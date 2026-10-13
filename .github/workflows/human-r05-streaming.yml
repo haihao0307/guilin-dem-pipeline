@@ -25,6 +25,7 @@ jobs:
           mkdir -p r05-evidence
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           node kaopu-unified-human-workbench/human-integrated-r05/install-base.cjs
+          node kaopu-unified-human-workbench/human-integrated-r05/finalize-startup.cjs
           node kaopu-unified-human-workbench/human-integrated-r05/prepare-assets.mjs
           node kaopu-unified-human-workbench/human-integrated-r05/test-stream.mjs | tee r05-evidence/unit.txt
           node kaopu-unified-human-workbench/human-integrated-r05/build.cjs
@@ -65,7 +66,7 @@ jobs:
           changes=subprocess.check_output(['git','diff','--name-only','4d2787db762fc3e72e4595827865f579026c2ad4','HEAD'],text=True).splitlines()
           assert all(x.startswith(str(p)+'/') or x in ['.github/workflows/human-r05-native-read.yml','.github/workflows/human-r05-streaming.yml'] for x in changes),changes
           (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
-          receipt={'version':'HUMAN-INTEGRATED-R05','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'hotModelBytes':b['hotModelBytes'],'originalModelBytes':b['originalModelBytes'],'coldReadyMS':q['coldReadyMS'],'warmReadyMS':q['warmReadyMS'],'checks':len(q['tests']),'unitChecks':15,'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'idleOnDemand':True}
+          receipt={'version':'HUMAN-INTEGRATED-R05','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'hotModelBytes':b['hotModelBytes'],'originalModelBytes':b['originalModelBytes'],'coldReadyMS':q['coldReadyMS'],'warmReadyMS':q['warmReadyMS'],'checks':len(q['tests']),'unitChecks':15,'transportUnitChecks':8,'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'idleOnDemand':True}
           (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2))
           PY
           git add kaopu-unified-human-workbench/human-integrated-r05/PUBLIC_QA.json kaopu-unified-human-workbench/human-integrated-r05/DELIVERY.json
