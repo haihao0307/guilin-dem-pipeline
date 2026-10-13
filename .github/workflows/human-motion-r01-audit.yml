@@ -1,0 +1,47 @@
+name: Human Motion R01 Source Audit
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths: [.github/workflows/human-motion-r01-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+          fetch-depth: 1
+      - name: Collect exact motion inputs
+        run: |
+          mkdir -p motion-audit/human motion-audit/legacy
+          cp -r kaopu-unified-human-workbench/full motion-audit/human/
+          cp -r kaopu-unified-human-workbench/human-integrated-r04 motion-audit/human/
+          cp -r kaopu-unified-human-workbench/human-integrated-r03 motion-audit/human/
+          python - <<'PY'
+          import json,urllib.request,pathlib,concurrent.futures
+          root=pathlib.Path('motion-audit'); repo='haihao0307/Humanoid-Rig-Lab-Next'
+          def get(url):
+            with urllib.request.urlopen(url,timeout=50) as r:return r.read()
+          tree=json.loads(get('https://api.github.com/repos/'+repo+'/git/trees/main?recursive=1'))
+          (root/'legacy-tree.json').write_text(json.dumps(tree,indent=2))
+          sha=tree['sha'];(root/'legacy-commit.txt').write_text(sha)
+          files=[x['path'] for x in tree['tree'] if x['type']=='blob' and x.get('size',0)<2000000 and (x['path'].startswith(('body/','src/modules/animation/','src/modules/pose/','source/')) or any(t in x['path'].lower() for t in ['build_manifest','foundationactivities','animationruntime','motion_skin','readme.md'])) and not x['path'].endswith(('.png','.jpg','.glb','.zip'))]
+          def copy(p):
+            try:
+              out=root/'legacy'/p;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(get('https://raw.githubusercontent.com/'+repo+'/'+sha+'/'+p));return p
+            except Exception as e:return {'path':p,'error':str(e)}
+          with concurrent.futures.ThreadPoolExecutor(8) as pool: result=list(pool.map(copy,files))
+          (root/'fetched.json').write_text(json.dumps(result,indent=2))
+          print('legacy',sha,'files',len(files))
+          PY
+          find motion-audit -type f \( -name '*.glb' -o -name '*.png' -o -name '*.jpg' -o -name '*.bin' \) -delete
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-motion-r01-inputs
+          path: motion-audit
+          retention-days: 7
