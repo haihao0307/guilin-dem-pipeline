@@ -1,0 +1,90 @@
+name: Hair F03 approved-scalp directions and guides
+on:
+  push:
+    branches: [feature/hair-f03-root-flow-guides-20261013]
+    paths: [.github/workflows/hair-f03-guides.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f03
+  ESBUILD: /tmp/f03-tools/node_modules/.bin/esbuild
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/f01
+            kaopu-hair-workbench/foundation/f02-1
+            kaopu-hair-workbench/foundation/f03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and browser tools
+        run: |
+          npm install --prefix /tmp/f03-tools --no-save esbuild@0.25.0 playwright@1.55.1
+          ln -s /tmp/f03-tools/node_modules node_modules
+          /tmp/f03-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Frozen scalp, native guides and exact static tests
+        run: |
+          python "$P/build.py"
+          node "$P/tests/core.mjs"
+          git fetch --depth=1 origin 111066a5058a2937420c25565f7b1fbd0d5d81a2
+          for OLD in f01 f02 f02-1; do
+            test "$(git rev-parse HEAD:kaopu-hair-workbench/foundation/$OLD)" = "$(git rev-parse 111066a5058a2937420c25565f7b1fbd0d5d81a2:kaopu-hair-workbench/foundation/$OLD)"
+          done
+          git diff --name-only 111066a5058a2937420c25565f7b1fbd0d5d81a2 HEAD | python -c 'import os,sys; assert all(x.startswith(os.environ["P"]+"/") or x==".github/workflows/hair-f03-guides.yml" for x in sys.stdin.read().splitlines())'
+      - name: Candidate real WebGL and interaction checks
+        run: |
+          python -m http.server 8765 --directory "$P/site" >/tmp/f03-http.log 2>&1 &
+          timeout 360s node "$P/tests/browser.mjs" http://127.0.0.1:8765/ candidate
+      - name: Commit immutable tested candidate
+        run: |
+          git config user.name 'KAOPU Hair F03 Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/src" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
+          git commit -m 'build(hair-f03): frozen scalp, exact native guides and candidate WebGL evidence'
+          git push origin HEAD:refs/heads/feature/hair-f03-root-flow-guides-20261013
+          echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
+      - name: Verify immutable public HTML bytes
+        run: |
+          python - <<'PY'
+          import os,time,urllib.request
+          from pathlib import Path
+          expected=(Path(os.environ['P'])/'preview.html').read_bytes()
+          u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['SOURCE_BUILD']+'/'+os.environ['P']+'/preview.html'
+          for i in range(12):
+              try:
+                  if urllib.request.urlopen(u,timeout=20).read()==expected:break
+              except Exception:pass
+              time.sleep(3)
+          else:raise RuntimeError('Fixed public source unavailable: delivery incomplete')
+          PY
+      - name: Real immutable public HTTPS browser verification
+        run: timeout 420s node "$P/tests/browser.mjs" "$PUBLIC_URL" public
+      - name: Record public result after all gates pass
+        run: |
+          python - <<'PY'
+          import os,json,hashlib
+          from pathlib import Path
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text());core=json.loads((p/'evidence/core.json').read_text());c=json.loads((p/'evidence/candidate/report.json').read_text());b=json.loads((p/'evidence/public/report.json').read_text())
+          assert core['success'] and c['success'] and b['success']
+          assert b['initial']['source']==m['source']==os.environ['GITHUB_SHA']
+          for f,h in m['sources'].items():assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h
+          assert (p/'preview.html').read_bytes()==(p/'site/index.html').read_bytes()
+          r={'version':'F03','source':m['source'],'sourceBuild':os.environ['SOURCE_BUILD'],'publicURL':os.environ['PUBLIC_URL'],'publicBrowserVerified':True,'run':os.environ['GITHUB_RUN_ID'],'htmlSHA256':m['htmlSHA256'],'htmlBytes':m['htmlBytes'],'coreChecks':len(core['checks']),'candidateChecks':len(c['checks']),'publicChecks':len(b['checks']),'publicReadyMS':b['readyMS'],'initial':b['initial'],'lengthEdit':b['lengthEdit'],'baselineAudit':core['baselineAudit'],'oldWorkbenchesChanged':False,'approvedScalpByteIdentical':True,'physicsAdvanced':False,'limits':core['limits']+['Mobile viewport only; no user-hardware FPS guarantee']}
+          (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          PY
+          git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
+          git commit -m 'test(hair-f03): immutable public guides, regional edits and locked scalp verified'
+          git push origin HEAD:refs/heads/feature/hair-f03-root-flow-guides-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f03-guides-public
+          path: kaopu-hair-workbench/foundation/f03
+          retention-days: 30
