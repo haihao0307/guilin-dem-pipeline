@@ -1,4 +1,4 @@
-name: Hair F03 approved-scalp directions and guides
+name: Hair F03 reviewed approved-scalp directions and guides
 on:
   push:
     branches: [feature/hair-f03-root-flow-guides-20261013]
@@ -30,6 +30,7 @@ jobs:
           /tmp/f03-tools/node_modules/.bin/playwright install --with-deps chromium
       - name: Frozen scalp, native guides and exact static tests
         run: |
+          python "$P/refine.py"
           python "$P/build.py"
           node "$P/tests/core.mjs"
           git fetch --depth=1 origin 111066a5058a2937420c25565f7b1fbd0d5d81a2
@@ -46,7 +47,7 @@ jobs:
           git config user.name 'KAOPU Hair F03 Verification'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add -f "$P/src" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
-          git commit -m 'build(hair-f03): frozen scalp, exact native guides and candidate WebGL evidence'
+          git commit -m 'build(hair-f03): reviewed smooth scalp styling and full candidate WebGL evidence'
           git push origin HEAD:refs/heads/feature/hair-f03-root-flow-guides-20261013
           echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
@@ -80,7 +81,7 @@ jobs:
           (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
           PY
           git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
-          git commit -m 'test(hair-f03): immutable public guides, regional edits and locked scalp verified'
+          git commit -m 'test(hair-f03): reviewed immutable public guides and locked scalp verified'
           git push origin HEAD:refs/heads/feature/hair-f03-root-flow-guides-20261013
       - uses: actions/upload-artifact@v4
         if: always()
