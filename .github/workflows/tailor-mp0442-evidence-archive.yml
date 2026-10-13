@@ -1,0 +1,87 @@
+name: MP04.4.2 factual evidence archive, not acceptance
+on:
+  push:
+    branches: [fix/tailor-mp04-playback-finish-20261013]
+    paths: ['.github/workflows/tailor-mp0442-evidence-archive.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04-4-2
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38367891312
+          pattern: mp0442-public-*
+          path: /tmp/evidence
+      - name: Preserve all reports and actual captured images, including failures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,datetime,os,shutil,hashlib,urllib.request
+          run_id=38367891312;source='4158ad94b0ac0a92ed67fcd770c3a4a8cf56dcb1'
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp04-r4-2-4158ad94b0ac/'
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04-4-2');e=pathlib.Path('/tmp/evidence')
+          reports=[json.loads(x.read_text()) for x in e.rglob('BROWSER_REPORT.json')]
+          expected={c+str(i).zfill(2) for c in ['K','L','D'] for i in range(1,5)}|{a+'-'+b for a in ['K04','L04','D01'] for b in ['raise','twist','step','detail']}
+          assert len(reports)==24 and {r['case'] for r in reports}==expected
+          assert all(r['source']==source and r['entry']==url for r in reports)
+          request=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/runs/'+str(run_id)+'/jobs?per_page=100',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(request,timeout=60) as response:jobs=json.load(response)['jobs']
+          case_jobs={j['name'][9:-1]:j for j in jobs if j['name'].startswith('browser (')}
+          assert set(case_jobs)==expected and all(j['status']=='completed' for j in case_jobs.values())
+          for r in reports:assert (case_jobs[r['case']]['conclusion']=='success')==r['passed'],r['case']
+          byte_report=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert byte_report['passed'] and byte_report['sourceCommit']==source and byte_report['fixedURL']==url
+          passed=sorted(r['case'] for r in reports if r['passed']);failed=sorted(r['case'] for r in reports if not r['passed'])
+          evidence=p/'recovery-evidence'
+          assert not evidence.exists(),'Do not overwrite earlier evidence'
+          shutil.copytree(e,evidence)
+          (evidence/'ORIGINAL_JOB_RESULTS.json').write_text(json.dumps(jobs,ensure_ascii=False,indent=2))
+          k=next(r for r in reports if r['case']=='K04-raise');assert k['passed']
+          batch=[{'role':row['role'],'beforeDraws':row['originalVisibleYarnDrawCalls'],'afterDraws':row['batchedYarnDrawCalls'],'triangles':row['batchedYarnTriangles'],'sameTriangles':row['batchedYarnTriangles']==row['submittedYarnTriangles'],'instances':row['batchedYarnInstances']} for row in k['finalRows']]
+          assert all(row['sameTriangles'] for row in batch)
+          failures=[{'case':r['case'],'errors':r['errors'],'lastState':r.get('lastState'),'jobURL':case_jobs[r['case']]['html_url']} for r in reports if not r['passed']]
+          state={'version':'MP04.4.2','status':'VIEWABLE_PARTIAL_CANDIDATE_NOT_FULL_ACCEPTANCE','fixedURL':url,'sourceCommit':source,'publicCommit':'32bd2a35c3e5a196e4e1106047c716e21c8119f7','originalWorkflowRun':run_id,'evidenceArchiveRun':os.environ['GITHUB_RUN_ID'],'publicBytesVerified':True,'publicFileCount':len(byte_report['files']),'browserCases':len(reports),'passedCases':passed,'failedCases':failed,'allBrowserCasesPassed':len(failed)==0,'deliveryComplete':False,'fullUserTaskComplete':False,'originalThresholdsRetained':True,'testsRerunForThisArchive':False,'runtimeChangedByThisArchive':False,'knitRaiseBatchMeasurement':batch,'failures':failures,'remaining':['five denim/leather motion cases exceed the natural-playback time limit on software rendering','one K04 initial load returned HTTP 503; other K04 motion and detail loads succeeded','complete native knit R15 fuzz/distance renderer migration','native denim R12 damaged-fabric independent force integration','all material/garment combinations and continuous/self collision validation','real-device performance certification'],'userAccepted':False,'physicalDeviceTested':False,'oldFailedRunsRetained':[38356384181,38362335029,38362561568,38365883577,38367891312],'archivedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          (p/'RECOVERY_RECEIPT.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          evidence_hashes={str(x.relative_to(evidence)):{'bytes':x.stat().st_size,'sha256':hashlib.sha256(x.read_bytes()).hexdigest()} for x in evidence.rglob('*') if x.is_file()}
+          (p/'RECOVERY_EVIDENCE_HASHES.json').write_text(json.dumps(evidence_hashes,ensure_ascii=False,indent=2))
+          text='# MP04.4.2 当前成果与未完成项\n\n'
+          text+='状态：可操作的公网候选；完整交付未完成。\n\n'+url+'?look=K04\n\n'
+          text+='源码：'+source+'\n\n原完整验收：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/'+str(run_id)+'\n\n'
+          text+='## 实际结果\n\n全部'+str(len(byte_report['files']))+'个公网文件与固定来源摘要一致。24个独立公网浏览器案例：'+str(len(passed))+'通过、'+str(len(failed))+'失败。证据归档工作流的成功不代表应用验收成功。没有重跑失败来筛选好数字，也没有降低既有阈值。\n\n'
+          text+='通过：'+', '.join(passed)+'。\n\n失败：'+', '.join(failed)+'。\n\n'
+          text+='毛衣K04的抬手、扭转、踏步，以及皮革搭配L04的抬手，通过真实鼠标暂停、继续、半速和时间轴定位。三类材质特写均通过；K04特写包含背面外侧、衣物内侧和单灯环扫。L04/D01具有390×844视口检查，不是手机实机。\n\n'
+          text+='## 本轮实际代码\n\n移除控制条高频完整audit/GL读取；最多一个GPU绘制在途；动作与单灯等待画面完成；保留暂停、继续、半速和时间轴。相同裁片/材质/LOD的纱线合批，不删纱线、不用平板替代、不降低阴影质量。K04抬手指定帧的上下装合计绘制由'+str(sum(x['beforeDraws'] for x in batch))+'次变为'+str(sum(x['afterDraws'] for x in batch))+'次，纱线三角形总数'+str(sum(x['triangles'] for x in batch))+'不变；这是提交次数，不是FPS提升倍数。\n\n'
+          text+='原生材料截面、单层厚针织、外表统一正针/内侧反针、皮革钱包式连续针路、上下装接触、原人物和九组实算动作继承自之前保存的MP04，不冒称此轮全部新做。旧工作台和固定入口不改。\n\n'
+          text+='## 仍未解决\n\nD01三个动作及L04扭转/踏步未达到软件渲染自然播放时限。D01踏步报告只观察到0/3/6帧，仍有一幅画面在绘制；不能称流畅或完整动作验证通过。K04单独冷启动出现503，其余K04动作/特写页成功加载；503未被抹掉或算作通过。\n\n'
+          text+='针织R15完整毛羽/距离渲染与牛仔R12破口独立受力尚未整体迁入。皮革R15材质及针路对应源码与这里沿用的R13核相同。动作是原参数下真实物理求解帧回放，非设备在线物理30FPS承诺；改配方须重新实算。单层视觉厚度不等于双层间滑移摩擦，钱包式针路不是逐线张力仿真。全组合/全姿态自碰撞、CCD及实机性能未完成。\n\n'
+          text+='## 后续接续约束\n\n从本源码及RECOVERY_RECEIPT接续，勿覆盖旧入口。下一次应先分离CPU更新与GPU材质/阴影负担，修复失败加载可重试链路，再验证D01/L04未通过动作；不能把继续合批当作已证明的GPU提速。最新毛衣迁移须保持私有源码边界和选中配方输出协议。所有24份报告、实际截图和原始作业结果已永久保存在recovery-evidence。\n'
+          (p/'CURRENT_HANDOFF.md').write_text(text)
+          print(json.dumps({k:state[k] for k in ['status','fixedURL','passedCases','failedCases','publicFileCount','deliveryComplete']},ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward evidence only
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-playback-finish-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-playback-finish-20261013)" = "$GITHUB_SHA"
+          git add -f kaopu-tailor-workbench/material-products/r04-4-2/recovery-evidence kaopu-tailor-workbench/material-products/r04-4-2/RECOVERY_RECEIPT.json kaopu-tailor-workbench/material-products/r04-4-2/RECOVERY_EVIDENCE_HASHES.json kaopu-tailor-workbench/material-products/r04-4-2/CURRENT_HANDOFF.md
+          git commit -m 'docs(mp04.4.2): permanently retain all public successes and failures; full delivery incomplete [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-playback-finish-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0442-permanent-evidence
+          path: |
+            kaopu-tailor-workbench/material-products/r04-4-2/recovery-evidence
+            kaopu-tailor-workbench/material-products/r04-4-2/RECOVERY_RECEIPT.json
+            kaopu-tailor-workbench/material-products/r04-4-2/CURRENT_HANDOFF.md
+          retention-days: 30
