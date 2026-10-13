@@ -1,0 +1,45 @@
+name: Human Motion R01 R04 Probe
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths: [.github/workflows/human-motion-r01-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/human-integrated-r04
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Probe retained native character
+        run: |
+          mkdir -p motion-probe
+          cat > probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await browser.newPage({viewport:{width:1100,height:900}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+          const raw=fs.readFileSync('kaopu-unified-human-workbench/human-integrated-r04/preview.html','utf8'),anchor='document.addEventListener("visibilitychange",this.visibility),this.invalidate()';if(raw.split(anchor).length!==2)throw Error('Idle defer anchor drift');const html=raw.replace(anchor,'document.addEventListener("visibilitychange",this.visibility),this.playing=!1,this.status="面部动作按需校准"');
+          await page.route('https://motion-probe.invalid/',r=>r.fulfill({contentType:'text/html',body:html}));await page.goto('https://motion-probe.invalid/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__IDENTITY_QA__?.model()?.positions?.length&&window.unifiedHuman,{timeout:240000});await page.evaluate(()=>window.lifelikeIdle?.pause(true));await page.waitForTimeout(3000);
+          const result=await page.evaluate(()=>{const q=window.__IDENTITY_QA__,m=q.model(),v=q.viewer(),layers=[];for(const [key,x]of Object.entries(v)){if(x?.source?.attributes?.position)layers.push({key,source:x.source.attributes.position.count,display:x.geometry?.attributes?.position.count,pairs:x.pairs?.length,count:x.count,layers:x.layers?.map(z=>({n:z.n,oldCount:z.oldCount,pairs:z.pairs?.length,count:z.geometry?.attributes?.position.count}))});}return{errors:[],modelCount:m.vertexCount,bodyCount:m.bodyCount,displayCount:v.geometry.attributes.position.count,viewerKeys:Object.keys(v),layers,mesh:{position:v.mesh.position.toArray(),rotation:v.mesh.rotation.toArray(),scale:v.mesh.scale.toArray()},camera:{position:v.camera.position.toArray(),target:v.controls?.target?.toArray()},rig:{names:m.lastBodyDriver.rig.names,parents:m.lastBodyDriver.rig.parents,restMatrices:m.lastBodyDriver.rig.restMatrices.map(x=>Array.from(x))},idle:window.lifelikeIdle?.report?.(),state:m.state,materialType:v.material?.type,meshMaterial:v.mesh.material.type,modelKeys:Object.keys(m),packetKeys:Object.keys(m.lastBodyDriver.packet),canonicalKeys:Object.keys(m.canonical),bounds:v.geometry.boundingBox};});result.pageErrors=errors;fs.writeFileSync('motion-probe/probe.json',JSON.stringify(result,null,2));
+          await page.screenshot({path:'motion-probe/r04-initial.png',timeout:90000});await browser.close();})();
+          JS
+          node probe.cjs
+          python - <<'PY'
+          import urllib.request,pathlib,json
+          sha='fda12bf2fe0262e4d02f1b08508128d17959e0c8'
+          for name in ['control/BasicController.js','control/CharacterActivity.js','control/TaskAgent.js','reconstruction/motion-reference.json','source/assembly.json']:
+            out=pathlib.Path('motion-probe/legacy')/name;out.parent.mkdir(parents=True,exist_ok=True)
+            out.write_bytes(urllib.request.urlopen('https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/'+sha+'/'+name,timeout=50).read())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-motion-r01-probe
+          path: motion-probe
+          retention-days: 7
