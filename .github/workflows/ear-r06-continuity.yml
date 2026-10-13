@@ -1,0 +1,101 @@
+name: EAR-R06 continuity
+on:
+  push:
+    branches: [fix/ear-r06-concha-continuity-20261013]
+    paths: ['kaopu-unified-human-workbench/ear-continuity-r06/**', '.github/workflows/ear-r06-continuity.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ear-r06-continuity
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          sparse-checkout: |
+            kaopu-unified-human-workbench/ear-continuity-r06
+            .github/workflows
+            knowledge
+            ops/mother_execution/templates
+      - uses: actions/checkout@v4
+        with:
+          ref: 3da5cddb8a55c868bc6a6f7108ba20b8cc1abcd1
+          path: .ear-r06-baseline
+          sparse-checkout: kaopu-unified-human-workbench
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fixed tools and independent workspace
+        run: |
+          npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+          cp -r kaopu-unified-human-workbench/ear-continuity-r06 .ear-r06-baseline/kaopu-unified-human-workbench/
+          mkdir -p ear-r06-evidence
+          cd .ear-r06-baseline
+          python3 -m http.server 8765 >/tmp/ear-r06-http.log 2>&1 &
+      - name: Source audit package
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-continuity-r06/build.cjs') == '' }}
+        run: |
+          python3 - <<'PY'
+          import pathlib,zipfile
+          root=pathlib.Path('.ear-r06-baseline')
+          with zipfile.ZipFile('ear-r06-evidence/source.zip','w',zipfile.ZIP_DEFLATED) as z:
+            for p in (root/'kaopu-unified-human-workbench').rglob('*'):
+              if p.is_file() and p.suffix in ['.js','.mjs','.cjs','.css','.json','.md'] and p.stat().st_size<4000000 and not any(x in p.parts for x in ['acceptance','evidence']):z.write(p,p.relative_to(root))
+            for p in pathlib.Path('knowledge').glob('*.md'):
+              if any(x in p.name for x in ['MOTHER_PRODUCTION','REFERENCE_REPLICATION','TASK_FRESHNESS','REAL_3D','PUBLIC_WEB','SINGLE_FILE','MOTHER_FACTORY']):z.write(p)
+            if pathlib.Path('AGENTS.md').exists():z.write('AGENTS.md')
+          PY
+      - name: Reproduce frozen defect
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-continuity-r06/build.cjs') == '' }}
+        run: node .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/audit.cjs
+      - name: Build and unit tests
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-continuity-r06/build.cjs') != '' }}
+        run: |
+          node .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/build.cjs
+          node .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/unit.mjs
+      - name: Candidate regression
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-continuity-r06/build.cjs') != '' }}
+        env:
+          EAR_OUT: ear-r06-evidence/candidate
+        run: node .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/verify.cjs
+      - name: Publish tested R06 only
+        id: publish
+        if: ${{ hashFiles('kaopu-unified-human-workbench/ear-continuity-r06/build.cjs') != '' }}
+        run: |
+          cp .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/preview.html kaopu-unified-human-workbench/ear-continuity-r06/
+          cp .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/BUILD.json kaopu-unified-human-workbench/ear-continuity-r06/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- kaopu-unified-human-workbench/ear-continuity-r06
+          if ! git diff --cached --quiet; then git commit -m 'build(ear-r06): tested isolated preview [skip ci]'; fi
+          git push origin HEAD:${{ github.ref_name }}
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Fixed public browser verification
+        if: ${{ steps.publish.outputs.sha != '' }}
+        env:
+          EAR_OUT: ear-r06-evidence/public
+          EAR_MODE: public
+          EAR_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.publish.outputs.sha }}/kaopu-unified-human-workbench/ear-continuity-r06/preview.html
+        run: node .ear-r06-baseline/kaopu-unified-human-workbench/ear-continuity-r06/verify.cjs
+      - name: Retain public evidence
+        if: ${{ steps.publish.outputs.sha != '' }}
+        run: |
+          mkdir -p kaopu-unified-human-workbench/ear-continuity-r06/acceptance
+          cp -r ear-r06-evidence/candidate ear-r06-evidence/public kaopu-unified-human-workbench/ear-continuity-r06/acceptance/
+          echo '${{ steps.publish.outputs.sha }}' > kaopu-unified-human-workbench/ear-continuity-r06/acceptance/BUILD_COMMIT.txt
+          git add -- kaopu-unified-human-workbench/ear-continuity-r06/acceptance
+          git commit -m 'test(ear-r06): fixed-public regression evidence [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ear-r06-${{ github.run_id }}
+          path: ear-r06-evidence
+          retention-days: 14
