@@ -17,7 +17,7 @@ export function random(seed){let s=seed>>>0;return()=>{s=(s+0x6d2b79f5)>>>0;let 
 export function signature(a){let h=2166136261;for(const n of a){h=Math.imul(h^Math.round(n*1e7),16777619);}return(h>>>0).toString(16);}
 export const REGIONS=['前额','左颞／耳周','右颞／耳周','冠部','后脑枕部','后颈'];
 export const PALETTE=['#deb784','#7ec5c6','#9cb0dc','#b3c79d','#7aa7c6','#cc9ead'];
-const knots=[[0,.3545],[.34,.355],[.59,.350],[.78,.337],[.99,.316],[1.12,.310],[1.31,.329],[1.53,.328],[1.71,.315],[1.99,.293],[2.27,.277],[2.63,.266],[Math.PI,.264]];
+const knots=[[0,.3545],[.34,.355],[.59,.350],[.78,.337],[.99,.316],[1.12,.310],[1.31,.329],[1.53,.328],[1.71,.315],[1.99,.293],[2.27,.270],[2.63,.253],[Math.PI,.249]];
 export function hairline(theta,front=0,nape=0){
  const t=Math.abs(theta);let j=0;while(j<knots.length-2&&t>knots[j+1][0])j++;
  const slope=i=>{if(i===0||i===knots.length-1)return 0;const a=(knots[i][1]-knots[i-1][1])/(knots[i][0]-knots[i-1][0]),b=(knots[i+1][1]-knots[i][1])/(knots[i+1][0]-knots[i][0]);return a*b<=0?0:2*a*b/(a+b);};
@@ -37,7 +37,7 @@ export const DEFAULT=Object.freeze({schema:'kaopu/hair-recipe@1',version:'F01',t
 export function validate(raw){if(!raw||raw.schema!==DEFAULT.schema||raw.topology!==DEFAULT.topology)throw Error('方案版本或人物拓扑不匹配');const r={...DEFAULT,...structuredClone(raw)};const ranges={frontMM:[-4,4],napeMM:[-6,6],partMM:[-24,24],lengthMM:[120,320],rootAngle:[20,55],curl:[0,1],density:[.2,1],stiffness:[.15,1],damping:[1,12],gravity:[0,1.5],wind:[0,1]};for(const[k,[a,b]]of Object.entries(ranges))if(!Number.isFinite(r[k])||r[k]<a||r[k]>b)throw Error('参数超出已支持范围：'+k);if(r.seed!==DEFAULT.seed)throw Error('根点种子不匹配');if(!Array.isArray(r.regionalLengths)||r.regionalLengths.length!==6||r.regionalLengths.some(x=>!Number.isFinite(x)||x<.5||x>1.2))throw Error('区域长度无效');if(!/^#[0-9a-f]{6}$/i.test(r.color))throw Error('发色无效');return r;}
 export function clipTriangle(head,f,recipe=DEFAULT,margin=0){
  const ids=head.triangles.slice(3*f,3*f+3);if(ids.some(i=>head.components[i]!==0))return[];
- if(ids.every(i=>head.positions[3*i+1]<.248))return[];
+ if(ids.every(i=>head.positions[3*i+1]<.228))return[];
  const vertex=b=>{const p=point(head,f,b);return{p,b,s:growth(p,recipe)+margin};};
  const subdiv=ids.some(i=>Math.abs(growth(V(head.positions,i),recipe))<.019)?4:1,polys=[];
  for(let i=0;i<subdiv;i++)for(let j=0;j<subdiv-i;j++){
@@ -95,14 +95,14 @@ export function makeGuides(head,roots,normals,sdf,recipe=DEFAULT,query=null){
  */
 export class HairSolver{
  constructor(groom,sdf){this.groom=groom;this.sdf=sdf;this.nodes=groom.segments+1;this.n=groom.guides.length*this.nodes;this.rest=new Float64Array(this.n*3);groom.guides.forEach((g,i)=>this.rest.set(g.rest,i*this.nodes*3));this.x=this.rest.slice();this.prev=this.x.slice();this.v=new Float64Array(this.x.length);this.target=this.x.slice();this.distanceLambda=new Float64Array(this.n);this.curveLambda=new Float64Array(this.x.length);this.targetLambda=new Float64Array(this.x.length);this.time=0;this.steps=0;this.yaw=0;this.nod=0;this.maxError=0;this.contacts=0;this.motion='still';this.recipe=groom.recipe;this.lastMs=0;}
- reset(){this.x.set(this.rest);this.prev.set(this.rest);this.v.fill(0);this.time=0;this.yaw=0;this.nod=0;}
+ reset(){this.x.set(this.rest);this.prev.set(this.rest);this.target.set(this.rest);this.v.fill(0);this.time=0;this.yaw=0;this.nod=0;this.maxError=0;this.contacts=0;}
  pose(t){const m=this.motion;return m==='turn'?[.32*Math.sin(t*1.4),0]:m==='nod'?[.09*Math.sin(t*.8),.22*(.5-.5*Math.cos(t*1.2))]:m==='shake'?[.40*Math.sin(t*3.2),.04*Math.sin(t*2)]:[0,0];}
  step(dt=1/60){const started=performance.now(),r=this.recipe,N=this.nodes,seg=N-1;this.time+=dt;[this.yaw,this.nod]=this.pose(this.time);this.prev.set(this.x);this.contacts=0;
   for(let i=0;i<this.n;i++){const q=turn(V(this.rest,i),this.yaw,this.nod);this.target.set(q,i*3);const j=i%N;if(j<2){this.x.set(q,i*3);continue;}const free=j/seg,damp=Math.exp(-r.damping*dt),wind=r.wind*16*(.7+.3*Math.sin(this.time*2.1+i*.017));for(let k=0;k<3;k++){let a=k===1?-9.81*r.gravity:k===0?wind:.25*wind;this.v[3*i+k]=this.v[3*i+k]*damp+a*dt;this.x[3*i+k]+=this.v[3*i+k]*dt;}}
   this.distanceLambda.fill(0);this.curveLambda.fill(0);this.targetLambda.fill(0);
   const lengthAlpha=1e-10/(dt*dt),curveAlpha=(.00000012/(r.stiffness*r.stiffness))/(dt*dt),x=this.x;
   const w=i=>i%N<2?0:1;
-  for(let iter=0;iter<9;iter++){
+  for(let iter=0;iter<6;iter++){
    // Rest curvature: x(i-1)-2*x(i)+x(i+1), rotated with the target head.
    for(let g=0;g<this.groom.guides.length;g++)for(let j=2;j<N-1;j++){const i=g*N+j,a=i-1,b=i+1,wa=w(a),wc=w(i),wb=w(b),den=wa+4*wc+wb+curveAlpha;for(let k=0;k<3;k++){const C=x[3*a+k]-2*x[3*i+k]+x[3*b+k]-(this.target[3*a+k]-2*this.target[3*i+k]+this.target[3*b+k]),li=i*3+k,dl=(-C-curveAlpha*this.curveLambda[li])/den;this.curveLambda[li]+=dl;x[3*a+k]+=wa*dl;x[3*i+k]-=2*wc*dl;x[3*b+k]+=wb*dl;}}
    // Weak, configurable target support; allows gravity/wind/inertia to depart.
