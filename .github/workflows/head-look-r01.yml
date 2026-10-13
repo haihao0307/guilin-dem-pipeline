@@ -1,0 +1,76 @@
+name: Head Look R01 integrated public acceptance
+on:
+  push:
+    branches: [feature/human-head-look-r01-20261013]
+    paths: ['kaopu-unified-human-workbench/head-look-r01/**', '.github/workflows/head-look-r01.yml']
+permissions:
+  contents: write
+concurrency:
+  group: head-look-r01-public
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Unit and exact-host build
+        run: |
+          mkdir -p head-look-evidence
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/head-look-r01/test.mjs | tee head-look-evidence/unit.txt
+          node kaopu-unified-human-workbench/human-integrated-r03/test.mjs | tee head-look-evidence/retained-unit.txt
+          node kaopu-unified-human-workbench/head-look-r01/build.cjs
+      - name: Real rendered candidate and A/B controls before publishing
+        env:
+          QA_OUT: head-look-evidence/smoke
+          SMOKE_ONLY: '1'
+        run: node kaopu-unified-human-workbench/head-look-r01/verify.cjs
+      - name: Publish fixed commit without merging
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/head-look-r01/preview.html kaopu-unified-human-workbench/head-look-r01/BUILD.json
+          git commit -m 'build(head-look-r01): same-person lighting and atlas skin candidate'
+          git push origin HEAD:feature/human-head-look-r01-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Full test of exact immutable public page
+        env:
+          QA_OUT: head-look-evidence/public
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/head-look-r01/preview.html"
+          node kaopu-unified-human-workbench/head-look-r01/verify.cjs
+      - name: Store permanent evidence with actual limits
+        run: |
+          git fetch --depth=1 origin 2c08fa9728f64e9119b4a666cf80ee3faecb23de
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,subprocess,re
+          p=Path('kaopu-unified-human-workbench/head-look-r01');q=json.loads(Path('head-look-evidence/public/qa.json').read_text());b=json.loads((p/'BUILD.json').read_text())
+          assert q['completed'] and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests'] and not q['referenceRequests']
+          changed=subprocess.check_output(['git','diff','--name-only','2c08fa9728f64e9119b4a666cf80ee3faecb23de','HEAD'],text=True).splitlines()
+          allowed=['.github/workflows/head-look-r01.yml','.github/workflows/head-look-r01-build-tools.yml','.github/workflows/human-head-look-study-r01.yml']
+          assert all(x.startswith(str(p)+'/') or x in allowed for x in changed),changed
+          units=int(re.search(r'HEAD_LOOK_UNIT_CHECKS=(\d+)',Path('head-look-evidence/unit.txt').read_text()).group(1))
+          receipt={'version':b['version'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewURL':q['url'],'previewSHA256':b['previewSHA256'],'previewBytes':b['previewBytes'],'publicBrowserVerified':True,'publicChecks':len(q['tests']),'unitChecks':units,'run':os.environ['GITHUB_RUN_ID'],'parent':b['parent'],'reference':b['reference'],'host':b['host'],'oldFilesChanged':False,'sameCharacter':True,'userVisualAccepted':False,'photorealisticEquivalence':False,'realPhoneTested':False,'consumerGPUPerformanceCertified':False,'final':q['final'],'limitations':b['limitations']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');(p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add kaopu-unified-human-workbench/head-look-r01/DELIVERY.json kaopu-unified-human-workbench/head-look-r01/PUBLIC_QA.json
+          git commit -m 'docs(head-look-r01): permanent exact-public verification and limitations'
+          git push origin HEAD:feature/human-head-look-r01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: head-look-r01-evidence-${{ github.run_number }}
+          path: |
+            head-look-evidence/
+            kaopu-unified-human-workbench/head-look-r01/
+          retention-days: 14

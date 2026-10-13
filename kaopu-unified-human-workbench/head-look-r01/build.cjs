@@ -1,0 +1,18 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const base=path.resolve(__dirname,'../human-integrated-r03');let code=fs.readFileSync(base+'/build-core.cjs','utf8');
+assert.equal(crypto.createHash('sha256').update(code).digest('hex'),'562658d0ae6f73e35756e003621b9872db5e32f3f6c462a6cab7b838fe2a90c5');
+const change=(a,b)=>{assert.equal(code.split(a).length,2,'Build adapter drift: '+a.slice(0,90));code=code.replace(a,()=>b);};
+change("spec=__dirname+'/specialists'","spec=path.resolve(__dirname,'../human-integrated-r03/specialists')");
+change("app=`import {installAnatomy}","app=`import {installHeadLook} from '../../head-look-r01/Profile.mjs';\nimport {mountHeadLook} from '../../head-look-r01/UI.mjs';\nimport {installAnatomy}");
+change('installAnatomy(model);if(!savedArchive)','installAnatomy(model);installHeadLook(model);if(!savedArchive)');
+change('mountUnifiedUI({model,viewer,controller});wasLoaded=true;','mountUnifiedUI({model,viewer,controller});mountHeadLook({model,viewer,controller});wasLoaded=true;');
+change('function release(){controller?.model.regionalFace','function release(){controller?.model.headLook?.disposeUI?.();controller?.model.regionalFace');
+change('regionalFace:appearance.regionalFace,cinematicLook:','regionalFace:appearance.regionalFace,headLook:appearance.headLook,cinematicLook:');
+change("if(s.includes('import.meta.url'))","s=require("+JSON.stringify(base+'/compatibility.cjs')+").adapt(s,rel,adapters);\n   if(s.includes('import.meta.url'))");
+change("__dirname+'/layout.css'];","root+'/human-integrated-r03/layout.css',__dirname+'/layout.css'];");
+change('<title>共同人物 R03 · 耳唇融合与面部分区</title>','<title>人物总台 · HEAD LOOK R01 灯光与表皮</title>');
+change('R03 · 耳 R05 / 唇 ET19 / 面部分区与曲面毛孔','HEAD LOOK R01 · 灯光 / 表皮 / 嘴唇 · 保留完整 R03 人物');
+change("version:'HUMAN-INTEGRATED-R03'","version:'HUMAN-HEAD-LOOK-R01'");
+change("fs.writeFileSync(__dirname+'/BUILD.json'",`Object.assign(manifest,{parent:'2c08fa9728f64e9119b4a666cf80ee3faecb23de',reference:'lo-th/head@21462e471d53ba8c413a96989016510ca4495a34',host:'HUMAN-INTEGRATED-R03',referenceMeshImported:false,referenceTexturesImported:false,referenceBundleImported:false,limitations:['First visual reproduction candidate; not identical reference assets or user visual acceptance','WebGL2 compatibility implementation of documented Three SSS term; not native TSL or volumetric skin simulation','Existing admitted surface atlases are reused; no original reference texture-painting source history was supplied','Environment is newly authored and prefiltered, not reference photo.hdr; one key shadow; no depth-of-field blur','Existing face/ear/lip geometry defects are retained, not concealed or called fixed','Old native assets, larger display mesh and idle baking still carry loading and GPU costs','No physical-phone, Safari, Vision Pro or consumer-GPU FPS certification']});fs.writeFileSync(__dirname+'/BUILD.json'`);
+require('node:child_process').execFileSync(process.execPath,[base+'/compatibility.cjs'],{stdio:'inherit'});
+new Function('require','__dirname','process',code)(require,__dirname,process);

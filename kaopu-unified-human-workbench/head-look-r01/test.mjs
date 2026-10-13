@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {DEFAULTS,LIMITS,validate,installHeadLook,SCHEMA} from './Profile.mjs';
+let checks=0;const ok=(n,f)=>{f();checks++;console.log('PASS',n);};
+ok('default recipe',()=>assert.deepEqual(validate(),DEFAULTS));
+for(const [k,[lo,hi]]of Object.entries(LIMITS))ok('bounded '+k,()=>{assert.equal(validate({[k]:lo})[k],lo);assert.equal(validate({[k]:hi})[k],hi);for(const v of [NaN,Infinity,-Infinity,lo-.01,hi+.01,'1',null])assert.throws(()=>validate({[k]:v}));});
+ok('toggles and unknown fields',()=>{assert.throws(()=>validate({surface:1}));assert.throws(()=>validate({lighting:0}));assert.throws(()=>validate({mesh:'reference'}));assert.throws(()=>validate([]));assert.throws(()=>validate({diagnostic:1.5}));});
+const model={body:4,archive(){return{body:this.body,lipAnatomyDNA:{retained:true}};},restore(a){if(a.body<0)throw Error('bad body');this.body=a.body;return this;}};
+const p=installHeadLook(model);
+ok('single installation',()=>assert.equal(installHeadLook(model),p));
+ok('archive includes host and recipe',()=>{const a=model.archive();assert.equal(a.headLook.schema,SCHEMA);assert.equal(a.body,4);assert(a.lipAnatomyDNA.retained);});
+ok('invalid profile is rejected before host mutation',()=>{const before=model.archive();assert.throws(()=>model.restore({body:5,headLook:{schema:SCHEMA,settings:{scatter:NaN}}}));assert.deepEqual(model.archive(),before);});
+ok('host failure rolls profile back',()=>{const before=model.archive();assert.throws(()=>model.restore({body:-1,headLook:{schema:SCHEMA,settings:{surface:false}}}));assert.deepEqual(model.archive(),before);});
+ok('round trip',()=>{const a=model.archive();a.headLook.settings.pigment=.9;model.restore(a);assert.equal(p.settings.pigment,.9);assert.equal(model.archive().body,4);});
+ok('legacy person without extension',()=>{model.restore({body:7});assert.deepEqual(p.settings,DEFAULTS);assert.equal(model.body,7);});
+ok('schema is not silently coerced',()=>assert.throws(()=>model.restore({headLook:{schema:'future@9',settings:{}}})));
+console.log('HEAD_LOOK_UNIT_CHECKS='+checks);

@@ -1,0 +1,37 @@
+name: Head Look R01 bounded build dependencies
+on:
+  push:
+    branches: [feature/human-head-look-r01-20261013]
+    paths: ['.github/workflows/head-look-r01-build-tools.yml']
+permissions:
+  contents: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false esbuild@0.25.11
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tarfile
+          with tarfile.open('head-look-build-dependencies.tar.gz','w:gz') as z:
+            for root in ['kaopu-unified-human-workbench','kaopu-anny-workbench']:
+              for p in Path(root).rglob('*'):
+                if not p.is_file():continue
+                if p.suffix in ['.mjs','.js','.cjs','.css','.json','.md'] and p.stat().st_size<16000000 or str(p) in ['kaopu-unified-human-workbench/index.html','kaopu-unified-human-workbench/human-integrated-r03/preview.html','kaopu-unified-human-workbench/skin-folds-r02/preview.html']:
+                  z.add(p)
+            z.add('node_modules/esbuild');z.add('node_modules/@esbuild')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: head-look-r01-build-tools
+          path: head-look-build-dependencies.tar.gz
+          retention-days: 3
