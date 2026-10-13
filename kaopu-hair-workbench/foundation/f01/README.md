@@ -1,31 +1,70 @@
-# KAOPU Hair Foundation F01
+# KAOPU Hair Foundation F01 · 生长与基础运动验收版
 
-Isolated implementation of the user's foundation-first, reference-driven route. Not a finished photoreconstructed hairstyle. Source parent: 6030e8142c066814df1c49fa33d3ca9949a4b96e. L03 / all approved short-hair pages unchanged.
+固定公网：https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/foundation/f01-3825be27e209/
 
-Same native 17,821-vertex GNM head, original triangle indices. A shape-preserving cubic hairline chart with an explicit ear exclusion is clipped onto original surface faces, with four-way local tessellation and per-point field evaluation; no hidden cap. Boundary, overlay and root activation use that same authored scalar. 2,400 deterministic native-face/barycentric root slots; density and color never resample. Candidate scalp shape still needs user review and is not a measured follicle map.
+状态：已发布，真实公网 WebGL 画面和主要交互检查通过。不是照片重建完成的密发成品；生长轮廓的美术确认、连续碰撞、密发和流畅度目标仍未全部完成。
 
-128 full root-to-tip guide curves, 32 segments each. Six independent length ratios, separate part direction (not a root deletion), curl of free sections, root elevation. These are structural fixtures, not images passed off as reconstructed grooms. HairRecipe separates design from velocities, constraint multipliers and pose. Worker generation is latest-job guarded. Import rejects incorrect topology and bad values before replacing state. Save is isolated to kaopu.hair.foundation.F01.
+## 本轮实际实现
 
-Original JavaScript compliant constraints, distance multiplier accumulation, rest-curvature and explicit artistic shape support. Final forward length constraints. Metres and fixed 1/60 second steps, gravity/wind/damping, root pins. Shape support is NOT identified biological stiffness or an inferred stress-free shape. Same mesh undergoes a neck-blended test pose; not a production skeleton animation clip.
+保留同一 GNM 原生头部的 17,821 个顶点、35,324 个三角面与原始坐标/索引，使用灰模检查结构。没有导入另一个头模覆盖它，也没有修改原 L03、认可的短发或其他工作台。
 
-Collision: offline 5mm sampled oriented nearest-native-skin SDF, trilinear sampling with endpoint and midpoint radius/clearance guards. Native-triangle BVH is independently used for current centreline audit. Neither SDF nor midpoint sampling constitutes continuous collision detection. No strand self-collision, no full torso outside the displayed native bust, and no full identity/body shape certification. At 320mm some tips leave the supported bust; report this rather than calling negative open-edge nearest-normal values body penetration proof.
+连续候选生长域覆盖前额、左右颞侧/耳周、冠部、后脑枕部及后颈。采用保形三次轮廓和明确耳部禁长区，在原生面上局部细分、求交并保留重心坐标。边界线、区域填色与根点激活读取同一生长场，不靠另一张盖层掩盖错误。视觉复核后下移后颈边界、修正诊断填色法线。轮廓仍需用户确认，不是生理测量结论。
 
-## Reproduce
+2,400 个稳定根点槽位，默认激活 2,222 个；根点绑定原生面编号和重心坐标。改变密度只关闭/开启原点，发色、风和观察角度不重新撒点。最终根点签名 b5672c1d；这些数量用于诊断，不代表真实人体毛囊数量。
 
-Run python build.py, node bake-sdf.mjs, python build.py, node tests/check.mjs and node tests/dynamic.mjs. Serve site/ over HTTP, then node tests/browser.mjs http://127.0.0.1:8765/ candidate. HAIR_L03 optionally selects the frozen source directory. Browser tests require Playwright 1.55.1 and Chromium. Three.js, head and SDF come from the same deployed directory; no external runtime CDN.
+128 条完整根到梢导向曲线，每条 32 段。六区域相对长度独立，整体长度参考 120–320 mm；支持分缝位置、自由段卷曲、密度、颜色、前额与后颈边界细调。分缝控制方向，不挖掉一条根点。曲线存实际弧长，整体滑块是长度参考，并非所有曲线精确同长。彩线是加粗的结构导向，不冒充最终发丝数量和质感。
 
-Browser navigation in the authoring container is blocked by managed policy. Do not remove/bypass that policy. Browser images and interaction evidence must come from GitHub Actions. A localhost candidate test does not establish public delivery. Only after immutable Pages deployment and public-browser checks may it be marked delivered. Mobile viewport is not actual phone hardware.
+独立 HairRecipe（kaopu/hair-recipe@1）保存设计，物理位置、速度与约束乘子独立。构建放入 Worker，过期结果不覆盖新任务；错误拓扑、NaN、非法范围在修改状态前拒绝。本机保存/恢复及 JSON 导入导出已实现，存储键 kaopu.hair.foundation.F01，不写旧版存档。本轮没有图片识别或自动照片重建入口。
 
-## Sources / legal scope
+原生 JavaScript 约束求解：距离乘子、参考曲率、可调艺术保形支撑，固定 1/60 秒子步、重力、风、阻尼，最终根到梢长度约束。转头/低头/较快转头是同一网格颈部渐变的测试姿态，不冒充已接入生产骨架动画。没有直接给发丝顶点套正弦摆动；正弦只作为头部和风的测试输入。保形支撑不是从照片识别出的生物刚度或无应力形态。
 
-XPBD mathematics: Macklin, Mueller and Chentanez, 2016, https://matthias-research.github.io/pages/publications/XPBD.pdf . Algorithm reference, no paper figures/assets redistributed.
+碰撞场由当前原生皮肤离线采样：5 mm 网格，61×78×58；运行时使用三线性距离值、节点与段中点间隙约束。独立原生三角面 BVH 检查中心线。它不是连续碰撞检测，不包含逐丝自碰撞，也不覆盖当前半身截断模型以外的完整胸背。320 mm 等长导向的梢部可能离开有效胸肩区域；开放边缘附近的最近面法线符号不当作严格的实体内外证明。
 
-TressFX: https://github.com/GPUOpen-Effects/TressFX . Architecture reference; no engine/source/assets imported here.
+静态视图按需绘制，后台暂停；隐藏的诊断网格不再逐帧全量更新，颜色直接更新属性；手机纵向取景已修正。但性能目标尚未达标，不能把上述优化说成已达到普通设备 60fps。
 
-Example-Based Hair Geometry Synthesis: https://research.lvdi.wang/publications/hairsynthesis/index.html . Hierarchical guide/shape reference, not a single-image engine.
+## 实际验证
 
-SurfaceQuery.mjs: bounded existing L03 native-triangle query subset from src/TeacherGroomBinding.js; no Daniel Bystedt groom curves imported. Three.js and GNM original licenses retained in site/licenses. The native head data remains derived from the existing licensed asset, not newly owned because parameters were changed.
+21 项内核检查通过，包括根点重心绑定、同种子复现、同场边界与激活、降低密度不搬点、非法方案拒绝、约束长度和穿面检测阳性对照。
 
-Ready time / frame time / substep time are separate measurements. The initial goal is visible and auditable foundation work, not arbitrary-phone 60fps or a universally correct full long-hair system.
+独立动态检查：120 / 235 / 320 mm 三档长度 × 静止/转头/低头/较快转头，共 12 组，风强 70%，每组运行 90 子步后检查。在这些采样终态中，中心线穿面为 0，根漂移为 0，数值有限。不是对所有参数、所有中间时刻或有限粗细毛发的无穿模证明。
 
-Status: awaiting candidate and immutable public browser validation. No merge or force push permitted.
+候选网页 23 项检查通过；真实公网另执行 23 项检查，通过视角、显示层、密度、方案更改、实际 JSON 文件导入、保存/恢复、刷新、转头和低头、风参数不重生成、动画推进、手机面板及无 JS 异常等。公网两种动作各检查 4,096 条当前线段中心线，未检出穿面。检查数存在范围重叠，不合并冒充独立场景数。
+
+已人工查看最终公网全貌、耳后生长域、后脑/后颈生长域、低头与手机画面；没有用生成图片代替三维渲染。手机只测 390×844 视口，不是手机实机。浏览器在 GitHub Actions 执行；本地作者环境的浏览器导航受管理策略限制，没有绕过它。
+
+下载最终 artifact 后，Python 再核 18 个清单文件的长度/SHA、所有可读 src 与 site 对应模块一致，以及核心/动态/候选/公网报告。全部一致。Artifact 11805286920，ZIP SHA256 1644a01dd75520283f6d86ba26349269cbd5c2dc6f8153520a3a36b444518062。
+
+## 速度与未达标项
+
+普通公网检查样本：从开始导航到 F01 可操作 1.921 秒。另一个全新浏览器上下文、关闭缓存、限速 5 Mbps / 80 ms，完整可操作耗时 4.630 秒。这里是本版稀疏基础样机，不能与原 L03 密发/高质量皮肤作同质量速度对比，也不是用户设备保证。
+
+公网 Chromium/SwiftShader 软件渲染的连续播放样本：实际帧间隔中位数 66.6 ms，约对应 15 帧/秒；求解 14.6 ms/子步，几何更新 16.4 ms。约四秒播放测试记录丢弃模拟积压 1.983 秒。界面统计为未截断的真实帧间隔，物理时间步另限幅；没有把被限幅的 100 ms 当成真实帧耗。该环境下明显未达到 60fps 和完整实时追赶，需要继续降低主线程几何/求解开销、改善调度。不能由软件显卡样本推断用户硬件速度。
+
+首批基础仍缺：连续/有限半径接触完善、完整身体碰撞域、全时域长时间压力验证、真正稳定实时性能、全部人物头型适配。后续密发、发束、远景抗闪烁、照片可见/推断证据和图像拟合尚未实现。
+
+## 固定版本和发布过程
+
+基线：6030e8142c066814df1c49fa33d3ca9949a4b96e。
+构建输入：3825be27e209032fb8d69a12e92f4b39cd82b0c7。
+最终可读源码与构建：a715d94cfb23c566e8b3696ed9a3bcfc7fc18a65。
+公网证据：47942691cd09a11d0cbf4e032cf491c5273c8897。
+不可变 site tree：19902fdda0df5842752c4e0fe933974e579c8d3e。
+HTML SHA256：0336aee7b5ae1deb7a91ee89b596ba9aef79b02158c7905ba4d51fc94ca33861。
+本轮只向 gh-pages 追加新目录：ac6e57ce306a2f81c0b791cac9a537a10734d84a。
+
+初次部署被另一工作台的后续发布接替；初次公网验收等待 10 分钟超时，未宣称通过。后续 gh-pages@8a294e444fc8b8f500c062b9b26704ff1fbe576d 完整保留同一 site tree，Pages run 38384289561 成功。公网测试 run 38383779813 第二次尝试成功，实际读取、运行同一不可变版本。总托管站点构建曾警告约 4.31 GB 超出建议/允许额度，属于共享托管增长风险；本工作台清单文件仅 3,061,847 字节，不是每次打开下载 4 GB。没有删除旧版来压缩站点。
+
+候选：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38383318194
+公网：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38383779813
+Draft PR257：https://github.com/haihao0307/guilin-dem-pipeline/pull/257
+
+仅新增 F01 目录与专用工作流；完整 L03 Git 子树与基线一致，其他旧文件不改。PR 保持 Draft，未合并、未强推。本文为文档收尾，不修改已测试 src/site。
+
+## 复现与来源
+
+依次运行 python build.py、node bake-sdf.mjs、python build.py、node tests/check.mjs、node tests/dynamic.mjs；再通过 HTTP 提供 site/ 并运行 node tests/browser.mjs <URL> candidate。已应用的 refine.py 不必重复执行。HAIR_L03 可以指向冻结的 fusion/r14-l03；Three.js 和原生数据来自该基线，运行时不依赖外部 CDN。浏览器测试依赖 Playwright 1.55.1 / Chromium。
+
+XPBD 数学参考：Macklin、Mueller、Chentanez，2016，https://matthias-research.github.io/pages/publications/XPBD.pdf 。此处自行实现 JavaScript 约束，没有复制论文图像。
+TressFX 架构参考：https://github.com/GPUOpen-Effects/TressFX 。本版未直接移植其引擎或资产。
+层级发型参考：https://research.lvdi.wang/publications/hairsynthesis/index.html 。不是现成单图重建引擎。
+SurfaceQuery.mjs 复用原 L03 的 TeacherGroomBinding.js 中有限的原生三角面查询部分，没有导入老师的发型曲线。Three.js、GNM 等原始许可保留在 site/licenses；既有模型并不因改参数而变成新增自主资产。
