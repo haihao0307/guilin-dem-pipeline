@@ -11,3 +11,7 @@
 本轮未新增发型、眉毛，也不是影视级完成品。手机测试限视口，不是实机。原生待机按需，头型修改会暂停待机以避免交互中混入动作；动态组合以PUBLIC_QA为准。
 
 交付状态及固定网址见DELIVERY.json；无成功公网收据时交付未完成。
+
+固定公网候选：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/076efd87f2909b4354c25c1db45f7e1551e35533/kaopu-unified-human-workbench/human-integrated-r06/preview.html
+
+完整运行与测试证据：38394820894；检查数量 86。不是用户视觉已验收。
