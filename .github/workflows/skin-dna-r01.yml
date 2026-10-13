@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build-review:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       DIR: kaopu-unified-human-workbench/skin-dna-r01
       NODE_PATH: /tmp/skin-dna-node/node_modules
@@ -34,7 +34,9 @@ jobs:
           node /tmp/skin-dna-node/node_modules/playwright/cli.js install --with-deps chromium
       - name: Build copied R04 and verify numerical profiles
         run: |
+          set -euo pipefail
           mkdir -p skin-dna-evidence
+          node "$DIR/refine.cjs"
           node "$DIR/test.mjs" | tee skin-dna-evidence/unit.log
           node "$DIR/build.cjs" 2>&1 | tee skin-dna-evidence/build.log
       - name: Render actual local candidate
@@ -42,6 +44,12 @@ jobs:
           QA_OUT: skin-dna-evidence/smoke
           SMOKE_ONLY: '1'
         run: node "$DIR/verify.cjs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-dna-early-${{ github.run_number }}
+          retention-days: 14
+          path: skin-dna-evidence
       - name: Publish build only to this isolated branch
         run: |
           test "$GITHUB_REF_NAME" = feature/skin-dna-r01-audit-20261013
@@ -49,7 +57,7 @@ jobs:
           git config user.name 'KAOPU Skin Review'
           git config user.email 'actions@users.noreply.github.com'
           git add "$DIR"
-          git commit -m "build(skin-dna): immutable candidate [skip ci]"
+          git commit -m "build(skin-dna): immutable refined candidate [skip ci]"
           git push origin HEAD:refs/heads/feature/skin-dna-r01-audit-20261013
           BUILD_SHA=$(git rev-parse HEAD)
           echo "BUILD_SHA=$BUILD_SHA" >> "$GITHUB_ENV"
