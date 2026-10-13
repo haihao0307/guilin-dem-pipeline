@@ -171,5 +171,45 @@
     "physicalIPhoneFullStartupAfterFix": "pending device confirmation",
     "publicVerificationAtManifestCreation": "pending deployment",
     "rollbackCommit": "8c7a24996fa772a26fe08a70c3dc770a26fbae90"
+  },
+  "startupGuard5": {
+    "qa": {
+      "commit": "bd20f16d2f803d3e55e12886b435494a11fafb73",
+      "run": 38325604843,
+      "conclusion": "success",
+      "jobs": {
+        "appleWebkit": 115063428363,
+        "linuxWebkit": 115063427994,
+        "linuxChromium": 115063428305
+      },
+      "unitTests": 20,
+      "realIPhone": false,
+      "caseCountPerBrowser": 5,
+      "coverage": [
+        "actual unchanged native startup and four perspective views",
+        "hair and eye toggle",
+        "real WEBGL_lose_context after stable display stops visibly",
+        "interrupted parent reload blocks before native engine restart",
+        "explicit single-use manual retry with intentional network failure",
+        "same parent with new native document fails visibly",
+        "loading and displaying interrupted reloads (control-plane fixtures)",
+        "obsolete or incorrect tokens/source ignored",
+        "stage regression and late ready cannot revive failure",
+        "local diagnostic download",
+        "zero observed non-GET/HEAD network requests"
+      ]
+    },
+    "sourceRootCause": "not yet established for the physical iPhone restart",
+    "codeFindings": [
+      "no automatic reload caller",
+      "prior progress could regress",
+      "WindowProxy alone could not identify a recreated native document"
+    ],
+    "modelAppearanceAlgorithmChanged": false,
+    "automaticTelemetry": false,
+    "samePreview": true,
+    "rollback": "e394e54f8f17159dc69bcf65bab557b1208790b6",
+    "publicVerification": "pending",
+    "physicalIPhoneFirstFrameResolved": false
   }
 }

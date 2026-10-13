@@ -24,3 +24,14 @@ The reference is byte-identical to the existing public program output captured i
 Exact iPhone output repair (device check4): the physical device diagnostic reported one head coordinate differing by2 FP32 ULP, maximum2.842170943040401e-14metres, zero body differences, with archive/state/topology/source/reference checks true. Independently changing only the retained reference vertex19758.x bit pattern0x340e82f8 to0x340e82fa reconstructs the reported complete305004-byte SHA256 exactly:0ef2fa104bd5ccbbe9ea88558a54723acaf455d555e4a72a1d204109d4964ff8. The opposite2-ULP direction does not match. See IPHONE-EXACT-OUTPUT-EVIDENCE.json.
 
 The lock admits this third exact complete output while preserving the original and macOS outputs. There is no general2-ULP tolerance, no position rewriting and no face/hair/eye algorithm or parameter change. Unobserved nearby bit patterns, another changed coordinate, wrong state, wrong archive and non-finite positions remain rejected. All loading entry module URLs were versioned for the changed lock. Physical iPhone end-to-end startup after publication still needs actual device confirmation; the reconstructed-snapshot browser test is labelled as such and does not substitute for it. The previous diagnostic release passed public QA38314159350 in all three browsers.
+
+
+## R54 启动诊断5：防重复启动与本机证据
+
+真实用户设备报告在4/5→5/5后回到初始加载。源码没有自动reload调用；该现象尚未证明是内存终止或显卡驱动故障。本版为一次父启动分配boot token，每个原生iframe文档分配独立document token；第二文档、阶段回退、旧消息与失败后的ready不能继续启动。进度统一同步写入同源父页，避免异步旧进度制造假回退。每个原生文档的引擎启动和mount均只有一个Promise。
+
+sessionStorage只保留有界的本机启动记录。未记录稳定完成的启动再次进入时，在载入原生引擎前停住，用户可以复制/下载完整记录或手动重试一次。储存不可用会明确记录，不能保证跨刷新保护。WebGL contextlost/contextcreationerror被尽早监听并可见停止，不自动恢复。没有自动上传、遥测或参考照片。
+
+绘制前后同步记录画布/DPR、Three资源计数、唯一几何数组字节、阴影尺寸和程序数量。记录不等于实际GPU/进程内存，也不证明render返回时GPU已完成。桌面WebKit实测：552×411绘图缓冲、renderer DPR1.5、22几何、15程序、118058796字节几何数组、4096²阴影；这些值不能拿来断定iPhone的OOM。
+
+固定R52输入/输出白名单、所有模型/发型/眼表算法和最终外观参数均保持。真实浏览器QA 38325604843 三项通过，20项纯生命周期回归通过；正常原生画面与可控故障/重启案例分别记录。控制面用例没有加载模型，未当成三维渲染证据。本版尚未证实解决用户iPhone的实际首帧失败，也不代表肖像或毛发质量验收。
