@@ -29,6 +29,7 @@ jobs:
           /tmp/f02-tools/node_modules/.bin/playwright install --with-deps chromium
       - name: Build same native head; no reference-image upload
         run: |
+          rm -rf "$P/evidence/candidate" "$P/evidence/public"
           python "$P/build.py"
           node "$P/tests/core.mjs"
           git fetch --depth=1 origin 4a745de3d7818df8c1ee8e8f083d91956275152a
@@ -43,21 +44,20 @@ jobs:
           git config user.name 'KAOPU Photo Scalp Verification'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add -f "$P/src/LegacyFoundation.mjs" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
-          git commit -m 'build(hair-f02): exact native scalp correction with candidate browser evidence'
+          git commit -m 'build(hair-f02): exact native scalp and host-compatible boot data with browser evidence'
           git push origin HEAD:refs/heads/fix/hair-f02-photo-scalp-20261013
           echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
       - name: Exact public source availability
         run: |
           python - <<'PY'
-          import os,time,urllib.request,hashlib
+          import os,time,urllib.request
           from pathlib import Path
           expected=(Path(os.environ['P'])/'preview.html').read_bytes()
           u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['SOURCE_BUILD']+'/'+os.environ['P']+'/preview.html'
           for i in range(12):
               try:
-                  b=urllib.request.urlopen(u,timeout=20).read()
-                  if b==expected:break
+                  if urllib.request.urlopen(u,timeout=20).read()==expected:break
               except Exception:pass
               time.sleep(3)
           else:raise RuntimeError('Fixed public source unavailable')
@@ -75,7 +75,7 @@ jobs:
           (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
           PY
           git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
-          git commit -m 'test(hair-f02): verified immutable public WebGL coverage and interaction'
+          git commit -m 'test(hair-f02): all public WebGL coverage and host compatibility checks passed'
           git push origin HEAD:refs/heads/fix/hair-f02-photo-scalp-20261013
       - uses: actions/upload-artifact@v4
         if: always()
