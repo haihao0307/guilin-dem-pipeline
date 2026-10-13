@@ -15,7 +15,7 @@ vec3 restYarn(float t,float lane,float carrier){if(uKnit>.5){float u=fract(t),a=
  float crossPitch=uKind<.5?uWeftPitch:uPitch,q=t/crossPitch,a=floor(q-.5),f=fract(q-.5);f=f*f*(3.-2.*f);float aa=uKind<.5?draft(lane,a):-draft(a,lane),bb=uKind<.5?draft(lane,a+1.):-draft(a+1.,lane);
  // At subpixel distance the closed tubes retain their pitch and width while
  // the crimp is low-pass filtered; microscope LOD restores the crossing wave.
- float filter=uLOD<.5?.18:1.;float z=mix(aa,bb,f)*uThickness*.265*filter+(uLOD<.5?(uKind<.5?.13:-.13)*uThickness:0.);
+ float crimpFilter=uLOD<.5?.18:1.;float z=mix(aa,bb,f)*uThickness*.265*crimpFilter+(uLOD<.5?(uKind<.5?.13:-.13)*uThickness:0.);
  return uKind<.5?vec3((lane+.5)*uPitch,t,z):vec3(t,(lane+.5)*uWeftPitch,z);}
 void solidVertex(out vec3 P,out vec3 NN){float t=mix(yarnInterval.x,yarnInterval.y,tubeCoordinate.x),lane=yarnInterval.z,carrier=yarnInterval.w,theta=tubeCoordinate.y,ply=tubeCoordinate.z;float eps=uKnit>.5?.0005:.008;
  vec3 q=restYarn(t,lane,carrier),N,U,V;surfaceFrame(q.xy,P,N,U,V);vec3 dq=(restYarn(t+eps,lane,carrier)-restYarn(t-eps,lane,carrier))/(2.*eps),T=normalize(U*dq.x+V*dq.y+N*dq.z*.001),B=normalize(cross(T,N)+vec3(1e-12)),W=normalize(cross(B,T));P+=N*(uOffset+q.z)*.001;
