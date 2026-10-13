@@ -1,3 +1,17 @@
+# R03f public preview, 2026-10-14
+
+This release exposes the existing candidate for direct inspection and ongoing map integration. It does not wait for final artistic acceptance. The source geometry, inventory, machinery, renderer, all six material mothers, and latest bounded counter parameters remain exactly as frozen at `5e139ef061cb2f6ed739536f2e53342a2c71c924`.
+
+Public-view changes only: front street opening, ordinary camera deep links, default 960 × 640 output and 720 × 480 / 480 × 320 quality choices. Each complete view is computed on demand; this is not a claim of realtime camera FPS. The page requires a browser/device with WebGPU.
+
+Verified: 128 Node tests, 49 source contracts, 18 interior contracts. Prior spatial GPU result: 00911ac9, seven 480 × 320 views. Prior latest material result: 5e139ef0, two baseline/matched pairs. Full-resolution public output and phone performance are not yet independently certified. Wood remains dark/flat in places, lighting and real-person handover are unfinished.
+
+The independent scene remains the canonical source for later changes. Map placement is a separately labelled candidate and must not pretend that the precise historic site, interiors or dynamic machinery are fully integrated. Original R02/R03e paths are preserved. No private reference photos or restricted reference derivatives are included.
+
+The remainder below is the dated development history and may describe gates that preceded this public-candidate request.
+
+---
+
 # Bureau R03f: reference-led public service hall candidate
 
 Local, independent candidate based on R03e commit `c38e0018aaa58c280ded445acf6485404301ff65`.
