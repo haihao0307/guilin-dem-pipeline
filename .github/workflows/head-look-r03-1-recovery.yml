@@ -22,16 +22,17 @@ jobs:
         with: {node-version: 22}
       - run: npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.58.2
       - run: npx playwright install --with-deps chromium
-      - name: Recover immutable readable source in an isolated new directory
+      - name: Recover immutable readable source and exact old/new lip support
         run: |
           echo "TRIGGER_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           git fetch --depth=1 origin 7dc53a7812d1edca0473fa12b848a919448c8ad4
           node kaopu-unified-human-workbench/head-look-r03-1-recovery/Recover.cjs
+          node kaopu-unified-human-workbench/head-look-r03-1-recovery/ScopeFix.cjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/head-look-r03-1-recovery
           if ! git diff --cached --quiet; then
-            git commit -m 'fix(head-look-r03.1): readable local-feature recovery and camera-only state guards'
+            git commit -m 'fix(head-look-r03.1): preserve native state and trace original/revised lip feather support'
             git push origin HEAD:fix/head-look-r03-1-recovery-20261013
           fi
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
@@ -42,22 +43,19 @@ jobs:
           node kaopu-unified-human-workbench/head-look-r03-1-recovery/test.mjs | tee local-r03-1-evidence/unit.txt
           node kaopu-unified-human-workbench/human-integrated-r03/test.mjs | tee local-r03-1-evidence/retained-unit.txt
           node kaopu-unified-human-workbench/head-look-r03-1-recovery/build.cjs
-      - name: Real local browser smoke and trusted pointer regression
-        env: {QA_OUT: local-r03-1-evidence/smoke, SMOKE_ONLY: '1'}
-        run: node kaopu-unified-human-workbench/head-look-r03-1-recovery/verify.cjs
-      - name: Publish separate immutable candidate; no merge or old-page replacement
+      - name: Publish separate immutable candidate; no delivery claim until public tests pass
         run: |
           git add kaopu-unified-human-workbench/head-look-r03-1-recovery/preview.html kaopu-unified-human-workbench/head-look-r03-1-recovery/BUILD.json
           if ! git diff --cached --quiet; then
-            git commit -m 'build(head-look-r03.1): retained native skin plus local lips eyes ears and calibrated light'
+            git commit -m 'build(head-look-r03.1): exact original and revised local-feature support'
             git push origin HEAD:fix/head-look-r03-1-recovery-20261013
           fi
           echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Exact public browser verification with protected pixels and real controls
+      - name: Exact public browser superset - smoke, strict protected pixels, controls and archives
         env: {QA_OUT: local-r03-1-evidence/public}
         run: |
           export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/head-look-r03-1-recovery/preview.html"
-          node kaopu-unified-human-workbench/head-look-r03-1-recovery/verify.cjs
+          timeout --signal=TERM --kill-after=15s 35m node kaopu-unified-human-workbench/head-look-r03-1-recovery/verify.cjs
       - name: Permanent source, public QA and actual rendered evidence
         run: |
           python - <<'PY'
