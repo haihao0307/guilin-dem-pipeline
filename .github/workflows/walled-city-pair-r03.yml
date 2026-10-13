@@ -6,6 +6,7 @@ permissions:
   contents: read
 jobs:
   pair-perspective-review:
+    if: ${{ !contains(github.event.head_commit.message, '[city-dark-probe]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +37,7 @@ jobs:
           name: walled-city-r04-smoke-${{ matrix.view }}-${{ github.sha }}
           path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke/
           retention-days: 7
+
       - name: Render complete requested perspective frame
         timeout-minutes: 100
         run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --init-timeout-ms 300000 --render-timeout-ms 5400000 --out whole-frontage-r04/qa/ci-${{ matrix.view }}/full
@@ -44,4 +46,30 @@ jobs:
         with:
           name: walled-city-r04-${{ matrix.view }}-${{ github.sha }}
           path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/
+          retention-days: 7
+
+  frozen-dark-shape-probe:
+    if: ${{ contains(github.event.head_commit.message, '[city-dark-probe]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03
+      - name: Install official pinned Playwright
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Verify frozen diagnostic and hard budget
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/inspect-dark-shapes.test.cjs
+      - name: Inspect two explicitly selected native tiles
+        timeout-minutes: 6
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/inspect-dark-shapes.cjs --tile 264,108 --tile 165,145 --timeout-ms 300000 --out qa/dark-shapes-ci
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: walled-city-dark-shape-probe-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/dark-shapes-ci/
           retention-days: 7
