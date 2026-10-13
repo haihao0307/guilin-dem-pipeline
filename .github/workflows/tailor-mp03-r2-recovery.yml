@@ -1,0 +1,41 @@
+name: MP03 R2 recovery audit
+on:
+  push:
+    branches: [fix/tailor-mp03-r2-recovery-20261013]
+    paths: ['.github/workflows/tailor-mp03-r2-recovery.yml', 'kaopu-tailor-workbench/material-products/r03-r2/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mp03-r2-recovery
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover original source and data without altering frozen versions
+        run: |
+          python kaopu-tailor-workbench/material-products/r03/bootstrap.py
+          mkdir -p /tmp/mp03-recovery
+          cp -a kaopu-tailor-workbench/material-products/r03 /tmp/mp03-recovery/r03
+          cp -a kaopu-tailor-workbench/material-products/r02 /tmp/mp03-recovery/r02 || true
+          printf '%s\n' "$GITHUB_SHA" > /tmp/mp03-recovery/SOURCE_COMMIT.txt
+          node kaopu-tailor-workbench/material-products/r03/test-physics.mjs
+          cp kaopu-tailor-workbench/material-products/r03/PHYSICS_REPORT.json /tmp/mp03-recovery/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-r2-recovery-source
+          path: /tmp/mp03-recovery
+          retention-days: 7
