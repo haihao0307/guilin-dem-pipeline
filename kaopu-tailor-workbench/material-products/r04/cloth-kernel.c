@@ -26,3 +26,22 @@ __attribute__((export_name("body_project"))) int body_project(double*p,double*w,
  return contacts;}
 __attribute__((export_name("pair_project"))) int pair_project(double*p,double*w,int n,double*P,double*W,double*N,int*F,double*B,int*O,int*cache,double gap,int refresh,int oneWay){int count=0;double q[7];for(int i=0;i<n;i++){if(!w[i])continue;int j=i*3;double x=p[j],y=p[j+1],z=p[j+2];if(x<B[4]-.04||x>B[7]+.04||y<B[5]-.04||y>B[8]+.04||z<B[6]-.04||z>B[9]+.04)continue;int f=cache[i];if(refresh||f<0)f=cache[i]=nearest(P,F,B,O,x,y,z,.045,f,q);else closest(P,F,f,x,y,z,q);if(f<0||q[0]>.045*.045)continue;int a=F[f]*3,b=F[f+1]*3,c=F[f+2]*3;double ux=P[b]-P[a],uy=P[b+1]-P[a+1],uz=P[b+2]-P[a+2],vx=P[c]-P[a],vy=P[c+1]-P[a+1],vz=P[c+2]-P[a+2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,L=len3(nx,ny,nz);if(L<1e-12)continue;nx/=L;ny/=L;nz/=L;double d=(x-q[1])*nx+(y-q[2])*ny+(z-q[3])*nz;if(d>=gap||d<-.035||q[0]-d*d>gap*gap)continue;double ws=w[i];if(!oneWay)for(int k=0;k<3;k++)ws+=sq(q[k+4])*W[F[f+k]];double dl=mn(.012,gap-d)/ws;p[j]+=nx*dl*w[i];p[j+1]+=ny*dl*w[i];p[j+2]+=nz*dl*w[i];if(!oneWay)for(int k=0;k<3;k++){int id=F[f+k];double t=dl*q[k+4]*W[id];P[id*3]-=nx*t;P[id*3+1]-=ny*t;P[id*3+2]-=nz*t;}count++;}return count;}
 __attribute__((export_name("query_mesh"))) void query_mesh(double*p,double*N,int*F,double*B,int*O,double x,double y,double z,double*q){int cache=-1;mesh_sample(p,N,F,B,O,x,y,z,&cache,1,q);}
+
+
+/* MP04.2 interior garment contact, not just vertex-versus-surface distances. */
+__attribute__((export_name("pair_surface"))) int pair_surface(double*p,double*w,int*faces,int nf,double*edges,int ne,double*P,double*W,double*N,int*F,double*B,int*O,int*cache,double gap,int refresh,int oneWay){
+ int count=0;double q[7];
+ for(int mode=0;mode<2;mode++)for(int i=0;i<(mode?nf:ne);i++){
+  int ids[3],m=mode?3:2;if(mode){ids[0]=faces[i*3];ids[1]=faces[i*3+1];ids[2]=faces[i*3+2];}else{ids[0]=(int)edges[i*4];ids[1]=(int)edges[i*4+1];}
+  double x=0,y=0,z=0,wa=0;for(int k=0;k<m;k++){x+=p[ids[k]*3]/m;y+=p[ids[k]*3+1]/m;z+=p[ids[k]*3+2]/m;wa+=w[ids[k]]/m/m;}
+  if(!wa||x<B[4]-.04||x>B[7]+.04||y<B[5]-.04||y>B[8]+.04||z<B[6]-.04||z>B[9]+.04)continue;
+  int ci=(mode?ne:0)+i,f=cache[ci];if(refresh||f<0)f=cache[ci]=nearest(P,F,B,O,x,y,z,.045,f,q);else closest(P,F,f,x,y,z,q);
+  if(f<0||q[0]>.045*.045)continue;
+  int a=F[f]*3,b=F[f+1]*3,c=F[f+2]*3;double ux=P[b]-P[a],uy=P[b+1]-P[a+1],uz=P[b+2]-P[a+2],vx=P[c]-P[a],vy=P[c+1]-P[a+1],vz=P[c+2]-P[a+2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,L=len3(nx,ny,nz);if(L<1e-12)continue;
+  nx/=L;ny/=L;nz/=L;double d=(x-q[1])*nx+(y-q[2])*ny+(z-q[3])*nz;if(d>=gap||d<-.035||q[0]-d*d>gap*gap)continue;
+  double ws=wa;if(!oneWay)for(int k=0;k<3;k++)ws+=sq(q[k+4])*W[F[f+k]];
+  double dl=mn(.012,gap-d)/ws;for(int k=0;k<m;k++){double t=w[ids[k]]*dl/m;p[ids[k]*3]+=nx*t;p[ids[k]*3+1]+=ny*t;p[ids[k]*3+2]+=nz*t;}
+  if(!oneWay)for(int k=0;k<3;k++){int id=F[f+k];double t=dl*q[k+4]*W[id];P[id*3]-=nx*t;P[id*3+1]-=ny*t;P[id*3+2]-=nz*t;}count++;
+ }
+ return count;
+}
