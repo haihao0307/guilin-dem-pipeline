@@ -14,7 +14,11 @@ esbuild=os.environ.get('ESBUILD','esbuild')
 for entry,out in [('Worker.mjs','worker.js'),('App.mjs','app.js')]:subprocess.run([esbuild,str(build/entry),'--bundle','--format=iife','--minify','--legal-comments=inline','--outfile='+str(build/out)],check=True)
 head=(old/'site/head.json.gz').read_bytes();source=os.environ.get('GITHUB_SHA','local-F02')
 boot={'version':'F02','source':source,'headGz':base64.b64encode(head).decode(),'headSHA':manifest['headSHA256'],'headCompressedSHA':sha(head),'worker':(build/'worker.js').read_text()}
-html=(p/'index.template.html').read_text().replace('__BOOT__',json.dumps(boot,ensure_ascii=False).replace('<','\\u003c')).replace('__APP__',(build/'app.js').read_text().replace('</script','<\\/script'))
+# HTMLPreview replays script tags as JavaScript even for application/json.
+# A hidden text container avoids executing data; JSON-escape '<' and '&' so
+# the HTML parser cannot reinterpret the payload. Runtime logic is unchanged.
+template=(p/'index.template.html').read_text().replace('<script type="application/json" id="boot">','<div id="boot" hidden>').replace('__BOOT__</script>','__BOOT__</div>')
+html=template.replace('__BOOT__',json.dumps(boot,ensure_ascii=False).replace('<','\\u003c').replace('&','\\u0026')).replace('__APP__',(build/'app.js').read_text().replace('</script','<\\/script'))
 (site/'index.html').write_text(html);shutil.copy2(site/'index.html',p/'preview.html')
 shutil.copytree(old/'site/licenses',site/'licenses',dirs_exist_ok=True)
 sources={str(f.relative_to(p)):sha(f.read_bytes()) for f in sorted((p/'src').glob('*.mjs'))}
