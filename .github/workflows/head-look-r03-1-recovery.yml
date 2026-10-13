@@ -1,0 +1,89 @@
+name: Head Look R03.1 recovery and exact public verification
+on:
+  push:
+    branches: [fix/head-look-r03-1-recovery-20261013]
+    paths: ['kaopu-unified-human-workbench/head-look-r03-1-recovery/**', '.github/workflows/head-look-r03-1-recovery.yml']
+permissions:
+  contents: write
+concurrency:
+  group: head-look-r03-1-recovery
+  cancel-in-progress: false
+jobs:
+  recover-build-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Recover immutable readable source and exact old/new lip support
+        run: |
+          echo "TRIGGER_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git fetch --depth=1 origin 7dc53a7812d1edca0473fa12b848a919448c8ad4
+          node kaopu-unified-human-workbench/head-look-r03-1-recovery/Recover.cjs
+          node kaopu-unified-human-workbench/head-look-r03-1-recovery/ScopeFix.cjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/head-look-r03-1-recovery
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(head-look-r03.1): preserve native state and trace original/revised lip feather support'
+            git push origin HEAD:fix/head-look-r03-1-recovery-20261013
+          fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Unit and retained-host compatibility verification
+        run: |
+          set -o pipefail
+          mkdir -p local-r03-1-evidence
+          node kaopu-unified-human-workbench/head-look-r03-1-recovery/test.mjs | tee local-r03-1-evidence/unit.txt
+          node kaopu-unified-human-workbench/human-integrated-r03/test.mjs | tee local-r03-1-evidence/retained-unit.txt
+          node kaopu-unified-human-workbench/head-look-r03-1-recovery/build.cjs
+      - name: Publish separate immutable candidate; no delivery claim until public tests pass
+        run: |
+          git add kaopu-unified-human-workbench/head-look-r03-1-recovery/preview.html kaopu-unified-human-workbench/head-look-r03-1-recovery/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(head-look-r03.1): exact original and revised local-feature support'
+            git push origin HEAD:fix/head-look-r03-1-recovery-20261013
+          fi
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Exact public browser superset - smoke, strict protected pixels, controls and archives
+        env: {QA_OUT: local-r03-1-evidence/public}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/head-look-r03-1-recovery/preview.html"
+          timeout --signal=TERM --kill-after=15s 35m node kaopu-unified-human-workbench/head-look-r03-1-recovery/verify.cjs
+      - name: Permanent source, public QA and actual rendered evidence
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,re,subprocess,hashlib,shutil
+          p=Path('kaopu-unified-human-workbench/head-look-r03-1-recovery')
+          q=json.loads(Path('local-r03-1-evidence/public/qa.json').read_text())
+          b=json.loads((p/'BUILD.json').read_text())
+          assert q['completed'] and not any(q[k] for k in ['pageErrors','consoleErrors','failedRequests','referenceRequests'])
+          changed=subprocess.check_output(['git','diff','--name-only','7dc53a7812d1edca0473fa12b848a919448c8ad4','HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') or x=='.github/workflows/head-look-r03-1-recovery.yml' for x in changed),changed
+          count=int(re.search(r'LOCAL_FEATURE_UNIT_CHECKS=(\d+)',Path('local-r03-1-evidence/unit.txt').read_text()).group(1))
+          receipt={'version':'HUMAN-LOCAL-FEATURES-R03.1','triggerCommit':os.environ['TRIGGER_SHA'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'recoveredFrom':'7dc53a7812d1edca0473fa12b848a919448c8ad4','publicURL':q['url'],'previewSHA256':hashlib.sha256((p/'preview.html').read_bytes()).hexdigest(),'previewBytes':(p/'preview.html').stat().st_size,'run':os.environ['GITHUB_RUN_ID'],'unitChecks':count,'publicChecks':len(q['tests']),'screenshots':len(q['screens']),'publicBrowserVerified':True,'oldSourcesChanged':False,'originalOverallSkin':True,'rejectedWholeFaceR01Imported':False,'userVisualAccepted':False,'photorealisticEquivalence':False,'realPhoneTested':False,'consumerGPUFPSCertified':False,'locality':q.get('locality'),'limitations':b['limitations']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          shutil.copytree('local-r03-1-evidence/public',p/'qa/public',dirs_exist_ok=True)
+          readme=(p/'README.md').read_text().replace('Build/public verification is pending until DELIVERY.json records success.','Exact public browser verification passed; see DELIVERY.json, PUBLIC_QA.json and qa/public. Visual acceptance remains with the user.')
+          readme+='\n## Fixed verified entry\n\n'+q['url']+'\n\nSource '+os.environ['SOURCE_SHA']+'\n\nBuild '+os.environ['BUILD_SHA']+'\n'
+          (p/'README.md').write_text(readme)
+          PY
+          git add kaopu-unified-human-workbench/head-look-r03-1-recovery
+          git commit -m 'docs(head-look-r03.1): permanent public controls, protected skin and rendered evidence'
+          git push origin HEAD:fix/head-look-r03-1-recovery-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: head-look-r03-1-recovery-${{ github.run_number }}
+          path: |
+            local-r03-1-evidence/
+            kaopu-unified-human-workbench/head-look-r03-1-recovery/
+          retention-days: 14
