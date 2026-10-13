@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict');
 exports.adapt=(s,rel,records)=>{const edit=(a,b,n=1)=>{assert.equal(s.split(a).length,n+1,'R05 exact source anchor '+rel+' '+a.slice(0,80));s=s.split(a).join(b);records.push({path:rel,kind:'lossless-demand-paging',anchor:a.slice(0,150)});};
+ if(rel.endsWith('/IdleRuntime.mjs'))edit('this.skin=installIdleSkin(viewer,this.settings);','this.skin=viewer.r05IdleSkin||installIdleSkin(viewer,this.settings);');
  if(rel.endsWith('/AnnyModel.js')){
  edit('const restVertices = new Float64Array(a.template_vertices);',"const cached=this.__restCache?.get(Array.from(baseCoefficients).join(','));\n    const restVertices = new Float64Array(cached?.v || a.template_vertices);");
  edit('const restBoneHeads = new Float64Array(a.template_bone_heads);','const restBoneHeads = new Float64Array(cached?.h || a.template_bone_heads);');
