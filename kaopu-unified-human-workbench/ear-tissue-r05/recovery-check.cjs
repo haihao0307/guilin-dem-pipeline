@@ -9,9 +9,15 @@ try{
  check(sha(fs.readFileSync('/tmp/ear-r05-frozen-public.html'))===manifest.previewSHA256,'fresh raw public HTML matches frozen manifest byte for byte');
  for(const source of manifest.sources)check(sha(fs.readFileSync(path.join(repo,source.path)))===source.sha256,'source integrity: '+source.path);
  check(sha(fs.readFileSync(path.join(dir,'LipMaterial.mjs')))===sha(fs.readFileSync(path.join(dir,'../ear-root-r04/LipMaterial.mjs'))),'R04 lip material preserved byte for byte');
- const files=cp.execFileSync('git',['diff','--name-only',base,'HEAD'],{cwd:repo,encoding:'utf8'}).trim().split('\n').filter(Boolean);
- check(files.every(p=>p.startsWith('kaopu-unified-human-workbench/ear-tissue-r05/')||p==='.github/workflows/ear-r05-tissue.yml'||p==='.github/workflows/ear-r05-recovery.yml'),'changed paths isolated; R04, earlier pages, eyes, lips, rig and body sources untouched');
- report.changedPaths=files;report.previewSHA256=manifest.previewSHA256;report.previewBytes=manifest.previewBytes;
+ const files=cp.execFileSync('git',['diff','--name-only','-z',base,'HEAD'],{cwd:repo,encoding:'utf8'}).split('\0').filter(Boolean);
+ report.changedPaths=files;
+ // The first recovery pass omitted the pre-existing read-only R05 asset audit.
+ // Its exact PR patch was inspected: it only downloads and verifies an existing
+ // immutable runtime asset; it does not edit source or deploy anything.
+ const workflows=new Set(['.github/workflows/ear-r05-tissue.yml','.github/workflows/ear-r05-recovery.yml','.github/workflows/ear-r05-asset-audit.yml']);
+ report.unexpectedPaths=files.filter(p=>!p.startsWith('kaopu-unified-human-workbench/ear-tissue-r05/')&&!workflows.has(p));
+ check(report.unexpectedPaths.length===0,'changed paths isolated; R04, earlier pages, eyes, lips, rig and body sources untouched');
+ report.previewSHA256=manifest.previewSHA256;report.previewBytes=manifest.previewBytes;
  const browser=JSON.parse(fs.readFileSync('ear-r05-recovery/public/report.json','utf8'));
  check(browser.pass===true,'fresh fixed-public browser tests pass');
  check(browser.url.includes('/'+build+'/kaopu-unified-human-workbench/ear-tissue-r05/preview.html'),'browser tested the exact frozen build, not a branch URL');
