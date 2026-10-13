@@ -105,14 +105,23 @@
 </main>
 <script>
 (function(){
- var send=function(type,message){parent.postMessage({type:type,message:message},location.origin);};
- send('r54-progress','1/5 正在加载原生引擎与外观模块');
- window.addEventListener('error',function(e){if(e.message)send('r54-error','原生页面错误：'+e.message);});
- window.addEventListener('unhandledrejection',function(e){send('r54-error','原生页面错误：'+String(e.reason&&e.reason.message||e.reason));});
+ var bootToken=new URL(location.href).searchParams.get('boot'),documentToken=Date.now()+'-'+Math.random().toString(36).slice(2);
+ window.r54Identity={bootToken:bootToken,documentToken:documentToken};
+ window.r54NativeAccepted=!!parent.r54RegisterNative&&parent.r54RegisterNative({bootToken:bootToken,documentToken:documentToken,timeOrigin:performance.timeOrigin});
+ window.r54Send=function(type,payload){if(!window.r54NativeAccepted)return;if(type==='r54-progress')return parent.r54Progress(Object.assign({bootToken:bootToken,documentToken:documentToken},payload||{}));parent.postMessage(Object.assign({type:type,bootToken:bootToken,documentToken:documentToken},payload||{}),location.origin);};
+ window.r54Trace=function(kind,payload){return parent.r54Checkpoint&&parent.r54Checkpoint({bootToken:bootToken,documentToken:documentToken,kind:kind,payload:payload});};
+ window.r54AssertStartupActive=function(){if(!window.r54NativeAccepted||!parent.r54StartupActive(bootToken,documentToken))throw Error('当前启动已停止，不再继续创建场景');};
+ if(!window.r54NativeAccepted)return;
+ window.r54Send('r54-progress',{message:'1/5 正在加载原生引擎与外观模块'});
+ window.addEventListener('error',function(e){if(e.message)window.r54Send('r54-error',{message:'原生页面错误：'+e.message});});
+ window.addEventListener('unhandledrejection',function(e){window.r54Send('r54-error',{message:'原生页面错误：'+String(e.reason&&e.reason.message||e.reason)});});
+ document.addEventListener('webglcontextlost',function(e){window.r54Trace('webglcontextlost',{statusMessage:String(e.statusMessage||''),canvas:{width:e.target.width,height:e.target.height}});window.r54Send('r54-context-lost',{message:'三维绘图上下文已丢失，已停止启动，没有自动重试。请保留本机启动记录。'});},true);
+ document.addEventListener('webglcontextcreationerror',function(e){window.r54Trace('webglcontextcreationerror',{statusMessage:String(e.statusMessage||'')});window.r54Send('r54-context-lost',{message:'三维绘图上下文未能创建，已停止启动。'});},true);
+ document.addEventListener('webglcontextrestored',function(){window.r54Trace('webglcontextrestored',{automaticResume:false});},true);
 })();
 </script>
 <script type="module">
-const send=(type,message)=>parent.postMessage({type,message},location.origin);
+const send=(type,message)=>window.r54Send(type,{message});
 // Some WebKit network failures leave dynamic import pending. Bound only module
 // downloads; model computation and groom generation have their own progress.
 async function importWithDeadline(url,label){
@@ -124,11 +133,12 @@ async function importWithDeadline(url,label){
   ]);
  }finally{clearTimeout(timer);}
 }
-(async()=>{
+if(window.r54NativeAccepted&&!window.r54NativeStartPromise)window.r54NativeStartPromise=(async()=>{
+ window.r54AssertStartupActive();
  await importWithDeadline(new URL('full/ui/browser-app.mjs?v=entry-r06-20261010',document.baseURI).href,'原生引擎模块');
- send('r54-progress','1/5 正在加载发眼组件');
- const module=await importWithDeadline(new URL('install-preview.mjs?v=r54-device-diagnostic-4',location.href).href,'发眼组件');
- await module.mountPreview();
+ window.r54AssertStartupActive();send('r54-progress','1/5 正在加载发眼组件');
+ const module=await importWithDeadline(new URL('install-preview.mjs?v=r54-startup-guard-5',location.href).href,'发眼组件');
+ window.r54AssertStartupActive();await module.mountPreview();
 })().catch(error=>send('r54-error','启动失败：'+error.message));
 </script>
 </body>

@@ -1,3 +1,4 @@
+import {snapshotStartupResources} from './StartupResources.mjs?v=r54-startup-guard-5';
 import * as THREE from '/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
 import {sha256 as digest,verifyR52Archive,verifyR52Geometry,R52_REFERENCE_SHA} from './FrozenR52Lock.mjs?v=exact-ios-output-3';
 import {attachAppearanceR52} from './base/brow-face-r52/AppearanceR52.mjs';
@@ -7,8 +8,10 @@ import {buildPackedGroomR30} from './legacy-r30/PackedGroomR30.js';
 import {attachPackedGroomR30} from './legacy-r30/InstancedGroomR30.js';
 import {attachR14Coverage} from './hair/R14CoverageLayer.js';
 import {attachNativeEyeSurfaceR54} from './eye/NativeEyeSurfaceR54.mjs';
-const send=(type,p={})=>parent.postMessage({type,...p},location.origin),progress=message=>send('r54-progress',{message});
-export async function mountPreview(){
+const send=(type,p={})=>window.r54Send(type,p),trace=(kind,payload)=>window.r54Trace(kind,payload),progress=message=>{window.r54AssertStartupActive();trace('checkpoint',{message});send('r54-progress',{message});};
+export function mountPreview(){if(window.r54MountPromise)return window.r54MountPromise;window.r54MountPromise=mountOnce();return window.r54MountPromise;}
+async function mountOnce(){
+ window.r54AssertStartupActive();
  const started=performance.now();while(!window.fullCommonWorkbench){if(performance.now()-started>30000)throw Error('原生人物入口未就绪');await new Promise(r=>setTimeout(r,100));}
  const [archive,config]=await Promise.all(['archive-r52.json','views.json'].map(async n=>{const r=await fetch(new URL(n,import.meta.url));if(!r.ok)throw Error('候选配置载入失败');return n==='archive-r52.json'?verifyR52Archive(await r.arrayBuffer()):r.json();}));
  const api=window.fullCommonWorkbench,loadStatus=document.getElementById('load-status'),loadProgress=document.getElementById('load-progress');
@@ -19,18 +22,20 @@ export async function mountPreview(){
  async function checkGeometry(){const positions=api.positions(),state=api.state(),faces=api.faces(),nativeArchive=api.archive();try{return await verifyR52Geometry(positions,state,archive.state);}catch(error){
   // Same-origin parent copies the exact failed snapshot synchronously before any await.
   // Do not depend on completion messages from a renderer iframe after failure.
-  try{parent.r54ReceiveFailure({positions,faces,state,archive,nativeArchive,error:error.message});}catch(diagnosticError){send('r54-error',{message:error.message+'；本机诊断未启动：'+diagnosticError.message});}throw error;
+  try{parent.r54ReceiveFailure({...window.r54Identity,positions,faces,state,archive,nativeArchive,error:error.message});}catch(diagnosticError){send('r54-error',{message:error.message+'；本机诊断未启动：'+diagnosticError.message});}throw error;
  }}
  const frozenGeometry=await checkGeometry();window.r54StartupDiagnostics={faceLock:frozenGeometry};
- const appearance=await attachAppearanceR52(api,{pigmentScale:.55,candidateBrows:true,taper:true});
+ let renderCalls=0,tracing=true;const originalRender=v.render;const tracedRender=function(...args){if(!parent.r54StartupActive(window.r54Identity.bootToken,window.r54Identity.documentToken)&&tracing)return;renderCalls++;if(tracing&&renderCalls<=40)trace('render-submit-before',{sequence:renderCalls,resources:snapshotStartupResources(v)});const result=originalRender.apply(this,args);if(tracing&&renderCalls<=40)trace('render-submit-returned',{sequence:renderCalls,resources:snapshotStartupResources(v),gpuCompletionVerified:false});return result;};v.render=tracedRender;
+ trace('native-loaded',{faceLock:frozenGeometry,resources:snapshotStartupResources(v)});
+ const appearance=await attachAppearanceR52(api,{pigmentScale:.55,candidateBrows:true,taper:true});trace('appearance-attached',{resources:snapshotStartupResources(v)});
  function view(id){const row=config.rows.find(x=>x.id===id)||expected,c=v.camera;if(id==='back'){const top=coverage.report().rootFrame.current.origin;c.clearViewOffset();c.fov=30;c.zoom=1;c.position.set(top[0],top[1]+.04,top[2]-.65);c.up.set(0,1,0);c.lookAt(top[0],top[1]-.03,top[2]);c.updateProjectionMatrix();}else{const s=row.camera,p=s.projection;new THREE.Matrix4().fromArray(s.cameraWorld).decompose(c.position,c.quaternion,c.scale);c.near=s.near;c.far=s.far;c.fov=2*Math.atan(1/p[5])*180/Math.PI;c.zoom=1;c.setViewOffset(797,590,p[8]*797/2,-p[9]*590/2,797,590);c.updateProjectionMatrix();}c.updateMatrixWorld(true);v.orbit.target.set(0,.70,.06);v.orbit.enabled=true;v.render();}
  // Select the same E04 perspective before generating any display-only layer.
  {const s=expected.camera;new THREE.Matrix4().fromArray(s.cameraWorld).decompose(v.camera.position,v.camera.quaternion,v.camera.scale);v.camera.near=s.near;v.camera.far=s.far;v.camera.fov=2*Math.atan(1/s.projection[5])*180/Math.PI;v.camera.setViewOffset(797,590,s.projection[8]*797/2,-s.projection[9]*590/2,797,590);v.camera.updateProjectionMatrix();v.camera.updateMatrixWorld(true);}
  progress('4/5 生成原长发段');const guides=attachGuideStructureR30(api),packed=buildPackedGroomR30(api,guides,{count:8000,matchingRootSupport:false,repairPrefixRoutes:true,meridianStrength:.8,holdLateralThroughNeck:true});const hairPointSHA=await digest(packed.pointData),hairNormalSHA=await digest(packed.normalData);Object.assign(window.r54StartupDiagnostics,{hairPointSHA,hairNormalSHA});if(hairPointSHA!==expected.expectedHairPointSHA256||hairNormalSHA!==expected.expectedHairNormalSHA256)throw Error('原长发绑定与冻结记录不同：'+hairPointSHA+' / '+hairNormalSHA);const longHair=attachPackedGroomR30(api,packed);v.scene.traverse(o=>{if(o.name==='18 colour-coded structural guides (diagnostic thickness)')o.visible=false;});
  const light=await attachObservationLighting(v,{options:expected.light});v.scene.traverse(o=>{if(o.isDirectionalLight&&o.name==='Reference comparison authored key'){o.shadow.mapSize.set(4096,4096);o.shadow.map?.dispose();o.shadow.map=null;o.shadow.needsUpdate=true;}});
- progress('4/5 在当前头皮生成覆盖发束');const coverage=await attachR14Coverage(api,{count:36000,segments:24,recipe:{style:'side-flow'},onProgress:(_stage,fraction)=>progress('4/5 正在生成头发'+(Number.isFinite(fraction)?' '+Math.round(Math.max(0,Math.min(1,fraction))*100)+'%':''))});progress('5/5 编译眼表并检查画面');const eye=attachNativeEyeSurfaceR54(v.skin);view('E04');
+ trace('legacy-hair-attached',{resources:snapshotStartupResources(v)});progress('4/5 在当前头皮生成覆盖发束');const coverage=await attachR14Coverage(api,{count:36000,segments:24,recipe:{style:'side-flow'},cancel:()=>!parent.r54StartupActive(window.r54Identity.bootToken,window.r54Identity.documentToken),onProgress:(_stage,fraction)=>progress('4/5 正在生成头发'+(Number.isFinite(fraction)?' '+Math.round(Math.max(0,Math.min(1,fraction))*100)+'%':''))});const coverageBudget=coverage.report();trace('coverage-attached',{count:coverageBudget.count,segments:coverageBudget.segments,geometryBytes:coverageBudget.geometryBytes,fieldCacheCells:coverageBudget.collision.fieldCacheCells,buildMs:coverageBudget.buildMs,resources:snapshotStartupResources(v)});progress('5/5 编译眼表并检查画面');trace('eye-attach-before',{resources:snapshotStartupResources(v)});const eye=attachNativeEyeSurfaceR54(v.skin);trace('eye-attach-returned',{eye:eye.report(),resources:snapshotStartupResources(v)});trace('final-view-before',{resources:snapshotStartupResources(v)});view('E04');trace('final-view-returned',{eye:eye.report(),resources:snapshotStartupResources(v)});
  const finalGeometry=await checkGeometry();if(finalGeometry.actualSHA!==frozenGeometry.actualSHA)throw Error('外观适配改变了脸型，已停止显示');if(eye.report().compiles<1)throw Error('眼表尚未编译');
  const report=()=>({version:'R54-appearance-preview/1',face:'R52 frozen',facePositionSHA:frozenGeometry.actualSHA,faceLock:frozenGeometry,eye:eye.report(),coverage:coverage.report(),geometryChanged:false,likenessAccepted:false,hairMature:false,physics:false,elapsedMs:performance.now()-started});
- window.r54Preview={view,hair:on=>coverage.setVisible(on),eye:on=>eye.enabled(on),report,dispose(){eye.dispose();coverage.dispose();light.dispose();longHair.dispose();guides.dispose();appearance.dispose();}};
- send('r54-ready',{report:report()});
+ window.r54Preview={view,hair:on=>coverage.setVisible(on),eye:on=>eye.enabled(on),report,dispose(){tracing=false;if(v.render===tracedRender)v.render=originalRender;eye.dispose();coverage.dispose();light.dispose();longHair.dispose();guides.dispose();appearance.dispose();}};
+ trace('startup-verified',{renderCalls,resources:snapshotStartupResources(v)});tracing=false;if(v.render===tracedRender)v.render=originalRender;send('r54-ready',{report:report()});
 }

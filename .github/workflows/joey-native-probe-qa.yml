@@ -11,13 +11,13 @@ concurrency:
 jobs:
   linux:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 14
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium]
+        browser: [chromium, webkit]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -29,16 +29,43 @@ jobs:
           df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify deployed exact iPhone output and unchanged native startup
+      - name: Verify single startup, local interruption record and unchanged native rendering
         env:
-          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-r04-release-hashes.json
+          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
           R54_BROWSER: ${{ matrix.browser }}
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/iphone-output-r04.test.mjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-iphone-output-r04.cjs
+          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup-r05.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r54-diagnostic-linux-${{ matrix.browser }}
-          path: r54-device-diagnostic-*/
+          name: r54-startup-r05-linux-${{ matrix.browser }}
+          path: r54-startup-r05-*/
+          retention-days: 7
+  apple:
+    runs-on: macos-14
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+      - name: Install pinned official package and WebKit
+        timeout-minutes: 5
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
+          echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
+      - name: Verify single startup, local interruption record and unchanged native rendering
+        env:
+          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+          R54_BROWSER: webkit
+        run: |
+          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup-r05.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r54-startup-r05-apple-webkit
+          path: r54-startup-r05-*/
           retention-days: 7
