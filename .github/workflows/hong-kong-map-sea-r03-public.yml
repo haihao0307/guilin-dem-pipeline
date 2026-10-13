@@ -1,4 +1,4 @@
-name: Hong Kong R03 exact public browser verification
+name: Hong Kong R03 modular resource and public browser QA
 on:
   push:
     branches: ['qa/hong-kong-map-sea-r03-public-20261013']
@@ -6,9 +6,9 @@ on:
 permissions:
   contents: read
 jobs:
-  public:
+  candidate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -18,16 +18,39 @@ jobs:
         run: |
           python3 -m pip install playwright==1.57.0 pillow==11.3.0
           python3 -m playwright install --with-deps chromium
-      - name: Verify exact public bytes and desktop/mobile WebGL interaction
-        env:
-          ALLOW_INCOMPLETE_STATION: '1'
+      - name: Verify exact candidate assets and actual browser interaction
         run: |
-          echo "b8ca45c06f7558579a8d35ab692d1ccc3f4a866360fc7d107cfb636bcac08e97  kaopu-geography-workbench/hong-kong-map-sea-r03/index.html" | sha256sum --check
-          python3 kaopu-geography-workbench/hong-kong-map-sea-r03/qa/public_verify.py
+          echo "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117  kaopu-geography-workbench/hong-kong-map-sea-r03/index.html" | sha256sum --check
+          echo "10ed6185af864245d4f865499e58040f8b9e0971d8271e6ec1ce4ee7c8d02e41  kaopu-geography-workbench/hong-kong-map-sea-r03/station-data.js" | sha256sum --check
+          python3 kaopu-geography-workbench/hong-kong-map-sea-r03/qa/browser_check.py
+          python3 kaopu-geography-workbench/hong-kong-map-sea-r03/qa/station_failure_check.py
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: r03-public-${{ github.sha }}
+          name: r03-final-candidate-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.png
+          retention-days: 7
+  public:
+    needs: candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r03
+      - name: Install pinned browser runner
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify both exact public assets and desktop/mobile WebGL interaction
+        run: python3 kaopu-geography-workbench/hong-kong-map-sea-r03/qa/public_verify.py
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: r03-public-final-${{ github.sha }}
           path: |
             kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.json
             kaopu-geography-workbench/hong-kong-map-sea-r03/qa/*.png
