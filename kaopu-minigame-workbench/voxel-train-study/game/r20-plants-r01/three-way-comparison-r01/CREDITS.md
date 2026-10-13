@@ -27,7 +27,7 @@ The old study objects' physical units have not been remeasured. This display is 
 - Original existing native function assembly, with branding and window-front gills.
 - Frozen source commit: 815a68995ae875155cfc59a3623f5ee6155f3841
 - Source: https://github.com/haihao0307/guilin-dem-pipeline/tree/815a68995ae875155cfc59a3623f5ee6155f3841/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-student-r02/native
-- All 46 imported source modules verified against Git blobs. Geometry and materials unchanged; display uses a rigid wrapper only. Source rail datum Z=0 is preserved, including the small flange below rail top.
+- All 48 imported source modules verified against Git blobs. Geometry and materials unchanged; display uses a rigid wrapper only. Source rail datum Z=0 is preserved, including the small flange below rail top.
 - Existing design metres are retained. This comparison does not declare new dimensional approval.
 
 ## Viewer
