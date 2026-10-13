@@ -9,11 +9,11 @@ fn resolveStationState(p:vec3<f32>)->StationState{let repair=repairAt(p);return 
 // never a centered member coordinate. Authored capillary fade is not calibration.
 // Conservation is a material/member property, not a global "make it new" mask.
 // Tower and above-ground main-hall fabric only; platform/ground remain unchanged.
-fn stationHeritageMember(h:HitField)->bool{return h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.||h.seed==174.||(h.seed==191.&&h.id!=17u&&h.id!=3u);}
+fn stationHeritageMember(h:HitField)->bool{return h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.||h.seed==174.||h.seed==175.||(h.seed==191.&&h.id!=17u&&h.id!=3u);}
 fn stationHeritageExposure(h:HitField,p:vec3<f32>)->vec3<f32>{
  // Interior lining is sheltered from facade run-off; handled edges retain wear.
  if(h.seed==174.){return vec3<f32>(0.,.55,1.-smoothstep(1.2,2.,p.y));}
- let tower=h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.;
+ let tower=h.seed==71.||h.seed==171.||h.seed==172.||h.seed==173.||h.seed==175.;
  let q=select(p,p-vec3<f32>(24.,0.,4.),tower);
  let belowCornice=select(12.-q.y,min(abs(q.y-28.60+.22),min(abs(q.y-37.55+.20),abs(q.y-8.10+.20))),tower);
  let sheltered=(1.-smoothstep(.08,.40,abs(belowCornice)))*(1.-smoothstep(.4,1.,abs(q.y-12.))*.1);
@@ -60,10 +60,13 @@ fn stationLampEmission(h:HitField)->f32{return select(0.,2.2,h.id==7u&&h.seed==1
 // constructor inputs instead of flattening every metal to the same green/dielectric.
 fn stationIronRole(h:HitField)->vec4<f32>{let castRole=h.seed==56.||h.seed==38.||h.seed==39.||h.seed==184.;if(castRole){return vec4<f32>(.0953074666309647,.16826940018969075,.13563332965520566,.58);}if(h.seed==188.){return vec4<f32>(.0295568344378088,.05448027644244237,.04091519690685319,.53);}return vec4<f32>(.22696587351009836,.3049873140698863,.26225065752969623,.43);}
 fn stationIronMetalness(h:HitField)->f32{if(h.seed==56.||h.seed==38.||h.seed==39.||h.seed==184.){return .10;}if(h.seed==188.){return .60;}return .40;}
+// New finite diagonal lantern walls use true tangent metres for the unchanged
+// brick mother. Existing members return the exact previous station point.
+fn stationBrickPoint(h:HitField,p:vec3<f32>)->vec3<f32>{if(h.seed==175.){return vec3<f32>(h.q.x,p.y,h.q.z);}return p;}
 fn evaluateStationGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGeometry{
  let st=stationMemberState(h,p,state);
  var g=StationGeometry(h.d,0.,0.,1.);
- if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let native=kpBrickBaseDistance(q,seed,variant,.42);let macroSignal=native-kpBrickAnalyticBoundDistance(q);g.loss=clamp(st.retained*st.wet*(.0004+max(0.,macroSignal)*.6),0.,.0016);let mortarDistance=h.d+.006;let brickDistance=native+g.loss;g.brickWeight=select(0.,1.,brickDistance<=mortarDistance);g.d=min(mortarDistance,brickDistance);}
+ if(h.id==1u||h.id==12u){let bp=stationBrickPoint(h,p);let q=brickQ(bp,h.id,h.d);let seed=19.+floor(bp.y/.073)*13.+floor((bp.x+bp.z)/.25);let variant=i32(abs(seed))%4;let native=kpBrickBaseDistance(q,seed,variant,.42);let macroSignal=native-kpBrickAnalyticBoundDistance(q);g.loss=clamp(st.retained*st.wet*(.0004+max(0.,macroSignal)*.6),0.,.0016);let mortarDistance=h.d+.006;let brickDistance=native+g.loss;g.brickWeight=select(0.,1.,brickDistance<=mortarDistance);g.d=min(mortarDistance,brickDistance);}
  if(h.id==2u){g.d=h.d-clamp(stationStoneHeight(h.q*.19)*(.25+.75*st.retained),-.004,.004);}
  if((h.id==3u||h.id==15u)&&h.seed!=181.&&h.seed!=182.){g.loss=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.0008;g.d=h.d+g.loss;if(isStationRoof(h)){g.thickness=.00006*stationRoofPaintCoverage(h,p,st);g.d-=g.thickness;}}
  if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(stationWoodCoordinates(h),stationWoodClass(h),stationWoodParams(h,st));}
@@ -73,7 +76,7 @@ fn evaluateStationGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGe
 }
 fn evaluateStationMatter(h:HitField,p:vec3<f32>,normal:vec3<f32>,fp:f32)->StationMatter{
  let state=resolveStationState(p);let st=stationMemberState(h,p,state);let g=evaluateStationGeometry(h,p,state);var m=StationMatter(g.d,KpSurface(0.,vec3<f32>(.34,.33,.28),.85),0.,1.,1.,0.,0u,0.,1.,0.);
- if(h.id==1u||h.id==12u){let q=brickQ(p,h.id,h.d);let seed=19.+floor(p.y/.073)*13.+floor((p.x+p.z)/.25);let variant=i32(abs(seed))%4;let loss=g.loss;m.surface=kpBrickOriginalSurface(q,seed,variant,.42,fp);if(g.brickWeight==0.){m.surface=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}m.surface.albedo*=1.-st.wet*.18-loss*60.;m.surface.roughness=clamp(m.surface.roughness+loss*50.,.15,.98);m.microHeight=m.surface.height;m.layer=1u;}
+ if(h.id==1u||h.id==12u){let bp=stationBrickPoint(h,p);let q=brickQ(bp,h.id,h.d);let seed=19.+floor(bp.y/.073)*13.+floor((bp.x+bp.z)/.25);let variant=i32(abs(seed))%4;let loss=g.loss;m.surface=kpBrickOriginalSurface(q,seed,variant,.42,fp);if(g.brickWeight==0.){m.surface=KpSurface(0.,vec3<f32>(.28,.26,.21),.94);}m.surface.albedo*=1.-st.wet*.18-loss*60.;m.surface.roughness=clamp(m.surface.roughness+loss*50.,.15,.98);m.microHeight=m.surface.height;m.layer=1u;}
  if(h.id==2u){let relief=.25+.75*st.retained;m.surface=kpStoneSurface(h.q*.19,st.age,st.wet,st.repair,fp*.19);m.surface.height*=relief;m.layer=2u;}
  if(h.id==3u||h.id==15u){let loss=g.loss;m.surface=kpMetalSurface(stationMetalCoordinates(h,p),st.age,st.wet,st.repair,fp);let corrosion=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair);let role=stationIronRole(h);if(!isStationRoof(h)){m.surface.albedo+=(role.rgb-vec3<f32>(.17,.235,.20))*(.94+.09*mt_kfb((stationMetalCoordinates(h,p)+vec3<f32>(19.))*3.1))*(1.-corrosion*.80)*(1.-st.wet*.18);m.surface.roughness=clamp(m.surface.roughness+role.a-.53,.12,.97);}if(isStationRoof(h)){let mq=stationMetalCoordinates(h,p);let pigmentDelta=vec3<f32>(.066,.073,.078)-vec3<f32>(.17,.235,.20);m.surface.albedo+=pigmentDelta*(.94+.09*mt_kfb((mq+vec3<f32>(19.))*3.1))*stationRoofPaintCoverage(h,p,st)*(1.-st.wet*.18);}m.metal=select(stationIronMetalness(h)*(1.-corrosion),0.,isStationRoof(h));if(h.id==3u&&h.seed==55.){let contact=1.-smoothstep(.01,.035,abs(stationMetalCoordinates(h,p).y-1.07));m.metal=(.40+.48*contact)*(1.-corrosion);}m.microHeight=m.surface.height+loss;m.layer=3u;}
  // Explicit preservation binding; physical copper ageing remains a recorded

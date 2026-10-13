@@ -1,4 +1,4 @@
-name: Kowloon heritage R05 finite-cavity small architectural review
+name: Kowloon heritage R05 finite-wall review and persistent hall tiles
 on:
   push:
     branches: ['qa/kowloon-heritage-r05-20261013']
@@ -12,9 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        view: [towerWhole, towerWindow, heritageHall]
+        view: [towerWhole, towerWindow, towerLantern]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -80,15 +80,17 @@ jobs:
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Bounded 18x18 native smoke with first GPU progress
-        timeout-minutes: 10
+        timeout-minutes: 15
         working-directory: baseline
         env:
           HERITAGE_SMOKE: '1'
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/validate-native-readback.mjs heritage-staged-${{ matrix.view }}-smoke
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-smoke-${{ matrix.view }}
+          name: heritage-smoke-${{ matrix.view }}-attempt-${{ github.run_attempt }}
           path: baseline/heritage-staged-${{ matrix.view }}-smoke/
           retention-days: 7
   small-architectural-review:
@@ -96,9 +98,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        view: [towerWhole, towerWindow, heritageHall]
+        view: [towerWhole, towerWindow, towerLantern]
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -164,16 +166,18 @@ jobs:
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
       - name: Small native perspective crop for human review before larger images
-        timeout-minutes: 20
+        timeout-minutes: 40
         working-directory: baseline
         env:
           HERITAGE_SMOKE: '0'
           HERITAGE_REVIEW_SCALE: '0.5'
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/validate-native-readback.mjs heritage-staged-${{ matrix.view }}-small
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-small-${{ matrix.view }}
+          name: heritage-small-${{ matrix.view }}-attempt-${{ github.run_attempt }}
           path: baseline/heritage-staged-${{ matrix.view }}-small/
           retention-days: 7
   material-regression:
@@ -202,7 +206,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Check production geometry and matter once at all 30 material-state samples
+      - name: Check production geometry and matter once at all 33 material-state samples
         timeout-minutes: 8
         working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
         run: |
@@ -213,6 +217,102 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-state-regression
+          name: heritage-state-regression-attempt-${{ github.run_attempt }}
           path: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/heritage-state-*/
+          retention-days: 7
+  hall-native-tiles:
+    strategy:
+      fail-fast: false
+      matrix:
+        tile: [0, 1, 2]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          path: revision
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 25c460991397665e2ad9068e79a93b2b16b80484
+          persist-credentials: false
+          path: baseline
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 92054936cdfacd22777c8a5ed00de18148aaf1fb
+          persist-credentials: false
+          path: hallmodel
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
+      - name: Prepare original 25c receiver with isolated R05 field and normal cameras
+        run: |
+          R=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+          cp -a hallmodel/$R/kowloon-station-r05-heritage baseline/$R/
+          for f in prepare-host-review.py render-staged-host.cjs heritage-review-layout.cjs validate-native-readback.mjs; do cp revision/$R/kowloon-station-r05-heritage/qa/$f baseline/$R/kowloon-station-r05-heritage/qa/$f; done
+          cd baseline
+          python $R/kowloon-station-r05-heritage/qa/prepare-host-review.py
+          node --test $R/kowloon-station-r05-heritage/qa/*.test.mjs
+      - name: Emit original stage boundaries with R05 field
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa
+        run: |
+          node emit-shader-inputs.mjs >/dev/null
+          node ../bureau-train88-r01/emit-shader-inputs.mjs >/dev/null
+          node ../bureau-train88-r01/qa/emit-probes.mjs >/dev/null
+          node emit-geometry-groups.mjs >/dev/null
+          node emit-group-runtime.mjs >/dev/null
+          node experiments/spatial-query-r01/emit.mjs
+          node experiments/spatial-query-r01/emit-flat.mjs
+          node experiments/compact-trace-r01/emit-contracts.mjs
+          node experiments/compact-trace-r01/emit.mjs
+          node experiments/bureau-query-r01/emit.mjs
+      - name: Compile pinned Naga and all exact compact runtime entries
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa/compiler
+        run: |
+          python - <<'PYLOCK'
+          import tomllib
+          p=next(p for p in tomllib.load(open('Cargo.lock','rb'))['package'] if p['name']=='naga')
+          assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
+          PYLOCK
+          cargo build --release --locked
+          for i in $(seq 0 11); do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/runtime-$i.wgsl ../experiments/compact-trace-r01/generated/runtime-$i.frag stationCompactQuery
+          done
+          for variant in advance-full advance-compact; do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/$variant.wgsl ../experiments/compact-trace-r01/generated/$variant.frag advanceGroupedRays
+          done
+          target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/merge-contract.wgsl ../experiments/compact-trace-r01/generated/merge-contract.frag mergeContract
+          for i in $(seq 0 11); do
+            target/release/kaopu-station-shader-bridge ../generated/group-runtime-$i.wgsl ../generated/group-runtime-$i.frag stationGroupQuery
+          done
+          target/release/kaopu-station-shader-bridge ../generated/group-init.wgsl ../generated/group-init.frag initializeGroupedRays
+          target/release/kaopu-station-shader-bridge ../generated/group-advance.wgsl ../generated/group-advance.frag advanceGroupedRays
+          target/release/kaopu-station-shader-bridge ../generated/group-normal-pack.wgsl ../generated/group-normal-pack.frag packGroupedGeometry
+          target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
+          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter'; do
+            read -r stage entry <<< "$pair"
+            target/release/kaopu-station-shader-bridge ../../bureau-train88-r01/generated/$stage.wgsl ../../bureau-train88-r01/generated/$stage.frag "$entry"
+          done
+      - name: Install pinned official browser QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
+      - name: Frozen 92054936 hall tile with two-pixel native halo and immediate checkpoint
+        timeout-minutes: 40
+        working-directory: baseline
+        env:
+          HERITAGE_SMOKE: '0'
+          HERITAGE_REVIEW_SCALE: '0.5'
+          HERITAGE_TILE_INDEX: '${{ matrix.tile }}'
+          HERITAGE_MODEL_COMMIT: 92054936cdfacd22777c8a5ed00de18148aaf1fb
+          HERITAGE_EXPECTED_FIELD_SHA: 9eec842b6a27789783c51fb966c524ad17cfffa52e1ae9387cf0a468f7160bf5
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs heritageHall
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/validate-native-readback.mjs heritage-staged-heritageHall-tile${{ matrix.tile }}
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: heritage-hall-tile-${{ matrix.tile }}-attempt-${{ github.run_attempt }}
+          path: baseline/heritage-staged-heritageHall-tile${{ matrix.tile }}/
           retention-days: 7

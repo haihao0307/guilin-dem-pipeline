@@ -1,7 +1,7 @@
 // AMO 2024 pp.3/5 observations. Dimensions remain authored within the R04 site.
 // The retained R04 source is separate; this is an independent heritage candidate.
 import {clockTowerMembers as retainedTowerMembers,clockTowerWGSL as retainedTowerWGSL} from './native-clock-tower-r04.mjs';
-export const TOWER_EVIDENCE=Object.freeze({source:'https://www.amo.gov.hk/filemanager/amo/common/download-area/pamphlet/clock_tower.pdf',observed:['square main shaft','two octagonal turret stages','concrete dome','granite pediment window surrounds','timber window frames'],authored:['all new member dimensions','maintained finish and exposure history','current 44m-scale envelope retained','0.63m masonry shell and finite interior plaster lining; not surveyed dimensions'],unresolved:['whether reported 44m includes the 7m lightning rod','original hall plan/depth','period-specific clock glazing'],referenceImagesPublished:false});
+export const TOWER_EVIDENCE=Object.freeze({source:'https://www.amo.gov.hk/filemanager/amo/common/download-area/pamphlet/clock_tower.pdf',observed:['square main shaft','two octagonal turret stages','concrete dome','granite pediment window surrounds','timber window frames'],authored:['all new member dimensions','maintained finish and exposure history','current 44m-scale envelope retained','0.63m masonry shell and finite interior plaster lining; not surveyed dimensions','four broad diagonal lantern brick facets inferred from visible AMO fabric; exact dimensions and fourfold continuation authored'],unresolved:['whether reported 44m includes the 7m lightning rod','original hall plan/depth','period-specific clock glazing'],referenceImagesPublished:false});
 const clone=x=>JSON.parse(JSON.stringify(x));
 export function clockTowerMembers({width=6.2}={}){
  const original=retainedTowerMembers({width}),parts=original.parts.filter(p=>!/^belfry-|^tower-belfry|^tower-dome|^dome-crown|^tower-finial|^tower-quoin|^tower-pilaster|^tower-cornice-(31|38|39)/.test(p.id)).map(clone);
@@ -73,6 +73,14 @@ export function clockTowerMembers({width=6.2}={}){
   add(`heritage-window-tympanum-${face}-${i}`,{type:'triangle-prism',center:facePoint(face,0,spring+.06,width/2-.015),base:1.94,rise:.39,depth:.16,yaw:face*Math.PI/2},'masonry-trim','granite-pediment-infill');
  }
  for(let face=0;face<4;face++)add('heritage-inner-lining-'+face,{type:'interior-lining',center:facePoint(face,0,14.95,2.34),size:[4.66,25.9,.02],yaw:face*Math.PI/2},'tower-plaster','finite-interior-lining');
+ // Visible broad red-brick facets interrupt the lantern openings in AMO p.5.
+ // Fourfold continuation and dimensions are authored, not a measured plan.
+ // These real walls sit behind the retained edge columns and overlap both
+ // cornices. Four axial window bays remain open; never eight empty faces.
+ for(let side=0;side<4;side++){
+  const a=Math.PI/4+side*Math.PI/2;
+  add('heritage-lantern-brick-facet-'+side,{type:'oriented-box',center:[Math.sin(a)*1.97,35.,Math.cos(a)*1.97],size:[1.68,4.46,.36],yaw:a},'lantern-brick-facet','finite-brick-wall');
+ }
  return {parts,clockHands:original.clockHands,windows:levels,evidence:TOWER_EVIDENCE};
 }
 const f=x=>Math.abs(x)<1e-12?'0.':Number.isInteger(x)?x+'.':String(x),v=a=>'vec3<f32>('+a.map(f).join(',')+')';
@@ -112,6 +120,16 @@ export function clockTowerWGSL(options={}){
   out+=`{let q=${q};let d=${expr};if(d-.03001<h.d){var child=HitField(d,13u,q,174.,d,${ex},${f(i)});child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}}\n`;
  }
  out+='h.d=h.baseD;return h;}\n';
+ // Each oriented facet samples the retained brick mother in its own metric
+ // tangent frame before the four-child union; material and geometry share it.
+ const facets=parts.map((part,i)=>({part,i})).filter(({part})=>part.surface.role==='lantern-brick-facet');
+ out+='fn completeTowerLanternWalls(p:vec3<f32>)->HitField{var h=HitField(1e5,1u,p,175.,1e5,vec3<f32>(1.),0.);let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
+ out+='for(var j=0u;j<4u;j++){var q=vec3<f32>(0.);var extent=vec3<f32>(1.);var member=0.;switch j{\n';
+ for(const [j,{part,i}]of facets.entries()){
+  const sh=part.shape,a=sh.yaw,c=f(Math.cos(a)),sn=f(Math.sin(a)),off=`(p-${v(sh.center)})`;
+  out+=`${j===3?'default':`case ${j}u`}:{q=vec3<f32>(${c}*${off}.x-(${sn})*${off}.z,${off}.y,${sn}*${off}.x+${c}*${off}.z);extent=${v(sh.size.map(x=>x/2))};member=${f(i)};}\n`;
+ }
+ out+='}let d=box(q,extent);if(d-.03001<h.d){var child=HitField(d,1u,q,175.,d,extent,member);child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}}h.d=h.baseD;return h;}\n';
  out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
  out+=`for(var j=0u;j<${timber.length}u;j++){var q=vec3<f32>(0.);var extent=vec3<f32>(1.);var member=0.;switch j{\n`;
  for(const [j,{part,i}]of timber.entries()){

@@ -31,7 +31,7 @@ ${footbridgeWGSL({...bridge,materialDistance:"stationBridgePhysicalDistance"})}
 ${archTrussWGSL({span:STATION_SCORE.shed.span,eave,radius:STATION_SCORE.shed.radius,depth:STATION_SCORE.shed.trussDepth})}
 ${shedRoofWGSL({span:STATION_SCORE.shed.span,eave,radius:STATION_SCORE.shed.radius,bay:STATION_SCORE.shed.bay})}
 ${host?hostWGSL:''}
-const STATION_CANDIDATE_CAPACITY:u32=${host?96:64}u;
+const STATION_CANDIDATE_CAPACITY:u32=96u;
 const HALL_BENCH_PUBLIC_X:array<f32,5>=array<f32,5>(${STATION_SCORE.hall.benchRows.publicX.map(f).join(",")});
 const HALL_BENCH_RAIL_X:array<f32,5>=array<f32,5>(${STATION_SCORE.hall.benchRows.railX.map(f).join(",")});
 const RAIL_CENTER_OFFSET:f32=${f(construction?.railCenterOffsetM??.752425)};
@@ -46,7 +46,7 @@ fn segment(p:vec3<f32>,a:vec3<f32>,b:vec3<f32>,r:f32)->f32{let v=b-a;return leng
 // Candidate list is procedural construction metadata, not geometry vertices.
 // A single dynamic material call prevents per-part compiler expansion while all
 // candidates receive material displacement BEFORE the final nearest selection.
-struct StationCandidates {count:u32,items:array<HitField,${host?96:64}>,}
+struct StationCandidates {count:u32,items:array<HitField,96>,}
 // Invocation-private construction workspace. Avoid copying 4KiB candidates across
 // function arguments in GLSL ES backends; reset before each nonrecursive query.
 var<private> stationCandidates:StationCandidates;
@@ -117,6 +117,7 @@ fn stationDomain(p:vec3<f32>,skipRoof:bool,skipFloor:bool)->HitField{
   let concrete=completeTowerconcrete(tq);recordCandidate(HitField(concrete.d,19u,tq,173.,concrete.d,vec3<f32>(2.7,1.3,2.7),concrete.member));
   let timber=completeTowerTimber(tq);recordCandidate(timber);
   let innerPlaster=completeTowerPlaster(tq);recordCandidate(innerPlaster);
+  let lanternWalls=completeTowerLanternWalls(tq);recordCandidate(lanternWalls);
   let dial=completeTowerdial(tq);recordCandidate(HitField(dial.d,7u,tq,0.,dial.d,vec3<f32>(1.),dial.member));
   for(var face=0u;face<4u;face++){
    let a=f32(face)*1.570796326794897;let n=vec3<f32>(sin(a),0.,cos(a));let right=vec3<f32>(n.z,0.,-n.x);let q=vec3<f32>(dot(tq,right),tq.y-25.,dot(tq,n)-3.30);

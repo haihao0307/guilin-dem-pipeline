@@ -2,7 +2,7 @@
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=__dirname,out=path.join(root,'heritage-state-results');fs.mkdirSync(out,{recursive:true});
-const report={commit:process.env.GITHUB_SHA||null,status:'running',scope:'30 numeric material-state samples only',stages:[],errors:[]};
+const report={commit:process.env.GITHUB_SHA||null,status:'running',scope:'33 numeric material-state samples only',stages:[],errors:[]};
 const save=()=>fs.writeFileSync(path.join(out,'receipt.json'),JSON.stringify(report,null,2)+'\n');
 const server=http.createServer((req,res)=>{
  try{const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname),file=path.resolve(root,'.'+name);

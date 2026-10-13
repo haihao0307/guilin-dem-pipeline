@@ -15,3 +15,15 @@ assert needle in s
 s=s.replace(needle,"camera.lookAt(cameraTarget);if(params.has('heritageView')){const hv=HERITAGE_VIEWS[params.get('heritageView')];if(!hv)throw Error('Unknown heritage observation');const hf=stationReceiver.binding.frame(view,game.route);bridgeTestCamera={eye:hf.toWorld(hv.eye),target:hf.toWorld(hv.target)};}if(bridgeTestCamera)")
 p.write_text(s)
 print('Created ephemeral original shared host, with R05 field and score imports. Original checkout files are unchanged.')
+
+# Read-only QA addition after completion: preserve the exact complete shadow
+# texture so independently persisted native tiles can prove the same illumination.
+p=target/'function-receiver.mjs';s=p.read_text()
+needle="if(gl.getError()!==gl.NO_ERROR||gl.isContextLost())throw Error('Focus attachment readback failed');return{encoding:"
+assert s.count(needle)==1
+s=s.replace(needle,"const shadowData=new Float32Array(shadow.w*shadow.h*4);renderer.readRenderTargetPixels(shadow.rays[shadow.last],0,0,shadow.w,shadow.h,shadowData);"+needle)
+needle="return{encoding:'RGBA32F bits, rows bottom to top',width:r.w,height:r.h,cropTopLeft:crop,"
+assert s.count(needle)==1
+s=s.replace(needle,"return{shadowReadback:{width:shadow.w,height:shadow.h,bits:Array.from(new Uint32Array(shadowData.buffer))},encoding:'RGBA32F bits, rows bottom to top',width:r.w,height:r.h,cropTopLeft:crop,")
+p.write_text(s)
+print('Added completed full-shadow readback for exact tile equality. No query, normal, shader or draw was skipped.')

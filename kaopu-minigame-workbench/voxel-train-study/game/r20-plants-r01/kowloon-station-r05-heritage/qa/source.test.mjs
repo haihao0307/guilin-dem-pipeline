@@ -26,10 +26,10 @@ test('roof acceleration bounds every barrel and refuses nearly axial rays',()=>{
 test('complete candidate capacity holds even if all domains were active simultaneously',()=>{
  // One terminal and one waterfront union each; internal children never enqueue.
  // Conservatively allow all four clock faces, every domain, all approach tracks.
- const counts={terminal:2,forecourt:1,steps:4,hallBenches:2,tower:7+4*3,shed:14,approach:3,buffersAndBed:3,goods:8,siding:3,walk:4,waterfront:1};
+ const counts={terminal:2,forecourt:1,steps:4,hallBenches:2,tower:8+4*3,shed:14,approach:3,buffersAndBed:3,goods:8,siding:3,walk:4,waterfront:1};
  const standalone=Object.values(counts).reduce((a,b)=>a+b,0),host=standalone+9+6+6+2+2;
- assert.equal(standalone,64);assert.equal(host,89);assert(standalone<=64&&host<=96);
- assert(WGSL.includes('items:array<HitField,64>'));assert.equal(STATION_SCORE.shed.length,135);
+ assert.equal(standalone,65);assert.equal(host,90);assert(standalone<=96&&host<=96);
+ assert(WGSL.includes('items:array<HitField,96>'));assert.equal(STATION_SCORE.shed.length,135);
 });
 
 test('staged GPU keeps the complete shared field and only caches current ray intersections',()=>{assert(WGSL.includes('fn primaryRays('));assert(WGSL.includes('rayHits:array<Trace>'));assert(WGSL.includes('let tr=march(u.eye,rd,420.)'));assert(WGSL.includes('color=shade(tr,u.eye,rd)'));});

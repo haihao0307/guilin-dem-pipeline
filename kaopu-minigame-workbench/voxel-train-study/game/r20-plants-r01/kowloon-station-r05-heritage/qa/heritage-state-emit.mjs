@@ -21,6 +21,7 @@ export const fixtures=[
  {name:'control-shed-roof',id:3,seed:8,p:[-20,14,-25],q:[.31,.042,.17],extent:[1,1,1],sourceSeed:0,layers:[3]},
  {name:'control-waterfront-stone',id:2,seed:186,p:[60.177,-.45,4.2],q:[.377,1.2,.31],extent:[.375,1.25,100],sourceSeed:1,layers:[2]},
  {name:'heritage-inner-plaster',id:13,seed:174,p:[25.2,15.4,6.314],q:[1.2,.45,-.026],extent:[2.33,12.95,.01],sourceSeed:parts.findIndex(p=>p.id==='heritage-inner-lining-0'),layers:[2,13]},
+ {name:'heritage-lantern-brick',id:1,seed:175,p:[25.66372124094,35.4,5.38087852847],q:[.2,.4,.182],extent:[.84,2.23,.18],sourceSeed:parts.findIndex(p=>p.id==='heritage-lantern-brick-facet-0'),layers:[1]},
 ].map(f=>({...f,baseD:.002,normal:[0,1,0]}));
 export const dimensions={width:fixtures.length,height:4};
 const f=n=>Number.isInteger(n)?`${n}.`:String(n),v=a=>`vec3<f32>(${a.map(f).join(',')})`;

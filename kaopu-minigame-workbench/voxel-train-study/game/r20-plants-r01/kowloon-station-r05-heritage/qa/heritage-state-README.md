@@ -2,9 +2,9 @@
 
 This is a small numeric regression, not an image, render-model change, or visual acceptance test. It extracts `evaluateStationGeometry` and `evaluateStationMatter` and their exact dependencies from the production `WGSL` using the existing `kowloon-train88-r01/shader-closure.mjs`.
 
-Six heritage fixtures cover brick, stone, actual sash timber, hall plaster, ID 19 concrete, and the finite tower interior lining. Four controls cover bench timber, platform concrete, shed roof, and waterfront stone. Each runs at ages 0, 0.5, and 1. Most fixtures are explicit nominal material samples; they do not claim to ray-intersect the architecture. The timber sample uses the current generated member's actual source ID, seed, center, and extents.
+Seven heritage fixtures cover brick, stone, actual sash timber, hall plaster, ID 19 concrete, the finite tower interior lining, and a finite diagonal lantern brick facet. Four controls cover bench timber, platform concrete, shed roof, and waterfront stone. Each runs at ages 0, 0.5, and 1. Most fixtures are explicit nominal material samples; they do not claim to ray-intersect the architecture. The timber sample uses the current generated member's actual source ID, seed, center, and extents.
 
-The 10 × 4 RGBA32F target contains:
+The 11 × 4 RGBA32F target contains:
 
 - Row 0: geometry distance, matter distance, actual matter layer, sample identity
 - Row 1: actual mother-bound albedo and roughness
@@ -31,6 +31,6 @@ If the bridge is not built yet, build its existing pinned project without changi
 (cd ../kowloon-train88-r01/compiler && cargo build --release --locked)
 ```
 
-The emitter's optional `HERITAGE_CLOSURE_MODULE` points to the same existing closure module when auditing a detached directory. Default resolution uses the repository sibling. The browser runner enforces a 240-second shader compilation limit and one 120-second readback window for all 30 samples, then performs bounded cleanup of only its own Chromium process.
+The emitter's optional `HERITAGE_CLOSURE_MODULE` points to the same existing closure module when auditing a detached directory. Default resolution uses the repository sibling. The browser runner enforces a 240-second shader compilation limit and one 120-second readback window for all 33 samples, then performs bounded cleanup of only its own Chromium process.
 
 Outputs stay under `qa/heritage-state-generated/` and `qa/heritage-state-results/`. A failed compile, timeout, context loss, bad readback, state mismatch, or empty material response is a failing result. A pass establishes this numeric contract only; it does not establish station image, integration, or hardware performance acceptance.
