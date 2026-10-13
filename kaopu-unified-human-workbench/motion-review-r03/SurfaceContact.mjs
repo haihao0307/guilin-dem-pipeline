@@ -1,3 +1,4 @@
+// R03 neutral wrist prop frame: palm-forward axis aligns with object depth.
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 import {NativeRig,math} from '../full/hand-body-r01/NativeRig.mjs';
 const {add,sub,scale,dot,cross,norm,unit,rotation,mv,clamp}=math;
@@ -26,7 +27,7 @@ export class SurfaceContact {
  measure(side,matrices,object){const g=this.groups[side],palm=this.anchor(g.palm,matrices),padGaps={};let min=Infinity,inside=0,palmSupportGap=Infinity,palmSupport=null;for(const i of g.vertices){const p=this.vertex(i,matrices),d=this.distance(p,object);min=Math.min(min,d);if(d<-.001)inside++;if(g.palmSet.has(i)&&Math.abs(d)<Math.abs(palmSupportGap)){palmSupportGap=d;palmSupport={vertex:i,point:p};}}for(let f=1;f<=5;f++)padGaps[f]=this.distance(this.anchor(g.pads[f],matrices),object);return{palm,palmSupport,palmSupportGapM:palmSupportGap,palmGapM:this.distance(palm,object),padGapsM:padGaps,maxVertexPenetrationM:Math.max(0,-min),verticesDeeperThan1MM:inside,scope:'full owned hand vertices plus stable palmar triangle anchors; not force closure'};}
  /** One bounded optimization per hand and object. No per-frame shape regeneration. */
  fit(side,shape,{radius=.038,halfExtents=[.16,.11,.12]}={}){const key=side+shape+radius+halfExtents.join(',');if(this.templates.has(key))return this.templates.get(key);const start=performance.now(),g=this.groups[side],r=this.rig;for(const d of r.rotationDeltas)d.fill(0);r.rootTranslation.fill(0);r.fk();const palm=g.palm.rest;
-  const object=shape==='sphere'?{shape,position:add(palm,scale(g.N,radius+.0007)),radius}:{shape:'box',position:add(palm,add(scale(g.N,halfExtents[0]+.0007),scale(g.F,.067-halfExtents[2]))),halfExtentsNative:[halfExtents[0],halfExtents[2],halfExtents[1]],axes:[g.N,g.F,g.U]};
+  const object=shape==='sphere'?{shape,position:add(palm,scale(g.N,radius+.0007)),radius}:{shape:'box',position:add(palm,add(scale(g.N,halfExtents[0]+.0007),scale(g.F,.067-halfExtents[1]))),halfExtentsNative:halfExtents.slice(),axes:[g.N,g.F,g.U]};
   const variables=[];for(let f=1;f<=5;f++)for(let k=1;k<=3;k++){const id=r.index.get(`finger${f}-${k}.${side}`),p=r.restP[id],next=k<3?r.restP[r.index.get(`finger${f}-${k+1}.${side}`)]:add(p,sub(p,r.restP[r.index.get(`finger${f}-2.${side}`)])),axis=unit(cross(unit(sub(next,p)),g.N));variables.push({f,k,id,axis,lo:f===1?-65:0,hi:k===1?90:105,value:shape==='sphere'?(f===1?15:[20,55,45][k-1]):[0,22,55][k-1]});}
   variables.push({f:1,k:0,id:r.index.get('finger1-1.'+side),axis:scale(g.F,side==='L'?1:-1),lo:-60,hi:70,value:30},{f:1,k:0,id:r.index.get('finger1-1.'+side),axis:g.N,lo:-45,hi:45,value:0});
   const nominalCenter=object.position.slice(),offset=[0,0,0];
