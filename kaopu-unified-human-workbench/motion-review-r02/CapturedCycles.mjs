@@ -8,11 +8,11 @@ function blend(a,b,t,displacement=null,root=0){const q=a.q.slice(),p=a.p.slice()
 /** A stride is chosen from a moving portion of a capture. The final interval
  * overlaps recorded pre-start context, not an artificial stop. The runtime
  * accumulates travel instead of teleporting at each repeat. */
-export async function buildCapturedClip(human,rowDef,source,sampler,{alive=()=>true,notify=()=>{}}={}){
+export async function buildCapturedClip(human,rowDef,source,sampler,{alive=()=>true,notify=()=>{},decorate=x=>x}={}){
  const start=performance.now(),ctl=createCapturedActivityController(human,source),motion=ctl.motion;motion.referenceFrame=source.referenceFrame??motion.referenceFrame;
  motion.rig.exportNativePose=()=>{};
  const looping=!!rowDef.continuous,def=source.cycle,limit=looping?def.endFrame:source.points.length-1,raw=[],contacts=[],root=human.rig.parents.findIndex(x=>x<0);
- for(let i=0;i<=limit;i++){if(!alive())throw Error('CANCELLED');const result=ctl.evaluate(i/source.fps);raw.push(sampler.pack(result.posedMatrices));contacts.push(structuredClone(result.footContacts));if(i%32===0){notify(`准备 ${rowDef.label} · ${Math.round(i/limit*100)}% · 原始动作采样`);await delay();}}
+ for(let i=0;i<=limit;i++){if(!alive())throw Error('CANCELLED');const result=decorate(ctl.evaluate(i/source.fps));raw.push(sampler.pack(result.posedMatrices));contacts.push(structuredClone(result.footContacts));if(i%32===0){notify(`准备 ${rowDef.label} · ${Math.round(i/limit*100)}% · 原始动作采样`);await delay();}}
  let frames,duration,displacement=[0,0,0],weights=[];
  if(looping){const {startFrame:a,endFrame:b,tailBlendFrames:B}=def,N=b-a;displacement=[0,1,2].map(k=>k===2?0:raw[b].p[root*3+k]-raw[a].p[root*3+k]);frames=[];
   for(let i=0;i<=N;i++){const w=smooth((i-(N-B))/B),other=a+i-N;frames.push(w>0?blend(raw[a+i],raw[other],w,displacement,root):copy(raw[a+i]));weights.push(Object.fromEntries(['L','R'].map(s=>[s,(contacts[a+i][s].weight||0)*(1-w)+(w>0?(contacts[other][s].weight||0)*w:0)])));}
