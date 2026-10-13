@@ -1,0 +1,853 @@
+{
+  "title": "Hong Kong R03 real CEDD detail patches",
+  "source_dataset": "CEDD LiDAR DTM 2020",
+  "source_dataset_url": "https://portal.csdi.gov.hk/csdi-webpage/dataset/cedd_rcd_1629267205233_87895",
+  "horizontal_crs": "EPSG:2326",
+  "source_vertical_crs": "EPSG:5738 (HKPD)",
+  "native_grid_spacing_m": 0.5,
+  "height_unit": "metre",
+  "source_tile_count": 40,
+  "scope": "Forty newly recovered selected tiles, not the historical full 390-tile set and not complete route coverage",
+  "source_manifest": "source_manifest.json",
+  "patches": [
+    {
+      "id": "clocktower",
+      "label": "Old Kowloon clocktower",
+      "bounds_epsg2326": [
+        835100,
+        816900,
+        835900,
+        817700
+      ],
+      "tiles": [
+        "11SW4A",
+        "11SW4B",
+        "11SW4D",
+        "11SW4C"
+      ],
+      "native_file": "grids/clocktower/native-hkpd-0p5m.tif",
+      "native_sha256": "b68771c340b8f2cd79846488313cab73885c0d10e6ad1fe06fba9dbc15be5f01",
+      "native_shape_rc": [
+        1600,
+        1600
+      ],
+      "native_valid_pixels": 1310502,
+      "native_nodata_pixels": 1249498,
+      "native_valid_area_m2": 327625.5,
+      "native_source_tif_crs_note": "Source TIFF stores horizontal CRS only; source index layer metadata independently declares HKPD (5738)",
+      "levels": [
+        {
+          "step_m": 2,
+          "width": 400,
+          "height": 400,
+          "x0_cell_center": 835101.0,
+          "y0_cell_center": 817699.0,
+          "geotransform": [
+            835100,
+            2,
+            0,
+            817700,
+            0,
+            -2
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            400,
+            400
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 82430,
+          "full_coverage_cells": 81386,
+          "partial_coverage_cells": 1044,
+          "source_nodata_cells": 77570,
+          "files": {
+            "hkpd": {
+              "file": "grids/clocktower/2m-hkpd.f32",
+              "npy": "grids/clocktower/2m-hkpd.npy",
+              "bytes": 640000,
+              "sha256": "bd7af02be5e3e4fccc15a25550232ea5bc2ec7e0270903bf018e2be990c68aa2"
+            },
+            "valid": {
+              "file": "grids/clocktower/2m-valid.u8",
+              "npy": "grids/clocktower/2m-valid.npy",
+              "bytes": 160000,
+              "sha256": "685b5acdffb23aed0316b63abf8a15873181642c10b82e2470abb8d2b75821fa"
+            },
+            "full_coverage": {
+              "file": "grids/clocktower/2m-full_coverage.u8",
+              "npy": "grids/clocktower/2m-full_coverage.npy",
+              "bytes": 160000,
+              "sha256": "ecd067ad02d8de99c8cb6a7296f0a3875025f4ccb063a7344aee45ebc420fd8d"
+            },
+            "coverage255": {
+              "file": "grids/clocktower/2m-coverage255.u8",
+              "npy": "grids/clocktower/2m-coverage255.npy",
+              "bytes": 160000,
+              "sha256": "e96eeeb548707154a42d434d7902b3a0ccbae5383f297a2643370978f3fb0ebc"
+            },
+            "egm2008_model": {
+              "file": "grids/clocktower/2m-egm2008_model.f32",
+              "npy": "grids/clocktower/2m-egm2008_model.npy",
+              "bytes": 640000,
+              "sha256": "43eae99f613dade755e6fab11b565aae8ec817a763e0db3b69e62cdaf006993b"
+            }
+          },
+          "model_delta_min_m": -0.41147926449775696,
+          "model_delta_max_m": -0.39790767431259155,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        },
+        {
+          "step_m": 5,
+          "width": 160,
+          "height": 160,
+          "x0_cell_center": 835102.5,
+          "y0_cell_center": 817697.5,
+          "geotransform": [
+            835100,
+            5,
+            0,
+            817700,
+            0,
+            -5
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            160,
+            160
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 13358,
+          "full_coverage_cells": 12852,
+          "partial_coverage_cells": 506,
+          "source_nodata_cells": 12242,
+          "files": {
+            "hkpd": {
+              "file": "grids/clocktower/5m-hkpd.f32",
+              "npy": "grids/clocktower/5m-hkpd.npy",
+              "bytes": 102400,
+              "sha256": "a4b85bbd139302cf8fae78c2d698ec093952e62f736f057842bf8d0444668cb2"
+            },
+            "valid": {
+              "file": "grids/clocktower/5m-valid.u8",
+              "npy": "grids/clocktower/5m-valid.npy",
+              "bytes": 25600,
+              "sha256": "83032a8b0dfbae130affc23b5824cb9929ca964b20c7512396184066679434fe"
+            },
+            "full_coverage": {
+              "file": "grids/clocktower/5m-full_coverage.u8",
+              "npy": "grids/clocktower/5m-full_coverage.npy",
+              "bytes": 25600,
+              "sha256": "a9e4007c5b897a9fb1efb15d23ca9030ccf45e5cab595271678ebf6da35f6e3e"
+            },
+            "coverage255": {
+              "file": "grids/clocktower/5m-coverage255.u8",
+              "npy": "grids/clocktower/5m-coverage255.npy",
+              "bytes": 25600,
+              "sha256": "8f71419678b133d2a078fcdf037e593a7f5f1f196df34e31751caab2efb18c5d"
+            },
+            "egm2008_model": {
+              "file": "grids/clocktower/5m-egm2008_model.f32",
+              "npy": "grids/clocktower/5m-egm2008_model.npy",
+              "bytes": 102400,
+              "sha256": "2455ae57310cc1072b6188afd9893558227effb60c9cff6813ab519fa05e24df"
+            }
+          },
+          "model_delta_min_m": -0.4114576578140259,
+          "model_delta_max_m": -0.3979357182979584,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        }
+      ]
+    },
+    {
+      "id": "hung_hom",
+      "label": "Modern Hung Hom reference",
+      "bounds_epsg2326": [
+        836400,
+        817850,
+        837200,
+        818650
+      ],
+      "tiles": [
+        "11NW25A",
+        "11NW25B",
+        "11NW25C",
+        "11NW25D",
+        "11SW5A",
+        "11SW5B"
+      ],
+      "native_file": "grids/hung_hom/native-hkpd-0p5m.tif",
+      "native_sha256": "33458a8a30041b55cc66ec089d6b9c135cff90de4964b94b81f421abc06f2f88",
+      "native_shape_rc": [
+        1600,
+        1600
+      ],
+      "native_valid_pixels": 2560000,
+      "native_nodata_pixels": 0,
+      "native_valid_area_m2": 640000.0,
+      "native_source_tif_crs_note": "Source TIFF stores horizontal CRS only; source index layer metadata independently declares HKPD (5738)",
+      "levels": [
+        {
+          "step_m": 2,
+          "width": 400,
+          "height": 400,
+          "x0_cell_center": 836401.0,
+          "y0_cell_center": 818649.0,
+          "geotransform": [
+            836400,
+            2,
+            0,
+            818650,
+            0,
+            -2
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            400,
+            400
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 160000,
+          "full_coverage_cells": 160000,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/hung_hom/2m-hkpd.f32",
+              "npy": "grids/hung_hom/2m-hkpd.npy",
+              "bytes": 640000,
+              "sha256": "15b5706de9a7ba70d807d11a00912414a59bc0418e7e4af4e29bce172ae11f69"
+            },
+            "valid": {
+              "file": "grids/hung_hom/2m-valid.u8",
+              "npy": "grids/hung_hom/2m-valid.npy",
+              "bytes": 160000,
+              "sha256": "cfe375848084228a7ef213f6a0abf68692e42e79df04dec3d7d210231bc2022e"
+            },
+            "full_coverage": {
+              "file": "grids/hung_hom/2m-full_coverage.u8",
+              "npy": "grids/hung_hom/2m-full_coverage.npy",
+              "bytes": 160000,
+              "sha256": "cfe375848084228a7ef213f6a0abf68692e42e79df04dec3d7d210231bc2022e"
+            },
+            "coverage255": {
+              "file": "grids/hung_hom/2m-coverage255.u8",
+              "npy": "grids/hung_hom/2m-coverage255.npy",
+              "bytes": 160000,
+              "sha256": "cdbf6c0880cfbeebfa8480444fef83685e70091bf1f23a5e8a71564d1f8be33a"
+            },
+            "egm2008_model": {
+              "file": "grids/hung_hom/2m-egm2008_model.f32",
+              "npy": "grids/hung_hom/2m-egm2008_model.npy",
+              "bytes": 640000,
+              "sha256": "364823a8ae8b6e8f58581a72c5f60eb7e517a2918e11a7cb5782b736aa614049"
+            }
+          },
+          "model_delta_min_m": -0.418986439704895,
+          "model_delta_max_m": -0.4143928289413452,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        },
+        {
+          "step_m": 5,
+          "width": 160,
+          "height": 160,
+          "x0_cell_center": 836402.5,
+          "y0_cell_center": 818647.5,
+          "geotransform": [
+            836400,
+            5,
+            0,
+            818650,
+            0,
+            -5
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            160,
+            160
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 25600,
+          "full_coverage_cells": 25600,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/hung_hom/5m-hkpd.f32",
+              "npy": "grids/hung_hom/5m-hkpd.npy",
+              "bytes": 102400,
+              "sha256": "9d3e168ad3bce479cafd5d3c04bfc61307c4eedd5d681bb7c48d9df1d2bbcc96"
+            },
+            "valid": {
+              "file": "grids/hung_hom/5m-valid.u8",
+              "npy": "grids/hung_hom/5m-valid.npy",
+              "bytes": 25600,
+              "sha256": "d5f33b0bc274c147ed25ae2027822e04dbeaec5d7262387962b740d72224914f"
+            },
+            "full_coverage": {
+              "file": "grids/hung_hom/5m-full_coverage.u8",
+              "npy": "grids/hung_hom/5m-full_coverage.npy",
+              "bytes": 25600,
+              "sha256": "d5f33b0bc274c147ed25ae2027822e04dbeaec5d7262387962b740d72224914f"
+            },
+            "coverage255": {
+              "file": "grids/hung_hom/5m-coverage255.u8",
+              "npy": "grids/hung_hom/5m-coverage255.npy",
+              "bytes": 25600,
+              "sha256": "e917371fc566f6523dd4091003f1fc65093e8b604a71b55e5fa65d93a01d4b54"
+            },
+            "egm2008_model": {
+              "file": "grids/hung_hom/5m-egm2008_model.f32",
+              "npy": "grids/hung_hom/5m-egm2008_model.npy",
+              "bytes": 102400,
+              "sha256": "ab84997742e8d4a781e9ad72ef18129cddeffe738f5982aec502fca178ecc186"
+            }
+          },
+          "model_delta_min_m": -0.4189765155315399,
+          "model_delta_max_m": -0.41440391540527344,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        }
+      ]
+    },
+    {
+      "id": "second_walled_city",
+      "label": "Second station and Walled City",
+      "bounds_epsg2326": [
+        837000,
+        820700,
+        838100,
+        822000
+      ],
+      "tiles": [
+        "11NW15D",
+        "11NE11C",
+        "11NW15B",
+        "11NE11A",
+        "11NW10D",
+        "11NE6C"
+      ],
+      "native_file": "grids/second_walled_city/native-hkpd-0p5m.tif",
+      "native_sha256": "cbf655f4a96e6df3a8b1866c251657b4e32166079a9b37b891347bcd7304a6f4",
+      "native_shape_rc": [
+        2600,
+        2200
+      ],
+      "native_valid_pixels": 5720000,
+      "native_nodata_pixels": 0,
+      "native_valid_area_m2": 1430000.0,
+      "native_source_tif_crs_note": "Source TIFF stores horizontal CRS only; source index layer metadata independently declares HKPD (5738)",
+      "levels": [
+        {
+          "step_m": 2,
+          "width": 550,
+          "height": 650,
+          "x0_cell_center": 837001.0,
+          "y0_cell_center": 821999.0,
+          "geotransform": [
+            837000,
+            2,
+            0,
+            822000,
+            0,
+            -2
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            650,
+            550
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 357500,
+          "full_coverage_cells": 357500,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/second_walled_city/2m-hkpd.f32",
+              "npy": "grids/second_walled_city/2m-hkpd.npy",
+              "bytes": 1430000,
+              "sha256": "e42bb50cef999632d00a9c4d840da8f345822cdb7dd64f14578905646bfdb6d6"
+            },
+            "valid": {
+              "file": "grids/second_walled_city/2m-valid.u8",
+              "npy": "grids/second_walled_city/2m-valid.npy",
+              "bytes": 357500,
+              "sha256": "a3c50e4b55a73b6c2c1cf792e418aaa664306611440d5ed21db21a1253bd54ba"
+            },
+            "full_coverage": {
+              "file": "grids/second_walled_city/2m-full_coverage.u8",
+              "npy": "grids/second_walled_city/2m-full_coverage.npy",
+              "bytes": 357500,
+              "sha256": "a3c50e4b55a73b6c2c1cf792e418aaa664306611440d5ed21db21a1253bd54ba"
+            },
+            "coverage255": {
+              "file": "grids/second_walled_city/2m-coverage255.u8",
+              "npy": "grids/second_walled_city/2m-coverage255.npy",
+              "bytes": 357500,
+              "sha256": "8ab166861376bc79d8b7f19a30b07a2d2a1123a3905f8a84d09ec2f37a631e6e"
+            },
+            "egm2008_model": {
+              "file": "grids/second_walled_city/2m-egm2008_model.f32",
+              "npy": "grids/second_walled_city/2m-egm2008_model.npy",
+              "bytes": 1430000,
+              "sha256": "d918db40883af9dda6ead8805c9a2db4beb2200c71aeabe5b6bf568d583467a8"
+            }
+          },
+          "model_delta_min_m": -0.43993863463401794,
+          "model_delta_max_m": -0.43344372510910034,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        },
+        {
+          "step_m": 5,
+          "width": 220,
+          "height": 260,
+          "x0_cell_center": 837002.5,
+          "y0_cell_center": 821997.5,
+          "geotransform": [
+            837000,
+            5,
+            0,
+            822000,
+            0,
+            -5
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            260,
+            220
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 57200,
+          "full_coverage_cells": 57200,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/second_walled_city/5m-hkpd.f32",
+              "npy": "grids/second_walled_city/5m-hkpd.npy",
+              "bytes": 228800,
+              "sha256": "95ca73b417a9cb14e0d68c4b208e084cd63b7f0ca43bbcdcda4892e590adfeba"
+            },
+            "valid": {
+              "file": "grids/second_walled_city/5m-valid.u8",
+              "npy": "grids/second_walled_city/5m-valid.npy",
+              "bytes": 57200,
+              "sha256": "f00623d6c9fef62360ab942136eb3de47307e3fb95854d1b75ac6550fec50021"
+            },
+            "full_coverage": {
+              "file": "grids/second_walled_city/5m-full_coverage.u8",
+              "npy": "grids/second_walled_city/5m-full_coverage.npy",
+              "bytes": 57200,
+              "sha256": "f00623d6c9fef62360ab942136eb3de47307e3fb95854d1b75ac6550fec50021"
+            },
+            "coverage255": {
+              "file": "grids/second_walled_city/5m-coverage255.u8",
+              "npy": "grids/second_walled_city/5m-coverage255.npy",
+              "bytes": 57200,
+              "sha256": "1834d3cd42d264b85854b7ad0b68144dbbeb44917554a2cf5bf38ee1014823bb"
+            },
+            "egm2008_model": {
+              "file": "grids/second_walled_city/5m-egm2008_model.f32",
+              "npy": "grids/second_walled_city/5m-egm2008_model.npy",
+              "bytes": 228800,
+              "sha256": "48fbadabffac8dc91ea832ee3a418d156752e23126589dc8dc8cb7ede2d45b37"
+            }
+          },
+          "model_delta_min_m": -0.43993064761161804,
+          "model_delta_max_m": -0.433455228805542,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        }
+      ]
+    },
+    {
+      "id": "lion_rock_tunnel",
+      "label": "Lion Rock tunnel surface surroundings (not tunnel elevation)",
+      "bounds_epsg2326": [
+        836950,
+        822500,
+        838350,
+        825700
+      ],
+      "tiles": [
+        "11NW5B",
+        "11NE1A",
+        "11NE1B",
+        "7SW20D",
+        "7SE16C",
+        "7SE16D",
+        "7SW25D",
+        "7SE21C",
+        "7SE21D",
+        "11NW5D",
+        "11NE1C",
+        "7SW25B",
+        "7SE21A",
+        "7SE21B",
+        "11NW10B",
+        "11NE6A",
+        "11NE6B",
+        "11NE1D"
+      ],
+      "native_file": "grids/lion_rock_tunnel/native-hkpd-0p5m.tif",
+      "native_sha256": "4ba84ef2b670eb05b05806d67b3cc56684040d5c96ca5587953fcf79762f932e",
+      "native_shape_rc": [
+        6400,
+        2800
+      ],
+      "native_valid_pixels": 17920000,
+      "native_nodata_pixels": 0,
+      "native_valid_area_m2": 4480000.0,
+      "native_source_tif_crs_note": "Source TIFF stores horizontal CRS only; source index layer metadata independently declares HKPD (5738)",
+      "levels": [
+        {
+          "step_m": 2,
+          "width": 700,
+          "height": 1600,
+          "x0_cell_center": 836951.0,
+          "y0_cell_center": 825699.0,
+          "geotransform": [
+            836950,
+            2,
+            0,
+            825700,
+            0,
+            -2
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            1600,
+            700
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 1120000,
+          "full_coverage_cells": 1120000,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/lion_rock_tunnel/2m-hkpd.f32",
+              "npy": "grids/lion_rock_tunnel/2m-hkpd.npy",
+              "bytes": 4480000,
+              "sha256": "fae38b7819b4334925fbea137912e197a1ad981195a489ee45752f45c86198d6"
+            },
+            "valid": {
+              "file": "grids/lion_rock_tunnel/2m-valid.u8",
+              "npy": "grids/lion_rock_tunnel/2m-valid.npy",
+              "bytes": 1120000,
+              "sha256": "e0c0aff4127e26872e54fa694a848f3345a32040eb806f1c757f2ee6e4d3f3df"
+            },
+            "full_coverage": {
+              "file": "grids/lion_rock_tunnel/2m-full_coverage.u8",
+              "npy": "grids/lion_rock_tunnel/2m-full_coverage.npy",
+              "bytes": 1120000,
+              "sha256": "e0c0aff4127e26872e54fa694a848f3345a32040eb806f1c757f2ee6e4d3f3df"
+            },
+            "coverage255": {
+              "file": "grids/lion_rock_tunnel/2m-coverage255.u8",
+              "npy": "grids/lion_rock_tunnel/2m-coverage255.npy",
+              "bytes": 1120000,
+              "sha256": "925a2316ff74b36acd9d672dc3062a3602bd6493150c212a36b3e71edff5ed53"
+            },
+            "egm2008_model": {
+              "file": "grids/lion_rock_tunnel/2m-egm2008_model.f32",
+              "npy": "grids/lion_rock_tunnel/2m-egm2008_model.npy",
+              "bytes": 4480000,
+              "sha256": "223dcb53779738a0c59c8280b09a1d415359b5d57e390a130de91a988d8bbfcb"
+            }
+          },
+          "model_delta_min_m": -0.44999557733535767,
+          "model_delta_max_m": -0.4256768226623535,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        },
+        {
+          "step_m": 5,
+          "width": 280,
+          "height": 640,
+          "x0_cell_center": 836952.5,
+          "y0_cell_center": 825697.5,
+          "geotransform": [
+            836950,
+            5,
+            0,
+            825700,
+            0,
+            -5
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            640,
+            280
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 179200,
+          "full_coverage_cells": 179200,
+          "partial_coverage_cells": 0,
+          "source_nodata_cells": 0,
+          "files": {
+            "hkpd": {
+              "file": "grids/lion_rock_tunnel/5m-hkpd.f32",
+              "npy": "grids/lion_rock_tunnel/5m-hkpd.npy",
+              "bytes": 716800,
+              "sha256": "bb5a993389c0bcc32d3d5efe5ed7e83131906ce3b2f86c18cffb2be77d78effe"
+            },
+            "valid": {
+              "file": "grids/lion_rock_tunnel/5m-valid.u8",
+              "npy": "grids/lion_rock_tunnel/5m-valid.npy",
+              "bytes": 179200,
+              "sha256": "a11b3648cd04b3350bbc0caddf5496b49f3b214c3e0b57ac75c9777304ae563e"
+            },
+            "full_coverage": {
+              "file": "grids/lion_rock_tunnel/5m-full_coverage.u8",
+              "npy": "grids/lion_rock_tunnel/5m-full_coverage.npy",
+              "bytes": 179200,
+              "sha256": "a11b3648cd04b3350bbc0caddf5496b49f3b214c3e0b57ac75c9777304ae563e"
+            },
+            "coverage255": {
+              "file": "grids/lion_rock_tunnel/5m-coverage255.u8",
+              "npy": "grids/lion_rock_tunnel/5m-coverage255.npy",
+              "bytes": 179200,
+              "sha256": "689733fb1fd8697fdd4ed41422f81faa3a6a323a751dc7155de611b5eba8c3eb"
+            },
+            "egm2008_model": {
+              "file": "grids/lion_rock_tunnel/5m-egm2008_model.f32",
+              "npy": "grids/lion_rock_tunnel/5m-egm2008_model.npy",
+              "bytes": 716800,
+              "sha256": "2a4a4520857a6e4a45809cf2cf112b8588d15973e5e3b16d792d06ac5ed7e234"
+            }
+          },
+          "model_delta_min_m": -0.44995811581611633,
+          "model_delta_max_m": -0.4256913661956787,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        }
+      ]
+    },
+    {
+      "id": "shatin_candidate",
+      "label": "R02 fictional Sha Tin station candidate",
+      "bounds_epsg2326": [
+        839350,
+        829300,
+        840250,
+        830200
+      ],
+      "tiles": [
+        "7SE2C",
+        "7SE2D",
+        "7SE2A",
+        "7SE2B",
+        "7NE22C",
+        "7NE22D"
+      ],
+      "native_file": "grids/shatin_candidate/native-hkpd-0p5m.tif",
+      "native_sha256": "a93b15ca5046073a67fb6998ffa69e074b1bde29fcb7319cec59d9af0c6d6475",
+      "native_shape_rc": [
+        1800,
+        1800
+      ],
+      "native_valid_pixels": 2963039,
+      "native_nodata_pixels": 276961,
+      "native_valid_area_m2": 740759.75,
+      "native_source_tif_crs_note": "Source TIFF stores horizontal CRS only; source index layer metadata independently declares HKPD (5738)",
+      "levels": [
+        {
+          "step_m": 2,
+          "width": 450,
+          "height": 450,
+          "x0_cell_center": 839351.0,
+          "y0_cell_center": 830199.0,
+          "geotransform": [
+            839350,
+            2,
+            0,
+            830200,
+            0,
+            -2
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            450,
+            450
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 185402,
+          "full_coverage_cells": 184977,
+          "partial_coverage_cells": 425,
+          "source_nodata_cells": 17098,
+          "files": {
+            "hkpd": {
+              "file": "grids/shatin_candidate/2m-hkpd.f32",
+              "npy": "grids/shatin_candidate/2m-hkpd.npy",
+              "bytes": 810000,
+              "sha256": "a0a41ab94ac2661946054cc323e5b90e4da8167935abc18a6028acd7882c165c"
+            },
+            "valid": {
+              "file": "grids/shatin_candidate/2m-valid.u8",
+              "npy": "grids/shatin_candidate/2m-valid.npy",
+              "bytes": 202500,
+              "sha256": "f30da2f22fd23e82e165aa80d56de4006389cc9932f4a68bd4e9165d4a1c9dfa"
+            },
+            "full_coverage": {
+              "file": "grids/shatin_candidate/2m-full_coverage.u8",
+              "npy": "grids/shatin_candidate/2m-full_coverage.npy",
+              "bytes": 202500,
+              "sha256": "0346d625be0647c295ce10c4f62de497b793f693d3bd7b7d94bb1a57d56753ee"
+            },
+            "coverage255": {
+              "file": "grids/shatin_candidate/2m-coverage255.u8",
+              "npy": "grids/shatin_candidate/2m-coverage255.npy",
+              "bytes": 202500,
+              "sha256": "068fb3223e5933f50abeeefd6c0d10251a066821671150f44c937a1496e4aa4d"
+            },
+            "egm2008_model": {
+              "file": "grids/shatin_candidate/2m-egm2008_model.f32",
+              "npy": "grids/shatin_candidate/2m-egm2008_model.npy",
+              "bytes": 810000,
+              "sha256": "cf76024e0411efc81e2136a082c6f0ae923c0786ea5e23461191f520b4e086d1"
+            }
+          },
+          "model_delta_min_m": -0.47166910767555237,
+          "model_delta_max_m": -0.4665074944496155,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        },
+        {
+          "step_m": 5,
+          "width": 180,
+          "height": 180,
+          "x0_cell_center": 839352.5,
+          "y0_cell_center": 830197.5,
+          "geotransform": [
+            839350,
+            5,
+            0,
+            830200,
+            0,
+            -5
+          ],
+          "array_order": "C row-major north-to-south, west-to-east",
+          "shape_rc": [
+            180,
+            180
+          ],
+          "height_dtype": "little-endian Float32",
+          "nodata": -9999,
+          "resampling": "Exact area average of valid native 0.5m cells; never replace NoData by zero",
+          "valid_cells": 29734,
+          "full_coverage_cells": 29527,
+          "partial_coverage_cells": 207,
+          "source_nodata_cells": 2666,
+          "files": {
+            "hkpd": {
+              "file": "grids/shatin_candidate/5m-hkpd.f32",
+              "npy": "grids/shatin_candidate/5m-hkpd.npy",
+              "bytes": 129600,
+              "sha256": "ad1749e9b6d3f1446acbff7146d4eccb8ed936f5e3d6442f690a0ba73177aee1"
+            },
+            "valid": {
+              "file": "grids/shatin_candidate/5m-valid.u8",
+              "npy": "grids/shatin_candidate/5m-valid.npy",
+              "bytes": 32400,
+              "sha256": "6d21eac3eeed2dc5a970f189838327681075e5af69a4bbe826cb29172b7c1d28"
+            },
+            "full_coverage": {
+              "file": "grids/shatin_candidate/5m-full_coverage.u8",
+              "npy": "grids/shatin_candidate/5m-full_coverage.npy",
+              "bytes": 32400,
+              "sha256": "350ca809b194822c5889317e94adc00c6e05e609cf0b4f3936e2a4f68ab1ba6e"
+            },
+            "coverage255": {
+              "file": "grids/shatin_candidate/5m-coverage255.u8",
+              "npy": "grids/shatin_candidate/5m-coverage255.npy",
+              "bytes": 32400,
+              "sha256": "7a42fa739f5c934e68d83b00a645b19ba70c77aa33471e168ee8c552cda095a2"
+            },
+            "egm2008_model": {
+              "file": "grids/shatin_candidate/5m-egm2008_model.f32",
+              "npy": "grids/shatin_candidate/5m-egm2008_model.npy",
+              "bytes": 129600,
+              "sha256": "c8c0b5143383d774b00342324b598aa38d9e854d7aee72e9f598a4c8f5c51c4a"
+            }
+          },
+          "model_delta_min_m": -0.47165361046791077,
+          "model_delta_max_m": -0.4665166437625885,
+          "datum_status": "HKPD aligned by explicit LandsD HKGEOID2016_SMO + PROJ/NGA EGM2008 model chain; not survey-grade; no era deformation correction"
+        }
+      ]
+    }
+  ],
+  "created_utc": "2026-10-13T07:05:57.435781+00:00",
+  "source_acquisition_window": [
+    "2019-12-20",
+    "2020-02-02"
+  ],
+  "zip_download_total_bytes": 201862510,
+  "raw_tif_total_bytes": 314743280,
+  "total_patch_valid_area_m2": 7618385.25,
+  "runtime_levels_m": [
+    2,
+    5
+  ],
+  "vertical_alignment": {
+    "formula": "H_EGM2008_model = H_HKPD + (h_WGS84_ITRF96_at_HKPD0 - N_EGM2008)",
+    "control_grid_max_spacing_m": 500,
+    "source_url": "https://www.geodetic.gov.hk/en/services/tform/tform.aspx/keyinTransformation",
+    "hk_model": "HKGEOID2016_SMO (live web tool v3.4.3 declaration; web tool clocktower output agrees with public v2 API)",
+    "egm_model": "PROJ/NGA EGM2008 2.5 arc-minute undulation grid, bilinear evaluation",
+    "method": "Bilinear interpolation of model difference using per-patch controls; source HKPD retained unchanged separately",
+    "status": "model-based visualization alignment, not a surveyed or EPSG-registered exact HKPD-to-EGM2008 operation",
+    "limitations": [
+      "No additional epoch/deformation adjustment between the HK WGS84(ITRF96) reference frame at 1998:121 and Copernicus source-era WGS84 realization was applied.",
+      "No accuracy guarantee; interpolation validation measures computational agreement, not absolute terrain or datum accuracy.",
+      "DEM/DSM surface and acquisition differences persist after datum alignment.",
+      "EGM2008 geoid grid spacing of 2.5 arc-minutes is unrelated to the native DTM spacing of 0.5 metres."
+    ],
+    "controls_manifest": "datum/datum_controls.json",
+    "independent_proj_verification": {
+      "method": "PROJ inverse vgridshift with cropped PROJ/NGA geoid grid",
+      "longitude": 114.169200006,
+      "latitude": 22.293499997,
+      "ellipsoidal_input_m": -2.665,
+      "EGM2008_output_m": -0.4034106453254034,
+      "purpose": "Verifies grid center convention, subtraction sign, and bilinear result independently; not an absolute accuracy check"
+    }
+  },
+  "mask_contract": {
+    "valid": "1 if at least one source0.5m sample exists,0 if none",
+    "full_coverage": "1 only if every contributing native sample is valid,0 otherwise; recommended for terrain topology",
+    "coverage255": "0..255 fraction of valid native samples, rounded",
+    "nodata": "-9999 preserved; never infer sea by elevation or convert source NoData to zero",
+    "outside_source_index": "All five output rectangles lie within selected official tile footprints; source NoData is separately retained, not outside index"
+  },
+  "attribution": "Source terrain data: © Government of the Hong Kong Special Administrative Region, Civil Engineering and Development Department (CEDD), provided through the Common Spatial Data Infrastructure (CSDI) Portal. Derived crops, 2m/5m averages and model datum alignment prepared for this visualization. EGM2008 undulation grid: NGA public-domain model, GeographicLib/OSGeo PROJ-data conversion.",
+  "terms_url": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC",
+  "terms_check": "CSDI terms allow free browsing, downloading, distribution and reproduction for commercial and non-commercial use subject to terms and clear attribution/IP acknowledgement. No explicit acceptance step encountered; retain terms link.",
+  "integration_recommendation": [
+    "Prefer 5m full-window terrain plus 2m near-camera LOD. Native0.5m TIFFs are source/QA, not browser runtime payload.",
+    "Use egm2008_model grids only with explicit model-alignment label; HKPD files are unchanged source heights.",
+    "Remove or replace background terrain beneath detailed patch interiors; a simple overlay will be occluded by DSM buildings/vegetation.",
+    "Use full_coverage mask for triangle construction. NoData is not sea; do not generate triangles spanning invalid vertices.",
+    "Keep source DTM values in patch interiors. Any background-to-DTM edge blend is synthetic visualization, label its100m rim and preserve the raw data separately.",
+    "Do not use a median DSM-DTM difference as datum correction. Surface and historical/fictional edit differences are not datum offsets.",
+    "Lion Rock patch is land surface above/around the proposed tunnel; never drape tunnel rail onto mountain terrain.",
+    "Modern2019/2020 DTM does not reconstruct historic coastlines, demolished buildings, or historic track elevations.",
+    "No claim of full corridor coverage, survey-grade vertical accuracy, exact HKPD/EGM2008 seamlessness, or0.5m runtime rendering is justified."
+  ],
+  "qa_file": "QA.json",
+  "anchor_samples": "anchor_terrain_samples.json"
+}
