@@ -1,0 +1,109 @@
+name: Skin folds R02 continuous tissue
+on:
+  push:
+    branches: [fix/skin-folds-r02-soft-tissue-20261013]
+    paths: ['kaopu-unified-human-workbench/skin-folds-r02/**', 'iteration/skin-folds-r02/**', '.github/workflows/skin-folds-r02.yml']
+permissions:
+  contents: write
+concurrency:
+  group: skin-folds-r02-isolated
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            iteration/skin-folds-r02
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - run: npx playwright install --with-deps chromium
+      - name: Validate canonical R02 source and frozen R01 predecessor
+        run: |
+          set -euo pipefail
+          mkdir -p r02-evidence
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          old=Path('kaopu-unified-human-workbench/skin-folds-r01')
+          assert hashlib.sha256((old/'preview.html').read_bytes()).hexdigest()=='58b394a4f8ab129fe4ea50bde4cfd3e3f8d9de50a4f8047022a9d59de3670f9c'
+          for f in json.loads((old/'BUILD.json').read_text())['sources']:
+            assert hashlib.sha256((old/Path(f['path']).name).read_bytes()).hexdigest()==f['sha256']
+          # The one-time bootstrap is retired. Do not regenerate and erase reviewed R02 source.
+          print('R01 unchanged; R02 readable modules are authoritative')
+          PY
+          for f in kaopu-unified-human-workbench/skin-folds-r02/*.mjs kaopu-unified-human-workbench/skin-folds-r02/*.cjs; do node --check "$f"; done
+          node kaopu-unified-human-workbench/skin-folds-r02/test.mjs | tee r02-evidence/unit-regression.txt
+          node kaopu-unified-human-workbench/skin-folds-r02/fair-test.mjs | tee r02-evidence/unit-fairing.txt
+          node iteration/skin-folds-r02/test-r02.mjs | tee r02-evidence/unit-r02.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Build deterministic new preview without modifying legacy entries
+        run: node kaopu-unified-human-workbench/skin-folds-r02/build.cjs
+      - name: Browser smoke gate
+        env:
+          QA_OUT: r02-evidence/smoke
+          SMOKE_ONLY: '1'
+        run: node kaopu-unified-human-workbench/skin-folds-r02/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-smoke-${{ github.run_number }}
+          path: r02-evidence/
+          retention-days: 14
+      - name: Publish immutable candidate on isolated branch
+        run: |
+          git add kaopu-unified-human-workbench/skin-folds-r02/preview.html kaopu-unified-human-workbench/skin-folds-r02/BUILD.json
+          git commit -m 'build(skin-r02): immutable candidate pending fixed-public regression'
+          git push origin HEAD:fix/skin-folds-r02-soft-tissue-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/kaopu-unified-human-workbench/skin-folds-r02/preview.html" >> "$GITHUB_ENV"
+      - name: Complete fixed-public regression
+        env:
+          QA_OUT: r02-evidence/public
+        run: node kaopu-unified-human-workbench/skin-folds-r02/verify.cjs
+      - name: Matched predecessor comparison and R02-specific real-browser tests
+        env:
+          BASELINE_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8eb41852b4751b02003867b9aff2c4dd7a6e338c/kaopu-unified-human-workbench/skin-folds-r01/preview.html
+          EXTRA_OUT: r02-evidence/extra
+        run: node iteration/skin-folds-r02/extra.cjs
+      - name: Record actual checks and unchanged legacy boundary
+        run: |
+          git fetch --no-tags --filter=blob:none --depth=1 origin 4a81a75abbcf35c280c2f1b25b7f30fb75b02b03
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib,subprocess,urllib.request
+          p=Path('kaopu-unified-human-workbench/skin-folds-r02')
+          qa=json.loads(Path('r02-evidence/public/qa.json').read_text());extra=json.loads(Path('r02-evidence/extra/qa.json').read_text())
+          assert qa['completed'] and not qa['errors'] and not qa['consoleErrors'] and not qa['requests']
+          assert extra['completed'] and not extra['errors'] and not extra['consoleErrors'] and not extra['failedRequests']
+          assert all(t['pass'] for t in qa['tests']+extra['tests'])
+          changes=subprocess.check_output(['git','diff','--name-only','4a81a75abbcf35c280c2f1b25b7f30fb75b02b03','HEAD'],text=True).splitlines()
+          assert all(x.startswith((str(p)+'/', 'iteration/skin-folds-r02/')) or x=='.github/workflows/skin-folds-r02.yml' for x in changes),changes
+          build=json.loads((p/'BUILD.json').read_text());sha=os.environ['BUILD_SHA']
+          raw=urllib.request.urlopen(f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{sha}/{p}/preview.html',timeout=60).read()
+          assert hashlib.sha256(raw).hexdigest()==build['previewSHA256']
+          receipt={'version':'ET21-FOLD-R02','baselineBuild':'8eb41852b4751b02003867b9aff2c4dd7a6e338c','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':sha,'publicURL':os.environ['PREVIEW_URL'],'previewSHA256':build['previewSHA256'],'previewBytes':len(raw),'run':os.environ['GITHUB_RUN_ID'],'unitChecks':16,'publicChecks':len(qa['tests']),'extraPublicChecks':len(extra['tests']),'publicBrowserVerified':True,'geometry':qa['initial']['geometry'],'extraResults':extra['tests'],'legacyFilesChanged':False,'userVisualAccepted':False,'visualReviewPending':True,'productionReady':False,'realPhoneTested':False,'consumerGPUPerformanceCertified':False,'limits':['bounded analytic face deformation, not tissue FEM/self-contact','native assets still downloaded on first load','shape edits still rebuild native idle bases','two preparation entries trade memory for repeated CPU work','micro-normal finish coefficients do not measure actual human skin']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (p/'PUBLIC_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n')
+          (p/'EXTRA_QA.json').write_text(json.dumps(extra,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+          git add kaopu-unified-human-workbench/skin-folds-r02/DELIVERY.json kaopu-unified-human-workbench/skin-folds-r02/PUBLIC_QA.json kaopu-unified-human-workbench/skin-folds-r02/EXTRA_QA.json
+          git commit -m 'docs(skin-r02): actual fixed-public geometry and cache evidence'
+          git push origin HEAD:fix/skin-folds-r02-soft-tissue-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-final-${{ github.run_number }}
+          path: |
+            r02-evidence/
+            kaopu-unified-human-workbench/skin-folds-r02/
+            iteration/skin-folds-r02/
+          retention-days: 14

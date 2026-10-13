@@ -1,0 +1,283 @@
+{
+  "tests": [
+    {
+      "name": "matched-public-R01-R02-gray-ablation-native-person-and-camera-unchanged",
+      "pass": true,
+      "data": {
+        "oldPositionHash": 2131055491,
+        "newPositionHash": 598442866,
+        "camera": {
+          "position": [
+            -8.650496602058409e-05,
+            0.714999109506607,
+            0.5816207881560262
+          ],
+          "target": [
+            -8.650496602058409e-05,
+            0.714999109506607,
+            0.02971716597676277
+          ],
+          "zoom": 1.35
+        },
+        "displayVertices": 205459
+      }
+    },
+    {
+      "name": "bounded-cache-output-equals-full-recompute-bit-for-bit",
+      "pass": true,
+      "data": {
+        "positionsExact": true,
+        "normalsExact": true,
+        "cachedMS": [
+          50.10000000009313,
+          48.199999999953434,
+          48.90000000002328
+        ],
+        "uncachedMS": [
+          263.29999999993015,
+          260.60000000009313,
+          260.69999999995343
+        ],
+        "cache": {
+          "hits": 40,
+          "misses": 37,
+          "entries": 2,
+          "maxEntries": 2,
+          "bytes": 22015080,
+          "match": "exact source position and normal values; not version-counter or hash-only",
+          "lastHit": true
+        },
+        "scope": "only FoldSurface CPU update; not full bake, frame time or FPS"
+      }
+    },
+    {
+      "name": "maximum-settings-protected-vertices-and-triangle-orientation",
+      "pass": true,
+      "data": {
+        "protectedMaxMM": 0,
+        "flips": 0,
+        "checked": 410424,
+        "minimumDot": 0.6158723957177433,
+        "finite": true,
+        "maxDeltaMM": 2.108655973153794,
+        "scope": "display triangles above 1e-12 square-metre cross magnitude; no self-contact certification"
+      }
+    },
+    {
+      "name": "skin-preset-does-not-reset-light-or-diagnostic",
+      "pass": true,
+      "data": {
+        "before": {
+          "light": "raking",
+          "chroma": 0.4,
+          "exposure": 0.2,
+          "gray": true,
+          "shadows": false,
+          "diffusion": false
+        },
+        "after": {
+          "light": "raking",
+          "chroma": 0.4,
+          "exposure": 0.2,
+          "gray": true,
+          "shadows": false,
+          "diffusion": false
+        }
+      }
+    },
+    {
+      "name": "real-shape-slider-commits-on-release",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "UI-full-person-download-has-explicit-formulation-version",
+      "pass": true,
+      "data": "kaopu/geometric-skin-folds@2"
+    },
+    {
+      "name": "second-native-person-rebuilds-cache-and-keeps-folds",
+      "pass": true,
+      "data": {
+        "hits": 92,
+        "misses": 86,
+        "entries": 2,
+        "maxEntries": 2,
+        "bytes": 22015080,
+        "match": "exact source position and normal values; not version-counter or hash-only",
+        "lastHit": true
+      }
+    },
+    {
+      "name": "no-browser-shader-or-network-errors-in-comparison",
+      "pass": true,
+      "data": true
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "completed": true,
+  "camera": {
+    "position": [
+      -8.650496602058409e-05,
+      0.714999109506607,
+      0.5816207881560262
+    ],
+    "target": [
+      -8.650496602058409e-05,
+      0.714999109506607,
+      0.02971716597676277
+    ],
+    "zoom": 1.35
+  },
+  "baseline": {
+    "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8eb41852b4751b02003867b9aff2c4dd7a6e338c/kaopu-unified-human-workbench/skin-folds-r01/preview.html",
+    "grayPixels": {
+      "hash": 3909108901,
+      "glError": 0
+    },
+    "skinPixels": {
+      "hash": 2121135092,
+      "glError": 0
+    },
+    "makeupPixels": {
+      "hash": 3061890548,
+      "glError": 0
+    },
+    "geometry": {
+      "positions": 2131055491,
+      "native": 2692675663,
+      "faces": 1446967608,
+      "stats": {
+        "addedVertices": 55000,
+        "sourceVertices": 150459,
+        "displayVertices": 205459,
+        "fairing": {
+          "activeVertices": 87340,
+          "maxCorrectionMM": 0.16353789108962685,
+          "capMM": 0.22,
+          "normalLaplacianBeforeMM": 0.026344949249232662,
+          "normalLaplacianAfterMM": 0.024222724975426962,
+          "cycles": 5,
+          "appliedBeforeFolds": true
+        },
+        "baseNormalPolish": {
+          "correctedBaseNormals": 73498,
+          "maxCorrectionDegrees": 11.568963276041394,
+          "capDegrees": 12,
+          "foldNormalDeltaPreserved": true,
+          "positionChanges": 0,
+          "protectedMaskUnchanged": true
+        },
+        "affectedVertices": 88575,
+        "positiveRollVertices": 11069,
+        "valleyVertices": 41352,
+        "maxDeltaMM": 1.1585713294391449,
+        "protectedDeltaMM": 0,
+        "updateMS": 265.4000000000233,
+        "canonicalModified": false,
+        "bodyModified": false,
+        "extraHeadMeshes": 0,
+        "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+        "physicalSkinSimulation": false
+      }
+    },
+    "settings": {
+      "strength": 1.1,
+      "slack": 0.92,
+      "compression": 0.72,
+      "forehead": 0.85,
+      "eyes": 0.9,
+      "nasolabial": 1,
+      "cheeks": 0.85,
+      "sag": 0.85,
+      "makeup": 1,
+      "light": "neutral",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    }
+  },
+  "r02": {
+    "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/518cc9bd85b9aec53d8abbeffe303d1c0d03ddd9/kaopu-unified-human-workbench/skin-folds-r02/preview.html",
+    "grayPixels": {
+      "hash": 1507442030,
+      "glError": 0
+    },
+    "skinPixels": {
+      "hash": 4212350404,
+      "glError": 0
+    },
+    "makeupPixels": {
+      "hash": 3210046336,
+      "glError": 0
+    },
+    "geometry": {
+      "positions": 598442866,
+      "native": 2692675663,
+      "faces": 1446967608,
+      "stats": {
+        "addedVertices": 55000,
+        "sourceVertices": 150459,
+        "displayVertices": 205459,
+        "preparedCache": {
+          "hits": 35,
+          "misses": 34,
+          "entries": 2,
+          "maxEntries": 2,
+          "bytes": 22015080,
+          "match": "exact source position and normal values; not version-counter or hash-only",
+          "lastHit": true
+        },
+        "fairing": {
+          "activeVertices": 87340,
+          "maxCorrectionMM": 0.16353789108962685,
+          "capMM": 0.22,
+          "normalLaplacianBeforeMM": 0.026344949249232662,
+          "normalLaplacianAfterMM": 0.024222724975426962,
+          "cycles": 5,
+          "appliedBeforeFolds": true
+        },
+        "baseNormalPolish": {
+          "correctedBaseNormals": 73498,
+          "maxCorrectionDegrees": 11.568963276041394,
+          "capDegrees": 12,
+          "foldNormalDeltaPreserved": true,
+          "positionChanges": 0,
+          "protectedMaskUnchanged": true
+        },
+        "affectedVertices": 88575,
+        "positiveRollVertices": 12100,
+        "valleyVertices": 44995,
+        "maxDeltaMM": 1.0978577948606565,
+        "protectedDeltaMM": 0,
+        "updateMS": 52.300000000046566,
+        "canonicalModified": false,
+        "bodyModified": false,
+        "extraHeadMeshes": 0,
+        "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+        "physicalSkinSimulation": false
+      }
+    },
+    "settings": {
+      "strength": 1.1,
+      "slack": 0.92,
+      "compression": 0.72,
+      "forehead": 0.85,
+      "eyes": 0.9,
+      "nasolabial": 1,
+      "cheeks": 0.85,
+      "sag": 0.85,
+      "makeup": 1,
+      "light": "neutral",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    }
+  }
+}
