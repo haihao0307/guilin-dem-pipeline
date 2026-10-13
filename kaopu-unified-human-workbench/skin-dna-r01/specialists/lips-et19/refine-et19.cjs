@@ -1,0 +1,37 @@
+const fs=require('fs'),path=require('path');
+function p(file,a,b){const f=path.join(__dirname,file),s=fs.readFileSync(f,'utf8');if(s.includes(b))return;if(!s.includes(a))throw Error('ET19 review correction anchor missing: '+file+' / '+a);fs.writeFileSync(f,s.replaceAll(a,b));}
+// Across-furrow strain, not isotropic edge length: a volume-compensated pucker
+// can have increasing total edge length while its transverse grooves compress.
+p('LipRegionTopology.mjs','this.inside=[];this.neighbors=','this.inside=[];this.oralSurface=[];this.neighbors=');
+p('LipRegionTopology.mjs','this.samples[i]=q;if(q.skin','if(q.inner>.001||(T[i]>.5&&T[i]<3.5))this.oralSurface.push(i);this.samples[i]=q;if(q.skin');
+p('LipRegionTopology.mjs','this.restLength=new Float32Array(this.count);','this.horizontalWeights=this.neighbors.map((ns,i)=>ns.map(j=>{const dx=R[i*3]-R[j*3],dy=R[i*3+1]-R[j*3+1],dz=R[i*3+2]-R[j*3+2];return dx*dx/Math.max(1e-12,dx*dx+dy*dy+dz*dz);}));this.restLength=new Float32Array(this.count);');
+p('LipBiomechanics.mjs','this.reference=null;this.lastKey=null;','this.reference=null;this.referenceHorizontal=null;this.lastKey=null;');
+p('LipBiomechanics.mjs','this.reference=null;this.lastKey=key;','this.reference=null;this.referenceHorizontal=null;this.lastKey=key;');
+p('LipBiomechanics.mjs','if(!this.reference&&neutral){','const horizontal=i=>{const ns=topo.neighbors[i],w=topo.horizontalWeights[i];let sum=0,weight=0;for(let k=0;k<ns.length;k++){const j=ns[k];sum+=w[k]*Math.abs((P[i*3]-P[j*3])*frame.x[0]+(P[i*3+1]-P[j*3+1])*frame.x[1]+(P[i*3+2]-P[j*3+2])*frame.x[2]);weight+=w[k];}return sum/Math.max(1e-8,weight);};if(!this.referenceHorizontal&&neutral){this.referenceHorizontal=new Float32Array(topo.count);for(const i of topo.active)this.referenceHorizontal[i]=horizontal(i);}if(!this.reference&&neutral){');
+p('LipBiomechanics.mjs','strain=clamp(length/Math.max(1e-7,reference),.55,1.85),gain=clamp(Math.pow(1/strain,1.55),.40,2.1);','strain=clamp(this.referenceHorizontal?.[i]>1e-7?horizontal(i)/this.referenceHorizontal[i]:length/Math.max(1e-7,reference),.55,1.85),gain=clamp(Math.pow(1/strain,1.55)*(1+topo.fields[i*4+3]*.16),.40,2.1);');
+p('LipBiomechanics.mjs',"localStretch:{min:","strainMetric:'weighted across-furrow tangent extension; pressure deepens contact creases',localStretch:{min:");
+// Geometry-derived intraoral visibility approximation follows the moving jaw.
+p('LipBiomechanics.mjs','let minGap=Infinity,closed=0;','for(const i of topo.oralSurface){let depth=0;for(let k=0;k<3;k++)depth+=(origin[k]-P[i*3+k])*frame.front[k];topo.detail[i*4+3]=Math.max(0,depth)/Math.max(.35,scale);}let minGap=Infinity,closed=0;');
+// Bound absolute authored offsets with the current mouth's identity scale.
+p('LipBiomechanics.mjs','dz=(.0036*p.pucker+.0025*p.funnel)*gauss(q.u,.85)-.0008*stretch*lipOnly;','dz=((.0036*p.pucker+.0025*p.funnel)*gauss(q.u,.85)-.0008*stretch*lipOnly)*scale;');
+p('LipBiomechanics.mjs','dy+=(q.upper?.0018*p.upperRaise:-.0024*p.lowerDepress)*gauss(q.u,.9);dy+=.0028*corner*cornerW;','dy+=(q.upper?.0018*p.upperRaise:-.0024*p.lowerDepress)*gauss(q.u,.9)*scale;dy+=.0028*corner*cornerW*scale;');
+p('LipBiomechanics.mjs','dy+=(q.upper?1:-1)*.0017*p.funnel*gauss(q.u,.85)*gauss(q.v,.8);','dy+=(q.upper?1:-1)*.0017*p.funnel*gauss(q.u,.85)*gauss(q.v,.8)*scale;');
+p('LipBiomechanics.mjs','dy+=(q.upper?-1:1)*.00125*roll*gauss(q.v-.20,.75);dz+=.00115*roll*lipOnly+.00065*p.press*lipOnly;','dy+=(q.upper?-1:1)*.00125*roll*gauss(q.v-.20,.75)*scale;dz+=(.00115*roll*lipOnly+.00065*p.press*lipOnly)*scale;');
+p('LipBiomechanics.mjs','dz+=(dna.tissueDepth-1)*.0011*lipOnly;','dz+=(dna.tissueDepth-1)*.0011*lipOnly*scale;');
+p('LipOptics.mjs','shader.fragmentShader=s;skin.lipMotherOptics.compiles++;',`s=replace(s,'(lpBroad*2.05+lpMottle*.64+lpWarmCenter*.11)*uLVariation','(lpBroad*.58+lpMottle*.32+lpWarmCenter*.13)*uLVariation');
+  s=replace(s,'if(uLDebug>.5&&uLDebug<1.5)',\`float l19Inside=max(lpMucosa,step(.5,vCSType)*(1.-step(3.5,vCSType)))*uLEnabled;
+   float l19Visibility=.12+.88*exp(-max(0.,vL19Detail.w)*120.);
+   outgoingLight*=mix(1.,l19Visibility,clamp(l19Inside,0.,1.));
+   if(uLDebug>.5&&uLDebug<1.5)\`);
+  shader.fragmentShader=s;skin.lipMotherOptics.compiles++;`);
+// Dedicated review space is reversible; no native controls or data are removed.
+p('LipMotherUI.mjs','function mount(){','const focusButton=document.createElement("button");focusButton.id="lip19Focus";focusButton.textContent="展开原总台入口";focusButton.setAttribute("aria-pressed","true");document.querySelector("body>header").append(focusButton);document.body.classList.add("lips-focus");focusButton.onclick=()=>{const on=document.body.classList.toggle("lips-focus");focusButton.textContent=on?"展开原总台入口":"返回唇部专注视图";focusButton.setAttribute("aria-pressed",String(on));dispatchEvent(new Event("resize"));};function mount(){');
+p('LipMotherUI.mjs','<h3>ET19 · 三维唇部母体</h3>','<h3>ET19 · 三维唇部母体</h3><div class="identity-tools lip19-views"><button data-l19-action="view-front">正面</button><button data-l19-action="view-oblique">45°</button><button data-l19-action="view-profile">侧面</button><button data-l19-action="view-macro">唇纹近景</button><button data-l19-action="view-face">整脸</button><button data-l19-action="gray">灰模结构</button></div>');
+p('LipMotherUI.mjs',"if(action==='stop')stop();","if(action.startsWith('view-'))window.lipWorkbench.view(action.slice(5));else if(action==='gray'){api.debug=0;model.eyeSurface.set({gray:!model.eyeSurface.settings.gray,grid:false});controller.changed();}else if(action==='stop')stop();");
+p('LipMotherUI.mjs',"api.debug={regions:5,strain:6,wet:7,beauty:0}[action];api.update();viewer.render();","api.debug={regions:5,strain:6,wet:7,beauty:0}[action];if(action==='beauty')model.eyeSurface.set({gray:false,grid:false});api.update();controller.changed();");
+p('LipMotherUI.mjs','disposed=true;stop();','disposed=true;focusButton.remove();document.body.classList.remove("lips-focus");stop();');
+p('LipUI.mjs',"a.download='kaopu-et18-person.json'","a.download='kaopu-et19-person.json'");
+p('build.cjs','lipStructure:appearance.lipStructure};','lipStructure:appearance.lipStructure,lipAnatomyDNA:appearance.lipAnatomyDNA,lipPerformance:appearance.lipPerformance,lipPerformanceContext:appearance.lipPerformanceContext};');
+p('verify-et19.cjs',"check('all 36 original presets',report.presets.length===36&&report.presets.every(p=>p.finite&&p.nativeVertices===25417&&p.mouthBoundary===0),{count:report.presets.length});","check('retained 72 original catalog presets',report.presets.length===72&&new Set(report.presets.map(p=>p.id)).size===72&&report.presets.every(p=>p.finite&&p.nativeVertices===25417&&p.mouthBoundary===0),{count:report.presets.length,source:'retained catalog inspected at ET18 source; includes R02 and R03.1'});");
+p('verify-et19.cjs',"await page.evaluate(()=>lipWorkbench.perform('neutral'));for(const [name,value]", "if(!isPublic){const neutral=report.poses.find(p=>p.name==='neutral').report.localStretch.mean,smile=report.poses.find(p=>p.name==='smile').report.localStretch.mean,pucker=report.poses.find(p=>p.name==='pucker').report.localStretch.mean;check('directional strain: smile extends and pucker compresses',smile>neutral&&pucker<neutral,{neutral,smile,pucker});}await page.evaluate(()=>lipWorkbench.perform('neutral'));for(const [name,value]");
+p('LipViewer.mjs','lipMaterial:this.skin?.lipExtension||null','lipMaterial:this.skin?.lipExtension||null,lipMotherOptics:this.skin?.lipMotherOptics||null');
