@@ -1,4 +1,4 @@
-name: Joey R56 bounded native crease reachability
+name: Joey R56 compact native crease comparison
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 17
+    timeout-minutes: 19
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -29,11 +29,11 @@ jobs:
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
       - name: Check bounded original GNM direction in complete native engine
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/native-guards.test.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/run.cjs
+          node --test kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/native-guards.test.cjs kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/local-intersections.test.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/local.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-native-crease-r56/
+          path: joey-native-local-r56/
           retention-days: 7
