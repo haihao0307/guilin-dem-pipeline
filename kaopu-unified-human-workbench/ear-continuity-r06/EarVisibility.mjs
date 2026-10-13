@@ -1,3 +1,4 @@
+import {PenumbraFilter} from './PenumbraFilter.mjs';
 /** Ear-only direct-light visibility against the CURRENT head surface.
  * Backside transport must exit the pinna and then have a clear path to light.
  * No positions, normals or albedo are altered. Units: millimetres. */
@@ -32,17 +33,18 @@ export class HeadVisibilityBVH{
 }
 export function coneDirections(light,angle=.018){const l=unit(light),axis=Math.abs(l[1])<.9?[0,1,0]:[1,0,0],u=unit(cross(axis,l)),v=cross(l,u);return[l,...[u,v].flatMap(t=>[-1,1].map(s=>unit(l.map((x,j)=>x+t[j]*angle*s))))]}
 export class EarVisibilityField{
- constructor(g,{sampleCount=g.attributes.position.count,pairs=[],skullGeometry=null}={}){this.geometry=g;this.sampleCount=sampleCount;this.skullGeometry=skullGeometry;this.pairs=pairs;this.active=[];const W=g.attributes.eWeight.array;for(let i=0;i<sampleCount;i++)if(W[i]>0)this.active.push(i);this.direct=new Float32Array(W.length*3).fill(1);this.deep=new Float32Array(W.length*3);this.last=null;this.lightKey=null;this.builds=0;this.report={ready:false};}
+ constructor(g,{sampleCount=g.attributes.position.count,pairs=[],skullGeometry=null}={}){this.geometry=g;this.sampleCount=sampleCount;this.skullGeometry=skullGeometry;this.pairs=pairs;this.active=[];const W=g.attributes.eWeight.array;for(let i=0;i<sampleCount;i++)if(W[i]>0)this.active.push(i);this.direct=new Float32Array(W.length*3).fill(1);this.deep=new Float32Array(W.length*3);this.penumbra=new PenumbraFilter(g);this.last=null;this.lightKey=null;this.builds=0;this.report={ready:false};}
  update(directions){
   if(directions.length!==3)throw Error('R06 requires the three retained directional lights; explicit rebind required');
   const g=this.geometry,P=g.attributes.position.array,N=g.attributes.normal.array,signature=directions.flat().map(x=>x.toFixed(8)).join('/'),geometrySame=this.last&&P.length===this.last.length&&P.every((x,i)=>x===this.last[i]);
   if(geometrySame&&signature===this.lightKey)return false;
-  const t=performance.now();if(!geometrySame){this.bvh=new HeadVisibilityBVH(g,{skullGeometry:this.skullGeometry});this.last=P.slice();}this.lightKey=signature;
+  const t=performance.now();if(!geometrySame){this.bvh=new HeadVisibilityBVH(g,{skullGeometry:this.skullGeometry});this.penumbra.prepare();this.last=P.slice();}this.lightKey=signature;
   let directVisible=[0,0,0],deepVisible=[0,0,0],rays=0;const cones=directions.map(d=>coneDirections(d));
   for(const i of this.active){const p=[P[i*3]*1000,P[i*3+1]*1000,P[i*3+2]*1000],n=unit([N[i*3],N[i*3+1],N[i*3+2]]);for(let lamp=0;lamp<3;lamp++){let d=0,s=0;for(const dir of cones[lamp]){const r=this.bvh.visibility(p,n,dir);d+=r.direct;s+=r.deep;rays++}d/=5;s/=5;this.direct[i*3+lamp]=d;this.deep[i*3+lamp]=s;directVisible[lamp]+=d;deepVisible[lamp]+=s;}}
   // The unchanged R04 midpoint stencils interpolate optical fields only.
   for(let j=0;j<this.pairs.length;j++){const[a,b]=this.pairs[j],id=this.sampleCount+j;for(let k=0;k<3;k++){this.direct[id*3+k]=(this.direct[a*3+k]+this.direct[b*3+k])*.5;this.deep[id*3+k]=(this.deep[a*3+k]+this.deep[b*3+k])*.5;}}
-  this.builds++;this.report={ready:true,version:'EAR-R06.0',method:'retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility',occluderTriangles:this.bvh.tri.length,raySampleVertices:this.active.length,interpolatedVertices:this.pairs.length,directVisible,deepVisible,lightDirections:directions,angularRadiusRadians:.018,biasMM:.06,queryCount:rays,fieldBytes:this.direct.byteLength+this.deep.byteLength,buildMS:performance.now()-t,builds:this.builds,geometryRebuilt:!geometrySame,positionsModified:false,normalsModified:false,unknownExitPolicy:'no deep transmission',fullVolumetricTransport:false};return true;
+  this.penumbra.apply(this.direct);this.penumbra.apply(this.deep);
+  this.builds++;this.report={ready:true,version:'EAR-R06.0',method:'retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility',penumbra:this.penumbra.report(),occluderTriangles:this.bvh.tri.length,raySampleVertices:this.active.length,interpolatedVertices:this.pairs.length,directVisible,deepVisible,visibilitySumStage:'before optical prefilter',lightDirections:directions,angularRadiusRadians:.018,biasMM:.06,queryCount:rays,fieldBytes:this.direct.byteLength+this.deep.byteLength,buildMS:performance.now()-t,builds:this.builds,geometryRebuilt:!geometrySame,positionsModified:false,normalsModified:false,unknownExitPolicy:'no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue',fullVolumetricTransport:false};return true;
  }
- dispose(){this.bvh=null;this.last=null;}
+ dispose(){this.bvh=null;this.last=null;this.penumbra=null;}
 }
