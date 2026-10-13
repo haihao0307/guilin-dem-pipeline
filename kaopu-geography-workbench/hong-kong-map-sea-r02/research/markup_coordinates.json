@@ -1,0 +1,712 @@
+{
+  "schema": "hk-r02-markup-coordinates-v1",
+  "crs": "EPSG:2326",
+  "units": "metres",
+  "status": "approximate fictional design intent, NOT exact georeferencing or engineering alignment",
+  "bounds_epsg2326": [
+    823020,
+    808000,
+    848490,
+    845500
+  ],
+  "bounds_order": [
+    "west",
+    "south",
+    "east",
+    "north"
+  ],
+  "bounds_size_m": [
+    25470,
+    37500
+  ],
+  "bounds_derivation": "Inverse-project the red screenshot quadrilateral to original DSM, then select a north-aligned rectangle near side midpoints and trim the west side slightly. Snap inward to original 30m cells. This avoids enlarging to the quadrilateral bounding box.",
+  "bounds_uncertainty_m": 600,
+  "red_screen_corners_epsg2326": [
+    [
+      848810,
+      845760
+    ],
+    [
+      848030,
+      807280
+    ],
+    [
+      821620,
+      808640
+    ],
+    [
+      822840,
+      845240
+    ]
+  ],
+  "red_screen_corner_order": [
+    "image top-left",
+    "image top-right",
+    "image bottom-right",
+    "image bottom-left"
+  ],
+  "stations": {
+    "second": {
+      "epsg2326": [
+        837440,
+        821150
+      ],
+      "source_image": "105108",
+      "source_pixel_1000wide": [
+        550,
+        266
+      ],
+      "original_dsm_height_m": 15.6,
+      "candidate_radius_m": 120,
+      "meaning": "Second large shed station, yellow circle southwest of the walled-city reference point. Fictional candidate, not surveyed."
+    },
+    "shatinNorthwest": {
+      "epsg2326": [
+        839530,
+        829940
+      ],
+      "source_image": "104923",
+      "source_pixel_1000wide": [
+        645,
+        359
+      ],
+      "original_dsm_height_m": 88.8,
+      "candidate_radius_m": 180,
+      "meaning": "Raw upper circle centre for audit only; not a platform location."
+    },
+    "shatinSoutheast": {
+      "epsg2326": [
+        839990,
+        829700
+      ],
+      "source_image": "104923",
+      "source_pixel_1000wide": [
+        659,
+        381
+      ],
+      "original_dsm_height_m": 8.4,
+      "candidate_radius_m": 150,
+      "meaning": "Raw lower circle centre for audit only; not a platform location."
+    },
+    "shatinCore": {
+      "epsg2326": [
+        839760,
+        829820
+      ],
+      "source_image": "104923",
+      "candidate_radius_m": 350,
+      "meaning": "Raw two-circle midpoint for audit. Use shatinPlanningAxis for the actual compact station."
+    },
+    "shatinPlanningAxis": {
+      "epsg2326": [
+        839790,
+        829760
+      ],
+      "source_image": "104923",
+      "candidate_radius_m": 180,
+      "planning_elevation_m": 9,
+      "axis_azimuth_clockwise_from_north_rad": 0.48,
+      "station_length_m": 300,
+      "station_width_m": 90,
+      "platform_lateral_offsets_m": [
+        -35,
+        35
+      ],
+      "meaning": "One continuous compact fictional station precinct on nearby low-gradient land, using the two circles only for general locality and side-by-side relation. Platform axes are tens of metres apart."
+    },
+    "shatinPlatformWest": {
+      "epsg2326": [
+        839759,
+        829776
+      ],
+      "planning_elevation_m": 9,
+      "axis_azimuth_clockwise_from_north_rad": 0.48,
+      "meaning": "Western parallel platform axis, 35m from shared centre."
+    },
+    "shatinPlatformEast": {
+      "epsg2326": [
+        839821,
+        829744
+      ],
+      "planning_elevation_m": 9,
+      "axis_azimuth_clockwise_from_north_rad": 0.48,
+      "meaning": "Eastern parallel platform axis, 35m from shared centre."
+    }
+  },
+  "shatinPlanningAxis": {
+    "epsg2326": [
+      839790,
+      829760
+    ],
+    "source_image": "104923",
+    "candidate_radius_m": 180,
+    "planning_elevation_m": 9,
+    "axis_azimuth_clockwise_from_north_rad": 0.48,
+    "station_length_m": 300,
+    "station_width_m": 90,
+    "platform_lateral_offsets_m": [
+      -35,
+      35
+    ],
+    "meaning": "One continuous compact fictional station precinct on nearby low-gradient land, using the two circles only for general locality and side-by-side relation. Platform axes are tens of metres apart."
+  },
+  "stationMarkupEvidence": {
+    "shatin_raw_circle_centres_epsg2326": [
+      [
+        839530,
+        829940
+      ],
+      [
+        839990,
+        829700
+      ]
+    ],
+    "shatin_raw_circle_original_dsm_heights_m": [
+      88.8,
+      8.4
+    ],
+    "shatin_raw_circle_midpoint_epsg2326": [
+      839760,
+      829820
+    ],
+    "interpretation": "These are broad handwritten circle marks, not exact platform endpoints. Do not bind platforms to the raw circle centres, excavate an 80m knoll, or separate platforms by ~520m.",
+    "selected_site_shift_from_circle_midpoint_m": 67,
+    "selected_site_footprint_m": [
+      300,
+      90
+    ],
+    "selected_site_heading_rad_from_north": 0.48,
+    "selected_site_parent_grid_samples_elevation_m": {
+      "min": 6.735,
+      "max": 12.358,
+      "mean": 8.764,
+      "all_land": true
+    },
+    "selected_site_independent_bilinear_check_m": {
+      "min": 6.853,
+      "max": 11.896,
+      "mean": 8.746,
+      "sampling": "31 along-axis × 10 cross-axis points,300m×90m,original 30m DSM bilinear"
+    },
+    "planning_level_m": 9,
+    "design_note": "A modest local fictional grading treatment may support a common planning level; this is not a survey or construction feasibility claim."
+  },
+  "routeSouth": [
+    [
+      835480,
+      817230
+    ],
+    [
+      835580,
+      817230
+    ],
+    [
+      835700,
+      817240
+    ],
+    [
+      835840,
+      817240
+    ],
+    [
+      835940,
+      817250
+    ],
+    [
+      836030,
+      817330
+    ],
+    [
+      836130,
+      817430
+    ],
+    [
+      836220,
+      817610
+    ],
+    [
+      836310,
+      817800
+    ],
+    [
+      836400,
+      818020
+    ],
+    [
+      836500,
+      818350
+    ],
+    [
+      836580,
+      818670
+    ],
+    [
+      836330,
+      819660
+    ],
+    [
+      836370,
+      819840
+    ],
+    [
+      836440,
+      819950
+    ],
+    [
+      836560,
+      820140
+    ],
+    [
+      836650,
+      820300
+    ],
+    [
+      836760,
+      820440
+    ],
+    [
+      836870,
+      820560
+    ],
+    [
+      837020,
+      820750
+    ],
+    [
+      837190,
+      820970
+    ],
+    [
+      837340,
+      821100
+    ],
+    [
+      837440,
+      821150
+    ],
+    [
+      837590,
+      821410
+    ],
+    [
+      837690,
+      821700
+    ],
+    [
+      837800,
+      822160
+    ],
+    [
+      837870,
+      822550
+    ],
+    [
+      837920,
+      822910
+    ],
+    [
+      837940,
+      823240
+    ],
+    [
+      837920,
+      823350
+    ],
+    [
+      837910,
+      823680
+    ],
+    [
+      837870,
+      823880
+    ]
+  ],
+  "routeSouthMeaning": "Clock tower coast departure from 105055, continuing with latest 105108 second-station and walled-city segment, ending at the south face of Lion Rock. One ~1km sketch gap between the screenshots is joined conceptually.",
+  "routeNorth": [
+    [
+      837460,
+      825400
+    ],
+    [
+      837580,
+      825900
+    ],
+    [
+      837720,
+      826400
+    ],
+    [
+      837880,
+      827030
+    ],
+    [
+      838030,
+      827540
+    ],
+    [
+      838240,
+      828080
+    ],
+    [
+      838540,
+      828620
+    ],
+    [
+      838800,
+      829100
+    ],
+    [
+      839170,
+      829330
+    ],
+    [
+      839580,
+      829640
+    ],
+    [
+      839700,
+      829950
+    ],
+    [
+      839740,
+      830320
+    ],
+    [
+      839720,
+      830730
+    ],
+    [
+      839660,
+      831210
+    ],
+    [
+      839480,
+      831540
+    ],
+    [
+      839170,
+      831850
+    ],
+    [
+      838770,
+      832260
+    ],
+    [
+      838370,
+      832780
+    ],
+    [
+      838000,
+      833190
+    ],
+    [
+      837620,
+      833640
+    ],
+    [
+      837270,
+      834100
+    ],
+    [
+      836830,
+      834590
+    ],
+    [
+      836290,
+      835050
+    ],
+    [
+      835640,
+      835510
+    ],
+    [
+      835080,
+      835920
+    ],
+    [
+      834520,
+      836330
+    ],
+    [
+      834000,
+      836780
+    ],
+    [
+      833910,
+      836920
+    ]
+  ],
+  "routeNorthMeaning": "104949 blue sketch, south of Sha Tin northward along the river side and around the bay to Tai Po. The last section crosses contemporary water; this is user-authored fictional intent, not real railway.",
+  "routeSouthRaw105055": [
+    [
+      835480,
+      817230
+    ],
+    [
+      835580,
+      817230
+    ],
+    [
+      835700,
+      817240
+    ],
+    [
+      835840,
+      817240
+    ],
+    [
+      835940,
+      817250
+    ],
+    [
+      836030,
+      817330
+    ],
+    [
+      836130,
+      817430
+    ],
+    [
+      836220,
+      817610
+    ],
+    [
+      836310,
+      817800
+    ],
+    [
+      836400,
+      818020
+    ],
+    [
+      836500,
+      818350
+    ],
+    [
+      836580,
+      818670
+    ],
+    [
+      836650,
+      818980
+    ],
+    [
+      836700,
+      819470
+    ],
+    [
+      836740,
+      820150
+    ],
+    [
+      836770,
+      820490
+    ],
+    [
+      836840,
+      820870
+    ],
+    [
+      836950,
+      821120
+    ],
+    [
+      837110,
+      821240
+    ],
+    [
+      837310,
+      821340
+    ],
+    [
+      837510,
+      821480
+    ],
+    [
+      837660,
+      821680
+    ],
+    [
+      837800,
+      822140
+    ],
+    [
+      837920,
+      822710
+    ],
+    [
+      837990,
+      823170
+    ],
+    [
+      837960,
+      823370
+    ],
+    [
+      837900,
+      823730
+    ],
+    [
+      837790,
+      823880
+    ],
+    [
+      837890,
+      825500
+    ],
+    [
+      838110,
+      827210
+    ],
+    [
+      838290,
+      828010
+    ],
+    [
+      838480,
+      828550
+    ],
+    [
+      838800,
+      829210
+    ]
+  ],
+  "routeSouthRevision105108": [
+    [
+      836330,
+      819660
+    ],
+    [
+      836370,
+      819840
+    ],
+    [
+      836440,
+      819950
+    ],
+    [
+      836560,
+      820140
+    ],
+    [
+      836650,
+      820300
+    ],
+    [
+      836760,
+      820440
+    ],
+    [
+      836870,
+      820560
+    ],
+    [
+      837020,
+      820750
+    ],
+    [
+      837190,
+      820970
+    ],
+    [
+      837340,
+      821100
+    ],
+    [
+      837440,
+      821150
+    ],
+    [
+      837590,
+      821410
+    ],
+    [
+      837690,
+      821700
+    ],
+    [
+      837800,
+      822160
+    ],
+    [
+      837870,
+      822550
+    ],
+    [
+      837920,
+      822910
+    ],
+    [
+      837940,
+      823240
+    ],
+    [
+      837920,
+      823350
+    ],
+    [
+      837910,
+      823680
+    ],
+    [
+      837870,
+      823880
+    ]
+  ],
+  "tunnelConceptEndpoints": [
+    [
+      837870,
+      823880
+    ],
+    [
+      837460,
+      825400
+    ]
+  ],
+  "tunnelMeaning": "A schematic connection only. Endpoints are picked surface pixels on opposite mountain flanks and do not define tunnel portals, rail elevations, feasibility, or a surveyed path.",
+  "route_intent_uncertainty_m": {
+    "lowlands": 150,
+    "mountain_or_oblique_horizon": 500,
+    "hand_drawn_stroke_interpretation": "wide strokes and occlusion make the line a corridor, not exact control points"
+  },
+  "fit_quality": {
+    "105236": {
+      "median_route_distance_px_at_1000px_width": 0.971,
+      "p90_route_distance_px_at_1000px_width": 3.407
+    },
+    "104923": {
+      "median_route_distance_px_at_1000px_width": 0.041,
+      "p90_route_distance_px_at_1000px_width": 0.747
+    },
+    "104949": {
+      "median_route_distance_px_at_1000px_width": 0.068,
+      "p90_route_distance_px_at_1000px_width": 0.512
+    },
+    "105108": {
+      "median_route_distance_px_at_1000px_width": 0.995,
+      "p90_route_distance_px_at_1000px_width": 7.397
+    },
+    "105055": {
+      "median_route_distance_px_at_1000px_width": 0.844,
+      "p90_route_distance_px_at_1000px_width": 7.694
+    }
+  },
+  "source_checksums": {
+    "屏幕截图 2026-10-13 105236.png": "822dbc79a31dba6f10b566807c968870dc46386978e9e6c9077a0ecfef59b521",
+    "屏幕截图 2026-10-13 104923.png": "350b30abd7d90ba81cb4c830268aa8da98bbc7674a1535a16c5a3f4d8378f5b5",
+    "屏幕截图 2026-10-13 104949.png": "cef12c884dd238e063362e4063cb0d2e6ab3ee5ee90b95c9484b73b1a2df8256",
+    "屏幕截图 2026-10-13 105108.png": "9ac7818cf1c6d0c778d521e21850005043a48b4ef0678dbdf5cfeff0ca6adcf1",
+    "屏幕截图 2026-10-13 105055.png": "f8b60fc2f271ea72fb5f8ed2cbc692a572fb9321cfda997e2677509933f4eb5f",
+    "hong-kong-map-sea-r01/data/scene.json": "491c18b56ffc81c521677a9efaf642ebb7eca2b9af735b336f04b6d1b53c78c3",
+    "hong-kong-map-sea-r01/data/heights.npy": "7d314c422650ead3f7b8a95074029ce7610fa07d07d90cbc971d0f1ce841ecf7",
+    "hong-kong-map-sea-r01/map-integration.js": "0cb5cced283ab4aab5928dcd38e97ed566f036f0195dfd6a0a16fa603280be52"
+  },
+  "cautions": [
+    "The display labels move to avoid collisions. Only corrected label ground-anchor picks initialize the fit; route pixels supply the final dense control.",
+    "Original 30m Copernicus DSM elevations include vegetation/buildings and are EGM2008, not bare-earth, not HKPD, not a historical terrain reconstruction.",
+    "Station and route coordinates are rounded to 10m only for implementation convenience. Do not infer 10m positional accuracy.",
+    "Route pixels are height-draped for recovery only. The fictional track must not inherit mountain surface heights or large river crossings as an engineering claim.",
+    "The raw yellow circles are broad locality markers; do not use their ~89m/~8m centre samples as platform elevations. The selected nearby shared station precinct is ~7–12m DSM with a fictional 9m planning level.",
+    "The north-aligned crop is a design interpretation of the red screen rectangle. It preserves approximate coverage while reducing area; it is not a unique exact answer."
+  ]
+}
