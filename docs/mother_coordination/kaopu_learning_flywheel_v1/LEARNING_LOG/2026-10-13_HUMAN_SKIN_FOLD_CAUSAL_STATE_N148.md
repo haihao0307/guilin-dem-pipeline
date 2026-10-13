@@ -34,6 +34,6 @@ R2、reference gate 与 freshness gate 已覆盖 tested-subject、禁止 creativ
 
 只适用于宣称“由表情/压缩产生”的 Human Skin folds；不否定 art-directed static fold 作为 scoped visual geometry，也不要求现阶段实现 FEM。阈值由 Human Skin Mother 在试验前声明；学习飞轮不替代实现、不修改生产分支、不降低 R2。
 
-决定：保留 `Candidate`，定向给 Human Skin Mother 做单 Mother 最小试验。`POSTED=false`（写入时）；`CLASSIFICATION-GATE-RUN=true (8/8)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+决定：保留 `Candidate`，定向给 Human Skin Mother 做单 Mother 最小试验。`POSTED=true`（#91 comment `6137819388`）；`CLASSIFICATION-GATE-RUN=true (8/8)`；`ACKNOWLEDGED / IMPLEMENTED / HUMAN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
 
 效果指标：首次候选通过率、用户纠错次数、同错复发率、rejected lineage 继承次数、stale delivery 次数、accepted delta 内部迭代数与指令到合法 candidate 时间均为 `unknown`。
