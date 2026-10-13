@@ -1,0 +1,71 @@
+name: Lips P2 actual Pages inline delivery verification
+on:
+  push:
+    branches: [fix/lips-p2-native-entry-20261013]
+    paths: [.github/workflows/lips-p2-public.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  public-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-unified-human-workbench/lip-startup-r01/verify.cjs
+            /kaopu-unified-human-workbench/lip-startup-r02/*.cjs
+            /kaopu-unified-human-workbench/lip-startup-r02/SITE.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned browser tools
+        run: |
+          mkdir -p /tmp/lips-p2-tools
+          cd /tmp/lips-p2-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: lips-startup-p1-evidence
+          run-id: 38340455955
+          github-token: ${{ github.token }}
+          path: /tmp/lips-p1-reference
+      - name: Confirm deployed manifest and retain the pinned original reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p lip-p2-evidence
+          cp /tmp/lips-p1-reference/baseline.json lip-p2-evidence/
+          cp /tmp/lips-p1-reference/baseline-macro.png lip-p2-evidence/
+          echo 'dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7  lip-p2-evidence/baseline.json' | sha256sum -c
+          node - <<'JS'
+          const fs=require('fs'),assert=require('assert/strict');
+          (async()=>{let ready=false;for(let i=0;i<30;i++){const r=await fetch('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/runs/38344391262',{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(15000)});assert(r.ok,'Pages run read failed');const d=await r.json();if(d.status==='completed'){assert.equal(d.conclusion,'success');ready=true;break;}await new Promise(r=>setTimeout(r,8000));}assert(ready,'Pages deployment did not complete');const b=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/lip-startup-r02/SITE.json'));const r=await fetch(b.siteURL+'BUILD.json',{signal:AbortSignal.timeout(30000)});assert(r.ok,'public BUILD HTTP '+r.status);const p=await r.json();assert.equal(p.programSHA256,b.programSHA256);assert.equal(p.sourceCommit,b.sourceCommit);fs.writeFileSync('lip-p2-evidence/public-build.json',JSON.stringify(p,null,2));fs.writeFileSync('lip-p2-evidence/delivery-url.txt',b.siteURL+'compat.html');})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - name: Cold and warm actual inline HTTPS page, exact original geometry, pixels and interactions
+        env:
+          NODE_PATH: /tmp/lips-p2-tools/node_modules
+          P2_PUBLIC: '1'
+        run: |
+          export PERF_URL=$(cat lip-p2-evidence/delivery-url.txt)
+          node kaopu-unified-human-workbench/lip-startup-r02/verify.cjs
+          node - <<'JS'
+          const fs=require('fs'),assert=require('assert/strict');const p=JSON.parse(fs.readFileSync('lip-p2-evidence/public.json'));for(const r of p.runs){assert(!r.network.some(n=>/\/assets\/app-.*\.js(?:\.gz)?(?:\?|$)/.test(n.url)),'Delivered inline page must not fetch a separate application');assert(!r.network.some(n=>/^https:\/\/(raw\.githubusercontent\.com|htmlpreview\.github\.io)\//.test(n.url)));}fs.writeFileSync('lip-p2-evidence/no-program-subrequest.json',JSON.stringify({passed:true,url:p.url,coldAndWarmChecked:true}));
+          JS
+      - name: Actual browser fault injection on the published site
+        env:
+          NODE_PATH: /tmp/lips-p2-tools/node_modules
+          P2_PUBLIC: '1'
+        run: node kaopu-unified-human-workbench/lip-startup-r02/faults.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-p2-public
+          path: lip-p2-evidence
+          retention-days: 14
