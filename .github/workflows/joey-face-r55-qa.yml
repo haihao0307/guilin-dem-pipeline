@@ -1,0 +1,36 @@
+name: Joey R55 native cheek comparison
+on:
+  push:
+    branches: ['qa/joey-face-r55-20261013']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', '.github/workflows/joey-face-r55-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: joey-face-r55-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55
+            kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+      - name: Install matching official browser package
+        timeout-minutes: 3
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
+          echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
+      - name: Render current native candidate and verify restoration
+        run: node kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/render.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joey-face-r55-${{ github.sha }}
+          path: joey-face-r55/
+          retention-days: 7
