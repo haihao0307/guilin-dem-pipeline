@@ -151,7 +151,7 @@ export function createLipTransport(manifest, options = {}) {
     if (data) { for (const c of file.chunks) credit(file, c); }
     else {
       data = new Uint8Array(file.bytes);
-      for (let i = 0; i < file.chunks.length; i++) { alive(signal); const chunk = file.chunks[i]; data.set(await downloadChunk(file, chunk, i, signal), chunk.offset); }
+      await Promise.all(file.chunks.map(async (chunk,i)=>{alive(signal);data.set(await downloadChunk(file,chunk,i,signal),chunk.offset);}));
     }
     if (await digest(data) !== expected) throw new Error(file.label + ' · 完整资源校验失败');
     alive(signal); stats.filesVerified++; emit('file-complete', { label: file.label, bytes: file.bytes }); return data.buffer;
