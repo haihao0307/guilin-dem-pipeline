@@ -1,0 +1,2755 @@
+{
+  "version": "HUMAN-INTEGRATED-R04",
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/e5df3bcba13ba566d6da27d5cb051e91956055b3/kaopu-unified-human-workbench/human-integrated-r04/preview.html",
+  "tests": [
+    {
+      "name": "latest-ear-R06-and-current-ET19-on-original-character",
+      "pass": true,
+      "data": {
+        "ready": true,
+        "version": "EAR-R06.0",
+        "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+        "penumbra": {
+          "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+          "sigmaMM": 0.65,
+          "passes": 10,
+          "vertices": 16991,
+          "protectedVerticesFiltered": 0,
+          "scratchBytes": 3193176,
+          "geometryModified": false,
+          "poreNormalsModified": false
+        },
+        "occluderTriangles": 64249,
+        "raySampleVertices": 4299,
+        "interpolatedVertices": 12692,
+        "directVisible": [
+          1691.2000000000003,
+          1656.2,
+          618.8
+        ],
+        "deepVisible": [
+          401.40000000000003,
+          367.19999999999993,
+          885.9999999999997
+        ],
+        "visibilitySumStage": "before optical prefilter",
+        "lightDirections": [
+          [
+            0.7527099294949814,
+            0.3387194682727416,
+            0.5645324471212361
+          ],
+          [
+            -0.8377078165833909,
+            0.29319773580418684,
+            0.46073929912086503
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "angularRadiusRadians": 0.018,
+        "biasMM": 0.06,
+        "queryCount": 64485,
+        "fieldBytes": 6386352,
+        "buildMS": 823.1000000000058,
+        "builds": 1,
+        "geometryRebuilt": true,
+        "positionsModified": false,
+        "normalsModified": false,
+        "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
+        "fullVolumetricTransport": false,
+        "sourceCommit": "38a8a2140b42561eecbd31af5df074e9210d0c64",
+        "active": true,
+        "hostLights": "fold key + fold fill + ear inspection lamp",
+        "gpuBinding": "Float32 texelFetch by display vertex ID; zero added vertex attributes",
+        "textureBytes": 8519680,
+        "fullCinemaAreaLightVisibility": false
+      }
+    },
+    {
+      "name": "P3-kernel-and-93-chunk-manifest-integrated",
+      "pass": true,
+      "data": {
+        "files": 26,
+        "chunks": 93
+      }
+    },
+    {
+      "name": "eye-compensation-bounded-eyeballs-body-retained",
+      "pass": true,
+      "data": {
+        "sourceEyesMM": 0,
+        "bodyMM": 0,
+        "changed": 1395,
+        "maxMM": 0.3536968305245381,
+        "report": {
+          "version": "ET11-U1-R04-continuity",
+          "knowledgeVersion": "kaopu/eye-knowledge@2-r04",
+          "medialVersion": "kaopu/medial-recess@1",
+          "revision": 40,
+          "enabled": true,
+          "settings": {
+            "enabled": true,
+            "lid": 1,
+            "brow": 1,
+            "medial": 1,
+            "resolution": 1,
+            "gray": false,
+            "grid": false
+          },
+          "eyes": [
+            {
+              "side": "right",
+              "widthMM": 26.302177265799347,
+              "nativeOpeningMM": 7.171564849449884,
+              "openingGate": 1,
+              "boundVertices": 679,
+              "changedVertices": 366,
+              "maxDisplacementMM": 0.35369977588787466,
+              "requestedMedialRecessMM": 0.17693460629958416,
+              "protectedContactSamples": 0,
+              "minimumChangedAxialGapMM": -0.18594551187727718,
+              "nativeMinimumAxialGapMM": -0.18687689750799924,
+              "frame": {
+                "nasal": [
+                  -0.01849382450944825,
+                  -0.1033166886967061,
+                  0.7310086578735836
+                ],
+                "temporal": [
+                  -0.044414379173966595,
+                  -0.09913691170692543,
+                  0.7325767264693244
+                ],
+                "front": [
+                  -0.1584865239025237,
+                  -0.98728993947503,
+                  0.011857367021650087
+                ]
+              }
+            },
+            {
+              "side": "left",
+              "widthMM": 25.873163801465477,
+              "nativeOpeningMM": 7.07796449552932,
+              "openingGate": 1,
+              "boundVertices": 671,
+              "changedVertices": 362,
+              "maxDisplacementMM": 0.3481264092597239,
+              "requestedMedialRecessMM": 0.17612668318974578,
+              "protectedContactSamples": 0,
+              "minimumChangedAxialGapMM": -0.23222599128744228,
+              "nativeMinimumAxialGapMM": -0.23666423099288858,
+              "frame": {
+                "nasal": [
+                  0.018761352994730494,
+                  -0.1048537648983318,
+                  0.7310940247168687
+                ],
+                "temporal": [
+                  0.043976263099938885,
+                  -0.0992274486127834,
+                  0.7324988302331933
+                ],
+                "front": [
+                  0.21728498728324802,
+                  -0.9760654704296887,
+                  0.009134097447979711
+                ]
+              }
+            }
+          ],
+          "bodyChanged": false,
+          "sourceEyesChanged": false,
+          "nativeTopologyUnchanged": true,
+          "fixedCorrespondence": true,
+          "scanHeadImported": false,
+          "clinicalCalibration": false,
+          "contactMeaning": "no deeper than native baseline at tested affected vertices; original source intersections are not claimed repaired",
+          "units": "metres / Z up / front -Y"
+        }
+      }
+    },
+    {
+      "name": "camera-no-visibility-rebuild",
+      "pass": true,
+      "data": {
+        "checksBefore": 6,
+        "checksAfter": 6
+      }
+    },
+    {
+      "name": "R06-visibility-changes-light-not-ear-geometry",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "latest-lip-DNA-and-expression-retained",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "combined-archive-roundtrip-and-invalid-atomic-rejection",
+      "pass": true,
+      "data": {
+        "rejected": true,
+        "unchanged": true,
+        "ear": true,
+        "lip": true,
+        "eye": true
+      }
+    },
+    {
+      "name": "shader-budget-no-geometry-quality-reduction",
+      "pass": true,
+      "data": {
+        "error": 0,
+        "maxAttributes": 16,
+        "attributePacking": {
+          "savedAttributeSlots": 2,
+          "precision": "Float32 retained",
+          "typeChannel": "csExtra.w (previously unused)",
+          "earChannel": "eTissue.z (same ear weight)",
+          "nativeCPUFieldsRetained": true,
+          "morphVertexIDBudgetPreserved": true
+        },
+        "triangles": 531702,
+        "vertices": 266098
+      }
+    },
+    {
+      "name": "native-source-positions-and-topology-retained",
+      "pass": true,
+      "data": {
+        "positions": true,
+        "indices": true
+      }
+    },
+    {
+      "name": "mobile-viewport-layout-only",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "no-page-shader-request-failures",
+      "pass": true,
+      "data": true
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "screens": [
+    {
+      "name": "01-full-face",
+      "sha256": "79f86e084e31a7e24e837a522b4f0b3da4487a1428a5752953a186400fd7052d"
+    },
+    {
+      "name": "02-eye-gray-open",
+      "sha256": "523a06f3a650947c005413e65de9a8c9169dc01b77db43aef84ed3c968ca8ec8"
+    },
+    {
+      "name": "03-eye-blink-0.5",
+      "sha256": "1f9bca31fc797586acce77d9403bb6c398d928c989c7fa086dca5bfb34ded920"
+    },
+    {
+      "name": "03-eye-blink-1",
+      "sha256": "dd61cf637b0752999b6998b0971dd431097bc450afa6a97c87a0dc6a97f419d1"
+    },
+    {
+      "name": "04-eye-oblique",
+      "sha256": "34ae043e8603d993f8e34bf5758eb1d43870272f20f330a05a2a9b27fb0ba2a8"
+    },
+    {
+      "name": "05-ear-R06-backlight",
+      "sha256": "6b00e0100edc9ff9c0753ca4db6e7fcefbcdc4860e8f239c3a9f0a22d2943dcf"
+    },
+    {
+      "name": "06-ear-R05-unoccluded-comparison",
+      "sha256": "54ac15b92474aba09148222a8791f32c34e40854b85ca40051497c954ef7daa7"
+    },
+    {
+      "name": "07-lips-ET19",
+      "sha256": "a599ee2c82df7e55ab3a858a5312ef2b70d02b0d6a6729212789177b05f6e7b3"
+    },
+    {
+      "name": "08-lip-smile",
+      "sha256": "c57258d2e7884f1fb744bff8890e410700b436f592cbd25c46398df681986fe2"
+    },
+    {
+      "name": "09-final-face",
+      "sha256": "08a6734678ca719347040ac749f13b586287aacf073a3d3e05dd60ed09b602fd"
+    },
+    {
+      "name": "10-mobile-viewport",
+      "sha256": "b628de7da9104f3294e2d93015e69102c8582e7c3f7e945b94e8967c83ad7d9b"
+    }
+  ],
+  "completed": true,
+  "initial": {
+    "version": "HUMAN-INTEGRATED-R04",
+    "nativeVertices": 25417,
+    "displayVertices": 266098,
+    "nativeTriangles": 50624,
+    "displayTriangles": 531702,
+    "resolution": 1,
+    "oneRenderer": true,
+    "oneCanvas": true,
+    "staticHeadReplacement": false,
+    "restCoordinates": "source-native rest metres, fixed-stencil interpolation",
+    "derivedSurfaceExportAvailable": true,
+    "baseTopologyUnchanged": true,
+    "face": {
+      "version": "ET12-F1",
+      "updates": 40,
+      "enabled": true,
+      "settings": {
+        "enabled": true,
+        "structure": 0.75,
+        "detail": 1,
+        "meso": 0.75,
+        "colorDetail": 0.5,
+        "pigment": 0,
+        "blood": 0.35,
+        "oil": 0.55,
+        "wrap": 0.28,
+        "diffusion": 0.42,
+        "radius": 0.85,
+        "layer": "beauty"
+      },
+      "fields": {
+        "version": "kaopu/native-face-fields@1",
+        "counts": {
+          "face": 7795,
+          "lips": 237,
+          "thin": 2277,
+          "nose": 990,
+          "forehead": 501,
+          "cheek": 888,
+          "ear": 1137,
+          "chin": 151,
+          "eyes": 750
+        },
+        "bodyWeight": 0,
+        "source": "same canonical GNM material/region IDs and retained barycentric landmarks; original lip mask reused",
+        "fixedAtBind": true,
+        "nearestCorrespondenceReselected": false
+      },
+      "affectedNativeVertices": 925,
+      "maxGeometryDeltaMM": 0.08233150583691895,
+      "regionalRequestedMaxMM": {
+        "philtrum": 0.11842404037401899,
+        "nasolabial": 0.05557900242666185,
+        "lipBorder": 0.09657713330329229,
+        "alar": 0.0945194591206984,
+        "chin": 0.0003246954144500974
+      },
+      "originalBodyUnchanged": true,
+      "eyeLayerRetained": true,
+      "originalHeadIdentityAndRigRetained": true,
+      "restCoordinatesStable": true,
+      "donorIdentityMeshImported": false,
+      "clinicalRecovery": false
+    },
+    "skin": {
+      "ready": true,
+      "errors": [],
+      "hostMaterialPreserved": true
+    },
+    "diffusion": {
+      "source": "donor 25-tap split-albedo RGB separable diffusion",
+      "frames": 0,
+      "size": [
+        0,
+        0
+      ],
+      "regionMask": "native face-only alpha",
+      "specularBlurred": false,
+      "bodyDiffusion": false,
+      "volumetricScattering": false,
+      "screenSpaceOcclusionLimit": true
+    },
+    "ocular": {
+      "mode": "eye-only tangent-plane midpoint refinement",
+      "addedVertices": 18192,
+      "eyeTrianglesBefore": 12096,
+      "eyeTrianglesAfter": 48384,
+      "maxCorrectionMM": 0.05704375936100394,
+      "correctionCapMM": 0.08,
+      "nativeVerticesMoved": 0,
+      "nonOcularTrianglesChanged": 0
+    },
+    "naturalEyes": {
+      "version": "ET15-E1",
+      "ready": true,
+      "shaderCompiles": 2,
+      "errors": [],
+      "originalTextures": [
+        1024,
+        1024
+      ],
+      "sourceAuthors": [
+        "callharvey3d"
+      ],
+      "sourcePack": "system_eye_materials03",
+      "license": "CC-BY as listed by source pack",
+      "unmodifiedSourcePNGs": true,
+      "bodyMaterialChanged": false,
+      "medicalSimulation": false
+    },
+    "lips": {
+      "mode": "native-landmark vermilion rolls and fixed-stencil local surface",
+      "addedDisplayVertices": 106771,
+      "affectedDisplayVertices": 83330,
+      "maxShapeDeltaMM": 0.828132054444811,
+      "nativePositionBufferModified": false,
+      "nativeIndexBufferModified": false,
+      "bodyTrianglesChanged": 0,
+      "extraHeadMeshes": 0,
+      "eyeChange": "bounded skin-only midpoint refinement; eyeballs and eyelid aperture retained",
+      "kind": "registered Anny jawOpen + reduced lip constraints; not FEM",
+      "mouthBoundaryEdges": 0,
+      "mouthNonManifoldEdges": 0,
+      "oralReturnVertices": 28347,
+      "vermilionVertices": 64511,
+      "pairedSections": 49,
+      "regionalTriangles": 188376,
+      "existingSurfaceRetained": true,
+      "newOverlappingSheets": 0,
+      "continuity": "indexed native skin and oral return retained; no cut-and-cover patch",
+      "referenceCalibration": "identity-neutral native surface",
+      "strainMetric": "weighted across-furrow tangent extension; pressure deepens contact creases",
+      "localStretch": {
+        "min": 0.8125827770499726,
+        "max": 1.2026188977523868,
+        "mean": 1.0000102749317168
+      },
+      "maxGeometryFurrowMicrons": 45.79124856425969,
+      "maxPerformanceDisplacementMM": 0,
+      "minimumPairedGapMM": 0.09134513676578712,
+      "closedSections": 4,
+      "totalSections": 49,
+      "dentalEnvelopeTriangles": 29920,
+      "dentalEnvelopeContacts": 0,
+      "maxDentalProjectionMM": 0,
+      "remainingFrontalEnvelopePenetrationMM": 0,
+      "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+      "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified",
+      "salivaSimulation": false
+    },
+    "lipMaterial": {
+      "version": "ET18-L2",
+      "shaderCompiles": 2,
+      "kind": "bounded lip field + seeded curve graph, not a scanned map",
+      "sourceHeadReplaced": false,
+      "oldSkinMastersRetained": true,
+      "distanceFiltering": true,
+      "atlas": {
+        "seed": 37,
+        "density": 1,
+        "primary": 90,
+        "branches": 105,
+        "secondary": 244,
+        "minHeightMM": -0.08215264976024628,
+        "maxHeightMM": 0.004684084502514452,
+        "baseBytes": 2097152,
+        "estimatedMipBytes": 2796203,
+        "source": "authored curve graph; no donor texture",
+        "periodicTiling": false
+      }
+    },
+    "lipMotherOptics": {
+      "version": "ET19-L3",
+      "compiles": 2,
+      "measuredOptics": false,
+      "independentUpperLower": true,
+      "wetness": "continuous original surface, not a transparent extra sheet",
+      "SSS": "retained host diffusion approximation; no measured volumetric scattering"
+    },
+    "geometricFolds": {
+      "addedVertices": 55000,
+      "sourceVertices": 198406,
+      "displayVertices": 253406,
+      "preparedCache": {
+        "hits": 18,
+        "misses": 18,
+        "entries": 2,
+        "maxEntries": 2,
+        "bytes": 27768720,
+        "match": "exact source position and normal values; not version-counter or hash-only",
+        "lastHit": true
+      },
+      "fairing": {
+        "activeVertices": 87340,
+        "maxCorrectionMM": 0.16353789108962685,
+        "capMM": 0.22,
+        "normalLaplacianBeforeMM": 0.026287202964457,
+        "normalLaplacianAfterMM": 0.024176888174079772,
+        "cycles": 5,
+        "appliedBeforeFolds": true
+      },
+      "baseNormalPolish": {
+        "correctedBaseNormals": 73483,
+        "maxCorrectionDegrees": 11.568963276041394,
+        "capDegrees": 12,
+        "foldNormalDeltaPreserved": true,
+        "positionChanges": 0,
+        "protectedMaskUnchanged": true
+      },
+      "affectedVertices": 88575,
+      "positiveRollVertices": 12230,
+      "valleyVertices": 44851,
+      "maxDeltaMM": 0.07714183444243264,
+      "protectedDeltaMM": 0,
+      "updateMS": 75.59999999997672,
+      "canonicalModified": false,
+      "bodyModified": false,
+      "extraHeadMeshes": 0,
+      "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+      "physicalSkinSimulation": false
+    },
+    "foldFrames": 36,
+    "foldLook": {
+      "strength": 0.35,
+      "slack": 0.4,
+      "compression": 0.55,
+      "forehead": 0.25,
+      "eyes": 0.3,
+      "nasolabial": 0.78,
+      "cheeks": 0.55,
+      "sag": 0.55,
+      "makeup": 0.12,
+      "light": "natural",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    },
+    "submitMeanMS": 18.93611111110901,
+    "performanceMeaning": "CPU WebGL submission only; not GPU time or certified hardware FPS",
+    "earLatest": {
+      "ready": true,
+      "version": "EAR-R06.0",
+      "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+      "penumbra": {
+        "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+        "sigmaMM": 0.65,
+        "passes": 10,
+        "vertices": 16991,
+        "protectedVerticesFiltered": 0,
+        "scratchBytes": 3193176,
+        "geometryModified": false,
+        "poreNormalsModified": false
+      },
+      "occluderTriangles": 64249,
+      "raySampleVertices": 4299,
+      "interpolatedVertices": 12692,
+      "directVisible": [
+        1691.2000000000003,
+        1656.2,
+        618.8
+      ],
+      "deepVisible": [
+        401.40000000000003,
+        367.19999999999993,
+        885.9999999999997
+      ],
+      "visibilitySumStage": "before optical prefilter",
+      "lightDirections": [
+        [
+          0.7527099294949814,
+          0.3387194682727416,
+          0.5645324471212361
+        ],
+        [
+          -0.8377078165833909,
+          0.29319773580418684,
+          0.46073929912086503
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "angularRadiusRadians": 0.018,
+      "biasMM": 0.06,
+      "queryCount": 64485,
+      "fieldBytes": 6386352,
+      "buildMS": 823.1000000000058,
+      "builds": 1,
+      "geometryRebuilt": true,
+      "positionsModified": false,
+      "normalsModified": false,
+      "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
+      "fullVolumetricTransport": false,
+      "sourceCommit": "38a8a2140b42561eecbd31af5df074e9210d0c64",
+      "active": true,
+      "hostLights": "fold key + fold fill + ear inspection lamp",
+      "gpuBinding": "Float32 texelFetch by display vertex ID; zero added vertex attributes",
+      "textureBytes": 8519680,
+      "fullCinemaAreaLightVisibility": false
+    },
+    "lipTransport": "P3",
+    "anatomy": {
+      "version": "REGIONAL-FACE-R03",
+      "changedVertices": 89344,
+      "maxNormalIncrementMM": 1.1278486344963312,
+      "regions": [
+        "zygoma",
+        "malar",
+        "buccal",
+        "masseter",
+        "jaw",
+        "temple",
+        "brow",
+        "vault"
+      ],
+      "bodyAndOralAndPinnaProtected": true,
+      "extraMeshes": 0,
+      "underSkinAnatomyMesh": false,
+      "method": "overlapping native-rest anatomical envelopes; normal-space millimetre display increments",
+      "muscleSimulation": false
+    },
+    "ears": {
+      "version": "EAR-R04.0",
+      "mode": "topological pinna ownership / fixed scalp / pinned geodesic root collar",
+      "domain": {
+        "schema": "kaopu/ear-root-domain@1",
+        "source": "authored edge loops on retained native GNM topology",
+        "region255IsNotEar": true,
+        "falloff": "surface geodesic, 0.7mm pinned collar + 10mm quintic ramp",
+        "sides": {
+          "left": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.128475071026948,
+            "seed": 2377,
+            "hinge": {
+              "origin": [
+                0.06877759844064713,
+                0.24515405297279358,
+                0.03877704590559006
+              ],
+              "axis": [
+                0.16780668171615873,
+                0.967939401656183,
+                -0.1869070150981023
+              ]
+            }
+          },
+          "right": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.06430507811123,
+            "seed": 8505,
+            "hinge": {
+              "origin": [
+                0.06884616613388062,
+                0.2452031522989273,
+                0.03870754688978195
+              ],
+              "axis": [
+                0.16760282546321437,
+                0.9675721478654469,
+                -0.18897997664248184
+              ]
+            }
+          }
+        },
+        "canonicalVertices": 25417,
+        "canonicalMovingVertices": 1022
+      },
+      "guard": {
+        "left": {
+          "acceptedScale": 1,
+          "backtrackingSteps": 0,
+          "requestedViolations": 0,
+          "violations": 0,
+          "checkedTriangles": 17336,
+          "minAreaRatio": 0.5239785182481385,
+          "minFacingCosine": 0.6600006648314485,
+          "minEdgeRatio": 0.6263295227808082,
+          "maxEdgeRatio": 2.181037032187247,
+          "checkedSheetPairs": 658,
+          "minimumSampledGapMM": 2.0289746956512476
+        },
+        "right": {
+          "acceptedScale": 1,
+          "backtrackingSteps": 0,
+          "requestedViolations": 0,
+          "violations": 0,
+          "checkedTriangles": 16829,
+          "minAreaRatio": 0.522143602953625,
+          "minFacingCosine": 0.6679387942014986,
+          "minEdgeRatio": 0.631997466084937,
+          "maxEdgeRatio": 2.1261190965541354,
+          "checkedSheetPairs": 670,
+          "minimumSampledGapMM": 2.06586659948419
+        }
+      },
+      "phenotype": {
+        "left": {
+          "c": 0,
+          "b": 0,
+          "l": 0,
+          "roll": 0.15999999999999992,
+          "spread": 0,
+          "attach": 0.45,
+          "depth": 0.92,
+          "stem": 1.08,
+          "projectionAngle": -0.002094395102393197,
+          "lobeLength": 1,
+          "lobeWidth": 1,
+          "cartilageScaleY": 1,
+          "cartilageScaleZ": 1,
+          "conchaScale": 1,
+          "cymbaGain": 1,
+          "cavumGain": 1,
+          "superior": 0.92,
+          "inferior": 0.9,
+          "fold": 0.85,
+          "sheetSupport": 1,
+          "description": "regional cartilage expansion \u2192 conchal support and crura \u2192 root rotation \u2192 separate lobule area/length budget",
+          "hinge": {
+            "origin": [
+              0.06877759844064713,
+              0.24515405297279358,
+              0.03877704590559006
+            ],
+            "axis": [
+              0.16780668171615873,
+              0.967939401656183,
+              -0.1869070150981023
+            ]
+          }
+        },
+        "right": {
+          "c": 0,
+          "b": 0,
+          "l": 0,
+          "roll": 0.15999999999999992,
+          "spread": 0,
+          "attach": 0.45,
+          "depth": 0.92,
+          "stem": 1.08,
+          "projectionAngle": -0.002094395102393197,
+          "lobeLength": 1,
+          "lobeWidth": 1,
+          "cartilageScaleY": 1,
+          "cartilageScaleZ": 1,
+          "conchaScale": 1,
+          "cymbaGain": 1,
+          "cavumGain": 1,
+          "superior": 0.92,
+          "inferior": 0.9,
+          "fold": 0.85,
+          "sheetSupport": 1,
+          "description": "regional cartilage expansion \u2192 conchal support and crura \u2192 root rotation \u2192 separate lobule area/length budget",
+          "hinge": {
+            "origin": [
+              0.06884616613388062,
+              0.2452031522989273,
+              0.03870754688978195
+            ],
+            "axis": [
+              0.16760282546321437,
+              0.9675721478654469,
+              -0.18897997664248184
+            ]
+          }
+        }
+      },
+      "subdivisionLevels": 1,
+      "subdivision": "conforming midpoint; no Loop displacement",
+      "addedDisplayVertices": 12692,
+      "affectedDisplayVertices": 16991,
+      "maxAuthoredDeltaMM": 2.3833647427094093,
+      "protectedDisplayVertices": 249107,
+      "protectedMaxDisplacementMM": 0,
+      "protectedMaxNormalChange": 0,
+      "canonicalBuffersModified": false,
+      "extraHeadMeshes": 0,
+      "scanMeshSpliced": false,
+      "growthSimulation": false,
+      "globalCollisionDetection": false
+    },
+    "earTissue": {
+      "ready": true,
+      "version": "EAR-R05.0",
+      "sampling": "area CDF + sqrt barycentric sampling + 3D Poisson rejection on owned template",
+      "seed": 731047,
+      "poreCount": 6381,
+      "seedAreaMM2": 6381.497622438552,
+      "minimumSeedSeparationMM": 0.34,
+      "poreRadiusMM": [
+        0.032,
+        0.054
+      ],
+      "poreDepthMM": [
+        0.003,
+        0.005
+      ],
+      "currentSpaceMetric": true,
+      "barycentricAnchors": true,
+      "planarPoreProjection": false,
+      "normalRayHits": 7570,
+      "coneRayEstimates": 5009,
+      "totalRayHits": 12579,
+      "confidenceFeatherPasses": 12,
+      "unmeasuredVertices": 4412,
+      "unmeasuredPolicy": "12mm conservative opaque estimate / zero deep transmission",
+      "thicknessMM": {
+        "min": 1.1087414026260376,
+        "p10": 4.928739547729492,
+        "median": 7.252469539642334,
+        "p90": 11.626604080200195,
+        "max": 33.83673858642578
+      },
+      "thicknessKind": "normal ray + marked 35deg cone estimate of model envelope, not skin/cartilage histology",
+      "hashBucketMaximum": 18,
+      "hashSize": 32768,
+      "hashDroppedRecords": 0,
+      "gpuDataBytes": 1105920,
+      "cellMM": 0.5,
+      "slots": 128,
+      "buildMS": 945.7000000000116,
+      "builds": 2,
+      "geometryModified": false
+    },
+    "faceSurface": {
+      "version": "REGIONAL-PORES-R03",
+      "count": 24000,
+      "gpuBytes": 2695168,
+      "maxBucket": 30,
+      "builds": 2,
+      "barycentric": true,
+      "paintedAlbedoDots": false,
+      "metric": "current authored surface; idle samples carry the fixed material coordinates",
+      "minRadiusMM": 0.033602175392722915,
+      "maxRadiusMM": 0.10034003575935233,
+      "measuredHumanPores": false
+    },
+    "regionalSkin": {
+      "version": "REGIONAL-SKIN-R03",
+      "compiles": 2,
+      "facePoresAreColourDots": false,
+      "earShaderPreserved": true,
+      "lipShaderPreserved": true,
+      "faceMicroNormals": "replace inherited stacked face micro-normal, then apply bounded surface pore derivative",
+      "volumeScattering": false,
+      "pores": {
+        "version": "REGIONAL-PORES-R03",
+        "count": 24000,
+        "gpuBytes": 2695168,
+        "maxBucket": 30,
+        "builds": 2,
+        "barycentric": true,
+        "paintedAlbedoDots": false,
+        "metric": "current authored surface; idle samples carry the fixed material coordinates",
+        "minRadiusMM": 0.033602175392722915,
+        "maxRadiusMM": 0.10034003575935233,
+        "measuredHumanPores": false
+      }
+    },
+    "earEnabled": true,
+    "earMaterial": {
+      "version": "EAR-R05.0",
+      "shaderCompiles": 2,
+      "measuredScattering": false,
+      "earChart": "area-sampled barycentric seeds + current-space circular tangent kernels",
+      "faceAtlasExcluded": true,
+      "opaque": true,
+      "materialControls": 7,
+      "subpixelPolicy": "microheight fades to roughness",
+      "localDiffusionWeight": 0.14,
+      "domain": {
+        "schema": "kaopu/ear-root-domain@1",
+        "source": "authored edge loops on retained native GNM topology",
+        "region255IsNotEar": true,
+        "falloff": "surface geodesic, 0.7mm pinned collar + 10mm quintic ramp",
+        "sides": {
+          "left": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.128475071026948,
+            "seed": 2377,
+            "hinge": {
+              "origin": [
+                0.06877759844064713,
+                0.24515405297279358,
+                0.03877704590559006
+              ],
+              "axis": [
+                0.16780668171615873,
+                0.967939401656183,
+                -0.1869070150981023
+              ]
+            }
+          },
+          "right": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.06430507811123,
+            "seed": 8505,
+            "hinge": {
+              "origin": [
+                0.06884616613388062,
+                0.2452031522989273,
+                0.03870754688978195
+              ],
+              "axis": [
+                0.16760282546321437,
+                0.9675721478654469,
+                -0.18897997664248184
+              ]
+            }
+          }
+        },
+        "canonicalVertices": 25417,
+        "canonicalMovingVertices": 1022
+      },
+      "skullUsesEarShader": false,
+      "deepScattering": "normal-ray envelope thickness / bounded directional attenuation",
+      "planarPoreProjection": false,
+      "tissue": {
+        "ready": true,
+        "version": "EAR-R05.0",
+        "sampling": "area CDF + sqrt barycentric sampling + 3D Poisson rejection on owned template",
+        "seed": 731047,
+        "poreCount": 6381,
+        "seedAreaMM2": 6381.497622438552,
+        "minimumSeedSeparationMM": 0.34,
+        "poreRadiusMM": [
+          0.032,
+          0.054
+        ],
+        "poreDepthMM": [
+          0.003,
+          0.005
+        ],
+        "currentSpaceMetric": true,
+        "barycentricAnchors": true,
+        "planarPoreProjection": false,
+        "normalRayHits": 7570,
+        "coneRayEstimates": 5009,
+        "totalRayHits": 12579,
+        "confidenceFeatherPasses": 12,
+        "unmeasuredVertices": 4412,
+        "unmeasuredPolicy": "12mm conservative opaque estimate / zero deep transmission",
+        "thicknessMM": {
+          "min": 1.1087414026260376,
+          "p10": 4.928739547729492,
+          "median": 7.252469539642334,
+          "p90": 11.626604080200195,
+          "max": 33.83673858642578
+        },
+        "thicknessKind": "normal ray + marked 35deg cone estimate of model envelope, not skin/cartilage histology",
+        "hashBucketMaximum": 18,
+        "hashSize": 32768,
+        "hashDroppedRecords": 0,
+        "gpuDataBytes": 1105920,
+        "cellMM": 0.5,
+        "slots": 128,
+        "buildMS": 945.7000000000116,
+        "builds": 2,
+        "geometryModified": false
+      },
+      "shaderCompilesR05": 2
+    },
+    "lipMother": "ET19-L3",
+    "oneCharacter": true
+  },
+  "loading": {
+    "startup": {
+      "version": "ET19-L3-P3",
+      "base": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/",
+      "started": 1038.0999999999767,
+      "stage": "\u4e09\u7ef4\u5df2\u5c31\u7eea",
+      "events": [
+        {
+          "stage": "\u5b8c\u6574\u6743\u91cd\u5e76\u884c\u4e0b\u8f7d / \u590d\u7528\u6821\u9a8c\u7f13\u5b58",
+          "ms": 1298
+        },
+        {
+          "stage": "\u539f\u59cb\u6743\u91cd\u5c31\u7eea / \u88c5\u914d\u540c\u4e00\u4eba\u7269",
+          "ms": 12418.699999999983
+        },
+        {
+          "stage": "\u539f\u4eba\u7269\u4e0e\u5b8c\u6574\u6743\u91cd\u88c5\u914d\u5b8c\u6210",
+          "ms": 12617
+        },
+        {
+          "stage": "\u5b8c\u6574\u6750\u8d28\u548c\u539f\u63a7\u4ef6\u5df2\u5c31\u7eea / \u9996\u6b21\u5b8c\u6574\u7ed8\u5236",
+          "ms": 29224.199999999983
+        }
+      ],
+      "networkBytes": 84045179,
+      "cacheBytes": 0,
+      "cacheHits": 0,
+      "requests": 93,
+      "warnings": [],
+      "coalescedStartupDraws": 30
+    },
+    "p3": [
+      "version",
+      "started",
+      "ready",
+      "appStarted",
+      "paused",
+      "errors",
+      "base",
+      "transport",
+      "snapshot",
+      "fail",
+      "pause",
+      "readyMS"
+    ],
+    "stats": {
+      "networkBytes": 84045179,
+      "cacheBytes": 0,
+      "verifiedBytes": 84045179,
+      "cacheHits": 0,
+      "retries": 0,
+      "requests": 93,
+      "chunksVerified": 93,
+      "filesVerified": 26,
+      "totalBytes": 84045179,
+      "totalChunks": 93,
+      "lastProgress": 11383.5,
+      "active": {},
+      "events": [
+        {
+          "type": "attempt",
+          "ms": 2149.899999999994,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 1/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/d00b8cf49d2abec57841c3cbdaca84e1d7459e1eb4ffe5709b9f0cf060cb5566.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2160.5,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 1/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2160.5,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 1/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/cfda7f437e4adb3582a61f2e63049e4799fb2306c7f33ffd7be06a4d02ab8432.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2341.399999999994,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 1/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2341.5,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 1/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/b1656471e477aacfdc9146cbb4119248de3dfb266a4bddf41a151f17bd20dfda.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2355.7999999999884,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 1/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2355.899999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 1/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/53ab2b88c9f44249e3317b8b3be9e11d0662c93cabd4cc1abc4c99050b477841.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2368.2999999999884,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 1/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2368.2999999999884,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 1/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/0a7291601ba0f7446a4443deb55c8fb29347b9598fd73cb781e29567bb92b2af.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2513.399999999994,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 1/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2513.5,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 2/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/105d0cddd313b4bd23f5d4563632088dea922226e00ac536a7c986eba3113e43.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2525.2999999999884,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 1/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2525.2999999999884,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 2/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/c6bb04123a4afd65d9d00964634861321cd4b98784ed603599dc439f4fd7418e.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2572.399999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 1/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2572.399999999994,
+          "label": "GNM / gnm-02-af24dcc19843.part \u00b7 \u5206\u5757 2/2",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/9a2755347c8adc4709b2a3088385b88386fa375eaaf2f280792c441a21abd3fc.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2718.6999999999825,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 2/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2718.7999999999884,
+          "label": "neck-surface.bin.gz \u00b7 \u5206\u5757 2/2",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/5dccb90461b6f2340b7ecfcd0382d34fee46bd20226f358c1efc0236ba02d42f.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2730.5,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 2/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2730.5999999999767,
+          "label": "head-transfer.bin.gz \u00b7 \u5206\u5757 2/2",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/15a9c5f29bd0b53f73f628c068ce967a219b893345e6ccd8a05bc7b11eea6e08.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2740.5999999999767,
+          "label": "GNM / gnm-02-af24dcc19843.part \u00b7 \u5206\u5757 2/2",
+          "bytes": 533061
+        },
+        {
+          "type": "attempt",
+          "ms": 2740.5999999999767,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/61e2bf0605ed0cf314e66516ffc100f9fb2d9aa350b9d7995f7d29a9c313b30b.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 2767.5999999999767,
+          "label": "GNM / gnm-02-af24dcc19843.part",
+          "bytes": 1581637
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2857.2999999999884,
+          "label": "head-transfer.bin.gz \u00b7 \u5206\u5757 2/2",
+          "bytes": 44054
+        },
+        {
+          "type": "attempt",
+          "ms": 2857.2999999999884,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/92cdf0381cc64859e048e382d894ad52ebdaba352a2ac34b4b6cc33a387d54e4.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 2875.899999999994,
+          "label": "head-transfer.bin.gz",
+          "bytes": 1092630
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2896.0999999999767,
+          "label": "neck-surface.bin.gz \u00b7 \u5206\u5757 2/2",
+          "bytes": 387900
+        },
+        {
+          "type": "attempt",
+          "ms": 2896.1999999999825,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/11fd74691c49a97d4ab7055ffe7b6c653bb208bc5bf044a7f1f6ffb2333bedd9.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 2921.1999999999825,
+          "label": "neck-surface.bin.gz",
+          "bytes": 1436476
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2946.0999999999767,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2946.0999999999767,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/3127ce5b4824c7c3ab21883c0ec2b1c9074c3ad15920c0c00a902747c58660b4.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 2986.399999999994,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 2986.5,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 2/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/92ab6b85935d217cdd3f9a573152c27375057778677170f5fb2a28316a85d04f.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3097,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3097,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/e1473d0eec68820722b2d3357efd22e1f3292f5ed5746df75004f285f191df97.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3112.5,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3112.5,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/c5ec504ecbb3e8f75c2605fa544f00798c4c9f137edf4bea337263c15f18691b.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3161.1999999999825,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 2/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3161.1999999999825,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 2/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/1bdfe24122420c5a2b24f6cf057f3c474fa503ea1dddbac0f58c25c82f726197.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3305.7999999999884,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3305.899999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 2/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/72882dbe11d0f661341a2efc7a8b19b5e2c0e9f53e5017756df2bb15633a1c35.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3320.6999999999825,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3320.6999999999825,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 3/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/a549fd1141851d25b6a019d45f6ff1f4c716e000791b72519eaf00c0141b375b.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3372.6999999999825,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 2/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3372.6999999999825,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 3/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/dbc0c4e08f019b8ed1c5dc91c399991ee43fd740dbbe4bf1a993f866f4b3435f.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3501,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 2/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3501.0999999999767,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/fd11e40f9f043c53af62725c920f49b834e648172c7c391078a16e6a0b1578a7.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3516.7999999999884,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 3/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3516.7999999999884,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/88c45309c83699edc2a638a9c9536abeee767275a1b26b03020e1c99b4a05602.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3566.2999999999884,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 3/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3566.2999999999884,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/378067df7b21653223de53c02a6d9da7a62a88bf1b317143e9cc5babb43f0002.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3644.0999999999767,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3644.1999999999825,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/f9e7f0727a93adedcef7c4a4c2340b893ea981925331d5d3bbf79d7407bf0e48.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3662.1999999999825,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3662.2999999999884,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 3/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/3fbc1cda42ea8f6b10a15d600ee0fd3e65e64c53bbe067cb386aa9cd67f87beb.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3736.5999999999767,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3736.5999999999767,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/ee99837cc68ba86f79d92bfe4dc89d1b01544422dbe18959fd86c8b4267077f2.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3795.2999999999884,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3795.2999999999884,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/4f6bd4f13287d07af1b5db2532017e918aeaf0a12170f89747b8c1d2ab254806.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3878.1999999999825,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 3/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3878.1999999999825,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 3/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/c01d22fd0c331ad902c7aebc728a7697520ec0a8d548637c417081dd57f44352.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3949.399999999994,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3949.5,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 3/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/98f1122d4174d9dbcf76fe49f0a8e735488175533ce2ef1030efd960e7c17830.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 3967.1999999999825,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 3967.2999999999884,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 4/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/abc881a75e61a7b2bb650dc0040957e254cc53e0091b422e0fd09ef9c4a962b2.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 4032.5999999999767,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 3/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 4032.6999999999825,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 4/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/29bbaa746deaf9992156e9039ee33627b907d91ac56ac5f8356e6b7cafdf4f39.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 4128.899999999994,
+          "label": "GNM / gnm-00-6559f13b52ea.part \u00b7 \u5206\u5757 4/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 4128.899999999994,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/22c650e9707d473d3b3d183bd8ff26dda4ce8a2150123db1296c149563fcaf28.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 4195.099999999977,
+          "label": "GNM / gnm-00-6559f13b52ea.part",
+          "bytes": 4194304
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 4277.1999999999825,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part \u00b7 \u5206\u5757 4/4",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 4277.299999999988,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/1c088c6b35625ab13aaad7fcde748bff7ba5b7d94ce00eaba371261f59fe70e7.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 4348,
+          "label": "GNM / gnm-01-6bb85b07b3cc.part",
+          "bytes": 4194304
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5126.899999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 3/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5127.099999999977,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/80433044ba984db509988851f9d1b63110ebebb1d553b946e95fba3bd6544ca0.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5144.1999999999825,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5144.299999999988,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/0ddf0e4863b18f6f19798c2c0fb6cd5cfa097eed5270888010d0a5fa2c77e9ab.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5161.6999999999825,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5161.799999999988,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 4/4",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/3d788774bef5ea9fb63a35e6e58b18e5f6b4052398b95458e2a6a5b55c34a636.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5343.099999999977,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5343.1999999999825,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/875a3ab7782e44443620ab27576e86ec408ac1cf40b823c2a0e6a438a885d337.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5361.599999999977,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5361.599999999977,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/21ade5fb58db19740931afa44032ff207ae560277da2a4ee901c491826cdc77f.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5379.1999999999825,
+          "label": "Anny / anny-model-05.bin.part \u00b7 \u5206\u5757 4/4",
+          "bytes": 913400
+        },
+        {
+          "type": "attempt",
+          "ms": 5379.1999999999825,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 4/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/5b64a2d996ce9856989746e0472f338914e26cf5072053e9ea6e5e221c9beafb.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 5451.299999999988,
+          "label": "Anny / anny-model-05.bin.part",
+          "bytes": 4059128
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5534.399999999994,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5534.5,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 4/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/4edfce0029531528db64f1ec174dfd2bfd6b1892570e36cc190a6ed7c8a5dc27.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5582.099999999977,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 4/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5582.099999999977,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/223067a1394317160ce0ca423da2eea27e16d0977cba68cfc0e60bbc5cfb1eea.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5602.299999999988,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5602.399999999994,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/ffc3b86a1dc41338838c224bfef3c3c1b5de06b98c1b4969134492477a77c7c8.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5751.899999999994,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5752,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/d5948a289f094c97ac52558f83fea6fa60579477b95daa3e143c79bbb8399bb6.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5773,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 4/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5773.1999999999825,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/2fc87a583351f1231908c8901b1380b3cf973889c4b51060c85cd69d6ac2c053.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5794.799999999988,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5794.899999999994,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/68febddc7774d3091f0693ccfdd7372fa62dcf330920239149676447aa9bb94d.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 5995.399999999994,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 5995.599999999977,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 5/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/b6ac1429c26e05bf1f061f505361500f224ca4d252f6c6c727866b0d17055bb9.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6018.1999999999825,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6018.299999999988,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/d945618bb6e6cafd888d01446fbad908cb4c4da0d35f700d23b107f687a33314.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6039.799999999988,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6039.799999999988,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/56a60c8983c7c9f74efd3313e65c3ec0c3db369687fa6041e5edce1dca518952.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6200,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 5/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6200.099999999977,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 5/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/9a934438627820953d6e01d768a1783101c5e09cb5ac3d71857bb21bd2a8c218.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6227.5,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6227.599999999977,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/1512403af76cff92fd5afafb89ebf0873c4c6906dc5fcfeabb8e158d6925acfd.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6254.099999999977,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6254.099999999977,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/d16951bf763084fc01ed36dad16560fa52cfb8285993a2c1a693916a60cbc063.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6423.099999999977,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6423.299999999988,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/85a1a2635106cbccabef9f0b2cfc1e01dc9607f6f9a444c1ae9c406eb13e10c6.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6459.6999999999825,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 5/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6459.6999999999825,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/eb17578ef4d0b380686f73c840349fa927bd8e292a53df81e281eabd4f458873.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6485.599999999977,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6485.6999999999825,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 6/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/04ac5068a142642966a715db4dcebe216ed30d7f49e06e7e3ac52f0c61a8a777.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6741.5,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6741.5,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/0ab64ade86d02b27a0e6fd2258215cd75c08d879fe91aad04510cb4e4159529f.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6765.5,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6765.599999999977,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/c34146bc6d07d0cb4372e82c364e8b4963f7fc1f86d896277f4cde25cfa22a74.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6788,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 6/7",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6788,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/9e49557350c2f082fe439604d758c4f850a8ddbe0bcfc85d69fa94c0d0933a74.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6901.799999999988,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6901.899999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 6/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/7c89fd4dc2883f8ababb904bdaec2ed1dfa3a5d7b681c33c96796d1280e6b350.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 6927,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 6927.099999999977,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/81a7cc73aad29eb7b7278a4c85900a0044537baf0ffb059973a9190b86f1b5ca.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7021.1999999999825,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7021.299999999988,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/cf0208813e9586b4e2934e969832157a6f285a30f81fd8c17b592fd3a2466920.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7183.099999999977,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7183.1999999999825,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/5291894831f679bb971cb57d894d939bf4748695ae6955906659a1b946aa50d6.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7207.899999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 6/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7207.899999999994,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 7/7",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/2fb5d310ea949ce7530bf3ec71dad41451048619054f355ca9604a1fcb35f143.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7233,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7233,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/77fc48ad5214e73f4ad5f3f7658862060f8211724036f3d71fdd112594005480.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7398.099999999977,
+          "label": "MHR / model-02.bin.part \u00b7 \u5206\u5757 7/7",
+          "bytes": 862386
+        },
+        {
+          "type": "attempt",
+          "ms": 7398.1999999999825,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/6e507af83a19ba943fec9e0c8866b39471ccf595560f1bb201d22c634248356b.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 7521,
+          "label": "MHR / model-02.bin.part",
+          "bytes": 7153842
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7583.6999999999825,
+          "label": "Anny / anny-model-01.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7583.6999999999825,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/e7c9f7ccd9a7cf3ccb145a13bc109b60f68bae0d152f8e74aa50317eeb79eefc.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 7724.299999999988,
+          "label": "Anny / anny-model-01.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7772.799999999988,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7772.799999999988,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/88f8a73b8efd23b954b4db20c2200d6cb678589436ab580d9e45764d00b2ad88.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7797.899999999994,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7798,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 7/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/60eeb04f9a3776f97c59368826dde527f1eb2fa9b4c98cdbddc8ea4ca0442244.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 7822,
+          "label": "Anny / anny-model-00.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 7822,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/de901c636ceb2ff415fb1e07317683d310f0ff3adc9c1c47d0d360e18ffc19d9.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 7956.899999999994,
+          "label": "Anny / anny-model-00.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 8063,
+          "label": "Anny / anny-model-03.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 8063.1999999999825,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/b8b704b1bb91c295dac34a6bfdf09d806d25823bdbc1bb3b157cb41c8544566b.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 8201.899999999994,
+          "label": "Anny / anny-model-03.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 8249.299999999988,
+          "label": "Anny / anny-model-02.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 8249.399999999994,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/74624337a3479886de8d4fe413fe22c61bf9d362e78ea29f236ee1f9812f2829.bin"
+        },
+        {
+          "type": "file-complete",
+          "ms": 8390.399999999994,
+          "label": "Anny / anny-model-02.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 8438.799999999988,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 7/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "attempt",
+          "ms": 8439.399999999994,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 8/8",
+          "attempt": 1,
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks/188d76bedaf4d6e0ae850e892f6216373c0de97a97f79a83b645a264db9f2c47.bin"
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 8463.399999999994,
+          "label": "Anny / anny-model-04.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "file-complete",
+          "ms": 8608.699999999983,
+          "label": "Anny / anny-model-04.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 11215.199999999983,
+          "label": "MHR / model-00.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "file-complete",
+          "ms": 11355,
+          "label": "MHR / model-00.bin.part",
+          "bytes": 8388608
+        },
+        {
+          "type": "chunk-complete",
+          "ms": 11383.5,
+          "label": "MHR / model-01.bin.part \u00b7 \u5206\u5757 8/8",
+          "bytes": 1048576
+        },
+        {
+          "type": "file-complete",
+          "ms": 11524.599999999977,
+          "label": "MHR / model-01.bin.part",
+          "bytes": 8388608
+        }
+      ],
+      "warnings": [],
+      "maximumActive": 3,
+      "concurrencyLimit": 3,
+      "idleMS": 30000,
+      "attempts": 3,
+      "cacheName": "kaopu-lips-verified-chunks-p3",
+      "cacheBudgetBytes": 134217728
+    },
+    "config": {
+      "files": 26,
+      "chunks": 93
+    }
+  },
+  "final": {
+    "version": "HUMAN-INTEGRATED-R04",
+    "nativeVertices": 25417,
+    "displayVertices": 266098,
+    "nativeTriangles": 50624,
+    "displayTriangles": 531702,
+    "resolution": 1,
+    "oneRenderer": true,
+    "oneCanvas": true,
+    "staticHeadReplacement": false,
+    "restCoordinates": "source-native rest metres, fixed-stencil interpolation",
+    "derivedSurfaceExportAvailable": true,
+    "baseTopologyUnchanged": true,
+    "face": {
+      "version": "ET12-F1",
+      "updates": 109,
+      "enabled": true,
+      "settings": {
+        "enabled": true,
+        "structure": 0.75,
+        "detail": 1,
+        "meso": 0.75,
+        "colorDetail": 0.5,
+        "pigment": 0,
+        "blood": 0.35,
+        "oil": 0.55,
+        "wrap": 0.28,
+        "diffusion": 0.42,
+        "radius": 0.85,
+        "layer": "beauty"
+      },
+      "fields": {
+        "version": "kaopu/native-face-fields@1",
+        "counts": {
+          "face": 7795,
+          "lips": 237,
+          "thin": 2277,
+          "nose": 990,
+          "forehead": 501,
+          "cheek": 888,
+          "ear": 1137,
+          "chin": 151,
+          "eyes": 750
+        },
+        "bodyWeight": 0,
+        "source": "same canonical GNM material/region IDs and retained barycentric landmarks; original lip mask reused",
+        "fixedAtBind": true,
+        "nearestCorrespondenceReselected": false
+      },
+      "affectedNativeVertices": 925,
+      "maxGeometryDeltaMM": 0.08233150583691895,
+      "regionalRequestedMaxMM": {
+        "philtrum": 0.11842404037401899,
+        "nasolabial": 0.05557900242666185,
+        "lipBorder": 0.09657713330329229,
+        "alar": 0.0945194591206984,
+        "chin": 0.0003246954144500974
+      },
+      "originalBodyUnchanged": true,
+      "eyeLayerRetained": true,
+      "originalHeadIdentityAndRigRetained": true,
+      "restCoordinatesStable": true,
+      "donorIdentityMeshImported": false,
+      "clinicalRecovery": false
+    },
+    "skin": {
+      "ready": true,
+      "errors": [],
+      "hostMaterialPreserved": true
+    },
+    "diffusion": {
+      "source": "donor 25-tap split-albedo RGB separable diffusion",
+      "frames": 0,
+      "size": [
+        0,
+        0
+      ],
+      "regionMask": "native face-only alpha",
+      "specularBlurred": false,
+      "bodyDiffusion": false,
+      "volumetricScattering": false,
+      "screenSpaceOcclusionLimit": true
+    },
+    "ocular": {
+      "mode": "eye-only tangent-plane midpoint refinement",
+      "addedVertices": 18192,
+      "eyeTrianglesBefore": 12096,
+      "eyeTrianglesAfter": 48384,
+      "maxCorrectionMM": 0.05704375936100394,
+      "correctionCapMM": 0.08,
+      "nativeVerticesMoved": 0,
+      "nonOcularTrianglesChanged": 0
+    },
+    "naturalEyes": {
+      "version": "ET15-E1",
+      "ready": true,
+      "shaderCompiles": 3,
+      "errors": [],
+      "originalTextures": [
+        1024,
+        1024
+      ],
+      "sourceAuthors": [
+        "callharvey3d"
+      ],
+      "sourcePack": "system_eye_materials03",
+      "license": "CC-BY as listed by source pack",
+      "unmodifiedSourcePNGs": true,
+      "bodyMaterialChanged": false,
+      "medicalSimulation": false
+    },
+    "lips": {
+      "mode": "native-landmark vermilion rolls and fixed-stencil local surface",
+      "addedDisplayVertices": 106771,
+      "affectedDisplayVertices": 83330,
+      "maxShapeDeltaMM": 0.828132054444811,
+      "nativePositionBufferModified": false,
+      "nativeIndexBufferModified": false,
+      "bodyTrianglesChanged": 0,
+      "extraHeadMeshes": 0,
+      "eyeChange": "bounded skin-only midpoint refinement; eyeballs and eyelid aperture retained",
+      "kind": "registered Anny jawOpen + reduced lip constraints; not FEM",
+      "mouthBoundaryEdges": 0,
+      "mouthNonManifoldEdges": 0,
+      "oralReturnVertices": 28347,
+      "vermilionVertices": 64511,
+      "pairedSections": 49,
+      "regionalTriangles": 188376,
+      "existingSurfaceRetained": true,
+      "newOverlappingSheets": 0,
+      "continuity": "indexed native skin and oral return retained; no cut-and-cover patch",
+      "referenceCalibration": "identity-neutral native surface",
+      "strainMetric": "weighted across-furrow tangent extension; pressure deepens contact creases",
+      "localStretch": {
+        "min": 0.8125827770499726,
+        "max": 1.2026188977523868,
+        "mean": 1.0000102749317168
+      },
+      "maxGeometryFurrowMicrons": 45.79124856425969,
+      "maxPerformanceDisplacementMM": 0,
+      "minimumPairedGapMM": 0.09134513676578712,
+      "closedSections": 4,
+      "totalSections": 49,
+      "dentalEnvelopeTriangles": 29920,
+      "dentalEnvelopeContacts": 0,
+      "maxDentalProjectionMM": 0,
+      "remainingFrontalEnvelopePenetrationMM": 0,
+      "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+      "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified",
+      "salivaSimulation": false
+    },
+    "lipMaterial": {
+      "version": "ET18-L2",
+      "shaderCompiles": 3,
+      "kind": "bounded lip field + seeded curve graph, not a scanned map",
+      "sourceHeadReplaced": false,
+      "oldSkinMastersRetained": true,
+      "distanceFiltering": true,
+      "atlas": {
+        "seed": 37,
+        "density": 1,
+        "primary": 90,
+        "branches": 105,
+        "secondary": 244,
+        "minHeightMM": -0.08215264976024628,
+        "maxHeightMM": 0.004684084502514452,
+        "baseBytes": 2097152,
+        "estimatedMipBytes": 2796203,
+        "source": "authored curve graph; no donor texture",
+        "periodicTiling": false
+      }
+    },
+    "lipMotherOptics": {
+      "version": "ET19-L3",
+      "compiles": 3,
+      "measuredOptics": false,
+      "independentUpperLower": true,
+      "wetness": "continuous original surface, not a transparent extra sheet",
+      "SSS": "retained host diffusion approximation; no measured volumetric scattering"
+    },
+    "geometricFolds": {
+      "addedVertices": 55000,
+      "sourceVertices": 198406,
+      "displayVertices": 253406,
+      "preparedCache": {
+        "hits": 51,
+        "misses": 52,
+        "entries": 2,
+        "maxEntries": 2,
+        "bytes": 27768720,
+        "match": "exact source position and normal values; not version-counter or hash-only",
+        "lastHit": true
+      },
+      "fairing": {
+        "activeVertices": 87340,
+        "maxCorrectionMM": 0.16353789108962685,
+        "capMM": 0.22,
+        "normalLaplacianBeforeMM": 0.026287202964457,
+        "normalLaplacianAfterMM": 0.024176888174079772,
+        "cycles": 5,
+        "appliedBeforeFolds": true
+      },
+      "baseNormalPolish": {
+        "correctedBaseNormals": 73483,
+        "maxCorrectionDegrees": 11.568963276041394,
+        "capDegrees": 12,
+        "foldNormalDeltaPreserved": true,
+        "positionChanges": 0,
+        "protectedMaskUnchanged": true
+      },
+      "affectedVertices": 88575,
+      "positiveRollVertices": 12230,
+      "valleyVertices": 44851,
+      "maxDeltaMM": 0.07714183444243264,
+      "protectedDeltaMM": 0,
+      "updateMS": 76,
+      "canonicalModified": false,
+      "bodyModified": false,
+      "extraHeadMeshes": 0,
+      "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+      "physicalSkinSimulation": false
+    },
+    "foldFrames": 95,
+    "foldLook": {
+      "strength": 0.35,
+      "slack": 0.4,
+      "compression": 0.55,
+      "forehead": 0.25,
+      "eyes": 0.3,
+      "nasolabial": 0.78,
+      "cheeks": 0.55,
+      "sag": 0.55,
+      "makeup": 0.12,
+      "light": "natural",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    },
+    "submitMeanMS": 17.25368421052515,
+    "performanceMeaning": "CPU WebGL submission only; not GPU time or certified hardware FPS",
+    "earLatest": {
+      "ready": true,
+      "version": "EAR-R06.0",
+      "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+      "penumbra": {
+        "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+        "sigmaMM": 0.65,
+        "passes": 10,
+        "vertices": 16991,
+        "protectedVerticesFiltered": 0,
+        "scratchBytes": 3193176,
+        "geometryModified": false,
+        "poreNormalsModified": false
+      },
+      "occluderTriangles": 64249,
+      "raySampleVertices": 4299,
+      "interpolatedVertices": 12692,
+      "directVisible": [
+        1691.2000000000003,
+        1656.2,
+        1330.8000000000004
+      ],
+      "deepVisible": [
+        401.40000000000003,
+        367.19999999999993,
+        506.2
+      ],
+      "visibilitySumStage": "before optical prefilter",
+      "lightDirections": [
+        [
+          0.7527099294949814,
+          0.3387194682727416,
+          0.5645324471212361
+        ],
+        [
+          -0.8377078165833909,
+          0.29319773580418684,
+          0.46073929912086503
+        ],
+        [
+          -0.7640696090859265,
+          0.5825927875384665,
+          -0.27709795448440006
+        ]
+      ],
+      "angularRadiusRadians": 0.018,
+      "biasMM": 0.06,
+      "queryCount": 64485,
+      "fieldBytes": 6386352,
+      "buildMS": 844.8999999999651,
+      "builds": 1,
+      "geometryRebuilt": true,
+      "positionsModified": false,
+      "normalsModified": false,
+      "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
+      "fullVolumetricTransport": false,
+      "sourceCommit": "38a8a2140b42561eecbd31af5df074e9210d0c64",
+      "active": true,
+      "hostLights": "fold key + fold fill + ear inspection lamp",
+      "gpuBinding": "Float32 texelFetch by display vertex ID; zero added vertex attributes",
+      "textureBytes": 8519680,
+      "fullCinemaAreaLightVisibility": false
+    },
+    "lipTransport": "P3",
+    "anatomy": {
+      "version": "REGIONAL-FACE-R03",
+      "changedVertices": 89344,
+      "maxNormalIncrementMM": 1.1278486344963312,
+      "regions": [
+        "zygoma",
+        "malar",
+        "buccal",
+        "masseter",
+        "jaw",
+        "temple",
+        "brow",
+        "vault"
+      ],
+      "bodyAndOralAndPinnaProtected": true,
+      "extraMeshes": 0,
+      "underSkinAnatomyMesh": false,
+      "method": "overlapping native-rest anatomical envelopes; normal-space millimetre display increments",
+      "muscleSimulation": false
+    },
+    "ears": {
+      "version": "EAR-R04.0",
+      "mode": "topological pinna ownership / fixed scalp / pinned geodesic root collar",
+      "domain": {
+        "schema": "kaopu/ear-root-domain@1",
+        "source": "authored edge loops on retained native GNM topology",
+        "region255IsNotEar": true,
+        "falloff": "surface geodesic, 0.7mm pinned collar + 10mm quintic ramp",
+        "sides": {
+          "left": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.128475071026948,
+            "seed": 2377,
+            "hinge": {
+              "origin": [
+                0.06877759844064713,
+                0.24515405297279358,
+                0.03877704590559006
+              ],
+              "axis": [
+                0.16780668171615873,
+                0.967939401656183,
+                -0.1869070150981023
+              ]
+            }
+          },
+          "right": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.06430507811123,
+            "seed": 8505,
+            "hinge": {
+              "origin": [
+                0.06884616613388062,
+                0.2452031522989273,
+                0.03870754688978195
+              ],
+              "axis": [
+                0.16760282546321437,
+                0.9675721478654469,
+                -0.18897997664248184
+              ]
+            }
+          }
+        },
+        "canonicalVertices": 25417,
+        "canonicalMovingVertices": 1022
+      },
+      "guard": {
+        "left": {
+          "acceptedScale": 1,
+          "backtrackingSteps": 0,
+          "requestedViolations": 0,
+          "violations": 0,
+          "checkedTriangles": 17336,
+          "minAreaRatio": 0.5239785182481385,
+          "minFacingCosine": 0.6600006648314485,
+          "minEdgeRatio": 0.6263295227808082,
+          "maxEdgeRatio": 2.181037032187247,
+          "checkedSheetPairs": 658,
+          "minimumSampledGapMM": 2.0289746956512476
+        },
+        "right": {
+          "acceptedScale": 1,
+          "backtrackingSteps": 0,
+          "requestedViolations": 0,
+          "violations": 0,
+          "checkedTriangles": 16829,
+          "minAreaRatio": 0.522143602953625,
+          "minFacingCosine": 0.6679387942014986,
+          "minEdgeRatio": 0.631997466084937,
+          "maxEdgeRatio": 2.1261190965541354,
+          "checkedSheetPairs": 670,
+          "minimumSampledGapMM": 2.06586659948419
+        }
+      },
+      "phenotype": {
+        "left": {
+          "c": 0,
+          "b": 0,
+          "l": 0,
+          "roll": 0.15999999999999992,
+          "spread": 0,
+          "attach": 0.45,
+          "depth": 0.92,
+          "stem": 1.08,
+          "projectionAngle": -0.002094395102393197,
+          "lobeLength": 1,
+          "lobeWidth": 1,
+          "cartilageScaleY": 1,
+          "cartilageScaleZ": 1,
+          "conchaScale": 1,
+          "cymbaGain": 1,
+          "cavumGain": 1,
+          "superior": 0.92,
+          "inferior": 0.9,
+          "fold": 0.85,
+          "sheetSupport": 1,
+          "description": "regional cartilage expansion \u2192 conchal support and crura \u2192 root rotation \u2192 separate lobule area/length budget",
+          "hinge": {
+            "origin": [
+              0.06877759844064713,
+              0.24515405297279358,
+              0.03877704590559006
+            ],
+            "axis": [
+              0.16780668171615873,
+              0.967939401656183,
+              -0.1869070150981023
+            ]
+          }
+        },
+        "right": {
+          "c": 0,
+          "b": 0,
+          "l": 0,
+          "roll": 0.15999999999999992,
+          "spread": 0,
+          "attach": 0.45,
+          "depth": 0.92,
+          "stem": 1.08,
+          "projectionAngle": -0.002094395102393197,
+          "lobeLength": 1,
+          "lobeWidth": 1,
+          "cartilageScaleY": 1,
+          "cartilageScaleZ": 1,
+          "conchaScale": 1,
+          "cymbaGain": 1,
+          "cavumGain": 1,
+          "superior": 0.92,
+          "inferior": 0.9,
+          "fold": 0.85,
+          "sheetSupport": 1,
+          "description": "regional cartilage expansion \u2192 conchal support and crura \u2192 root rotation \u2192 separate lobule area/length budget",
+          "hinge": {
+            "origin": [
+              0.06884616613388062,
+              0.2452031522989273,
+              0.03870754688978195
+            ],
+            "axis": [
+              0.16760282546321437,
+              0.9675721478654469,
+              -0.18897997664248184
+            ]
+          }
+        }
+      },
+      "subdivisionLevels": 1,
+      "subdivision": "conforming midpoint; no Loop displacement",
+      "addedDisplayVertices": 12692,
+      "affectedDisplayVertices": 16991,
+      "maxAuthoredDeltaMM": 2.3833647427094093,
+      "protectedDisplayVertices": 249107,
+      "protectedMaxDisplacementMM": 0,
+      "protectedMaxNormalChange": 0,
+      "canonicalBuffersModified": false,
+      "extraHeadMeshes": 0,
+      "scanMeshSpliced": false,
+      "growthSimulation": false,
+      "globalCollisionDetection": false
+    },
+    "earTissue": {
+      "ready": true,
+      "version": "EAR-R05.0",
+      "sampling": "area CDF + sqrt barycentric sampling + 3D Poisson rejection on owned template",
+      "seed": 731047,
+      "poreCount": 6381,
+      "seedAreaMM2": 6381.497622438552,
+      "minimumSeedSeparationMM": 0.34,
+      "poreRadiusMM": [
+        0.032,
+        0.054
+      ],
+      "poreDepthMM": [
+        0.003,
+        0.005
+      ],
+      "currentSpaceMetric": true,
+      "barycentricAnchors": true,
+      "planarPoreProjection": false,
+      "normalRayHits": 7570,
+      "coneRayEstimates": 5009,
+      "totalRayHits": 12579,
+      "confidenceFeatherPasses": 12,
+      "unmeasuredVertices": 4412,
+      "unmeasuredPolicy": "12mm conservative opaque estimate / zero deep transmission",
+      "thicknessMM": {
+        "min": 1.1087414026260376,
+        "p10": 4.928739547729492,
+        "median": 7.252469539642334,
+        "p90": 11.626604080200195,
+        "max": 33.83673858642578
+      },
+      "thicknessKind": "normal ray + marked 35deg cone estimate of model envelope, not skin/cartilage histology",
+      "hashBucketMaximum": 18,
+      "hashSize": 32768,
+      "hashDroppedRecords": 0,
+      "gpuDataBytes": 1105920,
+      "cellMM": 0.5,
+      "slots": 128,
+      "buildMS": 941.5,
+      "builds": 4,
+      "geometryModified": false
+    },
+    "faceSurface": {
+      "version": "REGIONAL-PORES-R03",
+      "count": 24000,
+      "gpuBytes": 2695168,
+      "maxBucket": 30,
+      "builds": 4,
+      "barycentric": true,
+      "paintedAlbedoDots": false,
+      "metric": "current authored surface; idle samples carry the fixed material coordinates",
+      "minRadiusMM": 0.033602175392722915,
+      "maxRadiusMM": 0.10034003575935233,
+      "measuredHumanPores": false
+    },
+    "regionalSkin": {
+      "version": "REGIONAL-SKIN-R03",
+      "compiles": 3,
+      "facePoresAreColourDots": false,
+      "earShaderPreserved": true,
+      "lipShaderPreserved": true,
+      "faceMicroNormals": "replace inherited stacked face micro-normal, then apply bounded surface pore derivative",
+      "volumeScattering": false,
+      "pores": {
+        "version": "REGIONAL-PORES-R03",
+        "count": 24000,
+        "gpuBytes": 2695168,
+        "maxBucket": 30,
+        "builds": 4,
+        "barycentric": true,
+        "paintedAlbedoDots": false,
+        "metric": "current authored surface; idle samples carry the fixed material coordinates",
+        "minRadiusMM": 0.033602175392722915,
+        "maxRadiusMM": 0.10034003575935233,
+        "measuredHumanPores": false
+      }
+    },
+    "earEnabled": true,
+    "earMaterial": {
+      "version": "EAR-R05.0",
+      "shaderCompiles": 3,
+      "measuredScattering": false,
+      "earChart": "area-sampled barycentric seeds + current-space circular tangent kernels",
+      "faceAtlasExcluded": true,
+      "opaque": true,
+      "materialControls": 7,
+      "subpixelPolicy": "microheight fades to roughness",
+      "localDiffusionWeight": 0.14,
+      "domain": {
+        "schema": "kaopu/ear-root-domain@1",
+        "source": "authored edge loops on retained native GNM topology",
+        "region255IsNotEar": true,
+        "falloff": "surface geodesic, 0.7mm pinned collar + 10mm quintic ramp",
+        "sides": {
+          "left": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.128475071026948,
+            "seed": 2377,
+            "hinge": {
+              "origin": [
+                0.06877759844064713,
+                0.24515405297279358,
+                0.03877704590559006
+              ],
+              "axis": [
+                0.16780668171615873,
+                0.967939401656183,
+                -0.1869070150981023
+              ]
+            }
+          },
+          "right": {
+            "interiorVertices": 511,
+            "pinnedBoundaryVertices": 42,
+            "movingNativeVertices": 511,
+            "maximumGeodesicMM": 31.06430507811123,
+            "seed": 8505,
+            "hinge": {
+              "origin": [
+                0.06884616613388062,
+                0.2452031522989273,
+                0.03870754688978195
+              ],
+              "axis": [
+                0.16760282546321437,
+                0.9675721478654469,
+                -0.18897997664248184
+              ]
+            }
+          }
+        },
+        "canonicalVertices": 25417,
+        "canonicalMovingVertices": 1022
+      },
+      "skullUsesEarShader": false,
+      "deepScattering": "normal-ray envelope thickness / bounded directional attenuation",
+      "planarPoreProjection": false,
+      "tissue": {
+        "ready": true,
+        "version": "EAR-R05.0",
+        "sampling": "area CDF + sqrt barycentric sampling + 3D Poisson rejection on owned template",
+        "seed": 731047,
+        "poreCount": 6381,
+        "seedAreaMM2": 6381.497622438552,
+        "minimumSeedSeparationMM": 0.34,
+        "poreRadiusMM": [
+          0.032,
+          0.054
+        ],
+        "poreDepthMM": [
+          0.003,
+          0.005
+        ],
+        "currentSpaceMetric": true,
+        "barycentricAnchors": true,
+        "planarPoreProjection": false,
+        "normalRayHits": 7570,
+        "coneRayEstimates": 5009,
+        "totalRayHits": 12579,
+        "confidenceFeatherPasses": 12,
+        "unmeasuredVertices": 4412,
+        "unmeasuredPolicy": "12mm conservative opaque estimate / zero deep transmission",
+        "thicknessMM": {
+          "min": 1.1087414026260376,
+          "p10": 4.928739547729492,
+          "median": 7.252469539642334,
+          "p90": 11.626604080200195,
+          "max": 33.83673858642578
+        },
+        "thicknessKind": "normal ray + marked 35deg cone estimate of model envelope, not skin/cartilage histology",
+        "hashBucketMaximum": 18,
+        "hashSize": 32768,
+        "hashDroppedRecords": 0,
+        "gpuDataBytes": 1105920,
+        "cellMM": 0.5,
+        "slots": 128,
+        "buildMS": 941.5,
+        "builds": 4,
+        "geometryModified": false
+      },
+      "shaderCompilesR05": 3
+    },
+    "lipMother": "ET19-L3",
+    "oneCharacter": true
+  }
+}

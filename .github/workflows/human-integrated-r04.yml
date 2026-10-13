@@ -1,0 +1,75 @@
+name: Human R04 latest specialists and eye repair
+on:
+  push:
+    branches: [fix/human-r04-latest-specialists-eye-20261013]
+    paths: ['kaopu-unified-human-workbench/human-integrated-r04/**', '.github/workflows/human-integrated-r04.yml']
+permissions: {contents: write}
+concurrency:
+  group: human-r04-latest-eye
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.58.2
+      - name: Build pinned complete R06 and P3 without replacing old modules
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git fetch --depth=1 --filter=blob:none origin 38a8a2140b42561eecbd31af5df074e9210d0c64 d6810d865fb7c06996b75ea7f0272c24304bf297 2c08fa9728f64e9119b4a666cf80ee3faecb23de
+          node kaopu-unified-human-workbench/human-integrated-r04/eye-adapter.cjs
+          node kaopu-unified-human-workbench/human-integrated-r04/build.cjs
+          node kaopu-unified-human-workbench/human-integrated-r04/test.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Real browser candidate smoke
+        env: {QA_OUT: r04-evidence/smoke, SMOKE_ONLY: '1'}
+        run: node kaopu-unified-human-workbench/human-integrated-r04/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r04-smoke-${{ github.run_number }}
+          path: |
+            r04-evidence/
+            kaopu-unified-human-workbench/human-integrated-r04/
+          retention-days: 7
+      - name: Persist complete readable source and immutable build
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/human-integrated-r04
+          git commit -m 'build(human-r04): latest ear R06 lip P3 and continuous eye envelope'
+          git push origin HEAD:fix/human-r04-latest-specialists-eye-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Exact fixed-public browser regression
+        env: {QA_OUT: r04-evidence/public}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/human-integrated-r04/preview.html"
+          node kaopu-unified-human-workbench/human-integrated-r04/verify.cjs
+      - name: Record evidence and old-version preservation
+        run: |
+          python - <<'PY'
+          import json,pathlib,os,hashlib,subprocess
+          d=pathlib.Path('kaopu-unified-human-workbench/human-integrated-r04');q=json.loads(pathlib.Path('r04-evidence/public/qa.json').read_text());b=json.loads((d/'BUILD.json').read_text());assert q['completed'] and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests']
+          names=subprocess.check_output(['git','diff','--name-only','2c08fa9728f64e9119b4a666cf80ee3faecb23de','HEAD'],text=True).splitlines();allow=['.github/workflows/human-r04-source.yml','.github/workflows/human-r04-eye-audit.yml','.github/workflows/human-integrated-r04.yml'];assert all(x.startswith(str(d)+'/') or x in allow for x in names),names
+          receipt={'version':'HUMAN-INTEGRATED-R04','source':os.environ['GITHUB_SHA'],'build':os.environ['BUILD_SHA'],'url':q['url'],'htmlSHA256':hashlib.sha256((d/'preview.html').read_bytes()).hexdigest(),'earSource':b['earSource'],'lipSource':b['lipSource'],'lipTransportSource':b['lipTransportSource'],'checks':len(q['tests']),'publicVerified':True,'oldFilesChanged':False,'realPhoneTested':False,'userVisualAccepted':False,'run':os.environ['GITHUB_RUN_ID']}
+          (d/'DELIVERY.json').write_text(json.dumps(receipt,indent=2)+'\n');(d/'PUBLIC_QA.json').write_text(json.dumps(q,indent=2)+'\n')
+          PY
+          git add kaopu-unified-human-workbench/human-integrated-r04/DELIVERY.json kaopu-unified-human-workbench/human-integrated-r04/PUBLIC_QA.json
+          git commit -m 'test(human-r04): exact public evidence and predecessor preservation'
+          git push origin HEAD:fix/human-r04-latest-specialists-eye-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r04-full-${{ github.run_number }}
+          path: |
+            r04-evidence/
+            kaopu-unified-human-workbench/human-integrated-r04/
+          retention-days: 14

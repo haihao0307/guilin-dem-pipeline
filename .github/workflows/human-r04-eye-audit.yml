@@ -1,0 +1,41 @@
+name: Human R04 eye geometry diagnosis
+on:
+  push:
+    branches: [fix/human-r04-latest-specialists-eye-20261013]
+    paths: ['.github/workflows/human-r04-eye-audit.yml']
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {sparse-checkout: .github}
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Render each actual layer ablation, not a suppressed stale frame
+        run: |
+          git fetch --depth=1 origin d174f6486c9ea91a74c537be447f5119b50b9c1a
+          mkdir -p audit
+          python - <<'PY'
+          import subprocess,pathlib
+          old=subprocess.check_output(['git','show','d174f6486c9ea91a74c537be447f5119b50b9c1a:.github/workflows/human-r04-eye-audit.yml'],text=True)
+          code=old.split("cat > audit.cjs <<'JS'\n",1)[1].split('\n          JS',1)[0]
+          code='\n'.join(line[10:] if line.startswith('          ') else line for line in code.splitlines())
+          a="snap=async n=>{const s=await cdp.send"
+          b="snap=async n=>{await p.evaluate(()=>{lifelikeIdle.runtime().originalRender();__IDENTITY_QA__.viewer().renderer.getContext().finish();});await p.waitForTimeout(120);const s=await cdp.send"
+          assert code.count(a)==1;pathlib.Path('audit.cjs').write_text(code.replace(a,b))
+          PY
+          node audit.cjs
+          python - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path('audit');r=json.loads((p/'report.json').read_text());assert r.get('pass'),r
+          hashes={x.name:hashlib.sha256(x.read_bytes()).hexdigest() for x in p.glob('*.png')}
+          assert hashes['01-full-gray.png']!=hashes['02-no-broad-anatomy.png'],'Diagnostic frame was stale'
+          r['imageSHA256']=hashes;r['explicitSuppressedRender']=True;(p/'report.json').write_text(json.dumps(r,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: human-r04-eye-diagnosis, path: audit/, retention-days: 7}

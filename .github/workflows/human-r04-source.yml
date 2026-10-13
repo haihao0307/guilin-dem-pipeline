@@ -1,0 +1,29 @@
+name: Human R04 pinned specialist source
+on:
+  push:
+    branches: [fix/human-r04-latest-specialists-eye-20261013]
+    paths: ['.github/workflows/human-r04-source.yml']
+permissions: {contents: read}
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {sparse-checkout: .github}
+      - name: Read only pinned donor sources
+        run: |
+          git fetch --depth=1 --filter=blob:none origin 38a8a2140b42561eecbd31af5df074e9210d0c64 d6810d865fb7c06996b75ea7f0272c24304bf297
+          python - <<'PY'
+          import subprocess,pathlib,json,hashlib
+          out=pathlib.Path('source');records=[]
+          for sha,folder in [('38a8a2140b42561eecbd31af5df074e9210d0c64','ear-continuity-r06'),('d6810d865fb7c06996b75ea7f0272c24304bf297','lip-startup-r03'),('d6810d865fb7c06996b75ea7f0272c24304bf297','lip-startup-r02'),('d6810d865fb7c06996b75ea7f0272c24304bf297','lip-startup-r01')]:
+            prefix='kaopu-unified-human-workbench/'+folder+'/'
+            for name in subprocess.check_output(['git','ls-tree','-r','--name-only',sha,'--',prefix],text=True).splitlines():
+              rel=name[len(prefix):]
+              if '/' in rel or pathlib.Path(rel).suffix not in ['.mjs','.cjs','.js','.json','.md','.css']:continue
+              data=subprocess.check_output(['git','show',sha+':'+name]);p=out/folder/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data);records.append({'path':str(p),'source':sha,'sha256':hashlib.sha256(data).hexdigest()})
+          (out/'provenance.json').write_text(json.dumps(records,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with: {name: human-r04-pinned-source, path: source/, retention-days: 7}
