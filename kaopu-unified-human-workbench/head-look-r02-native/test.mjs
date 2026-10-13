@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {DEFAULTS,LIMITS,validate,installNativeLighting,SCHEMA} from './Profile.mjs';
+import {environmentPixels} from './Studio.mjs';
+let n=0;const test=(name,f)=>{f();console.log('PASS',++n,name);};
+test('default is own skin with original lighting',()=>assert.equal(validate().lighting,false));
+for(const[k,[lo,hi]]of Object.entries(LIMITS))test('strict '+k,()=>{assert.equal(validate({[k]:lo})[k],lo);assert.equal(validate({[k]:hi})[k],hi);for(const v of [NaN,Infinity,lo-1,hi+1,'1',null])assert.throws(()=>validate({[k]:v}));});
+test('rejected skin switches cannot be enabled',()=>{for(const k of ['surface','scatter','pigment','diagnostic','wetness'])assert.throws(()=>validate({[k]:1}));assert.throws(()=>validate([]));assert.throws(()=>validate({lighting:1}));});
+const m={body:4,archive(){return{body:this.body,lips:{own:true}};},restore(a){assert(!a.headLook);if(a.body<0)throw Error('bad body');this.body=a.body;}};const p=installNativeLighting(m);
+test('single install',()=>assert.equal(p,installNativeLighting(m)));
+test('old R01 recipe is discarded without changing user body',()=>{m.restore({body:6,headLook:{schema:'kaopu/head-look@1',settings:{surface:true,pigment:1.1}}});assert.equal(m.body,6);assert.deepEqual(p.settings,DEFAULTS);assert(!m.archive().headLook);});
+test('invalid native lighting rejected before restore',()=>{const a=m.archive();assert.throws(()=>m.restore({body:10,nativeLighting:{schema:SCHEMA,settings:{key:NaN}}}));assert.deepEqual(m.archive(),a);});
+test('host failure restores lighting recipe',()=>{const a=m.archive();assert.throws(()=>m.restore({body:-1,nativeLighting:{schema:SCHEMA,settings:{lighting:true}}}));assert.deepEqual(m.archive(),a);});
+test('roundtrip owns only lighting',()=>{const a=m.archive();a.nativeLighting.settings.key=2.1;m.restore(a);assert.equal(p.settings.key,2.1);assert(m.archive().lips.own);});
+test('schema rejects unknown version',()=>assert.throws(()=>m.restore({body:7,nativeLighting:{schema:'future',settings:{}}})));
+test('neutral HDR has equal RGB and finite values',()=>{const a=environmentPixels(64,32);for(let i=0;i<a.length;i+=4){assert(Number.isFinite(a[i])&&a[i]>=0);assert.equal(a[i],a[i+1]);assert.equal(a[i],a[i+2]);assert.equal(a[i+3],1);}});
+console.log('NATIVE_SKIN_UNIT_CHECKS='+n);

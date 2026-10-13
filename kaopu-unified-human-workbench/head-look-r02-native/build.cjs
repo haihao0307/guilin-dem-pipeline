@@ -1,0 +1,18 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const base=path.resolve(__dirname,'../human-integrated-r03');let code=fs.readFileSync(base+'/build-core.cjs','utf8');
+assert.equal(crypto.createHash('sha256').update(code).digest('hex'),'562658d0ae6f73e35756e003621b9872db5e32f3f6c462a6cab7b838fe2a90c5');
+const change=(a,b)=>{assert.equal(code.split(a).length,2,'Build adapter drift: '+a.slice(0,90));code=code.replace(a,()=>b);};
+change("spec=__dirname+'/specialists'","spec=path.resolve(__dirname,'../human-integrated-r03/specialists')");
+change("app=`import {installAnatomy}","app=`import {installNativeLighting} from '../../head-look-r02-native/Profile.mjs';\nimport {mountNativeSkin} from '../../head-look-r02-native/UI.mjs';\nimport {installAnatomy}");
+change('installAnatomy(model);if(!savedArchive)','installAnatomy(model);installNativeLighting(model);if(!savedArchive)');
+change('mountUnifiedUI({model,viewer,controller});wasLoaded=true;','mountUnifiedUI({model,viewer,controller});mountNativeSkin({model,viewer,controller});wasLoaded=true;');
+change('function release(){controller?.model.regionalFace','function release(){controller?.model.nativeLighting?.disposeUI?.();controller?.model.regionalFace');
+change('regionalFace:appearance.regionalFace,cinematicLook:','regionalFace:appearance.regionalFace,nativeLighting:appearance.nativeLighting,cinematicLook:');
+change("if(s.includes('import.meta.url'))","s=require("+JSON.stringify(base+'/compatibility.cjs')+").adapt(s,rel,adapters);\n   if(s.includes('import.meta.url'))");
+change("__dirname+'/layout.css'];","root+'/human-integrated-r03/layout.css',__dirname+'/layout.css'];");
+change('<title>共同人物 R03 · 耳唇融合与面部分区</title>','<title>人物总台 · 原有皮肤恢复 R02</title>');
+change('R03 · 耳 R05 / 唇 ET19 / 面部分区与曲面毛孔','原有皮肤恢复 R02 · 原有嘴唇 / 眼周 / 耳部 · 灯光独立');
+change("version:'HUMAN-INTEGRATED-R03'","version:'HUMAN-NATIVE-SKIN-R02'");
+change("fs.writeFileSync(__dirname+'/BUILD.json'",`assert(!html.includes('uHLSurface')&&!html.includes('uHLScatter')&&!html.includes('HEAD-LOOK-MATERIAL-R01'),'Rejected R01 surface code entered native build');Object.assign(manifest,{parent:'c1e0fd1982322ae5a11e5473a69061e3d359df4d',host:'HUMAN-INTEGRATED-R03',skinSource:'2c08fa9728f64e9119b4a666cf80ee3faecb23de',rejectedSurfaceBundled:false,originalMaterialSourcesUnmodified:true,defaultLighting:'native',optionalLighting:'neutral with radius-controlled PCF filtering',limitations:['Skin is restored, not replaced by a newly acquired skin','Original skin/lip/ear/eye limitations and loading costs remain','PCF edge filtering is not physical area-light shadowing','No completion claim for SSS leak repair, new eye/ear texture authoring or film-quality calibration','No physical phone, Safari, Vision Pro or consumer GPU FPS certification']});fs.writeFileSync(__dirname+'/BUILD.json'`);
+require('node:child_process').execFileSync(process.execPath,[base+'/compatibility.cjs'],{stdio:'inherit'});
+new Function('require','__dirname','process',code)(require,__dirname,process);
