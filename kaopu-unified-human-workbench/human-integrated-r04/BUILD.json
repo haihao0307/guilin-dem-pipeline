@@ -1,12 +1,12 @@
 {
   "schema": "kaopu/unified-human-build@1",
   "version": "HUMAN-INTEGRATED-R04",
-  "sourceCommit": "9cf930ab43a1b9b3f759fba330cfca270c027bb1",
+  "sourceCommit": "11a639fe794dfc3e4d801af7cb2486d873b4088b",
   "predecessor": "3a4443bab9ee5a830024e7cbf3de51dc13160a8b",
   "earSource": "38a8a2140b42561eecbd31af5df074e9210d0c64",
   "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
-  "previewSHA256": "2f126bc1557a18a7c376444aaebf140a96dc4fbcf83f56239f687da9e683331e",
-  "previewBytes": 5293501,
+  "previewSHA256": "c8f1150714ac03d2aec7deb6df7dd1e31a4bb887b1ca4fa4a25b38e373377f8d",
+  "previewBytes": 5292707,
   "sources": [
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r04/.build-runtime.cjs",
@@ -78,7 +78,7 @@
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r04/eye-adapter.cjs",
-      "sha256": "0befcd89c51dddeef2eb229861a23c913629e79881e982748cc5bd798845244f"
+      "sha256": "67c55ee4a1bc4bd0d6e224d45f0d140a8d32b5afb36cc9847c4fec323078e512"
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r04/layout.css",
@@ -540,14 +540,10 @@
       "exactInputAnchor": "model.regionalFace=api;"
     },
     {
-      "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
-      "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
-    },
-    {
       "path": "kaopu-unified-human-workbench/eye-transfer/NativeEyeLayer.mjs",
       "adapter": "eye-continuous-native-envelope",
       "from": "const back=r.displacement*near*settings.medial*outer;",
-      "to": "const taper=smooth01(s/.07)*smooth01((.18-s)/.08)*smooth01((d/scale+.0015)/.0025);const back=Math.min(r.displacement,.00008*scale)*near*settings.medial*outer*taper;"
+      "to": "const taper=smooth01(s/.07)*smooth01((.18-s)/.08)*smooth01((d/scale+.0015)/.0025);const back=Math.min(r.displacement,.00020*scale)*near*settings.medial*outer*taper;"
     },
     {
       "path": "kaopu-unified-human-workbench/eye-transfer/NativeEyeLayer.mjs",
@@ -556,25 +552,12 @@
       "to": "version:'ET11-U1-R04-continuity',"
     },
     {
-      "path": "kaopu-unified-human-workbench/eye-transfer/NativeEyeLayer.mjs",
-      "adapter": "eye-continuous-native-envelope",
-      "from": "rows.push({side:e.side,",
-      "to": "let closedVertices=0,closedMaximum=0;const closing=smooth01(((1-opening)-.35)/.65);\n   if(settings.enabled&&closing>0){\n    const endY=(f.upper(1)+f.lower(1))*.5;\n    for(const{index:i,outer}of e.patch){\n     const q=f.project(point(p,i)),s=q[0]/f.width;if(s<=0||s>=1)continue;\n     const oldLine=(f.upper(s)+f.lower(s))*.5,oldSupport=support(q[0],q[1]);\n     if(oldSupport!==null&&q[2]<oldSupport-.00025*scale)continue;\n     const proximity=Math.exp(-Math.pow((q[1]-oldLine)/(.0055*scale),2)),corners=smooth01(s/.15)*smooth01((1-s)/.15);\n     const target=s*endY-.00075*scale*4*s*(1-s);\n     const lift=clamp(target-oldLine,-.002*scale,.002*scale)*closing*proximity*corners*outer;\n     if(Math.abs(lift)<1e-8)continue;\n     const nextSupport=support(q[0],q[1]+lift),clearance=oldSupport===null?.00006*scale:Math.min(.00006*scale,q[2]-oldSupport);\n     const front=nextSupport===null?0:Math.max(0,nextSupport+clearance-q[2]);\n     for(let k=0;k<3;k++)p[i*3+k]+=f.y[k]*lift+f.z[k]*front;\n     closedVertices++;closedMaximum=Math.max(closedMaximum,Math.abs(lift));\n    }\n   }\n   rows.push({closedCorrectionVertices:closedVertices,maximumClosedLiftMM:closedMaximum*1000,closedTarget:'bounded shallow arc between retained current canthi; no eye-mesh replacement',side:e.side,"
-    },
-    {
       "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
       "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
     },
     {
-      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
-      "adapter": "eye-continuous-native-envelope",
-      "from": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@1';",
-      "to": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@2-r04';"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
-      "adapter": "replace-underresolved-ridges-with-broad-C2-envelopes",
-      "nativeEyeballsChanged": false
+      "path": "kaopu-unified-human-workbench/ear-tissue-r05/EarUI.mjs",
+      "anchor": "Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(()=>{if(dispo"
     },
     {
       "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
@@ -607,6 +590,17 @@
       "exactInputAnchor": "float idleDrySkin=fMask*(1.-lpMask)",
       "result": "float idleDrySkin=fMask*(1.-lpMask)*(1.-eaM)",
       "occurrences": 1
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
+      "adapter": "eye-continuous-native-envelope",
+      "from": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@1';",
+      "to": "export const KNOWLEDGE_VERSION='kaopu/eye-knowledge@2-r04';"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-transfer/EyelidKnowledge.mjs",
+      "adapter": "replace-underresolved-submillimetre-ridges-with-broad-C2-envelopes",
+      "nativeEyeballsChanged": false
     },
     {
       "path": "kaopu-unified-human-workbench/identity-lab/TraitMaps.mjs",
