@@ -1,0 +1,98 @@
+name: Hair L02 immutable native public verification
+on:
+  push:
+    branches: [fix/hair-r14-l02-fast-start-20261013]
+    paths: [.github/workflows/hair-r14-l02-public.yml]
+permissions:
+  contents: write
+concurrency:
+  group: hair-r14-l02-public
+  cancel-in-progress: false
+jobs:
+  public-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      P: kaopu-hair-workbench/fusion/r14-fast
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/fusion/r14-l02-7c1072ee121d/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-fast
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify all prior quality and recovery evidence and exact published tree
+        run: |
+          git fetch --depth=1 origin 764a52d8c02b514181c4a931855922a10296f845
+          git fetch --depth=1 origin 5140912c24d5d901f05dd841e6b340ed7114073a
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,subprocess
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']=='bd1668502411fa074796ef8d851e75aa0044862d6b5ec9ee0c393438b2f0433c'
+          r=json.loads((p/'evidence/candidate/report.json').read_text());assert r['success'] and len(r['checks'])==40 and all(x['pass'] for x in r['checks'])
+          assert json.loads((p/'evidence/unit.json').read_text())['success']
+          pub=json.loads((p/'PUBLISH.json').read_text());dest=pub['destination'];sha=pub['pagesCommit'];parent=pub['pagesParent']
+          changed=subprocess.check_output(['git','diff','--name-only',parent,sha],text=True).splitlines()
+          assert len(changed)==36 and all(x.startswith(dest+'/') for x in changed),changed
+          a=subprocess.check_output(['git','rev-parse',sha+':'+dest],text=True).strip()
+          b=subprocess.check_output(['git','rev-parse','HEAD:'+str(p)+'/site'],text=True).strip()
+          assert a==b,(a,b)
+          (p/'evidence/pages-tree-identity.json').write_text(json.dumps({'publishedTree':a,'sourceSiteTree':b,'match':a==b,'oldPageChanges':0,'newFiles':len(changed),'pagesCommit':sha,'pagesParent':parent},indent=2))
+          PY
+          npm install --prefix /tmp/l02-public-tools --no-save playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/l02-public-tools/node_modules node_modules
+          /tmp/l02-public-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Wait for exact direct public HTML
+        run: |
+          python - <<'PY'
+          import os,time,urllib.request,hashlib,json
+          from pathlib import Path
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          for i in range(40):
+              try:
+                  t=time.monotonic();response=urllib.request.urlopen(os.environ['PUBLIC_URL'],timeout=20);data=response.read()
+                  if hashlib.sha256(data).hexdigest()==m['htmlSha256']:
+                      (p/'evidence/public-http.json').write_text(json.dumps({'url':os.environ['PUBLIC_URL'],'httpStatus':response.status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'seconds':time.monotonic()-t},indent=2));print('Exact native page ready');break
+                  print('Pending exact revision',i)
+              except Exception as e:print('Pages pending',i,str(e))
+              time.sleep(15)
+          else:raise RuntimeError('Native Pages delivery incomplete')
+          PY
+      - name: Actual full-quality cold warm presets controls and mobile viewport
+        run: timeout 1080s node "$P/tests/public.mjs" "$PUBLIC_URL" --public
+      - name: Save completed native public receipt without changing HTML or old workbenches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib
+          p=Path(os.environ['P']);r=json.loads((p/'evidence/public/report.json').read_text());assert r['success']
+          c=json.loads((p/'evidence/candidate/report.json').read_text());assert c['success']
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text());pub=json.loads((p/'PUBLISH.json').read_text());assert hashlib.sha256((p/'site/index.html').read_bytes()).hexdigest()==m['htmlSha256']
+          m.update(publicBrowserVerified=True,publicURL=os.environ['PUBLIC_URL'],sourceBuild=pub['sourceBuild'],pagesCommit=pub['pagesCommit'],actionsRun=os.environ['GITHUB_RUN_ID'],qualityEvidenceRun=38339825323,recoveryEvidenceRun=38341682138)
+          pub.update(publicBrowserVerified=True,publicVerificationRun=os.environ['GITHUB_RUN_ID'])
+          (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2));(p/'PUBLISH.json').write_text(json.dumps(pub,indent=2))
+          text='# R14.2-L02 原质量快启：公网验证完成\n\n'+os.environ['PUBLIC_URL']+'\n\n'
+          text+='实现源码：7c1072ee121d73d74cba5382b292faf20aa8261b；包含完整候选证据的构建：'+pub['sourceBuild']+'；Pages发布：'+pub['pagesCommit']+'。\n\n'
+          text+='入口49,126字节，首开必要资源5,741,226字节，合计5,790,352字节；原L01入口21,035,459字节，首开必要载荷减少约72.47%。不能将49KB入口误称整个应用49KB。\n\n'
+          text+='控制对照（5Mbps/80ms，Chromium140/SwiftShader，同一原对照任务）：旧L01整页下载屏障复现首次绘制34.056秒，新版0.144秒；全质量就绪100.214秒→68.9477秒。该旧版为受控传输重放，不是用户网络抓包；软件渲染秒数不是用户电脑承诺。\n\n'
+          text+='原生公网实测：'+json.dumps(r['timings'],ensure_ascii=False,indent=2)+'\n\n'
+          text+='质量：49项原运行/材质/图像文件逐字节一致；6张PNG字节及分辨率不降；三种预设完整9类数组每套60,153,348字节SHA与原版一致，三个顶视画面在同一对照环境差异像素通道均为0；自定义117mm/冠部51/起根11完整数组也一致。桌面64k潜在发根、24段、201,117,248字节几何缓冲与原值相同。4,000组精确导向查找和原模型重组/非零基底参数测试通过。\n\n'
+          text+='40项候选汇总检查和'+str(len(r['checks']))+'项原生公网检查通过。先前任务24项质量通过后撞到默认30秒刷新导航等待，失败证据保留；相同HTML及资源逐字节确认后，剩余冷/热缓存、缓存损坏+503、完整原基底按需恢复、手机视口在新任务完成。发布脚本的稀疏检出阻碍已用相同Git树追加发布解决，旧页面零改动。\n\n'
+          text+='边界：缓存未被浏览器清除时复用全部15个启动块；损坏只重读对应块，缓存不可用仍使用原质量网络数据。初次联网、CPU创建和GPU初始化仍需时间，多开重型3D页面仍有显存压力。原冠部视觉缺陷未改；手机390×844仅视口，不是实机。新原生站点与旧htmlpreview存储来源不同，旧存档仍在旧入口，需要JSON导出导入。PR233保持Draft，未合并、未强推。\n'
+          (p/'DELIVERY.md').write_text(text)
+          PY
+          git config user.name 'KAOPU Hair L02 Public Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          git commit -m 'test(hair-l02): completed immutable native HTTPS loading and exact-quality evidence'
+          git push origin HEAD:refs/heads/fix/hair-r14-l02-fast-start-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l02-public-verified
+          path: kaopu-hair-workbench/fusion/r14-fast
+          retention-days: 30
