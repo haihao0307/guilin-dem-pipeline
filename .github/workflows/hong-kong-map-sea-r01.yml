@@ -1,0 +1,31 @@
+name: Hong Kong geographic map and sea R01 QA
+on:
+  push:
+    branches: ['qa/hong-kong-map-sea-r01-20261013']
+    paths: ['kaopu-geography-workbench/hong-kong-map-sea-r01/**', '.github/workflows/hong-kong-map-sea-r01.yml']
+permissions:
+  contents: read
+jobs:
+  map:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/hong-kong-map-sea-r01
+      - name: Install official browser test runner
+        run: |
+          python3 -m pip install playwright==1.57.0 pillow==11.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Real normal-perspective geographic WebGL checks
+        run: python3 kaopu-geography-workbench/hong-kong-map-sea-r01/qa/browser_check.py
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: hong-kong-map-sea-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-map-sea-r01/qa/*.json
+            kaopu-geography-workbench/hong-kong-map-sea-r01/qa/*.png
+            kaopu-geography-workbench/hong-kong-map-sea-r01/SOURCE_MANIFEST.json
+          retention-days: 7
