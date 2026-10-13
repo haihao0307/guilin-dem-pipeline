@@ -23,3 +23,7 @@
 局部丰满度不是临床体脂百分比，颅形参数不是解剖骨骼/脂肪的力学模拟。眼球包络是保守近似，不宣称原生模型的所有内部交叠均已修复。此轮主要验收静态头型与眼裂，不能把旧版本的眨眼/转头收据当作C3全部动态验收。尚未重新设计全部36个旧体型档案，仅六款新结构预设逐一核验；原36人库保留。未新增头发眉毛或改变灯光。
 
 首屏仍需下载和原生计算，不承诺用户硬件秒开或全参数拖动60fps。CI采用软件渲染；手机仅尺寸视口，不是实机。最终固定网页、源码和构建哈希见DELIVERY.json，完整检查见PUBLIC_QA.json。未有C3成功公网收据时交付未完成。
+
+固定公网候选：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/f5017cb7cb9c2024df6a08328564c3f4ae502509/kaopu-unified-human-workbench/human-integrated-r06/preview.html
+
+完整运行与测试证据：38401781955；检查数量 86。不是用户视觉已验收。
