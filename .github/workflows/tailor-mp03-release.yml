@@ -1,0 +1,160 @@
+name: MP03 immutable public release
+on:
+  push:
+    branches: [fix/tailor-mp03-knit-seams-gravity-20261011]
+    paths:
+      - 'kaopu-tailor-workbench/material-products/r03/RELEASE.json'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: tailor-mp03-public-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: project
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          fetch-depth: 0
+          sparse-checkout: |
+            .github
+            kaopu-tailor-workbench/material-products
+            kaopu-tailor-workbench/presets/r04/assets
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore locked original garments, body contacts and thumbnails
+        run: python kaopu-tailor-workbench/material-products/r03/bootstrap.py
+      - name: Source syntax and all-seven-garment physical gate
+        run: |
+          P=kaopu-tailor-workbench/material-products/r03
+          for f in "$P"/*.mjs; do node --check "$f"; done
+          node "$P/test-physics.mjs"
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Full local Chromium gate before publication
+        run: |
+          python -m http.server 8000 > /tmp/mp03-local-http.log 2>&1 &
+          MP03_SCOPE=full MP03_OUT=kaopu-tailor-workbench/material-products/r03/local-release-evidence \
+            node kaopu-tailor-workbench/material-products/r03/qa-browser.cjs
+      - name: Publish a new immutable path on gh-pages without replacing older workbenches
+        id: publish
+        env:
+          SOURCE_BRANCH: fix/tailor-mp03-knit-seams-gravity-20261011
+        run: |
+          set -euo pipefail
+          P=kaopu-tailor-workbench/material-products/r03
+          SOURCE_SHA=$(git rev-parse HEAD)
+          DEST=kaopu-tailor-workbench/material-products/mp03-r1-${SOURCE_SHA:0:12}
+          URL=https://haihao0307.github.io/guilin-dem-pipeline/$DEST/
+          git fetch origin gh-pages --depth=1
+          rm -rf ../mp03-pages
+          git worktree add --detach ../mp03-pages origin/gh-pages
+          test ! -e ../mp03-pages/$DEST
+          mkdir -p ../mp03-pages/$DEST
+          cp -a "$P"/. ../mp03-pages/$DEST/
+          python - "$SOURCE_SHA" "$DEST" ../mp03-pages/$DEST <<'PY'
+          import hashlib,json,pathlib,sys
+          sha,dest,root=sys.argv[1],sys.argv[2],pathlib.Path(sys.argv[3])
+          files={}
+          for p in sorted(root.rglob('*')):
+              if p.is_file():
+                  b=p.read_bytes();files[str(p.relative_to(root))]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+          (root/'BUILD_MANIFEST.json').write_text(json.dumps({'version':'MP03-R1','sourceCommit':sha,'destination':dest,'localBrowserGatePassed':True,'files':files},ensure_ascii=False,indent=2))
+          PY
+          cd ../mp03-pages
+          OLD=kaopu-tailor-workbench/material-products/mp02-s1-23c34ca5699e
+          BEFORE=$(git rev-parse HEAD:$OLD)
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- "$DEST"
+          git commit -m "publish(mp03-r1): immutable double-knit, leather and gravity candidate [skip ci]"
+          test "$(git rev-parse HEAD:$OLD)" = "$BEFORE"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:refs/heads/gh-pages; then break; fi
+            test "$attempt" != 5
+            git fetch origin gh-pages --depth=20
+            git rebase origin/gh-pages
+            sleep 3
+          done
+          PUBLICATION_SHA=$(git rev-parse HEAD)
+          echo "dest=$DEST" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          echo "publication_sha=$PUBLICATION_SHA" >> "$GITHUB_OUTPUT"
+      - name: Wait for the exact public snapshot bytes
+        env:
+          FIXED_URL: ${{ steps.publish.outputs.url }}
+          SOURCE_SHA: ${{ steps.publish.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl -fsSL --max-time 30 "${FIXED_URL}BUILD_MANIFEST.json?attempt=$attempt" -o /tmp/manifest.json \
+              && python - "$SOURCE_SHA" <<'PY'
+          import json,sys
+          assert json.load(open('/tmp/manifest.json'))['sourceCommit']==sys.argv[1]
+          PY
+            then exit 0; fi
+            sleep 10
+          done
+          echo 'Public snapshot did not become available' >&2
+          exit 1
+      - name: Full public HTTPS Chromium gate
+        env:
+          MP03_URL: ${{ steps.publish.outputs.url }}
+          MP03_PUBLIC: '1'
+          MP03_SCOPE: full
+          MP03_OUT: kaopu-tailor-workbench/material-products/r03/public-release-evidence
+        run: node kaopu-tailor-workbench/material-products/r03/qa-browser.cjs
+      - name: Verify every published byte and record final release state
+        env:
+          FIXED_URL: ${{ steps.publish.outputs.url }}
+          SOURCE_SHA: ${{ steps.publish.outputs.source_sha }}
+          PUBLICATION_SHA: ${{ steps.publish.outputs.publication_sha }}
+          DEST: ${{ steps.publish.outputs.dest }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,urllib.request
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r03')
+          manifest=json.load(urllib.request.urlopen(os.environ['FIXED_URL']+'BUILD_MANIFEST.json'))
+          checked=[]
+          for name,entry in manifest['files'].items():
+              with urllib.request.urlopen(os.environ['FIXED_URL']+name) as r:data=r.read()
+              got=hashlib.sha256(data).hexdigest();assert got==entry['sha256'],name
+              checked.append({'path':name,'bytes':len(data),'sha256':got})
+          browser=json.loads((p/'PUBLIC_BROWSER_REPORT.json').read_text());assert browser['passed'] and browser['scope']=='full'
+          state={'version':'MP03-R1','sourceCommit':os.environ['SOURCE_SHA'],'publicationCommit':os.environ['PUBLICATION_SHA'],'fixedURL':os.environ['FIXED_URL'],'destination':os.environ['DEST'],'publicBytesVerified':True,'publicBrowserVerified':True,'fullLookSetVerified':True,'deliveryComplete':True,'userAccepted':False,'materialPhysicsCalibrated':False,'continuousCollision':False,'physicalDeviceTested':False,'oldPagesReplaced':False}
+          (p/'PUBLIC_BYTES.json').write_text(json.dumps({'passed':True,'files':checked},ensure_ascii=False,indent=2))
+          (p/'RELEASE_STATE.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          print(json.dumps(state,ensure_ascii=False))
+          PY
+      - name: Retain source-side public evidence without retriggering release
+        env:
+          SOURCE_BRANCH: fix/tailor-mp03-knit-seams-gravity-20261011
+          EXPECTED_SHA: ${{ steps.publish.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          P=kaopu-tailor-workbench/material-products/r03
+          git fetch origin "$SOURCE_BRANCH" --depth=1
+          test "$(git rev-parse origin/$SOURCE_BRANCH)" = "$EXPECTED_SHA"
+          git add -- "$P/RELEASE_STATE.json" "$P/PUBLIC_BYTES.json" "$P/PUBLIC_BROWSER_REPORT.json" "$P/BROWSER_REPORT.json" "$P/PHYSICS_REPORT.json"
+          git commit -m 'docs(mp03): record full public-browser and byte verification [skip ci]'
+          git push origin HEAD:refs/heads/$SOURCE_BRANCH
+      - name: Upload local and public browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp03-final-public-evidence
+          path: |
+            project/kaopu-tailor-workbench/material-products/r03/local-release-evidence
+            project/kaopu-tailor-workbench/material-products/r03/public-release-evidence
+            project/kaopu-tailor-workbench/material-products/r03/*REPORT.json
+            project/kaopu-tailor-workbench/material-products/r03/PUBLIC_BYTES.json
+            project/kaopu-tailor-workbench/material-products/r03/RELEASE_STATE.json
+          retention-days: 30
