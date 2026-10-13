@@ -10,7 +10,7 @@ permissions:
   contents: write
 concurrency:
   group: lips-et19-startup-only
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   optimize:
     runs-on: ubuntu-latest
@@ -32,13 +32,14 @@ jobs:
           npm init -y >/dev/null
           npm install esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
-      - name: Harden cancellation and full-material readiness gates
+      - name: Compose startup-only rendering gate without changing old modules
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('kaopu-unified-human-workbench/lip-startup-r01/AssetCache.mjs')
-          s=p.read_text();s=s.replace('await slot();alive(signal);const t=','await slot();const t=');s=s.replace('const timed=AbortSignal.timeout(90000)','alive(signal);const timed=AbortSignal.timeout(90000)');p.write_text(s)
-          p=Path('kaopu-unified-human-workbench/lip-startup-r01/verify.cjs');s=p.read_text();s=s.replace('skin?.naturalEyeExtension?.ready);','skin?.naturalEyeExtension?.ready&&window.__IDENTITY_QA__?.viewer()?.skin?.faceExtension?.ready);');p.write_text(s)
+          p=Path('kaopu-unified-human-workbench/lip-startup-r01/FastLoadCommon.mjs');s=p.read_text()
+          anchor="import './StartupRenderGate.mjs';\n"
+          if anchor not in s: p.write_text(anchor+s)
+          p=Path('kaopu-unified-human-workbench/lip-startup-r01/verify.cjs');s=p.read_text();s=s.replace('cacheHits:__LIP_STARTUP__.cacheHits,events:', 'cacheHits:__LIP_STARTUP__.cacheHits,coalescedStartupDraws:__LIP_STARTUP__.coalescedStartupDraws||0,events:');p.write_text(s)
           PY
       - name: Build lossless compressed startup and move source verification to build time
         env:
@@ -47,6 +48,10 @@ jobs:
           mkdir -p lip-startup-evidence/build
           echo "$GITHUB_SHA" > lip-startup-evidence/source-commit.txt
           node kaopu-unified-human-workbench/lip-startup-r01/build.cjs
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('kaopu-unified-human-workbench/lip-startup-r01/BUILD.json');d=json.loads(p.read_text());d['changes'].append('coalesce asynchronous texture, initial camera and layout renders until full face/eye materials and original controls are ready; unchanged rendering afterward');p.write_text(json.dumps(d,indent=2)+'\n')
+          PY
           cp -r kaopu-unified-human-workbench/lip-startup-r01/. lip-startup-evidence/build/
       - name: Measure actual original HTTPS cold/warm loads and capture all native regressions
         env:
@@ -69,7 +74,7 @@ jobs:
           git config user.name 'KAOPU Startup Verification'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/lip-startup-r01
-          git commit -m 'build(lips): P1 startup candidate after exact full-geometry regressions [skip ci]'
+          git commit -m 'build(lips): P1 complete-frame startup after exact full-geometry regressions [skip ci]'
           git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
           SHA=$(git rev-parse HEAD)
           URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/lip-startup-r01/index.html"
