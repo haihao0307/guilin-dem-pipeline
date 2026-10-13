@@ -1,0 +1,68 @@
+name: Skin R02.1 current browser public acceptance
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths:
+      - .github/workflows/skin-r021-current-browser-acceptance.yml
+      - qa/skin-r021/chrome-acceptance.cjs
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-chrome-gui
+            channel: chrome
+            backend: d3d11-warp
+            headed: '1'
+            dpr: '1'
+          - os: windows-latest
+            name: windows-chrome-highdpi
+            channel: chrome
+            backend: d3d11-warp
+            headed: '0'
+            dpr: '1.5'
+          - os: ubuntu-latest
+            name: linux-highdpi
+            channel: ''
+            backend: swiftshader
+            headed: '0'
+            dpr: '1.5'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 18
+    env:
+      PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7c406b142ac5732c999a87797251e38697b31f17/kaopu-unified-human-workbench/skin-dna-r02-1/preview.html
+      TEST_CHANNEL: ${{ matrix.channel }}
+      TEST_BACKEND: ${{ matrix.backend }}
+      TEST_HEADED: ${{ matrix.headed }}
+      TEST_DPR: ${{ matrix.dpr }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 8
+          sparse-checkout: |
+            qa/skin-r021
+            kaopu-unified-human-workbench/skin-dna-r02-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-accept" --no-audit --no-fund playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/skin-accept/node_modules" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = Linux ]; then
+            node "$RUNNER_TEMP/skin-accept/node_modules/playwright/cli.js" install --with-deps chromium
+          fi
+      - name: Exact public page and actual application-operated first frame
+        shell: bash
+        run: node qa/skin-r021/chrome-acceptance.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-current-${{ matrix.name }}-${{ github.run_number }}
+          path: evidence
+          retention-days: 14

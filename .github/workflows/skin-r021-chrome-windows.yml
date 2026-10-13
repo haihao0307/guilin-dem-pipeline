@@ -1,0 +1,33 @@
+name: Skin Windows installed Chrome reproduction and repair check
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-chrome-windows.yml]
+permissions:
+  contents: read
+jobs:
+  chrome:
+    runs-on: windows-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/chrome-test" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/chrome-test/node_modules" >> "$GITHUB_ENV"
+      - shell: bash
+        run: |
+          mkdir evidence
+          cat > probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');const base='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/';
+          (async()=>{for(const [name,commit,dir,headless] of [['old-chrome','69d5cb9bfd68c2950112346403f1bf530d4180c0','skin-dna-r02',true],['fixed-chrome','7c406b142ac5732c999a87797251e38697b31f17','skin-dna-r02-1',true],['fixed-headed-chrome','7c406b142ac5732c999a87797251e38697b31f17','skin-dna-r02-1',false]]){let b,p;const r={name,headless,console:[],errors:[]};try{b=await chromium.launch({channel:'chrome',headless,args:['--use-angle=d3d11-warp','--enable-logging=stderr']});r.browser=b.version();p=await b.newPage({viewport:{width:1190,height:1190}});p.on('console',m=>{if(['warning','error'].includes(m.type()))r.console.push(m.text());});p.on('pageerror',e=>r.errors.push(String(e)));r.url=base+commit+'/kaopu-unified-human-workbench/'+dir+'/preview.html';await p.goto(r.url,{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.__SKIN_REVIEW__?.ready||window.__SKIN_REVIEW__?.errors?.length,null,{timeout:180000});await p.waitForTimeout(1200);r.state=await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),g=v.renderer.getContext(),ext=g.getExtension('WEBGL_debug_renderer_info');return{opening:skinDNA.opening(),lost:g.isContextLost(),driver:ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):'',cap:g.getParameter(g.MAX_TEXTURE_IMAGE_UNITS)};});await p.screenshot({path:'evidence/'+name+'.png',timeout:120000});}catch(e){r.failure=String(e);}finally{fs.writeFileSync('evidence/'+name+'.json',JSON.stringify(r,null,2));await b?.close();}}})();
+          JS
+          DEBUG=pw:browser node probe.cjs > evidence/browser.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-installed-chrome
+          path: evidence
+          retention-days: 14

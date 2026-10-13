@@ -1,0 +1,104 @@
+name: Skin R02.1 high-DPI recheck and delivery receipt
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-closeout.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  hdpi:
+    runs-on: windows-latest
+    timeout-minutes: 16
+    env:
+      PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7c406b142ac5732c999a87797251e38697b31f17/kaopu-unified-human-workbench/skin-dna-r02-1/preview.html
+      TEST_CHANNEL: chrome
+      TEST_BACKEND: d3d11-warp
+      TEST_HEADED: '0'
+      TEST_DPR: '1.5'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 16
+          sparse-checkout: |
+            qa/skin-r021
+            kaopu-unified-human-workbench/skin-dna-r02-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/skin-accept" --no-audit --no-fund playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/skin-accept/node_modules" >> "$GITHUB_ENV"
+      - name: Same unmodified public page, original strict checks
+        shell: bash
+        run: node qa/skin-r021/chrome-acceptance.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-hdpi-recheck-${{ github.run_attempt }}
+          path: evidence
+          retention-days: 14
+  receipt:
+    needs: hdpi
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      DIR: kaopu-unified-human-workbench/skin-dna-r02-1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: kaopu-unified-human-workbench/skin-dna-r02-1
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-hdpi-recheck-${{ github.run_attempt }}
+          path: evidence/windows-chrome-highdpi
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-current-windows-chrome-gui-1
+          run-id: 38407637963
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/windows-chrome-gui
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-current-linux-highdpi-1
+          run-id: 38407637963
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/linux-highdpi
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-qa-linux-regression-5
+          run-id: 38404801284
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/linux-full-regression
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-installed-chrome
+          run-id: 38406210206
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: evidence/old-new-chrome-comparison
+      - uses: actions/download-artifact@v4
+        with:
+          name: skin-r021-current-windows-chrome-highdpi-1
+          run-id: 38407637963
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: previous-transient-network-failure
+      - name: Verify and preserve actual reports, successful and failed scope separately
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),crypto=require('crypto'),d=process.env.DIR,h=x=>crypto.createHash('sha256').update(x).digest('hex'),expected='19609ea6f60e3945e2c3caf9fad7fc6ff5cd2fdb037f7c6f317f87500798e2e3';if(h(fs.readFileSync(d+'/preview.html'))!==expected)throw Error('Runtime changed during acceptance');const names=['windows-chrome-gui','windows-chrome-highdpi','linux-highdpi','linux-full-regression'],reports=names.map(name=>({name,qa:JSON.parse(fs.readFileSync('evidence/'+name+'/qa.json'))}));for(const r of reports){if(!r.qa.completed||r.qa.tests.some(t=>!t.pass))throw Error('Acceptance incomplete '+r.name);for(const s of r.qa.screens){if(h(fs.readFileSync('evidence/'+r.name+'/'+s.name+'.png'))!==s.sha256)throw Error('Screenshot hash mismatch');}}for(const r of reports.filter(r=>r.name.startsWith('windows'))){const g=r.qa.opening.graphics;if(!g.valid||g.caps.fragmentSamplers!==16||!r.qa.eyeProof.passed||!r.qa.browser.startsWith('154.'))throw Error('Actual Windows proof missing');}const old=JSON.parse(fs.readFileSync('evidence/old-new-chrome-comparison/old-chrome.json'));if(old.state.opening.ready||!old.console.some(x=>x.includes('exceeds MAX_TEXTURE_IMAGE_UNITS(16)')))throw Error('Original failure not reproduced');fs.cpSync('evidence',d+'/acceptance',{recursive:true});fs.mkdirSync(d+'/acceptance/prior-network-failure',{recursive:true});fs.copyFileSync('previous-transient-network-failure/qa.json',d+'/acceptance/prior-network-failure/qa.json');if(fs.existsSync('previous-transient-network-failure/failure.png'))fs.copyFileSync('previous-transient-network-failure/failure.png',d+'/acceptance/prior-network-failure/failure.png');const receipt={version:'SKIN-DNA-R02.1',url:reports[0].qa.url,sourceCommit:'c1498c0255bd2f065a61e1268c7db5cd035942d0',buildCommit:'7aec131ba448f5cfa25a7d2edcbad07243340042',testedPublicSnapshot:'7c406b142ac5732c999a87797251e38697b31f17',previewSHA256:expected,previewBytes:fs.statSync(d+'/preview.html').size,blackFrameRepairVerified:true,windowsChromeVersion:reports[0].qa.browser,windowsBackend:'ANGLE D3D11 WARP software renderer',actualFragmentLimit:16,skinFragmentSamplers:15,skinVertexSamplers:1,userPhysicalGPUTested:false,old141WindowsHeadlessShellAccepted:false,merged:false,userVisualAccepted:false,sourceSkinRulesChanged:false,runs:{chromeOldNew:'38406210206',chromeGUIAndLinuxHighDPI:'38407637963',chromeHighDPIRecheck:process.env.GITHUB_RUN_ID,linuxRegression:'38404801284'},tests:reports.map(r=>({name:r.name,groups:r.qa.tests.length,screens:r.qa.screens.length,completed:r.qa.completed})),warnings:['Old Windows Chromium141 headless-shell lost context; it remains unsupported by this acceptance','Installed Chrome154 uses D3D11 WARP, not user physical graphics hardware','One earlier high-DPI run rendered all scenes but had a transient source-chunk network error; original failed record retained, unchanged strict recheck required','Hosting favicon.ico 404 is recorded separately, not a missing application asset','Nonfatal driver compiler warnings remain in reports','This repairs display compatibility, not cinematic skin quality']};fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify(receipt,null,2));
+          NODE
+          git config user.name 'KAOPU Render Repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$DIR/acceptance" "$DIR/DELIVERY.json"
+          git commit -m "test(skin-r021): preserve verified Chrome rendering, high-DPI, Linux and failed-case boundaries [skip ci]"
+          git push origin HEAD:refs/heads/fix/skin-dna-r02-1-blackframe-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-final-acceptance-${{ github.run_attempt }}
+          path: kaopu-unified-human-workbench/skin-dna-r02-1
+          retention-days: 14
