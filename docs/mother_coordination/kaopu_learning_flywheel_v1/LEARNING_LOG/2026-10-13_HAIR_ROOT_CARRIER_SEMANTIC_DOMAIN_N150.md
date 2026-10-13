@@ -63,5 +63,6 @@ Result: see `PROBES/hair_root_carrier_semantic_result_n150.json`.
 - The zero threshold is authorized by the current user's explicit no-ear-growth correction, not asserted as universal human biology.
 - Does not approve the current scalp boundary, sideburn shape, density, direction, hairstyle, physics or visual fidelity.
 - Does not modify PR #261, production branches, main, R2 or any gate threshold.
-- Route only to PR #261. Lifecycle before posting: `POSTED=false`; `ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Hair PR #261: https://github.com/haihao0307/guilin-dem-pipeline/pull/261#issuecomment-6144799602
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (6/6)`; `ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs: `unknown` until the Hair Mother implements the semantic partition and runs the production positive control.
