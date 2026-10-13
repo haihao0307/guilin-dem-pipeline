@@ -1,5 +1,6 @@
+import {FairSkin} from './FairSkin.mjs';
 import * as THREE from '../full/source/registration-vendor/three.module.js';
-import {foldAt,protectedSkin,GEOMETRY_KEYS,clamp,splitFace} from './FoldMath.mjs';
+import {foldAt,protectedSkin,GEOMETRY_KEYS,clamp,smooth,splitFace} from './FoldMath.mjs';
 /** Fixed edge stencils, not stacked tissue meshes. Native topology/buffers stay
  * read-only. All deformation precedes the retained idle blendshape bake. */
 export class FoldSurface {
@@ -16,7 +17,13 @@ export class FoldSurface {
    next.setIndex(out);this.layers.push({geometry:next,pairs,n});added+=pairs.length;g=next;
   }
   if(!this.layers.length){g=source.clone();this.layers.push({geometry:g,pairs:[],n:source.attributes.position.count});}
-  this.geometry=g;this.delta=new Float32Array(g.attributes.position.count*3);this.base=new Float32Array(this.delta.length);this.stats={addedVertices:added,sourceVertices:source.attributes.position.count,displayVertices:g.attributes.position.count};
+  this.geometry=g;
+  const masks=new Float32Array(g.attributes.position.count),R=g.attributes.fRest.array,T=g.attributes.csType.array;
+  for(let i=0;i<masks.length;i++){const x=R[i*3]*1000,y=R[i*3+1]*1000;if(T[i]>=.5||!protectedSkin(x,y))continue;let gate=this.coverage(i)*smooth(204,219,y)*(1-smooth(368,383,y))*(1-smooth(59,70,Math.abs(x)));
+   for(const cx of [-31,31])gate*=smooth(1,1.6,((x-cx)/18.2)**2+((y-301)/8.4)**2);
+   gate*=smooth(1,1.6,(x/27.8)**2+((y-232)/15.2)**2);masks[i]=gate>.0001?gate:0;
+  }
+  this.fair=new FairSkin(g.index.array,masks);this.delta=new Float32Array(g.attributes.position.count*3);this.base=new Float32Array(this.delta.length);this.stats={addedVertices:added,sourceVertices:source.attributes.position.count,displayVertices:g.attributes.position.count};
  }
  coverage(i){const g=this.geometry,A=g.attributes.fA.array,B=g.attributes.fB.array;return clamp(A[i*4])*(1-clamp(A[i*4+1]*5))*(1-clamp(B[i*4+2]*3))*(1-clamp(A[i*4+3]*.92));}
  update(settings){
@@ -25,7 +32,8 @@ export class FoldSurface {
    if(prev.attributes.color){const C=prev.attributes.color.array,D=l.geometry.attributes.color.array;D.set(C);for(let j=0;j<l.pairs.length;j++)for(let q=0;q<3;q++)D[(l.n+j)*3+q]=(C[l.pairs[j][0]*3+q]+C[l.pairs[j][1]*3+q])*.5;l.geometry.attributes.color.needsUpdate=true;}
    l.geometry.attributes.position.needsUpdate=true;l.geometry.computeVertexNormals();prev=l.geometry;
   }
-  const g=this.geometry,R=g.attributes.fRest.array,T=g.attributes.csType.array,Q=g.attributes.position.array,N=g.attributes.normal.array,key=GEOMETRY_KEYS.map(k=>settings[k]).join('|');
+  const g=this.geometry;this.fairStats=this.fair.apply(g.attributes.position.array,g.attributes.normal.array);g.computeVertexNormals();
+  const R=g.attributes.fRest.array,T=g.attributes.csType.array,Q=g.attributes.position.array,N=g.attributes.normal.array,key=GEOMETRY_KEYS.map(k=>settings[k]).join('|');
   if(key!==this.fieldKey){for(let i=0;i<T.length;i++){const d=T[i]<.5?foldAt(R[i*3]*1000,R[i*3+1]*1000,settings,this.coverage(i)):[0,0,0];this.delta.set(d,i*3);}this.fieldKey=key;}
   this.base.set(Q);
   const fields=this.model.faceSurface.fields,L=id=>fields.landmark(this.model.positions,id),toView=p=>new THREE.Vector3(p[0],p[2],-p[1]);
@@ -36,7 +44,7 @@ export class FoldSurface {
    if(T[i]>=.5||!protectedSkin(R[k]*1000,R[k+1]*1000))protectedDelta=Math.max(protectedDelta,Math.sqrt(sq));
   }
   g.attributes.position.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
-  this.stats={...this.stats,affectedVertices:affected,positiveRollVertices:pos,valleyVertices:neg,maxDeltaMM:max,protectedDeltaMM:protectedDelta*1000,updateMS:performance.now()-started,canonicalModified:false,bodyModified:false,extraHeadMeshes:0,foldSource:'CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases',physicalSkinSimulation:false};return g;
+  this.stats={...this.stats,fairing:this.fairStats,affectedVertices:affected,positiveRollVertices:pos,valleyVertices:neg,maxDeltaMM:max,protectedDeltaMM:protectedDelta*1000,updateMS:performance.now()-started,canonicalModified:false,bodyModified:false,extraHeadMeshes:0,foldSource:'CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases',physicalSkinSimulation:false};return g;
  }
  dispose(){for(const l of this.layers)l.geometry.dispose();}
 }

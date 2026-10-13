@@ -30,7 +30,7 @@ export class CinematicViewer extends ParentViewer {
  }
  render(){
   if(this.inFoldUpdate||this.inLipUpdate||this.inOcularUpdate||this.inNativeUpdate)return;
-  if(!this.foldLights)return super.render();
+  if(!this.foldLights){const f=this.model?.faceSurface?.settings,old=f?.diffusion;if(f&&this.model.foldProfile&&!this.model.foldProfile.settings.diffusion)f.diffusion=0;try{return super.render();}finally{if(f)f.diffusion=old;}}
   const s=this.model.foldProfile.settings,face=this.model.faceSurface.settings,eye=this.model.eyeSurface.settings,oldDiff=face.diffusion,oldGray=eye.gray,oldGrid=eye.grid;
   this.setFoldLook();if(!s.diffusion||s.gray)face.diffusion=0;if(s.gray){eye.gray=true;eye.grid=false;}
   const begin=performance.now();try{
