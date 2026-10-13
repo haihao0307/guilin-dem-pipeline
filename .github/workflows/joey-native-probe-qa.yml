@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, webkit]
+        browser: [chromium]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -29,18 +29,17 @@ jobs:
           df -h /dev/shm || true
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify single startup, local interruption record and unchanged native rendering
+      - name: Compare unchanged final geometry and frames after deferred initial render
         env:
-          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05-release-hashes.json
+          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/
           R54_BROWSER: ${{ matrix.browser }}
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup-r05.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-initial-render-r06.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r54-startup-r05-linux-${{ matrix.browser }}
-          path: r54-startup-r05-*/
+          name: r54-initial-render-r06-linux-${{ matrix.browser }}
+          path: r54-initial-render-r06-*/
           retention-days: 7
   apple:
     runs-on: macos-14
@@ -56,16 +55,15 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
           "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install webkit
           echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
-      - name: Verify single startup, local interruption record and unchanged native rendering
+      - name: Compare unchanged final geometry and frames after deferred initial render
         env:
-          R54_PUBLIC_HASHES: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05-release-hashes.json
+          R54_CANDIDATE_DIR: kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/
           R54_BROWSER: webkit
         run: |
-          node --test kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/startup-r05.test.cjs
-          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-startup-r05.cjs
+          node kaopu-unified-human-workbench/joey-observation-r01/appearance-r54/verify-initial-render-r06.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r54-startup-r05-apple-webkit
-          path: r54-startup-r05-*/
+          name: r54-initial-render-r06-apple-webkit
+          path: r54-initial-render-r06-*/
           retention-days: 7

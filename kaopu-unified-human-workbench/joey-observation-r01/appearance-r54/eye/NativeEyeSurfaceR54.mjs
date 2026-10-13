@@ -51,7 +51,7 @@ export function patchNativeEyeSurface(shader,uniforms){
 
 /** Install immediately after attachAppearanceR52. No THREE import is required.
  * Returns a removable layer; owning E1 disposal also removes this layer first. */
-export function attachNativeEyeSurfaceR54(skin,{parameters={}}={}){
+export function attachNativeEyeSurfaceR54(skin,{parameters={},deferInitialRender=false}={}){
  if(skin?.nativeEyeSurfaceR54)return skin.nativeEyeSurfaceR54;
  if(skin?.faceExtension?.version!=='R05-eye-chart-only/1'||!skin.eyeOptics)throw Error('Attach the frozen R05EyeBridge before R54 eye surface');
  let p=validateEyeSurface(parameters),disposed=false,compiles=0;const installation=++installationSerial;
@@ -62,5 +62,5 @@ export function attachNativeEyeSurfaceR54(skin,{parameters={}}={}){
  const cacheKey=function(){return previousKey.call(this)+'/'+EYE_SURFACE_VERSION+'/installation-'+installation;};
  const wrappedDispose=function(...args){api.dispose();return previousEyeDispose.apply(this,args);};
  const api={uniforms:U,report(){return {version:EYE_SURFACE_VERSION,installation,parameters:{...p},compiles,disposed,geometryChanged:false,eyeAxisChanged:false,eyelidsChanged:false,irisSource:'unchanged original procedural IrisField/E1',edgeUnits:'fraction of fixed bind iris radius, not millimetres on the deformed eye',newImages:0,newTextures:0,reflection:'actual Three directionalLights view-space direction and linear color; finite rectangular source approximation',contactShading:false,contactReason:'R05 has no verified eyeSurface intersection field; no painted socket or seam shadow is introduced',refraction:false,clinicalMeasurement:false,visualAcceptance:false};},set(patch={}){if(disposed)throw Error('R54 eye surface disposed');if(!patch||typeof patch!=='object'||Array.isArray(patch))throw TypeError('Eye surface patch must be an object');p=validateEyeSurface({...p,...patch});sync();skin.viewer.render();return api.report();},enabled(value){return api.set({enabled:value});},dispose(){if(disposed)return;if(mat.onBeforeCompile!==compile||mat.customProgramCacheKey!==cacheKey||eye.dispose!==wrappedDispose)throw Error('Dispose later eye material extensions before R54');mat.onBeforeCompile=previousCompile;mat.customProgramCacheKey=previousKey;eye.dispose=previousEyeDispose;delete skin.nativeEyeSurfaceR54;disposed=true;mat.needsUpdate=true;}};
- sync();mat.onBeforeCompile=compile;mat.customProgramCacheKey=cacheKey;eye.dispose=wrappedDispose;skin.nativeEyeSurfaceR54=api;mat.needsUpdate=true;skin.viewer.render();return api;
+ sync();mat.onBeforeCompile=compile;mat.customProgramCacheKey=cacheKey;eye.dispose=wrappedDispose;skin.nativeEyeSurfaceR54=api;mat.needsUpdate=true;if(!deferInitialRender)skin.viewer.render();return api;
 }

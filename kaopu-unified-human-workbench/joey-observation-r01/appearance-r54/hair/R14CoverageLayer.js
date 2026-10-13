@@ -8,7 +8,7 @@ import {SOURCE_COMMIT,buildCoverageContext,bindCurrentRoots,compiledToDisplay,fi
  * Recompile after any current common-geometry change, including expressions.
  */
 export async function attachR14Coverage(api,options={}){
- const {count=36000,segments=24,recipe:recipePatch={},visible=true,onProgress,onInvalidated,cancel,expectedVertexCount=25417,archive='R52 current fixed appearance'}=options;
+ const {count=36000,segments=24,recipe:recipePatch={},visible=true,deferInitialRender=false,onProgress,onInvalidated,cancel,expectedVertexCount=25417,archive='R52 current fixed appearance'}=options;
  if(!Number.isInteger(count)||count<1000||count>36000)throw Error('R14 coverage count must be an integer from 1000 to 36000');
  if(!Number.isInteger(segments)||segments<12||segments>32)throw Error('R14 coverage segments must be an integer from 12 to 32');
  const motion=api?.motion?.(),model=motion?.controller?.model,viewer=motion?.viewer;
@@ -24,8 +24,8 @@ export async function attachR14Coverage(api,options={}){
   } catch {return false;}
  };
  onProgress?.('原 GNM 根域 / 同向表面绑定',0);
- const roots=makeRootSet(model.gnm,count),support=bindCurrentRoots(roots,context),skin=new SkinField(context.collisionModel);
- const compiled=await compileGroom(roots,skin,recipe,{segments,cancel:()=>cancel?.()||!matches(),onProgress});
+ let roots=makeRootSet(model.gnm,count),support=bindCurrentRoots(roots,context),skin=new SkinField(context.collisionModel);
+ let compiled=await compileGroom(roots,skin,recipe,{segments,cancel:()=>cancel?.()||!matches(),onProgress});
  if(!matches())throw Error('Common mesh changed during R14 compilation; recompile for the new state');
  if(fingerprint(model.gnm.template)!==context.sourcePositionHash)throw Error('GNM source template changed during R14 compilation');
  const bindingStats=compiledToDisplay(compiled,context,support),geometry=coverageMeshGeometry(compiled,context.frame.scale),mesh=new THREE.Mesh(geometry,null);
@@ -54,10 +54,19 @@ export async function attachR14Coverage(api,options={}){
  // A shadow render also refuses a stale state before emitting any triangles.
  const fiberBeforeShadow=mesh.onBeforeShadow;
  mesh.onBeforeShadow=function(...args){if(!checkState())return;mesh.matrix.copy(viewer.mesh.matrix);mesh.matrixWorld.copy(viewer.mesh.matrixWorld);fiberBeforeShadow?.apply(this,args);};
- viewer.scene.add(mesh);viewer.render?.();
+ const collisionTriangleCount=context.collisionModel.triangles.length/3;
+ const rootRecords={sourceTriangles:roots.rootTriangles.slice(),barycentrics:roots.rootBarycentrics.slice(),commonSourceMap:context.sourceMap.slice(),displayRoots:support.displayRoots.slice(),displayNormals:support.normalRoots.slice()};
+ // These arrays have been copied into final geometry and root records. No live
+ // method uses them. Releasing references makes them eligible for collection,
+ // without forcing GC or altering the final rendered geometry.
+ const buffers=new Set();let compileArrayBytes=0;
+ for(const value of Object.values(compiled))if(ArrayBuffer.isView(value)&&!buffers.has(value.buffer)){buffers.add(value.buffer);compileArrayBytes+=value.buffer.byteLength;}
+ compiled=null;roots=null;support=null;skin=null;buffers.clear();
+ for(const key of ['orientedCommon','orientedDisplay','currentNormals','inverseNormals','source','sourceMap','collisionModel'])delete context[key];
+ const initialization={deferInitialRender:!!deferInitialRender,compileArrayBytes,referencesReleasedBeforeInitialRender:true,gcObserved:false};
+ viewer.scene.add(mesh);if(!deferInitialRender)viewer.render?.();
  return {
-  mesh,
-  rootRecords:{sourceTriangles:roots.rootTriangles.slice(),barycentrics:roots.rootBarycentrics.slice(),commonSourceMap:context.sourceMap.slice(),displayRoots:support.displayRoots.slice(),displayNormals:support.normalRoots.slice()},
+  mesh,rootRecords,
   setVisible(next){if(disposed)throw Error('R14 coverage is disposed');if(next&&!checkState())throw Error(invalidReason);mesh.visible=!!next;viewer.render?.();return mesh.visible;},
   assertCurrent(){if(!checkState())throw Error(invalidReason||'R14 coverage is disposed');return true;},
   update(){if(!checkState())throw Error(invalidReason||'R14 coverage is disposed');return true;},
@@ -69,9 +78,9 @@ export async function attachR14Coverage(api,options={}){
    nativeVertexCount:context.positions.length/3,nativeTriangleCount:context.displayFaces.length/3,
    geometryUnchanged:matches(),inputPositionHash:context.positionHash,inputIndexHash:context.indexHash,
    rootBinding:bindingReport,rootFrame:{anchors:[...context.anchors],anchorDistances:[...context.anchorDistances],source:context.frame.source,current:context.frame.current,scale:context.frame.scale},
-   collision:{source:'actual current complete displayed common mesh, inverse transformed into GNM frame',teacherGeometry:false,triangleCount:context.collisionModel.triangles.length/3,...compileStats},
+   collision:{source:'actual current complete displayed common mesh, inverse transformed into GNM frame',teacherGeometry:false,triangleCount:collisionTriangleCount,...compileStats},
    length:{...sourceStats,units:'GNM source-frame millimetres; displayed lengths multiplied by frame scale',displayScale:context.frame.scale,longHairProvided:false},
-   material:fiberMaterialDiagnostics(fiber.material),geometryBytes:memoryBytes,buildMs,
+   initialization:{...initialization},material:fiberMaterialDiagnostics(fiber.material),geometryBytes:memoryBytes,buildMs,
    limitations:['static rest groom; no hair dynamics','R14.2 authored hairline and 45–160 mm recipe range','actual-triangle skin field and segment guards are bounded collision approximations, not a swept-radius proof','R30 long strands are separate and must remain enabled by the owner']
   };},
   dispose(){if(disposed)return;disposed=true;viewer.scene.remove(mesh);fiber.dispose();geometry.dispose();mesh.visible=false;viewer.render?.();}
