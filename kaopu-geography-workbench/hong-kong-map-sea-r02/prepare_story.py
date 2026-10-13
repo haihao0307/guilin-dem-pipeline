@@ -39,7 +39,7 @@ def fill_water(name, e,n):
     H.ravel()[cells]=v;M.ravel()[cells]=1
     return {'name':name,'kind':'fictional dry terrain synthesis','sourceComponent':k,'cells':len(cells),'areaKm2':len(cells)*.0009,'method':'Harmonic interpolation inside original selected WBM water cells, using adjacent DSM boundary heights; exterior terrain samples unchanged','originalMedianHeightM':float(np.median(ORIGINAL_H[area])),'newMinMaxHeightM':[float(v.min()),float(v.max())]}
 
-edits=[fill_water('船湾淡水湖 → 故事陆地',844678.6,837441.1),fill_water('城门河 → 故事谷地',838949.6,828050.9)]
+edits=[fill_water('船湾淡水湖 → 故事陆地',844678.6,837441.1),fill_water('城门河 → 故事谷地',838949.6,828050.9),fill_water('沙田直线支沟残片 A → 故事陆地',839235,827665),fill_water('沙田直线支沟残片 B → 故事陆地',839565,827305)]
 MARK=json.loads((R/'research/markup_coordinates.json').read_text())
 RAW_MARK=copy.deepcopy(MARK)
 # Normalize hand-drawn intent to a small, coherent planning scene.
