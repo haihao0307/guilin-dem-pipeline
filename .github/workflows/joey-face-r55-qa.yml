@@ -1,4 +1,4 @@
-name: Joey R64 fixed-camera nasal comparison
+name: Joey R64 native piecewise response
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
@@ -31,12 +31,12 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/render-native.cjs
-      - name: Render one shared nasal candidate with frozen cameras
-        run: node kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/render-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/probe-branches.cjs
+      - name: Capture native negative zero positive responses
+        run: node kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/probe-branches.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-nasal-r64-render/
+          path: joey-nasal-r64-branches/
           retention-days: 7
