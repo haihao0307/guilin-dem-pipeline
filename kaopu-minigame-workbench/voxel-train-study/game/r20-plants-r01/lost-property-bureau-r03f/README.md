@@ -38,3 +38,11 @@ The prepared `qa/public-hall-webgpu.cjs` runner renders same-camera base/candida
 
 ## Next gate
 Obtain actual GPU images, inspect clear human circulation and low-writing-surface framing, then request/repeat full-resolution visual review if useful. Do not advertise the candidate as finished or replace any accepted public preview until that gate passes.
+
+## Seven-view result and one bounded parameter correction
+
+Exact commit `00911ac977ee61e3ffd0d6d1aac76f4f6b0f1e55`, Actions `38375875674`, completed seven 480 × 320 GPU frames. An independent readback check found all pixels opaque and accounted for, with zero primary/glass/visibility exhaustion and no compiler/device errors. Actual images confirm the continuous counter and low writing ledges. Counter wood remains dark and insufficiently legible; office tabletop layering is modest. This is spatial progress, not final artistic acceptance.
+
+A single subsequent experiment changes only the unchanged wood mother's supported `textureScale` from 0.70 to 3.0 and `grainContrast` from its original 0.20902697 to 0.34. Only the new component-framed counter members (materials 4/18) opt in. All original colour parameters, roughness, clearcoat, exposure, lights, physical geometry, inventory and transport remain fixed. The mother and existing response module stay byte-identical; an explicit source-binding adapter inserts the bounded parameter selection before the same original sample call.
+
+Two close cameras, writing ledge and front-panel detail, each render baseline/matched pairs in one compiled GPU context. A receiver flag selects the baseline original parameters; it is never read by the distance field. If actual images provide no material improvement, this parameter change is to be reverted while retaining the spatial candidate. No extra round of seven full-scene images is scheduled by this experiment.
