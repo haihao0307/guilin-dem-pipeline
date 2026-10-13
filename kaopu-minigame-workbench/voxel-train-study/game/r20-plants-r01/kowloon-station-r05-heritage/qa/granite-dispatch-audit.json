@@ -1,0 +1,334 @@
+{
+  "schema": "kaopu.granite-dispatch-source-audit/1",
+  "status": "pass",
+  "createdAt": "2026-10-13T06:06:40.079Z",
+  "scope": "Exact candidate construction source and twelve original geometry partition closures; runtime entry/header and GPU compilation/execution are not tested here.",
+  "reproduction": {
+    "command": "node qa/granite-dispatch-audit.mjs",
+    "workingDirectory": "candidate source root; the script itself may be invoked from any working directory",
+    "baselineHostDefault": "../kowloon-train88-r01 relative to candidate source root",
+    "baselineHostOverride": "HERITAGE_BASELINE_HOST, absolute or relative to the process working directory",
+    "localSnapshotExample": "HERITAGE_BASELINE_HOST=./baseline25 node candidate/qa/granite-dispatch-audit.mjs",
+    "resolvedBaselineHostRelativeToCandidate": "../baseline25",
+    "scriptSHA256": "9e3ebf4c519edb9c63c95bfe2cbb3e8dc64326f34c45b9e57cc91bcad05db564",
+    "sourcePaths": {
+      "receiver": {
+        "root": "candidate",
+        "path": "receiver.mjs"
+      },
+      "field": {
+        "root": "candidate",
+        "path": "station-field.mjs"
+      },
+      "matter": {
+        "root": "candidate",
+        "path": "station-matter.mjs"
+      },
+      "score": {
+        "root": "candidate",
+        "path": "station-score.mjs"
+      },
+      "graniteMother": {
+        "root": "candidate",
+        "path": "mothers/granite-fields.mjs"
+      },
+      "hostDatums": {
+        "root": "baselineHost",
+        "path": "qa/host-datums.json"
+      },
+      "stationBinding": {
+        "root": "baselineHost",
+        "path": "station-binding.mjs"
+      },
+      "hostConstruction": {
+        "root": "baselineHost",
+        "path": "host-construction.mjs"
+      },
+      "geometryGroups": {
+        "root": "baselineHost",
+        "path": "geometry-groups.mjs"
+      },
+      "closureModule": {
+        "root": "baselineHost",
+        "path": "shader-closure.mjs"
+      },
+      "bMatter": {
+        "root": "candidate",
+        "path": "qa/frozen-1f46/station-matter.mjs"
+      },
+      "cMatter": {
+        "root": "candidate",
+        "path": "qa/frozen-bdcd/station-matter.mjs"
+      },
+      "cField": {
+        "root": "candidate",
+        "path": "qa/frozen-bdcd/station-field.mjs"
+      }
+    },
+    "requiredSnapshotNote": "B/C snapshots are hash-locked and read as text only. Host dependencies come from the selected baselineHost. Input hashes identify the exact audit inputs; stationSourceSHA256 is not claimed to be the emitted full host runtime hash."
+  },
+  "inputSHA256": {
+    "receiver": "58c86bae9e40808a03f01c5d6993de327a0ba13df2ded2ee472a057a457b8fff",
+    "field": "f3db15d4c71374d75d6aabecf121e9e24d981c703bd6e313f6d0950680eb8936",
+    "matter": "3e54d827d8287b2a3c377d3ece0a90da9787e32d9ab10c8a850c50213155c0f5",
+    "score": "16e185581ceaab24523b959b7221393ea1ac742f2f432df68f517ecaf9ec389b",
+    "graniteMother": "cfcc487e2de4f3b0b5acdecbde4e001a1e18309d742bc7fd1f64c06d249e6f52",
+    "hostDatums": "2a10f0ce7a6a45e9286e4ed835e7f41a34b1f9389818e9253ef7512daefe54b6",
+    "stationBinding": "5136680882a1f2c88d2b520a5feb39365e3adfb8d119c5a49e671918f3c811b4",
+    "hostConstruction": "38d77a6a55f29e8e42f3dbfc72acce6f8cae303e28ef93fe8633d5d48de85fba",
+    "geometryGroups": "d2581d6bfa85fcc0eab4dca0e5bad023c8cd47c06bdf44f7c6592e717c1a296c",
+    "closureModule": "66245787ce23bd66ea137b6f579bd2fc3bb171db9fd9d81d7ca57cd7716285bc",
+    "bMatter": "0ceb936046b4543bc0720971afe2543477b9cfc37101bcf2ecd11bc5950360da",
+    "cMatter": "9b84f66daaab3b5064cbccfdd210b725bec125261f816ab38afe37bdd016bc7c",
+    "cField": "e7f75b3a4487124f9d68693139a929ec6adf74cf0c107f3dfd3257c767bbc853"
+  },
+  "frozenSourceSHA256": {
+    "bMatter": "0ceb936046b4543bc0720971afe2543477b9cfc37101bcf2ecd11bc5950360da",
+    "cMatter": "9b84f66daaab3b5064cbccfdd210b725bec125261f816ab38afe37bdd016bc7c",
+    "cField": "e7f75b3a4487124f9d68693139a929ec6adf74cf0c107f3dfd3257c767bbc853"
+  },
+  "stationSourceSHA256": "b03d1d130abfbc8e2939a18085c0f06df3f1e34b8fc20af35a323d2b80c050c4",
+  "stationSourceBytes": 573166,
+  "equality": {
+    "nonGraniteGeometryEqualsBExceptName": true,
+    "fullMatterEqualsC": true,
+    "recorderEqualsC": true,
+    "graniteNearFarEqualsCExceptName": true,
+    "stationDomainEqualsCAfterOnlyDeclaredResetAndRecorderReversal": true
+  },
+  "graniteCandidate": {
+    "literalSiteCount": 1,
+    "id": 2,
+    "seed": 171,
+    "site": "stationDomain: tb < 2 tower branch, outside every loop",
+    "geometryGroupIndex": 2,
+    "rawHitFieldPreserved": true,
+    "slotIndex": "retained count before unchanged recordCandidate; valid only if retained count increases",
+    "sentinel": "STATION_CANDIDATE_CAPACITY, reset at every stationDomain entry"
+  },
+  "groups": [
+    {
+      "index": 0,
+      "name": "terminal",
+      "selectedStationSourceSHA256": "19fab9f6f1b8477c2444267cbdc1271bb99dea5695c76f719e147d307c0a3c81",
+      "closureSHA256": "1f18434aca2cae23da0cba98a4f1c7a055e06fa6045c921dd4b6b297a6e7b8b6",
+      "closureWithSharedHeaderSHA256": "fcc232557fa266dd0fa30e6956d25221fb9bd5438b7d277c725ce57cb1b9bac0",
+      "closureBytes": 114430,
+      "closureWithSharedHeaderBytes": 117666,
+      "functionCount": 103,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 1,
+      "name": "hall-lettering",
+      "selectedStationSourceSHA256": "441b0de42d327749742ae04ed308b5a007da8353124c387172571300cddb73c4",
+      "closureSHA256": "8a97c4cbd6baa441ca63314234d0bbe1064734daf3c6439eca983f4dcf491b44",
+      "closureWithSharedHeaderSHA256": "1ea4a5e3a2952bbe4f4b812c720bfe6e0e4d24727b222b81857947d8c6dd7f80",
+      "closureBytes": 102498,
+      "closureWithSharedHeaderBytes": 105734,
+      "functionCount": 116,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 2,
+      "name": "hall-forecourt-and-tower",
+      "selectedStationSourceSHA256": "1c1cbc6b85bff81ee363cb38d418e1d62e0ef775bde04e0c3ddf41cd12055c1b",
+      "closureSHA256": "8d63d5a11c5961978b0c6e645aa9eba224bd0f6b9b200855281a257d9c89c4af",
+      "closureWithSharedHeaderSHA256": "aeb2915271c0bed456b9c0ab84d5bd1da9c52d42f7f434b529c2a60fe84ba546",
+      "closureBytes": 111168,
+      "closureWithSharedHeaderBytes": 114404,
+      "functionCount": 125,
+      "includes": {
+        "gr_scell": true,
+        "kpGraniteHeight": true,
+        "recordGraniteCandidate": true,
+        "evaluateStationGeometry": true
+      },
+      "graniteMotherFunctions": [
+        "gr_scell",
+        "gr_sourceQ",
+        "gr_pits",
+        "gr_originalFields",
+        "gr_heightFromFields",
+        "kpGraniteHeight"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "shed-roofs-trusses",
+      "selectedStationSourceSHA256": "7762f327ae0a042936671587b92471df308922c6f2cc7e59912374cb7c365724",
+      "closureSHA256": "2f9f7a1ac027ba5183c8ee19c4521c30cb561b98a5c028f121705b63d6f39ea5",
+      "closureWithSharedHeaderSHA256": "932d3268b771e434a078556e6d73752a0c885968212da5d7d19c2e3c16da7d8d",
+      "closureBytes": 53247,
+      "closureWithSharedHeaderBytes": 56483,
+      "functionCount": 102,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 4,
+      "name": "shed-castings-lamps",
+      "selectedStationSourceSHA256": "82f70a1bc9fd8c4a1ce3d24d2090a731f7e9e251e27be8bbbf013b88bd3d9fa0",
+      "closureSHA256": "c0b9d6aae1098a39cc3b823dc3c70577829a38136e8a86a47b36a01008a16305",
+      "closureWithSharedHeaderSHA256": "6f35742329d36b640bb08b940e9282feb1f270c6ba78c88d27c26e4282e4ae83",
+      "closureBytes": 199043,
+      "closureWithSharedHeaderBytes": 202279,
+      "functionCount": 152,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 5,
+      "name": "shed-platforms",
+      "selectedStationSourceSHA256": "6b963494cb360704633916b9bdb0c9f6b81a1238b29f455a99276edc02378744",
+      "closureSHA256": "e939b0bb11131f895e288dbe76ac4599c75f6156e92ac1322389c899ae2609bd",
+      "closureWithSharedHeaderSHA256": "d3be1f8c94434b330f7c92c5fdc5cbb3bbbe35ebbc2bbb71c38baaf78fc2f492",
+      "closureBytes": 38314,
+      "closureWithSharedHeaderBytes": 41550,
+      "functionCount": 110,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 6,
+      "name": "shed-rails",
+      "selectedStationSourceSHA256": "009a1a756184cbe3515d78083b52d8e3b118a241dd2f330bf3660625ab29034e",
+      "closureSHA256": "9fda6da6c2285d4ac9948d700e772059c2d35b554f7509ace853f110950836af",
+      "closureWithSharedHeaderSHA256": "b004e25d1115db299bd46228cb7213723712dc63c443308ebda8080981afd29c",
+      "closureBytes": 40149,
+      "closureWithSharedHeaderBytes": 43385,
+      "functionCount": 101,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 7,
+      "name": "shed-benches",
+      "selectedStationSourceSHA256": "6d3805911fdfbf670f3993621379e6772fc008480f499919acd4de526579e547",
+      "closureSHA256": "8df09c2f67f237afc886832e77a709c79b69e460cda02b4a0881c561664a3f8c",
+      "closureWithSharedHeaderSHA256": "17d492a6151f1cc7e12ad084440d62757716498023b1535aae77532ca3d36902",
+      "closureBytes": 39453,
+      "closureWithSharedHeaderBytes": 42689,
+      "functionCount": 101,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 8,
+      "name": "shed-footbridge",
+      "selectedStationSourceSHA256": "5c11510f65d186d0ff821896d122b1c3e76685063a990ebb404f851ac859d25a",
+      "closureSHA256": "b747fe61c5b420faad8ee043b9227168e625c0865067b281101508044cd031e3",
+      "closureWithSharedHeaderSHA256": "7e7e3844d216d2f950be1522c67bca7797d18491c3ed3a1db9e2e8ef7ba4466d",
+      "closureBytes": 49082,
+      "closureWithSharedHeaderBytes": 52318,
+      "functionCount": 104,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 9,
+      "name": "approaches-goods-walk",
+      "selectedStationSourceSHA256": "4458f64ab2d3d601d956df1d1bdeb46726e7e2c2915d7b068edd42c7e4005368",
+      "closureSHA256": "1d8f0a927aa911d0e9d282a49c102f0de75fccb2934414bdef2586026d4df4b2",
+      "closureWithSharedHeaderSHA256": "9f6aacbed08dba8108c05d6b9322b85517dea6057a4cfd61036559afb8e633f1",
+      "closureBytes": 43161,
+      "closureWithSharedHeaderBytes": 46397,
+      "functionCount": 104,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 10,
+      "name": "waterfront",
+      "selectedStationSourceSHA256": "3c6c7a52e0bfdc5d8191a675d1f98d418c3ad416bc0aed97fe5a16e4bdd99f1e",
+      "closureSHA256": "0edabd779939b97dda831fc05a4752f56c4851e0ed47963b25d35e8c7e2ff9c5",
+      "closureWithSharedHeaderSHA256": "998a05fe436d6ae106fc6c6bab59a0a6a96ac49a061446519d6b09f50c5a0bd7",
+      "closureBytes": 41764,
+      "closureWithSharedHeaderBytes": 45000,
+      "functionCount": 103,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    },
+    {
+      "index": 11,
+      "name": "host-transfer",
+      "selectedStationSourceSHA256": "2408f5936ed1c0a75a6af188bde08a97cf05ad2f378bc4a40c56d464d2d87726",
+      "closureSHA256": "eaa73a3f941acaf29a8fd4842967ebf919bc0f08d712801db5a630ae2ac78994",
+      "closureWithSharedHeaderSHA256": "dbcb3749e664ff891b4a06a27641d667c239e45beb17ff5d613ca81cc155745c",
+      "closureBytes": 35600,
+      "closureWithSharedHeaderBytes": 38836,
+      "functionCount": 98,
+      "includes": {
+        "gr_scell": false,
+        "kpGraniteHeight": false,
+        "recordGraniteCandidate": false,
+        "evaluateStationGeometry": false
+      },
+      "graniteMotherFunctions": []
+    }
+  ],
+  "reasoningChecks": [
+    "The unchanged recorder preserves raw count, capacity/overflow behavior, raw candidate values, upper bound and first-stage pruning.",
+    "The resolver preserves original candidate order, second-stage pruning, native/near-far evaluation guard and strict less-than winner selection; only the recorded granite slot reads its precomputed physical value.",
+    "Material/state/granite distance dependencies do not call stationDomain or mutate candidate workspace; earlier evaluation is pure, although a later-pruned granite slot may now be evaluated unnecessarily.",
+    "Each query resets the slot; later record calls only append and never move retained candidates, so the slot index remains stable.",
+    "The full evaluateStationGeometry wrapper retains granite semantics for shading, AO and independent direct probes; ordinary construction callbacks now require the documented non-granite precondition."
+  ],
+  "limitations": [
+    "No shader compiler, GPU draw, visual comparison or runtime performance assertion is made by this source audit.",
+    "The single-slot proof must be re-audited if another granite candidate site, candidate reordering or nested stationDomain query is added.",
+    "GPU equality checks must cover signed near/far thresholds, pruned/retained slots, equal-distance ties, overflow and consecutive query resets."
+  ]
+}

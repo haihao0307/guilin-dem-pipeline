@@ -23,15 +23,17 @@ async function main(){
  stage('compile');const ref=await program(gl,original,'original-GLSL-kind2'),candidate=await program(gl,port,'WGSL-kind2-port');stage('readback');
  const {width,height,referenceHeight}=manifest,a=draw(gl,ref,width,referenceHeight,true),b=draw(gl,candidate,width,height,false);gl.deleteProgram(ref);gl.deleteProgram(candidate);result.reference=Array.from(a);result.port=Array.from(b);
  if(!a.every(Number.isFinite)||!b.every(Number.isFinite))throw Error('Nonfinite material sample');const row=(data,y,x)=>Array.from(data.slice((y*width+x)*4,(y*width+x+1)*4));
- let maxColorRoughError=0,maxHeightError=0,maxGeometryHeightError=0,maxZeroFootprintError=0,farShift=0,nearShift=0;
+ let maxColorRoughError=0,maxHeightError=0,maxGeometryHeightError=0,maxZeroFootprintError=0,farShift=0,nearShift=0,dispatchMismatchedChannels=0;
  for(let x=0;x<width;x++){
   const ref0=row(a,0,x),port0=row(b,0,x),ref1=row(a,1,x),port1=row(b,1,x),zero=row(b,3,x);
   maxColorRoughError=Math.max(maxColorRoughError,...ref0.map((v,j)=>Math.abs(v-port0[j])));maxHeightError=Math.max(maxHeightError,Math.abs(ref1[0]-port1[0]));maxGeometryHeightError=Math.max(maxGeometryHeightError,Math.abs(port1[0]-port1[1]));maxZeroFootprintError=Math.max(maxZeroFootprintError,Math.abs(zero[0]-zero[1]),zero[2],zero[3]);
-  for(let y=0;y<height;y++)if(y!==1&&y!==3){const s=row(b,y,x);if(s.some(v=>v<0||v>1)||s[3]<.12)result.errors.push('Invalid reflectance/roughness '+x+'/'+y);}
+  for(let y=0;y<12;y++)if(y!==1&&y!==3){const s=row(b,y,x);if(s.some(v=>v<0||v>1)||s[3]<.12)result.errors.push('Invalid reflectance/roughness '+x+'/'+y);}
+  for(let y=12;y<16;y++)dispatchMismatchedChannels+=row(b,y,x).filter(v=>v!==0).length;
   for(let j=0;j<3;j++){farShift+=Math.abs(row(b,9,x)[j]-row(b,10,x)[j]);nearShift+=Math.abs(row(b,4,x)[j]-row(b,11,x)[j]);}
  }
- result.numeric={maxColorRoughError,maxHeightErrorM:maxHeightError,maxGeometryHeightErrorM:maxGeometryHeightError,maxZeroFootprintError,meanNearShift:nearShift/(width*3),meanFarShift:farShift/(width*3),farToNearShiftRatio:farShift/Math.max(nearShift,1e-20)};
+ result.numeric={dispatchCases:width,dispatchMismatchedChannels,maxColorRoughError,maxHeightErrorM:maxHeightError,maxGeometryHeightErrorM:maxGeometryHeightError,maxZeroFootprintError,meanNearShift:nearShift/(width*3),meanFarShift:farShift/(width*3),farToNearShiftRatio:farShift/Math.max(nearShift,1e-20)};
  if(maxColorRoughError>2e-4)result.errors.push('Original GLSL/port color or roughness mismatch');if(maxHeightError>5e-8||maxGeometryHeightError>1e-8)result.errors.push('Original/geometry height mismatch');if(maxZeroFootprintError>1e-6)result.errors.push('Zero footprint changed original mother');
+ if(dispatchMismatchedChannels)result.errors.push('Candidate dispatch differs from original C resolver or breaks its metadata contract');
  if(farShift>=nearShift)result.errors.push('Far footprint does not attenuate sampled small spatial shifts');
  result.status=result.errors.length?'failed':'passed';stage('complete');document.querySelector('#status').textContent=result.status;
 }

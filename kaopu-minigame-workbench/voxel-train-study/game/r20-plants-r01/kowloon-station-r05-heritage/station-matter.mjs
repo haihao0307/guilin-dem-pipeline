@@ -80,16 +80,22 @@ fn stationBrickSample(h:HitField,p:vec3<f32>)->StationBrickSample{
  }
  return StationBrickSample(brickQ(bp,h.id,h.d),19.+floor(bp.y/.073)*13.+floor((bp.x+bp.z)/.25));
 }
-fn evaluateStationGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGeometry{
+fn evaluateStationNonGraniteGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGeometry{
  let st=stationMemberState(h,p,state);
  var g=StationGeometry(h.d,0.,0.,1.);
  if(h.id==1u||h.id==12u){let sample=stationBrickSample(h,p);let q=sample.q;let seed=sample.seed;let variant=i32(abs(seed))%4;let native=kpBrickBaseDistance(q,seed,variant,.42);let macroSignal=native-kpBrickAnalyticBoundDistance(q);g.loss=clamp(st.retained*st.wet*(.0004+max(0.,macroSignal)*.6),0.,.0016);let mortarDistance=h.d+.006;let brickDistance=native+g.loss;g.brickWeight=select(0.,1.,brickDistance<=mortarDistance);g.d=min(mortarDistance,brickDistance);}
- if(h.id==2u){let relief=.25+.75*st.retained;if(stationHeritageGranite(h)){g.d=h.d-clamp(kpGraniteHeight(h.q)*relief,-.004,.004);}else{g.d=h.d-clamp(stationStoneHeight(h.q*.19)*relief,-.004,.004);}}
+ if(h.id==2u){g.d=h.d-clamp(stationStoneHeight(h.q*.19)*(.25+.75*st.retained),-.004,.004);}
  if((h.id==3u||h.id==15u)&&h.seed!=181.&&h.seed!=182.){g.loss=kpMetalCorrosion(stationMetalCoordinates(h,p),st.age,st.wet,st.repair)*.0008;g.d=h.d+g.loss;if(isStationRoof(h)){g.thickness=.00006*stationRoofPaintCoverage(h,p,st);g.d-=g.thickness;}}
  if(h.id==4u){g.d=h.d-kpWoodMacroDisplacement(stationWoodCoordinates(h),stationWoodClass(h),stationWoodParams(h,st));}
  if(h.id==17u||h.id==19u){g.d=h.d-stationConcreteHeight(h.q,st.retained);}
  if(h.id==13u){g.thickness=stationCoatingThickness(h,p,st);g.d=h.d-clamp(stationStoneHeight(h.q*.19)*.25,-.001,.001)-g.thickness;}
  return g;
+}
+// Public complete material query remains valid for every HitField. Only the
+// explicitly typed tower-granite candidate takes the original kind2 closure.
+fn evaluateStationGeometry(h:HitField,p:vec3<f32>,state:StationState)->StationGeometry{
+ if(stationHeritageGranite(h)){let st=stationMemberState(h,p,state);return StationGeometry(h.d-clamp(kpGraniteHeight(h.q)*(.25+.75*st.retained),-.004,.004),0.,0.,1.);}
+ return evaluateStationNonGraniteGeometry(h,p,state);
 }
 fn evaluateStationMatter(h:HitField,p:vec3<f32>,normal:vec3<f32>,fp:f32)->StationMatter{
  let state=resolveStationState(p);let st=stationMemberState(h,p,state);let g=evaluateStationGeometry(h,p,state);var m=StationMatter(g.d,KpSurface(0.,vec3<f32>(.34,.33,.28),.85),0.,1.,1.,0.,0u,0.,1.,0.);

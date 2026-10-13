@@ -81,7 +81,7 @@ export function buildProbe(extraction){
  const selected=closure(['evaluateStationGeometry','evaluateStationMatter','stationMemberState','stationBrickSample'],entry);
  const source=header+selected+entry;
  if(source.includes('fn stationDomain(')||source.includes('fn march('))throw Error('Unexpected renderer in numeric closure');
- const unchangedControls=JSON.parse(fs.readFileSync(new URL('./heritage-state-1f46-controls.json',import.meta.url),'utf8'));
+ const unchangedControls=JSON.parse(fs.readFileSync(new URL('./heritage-state-bdcd-controls.json',import.meta.url),'utf8'));
  return {source,manifest:{unchangedControls,scope:'Exact production geometry/matter state consistency only; no rendering or visual acceptance',ages:[0,.5,1],...dimensions,entry:'heritageStateProbe',toleranceM:1e-8,fixtures,receiverSha256:createHash('sha256').update(WGSL).digest('hex'),wgslSha256:createHash('sha256').update(source).digest('hex')}};
 }
 
