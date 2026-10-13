@@ -146,4 +146,3 @@ export function stationWaterfrontWGSL(options={}){
  return code+'return h;}\n';
 }
 export const STATION_WATERFRONT_WGSL=stationWaterfrontWGSL();
-

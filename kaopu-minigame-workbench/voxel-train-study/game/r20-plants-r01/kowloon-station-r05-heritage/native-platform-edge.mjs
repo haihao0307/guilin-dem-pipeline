@@ -160,4 +160,3 @@ fn stationCopingRowBound(p:vec3<f32>,centerX:f32,halfWidth:f32)->f32{
 fn stationPlatformEdgeRowBound(p:vec3<f32>,eaveCenterX:f32,centerX:f32,halfWidth:f32)->f32{return min(stationEaveRowBound(p,eaveCenterX),stationCopingRowBound(p,centerX,halfWidth));}
 `;
 }
-

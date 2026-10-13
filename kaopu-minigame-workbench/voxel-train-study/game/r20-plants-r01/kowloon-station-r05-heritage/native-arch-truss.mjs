@@ -20,4 +20,3 @@ export function archTrussWGSL(options={}){
  for(const[i,m]of archTrussMembers(options).entries())s+=`// ${m.id}: accepted real section (${m.sourceSection.width}m axial, ${m.sourceSection.depth}m in-plane)\nd=memberBeam(p,${v(m.a)},${v(m.b)},${f(m.width)},${f(m.depth)});if(d<h.d){h=ColumnMemberHit(d,${f(i)});}\n`;
  return s+'return h;}\n';
 }
-

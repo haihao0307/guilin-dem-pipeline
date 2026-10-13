@@ -18,4 +18,3 @@ export function stationRailWGSL(p=STATION_RAIL){let s=`fn stationRailArc(q:vec2<
  for(const[i,m]of stationRailCurves(p).entries()){s+=`// retained 56E1 analytic boundary ${i}: ${m.type}\nd=min(d,${m.type==='line'?`memberSegment2(q,${v(m.a)},${v(m.b)})`:`stationRailArc(q,${v(m.center)},${f(m.radius)},${f(m.start)},${f(m.sweep)},${v(m.a)},${v(m.b)})`});\n`;if(Math.abs(m.a[1]-m.b[1])>1e-13){const w=m.type==='line'?`${f(m.a[0])}+${f((m.b[0]-m.a[0])/(m.b[1]-m.a[1]))}*(q.y-${f(m.a[1])})`:`${f(m.center[0])}+${f(Math.sign(Math.cos(m.start+m.sweep/2)))}*sqrt(max(0.,${f(m.radius*m.radius)}-(q.y-${f(m.center[1])})*(q.y-${f(m.center[1])})))`;s+=`if(q.y<=${f(Math.max(m.a[1],m.b[1]))}&&q.y>=${f(Math.min(m.a[1],m.b[1]))}){width=${w};}\n`;}}
  return s+`return d*select(1.,-1.,q.y<=0.&&q.y>=-${f(p.heightM)}&&q.x<=width);}\n`;
 }
-

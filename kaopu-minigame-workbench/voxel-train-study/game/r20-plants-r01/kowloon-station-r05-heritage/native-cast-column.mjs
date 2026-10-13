@@ -53,4 +53,3 @@ export function castColumnWGSL(options={}){
  return text+'return h;}\n';
 }
 export const CAST_COLUMN_WGSL=castColumnWGSL();
-

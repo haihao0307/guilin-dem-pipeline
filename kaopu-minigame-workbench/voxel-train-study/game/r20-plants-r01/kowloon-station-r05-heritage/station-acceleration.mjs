@@ -17,4 +17,3 @@ export function stationFloorAdvanceWGSL(options={}){
  for(const q of b){const c=q.min.map((x,i)=>(x+q.max[i])/2),h=q.min.map((x,i)=>(q.max[i]-x)/2);s+=`// ${q.id}\n{let entry=floorRayBox(p,rd,${v(c)},${v(h)});if(entry<0.){return 0.;}near=min(near,entry);}\n`;}
  return s+'let other=max(0.,stationDomain(p,false,true).d-.03)*.60;return min(near*.98,other);}\n';
 }
-

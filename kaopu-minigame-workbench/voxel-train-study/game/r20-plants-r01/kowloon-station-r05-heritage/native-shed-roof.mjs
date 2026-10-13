@@ -14,4 +14,3 @@ export function shedRoofWGSL(options={}){
  for(const[i,m]of r.purlins.entries())s+=`// ${m.id}: full longitudinal load-bearing member\nd=box(p-vec3<f32>(${f(m.x)},${f(m.y)},0.),vec3<f32>(${f(m.widthX/2)},${f(m.heightY/2)},halfLength));if(d<h.d){h=ColumnMemberHit(d,${f(i)});}\n`;
  return s+'return h;}\n';
 }
-
