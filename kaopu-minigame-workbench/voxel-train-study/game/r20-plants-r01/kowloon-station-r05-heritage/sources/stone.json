@@ -1,0 +1,82 @@
+{
+  "source": {
+    "libraryFileId": "libfile_3d00eceb0dbc8191bc4bf7b704079ede",
+    "sourceHTML": "STONE_STUDY.html",
+    "sourceHTMLSHA256": "ad02a23d6a95a4c269b93beef614a97a9c330edda2214d9e3f9812de02e0ab5a",
+    "shaderFunctionHashes": {
+      "hash33": "a7a0b7a484627f15e6ee0743f7aa63b2946f4cb38c2daa487e8d78a358e5a29c",
+      "valueNoise3": "aaafc0fccac088724a9d28d2bb61fc6ca521ab21c07d334fc18f2c6bad8107a8",
+      "seedVector": "5f72535a0c6587c416ae723c5b122ae48515b3134cec491ba7fa1e212218ecd4",
+      "srgbToLinear": "e29d781ca7c01517d5c37e9f30f307f85c8a4639189d570fc1050f43aa9dd95b",
+      "sf": "7f5a2154c9da3d75d0862f6d7bfb2dfad127e1129bb0b1fe0972fe2fcd2b3a5d",
+      "scell": "a7e47401110ddd68aba82b372ab07e3e9f25e66580b65c67e8f5b762b23b75e5",
+      "stoneFields": "91588fcc0cb6b47990d4e90910c94e3ef63222cdeebd0f0ba21c0f6982110850"
+    },
+    "originalFunctionsRewritten": false,
+    "lightingIncluded": false,
+    "sourceCoordinateDomain": "original normalized specimen units; use metricPosition / scaleM",
+    "sourceColorSpace": "linear output from original srgbToLinear",
+    "originalHeightSpace": "original specimen units; multiply by scaleM for metres"
+  },
+  "files": {
+    "../material-audit/stone-material-kernel.mjs": "b5ec3159cc28e884df2b713d3b39f309c57834e1d673d5b1e6cf3b9971c1b681",
+    "../material-audit/stone-study/stone-original.mjs": "b91de72e4f3680770473f927122317a5fa5871c463bbeb101de452ec47ecff7c",
+    "stone-fields.wgsl": "2fefdf9c9f25d5b8bd89b0fae26ef3858811f45077b648f3e449421a0aa63f2a",
+    "stone-fields.mjs": "c911825d6c698d7bc66ff3715c57915d0e964647b7b8835f5d412d08f710b75e"
+  },
+  "sourceGLSLSha256": "ec80a9fc1ccc7d032c257782ffc4e60196e3178f59884c1d10aebb5bec8f99ca",
+  "wgslStringSha256": "2fefdf9c9f25d5b8bd89b0fae26ef3858811f45077b648f3e449421a0aa63f2a",
+  "masterSeed": 8231,
+  "derivedSeeds": {
+    "master": 8231,
+    "shape": 8332,
+    "damage": 8442,
+    "pore": 8538,
+    "color": 8632,
+    "water": 8734,
+    "weather": 8832,
+    "inclusion": 8932,
+    "detail": 9040
+  },
+  "kind": 0,
+  "kindReason": "Default kind in original audited stone receiver. Port of source stoneFields sKind == 0; not the slate branch (kind 3).",
+  "metric": {
+    "longestSideM": 0.42,
+    "sourceLongestSide": 3.4,
+    "metresPerSourceUnit": 0.12352941176470589,
+    "calibrated": false
+  },
+  "fixedOriginalUniforms": {
+    "sSurfaceX": 1,
+    "sSurfaceY": 0.7,
+    "sDisplayW": 1,
+    "sRelief": 1,
+    "uEventCount": 0
+  },
+  "newBridges": [
+    "Meters to source units and original height back to meters",
+    "Explicit isotropic finite-difference footprint replacing fwidth(line)",
+    "resolveStoneFabric age/moisture/repair to original wet and roughness uniforms; wear fixed 0.15"
+  ],
+  "faithfulScope": "Same source kind-0 hash33, quintic valueNoise3, sf, warp, vein, pits, albedo, height and roughness formula semantics; WGSL syntax is new.",
+  "notPorted": [
+    "Original geometry SDF / marching tetrahedra",
+    "Formation/damage event generation or time-varying geometry",
+    "Unused source kinds 1,2,3 and their inactive crystal/phase/grain evaluations",
+    "A calibrated physical aging law",
+    "Exact screen-space derivative or full signal band-limiting"
+  ],
+  "runtime": {
+    "directFunction": true,
+    "cpuMesh": false,
+    "textures": false,
+    "cache": false,
+    "additionalNoiseFamily": false
+  },
+  "verification": {
+    "mathematicalReference": "Test-only JavaScript scalar translation, double and per-operation float32 fixtures; not proof of GPU bit equivalence",
+    "actualGpuCompile": "blocked in this container by Chromium IPC socket permissions; see gpu-results.json",
+    "renderPipelineCreated": false
+  }
+}
+

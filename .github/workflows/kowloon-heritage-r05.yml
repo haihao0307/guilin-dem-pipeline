@@ -1,0 +1,41 @@
+name: Kowloon heritage R05 architectural review
+on:
+  push:
+    branches: ['qa/kowloon-heritage-r05-20261013']
+permissions:
+  contents: read
+concurrency:
+  group: kowloon-heritage-r05-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-component-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        view: [towerWhole, towerWindow, heritageHall]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
+      - name: Verify inherited and heritage source contracts
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
+        run: node --test qa/source.test.mjs qa/floor-bounds.test.mjs qa/rail-generated-syntax.test.mjs qa/heritage.test.mjs
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Render exact component using original function materials
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-heritage.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage ${{ matrix.view }} 384 heritage-${{ matrix.view }}
+      - name: Preserve actual GPU receipts and images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heritage-${{ matrix.view }}
+          path: heritage-${{ matrix.view }}/
+          if-no-files-found: warn
