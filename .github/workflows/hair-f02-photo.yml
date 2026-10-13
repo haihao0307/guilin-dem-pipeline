@@ -1,0 +1,85 @@
+name: Hair F02 photo scalp correction
+on:
+  push:
+    branches: [fix/hair-f02-photo-scalp-20261013]
+    paths: [.github/workflows/hair-f02-photo.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f02
+  ESBUILD: /tmp/f02-tools/node_modules/.bin/esbuild
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/f01
+            kaopu-hair-workbench/foundation/f02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproducible build tools
+        run: |
+          npm install --prefix /tmp/f02-tools --no-save esbuild@0.25.0 playwright@1.55.1
+          ln -s /tmp/f02-tools/node_modules node_modules
+          /tmp/f02-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build same native head; no reference-image upload
+        run: |
+          rm -rf "$P/evidence/candidate" "$P/evidence/public"
+          python "$P/build.py"
+          node "$P/tests/core.mjs"
+          git fetch --depth=1 origin 4a745de3d7818df8c1ee8e8f083d91956275152a
+          test "$(git rev-parse HEAD:kaopu-hair-workbench/foundation/f01)" = "$(git rev-parse 4a745de3d7818df8c1ee8e8f083d91956275152a:kaopu-hair-workbench/foundation/f01)"
+          git diff --name-only 4a745de3d7818df8c1ee8e8f083d91956275152a HEAD | python -c 'import sys,os; assert all(x.startswith(os.environ["P"]+"/") or x==".github/workflows/hair-f02-photo.yml" for x in sys.stdin.read().splitlines())'
+      - name: Actual candidate WebGL pictures and controls
+        run: |
+          python -m http.server 8765 --directory "$P/site" >/tmp/f02-server.log 2>&1 &
+          timeout 300s node "$P/tests/browser.mjs" http://127.0.0.1:8765/ candidate
+      - name: Commit fixed candidate
+        run: |
+          git config user.name 'KAOPU Photo Scalp Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/src/LegacyFoundation.mjs" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
+          git commit -m 'build(hair-f02): exact native scalp and host-compatible boot data with browser evidence'
+          git push origin HEAD:refs/heads/fix/hair-f02-photo-scalp-20261013
+          echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
+      - name: Exact public source availability
+        run: |
+          python - <<'PY'
+          import os,time,urllib.request
+          from pathlib import Path
+          expected=(Path(os.environ['P'])/'preview.html').read_bytes()
+          u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['SOURCE_BUILD']+'/'+os.environ['P']+'/preview.html'
+          for i in range(12):
+              try:
+                  if urllib.request.urlopen(u,timeout=20).read()==expected:break
+              except Exception:pass
+              time.sleep(3)
+          else:raise RuntimeError('Fixed public source unavailable')
+          PY
+      - name: Actual fixed public HTTPS browser verification
+        run: timeout 360s node "$P/tests/browser.mjs" "$PUBLIC_URL" public
+      - name: Record actual public result
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json
+          p=Path(os.environ['P']);core=json.loads((p/'evidence/core.json').read_text());public=json.loads((p/'evidence/public/report.json').read_text());candidate=json.loads((p/'evidence/candidate/report.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert core['success'] and public['success'] and candidate['success']
+          r={'version':'F02','source':m['source'],'sourceBuild':os.environ['SOURCE_BUILD'],'publicURL':os.environ['PUBLIC_URL'],'publicBrowserVerified':True,'run':os.environ['GITHUB_RUN_ID'],'htmlSHA256':m['htmlSHA256'],'htmlBytes':m['htmlBytes'],'coreChecks':len(core['checks']),'candidateChecks':len(candidate['checks']),'publicChecks':len(public['checks']),'publicReadyMS':public['readyMS'],'summary':core['summary'],'oldF01Changed':False,'oldShortHairChanged':False,'photoUploadedPublicly':False,'physicsAdvanced':False,'limits':core['limits']+['Mobile viewport only, not physical phone']}
+          (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
+          PY
+          git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
+          git commit -m 'test(hair-f02): all public WebGL coverage and host compatibility checks passed'
+          git push origin HEAD:refs/heads/fix/hair-f02-photo-scalp-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f02-photo-scalp
+          path: kaopu-hair-workbench/foundation/f02
+          retention-days: 30
