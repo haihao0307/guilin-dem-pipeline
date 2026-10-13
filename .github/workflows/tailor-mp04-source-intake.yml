@@ -1,0 +1,57 @@
+name: MP04 pinned material source intake
+on:
+  push:
+    branches: [feature/tailor-mp04-native-material-motion-20261013]
+    paths: ['.github/workflows/tailor-mp04-source-intake.yml']
+permissions:
+  contents: read
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 086414b317f313bf9465ea957753ae7e84453f6f
+          path: denim
+          sparse-checkout: denim-workshop
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 6c084b27d351d420b77fe33db2660bddd0bcc380
+          path: leather
+          sparse-checkout: leather-workshop
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Human-Fabric-Workbench
+          ref: f12c64d6f35e379414154d115f787b8d2748ecc6
+          path: fabric
+          sparse-checkout: |
+            src
+            previews
+            docs
+      - name: Pin and gather material runtime files and provenance
+        run: |
+          python - <<'PY'
+          import pathlib,shutil,json,subprocess
+          out=pathlib.Path('/tmp/mp04-intake');out.mkdir()
+          summary={}
+          for name in ['denim','leather','fabric']:
+              p=pathlib.Path(name)
+              summary[name]={'commit':subprocess.check_output(['git','-C',name,'rev-parse','HEAD'],text=True).strip(),'files':[],'branches':subprocess.check_output(['git','-C',name,'ls-remote','--heads','origin'],text=True).splitlines()}
+              for f in p.rglob('*'):
+                  if not f.is_file() or '.git' in f.parts:continue
+                  r=f.relative_to(p)
+                  if f.suffix not in ['.js','.mjs','.ts','.json','.md','.py','.c','.h','.wasm','.html','.css','.txt']:continue
+                  if 'node_modules' in f.parts or f.stat().st_size>12000000:continue
+                  dst=out/name/r;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(f,dst)
+                  summary[name]['files'].append({'path':str(r),'bytes':f.stat().st_size})
+          (out/'INTAKE.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print(json.dumps({k:{'commit':v['commit'],'recentDirs':sorted({x['path'].split('/')[1] for x in v['files'] if '/' in x['path']}),'branches':[b for b in v['branches'] if any(s in b for s in ['denim','leather','knit','fabric'])]}for k,v in summary.items()},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04-pinned-material-sources
+          path: /tmp/mp04-intake
+          retention-days: 14
