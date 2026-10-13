@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {buildSolid} from './solid-textiles.mjs';
 import {layerLayout} from './material-settings.mjs';
-import {sewnTrims} from './sewn-trims.mjs';
+import {sewnTrims} from './screen-trims.mjs';
 import {LeatherKernel,DEFAULT} from './native/leather-r13.mjs';
 const tiles=new Map(),leathers=new Map(),loader=new T.TextureLoader();
 async function field(info,renderer){
@@ -13,9 +13,7 @@ async function field(info,renderer){
  if(!tiles.has(info.id))tiles.set(info.id,(async()=>{const root=new URL('./runtime-tiles/'+info.id,import.meta.url).href;const meta=await(await fetch(root+'.json')).json(),maps={};await Promise.all(['outer','inner'].map(async side=>{maps[side]=await Promise.all(['color','normal'].map(async(type)=>{const tex=await loader.loadAsync(root+'-'+side+'-'+type+'.png');tex.wrapS=tex.wrapT=T.RepeatWrapping;tex.colorSpace=type==='color'?T.SRGBColorSpace:T.NoColorSpace;tex.anisotropy=4;return tex;}));}));return {meta,maps};})());
  return tiles.get(info.id);
 }
-/** Finite-thickness curved garment surface for unresolved yarns. Not an extra opaque backing.
- * At close inspection it is removed, and the original individual closed yarns take over.
- */
+/** Finite-thickness curved garment surface for unresolved yarns, not an extra backing. Native closed yarns replace it in microscope mode. */
 export async function buildAdaptiveSolid(native,packet,info,{renderer,signal,onProgress}={}){
  const started=performance.now(),fieldData=await field(info,renderer),layout=layerLayout(info),src=native.geometry,n=src.attributes.position.count,group=new T.Group(),materials=[],geometries=[],surfaces=[];
  const stats={family:info.family,material:info.id,representation:'screen-scale finite shell / original yarn microscope',layers:1,totalThicknessMM:layout.thickness,originalVertices:n,opaqueBackingSheets:0,aggregateSurfaces:1,separateClothLayers:false,externalAppearanceImages:0,notPixelEquivalentToMicroscope:true,physicsChanged:false};
@@ -30,7 +28,6 @@ export async function buildAdaptiveSolid(native,packet,info,{renderer,signal,onP
   else{const [map,normalMap]=fieldData.maps[side?'inner':'outer'];mat=new T.MeshPhysicalMaterial({map,normalMap,normalScale:new T.Vector2(normalScale,normalScale),roughness:info.family==='knit'?.86:.82,sheen:info.family==='knit'?.62:.30,sheenRoughness:.92,sheenColor:new T.Color(info.parameters['base-dye']||info.geometry?.warpDye||'#aaaabb'),envMapIntensity:.6});}
   mat.side=T.FrontSide;const mesh=new T.Mesh(g,mat);mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;group.add(mesh);materials.push(mat);geometries.push(g);surfaces.push({mesh,p,norm,side});
  }
- // Seal only true panel boundaries with a finite edge strip. The native bound-off yarns remain on open knit edges.
  const rimBase=[],rimFrac=[],rimIndex=[];let off=0;
  for(const panel of packet.spec.panels){const B=panel.boundary;for(let k=0;k<B.length;k++){const a=off+B[k],b=off+B[(k+1)%B.length],base=rimBase.length;for(let j=0;j<5;j++){rimBase.push(a,b);rimFrac.push(j/4,j/4);if(j<4){const c=base+j*2;rimIndex.push(c,c+1,c+2,c+1,c+3,c+2);}}}off+=panel.uvMm.length;}
  const rg=new T.BufferGeometry(),rp=new Float32Array(rimBase.length*3);rg.setAttribute('position',new T.BufferAttribute(rp,3));rg.setIndex(rimIndex);const rm=new T.MeshStandardMaterial({color:info.parameters.color||info.parameters['base-dye']||info.geometry?.warpDye||'#575552',roughness:.9,side:T.DoubleSide});const rim=new T.Mesh(rg,rm);rim.castShadow=rim.receiveShadow=true;rim.frustumCulled=false;group.add(rim);geometries.push(rg);materials.push(rm);
