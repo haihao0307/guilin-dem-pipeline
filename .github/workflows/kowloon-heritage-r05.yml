@@ -1,4 +1,4 @@
-name: Kowloon heritage R05 staged architectural review
+name: Kowloon heritage controlled baseline smoke
 on:
   push:
     branches: ['qa/kowloon-heritage-r05-20261013']
@@ -8,22 +8,29 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  staged-architectural-review:
+  controlled-native-smoke:
     strategy:
       fail-fast: false
       matrix:
-        view: [towerWhole, towerWindow, heritageHall]
+        mode: [baseline, candidate]
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+          path: revision
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - name: Prepare isolated source-bound shared host
-        run: python kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/prepare-host-review.py
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 25c460991397665e2ad9068e79a93b2b16b80484
+          persist-credentials: false
+          path: baseline
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Apply only station-module candidate to fixed successful receiver
+        run: python revision/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/prepare-controlled-review.py ${{ matrix.mode }}
       - name: Emit original stage boundaries with R05 field
-        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01
         run: |
           node emit-shader-inputs.mjs >/dev/null
           node ../bureau-train88-r01/emit-shader-inputs.mjs >/dev/null
@@ -36,7 +43,7 @@ jobs:
           node experiments/compact-trace-r01/emit.mjs
           node experiments/bureau-query-r01/emit.mjs
       - name: Compile pinned Naga and all exact compact runtime entries
-        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa/compiler
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/compiler
         run: |
           python - <<'PYLOCK'
           import tomllib
@@ -67,24 +74,15 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Startup and bounded native smoke before architectural frame
-        env:
-          HERITAGE_SMOKE: '1'
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
-      - name: Preserve smoke receipt before the larger render
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: heritage-smoke-${{ matrix.view }}
-          path: heritage-staged-${{ matrix.view }}-smoke/
-          retention-days: 7
-      - name: Review complete source construction in normal perspective
-        env:
-          HERITAGE_SMOKE: '0'
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+      - name: Fixed native camera and two source-bound blocks, with full shader diagnostics
+        working-directory: baseline
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/qa/native-focus-host.cjs
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-staged-${{ matrix.view }}
-          path: heritage-staged-${{ matrix.view }}/
+          name: controlled-${{ matrix.mode }}
+          path: |
+            baseline/train88-native-focus-results/
+            baseline/source-control.json
+            baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-train88-r01/experiments/compact-trace-r01/generated/
           retention-days: 7
