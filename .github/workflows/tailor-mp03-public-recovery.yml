@@ -1,0 +1,119 @@
+name: MP03 fixed HTTPS recovery acceptance
+on:
+  push:
+    branches: [fix/tailor-mp03-r2-recovery-20261013]
+    paths:
+      - '.github/workflows/tailor-mp03-public-recovery.yml'
+      - 'kaopu-tailor-workbench/material-products/recovery-audit/qa-public.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bytes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify every byte of the actual public frozen snapshot
+        run: |
+          python - <<'PY'
+          import json,hashlib,time,urllib.request,concurrent.futures
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp03-r1-fbbef8bc7df2/'
+          source='fbbef8bc7df2172f492dd60875432f4ffeff2429'
+          def read(name):
+              for attempt in range(4):
+                  try:
+                      with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+                  except Exception:
+                      if attempt==3:raise
+                      time.sleep(3)
+          manifest=json.loads(read('BUILD_MANIFEST.json'))
+          assert manifest['sourceCommit']==source
+          def check(item):
+              name,expected=item;b=read(name)
+              assert len(b)==expected['bytes'],name
+              digest=hashlib.sha256(b).hexdigest();assert digest==expected['sha256'],name
+              return {'path':name,'bytes':len(b),'sha256':digest}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:rows=list(pool.map(check,manifest['files'].items()))
+          json.dump({'passed':True,'sourceCommit':source,'fixedURL':base,'files':rows},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTES_PASS',len(rows),base)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp03-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: bytes
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        group: [knit,leather,denim]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/recovery-audit
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Real public page, original model, parameter controls and garment pixels
+        env:
+          MP03_GROUP: ${{ matrix.group }}
+        run: node kaopu-tailor-workbench/material-products/recovery-audit/qa-public.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-public-${{ matrix.group }}
+          path: kaopu-tailor-workbench/material-products/recovery-audit/public-${{ matrix.group }}
+          retention-days: 30
+  receipt:
+    needs: [bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-tailor-workbench/material-products/recovery-audit
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp03-public-*
+          path: /tmp/public-evidence
+      - name: Require twelve real public outfit results and preserve truthful limits
+        run: |
+          python - <<'PY'
+          import json,pathlib,os,datetime
+          root=pathlib.Path('/tmp/public-evidence')
+          reports=[json.loads(p.read_text()) for p in root.rglob('PUBLIC_REPORT.json')]
+          assert len(reports)==3 and all(p['passed'] for p in reports)
+          required={'K01','K02','K03','K04','L01','L02','L03','L04','D01','D02','D03','D04'}
+          covered={r['case'] for p in reports for r in p['rows'] if r['case'] in required};assert covered==required
+          hashes=json.loads(next(root.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          state={'version':'MP03-R1 recovery-verified','sourceCommit':hashes['sourceCommit'],'fixedURL':hashes['fixedURL'],'publicBrowserVerified':True,'publicBytesVerified':True,'outfits':sorted(covered),'deliveryComplete':True,'userAccepted':False,'materialPhysicsCalibrated':False,'continuousCollision':False,'separateKnitLayerMechanics':False,'physicalDeviceTested':False,'allParameterCombinationsTested':False,'sourceRuntimeReplacedByRecovery':False,'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/recovery-audit');p.mkdir(parents=True,exist_ok=True)
+          (p/'PUBLIC_RECOVERY_REPORT.json').write_text(json.dumps({'state':state,'reports':reports,'publicBytes':hashes},ensure_ascii=False,indent=2))
+          (p/'RELEASE_STATE.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Sync the recovery receipt with fast-forward-only source history
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp03-r2-recovery-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp03-r2-recovery-20261013)" = "$GITHUB_SHA"
+          git add kaopu-tailor-workbench/material-products/recovery-audit/PUBLIC_RECOVERY_REPORT.json kaopu-tailor-workbench/material-products/recovery-audit/RELEASE_STATE.json
+          git commit -m 'docs(mp03): retain complete fixed-HTTPS recovery evidence [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp03-r2-recovery-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp03-public-final-receipt
+          path: kaopu-tailor-workbench/material-products/recovery-audit/*REPORT.json
+          retention-days: 30
