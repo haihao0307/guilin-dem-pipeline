@@ -1,0 +1,38 @@
+{
+  "source": "https://raw.githubusercontent.com/facebookresearch/BioSkin/6cca1a76ac3f53077579c4249983ec91d855801d/",
+  "filesSHA256": {
+    "bioskin/bioskin.py": "9c5a7a45c6480125a45afca9c95874012b418e86ae228747371c6edde0b9997f",
+    "bioskin/spectrum/color_spectrum.py": "d39b78c0a0036be4d82e77ce8da49d0b1234dde4a50b82852177f79eefe02011",
+    "bioskin/parameters/params_io.py": "6ab996fedc0743ccd6941fcef1044bfa5c433dd434b684b3d0584bd56dbcda22",
+    "bioskin/parameters/parameter.py": "073ea1be3e300d103d0a77770d0762b1a987606021b4a2d6578f7290d7bd4dbf",
+    "pretrained_models/BioSkin.pt": "0c9f58fc14746aa31dfb905396a258c5deb440bc3f2d24a1e3fa2905a0131a06",
+    "pretrained_models/BioSkin.json": "bafa89caf729504ce964d3eb855cc1dca5d01797a0a8c247f0b5b045db9b8d86",
+    "LICENSE": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+  },
+  "weightsOnly": true,
+  "upstreamClassExecuted": "Skin2ReflectanceNN",
+  "upstreamColorConversion": "ColorSpectrum, BGR explicitly reordered RGB",
+  "grid": [
+    33,
+    17
+  ],
+  "physicalMapping": {
+    "melanin": ".005+.395*x^2",
+    "haemoglobin": ".001+.0215*y",
+    "thickness": 0.015,
+    "oxygenation": 0.7,
+    "melaninTypeRatio": 0.74
+  },
+  "fixedSliceNotFullFiveParameterModel": true,
+  "heldOutSamples": 1024,
+  "maxLinearChannelError": 0.003508871078843845,
+  "meanLinearChannelError": 0.00019062320726731888,
+  "outputRange": [
+    0.00643903249874711,
+    0.8429230451583862
+  ],
+  "noImportedFaceAssets": true,
+  "noMedicalMeasurement": true,
+  "rgbNotSpectralSceneTransport": true,
+  "lutSHA256": "38282d4b00b285388cdc244ff8074c2b3f2b696a6d6a9a74ab50667596362bb0"
+}
