@@ -1,4 +1,4 @@
-name: Hair F02.1 ear-only correction
+name: Hair F02.1 reviewed ear-only correction
 on:
   push:
     branches: [fix/hair-f02-1-ear-clearance-20261013]
@@ -30,6 +30,7 @@ jobs:
           /tmp/f021-tools/node_modules/.bin/playwright install --with-deps chromium
       - name: Build only F02.1 and validate native ear regression
         run: |
+          rm -rf "$P/evidence/candidate" "$P/evidence/public"
           python "$P/prepare.py"
           python "$P/build.py"
           node "$P/tests/core.mjs"
@@ -48,7 +49,7 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add -f "$P/src" "$P/tests/browser.mjs" "$P/build.py" "$P/index.template.html" "$P/site" "$P/preview.html" "$P/BUILD_MANIFEST.json" "$P/evidence"
           git diff --cached --name-only | python -c 'import os,sys; assert all(x.startswith(os.environ["P"]+"/") for x in sys.stdin.read().splitlines())'
-          git commit -m 'build(hair-f02.1): native ear-only subtraction and sparse-root clarification, browser verified'
+          git commit -m 'build(hair-f02.1): reviewed smooth ear-to-sideburn join, all original regression gates passed'
           git push origin HEAD:refs/heads/fix/hair-f02-1-ear-clearance-20261013
           echo "SOURCE_BUILD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "PUBLIC_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$(git rev-parse HEAD)/$P/preview.html" >> "$GITHUB_ENV"
@@ -82,7 +83,7 @@ jobs:
           (p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));(p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC_URL']+'\n')
           PY
           git add -f "$P/evidence/public" "$P/DELIVERY.json" "$P/PUBLIC_URL.txt"
-          git commit -m 'test(hair-f02.1): public same-head ear correction and original-root records verified'
+          git commit -m 'test(hair-f02.1): reviewed public ear subtraction, unchanged roots and sparse diagnostic labelling verified'
           git push origin HEAD:refs/heads/fix/hair-f02-1-ear-clearance-20261013
       - uses: actions/upload-artifact@v4
         if: always()
