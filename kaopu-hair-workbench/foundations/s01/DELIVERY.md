@@ -1,19 +1,22 @@
-# HAIR-FOUNDATION-S01 — 已完成固定公网技术验证，待发线视觉验收
+# HAIR-FOUNDATION-S01 — 固定公网已验证，待发线视觉验收
 
-https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/foundations/s01-031d9bb80ed5/
+https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/foundations/s01-e45d8da17e81/
 
-原生 GNM 中性头与原三角索引；独立可编辑生长蒙版和密度；稳定根点池；逐片元生长域显示与根点判定同源；边界、距离、根点、法线短针、测试切向与同拓扑形变检查；表面画笔、撤销重做、本机保存/读取及严格 JSON 导入导出。旧 L03、人物总台和其他工作台不改，PR250保持Draft，未合并、未强推。
+本轮实际完成：原生头部上的独立生长蒙版与密度场、稳定根点绑定、边界/距离/根点/法线诊断、同拓扑变形压力测试、局部增减生长区域与密度、撤销重做、本机保存读取及严格JSON导入导出。画笔修正版要求默认一次点按真正移除激活根点，并在真实画布中产生变化；随后补回、撤销和密度编辑验证通过。
 
-源码：031d9bb80ed5e52001cec51053e8f769d8c8a81c
-构建：ed3526a11f06af03d09b4758d96ecf7c4f925694
-Pages：4fd26afd38420ff542beda5dfc00bbab3cd93870
-站点树：20cacb572c7c194ba353016f0c65896ccbdfb669
-公网 Actions：38374070137
+源码 e45d8da17e81417ff5a378d3b6ba1749a671a82c
+构建 45e36ef453dd5209c671683802b3bf844be85683
+Pages fbd4d05610101a2338514389519c77115a60dd06
+站点树 9a8bca876af8ccaff6ee89f0eb667b60e87dc582
+公网任务 38375901663
 
-检查：{"unit": 25, "candidate": 34, "public": 34}。原生公网和候选的资源逐项 SHA/体积匹配；实际操作视角、显示、密度、短针、形变、根点拾取、画笔、撤销、存档、下载、无效导入、刷新和手机视口面板。无 JavaScript / 控制台着色器错误。
+检查：{"unit": 25, "brush": 5, "candidate": 37, "public": 37}。所有列举检查通过，但部分范围重叠，不相加冒充独立场景。公网逐项核对实际运行资源SHA和体积；冷启动、六视角、字段显示、密度、短针、绑定变形、点选、擦除/补回/密度画笔、撤销、存档、下载、无效导入、刷新、手机视口面板通过，无JS/控制台着色器错误。
 
-默认诊断：{"revision": 0, "candidateRoots": 20789, "activeRoots": 6158, "areaCm2": 590.1308463369991, "domainFaces": 4210, "boundarySegments": 282, "outsideRoots": 0, "maxBarycentricSumError": 4.470348358154297e-08, "rootBindingHash": "43c554a8e2f700da", "maskHash": "3a48a84f", "rootCountIsBiological": false, "distanceMethod": "mesh-edge Dijkstra approximation", "spacingMethod": "surface chord hard-core rejection", "draws": 1, "visibleHeadMeshes": 1, "positionHash": "6487401f", "source": "031d9bb80ed5e52001cec51053e8f769d8c8a81c", "geometryBytes": 425796, "hasFullHair": false}
+实际公网默认状态：{"revision": 0, "candidateRoots": 20789, "activeRoots": 6158, "areaCm2": 590.1308463369991, "domainFaces": 4210, "boundarySegments": 282, "outsideRoots": 0, "maxBarycentricSumError": 4.470348358154297e-08, "rootBindingHash": "43c554a8e2f700da", "maskHash": "3a48a84f", "rootCountIsBiological": false, "distanceMethod": "mesh-edge Dijkstra approximation", "spacingMethod": "surface chord hard-core rejection", "draws": 1, "visibleHeadMeshes": 1, "positionHash": "6487401f", "source": "e45d8da17e81417ff5a378d3b6ba1749a671a82c", "geometryBytes": 425796, "hasFullHair": false}
+画笔检查：{"name": "Actual surface brush removes roots and preserves bindings", "pass": true, "detail": {"before": 6158, "after": 6143}}
 
-初始发线仍是作者候选，不是已确认的真实个人发线。6158个激活点和20789个候选点不代表生物毛囊总数。边路径距离与弦距间隔是近似；形变只验证同拓扑。没有完整头发、独立生长方向/冠旋、长度场或物理。手机仅视口，窄屏需缩小视图，不是实机性能。不能把这个较轻的诊断页当作L03完整发型性能优化。
+6158个激活点与20789个候选点仅为诊断采样，不代表真实毛囊总数。初始发际线是可编辑作者候选，额角、耳周、后颈仍须人物特定校准；没有宣称医学分区。灰模沿用原GNM中性几何和三角索引，不替换ET18正式头部材质。距离是网格边路径近似，间距是弦距；形变仅同拓扑横向压力测试。法线短针与测试切向不是完整头发或正确生长场。没有完整发型、冠旋生长解算、长度场、动力学或衣物碰撞。
 
-下一步：先视觉校准额角、耳周、后颈和密度，再建独立初始倾角/切向方向与冠旋，之后长度场及稀疏导向；最后才回到密发、材质和物理。
+手机只有390×844视口，不是实机；窄屏可能需缩小视图。此页不生成原64k完整发丝，不能将其轻量速度当成L03完整工作台的加速证明。本机存档不自动进入总台SharedWorker。旧L03与所有以前版本及其他工作台保留，PR250保持Draft，未合并、未强推。
+
+下一方向：先校准发际线与局部密度；S02分离根部倾角/切向场并建立可调冠旋；S03独立弧长场和稀疏导向；之后才加入密集跟随发、发束、材质与物理。
