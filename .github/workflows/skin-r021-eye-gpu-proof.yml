@@ -1,0 +1,46 @@
+name: Skin Windows isolated eye sampling proof
+on:
+  push:
+    branches: [fix/skin-dna-r02-1-blackframe-20261013]
+    paths: [.github/workflows/skin-r021-eye-gpu-proof.yml]
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 25ff59621736fd73513ca25de099a3a00d2bc270
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-dna-r02-1
+            kaopu-unified-human-workbench/eye-materials/assets
+            kaopu-unified-human-workbench/full/source/registration-vendor
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - shell: bash
+        run: |
+          npm install --no-audit --no-fund esbuild@0.25.11 playwright@1.56.1
+          npx playwright install chromium
+          mkdir evidence
+          cat > eye-test.mjs <<'JS'
+          import * as T from './kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js';
+          import {createPackedEyeColors} from './kaopu-unified-human-workbench/skin-dna-r02-1/PackedEyeColors.mjs';
+          import a from './kaopu-unified-human-workbench/eye-materials/assets/Harvey_eye1.png';
+          import b from './kaopu-unified-human-workbench/eye-materials/assets/Harvey_eye2.png';
+          import c from './kaopu-unified-human-workbench/eye-materials/assets/sclera-clean.png';
+          window.result={complete:false,errors:[]};
+          (async()=>{const renderer=new T.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(512,512);document.body.append(renderer.domElement);renderer.domElement.addEventListener('webglcontextlost',e=>result.errors.push('context lost'));const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');result.driver=gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);result.cap=gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);const loader=new T.TextureLoader(),list=await Promise.all([a,b,c].map(u=>loader.loadAsync(u)));list.forEach(t=>{t.colorSpace=T.SRGBColorSpace;t.flipY=false;t.wrapS=t.wrapT=T.ClampToEdgeWrapping;t.minFilter=T.LinearMipmapLinearFilter;t.magFilter=T.LinearFilter;});const pack=await createPackedEyeColors(list);result.proof=pack.checkSampling(renderer);result.error=gl.getError();await new Promise(r=>setTimeout(r,2000));result.lost=gl.isContextLost();result.complete=true;document.body.append(document.createTextNode(JSON.stringify(result)));})().catch(e=>{result.errors.push(String(e));result.complete=true;});
+          JS
+          cat > eye-test.cjs <<'JS'
+          const fs=require('fs'),http=require('http'),esbuild=require('esbuild'),{chromium}=require('playwright');(async()=>{const bundle=await esbuild.build({entryPoints:['eye-test.mjs'],bundle:true,write:false,format:'iife',loader:{'.png':'dataurl'}});const html='<html><body><script>'+bundle.outputFiles[0].text.replace(/<\/script/gi,'<\\/script')+'</script></body></html>',server=http.createServer((q,s)=>{s.writeHead(200,{'content-type':'text/html'});s.end(html)});await new Promise(r=>server.listen(8123,'127.0.0.1',r));let b;try{b=await chromium.launch({headless:true,args:['--use-angle=d3d11-warp','--enable-unsafe-swiftshader']});const p=await b.newPage();const logs=[];p.on('console',m=>logs.push(m.type()+':'+m.text()));await p.goto('http://127.0.0.1:8123');await p.waitForFunction(()=>window.result?.complete,null,{timeout:120000});const q=await p.evaluate(()=>result);q.logs=logs;fs.writeFileSync('evidence/qa.json',JSON.stringify(q,null,2));await p.screenshot({path:'evidence/proof.png'});}finally{await b?.close();server.close();}})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          DEBUG=pw:browser node eye-test.cjs > evidence/browser.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r021-eye-only-windows
+          path: evidence
+          retention-days: 14
