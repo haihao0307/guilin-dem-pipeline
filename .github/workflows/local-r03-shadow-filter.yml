@@ -1,0 +1,28 @@
+name: Local R03 stable shadow filter audition
+on:
+  push:
+    branches: [test/local-r03-calibration-20261013]
+    paths: ['.github/workflows/local-r03-shadow-filter.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p filter-audition
+          cat > filter-audition/probe.cjs <<'JS'
+          const fs=require('fs'),{chromium}=require('playwright');
+          (async()=>{const r={build:'68a791658f2a8224ba4834ee8c01a4cb91be96cd',privateShaderAudition:true,notDelivered:true,errors:[],stage:'start',images:[],transmission:[]};let b,p;const write=()=>fs.writeFileSync('filter-audition/report.json',JSON.stringify(r,null,2));try{b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});p=await b.newPage({viewport:{width:1000,height:820},deviceScaleFactor:1});p.on('pageerror',e=>{r.errors.push(String(e));write()});p.on('console',e=>{if(e.type()==='error'){r.errors.push(e.text());write()}});await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+r.build+'/kaopu-unified-human-workbench/head-look-r03-local/preview.html',{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.localFeatures,null,{timeout:240000});await p.evaluate(()=>lifelikeIdle.pause(true));await p.waitForFunction(()=>lifelikeIdle.ready(),null,{timeout:240000});await p.evaluate(async()=>{const v=__IDENTITY_QA__.viewer();await Promise.all([v.skin.faceReady,v.skin.naturalEyesReady]);lifelikeIdle.seek(0);localFeatures.mode('both');localFeatures.set({environment:.42,fill:.72,key:2.7,exposure:1.05});v.scene.traverse(l=>{if(['Neutral main','Neutral fill','Neutral rim'].includes(l.name)){Object.assign(l.shadow.camera,{left:-.24,right:.24,top:.24,bottom:-.24});l.shadow.camera.updateProjectionMatrix();l.shadow.radius=5;l.shadow.normalBias=.00025;}});const m=v.skin.material,previous=m.onBeforeCompile,key=m.customProgramCacheKey.bind(m);m.onBeforeCompile=function(s,...a){previous.call(this,s,...a);const from='if(uLFShadowActive<.5)return lfNativeShadow';if(!s.fragmentShader.includes(from))throw Error('audition anchor drift');s.fragmentShader=s.fragmentShader.replace(from,'if(true)return lfNativeShadow');};m.customProgramCacheKey=()=>key()+'/private-native-pcf-audition';m.needsUpdate=true;v.renderer.shadowMap.needsUpdate=true;localFeatures.view('lip');});
+          const frame=async()=>p.evaluate(()=>{const v=__IDENTITY_QA__.viewer();v.renderer.render(v.scene,v.camera);const gl=v.renderer.getContext(),a=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,a);let h=2166136261,sum=0;for(let i=0;i<a.length;i++){h=Math.imul(h^a[i],16777619)>>>0;if(i%4!==3)sum+=a[i];}return{hash:h,mean:sum/(a.length*.75),error:gl.getError()};});
+          const shot=async name=>{r.stage=name;write();await frame();const c=await p.context().newCDPSession(p),s=await c.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});fs.writeFileSync('filter-audition/'+name+'.png',Buffer.from(s.data,'base64'));await c.detach();r.images.push(name);write();};await shot('01-pcf-lip');await p.evaluate(()=>localFeatures.view('ear'));await shot('02-pcf-ear');await p.evaluate(()=>{localFeatures.view('eye');const v=__IDENTITY_QA__.viewer();v.camera.zoom=2.1;v.camera.updateProjectionMatrix();});await shot('03-pcf-eye');
+          await p.evaluate(()=>{localFeatures.preset('back');localFeatures.view('ear');});for(const azimuth of [145,165,-95]){await p.evaluate(azimuth=>localFeatures.set({azimuth}),azimuth);const a=[];for(const earScatter of [0,1]){await p.evaluate(earScatter=>localFeatures.set({earScatter}),earScatter);a.push(await frame());}r.transmission.push({azimuth,frames:a});write();}r.complete=true;}catch(e){r.failure=String(e);process.exitCode=1;}finally{write();await b?.close();}})();
+          JS
+          timeout 14m node filter-audition/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: local-r03-stable-filter-audition, path: filter-audition/, retention-days: 7}
