@@ -6,8 +6,16 @@ Keep the original overall skin, character, body, rig, eyes, lip geometry and nat
 
 Camera-only views now avoid no-op model/geometry resets. QA retains actual trusted pointer clicks, all four comparisons, protected albedo pixels, expression/idle and versioned archive checks. Existing source and frozen pages are not changed.
 
-Build/public verification is pending until DELIVERY.json records success. Keep Draft. This is not user visual acceptance or photorealistic equivalence. Ear transmission is thickness-estimated; PCF is not contact-hardening or area-light path tracing. Original shape limitations remain. Native person load and idle calibration remain costs. Physical phone, Safari, Vision Pro and consumer GPU FPS are not certified.
+Exact public browser verification passed; see DELIVERY.json, PUBLIC_QA.json and qa/public. Visual acceptance remains with the user. Keep Draft. This is not user visual acceptance or photorealistic equivalence. Ear transmission is thickness-estimated; PCF is not contact-hardening or area-light path tracing. Original shape limitations remain. Native person load and idle calibration remain costs. Physical phone, Safari, Vision Pro and consumer GPU FPS are not certified.
 
 ## Lip support correction
 
 Run38393379283 passed all 7 smoke checks and real public controls but stopped at strict lip ownership: 2 old-border pixels differed by 2/255 just outside the new mask. The diagnostic now uses the exact union of original and revised feather support, because removing old lip pigment is itself a lip edit. Colour/roughness/normal behaviour is unchanged by this fix, and the protected-skin test remains zero changed pixels outside that explicit anatomical union (one-byte quantization tolerance only).
+
+## Fixed verified entry
+
+https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/91b1dd7cf402294a26051abe051696b2848207af/kaopu-unified-human-workbench/head-look-r03-1-recovery/preview.html
+
+Source 11c8016f4478afc1480bf5a45e935aa34dd41996
+
+Build 91b1dd7cf402294a26051abe051696b2848207af
