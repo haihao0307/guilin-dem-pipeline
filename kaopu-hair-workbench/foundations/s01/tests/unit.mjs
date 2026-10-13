@@ -1,0 +1,26 @@
+import fs from'node:fs';import path from'node:path';import{fileURLToPath}from'node:url';import assert from'node:assert/strict';import{Surface,rootPool,Domain,hash,dot}from'../src/kernel.mjs';
+const dir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),data=JSON.parse(fs.readFileSync(dir+'/site/head.json')),s=new Surface(data),p=rootPool(s),d=new Domain(s,p),checks=[];
+function test(name,fn){try{const details=fn();checks.push({name,pass:true,details});console.log('PASS',name)}catch(e){checks.push({name,pass:false,error:e.message});console.error('FAIL',name,e.message)}}
+const initial=d.stats(),binding=initial.rootBindingHash,active=d.active();
+test('Original native topology and vertex count',()=>{assert.equal(s.N,17821);assert.equal(s.F,35324);assert.equal(data.topology,'d79ab67c6e6f5e361a4adbaf484190a00ccce33b77ca82f780de4e2816d27685')});
+test('Non-empty inspectable scalp, no hidden full hair',()=>{assert(initial.activeRoots>1000);assert(initial.areaCm2>200&&initial.areaCm2<1400);return initial});
+test('No active root outside scalar domain',()=>assert.equal(initial.outsideRoots,0));
+test('Every root binds to original skin triangles',()=>{for(let i=0;i<p.count;i++){const f=p.triangles[i],b=p.barycentric.subarray(i*3,i*3+3);assert(f<s.F);assert(b.every(x=>x>=0&&x<=1));assert(Math.abs(b[0]+b[1]+b[2]-1)<1e-6);for(let k=0;k<3;k++)assert.equal(s.component[s.tri[f*3+k]],0)}});
+test('Candidate roots match their barycentric surface',()=>{let max=0;for(let i=0;i<p.count;i++){const r=s.sample(p.triangles[i],p.barycentric.subarray(i*3,i*3+3));for(let k=0;k<3;k++)max=Math.max(max,Math.abs(r[k]-p.positions[i*3+k]))}assert(max<5e-8);return max});
+test('Root candidate seed reproducible',()=>{const q=rootPool(s);assert.equal(hash(q.triangles)+hash(q.barycentric),binding);assert.equal(q.count,p.count)});
+test('Density selection monotonic and no resampling',()=>{const high=new Set(d.active()),low=d.active(.4);assert(low.length<high.size);assert(low.every(x=>high.has(x)));assert.equal(d.stats().rootBindingHash,binding)});
+test('Zero density truly hides all roots',()=>assert.equal(d.active(0).length,0));
+test('All positive-domain vertices have finite boundary paths',()=>{let max=0;for(let i=0;i<s.N;i++)if(d.phi[i]>0){assert(Number.isFinite(d.distance[i]));max=Math.max(max,d.distance[i])}return max});
+test('Distances respect shortest mesh-edge inequalities',()=>{for(let i=0;i<s.N;i++)for(const[j,w]of s.adj[i])if(Number.isFinite(d.distance[i]))assert(d.distance[j]<=d.distance[i]+w+1e-9)});
+test('Boundary endpoints lie on original edges',()=>{for(const b of d.boundary.segments){assert(b.t>=0&&b.t<=1);const [i,j]=b.edge;assert(Math.abs(d.phi[i]*(1-b.t)+d.phi[j]*b.t)<1e-7)}});
+test('Fixed binding follows nonuniform deformation',()=>{const target=s.p.slice();for(let i=0;i<s.N;i++)target[i*3]*=1.15;const r=d.roots(active,target),r0=d.roots(active);let max=0;for(let i=0;i<active.length;i++)max=Math.max(max,Math.abs(r[i*3]-r0[i*3]*1.15));assert(max<5e-8);assert.equal(d.stats().rootBindingHash,binding);return max});
+const id=active[Math.floor(active.length/2)],f=p.triangles[id],b=Array.from(p.barycentric.subarray(id*3,id*3+3)),a=d.archive(),mask0=d.maskHash;
+test('Erase stroke modifies surface field, not root pool',()=>{const n=d.paint(f,b,{mode:'erase',radius:.025,strength:1});assert(n>0);assert.notEqual(d.maskHash,mask0);assert.equal(d.stats().rootBindingHash,binding);assert(d.active().length<active.length)});
+test('Undo restores exact mask and activation',()=>{assert(d.undo());assert.equal(d.maskHash,mask0);assert.deepEqual(d.active(),active)});
+test('Redo restores edited domain',()=>{assert(d.redo());assert.notEqual(d.maskHash,mask0);assert.equal(d.stats().outsideRoots,0)});
+test('Valid archive restores exactly',()=>{d.import(a);assert.equal(d.maskHash,mask0);assert.deepEqual(d.active(),active)});
+test('Density brush independent from domain',()=>{d.paint(f,b,{mode:'thin',radius:.025,strength:1});assert.equal(d.maskHash,mask0);assert(d.active().length<active.length);d.import(a)});
+for(const[name,mutate]of[['Wrong topology',o=>o.topology='wrong'],['Wrong seed',o=>o.pool.seed=0],['Nonfinite scalar',o=>o.mask[0]=NaN],['Wrong field length',o=>o.density.pop()],['Out of bounds density',o=>o.density[1]=2],['Eyeball growth injection',o=>o.mask[Array.from(s.component).findIndex(x=>x===1)]=.02]])test('Reject '+name,()=>{const o=structuredClone(a);mutate(o);const old=d.maskHash;assert.throws(()=>d.import(o));assert.equal(d.maskHash,old)});
+test('Invalid brush rejected transactionally',()=>{assert.throws(()=>d.paint(-1,b));assert.throws(()=>d.paint(f,b,{radius:NaN}));assert.equal(d.maskHash,mask0)});
+test('Positive control catches removal of crown roots',()=>{const o=structuredClone(a);for(let i=0;i<s.N;i++)if(s.p[i*3+1]>.37)o.mask[i]=-.02;d.import(o);assert(d.active().length<active.length*.9);d.import(a)});
+const report={success:checks.every(x=>x.pass),checks,stats:d.stats(),scope:'Native neutral head, mathematical/engineering only; no anatomical or visual acceptance'};fs.mkdirSync(dir+'/evidence',{recursive:true});fs.writeFileSync(dir+'/evidence/unit.json',JSON.stringify(report,null,2));console.log('STATS',JSON.stringify(report.stats));if(!report.success)process.exit(1);

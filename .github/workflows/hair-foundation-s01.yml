@@ -1,0 +1,57 @@
+name: Hair Foundation S01 build and candidate verification
+on:
+  push:
+    branches: [feature/hair-foundation-s01-20261013]
+    paths: [.github/workflows/hair-foundation-s01.yml]
+permissions:
+  contents: write
+concurrency:
+  group: hair-foundation-s01-candidate
+  cancel-in-progress: false
+env:
+  P: kaopu-hair-workbench/foundations/s01
+  BASELINE_DIR: ${{ github.workspace }}/kaopu-hair-workbench/fusion/r14-l03
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+            kaopu-hair-workbench/foundations/s01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build original neutral head diagnostic and verify kernel
+        run: |
+          node "$P/build.mjs"
+          node "$P/tests/unit.mjs"
+      - name: Install browser tools
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Actual candidate interaction and all view screenshots
+        run: python "$P/tests/browser.py" local
+      - name: Commit tested site and candidate evidence only
+        run: |
+          python - <<'PY'
+          import json,os,pathlib,shutil
+          p=pathlib.Path(os.environ['P'])
+          for name in ['unit.json','candidate/report.json']:
+              r=json.loads((p/'evidence'/name).read_text());assert r['success'] and all(c['pass'] for c in r['checks'])
+          shutil.copyfile(p/'site/BUILD_MANIFEST.json',p/'BUILD_MANIFEST.json')
+          (p/'CANDIDATE.json').write_text(json.dumps({'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'candidateVerified':True,'publicBrowserVerified':False},indent=2))
+          PY
+          git config user.name 'KAOPU Hair Foundation Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          git commit -m 'build(hair-s01): tested native scalp diagnostic and candidate evidence'
+          git push origin HEAD:refs/heads/feature/hair-foundation-s01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-foundation-s01-candidate
+          path: kaopu-hair-workbench/foundations/s01
+          retention-days: 30
