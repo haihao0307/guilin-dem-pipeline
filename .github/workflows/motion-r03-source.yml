@@ -1,0 +1,52 @@
+name: Motion R03 Interaction Reference Audit
+on:
+  push:
+    branches: [feature/motion-r03-contact-interactions-20261013]
+    paths: [.github/workflows/motion-r03-source.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/motion-review-r02
+            kaopu-unified-human-workbench/full/activity-r01
+      - run: python -m pip install numpy scipy
+      - name: Retrieve bounded source records and reproduce source positions
+        run: |
+          mkdir -p interaction-source/source
+          python - <<'PY'
+          import importlib.util,pathlib,urllib.request,hashlib,json,concurrent.futures
+          root=pathlib.Path('interaction-source').resolve();raw=root/'source'
+          clips=[('22_14','alternating squats'),('115_06','Picking box up, bending knees'),('22_13','A passes soda to B; subject A'),('23_13','A passes soda to B; subject B')]
+          urls={}
+          for clip,label in clips:
+            sub=clip.split('_')[0]
+            urls[clip+'.amc']='http://mocap.cs.cmu.edu/subjects/'+sub+'/'+clip+'.amc'
+            urls[sub+'.asf']='http://mocap.cs.cmu.edu/subjects/'+sub+'/'+sub+'.asf'
+            urls[clip+'-label.html']='http://mocap.cs.cmu.edu/search.php?subjectnumber='+sub+'&trinum='+clip.split('_')[1]
+          def get(item):
+            name,url=item
+            for attempt in range(3):
+              try:
+                with urllib.request.urlopen(url,timeout=45) as r:data=r.read()
+                (raw/name).write_bytes(data);return {'file':name,'url':url,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+              except Exception as e:
+                if attempt==2:return {'file':name,'url':url,'error':str(e)}
+          with concurrent.futures.ThreadPoolExecutor(6) as pool:receipts=list(pool.map(get,urls.items()))
+          (root/'DOWNLOAD.json').write_text(json.dumps(receipts,indent=2));assert all('error' not in r for r in receipts if not r['file'].endswith('.html'))
+          spec=importlib.util.spec_from_file_location('conv','kaopu-unified-human-workbench/motion-review-r02/convert.py');c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c);c.ROOT=root;c.RAW=raw
+          names=json.load(open('kaopu-unified-human-workbench/full/activity-r01/16_57-SOURCE.json'))['names']
+          records=[c.convert(clip,label,'gesture',names) for clip,label in clips]
+          (root/'REPORT.json').write_text(json.dumps({'records':records,'fingerCapture':False,'limitedOfficialSources':True},indent=2));print(json.dumps(records,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r03-reference-inputs
+          path: interaction-source
+          retention-days: 14
