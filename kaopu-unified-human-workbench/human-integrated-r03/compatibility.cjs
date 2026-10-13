@@ -15,6 +15,7 @@ const idleBridges=[
 ];
 const makeupBridges=[['clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))','clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)',1]];
 exports.adapt=function adapt(source,relativePath,records){
+ if(relativePath.endsWith('/human-integrated-r03/Anatomy.mjs')){const a='model.regionalFace=api;';assert.equal(source.split(a).length,2);source="import {installAttributeBudget} from './AttributeBudget.mjs';\n"+source.replace(a,a+'installAttributeBudget(model);');records.push({path:relativePath,adapter:'lossless-vertex-slot-packing',exactInputAnchor:a});}
  const bridges=relativePath.endsWith('/ear-root-r04/EarMaterial.mjs')?earBridges:relativePath.endsWith('/idle-r01/IdleSkin.mjs')?idleBridges:relativePath.endsWith('/skin-folds-r02/FoldSkin.mjs')?makeupBridges:[];
  for(const [before,after,count]of bridges){assert.equal(source.split(before).length,count+1,'Pinned composition anchor changed: '+relativePath+' '+before);source=source.split(before).join(after);records.push({path:relativePath,adapter:'unified-specialist-ownership',exactInputAnchor:before,result:after,occurrences:count});}
  return source;
@@ -26,5 +27,6 @@ if(require.main===module){
   [__dirname+'/../idle-r01/IdleSkin.mjs','idle-r01/IdleSkin.mjs',idleBridges],
   [__dirname+'/../skin-folds-r02/FoldSkin.mjs','skin-folds-r02/FoldSkin.mjs',makeupBridges]
  ]){const input=fs.readFileSync(p,'utf8'),records=[],output=exports.adapt(input,'kaopu-unified-human-workbench/'+rel,records);for(const [,after]of bridges)assert(output.includes(after));assert.equal(records.length,bridges.length);assert.equal(fs.readFileSync(p,'utf8'),input);assert.equal(exports.adapt(input,'unrelated.mjs',[]),input);assert.throws(()=>exports.adapt(input.replace(bridges[0][0],'broken-anchor'),'kaopu-unified-human-workbench/'+rel,[]));checks+=bridges.length;}
- console.log('PASS '+checks+' exact compatibility expressions: donor immutability, eye/lip/ear ownership and drift rejection');
+ const input=fs.readFileSync(__dirname+'/Anatomy.mjs','utf8'),output=exports.adapt(input,'kaopu-unified-human-workbench/human-integrated-r03/Anatomy.mjs',[]);assert(output.includes('installAttributeBudget(model)'));
+ console.log('PASS '+checks+' exact compatibility expressions and attribute-packing activation; donor immutability and drift rejection');
 }
