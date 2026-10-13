@@ -72,7 +72,7 @@ for _,d,r,raw,native,core in records:
  assert canvas.crop((x,y,x+c['w'],y+c['h'])).tobytes()==core.tobytes()
 assert all(coverage),'Missing native core pixels'
 assert channels>0 and pixels>0,'No verified native tile overlap'
-view=first[2].get('view','heritageHall');assert view in ['heritageHall','towerWindow']
+view=first[2].get('view','heritageHall');assert view in ['heritageHall','towerWindow','heritageEnsemble']
 out.mkdir(parents=True,exist_ok=True);canvas.save(out/(view+'-native-assembled.png'))
 summary={'status':'exact-native-tile-assembly-not-visual-acceptance','modelCommit':first[2]['modelCommit'],'sourceSHA256':reference['sourceSHA256'],'executionSourceSHA256':reference['executionSourceSHA256'],'canvas':first[3]['fullResolution'],'crop':assembly,'tileCores':len(dirs),'haloPixels':2,'overlapRawChannelsCompared':channels,'rawChannelMismatches':0,'overlapRGBAImagesPixelsCompared':pixels,'compositedPixelMismatches':0,'fullShadowIdentical':True,'allActualShaderHashesIdentical':True,'interpolation':'none; copied original PNG core bytes','images':[{'directory':str(d),'pngSha256':hashlib.sha256((d/'tile-core.png').read_bytes()).hexdigest(),'artifactCommit':r['commit'],'attempt':r['attempt']}for _,d,r,_,_,_ in records]}
 (out/'assembly-proof.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))
