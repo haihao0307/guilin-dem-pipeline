@@ -1,0 +1,38 @@
+name: R06 continuous orbital visual comparison
+on:
+  push:
+    branches: [test/human-r06-ocular-pose-20261013]
+    paths: ['.github/workflows/human-r06-orbital-review.yml', 'kaopu-unified-human-workbench/human-integrated-r06/EyeTransportC3.mjs']
+permissions: {contents: read}
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/human-integrated-r06
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Render real original mesh under alternative continuous orbital maps
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');fs.mkdirSync('orbital-review',{recursive:true});
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1100,height:860}}),q={errors:[],screens:[],reports:[],completed:false};p.on('pageerror',e=>q.errors.push(String(e)));p.setDefaultTimeout(180000);
+          const raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/696f2317362fd53ad3c9a9de4078b01e13a02527/kaopu-unified-human-workbench/human-integrated-r06/preview.html';await p.route(raw,async route=>{const r=await route.fetch();let html=await r.text();const a='P3(n,x,m,{frame:xp,getLandmark:h,supportField:I4})';assert.equal(html.split(a).length,2);html=html.replace(a,'(window.__R06_BASE__=P3,(window.__DEV_APPLY__||P3)(n,x,m,{frame:xp,getLandmark:h,supportField:I4}))');await route.fulfill({response:r,body:html});});
+          async function shot(n){const c=await p.context().newCDPSession(p);const r=await c.send('Page.captureScreenshot',{format:'jpeg',quality:94,captureBeyondViewport:false});fs.writeFileSync('orbital-review/'+n+'.jpg',Buffer.from(r.data,'base64'));await c.detach();q.screens.push(n);console.log('SCREEN',n);}
+          try{await p.goto('https://htmlpreview.github.io/?'+raw,{waitUntil:'domcontentloaded',timeout:90000});await p.waitForFunction(()=>window.__LIP_P3__?.ready);await p.evaluate(fs.readFileSync('kaopu-unified-human-workbench/human-integrated-r06/EyeTransportC3.mjs','utf8').replace('export function applyOrbitalMorphology','window.__ORBITAL__=function applyOrbitalMorphology'));
+          await p.evaluate(()=>{window.__DEV_APPLY__=(model,p,eye,tools)=>{const a=model.headMorphology;if(!a)return;const s=a.settings,keys=['eyeWidth','eyeOpening','eyeTilt','upperArch','lowerArch','eyeApex','eyeHood'];a.settings={...s,...Object.fromEntries(keys.map(k=>[k,0]))};try{window.__R06_BASE__(model,p,eye,tools);}finally{a.settings=s;}if(s.enabled&&keys.some(k=>s[k]))a.report.eyes=window.__ORBITAL__(model,p,eye,tools,s,window.__MODE__||'radial');};});
+          for(const id of ['P02','P01','P05']){await p.evaluate(id=>portraitBank.apply(id),id);await p.evaluate(()=>headMorphology.view('front'));for(const mode of ['direct','radial']){await p.evaluate(async mode=>{window.__MODE__=mode;await headMorphology.set({enabled:true});},mode);await shot(id+'-'+mode);q.reports.push({id,mode,report:await p.evaluate(()=>headMorphology.report())});}await p.evaluate(()=>headMorphology.set({enabled:false}));await shot(id+'-baseline');}
+          assert(!q.errors.length);q.completed=true;
+          }finally{fs.writeFileSync('orbital-review/qa.json',JSON.stringify(q,null,2));await b.close();}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r06-orbital-comparison-${{ github.run_number }}
+          path: orbital-review/
+          retention-days: 7
