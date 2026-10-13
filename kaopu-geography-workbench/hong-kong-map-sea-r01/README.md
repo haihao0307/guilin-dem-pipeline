@@ -23,4 +23,6 @@ Ocean source: project-owned frozen Ocean Mother V001 as adopted by HK R01C. Sour
 
 ## Rebuild / audit
 
-index.html 内含无损 gzip Float32 数值与官方海陆类别，不是高程贴图。运行 python restore_embedded_data.py 可无损重建 data/ 下源数组与场景配置，再运行 build_map.py；所用冻结原海面在相邻 hong-kong-background-sea-r01/index.html。prepare_scene.py 是原始源处理步骤的记录，原始 Copernicus/OSM 来源均在清单中。新页约 3.75 MB，不是几 KB 的完整香港 KAOPU 谱，也不含全部 0.5m 近景。
+index.html 内含无损 gzip Float32 数值与官方海陆类别，不是高程贴图。运行 python restore_embedded_data.py 可无损重建 data/ 下源数组与场景配置，再运行 build_map.py；所用冻结原海面在相邻 hong-kong-background-sea-r01/index.html。prepare_scene.py 是原始源处理步骤的记录，原始 Copernicus/OSM 来源均在清单中。新页约 4.5 MB，不是几 KB 的完整香港 KAOPU 谱，也不含全部 0.5m 近景。
+
+东侧研究范围已扩至 E=855000，完整保留船湾淡水湖，与海洋单独标注。既有西侧 800 列样本逐位保持不变，扩展不改变此前地形高度。
