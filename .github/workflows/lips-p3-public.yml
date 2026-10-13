@@ -1,0 +1,79 @@
+name: Lips P3 actual HTTPS recovery verification
+on:
+  push:
+    branches: [fix/lips-p3-stream-recovery-20261013]
+    paths: [.github/workflows/lips-p3-public.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  public-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-unified-human-workbench/lip-startup-r03/*.cjs
+            /kaopu-unified-human-workbench/lip-startup-r03/SITE.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install matching browser tools
+        run: |
+          mkdir -p /tmp/lips-p3-tools
+          cd /tmp/lips-p3-tools
+          npm init -y >/dev/null
+          npm install playwright@1.56.1 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: lips-p3-candidate
+          run-id: 38353994755
+          github-token: ${{ github.token }}
+          path: /tmp/lips-p3-candidate
+      - name: Require exact deployed entry bytes and the verified candidate
+        run: |
+          mkdir -p lip-p3-public-evidence
+          cp /tmp/lips-p3-candidate/baseline.json /tmp/lips-p3-candidate/baseline-macro.png /tmp/lips-p3-candidate/candidate-faults.json /tmp/lips-p3-candidate/unit.json lip-p3-public-evidence/
+          echo 'dd9dc0b3fa2b23f1bab0e0e7da266c23d8998b8a801e49b33dc32fe2d84421a7  lip-p3-public-evidence/baseline.json' | sha256sum -c
+          node - <<'JS'
+          const fs=require('fs'),assert=require('assert/strict'),crypto=require('crypto');
+          const build=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/lip-startup-r03/SITE.json'));
+          assert(JSON.parse(fs.readFileSync('/tmp/lips-p3-candidate/candidate.json')).passed);
+          assert(JSON.parse(fs.readFileSync('/tmp/lips-p3-candidate/candidate-faults.json')).passed);
+          assert.equal(build.entrySHA256,'32ea77439e746280c420b59d09a1459a67a47351fc47b38a87d36184ce253e3a');
+          (async()=>{let success=false,last='';const until=Date.now()+12*60*1000;
+            while(Date.now()<until){try{
+              const r=await fetch(build.siteURL+'BUILD.json',{cache:'no-store',signal:AbortSignal.timeout(20000)});assert(r.ok,'BUILD HTTP '+r.status);const b=await r.json();assert.equal(b.sourceCommit,build.sourceCommit);assert.equal(b.entrySHA256,build.entrySHA256);
+              const p=await fetch(build.siteURL+'index.html',{cache:'no-store',signal:AbortSignal.timeout(30000)});assert(p.ok,'Entry HTTP '+p.status);const data=Buffer.from(await p.arrayBuffer());assert.equal(crypto.createHash('sha256').update(data).digest('hex'),build.entrySHA256);
+              fs.writeFileSync('lip-p3-public-evidence/public-build.json',JSON.stringify(b,null,2));fs.writeFileSync('lip-p3-public-evidence/delivery-url.txt',build.siteURL+'index.html');success=true;break;
+            }catch(e){last=String(e);console.log('Waiting for exact version:',last);await new Promise(r=>setTimeout(r,10000));}}
+            assert(success,'Exact Pages deployment unavailable: '+last);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - name: Verify actual public page and injected stream failures
+        env:
+          NODE_PATH: /tmp/lips-p3-tools/node_modules
+          PERF_MODE: public
+          PERF_OUT: lip-p3-public-evidence
+          P3_PUBLIC: '1'
+          P3_SKIP_SLOW: '1'
+        run: |
+          node kaopu-unified-human-workbench/lip-startup-r03/verify.cjs &
+          NORMAL=$!
+          node kaopu-unified-human-workbench/lip-startup-r03/faults.cjs &
+          FAULTS=$!
+          STATUS=0
+          wait "$NORMAL" || STATUS=1
+          wait "$FAULTS" || STATUS=1
+          exit "$STATUS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lips-p3-public
+          path: lip-p3-public-evidence
+          retention-days: 14
