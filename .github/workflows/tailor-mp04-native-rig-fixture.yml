@@ -15,28 +15,33 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.58.2
       - run: npx playwright install --with-deps chromium
-      - name: Evaluate the original common person and expose only its native rig data
+      - name: Freeze the original person and original procedural skin fields
         run: |
           mkdir -p fixture
           cat > index.html <<'HTML'
           <script type="module">
           import {loadCommon} from 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core/kaopu-unified-human-workbench/full/ui/load-common.mjs';
           import {defaultState} from 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core/kaopu-unified-human-workbench/full/src/State.mjs';
+          import {buildSkinRegions} from 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core/kaopu-unified-human-workbench/full/ui/skin/SkinRegions.mjs';
           window.finished=false;
-          try {const {model}=await loadCommon();model.compute(defaultState());window.model=model;window.state=defaultState;window.finished=true;}catch(e){window.failure=e.stack;window.finished=true;}
+          try {const {model}=await loadCommon();model.compute(defaultState());window.model=model;window.fields=buildSkinRegions(model);window.finished=true;}catch(e){window.failure=e.stack;window.finished=true;}
           </script>
           HTML
           python -m http.server 8000 > /tmp/http-rig.log 2>&1 &
           cat > capture.cjs <<'JS'
-          const {chromium}=require('playwright'),fs=require('fs'),zlib=require('zlib');
+          const {chromium}=require('playwright'),fs=require('fs'),zlib=require('zlib'),crypto=require('crypto');
           (async()=>{const b=await chromium.launch({headless:true}),p=await b.newPage();p.on('pageerror',e=>console.error(e));await p.goto('http://127.0.0.1:8000/');await p.waitForFunction(()=>window.finished,{},{timeout:360000});
-          const data=await p.evaluate(()=>{if(window.failure)throw Error(window.failure);const m=window.model,d=m.lastBodyDriver;const clone=x=>JSON.parse(JSON.stringify(x,(_,v)=>ArrayBuffer.isView(v)?Array.from(v):v));const base=clone({rig:d.rig,bodyCount:m.bodyCount,vertexCount:m.vertexCount,positions:m.positions,faces:m.faces,canonical:m.canonical,annyLabels:m.anny.boneLabels,boneOrder:m.anny.boneOrder,zero:d.nativeResult.zero,bodySource:d.vertices});base.referencePoses=[];for(const pose of [{'upperarm01.L':[0,0,12]},{'spine03':[0,0,8]},{'upperleg01.L':[10,0,0]}]){const s=window.state();s.anny.pose=pose;m.compute(s);base.referencePoses.push(clone({input:pose,positions:m.positions,rig:m.lastBodyDriver.rig}));}return base;});
-          fs.writeFileSync('fixture/native-common-rig.json.gz',zlib.gzipSync(Buffer.from(JSON.stringify(data))));fs.writeFileSync('fixture/SUMMARY.json',JSON.stringify({vertexCount:data.vertexCount,bodyCount:data.bodyCount,boneNames:data.annyLabels,rigKeys:Object.keys(data.rig),zeroKeys:Object.keys(data.zero)},null,2));console.log(fs.readFileSync('fixture/SUMMARY.json','utf8'));await b.close();})().catch(e=>{console.error(e);process.exitCode=1;});
+          const data=await p.evaluate(()=>{if(window.failure)throw Error(window.failure);const m=window.model,d=m.lastBodyDriver;const clone=x=>JSON.parse(JSON.stringify(x,(_,v)=>ArrayBuffer.isView(v)?Array.from(v):v));return clone({rig:d.rig,bodyCount:m.bodyCount,vertexCount:m.vertexCount,positions:m.positions,faces:m.faces,canonical:m.canonical,boneOrder:m.anny.boneOrder,state:m.state,archive:m.archive(),skinFields:window.fields});});
+          const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+          const blob=zlib.gzipSync(Buffer.from(JSON.stringify(data)));
+          fs.writeFileSync('fixture/native-person.json.gz',blob);
+          const manifest={source:'original common person r0434-8c8245dd87e5',vertexCount:data.vertexCount,bodyCount:data.bodyCount,bones:data.rig.names.length,geometrySHA256:hash(Buffer.from(new Float32Array(data.positions).buffer)),topologySHA256:hash(Buffer.from(new Uint32Array(data.faces).buffer)),fileSHA256:hash(blob),bytes:blob.length,skinFields:data.skinFields.report,morphologyEditable:false,geometryReplaced:false,poseDriver:'original joint-conditioned influences and immutable native bone hierarchy'};
+          fs.writeFileSync('fixture/PERSON_MANIFEST.json',JSON.stringify(manifest,null,2));console.log(JSON.stringify(manifest));await b.close();})().catch(e=>{console.error(e);process.exitCode=1;});
           JS
           node capture.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mp04-native-common-rig-fixture
+          name: mp04-native-person-fast-path
           path: fixture
           retention-days: 14
