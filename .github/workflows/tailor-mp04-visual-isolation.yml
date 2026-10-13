@@ -1,0 +1,46 @@
+name: MP04 material-family isolated visual check
+on:
+  push:
+    branches: [feature/tailor-mp04-native-material-motion-20261013]
+    paths: ['.github/workflows/tailor-mp04-visual-isolation.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  view:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        look: [K04,L04,D01]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38348237469
+          name: mp04-candidate-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: First frame and visible native material
+        env:
+          LOOK: ${{ matrix.look }}
+        run: |
+          python -m http.server 8000 > /tmp/mp04-isolation-http.log 2>&1 &
+          cat > check.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');fs.mkdirSync('evidence',{recursive:true});
+          (async()=>{const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']}),page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+          try{await page.goto('http://127.0.0.1:8000/runtime/?look='+process.env.LOOK);await page.waitForFunction(()=>{const a=window.__MP04__?.audit();return a&&!a.pending&&(a.selected||a.error);},{},{timeout:300000});const audit=await page.evaluate(()=>window.__MP04__.audit());fs.writeFileSync('evidence/AUDIT.json',JSON.stringify({audit,errors},null,2));await page.locator('#stage').screenshot({path:'evidence/'+process.env.LOOK+'-whole.png',timeout:120000});if(audit.error||errors.length)throw Error(audit.error||errors.join('\n'));await page.evaluate(()=>window.__MP04__.macro('top'));await page.locator('#stage').screenshot({path:'evidence/'+process.env.LOOK+'-macro.png',timeout:120000});}
+          catch(e){fs.writeFileSync('evidence/ERROR.json',JSON.stringify({message:String(e),errors},null,2));await page.screenshot({path:'evidence/failure.png',timeout:30000}).catch(()=>{});process.exitCode=1;}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          node check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-family-${{ matrix.look }}
+          path: evidence
+          retention-days: 14
