@@ -26,16 +26,30 @@ export class EarTissueField{
  update(){
   const g=this.geometry,P=g.attributes.position.array,N=g.attributes.normal.array;
   if(this.last&&this.active.every(i=>P[i*3]===this.last[i*3]&&P[i*3+1]===this.last[i*3+1]&&P[i*3+2]===this.last[i*3+2]))return false;
-  const start=performance.now();this.last=P.slice();const bvh=new PinnaBVH(g),D=this.thicknessData,values=[];let hits=0,missing=0;
-  for(const i of this.active){const n=at(N,i),p=at(P,i).map(x=>x*1000),o=p.map((x,k)=>x-n[k]*.025),d=bvh.ray(o,n.map(x=>-x)),valid=d!==null;D[i*4]=valid?Math.max(.15,d+.025):12;D[i*4+1]=valid?1:0;D[i*4+2]=this.protectedWeights[i];D[i*4+3]=1;if(valid){values.push(D[i*4]);hits++;}else missing++;}
-  // Robust one-ring filtering of ray estimates only; never alter position,
-  // normals, ownership, or replace an unmeasurable opening with a thin mask.
-  const adj=new Map(),I=g.index.array;for(let k=0;k<I.length;k+=3){const ids=[I[k],I[k+1],I[k+2]];for(const i of ids)if(this.protectedWeights[i]>0){let a=adj.get(i);if(!a)adj.set(i,a=new Set());for(const j of ids)if(j!==i&&D[j*4+1])a.add(j);}}
-  const src=D.slice();for(const i of this.active){if(!src[i*4+1])continue;const v=[src[i*4],...[...(adj.get(i)||[])].map(j=>src[j*4])].sort((a,b)=>a-b);D[i*4]=src[i*4]*.55+v[v.length>>1]*.45;}
+  const start=performance.now();this.last=P.slice();const bvh=new PinnaBVH(g),D=this.thicknessData,values=[];let hits=0,missing=0,coneHits=0;
+  for(const i of this.active){
+   const n=at(N,i),p=at(P,i).map(x=>x*1000),o=p.map((x,k)=>x-n[k]*.025);let d=bvh.ray(o,n.map(x=>-x)),confidence=d===null?0:1;
+   if(d===null){
+    // Eight 35-degree cone rays may recover a folded sheet missed by its
+    // interpolated normal. Their projected distance is an estimate, marked .65.
+    const axis=Math.abs(n[1])<.9?[0,1,0]:[1,0,0],t=[axis[1]*n[2]-axis[2]*n[1],axis[2]*n[0]-axis[0]*n[2],axis[0]*n[1]-axis[1]*n[0]],l=Math.hypot(...t);for(let k=0;k<3;k++)t[k]/=l;
+    const v=[n[1]*t[2]-n[2]*t[1],n[2]*t[0]-n[0]*t[2],n[0]*t[1]-n[1]*t[0]],c=Math.cos(Math.PI*35/180),ss=Math.sin(Math.PI*35/180),distances=[];
+    for(let j=0;j<8;j++){const a=j*Math.PI/4,dir=n.map((x,k)=>-x*c+(t[k]*Math.cos(a)+v[k]*Math.sin(a))*ss),q=bvh.ray(o,dir,25);if(q!==null)distances.push(q*c);}
+    if(distances.length>=2){distances.sort((a,b)=>a-b);d=distances[Math.floor(distances.length*.35)];confidence=.65;coneHits++;}
+   }
+   const valid=d!==null;D[i*4]=valid?Math.max(.15,d+.025):12;D[i*4+1]=confidence;D[i*4+2]=this.protectedWeights[i];D[i*4+3]=valid?1:0;
+   if(valid){values.push(D[i*4]);hits++;}else missing++;
+  }
+  // Filter only optical fields, never geometry. Unknown points remain opaque;
+  // their neighbours feather inward rather than displaying jagged confidence.
+  const adj=new Map(),I=g.index.array;for(let k=0;k<I.length;k+=3){const ids=[I[k],I[k+1],I[k+2]];for(const i of ids)if(this.protectedWeights[i]>0){let a=adj.get(i);if(!a)adj.set(i,a=new Set());for(const j of ids)if(j!==i)a.add(j);}}
+  const raw=D.slice();
+  for(let pass=0;pass<5;pass++){const src=D.slice();for(const i of this.active){if(!raw[i*4+3])continue;const ns=[...(adj.get(i)||[])],valid=ns.filter(j=>raw[j*4+3]),vals=[src[i*4],...valid.map(j=>src[j*4])].sort((a,b)=>a-b);D[i*4]=src[i*4]*.55+vals[vals.length>>1]*.45;}}
+  for(let pass=0;pass<12;pass++){const src=D.slice();for(const i of this.active){if(!raw[i*4+3]){D[i*4+1]=0;continue}const ns=[...(adj.get(i)||[])];let sum=0,weight=0;for(const j of ns){const distance=Math.hypot(P[i*3]-P[j*3],P[i*3+1]-P[j*3+1],P[i*3+2]-P[j*3+2])*1000,w=1/Math.max(distance,.12);sum+=src[j*4+1]*w;weight+=w;}D[i*4+1]=Math.min(raw[i*4+1],.30*src[i*4+1]+.70*(sum/Math.max(weight,.001)));}}
   g.attributes.eTissue.needsUpdate=true;
   this.records=updateSamples(this.binding,g);const packed=packSamples(this.records);this.indexTexture?.dispose();this.poreTexture?.dispose();this.indexTexture=texture(packed.ids,512);this.poreTexture=texture(packed.data,512);this.hashSize=packed.size;
   values.sort((a,b)=>a-b);this.builds++;
-  this.report={ready:true,version:'EAR-R05.0',sampling:this.binding.method,seed:this.binding.seed,poreCount:this.records.length,seedAreaMM2:this.binding.areaMM2,minimumSeedSeparationMM:this.binding.minimumSeedSeparationMM,poreRadiusMM:[.032,.054],poreDepthMM:[.003,.005],currentSpaceMetric:true,barycentricAnchors:true,planarPoreProjection:false,normalRayHits:hits,unmeasuredVertices:missing,unmeasuredPolicy:'12mm conservative opaque estimate / zero deep transmission',thicknessMM:{min:values[0],p10:values[Math.floor(values.length*.1)],median:values[Math.floor(values.length*.5)],p90:values[Math.floor(values.length*.9)],max:values.at(-1)},thicknessKind:'raycast model-envelope thickness, not measured skin/cartilage histology',hashBucketMaximum:packed.maxBucket,hashSize:packed.size,hashDroppedRecords:0,gpuDataBytes:packed.bytes,cellMM:CELL_MM,slots:MAX_BUCKET,buildMS:performance.now()-start,builds:this.builds,geometryModified:false};
+  this.report={ready:true,version:'EAR-R05.0',sampling:this.binding.method,seed:this.binding.seed,poreCount:this.records.length,seedAreaMM2:this.binding.areaMM2,minimumSeedSeparationMM:this.binding.minimumSeedSeparationMM,poreRadiusMM:[.032,.054],poreDepthMM:[.003,.005],currentSpaceMetric:true,barycentricAnchors:true,planarPoreProjection:false,normalRayHits:hits-coneHits,coneRayEstimates:coneHits,totalRayHits:hits,confidenceFeatherPasses:12,unmeasuredVertices:missing,unmeasuredPolicy:'12mm conservative opaque estimate / zero deep transmission',thicknessMM:{min:values[0],p10:values[Math.floor(values.length*.1)],median:values[Math.floor(values.length*.5)],p90:values[Math.floor(values.length*.9)],max:values.at(-1)},thicknessKind:'normal ray + marked 35deg cone estimate of model envelope, not skin/cartilage histology',hashBucketMaximum:packed.maxBucket,hashSize:packed.size,hashDroppedRecords:0,gpuDataBytes:packed.bytes,cellMM:CELL_MM,slots:MAX_BUCKET,buildMS:performance.now()-start,builds:this.builds,geometryModified:false};
   return true;
  }
  dispose(){this.indexTexture?.dispose();this.poreTexture?.dispose();this.last=null;this.records=[];}
