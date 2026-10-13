@@ -59,7 +59,8 @@ export function buildPlan(f){
   else{vertical(label+' front',c,from,hole-h);vertical(label+' rear',c,hole+h,to);}
  }
  function leaf(label,x,z,half,{side=false,mirror=false}={}){
-  if(side)rect(label,x+half*.65,z-half+.035,half*.98,.025,Math.PI/6,.035,2.025);
+  if(side&&f.level>0){const inward=-out,L=half*.98;rect(label,x+inward*(.15+Math.sin(Math.PI/3)*L),z-half+.5*L,L,.025,inward<0?5*Math.PI/6:Math.PI/6,.035,2.025);}
+  else if(side)rect(label,x+half*.65,z-half+.035,half*.98,.025,Math.PI/6,.035,2.025);
   else rect(label,x+(mirror?1:-1)*(half-.035),z+half*.65,half*.98,.025,mirror?2*Math.PI/3:Math.PI/3,.035,2.025);
  }
  function table(label,x,z,hx,hz,height){rect(label,x,z,hx,hz,0,height-.035,height+.035);}
@@ -92,7 +93,7 @@ export function buildPlan(f){
   if(i<2)vertical('ownership return '+i,x1,Math.min(front,f.fronts[i+1]),Math.max(front,f.fronts[i+1]));
  }
  // Internal core partition has .075 m half-thickness, not exterior .11 m.
- vertical('core partition front',partition,f.front+.12,entry-.48,.075);
+ vertical('core partition front',partition,Math.max(frontAt(f,partition-.075),frontAt(f,partition+.075))+.12,entry-.48,.075);
  vertical('core partition rear',partition,entry+.48,f.rear-.12,.075);
  horizontal('wet divider left',sep,left,wetX-.43,.065);
  horizontal('wet divider right',sep,wetX+.43,right,.065);
@@ -230,3 +231,31 @@ for(const f of FLOORS.filter(f=>!process.env.PLANAR_FLOOR||f.id===process.env.PL
  assert.ok(report.startFree,JSON.stringify({floor:f.id,start:report.start,error:'core entry point is obstructed'}));
  assert.deepEqual(report.failures.map(({path,...r})=>({...r,pathEnd:path.slice(-5)})),[],JSON.stringify({floor:f.id,failures:report.failures.map(({path,...r})=>({...r,pathEnd:path.slice(-5)}))}));
 });
+
+// These are nominal construction witnesses for the six existing borrowed doors,
+// not a runtime navigation or moving-gate simulation.
+function planRect(label,x,z,hx,hz,angle=0){const c=Math.cos(angle),s=Math.sin(angle),ex=Math.abs(c)*hx+Math.abs(s)*hz,ez=Math.abs(s)*hx+Math.abs(c)*hz;return {label,x,z,hx,hz,c,s,minX:x-ex,maxX:x+ex,minZ:z-ez,maxZ:z+ez};}
+function gatePanels(xa,opened){let x=xa+.165+.023,z=.70;const length=.72/3,parts=[];for(let j=0;j<3;j++){const sign=j===1?-1:1,angle=opened?sign*1.50:0,sn=Math.sin(angle),cs=Math.cos(angle),sx=x-sign*.023*cs,sz=z-sign*.023*sn;parts.push(planRect('gate leaf '+j,sx+sn*length/2,sz-cs*length/2,length/2,.023,Math.atan2(-cs,sn)));parts.push(planRect('gate hinge '+j,x,z,.009,.009));x=sx+sn*length-sign*.023*cs;z=sz-cs*length-sign*.023*sn;}parts.push(planRect('gate hinge 3',x,z,.009,.009));return parts;}
+function landingPlan(f,opened=true){const plan=buildPlan(f),out=outOf(f),edge=f.cx+out*f.width/2,x0=Math.min(edge,edge+out*(out>0?.90:.48)),x1=Math.max(edge,edge+out*(out>0?.90:.48));if(out>0)plan.bounds[2]+=.90;else plan.bounds[0]-=.48;
+ const outside=[['front',plan.bounds[1],-.33],['rear',.83,plan.bounds[3]]];for(const [side,z0,z1] of outside)plan.obs.push(planRect('outside level borrowed landing '+side,(x0+x1)/2,(z0+z1)/2,(x1-x0)/2,(z1-z0)/2));
+ for(const z of [-.31,.81])plan.obs.push(planRect('borrowed landing side guard',(x0+x1)/2,z,(x1-x0)/2,.027));
+ if(out>0){plan.obs.push(...gatePanels(edge,opened));for(const z of [-.02,.70])plan.obs.push(planRect('grounded gate jamb',edge+.165,z,.023,.023));for(const [z0,z1] of [[-.31,-.02],[.70,.81]])plan.obs.push(planRect('fixed gate side return',edge+.165,(z0+z1)/2,.027,(z1-z0)/2));}
+ const point=[edge+out*(out>0?.66:.24),.255];plan.goals.push({name:'borrowed landing through real door and open gate',point,preferred:point});return plan;
+}
+test('six upper borrowed doors use true inward hinges; gate has real grounded posts and three linked leaves',()=>{
+ for(const source of ['else if(side&&rec(s,2u).w>0.)','let inward=select(-1.,1.,rec(s,3u).x==2.)','let hinge=q-vec3<f32>(-half.x,0.,inward*.15)','half.x*.98','let x=a.x+a.z*.5+.165','let length=.72/3.','sign*1.50','hinge=start+direction*length-sign*.023*normal','vec3<f32>(x,a.y,.70)','vec3<f32>(x,a.y,-.02)','vec3<f32>(.023,.525,length*.5)','u.size.z>=21600.&&u.size.z<79200.'])assert.ok(GEOMETRY_WGSL.includes(source),source);
+ assert.doesNotMatch(GEOMETRY_WGSL,/let gateP=p-/);
+});
+for(const id of ['A-F03','A-F07','A-F10','B-F03','B-F07','B-F10'])test(id+': full-radius room and borrowed-platform witnesses include the actual inward leaf and open gate',()=>{const report=searchPlan(landingPlan(FLOORS.find(f=>f.id===id)));assert.ok(report.startFree);assert.deepEqual(report.failures,[],JSON.stringify(report.failures));});
+for(const id of ['A-F03','A-F07','A-F10'])test(id+': closed lease gate blocks the same borrowed-platform witness without changing internal access',()=>{const report=searchPlan(landingPlan(FLOORS.find(f=>f.id===id),false));assert.ok(report.startFree);assert.deepEqual(report.failures.map(x=>x.goal),['borrowed landing through real door and open gate']);});
+test('all borrowed wood leaves and both gate states clear every complete tread, riser and supporting platform',()=>{
+ for(const [ai,bi] of [[3,17],[7,21],[10,24]]){const a=FLOORS[ai],b=FLOORS[bi],xa=a.cx+a.width/2,xb=b.cx-b.width/2,rise=b.base-a.base,count=Math.ceil(rise/.18),tread=(xb-xa-.96)/(count-1),solids=[{label:'A landing',minX:xa-.18,maxX:xa+.48,minY:a.base-.18,maxY:a.base},{label:'B landing',minX:xb-.48,maxX:xb+.18,minY:b.base-.18,maxY:b.base}];for(let i=0;i<count;i++){const x=xa+.48+i*tread,top=a.base+(i+1)*rise/count;solids.push({label:'riser '+i,minX:x-.018,maxX:x+.018,minY:top-rise/count-.14,maxY:top});if(i<count-1)solids.push({label:'tread '+i,minX:x,maxX:x+tread,minY:top-.14,maxY:top});}
+  const leaves=[a,b].map(f=>{const out=outOf(f),edge=f.cx+out*f.width/2,L=.48*.98,center=edge-out*(.15+.8660254*L),half=.8660254*L+.5*.025;return{label:f.id+' wooden leaf',minX:center-half,maxX:center+half,minY:f.base+.035,maxY:f.base+2.025};});
+  for(const opened of [false,true])for(const p of gatePanels(xa,opened))leaves.push({...p,label:p.label+' '+opened,minY:a.base+.04,maxY:a.base+1.09});
+  for(const leaf of leaves)for(const solid of solids){const separation=Math.max(solid.minX-leaf.maxX,leaf.minX-solid.maxX,solid.minY-leaf.maxY,leaf.minY-solid.maxY);assert.ok(separation>2*MATERIAL_MARGIN,`${a.id}: ${leaf.label} intersects ${solid.label}: ${separation}`);}
+ }
+});
+test('folded gate leaves clear wall and bridge rails, stay distinct except adjoining hinges, and leave the fixed-body line',()=>{for(const xa of [-1.2,-.975]){const parts=gatePanels(xa,true),first=parts[0],last=parts[4];for(const p of parts){assert.ok(p.maxX<xa+.462-2*MATERIAL_MARGIN);if(p.label.startsWith('gate leaf'))assert.ok(p.minX>xa+.11+2*MATERIAL_MARGIN);assert.ok(p.maxZ<.81-.027-2*MATERIAL_MARGIN);assert.ok(p.minZ-.255>R+MATERIAL_MARGIN);}const corners=[[-first.hx,-first.hz],[first.hx,-first.hz],[first.hx,first.hz],[-first.hx,first.hz]].map(([u,v])=>[first.x+u*first.c-v*first.s,first.z+u*first.s+v*first.c]);let gap=Infinity;for(let i=0;i<4;i++)gap=Math.min(gap,segmentRectangleDistance(...corners[i],...corners[(i+1)%4],last));assert.ok(gap>2*MATERIAL_MARGIN);const closed=gatePanels(xa,false);assert.ok(Math.min(...closed.map(p=>p.minZ))<=-.02+1e-9);assert.ok(Math.max(...closed.map(p=>p.maxZ))>=.70-1e-9);assert.ok(.165-.027-.11>2*MATERIAL_MARGIN);}});
+function rectangleSATGap(a,b){const axes=[[a.c,a.s],[-a.s,a.c],[b.c,b.s],[-b.s,b.c]];return Math.max(...axes.map(([x,z])=>Math.abs((b.x-a.x)*x+(b.z-a.z)*z)-(a.hx*Math.abs(a.c*x+a.s*z)+a.hz*Math.abs(-a.s*x+a.c*z)+b.hx*Math.abs(b.c*x+b.s*z)+b.hz*Math.abs(-b.s*x+b.c*z))));}
+test('complete adjacent gate frames only meet at the shared surface hinge, never as intersecting center-hinged leaves',()=>{for(const opened of [false,true]){const parts=gatePanels(-1.2,opened).filter(p=>p.label.startsWith('gate leaf'));for(let j=0;j<2;j++)assert.ok(rectangleSATGap(parts[j],parts[j+1])>=-1e-9,'adjacent complete frames penetrate');assert.ok(rectangleSATGap(parts[0],parts[2])>2*MATERIAL_MARGIN);}assert.ok(GEOMETRY_WGSL.includes('let start=hinge-sign*.023*normal'));assert.ok(GEOMETRY_WGSL.includes('hinge=start+direction*length-sign*.023*normal'));});
+test('all six full inward wood leaves clear the real short and long stair-side guard segments',()=>{for(const f of FLOORS.filter(f=>['A-F03','A-F07','A-F10','B-F03','B-F07','B-F10'].includes(f.id))){const out=outOf(f),edge=f.cx+out*f.width/2,inner=edge-out*1.9,guard=edge-out*.8,leaf=buildPlan(f).obs.find(o=>o.label==='gap door leaf');const segments=[[guard,2.4-1.01*out,guard,2.4+2.15*out],[guard,2.4-2.15*out,guard,2.4-1.87*out],[inner-1.06,2.4-1.44*out-.40*out,inner+1.06,2.4-1.44*out-.40*out]];for(const segment of segments)assert.ok(segmentRectangleDistance(...segment,leaf)-.027>2*MATERIAL_MARGIN,f.id+' wood intersects existing stair guard');}});

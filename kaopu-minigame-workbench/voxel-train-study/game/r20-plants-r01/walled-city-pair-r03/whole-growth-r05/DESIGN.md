@@ -24,3 +24,9 @@ These are fictional addresses, dates, dimensions and agreements used to interpre
 ## Verification gate
 
 The R04 whole and detail results have been inspected. Frozen-source native tiles identify substantial rain-shelter shadows on intact walls; original native snapshots match the full image exactly. The first capture script also exposed a second-read canvas capture defect, corrected without altering geometry. This independent candidate has passed the old and new local tests. It still requires a smoke tile followed by a complete normal-perspective image and inspection. No low-resolution diagnostic or test count is visual acceptance. Ground remains the existing gray field.
+
+## Borrowed-link construction review
+
+The new vertical difference made two inherited leaf poses invalid: the A-side timber leaf and the long opened lease-gate frame met the first steps. Upper side doors now use actual inner-wall hinges, mirrored between A and B. The lease gate uses three 0.24 m framed leaves with alternating surface hinges, full 9 mm hinge pins, fixed jamb posts and short side guards on the level A landing. Opening remains controlled by the same authored daily lease schedule. The narrower 0.72 m opening and folded position are checked with the original adult body and material margins, including a witness beyond the whole folded gate. Ground doors, platform size, stair rise, furniture and the 1973 addition are not redesigned.
+
+A core partition is now clipped to the maximum actual parcel front across its 0.15 m thickness, instead of the old whole-floor front. This removes an unintended exterior wall fin on A-F10/F11 while retaining the original core door and internal passage. No new ownership event, resident or historical claim is introduced by these construction corrections.

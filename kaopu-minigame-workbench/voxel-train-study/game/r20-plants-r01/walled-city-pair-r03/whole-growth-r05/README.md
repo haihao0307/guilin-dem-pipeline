@@ -36,3 +36,9 @@ Run the old and new tests, then the explicit complete-frame review:
     node qa/local-review.cjs --candidate whole-growth-r05 --mode full --view overall --viewport 960x1200 --out whole-growth-r05/qa/overall
 
 Only the dedicated QA branch is in scope. This revision does not merge main or publish a public game preview.
+
+## Post-review construction corrections
+
+The first R05 commit remains a diagnostic baseline. Independent review found that the borrowed-link doors and open lease gates intersected the new steps, and one core partition retained an obsolete front line. The corrected source uses genuine inward hinges on the six upper borrowed doors, a 0.72 m three-panel surface-hinged gate that folds onto the existing A landing, and the deepest actual parcel front across the full core-wall thickness. Gate posts and both short side returns stand on that same landing. The original ground doors and the 1973 household front door are unchanged.
+
+Regression checks compare complete leaves and both gate states against every tread/riser/landing, check whole adjacent gate frames, preserve the fixed body size, cross the full folded-gate region, and confirm that closed lease gates block that same route. These nominal construction tests still do not establish GPU or visual acceptance of the corrected revision.
