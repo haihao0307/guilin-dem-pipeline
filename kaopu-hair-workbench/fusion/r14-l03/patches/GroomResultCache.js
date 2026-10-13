@@ -34,9 +34,11 @@ export class GroomResultCache{
   for(const[name,C]of Object.entries(TYPES)){const a=result[name];if(!(a instanceof C))throw Error('Original compiler array mismatch: '+name);const b=a.byteOffset===0&&a.byteLength===a.buffer.byteLength?a.buffer:a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);bytes+=b.byteLength;arrays[name]={bytes:b,type:C.name,sha256:await digest(b)};}
   const text=JSON.stringify(metadata);bytes+=enc.encode(text).byteLength;if(bytes>LIMIT){this.warn('Result exceeds local cache budget; original quality retained');return false;}
   const key=this.key(result.recipe),record={schema:SCHEMA,key,metadata:text,metaSHA:await digest(enc.encode(text)),arrays};if(this.closed)return false;
-  const summaries=await req(db.transaction('meta','readonly').objectStore('meta').getAll());let total=bytes,keep=0,remove=[];
+  // Budget read and mutation share ONE serialized transaction across windows.
+  const t=db.transaction(['results','meta'],'readwrite'),complete=done(t);
+  const summaries=await req(t.objectStore('meta').getAll());let total=bytes,keep=0,remove=[];
   for(const s of summaries.sort((a,b)=>b.at-a.at)){if(s.key===key)continue;if(keep<1&&total+s.bytes<=LIMIT){total+=s.bytes;keep++;}else remove.push(s.key);}
-  const t=db.transaction(['results','meta'],'readwrite'),complete=done(t);for(const k of remove){t.objectStore('results').delete(k);t.objectStore('meta').delete(k);}t.objectStore('results').put(record,key);t.objectStore('meta').put({key,bytes,at:Date.now()},key);await complete;
+  for(const k of remove){t.objectStore('results').delete(k);t.objectStore('meta').delete(k);}t.objectStore('results').put(record,key);t.objectStore('meta').put({key,bytes,at:Date.now()},key);await complete;
   this.stats.writes++;this.stats.storedBytes=total;this.stats.writeMs=performance.now()-start;return true;
  }catch(e){this.warn(e);return false;}};this.pending=this.pending.then(operation,operation);return this.pending;
  }

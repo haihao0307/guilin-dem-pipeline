@@ -1,0 +1,34 @@
+name: Hair L03 concurrent local cache bounds
+on:
+  push:
+    branches: [fix/hair-r14-l03-lifecycle-20261013]
+    paths: ['kaopu-hair-workbench/fusion/r14-l03/patches/GroomResultCache.js', 'kaopu-hair-workbench/fusion/r14-l03/tests/cache-*.mjs', '.github/workflows/hair-r14-l03-cache.yml']
+permissions:
+  contents: read
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      P: kaopu-hair-workbench/fusion/r14-l03
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/storage-tools --no-save playwright@1.55.1
+          ln -s /tmp/storage-tools/node_modules node_modules
+          /tmp/storage-tools/node_modules/.bin/playwright install --with-deps chromium
+          cp "$P/patches/GroomResultCache.js" "$P/src/GroomResultCache.js"
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/cache-http.log 2>&1 &
+          timeout 120s node "$P/tests/cache-check.mjs" "http://127.0.0.1:8765/$P/"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-l03-cache-check
+          path: kaopu-hair-workbench/fusion/r14-l03/evidence/cache-check
+          retention-days: 30
