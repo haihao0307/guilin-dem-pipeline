@@ -1,4 +1,4 @@
-name: Walled city pair R03 real perspective review
+name: Walled city R04 complete frontage review
 on:
   push:
     branches: ['qa/walled-city-pair-r03-20261012']
@@ -6,8 +6,16 @@ permissions:
   contents: read
 jobs:
   pair-perspective-review:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - view: overall
+            viewport: 960x1200
+          - view: facade-detail
+            viewport: 960x1000
     runs-on: ubuntu-24.04
-    timeout-minutes: 48
+    timeout-minutes: 125
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -18,13 +26,15 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
-      - name: Check compact world and original source binding
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/*.test.mjs
-      - name: Render two whole buildings through actual WebGPU
-        run: DEBUG=pw:browser node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/run.cjs
+      - name: Check old anchor and new whole-frontage rules
+        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/*.test.mjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/tests/local-review.test.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/tests/*.test.mjs
+      - name: Compile and smoke the actual candidate field
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode smoke --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --out whole-frontage-r04/qa/ci-${{ matrix.view }}/smoke
+      - name: Render complete requested perspective frame
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/qa/local-review.cjs --candidate whole-frontage-r04 --mode full --view ${{ matrix.view }} --viewport ${{ matrix.viewport }} --render-timeout-ms 6900000 --out whole-frontage-r04/qa/ci-${{ matrix.view }}/full
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: walled-city-pair-r03-${{ github.sha }}
-          path: walled-city-pair-r03-results/
+          name: walled-city-r04-${{ matrix.view }}-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/walled-city-pair-r03/whole-frontage-r04/qa/ci-${{ matrix.view }}/
           retention-days: 7
