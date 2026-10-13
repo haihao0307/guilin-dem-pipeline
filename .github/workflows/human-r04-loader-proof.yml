@@ -16,25 +16,20 @@ jobs:
         with: {node-version: 22}
       - run: npm install --no-save --package-lock=false playwright@1.58.2
       - run: npx playwright install --with-deps chromium
-      - name: Actual public loader controls and same-camera eye photographs
+      - name: Repeat identical prior passing tests on the new fixed HTML hash
         run: |
           mkdir -p proof
-          cat > proof.cjs <<'JS'
-          const fs=require('fs'),assert=require('node:assert/strict'),crypto=require('crypto'),{chromium}=require('playwright');
-          const raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/e5df3bcba13ba566d6da27d5cb051e91956055b3/kaopu-unified-human-workbench/human-integrated-r04/preview.html',url='https://htmlpreview.github.io/?'+raw;
-          (async()=>{const r={url,checks:[],screens:[],errors:[],physicalPhone:false},write=()=>fs.writeFileSync('proof/report.json',JSON.stringify(r,null,2)),pass=(name,data)=>{r.checks.push({name,data,pass:true});write();console.log('PASS',name)};
-          const res=await fetch(raw);assert(res.ok);const bytes=Buffer.from(await res.arrayBuffer());assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),'c8f1150714ac03d2aec7deb6df7dd1e31a4bb887b1ca4fa4a25b38e373377f8d');pass('fixed-public-HTML-hash',bytes.length);
-          const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),p=await b.newPage({viewport:{width:1400,height:1050}});p.setDefaultTimeout(120000);
-          const ready=async()=>{await p.waitForFunction(()=>window.__LIP_P3__?.ready,null,{timeout:240000});await p.evaluate(()=>lifelikeIdle.pause(true));await p.waitForFunction(()=>lifelikeIdle.ready(),null,{timeout:180000});await p.evaluate(()=>lifelikeIdle.seek(0));};
-          try{let requested=[];p.on('request',q=>{if(q.url().includes('/chunks/'))requested.push(q.url());});await p.goto(url,{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.__LIP_P3__?.transport?.stats.verifiedBytes>2097152&&!__LIP_P3__.ready,null,{timeout:120000});await p.locator('#lipP3Status [data-pause]').click();await p.waitForFunction(()=>__LIP_P3__.paused);await p.evaluate(()=>__LIP_P3__.transport.settled());const paused=await p.evaluate(()=>__LIP_P3__.snapshot());assert(paused.transport.verifiedBytes>0);const cached=await p.evaluate(async()=>{const c=await caches.open('kaopu-lips-verified-chunks-p3');return(await c.keys()).map(x=>x.url.split('/').pop());});requested=[];await Promise.all([p.waitForNavigation({waitUntil:'domcontentloaded',timeout:120000}),p.locator('#lipP3Status [data-resume]').click()]);await ready();const resumed=await p.evaluate(()=>__LIP_P3__.snapshot());assert.equal(resumed.transport.verifiedBytes,84045179);assert.equal(resumed.transport.chunksVerified,93);assert(resumed.transport.cacheHits>0);assert(!requested.some(u=>cached.includes(u.split('/').pop().replace('.bin',''))));pass('actual-pause-resume-reuses-completed-chunks',{pausedBytes:paused.transport.verifiedBytes,cachedChunks:cached.length,resumeCacheHits:resumed.transport.cacheHits,resumeNetworkBytes:resumed.transport.networkBytes});
-          await p.reload({waitUntil:'domcontentloaded',timeout:120000});await ready();const reload=await p.evaluate(()=>__LIP_P3__.snapshot());assert.equal(reload.transport.networkBytes,0);assert.equal(reload.transport.cacheHits,93);pass('public-reload-zero-model-body-download',{hits:93,modelBytes:0,scope:'not all-page network bytes or zero GPU initialization'});
-          const cdp=await p.context().newCDPSession(p),snap=async name=>{await p.evaluate(()=>{lifelikeIdle.runtime().originalRender();__IDENTITY_QA__.viewer().renderer.getContext().finish();});const s=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('proof/'+name+'.png',Buffer.from(s.data,'base64'));r.screens.push(name);write();};
-          const frame=async()=>p.evaluate(()=>{const v=__IDENTITY_QA__.viewer();geometricSkin.set({gray:true});v.view('face');v.camera.zoom=2;v.camera.updateProjectionMatrix();v.camera.position.y+=.045;v.orbit.target.y+=.045;v.orbit.update();lifelikeIdle.seek(0);});await frame();await snap('R04-eyes-open');await p.evaluate(()=>lifelikeIdle.runtime().apply(0,{blinkL:1,blinkR:1,events:[]}));await snap('R04-eyes-closed');
-          await p.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/3a4443bab9ee5a830024e7cbf3de51dc13160a8b/kaopu-unified-human-workbench/human-integrated-r03/preview.html',{waitUntil:'domcontentloaded',timeout:120000});await p.waitForFunction(()=>window.unifiedHuman,null,{timeout:240000});await p.evaluate(()=>lifelikeIdle.pause(true));await p.waitForFunction(()=>lifelikeIdle.ready(),null,{timeout:180000});await p.evaluate(async()=>{const v=__IDENTITY_QA__.viewer();await v.skin.faceReady;await v.skin.naturalEyesReady;});await frame();await snap('R03-eyes-open');await p.evaluate(()=>lifelikeIdle.runtime().apply(0,{blinkL:1,blinkR:1,events:[]}));await snap('R03-eyes-closed');pass('same-camera-original-and-repaired-eye-captures',true);r.completed=true;
-          }catch(e){r.failure=String(e);console.error(e);process.exitCode=1;}finally{write();await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});
-          JS
+          git fetch --depth=1 origin 09c95e983a60949b66fab3fca83ec1ba7ce42d28
+          python - <<'PY'
+          import pathlib,subprocess
+          old=subprocess.check_output(['git','show','09c95e983a60949b66fab3fca83ec1ba7ce42d28:.github/workflows/human-r04-loader-proof.yml'],text=True)
+          code=old.split("cat > proof.cjs <<'JS'\n",1)[1].split('\n          JS',1)[0];code='\n'.join(x[10:] if x.startswith('          ') else x for x in code.splitlines())
+          a='e5df3bcba13ba566d6da27d5cb051e91956055b3';b='26c2b26c8c888553d56d1be3eb9f5a890096350a';assert code.count(a)==1;code=code.replace(a,b)
+          a='c8f1150714ac03d2aec7deb6df7dd1e31a4bb887b1ca4fa4a25b38e373377f8d';b='2f126bc1557a18a7c376444aaebf140a96dc4fbcf83f56239f687da9e683331e';assert code.count(a)==1;code=code.replace(a,b)
+          pathlib.Path('proof.cjs').write_text(code);pathlib.Path('proof/test-source.cjs').write_text(code)
+          PY
           node proof.cjs
           node kaopu-unified-human-workbench/human-integrated-r04/specialists/lip-startup-r03/unit.mjs | tee proof/transport-unit.txt
       - uses: actions/upload-artifact@v4
         if: always()
-        with: {name: human-r04-independent-public-proof, path: proof/, retention-days: 14}
+        with: {name: human-r04-independent-public-proof-final, path: proof/, retention-days: 14}
