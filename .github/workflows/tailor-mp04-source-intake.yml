@@ -22,22 +22,12 @@ jobs:
           ref: 6c084b27d351d420b77fe33db2660bddd0bcc380
           path: leather
           sparse-checkout: leather-workshop
-      - uses: actions/checkout@v4
-        with:
-          repository: haihao0307/Human-Fabric-Workbench
-          ref: f12c64d6f35e379414154d115f787b8d2748ecc6
-          path: fabric
-          sparse-checkout: |
-            src
-            previews
-            docs
-      - name: Pin and gather material runtime files and provenance
+      - name: Gather pinned files and material branch inventory
         run: |
           python - <<'PY'
           import pathlib,shutil,json,subprocess
-          out=pathlib.Path('/tmp/mp04-intake');out.mkdir()
-          summary={}
-          for name in ['denim','leather','fabric']:
+          out=pathlib.Path('/tmp/mp04-intake');out.mkdir();summary={}
+          for name in ['denim','leather']:
               p=pathlib.Path(name)
               summary[name]={'commit':subprocess.check_output(['git','-C',name,'rev-parse','HEAD'],text=True).strip(),'files':[],'branches':subprocess.check_output(['git','-C',name,'ls-remote','--heads','origin'],text=True).splitlines()}
               for f in p.rglob('*'):
@@ -48,7 +38,7 @@ jobs:
                   dst=out/name/r;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(f,dst)
                   summary[name]['files'].append({'path':str(r),'bytes':f.stat().st_size})
           (out/'INTAKE.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
-          print(json.dumps({k:{'commit':v['commit'],'recentDirs':sorted({x['path'].split('/')[1] for x in v['files'] if '/' in x['path']}),'branches':[b for b in v['branches'] if any(s in b for s in ['denim','leather','knit','fabric'])]}for k,v in summary.items()},indent=2))
+          print('PINNED',[(k,v['commit'],len(v['files'])) for k,v in summary.items()])
           PY
       - uses: actions/upload-artifact@v4
         with:
