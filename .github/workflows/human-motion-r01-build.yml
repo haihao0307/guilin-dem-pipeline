@@ -1,0 +1,92 @@
+name: Human Motion R01 Build and Public Verification
+on:
+  push:
+    branches: [feature/human-motion-workbench-r01-20261013]
+    paths:
+      - kaopu-unified-human-workbench/motion-review-r01/**
+      - .github/workflows/human-motion-r01-build.yml
+permissions:
+  contents: write
+concurrency:
+  group: human-motion-r01-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      WORK: kaopu-unified-human-workbench/motion-review-r01
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/human-motion-workbench-r01-20261013
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            .github/workflows
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save esbuild@0.25.10 playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Reconcile verified R04 ancestry in new source only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node "$WORK/prepare.cjs"
+          git add "$WORK/Core.mjs" "$WORK/Workbench.mjs"
+          if ! git diff --cached --quiet; then git commit -m 'fix(motion): include complete original R04 refinement lineage and startup barrier'; fi
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Build exact retained person and new motion module
+        run: node "$WORK/build.cjs"
+      - name: Candidate browser gate
+        env:
+          QA_OUT: motion-evidence/candidate
+        run: node "$WORK/verify.cjs"
+      - name: Publish additive immutable build
+        run: |
+          git add "$WORK/Core.mjs" "$WORK/Workbench.mjs" "$WORK/preview.html" "$WORK/BUILD.json" "$WORK/CATALOGUE.json" "$WORK/README.md"
+          git commit -m 'build(motion): candidate-verified standalone R04 motion workbench'
+          git push origin HEAD:feature/human-motion-workbench-r01-20261013
+          BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$BUILD_SHA" >> "$GITHUB_ENV"
+          echo "QA_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$BUILD_SHA/$WORK/preview.html" >> "$GITHUB_ENV"
+      - name: Verify exact public bytes
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,hashlib,time
+          root=os.environ['WORK']; sha=os.environ['BUILD_SHA'];url=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{sha}/{root}/preview.html'; manifest=json.load(open(root+'/BUILD.json'))
+          data=None
+          for i in range(8):
+            try:data=urllib.request.urlopen(url,timeout=90).read();break
+            except Exception:
+              if i==7:raise
+              time.sleep(4)
+          assert hashlib.sha256(data).hexdigest()==manifest['outputHTMLSHA256'],'Public HTML differs from built candidate'
+          PY
+      - name: Actual fixed-public all-action browser verification
+        env:
+          QA_FULL: '1'
+          QA_OUT: motion-evidence/public
+        run: node "$WORK/verify.cjs"
+      - name: Permanent acceptance receipt
+        run: |
+          python - <<'PY'
+          import os,json,pathlib
+          root=pathlib.Path(os.environ['WORK']);qa=json.load(open('motion-evidence/public/qa.json'));assert qa['pass']
+          (root/'PUBLIC_QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2))
+          data={'version':'MOTION-REVIEW-R01','publicURL':os.environ['QA_URL'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'actionsRun':os.environ['GITHUB_RUN_ID'],'publicVerified':True,'userVisualAcceptance':False,'productionReady':False,'physicalPhoneTested':False,'consumerGPUPerformanceCertified':False,'counts':qa['initial']['report']['counts'],'checks':len(qa['checks']),'firstReadyMS':qa['startupMS'],'softwarePlayback':qa.get('softwarePlayback')}
+          (root/'DELIVERY.json').write_text(json.dumps(data,ensure_ascii=False,indent=2))
+          readme=root/'README.md';text=readme.read_text();readme.write_text('# 固定公网验收入口\n\n'+os.environ['QA_URL']+'\n\n实际公开页面通过 '+str(len(qa['checks']))+' 项浏览器检查。源码、构建、测试和真实边界见 BUILD.json、DELIVERY.json、PUBLIC_QA.json。该技术门槛不是所有动作自然或消费显卡60FPS的声明。\n\n'+text)
+          PY
+          git add "$WORK/PUBLIC_QA.json" "$WORK/DELIVERY.json" "$WORK/README.md"
+          git commit -m 'test(motion): record exact-public all-action acceptance evidence and real performance limits'
+          git push origin HEAD:feature/human-motion-workbench-r01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-motion-r01-${{ github.run_number }}
+          path: |
+            motion-evidence
+            kaopu-unified-human-workbench/motion-review-r01
+          retention-days: 14
