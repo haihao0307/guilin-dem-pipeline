@@ -16,7 +16,7 @@ export function attachEarMaterial(skin,api){
   if(uETHash==0)return 0.;ivec3 cell=ivec3(floor(p/.50));
   uint h=(uint(cell.x)*73856093u)^(uint(cell.y)*19349663u)^(uint(cell.z)*83492791u);int bucket=int(h&uint(uETHash-1));float height=0.;
   vec4 meta=texelFetch(uETIndex,ivec2(bucket%512,bucket/512),0);
-  for(int j=0;j<128;j++){if(j>=int(meta.y))break;int slot=int(meta.x)+j,address=slot/4;vec4 packed=texelFetch(uETIndex,ivec2(address%512,address/512),0);int id=int(packed[slot%4]);
+  for(int j=0;j<128;j++){if(j>=int(meta.y))break;int slot=int(meta.x)+j,address=slot/4;vec4 etIndices4=texelFetch(uETIndex,ivec2(address%512,address/512),0);int id=int(etIndices4[slot%4]);
    vec4 a=etRecord(id*2),b=etRecord(id*2+1);vec3 d=p-a.xyz;
    float support2=dot(d,d);if(support2>.1296)continue;
    float dn=dot(d,b.xyz),tangent2=max(0.,support2-dn*dn),r=a.w*clamp(size/.28,.55,1.97),r2=r*r;
@@ -30,9 +30,9 @@ export function attachEarMaterial(skin,api){
  vec3 etTransport(float nl,float strength,float lobe){
   float pathMM=clamp(vETissue.x,.15,35.)/max(abs(nl),.40);
   // Artist-calibrated effective attenuation, not measured spectral coefficients.
-  vec3 sigma=mix(vec3(.27,.74,1.12),vec3(.22,.67,1.04),lobe);
+  vec3 sigma=mix(vec3(.19,.43,.67),vec3(.17,.39,.61),lobe);
   vec3 trans=exp(-sigma*pathMM);
-  return trans*max(-nl,0.)*clamp(strength*2.8,0.,1.25)*vETissue.y;
+  return trans*max(-nl,0.)*clamp(strength*2.4,0.,1.25)*vETissue.y;
  }
  `;
  const patch=(s,a,b)=>{if(!s.includes(a))throw Error('R05 shader anchor missing: '+a.slice(0,90));return s.replace(a,()=>b)};
@@ -57,7 +57,7 @@ export function attachEarMaterial(skin,api){
    if(uETActive<.5){${old}}else{
     vec3 etMM=vETPosition*1000.;float etFoot=max(length(dFdx(etMM)),length(dFdy(etMM)));
     float etVisibility=1.-smoothstep(.08,.27,etFoot);
-    float etPore=0.;if(eaM>.0001)etPore=etPoreHeight(etMM,eaD.x,etFoot);
+    float etPore=0.;if(eaM>.0001&&uFPass<1.5&&etVisibility>.001)etPore=etPoreHeight(etMM,eaD.x,etFoot);
     float etDensity=.32+eaBowl*.32+etLobe*.10;
     // No pigment dots: pores alter the microscopic surface, not the albedo.
     float etHeight=etPore*eaS.y*etDensity*etVisibility;
@@ -84,9 +84,9 @@ export function attachEarMaterial(skin,api){
   shader.fragmentShader=shader.fragmentShader.replaceAll('(1.-eaM*.86)','(1.-eaM*mix(.86,.69,uETActive))');
   shader.fragmentShader=patch(shader.fragmentShader,'material.clearcoat=mix(material.clearcoat,.012+eaOil*.15,eaM);','material.clearcoat=mix(material.clearcoat,mix(.012+eaOil*.15,.008+eaOil*.07,uETActive),eaM);');
   shader.fragmentShader=patch(shader.fragmentShader,'#include <opaque_fragment>',`
-   if(uETDebug>.5&&uETDebug<1.5){float t=clamp(vETissue.x/12.,0.,1.);outgoingLight=mix(vec3(.03,.08,.13),mix(vec3(.95,.12,.05),vec3(.10,.28,.90),t),eaM);if(vETissue.y<.5&&eaM>.1)outgoingLight=vec3(.12);}
+   if(uETDebug>.5&&uETDebug<1.5){float t=clamp(vETissue.x/12.,0.,1.);outgoingLight=mix(vec3(.03,.08,.13),mix(vec3(.95,.12,.05),vec3(.10,.28,.90),t),eaM);if(vETissue.w<.5&&eaM>.1)outgoingLight=vec3(.12);}
    if(uETDebug>1.5&&uETDebug<2.5){float f=max(length(dFdx(vETPosition*1000.)),length(dFdy(vETPosition*1000.)));float h=etPoreHeight(vETPosition*1000.,eaD.x,f);outgoingLight=mix(vec3(.1),vec3(clamp(.6+h*50000.,0.,1.)),eaM);}
-   if(uETDebug>2.5){outgoingLight=mix(vec3(.03),exp(-clamp(vETissue.x,.15,35.)*vec3(.27,.74,1.12))*vETissue.y,eaM);}
+   if(uETDebug>2.5){outgoingLight=mix(vec3(.03),exp(-clamp(vETissue.x,.15,35.)*vec3(.19,.43,.67))*vETissue.y,eaM);}
    #include <opaque_fragment>
   `);
   skin.earExtension.shaderCompilesR05=(skin.earExtension.shaderCompilesR05||0)+1;
