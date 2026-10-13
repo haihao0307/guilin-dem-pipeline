@@ -47,15 +47,15 @@ export function clockTowerMembers({width=6.2}={}){
  oct('heritage-octagonal-string',32.67,2.65,.22);
  for(let side=0;side<8;side++){
   const a=side*Math.PI/4+Math.PI/8,x=Math.sin(a)*2.13,z=Math.cos(a)*2.13;
-  add('heritage-lantern-pier-'+side,{type:'oriented-box',center:[x,35.0,z],size:[.58,4.42,.53],yaw:a},'tower-brick','octagonal-brick-pier');
-  add('heritage-lantern-edge-'+side,{type:'cylinder',center:[x*1.075,35.02,z*1.075],radius:.125,radiusTop:.125,height:4.30},'masonry-trim','slender-mineral-order');
+  add('heritage-lantern-pier-'+side,{type:'oriented-box',center:[x,35.0,z],size:[.58,4.50,.53],yaw:a},'tower-brick','octagonal-brick-pier');
+  add('heritage-lantern-edge-'+side,{type:'cylinder',center:[x*1.075,35.0,z*1.075],radius:.125,radiusTop:.125,height:4.46},'masonry-trim','slender-mineral-order');
  }
  for(const [y,r,h]of[[37.25,2.59,.25],[37.55,2.80,.25],[37.83,2.88,.20]])oct('heritage-lantern-cornice-'+y,y,r,h);
- oct('heritage-upper-drum',38.40,2.35,.92,'tower-brick',1.89);
+ oct('heritage-upper-drum',38.39,2.35,.98,'tower-brick',1.89);
  oct('heritage-upper-drum-coping',38.96,2.51,.18);
  // Structural concrete shell, 160mm gauge; never the old 1.2mm copper skin.
  add('heritage-concrete-dome',{type:'dome',center:[0,39.02,0],radius:2.46,rise:2.15,thickness:.16},'tower-concrete','maintained-mineral-concrete-dome');
- add('heritage-dome-crown',{type:'cylinder',center:[0,41.23,0],radius:.17,radiusTop:.12,height:.30},'tower-concrete','concrete-crown');
+ add('heritage-dome-crown',{type:'cylinder',center:[0,41.23,0],radius:.17,radiusTop:.12,height:.40},'tower-concrete','concrete-crown');
  // R04 top envelope is preserved pending a surveyed vertical datum. Do not
  // label this provisional 2.65m visible support as the official seven-metre rod.
  for(const x of [-.11,.11])for(const z of [-.11,.11])beam(`heritage-mast-${x}-${z}`,[x,41.4,z],[x*.4,43.65,z*.4],.025,.025,'structural-iron');
@@ -87,12 +87,12 @@ export function clockTowerWGSL(options={}){
   }out+=`// ${part.id}\nd=${expr};if(d<h.d){h=ColumnMemberHit(d,${f(i)});}\n`;}
   out+='return h;}\n';
  }
- out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);var q=vec3<f32>(0.);var d=0.;\n';
+ out+='fn completeTowerTimber(p:vec3<f32>)->HitField{var h=HitField(1e5,4u,p,172.,1e5,vec3<f32>(1.),0.);var q=vec3<f32>(0.);var d=0.;let world=p+vec3<f32>(24.,0.,4.);let st=resolveStationState(world);\n';
  for(const [i,part]of parts.entries())if(part.surface.role==='window-timber'){
   const s=part.shape,vertical=s.size[1]>s.size[0]&&s.size[1]>s.size[2],face=Number(part.id.split('-')[3]),axis=s.size.indexOf(Math.max(...s.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz',ex=perm.split('').map(k=>s.size['xyz'.indexOf(k)]/2);
-  out+=`q=(p-${v(s.center)}).${perm};d=box(q,${v(ex)});if(d<h.d){h=HitField(d,4u,q,172.,d,${v(ex)},${f(i)});}\n`;
+  out+=`q=(p-${v(s.center)}).${perm};d=box(q,${v(ex)});if(d-.03001<h.d){var child=HitField(d,4u,q,172.,d,${v(ex)},${f(i)});child.d=stationCandidatePhysicalDistance(child,world,st);if(child.d<h.d){h=child;}}\n`;
  }
- out+='return h;}\n';
+ out+='h.d=h.baseD;return h;}\n';
  out+='fn heritageTimberDirection(member:f32,d:vec3<f32>)->vec3<f32>{\n';
  for(const [i,part]of parts.entries())if(part.surface.role==='window-timber'){const axis=part.shape.size.indexOf(Math.max(...part.shape.size)),perm=axis===1?'yxz':axis===2?'zxy':'xyz';out+=`if(member==${f(i)}){return d.${perm};}\n`;}
  out+='return d;}\n';

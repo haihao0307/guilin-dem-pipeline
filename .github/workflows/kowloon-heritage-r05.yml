@@ -1,41 +1,77 @@
-name: Kowloon heritage R05 architectural review
+name: Kowloon heritage R05 staged architectural review
 on:
   push:
     branches: ['qa/kowloon-heritage-r05-20261013']
-permissions:
-  contents: read
 concurrency:
   group: kowloon-heritage-r05-${{ github.ref }}
   cancel-in-progress: true
+permissions:
+  contents: read
 jobs:
-  native-component-review:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
+  staged-architectural-review:
     strategy:
       fail-fast: false
       matrix:
         view: [towerWhole, towerWindow, heritageHall]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
-      - name: Verify inherited and heritage source contracts
-        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
-        run: node --test qa/source.test.mjs qa/floor-bounds.test.mjs qa/rail-generated-syntax.test.mjs qa/heritage.test.mjs
-      - name: Install browser test runtime
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Prepare isolated source-bound shared host
+        run: python kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/prepare-host-review.py
+      - name: Emit original stage boundaries with R05 field
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa
         run: |
-          npm install --no-save playwright@1.58.2
-          npx playwright install --with-deps chromium
-      - name: Render exact component using original function materials
-        env:
-          GITHUB_SHA: ${{ github.sha }}
+          node emit-shader-inputs.mjs >/dev/null
+          node ../bureau-train88-r01/emit-shader-inputs.mjs >/dev/null
+          node ../bureau-train88-r01/qa/emit-probes.mjs >/dev/null
+          node emit-geometry-groups.mjs >/dev/null
+          node emit-group-runtime.mjs >/dev/null
+          node experiments/spatial-query-r01/emit.mjs
+          node experiments/spatial-query-r01/emit-flat.mjs
+          node experiments/compact-trace-r01/emit-contracts.mjs
+          node experiments/compact-trace-r01/emit.mjs
+          node experiments/bureau-query-r01/emit.mjs
+      - name: Compile pinned Naga and all exact compact runtime entries
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-heritage-host-qa/compiler
         run: |
-          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-heritage.cjs kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage ${{ matrix.view }} 384 heritage-${{ matrix.view }}
-      - name: Preserve actual GPU receipts and images
-        if: always()
-        uses: actions/upload-artifact@v4
+          python - <<'PYLOCK'
+          import tomllib
+          p=next(p for p in tomllib.load(open('Cargo.lock','rb'))['package'] if p['name']=='naga')
+          assert p['version']=='27.0.3' and p['checksum']=='066cf25f0e8b11ee0df221219010f213ad429855f57c494f995590c861a9a7d8'
+          PYLOCK
+          cargo build --release --locked
+          for i in $(seq 0 11); do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/runtime-$i.wgsl ../experiments/compact-trace-r01/generated/runtime-$i.frag stationCompactQuery
+          done
+          for variant in advance-full advance-compact; do
+            target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/$variant.wgsl ../experiments/compact-trace-r01/generated/$variant.frag advanceGroupedRays
+          done
+          target/release/kaopu-station-shader-bridge ../experiments/compact-trace-r01/generated/merge-contract.wgsl ../experiments/compact-trace-r01/generated/merge-contract.frag mergeContract
+          for i in $(seq 0 11); do
+            target/release/kaopu-station-shader-bridge ../generated/group-runtime-$i.wgsl ../generated/group-runtime-$i.frag stationGroupQuery
+          done
+          target/release/kaopu-station-shader-bridge ../generated/group-init.wgsl ../generated/group-init.frag initializeGroupedRays
+          target/release/kaopu-station-shader-bridge ../generated/group-advance.wgsl ../generated/group-advance.frag advanceGroupedRays
+          target/release/kaopu-station-shader-bridge ../generated/group-normal-pack.wgsl ../generated/group-normal-pack.frag packGroupedGeometry
+          target/release/kaopu-station-shader-bridge ../generated/matter.wgsl ../generated/matter.frag recordMatter
+          for pair in 'step stepRays' 'glass transmitGlass' 'normal recordGeometry' 'matter recordMatter'; do
+            read -r stage entry <<< "$pair"
+            target/release/kaopu-station-shader-bridge ../../bureau-train88-r01/generated/$stage.wgsl ../../bureau-train88-r01/generated/$stage.frag "$entry"
+          done
+      - name: Install pinned official browser QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
+      - name: Review complete original function fields in normal perspective
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs ${{ matrix.view }}
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-${{ matrix.view }}
-          path: heritage-${{ matrix.view }}/
-          if-no-files-found: warn
+          name: heritage-staged-${{ matrix.view }}
+          path: heritage-staged-${{ matrix.view }}/
+          retention-days: 7

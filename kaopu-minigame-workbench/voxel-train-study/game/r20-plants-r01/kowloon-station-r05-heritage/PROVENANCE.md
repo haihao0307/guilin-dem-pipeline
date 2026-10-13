@@ -1,3 +1,5 @@
+> Retained R04 historical audit. R05 changes and current verification are documented in HERITAGE-R05.md; this inherited report is not R05 acceptance.
+
 # Kowloon terminal R04 function candidate
 
 Independent authored station following the relationships visible in eight privately supplied station photographs: the long low hall, attached clock tower, sea-facing forecourt and landward train sheds. Image dates, exact dimensions and photographic rights are not inferred. No source photograph is distributed. The spatial design is an interpretation, not a surveyed historical replica.

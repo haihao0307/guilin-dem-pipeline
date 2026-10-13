@@ -1,3 +1,5 @@
+> Retained R04 historical audit. R05 changes and current verification are documented in HERITAGE-R05.md; this inherited report is not R05 acceptance.
+
 # R04 construction and matter audit
 
 This is a candidate implementation audit, not a visual quality certificate.
