@@ -26,6 +26,7 @@ jobs:
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           mkdir -p r06-evidence
           node kaopu-unified-human-workbench/human-integrated-r06/prepare.cjs
+          node kaopu-unified-human-workbench/human-integrated-r06/refine-eye-c2.cjs
           node --check kaopu-unified-human-workbench/human-integrated-r06/HeadMorphology.mjs
           node --check kaopu-unified-human-workbench/human-integrated-r06/HeadMorphologyUI.mjs
           node --check kaopu-unified-human-workbench/human-integrated-r06/FirstPaint.cjs
@@ -39,12 +40,18 @@ jobs:
       - name: Actual rendered candidate smoke gate
         env: {QA_OUT: r06-evidence/smoke, QA_MODE: smoke}
         run: node kaopu-unified-human-workbench/human-integrated-r06/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r06-visual-smoke-${{ github.run_number }}
+          path: r06-evidence/smoke/
+          retention-days: 14
       - name: Publish new version without touching R05 or main
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/human-integrated-r06
-          if ! git diff --cached --quiet; then git commit -m 'build(human-r06): native head silhouette and eye morphology candidate'; fi
+          if ! git diff --cached --quiet; then git commit -m 'build(human-r06): continuous eye margins and native head silhouette candidate'; fi
           git push origin HEAD:feature/human-r06-head-morphology-20261013
           echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Exact public page multi-view and endpoint regression
@@ -62,11 +69,11 @@ jobs:
           assert hashlib.sha256(urllib.request.urlopen(raw).read()).hexdigest()==b['previewSHA256']
           changed=subprocess.check_output(['git','diff','--name-only',os.environ['SOURCE_SHA'],'HEAD'],text=True).splitlines();assert all(x.startswith(str(p)+'/') for x in changed),changed
           (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
-          d={'version':'HUMAN-INTEGRATED-R06','status':'public-rendered-candidate','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'parameterCount':24,'portraitCount':6,'checks':len(q['tests']),'coldReadyMS':q['coldReadyMS'],'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'runId':os.environ['GITHUB_RUN_ID']};(p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
+          d={'version':'HUMAN-INTEGRATED-R06','eyeMorphology':q['initial']['morph']['version'],'status':'public-rendered-candidate','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'parameterCount':24,'portraitCount':6,'checks':len(q['tests']),'coldReadyMS':q['coldReadyMS'],'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'runId':os.environ['GITHUB_RUN_ID']};(p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
           with (p/'README.md').open('a') as f:f.write('\n固定公网候选：'+q['url']+'\n\n完整运行与测试证据：'+os.environ['GITHUB_RUN_ID']+'；检查数量 '+str(len(q['tests']))+'。不是用户视觉已验收。\n')
           PY
           git add kaopu-unified-human-workbench/human-integrated-r06
-          git commit -m 'test(human-r06): immutable public portraits and control endpoint evidence'
+          git commit -m 'test(human-r06): immutable public continuous-eye and head morphology evidence'
           git push origin HEAD:feature/human-r06-head-morphology-20261013
       - uses: actions/upload-artifact@v4
         if: always()
@@ -79,7 +86,4 @@ jobs:
             kaopu-unified-human-workbench/human-integrated-r06/*.json
             kaopu-unified-human-workbench/human-integrated-r06/*.md
             kaopu-unified-human-workbench/human-integrated-r06/preview.html
-            kaopu-unified-human-workbench/full/src/HeadTransfer.mjs
-            kaopu-unified-human-workbench/full/src/CommonPerson.mjs
-            kaopu-unified-human-workbench/idle-r01/IdleRuntime.mjs
           retention-days: 14
