@@ -23,42 +23,11 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/runner/node_modules" >> "$GITHUB_ENV"
           "$RUNNER_TEMP/runner/node_modules/.bin/playwright" install --with-deps chromium
-      - run: node "$CASE/qa/route-test.mjs" && node --test "$CASE/train-drive/test-train-drive.mjs"
+      - run: node "$CASE/qa/route-test.mjs" && node "$CASE/qa/train-structure.mjs" && node --test "$CASE/train-drive/test-train-drive.mjs"
       - run: node "$CASE/qa/browser.cjs"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: train88-scene-${{ github.sha }}
           path: kaopu-geography-workbench/hong-kong-train88-r01/qa/results
-          retention-days: 7
-  candidates:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        candidate: [lost-bureau, walled-pair]
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-          sparse-checkout: kaopu-geography-workbench/hong-kong-train88-r01
-      - run: python3 -m zipfile -e "$CASE/source-bundle.zip" "$CASE"
-      - run: |
-          npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
-          echo "NODE_PATH=$RUNNER_TEMP/runner/node_modules" >> "$GITHUB_ENV"
-          "$RUNNER_TEMP/runner/node_modules/.bin/playwright" install --with-deps chromium
-          echo "CHROMIUM_PATH=$(node -e 'console.log(require(process.env.RUNNER_TEMP+"/runner/node_modules/playwright").chromium.executablePath())')" >> "$GITHUB_ENV"
-      - env:
-          SAMPLE_MODEL: ${{ matrix.candidate }}
-        run: |
-          node "$CASE/candidates/qa/run-sampling.cjs"
-          node "$CASE/candidates/qa/pack-samples.mjs"
-      - if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: candidate-${{ matrix.candidate }}-${{ github.sha }}
-          path: |
-            kaopu-geography-workbench/hong-kong-train88-r01/candidates/data
-            kaopu-geography-workbench/hong-kong-train88-r01/candidates/qa/results
           retention-days: 7
