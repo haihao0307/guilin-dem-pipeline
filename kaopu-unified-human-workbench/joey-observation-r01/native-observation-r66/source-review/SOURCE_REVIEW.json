@@ -1,0 +1,45 @@
+{
+  "schema": "native-observation-source-review/1",
+  "source": "Meta PyTorch3D official",
+  "commit": "88e182f989c80836f4bd744e0d9cb1852762ce01",
+  "license": "BSD-3-Clause",
+  "externalSoftwareInstalled": false,
+  "externalSoftwareExecuted": false,
+  "externalModelUsed": false,
+  "files": [
+    {
+      "path": "LICENSE",
+      "gitBlob": "c55382ff0992d90ae5ecb2cd9ac624ccd20bda4d",
+      "sha256": "6da05663049417a91409fa349bfad5778ed56c9ef68226dde28dffd541481579",
+      "url": "https://github.com/facebookresearch/pytorch3d/blob/88e182f989c80836f4bd744e0d9cb1852762ce01/LICENSE"
+    },
+    {
+      "path": "pytorch3d/renderer/mesh/rasterize_meshes.py",
+      "gitBlob": "c2f7b34f2ebbd69f10cd6c974affb0da0a906c28",
+      "sha256": "911c396b54dc68966dced9ea4dc3e9c653aa42ba46026a1029a1332308933785",
+      "url": "https://github.com/facebookresearch/pytorch3d/blob/88e182f989c80836f4bd744e0d9cb1852762ce01/pytorch3d/renderer/mesh/rasterize_meshes.py"
+    },
+    {
+      "path": "pytorch3d/loss/chamfer.py",
+      "gitBlob": "7d7876690301ef55f5d84632592f9c156e455015",
+      "sha256": "de49c3d5f1176a747efc7084b8afe72e8639ce3c4490c8bb128864dfb493c917",
+      "url": "https://github.com/facebookresearch/pytorch3d/blob/88e182f989c80836f4bd744e0d9cb1852762ce01/pytorch3d/loss/chamfer.py"
+    }
+  ],
+  "adoptedConcepts": [
+    "Perspective-correct surface support and nearest visible surface, following rasterizer API semantics; original native CPU ray code retained.",
+    "Valid observation masking and normalized weights, following chamfer reduction semantics."
+  ],
+  "originalAdaptation": [
+    "Physical facial-region arc-length normalization across separated fragments.",
+    "Midpoint quadrature removes duplicated shared endpoints; samples are integration only, not new independent evidence.",
+    "Oriented image-curve normal residual with manual uncertainty band.",
+    "Cross-camera-envelope direction consistency and independent current-stage holdout."
+  ],
+  "notClaimed": [
+    "No new teacher runtime",
+    "No PyTorch3D reconstruction or learned detector",
+    "No dense automatic photo geometry",
+    "No unique metric anatomy from old photos"
+  ]
+}

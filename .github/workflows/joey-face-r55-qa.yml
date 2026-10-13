@@ -1,8 +1,8 @@
-name: Joey R65 head shoulder appearance
+name: Joey R66 native observation candidate
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/**', 'kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57/**', 'kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-shape-r62/**', 'kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/**', 'kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/**', 'kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/**', 'kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57/**', 'kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-shape-r62/**', 'kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/**', 'kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/**', 'kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -19,6 +19,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -34,13 +35,13 @@ jobs:
       - name: Verify bounded cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/render-native.cjs
-      - name: Render fixed R64 identity with bounded appearance controls
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/render-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/render-native.cjs
+      - name: Render bounded native identity candidate with identical appearance
+        run: node kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/render-native.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-appearance-r65/
+          path: joey-native-observation-r66/
           retention-days: 7
 
