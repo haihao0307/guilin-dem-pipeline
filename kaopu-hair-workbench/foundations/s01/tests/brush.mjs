@@ -1,0 +1,9 @@
+import fs from'node:fs';import assert from'node:assert/strict';import{Surface,rootPool,Domain}from'../src/kernel.mjs';
+const dir=new URL('../',import.meta.url),s=new Surface(JSON.parse(fs.readFileSync(new URL('site/head.json',dir)))),p=rootPool(s),d=new Domain(s,p),ids=d.active(),id=ids.find(i=>{const r=s.sample(p.triangles[i],p.barycentric.subarray(i*3,i*3+3));return r[2]>.075&&Math.abs(r[0])<.035&&r[1]>.356&&r[1]<.38}),f=p.triangles[id],b=Array.from(p.barycentric.subarray(id*3,id*3+3)),base=d.stats(),checks=[];
+function test(name,fn){try{const detail=fn();checks.push({name,pass:true,detail})}catch(e){checks.push({name,pass:false,error:e.message})}}
+test('Default erase removes actual root activation in one click',()=>{d.paint(f,b,{mode:'erase',radius:.012});const after=d.stats();assert(after.activeRoots<base.activeRoots);assert.equal(after.rootBindingHash,base.rootBindingHash);return {before:base.activeRoots,after:after.activeRoots}});
+test('Add restores actual roots without moving bindings',()=>{const n=d.active().length;d.paint(f,b,{mode:'add',radius:.012});assert(d.active().length>n);assert.equal(d.stats().rootBindingHash,base.rootBindingHash)});
+test('Two undo operations restore exact domain and activation',()=>{d.undo();d.undo();assert.equal(d.maskHash,base.maskHash);assert.deepEqual(d.active(),ids)});
+test('Zero strength leaves mask and revision unchanged',()=>{const rev=d.revision;d.paint(f,b,{mode:'erase',strength:0});assert.equal(d.revision,rev);assert.equal(d.maskHash,base.maskHash)});
+test('Invalid barycentrics are rejected without state change',()=>{assert.throws(()=>d.paint(f,[NaN,0,1]));assert.throws(()=>d.paint(f,[1,1,1]));assert.equal(d.maskHash,base.maskHash)});
+const report={success:checks.every(x=>x.pass),checks};fs.writeFileSync(new URL('evidence/brush.json',dir),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(!report.success)process.exit(1);

@@ -1,0 +1,7 @@
+# S01 execution and visual review log
+
+Attempt 01 source 4d996d92128ff13a5932a94564c120f70d4c2859, run 38372065727, job115211222480. All25 kernel checks passed;23 browser checks passed before the refresh predicate raised `ReferenceError: s01 is not defined`. A bare undeclared variable with optional chaining is not safe before page initialization. Changed the readiness predicate to `window.s01?.ready===true`, retaining the refresh test. Failed run was not published or labelled success.
+
+Artifact11799611288 independently downloaded; SHA256 45662d32977f5b21c8598cb76fdc795c54e290ffc4d64720a1f42bcb2858ec7a matched the action. Actual front/three-quarter/side/back screenshots inspected. Initial boundary is coherent but deliberately author-defined, symmetric and simplified; temporal recession, sideburn silhouette and nape need person-specific review. No individual anatomy acceptance.
+
+Visual bug exposed by screenshot review: vertex-color interpolation could suggest a domain boundary different from the actual zero contour. DisplayFields now evaluates the same interpolated scalar at fragments, with stronger contrast for root markers. This changes only field visualization, not root bindings or the initial mask. It is on the existing head material, not an extra scalp mesh. Retest all app controls and shader errors. Public/candidate suite additionally fetches and verifies every runtime resource SHA and length.
