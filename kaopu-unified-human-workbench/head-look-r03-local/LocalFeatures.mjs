@@ -105,7 +105,7 @@ export function installLocalFeatures(viewer){
   reflectedLight.directDiffuse+=lfAngular*directLight.color*BRDF_Lambert(material.diffuseColor);
  `);
  f=patch(f,'#include <opaque_fragment>',`
-  if(uLFDiagnostic>.5&&uLFDiagnostic<1.5){gl_FragColor=vec4(lfLip,lfEye,lfEar,1.);return;}
+  if(uLFDiagnostic>.5&&uLFDiagnostic<1.5){gl_FragColor=vec4(lfLip>0.?1.:0.,lfEye>0.?1.:0.,lfEar>0.?1.:0.,1.);return;}
   if(uLFDiagnostic>1.5&&uLFDiagnostic<2.5)outgoingLight=diffuseColor.rgb;
   if(uLFDiagnostic>2.5&&uLFDiagnostic<3.5)outgoingLight=vec3(roughnessFactor);
   if(uLFDiagnostic>3.5)outgoingLight=normal*.5+.5;
