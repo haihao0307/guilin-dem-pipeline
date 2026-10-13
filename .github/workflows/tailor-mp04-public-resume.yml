@@ -1,0 +1,116 @@
+name: MP04.3 public acceptance and natural playback
+on:
+  push:
+    branches: [test/mp04-public-autoplay-20261013]
+    paths: ['.github/workflows/tailor-mp04-public-resume.yml','kaopu-tailor-workbench/material-products/r04/prepare-public-resume.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [knit,leather,denim]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Fix only the capture coordinate handling, not product or thresholds
+        run: python kaopu-tailor-workbench/material-products/r04/prepare-public-resume.py
+      - name: Actual public page, natural clock, pause, same-frame cloth and all user controls
+        env:
+          QA_FAMILY: ${{ matrix.family }}
+          QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp04-r3-d08f5eef4142/
+          RUNTIME_SOURCE: d08f5eef4142aabf523d4cd72176b45d825c0e3c
+        run: node kaopu-tailor-workbench/material-products/r04/qa-release.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04.3-public-resumed-${{ matrix.family }}
+          path: |
+            kaopu-tailor-workbench/material-products/r04/public-${{ matrix.family }}
+            kaopu-tailor-workbench/material-products/r04/qa-release.cjs
+          retention-days: 30
+  bytes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify all public bytes again without relying on old HTML status
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib,json,concurrent.futures,time
+          base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp04-r3-d08f5eef4142/'
+          def read(name):
+              for retry in range(4):
+                  try:
+                      with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+                  except Exception:
+                      if retry==3:raise
+                      time.sleep(3)
+          m=json.loads(read('BUILD_MANIFEST.json'));assert m['sourceCommit']=='d08f5eef4142aabf523d4cd72176b45d825c0e3c'
+          def check(item):
+              n,e=item;b=read(n);assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],n
+              return {'path':n,**e}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:files=list(pool.map(check,m['files'].items()))
+          json.dump({'passed':True,'sourceCommit':m['sourceCommit'],'fixedURL':base,'files':files},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTE_PASS',len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp04.3-public-resumed-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  receipt:
+    needs: [public-browser,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: d08f5eef4142aabf523d4cd72176b45d825c0e3c
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp04.3-public-resumed-*
+          path: /tmp/evidence
+      - name: Record only complete public acceptance with the preserved previous failure
+        run: |
+          python - <<'PY'
+          import pathlib,json,datetime,os,shutil
+          e=pathlib.Path('/tmp/evidence');reports=[json.loads(p.read_text()) for p in e.rglob('BROWSER_REPORT.json')]
+          assert len(reports)==3 and all(r['passed'] for r in reports)
+          required={x+str(i).zfill(2) for x in ['K','L','D'] for i in range(1,5)}
+          cases={r['case'] for p in reports for r in p['rows']};assert required<=cases
+          for a in ['K04','L04','D01']:
+              for b in ['raise','twist','step']:
+                  assert a+'-'+b in cases and a+'-'+b+'-natural-playback' in cases
+          hashes=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04')
+          state={'version':'MP04.3','fixedURL':hashes['fixedURL'],'sourceCommit':hashes['sourceCommit'],'publicCommit':'c1f80e913d9396ca5806bde4a3069afa5bcff147','publicBrowserVerified':True,'publicBytesVerified':True,'deliveryComplete':True,'userAccepted':False,'physicalDeviceTested':False,'materialPhysicsCalibrated':False,'continuousCollision':False,'fullSelfCollision':False,'knitLayers':1,'actionMode':'exact recipe physically solved frames; modified recipes require new solve','naturalClockAndPauseVerified':True,'testedLooks':sorted(required),'testedMotionLooks':['K04','L04','D01'],'testedMotions':['raise','twist','step'],'workflowRun':os.environ['GITHUB_RUN_ID'],'preservedCaptureFailureRun':38352922606,'failureCorrection':'Test screenshot scrolled stage into view; no product or threshold changes','verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          (p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+          (p/'PUBLIC_BROWSER_REPORTS.json').write_text(json.dumps({'state':state,'reports':reports,'publicBytes':hashes},ensure_ascii=False,indent=2))
+          (p/'recovery-public').mkdir(exist_ok=True)
+          shutil.copyfile(next(e.rglob('qa-release.cjs')),p/'recovery-public/qa-release.cjs')
+          (p/'DELIVERY.md').write_text('# MP04.3 公网交付\n\n'+state['fixedURL']+'?look=K04\n\n固定源码：'+state['sourceCommit']+'\n\n验收 Actions：https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/'+state['workflowRun']+'\n\n十二套搭配、九组人物动作与衣物同帧回放、自动播放时钟和暂停、针织内外侧、单灯环扫、原缩略图及移动视口从实际公网检查。首次公网检查因滚动后截图裁剪越出画布失败，保留原记录；修正测试截图坐标后重验，没有降低产品质量阈值或修改已发布页面。\n\n默认动作来自真正的布料求解帧，不是实时全约束帧率承诺；更改材料配方后首次动作可能需要数分钟实算。单层针织近似原双层厚度，不等于双层间摩擦力学。原生针织曲线和包络已接入，完整微毛羽渲染器没有全量迁移。材料未实体标定，离散接触不是完整自碰撞/连续碰撞。手机为视口非实机。用户尚未视觉验收。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward receipt only onto the unchanged runtime source branch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-public-finish-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-public-finish-20261013)" = d08f5eef4142aabf523d4cd72176b45d825c0e3c
+          git add kaopu-tailor-workbench/material-products/r04/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r04/PUBLIC_BROWSER_REPORTS.json kaopu-tailor-workbench/material-products/r04/DELIVERY.md kaopu-tailor-workbench/material-products/r04/recovery-public
+          git commit -m 'docs(mp04.3): retain full public validation and natural playback evidence [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-public-finish-20261013
