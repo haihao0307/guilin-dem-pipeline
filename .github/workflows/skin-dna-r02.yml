@@ -1,0 +1,103 @@
+name: Skin R02 reference rules and opening recovery
+on:
+  push:
+    branches: [fix/skin-dna-r02-reference-recovery-20261013]
+    paths:
+      - iteration/skin-dna-r02/**
+      - .github/workflows/skin-dna-r02.yml
+permissions:
+  contents: write
+concurrency:
+  group: skin-r02-reference-recovery
+  cancel-in-progress: true
+jobs:
+  build-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DIR: kaopu-unified-human-workbench/skin-dna-r02
+      NODE_PATH: /tmp/skin-r02-node/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            iteration/skin-dna-r02
+            .github/workflows
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pinned build, model evaluation and browser tools
+        run: |
+          npm install --prefix /tmp/skin-r02-node --no-audit --no-fund esbuild@0.25.11 playwright@1.56.1 pngjs@7.0.0
+          node /tmp/skin-r02-node/node_modules/playwright/cli.js install --with-deps chromium
+          pip install numpy==1.26.4 scipy==1.13.1
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Isolated source build with actually executed BioSkin model
+        run: |
+          set -euo pipefail
+          mkdir -p skin-r02-evidence
+          if [ -d "$DIR" ]; then
+            test -f "$DIR/BASELINE_PRESERVATION.json"
+            rm -rf -- "$DIR"
+          fi
+          node iteration/skin-dna-r02/bootstrap.cjs
+          node -e "require('./iteration/skin-dna-r02/finalize.cjs')(process.env.DIR)"
+          python iteration/skin-dna-r02/generate_bioskin.py | tee skin-r02-evidence/bioskin.log
+          node "$DIR/unit.cjs" | tee skin-r02-evidence/unit.log
+          node "$DIR/build.cjs" 2>&1 | tee skin-r02-evidence/build.log
+          git diff --exit-code -- kaopu-unified-human-workbench/skin-dna-r01 kaopu-unified-human-workbench/human-integrated-r04
+      - name: Unassisted candidate opening
+        env:
+          QA_OUT: skin-r02-evidence/smoke
+          SMOKE_ONLY: '1'
+        run: node "$DIR/verify.cjs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-early-${{ github.run_number }}
+          path: |
+            skin-r02-evidence
+            kaopu-unified-human-workbench/skin-dna-r02/BIOSKIN_PROOF.json
+          retention-days: 14
+      - name: Publish only the independent R02
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = fix/skin-dna-r02-reference-recovery-20261013
+          git config user.name 'KAOPU Skin Review'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$DIR"
+          git commit -m "build(skin-r02): source-bound natural-skin review candidate [skip ci]"
+          git push origin HEAD:refs/heads/fix/skin-dna-r02-reference-recovery-20261013
+          SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$SHA" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/$DIR/preview.html" >> "$GITHUB_ENV"
+      - name: Verify exact public bytes and unassisted controls
+        env:
+          QA_OUT: skin-r02-evidence/public
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),crypto=require('crypto');(async()=>{let b;const u='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+process.env.BUILD_SHA+'/'+process.env.DIR+'/preview.html';for(let i=0;i<8;i++){const r=await fetch(u);if(r.ok){b=Buffer.from(await r.arrayBuffer());break;}await new Promise(r=>setTimeout(r,3000));}if(!b)throw Error('Public page unavailable');const h=x=>crypto.createHash('sha256').update(x).digest('hex');if(h(b)!==h(fs.readFileSync(process.env.DIR+'/preview.html')))throw Error('Public bytes mismatch');console.log('Public SHA256',h(b));})();
+          NODE
+          node "$DIR/verify.cjs"
+      - name: Permanent evidence, immutable URL and honest scope
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),d=process.env.DIR,q=JSON.parse(fs.readFileSync('skin-r02-evidence/public/qa.json')),b=JSON.parse(fs.readFileSync(d+'/BUILD.json'));if(!q.completed||q.errors.length||q.consoleErrors.length)throw Error('Public verification incomplete');fs.cpSync('skin-r02-evidence/public',d+'/acceptance/public',{recursive:true});fs.copyFileSync('skin-r02-evidence/public/qa.json',d+'/PUBLIC_QA.json');fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify({version:'SKIN-DNA-R02',url:process.env.PREVIEW_URL,sourceCommit:process.env.GITHUB_SHA,buildCommit:process.env.BUILD_SHA,previewSHA256:b.previewSHA256,run:process.env.GITHUB_RUN_ID,tests:q.tests.length,publicVerified:true,unassistedOpening:true,userVisualAccepted:false,merged:false,scope:'opening repair and bounded reference-model skin candidate, not film-quality certification'},null,2));
+          NODE
+          git add "$DIR/acceptance" "$DIR/PUBLIC_QA.json" "$DIR/DELIVERY.json"
+          git commit -m "test(skin-r02): preserve complete fixed-public opening and control evidence [skip ci]"
+          git push origin HEAD:refs/heads/fix/skin-dna-r02-reference-recovery-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-full-${{ github.run_number }}
+          retention-days: 14
+          path: |
+            skin-r02-evidence
+            kaopu-unified-human-workbench/skin-dna-r02

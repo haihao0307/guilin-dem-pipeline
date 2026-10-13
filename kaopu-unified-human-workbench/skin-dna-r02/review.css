@@ -1,0 +1,23 @@
+/* Scoped review layout. Original controls remain available, not deleted. */
+body.sd-review{margin:0!important;overflow:auto!important;background:#101719;color:#e4e9e6}
+body.sd-review>header{min-height:46px!important;height:auto!important;padding:10px 18px!important;display:flex;align-items:center;gap:16px}
+body.sd-review>header strong{font-size:17px!important}
+body.sd-review:not(.sd-show-navigation)>nav,body.sd-review:not(.sd-show-navigation)>header>*:not(strong){display:none!important}
+body.sd-review main{display:grid!important;grid-template-columns:minmax(0,1fr) 390px!important;gap:14px!important;align-items:start!important;padding:0 14px 16px!important;max-width:none!important;margin:0!important}
+body.sd-review .model-stage{min-width:0!important;position:sticky;top:10px;display:flex!important;flex-direction:column!important}
+body.sd-review #stage{height:calc(100vh - 152px)!important;min-height:460px!important;max-height:980px!important;width:100%!important;position:relative!important;margin:0!important;flex:none!important;border:1px solid #40504f;border-radius:10px;overflow:hidden}
+body.sd-review #canvas{display:block!important;width:100%!important;height:100%!important}
+body.sd-review #control-shell{width:auto!important;min-width:0!important;max-height:calc(100vh - 62px)!important;overflow-y:auto!important;padding:0 2px!important;scrollbar-gutter:stable}
+body.sd-review:not(.sd-show-navigation) .model-stage>.view-tools,body.sd-review:not(.sd-show-navigation) #model-status,body.sd-review:not(.sd-show-navigation) .model-stage>section:not(#sd-view-heading):not(#idle-controls){display:none!important}
+body.sd-review:not(.sd-show-idle) #idle-controls{display:none!important}
+#sd-view-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px 14px;min-height:66px;box-sizing:border-box}
+#sd-view-heading div{min-width:0}#sd-view-heading small{display:block;font-size:10px;letter-spacing:1.5px;color:#97aaa3;margin-bottom:6px}
+#sd-now{display:block;font-size:23px;line-height:1.3;color:#f2f3e9}#sd-now-note{display:block;font-size:12px;line-height:1.6;color:#b8c9c1;margin-top:5px}
+#sd-recover{min-width:116px;white-space:normal;line-height:1.5;padding:10px;border:1px solid #779187;background:#244138;color:#f4f7ed;border-radius:6px;cursor:pointer}
+body.sd-review #skin-dna-controls{margin:0 0 10px;padding:13px 12px;border-radius:10px;background:#192723}
+body.sd-review #skin-dna-controls h2{font-size:21px;margin:6px 0}body.sd-review .sd-intro{font-size:12px;margin-bottom:10px}
+body.sd-review .sd-presets button{min-height:75px;padding:9px}body.sd-review .sd-presets button[aria-pressed=true]{padding:8px;background:#365046;border-color:#d5dbb3}
+body.sd-review .sd-presets small{font-size:10px;line-height:1.5}body.sd-review .sd-toolbar{margin:10px 0;gap:5px}body.sd-review .sd-toolbar button{padding:7px;font-size:11px}
+#sd-rule-summary p{font-size:12px;line-height:1.75;color:#c7d3cd}#sd-legacy-controls{padding:12px 8px;border:1px solid #40504f;border-radius:8px;font-size:12px}#sd-legacy-controls>summary{cursor:pointer;line-height:1.7}#sd-legacy-controls[open]{padding-top:12px}
+@media(max-width:980px){body.sd-review main{grid-template-columns:minmax(0,1fr) 340px!important;gap:10px!important;padding:0 8px 10px!important}#sd-now{font-size:19px}#sd-recover{min-width:96px;font-size:11px}}
+@media(max-width:740px){body.sd-review main{grid-template-columns:1fr!important}body.sd-review .model-stage{position:relative;top:0}body.sd-review #stage{height:62vh!important;min-height:330px!important}body.sd-review #control-shell{max-height:none!important;overflow:visible!important}#sd-view-heading{min-height:70px}}

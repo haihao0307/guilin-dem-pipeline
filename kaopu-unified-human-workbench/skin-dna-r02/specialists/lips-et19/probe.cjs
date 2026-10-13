@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),{chromium}=require('playwright');
+(async()=>{
+ const out='lip-probe';fs.mkdirSync(out+'/cache',{recursive:true});const cache=[],pending=[];
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1600,height:1000}});page.setDefaultTimeout(120000);
+ const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.url().startsWith('https://raw.githubusercontent.com/'))pending.push((async()=>{try{const body=await r.body(),name=crypto.createHash('sha256').update(r.url()).digest('hex');fs.writeFileSync(out+'/cache/'+name,body);cache.push({url:r.url(),name,contentType:r.headers()['content-type'],status:r.status()});}catch(e){errors.push(String(e));}})());});
+ await page.goto('https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7bc25d5e31808d0a5724f602d4a4ade42a14c385/kaopu-unified-human-workbench/eye-materials/preview.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.naturalEyeWorkbench&&__IDENTITY_QA__.viewer().skin.naturalEyeExtension.ready);await page.waitForTimeout(1500);
+ await page.evaluate(()=>{naturalEyeWorkbench.view('face');});await page.screenshot({path:out+'/baseline-face.png'});
+ const data=await page.evaluate(()=>{const m=__IDENTITY_QA__.model(),v=__IDENTITY_QA__.viewer(),g=v.geometry,n=v.nativeGeometry;return{report:v.report(),archive:__IDENTITY_QA__.controller().archive(),modelKeys:Object.keys(m),viewerKeys:Object.keys(v),bounds:(g.computeBoundingBox(),g.boundingBox),camera:{position:v.camera.position.toArray(),target:v.orbit.target.toArray(),fov:v.camera.fov},nativeAttributes:Object.fromEntries(Object.entries(n.attributes).map(([k,a])=>[k,{itemSize:a.itemSize,array:Array.from(a.array)}])),nativeIndex:Array.from(n.index.array),modelPositions:Array.from(m.positions),modelRest:m.rest?Array.from(m.rest):null};});fs.writeFileSync(out+'/scene.json',JSON.stringify(data));
+ // The native rest coordinates use metres and Y up; the mouth is below the eyes.
+ for(const[name,x,z]of [['front',0,.25],['oblique',.13,.23],['profile',.25,.035]]){
+  await page.evaluate(([x,z])=>{const v=__IDENTITY_QA__.viewer();v.faceDiffusion&&(v.model.faceSurface.settings.diffusion=0);v.orbit.target.set(0,.706,.11);v.camera.position.set(x,.711,.11+z);v.camera.lookAt(v.orbit.target);v.camera.updateProjectionMatrix();v.render();},[x,z]);await page.screenshot({path:out+'/baseline-mouth-'+name+'.png'});
+ }
+ await Promise.allSettled(pending);fs.writeFileSync(out+'/cache/index.json',JSON.stringify(cache,null,2));fs.writeFileSync(out+'/errors.json',JSON.stringify(errors));await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
