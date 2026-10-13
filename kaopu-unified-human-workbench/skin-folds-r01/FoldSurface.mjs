@@ -1,3 +1,4 @@
+import {SmoothSkinNormals} from './SmoothSkinNormals.mjs';
 import {FairSkin} from './FairSkin.mjs';
 import * as THREE from '../full/source/registration-vendor/three.module.js';
 import {foldAt,protectedSkin,GEOMETRY_KEYS,clamp,smooth,splitFace} from './FoldMath.mjs';
@@ -23,7 +24,7 @@ export class FoldSurface {
    for(const cx of [-31,31])gate*=smooth(1,1.6,((x-cx)/18.2)**2+((y-301)/8.4)**2);
    gate*=smooth(1,1.6,(x/27.8)**2+((y-232)/15.2)**2);masks[i]=gate>.0001?gate:0;
   }
-  this.fair=new FairSkin(g.index.array,masks);this.delta=new Float32Array(g.attributes.position.count*3);this.base=new Float32Array(this.delta.length);this.stats={addedVertices:added,sourceVertices:source.attributes.position.count,displayVertices:g.attributes.position.count};
+  this.fair=new FairSkin(g.index.array,masks);this.normalPolish=new SmoothSkinNormals(this.fair);this.delta=new Float32Array(g.attributes.position.count*3);this.base=new Float32Array(this.delta.length);this.stats={addedVertices:added,sourceVertices:source.attributes.position.count,displayVertices:g.attributes.position.count};
  }
  coverage(i){const g=this.geometry,A=g.attributes.fA.array,B=g.attributes.fB.array;return clamp(A[i*4])*(1-clamp(A[i*4+1]*5))*(1-clamp(B[i*4+2]*3))*(1-clamp(A[i*4+3]*.92));}
  update(settings){
@@ -35,7 +36,7 @@ export class FoldSurface {
   const g=this.geometry;this.fairStats=this.fair.apply(g.attributes.position.array,g.attributes.normal.array);g.computeVertexNormals();
   const R=g.attributes.fRest.array,T=g.attributes.csType.array,Q=g.attributes.position.array,N=g.attributes.normal.array,key=GEOMETRY_KEYS.map(k=>settings[k]).join('|');
   if(key!==this.fieldKey){for(let i=0;i<T.length;i++){const d=T[i]<.5?foldAt(R[i*3]*1000,R[i*3+1]*1000,settings,this.coverage(i)):[0,0,0];this.delta.set(d,i*3);}this.fieldKey=key;}
-  this.base.set(Q);
+  this.base.set(Q);this.normalPolish.capture(N);
   const fields=this.model.faceSurface.fields,L=id=>fields.landmark(this.model.positions,id),toView=p=>new THREE.Vector3(p[0],p[2],-p[1]);
   const x=toView(L(45)).sub(toView(L(36))).normalize(),up=toView(L(27)).sub(toView(L(8)));up.addScaledVector(x,-up.dot(x)).normalize();
   let affected=0,max=0,pos=0,neg=0,protectedDelta=0;
@@ -43,8 +44,8 @@ export class FoldSurface {
    let sq=0;for(let q=0;q<3;q++){const d=N[k+q]*depth+x.getComponent(q)*tx+up.getComponent(q)*ty;Q[k+q]+=d;sq+=d*d;}max=Math.max(max,Math.sqrt(sq)*1000);if(depth>0)pos++;if(depth<0)neg++;affected++;
    if(T[i]>=.5||!protectedSkin(R[k]*1000,R[k+1]*1000))protectedDelta=Math.max(protectedDelta,Math.sqrt(sq));
   }
-  g.attributes.position.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
-  this.stats={...this.stats,fairing:this.fairStats,affectedVertices:affected,positiveRollVertices:pos,valleyVertices:neg,maxDeltaMM:max,protectedDeltaMM:protectedDelta*1000,updateMS:performance.now()-started,canonicalModified:false,bodyModified:false,extraHeadMeshes:0,foldSource:'CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases',physicalSkinSimulation:false};return g;
+  g.attributes.position.needsUpdate=true;g.computeVertexNormals();this.normalPolishStats=this.normalPolish.compose(g.attributes.normal.array);g.attributes.normal.needsUpdate=true;g.computeBoundingSphere();
+  this.stats={...this.stats,fairing:this.fairStats,baseNormalPolish:this.normalPolishStats,affectedVertices:affected,positiveRollVertices:pos,valleyVertices:neg,maxDeltaMM:max,protectedDeltaMM:protectedDelta*1000,updateMS:performance.now()-started,canonicalModified:false,bodyModified:false,extraHeadMeshes:0,foldSource:'CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases',physicalSkinSimulation:false};return g;
  }
  dispose(){for(const l of this.layers)l.geometry.dispose();}
 }
