@@ -1,0 +1,93 @@
+name: Hair F01 immutable public verification
+on:
+  push:
+    branches: [feature/hair-foundation-f01-20261013]
+    paths: [.github/workflows/hair-f01-public.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f01
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-workbench/foundation/f01-3825be27e209/
+  PAGES_COMMIT: ac6e57ce306a2f81c0b791cac9a537a10734d84a
+  PAGES_PARENT: 30f459517982b077067253d07c0ef970a03b3848
+  SOURCE_BUILD: a715d94cfb23c566e8b3696ed9a3bcfc7fc18a65
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: kaopu-hair-workbench/foundation/f01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check isolated source, unchanged old hair and exact Pages tree
+        run: |
+          git fetch --depth=1 origin "$PAGES_COMMIT" "$PAGES_PARENT" "$SOURCE_BUILD" 6030e8142c066814df1c49fa33d3ca9949a4b96e
+          python - <<'PY'
+          import os,subprocess,json
+          from pathlib import Path
+          p=Path(os.environ['P']);m=json.loads((p/'BUILD_MANIFEST.json').read_text());q=json.loads((p/'CANDIDATE.json').read_text())
+          assert m['source']=='3825be27e209032fb8d69a12e92f4b39cd82b0c7' and q['candidateBrowserVerified']
+          dest='kaopu-hair-workbench/foundation/f01-3825be27e209'
+          get=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          assert get('rev-parse',os.environ['PAGES_COMMIT']+':'+dest)==get('rev-parse',os.environ['SOURCE_BUILD']+':'+str(p)+'/site')=='19902fdda0df5842752c4e0fe933974e579c8d3e'
+          changes=get('diff','--name-only',os.environ['PAGES_PARENT'],os.environ['PAGES_COMMIT']).splitlines();assert all(x.startswith(dest+'/') for x in changes)
+          baseline='6030e8142c066814df1c49fa33d3ca9949a4b96e';old='kaopu-hair-workbench/fusion/r14-l03'
+          assert get('rev-parse','HEAD:'+old)==get('rev-parse',baseline+':'+old)
+          changes=get('diff','--name-only',baseline,'HEAD').splitlines()
+          assert all(x.startswith(str(p)+'/') or x in ['.github/workflows/hair-foundation-f01.yml','.github/workflows/hair-f01-final.yml','.github/workflows/hair-f01-public.yml'] for x in changes)
+          (p/'PUBLISH.json').write_text(json.dumps({'publicURL':os.environ['PUBLIC_URL'],'source':m['source'],'sourceBuild':os.environ['SOURCE_BUILD'],'pagesCommit':os.environ['PAGES_COMMIT'],'pagesParent':os.environ['PAGES_PARENT'],'siteTree':'19902fdda0df5842752c4e0fe933974e579c8d3e','oldPathsModified':False,'publicBrowserVerified':False},indent=2))
+          PY
+      - name: Wait for exact immutable HTTP content
+        run: |
+          python -u - <<'PY'
+          import os,hashlib,time,urllib.request,json
+          from pathlib import Path
+          p=Path(os.environ['P']);expected=(p/'site/BUILD_MANIFEST.json').read_bytes()
+          for i in range(60):
+              try:
+                  t=time.monotonic();r=urllib.request.urlopen(os.environ['PUBLIC_URL']+'BUILD_MANIFEST.json',timeout=15);b=r.read()
+                  if b==expected:
+                      (p/'evidence/public-http.json').write_text(json.dumps({'status':r.status,'manifestSHA256':hashlib.sha256(b).hexdigest(),'url':os.environ['PUBLIC_URL'],'seconds':time.monotonic()-t}));break
+              except Exception as e:print('Waiting',i,str(e),flush=True)
+              time.sleep(10)
+          else:raise RuntimeError('Immutable public delivery incomplete')
+          PY
+      - name: Render public page and exercise actual controls
+        run: |
+          npm install --prefix /tmp/f01-tools --no-save playwright@1.55.1
+          ln -s /tmp/f01-tools/node_modules node_modules
+          /tmp/f01-tools/node_modules/.bin/playwright install --with-deps chromium
+          timeout 600s node "$P/tests/browser.mjs" "$PUBLIC_URL" public
+      - name: Fresh public context under controlled bandwidth
+        run: |
+          node --input-type=module - <<'JS'
+          import{chromium}from'playwright';import fs from'node:fs';
+          const b=await chromium.launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),c=await b.newContext({viewport:{width:1440,height:1000}}),p=await c.newPage(),d=await c.newCDPSession(p);
+          await d.send('Network.enable');await d.send('Network.setCacheDisabled',{cacheDisabled:true});await d.send('Network.emulateNetworkConditions',{offline:false,latency:80,downloadThroughput:625000,uploadThroughput:625000});
+          const t=performance.now();await p.goto(process.env.PUBLIC_URL,{waitUntil:'domcontentloaded',timeout:90000});await p.waitForFunction(()=>window.hairFoundation?.diagnostics().ready,null,{timeout:90000});const r=await p.evaluate(()=>hairFoundation.diagnostics());if(r.source!=='3825be27e209032fb8d69a12e92f4b39cd82b0c7'||r.activeOutside!==0)throw Error('Wrong public runtime');
+          fs.writeFileSync(process.env.P+'/evidence/public-cold.json',JSON.stringify({url:process.env.PUBLIC_URL,wallReadyMS:performance.now()-t,diagnostics:r,network:'fresh context, cache disabled, 5Mbps/80ms',device:'Chromium SwiftShader; not phone hardware'},null,2));await b.close();
+          JS
+      - name: Commit public evidence only
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          p=Path(os.environ['P']);a=json.loads((p/'evidence/core.json').read_text());b=json.loads((p/'evidence/public/report.json').read_text());assert a['success'] and b['success']
+          pub=json.loads((p/'PUBLISH.json').read_text());pub.update(publicBrowserVerified=True,publicRun=os.environ['GITHUB_RUN_ID']);(p/'PUBLISH.json').write_text(json.dumps(pub,indent=2))
+          r={**pub,'coreChecks':len(a['checks']),'publicChecks':len(b['checks']),'publicNavigationMS':b['navMS'],'cold':json.loads((p/'evidence/public-cold.json').read_text()),'live':json.loads((p/'evidence/public/live.json').read_text()),'limits':['Sparse authored guides, not a reference-photo reconstruction','Same native bust only; no full torso, no self-collision or CCD','Phone viewport only; no 60fps or user-hardware guarantee','Draft PR257, no merge or force push']};(p/'DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2))
+          PY
+          git config user.name 'KAOPU Hair F01 Public Verification'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/evidence/public" "$P/evidence/public-http.json" "$P/evidence/public-cold.json" "$P/DELIVERY.json" "$P/PUBLISH.json"
+          git commit -m 'test(hair-f01): immutable public WebGL interaction, cold navigation and actual wall timing'
+          git push origin HEAD:refs/heads/feature/hair-foundation-f01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f01-public-delivery
+          path: kaopu-hair-workbench/foundation/f01
+          retention-days: 30
