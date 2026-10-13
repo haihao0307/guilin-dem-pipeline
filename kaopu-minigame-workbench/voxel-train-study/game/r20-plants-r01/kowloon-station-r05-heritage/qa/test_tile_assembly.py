@@ -27,4 +27,29 @@ class AssemblyTest(unittest.TestCase):
   d=self.dirs[1];raw=json.loads((d/'readback.json').read_text());raw['shadowReadback']['bits'][0]=1;self.write(d/'readback.json',raw);self.checkpoint(d);self.assertNotEqual(self.run_assembly().returncode,0)
  def test_corrupt_checkpoint_is_rejected(self):
   (self.dirs[0]/'readback.json').write_text('{}');self.assertNotEqual(self.run_assembly().returncode,0)
+class TwoDimensionalAssemblyTest(AssemblyTest):
+ def setUp(self):
+  super().setUp()
+  self.dirs=[]
+  for i in range(4):
+   d=self.root/('window'+str(i));d.mkdir();self.dirs.append(d)
+   x=198+(i%2)*112;y=18+(i//2)*180;w=116;h=184
+   shared={'fixture':'synthetic-only'};p={'sourceSHA256':'fixture','executionSourceSHA256':'fixture','shared':shared,'testResolution':[640,426],'testShadowResolution':[16,16],'geometryQuery':{'executionOutputs':shared},'traceQuery':{'executionOutputs':shared}}
+   tile={'index':i,'count':4,'halo':2,'core':{'x':x+2,'y':y+2,'w':112,'h':180},'assemblyCrop':{'x':200,'y':20,'w':224,'h':360}}
+   receipt={'status':'rendered-for-architectural-review','view':'towerWindow','tile':tile,'modelCommit':'synthetic-fixture-not-GPU','commit':'synthetic-fixture-not-GPU','attempt':1,'state':{'kowloonFunction':p}}
+   bits=[n for yy in range(y+h-1,y-1,-1)for xx in range(x,x+w)for n in [xx,yy,xx+yy,1]]
+   raw={'fullResolution':[640,426],'width':w,'height':h,'cropTopLeft':{'x':x,'y':y,'w':w,'h':h},'encoding':'RGBA32F bits, rows bottom to top','shadowReadback':{'width':16,'height':16,'bits':[0]*1024},'footprint':shared,'buffers':{k:list(bits)for k in ['trace','qSeed','extentSourceSeed','normalBaseDistance','normalValidity','albedoRoughness','response','finish']}}
+   for name,obj in [('receipt.json',receipt),('readback.json',raw),('validation.json',{'unresolved':0,'allEightBuffersFinite':True})]:self.write(d/name,obj)
+   image=Image.new('RGBA',(w,h));image.putdata([(xx%256,yy%256,(xx+yy)%256,255)for yy in range(y,y+h)for xx in range(x,x+w)]);image.save(d/'native-crop.png');image.crop((2,2,114,182)).save(d/'tile-core.png');self.checkpoint(d)
+ def test_exact_overlap_is_lossless(self):
+  result=self.run_assembly();self.assertEqual(result.returncode,0,result.stderr.decode());proof=json.loads((self.root/'out/assembly-proof.json').read_text());self.assertEqual(proof['overlapRawChannelsCompared'],77824);self.assertEqual(proof['compositedPixelMismatches'],0)
+  with Image.open(self.root/'out/towerWindow-native-assembled.png')as image:self.assertEqual(image.size,(224,360))
+ def test_vertical_overlap_mismatch_is_rejected(self):
+  d=self.dirs[2];raw=json.loads((d/'readback.json').read_text());raw['buffers']['trace'][-4]^=1;self.write(d/'readback.json',raw);self.checkpoint(d);self.assertNotEqual(self.run_assembly().returncode,0)
+ def test_duplicate_core_is_rejected(self):
+  import shutil
+  d=self.dirs[1]
+  for p in self.dirs[0].iterdir():shutil.copyfile(p,d/p.name)
+  r=json.loads((d/'receipt.json').read_text());r['tile']['index']=1;self.write(d/'receipt.json',r);self.checkpoint(d);self.assertNotEqual(self.run_assembly().returncode,0)
 if __name__=='__main__':unittest.main()
+
