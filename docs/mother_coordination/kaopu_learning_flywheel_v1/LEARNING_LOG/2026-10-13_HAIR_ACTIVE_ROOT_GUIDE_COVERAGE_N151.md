@@ -65,5 +65,6 @@ Result: see `PROBES/hair_active_root_guide_coverage_result_n151.json`.
 - Blocks only a stronger claim that the sparse guide set covers every active root or is ready to generate dense followers without an explicit mapping receipt.
 - Production thresholds are `unknown`; the replay's numeric values are synthetic classifier fixtures, not adopted millimetre standards.
 - Does not modify PR #266, production branches, main, R2 or any gate threshold.
-- Route only to Hair PR #266. Lifecycle before posting: `POSTED=false`; `CLASSIFICATION-GATE-RUN=false`; `ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Hair PR #266: https://github.com/haihao0307/guilin-dem-pipeline/pull/266#issuecomment-6149529001
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (7/7)`; `ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs: `unknown` until Hair Mother implements the mapping receipt and runs the production positive controls.
