@@ -1,0 +1,841 @@
+{
+  "version": "ET21-FOLD-R01",
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/416bf7b43c70bc1e4c8305389bd569d024440ac9/kaopu-unified-human-workbench/skin-folds-r01/preview.html",
+  "tests": [
+    {
+      "name": "real-fold-positions-positive-rolls-and-valleys",
+      "pass": true,
+      "data": {
+        "addedVertices": 55000,
+        "sourceVertices": 150459,
+        "displayVertices": 205459,
+        "affectedVertices": 88575,
+        "positiveRollVertices": 11543,
+        "valleyVertices": 40872,
+        "maxDeltaMM": 0.25835583984072436,
+        "protectedDeltaMM": 0,
+        "updateMS": 255,
+        "canonicalModified": false,
+        "bodyModified": false,
+        "extraHeadMeshes": 0,
+        "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+        "physicalSkinSimulation": false
+      }
+    },
+    {
+      "name": "real-rendered-canvas",
+      "pass": true,
+      "data": {
+        "hash": 3636142451,
+        "mean": 70.51092394812822,
+        "glError": 0
+      }
+    },
+    {
+      "name": "gray-ab-changes-actual-vertex-buffer-not-color",
+      "pass": true,
+      "data": {
+        "count": 58766,
+        "max": 1.158316471012673,
+        "vertices": 205459
+      }
+    },
+    {
+      "name": "old-painted-wrinkle-generator-disabled",
+      "pass": true,
+      "data": 0
+    },
+    {
+      "name": "three-independent-surface-recipes-render",
+      "pass": true,
+      "data": [
+        {
+          "id": "freckles",
+          "hash": 3964745739,
+          "mean": 70.47849913375148,
+          "glError": 0
+        },
+        {
+          "id": "marks",
+          "hash": 237363873,
+          "mean": 70.49693665091584,
+          "glError": 0
+        },
+        {
+          "id": "makeup",
+          "hash": 4015455079,
+          "mean": 70.55683423968628,
+          "glError": 0
+        }
+      ]
+    },
+    {
+      "name": "material-light-controls-do-not-rebuild-geometry",
+      "pass": true,
+      "data": {
+        "samePositions": true,
+        "noIdleRebake": true
+      }
+    },
+    {
+      "name": "makeup-real-pixel-response",
+      "pass": true,
+      "data": {
+        "before": {
+          "hash": 334138137,
+          "mean": 71.2030511158432,
+          "glError": 0
+        },
+        "after": {
+          "hash": 4175793326,
+          "mean": 71.25416872648354,
+          "glError": 0
+        }
+      }
+    },
+    {
+      "name": "warm-cool-lighting-three-distinct-responses",
+      "pass": true,
+      "data": [
+        {
+          "light": "hair",
+          "hash": 2875496529,
+          "mean": 66.54013561610496,
+          "glError": 0
+        },
+        {
+          "light": "neutral",
+          "hash": 3360889643,
+          "mean": 74.26799436784074,
+          "glError": 0
+        },
+        {
+          "light": "raking",
+          "hash": 3726808147,
+          "mean": 56.13748495750915,
+          "glError": 0
+        }
+      ]
+    },
+    {
+      "name": "optional-single-shadow-renders",
+      "pass": true,
+      "data": {
+        "hash": 4066282611,
+        "mean": 70.29216411769548,
+        "glError": 0
+      }
+    },
+    {
+      "name": "same-scene-render-pass-comparison",
+      "pass": true,
+      "data": [
+        {
+          "light": "natural",
+          "diffusion": false,
+          "rows": [
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.29999999998835847,
+              "softwareCompletionMS": 0.29999999998835847
+            },
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.20000000001164153,
+              "softwareCompletionMS": 0.20000000001164153
+            },
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.09999999997671694,
+              "softwareCompletionMS": 0.09999999997671694
+            }
+          ],
+          "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+        },
+        {
+          "light": "original",
+          "diffusion": false,
+          "rows": [
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.3999999999650754,
+              "softwareCompletionMS": 0.5
+            },
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.7000000000116415,
+              "softwareCompletionMS": 0.7999999999883585
+            },
+            {
+              "calls": 1,
+              "triangles": 410424,
+              "submitMS": 0.09999999997671694,
+              "softwareCompletionMS": 0.09999999997671694
+            }
+          ],
+          "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+        },
+        {
+          "light": "original",
+          "diffusion": true,
+          "rows": [
+            {
+              "calls": 6,
+              "triangles": 1231278,
+              "submitMS": 0.5999999999767169,
+              "softwareCompletionMS": 0.5999999999767169
+            },
+            {
+              "calls": 6,
+              "triangles": 1231278,
+              "submitMS": 3.599999999976717,
+              "softwareCompletionMS": 3.599999999976717
+            },
+            {
+              "calls": 6,
+              "triangles": 1231278,
+              "submitMS": 0.6000000000349246,
+              "softwareCompletionMS": 0.6000000000349246
+            }
+          ],
+          "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+        }
+      ]
+    },
+    {
+      "name": "paused-view-does-not-continuously-redraw",
+      "pass": true,
+      "data": 87
+    },
+    {
+      "name": "retained-idle-plays-on-fold-geometry",
+      "pass": true,
+      "data": 15
+    },
+    {
+      "name": "native-person-rig-and-body-preserved",
+      "pass": true,
+      "data": {
+        "positions": true,
+        "faces": true,
+        "singleCharacter": true
+      }
+    },
+    {
+      "name": "versioned-fold-profile-invalid-import-atomic",
+      "pass": true,
+      "data": {
+        "refused": true,
+        "unchanged": true,
+        "savedSchema": "kaopu/geometric-skin-folds@1"
+      }
+    },
+    {
+      "name": "whole-person-fold-profile-roundtrip",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "mobile-viewport-no-horizontal-overflow-not-device-test",
+      "pass": true,
+      "data": true
+    },
+    {
+      "name": "no-runtime-shader-or-request-errors",
+      "pass": true,
+      "data": true
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "requests": [],
+  "screens": [
+    "01-default",
+    "02-gray-zero-fold",
+    "03-gray-mature-fold",
+    "04-gray-raking-angle",
+    "05-mature-skin",
+    "skin-freckles",
+    "skin-marks",
+    "skin-makeup",
+    "06-single-shadow",
+    "07-blink",
+    "08-final-default",
+    "09-mobile-viewport"
+  ],
+  "completed": true,
+  "initial": {
+    "version": "ET21-FOLD-R01",
+    "settings": {
+      "strength": 0.72,
+      "slack": 0.65,
+      "compression": 0.55,
+      "forehead": 0.55,
+      "eyes": 0.6,
+      "nasolabial": 0.78,
+      "cheeks": 0.55,
+      "sag": 0.55,
+      "makeup": 0.12,
+      "light": "natural",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    },
+    "geometry": {
+      "addedVertices": 55000,
+      "sourceVertices": 150459,
+      "displayVertices": 205459,
+      "affectedVertices": 88575,
+      "positiveRollVertices": 11543,
+      "valleyVertices": 40872,
+      "maxDeltaMM": 0.25835583984072436,
+      "protectedDeltaMM": 0,
+      "updateMS": 255,
+      "canonicalModified": false,
+      "bodyModified": false,
+      "extraHeadMeshes": 0,
+      "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+      "physicalSkinSimulation": false
+    },
+    "viewer": {
+      "version": "ET18-L2",
+      "nativeVertices": 25417,
+      "displayVertices": 205459,
+      "nativeTriangles": 50624,
+      "displayTriangles": 410424,
+      "resolution": 1,
+      "oneRenderer": true,
+      "oneCanvas": true,
+      "staticHeadReplacement": false,
+      "restCoordinates": "source-native rest metres, fixed-stencil interpolation",
+      "derivedSurfaceExportAvailable": true,
+      "baseTopologyUnchanged": true,
+      "face": {
+        "version": "ET12-F1",
+        "updates": 37,
+        "enabled": true,
+        "settings": {
+          "enabled": true,
+          "structure": 0.75,
+          "detail": 1,
+          "meso": 0.75,
+          "colorDetail": 0.5,
+          "pigment": 0,
+          "blood": 0.35,
+          "oil": 0.55,
+          "wrap": 0.28,
+          "diffusion": 0.42,
+          "radius": 0.85,
+          "layer": "beauty"
+        },
+        "fields": {
+          "version": "kaopu/native-face-fields@1",
+          "counts": {
+            "face": 7795,
+            "lips": 237,
+            "thin": 2277,
+            "nose": 990,
+            "forehead": 501,
+            "cheek": 888,
+            "ear": 1137,
+            "chin": 151,
+            "eyes": 750
+          },
+          "bodyWeight": 0,
+          "source": "same canonical GNM material/region IDs and retained barycentric landmarks; original lip mask reused",
+          "fixedAtBind": true,
+          "nearestCorrespondenceReselected": false
+        },
+        "affectedNativeVertices": 925,
+        "maxGeometryDeltaMM": 0.08233150583691895,
+        "regionalRequestedMaxMM": {
+          "philtrum": 0.11842404037401899,
+          "nasolabial": 0.05557900242666185,
+          "lipBorder": 0.09657713330329229,
+          "alar": 0.0945194591206984,
+          "chin": 0.0003246954144500974
+        },
+        "originalBodyUnchanged": true,
+        "eyeLayerRetained": true,
+        "originalHeadIdentityAndRigRetained": true,
+        "restCoordinatesStable": true,
+        "donorIdentityMeshImported": false,
+        "clinicalRecovery": false
+      },
+      "skin": {
+        "ready": true,
+        "errors": [],
+        "hostMaterialPreserved": true
+      },
+      "diffusion": {
+        "source": "donor 25-tap split-albedo RGB separable diffusion",
+        "frames": 9,
+        "size": [
+          964,
+          745
+        ],
+        "regionMask": "native face-only alpha",
+        "specularBlurred": false,
+        "bodyDiffusion": false,
+        "volumetricScattering": false,
+        "screenSpaceOcclusionLimit": true
+      },
+      "ocular": {
+        "mode": "eye-only tangent-plane midpoint refinement",
+        "addedVertices": 18192,
+        "eyeTrianglesBefore": 12096,
+        "eyeTrianglesAfter": 48384,
+        "maxCorrectionMM": 0.05704375936100394,
+        "correctionCapMM": 0.08,
+        "nativeVerticesMoved": 0,
+        "nonOcularTrianglesChanged": 0
+      },
+      "naturalEyes": {
+        "version": "ET15-E1",
+        "ready": true,
+        "shaderCompiles": 7,
+        "errors": [],
+        "originalTextures": [
+          1024,
+          1024
+        ],
+        "sourceAuthors": [
+          "callharvey3d"
+        ],
+        "sourcePack": "system_eye_materials03",
+        "license": "CC-BY as listed by source pack",
+        "unmodifiedSourcePNGs": true,
+        "bodyMaterialChanged": false,
+        "medicalSimulation": false
+      },
+      "lips": {
+        "mode": "native-landmark vermilion rolls and fixed-stencil local surface",
+        "addedDisplayVertices": 58824,
+        "affectedDisplayVertices": 35383,
+        "maxShapeDeltaMM": 0.8269236926486127,
+        "nativePositionBufferModified": false,
+        "nativeIndexBufferModified": false,
+        "bodyTrianglesChanged": 0,
+        "extraHeadMeshes": 0,
+        "eyeChange": "bounded skin-only midpoint refinement; eyeballs and eyelid aperture retained"
+      },
+      "lipMaterial": {
+        "version": "ET18-L2",
+        "shaderCompiles": 7,
+        "kind": "bounded lip field + seeded curve graph, not a scanned map",
+        "sourceHeadReplaced": false,
+        "oldSkinMastersRetained": true,
+        "distanceFiltering": true,
+        "atlas": {
+          "seed": 37,
+          "density": 1,
+          "primary": 90,
+          "branches": 105,
+          "secondary": 244,
+          "minHeightMM": -0.08215264976024628,
+          "maxHeightMM": 0.004684084502514452,
+          "baseBytes": 2097152,
+          "estimatedMipBytes": 2796203,
+          "source": "authored curve graph; no donor texture",
+          "periodicTiling": false
+        }
+      },
+      "geometricFolds": {
+        "addedVertices": 55000,
+        "sourceVertices": 150459,
+        "displayVertices": 205459,
+        "affectedVertices": 88575,
+        "positiveRollVertices": 11543,
+        "valleyVertices": 40872,
+        "maxDeltaMM": 0.25835583984072436,
+        "protectedDeltaMM": 0,
+        "updateMS": 255,
+        "canonicalModified": false,
+        "bodyModified": false,
+        "extraHeadMeshes": 0,
+        "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+        "physicalSkinSimulation": false
+      },
+      "foldFrames": 26,
+      "foldLook": {
+        "strength": 0.72,
+        "slack": 0.65,
+        "compression": 0.55,
+        "forehead": 0.55,
+        "eyes": 0.6,
+        "nasolabial": 0.78,
+        "cheeks": 0.55,
+        "sag": 0.55,
+        "makeup": 0.12,
+        "light": "natural",
+        "chroma": 0.28,
+        "exposure": 0,
+        "shadows": false,
+        "diffusion": false,
+        "gray": false
+      },
+      "submitMeanMS": 41.01923076922853,
+      "performanceMeaning": "CPU WebGL submission only; not GPU time or certified hardware FPS"
+    },
+    "maps": {
+      "seed": 1729,
+      "width": 1024,
+      "height": 1280,
+      "rectMM": [
+        -90,
+        180,
+        180,
+        225
+      ],
+      "colorHash": "a15c9dc5",
+      "heightHash": "913c9dc5",
+      "nonzeroPixels": 0,
+      "freckleCount": 0,
+      "acneCount": 0,
+      "wrinkleCurves": 0,
+      "scarPoints": 0,
+      "buildMS": 147.5,
+      "kind": "authored pigment/redness/signed-height fields",
+      "relief": "normal perturbation, not silhouette displacement"
+    },
+    "skin": {
+      "compiles": 2,
+      "textureWrinklePainting": false,
+      "makeup": "bounded color/roughness/micro-normal finishing; geometry retained",
+      "newTextureBytes": 0
+    },
+    "oldWrinkleCurves": 0,
+    "lightSource": "kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed",
+    "nativeAssetReplaced": false
+  },
+  "performance": [
+    {
+      "light": "natural",
+      "diffusion": false,
+      "rows": [
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.29999999998835847,
+          "softwareCompletionMS": 0.29999999998835847
+        },
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.20000000001164153,
+          "softwareCompletionMS": 0.20000000001164153
+        },
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.09999999997671694,
+          "softwareCompletionMS": 0.09999999997671694
+        }
+      ],
+      "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+    },
+    {
+      "light": "original",
+      "diffusion": false,
+      "rows": [
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.3999999999650754,
+          "softwareCompletionMS": 0.5
+        },
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.7000000000116415,
+          "softwareCompletionMS": 0.7999999999883585
+        },
+        {
+          "calls": 1,
+          "triangles": 410424,
+          "submitMS": 0.09999999997671694,
+          "softwareCompletionMS": 0.09999999997671694
+        }
+      ],
+      "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+    },
+    {
+      "light": "original",
+      "diffusion": true,
+      "rows": [
+        {
+          "calls": 6,
+          "triangles": 1231278,
+          "submitMS": 0.5999999999767169,
+          "softwareCompletionMS": 0.5999999999767169
+        },
+        {
+          "calls": 6,
+          "triangles": 1231278,
+          "submitMS": 3.599999999976717,
+          "softwareCompletionMS": 3.599999999976717
+        },
+        {
+          "calls": 6,
+          "triangles": 1231278,
+          "submitMS": 0.6000000000349246,
+          "softwareCompletionMS": 0.6000000000349246
+        }
+      ],
+      "device": "Chromium SwiftShader; NOT consumer GPU benchmark"
+    }
+  ],
+  "final": {
+    "version": "ET21-FOLD-R01",
+    "settings": {
+      "strength": 0.72,
+      "slack": 0.65,
+      "compression": 0.55,
+      "forehead": 0.55,
+      "eyes": 0.6,
+      "nasolabial": 0.78,
+      "cheeks": 0.55,
+      "sag": 0.55,
+      "makeup": 0.12,
+      "light": "natural",
+      "chroma": 0.28,
+      "exposure": 0,
+      "shadows": false,
+      "diffusion": false,
+      "gray": false
+    },
+    "geometry": {
+      "addedVertices": 55000,
+      "sourceVertices": 150459,
+      "displayVertices": 205459,
+      "affectedVertices": 88575,
+      "positiveRollVertices": 11543,
+      "valleyVertices": 40872,
+      "maxDeltaMM": 0.25835583984072436,
+      "protectedDeltaMM": 0,
+      "updateMS": 121.40000000002328,
+      "canonicalModified": false,
+      "bodyModified": false,
+      "extraHeadMeshes": 0,
+      "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+      "physicalSkinSimulation": false
+    },
+    "viewer": {
+      "version": "ET18-L2",
+      "nativeVertices": 25417,
+      "displayVertices": 205459,
+      "nativeTriangles": 50624,
+      "displayTriangles": 410424,
+      "resolution": 1,
+      "oneRenderer": true,
+      "oneCanvas": true,
+      "staticHeadReplacement": false,
+      "restCoordinates": "source-native rest metres, fixed-stencil interpolation",
+      "derivedSurfaceExportAvailable": true,
+      "baseTopologyUnchanged": true,
+      "face": {
+        "version": "ET12-F1",
+        "updates": 262,
+        "enabled": true,
+        "settings": {
+          "enabled": true,
+          "structure": 0.75,
+          "detail": 1,
+          "meso": 0.75,
+          "colorDetail": 0.5,
+          "pigment": 0,
+          "blood": 0.35,
+          "oil": 0.55,
+          "wrap": 0.28,
+          "diffusion": 0.42,
+          "radius": 0.85,
+          "layer": "beauty"
+        },
+        "fields": {
+          "version": "kaopu/native-face-fields@1",
+          "counts": {
+            "face": 7795,
+            "lips": 237,
+            "thin": 2277,
+            "nose": 990,
+            "forehead": 501,
+            "cheek": 888,
+            "ear": 1137,
+            "chin": 151,
+            "eyes": 750
+          },
+          "bodyWeight": 0,
+          "source": "same canonical GNM material/region IDs and retained barycentric landmarks; original lip mask reused",
+          "fixedAtBind": true,
+          "nearestCorrespondenceReselected": false
+        },
+        "affectedNativeVertices": 925,
+        "maxGeometryDeltaMM": 0.08233150583691895,
+        "regionalRequestedMaxMM": {
+          "philtrum": 0.11842404037401899,
+          "nasolabial": 0.05557900242666185,
+          "lipBorder": 0.09657713330329229,
+          "alar": 0.0945194591206984,
+          "chin": 0.0003246954144500974
+        },
+        "originalBodyUnchanged": true,
+        "eyeLayerRetained": true,
+        "originalHeadIdentityAndRigRetained": true,
+        "restCoordinatesStable": true,
+        "donorIdentityMeshImported": false,
+        "clinicalRecovery": false
+      },
+      "skin": {
+        "ready": true,
+        "errors": [],
+        "hostMaterialPreserved": true
+      },
+      "diffusion": {
+        "source": "donor 25-tap split-albedo RGB separable diffusion",
+        "frames": 14,
+        "size": [
+          964,
+          554
+        ],
+        "regionMask": "native face-only alpha",
+        "specularBlurred": false,
+        "bodyDiffusion": false,
+        "volumetricScattering": false,
+        "screenSpaceOcclusionLimit": true
+      },
+      "ocular": {
+        "mode": "eye-only tangent-plane midpoint refinement",
+        "addedVertices": 18192,
+        "eyeTrianglesBefore": 12096,
+        "eyeTrianglesAfter": 48384,
+        "maxCorrectionMM": 0.05704375936100394,
+        "correctionCapMM": 0.08,
+        "nativeVerticesMoved": 0,
+        "nonOcularTrianglesChanged": 0
+      },
+      "naturalEyes": {
+        "version": "ET15-E1",
+        "ready": true,
+        "shaderCompiles": 10,
+        "errors": [],
+        "originalTextures": [
+          1024,
+          1024
+        ],
+        "sourceAuthors": [
+          "callharvey3d"
+        ],
+        "sourcePack": "system_eye_materials03",
+        "license": "CC-BY as listed by source pack",
+        "unmodifiedSourcePNGs": true,
+        "bodyMaterialChanged": false,
+        "medicalSimulation": false
+      },
+      "lips": {
+        "mode": "native-landmark vermilion rolls and fixed-stencil local surface",
+        "addedDisplayVertices": 58824,
+        "affectedDisplayVertices": 35383,
+        "maxShapeDeltaMM": 0.8269236926486127,
+        "nativePositionBufferModified": false,
+        "nativeIndexBufferModified": false,
+        "bodyTrianglesChanged": 0,
+        "extraHeadMeshes": 0,
+        "eyeChange": "bounded skin-only midpoint refinement; eyeballs and eyelid aperture retained"
+      },
+      "lipMaterial": {
+        "version": "ET18-L2",
+        "shaderCompiles": 10,
+        "kind": "bounded lip field + seeded curve graph, not a scanned map",
+        "sourceHeadReplaced": false,
+        "oldSkinMastersRetained": true,
+        "distanceFiltering": true,
+        "atlas": {
+          "seed": 37,
+          "density": 1,
+          "primary": 90,
+          "branches": 105,
+          "secondary": 244,
+          "minHeightMM": -0.08215264976024628,
+          "maxHeightMM": 0.004684084502514452,
+          "baseBytes": 2097152,
+          "estimatedMipBytes": 2796203,
+          "source": "authored curve graph; no donor texture",
+          "periodicTiling": false
+        }
+      },
+      "geometricFolds": {
+        "addedVertices": 55000,
+        "sourceVertices": 150459,
+        "displayVertices": 205459,
+        "affectedVertices": 88575,
+        "positiveRollVertices": 11543,
+        "valleyVertices": 40872,
+        "maxDeltaMM": 0.25835583984072436,
+        "protectedDeltaMM": 0,
+        "updateMS": 121.40000000002328,
+        "canonicalModified": false,
+        "bodyModified": false,
+        "extraHeadMeshes": 0,
+        "foldSource": "CPU display-vertex positions + recomputed normals; included in native-derived idle GPU bases",
+        "physicalSkinSimulation": false
+      },
+      "foldFrames": 107,
+      "foldLook": {
+        "strength": 0.72,
+        "slack": 0.65,
+        "compression": 0.55,
+        "forehead": 0.55,
+        "eyes": 0.6,
+        "nasolabial": 0.78,
+        "cheeks": 0.55,
+        "sag": 0.55,
+        "makeup": 0.12,
+        "light": "natural",
+        "chroma": 0.28,
+        "exposure": 0,
+        "shadows": false,
+        "diffusion": false,
+        "gray": false
+      },
+      "submitMeanMS": 21.522429906540097,
+      "performanceMeaning": "CPU WebGL submission only; not GPU time or certified hardware FPS"
+    },
+    "maps": {
+      "seed": 1729,
+      "width": 1024,
+      "height": 1280,
+      "rectMM": [
+        -90,
+        180,
+        180,
+        225
+      ],
+      "colorHash": "fe53ab6c",
+      "heightHash": "913c9dc5",
+      "nonzeroPixels": 962,
+      "freckleCount": 74,
+      "acneCount": 0,
+      "wrinkleCurves": 0,
+      "scarPoints": 0,
+      "buildMS": 451.5999999999767,
+      "kind": "authored pigment/redness/signed-height fields",
+      "relief": "normal perturbation, not silhouette displacement"
+    },
+    "skin": {
+      "compiles": 5,
+      "textureWrinklePainting": false,
+      "makeup": "bounded color/roughness/micro-normal finishing; geometry retained",
+      "newTextureBytes": 0
+    },
+    "oldWrinkleCurves": 0,
+    "lightSource": "kaopu-hair-workbench/qa/gnm-study/src/app.js @ ccf5a1ed",
+    "nativeAssetReplaced": false
+  }
+}
