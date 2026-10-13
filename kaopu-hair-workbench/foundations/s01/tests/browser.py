@@ -17,6 +17,10 @@ with sync_playwright() as p:
  browser=p.chromium.launch(**opts);context=browser.new_context(viewport={'width':1320,'height':940},accept_downloads=True);page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));console_errors=[];page.on('console',lambda e:console_errors.append(e.text) if e.type=='error' else None)
  try:
   t=time.monotonic();response=page.goto(url,wait_until='load',timeout=60000);check('HTTP 200',response.status==200);received=response.body();manifest=json.loads((P/'site/BUILD_MANIFEST.json').read_text());check('Exact tested HTML hash',hashlib.sha256(received).hexdigest()==manifest['htmlSha256']);page.wait_for_function('window.s01?.ready===true',timeout=60000);report['coldReadySeconds']=time.monotonic()-t
+  resource_hashes={}
+  for name,meta in manifest['files'].items():
+   result=context.request.get(url+name);blob=result.body();resource_hashes[name]={'status':result.status,'bytes':len(blob),'sha256':hashlib.sha256(blob).hexdigest()};check('Exact public/candidate resource '+name,result.status==200 and resource_hashes[name]['sha256']==meta['sha256'] and len(blob)==meta['bytes'])
+  report['resourceHashes']=resource_hashes
   initial=page.evaluate('s01.stats()');report['initial']=initial;binding=initial['rootBindingHash'];check('Runtime matches tested source',initial['source']==manifest['source']);check('One original head, no full hairstyle',initial['visibleHeadMeshes']==1 and not initial['hasFullHair']);check('Roots visible and no out-of-domain activation',initial['activeRoots']>1000 and initial['outsideRoots']==0);snap(page,'three')
   for v in ['front','left','right','back','top']:
    page.click('[data-view="'+v+'"]');snap(page,v);check('Actual camera button '+v,page.evaluate('s01.stats().rootBindingHash')==binding)
@@ -30,7 +34,7 @@ with sync_playwright() as p:
   page.click('#save');page.click('#reset');page.click('#load');check('Local save/load restores fields',page.evaluate('s01.stats().maskHash')==original_mask)
   with page.expect_download() as dl:page.click('#export')
   fn=out/'export.json';dl.value.save_as(str(fn));archive=json.loads(fn.read_text());check('Actual JSON download has current topology',archive['topology']==manifest['topology']);page.locator('details').first.locator('summary').click();page.locator('#json').fill('{"schema":"wrong"}');page.click('#import');check('Invalid import rejected without changing mask',page.evaluate('s01.stats().maskHash')==original_mask and '未导入' in page.inner_text('#status'))
-  page.reload(wait_until='load');page.wait_for_function('s01?.ready===true',timeout=60000);page.click('#load');check('Refresh and explicit load retain saved data',page.evaluate('s01.stats().maskHash')==original_mask)
+  page.reload(wait_until='load');page.wait_for_function('window.s01?.ready===true',timeout=60000);page.click('#load');check('Refresh and explicit load retain saved data',page.evaluate('s01.stats().maskHash')==original_mask)
   mobile=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1);mp=mobile.new_page();mp.on('pageerror',lambda e:errors.append(str(e)));mp.goto(url,wait_until='load');mp.wait_for_function('window.s01?.ready===true',timeout=60000);snap(mp,'mobile-view');mp.click('#openPanel');snap(mp,'mobile-controls');check('Mobile viewport has visible controls and no horizontal overflow',mp.locator('aside').is_visible() and mp.evaluate('document.documentElement.scrollWidth<=innerWidth'));mobile.close()
   check('No runtime JavaScript errors',not errors,errors);check('No console or shader errors',not console_errors,console_errors);report['success']=True
  except Exception as e:
