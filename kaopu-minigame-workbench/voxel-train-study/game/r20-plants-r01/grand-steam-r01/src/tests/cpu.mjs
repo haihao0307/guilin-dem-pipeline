@@ -1,0 +1,4 @@
+import * as T from 'three';
+import {createTrainMatter} from '../materials/matter.mjs';
+import {createGrandLocomotive} from '../loco/loco.mjs';
+const M=createTrainMatter(T);const loco=createGrandLocomotive(T,M);let meshes=0,triangles=0,bad=0;const names=[];loco.root.traverse(n=>{if(n.isMesh){meshes++;const g=n.geometry;triangles+=(g.index?g.index.count:g.attributes.position.count)/3;for(const v of g.attributes.position.array)if(!Number.isFinite(v))bad++;names.push(n.name);}});if(bad)throw Error('nonfinite '+bad);loco.setCoalOpen(1);loco.setWaterOpen(1);loco.setInterior(true);loco.setInterior(false);loco.setCoalOpen(0);loco.setWaterOpen(0);console.log(JSON.stringify({meshes,triangles,bad,bounds:new T.Box3().setFromObject(loco.root,true).getSize(new T.Vector3()).toArray(),body:loco.details,materials:Object.keys(M)},null,2));

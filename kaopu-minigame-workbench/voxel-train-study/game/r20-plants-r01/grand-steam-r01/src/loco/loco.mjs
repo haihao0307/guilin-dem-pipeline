@@ -1,0 +1,65 @@
+import {createTenderMother} from '../native/tender-mother.mjs';
+import {createFrameMother} from '../native/frame-mother.mjs';
+import {createRunningGearMother} from '../native/running-gear-mother.mjs';
+import {createCabMother,cabRoofTopAtY} from '../native/cab-mother.mjs';
+import {createBackheadMother} from '../native/backhead-mother.mjs';
+import {createServiceFittingsMother} from '../native/service-fittings-mother.mjs';
+import {DrivingPhysics} from '../native/retained/physics/driving-physics.mjs';
+import {A4_GAME_PARAMETERS} from '../native/retained/physics/parameters.mjs';
+import {kit,roundedShape,sweptSurface,smoothStations} from '../design/geometry.mjs';
+import {createLettering} from '../design/lettering.mjs';import {addOwnedIdentity} from '../design/identity.mjs';
+import {GRAND_STEAM_CONTRACT} from '../design/design-contract.mjs';
+const STATIONS=[[-8.45,1.30,1.78,3.97],[-6.20,1.32,1.78,3.97],[-3.8,1.33,1.78,3.98],[-1,1.30,1.76,3.98],[.8,1.25,1.73,3.93],[2.0,1.16,1.68,3.74],[3.2,.96,1.56,3.12],[4.2,.65,1.47,2.25],[4.6,.33,1.47,1.68]];
+function spline(rows,k){const n=rows.length,x=rows.map(r=>r[0]),a=rows.map(r=>r[k]),h=x.slice(1).map((v,i)=>v-x[i]),l=Array(n).fill(0),mu=Array(n).fill(0),z=Array(n).fill(0),c=Array(n).fill(0),b=Array(n-1),d=Array(n-1);l[0]=1;for(let i=1;i<n-1;i++){l[i]=2*(x[i+1]-x[i-1])-h[i-1]*mu[i-1];mu[i]=h[i]/l[i];z[i]=(3*(a[i+1]-a[i])/h[i]-3*(a[i]-a[i-1])/h[i-1]-h[i-1]*z[i-1])/l[i];}l[n-1]=1;for(let j=n-2;j>=0;j--){c[j]=z[j]-mu[j]*c[j+1];b[j]=(a[j+1]-a[j])/h[j]-h[j]*(c[j+1]+2*c[j])/3;d[j]=(c[j+1]-c[j])/(3*h[j]);}return t=>{let i=0;while(i<n-2&&t>x[i+1])i++;const q=Math.max(x[0],Math.min(x.at(-1),t))-x[i];return a[i]+b[i]*q+c[i]*q*q+d[i]*q*q*q;};}
+const profiles=[1,2,3].map(k=>spline(STATIONS,k));
+export function sectionAt(x){const [halfWidth,lower,crown]=profiles.map(f=>f(x));return{halfWidth,lower,crown};}
+export function sideAt(x,z,side=1){const s=sectionAt(x),u=Math.max(0,Math.min(1,(z-s.lower)/(s.crown-s.lower)));return side*s.halfWidth*Math.sqrt(Math.max(0,1-u**5.5));}
+export function roofAt(x,y){const s=sectionAt(x);return s.lower+(s.crown-s.lower)*Math.max(0,1-(y/s.halfWidth)**2)**(1/5.5);}
+function flipWinding(g){const a=g.index.array;for(let i=0;i<a.length;i+=3){const b=a[i+1];a[i+1]=a[i+2];a[i+2]=b;}g.computeVertexNormals();return g;}
+function bodyPoint(x,t,inset=0){const s=sectionAt(x),u=Math.sin(t);return[x,(s.halfWidth-inset)*Math.cos(t),s.lower+(s.crown-s.lower-inset)*Math.max(0,u)**(2/5.5)];}
+export function createGrandLocomotive(T,M){
+ const root=new T.Group();root.name='新88 / 末代蒸汽整車候選';const exterior=new T.Group();exterior.name='連續車身 / 可移除檢視';root.add(exterior);const K=kit(T,M,root),E=kit(T,M,exterior),L=createLettering(T,M);const frame=createFrameMother(T),gear=createRunningGearMother(T);root.add(frame.root,gear.root);
+ const shell={surfaceZM:roofAt,section:sectionAt,materials:{green:M.paint}};
+ const g=sweptSurface(T,(u,v)=>bodyPoint(-6.26+10.86*u,Math.PI*v),210,56);E.add(flipWinding(g),'paint','新共用連續母截面：鍋爐至流線鼻');const inner=sweptSurface(T,(u,v)=>bodyPoint(-6.26+10.86*u,Math.PI*(1-v),.026),160,44);E.add(flipWinding(inner),'iron','連續蒙皮內壁 / 26mm候選層');
+ for(const end of[-6.26,4.6])E.add(sweptSurface(T,(u,v)=>{const a=bodyPoint(end,u*Math.PI),b=bodyPoint(end,u*Math.PI,.026);return a.map((q,i)=>q+(b[i]-q)*v)},60,2),'steel','端面實體蒙皮收口 '+end);
+ // The original precise cab window/door/floor/steps anatomy is mapped by the same
+ // new authored envelope; no external teacher buffers are used.
+ const cab=createCabMother(T,{wearAmount:.13,grimeAmount:.10});for(const mesh of cab.parts){const a=mesh.geometry.attributes.position,roof=mesh.userData.functionalParent==='roof',d=mesh.userData.domain;for(let i=0;i<a.count;i++){let x=a.getX(i),y=a.getY(i),z=a.getZ(i);if(roof){const eave=3.60,ny=y*Math.abs(sideAt(x,eave))/(cab.parameters.widthM/2);z+=roofAt(x,ny)-cabRoofTopAtY(cab.parameters,y);y=ny;}else if(!mesh.name.startsWith('steps.')&&Math.abs(y)>.98){const shift=Math.abs(sideAt(x,z))-.038-(cab.parameters.widthM/2-cab.parameters.wallInsetM);y+=Math.sign(y)*shift*Math.min(1,(Math.abs(y)-.98)/.20);}a.setXYZ(i,x,y,z);}mesh.geometry.computeVertexNormals();if(d?.material==='paint')mesh.material=M.paint;else if(d?.material==='brass')mesh.material=M.brass;else if(d?.material==='steel')mesh.material=M.steel;}root.add(cab.root);
+ const backhead=createBackheadMother(T);backhead.root.position.set(-6.55,0,1.85);root.add(backhead.root);const fit=createServiceFittingsMother(T,{shell,gear});root.add(fit.root);
+ // New tandem exhaust: hollow bell mouths contained in one long elliptical
+ // tear-drop plenum; its feet follow the same roof field.
+ const chimney=new T.Group();chimney.name='雙煙道共用流線整流罩';exterior.add(chimney);const C=kit(T,M,chimney);
+ C.add(flipWinding(sweptSurface(T,(u,v)=>{const x=-.65+2.8*u,t=v*Math.PI*2,w=.06+.45*Math.sin(Math.PI*u)**.65,base=roofAt(x,0);return[x,w*Math.cos(t),base+.018+.060*Math.sin(Math.PI*u)+.10*Math.sin(t)]},90,36)),'paint','雙煙囪一體長淚滴座');
+ for(const x of[.10,1.04]){const z=roofAt(x,0)+.030;const profile=[[.225,0],[.236,.12],[.29,.26],[.315,.29],[.315,.32],[.272,.32],[.267,.27],[.205,.10],[.202,0],[.225,0]];const cg=new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h*.65)),64);cg.rotateX(Math.PI/2);cg.translate(x,0,z);C.add(cg,'iron','中空收擴排氣口 '+x);C.torus([x,0,z+.202],.294,.015,'brass','煙口精工邊緣 '+x);}
+ // Continuous fine lining follows real skin coordinates and joins cab/tender.
+ for(const side of[-1,1]){for(const z of[1.87,2.01,3.43]){const pts=[];for(let i=0;i<=100;i++){const x=-8.38+12.8*i/100,s=sectionAt(x),zz=Math.min(z,s.crown-.10);pts.push([x,sideAt(x,zz,side)+side*.017,zz]);}E.pipe(pts,z===2.01?.008:.012,'brass','連續黃銅細線 '+side+'/'+z);}
+  L.plaque(exterior,{text:'飛行的香港人',sub:'THE FLYING HONGKONGER',width:4.25,height:.59,at:[-2.90,side*1.342,2.94],side,letterHeight:.26,depth:.044});for(const dx of[-1.92,1.92])for(const dz of[-.215,.215]){const x=-2.9+dx,z=2.94+dz;E.rod([x,sideAt(x,z,side)-side*.004,z],[x,side*1.398,z],.017,'brass','銘牌貫穿固定螺柱',8);}
+  L.relief(exterior,'88',.56,.055,[-7.22,side*1.322,2.47],side);L.plaque(exterior,{text:'香港人鐵路',sub:'HONGKONGER RAILWAY',width:.91,height:.32,at:[-7.20,side*1.325,2.02],side,letterHeight:.096,depth:.025});
+  // Service covers, hinges and countersunk rows are mounted to analytic skin.
+  for(const x of[-5.3,-.2,1.55]){const z=2.28,y=sideAt(x,z,side)+side*.028;const cover=new T.Mesh(new T.ExtrudeGeometry(roundedShape(T,.62,.40,.065),{depth:.018,bevelEnabled:true,bevelSize:.008,bevelThickness:.005,bevelSegments:2}),M.paint);cover.applyMatrix4(L.sideMatrix(side,[x,y,z]));cover.name='檢修門 / 實體圓角及鉸鏈';exterior.add(cover);for(const dx of[-.24,.24])for(const dz of[-.14,.14])E.rod([x+dx,y,z+dz],[x+dx,y+side*.023,z+dz],.009,'brass','檢修門緊固件',8);}
+  for(let x=-6.1;x<3.7;x+=.225){const z=1.84;E.rod([x,sideAt(x,z,side),z],[x,sideAt(x,z,side)+side*.015,z],.008,'steel','蒙皮細鉚釘',10);}
+ }
+ // Tender: a separate water tank around the retained detailed running frame.
+ const tender=new T.Group();tender.name='連續煤水車 / 封閉煤艙與加水口';exterior.add(tender);const D=kit(T,M,tender),tx0=-16.16,tx1=-8.88;
+ for(const side of[-1,1]){D.box([-12.52,side*1.294,2.53],[7.27,.034,2.20],'paint','連續水箱側壁 '+side);D.pipe([[tx0,side*1.314,1.86],[tx1,side*1.314,1.86]],.012,'brass','煤水車金線下 '+side);D.pipe([[tx0,side*1.314,3.42],[tx1,side*1.314,3.42]],.012,'brass','煤水車金線上 '+side);for(let x=tx0+.12;x<tx1;x+=.225)for(const z of[1.50,3.55])D.rod([x,side*1.29,z],[x,side*1.324,z],.009,'steel','水箱鉚釘',10);L.plaque(tender,{text:'飛行的香港人',sub:'THE FLYING HONGKONGER',width:3.50,height:.44,at:[-12.52,side*1.322,3.34],side,letterHeight:.19,depth:.035});addOwnedIdentity(T,M,tender,L,{width:2.60,at:[-12.52,side*1.326,2.37],side});}
+ const retainedFuel=createTenderMother(T,{coalFill:.58});const fuel=new T.Group();fuel.name='原自有煤載荷 / 封閉時隱藏繪製';fuel.position.x=-12.57;tender.add(fuel);for(const n of [...retainedFuel.root.children])if(n.name==='native coal load from fill-domain'||n.name==='continuous coal bulk and bounded fill surface')fuel.add(n);fuel.visible=false;
+ D.box([-12.52,0,1.45],[7.27,2.59,.045],'steel','水箱承載底板');D.box([-12.52,0,3.55],[7.27,2.52,.032],'iron','煤艙密封內底與水箱上隔板');
+ for(const x of[tx0,tx1])D.box([x,0,2.5],[.035,2.6,2.13],'paint','水箱端壁 '+x);
+ // Shoulder transition is a genuine rounded surface rather than a strip decal.
+ for(const side of[-1,1])D.add((side===1?flipWinding:g=>g)(sweptSurface(T,(u,v)=>{const a=v*Math.PI/2;return[tx0+(tx1-tx0)*u,side*(1.02+.29*Math.cos(a)),3.61+.33*Math.sin(a)]},110,22)),'paint','水箱上肩連續流線 '+side);
+ const panels=[];for(let i=0;i<6;i++){const panel=new T.Group();panel.name='伸縮煤艙罩 / 重疊節 '+(i+1);tender.add(panel);const P=kit(T,M,panel),start=-15.30+i*1.02;P.add(sweptSurface(T,(u,v)=>{const y=-1.035+2.07*v;return[start+1.12*u,y,3.885-.058*(y/1.035)**2+i*.026]},20,24),'paint','有厚度弧形罩面');P.add(flipWinding(sweptSurface(T,(u,v)=>{const y=-1.035+2.07*v;return[start+1.12*u,y,3.863-.058*(y/1.035)**2+i*.026]},20,24)),'iron','伸縮罩實體內表面 / 22mm');for(const xx of[start,start+1.12])P.add(sweptSurface(T,(u,v)=>{const y=-1.035+2.07*u;return[xx,y,3.885-.058*(y/1.035)**2+i*.026-.022*v]},24,2),'brass','伸縮罩實體端壁');P.pipe(Array.from({length:25},(_,j)=>{const y=-1.035+j*2.07/24;return[start,y,3.893-.058*(y/1.035)**2+i*.026]}),.008,'brass','罩節封邊');panels.push({root:panel,rest:start,index:i});}
+ D.box([-15.68,0,3.82],[.92,2.04,.15],'paint','封閉加水口平台');D.rod([-15.7,0,3.87],[-15.7,0,3.96],.235,'brass','加水口頸與法蘭',64);const filler=new T.Group();filler.name='加水口實體密封蓋';filler.position.set(-15.935,0,3.965);tender.add(filler);const F=kit(T,M,filler);F.rod([.235,0,0],[.235,0,.037],.25,'paint','閉合水口頂蓋',64);F.torus([.235,0,.040],.234,.012,'brass','水口蓋壓環');F.pipe([[.13,0,.045],[.13,0,.105],[.34,0,.105],[.34,0,.045]],.015,'brass','加水蓋提手');
+ // Flexible full-width bridge roof, two side fairing leaves, working drawgear gap.
+ D.add(sweptSurface(T,(u,v)=>{const x=-8.88+.48*u,y=-1.30+2.6*v;return[x,y,3.97-.12*(y/1.3)**2]},12,24),'paint','駕駛室至煤水車重疊流線頂連接');for(const side of[-1,1]){D.box([-8.74,side*1.302,2.70],[.24,.024,1.84],'paint','煤水車端重疊整流葉 '+side);D.box([-8.51,side*1.312,2.70],[.24,.024,1.84],'paint','駕駛室端重疊整流葉 '+side);D.box([-8.635,side*1.291,2.70],[.015,.016,1.84],'black','15mm可動接縫 '+side);for(const z of[1.87,3.43])D.pipe([[-8.86,side*1.331,z],[-8.43,side*1.332,z]],.010,'brass','接縫連續金線 '+side+'/'+z);}
+ // Modern pneumatic concept remains explicit and traceable; no claimed250 proof.
+ for(const side of[-1,1]){K.pipe([[-15.9,side*.45,1.1],[-9.0,side*.45,1.1],[-8.55,side*.44,1.02],[-7.9,side*.44,1.1],[-5.9,side*.44,1.15],[3.95,side*.44,1.15]],.017,'brass',side>0?'主供風管 / 概念佈置':'制動管 / 概念佈置');for(const x of[-14.3,-11.3])K.rod([x-.40,side*.74,1.20],[x+.40,side*.74,1.20],.14,'iron','帶箍輔助風缸');for(const x of[-14.3,-11.3])for(const dx of[-.30,.30])K.torus([x+dx,side*.74,1.2],.145,.014,'steel','風缸承載抱箍',[1,0,0]);}
+ // Supplement existing original gauge/valve panel with actual solid inscriptions.
+ const instructions=new T.Group();instructions.name='駕駛操作銘牌與儀表說明';root.add(instructions);for(const side of[-1,1])L.plaque(instructions,{text:'操作說明',sub:'REGULATOR / BRAKE / WATER',width:.68,height:.24,at:[-7.42,side*1.10,2.18],side:-side,letterHeight:.066,depth:.012});
+ const doorGroups=[];for(const side of[-1,1]){const owner='door.'+(side>0?'left':'right'),pivot=new T.Group();pivot.name='可操作駕駛室車門 '+side;pivot.position.set(-8.30,side*1.296,1.85);root.add(pivot);for(const part of cab.parts.filter(p=>p.userData.functionalParent===owner)){part.geometry.translate(8.30,-side*1.296,-1.85);pivot.add(part);}doorGroups.push({pivot,side});}function setDoors(v){if(!Number.isFinite(v))throw Error('FINITE_DOOR_STATE_REQUIRED');for(const d of doorGroups)d.pivot.rotation.z=d.side*Math.max(0,Math.min(1,v))*1.18;}
+ const physics=new DrivingPhysics(A4_GAME_PARAMETERS);physics.reset();physics.setPaused(true);const state=physics.snapshot();gear.setPhysicsState(state);gear.root.position.x=0;gear.setBrakePressure(state.brakeFraction);backhead.updateFromPhysics(state);
+ function setCoalOpen(v){v=Math.max(0,Math.min(1,v));for(const p of panels)p.root.position.x=-p.index*.82*v;fuel.visible=v>.001;root.userData.coalOpen=v;}
+ function setWaterOpen(v){filler.rotation.y=-Math.max(0,Math.min(1,v))*1.65;}
+ function setInterior(v){exterior.visible=!v;for(const p of cab.parts)if(['roof','wall','door'].includes(p.userData.domain?.kind)||p.userData.functionalParent==='roof')p.visible=!v;}
+ root.userData={contract:GRAND_STEAM_CONTRACT,allNewOuterEnvelope:true,retainedOwnFamilies:['wheel tread and flange','cast wheel centre','forged rods','brake rigging','frame and couplings','cab functional anatomy','backhead valves and instruments','service fittings'],teacherAssetsLoaded:false,materialGeometry:'Shared authoring domains; triangulation is renderer output',brakeAirConceptUnvalidated:true};root.updateMatrixWorld(true);
+ return{root,setCoalOpen,setWaterOpen,setInterior,setDoors,gear,frame,cab,backhead,exterior,physicsState:state,details:{newEnvelope:true,solidNameplates:true,coveredCoal:true,dimensionsCalibrated:false,targetOnlyKmh:250}};
+}

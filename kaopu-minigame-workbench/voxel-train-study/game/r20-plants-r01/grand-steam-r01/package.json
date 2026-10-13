@@ -1,0 +1,15 @@
+{
+  "name": "kaopu-grand-steam-r01",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.mjs src/vendor-entry.mjs --bundle --format=esm --splitting --minify --legal-comments=eof --outdir=.",
+    "test": "node src/materials/test-matter.mjs && node src/coach/test-coach.mjs && node src/coach/test-winding.mjs && node src/coach/test-clearance.mjs && node src/tests/cpu.mjs && node src/tests/cab-opening.mjs && node src/tests/lettering.mjs"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5"
+  }
+}
