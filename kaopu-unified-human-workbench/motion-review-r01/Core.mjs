@@ -22,6 +22,11 @@ export class NativeBinding {
   // Keep the original native descriptor for source foot/hand calibration.
   const baseEntries=[],baseRange=new Float32Array(this.N*2);for(let i=0;i<this.N;i++){baseRange.set([baseEntries.length/8,rows[i].length],i*2);for(const a of rows[i])baseEntries.push(...a.p,a.j,a.w,0,0,0);}this.range=baseRange;this.packed=new Float32Array(baseEntries);
   const stages=[];
+  // R04 probe: original DenseSurface levels and OcularSurface precede lips.
+  const dense=[...(viewer.surfaces?.values()||[])].find(s=>s.geometry===viewer.currentOcular?.source);
+  if(!dense)throw Error("Original dense head ancestry unavailable");
+  for(const x of dense.levels)stages.push({n:x.oldCount,pairs:x.pairs,count:x.geometry.attributes.position.count});
+  const ocular=viewer.currentOcular;stages.push({n:ocular.source.attributes.position.count,pairs:ocular.pairs,count:ocular.geometry.attributes.position.count});
   for(const owner of [viewer.currentLip,viewer.currentFold])for(const x of owner?.layers||[])stages.push({n:x.oldCount??x.n,pairs:x.pairs,count:x.geometry.attributes.position.count});
   const e=viewer.currentEar;if(e&&viewer.geometry===e.geometry)stages.push({n:e.count,pairs:e.pairs,count:e.geometry.attributes.position.count});
   stages.sort((a,b)=>a.n-b.n);const lineage=[];
