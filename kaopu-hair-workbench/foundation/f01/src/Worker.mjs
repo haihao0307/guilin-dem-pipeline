@@ -1,0 +1,3 @@
+import {DEFAULT,validate,makeRoots,normalArray,makeDomain,makeGuides,DistanceField} from './Foundation.mjs';
+let head,roots,normals,sdf;
+self.onmessage=e=>{const{id,type}=e.data;try{if(type==='init'){head=e.data.head;normals=normalArray(head.positions,head.triangles);roots=makeRoots(head);sdf=new DistanceField(e.data.meta,e.data.field);}const recipe=validate(e.data.recipe||DEFAULT),start=performance.now(),domain=makeDomain(head,recipe),groom=makeGuides(head,roots,normals,sdf,recipe);self.postMessage({id,roots,normals,domain,groom,buildMs:performance.now()-start});}catch(err){self.postMessage({id,error:String(err.stack||err)});}};

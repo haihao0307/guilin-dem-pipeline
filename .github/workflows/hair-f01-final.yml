@@ -1,0 +1,70 @@
+name: Hair F01 final candidate
+on:
+  push:
+    branches: [feature/hair-foundation-f01-20261013]
+    paths: [.github/workflows/hair-f01-final.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f01
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/f01
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Separate wall timing from bounded physics delta
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          f=Path(os.environ['P'])/'src/App.mjs';s=f.read_text()
+          a='const dt=lastFrame?Math.min((t-lastFrame)/1000,.1):0;lastFrame=t;'
+          b='const elapsed=lastFrame?(t-lastFrame)/1000:0,dt=Math.min(elapsed,.1);if(playing)dropped+=Math.max(0,elapsed-dt);lastFrame=t;'
+          if a in s:s=s.replace(a,b)
+          assert b in s
+          s=s.replace('frameTimes.push(dt*1000)','frameTimes.push(elapsed*1000)')
+          f.write_text(s)
+          PY
+          python "$P/build.py"
+          node "$P/tests/check.mjs"
+          node "$P/tests/dynamic.mjs"
+      - name: Independent browser
+        run: |
+          npm install --prefix /tmp/f01-tools --no-save playwright@1.55.1
+          ln -s /tmp/f01-tools/node_modules node_modules
+          /tmp/f01-tools/node_modules/.bin/playwright install --with-deps chromium
+          python -m http.server 8765 --directory "$P/site" >/tmp/f01-server.log 2>&1 &
+          timeout 600s node "$P/tests/browser.mjs" http://127.0.0.1:8765/ candidate
+      - name: Record verified source and site
+        run: |
+          python - <<'PY'
+          import os,json,hashlib
+          from pathlib import Path
+          p=Path(os.environ['P']);a=json.loads((p/'evidence/core.json').read_text());b=json.loads((p/'evidence/candidate/report.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert a['success'] and b['success']
+          for name,v in m['files'].items():
+              raw=(p/'site'/name).read_bytes();assert len(raw)==v['bytes'] and hashlib.sha256(raw).hexdigest()==v['sha256'],name
+          for f in (p/'src').glob('*.mjs'):assert f.read_bytes()==(p/'site'/f.name).read_bytes()
+          (p/'CANDIDATE.json').write_text(json.dumps({'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'candidateBrowserVerified':True,'publicBrowserVerified':False,'coreChecks':len(a['checks']),'browserChecks':len(b['checks']),'htmlSHA256':m['files']['index.html']['sha256'],'frameTiming':'unclamped rAF wall interval; solver delta separate'},indent=2))
+          PY
+          git config user.name 'KAOPU Hair Foundation Validation'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/src" "$P/site" "$P/BUILD_MANIFEST.json" "$P/CANDIDATE.json" "$P/evidence"
+          git diff --cached --name-only | python -c 'import os,sys; assert all(x.startswith(os.environ["P"]+"/") for x in sys.stdin.read().splitlines())'
+          git commit -m 'build(hair-f01): final readable runtime and verified candidate with honest wall timing'
+          git push origin HEAD:refs/heads/feature/hair-foundation-f01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f01-final-candidate
+          path: kaopu-hair-workbench/foundation/f01
+          retention-days: 30

@@ -1,0 +1,67 @@
+name: Hair F01 native foundation candidate
+on:
+  push:
+    branches: [feature/hair-foundation-f01-20261013]
+    paths: [.github/workflows/hair-foundation-f01.yml]
+permissions:
+  contents: write
+env:
+  P: kaopu-hair-workbench/foundation/f01
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/f01
+            kaopu-hair-workbench/fusion/r14-l03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exact native data and readable source
+        run: |
+          python "$P/refine.py"
+          python "$P/build.py"
+          node "$P/bake-sdf.mjs"
+          python "$P/build.py"
+          node "$P/tests/check.mjs"
+          node "$P/tests/dynamic.mjs"
+      - name: Install independent browser
+        run: |
+          npm install --prefix /tmp/f01-tools --no-save playwright@1.55.1
+          ln -s /tmp/f01-tools/node_modules node_modules
+          /tmp/f01-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Actual WebGL canvas and interaction checks
+        run: |
+          python -m http.server 8765 --directory "$P/site" >/tmp/f01-server.log 2>&1 &
+          timeout 600s node "$P/tests/browser.mjs" http://127.0.0.1:8765/ candidate
+      - name: Record candidate without modifying old workbenches
+        run: |
+          python - <<'PY'
+          import os,json,hashlib
+          from pathlib import Path
+          p=Path(os.environ['P'])
+          a=json.loads((p/'evidence/core.json').read_text());b=json.loads((p/'evidence/candidate/report.json').read_text())
+          assert a['success'] and b['success']
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          for name,v in m['files'].items():
+              raw=(p/'site'/name).read_bytes()
+              assert len(raw)==v['bytes'] and hashlib.sha256(raw).hexdigest()==v['sha256'],name
+          for f in (p/'src').glob('*.mjs'):assert f.read_bytes()==(p/'site'/f.name).read_bytes()
+          (p/'CANDIDATE.json').write_text(json.dumps({'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'nativeL03Unchanged':True,'candidateBrowserVerified':True,'publicBrowserVerified':False,'coreChecks':len(a['checks']),'browserChecks':len(b['checks']),'htmlSHA256':m['files']['index.html']['sha256']},indent=2))
+          PY
+          git config user.name 'KAOPU Hair Foundation Validation'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -f "$P/src" "$P/site" "$P/BUILD_MANIFEST.json" "$P/CANDIDATE.json" "$P/evidence"
+          git diff --cached --name-only | python -c 'import os,sys; p=os.environ["P"]+"/"; assert all(x.startswith(p) for x in sys.stdin.read().splitlines())'
+          git commit -m 'build(hair-f01): reviewed native nape and lighter display updates with browser evidence'
+          git push origin HEAD:refs/heads/feature/hair-foundation-f01-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-f01-candidate
+          path: kaopu-hair-workbench/foundation/f01
+          retention-days: 30
