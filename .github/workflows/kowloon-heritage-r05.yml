@@ -1,4 +1,4 @@
-name: Kowloon heritage R05 single window review with persistent native tiles
+name: Kowloon heritage R05 single brick-identity repair with matched native window A/B
 on:
   push:
     branches: ['qa/kowloon-heritage-r05-20261013']
@@ -8,7 +8,48 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  material-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          path: revision
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 25c460991397665e2ad9068e79a93b2b16b80484
+          persist-credentials: false
+          path: baseline
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Copy isolated candidate and build pinned compiler
+        run: |
+          R=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
+          cp -a revision/$R/kowloon-station-r05-heritage baseline/$R/
+          cd baseline/$R/kowloon-train88-r01/compiler
+          cargo build --release --locked
+      - name: Install pinned official browser QA runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
+      - name: Check production geometry and matter once at 93 material-state/cell samples and 27 unchanged controls
+        timeout-minutes: 8
+        working-directory: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
+        run: |
+          node qa/heritage-state-emit.mjs
+          C=../kowloon-train88-r01/compiler/target/release/kaopu-station-shader-bridge
+          timeout 240s $C qa/heritage-state-generated/probe.wgsl qa/heritage-state-generated/probe.frag heritageStateProbe
+          node qa/heritage-state-run.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: heritage-state-regression-attempt-${{ github.run_attempt }}
+          path: baseline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/heritage-state-*/
+          retention-days: 7
   window-native-tiles:
+    needs: [material-regression]
     strategy:
       fail-fast: false
       matrix:
@@ -27,17 +68,10 @@ jobs:
           persist-credentials: false
           path: baseline
           sparse-checkout: kaopu-minigame-workbench/voxel-train-study
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: 04e5ac129512030875b033af40e4e5c553a0f9cd
-          persist-credentials: false
-          path: frozenmodel
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage
       - name: Prepare original 25c receiver with isolated R05 field and normal cameras
         run: |
           R=kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01
-          cp -a frozenmodel/$R/kowloon-station-r05-heritage baseline/$R/
-          for f in prepare-host-review.py render-staged-host.cjs heritage-review-layout.cjs validate-native-readback.mjs; do cp revision/$R/kowloon-station-r05-heritage/qa/$f baseline/$R/kowloon-station-r05-heritage/qa/$f; done
+          cp -a revision/$R/kowloon-station-r05-heritage baseline/$R/
           cd baseline
           python $R/kowloon-station-r05-heritage/qa/prepare-host-review.py
           node --test $R/kowloon-station-r05-heritage/qa/*.test.mjs
@@ -86,21 +120,21 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/station-bridge" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           "$RUNNER_TEMP/station-bridge/node_modules/.bin/playwright" install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/station-bridge/node_modules" >> "$GITHUB_ENV"
-      - name: Frozen 04e5ac12 window tile with two-pixel native halo and immediate checkpoint
+      - name: Brick-ID-only corrected window tile with two-pixel native halo and immediate checkpoint
         timeout-minutes: 40
         working-directory: baseline
         env:
           HERITAGE_SMOKE: '0'
           HERITAGE_REVIEW_SCALE: '1'
           HERITAGE_TILE_INDEX: '${{ matrix.tile }}'
-          HERITAGE_MODEL_COMMIT: 04e5ac129512030875b033af40e4e5c553a0f9cd
-          HERITAGE_EXPECTED_FIELD_SHA: 3759df8a7408503cffd8630a287cfb9fdde50ac8328edef51dad5a458c527a31
+          HERITAGE_MODEL_COMMIT: '${{ github.sha }}'
+          HERITAGE_EXPECTED_FIELD_SHA: 1141b25a06b4d2b0f27476dee41708ac09196a9136aeb26e405d34e1f3512f2c
         run: |
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/render-staged-host.cjs towerWindow
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/kowloon-station-r05-heritage/qa/validate-native-readback.mjs heritage-staged-towerWindow-tile${{ matrix.tile }}
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: heritage-window-tile-${{ matrix.tile }}-attempt-${{ github.run_attempt }}
+          name: heritage-window-B-tile-${{ matrix.tile }}-attempt-${{ github.run_attempt }}
           path: baseline/heritage-staged-towerWindow-tile${{ matrix.tile }}/
           retention-days: 7

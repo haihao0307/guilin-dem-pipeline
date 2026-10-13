@@ -21,8 +21,27 @@ function check(values,age,m){
   if(b.slice(0,3).every(x=>Math.abs(x)<1e-9)||!(b[3]>0&&b[3]<=1))failures.push(`${fixture.name}: empty/invalid material output`);
   const expectedAge=fixture.name.startsWith('heritage-')?Math.min(1,.32+age*.78):age;
   if(Math.abs(s[0]-expectedAge)>2e-7)failures.push(`${fixture.name}: age uniform/state mapping ${s[0]}`);
+  if(fixture.brickIdentity){
+   const actual=take(4),expected=fixture.brickIdentity;
+   row.brickIdentity={q:actual.slice(0,3),seed:actual[3],row:expected.row,column:expected.column};
+   if(!actual.every(Number.isFinite))failures.push(`${fixture.name}: nonfinite production brick coordinates/seed`);
+   if(actual[3]!==expected.seed)failures.push(`${fixture.name}: actual production brick seed ${actual[3]} != ${expected.seed}`);
+   if(actual.slice(0,3).some((v,j)=>Math.abs(v-expected.q[j])>8e-6))failures.push(`${fixture.name}: production brick local-coordinate mismatch`);
+  }
   rows.push(row);
  }
+ const controls=m.unchangedControls.cases.find(c=>c.age===age);
+ if(!controls)failures.push('Missing original non-brick control age');
+ for(const expected of controls?.rows||[]){
+  const actual=rows.find(r=>r.name===expected.name);
+  if(JSON.stringify(actual)!==JSON.stringify(expected))failures.push('Unchanged non-brick material differs from actual04e5 GPU values: '+expected.name);
+ }
+ const named=name=>rows.find(r=>r.name===name)?.brickIdentity;
+ for(const pair of [['heritage-brick-internal-left','heritage-brick-internal-right'],['heritage-brick-depth-back','heritage-brick-depth-front'],['heritage-brick-negative-left','heritage-brick-negative-right'],['heritage-lantern-local-depth-0','heritage-lantern-local-depth-1'],['heritage-brick-axis12-depth-0','heritage-brick-axis12-depth-1']]){
+  const a=named(pair[0]),b=named(pair[1]);if(!a||!b||a.seed!==b.seed)failures.push('One physical brick changed identity: '+pair.join('/'));
+ }
+ const before=named('heritage-brick-cell-left'),after=named('heritage-brick-cell-right');
+ if(!before||!after||after.seed!==before.seed+1)failures.push('True staggered cell boundary did not change identity once');
  return {age,rows,failures,readback:Array.from(values)};
 }
 async function main(){
@@ -55,8 +74,9 @@ async function main(){
   result.cases.push(check(values,age,manifest));
  }
  result.readbackMs=performance.now()-readbackStart;if(result.readbackMs>120000)throw Error('Readback exceeded 120000ms');
- // A raw-distance stub could agree perfectly: require real mother displacement.
- for(let i=0;i<width;i++)if(!result.cases.some(c=>Math.abs(c.rows[i].geometryD-c.rows[i].baseD)>1e-9))result.errors.push(`${manifest.fixtures[i].name}: all geometry samples equal nominal distance`);
+ // Retain the original 11 displaced fixtures as the anti-stub check. Added
+ // cell-identity fixtures may legitimately land in a flat brick-face interior.
+ for(let i=0;i<width;i++)if(manifest.fixtures[i].requirePhysicalDisplacement&&!result.cases.some(c=>Math.abs(c.rows[i].geometryD-c.rows[i].baseD)>1e-9))result.errors.push(`${manifest.fixtures[i].name}: all geometry samples equal nominal distance`);
  result.failures=result.cases.flatMap(c=>c.failures.map(message=>({age:c.age,message})));
  result.status=result.failures.length||result.errors.length?'failed':'passed';stage('complete');
  gl.deleteVertexArray(vao);gl.deleteFramebuffer(fbo);gl.deleteTexture(texture);gl.deleteBuffer(ub);gl.deleteProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);

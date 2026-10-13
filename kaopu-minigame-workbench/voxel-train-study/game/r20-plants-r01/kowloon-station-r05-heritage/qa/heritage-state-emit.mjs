@@ -22,8 +22,39 @@ export const fixtures=[
  {name:'control-waterfront-stone',id:2,seed:186,p:[60.177,-.45,4.2],q:[.377,1.2,.31],extent:[.375,1.25,100],sourceSeed:1,layers:[2]},
  {name:'heritage-inner-plaster',id:13,seed:174,p:[25.2,15.4,6.314],q:[1.2,.45,-.026],extent:[2.33,12.95,.01],sourceSeed:parts.findIndex(p=>p.id==='heritage-inner-lining-0'),layers:[2,13]},
  {name:'heritage-lantern-brick',id:1,seed:175,p:[25.66372124094,35.4,5.38087852847],q:[.2,.4,.182],extent:[.84,2.23,.18],sourceSeed:parts.findIndex(p=>p.id==='heritage-lantern-brick-facet-0'),layers:[1]},
-].map(f=>({...f,baseD:.002,normal:[0,1,0]}));
-export const dimensions={width:fixtures.length,height:4};
+ // Actual observed old-seed discontinuity, then a true staggered cell edge.
+ ...[
+  ['heritage-brick-internal-left',[22.78975,17.1915,6.96]],
+  ['heritage-brick-internal-right',[22.79025,17.1915,6.96]],
+  ['heritage-brick-depth-back',[22.79,17.1915,6.95975]],
+  ['heritage-brick-depth-front',[22.79,17.1915,6.96025]],
+  ['heritage-brick-cell-left',[22.87475,17.1915,6.96]],
+  ['heritage-brick-cell-right',[22.87525,17.1915,6.96]],
+ ].map(([name,p])=>({name,id:1,seed:71,p,q:p.map((v,i)=>v-[24,0,4][i]),extent:[2.96,13.65,2.96],sourceSeed:0,layers:[1]})),
+ {name:'heritage-brick-axis12',id:12,seed:71,p:[26.96,17.1915,2.78975],q:[2.96,17.1915,-1.21025],extent:[2.96,13.65,2.96],sourceSeed:0,layers:[1]},
+ {name:'heritage-hall-brick-cell',id:1,seed:191,p:[-18.79,10.011,8.12],q:[.2,.3,.002],extent:[.8,.5,.2],sourceSeed:137,layers:[1]},
+ ...[
+  ['heritage-brick-even-cell-left',[22.49975,17.1,6.96]],
+  ['heritage-brick-even-cell-right',[22.50025,17.1,6.96]],
+  ['heritage-brick-negative-left',[-.21,17.1915,6.96]],
+  ['heritage-brick-negative-right',[-.19,17.1915,6.96]],
+ ].map(([name,p])=>({name,id:1,seed:71,p,q:p.map((v,i)=>v-[24,0,4][i]),extent:[2.96,13.65,2.96],sourceSeed:0,layers:[1]})),
+ ...[.17975,.18025].map((depth,i)=>({name:'heritage-lantern-local-depth-'+i,id:1,seed:175,p:[25.6,35.4,5.4],q:[.07,.4,depth],extent:[.84,2.23,.18],sourceSeed:parts.findIndex(p=>p.id==='heritage-lantern-brick-facet-0'),layers:[1]})),
+ ...[26.96,26.9605].map((depth,i)=>({name:'heritage-brick-axis12-depth-'+i,id:12,seed:71,p:[depth,17.1915,2.78975],q:[depth-24,17.1915,-1.21025],extent:[2.96,13.65,2.96],sourceSeed:0,layers:[1]})),
+ ...[-.11,-.04].map((y,i)=>({name:'heritage-brick-negative-row-'+i,id:1,seed:71,p:[-.21,y,6.96],q:[.2,y,.002],extent:[.8,.5,.2],sourceSeed:0,layers:[1]})),
+ {name:'control-site-brick-axis12',id:12,seed:1,p:[-1.2,.15,-3.14],q:[.2,.3,.002],extent:[.8,.5,.2],sourceSeed:0,layers:[1]},
+ {name:'control-site-brick-cell',id:1,seed:1,p:[22.79,17.1915,6.96],q:[.2,.3,.002],extent:[.8,.5,.2],sourceSeed:0,layers:[1]},
+].map((f,i)=>({...f,baseD:.002,normal:[0,1,0],requirePhysicalDisplacement:i<11}));
+// Independent finite-domain arithmetic expectations. GPU returns the actual
+// production helper's q/seed; this is not a CPU replacement of the brick mother.
+const fract=x=>x-Math.floor(x);
+for(const f of fixtures){if(![1,12].includes(f.id))continue;
+ const bp=f.seed===175?[f.q[0],f.p[1],f.q[2]]:f.p,row=Math.floor(bp[1]/.073),shift=(row&1)?.125:0;
+ const phase=((f.id===12?bp[2]:bp[0])+shift)/.25;
+ const heritage=[71,175,191].includes(f.seed);
+ f.brickIdentity={row,column:Math.floor(phase),seed:19+row*13+(heritage?Math.floor(phase):Math.floor((bp[0]+bp[2])/.25)),q:[fract(phase)*.25-.125,fract(bp[1]/.073)*.073-.0365,.055384615+f.baseD]};
+}
+export const dimensions={width:fixtures.length,height:5};
 const f=n=>Number.isInteger(n)?`${n}.`:String(n),v=a=>`vec3<f32>(${a.map(f).join(',')})`;
 
 export function buildProbe(extraction){
@@ -42,13 +73,16 @@ export function buildProbe(extraction){
  if(row==0u){return vec4<f32>(geometry.d,matter.d,f32(matter.layer),f32(index+1u));}
  if(row==1u){return vec4<f32>(matter.surface.albedo,matter.surface.roughness);}
  if(row==2u){return vec4<f32>(matter.microHeight,geometry.loss,geometry.thickness,h.baseD);}
- return vec4<f32>(state.age,state.wet,state.repair,state.retained);
+ if(row==3u){return vec4<f32>(state.age,state.wet,state.repair,state.retained);}
+ if(h.id==1u||h.id==12u){let brick=stationBrickSample(h,p);return vec4<f32>(brick.q,brick.seed);}
+ return vec4<f32>(0.);
 }
 `;
- const selected=closure(['evaluateStationGeometry','evaluateStationMatter','stationMemberState'],entry);
+ const selected=closure(['evaluateStationGeometry','evaluateStationMatter','stationMemberState','stationBrickSample'],entry);
  const source=header+selected+entry;
  if(source.includes('fn stationDomain(')||source.includes('fn march('))throw Error('Unexpected renderer in numeric closure');
- return {source,manifest:{scope:'Exact production geometry/matter state consistency only; no rendering or visual acceptance',ages:[0,.5,1],...dimensions,entry:'heritageStateProbe',toleranceM:1e-8,fixtures,receiverSha256:createHash('sha256').update(WGSL).digest('hex'),wgslSha256:createHash('sha256').update(source).digest('hex')}};
+ const unchangedControls=JSON.parse(fs.readFileSync(new URL('./heritage-state-04e5-controls.json',import.meta.url),'utf8'));
+ return {source,manifest:{unchangedControls,scope:'Exact production geometry/matter state consistency only; no rendering or visual acceptance',ages:[0,.5,1],...dimensions,entry:'heritageStateProbe',toleranceM:1e-8,fixtures,receiverSha256:createHash('sha256').update(WGSL).digest('hex'),wgslSha256:createHash('sha256').update(source).digest('hex')}};
 }
 
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
