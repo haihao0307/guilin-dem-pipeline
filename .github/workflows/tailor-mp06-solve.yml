@@ -2,43 +2,70 @@ name: MP06 original-source garment contact solutions
 on:
   push:
     branches: [feature/tailor-mp06-native-human-motion-eb1-20261013]
-    paths: ['.github/workflows/tailor-mp06-solve.yml','kaopu-tailor-workbench/material-products/mp06-release/bake.mjs']
+    paths: ['.github/workflows/tailor-mp06-solve.yml','kaopu-tailor-workbench/material-products/mp06-release/bake.mjs','kaopu-tailor-workbench/material-products/mp06-release/fit-paper.py','kaopu-tailor-workbench/material-products/mp06-release/prepare-bake.py']
 permissions:
   contents: read
   actions: read
 jobs:
   source:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 4
     steps:
-      - name: Require the actual integrated R05 source probe, not a substitute actor
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python - <<'PY'
-          import urllib.request,json,os,time
-          url='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/runs/38389565687'
-          for i in range(80):
-            d=json.load(urllib.request.urlopen(urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})))
-            if d['status']=='completed':
-              assert d['conclusion']=='success',d['conclusion']
-              break
-            time.sleep(5)
-          else:raise RuntimeError('Source probe did not finish')
-          PY
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
           run-id: 38389565687
           name: mp06-native-integration
           path: pack
+      - name: Require identity and original motion provenance; retain the earlier unadapted cloth failure
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          d=json.loads(pathlib.Path('pack/probe/REPORT.json').read_text());assert d['initial']['binding']['displayVertices']==266098 and d['initial']['binding']['nativeBones']==104
+          assert len(d['sources'])==22 and all(s['boneErrorM']<1e-7 for s in d['sources'])
+          assert d['initial']['lighting']['version']=='EB1-1.1.0'
+          print('SOURCE PROVENANCE ONLY PASS. Original cloth failure preserved:', d['errors'])
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: mp06-solve-source
           path: pack
           retention-days: 30
-  solve:
+  fit:
     needs: source
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      matrix:
+        look: [K04,L04,D01]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-tailor-workbench/material-products/mp06-release
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp06-solve-source
+          path: pack
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fit existing panels to actual R05 body; do not change source motion or soften physics safety
+        env:
+          LOOK: ${{ matrix.look }}
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          python -m pip install numpy scipy
+          node kaopu-tailor-workbench/material-products/mp06-release/export-fit.mjs pack
+          python kaopu-tailor-workbench/material-products/mp06-release/fit-paper.py pack "$LOOK"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp06-fitted-${{ matrix.look }}
+          path: pack/fitting
+          retention-days: 30
+  solve:
+    needs: [source,fit]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -55,6 +82,10 @@ jobs:
         with:
           name: mp06-solve-source
           path: pack
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp06-fitted-${{ matrix.look }}
+          path: pack/fitting
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -62,7 +93,9 @@ jobs:
         env:
           ACTION: ${{ matrix.action }}
           LOOK: ${{ matrix.look }}
-        run: node kaopu-tailor-workbench/material-products/mp06-release/bake.mjs pack
+        run: |
+          python kaopu-tailor-workbench/material-products/mp06-release/prepare-bake.py
+          node kaopu-tailor-workbench/material-products/mp06-release/bake.mjs pack
       - uses: actions/upload-artifact@v4
         if: always()
         with:
