@@ -29,15 +29,21 @@ jobs:
       - run: npm install --no-save esbuild@0.25.10 playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - run: python -m pip install numpy scipy
-      - name: Generate new R02 sources, preserve all older files
+      - name: Generate new R02 sources and correct explicit test API argument
         run: |
           python "$WORK/prepare_sources.py"
           python "$WORK/install.py"
+          python - <<'PY'
+          import os,pathlib
+          p=pathlib.Path(os.environ['WORK'])/'verify.cjs';s=p.read_text();a=',{timeout:200000})';b=',null,{timeout:200000})'
+          if a in s:assert s.count(a)==1;s=s.replace(a,b);p.write_text(s)
+          assert b in s
+          PY
           node --check "$WORK/Workbench.mjs"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$WORK"
-          if ! git diff --cached --quiet; then git commit -m 'source(motion-r02): captured cycles and bilateral thumb same-person runtime'; fi
+          if ! git diff --cached --quiet; then git commit -m 'source(motion-r02): captured cycles, thumb runtime and correct startup test API'; fi
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Build new fixed-person preview
         run: node "$WORK/build.cjs"
@@ -45,6 +51,12 @@ jobs:
         env:
           QA_OUT: r02-evidence/candidate
         run: timeout 420 node "$WORK/verify.cjs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-r02-candidate-${{ github.run_number }}
+          path: r02-evidence/candidate
+          retention-days: 14
       - name: Publish immutable new workbench only
         run: |
           git add "$WORK"
