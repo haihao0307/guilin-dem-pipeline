@@ -1,0 +1,42 @@
+name: MP04 native rig fixture
+on:
+  push:
+    branches: [feature/tailor-mp04-native-material-motion-20261013]
+    paths: ['.github/workflows/tailor-mp04-native-rig-fixture.yml']
+permissions:
+  contents: read
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Evaluate the original common person and expose only its native rig data
+        run: |
+          mkdir -p fixture
+          cat > index.html <<'HTML'
+          <script type="module">
+          import {loadCommon} from 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core/kaopu-unified-human-workbench/full/ui/load-common.mjs';
+          import {defaultState} from 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/presets/r0434-8c8245dd87e5/person-core/kaopu-unified-human-workbench/full/src/State.mjs';
+          window.finished=false;
+          try {const {model}=await loadCommon();model.compute(defaultState());window.model=model;window.state=defaultState;window.finished=true;}catch(e){window.failure=e.stack;window.finished=true;}
+          </script>
+          HTML
+          python -m http.server 8000 > /tmp/http-rig.log 2>&1 &
+          cat > capture.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),zlib=require('zlib');
+          (async()=>{const b=await chromium.launch({headless:true}),p=await b.newPage();p.on('pageerror',e=>console.error(e));await p.goto('http://127.0.0.1:8000/');await p.waitForFunction(()=>window.finished,{},{timeout:360000});
+          const data=await p.evaluate(()=>{if(window.failure)throw Error(window.failure);const m=window.model,d=m.lastBodyDriver;const clone=x=>JSON.parse(JSON.stringify(x,(_,v)=>ArrayBuffer.isView(v)?Array.from(v):v));const base=clone({rig:d.rig,bodyCount:m.bodyCount,vertexCount:m.vertexCount,positions:m.positions,faces:m.faces,canonical:m.canonical,annyLabels:m.anny.boneLabels,boneOrder:m.anny.boneOrder,zero:d.nativeResult.zero,bodySource:d.vertices});base.referencePoses=[];for(const pose of [{'upperarm01.L':[0,0,12]},{'spine03':[0,0,8]},{'upperleg01.L':[10,0,0]}]){const s=window.state();s.anny.pose=pose;m.compute(s);base.referencePoses.push(clone({input:pose,positions:m.positions,rig:m.lastBodyDriver.rig}));}return base;});
+          fs.writeFileSync('fixture/native-common-rig.json.gz',zlib.gzipSync(Buffer.from(JSON.stringify(data))));fs.writeFileSync('fixture/SUMMARY.json',JSON.stringify({vertexCount:data.vertexCount,bodyCount:data.bodyCount,boneNames:data.annyLabels,rigKeys:Object.keys(data.rig),zeroKeys:Object.keys(data.zero)},null,2));console.log(fs.readFileSync('fixture/SUMMARY.json','utf8'));await b.close();})().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+          node capture.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp04-native-common-rig-fixture
+          path: fixture
+          retention-days: 14
