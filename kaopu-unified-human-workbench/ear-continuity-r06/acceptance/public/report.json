@@ -1,7 +1,7 @@
 {
   "version": "EAR-R06.0",
   "mode": "public",
-  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8393d49762cf918ce37f81f0a48399dfd1e57956/kaopu-unified-human-workbench/ear-continuity-r06/preview.html",
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/38a8a2140b42561eecbd31af5df074e9210d0c64/kaopu-unified-human-workbench/ear-continuity-r06/preview.html",
   "checks": [
     "initial shader and runtime valid",
     "new R06 runtime",
@@ -47,7 +47,7 @@
   "physicalMobile": false,
   "visualAcceptance": "USER_PENDING",
   "httpStatus": 200,
-  "readyMS": 30361,
+  "readyMS": 25854,
   "default": {
     "protectedCount": 146293,
     "protectedShiftMM": 0,
@@ -85,6 +85,16 @@
       "ready": true,
       "version": "EAR-R06.0",
       "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+      "penumbra": {
+        "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+        "sigmaMM": 0.65,
+        "passes": 10,
+        "vertices": 16486,
+        "protectedVerticesFiltered": 0,
+        "scratchBytes": 1953348,
+        "geometryModified": false,
+        "poreNormalsModified": false
+      },
       "occluderTriangles": 63220,
       "raySampleVertices": 4166,
       "interpolatedVertices": 12320,
@@ -98,6 +108,7 @@
         540.2,
         447.79999999999995
       ],
+      "visibilitySumStage": "before optical prefilter",
       "lightDirections": [
         [
           -0.3713906763541037,
@@ -119,12 +130,12 @@
       "biasMM": 0.06,
       "queryCount": 62490,
       "fieldBytes": 3906696,
-      "buildMS": 563.4000000000233,
+      "buildMS": 799.8000000000466,
       "builds": 8,
       "geometryRebuilt": false,
       "positionsModified": false,
       "normalsModified": false,
-      "unknownExitPolicy": "no deep transmission",
+      "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
       "fullVolumetricTransport": false
     },
     "fieldFinite": true,
@@ -132,8 +143,8 @@
     "hashDropped": 0
   },
   "difference": {
-    "changedPixels": 43335,
-    "meanRGB": 1.3653037633516134
+    "changedPixels": 58632,
+    "meanRGB": 1.4547219715467399
   },
   "crescent": [
     {
@@ -173,7 +184,7 @@
     {
       "id": 48057,
       "direct": [
-        1,
+        0.9997650384902954,
         0,
         1
       ],
@@ -240,6 +251,16 @@
         "ready": true,
         "version": "EAR-R06.0",
         "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+        "penumbra": {
+          "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+          "sigmaMM": 0.65,
+          "passes": 10,
+          "vertices": 16486,
+          "protectedVerticesFiltered": 0,
+          "scratchBytes": 1953348,
+          "geometryModified": false,
+          "poreNormalsModified": false
+        },
         "occluderTriangles": 63220,
         "raySampleVertices": 4166,
         "interpolatedVertices": 12320,
@@ -253,6 +274,7 @@
           547.0000000000005,
           485.80000000000007
         ],
+        "visibilitySumStage": "before optical prefilter",
         "lightDirections": [
           [
             -0.3713906763541037,
@@ -274,12 +296,12 @@
         "biasMM": 0.06,
         "queryCount": 62490,
         "fieldBytes": 3906696,
-        "buildMS": 1245.8000000000466,
+        "buildMS": 1188.5999999999767,
         "builds": 17,
         "geometryRebuilt": true,
         "positionsModified": false,
         "normalsModified": false,
-        "unknownExitPolicy": "no deep transmission",
+        "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
         "fullVolumetricTransport": false
       },
       "fieldFinite": true,
@@ -325,6 +347,16 @@
         "ready": true,
         "version": "EAR-R06.0",
         "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+        "penumbra": {
+          "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+          "sigmaMM": 0.65,
+          "passes": 10,
+          "vertices": 16486,
+          "protectedVerticesFiltered": 0,
+          "scratchBytes": 1953348,
+          "geometryModified": false,
+          "poreNormalsModified": false
+        },
         "occluderTriangles": 63220,
         "raySampleVertices": 4166,
         "interpolatedVertices": 12320,
@@ -338,6 +370,7 @@
           673.8000000000003,
           406.80000000000007
         ],
+        "visibilitySumStage": "before optical prefilter",
         "lightDirections": [
           [
             -0.3713906763541037,
@@ -359,12 +392,12 @@
         "biasMM": 0.06,
         "queryCount": 62490,
         "fieldBytes": 3906696,
-        "buildMS": 1402.3000000000466,
+        "buildMS": 1414.7999999999302,
         "builds": 18,
         "geometryRebuilt": true,
         "positionsModified": false,
         "normalsModified": false,
-        "unknownExitPolicy": "no deep transmission",
+        "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
         "fullVolumetricTransport": false
       },
       "fieldFinite": true,
@@ -410,6 +443,16 @@
         "ready": true,
         "version": "EAR-R06.0",
         "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+        "penumbra": {
+          "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+          "sigmaMM": 0.65,
+          "passes": 10,
+          "vertices": 16486,
+          "protectedVerticesFiltered": 0,
+          "scratchBytes": 1953348,
+          "geometryModified": false,
+          "poreNormalsModified": false
+        },
         "occluderTriangles": 63220,
         "raySampleVertices": 4166,
         "interpolatedVertices": 12320,
@@ -423,6 +466,7 @@
           673.8000000000003,
           494.4
         ],
+        "visibilitySumStage": "before optical prefilter",
         "lightDirections": [
           [
             -0.3713906763541037,
@@ -444,12 +488,12 @@
         "biasMM": 0.06,
         "queryCount": 62490,
         "fieldBytes": 3906696,
-        "buildMS": 1100.2999999999302,
+        "buildMS": 1602.0999999999767,
         "builds": 20,
         "geometryRebuilt": true,
         "positionsModified": false,
         "normalsModified": false,
-        "unknownExitPolicy": "no deep transmission",
+        "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
         "fullVolumetricTransport": false
       },
       "fieldFinite": true,
@@ -495,6 +539,16 @@
         "ready": true,
         "version": "EAR-R06.0",
         "method": "retained native skull + current refined pinna BVH / five angular samples / pinna exit and external visibility",
+        "penumbra": {
+          "method": "positive convex prefilter on connected current-space pinna edges; no screen blur",
+          "sigmaMM": 0.65,
+          "passes": 10,
+          "vertices": 16486,
+          "protectedVerticesFiltered": 0,
+          "scratchBytes": 1953348,
+          "geometryModified": false,
+          "poreNormalsModified": false
+        },
         "occluderTriangles": 63220,
         "raySampleVertices": 4166,
         "interpolatedVertices": 12320,
@@ -508,6 +562,7 @@
           673.8000000000003,
           418.3999999999999
         ],
+        "visibilitySumStage": "before optical prefilter",
         "lightDirections": [
           [
             -0.3713906763541037,
@@ -529,12 +584,12 @@
         "biasMM": 0.06,
         "queryCount": 62490,
         "fieldBytes": 3906696,
-        "buildMS": 738.2999999999302,
+        "buildMS": 937.7000000000698,
         "builds": 23,
         "geometryRebuilt": true,
         "positionsModified": false,
         "normalsModified": false,
-        "unknownExitPolicy": "no deep transmission",
+        "unknownExitPolicy": "no raw deep transmission; edge penumbra remains confidence-gated by R05 tissue",
         "fullVolumetricTransport": false
       },
       "fieldFinite": true,
