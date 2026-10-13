@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Material frame GPU covariance probe</title></head>
+<body>
+<h1>Actual material-mother GPU covariance probe</h1>
+<p>This diagnostic executes the production WGSL wood mother. It is not a rendered-image comparison or visual acceptance.</p>
+<pre id="result">Running independent WebGPU probe…</pre>
+<script type="module">
+  window.__frameProbe = { status: 'running', ready: false, gpuExecuted: false };
+  try {
+    const { runFrameProbe } = await import('./frame-probe.mjs');
+    window.__frameProbe = await runFrameProbe();
+  } catch (error) {
+    window.__frameProbe = { status: 'failed', ready: true, gpuExecuted: false, failure: error?.stack || String(error) };
+  }
+  document.querySelector('#result').textContent = JSON.stringify(window.__frameProbe, null, 2);
+  document.title = 'Frame probe: ' + window.__frameProbe.status;
+</script>
+</body>
+</html>

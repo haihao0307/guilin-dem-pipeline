@@ -1,0 +1,39 @@
+name: Bureau R03f independent public hall review
+on:
+  push:
+    branches: ['qa/bureau-r03f-public-hall-20261013']
+permissions:
+  contents: read
+jobs:
+  compare-public-hall:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03e
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f
+      - name: Install official pinned browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/wgpu" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/wgpu/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/wgpu/node_modules" >> "$GITHUB_ENV"
+      - name: Source and complete regression contracts
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f/qa/source.test.mjs
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f/qa/*.test.mjs
+          node --input-type=module -e "import('./kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f/interiors.mjs').then(m=>console.log(m.selfTestInteriors()))"
+      - name: Read-only furniture and item clearance audit
+        run: |
+          mkdir -p bureau-r03f-review-results
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f/qa/physical-clearance.mjs > bureau-r03f-review-results/physical-clearance.json
+      - name: Same camera and lighting before-after, plus writing, office, hall and street
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/lost-property-bureau-r03f/qa/public-hall-webgpu.cjs
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bureau-r03f-public-hall-${{ github.sha }}
+          path: bureau-r03f-review-results/
+          retention-days: 7
