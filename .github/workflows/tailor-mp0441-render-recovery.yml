@@ -1,0 +1,170 @@
+name: MP04.4.1 render backpressure public recovery
+on:
+  push:
+    branches: [fix/tailor-mp04-playback-finish-20261013]
+    paths: ['.github/workflows/tailor-mp0441-render-recovery.yml','kaopu-tailor-workbench/material-products/r04-render-recovery/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      source: ${{ steps.publish.outputs.source }}
+      public: ${{ steps.publish.outputs.public }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          sparse-checkout: |
+            kaopu-tailor-workbench/material-products/r04-4
+            kaopu-tailor-workbench/material-products/r04-render-recovery
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Patch full MP04.4 snapshot and test unchanged physical states plus GPU submission ordering
+        run: |
+          cp -a project/kaopu-tailor-workbench/material-products/r04-4 runtime
+          python project/kaopu-tailor-workbench/material-products/r04-render-recovery/prepare.py runtime
+          node --check runtime/app.mjs
+          node --check runtime/cloth-controller.mjs
+          node --check runtime/lighting.mjs
+          node --check runtime/qa-case.cjs
+          node runtime/unit.mjs
+          node runtime/test-render.mjs
+      - name: Publish complete source and immutable HTTPS snapshot without replacing older versions
+        id: publish
+        run: python runtime/_build/publish-snapshot.py runtime project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0441-stage
+          path: |
+            /tmp/MP04_PUBLIC_STAGE.json
+            runtime/UNIT_REPORT.json
+            runtime/RENDER_UNIT_REPORT.json
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp0441-runtime
+          path: runtime
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Verify every frozen public file
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,time,hashlib,concurrent.futures
+          base=os.environ['URL'];source=os.environ['SOURCE'];manifest=None
+          def read(name):
+              with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+          for attempt in range(85):
+              try:
+                  manifest=json.loads(read('BUILD_MANIFEST.json'))
+                  if manifest.get('sourceCommit')==source:break
+              except Exception:pass
+              time.sleep(10)
+          assert manifest and manifest['sourceCommit']==source and manifest['version']=='MP04.4.1'
+          def check(item):
+              n,e=item
+              for attempt in range(4):
+                  try:
+                      b=read(n);assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],n
+                      return {'path':n,**e}
+                  except Exception:
+                      if attempt==3:raise
+                      time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:files=list(pool.map(check,manifest['files'].items()))
+          json.dump({'passed':True,'sourceCommit':source,'fixedURL':base,'files':files},open('/tmp/PUBLIC_BYTES.json','w'),indent=2)
+          print('PUBLIC_BYTES_PASS',source,len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mp0441-public-bytes
+          path: /tmp/PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        case: [K04,L04,D01,K04-step,L04-raise,D01-step,K04-raise,L04-twist,D01-raise,K04-twist,L04-step,D01-twist,K01,K02,K03,L01,L02,L03,D02,D03,D04,K04-detail,L04-detail,D01-detail]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mp0441-runtime
+          path: runtime
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Real public interaction, real mouse pause, same geometry and physically solved frames
+        env:
+          QA_CASE: ${{ matrix.case }}
+          QA_URL: ${{ needs.stage.outputs.url }}
+          RUNTIME_SOURCE: ${{ needs.stage.outputs.source }}
+        run: node runtime/qa-case.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mp0441-public-${{ matrix.case }}
+          path: runtime/public-${{ matrix.case }}
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: kaopu-tailor-workbench/material-products/r04-4-1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mp0441-public-*
+          path: /tmp/evidence
+      - name: Save factual delivery with remaining material-integration work explicit
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,datetime,os
+          e=pathlib.Path('/tmp/evidence');reports=[json.loads(p.read_text()) for p in e.rglob('BROWSER_REPORT.json')]
+          expected={c+str(i).zfill(2) for c in ['K','L','D'] for i in range(1,5)}|{a+'-'+b for a in ['K04','L04','D01'] for b in ['raise','twist','step','detail']}
+          assert len(reports)==24 and {r['case'] for r in reports}==expected and all(r['passed'] for r in reports)
+          assert all(r['renderBackpressure']['maxInFlight']==1 and not r['renderBackpressure']['failed'] for r in reports)
+          hashes=json.loads(next(e.rglob('PUBLIC_BYTES.json')).read_text());assert hashes['passed']
+          latency=[row['wallMS'] for r in reports for row in r['rows'] if row['case']=='real-mouse-pause-latency'];assert len(latency)>=18
+          state={'version':'MP04.4.1','fixedURL':os.environ['URL'],'sourceCommit':os.environ['SOURCE'],'publicCommit':os.environ['PUBLIC'],'publicBrowserVerified':True,'publicBytesVerified':True,'thisRecoveryPreviewVerified':True,'fullUserTaskComplete':False,'remaining':['complete native knit R15 fuzz/distance renderer migration','native denim R12 damaged-fabric force integration','all material/garment combinations','full self-collision and continuous collision','real-device performance certification'],'testedCases':sorted(expected),'oldFailedRunsRetained':[38356384181,38362335029,38362561568],'physicsSourcesAndClipsPreserved':True,'materialGeometryAndShaderQualityPreserved':True,'renderQueueAtMostOneFrame':True,'realMousePauseWallMS':latency,'userAccepted':False,'physicalDeviceTested':False,'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          p=pathlib.Path('kaopu-tailor-workbench/material-products/r04-4-1');(p/'PUBLIC_DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2));(p/'PUBLIC_BROWSER_REPORTS.json').write_text(json.dumps({'state':state,'reports':reports,'publicBytes':hashes},ensure_ascii=False,indent=2))
+          (p/'DELIVERY.md').write_text('# MP04.4.1 成衣工作台接续成果\n\n'+state['fixedURL']+'?look=K04\n\n24个独立真实公网浏览器案例通过：十二套、三套各三个人物动作、三类材质特写。暂停、续播、半速和时间轴及单灯检查保留。删除动作控制条每200ms读取GL错误的同步阻塞；画面提交最多一帧在途，不通过降低几何或阴影质量解决。\n\n旧MP02/MP03/MP04和其他工作台不修改。原生材料、厚度、单层针织外侧方向、缝线和九组实算物理帧继承。动作缓存不是在线物理FPS承诺，新配方仍需重新求解。\n\n完整材料升级交付未完成：完整R15毛羽/距离渲染、R12破损独立受力尚未全量合入；不是实机性能认证或全部动态状态不穿模证明。\n')
+          print(json.dumps(state,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward verified receipt, never overwrite frozen public runtime
+        env:
+          SOURCE: ${{ needs.stage.outputs.source }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin fix/tailor-mp04-playback-finish-20261013 --depth=1
+          test "$(git rev-parse origin/fix/tailor-mp04-playback-finish-20261013)" = "$SOURCE"
+          git add -f kaopu-tailor-workbench/material-products/r04-4-1/PUBLIC_DELIVERY.json kaopu-tailor-workbench/material-products/r04-4-1/PUBLIC_BROWSER_REPORTS.json kaopu-tailor-workbench/material-products/r04-4-1/DELIVERY.md
+          git commit -m 'docs(mp04.4.1): preserve public interaction evidence and outstanding material goals [skip ci]'
+          git push origin HEAD:refs/heads/fix/tailor-mp04-playback-finish-20261013
