@@ -22,3 +22,8 @@ with sync_playwright() as p:
   report['cases'].append({'name':name,'viewport':size,'readySeconds':ready,'errors':errs,'consoleErrors':logs,'state':last,'passed':not errs and not logs});(R/'qa/BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print(name,ready,errs,logs,flush=True);page.close()
  b.close()
 report['passed']=all(c['passed'] for c in report['cases']);(R/'qa/BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));assert report['passed']
+
+if len(sys.argv)==1 and (R/'qa/PUBLIC_VERIFY.trigger').exists():
+ import shutil,subprocess
+ shutil.copy2(R/'qa/BROWSER_QA.json',R/'qa/BROWSER_QA_LOCAL.json')
+ subprocess.run([sys.executable,str(R/'qa/public_verify.py')],check=True)
