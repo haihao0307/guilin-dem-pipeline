@@ -15,3 +15,7 @@
 ## 睑缘连续性 C2
 
 首候选虽通过点位检查，实际图像仍暴露睑缘碎边，故补充连续深度/表面朝向遮罩、眼球曲率相对传输和低幅上睑覆盖。接触界限沿用原生基线：已有内部交叠不冒充已修复，已在外侧的样本保留有限正间隙；以多视图截图共同验收。48项端点检查改为原生数值管线并额外检查身体/眼球不变，不冒充48组极值都已有视觉验收。
+
+固定公网候选：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/696f2317362fd53ad3c9a9de4078b01e13a02527/kaopu-unified-human-workbench/human-integrated-r06/preview.html
+
+完整运行与测试证据：38398553405；检查数量 86。不是用户视觉已验收。
