@@ -54,8 +54,9 @@ export class Domain{
   * side of the head or disconnected eyeballs. A click is one undo transaction. */
  paint(face,bary,{mode='erase',radius=.012,strength=.65}={}){
   if(!Number.isInteger(face)||face<0||face>=this.s.F||!['add','erase','dense','thin'].includes(mode)||!Number.isFinite(radius)||radius<.002||radius>.04||!Number.isFinite(strength)||strength<0||strength>1)throw Error('无效画笔');
-  const ids=[0,1,2].map(k=>this.s.tri[face*3+k]);if(ids.some(i=>this.s.component[i]!==0))return 0;const center=this.s.sample(face,bary),seeds=ids.map(i=>[i,Math.hypot(...sub(center,this.s.vertex(i)))]),dist=this.s.distances(seeds,radius);this.saveHistory();let changed=0;
-  for(let i=0;i<this.s.N;i++)if(dist[i]<radius){const x=1-dist[i]/radius,w=x*x*(3-2*x);if(mode==='add'||mode==='erase'){const target=(mode==='add'?1:-1)*.014;this.phi[i]=clamp(this.phi[i]+(target-this.phi[i])*w*strength,-.08,.08)}else this.density[i]=clamp(this.density[i]+(mode==='dense'?1:-1)*strength*w);changed++}
+  if(!bary||bary.length!==3||Array.from(bary).some(v=>!Number.isFinite(v)||v<-.000001||v>1.000001)||Math.abs(bary[0]+bary[1]+bary[2]-1)>.00001)throw Error('无效表面坐标');
+  const ids=[0,1,2].map(k=>this.s.tri[face*3+k]);if(strength===0||ids.some(i=>this.s.component[i]!==0))return 0;const center=this.s.sample(face,bary),seeds=ids.map(i=>[i,Math.hypot(...sub(center,this.s.vertex(i)))]),dist=this.s.distances(seeds,radius);this.saveHistory();let changed=0;
+  for(let i=0;i<this.s.N;i++)if(dist[i]<radius){const x=1-dist[i]/radius,w=x*x*(3-2*x);if(mode==='add'||mode==='erase'){const disk=radius*strength-dist[i];this.phi[i]=clamp(mode==='add'?Math.max(this.phi[i],disk):Math.min(this.phi[i],-disk),-.08,.08)}else this.density[i]=clamp(this.density[i]+(mode==='dense'?1:-1)*strength*w);changed++}
   this.revision++;this.recompute();return changed;
  }
  active(factor=1){const ids=[],P=this.pool;for(let i=0;i<P.count;i++){const f=P.triangles[i],b=P.barycentric.subarray(i*3,i*3+3);if(this.s.scalar(f,b,this.phi)>1e-9&&P.random[i]<clamp(factor)*clamp(this.s.scalar(f,b,this.density)))ids.push(i)}return ids}

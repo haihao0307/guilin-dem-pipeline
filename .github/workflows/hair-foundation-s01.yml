@@ -1,5 +1,5 @@
 name: Hair Foundation S01 build and candidate verification
-# Attempt 02: exact scalar-field fill and safe refresh readiness predicate.
+# Attempt 03: direct domain stamps; require visible root removal, not only field changes.
 on:
   push:
     branches: [feature/hair-foundation-s01-20261013]
@@ -29,6 +29,7 @@ jobs:
         run: |
           node "$P/build.mjs"
           node "$P/tests/unit.mjs"
+          node "$P/tests/brush.mjs"
       - name: Install browser tools
         run: |
           python -m pip install playwright==1.55.0
@@ -40,7 +41,7 @@ jobs:
           python - <<'PY'
           import json,os,pathlib,shutil
           p=pathlib.Path(os.environ['P'])
-          for name in ['unit.json','candidate/report.json']:
+          for name in ['unit.json','brush.json','candidate/report.json']:
               r=json.loads((p/'evidence'/name).read_text());assert r['success'] and all(c['pass'] for c in r['checks'])
           shutil.copyfile(p/'site/BUILD_MANIFEST.json',p/'BUILD_MANIFEST.json')
           (p/'CANDIDATE.json').write_text(json.dumps({'source':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'candidateVerified':True,'publicBrowserVerified':False},indent=2))
@@ -48,7 +49,7 @@ jobs:
           git config user.name 'KAOPU Hair Foundation Verification'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add "$P"
-          git commit -m 'build(hair-s01): tested native scalp diagnostic and candidate evidence'
+          git commit -m 'build(hair-s01): tested visible domain stamps and strengthened evidence'
           git push origin HEAD:refs/heads/feature/hair-foundation-s01-20261013
       - uses: actions/upload-artifact@v4
         if: always()
