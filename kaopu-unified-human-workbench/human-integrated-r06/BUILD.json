@@ -2,12 +2,12 @@
   "schema": "kaopu/unified-human-build@1",
   "demandPaged": true,
   "version": "HUMAN-INTEGRATED-R06",
-  "sourceCommit": "bca8da3a1a1e392bcb926a9792a2b60ffae605d9",
+  "sourceCommit": "8d26fa8b45a0f5285f9ccf4fe53b255572912938",
   "predecessor": "475ead2759159b83927a1aa8ae6879595e1d18bc",
   "earSource": "38a8a2140b42561eecbd31af5df074e9210d0c64",
   "lipSource": "5b4997e6dca27106533022b4ab46164cea073818",
-  "previewSHA256": "6ccb159756b4ff90bc0b075d680d553ae4f9012b9e815f472244c1369ae482f5",
-  "previewBytes": 5391031,
+  "previewSHA256": "b33c0a651570f2671ac61ea546279abfe06ebb07c966a70964e428df966420fd",
+  "previewBytes": 5391305,
   "sources": [
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/.build-runtime.cjs",
@@ -38,6 +38,10 @@
       "sha256": "9a4fbcb02dd3692167503badcbca91beb1617938ce5b2f23380f9db628b1f102"
     },
     {
+      "path": "kaopu-unified-human-workbench/human-integrated-r06/EyeTransportC3.mjs",
+      "sha256": "d337f25d66cf85473e78f0ea9ea35a4bb65478b7a4d1a6f01c5266153f4aa107"
+    },
+    {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/FacePores.mjs",
       "sha256": "ca7c15b99426be1a659395d181ecdbc055e919d375f937d0ca13b881ec47d8f9"
     },
@@ -55,11 +59,11 @@
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/HeadMorphology.mjs",
-      "sha256": "d9b2f65546b1899dcb589e11cc90f7730834ce9a451fc007d9c82eeb34270f2c"
+      "sha256": "57637b50ef29eb95b2fd114e1bb161d9735fe99f5cfe0cb17b5834186c57399d"
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/HeadMorphologyUI.mjs",
-      "sha256": "409627823760ed0df3b5e9831d22ca7adc8a44568305711963cf133930045b1c"
+      "sha256": "f253be05d19df775360a4004cb9535658d1e6b5cb363b44c8eaf9c01ebf8fe2a"
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/LazyIdle.mjs",
@@ -127,11 +131,15 @@
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/prepare.cjs",
-      "sha256": "128c8b73de631191c577e0c41595dc0269d6a75534e31ab3e5003f3ce93a0f63"
+      "sha256": "9215195ceb7a2219b325457d82020be95dd5f3c900f381849468d6938f05b925"
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/refine-eye-c2.cjs",
-      "sha256": "bce599bc59dcf9c1d3897822e3d9118c410b12c1f79e22c438dc07eb9524e839"
+      "sha256": "e5a099e4fdf2cb346a28ba9fcee32bc0d21c2788ef651a87f99490312cc97b4f"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/human-integrated-r06/refine-eye-c3.cjs",
+      "sha256": "48b74d3bb02c93cac9aa90fe0497c4218245431cccd243c3337815d37365a87f"
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/specialists/ear-continuity-r06/ContinuityMaterial.mjs",
@@ -587,20 +595,10 @@
     },
     {
       "path": "kaopu-unified-human-workbench/human-integrated-r06/verify.cjs",
-      "sha256": "f6b5db69e416483e49bf24a2d4a35b7aabb8d10c670f68aab3cbfae3f0bdd8e2"
+      "sha256": "436e082151b2b07f7afce216066910b0aca21ead5298fca8f2ddf4babcbdbd55"
     }
   ],
   "adapters": [
-    {
-      "path": "kaopu-unified-human-workbench/human-integrated-r06/Anatomy.mjs",
-      "adapter": "lossless-vertex-slot-packing",
-      "exactInputAnchor": "model.regionalFace=api;"
-    },
-    {
-      "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeUI.mjs",
-      "kind": "lossless-demand-paging",
-      "anchor": "open();Promise.all([viewer.skin.naturalEyesReady,viewer.skin.faceReady].filter(Boolean)).then(()=>{if(!disposed){view('eyes');syncStatus();}});"
-    },
     {
       "path": "kaopu-unified-human-workbench/lip-structure/LipUI.mjs",
       "anchor": "tab.click();Promise.all([viewer.skin.faceReady,viewer.skin.naturalEyesReady].filter(Boolean)).then(("
@@ -640,6 +638,16 @@
       "path": "kaopu-unified-human-workbench/full/ui/Controller.mjs",
       "kind": "lossless-demand-paging",
       "anchor": "restore(archive){if(archive.surface"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/human-integrated-r06/Anatomy.mjs",
+      "adapter": "lossless-vertex-slot-packing",
+      "exactInputAnchor": "model.regionalFace=api;"
+    },
+    {
+      "path": "kaopu-unified-human-workbench/eye-materials/NaturalEyeUI.mjs",
+      "kind": "lossless-demand-paging",
+      "anchor": "open();Promise.all([viewer.skin.naturalEyesReady,viewer.skin.faceReady].filter(Boolean)).then(()=>{if(!disposed){view('eyes');syncStatus();}});"
     },
     {
       "path": "kaopu-unified-human-workbench/idle-r01/IdleSkin.mjs",
@@ -689,6 +697,13 @@
       "anchor": "function wrinkle(p,width,amount){if(!amount)return;"
     },
     {
+      "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
+      "adapter": "unified-specialist-ownership",
+      "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
+      "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
+      "occurrences": 1
+    },
+    {
       "path": "kaopu-unified-human-workbench/ear-root-r04/EarMaterial.mjs",
       "adapter": "unified-specialist-ownership",
       "exactInputAnchor": "patch(shader.fragmentShader,'*csCover*uIEnabled*iInside*(1.-lpMask);','*csCover*uIEnabled*iInside*(1.-lpMask)*(1.-eaM);')",
@@ -707,13 +722,6 @@
       "adapter": "unified-specialist-ownership",
       "exactInputAnchor": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65))','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
       "result": "patch(shader.fragmentShader,'vec4(diffuseColor.rgb,fMask)','vec4(diffuseColor.rgb,fMask*(1.-lpMask*.65)*(1.-eaM*.86))')",
-      "occurrences": 1
-    },
-    {
-      "path": "kaopu-unified-human-workbench/skin-folds-r02/FoldSkin.mjs",
-      "adapter": "unified-specialist-ownership",
-      "exactInputAnchor": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))",
-      "result": "clamp(vFA.x,0.,1.)*csCover*(1.-clamp(vFA.y*4.,0.,1.))*(1.-lpMask)*(1.-eaM)",
       "occurrences": 1
     },
     {

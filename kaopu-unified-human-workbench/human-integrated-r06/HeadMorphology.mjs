@@ -1,3 +1,4 @@
+import{applyOrbitalMorphology}from'./EyeTransportC3.mjs';
 // Original KAOPU authored geometric controls. Artistic increments, not measured anatomy.
 // Applied to the SAME native person before the existing native-eye contact pass.
 export const SCHEMA='kaopu/head-morphology@1';
@@ -50,22 +51,9 @@ export function finishHeadPortrait(model,id){const api=model.headMorphology;if(a
 export function applyHeadMorphology(model,p,eye,tools){
  const api=model.headMorphology;if(!api)return;const started=performance.now(),s=api.settings;
  if(!api.cache){const c=model.canonical,g=model.gnm,B=model.bodyCount,rows=[];for(let hi=0;hi<c.gnmRecipes.length;hi++){const i=B+hi;if(!eye.skin[i])continue;const[a,b,t]=c.gnmRecipes[hi];const q=[0,1,2].map(k=>g.template[a*3+k]*(1-t)+g.template[b*3+k]*t);if(q[1]>.173)rows.push([i,...q]);}api.cache={rows};}
- if(!s.enabled||KEYS.every(k=>s[k]===0)){api.report={version:'HEAD-MORPHOLOGY-R06-C2',enabled:false,changedVertices:0,sourceEyesChanged:false,bodyChanged:false,ms:performance.now()-started};return;}
+ if(!s.enabled||KEYS.every(k=>s[k]===0)){api.report={version:'HEAD-MORPHOLOGY-R06-C3',enabled:false,changedVertices:0,sourceEyesChanged:false,bodyChanged:false,ms:performance.now()-started};return;}
  const landmark=i=>tools.getLandmark(p,i),rland=i=>tools.getLandmark(eye.rest,i),L=landmark(36),R=landmark(45),axisX=unit(sub(R,L)),rawUp=sub(landmark(27),landmark(8)),axisY=unit(rawUp.map((v,i)=>v-dot(rawUp,axisX)*axisX[i]));let axisZ=unit(cross(axisX,axisY));const middle=L.map((v,i)=>(v+R[i])*.5);if(dot(axisZ,sub(landmark(30),middle))<0)axisZ=axisZ.map(v=>-v);const scale=clamp(Math.hypot(...sub(R,L))/Math.hypot(...sub(rland(45),rland(36))),.65,1.5);
  let changed=0,max=0;for(const[i,x,y,z]of api.cache.rows){const d=headDelta(x,y,z,s);if(Math.hypot(...d)<1e-10)continue;for(let k=0;k<3;k++)p[i*3+k]+=scale*(axisX[k]*d[0]+axisY[k]*d[1]+axisZ[k]*d[2]);max=Math.max(max,Math.hypot(...d)*scale*1000);changed++;}
- const eyes=[];const activeEye=GROUPS[3][1].some(([k])=>s[k]!==0);for(const e of activeEye?eye.eyes:[]){
-  const f=tools.frame(i=>tools.getLandmark(p,i),e.side),local=new Map(e.vertices.map(i=>[i,f.project(point(p,i))])),support=tools.supportField(local,e.triangles),opening=smooth(.0006,.005,f.gap),unitScale=clamp(f.width/.0255,.65,1.5);let moved=0,clearances=0,minClearance=Infinity,minBoundMargin=Infinity,maximum=0;
-  for(const {index:i,outer}of e.patch){const q=f.project(point(p,i)),t=q[0]/f.width;if(t<-.08||t>1.08)continue;const tc=clamp(t),top=f.upper(tc),bottom=f.lower(tc),mid=(top+bottom)*.5,upper=q[1]>=mid,d=upper?q[1]-top:bottom-q[1];if(d<-.0035*unitScale||d>.017*unitScale)continue;
-   const oldSupport=support(q[0],q[1]),frontGate=oldSupport===null?1:smooth(-.004*unitScale,-.0005*unitScale,q[2]-oldSupport),depthGate=smooth(-.0035*unitScale,-.0005*unitScale,d);
-   const mask=smooth(-.08,.06,t)*(1-smooth(.94,1.08,t))*(1-smooth(.009*unitScale,.017*unitScale,d))*outer*frontGate*depthGate,arc=Math.max(0,4*tc*(1-tc)),near=1-smooth(.003*unitScale,.012*unitScale,Math.abs(d));
-   let dx=(q[0]-f.width*.5)*.15*s.eyeWidth*mask;
-   let dy=(.0014*s.eyeOpening*(upper?1:-1)+.00135*(upper?s.upperArch:-s.lowerArch)*arc+.00075*s.eyeApex*arc*(2*tc-1)*(upper?1:.25))*opening*near*mask*unitScale;
-   dy+=.0045*s.eyeTilt*(tc-.5)*mask*unitScale;
-   let dz=upper?.00065*s.eyeHood*Math.exp(-(((d-.004*unitScale)/(.004*unitScale))**2))*mask*opening*arc*unitScale:0;
-   const nextSupport=support(q[0]+dx,q[1]+dy);if(nextSupport!==null){const oldGap=oldSupport===null?.00018*unitScale:q[2]-oldSupport;if(oldSupport!==null)dz+=nextSupport-oldSupport;const bound=Math.min(oldGap,.00018*unitScale),floor=nextSupport+bound;if(q[2]+dz<floor){dz=floor-q[2];clearances++;}minClearance=Math.min(minClearance,q[2]+dz-nextSupport);minBoundMargin=Math.min(minBoundMargin,q[2]+dz-nextSupport-bound);}
-   const norm=Math.hypot(dx,dy,dz);if(norm>0.007*unitScale)continue;if(norm<1e-10)continue;for(let k=0;k<3;k++)p[i*3+k]+=f.x[k]*dx+f.y[k]*dy+f.z[k]*dz;moved++;maximum=Math.max(maximum,norm*1000);
-  }
-  const after=tools.frame(i=>tools.getLandmark(p,i),e.side);eyes.push({side:e.side,changedVertices:moved,widthMM:after.width*1000,openingMM:after.gap*1000,priorWidthMM:f.width*1000,priorOpeningMM:f.gap*1000,contactCorrectedVertices:clearances,minimumTestedGapMM:Number.isFinite(minClearance)?minClearance*1000:null,minimumBaselineBoundMarginMM:Number.isFinite(minBoundMargin)?minBoundMargin*1000:null,contactMeaning:"not deeper than inherited negative gap; otherwise preserve at least min(native gap,0.18mm); not a full intersection repair",maxIncrementMM:maximum,closureGate:opening});
- }
- api.revision++;api.report={version:'HEAD-MORPHOLOGY-R06-C2',enabled:true,revision:api.revision,changedVertices:changed,maximumHeadIncrementMM:max,eyes,ms:performance.now()-started,bodyChanged:false,sourceEyesChanged:false,oneNativeMesh:true,parameterCount:KEYS.length,clinicalBodyFat:false,skullSimulation:false,method:'native-template vector fields; head-attached frame; existing globe triangle axial support; before native eye contact and display subdivision'};
+ const eyes=GROUPS[3][1].some(([k])=>s[k]!==0)?applyOrbitalMorphology(model,p,eye,tools,s):[];
+ api.revision++;api.report={version:'HEAD-MORPHOLOGY-R06-C3',enabled:true,revision:api.revision,changedVertices:changed,maximumHeadIncrementMM:max,eyes,ms:performance.now()-started,bodyChanged:false,sourceEyesChanged:false,oneNativeMesh:true,parameterCount:KEYS.length,clinicalBodyFat:false,skullSimulation:false,method:'native-template vector fields; head-attached frame; complete continuous orbital tissue; retained native-eye radial envelope; before native eye contact and display subdivision'};
 }
