@@ -1,0 +1,81 @@
+name: Local R03 lips orbital ear and calibrated light
+on:
+  push:
+    branches: [feature/head-look-r03-local-features-20261013]
+    paths: ['kaopu-unified-human-workbench/head-look-r03-local/**', '.github/workflows/head-look-r03-local.yml']
+permissions:
+  contents: write
+concurrency:
+  group: head-look-r03-local
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false esbuild@0.25.11 playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Build and verify immutable host adapter
+        run: |
+          set -o pipefail
+          mkdir -p local-r03-evidence
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/head-look-r03-local/test.mjs | tee local-r03-evidence/unit.txt
+          node kaopu-unified-human-workbench/human-integrated-r03/test.mjs | tee local-r03-evidence/retained-unit.txt
+          node kaopu-unified-human-workbench/head-look-r03-local/build.cjs
+      - name: Real browser local-feature and shader smoke
+        env: {QA_OUT: local-r03-evidence/smoke, SMOKE_ONLY: '1'}
+        run: node kaopu-unified-human-workbench/head-look-r03-local/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-r03-smoke-${{ github.run_number }}
+          path: |
+            local-r03-evidence/
+            kaopu-unified-human-workbench/head-look-r03-local/
+          retention-days: 7
+      - name: Publish immutable candidate without merging or replacing old pages
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/head-look-r03-local/preview.html kaopu-unified-human-workbench/head-look-r03-local/BUILD.json
+          git commit -m 'build(local-r03): original skin plus lip orbital ear and neutral light candidate'
+          git push origin HEAD:feature/head-look-r03-local-features-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify exact public URL with real controls and protected pixel regions
+        env: {QA_OUT: local-r03-evidence/public}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/head-look-r03-local/preview.html"
+          node kaopu-unified-human-workbench/head-look-r03-local/verify.cjs
+      - name: Record public proof and source preservation
+        run: |
+          git fetch --depth=1 origin 87f6acf857230c44c16ac7121613b9e7ca6af589
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,re,subprocess
+          p=Path('kaopu-unified-human-workbench/head-look-r03-local');q=json.loads(Path('local-r03-evidence/public/qa.json').read_text());b=json.loads((p/'BUILD.json').read_text())
+          assert q['completed'] and not any(q[k] for k in ['pageErrors','consoleErrors','failedRequests','referenceRequests'])
+          changed=subprocess.check_output(['git','diff','--name-only','87f6acf857230c44c16ac7121613b9e7ca6af589','HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') or x=='.github/workflows/head-look-r03-local.yml' for x in changed),changed
+          count=int(re.search(r'LOCAL_FEATURE_UNIT_CHECKS=(\d+)',Path('local-r03-evidence/unit.txt').read_text()).group(1))
+          receipt={'version':b['version'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'previewBytes':b['previewBytes'],'run':os.environ['GITHUB_RUN_ID'],'unitChecks':count,'publicChecks':len(q['tests']),'publicBrowserVerified':True,'oldSourcesChanged':False,'originalOverallSkin':True,'localTasks':b['localTasks'],'userVisualAccepted':False,'photorealisticEquivalence':False,'realPhoneTested':False,'consumerGPUFPSCertified':False,'final':q['final'],'limitations':b['limitations']}
+          (p/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');(p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add kaopu-unified-human-workbench/head-look-r03-local/DELIVERY.json kaopu-unified-human-workbench/head-look-r03-local/PUBLIC_QA.json
+          git commit -m 'docs(local-r03): permanent public evidence and limits'
+          git push origin HEAD:feature/head-look-r03-local-features-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-r03-full-${{ github.run_number }}
+          path: |
+            local-r03-evidence/
+            kaopu-unified-human-workbench/head-look-r03-local/
+          retention-days: 14
