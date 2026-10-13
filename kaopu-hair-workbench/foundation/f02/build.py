@@ -9,6 +9,7 @@ for name in ['head.json.gz','Foundation.mjs','three.module.js']:
     if name=='Foundation.mjs':shutil.copy2(old/'site'/name,p/'src/LegacyFoundation.mjs')
     if name=='three.module.js':shutil.copy2(old/'site'/name,build/name)
 for f in (p/'src').glob('*.mjs'):shutil.copy2(f,build/f.name)
+a=build/'App.mjs';lines=a.read_text().splitlines();assert all(x.startswith('import ') for x in lines[:2]);a.write_text('\n'.join(lines[:2])+'\n(async()=>{\n'+'\n'.join(lines[2:])+'\n})();\n')
 esbuild=os.environ.get('ESBUILD','esbuild')
 for entry,out in [('Worker.mjs','worker.js'),('App.mjs','app.js')]:subprocess.run([esbuild,str(build/entry),'--bundle','--format=iife','--minify','--legal-comments=inline','--outfile='+str(build/out)],check=True)
 head=(old/'site/head.json.gz').read_bytes();source=os.environ.get('GITHUB_SHA','local-F02')
