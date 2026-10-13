@@ -48,10 +48,12 @@ export function selectGuides(roots,count=192){
 function groomDirection(p,n,root,r,near,s){
  const sign=root.p[0]>=r.partMM*.001?1:-1;
  let desire=r.family==='natural'?emergence(p,n,r).t:r.family==='swept'?[.14,-.10,-1]:[sign,.0,-.13];
- if(p[1]<.34)desire=r.family==='natural'?[Math.sign(p[0])*.08,-1,-.06]:[Math.sign(p[0])*.11,-1,-.10];
+ const down=[Math.sign(p[0])*.10,-1,-.08];desire=mix(desire,down,smooth((.353-p[1])/.035));
  // Keep initial skin emergence distinct from sculpted part direction.
- let t=tangent(desire,n,[0,-1,0]),surface=unit(add(t,mul(n,.025))),free=[Math.sign(p[0])*.015,-1,-.025];
- const released=smooth((near-.005)/.011);return unit(mix(surface,free,released));
+ let t=tangent(desire,n,[0,-1,0]),surface=unit(add(t,mul(n,clamp((.004-near)*65,-.65,.25)))),free=[Math.sign(p[0])*.015,-1,-.025];
+ // First follow the scalp's styling field; release below the side head.
+ // Distance alone caused premature gravity-like drops and visible hooks.
+ const released=smooth((.319-p[1])/.037)*smooth((s-.01)/.02);return unit(mix(surface,free,released));
 }
 export class GuideBuilder{
  constructor(head,roots,normals){this.head=head;this.roots=roots;this.normals=normals;this.guides=selectGuides(roots);this.bvh=new TeacherSkinBVH({template:head.positions,triangles:head.triangles,componentId:head.components});this.key=null;this.paths=null;this.pathBuilds=0;}
@@ -68,7 +70,7 @@ export class GuideBuilder{
  return{recipe:r,curves,probes,cacheHit:cache,pathBuilds:this.pathBuilds,buildMS:performance.now()-start,rootBankSignature:signature(this.roots.flatMap(r=>[r.f,...r.b])),scalpLock:SCALP_LOCK,rangeChanged:false,physicsSteps:0};
  }
  trace(root,r){const e=this.frames.get(root.id),points=[...root.p],arc=[0];let p=root.p.slice(),dir=e.dir,dist=0,rootAdjusted=e.clearanceAdjusted;
- for(let k=1;k<=120;k++){const ds=.002;let desired=dir;if(k>2){const h=this.bvh.nearest(p),g=groomDirection(p,h.n,root,r,h.distance,dist),blend=.18*smooth((dist-.002)/.012);desired=unit(mix(dir,g,blend));}
+ for(let k=1;k<=120;k++){const ds=.002;let desired=dir;if(k>2){const h=this.bvh.nearest(p),g=groomDirection(p,unit(point(this.head,h.t,h.b,this.normals)),root,r,h.distance,dist),blend=.18*smooth((dist-.002)/.012);desired=unit(mix(dir,g,blend));}
   const next=safePoint(p,add(p,mul(desired,ds)),this.bvh,k===1?0:.00022);if(k===1&&len(sub(unit(sub(next,p)),e.dir))>1e-5)rootAdjusted=true;dir=unit(sub(next,p));dist+=len(sub(next,p));points.push(...next);arc.push(dist);p=next;}
  return{rootId:root.id,face:root.f,barycentric:root.b,region:e.region,normal:e.n,tangent:e.t,emergence:e.dir,desiredAngle:e.requestedAngle,resolvedAngle:e.angle,rootAdjusted,singular:e.singular,points,arc};
  }
