@@ -1,4 +1,4 @@
-name: Joey R63 native whole face response
+name: Joey R63 original engine checkpoint
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
@@ -30,12 +30,12 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/probe-native.cjs
-      - name: Capture current whole face native response
-        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/probe-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/forward-native.cjs
+      - name: Check actual native proposal forward
+        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/forward-native.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: joey-face-r55-${{ github.sha }}
-          path: joey-whole-face-r63-probe/
+          path: joey-whole-face-r63-forward/
           retention-days: 7
