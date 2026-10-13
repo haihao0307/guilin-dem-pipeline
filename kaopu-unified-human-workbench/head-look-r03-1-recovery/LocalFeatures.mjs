@@ -3,7 +3,7 @@ import {eyeFrames} from './Profile.mjs';
 const declaration=`
 uniform float uLFLips,uLFEyes,uLFEars,uLFGuard,uLFChroma,uLFBorder,uLFWet,uLFEyeDetail,uLFEyeTint,uLFEarColour,uLFEarScatter,uLFDiagnostic;
 uniform vec3 uLFOrigin[2],uLFX[2],uLFY[2],uLFZ[2];uniform vec4 uLFShape[2];
-float lfEye=0.,lfLip=0.,lfEar=0.,lfCavity=0.;
+float lfEye=0.,lfLip=0.,lfLipScope=0.,lfEar=0.,lfCavity=0.;
 vec4 lfOrbit(vec3 p,out vec3 local){
  int id=distance(p,uLFOrigin[0])<distance(p,uLFOrigin[1])?0:1;
  vec3 d=p-uLFOrigin[id];local=vec3(dot(d,uLFX[id]),dot(d,uLFY[id]),dot(d,uLFZ[id]));
@@ -54,6 +54,16 @@ export function installLocalFeatures(viewer){
   float lfSkinOwner=csCover*(1.-step(.5,vCSType));
   lfEye=lfEyeField.x*lfSkinOwner*(1.-lpMask)*(1.-eaM)*uLFEyes;
   lfLip=lpMask*lfSkinOwner*uLFLips;lfEar=eaM*uLFEars;
+  // A border correction can remove the former feather at a corner. Ownership
+  // must include BOTH the original support and the edited support; otherwise
+  // removed original pigment is falsely classified as an unrelated-skin edit.
+  // Recompute the exact retained specialist's original AA/domain equation.
+  // This does not broaden the actual colour, normal or optical modifications.
+  float lfNativeAA=max(fwidth(vFRest.y)*.8,mix(.00016,.00062,uLSoft));
+  float lfNativeLip=smoothstep(lpBotY-lfNativeAA,lpBotY+lfNativeAA,vFRest.y+lpBorderNoise)*(1.-smoothstep(lpTopY-lfNativeAA,lpTopY+lfNativeAA,vFRest.y+lpBorderNoise));
+  lfNativeLip*=lpExtent*lpThickness*smoothstep(0.111193347,0.117193347,vFRest.z)*csCover*uLEnabled;
+  lfNativeLip=max(lfNativeLip,lpMucosa);
+  lfLipScope=max(lpMask,lfNativeLip)*lfSkinOwner*uLFLips;
   lfCavity=clamp(vFA.w,0.,1.)*(1.-smoothstep(.267,.281,vFRest.y))*lfSkinOwner*uLFGuard;
   float lfRim=exp(-pow(lfEyeField.z/.65,2.));
   float lfUnder=(1.-lfEyeField.y)*exp(-pow((lfEyeField.z-3.5)/5.5,2.));
@@ -105,7 +115,7 @@ export function installLocalFeatures(viewer){
   reflectedLight.directDiffuse+=lfAngular*directLight.color*BRDF_Lambert(material.diffuseColor);
  `);
  f=patch(f,'#include <opaque_fragment>',`
-  if(uLFDiagnostic>.5&&uLFDiagnostic<1.5){gl_FragColor=vec4(lfLip>0.?1.:0.,lfEye>0.?1.:0.,lfEar>0.?1.:0.,1.);return;}
+  if(uLFDiagnostic>.5&&uLFDiagnostic<1.5){gl_FragColor=vec4(lfLipScope>0.?1.:0.,lfEye>0.?1.:0.,lfEar>0.?1.:0.,1.);return;}
   if(uLFDiagnostic>1.5&&uLFDiagnostic<2.5)outgoingLight=diffuseColor.rgb;
   if(uLFDiagnostic>2.5&&uLFDiagnostic<3.5)outgoingLight=vec3(roughnessFactor);
   if(uLFDiagnostic>3.5)outgoingLight=normal*.5+.5;
@@ -113,6 +123,6 @@ export function installLocalFeatures(viewer){
  `);
  s.fragmentShader=f;report.compiles++;
  };
- m.customProgramCacheKey=()=>key()+'/bounded-local-features-r03-v1';m.needsUpdate=true;
+ m.customProgramCacheKey=()=>key()+'/bounded-local-features-r03-v2-support-union';m.needsUpdate=true;
  return {U,report,shader:()=>lastShader,update(p){const gray=viewer.model.foldProfile.settings.gray||viewer.model.eyeSurface.settings.gray;for(const[k,n]of Object.entries({lips:'uLFLips',eyes:'uLFEyes',ears:'uLFEars',leakGuard:'uLFGuard'}))U[n].value=p[k]&&!gray?1:0;for(const[k,n]of Object.entries({lipChroma:'uLFChroma',lipBorder:'uLFBorder',lipWetness:'uLFWet',eyeDetail:'uLFEyeDetail',eyeTint:'uLFEyeTint',earColour:'uLFEarColour',earScatter:'uLFEarScatter',diagnostic:'uLFDiagnostic'}))U[n].value=gray?0:p[k];},dispose(){m.onBeforeCompile=previous;m.customProgramCacheKey=key;m.needsUpdate=true;}};
 }
