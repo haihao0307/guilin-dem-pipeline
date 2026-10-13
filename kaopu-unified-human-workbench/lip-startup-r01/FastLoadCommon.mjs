@@ -1,3 +1,4 @@
+import './StartupRenderGate.mjs';
 import{HeadTransfer}from'../full/src/HeadTransfer.mjs';
 import{AnnyModel}from'../full/source/kaopu-anny-workbench/r02/src/AnnyModel.js';
 import{GNMHeadModel,parseContainer}from'../full/source/kaopu-unified-human-workbench/src/GNMModel.js';
