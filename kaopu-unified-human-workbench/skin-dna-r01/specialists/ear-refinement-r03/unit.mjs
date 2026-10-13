@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {EAR_CONTROLS,EAR_DEFAULT,EAR_PRESETS,presetEar,generatedPair} from './EarParameters.mjs';
+import {validateEar} from './EarState.mjs';
+import {resolvePhenotype,earDelta,sampleEar} from './EarMath.mjs';
+assert.equal(EAR_CONTROLS.length,36);assert.equal(new Set(EAR_CONTROLS.map(x=>x[0])).size,36);assert.equal(EAR_PRESETS.length,8);
+for(const p of EAR_PRESETS)validateEar({left:presetEar(p.id),right:presetEar(p.id)});
+assert.deepEqual(generatedPair(142857),generatedPair(142857));assert.notDeepEqual(generatedPair(142857),generatedPair(142858));
+for(let seed=0;seed<128;seed++)validateEar(generatedPair(seed));
+for(const input of [null,[],{schema:'unknown'},{left:{pores:NaN}},{right:{roughness:9}},{left:{rootAngle:'3'}},{left:{height:3}},{generation:{seed:-1}}])assert.throws(()=>validateEar(input));
+for(const seed of [-1,2.5,4294967296,NaN])assert.throws(()=>generatedPair(seed));
+const old=validateEar({schema:'kaopu/ear-structure@1',left:{helix:.8},right:{helix:1.1}});assert.equal(old.left.helix,.8);assert.equal(old.right.helix,1.1);assert.equal(old.schema,'kaopu/ear-structure@2');
+const a=resolvePhenotype(EAR_DEFAULT),b=resolvePhenotype({...EAR_DEFAULT,lobuleGrowth:1});assert.equal(a.cartilageScaleY,b.cartilageScaleY);assert.notEqual(a.lobeLength,b.lobeLength);
+const root=sampleEar([.055,.275,.03],0,1);assert.equal(root,null);
+const q=sampleEar([.08,.28,.02],0,.8);for(const row of EAR_CONTROLS)for(const value of[row[2],row[3]])assert(earDelta(q,{...EAR_DEFAULT,[row[0]]:value}).every(Number.isFinite));
+console.log(JSON.stringify({pass:true,controls:36,presets:8,generatedPairs:128,schemaMigration:true,invalidDataRejected:true,separateLobuleBudget:true}));
