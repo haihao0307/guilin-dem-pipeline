@@ -1,0 +1,89 @@
+name: Human R06 head morphology and multi-view acceptance
+on:
+  push:
+    branches: [feature/human-r06-head-morphology-20261013]
+    paths: ['kaopu-unified-human-workbench/human-integrated-r06/**', '.github/workflows/human-r06-head-morphology.yml']
+permissions: {contents: write}
+concurrency:
+  group: human-r06-head-morphology
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2 esbuild@0.25.11
+      - name: Prepare isolated inherited runtime and source checks
+        run: |
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          mkdir -p r06-evidence
+          node kaopu-unified-human-workbench/human-integrated-r06/prepare.cjs
+          node kaopu-unified-human-workbench/human-integrated-r06/refine-eye-c2.cjs
+          node --check kaopu-unified-human-workbench/human-integrated-r06/HeadMorphology.mjs
+          node --check kaopu-unified-human-workbench/human-integrated-r06/HeadMorphologyUI.mjs
+          node --check kaopu-unified-human-workbench/human-integrated-r06/FirstPaint.cjs
+          node --check kaopu-unified-human-workbench/human-integrated-r06/StreamingAdapters.cjs
+          node --check kaopu-unified-human-workbench/human-integrated-r06/verify.cjs
+          node - <<'JS'
+          const fs=require('fs');const p='kaopu-unified-human-workbench/human-integrated-r06/build.cjs';let s=fs.readFileSync(p,'utf8');s=s.replaceAll("'共同人物 R05'","'共同人物 R06'").replaceAll('R05 · 按需原生构建 / 六款脸型 / 耳 R06 / 唇 ET19','R06 · 头型 / 下颌 / 眼裂 / 耳 R06 / 唇 ET19').replaceAll("predecessor:'e5df3bcba13ba566d6da27d5cb051e91956055b3'","predecessor:'475ead2759159b83927a1aa8ae6879595e1d18bc'");fs.writeFileSync(p,s);
+          JS
+          node kaopu-unified-human-workbench/human-integrated-r06/build.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Actual rendered candidate smoke gate
+        env: {QA_OUT: r06-evidence/smoke, QA_MODE: smoke}
+        run: node kaopu-unified-human-workbench/human-integrated-r06/verify.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r06-visual-smoke-${{ github.run_number }}
+          path: r06-evidence/smoke/
+          retention-days: 14
+      - name: Publish new version without touching R05 or main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/human-integrated-r06
+          if ! git diff --cached --quiet; then git commit -m 'build(human-r06): continuous eye margins and native head silhouette candidate'; fi
+          git push origin HEAD:feature/human-r06-head-morphology-20261013
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Exact public page multi-view and endpoint regression
+        env: {QA_OUT: r06-evidence/public}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/human-integrated-r06/preview.html"
+          node kaopu-unified-human-workbench/human-integrated-r06/verify.cjs
+      - name: Record public evidence and source isolation
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,subprocess,urllib.request
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r06');q=json.loads(Path('r06-evidence/public/qa.json').read_text());b=json.loads((p/'BUILD.json').read_text());assert q['completed'] and all(t['passed'] for t in q['tests']) and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests']
+          raw=f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{os.environ['BUILD_SHA']}/{p}/preview.html"
+          assert hashlib.sha256(urllib.request.urlopen(raw).read()).hexdigest()==b['previewSHA256']
+          changed=subprocess.check_output(['git','diff','--name-only',os.environ['SOURCE_SHA'],'HEAD'],text=True).splitlines();assert all(x.startswith(str(p)+'/') for x in changed),changed
+          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2))
+          d={'version':'HUMAN-INTEGRATED-R06','eyeMorphology':q['initial']['morph']['version'],'status':'public-rendered-candidate','sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'publicURL':q['url'],'previewSHA256':b['previewSHA256'],'parameterCount':24,'portraitCount':6,'checks':len(q['tests']),'coldReadyMS':q['coldReadyMS'],'oldVersionsChanged':False,'userVisualAccepted':False,'physicalDeviceTested':False,'runId':os.environ['GITHUB_RUN_ID']};(p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
+          with (p/'README.md').open('a') as f:f.write('\n固定公网候选：'+q['url']+'\n\n完整运行与测试证据：'+os.environ['GITHUB_RUN_ID']+'；检查数量 '+str(len(q['tests']))+'。不是用户视觉已验收。\n')
+          PY
+          git add kaopu-unified-human-workbench/human-integrated-r06
+          git commit -m 'test(human-r06): immutable public continuous-eye and head morphology evidence'
+          git push origin HEAD:feature/human-r06-head-morphology-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-r06-evidence-${{ github.run_number }}
+          path: |
+            r06-evidence/
+            kaopu-unified-human-workbench/human-integrated-r06/*.mjs
+            kaopu-unified-human-workbench/human-integrated-r06/*.cjs
+            kaopu-unified-human-workbench/human-integrated-r06/*.json
+            kaopu-unified-human-workbench/human-integrated-r06/*.md
+            kaopu-unified-human-workbench/human-integrated-r06/preview.html
+          retention-days: 14
