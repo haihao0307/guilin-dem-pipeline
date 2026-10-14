@@ -1,0 +1,85 @@
+name: Brow Lash R02 build and exact-public verification
+on:
+  push:
+    branches: [feature/brow-lash-r02-recovery-20261014]
+    paths:
+      - 'kaopu-unified-human-workbench/brow-lash-r02/**'
+      - '.github/workflows/brow-lash-r02.yml'
+permissions:
+  contents: write
+concurrency:
+  group: brow-lash-r02
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_PATH: /tmp/bltools/node_modules
+      BL_DIR: kaopu-unified-human-workbench/brow-lash-r02
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/brow-lash-r02-recovery-20261014
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-unified-human-workbench/brow-lash-r01/
+            /kaopu-unified-human-workbench/brow-lash-r02/
+            /kaopu-unified-human-workbench/human-integrated-r06/preview.html
+            /kaopu-unified-human-workbench/vendor/
+            /kaopu-unified-human-workbench/full/source/registration-vendor/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and numerical tests
+        run: |
+          npm install --prefix /tmp/bltools esbuild@0.25.9 playwright@1.57.0
+          /tmp/bltools/node_modules/.bin/playwright install --with-deps chromium
+          rm -rf "$BL_DIR/acceptance" "$BL_DIR/DELIVERY.json"
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/brow-lash-r01/test.mjs > "$BL_DIR/INHERITED_UNIT_QA.json"
+          node "$BL_DIR/test.mjs" > "$BL_DIR/UNIT_QA.json"
+          SOURCE_SHA=$(git rev-parse HEAD) node "$BL_DIR/build.cjs"
+      - name: Candidate actual pixels and controls
+        env:
+          QA_MODE: smoke
+          QA_OUT: kaopu-unified-human-workbench/brow-lash-r02/acceptance/candidate
+        run: node "$BL_DIR/verify.cjs"
+      - name: Early visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brow-lash-r02-early
+          path: kaopu-unified-human-workbench/brow-lash-r02/
+          retention-days: 14
+      - name: Publish candidate research branch only
+        run: |
+          git config user.name 'KAOPU Workbench Builder'
+          git config user.email 'kaopu-builder@users.noreply.github.com'
+          git add "$BL_DIR/preview.html" "$BL_DIR/BUILD_MANIFEST.json" "$BL_DIR/UNIT_QA.json" "$BL_DIR/INHERITED_UNIT_QA.json" "$BL_DIR"/*.adapted.txt
+          git diff --cached --quiet || git commit -m 'build(brow-lash-r02): inspected fixed candidate [skip ci]'
+          git push origin HEAD:feature/brow-lash-r02-recovery-20261014
+          SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$SHA" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/$BL_DIR/preview.html" >> "$GITHUB_ENV"
+      - name: Exact public page full regression
+        env:
+          QA_MODE: full
+          QA_OUT: kaopu-unified-human-workbench/brow-lash-r02/acceptance/public
+        run: node "$BL_DIR/verify.cjs"
+      - name: Preserve fresh public receipt
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),dir=process.env.BL_DIR,q=JSON.parse(fs.readFileSync(dir+'/acceptance/public/qa.json'));if(!q.completed)throw Error('Public incomplete');fs.writeFileSync(dir+'/DELIVERY.json',JSON.stringify({version:'BROW-LASH-R02',sourceCommit:process.env.SOURCE_SHA,buildCommit:process.env.BUILD_SHA,preview:process.env.PREVIEW_URL,workflowRun:process.env.GITHUB_RUN_ID,checks:q.checks.length,screens:q.screens.length,publicRuntimeVerified:true,userVisualAccepted:false,filmQualityAccepted:false,consumerGPUCertified:false,physicalPhone:false},null,2));
+          NODE
+          git add "$BL_DIR/acceptance" "$BL_DIR/DELIVERY.json"
+          git commit -m 'test(brow-lash-r02): preserve real fixed-public evidence [skip ci]'
+          git push origin HEAD:feature/brow-lash-r02-recovery-20261014
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brow-lash-r02-full
+          path: kaopu-unified-human-workbench/brow-lash-r02/
+          retention-days: 14
