@@ -1,0 +1,99 @@
+name: Hair Fiber Stability R03
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths: ['kaopu-hair-workbench/research/fiber-r03/**','.github/workflows/hair-fiber-stability-r03.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hair-fiber-r03-isolated
+  cancel-in-progress: false
+jobs:
+  single-frame-motion-and-public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      ROOT: kaopu-hair-workbench/research/fiber-r03
+      BASE_SHA: 4095c62bd5c40bec9381ad95a765919a82fac1d7
+      BRANCH: research/hair-fiber-lookdev-physics-r01-20261014
+    steps:
+      - name: Read isolated revision and enforce frozen old workbenches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set kaopu-hair-workbench/research kaopu-hair-workbench/foundation/f03/src/approved
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA" "$BASE_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/changes.txt
+          cat /tmp/changes.txt
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r03/|\.github/workflows/hair-fiber-stability-r03\.yml$|\.github/workflows/hair-fiber-r03-motion-audit\.yml$)' /tmp/changes.txt; then exit 1; fi
+          REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs
+          node --test "$ROOT/tests/core.mjs"
+      - name: Pinned self-contained rendering build
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/hair-r03-deps" --ignore-scripts --no-audit --no-fund three@0.169.0 playwright@1.55.1
+          ln -s "$RUNNER_TEMP/hair-r03-deps/node_modules" "$ROOT/node_modules"
+          "$ROOT/node_modules/.bin/playwright" install --with-deps chromium
+          mkdir -p "$ROOT/licenses"
+          cp "$ROOT/node_modules/three/LICENSE" "$ROOT/licenses/THREE-MIT.txt"
+          python "$ROOT/build.py" "$ROOT/node_modules/three/build/three.module.min.js"
+      - name: Actual moving-frame evidence then immutable public verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          push_safe() {
+            test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$1"
+            local header
+            header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            git -c "http.https://github.com/.extraheader=$header" push origin "HEAD:refs/heads/$BRANCH"
+          }
+          python -m http.server 8765 --directory "$ROOT/site" >/tmp/hair-r03-http.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs http://127.0.0.1:8765/preview.html candidate)
+          CODE=$?
+          set -e
+          git add "$ROOT/evidence" "$ROOT/BUILD_MANIFEST.json" "$ROOT/licenses"
+          if [ "$CODE" != 0 ]; then
+            git commit -m 'test(hair-r03): retain failed rendering evidence; delivery incomplete [skip ci]'
+            push_safe "$GITHUB_SHA"
+            exit "$CODE"
+          fi
+          cp "$ROOT/site/preview.html" "$ROOT/preview.html"
+          git add "$ROOT/preview.html"
+          git commit -m 'build(hair-r03): single-frame coverage candidate with motion sequence evidence [skip ci]'
+          BUILD_SHA=$(git rev-parse HEAD)
+          push_safe "$GITHUB_SHA"
+          RAW="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$BUILD_SHA/$ROOT/preview.html"
+          PUBLIC="https://htmlpreview.github.io/?$RAW"
+          curl --fail --location --retry 5 --retry-delay 2 "$RAW" -o /tmp/hair-r03-public.html
+          cmp "$ROOT/preview.html" /tmp/hair-r03-public.html
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs "$PUBLIC" public)
+          CODE=$?
+          set -e
+          export BUILD_SHA PUBLIC CODE
+          python - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path(os.environ['ROOT'])
+          d={'version':'HAIR-FIBER-R03-S1','source':os.environ['GITHUB_SHA'],'build':os.environ['BUILD_SHA'],'url':os.environ['PUBLIC'],'publicVerified':os.environ['CODE']=='0','status':'interactive_candidate_awaiting_visual_review' if os.environ['CODE']=='0' else '交付未完成','actionsRun':os.environ['GITHUB_RUN_ID'],'mobile':'390x844 viewport, not physical phone','physics':False,'temporalReprojection':False,'filmQualityAccepted':False}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          (p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC']+'\n')
+          PY
+          git add "$ROOT/evidence" "$ROOT/DELIVERY.json" "$ROOT/PUBLIC_URL.txt"
+          git commit -m 'test(hair-r03): immutable HTTPS motion, single-frame coverage and interaction receipts [skip ci]'
+          push_safe "$BUILD_SHA"
+          echo "PUBLIC_URL=$PUBLIC"
+          exit "$CODE"

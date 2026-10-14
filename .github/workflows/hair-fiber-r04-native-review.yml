@@ -1,0 +1,105 @@
+name: Hair R04 Native Interaction Review
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths: ['.github/workflows/hair-fiber-r04-native-review.yml']
+permissions:
+  contents: write
+jobs:
+  fixed-page-native-input:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ROOT: kaopu-hair-workbench/research/fiber-r04
+      BRANCH: research/hair-fiber-lookdev-physics-r01-20261014
+      RUNTIME_SOURCE: a1eeef8144b1c11f4d4acd09ec9b648624db8772
+      PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/af4995b786f4a457d9e5de8fc147dc55ac7a3f75/kaopu-hair-workbench/research/fiber-r04/preview.html
+    steps:
+      - name: Fetch own audit snapshot and pinned browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set "$ROOT"
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          npm install --prefix "$RUNNER_TEMP/r04-native" --ignore-scripts --no-audit --no-fund playwright@1.55.1
+          ln -s "$RUNNER_TEMP/r04-native/node_modules" "$ROOT/node_modules"
+          "$ROOT/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Native pointer, release, wind and same-run optical cost
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$ROOT/audits/native"
+          cat > "$ROOT/audits/native/audit.mjs" <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+          const url=process.env.PUBLIC_URL,source=process.env.RUNTIME_SOURCE;
+          if(!url||!source)throw Error('Fixed public URL and runtime source required');
+          const results=[],errors=[],timings=[];fs.mkdirSync('audits/native',{recursive:true});
+          const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+          const page=await browser.newPage({viewport:{width:1100,height:820},deviceScaleFactor:1});
+          page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+          const check=(name,pass,info={})=>{results.push({name,pass,...info});console.log(pass?'PASS':'FAIL',name,JSON.stringify(info).slice(0,1500));if(!pass)throw Error(name);};
+          const snap=()=>page.evaluate(()=>HAIR_LAB.snapshot());
+          async function capture(name){const d=await page.evaluate(()=>HAIR_LAB.capture());const b=Buffer.from(d.split(',')[1],'base64');fs.writeFileSync(`audits/native/${name}.png`,b);const crop=await page.evaluate(()=>{const c=document.querySelector('canvas'),a=document.createElement('canvas');a.width=210;a.height=330;a.getContext('2d').drawImage(c,c.width*.31,0,c.width*.38,c.height,0,0,210,330);return a.toDataURL('image/jpeg',.5).split(',')[1];});fs.writeFileSync(`audits/native/${name}.base64.txt`,crop+'\n');return crypto.createHash('sha256').update(b).digest('hex');}
+          async function settled(){await page.waitForFunction(()=>{const s=HAIR_LAB.snapshot();return s.completed>=1&&s.completedRevision===s.revision;},null,{timeout:180000});}
+          try{
+           await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.HAIR_LAB?.snapshot().completed>=1,null,{timeout:180000});
+           check('exact fixed runtime',(await snap()).source===source);
+           await page.evaluate(()=>HAIR_LAB.setManual(true));
+           for(const samples of[81,21,81,21]){
+            await page.evaluate(n=>{HAIR_LAB.resetDynamics();HAIR_LAB.setOpticalSamples(n);HAIR_LAB.setCamera({yaw:.12,pitch:.035,distance:.66,target:[0,-.002,0]});},samples);
+            let s=await page.evaluate(()=>HAIR_LAB.renderFrame());
+            await page.evaluate(()=>HAIR_LAB.setCamera({yaw:.19}));
+            s=await page.evaluate(()=>HAIR_LAB.renderFrame());
+            timings.push({samples,wallMS:s.completedFrameWallMS.at(-1),cpuGuideMS:s.guideMotion.cpuMS,width:s.width,height:s.height});
+           }
+           await page.evaluate(()=>{HAIR_LAB.resetDynamics();HAIR_LAB.setCamera({yaw:.12,pitch:.035,distance:.66,target:[0,-.002,0]});HAIR_LAB.setOpticalSamples(21);});await page.evaluate(()=>HAIR_LAB.renderFrame());
+           await page.evaluate(()=>HAIR_LAB.setManual(false));
+           await page.click('#brushMotion');
+           const box=await page.locator('canvas').boundingBox();
+           await page.mouse.move(box.x+box.width*.5,box.y+box.height*.55);await page.mouse.down();
+           await page.mouse.move(box.x+box.width*.5+14,box.y+box.height*.55-5,{steps:1});
+           await page.waitForFunction(()=>{const s=HAIR_LAB.snapshot();return s.renderedGuideState?.maxOffset>.002&&s.completedRevision>=2;},null,{timeout:180000});
+           await page.evaluate(()=>HAIR_LAB.setManual(true));
+           const held=await snap();
+           check('native local brush produces bounded guide motion',held.guideMotion.maxOffset>.002&&held.guideMotion.maxOffset<=.035001,{guideMotion:held.guideMotion,renderedGuideState:held.renderedGuideState});
+           const heldHash=await capture('native-brush-held');
+           await page.mouse.up();
+           await page.evaluate(()=>{HAIR_LAB.setManual(false);HAIR_LAB.setWindEnabled(false);});
+           await page.waitForFunction(()=>HAIR_LAB.snapshot().guideMotion.maxOffset<.0001,null,{timeout:180000});await settled();
+           const released=await snap(),releaseHash=await capture('native-brush-released');
+           check('native release returns to rest without fixed motion clip',released.guideMotion.maxOffset<.0001&&heldHash!==releaseHash,{guideMotion:released.guideMotion});
+           await page.click('#brushMotion');
+           await page.click('#windMotion');const start=await snap();
+           await page.waitForFunction(n=>HAIR_LAB.snapshot().seq>=n+2,start.seq,{timeout:180000});
+           await page.click('#pauseMotion');await page.evaluate(()=>HAIR_LAB.setManual(true));
+           const wind=await snap();
+           check('native wind button drives hair rather than camera',wind.guideMotion.windEnabled&&wind.guideMotion.maxOffset>.0001&&wind.camera.yaw===start.camera.yaw,{guideMotion:wind.guideMotion,frameWallMS:wind.completedFrameWallMS.slice(-4)});
+           await capture('native-wind');
+           await page.click('#resetMotion');await page.evaluate(()=>HAIR_LAB.renderFrame());const reset=await snap();
+           check('native static reset restores exact root recipe',reset.guideMotion.maxOffset===0&&reset.signature==='eaadb8b8');
+           check('no runtime errors',errors.length===0&&reset.errors.length===0,{errors});
+           fs.writeFileSync('audits/native/REPORT.json',JSON.stringify({url,source,results,timings,errors,final:reset,limits:['SwiftShader timings, not physical GPU FPS','Fixed-step spring motion, not elastic rod or contacts','No cinematic acceptance claimed']},null,2));
+          }catch(e){fs.writeFileSync('audits/native/REPORT.json',JSON.stringify({url,source,results,timings,errors,failure:String(e),snapshot:await snap().catch(()=>null)},null,2));throw e;}finally{await browser.close();}
+          JS
+          set +e
+          (cd "$ROOT" && node audits/native/audit.mjs)
+          CODE=$?
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$ROOT/audits/native"
+          git commit -m 'test(hair-r04): retain native pointer and same-run optical cost evidence [skip ci]'
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$header" push origin "HEAD:refs/heads/$BRANCH"
+          exit "$CODE"

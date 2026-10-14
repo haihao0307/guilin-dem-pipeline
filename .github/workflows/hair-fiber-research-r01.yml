@@ -1,0 +1,46 @@
+name: Hair Fiber Research R01
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths:
+      - 'kaopu-hair-workbench/research/fiber-r01/**'
+      - '.github/workflows/hair-fiber-research-r01.yml'
+permissions:
+  contents: read
+jobs:
+  scalar-probes-and-approved-domain-lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      BASE_SHA: 6b00c22d64f495bd515d031a80c61cd9f38ef81a
+    steps:
+      - name: Fetch only this public research snapshot and approved sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set kaopu-hair-workbench/research/fiber-r01 kaopu-hair-workbench/foundation/f03/src/approved
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA" "$BASE_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Enforce isolated additions; no old workbench changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/hair-r01-changed.txt
+          cat /tmp/hair-r01-changed.txt
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r01/|\.github/workflows/hair-fiber-research-r01\.yml$)' /tmp/hair-r01-changed.txt; then
+            echo 'Change outside isolated research scope'; exit 1
+          fi
+          test -z "$(git diff --diff-filter=DM --name-only "$BASE_SHA" "$GITHUB_SHA")"
+      - name: Run scalar probes and mandatory source hashes; not visual acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          node -p "JSON.stringify({platform:process.platform,arch:process.arch,versions:process.versions})"
+          REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs

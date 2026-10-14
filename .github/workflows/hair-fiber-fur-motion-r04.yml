@@ -1,0 +1,109 @@
+name: Hair Fiber Fur Motion R04
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths: ['kaopu-hair-workbench/research/fiber-r04/**','.github/workflows/hair-fiber-fur-motion-r04.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hair-fur-r04-isolated
+  cancel-in-progress: false
+jobs:
+  source-motion-look-and-fixed-public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ROOT: kaopu-hair-workbench/research/fiber-r04
+      BASE_SHA: a5c4881394ef4e0ac2198fb6f0e4089bfee27605
+      BRANCH: research/hair-fiber-lookdev-physics-r01-20261014
+    steps:
+      - name: Read frozen baseline and only isolated additions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set kaopu-hair-workbench/research kaopu-hair-workbench/foundation/f03/src/approved
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA" "$BASE_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/changes.txt
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r04/|\.github/workflows/hair-fiber-(fur-motion-r04|r04-native-review)\.yml$)' /tmp/changes.txt; then exit 1; fi
+          REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs
+          node --test "$ROOT/tests/motion.test.mjs"
+          mkdir -p "$ROOT/provenance"
+          curl --fail --location --retry 3 'https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/e845835b3e04c56a65c405ff87aece955b161b4d/fur-workshop/r02/app.js' -o /tmp/fur-source.js
+          echo '8515146fbf1e788a70624a8aee47dc9a2a1b597405c9013e057c5b6e5e3f5842  /tmp/fur-source.js' | sha256sum -c -
+          python - <<'PY'
+          from pathlib import Path
+          import os,json
+          text=Path('/tmp/fur-source.js').read_text()
+          lines=[line for line in text.splitlines() if 'function integrate(dt)' in line or 'function frame(now)' in line]
+          (Path(os.environ['ROOT'])/'provenance/FUR_R02_MOTION_EXCERPT.txt').write_text('\n'.join(lines)+'\n')
+          PY
+      - name: Pinned build with source optics retained
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/hair-r04-deps" --ignore-scripts --no-audit --no-fund three@0.169.0 playwright@1.55.1 pngjs@7.0.0
+          ln -s "$RUNNER_TEMP/hair-r04-deps/node_modules" "$ROOT/node_modules"
+          "$ROOT/node_modules/.bin/playwright" install --with-deps chromium
+          mkdir -p "$ROOT/licenses"
+          cp "$ROOT/node_modules/three/LICENSE" "$ROOT/licenses/THREE-MIT.txt"
+          python "$ROOT/build.py" "$ROOT/node_modules/three/build/three.module.min.js"
+      - name: Real hair motion, reference look and immutable HTTPS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          push_safe() {
+            test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$1"
+            local header
+            header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            git -c "http.https://github.com/.extraheader=$header" push origin "HEAD:refs/heads/$BRANCH"
+          }
+          python -m http.server 8765 --directory "$ROOT/site" >/tmp/hair-r04-http.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs http://127.0.0.1:8765/preview.html candidate)
+          CODE=$?
+          set -e
+          git add "$ROOT/app.mjs" "$ROOT/index.html" "$ROOT/BUILD_MANIFEST.json" "$ROOT/licenses" "$ROOT/provenance" "$ROOT/evidence"
+          if [ "$CODE" != 0 ]; then
+            git commit -m 'test(hair-r04): retain failed candidate evidence; no delivery [skip ci]'
+            push_safe "$GITHUB_SHA"
+            exit "$CODE"
+          fi
+          (cd "$ROOT" && node tests/source.mjs)
+          cp "$ROOT/site/preview.html" "$ROOT/preview.html"
+          git add "$ROOT/preview.html" "$ROOT/evidence"
+          git commit -m 'build(hair-r04): bounded fur-guide motion on frozen hair optics; candidate verified [skip ci]'
+          BUILD_SHA=$(git rev-parse HEAD)
+          push_safe "$GITHUB_SHA"
+          RAW="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$BUILD_SHA/$ROOT/preview.html"
+          PUBLIC="https://htmlpreview.github.io/?$RAW"
+          curl --fail --location --retry 5 --retry-delay 2 "$RAW" -o /tmp/hair-r04-public.html
+          cmp "$ROOT/preview.html" /tmp/hair-r04-public.html
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs "$PUBLIC" public)
+          CODE=$?
+          set -e
+          export BUILD_SHA PUBLIC CODE
+          python - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path(os.environ['ROOT'])
+          d={'version':'HAIR-FIBER-R04-FUR1','source':os.environ['GITHUB_SHA'],'build':os.environ['BUILD_SHA'],'url':os.environ['PUBLIC'],'publicVerified':os.environ['CODE']=='0','status':'motion_integration_candidate' if os.environ['CODE']=='0' else '交付未完成','actionsRun':os.environ['GITHUB_RUN_ID'],'mobile':'viewport only; not physical phone','physics':'bounded guide-tip springs','fullRodSolver':False,'collision':False,'hardwarePerformanceCertified':False,'filmQualityAccepted':False}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          (p/'PUBLIC_URL.txt').write_text(os.environ['PUBLIC']+'\n')
+          PY
+          git add "$ROOT/evidence" "$ROOT/DELIVERY.json" "$ROOT/PUBLIC_URL.txt"
+          git commit -m 'test(hair-r04): fixed public motion and preserved-look receipt [skip ci]'
+          push_safe "$BUILD_SHA"
+          echo "PUBLIC_URL=$PUBLIC"
+          exit "$CODE"

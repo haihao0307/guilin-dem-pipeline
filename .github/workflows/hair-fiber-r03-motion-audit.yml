@@ -1,0 +1,121 @@
+name: Hair R03 Native Motion Audit
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths: ['.github/workflows/hair-fiber-r03-motion-audit.yml']
+permissions:
+  contents: write
+jobs:
+  inspect-fixed-render-without-changing-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ROOT: kaopu-hair-workbench/research/fiber-r03
+      BRANCH: research/hair-fiber-lookdev-physics-r01-20261014
+      PUBLIC: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/660cbd904c422ea0ed5e03d41c5afaa26f22f8ca/kaopu-hair-workbench/research/fiber-r03/preview.html
+    steps:
+      - name: Read frozen evidence and pinned browser
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set "$ROOT"
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          npm install --prefix "$RUNNER_TEMP/hair-audit" --ignore-scripts --no-audit --no-fund playwright@1.55.1
+          ln -s "$RUNNER_TEMP/hair-audit/node_modules" node_modules
+          ./node_modules/.bin/playwright install --with-deps chromium
+          python -m pip install --disable-pip-version-check pillow==11.3.0 numpy==2.3.3
+      - name: Inspect existing unretouched pixels and actual frame completion costs
+        run: |
+          set -euo pipefail
+          mkdir -p "$ROOT/audits/s1"
+          python - <<'PY'
+          import os,json,base64,io,hashlib
+          from pathlib import Path
+          import numpy as np
+          from PIL import Image,ImageFilter,ImageDraw
+          root=Path(os.environ['ROOT']);ev=root/'evidence';out=root/'audits/s1'
+          files={k:ev/('public-'+k+'.png') for k in ['stable','legacy-single','reference32']}
+          im={k:Image.open(v).convert('RGB') for k,v in files.items()}
+          a={k:np.asarray(v,dtype=np.float64)/255 for k,v in im.items()}
+          assert len({v.shape for v in a.values()})==1
+          ref=a['reference32'];mask=np.max(ref,axis=2)>.055
+          refhp=ref-np.asarray(im['reference32'].filter(ImageFilter.GaussianBlur(1)),dtype=np.float64)/255
+          stats={}
+          for k,v in a.items():
+            hp=v-np.asarray(im[k].filter(ImageFilter.GaussianBlur(1)),dtype=np.float64)/255
+            stats[k]={'meanRGB':v[mask].mean(axis=0).tolist(),'MAE_to_reference32_sRGB':float(np.abs(v-ref)[mask].mean()),'highpassMAE_to_reference32_sRGB':float(np.abs(hp-refhp)[mask].mean()),'SHA256':hashlib.sha256(files[k].read_bytes()).hexdigest()}
+          cand=json.loads((ev/'candidate.json').read_text());pub=json.loads((ev/'public.json').read_text())
+          moving=[r['wallMS'] for r in pub['results'] if r['name'].startswith('moving-camera-frame-')]
+          report={'source':'7119a2e906bf4289248cfee24b8686d56010dd42','build':'660cbd904c422ea0ed5e03d41c5afaa26f22f8ca','url':os.environ['PUBLIC'],'candidateChecks':len(cand['results']),'publicChecks':len(pub['results']),'allCandidatePassed':all(r['pass'] for r in cand['results']),'allPublicPassed':all(r['pass'] for r in pub['results']),'staticDiagnostics':stats,'mask':'reference32 maximum RGB > .055, sRGB bytes; NOT a calibrated radiometric truth','cameraFrameWallMS':moving,'cameraMedianWallMS':float(np.median(moving)),'cameraMaxWallMS':max(moving),'limits':['Highpass error can reward smoothing and is not itself a grain or quality certification.','32-sample R02 is noisy and uses a different finite raster footprint; not exact physical truth.','These are same-pose STATIC diagnostics; not temporal sequence noise percentages.','SwiftShader is software; no hardware GPU FPS or phone certification.'],'runtimeUnchanged':True}
+          (out/'pixel-and-cost-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          # Only crop, resize, and label native canvas pixels for inspection.
+          board=Image.new('RGB',(480,240),(7,9,11));d=ImageDraw.Draw(board)
+          for n,k in enumerate(['legacy-single','reference32','stable']):
+            w,h=im[k].size;crop=im[k].crop((int(w*.28),int(h*.04),int(w*.72),int(h*.93)))
+            crop.thumbnail((154,214));board.paste(crop,(n*160+(160-crop.width)//2,23));d.text((n*160+7,5),['R02 one','R02 32','R03 one'][n],fill=(210,220,230))
+          buf=io.BytesIO();board.save(buf,format='JPEG',quality=55)
+          (out/'comparison.jpg').write_bytes(buf.getvalue());(out/'comparison.base64.txt').write_text(base64.b64encode(buf.getvalue()).decode()+'\n')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - name: Native pointer and animation buttons on the actual public page
+        run: |
+          set -euo pipefail
+          cat > native-motion-audit.mjs <<'JS'
+          import {chromium} from 'playwright';import fs from 'node:fs';import crypto from 'node:crypto';
+          const out=process.env.ROOT+'/audits/s1',results=[],frames=[],errors=[];
+          const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+          const page=await browser.newPage({viewport:{width:1100,height:820},deviceScaleFactor:1});
+          page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+          const check=(name,pass,info={})=>{results.push({name,pass,...info});console.log(pass?'PASS':'FAIL',name);if(!pass)throw Error(name);};
+          async function snap(){return page.evaluate(()=>HAIR_LAB.snapshot());}
+          async function capture(name){const data=await page.evaluate(()=>({png:HAIR_LAB.capture(),state:HAIR_LAB.snapshot(),cameraActive:document.querySelector('#cameraMove').classList.contains('selected'),lightActive:document.querySelector('#lightMove').classList.contains('selected')}));const b=Buffer.from(data.png.split(',')[1],'base64');fs.writeFileSync(out+'/'+name+'.png',b);delete data.png;frames.push({name,...data,sha256:crypto.createHash('sha256').update(b).digest('hex')});return data;}
+          try{
+            await page.goto(process.env.PUBLIC,{waitUntil:'domcontentloaded',timeout:90000});
+            await page.waitForFunction(()=>document.body.dataset.ready==='true',null,{timeout:240000});
+            await page.waitForFunction(()=>HAIR_LAB.snapshot().completedRevision===HAIR_LAB.snapshot().revision,null,{timeout:240000});
+            const initial=await snap();check('fixed source exact',initial.source==='7119a2e906bf4289248cfee24b8686d56010dd42');
+            const box=await page.locator('canvas').boundingBox();
+            await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();
+            for(let i=0;i<3;i++){
+              await page.mouse.move(box.x+box.width*.5+(i+1)*12,box.y+box.height*.5+i*2);
+              const rev=(await snap()).revision;
+              await page.waitForFunction(rev=>HAIR_LAB.snapshot().completedRevision>=rev,rev,{timeout:180000});
+              const v=await capture('pointer-held-'+i);
+              check('one frame while pointer remains held '+i,v.state.completed===1&&v.state.signature==='eaadb8b8',{yaw:v.state.camera.yaw,wallMS:v.state.completedFrameWallMS.at(-1)});
+            }
+            await page.mouse.up();
+            for(const kind of ['camera','light']){
+              const id=kind==='camera'?'#cameraMove':'#lightMove';
+              await page.click(id);const start=await snap();
+              await page.waitForFunction(s=>HAIR_LAB.snapshot().seq>=s+3,start.seq,{timeout:180000});
+              const a=await capture(kind+'-running-a');
+              await page.waitForFunction(s=>HAIR_LAB.snapshot().seq>=s+2,a.state.seq,{timeout:180000});
+              const z=await capture(kind+'-running-b');
+              check(kind+' native button keeps producing current frames',kind==='camera'?a.cameraActive&&z.cameraActive&&a.state.camera.yaw!==z.state.camera.yaw:a.lightActive&&z.lightActive&&a.state.parameters.rotation!==z.state.parameters.rotation,{first:a.state.seq,last:z.state.seq});
+              await page.click(id);
+              await page.waitForFunction(()=>HAIR_LAB.snapshot().completedRevision===HAIR_LAB.snapshot().revision,null,{timeout:180000});
+            }
+            check('native movement no runtime errors',errors.length===0&&(await snap()).errors.length===0,{errors});
+          }catch(e){results.push({name:'audit failure',pass:false,error:String(e)});console.error(e);process.exitCode=1;}
+          finally{fs.writeFileSync(out+'/native-motion.json',JSON.stringify({url:process.env.PUBLIC,results,frames,errors,scope:'Actual native pointer held and automatic camera/light buttons; stable path only. No frame accumulation, no animation cache. Software rendering is not a real-time hardware benchmark.'},null,2));await browser.close();}
+          JS
+          node native-motion-audit.mjs
+      - name: Save truthful audit without modifying source or preview
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -d "$ROOT/audits/s1"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$ROOT/audits/s1"
+          git commit -m 'test(hair-r03): native public motion, unretouched pixel comparison and explicit software cost audit [skip ci]'
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$header" push origin "HEAD:refs/heads/$BRANCH"

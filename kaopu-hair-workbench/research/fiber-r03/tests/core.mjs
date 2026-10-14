@@ -1,0 +1,17 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import crypto from 'node:crypto';
+import {intervalCoverage,partition,compose,stableVertex,layerFragment,nodeRadianceFragment} from '../stability.mjs';
+import {makeRoots,hashFloats,MATERIALS,COUNT,SEGMENTS} from '../../fiber-r02/kernel.mjs';
+import {fragment} from '../../fiber-r02/shaders.mjs';
+const near=(a,b,e=1e-9)=>assert.ok(Math.abs(a-b)<e,`${a} != ${b}`);
+test('same 10000 roots and 80 geometry segments; no geometry reduction',()=>{const q=makeRoots();assert.equal(COUNT,10000);assert.equal(SEGMENTS,80);assert.equal(hashFloats([q.roots,q.traits]),'eaadb8b8');});
+test('frozen shader and material hashes',()=>{for(const [f,h] of Object.entries({'kernel.mjs':'e6f628a028b7bab6494dd3921094bb3373ca55c0eb2e9cac404429f219ec9cbb','shaders.mjs':'d21c524bcccd28d2a550bb58fec2cad84891a4fb126db2b18a47774e61fa7cf5'}))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(new URL('../../fiber-r02/'+f,import.meta.url))).digest('hex'),h);});
+test('coverage has fractional rather than stochastic visibility',()=>{near(intervalCoverage(0,.2),.2);near(intervalCoverage(0,2),1);near(intervalCoverage(2,.2),0);});
+test('coverage conserves integrated physical width',()=>{for(const w of[.02,.2,.7,1,3]){let area=0;for(let x=-4;x<4;x+=.001)area+=intervalCoverage(x,w)*.001;near(area,w,1e-4);}});
+test('invalid coverage rejected',()=>{assert.throws(()=>intervalCoverage(0,-1));assert.throws(()=>intervalCoverage(NaN,1));assert.throws(()=>intervalCoverage(0,1,0));});
+test('layer split continuous nonnegative and partitions unity',()=>{for(let x=-.01;x<.03;x+=.000031){const a=partition(x);near(a.reduce((s,v)=>s+v,0),1);assert.ok(a.every(v=>v>=0&&v<=1));}});
+test('layer boundaries do not jump optical depth',()=>{for(let i=1;i<7;i++){const a=partition(i*.0015-1e-9),b=partition(i*.0015+1e-9);assert.ok(a.every((v,j)=>Math.abs(v-b[j])<.000002));}});
+test('empty transparency retains background exactly',()=>{assert.deepEqual(compose([[0,0,0,0]],[.1,.2,.3]),{rgb:[.1,.2,.3],transmittance:1});});
+test('single-colour split preserves radiance and transmittance',()=>{const tau=1.2,col=[.3,.5,.7];for(const d of[0,.001,.007,.04]){const q=compose(partition(d).map(w=>[...col.map(c=>c*tau*w),tau*w]));near(q.transmittance,Math.exp(-tau));q.rgb.forEach((x,i)=>near(x,col[i]*(1-Math.exp(-tau))));}});
+test('accumulated coverage agrees with product of transparency',()=>{const as=[.02,.31,.6,.08],tau=as.reduce((s,a)=>s-Math.log(1-a),0);near(compose([[tau,tau,tau,tau]]).transmittance,as.reduce((s,a)=>s*(1-a),1));});
+test('same fibre function used without optical retuning',()=>{const start=fragment.indexOf('vec3 fiber('),end=fragment.indexOf('float channel(');assert.ok(nodeRadianceFragment.includes(fragment.slice(start,end)));assert.deepEqual(MATERIALS.chestnut.sigma,[.40,.80,1.30]);});
+test('stable path has no random binary discard or global blur',()=>{assert.ok(!layerFragment.includes('sampleIndex'));assert.ok(!layerFragment.includes('uint h'));assert.ok(stableVertex.includes('float expanded=physical+pixelWorld*2.'));});

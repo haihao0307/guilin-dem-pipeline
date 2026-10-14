@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="source-commit" content="local-research"><title>KAOPU / HAIR FIBER R04</title><style>
+*{box-sizing:border-box}body{margin:0;background:#090c11;color:#e7e9ed;font:14px system-ui,'Microsoft Yahei',sans-serif}header{height:68px;border-bottom:1px solid #262c33;display:flex;align-items:center;justify-content:space-between;padding:0 24px}h1{font-size:18px;letter-spacing:.06em;margin:0}header small{color:#a5aab2}main{display:grid;grid-template-columns:1fr 284px;height:calc(100vh - 68px)}#view{position:relative;min-height:300px;background:#030507;overflow:hidden}canvas{display:block;touch-action:none}#loading{position:absolute;inset:40% 0 auto;text-align:center}#loading[hidden]{display:none}.hud{position:absolute;bottom:20px;left:22px;pointer-events:none;text-shadow:0 1px 6px #000}#status{font-size:14px}#stats{font-size:11px;color:#949daa;margin-top:7px}aside{padding:18px;overflow:auto;border-left:1px solid #272d35}h2{font-size:12px;color:#9da6b2;letter-spacing:.1em;margin:18px 0 10px}.row{display:flex;gap:6px;margin:8px 0}.row>*{flex:1}button,select{background:#182029;color:#dce2e8;border:1px solid #303b47;border-radius:5px;padding:9px 6px;font:inherit;cursor:pointer}button:hover{border-color:#8aaac8}.selected{background:#2a4356;border-color:#84abc7}select{width:100%}label{display:block;font-size:12px;margin-top:11px;color:#abb5c3}input[type=range]{width:100%;margin:6px 0;accent-color:#96b9d4}output{float:right;color:#dae2eb}.note{font-size:11px;line-height:1.7;color:#8f99a7;margin-top:13px}details{margin-top:16px}summary{cursor:pointer;color:#b9c4d1}a{color:#a4c0d8}@media(max-width:700px){header{height:60px;padding:0 12px}header small{display:none}h1{font-size:15px}main{display:flex;flex-direction:column;height:auto}#view{height:65vh;min-height:360px}aside{border-left:0;border-top:1px solid #272d35}aside .group{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+</style></head><body><header><h1>KAOPU / 发丝动态稳定 R04</h1><small>同一发样 · 同一光学 · 先检查运动画质</small></header><main><section id="view"><div id="loading">正在建立真实三维发丝与照明…</div><div class="hud"><div id="status">初始化</div><div id="stats"></div><div id="motionStats" style="font-size:11px;color:#a1afbd;margin-top:7px"></div></div></section><aside>
+<h2>毛领运动逻辑 / 保留头发质感</h2>
+<div class="row"><button id="windMotion">开启微风</button><button id="pauseMotion">暂停发丝</button></div>
+<div class="row"><button id="impulseMotion">拨动一次</button><button id="brushMotion">局部拨毛</button></div>
+<div class="row"><button id="resetMotion">恢复静态发束</button></div>
+<label>风力 <output id="windGainValue">0.32</output><input id="windGain" type="range" min="0" max="1.5" step=".01" value=".32"></label>
+<label>光学计算对照<select id="opticalSamples"><option value="21">21 点光学插值 / 实验加速</option><option value="81">81 点原精度 / 静态对照</option></select></label>
+<div class="note">局部拨毛开启后，左键拖动发束；松手回弹。两种光学计算都保留 10,000 根 × 80 段几何。微风来自导向弹簧，不是整束旋转；不含人体/衣物碰撞。</div><h2>绘制对照</h2><select id="path"><option value="stable">R04 · 单帧连续覆盖</option><option value="legacy">R02 · 运动中单次采样</option><option value="reference">R02 · 16 次静帧参考</option></select>
+<div class="note">拖动旋转，滚轮缩放，Shift＋拖动平移。R04 不等待静帧叠加，也不保留旧画面拖影。</div>
+<h2>发色 / 原版参数</h2><div class="row"><button data-material="chestnut" class="selected">栗棕</button><button data-material="black">自然黑</button></div><div class="row"><button data-material="honey">蜜金</button><button data-material="silver">银白</button></div>
+<div class="row"><button id="full">整体发束</button><button id="macro">发丝近看</button></div>
+<h2>连续运动检查</h2><div class="row"><button id="cameraMove">相机往返</button><button id="lightMove">光源巡游</button></div>
+<label>光照<select id="lighting"><option value="studio">原版棚拍光</option><option value="rake">侧光</option><option value="back">逆光</option></select></label>
+<label>灯光方位 <output id="rotationValue">0</output><input id="rotation" type="range" min="-180" max="180" step="1" value="0"></label>
+<label>曝光 <output id="exposureValue">1.25</output><input id="exposure" type="range" min=".4" max="2.8" step=".01" value="1.25"></label>
+<label>粗糙度 <output id="roughnessValue">0.3</output><input id="roughness" type="range" min=".18" max=".55" step=".01" value=".3"></label>
+<details><summary>细丝与分项观察</summary>
+<label>丝径 μm <output id="diameterValue">70</output><input id="diameter" type="range" min="40" max="120" value="70"></label>
+<label>色素差异 <output id="variationValue">.36</output><input id="variation" type="range" min="0" max=".7" step=".01" value=".36"></label>
+<label>游离程度 <output id="frizzValue">.22</output><input id="frizz" type="range" min="0" max=".6" step=".01" value=".22"></label>
+<label>曲率 <output id="waveValue">1</output><input id="wave" type="range" min="0" max="1.4" step=".01" value="1"></label>
+<label>遮挡 <output id="shadowStrengthValue">.52</output><input id="shadowStrength" type="range" min="0" max="1" step=".01" value=".52"></label>
+<label>束间补光 <output id="scatterBoostValue">1</output><input id="scatterBoost" type="range" min="0" max="2" step=".01" value="1"></label>
+<label>光学分项<select id="mode"><option value="0">完整光学</option><option value="1">表面反射 R</option><option value="2">内部透射 / 反射</option><option value="3">结构灰模</option></select></label>
+<label>背景<select id="background"><option value="black">深色背景</option><option value="gray">灰色背景</option></select></label>
+</details><div class="row"><button id="reset">恢复原参数</button><button id="save">保存参数</button></div>
+<div class="note">R04-FUR1 / 8 层连续分配的透明合成近似，非精确排序。没有全屏模糊、减少发量或加粗物理丝径；已接入毛领导向毛梢弹簧；未实现完整弹性杆、碰撞、EB1 或整头人物。</div>
+</aside></main><script type="module" src="./app.mjs"></script></body></html>

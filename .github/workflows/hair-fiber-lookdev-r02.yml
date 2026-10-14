@@ -1,0 +1,105 @@
+name: Hair Fiber Lookdev R02
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths:
+      - 'kaopu-hair-workbench/research/fiber-r02/*.mjs'
+      - 'kaopu-hair-workbench/research/fiber-r02/*.py'
+      - 'kaopu-hair-workbench/research/fiber-r02/index.template.html'
+      - 'kaopu-hair-workbench/research/fiber-r02/tests/**'
+      - '.github/workflows/hair-fiber-lookdev-r02.yml'
+permissions:
+  contents: write
+concurrency:
+  group: hair-fiber-r02-isolated
+  cancel-in-progress: false
+jobs:
+  build-render-and-public-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ROOT: kaopu-hair-workbench/research/fiber-r02
+      BASE_SHA: 95e85e3531a32d7a5ebfff236f0d0375eab3a988
+      BRANCH: research/hair-fiber-lookdev-physics-r01-20261014
+    steps:
+      - name: Checkout isolated research snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config remote.origin.promisor true
+          git config remote.origin.partialclonefilter blob:none
+          git sparse-checkout init --cone
+          git sparse-checkout set kaopu-hair-workbench/research kaopu-hair-workbench/foundation/f03/src/approved
+          git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA" "$BASE_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/changes.txt
+          cat /tmp/changes.txt
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r02/|\.github/workflows/hair-fiber-lookdev-r02\.yml$|\.github/workflows/hair-fiber-r02-review\.yml$)' /tmp/changes.txt; then exit 1; fi
+          REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs
+      - name: Pinned dependencies and self-contained build
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/hair-r02-deps" --ignore-scripts --no-audit --no-fund three@0.169.0 playwright@1.55.1
+          ln -s "$RUNNER_TEMP/hair-r02-deps/node_modules" "$ROOT/node_modules"
+          "$ROOT/node_modules/.bin/playwright" install --with-deps chromium
+          mkdir -p "$ROOT/licenses"
+          cp "$ROOT/node_modules/three/LICENSE" "$ROOT/licenses/THREE-MIT.txt"
+          node --test "$ROOT/tests/core.mjs"
+          python "$ROOT/build.py" "$ROOT/node_modules/three/build/three.module.min.js"
+      - name: Real WebGL candidate and fixed public rendering
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          push_safe() {
+            local expected="$1"
+            test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$expected"
+            local header
+            header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            git -c "http.https://github.com/.extraheader=$header" push origin "HEAD:refs/heads/$BRANCH"
+          }
+          python -m http.server 8765 --directory "$ROOT/site" >/tmp/hair-r02-http.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs http://127.0.0.1:8765/preview.html candidate)
+          CANDIDATE=$?
+          set -e
+          git add "$ROOT/evidence" "$ROOT/BUILD_MANIFEST.json" "$ROOT/licenses"
+          if [ "$CANDIDATE" != 0 ]; then
+            git commit -m 'test(hair-r02): retain failed candidate evidence; no public delivery [skip ci]'
+            push_safe "$GITHUB_SHA"
+            exit "$CANDIDATE"
+          fi
+          cp "$ROOT/site/preview.html" "$ROOT/preview.html"
+          git add "$ROOT/preview.html"
+          git commit -m 'build(hair-r02): self-contained strand optical specimen, candidate WebGL checked [skip ci]'
+          BUILD_SHA=$(git rev-parse HEAD)
+          push_safe "$GITHUB_SHA"
+          RAW="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$BUILD_SHA/$ROOT/preview.html"
+          PUBLIC="https://htmlpreview.github.io/?$RAW"
+          printf '%s\n' "$PUBLIC" > "$ROOT/PUBLIC_URL.txt"
+          curl --fail --location --retry 5 --retry-delay 2 "$RAW" -o /tmp/hair-r02-public.html
+          cmp "$ROOT/preview.html" /tmp/hair-r02-public.html
+          set +e
+          (cd "$ROOT" && node tests/browser.mjs "$PUBLIC" public)
+          PUBLIC_EXIT=$?
+          set -e
+          export BUILD_SHA PUBLIC PUBLIC_EXIT
+          python - <<'PY'
+          import os,json,pathlib
+          p=pathlib.Path(os.environ['ROOT'])
+          d={'version':'HAIR-FIBER-R02','source':os.environ['GITHUB_SHA'],'build':os.environ['BUILD_SHA'],'url':os.environ['PUBLIC'],'publicVerified':os.environ['PUBLIC_EXIT']=='0','status':'interactive_candidate_awaiting_art_review' if os.environ['PUBLIC_EXIT']=='0' else '交付未完成','mobile':'390x844 viewport only; not a physical phone','physics':False,'filmQualityAccepted':False,'eb1':False,'actionsRun':os.environ['GITHUB_RUN_ID']}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add "$ROOT/evidence" "$ROOT/PUBLIC_URL.txt" "$ROOT/DELIVERY.json"
+          git commit -m 'test(hair-r02): fixed HTTPS rendering, optical interactions and mobile viewport receipt [skip ci]'
+          push_safe "$BUILD_SHA"
+          echo "PUBLIC_URL=$PUBLIC"
+          exit "$PUBLIC_EXIT"
