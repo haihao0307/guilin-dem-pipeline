@@ -8,7 +8,7 @@ permissions:
 env:
   CASE: kaopu-geography-workbench/hong-kong-train88-r01
 jobs:
-  scene:
+  cost_diagnosis:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -18,16 +18,23 @@ jobs:
           sparse-checkout: |
             kaopu-geography-workbench/hong-kong-train88-r01
             kaopu-geography-workbench/hong-kong-map-sea-r03
-      - run: python3 -m zipfile -e "$CASE/source-bundle.zip" "$CASE" && python3 -m zipfile -e "$CASE/patch-bundle.zip" "$CASE"
       - run: |
-          npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          cp -r "$CASE" "$RUNNER_TEMP/direct-overlays"
+          python3 -m zipfile -e "$CASE/source-bundle.zip" "$CASE"
+          python3 -m zipfile -e "$CASE/patch-bundle.zip" "$CASE"
+          cp -r "$RUNNER_TEMP/direct-overlays/." "$CASE/"
+      - run: |
+          npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0 three@0.170.0 esbuild@0.25.6
           echo "NODE_PATH=$RUNNER_TEMP/runner/node_modules" >> "$GITHUB_ENV"
           "$RUNNER_TEMP/runner/node_modules/.bin/playwright" install --with-deps chromium
       - run: node "$CASE/qa/route-test.mjs" && node "$CASE/qa/train-structure.mjs" && node --test "$CASE/train-drive/test-train-drive.mjs"
-      - run: node "$CASE/qa/browser.cjs"
+      - run: |
+          python3 "$CASE/qa/make-perf-entry.py"
+          "$RUNNER_TEMP/runner/node_modules/.bin/esbuild" "$CASE/src/perf-entry.mjs" --bundle --format=esm --target=es2022 --outfile="$CASE/integration.js" --minify --legal-comments=linked
+          node "$CASE/qa/diagnose.cjs"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: train88-scene-${{ github.sha }}
-          path: kaopu-geography-workbench/hong-kong-train88-r01/qa/results
+          name: train88-cost-${{ github.sha }}
+          path: kaopu-geography-workbench/hong-kong-train88-r01/qa/diagnostic-results
           retention-days: 7

@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>香港主線 × 88號 · 同場工作版 R01</title><style>body{margin:0;background:#10282e;color:#e8e9d9;font:16px/1.8 system-ui;display:grid;place-items:center;min-height:100vh}main{max-width:620px;padding:25px}small{color:#b6c1b9}progress{width:100%;accent-color:#d4ae68}a{color:#dcc895}</style><main><h2>香港主線 × 88號</h2><p id="load-status">正在載入真實地形、原海洋與現有列車…</p><progress></progress><small>同一個三維場景。使用已公開 R03 地圖；原版本保留。首次載入包含約 20MB 地形與車站資料。</small><p><a href="../hong-kong-map-sea-r03/">原 R03 地圖</a></p></main><script type="module">
+const root=new URL('.',location.href),status=document.getElementById('load-status');
+try{
+ const config=await (await fetch(new URL('host-patches.json',root))).json();
+ const response=await fetch(new URL(config.source,root));if(!response.ok)throw Error('地圖來源 HTTP '+response.status);
+ const bytes=await response.arrayBuffer();const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');
+ if(hash!==config.sourceSha256)throw Error('R03 基線版本已變，為免混用已停止；請保留診斷並聯絡更新。');
+ let html=new TextDecoder().decode(bytes);
+ for(const [from,to] of config.patches){if(html.split(from).length!==2)throw Error('主場景接入點不唯一');html=html.replace(from,to.replace('__INTEGRATION_URL__',new URL('integration.js',root).href));}
+ html=html.replace('src="./station-data.js"','src="'+new URL('../hong-kong-map-sea-r03/station-data.js',root).href+'"');
+ html=html.replace('</head>','<link rel="stylesheet" href="'+new URL('integration.css',root).href+'"></head>');
+ html=html.replace('<title>陸港鐵路 · 香港故事地圖 R03</title>','<title>香港主線 × 88號 · 同場工作版 R01</title>');
+ html=html.replace('<body ', '<body data-integration="HK-TRAIN88-R01" ');
+ window.HK_TRAIN_ASSET_BASE=root.href;window.HK_CANDIDATE_VISIBILITY={kowloon:true,bureau:true,city:true};
+ document.open();document.write(html);document.close();
+}catch(e){status.textContent='未能載入：'+e.message;document.querySelector('progress').remove();console.error(e);}
+</script></html>
