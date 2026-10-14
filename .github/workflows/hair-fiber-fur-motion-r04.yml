@@ -30,7 +30,7 @@ jobs:
           git fetch --no-tags --filter=blob:none --depth=1 origin "$GITHUB_SHA" "$BASE_SHA"
           git checkout --detach "$GITHUB_SHA"
           git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/changes.txt
-          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r04/|\.github/workflows/hair-fiber-fur-motion-r04\.yml$)' /tmp/changes.txt; then exit 1; fi
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r04/|\.github/workflows/hair-fiber-(fur-motion-r04|r04-native-review)\.yml$)' /tmp/changes.txt; then exit 1; fi
           REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs
           node --test "$ROOT/tests/motion.test.mjs"
           mkdir -p "$ROOT/provenance"
