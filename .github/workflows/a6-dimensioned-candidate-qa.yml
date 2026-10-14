@@ -34,6 +34,8 @@ jobs:
           npm test
       - name: Render complete train and verify interactions
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01
+        env:
+          A6_QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01/
         run: node tests/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
