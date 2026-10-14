@@ -15,6 +15,7 @@ export function orbitalWarp(q,eye,amount=1){
  const target=line+(seam-line)*.42,vertical=q[1]-seam;
  const gate=smooth(0,.09,u)*(1-smooth(.91,1,u))*(1-smooth(.014,.026,Math.abs(vertical)));
  const dy=clamp(target-seam,-.0045,.0045)*Math.exp(-((vertical/.014)**2))*gate*amount;
+ if(dy===0)return [0,0,0];
  const ry=q[1]-eye.center[1],rz=q[2]-eye.center[2],rho=Math.hypot(ry,rz);
  if(rz<=.001||rho<.002||Math.abs(ry+dy)>=rho*.998)return [0,0,0];
  // Rotate skin around the unchanged globe axis, preserving radial clearance.
