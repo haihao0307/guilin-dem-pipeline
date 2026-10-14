@@ -53,8 +53,20 @@ void main(){
  gl_Position=projectionMatrix*viewMatrix*vec4(wp.xyz+widthAxis*position.x*expanded*.5,1.0);
  wPos=wp.xyz;wTangent=wt;sideCoord=position.x;seedValue=rootData.w;progress=t;
 }`;
-export const coverageFragment = `precision highp float;varying float sideCoord,coverageScale;
-void main(){float aa=max(fwidth(sideCoord),.02);float a=coverageScale*(1.0-smoothstep(1.0-aa,1.0+aa,abs(sideCoord)));if(a<.012)discard;gl_FragColor=vec4(0.,0.,0.,a);}`;
+export const gbufferFragment = `precision highp float;
+uniform int sampleIndex;
+varying vec3 wPos,wTangent;
+varying float sideCoord,coverageScale,seedValue,progress;
+layout(location=0) out vec4 gPosition;
+layout(location=1) out vec4 gTangent;
+layout(location=2) out vec4 gAux;
+void main(){
+ float aa=max(fwidth(sideCoord),.02),a=coverageScale*(1.-smoothstep(1.-aa,1.+aa,abs(sideCoord)));
+ uint h=uint(gl_FragCoord.x)+uint(gl_FragCoord.y)*4099u+uint(seedValue*16777215.0)*131u+uint(sampleIndex)*2246822519u;
+ h=(h^(h>>16))*2146121005u;h=(h^(h>>15))*2221713035u;h=h^(h>>16);
+ if(float(h&16777215u)/16777216.0>=a)discard;
+ gPosition=vec4(wPos,progress);gTangent=vec4(normalize(wTangent),seedValue);gAux=vec4(sideCoord,coverageScale,1.,0.);
+}`;
 export const fragment = `
 precision highp float;
 uniform vec3 sigmaA;
@@ -62,8 +74,10 @@ uniform float roughness, variation, exposure, shadowStrength, scatterBoost, mode
 uniform vec3 lightDirs[3],lightColors[3];
 uniform mat4 shadowMatrices[3];
 uniform sampler2D shadow0, shadow1, shadow2;
-varying vec3 wPos,wTangent;
-varying float sideCoord,coverageScale,seedValue,progress;
+varying vec2 vUv;
+uniform sampler2D gPositionMap,gTangentMap,gAuxMap;
+uniform vec3 eyePosition,backdrop;
+vec3 wPos,wTangent;float sideCoord,coverageScale,seedValue,progress;
 const float PI=3.14159265359;
 float sq(float x){return x*x;}
 float logI0(float x){
@@ -74,7 +88,6 @@ float logI0(float x){
 }
 float longitudinal(float si,float ci,float so,float co,float v){
  float a=ci*co/v,b=si*so/v;
- // log(2*sinh(1/v)) = 1/v + log(1-exp(-2/v)).
  return exp(clamp(logI0(a)-b-1.0/v-log(v)-log(max(1e-8,1.0-exp(-2.0/v))),-60.0,12.0));
 }
 float fresnel(float c){
@@ -89,7 +102,6 @@ vec3 fiber(vec3 T,vec3 V,vec3 L,vec3 absorption){
  float so=clamp(dot(T,V),-.999,.999),co=sqrt(1.0-so*so),si=clamp(dot(T,L),-.999,.999),ci=sqrt(1.0-si*si);
  vec3 N=normalize(V-T*so),B=normalize(cross(T,N));
  float phi=atan(dot(L,B),dot(L,N));
- // Subpixel strands use a stable per-strand quadrature sample; not frame noise.
  float h=mix(seedValue*1.8-.9,clamp(sideCoord,-.96,.96),smoothstep(.60,1.0,coverageScale));
  float go=asin(h),etaP=sqrt(1.55*1.55-so*so)/co,gt=asin(clamp(h/etaP,-.99,.99));
  float ct=sqrt(1.0-sq(so/1.55));
@@ -111,7 +123,6 @@ vec3 fiber(vec3 T,vec3 V,vec3 L,vec3 absorption){
 float channel(vec4 v,int n){if(n==0)return v.r;if(n==1)return v.g;if(n==2)return v.b;return v.a;}
 float opacityAt(sampler2D tex,vec3 uv){
  if(any(lessThan(uv,vec3(0.0)))||any(greaterThan(uv,vec3(1.0))))return 0.0;
- // Each half of a texture contains four cumulative opacity depths.
  vec4 a=texture2D(tex,vec2(uv.x*.5,uv.y));
  vec4 b=texture2D(tex,vec2(uv.x*.5+.5,uv.y));
  float p=clamp((uv.z-.004)*8.0,0.0,8.0);int k=int(floor(p));float frac=p-float(k);
@@ -121,7 +132,11 @@ float opacityAt(sampler2D tex,vec3 uv){
  return max(0.0,mix(prev,next,frac));
 }
 void main(){
- vec3 V=normalize(cameraPosition-wPos),T=normalize(wTangent);
+ vec4 aux=texture2D(gAuxMap,vUv);
+ if(aux.z<.5){gl_FragColor=vec4(backdrop,1.);return;}
+ vec4 p=texture2D(gPositionMap,vUv),t=texture2D(gTangentMap,vUv);
+ wPos=p.xyz;progress=p.w;wTangent=t.xyz;seedValue=t.w;sideCoord=aux.x;coverageScale=aux.y;
+ vec3 V=normalize(eyePosition-wPos),T=normalize(wTangent);
  float v=exp((seedValue-.5)*variation*2.0);
  vec3 absorption=sigmaA*v*mix(1.10,.82,progress);
  vec3 color=vec3(0.0),base=exp(-absorption*2.2);
@@ -131,7 +146,7 @@ void main(){
    if(i==0)tau=opacityAt(shadow0,uv);else if(i==1)tau=opacityAt(shadow1,uv);else tau=opacityAt(shadow2,uv);
    float visibility=exp(-tau*shadowStrength);
    vec3 direct=fiber(T,V,normalize(lightDirs[i]),absorption);
-   // Deliberately labelled artistic multiple-scattering approximation, not path tracing.
+   // Artistic inter-fiber multiple-scattering approximation, not path tracing.
    vec3 bounce=base*.045*scatterBoost*(1.0-exp(-tau*.5));
    if(mode>.5)bounce=vec3(0.0);
    color+=lightColors[i]*(direct*visibility+bounce);
