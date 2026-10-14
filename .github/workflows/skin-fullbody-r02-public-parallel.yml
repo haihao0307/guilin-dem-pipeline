@@ -1,0 +1,135 @@
+name: Skin fullbody R02 exact public parallel proof
+on:
+  push:
+    branches: [feature/skin-fullbody-r02-20261014]
+    paths: ['.github/workflows/skin-fullbody-r02-public-parallel.yml']
+permissions: {contents: read, actions: read}
+concurrency:
+  group: skin-fullbody-r02-public-parallel
+  cancel-in-progress: false
+env:
+  BUILD_SHA: 50f9dd769893584dedb62f0bc62db07ebcb1dcc0
+  EXPECTED_SOURCE: 1923ee7af9e121c40caa2089a49ed064e05451fe
+  PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/50f9dd769893584dedb62f0bc62db07ebcb1dcc0/kaopu-unified-human-workbench/skin-fullbody-r02/preview.html
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {kind: body, script: verify-body.cjs}
+          - {kind: core, script: verify.cjs}
+          - {kind: controls, script: verify-controls.cjs}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 50f9dd769893584dedb62f0bc62db07ebcb1dcc0
+          sparse-checkout: kaopu-unified-human-workbench/skin-fullbody-r02
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Verify exact candidate digest; add test progress only
+        env:
+          SCRIPT: ${{ matrix.script }}
+        run: |
+          python - <<'PY'
+          import os,json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/skin-fullbody-r02')
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']==os.environ['EXPECTED_SOURCE']
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==m['previewSHA256']=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          for f,h in m['sourceSHA256'].items(): assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h,f
+          s=(p/os.environ['SCRIPT']).read_text()
+          needle='const result=await fn();'
+          assert s.count(needle)==1
+          s=s.replace(needle,"console.log('TEST_START',name);const result=await deadline(fn,name);console.log('TEST_PASS',name);")
+          helper="function deadline(fn,name){let timer;return Promise.race([Promise.resolve().then(fn),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Test deadline: '+name)),600000)})]).finally(()=>clearTimeout(timer));}\n"
+          (p/'_public-instrumented.cjs').write_text(helper+s)
+          PY
+      - name: Actual public rendering and original assertions
+        env:
+          BODY_OUT: public-proof/${{ matrix.kind }}
+          QA_OUT: public-proof/${{ matrix.kind }}
+          CONTROL_OUT: public-proof/${{ matrix.kind }}
+        run: node kaopu-unified-human-workbench/skin-fullbody-r02/_public-instrumented.cjs
+      - name: Native toolbar and inspection-light return regression
+        if: matrix.kind == 'body'
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+          (async()=>{const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),c=await b.newContext({viewport:{width:1000,height:820}}),p=await c.newPage(),q={url:process.env.PREVIEW_URL,tests:[],errors:[],physicalPhone:false};p.on('pageerror',e=>q.errors.push(String(e)));try{
+          await p.goto(q.url,{waitUntil:'domcontentloaded',timeout:90000});await p.waitForFunction(()=>window.__HEAD_PROC__?.ready,{},{timeout:240000});
+          const report=()=>p.evaluate(()=>{const v=__IDENTITY_QA__.viewer();v.render();return{key:v.foldLights.key.visible,fill:v.foldLights.fill.visible,ear:v.earInspection,backlight:bodyProceduralSkin.report().earBacklightInspection,source:bodyProceduralSkin.report().source};});
+          await p.click('[data-fb-action="backlight"]');let x=await report();assert(!x.key&&!x.fill&&x.backlight);
+          await p.click('[data-view="face"]');x=await report();assert(x.key&&x.fill&&!x.ear&&!x.backlight);q.tests.push({name:'trusted native face button restores original lamps',passed:true,result:x});
+          await p.click('[data-fb-action="backlight"]');await p.click('[data-hc-light="neutral"]');x=await report();assert(x.key&&x.fill&&!x.backlight);q.tests.push({name:'trusted C4 lighting button exits isolated backlight',passed:true,result:x});
+          assert.equal(x.source,process.env.EXPECTED_SOURCE);assert.equal(q.errors.length,0);const cd=await c.newCDPSession(p),im=await cd.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('public-proof/body/native-view-return.png',Buffer.from(im.data,'base64'));q.completed=true;
+          }catch(e){q.completed=false;q.failure=String(e);process.exitCode=1;console.error(e);}finally{fs.writeFileSync('public-proof/body/NATIVE_VIEW_QA.json',JSON.stringify(q,null,2));console.log(JSON.stringify(q,null,2));await b.close();}})();
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-public-${{ matrix.kind }}-${{ github.run_id }}
+          path: public-proof/
+          retention-days: 14
+  receipt:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions: {contents: write, actions: read}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/skin-fullbody-r02-20261014
+          sparse-checkout: kaopu-unified-human-workbench/skin-fullbody-r02
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: skin-r02-public-*-${{ github.run_id }}
+          path: proof
+          merge-multiple: true
+      - name: Gate all original tests and write immutable public evidence
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,urllib.request,shutil
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/skin-fullbody-r02');m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']==os.environ['EXPECTED_SOURCE']
+          for f,h in m['sourceSHA256'].items(): assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h,f
+          qs={k:json.loads(Path(f'proof/{k}/qa.json').read_text()) for k in ['body','core','controls']}
+          assert {k:len(q['tests']) for k,q in qs.items()}=={'body':11,'core':12,'controls':5}
+          for k,q in qs.items():
+            assert q['completed'] and all(t['passed'] for t in q['tests']),k
+            assert q['url']==os.environ['PREVIEW_URL'],(k,q['url'])
+            for field in ['errors','pageErrors','consoleErrors','failedRequests','referenceRequests']: assert not q.get(field),(k,field)
+          assert qs['body']['initial']['body']['source']==m['sourceCommit']
+          extra=json.loads(Path('proof/body/NATIVE_VIEW_QA.json').read_text());assert extra['completed'] and all(t['passed'] for t in extra['tests']) and not extra['errors']
+          raw=f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{os.environ['BUILD_SHA']}/{p}/preview.html"
+          assert hashlib.sha256(urllib.request.urlopen(raw,timeout=60).read()).hexdigest()==m['previewSHA256']==hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()
+          for k,name in [('body','PUBLIC_BODY_QA.json'),('core','PUBLIC_QA.json'),('controls','PUBLIC_CONTROL_QA.json')]:
+            (p/name).write_text(json.dumps(qs[k],ensure_ascii=False,indent=2));shutil.copytree(f'proof/{k}',p/'acceptance'/k,dirs_exist_ok=True)
+          (p/'PUBLIC_NATIVE_VIEW_QA.json').write_text(json.dumps(extra,ensure_ascii=False,indent=2))
+          d={'version':'SKIN-FULLBODY-R02','lookCalibration':'C2','status':'public-interactive-candidate','publicURL':os.environ['PREVIEW_URL'],'sourceCommit':m['sourceCommit'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'candidateRunId':'38548514617','publicationStrategy':'parallel original exact-public regressions, unchanged candidate bytes','testGroups':{k:len(q['tests']) for k,q in qs.items()},'nativeViewReturnTests':len(extra['tests']),'headSliders':15,'bodyTissueSliders':10,'wholeBodySkin':True,'geometryChanged':False,'referenceAssetsImported':0,'newSkinImageMaps':0,'fullVolumeScattering':False,'physicalPhone':False,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'productionReady':False}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2));print(json.dumps(d,ensure_ascii=False,indent=2))
+          PY
+      - name: Fast-forward evidence only, never overwrite new source
+        run: |
+          git fetch origin feature/skin-fullbody-r02-20261014
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/feature/skin-fullbody-r02-20261014)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-fullbody-r02
+          git commit -m 'test(skin-fullbody-r02): exact-public parallel regressions screenshots and complete receipt'
+          git push origin HEAD:feature/skin-fullbody-r02-20261014
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-r02-public-delivery-${{ github.run_id }}
+          path: |
+            proof/
+            kaopu-unified-human-workbench/skin-fullbody-r02/DELIVERY.json
+            kaopu-unified-human-workbench/skin-fullbody-r02/BUILD_MANIFEST.json
+          retention-days: 14
