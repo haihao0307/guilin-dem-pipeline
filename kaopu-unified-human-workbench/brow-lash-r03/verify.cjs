@@ -1,0 +1,29 @@
+'use strict';
+const fs=require('fs'),Module=require('module'),assert=require('node:assert/strict');
+let src=fs.readFileSync(__dirname+'/../brow-lash-r01/verify.cjs','utf8');
+const patch=(a,b)=>{assert(src.includes(a),'R03 QA adapter '+a);src=src.replace(a,()=>b);};
+src=src.replaceAll('BROW-LASH-R01','BROW-LASH-R03').replaceAll('/brow-lash-r01/preview.html','/brow-lash-r03/preview.html').replaceAll('lifelikeIdle.ready()','browLash.groom().focusBlink.ready');
+patch('const r=lifelikeIdle.runtime();r.pause(true);','browLash.groom().focusBlink.cancel();');
+const closureChecks=`
+  await p.evaluate(()=>browLash.prepareBlink());
+  const measure=()=>p.evaluate(()=>{const groom=browLash.groom(),f=groom.frame;return ['left','right'].map(side=>{const ids=side==='left'?[42,45]:[39,36],line=(f.project(groom.landmark(ids[0]))[1]+f.project(groom.landmark(ids[1]))[1])*.5;const roots=groom.batches.filter(b=>b.kind!=='brow').flatMap(b=>b.strands.filter(s=>s.side===side&&Math.abs(s.u-.5)<.075));return{side,roots:roots.length,midSagMM:(line-roots.reduce((n,s)=>n+f.project(s.currentPoints[0])[1],0)/roots.length)*1000};});});
+  await p.evaluate(()=>{const b=browLash.groom().focusBlink;b.cancel();b.setCorrection(0);browLash.closure(1);browLash.view('eyes');});
+  const native=await measure();await shot('closure-R02-native-comparison');
+  await button('#bl-native-compare');const corrected=await measure();await shot('closure-R03-corrected-comparison');
+  q.closureComparison={native,corrected};
+  check('both actual central closure lines are less deeply curved',corrected.every((r,i)=>r.roots>10&&Math.abs(r.midSagMM)<Math.abs(native[i].midSagMM)*.85),q.closureComparison);
+  q.corrective=await p.evaluate(()=>browLash.groom().focusBlink.report());
+  check('native blink targets preserved and two residual targets separately controlled',await p.evaluate(()=>{const b=browLash.groom().focusBlink,g=b.geometry;return g.morphAttributes.position.length===4&&b.nativePositions.every((p,i)=>p===g.morphAttributes.position[i]);}));
+  check('corrective positions leave body and original globe vertices exactly zero',await p.evaluate(()=>{const m=__IDENTITY_QA__.model(),b=browLash.groom().focusBlink;for(const a of b.geometry.morphAttributes.position.slice(2)){for(let k=0;k<m.bodyCount*3;k++)if(a.array[k]!==0)return false;for(const eye of m.eyeSurface.eyes)for(const i of eye.vertices)for(let k=0;k<3;k++)if(a.array[i*3+k]!==0)return false;}return true;}));
+  check('corrective generator preserves sampled globe-axis radius',q.corrective.correction.every(r=>r.changedVertices>100&&r.maxRadialErrorMM<.00001),q.corrective.correction);
+  await p.evaluate(()=>browLash.closure(.5));await shot('closure-R03-half');
+  await p.evaluate(()=>{browLash.closure(0);browLash.view('eye');});await shot('closure-R03-reopened-eye');
+`;
+patch("if(q.mode==='smoke'){check('smoke has no page or shader errors',!q.pageErrors.length&&!q.consoleErrors.length);q.completed=true;return;}",`if(q.mode==='smoke'){${closureChecks}check('smoke has no page or shader errors',!q.pageErrors.length&&!q.consoleErrors.length);q.completed=true;return;}`);
+patch('q.final=await p.evaluate(()=>browLash.report());',closureChecks+`
+  const repeated=await p.evaluate(()=>({revision:browLash.report().revision,prep:browLash.groom().focusBlink.preparationMS}));
+  await p.evaluate(async()=>{await browLash.prepareBlink();browLash.closure(.5);browLash.closure(0);});
+  check('repeat closure does not rebuild groom or native preparation',await p.evaluate(saved=>browLash.report().revision===saved.revision&&browLash.groom().focusBlink.preparationMS===saved.prep,repeated));
+  check('native authoring positions and topology remain exact after correction',await p.evaluate(()=>{const m=__IDENTITY_QA__.model();return m.positions.every((v,i)=>v===__BL_TEST.positions[i])&&m.faces.every((v,i)=>v===__BL_TEST.faces[i]);}));
+  q.final=await p.evaluate(()=>browLash.report());`);
+const generated=new Module(__filename,module);generated.filename=__filename;generated.paths=module.paths;generated._compile(src,__filename);
