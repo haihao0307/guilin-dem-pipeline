@@ -1,0 +1,151 @@
+{
+  "counts": {
+    "bodyEntries": 14,
+    "boxingPrograms": 0,
+    "boxingExcerpts": 0,
+    "facialChannels": 0,
+    "legacyEntries": 0,
+    "scenarios": 0
+  },
+  "records": [
+    {
+      "id": "idle",
+      "label": "自然站立",
+      "group": "01 站立与待机",
+      "kind": "basic",
+      "note": "自有静止姿态：双足支撑、手臂放松、手掌朝向身体。不是外部动捕。",
+      "playable": true,
+      "task": "idle",
+      "duration": 4,
+      "continuous": true
+    },
+    {
+      "id": "idle-breathe",
+      "label": "站立 · 轻微呼吸",
+      "group": "01 站立与待机",
+      "kind": "basic",
+      "note": "自有脊柱小幅周期姿态，双足保持支撑；不宣称真实胸廓呼吸力学。",
+      "playable": true,
+      "task": "idle-breathe",
+      "duration": 5,
+      "continuous": true
+    },
+    {
+      "id": "walk-loop",
+      "label": "连续行走",
+      "group": "02 行走与跑步",
+      "kind": "capture2",
+      "note": "CMU16_15完整步态周期。初始朝向、肘部平面与手掌已统一校准，平地脚跟/脚尖支撑。",
+      "playable": true,
+      "sourceKey": "walkCycle",
+      "continuous": true
+    },
+    {
+      "id": "run-loop",
+      "label": "连续跑步",
+      "group": "02 行走与跑步",
+      "kind": "capture2",
+      "note": "CMU16_35完整跑步周期。循环位移累计；可切换原地观察。",
+      "playable": true,
+      "sourceKey": "runCycle",
+      "continuous": true
+    },
+    {
+      "id": "walk",
+      "label": "行走 → 停步",
+      "group": "02 行走与跑步",
+      "kind": "capture",
+      "note": "CMU16_33有限片段：原始行走和停步，不作为无限循环。",
+      "playable": true,
+      "sourceKey": "walk"
+    },
+    {
+      "id": "run",
+      "label": "跑步 → 停步",
+      "group": "02 行走与跑步",
+      "kind": "capture",
+      "note": "CMU16_57有限跑步、减速与停止。不是连续跑周期。",
+      "playable": true,
+      "sourceKey": "run"
+    },
+    {
+      "id": "turn-left",
+      "label": "走步左转 90°",
+      "group": "03 转向",
+      "kind": "turn",
+      "note": "在已有行走采样上编排弧线路径，并重新约束支撑脚；不是新采集的原地转身。",
+      "playable": true,
+      "direction": 1,
+      "sourceKey": "walkCycle"
+    },
+    {
+      "id": "turn-right",
+      "label": "走步右转 90°",
+      "group": "03 转向",
+      "kind": "turn",
+      "note": "与左转共用原始步态，方向独立编排，双足接触在转弯后重解。",
+      "playable": true,
+      "direction": -1,
+      "sourceKey": "walkCycle"
+    },
+    {
+      "id": "squat-cycle",
+      "label": "下蹲 → 起身",
+      "group": "04 下蹲与起身",
+      "kind": "basic",
+      "note": "CMU22_14实测下降与起身高度时序，加自有原生骨架姿态。双足支撑，双手随膝前方移动。",
+      "playable": true,
+      "task": "squat-cycle",
+      "duration": 4.6
+    },
+    {
+      "id": "squat-down",
+      "label": "下蹲并保持",
+      "group": "04 下蹲与起身",
+      "kind": "basic",
+      "note": "同一次蹲起的下降段。保留姿态，不算另一份独立动捕。",
+      "playable": true,
+      "task": "squat-down",
+      "duration": 2.3
+    },
+    {
+      "id": "stand-up",
+      "label": "从蹲姿起身",
+      "group": "04 下蹲与起身",
+      "kind": "basic",
+      "note": "同一采集的上升时序，不用倒放下降片段冒充。",
+      "playable": true,
+      "task": "stand-up",
+      "duration": 2.3
+    },
+    {
+      "id": "jump",
+      "label": "小跳 → 落地",
+      "group": "05 跳跃与手势",
+      "kind": "capture",
+      "note": "CMU16_01小幅跳跃。检查起跳、腾空和落地缓冲。",
+      "playable": true,
+      "sourceKey": "jump"
+    },
+    {
+      "id": "natural-wave",
+      "label": "站立挥手",
+      "group": "05 跳跃与手势",
+      "kind": "capture2",
+      "note": "CMU143_25挥手片段。身体为采集重定向，手指为独立原生放松姿态。",
+      "playable": true,
+      "sourceKey": "waveNatural",
+      "continuous": false
+    },
+    {
+      "id": "natural-stretch",
+      "label": "全身伸展",
+      "group": "05 跳跃与手势",
+      "kind": "capture2",
+      "note": "CMU143_30伸展时序。没有添加伪造的同步打哈欠口型。",
+      "playable": true,
+      "sourceKey": "stretchNatural",
+      "continuous": false
+    }
+  ]
+}
