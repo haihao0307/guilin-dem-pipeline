@@ -1,0 +1,72 @@
+name: Fabric collection R01 fixed HTTPS publication
+on:
+  push:
+    branches: [feature/fabric-collection-r01-public-20261014]
+    paths: [kaopu-fabric-workbench/collection/PUBLISH_REQUEST.json]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      public: ${{ steps.publish.outputs.public }}
+      source: ${{ steps.publish.outputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/fabric-collection-r01-public-20261014
+          sparse-checkout: kaopu-fabric-workbench/collection
+      - name: Append only the verified encrypted collection
+        id: publish
+        run: python kaopu-fabric-workbench/collection/publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-collection-r01-public-stage
+          path: /tmp/FABRIC_PUBLIC_STAGE.json
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: fabric-collection-r01-public-stage
+          path: stage
+      - name: Verify exact fixed HTTPS content, not a local substitute
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os,json,time,hashlib,urllib.request,concurrent.futures
+          stage=json.loads(Path('stage/FABRIC_PUBLIC_STAGE.json').read_text());base=os.environ['URL'];manifest=None
+          def get(path):return urllib.request.urlopen(base+path,timeout=180).read()
+          for attempt in range(80):
+            try:
+              manifest=json.loads(get('FILES.json'))
+              if manifest['sourceCommit']==stage['sourceCommit']:break
+            except Exception:pass
+            time.sleep(6)
+          assert manifest and manifest['sourceCommit']==stage['sourceCommit'],'HTTPS publication not visible'
+          assert manifest['files']==stage['files'],'Unexpected public file manifest'
+          def verify(item):
+            name,expected=item
+            data=get(name)
+            assert len(data)==expected['bytes'] and hashlib.sha256(data).hexdigest()==expected['sha256'],name
+            return {'path':name,**expected}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:rows=list(pool.map(verify,manifest['files'].items()))
+          report={**stage,'publicBytesVerified':True,'publicBrowserVerified':False,'verifiedFiles':rows,'workflowRun':os.environ['GITHUB_RUN_ID']}
+          Path('PUBLIC_BYTES.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print('Verified files',len(rows))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-collection-r01-public-bytes
+          path: PUBLIC_BYTES.json
+          retention-days: 30
