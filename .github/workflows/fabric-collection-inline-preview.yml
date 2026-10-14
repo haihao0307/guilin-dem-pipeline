@@ -1,0 +1,58 @@
+name: Fabric collection R01 pinned HTML transport
+on:
+  push:
+    branches: [feature/fabric-collection-r01-public-20261014]
+    paths: [.github/workflows/fabric-collection-inline-preview.yml]
+permissions:
+  contents: write
+jobs:
+  inline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/fabric-collection-r01-public-20261014
+          sparse-checkout: kaopu-fabric-workbench/collection
+      - name: Inline only the public shell and freeze existing encrypted asset URLs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,json,hashlib,re,subprocess
+          asset_commit='2c96580cbc6829dd405237b4c74d8efe69705355'
+          rel='kaopu-fabric-workbench/collection/r01-5aaaabac5d2d'
+          base=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{asset_commit}/{rel}/'
+          def get(n):return urllib.request.urlopen(base+n,timeout=120).read()
+          files=json.loads(get('FILES.json'));assert files['sourceCommit']=='5aaaabac5d2d748d5a126225bb06512b134fdea8'
+          def text(n):
+            b=get(n);r=files['files'][n];assert len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256'],n
+            return b.decode()
+          html=text('index.html');app=text('app.js');runtime=text('runtime-loader.js');bridge=text('native-bridge.js');reg=text('registry.json');man=text('BUILD_MANIFEST.json')
+          assert app.startswith("import {unlock,prepareRuntime} from './runtime-loader.js';\n")
+          app=app.split('\n',1)[1]
+          original="const $=id=>document.getElementById(id),REG=await fetch('./registry.json').then(r=>r.json()),MAN=await fetch('./BUILD_MANIFEST.json').then(r=>r.json()),BRIDGE=await fetch('./native-bridge.js').then(r=>r.text());"
+          assert app.count(original)==1
+          prelude='const ASSET_BASE='+json.dumps(base)+';\nconst $=id=>document.getElementById(id),REG='+reg.strip()+',MAN='+man.strip()+',BRIDGE='+json.dumps(bridge,ensure_ascii=False)+';'
+          app=app.replace(original,prelude)
+          assert app.count('new URL(rec.url,location.href)')==1
+          app=app.replace('new URL(rec.url,location.href)','new URL(rec.url,ASSET_BASE)')
+          runtime=re.sub(r'^export ', '', runtime, flags=re.M)
+          js='(async()=>{\n'+runtime+'\n'+app+'\n})().catch(error=>{console.error(error);const el=document.getElementById("load-message");if(el)el.textContent="集合启动失败："+error.message;});'
+          js=re.sub(r'</script',lambda m:'<\\/script',js,flags=re.I)
+          Path('/tmp/fabric-inline.js').write_text(js)
+          subprocess.run(['node','--check','/tmp/fabric-inline.js'],check=True)
+          marker='<script type="module" src="./app.js"></script>';assert html.count(marker)==1
+          html=html.replace(marker,'<script>'+js+'</script>')
+          dest=Path(rel);dest.mkdir(parents=True,exist_ok=True);(dest/'preview.html').write_text(html)
+          notice={'version':'FABRIC-COLLECTION-R01','sourceCommit':files['sourceCommit'],'assetCommit':asset_commit,'assetURL':base,'previewSHA256':hashlib.sha256(html.encode()).hexdigest(),'transport':'pinned-inline-shell-with-pinned-encrypted-assets','changes':'Only transport: inline public shell, registry, manifest and bridge; resolve existing encrypted package URLs against the fixed asset commit. Native materials, geometry and physics unchanged.','keyIncluded':False,'publicBrowserVerified':False}
+          (dest/'PREVIEW_TRANSPORT.json').write_text(json.dumps(notice,ensure_ascii=False,indent=2))
+          print(json.dumps(notice,ensure_ascii=False,indent=2))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add kaopu-fabric-workbench/collection/r01-5aaaabac5d2d
+          git commit -m 'publish(fabric): pinned standalone transport, original seven-family runtimes preserved'
+          git push origin HEAD:refs/heads/feature/fabric-collection-r01-public-20261014
+          PREVIEW=$(git rev-parse HEAD)
+          echo "PREVIEW_COMMIT=$PREVIEW"
+          echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$PREVIEW/kaopu-fabric-workbench/collection/r01-5aaaabac5d2d/preview.html"
