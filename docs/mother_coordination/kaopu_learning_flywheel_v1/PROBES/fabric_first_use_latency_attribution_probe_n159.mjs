@@ -33,7 +33,8 @@ const result = {
     publicRuntimeSha: fixture.observed.publicRuntimeSha,
     nativeRun: fixture.observed.nativeRun,
     publicBrowserRun: fixture.observed.publicBrowserRun,
-    persistenceRun: fixture.observed.persistenceRun
+    persistenceRun: fixture.observed.persistenceRun,
+    n159RoutingReceipt: fixture.observed.n159RoutingReceipt
   },
   preservedEvidence: {
     schedulerAssertionsPassed: fixture.observed.schedulerAssertionsPassed,
