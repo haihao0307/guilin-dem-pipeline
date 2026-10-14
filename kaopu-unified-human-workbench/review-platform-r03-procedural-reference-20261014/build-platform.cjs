@@ -10,7 +10,7 @@ once('c.neReady.value=1,l.ready=!0,a.dispose(),n.viewer.render(),!0)).catch', 'a
 // Disable the previous ET lip mesh deformation/refinement stage. Surface data
 // attributes below carry semantics only, with no position/index writes.
 once('if(super.update(),this.model?.lipStructure?.settings.enabled){','if(super.update(),false){');
-once('else this.currentLip=null}finally{this.inLipUpdate=!1}', 'else{this.currentLip=null;let g=this.geometry;if(!g.attributes.l19State){let a=new Float32Array(g.attributes.position.count*4),b=new Float32Array(a.length);for(let j=0;j<g.attributes.position.count;j++){a[j*4+1]=1;b[j*4]=1;}g.setAttribute("l19State",new He(a,4));g.setAttribute("l19Detail",new He(b,4));}}}finally{this.inLipUpdate=!1}');
+once('else this.currentLip=null}finally{this.inLipUpdate=!1}', 'else{this.currentLip=null;let g=this.geometry;if(!g.attributes.l19State){let a=new Float32Array(g.attributes.position.count*4),b=new Float32Array(a.length);for(let j=0;j<g.attributes.position.count;j++){a[j*4]=g.attributes.l19Oral?.array[j]||0;a[j*4+1]=1;b[j*4]=1;if(a[j*4]>.001){let f=g.attributes.fRest.array,x=f[j*3],y=f[j*3+1],z=f[j*3+2],r=this.model.lipStructure.rails,q=r.sample([x,y,z],0);b[j*4+3]=Math.max(0,lw(q.upper?r.innerTop:r.innerBottom,x)-z);}}g.setAttribute("l19State",new He(a,4));g.setAttribute("l19Detail",new He(b,4));}}}finally{this.inLipUpdate=!1}');
 html=html.replace(/<title>[^<]*<\/title>/,'<title>人物总平台 · 程序表面 R03</title>');
 once('<script>(()=>{','<script>'+read('integration/merge.bundle.js').replaceAll('</script','<\\/script')+'</script>\n<script>(()=>{');
 once('</head>','<style>'+read('platform.css')+'</style></head>');
