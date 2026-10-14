@@ -14,11 +14,11 @@ jobs:
         with:
           ref: feature/fabric-collection-r01-public-20261014
           sparse-checkout: kaopu-fabric-workbench/collection
-      - name: Inline only the public shell and freeze existing encrypted asset URLs
+      - name: Preserve the verified public shell bytes and freeze encrypted asset URLs
         run: |
           python - <<'PY'
           from pathlib import Path
-          import urllib.request,json,hashlib,re,subprocess
+          import urllib.request,json,hashlib,re,subprocess,base64
           asset_commit='2c96580cbc6829dd405237b4c74d8efe69705355'
           rel='kaopu-fabric-workbench/collection/r01-5aaaabac5d2d'
           base=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{asset_commit}/{rel}/'
@@ -38,20 +38,24 @@ jobs:
           app=app.replace('new URL(rec.url,location.href)','new URL(rec.url,ASSET_BASE)')
           runtime=re.sub(r'^export ', '', runtime, flags=re.M)
           js='(async()=>{\n'+runtime+'\n'+app+'\n})().catch(error=>{console.error(error);const el=document.getElementById("load-message");if(el)el.textContent="集合启动失败："+error.message;});'
-          js=re.sub(r'</script',lambda m:'<\\/script',js,flags=re.I)
           Path('/tmp/fabric-inline.js').write_text(js)
           subprocess.run(['node','--check','/tmp/fabric-inline.js'],check=True)
+          encoded=base64.b64encode(js.encode()).decode('ascii')
+          boot='(()=>{const bytes=Uint8Array.from(atob('+json.dumps(encoded)+'),c=>c.charCodeAt(0));const script=document.createElement("script");script.textContent=new TextDecoder().decode(bytes);document.head.appendChild(script);})();'
+          Path('/tmp/fabric-bootstrap.js').write_text(boot)
+          subprocess.run(['node','--check','/tmp/fabric-bootstrap.js'],check=True)
+          assert base64.b64decode(encoded).decode()==js
           marker='<script type="module" src="./app.js"></script>';assert html.count(marker)==1
-          html=html.replace(marker,'<script>'+js+'</script>')
+          html=html.replace(marker,'<script>'+boot+'</script>')
           dest=Path(rel);dest.mkdir(parents=True,exist_ok=True);(dest/'preview.html').write_text(html)
-          notice={'version':'FABRIC-COLLECTION-R01','sourceCommit':files['sourceCommit'],'assetCommit':asset_commit,'assetURL':base,'previewSHA256':hashlib.sha256(html.encode()).hexdigest(),'transport':'pinned-inline-shell-with-pinned-encrypted-assets','changes':'Only transport: inline public shell, registry, manifest and bridge; resolve existing encrypted package URLs against the fixed asset commit. Native materials, geometry and physics unchanged.','keyIncluded':False,'publicBrowserVerified':False}
+          notice={'version':'FABRIC-COLLECTION-R01','sourceCommit':files['sourceCommit'],'assetCommit':asset_commit,'assetURL':base,'previewSHA256':hashlib.sha256(html.encode()).hexdigest(),'bootJS_SHA256':hashlib.sha256(js.encode()).hexdigest(),'transport':'pinned-base64-utf8-shell-with-pinned-encrypted-assets','changes':'Transport only: byte-preserving UTF8 bootstrap avoids nested HTML script and regex rewriting; fixed asset URLs, original native shaders geometry physics and quality unchanged. Rule expressions remain inert text.','keyIncluded':False,'publicBrowserVerified':False}
           (dest/'PREVIEW_TRANSPORT.json').write_text(json.dumps(notice,ensure_ascii=False,indent=2))
           print(json.dumps(notice,ensure_ascii=False,indent=2))
           PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add kaopu-fabric-workbench/collection/r01-5aaaabac5d2d
-          git commit -m 'publish(fabric): pinned standalone transport, original seven-family runtimes preserved'
+          git commit -m 'publish(fabric): preserve exact shell bytes in pinned preview transport'
           git push origin HEAD:refs/heads/feature/fabric-collection-r01-public-20261014
           PREVIEW=$(git rev-parse HEAD)
           echo "PREVIEW_COMMIT=$PREVIEW"
