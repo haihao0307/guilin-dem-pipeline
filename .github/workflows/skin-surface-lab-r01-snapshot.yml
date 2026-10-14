@@ -8,13 +8,18 @@ permissions:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: |
             kaopu-unified-human-workbench/skin-dna-r02-1
             .github/workflows
+      - uses: actions/checkout@v4
+        with:
+          ref: dbd18e28e69927c07cb0e8b3d755ce1ee8c36d0c
+          path: deployed-source
+          sparse-checkout: kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44
       - uses: actions/upload-artifact@v4
         with:
           name: skin-surface-lab-r01-source
@@ -22,8 +27,14 @@ jobs:
             kaopu-unified-human-workbench/skin-dna-r02-1/*.mjs
             kaopu-unified-human-workbench/skin-dna-r02-1/*.json
             kaopu-unified-human-workbench/skin-dna-r02-1/*.md
-            kaopu-unified-human-workbench/skin-dna-r02-1/*.py
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.cjs
             kaopu-unified-human-workbench/skin-dna-r02-1/*.html
             .github/workflows/*skin*.yml
           include-hidden-files: true
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skin-surface-lab-r01-own-assets
+          path: deployed-source/kaopu-unified-human-workbench/lip-startup-r03/p3-a42d86c77b44/chunks
+          if-no-files-found: error
           retention-days: 7
