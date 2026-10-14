@@ -12,7 +12,7 @@ const server=http.createServer((req,res)=>{let p=path.resolve('.'+decodeURICompo
   page.on('pageerror',e=>{receipt.errors.push(e.message);save();});
   page.on('console',m=>{if(m.type()==='error'){receipt.consoleErrors.push(m.text());save();}});
   await page.exposeFunction('__qaProgress',event=>{fs.writeFileSync(OUT+'/progress.json',JSON.stringify(event,null,2));if(event.stage!=='render'||event.tiles%32===0||event.tiles===event.total)console.log('BUREAU_PUBLIC_PROGRESS',JSON.stringify(event));});
-  const ready=()=>page.waitForFunction(()=>window.__bureau?.proof?.ready||window.__bureau?.proof?.failure,null,{timeout:1200000});
+  const ready=(view,after)=>page.waitForFunction(({view,after})=>{const p=window.__bureau?.proof;return p?.failure||(p?.frames?.length>after&&p.frames.at(-1).view===view&&document.getElementById('scene').getAttribute('aria-busy')==='false');},{view,after},{timeout:1200000});
   const capture=async(name)=>{
     const proof=await page.evaluate(()=>window.__bureau.proof);
     if(proof.failure)throw Error(proof.failure);
@@ -25,12 +25,14 @@ const server=http.createServer((req,res)=>{let p=path.resolve('.'+decodeURICompo
     receipt.frames.push(frame);save();
   };
   try{
-    await page.goto('http://127.0.0.1:8783/'+ENTRY+'?qa=1&view=street&width=720&height=480',{waitUntil:'domcontentloaded',timeout:60000});
-    await ready();await capture('street-720');
-    receipt.contracts.initialViewIsStreet=receipt.frames[0].view==='street';
+    await page.goto('http://127.0.0.1:8783/'+ENTRY+'?qa=1&deferRender=1&view=street&width=720&height=480',{waitUntil:'domcontentloaded',timeout:60000});
+    await page.waitForFunction(()=>typeof window.__bureau?.view==='function'&&document.getElementById('scene').getAttribute('aria-busy')==='false',null,{timeout:480000});
+    const before=await page.evaluate(()=>window.__bureau.proof.frames.length);
+    if(before!==0)throw Error('Targeted hall run must not repeat exterior rendering');
+    await page.click('[data-view="hall"]');await ready('hall',before);await capture('hall-720');
+    receipt.contracts.onlyFailedHallRetried=receipt.frames.length===1&&before===0;
     receipt.contracts.actualStandardResolution=receipt.frames[0].width===720&&receipt.frames[0].height===480;
     receipt.contracts.qualityOptions=await page.locator('#quality option').evaluateAll(n=>n.map(x=>x.value).join(',')==='960,720,480');
-    await page.click('[data-view="hall"]');await ready();await capture('hall-720');
     receipt.contracts.hallButtonCompleted=receipt.frames.at(-1).view==='hall';
     await page.click('#save');
     receipt.contracts.actualSaveButton=await page.evaluate(()=>document.getElementById('message').textContent.includes('已保存')&&localStorage.getItem('kaopu.bureau.r03e.custody.v3-network.public-hall-r03f.local-only')===window.__bureau.state());
