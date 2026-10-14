@@ -5,8 +5,9 @@ on:
     paths:
       - .github/workflows/skin-surface-grammar-r01-audit.yml
       - kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/audit_reference.py
+      - kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/verify_skill.py
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: skin-surface-grammar-r01-reference-audit
   cancel-in-progress: false
@@ -18,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          ref: ${{ github.sha }}
           sparse-checkout: kaopu-unified-human-workbench/skills/skin-surface-grammar-r01
       - uses: actions/setup-python@v5
         with:
@@ -26,7 +28,28 @@ jobs:
         run: python -m pip install Pillow numpy
       - name: Read-only pinned source and texture audit
         run: python kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/audit_reference.py --out /tmp/skin-surface-audit
-      - name: Upload temporary research evidence, not production assets
+      - name: Validate eight evidence and contract checks, not rendering
+        run: python kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/verify_skill.py --audit-dir /tmp/skin-surface-audit
+      - name: Persist text-only evidence, fast-forward only
+        env:
+          TARGET_BRANCH: research/skin-surface-grammar-r01-20261014
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$TARGET_BRANCH"
+          ROOT=kaopu-unified-human-workbench/skills/skin-surface-grammar-r01
+          cp /tmp/skin-surface-audit/reference-audit.json "$ROOT/reference-audit.json"
+          cp /tmp/skin-surface-audit/verification.json "$ROOT/verification.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ROOT/reference-audit.json" "$ROOT/verification.json"
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(skin): persist measured reference inventory and non-rendering skill checks"
+            git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          fi
+          mkdir -p /tmp/skin-surface-audit/skill-package
+          cp "$ROOT"/*.md "$ROOT"/*.json "$ROOT"/*.py /tmp/skin-surface-audit/skill-package/
+          git rev-parse HEAD > /tmp/skin-surface-audit/delivery-commit.txt
+      - name: Upload research evidence and text-only skill package
         uses: actions/upload-artifact@v4
         with:
           name: skin-surface-grammar-r01-reference-audit
