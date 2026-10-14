@@ -1,0 +1,160 @@
+{
+  "schema": "kaopu.tissue-layers/1",
+  "units": {
+    "thickness": "mm",
+    "absorption": "mm^-1",
+    "reducedScattering": "mm^-1",
+    "wavelength": "nm"
+  },
+  "model": "81-wavelength finite-slab two-flux transport, 380-780 nm at 5 nm; CIE 1931/D65 color integration; appearance calibrated to existing BioSkin identity",
+  "bandsNM": [
+    610,
+    550,
+    460
+  ],
+  "hemoglobin": {
+    "source": "https://omlc.org/spectra/hemoglobin/summary.html",
+    "molarExtinctionOxy": [
+      1506,
+      43016,
+      44480
+    ],
+    "molarExtinctionDeoxy": [
+      9443.6,
+      53412,
+      23388.8
+    ],
+    "hemoglobinGramsPerLiter": 150,
+    "molecularWeightGramsPerMole": 64500,
+    "conversion": "mu_a_mm = 2.303 * epsilon * 150 / 64500 / 10"
+  },
+  "opticalFormulaSource": "https://omlc.org/news/jan98/skinoptics.html",
+  "formulasCM": {
+    "baseline": "0.244 + 85.3 * exp(-(lambdaNM-154)/66.2)",
+    "melanosome": "6.6e11 * lambdaNM^-3.33",
+    "reducedScattering": "2e5 * lambdaNM^-1.5 + 2e12 * lambdaNM^-4"
+  },
+  "layers": [
+    {
+      "id": "corneum",
+      "name": "角质屏障",
+      "mm": 0.014,
+      "vascular": false,
+      "role": "weakly absorbing keratin barrier; hydration drives micro-roughness",
+      "valueStatus": "authored representative thickness"
+    },
+    {
+      "id": "epidermis",
+      "name": "活性表皮",
+      "mm": 0.065,
+      "vascular": false,
+      "role": "melanin absorption filter above vascular tissue",
+      "valueStatus": "authored representative thickness; melanin coefficients from Jacques"
+    },
+    {
+      "id": "papillary",
+      "name": "乳头真皮",
+      "mm": 0.2,
+      "vascular": true,
+      "bloodFraction": 0.025,
+      "role": "superficial capillary absorption and collagen scattering",
+      "valueStatus": "authored regional value; Jacques discusses localized 2-5 percent blood near 100-200 micrometres"
+    },
+    {
+      "id": "reticular",
+      "name": "网状真皮",
+      "mm": 1.1,
+      "vascular": true,
+      "bloodFraction": 0.002,
+      "role": "deeper collagen scattering and softly filtered vascular field",
+      "valueStatus": "authored representative thickness and blood fraction"
+    },
+    {
+      "id": "subcutis",
+      "name": "皮下组织",
+      "effectiveOpticalMM": 2.2,
+      "vascular": true,
+      "role": "low-absorption scattering backing; not a geometric fat-thickness estimate",
+      "valueStatus": "authored effective optical slab, not measured anatomy"
+    }
+  ],
+  "surfaceFilm": {
+    "sebumIOR": 1.46,
+    "aqueousIOR": 1.333,
+    "skinIOR": 1.4,
+    "valueStatus": "representative rendering indices; film covers a bounded part of the surface"
+  },
+  "vermilion": {
+    "corneumMM": 0.004,
+    "viableEpitheliumMM": 0.12,
+    "superficialConnectiveMM": 0.25,
+    "deeperConnectiveMM": 0.85,
+    "backing": "vascular muscle-rich connective tissue, not facial adipose",
+    "film": "independent aqueous wetness field; no facial T-zone sebum",
+    "pores": false,
+    "valueStatus": "authored values; lip barrier and vascular differences are research-backed, these thicknesses are not donor measurements"
+  },
+  "regionalEstimates": {
+    "status": "smooth original model-space artistic fields; no measured individual vessel map or histological thickness map",
+    "thicknessOrder": "eyelid and temple thinner than cheek; nose and forehead thicker",
+    "blood": "distinct smoothly varying superficial and deep fractions, cheek/nose emphasis, no blood inside epidermis",
+    "sources": [
+      "https://pubmed.ncbi.nlm.nih.gov/35710358/",
+      "https://pubmed.ncbi.nlm.nih.gov/15861089/",
+      "https://pubmed.ncbi.nlm.nih.gov/41375703/"
+    ]
+  },
+  "lipSources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC6594803/",
+    "https://pubmed.ncbi.nlm.nih.gov/15030342/"
+  ],
+  "boundaries": [
+    "No alpha-blended nested head meshes",
+    "No new photographic textures or head meshes",
+    "No medical simulation or measured individual concentrations",
+    "Subcutaneous anatomy and vessels are estimated, not observed",
+    "Three representative wavelengths remain only in angular diffusion-width approximation; visible colors use 81-wavelength integration"
+  ],
+  "appearancePresets": {
+    "natural": {
+      "epi": 1.04,
+      "blood": 0.94,
+      "scatter": 1,
+      "film": 0.65,
+      "hydration": 0.35,
+      "veins": 0.55
+    },
+    "luminous": {
+      "epi": 1,
+      "blood": 1,
+      "scatter": 1.03,
+      "film": 1,
+      "hydration": 0.68,
+      "veins": 0.65
+    },
+    "thin": {
+      "epi": 0.78,
+      "blood": 1.08,
+      "scatter": 0.96,
+      "film": 0.82,
+      "hydration": 0.55,
+      "veins": 1
+    }
+  },
+  "calibration": {
+    "type": "relative spectral layer response with existing BioSkin neutral identity anchor",
+    "reference": "natural tissue, relative thickness 1, baseline preset melanin/blood, no additional deep vessel",
+    "reason": "Three-band direct color was gray/purple; absolute uncalibrated two-flux color was pale/olive. Neither is accepted as a faithful prediction.",
+    "measurement": false
+  },
+  "colorimetry": {
+    "samples": 81,
+    "startNM": 380,
+    "endNM": 780,
+    "stepNM": 5,
+    "CIE1931": "https://doi.org/10.25039/CIE.DS.xvudnb9b",
+    "D65": "https://doi.org/10.25039/CIE.DS.hjfjmt59",
+    "tableLicense": "CC BY-SA 4.0",
+    "browser": "manual 4D interpolation, appended to existing 512-wide Float32 pore table, no extra sampler"
+  }
+}

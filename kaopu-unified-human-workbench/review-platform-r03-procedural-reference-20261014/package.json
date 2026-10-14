@@ -1,0 +1,15 @@
+{
+  "name": "kaopu-reference-procedural-surface-review",
+  "private": true,
+  "version": "3.0.0",
+  "scripts": {
+    "bundle": "esbuild integration/merge.mjs --bundle --format=iife --minify --outfile=integration/merge.bundle.js",
+    "build": "npm run bundle && node build-platform.cjs",
+    "start": "node serve-reviewed.cjs",
+    "qa": "node qa-procedural.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "playwright": "1.58.2"
+  }
+}
