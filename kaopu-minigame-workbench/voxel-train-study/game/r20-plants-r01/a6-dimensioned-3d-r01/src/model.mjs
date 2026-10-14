@@ -11,46 +11,50 @@ import angelR from './retained/branding/angel_right.mjs';
 export function buildTrain(T){
  const root=new T.Group();root.name='A6 88 · R08 native dimensioned train';
  const mat=(color,metalness=.1,roughness=.35)=>new T.MeshStandardMaterial({color,metalness,roughness});
- const M={paint:new T.MeshPhysicalMaterial({color:'#064630',metalness:.58,roughness:.25,clearcoat:1,clearcoatRoughness:.18,side:T.DoubleSide}),gold:mat('#e9bc63',.8,.24),brass:mat('#e9bc63',.8,.24),steel:mat('#acb5bb',.85,.25),iron:mat('#283239',.65,.4),black:mat('#11191c',.1,.6),rubber:mat('#1b2426',.05,.8),red:mat('#e22a32',.4,.3),cream:mat('#d9c6a3',.05,.6),wood:mat('#76533b',.08,.44),seat:mat('#233f38',.05,.67),skin:mat('#b68b68',.02,.68),uniform:mat('#233444',.05,.65),glass:new T.MeshPhysicalMaterial({color:'#678d98',metalness:.05,roughness:.10,transparent:true,opacity:.30,side:T.DoubleSide,depthWrite:false}),lamp:new T.MeshStandardMaterial({color:'#fff5d8',emissive:'#fff2ce',emissiveIntensity:1.5})};
+ const M={paint:new T.MeshPhysicalMaterial({color:'#064630',metalness:.58,roughness:.25,clearcoat:1,clearcoatRoughness:.18,side:T.DoubleSide}),gold:mat('#e9bc63',.8,.24),brass:mat('#e9bc63',.8,.24),steel:mat('#acb5bb',.85,.25),iron:mat('#283239',.65,.4),black:mat('#11191c',.1,.6),rubber:mat('#1b2426',.05,.8),red:mat('#e22a32',.4,.3),cream:mat('#d9c6a3',.05,.6),wood:mat('#76533b',.08,.44),seat:mat('#233f38',.05,.67),skin:mat('#b68b68',.02,.68),uniform:mat('#233444',.05,.65),glass:new T.MeshPhysicalMaterial({color:'#153b40',metalness:.26,roughness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.70,side:T.DoubleSide,depthWrite:false}),lamp:new T.MeshStandardMaterial({color:'#fff5d8',emissive:'#fff2ce',emissiveIntensity:1.5})};
  const group=(name,p=root)=>{const g=new T.Group();g.name=name;p.add(g);return g;};
  const shell=group('01 continuous R08 exterior'),interior=group('02 cab boiler oil water interior'),running=group('03 inherited wheels rods and connected suspension'),coach=group('04 integral commuter coach'),coachShell=group('04a coach removable shell',coach),coachInside=group('04b coach commuter interior',coach),connections=group('05 continuous couplings brake and service pipes');
  const K=kit(T,M,root),E=kit(T,M,shell),I=kit(T,M,interior),G=kit(T,M,running),C=kit(T,M,coachShell),P=kit(T,M,coachInside),J=kit(T,M,connections),L=createLettering(T,M);
- const stations=[[0,.12,.57,.72],[.8,.65,.45,1.10],[2.1,1.12,.38,1.92],[3.4,1.37,.34,2.75],[4.25,1.44,.34,3.25],[5.5,1.475,.34,3.99],[6.4,1.475,.34,4.15],[8.2,1.475,.34,4.15],[10.15,1.475,.34,4.06],[11.2,1.475,.34,3.98],[20.1,1.475,.34,3.98]];
- function smoothAt(x){let i=0;while(i<stations.length-2&&x>stations[i+1][0])i++;let a=stations[i],b=stations[i+1],t=Math.min(1,Math.max(0,(x-a[0])/(b[0]-a[0])));return a.slice(1).map((v,k)=>{const prev=stations[Math.max(0,i-1)],next=stations[Math.min(stations.length-1,i+2)],m1=(b[k+1]-prev[k+1])/(b[0]-prev[0])*(b[0]-a[0]),m2=(next[k+1]-a[k+1])/(next[0]-a[0])*(b[0]-a[0]);return(2*t**3-3*t*t+1)*v+(t**3-2*t*t+t)*m1+(-2*t**3+3*t*t)*b[k+1]+(t**3-t*t)*m2;});}
- const halfAt=(x,z)=>{const[w,lo,hi]=smoothAt(x),s=Math.max(0,Math.min(1,(z-2.16)/(hi-2.16)));return w*Math.sqrt(Math.max(.00001,1-s**5.4));};
- const topPoint=(x,t,lower=2.16)=>{const[w,,hi]=smoothAt(x);return[x,w*Math.cos(t),lower+(hi-lower)*Math.sin(t)**(2/5.4)];};
+ // A single rounded-superellipse section field owns every exterior surface.
+ const stations=[[0,.16,.48,.78],[.8,.67,.31,1.43],[2.1,1.16,.29,2.43],[3.4,1.39,.29,2.94],[4.25,1.45,.29,3.25],[5.5,1.475,.29,4.02],[6.4,1.475,.29,4.15],[8.2,1.475,.29,4.15],[10.15,1.475,.29,4.06],[11.2,1.475,.29,3.98],[20.1,1.475,.29,3.98],[20.32,1.475,.29,3.98],[27.60,1.475,.29,3.98],[28.30,1.45,.31,3.96],[29.10,1.45,1.07,3.96],[29.80,1.475,1.07,3.98],[51.40,1.475,1.07,3.98],[52.10,1.45,1.07,3.96]];
+ function smoothAt(x){let i=0;while(i<stations.length-2&&x>stations[i+1][0])i++;let a=stations[i],b=stations[i+1],t=Math.min(1,Math.max(0,(x-a[0])/(b[0]-a[0])));return a.slice(1).map((v,k)=>{const prev=stations[Math.max(0,i-1)],next=stations[Math.min(stations.length-1,i+2)],m1=(b[k+1]-prev[k+1])/(b[0]-prev[0])*(b[0]-a[0]),m2=(next[k+1]-a[k+1])/(next[0]-a[0])*(b[0]-a[0]);const q=(2*t**3-3*t*t+1)*v+(t**3-2*t*t+t)*m1+(-2*t**3+3*t*t)*b[k+1]+(t**3-t*t)*m2;return Math.max(Math.min(v,b[k+1]),Math.min(Math.max(v,b[k+1]),q));});}
+ const halfAt=(x,z)=>{const[w,lo,hi]=smoothAt(x),u=Math.max(-1,Math.min(1,(z-(lo+hi)/2)/((hi-lo)/2)));const n=x>=29.10&&u<0?18:4.8;return w*Math.pow(Math.max(0,1-Math.pow(Math.abs(u),n)),1/n);};
+ const roofAtY=(x,y)=>{const[w,lo,hi]=smoothAt(x);return(lo+hi)/2+(hi-lo)/2*Math.pow(Math.max(0,1-Math.pow(Math.abs(y)/w,4.8)),1/4.8);};
+ const ease=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
+ const cutAt=x=>{const lo=smoothAt(x)[1];if(x<8.02||x>18.12)return lo;if(x<8.57)return lo+(2.17-lo)*ease((x-8.02)/.55);if(x<17.43)return 2.17;return lo+(2.17-lo)*(1-ease((x-17.43)/.69));};
+ const skin=(Q,x0,x1,z0,z1,material,name,nu=120,nv=42,inset=0)=>{const parts=[];for(const sign of[-1,1]){const o=surface(Q,x0,x1,(x,v)=>{const low=typeof z0==='function'?z0(x):z0,high=typeof z1==='function'?z1(x):z1,z=low+(high-low)*v;return[x,sign*Math.max(0,halfAt(x,z)+inset),z]},material,name+' '+sign,nu,nv);parts.push(o);}return parts;};
+ const sectionLoop=(x,z0,z1,inset=0)=>{const pts=[];for(let i=0;i<=40;i++){const z=z0+(z1-z0)*i/40;pts.push([x,Math.max(0,halfAt(x,z)-inset),z]);}for(let i=39;i>=0;i--){const z=z0+(z1-z0)*i/40;pts.push([x,-Math.max(0,halfAt(x,z)-inset),z]);}return pts;};
+ function cap(Q,x,lo,hi,inset,mat,name){const pts=sectionLoop(x,lo,hi,inset),shape=new T.Shape(pts.map(p=>new T.Vector2(p[1],p[2]))),g=new T.ExtrudeGeometry(shape,{depth:.045,bevelEnabled:false});g.applyMatrix4(new T.Matrix4().set(0,0,1,x,1,0,0,0,0,1,0,0,0,0,0,1));return Q.add(g,mat,name);}
  function surface(owner,x0,x1,point,material,name,n=100,m=32){return owner.add(sweptSurface(T,(u,v)=>point(x0+(x1-x0)*u,v),n,m),material,name);}
- // Nose is one smooth analytical shell. Separate canopy shares identical section fields.
- surface(E,0,4.25,(x,v)=>{const[w,lo,hi]=smoothAt(x),t=v*Math.PI;return[x,w*Math.cos(t),lo+(hi-lo)*Math.sin(t)**.80]},'paint','continuous aggressive nose shell',120,48);
- surface(E,4.25,10.15,(x,v)=>{const[w,lo]=smoothAt(x);return[x,w*Math.cos(v*Math.PI),lo+(D.cabGlassSill-lo)*Math.sin(v*Math.PI)**.25]},'paint','low cab waist below long glass',100,44);
- surface(E,10.15,20.10,(x,v)=>topPoint(x,v*Math.PI),'paint','boiler continuous upper fuselage',160,48);
- // The cabin glass genuinely starts only 140 mm above the gold stripe.
- const glass=surface(E,4.25,10.15,(x,v)=>{const[w,,hi]=smoothAt(x),t=v*Math.PI;return[x,(w+.008)*Math.cos(t),D.cabGlassSill+(hi-D.cabGlassSill)*Math.sin(t)**(2/5.4)]},'glass','long panoramic cabin glazing with low sill',120,48);glass.renderOrder=8;
- for(const s of[-1,1]){E.pipe(Array.from({length:70},(_,i)=>{const x=4.25+5.9*i/69;return[x,s*(smoothAt(x)[0]+.012),D.cabGlassSill]}),.022,'steel','low window sill metal surround');E.pipe(Array.from({length:60},(_,i)=>{const x=.3+19.78*i/59,[w,,hi]=smoothAt(x),z=Math.min(D.goldStripe,hi-.17);return[x,s*Math.max(.03,halfAt(x,z)+.014),z]}),.025,'gold','continuous upper gold belt');
-  for(const x of[4.25,5.50,7.10,8.65,10.15])E.pipe(Array.from({length:33},(_,j)=>{const t=j/32*Math.PI/2;const[w,,hi]=smoothAt(x);return[x,s*(w+.014)*Math.cos(t),D.cabGlassSill+(hi-D.cabGlassSill)*Math.sin(t)**(2/5.4)]}),x===4.25||x===10.15?.031:.013,'steel','flush curved glazing frame');
-  // Front guide wheels remain beneath low streamlined skirts. Driver opening is uninterrupted.
-  surface(E,1.0,8.42,(x,v)=>{const[w,lo]=smoothAt(x),z=lo+(2.13-lo)*v;return[x,s*(w-.025),Math.min(z,smoothAt(x)[2]-.06)]},'paint','guide bogie covering side '+s,95,16);
-  surface(E,17.55,20.10,(x,v)=>[x,s*1.45,.32+1.83*v],'paint','rear truck streamlined lower side '+s,50,16);
-  for(const [a,b]of[[.9,8.42],[17.55,20.1]])E.pipe(Array.from({length:50},(_,j)=>{let x=a+(b-a)*j/49;return[x,s*(smoothAt(x)[0]+.008),.39]}),.016,'steel','lower flush bright sill '+s);
-  // Three cooling gills moved beyond long cabin, no exposed rivets.
-  for(let q=0;q<3;q++){const x=10.50+q*.34,z=3.12;const shape=roundedShape(T,.16,.57,.07);const o=E.add(new T.ExtrudeGeometry(shape,{depth:.025,bevelEnabled:true,bevelSize:.012,bevelThickness:.006,bevelSegments:3}),'black','rearward cooling gill '+q);o.applyMatrix4(L.sideMatrix(-s,[x,s*(halfAt(x,z)+.015),z]));o.rotation.z=s*.18;}
-  // Large native source wordmark contours, not a newly invented company.
-  addBrand(wordmark,6.62,[15.12,s*1.495,3.03],-s,M.gold,shell,'existing Flying Hongkonger identity');
-  L.relief(shell,'88',.58,.010,[2.8,s*(smoothAt(2.8)[0]+.018),1.70],-s,M.gold);
+ // Material boundaries share the very same loft, so windshield and nose meet without a ledge.
+ skin(E,0,4.25,x=>smoothAt(x)[1],x=>smoothAt(x)[2],'paint','one-field double-curved nose',150,56);
+ skin(E,4.25,10.15,cutAt,D.cabGlassSill,'paint','continuous cab lower shell with swept wheel opening',130,28);
+ skin(E,10.15,20.10,cutAt,x=>smoothAt(x)[2],'paint','continuous boiler body loft and wheel opening',180,56);
+ const glass=skin(E,4.25,10.15,D.cabGlassSill,x=>smoothAt(x)[2]-.003,'glass','closed thick tinted panoramic canopy',130,52,.012);for(const o of glass)o.renderOrder=8;
+ const innerGlass=M.glass.clone();innerGlass.opacity=.14;skin(E,4.25,10.15,D.cabGlassSill+.014,x=>smoothAt(x)[2]-.025,innerGlass,'canopy inner glass wall 22 mm',90,32,-.010);
+ surface(E,4.30,10.15,(x,v)=>{const y=-.36+.72*v;return[x,y,roofAtY(x,y)+.013]},'paint','continuous dark green canopy roof spine',100,20);
+ for(const side of[-1,1]){
+  E.pipe(Array.from({length:80},(_,i)=>{const x=4.25+5.9*i/79;return[x,side*(halfAt(x,D.cabGlassSill)+.022),D.cabGlassSill]}),.025,'steel','low panoramic window surround');
+  E.pipe(Array.from({length:140},(_,i)=>{const x=.15+19.95*i/139,z=Math.min(D.goldStripe,smoothAt(x)[2]-.23);return[x,side*(halfAt(x,z)+.016),z]}),.023,'gold','gold belt follows actual skin');
+  for(const x of[4.25,5.50,7.10,8.65,10.15]){const hi=smoothAt(x)[2]-.012;E.pipe(Array.from({length:48},(_,i)=>{const z=D.cabGlassSill+(hi-D.cabGlassSill)*i/47;return[x,side*(halfAt(x,z)+.022),z]}),x===4.25||x===10.15?.032:.015,'steel','flush canopy arch follows shared loft');}
+  for(const [a,b]of[[.35,8.56],[17.44,20.1]])E.pipe(Array.from({length:65},(_,i)=>{const x=a+(b-a)*i/64,z=cutAt(x)+.04;return[x,side*(halfAt(x,z)+.006),z]}),.016,'steel','swept curved skirt edge');
+  for(let q=0;q<3;q++){const x=10.70+q*.34;skin(E,x-.07,x+.07,2.93,3.44,'black','rearward recessed cooling gill '+q,8,18,.016);}
+  addBrand(wordmark,6.62,[15.12,side*(halfAt(15.12,3.03)+.020),3.03],side,M.gold,shell,'existing Flying Hongkonger identity');
+  L.relief(shell,'88',.58,.010,[2.8,side*(halfAt(2.8,1.70)+.020),1.70],side,M.gold);
  }
  function addBrand(recipe,width,at,side,material,parent,name){const scale=width/recipe.size_px[0],g=new T.ExtrudeGeometry(contourShapes(T,recipe),{depth:.009/scale,bevelEnabled:false,curveSegments:1});g.scale(scale,scale,scale);g.translate(-width/2,width*recipe.size_px[1]/recipe.size_px[0]/2,0);const o=new T.Mesh(g,material);o.name=name;o.applyMatrix4(L.sideMatrix(side,at));o.userData={source:recipe.source_sha256||recipe.asset,originalContours:true,widthM:width};parent.add(o);return o;}
  // Single high-forward driver position, full-size seat, generous work zone behind.
  I.box([7.15,0,D.cabFloor-.05],[6.02,2.72,.10],'iron','cab raised structural deck');
- I.box([7.22,0,2.025],[5.78,2.62,.025],'wood','cab walnut floor');
- function seat(Q,x,y,z,front=-1){const g=group('full scale 480 mm seat',Q===I?interior:coachInside),S=kit(T,M,g);S.box([x,y,z+.34],[.45,.48,.10],'seat','upholstered cushion');const b=S.box([x-front*.20,y,z+.70],[.10,.48,.66],'seat','sculpted high back');b.rotation.y=front*.09;S.rod([x,y,z-.0],[x,y,z+.30],.055,'steel','seat pedestal');for(const s of[-1,1])S.pipe([[x-front*.17,y+s*.26,z+.40],[x+front*.16,y+s*.26,z+.45]],.021,'gold','seat arm');return g;}
+ I.box([7.22,0,D.cabFloor+.025],[5.78,2.62,.025],'wood','cab walnut floor');
+ function seat(Q,x,y,z,front=-1){const g=group('full scale 480 mm seat',Q===I?interior:coachInside),S=kit(T,M,g);S.box([x,y,z+.34],[.45,.48,.10],'seat','upholstered cushion');const b=S.box([x-front*.20,y,z+.70],[.10,.48,.66],'seat','sculpted high back');b.rotation.y=front*.09;S.rod([x,y,z-.0],[x,y,z+.30],.055,'steel','seat pedestal');if(Q===I)for(const s of[-1,1])S.pipe([[x-front*.17,y+s*.26,z+.40],[x+front*.16,y+s*.26,z+.45]],.021,'gold','seat arm');return g;}
  seat(I,5.7,0,D.cabFloor,-1);seat(I,8.0,.99,D.cabFloor,-1);I.box([8.0,.99,2.43],[.14,.45,.48],'seat','foldable rear seat back');
- const desk=I.box([5.04,0,2.66],[.78,1.35,.15],'black','single central pilot instrument deck');desk.rotation.y=-.15;
- for(let i=0;i<5;i++){const y=-.48+i*.24;I.rod([5.01,y,2.74],[4.99,y,2.79],.088,'gold','inset analogue instrument bezel',32);I.rod([5.01,y,2.785],[4.99,y,2.80],.071,'cream','instrument face',32);}
- I.torus([5.32,0,2.82],.18,.018,'black','pilot control wheel',[1,0,0]);I.rod([5.1,0,2.58],[5.30,0,2.82],.027,'steel','control column');
- I.box([9.82,0,2.98],[.10,2.50,1.85],'iron','sealed boiler service bulkhead behind working area');
+ const desk=I.box([5.04,0,2.86],[.78,1.35,.15],'black','single central pilot instrument deck');desk.rotation.y=-.15;
+ for(let i=0;i<5;i++){const y=-.48+i*.24;I.rod([5.01,y,2.94],[4.99,y,2.99],.088,'gold','inset analogue instrument bezel',32);I.rod([5.01,y,2.985],[4.99,y,3.0],.071,'cream','instrument face',32);}
+ I.torus([5.32,0,3.02],.18,.018,'black','pilot control wheel',[1,0,0]);I.rod([5.1,0,2.78],[5.30,0,3.02],.027,'steel','control column');
+ cap(I,9.82,D.cabFloor,3.98,.09,'iron','sealed bulkhead follows continuous outer shell');
  for(const s of[-1,1]){I.pipe([[9.75,s*.82,2.10],[9.75,s*.82,3.68],[9.75,s*.34,3.68]],.033,'gold','full height steam service pipe');I.torus([9.68,s*.73,3.00],.24,.026,'red','large startup valve 480 mm',[1,0,0]);for(let j=0;j<5;j++){const a=j*Math.PI*2/5;I.rod([9.66,s*.73,3.0],[9.66,s*.73+.22*Math.cos(a),3+.22*Math.sin(a)],.012,'red','valve spoke');}}
  for(let i=0;i<3;i++)I.rod([9.72,-.36+i*.36,3.49],[9.65,-.36+i*.36,3.49],.12,'cream','backhead instrument',48);
- I.box([8.70,0,2.04],[2.05,1.05,.008],new T.MeshStandardMaterial({color:'#b18c46',transparent:true,opacity:.15}),'clear startup valve standing work zone 2.05 x 1.05 m');
+ I.box([8.70,0,D.cabFloor+.04],[2.05,1.05,.008],new T.MeshStandardMaterial({color:'#b18c46',transparent:true,opacity:.15}),'clear startup valve standing work zone 2.05 x 1.05 m');
  // The sealed combustion/boiler volume is aft of cab; oil/water is in the tender.
  I.rod([10.50,0,3.04],[18.95,0,3.04],.88,'iron','diesel-fired steam generator envelope',64);
  for(const x of[11.2,13,14.8,16.6,18.3])I.torus([x,0,3.04],.895,.022,'steel','boiler support band',[1,0,0]);
@@ -71,39 +75,41 @@ export function buildTrain(T){
  // Connected bogie assemblies, with pivot bolster, side beams and brake pipes.
  function bogie(cx,r,label){for(const dx of[-.90,.90])axle(cx+dx,r,false,label);G.rod([cx,0,r+.20],[cx,0,1.14],.15,'steel',label+' kingpin to underframe');G.box([cx,0,r+.31],[.42,1.45,.16],'iron',label+' bolster');for(const s of[-1,1]){G.box([cx,s*.98,r+.20],[2.45,.14,.24],'iron',label+' bogie side frame');for(const dx of[-.90,.90]){G.box([cx+dx,s*.98,r+.12],[.25,.27,.23],'iron',label+' axle journal');G.rod([cx+dx,s*.98,r+.23],[cx+dx,s*.98,r+.52],.075,'steel',label+' suspension');G.rod([cx+dx+.38,s*.85,r+.34],[cx+dx+.38,s*.85,.25],.022,'steel',label+' brake hanger');G.box([cx+dx+.39,s*.80,r],[.06,.14,.19],'black',label+' brake shoe');}G.rod([cx-1.1,s*.9,.3],[cx+1.1,s*.9,.3],.02,'steel',label+' brake pull rod');}}
  for(const cx of D.tenderBogieCentres)bogie(cx,D.tenderWheelRadius,'oil water tender');for(const cx of D.coachBogieCentres)bogie(cx,D.coachWheelRadius,'commuter coach');
- function capsuleBody(Q,start,end,lower,crown,name){surface(Q,start,end,(x,v)=>{const t=v*Math.PI;return[x,1.475*Math.cos(t),lower+(crown-lower)*Math.sin(t)**(2/5.4)]},'paint',name,100,44);}
- capsuleBody(E,D.tenderStart,D.tenderEnd,.37,D.bodyCrown,'continuous oil water tender shell');
- for(const s of[-1,1]){E.pipe([[D.tenderStart,s*1.485,D.goldStripe],[D.tenderEnd,s*1.485,D.goldStripe]],.025,'gold','tender matched belt');E.pipe([[D.tenderStart,s*1.46,.43],[D.tenderEnd,s*1.46,.43]],.014,'steel','tender lower bright sill');addBrand(s>0?angelR:angelL,3.65,[24.4,s*1.497,2.99],-s,M.red,shell,'existing red flying figure');}
- I.box([24.30,0,1.07],[7.9,2.40,.16],'iron','tender chassis');I.box([23.0,0,2.25],[4.1,2.55,2.20],'steel','water volume envelope');I.box([26.60,0,2.3],[2.5,2.55,2.2],'iron','diesel oil volume envelope');
+ // Tender is another interval of exactly the same longitudinal section field.
+ skin(E,D.tenderStart,D.tenderEnd,x=>smoothAt(x)[1],x=>smoothAt(x)[2],'paint','continuous oil water tender loft',150,56);
+ for(const side of[-1,1]){E.pipe(Array.from({length:70},(_,i)=>{const x=D.tenderStart+(D.tenderEnd-D.tenderStart)*i/69;return[x,side*(halfAt(x,D.goldStripe)+.016),D.goldStripe]}),.023,'gold','matched tender belt on shared surface');addBrand(side>0?angelR:angelL,3.65,[24.4,side*(halfAt(24.4,2.99)+.020),2.99],side,M.red,shell,'existing red flying figure');}
+ I.box([24.30,0,1.07],[7.9,2.40,.16],'iron','tender chassis');I.box([23.0,0,2.25],[4.1,2.10,1.85],'steel','water envelope contained inside skin');I.box([26.60,0,2.3],[2.5,2.10,1.85],'iron','diesel oil envelope contained inside skin');
  for(const x of[23.1,26.6]){E.rod([x,0,3.97],[x,0,4.06],.21,'gold','sealed filling collar');E.rod([x,0,4.06],[x,0,4.09],.23,'paint','flush oil water filling cover');}
  // Flat joining ends, not a pointed decorative dead end. Both share coach body section.
- function endWall(Q,x,z0,z1,w,name){Q.box([x,0,(z0+z1)/2],[.055,w,z1-z0],'paint',name);}
- endWall(E,28.28,.46,3.55,2.84,'tender rear coupling bulkhead');endWall(C,D.coachStart,1.12,3.55,2.84,'coach front gangway bulkhead');endWall(C,D.coachEnd,1.12,3.55,2.84,'coach rear gangway bulkhead');
- // Integral coach, matching roof, low gold belt and large continuous window band.
+ cap(E,28.28,.43,3.95,.015,'paint','tender matched rounded rear bulkhead');cap(C,D.coachStart,1.13,3.95,.015,'paint','coach matched rounded front bulkhead');cap(C,D.coachEnd,1.13,3.95,.015,'paint','coach matched rounded rear bulkhead');
  P.box([40.60,0,D.coachFloor-.08],[23,2.77,.16],'iron','coach structural floor');P.box([40.60,0,D.coachFloor+.015],[22.85,2.73,.03],'wood','coach quiet walnut floor');
- for(const s of[-1,1]){C.box([40.60,s*1.445,1.58],[23,.06,.94],'paint','coach lower side');C.box([40.60,s*1.435,2.73],[22.8,.02,1.12],'glass','long coach glass band');C.pipe([[29.10,s*1.483,2.20],[52.10,s*1.483,2.20]],.025,'gold','matching coach gold belt');C.pipe([[29.10,s*1.48,1.15],[52.10,s*1.48,1.15]],.014,'steel','coach lower sill');
- for(let x=29.6;x<52.0;x+=1.22)C.box([x,s*1.455,2.72],[.065,.065,1.14],'paint','coach flush window mullion');
- for(const x of[30.6,40.6,50.6]){C.box([x,s*1.478,2.20],[1.18,.027,2.10],'paint','flush sliding passenger door');C.box([x,s*1.500,2.77],[.94,.018,.80],'glass','door glazing');C.pipe([[x-.59,s*1.51,1.17],[x-.59,s*1.51,3.23],[x+.59,s*1.51,3.23],[x+.59,s*1.51,1.17]],.009,'steel','door reveal');C.rod([x+.43,s*1.53,1.88],[x+.43,s*1.53,2.13],.014,'gold','flush door handle');}
- addBrand(wordmark,3.7,[45.3,s*1.494,1.64],-s,M.gold,coachShell,'coach same Flying Hongkonger lettering');}
- surface(C,29.10,52.10,(x,v)=>{const t=v*Math.PI;return[x,1.475*Math.cos(t),3.28+.70*Math.sin(t)**.72]},'paint','coach shared rounded crown',100,40);
+ skin(C,29.10,52.10,x=>smoothAt(x)[1],2.20,'paint','coach lower body same rounded loft',150,30);
+ skin(C,29.10,52.10,2.20,3.28,'glass','coach glazing conforms to shared body',150,28,.008);
+ skin(C,29.10,52.10,3.28,x=>smoothAt(x)[2],'paint','coach upper crown same section family',150,36);
+ for(const side of[-1,1]){
+  C.pipe(Array.from({length:100},(_,i)=>{const x=29.10+23*i/99;return[x,side*(halfAt(x,2.20)+.018),2.20]}),.023,'gold','matching coach belt');
+  for(let x=29.6;x<52.0;x+=1.22)C.pipe(Array.from({length:20},(_,i)=>{const z=2.20+1.08*i/19;return[x,side*(halfAt(x,z)+.018),z]}),.031,'paint','flush body following window mullion');
+  for(const x of[30.6,40.6,50.6]){skin(C,x-.59,x+.59,1.17,3.23,'paint','body conforming sliding passenger door',16,30,.012);skin(C,x-.47,x+.47,2.37,3.17,'glass','door glazing',14,20,.026);for(const dx of[-.59,.59])C.pipe(Array.from({length:24},(_,i)=>{const z=1.17+2.06*i/23;return[x+dx,side*(halfAt(x+dx,z)+.029),z]}),.009,'steel','flush door reveal');C.rod([x+.43,side*(halfAt(x+.43,1.88)+.045),1.88],[x+.43,side*(halfAt(x+.43,2.13)+.045),2.13],.014,'gold','flush door handle');}
+  addBrand(wordmark,3.7,[45.3,side*(halfAt(45.3,1.64)+.020),1.64],side,M.gold,coachShell,'same Flying Hongkonger coach lettering');
+ }
  const rowXs=[...Array.from({length:8},(_,i)=>32+i*.92),...Array.from({length:8},(_,i)=>42+i*.92)];
- for(const x of rowXs)for(const y of[-1.08,-.58,.58,1.08])seat(P,x,y,D.coachFloor,1);
+ for(const x of rowXs){for(const y of[-1.112,-.612,.612,1.112])seat(P,x,y,D.coachFloor,1);for(const y of[-1.362,-.862,-.362,.362,.862,1.362])P.pipe([[x-.17,y,D.coachFloor+.40],[x+.16,y,D.coachFloor+.45]],.012,'gold','shared commuter armrest / 0.700 m clear aisle');}
  // Refined wood ceiling strips and practical standing-room grab rails, no chandeliers.
  for(let y=-1.32;y<1.34;y+=.12)P.box([40.60,y,3.60+.12*(1-(y/1.35)**2)],[22.8,.095,.025],'wood','longitudinal walnut ceiling slat');
  for(const s of[-1,1]){P.rod([30.0,s*.38,3.20],[51.2,s*.38,3.20],.021,'gold','continuous commuter handrail');for(const x of[31,39.1,40.6,42.1,50.2]){P.rod([x,s*.68,1.15],[x,s*.68,3.22],.022,'gold','standing vestibule pole');P.rod([x,s*.68,3.21],[x,s*.38,3.21],.02,'gold','pole to roof rail junction');}for(let x=30.4;x<51;x+=1.0){P.rod([x,s*.38,3.20],[x,s*.38,2.99],.010,'black','grab strap');P.torus([x,s*.38,2.90],.09,.013,'cream','commuter hanging handhold',[1,0,0]);}P.rod([30,s*.9,3.47],[51.2,s*.9,3.47],.025,'lamp','flush warm ceiling light strip');}
  // Flexible fairings are complete surfaces, with mechanical draft links beneath.
- function joint(a,b,name,gangway=false){for(let i=0;i<9;i++){const x=a+(b-a)*i/8;J.box([x,0,3.60],[.035,2.55,.15],'rubber',name+' roof concertina');for(const s of[-1,1])J.box([x,s*1.32,2.28],[.035,.08,2.55],'rubber',name+' side concertina');}J.rod([a-.18,0,.88],[b+.18,0,.88],.11,'iron',name+' continuous draft link');J.box([(a+b)/2,0,.88],[.22,.28,.22],'steel',name+' joined coupler head');for(const s of[-1,1]){J.pipe([[a-.1,s*.43,1.02],[a+.16,s*.43,.64],[b-.16,s*.43,.64],[b+.1,s*.43,1.02]],.026,'black',name+' connected brake hose');J.rod([a-.08,s*.43,1.02],[a-.08,s*.43,1.20],.016,'red',name+' brake isolating cock');}if(gangway)J.box([(a+b)/2,0,1.15],[b-a,1.15,.06],'steel',name+' bridging footplate');}
+ function joint(a,b,name,gangway=false){skin(J,a,b,gangway?1.13:.43,3.93,'rubber',name+' continuous curved flexible fairing',14,36,-.035);for(let i=0;i<9;i++){const x=a+(b-a)*i/8;J.pipe(sectionLoop(x,gangway?1.13:.43,3.93,.020),.017,'iron',name+' curved concertina rib');}J.rod([a-.18,0,.88],[b+.18,0,.88],.11,'iron',name+' continuous draft link');J.box([(a+b)/2,0,.88],[.22,.28,.22],'steel',name+' joined coupler head');for(const side of[-1,1]){J.pipe([[a-.1,side*.43,1.02],[a+.16,side*.43,.64],[b-.16,side*.43,.64],[b+.1,side*.43,1.02]],.026,'black',name+' connected brake hose');J.rod([a-.08,side*.43,1.02],[a-.08,side*.43,1.20],.016,'red',name+' brake isolating cock');}if(gangway)J.box([(a+b)/2,0,1.15],[b-a,1.15,.06],'steel',name+' bridging footplate');}
  joint(20.10,20.32,'locomotive to oil water tender');joint(28.30,29.10,'tender to coach',true);
  for(const [a,b]of[[.8,20],[20.4,28.2],[29.2,52.0]])for(const s of[-1,1])J.rod([a,s*.42,1.02],[b,s*.42,1.02],.018,'iron','continuous through brake pipe');
  J.rod([51.95,0,.88],[52.55,0,.88],.11,'iron','coach next-vehicle coupling');J.box([52.55,0,.88],[.21,.27,.20],'steel','rear knuckle interface');
- // Flush elliptical nose lamps, with no locomotive rivet rows.
- for(const s of[-1,1]){const housing=E.add(new T.SphereGeometry(1,32,24),'steel','flush nose lamp shell',[1.95,s*.85,1.43]);housing.scale.set(.55,.07,.16);housing.rotation.y=-.35;const lens=E.add(new T.SphereGeometry(1,32,24),'black','sealed lamp lens',[1.95,s*.915,1.43]);lens.scale.set(.48,.025,.125);lens.rotation.y=-.35;for(const q of[-.22,.10]){const o=E.add(new T.SphereGeometry(1,24,16),'lamp','sealed LED lamp',[1.95+q,s*.943,1.43-q*.3]);o.scale.set(.09,.017,.08);}}
+ // Flush side lamps mounted on the analytic skin, no exposed fastener rows.
+ for(const side of[-1,1]){const x=2.12,z=1.70,y=side*(halfAt(x,z)+.035);const housing=E.add(new T.SphereGeometry(1,32,24),'steel','flush nose lamp shell',[x,y,z]);housing.scale.set(.57,.075,.17);housing.rotation.y=-.38;const lens=E.add(new T.SphereGeometry(1,32,24),'black','sealed dark nose lamp lens',[x,y+side*.055,z]);lens.scale.set(.50,.035,.135);lens.rotation.y=-.38;for(const q of[-.23,.11]){const o=E.add(new T.SphereGeometry(1,24,16),'lamp','sealed headlight',[x+q,y+side*.085,z+q*.38]);o.scale.set(.09,.021,.08);}}
  // Exact 1.75 m comparison figures. Standing figure spans Z=0 to 1.75.
  function human(x,y,z=0,seated=false,name='1.75 m full scale adult'){const h=group(name);const H=kit(T,M,h);h.position.set(x,y,z);if(!seated){H.rod([-.10,0,.10],[-.10,0,.85],.065,'uniform','leg');H.rod([.10,0,.10],[.10,0,.85],.065,'uniform','leg');H.box([0,0,1.10],[.38,.22,.52],'uniform','torso');H.rod([-.24,0,1.30],[-.25,0,.81],.045,'uniform','left arm');H.rod([.24,0,1.30],[.25,0,.81],.045,'uniform','right arm');H.add(new T.SphereGeometry(.115,20,16),'skin','head',[0,0,1.635]);H.box([-.1,-.04,.055],[.15,.27,.11],'black','shoe');H.box([.1,-.04,.055],[.15,.27,.11],'black','shoe');}else{H.box([0,0,.79],[.36,.24,.48],'uniform','seated torso');H.add(new T.SphereGeometry(.115,20,16),'skin','seated head',[0,0,1.155]);for(const s of[-1,1]){H.rod([0,s*.11,.55],[-.35,s*.11,.42],.065,'uniform','thigh');H.rod([-.35,s*.11,.42],[-.38,s*.11,.08],.055,'uniform','shin');H.rod([-.05,s*.22,.91],[-.42,s*.24,.85],.045,'uniform','pilot arm');}}h.userData={standingHeightM:1.75,scale:1,seated};return h;}
  const comparisonHuman=human(6,-3.15);human(5.7,0,D.cabFloor,true,'full size seated pilot');
  const track=group('06 retained 56E1 rail profile / 1.435 m gauge');const R=kit(T,M,track);for(const s of[-1,1]){const g=createRailGeometry(T,{lengthM:58,centerXM:25,centerZM:s*dat.railCentreAbsM,railTopM:0,maxSegmentLengthM:4});g.rotateX(Math.PI/2);R.add(g,'steel','retained 56E1 running rail');}for(let x=-4;x<54;x+=.65){R.box([x,0,-.23],[.22,2.55,.13],'cream','track sleeper');}
  setPhase(.30);root.updateMatrixWorld(true);
- function setCutaway(on){shell.visible=!on;coachShell.visible=!on;}
+ function setCutaway(on){shell.visible=!on;coachShell.visible=!on;coachInside.traverse(o=>{if(o.name==='longitudinal walnut ceiling slat')o.visible=!on;});}
  function setCoachOnly(on){shell.visible=!on;interior.visible=!on;}
  const contact=sectionContactReport({radiusM:D.driverRadius,datums:dat});
  root.userData={dimensions:D,metres:true,retainedFamilies:['56E1 rail and GAME tread/flange','native cast wheel topology','forged connecting and coupling rods','original wordmark and red flying contours'],sourceBuffersLoaded:false,kinematicClosureChecked:true,contact,status:D.status};
