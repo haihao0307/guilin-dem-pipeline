@@ -6,6 +6,7 @@ on:
       - kaopu-fabric-workbench/knit-public-p01/main.mjs
       - kaopu-fabric-workbench/knit-public-p01/template.html
       - kaopu-fabric-workbench/knit-public-p01/qa.py
+      - kaopu-fabric-workbench/knit-public-p01/refine.py
       - .github/workflows/knit-public-p01.yml
 permissions:
   contents: write
@@ -23,6 +24,7 @@ jobs:
       - name: Build using only new public source and public dependencies
         run: |
           cd kaopu-fabric-workbench/knit-public-p01
+          python refine.py
           npm install --no-audit --no-fund --no-save three@0.180.0 esbuild@0.25.10
           python - <<'PY'
           import urllib.request,hashlib,pathlib
@@ -40,7 +42,7 @@ jobs:
           (r/'index.html').write_text(page)
           notices=(r/'node_modules/three/LICENSE').read_text()+'\n\nKAOPU EB1: already-public user-owned procedural lighting core. Source: haihao0307/Humanoid-Rig-Lab-Next@7dcbcaeaf20af630195e1be2c6ff7ec8ba63467f/lighting/eb1/eb1.js. Khronos PBR Neutral equations: Apache-2.0, attribution retained in embedded core.\n'
           (r/'THIRD_PARTY_NOTICES.txt').write_text(notices)
-          manifest={'version':'KNIT-PUBLIC-P01','sourceCommit':os.environ['GITHUB_SHA'],'status':'BUILT_REQUIRES_BROWSER_VERIFICATION','htmlSHA256':hashlib.sha256((r/'index.html').read_bytes()).hexdigest(),'htmlBytes':(r/'index.html').stat().st_size,'three':'0.180.0','EB1SHA256':hashlib.sha256((r/'eb1-public.js').read_bytes()).hexdigest(),'privateRuntimeImported':False,'nativeR15':False,'nativeR01_2Published':False,'clothPhysics':False,'externalRuntimeRequests':0,'publicURLVerified':False}
+          manifest={'version':'KNIT-PUBLIC-P01','refinement':1,'sourceCommit':os.environ['GITHUB_SHA'],'status':'BUILT_REQUIRES_BROWSER_VERIFICATION','htmlSHA256':hashlib.sha256((r/'index.html').read_bytes()).hexdigest(),'htmlBytes':(r/'index.html').stat().st_size,'three':'0.180.0','EB1SHA256':hashlib.sha256((r/'eb1-public.js').read_bytes()).hexdigest(),'privateRuntimeImported':False,'nativeR15':False,'nativeR01_2Published':False,'clothPhysics':False,'externalRuntimeRequests':0,'publicURLVerified':False}
           (r/'BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps(manifest))
           PY
@@ -65,8 +67,8 @@ jobs:
           test "$CURRENT" = "$GITHUB_SHA"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-fabric-workbench/knit-public-p01/index.html kaopu-fabric-workbench/knit-public-p01/BUILD_MANIFEST.json kaopu-fabric-workbench/knit-public-p01/THIRD_PARTY_NOTICES.txt kaopu-fabric-workbench/knit-public-p01/qa
-          git commit -m 'build(knit-public): preserve tested self-contained specimen and actual browser evidence'
+          git add kaopu-fabric-workbench/knit-public-p01/index.html kaopu-fabric-workbench/knit-public-p01/BUILD_MANIFEST.json kaopu-fabric-workbench/knit-public-p01/THIRD_PARTY_NOTICES.txt kaopu-fabric-workbench/knit-public-p01/qa kaopu-fabric-workbench/knit-public-p01/main.mjs kaopu-fabric-workbench/knit-public-p01/template.html
+          git commit -m 'build(knit-public): save refined self-contained specimen and actual browser evidence'
           git push origin "HEAD:refs/heads/$BRANCH"
       - uses: actions/upload-artifact@v4
         if: always()
