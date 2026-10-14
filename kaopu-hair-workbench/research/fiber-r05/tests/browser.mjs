@@ -1,0 +1,46 @@
+import {chromium} from 'playwright';import fs from 'node:fs';import crypto from 'node:crypto';import {PNG} from 'pngjs';
+const url=process.argv[2],label=process.argv[3]||'candidate';if(!url)throw Error('URL required');fs.mkdirSync('evidence',{recursive:true});
+const results=[],errors=[],shots={},bench=[],profiles=[];let report={};
+const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+const context=await browser.newContext({viewport:{width:1100,height:820},deviceScaleFactor:1}),page=await context.newPage();
+page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+const check=(name,pass,info={})=>{results.push({name,pass,...info});console.log(pass?'PASS':'FAIL',name,JSON.stringify(info).slice(0,900));if(!pass)throw Error(name);};
+const snap=()=>page.evaluate(()=>HAIR_LAB.snapshot());
+async function draw(){for(let i=0;i<4;i++){const s=await page.evaluate(()=>HAIR_LAB.renderFrame());if(s.revision===s.completedRevision)return s;}throw Error('No complete current revision');}
+async function image(name){const data=await page.evaluate(()=>HAIR_LAB.capture()),b=Buffer.from(data.split(',')[1],'base64');fs.writeFileSync(`evidence/${label}-${name}.png`,b);shots[name]=b;
+ const png=PNG.sync.read(b);let visible=0;for(let i=0;i<png.data.length;i+=4)if(Math.max(png.data[i],png.data[i+1],png.data[i+2])>35)visible++;check(name+' real hair pixels',visible>800,{visible,bytes:b.length});
+ const crop=await page.evaluate(()=>{const c=document.querySelector('canvas'),a=document.createElement('canvas');a.width=200;a.height=340;a.getContext('2d').drawImage(c,c.width*.28,0,c.width*.44,c.height,0,0,200,340);return a.toDataURL('image/jpeg',.45).split(',')[1];});fs.writeFileSync(`evidence/${label}-${name}.base64.txt`,crop+'\n');return crypto.createHash('sha256').update(b).digest('hex');}
+function diff(a,b){a=PNG.sync.read(a);b=PNG.sync.read(b);if(a.width!==b.width||a.height!==b.height)throw Error('Dimensions mismatch');let sum=0,all=[],meanA=0,meanB=0;for(let i=0;i<a.data.length;i+=4){if(Math.max(b.data[i],b.data[i+1],b.data[i+2])<16)continue;for(let k=0;k<3;k++){const d=Math.abs(a.data[i+k]-b.data[i+k])/255;sum+=d;all.push(d);meanA+=a.data[i+k]/255;meanB+=b.data[i+k]/255;}}all.sort((a,b)=>a-b);return {MAE:sum/all.length,p99:all[Math.floor(all.length*.99)],max:all.at(-1),meanA:meanA/all.length,meanB:meanB/all.length};}
+try{
+ await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.HAIR_LAB?.snapshot().completed>=1,null,{timeout:180000});await page.evaluate(()=>HAIR_LAB.setManual(true));let s=await snap();
+ check('fixed R05 source/version',s.version==='HAIR-FIBER-R05-M3'&&s.source===process.env.GITHUB_SHA,{source:s.source});check('same 10000 roots and 80 segments',s.count===10000&&s.segments===80&&s.signature==='eaadb8b8');check('all 81 optical nodes retained',s.opticalSamples===81);
+ await page.evaluate(()=>HAIR_LAB.resetDynamics());await draw();await image('static-merged');
+ const baseline=await context.request.get('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/6fdcd5266475ca2c775a078d0b077b72df3d7bfe/kaopu-hair-workbench/research/fiber-r04/evidence/public-full-optics.png');check('fixed original full-quality image read',baseline.ok());
+ const baseDiff=diff(shots['static-merged'],await baseline.body());check('original full-quality appearance retained',baseDiff.MAE<.003&&baseDiff.p99<.035,{baseDiff});
+ await draw();const repeat=await image('static-repeat');check('single frame deterministic, no progressive grain',repeat===crypto.createHash('sha256').update(shots['static-merged']).digest('hex'));
+ for(const pipeline of[false,true]){await page.evaluate(v=>HAIR_LAB.setPipeline(v),pipeline);await draw();const t=await page.evaluate(()=>HAIR_LAB.profileFrame());profiles.push({pipeline,stages:t});await image(pipeline?'merged-profile':'reference-profile');}
+ const pipelineDiff=diff(shots['merged-profile'],shots['reference-profile']);check('coalesced and separate passes match',pipelineDiff.MAE<.003&&pipelineDiff.p99<.035,{pipelineDiff});
+ if(label==='candidate')for(const pipeline of[false,true,false,true]){
+  await page.evaluate(v=>{HAIR_LAB.resetDynamics();HAIR_LAB.setPipeline(v);HAIR_LAB.setWindEnabled(true);for(let i=0;i<48;i++)HAIR_LAB.stepDynamics(1/120);},pipeline);await draw();
+  await page.evaluate(()=>{for(let i=0;i<16;i++)HAIR_LAB.stepDynamics(1/120);});const q=await draw();bench.push({pipeline,frameWallMS:q.completedFrameWallMS.at(-1),guideCPU:q.guideMotion.cpuMS,width:q.width,height:q.height,packedLayers:q.packedLayers});
+ }
+ await page.evaluate(()=>{HAIR_LAB.resetDynamics();HAIR_LAB.setPipeline(true);});await draw();const roots=await page.evaluate(()=>HAIR_LAB.readMotionNodes());
+ await page.evaluate(()=>{HAIR_LAB.setWindEnabled(true);for(let i=0;i<72;i++)HAIR_LAB.stepDynamics(1/120);});await draw();await image('wind-0');
+ const moved=await page.evaluate(()=>HAIR_LAB.readMotionNodes());check('GPU roots fixed while tips bend',moved.every((n,i)=>n.position.every((v,k)=>Math.abs(v-roots[i].position[k])<1e-7))&&moved.some((n,i)=>Math.hypot(...n.tip.map((v,k)=>v-roots[i].tip[k]))>.001),{roots,moved});
+ await page.evaluate(()=>{for(let i=0;i<72;i++)HAIR_LAB.stepDynamics(1/120);});await draw();await image('wind-1');check('wind changes actual frames',!shots['wind-0'].equals(shots['wind-1']));
+ await page.evaluate(()=>{HAIR_LAB.resetDynamics();HAIR_LAB.testGrab(.48,[.025,0,.008]);for(let i=0;i<60;i++)HAIR_LAB.stepDynamics(1/120);});await draw();await image('midshaft-grab');s=await snap();check('midshaft grab excites three modes',s.guideMotion.modalEnergy.every(e=>e>1e-8),{motion:s.guideMotion});
+ await page.evaluate(()=>{HAIR_LAB.releaseGrab();for(let i=0;i<12;i++)HAIR_LAB.stepDynamics(1/120);});await draw();await image('release-bend');check('release is not immediate snap',(await snap()).guideMotion.maxOffset>.0001);
+ await page.evaluate(()=>{for(let i=0;i<960;i++)HAIR_LAB.stepDynamics(1/120);});await draw();check('release dissipates to rest',(await snap()).guideMotion.maxOffset<.00001);
+ for(const material of['black','honey','silver']){await page.evaluate(v=>HAIR_LAB.setParam('material',v),material);await draw();await image(material);}
+ await page.evaluate(()=>{HAIR_LAB.setParam('material','chestnut');HAIR_LAB.setParam('lighting','back');});await draw();await image('backlight');
+ await page.evaluate(()=>{HAIR_LAB.setParam('lighting','studio');HAIR_LAB.setCamera({distance:.20,yaw:.08,pitch:0,target:[.012,-.015,.006]});});await draw();await image('macro');
+ // Native pointer path, not solely the synthetic force API.
+ await page.evaluate(()=>{HAIR_LAB.resetDynamics();HAIR_LAB.setCamera({distance:.66,yaw:.12,pitch:.035,target:[0,-.002,0]});});await draw();await page.evaluate(()=>HAIR_LAB.setManual(false));await page.click('#brushMotion');
+ const box=await page.locator('canvas').boundingBox();await page.mouse.move(box.x+box.width*.51,box.y+box.height*.55);await page.mouse.down();await page.mouse.move(box.x+box.width*.51+22,box.y+box.height*.55-3);
+ await page.waitForFunction(()=>HAIR_LAB.snapshot().renderedGuideState?.maxOffset>.002,null,{timeout:180000});await page.evaluate(()=>HAIR_LAB.setManual(true));await image('native-grab');check('native drag bends while button held',(await snap()).guideMotion.maxOffset>.002);
+ await page.mouse.up();await page.evaluate(()=>{HAIR_LAB.setManual(false);HAIR_LAB.setWindEnabled(false);});await page.waitForFunction(()=>{const s=HAIR_LAB.snapshot();return s.guideMotion.maxOffset<.00001&&s.completedRevision===s.revision;},null,{timeout:180000});check('native release settles',true);
+ await page.click('#brushMotion');await page.click('#windMotion');const seq=(await snap()).seq;await page.waitForFunction(n=>HAIR_LAB.snapshot().seq>=n+2,seq,{timeout:180000});await page.click('#pauseMotion');await page.evaluate(()=>HAIR_LAB.setManual(true));s=await snap();check('native wind and pause',s.guideMotion.paused&&s.guideMotion.windEnabled,{motion:s.guideMotion,frameWallMS:s.completedFrameWallMS.slice(-4)});
+ await page.setViewportSize({width:390,height:844});await page.waitForFunction(()=>HAIR_LAB.snapshot().width===390);await page.evaluate(()=>HAIR_LAB.resetDynamics());await draw();await image('mobile');check('mobile layout fits',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.setViewportSize({width:1100,height:820});await page.waitForFunction(()=>HAIR_LAB.snapshot().width===816);await draw();await page.screenshot({path:`evidence/${label}-page.jpg`,type:'jpeg',quality:75,timeout:90000});s=await snap();check('no shader/runtime errors',errors.length===0&&s.errors.length===0,{errors});
+ report={url,label,source:process.env.GITHUB_SHA,results,errors,baseDiff,pipelineDiff,bench,profiles,final:s,limits:['Software GPU only; no desktop hardware FPS certification','Reduced bending basis, not exact inextensible hair/contacts','Pixel difference is not aesthetic acceptance; motion must be reviewed by user']};
+}catch(e){report={url,label,results,errors,bench,profiles,failure:String(e),snapshot:await snap().catch(()=>null)};throw e;}finally{fs.writeFileSync(`evidence/${label}.json`,JSON.stringify(report,null,2));await browser.close();}
