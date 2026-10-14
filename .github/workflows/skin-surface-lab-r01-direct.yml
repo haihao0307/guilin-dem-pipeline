@@ -1,0 +1,50 @@
+name: Skin Surface Lab R01 direct public verification
+on:
+  push:
+    branches: [feature/skin-surface-lab-r01-20261014]
+    paths: [.github/workflows/skin-surface-lab-r01-direct.yml]
+permissions:
+  contents: read
+jobs:
+  direct-public:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4669c23ceec256808907176ce2d42cedb626ae22
+          sparse-checkout: kaopu-unified-human-workbench/skin-surface-lab-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare browser and readable CJK evidence
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ssg-direct" playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/ssg-direct/node_modules" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = Linux ]; then sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk; fi
+      - name: Exact deployed bytes and real direct-page controls
+        shell: bash
+        run: |
+          mkdir -p direct-evidence
+          cat > direct-check.cjs <<'JS'
+          const fs=require('fs'),cp=require('child_process'),crypto=require('crypto'),{chromium}=require('playwright'),{PNG}=require('pngjs');
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/skin-surface-lab-r01-4669c23ceec2/',expected='05dbad16827b5a56961c094b104228765fc8eb88b4417f105337f73f7d9eb98e';
+          const R={version:'SKIN-SURFACE-LAB-R01',url,sourceCommit:'45c1090fcbcc780fa05ef7c08bf0475753fb34c4',buildCommit:'4669c23ceec256808907176ce2d42cedb626ae22',deployCommit:'6f6ce0da30d4a516656672254ea1ccaac1120753',complete:false,tests:[],screens:[],errors:[],requestFailures:[],httpErrors:[],consoleErrors:[],scope:'Direct public URL byte identity, first frame, six presets, geometry identity, closeup A/B and two live microstructure controls; real desktop software backend, not user physical GPU or cinematic certification'};
+          const hash=x=>crypto.createHash('sha256').update(x).digest('hex'),check=(v,m)=>{if(!v)throw Error(m)},save=()=>fs.writeFileSync('direct-evidence/qa.json',JSON.stringify(R,null,2)),pass=(name,data)=>{R.tests.push({name,pass:true,data});save();console.log('PASS',name)};let browser,page,cdp;
+          async function snap(name){await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const box=await page.locator('#canvas').boundingBox(),bytes=Buffer.from((await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'),im=PNG.sync.read(bytes),x=Math.ceil(box.x+10),y=Math.ceil(box.y+180),w=Math.floor(box.width-20),h=Math.floor(box.height-290);check(x>=0&&y>=0&&x+w<=im.width&&y+h<=im.height&&w>500&&h>500,'Invalid unobscured crop');const a=Buffer.alloc(w*h*4);for(let j=0;j<h;j++)im.data.copy(a,j*w*4,((y+j)*im.width+x)*4,((y+j)*im.width+x+w)*4);let min=255,max=0;for(let i=0;i<a.length;i+=148){min=Math.min(min,a[i]);max=Math.max(max,a[i]);}const r={name,sha256:hash(bytes),canvasRGBA256:hash(a),crop:{x,y,w,h,excludesUI:true},range:[min,max]};fs.writeFileSync('direct-evidence/'+name+'.png',bytes);R.screens.push(r);save();return r;}
+          async function geometry(){return page.evaluate(async()=>{const g=__IDENTITY_QA__.viewer().geometry,h=async a=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(a.buffer,a.byteOffset,a.byteLength))),x=>x.toString(16).padStart(2,'0')).join('');return{positions:await h(g.attributes.position.array),indices:await h(g.index.array),vertices:g.attributes.position.count,triangles:g.index.count/3};});}
+          (async()=>{const canonical=cp.execFileSync('git',['show','HEAD:kaopu-unified-human-workbench/skin-surface-lab-r01/preview.html'],{maxBuffer:12000000});check(hash(canonical)===expected,'Canonical source mismatch');let bytes;for(let i=0;i<20;i++){try{const response=await fetch(url);if(response.ok){const b=Buffer.from(await response.arrayBuffer());if(hash(b)===expected){bytes=b;break;}}}catch{}await new Promise(r=>setTimeout(r,5000));}check(bytes,'Fixed Pages URL not serving canonical bytes');pass('exact direct-public HTML bytes',{sha256:hash(bytes),bytes:bytes.length});const win=process.platform==='win32';browser=await chromium.launch({channel:'chrome',headless:true,args:win?['--use-angle=d3d11-warp']:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});R.browser=browser.version();R.platform=process.platform;page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});page.setDefaultTimeout(120000);cdp=await page.context().newCDPSession(page);page.on('pageerror',e=>R.errors.push(String(e)));page.on('requestfailed',r=>R.requestFailures.push({url:r.url(),error:r.failure()}));page.on('response',r=>{if(r.status()>=400)R.httpErrors.push({url:r.url(),status:r.status()});});page.on('console',m=>{if(m.type()==='error')R.consoleErrors.push({message:m.text(),location:m.location()});});const t=Date.now();await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.skinSurfaceLab&&(skinSurfaceLab.report().ready||skinSurfaceLab.report().errors.length),null,{timeout:240000});R.first=await page.evaluate(()=>skinSurfaceLab.report());R.firstMS=Date.now()-t;check(R.first.ready&&R.first.graphics.valid,'Page did not render or shader failed');if(win)check(R.first.graphics.caps.fragmentSamplers===16&&/Direct3D11|D3D11/.test(R.first.graphics.driver),'Windows target backend mismatch');const first=await snap('00-direct-unassisted');check(first.range[1]-first.range[0]>30,'Blank first frame');pass('direct unassisted first frame and linked skin program',R.first.graphics);const base=await geometry(),hashes=[];for(const id of ['satin','porcelain','warm','deep','dry','mixed']){await page.locator('[data-ssg-preset="'+id+'"]').click();hashes.push((await snap('preset-'+id)).canvasRGBA256);}check(new Set(hashes).size===6,'Preset pixels not distinct');check(JSON.stringify(await geometry())===JSON.stringify(base),'Skin controls altered geometry');pass('six real buttons change skin not geometry or overlay text',{hashes,geometry:base});await page.locator('[data-ssg-preset="satin"]').click();await page.locator('[data-ssg-view="macro"]').click();const macro=await snap('macro-new');await page.locator('#ssg-ab').click();check((await snap('macro-original')).canvasRGBA256!==macro.canvasRGBA256,'A/B inactive');await page.locator('#ssg-ab').click();check((await snap('macro-return')).canvasRGBA256===macro.canvasRGBA256,'A/B does not restore exact pixels');pass('closeup A/B and exact return',true);const recipe=await page.evaluate(()=>skinSurfaceLab.archive());for(const [k,v] of [['pore',1.4],['micro',1.4]]){await page.evaluate(r=>skinSurfaceLab.restore(r),recipe);await page.locator('[data-ssg-param="'+k+'"]').evaluate((e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},v);check((await snap('control-'+k)).canvasRGBA256!==macro.canvasRGBA256,'Inert microstructure control '+k);}await page.evaluate(r=>skinSurfaceLab.restore(r),recipe);pass('pore and micro-line controls alter rendered skin',true);const icon=u=>/\/favicon\.ico(?:\?|$)/.test(u);R.hostIcons={http:R.httpErrors.filter(x=>icon(x.url)),console:R.consoleErrors.filter(x=>icon(x.location?.url||''))};check(!R.errors.length&&!R.requestFailures.length,'Runtime or network failure');check(!R.httpErrors.filter(x=>!icon(x.url)).length&&!R.consoleErrors.filter(x=>!icon(x.location?.url||'')).length,'Application HTTP/console failure');pass('no application errors; host icon requests separate',R.hostIcons);R.complete=true;
+          })().catch(async e=>{R.failure=String(e.stack||e);console.error(e);save();try{R.body=await page.locator('body').innerText();await snap('FAILED');}catch{}process.exitCode=1;}).finally(async()=>{save();await browser?.close();});
+          JS
+          node direct-check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-surface-lab-r01-direct-${{ matrix.os }}
+          path: direct-evidence/
+          retention-days: 14
