@@ -1,0 +1,110 @@
+{
+  "schema": "kaopu.skin-surface-spec/1",
+  "skill": "kaopu-skin-surface-grammar",
+  "version": "SSG-01-R01",
+  "purpose": "Interface example, not a render-ready or physiologically calibrated skin preset",
+  "status": {
+    "referenceAuditVerified": true,
+    "generatorImplemented": false,
+    "rendererIntegrated": false,
+    "userVisualAccepted": false
+  },
+  "provenance": {
+    "referenceRepository": "lo-th/head",
+    "referenceCommit": "21462e471d53ba8c413a96989016510ca4495a34",
+    "existingProjectBaseline": "5fa10e2270abc607c937e50cb90464f98ff23735",
+    "inheritedRules": "NSR-01",
+    "externalRuntimeAssetsAllowed": false,
+    "referencePixelsMayBecomeProductionAssets": false,
+    "modelGeometryMayBeReplaced": false
+  },
+  "identity": {
+    "personId": "example-subject-not-a-real-person",
+    "seed": 1041401,
+    "seedPurpose": "Stable feature identity, not physical randomness or demographic classification",
+    "anatomyAdapterId": "required-own-surface-adapter",
+    "materialCoordinates": "subject-rest-surface-mm",
+    "landmarkAtlasVersion": "unavailable-until-own-adapter-is-implemented",
+    "preserveFeatureIdsAcrossStateChanges": true,
+    "separateRestMorphologyFromElasticDeformation": true
+  },
+  "regions": [
+    {"id": "forehead", "rules": "ordinary-skin", "calibration": "uncalibrated"},
+    {"id": "nose", "rules": "ordinary-skin", "calibration": "uncalibrated"},
+    {"id": "left-cheek", "rules": "ordinary-skin", "calibration": "uncalibrated"},
+    {"id": "right-cheek", "rules": "ordinary-skin", "calibration": "uncalibrated"},
+    {"id": "periocular", "rules": "periocular-specialized", "calibration": "uncalibrated"},
+    {"id": "vermilion", "rules": "vermilion-specialized-no-facial-follicle-pores", "calibration": "uncalibrated"},
+    {"id": "ear", "rules": "ear-specialized", "calibration": "uncalibrated"},
+    {"id": "scalp", "rules": "scalp-specialized", "calibration": "uncalibrated"},
+    {"id": "neck", "rules": "neck-specialized", "calibration": "uncalibrated"}
+  ],
+  "microstructure": {
+    "sourceOfTruth": "own-procedural-feature-graph-and-height-fields",
+    "poreDensityPerMm2": null,
+    "poreDiameterDistributionMm": null,
+    "poreDepthDistributionMm": null,
+    "microWrinkleWidthDistributionMm": null,
+    "microWrinkleDepthDistributionMm": null,
+    "orientationField": "required-from-own-anatomy",
+    "topologyRule": "pore-nodes-and-curated-micro-wrinkle-graph",
+    "calibration": "No metric calibration was derived from the source JPEGs. Null is unavailable, never zero.",
+    "measurementRequired": ["source-capture-conditions", "anatomical-region", "pixel-to-surface-metric", "height-calibration-or-independent-reference"]
+  },
+  "optics": {
+    "appearanceBackend": "reuse-existing-BioSkin-2D-LUT-through-adapter",
+    "melaninCoordinate": "inherit-existing-person",
+    "hemoglobinCoordinate": "inherit-existing-person",
+    "coordinateUnits": "normalized-LUT-coordinates-not-medical-concentrations",
+    "fullFiveDimensionalBioSkinEditingImplemented": false,
+    "volumeOpticsBackend": "unavailable",
+    "absorptionPerMm": null,
+    "reducedScatteringPerMm": null,
+    "effectiveScatteringDistanceMm": null,
+    "skinThicknessMm": null,
+    "metalness": 0,
+    "specularLobes": "dielectric-energy-accounted-adapter-required",
+    "fuzz": "separate-structural-layer-not-equivalent-to-sheen"
+  },
+  "state": {
+    "separateFromIdentity": true,
+    "oilFilm": "inherit-baseline-until-calibrated",
+    "sweat": "off-until-implemented",
+    "vascularVariation": "off-until-calibrated",
+    "deformationSource": "read-only-existing-expression-deformation",
+    "wrinkleResponse": "directional-strain-width-depth-response-required",
+    "clockDrivenGlobalWrinklesAllowed": false,
+    "actionCachingRequested": false
+  },
+  "compiler": {
+    "rendererAdapter": "not-implemented-by-this-skill-document",
+    "constantLighting": "EB1-existing-project",
+    "generatedCacheAllowed": true,
+    "cacheIsOnlySourceOfTruth": false,
+    "externalUVOrPixelCopyAllowed": false,
+    "scheduling": "continuous-surface-pixel-footprint-demand",
+    "fixedDistanceLODBandsAllowed": false,
+    "unresolvedMicrogeometry": "transfer-slope-statistics-to-roughness-not-flat-normal-fade",
+    "colourOutputs": "linear-RGB",
+    "dataOutputs": "non-colour-linear-fields",
+    "samplerBudget": "query-actual-device-and-full-character-active-samplers-before-adding-fields",
+    "cacheKeyFields": ["schema", "algorithmVersion", "personId", "seed", "anatomyMetricVersion", "recipeDigest"]
+  },
+  "requestedOutputs": [
+    "baseColorLinear", "heightMm", "tangentSlope", "normalTS", "roughness",
+    "unresolvedSlopeCovariance", "dielectricSpecularResponse", "scatteringParameters",
+    "stablePigmentFeatures", "fuzzAnchors", "calibrationAndValidityReport"
+  ],
+  "acceptance": {
+    "normalOnlyMustNotClaimGeometricFolds": true,
+    "fileExistsIsNotShaderLiveness": true,
+    "needsRealChannelAblation": true,
+    "needsMultipleHeadShapes": true,
+    "needsStaticAndExpressionChecks": true,
+    "needsNearToFarContinuousCheck": true,
+    "needsNeutralWarmCoolLightingChecks": true,
+    "needsColdLoadAndSwitchMemoryChecks": true,
+    "needsFixedPublicHTTPSPreviewForInteractiveDelivery": true,
+    "numericalOrCIApprovalIsNotVisualApproval": true
+  }
+}
