@@ -1,0 +1,58 @@
+name: Knit public P01 fixed-commit HTTPS preview
+on:
+  push:
+    branches: [verify/knit-public-p01-fixed-preview-20261014]
+    paths: [.github/workflows/knit-public-p01-fixed-preview.yml]
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-public-p01
+            docs/knit-public-p01
+          fetch-depth: 1
+      - name: Check the exact already-public runtime bytes
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib
+          url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/3df3869059a3382da14b2b8138de5a02262c6b38/kaopu-fabric-workbench/knit-public-p01/index.html'
+          data=urllib.request.urlopen(url,timeout=30).read()
+          assert hashlib.sha256(data).hexdigest()=='4c242ead757152e34aab251338df0c06d6c966b8d609862ea3e0614ad6097e2b'
+          print('Already-public runtime bytes match the browser-tested specimen.')
+          PY
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Render fixed public HTTPS preview and test controls
+        env:
+          KNIT_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/3df3869059a3382da14b2b8138de5a02262c6b38/kaopu-fabric-workbench/knit-public-p01/index.html
+          KNIT_QA_OUT: fixed-preview-qa
+        run: python kaopu-fabric-workbench/knit-public-p01/qa.py
+      - name: Preserve fixed-preview evidence
+        run: |
+          python - <<'PY'
+          import pathlib,json,shutil
+          r=json.loads(pathlib.Path('fixed-preview-qa/REPORT.json').read_text());assert r['passed'] and r['public']
+          dest=pathlib.Path('docs/knit-public-p01/fixed-preview');dest.mkdir(parents=True,exist_ok=True);shutil.copytree('fixed-preview-qa',dest,dirs_exist_ok=True)
+          state={'version':'KNIT-PUBLIC-P01','publicURL':r['url'],'publicURLVerified':True,'browserChecksPassed':len(r['checks']),'runtimeHTMLSHA256':'4c242ead757152e34aab251338df0c06d6c966b8d609862ea3e0614ad6097e2b','runtimeHTMLBytes':753073,'wrapperDocumentSHA256':r['htmlSHA256'],'buildCommit':'3df3869059a3382da14b2b8138de5a02262c6b38','sourceCommit':'7d1ee80eb9e9b7da553b5110fc1b3173d7f3062b','privateRuntimeImported':False,'nativeR15':False,'nativeR01_2Published':False,'clothPhysics':False,'userVisualAccepted':False,'referenceQualityAchieved':False,'device':r['device'],'scope':'New independent public appearance specimen, not original private workbench publication.'}
+          (dest/'DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2)+'\n')
+          PY
+          BRANCH=verify/knit-public-p01-fixed-preview-20261014
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/knit-public-p01/fixed-preview
+          git commit -m 'docs(knit-public): archive independently verified fixed-commit HTTPS preview'
+          git push origin "HEAD:refs/heads/$BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-public-p01-fixed-preview-evidence
+          path: |
+            fixed-preview-qa/
+            docs/knit-public-p01/fixed-preview/DELIVERY.json
+          retention-days: 14
