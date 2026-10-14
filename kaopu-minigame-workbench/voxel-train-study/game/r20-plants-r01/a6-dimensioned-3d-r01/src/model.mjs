@@ -30,17 +30,17 @@ export function buildTrain(T){
  skin(E,0,4.25,x=>smoothAt(x)[1],x=>smoothAt(x)[2],'paint','one-field double-curved nose',150,56);
  skin(E,4.25,10.15,cutAt,D.cabGlassSill,'paint','continuous cab lower shell with swept wheel opening',130,28);
  skin(E,10.15,20.10,cutAt,x=>smoothAt(x)[2],'paint','continuous boiler body loft and wheel opening',180,56);
- const glass=skin(E,4.25,10.15,D.cabGlassSill,x=>smoothAt(x)[2]-.003,'glass','closed thick tinted panoramic canopy',130,52,.012);for(const o of glass)o.renderOrder=8;
- const innerGlass=M.glass.clone();innerGlass.opacity=.14;skin(E,4.25,10.15,D.cabGlassSill+.014,x=>smoothAt(x)[2]-.025,innerGlass,'canopy inner glass wall 22 mm',90,32,-.010);
+ const glass=skin(E,4.25,10.15,D.cabGlassSill,x=>smoothAt(x)[2],'glass','closed thick tinted panoramic canopy',130,52,0);for(const o of glass)o.renderOrder=8;
+ const innerGlass=M.glass.clone();innerGlass.opacity=.14;const innerCanopy=skin(E,4.25,10.15,D.cabGlassSill+.014,x=>smoothAt(x)[2],innerGlass,'canopy inner glass wall 18 mm',90,32,-.010);for(const o of innerCanopy)o.position.z=-.018;
  surface(E,4.30,10.15,(x,v)=>{const y=-.36+.72*v;return[x,y,roofAtY(x,y)+.013]},'paint','continuous dark green canopy roof spine',100,20);
  for(const side of[-1,1]){
   E.pipe(Array.from({length:80},(_,i)=>{const x=4.25+5.9*i/79;return[x,side*(halfAt(x,D.cabGlassSill)+.022),D.cabGlassSill]}),.025,'steel','low panoramic window surround');
   E.pipe(Array.from({length:140},(_,i)=>{const x=.15+19.95*i/139,z=Math.min(D.goldStripe,smoothAt(x)[2]-.23);return[x,side*(halfAt(x,z)+.016),z]}),.023,'gold','gold belt follows actual skin');
-  for(const x of[4.25,5.50,7.10,8.65,10.15]){const hi=smoothAt(x)[2]-.012;E.pipe(Array.from({length:48},(_,i)=>{const z=D.cabGlassSill+(hi-D.cabGlassSill)*i/47;return[x,side*(halfAt(x,z)+.022),z]}),x===4.25||x===10.15?.032:.015,'steel','flush canopy arch follows shared loft');}
+  for(const x of[4.25,5.50,7.10,8.65,10.15]){const hi=smoothAt(x)[2];E.pipe(Array.from({length:48},(_,i)=>{const z=D.cabGlassSill+(hi-D.cabGlassSill)*i/47;return[x,side*(halfAt(x,z)+.022),z]}),x===4.25||x===10.15?.032:.015,'steel','flush canopy arch follows shared loft');}
   for(const [a,b]of[[.35,8.56],[17.44,20.1]])E.pipe(Array.from({length:65},(_,i)=>{const x=a+(b-a)*i/64,z=cutAt(x)+.04;return[x,side*(halfAt(x,z)+.006),z]}),.016,'steel','swept curved skirt edge');
   for(let q=0;q<3;q++){const x=10.70+q*.34;skin(E,x-.07,x+.07,2.93,3.44,'black','rearward recessed cooling gill '+q,8,18,.016);}
   addBrand(wordmark,6.62,[15.12,side*(halfAt(15.12,3.03)+.020),3.03],side,M.gold,shell,'existing Flying Hongkonger identity');
-  L.relief(shell,'88',.58,.010,[2.8,side*(halfAt(2.8,1.70)+.020),1.70],side,M.gold);
+  const numberY=side*(halfAt(2.8,1.70)+.020),number=L.relief(shell,'88',.58,.010,[2.8,numberY,1.70],side,M.gold);number.updateMatrix();number.geometry=number.geometry.clone();number.geometry.applyMatrix4(number.matrix);number.position.set(0,0,0);number.rotation.set(0,0,0);number.scale.set(1,1,1);const np=number.geometry.attributes.position;for(let j=0;j<np.count;j++){const depth=side*(np.getY(j)-numberY);np.setY(j,side*(halfAt(np.getX(j),np.getZ(j))+.018+depth));}number.geometry.computeVertexNormals();number.userData.surfaceConformed=true;
  }
  function addBrand(recipe,width,at,side,material,parent,name){const scale=width/recipe.size_px[0],g=new T.ExtrudeGeometry(contourShapes(T,recipe),{depth:.009/scale,bevelEnabled:false,curveSegments:1});g.scale(scale,scale,scale);g.translate(-width/2,width*recipe.size_px[1]/recipe.size_px[0]/2,0);const o=new T.Mesh(g,material);o.name=name;o.applyMatrix4(L.sideMatrix(side,at));o.userData={source:recipe.source_sha256||recipe.asset,originalContours:true,widthM:width};parent.add(o);return o;}
  // Single high-forward driver position, full-size seat, generous work zone behind.
