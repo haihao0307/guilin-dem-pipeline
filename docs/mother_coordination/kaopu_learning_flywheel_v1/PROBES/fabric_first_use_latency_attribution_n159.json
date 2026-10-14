@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu.regression-fixture/1",
+  "caseId": "PHASE-LOCAL-TIMER-NOT-END-TO-END-READINESS-001",
+  "boundedQuestion": "Does Fabric R03 prove user-visible seconds-scale first-use progress, or only scheduling correctness with an incomplete latency clock?",
+  "observed": {
+    "mother": "Human/Fabric",
+    "pr": 289,
+    "publicHeadSha": "bc7f0b53ef995a8d03ffcd3e70f55ed16f6d9efd",
+    "sourceSha": "3be635ad51dc81e6ea2dbc773849ca14cba3579f",
+    "publicRuntimeSha": "fa5ad06ca9cc2e2fc61cecc304cab2a1e74f2776",
+    "nativeRun": 38549352676,
+    "publicBrowserRun": 38550549508,
+    "persistenceRun": 38552378492,
+    "exactSubjectBound": true,
+    "schedulerAssertionsPassed": true,
+    "visualEquivalencePassed": true,
+    "performanceDeltaClaimed": false,
+    "controlledPairedComparison": false,
+    "endToEndStartMark": "UNKNOWN",
+    "firstUsableCanvasEndMark": "material-ready",
+    "phaseCoverageComplete": false,
+    "knownMissingPhases": [
+      "compileShader and linkProgram calls before waitPrograms",
+      "first-use deferred GPU compilation",
+      "GPU completion boundary",
+      "input responsiveness during startup"
+    ],
+    "phasePositiveControlsPassed": false,
+    "longTaskObservationBound": false,
+    "targetBudgetFrozen": false,
+    "observedPublicDenimReadyMs": 95860,
+    "observedNativeDenimReadyMs": 118240,
+    "observedLeatherReadyMs": 21860,
+    "reportedLocalCompileWaitMs": 184,
+    "userAccepted": false
+  },
+  "minimumTrial": {
+    "sameEnvironmentPair": ["R02", "R03"],
+    "separateRuns": ["cold-cache", "warm-cache"],
+    "requiredMarks": [
+      "selection-received",
+      "runtime-byte-ready",
+      "decrypt-start/end",
+      "parse-eval-start/end",
+      "gl-context-ready",
+      "shader-submit-start/end",
+      "program-completion-start/end",
+      "first-use-start/end",
+      "geometry-start/end",
+      "sample-start/end",
+      "first-meaningful-canvas",
+      "interaction-ready",
+      "material-ready"
+    ],
+    "requiredChecks": [
+      "all parent-child spans are nested or explicitly parallel",
+      "union of top-level spans covers selection-received through material-ready without unexplained gaps",
+      "phase durations do not double-count parallel work",
+      "Long Tasks support is checked and entries are bound to the exact run",
+      "KHR_parallel_shader_compile support and exercised path are recorded",
+      "same-parameter restore, duplicate selection and last-selection-wins assertions remain green"
+    ],
+    "positiveControls": [
+      "inject a bounded pre-submit delay and require shader-submit span growth",
+      "inject a bounded first-use stall and require first-use span growth",
+      "inject a main-thread busy loop over 50 ms and require a longtask entry when supported"
+    ],
+    "nonClaims": [
+      "physical-device GPU performance from software Chromium",
+      "total shader compilation time from waitPrograms only",
+      "speedup ratio from unpaired native and public runs",
+      "all-material seconds-open",
+      "user acceptance"
+    ]
+  },
+  "cases": [
+    {"id":"SUBJECT_UNBOUND","input":{"exactSubjectBound":false},"expect":"HOLD_SUBJECT_OR_RUN_UNBOUND"},
+    {"id":"SCHEDULER_UNVERIFIED","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":false},"expect":"HOLD_SCHEDULING_EVIDENCE_UNBOUND"},
+    {"id":"VISUAL_EQUIVALENCE_FAIL","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":false},"expect":"HOLD_VISUAL_EQUIVALENCE_FAIL"},
+    {"id":"CURRENT_LOCAL_TIMER_ONLY","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"UNKNOWN","phaseCoverageComplete":false},"expect":"HOLD_END_TO_END_PHASE_ATTRIBUTION_GAP"},
+    {"id":"MISSING_FIRST_USE_GPU_PHASE","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":false},"expect":"HOLD_END_TO_END_PHASE_ATTRIBUTION_GAP"},
+    {"id":"UNPAIRED_SPEEDUP_CLAIM","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":true,"controlledPairedComparison":false},"expect":"HOLD_UNCONTROLLED_PERFORMANCE_COMPARISON"},
+    {"id":"NO_PHASE_POSITIVE_CONTROL","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":false,"phasePositiveControlsPassed":false},"expect":"HOLD_PHASE_INSTRUMENT_POSITIVE_CONTROL_MISSING"},
+    {"id":"RESPONSIVENESS_UNMEASURED","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":false,"phasePositiveControlsPassed":true,"longTaskObservationBound":false},"expect":"HOLD_INTERACTION_RESPONSIVENESS_UNMEASURED"},
+    {"id":"BUDGET_UNFROZEN","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":false,"phasePositiveControlsPassed":true,"longTaskObservationBound":true,"targetBudgetFrozen":false},"expect":"HOLD_USER_LATENCY_BUDGET_UNFROZEN"},
+    {"id":"SCOPED_PASS_USER_PENDING","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":true,"controlledPairedComparison":true,"phasePositiveControlsPassed":true,"longTaskObservationBound":true,"targetBudgetFrozen":true,"latencyBudgetPassed":true,"userAccepted":false},"expect":"END_TO_END_FIRST_USE_LATENCY_VERIFIED_NOT_USER_ACCEPTED"},
+    {"id":"SCOPED_PASS_USER_ACCEPTED","input":{"exactSubjectBound":true,"schedulerAssertionsPassed":true,"visualEquivalencePassed":true,"endToEndStartMark":"selection-received","phaseCoverageComplete":true,"performanceDeltaClaimed":true,"controlledPairedComparison":true,"phasePositiveControlsPassed":true,"longTaskObservationBound":true,"targetBudgetFrozen":true,"latencyBudgetPassed":true,"userAccepted":true},"expect":"USER_ACCEPTED"}
+  ]
+}
