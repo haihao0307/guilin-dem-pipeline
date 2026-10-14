@@ -1,5 +1,7 @@
 # 人物总平台 · 分层皮肤与嘴唇 R02
 
+[打开固定公网审核版](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7ad9130c6796a833503a4fec74607aa7740340f8/kaopu-unified-human-workbench/review-platform-r02-layered-skin-20261014/preview.html)。该地址固定在提交 `7ad9130c6796a833503a4fec74607aa7740340f8`，不会随以后修改改变。
+
 在已发布 R01 人物总平台上增加分层组织的颜色传输、区域血色、独立表面脂质和唇红湿润区。界面仍只提供预设与对照；用户审核外观，内部数值由开发者维护。
 
 - 表面脂质/水膜独立控制反射；角质屏障、活性表皮、乳头真皮、网状真皮、皮下散射背景分别参与计算。
