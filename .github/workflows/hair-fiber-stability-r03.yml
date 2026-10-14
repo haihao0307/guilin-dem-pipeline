@@ -31,7 +31,7 @@ jobs:
           git checkout --detach "$GITHUB_SHA"
           git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > /tmp/changes.txt
           cat /tmp/changes.txt
-          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r03/|\.github/workflows/hair-fiber-stability-r03\.yml$)' /tmp/changes.txt; then exit 1; fi
+          if grep -Ev '^(kaopu-hair-workbench/research/fiber-r03/|\.github/workflows/hair-fiber-stability-r03\.yml$|\.github/workflows/hair-fiber-r03-motion-audit\.yml$)' /tmp/changes.txt; then exit 1; fi
           REQUIRE_BASELINE=1 node --test kaopu-hair-workbench/research/fiber-r01/tests/probes.test.mjs
           node --test "$ROOT/tests/core.mjs"
       - name: Pinned self-contained rendering build
