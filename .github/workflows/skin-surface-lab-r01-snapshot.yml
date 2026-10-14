@@ -1,0 +1,29 @@
+name: Skin Surface Lab R01 source snapshot
+on:
+  push:
+    branches: [feature/skin-surface-lab-r01-20261014]
+    paths: [.github/workflows/skin-surface-lab-r01-snapshot.yml]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-dna-r02-1
+            .github/workflows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skin-surface-lab-r01-source
+          path: |
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.mjs
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.json
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.md
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.py
+            kaopu-unified-human-workbench/skin-dna-r02-1/*.html
+            .github/workflows/*skin*.yml
+          include-hidden-files: true
+          retention-days: 7
