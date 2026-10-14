@@ -69,7 +69,7 @@ R2 已要求重要用户纠错生成 regression case。PR #288 做到了：
 
 `CANDIDATE_ONLY_TARGETED_SKIN_TRIAL_REQUIRED`
 
-- POSTED：等待定向路由至 PR #288
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/288#issuecomment-6167550625
 - CLASSIFICATION-GATE-RUN：8/8
 - ACKNOWLEDGED / IMPLEMENTED / SKIN-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED：false
 
