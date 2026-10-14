@@ -4,6 +4,7 @@ on:
     branches: [feature/skin-fullbody-r02-20261014]
     paths:
       - 'kaopu-unified-human-workbench/skin-fullbody-r02/BodySurface.js'
+      - 'kaopu-unified-human-workbench/skin-fullbody-r02/BodyLookC2.js'
       - 'kaopu-unified-human-workbench/skin-fullbody-r02/build.cjs'
       - 'kaopu-unified-human-workbench/skin-fullbody-r02/verify-body.cjs'
       - '.github/workflows/skin-fullbody-r02.yml'
@@ -34,6 +35,15 @@ jobs:
       - name: Whole-body candidate anatomy and control gates
         env: {BODY_OUT: fullbody-evidence/candidate-body}
         run: node kaopu-unified-human-workbench/skin-fullbody-r02/verify-body.cjs
+      - name: Preserve inspectable candidate evidence before regression
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skin-fullbody-r02-visual-candidate-${{ github.run_number }}
+          path: |
+            fullbody-evidence/candidate-body/
+            kaopu-unified-human-workbench/skin-fullbody-r02/
+          retention-days: 14
       - name: Preserved native person and head surface regressions
         env: {QA_OUT: fullbody-evidence/candidate-core, CONTROL_OUT: fullbody-evidence/candidate-controls}
         run: |
@@ -72,7 +82,7 @@ jobs:
           for key,name in [('body','PUBLIC_BODY_QA.json'),('core','PUBLIC_QA.json'),('controls','PUBLIC_CONTROL_QA.json')]:
             (p/name).write_text(json.dumps(qs[key],ensure_ascii=False,indent=2))
             shutil.copytree(f'fullbody-evidence/public-{key}',p/'acceptance'/key,dirs_exist_ok=True)
-          d={'version':m['version'],'status':'public-interactive-candidate','publicURL':qs['body']['url'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'testGroups':{k:len(v['tests']) for k,v in qs.items()},'headSliders':15,'bodyTissueSliders':10,'wholeBodySkin':True,'geometryChanged':False,'referenceAssetsImported':0,'newSkinImageMaps':0,'fullVolumeScattering':False,'physicalPhone':False,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'productionReady':False}
+          d={'version':m['version'],'lookCalibration':m['lookCalibration'],'status':'public-interactive-candidate','publicURL':qs['body']['url'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'testGroups':{k:len(v['tests']) for k,v in qs.items()},'headSliders':15,'bodyTissueSliders':10,'wholeBodySkin':True,'geometryChanged':False,'referenceAssetsImported':0,'newSkinImageMaps':0,'fullVolumeScattering':False,'physicalPhone':False,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'productionReady':False}
           (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
           PY
           git add kaopu-unified-human-workbench/skin-fullbody-r02
