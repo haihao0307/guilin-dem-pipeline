@@ -1,0 +1,46 @@
+name: Hair Fiber R02 Evidence Review
+on:
+  push:
+    branches: [research/hair-fiber-lookdev-physics-r01-20261014]
+    paths: ['.github/workflows/hair-fiber-r02-review.yml']
+permissions:
+  contents: write
+jobs:
+  export-existing-failed-render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Read exact existing screenshot and create compact inspection copy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git sparse-checkout init --cone
+          git sparse-checkout set kaopu-hair-workbench/research/fiber-r02/evidence
+          git fetch --filter=blob:none --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach "$GITHUB_SHA"
+          python -m pip install --quiet Pillow==11.3.0
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import base64,io,json,hashlib
+          p=Path('kaopu-hair-workbench/research/fiber-r02/evidence')
+          original=p/'candidate-failure.jpg'
+          im=Image.open(original)
+          im=im.crop((290,160,735,805));im.thumbnail((200,290))
+          out=io.BytesIO();im.save(out,format='JPEG',quality=42,optimize=True)
+          data=out.getvalue()
+          (p/'failed-render-review.base64.txt').write_text(base64.b64encode(data).decode()+'\n')
+          (p/'failed-render-review.json').write_text(json.dumps({'source':'43d18b349e7733dba8e43e5fc076d3003cb0ca59','original':original.name,'originalSHA256':hashlib.sha256(original.read_bytes()).hexdigest(),'operation':'crop only and resize, no retouch, no generated image','crop':[290,160,735,805],'size':im.size,'bytes':len(data),'inspectionOnly':True},indent=2)+'\n')
+          print(len(data))
+          PY
+          git add kaopu-hair-workbench/research/fiber-r02/evidence/failed-render-review.*
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'test(hair-r02): compact inspection copy of actual failed render, not new delivery [skip ci]'
+          BRANCH=research/hair-fiber-lookdev-physics-r01-20261014
+          test "$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          HEADER="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$HEADER" push origin "HEAD:refs/heads/$BRANCH"
