@@ -1,0 +1,13 @@
+{
+  "name": "kaopu-unified-human-review-platform",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "bundle": "esbuild integration/merge.mjs --bundle --format=iife --minify --outfile=integration/merge.bundle.js",
+    "build": "npm run bundle && node build-platform.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "playwright": "1.58.2"
+  }
+}

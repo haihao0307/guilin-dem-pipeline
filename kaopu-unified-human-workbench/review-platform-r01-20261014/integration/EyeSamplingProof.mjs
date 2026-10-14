@@ -1,0 +1,9 @@
+import * as T from './three.module.js';
+export function checkEyeSampling(renderer,packed,sources){
+ const scene=new T.Scene(),camera=new T.Camera(),geometry=new T.PlaneGeometry(2,2),target=new T.WebGLRenderTarget(128,128,{depthBuffer:false,stencilBuffer:false}),U={sourceMap:{value:sources[0]},packedMap:{value:packed},layer:{value:0},level:{value:0},packedMode:{value:false}};
+ const material=new T.ShaderMaterial({uniforms:U,glslVersion:T.GLSL3,depthTest:false,depthWrite:false,vertexShader:'out vec2 q;void main(){q=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:'precision highp sampler2DArray;uniform sampler2D sourceMap;uniform sampler2DArray packedMap;uniform float layer,level;uniform bool packedMode;in vec2 q;out vec4 result;void main(){vec3 a=textureLod(sourceMap,q,level).rgb;vec3 b=textureLod(packedMap,vec3(q,layer),level).rgb;result=vec4(packedMode?b:a,1.);}'});scene.add(new T.Mesh(geometry,material));
+ const prior=renderer.getRenderTarget(),viewport=renderer.getViewport(new T.Vector4()),cases=[];const a=new Uint8Array(128*128*4),b=new Uint8Array(a.length);
+ try{renderer.setRenderTarget(target);for(let i=0;i<3;i++)for(const lod of [0,2.25,5]){U.sourceMap.value=sources[i];U.layer.value=i;U.level.value=lod;U.packedMode.value=false;renderer.render(scene,camera);renderer.readRenderTargetPixels(target,0,0,128,128,a);U.packedMode.value=true;renderer.render(scene,camera);renderer.readRenderTargetPixels(target,0,0,128,128,b);let max=0,changed=0;for(let k=0;k<a.length;k++){const d=Math.abs(a[k]-b[k]);max=Math.max(max,d);changed+=d>0?1:0;}cases.push({layer:i,lod,maxByteDelta:max,changedChannels:changed});}
+ }finally{renderer.setRenderTarget(prior);renderer.setViewport(viewport);target.dispose();geometry.dispose();material.dispose();}
+ return{method:'actual GPU textureLod, sRGB decode, 128x128 full RGBA per case',cases,passed:cases.every(c=>c.maxByteDelta<=1),comparisonTolerance:'at most 1/255 output channel',sourceResized:false};
+}
