@@ -1,0 +1,78 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "PHASE-LOCAL-TIMER-NOT-END-TO-END-READINESS-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Human/Fabric",
+    "taskClass": "FIRST_USE_LATENCY_OR_SECONDS_OPEN_CLAIM",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A phase-local timer can be mistaken for total first-use latency even when it starts after expensive work has already begun and omits deferred GPU work, useful-paint readiness and interaction blocking.",
+    "observedSubject": {
+      "pr": 289,
+      "publicHeadSha": "bc7f0b53ef995a8d03ffcd3e70f55ed16f6d9efd",
+      "sourceSha": "3be635ad51dc81e6ea2dbc773849ca14cba3579f",
+      "publicRuntimeSha": "fa5ad06ca9cc2e2fc61cecc304cab2a1e74f2776",
+      "publicBrowserRun": 38550549508,
+      "nativeRun": 38549352676,
+      "reportedCompileWaitMs": 184,
+      "publicDenimReadyMs": 95860,
+      "nativeDenimReadyMs": 118240,
+      "disclosure": "R03 correctly states that compileMs starts after nine program submissions and is not total shader compilation or all-material seconds-open evidence."
+    }
+  },
+  "falsifiableHypothesis": "An exact-run, gap-checked phase ledger with injected-delay positive controls and long-task observation will preserve R03 scheduling/visual evidence while refusing an end-to-end or speedup claim when the clock omits pre-wait shader work, first-use GPU delay, useful paint, responsiveness, a controlled pair, or a frozen latency budget.",
+  "requiredReceiptFields": [
+    "testedSubjectSha",
+    "runIdentity",
+    "environmentProfile",
+    "cacheState",
+    "userActionStartMark",
+    "firstMeaningfulCanvasMark",
+    "interactionReadyMark",
+    "materialReadyMark",
+    "phaseSpanLedger",
+    "phaseCoverageDecision",
+    "parallelSpanAccounting",
+    "shaderCompileExtensionSupport",
+    "shaderPathExercised",
+    "longTaskSupport",
+    "longTaskEntries",
+    "phasePositiveControlResults",
+    "controlledBaselineRunOrNotClaimed",
+    "latencyBudgetProfileId",
+    "latencyDecision",
+    "userAcceptance"
+  ],
+  "mustNeverRepeat": [
+    "rename waitPrograms duration as total shader compilation time",
+    "infer a speedup percentage from unmatched environments or cache states",
+    "treat non-blocking completion polling as proof that total GPU work decreased",
+    "treat phase labels in the UI as proof that the critical path is fully covered",
+    "claim responsive interruption without a bound input or long-task observation",
+    "promote scheduling correctness or pixel equivalence into seconds-open or user acceptance"
+  ],
+  "decisions": [
+    "SCHEDULING_CORRECTNESS_VERIFIED",
+    "VISUAL_EQUIVALENCE_VERIFIED",
+    "HOLD_END_TO_END_PHASE_ATTRIBUTION_GAP",
+    "HOLD_UNCONTROLLED_PERFORMANCE_COMPARISON",
+    "HOLD_PHASE_INSTRUMENT_POSITIVE_CONTROL_MISSING",
+    "HOLD_INTERACTION_RESPONSIVENESS_UNMEASURED",
+    "HOLD_USER_LATENCY_BUDGET_UNFROZEN",
+    "USER_LATENCY_BUDGET_EXCEEDED",
+    "END_TO_END_FIRST_USE_LATENCY_VERIFIED_NOT_USER_ACCEPTED",
+    "USER_ACCEPTED"
+  ],
+  "applicability": "One Fabric Mother trial for first-use or material-switch latency claims. It does not invalidate R03 queue coalescing, stale-result rejection, differential restore, exact artifact identity, visual equivalence, or public runtime evidence.",
+  "rollbackPoint": "Remove this Candidate if the next exact R02/R03 paired replay shows that existing receipts already provide complete, positive-control-verified end-to-end phase coverage with no added discrimination.",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
