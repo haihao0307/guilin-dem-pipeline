@@ -33,7 +33,8 @@ const result = {
   targetSubject: {
     pr: fixture.observed.targetPr,
     headSha: fixture.observed.targetHeadSha,
-    transferReceipt: fixture.observed.targetTransferReceipt
+    transferReceipt: fixture.observed.targetTransferReceipt,
+    n158RoutingReceipt: fixture.observed.n158RoutingReceipt
   },
   currentState,
   verdict: 'SOURCE_METHOD_VERIFIED__TARGET_TRANSFER_POSTED__HOLD_TARGET_TRANSFER_UNACKNOWLEDGED__CORRECTION_REGRESSION_UNBOUND',

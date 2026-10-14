@@ -61,7 +61,7 @@ R2 与 `USER-CORRECTION-REGRESSION-BINDING-001` 已要求 exact subject、reason
 
 ## 7. 生命周期与 KPI
 
-- POSTED：true（source transfer 已发布）
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/288#issuecomment-6176946595
 - ACKNOWLEDGED / IMPLEMENTED / TARGET-GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - 本轮 classifier gate：11/11
 - first-pass candidate rate、same-class recurrence、rejected-lineage inheritance、accepted-delta iteration count、instruction-to-legal-candidate time：unknown
