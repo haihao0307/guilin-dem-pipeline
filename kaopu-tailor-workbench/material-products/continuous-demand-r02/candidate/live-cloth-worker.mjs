@@ -4,6 +4,7 @@ import {CoupledCloth}from'./coupled-cloth.mjs';
 import {loadClothKernel,accelerateWorld}from'./wasm-cloth.mjs';
 let world=null,settings=null,chain=Promise.resolve(),generation=0,lastBody=-1,pool=[];
 const DT=1/60,clock={wallTarget:0,simLagMs:0,overBudget:false,activeWallSeconds:0};
+function resetClock(){Object.assign(clock,{wallTarget:world?.elapsed||0,simLagMs:0,overBudget:false,activeWallSeconds:0,mode:'paused'});}
 const digest=async b=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(x=>x.toString(16).padStart(2,'0')).join('');
 async function checked(url,hash){const r=await fetch(url);if(!r.ok)throw Error('物理资源 HTTP '+r.status);const b=await r.arrayBuffer();if(hash&&await digest(b)!==hash)throw Error('物理来源散列不符');return b;}
 function newSlot(id){return{id,free:true,rows:world.solvers.map(s=>({positions:new Float32Array(s.output.length),normals:new Float32Array(s.normals.length)})),body:new Float32Array(world.actor.native.length)};}
@@ -23,21 +24,21 @@ async function handle(d){
   generation=d.generation||0;const meta=JSON.parse(new TextDecoder().decode(await checked(new URL('./assets/body-sdf-grid.json',import.meta.url),d.lock.sdfMetadataSHA256))),compressed=await checked(new URL('./assets/common-body.sdfd.gz',import.meta.url),d.lock.sdfFileSHA256),raw=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   world=new CoupledCloth(d.rows,{sdf:new BodySDF(meta,new Int16Array(raw),d.lock.groundShiftM),actor:d.actor,settings:d.settings});world.actor.evaluate({});const finalBody=world.actor.positions.slice(),origin=d.actor.fittingOrigin;if(origin){world.actor.positions.set(origin);world.body.refit(world.actor.positions);}try{await GPUCloth.create(world);}catch(e){if(d.actor?.sourceRevision)world.forceBodyTriangles=true;accelerateWorld(world,await loadClothKernel());world.gpuFallbackReason=e.message;world.bodyActive=!!d.actor?.sourceRevision;}settings={...d.settings};
   const fittingSteps=origin?48:8;for(let i=0;i<fittingSteps;i++){if(origin){const f=Math.min(1,(i+1)/32),target=Float32Array.from(finalBody,(v,k)=>origin[k]+(v-origin[k])*f);if(world.acceleration instanceof GPUCloth){world.acceleration.fittingTarget=target;world.acceleration.fitFraction=f;}else{world.actor.positions.set(target);world.acceleration.actorTarget.set(target);world.acceleration.waist.begin();}}await world.step(origin?1/60:1/30,false);self.postMessage({id:d.id,progress:(i+1)/fittingSteps,phase:'最新人物体型适配 · 原裁片实时松弛'});}
-  world.initial=world.solvers.map(s=>s.p.slice());world.initialTime=world.elapsed;pool=Array.from({length:3},(_,i)=>newSlot(i));send(d.id,{dense:true,initial:true});return;
+  world.initial=world.solvers.map(s=>s.p.slice());world.initialTime=world.elapsed;resetClock();pool=Array.from({length:3},(_,i)=>newSlot(i));send(d.id,{dense:true,initial:true});return;
  }
  if(!world)throw Error('实时服装尚未初始化');
  if(d.command==='advance'){
   const target=Number(d.targetSeconds);if(!Number.isFinite(target)||target<world.elapsed-DT)throw Error('非单调模拟目标');
   const required=Math.max(0,Math.floor((target-world.elapsed+1e-9)/DT)),batchLimit=Math.max(1,Math.min(4,Math.floor(12/Math.max(.1,world.simulationMs||1)))),steps=Math.min(batchLimit,required);
   for(let i=0;i<steps;i++){await world.step(DT);if(world.acceleration.config?.resultOnce===false)world.rows();}
-  clock.wallTarget=target;clock.activeWallSeconds=d.activeWallSeconds;clock.simLagMs=Math.max(0,(target-world.elapsed)*1000);clock.overBudget=clock.simLagMs>DT*2000||world.simulationMs>DT*1000;
+  clock.mode='realtime';clock.wallTarget=target;clock.activeWallSeconds=d.activeWallSeconds;clock.simLagMs=Math.max(0,(target-world.elapsed)*1000);clock.overBudget=clock.simLagMs>DT*2000||world.simulationMs>DT*1000;
   if(!steps){self.postMessage({id:d.id,statusOnly:true,audit:{clock:{...clock},simulationSeconds:world.elapsed,simulationTimeSeconds:world.elapsed,advanceSteps:0,frameSequence:world.frameSequence}});return;}
   send(d.id,{liveSteps:steps});return;
  }
- if(d.command==='step'){await world.step(DT);send(d.id);}
+ if(d.command==='step'){await world.step(DT);clock.mode='fixed-step-test';send(d.id);}
  else if(d.command==='motion'){world.setMotion(d.motion);world.bodyRevision++;send(d.id);}
  else if(d.command==='tug'){world.tug();world.acceleration.uploadState?.();await world.step(DT);send(d.id);}
- else if(d.command==='reset'){world.reset();lastBody=-1;send(d.id,{dense:true});}
+ else if(d.command==='reset'){world.reset();resetClock();lastBody=-1;send(d.id,{dense:true});}
  else if(d.command==='settings'){world.set(d.settings);settings={...settings,...d.settings};world.materialRevision=(world.materialRevision||0)+1;send(d.id);}
  else if(d.command==='settle'){const n=Math.max(1,Math.min(120,Math.ceil((d.seconds||.5)/DT)));for(let i=0;i<n;i++)await world.step(DT);send(d.id,{dense:true});}
  else if(d.command==='audit')send(d.id,{dense:true});
