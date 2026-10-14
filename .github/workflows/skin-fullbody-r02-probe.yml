@@ -1,0 +1,25 @@
+name: Skin fullbody R02 frozen baseline probe
+on:
+  push:
+    branches: [feature/skin-fullbody-r02-20261014]
+    paths: ['kaopu-unified-human-workbench/skin-fullbody-r02/probe.cjs', '.github/workflows/skin-fullbody-r02-probe.yml']
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/skin-fullbody-r02
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: node kaopu-unified-human-workbench/skin-fullbody-r02/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-fullbody-r02-probe-${{ github.run_number }}
+          path: body-skin-probe/
+          retention-days: 14
