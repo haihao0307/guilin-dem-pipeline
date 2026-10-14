@@ -2,16 +2,7 @@
  * and PBRT 4e §9.9: R, TT, TRT, internal tail; RGB instead of spectral.
  * Log-I0 approximation and eight-bin deep opacity are R02 approximations.
  * No copied film assets, hairstyle mesh, or AI-rendered texture. */
-export const vertex = `
-precision highp float;
-attribute vec4 rootData;
-attribute vec4 trait;
-uniform float diameter, frizz, wave;
-uniform vec2 viewport;
-uniform float ortho;
-varying vec3 wPos, wTangent;
-varying float sideCoord, coverageScale, seedValue, progress;
-vec3 curve(float t) {
+export const curveGLSL = `vec3 curve(float t) {
  float g=rootData.z, phase=g*.83, s=t*trait.x;
  float rootX=rootData.x, rootZ=rootData.y;
  float envelope=sin(3.14159265*s);
@@ -27,25 +18,43 @@ vec3 curve(float t) {
  x+=trait.w*frizz*.010*sin(4.6*t+trait.z)*t;
  z+=trait.w*frizz*.008*sin(5.2*t+trait.z)*t;
  return vec3(x,y,z);
-}
+}`;
+export const positionFragment = `precision highp float;
+uniform sampler2D rootMap,traitMap;
+uniform float frizz,wave;
+vec4 rootData,trait;
+${curveGLSL}
 void main(){
- float t=position.y;
- vec3 p=curve(t);
- vec3 tangent=normalize(curve(min(1.0,t+.0005))-curve(max(0.0,t-.0005)));
- vec4 wp=modelMatrix*vec4(p,1.0);
- vec3 wt=normalize(mat3(modelMatrix)*tangent);
- vec4 vp=viewMatrix*wp;
- vec3 eye=ortho>.5 ? normalize((inverse(viewMatrix)*vec4(0.,0.,1.,0.)).xyz) : normalize(cameraPosition-wp.xyz);
+ int id=int(gl_FragCoord.x)+int(gl_FragCoord.y)*1024;
+ int root=id/81;int node=id-root*81;
+ if(root>=10000){gl_FragColor=vec4(0.);return;}
+ ivec2 at=ivec2(root%128,root/128);
+ rootData=texelFetch(rootMap,at,0);trait=texelFetch(traitMap,at,0);
+ gl_FragColor=vec4(curve(float(node)/80.0),1.0);
+}`;
+export const vertex = `precision highp float;
+attribute vec4 rootData;attribute vec4 trait;
+uniform sampler2D positionMap;
+uniform float diameter,ortho;
+uniform vec3 orthoDir;
+uniform vec2 viewport;
+varying vec3 wPos,wTangent;
+varying float sideCoord,coverageScale,seedValue,progress;
+vec3 pointAt(int j){int id=gl_InstanceID*81+j;return texelFetch(positionMap,ivec2(id%1024,id/1024),0).xyz;}
+void main(){
+ float t=position.y;int node=int(t*80.0+.5);
+ vec3 p=pointAt(node),tangent=normalize(pointAt(min(80,node+1))-pointAt(max(0,node-1)));
+ vec4 wp=modelMatrix*vec4(p,1.0);vec3 wt=normalize(mat3(modelMatrix)*tangent);vec4 vp=viewMatrix*wp;
+ vec3 eye=ortho>.5?orthoDir:normalize(cameraPosition-wp.xyz);
  vec3 widthAxis=normalize(cross(wt,eye));
  float pixelWorld=(ortho>.5?1.0:-vp.z)*2.0/(viewport.y*projectionMatrix[1][1]);
- float taper=mix(1.0,.08,smoothstep(.72,1.0,t));
- float physical=diameter*trait.y*taper;
- float expanded=max(physical,pixelWorld*1.20);
- coverageScale=min(1.0,physical/expanded);
- vec3 outputP=wp.xyz+widthAxis*position.x*expanded*.5;
- gl_Position=projectionMatrix*viewMatrix*vec4(outputP,1.0);
+ float physical=diameter*trait.y*mix(1.0,.08,smoothstep(.72,1.0,t));
+ float expanded=max(physical,pixelWorld*1.20);coverageScale=min(1.0,physical/expanded);
+ gl_Position=projectionMatrix*viewMatrix*vec4(wp.xyz+widthAxis*position.x*expanded*.5,1.0);
  wPos=wp.xyz;wTangent=wt;sideCoord=position.x;seedValue=rootData.w;progress=t;
 }`;
+export const coverageFragment = `precision highp float;varying float sideCoord,coverageScale;
+void main(){float aa=max(fwidth(sideCoord),.02);float a=coverageScale*(1.0-smoothstep(1.0-aa,1.0+aa,abs(sideCoord)));if(a<.012)discard;gl_FragColor=vec4(0.,0.,0.,a);}`;
 export const fragment = `
 precision highp float;
 uniform vec3 sigmaA;
@@ -112,9 +121,6 @@ float opacityAt(sampler2D tex,vec3 uv){
  return max(0.0,mix(prev,next,frac));
 }
 void main(){
- float aa=max(fwidth(sideCoord),.02);
- float alpha=coverageScale*(1.0-smoothstep(1.0-aa,1.0+aa,abs(sideCoord)));
- if(alpha<.012)discard;
  vec3 V=normalize(cameraPosition-wPos),T=normalize(wTangent);
  float v=exp((seedValue-.5)*variation*2.0);
  vec3 absorption=sigmaA*v*mix(1.10,.82,progress);
@@ -132,7 +138,7 @@ void main(){
  }
  if(mode<.5)color+=base*.016;
  if(mode>2.5)color=vec3(.32)*(.30+.7*abs(dot(normalize(cross(T,V)),normalize(lightDirs[0]))));
- gl_FragColor=vec4(color,alpha);
+ gl_FragColor=vec4(color,1.0);
 }`;
 export const shadowFragment = `
 precision highp float;
