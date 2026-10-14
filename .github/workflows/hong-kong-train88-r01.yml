@@ -8,7 +8,7 @@ permissions:
 env:
   CASE: kaopu-geography-workbench/hong-kong-train88-r01
 jobs:
-  cost_diagnosis:
+  city_split_sampling:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -23,18 +23,19 @@ jobs:
           python3 -m zipfile -e "$CASE/source-bundle.zip" "$CASE"
           python3 -m zipfile -e "$CASE/patch-bundle.zip" "$CASE"
           cp -r "$RUNNER_TEMP/direct-overlays/." "$CASE/"
+          python3 -m zipfile -e "$CASE/city-split-bundle.zip" "$CASE"
       - run: |
-          npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0 three@0.170.0 esbuild@0.25.6
+          npm install --prefix "$RUNNER_TEMP/runner" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/runner/node_modules" >> "$GITHUB_ENV"
           "$RUNNER_TEMP/runner/node_modules/.bin/playwright" install --with-deps chromium
-      - run: node "$CASE/qa/route-test.mjs" && node "$CASE/qa/train-structure.mjs" && node --test "$CASE/train-drive/test-train-drive.mjs"
       - run: |
-          python3 "$CASE/qa/make-perf-entry.py"
-          "$RUNNER_TEMP/runner/node_modules/.bin/esbuild" "$CASE/src/perf-entry.mjs" --bundle --format=esm --target=es2022 --outfile="$CASE/integration.js" --minify --legal-comments=linked
-          node "$CASE/qa/diagnose.cjs"
+          SAMPLE_MODEL=walled-pair node "$CASE/candidates/qa/run-sampling.cjs"
+          SAMPLE_MODEL=walled-pair node "$CASE/candidates/qa/pack-samples.mjs"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: train88-cost-${{ github.sha }}
-          path: kaopu-geography-workbench/hong-kong-train88-r01/qa/diagnostic-results
+          name: city-split-${{ github.sha }}
+          path: |
+            kaopu-geography-workbench/hong-kong-train88-r01/candidates/qa/results
+            kaopu-geography-workbench/hong-kong-train88-r01/candidates/data
           retention-days: 7
