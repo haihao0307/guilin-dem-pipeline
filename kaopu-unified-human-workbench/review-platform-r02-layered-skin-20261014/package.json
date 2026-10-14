@@ -1,0 +1,15 @@
+{
+  "name": "kaopu-layered-skin-review",
+  "private": true,
+  "version": "2.0.0",
+  "scripts": {
+    "bundle": "esbuild integration/merge.mjs --bundle --format=iife --minify --outfile=integration/merge.bundle.js",
+    "build": "npm run spectral && npm run bundle && node build-platform.cjs",
+    "spectral": "node spectral-transport.cjs",
+    "qa:optics": "node qa-optics.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "playwright": "1.58.2"
+  }
+}
