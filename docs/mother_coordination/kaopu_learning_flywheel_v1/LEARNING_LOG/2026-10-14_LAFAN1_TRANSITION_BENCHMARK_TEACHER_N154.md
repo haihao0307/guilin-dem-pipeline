@@ -77,5 +77,6 @@ Classifier result: `8/8`. See `PROBES/motion_held_out_transition_benchmark_resul
 - Applies to Motion transition tasks with a legally usable exact reference sequence; not all animation, locomotion or physical interaction.
 - Does not change PR #268, its branch, visuals, thresholds or parent lineage.
 - Does not certify contact force, global performance, artistic naturalness or user acceptance.
-- Lifecycle before routing: `POSTED=false`; `CLASSIFICATION-GATE-RUN=true (8/8)`; `ACKNOWLEDGED / AUDITION / PROBATION / ACTIVE_TEACHER / IMPLEMENTED / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Motion PR #268: https://github.com/haihao0307/guilin-dem-pipeline/pull/268#issuecomment-6160458624
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (8/8)`; `ACKNOWLEDGED / AUDITION / PROBATION / ACTIVE_TEACHER / IMPLEMENTED / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs remain `unknown`; no production audition has run.
