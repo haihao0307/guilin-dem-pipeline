@@ -1,5 +1,7 @@
 # 单人基础动作 R04
 
+[打开固定公网工作台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8a32297479e73367778d68dea705c27314a7affb/kaopu-unified-human-workbench/motion-review-r04/preview.html)。构建 `8a32297479e73367778d68dea705c27314a7affb`，代码源 `b02adf1063f5d08072c036d33c4e45a6716d08f7`。
+
 本版从动作 R03 的冻结源码 `fde66f8246cc49f604e5deb24fcc4128d8c9772b` 接续，优先检查同一完整 R04 人物的单人动作。旧 R01/R02/R03、原人物和动作源保持原样。双人交互不进入本版目录。
 
 ## 可操作内容
