@@ -1,0 +1,623 @@
+{
+  "url": "http://127.0.0.1:8765/preview.html",
+  "label": "candidate",
+  "source": "a1eeef8144b1c11f4d4acd09ec9b648624db8772",
+  "results": [
+    {
+      "name": "R04 exact version/source",
+      "pass": true,
+      "source": "a1eeef8144b1c11f4d4acd09ec9b648624db8772"
+    },
+    {
+      "name": "original 10000 roots / 80 segments",
+      "pass": true
+    },
+    {
+      "name": "full-optics actual canvas",
+      "pass": true,
+      "sha256": "54ca172638d487e4b2d2fe32a265eeb5bf4a1e3a73121a4677c92eb4d4c74740",
+      "bytes": 158537
+    },
+    {
+      "name": "read fixed original R03 pixels",
+      "pass": true
+    },
+    {
+      "name": "zero-motion original look retained at full optics",
+      "pass": true,
+      "comparison": {
+        "foregroundMAE": 0,
+        "maxError": 0,
+        "meanA": 0.2915096775000694,
+        "meanB": 0.2915096775000694,
+        "pixels": 62815
+      }
+    },
+    {
+      "name": "fast-optics actual canvas",
+      "pass": true,
+      "sha256": "db3e8d99ced219e02d156f12b787ed65fb3800b05e6eeb5a6b9d93bfcda9b42e",
+      "bytes": 158279
+    },
+    {
+      "name": "optical interpolation bounded against same-frame full reference",
+      "pass": true,
+      "comparison": {
+        "foregroundMAE": 0.020727637283247856,
+        "maxError": 0.6901960784313725,
+        "meanA": 0.30687807697587655,
+        "meanB": 0.2915096775000694,
+        "pixels": 62815
+      }
+    },
+    {
+      "name": "same-frame-repeat actual canvas",
+      "pass": true,
+      "sha256": "db3e8d99ced219e02d156f12b787ed65fb3800b05e6eeb5a6b9d93bfcda9b42e",
+      "bytes": 158279
+    },
+    {
+      "name": "stable frame does not evolve stochastic noise",
+      "pass": true
+    },
+    {
+      "name": "wind-0 actual canvas",
+      "pass": true,
+      "sha256": "10de6bae41fc9c280c6a89e7d3326efe9377aa4e51745efd847b48ba8babb4e8",
+      "bytes": 159239
+    },
+    {
+      "name": "wind moves GPU tips but not roots",
+      "pass": true,
+      "baselineNodes": [
+        {
+          "root": 0,
+          "position": [
+            -0.022212455049157143,
+            0.12800000607967377,
+            -0.00008196979615604505
+          ],
+          "tip": [
+            -0.01932409405708313,
+            -0.12045013904571533,
+            0.0031833769753575325
+          ]
+        },
+        {
+          "root": 4999,
+          "position": [
+            -0.02539515495300293,
+            0.12800000607967377,
+            0.0019748222548514605
+          ],
+          "tip": [
+            -0.018504418432712555,
+            -0.13763506710529327,
+            0.0018425481393933296
+          ]
+        },
+        {
+          "root": 9999,
+          "position": [
+            -0.017916664481163025,
+            0.12800000607967377,
+            0.0004276632680557668
+          ],
+          "tip": [
+            -0.013377883471548557,
+            -0.1351480334997177,
+            0.001808032626286149
+          ]
+        }
+      ],
+      "movingNodes": [
+        {
+          "root": 0,
+          "position": [
+            -0.022212455049157143,
+            0.12800000607967377,
+            -0.00008196979615604505
+          ],
+          "tip": [
+            -0.01605948433279991,
+            -0.12045013904571533,
+            0.0033781956881284714
+          ]
+        },
+        {
+          "root": 4999,
+          "position": [
+            -0.02539515495300293,
+            0.12800000607967377,
+            0.0019748222548514605
+          ],
+          "tip": [
+            -0.01583883725106716,
+            -0.13763506710529327,
+            0.002018900588154793
+          ]
+        },
+        {
+          "root": 9999,
+          "position": [
+            -0.017916664481163025,
+            0.12800000607967377,
+            0.0004276632680557668
+          ],
+          "tip": [
+            -0.01111419964581728,
+            -0.1351480334997177,
+            0.002027717186138034
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wind-1 actual canvas",
+      "pass": true,
+      "sha256": "0f8d3a99d5ee461e2866098d95fc71b2583efd5547695d04d5c95db6f3e8e885",
+      "bytes": 160004
+    },
+    {
+      "name": "wind-2 actual canvas",
+      "pass": true,
+      "sha256": "d727f555936b34e61cf815af58832d747df4ba982a09d4c28e7772e476656f57",
+      "bytes": 160441
+    },
+    {
+      "name": "wind creates distinct current frames",
+      "pass": true
+    },
+    {
+      "name": "wind-off spring returns toward rest",
+      "pass": true,
+      "motion": {
+        "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+        "model": "bounded guide-tip spring; not rod/collision",
+        "guides": 85,
+        "fixedStep": 0.008333333333333333,
+        "stiffness": 33,
+        "damping": 8.5,
+        "maxOffset": 0,
+        "maxVelocity": 0,
+        "steps": 422,
+        "time": 3.516666666666657,
+        "wind": 0.32,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 423
+      }
+    },
+    {
+      "name": "brush actual canvas",
+      "pass": true,
+      "sha256": "68e6b08848332de2ff3955cf01eaa05202b57c755d54c9a26f91dd94ada02d82",
+      "bytes": 176061
+    },
+    {
+      "name": "brush response bounded",
+      "pass": true,
+      "motion": {
+        "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+        "model": "bounded guide-tip spring; not rod/collision",
+        "guides": 85,
+        "fixedStep": 0.008333333333333333,
+        "stiffness": 33,
+        "damping": 8.5,
+        "maxOffset": 0.03499999950636763,
+        "maxVelocity": 0.16444082264823548,
+        "steps": 452,
+        "time": 3.766666666666656,
+        "wind": 0.32,
+        "windEnabled": false,
+        "paused": false,
+        "active": true,
+        "cpuMS": 0.10000000000582077,
+        "droppedSeconds": 0,
+        "revision": 453
+      }
+    },
+    {
+      "name": "black actual canvas",
+      "pass": true,
+      "sha256": "72f844f3a73e2f80436a3a6f65dc67c795522c11bf99b94226f252d0c0950cad",
+      "bytes": 133956
+    },
+    {
+      "name": "black roots unchanged",
+      "pass": true
+    },
+    {
+      "name": "honey actual canvas",
+      "pass": true,
+      "sha256": "385a33fc26aa03f6d1edba1031a5d49e72be73e78cc3b0a114149c33a14c28dc",
+      "bytes": 155303
+    },
+    {
+      "name": "honey roots unchanged",
+      "pass": true
+    },
+    {
+      "name": "silver actual canvas",
+      "pass": true,
+      "sha256": "9ea3976e3afe18d17bb3b519920d9652c8e969d30178dfffb510ed844302bfef",
+      "bytes": 152237
+    },
+    {
+      "name": "silver roots unchanged",
+      "pass": true
+    },
+    {
+      "name": "macro-full actual canvas",
+      "pass": true,
+      "sha256": "8b95139843db83c380aab786dbdbbe3b793aec44ad8e5a1b6ab5be037d938c2b",
+      "bytes": 569683
+    },
+    {
+      "name": "macro-fast actual canvas",
+      "pass": true,
+      "sha256": "5510cad8a46b9c4ea1bd9d7ba9a7cae7ca7e37a76fca65d737588166a04d433e",
+      "bytes": 570120
+    },
+    {
+      "name": "macro optical error measured",
+      "pass": true,
+      "comparison": {
+        "foregroundMAE": 0.0060570889776439645,
+        "maxError": 0.15294117647058825,
+        "meanA": 0.22579798332270115,
+        "meanB": 0.2254350251270717,
+        "pixels": 264324
+      }
+    },
+    {
+      "name": "backlight actual canvas",
+      "pass": true,
+      "sha256": "27ca90a85186db7d719e68dad37012cfc8a199f3b26b676cec9b029806f7c929",
+      "bytes": 166366
+    },
+    {
+      "name": "native wind loop advances actual rendered frames",
+      "pass": true,
+      "motion": {
+        "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+        "model": "bounded guide-tip spring; not rod/collision",
+        "guides": 85,
+        "fixedStep": 0.008333333333333333,
+        "stiffness": 33,
+        "damping": 8.5,
+        "maxOffset": 0.005139815282903132,
+        "maxVelocity": 0.01041892942428572,
+        "steps": 3332,
+        "time": 21.074999999999445,
+        "wind": 0.32,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 2070
+      },
+      "renderedGuideState": {
+        "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+        "model": "bounded guide-tip spring; not rod/collision",
+        "guides": 85,
+        "fixedStep": 0.008333333333333333,
+        "stiffness": 33,
+        "damping": 8.5,
+        "maxOffset": 0.005139815282903132,
+        "maxVelocity": 0.01041892942428572,
+        "steps": 3332,
+        "time": 21.074999999999445,
+        "wind": 0.32,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 2070
+      },
+      "completedFrameWallMS": [
+        7042.899999999994,
+        7136.700000000012,
+        6982.8000000000175,
+        6949.700000000012
+      ]
+    },
+    {
+      "name": "mobile-viewport actual canvas",
+      "pass": true,
+      "sha256": "f719696826d3fff9122c477bdf0d4cc122859d717edea6f8eed4e36868ccdf55",
+      "bytes": 83546
+    },
+    {
+      "name": "mobile viewport fits",
+      "pass": true
+    },
+    {
+      "name": "no shader/runtime errors",
+      "pass": true,
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "fastQuality": {
+    "foregroundMAE": 0.020727637283247856,
+    "maxError": 0.6901960784313725,
+    "meanA": 0.30687807697587655,
+    "meanB": 0.2915096775000694,
+    "pixels": 62815
+  },
+  "macroQuality": {
+    "foregroundMAE": 0.0060570889776439645,
+    "maxError": 0.15294117647058825,
+    "meanA": 0.22579798332270115,
+    "meanB": 0.2254350251270717,
+    "pixels": 264324
+  },
+  "final": {
+    "version": "HAIR-FIBER-R04-FUR1",
+    "source": "a1eeef8144b1c11f4d4acd09ec9b648624db8772",
+    "parameters": {
+      "material": "chestnut",
+      "roughness": 0.3,
+      "variation": 0.36,
+      "diameter": 70,
+      "frizz": 0.22,
+      "wave": 1,
+      "lighting": "studio",
+      "rotation": 0,
+      "exposure": 1.25,
+      "shadowStrength": 0.52,
+      "scatterBoost": 1,
+      "mode": 0,
+      "path": "stable"
+    },
+    "camera": {
+      "yaw": 0.12,
+      "pitch": 0.035,
+      "distance": 0.66,
+      "target": [
+        0,
+        -0.002,
+        0
+      ]
+    },
+    "count": 10000,
+    "segments": 80,
+    "signature": "eaadb8b8",
+    "width": 816,
+    "height": 752,
+    "revision": 2673,
+    "completedRevision": 2673,
+    "completed": 1,
+    "seq": 23,
+    "firstFrameMS": 9183,
+    "completedFrameWallMS": [
+      9097.900000000001,
+      4801.800000000003,
+      7563.700000000004,
+      4062.800000000003,
+      3461.800000000003,
+      6988.300000000003,
+      6916.300000000003,
+      6963.800000000003,
+      7045.900000000009,
+      6705.199999999997,
+      6916.200000000004,
+      3653.600000000006,
+      3604.100000000006,
+      3620.1999999999825,
+      5957,
+      5456.8000000000175,
+      7042.899999999994,
+      7136.700000000012,
+      6982.8000000000175,
+      6949.700000000012,
+      6983.400000000023,
+      6373.5,
+      7157.299999999988
+    ],
+    "inputLatencyWallMS": [
+      13632.100000000006,
+      7567.4000000000015,
+      4064,
+      7590.600000000006,
+      6993.800000000003,
+      13952.199999999997,
+      20947.899999999994,
+      7051.5,
+      13771.799999999988,
+      6916.900000000016,
+      3655.100000000006,
+      3604.8000000000175,
+      3620.899999999994,
+      5957.5,
+      5457.399999999994,
+      7049.200000000012,
+      6374,
+      7157.799999999988
+    ],
+    "counters": {
+      "positions": 14,
+      "shadows": 15,
+      "radiance": 22,
+      "geometry": 65,
+      "display": 23
+    },
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "memory": {
+      "geometries": 2,
+      "textures": 21
+    },
+    "errors": [],
+    "physics": "bounded-guide-spring",
+    "guideMotion": {
+      "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+      "model": "bounded guide-tip spring; not rod/collision",
+      "guides": 85,
+      "fixedStep": 0.008333333333333333,
+      "stiffness": 33,
+      "damping": 8.5,
+      "maxOffset": 0,
+      "maxVelocity": 0,
+      "steps": 3338,
+      "time": 0,
+      "wind": 0.32,
+      "windEnabled": false,
+      "paused": false,
+      "active": false,
+      "cpuMS": 0.10000000000582077,
+      "droppedSeconds": 0,
+      "revision": 2075
+    },
+    "renderedGuideState": {
+      "source": "e845835b3e04c56a65c405ff87aece955b161b4d",
+      "model": "bounded guide-tip spring; not rod/collision",
+      "guides": 85,
+      "fixedStep": 0.008333333333333333,
+      "stiffness": 33,
+      "damping": 8.5,
+      "maxOffset": 0,
+      "maxVelocity": 0,
+      "steps": 3338,
+      "time": 0,
+      "wind": 0.32,
+      "windEnabled": false,
+      "paused": false,
+      "active": false,
+      "cpuMS": 0.10000000000582077,
+      "droppedSeconds": 0,
+      "revision": 2075
+    },
+    "simulationCPU": [
+      0,
+      0,
+      0,
+      0,
+      0.09999999997671694,
+      0.10000000000582077,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0.10000000000582077,
+      0,
+      0.09999999997671694,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0.10000000000582077,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077,
+      0.10000000000582077,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.10000000000582077
+    ],
+    "opticalSamples": 21,
+    "temporalReprojection": false,
+    "deterministicCoverage": true
+  },
+  "scope": "SwiftShader software GPU; phone viewport only; bounded spring motion, no collision certification"
+}
