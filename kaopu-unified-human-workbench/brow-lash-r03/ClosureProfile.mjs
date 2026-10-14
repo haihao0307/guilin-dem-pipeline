@@ -13,7 +13,7 @@ export function orbitalWarp(q,eye,amount=1){
  if(u<=0||u>=1)return [0,0,0];
  const seam=interpolate(eye.profile,u),line=eye.inner[1]*(1-u)+eye.outer[1]*u;
  const target=line+(seam-line)*.42,vertical=q[1]-seam;
- const gate=smooth(0,.09,u)*(1-smooth(.91,1,u))*(1-smooth(.014,.026,Math.abs(vertical)));
+ const gate=16*u*u*(1-u)*(1-u)*(1-smooth(.014,.026,Math.abs(vertical)));
  const ry=q[1]-eye.center[1],rz=q[2]-eye.center[2],rho=Math.hypot(ry,rz);
  const frontFade=smooth(.001,.006,rz)*(1-smooth(.90,.998,Math.abs(ry)/(rho||1)));
  const dy=clamp(target-seam,-.0045,.0045)*Math.exp(-((vertical/.014)**2))*gate*amount*frontFade;
@@ -69,5 +69,18 @@ export function buildClosureCorrections(groom,geometry){
   const mid=interpolate(profile,.5),line=(inner[1]+outer[1])*.5;
   reports.push({side,targetIndex:ti,profilePoints:profile.length,connectedSkinVertices:selected.size,changedVertices:changed,maxShiftMM:maxShift*1000,maxRadialErrorMM:maxRadiusError*1000,inheritedMidSagMM:(line-mid)*1000,targetMidSagMM:(line-mid)*.42*1000,closedEyeCenter:center});domains.push({side,indices:Array.from(selected),eye});
  }
- return {positions,reports,domains};
+ // Bound the displacement gradient on the ACTUAL retained triangle edges.
+ // This diagnoses a corrective ridge, not whole-mesh contact or film quality.
+ let maxDeltaOverRestEdge=0,maxDeltaChangeMM=0,testedTriangleEdges=0;
+ for(let k=0;k<index.length;k+=3)for(let j=0;j<3;j++){
+  const a=index[k+j]*3,b=index[k+(j+1)%3]*3;
+  const dx=positions[0][a]+positions[1][a]-positions[0][b]-positions[1][b];
+  const dy=positions[0][a+1]+positions[1][a+1]-positions[0][b+1]-positions[1][b+1];
+  const dz=positions[0][a+2]+positions[1][a+2]-positions[0][b+2]-positions[1][b+2];
+  if(dx===0&&dy===0&&dz===0)continue;
+  const change=Math.hypot(dx,dy,dz),length=Math.hypot(p[a]-p[b],p[a+1]-p[b+1],p[a+2]-p[b+2]);
+  maxDeltaOverRestEdge=Math.max(maxDeltaOverRestEdge,change/Math.max(length,1e-7));
+  maxDeltaChangeMM=Math.max(maxDeltaChangeMM,change*1000);testedTriangleEdges++;
+ }
+ return {positions,reports,domains,edgeQA:{maxDeltaOverRestEdge,maxDeltaChangeMM,testedTriangleEdges,scope:'corrective displacement difference / neutral edge length; not total deformed strain or collision'}};
 }

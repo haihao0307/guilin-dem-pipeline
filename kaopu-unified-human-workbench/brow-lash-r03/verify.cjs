@@ -15,6 +15,7 @@ const closureChecks=`
   q.corrective=await p.evaluate(()=>browLash.groom().focusBlink.report());
   check('native blink targets preserved and two residual targets separately controlled',await p.evaluate(()=>{const b=browLash.groom().focusBlink,g=b.geometry;return g.morphAttributes.position.length===4&&b.nativePositions.every((p,i)=>p===g.morphAttributes.position[i]);}));
   check('corrective positions leave body and original globe vertices exactly zero',await p.evaluate(()=>{const m=__IDENTITY_QA__.model(),b=browLash.groom().focusBlink;for(const a of b.geometry.morphAttributes.position.slice(2)){for(let k=0;k<m.bodyCount*3;k++)if(a.array[k]!==0)return false;for(const eye of m.eyeSurface.eyes)for(const i of eye.vertices)for(let k=0;k<3;k++)if(a.array[i*3+k]!==0)return false;}return true;}));
+  check('actual corrective edge gradients no longer exceed original edge length',q.corrective.edgeQA.maxDeltaOverRestEdge<1,q.corrective.edgeQA);
   check('corrective generator preserves sampled globe-axis radius',q.corrective.correction.every(r=>r.changedVertices>100&&r.maxRadialErrorMM<.00001),q.corrective.correction);
   await p.evaluate(()=>browLash.closure(.5));await shot('closure-R03-half');
   await p.evaluate(()=>{browLash.closure(0);browLash.view('eye');});await shot('closure-R03-reopened-eye');

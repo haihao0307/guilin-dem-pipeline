@@ -24,7 +24,7 @@ export class FocusedBlink extends NativeBlink {
    }
   }finally{scratch.dispose();}
   this.nativePositions=originalPositions;this.nativeNormals=originalNormals;
-  this.correctionReport=result.reports;this.correctionDomains=result.domains;
+  this.correctionReport=result.reports;this.correctionDomains=result.domains;this.edgeQA=result.edgeQA;
   this.groom.viewer.mesh.updateMorphTargets();this.correctionReady=true;
   this.correctionBuildMS=performance.now()-start;this.set(0);return true;
  }
@@ -38,5 +38,5 @@ export class FocusedBlink extends NativeBlink {
  }
  setCorrection(value){if(!Number.isFinite(value)||value<0||value>1)throw Error('闭眼轮廓修正必须在0–1');this.correctionAmount=value;if(this.ready)this.set(...this.weights);return this.report();}
  detach(){this.correctionReady=false;super.detach();}
- report(){return {...super.report(),version:'NATIVE-BLINK-WITH-CORRECTIVE-R03',nativeTargetCount:2,correctiveTargetCount:this.correctionReady?2:0,correctionAmount:this.correctionAmount,correctiveBuildMS:this.correctionBuildMS,correction:this.correctionReport,neutralSurfaceUnchanged:true,method:'connected eyelid skin / coherent closed-target warp / preserved globe-axis radius / reversible authored residual',measuredAnatomicalModel:false};}
+ report(){return {...super.report(),version:'NATIVE-BLINK-WITH-CORRECTIVE-R03',nativeTargetCount:2,correctiveTargetCount:this.correctionReady?2:0,correctionAmount:this.correctionAmount,correctiveBuildMS:this.correctionBuildMS,correction:this.correctionReport,edgeQA:this.edgeQA,neutralSurfaceUnchanged:true,method:'connected eyelid skin / coherent closed-target warp / preserved globe-axis radius / reversible authored residual',measuredAnatomicalModel:false};}
 }
