@@ -1,0 +1,80 @@
+{
+  "probeId": "USER-CORRECTION-REGRESSION-BINDING-001-N156",
+  "generatedAt": "2026-10-14T19:39:30+08:00",
+  "boundedQuestion": "Did the rejected Skin R01 visual correction become an executable regression before R02 was presented?",
+  "subject": {
+    "productionPr": 288,
+    "rejectedVersion": "SKIN-SURFACE-LAB-R01",
+    "rejectedBuildSha": "4669c23ceec256808907176ce2d42cedb626ae22",
+    "candidateVersion": "SKIN-PAINT-R02",
+    "candidateSourceSha": "03b6b062e8195a1ba935f2e0c95d3fa345e9ae9c",
+    "candidateBuildSha": "b97e65823d1103d96c78d82fe351fa2d8802a125",
+    "candidateEvidenceSha": "370b2052773d4fd80a23c709574edafeddf2fe26",
+    "candidateHandoffSha": "20649aea99244040e273233e16e191d37e10ccb8",
+    "browserRun": 38553171915,
+    "userCorrectionRecorded": true,
+    "correctionLocation": "kaopu-unified-human-workbench/skin-paint-r02/LESSONS_R02.md",
+    "executableCorrectionRegressionFound": false,
+    "functionalChecksPreserved": "Two public software-browser jobs; 8 tests and 20 screenshots per platform",
+    "userVisualAccepted": false
+  },
+  "verdict": "FUNCTIONAL_EVIDENCE_PRESERVED__HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+  "assertions": [
+    {
+      "id": "SKIN_R01_REJECTION_RECORDED_ONLY",
+      "expected": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+      "observed": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+      "passed": true
+    },
+    {
+      "id": "SKIN_R02_FUNCTIONAL_GREEN_BUT_CORRECTION_NOT_EXECUTABLE",
+      "expected": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+      "observed": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+      "passed": true
+    },
+    {
+      "id": "CASE_DEFINED_NOT_RUN",
+      "expected": "HOLD_USER_CORRECTION_REGRESSION_NOT_RUN",
+      "observed": "HOLD_USER_CORRECTION_REGRESSION_NOT_RUN",
+      "passed": true
+    },
+    {
+      "id": "RUN_WITHOUT_KNOWN_BAD_CONTROL",
+      "expected": "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING",
+      "observed": "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING",
+      "passed": true
+    },
+    {
+      "id": "KNOWN_REJECTION_SIGNATURE_RECURS",
+      "expected": "HOLD_USER_CORRECTION_SIGNATURE_RECURRED",
+      "observed": "HOLD_USER_CORRECTION_SIGNATURE_RECURRED",
+      "passed": true
+    },
+    {
+      "id": "SCOPED_REGRESSION_PASS_USER_PENDING",
+      "expected": "CORRECTION_REGRESSION_VERIFIED_NOT_USER_ACCEPTED",
+      "observed": "CORRECTION_REGRESSION_VERIFIED_NOT_USER_ACCEPTED",
+      "passed": true
+    },
+    {
+      "id": "SCOPED_REGRESSION_AND_USER_ACCEPTED",
+      "expected": "USER_ACCEPTED",
+      "observed": "USER_ACCEPTED",
+      "passed": true
+    },
+    {
+      "id": "FUNCTIONAL_FAILURE_PRESERVED_SEPARATELY",
+      "expected": "HOLD_FUNCTIONAL_GATE_FAIL",
+      "observed": "HOLD_FUNCTIONAL_GATE_FAIL",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "total": 8,
+    "allPassed": true
+  },
+  "productionChanged": false,
+  "globalR2Changed": false,
+  "userAcceptance": false
+}

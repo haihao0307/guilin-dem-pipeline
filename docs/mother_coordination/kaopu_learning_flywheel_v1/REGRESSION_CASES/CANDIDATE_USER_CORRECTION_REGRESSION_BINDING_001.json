@@ -1,0 +1,120 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "USER-CORRECTION-REGRESSION-BINDING-001",
+  "status": "CANDIDATE_SINGLE_MOTHER_TRIAL_REQUIRED",
+  "active": false,
+  "scope": {
+    "mother": "Human/Skin",
+    "taskClass": "USER_VISUAL_REJECTION_TO_EXECUTABLE_REGRESSION",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A material user rejection is preserved in prose, but the next candidate has no executable regression that binds the rejected subject, defect signature, protected valid evidence, recurrence oracle and positive control.",
+    "observedSubject": {
+      "productionPr": 288,
+      "rejectedVersion": "SKIN-SURFACE-LAB-R01",
+      "rejectedBuildSha": "4669c23ceec256808907176ce2d42cedb626ae22",
+      "candidateVersion": "SKIN-PAINT-R02",
+      "candidateSourceSha": "03b6b062e8195a1ba935f2e0c95d3fa345e9ae9c",
+      "candidateBuildSha": "b97e65823d1103d96c78d82fe351fa2d8802a125",
+      "candidateEvidenceSha": "370b2052773d4fd80a23c709574edafeddf2fe26",
+      "candidateHandoffSha": "20649aea99244040e273233e16e191d37e10ccb8",
+      "browserRun": 38553171915,
+      "userCorrectionRecorded": true,
+      "correctionLocation": "kaopu-unified-human-workbench/skin-paint-r02/LESSONS_R02.md",
+      "executableCorrectionRegressionFound": false,
+      "functionalChecksPreserved": "Two public software-browser jobs; 8 tests and 20 screenshots per platform",
+      "userVisualAccepted": false
+    }
+  },
+  "requiredReceiptFields": [
+    "correctionId",
+    "userCorrectionSource",
+    "rejectedSubjectSha",
+    "rejectedArtifactDigest",
+    "defectSignature",
+    "protectedValidClaims",
+    "nextCandidateSubjectSha",
+    "regressionCaseId",
+    "regressionOracle",
+    "positiveControlId",
+    "positiveControlDetected",
+    "regressionRunId",
+    "regressionDecision",
+    "verifierIdentity",
+    "userAcceptance"
+  ],
+  "gate": [
+    "A lesson, issue comment, screenshot gallery or Delivery limitation may record the correction, but does not by itself constitute an executable regression.",
+    "The regression must bind one rejected subject and a reason-bearing defect signature rather than the vague label 'not realistic'.",
+    "Valid freshness, browser, capability and state-roundtrip evidence remains preserved and separate from visual correction closure.",
+    "Before presenting the next candidate as correcting the user rejection, run the bound oracle on the exact candidate and prove a known bad control is rejected.",
+    "A regression pass is not USER-ACCEPTED; only a later user receipt may close that state.",
+    "If the rejection cannot yet be operationalized without inventing a subjective universal threshold, keep the visual correction open and ask the relevant Mother to define the smallest observable signature."
+  ],
+  "states": [
+    "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
+    "HOLD_USER_CORRECTION_REGRESSION_NOT_RUN",
+    "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING",
+    "HOLD_USER_CORRECTION_SIGNATURE_RECURRED",
+    "CORRECTION_REGRESSION_VERIFIED_NOT_USER_ACCEPTED",
+    "USER_ACCEPTED"
+  ],
+  "cases": [
+    {
+      "id": "SKIN_R01_REJECTION_RECORDED_ONLY",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": false, "regressionCaseDefined": false, "regressionRun": false, "positiveControlDetected": false, "candidateSignaturePass": false, "userAccepted": false},
+      "expect": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND"
+    },
+    {
+      "id": "SKIN_R02_FUNCTIONAL_GREEN_BUT_CORRECTION_NOT_EXECUTABLE",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": false, "regressionCaseDefined": false, "regressionRun": false, "positiveControlDetected": false, "candidateSignaturePass": false, "functionalEvidenceValid": true, "userAccepted": false},
+      "expect": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND"
+    },
+    {
+      "id": "CASE_DEFINED_NOT_RUN",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": false, "positiveControlDetected": false, "candidateSignaturePass": false, "userAccepted": false},
+      "expect": "HOLD_USER_CORRECTION_REGRESSION_NOT_RUN"
+    },
+    {
+      "id": "RUN_WITHOUT_KNOWN_BAD_CONTROL",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": true, "positiveControlDetected": false, "candidateSignaturePass": true, "userAccepted": false},
+      "expect": "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING"
+    },
+    {
+      "id": "KNOWN_REJECTION_SIGNATURE_RECURS",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": true, "positiveControlDetected": true, "candidateSignaturePass": false, "userAccepted": false},
+      "expect": "HOLD_USER_CORRECTION_SIGNATURE_RECURRED"
+    },
+    {
+      "id": "SCOPED_REGRESSION_PASS_USER_PENDING",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": true, "positiveControlDetected": true, "candidateSignaturePass": true, "userAccepted": false},
+      "expect": "CORRECTION_REGRESSION_VERIFIED_NOT_USER_ACCEPTED"
+    },
+    {
+      "id": "SCOPED_REGRESSION_AND_USER_ACCEPTED",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": true, "positiveControlDetected": true, "candidateSignaturePass": true, "userAccepted": true},
+      "expect": "USER_ACCEPTED"
+    },
+    {
+      "id": "FUNCTIONAL_FAILURE_PRESERVED_SEPARATELY",
+      "input": {"userCorrectionRecorded": true, "rejectedSubjectBound": true, "defectSignatureBound": true, "regressionCaseDefined": true, "regressionRun": true, "positiveControlDetected": true, "candidateSignaturePass": true, "functionalEvidenceValid": false, "userAccepted": false},
+      "expect": "HOLD_FUNCTIONAL_GATE_FAIL"
+    }
+  ],
+  "externalEvidence": [
+    {
+      "source": "NASA-STD-8739.8A section 4.5.11",
+      "url": "https://s3vi.ndc.nasa.gov/ssri-kb/static/resources/nasa-std-8739.8a.pdf",
+      "use": "Regression procedures are updated to incorporate tests validating correction of critical anomalies."
+    },
+    {
+      "source": "Google SRE Workbook — Postmortem Culture",
+      "url": "https://sre.google/workbook/postmortem-culture/",
+      "use": "Incomplete action items increase recurrence risk; follow-up needs owned, vetted actions rather than prose alone."
+    }
+  ],
+  "adoptionDecision": "CANDIDATE_ONLY_TARGETED_SKIN_TRIAL_REQUIRED",
+  "lifecycle": {"POSTED": false, "ACKNOWLEDGED": false, "IMPLEMENTED": false, "GATE-RUN": true, "ADOPTED": false, "USER-ACCEPTED": false},
+  "kpiEffect": {"firstPassCandidateRate": "unknown", "userCorrectionCount": 1, "sameClassRecurrenceRate": "unknown", "rejectedLineageInheritanceCount": "unknown", "staleDeliveryCount": 0, "internalIterationsPerAcceptedDelta": "unknown", "instructionToLegalCandidateTime": "unknown"}
+}
