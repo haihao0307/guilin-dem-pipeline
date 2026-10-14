@@ -1,8 +1,8 @@
-name: GNM independent initialization comparison
+name: GNM new shared identity three expression states
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/gnm-reinitialize-r01/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/three-frame-expression-r01/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -11,11 +11,11 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 24
+    timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
-        portrait: [baseline, new]
+        frame: [F1, F2, F3]
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/gnm-reinitialize-r01
+            kaopu-unified-human-workbench/joey-observation-r01/three-frame-expression-r01
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -39,15 +39,15 @@ jobs:
       - name: Verify bounded cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/gnm-reinitialize-r01/render-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/three-frame-expression-r01/render-native.cjs
       - name: Render native initialization with same appearance
         env:
-          PORTRAIT_STATE: ${{ matrix.portrait }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/gnm-reinitialize-r01/render-native.cjs
+          FRAME_VIEW: ${{ matrix.frame }}
+        run: node kaopu-unified-human-workbench/joey-observation-r01/three-frame-expression-r01/render-native.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-reinitialize-${{ matrix.portrait }}-${{ github.sha }}
-          path: joey-gnm-reinitialize-${{ matrix.portrait }}/
+          name: joey-three-frame-${{ matrix.frame }}-${{ github.sha }}
+          path: joey-three-frame-${{ matrix.frame }}/
           retention-days: 7
 
