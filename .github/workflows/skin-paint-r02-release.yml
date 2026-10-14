@@ -1,0 +1,135 @@
+name: Skin Paint R02 reviewed specimen release
+on:
+  push:
+    branches: [feature/skin-paint-r02-20261014]
+    paths:
+      - .github/workflows/skin-paint-r02-release.yml
+      - qa/skin-paint-r02/RELEASE.json
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: skin-paint-r02-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.publish.outputs.sha }}
+      url: ${{ steps.publish.outputs.url }}
+      digest: ${{ steps.publish.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            iteration/skin-paint-r02
+            qa/skin-paint-r02
+            kaopu-unified-human-workbench/skin-surface-lab-r01
+            kaopu-unified-human-workbench/skin-paint-r02
+      - name: Rebuild exact reviewed bytes
+        run: |
+          python iteration/skin-paint-r02/build.py
+          python iteration/skin-paint-r02/refine.py
+          python - <<'PY'
+          import pathlib,json,hashlib
+          r=json.loads(pathlib.Path('qa/skin-paint-r02/RELEASE.json').read_text())
+          p=pathlib.Path('kaopu-unified-human-workbench/skin-paint-r02/preview.html')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==r['reviewedHTMLSHA256']
+          print('Exact reviewed HTML',r['reviewedHTMLSHA256'])
+          PY
+          git diff --exit-code -- kaopu-unified-human-workbench/skin-surface-lab-r01
+      - name: Add independent fixed snapshot, fast-forward only
+        id: publish
+        env:
+          BRANCH: feature/skin-paint-r02-20261014
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse kaopu-unified-human-workbench/skin-paint-r02
+          git commit -m "build(skin): preserve visually reviewed regional painting R02 candidate"
+          git push origin "HEAD:refs/heads/$BRANCH"
+          SHA=$(git rev-parse HEAD)
+          DIGEST=$(python -c "import json;print(json.load(open('qa/skin-paint-r02/RELEASE.json'))['reviewedHTMLSHA256'])")
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "url=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/skin-paint-r02/preview.html" >> "$GITHUB_OUTPUT"
+  public:
+    needs: publish
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.publish.outputs.sha }}
+          sparse-checkout: qa/skin-paint-r02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare actual Chrome and PNG inspection
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/paint-public" playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/paint-public/node_modules" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = Linux ]; then sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk; fi
+      - name: Inspect published website and actual controls
+        env:
+          PREVIEW_URL: ${{ needs.publish.outputs.url }}
+          EXPECTED_SHA256: ${{ needs.publish.outputs.digest }}
+        run: node qa/skin-paint-r02/public-check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-paint-r02-public-${{ matrix.os }}
+          path: public-evidence/
+          retention-days: 14
+  receipt:
+    needs: [publish, public]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.publish.outputs.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            qa/skin-paint-r02
+            kaopu-unified-human-workbench/skin-paint-r02
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: skin-paint-r02-public-*
+          path: kaopu-unified-human-workbench/skin-paint-r02/acceptance
+      - name: Verify and record real public evidence
+        env:
+          BUILD_SHA: ${{ needs.publish.outputs.sha }}
+          PREVIEW_URL: ${{ needs.publish.outputs.url }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,os
+          root=Path('kaopu-unified-human-workbench/skin-paint-r02')
+          records=[]
+          for f in sorted((root/'acceptance').glob('*/QA.json')):
+            r=json.loads(f.read_text());assert r['complete'] and not r['errors'] and not r['requests'],f
+            for s in r['screens']:
+              assert hashlib.sha256((f.parent/(s['name']+'.png')).read_bytes()).hexdigest()==s['sha256']
+            records.append({'platform':r['platform'],'browser':r['browser'],'tests':len(r['tests']),'screens':len(r['screens']),'firstMS':r['firstMS'],'driver':r['first']['graphics']['driver'],'geometry':r['geometry']})
+          assert len(records)==2
+          release=json.loads(Path('qa/skin-paint-r02/RELEASE.json').read_text())
+          receipt={**release,'url':os.environ['PREVIEW_URL'],'buildCommit':os.environ['BUILD_SHA'],'publicVerified':True,'verificationRun':os.environ['GITHUB_RUN_ID'],'reports':records,'oldVersionsUnchanged':True,'merged':False}
+          (root/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          (root/'README.md').write_text('# SKIN-PAINT-R02\n\n'+os.environ['PREVIEW_URL']+'\n\nIndependent same-character surface candidate. R01 was visually rejected by the user; it is not treated as a realism baseline.\n\nR02 replaces misplaced fixed anatomy centers with this model\'s barycentric landmark and semantic-region anchors. Regional pigment/blood paint, irregular pore distribution, lip pigment and local oil treatment are editable; beard control means undertone, not geometric hairs. The texture is self-generated, not copied from the reference.\n\nThe top comparison disables R02 pigment, relief gain and oil treatment but retains the new organic field. It is NOT the exact archived R01.\n\nWindows and Linux public-browser evidence is in acceptance/. These are software rendering backends, not user-device or cinematic-quality certification. Original geometry is retained; eye/lip/ear anatomical limitations, incomplete tissue scattering and first-load cost remain. userVisualAccepted=false.\n\nSee DELIVERY.json for exact versions, tested scope and evidence. Old versions and source branches are not merged or overwritten.\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse kaopu-unified-human-workbench/skin-paint-r02/acceptance kaopu-unified-human-workbench/skin-paint-r02/DELIVERY.json kaopu-unified-human-workbench/skin-paint-r02/README.md
+          git commit -m "docs(skin): retain actual R02 public evidence and honest delivery boundary"
+          git push origin HEAD:refs/heads/feature/skin-paint-r02-20261014
