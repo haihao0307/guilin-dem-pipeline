@@ -1,6 +1,6 @@
 # 人物总平台 · 整合审核版
 
-公开入口：[打开人物总平台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/feature/unified-human-review-platform-20261014/kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html)。本机入口为 http://127.0.0.1:8893/，使用已经下载校验的资源，不需要浏览器再访问模型下载站。
+公开入口：[打开人物总平台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ab499da18b1da1e256cd66e35ec1212183c58028/kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html)。本机入口为 http://127.0.0.1:8893/，使用已经下载校验的资源，不需要浏览器再访问模型下载站。
 
 界面只保留预设、观察、保存和审核功能；数值调整面板已隐藏。
 
