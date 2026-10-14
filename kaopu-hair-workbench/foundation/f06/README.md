@@ -38,6 +38,8 @@
 
 `python build.py` 下载并校验固定人物平台HTML；也可设置 `NATIVE_PERSON_HTML` 指向同字节的本机来源。Three.js来自该平台已使用的库，存于 `vendor/` 并核对SHA256；原许可保留。`ESBUILD` 可指定esbuild@0.25.0，`GITHUB_SHA`写入本轮源码提交。
 
+发布采用分块压缩的原始运行HTML；每块与完整解压结果均核对SHA256，分块固定在独立提交。先生成并记录payload，再设置NATIVE_PAYLOAD_REF构建固定预览。这样大文件载入可分块重试，人物源码、材质和参数不变。
+
 没有把人物运行时生成的表面顶点保存成生产资产。数值测试需要实际人物运行时的临时捕获：
 
 ```text
