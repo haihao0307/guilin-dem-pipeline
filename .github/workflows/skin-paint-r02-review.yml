@@ -1,0 +1,48 @@
+name: Skin Paint R02 image-first review
+on:
+  push:
+    branches: [feature/skin-paint-r02-20261014]
+    paths:
+      - iteration/skin-paint-r02/**
+      - .github/workflows/skin-paint-r02-review.yml
+permissions:
+  contents: read
+concurrency:
+  group: skin-paint-r02-review
+  cancel-in-progress: true
+jobs:
+  visual-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            iteration/skin-paint-r02
+            kaopu-unified-human-workbench/skin-surface-lab-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build specimen with actual own anatomy anchors
+        run: |
+          python iteration/skin-paint-r02/build.py
+          python iteration/skin-paint-r02/refine.py
+          node --check iteration/skin-paint-r02/paint-kernel.js
+          node --check iteration/skin-paint-r02/anatomy.js
+      - name: Prepare review browser
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+          npm install --prefix "$RUNNER_TEMP/paint-r02" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/paint-r02/node_modules" >> "$GITHUB_ENV"
+      - name: Real regional colour and surface image review
+        run: node iteration/skin-paint-r02/review.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-paint-r02-review
+          path: |
+            paint-evidence/
+            kaopu-unified-human-workbench/skin-paint-r02/
+            iteration/skin-paint-r02/
+          retention-days: 14
