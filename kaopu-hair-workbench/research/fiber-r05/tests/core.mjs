@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {basis,FurGuideMotion} from '../motion.mjs';
 const run=(m,t)=>{for(let i=0;i<Math.round(t*120);i++)m.advance(1/120);};
-test('clamped basis root and root slope vanish; normalized tips',()=>{for(let m=0;m<3;m++){assert.equal(basis(0,m),0);assert.ok(Math.abs(basis(1,m)-1)<1e-12);assert.ok(Math.abs(basis(1e-6,m)/1e-6)<.001);}});
+test('clamped basis root and root slope vanish; normalized tips',()=>{for(let m=0;m<3;m++){assert.ok(basis(0,m)===0);assert.ok(Math.abs(basis(1,m)-1)<1e-12);assert.ok(Math.abs(basis(1e-6,m)/1e-6)<.001);}});
 test('different curvature modes are not scaled copies',()=>{assert.ok(Math.abs(basis(.4,0)/basis(.7,0)-basis(.4,1)/basis(.7,1))>.1);});
 test('zero force preserves original rest exactly',()=>{const m=new FurGuideMotion();run(m,3);assert.equal(m.snapshot().maxOffset,0);assert.deepEqual(m.sample(10,.5),[0,0,0]);});
 test('120Hz integrator agrees across 30/60/120Hz calls',()=>{const a=new FurGuideMotion(),b=new FurGuideMotion(),c=new FurGuideMotion();for(const m of[a,b,c])m.enabled=true;for(let i=0;i<120;i++)a.advance(1/30);for(let i=0;i<240;i++)b.advance(1/60);run(c,4);assert.deepEqual(a.offsets,b.offsets);assert.deepEqual(b.offsets,c.offsets);});
