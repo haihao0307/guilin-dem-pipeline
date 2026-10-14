@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu.source-lock/1",
+  "lockedAt": "2026-10-15T07:44:30+08:00",
+  "sources": [
+    {
+      "id": "KHRONOS-KHR-PARALLEL-SHADER-COMPILE-REV6",
+      "url": "https://registry.khronos.org/webgl/extensions/KHR_parallel_shader_compile/",
+      "provenance": "Khronos WebGL Working Group extension registry",
+      "lastModified": "2020-11-24",
+      "license": "Khronos specification terms at source",
+      "novelty": "NO_NOVELTY",
+      "reason": "Fabric R03 already cites and implements its polling semantics; the spec explicitly says non-blocking polling is likely to take the same total link wall time."
+    },
+    {
+      "id": "W3C-USER-TIMING-LEVEL-3",
+      "url": "https://www.w3.org/TR/user-timing/",
+      "repository": "https://github.com/w3c/user-timing",
+      "repositoryCommit": "a449dbed90a1fdfc4c0524380099babfbe217fd6",
+      "repositoryCommitDate": "2026-09-01",
+      "provenance": "W3C Web Performance Working Group",
+      "license": "W3C Software and Document License",
+      "reproducibility": "PerformanceMark and PerformanceMeasure behavior has Web Platform Tests",
+      "novelty": "TEACHER_CANDIDATE",
+      "boundedNovelty": "Named monotonic marks and measures can bind each startup span to an exact run instead of inferring the critical path from one phase-local number."
+    },
+    {
+      "id": "W3C-LONG-TASKS-2026-03-19",
+      "url": "https://www.w3.org/TR/longtasks-1/",
+      "repository": "https://github.com/w3c/longtasks",
+      "repositoryCommit": "65eb2e6aad59f4d342ff3be81777c4b25b9d10d0",
+      "repositoryCommitDate": "2026-03-19",
+      "provenance": "W3C Web Performance Working Group",
+      "license": "W3C Software and Document License",
+      "reproducibility": "longtask-timing tests are published in web-platform-tests/wpt under BSD-3-Clause",
+      "novelty": "TEACHER_CANDIDATE",
+      "boundedNovelty": "A supported PerformanceObserver can expose UI-thread tasks of at least 50 ms that phase totals alone do not reveal.",
+      "risks": ["Working Draft", "browser support must be checked", "does not measure GPU completion", "cross-origin attribution is intentionally coarse"]
+    }
+  ],
+  "integrationRisk": "Low for instrumentation-only trial; no runtime dependency or production algorithm change. The browser must record unsupported APIs as Unknown rather than silently pass."
+}
