@@ -65,5 +65,6 @@ Updated Candidate fixtures now include the exact R05 self-consistency receipt wi
 - Does not reject R05 or undo its 18-switch / 96-phase continuity evidence.
 - Does not claim R05 is visually unnatural; it limits the stronger naturalness/reference claim.
 - Does not modify PR #270, Motion source, thresholds, main, R2 or production lineage.
-- Lifecycle before routing: `POSTED=false`; `CLASSIFICATION-GATE-RUN=true (9/9)`; `ACKNOWLEDGED / AUDITION / PROBATION / ACTIVE_TEACHER / IMPLEMENTED-N154 / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
+- Routed only to Motion R05 PR #270: https://github.com/haihao0307/guilin-dem-pipeline/pull/270#issuecomment-6163487314
+- Lifecycle after routing: `POSTED=true`; `CLASSIFICATION-GATE-RUN=true (9/9)`; `ACKNOWLEDGED / AUDITION / PROBATION / ACTIVE_TEACHER / IMPLEMENTED-N154 / MOTION-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
 - Effect KPIs remain `unknown`; no N154-compliant production audition has run.
