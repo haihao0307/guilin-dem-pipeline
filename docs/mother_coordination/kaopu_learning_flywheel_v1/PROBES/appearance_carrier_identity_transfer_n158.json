@@ -1,0 +1,57 @@
+{
+  "schema": "kaopu.regression-evidence-update/1",
+  "parentCaseId": "USER-CORRECTION-REGRESSION-BINDING-001",
+  "evidenceUpdateId": "SKIN-EAR-CARRIER-IDENTITY-N158",
+  "boundedQuestion": "Did the Full-body R02 ear-transmission result become an executable Skin Paint carrier-identity regression, rather than a posted method note?",
+  "observed": {
+    "sourceMother": "Human/Full-body Skin",
+    "sourcePr": 284,
+    "sourceSha": "1923ee7af9e121c40caa2089a49ed064e05451fe",
+    "sourceBuildSha": "50f9dd769893584dedb62f0bc62db07ebcb1dcc0",
+    "sourceHandoffSha": "60d12161a55907ba0cd2a6fffec781579d41a3c2",
+    "sourceCandidateRun": 38548514617,
+    "sourcePublicRun": 38551485275,
+    "sourceLightPathProbeRun": 38547867723,
+    "sourceMethodEvidence": true,
+    "sourceLightPathProbe": true,
+    "sourceFinding": "The inherited nominal backlight produced zero visible ear-transmission delta because it was across the skull; a head-space rear light produced a nonzero exact pixel delta without disabling occlusion.",
+    "targetMother": "Human/Skin Paint",
+    "targetPr": 288,
+    "targetHeadSha": "20649aea99244040e273233e16e191d37e10ccb8",
+    "targetTransferPosted": true,
+    "targetTransferReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/pull/288#issuecomment-6175565174",
+    "targetAcknowledged": false,
+    "targetImplemented": false,
+    "targetAblationRun": false,
+    "knownBadControlDetected": false,
+    "carrierIsolationPass": false,
+    "functionalEvidenceValid": true,
+    "userAccepted": false
+  },
+  "targetTrial": {
+    "scope": "one ear rim/lobe crop only",
+    "fixed": ["exact target subject SHA", "camera", "exposure", "crop", "geometry", "non-tested material parameters"],
+    "factors": {
+      "baseOrBloodRed": ["off", "on"],
+      "thicknessTransmission": ["off", "on"],
+      "lighting": ["neutral front", "geometrically validated rear"]
+    },
+    "requiredChannels": ["diffuse/base", "surface specular", "transmission"],
+    "positiveControl": "fixed-red ear patch or equivalent known-bad baked-red carrier",
+    "passRule": "The target must reject the baked-red control and show that transmission changes the bound ear region only under a validated light path, while base/blood red remains distinguishable under neutral front light.",
+    "nonClaims": ["global skin realism", "medical tissue parameters", "full volumetric transport", "user acceptance"]
+  },
+  "cases": [
+    {"id":"SOURCE_METHOD_MISSING","input":{"sourceMethodEvidence":false,"sourceLightPathProbe":false},"expect":"HOLD_SOURCE_METHOD_EVIDENCE_UNBOUND"},
+    {"id":"SOURCE_LIGHT_PATH_UNPROVEN","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":false},"expect":"HOLD_SOURCE_METHOD_EVIDENCE_UNBOUND"},
+    {"id":"TRANSFER_NOT_POSTED","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":false},"expect":"HOLD_TARGET_TRANSFER_NOT_POSTED"},
+    {"id":"CURRENT_POSTED_NO_ACK","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":false,"functionalEvidenceValid":true},"expect":"HOLD_TARGET_TRANSFER_UNACKNOWLEDGED"},
+    {"id":"ACK_NO_IMPLEMENTATION","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":false},"expect":"HOLD_TARGET_TRANSFER_NOT_IMPLEMENTED"},
+    {"id":"IMPLEMENTED_NO_ABLATION","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":true,"targetAblationRun":false},"expect":"HOLD_TARGET_CARRIER_ABLATION_NOT_RUN"},
+    {"id":"ABLATION_WITHOUT_BAD_CONTROL","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":true,"targetAblationRun":true,"knownBadControlDetected":false},"expect":"HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING"},
+    {"id":"BAD_CONTROL_DETECTED_CARRIERS_NOT_ISOLATED","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":true,"targetAblationRun":true,"knownBadControlDetected":true,"carrierIsolationPass":false},"expect":"HOLD_APPEARANCE_CARRIER_IDENTITY_UNBOUND"},
+    {"id":"SCOPED_PASS_USER_PENDING","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":true,"targetAblationRun":true,"knownBadControlDetected":true,"carrierIsolationPass":true,"userAccepted":false},"expect":"CARRIER_IDENTITY_REGRESSION_VERIFIED_NOT_USER_ACCEPTED"},
+    {"id":"SCOPED_PASS_USER_ACCEPTED","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":true,"targetImplemented":true,"targetAblationRun":true,"knownBadControlDetected":true,"carrierIsolationPass":true,"userAccepted":true},"expect":"USER_ACCEPTED"},
+    {"id":"FUNCTIONAL_FAILURE_REMAINS_SEPARATE","input":{"sourceMethodEvidence":true,"sourceLightPathProbe":true,"targetTransferPosted":true,"targetAcknowledged":false,"functionalEvidenceValid":false},"expect":"HOLD_FUNCTIONAL_GATE_FAIL"}
+  ]
+}
