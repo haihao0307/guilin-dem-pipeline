@@ -84,12 +84,12 @@
           {
             "side": "left",
             "roots": 32,
-            "midSagMM": 2.671930779816005
+            "midSagMM": 2.7318910347406695
           },
           {
             "side": "right",
             "roots": 31,
-            "midSagMM": 2.6362860649753963
+            "midSagMM": 2.6923384080348374
           }
         ]
       }
@@ -103,6 +103,16 @@
       "passed": true
     },
     {
+      "name": "actual corrective edge gradients no longer exceed original edge length",
+      "passed": true,
+      "details": {
+        "maxDeltaOverRestEdge": 0.9206929605015126,
+        "maxDeltaChangeMM": 1.479238282648851,
+        "testedTriangleEdges": 114092,
+        "scope": "corrective displacement difference / neutral edge length; not total deformed strain or collision"
+      }
+    },
+    {
       "name": "corrective generator preserves sampled globe-axis radius",
       "passed": true,
       "details": [
@@ -111,8 +121,8 @@
           "targetIndex": 0,
           "profilePoints": 23,
           "connectedSkinVertices": 14427,
-          "changedVertices": 9670,
-          "maxShiftMM": 3.6909024656908618,
+          "changedVertices": 9581,
+          "maxShiftMM": 3.3700883997699473,
           "maxRadialErrorMM": 6.938893903907228e-15,
           "inheritedMidSagMM": 4.015714174790435,
           "targetMidSagMM": 1.6865999534119827,
@@ -127,8 +137,8 @@
           "targetIndex": 1,
           "profilePoints": 23,
           "connectedSkinVertices": 13063,
-          "changedVertices": 9176,
-          "maxShiftMM": 3.6020732648519744,
+          "changedVertices": 9122,
+          "maxShiftMM": 3.2551389839350215,
           "maxRadialErrorMM": 6.938893903907228e-15,
           "inheritedMidSagMM": 3.8525602991283354,
           "targetMidSagMM": 1.6180753256339007,
@@ -188,13 +198,13 @@
     },
     {
       "name": "closure-R03-corrected-comparison.png",
-      "sha256": "c2e3ce5ce350c7ebde0375148f392c29d5575bb8d6a331a53bef1d68cf495945",
-      "bytes": 374932
+      "sha256": "b024f8c5e402f106c445907a6f392f13caf2e9544955ef237267f9b0f025082d",
+      "bytes": 373875
     },
     {
       "name": "closure-R03-half.png",
-      "sha256": "289ab299688e6af3e4801126db76add6b867f51ead6882c258b09585066c6c03",
-      "bytes": 377827
+      "sha256": "95b77f36b6e60d07a454a6c0d810ad15ed1d2ee9c3c5cc92c3d6dea0ff855b84",
+      "bytes": 376555
     },
     {
       "name": "closure-R03-reopened-eye.png",
@@ -207,7 +217,7 @@
   "consumerGPUCertified": false,
   "physicalPhone": false,
   "userVisualAccepted": false,
-  "readyMS": 17773.506591,
+  "readyMS": 19066.508792999997,
   "initial": {
     "version": "BROW-LASH-R03",
     "ready": true,
@@ -240,8 +250,8 @@
     "triangles": 55232,
     "geometryBytes": 4791376,
     "maxRootOffsetMM": 0.010000000000081328,
-    "buildMS": 791,
-    "updateMS": 71.39999999999418,
+    "buildMS": 978.1000000000058,
+    "updateMS": 84.79999999998836,
     "updateCount": 1,
     "msaa": true,
     "coverage": "continuous blended per-fiber coverage; no sample dithering",
@@ -323,12 +333,12 @@
       {
         "side": "left",
         "roots": 32,
-        "midSagMM": 2.671930779816005
+        "midSagMM": 2.7318910347406695
       },
       {
         "side": "right",
         "roots": 31,
-        "midSagMM": 2.6362860649753963
+        "midSagMM": 2.6923384080348374
       }
     ]
   },
@@ -336,7 +346,7 @@
     "version": "NATIVE-BLINK-WITH-CORRECTIVE-R03",
     "ready": true,
     "nativeTargetCount": 2,
-    "preparationMS": 5203.100000000035,
+    "preparationMS": 5869.799999999988,
     "cacheBytes": 25545408,
     "weights": [
       1,
@@ -352,15 +362,15 @@
     "errors": [],
     "correctiveTargetCount": 2,
     "correctionAmount": 0.85,
-    "correctiveBuildMS": 678.7000000000116,
+    "correctiveBuildMS": 720.0999999999767,
     "correction": [
       {
         "side": "left",
         "targetIndex": 0,
         "profilePoints": 23,
         "connectedSkinVertices": 14427,
-        "changedVertices": 9670,
-        "maxShiftMM": 3.6909024656908618,
+        "changedVertices": 9581,
+        "maxShiftMM": 3.3700883997699473,
         "maxRadialErrorMM": 6.938893903907228e-15,
         "inheritedMidSagMM": 4.015714174790435,
         "targetMidSagMM": 1.6865999534119827,
@@ -375,8 +385,8 @@
         "targetIndex": 1,
         "profilePoints": 23,
         "connectedSkinVertices": 13063,
-        "changedVertices": 9176,
-        "maxShiftMM": 3.6020732648519744,
+        "changedVertices": 9122,
+        "maxShiftMM": 3.2551389839350215,
         "maxRadialErrorMM": 6.938893903907228e-15,
         "inheritedMidSagMM": 3.8525602991283354,
         "targetMidSagMM": 1.6180753256339007,
@@ -387,6 +397,12 @@
         ]
       }
     ],
+    "edgeQA": {
+      "maxDeltaOverRestEdge": 0.9206929605015126,
+      "maxDeltaChangeMM": 1.479238282648851,
+      "testedTriangleEdges": 114092,
+      "scope": "corrective displacement difference / neutral edge length; not total deformed strain or collision"
+    },
     "neutralSurfaceUnchanged": true,
     "method": "connected eyelid skin / coherent closed-target warp / preserved globe-axis radius / reversible authored residual",
     "measuredAnatomicalModel": false
