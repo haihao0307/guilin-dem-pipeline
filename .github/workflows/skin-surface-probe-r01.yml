@@ -1,0 +1,59 @@
+name: Skin Surface R01 diagnostic channels
+on:
+  push:
+    branches: [feature/skin-surface-lab-r01-20261014]
+    paths: [.github/workflows/skin-surface-probe-r01.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 703b6bbf50a3080a5fdfffaf13d3408f20a53605
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-dna-r02-1
+            iteration/skin-surface-lab-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build unchanged candidate and prepare diagnostic browser
+        run: |
+          python iteration/skin-surface-lab-r01/build.py
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+          npm install --prefix "$RUNNER_TEMP/probe" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/probe/node_modules" >> "$GITHUB_ENV"
+      - name: Inspect actual renderer fields without changing source skin
+        run: |
+          cat > /tmp/ssg-probe.cjs <<'JS'
+          const fs=require('fs'),path=require('path'),http=require('http'),{chromium}=require('playwright');
+          (async()=>{const out='probe-evidence';fs.mkdirSync(out);let b,p,c;const R={errors:[],scope:'Diagnostic shader outputs, not skin beauty images'};const server=http.createServer((q,r)=>{const f=path.resolve('.','.'+q.url.split('?')[0]);if(!f.startsWith(path.resolve('.')+'/')||!fs.existsSync(f)){r.writeHead(404);return r.end();}r.setHeader('Content-Type','text/html');r.end(fs.readFileSync(f));});await new Promise(r=>server.listen(8767,'127.0.0.1',r));
+          try{b=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});p=await b.newPage({viewport:{width:1440,height:1000}});p.setDefaultTimeout(120000);c=await p.context().newCDPSession(p);p.on('pageerror',e=>R.errors.push(String(e)));await p.goto('http://127.0.0.1:8767/kaopu-unified-human-workbench/skin-surface-lab-r01/preview.html',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.skinSurfaceLab?.report().ready,null,{timeout:240000});R.initial=await p.evaluate(()=>skinSurfaceLab.report());await p.click('[data-ssg-view="macro"]');
+          R.attributes=await p.evaluate(()=>Object.fromEntries(Object.entries(__IDENTITY_QA__.viewer().geometry.attributes).map(([name,a])=>{let min=Infinity,max=-Infinity;for(const n of a.array){min=Math.min(min,n);max=Math.max(max,n);}return[name,{count:a.count,itemSize:a.itemSize,min,max}]})));
+          await p.evaluate(()=>{const v=__IDENTITY_QA__.viewer(),m=v.skin.material,old=m.onBeforeCompile,key=m.customProgramCacheKey.bind(m);window.__SSG_PROBE_U__={value:0};m.customProgramCacheKey=()=>key()+'/diagnostic-only';m.onBeforeCompile=s=>{old(s);s.uniforms.uSSGProbe=__SSG_PROBE_U__;s.fragmentShader='uniform int uSSGProbe;\n'+s.fragmentShader.replace('#include <opaque_fragment>',`
+          if(uSSGProbe==1)outgoingLight=vec3(ssgMask);
+          if(uSSGProbe==2)outgoingLight=fract(vCSRest*10.);
+          if(uSSGProbe==3)outgoingLight=vec3(ssgPoreField);
+          if(uSSGProbe==4)outgoingLight=abs(ssgGrad)*10.;
+          if(uSSGProbe==5)outgoingLight=vec3(length(ssgSlope)*10.);
+          if(uSSGProbe==6)outgoingLight=vec3(ssgFootprint);
+          if(uSSGProbe==7)outgoingLight=ssgW;
+          if(uSSGProbe==8)outgoingLight=ssgAmplitude*100.;
+          if(uSSGProbe==9)outgoingLight=vec3(length(dFdx(vCSRest))/max(length(dFdx(-vViewPosition)),1e-12));
+          if(uSSGProbe==10)outgoingLight=vec3(texture(uSSGField,vec3(gl_FragCoord.xy/256.,1.)).b);
+          if(uSSGProbe==11)outgoingLight=vec3(uSSGPore,uSSGOn,uSSGMicro);
+          #include <opaque_fragment>`);};m.needsUpdate=true;skinSurfaceLab.channel(0);});
+          const names=['mask','rest-coordinate','pore-field','rest-gradient','view-slope','footprint-mm','triplanar-weight','amplitude-x100','rest-view-scale','screen-tile-sample','uniforms'];
+          for(let i=0;i<names.length;i++){await p.evaluate(n=>{__SSG_PROBE_U__.value=n;skinSurfaceLab.channel(0);},i+1);await p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));fs.writeFileSync(out+'/'+String(i+1).padStart(2,'0')+'-'+names[i]+'.png',Buffer.from((await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));}
+          R.graphics=await p.evaluate(()=>skinSurfaceLab.inspect());R.complete=true;
+          }catch(e){R.errors.push(String(e));process.exitCode=1;}finally{fs.writeFileSync(out+'/diagnosis.json',JSON.stringify(R,null,2));await b?.close();server.close();}})();
+          JS
+          node /tmp/ssg-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-surface-r01-diagnostic-fields
+          path: probe-evidence/
+          retention-days: 14
