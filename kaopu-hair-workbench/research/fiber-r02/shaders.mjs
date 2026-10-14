@@ -79,6 +79,8 @@ uniform sampler2D gPositionMap,gTangentMap,gAuxMap;
 uniform vec3 eyePosition,backdrop;
 vec3 wPos,wTangent;float sideCoord,coverageScale,seedValue,progress;
 const float PI=3.14159265359;
+// Shared light calibration, identical for every material and diagnostic mode.
+const float LIGHT_RADIANCE_SCALE=.35;
 float sq(float x){return x*x;}
 float logI0(float x){
  if(x>10.0){float z=1.0/x;return x-.5*log(2.0*PI*x)+log(1.0+z*.125+z*z*.0703125+z*z*z*.07324219);}
@@ -146,11 +148,12 @@ void main(){
    if(i==0)tau=opacityAt(shadow0,uv);else if(i==1)tau=opacityAt(shadow1,uv);else tau=opacityAt(shadow2,uv);
    float visibility=exp(-tau*shadowStrength);
    vec3 direct=fiber(T,V,normalize(lightDirs[i]),absorption);
-   // Artistic inter-fiber multiple-scattering approximation, not path tracing.
-   vec3 bounce=base*.045*scatterBoost*(1.0-exp(-tau*.5));
+   // Small artistic inter-fiber bounce. Not a measured multiple-scattering solver.
+   vec3 bounce=base*.008*scatterBoost*(1.0-exp(-tau*.5));
    if(mode>.5)bounce=vec3(0.0);
    color+=lightColors[i]*(direct*visibility+bounce);
  }
+ color*=LIGHT_RADIANCE_SCALE;
  if(mode<.5)color+=base*.016;
  if(mode>2.5)color=vec3(.32)*(.30+.7*abs(dot(normalize(cross(T,V)),normalize(lightDirs[0]))));
  gl_FragColor=vec4(color,1.0);

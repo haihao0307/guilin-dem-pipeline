@@ -37,8 +37,10 @@ export function pathEnergy(f, opticalDepth) {
   const tail = f === 1 ? 0 : TRT*f*t/(1-f*t);
   return [R, TT, TRT, tail];
 }
+// Artist-selected RGB absorption coefficients in normalized fiber diameter units.
+// They are not a calibrated eumelanin concentration or metre^-1 measurements.
 export const MATERIALS = Object.freeze({
-  chestnut: { name: '栗棕', sigma: [.24, .49, .86], roughness: .30 },
+  chestnut: { name: '栗棕', sigma: [.40, .80, 1.30], roughness: .30 },
   black: { name: '自然黑', sigma: [1.65, 2.08, 2.65], roughness: .28 },
   honey: { name: '蜜金', sigma: [.035, .10, .27], roughness: .31 },
   silver: { name: '银白', sigma: [.017, .021, .027], roughness: .35 }
