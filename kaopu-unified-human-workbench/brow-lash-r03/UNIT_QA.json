@@ -1,0 +1,47 @@
+{
+  "version": "BROW-LASH-R03",
+  "scope": "synthetic warp unit checks; actual person and rendering separately verified",
+  "tests": [
+    {
+      "name": "zero amount is exact zero for finite points",
+      "passed": true
+    },
+    {
+      "name": "corners and distant orbital skin remain unchanged",
+      "passed": true
+    },
+    {
+      "name": "local warp is finite and preserves globe-axis radius",
+      "passed": true,
+      "detail": {
+        "points": 6561,
+        "maxRadiusErrorM": 3.469446951953614e-18,
+        "changed": 6075
+      }
+    },
+    {
+      "name": "central closed sag is reduced without changing lateral coordinate",
+      "passed": true,
+      "detail": {
+        "before": [
+          0,
+          -0.004,
+          0.014
+        ],
+        "after": [
+          0,
+          -0.0013900000000000002,
+          0.0144937193294199
+        ]
+      }
+    },
+    {
+      "name": "small input changes have bounded output changes in tested region",
+      "passed": true,
+      "detail": {
+        "maxChangeM": 3.404966289883691e-8,
+        "inputStepM": 1e-7
+      }
+    }
+  ]
+}

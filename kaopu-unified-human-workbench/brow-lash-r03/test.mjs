@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {orbitalWarp} from './ClosureProfile.mjs';
+const eye={inner:[-.015,0,.02],outer:[.015,.001,.02],center:[0,0,0],profile:[[0,0],[.25,-.003],[.5,-.004],[.75,-.0025],[1,.001]]};
+const tests=[],check=(name,fn)=>{const detail=fn();tests.push({name,passed:true,detail});};
+check('zero amount is exact zero for finite points',()=>{for(const x of[-.012,-.004,0,.004,.012]){const d=orbitalWarp([x,-.004,.014],eye,0);assert(d.every(v=>Math.abs(v)<1e-15));}});
+check('corners and distant orbital skin remain unchanged',()=>{for(const q of[[-.015,-.004,.014],[.015,-.004,.014],[.03,0,.014],[0,.03,.014]])assert.deepEqual(orbitalWarp(q,eye),[0,0,0]);});
+check('local warp is finite and preserves globe-axis radius',()=>{let max=0,changed=0;for(let i=0;i<=80;i++)for(let j=0;j<=80;j++){const q=[-.016+i*.0004,-.02+j*.0005,.014],d=orbitalWarp(q,eye);assert(d.every(Number.isFinite));max=Math.max(max,Math.abs(Math.hypot(q[1],q[2])-Math.hypot(q[1]+d[1],q[2]+d[2])));if(Math.hypot(...d)>1e-10)changed++;}assert(max<1e-12);assert(changed>1000);return{points:6561,maxRadiusErrorM:max,changed};});
+check('central closed sag is reduced without changing lateral coordinate',()=>{const q=[0,-.004,.014],d=orbitalWarp(q,eye);assert.equal(d[0],0);assert(d[1]>0&&d[1]<.004);assert(Math.abs(q[1]+d[1])<Math.abs(q[1])*.6);return{before:q,after:q.map((v,i)=>v+d[i])};});
+check('small input changes have bounded output changes in tested region',()=>{let max=0;for(let i=0;i<1000;i++){const x=-.014+i*.000028,a=orbitalWarp([x,-.004,.014],eye),b=orbitalWarp([x+1e-7,-.004,.014],eye);max=Math.max(max,Math.hypot(...a.map((v,k)=>v-b[k])));}assert(max<.00001);return{maxChangeM:max,inputStepM:1e-7};});
+console.log(JSON.stringify({version:'BROW-LASH-R03',scope:'synthetic warp unit checks; actual person and rendering separately verified',tests},null,2));

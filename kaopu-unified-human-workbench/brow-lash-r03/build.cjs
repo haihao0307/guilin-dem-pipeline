@@ -1,0 +1,28 @@
+'use strict';
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=require('node:assert/strict'),vm=require('vm'),esbuild=require('esbuild');
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex'),here=__dirname,root=path.resolve(here,'..'),old=root+'/brow-lash-r01',r02=root+'/brow-lash-r02';
+const read=p=>fs.readFileSync(p,'utf8'),once=(s,a,b)=>{assert.equal(s.split(a).length,2,'R03 adapter '+a.slice(0,80));return s.replace(a,()=>b);};
+(async()=>{
+ const host=read(root+'/human-integrated-r06/preview.html');assert.equal(hash(host),'b33c0a651570f2671ac61ea546279abfe06ebb07c966a70964e428df966420fd');
+ const manifest=JSON.parse(read(r02+'/BUILD_MANIFEST.json'));
+ let groom=read(r02+'/Groom.adapted.txt'),material=read(r02+'/Material.adapted.txt'),app=read(r02+'/App.adapted.txt');
+ for(const [key,text]of Object.entries({groom,material,app}))assert.equal(hash(text),manifest.adapterSHA256[key],'R02 adapter drift '+key);
+ groom=groom.replaceAll('BROW-LASH-R02','BROW-LASH-R03');
+ app=app.replace('../brow-lash-r02/FocusedBlink.mjs','../brow-lash-r03/CorrectedBlink.mjs').replaceAll('BROW-LASH-R02','BROW-LASH-R03').replaceAll('· R02','· R03').replaceAll('R02 已渲染','R03 已渲染');
+ app=once(app,'<h2>原生眼睑联动</h2>','<h2>原生眼睑联动</h2><label class="bl-knob"><span>闭眼轮廓修正 <output id="bl-correct-value">85%</output></span><input id="bl-correct" type="range" min="0" max="1" step=".01" value=".85" disabled></label><button id="bl-native-compare" disabled style="width:100%;margin-bottom:8px">对照 R02 原闭眼轮廓</button>');
+ app=once(app,"$('bl-closure').disabled=false;status(","$('bl-closure').disabled=false;$('bl-correct').disabled=false;$('bl-native-compare').disabled=false;status(");
+ app=once(app,"if(e.target.id==='bl-closure')try{", "if(e.target.id==='bl-correct'&&groom?.focusBlink?.ready){groom.focusBlink.setCorrection(Number(e.target.value));$('bl-correct-value').textContent=Math.round(Number(e.target.value)*100)+'%';}if(e.target.id==='bl-closure')try{");
+ app=once(app,"if(b.dataset.blPreset){", "if(b.id==='bl-native-compare'){const value=groom.focusBlink.correctionAmount>0?0:.85;groom.focusBlink.setCorrection(value);$('bl-correct').value=value;$('bl-correct-value').textContent=Math.round(value*100)+'%';b.textContent=value>0?'对照 R02 原闭眼轮廓':'返回 R03 闭眼修正';}else if(b.dataset.blPreset){");
+ app=app.replace('之后只读取原生形变。','原生形变保留，附加可撤回的局部闭眼轮廓修正。').replace('两眼原生形变已就绪。','原生双眼与可撤回闭眼修正已就绪。');
+ let growth=read(r02+'/Growth.mjs');growth=growth.replace('Math.round(420*s.browDensity)','Math.round(500*s.browDensity)').replace('.0022+.0031*maturity','.0018+.0028*maturity');
+ const routes=new Map([[old+'/Groom.mjs',groom],[old+'/FiberMaterial.mjs',material],[old+'/app.mjs',app],[r02+'/Growth.mjs',growth]]);
+ const plugin={name:'r03-readonly-composition',setup(b){b.onLoad({filter:/\.(mjs|js)$/},a=>routes.has(a.path)?{contents:routes.get(a.path),loader:'js',resolveDir:path.dirname(a.path)}:undefined);}};
+ const result=await esbuild.build({entryPoints:[old+'/app.mjs'],bundle:true,minify:true,format:'iife',target:'es2022',write:false,metafile:true,legalComments:'inline',plugins:[plugin]});
+ const code=result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');new vm.Script(code);
+ const html=host.replace(/<title>[^<]*<\/title>/,'<title>KAOPU 眉睫 R03 · 闭眼轮廓修复</title>').replace('</body>',()=>'<script data-module="KAOPU-BROW-LASH-R03">'+code+'</script></body>');
+ const scripts=s=>[...s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);assert.deepEqual(scripts(html).slice(0,scripts(host).length).map(hash),scripts(host).map(hash));
+ fs.writeFileSync(here+'/preview.html',html);for(const [name,text]of Object.entries({Groom:groom,Material:material,App:app,Growth:growth}))fs.writeFileSync(here+'/'+name+'.adapted.txt',text);
+ const files=[...Object.keys(result.metafile.inputs),here+'/build.cjs',here+'/verify.cjs'];
+ const output={version:'BROW-LASH-R03',sourceCommit:process.env.SOURCE_SHA||process.env.GITHUB_SHA||'local',predecessor:'9095762c0c6618f928a4be45297ed5d13dd2d9f1',hostBuild:'f5017cb7cb9c2024df6a08328564c3f4ae502509',hostExecutableUnchanged:true,neutralFaceUnchanged:true,previewBytes:Buffer.byteLength(html),previewSHA256:hash(html),sources:files.map(p=>({path:path.relative(path.resolve(root,'..'),p),sha256:hash(fs.readFileSync(p))})),userVisualAccepted:false,filmQualityAccepted:false};
+ fs.writeFileSync(here+'/BUILD_MANIFEST.json',JSON.stringify(output,null,2));console.log('BUILT R03',output.previewBytes,output.previewSHA256);
+})().catch(e=>{console.error(e);process.exitCode=1;});
