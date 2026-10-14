@@ -9,7 +9,7 @@ permissions:
   contents: read
 concurrency:
   group: skin-paint-r02-review
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   visual-review:
     runs-on: ubuntu-latest
@@ -24,10 +24,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build isolated specimen
+      - name: Build specimen with actual own anatomy anchors
         run: |
           python iteration/skin-paint-r02/build.py
+          python iteration/skin-paint-r02/refine.py
           node --check iteration/skin-paint-r02/paint-kernel.js
+          node --check iteration/skin-paint-r02/anatomy.js
       - name: Prepare review browser
         run: |
           sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
