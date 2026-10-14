@@ -11,7 +11,7 @@ jobs:
   build:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,37 +26,41 @@ jobs:
         run: |
           echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           node --check kaopu-unified-human-workbench/head-procedural-r01/HeadSurface.js
-          node --check kaopu-unified-human-workbench/head-procedural-r01/verify.cjs
+          node --check kaopu-unified-human-workbench/head-procedural-r01/SurfaceMicrostructure.js
           node kaopu-unified-human-workbench/head-procedural-r01/build.cjs
       - name: Real candidate browser gates
         env: {QA_OUT: head-procedural-evidence/candidate}
         run: node kaopu-unified-human-workbench/head-procedural-r01/verify.cjs
+      - name: All surface controls and native-shape regression
+        env: {CONTROL_OUT: head-procedural-evidence/candidate-controls}
+        run: node kaopu-unified-human-workbench/head-procedural-r01/verify-controls.cjs
       - name: Publish only isolated new directory
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add kaopu-unified-human-workbench/head-procedural-r01
-          git commit -m 'build(head-procedural-r01): tested same-person no-skin-map candidate'
+          git commit -m 'build(head-procedural-r01): C3 microstructure and actual parameter regression'
           git push origin HEAD:research/head-procedural-skin-r01-20261014
           echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Exact public HTTPS browser gates
-        env: {QA_OUT: head-procedural-evidence/public}
+        env: {QA_OUT: head-procedural-evidence/public, CONTROL_OUT: head-procedural-evidence/public-controls}
         run: |
           export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/head-procedural-r01/preview.html"
           node kaopu-unified-human-workbench/head-procedural-r01/verify.cjs
+          node kaopu-unified-human-workbench/head-procedural-r01/verify-controls.cjs
       - name: Record permanent exact-public proof
         run: |
           python - <<'PY'
           import json,os,hashlib,urllib.request,subprocess,shutil
           from pathlib import Path
-          p=Path('kaopu-unified-human-workbench/head-procedural-r01');q=json.loads(Path('head-procedural-evidence/public/qa.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text());assert q['completed'] and all(t['passed'] for t in q['tests']) and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests'] and not q['referenceRequests']
+          p=Path('kaopu-unified-human-workbench/head-procedural-r01');q=json.loads(Path('head-procedural-evidence/public/qa.json').read_text());c=json.loads(Path('head-procedural-evidence/public-controls/qa.json').read_text());m=json.loads((p/'BUILD_MANIFEST.json').read_text());assert q['completed'] and c['completed'] and all(t['passed'] for t in q['tests']+c['tests']) and not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests'] and not q['referenceRequests'] and not c['errors']
           raw=f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{os.environ['BUILD_SHA']}/{p}/preview.html";assert hashlib.sha256(urllib.request.urlopen(raw).read()).hexdigest()==m['previewSHA256']
           changed=subprocess.check_output(['git','diff','--name-only',os.environ['SOURCE_SHA'],'HEAD'],text=True).splitlines();assert all(x.startswith(str(p)+'/') for x in changed),changed
-          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2));shutil.copytree('head-procedural-evidence/public',p/'acceptance',dirs_exist_ok=True)
-          d={'version':m['version'],'status':'public-interactive-candidate','publicURL':q['url'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'tests':len(q['tests']),'referenceAssetsImported':0,'skinImageSamplers':0,'headOnly':True,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'physicalPhone':False,'productionReady':False};(p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
+          (p/'PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2));(p/'PUBLIC_CONTROL_QA.json').write_text(json.dumps(c,ensure_ascii=False,indent=2));shutil.copytree('head-procedural-evidence/public',p/'acceptance',dirs_exist_ok=True);shutil.copytree('head-procedural-evidence/public-controls',p/'acceptance'/'controls',dirs_exist_ok=True)
+          d={'version':m['version'],'calibration':m['calibration'],'status':'public-interactive-candidate','publicURL':q['url'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'coreTests':len(q['tests']),'controlTests':len(c['tests']),'individualSurfaceControls':len(c['parameterResults']),'referenceAssetsImported':0,'skinImageSamplers':0,'headOnly':True,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'physicalPhone':False,'productionReady':False};(p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
           PY
           git add kaopu-unified-human-workbench/head-procedural-r01
-          git commit -m 'test(head-procedural-r01): exact-public controls pixels archives and provenance'
+          git commit -m 'test(head-procedural-r01): C3 immutable public full-control proof'
           git push origin HEAD:research/head-procedural-skin-r01-20261014
       - uses: actions/upload-artifact@v4
         if: always()
