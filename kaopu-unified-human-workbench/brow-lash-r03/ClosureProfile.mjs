@@ -14,12 +14,13 @@ export function orbitalWarp(q,eye,amount=1){
  const seam=interpolate(eye.profile,u),line=eye.inner[1]*(1-u)+eye.outer[1]*u;
  const target=line+(seam-line)*.42,vertical=q[1]-seam;
  const gate=smooth(0,.09,u)*(1-smooth(.91,1,u))*(1-smooth(.014,.026,Math.abs(vertical)));
- const dy=clamp(target-seam,-.0045,.0045)*Math.exp(-((vertical/.014)**2))*gate*amount;
- if(dy===0)return [0,0,0];
  const ry=q[1]-eye.center[1],rz=q[2]-eye.center[2],rho=Math.hypot(ry,rz);
- if(rz<=.001||rho<.002||Math.abs(ry+dy)>=rho*.998)return [0,0,0];
+ const frontFade=smooth(.001,.006,rz)*(1-smooth(.90,.998,Math.abs(ry)/(rho||1)));
+ const dy=clamp(target-seam,-.0045,.0045)*Math.exp(-((vertical/.014)**2))*gate*amount*frontFade;
+ if(dy===0||rho<.002)return [0,0,0];
+ const nextY=clamp(ry+dy,-rho*.998,rho*.998);
  // Rotate skin around the unchanged globe axis, preserving radial clearance.
- return [0,dy,Math.sqrt(Math.max(0,rho*rho-(ry+dy)*(ry+dy)))-rz];
+ return [0,nextY-ry,Math.sqrt(Math.max(0,rho*rho-nextY*nextY))-rz];
 }
 export function buildClosureCorrections(groom,geometry){
  const f=groom.frame,p=geometry.attributes.position.array,index=geometry.index.array,targets=geometry.morphAttributes.position;
@@ -58,7 +59,9 @@ export function buildClosureCorrections(groom,geometry){
   const selected=new Set(),queue=[];for(const i of seeds)if(eligible[i]){selected.add(i);queue.push(i);}
   for(let j=0;j<queue.length;j++)for(const i of adj.get(queue[j])||[])if(!selected.has(i)){selected.add(i);queue.push(i);}
   let maxShift=0,maxRadiusError=0,changed=0;
-  for(const i of selected){const q=point(closed,i),d=orbitalWarp(q,eye);if(Math.hypot(...d)<1e-10)continue;
+  for(const i of selected){const q=point(closed,i),neutral=point(rest,i);
+   const domainFade=(1-smooth(.021,.032,Math.abs(neutral[1]-center[1])))*smooth(.001,.006,neutral[2]-center[2])*(1-smooth(.033,.044,neutral[2]-center[2]));
+   const d=orbitalWarp(q,eye,domainFade);if(Math.hypot(...d)<1e-10)continue;
    const before=Math.hypot(q[1]-center[1],q[2]-center[2]),after=Math.hypot(q[1]+d[1]-center[1],q[2]+d[2]-center[2]);maxRadiusError=Math.max(maxRadiusError,Math.abs(after-before));
    for(let k=0;k<3;k++)positions[ti][i*3+k]=f.x[k]*d[0]+f.up[k]*d[1]+f.front[k]*d[2];
    maxShift=Math.max(maxShift,Math.hypot(...d));changed++;
