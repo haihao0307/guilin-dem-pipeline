@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {makeJacket} from './jacket.mjs';
+import {makeJacket,shadeFlyaways} from './jacket-refined.mjs';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './eb1-public.js';
 
@@ -13,7 +13,7 @@ const defaults={...settings};
 try{const saved=JSON.parse(localStorage.getItem('kaopu:knit:public:p02'));if(saved&&saved.version===VERSION)for(const key of Object.keys(defaults)){if(typeof saved.settings[key]===typeof defaults[key])settings[key]=saved.settings[key];}}catch{}
 function hash(n){n=Math.imul(n^seed,0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967296;}
 let dirty=true,ready=false,builds=0,frames=0,building=false,mesh=null,fur=null,buildMs=0,vertices=0,triangles=0,hairCount=0;
-let shaders=[],jacket=null;
+let shaders=[],jacket=null,activeView="whole";
 const stage=$('stage'),scene=new THREE.Scene();
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -47,7 +47,7 @@ function frame(c,r,t){const p=point(c,r,t),T=point(c,r,Math.min(1,t+.0004)).sub(
 function build(){
  if(building)return;building=true;const start=performance.now();
  const positions=[],normals=[],uvs=[],colors=[],indices=[];
- const roots=[],dirs=[],bends=[],seeds=[],hcolors=[];
+ const roots=[],dirs=[],bends=[],seeds=[],hcolors=[],hNormals=[];
  const steps=64,sides=12;
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const id=r*cols+c,col=colorAt(c,r,id),phase=hash(id)*TAU;
@@ -77,7 +77,7 @@ function build(){
    const len=(fly?.0014:.00032)+(fly?.0015:.00094)*Math.pow(hash(hid*31),1.45);
    const dir=T.clone().multiplyScalar((hash(hid*41)-.5)*1.35).addScaledVector(n,.30+.50*hash(hid*23)).normalize().multiplyScalar(len);
    const curve=B.clone().multiplyScalar((hash(hid*19)-.5)*len*1.25).addScaledVector(N,(hash(hid*37)-.45)*len*.7);
-   roots.push(root.x,root.y,root.z);dirs.push(dir.x,dir.y,dir.z);bends.push(curve.x,curve.y,curve.z);seeds.push(hash(hid*43),fly?1:0);hcolors.push(col.r,col.g,col.b);
+   roots.push(root.x,root.y,root.z);dirs.push(dir.x,dir.y,dir.z);bends.push(curve.x,curve.y,curve.z);seeds.push(hash(hid*43),fly?1:0);hcolors.push(col.r,col.g,col.b);hNormals.push(n.x,n.y,n.z);
   }
  }
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.setIndex(indices);geometry.computeBoundingSphere();
@@ -101,7 +101,7 @@ function build(){
  material.customProgramCacheKey=()=>VERSION;
  if(mesh){group.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}
  mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
- jacket?.dispose();jacket=makeJacket({cols,rows,radius,frame,hash,colorAt,settings,uniforms,store});group.add(jacket.mesh);
+ jacket?.dispose();jacket=makeJacket({cols,rows,radius,frame,hash,colorAt,settings,uniforms,store,lighting});group.add(jacket.mesh);
  if(fur){group.remove(fur);fur.geometry.dispose();fur.material.dispose();}
  const fg=new THREE.InstancedBufferGeometry(),v=[],ix=[];
  for(let s=0;s<=4;s++){v.push(s/4,-1,0,s/4,1,0);if(s<4){const k=s*2;ix.push(k,k+2,k+1,k+2,k+3,k+1);}}
@@ -119,7 +119,7 @@ function build(){
  }`});
  // GLSL preprocessor directives must begin their own line.
  fmat.fragmentShader=fmat.fragmentShader.replace(';#include',';\n#include');
- fur=new THREE.Mesh(fg,fmat);fur.frustumCulled=false;fur.renderOrder=2;group.add(fur);
+ fur=new THREE.Mesh(fg,fmat);fur.frustumCulled=false;fur.renderOrder=2;group.add(fur);shadeFlyaways(fur,new Float32Array(hNormals),store,lighting);
  const phot=()=>{const p=KAOPU_EB1.sampleProfile(store.get());fmat.uniforms.uKeyDir.value.fromArray(p.keyDirection);fmat.uniforms.uRimDir.value.fromArray(p.rimDirection);fmat.uniforms.uKey.value.fromArray(p.keyColor);fmat.uniforms.uRim.value.fromArray(p.rimColor);fmat.uniforms.uEnv.value=store.get().environment;};phot();
  if(window.__furUnsub)window.__furUnsub();window.__furUnsub=store.subscribe(phot);
  vertices=positions.length/3;triangles=indices.length/3+hairCount*8;builds++;buildMs=performance.now()-start;building=false;
@@ -142,8 +142,13 @@ function set(patch,{save=true}={}){
  return {...settings};
 }
 function sync(){for(const el of document.querySelectorAll('[data-param]')){const k=el.dataset.param;el.value=settings[k];const o=document.querySelector(`[data-output="${k}"]`);if(o)o.textContent=Number(settings[k]).toFixed(2);}document.querySelectorAll('[data-mode]').forEach(el=>{el.classList.toggle('selected',el.dataset.mode===settings.mode);el.setAttribute('aria-pressed',el.dataset.mode===settings.mode?'true':'false');});$('mode-note').textContent=settings.mode==='fiber'?'贴伏纤维层 + 短绒（P02）':'关闭细节的载纱对照（不是原生 R15）';}
-function view(name){const views={whole:[[.027,.012,.19],[0,0,0]],close:[[.005,.004,.058],[0,0,.003]],edge:[[.11,.015,.056],[.012,0,.002]],back:[[.02,.012,-.16],[0,0,0]]};if(!views[name])throw new Error('未知视角');camera.position.fromArray(views[name][0]);controls.target.fromArray(views[name][1]);controls.update();dirty=true;return name;}
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();uniforms.viewSize.value.set(w*renderer.getPixelRatio(),h*renderer.getPixelRatio());dirty=true;}
+function view(name){activeView=name;if(name==='whole'){
+ const v=new THREE.Vector3(.81,.22,.54).normalize(),right=new THREE.Vector3(v.z,0,-v.x).normalize(),up=new THREE.Vector3().crossVectors(v,right).normalize();
+ const extent=a=>.049*Math.abs(a.x)+.035*Math.abs(a.y)+.006*Math.abs(a.z);
+ const d=1.08*(Math.max(extent(right)/(Math.tan(camera.fov*Math.PI/360)*camera.aspect),extent(up)/Math.tan(camera.fov*Math.PI/360))+extent(v));
+ camera.position.copy(v).multiplyScalar(d);controls.target.set(0,0,.002);controls.update();dirty=true;return name;}
+ const views={frontal:[[.027,.012,.19],[0,0,0]],close:[[.005,.004,.058],[0,0,.003]],edge:[[.11,.015,.056],[.012,0,.002]],back:[[.02,.012,-.16],[0,0,0]]};if(!views[name])throw new Error('未知视角');camera.position.fromArray(views[name][0]);controls.target.fromArray(views[name][1]);controls.update();dirty=true;return name;}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();if(activeView==="whole")view("whole");uniforms.viewSize.value.set(w*renderer.getPixelRatio(),h*renderer.getPixelRatio());dirty=true;}
 new ResizeObserver(resize).observe(stage);
 for(const el of document.querySelectorAll('[data-param]')){el.addEventListener(el.type==='range'?'input':'change',()=>set({[el.dataset.param]:el.type==='range'?Number(el.value):el.value}));}
 document.querySelectorAll('[data-mode]').forEach(el=>el.onclick=()=>set({mode:el.dataset.mode}));
