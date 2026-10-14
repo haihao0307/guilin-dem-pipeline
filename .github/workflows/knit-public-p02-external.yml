@@ -1,0 +1,98 @@
+name: Knit P02 exact public C2 verification
+on:
+  push:
+    branches: [fix/knit-p02-visible-fiber-20261014]
+    paths: [.github/workflows/knit-public-p02-external.yml]
+permissions:
+  contents: write
+jobs:
+  external:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: docs/knit-public-p02
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Verify the real public URL, not a local substitute
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,json,hashlib,traceback
+          from playwright.sync_api import sync_playwright
+          from PIL import Image,ImageChops,ImageStat
+          root=Path('p02-public-proof');root.mkdir(exist_ok=True)
+          commit='6f1a7f1353d2b47822525769313d63cc51890a0c'
+          raw=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{commit}/kaopu-fabric-workbench/knit-public-p02/index.html'
+          url='https://htmlpreview.github.io/?'+raw
+          r={'version':'KNIT-PUBLIC-P02','revision':'C2','publicURL':url,'buildCommit':commit,'sourceCommit':'f09fb6bcd36cf29e5921922bb5dd0737f3d917b9','checks':{},'errors':[],'consoleErrors':[],'visualReviewed':True,'userVisualAccepted':False,'referenceQualityAchieved':False,'visualAssessment':'Default-scale surface fibres and fuzz are visible. The first C1 showed overlit dashed strands and was rejected. C2 reduces this with clearance and carrier-shadow reception, but regular cord/chain shapes and some near-view line artifacts remain; not an accepted finished wool material.','privateRuntimeImported':False,'clothPhysics':False,'device':'Chromium SwiftShader software GPU; 855x866 viewport, 565x800 canvas; not phone hardware or hardware FPS'}
+          def ck(k,v):
+            r['checks'][k]=bool(v)
+            if not v:raise AssertionError(k)
+          data=urllib.request.urlopen(raw,timeout=45).read();r['htmlSHA256']=hashlib.sha256(data).hexdigest();r['htmlBytes']=len(data)
+          ck('exactPublicBytes',r['htmlSHA256']=='aff46d61deae59656fd4605356bd04b62789db8c64c3cf88ffd729d16f201ee1' and len(data)==761310)
+          with sync_playwright() as pw:
+            b=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+            page=b.new_page(viewport={'width':855,'height':866},device_scale_factor=1);page.set_default_timeout(120000)
+            page.on('pageerror',lambda e:r['errors'].append(str(e)))
+            page.on('console',lambda e:r['consoleErrors'].append(e.text) if e.type=='error' else None)
+            try:
+              page.goto(url,wait_until='domcontentloaded',timeout=120000);page.wait_for_function('window.KnitPublic&&KnitPublic.report().ready',timeout=240000)
+              initial=page.evaluate('KnitPublic.report()');r['initial']=initial
+              ck('rightRuntime',initial['version']=='KNIT-PUBLIC-P02')
+              ck('defaultFibreMode',initial['settings']['mode']=='fiber' and initial['settings']['detail']==1)
+              def shot(name):
+                page.evaluate('KnitPublic.render()');page.wait_for_timeout(500)
+                bounds=page.locator('#stage canvas').bounding_box();page.screenshot(path=str(root/(name+'.png')),clip=bounds,timeout=180000)
+                ck(name+'_GL',page.evaluate('KnitPublic.report().glError')==0)
+              shot('default-public')
+              page.locator('[data-param="detail"]').evaluate('el=>{el.value="0";el.dispatchEvent(new Event("input",{bubbles:true}));}')
+              shot('without-laid-fibres')
+              a=Image.open(root/'default-public.png').convert('RGB');c=Image.open(root/'without-laid-fibres.png').convert('RGB');score=sum(ImageStat.Stat(ImageChops.difference(a,c)).mean)/3;r['surfaceLayerPixelDifference']=score
+              ck('visibleSurfaceLayerAt565px',score>.5)
+              page.evaluate('KnitPublic.set({detail:1});KnitPublic.view("close")');shot('close-public')
+              page.evaluate('KnitPublic.view("edge")');shot('grazing-public')
+              ck('EB1Unchanged',page.evaluate('KnitPublic.report().lighting.fingerprint')==initial['lighting']['fingerprint'])
+              ck('fibreControlsNoRebuild',page.evaluate('KnitPublic.report().builds')==initial['builds'])
+              page.locator('[data-param="fuzz"]').evaluate('el=>{el.value=".6";el.dispatchEvent(new Event("input",{bubbles:true}));}')
+              ck('actualParameterInput',abs(page.evaluate('KnitPublic.report().settings.fuzz')-.6)<1e-8)
+              page.reload(wait_until='domcontentloaded',timeout=120000);page.wait_for_function('window.KnitPublic&&KnitPublic.report().ready',timeout=240000)
+              ck('reloadSave',abs(page.evaluate('KnitPublic.report().settings.fuzz')-.6)<1e-8)
+              page.evaluate('document.getElementById("reset").click();KnitPublic.view("whole");KnitPublic.render()')
+              ck('invalidInputRejected',page.evaluate('()=>{try{KnitPublic.set({fuzz:NaN});return false}catch(e){return true}}'))
+              page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(700);page.screenshot(path=str(root/'narrow-viewport-public.png'),timeout=180000)
+              ck('narrowNoHorizontalOverflow',page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
+              ck('noPageErrors',not r['errors']);ck('noConsoleErrors',not r['consoleErrors'])
+              r['final']=page.evaluate('KnitPublic.report()');r['publicURLVerified']=True;r['passed']=True
+            except Exception as e:
+              r['passed']=False;r['publicURLVerified']=False;r['error']=str(e);r['trace']=traceback.format_exc()
+              try:page.screenshot(path=str(root/'failure.png'),timeout=60000)
+              except:pass
+            finally:
+              r['images']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.png')};(root/'PUBLIC_DELIVERY.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));b.close()
+          print(json.dumps({'passed':r.get('passed'),'checks':r['checks'],'error':r.get('error')},ensure_ascii=False))
+          if not r.get('passed'):raise SystemExit(1)
+          PY
+      - name: Preserve exact public evidence with fast-forward-only update
+        run: |
+          mkdir -p docs/knit-public-p02
+          cp -r p02-public-proof docs/knit-public-p02/c2
+          BRANCH=fix/knit-p02-visible-fiber-20261014
+          CURRENT=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          test "$CURRENT" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/knit-public-p02/c2
+          git commit -m 'docs(knit-p02): exact public render and controls verified; reference visual quality remains unmet'
+          git push origin "HEAD:refs/heads/$BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-p02-public-proof
+          path: p02-public-proof/
+          retention-days: 14
