@@ -44,5 +44,5 @@ const attached = await attachGroom(head,pack);
 - [x] 已实际修改毛发生产源码，复用完整人物运行时；
 - [x] 人物几何、骨架与头部姿态来自原生运行时；
 - [x] 相机、方案和绑定检查提供真实操作；
-- [ ] 固定公网和最终浏览器验收见DELIVERY.json；
+- [x] 固定公网和最终浏览器验收见DELIVERY.json；
 - [x] 只提供截图没有工作台视为交付未完成。

@@ -1,26 +1,324 @@
 {
-  "success": false,
+  "success": true,
   "checks": [
     {
-      "name": "native browser completed",
-      "pass": false,
-      "data": "TimeoutError: page.waitForFunction: Timeout 180000ms exceeded."
-    }
-  ],
-  "errors": [
-    "page.waitForFunction: Timeout 180000ms exceeded.\n    at wait (G:\\Three.js\\Human\\Human-Hair-F03-Preparation-20261014\\kaopu-hair-workbench\\foundation\\f06\\tests\\native-browser.mjs:5:21)\n    at G:\\Three.js\\Human\\Human-Hair-F03-Preparation-20261014\\kaopu-hair-workbench\\foundation\\f06\\tests\\native-browser.mjs:8:93"
-  ],
-  "failed": [
-    {
-      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7e082c78f024edd9b360366fd6d7856eb1174669/kaopu-hair-workbench/foundation/f06/preview.html",
-      "error": "net::ERR_TIMED_OUT"
+      "name": "complete P01 native person ready, no standalone head",
+      "pass": true,
+      "data": {
+        "version": "F06",
+        "source": "7b03f6366c43d729b9279e410932e84e34e95915",
+        "ready": true,
+        "busy": false,
+        "builds": 1,
+        "pathBuilds": 1,
+        "cacheHit": false,
+        "lastBuildMS": 723.3000000119209,
+        "readyMS": 34858.40000003576,
+        "person": "P01",
+        "nativeSource": {
+          "commit": "d413d108704af47cf531ee8c25d93f682c3176e3",
+          "path": "kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html",
+          "htmlSHA256": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+          "character": "P01",
+          "topology": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+          "adapter": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5",
+          "indexSHA256": "426c934a70c30c2a1229d1166175f08726943bcaf65087e937b0ba9932e55653",
+          "vertices": 25417,
+          "triangles": 50624
+        },
+        "personMeshUUID": "bf692d90-efff-49a6-9fca-b4b6cb8b3007",
+        "nativeCommonVertices": 25417,
+        "nativeCommonTriangles": 50624,
+        "renderVertices": 266098,
+        "activeRoots": 3067,
+        "guideCount": 192,
+        "rootBankSignature": "b0f64ef",
+        "nativeBinding": {
+          "source": {
+            "commit": "d413d108704af47cf531ee8c25d93f682c3176e3",
+            "path": "kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html",
+            "htmlSHA256": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+            "character": "P01",
+            "topology": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+            "adapter": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5",
+            "indexSHA256": "426c934a70c30c2a1229d1166175f08726943bcaf65087e937b0ba9932e55653",
+            "vertices": 25417,
+            "triangles": 50624
+          },
+          "bank": 3300,
+          "active": 3067,
+          "unsupportedActive": 0,
+          "signature": "b0f64ef",
+          "sourceChartSignature": "a624b76f",
+          "commonVertexCount": 25417,
+          "commonTriangleCount": 50624,
+          "extraHeadMesh": false
+        },
+        "rootAttachmentErrorMM": 0.000029747166618854237,
+        "physicsSteps": 0,
+        "extraHeadMesh": false,
+        "oldHeadResourceLoaded": false,
+        "nativePersonMeshUnchanged": true,
+        "errors": []
+      }
     },
     {
-      "url": "https://api.codetabs.com/v1/proxy/?quest=https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7e082c78f024edd9b360366fd6d7856eb1174669/kaopu-hair-workbench/foundation/f06/preview.html",
-      "error": "net::ERR_FAILED"
+      "name": "native root map has all supports",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "single actual WebGL canvas and retained native dense rendering",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "rendered root vertices match actual full-person triangles",
+      "pass": true,
+      "data": {
+        "errorMM": 0.000029807747598034312,
+        "matrixMatches": true
+      }
+    },
+    {
+      "name": "native head-joint turn moves rendered guides without root drift",
+      "pass": true,
+      "data": {
+        "maxComponentMovementMetres": 0.017693429021164775,
+        "rootErrorMM": 0.000029828456101847283
+      }
+    },
+    {
+      "name": "preset edited while posed stays bound to current native skin",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "opposite native pose retains exact root and person mesh",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "return to neutral and medium preserves fixed native root bank",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "long preset changes only guide recipe on same person",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "undo restores native medium document",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "redo restores native long document",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "rename does not rebuild native person or guides",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "local reference metadata retained without auto-fit or upload claim",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "reference viewpoint edit does not rebuild geometry",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "same photo hash deduplicated",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "undo restores complete reference record",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "actual native design export keeps target but no image pixels",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "full saved native document restored",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "old F05 local project left untouched",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "wrong native target import refused without mutation",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "legacy project migrates settings and creates new full-person target",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "late worker result cannot overwrite latest native design",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "actual downloaded groom binds back to complete native person",
+      "pass": true,
+      "data": {
+        "maxErrorMetres": 1.1102230246251565e-16
+      }
+    },
+    {
+      "name": "exchange retains native person parameters without body vertex bake",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "static design does not invent physics equilibrium",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "current neutral long guides checked against native full-body triangles",
+      "pass": true,
+      "data": {
+        "curveCount": 192,
+        "testedSegments": 38860,
+        "centerlineCrossings": 0,
+        "badSegments": [],
+        "probeCount": 3067,
+        "probeMM": 8,
+        "probeCrossings": 0,
+        "rootDriftMM": 0,
+        "maxLengthErrorMM": 2.842170943040401e-14,
+        "minEndpointSignedClearanceMM": 0.39845128932734103,
+        "method": "exact current native triangle centerline check; not swept CCD; signed nearest normal is not a closed solid",
+        "positiveControl": true
+      }
+    },
+    {
+      "name": "fullbody and head viewpoints do not regenerate people or hair",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "refresh recovers native project and local reference asset",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "headless drag changes real native 3D camera",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "mobile native workflow has no horizontal page overflow",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "mobile preset edits same complete person",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "no reference-head asset requested",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "no script errors",
+      "pass": true,
+      "data": []
+    },
+    {
+      "name": "all actual network requests completed",
+      "pass": true,
+      "data": []
     }
   ],
-  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7e082c78f024edd9b360366fd6d7856eb1174669/kaopu-hair-workbench/foundation/f06/preview.html",
+  "errors": [],
+  "failed": [],
+  "initial": {
+    "version": "F06",
+    "source": "7b03f6366c43d729b9279e410932e84e34e95915",
+    "ready": true,
+    "busy": false,
+    "builds": 1,
+    "pathBuilds": 1,
+    "cacheHit": false,
+    "lastBuildMS": 723.3000000119209,
+    "readyMS": 34858.40000003576,
+    "person": "P01",
+    "nativeSource": {
+      "commit": "d413d108704af47cf531ee8c25d93f682c3176e3",
+      "path": "kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html",
+      "htmlSHA256": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+      "character": "P01",
+      "topology": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+      "adapter": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5",
+      "indexSHA256": "426c934a70c30c2a1229d1166175f08726943bcaf65087e937b0ba9932e55653",
+      "vertices": 25417,
+      "triangles": 50624
+    },
+    "personMeshUUID": "bf692d90-efff-49a6-9fca-b4b6cb8b3007",
+    "nativeCommonVertices": 25417,
+    "nativeCommonTriangles": 50624,
+    "renderVertices": 266098,
+    "activeRoots": 3067,
+    "guideCount": 192,
+    "rootBankSignature": "b0f64ef",
+    "nativeBinding": {
+      "source": {
+        "commit": "d413d108704af47cf531ee8c25d93f682c3176e3",
+        "path": "kaopu-unified-human-workbench/review-platform-r01-20261014/preview.html",
+        "htmlSHA256": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+        "character": "P01",
+        "topology": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+        "adapter": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5",
+        "indexSHA256": "426c934a70c30c2a1229d1166175f08726943bcaf65087e937b0ba9932e55653",
+        "vertices": 25417,
+        "triangles": 50624
+      },
+      "bank": 3300,
+      "active": 3067,
+      "unsupportedActive": 0,
+      "signature": "b0f64ef",
+      "sourceChartSignature": "a624b76f",
+      "commonVertexCount": 25417,
+      "commonTriangleCount": 50624,
+      "extraHeadMesh": false
+    },
+    "rootAttachmentErrorMM": 0.000029747166618854237,
+    "physicsSteps": 0,
+    "extraHeadMesh": false,
+    "oldHeadResourceLoaded": false,
+    "nativePersonMeshUnchanged": true,
+    "errors": []
+  },
+  "readyMS": 39457,
+  "packageSummary": {
+    "sha256": "f39e2c4aa4abdfe9b6a36f09137114cc55c99d9afa73c232e40a1c6db9932786",
+    "bytes": 9240635,
+    "roots": 3067,
+    "guides": 192,
+    "fullPersonVertices": 25417,
+    "fullPersonTriangles": 50624,
+    "reattachErrorMetres": 1.1102230246251565e-16
+  },
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/676385d531d93d0da0d0c1d28a4f43793a8ffdbc/kaopu-hair-workbench/foundation/f06/preview.html",
   "mode": "public",
   "referenceFixture": "16x16 synthetic solid PNG for local intake tests, not a human reference or hairstyle evidence",
   "assetTransport": "Original frozen HTTPS assets, no route interception",
