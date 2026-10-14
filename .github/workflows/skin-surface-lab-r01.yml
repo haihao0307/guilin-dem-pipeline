@@ -1,0 +1,113 @@
+name: Skin Surface Lab R01 build and browser acceptance
+on:
+  push:
+    branches: [feature/skin-surface-lab-r01-20261014]
+    paths:
+      - iteration/skin-surface-lab-r01/**
+      - qa/skin-surface-lab-r01/**
+      - .github/workflows/skin-surface-lab-r01.yml
+permissions:
+  contents: write
+concurrency:
+  group: skin-surface-lab-r01-delivery
+  cancel-in-progress: true
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      build_sha: ${{ steps.publish.outputs.sha }}
+      preview_url: ${{ steps.publish.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-dna-r02-1
+            kaopu-unified-human-workbench/skin-surface-lab-r01
+            iteration/skin-surface-lab-r01
+            qa/skin-surface-lab-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build isolated page and validate syntax
+        run: |
+          python iteration/skin-surface-lab-r01/build.py
+          node --check kaopu-unified-human-workbench/skin-surface-lab-r01/surface-runtime.js
+          node --check kaopu-unified-human-workbench/skin-surface-lab-r01/surface-kernel.js
+          node --check qa/skin-surface-lab-r01/compositor-acceptance.cjs
+          git diff --exit-code -- kaopu-unified-human-workbench/skin-dna-r02-1
+      - name: Prepare installed Chrome and CJK fonts
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+          npm install --prefix "$RUNNER_TEMP/ssg-browser" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/ssg-browser/node_modules" >> "$GITHUB_ENV"
+          google-chrome --version
+      - name: Actual compositor and full interaction checks
+        run: node qa/skin-surface-lab-r01/compositor-acceptance.cjs
+      - name: Publish unique independent snapshot, fast forward only
+        id: publish
+        env:
+          TARGET_BRANCH: feature/skin-surface-lab-r01-20261014
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$TARGET_BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse kaopu-unified-human-workbench/skin-surface-lab-r01/preview.html kaopu-unified-human-workbench/skin-surface-lab-r01/BUILD.json kaopu-unified-human-workbench/skin-surface-lab-r01/surface-runtime.js kaopu-unified-human-workbench/skin-surface-lab-r01/surface-kernel.js
+          git commit -m "build(skin): publish browser-checked independent SSG surface lab"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          SHA=$(git rev-parse HEAD)
+          URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$SHA/kaopu-unified-human-workbench/skin-surface-lab-r01/preview.html"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "$SHA" > skin-lab-evidence/build-commit.txt
+          echo "$URL" > skin-lab-evidence/public-url.txt
+      - name: Archive real evidence and candidate even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skin-surface-lab-r01-linux
+          path: |
+            skin-lab-evidence/
+            iteration/skin-surface-lab-r01/
+            qa/skin-surface-lab-r01/
+            kaopu-unified-human-workbench/skin-surface-lab-r01/
+          retention-days: 14
+  public-verification:
+    needs: build-and-verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-and-verify.outputs.build_sha }}
+          sparse-checkout: qa/skin-surface-lab-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare installed Chrome harness
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ssg-public" playwright@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/ssg-public/node_modules" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk; fi
+      - name: Verify public immutable URL
+        env:
+          PREVIEW_URL: ${{ needs.build-and-verify.outputs.preview_url }}
+          QA_OUT: skin-lab-public-evidence
+        run: node qa/skin-surface-lab-r01/compositor-acceptance.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-surface-lab-r01-public-${{ matrix.os }}
+          path: skin-lab-public-evidence/
+          retention-days: 14
