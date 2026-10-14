@@ -1,0 +1,44 @@
+name: A6 dimensioned native train candidate QA
+on:
+  push:
+    branches: ['qa/a6-dimensioned-3d-r01-20261014']
+    paths:
+      - '.github/workflows/a6-dimensioned-candidate-qa.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01/**'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned official dependencies
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Build and check native geometry
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01
+        run: |
+          mkdir -p qa
+          npm run build
+          npm test
+      - name: Render complete train and verify interactions
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01
+        run: node tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a6-dimensioned-candidate-proof
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a6-dimensioned-3d-r01/qa/
+          if-no-files-found: error
+          retention-days: 14
