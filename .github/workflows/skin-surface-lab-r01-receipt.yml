@@ -1,0 +1,135 @@
+name: Skin Surface Lab R01 permanent delivery receipt
+on:
+  push:
+    branches: [feature/skin-surface-lab-r01-20261014]
+    paths: [.github/workflows/skin-surface-lab-r01-receipt.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: kaopu-unified-human-workbench/skin-surface-lab-r01
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38543634694
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: skin-surface-lab-r01-linux
+          path: evidence/local
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38543634694
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: skin-surface-lab-r01-public-ubuntu-latest
+          path: evidence/public-linux
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38543634694
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: skin-surface-lab-r01-public-windows-latest
+          path: evidence/public-windows
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38536667223
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: skin-surface-lab-r01-linux
+          path: evidence/prior-first
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38543296248
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: skin-surface-lab-r01-linux
+          path: evidence/prior-cancelled
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 38546364412
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: skin-surface-lab-r01-direct-*
+          path: evidence/prior-pages
+      - name: Verify every screenshot and preserve results with scope
+        shell: python
+        run: |
+          import pathlib,json,hashlib,shutil,re,os
+          root=pathlib.Path('kaopu-unified-human-workbench/skin-surface-lab-r01')
+          expected='05dbad16827b5a56961c094b104228765fc8eb88b4417f105337f73f7d9eb98e'
+          sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+          assert sha(root/'preview.html')==expected
+          build=json.loads((root/'BUILD.json').read_text());assert build['previewSHA256']==expected
+          url='https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/4669c23ceec256808907176ce2d42cedb626ae22/kaopu-unified-human-workbench/skin-surface-lab-r01/preview.html'
+          reports=[];total=0
+          for name,src in [('local-linux',pathlib.Path('evidence/local/skin-lab-evidence')),('public-linux',pathlib.Path('evidence/public-linux')),('public-windows',pathlib.Path('evidence/public-windows'))]:
+            q=json.loads((src/'qa.json').read_text());assert q['complete'] and len(q['tests'])==13 and all(t['pass'] for t in q['tests'])
+            assert len(q['screens'])==23 and q['first']['graphics']['valid'] and q['finalGraphics']['valid']
+            assert not q['pageErrors'] and not q['requestFailures']
+            if name.startswith('public-'): assert q['url']==url
+            if name=='public-windows': assert q['first']['graphics']['caps']['fragmentSamplers']==16 and 'D3D11' in q['first']['graphics']['driver']
+            for s in q['screens']:
+              assert re.fullmatch('[a-zA-Z0-9_-]+',s['name'])
+              assert sha(src/(s['name']+'.png'))==s['sha256']
+              assert s['crop']['excludesUIOverlays']
+            total+=len(q['screens']);shutil.copytree(src,root/'acceptance'/name,dirs_exist_ok=True)
+            reports.append({'name':name,'browser':q['browser'],'tests':len(q['tests']),'screens':len(q['screens']),'firstMS':q['first']['elapsedMS'],'warmMS':q['warm']['elapsedMS'],'driver':q['first']['graphics']['driver'],'fragmentSamplerLimit':q['first']['graphics']['caps']['fragmentSamplers'],'skinFragmentSamplers':max(p['fragmentSamplers'] for p in q['first']['graphics']['programs'] if p['skin']),'microSignal':q['microSignal'],'geometry':q['geometry'],'hostIcons':q['hostIcons']})
+          assert total==69 and all(r['geometry']==reports[0]['geometry'] for r in reports)
+          for name,src in [('first-capture-failure',pathlib.Path('evidence/prior-first/skin-lab-evidence')),('superseded-cancelled-v3',pathlib.Path('evidence/prior-cancelled/skin-lab-evidence')),('pages-not-yet-serving',pathlib.Path('evidence/prior-pages'))]:
+            if src.exists():shutil.copytree(src,root/'acceptance/prior'/name,dirs_exist_ok=True)
+          receipt={'version':'SKIN-SURFACE-LAB-R01','kernel':'ssg-slope-array-v3','url':url,'sourceCommit':'45c1090fcbcc780fa05ef7c08bf0475753fb34c4','runtimeRefinementCommit':'5c107ad610d779ee8adbce4fc9740074a1a5e249','buildCommit':'4669c23ceec256808907176ce2d42cedb626ae22','previewSHA256':expected,'previewBytes':(root/'preview.html').stat().st_size,'baselineCommit':'7c406b142ac5732c999a87797251e38697b31f17','skillCommit':'853e5f02b8b6e557eaf28f461e49ae495a1b5d07','qaRun':38543634694,'receiptRun':os.environ['GITHUB_RUN_ID'],'publicVerified':True,'windows16SamplerVerified':True,'userPhysicalGPUTested':False,'mobileTested':False,'userVisualAccepted':False,'merged':False,'oldRuntimeModified':False,'newGeometryCreases':False,'externalReferenceSkinPixelsCopied':False,'presets':['细腻缎面','浅色微红','暖色细纹','深色柔光','干爽微纹','润泽混合'],'adjustableControls':9,'generatedTextureLayers':2,'generatedTextureBaseBytes':8388608,'verifiedScreens':total,'reports':reports,'limits':['Engineering microstructure scales are not measured tissue calibration','No full volumetric spectral scattering or dynamic tissue-wrinkle claim','One retained character is the current acceptance subject; not a certification of all heads or every body region','Original eyelid, lip and ear geometry remains; surface shaders do not repair all anatomical issues','Complete original model assets still cause substantial first-load work; no seconds-open or physical-device frame-rate claim'],'secondaryPages':{'url':'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/skin-surface-lab-r01-4669c23ceec2/','deployCommit':'6f6ce0da30d4a516656672254ea1ccaac1120753','attemptRun':38546364412,'deliveryStatus':'Not used as the delivery URL: the recorded first direct checks ran before canonical page bytes were served. Current availability is not certified by this receipt.'}}
+          (root/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          text=f'''# 皮肤表面实验室 · R01
+
+          ## 固定公网入口
+
+          {url}
+
+          这是新表面实验网页，不是旧R02.1链接。固定构建4669c23ceec256808907176ce2d42cedb626ae22，完整HTML SHA256 `{expected}`。只新增独立候选，原人物、眼唇耳、骨架与旧皮肤工作台保持原样；Draft PR278未合并。
+
+          ## 查看方法
+
+          页面有细腻缎面、浅色微红、暖色细纹、深色柔光、干爽微纹、润泽混合六种配方。先切换预设，再用“肌理近看”与“掠射检查”观察；“对照”在相同人物、配方、相机和灯光下关闭/恢复新增表面层。九个滑块分别控制色素、血色、部位色差、孔口深浅、孔口宽度、微纹、微表面起伏、油膜和干润。配方可以保存、导入及按固定种子重建。
+
+          ## 已实现的边界
+
+          自有确定性孔节点和微纹场，先生成多通道高度导数，再进行纹理过滤与表面梯度输运。新增一个片元采样器读取双层自生成纹理数组，基础像素8MiB；不拷贝lo-th/head皮肤图，不改几何，不把大沟槽当皮肤。继承原BioSkin二维颜色查表和EB1。
+
+          保留完整人物的266098显示顶点、531702三角面。三份通过报告中的位置与索引摘要相同。工程尺度不是扫描/医学数据，也不是完整Disney优化器、全体积皮肤散射或动态组织皱纹。此版本为效果候选，userVisualAccepted=false；不能以编译、更多滑块或69张图宣称已经达到影视级或超过参考。
+
+          ## 实际验收
+
+          Actions38543634694：本地Linux、固定公网Linux、固定公网Windows各13组检查、23张真实浏览器合成器截图，共69张，逐图SHA256已核对并永久保存到acceptance/。画布比较排除了标题、按钮和状态文字，微法线还做了独立开关信号检查；这些数值不是写实度分数。
+
+          Windows Chrome154 / D3D11 WARP实际16个片元纹理单元限制通过，新皮肤实际使用16个；Linux为Chrome154 / SwiftShader。是软件图形后端，不是用户物理GPU或手机实机。公网Windows样本首开47.184秒、缓存刷新27.533秒；公网Linux样本55.859秒、58.118秒。它们只是各自测试环境的记录，不能承诺用户帧率或秒开。
+
+          原人物资产仍较大，本轮不算整体启动性能优化。首次等待时页面显示载入状态；切换肤质不会重新下载人物。原有眼睑、耳唇形体及大尺度组织外观仍影响真实感，后续需另行迭代，不能用肤色掩盖。
+
+          原第一次截图失败、被新测试取代而取消的V3片段及Pages直连过早检查失败保留在acceptance/prior。它们没有被改说为成功；本交付使用上方已验证的固定提交入口。主托管站favicon.ico的非应用404另列于报告，不宣称控制台完全无信息。
+
+          可读实现：surface-runtime.js、surface-kernel.js；生成源：iteration/skin-surface-lab-r01；验收源：qa/skin-surface-lab-r01/compositor-acceptance.cjs。更完整的机器可读来源、版本与验收边界见DELIVERY.json。
+          '''
+          (root/'README.md').write_text('\n'.join(line.lstrip() for line in text.splitlines())+'\n')
+          assert sha(root/'preview.html')==expected
+          print(json.dumps({'screens':total,'reports':len(reports),'deliveryURL':url,'runtimeUnchanged':True},ensure_ascii=False))
+      - name: Commit only new candidate documentation and evidence
+        env:
+          TARGET_BRANCH: feature/skin-surface-lab-r01-20261014
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$TARGET_BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          D=kaopu-unified-human-workbench/skin-surface-lab-r01
+          git add --sparse "$D/README.md" "$D/DELIVERY.json" "$D/acceptance"
+          git commit -m "docs(skin): preserve fixed public delivery and 69 verified browser frames [skip ci]"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          git rev-parse HEAD > evidence/receipt-commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-surface-lab-r01-permanent-delivery
+          path: |
+            kaopu-unified-human-workbench/skin-surface-lab-r01/
+            evidence/receipt-commit.txt
+          retention-days: 14
