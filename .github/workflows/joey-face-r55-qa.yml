@@ -1,8 +1,8 @@
-name: GNM visible eye and mouth observation exercise
+name: GNM closed-jaw and native brow-lash correction
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r01/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r02/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r01
+            kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r02
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -39,15 +39,15 @@ jobs:
       - name: Verify bounded cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r01/render-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r02/render-native.cjs
       - name: Render native initialization with same appearance
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r01/render-native.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/visible-feature-fit-r02/render-native.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-visible-face-${{ matrix.frame }}-${{ github.sha }}
-          path: joey-visible-face-${{ matrix.frame }}/
+          name: joey-visible-r02-${{ matrix.frame }}-${{ github.sha }}
+          path: joey-visible-r02-${{ matrix.frame }}/
           retention-days: 7
 
