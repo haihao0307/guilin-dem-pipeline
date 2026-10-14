@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="source-commit" content="51ecc9962609800859720569377584ca2e432015"><title>KAOPU / HAIR FIBER R05</title><style>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="source-commit" content="3fd9377972f5e8009faaf90195a4eea4841d4673"><title>KAOPU / HAIR FIBER R05</title><style>
 *{box-sizing:border-box}body{margin:0;background:#090c11;color:#e7e9ed;font:14px system-ui,'Microsoft Yahei',sans-serif}header{height:68px;border-bottom:1px solid #262c33;display:flex;align-items:center;justify-content:space-between;padding:0 24px}h1{font-size:18px;letter-spacing:.06em;margin:0}header small{color:#a5aab2}main{display:grid;grid-template-columns:1fr 284px;height:calc(100vh - 68px)}#view{position:relative;min-height:300px;background:#030507;overflow:hidden}canvas{display:block;touch-action:none}#loading{position:absolute;inset:40% 0 auto;text-align:center}#loading[hidden]{display:none}.hud{position:absolute;bottom:20px;left:22px;pointer-events:none;text-shadow:0 1px 6px #000}#status{font-size:14px}#stats{font-size:11px;color:#949daa;margin-top:7px}aside{padding:18px;overflow:auto;border-left:1px solid #272d35}h2{font-size:12px;color:#9da6b2;letter-spacing:.1em;margin:18px 0 10px}.row{display:flex;gap:6px;margin:8px 0}.row>*{flex:1}button,select{background:#182029;color:#dce2e8;border:1px solid #303b47;border-radius:5px;padding:9px 6px;font:inherit;cursor:pointer}button:hover{border-color:#8aaac8}.selected{background:#2a4356;border-color:#84abc7}select{width:100%}label{display:block;font-size:12px;margin-top:11px;color:#abb5c3}input[type=range]{width:100%;margin:6px 0;accent-color:#96b9d4}output{float:right;color:#dae2eb}.note{font-size:11px;line-height:1.7;color:#8f99a7;margin-top:13px}details{margin-top:16px}summary{cursor:pointer;color:#b9c4d1}a{color:#a4c0d8}@media(max-width:700px){header{height:60px;padding:0 12px}header small{display:none}h1{font-size:15px}main{display:flex;flex-direction:column;height:auto}#view{height:65vh;min-height:360px}aside{border-left:0;border-top:1px solid #272d35}aside .group{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
 </style></head><body><header><h1>KAOPU / 发丝连续弯曲 R05</h1><small>原精度质感 · 三模式弯曲 · 真实鼠标拨动</small></header><main><section id="view"><div id="loading">正在建立真实三维发丝与照明…</div><div class="hud"><div id="status">初始化</div><div id="stats"></div><div id="motionStats" style="font-size:11px;color:#a1afbd;margin-top:7px"></div></div></section><aside>
 <h2>连续弯曲 / 松手回弹</h2>
@@ -751,11 +751,17 @@ function releaseGrab(){if(grabState){grabState=null;dynamics.release();wakeDynam
 r.domElement.onpointerup=r.domElement.onpointercancel=releaseGrab;r.domElement.addEventListener('lostpointercapture',releaseGrab);
 $('impulseMotion').onclick=()=>{dynamics.impulse();wakeDynamics();};
 $('pipeline').onchange=e=>setPipeline(e.target.value==='merged');
-function setPipeline(v){optimized=!!v;packed=optimized&&supports8;radMat.fragmentShader=optimized?fastNodeRadianceFragment:nodeRadianceFragment;radMat.needsUpdate=true;$('pipeline').value=optimized?'merged':'reference';resize();shadowDirty=shadeDirty=posDirty=true;}
+function materialPassMode(){for(const m of[layerMat,layer8Mat,depthMat,pairMat])if(m)m.forceSinglePass=optimized;}
+materialPassMode();
+function setPipeline(v){optimized=!!v;packed=optimized&&supports8;materialPassMode();radMat.fragmentShader=optimized?fastNodeRadianceFragment:nodeRadianceFragment;radMat.needsUpdate=true;$('pipeline').value=optimized?'merged':'reference';resize();shadowDirty=shadeDirty=posDirty=true;}
 // Measurements are opt-in, serialized and excluded from normal runtime.
 let profiling=false,passTimings=[];
 const rawFullpass=fullpass,rawGeometry=geometry,rawShadows=shadows;
-function timed(name,fn){if(!profiling)return fn();gl.finish();const start=performance.now();const v=fn();gl.finish();passTimings.push({name,wallMS:performance.now()-start});return v;}
+function timed(name,fn){
+ if(!profiling)return fn();gl.finish();const auto=r.info.autoReset;r.info.autoReset=false;
+ const calls=r.info.render.calls,triangles=r.info.render.triangles,start=performance.now();
+ try{const v=fn();gl.finish();passTimings.push({name,wallMS:performance.now()-start,drawCalls:r.info.render.calls-calls,triangles:r.info.render.triangles-triangles});return v;}finally{r.info.autoReset=auto;}
+}
 fullpass=(mat,rt)=>timed(mat===positionMat?'positions':mat===radMat?'optics81':mat===resolveMat?'resolve':mat===outMat?'display':mat===packMat?'shadow_pack':'other_quad',()=>rawFullpass(mat,rt));
 geometry=(mat,rt,clear=true)=>timed(mat===frontMat?'front_depth':mat===layer8Mat?'eight_layers_one_draw':'layer_group',()=>rawGeometry(mat,rt,clear));
 shadows=()=>timed('shadows_inclusive',()=>rawShadows());
