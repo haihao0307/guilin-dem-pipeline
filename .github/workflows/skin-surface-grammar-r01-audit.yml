@@ -1,0 +1,35 @@
+name: Skin Surface Grammar R01 reference audit
+on:
+  push:
+    branches: [research/skin-surface-grammar-r01-20261014]
+    paths:
+      - .github/workflows/skin-surface-grammar-r01-audit.yml
+      - kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/audit_reference.py
+permissions:
+  contents: read
+concurrency:
+  group: skin-surface-grammar-r01-reference-audit
+  cancel-in-progress: false
+jobs:
+  reference-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: kaopu-unified-human-workbench/skills/skin-surface-grammar-r01
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install audit dependencies
+        run: python -m pip install Pillow numpy
+      - name: Read-only pinned source and texture audit
+        run: python kaopu-unified-human-workbench/skills/skin-surface-grammar-r01/audit_reference.py --out /tmp/skin-surface-audit
+      - name: Upload temporary research evidence, not production assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: skin-surface-grammar-r01-reference-audit
+          path: /tmp/skin-surface-audit/
+          if-no-files-found: error
+          retention-days: 7
