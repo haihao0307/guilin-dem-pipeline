@@ -1,0 +1,56 @@
+name: Fabric R02 encrypted website publication
+on:
+  push:
+    branches: [release/fabric-collection-r02-web-20261014]
+    paths: [.github/workflows/fabric-r02-publish.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: kaopu-fabric-workbench/collection/r02-2f3ca2cc08b2
+      - name: Validate and append only the encrypted website
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,zipfile,io,json,hashlib,subprocess
+          source='2f3ca2cc08b27f729514da6d4ebe51d3259782af'
+          rel='kaopu-fabric-workbench/collection/r02-'+source[:12]
+          url='https://sdmntprsoutheastus3.oaiusercontent.com/files/00000000-5b74-820c-a482-2be2b19025d9/raw?se=2026-10-14T09%3A45%3A55Z&sp=r&sv=2026-02-06&sr=b&scid=37ed1530-b206-517d-9783-8cdfabb7fe06&skoid=c69179d1-5b5d-430f-afa3-b9bdcf9d6497&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-14T05%3A06%3A48Z&ske=2026-10-15T05%3A06%3A48Z&sks=b&skv=2026-02-06&sig=doGJOY6wnHWp/I04sZF%2BSYRIXvHCUHh29lrr9z8pIWU%3D'
+          raw=urllib.request.urlopen(url,timeout=120).read()
+          assert hashlib.sha256(raw).hexdigest()=='b4c39f09900caa1bd5cd293823076674bb8faab79be126ddd8559a6fafbb99f0'
+          with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            names=z.namelist()
+            assert len(names)==len(set(names)) and all('/' not in n and '\\' not in n for n in names)
+            m=json.loads(z.read('BUILD_MANIFEST.json'))
+            assert m['version']=='FABRIC-COLLECTION-R02' and m['sourceCommit']==source
+            allowed={'index.html','app.js','runtime-loader.js','asset-service.js','cipher-cache.js','decode-worker.js','native-bridge.js','registry.json','SHADER_RULE_CONTRACT.json','BUILD_MANIFEST.json','BUILD_PROOF.json'}
+            for r in list(m['engines'].values())+list(m['bundles'].values()):
+              assert r['encrypted'] and r['url'].endswith('.pack')
+              b=z.read(r['url']);assert len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+              allowed.add(r['url'])
+            assert set(names)==allowed
+            dest=Path(rel);assert not dest.exists(),'Immutable directory already exists; refusing overwrite'
+            dest.mkdir(parents=True)
+            for name in names:(dest/name).write_bytes(z.read(name))
+          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(dest.iterdir())}
+          (dest/'FILES.json').write_text(json.dumps({'version':m['version'],'sourceCommit':source,'files':files},indent=2))
+          def git(*a):return subprocess.check_output(['git',*a],text=True).strip()
+          git('config','user.name','github-actions[bot]');git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com')
+          git('add','-f',rel);git('commit','-m','publish(fabric): immutable R02 selective-load website candidate')
+          paths=git('diff-tree','--no-commit-id','--name-only','-r','HEAD').splitlines()
+          assert paths and all(p.startswith(rel+'/') for p in paths)
+          git('push','origin','HEAD:refs/heads/gh-pages')
+          receipt={'version':m['version'],'sourceCommit':source,'publicCommit':git('rev-parse','HEAD'),'url':'https://haihao0307.github.io/guilin-dem-pipeline/'+rel+'/','status':'PUBLISHED_PENDING_BROWSER_ACCEPTANCE','buildRun':38543980517,'oldVersionsPreserved':True,'keyPublished':False,'files':files}
+          Path('/tmp/R02_PUBLIC_STAGE.json').write_text(json.dumps(receipt,indent=2));print(json.dumps({k:v for k,v in receipt.items() if k!='files'},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r02-public-stage
+          path: /tmp/R02_PUBLIC_STAGE.json
+          retention-days: 14
