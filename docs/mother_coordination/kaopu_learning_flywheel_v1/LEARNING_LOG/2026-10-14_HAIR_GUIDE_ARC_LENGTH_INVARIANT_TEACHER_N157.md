@@ -71,7 +71,7 @@ R2 已要求声明边界、独立验证与 regression 正控，制度层 `NO_NOV
 - 适用：R05-M3 的 81-node guide，在 midshaft/endpoint grab、wind、release 的中心线伸长审计。
 - 不适用：twist、collision/self-contact、身体/衣服接触、完整杆件物理、性能、渲染保真或 USER-ACCEPTED。
 - 决策：`CANDIDATE_ONLY_TARGETED_HAIR_TRIAL_REQUIRED`。
-- POSTED：等待定向路由至 PR #272。
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/272#issuecomment-6172412912
 - CLASSIFICATION-GATE-RUN：9/9。
 - ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED：false。
 - KPI：stale delivery = 0；其余均 `unknown`。
