@@ -1,0 +1,20 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),cp=require('child_process'),assert=require('node:assert/strict');
+const oldDir=path.resolve(__dirname,'../head-procedural-r01'),digest=b=>crypto.createHash('sha256').update(b).digest('hex');
+const host=fs.readFileSync(path.resolve(__dirname,'../human-integrated-r06/preview.html'));assert.equal(digest(host),'b33c0a651570f2671ac61ea546279abfe06ebb07c966a70964e428df966420fd','Frozen R06 host drift');
+assert.equal(digest(fs.readFileSync(oldDir+'/preview.html')),'159743737fe7a70dd6fb3ece4fb53f2f4fa0ad8f84fd32de481c4c77e7838786','Frozen R01 comparison drift');
+const once=(s,a,b)=>{assert.equal(s.split(a).length,2,'Build anchor changed: '+a);return s.replace(a,()=>b);};
+let head=fs.readFileSync(oldDir+'/HeadSurface.js','utf8');
+head=once(head,'const cache=new WeakMap();','const headCache=new WeakMap(),bodyCache=new WeakMap();');
+head=once(head,'if(cache.has(g))return cache.get(g);const rest=',`const full=window.__FB_ACTIVE__===true,cache=full?bodyCache:headCache;
+  if(cache.has(g)){const hit=cache.get(g);drawGroupReport=hit.userData.surfaceGroups;return hit;}const rest=`);
+head=once(head,'type.array[id]<.5&&cover.getX(id)>.5&&rest.getY(id)>.19&&rest.getY(id)<.46','type.array[id]<.5&&cover.getX(id)>.5&&(full||(rest.getY(id)>.19&&rest.getY(id)<.46))');
+head=once(head,'groups:2};cache.set(g,result);geometryBuilds++;return result;','groups:2,fullBody:full,skinTriangles:head.length/3};result.userData.surfaceGroups=drawGroupReport;cache.set(g,result);geometryBuilds++;return result;');
+fs.writeFileSync(__dirname+'/HeadSurface.js',head);
+for(const name of ['SurfaceCalibration.js','SurfaceMicrostructure.js','SurfaceLookC4.js','RenderHealth.js','verify.cjs','verify-controls.cjs'])fs.copyFileSync(oldDir+'/'+name,__dirname+'/'+name);
+const names=['HeadSurface.js','SurfaceCalibration.js','SurfaceMicrostructure.js','SurfaceLookC4.js','BodySurface.js','BodyLookC2.js','RenderHealth.js'],parts=names.map(n=>fs.readFileSync(__dirname+'/'+n,'utf8'));
+for(let i=0;i<names.length;i++){assert(!parts[i].includes('</script>'),'unsafe inline script');assert(!/TextureLoader|fetch\(|\.glb|lo-th|detail\.png|chroma\.png/.test(parts[i]),'No new surface asset imports');cp.execFileSync(process.execPath,['--check',__dirname+'/'+names[i]]);}
+const source=process.env.SOURCE_SHA||cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();let html=host.toString('utf8');assert.equal(html.split('</body>').length,2);html=html.replace('</body>',`<script>window.__HEAD_PROC_SOURCE__=${JSON.stringify(source)};window.__FULLBODY_SOURCE__=${JSON.stringify(source)};\n${parts.join('\n')}</script></body>`).replace(/<title>.*?<\/title>/,'<title>KAOPU · 全身程序皮肤 R02</title>');
+for(const name of ['DELIVERY.json','PUBLIC_QA.json','PUBLIC_CONTROL_QA.json','PUBLIC_BODY_QA.json','acceptance'])fs.rmSync(__dirname+'/'+name,{recursive:true,force:true});
+fs.writeFileSync(__dirname+'/preview.html',html);
+const manifest={schema:'kaopu/fullbody-surface-build@1',version:'SKIN-FULLBODY-R02',lookCalibration:'C2',sourceCommit:source,parentReceipt:'7a6c507256bd5ff0f63d7090b947d5ae1a339148',previousBuild:'7ca673bc5f2be9dc2462252ae94580e81f05ab8a',hostCommit:'f5017cb7cb9c2024df6a08328564c3f4ae502509',hostSHA256:digest(host),sourceSHA256:Object.fromEntries(names.map((n,i)=>[n,digest(parts[i])])),previewSHA256:digest(html),previewBytes:Buffer.byteLength(html),sameNativePerson:true,canonicalGeometryChanged:false,referenceAssetsImported:0,skinImageMaps:0,headSurfaceControls:15,bodyTissueControls:10,wholeBodySkin:true,coordinateMethod:'native csRest in shared rest frame; native head offset from canonical transform',earTransmission:'native R05 thickness/confidence plus R06 light exit visibility; effective RGB approximation',fullVolumeTransport:false,legacyComparison:true,visualEquivalenceAccepted:false,userVisualAccepted:false,productionReady:false};
+fs.writeFileSync(__dirname+'/BUILD_MANIFEST.json',JSON.stringify(manifest,null,2));console.log(JSON.stringify(manifest,null,2));

@@ -1,0 +1,98 @@
+name: Skin fullbody R02 continuous surface delivery
+on:
+  push:
+    branches: [feature/skin-fullbody-r02-20261014]
+    paths:
+      - 'kaopu-unified-human-workbench/skin-fullbody-r02/BodySurface.js'
+      - 'kaopu-unified-human-workbench/skin-fullbody-r02/BodyLookC2.js'
+      - 'kaopu-unified-human-workbench/skin-fullbody-r02/build.cjs'
+      - 'kaopu-unified-human-workbench/skin-fullbody-r02/verify-body.cjs'
+      - '.github/workflows/skin-fullbody-r02.yml'
+permissions: {contents: write}
+concurrency:
+  group: skin-fullbody-r02
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/skin-fullbody-r02
+            kaopu-unified-human-workbench/head-procedural-r01
+            kaopu-unified-human-workbench/human-integrated-r06
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Build from frozen original person and surface
+        run: |
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          node kaopu-unified-human-workbench/skin-fullbody-r02/build.cjs
+      - name: Whole-body candidate anatomy and control gates
+        env: {BODY_OUT: fullbody-evidence/candidate-body}
+        run: node kaopu-unified-human-workbench/skin-fullbody-r02/verify-body.cjs
+      - name: Preserve inspectable candidate evidence before regression
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skin-fullbody-r02-visual-candidate-${{ github.run_number }}
+          path: |
+            fullbody-evidence/candidate-body/
+            kaopu-unified-human-workbench/skin-fullbody-r02/
+          retention-days: 14
+      - name: Preserved native person and head surface regressions
+        env: {QA_OUT: fullbody-evidence/candidate-core, CONTROL_OUT: fullbody-evidence/candidate-controls}
+        run: |
+          node kaopu-unified-human-workbench/skin-fullbody-r02/verify.cjs
+          node kaopu-unified-human-workbench/skin-fullbody-r02/verify-controls.cjs
+      - name: Publish only the isolated new directory
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-unified-human-workbench/skin-fullbody-r02
+          git commit -m 'build(skin-fullbody-r02): continuous full-skin candidate with real-browser gates'
+          git push origin HEAD:feature/skin-fullbody-r02-20261014
+          echo "BUILD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Exact immutable public browser rendering and controls
+        env: {BODY_OUT: fullbody-evidence/public-body, QA_OUT: fullbody-evidence/public-core, CONTROL_OUT: fullbody-evidence/public-controls}
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${BUILD_SHA}/kaopu-unified-human-workbench/skin-fullbody-r02/preview.html"
+          node kaopu-unified-human-workbench/skin-fullbody-r02/verify-body.cjs
+          node kaopu-unified-human-workbench/skin-fullbody-r02/verify.cjs
+          node kaopu-unified-human-workbench/skin-fullbody-r02/verify-controls.cjs
+      - name: Record permanent public evidence and complete delivery receipt
+        run: |
+          python - <<'PY'
+          import json,os,hashlib,urllib.request,subprocess,shutil
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/skin-fullbody-r02')
+          qs={k:json.loads(Path(f'fullbody-evidence/public-{k}/qa.json').read_text()) for k in ['body','core','controls']}
+          for k,q in qs.items():
+            assert q['completed'] and all(t['passed'] for t in q['tests']),k
+            for field in ['errors','pageErrors','consoleErrors','failedRequests','referenceRequests']: assert not q.get(field), (k,field)
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          raw=f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{os.environ['BUILD_SHA']}/{p}/preview.html"
+          assert hashlib.sha256(urllib.request.urlopen(raw).read()).hexdigest()==m['previewSHA256']
+          changed=subprocess.check_output(['git','diff','--name-only',os.environ['SOURCE_SHA'],'HEAD'],text=True).splitlines()
+          assert all(x.startswith(str(p)+'/') for x in changed),changed
+          for key,name in [('body','PUBLIC_BODY_QA.json'),('core','PUBLIC_QA.json'),('controls','PUBLIC_CONTROL_QA.json')]:
+            (p/name).write_text(json.dumps(qs[key],ensure_ascii=False,indent=2))
+            shutil.copytree(f'fullbody-evidence/public-{key}',p/'acceptance'/key,dirs_exist_ok=True)
+          d={'version':m['version'],'lookCalibration':m['lookCalibration'],'status':'public-interactive-candidate','publicURL':qs['body']['url'],'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['BUILD_SHA'],'previewSHA256':m['previewSHA256'],'runId':os.environ['GITHUB_RUN_ID'],'testGroups':{k:len(v['tests']) for k,v in qs.items()},'headSliders':15,'bodyTissueSliders':10,'wholeBodySkin':True,'geometryChanged':False,'referenceAssetsImported':0,'newSkinImageMaps':0,'fullVolumeScattering':False,'physicalPhone':False,'userVisualAccepted':False,'referenceEquivalenceAccepted':False,'productionReady':False}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
+          PY
+          git add kaopu-unified-human-workbench/skin-fullbody-r02
+          git commit -m 'test(skin-fullbody-r02): permanent exact-public screenshots controls and archive proof'
+          git push origin HEAD:feature/skin-fullbody-r02-20261014
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skin-fullbody-r02-evidence-${{ github.run_number }}
+          path: |
+            fullbody-evidence/
+            kaopu-unified-human-workbench/skin-fullbody-r02/
+          retention-days: 14
