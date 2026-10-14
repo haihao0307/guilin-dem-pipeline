@@ -1,0 +1,8 @@
+import assert from'node:assert/strict';import{random,SurfaceChart,bindOffsets,sampleOffsets,anchorFrame,cubic}from'./SurfaceBinding.mjs';
+const checks=[];const check=(name,f)=>{f();checks.push({name,passed:true});};
+check('stable random identity',()=>{const a=random(725),b=random(725),c=random(726);const x=Array.from({length:200},a),y=Array.from({length:200},b),z=Array.from({length:200},c);assert.deepEqual(x,y);assert.notDeepEqual(x,z);assert(x.every(v=>v>=0&&v<1));});
+const positions=new Float32Array([0,0,0,.08,0,0,0,.06,0]),indices=new Uint16Array([0,1,2]),frame={project:p=>p,front:[0,0,1]},g={attributes:{position:{array:positions}},morphAttributes:{position:[{array:new Float32Array([0,0,.005,0,0,.005,0,0,.005])}]},morphTargetsRelative:true};
+check('exact front triangle barycentrics',()=>{const c=new SurfaceChart(positions,indices,frame),hit=c.query(.02,.02);assert(hit);assert(Math.abs(hit.weights.reduce((a,b)=>a+b,0)-1)<1e-12);assert(Math.abs(hit.position[0]-.02)<1e-12);assert.equal(c.query(-.02,.02),null);});
+check('attached root and strand translate with native morph',()=>{const c=new SurfaceChart(positions,indices,frame),hit=c.query(.02,.02),curve=[[.02,.02,.00001],[.02,.023,.001]],a=bindOffsets(hit,curve,g),out=sampleOffsets(a,g,[1]);for(let i=0;i<curve.length;i++){assert(Math.abs(out[i][2]-curve[i][2]-.005)<1e-8);assert(Math.abs(out[i][0]-curve[i][0])<1e-10);}const f=anchorFrame(a,g,[1]);assert(Math.abs(f.center[2]-.005)<1e-8);});
+check('cubic endpoints remain exact',()=>{const a=[1,2,3],b=[2,3,4],c=[3,4,5],d=[4,5,6];assert.deepEqual(cubic(a,b,c,d,0),a);assert.deepEqual(cubic(a,b,c,d,1),d);});
+console.log(JSON.stringify({version:'BROW-LASH-R01',checks},null,2));
