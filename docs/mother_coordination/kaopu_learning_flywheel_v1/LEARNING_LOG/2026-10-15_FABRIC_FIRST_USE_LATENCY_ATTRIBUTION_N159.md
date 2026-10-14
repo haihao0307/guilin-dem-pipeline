@@ -55,7 +55,7 @@ R2、N33 与 N39 已分别要求声明/证据分层、用户可见启动和资�
 
 ## 7. 生命周期与 KPI
 
-- POSTED：false（路由待本轮 comment）
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/289#issuecomment-6181044319
 - ACKNOWLEDGED / IMPLEMENTED / TARGET-GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - learning classifier gate：11/11
 - 首次候选通过率、用户纠错次数、同错复发率、rejected lineage 继承次数、accepted delta 内部迭代数、从指令到合法 candidate 时间：unknown
