@@ -1,0 +1,38 @@
+name: Head procedural reference observation only
+on:
+  push:
+    branches: [research/head-procedural-skin-r01-20261014]
+    paths: ['.github/workflows/head-procedural-reference-capture.yml']
+permissions: {contents: read}
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p evidence
+          cat > observe.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs');
+          (async()=>{const report={url:'https://lo-th.github.io/head/',mode:'WebGL fallback on SwiftShader; compositor screenshots; not physical GPU',productAssetsImported:false,errors:[],network:[]};let b,p;try{
+            b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const c=await b.newContext({viewport:{width:1100,height:900}});p=await c.newPage();
+            await p.addInitScript(()=>{Object.defineProperty(navigator,'gpu',{get:()=>undefined,configurable:true});const raf=requestAnimationFrame.bind(window);let paused=false,waiting=[];window.requestAnimationFrame=cb=>raf(t=>{if(paused)waiting.push(cb);else cb(t)});window.__refPause=()=>{paused=true};window.__refResume=()=>{paused=false;const q=waiting;waiting=[];q.forEach(cb=>requestAnimationFrame(cb));};});
+            p.on('pageerror',e=>report.errors.push(String(e)));p.on('response',r=>report.network.push({url:r.url(),status:r.status()}));
+            await p.goto(report.url,{waitUntil:'domcontentloaded',timeout:60000});await p.waitForFunction(()=>document.body.innerText.includes('vertices')&&document.body.innerText.includes('Skin Texture'),{},{timeout:180000});await p.waitForTimeout(8000);
+            report.body=await p.locator('body').innerText();report.canvas=await p.evaluate(()=>Array.from(document.querySelectorAll('canvas'),el=>({width:el.width,height:el.height,rect:el.getBoundingClientRect().toJSON(),ancestors:[el.parentElement?.className,el.parentElement?.parentElement?.className]})));
+            const cd=await c.newCDPSession(p);async function shot(n){await p.evaluate(()=>__refPause());const s=await cd.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('evidence/'+n+'.png',Buffer.from(s.data,'base64'));await p.evaluate(()=>__refResume());}
+            await shot('reference-original-ui');
+            await p.evaluate(()=>{const canvases=Array.from(document.querySelectorAll('canvas'));for(const el of document.querySelectorAll('body *')){if(!canvases.some(c=>el===c||el.contains(c)||c.contains(el)))el.style.visibility='hidden';}});await p.waitForTimeout(2500);await shot('reference-unobstructed');
+            const canvas=p.locator('canvas').first(),box=await canvas.boundingBox();await p.mouse.move(box.x+box.width*.52,box.y+box.height*.5);await p.mouse.down();await p.mouse.move(box.x+box.width*.62,box.y+box.height*.5,{steps:8});await p.mouse.up();await p.waitForTimeout(2500);await shot('reference-oblique');report.completed=true;
+          }catch(e){report.completed=false;report.failure=String(e);process.exitCode=1;}finally{fs.writeFileSync('evidence/report.json',JSON.stringify(report,null,2));await b?.close();}})();
+          JS
+          node observe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: head-procedural-reference-observation
+          path: evidence/
+          retention-days: 7
