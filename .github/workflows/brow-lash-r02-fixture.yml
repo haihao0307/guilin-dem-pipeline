@@ -1,0 +1,41 @@
+name: Brow Lash R02 reproducible public fixture
+on:
+  push:
+    branches: [feature/brow-lash-r02-recovery-20261014]
+    paths: ['.github/workflows/brow-lash-r02-fixture.yml']
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      NODE_PATH: /tmp/bltools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /kaopu-unified-human-workbench/brow-lash-r01/
+            /kaopu-unified-human-workbench/brow-lash-r02/
+            /kaopu-unified-human-workbench/human-integrated-r06/preview.html
+            /kaopu-unified-human-workbench/vendor/three.module.js
+            /kaopu-unified-human-workbench/full/source/registration-vendor/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/bltools esbuild@0.25.9 playwright@1.57.0
+          /tmp/bltools/node_modules/.bin/playwright install --with-deps chromium
+          node kaopu-unified-human-workbench/brow-lash-r02/capture-fixture.cjs
+          mkdir -p bl-offline-fixture/repo/kaopu-unified-human-workbench bl-offline-fixture/tools
+          cp -r kaopu-unified-human-workbench/vendor kaopu-unified-human-workbench/full kaopu-unified-human-workbench/brow-lash-r01 kaopu-unified-human-workbench/human-integrated-r06 bl-offline-fixture/repo/kaopu-unified-human-workbench/
+          cp -r /tmp/bltools/node_modules/esbuild /tmp/bltools/node_modules/@esbuild bl-offline-fixture/tools/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brow-lash-r02-public-fixture
+          path: bl-offline-fixture/
+          retention-days: 7
