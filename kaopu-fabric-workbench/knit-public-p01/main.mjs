@@ -6,8 +6,8 @@ import './eb1-public.js';
 // the private R15/R01.2 engine. It imports no private data, model or texture.
 const VERSION='KNIT-PUBLIC-P01';
 const $=id=>document.getElementById(id), TAU=Math.PI*2;
-const seed=4291, cols=16, rows=20, pitch=.0058, spacing=.00405, radius=.00076;
-const settings={fuzz:.82,length:.85,detail:.85,twist:.55,mottle:.18,pattern:'plain',color:'#b8a284',shape:'jersey',mode:'fiber'};
+const seed=4291, cols=16, rows=20, pitch=.0058, spacing=.00290, radius=.00086;
+const settings={fuzz:.82,length:.85,detail:.85,twist:.55,mottle:.18,pattern:'plain',color:'#d3c4af',shape:'jersey',mode:'fiber'};
 const defaults={...settings};
 try{const saved=JSON.parse(localStorage.getItem('kaopu:knit:public:p01'));if(saved&&saved.version===VERSION)for(const key of Object.keys(defaults)){if(typeof saved.settings[key]===typeof defaults[key])settings[key]=saved.settings[key];}}catch{}
 function hash(n){n=Math.imul(n^seed,0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967296;}
@@ -47,7 +47,7 @@ function build(){
  if(building)return;building=true;const start=performance.now();
  const positions=[],normals=[],uvs=[],colors=[],indices=[];
  const roots=[],dirs=[],bends=[],seeds=[],hcolors=[];
- const steps=48,sides=8;
+ const steps=64,sides=12;
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const id=r*cols+c,col=colorAt(c,r,id),phase=hash(id)*TAU;
   const offset=positions.length/3;
@@ -65,12 +65,15 @@ function build(){
   }
   // Stable material-root IDs. Each root owns a curved, tapered ribbon.
   // Density control changes optical coverage, not per-frame random identity.
-  for(let h=0;h<180;h++){
-   const hid=id*181+h,tt=hash(hid*13+4),{p,T,B,N}=frame(c,r,tt),ang=hash(hid*7+1)*TAU;
+  for(let h=0;h<320;h++){
+   const hid=id*337+h,tt=hash(hid*13+4),{p,T,B,N}=frame(c,r,tt),ang=hash(hid*7+1)*TAU;
    const n=B.clone().multiplyScalar(Math.cos(ang)).addScaledVector(N,Math.sin(ang));
-   const root=p.clone().addScaledVector(n,radius*(1+.02*Math.sin(tt*49+phase*3)));
-   const fly=hash(hid*29)> .962;
-   const len=(fly?.0016:.00018)+(fly?.0016:.00058)*Math.pow(hash(hid*31),1.7);
+   const breathe=1+.038*Math.sin(tt*21+phase)+.022*Math.sin(tt*49+phase*3);
+   const twistAngle=ang+tt*TAU*2.8*settings.twist;
+   const envelope=1+.055*Math.cos(3*twistAngle)+.022*Math.sin(5*ang+phase+tt*11);
+   const root=p.clone().addScaledVector(n,radius*breathe*envelope+.000014);
+   const fly=hash(hid*29)> .991;
+   const len=(fly?.0014:.00024)+(fly?.0015:.00070)*Math.pow(hash(hid*31),1.45);
    const dir=T.clone().multiplyScalar((hash(hid*41)-.5)*1.35).addScaledVector(n,.30+.50*hash(hid*23)).normalize().multiplyScalar(len);
    const curve=B.clone().multiplyScalar((hash(hid*19)-.5)*len*1.25).addScaledVector(N,(hash(hid*37)-.45)*len*.7);
    roots.push(root.x,root.y,root.z);dirs.push(dir.x,dir.y,dir.z);bends.push(curve.x,curve.y,curve.z);seeds.push(hash(hid*43),fly?1:0);hcolors.push(col.r,col.g,col.b);
@@ -106,7 +109,7 @@ function build(){
  const fmat=new THREE.ShaderMaterial({transparent:true,depthTest:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uDensity:uniforms.fuzz,uLength:uniforms.len,uSize:uniforms.viewSize,uKeyDir:{value:new THREE.Vector3()},uRimDir:{value:new THREE.Vector3()},uKey:{value:new THREE.Vector3()},uRim:{value:new THREE.Vector3()},uEnv:{value:.6}},
  vertexShader:`attribute vec3 root,strand,curve,fiberColor;attribute vec2 identity;uniform float uLength,uDensity;uniform vec2 uSize;varying float vEdge,vAlpha;varying vec3 vT,vC;
  void main(){float t=position.x;vec3 p=root+uLength*(strand*t+curve*t*t);vec3 tangent=normalize(strand+2.*curve*t);vec4 mv=modelViewMatrix*vec4(p,1.);vec3 tv=normalize(mat3(modelViewMatrix)*tangent);vec2 across=vec2(-tv.y,tv.x);across/=max(length(across),.00001);vec4 cp=projectionMatrix*mv;
- float actual=projectionMatrix[1][1]*.000020/max(-mv.z,.00001)*uSize.y*.5;float width=max(.7,actual)*(1.-.75*t);cp.xy+=across*position.y*width/uSize*cp.w;gl_Position=cp;
+ float actual=projectionMatrix[1][1]*.000026/max(-mv.z,.00001)*uSize.y*.5;float width=max(.7,actual)*(1.-.75*t);cp.xy+=across*position.y*width/uSize*cp.w;gl_Position=cp;
  vAlpha=min(1.,actual/.7)*(1.-t*.35)*smoothstep(identity.x-.12,identity.x+.12,uDensity)*.80;vEdge=position.y;vT=normalize(mat3(modelMatrix)*tangent);vC=fiberColor;}`,
  fragmentShader:`uniform vec3 uKeyDir,uRimDir,uKey,uRim;uniform float uEnv;varying float vEdge,vAlpha;varying vec3 vT,vC;
  void main(){float alpha=vAlpha*(1.-smoothstep(.45,1.,abs(vEdge)));if(alpha<.003)discard;vec3 T=normalize(vT);float a=sqrt(max(0.,1.-pow(dot(T,uKeyDir),2.))),b=sqrt(max(0.,1.-pow(dot(T,uRimDir),2.)));vec3 light=vec3(.30*uEnv)+(uKey*a+uRim*b)/3.14159265;gl_FragColor=vec4(vC*light,alpha);#include <tonemapping_fragment>
@@ -137,7 +140,7 @@ function set(patch,{save=true}={}){
  return {...settings};
 }
 function sync(){for(const el of document.querySelectorAll('[data-param]')){const k=el.dataset.param;el.value=settings[k];const o=document.querySelector(`[data-output="${k}"]`);if(o)o.textContent=Number(settings[k]).toFixed(2);}document.querySelectorAll('[data-mode]').forEach(el=>{el.classList.toggle('selected',el.dataset.mode===settings.mode);el.setAttribute('aria-pressed',el.dataset.mode===settings.mode?'true':'false');});$('mode-note').textContent=settings.mode==='fiber'?'纤维表面 + 短绒':'关闭细节的载纱对照（不是原生 R15）';}
-function view(name){const views={whole:[[.034,.018,.19],[0,0,0]],close:[[.005,.004,.058],[0,0,.003]],edge:[[.11,.015,.056],[.012,0,.002]],back:[[.02,.012,-.16],[0,0,0]]};if(!views[name])throw new Error('未知视角');camera.position.fromArray(views[name][0]);controls.target.fromArray(views[name][1]);controls.update();dirty=true;return name;}
+function view(name){const views={whole:[[.027,.012,.19],[0,0,0]],close:[[.005,.004,.058],[0,0,.003]],edge:[[.11,.015,.056],[.012,0,.002]],back:[[.02,.012,-.16],[0,0,0]]};if(!views[name])throw new Error('未知视角');camera.position.fromArray(views[name][0]);controls.target.fromArray(views[name][1]);controls.update();dirty=true;return name;}
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();uniforms.viewSize.value.set(w*renderer.getPixelRatio(),h*renderer.getPixelRatio());dirty=true;}
 new ResizeObserver(resize).observe(stage);
 for(const el of document.querySelectorAll('[data-param]')){el.addEventListener(el.type==='range'?'input':'change',()=>set({[el.dataset.param]:el.type==='range'?Number(el.value):el.value}));}
