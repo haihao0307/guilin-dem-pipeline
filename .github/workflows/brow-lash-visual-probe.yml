@@ -1,0 +1,32 @@
+name: Brow lash visual diagnosis
+on:
+  push:
+    branches: [feature/brow-lash-r01-cinematic-study-20261014]
+    paths: ['.github/workflows/brow-lash-visual-probe.yml','diagnostics/brow-lash-r01-probe.cjs']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NODE_PATH: /tmp/bl-probe-tools/node_modules
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: diagnostics
+          fetch-depth: 1
+          filter: blob:none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix /tmp/bl-probe-tools playwright@1.57.0
+          /tmp/bl-probe-tools/node_modules/.bin/playwright install --with-deps chromium
+          node diagnostics/brow-lash-r01-probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brow-lash-visual-diagnosis
+          path: probe
+          retention-days: 14
