@@ -1,0 +1,74 @@
+{
+  "probeId": "HAIR-GUIDE-ARC-LENGTH-INVARIANT-001-N157",
+  "generatedAt": "2026-10-14T23:45:30+08:00",
+  "failure": {
+    "observedSubject": {
+      "productionPr": 272,
+      "version": "HAIR-FIBER-R05-M3",
+      "sourceSha": "3fd9377972f5e8009faaf90195a4eea4841d4673",
+      "buildSha": "1e3af7b2887916ab6430652bead644b45cd5c7cb",
+      "publicEvidenceSha": "d67f016ccc4e6ccfe3beceb2524feaa66363e01e",
+      "handoffSha": "61459da210933010e31d7c80cb353f57e0524783",
+      "browserRun": 38573567754,
+      "guideCount": 85,
+      "opticalSamplesPerGuide": 81,
+      "renderedStrands": 10000,
+      "segmentsPerStrand": 80,
+      "rootPinned": true,
+      "reducedBendingModes": 3,
+      "grabModes": ["midshaft", "endpoint"],
+      "releaseDampingTested": true,
+      "arcLengthConstraintDeclared": false,
+      "arcLengthReceiptFound": false,
+      "knownStretchPositiveControlFound": false,
+      "userAccepted": false
+    }
+  },
+  "cases": [
+    {
+      "id": "R05_ROOT_AND_BENDING_GREEN_ARC_LENGTH_UNBOUND",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": false, "deformedCenterlineBound": false, "segmentMetricBound": false, "totalMetricBound": false, "motionEnvelopeComplete": false, "thresholdBasisBound": false, "positiveControlRun": false, "positiveControlDetected": false},
+      "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"
+    },
+    {
+      "id": "ROOT_PIN_FAILURE_PRESERVED_SEPARATELY",
+      "input": {"rootPinned": false, "modalBendingEvidence": true},
+      "expect": "HOLD_ROOT_PIN_FAIL"
+    },
+    {
+      "id": "BENDING_EVIDENCE_MISSING_PRESERVED_SEPARATELY",
+      "input": {"rootPinned": true, "modalBendingEvidence": false},
+      "expect": "HOLD_REDUCED_BENDING_EVIDENCE_MISSING"
+    },
+    {
+      "id": "TOTAL_LENGTH_ONLY_DOES_NOT_LOCALIZE_STRETCH",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": false, "totalMetricBound": true, "motionEnvelopeComplete": true, "thresholdBasisBound": true, "positiveControlRun": true, "positiveControlDetected": true, "maxSegmentStretchRatio": 0, "maxSegmentStretchLimit": 0.02, "totalArcLengthDriftRatio": 0, "totalArcLengthDriftLimit": 0.01},
+      "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"
+    },
+    {
+      "id": "GRAB_ONLY_DOES_NOT_COVER_WIND_AND_RELEASE",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": true, "totalMetricBound": true, "motionEnvelopeComplete": false, "thresholdBasisBound": true, "positiveControlRun": true, "positiveControlDetected": true},
+      "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"
+    },
+    {
+      "id": "METRICS_WITHOUT_JUSTIFIED_THRESHOLD",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": true, "totalMetricBound": true, "motionEnvelopeComplete": true, "thresholdBasisBound": false, "positiveControlRun": false, "positiveControlDetected": false},
+      "expect": "HOLD_GUIDE_ARC_LENGTH_THRESHOLD_UNBOUND"
+    },
+    {
+      "id": "NO_KNOWN_STRETCH_POSITIVE_CONTROL",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": true, "totalMetricBound": true, "motionEnvelopeComplete": true, "thresholdBasisBound": true, "positiveControlRun": false, "positiveControlDetected": false},
+      "expect": "HOLD_ARC_LENGTH_POSITIVE_CONTROL_MISSING"
+    },
+    {
+      "id": "LOCAL_SEGMENT_STRETCH_REJECTED",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": true, "totalMetricBound": true, "motionEnvelopeComplete": true, "thresholdBasisBound": true, "positiveControlRun": true, "positiveControlDetected": true, "maxSegmentStretchRatio": 0.031, "maxSegmentStretchLimit": 0.02, "totalArcLengthDriftRatio": 0.004, "totalArcLengthDriftLimit": 0.01},
+      "expect": "HOLD_GUIDE_STRETCH_OUT_OF_BOUND"
+    },
+    {
+      "id": "SCOPED_INEXTENSIBILITY_PASS_NOT_FULL_ROD",
+      "input": {"rootPinned": true, "modalBendingEvidence": true, "restCenterlineBound": true, "deformedCenterlineBound": true, "segmentMetricBound": true, "totalMetricBound": true, "motionEnvelopeComplete": true, "thresholdBasisBound": true, "positiveControlRun": true, "positiveControlDetected": true, "maxSegmentStretchRatio": 0.009, "maxSegmentStretchLimit": 0.02, "totalArcLengthDriftRatio": 0.003, "totalArcLengthDriftLimit": 0.01, "twistSolved": false, "collisionSolved": false},
+      "expect": "SCOPED_GUIDE_INEXTENSIBILITY_VERIFIED_NOT_FULL_ROD"
+    }
+  ]
+}

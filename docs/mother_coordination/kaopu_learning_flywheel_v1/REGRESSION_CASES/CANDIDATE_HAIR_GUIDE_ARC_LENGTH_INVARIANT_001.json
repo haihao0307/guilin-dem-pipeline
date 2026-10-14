@@ -1,0 +1,123 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "HAIR-GUIDE-ARC-LENGTH-INVARIANT-001",
+  "status": "CANDIDATE_SINGLE_MOTHER_TRIAL_REQUIRED",
+  "active": false,
+  "scope": {
+    "mother": "Hair",
+    "taskClass": "INTERACTIVE_GUIDE_BENDING_VS_CENTERLINE_STRETCH",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "Hair R05-M3 proves pinned roots, three-mode guide response, bounded motion and release damping, but does not bind rest/deformed guide centerlines or measure local segment stretch and total arc-length drift. A positional target can therefore be met without evidence that the guide bent rather than lengthened.",
+    "observedSubject": {
+      "productionPr": 272,
+      "version": "HAIR-FIBER-R05-M3",
+      "sourceSha": "3fd9377972f5e8009faaf90195a4eea4841d4673",
+      "buildSha": "1e3af7b2887916ab6430652bead644b45cd5c7cb",
+      "publicEvidenceSha": "d67f016ccc4e6ccfe3beceb2524feaa66363e01e",
+      "handoffSha": "61459da210933010e31d7c80cb353f57e0524783",
+      "browserRun": 38573567754,
+      "rootPinned": true,
+      "reducedBendingModes": 3,
+      "releaseDampingTested": true,
+      "arcLengthConstraintDeclared": false,
+      "arcLengthReceiptFound": false,
+      "knownStretchPositiveControlFound": false,
+      "userAccepted": false
+    }
+  },
+  "requiredReceiptFields": [
+    "subjectSourceSha",
+    "subjectBuildSha",
+    "guideId",
+    "guideRestCenterlineDigest",
+    "restSegmentLengthsDigest",
+    "motionMode",
+    "grabArcPosition",
+    "grabTarget",
+    "deformedCenterlineDigest",
+    "maxSegmentStretchRatio",
+    "maxSegmentCompressionRatio",
+    "totalArcLengthDriftRatio",
+    "measurementFrameIds",
+    "thresholdBasis",
+    "positiveControlId",
+    "positiveControlInjectedStretch",
+    "positiveControlDetected",
+    "regressionRunId",
+    "decision",
+    "verifierIdentity"
+  ],
+  "gate": [
+    "Preserve R05-M3 root-pin, reduced-bending, release, static-image and freshness evidence; this Candidate does not reopen those claims.",
+    "Bind exact rest and deformed 81-node guide centerlines and calculate both per-segment strain and total arc-length drift for midshaft grab, endpoint grab, wind and release frames.",
+    "A total-length-only metric is insufficient because adjacent segments can stretch and compress while total length cancels out.",
+    "Thresholds must be scoped to the exact Hair task and justified by the intended claim or accepted baseline; classifier fixture numbers are not production thresholds.",
+    "Before a scoped pass, inject a known stretched guide and prove the independent verifier rejects it.",
+    "A pass proves only bounded centerline inextensibility for the tested guide/motion envelope. It does not prove twist, collision, self-contact, body/clothing contact, full rod physics, performance or USER-ACCEPTED."
+  ],
+  "states": [
+    "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND",
+    "HOLD_GUIDE_ARC_LENGTH_THRESHOLD_UNBOUND",
+    "HOLD_ARC_LENGTH_POSITIVE_CONTROL_MISSING",
+    "HOLD_GUIDE_STRETCH_OUT_OF_BOUND",
+    "SCOPED_GUIDE_INEXTENSIBILITY_VERIFIED_NOT_FULL_ROD"
+  ],
+  "teacherCandidate": {
+    "status": "TEACHER_CANDIDATE",
+    "name": "Muller-Kim-Chentanez dynamic Follow-The-Leader / PositionBasedDynamics distance constraints",
+    "boundedNovelty": "Defines inextensibility as adjacent rest-distance preservation and supplies a geometric single-pass hair method, while R05-M3 currently measures displacement and modal energy but no segment-length invariant.",
+    "sourceProvenance": [
+      "https://matthias-research.github.io/pages/publications/FTLHairFur.pdf",
+      "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics/tree/10a70bc146a97873dc3c8fef372f5217e010542e"
+    ],
+    "maintenance": "Repository head 10a70bc146a97873dc3c8fef372f5217e010542e dated 2026-09-01; latest tagged release 2.2.0 dated 2022-12-13, so current source activity exists but release cadence is stale.",
+    "runnableEvidence": "CMake C++ library, Python interface, demos including Cosserat rods, and Linux/Windows build workflows; no dedicated Tests directory found at the audited head.",
+    "license": "MIT for repository code; paper is used as source evidence only.",
+    "dependencyRisk": "Direct integration requires C++/CMake/Eigen and would change the solver architecture. This Candidate imports no code or assets.",
+    "methodBoundary": "Dynamic FTL trades accuracy for speed and introduces artificial damping; PBD is visually plausible but generally less accurate than force-based methods. Neither source alone validates R05 twist, contact or user quality.",
+    "auditionUse": "Learn only the segment-distance invariant, positive-control design and explicit damping boundary. Solver adoption remains NOT_PROPOSED."
+  },
+  "cases": [
+    {"id": "R05_ROOT_AND_BENDING_GREEN_ARC_LENGTH_UNBOUND", "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"},
+    {"id": "ROOT_PIN_FAILURE_PRESERVED_SEPARATELY", "expect": "HOLD_ROOT_PIN_FAIL"},
+    {"id": "BENDING_EVIDENCE_MISSING_PRESERVED_SEPARATELY", "expect": "HOLD_REDUCED_BENDING_EVIDENCE_MISSING"},
+    {"id": "TOTAL_LENGTH_ONLY_DOES_NOT_LOCALIZE_STRETCH", "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"},
+    {"id": "GRAB_ONLY_DOES_NOT_COVER_WIND_AND_RELEASE", "expect": "HOLD_GUIDE_ARC_LENGTH_INVARIANT_UNBOUND"},
+    {"id": "METRICS_WITHOUT_JUSTIFIED_THRESHOLD", "expect": "HOLD_GUIDE_ARC_LENGTH_THRESHOLD_UNBOUND"},
+    {"id": "NO_KNOWN_STRETCH_POSITIVE_CONTROL", "expect": "HOLD_ARC_LENGTH_POSITIVE_CONTROL_MISSING"},
+    {"id": "LOCAL_SEGMENT_STRETCH_REJECTED", "expect": "HOLD_GUIDE_STRETCH_OUT_OF_BOUND"},
+    {"id": "SCOPED_INEXTENSIBILITY_PASS_NOT_FULL_ROD", "expect": "SCOPED_GUIDE_INEXTENSIBILITY_VERIFIED_NOT_FULL_ROD"}
+  ],
+  "externalEvidence": [
+    {
+      "source": "Muller, Kim, Chentanez — Fast Simulation of Inextensible Hair and Fur (2012)",
+      "url": "https://matthias-research.github.io/pages/publications/FTLHairFur.pdf",
+      "use": "Treats hair inextensibility as adjacent particle distance preservation, guarantees zero stretch with single-pass Follow-The-Leader, and discloses artificial damping/accuracy tradeoffs."
+    },
+    {
+      "source": "InteractiveComputerGraphics/PositionBasedDynamics at 10a70bc1",
+      "url": "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics/tree/10a70bc146a97873dc3c8fef372f5217e010542e",
+      "use": "Runnable MIT implementation exposes distance-constraint projection against a declared rest length plus rod demos and build workflows; used only as an implementation teacher for the invariant, not imported."
+    }
+  ],
+  "adoptionDecision": "CANDIDATE_ONLY_TARGETED_HAIR_TRIAL_REQUIRED",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "kpiEffect": {
+    "firstPassCandidateRate": "unknown",
+    "userCorrectionCount": "unknown",
+    "sameClassRecurrenceRate": "unknown",
+    "rejectedLineageInheritanceCount": "unknown",
+    "staleDeliveryCount": 0,
+    "internalIterationsPerAcceptedDelta": "unknown",
+    "instructionToLegalCandidateTime": "unknown"
+  }
+}
