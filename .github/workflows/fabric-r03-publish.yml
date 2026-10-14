@@ -1,0 +1,23 @@
+name: Fabric R03 fixed website publication
+on:
+  push:
+    branches: [release/fabric-r03-web-20261014]
+    paths: [kaopu-fabric-workbench/collection/r03-release/REQUEST.json]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-fabric-workbench/collection/r03-release
+      - name: Append only checksum-verified encrypted website files
+        run: python kaopu-fabric-workbench/collection/r03-release/publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r03-public-stage
+          path: /tmp/FABRIC_R03_STAGE.json
+          retention-days: 14
