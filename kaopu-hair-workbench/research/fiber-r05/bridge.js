@@ -30,11 +30,17 @@ function releaseGrab(){if(grabState){grabState=null;dynamics.release();wakeDynam
 r.domElement.onpointerup=r.domElement.onpointercancel=releaseGrab;r.domElement.addEventListener('lostpointercapture',releaseGrab);
 $('impulseMotion').onclick=()=>{dynamics.impulse();wakeDynamics();};
 $('pipeline').onchange=e=>setPipeline(e.target.value==='merged');
-function setPipeline(v){optimized=!!v;packed=optimized&&supports8;radMat.fragmentShader=optimized?fastNodeRadianceFragment:nodeRadianceFragment;radMat.needsUpdate=true;$('pipeline').value=optimized?'merged':'reference';resize();shadowDirty=shadeDirty=posDirty=true;}
+function materialPassMode(){for(const m of[layerMat,layer8Mat,depthMat,pairMat])if(m)m.forceSinglePass=optimized;}
+materialPassMode();
+function setPipeline(v){optimized=!!v;packed=optimized&&supports8;materialPassMode();radMat.fragmentShader=optimized?fastNodeRadianceFragment:nodeRadianceFragment;radMat.needsUpdate=true;$('pipeline').value=optimized?'merged':'reference';resize();shadowDirty=shadeDirty=posDirty=true;}
 // Measurements are opt-in, serialized and excluded from normal runtime.
 let profiling=false,passTimings=[];
 const rawFullpass=fullpass,rawGeometry=geometry,rawShadows=shadows;
-function timed(name,fn){if(!profiling)return fn();gl.finish();const start=performance.now();const v=fn();gl.finish();passTimings.push({name,wallMS:performance.now()-start});return v;}
+function timed(name,fn){
+ if(!profiling)return fn();gl.finish();const auto=r.info.autoReset;r.info.autoReset=false;
+ const calls=r.info.render.calls,triangles=r.info.render.triangles,start=performance.now();
+ try{const v=fn();gl.finish();passTimings.push({name,wallMS:performance.now()-start,drawCalls:r.info.render.calls-calls,triangles:r.info.render.triangles-triangles});return v;}finally{r.info.autoReset=auto;}
+}
 fullpass=(mat,rt)=>timed(mat===positionMat?'positions':mat===radMat?'optics81':mat===resolveMat?'resolve':mat===outMat?'display':mat===packMat?'shadow_pack':'other_quad',()=>rawFullpass(mat,rt));
 geometry=(mat,rt,clear=true)=>timed(mat===frontMat?'front_depth':mat===layer8Mat?'eight_layers_one_draw':'layer_group',()=>rawGeometry(mat,rt,clear));
 shadows=()=>timed('shadows_inclusive',()=>rawShadows());
