@@ -1,8 +1,8 @@
-name: GNM whole-face visible anatomical fit
+name: GNM bounded whole-face identity fit
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/whole-face-visible-r03/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/bounded-identity-fit-r04/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/whole-face-visible-r03
+            kaopu-unified-human-workbench/joey-observation-r01/bounded-identity-fit-r04
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -39,15 +39,15 @@ jobs:
       - name: Verify bounded cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-visible-r03/render-native.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/bounded-identity-fit-r04/render-native-ci.cjs
       - name: Render native initialization with same appearance
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-visible-r03/render-native.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/bounded-identity-fit-r04/render-native-ci.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-whole-r03-${{ matrix.frame }}-${{ github.sha }}
-          path: joey-whole-r03-${{ matrix.frame }}/
+          name: joey-bounded-r04-${{ matrix.frame }}-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/bounded-identity-fit-r04/evidence/
           retention-days: 7
 
