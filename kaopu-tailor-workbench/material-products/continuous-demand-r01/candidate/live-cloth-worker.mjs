@@ -27,7 +27,7 @@ async function handle(d){
  if(!world)throw Error('实时服装尚未初始化');
  if(d.command==='advance'){
   const target=Number(d.targetSeconds);if(!Number.isFinite(target)||target<world.elapsed-DT)throw Error('非单调模拟目标');
-  const required=Math.max(0,Math.floor((target-world.elapsed+1e-9)/DT)),steps=Math.min(4,required);
+  const required=Math.max(0,Math.floor((target-world.elapsed+1e-9)/DT)),batchLimit=Math.max(1,Math.min(4,Math.floor(12/Math.max(.1,world.simulationMs||1)))),steps=Math.min(batchLimit,required);
   for(let i=0;i<steps;i++){world.step(DT);if(world.acceleration.config?.resultOnce===false)world.rows();}
   clock.wallTarget=target;clock.activeWallSeconds=d.activeWallSeconds;clock.simLagMs=Math.max(0,(target-world.elapsed)*1000);clock.overBudget=clock.simLagMs>DT*2000||world.simulationMs>DT*1000;
   if(!steps){self.postMessage({id:d.id,statusOnly:true,audit:{clock:{...clock},simulationSeconds:world.elapsed,simulationTimeSeconds:world.elapsed,advanceSteps:0,frameSequence:world.frameSequence}});return;}
