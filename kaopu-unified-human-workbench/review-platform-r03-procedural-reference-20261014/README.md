@@ -1,5 +1,7 @@
 # 人物总平台 · 参考表面程序表达 R03
 
+[打开固定审核页](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0f960092466b71260c6a7994ad919c409cde23b2/kaopu-unified-human-workbench/review-platform-r03-procedural-reference-20261014/preview.html)
+
 本版回应 R02 与教师示例差距较大的反馈。先研究 [lo-th/head](https://github.com/lo-th/head) 的实际运行代码和表面数据，再用小型数值场、稀疏余弦函数与材质表达重建外观。成品继续使用本平台既有原生人物底座；没有引入教师人物、原图、HDR 文件或运行 bundle，也没有使用旧唇部几何加工来制造新的纹理。
 
 **尚未达到整幅画面逐像素一比一。** 已拟合的表面信号、实际头型、相机、光照、阴影和整体观感是不同的验收项目。函数系数的误差不能当作画面相同的证明。
