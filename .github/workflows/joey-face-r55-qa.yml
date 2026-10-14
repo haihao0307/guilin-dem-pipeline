@@ -1,8 +1,8 @@
-name: Joey R66 native observation candidate
+name: Native single eye corner control audit
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-crease-r56/**', 'kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57/**', 'kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59/**', 'kaopu-unified-human-workbench/joey-observation-r01/eye-shape-r60/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-boundary-r61/**', 'kaopu-unified-human-workbench/joey-observation-r01/lip-shape-r62/**', 'kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63/**', 'kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64/**', 'kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/**', 'kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/eye-corner-control-check/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 12
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -19,29 +19,23 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66
+            kaopu-unified-human-workbench/joey-observation-r01/eye-corner-control-check
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
-            kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
-            kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55
-            kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58
-            kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57
-            kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+            kaopu-unified-human-workbench/joey-observation-r01/eye-response-r59
       - name: Install matching official browser package
         timeout-minutes: 3
         run: |
           npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
           echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
-      - name: Verify bounded cosmetics and brow contracts
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
-      - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/render-native.cjs
-      - name: Render bounded native identity candidate with identical appearance
-        run: node kaopu-unified-human-workbench/joey-observation-r01/native-observation-r66/render-native.cjs
+      - name: Check isolated control probe syntax
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/eye-corner-control-check/probe.cjs
+      - name: Evaluate three states and exact rollback on native engine
+        timeout-minutes: 9
+        run: node kaopu-unified-human-workbench/joey-observation-r01/eye-corner-control-check/probe.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-face-r55-${{ github.sha }}
-          path: joey-native-observation-r66/
+          name: joey-eye-corner-${{ github.sha }}
+          path: joey-eye-corner-control-check/
           retention-days: 7
-
