@@ -10,6 +10,7 @@ const FILE_PREFIX='architecture-r02';
 fs.mkdirSync(OUT,{recursive:true});
 const receipt={schema:'bureau-architecture-r02-browser/1',commit:process.env.GITHUB_SHA||null,
   startedUtc:new Date().toISOString(),status:'running',
+  scope:'Focused default inspection-lighting and post-mutation frame sampling regression. All eight views exercised; four fresh screenshots. Previous run 38749933712 retains all eight geometry views. Geometry source unchanged.',
   backend:'Chromium WebGL2 with SwiftShader launch flags; actual GL identification recorded below',
   userHardwareVerified:false,artisticAcceptance:false,noAutomaticRetry:true,
   viewport:{width:1280,height:900},functionalContracts:{},performanceContracts:{},
@@ -50,8 +51,9 @@ async function snapshot(page){return page.evaluate(()=>{
     controls:{roofs:document.getElementById('roofs')?.checked,floors:document.getElementById('floors')?.checked,
       cut:document.getElementById('cut')?.value,lightQuality:document.getElementById('light-quality')?.value}};
 });}
-async function nextFrames(page,previous,amount=2){await page.waitForFunction(({f,n})=>window.__bureauArchitecture.frames>=f+n,{f:previous,n:amount},{timeout:30000});}
+async function nextFrames(page,previous,amount=2){previous=Math.max(previous,await page.evaluate(()=>window.__bureauArchitecture.frames));await page.waitForFunction(({f,n})=>window.__bureauArchitecture.frames>=f+n,{f:previous,n:amount},{timeout:30000});}
 async function capture(page,name){
+  if(!['initial-whole','view-hall','view-warehouse','view-section'].includes(name))return;
   const ui=path.join(OUT,FILE_PREFIX+'-'+name+'-ui.png'),canvas=path.join(OUT,FILE_PREFIX+'-'+name+'-canvas.png');
   const started=Date.now();
   // A fixed full-viewport canvas is still actively rendering. Locator stability
