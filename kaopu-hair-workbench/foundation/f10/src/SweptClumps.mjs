@@ -1,0 +1,40 @@
+import {clumpRule} from './ClumpRules.mjs';
+import {point} from './NativeSurface.mjs';
+import {add,sub,mul,mix,dot,cross,len,unit,smooth,clamp} from './approved/LegacyFoundation.mjs';
+const project=(v,n)=>sub(v,mul(n,dot(v,n)));
+const curve=(c,u)=>{const count=c.points.length/3-1,x=u*count,i=Math.min(count-1,Math.floor(x));return mix(c.points.slice(i*3,i*3+3),c.points.slice((i+1)*3,(i+1)*3+3),x-i);};
+function rotate(v,axis,a){return add(add(mul(v,Math.cos(a)),mul(cross(axis,v),Math.sin(a))),mul(axis,dot(axis,v)*(1-Math.cos(a))));}
+function transport(w,a,b){const axis=cross(a,b),s=len(axis),c=clamp(dot(a,b),-1,1);if(s<1e-8)return unit(project(w,b));return unit(rotate(w,mul(axis,1/s),Math.atan2(s,c)));}
+function dimensions(id){if(id==='bang-wisps')return [.0016,.0010,18];if(id==='bang-sweep')return [.008,.002,24];if(id.startsWith('frame'))return [.012,.008,25];if(id.startsWith('outer'))return [.022,.010,20];if(id.startsWith('under'))return [.016,.007,12];if(id.startsWith('back'))return [.027,.010,10];return [.024,.008,8];}
+// A volume is a continuous family of root-owned paths through nonzero 2D
+// sections. Parallel transport and a separate authored twist prevent a flat
+// ribbon from being mistaken for a volumetric bundle.
+export function createSweptClump(region,guides,state,builder){
+ const id=region.id,isFringe=id.startsWith('bang'),axis=clumpRule(id,state.recipe)?.axis??0,longAxis=isFringe?2:1,origin=region.nodes.reduce((p,n)=>add(p,mul(n.p,1/region.nodes.length)),[0,0,0]);
+ const lo=Math.min(...region.nodes.map(n=>n.chartP[axis])),hi=Math.max(...region.nodes.map(n=>n.chartP[axis])),span=Math.max(.00001,hi-lo),bins=Array.from({length:17},()=>[Infinity,-Infinity]);
+ for(const n of region.nodes){const i=clamp(Math.round((n.chartP[axis]-lo)/span*16),0,16),v=n.chartP[longAxis];bins[i][0]=Math.min(bins[i][0],v);bins[i][1]=Math.max(bins[i][1],v);}
+ for(let i=0;i<bins.length;i++)if(!Number.isFinite(bins[i][0])){let k=0;while(i-k>=0||i+k<bins.length){const b=bins[Math.max(0,i-k)],c=bins[Math.min(16,i+k)];if(Number.isFinite(b[0])){bins[i]=b.slice();break;}if(Number.isFinite(c[0])){bins[i]=c.slice();break;}k++;}}
+ const coords=node=>{const q=clamp((node.chartP[axis]-lo)/span,0,1),x=q*16,i=Math.min(15,Math.floor(x)),limits=mix([bins[i][0],bins[i][1],0],[bins[i+1][0],bins[i+1][1],0],x-i),a=q*2-1,b=clamp((node.chartP[longAxis]-limits[0])/Math.max(.00001,limits[1]-limits[0])*2-1,-1,1);return [a*Math.sqrt(1-b*b*.5),b*Math.sqrt(1-a*a*.5)];};
+ const [width,thickness,twistDegrees]=dimensions(id),steps=64,centers=Array.from({length:steps+1},(_,i)=>guides.reduce((p,g)=>add(p,mul(curve(g,i/steps),1/guides.length)),[0,0,0])),sections=[],emergenceCache=new WeakMap(),meanLength=guides.reduce((n,g)=>n+g.actualMM*.001/guides.length,0);
+ const sign=id.endsWith('left')||id==='bang-sweep'?-1:1,radial=isFringe?[0,0,1]:id.startsWith('back')||id==='nape'?[0,0,-1]:[sign,0,.1];let previousW,previousT;
+ for(let i=0;i<=steps;i++){const u=i/steps,tangent=unit(sub(centers[Math.min(steps,i+1)],centers[Math.max(0,i-1)]));let W=previousW?transport(previousW,previousT,tangent):unit(project(axis===2?[0,0,1]:[1,0,0],tangent));if(len(W)<.5)W=unit(cross(tangent,radial));let B=unit(cross(tangent,W));if(i===0&&dot(B,radial)<0){W=mul(W,-1);B=mul(B,-1);}previousW=W;previousT=tangent;
+  const angle=sign*twistDegrees*state.recipe.twistGain*Math.PI/180*(smooth((u-.10)/.45)-.68*smooth((u-.68)/.30)),w=add(mul(W,Math.cos(angle)),mul(B,Math.sin(angle))),b=sub(mul(B,Math.cos(angle)),mul(W,Math.sin(angle))),growth=smooth(u/.24),taper=1-(isFringe?.90:.35)*smooth((u-(isFringe?.78:.90))/(isFringe?.22:.10)),thicknessTaper=1-(isFringe?.94:.50)*smooth((u-(isFringe?.80:.90))/(isFringe?.20:.10));
+  sections.push({u,center:centers[i],tangent,widthAxis:w,thicknessAxis:b,halfWidth:width*growth*taper,halfThickness:thickness*growth*thicknessTaper,twistRadians:angle});
+ }
+ const shortSign=dot(sections[0].widthAxis,axis===2?[0,0,1]:[1,0,0])<0?-1:1;
+ const section=u=>{const x=clamp(u)*steps,i=Math.min(steps-1,Math.floor(x)),t=x-i,a=sections[i],b=sections[i+1];return {center:mix(a.center,b.center,t),widthAxis:unit(mix(a.widthAxis,b.widthAxis,t)),thicknessAxis:unit(mix(a.thicknessAxis,b.thicknessAxis,t)),halfWidth:a.halfWidth+(b.halfWidth-a.halfWidth)*t,halfThickness:a.halfThickness+(b.halfThickness-a.halfThickness)*t};};
+ function clear(p,u){if(u===0)return p;let q=p;for(let i=0;i<3;i++){const h=builder.bvh.nearest(q),n=unit(point(builder.head,h.t,h.b,builder.normals)),signed=dot(sub(q,h.p),n),gap=Math.min(.0012,u*.025);if(signed>=gap)break;q=add(q,mul(n,gap-signed));}return q;}
+ function emergence(node){let e=emergenceCache.get(node);if(e)return e;const frame=builder.frames.get(node.id);if(frame)e=frame.dir;else{const n=unit(point(builder.head,node.f,node.b,builder.normals)),desired=guides.reduce((p,g)=>add(p,mul(g.emergence,1/guides.length)),[0,0,0]),t=unit(project(desired,n));e=n;for(let angle=24;angle<=86;angle+=3){const a=angle*Math.PI/180,d=unit(add(mul(t,Math.cos(a)),mul(n,Math.sin(a))));if(!builder.bvh.segmentHit(add(node.p,mul(d,.00005)),add(node.p,mul(d,.008)))){e=d;break;}}}emergenceCache.set(node,e);return e;}
+ function at(node,u){if(u===0)return node.p.slice();const s=section(u),[a,b]=coords(node),rootDelta=sub(node.p,centers[0]),attachment=1-smooth(u/.30);let p=add(s.center,mul(rootDelta,attachment));p=add(p,add(mul(s.widthAxis,a*shortSign*s.halfWidth),mul(s.thicknessAxis,b*s.halfThickness)));p[1]+=(isFringe?.0015:.004)*b*smooth((u-.78)/.22);if(u<.13)p=mix(add(node.p,mul(emergence(node),Math.min(.020,u*meanLength))),p,smooth(u/.13));return clear(p,u);}
+ const anchor=guides.reduce((a,b)=>len(sub(builder.roots[a.rootId].p,origin))<len(sub(builder.roots[b.rootId].p,origin))?a:b);
+ return {at,section,metadata:{id:region.clumpId,sourceAreaCM2:region.area*1e4,anchorRootId:anchor.rootId,sourceMap:{axis,longAxis,shortSign,min:lo,max:hi,conditionalLongBounds:bins,mapping:'conditional rectangle to disk; exact root attachment blended over first 30 percent'},crossSection:'elliptic 2D area, separate width and thickness',frameMethod:'minimal-rotation parallel transport + authored axial twist',twistMeaning:'static groom orientation; not simulated torsion',sections,peakWidthMM:width*2000,peakThicknessMM:thickness*2000},coords};
+}
+export function guideThroughClump(g,model,builder){
+ const root=builder.roots[g.rootId],segments=Math.min(480,Math.max(40,Math.ceil(g.actualMM/1.0))),points=[...root.p];
+ for(let i=1;i<=segments;i++){const wanted=model.at(root,i/segments);for(let j=0;j<3;j++){const p=points.slice(-3),distance=len(sub(wanted,p));if(distance<1e-6)break;const step=Math.min(.0015,distance),direction=unit(sub(wanted,p)),h=builder.bvh.nearest(p),n=unit(point(builder.head,h.t,h.b,builder.normals));let q=add(p,mul(direction,step));const valid=q=>{const hit=builder.bvh.segmentHit(add(p,mul(sub(q,p),.0001)),q);if(hit)return false;const h=builder.bvh.nearest(q),normal=unit(point(builder.head,h.t,h.b,builder.normals));return dot(sub(q,h.p),normal)>=Math.min(.0008,i*.00012)-1e-7;};
+   if(!valid(q)){const t=unit(project(direction,n));let found=false;for(const lift of [.12,.25,.45,.70,.95,1]){const v=unit(add(mul(t,1-lift),mul(n,lift))),candidate=add(p,mul(v,step));if(valid(candidate)){q=candidate;found=true;break;}}if(!found){if(i===1){q=add(p,mul(builder.frames.get(g.rootId).dir,step));if(builder.bvh.segmentHit(add(p,mul(sub(q,p),.0001)),q))throw Error('体积导向出根失败 '+g.rootId);}else break;}}
+   points.push(...q);if(distance<=step)break;
+  }}
+ if(points.length>3003)throw Error('体积导向路径过长 '+g.rootId);
+ let length=0;for(let i=3;i<points.length;i+=3)length+=len(sub(points.slice(i,i+3),points.slice(i-3,i)));return {...g,points,actualMM:length*1000,requestedMM:length*1000,styleProfile:{...g.styleProfile,clumpId:model.metadata.id,authoredTarget:g.styleProfile.target,hem:points.at(-2),target:points.slice(-3),fieldEndpointErrorMM:len(sub(points.slice(-3),model.at(root,1)))*1000,pathAuthority:'same nonzero 2D section field; guide centerlines include local native-body avoidance',crossSectionModel:model.metadata.id}};
+}
