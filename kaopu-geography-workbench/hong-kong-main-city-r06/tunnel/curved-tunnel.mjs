@@ -13,7 +13,7 @@ const finite=a=>a.every(Number.isFinite);
 const area=p=>{let s=0;for(let i=1;i<p.length-1;i++)s+=Math.hypot(...cross(sub(p[i].a,p[0].a),sub(p[i+1].a,p[0].a)))/2;return s;};
 const bounds=pts=>[0,1,2].map(k=>[Math.min(...pts.map(p=>p[k])),Math.max(...pts.map(p=>p[k]))]);
 const overlaps=(a,b)=>a.every((v,k)=>v[1]>b[k][0]+EPS&&v[0]<b[k][1]-EPS);
-export const DEFAULT_TUNNEL=Object.freeze({sectionId:'lion_rock',stepM:4,halfWidthM:4.5,springM:3.5,floorM:-.65,wallM:.45,archSegments:16,segmentOverlapM:.12,maxPortalExtensionM:1500,portalProbeStepM:5});
+export const DEFAULT_TUNNEL=Object.freeze({sectionId:'lion_rock',stepM:4,halfWidthM:4.5,springM:3.5,floorM:-.65,wallM:.45,archSegments:16,segmentOverlapM:.12,maxPortalExtensionM:1500,portalProbeStepM:5,portalFloorClearanceM:.10,portalExitCheckM:10});
 
 /** Exact height on the retained background triangles, not a nearest DEM node.
  * Pure display query: does not replace hkHeight or edit any source samples.
@@ -63,7 +63,7 @@ export function createTunnelSweep(route,options={}){
  let samples=[],volumes=[],grid=new Map(),allBounds=null,clipRecords=[],groundSampler=null,portalS=[startS,endS],coveredRuns=[],openRuns=[];
  const cellM=64,key=(x,z)=>x+','+z;
  function rebuild(){
-  const count=Math.ceil((endS-startS)/config.stepM),chainages=new Set([startS,endS,...portalS]);for(let i=0;i<=count;i++)chainages.add(startS+(endS-startS)*i/count);samples=[...chainages].sort((a,b)=>a-b).map(s=>pose(route,s));
+  const core=portalStatus.railVisibilityInterval||[startS,endS],count=Math.ceil((core[1]-core[0])/config.stepM),chainages=new Set([startS,endS,...portalS]);for(let i=0;i<=count;i++)chainages.add(core[0]+(core[1]-core[0])*i/count);for(let s=core[0]-config.stepM;s>startS;s-=config.stepM)chainages.add(s);for(let s=core[1]+config.stepM;s<endS;s+=config.stepM)chainages.add(s);samples=[...chainages].sort((a,b)=>a-b).map(s=>pose(route,s));
   const profile=tunnelProfile(config,true),covered=samples.slice(1).map((b,i)=>{const q=pose(route,(samples[i].s+b.s)/2),h=groundSampler?.(q.p[0],q.p[2]);return !groundSampler||(Number.isFinite(h)&&h>=world(q,[0,config.springM+config.halfWidthM+config.wallM])[1]-.35);});
   function runs(value){const out=[];let start=null;for(let i=0;i<covered.length;i++){if(covered[i]===value&&start===null)start=i;if(start!==null&&(covered[i]!==value||i===covered.length-1)){const end=covered[i]===value?i+1:i;out.push([start,end]);start=null;}}return out;}
   coveredRuns=runs(true);openRuns=runs(false);
@@ -76,15 +76,17 @@ export function createTunnelSweep(route,options={}){
  function terrainAt(sampleHeight,s){const p=pose(route,s),h=sampleHeight(p.p[0],p.p[2]);return{chainageM:s,terrainM:Number.isFinite(h)?h:null,railM:p.p[1],crownM:world(p,[0,config.springM+config.halfWidthM+config.wallM])[1],position:p.p};}
  function resolvePortals(sampleHeight,{extend=true,samplerPolicy='caller_supplied_terrain_query'}={}){
   if(clipRecords.length)throw Error('Resolve tunnel portals before any terrain clipping');
-  groundSampler=sampleHeight;portalStatus.samplerPolicy=samplerPolicy;portalStatus.openCuttingTopPolicy='vertically_open_excavation_10km_numeric_ceiling';const ends=[],crowns=[];
+  groundSampler=sampleHeight;portalStatus.samplerPolicy=samplerPolicy;portalStatus.openCuttingTopPolicy='vertically_open_excavation_10km_numeric_ceiling';portalStatus.endpointPolicy='full_cut_width_below_inner_floor_with_outward_check';const ends=[],crowns=[],railEnds=[];
+  const floorExit=(s,dir)=>{let minClearanceM=Infinity,maxCrossSectionGroundAboveFloorM=-Infinity,sampleCount=0;const width=config.halfWidthM+config.wallM;for(let d=0;d<=config.portalExitCheckM;d+=1){const at=s+dir*d;if(at<0||at>route.length)return{exposed:false,minClearanceM:null};const q=pose(route,at);for(let i=0;i<=10;i++){const p=world(q,[-width+2*width*i/10,config.floorM]),h=sampleHeight(p[0],p[2]);if(!Number.isFinite(h))return{exposed:false,minClearanceM:null};minClearanceM=Math.min(minClearanceM,p[1]-h);if(d===0)maxCrossSectionGroundAboveFloorM=Math.max(maxCrossSectionGroundAboveFloorM,h-p[1]);sampleCount++;}}return{exposed:minClearanceM>=config.portalFloorClearanceM,minClearanceM,maxCrossSectionGroundAboveFloorM,outwardCheck:{distanceM:config.portalExitCheckM,stepM:1,lateralSamples:11,sampleCount,maxGroundAboveFloorM:-minClearanceM}};};
   for(const [s,dir]of[[section.startS,-1],[section.endS,1]]){let q=terrainAt(sampleHeight,s),distance=0,crown=null;
    while(true){if(crown===null&&q.terrainM!==null&&q.terrainM<=q.crownM-.35)crown={...q};
     if(!extend||q.terrainM===null||q.terrainM<=q.railM+.35||distance>=config.maxPortalExtensionM)break;
     distance+=config.portalProbeStepM;const d=Math.max(0,Math.min(route.length,s+dir*distance));q=terrainAt(sampleHeight,d);if(d===0||d===route.length)break;
    }
-   ends.push({...q,coverAboveRailM:q.terrainM===null?null:q.terrainM-q.railM,extensionM:Math.abs(q.chainageM-s),exposed:q.terrainM!==null&&q.terrainM<=q.railM+.35});crowns.push(crown);
+   railEnds.push(q.chainageM);let exit=floorExit(q.chainageM,dir);while(extend&&!exit.exposed&&q.terrainM!==null&&distance<config.maxPortalExtensionM){distance=Math.min(config.maxPortalExtensionM,distance+config.portalProbeStepM);const d=Math.max(0,Math.min(route.length,s+dir*distance));q=terrainAt(sampleHeight,d);exit=floorExit(q.chainageM,dir);if(d===0||d===route.length)break;}
+   ends.push({...q,coverAboveRailM:q.terrainM===null?null:q.terrainM-q.railM,extensionM:Math.abs(q.chainageM-s),exposed:exit.exposed,floorClearanceM:exit.minClearanceM,maxCrossSectionGroundAboveFloorM:exit.maxCrossSectionGroundAboveFloorM??null,requiredGroundBelowFloorM:config.portalFloorClearanceM,outwardCheck:exit.outwardCheck??null,checkedOutwardM:config.portalExitCheckM,checkedHalfWidthM:config.halfWidthM+config.wallM});crowns.push(crown);
   }
-  startS=ends[0].chainageM;endS=ends[1].chainageM;portalS=crowns.map((q,i)=>q?.chainageM??[startS,endS][i]);
+  portalStatus.railVisibilityInterval=railEnds;startS=ends[0].chainageM;endS=ends[1].chainageM;portalS=crowns.map((q,i)=>q?.chainageM??[startS,endS][i]);
   Object.assign(portalStatus,{resolved:ends.every(q=>q.exposed)&&crowns.every(Boolean),ends,crownCrossings:crowns,portalChainages:portalS,autoExtended:extend,renderInterval:[startS,endS],searchLimitPerEndM:config.maxPortalExtensionM,status:ends.every(q=>q.exposed)&&crowns.every(Boolean)?'open_portals_with_approach_cuttings':'blocked_no_exposed_entrance_in_search_range'});rebuild();return structuredClone(portalStatus);
  }
  function clipTerrain(positions,indices,stride=7,label='terrain'){
