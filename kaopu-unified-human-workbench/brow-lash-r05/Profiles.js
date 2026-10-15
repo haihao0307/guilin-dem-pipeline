@@ -8,30 +8,30 @@
   const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
   const mix=(a,b,t)=>a*(1-t)+b*t;
   const DEFAULTS=Object.freeze({
-    seed:7319,density:1.16,span:.98,bandWidth:.94,arch:.08,peak:.60,peakSharpness:1,
-    headFullness:1.04,bodyFullness:1.12,tailFullness:.86,
-    headAngle:64,bodyAngle:16,tailAngle:-8,
-    strandLength:1,lengthVariation:.24,laydown:.82,lift:.18,clump:.14,
-    fiberWidth:1,vellus:.18,asymmetry:.04,roughness:.48,color:'#4a3024',
+    seed:7319,density:1.24,span:.98,bandWidth:.94,arch:.08,peak:.60,peakSharpness:1,
+    headFullness:1.05,bodyFullness:1.14,tailFullness:.88,
+    headAngle:64,bodyAngle:16,tailAngle:-8,crossFlow:19,
+    strandLength:1,lengthVariation:.28,edgeShortening:.24,laydown:.98,lift:.12,clump:.10,rootJitter:.10,
+    fiberWidth:.92,vellus:.20,asymmetry:.04,roughness:.50,color:'#52372b',
     brows:true,lashes:true,showDomain:false
   });
   const PRESETS=Object.freeze({
     natural:{label:'自然高密',note:'眉头上扬 · 眉身顺流 · 眉尾收细',values:{}},
-    straight:{label:'平直浓眉',note:'低拱宽眉身 · 尾部平稳',values:{density:1.08,bandWidth:.96,arch:-.06,peak:.56,headFullness:1.05,bodyFullness:1.1,tailFullness:.82,headAngle:52,bodyAngle:7,tailAngle:-4,strandLength:1.03,fiberWidth:1.08,clump:.11}},
-    softArch:{label:'柔弧眉',note:'缓慢起拱 · 柔和回落',values:{density:.95,bandWidth:.82,arch:.30,peak:.63,peakSharpness:.78,headAngle:62,bodyAngle:20,tailAngle:-10,tailFullness:.70,strandLength:.98}},
-    highArch:{label:'高眉峰',note:'峰位靠外 · 眉尾明显下收',values:{density:.88,bandWidth:.72,arch:.56,peak:.67,peakSharpness:1.55,headFullness:.78,bodyFullness:.95,tailFullness:.58,headAngle:68,bodyAngle:18,tailAngle:-24,strandLength:.95,fiberWidth:.94}},
-    feather:{label:'羽状上扬',note:'眉头与眉身向上梳理',values:{density:.94,bandWidth:.88,arch:.18,peak:.59,headAngle:84,bodyAngle:35,tailAngle:10,lift:.34,laydown:.63,clump:.07,lengthVariation:.31,strandLength:1.05}},
-    strong:{label:'粗浓英气',note:'高密宽带 · 毛干更粗',values:{density:1.22,bandWidth:1,arch:.04,headFullness:1.15,bodyFullness:1.18,tailFullness:.92,headAngle:58,bodyAngle:12,tailAngle:-7,strandLength:1.10,fiberWidth:1.22,vellus:.11,clump:.16,color:'#38251e'}},
-    fine:{label:'细长淡眉',note:'窄带细毛 · 皮肤可见',values:{density:1.02,bandWidth:.56,arch:.18,peak:.62,headFullness:.70,bodyFullness:.72,tailFullness:.55,headAngle:63,bodyAngle:17,tailAngle:-12,strandLength:.90,fiberWidth:.76,vellus:.26,color:'#6d4a38',roughness:.56}},
-    shortDense:{label:'短浓眉',note:'缩短眉尾 · 保留厚眉身',values:{density:1.14,span:.80,bandWidth:.94,arch:.03,headFullness:1.08,bodyFullness:1.14,tailFullness:.38,headAngle:58,bodyAngle:10,tailAngle:-3,strandLength:1.02,fiberWidth:1.12}},
-    angular:{label:'清晰折角',note:'中外段转折更明确',values:{density:.98,bandWidth:.78,arch:.44,peak:.58,peakSharpness:1.85,headAngle:66,bodyAngle:8,tailAngle:-22,tailFullness:.66,strandLength:1.02,clump:.10}},
-    rounded:{label:'圆弧自然',note:'峰位居中 · 尾部缓降',values:{density:.91,bandWidth:.84,arch:.22,peak:.52,peakSharpness:.62,headAngle:58,bodyAngle:24,tailAngle:1,tailFullness:.72,strandLength:.97,clump:.13}}
+    straight:{label:'平直浓眉',note:'低拱宽眉身 · 尾部平稳',values:{density:1.18,bandWidth:.96,arch:-.06,peak:.56,headFullness:1.08,bodyFullness:1.14,tailFullness:.84,headAngle:52,bodyAngle:7,tailAngle:-4,crossFlow:15,strandLength:.94,fiberWidth:.98,clump:.08,edgeShortening:.20}},
+    softArch:{label:'柔弧眉',note:'缓慢起拱 · 柔和回落',values:{density:1.12,bandWidth:.82,arch:.30,peak:.63,peakSharpness:.78,headAngle:62,bodyAngle:20,tailAngle:-10,crossFlow:19,tailFullness:.74,strandLength:.95}},
+    highArch:{label:'高眉峰',note:'峰位靠外 · 眉尾明显下收',values:{density:1.08,bandWidth:.74,arch:.56,peak:.67,peakSharpness:1.55,headFullness:.88,bodyFullness:1.02,tailFullness:.68,headAngle:68,bodyAngle:18,tailAngle:-24,crossFlow:20,strandLength:.90,fiberWidth:.88}},
+    feather:{label:'羽状上扬',note:'眉头与眉身向上梳理',values:{density:1.15,bandWidth:.88,arch:.18,peak:.59,headAngle:82,bodyAngle:32,tailAngle:8,crossFlow:11,lift:.20,laydown:.82,clump:.06,lengthVariation:.32,strandLength:.96,edgeShortening:.18,rootJitter:.12}},
+    strong:{label:'粗浓英气',note:'高密宽带 · 毛干更粗',values:{density:1.30,bandWidth:1,arch:.04,headFullness:1.18,bodyFullness:1.22,tailFullness:.95,headAngle:58,bodyAngle:12,tailAngle:-7,crossFlow:22,strandLength:1.00,fiberWidth:1.05,vellus:.12,clump:.12,color:'#3d2a22'}},
+    fine:{label:'细长淡眉',note:'窄带细毛 · 皮肤可见',values:{density:1.24,bandWidth:.58,arch:.18,peak:.62,headFullness:.88,bodyFullness:.94,tailFullness:.76,headAngle:63,bodyAngle:17,tailAngle:-12,crossFlow:16,strandLength:.88,fiberWidth:.68,vellus:.28,color:'#694a3b',roughness:.57}},
+    shortDense:{label:'短浓眉',note:'缩短眉尾 · 保留厚眉身',values:{density:1.25,span:.80,bandWidth:.94,arch:.03,headFullness:1.12,bodyFullness:1.18,tailFullness:.46,headAngle:58,bodyAngle:10,tailAngle:-3,crossFlow:21,strandLength:.88,fiberWidth:1.00,edgeShortening:.27}},
+    angular:{label:'清晰折角',note:'中外段转折更明确',values:{density:1.15,bandWidth:.78,arch:.44,peak:.58,peakSharpness:1.85,headAngle:66,bodyAngle:8,tailAngle:-22,crossFlow:20,tailFullness:.72,strandLength:.92,clump:.08}},
+    rounded:{label:'圆弧自然',note:'峰位居中 · 尾部缓降',values:{density:1.12,bandWidth:.84,arch:.22,peak:.52,peakSharpness:.62,headAngle:58,bodyAngle:24,tailAngle:1,crossFlow:18,tailFullness:.78,strandLength:.93,clump:.09}}
   });
   const numericRanges=Object.freeze({
     density:[.45,1.3],span:[.65,1],bandWidth:[.42,1],arch:[-.35,.65],peak:[.35,.78],peakSharpness:[.5,2],
     headFullness:[.35,1.25],bodyFullness:[.35,1.25],tailFullness:[.2,1.25],
-    headAngle:[20,90],bodyAngle:[-12,48],tailAngle:[-38,28],strandLength:[.6,1.4],lengthVariation:[0,.45],
-    laydown:[.45,1.15],lift:[.04,.5],clump:[0,.5],fiberWidth:[.6,1.45],vellus:[0,.38],asymmetry:[0,.25],roughness:[.25,.75]
+    headAngle:[20,90],bodyAngle:[-12,48],tailAngle:[-38,28],crossFlow:[0,35],strandLength:[.6,1.4],lengthVariation:[0,.45],edgeShortening:[0,.45],
+    laydown:[.45,1.15],lift:[.02,.5],clump:[0,.5],rootJitter:[0,.18],fiberWidth:[.5,1.45],vellus:[0,.38],asymmetry:[0,.25],roughness:[.25,.75]
   });
   function validate(input={}){
     if(!input||typeof input!=='object'||Array.isArray(input))throw Error('眉毛配方必须为对象');
