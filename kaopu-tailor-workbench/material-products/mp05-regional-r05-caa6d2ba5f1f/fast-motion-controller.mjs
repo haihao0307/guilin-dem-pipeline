@@ -1,0 +1,57 @@
+import {ClothController as ReferenceController} from './cloth-controller.mjs';
+import {NativeMotion} from './native-motion.mjs';
+import {decodeClip,clipRows} from './motion-cache.mjs';
+import {layerLayout} from './material-settings.mjs';
+import {loadBytes,unzip,loadJSON,cacheStats} from './fast-assets.mjs';
+const clips=new Map();let catalog;
+export function physicalKey(rows,settings){return JSON.stringify({revision:'MP05-cache-1',garments:rows.map(r=>[r.packet.binding.presetId,r.info.family,Math.round(layerLayout(r.info).thickness*1e6)/1e6]),physics:['gravity','bend','softness','damping','clearanceMM'].map(k=>settings[k])});}
+async function index(){if(!catalog)catalog=loadJSON(new URL('./motion-index-v2.json',import.meta.url)).catch(e=>{catalog=null;throw e;});return catalog;}
+async function getClip(entry){if(!clips.has(entry.sha256)){while(clips.size>=3)clips.delete(clips.keys().next().value);}if(!clips.has(entry.sha256))clips.set(entry.sha256,(async()=>decodeClip(await unzip(await loadBytes(new URL('./clips/'+entry.file,import.meta.url),entry.sha256))))().catch(e=>{clips.delete(entry.sha256);throw e;return null;}));return clips.get(entry.sha256);}
+export class FastClothController{
+ constructor(callbacks){Object.assign(this,callbacks);this.running=false;this.dead=false;this.baking=false;this.fromCache=false;this.playToken=0;this.reference=null;this.stats={fullActionBakes:0,actionLoads:0,actionSwitchMS:[],frames:0,mode:'verified physical replay',referenceSolver:false};}
+ async init(rows,lock,settings,actor,context={}){this.inputRows=rows;this.lock=lock;this.settings={...settings};this.actor=actor;this.look=context.look;this.key=physicalKey(rows,settings);this.nativeMotion=new NativeMotion(actor);const cat=await index();this.entries=cat.clips.filter(e=>e.physicalKey===this.key);const boot=cat.boots.find(e=>e.physicalKey===this.key);
+ if(boot){const data=JSON.parse(new TextDecoder().decode(await unzip(await loadBytes(new URL('./boot/'+boot.file,import.meta.url),boot.sha256))));this.rows=data.rows.map(r=>({...r,positions:Float32Array.from(r.positions),normals:Float32Array.from(r.normals)}));this.frame={rows:this.rows,body:Float32Array.from(this.nativeMotion.native),audit:{bootstrapPhysicalState:true,physicsSource:'frozen reference solve',bodyFrameMatchesCloth:true}};this.initialRows=this.rows;this.initialFrame=this.frame;this.onFrame?.(this.rows,this.frame);this.stats.bootstrap='verified precomputed state';}
+ else{await this.ensureReference();this.stats.bootstrap='live reference init';}
+ this.availableMotions=this.entries.map(e=>e.motion);setTimeout(()=>{if(!this.dead)this.prefetchReady=this.prime();},200);return this.rows;
+ }
+ prime(){return Promise.all(this.entries.map(entry=>getClip(entry).catch(()=>null)));}
+ async ensureReference(){if(this.reference)return this.reference;this.pause();this.reference=new ReferenceController({onFrame:(rows,d)=>{this.rows=rows;this.frame=d;this.stats.mode='live reference solver';this.stats.referenceSolver=true;this.onFrame?.(rows,d);},onError:this.onError,onProgress:this.onProgress});await this.reference.init(this.inputRows,this.lock,this.settings,this.actor,{look:this.look});return this.reference;}
+ pause(){this.running=false;this.playToken++;if(this.raf)cancelAnimationFrame(this.raf);this.reference?.pause();this.raf=0;}
+ async playMotion(id){const start=performance.now();this.pause();const token=this.playToken,entry=this.entries.find(e=>e.motion===id);if(!entry){const e=Error('当前物理组合尚无已验证动作缓存；已阻止耗时整段重算。默认 K04、L04、D01、D04 可直接播放。');this.onError?.(e);throw e;}
+  this.baking=false;this.stats.actionLoads++;this.onProgress?.(1,'读取已验证动作，不重新解算');const clip=await getClip(entry);if(token!==this.playToken||this.dead)return false;this.activeClip=clip;this.fromCache=true;this.reference?.pause();this.replayRows=null;this.time=0;this.stats.mode='verified physical replay';this.stats.referenceSolver=false;this.presentMotionFrame(0);await this.presentationReady;if(token!==this.playToken||this.dead)return false;this.stats.actionSwitchMS.push(performance.now()-start);if(this.stats.actionSwitchMS.length>32)this.stats.actionSwitchMS.shift();this.resumeMotion();return true;
+ }
+ presentMotionFrame(frame){const clip=this.activeClip;if(!clip)return null;frame=Math.max(0,Math.min(clip.header.frameCount-1,Math.floor(frame)));const rows=clipRows(clip,frame,this.replayRows);this.replayRows=rows;this.nativeMotion.at(clip.header.motion,frame/clip.header.fps);this.rows=rows;this.fromCache=true;this.frame={rows,body:Float32Array.from(this.nativeMotion.native),audit:{cachedPhysicalReplay:true,frameSequence:frame,motion:clip.header.motion,motionTime:frame/clip.header.fps,bodyFrameMatchesCloth:true,nativeRig:this.nativeMotion.audit(),clipProof:clip.header.proof,quantisationMM:clip.header.maxQuantisationErrorMM,presentationClock:'wall-time 30fps; no slowed time cap',maximumFrameJump:null,physicsRecomputed:false}};this.stats.frames++;this.presentationReady=Promise.resolve(this.onFrame?.(rows,this.frame));return this.presentationReady;}
+ resumeMotion(){
+ if(!this.activeClip||this.dead)return false;
+ this.pause();const token=this.playToken,h=this.activeClip.header,end=(h.frameCount-1)/h.fps;
+ if((this.time||0)>=end)this.time=0;
+ this.running=true;let previous=this.frame?.audit?.frameSequence??-1;
+ this.started=performance.now()-(this.time||0)*1000/(this.playbackSpeed||1);
+ const tick=now=>{
+  if(!this.running||this.dead||token!==this.playToken)return;
+  if(this.canPresent&&!this.canPresent()){this.stats.unpresentableUpdatesAvoided=(this.stats.unpresentableUpdatesAvoided||0)+1;this.raf=requestAnimationFrame(tick);return;}
+  this.time=Math.min(end,(now-this.started)/1000*(this.playbackSpeed||1));
+  const frame=Math.min(h.frameCount-1,Math.floor(this.time*h.fps+1e-7));
+  if(frame!==previous){const t=performance.now();this.presentMotionFrame(frame);this.stats.lastCPUFrameMS=performance.now()-t;previous=frame;}
+  if(this.time<end)this.raf=requestAnimationFrame(tick);
+  else Promise.resolve(this.presentationReady).then(ok=>{if(token!==this.playToken||this.dead)return;this.running=false;if(ok===false)this.onError?.(Error('最终画面未完成'));else this.onProgress?.(1,'动作完成 · 复用已验证物理帧');});
+ };
+ this.raf=requestAnimationFrame(tick);return true;
+ }
+ adopt(other){
+  if(!other?.fromCache||!other.activeClip||other.key!==this.key)return false;
+  this.activeClip=other.activeClip;this.time=other.frame.audit.motionTime;
+  this.playbackSpeed=other.playbackSpeed||1;this.fromCache=true;this.replayRows=null;
+  this.presentMotionFrame(other.frame.audit.frameSequence);this.stats.appearancePreservedFrame=true;return true;
+ }
+ setPlaybackSpeed(speed){speed=Number(speed);if(![.25,.5,1].includes(speed))throw Error('invalid speed');this.playbackSpeed=speed;if(this.running)this.started=performance.now()-(this.time||0)*1000/speed;}
+ seekMotionFrame(frame){this.pause();this.time=Math.max(0,Math.min(this.activeClip.header.frameCount-1,frame))/this.activeClip.header.fps;this.presentMotionFrame(frame);return this.frame.audit;}
+ get clock(){return {finished:!!this.activeClip&&(this.time||0)>=(this.activeClip.header.frameCount-1)/this.activeClip.header.fps};}
+ async play(){const r=await this.ensureReference();this.fromCache=false;r.play();this.running=true;}
+ async settle(s){const r=await this.ensureReference();this.fromCache=false;return r.settle(s);}
+ async tug(){const r=await this.ensureReference();this.fromCache=false;return r.tug();}
+ async reset(){this.pause();this.fromCache=false;this.time=0;this.activeClip=null;if(this.initialFrame){this.rows=this.initialRows;this.frame=this.initialFrame;this.nativeMotion.evaluate({});this.stats.mode='verified physical replay';this.onFrame?.(this.rows,this.frame);return this.rows;}return (await this.ensureReference()).reset();}
+ async set(s){this.settings={...this.settings,...s};this.key=physicalKey(this.inputRows,this.settings);this.entries=(await index()).clips.filter(e=>e.physicalKey===this.key);this.availableMotions=this.entries.map(e=>e.motion);this.fromCache=false;return (await this.ensureReference()).set(s);}
+ audit(){return {...this.stats,availableMotions:this.availableMotions,cache:{...cacheStats},liveClothRealtimeCertified:false};}
+ dispose(){this.pause();this.dead=true;this.reference?.dispose();}
+}

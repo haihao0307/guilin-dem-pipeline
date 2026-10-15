@@ -1,0 +1,37 @@
+export class LiveClothController{
+ constructor(callbacks){Object.assign(this,callbacks);this.worker=new Worker(new URL('./live-cloth-worker.mjs',import.meta.url),{type:'module'});this.pending=new Map();this.sequence=0;this.generation=0;this.running=false;this.testing=false;this.lastError=null;this.dead=false;this.fromCache=false;this.activeWallTotal=0;this.stats={mode:'live',fullActionBakes:0,actionLoads:0,frames:0,receivedBytes:0,mainUpdateMS:0,bodyRevision:-1,liveSimulationSeconds:0,testSteps:0};
+  this.worker.onmessage=({data:d})=>{if(this.dead)return;if(d.progress!==undefined){this.onProgress?.(d.progress,d.phase);return;}const task=this.pending.get(d.id);if(d.error){if(this.frame&&d.failureAudit)this.frame.audit={...this.frame.audit,...d.failureAudit};this.pause();this.pending.delete(d.id);const error=Error(d.error);this.lastError=error.message;task?.reject(error);this.onError?.(error);return;}if(!task)return;this.pending.delete(d.id);
+   if(d.statusOnly){this.frame.audit={...this.frame.audit,...d.audit};task.resolve(this.rows);return;}
+   this.stats.liveSimulationSeconds+=(d.audit.advanceSteps||0)/60;this.stats.lastReceivedMS=performance.now();
+   const t=performance.now();this.rows??=d.rows.map(r=>({positions:new Float32Array(r.positions.length),normals:new Float32Array(r.normals.length)}));
+   for(let i=0;i<d.rows.length;i++){const a=d.rows[i],b=this.rows[i];b.positions.set(a.positions);b.normals.set(a.normals);b.audit=a.audit;if(a.indices){b.indices=a.indices;b.orientation=a.orientation;b.vertices=a.vertices;}}
+   if(d.body){this.body??=new Float32Array(d.body.length);this.body.set(d.body);}
+   this.frame={rows:this.rows,body:d.body?this.body:null,audit:d.audit};this.stats.frames++;this.stats.receivedBytes+=d.audit.transferredBytes;this.stats.bodyRevision=d.audit.bodyRevision;
+   try{this.presentationReady=Promise.resolve(this.onFrame?.(this.rows,this.frame));this.stats.mainUpdateMS=performance.now()-t;}
+   finally{const buffers=d.rows.flatMap(r=>[r.positions.buffer,r.normals.buffer]);if(d.body)buffers.push(d.body.buffer);this.worker.postMessage({command:'recycle',slot:d.slot,buffers,body:!!d.body},buffers);}
+   task.resolve(this.rows);
+  };
+  this.worker.onerror=e=>{this.pause();for(const t of this.pending.values())t.reject(Error(e.message));this.pending.clear();this.onError?.(Error(e.message));};
+ }
+ command(command,data={}){if(this.dead)return Promise.reject(Error('Disposed live controller'));const id=++this.sequence;return new Promise((resolve,reject)=>{this.pending.set(id,{resolve,reject});this.worker.postMessage({id,command,...data});});}
+ async init(rows,lock,settings,actor,context={}){this.inputRows=rows;this.lock=lock;this.settings={...settings};this.actor=actor;this.look=context.look;return this.command('init',{rows,lock,settings,actor,generation:++this.generation});}
+ pause(){if(this.running){const seconds=(performance.now()-this.wallStart)/1000;this.activeWallTotal+=seconds;this.targetTime=this.segmentTarget+seconds;}this.running=false;this.testing=false;this.runToken=(this.runToken||0)+1;if(this.timer)clearTimeout(this.timer);if(this.raf)cancelAnimationFrame(this.raf);this.timer=this.raf=0;this.onState?.();}
+ async idle(){await this.advancing?.catch(()=>{});await this.presentationReady;}
+ assertSafe(){if(this.lastError)throw Error('请先恢复初始衣形，再继续测试。'+this.lastError);}
+ async play(){if(this.running||this.dead)return;this.assertSafe();this.pause();const token=this.runToken;await this.idle();if(this.dead||token!==this.runToken)return;this.running=true;this.testProgress=null;const start=performance.now(),simStart=Math.max(this.targetTime??this.frame.audit.simulationSeconds,this.frame.audit.simulationSeconds);this.wallStart=start;this.segmentTarget=simStart;this.onState?.();
+  const next=async()=>{if(!this.running||this.dead||token!==this.runToken)return;try{const wall=(performance.now()-start)/1000;this.advancing=this.command('advance',{targetSeconds:simStart+wall,activeWallSeconds:this.activeWallTotal+wall});await this.advancing;if(this.running&&token===this.runToken)this.timer=setTimeout(next,0);}catch(e){this.pause();this.onError?.(e);}};void next();
+ }
+ async playMotion(id){if(!['raise','twist','step','idle','walk','run','jump'].includes(id))throw Error('未知实时人体动作');this.assertSafe();this.pause();await this.idle();await this.command('motion',{motion:id});await this.play();return true;}
+ // Diagnostic fixed-step tests never claim realtime speed. Each full physical
+ // step is shown before the next, with at most one worker command outstanding.
+ async testSteps(count=1,motion=null){if(!Number.isInteger(count)||count<1||count>120)throw Error('测试步数须为 1–120');this.assertSafe();this.pause();const token=this.runToken;await this.idle();if(this.dead||token!==this.runToken)return false;if(motion)await this.command('motion',{motion});if(token!==this.runToken)return false;this.testing=true;this.testProgress={completed:0,total:count,cancelled:false,wallMS:0};this.onState?.();const start=performance.now();try{for(let i=0;i<count;i++){if(this.dead||token!==this.runToken)break;this.advancing=this.command('step');await this.advancing;this.stats.testSteps++;this.testProgress.completed++;this.testProgress.wallMS=performance.now()-start;await this.presentationReady;this.onState?.();}return this.rows;}finally{this.testing=false;if(this.testProgress)this.testProgress.cancelled=this.testProgress.completed<count;this.onState?.();}}
+ async settle(seconds=.5){return this.testSteps(Math.max(1,Math.min(120,Math.ceil(seconds*60))));}
+ async tug(){this.assertSafe();this.pause();await this.idle();await this.command('tug');await this.play();}
+ async reset(){this.pause();await this.idle();const result=await this.command('reset');this.lastError=null;this.testProgress=null;this.activeWallTotal=0;this.targetTime=this.frame.audit.simulationSeconds;this.stats.liveSimulationSeconds=0;this.stats.testSteps=0;this.onReset?.();this.onState?.();return result;}
+ async set(settings){const playing=this.running;this.pause();await this.idle();this.settings={...this.settings,...settings};const result=await this.command('settings',{settings});if(playing)await this.play();return result;}
+ async configure(config){this.pause();await this.idle();return this.command('config',{config});}
+ resumeMotion(){return this.play();}
+ adopt(){return false;}
+ audit(){const frame=this.frame?.audit,wall=this.activeWallTotal+(this.running?(performance.now()-this.wallStart)/1000:0),target=this.running?this.segmentTarget+(performance.now()-this.wallStart)/1000:this.targetTime??frame?.simulationSeconds;return{...this.stats,testing:this.testing,testProgress:this.testProgress,lastError:this.lastError,pendingCommands:this.pending.size,physicsSource:'live',backend:frame?.backend||'initializing',simulationTimeSeconds:frame?.simulationSeconds,wallTimeSeconds:wall,simulationToWallRatio:wall>0?this.stats.liveSimulationSeconds/wall:null,simLagMs:Math.max(0,(target-(frame?.simulationSeconds||0))*1000),latestSolverAgeMS:this.stats.lastReceivedMS?performance.now()-this.stats.lastReceivedMS:null,overBudget:frame?.clock?.overBudget,pipeline:frame?.pipeline,clock:frame?.clock,gpuMs:frame?.pipeline?.gpuMS??null,liveClothRealtimeCertified:false,continuousGeometryComplete:false};}
+ dispose(){this.pause();this.dead=true;this.worker.terminate();for(const t of this.pending.values())t.reject(new DOMException('Superseded','AbortError'));this.pending.clear();}
+}
