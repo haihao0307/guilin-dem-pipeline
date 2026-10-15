@@ -40,7 +40,7 @@ jobs:
           expected=json.loads(pathlib.Path('base-host-patches.json').read_text())['sourceSha256']
           assert hashlib.sha256(p).hexdigest()==expected
           PY
-          nohup node qa/browser.cjs > evidence/browser.log 2>&1 &
+          KAOPU_LABELS_ONLY=1 nohup node qa/browser.cjs > evidence/browser.log 2>&1 &
           for i in $(seq 1 750); do
             test -f evidence/FIRST_FRAME.json && exit 0
             test -f evidence/browser-exit.txt && { cat evidence/browser.log; exit 1; }

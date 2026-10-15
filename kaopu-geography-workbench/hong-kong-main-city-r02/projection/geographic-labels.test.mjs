@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {projectLabelAnchor,layoutAnchoredLabels,patchGeographicLabels}from './geographic-labels.mjs';
+const root=new URL('../',import.meta.url),q=JSON.parse(fs.readFileSync(new URL('../../hk-main-city-r02-qa-fc8cccf7/NEXT_MAP_QA.json',import.meta.url))),s=q.screenshots[0].beforeState,c=s.next.overview.last.camera;
+const endpoints=s.airport.data.runway.endpoints_epsg2326.map(([E,N])=>[E-834000,50,827000-N]);
+const projected=endpoints.map(p=>projectLabelAnchor(p,c,{width:1600,height:1000,aspect:1.6}));
+assert(projected.every(p=>p.inside));
+const layout=layoutAnchoredLabels(projected.map((p,i)=>({...p,width:170,height:25,priority:100,order:i})),{width:1600,height:1000});
+assert(layout.every(p=>p.visible));assert(layout.every(p=>p.displacementPx===0));
+const collision=layoutAnchoredLabels([{pixel:[500,500],width:100,height:25,priority:10,order:1},{pixel:[500,500],width:100,height:25,priority:0,order:0}],{width:1600,height:1000});
+assert(collision[0].visible);assert(!collision[1].visible);assert.deepEqual(collision[1].pixel,[500,500]);
+assert(!projectLabelAnchor([0,0,0],{...c,cam:[0,0,0]},{width:1600,height:1000,aspect:1.6}).inside);
+const html=fs.readFileSync(new URL('../../hong-kong-map-sea-r03/publish-final/index.html',root),'utf8'),patched=patchGeographicLabels(html);
+assert(!patched.includes('let visible=0,placed=[];'));assert(patched.includes('qa.mapCamera=c;'));assert.throws(()=>patchGeographicLabels(patched));
+const report={schema:'hk-fixed-geographic-label-unit-qa/1',passed:true,checks:8,scope:'CPU projector/collision/host anchors only; actual DOM and same-frame camera require browser',airportSourceEndpoints:s.airport.data.runway.endpoints_epsg2326,projected,layout:layout.map(({label,...x})=>x),hostGeometryUnchanged:true};
+fs.writeFileSync(new URL('GEOGRAPHIC-LABEL-QA.json',import.meta.url),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
