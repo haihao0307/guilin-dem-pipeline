@@ -23,8 +23,9 @@ const server=http.createServer((q,s)=>{const rel=decodeURIComponent(q.url.split(
  async function shot(file){
   await page.waitForTimeout(400);
   await page.waitForFunction(()=>HKCityBuildings.getState().loadingChunks===0);
-  const n=await page.evaluate(()=>HKCityBuildings.getState().frames);
-  await page.waitForFunction(n=>HKCityBuildings.getState().frames>=n+2,n);
+  const n=await page.evaluate(()=>{const n=HKCityBuildings.getState().frames;OceanMother.pause();return n;});
+  await page.waitForFunction(n=>HKCityBuildings.getState().frames>n,n,{timeout:30000});
+  await page.evaluate(()=>document.querySelector('canvas').getContext('webgl2').finish());
   const before=await snapshot();assert(before.weatherReady&&before.loadingDisplay==='none','Real weather initialization must finish before capture');
   assert(before.cityCountText.includes(`当前已画 ${before.city.visibleModels}。`),'UI and rendered count disagree before capture');
   await page.screenshot({path:path.join(out,file),fullPage:true,timeout:300000});
@@ -32,18 +33,15 @@ const server=http.createServer((q,s)=>{const rel=decodeURIComponent(q.url.split(
   assert(state.weatherReady&&state.loadingDisplay==='none');
   const item={file,sha256:sha(fs.readFileSync(path.join(out,file))),beforeState:before,state};report.screenshots.push(item);return item;
  }
+ const groundProbeInput=JSON.parse(fs.readFileSync(path.join(caseRoot,'qa/ground-probes.json'),'utf8'));
+ report.groundProbes=await page.evaluate(probes=>probes.map(p=>({...p,terrainSamples:p.terrainQueriesLocalXZ.map(([x,z])=>({x,z,terrainY:HKMap.sampleHeight(x,z)}))})),groundProbeInput.probes);
+ fs.writeFileSync(path.join(out,'GROUND_PROBES.json'),JSON.stringify(report.groundProbes,null,2));
  const first=await shot('01-main-map-first-city.png');fs.writeFileSync(path.join(out,'FIRST_FRAME.json'),JSON.stringify(first,null,2));console.log('FIRST_FRAME_READY');
  assert.equal(await page.locator('canvas').count(),1);assert.equal(await page.locator('iframe').count(),0);assert.equal(first.state.city.sourceTiles,113);assert.equal(first.state.city.sourceModels,23414);assert.equal(first.state.city.usableSourceModels,23413);assert.equal(first.state.map.heightExaggeration,1);assert.equal(first.state.city.sourceMeshReadAtRuntime,false);
- report.manifest=await page.evaluate(()=>{const m=HKCityBuildings.manifest;return {schema:m.schema,status:m.status,sourceModels:m.sourceModels,usableSourceModels:m.usableSourceModels,readyModels:m.readyModels,residualModels:m.residualModels,failedModels:m.failedModels,excludedSourceModels:m.excludedSourceModels,tiles:m.tiles.map(t=>({id:t.id,modelCount:t.modelCount,readyModels:t.readyModels,residualModels:t.residualModels,failedModels:t.failedModels,status:t.status,chunks:t.chunks.length}))};});
- // Ordinary user wheel interaction, preserving the real main renderer.
- const box=await page.locator('canvas').boundingBox();const before=await snapshot();await page.mouse.move(box.x+box.width*.62,box.y+box.height*.55);await page.mouse.wheel(0,-450);await page.waitForTimeout(1000);const after=await snapshot();report.wheelZoom={before:before.map.mapState,after:after.map.mapState};assert.notEqual(before.map.mapState.distance,after.map.mapState.distance);await shot('02-main-map-city-close.png');
- await page.evaluate(()=>HKCityBuildings.setEnabled(false));await page.waitForFunction(()=>HKCityBuildings.getState().visibleModels===0);await shot('03-main-map-buildings-off.png');await page.evaluate(()=>HKCityBuildings.setEnabled(true));await page.waitForFunction(()=>HKCityBuildings.getState().visibleModels>0);await shot('04-main-map-buildings-restored.png');
- // Inspect inherited layers in this new integration without changing the old task's receipt.
- for(const view of ['kowloon','kaitak_world','kaitak_plan']){const n=await page.evaluate(()=>HKKaiTak.getState().frames);await page.evaluate(v=>{HKTrain88.setMode('map');HKMap.focus(v);},view);await page.waitForFunction(n=>HKKaiTak.getState().frames>n,n);await shot(`05-main-map-${view}.png`);}
- report.route=await page.evaluate(()=>({start:HKTrain88.route.points.slice(0,2),length:HKTrain88.route.length,stops:HKTrain88.route.stops}));assert.equal(report.route.start[0].z,9775.015);assert.equal(report.route.start[1].z,9775.015);
- const ready=report.manifest.tiles.filter(x=>x.readyModels>0).map(x=>x.id);await page.evaluate(ids=>{for(const id of ids)HKCityBuildings.focusTile(id);HKCityBuildings.focusTile('11-NW-15B');},ready.slice(0,3));await page.waitForFunction(()=>HKCityBuildings.getState().loadingChunks===0&&HKCityBuildings.getState().visibleModels>0);report.afterRapidNavigation=await snapshot();assert(report.afterRapidNavigation.city.gpuBytes<=report.afterRapidNavigation.city.gpuBudgetBytes);
- await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);await shot('06-main-map-mobile-emulated.png');report.mobile={overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)};
+ report.captureScope='One real desktop view after natural weather initialization, original camera focus and one explicit render request; five source/model/terrain height probes. Earlier interaction suite retained separately.';
+ report.groundProbes.forEach(p=>{p.terrainCenterY=p.terrainSamples[0].terrainY;p.baseMinusTerrainM=p.displayBaseEGM2008===null?null:p.displayBaseEGM2008-p.terrainCenterY;p.roofMinusTerrainM=p.displayRoofEGM2008===null?null:p.displayRoofEGM2008-p.terrainCenterY;});
+ fs.writeFileSync(path.join(out,'GROUND_PROBES.json'),JSON.stringify(report.groundProbes,null,2));
  report.final=await snapshot();report.browser={name:browser.version(),physicalGPU:false,backend:await page.evaluate(()=>{const g=document.querySelector('canvas').getContext('webgl2'),d=g.getExtension('WEBGL_debug_renderer_info');return d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)})};
  for(const s of report.screenshots){assert.equal(s.state.gl,0);assert(s.state.city.gpuBytes<=s.state.city.gpuBudgetBytes);assert(s.state.airport.triangleCount>100);}
- assert(!report.errors.length&&!report.failedRequests.length&&!report.badResponses.length&&!report.mobile.overflow);report.passed=true;
+ assert(!report.errors.length&&!report.failedRequests.length&&!report.badResponses.length);report.passed=true;
 }catch(e){report.error=e.stack||String(e);process.exitCode=1;}finally{report.finished=new Date().toISOString();fs.writeFileSync(path.join(out,'MAIN_MAP_QA.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(browser)await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));fs.writeFileSync(path.join(out,'browser-exit.txt'),report.passed?'0':'1');}})();
