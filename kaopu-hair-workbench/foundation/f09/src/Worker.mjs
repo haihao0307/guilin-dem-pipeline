@@ -1,0 +1,14 @@
+import{splitRootPatches,buildBundleVolumes,populationBudget,samplePatchRoots}from './BundleVolumes.mjs';
+import{buildNativeSurface,projectDomain,normalArray,verifyNativeInput}from'./NativeSurface.mjs';
+import{GuideBuilder,validate}from'./GuideKernel.mjs';
+import{buildCoverage}from'./GuideExchange.mjs';
+let surface,builder,last,coverage,scalp,rootPatches,volumeKey;
+function enrich(){const key=JSON.stringify({...last.recipe,hairDensity:0});if(volumeKey!==key){rootPatches=splitRootPatches(scalp,last.recipe);last.volumes=buildBundleVolumes(rootPatches,last,builder);volumeKey=key;}last.population=populationBudget(rootPatches,last.recipe.hairDensity);return last;}
+self.onmessage=async e=>{const{id,type}=e.data;try{
+ if(type==='init'){await verifyNativeInput(e.data.input);surface=buildNativeSurface(e.data.input);scalp=projectDomain(surface,e.data.input.chart);const normals=normalArray(surface.head.positions,surface.head.triangles);builder=new GuideBuilder(surface.head,surface.roots,normals);last=builder.build(validate(e.data.recipe));enrich();self.postMessage({id,type:'result',...last,roots:surface.roots,scalp,nativeReport:surface.report});return;}
+ if(!builder)throw Error('完整人物尚未完成绑定');
+ if(type==='audit'){self.postMessage({id,type:'audit',audit:builder.audit(last,e.data.probeMM||8)});return;}
+ if(type==='population'){self.postMessage({id,type:'population',budget:last.population,rootPatches:rootPatches.patches.map(p=>({id:p.id,parent:p.parent,area:p.area,cells:p.cells.map(c=>({f:c.f,v:c.v.map(v=>({b:v.b,chartP:v.chartP})),area:c.area,cdf:c.cdf}))}))});return;}
+ if(type==='coverage'){coverage??=buildCoverage(surface.head,surface.roots,last.curves,last.recipe);self.postMessage({id,type:'coverage',coverage});return;}
+ const previousVolumes=last.volumes;last=builder.build(validate(e.data.recipe));last.volumes=previousVolumes;enrich();coverage=null;self.postMessage({id,type:'result',...last});
+ }catch(error){self.postMessage({id,error:String(error.stack||error)});}};
