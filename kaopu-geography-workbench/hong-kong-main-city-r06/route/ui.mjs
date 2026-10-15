@@ -1,3 +1,6 @@
+export function normalizeConflictGroups(groups=[]){
+ return groups.map(c=>{const ids=c.objectIds??c.buildingIds;if(!Array.isArray(ids)||!ids.every(x=>typeof x==='string')||!Number.isFinite(c.centerS))throw Error('Invalid route conflict diagnostic group');return {...c,objectIds:[...ids]};});
+}
 function featureRanges(route,role){
  const pts=route.renderPoints||route.points,ranges=[];let open=null;
  for(let i=0;i<pts.length-1;i++){const start=pts[i].d,end=pts[i+1].d,is=route.sample((start+end)/2).role===role;if(is){if(open===null)open=start;}else if(open!==null){ranges.push([open,start]);open=null;}}
@@ -5,7 +8,7 @@ function featureRanges(route,role){
 }
 export function installNewRouteUI(host,game,{overview=null}={}){
  const route=game.route;if(route!==window.HKRailVertical.route||!route.metadata?.routeTier)throw Error('New route identity or metadata missing');
- const conflicts=route.planSpectrum.conflictClusters||[],conflictCount=conflicts.reduce((n,c)=>n+c.objectIds.length,0);
+ const conflicts=normalizeConflictGroups(route.planSpectrum.conflictClusters||[]),conflictCount=conflicts.reduce((n,c)=>n+c.objectIds.length,0);
  const {mapState,requestFrame}=host;window.HKRouteViewRequest=requestFrame;
  const tunnelRanges=featureRanges(route,'tunnel'),bridgeRanges=featureRanges(route,'bridge'),longest=ranges=>ranges.reduce((a,r)=>!a||r[1]-r[0]>a[1]-a[0]?r:a,null);
  const focus=(d,distance=1500)=>{overview?.cancel();game.setMode('map');const s=route.sample(d);Object.assign(mapState,{target:[...s.p],distance,yaw:Math.atan2(s.f[0],-s.f[2])-.55,pitch:-.72,labels:true,story:true});requestFrame();};

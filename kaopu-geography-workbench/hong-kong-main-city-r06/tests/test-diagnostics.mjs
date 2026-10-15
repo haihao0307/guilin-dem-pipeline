@@ -1,3 +1,4 @@
+import{normalizeConflictGroups}from '../route/ui.mjs';
 import assert from 'node:assert/strict';import fs from 'node:fs';import {createRouteDisplay} from '../route/display.mjs';
 const plan={displayRoutes:[{id:'test',points:[[0,0],[1,1]]}],labels:[{point:[0,0],text:'engineering'}]};
 const display=createRouteDisplay(plan);assert.deepEqual(display.stats().newPlanning,false);assert.equal(display.showLegacy,false);
@@ -13,3 +14,5 @@ assert(read('../airport.mjs').includes('window.HKMapDiagnostics?.enabled?G.verti
 assert(read('../display/diagnostics.mjs').includes('setEnabled(false)'));
 assert(read('../display/diagnostics.mjs').includes('physicalTrackAffected:false'));
 console.log(JSON.stringify({passed:true,defaultEngineeringOverlays:false,planningDataPreserved:true,referenceLandmarksPreserved:true,coverageDefault:false,clockRulerOptIn:true,physicalTrackToggleUntouched:true}));
+
+const routePlan=JSON.parse(read('../route/route-plan.json'));const normalized=normalizeConflictGroups(routePlan.conflictClusters);assert.equal(normalized.reduce((n,g)=>n+g.objectIds.length,0),11);assert(normalized.some(g=>g.objectIds.includes('B376362040601063C0')));assert.equal(normalizeConflictGroups([{objectIds:['legacy'],centerS:0}])[0].objectIds[0],'legacy');assert.throws(()=>normalizeConflictGroups([{centerS:0}]));

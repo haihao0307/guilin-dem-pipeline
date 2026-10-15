@@ -12,6 +12,7 @@ import {installDiagnosticsUI}from './display/diagnostics.mjs';
 import {createOuterTerrain}from '../hong-kong-main-city-r02/runtime/outer-renderer.mjs';
 import {createOuterOcean}from '../hong-kong-main-city-r02/ocean/extend-existing-ocean.mjs';
 export async function createIntegration(host){
+ try{
  await installRailVerticalProfile();
  const baseURL=new URL('../hong-kong-main-city-r01/',import.meta.url),{createIntegration:base}=await loadSharedProjectionIntegration({bundleURL:new URL('integration-aligned.js',baseURL),assetBaseURL:baseURL});
  const game=await base(host),airport=createAirportRenderer(host,window.KaiTakSetup),ocean=await createOuterOcean(host),city=await createCityBuildings(host),outer=await createOuterTerrain(host),draw=game.draw;
@@ -34,4 +35,5 @@ export async function createIntegration(host){
  if(window.HKConsistSetup.config.coachCount>4){const option=document.querySelector('#reviewLocation option[value="kowloon"]');if(option){option.disabled=true;option.textContent+='（本编组不适配）';}}
  setTimeout(()=>{const view=new URLSearchParams(location.search).get('view');if(view==='city')window.HKMainCityNext.focusCity();else if(view==='overview')overview.focus();else if(view==='new-close')window.HKMainCityNext.focusNewGroundClose();else if(view==='yard')routeUI.focusYard();else if(view==='tunnel')routeUI.focusTunnel();else if(view==='bridge')routeUI.focusBridge();else if(view==='route')routeUI.focusRoute();else if(view==='steam')consist.focusSteam();else consist.focusWhole();},0);
  return game;
+ }catch(error){window.HKNextFatal=String(error.stack||error);const notice=document.getElementById('trainNotice');if(notice)notice.textContent='地图装配失败：'+error.message;throw error;}
 }
