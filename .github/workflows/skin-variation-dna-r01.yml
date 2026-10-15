@@ -1,0 +1,159 @@
+name: KAOPU SkinVariationDNA R01 fixed public candidate
+on:
+  push:
+    branches: [feature/skin-variation-dna-r01-20261015]
+    paths:
+      - .github/workflows/skin-variation-dna-r01.yml
+      - iteration/skin-variation-dna-r01/**
+      - qa/skin-variation-dna-r01/**
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: skin-variation-dna-r01-publish
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    outputs:
+      commit: ${{ steps.publish.outputs.commit }}
+      digest: ${{ steps.publish.outputs.digest }}
+      url: ${{ steps.publish.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            iteration/skin-variation-dna-r01
+            qa/skin-variation-dna-r01
+            kaopu-unified-human-workbench/skin-natural-traces-r03
+            kaopu-unified-human-workbench/knowledge
+            kaopu-unified-human-workbench/skin-variation-dna-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify knowledge and deterministic source without copying reference pixels
+        run: |
+          set -eu
+          test -f kaopu-unified-human-workbench/knowledge/SKIN_VARIATION_DNA_KB_R01.md
+          node --check iteration/skin-variation-dna-r01/dna-kernel.js
+          node --check qa/skin-variation-dna-r01/kernel-check.cjs
+          node --check qa/skin-variation-dna-r01/public-check.cjs
+          node qa/skin-variation-dna-r01/kernel-check.cjs
+          python -m py_compile iteration/skin-variation-dna-r01/build.py
+          python iteration/skin-variation-dna-r01/build.py
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/skin-variation-dna-r01')
+          b=json.loads((p/'BUILD.json').read_text())
+          raw=(p/'preview.html').read_bytes()
+          assert b['sha256']==hashlib.sha256(raw).hexdigest()
+          assert b['totalTextureLayers']==7 and b['samplersAdded']==0
+          assert len(b['semanticMaps'])==7 and len(b['presets'])==3
+          assert b['nativeSSSRetained'] and b['nativePoresRetained'] and b['sameGeometry']
+          assert b['hairAdapterIntegrated'] is False
+          assert b['vertexDisplacementImplemented'] is False
+          assert b['userVisualAccepted'] is False
+          for word in ('skinVariationDNA_R01','uDnaPIE','uDnaPIH','dna-controls','dna-preset','uDnaDryness'):
+              assert word.encode() in raw,word
+          PY
+          git diff --exit-code -- kaopu-unified-human-workbench/skin-natural-traces-r03
+      - name: Publish committed candidate without altering inherited workbench
+        id: publish
+        env:
+          BRANCH: feature/skin-variation-dna-r01-20261015
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse kaopu-unified-human-workbench/skin-variation-dna-r01/preview.html kaopu-unified-human-workbench/skin-variation-dna-r01/BUILD.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build(skin): freeze SkinVariationDNA R01 tuned candidate"
+            git push origin HEAD:refs/heads/$BRANCH
+          else
+            echo "Generated candidate matches the already committed source"
+          fi
+          COMMIT=$(git rev-parse HEAD)
+          DIGEST=$(python -c "import json;print(json.load(open('kaopu-unified-human-workbench/skin-variation-dna-r01/BUILD.json'))['sha256'])")
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "url=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$COMMIT/kaopu-unified-human-workbench/skin-variation-dna-r01/preview.html" >> "$GITHUB_OUTPUT"
+  public:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+          sparse-checkout: qa/skin-variation-dna-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install actual Chrome browser automation dependencies
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/dna-public" playwright@1.56.1 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/dna-public/node_modules" >> "$GITHUB_ENV"
+      - name: Verify fixed public bytes and interactive seven-map preset rendering
+        env:
+          PREVIEW_URL: ${{ needs.build.outputs.url }}
+          EXPECTED_SHA256: ${{ needs.build.outputs.digest }}
+        run: node qa/skin-variation-dna-r01/public-check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dna-r01-public-windows
+          path: public-evidence/
+          retention-days: 14
+  receipt:
+    needs: [build, public]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+          fetch-depth: 1
+          sparse-checkout: |
+            qa/skin-variation-dna-r01
+            kaopu-unified-human-workbench/skin-variation-dna-r01
+      - uses: actions/download-artifact@v4
+        with:
+          name: dna-r01-public-windows
+          path: kaopu-unified-human-workbench/skin-variation-dna-r01/acceptance/windows
+      - name: Audit browser results and document unapproved visual boundary
+        env:
+          FIXED_PREVIEW: ${{ needs.build.outputs.url }}
+          FROZEN_COMMIT: ${{ needs.build.outputs.commit }}
+          WORKFLOW_RUN: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import json,os,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/skin-variation-dna-r01')
+          q=json.loads((p/'acceptance/windows/QA.json').read_text())
+          b=json.loads((p/'BUILD.json').read_text())
+          assert q['complete'] and not q['pageErrors'] and not q['requests'] and not q['http'] and not q['console']
+          assert q['initial']['field']['textureLayers']==7
+          assert len([x for x in q['screens'] if x['name'].startswith('mask-')])==7
+          for x in q['screens']:
+              f=p/'acceptance/windows'/ (x['name']+'.png')
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==x['sha256'],f
+          d={**b,'publicVerified':True,'userVisualAccepted':False,'merged':False,
+             'testedPlatform':q['platform'],'backend':q['initial']['graphics']['driver'],
+             'publicPreview':os.environ['FIXED_PREVIEW'],'pinnedCommit':os.environ['FROZEN_COMMIT'],
+             'runId':os.environ['WORKFLOW_RUN'],'browserTestCount':len(q['tests']),
+             'savedScreenshots':len(q['screens']),'firstMS':q['startMS']}
+          (p/'DELIVERY.json').write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          (p/'README.md').write_text('# SKIN-VARIATION-DNA-R01\n\n'+os.environ['FIXED_PREVIEW']+'\n\nSeven knowledge-domain maps, three preset identities on ONE unchanged native person, same camera/lighting, OFF/ON checks and forensic screenshots. Source: iteration/skin-variation-dna-r01. Knowledge: kaopu-unified-human-workbench/knowledge/SKIN_VARIATION_DNA_KB_R01.md. No external pixels. No true scar vertex displacement yet; separate hair workbench root integration pending. Browser automation does not grant artistic acceptance; userVisualAccepted=false. Draft-only, no merge.\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse kaopu-unified-human-workbench/skin-variation-dna-r01
+          git commit -m "docs(skin): retain actual R01 public browser evidence and limits"
+          git push origin HEAD:refs/heads/feature/skin-variation-dna-r01-20261015
