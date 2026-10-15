@@ -1,0 +1,51 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "HUMAN-SHARED-SKIN-20261015",
+  "baseSha": "f723d28a45327d4b70fed68338eb6a31693792e5",
+  "headSha": "9de8f3c26ec2f8dd444548c4ea242f7ad198a0d6",
+  "targetObject": "Total human review workbench and all current native-person hair/clothing consumers",
+  "targetDefectOrChange": "Use exact SKIN-FULLBODY-R02 skin in all six active local consumers and four review modules",
+  "productionFilesChanged": "FINAL_ACTIVE_CHANGES.json",
+  "tests": [
+    "FINAL_SOURCE_AUDIT.json",
+    "qa/offline-all-complete.json",
+    "qa/public-wardrobe-final.json",
+    "qa/independent-final.json"
+  ],
+  "browserDesktop": {
+    "passed": true,
+    "live3D": true,
+    "evidence": "qa/offline-all-complete.json"
+  },
+  "browser390x844": {
+    "passed": true,
+    "evidence": "qa/mobile.png"
+  },
+  "referenceViews": [
+    {
+      "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/50f9dd769893584dedb62f0bc62db07ebcb1dcc0/kaopu-unified-human-workbench/skin-fullbody-r02/preview.html",
+      "fidelity": "seven exact frozen implementation digests; host lighting preserved"
+    }
+  ],
+  "regressionCasesRun": [
+    "old person archive missing surface fields",
+    "native material version/cache-key invalidation",
+    "frozen hair rebuild must inject skin",
+    "opaque iframe history transport",
+    "file Blob worker source transport"
+  ],
+  "failedGates": [],
+  "knownLimitations": [
+    "Human visual acceptance remains pending",
+    "Inherited bounded RGB skin scattering and original garment physics limitations remain",
+    "Clothing grading must use its own workbench flow rather than direct low-level native-person archive restore"
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "PASS_MACHINE_AND_INDEPENDENT_VERIFIER",
+  "nextAction": "User reviews current interactive result"
+}
