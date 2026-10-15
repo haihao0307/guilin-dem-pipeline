@@ -90,7 +90,7 @@ window.skinVariationDNA_R01={
 };
 """
 one('window.skinNaturalTracesR03={version:',ui_js+'window.skinNaturalTracesR03={version:')
-s=s.replace('皮肤自然痕迹实验室 R03','皮肤自然变化工作台 R01')
+s=s.replace('皮肤自然痕迹实验室','皮肤自然变化工作台').replace('对照：R03 自然痕迹','对照：原皮肤基底')
 s=s.replace('TRACES · R03','SKIN DNA · R01')
 s=s.replace('LIVED-IN SKIN / SPARSE NATURAL TRACES','SKIN DNA / LIVED-IN FEATURES')
 path=OUT/'preview.html';path.write_text(s)
