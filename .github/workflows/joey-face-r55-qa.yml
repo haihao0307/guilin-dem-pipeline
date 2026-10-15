@@ -1,8 +1,8 @@
-name: GNM whole-face-preserving R07 native A/B
+name: GNM fixed-pose R09 native four-frame comparison
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/whole-face-preserving-r07/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/whole-face-preserving-r07
+            kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -39,15 +39,15 @@ jobs:
       - name: Verify retained cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-preserving-r07/render-native-ci.cjs
-      - name: Render frozen R64 and R07 with matched camera and light
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-native-ci.cjs
+      - name: Render frozen R64 and R09 with matched camera and light
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-preserving-r07/render-native-ci.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-native-ci.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-whole-face-r07-${{ matrix.frame }}-${{ github.sha }}
-          path: kaopu-unified-human-workbench/joey-observation-r01/whole-face-preserving-r07/evidence/
+          name: joey-whole-face-r09-${{ matrix.frame }}-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/evidence/
           retention-days: 7
 

@@ -1,0 +1,23 @@
+import {unit,dot,sub} from './NativeHeadBinding.mjs';
+export const GUIDE_COUNT=192,NODES=25,NODE_POWER=1.3,COUNT=64000,SEGMENTS=56;
+export const STYLES={medium:{name:'偏分中长发',length:.20,part:.022},long:{name:'中分披肩长发',length:.43,part:0}};
+export function random(seed=30417){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const mix=(a,b,t)=>a+(b-a)*t,clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function roots(binding,count,style,seed){const result=[],rng=random(seed),part=STYLES[style].part;let i=0;while(result.length<count){const phi=(i*.61803398875+rng()*.002)*Math.PI*2,front=Math.max(0,Math.cos(phi)),back=Math.max(0,-Math.cos(phi)),max=1.8-.75*front**3+.20*back**2-.40*Math.sin(phi)**4,cos=mix(1,Math.cos(max),rng()),theta=Math.acos(cos);i++;const root=binding.sample(theta,phi);if(!root)continue;if(Math.abs(root.p[0]-part)<.00065&&root.p[1]>.03&&root.p[2]>-.13)continue;root.side=root.p[2]<binding.center[2]-.025?0:root.p[0]>part?1:-1;root.bodySide=Math.cos(phi)>.25?1:-1;root.seed=rng();result.push(root);}return result;}
+function guideCurve(binding,root,style){const cfg=STYLES[style],ny=Math.max(0,root.n[1]),front=Math.max(0,Math.cos(root.phi)),length=style==='medium'?.060+.14*ny**.7+.025*front:.29+.145*ny**.7+.015*front,ds=length/128,points=[root.p.slice()],phase=root.seed*Math.PI*2;let p=root.p.slice(),direction=null,released=false,releaseAt=0;const frontLock=Math.cos(root.phi)>.25;
+ for(let i=1;i<=128;i++){
+  const s=i*ds;let d;
+  if(!released){const nearest=binding.bvh.nearest(p),n=dot(nearest.n,sub(nearest.p,binding.center))<0?nearest.n.map(v=>-v):nearest.n,upper=clamp((p[1]-.005)/.085,0,1),fw=clamp((n[2]-.05)/.8,0,1),driver=[root.side*(.70*(1.-Math.max(0,-n[2]))**2+.04), -.85+.98*fw+.45*upper,(style==='long'&&frontLock?-.10:-.32-.12*front)];const parallel=dot(driver,n);d=unit(driver.map((v,k)=>v-n[k]*parallel));const candidate=p.map((v,k)=>v+d[k]*ds),q=binding.bvh.nearest(candidate),nn=dot(q.n,sub(q.p,binding.center))<0?q.n.map(v=>-v):q.n,loft=(style==='medium'?.009:.005)*(1-Math.exp(-s/.012))*(.75+.25*Math.sin(phase)),clear=dot(sub(candidate,q.p),nn);
+   p=candidate.map((v,k)=>v+nn[k]*(Math.max(loft,clear)-clear));direction=d;
+   if(p[1]<(style==='long'&&frontLock?.008:-.040)||s>Math.min(.19,length*.84)){released=true;releaseAt=s;}
+  }else{const u=1-Math.exp(-(s-releaseAt)/.026),fall=[root.side*(style==='long'?.14:.025),-1,style==='long'?(frontLock?.18:-.10):-.04];d=unit(direction.map((v,k)=>mix(v,fall[k],u)));p=p.map((v,k)=>v+d[k]*ds);const tip=clamp((s/length-.65)/.35,0,1);p[0]+=.00006*root.side*Math.sin(phase+s*32)*tip;p[2]+=.00007*Math.sin(s*37+phase)*tip;}
+  if(released&&style==='long'){const b=clamp((-p[1]-.025)/.075,0,1);const body=binding.bodyAt(p[1]),extent=body[2]*Math.sqrt(Math.max(.05,1-(p[0]/body[0])**2)),frontZ=body[1]+extent+.006,backZ=body[1]-extent-.006;if(frontLock)p[2]=mix(p[2],Math.max(p[2],frontZ),b*.15);else p[2]=mix(p[2],Math.min(p[2],backZ),b*.15);}
+  points.push(p.slice());
+ }
+ const lengths=[0];for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(...sub(points[i],points[i-1])));const total=lengths.at(-1),out=new Float64Array(NODES*3);let idx=0;
+ for(let n=0;n<NODES;n++){const target=total*(n/(NODES-1))**NODE_POWER;while(idx<127&&lengths[idx+1]<target)idx++;const t=(target-lengths[idx])/Math.max(1e-9,lengths[idx+1]-lengths[idx]);out.set(points[idx].map((v,k)=>mix(v,points[idx+1][k],t)),n*3);}return{points:out,length:total};
+}
+export function makeGroom(binding,style){const started=performance.now(),guides=roots(binding,GUIDE_COUNT,style,71417),hairs=roots(binding,COUNT,style,38471),curves=guides.map(r=>guideCurve(binding,r,style)),indices=new Float32Array(COUNT*4),weights=indices.slice(),rootData=new Float32Array(COUNT*3),traits=new Float32Array(COUNT*4),normals=rootData.slice();
+ for(let i=0;i<COUNT;i++){const r=hairs[i],best=[];for(let g=0;g<GUIDE_COUNT;g++){if(guides[g].side!==r.side||guides[g].bodySide!==r.bodySide)continue;const d=guides[g].p.reduce((v,x,k)=>v+(x-r.p[k])**2,0);if(best.length<4||d<best.at(-1).d){best.push({g,d});best.sort((a,b)=>a.d-b.d);if(best.length>4)best.pop();}}const w=best.map(x=>1/(x.d+.000025)),sum=w.reduce((a,b)=>a+b,0);indices.set(best.map(x=>x.g),i*4);weights.set(w.map(x=>x/sum),i*4);rootData.set(r.p,i*3);normals.set(r.n,i*3);traits.set([.86+.14*r.seed,.85+.30*((Math.sin(i*17.7)*43758.5+1e5)%1),r.seed*6.2831853,(i%73===0)?1:0],i*4);}
+ return{style,binding,guides,hairs,curves,indices,weights,roots:rootData,normals,traits,buildMS:performance.now()-started};
+}
