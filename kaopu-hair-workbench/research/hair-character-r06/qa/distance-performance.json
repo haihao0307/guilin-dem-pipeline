@@ -1,0 +1,3753 @@
+{
+  "version": "R06",
+  "sourceHashes": {
+    "preview.html": "38f1ff00222411c40ca308c766de95c80a8bed562dcf6dae5f6d6718baca6361",
+    "preview-medium.html": "38f1ff00222411c40ca308c766de95c80a8bed562dcf6dae5f6d6718baca6361",
+    "preview-long.html": "8cb9c24068b963c83df2deee18ef5a701565e4c721e1f4e13d49054bfba36e1d",
+    "src/app.mjs": "75760b4ce9be5e287dc1efdf6c5caf4bbf3d789385b798257dbee47437b2c9cd",
+    "src/CollisionProxies.mjs": "7775e893c1efb6d7baa174e2ff43cd6220e003e59443e40c92d43a9643eafbf0",
+    "src/detail-dynamics.mjs": "04d10637707ef875c4b72f0cd3c743b633f8fb520d7cf44b9441d4d6cd7330e6",
+    "src/DistanceHair.mjs": "1ae0ed32ada8bbeaedb324fb3e606dd4c152cabfa54541738ff96823503e4016",
+    "src/Groom.mjs": "d6b12647463970a20a23b5c33e4ae77bb5a96b7c44bcea1cf65887ca3fffc7a1",
+    "src/GuideDynamics.mjs": "0f768a0d9169b372936858ce913c05fc069965dcbc0467b9a7c34e05a86955f7",
+    "src/HairPassCache.mjs": "7353ab7d291c3f8d607c495e8a5f4a7ab3e07bf709c6f76c94e5f566e0c13e57",
+    "src/HairRenderer.mjs": "a6b5ae322b45b49407cc40c9b025c1ee789db95a237b9f4580213cd1b5abd06b",
+    "src/NativeHeadBinding.mjs": "02932cd8569e03d2df9824bd0a90d583a3605a1bcbbae134d7d40f963097f39e",
+    "src/NativeMotion.mjs": "28e6e99c52bf952c7994ef95e157456f0c1a539b6079c53006b1e444a975f60f",
+    "src/NativePoseCache.mjs": "97baf4f44f3bfa5a2999bc49fdaab45491df466468cc82d2f4461c472b6186b4",
+    "src/RestFiberCache.mjs": "da103cf25df4ce9b5e6118d34970e16a8be35736ec5a8e1dbbd219909185103e",
+    "src/SurfaceBVH.mjs": "50e47289f73a7927ae4b5d7b49bf8e316a49e5d5b5fccb4735f266153d72c171",
+    "src/wind.mjs": "2a4059bf8c22a50479eef9e58d482388e1401c49ff4a6997026a3063af1de84a",
+    "tools/build.cjs": "e1979c4e36e4198ba172b952734a844fceb476cb396bc9e969c166cf525ba989",
+    "references/character-platform-frozen.html": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+    "references/motion/16_01-SOURCE.json": "280841e04099650e0bb935b6f6ce0725d2efa80664de549b7cfa46eac92ec0a1",
+    "references/motion/16_15-SOURCE.json": "05dc08b3f1faaa70c736149e738dd4f238b28b270bfe4ed5594bf7a74fb23d40",
+    "references/motion/16_35-SOURCE.json": "ba432e27bb3c48981a96ef8975201e0dad015ac039e0ab098caaf325e1c719a3",
+    "references/motion/ArmContinuity.mjs": "86ca78a237831107c010b8ec3e6bd79e64579629ec8f3308a38706b3a895b4bb",
+    "references/motion/CapturedController.mjs": "a43b67512e044581121aa73547c8e590baa89448e8706c29e2c9a39e88bae48e",
+    "references/motion/CapturedCycles.mjs": "0f480c7d6fc0094ff4ab2b574324ea42b13a244db9de7bf67a04466d03fad8f0",
+    "references/motion/Core.mjs": "d34ce0c86c3a727c532e9b53938ba264a663770b863cc3f559665d0f0df5221a",
+    "references/motion/Motion.mjs": "5f646bc3585dfd40f67f28a3ef8eaacf8779ef9951c18a9c76d91adbe19750d0",
+    "references/motion/NativeRig.mjs": "5e28ef7472813993e372090c90d1abff7b09e994edc23ee576a4d4b904b54c04",
+    "references/motion/NativeWalkRetarget.mjs": "2654a1f3744605d80b38ebe8744de0ca3af38a0d2186109d7064e3d9b31eacb5",
+    "references/motion/NaturalRetarget.mjs": "e3d92f8ed52c5e6843b3e59c89a17553ec17e284d88f1126422abcbc09c56afd"
+  },
+  "startedAt": "2026-10-15T09:48:18.403Z",
+  "cases": [
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 64000,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 1,
+        "activeDetailModes": 128000,
+        "cpuMS": 0,
+        "updateMS": 12.199999988079071,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 596.6867639185293,
+            "budget": 64000,
+            "segments": 54,
+            "fineWeight": 1
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 81.19999998807907,
+            "gpuMS": 11.077376
+          },
+          {
+            "cpuSubmitMS": 33.40000003576279,
+            "gpuMS": 12.068864
+          },
+          {
+            "cpuSubmitMS": 33.09999996423721,
+            "gpuMS": 15.623168
+          },
+          {
+            "cpuSubmitMS": 33.40000003576279,
+            "gpuMS": 16.14336
+          },
+          {
+            "cpuSubmitMS": 33.69999998807907,
+            "gpuMS": 13.605888
+          },
+          {
+            "cpuSubmitMS": 33.19999998807907,
+            "gpuMS": 15.808512
+          },
+          {
+            "cpuSubmitMS": 33.5,
+            "gpuMS": 16.636928
+          },
+          {
+            "cpuSubmitMS": 33.10000002384186,
+            "gpuMS": 15.648768
+          },
+          {
+            "cpuSubmitMS": 33.5,
+            "gpuMS": 14.465024
+          },
+          {
+            "cpuSubmitMS": 33.5,
+            "gpuMS": 15.992832
+          },
+          {
+            "cpuSubmitMS": 33.19999998807907,
+            "gpuMS": 15.654912
+          },
+          {
+            "cpuSubmitMS": 33.19999998807907,
+            "gpuMS": 18.546688
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 68.5,
+            "gpuMS": 8.651776
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 8.549376
+          },
+          {
+            "cpuSubmitMS": 33.40000003576279,
+            "gpuMS": 10.310656
+          },
+          {
+            "cpuSubmitMS": 33.69999998807907,
+            "gpuMS": 11.053056
+          },
+          {
+            "cpuSubmitMS": 16.19999998807907,
+            "gpuMS": 8.587264
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 8.61696
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 8.621056
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 7.625728
+          },
+          {
+            "cpuSubmitMS": 33.5,
+            "gpuMS": 9.540608
+          },
+          {
+            "cpuSubmitMS": 16.400000035762787,
+            "gpuMS": 8.530944
+          },
+          {
+            "cpuSubmitMS": 33.30000001192093,
+            "gpuMS": 9.426944
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 8.532992
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 1387,
+        "steps": 180,
+        "guideSteps": 180,
+        "distance": {
+          "automatic": true,
+          "actors": 1,
+          "totalBudget": 128000,
+          "visibleStrands": 64000,
+          "focusIndex": 0,
+          "fineActors": 1,
+          "fineWeight": 1,
+          "activeDetailModes": 128000,
+          "cpuMS": 0.10000002384185791,
+          "updateMS": 6.800000011920929,
+          "carrierTriangles": 0,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 596.6867639185293,
+              "budget": 64000,
+              "segments": 54,
+              "fineWeight": 1
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.5,
+            "sweep": 0.09999996423721313,
+            "solves": 2.600000023841858,
+            "chain": 1.399999976158142,
+            "friction": 0.30000001192092896,
+            "forces": 0.699999988079071,
+            "constraints": 4.300000011920929,
+            "detail": 1
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.006358371022507444,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009916753777361453,
+          "maxOffset": 0.007093890461493744,
+          "maxVelocity": 0.0021500467830481984,
+          "tipSpeed": 0.0023348951574294215,
+          "kineticEnergy": 5.767304045289438e-12,
+          "steps": 360,
+          "time": 2.999999999999992,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 6.600000023841858,
+          "droppedSeconds": 0,
+          "revision": 271,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "medium",
+      "count": 1,
+      "live": {
+        "fps": 37.37172614489202,
+        "wallMS": 3264.5,
+        "frames": 122
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 12,
+        "totalBudget": 128000,
+        "visibleStrands": 10791,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 19.599999964237213,
+            "gpuMS": 2.843648
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 1.420928
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 3.084288
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.144256
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 1.69472
+          },
+          {
+            "cpuSubmitMS": 16.399999976158142,
+            "gpuMS": 1.795072
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.44384
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.167808
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.144256
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.387968
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.444864
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.21184
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 10.400000035762787,
+            "gpuMS": 1.918976
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.451008
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.200128
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.481728
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.2032
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 1.224704
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.201152
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.19808
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.951168
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.189888
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.207296
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.449984
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 5.699999988079071,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 12,
+          "totalBudget": 128000,
+          "visibleStrands": 10791,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.5,
+            "sweep": 0,
+            "solves": 3.399999976158142,
+            "chain": 1,
+            "friction": 0.19999998807907104,
+            "forces": 0.6000000238418579,
+            "constraints": 4.599999964237213,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.003486611340242398,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.000991355345221434,
+          "maxOffset": 0.0052500865207210515,
+          "maxVelocity": 0.002512316425821448,
+          "tipSpeed": 0.0025137700101169882,
+          "kineticEnergy": 6.293193704653091e-12,
+          "steps": 829,
+          "time": 6.908333333333466,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 10.400000035762787,
+          "droppedSeconds": 0,
+          "revision": 435,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "medium",
+      "count": 12,
+      "live": {
+        "fps": 60.120864743852934,
+        "wallMS": 3210.199999988079,
+        "frames": 193
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 24,
+        "totalBudget": 128000,
+        "visibleStrands": 19492,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.13872989158806,
+            "budget": 644.4470549239461,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.677434685858074,
+            "budget": 427.12589505940815,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.64618105488939,
+            "budget": 452.82619983135913,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.56072445726135,
+            "budget": 477.7774700042972,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.39743793636005,
+            "budget": 501.19144498338466,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.13132130267119,
+            "budget": 522.1889516307444,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.73755580704874,
+            "budget": 539.8592026704083,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.59459430907756,
+            "budget": 374.41168037481646,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.385275570009913,
+            "budget": 394.01420904218446,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.12362479941423,
+            "budget": 412.77090810141635,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.79219234743978,
+            "budget": 430.1311515805953,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.373090472181204,
+            "budget": 445.50526706575675,
+            "segments": 13,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 21,
+            "gpuMS": 3.573344
+          },
+          {
+            "cpuSubmitMS": 16.399999976158142,
+            "gpuMS": 1.642368
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.869824
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.667072
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.664
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 1.647616
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.677312
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.127872
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.660928
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.66912
+          },
+          {
+            "cpuSubmitMS": 16.899999976158142,
+            "gpuMS": 1.671168
+          },
+          {
+            "cpuSubmitMS": 16.299999952316284,
+            "gpuMS": 1.649664
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 11.900000035762787,
+            "gpuMS": 1.040224
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 1.313792
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 1.289216
+          },
+          {
+            "cpuSubmitMS": 16.19999998807907,
+            "gpuMS": 1.28
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 1.316864
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.317888
+          },
+          {
+            "cpuSubmitMS": 16.899999976158142,
+            "gpuMS": 1.301504
+          },
+          {
+            "cpuSubmitMS": 16.400000035762787,
+            "gpuMS": 1.286144
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 1.26464
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.28
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.28
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.271808
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 7.200000047683716,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 24,
+          "totalBudget": 128000,
+          "visibleStrands": 19492,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.13872989158806,
+              "budget": 644.4470549239461,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.677434685858074,
+              "budget": 427.12589505940815,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.64618105488939,
+              "budget": 452.82619983135913,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 34.56072445726135,
+              "budget": 477.7774700042972,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.39743793636005,
+              "budget": 501.19144498338466,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.13132130267119,
+              "budget": 522.1889516307444,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.73755580704874,
+              "budget": 539.8592026704083,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.59459430907756,
+              "budget": 374.41168037481646,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.385275570009913,
+              "budget": 394.01420904218446,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.12362479941423,
+              "budget": 412.77090810141635,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.79219234743978,
+              "budget": 430.1311515805953,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.373090472181204,
+              "budget": 445.50526706575675,
+              "segments": 13,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.5,
+            "sweep": 0,
+            "solves": 3.399999976158142,
+            "chain": 1,
+            "friction": 0.19999998807907104,
+            "forces": 0.6000000238418579,
+            "constraints": 4.599999964237213,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.003486611340242398,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.000991355345221434,
+          "maxOffset": 0.0052500865207210515,
+          "maxVelocity": 0.002512316425821448,
+          "tipSpeed": 0.0025137700101169882,
+          "kineticEnergy": 6.293193704653091e-12,
+          "steps": 829,
+          "time": 6.908333333333466,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 10.400000035762787,
+          "droppedSeconds": 0,
+          "revision": 435,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "medium",
+      "count": 24,
+      "live": {
+        "fps": 59.95316159250586,
+        "wallMS": 3202.5,
+        "frames": 192
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 48,
+        "totalBudget": 128000,
+        "visibleStrands": 33132,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.13872989158806,
+            "budget": 644.4470549239461,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.677434685858074,
+            "budget": 427.12589505940815,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.64618105488939,
+            "budget": 452.82619983135913,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.56072445726135,
+            "budget": 477.7774700042972,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.39743793636005,
+            "budget": 501.19144498338466,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.13132130267119,
+            "budget": 522.1889516307444,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.73755580704874,
+            "budget": 539.8592026704083,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.59459430907756,
+            "budget": 374.41168037481646,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.385275570009913,
+            "budget": 394.01420904218446,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.12362479941423,
+            "budget": 412.77090810141635,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.79219234743978,
+            "budget": 430.1311515805953,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.373090472181204,
+            "budget": 445.50526706575675,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.84904774013136,
+            "budget": 458.3032131654768,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.726651149211275,
+            "budget": 330.0881944993926,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.378156255826227,
+            "budget": 345.2304259966967,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.981063346380346,
+            "budget": 359.54566375186846,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.52238665737828,
+            "budget": 372.6464349050015,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.989149318833217,
+            "budget": 384.1309502019765,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.369097155993302,
+            "budget": 393.60810255285884,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.048216728912074,
+            "budget": 292.6424112856796,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.58996065430038,
+            "budget": 304.4823715623372,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.08751991184353,
+            "budget": 315.56350991928275,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.531140075401538,
+            "budget": 325.6103816008735,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.91127381174637,
+            "budget": 334.3447013671086,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.219066850075322,
+            "budget": 341.50154703566824,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.536155611620273,
+            "budget": 260.8380973683542,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.990536519849694,
+            "budget": 270.2031954358563,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.405212820078578,
+            "budget": 278.8941056294568,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.772782973537172,
+            "budget": 286.7127632592488,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.08612572763789,
+            "budget": 293.46328277336283,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.338734126773304,
+            "budget": 298.96255346175974,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.169932296320134,
+            "budget": 233.67425088347966,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.55414135171652,
+            "budget": 241.1623430080301,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.90289316897021,
+            "budget": 248.06163527405727,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.210513397611138,
+            "budget": 254.22799430845225,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.471620099722973,
+            "budget": 259.52137220184454,
+            "segments": 12,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 19,
+            "gpuMS": 2.29648
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 2.131968
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.154496
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 2.024448
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.038784
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 2.00192
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.044928
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 2.019328
+          },
+          {
+            "cpuSubmitMS": 16.30000001192093,
+            "gpuMS": 2.087936
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.057216
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.44224
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.03776
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 13.399999976158142,
+            "gpuMS": 1.366016
+          },
+          {
+            "cpuSubmitMS": 16.30000001192093,
+            "gpuMS": 1.513472
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.475584
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.497088
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.46944
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.482752
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.46432
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 1.48992
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.498112
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.890304
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 1.437696
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.422336
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 11.399999976158142,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 48,
+          "totalBudget": 128000,
+          "visibleStrands": 33132,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0.09999996423721313,
+          "updateMS": 0.09999996423721313,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.13872989158806,
+              "budget": 644.4470549239461,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.677434685858074,
+              "budget": 427.12589505940815,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.64618105488939,
+              "budget": 452.82619983135913,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 34.56072445726135,
+              "budget": 477.7774700042972,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.39743793636005,
+              "budget": 501.19144498338466,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.13132130267119,
+              "budget": 522.1889516307444,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.73755580704874,
+              "budget": 539.8592026704083,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.59459430907756,
+              "budget": 374.41168037481646,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.385275570009913,
+              "budget": 394.01420904218446,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.12362479941423,
+              "budget": 412.77090810141635,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.79219234743978,
+              "budget": 430.1311515805953,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.373090472181204,
+              "budget": 445.50526706575675,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.84904774013136,
+              "budget": 458.3032131654768,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.726651149211275,
+              "budget": 330.0881944993926,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.378156255826227,
+              "budget": 345.2304259966967,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.981063346380346,
+              "budget": 359.54566375186846,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.52238665737828,
+              "budget": 372.6464349050015,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.989149318833217,
+              "budget": 384.1309502019765,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.369097155993302,
+              "budget": 393.60810255285884,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.048216728912074,
+              "budget": 292.6424112856796,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.58996065430038,
+              "budget": 304.4823715623372,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.08751991184353,
+              "budget": 315.56350991928275,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.531140075401538,
+              "budget": 325.6103816008735,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.91127381174637,
+              "budget": 334.3447013671086,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.219066850075322,
+              "budget": 341.50154703566824,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.536155611620273,
+              "budget": 260.8380973683542,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.990536519849694,
+              "budget": 270.2031954358563,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 26.405212820078578,
+              "budget": 278.8941056294568,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 26.772782973537172,
+              "budget": 286.7127632592488,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.08612572763789,
+              "budget": 293.46328277336283,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.338734126773304,
+              "budget": 298.96255346175974,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.169932296320134,
+              "budget": 233.67425088347966,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.55414135171652,
+              "budget": 241.1623430080301,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.90289316897021,
+              "budget": 248.06163527405727,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.210513397611138,
+              "budget": 254.22799430845225,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.471620099722973,
+              "budget": 259.52137220184454,
+              "segments": 12,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.5,
+            "sweep": 0,
+            "solves": 3.399999976158142,
+            "chain": 1,
+            "friction": 0.19999998807907104,
+            "forces": 0.6000000238418579,
+            "constraints": 4.599999964237213,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.003486611340242398,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.000991355345221434,
+          "maxOffset": 0.0052500865207210515,
+          "maxVelocity": 0.002512316425821448,
+          "tipSpeed": 0.0025137700101169882,
+          "kineticEnergy": 6.293193704653091e-12,
+          "steps": 829,
+          "time": 6.908333333333466,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 10.400000035762787,
+          "droppedSeconds": 0,
+          "revision": 435,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "medium",
+      "count": 48,
+      "live": {
+        "fps": 59.990626464614905,
+        "wallMS": 3200.5,
+        "frames": 192
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 45201,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 0.9576911116436885,
+        "activeDetailModes": 90402,
+        "cpuMS": 0.10000002384185791,
+        "updateMS": 12.699999988079071,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 335.201799420756,
+            "budget": 44944.098533965094,
+            "segments": 41,
+            "fineWeight": 0.9576911116436885
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 37.40000003576279,
+            "gpuMS": 10.803904
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 7.453696
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 9.092096
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 9.194496
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 9.311232
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 6.723584
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 9.237504
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 9.304064
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 9.147392
+          },
+          {
+            "cpuSubmitMS": 16.899999976158142,
+            "gpuMS": 6.670336
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 9.086976
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 9.16992
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 24.19999998807907,
+            "gpuMS": 6.298624
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 5.3248
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 3.076096
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 4.973568
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 4.805632
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 3.094528
+          },
+          {
+            "cpuSubmitMS": 16.899999976158142,
+            "gpuMS": 4.855808
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 4.903936
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 3.0976
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 4.948992
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 4.773888
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 3.10272
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 1223.800000011921,
+        "steps": 180,
+        "guideSteps": 180,
+        "distance": {
+          "automatic": true,
+          "actors": 1,
+          "totalBudget": 128000,
+          "visibleStrands": 45201,
+          "focusIndex": 0,
+          "fineActors": 1,
+          "fineWeight": 0.9576911116257869,
+          "activeDetailModes": 90402,
+          "cpuMS": 0,
+          "updateMS": 7.900000035762787,
+          "carrierTriangles": 0,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 335.201799420756,
+              "budget": 44944.098533965094,
+              "segments": 41,
+              "fineWeight": 0.9576911116257869
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0.7000000476837158,
+            "sweep": 0,
+            "solves": 4.299999952316284,
+            "chain": 1.100000023841858,
+            "friction": 0.19999998807907104,
+            "forces": 0.7000000476837158,
+            "constraints": 5.599999964237213,
+            "detail": 0.800000011920929
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.019065855223088516,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009985716018218183,
+          "maxOffset": 0.07029005994166608,
+          "maxVelocity": 0.01686984374445394,
+          "tipSpeed": 0.018069105860477885,
+          "kineticEnergy": 4.890313521298728e-10,
+          "steps": 360,
+          "time": 2.999999999999992,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.900000035762787,
+          "droppedSeconds": 0,
+          "revision": 271,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "long",
+      "count": 1,
+      "live": {
+        "fps": 47.04862723266192,
+        "wallMS": 3230.699999988079,
+        "frames": 152
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 12,
+        "totalBudget": 128000,
+        "visibleStrands": 10791,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 26.100000023841858,
+            "gpuMS": 2.81088
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.879488
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.688
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.518592
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 2.649088
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.871296
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.867776
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.709504
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.518592
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 2.679808
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.666496
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.490944
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 10.199999988079071,
+            "gpuMS": 1.12128
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.390016
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.924544
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.206272
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 2.502656
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 1.03936
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.455552
+          },
+          {
+            "cpuSubmitMS": 16.799999952316284,
+            "gpuMS": 2.352128
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.188864
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.60096
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.158144
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.204224
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 5.199999988079071,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 12,
+          "totalBudget": 128000,
+          "visibleStrands": 10791,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0.699999988079071,
+            "sweep": 0,
+            "solves": 4,
+            "chain": 1.100000023841858,
+            "friction": 0.09999996423721313,
+            "forces": 0.699999988079071,
+            "constraints": 5.199999988079071,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.011875073541196235,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009987410096705673,
+          "maxOffset": 0.04215847563548702,
+          "maxVelocity": 0.01630414389867088,
+          "tipSpeed": 0.01744614573271714,
+          "kineticEnergy": 5.345758768942586e-10,
+          "steps": 825,
+          "time": 6.8750000000001315,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 11.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 464,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "long",
+      "count": 12,
+      "live": {
+        "fps": 59.97001499317363,
+        "wallMS": 3201.599999964237,
+        "frames": 192
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 24,
+        "totalBudget": 128000,
+        "visibleStrands": 19492,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.13872989158806,
+            "budget": 644.4470549239461,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.677434685858074,
+            "budget": 427.12589505940815,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.64618105488939,
+            "budget": 452.82619983135913,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.56072445726135,
+            "budget": 477.7774700042972,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.39743793636005,
+            "budget": 501.19144498338466,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.13132130267119,
+            "budget": 522.1889516307444,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.73755580704874,
+            "budget": 539.8592026704083,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.59459430907756,
+            "budget": 374.41168037481646,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.385275570009913,
+            "budget": 394.01420904218446,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.12362479941423,
+            "budget": 412.77090810141635,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.79219234743978,
+            "budget": 430.1311515805953,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.373090472181204,
+            "budget": 445.50526706575675,
+            "segments": 13,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 23.900000035762787,
+            "gpuMS": 5.291008
+          },
+          {
+            "cpuSubmitMS": 16.30000001192093,
+            "gpuMS": 1.801216
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 3.545088
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.301952
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 3.530752
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 3.468288
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.788928
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 3.634176
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 3.72224
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.506752
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 3.657728
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 1.767424
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 10.100000023841858,
+            "gpuMS": 2.36032
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.312768
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.552832
+          },
+          {
+            "cpuSubmitMS": 16.899999976158142,
+            "gpuMS": 2.521088
+          },
+          {
+            "cpuSubmitMS": 16.30000001192093,
+            "gpuMS": 1.278976
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.674688
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 1.26976
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.612224
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 2.422784
+          },
+          {
+            "cpuSubmitMS": 16.399999976158142,
+            "gpuMS": 1.29024
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 2.495488
+          },
+          {
+            "cpuSubmitMS": 16.400000035762787,
+            "gpuMS": 1.297408
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 8.600000023841858,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 24,
+          "totalBudget": 128000,
+          "visibleStrands": 19492,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.13872989158806,
+              "budget": 644.4470549239461,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.677434685858074,
+              "budget": 427.12589505940815,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.64618105488939,
+              "budget": 452.82619983135913,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 34.56072445726135,
+              "budget": 477.7774700042972,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.39743793636005,
+              "budget": 501.19144498338466,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.13132130267119,
+              "budget": 522.1889516307444,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.73755580704874,
+              "budget": 539.8592026704083,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.59459430907756,
+              "budget": 374.41168037481646,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.385275570009913,
+              "budget": 394.01420904218446,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.12362479941423,
+              "budget": 412.77090810141635,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.79219234743978,
+              "budget": 430.1311515805953,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.373090472181204,
+              "budget": 445.50526706575675,
+              "segments": 13,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0.699999988079071,
+            "sweep": 0,
+            "solves": 4,
+            "chain": 1.100000023841858,
+            "friction": 0.09999996423721313,
+            "forces": 0.699999988079071,
+            "constraints": 5.199999988079071,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.011875073541196235,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009987410096705673,
+          "maxOffset": 0.04215847563548702,
+          "maxVelocity": 0.01630414389867088,
+          "tipSpeed": 0.01744614573271714,
+          "kineticEnergy": 5.345758768942586e-10,
+          "steps": 825,
+          "time": 6.8750000000001315,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 11.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 464,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "long",
+      "count": 24,
+      "live": {
+        "fps": 59.84850846250837,
+        "wallMS": 3208.100000023842,
+        "frames": 192
+      }
+    },
+    {
+      "distance": {
+        "automatic": true,
+        "actors": 48,
+        "totalBudget": 128000,
+        "visibleStrands": 33132,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.570588707871956,
+            "budget": 867.5278930391083,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.59285927527814,
+            "budget": 565.2892273963462,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.08960504001763,
+            "budget": 611.1988888738287,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.544681074989654,
+            "budget": 657.5484653890497,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 41.91450001008481,
+            "budget": 702.7301244381598,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.14850155588327,
+            "budget": 744.7172746072245,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.19226350606695,
+            "budget": 781.1824615158628,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.00174257651902,
+            "budget": 490.0487933571618,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.200193139963545,
+            "budget": 524.1815933482656,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.34664657562215,
+            "budget": 557.908804177772,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.40897708308398,
+            "budget": 590.0998082275482,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.351800799798966,
+            "budget": 619.4256904748235,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.13872989158806,
+            "budget": 644.4470549239461,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.677434685858074,
+            "budget": 427.12589505940815,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.64618105488939,
+            "budget": 452.82619983135913,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.56072445726135,
+            "budget": 477.7774700042972,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.39743793636005,
+            "budget": 501.19144498338466,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.13132130267119,
+            "budget": 522.1889516307444,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.73755580704874,
+            "budget": 539.8592026704083,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.59459430907756,
+            "budget": 374.41168037481646,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.385275570009913,
+            "budget": 394.01420904218446,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.12362479941423,
+            "budget": 412.77090810141635,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.79219234743978,
+            "budget": 430.1311515805953,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.373090472181204,
+            "budget": 445.50526706575675,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.84904774013136,
+            "budget": 458.3032131654768,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.726651149211275,
+            "budget": 330.0881944993926,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.378156255826227,
+            "budget": 345.2304259966967,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.981063346380346,
+            "budget": 359.54566375186846,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.52238665737828,
+            "budget": 372.6464349050015,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.989149318833217,
+            "budget": 384.1309502019765,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.369097155993302,
+            "budget": 393.60810255285884,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.048216728912074,
+            "budget": 292.6424112856796,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.58996065430038,
+            "budget": 304.4823715623372,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.08751991184353,
+            "budget": 315.56350991928275,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.531140075401538,
+            "budget": 325.6103816008735,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.91127381174637,
+            "budget": 334.3447013671086,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.219066850075322,
+            "budget": 341.50154703566824,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.536155611620273,
+            "budget": 260.8380973683542,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.990536519849694,
+            "budget": 270.2031954358563,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.405212820078578,
+            "budget": 278.8941056294568,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.772782973537172,
+            "budget": 286.7127632592488,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.08612572763789,
+            "budget": 293.46328277336283,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.338734126773304,
+            "budget": 298.96255346175974,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.169932296320134,
+            "budget": 233.67425088347966,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.55414135171652,
+            "budget": 241.1623430080301,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.90289316897021,
+            "budget": 248.06163527405727,
+            "segments": 11,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.210513397611138,
+            "budget": 254.22799430845225,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.471620099722973,
+            "budget": 259.52137220184454,
+            "segments": 12,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "render": {
+        "withHair": [
+          {
+            "cpuSubmitMS": 26.5,
+            "gpuMS": 6.362112
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 2.830336
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 4.560896
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 4.558848
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 2.42176
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 4.558848
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 4.599808
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.881536
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 3.587072
+          },
+          {
+            "cpuSubmitMS": 16.700000047683716,
+            "gpuMS": 4.621312
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 2.267136
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 4.820992
+          }
+        ],
+        "carrierOnly": [
+          {
+            "cpuSubmitMS": 9.199999988079071,
+            "gpuMS": 1.190912
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 3.21024
+          },
+          {
+            "cpuSubmitMS": 17,
+            "gpuMS": 3.416064
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 1.516544
+          },
+          {
+            "cpuSubmitMS": 16.399999976158142,
+            "gpuMS": 3.33312
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 1.465344
+          },
+          {
+            "cpuSubmitMS": 16.600000023841858,
+            "gpuMS": 2.594816
+          },
+          {
+            "cpuSubmitMS": 16.80000001192093,
+            "gpuMS": 2.612224
+          },
+          {
+            "cpuSubmitMS": 16.5,
+            "gpuMS": 1.481728
+          },
+          {
+            "cpuSubmitMS": 16.900000035762787,
+            "gpuMS": 2.671616
+          },
+          {
+            "cpuSubmitMS": 16.599999964237213,
+            "gpuMS": 1.485824
+          },
+          {
+            "cpuSubmitMS": 16.69999998807907,
+            "gpuMS": 2.624512
+          }
+        ]
+      },
+      "update": {
+        "wallMS": 9.699999988079071,
+        "steps": 180,
+        "guideSteps": 0,
+        "distance": {
+          "automatic": true,
+          "actors": 48,
+          "totalBudget": 128000,
+          "visibleStrands": 33132,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0,
+          "carrierTriangles": 20998,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.570588707871956,
+              "budget": 867.5278930391083,
+              "segments": 16,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.59285927527814,
+              "budget": 565.2892273963462,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.08960504001763,
+              "budget": 611.1988888738287,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.544681074989654,
+              "budget": 657.5484653890497,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 41.91450001008481,
+              "budget": 702.7301244381598,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 43.14850155588327,
+              "budget": 744.7172746072245,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 44.19226350606695,
+              "budget": 781.1824615158628,
+              "segments": 15,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.00174257651902,
+              "budget": 490.0487933571618,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.200193139963545,
+              "budget": 524.1815933482656,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 37.34664657562215,
+              "budget": 557.908804177772,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 38.40897708308398,
+              "budget": 590.0998082275482,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 39.351800799798966,
+              "budget": 619.4256904748235,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 40.13872989158806,
+              "budget": 644.4470549239461,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.677434685858074,
+              "budget": 427.12589505940815,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.64618105488939,
+              "budget": 452.82619983135913,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 34.56072445726135,
+              "budget": 477.7774700042972,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 35.39743793636005,
+              "budget": 501.19144498338466,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.13132130267119,
+              "budget": 522.1889516307444,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 36.73755580704874,
+              "budget": 539.8592026704083,
+              "segments": 14,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.59459430907756,
+              "budget": 374.41168037481646,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.385275570009913,
+              "budget": 394.01420904218446,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.12362479941423,
+              "budget": 412.77090810141635,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 32.79219234743978,
+              "budget": 430.1311515805953,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.373090472181204,
+              "budget": 445.50526706575675,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 33.84904774013136,
+              "budget": 458.3032131654768,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.726651149211275,
+              "budget": 330.0881944993926,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.378156255826227,
+              "budget": 345.2304259966967,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.981063346380346,
+              "budget": 359.54566375186846,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.52238665737828,
+              "budget": 372.6464349050015,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 30.989149318833217,
+              "budget": 384.1309502019765,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 31.369097155993302,
+              "budget": 393.60810255285884,
+              "segments": 13,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.048216728912074,
+              "budget": 292.6424112856796,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.58996065430038,
+              "budget": 304.4823715623372,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.08751991184353,
+              "budget": 315.56350991928275,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.531140075401538,
+              "budget": 325.6103816008735,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 28.91127381174637,
+              "budget": 334.3447013671086,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 29.219066850075322,
+              "budget": 341.50154703566824,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.536155611620273,
+              "budget": 260.8380973683542,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.990536519849694,
+              "budget": 270.2031954358563,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 26.405212820078578,
+              "budget": 278.8941056294568,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 26.772782973537172,
+              "budget": 286.7127632592488,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.08612572763789,
+              "budget": 293.46328277336283,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 27.338734126773304,
+              "budget": 298.96255346175974,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.169932296320134,
+              "budget": 233.67425088347966,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.55414135171652,
+              "budget": 241.1623430080301,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 24.90289316897021,
+              "budget": 248.06163527405727,
+              "segments": 11,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.210513397611138,
+              "budget": 254.22799430845225,
+              "segments": 12,
+              "fineWeight": 0
+            },
+            {
+              "pixels": 25.471620099722973,
+              "budget": 259.52137220184454,
+              "segments": 12,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "physics": {
+          "maxPenetration": 0,
+          "contactFriction": 0.18,
+          "matrixBuilds": 1,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0.699999988079071,
+            "sweep": 0,
+            "solves": 4,
+            "chain": 1.100000023841858,
+            "friction": 0.09999996423721313,
+            "forces": 0.699999988079071,
+            "constraints": 5.199999988079071,
+            "detail": 0.10000002384185791
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.011875073541196235,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009987410096705673,
+          "maxOffset": 0.04215847563548702,
+          "maxVelocity": 0.01630414389867088,
+          "tipSpeed": 0.01744614573271714,
+          "kineticEnergy": 5.345758768942586e-10,
+          "steps": 825,
+          "time": 6.8750000000001315,
+          "wind": 0.38,
+          "windEnabled": true,
+          "paused": false,
+          "active": true,
+          "cpuMS": 11.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 464,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      },
+      "style": "long",
+      "count": 48,
+      "live": {
+        "fps": 59.8653030683193,
+        "wallMS": 3207.199999988079,
+        "frames": 192
+      }
+    }
+  ],
+  "errors": [],
+  "passed": true,
+  "finishedAt": "2026-10-15T09:49:37.796Z"
+}
