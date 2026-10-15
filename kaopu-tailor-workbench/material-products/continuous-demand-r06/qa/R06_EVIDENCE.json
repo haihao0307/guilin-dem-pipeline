@@ -1,0 +1,158 @@
+{
+  "version": "MP05-R06-Regional",
+  "runtimeTree": "96863267eab7922b4b7c8bc72f1d8519ac9fb8fb",
+  "publicURL": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-regional-r06-96863267eab7/?look=K03",
+  "pagesCommit": "6a889e69f05006309828449fa96a350c4edccc06",
+  "taskStartedUTC": "2026-10-15T04:32:08Z",
+  "deadlineUTC": "2026-10-15T07:32:08Z",
+  "previousRuntimeTree": "caa6d2ba5f1fd218dd73cad5a610edf8eb87c76e",
+  "publicVerified": false,
+  "aggregateVerified": false,
+  "sourceAssetsUnchanged": true,
+  "runtimeFilesVerified": 336,
+  "numericalComparison": [
+    {
+      "mode": "reference",
+      "motion": "walk",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 6.900000035762787,
+      "averageSweeps": 8
+    },
+    {
+      "mode": "reference",
+      "motion": "run",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 6.899999976158142,
+      "averageSweeps": 8
+    },
+    {
+      "mode": "reference",
+      "motion": "jump",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 7.0,
+      "averageSweeps": 8
+    },
+    {
+      "mode": "repeat",
+      "motion": "walk",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 7.199999988079071,
+      "averageSweeps": 8
+    },
+    {
+      "mode": "adaptive",
+      "motion": "walk",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 6.600000023841858,
+      "averageSweeps": 7.634166666666666
+    },
+    {
+      "mode": "adaptive",
+      "motion": "run",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 6.5,
+      "averageSweeps": 7.599583333333333
+    },
+    {
+      "mode": "adaptive",
+      "motion": "jump",
+      "steps": 300,
+      "snapshotIntervalSteps": 10,
+      "maxPositionDifferenceMM": 0,
+      "solverMedianMS": 6.399999976158142,
+      "averageSweeps": 7.824166666666667
+    }
+  ],
+  "exactComparedTrajectories": true,
+  "physicsProof": [
+    {
+      "name": "gravity changes actual cloth with identical static body",
+      "differenceMM": 66.21087528765202,
+      "passed": true
+    },
+    {
+      "name": "impulse changes persistent cloth without moving body",
+      "differenceMM": 14.9146169424057,
+      "sameBody": true,
+      "passed": true
+    },
+    {
+      "name": "failure atomically rolls back cloth body and clock",
+      "injected": "QA 注入：事务回滚，已回滚本步",
+      "clothDifference": 0,
+      "samePose": true,
+      "sameTime": true,
+      "passed": true
+    },
+    {
+      "name": "recovery after numerical failure",
+      "simulationSeconds": 1.9999999999999978,
+      "lastError": null,
+      "passed": true
+    },
+    {
+      "name": "bend control affects actual dynamics",
+      "differenceMM": 17.88628101348877,
+      "passed": true
+    }
+  ],
+  "renderProof": {
+    "repeatBeautyMaxHalfFloatBitDifference": 0,
+    "sameBeautyMaxHalfFloatBitDifference": 0,
+    "beautyIdentical": true,
+    "glError": 0,
+    "routing": {
+      "enabled": true,
+      "skinPasses": 82,
+      "depthCopies": 82,
+      "fallbackPasses": 0,
+      "method": "same-frame beauty depth + native-skin auxiliary passes",
+      "removedVisibleGeometry": false,
+      "occlusion": "exact current beauty-pass depth",
+      "nativeFaceDiffusionPreserved": true
+    },
+    "bodyGeometrySHA": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+    "auxiliaryFacePixels": 2844,
+    "bufferPixels": 655520,
+    "faceMaskFraction": 0.004338540395411277,
+    "maskIsLocal": true
+  },
+  "fullFreeCloth": false,
+  "paperMetricCertified": false,
+  "allSelfCollision": false,
+  "continuousCollision": false,
+  "cachedClothReplay": false,
+  "rejectedApproaches": [
+    {
+      "toleranceMetersPerSecond": 1e-07,
+      "maxPositionDifferenceMM": [
+        0.8097626268863678,
+        2.9537081718444824,
+        0.27504563331604004
+      ],
+      "accepted": false
+    },
+    {
+      "toleranceMetersPerSecond": 1e-10,
+      "maxPositionDifferenceMM": [
+        0.3265887498855591,
+        1.7335712909698486,
+        2.9802322387695312e-05
+      ],
+      "accepted": false
+    }
+  ],
+  "precisionPolicy": "fused independent axis neighbor walks; stop only at an IEEE-754 fixed point; original scalar 8-sweep reference retained"
+}
