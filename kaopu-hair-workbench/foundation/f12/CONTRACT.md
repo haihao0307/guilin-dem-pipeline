@@ -27,3 +27,6 @@ StyleRules@3 保存真实段长和逐点权重。根 pin=1，mobility=0。近根
 头保留 nativeSource、当前公共表面 Float64 字节散列 nativePositionSHA256、personArchive、recipe、层组/子束、一次 placement 和 motionProfile。motionProfile 含 StylingMap、活动自由度、档位系数、冻结源码提交与算法版本。消费者用真实路径弧长、sourceCharts 和 clumpId 调用同版本 Styling.mjs 的 motionWeights，可恢复逐根逐点权重；不需要任意跨束插值。
 
 readDenseHair 检查版本、字节区间、数量、有限值、原生绑定和定型配置。GuideGroom@6 的 motionRules.styling 必须与 design.styling 一致。原始位图、旧手绘分区、另一参考头、第三方发型资产均不参与交付。
+
+
+共享皮肤接入记录：用户在“皮肤”任务中明确要求总平台、当前头发和服装宿主统一到 50f9dd769893584dedb62f0bc62db07ebcb1dcc0 的 SKIN-FULLBODY-R02。保留这项同步，不修改七个皮肤模块。F12 将相同字节快照与宿主适配器固定在 vendor/shared-skin，逐文件校验，避免未来构建依赖可变的工作区外文件。毛发前后对比采用相同皮肤呈现；旧 F11 字面路径仍用于根绑定和转角对比。

@@ -8,12 +8,14 @@ source['url']='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/
 baseline=Path(os.environ['NATIVE_PERSON_HTML']).read_bytes() if os.environ.get('NATIVE_PERSON_HTML') else urllib.request.urlopen(source['url'],timeout=120).read()
 assert sha(baseline)==source['sha256'],'Native complete-person source changed'
 # Share the exact R07 skin implementation; preserve the frozen person source.
-skin_builder=p.parents[3]/'Shared-Human-Skin-R02'/'build-skin-host.cjs'
+skin_root=p/'vendor/shared-skin';skin_pin=json.loads((skin_root/'PINNED_SOURCE.json').read_text(encoding='utf-8'))
+for relative,digest in skin_pin['sha256'].items():assert sha((skin_root/relative).read_bytes())==digest,'Shared skin snapshot changed: '+relative
+skin_builder=skin_root/'build-skin-host.cjs'
 skin_input=build/'native-skin-input.html';skin_output=build/'native-skin-host.html'
 skin_input.write_bytes(baseline)
 subprocess.run(['node',str(skin_builder),str(skin_input),str(skin_output)],check=True)
 baseline=skin_output.read_bytes()
-source['skinLayer']={'version':'SKIN-FULLBODY-R02','commit':'50f9dd769893584dedb62f0bc62db07ebcb1dcc0','hostSHA256':sha(baseline)}
+source['skinLayer']={'version':'SKIN-FULLBODY-R02','commit':'50f9dd769893584dedb62f0bc62db07ebcb1dcc0','hostSHA256':sha(baseline),'sourceManifest':skin_pin}
 three=Path(os.environ.get('NATIVE_THREE',p/'vendor/three.module.js')).read_bytes();assert sha(three)=='ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb','Native platform Three.js source changed'
 # The Three.js module can be supplied from the verified native platform. The
 # source digest is recorded; native geometry/materials stay in their own runtime.
