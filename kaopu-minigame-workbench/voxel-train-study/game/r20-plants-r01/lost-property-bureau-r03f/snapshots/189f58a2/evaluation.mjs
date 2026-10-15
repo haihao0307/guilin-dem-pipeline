@@ -1,0 +1,5 @@
+/** Exact-zero evaluation short circuits. Original mother strings stay frozen.
+ * A gated wave whose multiplier is exactly zero contributes no value. Once
+ * monotonically increasing sc is beyond a smoothstep upper endpoint all later
+ * gate values are also zero. No layer/count/frequency is reduced. */
+export function skipZeroContributions(source){let count=0;source=source.replace(/let m=br_m([xyz])\(([^;]+)\);let t=/g,(all,axis,args)=>{count++;return `let m=br_m${axis}(${args});if(m==0.){return vec3<f32>(0.);}let t=`;});if(count!==3)throw Error('Expected three original brick edge gates');let gates=0;source=source.replace('for(var j=0;j<17;j++){let gate=1.0-smoothstep(0.48,1.10,fp*sc);',()=>{gates++;return 'for(var j=0;j<17;j++){if(fp*sc>=1.10){break;}let gate=1.0-smoothstep(0.48,1.10,fp*sc);';});source=source.replace('for(var i=0;i<17;i++){let gate=1.0-smoothstep(0.44,1.12,fp*sc);',()=>{gates++;return 'for(var i=0;i<17;i++){if(fp*sc>=1.12){break;}let gate=1.0-smoothstep(0.44,1.12,fp*sc);';});if(gates!==2)throw Error('Expected two original monotone Microscope gates');return source;}

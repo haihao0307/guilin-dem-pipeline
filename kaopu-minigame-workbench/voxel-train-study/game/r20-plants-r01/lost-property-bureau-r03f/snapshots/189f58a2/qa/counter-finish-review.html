@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>Bureau local review</title><style>body{margin:0;background:#111}canvas{display:block}</style><canvas id="scene"></canvas><script type="module">
+const q=new URLSearchParams(location.search),source='..';
+window.proof={ready:false};
+try{const R=await import(source+'/renderer.mjs'),I=await import(source+'/inventory.mjs'),M=await import(source+'/transport.mjs'),cameras=(await import('../renderer.mjs')).VIEWS;
+const r=await R.createRenderer(document.querySelector('canvas'),e=>window.progress?.(e));window.proof=r.proof;const state=I.createInventory();const items=Object.values(state.items).map(item=>({position:I.itemPosition(state,item),size:I.itemRenderDimensions(item).map(v=>v*.5),mechanical:item.itemId===M.TRANSPORT.itemId})).filter(x=>x.position);
+window.renderView=async(view,finish)=>r.render({view,publicCounterFinish:finish,camera:cameras[view],cut:cameras[view].cut,width:480,height:320,age:.74,frameFix:true,responseMode:0,worldTime:state.worldTime,seconds:0,running:true,items,machineUniforms:M.uniforms(state),machineAudit:M.audit(state)});
+window.capture=async()=>{const a=await r.captureRgba();const c=document.createElement('canvas');c.width=a.width;c.height=a.height;c.getContext('2d').putImageData(new ImageData(a.rgba,a.width,a.height),0,0);return c.toDataURL('image/png');};window.ready=true;
+}catch(e){window.failure=e.stack;console.error(e);}
+</script>
