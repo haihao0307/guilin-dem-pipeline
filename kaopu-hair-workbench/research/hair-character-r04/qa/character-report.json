@@ -1,0 +1,5222 @@
+{
+  "version": "HAIR-CHARACTER-R04",
+  "startedAt": "2026-10-15T05:25:29.147Z",
+  "passed": true,
+  "sourceHashes": {
+    "preview.html": "45c11ae7a5a4a28b63f0413e1c1d19416d59d7272068c24eb797641105ae13d5",
+    "preview-medium.html": "45c11ae7a5a4a28b63f0413e1c1d19416d59d7272068c24eb797641105ae13d5",
+    "preview-long.html": "b999cce6d71467cc4607d3b2e54f99582fe8428dd3363fbbbc342ce9a08d6e4e",
+    "src/app.mjs": "34343c169693286057d47974b2507bef520d2fff67851f95717d2b98af4fa5e6",
+    "src/CollisionProxies.mjs": "d6ffbd0aa140ecc797fe7487d4be19f269e5ccb37c22aed0484afb1f9f2f24c4",
+    "src/detail-dynamics.mjs": "27c644bb48d99a1042d64eece9057aab661bead9c27f24c898dfcc50da5808dd",
+    "src/Groom.mjs": "96ffc9186dabf2900ba62dac4d47e089219af3c913985f5c5530ca7ed61ae278",
+    "src/GuideDynamics.mjs": "a851ecf52d327a8a5e415f37bd3cd3d7f4add850eeac5c0283772054d11d075b",
+    "src/HairRenderer.mjs": "e87338353d21357c22d94516dcb8a798c5f6b039455816b8de45fb7ca8797486",
+    "src/NativeHeadBinding.mjs": "a146a4b6031f4727f2a0b34978d08d82b4fb4c3abab905f81fcc3507f49fdc50",
+    "src/SurfaceBVH.mjs": "31bed0e7a18fdf1a2d35d817953d2ab2ffe68246a13869e73ed2ad47bb21d72a",
+    "src/wind.mjs": "fdd12ee77204e983dd5ba436cf03133b6e5a65e92aafed4595a27bb4941d35a1",
+    "tools/build.cjs": "9246ac25dc7d3a2ca25fd5917f62080291f6f0fb3a0f17f419d82010f680ab85"
+  },
+  "tests": [
+    {
+      "name": "medium-native-mesh-and-rest-constraints",
+      "passed": true,
+      "data": {
+        "style": "medium",
+        "character": "P01",
+        "strands": 64000,
+        "guides": 192,
+        "groomMS": 868.0999999642372,
+        "sameNativeMesh": true,
+        "binding": {
+          "source": "existing unified character platform ab499da18b1da1e256cd66e35ec1212183c58028",
+          "sameCharacterMesh": true,
+          "headTriangles": 10273,
+          "center": [
+            0,
+            0.0065494176058485815,
+            -0.07524076705251775
+          ],
+          "radii": [
+            0.07458542769502001,
+            0.113,
+            0.1
+          ],
+          "geometryReplaced": false,
+          "rootMethod": "native scalp triangle hit and barycentric support",
+          "worldFrame": [
+            0.9999998757195382,
+            0.00006599871987886942,
+            0.0004941711012360805,
+            0,
+            0.000013887859521072539,
+            0.987126983843245,
+            -0.15993848059696292,
+            0,
+            -0.0004983653636444381,
+            0.15993846758271354,
+            0.9871268602460668,
+            0,
+            -0.0002508127872530158,
+            0.7335522572568656,
+            0.09897334553741749,
+            1
+          ]
+        },
+        "physics": {
+          "timings": {
+            "forces": 1,
+            "constraints": 4.300000011920929,
+            "detail": 0
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009904620189662428,
+          "maxOffset": 0,
+          "maxVelocity": 0,
+          "tipSpeed": 0,
+          "kineticEnergy": 0,
+          "steps": 0,
+          "time": 0,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": false,
+          "cpuMS": 0,
+          "droppedSeconds": 0,
+          "revision": 1,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "errors": [],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      }
+    },
+    {
+      "name": "medium-ten-color-view-renders",
+      "passed": true,
+      "data": {}
+    },
+    {
+      "name": "medium-wind-root-stability-lengths-and-independent-detail",
+      "passed": true,
+      "data": {
+        "frames": [
+          {
+            "time": 0.13333333333333333,
+            "wallMS": 138.5,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.003811004574137378,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000993101073765379,
+              "maxOffset": 0.006653155101348488,
+              "maxVelocity": 0.04912978282011038,
+              "tipSpeed": 0.05022731235924233,
+              "kineticEnergy": 1.8405134623108033e-9,
+              "steps": 16,
+              "time": 0.13333333333333333,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.80000001192093,
+              "droppedSeconds": 0,
+              "revision": 5,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.26666666666666666,
+            "wallMS": 154.39999997615814,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.700000047683716,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.0068154290162651,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009941596766491756,
+              "maxOffset": 0.0071982700550444825,
+              "maxVelocity": 0.03348686925814914,
+              "tipSpeed": 0.03424418542854528,
+              "kineticEnergy": 8.743586305460112e-10,
+              "steps": 32,
+              "time": 0.26666666666666666,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.5,
+              "droppedSeconds": 0,
+              "revision": 9,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.4000000000000004,
+            "wallMS": 148,
+            "physics": {
+              "timings": {
+                "forces": 0.8999999761581421,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005853526214366253,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009855353690431112,
+              "maxOffset": 0.004196168304681076,
+              "maxVelocity": 0.014664621057678962,
+              "tipSpeed": 0.014876553919966522,
+              "kineticEnergy": 2.3217003584244118e-10,
+              "steps": 48,
+              "time": 0.4000000000000004,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.099999964237213,
+              "droppedSeconds": 0,
+              "revision": 13,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.5333333333333339,
+            "wallMS": 147.5,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005685609293421281,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009849641987327296,
+              "maxOffset": 0.005642632404584514,
+              "maxVelocity": 0.015722150105752508,
+              "tipSpeed": 0.015909230930360792,
+              "kineticEnergy": 1.2688247172771428e-10,
+              "steps": 64,
+              "time": 0.5333333333333339,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 17,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.6666666666666667,
+            "wallMS": 152.10000002384186,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005731077298840293,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009926486938368617,
+              "maxOffset": 0.006268629669534943,
+              "maxVelocity": 0.008986587528310719,
+              "tipSpeed": 0.009079734121739843,
+              "kineticEnergy": 6.264669680557617e-11,
+              "steps": 80,
+              "time": 0.6666666666666667,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.69999998807907,
+              "droppedSeconds": 0,
+              "revision": 21,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.7999999999999996,
+            "wallMS": 147,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.0052754877465714676,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009843613799758177,
+              "maxOffset": 0.0052221532105318985,
+              "maxVelocity": 0.005412632870400169,
+              "tipSpeed": 0.0055532961255122994,
+              "kineticEnergy": 2.2798129950753112e-11,
+              "steps": 96,
+              "time": 0.7999999999999996,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 25,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.9333333333333325,
+            "wallMS": 148.19999998807907,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005131922695047171,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000985021446808343,
+              "maxOffset": 0.005268394187881246,
+              "maxVelocity": 0.003809669811994376,
+              "tipSpeed": 0.003819322000555838,
+              "kineticEnergy": 1.591552851421002e-11,
+              "steps": 112,
+              "time": 0.9333333333333325,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.599999964237213,
+              "droppedSeconds": 0,
+              "revision": 29,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.0666666666666653,
+            "wallMS": 152.29999995231628,
+            "physics": {
+              "timings": {
+                "forces": 1.100000023841858,
+                "constraints": 3.699999988079071,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005772610388708565,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009855761805346308,
+              "maxOffset": 0.005576319678169022,
+              "maxVelocity": 0.003936424568123931,
+              "tipSpeed": 0.003964846383866509,
+              "kineticEnergy": 1.331179320866962e-11,
+              "steps": 128,
+              "time": 1.0666666666666653,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.599999964237213,
+              "droppedSeconds": 0,
+              "revision": 33,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.1999999999999982,
+            "wallMS": 125.90000003576279,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006278715471187333,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009865716424473092,
+              "maxOffset": 0.005333482567204882,
+              "maxVelocity": 0.0032427488428249385,
+              "tipSpeed": 0.004112825421999368,
+              "kineticEnergy": 1.4524694276171698e-11,
+              "steps": 144,
+              "time": 1.1999999999999982,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 37,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.333333333333331,
+            "wallMS": 125.40000003576279,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.600000023841858,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006243801449813313,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009880319004405003,
+              "maxOffset": 0.005241815856565776,
+              "maxVelocity": 0.002972014913497356,
+              "tipSpeed": 0.003741094319536158,
+              "kineticEnergy": 1.2383642095490771e-11,
+              "steps": 160,
+              "time": 1.333333333333331,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.5,
+              "droppedSeconds": 0,
+              "revision": 41,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.466666666666664,
+            "wallMS": 128.10000002384186,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005923528700636392,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000989390951037894,
+              "maxOffset": 0.00524919232131671,
+              "maxVelocity": 0.00297356580478525,
+              "tipSpeed": 0.003034856393124984,
+              "kineticEnergy": 1.1332695413635966e-11,
+              "steps": 176,
+              "time": 1.466666666666664,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 45,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.5999999999999968,
+            "wallMS": 125.09999996423721,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005430086239888158,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009909022344367635,
+              "maxOffset": 0.005498142302779479,
+              "maxVelocity": 0.002949385595067411,
+              "tipSpeed": 0.0030156068313104867,
+              "kineticEnergy": 1.1271385553668194e-11,
+              "steps": 192,
+              "time": 1.5999999999999968,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.900000035762787,
+              "droppedSeconds": 0,
+              "revision": 49,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.7333333333333296,
+            "wallMS": 126.90000003576279,
+            "physics": {
+              "timings": {
+                "forces": 0.8999999761581421,
+                "constraints": 3.899999976158142,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005157154107588543,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009925755602444575,
+              "maxOffset": 0.005720975767759607,
+              "maxVelocity": 0.003550122053597171,
+              "tipSpeed": 0.004450003105424906,
+              "kineticEnergy": 1.0247668506061712e-11,
+              "steps": 208,
+              "time": 1.7333333333333296,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.099999964237213,
+              "droppedSeconds": 0,
+              "revision": 53,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.8666666666666625,
+            "wallMS": 148.29999995231628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.700000047683716,
+                "detail": 0.7999999523162842
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005427586666304071,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009948965003536703,
+              "maxOffset": 0.005955581844876434,
+              "maxVelocity": 0.0024723246786517716,
+              "tipSpeed": 0.0027343462041469085,
+              "kineticEnergy": 8.08468765793566e-12,
+              "steps": 224,
+              "time": 1.8666666666666625,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.900000035762787,
+              "droppedSeconds": 0,
+              "revision": 57,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.9999999999999953,
+            "wallMS": 150.30000001192093,
+            "physics": {
+              "timings": {
+                "forces": 0.9000000357627869,
+                "constraints": 3.799999952316284,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005862197231117648,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009957174651857859,
+              "maxOffset": 0.00618304973293548,
+              "maxVelocity": 0.0039644670026334206,
+              "tipSpeed": 0.004002617432512502,
+              "kineticEnergy": 7.848027660722482e-12,
+              "steps": 240,
+              "time": 1.9999999999999953,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 61,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.1333333333333284,
+            "wallMS": 154,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.700000047683716,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006102946814566429,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009994933515556914,
+              "maxOffset": 0.006417446169412173,
+              "maxVelocity": 0.002255724372670631,
+              "tipSpeed": 0.002293220112384068,
+              "kineticEnergy": 6.934064354513771e-12,
+              "steps": 256,
+              "time": 2.1333333333333284,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.600000023841858,
+              "droppedSeconds": 0,
+              "revision": 65,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.2666666666666613,
+            "wallMS": 153,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.699999988079071,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006798847835264766,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009982967923212183,
+              "maxOffset": 0.00664480018081089,
+              "maxVelocity": 0.0025235788251604108,
+              "tipSpeed": 0.002577445543472627,
+              "kineticEnergy": 6.74569668749655e-12,
+              "steps": 272,
+              "time": 2.2666666666666613,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 69,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.399999999999994,
+            "wallMS": 153.9000000357628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.0068488040742812365,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009992559186502437,
+              "maxOffset": 0.006761863100859574,
+              "maxVelocity": 0.0027477566149236576,
+              "tipSpeed": 0.0028574188243009765,
+              "kineticEnergy": 5.911373440208076e-12,
+              "steps": 288,
+              "time": 2.399999999999994,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.599999964237213,
+              "droppedSeconds": 0,
+              "revision": 73,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.533333333333327,
+            "wallMS": 149.89999997615814,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006650568221544251,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009999839646055442,
+              "maxOffset": 0.006725463492760966,
+              "maxVelocity": 0.0024734533221904,
+              "tipSpeed": 0.002506172619029686,
+              "kineticEnergy": 5.152308394163413e-12,
+              "steps": 304,
+              "time": 2.533333333333327,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.600000023841858,
+              "droppedSeconds": 0,
+              "revision": 77,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.66666666666666,
+            "wallMS": 154.39999997615814,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.800000011920929,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.006501272653526281,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009908074186113502,
+              "maxOffset": 0.006598464973537516,
+              "maxVelocity": 0.0020672758912668177,
+              "tipSpeed": 0.0022570171575056895,
+              "kineticEnergy": 5.049128870997191e-12,
+              "steps": 320,
+              "time": 2.66666666666666,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.30000001192093,
+              "droppedSeconds": 0,
+              "revision": 81,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.7999999999999927,
+            "wallMS": 152.20000004768372,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.00666525755360615,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009908491141783493,
+              "maxOffset": 0.0064675736330621625,
+              "maxVelocity": 0.0017446796037928758,
+              "tipSpeed": 0.00200591278049779,
+              "kineticEnergy": 4.0954235616540454e-12,
+              "steps": 336,
+              "time": 2.7999999999999927,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.100000023841858,
+              "droppedSeconds": 0,
+              "revision": 85,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.9333333333333256,
+            "wallMS": 149.4000000357628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.007154021977336939,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000990465961994369,
+              "maxOffset": 0.006396444886090708,
+              "maxVelocity": 0.0017688328722431645,
+              "tipSpeed": 0.0018057652709124166,
+              "kineticEnergy": 4.400311352157408e-12,
+              "steps": 352,
+              "time": 2.9333333333333256,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.599999964237213,
+              "droppedSeconds": 0,
+              "revision": 89,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 3.0666666666666584,
+            "wallMS": 151,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.699999988079071,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.007565867862538588,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009898449812377752,
+              "maxOffset": 0.006372052842064458,
+              "maxVelocity": 0.002206424316263389,
+              "tipSpeed": 0.002251448863217828,
+              "kineticEnergy": 5.3722513110875804e-12,
+              "steps": 368,
+              "time": 3.0666666666666584,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 24.900000035762787,
+              "droppedSeconds": 0,
+              "revision": 93,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 3.1999999999999913,
+            "wallMS": 155.19999998807907,
+            "physics": {
+              "timings": {
+                "forces": 0.8999999761581421,
+                "constraints": 3.800000011920929,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.00757724363115298,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "medium",
+              "nominalLength": 0.2,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000988995808044013,
+              "maxOffset": 0.00631280318331922,
+              "maxVelocity": 0.001782133595036317,
+              "tipSpeed": 0.0022872979077095523,
+              "kineticEnergy": 5.34980323133837e-12,
+              "steps": 384,
+              "time": 3.1999999999999913,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23.30000001192093,
+              "droppedSeconds": 0,
+              "revision": 97,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          }
+        ],
+        "meanWallMSPerSimulatedSecond": 1090.9375000186265
+      }
+    },
+    {
+      "name": "medium-wind-off-energy-decay",
+      "passed": true,
+      "data": {
+        "before": 5.34980323133837e-12,
+        "after": 1.722264526426229e-13,
+        "detail": 9.916209251094027e-8
+      }
+    },
+    {
+      "name": "long-native-mesh-and-rest-constraints",
+      "passed": true,
+      "data": {
+        "style": "long",
+        "character": "P01",
+        "strands": 64000,
+        "guides": 192,
+        "groomMS": 568,
+        "sameNativeMesh": true,
+        "binding": {
+          "source": "existing unified character platform ab499da18b1da1e256cd66e35ec1212183c58028",
+          "sameCharacterMesh": true,
+          "headTriangles": 10273,
+          "center": [
+            0,
+            0.0065494176058485815,
+            -0.07524076705251775
+          ],
+          "radii": [
+            0.07458542769502001,
+            0.113,
+            0.1
+          ],
+          "geometryReplaced": false,
+          "rootMethod": "native scalp triangle hit and barycentric support",
+          "worldFrame": [
+            0.9999998757195382,
+            0.00006599871987886942,
+            0.0004941711012360805,
+            0,
+            0.000013887859521072539,
+            0.987126983843245,
+            -0.15993848059696292,
+            0,
+            -0.0004983653636444381,
+            0.15993846758271354,
+            0.9871268602460668,
+            0,
+            -0.0002508127872530158,
+            0.7335522572568656,
+            0.09897334553741749,
+            1
+          ]
+        },
+        "physics": {
+          "timings": {
+            "forces": 1,
+            "constraints": 3.299999952316284,
+            "detail": 0
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009928413589668228,
+          "maxOffset": 0,
+          "maxVelocity": 0,
+          "tipSpeed": 0,
+          "kineticEnergy": 0,
+          "steps": 0,
+          "time": 0,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": false,
+          "cpuMS": 0,
+          "droppedSeconds": 0,
+          "revision": 1,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "errors": [],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      }
+    },
+    {
+      "name": "long-ten-color-view-renders",
+      "passed": true,
+      "data": {}
+    },
+    {
+      "name": "long-wind-root-stability-lengths-and-independent-detail",
+      "passed": true,
+      "data": {
+        "frames": [
+          {
+            "time": 0.13333333333333333,
+            "wallMS": 134.4000000357628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.300000011920929,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.005314529116367184,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009993235266194667,
+              "maxOffset": 0.007423093888088541,
+              "maxVelocity": 0.09556023215899656,
+              "tipSpeed": 0.09695748713945476,
+              "kineticEnergy": 1.2713409772713627e-7,
+              "steps": 16,
+              "time": 0.13333333333333333,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.399999976158142,
+              "droppedSeconds": 0,
+              "revision": 5,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.26666666666666666,
+            "wallMS": 159.30000001192093,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.5,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.015189190433312709,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009981935399643316,
+              "maxOffset": 0.021250542449505715,
+              "maxVelocity": 0.13155290091392158,
+              "tipSpeed": 0.1343158986528982,
+              "kineticEnergy": 1.0092574808987206e-7,
+              "steps": 32,
+              "time": 0.26666666666666666,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 23,
+              "droppedSeconds": 0,
+              "revision": 9,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.4000000000000004,
+            "wallMS": 136.79999995231628,
+            "physics": {
+              "timings": {
+                "forces": 1.199999988079071,
+                "constraints": 3.400000035762787,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.0216370543990549,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009970962782084314,
+              "maxOffset": 0.0319614371054784,
+              "maxVelocity": 0.06257940555265129,
+              "tipSpeed": 0.06391508908334222,
+              "kineticEnergy": 7.771853491796343e-9,
+              "steps": 48,
+              "time": 0.4000000000000004,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22,
+              "droppedSeconds": 0,
+              "revision": 13,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.5333333333333339,
+            "wallMS": 139,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.300000011920929,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.02153034837340845,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000997136481031502,
+              "maxOffset": 0.03306468517260569,
+              "maxVelocity": 0.054836377477158194,
+              "tipSpeed": 0.05540840379747748,
+              "kineticEnergy": 1.299620858308295e-8,
+              "steps": 64,
+              "time": 0.5333333333333339,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.400000035762787,
+              "droppedSeconds": 0,
+              "revision": 17,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.6666666666666667,
+            "wallMS": 142.0999999642372,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.399999976158142,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.019572901266357905,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009974250339979118,
+              "maxOffset": 0.02650814446669936,
+              "maxVelocity": 0.06297950830583321,
+              "tipSpeed": 0.06375021141749104,
+              "kineticEnergy": 1.5488863794960472e-8,
+              "steps": 80,
+              "time": 0.6666666666666667,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.100000023841858,
+              "droppedSeconds": 0,
+              "revision": 21,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.7999999999999996,
+            "wallMS": 147.69999998807907,
+            "physics": {
+              "timings": {
+                "forces": 0.9000000357627869,
+                "constraints": 3.5,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.016428669885649692,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009979419726713346,
+              "maxOffset": 0.024040597141731446,
+              "maxVelocity": 0.03406217595061767,
+              "tipSpeed": 0.0348493046339026,
+              "kineticEnergy": 4.613057919897634e-9,
+              "steps": 96,
+              "time": 0.7999999999999996,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.19999998807907,
+              "droppedSeconds": 0,
+              "revision": 25,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 0.9333333333333325,
+            "wallMS": 152.0999999642372,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.399999976158142,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.016057483999041604,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009981927556341752,
+              "maxOffset": 0.02385875036736927,
+              "maxVelocity": 0.021898363496677398,
+              "tipSpeed": 0.022447974703802918,
+              "kineticEnergy": 2.226675561715955e-9,
+              "steps": 112,
+              "time": 0.9333333333333325,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.600000023841858,
+              "droppedSeconds": 0,
+              "revision": 29,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.0666666666666653,
+            "wallMS": 159.5999999642372,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.399999976158142,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.017748931757918536,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009981396540925669,
+              "maxOffset": 0.02544544917613478,
+              "maxVelocity": 0.017918099962939138,
+              "tipSpeed": 0.01832853424030819,
+              "kineticEnergy": 2.566416875135123e-9,
+              "steps": 128,
+              "time": 1.0666666666666653,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.5,
+              "droppedSeconds": 0,
+              "revision": 33,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.1999999999999982,
+            "wallMS": 155.10000002384186,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.5,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.019113381395887266,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009980767407811175,
+              "maxOffset": 0.027142885838556507,
+              "maxVelocity": 0.013820171968662587,
+              "tipSpeed": 0.014127941444237319,
+              "kineticEnergy": 1.2048379946006097e-9,
+              "steps": 144,
+              "time": 1.1999999999999982,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22,
+              "droppedSeconds": 0,
+              "revision": 37,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.333333333333331,
+            "wallMS": 156.4000000357628,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.300000011920929,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.020064039429035847,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009980076707813978,
+              "maxOffset": 0.027959957876548275,
+              "maxVelocity": 0.010471890209686752,
+              "tipSpeed": 0.010567788929428695,
+              "kineticEnergy": 2.732706341544161e-10,
+              "steps": 160,
+              "time": 1.333333333333331,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.30000001192093,
+              "droppedSeconds": 0,
+              "revision": 41,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.466666666666664,
+            "wallMS": 157.39999997615814,
+            "physics": {
+              "timings": {
+                "forces": 1.100000023841858,
+                "constraints": 3.399999976158142,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.019608309011398005,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009980553994004548,
+              "maxOffset": 0.028134746937634236,
+              "maxVelocity": 0.010548122478251098,
+              "tipSpeed": 0.010658114555297825,
+              "kineticEnergy": 3.262026855991371e-10,
+              "steps": 176,
+              "time": 1.466666666666664,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.100000023841858,
+              "droppedSeconds": 0,
+              "revision": 45,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.5999999999999968,
+            "wallMS": 152.79999995231628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.399999976158142,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.017862846112058968,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009982036679394568,
+              "maxOffset": 0.028067710775553548,
+              "maxVelocity": 0.008849838060942528,
+              "tipSpeed": 0.008902318564871196,
+              "kineticEnergy": 3.342324879054236e-10,
+              "steps": 192,
+              "time": 1.5999999999999968,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.5,
+              "droppedSeconds": 0,
+              "revision": 49,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.7333333333333296,
+            "wallMS": 159.5999999642372,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.300000011920929,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.018189437636835053,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009983599079699257,
+              "maxOffset": 0.027995420585939956,
+              "maxVelocity": 0.008526476612145117,
+              "tipSpeed": 0.0085549164759306,
+              "kineticEnergy": 2.1874458372815838e-10,
+              "steps": 208,
+              "time": 1.7333333333333296,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22,
+              "droppedSeconds": 0,
+              "revision": 53,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.8666666666666625,
+            "wallMS": 156.80000001192093,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.300000011920929,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.019335006367049202,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009984664225162199,
+              "maxOffset": 0.02800475359008279,
+              "maxVelocity": 0.005655685263765559,
+              "tipSpeed": 0.0056582835552391264,
+              "kineticEnergy": 2.198317111412445e-10,
+              "steps": 224,
+              "time": 1.8666666666666625,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.099999964237213,
+              "droppedSeconds": 0,
+              "revision": 57,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 1.9999999999999953,
+            "wallMS": 158.29999995231628,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.400000035762787,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.01990956932175406,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009984762451371587,
+              "maxOffset": 0.028027648543937016,
+              "maxVelocity": 0.006528070611382525,
+              "tipSpeed": 0.006529824945621688,
+              "kineticEnergy": 2.477842280685574e-10,
+              "steps": 240,
+              "time": 1.9999999999999953,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.80000001192093,
+              "droppedSeconds": 0,
+              "revision": 61,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.1333333333333284,
+            "wallMS": 129.19999998807907,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.300000011920929,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.019483204833066703,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009983942023878978,
+              "maxOffset": 0.02800119324179006,
+              "maxVelocity": 0.006334123906860667,
+              "tipSpeed": 0.006336315914294852,
+              "kineticEnergy": 2.1530460915290657e-10,
+              "steps": 256,
+              "time": 2.1333333333333284,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.600000023841858,
+              "droppedSeconds": 0,
+              "revision": 65,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.2666666666666613,
+            "wallMS": 156.19999998807907,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.300000011920929,
+                "detail": 0.9000000357627869
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.01887741534462996,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009982364386389442,
+              "maxOffset": 0.02792269085823052,
+              "maxVelocity": 0.005874584376875103,
+              "tipSpeed": 0.005891268329536891,
+              "kineticEnergy": 1.878140981205056e-10,
+              "steps": 272,
+              "time": 2.2666666666666613,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.69999998807907,
+              "droppedSeconds": 0,
+              "revision": 69,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.399999999999994,
+            "wallMS": 155.60000002384186,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.400000035762787,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.02002364211577883,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009980268858382768,
+              "maxOffset": 0.02776760949369597,
+              "maxVelocity": 0.005957869759666279,
+              "tipSpeed": 0.005992296349930322,
+              "kineticEnergy": 1.9144198179842416e-10,
+              "steps": 288,
+              "time": 2.399999999999994,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.80000001192093,
+              "droppedSeconds": 0,
+              "revision": 73,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.533333333333327,
+            "wallMS": 160.69999998807907,
+            "physics": {
+              "timings": {
+                "forces": 1.100000023841858,
+                "constraints": 3.399999976158142,
+                "detail": 0.800000011920929
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.020631437629197717,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009977800489273658,
+              "maxOffset": 0.027486258533124378,
+              "maxVelocity": 0.00629512271865168,
+              "tipSpeed": 0.006351434606073064,
+              "kineticEnergy": 2.1041914876511884e-10,
+              "steps": 304,
+              "time": 2.533333333333327,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.900000035762787,
+              "droppedSeconds": 0,
+              "revision": 77,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.66666666666666,
+            "wallMS": 155.69999998807907,
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.400000035762787,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.020793454477938598,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009974918920585552,
+              "maxOffset": 0.027049621288502287,
+              "maxVelocity": 0.005968878035020053,
+              "tipSpeed": 0.005978683109691901,
+              "kineticEnergy": 2.517376771506912e-10,
+              "steps": 320,
+              "time": 2.66666666666666,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.600000023841858,
+              "droppedSeconds": 0,
+              "revision": 81,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.7999999999999927,
+            "wallMS": 153.80000001192093,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.300000011920929,
+                "detail": 1
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.020460958954554603,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009985758139123835,
+              "maxOffset": 0.026481584064629766,
+              "maxVelocity": 0.006699038437865679,
+              "tipSpeed": 0.0068106205931376135,
+              "kineticEnergy": 3.0312068531317604e-10,
+              "steps": 336,
+              "time": 2.7999999999999927,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.69999998807907,
+              "droppedSeconds": 0,
+              "revision": 85,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 2.9333333333333256,
+            "wallMS": 153.19999998807907,
+            "physics": {
+              "timings": {
+                "forces": 0.8999999761581421,
+                "constraints": 3.400000035762787,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.02007256570568184,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009967725163360086,
+              "maxOffset": 0.025835083543008515,
+              "maxVelocity": 0.008267134204726634,
+              "tipSpeed": 0.008420372179115263,
+              "kineticEnergy": 3.2941335774749354e-10,
+              "steps": 352,
+              "time": 2.9333333333333256,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.5,
+              "droppedSeconds": 0,
+              "revision": 89,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 3.0666666666666584,
+            "wallMS": 151.5,
+            "physics": {
+              "timings": {
+                "forces": 1,
+                "constraints": 3.399999976158142,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.01996583811996591,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000996363502209885,
+              "maxOffset": 0.025769843308924005,
+              "maxVelocity": 0.008138528540432843,
+              "tipSpeed": 0.00817272788168124,
+              "kineticEnergy": 3.354559996350257e-10,
+              "steps": 368,
+              "time": 3.0666666666666584,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 21.80000001192093,
+              "droppedSeconds": 0,
+              "revision": 93,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          },
+          {
+            "time": 3.1999999999999913,
+            "wallMS": 151.30000001192093,
+            "physics": {
+              "timings": {
+                "forces": 1.100000023841858,
+                "constraints": 3.300000011920929,
+                "detail": 0.8999999761581421
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0.020232051669170498,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009994210617958466,
+              "maxOffset": 0.026060710967537384,
+              "maxVelocity": 0.00831509728780766,
+              "tipSpeed": 0.008344759036656149,
+              "kineticEnergy": 3.491398977785883e-10,
+              "steps": 384,
+              "time": 3.1999999999999913,
+              "wind": 0.38,
+              "windEnabled": true,
+              "paused": false,
+              "active": true,
+              "cpuMS": 22.80000001192093,
+              "droppedSeconds": 0,
+              "revision": 97,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            }
+          }
+        ],
+        "meanWallMSPerSimulatedSecond": 1135.8124999329448
+      }
+    },
+    {
+      "name": "long-wind-off-energy-decay",
+      "passed": true,
+      "data": {
+        "before": 3.491398977785883e-10,
+        "after": 2.9712741568556468e-12,
+        "detail": 9.746150772346442e-8
+      }
+    },
+    {
+      "name": "native-morph-idle-moves-exact-scalp-roots",
+      "passed": true,
+      "data": {
+        "movementMetres": 0.0009208877912622712,
+        "poses": [
+          {
+            "time": 0,
+            "rootPoints": [
+              [
+                -0.05225920150918782,
+                0.7285380986443454,
+                -0.05219751698316732
+              ],
+              [
+                0.026784513844789984,
+                0.8086435250915458,
+                0.08913155176861157
+              ],
+              [
+                0.07405646368971457,
+                0.741936921077019,
+                0.00028371640602106604
+              ],
+              [
+                -0.010423474782808041,
+                0.8190111735655143,
+                0.08372311502174977
+              ],
+              [
+                -0.03103451694668352,
+                0.7414028739553591,
+                -0.07119388829032018
+              ],
+              [
+                0.0037049590438714267,
+                0.8320311115371041,
+                0.05878039045485554
+              ],
+              [
+                -0.04330087481352706,
+                0.8260873960923563,
+                0.010920553201311078
+              ],
+              [
+                -0.011398331021545572,
+                0.7982504465486248,
+                0.10452429688089543
+              ],
+              [
+                0.00861297693880123,
+                0.8334222054336193,
+                0.051971898160466524
+              ],
+              [
+                0.00808633399130007,
+                0.810508203030761,
+                0.0950032608277726
+              ],
+              [
+                0.06677321250057369,
+                0.7959568928589852,
+                0.021534894959733816
+              ],
+              [
+                -0.06239112017614599,
+                0.7978435882452806,
+                -0.02394635662131536
+              ],
+              [
+                -0.007822679979693645,
+                0.7790858803624199,
+                -0.07618836268813949
+              ],
+              [
+                0.015065572149343127,
+                0.836282892377752,
+                0.030101939265656387
+              ],
+              [
+                0.06617352636983809,
+                0.7733168152689807,
+                0.05747719333862293
+              ],
+              [
+                0.004917220636890934,
+                0.8186888458574579,
+                0.08529723591083033
+              ],
+              [
+                0.05646056934777593,
+                0.8074606245276902,
+                -0.025003165347167657
+              ],
+              [
+                -0.045268105451693505,
+                0.7989853067863655,
+                -0.05060251835514
+              ],
+              [
+                0.03207615615468581,
+                0.7931009998239889,
+                0.09988390465959708
+              ],
+              [
+                -0.060885792915910814,
+                0.8085486137932949,
+                0.015696855543470466
+              ],
+              [
+                0.03816456682028467,
+                0.8168907748035447,
+                0.06467788840353617
+              ],
+              [
+                -0.00746248112115926,
+                0.8365522975548974,
+                0.03832996856230094
+              ],
+              [
+                -0.039369690919724996,
+                0.8172909782907976,
+                -0.03471853718040436
+              ],
+              [
+                -0.047752606486680026,
+                0.8211279757509498,
+                -0.009170340318019672
+              ],
+              [
+                -0.020277634353441265,
+                0.8362978802685626,
+                0.010705061040346162
+              ],
+              [
+                -0.045025344682613086,
+                0.6994741328199187,
+                -0.04584838938254954
+              ],
+              [
+                0.06812198710131613,
+                0.7562299615361529,
+                0.04640859234936589
+              ],
+              [
+                -0.06732471787410352,
+                0.7507357471497493,
+                0.05048650095127348
+              ],
+              [
+                -0.06906553317847813,
+                0.7483642592071574,
+                0.03823908457794507
+              ],
+              [
+                0.015983356155721492,
+                0.7405254986724018,
+                -0.0767257632999052
+              ],
+              [
+                -0.03705994667568886,
+                0.7901201086303454,
+                0.09879740656076243
+              ],
+              [
+                0.022658588152224574,
+                0.8332684055929797,
+                0.03589229131183669
+              ],
+              [
+                -0.03660798401644532,
+                0.7602604520088769,
+                -0.0700290430542546
+              ],
+              [
+                -0.047797647407335,
+                0.8205992783613549,
+                0.02773959857583877
+              ],
+              [
+                0.0342631657258378,
+                0.8141365265103435,
+                0.07492239428462666
+              ],
+              [
+                -0.04640765180241347,
+                0.8211006699190426,
+                -0.013855505913828838
+              ],
+              [
+                -0.03010828900792975,
+                0.818099856221812,
+                0.0730894325988142
+              ],
+              [
+                -0.033903450440312,
+                0.7919535455946993,
+                0.10004908582565807
+              ],
+              [
+                0.029410552341828346,
+                0.8331637160093363,
+                0.012417446504996673
+              ],
+              [
+                -0.07067781463936178,
+                0.7325813950127268,
+                -0.023255399791940204
+              ],
+              [
+                -0.019131773084456172,
+                0.8365419080963765,
+                0.014702312932132764
+              ],
+              [
+                0.045187025084393234,
+                0.8247424327919084,
+                0.0069227832887315075
+              ],
+              [
+                -0.03025856306024112,
+                0.830293897102438,
+                0.036129450254829644
+              ],
+              [
+                -0.03323845843195515,
+                0.8048006652420071,
+                0.08958032730017643
+              ],
+              [
+                -0.01532349992488469,
+                0.8329526777259868,
+                -0.020587298114936575
+              ],
+              [
+                -0.013597312016304708,
+                0.8316314722401416,
+                -0.02530653175462445
+              ],
+              [
+                0.030311784180586915,
+                0.832581223038267,
+                0.0017395531387754733
+              ],
+              [
+                -0.01986445477725245,
+                0.7954471020326874,
+                0.10418609426479207
+              ],
+              [
+                0.06451414832336214,
+                0.7734101494335477,
+                0.06460157323355109
+              ],
+              [
+                0.03599980136049005,
+                0.8129437822289282,
+                -0.044780267475547524
+              ],
+              [
+                0.06968494508002876,
+                0.7646950885795667,
+                0.038067088643739075
+              ],
+              [
+                0.030048589025126003,
+                0.7742288532190954,
+                -0.07151822661836453
+              ],
+              [
+                0.07386543548131978,
+                0.7647420387924659,
+                0.010225826909480611
+              ],
+              [
+                -0.07223115080988556,
+                0.7768995752407339,
+                -0.007453537407238623
+              ],
+              [
+                -0.006490700856108447,
+                0.8384496429279945,
+                0.022997210564983203
+              ],
+              [
+                0.052299360196078726,
+                0.7258827165968622,
+                -0.05053354276768957
+              ],
+              [
+                0.020816875736981325,
+                0.6778873747227533,
+                -0.04891388233829194
+              ],
+              [
+                0.030178352192011332,
+                0.6911148736969284,
+                -0.05134285579500815
+              ],
+              [
+                0.06297986429002073,
+                0.7799523498610443,
+                0.06544350615080398
+              ],
+              [
+                0.0520686066332579,
+                0.734095356588914,
+                -0.05321410268081753
+              ],
+              [
+                0.07347406417949685,
+                0.7455910433234584,
+                -0.014208335841337162
+              ],
+              [
+                -0.02057844048942441,
+                0.8293256684047161,
+                -0.027068603904242046
+              ],
+              [
+                0.024936444961891263,
+                0.6942181169641279,
+                -0.05668805756127164
+              ],
+              [
+                0.06652523284947966,
+                0.7707952361894427,
+                0.05729018419698805
+              ]
+            ],
+            "physics": {
+              "timings": {
+                "forces": 1.0999999642372131,
+                "constraints": 3.600000023841858,
+                "detail": 0
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.000995871924915237,
+              "maxOffset": 0.00002454450268329951,
+              "maxVelocity": 0.002936802844577535,
+              "tipSpeed": 0.0027397851695887872,
+              "kineticEnergy": 2.68399052537167e-10,
+              "steps": 1,
+              "time": 0.008333333333333333,
+              "wind": 0.38,
+              "windEnabled": false,
+              "paused": false,
+              "active": true,
+              "cpuMS": 5.399999976158142,
+              "droppedSeconds": 0,
+              "revision": 2,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            },
+            "morphInfluences": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0.0016550408192456552
+            ],
+            "nativeRootTexture": 3,
+            "frame": [
+              0.9999998757196057,
+              0.00006599653132120434,
+              0.0004941712565517767,
+              0,
+              0.000013888317380190195,
+              0.9871275381945037,
+              -0.15993505914955974,
+              0,
+              -0.0004983652150669626,
+              0.1599350461359748,
+              0.9871274145973233,
+              0,
+              -0.00025081279030494605,
+              0.7335518521073657,
+              0.09897552948324208,
+              1
+            ],
+            "idle": {
+              "version": "ET19-IDLE-R01",
+              "ready": true,
+              "status": "待机已连接 · 当前人物原生动作",
+              "playing": false,
+              "time": 0,
+              "settings": {
+                "enabled": true,
+                "profile": "listening",
+                "seed": 4197,
+                "intensity": 0.85,
+                "blink": true,
+                "gaze": true,
+                "mouth": true,
+                "head": true,
+                "breath": true,
+                "surface": true,
+                "surfaceGain": 0.75,
+                "wrinkleGain": 0.65
+              },
+              "weights": {
+                "blinkL": 0,
+                "blinkR": 0,
+                "gazeX": 0,
+                "gazeY": 0,
+                "headX": 0,
+                "headY": 0,
+                "jaw": 0,
+                "press": 0,
+                "smile": 0,
+                "brow": 0,
+                "breath": 0.0016550408192456552,
+                "events": [
+                  "视线转移"
+                ]
+              },
+              "basis": [
+                {
+                  "name": "blinkL",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.126528925391922,
+                  "affectedDisplayVertices": 102171
+                },
+                {
+                  "name": "blinkR",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.437897752471411,
+                  "affectedDisplayVertices": 99285
+                },
+                {
+                  "name": "jaw",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 7.791340167980522,
+                  "affectedDisplayVertices": 224899
+                },
+                {
+                  "name": "press",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 2.8189576274719186,
+                  "affectedDisplayVertices": 171099
+                },
+                {
+                  "name": "smile",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 4.700102058268202,
+                  "affectedDisplayVertices": 209809
+                },
+                {
+                  "name": "brow",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 1.1362997747971344,
+                  "affectedDisplayVertices": 58210
+                },
+                {
+                  "name": "gazeXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.9787079744744553,
+                  "affectedDisplayVertices": 58334
+                },
+                {
+                  "name": "gazeXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.978710249181178,
+                  "affectedDisplayVertices": 59360
+                },
+                {
+                  "name": "gazeYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4036143882504482,
+                  "affectedDisplayVertices": 60231
+                },
+                {
+                  "name": "gazeYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4035685178879638,
+                  "affectedDisplayVertices": 55815
+                },
+                {
+                  "name": "headXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869736511243,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869821600423,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938271520583577,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938243219416751,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "breath",
+                  "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+                  "supported": true,
+                  "maxMM": 1.5419263167176198,
+                  "affectedDisplayVertices": 262688
+                }
+              ],
+              "bakeMS": 17848.400000035763,
+              "cacheBytes": 95795280,
+              "frames": 3,
+              "meanSubmitMS": 1167.6666666865349,
+              "singleMesh": true,
+              "canonicalStateChangedByPlayback": false,
+              "skin": {
+                "version": "IDLE-R01",
+                "compiled": 5,
+                "addedTextureBytes": 0,
+                "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+                "stressSolver": false
+              },
+              "errors": [],
+              "manualExpressionPriority": true,
+              "limitations": [
+                "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+                "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+                "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+                "all profile-specific eyelid contact quality remains inherited and needs visual review"
+              ]
+            }
+          },
+          {
+            "time": 2,
+            "rootPoints": [
+              [
+                -0.05225788056312698,
+                0.7285789179314007,
+                -0.051466492722667755
+              ],
+              [
+                0.026782913222752853,
+                0.8085172761255314,
+                0.08995846629817679
+              ],
+              [
+                0.07405663548149383,
+                0.7419157227801597,
+                0.0010330112293545721
+              ],
+              [
+                -0.01042493413273412,
+                0.8188913472912545,
+                0.08456152624266777
+              ],
+              [
+                -0.031032825696426822,
+                0.7414661154275128,
+                -0.07044720073236362
+              ],
+              [
+                0.0037039955645443495,
+                0.8319407389083701,
+                0.05963451936020635
+              ],
+              [
+                -0.04330081810784049,
+                0.8260535600237847,
+                0.011766821118019107
+              ],
+              [
+                -0.011400211904418882,
+                0.7981060908291624,
+                0.10533812490610216
+              ],
+              [
+                0.008612147524243313,
+                0.8333398205299848,
+                0.05282778601321333
+              ],
+              [
+                0.008084635659064664,
+                0.8103750679130952,
+                0.09583197650195945
+              ],
+              [
+                0.06677295809668932,
+                0.7959105497573666,
+                0.022347788560661764
+              ],
+              [
+                -0.0623903516229438,
+                0.7978509571095971,
+                -0.02313375468286562
+              ],
+              [
+                -0.007820890752049038,
+                0.7791549823462774,
+                -0.07539668330393513
+              ],
+              [
+                0.01506518823848084,
+                0.8362264042851695,
+                0.030961387207436592
+              ],
+              [
+                0.06617254157738256,
+                0.7732280137527914,
+                0.05826325529888287
+              ],
+              [
+                0.0049157170553971,
+                0.8185671888069573,
+                0.08613556966947389
+              ],
+              [
+                0.05646127024692548,
+                0.8074692609354216,
+                -0.024176791325418386
+              ],
+              [
+                -0.045266810158700106,
+                0.7990241299570617,
+                -0.04978815881639413
+              ],
+              [
+                0.03207433593984026,
+                0.7929621527930745,
+                0.10069254016445336
+              ],
+              [
+                -0.060885830999787706,
+                0.8085091524696513,
+                0.01652204150932955
+              ],
+              [
+                0.038163460405644466,
+                0.8167934719576467,
+                0.06551482305354311
+              ],
+              [
+                -0.007463024905191552,
+                0.8364860219712948,
+                0.03918925928728053
+              ],
+              [
+                -0.039368720898838826,
+                0.8173110392289215,
+                -0.033882474378034697
+              ],
+              [
+                -0.0477521518340128,
+                0.8211178249538562,
+                -0.00832997773793091
+              ],
+              [
+                -0.02027760180683277,
+                0.8362642523691699,
+                0.011563856776200462
+              ],
+              [
+                -0.045024220563542536,
+                0.6995074673983083,
+                -0.045151548136179456
+              ],
+              [
+                0.06812122849463406,
+                0.7561543277131894,
+                0.04717453897634831
+              ],
+              [
+                -0.06732545570081543,
+                0.7506553044446175,
+                0.05124319755467163
+              ],
+              [
+                -0.06906602586194278,
+                0.7482982543203719,
+                0.038992974689080716
+              ],
+              [
+                0.01598511774204118,
+                0.7405953062531567,
+                -0.07597915347777848
+              ],
+              [
+                -0.037061687408142294,
+                0.7899825707659858,
+                0.0996011178596826
+              ],
+              [
+                0.0226580793409152,
+                0.8332050052610337,
+                0.03674832472462068
+              ],
+              [
+                -0.03660629991585964,
+                0.7603223038918946,
+                -0.06926019198486498
+              ],
+              [
+                -0.04779793629959382,
+                0.8205455742841987,
+                0.028579259682098977
+              ],
+              [
+                0.034261854302817044,
+                0.8140270532644598,
+                0.07575596886246613
+              ],
+              [
+                -0.04640710252819548,
+                0.821096032418093,
+                -0.013015138063438495
+              ],
+              [
+                -0.0301095167061747,
+                0.8179926050079953,
+                0.07392639318208284
+              ],
+              [
+                -0.03390522478008306,
+                0.7918144752760786,
+                0.10085502826825979
+              ],
+              [
+                0.029410512032503573,
+                0.8331280973174483,
+                0.013273543294409556
+              ],
+              [
+                -0.07067705549850013,
+                0.7325880842315421,
+                -0.022520039970614397
+              ],
+              [
+                -0.019131819864268883,
+                0.8365035296537116,
+                0.015561409102203374
+              ],
+              [
+                0.04518707772954495,
+                0.8247133116576201,
+                0.007769264700441745
+              ],
+              [
+                -0.03025903845494424,
+                0.8302302092512448,
+                0.03698089602730841
+              ],
+              [
+                -0.03324002210774663,
+                0.804673916437232,
+                0.09040148103741168
+              ],
+              [
+                -0.015322835254853446,
+                0.832956036779746,
+                -0.019732279342315886
+              ],
+              [
+                -0.01359655333673423,
+                0.8316404066526691,
+                -0.024453033563465704
+              ],
+              [
+                0.030311966544365687,
+                0.8325581664332133,
+                0.002595008975922712
+              ],
+              [
+                -0.019866317154086925,
+                0.7953031267788527,
+                0.10499642872699089
+              ],
+              [
+                0.06451302251448444,
+                0.7733129893741505,
+                0.0653876950403966
+              ],
+              [
+                0.03600091341580677,
+                0.8129757543777749,
+                -0.043947788758377834
+              ],
+              [
+                0.06968435534501254,
+                0.7646292444316678,
+                0.038843082964451436
+              ],
+              [
+                0.030050255707422913,
+                0.7742924215276741,
+                -0.07073152637713448
+              ],
+              [
+                0.0738654053452393,
+                0.764709109778315,
+                0.01100202730355637
+              ],
+              [
+                -0.07223071048694459,
+                0.7768874609268884,
+                -0.006665907519213662
+              ],
+              [
+                -0.0064909308850237945,
+                0.8384014941318156,
+                0.023858796072167232
+              ],
+              [
+                0.052300570971224175,
+                0.7259215803953406,
+                -0.04980355062682353
+              ],
+              [
+                0.02081788179771331,
+                0.6779242700996205,
+                -0.0482413602830645
+              ],
+              [
+                0.030179470914264095,
+                0.6911547020918928,
+                -0.05065449310703905
+              ],
+              [
+                0.06297872135139429,
+                0.7798541737654886,
+                0.06623731985463248
+              ],
+              [
+                0.052069879034018086,
+                0.7341373899246005,
+                -0.05247439935684928
+              ],
+              [
+                0.07347453229704205,
+                0.7455869872692636,
+                -0.013454704044667498
+              ],
+              [
+                -0.020577642139541007,
+                0.8293366002228986,
+                -0.02621796500557595
+              ],
+              [
+                0.024937666058998432,
+                0.6942642413845899,
+                -0.05599611663836832
+              ],
+              [
+                0.06652425019342836,
+                0.7707066639481667,
+                0.05807327622084718
+              ]
+            ],
+            "physics": {
+              "timings": {
+                "forces": 1.199999988079071,
+                "constraints": 3.599999964237213,
+                "detail": 0
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009966210536140885,
+              "maxOffset": 0.0008662358225037437,
+              "maxVelocity": 0.10083650771997466,
+              "tipSpeed": 0.02477605661446545,
+              "kineticEnergy": 1.4801005803128663e-7,
+              "steps": 2,
+              "time": 0.016666666666666666,
+              "wind": 0.38,
+              "windEnabled": false,
+              "paused": false,
+              "active": true,
+              "cpuMS": 5.399999976158142,
+              "droppedSeconds": 0,
+              "revision": 3,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            },
+            "morphInfluences": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0.10390764355659483,
+              0.09967430077819149,
+              0,
+              0,
+              0.0002712135554244321,
+              0.00021491803385106443,
+              0,
+              0.5598942646636148
+            ],
+            "nativeRootTexture": 4,
+            "frame": [
+              0.9999998668697314,
+              0.00006406420535251174,
+              0.0005120120085070845,
+              0,
+              0.000018040462760509654,
+              0.9873156262404734,
+              -0.15876981405772211,
+              0,
+              -0.0005156889187933889,
+              0.1587698021575877,
+              0.987315493643131,
+              0,
+              -0.00025181482102204153,
+              0.7334141221650969,
+              0.09971310612327088,
+              1
+            ],
+            "idle": {
+              "version": "ET19-IDLE-R01",
+              "ready": true,
+              "status": "待机已连接 · 当前人物原生动作",
+              "playing": false,
+              "time": 2,
+              "settings": {
+                "enabled": true,
+                "profile": "listening",
+                "seed": 4197,
+                "intensity": 0.85,
+                "blink": true,
+                "gaze": true,
+                "mouth": true,
+                "head": true,
+                "breath": true,
+                "surface": true,
+                "surfaceGain": 0.75,
+                "wrinkleGain": 0.65
+              },
+              "weights": {
+                "blinkL": 0,
+                "blinkR": 0,
+                "gazeX": -0.10390764355659483,
+                "gazeY": 0.09967430077819149,
+                "headX": -0.0002712135554244321,
+                "headY": 0.00021491803385106443,
+                "jaw": 0,
+                "press": 0,
+                "smile": 0,
+                "brow": 0,
+                "breath": 0.5598942646636148,
+                "events": [
+                  "视线转移"
+                ]
+              },
+              "basis": [
+                {
+                  "name": "blinkL",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.126528925391922,
+                  "affectedDisplayVertices": 102171
+                },
+                {
+                  "name": "blinkR",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.437897752471411,
+                  "affectedDisplayVertices": 99285
+                },
+                {
+                  "name": "jaw",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 7.791340167980522,
+                  "affectedDisplayVertices": 224899
+                },
+                {
+                  "name": "press",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 2.8189576274719186,
+                  "affectedDisplayVertices": 171099
+                },
+                {
+                  "name": "smile",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 4.700102058268202,
+                  "affectedDisplayVertices": 209809
+                },
+                {
+                  "name": "brow",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 1.1362997747971344,
+                  "affectedDisplayVertices": 58210
+                },
+                {
+                  "name": "gazeXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.9787079744744553,
+                  "affectedDisplayVertices": 58334
+                },
+                {
+                  "name": "gazeXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.978710249181178,
+                  "affectedDisplayVertices": 59360
+                },
+                {
+                  "name": "gazeYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4036143882504482,
+                  "affectedDisplayVertices": 60231
+                },
+                {
+                  "name": "gazeYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4035685178879638,
+                  "affectedDisplayVertices": 55815
+                },
+                {
+                  "name": "headXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869736511243,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869821600423,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938271520583577,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938243219416751,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "breath",
+                  "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+                  "supported": true,
+                  "maxMM": 1.5419263167176198,
+                  "affectedDisplayVertices": 262688
+                }
+              ],
+              "bakeMS": 17848.400000035763,
+              "cacheBytes": 95795280,
+              "frames": 4,
+              "meanSubmitMS": 876.6750000119209,
+              "singleMesh": true,
+              "canonicalStateChangedByPlayback": false,
+              "skin": {
+                "version": "IDLE-R01",
+                "compiled": 5,
+                "addedTextureBytes": 0,
+                "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+                "stressSolver": false
+              },
+              "errors": [],
+              "manualExpressionPriority": true,
+              "limitations": [
+                "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+                "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+                "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+                "all profile-specific eyelid contact quality remains inherited and needs visual review"
+              ]
+            }
+          },
+          {
+            "time": 4,
+            "rootPoints": [
+              [
+                -0.05202645023993453,
+                0.7286815718923735,
+                -0.0518755026617245
+              ],
+              [
+                0.026503144926711252,
+                0.8084190985906935,
+                0.08991635483911799
+              ],
+              [
+                0.07408697817923726,
+                0.7419455327751284,
+                0.0010827600957774696
+              ],
+              [
+                -0.01068049900286266,
+                0.8188001350069497,
+                0.08440244114378545
+              ],
+              [
+                -0.030736498832080072,
+                0.7415946005851185,
+                -0.07075990581075982
+              ],
+              [
+                0.0035353831462287435,
+                0.8318836748419827,
+                0.05954867190667487
+              ],
+              [
+                -0.0432927561671285,
+                0.8260637761559246,
+                0.011514322526712438
+              ],
+              [
+                -0.011729722021914496,
+                0.7979869050480359,
+                0.10514259076884747
+              ],
+              [
+                0.008467126155309656,
+                0.8332922423826812,
+                0.052762649929107376
+              ],
+              [
+                0.007786438453151941,
+                0.8102685227280865,
+                0.09572478201409759
+              ],
+              [
+                0.06672859091428857,
+                0.7959075654771848,
+                0.022443130340075654
+              ],
+              [
+                -0.06225557888426326,
+                0.7979115053762313,
+                -0.023487147235489825
+              ],
+              [
+                -0.007507332383751412,
+                0.7792896855871003,
+                -0.07557210634810121
+              ],
+              [
+                0.014997189641014753,
+                0.8362092090323752,
+                0.030927371339803795
+              ],
+              [
+                0.06600025877665773,
+                0.7731760515888648,
+                0.0583179770542825
+              ],
+              [
+                0.004652508417971251,
+                0.818473743053621,
+                0.08603037116825467
+              ],
+              [
+                0.0565840055079564,
+                0.8075307450362735,
+                -0.024093285710769623
+              ],
+              [
+                -0.04503938615051327,
+                0.7991219238833165,
+                -0.05007394165997274
+              ],
+              [
+                0.03175557048414842,
+                0.7928497459599603,
+                0.10064549826668011
+              ],
+              [
+                -0.060892437126826,
+                0.8085136772612179,
+                0.01618148926208344
+              ],
+              [
+                0.03796926407351968,
+                0.8167289796826699,
+                0.06552939865625429
+              ],
+              [
+                -0.007557332839624113,
+                0.8364573198038715,
+                0.039073836332773004
+              ],
+              [
+                -0.039198655450080895,
+                0.8173855802601088,
+                -0.0341246507033521
+              ],
+              [
+                -0.04767195213921044,
+                0.8211564251479997,
+                -0.008601465995226706
+              ],
+              [
+                -0.020271838497993286,
+                0.8362742048248819,
+                0.011407672062325118
+              ],
+              [
+                -0.04482732511574466,
+                0.6995969197405983,
+                -0.045574932879996505
+              ],
+              [
+                0.06798810324410799,
+                0.7561188028765647,
+                0.047214400043441365
+              ],
+              [
+                -0.06745509482362114,
+                0.7506143742256561,
+                0.050792254636346075
+              ],
+              [
+                -0.06915181421710671,
+                0.7482746050773371,
+                0.038534841911600136
+              ],
+              [
+                0.016293902087472084,
+                0.7407309859627172,
+                -0.07612683237170025
+              ],
+              [
+                -0.03736739469335405,
+                0.7898718312939925,
+                0.09930390574757873
+              ],
+              [
+                0.02256844971608818,
+                0.833179905085896,
+                0.036736034874262066
+              ],
+              [
+                -0.03631088095384478,
+                0.7604494188878744,
+                -0.06956563630599934
+              ],
+              [
+                -0.047849173620729685,
+                0.8205325756245053,
+                0.028299892183832855
+              ],
+              [
+                0.03403169163856085,
+                0.8139484114760562,
+                0.07575086607750277
+              ],
+              [
+                -0.04631039441517575,
+                0.8211412049907724,
+                -0.013280989711365444
+              ],
+              [
+                -0.0303246063777463,
+                0.8179162834495382,
+                0.07369794032574412
+              ],
+              [
+                -0.03421580317738113,
+                0.7917019335024181,
+                0.10057138806655412
+              ],
+              [
+                0.02940358406205144,
+                0.8331358052109935,
+                0.013289598035106912
+              ],
+              [
+                -0.0705436961048826,
+                0.7326512861317126,
+                -0.022994328726758266
+              ],
+              [
+                -0.01914044266324147,
+                0.8365078794765902,
+                0.015408886818612324
+              ],
+              [
+                0.045197624037050375,
+                0.8247291838519555,
+                0.007830762646831331
+              ],
+              [
+                -0.03034249039410678,
+                0.8302049397099183,
+                0.03677595523993033
+              ],
+              [
+                -0.03351341188518612,
+                0.8045753034464993,
+                0.09014015660234685
+              ],
+              [
+                -0.015206286160826095,
+                0.8330099304184251,
+                -0.01986959219382392
+              ],
+              [
+                -0.013463429117841357,
+                0.831700947497022,
+                -0.024585157161748215
+              ],
+              [
+                0.030342940533133272,
+                0.8325808579683719,
+                0.002615473423610682
+              ],
+              [
+                -0.020193500350808403,
+                0.7951845820481559,
+                0.10476689601807192
+              ],
+              [
+                0.06431558907808387,
+                0.7732510593001976,
+                0.06543529360602694
+              ],
+              [
+                0.0361967906946341,
+                0.8130645988124648,
+                -0.04392574840116988
+              ],
+              [
+                0.06958072398056465,
+                0.7646049401760081,
+                0.03890193373040434
+              ],
+              [
+                0.030342136452778945,
+                0.7744208530945333,
+                -0.07077976225077023
+              ],
+              [
+                0.0738603630834798,
+                0.7647237503998066,
+                0.011081110069084197
+              ],
+              [
+                -0.07215335789019135,
+                0.7769261536954621,
+                -0.007086748018210911
+              ],
+              [
+                -0.0065307683780636205,
+                0.8383941577374957,
+                0.02375239064425729
+              ],
+              [
+                0.05251285155606428,
+                0.726022300738511,
+                -0.04984753438412649
+              ],
+              [
+                0.020993905487960412,
+                0.6780054089776683,
+                -0.04849013438128095
+              ],
+              [
+                0.030375470289262112,
+                0.6912457049298633,
+                -0.050847251377324966
+              ],
+              [
+                0.06277849349065501,
+                0.7797907005637983,
+                0.06628845014159343
+              ],
+              [
+                0.05229279817327482,
+                0.7342420072966619,
+                -0.05250529778348319
+              ],
+              [
+                0.07355655781164067,
+                0.7456368627837083,
+                -0.013399180367050626
+              ],
+              [
+                -0.02043731461129937,
+                0.8293997814525971,
+                -0.026377839130342435
+              ],
+              [
+                0.025151529328103935,
+                0.6943615395910773,
+                -0.056200684479605544
+              ],
+              [
+                0.06635258754584787,
+                0.7706550903343629,
+                0.058125754148794145
+              ]
+            ],
+            "physics": {
+              "timings": {
+                "forces": 1.199999988079071,
+                "constraints": 3.399999976158142,
+                "detail": 0
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009990639121315592,
+              "maxOffset": 0.0009983483747668812,
+              "maxVelocity": 0.05643665846992024,
+              "tipSpeed": 0.032044799636777296,
+              "kineticEnergy": 4.5133499143613584e-8,
+              "steps": 3,
+              "time": 0.025,
+              "wind": 0.38,
+              "windEnabled": false,
+              "paused": false,
+              "active": true,
+              "cpuMS": 5.300000011920929,
+              "droppedSeconds": 0,
+              "revision": 4,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            },
+            "morphInfluences": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0.10390764355659483,
+              0.09967430077819149,
+              0,
+              0,
+              0.047797516036033626,
+              0.03787623429571277,
+              0,
+              0.23922319302215997
+            ],
+            "nativeRootTexture": 5,
+            "frame": [
+              0.9999917011431856,
+              0.00006350057426411754,
+              0.004073525798940811,
+              0,
+              0.000578363250159642,
+              0.9875388784858269,
+              -0.15737416870282814,
+              0,
+              -0.004032758449056058,
+              0.15737521865475648,
+              0.9875306463156772,
+              0,
+              -0.0005630470077169353,
+              0.7333063723711455,
+              0.0994677262769665,
+              1
+            ],
+            "idle": {
+              "version": "ET19-IDLE-R01",
+              "ready": true,
+              "status": "待机已连接 · 当前人物原生动作",
+              "playing": false,
+              "time": 4,
+              "settings": {
+                "enabled": true,
+                "profile": "listening",
+                "seed": 4197,
+                "intensity": 0.85,
+                "blink": true,
+                "gaze": true,
+                "mouth": true,
+                "head": true,
+                "breath": true,
+                "surface": true,
+                "surfaceGain": 0.75,
+                "wrinkleGain": 0.65
+              },
+              "weights": {
+                "blinkL": 0,
+                "blinkR": 0,
+                "gazeX": -0.10390764355659483,
+                "gazeY": 0.09967430077819149,
+                "headX": -0.047797516036033626,
+                "headY": 0.03787623429571277,
+                "jaw": 0,
+                "press": 0,
+                "smile": 0,
+                "brow": 0,
+                "breath": 0.23922319302215997,
+                "events": []
+              },
+              "basis": [
+                {
+                  "name": "blinkL",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.126528925391922,
+                  "affectedDisplayVertices": 102171
+                },
+                {
+                  "name": "blinkR",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.437897752471411,
+                  "affectedDisplayVertices": 99285
+                },
+                {
+                  "name": "jaw",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 7.791340167980522,
+                  "affectedDisplayVertices": 224899
+                },
+                {
+                  "name": "press",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 2.8189576274719186,
+                  "affectedDisplayVertices": 171099
+                },
+                {
+                  "name": "smile",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 4.700102058268202,
+                  "affectedDisplayVertices": 209809
+                },
+                {
+                  "name": "brow",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 1.1362997747971344,
+                  "affectedDisplayVertices": 58210
+                },
+                {
+                  "name": "gazeXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.9787079744744553,
+                  "affectedDisplayVertices": 58334
+                },
+                {
+                  "name": "gazeXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.978710249181178,
+                  "affectedDisplayVertices": 59360
+                },
+                {
+                  "name": "gazeYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4036143882504482,
+                  "affectedDisplayVertices": 60231
+                },
+                {
+                  "name": "gazeYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4035685178879638,
+                  "affectedDisplayVertices": 55815
+                },
+                {
+                  "name": "headXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869736511243,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869821600423,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938271520583577,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938243219416751,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "breath",
+                  "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+                  "supported": true,
+                  "maxMM": 1.5419263167176198,
+                  "affectedDisplayVertices": 262688
+                }
+              ],
+              "bakeMS": 17848.400000035763,
+              "cacheBytes": 95795280,
+              "frames": 5,
+              "meanSubmitMS": 702.1,
+              "singleMesh": true,
+              "canonicalStateChangedByPlayback": false,
+              "skin": {
+                "version": "IDLE-R01",
+                "compiled": 5,
+                "addedTextureBytes": 0,
+                "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+                "stressSolver": false
+              },
+              "errors": [],
+              "manualExpressionPriority": true,
+              "limitations": [
+                "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+                "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+                "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+                "all profile-specific eyelid contact quality remains inherited and needs visual review"
+              ]
+            }
+          },
+          {
+            "time": 6,
+            "rootPoints": [
+              [
+                -0.05202644879465303,
+                0.7286792570370881,
+                -0.051917971317219855
+              ],
+              [
+                0.02650326209660841,
+                0.8084266423070663,
+                0.08986852005900997
+              ],
+              [
+                0.07408697819760578,
+                0.7419467787274638,
+                0.0010393906663402398
+              ],
+              [
+                -0.010680309968045124,
+                0.8188072322501135,
+                0.0843539031855135
+              ],
+              [
+                -0.030736499233147387,
+                0.7415909852239506,
+                -0.07080324201042783
+              ],
+              [
+                0.0035355396433621967,
+                0.8318891046393802,
+                0.059499249693906554
+              ],
+              [
+                -0.04329249184098576,
+                0.826065906041185,
+                0.011465251618504944
+              ],
+              [
+                -0.011729525722236456,
+                0.7979954436759857,
+                0.10509546370274073
+              ],
+              [
+                0.008467277259179302,
+                0.8332972000240189,
+                0.052713130500019245
+              ],
+              [
+                0.007786592866447595,
+                0.8102764226289194,
+                0.09567682015360612
+              ],
+              [
+                0.06672861008473095,
+                0.7959106058703068,
+                0.02239613215546598
+              ],
+              [
+                -0.0622552479440831,
+                0.7979112842710568,
+                -0.023534437982968583
+              ],
+              [
+                -0.007507196767283537,
+                0.7792858827492205,
+                -0.07561817068781249
+              ],
+              [
+                0.01499732810211583,
+                0.8362126944385296,
+                0.030877652517412146
+              ],
+              [
+                0.066000254312924,
+                0.7731814035588553,
+                0.05827227608474153
+              ],
+              [
+                0.0046526731032446615,
+                0.8184809987776086,
+                0.08598185279830306
+              ],
+              [
+                0.05658407762198523,
+                0.8075306140175622,
+                -0.024141258531582065
+              ],
+              [
+                -0.04503910277483395,
+                0.7991199166889141,
+                -0.05012131842297808
+              ],
+              [
+                0.0317556763646531,
+                0.7928580182022661,
+                0.10059871029047775
+              ],
+              [
+                -0.060892136638597785,
+                0.8085160524465722,
+                0.016133642664953964
+              ],
+              [
+                0.03796935941486256,
+                0.8167348908856591,
+                0.06548099404177722
+              ],
+              [
+                -0.007557146055535081,
+                0.8364613568308817,
+                0.039024103014239864
+              ],
+              [
+                -0.0391983855665412,
+                0.8173846846364455,
+                -0.03417327010185213
+              ],
+              [
+                -0.047671666821731816,
+                0.8211571944397955,
+                -0.008650318732557071
+              ],
+              [
+                -0.020271615183298012,
+                0.8362763741371131,
+                0.011357894127183767
+              ],
+              [
+                -0.044827305628435496,
+                0.6995949939557193,
+                -0.045615435133588664
+              ],
+              [
+                0.06798809771538558,
+                0.7561241561538692,
+                0.04716609388398194
+              ],
+              [
+                -0.06745311526915865,
+                0.7506206644320356,
+                0.05074129329483504
+              ],
+              [
+                -0.06915171534377058,
+                0.7482796102866905,
+                0.038489317815036575
+              ],
+              [
+                0.016293901654640765,
+                0.7407269698005736,
+                -0.07617010823331336
+              ],
+              [
+                -0.03736714892254442,
+                0.7898799061872025,
+                0.0992573375484467
+              ],
+              [
+                0.022568572899626885,
+                0.8331838225377263,
+                0.036686517249232616
+              ],
+              [
+                -0.036310845240853755,
+                0.7604459389450018,
+                -0.06961045506852906
+              ],
+              [
+                -0.0478489103893593,
+                0.8205358206212151,
+                0.028251248465217784
+              ],
+              [
+                0.03403179171051256,
+                0.813955004333657,
+                0.07570264979618539
+              ],
+              [
+                -0.04631011298352169,
+                0.8211416680975501,
+                -0.013329855004558694
+              ],
+              [
+                -0.030324373256357003,
+                0.8179226346246758,
+                0.07364946947458091
+              ],
+              [
+                -0.03421556539340871,
+                0.791710101539596,
+                0.10052469315924396
+              ],
+              [
+                0.029403697815052376,
+                0.8331381506404532,
+                0.01324003734518588
+              ],
+              [
+                -0.0705436961619856,
+                0.7326509629226151,
+                -0.02303708916570233
+              ],
+              [
+                -0.019140227652522743,
+                0.83651030935948,
+                0.015359116660191739
+              ],
+              [
+                0.04519771549205079,
+                0.8247311456435112,
+                0.007781743026780336
+              ],
+              [
+                -0.030342260885155927,
+                0.8302088048031231,
+                0.036726654121316225
+              ],
+              [
+                -0.03351317802388876,
+                0.8045827827456545,
+                0.0900925873030465
+              ],
+              [
+                -0.015206066325689781,
+                0.8330100028826622,
+                -0.019919277099754447
+              ],
+              [
+                -0.013463213270799872,
+                0.8317007179697928,
+                -0.0246347561489614
+              ],
+              [
+                0.030343056728136624,
+                0.8325825166165597,
+                0.002565881621336529
+              ],
+              [
+                -0.02019328861186825,
+                0.7951930625154917,
+                0.10471995857349144
+              ],
+              [
+                0.06431556961618948,
+                0.7732590425167443,
+                0.06538973150533475
+              ],
+              [
+                0.036196911606694984,
+                0.8130631333058065,
+                -0.043974088882325485
+              ],
+              [
+                0.0695806853230852,
+                0.764608886885234,
+                0.038857028965899015
+              ],
+              [
+                0.030342209623801807,
+                0.7744173968878532,
+                -0.07082550107978383
+              ],
+              [
+                0.07386034097840134,
+                0.7647257078151929,
+                0.011036178788275982
+              ],
+              [
+                -0.07215307308816646,
+                0.7769269020584939,
+                -0.007132579221640541
+              ],
+              [
+                -0.00653058288187716,
+                0.838397146131162,
+                0.02370251646626744
+              ],
+              [
+                0.052512851168569546,
+                0.7260201021568655,
+                -0.04988984331678033
+              ],
+              [
+                0.020993904230262657,
+                0.678003307017197,
+                -0.04852915648609553
+              ],
+              [
+                0.03037546633096882,
+                0.6912434564324739,
+                -0.050887177313851444
+              ],
+              [
+                0.06277850904112721,
+                0.7797973264716976,
+                0.06624249792761722
+              ],
+              [
+                0.052292798285600704,
+                0.7342395892154728,
+                -0.05254813797953876
+              ],
+              [
+                0.07355655260281992,
+                0.7456370983869421,
+                -0.013442802466576559
+              ],
+              [
+                -0.02043708134626615,
+                0.8293994299140299,
+                -0.026427280148857604
+              ],
+              [
+                0.025151528900375135,
+                0.6943589341428285,
+                -0.0562408183628252
+              ],
+              [
+                0.06635258204951743,
+                0.7706603746524279,
+                0.058079860766096246
+              ]
+            ],
+            "physics": {
+              "timings": {
+                "forces": 1.100000023841858,
+                "constraints": 3.5,
+                "detail": 0
+              },
+              "detailModes": 128000,
+              "detailPeakMetres": 0,
+              "airModel": "advected spatial field, transverse drag and exposure approximation",
+              "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+              "style": "long",
+              "nominalLength": 0.43,
+              "guides": 192,
+              "nodes": 25,
+              "fixedStep": 0.008333333333333333,
+              "rootPinned": true,
+              "rootError": 0,
+              "maxRelativeStretch": 0.0009919493747354569,
+              "maxOffset": 0.0009565180020863369,
+              "maxVelocity": 0.030683027261143164,
+              "tipSpeed": 0.02723612796497805,
+              "kineticEnergy": 1.7171725046491933e-8,
+              "steps": 4,
+              "time": 0.03333333333333333,
+              "wind": 0.38,
+              "windEnabled": false,
+              "paused": false,
+              "active": true,
+              "cpuMS": 5.200000047683716,
+              "droppedSeconds": 0,
+              "revision": 5,
+              "rootSway": false,
+              "stiffness": 0.5,
+              "damping": 1.7
+            },
+            "morphInfluences": [
+              0,
+              0,
+              0,
+              0,
+              0.4803914336938595,
+              0,
+              0,
+              0.10390764355659483,
+              0.09967430077819149,
+              0,
+              0,
+              0.047797516036033626,
+              0.03787623429571277,
+              0,
+              0.2067941037677906
+            ],
+            "nativeRootTexture": 6,
+            "frame": [
+              0.9999916481053938,
+              -0.00004817747841517329,
+              0.00408673444071359,
+              0,
+              0.0006905688961937228,
+              0.9875450734900879,
+              -0.15733483701983117,
+              0,
+              -0.004028254467874496,
+              0.1573363451475462,
+              0.987536858887583,
+              0,
+              -0.000564623925143639,
+              0.7333359776529066,
+              0.09943134415206795,
+              1
+            ],
+            "idle": {
+              "version": "ET19-IDLE-R01",
+              "ready": true,
+              "status": "待机已连接 · 当前人物原生动作",
+              "playing": false,
+              "time": 6,
+              "settings": {
+                "enabled": true,
+                "profile": "listening",
+                "seed": 4197,
+                "intensity": 0.85,
+                "blink": true,
+                "gaze": true,
+                "mouth": true,
+                "head": true,
+                "breath": true,
+                "surface": true,
+                "surfaceGain": 0.75,
+                "wrinkleGain": 0.65
+              },
+              "weights": {
+                "blinkL": 0,
+                "blinkR": 0,
+                "gazeX": -0.10390764355659483,
+                "gazeY": 0.09967430077819149,
+                "headX": -0.047797516036033626,
+                "headY": 0.03787623429571277,
+                "jaw": 0,
+                "press": 0,
+                "smile": 0.4803914336938595,
+                "brow": 0,
+                "breath": 0.2067941037677906,
+                "events": [
+                  "嘴角轻抬"
+                ]
+              },
+              "basis": [
+                {
+                  "name": "blinkL",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.126528925391922,
+                  "affectedDisplayVertices": 102171
+                },
+                {
+                  "name": "blinkR",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 11.437897752471411,
+                  "affectedDisplayVertices": 99285
+                },
+                {
+                  "name": "jaw",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 7.791340167980522,
+                  "affectedDisplayVertices": 224899
+                },
+                {
+                  "name": "press",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 2.8189576274719186,
+                  "affectedDisplayVertices": 171099
+                },
+                {
+                  "name": "smile",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 4.700102058268202,
+                  "affectedDisplayVertices": 209809
+                },
+                {
+                  "name": "brow",
+                  "source": "native Anny facial actions",
+                  "supported": true,
+                  "maxMM": 1.1362997747971344,
+                  "affectedDisplayVertices": 58210
+                },
+                {
+                  "name": "gazeXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.9787079744744553,
+                  "affectedDisplayVertices": 58334
+                },
+                {
+                  "name": "gazeXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.978710249181178,
+                  "affectedDisplayVertices": 59360
+                },
+                {
+                  "name": "gazeYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4036143882504482,
+                  "affectedDisplayVertices": 60231
+                },
+                {
+                  "name": "gazeYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 1.4035685178879638,
+                  "affectedDisplayVertices": 55815
+                },
+                {
+                  "name": "headXP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869736511243,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headXN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 9.676869821600423,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYP",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938271520583577,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "headYN",
+                  "source": "native GNM axis-angle radians",
+                  "supported": true,
+                  "maxMM": 10.938243219416751,
+                  "affectedDisplayVertices": 257023
+                },
+                {
+                  "name": "breath",
+                  "source": "native fixed-length Anny spine rotations; postural breathing proxy",
+                  "supported": true,
+                  "maxMM": 1.5419263167176198,
+                  "affectedDisplayVertices": 262688
+                }
+              ],
+              "bakeMS": 17848.400000035763,
+              "cacheBytes": 95795280,
+              "frames": 6,
+              "meanSubmitMS": 585.7166666686535,
+              "singleMesh": true,
+              "canonicalStateChangedByPlayback": false,
+              "skin": {
+                "version": "IDLE-R01",
+                "compiled": 5,
+                "addedTextureBytes": 0,
+                "method": "composed roughness/clearcoat + filtered inherited pore bands + expression-linked meso contrast",
+                "stressSolver": false
+              },
+              "errors": [],
+              "manualExpressionPriority": true,
+              "limitations": [
+                "small-angle native-derived blendshape cache, not a new muscle/physics solver",
+                "breathing is a spine-pose proxy, no rib volume or respiratory simulation",
+                "only current shape-mode person; existing locomotion/crowd modes are not newly animated",
+                "all profile-specific eyelid contact quality remains inherited and needs visual review"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "reset-pins-to-current-native-pose",
+      "passed": true,
+      "data": {
+        "timings": {
+          "forces": 1.100000023841858,
+          "constraints": 3.5,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.007991361977379707,
+        "maxOffset": 0.0009326387771660016,
+        "maxVelocity": 0,
+        "tipSpeed": 0,
+        "kineticEnergy": 0,
+        "steps": 4,
+        "time": 0,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 5.200000047683716,
+        "droppedSeconds": 0,
+        "revision": 6,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "name": "native-character-P02-rebind",
+      "passed": true,
+      "data": {
+        "style": "long",
+        "character": "P02",
+        "strands": 64000,
+        "guides": 192,
+        "groomMS": 524.4000000357628,
+        "sameNativeMesh": true,
+        "binding": {
+          "source": "existing unified character platform ab499da18b1da1e256cd66e35ec1212183c58028",
+          "sameCharacterMesh": true,
+          "headTriangles": 10350,
+          "center": [
+            0,
+            0.00523203490506173,
+            -0.07608029080615727
+          ],
+          "radii": [
+            0.07656422441567662,
+            0.113,
+            0.1
+          ],
+          "geometryReplaced": false,
+          "rootMethod": "native scalp triangle hit and barycentric support",
+          "worldFrame": [
+            0.9999992319093955,
+            0.00029991665406811283,
+            0.0012025932893070027,
+            0,
+            -0.00010043461456349381,
+            0.9866987530771572,
+            -0.16255940633771795,
+            0,
+            -0.0012353515722542837,
+            0.1625591606953718,
+            0.9866980253251291,
+            0,
+            -0.0002372138015034539,
+            0.7319256735279747,
+            0.09911267014065543,
+            1
+          ]
+        },
+        "physics": {
+          "timings": {
+            "forces": 1.100000023841858,
+            "constraints": 3.399999976158142,
+            "detail": 0
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.00099439587717165,
+          "maxOffset": 0,
+          "maxVelocity": 0,
+          "tipSpeed": 0,
+          "kineticEnergy": 0,
+          "steps": 0,
+          "time": 0,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": false,
+          "cpuMS": 0,
+          "droppedSeconds": 0,
+          "revision": 1,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "errors": [],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      }
+    },
+    {
+      "name": "native-character-P01-rebind",
+      "passed": true,
+      "data": {
+        "style": "long",
+        "character": "P01",
+        "strands": 64000,
+        "guides": 192,
+        "groomMS": 468.0999999642372,
+        "sameNativeMesh": true,
+        "binding": {
+          "source": "existing unified character platform ab499da18b1da1e256cd66e35ec1212183c58028",
+          "sameCharacterMesh": true,
+          "headTriangles": 10273,
+          "center": [
+            0,
+            0.0065494176058485815,
+            -0.07524076705251775
+          ],
+          "radii": [
+            0.07458542769502001,
+            0.113,
+            0.1
+          ],
+          "geometryReplaced": false,
+          "rootMethod": "native scalp triangle hit and barycentric support",
+          "worldFrame": [
+            0.9999998757195382,
+            0.00006599871987886942,
+            0.0004941711012360805,
+            0,
+            0.000013887859521072539,
+            0.987126983843245,
+            -0.15993848059696292,
+            0,
+            -0.0004983653636444381,
+            0.15993846758271354,
+            0.9871268602460668,
+            0,
+            -0.0002508127872530158,
+            0.7335522572568656,
+            0.09897334553741749,
+            1
+          ]
+        },
+        "physics": {
+          "timings": {
+            "forces": 1,
+            "constraints": 3.800000011920929,
+            "detail": 0
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 192,
+          "nodes": 25,
+          "fixedStep": 0.008333333333333333,
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0009928413589668228,
+          "maxOffset": 0,
+          "maxVelocity": 0,
+          "tipSpeed": 0,
+          "kineticEnergy": 0,
+          "steps": 0,
+          "time": 0,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": false,
+          "cpuMS": 0,
+          "droppedSeconds": 0,
+          "revision": 1,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "errors": [],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      }
+    },
+    {
+      "name": "mobile-no-horizontal-overflow",
+      "passed": true,
+      "data": {}
+    },
+    {
+      "name": "no-script-shader-request-errors-and-sampler-budget",
+      "passed": true,
+      "data": {
+        "contextLost": false,
+        "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "fragmentSamplerLimit": 16,
+        "programs": [
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tColor",
+                "size": 1
+              },
+              {
+                "name": "tDepth",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 3
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tFull",
+                "size": 1
+              },
+              {
+                "name": "tDiffuse",
+                "size": 1
+              },
+              {
+                "name": "tBlur",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 16
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tFull",
+                "size": 1
+              },
+              {
+                "name": "tDiffuse",
+                "size": 1
+              },
+              {
+                "name": "tBlur",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "morphTargetsTexture",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 17
+          },
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 2
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "morphTargetsTexture",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "nativePositionMap",
+                "size": 1
+              },
+              {
+                "name": "guideMap",
+                "size": 1
+              },
+              {
+                "name": "frameMap",
+                "size": 1
+              },
+              {
+                "name": "detailMap",
+                "size": 1
+              },
+              {
+                "name": "headRadiusMap",
+                "size": 1
+              },
+              {
+                "name": "bodyProfileMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 8
+          }
+        ],
+        "skin": {
+          "version": "SKIN-DNA-R02.1+R06",
+          "recipe": {
+            "schema": "kaopu.skin-dna/2",
+            "preset": "silk",
+            "enabled": true,
+            "quality": "fast",
+            "profile": {
+              "seed": 41731,
+              "melanin": 0.22,
+              "blood": 0.24,
+              "variation": 0.48,
+              "freckles": 0.035,
+              "sun": 0.12,
+              "age": 0.2,
+              "oil": 0.27,
+              "hydration": 0.55,
+              "pores": 0.65,
+              "poreScale": 1,
+              "detail": 0.55
+            },
+            "state": {
+              "flush": 0,
+              "sweat": 0,
+              "dryness": 0
+            }
+          },
+          "material": {
+            "version": "SKIN-DNA-MATERIAL-R02",
+            "compiles": 4,
+            "sourceGeometryChanged": false,
+            "wholeBodyIdentity": true,
+            "measuredOptics": false,
+            "chromophores": "Official BioSkin spectral decoder offline LUT; fixed 2D slice, not medical concentrations",
+            "bioSkinSource": "6cca1a76ac3f53077579c4249983ec91d855801d",
+            "lutBytes": 8976,
+            "sharedFloatTable": true,
+            "extraFragmentSamplers": 0,
+            "addedWrinkleGeometry": false,
+            "noiseCreaseLayer": false,
+            "randomPigmentIslands": false,
+            "pores": "seeded subset and dimensions of retained area-sampled surface candidates",
+            "poreColourDots": false,
+            "specularIndependentOfMelanin": true,
+            "fragmentBytes": 62822,
+            "uniforms": [
+              "uSDOn",
+              "uSDMel",
+              "uSDBlood",
+              "uSDVariation",
+              "uSDFreckles",
+              "uSDSun",
+              "uSDAge",
+              "uSDOil",
+              "uSDHydration",
+              "uSDPores",
+              "uSDPoreScale",
+              "uSDDetail",
+              "uSDFlush",
+              "uSDSweat",
+              "uSDDry",
+              "uSDView",
+              "uSDSeed",
+              "uSDOffset",
+              "uSDBioRow"
+            ]
+          },
+          "eyePacking": {
+            "version": "EYE-COLOR-SAMPLER-PACK-2",
+            "sources": 3,
+            "layers": 3,
+            "width": 1024,
+            "height": 1024,
+            "colorSpace": "sRGB",
+            "vesselDataSeparate": true,
+            "sourceResized": false,
+            "geometryChanged": false,
+            "baseBytes": 12582912,
+            "savedFragmentSamplers": 2,
+            "allPixelsCopied": true,
+            "transparentTexelRGBPreserved": true,
+            "sourceSHA256": [
+              "6cf688756e0867bcae6ce911b8a6a68e0fad0113998087506e41ca6cc642ba70",
+              "ea78bf4b3bae42e463d6f809d7d02321ad768da5e8d16fba034d6067e9fb653e",
+              "04112d02ad7df944a083cc8964efd318f9a3a285853878b8b1ce6e30bf933207"
+            ],
+            "decodedRGBASHA256": [
+              "72e92b530fb910976e22d02ebf0e6630e2ff75bdde757bf588b2b0f92f8b8d06",
+              "86f67a61679bf3438de0cc152cca4b3553cba41daceac6810e99d62796c552fd",
+              "c9dc71bd634accc720846e0389fb4fbff73a6a129c339771f3b5fcbb07b2adc5"
+            ]
+          },
+          "sourceGeometryChanged": false
+        },
+        "dermal": {
+          "version": "DERMAL-OPTICS-R01",
+          "preset": "luminous",
+          "scatter": 0.72,
+          "veins": 0.25,
+          "micro": 1.18,
+          "diffusion": true,
+          "surfacePores": "retained surface candidates plus original cellular microrelief, bounded micrometre relief and pixel-footprint filtering",
+          "vessels": "soft procedural intradermal colour absorption on temples and upper cheeks; stable rest-space curves",
+          "scattering": "RGB angular approximation plus retained diffuse-only face diffusion; no volume path tracing",
+          "extraTextureSamplers": 0,
+          "medicalMeasurement": false
+        },
+        "meshCount": 1,
+        "samplerStages": {
+          "vertexLimit": 16,
+          "fragmentLimit": 16,
+          "combinedLimit": 32,
+          "programs": [
+            {
+              "vertex": 0,
+              "fragment": 0,
+              "combined": 0
+            },
+            {
+              "vertex": 1,
+              "fragment": 12,
+              "combined": 13
+            },
+            {
+              "vertex": 1,
+              "fragment": 12,
+              "combined": 13
+            },
+            {
+              "vertex": 1,
+              "fragment": 12,
+              "combined": 13
+            },
+            {
+              "vertex": 0,
+              "fragment": 3,
+              "combined": 3
+            },
+            {
+              "vertex": 0,
+              "fragment": 4,
+              "combined": 4
+            },
+            {
+              "vertex": 0,
+              "fragment": 0,
+              "combined": 0
+            },
+            {
+              "vertex": 1,
+              "fragment": 15,
+              "combined": 16
+            },
+            {
+              "vertex": 0,
+              "fragment": 4,
+              "combined": 4
+            },
+            {
+              "vertex": 2,
+              "fragment": 15,
+              "combined": 17
+            },
+            {
+              "vertex": 0,
+              "fragment": 0,
+              "combined": 0
+            },
+            {
+              "vertex": 0,
+              "fragment": 2,
+              "combined": 2
+            },
+            {
+              "vertex": 1,
+              "fragment": 0,
+              "combined": 1
+            },
+            {
+              "vertex": 0,
+              "fragment": 0,
+              "combined": 0
+            },
+            {
+              "vertex": 6,
+              "fragment": 2,
+              "combined": 8
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "failedRequests": [],
+  "desktopMouseControlled": false,
+  "finishedAt": "2026-10-15T05:27:05.725Z"
+}

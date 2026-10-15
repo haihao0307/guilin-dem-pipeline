@@ -1,0 +1,35 @@
+import * as THREE from '../references/three.module.js';
+import {TeacherSkinBVH} from './SurfaceBVH.mjs';
+export const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],sub=(a,b)=>a.map((v,k)=>v-b[k]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);};
+export function matrixPoint(F,p){const e=F.elements;return[e[0]*p[0]+e[4]*p[1]+e[8]*p[2]+e[12],e[1]*p[0]+e[5]*p[1]+e[9]*p[2]+e[13],e[2]*p[0]+e[6]*p[1]+e[10]*p[2]+e[14]];}
+export class NativeHeadBinding{
+ constructor(model,viewer){this.model=model;this.viewer=viewer;const g=model.gnm;this.map=new Int32Array(g.numVertices).fill(-1);model.canonical.gnmRecipes.forEach(([a,b,t],i)=>{if(a===b&&t===0)this.map[a]=model.bodyCount+i;});this.frame=new THREE.Matrix4();this.inverse=new THREE.Matrix4();this.updateFrame();
+  const raw=viewer.geometry.attributes.position.array,p=new Float32Array(g.numVertices*3),points=[];for(let i=0;i<g.numVertices;i++){if(this.map[i]<0)continue;const j=this.map[i]*3,q=matrixPoint(this.inverse,[raw[j],raw[j+1],raw[j+2]]);p.set(q,i*3);if(g.componentId[i]===0)points.push(q);}
+  const top=Math.max(...points.map(q=>q[1])),back=Math.min(...points.filter(q=>q[1]>-.025).map(q=>q[2])),sides=points.filter(q=>q[1]>.025&&q[1]<.075&&q[2]<-.015),rx=Math.max(...sides.map(q=>Math.abs(q[0])));
+  this.center=[0,top-.113,back+.100];this.radii=[Math.min(.090,Math.max(.07,rx)),.113,.100];this.top=top;
+  const used=new Set(Array.from(model.faces).filter(i=>i<model.bodyCount)),body=[];
+  for(const i of used){const j=i*3;body.push(matrixPoint(this.inverse,[raw[j],raw[j+1],raw[j+2]]));}
+  const dataBody=new Float32Array(64*4),yTop=-.10,yBottom=-.65;this.bodyRange=[yTop,yBottom];
+  for(let n=0;n<64;n++){const y=yTop+(yBottom-yTop)*n/63;let slice=body.filter(q=>Math.abs(q[1]-y)<.012&&Math.abs(q[0])<.255);if(slice.length<8)slice=body.filter(q=>Math.abs(q[1]-y)<.03&&Math.abs(q[0])<.255);if(slice.length){const front=Math.max(...slice.map(q=>q[2])),back=Math.min(...slice.map(q=>q[2])),rx=Math.max(...slice.map(q=>Math.abs(q[0])));dataBody.set([Math.max(.035,rx)+.004,(front+back)*.5,Math.max(.035,(front-back)*.5)+.006,1],n*4);}else dataBody.set([.08,-.14,.08,1],n*4);}
+  this.bodyProfile=dataBody;this.bodyTexture=new THREE.DataTexture(dataBody,64,1,THREE.RGBAFormat,THREE.FloatType);this.bodyTexture.minFilter=this.bodyTexture.magFilter=THREE.LinearFilter;this.bodyTexture.needsUpdate=true;
+  const allowed=new Set();for(let t=0;t<g.triangles.length/3;t++){const ids=g.triangles.subarray(t*3,t*3+3);if([...ids].some(i=>g.componentId[i]!==0||this.map[i]<0))continue;const y=ids.reduce((v,i)=>v+p[i*3+1],0)/3,z=ids.reduce((v,i)=>v+p[i*3+2],0)/3;if(y>-.085&&(z<-.015||y>.028))allowed.add(t);}
+  this.bvh=new TeacherSkinBVH(g,p,allowed);this.bindings=[];
+  const collisionBVH=new TeacherSkinBVH(g,p);
+  const W=128,H=64,data=new Float32Array(W*H*4),c=this.center,r=this.radii;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const theta=(y+.5)/H*Math.PI,phi=((x+.5)/W-.5)*Math.PI*2,d=[Math.sin(theta)*Math.sin(phi),Math.cos(theta),Math.sin(theta)*Math.cos(phi)],end=d.map((v,k)=>c[k]+v*.35),hit=collisionBVH.segmentHit(c,end),fallback=1/Math.sqrt(d.reduce((a,v,k)=>a+(v/r[k])**2,0));data[(y*W+x)*4]=hit?Math.hypot(...sub(hit.point,c)):fallback*.90;}
+  this.radiusMax=Math.max(...Array.from(data).filter((_,i)=>i%4===0));this.radiusData=data;this.radiusWidth=W;this.radiusHeight=H;
+  this.radiusTexture=new THREE.DataTexture(data,W,H,THREE.RGBAFormat,THREE.FloatType);this.radiusTexture.minFilter=this.radiusTexture.magFilter=THREE.LinearFilter;this.radiusTexture.wrapS=THREE.RepeatWrapping;this.radiusTexture.needsUpdate=true;this.sourcePositions=p;this.headTriangles=allowed.size;
+  this.nativeWidth=256;this.nativeData=new Float32Array(256*Math.ceil(g.numVertices/256)*4);this.nativeIndices=[...new Set([...allowed].flatMap(t=>[...g.triangles.subarray(t*3,t*3+3)]))];this.nativeTexture=new THREE.DataTexture(this.nativeData,256,Math.ceil(g.numVertices/256),THREE.RGBAFormat,THREE.FloatType);this.nativeTexture.needsUpdate=true;this.refreshNative();
+ }
+ vertex(i){const v=new THREE.Vector3();this.viewer.mesh.getVertexPosition(this.map[i],v);return v.toArray();}
+ landmark(i){const g=this.model.gnm,p=[0,0,0];for(let k=0;k<3;k++){const q=this.vertex(g.landmarkIndices[i*3+k]),w=g.landmarkWeights[i*3+k];for(let n=0;n<3;n++)p[n]+=q[n]*w;}return p;}
+ refreshNative(){if(!this.nativeData)return;const mesh=this.viewer.mesh,key=this.viewer.geometry.uuid+'/'+this.viewer.geometry.attributes.position.version+'/'+(mesh.morphTargetInfluences||[]).join(',');if(key===this.nativeKey)return;this.nativeKey=key;const v=new THREE.Vector3();for(const i of this.nativeIndices){mesh.getVertexPosition(this.map[i],v);v.applyMatrix4(mesh.matrixWorld);this.nativeData.set([v.x,v.y,v.z,1],i*4);}this.nativeTexture.needsUpdate=true;}
+ rootWorld(r){const ids=this.model.gnm.triangles.subarray(r.t*3,r.t*3+3),v=[...ids].map(i=>[...this.nativeData.subarray(i*4,i*4+3)]),p=[0,0,0];for(let k=0;k<3;k++)for(let c=0;c<3;c++)p[c]+=v[k][c]*r.b[k];let n=unit(cross(sub(v[1],v[0]),sub(v[2],v[0])));const center=matrixPoint(this.frame,this.center);if(dot(n,sub(p,center))<0)n=n.map(x=>-x);return p.map((x,k)=>x+n[k]*.00035);}
+ updateFrame(){const l=this.landmark(36),r=this.landmark(45),origin=l.map((v,k)=>(v+r[k])*.5),x=unit(sub(r,l)),up=sub(origin,this.landmark(8)),y=unit(up.map((v,k)=>v-x[k]*dot(up,x))),z=unit(cross(x,y));this.frame.makeBasis(new THREE.Vector3(...x),new THREE.Vector3(...y),new THREE.Vector3(...z));this.frame.setPosition(...origin);this.frame.premultiply(this.viewer.mesh.matrixWorld);this.inverse.copy(this.frame).invert();this.refreshNative();return this.frame;}
+ sample(theta,phi){const c=this.center,r=this.radii,d=[r[0]*Math.sin(theta)*Math.sin(phi),r[1]*Math.cos(theta),r[2]*Math.sin(theta)*Math.cos(phi)],end=d.map((v,k)=>c[k]+v*4),hit=this.bvh.segmentHit(c,end);if(!hit)return null;const q=this.bvh.nearest(hit.point),n=dot(q.n,sub(q.p,c))<0?q.n.map(v=>-v):q.n;return{p:q.p.map((v,k)=>v+n[k]*.00035),n,t:q.t,b:q.b,theta,phi};}
+ bodyAt(y){const t=Math.max(0,Math.min(63,(y-this.bodyRange[0])/(this.bodyRange[1]-this.bodyRange[0])*63)),a=Math.floor(t),b=Math.min(63,a+1),w=t-a;return[0,1,2].map(k=>this.bodyProfile[a*4+k]*(1-w)+this.bodyProfile[b*4+k]*w);}
+ radiusAt(d){return this.radiusXYZ(d[0],d[1],d[2]);}
+ radiusXYZ(dx,dy,dz){const len=Math.hypot(dx,dy,dz),u=Math.atan2(dx,dz)/(2*Math.PI)+.5,v=Math.acos(Math.max(-1,Math.min(1,dy/len)))/Math.PI,x=u*128-.5,y=Math.max(0,Math.min(63,v*64-.5)),ix=Math.floor(x),iy=Math.floor(y),tx=x-ix,ty=y-iy,x0=(ix+128)%128,x1=(ix+129)%128,y1=Math.min(63,iy+1),d=this.radiusData;return(d[(iy*128+x0)*4]*(1-tx)+d[(iy*128+x1)*4]*tx)*(1-ty)+(d[(y1*128+x0)*4]*(1-tx)+d[(y1*128+x1)*4]*tx)*ty;}
+
+ report(){return{source:'existing unified character platform ab499da18b1da1e256cd66e35ec1212183c58028',sameCharacterMesh:true,headTriangles:this.headTriangles,center:this.center,radii:this.radii,geometryReplaced:false,rootMethod:'native scalp triangle hit and barycentric support',worldFrame:this.frame.toArray()};}
+}
