@@ -1,0 +1,57 @@
+{
+  "schema": "kaopu/hair-bundle-frame-twist-continuity-fixture@1",
+  "subject": {
+    "pr": 297,
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/pull/297",
+    "delivery": "HAIR-VOLUME-F10",
+    "headSha": "ff4469716176da63cfcbf8be93d588e266af3d83",
+    "sourceCommit": "5f6f35f5de78a017b4d83d1ba362c6f56fd7c17d",
+    "immutablePreviewCommit": "e208ebe2647098e7bf6f2f16b39aa527e60b50a9",
+    "payloadCommit": "ce52c254af53bc87f3258831d0958c5708611c8b",
+    "volumeClumps": 43,
+    "sectionsPerClump": 65,
+    "activeRoots": 3067,
+    "guideCount": 192,
+    "minimumObservedThicknessMM": 1.969,
+    "nativeRebindErrorM": 2.22e-16
+  },
+  "observedGate": {
+    "claim": "cross-section frames bend and twist continuously without axis flips",
+    "predicate": "for every consecutive section dot(widthAxis[i], widthAxis[i-1]) > 0 and max(abs(twistRadians)) > 0.05",
+    "consumerChecks": [
+      "tangent, width and thickness axes are unit length",
+      "axes are pairwise orthogonal",
+      "mid-section halfWidth and halfThickness are nonzero",
+      "source-area and quantity conservation"
+    ],
+    "negativeControls": [
+      "flatten one section",
+      "make section axes non-perpendicular"
+    ],
+    "missingEvidence": [
+      "arc-length-normalized signed twist increment",
+      "task-frozen twist-rate budget",
+      "65-to-129-section convergence",
+      "reversal symmetry check",
+      "high-frequency sawtooth positive control"
+    ]
+  },
+  "currentEvidence": {
+    "framesValid": true,
+    "centers": null,
+    "twistAnglesDeg": null,
+    "twistRateBudgetDegPerMM": null,
+    "positiveControlSawtoothRejected": null,
+    "refinementErrorDeg": null,
+    "refinementToleranceDeg": null,
+    "reversalErrorDeg": null,
+    "reversalToleranceDeg": null
+  },
+  "expectedState": "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+  "excludedClaims": [
+    "F10 contains a visible axis flip or sawtooth artifact.",
+    "The existing width, thickness, orthonormality, conservation or native-rebind evidence is invalid.",
+    "One global twist-rate threshold is valid for every hairstyle, clump radius or scale.",
+    "Current user hairstyle or shape acceptance has been obtained."
+  ]
+}
