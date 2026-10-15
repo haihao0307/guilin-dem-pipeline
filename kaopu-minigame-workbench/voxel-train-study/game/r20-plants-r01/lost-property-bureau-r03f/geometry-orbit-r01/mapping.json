@@ -1,0 +1,241 @@
+{
+  "schema": "bureau-analytic-geometry-map/1",
+  "status": "interactive spatial inspection candidate, not artistic acceptance",
+  "sourceHashes": {
+    "domain.mjs": "99b33f62cfc12379d1e408519254c38b3b74c5954effeb53d0a8ed0606fa98c8",
+    "interiors.mjs": "59704d6761ad6662d70710cfeab3d7cc62ce22b38060bff66b1d0659ecf8c6b0",
+    "public-counter.mjs": "11efda423463266f60bf5f1973403af18b2ce508e26a2f98638351286a9185f7",
+    "windows.mjs": "35c6c9b0702132dbd180c359924ddcbcdd4dcc88838ea8bb0b536f29f1f6cdac",
+    "inventory.mjs": "fe226b95eb3498dbf8fe6c0c0e13ad82a8413b96fbf8993d59da9d09d4ca7d84"
+  },
+  "originalSdf": "../",
+  "snapshot": "../snapshots/189f58a2/",
+  "counts": {
+    "revision": "geometry-orbit-r01",
+    "source": {
+      "domain.mjs": "99b33f62cfc12379d1e408519254c38b3b74c5954effeb53d0a8ed0606fa98c8",
+      "interiors.mjs": "59704d6761ad6662d70710cfeab3d7cc62ce22b38060bff66b1d0659ecf8c6b0",
+      "public-counter.mjs": "11efda423463266f60bf5f1973403af18b2ce508e26a2f98638351286a9185f7",
+      "windows.mjs": "35c6c9b0702132dbd180c359924ddcbcdd4dcc88838ea8bb0b536f29f1f6cdac",
+      "inventory.mjs": "fe226b95eb3498dbf8fe6c0c0e13ad82a8413b96fbf8993d59da9d09d4ca7d84"
+    },
+    "parameterVersion": "bureau-r03e-arcaded-tower-01",
+    "units": "metres",
+    "building": [
+      92,
+      80
+    ],
+    "warehouse": {
+      "min": [
+        -28,
+        -28
+      ],
+      "max": [
+        44,
+        34.5
+      ],
+      "size": [
+        72,
+        62.5
+      ],
+      "area": 4500
+    },
+    "primitiveCount": 6775,
+    "counts": {
+      "site": 3,
+      "arcades": 638,
+      "recessed-facades": 791,
+      "tower-shell": 424,
+      "tower-floors-stairs": 82,
+      "partitions": 3,
+      "public-floors": 2,
+      "public-stairs": 33,
+      "roofs": 276,
+      "warehouse-racks": 3376,
+      "warehouse-trusses": 196,
+      "hall-counter": 27,
+      "hall-benches": 30,
+      "offices": 367,
+      "interior-finishes": 131,
+      "pendants": 50,
+      "boiler-house": 6,
+      "chimney": 7,
+      "rail-yard": 303,
+      "authored-inventory": 30
+    },
+    "layers": {
+      "structure": 6491,
+      "upper-floors": 7,
+      "roofs": 277
+    },
+    "meshes": 17,
+    "triangles": 200628,
+    "bounds": {
+      "min": [
+        -81,
+        -0.6800000071525574,
+        -57
+      ],
+      "max": [
+        91,
+        31.077499389648438,
+        71
+      ]
+    },
+    "rackRows": 32,
+    "rackBays": 640,
+    "regularAddresses": 4800,
+    "smallAddresses": 17280,
+    "artisticAcceptance": false,
+    "conversion": "analytic geometry; no image impostors; material approximation; original SDF retained"
+  },
+  "components": [
+    {
+      "category": "site",
+      "source": "domain.mjs: architecture/outsideField",
+      "parameters": "92×80 m; base centre [4,-.24,0], half [46,.24,40]",
+      "conversion": "same dimensions",
+      "generatedGeometryPieces": 3
+    },
+    {
+      "category": "arcades",
+      "source": "domain.mjs: arcade/upperLoggia",
+      "parameters": "west x=-42.6, south z=-40.5; pitch 5.5 m; arch r2.14 spring2.75; upper r1.92 spring2.55",
+      "conversion": "actual open arch polygons/extrusions; stone arch bands; railings; tower interruption; corner ends tessellated",
+      "generatedGeometryPieces": 638
+    },
+    {
+      "category": "recessed-facades",
+      "source": "domain.mjs: architecture; windows.mjs",
+      "parameters": "west x=-38.7; south z=-36.6; 5.5 m window rhythm; east x49.75 and rear z39.75",
+      "conversion": "actual arch holes, sash rings, mullions, fan bars and transparent glass; entrance/tower upper void cut",
+      "generatedGeometryPieces": 791
+    },
+    {
+      "category": "tower-shell",
+      "source": "domain.mjs: taperedTower/towerHalf",
+      "parameters": "4 storeys; halfwidth transitions [7.1,8.2] → [6.35,7.1] → [5.05,5.4] → [3.8,3.8]; y7.2–8.4/12.3–13.7/18.2–19.4",
+      "conversion": "same smoothstep taper sampled every .248 m; four actual shell faces with entry, hall arches, upper bridge and 36 arched windows; corner chamfers and courses",
+      "generatedGeometryPieces": 424
+    },
+    {
+      "category": "tower-floors-stairs",
+      "source": "domain.mjs: taperedTower",
+      "parameters": "floors y6.5/12.3/18.2; central opening 3.9×6.2; 2 flights ×32 treads; 8 approach treads",
+      "conversion": "actual slab holes, tread elevations, dogleg stair and half landings; basic handrails",
+      "generatedGeometryPieces": 82
+    },
+    {
+      "category": "partitions",
+      "source": "domain.mjs: architecture",
+      "parameters": "warehouse wall x=-28.3; south z=-28.3; receiving z34.8; actual portals at z-20/0/20 and x-16/4/24",
+      "conversion": "same partition and rectangular portal relations",
+      "generatedGeometryPieces": 3
+    },
+    {
+      "category": "public-floors",
+      "source": "domain.mjs: architecture",
+      "parameters": "west upper y5.32 with tower void and 3.2×11 stair void; south upper floor",
+      "conversion": "same slab extents and openings; toggleable without deleting model",
+      "generatedGeometryPieces": 2
+    },
+    {
+      "category": "public-stairs",
+      "source": "domain.mjs: architecture",
+      "parameters": "30 treads at x-33, z25+(i+.5)×.32; rise .18; landing y5.36",
+      "conversion": "actual open stair treads, landing and rails",
+      "generatedGeometryPieces": 33
+    },
+    {
+      "category": "roofs",
+      "source": "domain.mjs: architecture/publicGable",
+      "parameters": "3 warehouse ridges at z3.25+n×20.833333; y12.9-.25|dz|; skylights 61.8×3.84; west/south L hip roofs and gabled dormers",
+      "conversion": "warehouse slopes have real skylight apertures; L/dormer max-envelope sampled ≤.38 m; tower roof and boiler roof retained; roof plates rendered thin double-sided, no SDF microthickness",
+      "generatedGeometryPieces": 276
+    },
+    {
+      "category": "warehouse-racks",
+      "source": "domain.mjs: rackField; inventory.mjs: RACK_LAYOUT",
+      "parameters": "2 banks startx-25/12; 16 rows each, pitch3.5; 20 bays pitch1.2; 6 levels pitch1.15; last6 rows small dividers and12 half-shelves",
+      "conversion": "all32 rows/640 bays; 2560 posts,480 dividers,192 full shelves,144 half-shelves; continuous shelves represented once per row, not once per bay",
+      "generatedGeometryPieces": 3376
+    },
+    {
+      "category": "warehouse-trusses",
+      "source": "interiors.mjs: warehouseStructure",
+      "parameters": "columns x-28.42/44.32; 7 z axes; 12 truss panels each",
+      "conversion": "actual 14 columns, ties, upper chords and cross diagonals",
+      "generatedGeometryPieces": 196
+    },
+    {
+      "category": "hall-counter",
+      "source": "interiors.mjs; public-counter.mjs",
+      "parameters": "25.1 m continuous counter at x-32.5; 8 positions z=-6+3.2i; high1.30 low.84",
+      "conversion": "body, plinth, continuous top and eight writing stations retained; rounded edges and detailed joinery approximated",
+      "generatedGeometryPieces": 27
+    },
+    {
+      "category": "hall-benches",
+      "source": "interiors.mjs",
+      "parameters": "five authored bench positions",
+      "conversion": "seat, back and separate legs retained",
+      "generatedGeometryPieces": 30
+    },
+    {
+      "category": "offices",
+      "source": "interiors.mjs",
+      "parameters": "9 south office desks on each of two storeys; 9 west upper office desks",
+      "conversion": "all27 desk/chair/cabinet groups; partition screens; small telephone/paper/accessory geometry not reproduced",
+      "generatedGeometryPieces": 367
+    },
+    {
+      "category": "interior-finishes",
+      "source": "interiors.mjs",
+      "parameters": "hall extent[-38.35,-28.55]×[-39.4,39.4]; wainscot1.3",
+      "conversion": "floor and wainscot retained with portal gaps; checker inlay/procedural ageing not converted",
+      "generatedGeometryPieces": 131
+    },
+    {
+      "category": "pendants",
+      "source": "interiors.mjs",
+      "parameters": "hall7 and warehouse18 original positions",
+      "conversion": "basic lamp shades and suspension; remaining office lamp accessories not converted",
+      "generatedGeometryPieces": 50
+    },
+    {
+      "category": "boiler-house",
+      "source": "domain.mjs: machineField",
+      "parameters": "[58,3.2,48] half[6,3.2,9]; boiler centre[57,2.2,49]",
+      "conversion": "actual hollow house/door/roof and boiler cylinder",
+      "generatedGeometryPieces": 6
+    },
+    {
+      "category": "chimney",
+      "source": "domain.mjs: taperedChimney",
+      "parameters": "31 m; shaft2.45→1.18 radius; plinth3/cap1.39",
+      "conversion": "full silhouette/courses; top dark inset, inner chimney bore not meshed",
+      "generatedGeometryPieces": 7
+    },
+    {
+      "category": "rail-yard",
+      "source": "domain.mjs: outsideField",
+      "parameters": "2 tracks z46/51, x-80..40; 3 wagons",
+      "conversion": "rails, sleepers, wagons and wheels retained",
+      "generatedGeometryPieces": 303
+    },
+    {
+      "category": "authored-inventory",
+      "source": "inventory.mjs: createInventory/itemPosition/itemRenderDimensions",
+      "parameters": "24 authored items, original current positions and dimensions",
+      "conversion": "basic physical extents and baggage handles; no new fictitious cargo; original mechanical bag surface remains in SDF",
+      "generatedGeometryPieces": 30
+    }
+  ],
+  "notEquivalent": [
+    "Primitive counts are implementation counts, not a claim of a one-to-one 16000 part conversion. No verified 16000-part source ledger was found.",
+    "SDF procedural brick/wood/plaster/weathering, small text/joinery/accessories and material microdisplacement are retained only in original version.",
+    "Conveyor routing, mechanical transfer animation and custody simulation are not active in this spatial inspection page.",
+    "Roof thickness and curve tessellation differ. This page is for continuous spatial review, not visual approval."
+  ],
+  "interaction": "actual merged BufferGeometry, OrbitControls, requestAnimationFrame rendering, no photographs or rendered image impostors"
+}
