@@ -1,0 +1,1218 @@
+// Exact function closure, heritage B / Naga 27.0.3. See provenance/material-sources.json
+struct KpSurface {
+    float height;
+    vec3 albedo;
+    float roughness;
+};
+
+struct KpPlasterParams {
+    vec2 centerM;
+    vec2 halfM;
+    float thicknessM;
+    float reliefM;
+    float geometryMicroM;
+    float minThicknessM;
+    float maxThicknessM;
+    float microM;
+    vec3 paletteDark;
+    vec3 paletteLight;
+    float grainWavelengthM;
+    float grainHeightM;
+    float grainColor;
+};
+
+struct KpPlasterField {
+    float macroTone;
+    float micro;
+    float thicknessM;
+    KpSurface surface;
+};
+
+const float KP_BRICK_PI = 3.1415927;
+
+const float KP_BRICK_SCALE = 0.115384616;
+
+const float KP_WOOD_PI = 3.1415927;
+
+const float KP_WOOD_TAU = 6.2831855;
+
+const float KP_STONE_SCALE_M = 0.12352941;
+
+const float KP_STONE_COLOR_SEED = 8632.0;
+
+const float KP_STONE_PORE_SEED = 8538.0;
+
+const float KP_STONE_WEATHER_SEED = 8832.0;
+
+const float BENCH_WOOD_SCALE = 4.0;
+
+const float BENCH_WOOD_CONTRAST = 0.36;
+
+const float RAIL_CROWN = 0.086;
+
+float br_h11_(float p_1) {
+    return fract((sin(((p_1 * 127.1) + 311.7)) * 43758.547));
+}
+
+float br_hash31_(vec3 pIn) {
+    vec3 p_2 = vec3(0.0);
+    p_2 = fract((pIn * 0.1031));
+    vec3 _e5 = p_2;
+    vec3 _e6 = p_2;
+    vec3 _e13 = p_2;
+    p_2 = (_e13 + vec3(dot(_e5, (_e6.yzx + vec3(33.33)))));
+    float _e16 = p_2.x;
+    float _e18 = p_2.y;
+    float _e21 = p_2.z;
+    return fract(((_e16 + _e18) * _e21));
+}
+
+float br_noise3_(vec3 p_3) {
+    vec3 f = vec3(0.0);
+    vec3 i_6 = floor(p_3);
+    f = fract(p_3);
+    vec3 _e4 = f;
+    vec3 _e5 = f;
+    vec3 _e9 = f;
+    f = ((_e4 * _e5) * (vec3(3.0) - (2.0 * _e9)));
+    float _e14 = br_hash31_(i_6);
+    float _e20 = br_hash31_((i_6 + vec3(1.0, 0.0, 0.0)));
+    float _e22 = f.x;
+    float _e29 = br_hash31_((i_6 + vec3(0.0, 1.0, 0.0)));
+    float _e35 = br_hash31_((i_6 + vec3(1.0, 1.0, 0.0)));
+    float _e37 = f.x;
+    float _e40 = f.y;
+    float _e47 = br_hash31_((i_6 + vec3(0.0, 0.0, 1.0)));
+    float _e53 = br_hash31_((i_6 + vec3(1.0, 0.0, 1.0)));
+    float _e55 = f.x;
+    float _e62 = br_hash31_((i_6 + vec3(0.0, 1.0, 1.0)));
+    float _e68 = br_hash31_((i_6 + vec3(1.0, 1.0, 1.0)));
+    float _e70 = f.x;
+    float _e73 = f.y;
+    float _e76 = f.z;
+    return mix(mix(mix(_e14, _e20, _e22), mix(_e29, _e35, _e37), _e40), mix(mix(_e47, _e53, _e55), mix(_e62, _e68, _e70), _e73), _e76);
+}
+
+float br_fbm(vec3 pIn_1) {
+    vec3 p_4 = vec3(0.0);
+    float s = 0.0;
+    float a = 0.5;
+    int i = 0;
+    p_4 = pIn_1;
+    bool loop_init = true;
+    while(true) {
+        if (!loop_init) {
+            int _e29 = i;
+            i = (_e29 + 1);
+        }
+        loop_init = false;
+        int _e8 = i;
+        if ((_e8 < 5)) {
+        } else {
+            break;
+        }
+        {
+            float _e11 = a;
+            vec3 _e12 = p_4;
+            float _e13 = br_noise3_(_e12);
+            float _e15 = s;
+            s = (_e15 + (_e11 * _e13));
+            vec3 _e17 = p_4;
+            p_4 = ((_e17 * 2.03) + vec3(7.1, -3.7, 11.9));
+            float _e26 = a;
+            a = (_e26 * 0.5);
+        }
+    }
+    float _e31 = s;
+    return _e31;
+}
+
+float br_roundBox(vec3 p_5, vec3 b, float r) {
+    vec3 q_13 = ((abs(p_5) - b) + vec3(r));
+    return ((length(max(q_13, vec3(0.0))) + min(max(q_13.x, max(q_13.y, q_13.z)), 0.0)) - r);
+}
+
+float br_mid_x_m_m(float tIn) {
+    float t = 0.0;
+    t = tIn;
+    float _e2 = t;
+    t = clamp(_e2, -0.95, 0.95);
+    float _e7 = t;
+    float _e15 = t;
+    float _e22 = t;
+    float _e29 = t;
+    return ((((0.0 - (0.01800174 * cos((9.424778 * _e7)))) + (0.00862492 * sin((9.424778 * _e15)))) - (0.00032245 * cos((12.566371 * _e22)))) - (0.00199262 * sin((12.566371 * _e29))));
+}
+
+float br_high_x_m_m(float tIn_1) {
+    float t_1 = 0.0;
+    t_1 = tIn_1;
+    float _e2 = t_1;
+    t_1 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_1;
+    float _e15 = t_1;
+    float _e22 = t_1;
+    float _e29 = t_1;
+    float _e36 = t_1;
+    float _e43 = t_1;
+    float _e50 = t_1;
+    float _e57 = t_1;
+    float _e64 = t_1;
+    float _e71 = t_1;
+    float _e78 = t_1;
+    float _e85 = t_1;
+    float _e92 = t_1;
+    float _e99 = t_1;
+    float _e106 = t_1;
+    float _e113 = t_1;
+    float _e120 = t_1;
+    float _e127 = t_1;
+    float _e134 = t_1;
+    float _e141 = t_1;
+    float _e148 = t_1;
+    float _e155 = t_1;
+    float _e162 = t_1;
+    float _e169 = t_1;
+    return ((((((((((((((((((((((((0.0 - (0.01471101 * cos((15.707964 * _e7)))) - (0.00611511 * sin((15.707964 * _e15)))) + (0.00505069 * cos((18.849556 * _e22)))) - (0.01129023 * sin((18.849556 * _e29)))) + (0.00016204 * cos((21.99115 * _e36)))) - (0.00678541 * sin((21.99115 * _e43)))) + (0.00910669 * cos((25.132742 * _e50)))) - (0.00372102 * sin((25.132742 * _e57)))) + (0.0038662 * cos((28.274334 * _e64)))) + (0.00169141 * sin((28.274334 * _e71)))) + (0.00255569 * cos((31.415928 * _e78)))) + (0.00429621 * sin((31.415928 * _e85)))) - (0.00149008 * cos((34.55752 * _e92)))) + (0.00421699 * sin((34.55752 * _e99)))) - (0.00482651 * cos((37.699112 * _e106)))) + (0.00371242 * sin((37.699112 * _e113)))) - (0.00518212 * cos((40.840706 * _e120)))) - (0.00028101 * sin((40.840706 * _e127)))) - (0.00483069 * cos((43.9823 * _e134)))) - (0.00165143 * sin((43.9823 * _e141)))) - (0.00203463 * cos((47.12389 * _e148)))) - (0.00399068 * sin((47.12389 * _e155)))) + (0.00089974 * cos((50.265484 * _e162)))) - (0.00264073 * sin((50.265484 * _e169))));
+}
+
+float br_mid_x_m_p(float tIn_2) {
+    float t_2 = 0.0;
+    t_2 = tIn_2;
+    float _e2 = t_2;
+    t_2 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_2;
+    float _e15 = t_2;
+    float _e22 = t_2;
+    float _e29 = t_2;
+    return ((((0.0 - (0.01135424 * cos((9.424778 * _e7)))) - (0.00403594 * sin((9.424778 * _e15)))) + (0.01141619 * cos((12.566371 * _e22)))) - (0.00155239 * sin((12.566371 * _e29))));
+}
+
+float br_high_x_m_p(float tIn_3) {
+    float t_3 = 0.0;
+    t_3 = tIn_3;
+    float _e2 = t_3;
+    t_3 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_3;
+    float _e15 = t_3;
+    float _e22 = t_3;
+    float _e29 = t_3;
+    float _e36 = t_3;
+    float _e43 = t_3;
+    float _e50 = t_3;
+    float _e57 = t_3;
+    float _e64 = t_3;
+    float _e71 = t_3;
+    float _e78 = t_3;
+    float _e85 = t_3;
+    float _e92 = t_3;
+    float _e99 = t_3;
+    float _e106 = t_3;
+    float _e113 = t_3;
+    float _e120 = t_3;
+    float _e127 = t_3;
+    float _e134 = t_3;
+    float _e141 = t_3;
+    float _e148 = t_3;
+    float _e155 = t_3;
+    float _e162 = t_3;
+    float _e169 = t_3;
+    return ((((((((((((((((((((((((0.0 - (0.01111828 * cos((15.707964 * _e7)))) - (0.00524976 * sin((15.707964 * _e15)))) + (0.00926048 * cos((18.849556 * _e22)))) - (0.00196252 * sin((18.849556 * _e29)))) - (0.01080133 * cos((21.99115 * _e36)))) - (0.00236667 * sin((21.99115 * _e43)))) + (0.00682428 * cos((25.132742 * _e50)))) + (0.00034784 * sin((25.132742 * _e57)))) - (0.00988528 * cos((28.274334 * _e64)))) - (0.00067851 * sin((28.274334 * _e71)))) + (0.00392564 * cos((31.415928 * _e78)))) + (0.00248324 * sin((31.415928 * _e85)))) - (0.00639717 * cos((34.55752 * _e92)))) - (0.00103361 * sin((34.55752 * _e99)))) + (0.00224399 * cos((37.699112 * _e106)))) + (0.00279355 * sin((37.699112 * _e113)))) - (0.00234379 * cos((40.840706 * _e120)))) - (0.00034023 * sin((40.840706 * _e127)))) + (0.00154531 * cos((43.9823 * _e134)))) + (0.00135488 * sin((43.9823 * _e141)))) - (0.00041372 * cos((47.12389 * _e148)))) + (0.00081121 * sin((47.12389 * _e155)))) + (0.0017669 * cos((50.265484 * _e162)))) - (0.00017177 * sin((50.265484 * _e169))));
+}
+
+float br_mid_x_p_m(float tIn_4) {
+    float t_4 = 0.0;
+    t_4 = tIn_4;
+    float _e2 = t_4;
+    t_4 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_4;
+    float _e15 = t_4;
+    float _e22 = t_4;
+    float _e29 = t_4;
+    return ((((0.0 - (0.01106844 * cos((9.424778 * _e7)))) + (0.00366009 * sin((9.424778 * _e15)))) + (0.00491573 * cos((12.566371 * _e22)))) - (0.00304459 * sin((12.566371 * _e29))));
+}
+
+float br_high_x_p_m(float tIn_5) {
+    float t_5 = 0.0;
+    t_5 = tIn_5;
+    float _e2 = t_5;
+    t_5 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_5;
+    float _e15 = t_5;
+    float _e22 = t_5;
+    float _e29 = t_5;
+    float _e36 = t_5;
+    float _e43 = t_5;
+    float _e50 = t_5;
+    float _e57 = t_5;
+    float _e64 = t_5;
+    float _e71 = t_5;
+    float _e78 = t_5;
+    float _e85 = t_5;
+    float _e92 = t_5;
+    float _e99 = t_5;
+    float _e106 = t_5;
+    float _e113 = t_5;
+    float _e120 = t_5;
+    float _e127 = t_5;
+    float _e134 = t_5;
+    float _e141 = t_5;
+    float _e148 = t_5;
+    float _e155 = t_5;
+    float _e162 = t_5;
+    float _e169 = t_5;
+    return ((((((((((((((((((((((((0.0 - (0.00968863 * cos((15.707964 * _e7)))) + (0.00804842 * sin((15.707964 * _e15)))) - (0.00023933 * cos((18.849556 * _e22)))) - (0.0015963 * sin((18.849556 * _e29)))) - (0.00533428 * cos((21.99115 * _e36)))) + (0.00562751 * sin((21.99115 * _e43)))) - (0.00301718 * cos((25.132742 * _e50)))) - (0.00124667 * sin((25.132742 * _e57)))) - (0.00068517 * cos((28.274334 * _e64)))) + (0.00175252 * sin((28.274334 * _e71)))) - (0.00175606 * cos((31.415928 * _e78)))) - (0.00053161 * sin((31.415928 * _e85)))) + (0.00314901 * cos((34.55752 * _e92)))) - (0.00221809 * sin((34.55752 * _e99)))) - (2.768e-5 * cos((37.699112 * _e106)))) - (0.00050747 * sin((37.699112 * _e113)))) + (0.0032259 * cos((40.840706 * _e120)))) - (0.00372527 * sin((40.840706 * _e127)))) + (9.642e-5 * cos((43.9823 * _e134)))) + (0.00051161 * sin((43.9823 * _e141)))) + (0.00137602 * cos((47.12389 * _e148)))) - (0.00204386 * sin((47.12389 * _e155)))) - (0.00040926 * cos((50.265484 * _e162)))) + (0.00184796 * sin((50.265484 * _e169))));
+}
+
+float br_mid_x_p_p(float tIn_6) {
+    float t_6 = 0.0;
+    t_6 = tIn_6;
+    float _e2 = t_6;
+    t_6 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_6;
+    float _e15 = t_6;
+    float _e22 = t_6;
+    float _e29 = t_6;
+    return ((((0.0 - (0.01568166 * cos((9.424778 * _e7)))) - (0.00042124 * sin((9.424778 * _e15)))) + (0.00873786 * cos((12.566371 * _e22)))) + (0.00638691 * sin((12.566371 * _e29))));
+}
+
+float br_high_x_p_p(float tIn_7) {
+    float t_7 = 0.0;
+    t_7 = tIn_7;
+    float _e2 = t_7;
+    t_7 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_7;
+    float _e15 = t_7;
+    float _e22 = t_7;
+    float _e29 = t_7;
+    float _e36 = t_7;
+    float _e43 = t_7;
+    float _e50 = t_7;
+    float _e57 = t_7;
+    float _e64 = t_7;
+    float _e71 = t_7;
+    float _e78 = t_7;
+    float _e85 = t_7;
+    float _e92 = t_7;
+    float _e99 = t_7;
+    float _e106 = t_7;
+    float _e113 = t_7;
+    float _e120 = t_7;
+    float _e127 = t_7;
+    float _e134 = t_7;
+    float _e141 = t_7;
+    float _e148 = t_7;
+    float _e155 = t_7;
+    float _e162 = t_7;
+    float _e169 = t_7;
+    return ((((((((((((((((((((((((0.0 - (0.01295239 * cos((15.707964 * _e7)))) - (0.00380655 * sin((15.707964 * _e15)))) + (0.00244597 * cos((18.849556 * _e22)))) + (0.00179228 * sin((18.849556 * _e29)))) - (0.00822504 * cos((21.99115 * _e36)))) - (0.00912719 * sin((21.99115 * _e43)))) + (0.00818194 * cos((25.132742 * _e50)))) - (0.0022658 * sin((25.132742 * _e57)))) + (0.00200288 * cos((28.274334 * _e64)))) - (0.00217961 * sin((28.274334 * _e71)))) + (0.00524195 * cos((31.415928 * _e78)))) + (0.00335884 * sin((31.415928 * _e85)))) - (0.00236021 * cos((34.55752 * _e92)))) + (0.00141195 * sin((34.55752 * _e99)))) + (0.00291234 * cos((37.699112 * _e106)))) + (0.00156187 * sin((37.699112 * _e113)))) - (0.00192814 * cos((40.840706 * _e120)))) + (0.00280991 * sin((40.840706 * _e127)))) - (0.00040794 * cos((43.9823 * _e134)))) + (0.00126868 * sin((43.9823 * _e141)))) - (0.00433065 * cos((47.12389 * _e148)))) - (0.00021126 * sin((47.12389 * _e155)))) + (0.00012984 * cos((50.265484 * _e162)))) - (0.0020827 * sin((50.265484 * _e169))));
+}
+
+float br_mid_y_m_m(float tIn_8) {
+    float t_8 = 0.0;
+    t_8 = tIn_8;
+    float _e2 = t_8;
+    t_8 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_8;
+    float _e15 = t_8;
+    float _e22 = t_8;
+    float _e29 = t_8;
+    return ((((0.0 - (0.00630336 * cos((9.424778 * _e7)))) + (0.00827031 * sin((9.424778 * _e15)))) + (0.00566717 * cos((12.566371 * _e22)))) + (0.00042867 * sin((12.566371 * _e29))));
+}
+
+float br_high_y_m_m(float tIn_9) {
+    float t_9 = 0.0;
+    t_9 = tIn_9;
+    float _e2 = t_9;
+    t_9 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_9;
+    float _e15 = t_9;
+    float _e22 = t_9;
+    float _e29 = t_9;
+    float _e36 = t_9;
+    float _e43 = t_9;
+    float _e50 = t_9;
+    float _e57 = t_9;
+    float _e64 = t_9;
+    float _e71 = t_9;
+    float _e78 = t_9;
+    float _e85 = t_9;
+    float _e92 = t_9;
+    float _e99 = t_9;
+    float _e106 = t_9;
+    float _e113 = t_9;
+    float _e120 = t_9;
+    float _e127 = t_9;
+    float _e134 = t_9;
+    float _e141 = t_9;
+    float _e148 = t_9;
+    float _e155 = t_9;
+    float _e162 = t_9;
+    float _e169 = t_9;
+    return ((((((((((((((((((((((((0.0 - (0.00616945 * cos((15.707964 * _e7)))) + (0.00614401 * sin((15.707964 * _e15)))) + (0.00276823 * cos((18.849556 * _e22)))) - (0.00324009 * sin((18.849556 * _e29)))) - (0.00277462 * cos((21.99115 * _e36)))) + (0.00419118 * sin((21.99115 * _e43)))) + (0.00129222 * cos((25.132742 * _e50)))) - (0.0025167 * sin((25.132742 * _e57)))) - (0.00017492 * cos((28.274334 * _e64)))) + (0.00320414 * sin((28.274334 * _e71)))) - (0.00060079 * cos((31.415928 * _e78)))) - (0.00079424 * sin((31.415928 * _e85)))) + (0.00099889 * cos((34.55752 * _e92)))) + (0.00100195 * sin((34.55752 * _e99)))) - (0.00147204 * cos((37.699112 * _e106)))) + (0.00019719 * sin((37.699112 * _e113)))) + (0.00147029 * cos((40.840706 * _e120)))) - (0.00057325 * sin((40.840706 * _e127)))) - (0.00105959 * cos((43.9823 * _e134)))) + (0.00146526 * sin((43.9823 * _e141)))) + (0.00110262 * cos((47.12389 * _e148)))) - (0.00092602 * sin((47.12389 * _e155)))) - (0.00024836 * cos((50.265484 * _e162)))) + (0.00177536 * sin((50.265484 * _e169))));
+}
+
+float br_mid_y_m_p(float tIn_10) {
+    float t_10 = 0.0;
+    t_10 = tIn_10;
+    float _e2 = t_10;
+    t_10 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_10;
+    float _e15 = t_10;
+    float _e22 = t_10;
+    float _e29 = t_10;
+    return ((((0.0 - (0.00456362 * cos((9.424778 * _e7)))) + (0.00232485 * sin((9.424778 * _e15)))) + (0.00364059 * cos((12.566371 * _e22)))) - (0.00296393 * sin((12.566371 * _e29))));
+}
+
+float br_high_y_m_p(float tIn_11) {
+    float t_11 = 0.0;
+    t_11 = tIn_11;
+    float _e2 = t_11;
+    t_11 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_11;
+    float _e15 = t_11;
+    float _e22 = t_11;
+    float _e29 = t_11;
+    float _e36 = t_11;
+    float _e43 = t_11;
+    float _e50 = t_11;
+    float _e57 = t_11;
+    float _e64 = t_11;
+    float _e71 = t_11;
+    float _e78 = t_11;
+    float _e85 = t_11;
+    float _e92 = t_11;
+    float _e99 = t_11;
+    float _e106 = t_11;
+    float _e113 = t_11;
+    float _e120 = t_11;
+    float _e127 = t_11;
+    float _e134 = t_11;
+    float _e141 = t_11;
+    float _e148 = t_11;
+    float _e155 = t_11;
+    float _e162 = t_11;
+    float _e169 = t_11;
+    return ((((((((((((((((((((((((0.0 + (0.00058035 * cos((15.707964 * _e7)))) + (0.00351213 * sin((15.707964 * _e15)))) - (0.00311119 * cos((18.849556 * _e22)))) - (0.0008256 * sin((18.849556 * _e29)))) + (0.0044752 * cos((21.99115 * _e36)))) - (0.00080438 * sin((21.99115 * _e43)))) - (0.00625696 * cos((25.132742 * _e50)))) + (0.00100661 * sin((25.132742 * _e57)))) + (0.00468255 * cos((28.274334 * _e64)))) - (0.00231942 * sin((28.274334 * _e71)))) - (0.00397357 * cos((31.415928 * _e78)))) + (0.00223223 * sin((31.415928 * _e85)))) + (0.00344591 * cos((34.55752 * _e92)))) - (0.00145876 * sin((34.55752 * _e99)))) - (0.00081874 * cos((37.699112 * _e106)))) + (0.00036113 * sin((37.699112 * _e113)))) + (0.00095928 * cos((40.840706 * _e120)))) + (0.00022236 * sin((40.840706 * _e127)))) + (0.00016248 * cos((43.9823 * _e134)))) - (0.00163296 * sin((43.9823 * _e141)))) - (0.00041686 * cos((47.12389 * _e148)))) + (0.00173083 * sin((47.12389 * _e155)))) + (0.00042056 * cos((50.265484 * _e162)))) - (0.00171078 * sin((50.265484 * _e169))));
+}
+
+float br_mid_y_p_m(float tIn_12) {
+    float t_12 = 0.0;
+    t_12 = tIn_12;
+    float _e2 = t_12;
+    t_12 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_12;
+    float _e15 = t_12;
+    float _e22 = t_12;
+    float _e29 = t_12;
+    return ((((0.0 - (0.00568083 * cos((9.424778 * _e7)))) + (0.00059518 * sin((9.424778 * _e15)))) + (0.00165756 * cos((12.566371 * _e22)))) - (0.00265243 * sin((12.566371 * _e29))));
+}
+
+float br_high_y_p_m(float tIn_13) {
+    float t_13 = 0.0;
+    t_13 = tIn_13;
+    float _e2 = t_13;
+    t_13 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_13;
+    float _e15 = t_13;
+    float _e22 = t_13;
+    float _e29 = t_13;
+    float _e36 = t_13;
+    float _e43 = t_13;
+    float _e50 = t_13;
+    float _e57 = t_13;
+    float _e64 = t_13;
+    float _e71 = t_13;
+    float _e78 = t_13;
+    float _e85 = t_13;
+    float _e92 = t_13;
+    float _e99 = t_13;
+    float _e106 = t_13;
+    float _e113 = t_13;
+    float _e120 = t_13;
+    float _e127 = t_13;
+    float _e134 = t_13;
+    float _e141 = t_13;
+    float _e148 = t_13;
+    float _e155 = t_13;
+    float _e162 = t_13;
+    float _e169 = t_13;
+    return ((((((((((((((((((((((((0.0 - (0.00237719 * cos((15.707964 * _e7)))) + (0.00155711 * sin((15.707964 * _e15)))) - (0.001748 * cos((18.849556 * _e22)))) - (0.0003458 * sin((18.849556 * _e29)))) + (0.00109223 * cos((21.99115 * _e36)))) - (0.00076205 * sin((21.99115 * _e43)))) - (0.00183915 * cos((25.132742 * _e50)))) + (0.00169373 * sin((25.132742 * _e57)))) + (0.00166788 * cos((28.274334 * _e64)))) - (0.0019743 * sin((28.274334 * _e71)))) + (0.00023726 * cos((31.415928 * _e78)))) + (0.0020999 * sin((31.415928 * _e85)))) - (0.0001369 * cos((34.55752 * _e92)))) - (0.00204928 * sin((34.55752 * _e99)))) + (0.00149101 * cos((37.699112 * _e106)))) + (0.00080592 * sin((37.699112 * _e113)))) - (0.00168845 * cos((40.840706 * _e120)))) - (0.00052462 * sin((40.840706 * _e127)))) + (0.00199706 * cos((43.9823 * _e134)))) - (0.00016703 * sin((43.9823 * _e141)))) - (0.00114543 * cos((47.12389 * _e148)))) + (0.00067098 * sin((47.12389 * _e155)))) + (0.00132124 * cos((50.265484 * _e162)))) - (0.00060376 * sin((50.265484 * _e169))));
+}
+
+float br_mid_y_p_p(float tIn_14) {
+    float t_14 = 0.0;
+    t_14 = tIn_14;
+    float _e2 = t_14;
+    t_14 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_14;
+    float _e15 = t_14;
+    float _e22 = t_14;
+    float _e29 = t_14;
+    return ((((0.0 - (0.01472244 * cos((9.424778 * _e7)))) + (0.00196068 * sin((9.424778 * _e15)))) + (0.00837774 * cos((12.566371 * _e22)))) - (0.00049031 * sin((12.566371 * _e29))));
+}
+
+float br_high_y_p_p(float tIn_15) {
+    float t_15 = 0.0;
+    t_15 = tIn_15;
+    float _e2 = t_15;
+    t_15 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_15;
+    float _e15 = t_15;
+    float _e22 = t_15;
+    float _e29 = t_15;
+    float _e36 = t_15;
+    float _e43 = t_15;
+    float _e50 = t_15;
+    float _e57 = t_15;
+    float _e64 = t_15;
+    float _e71 = t_15;
+    float _e78 = t_15;
+    float _e85 = t_15;
+    float _e92 = t_15;
+    float _e99 = t_15;
+    float _e106 = t_15;
+    float _e113 = t_15;
+    float _e120 = t_15;
+    float _e127 = t_15;
+    float _e134 = t_15;
+    float _e141 = t_15;
+    float _e148 = t_15;
+    float _e155 = t_15;
+    float _e162 = t_15;
+    float _e169 = t_15;
+    return ((((((((((((((((((((((((0.0 - (0.00814206 * cos((15.707964 * _e7)))) - (0.00053856 * sin((15.707964 * _e15)))) + (0.00257906 * cos((18.849556 * _e22)))) - (0.00127762 * sin((18.849556 * _e29)))) - (0.0008612 * cos((21.99115 * _e36)))) + (0.0016501 * sin((21.99115 * _e43)))) - (0.00324482 * cos((25.132742 * _e50)))) - (0.00230772 * sin((25.132742 * _e57)))) + (0.00531309 * cos((28.274334 * _e64)))) + (0.0028567 * sin((28.274334 * _e71)))) - (0.00601731 * cos((31.415928 * _e78)))) - (0.00308967 * sin((31.415928 * _e85)))) + (0.0075677 * cos((34.55752 * _e92)))) + (0.00401337 * sin((34.55752 * _e99)))) - (0.0070424 * cos((37.699112 * _e106)))) - (0.00363779 * sin((37.699112 * _e113)))) + (0.00672339 * cos((40.840706 * _e120)))) + (0.00366736 * sin((40.840706 * _e127)))) - (0.00539581 * cos((43.9823 * _e134)))) - (0.00292112 * sin((43.9823 * _e141)))) + (0.00379057 * cos((47.12389 * _e148)))) + (0.0028041 * sin((47.12389 * _e155)))) - (0.00302659 * cos((50.265484 * _e162)))) - (0.00189233 * sin((50.265484 * _e169))));
+}
+
+float br_mid_z_m_m(float tIn_16) {
+    float t_16 = 0.0;
+    t_16 = tIn_16;
+    float _e2 = t_16;
+    t_16 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_16;
+    float _e15 = t_16;
+    float _e22 = t_16;
+    float _e29 = t_16;
+    return ((((0.0 - (0.0344543 * cos((9.424778 * _e7)))) - (0.00282014 * sin((9.424778 * _e15)))) + (0.03501842 * cos((12.566371 * _e22)))) + (0.00267835 * sin((12.566371 * _e29))));
+}
+
+float br_high_z_m_m(float tIn_17) {
+    float t_17 = 0.0;
+    t_17 = tIn_17;
+    float _e2 = t_17;
+    t_17 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_17;
+    float _e15 = t_17;
+    float _e22 = t_17;
+    float _e29 = t_17;
+    float _e36 = t_17;
+    float _e43 = t_17;
+    float _e50 = t_17;
+    float _e57 = t_17;
+    float _e64 = t_17;
+    float _e71 = t_17;
+    float _e78 = t_17;
+    float _e85 = t_17;
+    float _e92 = t_17;
+    float _e99 = t_17;
+    float _e106 = t_17;
+    float _e113 = t_17;
+    float _e120 = t_17;
+    float _e127 = t_17;
+    float _e134 = t_17;
+    float _e141 = t_17;
+    float _e148 = t_17;
+    float _e155 = t_17;
+    float _e162 = t_17;
+    float _e169 = t_17;
+    return ((((((((((((((((((((((((0.0 - (0.0313497 * cos((15.707964 * _e7)))) - (0.00507503 * sin((15.707964 * _e15)))) + (0.02759835 * cos((18.849556 * _e22)))) + (0.00467492 * sin((18.849556 * _e29)))) - (0.02453092 * cos((21.99115 * _e36)))) - (0.00547356 * sin((21.99115 * _e43)))) + (0.02023931 * cos((25.132742 * _e50)))) + (0.00660731 * sin((25.132742 * _e57)))) - (0.0169969 * cos((28.274334 * _e64)))) - (0.00634397 * sin((28.274334 * _e71)))) + (0.01361088 * cos((31.415928 * _e78)))) + (0.00712487 * sin((31.415928 * _e85)))) - (0.01008559 * cos((34.55752 * _e92)))) - (0.00675053 * sin((34.55752 * _e99)))) + (0.00780155 * cos((37.699112 * _e106)))) + (0.00722028 * sin((37.699112 * _e113)))) - (0.00529194 * cos((40.840706 * _e120)))) - (0.00638835 * sin((40.840706 * _e127)))) + (0.00336004 * cos((43.9823 * _e134)))) + (0.00624403 * sin((43.9823 * _e141)))) - (0.00209103 * cos((47.12389 * _e148)))) - (0.00553015 * sin((47.12389 * _e155)))) + (0.00084286 * cos((50.265484 * _e162)))) + (0.00479951 * sin((50.265484 * _e169))));
+}
+
+float br_mid_z_m_p(float tIn_18) {
+    float t_18 = 0.0;
+    t_18 = tIn_18;
+    float _e2 = t_18;
+    t_18 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_18;
+    float _e15 = t_18;
+    float _e22 = t_18;
+    float _e29 = t_18;
+    return ((((0.0 - (0.01307475 * cos((9.424778 * _e7)))) + (0.00450446 * sin((9.424778 * _e15)))) + (0.00682105 * cos((12.566371 * _e22)))) + (0.00639899 * sin((12.566371 * _e29))));
+}
+
+float br_high_z_m_p(float tIn_19) {
+    float t_19 = 0.0;
+    t_19 = tIn_19;
+    float _e2 = t_19;
+    t_19 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_19;
+    float _e15 = t_19;
+    float _e22 = t_19;
+    float _e29 = t_19;
+    float _e36 = t_19;
+    float _e43 = t_19;
+    float _e50 = t_19;
+    float _e57 = t_19;
+    float _e64 = t_19;
+    float _e71 = t_19;
+    float _e78 = t_19;
+    float _e85 = t_19;
+    float _e92 = t_19;
+    float _e99 = t_19;
+    float _e106 = t_19;
+    float _e113 = t_19;
+    float _e120 = t_19;
+    float _e127 = t_19;
+    float _e134 = t_19;
+    float _e141 = t_19;
+    float _e148 = t_19;
+    float _e155 = t_19;
+    float _e162 = t_19;
+    float _e169 = t_19;
+    return ((((((((((((((((((((((((0.0 - (0.00571077 * cos((15.707964 * _e7)))) + (0.00346485 * sin((15.707964 * _e15)))) + (0.00609629 * cos((18.849556 * _e22)))) + (0.00059963 * sin((18.849556 * _e29)))) - (0.00710636 * cos((21.99115 * _e36)))) - (0.00381479 * sin((21.99115 * _e43)))) + (0.00135812 * cos((25.132742 * _e50)))) + (0.00135282 * sin((25.132742 * _e57)))) - (0.00506045 * cos((28.274334 * _e64)))) - (0.00360239 * sin((28.274334 * _e71)))) + (0.00308686 * cos((31.415928 * _e78)))) + (0.00261325 * sin((31.415928 * _e85)))) - (0.00270687 * cos((34.55752 * _e92)))) - (0.00449361 * sin((34.55752 * _e99)))) + (0.00262569 * cos((37.699112 * _e106)))) + (0.00311502 * sin((37.699112 * _e113)))) - (0.00162438 * cos((40.840706 * _e120)))) - (0.00306571 * sin((40.840706 * _e127)))) + (0.00251715 * cos((43.9823 * _e134)))) + (0.00290793 * sin((43.9823 * _e141)))) - (0.0008765 * cos((47.12389 * _e148)))) - (0.00290014 * sin((47.12389 * _e155)))) + (0.00095675 * cos((50.265484 * _e162)))) + (0.00161494 * sin((50.265484 * _e169))));
+}
+
+float br_mid_z_p_m(float tIn_20) {
+    float t_20 = 0.0;
+    t_20 = tIn_20;
+    float _e2 = t_20;
+    t_20 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_20;
+    float _e15 = t_20;
+    float _e22 = t_20;
+    float _e29 = t_20;
+    return ((((0.0 - (0.00543148 * cos((9.424778 * _e7)))) - (0.01245624 * sin((9.424778 * _e15)))) + (0.01205722 * cos((12.566371 * _e22)))) + (0.00758454 * sin((12.566371 * _e29))));
+}
+
+float br_high_z_p_m(float tIn_21) {
+    float t_21 = 0.0;
+    t_21 = tIn_21;
+    float _e2 = t_21;
+    t_21 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_21;
+    float _e15 = t_21;
+    float _e22 = t_21;
+    float _e29 = t_21;
+    float _e36 = t_21;
+    float _e43 = t_21;
+    float _e50 = t_21;
+    float _e57 = t_21;
+    float _e64 = t_21;
+    float _e71 = t_21;
+    float _e78 = t_21;
+    float _e85 = t_21;
+    float _e92 = t_21;
+    float _e99 = t_21;
+    float _e106 = t_21;
+    float _e113 = t_21;
+    float _e120 = t_21;
+    float _e127 = t_21;
+    float _e134 = t_21;
+    float _e141 = t_21;
+    float _e148 = t_21;
+    float _e155 = t_21;
+    float _e162 = t_21;
+    float _e169 = t_21;
+    return ((((((((((((((((((((((((0.0 - (0.01318042 * cos((15.707964 * _e7)))) - (0.01120445 * sin((15.707964 * _e15)))) + (0.00622728 * cos((18.849556 * _e22)))) + (0.0064346 * sin((18.849556 * _e29)))) - (0.00641567 * cos((21.99115 * _e36)))) - (0.00656035 * sin((21.99115 * _e43)))) + (0.00075536 * cos((25.132742 * _e50)))) + (0.00936163 * sin((25.132742 * _e57)))) - (0.00227068 * cos((28.274334 * _e64)))) - (0.00692473 * sin((28.274334 * _e71)))) + (0.00018661 * cos((31.415928 * _e78)))) + (0.00740915 * sin((31.415928 * _e85)))) - (9.489e-5 * cos((34.55752 * _e92)))) - (0.00591066 * sin((34.55752 * _e99)))) - (0.00047542 * cos((37.699112 * _e106)))) + (0.0043875 * sin((37.699112 * _e113)))) + (0.0003427 * cos((40.840706 * _e120)))) - (0.0032469 * sin((40.840706 * _e127)))) - (0.00151968 * cos((43.9823 * _e134)))) + (0.00176894 * sin((43.9823 * _e141)))) + (0.00166849 * cos((47.12389 * _e148)))) - (0.0012368 * sin((47.12389 * _e155)))) - (0.00146369 * cos((50.265484 * _e162)))) + (0.00149355 * sin((50.265484 * _e169))));
+}
+
+float br_mid_z_p_p(float tIn_22) {
+    float t_22 = 0.0;
+    t_22 = tIn_22;
+    float _e2 = t_22;
+    t_22 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_22;
+    float _e15 = t_22;
+    float _e22 = t_22;
+    float _e29 = t_22;
+    return ((((0.0 - (0.00388179 * cos((9.424778 * _e7)))) + (0.00390139 * sin((9.424778 * _e15)))) + (0.00238573 * cos((12.566371 * _e22)))) - (0.00329681 * sin((12.566371 * _e29))));
+}
+
+float br_high_z_p_p(float tIn_23) {
+    float t_23 = 0.0;
+    t_23 = tIn_23;
+    float _e2 = t_23;
+    t_23 = clamp(_e2, -0.95, 0.95);
+    float _e7 = t_23;
+    float _e15 = t_23;
+    float _e22 = t_23;
+    float _e29 = t_23;
+    float _e36 = t_23;
+    float _e43 = t_23;
+    float _e50 = t_23;
+    float _e57 = t_23;
+    float _e64 = t_23;
+    float _e71 = t_23;
+    float _e78 = t_23;
+    float _e85 = t_23;
+    float _e92 = t_23;
+    float _e99 = t_23;
+    float _e106 = t_23;
+    float _e113 = t_23;
+    float _e120 = t_23;
+    float _e127 = t_23;
+    float _e134 = t_23;
+    float _e141 = t_23;
+    float _e148 = t_23;
+    float _e155 = t_23;
+    float _e162 = t_23;
+    float _e169 = t_23;
+    return ((((((((((((((((((((((((0.0 - (0.00010459 * cos((15.707964 * _e7)))) + (0.00147038 * sin((15.707964 * _e15)))) + (0.00066299 * cos((18.849556 * _e22)))) - (0.00479755 * sin((18.849556 * _e29)))) + (0.00106469 * cos((21.99115 * _e36)))) + (0.00323743 * sin((21.99115 * _e43)))) - (0.0003419 * cos((25.132742 * _e50)))) - (0.00098051 * sin((25.132742 * _e57)))) + (0.00303712 * cos((28.274334 * _e64)))) + (0.00124931 * sin((28.274334 * _e71)))) - (0.00262919 * cos((31.415928 * _e78)))) - (0.00150538 * sin((31.415928 * _e85)))) + (0.00194169 * cos((34.55752 * _e92)))) - (0.00037848 * sin((34.55752 * _e99)))) - (0.00197504 * cos((37.699112 * _e106)))) + (0.00095933 * sin((37.699112 * _e113)))) + (0.00272261 * cos((40.840706 * _e120)))) - (0.00108356 * sin((40.840706 * _e127)))) - (0.00067581 * cos((43.9823 * _e134)))) + (0.00082625 * sin((43.9823 * _e141)))) + (0.00043735 * cos((47.12389 * _e148)))) - (0.00193681 * sin((47.12389 * _e155)))) - (0.00039229 * cos((50.265484 * _e162)))) + (0.00197941 * sin((50.265484 * _e169))));
+}
+
+float br_midX(float t_24, float sy, float sz) {
+    if ((sy < 0.0)) {
+        if ((sz < 0.0)) {
+            float _e7 = br_mid_x_m_m(t_24);
+            return _e7;
+        }
+        float _e8 = br_mid_x_m_p(t_24);
+        return _e8;
+    }
+    if ((sz < 0.0)) {
+        float _e11 = br_mid_x_p_m(t_24);
+        return _e11;
+    }
+    float _e12 = br_mid_x_p_p(t_24);
+    return _e12;
+}
+
+float br_midY(float t_25, float sx, float sz_1) {
+    if ((sx < 0.0)) {
+        if ((sz_1 < 0.0)) {
+            float _e7 = br_mid_y_m_m(t_25);
+            return _e7;
+        }
+        float _e8 = br_mid_y_m_p(t_25);
+        return _e8;
+    }
+    if ((sz_1 < 0.0)) {
+        float _e11 = br_mid_y_p_m(t_25);
+        return _e11;
+    }
+    float _e12 = br_mid_y_p_p(t_25);
+    return _e12;
+}
+
+float br_midZ(float t_26, float sx_1, float sy_1) {
+    if ((sx_1 < 0.0)) {
+        if ((sy_1 < 0.0)) {
+            float _e7 = br_mid_z_m_m(t_26);
+            return _e7;
+        }
+        float _e8 = br_mid_z_m_p(t_26);
+        return _e8;
+    }
+    if ((sy_1 < 0.0)) {
+        float _e11 = br_mid_z_p_m(t_26);
+        return _e11;
+    }
+    float _e12 = br_mid_z_p_p(t_26);
+    return _e12;
+}
+
+float br_highX(float t_27, float sy_2, float sz_2) {
+    if ((sy_2 < 0.0)) {
+        if ((sz_2 < 0.0)) {
+            float _e7 = br_high_x_m_m(t_27);
+            return _e7;
+        }
+        float _e8 = br_high_x_m_p(t_27);
+        return _e8;
+    }
+    if ((sz_2 < 0.0)) {
+        float _e11 = br_high_x_p_m(t_27);
+        return _e11;
+    }
+    float _e12 = br_high_x_p_p(t_27);
+    return _e12;
+}
+
+float br_highY(float t_28, float sx_2, float sz_3) {
+    if ((sx_2 < 0.0)) {
+        if ((sz_3 < 0.0)) {
+            float _e7 = br_high_y_m_m(t_28);
+            return _e7;
+        }
+        float _e8 = br_high_y_m_p(t_28);
+        return _e8;
+    }
+    if ((sz_3 < 0.0)) {
+        float _e11 = br_high_y_p_m(t_28);
+        return _e11;
+    }
+    float _e12 = br_high_y_p_p(t_28);
+    return _e12;
+}
+
+float br_highZ(float t_29, float sx_3, float sy_3) {
+    if ((sx_3 < 0.0)) {
+        if ((sy_3 < 0.0)) {
+            float _e7 = br_high_z_m_m(t_29);
+            return _e7;
+        }
+        float _e8 = br_high_z_m_p(t_29);
+        return _e8;
+    }
+    if ((sy_3 < 0.0)) {
+        float _e11 = br_high_z_p_m(t_29);
+        return _e11;
+    }
+    float _e12 = br_high_z_p_p(t_29);
+    return _e12;
+}
+
+float br_nf(float c, float h_1, float s_1, float band) {
+    return smoothstep((h_1 - band), (h_1 + 0.003), (s_1 * c));
+}
+
+float br_chipWear(float vIn) {
+    float v_3 = max((vIn - 0.0018), 0.0);
+    return ((0.02 * tanh((v_3 / 0.02))) * smoothstep(0.001, 0.006, v_3));
+}
+
+float br_contour(float v) {
+    return (0.0048 * tanh((v / 0.03)));
+}
+
+float br_contourLong(float v_1) {
+    float _e1 = br_contour(v_1);
+    if ((_e1 >= -0.0022)) {
+        return _e1;
+    }
+    return (-0.0022 + (0.00045 * tanh(((_e1 + 0.0022) / 0.00045))));
+}
+
+float br_mx(vec3 q, vec3 b_1, float sy_4, float sz_4) {
+    float _e7 = br_nf(q.y, b_1.y, sy_4, 0.042);
+    float _e11 = br_nf(q.z, b_1.z, sz_4, 0.054);
+    return (_e7 * _e11);
+}
+
+float br_my(vec3 q_1, vec3 b_2, float sx_4, float sz_5) {
+    float _e7 = br_nf(q_1.x, b_2.x, sx_4, 0.062);
+    float _e11 = br_nf(q_1.z, b_2.z, sz_5, 0.054);
+    return (_e7 * _e11);
+}
+
+float br_mz(vec3 q_2, vec3 b_3, float sx_5, float sy_5) {
+    float _e7 = br_nf(q_2.x, b_3.x, sx_5, 0.062);
+    float _e11 = br_nf(q_2.y, b_3.y, sy_5, 0.042);
+    return (_e7 * _e11);
+}
+
+float br_ck(vec3 q_3, vec3 b_4, float sx_6, float sy_6, float sz_6) {
+    float _e8 = br_nf(q_3.x, b_4.x, sx_6, 0.08);
+    float _e12 = br_nf(q_3.y, b_4.y, sy_6, 0.052);
+    float _e17 = br_nf(q_3.z, b_4.z, sz_6, 0.064);
+    return ((_e8 * _e12) * _e17);
+}
+
+vec3 br_ax(vec3 q_4, vec3 b_5, float sy_7, float sz_7) {
+    float _e4 = br_mx(q_4, b_5, sy_7, sz_7);
+    float t_30 = (q_4.x / b_5.x);
+    float _e8 = br_midX(t_30, sy_7, sz_7);
+    float _e9 = br_highX(t_30, sy_7, sz_7);
+    float _e11 = br_chipWear((_e8 + _e9));
+    float _e13 = br_contourLong(_e8);
+    return vec3((_e11 * _e4), (_e13 * _e4), _e4);
+}
+
+vec3 br_ay(vec3 q_5, vec3 b_6, float sx_7, float sz_8) {
+    float _e4 = br_my(q_5, b_6, sx_7, sz_8);
+    float t_31 = (q_5.y / b_6.y);
+    float _e8 = br_midY(t_31, sx_7, sz_8);
+    float _e9 = br_highY(t_31, sx_7, sz_8);
+    float _e11 = br_chipWear((_e8 + _e9));
+    float _e13 = br_contour(_e8);
+    return vec3((_e11 * _e4), (_e13 * _e4), _e4);
+}
+
+vec3 br_az(vec3 q_6, vec3 b_7, float sx_8, float sy_8) {
+    float _e4 = br_mz(q_6, b_7, sx_8, sy_8);
+    float t_32 = (q_6.z / b_7.z);
+    float _e8 = br_midZ(t_32, sx_8, sy_8);
+    float _e9 = br_highZ(t_32, sx_8, sy_8);
+    float _e11 = br_chipWear((_e8 + _e9));
+    float _e13 = br_contour(_e8);
+    return vec3((_e11 * _e4), (_e13 * _e4), _e4);
+}
+
+float br_surfaceDelta(vec3 q_7, vec3 b_8) {
+    vec3 sum = vec3(0.0);
+    vec3 _e7 = br_ax(q_7, b_8, -1.0, -1.0);
+    vec3 _e8 = sum;
+    sum = (_e8 + _e7);
+    vec3 _e12 = br_ax(q_7, b_8, -1.0, 1.0);
+    vec3 _e13 = sum;
+    sum = (_e13 + _e12);
+    vec3 _e17 = br_ax(q_7, b_8, 1.0, -1.0);
+    vec3 _e18 = sum;
+    sum = (_e18 + _e17);
+    vec3 _e22 = br_ax(q_7, b_8, 1.0, 1.0);
+    vec3 _e23 = sum;
+    sum = (_e23 + _e22);
+    vec3 _e27 = br_ay(q_7, b_8, -1.0, -1.0);
+    vec3 _e28 = sum;
+    sum = (_e28 + _e27);
+    vec3 _e32 = br_ay(q_7, b_8, -1.0, 1.0);
+    vec3 _e33 = sum;
+    sum = (_e33 + _e32);
+    vec3 _e37 = br_ay(q_7, b_8, 1.0, -1.0);
+    vec3 _e38 = sum;
+    sum = (_e38 + _e37);
+    vec3 _e42 = br_ay(q_7, b_8, 1.0, 1.0);
+    vec3 _e43 = sum;
+    sum = (_e43 + _e42);
+    vec3 _e47 = br_az(q_7, b_8, -1.0, -1.0);
+    vec3 _e48 = sum;
+    sum = (_e48 + _e47);
+    vec3 _e52 = br_az(q_7, b_8, -1.0, 1.0);
+    vec3 _e53 = sum;
+    sum = (_e53 + _e52);
+    vec3 _e57 = br_az(q_7, b_8, 1.0, -1.0);
+    vec3 _e58 = sum;
+    sum = (_e58 + _e57);
+    vec3 _e62 = br_az(q_7, b_8, 1.0, 1.0);
+    vec3 _e63 = sum;
+    sum = (_e63 + _e62);
+    float _e69 = br_ck(q_7, b_8, -1.0, -1.0, 1.0);
+    float _e72 = sum.x;
+    sum.x = (_e72 + (0.0017 * _e69));
+    float _e78 = br_ck(q_7, b_8, -1.0, 1.0, 1.0);
+    float _e81 = sum.x;
+    sum.x = (_e81 + (0.022 * _e78));
+    float _e87 = br_ck(q_7, b_8, 1.0, 1.0, -1.0);
+    float _e90 = sum.x;
+    sum.x = (_e90 + (0.014 * _e87));
+    float _e96 = br_ck(q_7, b_8, 1.0, 1.0, 1.0);
+    float _e99 = sum.x;
+    sum.x = (_e99 + (0.007 * _e96));
+    float _e102 = sum.x;
+    float _e111 = sum.y;
+    float _e113 = sum.z;
+    return ((0.038 * tanh(((_e102 * 1.1) / 0.038))) + (_e111 / max(1.0, _e113)));
+}
+
+vec3 br_variant(vec3 qIn, int variant) {
+    vec3 q_8 = vec3(0.0);
+    q_8 = qIn;
+    if (((variant & 1) == 1)) {
+        float _e9 = q_8.x;
+        q_8.x = -(_e9);
+    }
+    if (((variant & 2) == 2)) {
+        float _e17 = q_8.z;
+        q_8.z = -(_e17);
+    }
+    vec3 _e19 = q_8;
+    return _e19;
+}
+
+float kpBrickBaseDistance(vec3 pLocalM, float seed, int variant_1, float variation) {
+    vec3 _e7 = br_variant((pLocalM / vec3(0.115384616)), variant_1);
+    vec3 b_9 = vec3(1.04, 0.265, 0.48);
+    float _e14 = br_h11_((seed + 7.1));
+    float gain = mix(1.0, (0.9 + (0.2 * _e14)), variation);
+    float _e23 = br_roundBox(_e7, b_9, 0.055);
+    float _e24 = br_surfaceDelta(_e7, b_9);
+    return (KP_BRICK_SCALE * (_e23 + (_e24 * gain)));
+}
+
+vec3 br_xi(vec3 q_9) {
+    float rr = max(length(q_9), 0.0001);
+    float radial2_ = dot(q_9.xy, q_9.xy);
+    float angularRadius = sqrt((radial2_ + ((1.235 * 1.235) * exp((-(radial2_) / (1.235 * 1.235))))));
+    float angle = acos(clamp((q_9.y / angularRadius), -0.999999, 0.999999));
+    return vec3((log2(rr) - 2.0), ((-(q_9.z) / rr) - 1.0), angle);
+}
+
+float br_microscope(vec3 q_10, float qFootprint) {
+    float s_2 = 0.0;
+    float sc = 1.0;
+    int j = 0;
+    vec3 _e2 = br_xi(q_10);
+    float e = max(qFootprint, 1e-7);
+    vec3 _e9 = br_xi((q_10 + vec3(e, 0.0, 0.0)));
+    vec3 _e16 = br_xi((q_10 + vec3(0.0, e, 0.0)));
+    vec3 _e23 = br_xi((q_10 + vec3(0.0, 0.0, e)));
+    float fp_23 = max(length((_e9 - _e2)), max(length((_e16 - _e2)), length((_e23 - _e2))));
+    bool loop_init_1 = true;
+    while(true) {
+        if (!loop_init_1) {
+            int _e75 = j;
+            j = (_e75 + 1);
+        }
+        loop_init_1 = false;
+        int _e34 = j;
+        if ((_e34 < 17)) {
+        } else {
+            break;
+        }
+        {
+            float _e37 = sc;
+            float gate = (1.0 - smoothstep(0.48, 1.1, (fp_23 * _e37)));
+            float _e44 = sc;
+            vec3 x_1 = (_e2 * _e44);
+            float _e67 = sc;
+            float _e69 = s_2;
+            s_2 = (_e69 + ((gate * (cos((((cos(x_1.z) * cos(x_1.x)) + (cos(x_1.y) * cos(x_1.y))) + (cos(x_1.y) * cos(x_1.x)))) - 0.6556965)) / _e67));
+            float _e72 = sc;
+            sc = (_e72 * 2.0);
+        }
+    }
+    float _e77 = s_2;
+    return _e77;
+}
+
+KpSurface kpBrickOriginalSurface(vec3 pLocalM_2, float seed_1, int variant_2, float variation_1, float physicalFootprintM) {
+    vec3 q_11 = vec3(0.0);
+    vec3 base = vec3(0.0);
+    float _e7 = br_h11_((seed_1 + 1.2));
+    float _e10 = br_h11_((seed_1 + 2.7));
+    float _e13 = br_h11_((seed_1 + 4.9));
+    float _e16 = br_h11_((seed_1 + 8.3));
+    vec3 _e20 = br_variant((pLocalM_2 / vec3(0.115384616)), variant_2);
+    q_11 = _e20;
+    float ang = (((_e7 - 0.5) * 2.2) * variation_1);
+    float ca = cos(ang);
+    float sa = sin(ang);
+    vec3 _e29 = q_11;
+    vec2 oldXZ = _e29.xz;
+    q_11.x = ((ca * oldXZ.x) + (sa * oldXZ.y));
+    q_11.z = ((-(sa) * oldXZ.x) + (ca * oldXZ.y));
+    vec3 _e58 = q_11;
+    q_11 = (_e58 + (variation_1 * vec3(((_e10 - 0.5) * 18.0), ((_e13 - 0.5) * 12.0), ((_e16 - 0.5) * 16.0))));
+    vec3 _e60 = q_11;
+    float _e68 = br_fbm(((_e60 * 1.15) + vec3(-2.7, 4.1, 8.3)));
+    vec3 _e69 = q_11;
+    float _e77 = br_fbm(((_e69 * 2.65) + vec3(7.1, -5.2, 1.7)));
+    float firing = smoothstep(0.27, 0.79, ((0.66 * _e68) + (0.34 * _e77)));
+    vec3 _e86 = q_11;
+    float _e94 = br_fbm(((_e86 * 0.82) + vec3(12.1, 1.4, -9.7)));
+    float reduction = (smoothstep(0.69, 0.88, _e94) * smoothstep(0.38, 0.82, firing));
+    vec3 _e102 = q_11;
+    float _e110 = br_noise3_(((_e102 * 29.7) + vec3(2.3, 9.1, -4.4)));
+    vec3 _e111 = q_11;
+    float _e119 = br_noise3_(((_e111 * 61.3) + vec3(-7.2, 3.7, 14.6)));
+    float pore = (smoothstep(0.79, 0.92, _e110) * smoothstep(0.64, 0.84, _e119));
+    vec3 _e127 = q_11;
+    float _e135 = br_fbm(((_e127 * 5.1) + vec3(1.9, -3.2, 11.4)));
+    float skin = smoothstep(0.36, 0.76, _e135);
+    vec3 _e139 = q_11;
+    float _e148 = br_microscope((_e139 * 9.5), ((max(physicalFootprintM, 0.0) / KP_BRICK_SCALE) * 9.5));
+    base = mix(vec3(0.235, 0.043, 0.023), vec3(0.455, 0.105, 0.048), smoothstep(0.14, 0.76, firing));
+    vec3 _e162 = base;
+    base = mix(_e162, vec3(0.625, 0.205, 0.082), (smoothstep(0.58, 0.92, firing) * 0.34));
+    vec3 _e173 = base;
+    base = mix(_e173, vec3(0.19, 0.055, 0.038), (reduction * 0.63));
+    float rough_1 = clamp((((0.9 - (0.1 * firing)) + (0.055 * reduction)) + (0.075 * pore)), 0.68, 0.985);
+    float h_20 = (((((_e68 - 0.5) * 0.01) + ((skin - 0.5) * 0.004)) + (_e148 * 0.0034)) - (pore * 0.0048));
+    vec3 _e215 = base;
+    base = (_e215 * (0.965 + (0.07 * (skin - 0.5))));
+    float _e219 = br_h11_((seed_1 + 19.7));
+    vec3 _e226 = base;
+    base = (_e226 * mix(1.0, (0.93 + (0.14 * _e219)), variation_1));
+    vec3 _e230 = base;
+    return KpSurface((h_20 * KP_BRICK_SCALE), _e230, rough_1);
+}
+
+float mt_kh(vec3 pIn_7) {
+    vec3 p_17 = vec3(0.0);
+    p_17 = fract((pIn_7 * 0.1031));
+    vec3 _e5 = p_17;
+    vec3 _e6 = p_17;
+    vec3 _e13 = p_17;
+    p_17 = (_e13 + vec3(dot(_e5, (_e6.yzx + vec3(33.33)))));
+    float _e16 = p_17.x;
+    float _e18 = p_17.y;
+    float _e21 = p_17.z;
+    return fract(((_e16 + _e18) * _e21));
+}
+
+float mt_kn(vec3 p_18) {
+    vec3 f_4 = vec3(0.0);
+    vec3 i_8 = floor(p_18);
+    f_4 = fract(p_18);
+    vec3 _e4 = f_4;
+    vec3 _e5 = f_4;
+    vec3 _e9 = f_4;
+    f_4 = ((_e4 * _e5) * (vec3(3.0) - (2.0 * _e9)));
+    float _e14 = mt_kh(i_8);
+    float _e20 = mt_kh((i_8 + vec3(1.0, 0.0, 0.0)));
+    float _e22 = f_4.x;
+    float _e29 = mt_kh((i_8 + vec3(0.0, 1.0, 0.0)));
+    float _e35 = mt_kh((i_8 + vec3(1.0, 1.0, 0.0)));
+    float _e37 = f_4.x;
+    float _e40 = f_4.y;
+    float _e47 = mt_kh((i_8 + vec3(0.0, 0.0, 1.0)));
+    float _e53 = mt_kh((i_8 + vec3(1.0, 0.0, 1.0)));
+    float _e55 = f_4.x;
+    float _e62 = mt_kh((i_8 + vec3(0.0, 1.0, 1.0)));
+    float _e68 = mt_kh((i_8 + vec3(1.0, 1.0, 1.0)));
+    float _e70 = f_4.x;
+    float _e73 = f_4.y;
+    float _e76 = f_4.z;
+    return mix(mix(mix(_e14, _e20, _e22), mix(_e29, _e35, _e37), _e40), mix(mix(_e47, _e53, _e55), mix(_e62, _e68, _e70), _e73), _e76);
+}
+
+KpSurface kpConcreteStation(vec3 p_22, float age_3, float wetness, float repair_3, float footprint_2) {
+    float fine = 0.5;
+    vec3 color_1 = vec3(0.0);
+    vec3 q_14 = (p_22 + vec3(19.0, 13.49, 7.03));
+    float _e12 = mt_kn((q_14 * 0.63));
+    float _e15 = mt_kn((q_14 * 3.7));
+    if ((footprint_2 < 0.021)) {
+        float _e22 = mt_kn((q_14 * 127.0));
+        fine = mix(_e22, 0.5, smoothstep(0.003, 0.021, footprint_2));
+    }
+    float moisturePatch = (smoothstep(0.43, 0.72, _e12) * smoothstep(0.28, 0.62, _e15));
+    float damp = clamp(((moisturePatch * (0.42 + (_e12 * 0.58))) * (1.0 - (repair_3 * 0.85))), 0.0, 1.0);
+    float wet_4 = (wetness * clamp(((damp + (smoothstep(0.6, 0.81, _e12) * 0.38)) + 0.22), 0.0, 1.0));
+    vec3 base_3 = vec3(0.468, 0.451, 0.381);
+    float gray = (((moisturePatch * age_3) * 0.18) * (1.0 - repair_3));
+    color_1 = mix(base_3, ((base_3 * 0.69) + vec3(0.027, 0.03, 0.025)), gray);
+    float _e81 = mt_kn((q_14 * 23.0));
+    float chip = ((smoothstep(0.64, 0.81, _e81) * smoothstep(0.46, 0.76, _e15)) * age_3);
+    vec3 _e90 = color_1;
+    color_1 = mix(_e90, (base_3 * vec3(0.59, 0.56, 0.49)), (chip * 0.42));
+    vec3 _e99 = color_1;
+    color_1 = mix(_e99, (base_3 * vec3(0.5, 0.56, 0.5)), ((damp * age_3) * 0.72));
+    vec3 _e109 = color_1;
+    color_1 = mix(_e109, mix(base_3, vec3(0.8, 0.78, 0.69), 0.17), (repair_3 * 0.85));
+    vec3 _e123 = color_1;
+    color_1 = (_e123 * (1.0 - (wet_4 * 0.13)));
+    float _e125 = fine;
+    float height = (((_e125 - 0.5) * 0.00042) - (chip * 0.0007));
+    float _e133 = fine;
+    float rough_4 = clamp(((0.87 + ((_e133 - 0.5) * 0.07)) - (wet_4 * 0.23)), 0.23, 1.0);
+    vec3 _e146 = color_1;
+    return KpSurface(height, _e146, rough_4);
+}
+
+vec3 pl_rotate(vec3 v_2, vec3 axis, float a_1) {
+    float c_2 = cos(a_1);
+    float s_3 = sin(a_1);
+    return (((v_2 * c_2) + (cross(axis, v_2) * s_3)) + ((axis * dot(axis, v_2)) * (1.0 - c_2)));
+}
+
+vec3 pl_warp(vec3 p_23, vec3 phase_2) {
+    vec3 c1_ = (vec3(0.12, 1.42, 0.04) + (0.035 * phase_2));
+    vec3 a1_ = normalize(vec3(0.38, 0.82, 0.42));
+    vec3 v1_ = (p_23 - c1_);
+    float t1_ = ((0.65 * exp((-(dot(v1_, v1_)) / 5.76))) * sin((((1.45 * dot(a1_, v1_)) + 0.7) + phase_2.x)));
+    vec3 _e31 = pl_rotate(v1_, a1_, t1_);
+    vec3 q_15 = (c1_ + _e31);
+    vec3 c2_ = (vec3(-0.16, 1.63, -0.06) + (0.025 * phase_2));
+    vec3 a2_ = normalize(vec3(-0.67, 0.15, 0.73));
+    vec3 v2_ = (q_15 - c2_);
+    float t2_ = ((0.2 * exp((-(dot(v2_, v2_)) / 4.41))) * sin((((4.1 * dot(a2_, v2_)) + 2.0) + phase_2.y)));
+    vec3 _e62 = pl_rotate(v2_, a2_, t2_);
+    return (c2_ + _e62);
+}
+
+vec3 pl_xi(vec3 p_24, vec3 phase_3) {
+    vec3 _e2 = pl_warp(p_24, phase_3);
+    vec3 q_16 = (_e2 + vec3(2.73, 0.91, 1.37));
+    float r_2 = max(length(q_16), 0.0001);
+    return vec3((log2(r_2) - 2.0), (-(q_16.z) / r_2), atan(q_16.x, q_16.y));
+}
+
+float pl_cell(vec3 xi, float sc_1) {
+    float a_8 = (((cos((sc_1 * xi.z)) * cos((sc_1 * xi.x))) + (cos((sc_1 * xi.y)) * cos((sc_1 * xi.y)))) + (cos((sc_1 * xi.y)) * cos((sc_1 * xi.x))));
+    return (cos(a_8) - 0.6556966);
+}
+
+float pl_macroFast(vec3 p_25) {
+    vec3 _e5 = pl_xi(p_25, vec3(0.7, -1.3, 2.1));
+    float _e7 = pl_cell(_e5, 1.0);
+    float _e9 = pl_cell(_e5, 2.0);
+    float _e14 = pl_cell(_e5, 4.0);
+    float _e19 = pl_cell(_e5, 8.0);
+    float _e24 = pl_cell(_e5, 16.0);
+    float s_4 = ((((_e7 + (_e9 * 0.5)) + (_e14 * 0.25)) + (_e19 * 0.125)) + (_e24 * 0.0625));
+    return tanh((0.78 * s_4));
+}
+
+float pl_microFast(vec3 p_26) {
+    vec3 _e5 = pl_xi(p_26, vec3(0.7, -1.3, 2.1));
+    float _e7 = pl_cell(_e5, 16.0);
+    float _e11 = pl_cell(_e5, 32.0);
+    float _e16 = pl_cell(_e5, 64.0);
+    float s_5 = (((_e7 * 0.0625) + (_e11 * 0.03125)) + (_e16 * 0.015625));
+    return tanh((10.5 * s_5));
+}
+
+vec3 pl_q(vec3 p_27, KpPlasterParams a_2) {
+    return vec3(((p_27.xy - a_2.centerM) / max(a_2.halfM, vec2(0.08))), (p_27.z * 2.0));
+}
+
+float kpPlasterMacro(vec3 p_28, KpPlasterParams a_3) {
+    vec3 _e2 = pl_q(p_28, a_3);
+    float _e8 = pl_macroFast((_e2 + vec3(-0.17, 0.31, 0.09)));
+    float coarse = (sin(((p_28.x * 2.7) + (p_28.y * 0.9))) * sin(((p_28.y * 3.2) - (p_28.x * 0.7))));
+    return clamp(((0.48 * _e8) + (0.52 * coarse)), -1.0, 1.0);
+}
+
+float kpPlasterMicro(vec3 p_29, KpPlasterParams a_4) {
+    vec3 _e2 = pl_q(p_29, a_4);
+    float _e13 = pl_microFast(((_e2 * vec3(2.65, 2.52, 3.55)) + vec3(-0.27, 0.44, -0.19)));
+    float r_3 = (sin((((p_29.x * 47.0) - (p_29.y * 39.0)) + (p_29.z * 58.0))) * sin((((p_29.x * 31.0) + (p_29.y * 37.0)) - (p_29.z * 43.0))));
+    return clamp(((0.78 * _e13) + (0.22 * r_3)), -1.0, 1.0);
+}
+
+float pl_observed(vec3 p_30, KpPlasterParams a_5, float physicalFootprintM_6) {
+    float sum_1 = 0.0;
+    float sc_2 = 1.0;
+    int i_5 = 0;
+    vec3 _e3 = pl_q(p_30, a_5);
+    vec3 phase_4 = vec3(-1.3, 4.7, 2.2);
+    vec3 _e8 = pl_xi(_e3, phase_4);
+    float e_2 = max(physicalFootprintM_6, 1e-7);
+    vec3 dq = vec3((e_2 / max(a_5.halfM.x, 0.08)), (e_2 / max(a_5.halfM.y, 0.08)), (e_2 * 2.0));
+    vec3 _e29 = pl_xi((_e3 + vec3(dq.x, 0.0, 0.0)), phase_4);
+    vec3 _e37 = pl_xi((_e3 + vec3(0.0, dq.y, 0.0)), phase_4);
+    vec3 _e45 = pl_xi((_e3 + vec3(0.0, 0.0, dq.z)), phase_4);
+    float fp_24 = max(length((_e29 - _e8)), max(length((_e37 - _e8)), length((_e45 - _e8))));
+    bool loop_init_4 = true;
+    while(true) {
+        if (!loop_init_4) {
+            int _e77 = i_5;
+            i_5 = (_e77 + 1);
+        }
+        loop_init_4 = false;
+        int _e56 = i_5;
+        if ((_e56 < 17)) {
+        } else {
+            break;
+        }
+        {
+            float _e59 = sc_2;
+            float gate_1 = (1.0 - smoothstep(0.44, 1.12, (fp_24 * _e59)));
+            float _e66 = sc_2;
+            float _e67 = pl_cell(_e8, _e66);
+            float _e69 = sc_2;
+            float _e71 = sum_1;
+            sum_1 = (_e71 + ((gate_1 * _e67) / _e69));
+            float _e74 = sc_2;
+            sc_2 = (_e74 * 2.0);
+        }
+    }
+    float _e79 = sum_1;
+    return tanh((0.86 * _e79));
+}
+
+KpPlasterField kpPlasterOriginalField(vec3 pLocalM_5, KpPlasterParams a_6, float physicalFootprintM_7) {
+    float _e3 = kpPlasterMacro(pLocalM_5, a_6);
+    float _e4 = kpPlasterMicro(pLocalM_5, a_6);
+    float _e5 = pl_observed(pLocalM_5, a_6, physicalFootprintM_7);
+    float wave = max(a_6.grainWavelengthM, 0.0003);
+    float phase_5 = (dot(pLocalM_5, normalize(vec3(83.0, -61.0, 97.0))) * (6.2831855 / wave));
+    float grain_1 = (sin(phase_5) * (1.0 - smoothstep(0.35, 0.9, (physicalFootprintM_7 / wave))));
+    float microGate = (1.0 - smoothstep(0.008, 0.02, physicalFootprintM_7));
+    float h_22 = (((microGate * a_6.microM) * ((0.26 * _e5) + (0.18 * _e4))) + (a_6.grainHeightM * grain_1));
+    vec3 base_4 = (mix(a_6.paletteDark, a_6.paletteLight, ((0.58 + (0.08 * _e5)) + (0.22 * _e3))) * (0.94 + (a_6.grainColor * grain_1)));
+    float rough_5 = clamp((0.95 + (0.032 * -(_e5))), 0.86, 0.997);
+    float thickness = clamp(((a_6.thicknessM + (a_6.reliefM * _e3)) + (a_6.geometryMicroM * _e4)), a_6.minThicknessM, a_6.maxThicknessM);
+    return KpPlasterField(_e3, _e4, thickness, KpSurface(h_22, base_4, rough_5));
+}
