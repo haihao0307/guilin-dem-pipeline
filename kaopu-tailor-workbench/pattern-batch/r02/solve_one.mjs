@@ -14,6 +14,7 @@ async function save(result){if(done)return;done=true;clearTimeout(deadline);cons
  if(!result.record&&state.lab&&state.lab.positions.every(p=>p.every(Number.isFinite)))result.checkpoint={positionsM:state.lab.positions.flatMap(p=>Array.from(p)),metrics:state.lab.metrics(),stage:state.stages[state.stageIndex],complete:false,accepted:false};
  await fs.mkdir(path.dirname(out),{recursive:true});await fs.writeFile(out,gzipSync(JSON.stringify(result),{level:9}));console.log('OUTCOME',JSON.stringify({id,complete:!!result.record,reinforced:reinforce,passed:result.record?.staticGate?.passed,error:result.error,seconds:result.seconds}));resolve();}
 globalThis.postMessage=d=>{
+ if(d.type==='started'&&process.argv.includes('--debug-initial')){const s=mod.__batchState();void fs.writeFile(out+'.initial.json.gz',gzipSync(JSON.stringify({spec:s.spec,checkpoint:{positionsM:s.lab.positions.flatMap(p=>Array.from(p)),metrics:s.lab.metrics()}})))}
  if(d.type==='stage'){stages.push({stage:d.completedStage,metrics:d.metrics});console.log('STAGE',id,d.completedStage,d.metrics.maxPrincipalStrain)}
  if(d.type==='paused'&&d.budgetCheckpoint)setTimeout(()=>self.onmessage({data:{type:'resume',requestId:1}}),0);
  if(d.type==='done')void save({record:d.record,regions:d.regions,intersections:d.intersections,profile:d.profile});
@@ -28,12 +29,13 @@ try{
  mod=await import('./backend/native/kaopu-tailor-workbench/catalogue/batch-adapter.mjs');
  let warmStart=null;
  if(reinforce&&!process.argv.includes('--cold')){
-  const archived=await fs.readFile(path.join(root,'../../presets/r04/assets/results',id+'.json.gz'));warmStart=JSON.parse(gunzipSync(archived));
+  const archived=await fs.readFile(path.join(root,process.argv.includes('--warm-r02')?'data/results':'../../presets/r04/assets/results',id+'.json.gz'));warmStart=JSON.parse(gunzipSync(archived));
   if(warmStart.binding?.presetId!==id)throw Error('Warm garment identity differs');
   warmStart.archiveSHA256=createHash('sha256').update(archived).digest('hex');
   const lock=JSON.parse(await fs.readFile(path.join(root,'data/SOURCE_RESULT_LOCK.json'),'utf8'));
-  if(lock.results[id].sha256!==warmStart.archiveSHA256||JSON.stringify(lock.person)!==JSON.stringify(warmStart.binding.person))throw Error('Verified source sewing archive or person differs');
+  const wanted=process.argv.includes('--warm-r02')?JSON.parse(await fs.readFile(path.join(root,'data/BATCH_REPORT.json'),'utf8')).rows.find(r=>r.id===id).sha256:lock.results[id].sha256;
+  if(wanted!==warmStart.archiveSHA256||JSON.stringify(lock.person)!==JSON.stringify(warmStart.binding.person))throw Error('Verified source sewing archive or person differs');
  }
- const loaded=await mod.__loadBatch(ticket,{reinforce,warmStart,continuation:process.argv.includes('--continuation'),variant43:process.argv.includes('--legacy')?false:process.argv.includes('--bending')?true:undefined});console.log('MESH',id,loaded.spec.panels.reduce((s,p)=>s+p.uvMm.length,0),loaded.spec.seams.length);
+ const loaded=await mod.__loadBatch(ticket,{reinforce,warmStart,finish:process.argv.includes('--finish'),mirrorLegStart:process.argv.includes('--mirror-leg-start=right')?'right':process.argv.includes('--mirror-leg-start'),continuation:process.argv.includes('--continuation'),variant43:process.argv.includes('--legacy')?false:process.argv.includes('--bending')?true:undefined});if(process.argv.includes('--grip-control')){delete loaded.spec.elasticStays;loaded.spec.source.finishRevision.gripControlDisabled=true;const {materialHash}=await import('./backend/source-contract.mjs');loaded.binding.materialHash=await materialHash(loaded.spec)}console.log('MESH',id,loaded.spec.panels.reduce((s,p)=>s+p.uvMm.length,0),loaded.spec.seams.length);
  await self.onmessage({data:{type:'run',requestId:1,person:loaded.binding.person}});await completion;
 }catch(e){if(mod)await save({error:e.stack});else throw e}

@@ -19,17 +19,17 @@ export function prepareAssembly(spec,body){
 export function createSeamLayerGuide(lab){
  const guides=[];
  for(const seam of lab.spec.seams){
-  if(seam.isInternalReinforcement)continue;
+  if(seam.isInternalReinforcement||seam.isFinishConstruction)continue;
   if(!seam.numericalStitchPlan)continue;
   let A=seam.a,B=seam.b,pa=lab.spec.panels.find(p=>p.id===A.panelId),pb=lab.spec.panels.find(p=>p.id===B.panelId),pairs=seam.stitchVertexPairs;
   if(seam.sourceSeam.lengthAMm>seam.sourceSeam.lengthBMm){[A,B]=[B,A];[pa,pb]=[pb,pa];pairs=pairs.map(([a,b])=>[b,a]);}
   const be=B.reverse?[...pb.edges[B.edge]].reverse():pb.edges[B.edge],oa=lab.offsets.get(pa.id),ob=lab.offsets.get(pb.id);
   for(let i=0;i+1<pairs.length;i++){
    const [a0,b0]=pairs[i],[a1,b1]=pairs[i+1];const face=pa.triangles.find(t=>t.includes(a0)&&t.includes(a1));if(!face)continue;
-   const inner=face.find(v=>v!==a0&&v!==a1),j0=be.indexOf(b0),j1=be.indexOf(b1);if(j0<0||j1<=j0)continue;
+   const inner=_finishInner(pa,a0,a1,face.find(v=>v!==a0&&v!==a1)),j0=be.indexOf(b0),j1=be.indexOf(b1);if(j0<0||j1<=j0)continue;
    for(let j=j0+1;j<j1;j++)guides.push({a:oa+a0,b:oa+a1,c:oa+inner,v:ob+be[j],f:(j-j0)/(j1-j0),boundary:true});
    const chosen=new Set();
-   for(let j=j0;j<j1;j++)for(const t of pb.triangles)if((!pb.reinforcementCut||t.every(i=>i<pb.reinforcementCut.originalMaterialVertexCount))&&t.includes(be[j])&&t.includes(be[j+1])){const v=t.find(v=>v!==be[j]&&v!==be[j+1]);if(chosen.has(v)||(pb.reinforcementCut?.netBoundaryMaterialIds||pb.boundary).includes(v))continue;chosen.add(v);guides.push({a:oa+a0,b:oa+a1,c:oa+inner,v:ob+v,f:(j-j0+.5)/(j1-j0),boundary:false});}
+   for(let j=j0;j<j1;j++)for(const t of pb.triangles)if((!pb.reinforcementCut||t.every(i=>i<pb.reinforcementCut.originalMaterialVertexCount))&&t.includes(be[j])&&t.includes(be[j+1])){const v=_finishInner(pb,be[j],be[j+1],t.find(v=>v!==be[j]&&v!==be[j+1]));if(chosen.has(v)||(pb.reinforcementCut?.netBoundaryMaterialIds||pb.boundary).includes(v))continue;chosen.add(v);guides.push({a:oa+a0,b:oa+a1,c:oa+inner,v:ob+v,f:(j-j0+.5)/(j1-j0),boundary:false});}
   }
  }
  return {count:guides.length,project(){let corrected=0;const x=lab.positions,w=lab.invMass;
@@ -40,4 +40,13 @@ export function createSeamLayerGuide(lab){
    for(const[id,s]of[[g.v,-w[g.v]],[g.a,w[g.a]*(1-f)],[g.b,w[g.b]*f]]){x[id][0]+=s*lambda*dx;x[id][1]+=s*lambda*dy;x[id][2]+=s*lambda*dz;}corrected++;
   }return corrected;
  }};
+}
+
+// A narrow folded seam needs a net-cloth orientation reference beyond its fold,
+// otherwise the old half-space rule fights the newly sewn second row.
+function _finishInner(p,a,b,near){
+ if(p.reinforcementCut?.schema!=='interior-narrow-fold-cut@1')return near;
+ const A=p.uvMm[a],B=p.uvMm[b],C=p.uvMm[near],dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy),side=Math.sign(dx*(C[1]-A[1])-dy*(C[0]-A[0])),mid=[(A[0]+B[0])/2,(A[1]+B[1])/2];let best=near,score=Infinity;
+ for(let i=0;i<p.uvMm.length;i++){const q=p.uvMm[i],height=(dx*(q[1]-A[1])-dy*(q[0]-A[0]))/L*side;if(height<5)continue;const d=(q[0]-mid[0])**2+(q[1]-mid[1])**2;if(d<score){score=d;best=i}}
+ return best;
 }

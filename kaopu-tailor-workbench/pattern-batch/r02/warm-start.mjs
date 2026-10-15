@@ -20,14 +20,14 @@ export function warmStartAllowances(lab,base){
  };
  const mapping=[];let originalTransferred=0,newAllowance=0,maxAnalyticDifferenceMm=0;
  for(const p of lab.spec.panels){
-  const entry=oldPanels.get(p.id);if(!entry)throw Error('Warm start cannot add an unrelated panel: '+p.id);
+  const entry=oldPanels.get(p.id);if(!entry){if(p.finishFacing)continue;throw Error('Warm start cannot add an unrelated panel: '+p.id)}
   const origin=frame(lab.spec,p.id),oldOrigin=frame(base.spec,p.id),shift=origin.map((x,k)=>x-oldOrigin[k]),offset=lab.offsets.get(p.id),netCount=p.reinforcementCut?.originalMaterialVertexCount||p.uvMm.length;
   const curves=new Map(entry.panel.analyticCurvesMm.map(e=>[e.id,e]));
   for(const curve of p.analyticCurvesMm){const old=curves.get(curve.id);if(!old||old.kind!==curve.kind)throw Error('Warm source analytic paper differs: '+p.id);const a=curve.sampledPointsMm.map(q=>q.map((x,k)=>x+shift[k])),b=old.sampledPointsMm;for(const [source,target]of [[a,b],[b,a]])for(const q of source){const d=nearestSegment(q,{uvMm:target},target.map((_,i)=>i)).gap;maxAnalyticDifferenceMm=Math.max(maxAnalyticDifferenceMm,d);if(d>10)throw Error('Warm initialization cut differs by more than 10 mm: '+p.id)}}
-  const joins=lab.spec.seams.filter(s=>!s.isInternalReinforcement&&(s.a.panelId===p.id||s.b.panelId===p.id));
+  const joins=lab.spec.seams.filter(s=>!s.isInternalReinforcement&&!s.isFinishConstruction&&(s.a.panelId===p.id||s.b.panelId===p.id));
   for(let i=0;i<p.uvMm.length;i++){
    const q=p.uvMm[i].map((x,k)=>x+shift[k]);let world;
-   if(i<netCount){world=interpolate(entry,q);originalTransferred++}
+   if(i<netCount||entry.lookup.has(key(q))){world=interpolate(entry,q);originalTransferred++}
    else{
     let closest;
     for(const seam of joins){let oldSeam=baseSeams.get(edgeKey(seam.a)+'::'+edgeKey(seam.b));if(!oldSeam){const swapped=baseSeams.get(edgeKey(seam.b)+'::'+edgeKey(seam.a));if(swapped)oldSeam={...swapped,a:swapped.b,b:swapped.a}}if(!oldSeam)throw Error('Warm source material edge identity differs: '+seam.id);for(const side of ['a','b']){if(oldSeam[side].panelId!==p.id)continue;const ref=oldSeam[side],edge=entry.panel.edges[ref.edge];if(!edge)throw Error('Warm material edge missing: '+edgeKey(ref));const near=nearestSegment(q,entry.panel,edge);if(!closest||near.gap<closest.near.gap)closest={seam:oldSeam,side,near,ref}}}

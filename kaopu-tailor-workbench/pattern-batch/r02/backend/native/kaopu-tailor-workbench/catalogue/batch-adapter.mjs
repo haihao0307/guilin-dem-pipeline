@@ -1,3 +1,5 @@
+import {addInteriorReinforcement} from '../../../../inside-reinforce.mjs';
+import {prepareFinishGuides,addFinishedEdges,initializeFinishPanels,contactSnapshot,applyFinishContact,measureFinish,installElasticStays,prepareFinishFixtures} from '../../../../finish.mjs';
 import {warmStartAllowances} from '../../../../warm-start.mjs';
 let batchWarmStart=null;
 import {addInternalReinforcement,scheduleInternalStages} from '../../../../reinforce.mjs';
@@ -2646,7 +2648,7 @@ var GarmentLab = class extends ClothLab {
     this.frameCount++;
     const n = this.positions.length, h = dt / this.substeps, ps = this.positions, vs = this.velocity, im = this.invMass, q = this._q, old = this._old, all = [...this.constraints, ...this.seamConstraints];
     this.bodyContacts = 0;
-    for (let sub3 = 0; sub3 < this.substeps; sub3++) {
+    for (let sub3 = 0; sub3 < this.substeps; sub3++) {const finishBefore=contactSnapshot(this);
       this.elapsed += h;
       this.seamElapsed += h;
       if (this.stitchEqualityElimination) this.stitchGroups.synchronize();
@@ -2732,7 +2734,7 @@ var GarmentLab = class extends ClothLab {
         this.selfContacts.rebuild();
         this.selfContacts.project();
       }
-      const damping = Math.exp(-20 * h);
+      applyFinishContact(this,finishBefore,h);const damping = Math.exp(-20 * h);
       for (let i = 0; i < n; i++) {
         if (this.stitchEqualityElimination && this.stitchGroups.find(i) !== i) continue;
         const p = ps[i], v = vs[i], o = i * 3;
@@ -2785,7 +2787,7 @@ var GarmentLab2 = class extends GarmentLab {
     if (!module) throw Error("Fast kernel must be initialized before constructing cloth");
     this.kernel = new WebAssembly.Instance(module, { math: { atan2: Math.atan2, cos: Math.cos, sin: Math.sin } }).exports;
     this.profile = { distanceMs: 0, strainMs: 0, bodyVertexMs: 0, bodySurfaceMs: 0, integrateAndGroupsMs: 0 };
-    const n = this.positions.length, t = this.strainTriangles.length, e = this.meshEdges.length, capacity = this.constraints.length + spec2.seams.reduce((s, x) => s + spec2.panels.find((p2) => p2.id === x.a.panelId).edges[x.a.edge].length, 0) + 16;
+    const n = this.positions.length, t = this.strainTriangles.length, e = this.meshEdges.length, capacity = this.constraints.length + spec2.seams.reduce((s, x) => s + spec2.panels.find((p2) => p2.id === x.a.panelId).edges[x.a.edge].length, 0) + 256;
     this.capacity = capacity;
     let offset = 65536;
     const take = (count, bytes2 = 8) => {
@@ -2874,7 +2876,7 @@ var GarmentLab2 = class extends GarmentLab {
     this.frameCount++;
     const n = this.positions.length, h = dt / this.substeps, ps = this.positions, vs = this.velocity, im = this.invMass, old = this._old, k = this.kernel, P = this.profile, baseCount = this.constraints.length;
     this.bodyContacts = 0;
-    for (let sub3 = 0; sub3 < this.substeps; sub3++) {
+    for (let sub3 = 0; sub3 < this.substeps; sub3++) {const finishBefore=contactSnapshot(this);
       let now = performance.now();
       this.elapsed += h;
       this.seamElapsed += h;
@@ -2928,7 +2930,7 @@ var GarmentLab2 = class extends GarmentLab {
       if(this.waistCircuit43)for(let j=0;j<32;j++){k.waistProject43(1);k.vertices(this.clearance);}
       this.bodyContacts += k.getContacts();
       now = performance.now();
-      const damping = Math.exp(-20 * h);
+      applyFinishContact(this,finishBefore,h);const damping = Math.exp(-20 * h);
       for (let i = 0; i < n; i++) {
         if (this.stitchEqualityElimination && this.alias[i] !== i) continue;
         const p = ps[i], v = vs[i], o = i * 3;
@@ -3396,14 +3398,14 @@ async function startLegacySolve(token) {
   profile.bodyMs = performance.now() - start;
   if(config.kind==="legacy")throw Error("基础款须使用保留的 R06 原始计算线程");
   prepareAssembly(spec,body);if(nativeBinding?.presetId==="S06")stageLowerBodyPanels(spec,body);prepareShoulderFixtures(spec,sdf);if(corrected43)stageRadialSkirt(spec,analytic,body);
-  scheduleInternalStages(spec);lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
- if(batchWarmStart)warmStartAllowances(lab,batchWarmStart);lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;lab.sideClearance43d=corrected43&&nativeBinding?.presetId==="P06";if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
+  prepareFinishFixtures(spec,sdf,body);scheduleInternalStages(spec);lab = new GarmentLab2(spec, sdf, { substeps: corrected43&&nativeBinding.presetId==="T06"?18:12, iterations: corrected43&&nativeBinding.presetId==="T06"?4:1, sewingDuration:.75 });
+ if(batchWarmStart)warmStartAllowances(lab,batchWarmStart);if(spec.source.finishRevision){initializeFinishPanels(lab);lab.finishProof.afterInitialization=measureFinish(lab);}installElasticStays(lab);lab.pipeline43=corrected43;lab.spanCorrected43=spanCorrected43;lab.sideClearance43d=corrected43&&nativeBinding?.presetId==="P06";if(corrected43)configureMaterialBending(lab);if(corrected43)lab.kernel.setBodyExterior43(...sdf.exteriorBounds.lo,...sdf.exteriorBounds.hi);
   lab.orientationGuides = false;
   lab.selfCollisionEnabled = false;
   lab.stitchEqualityElimination = true;
   lab.strainGuard = true;
-  stages = [...spec.source.assemblyExperiment,...(corrected43?["seam-relax","seam-finish"]:[]),"release","refine","joint"];
-  totalFrames = stages.reduce((n,s)=>n+r043Frames(s),0);
+  stages = [...spec.source.assemblyExperiment,...(corrected43?["seam-relax","seam-finish"]:[]),"release","refine","joint",...(spec.source.finishRevision?["wear"]:[])];
+  if(spec.source.finishRevision?.strapless)stages=[...spec.source.assemblyExperiment,...(spec.source.finishRevision.waistSupport?[]:["elastic-fit"]),"release","wear"];totalFrames = stages.reduce((n,s)=>n+r043Frames(s),0);
   refinementSteps=0;layerGuide=null;jointSteps=0;jointInfo=closureInfo=null;
   stageIndex = stageFrame = wallMs = 0;
   if (pendingPause) { running=false; packet("paused"); return; }
@@ -3414,7 +3416,7 @@ async function startLegacySolve(token) {
 }
 // R04.3 sequenced native sewing. Heavy stages yield so pause/cancel remains real.
 var r043PreGuides=null,r043PreJoint=null,r043BudgetOrigin=0,r043Recovery=[];
-function r043Frames(stage){if(spec?.source.priorSewingContinuation&&spec.stages.some(s=>s.id===stage&&s.seams.length&&s.seams.every(id=>!id.endsWith('__inner'))))return 1;return ['seam-relax','refine'].includes(stage)?(stage==='seam-relax'?1000:1600):['seam-finish','joint'].includes(stage)?1600:stage==='release'?120:90;}
+function r043Frames(stage){if(spec?.source.priorSewingContinuation&&spec.stages.some(s=>s.id===stage&&s.seams.length&&s.seams.every(id=>!id.endsWith('__inner'))))return 1;if(stage==="elastic-fit")return 120;if(stage==="wear")return spec.source.finishRevision?.strapless?600:180;return ['seam-relax','refine'].includes(stage)?(stage==='seam-relax'?1000:1600):['seam-finish','joint'].includes(stage)?1600:stage==='release'?120:90;}
 function tick(token){
  if(!running||token!==epoch)return;
  try{
@@ -3426,13 +3428,13 @@ function tick(token){
    if(stageFrame===0){
     if(stage==='seam-relax'){lab.kernel.prepare(1/720,lab.elapsed);r043PreGuides=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
     else if(stage==='seam-finish')r043PreJoint=beginMaterialRefinement(lab);
-    else if(stage==='release'){
-     lab.releasePins();
+    else if(stage==='elastic-fit'){finalizeCloseSeams(lab);lab.releasePins();lab.setGravity(0);lab.elasticEnabled=true;lab.finishProof.elasticFitSeconds=2;}else if(stage==='release'){
+     if(spec.source.finishRevision?.strapless){const closure=finalizeCloseSeams(lab);lab.elasticEnabled=true;lab.finishProof.elasticActivation={phase:'after sewing, before gravity',closure,preGravitySeamGapMm:lab.metrics().activeMaxGapMm};}lab.releasePins();
      if(lab.pipeline43){lab.waistCircuitReport43=waistCircuit(lab,analytic);for(const v of lab.velocity)v.fill(0);lab.setGravity(0);}
      else lab.setGravity(1);
     }else if(stage==='refine'){lab.kernel.prepare(1/720,lab.elapsed);layerGuide=createSeamLayerGuide(lab);for(const v of lab.velocity)v.fill(0);}
     else if(stage==='joint')jointInfo=beginMaterialRefinement(lab);
-    else {lab.activate(stage);if(stage==='sides'&&!spec.source.radialAssembly43b?.enabled)lab.releasePins();}
+    else if(stage==='wear'){lab.releasePins();lab.setGravity(1);lab.finishProof.beforeWear=measureFinish(lab);}else {lab.activate(stage);if(stage==='sides'&&!spec.source.radialAssembly43b?.enabled&&!spec.source.finishRevision?.strapless)lab.releasePins();}
    }
    const time=performance.now();
    if(stage==='refine'||stage==='seam-relax'){
@@ -3443,25 +3445,25 @@ function tick(token){
     if(stage==='refine')refinementSteps++;
    }else if(stage==='joint'||stage==='seam-finish'){
     const result=lab.kernel.qnStep();if(result<0)throw Error('联合整理检测到无效材料/接缝状态；中间坐标保留供诊断。');if(stage==='joint')jointSteps++;
-   }else {if(stage==='release'&&lab.pipeline43)lab.setGravity((stageFrame+1)/120);lab.step();}
+   }else {if(stage==='release'&&lab.pipeline43)lab.setGravity((stageFrame+1)/120);lab.step();if(stage==='wear'&&stageFrame%60===59)(lab.finishProof.wearTrace||=[]).push({seconds:(stageFrame+1)/60,...measureFinish(lab)});}
    profile.solveMs+=performance.now()-time;stageFrame++;count++;
    if(stageFrame===r043Frames(stage)){
     if(stage==='seam-finish')lab.preReleaseClosure43={...jointReport(lab,r043PreJoint),closure:finalizeCloseSeams(lab)};
-    if(stage==='joint'){jointInfo=jointReport(lab,jointInfo);closureInfo=finalizeCloseSeams(lab);}
+    if(stage==='wear'){lab.finishProof.afterWear=measureFinish(lab);lab.finishProof.wearSeconds=spec.source.finishRevision.strapless?10:3;if(spec.source.finishRevision.strapless){closureInfo=finalizeCloseSeams(lab);lab.finishProof.physicalContactContinuation=true;lab.finishProof.quasiStaticFrictionlessPassSkipped=true;}}if(stage==='joint'){jointInfo=jointReport(lab,jointInfo);closureInfo=finalizeCloseSeams(lab);}
     let check=lab.metrics();
     if(lab.pipeline43&&check.finite&&check.maxPrincipalStrain>5){
      const before=check.maxPrincipalStrain;lab.kernel.prepare(1/720,lab.elapsed);
      for(let j=0;j<160;j++){lab.kernel.globalProject(lab.constraints.length,30,.002,100,50);lab.kernel.vertices(.0035);lab.kernel.surfaces();}
      for(const v of lab.velocity)v.fill(0);check=lab.metrics();r043Recovery.push({stage,beforeMaxStrain:before,afterMaxStrain:check.maxPrincipalStrain,extraGlobalIterations:160});
     }
-    if(!check.finite||check.maxPrincipalStrain>5)throw Error('当前原裁片仍存在严重材料变形；已保留有限中间状态，不认定为成衣。');
+    if(spec.source.finishRevision&&check.finite&&check.maxPrincipalStrain>5){const before=check.maxPrincipalStrain;let extra=0;lab.kernel.prepare(1/720,lab.elapsed);while(check.finite&&check.maxPrincipalStrain>5&&extra<2400){for(let j=0;j<80;j++){lab.kernel.globalProject(lab.constraints.length,30,.002,100,50);lab.kernel.vertices(.0035);lab.kernel.surfaces();}extra+=80;check=lab.metrics();}for(const v of lab.velocity)v.fill(0);r043Recovery.push({stage,beforeMaxStrain:before,afterMaxStrain:check.maxPrincipalStrain,finishConstructionIterations:extra,thresholdUnchanged:true});}if(!check.finite||check.maxPrincipalStrain>5)throw Error('当前原裁片仍存在严重材料变形；已保留有限中间状态，不认定为成衣。');
     packet('stage',{completedStage:stage});stageIndex++;stageFrame=0;
     if(stageIndex===stages.length){
      wallMs+=performance.now()-runStarted;running=false;packet('auditing');
      const begin=performance.now(),record=lab.export(),regions=regionalStrain(spec,record.positionsMm),intersections=strictIntersectionAudit(spec,record.positionsMm,record.materialToSolverGroup,bodyAudit);
      record.nativeBinding=structuredClone(nativeBinding);record.staticGate=staticGate(lab,record,regions,intersections);profile.auditMs=performance.now()-begin;
      record.jointRefinement={...jointInfo,closure:closureInfo};
-     record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
+     record.finishConstruction=lab.finishProof||null;record.finishContact=lab.finishContactReport||null;record.elasticStay=lab.elasticStayProof||null;record.trial={version:lab.pipeline43?'R04.3-native-material-circuit':'R04.2-preserved-baseline',physicalFitAccepted:false,continuousCollision:false,materialCalibrated:false,runtimeSelfContact:false,originalMaterialRetained:true,wholeSeamGateUnchanged:true};
      record.r043={constructionSideClearance:lab.seamSideClearance43d||null,continuousSeamSpans:lab.seamSpanReport43c||null,bending:lab.bending43b||null,radialAssembly:spec.source.radialAssembly43b||null,surfaceBodySamplesPerTriangle:lab.pipeline43?4:0,sourceRepresentation:analytic.source?.r043SourceRepair||null,waistCircuit:lab.waistCircuitReport43||{enabled:false},preReleaseClosure:lab.preReleaseClosure43||null,adaptiveRecovery:r043Recovery,personScaled:false,displayProxy:false};
      emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});return;
     }
@@ -3638,17 +3640,20 @@ const stable43=x=>JSON.stringify(x&&typeof x==='object'?Array.isArray(x)?x.map(v
 async function cuttingGeometryHash43(d){return sha(stable43(d.panels.map(p=>({id:p.id,verticesMm:p.verticesMm,edges:p.edges,placement:p.placement}))));}
 
 export function __batchState(){return {spec,analytic,lab,nativeBinding,stages,stageIndex,stageFrame}};
-export async function __loadBatch(ticket,{reinforce=true,warmStart=null,variant43=undefined,continuation=false}={}){
+export async function __loadBatch(ticket,{reinforce=true,warmStart=null,variant43=undefined,continuation=false,finish=false,mirrorLegStart=false}={}){
  stop();requestId=1;resetContinuation();spec=analytic=lab=null;batchWarmStart=warmStart;
  analytic=prepareNativeSource(await recoverExplicitPantsCuffGathering(ticket.pattern));
  spec=compileWithinNativeBudget(analytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:ticket.bodyIdentity.id}});
- if(reinforce)spec=addInternalReinforcement(spec);
+ if(finish)prepareFinishGuides(spec,analytic,(uv,edges)=>(0,import_cdt2d3.default)(uv,edges,{exterior:false}));
+ if(reinforce)spec=finish?addInteriorReinforcement(spec,(uv,edges)=>(0,import_cdt2d3.default)(uv,edges,{exterior:false})):addInternalReinforcement(spec);
+ if(finish)addFinishedEdges(spec);
+ if(mirrorLegStart)spec.source.initialLegSymmetry={sourceSide:mirrorLegStart==='right'?'right':'left',targetSide:mirrorLegStart==='right'?'left':'right',fullBelowMaterialYmm:350,blendEndsMaterialYmm:600,initializationOnly:true,paperRestUnchanged:true};
  if(continuation&&warmStart){spec.source.priorSewingContinuation={initializationOnly:true,allOriginalStagesActivatedBeforeNewRows:true};scheduleInternalStages(spec)}
  validate2(spec);
  spec.source.patternBatchTicket={id:ticket.id,recipeHash:ticket.recipeHash,geometryHash:ticket.geometryHash,contentSHA256:ticket.contentSHA256};
  config={kind:'analytic',variant43};
  nativeBinding={schema:'kaopu-native-pattern-batch-binding@1',presetId:ticket.id,person:R04_LOCK.person,
-   sourceRecipeHash:ticket.recipeHash,sourceGeometryHash:ticket.geometryHash,batchContentSHA256:ticket.contentSHA256,
+   sourceRecipeHash:ticket.recipeHash,sourceGeometryHash:analytic.geometryHash,batchContentSHA256:ticket.contentSHA256,
    bodyMutationAllowed:false,internalReinforcement:reinforce,materialHash:await materialHash(spec)};
  return {spec,binding:nativeBinding,fitPreflight:preflightSizing(analytic)};
 }

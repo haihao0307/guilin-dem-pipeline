@@ -11,9 +11,9 @@ for row in report['rows']:
     for seam in inner:
         parent=next(s for s in originals if s['id']==seam['parentSeamId']);assert seam['stageId']==parent['stageId']+'__reinforce';assert parent['stageId'] in stages[seam['stageId']]['requires'];assert len(seam['stitchVertexPairs'])>=2
         for side in ['a','b']:
-            ref=seam[side];p=panels[ref['panelId']];assert all(0<=i<len(p['uvMm']) for i in p['edges'][ref['edge']]);assert all(i>=p['reinforcementCut']['originalMaterialVertexCount'] for i in p['edges'][ref['edge']])
+            ref=seam[side];p=panels[ref['panelId']];assert all(0<=i<len(p['uvMm']) for i in p['edges'][ref['edge']]);assert p['reinforcementCut']['schema'] in ['interior-narrow-fold-cut@1','new-facing-material@1'] or all(i>=p['reinforcementCut']['originalMaterialVertexCount'] for i in p['edges'][ref['edge']])
     for p in panels.values():
-        cut=p['reinforcementCut'];assert not cut['originalCoordinatesScaled'];assert cut['newCutAreaMm2']>cut['originalNetAreaMm2']>0
+        cut=p['reinforcementCut'];assert not cut['originalCoordinatesScaled'];assert cut['newCutAreaMm2']>=cut['originalNetAreaMm2']>0
         area=0
         for tri in p['triangles']:
             assert len(set(tri))==3 and all(0<=i<len(p['uvMm']) for i in tri)

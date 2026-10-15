@@ -20,8 +20,11 @@ for row in report['rows']:
         if not seam.get('isInternalReinforcement'):continue
         ref=seam['a'];indices=panels[ref['panelId']]['edges'][ref['edge']]
         lines+=['g inner_stitch_'+seam['id'],'l '+' '.join(str(i+offsets[ref['panelId']]+1) for i in indices)]
+    for stay in packet['spec'].get('elasticStays',[]):
+        lines.append('g elastic_stay_'+stay['panelId'])
+        lines+=['l '+' '.join(str(i+offsets[stay['panelId']]+1) for i in [s['a'],s['b']]) for s in stay['segments']]
     file=export/(row['id']+'.obj');file.write_text('\n'.join(lines)+'\n',encoding='utf8')
-    manifest.append({'id':row['id'],'name':row['name'],'file':file.name,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'vertices':offset,'triangles':sum(len(p['triangles']) for p in panels.values()),'innerRows':row['reinforcedSeams'],'complete':bool(record),'staticPassed':row['staticPassed']})
+    manifest.append({'id':row['id'],'name':row['name'],'file':file.name,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'vertices':offset,'triangles':sum(len(p['triangles']) for p in panels.values()),'innerRows':row['reinforcedSeams'],'elasticStayPaths':len(packet['spec'].get('elasticStays',[])),'complete':bool(record),'staticPassed':row['staticPassed']})
 (export/'MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 (export/'说明.txt').write_text('全部模型使用米为单位，含实际裁片三角面和内侧补强线分组。模型来自对应的裁片缝合求解结果。请查看 MANIFEST.json 的完成状态；已生成三维不等于材料、碰撞、动态穿着检查通过。补强车缝线参与求解，但抗撕裂参数尚未实物标定。\n',encoding='utf8')
 archive=ROOT/'data/60款三维服装_OBJ.zip'
