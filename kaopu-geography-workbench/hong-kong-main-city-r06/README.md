@@ -1,0 +1,26 @@
+# 香港主地图 R06：清洁场景与空间校正候选
+
+旧 R05/R04/R03 保留。本版默认旧九龙完整四节列车展示，关闭工程范围框、蓝色高度尺、碰撞注释和黄色规划覆盖；“工程诊断”可恢复数据叠层，真实轨道保留。
+
+## 海岸
+
+旧陆地只渲染三顶点均为非海面的三角形，水面却按最近单节点裁切，混合网格存在双重漏画。本版水面裁切与同一陆地三角形精确互补；原高程、分类、Ocean 造波/光照母体不变。沿实际粗地形海岸边补竖向显示连接面，下缘 -2m，仅适配当前海面预设，不是实测海底或挡土墙。保留原30m海岸阶梯，不声称获得更高精度海岸。
+
+## 线路与站场
+
+最终暂行线路 34,672.317183m，最大纵坡5.836679‰（可编辑游戏上限15‰）。旧九龙中央新增通过轨，原六股及站体保持；钟楼仍用此前缓存官方POI，整站历史精确朝向未独立认证。天后站位向西北调整，站轨顶9.85m；同谱驱动站场、列车和坡度力。只修改六段平面多项式，后段世界坐标保持。
+
+旧九龙与天后中心轨均无贴邻站台，只展示/通过，不提供上下客。137.60m旧台长度对四节编组的8.52m双端余量仅为纵向容纳，不是可上下客认证。原靠台侧线保留，动态道岔/侧线驾驶未接。仍有11个既有建筑bbox潜在命中（含1个新增），未完成精确三维避让。
+
+## 狮子山
+
+同一路线采样建立弯曲开挖体积，实际剪切背景及2m/5m显示地形三角，保留覆土上表面。按实际覆土逐段分封顶隧道和露天接近槽，提供开放门户、内衬、地板与门户显示封边。尺寸属于作品设计，不是历史铁路测绘或工程认证；原地形高程采样仍保留，列车只沿轨运行，非任意体积物理碰撞。
+
+## 范围
+
+沿用642个前1997证据候选部件，71个待地面/支撑核查的候选不进场。没有新增官方未读原包、没有全九龙贴图。保留原完整机车和客车，蒸汽是显示粒子，仍可能穿建筑，不是流体模拟。私人参考照片不随包发布。
+
+原官方建筑/地形来源为香港特区政府地政总署/CSDI及CEDD；原许可与署名沿固定依赖保留。公共证据见 route/candidate-spatial-audit.json、route/candidate-runway-audit.json、yard/current-scene-ground-review.json、tunnel/CPU-EVIDENCE.json、tests/COAST-CPU-QA.json。CPU通过不等于实际画面通过，浏览器截图与冷启动记录单独验收。
+
+## Portal repair follow-through
+The first browser run exposed north-portal residual terrain and an invalid south review eye. The tunnel now queries actual source triangles, and open cuttings extend vertically instead of stopping at a nearest-node height. Original DEM arrays remain unchanged. QA preserves all three original camera transforms, then separately checks public portal buttons from the adjacent open approach at rail+2.2m. The old south camera is deliberately retained as an invalid-eye diagnostic, not a successful outside view. See tunnel/portal-fix/ for source-mesh regression.
