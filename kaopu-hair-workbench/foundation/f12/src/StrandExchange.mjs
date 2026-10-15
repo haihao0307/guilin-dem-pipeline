@@ -1,3 +1,4 @@
+import {LENGTH_PROFILE} from './LayerLengths.mjs';
 import {validateStyling,PRODUCTS} from './Styling.mjs';
 // Compact lossless binary paths accompany the small guide/volume contract.
 // Header length + UTF-8 header + ordered typed-array blocks (little endian).
@@ -8,7 +9,7 @@ export function denseHairBlob(parts,metadata){
   for(const key of ['positions','bindings','appearance','sourceCharts']){const a=p[key];if(!ArrayBuffer.isView(a))throw Error('密集发丝数组缺失');row.blocks[key]={offset,bytes:a.byteLength,type:a.constructor.name};offset+=a.byteLength;blocks.push(a);}
   rows.push(row);
  }
- const header={schema:DENSE_SCHEMA,coordinates:'native-common-viewer-Yup',byteOrder:'little-endian',sourceChartCoordinates:'approved intrinsic scalp chart, not native or world positions',...metadata,count:rows.reduce((n,p)=>n+p.count,0),parts:rows,dataBytes:offset,strandIdentity:'part id + local strand index; stable root prefix at fixed recipe',diameterMicrometres:70,tipRadiusProfile:'1 - 0.92*smoothstep(0.88,1,u); render line width is screen-space only',finiteWidthCollisionCertified:false};
+ const header={schema:DENSE_SCHEMA,referenceLengthProfile:LENGTH_PROFILE,coordinates:'native-common-viewer-Yup',byteOrder:'little-endian',sourceChartCoordinates:'approved intrinsic scalp chart, not native or world positions',...metadata,count:rows.reduce((n,p)=>n+p.count,0),parts:rows,dataBytes:offset,strandIdentity:'part id + local strand index; stable root prefix at fixed recipe',diameterMicrometres:70,tipRadiusProfile:'1 - 0.92*smoothstep(0.88,1,u); render line width is screen-space only',finiteWidthCollisionCertified:false};
  const text=new TextEncoder().encode(JSON.stringify(header)),length=new Uint8Array(4);new DataView(length.buffer).setUint32(0,text.length,true);
  return {header,blob:new Blob([length,text,...blocks],{type:'application/octet-stream'})};
 }

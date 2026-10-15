@@ -3,6 +3,7 @@ import {bundleOf,bundleSpec} from './BundlePlan.mjs';
 import {unit,add,sub,mul,dot,len,mix,clamp,smooth} from './approved/LegacyFoundation.mjs';
 import {point} from './NativeSurface.mjs';
 import {clumpOf} from './ClumpRules.mjs';
+import {layerEndpoint} from './LayerLengths.mjs';
 export const PHOTO_STUDY=Object.freeze({id:'front-bob-volumetric-clumps-04',sha256:'959b28381536f2b1fabb3683caaed71e8ccfbf8a994d2b7a344f1df0fecb2a91',width:688,height:832,view:'front',method:'direct-3D-authoring-from-user-photo-and-user-bundle-examples',observed:['asymmetric near-central part','diagonal image-left fringe and sparse central wisps','long face-framing layer inside outer shoulder-length layer','rounded sides with inward ends'],inferred:['all concealed scalp root patches','back layers and depth','occluded inner layers','crown volume beyond cropped image boundary'],imagePublished:false});
 const project=(v,n)=>sub(v,mul(n,dot(v,n)));
 export function bobEmergence(p,r){
@@ -47,10 +48,16 @@ export function bobProfile(root,r,bvh=null){
  }else{
   waypoint=[p[0]*1.08,p[1]-.025,-.086-r.bobBackMM*.001];target=[p[0]*1.12,.144-r.bobLengthMM*.001+jitter*.4,-.088-r.bobBackMM*.001];
  }
+ const lengthLayer=layerEndpoint(id,c,target[1],r);
+ if(lengthLayer.graduation>0){
+  const hem=Math.min(lengthLayer.hem,waypoint[1]-.010),base={target,waypoint,route,hem:target[1]};
+  target=goalAtHeight(base,hem).slice();target[1]=hem;
+  if(route)route=[...route.filter(q=>q[1]>hem+.00001),target];
+ }
  // Individual endpoint support against the native person, not a shell trim.
  if(spec.kind==='body'&&bvh){const h=bvh.segmentHit([target[0],.205,target[2]],[target[0],target[1]-.012,target[2]]);if(h&&h.point[1]>target[1])target[1]=h.point[1]+.005;}
  if(route)route[route.length-1]=target;
- return {kind:spec.kind,bundleId:id,clumpId:lock.id,rootGroup:id,pathGroups:[id],sign,layer:spec.layer,evidence:spec.evidence,outlineAccent:accent>.65,tipVariationMM:jitter*1000,target,waypoint,route,hem:target[1],central:id==='bang-wisps'};
+ return {kind:spec.kind,bundleId:id,clumpId:lock.id,rootGroup:id,pathGroups:[id],sign,layer:spec.layer,lengthLayer,curlScale:lengthLayer.curlScale,evidence:spec.evidence,outlineAccent:accent>.65,tipVariationMM:jitter*1000,target,waypoint,route,hem:target[1],central:id==='bang-wisps'};
 }
 // Smooth shape landmarks belong to one root-owned path. They are never
 // horizontal face groups or separate hair layers.

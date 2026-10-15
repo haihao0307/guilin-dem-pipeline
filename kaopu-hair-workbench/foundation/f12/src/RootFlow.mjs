@@ -9,7 +9,7 @@ export function traceRootFlow(node,id,clumpId,recipe,builder){
  for(let k=0;k<260;k++){
   const remain=p[1]-profile.hem;if(k>8&&remain<=0)break;const step=arc<.016?.0013:.0025,h=nearest(p),goal=goalAtHeight(profile,p[1]-.014),drop=profile.route&&p[1]<profile.waypoint[1]+.015?.020:Math.max(.025,p[1]-Math.max(profile.hem,profile.waypoint[1]));
   let wanted=unit([clamp((profile.kind==='fringe'?1.55:1)*(goal[0]-p[0])/Math.max(.025,drop),-1.5,1.5),-1,clamp((goal[2]-p[2])/Math.max(.025,drop),-1.2,1.2)]);
-  if(profile.kind==='body'&&remain<.025&&arc>.040){const curl=recipe.bobCurlMM*.001/.025*smooth((.025-remain)/.025);wanted=unit(add(wanted,[-profile.sign*curl,0,profile.layer==='back'||profile.layer==='nape'?curl*.25:-curl*.25]));}
+  if(profile.kind==='body'&&remain<.025&&arc>.040){const curl=recipe.bobCurlMM*.001/.025*(profile.curlScale??1)*smooth((.025-remain)/.025);wanted=unit(add(wanted,[-profile.sign*curl,0,profile.layer==='back'||profile.layer==='nape'?curl*.25:-curl*.25]));}
   const blend=smooth((arc-(profile.kind==='fringe'?.003:.006))/(profile.kind==='fringe'?.020:.038));wanted=unit(mix(initial,wanted,blend));if(h.distance<.008&&dot(wanted,h.n)<.12){const v=project(wanted,h.n);if(len(v)>1e-8)wanted=unit(add(unit(v),mul(h.n,.12)));}
   // Steer toward the scalp-relative support before the continuous direction
   // filter. Projecting finished points back onto a height cap creates kinks.
