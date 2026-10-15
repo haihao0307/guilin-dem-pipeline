@@ -25,22 +25,31 @@ const server=http.createServer((req,res)=>{let p=path.resolve('.'+decodeURICompo
     receipt.frames.push(frame);save();
   };
   try{
-    await page.goto('http://127.0.0.1:8783/'+ENTRY+'?qa=1&deferRender=1&view=street&width=720&height=480',{waitUntil:'domcontentloaded',timeout:60000});
+    await page.goto('http://127.0.0.1:8783/'+ENTRY+'?qa=1&deferRender=1&view=street&width=240&height=160',{waitUntil:'domcontentloaded',timeout:60000});
     await page.waitForFunction(()=>typeof window.__bureau?.view==='function'&&document.getElementById('scene').getAttribute('aria-busy')==='false',null,{timeout:480000});
     const before=await page.evaluate(()=>window.__bureau.proof.frames.length);
-    if(before!==0)throw Error('Targeted hall run must not repeat exterior rendering');
-    await page.click('[data-view="hall"]');await ready('hall',before);await capture('hall-720');
-    receipt.contracts.onlyFailedHallRetried=receipt.frames.length===1&&before===0;
-    receipt.contracts.actualStandardResolution=receipt.frames[0].width===720&&receipt.frames[0].height===480;
-    receipt.contracts.qualityOptions=await page.locator('#quality option').evaluateAll(n=>n.map(x=>x.value).join(',')==='960,720,480');
+    if(before!==0)throw Error('Interaction run must defer initial rendering');
+    const box=await page.locator('#scene').boundingBox();
+    await page.mouse.move(box.x+box.width*.50,box.y+box.height*.50);
+    await page.mouse.down();await page.mouse.move(box.x+box.width*.59,box.y+box.height*.53,{steps:8});await page.mouse.up();
+    await ready('street',before);await capture('street-rotated-240');
+    const rotated=receipt.frames.at(-1).camera;
+    receipt.contracts.actualPointerRotation=rotated.eye.some((n,i)=>Math.abs(n-[-87,23,-23][i])>.01);
+    await page.mouse.wheel(0,-260);await ready('street',before+1);await capture('street-zoomed-240');
+    const zoomed=receipt.frames.at(-1).camera;
+    const distance=c=>Math.hypot(...c.eye.map((n,i)=>n-c.target[i]));
+    receipt.contracts.actualWheelZoom=distance(zoomed)<distance(rotated)*.9;
+    await page.click('[data-view="hall"]');await ready('hall',before+2);await capture('hall-240');
     receipt.contracts.hallButtonCompleted=receipt.frames.at(-1).view==='hall';
+    receipt.contracts.allDiagnosticFramesComplete=receipt.frames.length===3&&receipt.frames.every(f=>f.width===240&&f.height===160);
+    receipt.contracts.qualityOptions=await page.locator('#quality option').evaluateAll(n=>n.map(x=>x.value).join(',')==='960,720,480');
     await page.click('#save');
     receipt.contracts.actualSaveButton=await page.evaluate(()=>document.getElementById('message').textContent.includes('已保存')&&localStorage.getItem('kaopu.bureau.r03e.custody.v3-network.public-hall-r03f.local-only')===window.__bureau.state());
     receipt.contracts.inventory=await page.evaluate(()=>window.__bureau.testInventory());
     receipt.contracts.noPrematureInventoryDelivery=receipt.contracts.inventory.oneYearPreservesItems;
     receipt.compilation=await page.evaluate(()=>window.__bureau.proof.compilation);
     if(receipt.errors.length||receipt.consoleErrors.length||Object.values(receipt.contracts).some(v=>v===false))throw Error('Public preview interaction contract failed');
-    receipt.status='normal-resolution-and-interaction-pass';receipt.artisticAcceptance=false;save();
+    receipt.status='actual-pointer-wheel-hall-browser-pass';receipt.artisticAcceptance=false;save();
   }catch(e){receipt.status='failed';receipt.failure=e.stack;save();await page.screenshot({path:OUT+'/failure.png'}).catch(()=>{});process.exitCode=1;}
   finally{await browser.close();server.close();}
 })();
