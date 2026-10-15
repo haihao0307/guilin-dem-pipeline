@@ -77,3 +77,7 @@ Syntax checks can run locally without launching a browser:
 Run the actual entry only in the authorized remote repository QA layout, with the existing runner's dependencies. The workspace's local recovered candidate/source directories are not that complete checkout layout.
 
 This QA package does not modify model/viewer files, publish original reference images, change permissions, edit other projects, or authorize external synchronization. Publication and exact-commit CI/artifact/HTTP verification remain separately controlled by the parent task.
+
+## Second run adjustment
+
+Run 38748150601 stopped at Playwright locator screenshot stability waiting after the tower view. It did not finish the performance gate. The follow-up uses actual page screenshots with a measured canvas rectangle; for the fixed full-viewport canvas, the canvas-named evidence is the identical composited UI screenshot, explicitly recorded as such. No render pause, synthetic image or lower interaction/performance threshold is used. The viewer caches the static world-space shadow map and invalidates it on layer, clip and lighting changes; orbit movement does not require rebuilding static sun shadows. Geometry is unchanged. Capture completion time is recorded separately from the first renderer submission.

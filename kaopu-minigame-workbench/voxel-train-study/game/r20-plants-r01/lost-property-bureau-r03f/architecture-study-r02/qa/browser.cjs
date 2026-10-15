@@ -53,9 +53,16 @@ async function snapshot(page){return page.evaluate(()=>{
 async function nextFrames(page,previous,amount=2){await page.waitForFunction(({f,n})=>window.__bureauArchitecture.frames>=f+n,{f:previous,n:amount},{timeout:30000});}
 async function capture(page,name){
   const ui=path.join(OUT,FILE_PREFIX+'-'+name+'-ui.png'),canvas=path.join(OUT,FILE_PREFIX+'-'+name+'-canvas.png');
+  const started=Date.now();
+  // A fixed full-viewport canvas is still actively rendering. Locator stability
+  // waiting can time out on software GPUs. Capture the actual composited page;
+  // its full-viewport canvas view is the same pixels, including overlapping UI.
   const uiBytes=await page.screenshot({path:ui,timeout:30000});
-  const canvasBytes=await page.locator('body > canvas').first().screenshot({path:canvas,timeout:30000});
-  receipt.captures.push({name,ui:path.basename(ui),canvas:path.basename(canvas),uiSha256:digest(uiBytes),canvasSha256:digest(canvasBytes)});save();
+  const rect=await page.evaluate(()=>{const r=document.querySelector('body > canvas').getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,viewportWidth:innerWidth,viewportHeight:innerHeight};});
+  const fullViewport=rect.x===0&&rect.y===0&&rect.width===rect.viewportWidth&&rect.height===rect.viewportHeight;
+  let canvasBytes;if(fullViewport){canvasBytes=uiBytes;fs.writeFileSync(canvas,canvasBytes);}else canvasBytes=await page.screenshot({path:canvas,clip:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},timeout:30000});
+  const completed=Date.now();
+  receipt.captures.push({name,ui:path.basename(ui),canvas:path.basename(canvas),uiSha256:digest(uiBytes),canvasSha256:digest(canvasBytes),captureMs:completed-started,navigationToCaptureMs:completed-receipt.navigationStartedEpochMs,fullViewportComposited:fullViewport});save();
 }
 async function chooseView(page,name){
   const views=page.locator('#views');
@@ -87,7 +94,7 @@ async function run(){
       window.__architectureQaContextLosses=[];
       document.addEventListener('webglcontextlost',e=>window.__architectureQaContextLosses.push({time:performance.now(),target:e.target?.tagName}),true);
     });
-    const navigationStarted=Date.now();
+    const navigationStarted=Date.now();receipt.navigationStartedEpochMs=navigationStarted;
     const response=await page.goto('http://127.0.0.1:'+PORT+'/'+ENTRY,{waitUntil:'domcontentloaded',timeout:60000});
     if(!response?.ok())throw Error('Candidate entry HTTP failure: '+response?.status());
     await page.waitForFunction(()=>window.__bureauArchitecture?.ready||window.__bureauArchitectureError,null,{timeout:120000});
