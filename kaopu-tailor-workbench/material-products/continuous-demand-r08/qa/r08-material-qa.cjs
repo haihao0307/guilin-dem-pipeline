@@ -1,6 +1,6 @@
 const{chromium}=require('C:/Users/Administrator/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'),fs=require('fs');
 (async()=>{const b=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'}),p=await b.newPage({viewport:{width:1600,height:1150}}),r={errors:[],looks:[]};p.setDefaultTimeout(180000);p.on('pageerror',e=>r.errors.push(e.message));try{
- await p.goto('http://127.0.0.1:8897/MP05-Continuous-Demand-R01/candidate-r08/?look=D01');await p.waitForFunction(()=>window.__MP05__?.debug().physics?.running);
+ await p.goto('http://127.0.0.1:8897/MP05-Continuous-Demand-R01/releases/r08-ccccfd5ca9c1/?look=D01');await p.waitForFunction(()=>window.__MP05__?.debug().physics?.running);
  for(const id of ['D01','D02','D03','D04','K02','K03']){
   if(id!=='D01')await p.evaluate(id=>__MP05__.select(id),id);
   for(const motion of ['walk','run','jump']){await p.locator('[data-motion='+motion+']').click();await p.waitForTimeout(3500);r.looks.push({id,motion,...await p.evaluate(()=>({error:__MP05__.audit().error,glError:__MP05__.debug().viewer.renderer.getContext().getError(),running:__MP05__.debug().physics.running,visible:__MP05__.debug().items.every(i=>i.solid.group.visible)}))});}

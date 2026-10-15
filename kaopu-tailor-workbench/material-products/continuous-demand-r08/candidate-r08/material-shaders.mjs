@@ -78,30 +78,37 @@ if(uKnit<.5){
  float variation;normal=fiberSurface(normal,normalize(vYarnT),vec2(vSolidCoord.x,vSolidCoord.y*.18),vSolidCoord.z,variation);diffuseColor.rgb*=clamp(variation,.55,1.4);
  vec3 clothN=normalize(vClothN);bool outer=dot(clothN,normalize(vViewPosition))>=0.;
  vec2 draftCell=vDenimMM/vec2(uPitch,uWeftPitch);
- float warp=denimDraftCoverage(draftCell,fwidth(draftCell));
+ float draftPhase=(draftCell.y-draftCell.x)*.25;
+ vec2 draftPhasePixel=vec2(dFdx(draftPhase),dFdy(draftPhase));
+ // Pixel-box integration still has side lobes above Nyquist. Suppress those
+ // before they become slow moving interference bands at a distant view.
+ float draftResolved=1.-smoothstep(.32,.5,length(draftPhasePixel));
+ float warp=mix(.75,denimDraftCoverage(draftCell,fwidth(draftCell)),draftResolved);
  vec3 warpColour=uDye,weftColour=uWeftDye;
  if(uDenimWash>.001&&uPlain<.5){
   // Dye loss follows material-space warp streaks; no painted image or body-space noise.
   vec2 washUV=vDenimMM*vec2(.035,.008),slubUV=vDenimMM*vec2(.32,.022);
-  float broad=denimNoise2(washUV),streak=denimNoise2(slubUV);
+  float washFoot=max(length(dFdx(washUV)),length(dFdy(washUV)));
+  float broad=mix(.5,denimNoise2(washUV),1.-smoothstep(.5,1.25,washFoot)),streak=denimNoise2(slubUV);
   float slubFoot=max(length(dFdx(slubUV)),length(dFdy(slubUV))),slubResolved=1.-smoothstep(.65,1.6,slubFoot);
   float pigment=1.+uDenimWash*(broad-.5)*.44+uDenimSlub*(streak-.5)*.36*slubResolved;
-  warpColour*=pigment;weftColour*=1.+uDenimWash*(broad-.5)*.07;roughnessFactor=clamp(roughnessFactor+uDenimWash*(broad-.5)*.12+uDenimSlub*(streak-.5)*.08,.65,.97);
+  warpColour*=pigment;weftColour*=1.+uDenimWash*(broad-.5)*.07;roughnessFactor=clamp(roughnessFactor+uDenimWash*(broad-.5)*.12+uDenimSlub*(streak-.5)*.08*slubResolved,.65,.97);
   vec3 sourceColour=mix(uDye,uWeftDye,uKind),washedColour=mix(warpColour,weftColour,uKind);
   diffuseColor.rgb*=washedColour/max(sourceColour,vec3(.0001));
  }
  vec3 meanColour=mix(weftColour,warpColour,outer?warp:1.-warp);meanColour=mix(meanColour,vec3(.52),uPlain);
  diffuseColor.rgb=mix(diffuseColor.rgb,meanColour,average);
- normal=normalize(mix(normal,outer?clothN:-clothN,average*(uDenimWash>.001?.82:.92)));
+ float strandResolved=1.-smoothstep(.8,2.,mmPerPixel/max(.01,min(uPitch,uWeftPitch)));
+ normal=normalize(mix(normal,outer?clothN:-clothN,average*mix(1.,uDenimWash>.001?.82:.92,strandResolved)));
  if(uDenimWash>.001){
   // The first band of a 3:1 float remains visible after individual strands
   // become subpixel. Integrate that band over the actual screen pixel before
   // differentiating its height; do not retain aliased per-strand highlights.
-  float phase=(draftCell.y-draftCell.x)*.25-.375;
-  vec2 phasePixel=vec2(dFdx(phase),dFdy(phase));
+  float phase=draftPhase-.375;
+  vec2 phasePixel=draftPhasePixel;
   float ax=3.14159265*phasePixel.x,ay=3.14159265*phasePixel.y;
   float fx=abs(ax)<.001?1.-ax*ax/6.:sin(ax)/ax,fy=abs(ay)<.001?1.-ay*ay/6.:sin(ay)/ay;
-  float dh=-uThickness*.12*6.2831853*sin(phase*6.2831853)*fx*fy*.001*average;
+  float dh=-uThickness*.12*6.2831853*sin(phase*6.2831853)*fx*fy*.001*average*draftResolved;
   vec3 sx=dFdx(-vViewPosition),sy=dFdy(-vViewPosition),r1=cross(sy,normal),r2=cross(normal,sx);
   float determinant=dot(sx,r1);
   normal=normalize(abs(determinant)*normal-sign(determinant)*dh*(phasePixel.x*r1+phasePixel.y*r2));

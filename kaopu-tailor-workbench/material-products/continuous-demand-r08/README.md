@@ -1,9 +1,18 @@
-# MP05 R08 · 牛仔织纹与性能
+# MP05 R08 · 牛仔织纹与远距过滤
 
-当前候选 `candidate-r08/`：默认将牛仔经纬织纹放大 6 倍，可调节 1–8 倍。重新生成对应间距的闭合经纬纱，原裁片、缝线、人物和物理求解保留。浅洗款增加独立显示纱束起伏、棉质柔光与像素过滤的织纹法线；物理厚度保持 0.7 mm。
+固定候选 `releases/r08-ccccfd5ca9c1/`：默认织纹放大 6 倍，可调 1–8 倍。浅洗款增加纱束起伏、棉质柔光和水洗层次；物理厚度仍为 0.7 mm。近处保留闭合经纬纱，远处按屏幕足迹共同过滤颜色、起伏法线与逐纱高光。
 
-[本地集合](http://127.0.0.1:8897/Human-Clothing-Workbench/%E6%9C%8D%E8%A3%85%E9%9E%8B%E5%B8%BD%E5%B7%A5%E4%BD%9C%E5%8F%B0.html?v=R08-c863260d70cd) · [固定公开预览](https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-denim-r08-c863260d70cd/?look=D01)（最终部署验证中）。
+[本地集合](http://127.0.0.1:8897/Human-Clothing-Workbench/%E6%9C%8D%E8%A3%85%E9%9E%8B%E5%B8%BD%E5%B7%A5%E4%BD%9C%E5%8F%B0.html?v=R08-ccccfd5ca9c1) · [固定公开预览](https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-denim-r08-ccccfd5ca9c1/?look=D03)
 
-R07 双牛仔基线走/跑约 6.3 FPS、反复跳跃约 7.0 FPS。R08 初次优化约 57–60 FPS；浅色纱束强化版本地约 55–59 FPS。最终公开版数据、设备、动作录像和未完成范围见 `qa/R08_EVIDENCE.json` 与 [开发记录](docs/R08_DENIM.md)。初测不是最终公开测试。
+本机浏览器访问最终固定公开版本实测：1600×1150 / DPR 1 / RTX 4070 Ti SUPER / Chrome 155。每个动作 12 秒，计数已完成的真实绘制帧，跳跃反复触发。公开预览的代码字节及六段动作另行检查。
 
-R07、初版 R08、三边形和直接强化法线的失败/中间试验均保留。完整自由布料、全自碰撞、CCD、材料标定与成衣工艺验收没有因此完成。
+| 材料 | 走路 | 跑步 | 反复跳跃 |
+| --- | ---: | ---: | ---: |
+| 深靛牛仔 | 53.41 FPS | 53.25 FPS | 56.25 FPS |
+| 浅洗牛仔 | 56.66 FPS | 59.65 FPS | 57.66 FPS |
+
+R07 双牛仔同机基线约 6.3–7.0 FPS。最终录像 `qa/R08_浅洗牛仔_真实动作.mp4`，21.29 秒，源平均 52.80 FPS，原始时间戳；没有插帧或变速。仍可能掉帧，不宣称所有设备锁定 60 FPS。
+
+四档距离的受控相位对照见 `qa/r08-far-moire.json.gz`；远处波动明显降低，但不宣称所有镜头和边缘完全没有摩尔纹。18 段材料动作检查、集合切换和暂停缩放检查已通过。
+
+R07、早期 R08 和失败试验均保留。完整自由布料、全自碰撞、CCD、材料标定与七阶段成衣工艺验收没有因此完成。方法、原人物并行修改的保留方式及验证边界见 [开发记录](docs/R08_DENIM.md) 与 `qa/R08_EVIDENCE.json`。
