@@ -18,5 +18,6 @@ export function traceRootFlow(node,id,clumpId,recipe,builder){
   dir=unit(mix(dir,wanted,1-Math.exp(-step/.018)));let q=add(p,mul(dir,step));for(let j=0;j<2;j++){const f=nearest(q),gap=Math.min(.0012,arc*.10);if(f.signed>=gap)break;q=add(q,mul(f.n,gap-f.signed));}
   if(q[1]<profile.hem&&p[1]>profile.hem&&k>8)q=mix(p,q,(p[1]-profile.hem)/(p[1]-q[1]));arc+=len(sub(q,p));points.push(q);arcs.push(arc);dir=unit(sub(q,p));p=q;
  }
+ if(p[1]>profile.hem+.00001)throw Error('Root flow did not reach its individual layer endpoint: '+clumpId);
  return {points,arcs,length:arc,at(u){const d=clamp(u)*arc;let lo=0,hi=arcs.length-1;while(lo+1<hi){const m=(lo+hi)>>1;if(arcs[m]<d)lo=m;else hi=m;}return mix(points[lo],points[hi],(d-arcs[lo])/Math.max(1e-9,arcs[hi]-arcs[lo]));}};
 }
