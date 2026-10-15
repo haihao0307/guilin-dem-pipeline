@@ -1,0 +1,15 @@
+from pathlib import Path
+import json,statistics,datetime
+P=Path(__file__).resolve().parents[1]
+def read(n):return json.loads((P/n).read_text(encoding='utf-8-sig'))
+b=read('qa/baseline-performance.json');o=read('qa/optimized-performance.json');manifest=read('BUILD_MANIFEST.json')
+assert b['passed'] and o['passed'] and o['sourceHashes']==manifest['files']
+assert b['host']['driver']==o['host']['driver']
+for n in ['qa/character-report.json','qa/performance-correctness.json']:assert read(n)['passed'] and read(n)['sourceHashes']==manifest['files']
+def case(r,s,m):return next(x for x in r['cases'] if x['style']==s and x['mode']==m)
+styles=[]
+for s in ['medium','long']:
+ bg=statistics.median(x['gpuMS'] for x in case(b,s,'forced-render')['samples']);og=statistics.median(x['gpuMS'] for x in case(o,s,'forced-render')['samples']);bc=case(b,s,'cpu-physics')['msPerStep'];oc=case(o,s,'cpu-physics')['msPerStep']
+ styles.append({'style':s,'gpuFullForcedRenderMedianMS':{'baseline':bg,'optimized':og,'reductionPercent':100*(1-og/bg)},'cpuManualPhysicsAndUpdateMSPer120HzStep':{'baseline':bc,'optimized':oc,'reductionPercent':100*(1-oc/bc)},'nativeIdleFPS':{'baseline':case(b,s,'idle')['fps'],'optimized':case(o,s,'idle')['fps']},'breezeFPS':{'baseline':case(b,s,'wind')['fps'],'optimized':case(o,s,'wind')['fps']},'hairPassesPerFullRender':{'baseline':case(b,s,'forced-render')['counts']['hair']/8,'optimized':case(o,s,'forced-render')['counts']['hair']/8},'staticOptimized':{'rendersDuringSample':case(o,s,'static')['counts']['hair'],'simulatedSeconds':case(o,s,'static')['simulatedSeconds']}})
+report={'passed':True,'sourceHashes':manifest['files'],'createdAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'baselineRenderCommit':'aa12eae52fc3bffa5afae079d2fff761b7a6359b','baselineSourceHashes':b['sourceHashes'],'hardware':o['host']['driver'],'viewport':o['viewport'],'method':'Sequential off-screen Chrome runs on the same hardware. GPU query median of eight warmed forced renders; live samples 3.5 seconds after warmup; CPU 144 manual steps. No other QA browser running concurrently.','styles':styles,'preserved':{'strands':64000,'guides':192,'nodesPerGuide':25,'renderSegmentsPerStrand':56,'perStrandDetailModes':2,'physicsHz':120,'groomAndOpticalParametersUnchanged':True},'additionalReusableCacheBytes':1112*942*8,'correctnessTestGroups':len(read('qa/performance-correctness.json')['tests']),'functionalTestGroups':len(read('qa/character-report.json')['tests']),'appearanceComparisons':len(read('qa/visual-difference.json')['cases']),'limits':['Live FPS is capped around 60 Hz on this test system, not a cross-device guarantee.','Additional cache uses eight bytes per drawing-buffer pixel.','Small floating-point and tangent approximation differences are measured in visual-difference.json.','R04 collision and optical approximation limits remain.']}
+(P/'qa/performance-summary.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(styles,indent=2))

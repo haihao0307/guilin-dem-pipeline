@@ -1,0 +1,607 @@
+{
+  "label": "optimized",
+  "url": "http://127.0.0.1:8769/preview.html",
+  "viewport": {
+    "width": 1500,
+    "height": 1050
+  },
+  "startedAt": "2026-10-15T07:51:26.134Z",
+  "sourceHashes": {
+    "preview.html": "0326bdd1b60d938929b4d7933721998426ea2d695ae2b7674a1f385eb2f56b7c",
+    "preview-medium.html": "0326bdd1b60d938929b4d7933721998426ea2d695ae2b7674a1f385eb2f56b7c",
+    "preview-long.html": "8a84eba89a09f0a621a4565ab76211c2040f0ef72ea25d17ea42b6291c43ed4d",
+    "src/app.mjs": "f31f30459e168d9fdaf111164a4143b9c4a42db56c17003953655a276fba23ba",
+    "src/CollisionProxies.mjs": "d6ffbd0aa140ecc797fe7487d4be19f269e5ccb37c22aed0484afb1f9f2f24c4",
+    "src/detail-dynamics.mjs": "8be7ba42cdd9db978b240ae3fd581e25fb0cf5acbebb8d14e1cfe642f121833a",
+    "src/Groom.mjs": "96ffc9186dabf2900ba62dac4d47e089219af3c913985f5c5530ca7ed61ae278",
+    "src/GuideDynamics.mjs": "e60bd94bbec5527138319ba672740fd9f49c4906eed0b1dab1e3961d761e1438",
+    "src/HairPassCache.mjs": "be622acfdc77581971403deada6763ef15a1b733eb7e6905f89ae28a25510826",
+    "src/HairRenderer.mjs": "3445b6c1635becbe9f4963dc980743a6ab094ac2c284bd2da15e081854df870d",
+    "src/NativeHeadBinding.mjs": "220873ca258cf1132f8f999a2c572c815abc5b3c52b371cec3766ddb8c8f0c5f",
+    "src/SurfaceBVH.mjs": "50e47289f73a7927ae4b5d7b49bf8e316a49e5d5b5fccb4735f266153d72c171",
+    "src/wind.mjs": "2a4059bf8c22a50479eef9e58d482388e1401c49ff4a6997026a3063af1de84a",
+    "tools/build.cjs": "3c0a3e6d830818da32ffdf51572da0ff36ca329281a1bed247117b731ce183fa"
+  },
+  "cases": [
+    {
+      "style": "medium",
+      "mode": "forced-render",
+      "samples": [
+        {
+          "cpuMS": 3,
+          "gpuMS": 10.830784
+        },
+        {
+          "cpuMS": 4.199999988079071,
+          "gpuMS": 10.917888
+        },
+        {
+          "cpuMS": 3.5,
+          "gpuMS": 10.658816
+        },
+        {
+          "cpuMS": 3.399999976158142,
+          "gpuMS": 10.65984
+        },
+        {
+          "cpuMS": 3.600000023841858,
+          "gpuMS": 10.683392
+        },
+        {
+          "cpuMS": 3,
+          "gpuMS": 10.63936
+        },
+        {
+          "cpuMS": 3.400000035762787,
+          "gpuMS": 10.663648
+        },
+        {
+          "cpuMS": 3,
+          "gpuMS": 10.58304
+        }
+      ],
+      "counts": {
+        "scene": 48,
+        "hair": 8
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "static",
+      "wallMS": 3512.899999976158,
+      "frames": 211,
+      "fps": 59.77966921956938,
+      "medianFrameMS": 16.700000000000728,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 0,
+        "hair": 0
+      },
+      "simulatedSeconds": 0,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.10000002384185791,
+          "constraints": 3.299999952316284,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009904620189662428,
+        "maxOffset": 0,
+        "maxVelocity": 0,
+        "tipSpeed": 0,
+        "kineticEnergy": 0,
+        "steps": 0,
+        "time": 0,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 1,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 2,
+        "pendingFrame": false,
+        "simulationActive": false,
+        "passCache": {
+          "bakes": 25,
+          "composites": 75,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "wind",
+      "wallMS": 3519,
+      "frames": 211,
+      "fps": 59.67604433077579,
+      "medianFrameMS": 16.700000000000728,
+      "p95FrameMS": 16.799999999999272,
+      "counts": {
+        "scene": 1266,
+        "hair": 211
+      },
+      "simulatedSeconds": 3.5166666666666604,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.5,
+          "constraints": 3.400000035762787,
+          "detail": 0.7999999523162842
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.006563897947419795,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009980272359906284,
+        "maxOffset": 0.005411531540453096,
+        "maxVelocity": 0.001679876484224907,
+        "tipSpeed": 0.001684653289576559,
+        "kineticEnergy": 3.9294348336769515e-12,
+        "steps": 493,
+        "time": 4.108333333333327,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 10.300000011920929,
+        "droppedSeconds": 0,
+        "revision": 247,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 248,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "passCache": {
+          "bakes": 271,
+          "composites": 813,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "idle",
+      "wallMS": 3517,
+      "frames": 211,
+      "fps": 59.7099800966733,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 1266,
+        "hair": 211
+      },
+      "simulatedSeconds": 3.516666666666816,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 2,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.10000002384185791,
+          "constraints": 3.299999952316284,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 9.504531180194315e-8,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.000994100243417062,
+        "maxOffset": 0.0014575039294746608,
+        "maxVelocity": 0.0013212638419624056,
+        "tipSpeed": 0.0012436101291481137,
+        "kineticEnergy": 1.1466519709675936e-12,
+        "steps": 988,
+        "time": 8.233333333333507,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": true,
+        "cpuMS": 7.800000011920929,
+        "droppedSeconds": 0,
+        "revision": 494,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 496,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "passCache": {
+          "bakes": 571,
+          "composites": 1713,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "cpu-physics",
+      "wallMS": 791.6000000238419,
+      "steps": 144,
+      "msPerStep": 5.497222222387791,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.5999999642372131,
+          "constraints": 3.400000035762787,
+          "detail": 0.8999999761581421
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.007061744533674183,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009945305744183397,
+        "maxOffset": 0.005059391256552408,
+        "maxVelocity": 0.004060015949886864,
+        "tipSpeed": 0.004254991126587395,
+        "kineticEnergy": 1.4668293542968986e-11,
+        "steps": 1132,
+        "time": 9.433333333333438,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 5.399999976158142,
+        "droppedSeconds": 0,
+        "revision": 638,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "long",
+      "mode": "forced-render",
+      "samples": [
+        {
+          "cpuMS": 12.100000023841858,
+          "gpuMS": 9.231232
+        },
+        {
+          "cpuMS": 3.5,
+          "gpuMS": 10.720256
+        },
+        {
+          "cpuMS": 3.399999976158142,
+          "gpuMS": 10.48576
+        },
+        {
+          "cpuMS": 3.5,
+          "gpuMS": 10.689536
+        },
+        {
+          "cpuMS": 3.300000011920929,
+          "gpuMS": 10.418176
+        },
+        {
+          "cpuMS": 3.600000023841858,
+          "gpuMS": 10.458112
+        },
+        {
+          "cpuMS": 3.100000023841858,
+          "gpuMS": 10.435584
+        },
+        {
+          "cpuMS": 3.099999964237213,
+          "gpuMS": 9.691136
+        }
+      ],
+      "counts": {
+        "scene": 48,
+        "hair": 8
+      }
+    },
+    {
+      "style": "long",
+      "mode": "static",
+      "wallMS": 3501.699999988079,
+      "frames": 210,
+      "fps": 59.68529571371377,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 0,
+        "hair": 0
+      },
+      "simulatedSeconds": 0,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.19999998807907104,
+          "constraints": 3.400000035762787,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009978701458315253,
+        "maxOffset": 0,
+        "maxVelocity": 0,
+        "tipSpeed": 0,
+        "kineticEnergy": 0,
+        "steps": 0,
+        "time": 0,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 1,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 497,
+        "pendingFrame": false,
+        "simulationActive": false,
+        "passCache": {
+          "bakes": 594,
+          "composites": 1782,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "mode": "wind",
+      "wallMS": 3519.699999988079,
+      "frames": 211,
+      "fps": 59.66417592428652,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 1266,
+        "hair": 211
+      },
+      "simulatedSeconds": 3.5166666666666595,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.5999999642372131,
+          "constraints": 3,
+          "detail": 0.9000000357627869
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.021034380623342064,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009985484633259212,
+        "maxOffset": 0.025538346005374718,
+        "maxVelocity": 0.008205767676304487,
+        "tipSpeed": 0.008291011123984726,
+        "kineticEnergy": 4.005195465460123e-10,
+        "steps": 491,
+        "time": 4.09166666666666,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 9.599999964237213,
+        "droppedSeconds": 0,
+        "revision": 239,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 735,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "passCache": {
+          "bakes": 832,
+          "composites": 2496,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "mode": "idle",
+      "wallMS": 3522.199999988079,
+      "frames": 211,
+      "fps": 59.621827267250794,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 1266,
+        "hair": 211
+      },
+      "simulatedSeconds": 3.5166666666668176,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 2,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.10000002384185791,
+          "constraints": 3.300000011920929,
+          "detail": 1
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 5.192121549925385e-7,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009937265063411083,
+        "maxOffset": 0.0009794687070573617,
+        "maxVelocity": 0.001383629165560285,
+        "tipSpeed": 0.001112141235006702,
+        "kineticEnergy": 6.629730137474318e-12,
+        "steps": 986,
+        "time": 8.21666666666684,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": true,
+        "cpuMS": 11.099999964237213,
+        "droppedSeconds": 0,
+        "revision": 487,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "performance": {
+        "renderedFrames": 983,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "passCache": {
+          "bakes": 1124,
+          "composites": 3372,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "mode": "cpu-physics",
+      "wallMS": 762.3999999761581,
+      "steps": 144,
+      "msPerStep": 5.294444444278876,
+      "physics": {
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "forces": 0.6000000238418579,
+          "constraints": 3,
+          "detail": 0.8999999761581421
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.01967994103627035,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009968901847274836,
+        "maxOffset": 0.02819405570530626,
+        "maxVelocity": 0.015025863808135198,
+        "tipSpeed": 0.015394314039976854,
+        "kineticEnergy": 1.4045293350916828e-9,
+        "steps": 1130,
+        "time": 9.416666666666773,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 5.5,
+        "droppedSeconds": 0,
+        "revision": 631,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    }
+  ],
+  "errors": [],
+  "host": {
+    "render": "function(...n){if(Vt||!Pt||yt)return Fi(...n);qe()}",
+    "prototypeRender": "render(){if(!this.inUnified)return super.render()}",
+    "diffusion": [
+      "v",
+      "targets",
+      "blur",
+      "compose",
+      "scene",
+      "camera",
+      "quad",
+      "width",
+      "height",
+      "frames"
+    ],
+    "shadowAuto": false,
+    "shadowNeeds": false,
+    "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "passed": true,
+  "finishedAt": "2026-10-15T07:52:39.574Z"
+}

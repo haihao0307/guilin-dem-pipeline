@@ -1,0 +1,510 @@
+{
+  "label": "baseline-performance",
+  "url": "http://127.0.0.1:8768/preview.html",
+  "viewport": {
+    "width": 1500,
+    "height": 1050
+  },
+  "startedAt": "2026-10-15T07:43:53.508Z",
+  "sourceHashes": {
+    "preview.html": "45c11ae7a5a4a28b63f0413e1c1d19416d59d7272068c24eb797641105ae13d5",
+    "preview-medium.html": "45c11ae7a5a4a28b63f0413e1c1d19416d59d7272068c24eb797641105ae13d5",
+    "preview-long.html": "b999cce6d71467cc4607d3b2e54f99582fe8428dd3363fbbbc342ce9a08d6e4e",
+    "src/app.mjs": "34343c169693286057d47974b2507bef520d2fff67851f95717d2b98af4fa5e6",
+    "src/CollisionProxies.mjs": "d6ffbd0aa140ecc797fe7487d4be19f269e5ccb37c22aed0484afb1f9f2f24c4",
+    "src/detail-dynamics.mjs": "27c644bb48d99a1042d64eece9057aab661bead9c27f24c898dfcc50da5808dd",
+    "src/Groom.mjs": "96ffc9186dabf2900ba62dac4d47e089219af3c913985f5c5530ca7ed61ae278",
+    "src/GuideDynamics.mjs": "a851ecf52d327a8a5e415f37bd3cd3d7f4add850eeac5c0283772054d11d075b",
+    "src/HairRenderer.mjs": "e87338353d21357c22d94516dcb8a798c5f6b039455816b8de45fb7ca8797486",
+    "src/NativeHeadBinding.mjs": "a146a4b6031f4727f2a0b34978d08d82b4fb4c3abab905f81fcc3507f49fdc50",
+    "src/SurfaceBVH.mjs": "31bed0e7a18fdf1a2d35d817953d2ab2ffe68246a13869e73ed2ad47bb21d72a",
+    "src/wind.mjs": "fdd12ee77204e983dd5ba436cf03133b6e5a65e92aafed4595a27bb4941d35a1",
+    "tools/build.cjs": "9246ac25dc7d3a2ca25fd5917f62080291f6f0fb3a0f17f419d82010f680ab85"
+  },
+  "cases": [
+    {
+      "style": "medium",
+      "mode": "forced-render",
+      "samples": [
+        {
+          "cpuMS": 16.30000001192093,
+          "gpuMS": 15.491072
+        },
+        {
+          "cpuMS": 3.5,
+          "gpuMS": 13.995008
+        },
+        {
+          "cpuMS": 3.899999976158142,
+          "gpuMS": 14.23872
+        },
+        {
+          "cpuMS": 4,
+          "gpuMS": 14.097024
+        },
+        {
+          "cpuMS": 4,
+          "gpuMS": 14.013344
+        },
+        {
+          "cpuMS": 3.600000023841858,
+          "gpuMS": 14.044
+        },
+        {
+          "cpuMS": 4.199999988079071,
+          "gpuMS": 15.691776
+        },
+        {
+          "cpuMS": 4.600000023841858,
+          "gpuMS": 14.19776
+        }
+      ],
+      "counts": {
+        "scene": 48,
+        "hair": 24
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "static",
+      "wallMS": 3508.2999999523163,
+      "frames": 211,
+      "fps": 59.85805090866068,
+      "medianFrameMS": 16.700000000000728,
+      "p95FrameMS": 16.799999999999272,
+      "counts": {
+        "scene": 0,
+        "hair": 0
+      },
+      "simulatedSeconds": 0,
+      "physics": {
+        "timings": {
+          "forces": 1,
+          "constraints": 4.199999988079071,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009904620189662428,
+        "maxOffset": 0,
+        "maxVelocity": 0,
+        "tipSpeed": 0,
+        "kineticEnergy": 0,
+        "steps": 0,
+        "time": 0,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 1,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "wind",
+      "wallMS": 3529.699999988079,
+      "frames": 199,
+      "fps": 56.09541887431473,
+      "medianFrameMS": 16.700000000000728,
+      "p95FrameMS": 33.39999999999782,
+      "counts": {
+        "scene": 1194,
+        "hair": 597
+      },
+      "simulatedSeconds": 3.533333333333328,
+      "physics": {
+        "timings": {
+          "forces": 2.400000035762787,
+          "constraints": 4,
+          "detail": 0.8999999761581421
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.006507604318838762,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009981377741390407,
+        "maxOffset": 0.005388085884371307,
+        "maxVelocity": 0.0017064146664783064,
+        "tipSpeed": 0.0017330983255836254,
+        "kineticEnergy": 3.994440399387145e-12,
+        "steps": 495,
+        "time": 4.124999999999995,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 13.699999988079071,
+        "droppedSeconds": 0,
+        "revision": 224,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "idle",
+      "wallMS": 3608.400000035763,
+      "frames": 61,
+      "fps": 16.62786830711821,
+      "medianFrameMS": 66.69999999999709,
+      "p95FrameMS": 66.80000000000291,
+      "counts": {
+        "scene": 732,
+        "hair": 366
+      },
+      "simulatedSeconds": 3.033333333333484,
+      "physics": {
+        "timings": {
+          "forces": 1,
+          "constraints": 3.800000011920929,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 9.463197601622588e-8,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009935543009778058,
+        "maxOffset": 0.0014769015321119269,
+        "maxVelocity": 0.0013187713742102147,
+        "tipSpeed": 0.0012305573217674674,
+        "kineticEnergy": 1.057763090725841e-12,
+        "steps": 921,
+        "time": 7.675000000000171,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": true,
+        "cpuMS": 29.80000001192093,
+        "droppedSeconds": 0,
+        "revision": 296,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "medium",
+      "mode": "cpu-physics",
+      "wallMS": 911.5999999642372,
+      "steps": 144,
+      "msPerStep": 6.330555555307203,
+      "physics": {
+        "timings": {
+          "forces": 1,
+          "constraints": 3.699999988079071,
+          "detail": 0.800000011920929
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.007111016131692273,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.000996898332109808,
+        "maxOffset": 0.00423562060828855,
+        "maxVelocity": 0.002693415489630757,
+        "tipSpeed": 0.0032588291491835487,
+        "kineticEnergy": 8.623913366112888e-12,
+        "steps": 1065,
+        "time": 8.875000000000137,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 6.099999964237213,
+        "droppedSeconds": 0,
+        "revision": 440,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "long",
+      "mode": "forced-render",
+      "samples": [
+        {
+          "cpuMS": 19.099999964237213,
+          "gpuMS": 16.932832
+        },
+        {
+          "cpuMS": 3.699999988079071,
+          "gpuMS": 18.481152
+        },
+        {
+          "cpuMS": 3.100000023841858,
+          "gpuMS": 18.718368
+        },
+        {
+          "cpuMS": 3.400000035762787,
+          "gpuMS": 18.254816
+        },
+        {
+          "cpuMS": 3.599999964237213,
+          "gpuMS": 18.604032
+        },
+        {
+          "cpuMS": 3.400000035762787,
+          "gpuMS": 18.73072
+        },
+        {
+          "cpuMS": 3.700000047683716,
+          "gpuMS": 19.070976
+        },
+        {
+          "cpuMS": 3.800000011920929,
+          "gpuMS": 18.21184
+        }
+      ],
+      "counts": {
+        "scene": 48,
+        "hair": 24
+      }
+    },
+    {
+      "style": "long",
+      "mode": "static",
+      "wallMS": 3504.800000011921,
+      "frames": 211,
+      "fps": 59.91782697993772,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 16.80000000000291,
+      "counts": {
+        "scene": 0,
+        "hair": 0
+      },
+      "simulatedSeconds": 0,
+      "physics": {
+        "timings": {
+          "forces": 1,
+          "constraints": 3.300000011920929,
+          "detail": 0
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009971074698589266,
+        "maxOffset": 0,
+        "maxVelocity": 0,
+        "tipSpeed": 0,
+        "kineticEnergy": 0,
+        "steps": 0,
+        "time": 0,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": false,
+        "cpuMS": 0,
+        "droppedSeconds": 0,
+        "revision": 1,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "long",
+      "mode": "wind",
+      "wallMS": 3546.2999999523163,
+      "frames": 196,
+      "fps": 54.98688774289315,
+      "medianFrameMS": 16.69999999999709,
+      "p95FrameMS": 33.30000000000291,
+      "counts": {
+        "scene": 1176,
+        "hair": 588
+      },
+      "simulatedSeconds": 3.541666666666659,
+      "physics": {
+        "timings": {
+          "forces": 1,
+          "constraints": 3.799999952316284,
+          "detail": 0.9000000357627869
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.021050513208936555,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009975458882385269,
+        "maxOffset": 0.025561503059542495,
+        "maxVelocity": 0.00811949864182343,
+        "tipSpeed": 0.0082042124573414,
+        "kineticEnergy": 3.95028316650504e-10,
+        "steps": 490,
+        "time": 4.083333333333326,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 11.5,
+        "droppedSeconds": 0,
+        "revision": 223,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "long",
+      "mode": "idle",
+      "wallMS": 3592.5,
+      "frames": 61,
+      "fps": 16.701461377870565,
+      "medianFrameMS": 66.60000000000582,
+      "p95FrameMS": 66.80000000000291,
+      "counts": {
+        "scene": 732,
+        "hair": 366
+      },
+      "simulatedSeconds": 3.0500000000001517,
+      "physics": {
+        "timings": {
+          "forces": 0.8999999761581421,
+          "constraints": 3.800000011920929,
+          "detail": 0.8999999761581421
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.000003696161485260811,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009923654870178655,
+        "maxOffset": 0.0008504571802907013,
+        "maxVelocity": 0.0016025484307435889,
+        "tipSpeed": 0.0010674253361025456,
+        "kineticEnergy": 6.169424905966282e-12,
+        "steps": 924,
+        "time": 7.7000000000001725,
+        "wind": 0.38,
+        "windEnabled": false,
+        "paused": false,
+        "active": true,
+        "cpuMS": 32.799999952316284,
+        "droppedSeconds": 0,
+        "revision": 296,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    },
+    {
+      "style": "long",
+      "mode": "cpu-physics",
+      "wallMS": 845.1999999880791,
+      "steps": 144,
+      "msPerStep": 5.86944444436166,
+      "physics": {
+        "timings": {
+          "forces": 0.8999999761581421,
+          "constraints": 3.300000011920929,
+          "detail": 0.8999999761581421
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.022307456565239112,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.008333333333333333,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009953215767102286,
+        "maxOffset": 0.026615512975673963,
+        "maxVelocity": 0.016600112462776262,
+        "tipSpeed": 0.016964702704964092,
+        "kineticEnergy": 1.400434644213219e-9,
+        "steps": 1068,
+        "time": 8.900000000000135,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 5.699999988079071,
+        "droppedSeconds": 0,
+        "revision": 440,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      }
+    }
+  ],
+  "errors": [],
+  "host": {
+    "render": "function(...S){return I(),T.apply(this,S)}",
+    "prototypeRender": "render(){if(!this.inUnified)return super.render()}",
+    "diffusion": [
+      "v",
+      "targets",
+      "blur",
+      "compose",
+      "scene",
+      "camera",
+      "quad",
+      "width",
+      "height",
+      "frames"
+    ],
+    "shadowAuto": false,
+    "shadowNeeds": false,
+    "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "passed": true,
+  "finishedAt": "2026-10-15T07:45:12.500Z"
+}
