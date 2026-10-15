@@ -1,0 +1,42 @@
+{
+  "caseId": "HAIR-BUNDLE-FRAME-TWIST-CONTINUITY-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": "Hair F10 swept-clump cross-section frames only",
+  "trigger": "A delivery claims continuous bend/twist or no frame discontinuity across sampled bundle sections.",
+  "mustNever": [
+    "Pairwise axis dot products greater than zero are treated as proof of smooth twist.",
+    "A nonzero maximum authored twist substitutes for a local angular-rate bound.",
+    "Uniform curve parameter samples are assumed to be uniform arc-length samples.",
+    "A global hairstyle-independent twist-rate threshold is invented after seeing the candidate.",
+    "A synthetic false-positive mechanism is reported as an observed production artifact.",
+    "Frame continuity expands into hairstyle, shape, strand, material, dynamics or user acceptance."
+  ],
+  "requiredEvidence": [
+    "exact source, subject and run identity",
+    "section centers, tangents, width axes, thickness axes and authored twist values",
+    "unit-length and pairwise-orthogonality checks",
+    "strictly positive consecutive arc-length increments",
+    "signed unwrapped twist increments normalized by arc length",
+    "a task-specific twist-rate budget frozen before the gate run",
+    "65-to-129-section convergence error and pre-frozen tolerance",
+    "forward-versus-reversed transport error and pre-frozen tolerance",
+    "a high-frequency sawtooth positive control that passes the old dot-product predicate but is rejected by the candidate gate",
+    "independent verifier identity or explicit UNKNOWN"
+  ],
+  "states": [
+    "HOLD_FRAME_ORTHONORMALITY_INVALID",
+    "HOLD_ARC_LENGTH_DEGENERATE",
+    "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+    "HOLD_TWIST_RATE_BUDGET_UNFROZEN",
+    "HOLD_POSITIVE_CONTROL_MISSING",
+    "HOLD_TWIST_RATE_SPIKE",
+    "HOLD_SAMPLING_REFINEMENT_UNBOUND",
+    "HOLD_REVERSAL_SYMMETRY_UNBOUND",
+    "FRAME_TWIST_CONTINUITY_VERIFIED"
+  ],
+  "boundedHypothesis": "If the claimed continuity is real rather than a sampling artifact, then an injected <90-degree-per-step sawtooth must fail an arc-length-normalized rate gate, and 65/129-section plus forward/reverse evaluations must agree within tolerances frozen before the run.",
+  "currentF10State": "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+  "activationGate": "Hair Mother implements the receipt fields and independent verifier runs this case on one immutable F10 descendant; coordinator review is required before activation.",
+  "rollback": "Remove the candidate receipt/check only; preserve F10 geometry and existing width, thickness, conservation and native-rebind evidence."
+}
