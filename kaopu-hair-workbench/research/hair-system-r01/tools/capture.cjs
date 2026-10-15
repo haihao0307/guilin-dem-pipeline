@@ -4,8 +4,8 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'qa');fs.mkdirSync(ou
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--enable-unsafe-swiftshader']});
  try{
-  const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1}),errors=[];
-  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1}),errors=[],hostResourceErrors=[];
+  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error'){if(m.location().url==='https://htmlpreview.github.io/favicon.ico')hostResourceErrors.push({text:m.text(),url:m.location().url});else errors.push(m.text());}});
   await page.goto(process.argv[2]||'http://127.0.0.1:8765/',{waitUntil:'load',timeout:90000});
   await page.waitForFunction(()=>document.body.dataset.ready==='true',null,{timeout:180000});
   await page.evaluate(()=>HAIR_LAB.setManual(true));
@@ -18,7 +18,7 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'qa');fs.mkdirSync(ou
   await frame('hair-moved',()=>{HAIR_LAB.setParam('material','chestnut');HAIR_LAB.impulse();for(let n=0;n<45;n++)HAIR_LAB.stepDynamics(1/120);});
   await page.evaluate(()=>{HAIR_LAB.resetDynamics();document.getElementById('full').click();});await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(150);await frame('mobile');
-  fs.writeFileSync(path.join(out,'browser-report.json'),JSON.stringify({url:page.url(),desktopMouseControlled:false,errors,records},null,2));
+  fs.writeFileSync(path.join(out,'browser-report.json'),JSON.stringify({url:page.url(),desktopMouseControlled:false,errors,hostResourceErrors,records},null,2));
   if(errors.length)throw Error(errors.join('\n'));console.log('Actual WebGL captures complete; no browser errors');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

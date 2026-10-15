@@ -4,8 +4,8 @@ const P=path.resolve(__dirname,'..');
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--enable-unsafe-swiftshader']});
  try{
-  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
-  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],hostResourceErrors=[];
+  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error'){if(m.location().url==='https://htmlpreview.github.io/favicon.ico')hostResourceErrors.push({text:m.text(),url:m.location().url});else errors.push(m.text());}});
   const url=process.argv[2]||'http://127.0.0.1:8765/';await page.goto(url,{waitUntil:'load',timeout:90000});
   await page.waitForFunction(()=>document.body.dataset.ready==='true',null,{timeout:120000});
   assert.equal(await page.locator('[data-specimen="fur"],#layerFilter').count(),0);
@@ -44,7 +44,7 @@ const P=path.resolve(__dirname,'..');
   await page.evaluate(()=>{HAIR_LAB.resetDynamics();HAIR_LAB.setWindEnabled(true);});
   await page.click('#pauseMotion');const paused=await page.evaluate(()=>HAIR_LAB.snapshot());await page.evaluate(()=>HAIR_LAB.stepDynamics(.05));assert.equal((await page.evaluate(()=>HAIR_LAB.snapshot())).guideMotion.steps,paused.guideMotion.steps);
   await page.click('#resetMotion');
-  const report={passed:true,url,desktopMouseControlled:false,errors,sourceHashes:JSON.parse(fs.readFileSync(path.join(P,'BUILD_MANIFEST.json'))).files,checks:['long hair only UI','actual pointer grab','GPU fixed roots','stable root signature','release recovery','R/TT/TRT and gray mode changes','maximum wind stability','pause freeze'],before:before.state,held:held.state,released,wind};
+  const report={passed:true,url,desktopMouseControlled:false,errors,hostResourceErrors,sourceHashes:JSON.parse(fs.readFileSync(path.join(P,'BUILD_MANIFEST.json'))).files,checks:['long hair only UI','actual pointer grab','GPU fixed roots','stable root signature','release recovery','R/TT/TRT and gray mode changes','maximum wind stability','pause freeze'],before:before.state,held:held.state,released,wind};
   fs.writeFileSync(path.join(P,'qa/interaction-report.json'),JSON.stringify(report,null,2));assert.deepEqual(errors,[]);console.log('Actual browser interaction checks passed');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
