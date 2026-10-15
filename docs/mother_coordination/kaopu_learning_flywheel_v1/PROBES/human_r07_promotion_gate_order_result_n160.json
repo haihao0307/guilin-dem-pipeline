@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu/promotion-gate-order-result@1",
+  "fixture": "human_r07_promotion_gate_order_n160.json",
+  "passed": 9,
+  "total": 9,
+  "currentState": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+  "temporalFacts": {
+    "canonicalClaimIssuedAt": "2026-10-15T03:25:23Z",
+    "finalSuccessfulGateCompletedAt": "2026-10-15T03:42:16Z",
+    "orderingSatisfied": false
+  },
+  "results": [
+    {
+      "name": "missing user authority",
+      "expected": "HOLD_USER_AUTHORIZATION_MISSING",
+      "actual": "HOLD_USER_AUTHORIZATION_MISSING",
+      "pass": true
+    },
+    {
+      "name": "runtime mutated after test",
+      "expected": "HOLD_UNTESTED_RUNTIME_DESCENDANT",
+      "actual": "HOLD_UNTESTED_RUNTIME_DESCENDANT",
+      "pass": true
+    },
+    {
+      "name": "attempt lineage dropped",
+      "expected": "HOLD_ATTEMPT_LINEAGE_INCOMPLETE",
+      "actual": "HOLD_ATTEMPT_LINEAGE_INCOMPLETE",
+      "pass": true
+    },
+    {
+      "name": "gate incomplete before any promotion",
+      "expected": "HOLD_PREPROMOTION_GATE_INCOMPLETE",
+      "actual": "HOLD_PREPROMOTION_GATE_INCOMPLETE",
+      "pass": true
+    },
+    {
+      "name": "complete gate makes candidate eligible",
+      "expected": "ELIGIBLE_FOR_PROMOTION",
+      "actual": "ELIGIBLE_FOR_PROMOTION",
+      "pass": true
+    },
+    {
+      "name": "promotion while only cancelled attempt exists",
+      "expected": "PROMOTED_WITHOUT_PREPROMOTION_FINAL_CLOSURE",
+      "actual": "PROMOTED_WITHOUT_PREPROMOTION_FINAL_CLOSURE",
+      "pass": true
+    },
+    {
+      "name": "success after canonical claim retains sequence exception",
+      "expected": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "actual": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "pass": true
+    },
+    {
+      "name": "success before promotion verifies ordering",
+      "expected": "PROMOTION_ORDER_VERIFIED",
+      "actual": "PROMOTION_ORDER_VERIFIED",
+      "pass": true
+    },
+    {
+      "name": "user approval does not waive gate ordering",
+      "expected": "PROMOTED_WITHOUT_PREPROMOTION_FINAL_CLOSURE",
+      "actual": "PROMOTED_WITHOUT_PREPROMOTION_FINAL_CLOSURE",
+      "pass": true
+    }
+  ]
+}
