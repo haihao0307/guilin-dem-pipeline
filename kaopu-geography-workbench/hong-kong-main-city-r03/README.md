@@ -16,7 +16,7 @@ Four legal2m-node rectangles,114,384 nodes;4 Float64 hierarchical coefficient gz
 
 Old2m details/story areas and old shoreline take priority. Old source arrays remain unchanged. The new rectangles do not overlap old detail rectangles. They are appended after old details; far views explicitly fall back to the same2m level rather than inventing a5m field.
 
-The old30m background triangles are precisely clipped from the new rectangles. Outside fragments retain their old triangle planes and interpolated attributes. The new source floor is not feathered upward toward the old DSM. New/old boundary difference reaches28.644m: the current source comparison retains that discontinuity and does not claim seamless terrain. No synthetic bridges, skirts or source-derived claims are introduced to hide it.
+The old30m background triangles are precisely clipped from the new rectangles. Outside fragments retain their old triangle planes and interpolated attributes. The new source floor is not feathered upward toward the old DSM. New/old boundary difference reaches28.644m: the source height discontinuity remains. An explicitly synthetic vertical display seam now connects the two unchanged edge heights to prevent a hole exposing the sky. It is a rendering closure, not measured ground, a retaining wall or a foundation, and it does not change floor queries. Edge segments are split at both source grids and triangle diagonals. No inward feathering or source-height adjustment is applied.
 
 ## Interfaces and testing
 
