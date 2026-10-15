@@ -47,7 +47,7 @@ R2 已分离 Producer、Verifier 与用户接受；现有 candidate regression �
 
 ## 7. 生命周期与 KPI
 
-- POSTED：false（待定向路由 PR #293）
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/293#issuecomment-6183942058
 - ACKNOWLEDGED / IMPLEMENTED / NEXT-PROMOTION-GATE-RUN / ADOPTED：false
 - 当前固定 runtime post-promotion GATE-RUN：true（Actions `38669673332` attempt 2）
 - USER-ACCEPTED：true（仅当前皮肤作为主线基线；不等于 production-ready）
