@@ -114,7 +114,7 @@ function makeShells({geometry,uniforms,store,lighting}){
  layers.forEach((layer,index)=>{
   const material=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,side:THREE.DoubleSide,toneMapped:true,
    uniforms:{uOffset:{value:layer.offset},uOpacity:{value:layer.opacity},uLayer:{value:index+1},uNoiseScale:{value:layer.scale},uFuzz:uniforms.fuzz,...PHOTO_UNIFORMS(),...SHADOW_UNIFORMS()},
-   vertexShader:`varying vec3 vWorld,vN,vC;varying vec2 vUvW;
+   vertexShader:`attribute vec3 color;varying vec3 vWorld,vN,vC;varying vec2 vUvW;
 uniform float uOffset;
 void main(){vec3 p=position+normal*uOffset;vec4 world=modelMatrix*vec4(p,1.);vWorld=world.xyz;vN=normalize(mat3(modelMatrix)*normal);vC=color;vUvW=uv;gl_Position=projectionMatrix*viewMatrix*world;}`,
    fragmentShader:SHADOW_GLSL+woolLightGLSL()+`
