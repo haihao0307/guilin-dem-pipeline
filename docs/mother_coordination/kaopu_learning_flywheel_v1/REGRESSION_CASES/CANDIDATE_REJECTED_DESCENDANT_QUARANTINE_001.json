@@ -1,0 +1,128 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "REJECTED-DESCENDANT-QUARANTINE-001",
+  "status": "CANDIDATE_TWO_HISTORY_INSTANCES_RECORDED_NOT_GATE_RUN_NOT_ADOPTED",
+  "active": false,
+  "scope": {
+    "mothers": ["Knit", "BrowLash"],
+    "taskClass": "USER_REJECTED_CANDIDATE_BASELINE_RESTORE_AND_FUTURE_LINEAGE",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A user-rejected candidate remains addressable as an immutable commit or closed PR and can later be silently reused, cherry-picked, copied, or treated as a baseline after the active branch has been restored.",
+    "independentObservations": [
+      {
+        "id": "KNIT_P03_REJECTED",
+        "acceptedBaseSha": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "rejectedCandidateSha": "a51a5e4f429b91eb4d9d2d2bfc361863a81f6d9d",
+        "closedPr": 291,
+        "currentAcceptedPr": 282,
+        "rejectedBranchCurrentHead": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "acceptedBranchCurrentHead": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "rejectedReason": "User rejected P03 C2 visual result and restored P02 C2 as the current knit lineage baseline."
+      },
+      {
+        "id": "BROW_R05_REJECTED",
+        "acceptedBaseSha": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "rejectedCandidateSha": "ed68b1278fefadcb136e650da87f8c4459f5fada",
+        "closedPr": 292,
+        "currentAcceptedPr": 286,
+        "rejectedBranchCurrentHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "acceptedBranchCurrentHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "rejectedReason": "User rejected R05 and restored R04 as the current brow-lash lineage baseline."
+      }
+    ]
+  },
+  "mustNeverRepeat": [
+    "Treat an immutable rejected commit or closed PR as a valid production baseline because it remains fetchable.",
+    "Treat branch reset, PR closure, page similarity, or a renamed directory as proof that rejected content cannot return.",
+    "Cherry-pick, copy, regenerate, or indirectly inherit a rejected file/tree/behavior without explicit current user reauthorization.",
+    "Erase rejected evidence from history or claim that a published Git object was physically deleted.",
+    "Promote a restored lineage baseline to final visual acceptance merely because the user selected it as the restart point."
+  ],
+  "requiredTaskAnchorAndReceiptFields": [
+    "acceptedBaseSha",
+    "acceptedBaselineScope",
+    "rejectedCandidateShas",
+    "rejectedPathsOrTreeDigests",
+    "actualHeadSha",
+    "baseHeadDiffPaths",
+    "rejectedAncestryPresent",
+    "rejectedContentMatchPresent",
+    "userReauthorization",
+    "reauthorizedScope",
+    "independentVerifier",
+    "userVisualAcceptance"
+  ],
+  "gate": [
+    "A rejected candidate remains EVIDENCE_ONLY even when its immutable SHA or closed PR is readable.",
+    "A new candidate is HOLD_REJECTED_DESCENDANT_PRESENT when rejected ancestry or rejected content identity is present and no exact current user reauthorization covers it.",
+    "Ancestry checks are necessary but not sufficient: copied or regenerated rejected files must also be checked by path, tree/blob digest, or behavior-specific regression.",
+    "A clean descendant of the restored accepted baseline is only eligible for normal verification; it is not automatically reference-faithful, visually accepted, or production-ready.",
+    "Reauthorization must name the rejected element and scope; a general request to continue does not revive all rejected work."
+  ],
+  "states": [
+    "BASELINE_RESTORED_REJECTED_AUDIT_ONLY",
+    "HOLD_REJECTED_DESCENDANT_PRESENT",
+    "HOLD_REAUTHORIZATION_SCOPE_MISSING",
+    "CANDIDATE_ELIGIBLE_NOT_VISUAL_ACCEPTED"
+  ],
+  "cases": [
+    {
+      "id": "KNIT_CURRENT_POINTERS_RESTORED",
+      "input": {
+        "acceptedBaseSha": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "activeBranchHead": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "rejectedBranchHead": "d3e2c5d39a884bcc15b89232ec8e6a4ecb1e7ee9",
+        "rejectedCandidateSha": "a51a5e4f429b91eb4d9d2d2bfc361863a81f6d9d",
+        "rejectedCommitStillReadable": true
+      },
+      "expect": "BASELINE_RESTORED_REJECTED_AUDIT_ONLY"
+    },
+    {
+      "id": "BROW_CURRENT_POINTERS_RESTORED",
+      "input": {
+        "acceptedBaseSha": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "activeBranchHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "rejectedBranchHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
+        "rejectedCandidateSha": "ed68b1278fefadcb136e650da87f8c4459f5fada",
+        "rejectedCommitStillReadable": true
+      },
+      "expect": "BASELINE_RESTORED_REJECTED_AUDIT_ONLY"
+    },
+    {
+      "id": "CONTROL_REJECTED_FILE_REINTRODUCED",
+      "input": {
+        "baseIsAccepted": true,
+        "rejectedAncestryPresent": false,
+        "rejectedContentMatchPresent": true,
+        "userReauthorization": false
+      },
+      "expect": "HOLD_REJECTED_DESCENDANT_PRESENT"
+    },
+    {
+      "id": "CONTROL_CLEAN_NEW_INCREMENT",
+      "input": {
+        "baseIsAccepted": true,
+        "rejectedAncestryPresent": false,
+        "rejectedContentMatchPresent": false,
+        "userReauthorization": false
+      },
+      "expect": "CANDIDATE_ELIGIBLE_NOT_VISUAL_ACCEPTED"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherGateRunRequired": true,
+    "independentVerifierRequired": true,
+    "learningQuestion": "How can copied or semantically regenerated rejected behavior be detected when Git ancestry and exact blob digests no longer match?"
+  },
+  "lifecycle": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
