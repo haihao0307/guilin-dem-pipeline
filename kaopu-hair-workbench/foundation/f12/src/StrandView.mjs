@@ -1,3 +1,4 @@
+import {depthGroup} from './DepthRelations.mjs';
 import {DEFAULT_STYLING,prepareStyling,motionWeights} from './Styling.mjs';
 import {denseHairBlob} from './StrandExchange.mjs';
 import * as THREE from './three.module.js';
@@ -20,7 +21,7 @@ export function createStrandView(surface,state){
   const material=new THREE.LineBasicMaterial({vertexColors:true,transparent:false,depthWrite:true,depthTest:true,toneMapped:false});
   const line=new THREE.LineSegments(geometry,material);line.name='F12-dense-'+p.id;line.frustumCulled=false;group.add(line);parts.push({p,array,offsets,colors,arcs,geometry,material,line});
  }
- function refresh(){for(const o of parts){const {p,colors}=o;o.line.visible=enabled&&(selected==='all'||selected===p.id||selected===p.patch||selected===p.parent);const color=new THREE.Color(colored?PARENTS.find(g=>g.id===p.parent).color:'#8b8981');
+ function refresh(){for(const o of parts){const {p,colors}=o;o.line.visible=enabled&&(selected==='all'||selected===p.id||selected===p.patch||selected===p.parent);const color=new THREE.Color(colored?depthGroup(p.id).color:'#8b8981');
    for(let i=0;i<p.count;i++){const tipY=p.positions[(i*p.samples+p.samples-1)*3+1],lengthColor=p.patch.startsWith('bang')?[.86,.35,.45]:tipY>.258?[.95,.65,.25]:tipY>.185?[.35,.76,.65]:[.30,.53,.90],tone=p.appearance[i*4+3],phase=p.appearance[i*4],context=weightMode?prepareStyling(Array.from(p.sourceCharts.subarray(i*3,i*3+3)),p.id,state.recipe,styling):null,L=o.arcs[i*p.samples+p.samples-1];for(let j=0;j<p.samples;j++){const k=(i*p.samples+j)*3,u=j/(p.samples-1),shade=.50+tone*.56+.24*Math.pow(Math.max(0,Math.sin(u*5+phase*.18)),8);if(lengthMode&&!weightMode){for(let a=0;a<3;a++)colors[k+a]=Math.min(255,Math.round(lengthColor[a]*255*shade));continue;}if(weightMode){const w=motionWeights(o.arcs[i*p.samples+j],L,p.patch.startsWith('bang')?'fringe':'body',freedom,context).shapeHold;colors[k]=Math.round((.12+.83*w)*255);colors[k+1]=Math.round((.56-.30*w)*255);colors[k+2]=Math.round((.96-.83*w)*255);continue;}colors[k]=Math.min(255,Math.round(color.r*255*shade));colors[k+1]=Math.min(255,Math.round(color.g*255*shade));colors[k+2]=Math.min(255,Math.round(color.b*255*shade));}}
    o.geometry.attributes.color.needsUpdate=true;
   }}

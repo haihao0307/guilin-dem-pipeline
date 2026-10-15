@@ -1,3 +1,4 @@
+import {DEPTH_RELATIONS,depthGroup} from './DepthRelations.mjs';
 import {LENGTH_PROFILE} from './LayerLengths.mjs';
 import {validateStyling,PRODUCTS} from './Styling.mjs';
 // Compact lossless binary paths accompany the small guide/volume contract.
@@ -5,11 +6,11 @@ import {validateStyling,PRODUCTS} from './Styling.mjs';
 export const DENSE_SCHEMA='kaopu/native-dense-hair@2';
 export function denseHairBlob(parts,metadata){
  let offset=0;const blocks=[],rows=[];
- for(const p of parts){const row={id:p.id,patch:p.patch,parent:p.parent,count:p.count,samples:p.samples,sourceAreaCM2:p.sourceAreaCM2,blocks:{}};
+ for(const p of parts){const row={id:p.id,referenceDepthGroup:depthGroup(p.id).id,patch:p.patch,parent:p.parent,count:p.count,samples:p.samples,sourceAreaCM2:p.sourceAreaCM2,blocks:{}};
   for(const key of ['positions','bindings','appearance','sourceCharts']){const a=p[key];if(!ArrayBuffer.isView(a))throw Error('密集发丝数组缺失');row.blocks[key]={offset,bytes:a.byteLength,type:a.constructor.name};offset+=a.byteLength;blocks.push(a);}
   rows.push(row);
  }
- const header={schema:DENSE_SCHEMA,referenceLengthProfile:LENGTH_PROFILE,coordinates:'native-common-viewer-Yup',byteOrder:'little-endian',sourceChartCoordinates:'approved intrinsic scalp chart, not native or world positions',...metadata,count:rows.reduce((n,p)=>n+p.count,0),parts:rows,dataBytes:offset,strandIdentity:'part id + local strand index; stable root prefix at fixed recipe',diameterMicrometres:70,tipRadiusProfile:'1 - 0.92*smoothstep(0.88,1,u); render line width is screen-space only',finiteWidthCollisionCertified:false};
+ const header={schema:DENSE_SCHEMA,referenceLengthProfile:LENGTH_PROFILE,referenceDepthRelations:DEPTH_RELATIONS,coordinates:'native-common-viewer-Yup',byteOrder:'little-endian',sourceChartCoordinates:'approved intrinsic scalp chart, not native or world positions',...metadata,count:rows.reduce((n,p)=>n+p.count,0),parts:rows,dataBytes:offset,strandIdentity:'part id + local strand index; stable root prefix at fixed recipe',diameterMicrometres:70,tipRadiusProfile:'1 - 0.92*smoothstep(0.88,1,u); render line width is screen-space only',finiteWidthCollisionCertified:false};
  const text=new TextEncoder().encode(JSON.stringify(header)),length=new Uint8Array(4);new DataView(length.buffer).setUint32(0,text.length,true);
  return {header,blob:new Blob([length,text,...blocks],{type:'application/octet-stream'})};
 }

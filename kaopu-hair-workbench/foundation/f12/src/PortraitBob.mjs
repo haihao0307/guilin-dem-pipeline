@@ -30,12 +30,15 @@ export function bobProfile(root,r,bvh=null){
  }else if(id.startsWith('frame')){
   const spread=clamp((c[0]*sign-.012)/.055,0,1);
   const front=clamp((c[2]-.045)/.070,0,1),wide=.095+.010*u+(.5-front)*.018+extra+w*.6;
-  target=[sign*(wide-.023),.126-r.bobLengthMM*.001+jitter*.45,.092+front*.020];
-  waypoint=[sign*(wide-.008),.293,.102+front*.018];
-  route=[waypoint,[sign*wide,.241,.101+front*.019],[sign*(wide+.003),.199,.099+front*.019],[sign*(wide-.002),.157,.097+front*.018],target];
+  const tuck=sign<0?.040:0;
+  target=[sign*(wide-.023),.126-r.bobLengthMM*.001+jitter*.45,.092+front*.020-tuck];
+  waypoint=[sign*(wide-.008),.293,.102+front*.018-tuck];
+  route=[waypoint,[sign*wide,.241,.101+front*.019-tuck],[sign*(wide+.003),.199,.099+front*.019-tuck],[sign*(wide-.002),.157,.097+front*.018-tuck],target];
  }else if(id.startsWith('outer')){
   const depth=clamp((c[2]+.027)/.072,0,1);
-  const wide=.092+.021*Math.sin(depth*Math.PI/2)+.008*u+extra+w,asym=sign<0?.002:-.001;
+  // Rear crown sources support the outer contour; the more frontal middle
+  // layer sits inward and in front. The photo is not a mirrored curtain.
+  const wide=.103+.015*(1-depth)+.006*u+extra+w,asym=sign<0?.002:-.001;
   waypoint=[sign*(wide-.024),.304,-.062+depth*.143];target=[sign*(wide-.025+asym),.128-r.bobLengthMM*.001+jitter*.55,-.064+depth*.151];
   route=[waypoint,[sign*(wide-.003),.251,-.064+depth*.150],[sign*(wide+asym),.209,-.066+depth*.157],[sign*(wide-.006),.164,-.068+depth*.160],target];
  }else if(id.startsWith('under')){
