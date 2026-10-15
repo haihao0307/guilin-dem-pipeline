@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu/promotion-gate-order-probe@1",
+  "subject": {
+    "version": "HUMAN-INTEGRATED-R07",
+    "promotionCommit": "d29534672989de3b9373bced5abf3ac333be3dee",
+    "canonicalMetadataCommit": "f723d28a45327d4b70fed68338eb6a31693792e5",
+    "runtimeSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "userAuthorized": true,
+    "promotionObservedByAt": "2026-10-15T03:25:23Z",
+    "canonicalClaimIssuedAt": "2026-10-15T03:25:23Z",
+    "postPromotionMetadataOnly": true,
+    "metadataChangedPaths": [
+      "kaopu-unified-human-workbench/CURRENT_HUMAN.json",
+      "kaopu-unified-human-workbench/CURRENT_HUMAN.md"
+    ]
+  },
+  "workflow": {
+    "runId": 38669673332,
+    "headSha": "d29534672989de3b9373bced5abf3ac333be3dee",
+    "attemptCount": 2,
+    "attempts": [
+      {
+        "attempt": 1,
+        "startedAt": "2026-10-15T02:11:25Z",
+        "completedAt": "2026-10-15T02:56:47Z",
+        "conclusion": "cancelled",
+        "boundedPromotionCheck": "success",
+        "exactRebuild": "success",
+        "candidateBrowser": "success",
+        "exactPublicBrowser": "cancelled",
+        "finalGateReport": "skipped"
+      },
+      {
+        "attempt": 2,
+        "startedAt": "2026-10-15T03:19:45Z",
+        "completedAt": "2026-10-15T03:42:16Z",
+        "conclusion": "success",
+        "boundedPromotionCheck": "success",
+        "exactRebuild": "success",
+        "candidateBrowser": "success",
+        "exactPublicBrowser": "success",
+        "finalGateReport": "success"
+      }
+    ]
+  },
+  "expectedState": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+  "excludedClaims": [
+    "The complete promotion gate passed before main was updated.",
+    "The successful rerun erases the cancelled first attempt.",
+    "User authorization substitutes for verifier closure.",
+    "Post-promotion success retroactively satisfies a pre-promotion ordering predicate.",
+    "The sequence exception alone requires automatic rollback of a user-authorized, byte-stable runtime."
+  ]
+}
