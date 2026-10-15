@@ -3,12 +3,16 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=requ
 const here=__dirname,root=path.resolve(here,'..'),hash=x=>crypto.createHash('sha256').update(x).digest('hex'),read=p=>fs.readFileSync(p,'utf8');
 const host=read(path.join(root,'brow-lash-r04','preview.html'));
 assert.equal(hash(host),'34d7bcec46fc05968f893c8293a678ddbe63274c802e2905e6bc2dc98ada6f76','R04 fixed host drifted');
-const profiles=read(path.join(here,'Profiles.js')),app=read(path.join(here,'app.js')),code=(profiles+'\n'+app).replace(/<\/script/gi,'<\\/script');
+const partNames=Array.from({length:8},(_,i)=>`app.parts/${String(i).padStart(2,'0')}.b64`);
+const app=Buffer.from(partNames.map(name=>read(path.join(here,name)).trim()).join(''),'base64').toString('utf8');
+assert.equal(hash(app),'d6262fa07806143e02180a107382d00b6859bcbf62218b8a96358adab7f9e3d9','R05 reconstructed source mismatch');
+const profiles=read(path.join(here,'Profiles.js')),code=(profiles+'\n'+app).replace(/<\/script/gi,'<\\/script');
 new vm.Script(code,{filename:'BROW-LASH-R05.bundle.js'});
 const scripts=s=>[...s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>hash(m[1]));
 const html=host.replace(/<title>[^<]*<\/title>/,'<title>程序化毛囊眉毛 R05 · 高密度多眉形</title>').replace('</body>',()=>'<script data-module="KAOPU-BROW-LASH-R05">'+code+'</script></body>');
 assert.deepEqual(scripts(html).slice(0,scripts(host).length),scripts(host),'R04 executable scripts changed');
 fs.writeFileSync(path.join(here,'preview.html'),html);
-const manifest={version:'BROW-LASH-R05',sourceCommit:process.env.SOURCE_SHA||process.env.GITHUB_SHA||'local',parentBuild:'0e913ae903d43438205aeff3aa4a3eed38f497c6',hostPreviewSHA256:hash(host),hostExecutableUnchanged:true,externalEyebrowMeshImported:false,externalEyebrowTextureImported:false,externalRootCoordinatesImported:false,proceduralFollicles:true,presetCount:10,defaultExpectedRootCount:1905,stage:'dense follicle eyebrow variants for visual review',previewBytes:Buffer.byteLength(html),previewSHA256:hash(html),sources:['Profiles.js','app.js','build.cjs','test.cjs','verify.cjs'].filter(x=>fs.existsSync(path.join(here,x))).map(x=>({path:'kaopu-unified-human-workbench/brow-lash-r05/'+x,sha256:hash(fs.readFileSync(path.join(here,x)))})),userVisualAccepted:false,filmQualityAccepted:false};
+const sourceNames=['Profiles.js',...partNames,'build.cjs','test.cjs','verify.cjs'];
+const manifest={version:'BROW-LASH-R05',sourceCommit:process.env.SOURCE_SHA||process.env.GITHUB_SHA||'local',parentBuild:'0e913ae903d43438205aeff3aa4a3eed38f497c6',hostPreviewSHA256:hash(host),hostExecutableUnchanged:true,reconstructedAppSHA256:hash(app),externalEyebrowMeshImported:false,externalEyebrowTextureImported:false,externalRootCoordinatesImported:false,proceduralFollicles:true,presetCount:10,defaultExpectedRootCount:1905,stage:'dense follicle eyebrow variants for visual review',previewBytes:Buffer.byteLength(html),previewSHA256:hash(html),sources:sourceNames.filter(x=>fs.existsSync(path.join(here,x))).map(x=>({path:'kaopu-unified-human-workbench/brow-lash-r05/'+x,sha256:hash(fs.readFileSync(path.join(here,x)))})),userVisualAccepted:false,filmQualityAccepted:false};
 fs.writeFileSync(path.join(here,'BUILD_MANIFEST.json'),JSON.stringify(manifest,null,2));
 console.log(JSON.stringify(manifest,null,2));
