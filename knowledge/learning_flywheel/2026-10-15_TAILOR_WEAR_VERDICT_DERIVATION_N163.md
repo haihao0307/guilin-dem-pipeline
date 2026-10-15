@@ -64,7 +64,7 @@ NASA-STD-7009B（2024-03-05）要求模型与仿真的 acceptance criteria 由�
 
 - method：`NO_NOVELTY`
 - regression：复用 `VERIFIER-INDEPENDENCE-IDENTITY-001`，无重复 case
-- POSTED：待本轮路由
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/299#issuecomment-6196097579
 - ACKNOWLEDGED / IMPLEMENTED / CLOTHING-GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - classification replay：6/6
 - 当前 pass-verdict derivation 缺失事件：1
