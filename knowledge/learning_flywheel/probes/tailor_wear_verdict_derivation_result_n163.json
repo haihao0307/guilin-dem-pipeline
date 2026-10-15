@@ -1,0 +1,52 @@
+{
+  "schema": "kaopu/tailor-wear-verdict-derivation-result@1",
+  "fixture": "tailor_wear_verdict_derivation_n163.json",
+  "passed": 6,
+  "total": 6,
+  "currentState": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+  "claimBoundary": {
+    "rawTraceEvidence": "PRESENT",
+    "deterministicVerdictDerivation": "UNBOUND",
+    "independentVerifierApproval": "UNBOUND",
+    "staticMaterialAcceptance": "FAILED",
+    "wearCertification": "NOT_CLAIMED"
+  },
+  "results": [
+    {
+      "name": "raw evidence missing",
+      "expected": "HOLD_RAW_EVIDENCE_MISSING",
+      "actual": "HOLD_RAW_EVIDENCE_MISSING",
+      "pass": true
+    },
+    {
+      "name": "current T14 trace exists but verdict derivation is unbound",
+      "expected": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+      "actual": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "handwritten pass label without executable derivation",
+      "expected": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+      "actual": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "predicate committed but criteria chosen after run",
+      "expected": "AUTOMATED_CHECK_EXECUTED__HOLD_PREFROZEN_CRITERIA_UNBOUND",
+      "actual": "AUTOMATED_CHECK_EXECUTED__HOLD_PREFROZEN_CRITERIA_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "frozen automated check still awaits independent approval",
+      "expected": "AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING",
+      "actual": "AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING",
+      "pass": true
+    },
+    {
+      "name": "exact subject, frozen predicate and independent receipt close the gate",
+      "expected": "INDEPENDENT_VERIFIER_RECEIPT_VERIFIED",
+      "actual": "INDEPENDENT_VERIFIER_RECEIPT_VERIFIED",
+      "pass": true
+    }
+  ]
+}
