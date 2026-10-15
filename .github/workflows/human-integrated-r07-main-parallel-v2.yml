@@ -1,0 +1,142 @@
+name: Human integrated R07 mainline proof v2
+on:
+  push:
+    branches: [integration/human-r07-skin-main-20261015]
+    paths: ['.github/workflows/human-integrated-r07-main-parallel-v2.yml']
+permissions: {contents: read}
+concurrency:
+  group: human-integrated-r07-proof-v2-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Exact bounded graft and reproducible runtime
+        env: {SOURCE_SHA: 1923ee7af9e121c40caa2089a49ed064e05451fe}
+        run: |
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/ear-continuity-r06)" = "d483c0e0889e2fdc994b33f41a6c587a18ccd88a"
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/human-integrated-r06)" = "55a254681844712c3a9a1b7b609a1549dec84a17"
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/head-procedural-r01)" = "059f87d550c2751ea74c7f879967ab83509b8f9b"
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07');c=json.loads(Path('kaopu-unified-human-workbench/CURRENT_HUMAN.json').read_text())
+          assert c['version']=='HUMAN-INTEGRATED-R07' and c['userApprovedForMainIntegration'] and c['oldVersionsPreserved']
+          assert not c['ancestorHistoriesMerged']
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          PY
+          node kaopu-unified-human-workbench/human-integrated-r07/build.cjs
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07');m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']=='1923ee7af9e121c40caa2089a49ed064e05451fe'
+          assert m['wholeBodySkin'] and not m['canonicalGeometryChanged'] and m['referenceAssetsImported']==0 and m['skinImageMaps']==0
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==m['previewSHA256']=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          PY
+  verify:
+    needs: precheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {kind: body, script: verify-body.cjs, count: 11}
+          - {kind: core, script: verify.cjs, count: 12}
+          - {kind: controls, script: verify-controls.cjs, count: 5}
+    name: verify-${{ matrix.kind }}-candidate-and-public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Verify committed runtime bytes
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07');m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']=='1923ee7af9e121c40caa2089a49ed064e05451fe'
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==m['previewSHA256']=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          for f,h in m['sourceSHA256'].items(): assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h,f
+          PY
+      - name: Candidate real-browser regression
+        env:
+          SCRIPT: ${{ matrix.script }}
+          BODY_OUT: r07-proof/candidate-${{ matrix.kind }}
+          QA_OUT: r07-proof/candidate-${{ matrix.kind }}
+          CONTROL_OUT: r07-proof/candidate-${{ matrix.kind }}
+        run: node "kaopu-unified-human-workbench/human-integrated-r07/$SCRIPT"
+      - name: Exact-public real-browser regression
+        env:
+          SCRIPT: ${{ matrix.script }}
+          PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/human-integrated-r07/preview.html
+          BODY_OUT: r07-proof/public-${{ matrix.kind }}
+          QA_OUT: r07-proof/public-${{ matrix.kind }}
+          CONTROL_OUT: r07-proof/public-${{ matrix.kind }}
+        run: node "kaopu-unified-human-workbench/human-integrated-r07/$SCRIPT"
+      - name: Native view and lighting return on exact public R07
+        if: matrix.kind == 'body'
+        env:
+          PREVIEW_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ github.sha }}/kaopu-unified-human-workbench/human-integrated-r07/preview.html
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+          (async()=>{const out='r07-proof/public-body';fs.mkdirSync(out,{recursive:true});const b=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),c=await b.newContext({viewport:{width:1000,height:820}}),p=await c.newPage(),q={url:process.env.PREVIEW_URL,tests:[],errors:[],physicalPhone:false};p.on('pageerror',e=>q.errors.push(String(e)));try{await p.goto(q.url,{waitUntil:'domcontentloaded',timeout:90000});await p.waitForFunction(()=>window.__HEAD_PROC__?.ready,{},{timeout:240000});const r=()=>p.evaluate(()=>{const v=__IDENTITY_QA__.viewer();v.render();return{key:v.foldLights.key.visible,fill:v.foldLights.fill.visible,ear:v.earInspection,backlight:bodyProceduralSkin.report().earBacklightInspection,source:bodyProceduralSkin.report().source};});await p.click('[data-fb-action="backlight"]');let x=await r();assert(!x.key&&!x.fill&&x.backlight);await p.click('[data-view="face"]');x=await r();assert(x.key&&x.fill&&!x.ear&&!x.backlight);q.tests.push({name:'native face view restores original lamps',passed:true,result:x});await p.click('[data-fb-action="backlight"]');await p.click('[data-hc-light="neutral"]');x=await r();assert(x.key&&x.fill&&!x.backlight);q.tests.push({name:'C4 lighting exits isolated ear backlight',passed:true,result:x});assert.equal(x.source,'1923ee7af9e121c40caa2089a49ed064e05451fe');assert.equal(q.errors.length,0);q.completed=true;}catch(e){q.completed=false;q.failure=String(e);process.exitCode=1;console.error(e);}finally{fs.writeFileSync(out+'/NATIVE_VIEW_QA.json',JSON.stringify(q,null,2));console.log(JSON.stringify(q,null,2));await b.close();}})();
+          JS
+      - name: Gate both reports
+        env: {KIND: ${{ matrix.kind }}, EXPECTED: ${{ matrix.count }}}
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          for mode in ['candidate','public']:
+            q=json.loads(Path(f"r07-proof/{mode}-{os.environ['KIND']}/qa.json").read_text())
+            assert q['completed'] and len(q['tests'])==int(os.environ['EXPECTED']) and all(t['passed'] for t in q['tests'])
+            for f in ['errors','pageErrors','consoleErrors','failedRequests','referenceRequests']: assert not q.get(f),(mode,f,q.get(f))
+            if mode=='public': assert '/human-integrated-r07/preview.html' in q['url']
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r07-${{ matrix.kind }}-${{ github.run_id }}
+          path: r07-proof/
+          retention-days: 14
+  receipt:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r07-*-${{ github.run_id }}
+          path: proof
+          merge-multiple: true
+      - name: Consolidate complete proof
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          expected={'candidate-body':11,'candidate-core':12,'candidate-controls':5,'public-body':11,'public-core':12,'public-controls':5};groups={}
+          for name,count in expected.items():
+            q=json.loads(Path(f'proof/{name}/qa.json').read_text());assert q['completed'] and len(q['tests'])==count and all(t['passed'] for t in q['tests'])
+            errors=sum(len(q.get(x,[])) for x in ['errors','pageErrors','consoleErrors','failedRequests','referenceRequests']);assert errors==0
+            groups[name]={'tests':count,'url':q['url'],'errors':errors}
+          n=json.loads(Path('proof/public-body/NATIVE_VIEW_QA.json').read_text());assert n['completed'] and len(n['tests'])==2 and all(t['passed'] for t in n['tests']) and not n['errors']
+          groups['native-view-return']={'tests':2,'url':n['url'],'errors':0}
+          r={'schema':'kaopu/human-mainline-proof@1','version':'HUMAN-INTEGRATED-R07','commit':os.environ['GITHUB_SHA'],'totalAssertions':sum(x['tests'] for x in groups.values()),'groups':groups,'completed':True}
+          Path('MAINLINE_PROOF.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));print(json.dumps(r,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: human-integrated-r07-mainline-proof-${{ github.run_id }}
+          path: |
+            proof/
+            MAINLINE_PROOF.json
+          retention-days: 14
