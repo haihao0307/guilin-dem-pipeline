@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>香港主地图 · 建筑谱层</title><style>body{margin:0;background:#192b31;color:#dedcca;font:16px/1.8 system-ui;display:grid;place-items:center;min-height:100vh}main{max-width:650px;padding:30px}progress{width:100%}</style><main><h2>香港主地图 · 同一DEM、海洋与线路</h2><p id="load-status">校验既有地图、88、启德与建筑谱索引…</p><progress></progress><small>保留舊地圖。建筑年代、资料更新与架空游戏时间分别标注。</small></main><script type="module">
+import {makeSetup} from './airport.mjs';
+const root=new URL('.',location.href),status=document.getElementById('load-status'),query=new URLSearchParams(location.search);
+try{
+ const era='1970';
+ const dataResponse=await fetch(new URL(`airport-${era}.json`,root));if(!dataResponse.ok)throw Error('機場坐標資料尚未就緒');
+ const data=await dataResponse.json();window.KaiTakSetup=makeSetup(data,query.get('terrain')==='source');
+ const config=await(await fetch(new URL('base-host-patches.json',root))).json();
+ const response=await fetch(new URL('../hong-kong-map-sea-r03/index.html',root));if(!response.ok)throw Error('地圖來源 HTTP '+response.status);const bytes=await response.arrayBuffer();
+ const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');if(hash!==config.sourceSha256)throw Error('固定R03地圖SHA不符，已停止');
+ let html=new TextDecoder().decode(bytes);const patches=[...config.patches,
+ ['const hkBox=[HK.x0-HK.origin[0]', 'window.KaiTakSetup.prepareTerrain({HK,hkHeights,hkMask});const hkBox=[HK.x0-HK.origin[0]'],
+ ['detailPatches.push(q)}','window.KaiTakSetup.prepareDetail(q);detailPatches.push(q)}']];
+ for(const[from,to]of patches){if(html.split(from).length!==2)throw Error('地圖接入點不唯一：'+from.slice(0,40));html=html.replace(from,to.replace('__INTEGRATION_URL__',new URL('integration.js',root).href));}
+ html=html.replace('src="./station-data.js"','src="'+new URL(query.get('station')==='original'?'../hong-kong-map-sea-r03/station-data.js':'station-calibrated-data.js',root).href+'"');
+ html=html.replace('</head>',`<link rel="stylesheet" href="${new URL('integration.css',root).href}"><link rel="stylesheet" href="${new URL('airport.css',root).href}"><link rel="stylesheet" href="${new URL('city-buildings/style.css',root).href}"></head>`);
+ html=html.replace(/<title>[^<]*<\/title>/,'<title>香港主地图 · 建筑谱层</title>');window.HK_TRAIN_ASSET_BASE=root.href;window.HK_CANDIDATE_VISIBILITY={kowloon:true,bureau:true,city:true};
+ document.open();document.write(html);document.close();
+}catch(e){status.textContent='未能載入：'+e.message;document.querySelector('progress')?.remove();console.error(e);}
+</script></html>
