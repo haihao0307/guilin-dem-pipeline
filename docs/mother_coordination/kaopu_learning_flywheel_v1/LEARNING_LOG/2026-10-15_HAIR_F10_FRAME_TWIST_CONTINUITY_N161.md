@@ -59,7 +59,7 @@ R2 与参考复刻门禁已经要求 bounded claim、独立 verifier、positive/
 ## 7. 生命周期与 KPI
 
 - Teacher：`TEACHER_CANDIDATE`；Mother query：`NOT_QUERIED/UNKNOWN`
-- POSTED：pending
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/297#issuecomment-6187187364
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - learning synthetic replay：10/10
 - 当前首次候选通过率、用户纠错次数、同错复发率、rejected lineage 继承次数、stale delivery 次数、accepted delta 内部迭代数、从指令到合法 candidate 时间：unknown
