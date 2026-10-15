@@ -66,7 +66,7 @@ R2、Freshness Gate 和根 AGENTS 已明确要求测试与当前 head 绑定，�
 ## 7. 生命周期与 KPI
 
 - method：NO_NOVELTY；沿用 N147 Teacher Candidate，不新增老师
-- POSTED：pending
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/293#issuecomment-6191356375
 - ACKNOWLEDGED / IMPLEMENTED / ACTIVE-ROUTE-GATE-RUN / ADOPTED：false
 - USER-ACCEPTED：true（仅 SKIN-FULLBODY-R02 作为主线基线）；stable clothing route 视觉验收：false
 - learning classifier：11/11
