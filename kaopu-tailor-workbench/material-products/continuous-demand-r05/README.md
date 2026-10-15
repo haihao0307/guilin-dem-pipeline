@@ -6,7 +6,7 @@
 
 本地集合：[服装鞋帽工作台](http://127.0.0.1:8897/Human-Clothing-Workbench/%E6%9C%8D%E8%A3%85%E9%9E%8B%E5%B8%BD%E5%B7%A5%E4%BD%9C%E5%8F%B0.html)。
 
-独立固定预览：[MP05 R05](https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-regional-r05-caa6d2ba5f1f/?look=K03)。公开地址是否实测完成以 `RELEASE_STATUS.json` 为准。
+独立固定预览：[MP05 R05](https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-regional-r05-caa6d2ba5f1f/?look=K03)。该固定地址已在 Chrome 155 / RTX 4070 Ti SUPER 实测：走、跑、重复跳跃约 53–58 帧/秒，单步中位约 7.1–7.2 ms，活动时钟比约 0.999。首次完整载入约 57 秒；这是载入时间，不是运动帧耗时。
 
 实现与限制见 [candidate-r05/README.md](candidate-r05/README.md)，方法核对见 [docs/R05_METHODS.md](docs/R05_METHODS.md)，最终证据见 `qa/R05_EVIDENCE.json`。录像为实际浏览器画面，位于 `qa/R05_K03_连续走跑跳.mp4`。
 
