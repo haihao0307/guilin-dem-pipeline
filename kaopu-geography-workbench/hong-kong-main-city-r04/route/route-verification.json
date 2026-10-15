@@ -1,0 +1,1163 @@
+{
+  "schema": "hk.game.sketch-route-verification/1",
+  "passed": true,
+  "tests": [
+    {
+      "name": "old route remains byte-identical and rollback returns its original identity",
+      "passed": true
+    },
+    {
+      "name": "whole-line vertical validation and five ordered stops pass",
+      "passed": true
+    },
+    {
+      "name": "Tin Hau calibrated game height is exact and all planar geometry is preserved",
+      "passed": true
+    },
+    {
+      "name": "every metre actual horizontal run and analytic grade agree below 15 per mille",
+      "passed": true
+    },
+    {
+      "name": "analytic plan joins preserve position tangent and curvature",
+      "passed": true
+    },
+    {
+      "name": "whole 570m Tin Hau yard main line is straight and level at exact registered anchor",
+      "passed": true
+    },
+    {
+      "name": "actual retained fixed-step drive consumes same new profile grade",
+      "passed": true
+    },
+    {
+      "name": "source route end is Lo Wu and incompatible design constraints fail explicitly",
+      "passed": true
+    }
+  ],
+  "lengthM": 34734.793603232596,
+  "oldRouteLengthM": 15703.434096760362,
+  "oldRouteUnmodified": true,
+  "stops": [
+    {
+      "id": "kowloon",
+      "name": "九龍總站",
+      "d": 205,
+      "planningRailHeightM": 3.986,
+      "anchorEPSG2326": null,
+      "planProjectionDistanceM": 0,
+      "status": "authored_game_stop_not_surveyed_platform"
+    },
+    {
+      "id": "hung_hom",
+      "name": "紅磡候選站",
+      "d": 1723.6570738097055,
+      "planningRailHeightM": 9.703483697890459,
+      "anchorEPSG2326": [
+        836816.072,
+        818233.555
+      ],
+      "planProjectionDistanceM": 173.44248363798843,
+      "status": "authored_game_stop_not_surveyed_platform"
+    },
+    {
+      "id": "second",
+      "name": "天后宮站（暫定）",
+      "d": 4773.840875115568,
+      "planningRailHeightM": 7.25,
+      "anchorEPSG2326": [
+        837820,
+        820950
+      ],
+      "planProjectionDistanceM": 9.792601718301041e-11,
+      "status": "authored_game_stop_not_surveyed_platform"
+    },
+    {
+      "id": "shatin",
+      "name": "沙田北概念站（暫定）",
+      "d": 15211.939519673948,
+      "planningRailHeightM": 12,
+      "anchorEPSG2326": [
+        839790,
+        829760
+      ],
+      "planProjectionDistanceM": 61.464628964501586,
+      "status": "authored_game_stop_not_surveyed_platform"
+    },
+    {
+      "id": "lo_wu",
+      "name": "羅湖終點（暫定）",
+      "d": 34676.28954832228,
+      "planningRailHeightM": 12,
+      "anchorEPSG2326": [
+        829721,
+        843105
+      ],
+      "planProjectionDistanceM": 3.3844952489003943,
+      "status": "authored_game_stop_not_surveyed_platform"
+    }
+  ],
+  "yardAnchor": {
+    "id": "tinhau",
+    "centerEPSG2326": [
+      837820,
+      820950
+    ],
+    "centerS": 4773.840875115568,
+    "axisPositiveEN": [
+      -0.11,
+      0.9939315871829408
+    ],
+    "rightEN": [
+      0.9939315871829408,
+      0.11
+    ],
+    "straightLengthM": 620,
+    "registrationUncertaintyM": 150
+  },
+  "vertical": {
+    "passed": true,
+    "failures": [],
+    "sampleCount": 34810,
+    "sampleStepM": 1,
+    "sampledMaxGradePermille": 5.90248484471778,
+    "sampledMaxGradeRatePerM": 0.00004426863633538334,
+    "analytic": {
+      "maxAbsoluteGradePermille": 5.90248484471778,
+      "maxGradeRatePerM": 0.00004426863633538335,
+      "boundProof": "Grade ramps use monotone S(u)=10u^3-15u^4+6u^5 on [0,1]; grade extrema are endpoints. S-prime reaches 1.875 at u=0.5. Exact join height and first three height derivatives are checked."
+    },
+    "anchorChecks": [
+      {
+        "id": "start",
+        "d": 0,
+        "height": 3.986,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "kowloon",
+        "d": 205,
+        "height": 3.986,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "hung_hom",
+        "d": 1723.6570738097055,
+        "height": 9.703483697890459,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "second",
+        "d": 4773.840875115568,
+        "height": 7.25,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "shatin",
+        "d": 15211.939519673948,
+        "height": 12,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "tolo_bridge_deck",
+        "d": 19813.10002398967,
+        "height": 15,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "fanling_height_control",
+        "d": 29695.61596571765,
+        "height": 22,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "lo_wu",
+        "d": 34676.28954832228,
+        "height": 12,
+        "error": 0,
+        "gradePermille": 0
+      },
+      {
+        "id": "end",
+        "d": 34734.793603232596,
+        "height": 12,
+        "error": 0,
+        "gradePermille": 0
+      }
+    ],
+    "joins": [
+      {
+        "d": 355,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 605,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 1323.6570738097055,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 1573.6570738097055,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 1873.6570738097055,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 2123.6570738097053,
+        "delta": {
+          "height": 0,
+          "grade": 8.673617379884035e-19,
+          "gradeRate": 9.92464285813537e-35,
+          "gradeSecond": 8.93932357553673e-22
+        }
+      },
+      {
+        "d": 4213.840875115568,
+        "delta": {
+          "height": 8.881784197001252e-16,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 4463.840875115568,
+        "delta": {
+          "height": 8.881784197001252e-16,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 5083.840875115568,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 5333.840875115568,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 14811.93951967395,
+        "delta": {
+          "height": 1.7763568394002505e-15,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 15061.939519673948,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 15361.939519673948,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 15611.939519673948,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 19413.10002398967,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 19663.10002398967,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 19963.10002398967,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 20213.10002398967,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 29345.61596571765,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 29595.61596571765,
+        "delta": {
+          "height": 3.552713678800501e-15,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 29795.61596571765,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 30045.61596571765,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 34276.28954832228,
+        "delta": {
+          "height": 1.7763568394002505e-15,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      },
+      {
+        "d": 34526.28954832228,
+        "delta": {
+          "height": 0,
+          "grade": 0,
+          "gradeRate": 0,
+          "gradeSecond": 0
+        }
+      }
+    ],
+    "maxJoinHeightErrorM": 3.552713678800501e-15,
+    "maxJoinGradeError": 8.673617379884035e-19,
+    "maxJoinGradeRateError": 9.92464285813537e-35,
+    "maxJoinGradeSecondError": 8.93932357553673e-22,
+    "scope": "Vertical derivatives only. Existing horizontal polyline corners are intentionally unchanged."
+  },
+  "plan": {
+    "minimumRadiusSampledM": 209.18874453275126,
+    "minimumRadiusAnalyticM": 209.1841460124386,
+    "minimumRadiusGameDesignM": 200,
+    "maxPlanSpeedError": 9.943497170095128e-8,
+    "maxPoseError": 9.485758602924606e-16,
+    "maxFiniteDifferenceGradePermille": 5.902484850934146,
+    "maxGradeToFiniteDifferenceError": 7.362269474620042e-11,
+    "joins": [
+      {
+        "d": 299.9999999986143,
+        "positionErrorM": 2.1544945200364575e-9,
+        "tangentError": 2.8716348147371167e-11,
+        "curvatureErrorPerM": 3.6571087955825855e-13
+      },
+      {
+        "d": 627.8615423057765,
+        "positionErrorM": 6.067670318543355e-9,
+        "tangentError": 6.881281220238595e-11,
+        "curvatureErrorPerM": 4.504868700294651e-13
+      },
+      {
+        "d": 782.5844574690353,
+        "positionErrorM": 9.989005980426597e-9,
+        "tangentError": 1.2803031117355102e-10,
+        "curvatureErrorPerM": 1.7829958429832482e-12
+      },
+      {
+        "d": 934.7576715165612,
+        "positionErrorM": 7.753832952082464e-9,
+        "tangentError": 2.339540120110844e-11,
+        "curvatureErrorPerM": 3.7387936713609293e-13
+      },
+      {
+        "d": 1077.374790620282,
+        "positionErrorM": 8.78985764570856e-9,
+        "tangentError": 3.5956118399042596e-11,
+        "curvatureErrorPerM": 5.047957494716537e-13
+      },
+      {
+        "d": 1212.1134547041052,
+        "positionErrorM": 5.042424020533198e-9,
+        "tangentError": 1.2270173113505853e-10,
+        "curvatureErrorPerM": 1.7816841751949752e-12
+      },
+      {
+        "d": 1474.798446341425,
+        "positionErrorM": 6.584602718451568e-9,
+        "tangentError": 2.8179517033472486e-11,
+        "curvatureErrorPerM": 2.948621164941545e-13
+      },
+      {
+        "d": 1725.1477136162798,
+        "positionErrorM": 4.091212579972572e-9,
+        "tangentError": 2.3367925286853758e-11,
+        "curvatureErrorPerM": 3.5984008741468676e-13
+      },
+      {
+        "d": 1949.8831978315627,
+        "positionErrorM": 6.018046257256927e-9,
+        "tangentError": 6.313576802504689e-11,
+        "curvatureErrorPerM": 2.8519721306796697e-13
+      },
+      {
+        "d": 2211.805110937795,
+        "positionErrorM": 9.102220067286401e-10,
+        "tangentError": 1.3794738338510003e-11,
+        "curvatureErrorPerM": 3.26313520475352e-13
+      },
+      {
+        "d": 2471.858493952329,
+        "positionErrorM": 2.2133355224025995e-9,
+        "tangentError": 1.6117590497258174e-11,
+        "curvatureErrorPerM": 3.455766488941192e-13
+      },
+      {
+        "d": 3089.2038853304143,
+        "positionErrorM": 5.036687411189295e-9,
+        "tangentError": 9.213227096250988e-12,
+        "curvatureErrorPerM": 1.5848737253132406e-13
+      },
+      {
+        "d": 3491.799395430658,
+        "positionErrorM": 1.2722271346620955e-9,
+        "tangentError": 7.100501614459511e-12,
+        "curvatureErrorPerM": 1.0936997835164775e-13
+      },
+      {
+        "d": 3711.9977879757566,
+        "positionErrorM": 6.504230550624903e-10,
+        "tangentError": 7.883920002814195e-12,
+        "curvatureErrorPerM": 1.7348253909810207e-13
+      },
+      {
+        "d": 4463.840875115514,
+        "positionErrorM": 3.816177370420006e-9,
+        "tangentError": 3.860261193529992e-12,
+        "curvatureErrorPerM": 2.3412078117371338e-14
+      },
+      {
+        "d": 5083.840875123588,
+        "positionErrorM": 8.021171824692525e-9,
+        "tangentError": 6.55586760083441e-12,
+        "curvatureErrorPerM": 3.441577012517532e-14
+      },
+      {
+        "d": 5474.54611132711,
+        "positionErrorM": 3.974371654268938e-9,
+        "tangentError": 2.4037096820457643e-11,
+        "curvatureErrorPerM": 7.736668835960081e-14
+      },
+      {
+        "d": 5968.957273270222,
+        "positionErrorM": 2.8200688666525e-9,
+        "tangentError": 1.5793857334315043e-11,
+        "curvatureErrorPerM": 7.113545575477371e-14
+      },
+      {
+        "d": 6501.141215460402,
+        "positionErrorM": 3.296667389289451e-10,
+        "tangentError": 3.880685644262072e-12,
+        "curvatureErrorPerM": 4.588452014175903e-14
+      },
+      {
+        "d": 7123.99724381088,
+        "positionErrorM": 2.498851630637317e-9,
+        "tangentError": 8.216617241070432e-12,
+        "curvatureErrorPerM": 1.7654497655450463e-14
+      },
+      {
+        "d": 7580.0431171560795,
+        "positionErrorM": 1.5496746219381874e-10,
+        "tangentError": 5.203309805435224e-12,
+        "curvatureErrorPerM": 9.504886027550397e-14
+      },
+      {
+        "d": 8010.529614881767,
+        "positionErrorM": 1.2057505739786008e-9,
+        "tangentError": 1.8523939623770972e-12,
+        "curvatureErrorPerM": 1.9975164643019905e-14
+      },
+      {
+        "d": 8442.783071997434,
+        "positionErrorM": 3.729759734468677e-9,
+        "tangentError": 1.7543194896225156e-11,
+        "curvatureErrorPerM": 7.374233602225333e-14
+      },
+      {
+        "d": 8875.11322595035,
+        "positionErrorM": 1.3273005639543745e-9,
+        "tangentError": 1.9342546287888455e-12,
+        "curvatureErrorPerM": 1.1118601699056097e-14
+      },
+      {
+        "d": 9281.148842368568,
+        "positionErrorM": 3.2993309670179547e-9,
+        "tangentError": 1.7856121193830584e-11,
+        "curvatureErrorPerM": 7.228239850469529e-14
+      },
+      {
+        "d": 9583.69470382652,
+        "positionErrorM": 3.7098055393167654e-9,
+        "tangentError": 3.054061024629507e-11,
+        "curvatureErrorPerM": 2.0943674312184912e-13
+      },
+      {
+        "d": 9848.795315378757,
+        "positionErrorM": 6.222785147890714e-9,
+        "tangentError": 7.110025389500251e-11,
+        "curvatureErrorPerM": 7.845947199228154e-13
+      },
+      {
+        "d": 10153.627583380854,
+        "positionErrorM": 1.086513548044595e-9,
+        "tangentError": 7.701509559715763e-12,
+        "curvatureErrorPerM": 3.6647811521572926e-13
+      },
+      {
+        "d": 10626.522836978618,
+        "positionErrorM": 5.771260691259747e-9,
+        "tangentError": 1.4264907909266104e-11,
+        "curvatureErrorPerM": 2.0918163035066328e-14
+      },
+      {
+        "d": 10886.768812704267,
+        "positionErrorM": 3.369807510460017e-9,
+        "tangentError": 1.6593721279092958e-12,
+        "curvatureErrorPerM": 1.0368312111652678e-13
+      },
+      {
+        "d": 11146.55980067943,
+        "positionErrorM": 5.2530479681175975e-9,
+        "tangentError": 5.130790649213845e-11,
+        "curvatureErrorPerM": 2.57596895203438e-13
+      },
+      {
+        "d": 11406.654586952522,
+        "positionErrorM": 6.986786603179435e-9,
+        "tangentError": 5.7788792886300906e-11,
+        "curvatureErrorPerM": 4.570306806617186e-13
+      },
+      {
+        "d": 11666.665209395522,
+        "positionErrorM": 4.674787507007672e-9,
+        "tangentError": 4.07261679223907e-11,
+        "curvatureErrorPerM": 2.518418416516677e-13
+      },
+      {
+        "d": 11926.729550922186,
+        "positionErrorM": 6.277079317045671e-9,
+        "tangentError": 3.189488231473563e-11,
+        "curvatureErrorPerM": 6.068062718966871e-13
+      },
+      {
+        "d": 12186.68427193906,
+        "positionErrorM": 5.075226425429223e-9,
+        "tangentError": 2.6504614122107226e-11,
+        "curvatureErrorPerM": 2.2557509245929586e-13
+      },
+      {
+        "d": 12446.735098601379,
+        "positionErrorM": 1.8689452936447672e-9,
+        "tangentError": 7.16077887677673e-12,
+        "curvatureErrorPerM": 1.7062469059164753e-13
+      },
+      {
+        "d": 12706.74454834399,
+        "positionErrorM": 3.170397693264308e-9,
+        "tangentError": 4.258305687734449e-11,
+        "curvatureErrorPerM": 5.293539044604056e-13
+      },
+      {
+        "d": 12966.577869696663,
+        "positionErrorM": 2.000546479044825e-9,
+        "tangentError": 1.7830689677997415e-11,
+        "curvatureErrorPerM": 2.516587741148435e-13
+      },
+      {
+        "d": 13226.578869249053,
+        "positionErrorM": 9.854933281847857e-10,
+        "tangentError": 1.1599317126923814e-11,
+        "curvatureErrorPerM": 2.454888506017716e-13
+      },
+      {
+        "d": 13486.58002433082,
+        "positionErrorM": 2.7357872750726174e-9,
+        "tangentError": 3.1119453991786484e-11,
+        "curvatureErrorPerM": 2.9876902547017886e-13
+      },
+      {
+        "d": 13746.551434499961,
+        "positionErrorM": 4.399814104362488e-9,
+        "tangentError": 9.267179260859855e-12,
+        "curvatureErrorPerM": 2.089512373890101e-14
+      },
+      {
+        "d": 14006.575865097022,
+        "positionErrorM": 3.934970869973055e-9,
+        "tangentError": 5.016229544883132e-11,
+        "curvatureErrorPerM": 4.852177687419967e-13
+      },
+      {
+        "d": 14265.754211697025,
+        "positionErrorM": 7.377349048344913e-10,
+        "tangentError": 1.4182388711589547e-11,
+        "curvatureErrorPerM": 2.3154937169034273e-13
+      },
+      {
+        "d": 14526.243146834575,
+        "positionErrorM": 1.8177489413960332e-9,
+        "tangentError": 1.941436971956483e-12,
+        "curvatureErrorPerM": 8.182907476617096e-14
+      },
+      {
+        "d": 15045.865769957441,
+        "positionErrorM": 4.054094949632742e-9,
+        "tangentError": 8.459683359350124e-12,
+        "curvatureErrorPerM": 5.5459651628064766e-14
+      },
+      {
+        "d": 15303.555653221782,
+        "positionErrorM": 7.867954887734515e-9,
+        "tangentError": 9.068756871012724e-11,
+        "curvatureErrorPerM": 6.418320736001348e-13
+      },
+      {
+        "d": 15562.229175698994,
+        "positionErrorM": 3.284000901226021e-9,
+        "tangentError": 7.400353647600997e-12,
+        "curvatureErrorPerM": 1.411761332836825e-13
+      },
+      {
+        "d": 15821.829615985676,
+        "positionErrorM": 3.784460349097504e-9,
+        "tangentError": 4.378705822979971e-11,
+        "curvatureErrorPerM": 2.6723848828291707e-14
+      },
+      {
+        "d": 16081.261091032004,
+        "positionErrorM": 9.075254464852633e-10,
+        "tangentError": 2.003220652699804e-11,
+        "curvatureErrorPerM": 3.9949944394268577e-13
+      },
+      {
+        "d": 16341.395922863934,
+        "positionErrorM": 2.2907940116066692e-10,
+        "tangentError": 7.282745047938859e-12,
+        "curvatureErrorPerM": 1.6379085587825415e-13
+      },
+      {
+        "d": 16600.703368574617,
+        "positionErrorM": 3.4586783992338386e-9,
+        "tangentError": 3.9221834337936426e-11,
+        "curvatureErrorPerM": 3.144461687559774e-13
+      },
+      {
+        "d": 16861.008335614646,
+        "positionErrorM": 2.238402271369135e-9,
+        "tangentError": 2.112881171940832e-11,
+        "curvatureErrorPerM": 5.950296678991496e-13
+      },
+      {
+        "d": 17120.94853683864,
+        "positionErrorM": 1.9988620385396435e-9,
+        "tangentError": 7.106136425136508e-12,
+        "curvatureErrorPerM": 9.686240524942047e-14
+      },
+      {
+        "d": 17380.851520685894,
+        "positionErrorM": 3.838178093929098e-9,
+        "tangentError": 5.0212202695685745e-11,
+        "curvatureErrorPerM": 7.178802094876674e-13
+      },
+      {
+        "d": 17731.424268093644,
+        "positionErrorM": 2.2521355092131516e-9,
+        "tangentError": 2.2726910177998834e-12,
+        "curvatureErrorPerM": 3.145330133499935e-14
+      },
+      {
+        "d": 18112.827204940288,
+        "positionErrorM": 4.671007979295556e-9,
+        "tangentError": 2.550118289121946e-11,
+        "curvatureErrorPerM": 2.3142295371703092e-14
+      },
+      {
+        "d": 18374.799247041185,
+        "positionErrorM": 6.836199305263345e-9,
+        "tangentError": 3.143167053315361e-11,
+        "curvatureErrorPerM": 1.747441167460062e-13
+      },
+      {
+        "d": 18698.886096572744,
+        "positionErrorM": 5.134185317926999e-9,
+        "tangentError": 3.607839093919528e-11,
+        "curvatureErrorPerM": 5.101806564017375e-13
+      },
+      {
+        "d": 18957.05704441441,
+        "positionErrorM": 5.426536626783548e-9,
+        "tangentError": 1.0663285273898029e-12,
+        "curvatureErrorPerM": 1.0430881419026816e-13
+      },
+      {
+        "d": 19291.995392615772,
+        "positionErrorM": 2.4682561878843976e-9,
+        "tangentError": 2.2885425359445593e-11,
+        "curvatureErrorPerM": 9.58861354032059e-14
+      },
+      {
+        "d": 19701.2997285801,
+        "positionErrorM": 2.6850803690346846e-9,
+        "tangentError": 2.1724492943081368e-12,
+        "curvatureErrorPerM": 1.4788987905394596e-13
+      },
+      {
+        "d": 20107.038564026207,
+        "positionErrorM": 2.6260231056325443e-9,
+        "tangentError": 2.7415882818169173e-11,
+        "curvatureErrorPerM": 2.421978633274091e-13
+      },
+      {
+        "d": 20429.481800682282,
+        "positionErrorM": 2.8965104581596633e-9,
+        "tangentError": 3.327282739913208e-12,
+        "curvatureErrorPerM": 9.680516615097681e-14
+      },
+      {
+        "d": 20851.708693555905,
+        "positionErrorM": 2.698539903324589e-9,
+        "tangentError": 2.6436451246190494e-11,
+        "curvatureErrorPerM": 2.394023293408182e-13
+      },
+      {
+        "d": 21271.595992617775,
+        "positionErrorM": 5.2295502465691485e-9,
+        "tangentError": 4.3297019770824474e-11,
+        "curvatureErrorPerM": 2.7961140347532165e-13
+      },
+      {
+        "d": 21703.544555217046,
+        "positionErrorM": 2.7982676764558645e-9,
+        "tangentError": 1.1553397194114871e-11,
+        "curvatureErrorPerM": 6.590084380975192e-14
+      },
+      {
+        "d": 22259.564389358537,
+        "positionErrorM": 4.154575381520446e-9,
+        "tangentError": 1.0131866604974321e-11,
+        "curvatureErrorPerM": 1.0064041613966346e-13
+      },
+      {
+        "d": 22554.07691974713,
+        "positionErrorM": 3.879086124680686e-9,
+        "tangentError": 2.459479469770808e-11,
+        "curvatureErrorPerM": 1.1857919160473962e-13
+      },
+      {
+        "d": 22852.319438743216,
+        "positionErrorM": 7.150889935959593e-9,
+        "tangentError": 7.75781445736843e-11,
+        "curvatureErrorPerM": 5.602276455241029e-13
+      },
+      {
+        "d": 23152.84876714943,
+        "positionErrorM": 7.67874888180885e-9,
+        "tangentError": 6.079766367802174e-11,
+        "curvatureErrorPerM": 4.798340544343027e-13
+      },
+      {
+        "d": 23452.87038015951,
+        "positionErrorM": 3.898014027494701e-9,
+        "tangentError": 2.9053769327595324e-11,
+        "curvatureErrorPerM": 3.385760774391247e-13
+      },
+      {
+        "d": 23752.544101884836,
+        "positionErrorM": 2.7522562066779484e-9,
+        "tangentError": 2.603576151513093e-11,
+        "curvatureErrorPerM": 3.6439904912977106e-13
+      },
+      {
+        "d": 24052.221687706682,
+        "positionErrorM": 6.418096036927674e-9,
+        "tangentError": 2.6383241649490944e-11,
+        "curvatureErrorPerM": 2.9857485841361386e-13
+      },
+      {
+        "d": 24352.119676457765,
+        "positionErrorM": 1.6016579358732137e-9,
+        "tangentError": 1.097949186442941e-11,
+        "curvatureErrorPerM": 1.2124416054470899e-14
+      },
+      {
+        "d": 24651.982227867353,
+        "positionErrorM": 6.92747069365147e-9,
+        "tangentError": 3.597651971453215e-11,
+        "curvatureErrorPerM": 3.069701610958209e-14
+      },
+      {
+        "d": 24952.06213584196,
+        "positionErrorM": 2.5334196797306443e-9,
+        "tangentError": 3.7185140859106775e-11,
+        "curvatureErrorPerM": 3.7622314118246347e-13
+      },
+      {
+        "d": 25252.044375211946,
+        "positionErrorM": 6.46195698492333e-9,
+        "tangentError": 7.297031069249125e-11,
+        "curvatureErrorPerM": 6.058166121536424e-13
+      },
+      {
+        "d": 25552.054766942252,
+        "positionErrorM": 2.3276370340329475e-9,
+        "tangentError": 1.6481009528886677e-11,
+        "curvatureErrorPerM": 5.925693421192368e-14
+      },
+      {
+        "d": 25852.05651411429,
+        "positionErrorM": 1.9807638397459123e-9,
+        "tangentError": 3.7690767095841e-11,
+        "curvatureErrorPerM": 5.087438716827597e-13
+      },
+      {
+        "d": 26152.08278473282,
+        "positionErrorM": 2.6383784117819918e-9,
+        "tangentError": 2.5345877250825854e-11,
+        "curvatureErrorPerM": 9.767468951704661e-14
+      },
+      {
+        "d": 26452.07479627446,
+        "positionErrorM": 3.798187398651561e-9,
+        "tangentError": 1.707685638774846e-11,
+        "curvatureErrorPerM": 6.647295019111821e-14
+      },
+      {
+        "d": 26752.075143869435,
+        "positionErrorM": 3.7483053528600345e-9,
+        "tangentError": 4.532416765476636e-11,
+        "curvatureErrorPerM": 4.549339014227674e-13
+      },
+      {
+        "d": 27052.079050894725,
+        "positionErrorM": 2.3387084169388826e-9,
+        "tangentError": 1.6189851687955836e-11,
+        "curvatureErrorPerM": 7.88367309802196e-14
+      },
+      {
+        "d": 27352.144375124743,
+        "positionErrorM": 5.519873159821849e-9,
+        "tangentError": 3.47895173581101e-11,
+        "curvatureErrorPerM": 9.084508319212592e-14
+      },
+      {
+        "d": 27652.11990675233,
+        "positionErrorM": 1.4774562123239876e-9,
+        "tangentError": 1.2700796445075666e-11,
+        "curvatureErrorPerM": 1.8547533300883323e-13
+      },
+      {
+        "d": 27952.036286658655,
+        "positionErrorM": 3.080709464792471e-9,
+        "tangentError": 2.2664015466809963e-11,
+        "curvatureErrorPerM": 6.45937296706034e-14
+      },
+      {
+        "d": 28252.027458159304,
+        "positionErrorM": 3.0355418884350793e-9,
+        "tangentError": 4.7699193174578e-12,
+        "curvatureErrorPerM": 3.6694172006468406e-14
+      },
+      {
+        "d": 28551.848110016606,
+        "positionErrorM": 4.4235672514235685e-9,
+        "tangentError": 2.8626875768173804e-11,
+        "curvatureErrorPerM": 2.3723969837241565e-13
+      },
+      {
+        "d": 28851.978334479412,
+        "positionErrorM": 8.207670300874777e-9,
+        "tangentError": 4.763323589257836e-11,
+        "curvatureErrorPerM": 4.732393134049967e-13
+      },
+      {
+        "d": 29151.924796449603,
+        "positionErrorM": 3.5339666570682014e-9,
+        "tangentError": 8.793131973128945e-12,
+        "curvatureErrorPerM": 6.444215820688992e-14
+      },
+      {
+        "d": 29451.481128898038,
+        "positionErrorM": 7.020645942314962e-9,
+        "tangentError": 7.007658306568338e-11,
+        "curvatureErrorPerM": 6.088776401472207e-13
+      },
+      {
+        "d": 29751.55537205722,
+        "positionErrorM": 6.677206757006833e-9,
+        "tangentError": 7.826676763195351e-12,
+        "curvatureErrorPerM": 5.331008529584069e-14
+      },
+      {
+        "d": 30051.560845011387,
+        "positionErrorM": 5.323313764650976e-9,
+        "tangentError": 5.128164996659368e-11,
+        "curvatureErrorPerM": 3.4425439319400557e-13
+      },
+      {
+        "d": 30351.56059338323,
+        "positionErrorM": 1.730231921230509e-9,
+        "tangentError": 1.962093134058238e-12,
+        "curvatureErrorPerM": 1.6710364747474487e-13
+      },
+      {
+        "d": 30651.560637927327,
+        "positionErrorM": 5.098719954300614e-9,
+        "tangentError": 4.088041793042851e-11,
+        "curvatureErrorPerM": 2.9900928430102474e-13
+      },
+      {
+        "d": 30951.557642024825,
+        "positionErrorM": 4.783110805143704e-9,
+        "tangentError": 2.1488423783469667e-11,
+        "curvatureErrorPerM": 6.250655917340586e-14
+      },
+      {
+        "d": 31251.55096904347,
+        "positionErrorM": 5.403029702419421e-9,
+        "tangentError": 6.936470094723172e-11,
+        "curvatureErrorPerM": 5.624028464614426e-13
+      },
+      {
+        "d": 31551.516309420324,
+        "positionErrorM": 2.7292153926417785e-9,
+        "tangentError": 2.498889266137155e-12,
+        "curvatureErrorPerM": 4.9015062435252624e-14
+      },
+      {
+        "d": 31851.495542990142,
+        "positionErrorM": 7.360789385341601e-9,
+        "tangentError": 6.654115245596008e-11,
+        "curvatureErrorPerM": 7.870120299815347e-13
+      },
+      {
+        "d": 32151.448711278823,
+        "positionErrorM": 1.506362663438113e-9,
+        "tangentError": 1.1904584835915372e-11,
+        "curvatureErrorPerM": 1.531944601555757e-13
+      },
+      {
+        "d": 32451.482346901044,
+        "positionErrorM": 4.61948969679303e-9,
+        "tangentError": 4.8357721454016624e-11,
+        "curvatureErrorPerM": 4.787771741565638e-13
+      },
+      {
+        "d": 32750.87920572075,
+        "positionErrorM": 3.7243811646707197e-9,
+        "tangentError": 4.1697365155544664e-11,
+        "curvatureErrorPerM": 3.6136284936594265e-13
+      },
+      {
+        "d": 33051.28479848055,
+        "positionErrorM": 7.929826933053206e-9,
+        "tangentError": 8.512566860235809e-11,
+        "curvatureErrorPerM": 7.941327716948221e-13
+      },
+      {
+        "d": 33351.05946741531,
+        "positionErrorM": 9.983733416933507e-10,
+        "tangentError": 5.482529663608733e-12,
+        "curvatureErrorPerM": 1.4242665206942728e-13
+      },
+      {
+        "d": 33651.15801612406,
+        "positionErrorM": 2.2451585488964485e-9,
+        "tangentError": 1.4432169565688727e-11,
+        "curvatureErrorPerM": 6.350703383312117e-14
+      },
+      {
+        "d": 33950.70746341722,
+        "positionErrorM": 3.334146670265115e-9,
+        "tangentError": 2.201542127107596e-11,
+        "curvatureErrorPerM": 1.915815596442716e-13
+      },
+      {
+        "d": 34250.909407217725,
+        "positionErrorM": 3.4163415231717777e-9,
+        "tangentError": 4.248842467447898e-11,
+        "curvatureErrorPerM": 4.839022249309571e-13
+      },
+      {
+        "d": 34551.26788127959,
+        "positionErrorM": 2.0642149899492346e-9,
+        "tangentError": 1.644660911996053e-11,
+        "curvatureErrorPerM": 2.3828595346886416e-14
+      }
+    ],
+    "maxJoinPositionErrorM": 9.989005980426597e-9,
+    "maxJoinTangentError": 1.2803031117355102e-10,
+    "maxJoinCurvatureError": 1.7829958429832482e-12
+  },
+  "yard": {
+    "testedLengthM": 570,
+    "maxPlanDeviationM": 8.231806349783991e-10,
+    "maxGrade": 0,
+    "maxCurvature": 2.0888143450406643e-14
+  },
+  "motion": {
+    "tick": 120,
+    "positionM": 909.9648468289145,
+    "grade": 0.00590248484471778,
+    "gradeForceN": -11869.985377617542,
+    "gradeWorkJ": -118282.58614941221
+  },
+  "terrainSections": [
+    {
+      "id": "lion_rock",
+      "role": "tunnel",
+      "startS": 6326.95896041771,
+      "endS": 9250.705621416604,
+      "title": "狮子山穿山隧道候选",
+      "status": "declared_tunnel_alignment_not_built_portal_or_lining",
+      "lengthM": 2923.746660998894,
+      "samples": 585,
+      "finiteTerrainSamples": 585,
+      "coverAbove3mSamples": 585,
+      "railAboveTerrain3mSamples": 0,
+      "waterMaskSamples": 0,
+      "unknownMaskSamples": 0,
+      "gapRangeM": [
+        -410.53449744165755,
+        -14.909960274973255
+      ],
+      "limitations": [
+        "Terrain is source-era DSM with explicit map edits, not bare earth or a historical shoreline.",
+        "30m water mask is coarse and has documented fictional lake/river edits.",
+        "Candidate endpoints are planning limits, not surveyed portal or abutment positions."
+      ]
+    },
+    {
+      "id": "tolo_cutoff",
+      "role": "bridge",
+      "startS": 18374.799247041185,
+      "endS": 21271.595992617775,
+      "title": "吐露港南岸跨水切弯桥候选",
+      "status": "declared_bridge_alignment_not_structural_or_navigation_clearance_approval",
+      "lengthM": 2896.79674557659,
+      "samples": 580,
+      "finiteTerrainSamples": 580,
+      "coverAbove3mSamples": 0,
+      "railAboveTerrain3mSamples": 572,
+      "waterMaskSamples": 222,
+      "unknownMaskSamples": 0,
+      "gapRangeM": [
+        -0.31360197715730287,
+        15.627965313137052
+      ],
+      "limitations": [
+        "Terrain is source-era DSM with explicit map edits, not bare earth or a historical shoreline.",
+        "30m water mask is coarse and has documented fictional lake/river edits.",
+        "Candidate endpoints are planning limits, not surveyed portal or abutment positions."
+      ]
+    }
+  ],
+  "collisionSummary": {
+    "screenedModels": 642,
+    "hits": 40,
+    "status": "known_potential_conflicts_retained_for_review"
+  },
+  "speedPolicy": {
+    "status": "advisory_only_not_enforced",
+    "gameMaxKph": 80,
+    "gameLateralAccelerationMps2": 0.5,
+    "yardKph": 20,
+    "formula": "min(80,sqrt(radiusM*0.5)*3.6), yard 20",
+    "notEngineeringSpeedApproval": true
+  },
+  "limits": [
+    "Private sketch references are approximate and adjustable, not an exact surveyed historical line.",
+    "Bridge and tunnel structures have not been built or certified.",
+    "Only 642 currently displayed component bboxes were checked; other areas are unknown.",
+    "Current aggregate drive still measures horizontal chainage rather than exact 3D wheel arc distance."
+  ]
+}
