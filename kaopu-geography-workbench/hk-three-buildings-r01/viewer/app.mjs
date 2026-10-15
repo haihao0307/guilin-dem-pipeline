@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {makeMaterial,MATERIAL_NAMES} from './materials.mjs';
 import {groupByMaterial} from './geometry-utils.mjs';
+import {fitDirectionalShadow} from './shadow-fit.mjs';
 import {buildGeometry} from '../geometry/reconstruct.mjs';
 const $=id=>document.getElementById(id),errors=[];
 window.__KAOPU_TRIAL__={ready:false,contextReady:false,fatalError:null,errors};
@@ -42,7 +43,7 @@ async function setMode(v){
  if(version!==modeVersion)return mode;
  mode=v;$('failure').hidden=true;for(const o of objects){if(o.source)o.source.visible=v==='source';o.mesh.visible=v!=='source';for(const m of o.materials)m.userData.uniforms.uPlain.value=v==='reconstruction'?1:settings.plain;}for(const b of document.querySelectorAll('[data-mode]'))b.classList.toggle('active',b.dataset.mode===v);updateLabels();render();return mode;
 }
-function selectBuilding(v){modeVersion++;selected=v==='all'?'all':Number(v);for(let i=0;i<objects.length;i++)objects[i].group.visible=selected==='all'||selected===i;for(const b of document.querySelectorAll('[data-building]'))b.classList.toggle('active',String(selected)===b.dataset.building);if(contextHook)contextHook({selected,objects});setView(currentView);updateLabels();if(mode==='source')return setMode('source');}
+function selectBuilding(v){modeVersion++;selected=v==='all'?'all':Number(v);for(let i=0;i<objects.length;i++)objects[i].group.visible=selected==='all'||selected===i;for(const b of document.querySelectorAll('[data-building]'))b.classList.toggle('active',String(selected)===b.dataset.building);if(contextHook)contextHook({selected,objects});scene.updateMatrixWorld(true);window.__KAOPU_TRIAL__.shadowFit=fitDirectionalShadow(sun,getBounds(),THREE);setView(currentView);updateLabels();if(mode==='source')return setMode('source');}
 function setView(v){currentView=v;const box=getBounds(),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
  if(v==='whole'){
   const radius=size.length()/2;const dist=radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.13;
@@ -63,7 +64,7 @@ function setView(v){currentView=v;const box=getBounds(),center=box.getCenter(new
  updateLabels();render();return cameraSnapshot();}
 function setMaterial(value){const vals={brick:0,plaster:1,concrete:2};if(value in vals)value=vals[value];for(const o of chosen()){o.materials[0].userData.uniforms.uMaterialKind.value=value==='preset'?o.index:Number(value);}if(document.querySelector(`#material option[value="${value}"]`))$('material').value=value;requestRender();}
 function setParams(p){Object.assign(settings,p);for(const o of chosen())for(const m of o.materials){for(const [k,v] of Object.entries(p)){const u='u'+k[0].toUpperCase()+k.slice(1);if(m.userData.uniforms[u])m.userData.uniforms[u].value=Number(v);}}for(const k of ['age','wet','grain']){$(k).value=settings[k];$(k+'Value').textContent=Number(settings[k]).toFixed(2);}$('windows').checked=!!settings.windows;requestRender();return {...settings};}
-function stats(){return {ready:window.__KAOPU_TRIAL__.ready,selected,view:currentView,mode,frames:frameCount,lastRenderCpuMs:lastRenderMs,renderer:renderer.info.render,memory:renderer.info.memory,pixelRatio:renderer.getPixelRatio(),drawingBuffer:[canvas.width,canvas.height],geometry:objects.map(o=>({id:o.entry.id,triangles:o.mesh.geometry.index?o.mesh.geometry.index.count/3:o.mesh.geometry.attributes.position.count/3,sourceTriangles:o.entry.sourceTriangles,sourceLoaded:!!o.source,size:o.size.toArray(),placement:o.group.position.toArray()})),settings:{...settings},camera:cameraSnapshot(),errors,limits:['CPU render submission timing is not GPU frame time','Surface microheight is shading-only','Far-footprint mean is approximate','Creative windows are not measured openings']};}
+function stats(){return {ready:window.__KAOPU_TRIAL__.ready,selected,view:currentView,mode,frames:frameCount,lastRenderCpuMs:lastRenderMs,renderer:renderer.info.render,memory:renderer.info.memory,pixelRatio:renderer.getPixelRatio(),drawingBuffer:[canvas.width,canvas.height],shadowFit:window.__KAOPU_TRIAL__.shadowFit,geometry:objects.map(o=>({id:o.entry.id,triangles:o.mesh.geometry.index?o.mesh.geometry.index.count/3:o.mesh.geometry.attributes.position.count/3,sourceTriangles:o.entry.sourceTriangles,sourceLoaded:!!o.source,size:o.size.toArray(),placement:o.group.position.toArray()})),settings:{...settings},camera:cameraSnapshot(),errors,limits:['CPU render submission timing is not GPU frame time','Surface microheight is shading-only','Far-footprint mean is approximate','Creative windows are not measured openings']};}
 function updateLabels(){if(!objects.length)return;const all=selected==='all',o=objects[all?0:selected];$('viewTitle').textContent=all&&currentView==='whole'?'三栋 · 同一真实比例':o.entry.label;$('selectionLabel').textContent=all?'三栋独立实测主形':o.entry.label;$('geometryInfo').textContent=all?`${objects.reduce((s,o)=>s+o.triangles,0).toLocaleString()} 重建三角形 · 共享母体`:`${o.size.x.toFixed(1)} × ${o.size.z.toFixed(1)} × ${o.size.y.toFixed(1)} m · 不缩放`;
  $('viewNote').textContent=mode==='source'?'原件几何对照。同相机、同坐标，材质不代表原建筑外观。':currentView==='near'?'原建筑墙面上的程序材质近景。微表面不改变测量轮廓。':currentView==='mid'?'中景观察：砖缝与颗粒按屏幕足迹逐渐滤去。':all?'三栋独立源建筑，展示位置已并排排列；几何尺寸不变。':'实测主形与创作表面分离。窗门、楼层和内部空间未被推定。';}
 function bestFace(g){
@@ -98,7 +99,7 @@ async function load(){
   const o={index,entry,score,size,group,mesh,source:null,sourcePromise:null,materials,nearFace:bestFace(geometry),triangles:geometry.attributes.position.count/3};objects.push(o);
  }
  const bounds=new THREE.Box3().setFromObject(root),center=bounds.getCenter(new THREE.Vector3());for(const o of objects)o.group.position.x-=center.x;
- const span=bounds.getSize(new THREE.Vector3()).length();sun.shadow.camera.left=-span;sun.shadow.camera.right=span;sun.shadow.camera.top=span;sun.shadow.camera.bottom=-span;sun.shadow.camera.far=600;sun.shadow.camera.near=.1;sun.shadow.camera.updateProjectionMatrix();
+ scene.updateMatrixWorld(true);window.__KAOPU_TRIAL__.shadowFit=fitDirectionalShadow(sun,getBounds(),THREE);
  $('buildings').innerHTML=`<button data-building="all" class="active">三栋一起看<small>真实比例 · 独立实验场</small></button>`+objects.map((o,i)=>`<button data-building="${i}">${String(i+1).padStart(2,'0')} · ${o.entry.label}<small>${o.size.y.toFixed(1)} m 高 · ${MATERIAL_NAMES[i]}</small></button>`).join('');
  for(const b of document.querySelectorAll('[data-building]'))b.onclick=()=>Promise.resolve(selectBuilding(b.dataset.building)).catch(()=>{});
  for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>setView(b.dataset.view);

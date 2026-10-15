@@ -32,8 +32,8 @@ jobs:
           node --test kaopu-geography-workbench/hk-three-buildings-r01/viewer/tests/*.mjs
           python kaopu-geography-workbench/hk-three-buildings-r01/qa/check_package.py
           node kaopu-geography-workbench/hk-three-buildings-r01/qa/benchmark-reconstruction.mjs
-      - name: Capture true source-reconstruction-material browser evidence
-        run: node kaopu-geography-workbench/hk-three-buildings-r01/qa/browser.cjs
+      - name: Final focused shadow and close-view browser acceptance
+        run: node kaopu-geography-workbench/hk-three-buildings-r01/qa/review-shadow.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
