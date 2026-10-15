@@ -15,6 +15,17 @@ const bounds=pts=>[0,1,2].map(k=>[Math.min(...pts.map(p=>p[k])),Math.max(...pts.
 const overlaps=(a,b)=>a.every((v,k)=>v[1]>b[k][0]+EPS&&v[0]<b[k][1]-EPS);
 export const DEFAULT_TUNNEL=Object.freeze({sectionId:'lion_rock',stepM:4,halfWidthM:4.5,springM:3.5,floorM:-.65,wallM:.45,archSegments:16,segmentOverlapM:.12,maxPortalExtensionM:1500,portalProbeStepM:5});
 
+/** Exact height on the retained background triangles, not a nearest DEM node.
+ * Pure display query: does not replace hkHeight or edit any source samples.
+ */
+export function sampleBackgroundTriangle(HK,heights,mask,x,z){
+ const cf=(x-(HK.x0-HK.origin[0]))/HK.step,rf=(z-(HK.origin[1]-HK.y0))/HK.step;
+ if(cf<0||rf<0||cf>HK.width-1||rf>HK.height-1)return NaN;
+ const c=Math.min(HK.width-2,Math.floor(cf)),r=Math.min(HK.height-2,Math.floor(rf)),u=cf-c,v=rf-r,j=r*HK.width+c,A=j,B=j+1,C=j+HK.width,D=C+1,ids=u+v<=1?[A,C,B]:[B,C,D];
+ if(ids.some(i=>!Number.isFinite(heights[i])||mask&&mask[i]===0))return NaN;
+ return u+v<=1?heights[A]+(heights[B]-heights[A])*u+(heights[C]-heights[A])*v:heights[D]+(heights[C]-heights[D])*(1-u)+(heights[B]-heights[D])*(1-v);
+}
+
 export function tunnelProfile(config=DEFAULT_TUNNEL,outer=false){
  const w=config.halfWidthM+(outer?config.wallM:0),floor=config.floorM-(outer?config.wallM:0),p=[[-w,floor],[w,floor],[w,config.springM]];
  for(let i=1;i<=config.archSegments;i++){const a=Math.PI*i/config.archSegments;p.push([Math.cos(a)*w,config.springM+Math.sin(a)*w]);}
@@ -56,16 +67,16 @@ export function createTunnelSweep(route,options={}){
   const profile=tunnelProfile(config,true),covered=samples.slice(1).map((b,i)=>{const q=pose(route,(samples[i].s+b.s)/2),h=groundSampler?.(q.p[0],q.p[2]);return !groundSampler||(Number.isFinite(h)&&h>=world(q,[0,config.springM+config.halfWidthM+config.wallM])[1]-.35);});
   function runs(value){const out=[];let start=null;for(let i=0;i<covered.length;i++){if(covered[i]===value&&start===null)start=i;if(start!==null&&(covered[i]!==value||i===covered.length-1)){const end=covered[i]===value?i+1:i;out.push([start,end]);start=null;}}return out;}
   coveredRuns=runs(true);openRuns=runs(false);
-  volumes=samples.slice(1).map((b,i)=>{const a=samples[i];let shape=profile;if(!covered[i]&&groundSampler){const height=Math.max(...[a,b].flatMap(q=>[-1,0,1].map(side=>{const p=world(q,[side*(config.halfWidthM+config.wallM),0]),h=groundSampler(p[0],p[2]);return Number.isFinite(h)?h-q.p[1]+2:config.springM+config.halfWidthM+2;}))),w=config.halfWidthM+config.wallM;shape=[[-w,config.floorM-config.wallM],[w,config.floorM-config.wallM],[w,height],[-w,height]];}return segmentVolume(a,b,shape,config.segmentOverlapM);});grid=new Map();
+  volumes=samples.slice(1).map((b,i)=>{const a=samples[i];let shape=profile;if(!covered[i]&&groundSampler){const height=Math.max(...[a,b].flatMap(q=>[-1,0,1].map(side=>{const p=world(q,[side*(config.halfWidthM+config.wallM),0]),h=groundSampler(p[0],p[2]);return Number.isFinite(h)?h-q.p[1]+2:config.springM+config.halfWidthM+2;}))),w=config.halfWidthM+config.wallM;const top=Math.max(10000,height);shape=[[-w,config.floorM-config.wallM],[w,config.floorM-config.wallM],[w,top],[-w,top]];}return segmentVolume(a,b,shape,config.segmentOverlapM);});grid=new Map();
   if(groundSampler){portalStatus.coveredIntervals=coveredRuns.map(([a,b])=>[samples[a].s,samples[b].s]);portalStatus.openCuttingIntervals=openRuns.map(([a,b])=>[samples[a].s,samples[b].s]);portalStatus.geometryPortals=coveredRuns.flatMap(([a,b])=>[a,b].map(i=>terrainAt(groundSampler,samples[i].s)));portalStatus.longestOpenCuttingM=Math.max(0,...openRuns.map(([a,b])=>samples[b].s-samples[a].s));portalStatus.coveredComponents=coveredRuns.length;portalStatus.mainCoveredInterval=portalStatus.coveredIntervals.reduce((a,b)=>!a||b[1]-b[0]>a[1]-a[0]?b:a,null);if(coveredRuns.length)portalStatus.portalChainages=[samples[coveredRuns[0][0]].s,samples[coveredRuns.at(-1)[1]].s];}
   for(let i=0;i<volumes.length;i++){const b=volumes[i].bounds;for(let x=Math.floor(b[0][0]/cellM);x<=Math.floor(b[0][1]/cellM);x++)for(let z=Math.floor(b[2][0]/cellM);z<=Math.floor(b[2][1]/cellM);z++){const k=key(x,z);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(i);}}
   allBounds=[0,1,2].map(k=>[Math.min(...volumes.map(v=>v.bounds[k][0])),Math.max(...volumes.map(v=>v.bounds[k][1]))]);
  }
  function candidates(b){if(!overlaps(b,allBounds))return[];const ids=new Set();for(let x=Math.floor(b[0][0]/cellM);x<=Math.floor(b[0][1]/cellM);x++)for(let z=Math.floor(b[2][0]/cellM);z<=Math.floor(b[2][1]/cellM);z++)for(const id of grid.get(key(x,z))||[])if(overlaps(b,volumes[id].bounds))ids.add(id);return[...ids].map(i=>volumes[i]);}
  function terrainAt(sampleHeight,s){const p=pose(route,s),h=sampleHeight(p.p[0],p.p[2]);return{chainageM:s,terrainM:Number.isFinite(h)?h:null,railM:p.p[1],crownM:world(p,[0,config.springM+config.halfWidthM+config.wallM])[1],position:p.p};}
- function resolvePortals(sampleHeight,{extend=true}={}){
+ function resolvePortals(sampleHeight,{extend=true,samplerPolicy='caller_supplied_terrain_query'}={}){
   if(clipRecords.length)throw Error('Resolve tunnel portals before any terrain clipping');
-  groundSampler=sampleHeight;const ends=[],crowns=[];
+  groundSampler=sampleHeight;portalStatus.samplerPolicy=samplerPolicy;portalStatus.openCuttingTopPolicy='vertically_open_excavation_10km_numeric_ceiling';const ends=[],crowns=[];
   for(const [s,dir]of[[section.startS,-1],[section.endS,1]]){let q=terrainAt(sampleHeight,s),distance=0,crown=null;
    while(true){if(crown===null&&q.terrainM!==null&&q.terrainM<=q.crownM-.35)crown={...q};
     if(!extend||q.terrainM===null||q.terrainM<=q.railM+.35||distance>=config.maxPortalExtensionM)break;
@@ -118,7 +129,7 @@ export function createTunnelSweep(route,options={}){
   return{positions:Float32Array.from(positions),colors:Float32Array.from(colors),indices:Uint32Array.from(indices),parts:partCounts,rings:ringCount,profileVertices:n,openEndCaps:true,approachType:'roofless_actual_terrain_height_cuttings'};
  }
  rebuild();
- return{route,config,section,resolvePortals,clipTerrain,contains,meshData,get samples(){return samples;},get interval(){return[startS,endS];},stats(){return{schema:'kaopu.curved-terrain-tunnel/1',sectionId:section.id,routeLengthM:route.length,renderInterval:[startS,endS],lengthM:endS-startS,curveSamples:samples.length,convexSweeps:volumes.length,profile:config,portals:structuredClone(portalStatus),terrainCaches:clipRecords.map(s=>({...s})),removedSurfaceAreaM2:clipRecords.reduce((a,b)=>a+b.removedSurfaceAreaM2,0),sourceHeightsChanged:false,runwayChanged:false,trainAndLiningShareRoute:true,legacyRadiusCutaway:false,geometryRole:'authored_game_tunnel_not_surveyed_engineering',collisionModel:'route_constrained_train; source_terrain_sampler_remains_original'}}};
+ return{route,config,section,resolvePortals,clipTerrain,contains,meshData,sampleBackgroundTriangle,get samples(){return samples;},get interval(){return[startS,endS];},stats(){return{schema:'kaopu.curved-terrain-tunnel/1',sectionId:section.id,routeLengthM:route.length,renderInterval:[startS,endS],lengthM:endS-startS,curveSamples:samples.length,convexSweeps:volumes.length,profile:config,portals:structuredClone(portalStatus),terrainCaches:clipRecords.map(s=>({...s})),removedSurfaceAreaM2:clipRecords.reduce((a,b)=>a+b.removedSurfaceAreaM2,0),sourceHeightsChanged:false,runwayChanged:false,trainAndLiningShareRoute:true,legacyRadiusCutaway:false,geometryRole:'authored_game_tunnel_not_surveyed_engineering',collisionModel:'route_constrained_train; source_terrain_sampler_remains_original'}}};
 }
 
 export function installTunnelTerrain(route,{target=globalThis,...options}={}){const sweep=createTunnelSweep(route,options);target.HKLionRockTunnel=sweep;return sweep;}
@@ -128,7 +139,7 @@ export function patchTunnelTerrainHost(html){
  const coast='const hkMeshData=hkMesh(hkCoastClosed.positions,hkCoastClosed.indices,7);',cedd='const hkMeshData=hkMesh(hkClippedIncrement.positions,hkClippedIncrement.indices,7);';
  const matches=[coast,cedd].filter(anchor=>html.split(anchor).length===2);if(matches.length!==1)throw Error('Tunnel needs exactly one final coast/CEDD terrain cache anchor');
  const source=matches[0]===coast?'hkCoastClosed':'hkClippedIncrement';
- once(matches[0],`window.HKLionRockTunnel.resolvePortals(hkHeight);const hkTunnelCache=window.HKLionRockTunnel.clipTerrain(${source}.positions,${source}.indices,7,"background-and-coast");const hkMeshData=hkMesh(hkTunnelCache.positions,hkTunnelCache.indices,7);`);
+ once(matches[0],`window.HKLionRockTunnel.resolvePortals((x,z)=>{const detail=sampleDetail(x,z);return detail!==null?detail:window.HKLionRockTunnel.sampleBackgroundTriangle(HK,hkHeights,hkMask,x,z);},{samplerPolicy:"source_detail_triangles_and_background_triangles"});const hkTunnelCache=window.HKLionRockTunnel.clipTerrain(${source}.positions,${source}.indices,7,"background-and-coast");const hkMeshData=hkMesh(hkTunnelCache.positions,hkTunnelCache.indices,7);`);
  once('return hkMesh(vs,ix,7)}','const tunnelCache=window.HKLionRockTunnel.clipTerrain(vs,ix,7,"detail-"+l.step+"m");return hkMesh(tunnelCache.positions,tunnelCache.indices,7)}');
  once('if(uTrackCut>0.5&&distance(p.xz,uTrackFocus.xz)<180.&&p.y>uTrackFocus.y+1.)discard;','');
  return html;

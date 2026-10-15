@@ -21,3 +21,6 @@
 沿用642个前1997证据候选部件，71个待地面/支撑核查的候选不进场。没有新增官方未读原包、没有全九龙贴图。保留原完整机车和客车，蒸汽是显示粒子，仍可能穿建筑，不是流体模拟。私人参考照片不随包发布。
 
 原官方建筑/地形来源为香港特区政府地政总署/CSDI及CEDD；原许可与署名沿固定依赖保留。公共证据见 route/candidate-spatial-audit.json、route/candidate-runway-audit.json、yard/current-scene-ground-review.json、tunnel/CPU-EVIDENCE.json、tests/COAST-CPU-QA.json。CPU通过不等于实际画面通过，浏览器截图与冷启动记录单独验收。
+
+## Portal repair follow-through
+The first browser run exposed north-portal residual terrain and an invalid south review eye. The tunnel now queries actual source triangles, and open cuttings extend vertically instead of stopping at a nearest-node height. Original DEM arrays remain unchanged. QA preserves all three original camera transforms, then separately checks public portal buttons from the adjacent open approach at rail+2.2m. The old south camera is deliberately retained as an invalid-eye diagnostic, not a successful outside view. See tunnel/portal-fix/ for source-mesh regression.

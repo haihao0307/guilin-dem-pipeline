@@ -23,7 +23,7 @@ After all existing base, CEDD, station and coast host patches and before `docume
 html=patchTunnelTerrainHost(html);
 ```
 
-The tunnel patch accepts exactly one of the final `hkCoastClosed` or `hkClippedIncrement` upload anchors. Coast therefore goes first. It calls the actual host `hkHeight` before either background or 2m/5m detail uploads. It clips both caches and removes the old 180m camera-follow fragment discard. It never edits original height arrays, sampleHeight, airport setup, raw source HTML, or mapData.
+The tunnel patch accepts exactly one of the final `hkCoastClosed` or `hkClippedIncrement` upload anchors. Coast therefore goes first. It queries the actual detail triangles and exact background source triangles before either background or 2m/5m detail uploads. The original `hkHeight` nearest-node behavior remains unchanged for existing callers. It clips both caches and removes the old 180m camera-follow fragment discard. It never edits original height arrays, sampleHeight, airport setup, raw source HTML, or mapData.
 
 R06 integration module imports:
 
@@ -53,7 +53,7 @@ window.HKLionRockTunnelScene=tunnel;
 
 ## CPU verification
 
-`node research/hk-lionrock-tunnel-r06/test-tunnel.mjs`
+`node research/hk-lionrock-tunnel-r06/test-tunnel.mjs research/hk-route-spatial-r06/route-plan.json`
 
 Passes synthetic full/partial triangle removal, attributes/source hash preservation, overburden roof retention, curved centerline clearance, fail-closed missing portals, real retained 2m/5m and 30m source terrain cuts, final host anchor composition, and duplicate patch rejection. Evidence is in `CPU-EVIDENCE.json`. CPU-EVIDENCE.json now uses the frozen candidate research/hk-route-spatial-r06/route-plan.json (9.85m Tin Hau rail). CPU-EVIDENCE-R05.json preserves the earlier R05 comparison. Owner must browser-check the final R06 host before acceptance.
 
@@ -62,3 +62,11 @@ Browser acceptance should inspect: south real portal from outside, inside on a b
 ## R06 focus locations
 
 For the real Lion Rock main portals, use `const [south,north] = window.HKLionRockTunnelScene.stats().portals.mainCoveredInterval`, then `game.route.sample(south)` or `game.route.sample(north)`. For an interior bend, sample the midpoint of this interval at rail elevation plus 3m. Do not use the first `portalChainages` value for the main mountain tunnel: that value deliberately includes the short covered ground undulations near Walled City. `geometryPortals` lists every cover transition. `ends` are the actually exposed rail approach entrances. All are recomputed from the loaded route and terrain.
+
+## Portal visual failure correction (2026-10-15)
+
+The first assembled browser QA was **not** a visual pass. North-portal terrain bars were reproduced against the actual retained 30m triangles: a nearest source node understated the drawn surface by 2.1–2.5m, while the open-cut Boolean had an incorrect sampled-height-plus-2m lid. This version uses matching triangle interpolation for portal selection and retaining-wall tops; roofless cuts extend vertically to a 10km numerical ceiling. Closed tunnel volume and mountain overburden are unchanged. The new regression independently casts vertical rays against post-cut triangles: before 37 residual samples among 355 probes, after zero among 395 probes, over five lateral positions and 0.5m chainage spacing. These are CPU geometry results, **not** browser acceptance.
+
+The original south inspection eye was S5744.82, inside the previous short covered segment, 3.56m laterally off the route and 6.54m above rail: outside the arched free-space cross-section. Preserve that exact old camera as a documented fixed regression. The public portal camera should use the adjoining open interval at the real curve center, eye rail+2.2m, rather than a 65m tangent extrapolation. Public views must be shown alongside the unchanged old views; camera changes do not substitute for verifying the repaired north terrain.
+
+Detailed evidence: `portal-fix/PORTAL-MESH-REGRESSION.json`, `portal-fix/DIAGNOSIS.json`. Run `node research/hk-lionrock-tunnel-r06/portal-fix/test-portal-mesh.mjs research/hk-route-spatial-r06/route-plan.json`. The final plan is SHA256 364a1087816f6f03450641e39df73355a006917b2229532d81f0a75d76c6b19b.
