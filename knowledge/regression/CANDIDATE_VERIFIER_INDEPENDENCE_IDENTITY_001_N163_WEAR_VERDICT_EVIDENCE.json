@@ -1,0 +1,56 @@
+{
+  "caseId": "VERIFIER-INDEPENDENCE-IDENTITY-001",
+  "status": "CANDIDATE_REAL_RUN_EVIDENCE_UPDATE_NOT_ADOPTED",
+  "active": false,
+  "decision": "NO_NEW_CASE_EXTEND_EXISTING_VERIFIER_INDEPENDENCE_CASE",
+  "evidenceUpdate": {
+    "cycle": "N163",
+    "date": "2026-10-15",
+    "mother": "Clothing / Tailor",
+    "productionPullRequest": 299,
+    "subjectHead": "c84b16a0ae022dda9fe22c09df758fcb8095bc07",
+    "subjectId": "T14",
+    "sourceResultSHA256": "d33f80cd41bcda01b7bafc151d8b58290e5945d01f3574c0217ccacd2209f7c3",
+    "rawWearTraceSamples": 10,
+    "pinsAfterWear": 0,
+    "supportsAfterWear": 0,
+    "physicalWearReviewPassedField": true,
+    "batchWearReviewPassedField": true,
+    "committedVerdictGeneratorFound": false,
+    "frozenCriterionReceiptFound": false,
+    "independentVerifierReceiptFound": false,
+    "expectedState": "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND"
+  },
+  "preservedFacts": [
+    "The ten-second T14 trace, zero post-wear pins/supports and near-zero last-three-second mean edge-height changes are valid observations.",
+    "T14 remains staticPassed=false with cloth intersections, tension and compression failures; wearCertified=false.",
+    "This evidence update does not assert that T14 is physically unstable."
+  ],
+  "mustNever": [
+    "A report boolean is treated as a reproducible gate when no committed predicate can derive it from the immutable subject.",
+    "Criteria selected after seeing the result are described as frozen acceptance criteria.",
+    "A producer-authored or producer-edited pass field is expanded into independent verifier approval.",
+    "A scoped position observation is expanded into calibrated material, collision, action or production certification.",
+    "Static failures are hidden by a separate dynamic-position label."
+  ],
+  "requiredReceiptIncrement": [
+    "subjectSha and sourceResultSHA256",
+    "criterionId and criterionVersion",
+    "criterionFrozenAt and evidence that it predates the gate run",
+    "verdictGeneratorSha",
+    "deterministic per-predicate observations, expected values and reasons",
+    "verdictDigest",
+    "producerPrincipalId",
+    "verifierPrincipalId or explicit UNKNOWN",
+    "verifierDecisionReceipt when independent approval is claimed"
+  ],
+  "states": [
+    "HOLD_RAW_EVIDENCE_MISSING",
+    "TRACE_EVIDENCE_PRESENT__HOLD_VERDICT_DERIVATION_UNBOUND",
+    "AUTOMATED_CHECK_EXECUTED__HOLD_PREFROZEN_CRITERIA_UNBOUND",
+    "AUTOMATED_CHECK_VERIFIED__INDEPENDENT_APPROVAL_PENDING",
+    "INDEPENDENT_VERIFIER_RECEIPT_VERIFIED"
+  ],
+  "activationGate": "Clothing Mother commits a deterministic read-only verdict generator and pre-run criterion receipt for one immutable T14 result; a distinct verifier principal reruns it before any pass/approval promotion.",
+  "rollback": "Remove this candidate evidence extension only. Preserve PR #299, its raw trajectory, static failures and draft state."
+}
