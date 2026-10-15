@@ -1,0 +1,55 @@
+{
+  "schema": "hk.game.rail-runtime-integration-tests/1",
+  "passed": true,
+  "tests": [
+    {
+      "name": "all three actual bundle anchors match once and patch without source write",
+      "passed": true
+    },
+    {
+      "name": "actual retained 120 Hz drive receives constrained grade and gravity",
+      "passed": true
+    },
+    {
+      "name": "fixed-step grade integration is consistent across 1s and 60 render frames",
+      "passed": true
+    },
+    {
+      "name": "actual Three Euler YZX points locomotive X axis along constrained 3D tangent",
+      "passed": true
+    },
+    {
+      "name": "source horizontal change fails instead of silently moving station anchors",
+      "passed": true
+    },
+    {
+      "name": "excess time budget and excessive physics grade reject before advancing",
+      "passed": true
+    }
+  ],
+  "bundleSha256": "137b21db65659b43658d51958a7ac2e4d05a4a2068765bd3af894a9b8ac3c286",
+  "patchedInMemorySha256": "a73437bbc1d12b827f0fd05e1c9ced3e50b7df30fa4207a0185bc17fd30077f8",
+  "patchIds": [
+    "same-profile-track-and-motion",
+    "same-profile-fixed-step-gravity",
+    "locomotive-pitch-from-same-profile"
+  ],
+  "realDriveTest": {
+    "source": "hong-kong-train88-r01/train-drive/train-drive.mjs",
+    "ticks": 120,
+    "profileGradePermille": 5.416927435581959,
+    "expectedGradeForceN": -10893.552095189802,
+    "actualGradeForceN": -10893.552095189802,
+    "hillSpeedMps": 9.934111656120766,
+    "flatSpeedMps": 9.983294898747074,
+    "gradeWorkJ": -108576.59337917248,
+    "oneVersusSixtyFramePositionErrorM": 0
+  },
+  "maxPoseForwardError": 7.087274275478006e-16,
+  "sourceBundleWritten": false,
+  "limits": [
+    "The existing aggregate train drive interprets positionM as horizontal chainage; wheel travel is not remapped to exact 3D rail arc length.",
+    "No multi-axle suspension, curve force, structural or real operating safety validation.",
+    "Original tunnel-only cutaway behavior is unchanged. New bridge/tunnel labels remain unbuilt geometric candidates."
+  ]
+}

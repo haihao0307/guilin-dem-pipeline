@@ -1,0 +1,135 @@
+{
+  "schema": "hk-projection-150km-patch-audit/1",
+  "sourceWrites": 0,
+  "writeGenerated": false,
+  "files": {
+    "r03": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-map-sea-r03/publish-final/index.html",
+      "inputBytes": 14691672,
+      "inputSha256": "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117",
+      "outputSha256": "11f5df1502d766ced921836537fd523b300769edcd7ada42c024c402fcaf51f0",
+      "outputBytes": 14691677,
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=.15,far=150000.",
+          "count": 4
+        },
+        {
+          "from": "mapState.distance=clamp(mapState.distance*Math.exp(e.deltaY*.001),180,60000)",
+          "to": "mapState.distance=clamp(mapState.distance*Math.exp(e.deltaY*.001),180,150000)",
+          "count": 1
+        }
+      ]
+    },
+    "three": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/integration-aligned.js",
+      "inputBytes": 1134036,
+      "inputSha256": "137b21db65659b43658d51958a7ac2e4d05a4a2068765bd3af894a9b8ac3c286",
+      "outputSha256": "4f30ce4e19612e4c775a4b6a9b7bd989b2c030e61deba3fcc782adab11f05f6d",
+      "outputBytes": 1134037,
+      "replacements": [
+        {
+          "from": "new Mt(55,1,.15,6e4)",
+          "to": "new Mt(55,1,.15,15e4)",
+          "count": 1
+        }
+      ]
+    },
+    "airport": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/airport.mjs",
+      "inputBytes": 5484,
+      "inputSha256": "69498383ede98b4fee61259b0c0bf64aa4ae045e8d472d3837dabf7e8a9131df",
+      "outputSha256": "86cbaed34267eb9d915be8124999eed5b39f0813d20d8e168eada670d229d2f6",
+      "outputBytes": 5603,
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=.15,far=150000.",
+          "count": 1
+        },
+        {
+          "from": "uniform float aspect;out vec3 col;",
+          "to": "uniform float aspect,tanFov;out vec3 col;",
+          "count": 1
+        },
+        {
+          "from": "dot(v,right)/(.520567*aspect),dot(v,up)/.520567",
+          "to": "dot(v,right)/(tanFov*aspect),dot(v,up)/tanFov",
+          "count": 1
+        },
+        {
+          "from": "z*.520567",
+          "to": "z*Math.tan(55*Math.PI/360)",
+          "count": 2
+        },
+        {
+          "from": "gl.uniform1f(gl.getUniformLocation(program,'aspect'),canvas.width/canvas.height);",
+          "to": "gl.uniform1f(gl.getUniformLocation(program,'aspect'),canvas.width/canvas.height);gl.uniform1f(gl.getUniformLocation(program,'tanFov'),Math.tan(55*Math.PI/360));",
+          "count": 1
+        }
+      ]
+    },
+    "city": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/city-buildings/runtime.mjs",
+      "inputBytes": 18719,
+      "inputSha256": "bc3b6fed8e91cd1d34d7d7e5c8f0cba07cd41cdd121148f951e5b55e01966fad",
+      "outputSha256": "0494e07e79f60b786348287a41b630612ea04d5bbaeefe65b19ebc92ce75c8a0",
+      "outputBytes": 18720,
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=.15,far=150000.",
+          "count": 1
+        }
+      ]
+    },
+    "citySpatial": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/city-buildings/spatial.mjs",
+      "inputBytes": 1388,
+      "inputSha256": "db55edaf8ba8c8fa2b6641d3c857e1da575a33650da7fd001b0b19dbb1140cb9",
+      "outputSha256": "8adf55eb18419fe76cb27db50a0f807109aad2c9c51770d151f1a099d9bb0fcc",
+      "outputBytes": 1389,
+      "replacements": [
+        {
+          "from": "z-r<60000",
+          "to": "z-r<150000",
+          "count": 1
+        }
+      ]
+    },
+    "outer": {
+      "source": "/workspace/scratch/2f609cc83d31/research/hk-main-map-next-r02/projection/source-fixtures/outer-renderer.mjs",
+      "inputBytes": 10988,
+      "inputSha256": "c3d05707e5e4db92921d77b2544693ac961fd6cfcd30277e09fa847b95c25a18",
+      "outputSha256": "ec353761d59432ab1b60334e64a5f1a9d279485108507fdefddc5197214303a1",
+      "outputBytes": 10990,
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=.15,far=150000.",
+          "count": 1
+        },
+        {
+          "from": "farPlaneM:60000",
+          "to": "farPlaneM:150000",
+          "count": 1
+        }
+      ]
+    },
+    "outerSpatial": {
+      "source": "/workspace/scratch/2f609cc83d31/research/hk-main-map-next-r02/projection/source-fixtures/outer-spatial.mjs",
+      "inputBytes": 1388,
+      "inputSha256": "db55edaf8ba8c8fa2b6641d3c857e1da575a33650da7fd001b0b19dbb1140cb9",
+      "outputSha256": "8adf55eb18419fe76cb27db50a0f807109aad2c9c51770d151f1a099d9bb0fcc",
+      "outputBytes": 1389,
+      "replacements": [
+        {
+          "from": "z-r<60000",
+          "to": "z-r<150000",
+          "count": 1
+        }
+      ]
+    }
+  }
+}

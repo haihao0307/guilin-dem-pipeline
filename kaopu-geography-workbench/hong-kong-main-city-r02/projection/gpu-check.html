@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>150km projection comparator · deferred GPU QA</title><style>body{font:14px/1.4 monospace;margin:24px;white-space:pre-wrap}</style><h1>Projection-only GPU QA</h1><p>This page is a test harness, not the map. No scene/source file is changed.</p><pre id="result">Running baseline and two test-only shared-near comparison passes…</pre><script type="module">
+import {patchVerified} from './patch-plan.mjs';
+import {fitRegion,regionCorners,mapCamera} from './camera.mjs';
+import {projectionForFrame} from './shared-projection.mjs';
+import {projectionSourceURLs} from './source-layout.mjs';
+import {runProjectionGPUComparison} from './verify-gpu.mjs';
+try{
+ const r=await fetch(projectionSourceURLs(import.meta.url).three);if(!r.ok)throw Error('Verified source bundle missing: HTTP '+r.status);
+ const patched=await patchVerified('three',await r.arrayBuffer());
+ const url=URL.createObjectURL(new Blob([patched.text+'\nexport{Mt as TestPerspectiveCamera};'],{type:'text/javascript'}));
+ let module;try{module=await import(url);}finally{URL.revokeObjectURL(url);}
+ const cases=[[1920,1080],[390,844],[360,800]].map(([w,h])=>{const fit=fitRegion(w/h);if(!fit.supported)throw Error('Expected supported viewport');return {label:`overview-${w}x${h}`,mode:'map',distance:fit.state.distance,testSeaSurface:true,camera:fit.camera,aspect:w/h};});
+ const camera=mapCamera({target:[1521.171,5.8,9775.015],distance:12,yaw:1.1,pitch:-.2}),points=[];
+ for(const d of[.3,1,3,10,100])for(const side of[-.2,.2])points.push(camera.cam.map((x,i)=>x+camera.fw[i]*d+camera.right[i]*side*d));
+ cases.push({label:'train-near-world-roundoff-diagnostic',mode:'follow',distance:12,camera,aspect:16/9,points});
+ const closeCamera=mapCamera({target:[4000,60,7350],distance:2000,yaw:-.9,pitch:-.64}),closePoints=[3,10,100,1000,2000].map(d=>closeCamera.cam.map((x,i)=>x+closeCamera.fw[i]*d));cases.push({label:'map-near-2km',mode:'map',distance:2000,camera:closeCamera,aspect:16/9,points:closePoints});
+ const baseline=await runProjectionGPUComparison({ThreePerspectiveCamera:module.TestPerspectiveCamera,cases});
+ const sharedNearCandidates=[];for(const near of[10,100])sharedNearCandidates.push(await runProjectionGPUComparison({ThreePerspectiveCamera:module.TestPerspectiveCamera,cases:cases.filter(c=>c.label.startsWith('overview-')),near}));
+ const dynamicPolicy=[];for(const entry of cases){const clip=projectionForFrame({mode:entry.mode,distance:entry.distance});dynamicPolicy.push({label:entry.label,clip,result:await runProjectionGPUComparison({ThreePerspectiveCamera:module.TestPerspectiveCamera,cases:[entry],near:clip.clipNear})});}
+ window.__projectionGPUResult={baseline,sharedNearCandidates,dynamicPolicy,dynamicPolicyPassed:dynamicPolicy.every(x=>x.result.passed),sceneApproval:false,note:'Dynamic policy: map near=clamp(distance*.02,.15,3000), other modes near=.15. Fixed near 10/100 comparisons are test-only. No production file or running map was changed.'};
+}catch(error){window.__projectionGPUResult={gpuStatus:'ERROR',passed:false,sceneApproval:false,error:String(error.stack||error)};}
+document.getElementById('result').textContent=JSON.stringify(window.__projectionGPUResult,null,2);window.__projectionGPUReady=true;
+</script>

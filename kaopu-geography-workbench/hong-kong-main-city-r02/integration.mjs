@@ -1,0 +1,23 @@
+import {installRailVerticalProfile}from './rail-profile/install-rail-profile.mjs';
+import {loadSharedProjectionIntegration}from './projection/bundle-loader.mjs';
+import {installRegionOverview}from './projection/camera.mjs';
+import {createAirportRenderer}from './airport.mjs';
+import {createCityBuildings}from './city-buildings/runtime.mjs';
+import {createOuterTerrain}from './runtime/outer-renderer.mjs';
+import {createOuterOcean}from './ocean/extend-existing-ocean.mjs';
+export async function createIntegration(host){
+ await installRailVerticalProfile();
+ const baseURL=new URL('../hong-kong-main-city-r01/',import.meta.url),{createIntegration:base}=await loadSharedProjectionIntegration({bundleURL:new URL('integration-aligned.js',baseURL),assetBaseURL:baseURL});
+ const game=await base(host),airport=createAirportRenderer(host,window.KaiTakSetup),ocean=await createOuterOcean(host),city=await createCityBuildings(host),outer=await createOuterTerrain(host),draw=game.draw;
+ window.HKOuterOcean=ocean;window.HKCityBuildings=city;window.HKOuterTerrain=outer;window.HKKaiTak=airport;
+ const toolbar=document.createElement('nav');toolbar.id='nextMapToolbar';toolbar.setAttribute('aria-label','地图范围和显示控制');toolbar.innerHTML='<button data-focus="city">九龙楼群</button><button data-focus="island">岛屿近览</button><button data-focus="kowloon">旧九龙站</button><button id="nextPanels" aria-expanded="false">显示面板</button><span id="nextMapSummary"></span><details id="railProfileNotice"><summary>线路纵坡与桥隧候选</summary><p>平面线路待调整；当前纵坡最大约5.42‰，游戏上限15‰，站内平段。固定平面导致约8.24km穿山候选、1.78km桥候选，最深覆土约483m，桥隧结构尚未建设。粉色地表规划覆盖线只标平面位置，不是实际轨顶；地下列车不抬到地面。站高为作品设计值，非铁路测量。</p></details>';document.body.append(toolbar);
+ const overview=installRegionOverview(host,game,{buttonParent:toolbar});toolbar.prepend(toolbar.querySelector('[data-view="whole-hong-kong"]'));
+ document.body.classList.add('map-panels-folded');const fold=toolbar.querySelector('#nextPanels');fold.onclick=()=>{const hidden=document.body.classList.toggle('map-panels-folded');fold.textContent=hidden?'显示面板':'收起面板';fold.setAttribute('aria-expanded',String(!hidden));};
+ toolbar.querySelector('[data-focus="city"]').onclick=()=>{overview.cancel();city.focusTile('11-NW-15B');host.mapState.distance=1300;host.mapState.target=[3280,38,5680];host.requestFrame();};toolbar.querySelector('[data-focus="island"]').onclick=()=>{overview.cancel();game.setMode('map');Object.assign(host.mapState,{target:[-12945,45,19120],distance:6000,yaw:-.25,pitch:-1.1});host.requestFrame();};toolbar.querySelector('[data-focus="kowloon"]').onclick=()=>{overview.cancel();game.setMode('map');window.HKMap.focus('kowloon');host.requestFrame();};
+ game.draw=(c,s,e)=>{draw(c,s,e);airport.draw(c);city.draw(c,s,e);outer.draw(c,s,e);const cs=city.stats(),os=outer.stats();toolbar.querySelector('#nextMapSummary').textContent=`建筑 ${cs.visibleModels} 当前可见 / ${cs.defaultDisplayAllowedModels} 默认候选（${cs.terrainPendingModels} 待地面核验） · ${cs.agePolicy.enabled?"仅早于1997证据候选":"现代档案预览"}；旧入伙不证明旧外形 · 外围 ${os.visibleChunks}/${os.exteriorNonOceanChunks} 块 · 本批无纹理，带图样本未接`;host.qa.nextMap={projection:{near:c.clipNear,far:c.clipFar,mode:c.clipMode},cityGPUBytes:cs.gpuBytes,outerGPUBytes:os.gpuBytes,oceanMaskGPUBytes:ocean.stats().maskGPUBytes,incrementalGPUBudgetBytes:192*1048576+ocean.stats().maskGPUBytes,existingHostGPUBytes:'not_included',sourceAndOwnedTerrainModified:false};};
+ game.cityBuildings=city;game.outerTerrain=outer;game.airport=airport;
+ window.HKMainCityNext={ready:true,focusOverview:overview.focus,focusCity:()=>toolbar.querySelector('[data-focus="city"]').click(),focusIsland:()=>toolbar.querySelector('[data-focus="island"]').click(),stats:()=>({rail:{status:window.HKRailVertical.status,validation:window.HKRailVertical.validation,designLabel:window.HKRailVertical.designLabel,bridgeTunnelConstruction:'not_built_candidates_only',originalRoleCutawayRetained:true},city:city.stats(),outer:outer.stats(),ocean:ocean.stats(),projection:host.qa.clipProjection,overview:overview.getState(),scope:host.qa.nextMap})};
+ document.querySelector('#panel')?.classList.add('closed');document.title='香港主地图 · 全港外围与建筑谱';const title=document.querySelector('#mast h1');if(title)title.textContent='香港主地图 · 全港 / 建筑 / 88 / 启德';
+ setTimeout(()=>{if(new URLSearchParams(location.search).get('view')==='city')window.HKMainCityNext.focusCity();else overview.focus();},0);
+ return game;
+}
