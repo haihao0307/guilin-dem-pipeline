@@ -1,0 +1,47 @@
+{
+  "caseId": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001",
+  "status": "CANDIDATE_REAL_RUN_EVIDENCE_UPDATE_NOT_ADOPTED",
+  "active": false,
+  "decision": "NO_NEW_CASE_EXTEND_EXISTING_TESTED_SUBJECT_AND_FRESHNESS_CASE",
+  "evidenceUpdate": {
+    "cycle": "N162",
+    "date": "2026-10-15",
+    "mother": "Human / Shared Skin / Clothing collection route",
+    "mainHead": "1e09ffec5b6b74d89b25e48afc4c487451db4e34",
+    "receiptHead": "9de8f3c26ec2f8dd444548c4ea242f7ad198a0d6",
+    "activeRouteCreatedAt": "2026-10-15T10:12:24.361Z",
+    "predecessorPublicBrowserFinishedAt": "2026-10-15T10:05:26.729Z",
+    "newBrowserRunPerformed": false,
+    "runtimeSourceByteEquivalence": true,
+    "expectedState": "CONTENT_EQUIVALENCE_VERIFIED__HOLD_ACTIVE_ROUTE_BROWSER_UNBOUND"
+  },
+  "mustNever": [
+    "A browser run that predates creation of the active route is attributed to that route.",
+    "Byte-equivalent runtime source is expanded into proof that a different path, loader, relative dependency graph or collection entry executed.",
+    "A receipt head older than the active subject is marked fresh for the active subject.",
+    "A broad sharedSkinBrowserVerified flag hides which consumers and routes were actually exercised.",
+    "Machine route verification is expanded into user visual acceptance or production readiness."
+  ],
+  "requiredReceiptIncrement": [
+    "activeRoute or activeConsumerId",
+    "activeSubjectCommit and route-introduction commit",
+    "testedRoute and testedCommit",
+    "runtime plus asset-set digests",
+    "browserStartedAt and browserFinishedAt",
+    "HTTP identity and embedded version marker",
+    "exactRouteMatched",
+    "runAfterRouteCreation",
+    "newBrowserRunPerformed",
+    "per-consumer result rather than one aggregate boolean"
+  ],
+  "states": [
+    "HOLD_ACTIVE_ROUTE_IDENTITY_MISSING",
+    "HOLD_ACTIVE_SUBJECT_DIGEST_MISMATCH",
+    "CONTENT_EQUIVALENCE_VERIFIED__HOLD_ACTIVE_ROUTE_BROWSER_UNBOUND",
+    "HOLD_ACTIVE_ROUTE_PUBLIC_IDENTITY_UNBOUND",
+    "HOLD_ACTIVE_ROUTE_BROWSER_FAILED",
+    "ACTIVE_ROUTE_BROWSER_VERIFIED"
+  ],
+  "activationGate": "The Human/Clothing owner records an exact active-route browser run after route creation; independent verifier binds its public URL, commit, route, runtime and asset digests. Coordinator review is required before any wider rule change.",
+  "rollback": "Remove this candidate evidence extension only. Do not alter the stable overlay, prior immutable public build or current user-authorized skin baseline."
+}
