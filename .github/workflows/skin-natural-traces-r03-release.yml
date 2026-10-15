@@ -4,7 +4,9 @@ on:
     branches: [feature/skin-natural-traces-r03-20261015]
     paths:
       - .github/workflows/skin-natural-traces-r03-release.yml
-      - qa/skin-natural-traces-r03/RELEASE.json
+      - iteration/skin-natural-traces-r03/**
+      - qa/skin-natural-traces-r03/**
+      - kaopu-unified-human-workbench/skin-paint-r02/**
 permissions:
   contents: write
   actions: read
@@ -35,7 +37,10 @@ jobs:
       - name: Validate source and build from pinned R02
         run: |
           node --check iteration/skin-natural-traces-r03/natural-traces.js
+          node --check iteration/skin-natural-traces-r03/visual-tune-r03-1.js
           node --check qa/skin-natural-traces-r03/public-check.cjs
+          node --check qa/skin-natural-traces-r03/visibility-audit.cjs
+          node --check qa/skin-natural-traces-r03/linux-smoke.cjs
           python -m py_compile iteration/skin-natural-traces-r03/build.py
           python iteration/skin-natural-traces-r03/build.py
           python - <<'PY'
@@ -47,8 +52,9 @@ jobs:
           assert h==b['sha256']
           assert b['sameGeometry'] and not b['sourcePixelsCopied']
           assert b['textureLayers']==5 and b['extraSamplerOverR02']==0
+          assert b['kernel']=='skin-natural-traces-r03-v2'
           text=(root/'preview.html').read_text()
-          for token in ['skinNaturalTracesR03','uTraceAcne','uTraceHealed','uTraceShave','uTraceEye','uTraceScar','data-trace-param','trace-debug']:
+          for token in ['skinNaturalTracesR03','skin-natural-traces-r03-v2','r03.1-visibility-balanced','uTraceAcne','uTraceHealed','uTraceShave','uTraceEye','uTraceScar','data-trace-param','trace-debug']:
               assert token in text, token
           print(b)
           PY
@@ -63,7 +69,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --sparse kaopu-unified-human-workbench/skin-natural-traces-r03
-          git commit -m "build(skin): publish natural trace R03 candidate"
+          git commit -m "build(skin): publish natural trace R03.1 candidate"
           git push origin "HEAD:refs/heads/$BRANCH"
           SHA=$(git rev-parse HEAD)
           DIGEST=$(python -c "import json;print(json.load(open('kaopu-unified-human-workbench/skin-natural-traces-r03/BUILD.json'))['sha256'])")
@@ -73,7 +79,7 @@ jobs:
   public:
     needs: build
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 18
     strategy:
       fail-fast: false
       matrix:
@@ -92,11 +98,20 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/trace-public" playwright@1.56.1 pngjs@7.0.0
           echo "NODE_PATH=$RUNNER_TEMP/trace-public/node_modules" >> "$GITHUB_ENV"
           if [ "$RUNNER_OS" = Linux ]; then sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk; fi
-      - name: Inspect fixed public website and independent trace controls
+      - name: Full Windows public visual matrix
+        if: runner.os == 'Windows'
         env:
           PREVIEW_URL: ${{ needs.build.outputs.url }}
           EXPECTED_SHA256: ${{ needs.build.outputs.digest }}
-        run: node qa/skin-natural-traces-r03/public-check.cjs
+        run: |
+          node qa/skin-natural-traces-r03/public-check.cjs
+          node qa/skin-natural-traces-r03/visibility-audit.cjs
+      - name: Linux public startup and shader smoke
+        if: runner.os == 'Linux'
+        env:
+          PREVIEW_URL: ${{ needs.build.outputs.url }}
+          EXPECTED_SHA256: ${{ needs.build.outputs.digest }}
+        run: node qa/skin-natural-traces-r03/linux-smoke.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -133,9 +148,11 @@ jobs:
           for f in sorted((root/'acceptance').glob('*/QA.json')):
               r=json.loads(f.read_text())
               assert r['complete'] and not r['errors'] and not r['requests'],f
+              if r['platform']=='win32':
+                  assert r.get('visibilityAudit',{}).get('passed') is True
               for s in r['screens']:
                   assert hashlib.sha256((f.parent/(s['name']+'.png')).read_bytes()).hexdigest()==s['sha256']
-              reports.append({'platform':r['platform'],'browser':r['browser'],'tests':len(r['tests']),'screens':len(r['screens']),'firstMS':r['firstMS'],'driver':r['first']['graphics']['driver'],'geometry':r['geometry']})
+              reports.append({'platform':r['platform'],'browser':r['browser'],'tests':len(r['tests']),'screens':len(r['screens']),'firstMS':r['firstMS'],'driver':r['first']['graphics']['driver'],'geometry':r['geometry'],'visibilityAudit':r.get('visibilityAudit')})
           assert len(reports)==2,reports
           build=json.loads((root/'BUILD.json').read_text())
           release=json.loads(Path('qa/skin-natural-traces-r03/RELEASE.json').read_text())
@@ -143,10 +160,10 @@ jobs:
           (root/'DELIVERY.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
           study=Path('iteration/skin-natural-traces-r03/STUDY.md').read_text()
           (root/'STUDY.md').write_text(study)
-          (root/'README.md').write_text('# SKIN-NATURAL-TRACES-R03\n\n'+os.environ['PREVIEW_URL']+'\n\nR03 keeps the R02 character, geometry and base skin system, then adds a separate procedural layer for sparse lived-in variation: active blemishes, healed marks, shaved follicle roots/razor irritation, periorbital variation, small pitted traces and controlled left-right asymmetry.\n\nThe reference project was used only to learn channel separation. No reference texture pixels, mesh or UV data are included. R03 uses the existing array sampler and grows it from three to five RGBA8 layers; base texture data is about 20 MiB before mipmaps.\n\nWindows and Linux public-browser evidence is stored in acceptance/. Passing automation proves the page and controls worked on the tested software backends; it does not certify cinematic realism or user visual approval. Current eye/lid geometry, head form, SSS limits and first-load cost remain. userVisualAccepted=false.\n\nOld versions are preserved. This branch is Draft-only and is not merged. See STUDY.md and DELIVERY.json.\n')
+          (root/'README.md').write_text('# SKIN-NATURAL-TRACES-R03.1\n\n'+os.environ['PREVIEW_URL']+'\n\nR03.1 keeps the R02 character, geometry and base skin system, then adds a separate procedural layer for sparse lived-in variation: active blemishes, healed marks, shaved follicle roots/razor irritation, localized lower-eye variation, small pitted traces and controlled left-right asymmetry.\n\nThe reference project was used only to learn channel separation. No reference texture pixels, mesh or UV data are included. R03.1 uses the existing array sampler and grows it from three to five RGBA8 layers; base texture data is about 20 MiB before mipmaps.\n\nThe first R03 fixed-public evidence proved the implementation but exposed weak default visibility and an overly broad eye mask. R03.1 tightens the eye region, raises bounded blemish/healed/shave visibility and adds same-camera RGB visibility floors. Windows runs the full visual matrix; Linux runs a lighter startup/shader/geometry smoke because the full software-rendered screenshot matrix exceeded the earlier 15-minute job budget.\n\nPassing automation proves the page and controls worked on the tested software backends; it does not certify cinematic realism or user visual approval. Current eye/lid geometry, head form, SSS limits, the exact 16-fragment-sampler ceiling and first-load cost remain. userVisualAccepted=false.\n\nOld versions are preserved. This branch is Draft-only and is not merged. See STUDY.md and DELIVERY.json.\n')
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --sparse kaopu-unified-human-workbench/skin-natural-traces-r03/acceptance kaopu-unified-human-workbench/skin-natural-traces-r03/DELIVERY.json kaopu-unified-human-workbench/skin-natural-traces-r03/README.md kaopu-unified-human-workbench/skin-natural-traces-r03/STUDY.md
-          git commit -m "docs(skin): retain R03 public evidence and learning boundary"
+          git commit -m "docs(skin): retain R03.1 public evidence and learning boundary"
           git push origin HEAD:refs/heads/feature/skin-natural-traces-r03-20261015
