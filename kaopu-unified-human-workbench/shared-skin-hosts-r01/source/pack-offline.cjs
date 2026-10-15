@@ -1,0 +1,9 @@
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'..'),assetRoot=path.join(root,'Kaopu-Unified-Human-Platform-20261014/asset-cache');
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const mime=url=>url.endsWith('.png')?'image/png':url.endsWith('.jpg')?'image/jpeg':url.endsWith('.json')?'application/json':/\.m?js$/.test(url)?'text/javascript':'application/octet-stream';
+function assetEntries(){const entries={};const manifest=JSON.parse(fs.readFileSync(path.join(root,'Kaopu-Unified-Human-Platform-20261014/stream-manifest.json'))),base='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/475ead2759159b83927a1aa8ae6879595e1d18bc/kaopu-unified-human-workbench/human-integrated-r05/';const exclude=new Set(manifest.files.filter(f=>f.id==='mhr-cold').flatMap(f=>f.chunks).map(c=>sha(base+c.url)));
+ for(const n of fs.readdirSync(assetRoot).filter(n=>/^[a-f0-9]{64}$/.test(n)&&!exclude.has(n))){const metadata=JSON.parse(fs.readFileSync(path.join(assetRoot,n+'.json')));const url=metadata.url;const b=fs.readFileSync(path.join(assetRoot,n)),gz=zlib.gzipSync(b,{level:9,mtime:0}),compress=gz.length<b.length;entries[url]={data:(compress?gz:b).toString('base64'),gzip:compress,mime:mime(url)};}return entries;}
+function pack(html,base,extra={}){const config={version:'SKIN-OFFLINE-R01-20261015',base,entries:{...assetEntries(),...extra}};const boot='<script>window.__SKIN_OFFLINE__='+JSON.stringify(config)+';'+fs.readFileSync(path.join(__dirname,'offline-runtime.js'),'utf8')+'</script>';return html.replace('<head>','<head>'+boot);}
+module.exports={pack,assetEntries,mime,sha};
+if(require.main===module){const [src,dst]=process.argv.slice(2);const out=pack(fs.readFileSync(src,'utf8'),'https://skin-offline.invalid/');fs.writeFileSync(dst,out);console.log(JSON.stringify({dst,bytes:Buffer.byteLength(out),sha256:sha(out)}));}
