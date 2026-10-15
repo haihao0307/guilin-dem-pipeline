@@ -1,0 +1,17 @@
+import glyphData from './glyphs.json' with {type:'json'};
+import {roundedShape} from './geometry.mjs';
+export function createLettering(T,M){
+ const cache=new Map();
+ function textGeometry(text,height=.2,depth=.012){
+  const key=[text,height,depth].join('|');if(cache.has(key))return cache.get(key);const scale=height/glyphData.upm,shapes=[];let advance=0;
+  const contains=(ps,p)=>{let inside=false;for(let i=0,j=ps.length-1;i<ps.length;j=i++){const a=ps[i],b=ps[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;};
+  for(const ch of text){const glyph=glyphData.glyphs[ch];if(!glyph)throw Error('GLYPH_NOT_PREPARED: '+ch);const path=new T.ShapePath();for(const[c,...q]of glyph.commands){const P=[];for(let i=0;i<q.length;i+=2)P.push((q[i]+advance)*scale,q[i+1]*scale);if(c==='m')path.moveTo(...P);else if(c==='l')path.lineTo(...P);else if(c==='c')path.bezierCurveTo(...P);else if(c==='q')path.quadraticCurveTo(...P);else if(c==='z')path.currentPath.closePath();}
+   const rings=path.subPaths.map(p=>({path:p,points:p.getPoints(12)})).filter(r=>r.points.length>2);for(const r of rings)r.area=Math.abs(T.ShapeUtils.area(r.points));for(const r of rings){const parents=rings.filter(o=>o!==r&&o.area>r.area&&contains(o.points,r.points[0])).sort((a,b)=>a.area-b.area);r.parent=parents[0]||null;r.depth=parents.length;}for(const r of rings)if(r.depth%2===0){const shape=new T.Shape();shape.curves=r.path.curves;shape.currentPoint.copy(r.path.currentPoint);for(const hole of rings.filter(o=>o.parent===r&&o.depth%2===1)){const p=new T.Path();p.curves=hole.path.curves;p.currentPoint.copy(hole.path.currentPoint);shape.holes.push(p);}shapes.push(shape);}advance+=glyph.advance;
+  }
+  const g=new T.ExtrudeGeometry(shapes,{depth,bevelEnabled:true,bevelSize:Math.min(depth*.16,height*.004),bevelThickness:Math.min(depth*.16,height*.004),bevelSegments:2,curveSegments:10});g.computeBoundingBox();const c=g.boundingBox.getCenter(new T.Vector3());g.translate(-c.x,-c.y,0);g.computeVertexNormals();g.userData={text,glyphCount:[...text].length,topology:'per-glyph explicit even/odd nesting; no inter-glyph hole assignment'};cache.set(key,g);return g;
+ }
+ const sideMatrix=(side,at)=>new T.Matrix4().set(-side,0,0,at[0],0,0,side,at[1],0,1,0,at[2],0,0,0,1);
+ function relief(parent,text,height,depth,at,side=1,mat=M.brass){const mesh=new T.Mesh(textGeometry(text,height,depth),mat);mesh.name='實體銘文 / '+text;mesh.applyMatrix4(sideMatrix(side,at));mesh.userData={text,extrusionM:depth,solidGlyphs:true,noRaster:true};parent.add(mesh);return mesh;}
+ function plaque(parent,{text,sub='',width=4,height=.45,at,side=1,letterHeight=.20,depth=.035,base=M.paint}){const root=new T.Group();root.name='厚鑄銘牌 / '+text;parent.add(root);const border=new T.ExtrudeGeometry(roundedShape(T,width,height,.10),{depth,bevelEnabled:true,bevelSize:.006,bevelThickness:.005,bevelSegments:3});const mesh=new T.Mesh(border,M.brass);mesh.applyMatrix4(sideMatrix(side,at));root.add(mesh);const inset=new T.ExtrudeGeometry(roundedShape(T,width-.035,height-.035,.083),{depth:.008,bevelEnabled:true,bevelSize:.003,bevelThickness:.002,bevelSegments:2});const face=new T.Mesh(inset,base);face.applyMatrix4(sideMatrix(side,[at[0],at[1]+side*(depth+.008),at[2]]));root.add(face);relief(root,text,letterHeight,.014,[at[0],at[1]+side*(depth+.019),at[2]+(sub?.075:0)],side);if(sub)relief(root,sub,letterHeight*.51,.008,[at[0],at[1]+side*(depth+.019),at[2]-.145],side);return root;}
+ return{textGeometry,relief,plaque,sideMatrix};
+}
