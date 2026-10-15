@@ -1,0 +1,82 @@
+{
+  "schema": "kaopu/hair-bundle-frame-twist-continuity-result@1",
+  "fixture": "hair_f10_frame_twist_continuity_n161.json",
+  "passed": 10,
+  "total": 10,
+  "currentState": "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+  "falsePositiveMechanism": {
+    "anglesDeg": [
+      0,
+      44,
+      -44,
+      44,
+      -44
+    ],
+    "sectionSpacingMM": 0.1,
+    "passesObservedF10Predicate": true,
+    "candidateState": "HOLD_TWIST_RATE_SPIKE",
+    "note": "This is a synthetic positive control, not an observation that F10 contains the artifact."
+  },
+  "results": [
+    {
+      "name": "F10 current receipt does not bind rate/refinement",
+      "expected": "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+      "actual": "VOLUME_AND_ORTHONORMAL_SECTION_FRAMES_VERIFIED__HOLD_ARC_LENGTH_NORMALIZED_TWIST_CONTINUITY_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "invalid frame is rejected first",
+      "expected": "HOLD_FRAME_ORTHONORMALITY_INVALID",
+      "actual": "HOLD_FRAME_ORTHONORMALITY_INVALID",
+      "pass": true
+    },
+    {
+      "name": "repeated center is degenerate",
+      "expected": "HOLD_ARC_LENGTH_DEGENERATE",
+      "actual": "HOLD_ARC_LENGTH_DEGENERATE",
+      "pass": true
+    },
+    {
+      "name": "task threshold must be frozen",
+      "expected": "HOLD_TWIST_RATE_BUDGET_UNFROZEN",
+      "actual": "HOLD_TWIST_RATE_BUDGET_UNFROZEN",
+      "pass": true
+    },
+    {
+      "name": "sawtooth positive control is mandatory",
+      "expected": "HOLD_POSITIVE_CONTROL_MISSING",
+      "actual": "HOLD_POSITIVE_CONTROL_MISSING",
+      "pass": true
+    },
+    {
+      "name": "legacy-positive sawtooth fails rate gate",
+      "expected": "HOLD_TWIST_RATE_SPIKE",
+      "actual": "HOLD_TWIST_RATE_SPIKE",
+      "pass": true
+    },
+    {
+      "name": "short segment exposes spacing-sensitive rate spike",
+      "expected": "HOLD_TWIST_RATE_SPIKE",
+      "actual": "HOLD_TWIST_RATE_SPIKE",
+      "pass": true
+    },
+    {
+      "name": "refinement mismatch holds",
+      "expected": "HOLD_SAMPLING_REFINEMENT_UNBOUND",
+      "actual": "HOLD_SAMPLING_REFINEMENT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "reversal mismatch holds",
+      "expected": "HOLD_REVERSAL_SYMMETRY_UNBOUND",
+      "actual": "HOLD_REVERSAL_SYMMETRY_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "bounded smooth sequence verifies",
+      "expected": "FRAME_TWIST_CONTINUITY_VERIFIED",
+      "actual": "FRAME_TWIST_CONTINUITY_VERIFIED",
+      "pass": true
+    }
+  ]
+}
