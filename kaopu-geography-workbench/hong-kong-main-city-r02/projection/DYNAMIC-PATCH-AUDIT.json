@@ -1,0 +1,185 @@
+{
+  "schema": "hk-dynamic-projection-patch/1",
+  "sourceWrites": 0,
+  "files": {
+    "r03": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-map-sea-r03/publish-final/index.html",
+      "inputSha256": "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117",
+      "outputSha256": "22f1d27ab05d29b5108201a20714f6ef5557cdca39da35de74ad0ccc2fd4449d",
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=clipNear,far=clipFar",
+          "count": 4
+        },
+        {
+          "from": "uniform vec3 camera,fw,right,up;",
+          "to": "uniform float clipNear,clipFar;uniform vec3 camera,fw,right,up;",
+          "count": 3
+        },
+        {
+          "from": "uniform vec3 camera,fw,right,up,flatForward;",
+          "to": "uniform float clipNear,clipFar;uniform vec3 camera,fw,right,up,flatForward;",
+          "count": 3
+        },
+        {
+          "from": "v3(p,'camera',c.cam);",
+          "to": "f(p,'clipNear',c.clipNear);f(p,'clipFar',c.clipFar);v3(p,'camera',c.cam);",
+          "count": 1
+        },
+        {
+          "from": "mapState.distance=clamp(mapState.distance*Math.exp(e.deltaY*.001),180,60000)",
+          "to": "mapState.distance=clamp(mapState.distance*Math.exp(e.deltaY*.001),180,150000)",
+          "count": 1
+        },
+        {
+          "from": "function cameraData(){return mapCamera()}",
+          "to": "function cameraData(){return mapCamera()}const hkUnclippedCameraData=cameraData;cameraData=()=>{const c=window.HKSharedProjection.frame(hkUnclippedCameraData(),{mode:window.HKTrain88?.getState?.().mode||'map',distance:mapState.distance});qa.clipProjection={near:c.clipNear,far:c.clipFar,mode:c.clipMode};return c;};",
+          "count": 1
+        }
+      ]
+    },
+    "three": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/integration-aligned.js",
+      "inputSha256": "137b21db65659b43658d51958a7ac2e4d05a4a2068765bd3af894a9b8ac3c286",
+      "outputSha256": "ff6707b282c62a0a5818db99cca376df507334120dc52c03acf693f83127d62d",
+      "replacements": [
+        {
+          "from": "new Mt(55,1,.15,6e4)",
+          "to": "new Mt(55,1,.15,15e4)",
+          "count": 1
+        },
+        {
+          "from": "p.aspect=t.width/t.height,p.position.set(...G.cam)",
+          "to": "p.near=G.clipNear,p.far=G.clipFar,p.aspect=t.width/t.height,p.position.set(...G.cam)",
+          "count": 1
+        },
+        {
+          "from": "cameraMode:k,cameraPosition:G.cam",
+          "to": "cameraMode:k,clipNear:p.near,clipFar:p.far,clipProjectionMatrix:p.projectionMatrix.elements.slice(),cameraPosition:G.cam",
+          "count": 1
+        }
+      ]
+    },
+    "airport": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/airport.mjs",
+      "inputSha256": "69498383ede98b4fee61259b0c0bf64aa4ae045e8d472d3837dabf7e8a9131df",
+      "outputSha256": "453119a9a151d5efc44f9cc68fc3e529857eb82267a70cbccc709cef6235eff7",
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=clipNear,far=clipFar",
+          "count": 1
+        },
+        {
+          "from": "uniform vec3 camera,fw,right,up;",
+          "to": "uniform float clipNear,clipFar;uniform vec3 camera,fw,right,up;",
+          "count": 1
+        },
+        {
+          "from": "uniform float aspect;out vec3 col;",
+          "to": "uniform float aspect,tanFov;out vec3 col;",
+          "count": 1
+        },
+        {
+          "from": "dot(v,right)/(.520567*aspect),dot(v,up)/.520567",
+          "to": "dot(v,right)/(tanFov*aspect),dot(v,up)/tanFov",
+          "count": 1
+        },
+        {
+          "from": "z*.520567",
+          "to": "z*Math.tan(55*Math.PI/360)",
+          "count": 2
+        },
+        {
+          "from": "gl.uniform1f(gl.getUniformLocation(program,'aspect'),canvas.width/canvas.height);",
+          "to": "gl.uniform1f(gl.getUniformLocation(program,'aspect'),canvas.width/canvas.height);gl.uniform1f(gl.getUniformLocation(program,'tanFov'),Math.tan(55*Math.PI/360));gl.uniform1f(gl.getUniformLocation(program,'clipNear'),c.clipNear);gl.uniform1f(gl.getUniformLocation(program,'clipFar'),c.clipFar);",
+          "count": 1
+        }
+      ]
+    },
+    "city": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/city-buildings/runtime.mjs",
+      "inputSha256": "bc3b6fed8e91cd1d34d7d7e5c8f0cba07cd41cdd121148f951e5b55e01966fad",
+      "outputSha256": "d5077d6072184d5e76ee51ca3c602ca9358e05bd0b920a0f1f55598251616c89",
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=clipNear,far=clipFar",
+          "count": 1
+        },
+        {
+          "from": "uniform vec3 camera,fw,right,up;",
+          "to": "uniform float clipNear,clipFar;uniform vec3 camera,fw,right,up;",
+          "count": 1
+        },
+        {
+          "from": "['camera','fw','right','up','aspect','tanFov'",
+          "to": "['camera','fw','right','up','clipNear','clipFar','aspect','tanFov'",
+          "count": 1
+        },
+        {
+          "from": "gl.uniform1f(uniforms.aspect,canvas.width/canvas.height);",
+          "to": "gl.uniform1f(uniforms.aspect,canvas.width/canvas.height);gl.uniform1f(uniforms.clipNear,c.clipNear);gl.uniform1f(uniforms.clipFar,c.clipFar);",
+          "count": 1
+        }
+      ]
+    },
+    "citySpatial": {
+      "source": "/workspace/scratch/2f609cc83d31/hong-kong-main-city-r01/city-buildings/spatial.mjs",
+      "inputSha256": "db55edaf8ba8c8fa2b6641d3c857e1da575a33650da7fd001b0b19dbb1140cb9",
+      "outputSha256": "61e16742eec37ecd0a1a92b2cf4fec360ef588ca09a27e2b6bd52af5c93cd70a",
+      "replacements": [
+        {
+          "from": "return z+r>.15&&z-r<60000",
+          "to": "return z+r>c.clipNear&&z-r<c.clipFar",
+          "count": 1
+        }
+      ]
+    },
+    "outer": {
+      "source": "/workspace/scratch/2f609cc83d31/research/hk-main-map-next-r02/projection/source-fixtures/outer-renderer.mjs",
+      "inputSha256": "c3d05707e5e4db92921d77b2544693ac961fd6cfcd30277e09fa847b95c25a18",
+      "outputSha256": "9167bac486bd149ec65b8bae2970a2e90d09a1bf73dd98c8fd68a4fc81db5cde",
+      "replacements": [
+        {
+          "from": "near=.15,far=60000.",
+          "to": "near=clipNear,far=clipFar",
+          "count": 1
+        },
+        {
+          "from": "uniform vec3 camera,fw,right,up;",
+          "to": "uniform float clipNear,clipFar;uniform vec3 camera,fw,right,up;",
+          "count": 1
+        },
+        {
+          "from": "['camera','fw','right','up','aspect','tanFov'",
+          "to": "['camera','fw','right','up','clipNear','clipFar','aspect','tanFov'",
+          "count": 1
+        },
+        {
+          "from": "gl.uniform1f(u.aspect,canvas.width/canvas.height);",
+          "to": "gl.uniform1f(u.aspect,canvas.width/canvas.height);gl.uniform1f(u.clipNear,c.clipNear);gl.uniform1f(u.clipFar,c.clipFar);",
+          "count": 1
+        },
+        {
+          "from": "farPlaneM:60000",
+          "to": "farPlaneM:150000,nearPlanePolicy:'shared-c-cameraData'",
+          "count": 1
+        }
+      ]
+    },
+    "outerSpatial": {
+      "source": "/workspace/scratch/2f609cc83d31/research/hk-main-map-next-r02/projection/source-fixtures/outer-spatial.mjs",
+      "inputSha256": "db55edaf8ba8c8fa2b6641d3c857e1da575a33650da7fd001b0b19dbb1140cb9",
+      "outputSha256": "61e16742eec37ecd0a1a92b2cf4fec360ef588ca09a27e2b6bd52af5c93cd70a",
+      "replacements": [
+        {
+          "from": "return z+r>.15&&z-r<60000",
+          "to": "return z+r>c.clipNear&&z-r<c.clipFar",
+          "count": 1
+        }
+      ]
+    }
+  }
+}

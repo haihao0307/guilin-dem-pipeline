@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>香港主地图 · 全港外围与建筑谱</title><style>body{margin:0;background:#192b31;color:#dedcca;font:16px/1.8 system-ui;display:grid;place-items:center;min-height:100vh}main{max-width:650px;padding:30px}progress{width:100%}</style><main><h2>香港主地图 · 全港含离岛</h2><p id="load-status">校验原地图、共享投影、外围与建筑谱…</p><progress></progress><small>逐楼年代分开记录。本批无纹理，带图样本未接。</small></main><script type="module">
+import{installGeographicLabels,patchGeographicLabels}from './projection/geographic-labels.mjs';
+import {makeSetup}from './airport.mjs';import{patchDynamicVerified}from './projection/dynamic-patch-plan.mjs';import{installSharedProjection}from './projection/shared-projection.mjs';import{patchOceanDomain}from './ocean/extend-existing-ocean.mjs';
+const root=new URL('.',location.href),base=new URL('../hong-kong-main-city-r01/',root),status=document.getElementById('load-status'),query=new URLSearchParams(location.search);
+try{
+ const dataResponse=await fetch(new URL('airport-1970.json',root));if(!dataResponse.ok)throw Error('机场资料 '+dataResponse.status);window.KaiTakSetup=makeSetup(await dataResponse.json(),query.get('terrain')==='source');
+ installSharedProjection(window);installGeographicLabels(window);const config=await(await fetch(new URL('base-host-patches.json',root))).json(),response=await fetch(new URL('../hong-kong-map-sea-r03/index.html',root));if(!response.ok)throw Error('地图来源 '+response.status);
+ let html=patchGeographicLabels(patchOceanDomain((await patchDynamicVerified('r03',await response.arrayBuffer())).text));
+ const patches=[...config.patches,['const hkBox=[HK.x0-HK.origin[0]','window.KaiTakSetup.prepareTerrain({HK,hkHeights,hkMask});const hkBox=[HK.x0-HK.origin[0]'],['detailPatches.push(q)}','window.KaiTakSetup.prepareDetail(q);detailPatches.push(q)}']];
+ for(const[a,b]of patches){if(html.split(a).length!==2)throw Error('宿主接入点不唯一：'+a.slice(0,60));html=html.replace(a,b.replace('__INTEGRATION_URL__',new URL('integration.mjs',root).href));}
+ const hostFields='createIntegration({gl,canvas,HK,mapState,hkHeight,requestFrame:';if(html.split(hostFields).length!==2)throw Error('只读高度接口不唯一');html=html.replace(hostFields,'createIntegration({gl,canvas,HK,mapState,hkHeight,hkHeights,hkMask,requestFrame:');
+ html=html.replace('src="./station-data.js"','src="'+new URL(query.get('station')==='original'?'../hong-kong-map-sea-r03/station-data.js':'station-calibrated-data.js',base).href+'"');
+ html=html.replace('</head>',`<link rel="stylesheet" href="${new URL('integration.css',base)}"><link rel="stylesheet" href="${new URL('airport.css',base)}"><link rel="stylesheet" href="${new URL('city-buildings/style.css',base)}"><link rel="stylesheet" href="${new URL('next-map.css',root)}"></head>`);
+ html=html.replace(/<title>[^<]*<\/title>/,'<title>香港主地图 · 全港外围与建筑谱</title>');window.HK_TRAIN_ASSET_BASE=base.href;window.HK_CANDIDATE_VISIBILITY={kowloon:true,bureau:true,city:true};
+ document.open();document.write(html);document.close();
+}catch(error){status.textContent='未能载入：'+error.message;document.querySelector('progress')?.remove();console.error(error);window.HKNextFatal=String(error.stack||error);}
+</script></html>
