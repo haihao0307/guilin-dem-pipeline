@@ -39,7 +39,7 @@ jobs:
         run: |
           node "$BL_DIR/test.cjs" > "$BL_DIR/UNIT_QA.json"
           SOURCE_SHA=${{ github.sha }} node "$BL_DIR/build.cjs"
-      - name: Actual candidate fibers, presets and blink inspection
+      - name: Actual candidate fibers and blink inspection
         env:
           QA_MODE: smoke
           QA_OUT: kaopu-unified-human-workbench/brow-lash-r05/acceptance/candidate
@@ -61,14 +61,22 @@ jobs:
           BUILD_SHA=$(git rev-parse HEAD)
           echo "BUILD_SHA=$BUILD_SHA" >> "$GITHUB_ENV"
           echo "PREVIEW_URL=https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$BUILD_SHA/$BL_DIR/preview.html" >> "$GITHUB_ENV"
-      - name: Exact public page visual and interaction verification
+      - name: Exact public page verification
         env:
           QA_MODE: full
           QA_OUT: kaopu-unified-human-workbench/brow-lash-r05/acceptance/public
         run: node "$BL_DIR/verify.cjs"
       - name: Preserve final receipt and evidence
         run: |
-          node - <<'NODE'
-          const fs=require('fs'),dir=process.env.BL_DIR,q=JSON.parse(fs.readFileSync(dir+'/acceptance/public/qa.json'));if(!q.completed)throw Error('Public QA incomplete');const receipt={version:'BROW-LASH-R05',sourceCommit:process.env.GITHUB_SHA,buildCommit:process.env.BUILD_SHA,preview:process.env.PREVIEW_URL,workflowRun:process.env.GITHUB_RUN_ID,checks:q.checks.length,screens:q.screens.length,publicRuntimeVerified:true,defaultRoots:q.initial.follicles.acceptedRoots,presetCount:q.initial.follicles.presetCount,externalEyebrowAssets:false,originalNative65:true,userVisualAccepted:false,filmQualityAccepted:false,consumerGPUCertified:false,physicalPhone:false};fs.writeFileSync(dir+'/DELIVERY.json',JSON.stringify(receipt,null,2));
-          NODE
-          git add "$BL_DIR/acceptance" "$BL_DIR/DELIVERY.jsom¸ˆ(€€€€€€€€€¥Ð½µµ¥Ð€µ´€Ñ•ÍÐ¡‰É½Üµ±…Í µÈÀÔ¤èÁÉ•Í•ÉÙ”•á…ÐµÁÕ‰±¥Œ™½±±¥±”•Ù¥‘•¹”mÍ­¥À¥tœ(€€€€€€€€€¥ÐÁÕÍ ½É¥¥¸!é™•…ÑÕÉ”½‰É½Üµ±…Í µÈÀÔµ™½±±¥±”µÙ…É¥…¹ÑÌ´ÈÀÈØÄÀÄÔ(€€€€€€´¹…µ”è½µÁ±•Ñ”•Ù¥‘•¹”¥¹±Õ‘¥¹œ™…¥±ÕÉ•Ì(€€€€€€€¥˜è…±Ý…åÌ ¤(€€€€€€€ÕÍ•Ìè…Ñ¥½¹Ì½ÕÁ±½…µ…ÉÑ¥™…ÑØÐ(€€€€€€€Ý¥Ñ è(€€€€€€€€€¹…µ”è‰É½Üµ±…Í µÈÀÔµ™Õ±°(€€€€€€€€€Á…Ñ è­…½ÁÔµÕ¹¥™¥•µ¡Õµ…¸µÝ½É­‰•¹ ½‰É½Üµ±…Í µÈÀÔ¼(€€€€€€€€€¥˜µ¹¼µ™¥±•Ìµ™½Õ¹è•ÉÉ½È(€€€€€€€€€É•Ñ•¹Ñ¥½¸µ‘…åÌè€ÄÐ(
+          node -e "const fs=require('fs'),d=process.env.BL_DIR,q=JSON.parse(fs.readFileSync(d+'/acceptance/public/qa.json'));if(!q.completed)throw Error('Public QA incomplete');const r={version:'BROW-LASH-R05',sourceCommit:process.env.GITHUB_SHA,buildCommit:process.env.BUILD_SHA,preview:process.env.PREVIEW_URL,workflowRun:process.env.GITHUB_RUN_ID,checks:q.checks.length,screens:q.screens.length,publicRuntimeVerified:true,defaultRoots:q.initial.follicles.acceptedRoots,presetCount:q.initial.follicles.presetCount,externalEyebrowAssets:false,originalNative65:true,userVisualAccepted:false,filmQualityAccepted:false,consumerGPUCertified:false,physicalPhone:false};fs.writeFileSync(d+'/DELIVERY.json',JSON.stringify(r,null,2))"
+          git add "$BL_DIR/acceptance" "$BL_DIR/DELIVERY.json"
+          git commit -m 'test(brow-lash-r05): preserve exact-public follicle evidence [skip ci]'
+          git push origin HEAD:feature/brow-lash-r05-follicle-variants-20261015
+      - name: Complete evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brow-lash-r05-full
+          path: kaopu-unified-human-workbench/brow-lash-r05/
+          if-no-files-found: error
+          retention-days: 14
