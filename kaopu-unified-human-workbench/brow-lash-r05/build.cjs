@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=requ
 const here=__dirname,root=path.resolve(here,'..'),hash=x=>crypto.createHash('sha256').update(x).digest('hex'),read=p=>fs.readFileSync(p,'utf8');
 const host=read(path.join(root,'brow-lash-r04','preview.html'));
 assert.equal(hash(host),'34d7bcec46fc05968f893c8293a678ddbe63274c802e2905e6bc2dc98ada6f76','R04 fixed host drifted');
-const partNames=Array.from({length:8},(_,i)=>`app.parts/${String(i).padStart(2,'0')}.b64`);
+const partNames=['app.parts/00.b64','app.parts/01.b64','app.parts/02.0.b64','app.parts/02.1.b64','app.parts/03.b64','app.parts/04.0.b64','app.parts/04.1.b64','app.parts/05.b64','app.parts/06.b64','app.parts/07.b64'];
 const app=Buffer.from(partNames.map(name=>read(path.join(here,name)).trim()).join(''),'base64').toString('utf8');
 assert.equal(hash(app),'d6262fa07806143e02180a107382d00b6859bcbf62218b8a96358adab7f9e3d9','R05 reconstructed source mismatch');
 const profiles=read(path.join(here,'Profiles.js')),code=(profiles+'\n'+app).replace(/<\/script/gi,'<\\/script');
