@@ -5,6 +5,7 @@ on:
     paths:
       - kaopu-fabric-workbench/knit-public-p03/build.py
       - kaopu-fabric-workbench/knit-public-p03/wool-envelope.mjs
+      - kaopu-fabric-workbench/knit-public-p03/refine-c2.py
       - kaopu-fabric-workbench/knit-public-p03/qa.py
       - .github/workflows/knit-public-p03.yml
 permissions:
@@ -21,17 +22,9 @@ jobs:
           sparse-checkout: |
             kaopu-fabric-workbench/knit-public-p02
             kaopu-fabric-workbench/knit-public-p03
-      - name: Preflight shader interface and build P03 from frozen P02 source
+      - name: Generate C2 softness source and build from frozen P02 baseline
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('kaopu-fabric-workbench/knit-public-p03/wool-envelope.mjs')
-          s=p.read_text()
-          old='vertexShader:`varying vec3 vWorld,vN,vC;varying vec2 vUvW;'
-          new='vertexShader:`attribute vec3 color;varying vec3 vWorld,vN,vC;varying vec2 vUvW;'
-          assert s.count(old)==1, s.count(old)
-          p.write_text(s.replace(old,new))
-          PY
+          python kaopu-fabric-workbench/knit-public-p03/refine-c2.py
           python kaopu-fabric-workbench/knit-public-p03/build.py
       - name: Install real-browser test tools
         run: |
@@ -41,7 +34,7 @@ jobs:
         run: |
           python -m http.server 8873 --directory kaopu-fabric-workbench >/tmp/p03-http.log 2>&1 &
           python kaopu-fabric-workbench/knit-public-p03/qa.py
-      - name: Save candidate without declaring visual acceptance
+      - name: Save C2 candidate without declaring visual acceptance
         run: |
           python - <<'PY'
           import json,pathlib,shutil
@@ -50,9 +43,10 @@ jobs:
           assert r['passed']
           shutil.copytree('p03-evidence',p/'qa',dirs_exist_ok=True)
           m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          m['revision']='C2'
           m['runtimeChecksPassed']=len(r['checks'])
           m['runtimeReport']='qa/REPORT.json'
-          m['status']='RUNTIME_CHECKED_AWAITING_USER_VISUAL_REVIEW'
+          m['status']='C2_RUNTIME_CHECKED_AWAITING_USER_VISUAL_REVIEW'
           (p/'BUILD_MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2))
           PY
           BRANCH=feature/knit-public-p03-wool-envelope-20261015
@@ -60,7 +54,7 @@ jobs:
           test "$CURRENT" = "$GITHUB_SHA"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-fabric-workbench/knit-public-p03/wool-envelope.mjs \
+          git add kaopu-fabric-workbench/knit-public-p03/wool-envelope-c2.mjs \
                   kaopu-fabric-workbench/knit-public-p03/main.mjs \
                   kaopu-fabric-workbench/knit-public-p03/jacket-refined.mjs \
                   kaopu-fabric-workbench/knit-public-p03/template.html \
@@ -68,12 +62,12 @@ jobs:
                   kaopu-fabric-workbench/knit-public-p03/BUILD_MANIFEST.json \
                   kaopu-fabric-workbench/knit-public-p03/THIRD_PARTY_NOTICES.txt \
                   kaopu-fabric-workbench/knit-public-p03/qa
-          git commit -m 'build(knit-p03): save wool envelope candidate and browser evidence'
+          git commit -m 'build(knit-p03): save C2 wool softness candidate and evidence'
           git push origin "HEAD:refs/heads/$BRANCH"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: knit-p03-wool-envelope-review
+          name: knit-p03-c2-wool-envelope-review
           path: |
             p03-evidence/
             kaopu-fabric-workbench/knit-public-p03/BUILD_MANIFEST.json
