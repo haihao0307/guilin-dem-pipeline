@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {shadeFlyaways} from './jacket-refined.mjs';
-import {softenCarrierMaterial,makeWoolEnvelope} from './wool-envelope.mjs';
+import {softenCarrierMaterial,makeWoolEnvelope} from './wool-envelope-c2.mjs';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './eb1-public.js';
 
@@ -8,7 +8,7 @@ import './eb1-public.js';
 // the private R15/R01.2 engine. It imports no private data, model or texture.
 const VERSION='KNIT-PUBLIC-P03';
 const $=id=>document.getElementById(id), TAU=Math.PI*2;
-const seed=4291, cols=16, rows=20, pitch=.0058, spacing=.00290, radius=.00086;
+const seed=4291, cols=16, rows=20, pitch=.00545, spacing=.00268, radius=.00091;
 const settings={fuzz:1.18,length:1.15,detail:1.12,twist:.46,mottle:.24,pattern:'plain',color:'#c7b59e',shape:'jersey',mode:'fiber'};
 const defaults={...settings};
 try{const saved=JSON.parse(localStorage.getItem('kaopu:knit:public:p03'));if(saved&&saved.version===VERSION)for(const key of Object.keys(defaults)){if(typeof saved.settings[key]===typeof defaults[key])settings[key]=saved.settings[key];}}catch{}
@@ -37,8 +37,8 @@ function point(c,r,t){
  const x=t*(base.length-1),k=Math.min(base.length-2,Math.floor(x)),u=x-k;
  const a=base[Math.max(0,k-1)],b=base[k],d=base[k+1],e=base[Math.min(base.length-1,k+2)];
  const p=[];for(let j=0;j<3;j++)p[j]=.5*((2*b[j])+(-a[j]+d[j])*u+(2*a[j]-5*b[j]+4*d[j]-e[j])*u*u+(-a[j]+3*b[j]-3*d[j]+e[j])*u*u*u);
- const id=r*cols+c,jx=(hash(id*149+11)-.5)*.14,jy=(hash(id*233+17)-.5)*.18;
- const tensionX=.96+.08*hash(id*307+19),tensionY=.95+.10*hash(id*401+23);
+ const id=r*cols+c,jx=(hash(id*149+11)-.5)*.18,jy=(hash(id*233+17)-.5)*.22;
+ const tensionX=.93+.14*hash(id*307+19),tensionY=.93+.14*hash(id*401+23);
  const wx=(c-(cols-1)/2+jx+p[0]*tensionX)*pitch,wy=(r-(rows-1)/2+jy)*spacing+p[1]*pitch*tensionY;
  let wz=p[2]*pitch*(.94+.12*hash(id*503+29));
  wz+=.00022*Math.sin(t*TAU*(1.65+1.35*hash(id*607+31))+hash(id*701+37)*TAU)*Math.sin(Math.PI*t);
@@ -118,7 +118,7 @@ function build(){
  renderer.shadowMap.needsUpdate=true;applyMode();dirty=true;
  const wr=wool?.report();$('counts').textContent=`${cols*rows} 针目 · ${wr?.stapleFibres.toLocaleString()||0} 包覆纤维 + ${wr?.haloFibres.toLocaleString()||0} 绒毛`;
 }
-function applyMode(){const on=settings.mode==='fiber';uniforms.fuzz.value=on?settings.fuzz:0;uniforms.detail.value=on?settings.detail:0;if(fur)fur.visible=false;if(jacket)jacket.mesh.visible=false;if(wool)wool.setVisible(on);if(mesh){mesh.material.sheen=on?.72:0;mesh.material.roughness=on?.97:.56;mesh.material.color.setScalar(on?.80:1);}dirty=true;}
+function applyMode(){const on=settings.mode==='fiber';uniforms.fuzz.value=on?settings.fuzz:0;uniforms.detail.value=on?settings.detail:0;if(fur)fur.visible=false;if(jacket)jacket.mesh.visible=false;if(wool)wool.setVisible(on);if(mesh){mesh.material.sheen=on?.42:0;mesh.material.roughness=on?.995:.56;mesh.material.color.setScalar(on?.70:1);}dirty=true;}
 function set(patch,{save=true}={}){
  if(!patch||typeof patch!=='object')throw new TypeError('参数必须为对象');
  const enums={pattern:['plain','stripe','diamond'],shape:['jersey','rib'],mode:['fiber','carrier']};
