@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>香港主地图 · 完整编组与站址校准 R05</title><style>body{margin:0;background:#192b31;color:#dedcca;font:16px/1.8 system-ui;display:grid;place-items:center;min-height:100vh}main{max-width:650px;padding:30px}progress{width:100%}</style><main><h2>香港主地图 · 旧九龙—罗湖暂行线</h2><p id="load-status">校验原地图、新线路谱、纵断面与站场…</p><progress></progress><small>逐楼年代分开记录。本批无纹理，带图样本未接。</small></main><script type="module">
+import{installKowloonRegistration,patchKowloonStationHost}from './route/station-registration.mjs';
+import{installConsistSetup}from './train/config.mjs';
+import{installRailVerticalProfile}from './route/install-rail-profile.mjs';
+import{createRouteDisplay,patchRouteDisplayHost}from '../hong-kong-main-city-r04/route/display.mjs';
+import{installCEDDTerrain,patchCEDDHost}from '../hong-kong-main-city-r03/terrain/install.mjs';
+import{installGeographicLabels,patchGeographicLabels}from '../hong-kong-main-city-r02/projection/geographic-labels.mjs';
+import {makeSetup}from '../hong-kong-main-city-r02/airport.mjs';import{patchDynamicVerified}from '../hong-kong-main-city-r02/projection/dynamic-patch-plan.mjs';import{installSharedProjection}from '../hong-kong-main-city-r02/projection/shared-projection.mjs';import{patchOceanDomain}from '../hong-kong-main-city-r02/ocean/extend-existing-ocean.mjs';
+const root=new URL('.',location.href),previous=new URL('../hong-kong-main-city-r02/',root),base=new URL('../hong-kong-main-city-r01/',root),status=document.getElementById('load-status'),query=new URLSearchParams(location.search);
+try{
+ installConsistSetup();
+ const kowloon=await installKowloonRegistration();
+ await installCEDDTerrain();
+ const routeSetup=await installRailVerticalProfile();window.HKRouteSketchDisplay=createRouteDisplay(routeSetup,{requestFrame:()=>window.HKRouteViewRequest?.()});
+ const dataResponse=await fetch(new URL('airport-1970.json',previous));if(!dataResponse.ok)throw Error('机场资料 '+dataResponse.status);window.KaiTakSetup=makeSetup(await dataResponse.json(),query.get('terrain')==='source');
+ installSharedProjection(window);installGeographicLabels(window);const config=await(await fetch(new URL('base-host-patches.json',previous))).json(),response=await fetch(new URL('../hong-kong-map-sea-r03/index.html',root));if(!response.ok)throw Error('地图来源 '+response.status);
+ let html=patchGeographicLabels(patchOceanDomain((await patchDynamicVerified('r03',await response.arrayBuffer())).text));
+ const patches=[...config.patches,['const hkBox=[HK.x0-HK.origin[0]','window.KaiTakSetup.prepareTerrain({HK,hkHeights,hkMask});const hkBox=[HK.x0-HK.origin[0]'],['detailPatches.push(q)}','window.KaiTakSetup.prepareDetail(q);detailPatches.push(q)}']];
+ for(const[a,b]of patches){if(html.split(a).length!==2)throw Error('宿主接入点不唯一：'+a.slice(0,60));html=html.replace(a,b.replace('__INTEGRATION_URL__',new URL('integration.mjs',root).href));}
+ html=patchKowloonStationHost(patchRouteDisplayHost(patchCEDDHost(html)),kowloon);
+ const zoomAnchor='mapState.distance=clamp(mapState.distance*Math.exp(e.deltaY*.001),180,150000)';if(html.split(zoomAnchor).length!==2)throw Error('R05 zoom anchor not unique');html=html.replace(zoomAnchor,zoomAnchor.replace(',180,',',8,'));
+ const hostFields='createIntegration({gl,canvas,HK,mapState,hkHeight,requestFrame:';if(html.split(hostFields).length!==2)throw Error('只读高度接口不唯一');html=html.replace(hostFields,'createIntegration({gl,canvas,HK,mapState,hkHeight,hkHeights,hkMask,requestFrame:');
+ html=html.replace('src="./station-data.js"','src="'+new URL(query.get('station')==='original'?'../hong-kong-map-sea-r03/station-data.js':'station-calibrated-data.js',base).href+'"');
+ html=html.replace('</head>',`<link rel="stylesheet" href="${new URL('integration.css',base)}"><link rel="stylesheet" href="${new URL('airport.css',base)}"><link rel="stylesheet" href="${new URL('city-buildings/style.css',base)}"><link rel="stylesheet" href="${new URL('next-map.css',previous)}"><link rel="stylesheet" href="${new URL('../hong-kong-main-city-r03/terrain.css',root)}"><link rel="stylesheet" href="${new URL('route.css',root)}"><link rel="stylesheet" href="${new URL('train/style.css',root)}"></head>`);
+ html=html.replace(/<title>[^<]*<\/title>/,'<title>香港主地图 · 完整编组与站址校准 R05</title>');window.HK_TRAIN_ASSET_BASE=base.href;window.HK_CANDIDATE_VISIBILITY={kowloon:true,bureau:true,city:true};
+ document.open();document.write(html);document.close();
+}catch(error){status.textContent='未能载入：'+error.message;document.querySelector('progress')?.remove();console.error(error);window.HKNextFatal=String(error.stack||error);}
+</script></html>
