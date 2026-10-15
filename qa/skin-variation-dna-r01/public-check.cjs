@@ -47,7 +47,7 @@ const diff=(a,b)=>{
  page.on('pageerror',e=>R.pageErrors.push(String(e)));
  page.on('requestfailed',r=>R.requests.push({url:r.url(),error:r.failure()}));
  page.on('response',r=>{if(r.status()>=400&&!/favicon\.ico/.test(r.url()))R.http.push({url:r.url(),status:r.status()});});
- page.on('console',m=>{if(m.type()==='error'&&!/favicon/.test(m.text()))R.console.push({text:m.text(),location:m.location()});});
+ page.on('console',m=>{const loc=m.location();if(m.type()==='error'&&!/favicon\\.ico/.test(m.text())&&!/favicon\\.ico/.test(loc.url||''))R.console.push({text:m.text(),location:loc});});
  const t=Date.now();await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
  await page.waitForFunction(()=>window.skinVariationDNA_R01&&(skinVariationDNA_R01.report().ready||skinVariationDNA_R01.report().errors.length),null,{timeout:360000});
  R.startMS=Date.now()-t;R.initial=await page.evaluate(()=>skinVariationDNA_R01.report());
