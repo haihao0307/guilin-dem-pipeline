@@ -8,15 +8,18 @@
     "A job-level success directly promotes a stronger named claim.",
     "An early proof file is silently treated as if it contained a later step result.",
     "Missing final closure is converted to ALLOW by ignoring absent or false fields.",
+    "A successful rerun erases an earlier cancelled or failed attempt.",
+    "Post-promotion success is rewritten as pre-promotion closure.",
     "A technical publication claim is expanded into iPhone, visual, Game-baseline or user acceptance."
   ],
   "requiredEvidence": [
     "claimType and claimScope",
-    "exact runId and headSha",
+    "exact runId, attempt lineage and headSha",
     "subject byte size and digest",
-    "claim-critical step results",
+    "claim-critical step results for every attempt",
     "path and SHA-256 for every consumed evidence atom",
     "proof predicates and excluded claims",
+    "gateCompletedAt and claimIssuedAt or promotionObservedByAt",
     "issuedAfterCriticalSteps=true",
     "claimState",
     "independent verifier identity or explicit UNKNOWN"
@@ -25,6 +28,7 @@
     "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE",
     "HOLD_FINAL_CLAIM_UNSEALED",
     "HOLD_FINAL_CLAIM_INVALID",
+    "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
     "CLAIM_VERIFIED"
   ],
   "historyFixtures": [
@@ -35,6 +39,22 @@
     {
       "runId": 35973024167,
       "expectedState": "HOLD_FINAL_CLAIM_UNSEALED"
+    }
+  ],
+  "evidenceUpdates": [
+    {
+      "cycle": "N160",
+      "date": "2026-10-15",
+      "mother": "Human / total-platform promotion",
+      "runId": 38669673332,
+      "testedHeadSha": "d29534672989de3b9373bced5abf3ac333be3dee",
+      "canonicalClaimCommit": "f723d28a45327d4b70fed68338eb6a31693792e5",
+      "canonicalClaimIssuedAt": "2026-10-15T03:25:23Z",
+      "finalSuccessfulGateCompletedAt": "2026-10-15T03:42:16Z",
+      "attempt1": "candidate browser success; exact public cancelled; final report skipped",
+      "attempt2": "all critical steps success after canonical claim",
+      "expectedState": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "decision": "NO_NEW_CASE_EXTEND_EXISTING_CANDIDATE"
     }
   ],
   "activationGate": "One real Mother implementation of a post-critical-step finalizer plus an independent verifier GATE-RUN; coordinator review required before wider activation."
