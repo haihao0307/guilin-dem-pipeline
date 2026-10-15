@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),P=require('./Profiles.js');
+const checks=[],check=(name,fn)=>{try{const details=fn();checks.push({name,passed:true,details});}catch(e){checks.push({name,passed:false,error:String(e)});throw e;}};
+const ranges={head:[0,.15],body:[.15,.75],tail:[.75,1]};
+function roots(settings){const n={left:0,right:0,total:0};let index=0;for(const side of['right','left'])for(const[a,b]of Object.values(ranges)){const rows=Math.max(10,Math.ceil((b-a)*120)),cols=10;for(let i=0;i<=rows;i++)for(let j=0;j<=cols;j++,index++){const u=a+(b-a)*i/rows,v=-1+2*j/cols;if(P.inclusion(u,v,settings,P.hash01(settings.seed,index,side==='left'?101:211))){n[side]++;n.total++;}}}return n;}
+check('ten distinct eyebrow presets validate',()=>{assert.equal(Object.keys(P.PRESETS).length,10);for(const id of Object.keys(P.PRESETS))P.preset(id);return Object.keys(P.PRESETS);});
+check('default and strong are genuinely dense',()=>{const a=roots(P.preset('natural')),b=roots(P.preset('strong'));assert(a.left>850&&a.right>850);assert(b.left>950&&b.right>950);return{natural:a,strong:b};});
+check('even the narrow preset retains continuous root population',()=>{const r=roots(P.preset('fine'));assert(r.left>300&&r.right>300);return r;});
+check('all presets remain inside the retained root domain',()=>{for(const id of Object.keys(P.PRESETS)){const s=P.preset(id);for(let i=0;i<=1000;i++){const u=i/1000,w=P.occupiedHalfWidth(u,s),c=P.centerShift(u,s);assert(Number.isFinite(w)&&w>=0&&w<=1);assert(Number.isFinite(c)&&Math.abs(c)<=.72);if(u>.16+.84*s.span)assert.equal(w,0);}}return true;});
+check('root selection and follicle noise are deterministic',()=>{for(let i=0;i<10000;i++)assert.equal(P.hash01(7319,i,101),P.hash01(7319,i,101));assert.notEqual(P.hash01(7319,10,101),P.hash01(7319,11,101));return{sample:P.hash01(7319,10,101)};});
+check('regional flow changes continuously from head to tail',()=>{for(const id of Object.keys(P.PRESETS)){const s=P.preset(id);let prev=P.flowAngleDeg(0,s);for(let i=1;i<=1000;i++){const v=P.flowAngleDeg(i/1000,s);assert(Number.isFinite(v));assert(Math.abs(v-prev)<1);prev=v;}}return true;});
+check('strand length stays finite across every preset',()=>{let min=Infinity,max=-Infinity;for(const id of Object.keys(P.PRESETS)){const s=P.preset(id);for(let i=0;i<5000;i++){const u=(i%1000)/999,v=-1+2*((i*37)%1000)/999,l=P.lengthScale(u,v,s,P.hash01(s.seed,i,3),P.hash01(s.seed,i,7));assert(Number.isFinite(l)&&l>0);min=Math.min(min,l);max=Math.max(max,l);}}return{min,max};});
+check('unknown or unsafe parameters are rejected',()=>{assert.throws(()=>P.validate({density:9}));assert.throws(()=>P.validate({color:'brown'}));assert.throws(()=>P.validate({foreignMesh:true}));return true;});
+const out={version:'BROW-LASH-R05',completed:true,checks};console.log(JSON.stringify(out,null,2));
