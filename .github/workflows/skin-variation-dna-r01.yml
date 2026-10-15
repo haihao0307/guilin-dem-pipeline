@@ -4,6 +4,8 @@ on:
     branches: [feature/skin-variation-dna-r01-20261015]
     paths:
       - .github/workflows/skin-variation-dna-r01.yml
+      - iteration/skin-variation-dna-r01/**
+      - qa/skin-variation-dna-r01/**
 permissions:
   contents: write
   actions: read
@@ -69,8 +71,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --sparse kaopu-unified-human-workbench/skin-variation-dna-r01/preview.html kaopu-unified-human-workbench/skin-variation-dna-r01/BUILD.json
-          git commit -m "build(skin): freeze SkinVariationDNA R01 seven-map public candidate"
-          git push origin HEAD:refs/heads/$BRANCH
+          if ! git diff --cached --quiet; then
+            git commit -m "build(skin): freeze SkinVariationDNA R01 tuned candidate"
+            git push origin HEAD:refs/heads/$BRANCH
+          else
+            echo "Generated candidate matches the already committed source"
+          fi
           COMMIT=$(git rev-parse HEAD)
           DIGEST=$(python -c "import json;print(json.load(open('kaopu-unified-human-workbench/skin-variation-dna-r01/BUILD.json'))['sha256'])")
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
