@@ -1,0 +1,1582 @@
+{
+  "passed": true,
+  "sourceHashes": {
+    "preview.html": "82875b3d782f189d28e1abc5161b3224d4700eb464c0e32b3b7018f944bc5d5f",
+    "preview-medium.html": "82875b3d782f189d28e1abc5161b3224d4700eb464c0e32b3b7018f944bc5d5f",
+    "preview-long.html": "9e1407c0b697683e016fb03163fb73c66ddd2069c0e00c034b7056fbd9d24bcc",
+    "src/app.mjs": "c1c0d365dbffaa3273acaa9d67c79a6e7dd8c3b03820f67415416578dad7db6d",
+    "src/BundleFriction.mjs": "830be17b18f721d386da38bde72e5ec420de366385a996892a02982886661234",
+    "src/CollisionProxies.mjs": "7b156695d14645e4351228b1cbc42ad1cc88086e82094fe4d7d875b32df94607",
+    "src/detail-dynamics.mjs": "04d10637707ef875c4b72f0cd3c743b633f8fb520d7cf44b9441d4d6cd7330e6",
+    "src/DistanceHair.mjs": "eb35447c78d3b76506381ef16f2d2897f53f0e5296775c2597a0e7daecc1d573",
+    "src/FineFiberCache.mjs": "195958dec19da1fb404e9b059561a4b959b0a21841925a8db8356fe8e8a56d2e",
+    "src/Groom.mjs": "41b7bb1c3a50c42a343db4acafbec8fd2e7c74386c71376f3afd1e83691a13d3",
+    "src/GuideDynamics.mjs": "ae29ca3dc9afeb5dc98dd78bf394e5d707e800113fb340996d77622683dfab04",
+    "src/HairPassCache.mjs": "76bcf9153e62151c7558446d9c880bd9e0f8ef2ce9460e394e3a8cd5dfa12506",
+    "src/HairRenderer.mjs": "2a941d0d8d1880fd9ddc81b252404ed87eaf641369126f08be2df817507bfe18",
+    "src/NativeHeadBinding.mjs": "02932cd8569e03d2df9824bd0a90d583a3605a1bcbbae134d7d40f963097f39e",
+    "src/NativeMotion.mjs": "b621c16bb6f33226eecf88fd06a8bade17b8d8d6e0b0c255cfb70a5137ea5d50",
+    "src/NativePoseCache.mjs": "6edad2f16dec66e4e555f166ae266c04f8ebd75f4107e0e7e6027a8149d451e7",
+    "src/RestFiberCache.mjs": "ab537cb515e9a98a2573ae4c38d8509aa32dc5343a4a971f5cbb918ee64a762f",
+    "src/SurfaceAudit.mjs": "74cd23c31f6ffdea8562e276937c1b0afcf86af472aaf5eae61cd1afa482933c",
+    "src/SurfaceBVH.mjs": "50e47289f73a7927ae4b5d7b49bf8e316a49e5d5b5fccb4735f266153d72c171",
+    "src/SurfaceContactField.mjs": "711bd7bae0377b94f2e57afa21a4e79622ddf0de6efc52fa62c108bf8b5944d0",
+    "src/wind.mjs": "2a4059bf8c22a50479eef9e58d482388e1401c49ff4a6997026a3063af1de84a",
+    "tools/build.cjs": "aae58158466e703ca5c7a2c0686924f6f0eda21ee0389a1b044c3aad77ea2c77",
+    "references/character-platform-frozen.html": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+    "references/motion/16_01-SOURCE.json": "280841e04099650e0bb935b6f6ce0725d2efa80664de549b7cfa46eac92ec0a1",
+    "references/motion/16_15-SOURCE.json": "05dc08b3f1faaa70c736149e738dd4f238b28b270bfe4ed5594bf7a74fb23d40",
+    "references/motion/16_35-SOURCE.json": "ba432e27bb3c48981a96ef8975201e0dad015ac039e0ab098caaf325e1c719a3",
+    "references/motion/ArmContinuity.mjs": "86ca78a237831107c010b8ec3e6bd79e64579629ec8f3308a38706b3a895b4bb",
+    "references/motion/CapturedController.mjs": "a43b67512e044581121aa73547c8e590baa89448e8706c29e2c9a39e88bae48e",
+    "references/motion/CapturedCycles.mjs": "0f480c7d6fc0094ff4ab2b574324ea42b13a244db9de7bf67a04466d03fad8f0",
+    "references/motion/Core.mjs": "d34ce0c86c3a727c532e9b53938ba264a663770b863cc3f559665d0f0df5221a",
+    "references/motion/Motion.mjs": "5f646bc3585dfd40f67f28a3ef8eaacf8779ef9951c18a9c76d91adbe19750d0",
+    "references/motion/NativeRig.mjs": "5e28ef7472813993e372090c90d1abff7b09e994edc23ee576a4d4b904b54c04",
+    "references/motion/NativeWalkRetarget.mjs": "2654a1f3744605d80b38ebe8744de0ca3af38a0d2186109d7064e3d9b31eacb5",
+    "references/motion/NaturalRetarget.mjs": "e3d92f8ed52c5e6843b3e59c89a17553ec17e284d88f1126422abcbc09c56afd"
+  },
+  "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": {
+    "width": 1500,
+    "height": 1050
+  },
+  "rows": [
+    {
+      "style": "medium",
+      "heads": 1,
+      "strands": 64000,
+      "cachedHairGpuIncrementMS": 6.494890666666667,
+      "animatedWindHairGpuIncrementMS": 16.456376,
+      "cpuMSPerUpdateCall": 6.125555555688011,
+      "cpuMSPerActualGuideStep": 12.251111111376021,
+      "guideSteps": 90,
+      "liveWindFPS": 51.847456039172336
+    },
+    {
+      "style": "medium",
+      "heads": 12,
+      "strands": 10791,
+      "cachedHairGpuIncrementMS": 0.2779520000000002,
+      "animatedWindHairGpuIncrementMS": 1.16648,
+      "cpuMSPerUpdateCall": 0.03833333320087857,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 59.83545250538728
+    },
+    {
+      "style": "medium",
+      "heads": 24,
+      "strands": 19492,
+      "cachedHairGpuIncrementMS": 0.8361813333333332,
+      "animatedWindHairGpuIncrementMS": 3.2025599999999996,
+      "cpuMSPerUpdateCall": 0.050555555688010324,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 59.940059939167654
+    },
+    {
+      "style": "medium",
+      "heads": 48,
+      "strands": 33132,
+      "cachedHairGpuIncrementMS": 1.6431786666666666,
+      "animatedWindHairGpuIncrementMS": 3.851264,
+      "cpuMSPerUpdateCall": 0.06277777784400516,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 59.915743485723205
+    },
+    {
+      "style": "long",
+      "heads": 1,
+      "strands": 45201,
+      "cachedHairGpuIncrementMS": 4.942573333333334,
+      "animatedWindHairGpuIncrementMS": 10.821172,
+      "cpuMSPerUpdateCall": 7.4977777775790955,
+      "cpuMSPerActualGuideStep": 14.995555555158191,
+      "guideSteps": 90,
+      "liveWindFPS": 27.169718114374565
+    },
+    {
+      "style": "long",
+      "heads": 12,
+      "strands": 10791,
+      "cachedHairGpuIncrementMS": 0.344576,
+      "animatedWindHairGpuIncrementMS": 1.8531999999999997,
+      "cpuMSPerUpdateCall": 0.03833333320087857,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 60.14709548718617
+    },
+    {
+      "style": "long",
+      "heads": 24,
+      "strands": 19492,
+      "cachedHairGpuIncrementMS": 1.1429546666666668,
+      "animatedWindHairGpuIncrementMS": 4.218368,
+      "cpuMSPerUpdateCall": 0.048333333598242864,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 60.113374446697435
+    },
+    {
+      "style": "long",
+      "heads": 48,
+      "strands": 33132,
+      "cachedHairGpuIncrementMS": 1.9813546666666673,
+      "animatedWindHairGpuIncrementMS": 4.580608,
+      "cpuMSPerUpdateCall": 0.06777777804268731,
+      "cpuMSPerActualGuideStep": null,
+      "guideSteps": 0,
+      "liveWindFPS": 60.11524684628562
+    }
+  ],
+  "runningCases": [
+    {
+      "style": "medium",
+      "count": 1,
+      "fps": 12.38072230936853,
+      "wallMS": 3311.600000023842,
+      "frames": 41,
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 64000,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 0.9999999999999051,
+        "activeDetailModes": 128000,
+        "cpuMS": 0.40000003576278687,
+        "updateMS": 76.40000003576279,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.03817122050397611,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 573.9012153021117,
+            "budget": 64000,
+            "segments": 75,
+            "fineWeight": 0.9999999999999051
+          }
+        ]
+      },
+      "motion": {
+        "mode": "run",
+        "playing": true,
+        "active": true,
+        "time": 3.4666666666666592,
+        "duration": 0.8,
+        "continuous": true,
+        "source": "16_35",
+        "boneLengthError": 1.3877787807814457e-16,
+        "binding": {
+          "version": "R04-display-native-binding/1",
+          "nativeVertices": 25417,
+          "displayVertices": 266098,
+          "triangles": 531702,
+          "nativeBones": 104,
+          "maxInfluences": 9,
+          "weightsTruncated": false,
+          "neutralMaxErrorM": 2.220446049250313e-16,
+          "lineage": [
+            {
+              "from": 25417,
+              "to": 73443
+            },
+            {
+              "from": 73443,
+              "to": 91635
+            },
+            {
+              "from": 91635,
+              "to": 116827
+            },
+            {
+              "from": 116827,
+              "to": 150459
+            },
+            {
+              "from": 150459,
+              "to": 198406
+            },
+            {
+              "from": 198406,
+              "to": 221916
+            },
+            {
+              "from": 221916,
+              "to": 253406
+            },
+            {
+              "from": 253406,
+              "to": 266098
+            }
+          ],
+          "sameMesh": true,
+          "sameMaterial": true,
+          "bindHierarchyChanged": false,
+          "originalAttributesRetained": true,
+          "addedGPUBytes": 14621184,
+          "limitations": [
+            "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+            "native linear skinning and inherited joint correctives, not muscle/contact physics"
+          ]
+        },
+        "poseCache": {
+          "bakes": 209,
+          "width": 1024,
+          "height": 260,
+          "bytes": 12779520,
+          "nativeVertices": 266098,
+          "precision": "RGBA32F position + complete blended native normal/morph matrix",
+          "oneBakePerVisiblePose": true
+        },
+        "inertia": {
+          "linear": [
+            3.434178490499234,
+            0.2814874229673888,
+            -0.7703420494219895
+          ],
+          "angular": [
+            -0.7801777493144688,
+            1.4983891508011837,
+            2.8059978928121336
+          ],
+          "omega": [
+            0.11769677941061508,
+            -0.0012081332302424745,
+            0.3455080333371809
+          ],
+          "air": [
+            -0.13429649541333116,
+            0.1881752614654355,
+            -2.9832314628356267
+          ],
+          "peak": 3.483279061300026
+        },
+        "airVelocity": [
+          0.13991769636049867,
+          0,
+          -2.9889025539159775
+        ],
+        "version": 209
+      },
+      "caches": {
+        "renderedFrames": 1451,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 44,
+          "nodes": 76,
+          "count": 64000,
+          "bytes": 51904512,
+          "cpuSubmitMS": 1.199999988079071,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 1685,
+          "composites": 5055,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "medium",
+      "count": 48,
+      "fps": 59.93070512242546,
+      "wallMS": 3203.699999988079,
+      "frames": 192,
+      "distance": {
+        "automatic": true,
+        "actors": 48,
+        "totalBudget": 128000,
+        "visibleStrands": 33362,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0,
+        "updateMS": 0.30000001192092896,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.04732314745987731,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.82372680672397,
+            "budget": 879.8281146325869,
+            "segments": 24,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.72847367725689,
+            "budget": 571.02057587932,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.25528497519382,
+            "budget": 618.2132147103121,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.74434902616974,
+            "budget": 665.5733864275743,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 42.1514843509989,
+            "budget": 712.3487376846155,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.42496525733056,
+            "budget": 756.0300174745812,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.50857924570794,
+            "budget": 793.7517212604523,
+            "segments": 15,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.13050639927894,
+            "budget": 494.9205846613157,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.35313818773737,
+            "budget": 529.6746377563746,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.52614175664716,
+            "budget": 564.4152457976219,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.616826515144325,
+            "budget": 597.697166703762,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.58891017088228,
+            "budget": 627.9273912843852,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.40477756075901,
+            "budget": 653.7493015737683,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.79791154223352,
+            "budget": 431.2553612378041,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.78612024331876,
+            "budget": 457.4058002852166,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.72153837241807,
+            "budget": 483.0833286934616,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.580065917678816,
+            "budget": 507.2591006820744,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.3360357139291,
+            "budget": 529.0246391329567,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.96378734124273,
+            "budget": 547.059281262978,
+            "segments": 14,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.706348752416304,
+            "budget": 377.4972404004027,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.51275732234437,
+            "budget": 397.84474347672733,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.2676595951341,
+            "budget": 417.1294940006531,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.9532303067953,
+            "budget": 435.0322894105849,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.551092996355116,
+            "budget": 450.66708993731976,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.043393780156805,
+            "budget": 463.97633117603084,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.82981530925845,
+            "budget": 332.73854487087584,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.494104492287256,
+            "budget": 348.24814142037246,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.110262029612027,
+            "budget": 362.94770926756513,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.665010936054333,
+            "budget": 376.4395371947683,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.145016690129356,
+            "budget": 388.30887336693996,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.537616789604176,
+            "budget": 398.1495548681916,
+            "segments": 13,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.143224004335966,
+            "budget": 294.7018437398241,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.695431202173918,
+            "budget": 306.81476378973946,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.203700326062037,
+            "budget": 318.1794848329248,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.658053285106583,
+            "budget": 328.5136072368033,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.04867976379752,
+            "budget": 337.53031840786383,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.366435046736047,
+            "budget": 344.95500294166686,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.623581463073595,
+            "budget": 262.6271707979075,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.086588957030585,
+            "budget": 272.20404936522806,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.510004622976105,
+            "budget": 281.1121380440858,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.88625545048008,
+            "budget": 289.14829285938794,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.208025289578273,
+            "budget": 296.1106560633324,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.46859749860738,
+            "budget": 301.80953941619987,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.250401628872332,
+            "budget": 235.23279166464556,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.641775864977255,
+            "budget": 242.88684711191024,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.997724977877855,
+            "budget": 249.95450162784738,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.312442831095268,
+            "budget": 256.2879048309865,
+            "segments": 12,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.580401684859584,
+            "budget": 261.7427801435069,
+            "segments": 12,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "motion": {
+        "mode": "run",
+        "playing": true,
+        "active": true,
+        "time": 8.165466666666681,
+        "duration": 0.8,
+        "continuous": true,
+        "source": "16_35",
+        "boneLengthError": 8.326672684688674e-17,
+        "binding": {
+          "version": "R04-display-native-binding/1",
+          "nativeVertices": 25417,
+          "displayVertices": 266098,
+          "triangles": 531702,
+          "nativeBones": 104,
+          "maxInfluences": 9,
+          "weightsTruncated": false,
+          "neutralMaxErrorM": 2.220446049250313e-16,
+          "lineage": [
+            {
+              "from": 25417,
+              "to": 73443
+            },
+            {
+              "from": 73443,
+              "to": 91635
+            },
+            {
+              "from": 91635,
+              "to": 116827
+            },
+            {
+              "from": 116827,
+              "to": 150459
+            },
+            {
+              "from": 150459,
+              "to": 198406
+            },
+            {
+              "from": 198406,
+              "to": 221916
+            },
+            {
+              "from": 221916,
+              "to": 253406
+            },
+            {
+              "from": 253406,
+              "to": 266098
+            }
+          ],
+          "sameMesh": true,
+          "sameMaterial": true,
+          "bindHierarchyChanged": false,
+          "originalAttributesRetained": true,
+          "addedGPUBytes": 14621184,
+          "limitations": [
+            "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+            "native linear skinning and inherited joint correctives, not muscle/contact physics"
+          ]
+        },
+        "poseCache": {
+          "bakes": 444,
+          "width": 1024,
+          "height": 260,
+          "bytes": 12779520,
+          "nativeVertices": 266098,
+          "precision": "RGBA32F position + complete blended native normal/morph matrix",
+          "oneBakePerVisiblePose": true
+        },
+        "inertia": {
+          "linear": [
+            -1.5393444963074798,
+            -4.929005685507318,
+            -2.398557485871289
+          ],
+          "angular": [
+            2.419534213116074,
+            -0.23016906189671194,
+            -0.61211691150778
+          ],
+          "omega": [
+            0.25560270878644425,
+            -0.13303790560126758,
+            -0.0850165856313646
+          ],
+          "air": [
+            -0.11528252722649307,
+            0.24079855615456808,
+            -2.980241841332752
+          ],
+          "peak": 5.119772401929733
+        },
+        "airVelocity": [
+          0.13991769636049867,
+          0,
+          -2.9889025539159775
+        ],
+        "version": 491
+      },
+      "caches": {
+        "renderedFrames": 1643,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 238,
+          "nodes": 25,
+          "count": 1136,
+          "bytes": 51904512,
+          "cpuSubmitMS": 0.3999999761581421,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 1879,
+          "composites": 5637,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "count": 1,
+      "fps": 12.91330069981317,
+      "wallMS": 3329.899999976158,
+      "frames": 43,
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 45197,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 0.9576446257131151,
+        "activeDetailModes": 90394,
+        "cpuMS": 0.4999999403953552,
+        "updateMS": 85.89999997615814,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.15882028401350157,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 335.2660295881993,
+            "budget": 44940.671761021375,
+            "segments": 60,
+            "fineWeight": 0.9576446257131151
+          }
+        ]
+      },
+      "motion": {
+        "mode": "run",
+        "playing": true,
+        "active": true,
+        "time": 3.5499999999999923,
+        "duration": 0.8,
+        "continuous": true,
+        "source": "16_35",
+        "boneLengthError": 1.3877787807814457e-16,
+        "binding": {
+          "version": "R04-display-native-binding/1",
+          "nativeVertices": 25417,
+          "displayVertices": 266098,
+          "triangles": 531702,
+          "nativeBones": 104,
+          "maxInfluences": 9,
+          "weightsTruncated": false,
+          "neutralMaxErrorM": 2.220446049250313e-16,
+          "lineage": [
+            {
+              "from": 25417,
+              "to": 73443
+            },
+            {
+              "from": 73443,
+              "to": 91635
+            },
+            {
+              "from": 91635,
+              "to": 116827
+            },
+            {
+              "from": 116827,
+              "to": 150459
+            },
+            {
+              "from": 150459,
+              "to": 198406
+            },
+            {
+              "from": 198406,
+              "to": 221916
+            },
+            {
+              "from": 221916,
+              "to": 253406
+            },
+            {
+              "from": 253406,
+              "to": 266098
+            }
+          ],
+          "sameMesh": true,
+          "sameMaterial": true,
+          "bindHierarchyChanged": false,
+          "originalAttributesRetained": true,
+          "addedGPUBytes": 14621184,
+          "limitations": [
+            "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+            "native linear skinning and inherited joint correctives, not muscle/contact physics"
+          ]
+        },
+        "poseCache": {
+          "bakes": 658,
+          "width": 1024,
+          "height": 260,
+          "bytes": 12779520,
+          "nativeVertices": 266098,
+          "precision": "RGBA32F position + complete blended native normal/morph matrix",
+          "oneBakePerVisiblePose": true
+        },
+        "inertia": {
+          "linear": [
+            2.1743671225082237,
+            4.337287838818723,
+            1.2299782407997797
+          ],
+          "angular": [
+            0.152770909267002,
+            5.468960667592488,
+            -1.073769570369532
+          ],
+          "omega": [
+            0.059532500285859435,
+            0.7279211363925145,
+            0.1500094499868839
+          ],
+          "air": [
+            0.005203311137079614,
+            0.1839869771835239,
+            -2.9865091924084815
+          ],
+          "peak": 5.393831647248723
+        },
+        "airVelocity": [
+          0.13991769636049867,
+          0,
+          -2.9889025539159775
+        ],
+        "version": 705
+      },
+      "caches": {
+        "renderedFrames": 1686,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 46,
+          "nodes": 61,
+          "count": 45197,
+          "bytes": 51904512,
+          "cpuSubmitMS": 0.9000000357627869,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 1934,
+          "composites": 5802,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "count": 48,
+      "fps": 59.99812505926243,
+      "wallMS": 3200.099999964237,
+      "frames": 192,
+      "distance": {
+        "automatic": true,
+        "actors": 48,
+        "totalBudget": 128000,
+        "visibleStrands": 33318,
+        "focusIndex": 0,
+        "fineActors": 0,
+        "fineWeight": 0,
+        "activeDetailModes": 0,
+        "cpuMS": 0.10000002384185791,
+        "updateMS": 0.40000003576278687,
+        "carrierTriangles": 20998,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.09865191813754665,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 46.692655550781694,
+            "budget": 877.1880100036576,
+            "segments": 32,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.645138173151594,
+            "budget": 569.6140444304433,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.16467881361262,
+            "budget": 616.4592945267115,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.646680448657946,
+            "budget": 664.1148294480936,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 42.04737478089638,
+            "budget": 710.7777571814487,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 43.31553518913567,
+            "budget": 754.2002714831933,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 44.39548680274549,
+            "budget": 792.1428162684379,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.058670308102805,
+            "budget": 493.8222044049578,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.276126633520434,
+            "budget": 528.6490898044275,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 37.44427798278227,
+            "budget": 563.3134484918598,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 38.530713844314896,
+            "budget": 596.5318393357167,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 39.49946491137108,
+            "budget": 626.7021736384856,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 40.3132300825407,
+            "budget": 652.8030647082235,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.735746440700154,
+            "budget": 430.2883335441918,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.72024223464181,
+            "budget": 456.60630929868597,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 34.65228888885366,
+            "budget": 482.23747257572705,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 35.50797436587677,
+            "budget": 506.3770565289223,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.26182918265059,
+            "budget": 527.9494032108863,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 36.888380241349566,
+            "budget": 546.3519055256063,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.65229028323326,
+            "budget": 377.033516397014,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.456011889335276,
+            "budget": 397.09507283373,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.208545510630586,
+            "budget": 416.4699960117557,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 32.89219213975567,
+            "budget": 434.22657579394956,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.48870172153512,
+            "budget": 450.1265954280447,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 33.98033454574309,
+            "budget": 463.43530920892573,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.78255494773542,
+            "budget": 332.23463395253737,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.444882432876458,
+            "budget": 347.720857635752,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.059358877178838,
+            "budget": 362.40179142514825,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 30.61279264423081,
+            "budget": 376.0202491799305,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.091931227003577,
+            "budget": 387.8850637788756,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 31.484183184913427,
+            "budget": 397.7274658943303,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.101679667269,
+            "budget": 293.8004163149048,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.652442612934987,
+            "budget": 305.8630329846651,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.15950805084156,
+            "budget": 317.18315746616423,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 28.612956125843883,
+            "budget": 327.48050330378686,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.003030549107535,
+            "budget": 336.470312412986,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 29.32063170478484,
+            "budget": 343.8797774270536,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.586862639723833,
+            "budget": 261.8750158976381,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.048798684019893,
+            "budget": 271.4159651522386,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.471346270916047,
+            "budget": 280.2928693578964,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 26.846972552733813,
+            "budget": 288.30397409889713,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.168397505092802,
+            "budget": 295.24872919789317,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 27.42893362057284,
+            "budget": 300.93855982471644,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.217776054016717,
+            "budget": 234.60027080100224,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.60835008386491,
+            "budget": 242.22835754002165,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 24.963669812824197,
+            "budget": 249.27392420948405,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.277957113752457,
+            "budget": 255.59004633788336,
+            "segments": 16,
+            "fineWeight": 0
+          },
+          {
+            "pixels": 25.54570874894556,
+            "budget": 261.03329419438154,
+            "segments": 16,
+            "fineWeight": 0
+          }
+        ]
+      },
+      "motion": {
+        "mode": "run",
+        "playing": true,
+        "active": true,
+        "time": 8.245599999988091,
+        "duration": 0.8,
+        "continuous": true,
+        "source": "16_35",
+        "boneLengthError": 1.1102230246251565e-16,
+        "binding": {
+          "version": "R04-display-native-binding/1",
+          "nativeVertices": 25417,
+          "displayVertices": 266098,
+          "triangles": 531702,
+          "nativeBones": 104,
+          "maxInfluences": 9,
+          "weightsTruncated": false,
+          "neutralMaxErrorM": 2.220446049250313e-16,
+          "lineage": [
+            {
+              "from": 25417,
+              "to": 73443
+            },
+            {
+              "from": 73443,
+              "to": 91635
+            },
+            {
+              "from": 91635,
+              "to": 116827
+            },
+            {
+              "from": 116827,
+              "to": 150459
+            },
+            {
+              "from": 150459,
+              "to": 198406
+            },
+            {
+              "from": 198406,
+              "to": 221916
+            },
+            {
+              "from": 221916,
+              "to": 253406
+            },
+            {
+              "from": 253406,
+              "to": 266098
+            }
+          ],
+          "sameMesh": true,
+          "sameMaterial": true,
+          "bindHierarchyChanged": false,
+          "originalAttributesRetained": true,
+          "addedGPUBytes": 14621184,
+          "limitations": [
+            "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+            "native linear skinning and inherited joint correctives, not muscle/contact physics"
+          ]
+        },
+        "poseCache": {
+          "bakes": 892,
+          "width": 1024,
+          "height": 260,
+          "bytes": 12779520,
+          "nativeVertices": 266098,
+          "precision": "RGBA32F position + complete blended native normal/morph matrix",
+          "oneBakePerVisiblePose": true
+        },
+        "inertia": {
+          "linear": [
+            3.1175122145361183,
+            3.396821375440955,
+            -1.0565732928611897
+          ],
+          "angular": [
+            -0.2574392854825932,
+            0.08711574251260515,
+            3.7914375599058276
+          ],
+          "omega": [
+            0.15923479365672655,
+            -0.09767137227133144,
+            0.33215126442808474
+          ],
+          "air": [
+            -0.13460392270732863,
+            0.19500204703525936,
+            -2.9827791443893625
+          ],
+          "peak": 3.7378368031022955
+        },
+        "airVelocity": [
+          0.13991769636049867,
+          0,
+          -2.9889025539159775
+        ],
+        "version": 987
+      },
+      "caches": {
+        "renderedFrames": 1878,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 240,
+          "nodes": 33,
+          "count": 1134,
+          "bytes": 51904512,
+          "cpuSubmitMS": 0.40000003576278687,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 2128,
+          "composites": 6384,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    }
+  ],
+  "fluffyCases": [
+    {
+      "style": "medium",
+      "fps": 13.71031625134466,
+      "wallMS": 3282.199999988079,
+      "frames": 45,
+      "fullness": 2.7,
+      "physics": {
+        "constraintFallbacks": 0,
+        "infeasibleConstraints": 0,
+        "maxPenetration": 0,
+        "bundleContact": {
+          "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+          "coefficient": 0.24,
+          "bundleRadius": 0.0045,
+          "pairs": 8322,
+          "contacts": 841,
+          "frictionDissipationJ": 8.822985174391416e-09,
+          "cpuMS": 0.10000002384185791,
+          "individualFiberSelfCollision": false
+        },
+        "contactFriction": 0.18,
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "binding": 3.800000011920929,
+          "integration": 0.5999999642372131,
+          "sweep": 2,
+          "solves": 5,
+          "chain": 2.700000047683716,
+          "friction": 0.19999998807907104,
+          "forces": 6.399999976158142,
+          "constraints": 7.900000035762787,
+          "detail": 1.399999976158142
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.007128569686772402,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "medium",
+        "nominalLength": 0.2,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.016666666666666666,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 4.855791413405086e-08,
+        "maxOffset": 0.11107802093033219,
+        "maxVelocity": 1.9763513187930926,
+        "tipSpeed": 1.9945690169025343,
+        "kineticEnergy": 7.595135317744658e-05,
+        "steps": 219,
+        "time": 3.649999999999992,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 73.10000002384186,
+        "droppedSeconds": 0,
+        "revision": 135,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 64000,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 1,
+        "activeDetailModes": 128000,
+        "cpuMS": 0.5,
+        "updateMS": 73.69999998807907,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.02217005183472766,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 586.2570956578345,
+            "budget": 64000,
+            "segments": 76,
+            "fineWeight": 1
+          }
+        ]
+      },
+      "caches": {
+        "renderedFrames": 1923,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 47,
+          "nodes": 77,
+          "count": 64000,
+          "bytes": 51904512,
+          "cpuSubmitMS": 1.199999988079071,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 2185,
+          "composites": 6555,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    },
+    {
+      "style": "long",
+      "fps": 13.028329041054386,
+      "wallMS": 3300.5,
+      "frames": 43,
+      "fullness": 2.7,
+      "physics": {
+        "constraintFallbacks": 0,
+        "infeasibleConstraints": 0,
+        "maxPenetration": 0,
+        "bundleContact": {
+          "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+          "coefficient": 0.24,
+          "bundleRadius": 0.0045,
+          "pairs": 4042,
+          "contacts": 568,
+          "frictionDissipationJ": 5.819076494921928e-09,
+          "cpuMS": 0.10000002384185791,
+          "individualFiberSelfCollision": false
+        },
+        "contactFriction": 0.18,
+        "matrixBuilds": 1,
+        "quietSteps": 0,
+        "sleepDrift": 0,
+        "timings": {
+          "binding": 4.300000011920929,
+          "integration": 0.5999999642372131,
+          "sweep": 2,
+          "solves": 6.199999988079071,
+          "chain": 5.100000023841858,
+          "friction": 0.30000001192092896,
+          "forces": 6.899999976158142,
+          "constraints": 11.600000023841858,
+          "detail": 1
+        },
+        "detailModes": 128000,
+        "detailPeakMetres": 0.019021215054651285,
+        "airModel": "advected spatial field, transverse drag and exposure approximation",
+        "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+        "style": "long",
+        "nominalLength": 0.43,
+        "guides": 192,
+        "nodes": 25,
+        "fixedStep": 0.016666666666666666,
+        "rootPinned": true,
+        "rootError": 0,
+        "maxRelativeStretch": 0.0009705193599500728,
+        "maxOffset": 0.551887799382005,
+        "maxVelocity": 3.214123336879282,
+        "tipSpeed": 3.3483219191269016,
+        "kineticEnergy": 8.144624109611638e-05,
+        "steps": 213,
+        "time": 3.5499999999999923,
+        "wind": 0.38,
+        "windEnabled": true,
+        "paused": false,
+        "active": true,
+        "cpuMS": 83.39999997615814,
+        "droppedSeconds": 0,
+        "revision": 133,
+        "rootSway": false,
+        "stiffness": 0.5,
+        "damping": 1.7
+      },
+      "distance": {
+        "automatic": true,
+        "actors": 1,
+        "totalBudget": 128000,
+        "visibleStrands": 45197,
+        "focusIndex": 0,
+        "fineActors": 1,
+        "fineWeight": 0.9576446257163861,
+        "activeDetailModes": 90394,
+        "cpuMS": 0.30000001192092896,
+        "updateMS": 83.90000003576279,
+        "carrierTriangles": 0,
+        "restFieldCacheBytes": 12812288,
+        "sharedFollicleBuffers": true,
+        "sharedTransmittanceCache": true,
+        "coarseActive": true,
+        "fineContactSolverLimit": 1,
+        "independentCoarseModes": true,
+        "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+        "coarsePeak": 0.1631100610487452,
+        "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+        "meshSubstitution": false,
+        "entries": [
+          {
+            "pixels": 335.2660295881993,
+            "budget": 44940.67176137618,
+            "segments": 60,
+            "fineWeight": 0.9576446257163861
+          }
+        ]
+      },
+      "caches": {
+        "renderedFrames": 1966,
+        "pendingFrame": false,
+        "simulationActive": true,
+        "fineFiberCache": {
+          "bakes": 45,
+          "nodes": 61,
+          "count": 45197,
+          "bytes": 51904512,
+          "cpuSubmitMS": 1,
+          "method": "ordered GPU root-to-tip strand length and swept segment contact",
+          "oneFocusBuffer": true
+        },
+        "passCache": {
+          "bakes": 2240,
+          "composites": 6720,
+          "width": 1112,
+          "height": 942,
+          "bytes": 8380032
+        }
+      }
+    }
+  ],
+  "limits": [
+    "One complete native person plus native-head fixtures; no independent full-body or network cost.",
+    "One fine guide solver and one ordered display buffer; other heads retain twelve coarse physical coordinates.",
+    "Subtracted GPU means include timing noise.",
+    "Results are this machine and browser, not a guarantee for other devices."
+  ]
+}

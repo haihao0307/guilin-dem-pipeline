@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import * as THREE from '../references/three.module.js';
+import {CollisionProxies} from '../src/CollisionProxies.mjs';
+const c=Object.create(CollisionProxies.prototype);c.binding={inverse:new THREE.Matrix4()};c.friction=.18;c.dt=1/120;c.contacts=0;
+const frame=new THREE.Matrix4(),shape={r:[.05,.03,.04],frame,inverse:frame.clone().invert(),previous:frame.clone(),previousInverse:frame.clone().invert(),radius2:.055**2};c.shapes=[shape];
+const swept=c.sweepWorld([-.10,0,0],[.10,0,0]);assert(swept[0]<-.0499);assert(c.envelope(shape,swept).depth<=.00005);
+const projected=c.projectWorld([.049,0,0],false);assert(projected.changed);assert(projected.p[0]>=.04999);
+const contact=c.envelope(shape,[.05,0,0]),velocity=[-1,1,0];c.resolveVelocity(null,velocity,.05,contact);assert(velocity[0]>=0);assert(velocity[1]>0&&velocity[1]<1);
+shape.previous.makeTranslation(-.15,0,0);shape.previousInverse.copy(shape.previous).invert();shape.frame.makeTranslation(.15,0,0);shape.inverse.copy(shape.frame).invert();const movingSweep=c.sweepWorld([0,0,0],[0,0,0]);assert(movingSweep[0]>.1999,'moving collider must carry a stationary particle out of its swept volume');
+shape.previous.makeTranslation(.149,0,0);const movingContact=c.envelope(shape,[.20,0,0]),stationary=[0,0,0];c.resolveVelocity(null,stationary,.05,movingContact);assert(stationary[0]>.119,'relative normal velocity must include collider velocity');
+console.log(JSON.stringify({passed:true,analyticSweep:swept,movingSweep,frictionResult:velocity,movingSurfaceVelocity:stationary}));
