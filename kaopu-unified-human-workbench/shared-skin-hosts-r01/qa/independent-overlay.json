@@ -1,0 +1,112 @@
+{
+  "schema": "kaopu/independent-stable-overlay-verifier@1",
+  "verifier": "skin_compatibility_audit",
+  "checkedAt": "2026-10-15T10:14:35.685Z",
+  "status": "PASS",
+  "base": "G:\\Three.js\\Human\\MP05-Continuous-Demand-R01\\releases\\r08-ccccfd5ca9c1",
+  "output": "G:\\Three.js\\Human\\MP05-Continuous-Demand-R01\\releases\\r08-ccccfd5ca9c1-skin-r02",
+  "sourceBuild": "50f9dd769893584dedb62f0bc62db07ebcb1dcc0",
+  "sourcePromotionGate": true,
+  "userVisualAccepted": false,
+  "productionReady": false,
+  "newBrowserRunPerformed": false,
+  "baseBeforeHashesMatched": true,
+  "checks": [
+    {
+      "name": "frozen source before hashes retained in original release",
+      "passed": true,
+      "data": [
+        {
+          "file": "platform-runtime/preview.html",
+          "before": "c61f3a3dd1cfbe4455787a2f82bedb8b22a8e42439bda787c0c4d0182b44a662",
+          "after": "186025715f1c9722faa7971e685b893d6b18468a23d084ada2d8d61a7bad8da8"
+        },
+        {
+          "file": "platform-person.mjs",
+          "before": "85e3de66db838d8022ebde3f3ec5ede91b94faa50062cf39421aec1f4a1ebc8d",
+          "after": "f27fc6c5ea177e3b2b97e96f27a8df711e8686cf373386c49258824fdc938666"
+        },
+        {
+          "file": "platform-motion/bridge.mjs",
+          "before": "a021858ea99a844dd39440e4b7ca88e548f59f36187a17ada3c1812a04b79bde",
+          "after": "e5e404bc86161673b542d3d123c191bfef5bc9447e8c8db3eb26e0981759d4d7"
+        }
+      ]
+    },
+    {
+      "name": "only three of source files changed",
+      "passed": true,
+      "data": {
+        "sourceFiles": 83,
+        "changedSourceFiles": [
+          "platform-motion/bridge.mjs",
+          "platform-person.mjs",
+          "platform-runtime/preview.html"
+        ]
+      }
+    },
+    {
+      "name": "all original assets and physical code unchanged in overlay",
+      "passed": true,
+      "data": {
+        "baseFiles": 338,
+        "changed": [
+          "BUILD_MANIFEST.json",
+          "platform-motion/bridge.mjs",
+          "platform-person.mjs",
+          "platform-runtime/preview.html"
+        ],
+        "added": [
+          "CURRENT_SKIN.json",
+          "ORIGINAL_BUILD_MANIFEST.json"
+        ]
+      }
+    },
+    {
+      "name": "three new runtime files byte equal verified release",
+      "passed": true
+    },
+    {
+      "name": "original build manifest preserved byte for byte",
+      "passed": true
+    },
+    {
+      "name": "build metadata only adds separate shared-skin record",
+      "passed": true
+    },
+    {
+      "name": "all frozen surface modules retained exactly once",
+      "passed": true
+    },
+    {
+      "name": "current collection routes to stable skin overlay",
+      "passed": true,
+      "data": {
+        "collection": "G:\\Three.js\\Human\\Human-Clothing-Workbench\\服装鞋帽工作台.html",
+        "sha256": "6dfb052daf87d1f00f676c07d13ec1405957c5c41a06a5dc87991d5ee0295525",
+        "localClothingPath": "../MP05-Continuous-Demand-R01/releases/r08-ccccfd5ca9c1-skin-r02/?look=D01"
+      }
+    },
+    {
+      "name": "final actual public hair walk report passed",
+      "passed": true,
+      "data": {
+        "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/9de8f3c26ec2f8dd444548c4ea242f7ad198a0d6/kaopu-unified-human-workbench/shared-skin-hosts-r01/preview.html",
+        "finished": "2026-10-15T10:10:56.571Z",
+        "strands": 64000,
+        "rootError": 0,
+        "boneLengthError": 1.3877787807814457e-16
+      }
+    }
+  ],
+  "evidence": {
+    "overlayMetadata": {
+      "path": "G:\\Three.js\\Human\\Human-Skin-Integration-20261015\\STABLE_CLOTHING_SKIN_OVERLAY.json",
+      "sha256": "9c899d858fd4f60ea6565748965b29b15749ac841b53de6622aad5b49ed062c1"
+    },
+    "publicHairReport": {
+      "path": "G:\\Three.js\\Human\\Human-Skin-Integration-20261015\\qa\\public-hair-final.json",
+      "sha256": "f0e1381b7e90b6ca2532d0cfba040c40788fc671fa251415d4a9670d4297cd5a"
+    }
+  }
+}
