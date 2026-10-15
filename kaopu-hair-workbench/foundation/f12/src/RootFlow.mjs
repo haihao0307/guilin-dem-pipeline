@@ -11,11 +11,11 @@ export function traceRootFlow(node,id,clumpId,recipe,builder){
   let wanted=unit([clamp((profile.kind==='fringe'?1.55:1)*(goal[0]-p[0])/Math.max(.025,drop),-1.5,1.5),-1,clamp((goal[2]-p[2])/Math.max(.025,drop),-1.2,1.2)]);
   if(profile.kind==='body'&&remain<.025&&arc>.040){const curl=recipe.bobCurlMM*.001/.025*smooth((.025-remain)/.025);wanted=unit(add(wanted,[-profile.sign*curl,0,profile.layer==='back'||profile.layer==='nape'?curl*.25:-curl*.25]));}
   const blend=smooth((arc-(profile.kind==='fringe'?.003:.006))/(profile.kind==='fringe'?.020:.038));wanted=unit(mix(initial,wanted,blend));if(h.distance<.008&&dot(wanted,h.n)<.12){const v=project(wanted,h.n);if(len(v)>1e-8)wanted=unit(add(unit(v),mul(h.n,.12)));}
+  // Steer toward the scalp-relative support before the continuous direction
+  // filter. Projecting finished points back onto a height cap creates kinks.
+  const support=smooth((p[1]-.338)/.030)*smooth((node.chartP[1]-.345)/.030),lift=.0048+.0012*Math.sin(node.chartP[0]*71+node.chartP[2]*37);
+  if(h.distance<.030&&h.signed>lift&&support>0)wanted=unit(sub(wanted,mul(h.n,clamp((h.signed-lift)/.010,0,.9)*support)));
   dir=unit(mix(dir,wanted,1-Math.exp(-step/.018)));let q=add(p,mul(dir,step));for(let j=0;j<2;j++){const f=nearest(q),gap=Math.min(.0012,arc*.10);if(f.signed>=gap)break;q=add(q,mul(f.n,gap-f.signed));}
-  // A soft scalp-relative support target keeps crown turns close to the
-  // head, instead of leaving a few near-part fibres as tall returning loops.
-  const cap=nearest(q),support=smooth((q[1]-.338)/.030)*smooth((node.chartP[1]-.345)/.030),lift=.0048+.0012*Math.sin(node.chartP[0]*71+node.chartP[2]*37);
-  if(cap.distance<.030&&cap.signed>lift&&support>0)q=add(q,mul(cap.n,-(cap.signed-lift)*support*.35));
   if(q[1]<profile.hem&&p[1]>profile.hem&&k>8)q=mix(p,q,(p[1]-profile.hem)/(p[1]-q[1]));arc+=len(sub(q,p));points.push(q);arcs.push(arc);dir=unit(sub(q,p));p=q;
  }
  return {points,arcs,length:arc,at(u){const d=clamp(u)*arc;let lo=0,hi=arcs.length-1;while(lo+1<hi){const m=(lo+hi)>>1;if(arcs[m]<d)lo=m;else hi=m;}return mix(points[lo],points[hi],(d-arcs[lo])/Math.max(1e-9,arcs[hi]-arcs[lo]));}};
