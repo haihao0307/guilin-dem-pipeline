@@ -24,3 +24,8 @@
 `src/` 为这一版的组合与新增实现，`references/manifest.json` 冻结两个用户指定网页的原始来源与哈希。原引擎与光学来源的许可 / 声明保存在 `references/`。原 fur 页面中的短绒与针毛逻辑不参与头发运行。
 
 构建：`node tools/build.cjs`。当前工具使用工作站现有 esbuild 0.25.0；预览 HTML 本身没有此依赖。`tools/serve.cjs` 可在本机 8767 端口供后台检查。`tests/` 与截图工具使用工作站现有 Playwright / Chrome 路径；不会操作桌面鼠标。
+
+## 公开预览
+
+- [男士中长发](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/a40770509a935aff331213c5b69df02d99e661c6/kaopu-hair-workbench/research/hair-system-r03/preview-medium.html)
+- [长发](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/a40770509a935aff331213c5b69df02d99e661c6/kaopu-hair-workbench/research/hair-system-r03/preview-long.html)
