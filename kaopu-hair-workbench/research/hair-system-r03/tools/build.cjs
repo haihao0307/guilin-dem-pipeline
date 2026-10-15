@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const esbuild=require('G:/Three.js/Human/Human-Hair-F03-Preparation-20261014/.local-tools/node_modules/esbuild');
+const root=path.resolve(__dirname,'..');
+esbuild.buildSync({entryPoints:[path.join(root,'src/app.mjs')],bundle:true,format:'iife',outfile:path.join(root,'dist/runtime.js'),minify:true,legalComments:'inline'});
+let html=fs.readFileSync(path.join(root,'index.html'),'utf8'),js=fs.readFileSync(path.join(root,'dist/runtime.js'),'utf8');
+html=html.replace('<script type="module" src="./src/app.mjs"></script>',()=>'<script>'+js.replace(/<\/script/gi,'<\\/script')+'</script>');
+if((html.match(/<script/g)||[]).length!==1||(html.match(/<\/script>/g)||[]).length!==1)throw Error('Standalone script boundary corrupted');
+new (require('vm').Script)(js);
+fs.writeFileSync(path.join(root,'preview.html'),html);
+for(const style of ['medium','long'])fs.writeFileSync(path.join(root,'preview-'+style+'.html'),html.replace('name="hair-style" content="medium"','name="hair-style" content="'+style+'"'));
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+const files=['index.html','tools/build.cjs','preview.html','preview-medium.html','preview-long.html','src/app.mjs','src/physics.mjs','src/shape-shader.mjs','src/specimen.mjs','src/optics.mjs','src/wind.mjs','src/detail-dynamics.mjs'];
+fs.writeFileSync(path.join(root,'BUILD_MANIFEST.json'),JSON.stringify({version:'HAIR-FIBER-SYSTEM-R03',builtAt:new Date().toISOString(),files:Object.fromEntries(files.map(f=>[f,hash(fs.readFileSync(path.join(root,f)))])),sources:['Humanoid-Rig-Lab-Next@e845835b3e04c56a65c405ff87aece955b161b4d/fur-workshop/r02','guilin-dem-pipeline@1e3af7b2887916ab6430652bead644b45cd5c7cb/kaopu-hair-workbench/research/fiber-r05'],strands:10000,renderNodes:81,guides:85,guideNodes:33,stepHz:120,units:'metres',calibratedBiologicalMaterial:false},null,2));
+console.log('Built self-contained preview.html:',html.length,'characters');
