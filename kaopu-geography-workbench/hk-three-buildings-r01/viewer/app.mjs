@@ -22,7 +22,7 @@ const fill=new THREE.DirectionalLight(0xd8e4ef,.5);fill.position.set(-70,40,-60)
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(700,500),new THREE.MeshStandardMaterial({color:0xd4d8c7,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.055;ground.receiveShadow=true;context.add(ground);
 const grid=new THREE.GridHelper(500,50,0xbec8b5,0xd0d6c7);grid.position.y=-.048;grid.material.transparent=true;grid.material.opacity=.28;context.add(grid);
 function requestRender(){if(framePending)return;framePending=true;requestAnimationFrame(()=>{framePending=false;render();});}
-function render(){const t=performance.now();renderer.render(scene,camera);lastRenderMs=performance.now()-t;frameCount++;$('perf').textContent=`${lastRenderMs.toFixed(1)} ms 提交 · ${renderer.info.render.calls} 次绘制`;return stats();}
+function render(){const t=performance.now();renderer.render(scene,camera);lastRenderMs=performance.now()-t;frameCount++;$('perf').textContent=`${lastRenderMs.toFixed(1)} ms CPU提交 · ${renderer.info.render.calls} 次绘制`;return stats();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();requestRender();}
 new ResizeObserver(resize).observe($('stage'));
 function getBounds(){const b=new THREE.Box3();for(const o of objects)if(o.group.visible)b.expandByObject(o.group);return b;}
@@ -48,12 +48,16 @@ function setView(v){currentView=v;const box=getBounds(),center=box.getCenter(new
   const radius=size.length()/2;const dist=radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.13;
   const dir=selected==='all'?new THREE.Vector3(.5,.33,1).normalize():new THREE.Vector3(1,.55,1.35).normalize();
   controls.target.copy(center);camera.position.copy(center).addScaledVector(dir,dist);camera.near=.05;camera.far=Math.max(1500,dist*8);
+ }else if(v==='mid'){
+  // Preserve corners and roof/wall relationships in the middle-distance view.
+  // It is an architectural crop of the actual building, not a front-on swatch.
+  const o=objects[selected==='all'?0:selected],local=o.mesh.geometry.boundingBox.getCenter(new THREE.Vector3()),target=local.add(o.group.position);
+  const distance=Math.max(12,o.size.length()*.9),dir=new THREE.Vector3(1,.28,1.35).normalize();
+  controls.target.copy(target);camera.position.copy(target).addScaledVector(dir,distance);camera.near=.03;camera.far=2000;
  }else{
   const o=objects[selected==='all'?0:selected],f=o.nearFace,target=f.center.clone().add(o.group.position);
-  const normal=f.normal.clone();
-  const distance=v==='near'?1.25:Math.min(18,Math.max(8,o.size.y*.33));
-  controls.target.copy(target);camera.position.copy(target).addScaledVector(normal,distance);camera.position.y+=v==='near'?.11:distance*.08;
-  camera.near=v==='near'?.01:.05;camera.far=2000;
+  controls.target.copy(target);camera.position.copy(target).addScaledVector(f.normal,1.25);camera.position.y+=.11;
+  camera.near=.01;camera.far=2000;
  }
  camera.updateProjectionMatrix();controls.update();for(const b of document.querySelectorAll('[data-view]'))b.classList.toggle('active',b.dataset.view===v);
  updateLabels();render();return cameraSnapshot();}
@@ -62,9 +66,23 @@ function setParams(p){Object.assign(settings,p);for(const o of chosen())for(cons
 function stats(){return {ready:window.__KAOPU_TRIAL__.ready,selected,view:currentView,mode,frames:frameCount,lastRenderCpuMs:lastRenderMs,renderer:renderer.info.render,memory:renderer.info.memory,pixelRatio:renderer.getPixelRatio(),drawingBuffer:[canvas.width,canvas.height],geometry:objects.map(o=>({id:o.entry.id,triangles:o.mesh.geometry.index?o.mesh.geometry.index.count/3:o.mesh.geometry.attributes.position.count/3,sourceTriangles:o.entry.sourceTriangles,sourceLoaded:!!o.source,size:o.size.toArray(),placement:o.group.position.toArray()})),settings:{...settings},camera:cameraSnapshot(),errors,limits:['CPU render submission timing is not GPU frame time','Surface microheight is shading-only','Far-footprint mean is approximate','Creative windows are not measured openings']};}
 function updateLabels(){if(!objects.length)return;const all=selected==='all',o=objects[all?0:selected];$('viewTitle').textContent=all&&currentView==='whole'?'三栋 · 同一真实比例':o.entry.label;$('selectionLabel').textContent=all?'三栋独立实测主形':o.entry.label;$('geometryInfo').textContent=all?`${objects.reduce((s,o)=>s+o.triangles,0).toLocaleString()} 重建三角形 · 共享母体`:`${o.size.x.toFixed(1)} × ${o.size.z.toFixed(1)} × ${o.size.y.toFixed(1)} m · 不缩放`;
  $('viewNote').textContent=mode==='source'?'原件几何对照。同相机、同坐标，材质不代表原建筑外观。':currentView==='near'?'原建筑墙面上的程序材质近景。微表面不改变测量轮廓。':currentView==='mid'?'中景观察：砖缝与颗粒按屏幕足迹逐渐滤去。':all?'三栋独立源建筑，展示位置已并排排列；几何尺寸不变。':'实测主形与创作表面分离。窗门、楼层和内部空间未被推定。';}
-function bestFace(g){const a=g.attributes.position,n=g.attributes.normal;let best=null,score=-Infinity;
- for(let i=0;i<a.count;i+=3){const p=[0,1,2].map(j=>new THREE.Vector3().fromBufferAttribute(a,i+j)),normal=new THREE.Vector3().crossVectors(p[1].clone().sub(p[0]),p[2].clone().sub(p[0]));const area=normal.length()/2;normal.normalize();if(Math.abs(normal.y)>.15)continue;const center=p[0].clone().add(p[1]).add(p[2]).multiplyScalar(1/3);const facing=Math.max(.1,normal.dot(new THREE.Vector3(.4,0,1).normalize()));const s=area*facing;if(s>score){score=s;best={center,normal};}}
- return best||{center:new THREE.Vector3(0,5,0),normal:new THREE.Vector3(0,0,1)};}
+function bestFace(g){
+ const a=g.attributes.position;let best=null,score=-Infinity;
+ const material=new THREE.MeshBasicMaterial({side:THREE.DoubleSide}),probe=new THREE.Mesh(g,material),ray=new THREE.Raycaster();probe.updateMatrixWorld(true);
+ const reach=g.boundingBox.getSize(new THREE.Vector3()).length()*2+1;
+ for(let i=0;i<a.count;i+=3){
+  const p=[0,1,2].map(j=>new THREE.Vector3().fromBufferAttribute(a,i+j));
+  const normal=new THREE.Vector3().crossVectors(p[1].clone().sub(p[0]),p[2].clone().sub(p[0])),area=normal.length()/2;normal.normalize();
+  if(Math.abs(normal.y)>.15)continue;
+  const center=p[0].clone().add(p[1]).add(p[2]).multiplyScalar(1/3),facing=normal.dot(new THREE.Vector3(.4,0,1).normalize());if(facing<.12)continue;
+  // An outward normal may point into a different wing on a concave building.
+  // Keep only a wall whose centre is actually the first hit from outside.
+  ray.set(center.clone().addScaledVector(normal,reach),normal.clone().negate());
+  const hit=ray.intersectObject(probe,false)[0];if(!hit||hit.point.distanceTo(center)>.002)continue;
+  const value=area*facing;if(value>score){score=value;best={center,normal,triangle:i/3,unoccludedNormalRay:true};}
+ }
+ material.dispose();if(!best)throw Error('No unobstructed measured facade available for close view');return best;
+}
 async function json(url){const r=await fetch(url);if(!r.ok)throw Error(`${r.status} ${url}`);return r.json();}
 function urlFor(path){return new URL(path,new URL('../',location.href)).href;}
 async function load(){

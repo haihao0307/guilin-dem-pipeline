@@ -11,7 +11,7 @@ const report = {schema:'hk-three-buildings-browser-qa/1', started:new Date().toI
   commit:process.env.GITHUB_SHA||null, passed:false, screenshots:[], checks:[], consoleErrors:[],
   pageErrors:[], failedRequests:[], metrics:[], notes:[
     'Screenshots are captured from the actual Chromium page and WebGL canvas.',
-    'SwiftShader software-renderer measurements are diagnostic costs, not physical-device FPS.',
+    'Synchronous draw plus one-pixel readback wall times include CPU, driver, GPU and readback; they are not isolated GPU timings or physical-device FPS.',
     'Mobile is an emulated viewport, not a physical-phone acceptance test.'
   ]};
 const types={'.js':'text/javascript','.mjs':'text/javascript','.html':'text/html','.json':'application/json','.css':'text/css','.gltf':'model/gltf+json','.bin':'application/octet-stream','.png':'image/png'};
@@ -85,6 +85,30 @@ function assert(name,ok,detail){report.checks.push({name,passed:!!ok,detail});wr
     await call('setParams',savedSettings);const restoredPixels=await pixelHash();
     assert('editable material changes actual pixels',changedPixels.sha256!==stable[0].sha256,{before:stable[0],changed:changedPixels});
     assert('returning parameters restores actual pixels',restoredPixels.sha256===stable[0].sha256,{before:stable[0],restored:restoredPixels});
+    report.cameraRoundTrips=[];
+    for(let building=0;building<3;building++){
+      await call('selectBuilding',building);await call('setView','near');await call('setMode','material');
+      const pose=await page.evaluate(()=>({position:window.__KAOPU_TRIAL__.camera.position.toArray(),quaternion:window.__KAOPU_TRIAL__.camera.quaternion.toArray(),target:window.__KAOPU_TRIAL__.cameraSnapshot().target}));
+      const states=[];
+      for(const offset of [0,.004,.008,.004,0]){
+        await page.evaluate(({pose,offset})=>{const a=window.__KAOPU_TRIAL__;a.camera.position.fromArray(pose.position);a.camera.position.x+=offset;if(offset)a.camera.lookAt(...pose.target);else a.camera.quaternion.fromArray(pose.quaternion);a.camera.updateMatrixWorld();a.render();},{pose,offset});
+        states.push({offsetMetres:offset,...await pixelHash()});
+      }
+      assert(`building ${building+1}: camera-return pixels repeat`,states[0].sha256===states[4].sha256&&states[1].sha256===states[3].sha256,states);
+      report.cameraRoundTrips.push({building,states,scope:'Fixed material coordinates and deterministic return over an 8 mm camera shift; no whole-path shimmer or TAA certification'});
+    }
+    await call('selectBuilding',0);await call('setView','near');
+    report.shadowAblation=[];
+    for(const building of [1,2]){
+      await call('selectBuilding',building);await call('setView','near');
+      const enabled=await page.evaluate(()=>window.__KAOPU_TRIAL__.renderer.shadowMap.enabled);
+      await shot(`building-${building+1}-shadow-on-near`);
+      await page.evaluate(()=>{const a=window.__KAOPU_TRIAL__;a.renderer.shadowMap.enabled=false;a.scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[])m.needsUpdate=true;});a.render();});
+      await shot(`building-${building+1}-shadow-off-near`);
+      report.shadowAblation.push({building,originalShadowEnabled:enabled,scope:'Same camera, same geometry, same material functions; only shadow-map receiving is toggled'});
+      await page.evaluate(enabled=>{const a=window.__KAOPU_TRIAL__;a.renderer.shadowMap.enabled=enabled;a.scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[])m.needsUpdate=true;});a.render();},enabled);
+    }
+    await call('selectBuilding',0);await call('setView','near');
     for(const material of ['brick','plaster','concrete']){await call('setMaterial',material);await shot('material-'+material+'-near');}
     await call('setParams',{age:0.85,wet:0.9,windows:false});await shot('material-weathering-test');
     await call('setParams',{age:0.45,wet:0.25,windows:true});await shot('hypothetical-windows-explicit');
@@ -97,20 +121,20 @@ function assert(name,ok,detail){report.checks.push({name,passed:!!ok,detail});wr
     assert('all three matching courts visible',await page.evaluate(()=>window.__KAOPU_TRIAL__.context.children.filter(o=>o.name.startsWith('Authored presentation court:')&&o.visible).length)===3);
     await page.locator('#context').uncheck();assert('context checkbox hides real context',await page.evaluate(()=>window.__KAOPU_TRIAL__.context.visible===false));
     await page.locator('#context').check();assert('context checkbox restores real context',await page.evaluate(()=>window.__KAOPU_TRIAL__.context.visible===true));
-    // GPU-completed timing: manual draws plus gl.finish include backend completion.
+    // gl.finish alone can measure IPC submission. Force synchronous pixel readback.
     for(const mode of ['source','reconstruction','material']){
       await call('setMode',mode);
       const result=await page.evaluate(async mode=>{
         const api=window.__KAOPU_TRIAL__,canvas=document.querySelector('canvas');
         const gl=canvas?.getContext('webgl2')||canvas?.getContext('webgl');
         if(!gl)throw Error('No actual WebGL context');
-        const samples=[];
+        const samples=[],pixel=new Uint8Array(4);
         for(let i=0;i<17;i++){
-          const t=performance.now();api.render();gl.finish();const ms=performance.now()-t;if(i>=5)samples.push(ms);
+          const t=performance.now();api.render();gl.finish();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);const ms=performance.now()-t;if(i>=5)samples.push(ms);
           await new Promise(r=>setTimeout(r,0));
         }
         const sorted=[...samples].sort((a,b)=>a-b),ext=gl.getExtension('WEBGL_debug_renderer_info');
-        return {mode,samplesMs:samples,medianMs:sorted[Math.floor(sorted.length/2)],p95Ms:sorted[Math.floor((sorted.length-1)*.95)],
+        return {mode,timingMethod:'CPU wall time: draw + finish + synchronous one-pixel readback; not isolated GPU duration',samplesMs:samples,medianMs:sorted[Math.floor(sorted.length/2)],p95Ms:sorted[Math.floor((sorted.length-1)*.95)],
           renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),version:gl.getParameter(gl.VERSION),
           drawingBuffer:[gl.drawingBufferWidth,gl.drawingBufferHeight],stats:api.stats(),glError:gl.getError()};
       },mode);
