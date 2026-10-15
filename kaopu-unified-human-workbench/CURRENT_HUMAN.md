@@ -1,8 +1,10 @@
 # KAOPU 总平台人物当前主线
 
-当前主线候选：`HUMAN-INTEGRATED-R07`。
+当前主线：`HUMAN-INTEGRATED-R07`，已于 2026-10-15 以非强制快进方式合入 `main`。
 
 运行入口：`kaopu-unified-human-workbench/human-integrated-r07/preview.html`。
+
+固定主线运行提交：`d29534672989de3b9373bced5abf3ac333be3dee`。
 
 本版不是把实验页面作为 iframe 或外链挂进主线，而是将已经通过固定公网验证的全身程序皮肤运行时、可读源码、构建脚本和测试脚本作为总平台人物 R07 的完整目录接入。为了让主线能够重新构建，而不是只保存一个静态 HTML，同时接入其两个冻结依赖：`human-integrated-r06` 和 `head-procedural-r01`。三者均按已验证 Git tree 精确复制，没有合并实验分支的无关祖先历史。
 
