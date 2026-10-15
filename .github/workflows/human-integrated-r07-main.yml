@@ -1,0 +1,99 @@
+name: Human integrated R07 mainline promotion proof
+on:
+  push:
+    branches: [integration/human-r07-skin-main-20261015, main]
+    paths:
+      - 'kaopu-unified-human-workbench/human-integrated-r06/**'
+      - 'kaopu-unified-human-workbench/head-procedural-r01/**'
+      - 'kaopu-unified-human-workbench/human-integrated-r07/**'
+      - 'kaopu-unified-human-workbench/CURRENT_HUMAN.json'
+      - 'kaopu-unified-human-workbench/CURRENT_HUMAN.md'
+      - 'docs/handoffs/human-integrated-r07-main-20261015/**'
+      - '.github/workflows/human-integrated-r07-main.yml'
+permissions: {contents: read}
+concurrency:
+  group: human-integrated-r07-main-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-save --package-lock=false playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - name: Verify bounded promotion and preserved main content
+        run: |
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/ear-continuity-r06)" = "d483c0e0889e2fdc994b33f41a6c587a18ccd88a"
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/human-integrated-r06)" = "55a254681844712c3a9a1b7b609a1549dec84a17"
+          test "$(git rev-parse HEAD:kaopu-unified-human-workbench/head-procedural-r01)" = "059f87d550c2751ea74c7f879967ab83509b8f9b"
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07')
+          current=json.loads(Path('kaopu-unified-human-workbench/CURRENT_HUMAN.json').read_text())
+          assert current['version']=='HUMAN-INTEGRATED-R07'
+          assert current['userApprovedForMainIntegration'] is True
+          assert current['ancestorHistoriesMerged'] is False
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']=='1923ee7af9e121c40caa2089a49ed064e05451fe'
+          assert m['previewSHA256']=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          assert m['wholeBodySkin'] and not m['canonicalGeometryChanged'] and m['referenceAssetsImported']==0
+          PY
+      - name: Rebuild exact tested runtime from copied total-platform dependencies
+        env:
+          SOURCE_SHA: 1923ee7af9e121c40caa2089a49ed064e05451fe
+        run: |
+          node kaopu-unified-human-workbench/human-integrated-r07/build.cjs
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07')
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']=='1923ee7af9e121c40caa2089a49ed064e05451fe'
+          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==m['previewSHA256']=='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          PY
+      - name: Candidate browser regressions on promoted total platform
+        env:
+          BODY_OUT: r07-evidence/candidate-body
+          QA_OUT: r07-evidence/candidate-core
+          CONTROL_OUT: r07-evidence/candidate-controls
+        run: |
+          node kaopu-unified-human-workbench/human-integrated-r07/verify-body.cjs
+          node kaopu-unified-human-workbench/human-integrated-r07/verify.cjs
+          node kaopu-unified-human-workbench/human-integrated-r07/verify-controls.cjs
+      - name: Exact public HTTPS browser regressions on new directory
+        env:
+          BODY_OUT: r07-evidence/public-body
+          QA_OUT: r07-evidence/public-core
+          CONTROL_OUT: r07-evidence/public-controls
+        run: |
+          export PREVIEW_URL="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${GITHUB_SHA}/kaopu-unified-human-workbench/human-integrated-r07/preview.html"
+          node kaopu-unified-human-workbench/human-integrated-r07/verify-body.cjs
+          node kaopu-unified-human-workbench/human-integrated-r07/verify.cjs
+          node kaopu-unified-human-workbench/human-integrated-r07/verify-controls.cjs
+      - name: Gate reports without weakening original assertions
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          groups={'candidate-body':11,'candidate-core':12,'candidate-controls':5,'public-body':11,'public-core':12,'public-controls':5}
+          for name,count in groups.items():
+            q=json.loads(Path(f'r07-evidence/{name}/qa.json').read_text())
+            assert q['completed'] and len(q['tests'])==count and all(x['passed'] for x in q['tests']),name
+            for field in ['errors','pageErrors','consoleErrors','failedRequests','referenceRequests']:
+              assert not q.get(field),(name,field,q.get(field))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: human-integrated-r07-main-${{ github.run_id }}
+          path: |
+            r07-evidence/
+            kaopu-unified-human-workbench/CURRENT_HUMAN.json
+            kaopu-unified-human-workbench/human-integrated-r07/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/human-integrated-r07/preview.html
+          retention-days: 14
