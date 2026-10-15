@@ -1,0 +1,72 @@
+name: Knit public P01 external HTTPS verification
+on:
+  push:
+    branches: [feature/knit-public-lookdev-p01-20261014]
+    paths: [.github/workflows/knit-public-p01-public.yml]
+permissions:
+  contents: write
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-public-p01
+            docs/knit-public-p01
+          fetch-depth: 1
+      - name: Wait for the exact already-published public file
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib,time
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fabric-workbench/knit-public-p01/index.html'
+          expected='4c242ead757152e34aab251338df0c06d6c966b8d609862ea3e0614ad6097e2b'
+          for attempt in range(18):
+            try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'Cache-Control':'no-cache'}),timeout=20) as r:
+                data=r.read();digest=hashlib.sha256(data).hexdigest()
+              if digest==expected:print('Exact public HTML confirmed:',digest,len(data));break
+              print('Waiting for matching deployment',attempt,digest)
+            except Exception as e:print('Waiting for Pages',attempt,str(e))
+            time.sleep(10)
+          else:raise SystemExit('Exact public HTML not available; delivery incomplete')
+          PY
+      - name: Install browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Actual external browser interaction, not localhost
+        env:
+          KNIT_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fabric-workbench/knit-public-p01/index.html
+          KNIT_QA_OUT: public-qa
+        run: python kaopu-fabric-workbench/knit-public-p01/qa.py
+      - name: Validate and retain external delivery evidence
+        run: |
+          python - <<'PY'
+          import pathlib,json,shutil
+          r=json.loads(pathlib.Path('public-qa/REPORT.json').read_text())
+          assert r['passed'] and r['public'] and all(r['checks'].values())
+          assert r['htmlSHA256']=='4c242ead757152e34aab251338df0c06d6c966b8d609862ea3e0614ad6097e2b'
+          dest=pathlib.Path('docs/knit-public-p01/public');dest.mkdir(parents=True,exist_ok=True)
+          shutil.copytree('public-qa',dest,dirs_exist_ok=True)
+          state={'version':'KNIT-PUBLIC-P01','publicURL':r['url'],'publicURLVerified':True,'publicBrowserChecksPassed':len(r['checks']),'htmlSHA256':r['htmlSHA256'],'htmlBytes':753073,'sourceCommit':'7d1ee80eb9e9b7da553b5110fc1b3173d7f3062b','buildCommit':'3df3869059a3382da14b2b8138de5a02262c6b38','publicationCommit':'66469c5c334533c374b46234b2e04f53e4f6c178','publicBaseline':'dbd18e28e69927c07cb0e8b3d755ce1ee8c36d0c','draftPR':279,'privateRuntimeImported':False,'nativeR15':False,'nativeR01_2Published':False,'clothPhysics':False,'visualAcceptedByUser':False,'referenceQualityAchieved':False,'device':r['device'],'privateRepositoryChanged':False,'existingPublicFilesChanged':False,'limitations':['Independent newly authored public appearance specimen, not the private R15/R01.2 runtime','No garment dynamics or manufacturing needle-path certification','Tube-like yarn structure and imperfect fine-fibre appearance remain; not film-quality acceptance','Mobile viewport only, no phone hardware or consumer GPU speed certification'],'userFacingStatus':'独立公开预览已交付；原生R15/R01.2整体发布和参考质感目标仍未完成。'}
+          (dest/'DELIVERY.json').write_text(json.dumps(state,ensure_ascii=False,indent=2)+'\n')
+          PY
+          BRANCH=feature/knit-public-lookdev-p01-20261014
+          CURRENT=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          test "$CURRENT" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/knit-public-p01/public
+          git commit -m 'docs(knit-public): archive real external HTTPS checks and honest delivery scope'
+          git push origin "HEAD:refs/heads/$BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-public-p01-external-evidence
+          path: |
+            public-qa/
+            docs/knit-public-p01/public/DELIVERY.json
+          retention-days: 14
