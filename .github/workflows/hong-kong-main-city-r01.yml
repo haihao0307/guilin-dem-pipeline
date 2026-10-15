@@ -2,7 +2,7 @@ name: Hong Kong main city map independent integration QA
 on:
   push:
     branches: ['qa/hong-kong-main-city-r01-20261015']
-    paths: ['kaopu-geography-workbench/hong-kong-main-city-r03/**', '.github/workflows/hong-kong-main-city-r01.yml']
+    paths: ['kaopu-geography-workbench/hong-kong-main-city-r04/**', '.github/workflows/hong-kong-main-city-r01.yml']
 permissions:
   contents: read
 concurrency:
@@ -17,6 +17,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
+            kaopu-geography-workbench/hong-kong-main-city-r04
             kaopu-geography-workbench/hong-kong-main-city-r03
             kaopu-geography-workbench/hong-kong-main-city-r02
             kaopu-geography-workbench/hong-kong-main-city-r01
@@ -29,10 +30,10 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
       - name: Verify fixed host and start main map
         run: |
-          cd kaopu-geography-workbench/hong-kong-main-city-r03
+          cd kaopu-geography-workbench/hong-kong-main-city-r04
           mkdir -p evidence
           node --check integration.mjs
-          node --check city-buildings/runtime.mjs
+          node --check route/route-runtime.mjs
           node --check qa/browser.cjs
           node qa/preflight.cjs > evidence/LOCAL_CONTRACT_RESULT.json
           python - <<'PY'
@@ -41,7 +42,7 @@ jobs:
           expected=json.loads(pathlib.Path('../hong-kong-main-city-r02/base-host-patches.json').read_text())['sourceSha256']
           assert hashlib.sha256(p).hexdigest()==expected
           PY
-          KAOPU_GROUND_ONLY=1 nohup node qa/browser.cjs > evidence/browser.log 2>&1 &
+          nohup node qa/browser.cjs > evidence/browser.log 2>&1 &
           for i in $(seq 1 750); do
             test -f evidence/FIRST_FRAME.json && exit 0
             test -f evidence/browser-exit.txt && { cat evidence/browser.log; exit 1; }
@@ -53,13 +54,13 @@ jobs:
         with:
           name: hk-main-city-r03-first-real-frame-${{ github.sha }}
           path: |
-            kaopu-geography-workbench/hong-kong-main-city-r03/evidence/01-main-map-r03-ground-closure.png
-            kaopu-geography-workbench/hong-kong-main-city-r03/evidence/FIRST_FRAME.json
+            kaopu-geography-workbench/hong-kong-main-city-r04/evidence/01-main-map-r04-route-overview.png
+            kaopu-geography-workbench/hong-kong-main-city-r04/evidence/FIRST_FRAME.json
           if-no-files-found: error
           retention-days: 14
       - name: Complete main map integration checks
         run: |
-          cd kaopu-geography-workbench/hong-kong-main-city-r03
+          cd kaopu-geography-workbench/hong-kong-main-city-r04
           for i in $(seq 1 600); do
             if test -f evidence/browser-exit.txt; then cat evidence/browser.log; exit $(cat evidence/browser-exit.txt); fi
             sleep 2
@@ -70,6 +71,6 @@ jobs:
         if: always()
         with:
           name: hk-main-city-r03-${{ github.sha }}
-          path: kaopu-geography-workbench/hong-kong-main-city-r03/evidence
+          path: kaopu-geography-workbench/hong-kong-main-city-r04/evidence
           if-no-files-found: error
           retention-days: 14
