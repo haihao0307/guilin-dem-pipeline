@@ -38,7 +38,7 @@ one('U.uTraceAmount.value=comparison?0:traceSettings.amount;',
     """U.uTraceAmount.value=0; // Old R03 marks become read-only event source, not double-painted.
 U.uDnaOn.value=dnaEnabled&&!comparison?1:0;U.uDnaPhase.value=dnaSettings.phase;U.uDnaDebug.value=dnaEnabled&&!comparison?dnaDebug:0;
 for(const [k] of window.KAOPU_SKIN_VARIATION_DNA_R01.spec){
- const name='uDna'+k[0].toUpperCase()+k.slice(1);if(!U[name])throw Error('DNA uniform missing '+name);U[name].value=dnaSettings[k];
+ const name='uDna'+(k==='pie'?'PIE':k==='pih'?'PIH':k[0].toUpperCase()+k.slice(1));if(!U[name])throw Error('DNA uniform missing '+name);U[name].value=dnaSettings[k];
 }""")
 one('U.uTraceDebug.value=traceSettings.debug;','U.uTraceDebug.value=0;')
 # Legacy fields stay in DOM for backward compatibility but are invisible and always disabled.
