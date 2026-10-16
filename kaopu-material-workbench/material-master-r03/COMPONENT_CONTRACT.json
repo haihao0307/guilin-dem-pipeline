@@ -1,0 +1,84 @@
+{
+  "version": "HK_MATERIAL_COMPONENT_01",
+  "status": "Integration contract only; no facade recognition or automatic building assignment implemented",
+  "component": {
+    "objectId": "building-id-required",
+    "componentId": "measured-component-id-required",
+    "semanticType": "wall | door | window | cornice | railing | other",
+    "geometry": {
+      "units": "m",
+      "localToBuilding": "4x4 transform",
+      "restCoordinateOrigin": [
+        0,
+        0,
+        0
+      ],
+      "surfaceNormalLocal": [
+        0,
+        0,
+        1
+      ],
+      "gravityWorld": [
+        0,
+        -1,
+        0
+      ],
+      "measuredSizeM": null
+    },
+    "recipe": {
+      "materialId": null,
+      "sourceRevision": null,
+      "substrate": null,
+      "surfaceTreatment": null,
+      "seed": 1,
+      "parameters": {
+        "wear": 0,
+        "runoffHistory": 0,
+        "currentWetness": 0,
+        "repair": 0
+      },
+      "coatingLayers": []
+    },
+    "evidence": {
+      "photoSource": null,
+      "photoRights": null,
+      "viewId": null,
+      "alignmentTransform": null,
+      "era": null,
+      "measurementMethod": null,
+      "confidence": "unverified",
+      "inferredFields": []
+    }
+  },
+  "rules": [
+    "Different facades must be aligned before sharing measurements.",
+    "Shared material recipe is inherited; per-component dimensions, treatment and ageing parameters remain explicit.",
+    "Do not derive physical dimensions from a single uncalibrated image.",
+    "Door/window standards inform checks; they do not override measured historical dimensions.",
+    "World gravity drives runoff while material rest coordinates remain stable.",
+    "Unknown history, photographic rights, or measurements remain unknown rather than fabricated."
+  ],
+  "renderPolicy": {
+    "status": "design contract; not implemented across the city",
+    "detailSelection": "continuous screen-space footprint and projected contribution, not discrete distance buckets",
+    "preserveAtDistance": [
+      "averaged base colour",
+      "filtered roughness",
+      "metal/dielectric distinction",
+      "Fresnel and transmission where material requires it"
+    ],
+    "nearDetails": [
+      "grain",
+      "pores",
+      "tile joints",
+      "normal/height microstructure"
+    ],
+    "visibility": "frustum/occlusion culling for direct view; retain necessary shadow/reflection contributors",
+    "photoLabelling": "per-facade aligned regions with source and confidence; do not assume all photos are available or all regions automatically identifiable"
+  },
+  "plannedTileRecipes": [
+    "glazed ceramic",
+    "unglazed ceramic",
+    "mosaic with distinct joints"
+  ]
+}
