@@ -1,8 +1,8 @@
-name: R19 reference brows and center-part long hair single wide
+name: R20 retained long hair with softer hairline and ear routes
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/full-material-r19/**', 'kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r19/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/full-material-r20/**', 'kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r20/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        frame: [candidate-r19]
+        frame: [candidate-r20]
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -23,8 +23,9 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01/full-material-r20
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r19
-            kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r19
+            kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r20
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r18
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r17
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r16
@@ -44,16 +45,16 @@ jobs:
       - name: Verify retained cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/full-material-r19/render-native-ci.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/full-material-r20/render-native-ci.cjs
       - name: Render complete inherited portrait and restore original archive
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/full-material-r19/render-native-ci.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/full-material-r20/render-native-ci.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-r19-full-material-${{ matrix.frame }}-${{ github.sha }}
-          path: kaopu-unified-human-workbench/joey-observation-r01/full-material-r19/evidence/
+          name: joey-r20-full-material-${{ matrix.frame }}-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/full-material-r20/evidence/
           retention-days: 7
 
 
