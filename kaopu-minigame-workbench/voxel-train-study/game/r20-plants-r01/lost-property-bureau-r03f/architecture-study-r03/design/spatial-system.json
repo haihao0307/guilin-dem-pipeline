@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.architecture.spatial-system/1",
+  "units": "metres",
+  "coordinateSystem": "x east/west, y up, z front/back; geographic compass not asserted",
+  "objects": [
+    {"id":"civic-front","function":"offices and administration","envelope":[-42,42,-46,-30],"levels":[0,4.8],"module":6},
+    {"id":"entrance","function":"public vestibule and clock tower","envelope":[-6,6,-47,-30],"top":27.4},
+    {"id":"hall","function":"public claim and signing; clerks behind continuous counters","envelope":[-13,13,-30,12],"naveSpan":12,"vaultSpring":7.7,"vaultRise":4.4,"bayCentres":[-21,-9,3]},
+    {"id":"daylight-centre","function":"central bay roof light with continuous shaft","opening":[-2,2,-11,-7],"shaftBase":11.85,"glazing":[15.25,17.8],"roofTop":19.1},
+    {"id":"west-arcade","function":"covered public street-to-court passage","envelope":[-41.5,-35.5,-30,12],"clearWidth":5.45,"openBothSides":true},
+    {"id":"east-arcade","function":"covered public street-to-court passage","envelope":[35.5,41.5,-30,12],"clearWidth":5.45,"openBothSides":true},
+    {"id":"transfer","function":"controlled cross-building staff and goods connection","envelope":[-45,45,12,20],"roofTop":7.64},
+    {"id":"warehouse","function":"storage including internal access aisles","envelope":[-45,45,20,70],"clearAllocation":4500,"currentColumnDeduction":18,"remainingArea":4482,"transverseSpans":5,"span":18,"framePitch":5},
+    {"id":"steam-gallery","function":"visible stationary receiver, shaft and suspended goods track","envelope":[45.5,52,20,70],"clearWalkLineX":50.7}
+  ],
+  "relations": [
+    {"from":"street","to":"entrance","kind":"public opening","width":4.8,"axis":"z"},
+    {"from":"entrance","to":"hall","kind":"aligned public opening","width":5},
+    {"from":"entrance","to":"civic-front","kind":"office-corridor doors","z":-31.7},
+    {"from":"civic-front","to":"west-arcade","kind":"door","x":-39},
+    {"from":"civic-front","to":"east-arcade","kind":"door","x":39},
+    {"from":"west-arcade","to":"transfer","kind":"open end"},
+    {"from":"east-arcade","to":"transfer","kind":"open end"},
+    {"from":"hall","to":"transfer","kind":"three controlled openings"},
+    {"from":"transfer","to":"warehouse","kind":"five loading portals"},
+    {"from":"warehouse","to":"rear-apron","kind":"five loading portals"}
+  ],
+  "rebuildEntry":"model.mjs buildBureau()",
+  "geometryKernel":"construction.mjs AssemblyBuilder, shared wall and opening outlines, ribs, barrel/groin rules",
+  "materialKernel":"material-mothers.mjs with 105 retained field functions and per-primitive frames",
+  "editableScope":"Source-driven architecture. This graph is a measurable design contract; changing arbitrary JSON numbers alone is not an implemented BIM editor.",
+  "verification":"qa/geometry.test.mjs reads generated geometry and checks dimensions, supports, opening uniqueness and nine continuous route ray probes. Browser QA is a separate required gate."
+}
