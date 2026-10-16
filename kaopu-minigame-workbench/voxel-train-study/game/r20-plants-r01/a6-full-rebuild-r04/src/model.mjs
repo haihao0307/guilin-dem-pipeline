@@ -44,17 +44,17 @@ export function buildTrain(T,overrides={}){
 
  // Sealed lamps are patches ON the actual forward upper nose, not side-mounted pods.
  for(const side of[-1,1]){
-  const xc=2.08,tc=.25,points=[],normals=[],idx=[],rings=8,segments=64;
-  for(let r=0;r<=rings;r++)for(let j=0;j<=segments;j++){const a=j/segments*Math.PI*2,rr=r/rings,x=xc+.68*rr*Math.cos(a),t=tc+.078*rr*Math.sin(a),n=shellNormal(T,x,t,side),p=shellPoint(x,t,side);points.push(...p.map((v,k)=>v+n.getComponent(k)*.018));normals.push(...n.toArray());}
+  const xc=2.1,tc=.43,points=[],normals=[],idx=[],rings=8,segments=64;
+  for(let r=0;r<=rings;r++)for(let j=0;j<=segments;j++){const a=j/segments*Math.PI*2,rr=r/rings,x=xc+.84*rr*Math.cos(a),t=tc-.030*rr*Math.cos(a)+.023*rr*Math.sin(a),n=shellNormal(T,x,t,side),p=shellPoint(x,t,side);points.push(...p.map((v,k)=>v+n.getComponent(k)*.018));normals.push(...n.toArray());}
   for(let r=0;r<rings;r++)for(let j=0;j<segments;j++){const a=r*(segments+1)+j,b=a+segments+1;idx.push(a,b,a+1,b,b+1,a+1)}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));g.setIndex(idx);const lens=new T.Mesh(g,new T.MeshPhysicalMaterial({color:'#142125',metalness:.2,roughness:.13,clearcoat:1,side:T.DoubleSide}));lens.name='sealed conformal forward-facing lamp lens';details.add(lens);
-  E.pipe(Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2,x=xc+.68*Math.cos(a),t=tc+.078*Math.sin(a),n=shellNormal(T,x,t,side);return shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.023)}),.013,'steel','flush lamp perimeter');
-  for(const dx of[-.24,.20]){const x=xc+dx,t=tc,n=shellNormal(T,x,t,side),p=new T.Vector3(...shellPoint(x,t,side)).addScaledVector(n,.025),a=p.clone().addScaledVector(n,.006);E.rod(p.toArray(),a.toArray(),dx<0?.083:.064,'lamp','sealed projector light',40);}
+  E.pipe(Array.from({length:65},(_,i)=>{const a=i/64*Math.PI*2,x=xc+.84*Math.cos(a),t=tc-.030*Math.cos(a)+.023*Math.sin(a),n=shellNormal(T,x,t,side);return shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.023)}),.013,'steel','flush lamp perimeter');
+  for(const dx of[-.32,.28]){const x=xc+dx,t=tc-.030*dx/.84,n=shellNormal(T,x,t,side),p=new T.Vector3(...shellPoint(x,t,side)).addScaledVector(n,.025),a=p.clone().addScaledVector(n,.006);E.rod(p.toArray(),a.toArray(),dx<0?.060:.050,'lamp','sealed projector light',40);}
  }
  // Exact original traced number and company plaque; no newly typed company name.
  for(const side of[-1,1]){brand(numberRecipe,1.20,[4.55,side*1.3,1.47],side,M.gold,'original 88 under driver feet');brand(companyRecipe,1.05,[6.25,side*1.3,1.38],side,M.gold,'original company plaque behind 88');}
  // Two long wipers lie on the forward glass, below the driver's line of sight.
- for(const side of[-1,1]){const pts=Array.from({length:40},(_,i)=>{const x=3.75+1.08*i/39,t=.18+.075*i/39,n=shellNormal(T,x,t,side);return shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.033)});E.pipe(pts,.014,'black','long curved front windscreen wiper');const p=pts[0];E.rod([p[0]+.16,p[1]*.77,p[2]-.03],p,.014,'steel','wiper drive arm');}
+ for(const side of[-1,1]){const pts=Array.from({length:40},(_,i)=>{const x=3.48+1.08*i/39,t=.16+.11*i/39,n=shellNormal(T,x,t,side);return shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.033)});E.pipe(pts,.014,'black','long curved front windscreen wiper');const p=pts[0];E.rod([p[0]+.16,p[1]*.77,p[2]-.03],p,.014,'steel','wiper drive arm');}
  // Cab deck is the old 2.18 m datum; feet stay below the sill. Keep full-scale occupants.
  I.box([7.75,0,D.cabFloor-.05],[6.8,2.38,.10],'iron','continuous structural cab floor');I.box([7.75,0,D.cabFloor+.012],[6.7,2.32,.025],'wood','long wood cab floor');
  function seat(x,y,fold=false){I.box([x,y,D.cabFloor+.36],[.47,.48,.11],'seat','full-size seat cushion');const b=I.box([x+.20,y,D.cabFloor+.72],[.10,.48,.65],'seat','ergonomic seat back');b.rotation.y=-.1;I.rod([x,y,D.cabFloor],[x,y,D.cabFloor+.30],.055,'steel','seat pedestal');if(fold)b.userData.foldable=true}
