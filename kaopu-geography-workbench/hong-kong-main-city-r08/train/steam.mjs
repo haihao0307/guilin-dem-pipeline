@@ -7,7 +7,7 @@ const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
 const mix=(a,b,t)=>a+(b-a)*t;
 const hash=n=>{let x=(n|0)^0x9e3779b9;x=Math.imul(x^(x>>>16),0x21f0aaad);x=Math.imul(x^(x>>>15),0x735a2d97);return ((x^(x>>>15))>>>0)/4294967296;};
 const finite=(x,fallback=0)=>Number.isFinite(x)?x:fallback;
-export const STEAM_DESIGN=Object.freeze({revision:'R08_DRIVE_LINKED_EXHAUST_1',mainLifeS:8,sideLifeS:2.6,purgeDurationS:3,launchDurationS:6,defaultCapacity:384,fluidSimulation:false,sideRole:'existing authored cylinder-drain candidates, game-visual discharge only'});
+export const STEAM_DESIGN=Object.freeze({revision:'R08_DRIVE_LINKED_EXHAUST_2',mainLifeS:8,sideLifeS:2.6,purgeDurationS:3,launchDurationS:6,defaultCapacity:384,fluidSimulation:false,sideRole:'existing authored cylinder-drain candidates, game-visual discharge only'});
 
 /** Read exact declared drain locations from the retained assembly, not a new A6.
  * Converts each owner's native frame to train.root native frame, without edits.
@@ -107,15 +107,15 @@ export function createSteamSimulation({route,nativeSockets,nativeSideSockets=[],
     x=p.position[0]+p.direction[0]*travel+p.forward[0]*p.speed*.12*age;
     y=p.position[1]+p.direction[1]*travel+rise;
     z=p.position[2]+p.direction[2]*travel+p.forward[2]*p.speed*.12*age;
-    radius=(.085+.25*age+.07*age*age)*p.width;aspect=.82+.15*u;
-    alpha=.105*p.strength*smooth(0,.075,age)*(1-smooth(.30,1,u));
+    radius=(.10+.32*age+.08*age*age)*p.width;aspect=.82+.15*u;
+    alpha=.18*p.strength*smooth(0,.075,age)*(1-smooth(.30,1,u));
    }else{
     const swell=smooth(0,1.7,age),swirl=(.045+.18*age)*swell,rise=1.15*age+.6*(1-Math.exp(-age*1.8));
     x=p.position[0]+.32*age+p.forward[0]*p.speed*.17*(1-Math.exp(-age/.85))+Math.cos(turn)*swirl;
     y=p.position[1]+rise+Math.sin(phase)*.075*swell;
     z=p.position[2]+.11*age+p.forward[2]*p.speed*.17*(1-Math.exp(-age/.85))+Math.sin(turn)*swirl;
     radius=(.18+.31*age+.018*age*age)*p.width*(.88+.28*p.load);aspect=1.08+.15*Math.sin(p.swirl);
-    alpha=(.045+.065*p.strength)*smooth(0,.14,age)*Math.pow(1-u,1.35)*(1-.20*smooth(.35,.8,u));
+    alpha=(.065+.10*p.strength)*smooth(0,.14,age)*Math.pow(1-u,1.35)*(1-.20*smooth(.35,.8,u));
    }
    centres.set([x,y,z],i*3);shapes.set([radius,hash(p.seed+19),enabled?alpha*intensity:0,age],offset);details.set([aspect,p.swirl+age*.065,p.kind,u],offset);
    if(alpha*intensity>.0001){alive++;if(p.kind)sideAlive++;else mainAlive++;maximumRadius=Math.max(maximumRadius,radius);}
@@ -149,6 +149,8 @@ export function createHostSteam(T,options={}){
   // Authored soft self-shading; not a solved volumetric lighting field.
   float light=.79+.16*low+.05*smoothstep(-.8,.7,p.y);vec3 tint=mix(steamTint*light,steamTint,.12+detail.z*.10);
   gl_FragColor=vec4(tint,alpha);
+  // ShaderMaterial does not apply the renderer's output transform implicitly.
+  #include <colorspace_fragment>
  }
  `});
  const mesh=new T.Mesh(geometry,material);mesh.frustumCulled=false;mesh.renderOrder=8;mesh.name='R08 twin-main and paired side-drain game steam';

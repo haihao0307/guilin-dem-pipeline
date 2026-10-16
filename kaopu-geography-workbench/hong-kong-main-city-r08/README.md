@@ -21,3 +21,5 @@
 ## 验证
 
 本地固定步、原母体几何、相机眼位及补丁合同通过；真实浏览器记录另见 evidence。CPU通过不能代表视觉通过。使用同一只读GitHub Actions流程检查真实启动、暂停、排汽、起步、全部视角与隧道同行；软件GPU时间不能代表用户硬件性能。
+
+Steam visibility correction: the authored shader now applies the retained renderer output color space. Main opacity and paired-drain cloud opacity/radius are moderately strengthened; original outlets, timing, full train geometry, depth testing, 384-particle capacity and one draw are unchanged. Real station columns still occlude steam. Targeted close-view captures complement the default side-view evidence; this is not fluid/roof collision simulation.
