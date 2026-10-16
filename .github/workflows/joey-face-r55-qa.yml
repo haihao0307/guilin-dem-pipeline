@@ -1,4 +1,4 @@
-name: GNM fixed-pose R09 native four-frame comparison
+name: GNM R09 isolated dense-hair and restore verification
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
@@ -39,15 +39,16 @@ jobs:
       - name: Verify retained cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-native-ci.cjs
-      - name: Render frozen R64 and R09 with matched camera and light
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-dense-recovery-ci.cjs
+      - name: Render frozen R09 dense-hair and restore original archive
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-native-ci.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/render-dense-recovery-ci.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-whole-face-r09-${{ matrix.frame }}-${{ github.sha }}
+          name: joey-whole-face-r09-dense-recovery-${{ matrix.frame }}-${{ github.sha }}
           path: kaopu-unified-human-workbench/joey-observation-r01/whole-face-proportion-r09/evidence/
           retention-days: 7
+
 
