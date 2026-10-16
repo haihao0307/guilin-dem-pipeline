@@ -63,7 +63,7 @@ NIST AI RMF 1.0 明确提醒，人会假设 AI 在所有环境都能正常工作
 
 - regression：`CAPABILITY-PROMISE-REQUIRES-EXECUTABLE-PROBE-001`（Candidate）
 - classification replay：9/9
-- POSTED：待路由
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6207593472
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - 本轮用户纠错事件：1
 - 其余首次候选通过率、同错复发率、stale delivery、accepted delta 内部迭代数及从指令到合法 candidate 时间：unknown
