@@ -1,0 +1,4764 @@
+{
+  "sourceHashes": {
+    "preview.html": "be104c208a63b5ca3ec5492f1267d4b5380b02d1a469b08fa58dd58b0bd30d81",
+    "preview-medium.html": "be104c208a63b5ca3ec5492f1267d4b5380b02d1a469b08fa58dd58b0bd30d81",
+    "preview-long.html": "2001b13bbf6f1593e010b6afb1d8065986271807046a5a4e1893fdf8219bb2df",
+    "src/app.mjs": "6311fe2ecf9786404ef534d52e2b130376916a5033d51e353b19e55cf23fab0a",
+    "src/BundleFriction.mjs": "830be17b18f721d386da38bde72e5ec420de366385a996892a02982886661234",
+    "src/CollisionProxies.mjs": "853ec92f5696338c96f08914d082945702255e0f588f8bc32dcc96443183ea38",
+    "src/detail-dynamics.mjs": "04d10637707ef875c4b72f0cd3c743b633f8fb520d7cf44b9441d4d6cd7330e6",
+    "src/DistanceHair.mjs": "96b32cd568986e6fec074df502e49dd6c95465ae8410ad5cec6bb748ce7e8bf6",
+    "src/FineFiberCache.mjs": "8ef2a2b536781e4f5ff09bbb513c73b7d1222738c5e9582b8d7213d146e7796c",
+    "src/Groom.mjs": "ec1382c7169208ec26f224711b65c66cb9ff23c0b7cc06dba744f689f2c85ee2",
+    "src/GuideDynamics.mjs": "d376078a996210bd3c8bf092f267650903aa302834e12bada66e99269221ef02",
+    "src/HairPassCache.mjs": "76bcf9153e62151c7558446d9c880bd9e0f8ef2ce9460e394e3a8cd5dfa12506",
+    "src/HairRenderer.mjs": "5f39c7db4e415bf33c0c5bbaf81a52375a603d6c1d2f726e7b21c2da03640d26",
+    "src/NativeHeadBinding.mjs": "4c82d54baa212e62a5ebade60b4c7685f612c2a307f3ea268718da3b9e2e08f3",
+    "src/NativeMotion.mjs": "b621c16bb6f33226eecf88fd06a8bade17b8d8d6e0b0c255cfb70a5137ea5d50",
+    "src/NativePoseCache.mjs": "6edad2f16dec66e4e555f166ae266c04f8ebd75f4107e0e7e6027a8149d451e7",
+    "src/RestFiberCache.mjs": "ab537cb515e9a98a2573ae4c38d8509aa32dc5343a4a971f5cbb918ee64a762f",
+    "src/SurfaceAudit.mjs": "74cd23c31f6ffdea8562e276937c1b0afcf86af472aaf5eae61cd1afa482933c",
+    "src/SurfaceBVH.mjs": "50e47289f73a7927ae4b5d7b49bf8e316a49e5d5b5fccb4735f266153d72c171",
+    "src/SurfaceContactField.mjs": "3231d1e32beebc8513a2216c49ae89612400b6338a77ae994cf30b6d38fa1c51",
+    "src/wind.mjs": "2a4059bf8c22a50479eef9e58d482388e1401c49ff4a6997026a3063af1de84a",
+    "tools/build.cjs": "fc148182f3bf1c381eb3145e769a6c0d15bf7c07bb4e8df7c9e9492413133e33",
+    "references/character-platform-frozen.html": "69da0a547349639d6a1245c46ff46c6420c9bdf45cb4b84bfba7fa549743664e",
+    "references/motion/16_01-SOURCE.json": "280841e04099650e0bb935b6f6ce0725d2efa80664de549b7cfa46eac92ec0a1",
+    "references/motion/16_15-SOURCE.json": "05dc08b3f1faaa70c736149e738dd4f238b28b270bfe4ed5594bf7a74fb23d40",
+    "references/motion/16_35-SOURCE.json": "ba432e27bb3c48981a96ef8975201e0dad015ac039e0ab098caaf325e1c719a3",
+    "references/motion/ArmContinuity.mjs": "86ca78a237831107c010b8ec3e6bd79e64579629ec8f3308a38706b3a895b4bb",
+    "references/motion/CapturedController.mjs": "a43b67512e044581121aa73547c8e590baa89448e8706c29e2c9a39e88bae48e",
+    "references/motion/CapturedCycles.mjs": "0f480c7d6fc0094ff4ab2b574324ea42b13a244db9de7bf67a04466d03fad8f0",
+    "references/motion/Core.mjs": "d34ce0c86c3a727c532e9b53938ba264a663770b863cc3f559665d0f0df5221a",
+    "references/motion/Motion.mjs": "5f646bc3585dfd40f67f28a3ef8eaacf8779ef9951c18a9c76d91adbe19750d0",
+    "references/motion/NativeRig.mjs": "5e28ef7472813993e372090c90d1abff7b09e994edc23ee576a4d4b904b54c04",
+    "references/motion/NativeWalkRetarget.mjs": "2654a1f3744605d80b38ebe8744de0ca3af38a0d2186109d7064e3d9b31eacb5",
+    "references/motion/NaturalRetarget.mjs": "e3d92f8ed52c5e6843b3e59c89a17553ec17e284d88f1126422abcbc09c56afd"
+  },
+  "passed": true,
+  "tests": [
+    {
+      "name": "medium-walk-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3975,
+            "contacts": 1024,
+            "frictionDissipationJ": 1.788635773445047e-9,
+            "cpuMS": 0.19999998807907104,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.10000002384185791,
+            "sweep": 2.099999964237213,
+            "solves": 4.600000023841858,
+            "chain": 3,
+            "friction": 0.5,
+            "forces": 2.300000011920929,
+            "constraints": 8.100000023841858,
+            "detail": 1.0999999642372131
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.00262121037177825,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.5520917884259688e-13,
+          "maxOffset": 0.07614098264990557,
+          "maxVelocity": 1.1389707267376337,
+          "tipSpeed": 1.144817664822121,
+          "kineticEnergy": 0.000030924504920151084,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 13,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1608,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 3.600000023841858,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 2,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.7808221688247434,
+              11.272955507323525,
+              1.8405934999308338
+            ],
+            "angular": [
+              -1.6877012910844666,
+              -1.7460851692245618,
+              -0.32340947974972045
+            ],
+            "omega": [
+              -0.15297782724131223,
+              -0.3465249318944645,
+              -0.05580627496200163
+            ],
+            "air": [
+              0.02796985725124934,
+              0.20314073829209645,
+              -1.1529313811294324
+            ],
+            "peak": 11.445592094369731
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 24
+        }
+      }
+    },
+    {
+      "name": "medium-walk-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3997,
+            "contacts": 1059,
+            "frictionDissipationJ": 7.587548203033095e-10,
+            "cpuMS": 0.19999998807907104,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0,
+            "sweep": 1.0999999642372131,
+            "solves": 5.600000023841858,
+            "chain": 2.699999988079071,
+            "friction": 0.30000001192092896,
+            "forces": 1.199999988079071,
+            "constraints": 8.600000023841858,
+            "detail": 0.6000000238418579
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0025098258458639776,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0004793368404700793,
+          "maxOffset": 0.056435575102423106,
+          "maxVelocity": 0.3591107373285778,
+          "tipSpeed": 0.36095339835628953,
+          "kineticEnergy": 7.229786842086853e-7,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 10.800000011920929,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 39424,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 77,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1381.199999988079,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 3.600000023841858,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 1.1102230246251565e-16,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 3,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -1.424810253965045,
+              -0.7354812815865359,
+              -0.801327282998594
+            ],
+            "angular": [
+              -2.804426873690919,
+              -0.5370165221120456,
+              1.7657240444540712
+            ],
+            "omega": [
+              0.02097980357299677,
+              0.477192133004486,
+              0.2394167097054678
+            ],
+            "air": [
+              0.02869612125808743,
+              0.13577641398451348,
+              -1.162772780938641
+            ],
+            "peak": 2.6132995736053832
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 72
+        }
+      }
+    },
+    {
+      "name": "medium-walk-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3902,
+            "contacts": 1136,
+            "frictionDissipationJ": 8.916931936312606e-10,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.19999998807907104,
+            "integration": 0,
+            "sweep": 2.5,
+            "solves": 2.800000011920929,
+            "chain": 1.399999976158142,
+            "friction": 0.30000001192092896,
+            "forces": 2.699999988079071,
+            "constraints": 4.5,
+            "detail": 0.5999999642372131
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0029898221350536593,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.787459069646502e-13,
+          "maxOffset": 0.09425054071781909,
+          "maxVelocity": 0.32018168130072233,
+          "tipSpeed": 0.39813089592471934,
+          "kineticEnergy": 0.0000027905470570308487,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 774,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 3.600000023841858,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 4,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -0.7161930339704965,
+              1.0405943726183076,
+              0.7279515191255256
+            ],
+            "angular": [
+              1.6788693117741325,
+              0.8755672807440988,
+              -1.0254180405253317
+            ],
+            "omega": [
+              -0.08373040242146962,
+              0.06191038959847933,
+              0.03592806916447307
+            ],
+            "air": [
+              0.05908987824202802,
+              0.20139036158549453,
+              -1.1520631712763583
+            ],
+            "peak": 1.48791684742695
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 159
+        }
+      }
+    },
+    {
+      "name": "medium-run-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3531,
+            "contacts": 791,
+            "frictionDissipationJ": 1.5098655916102509e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0,
+            "sweep": 2,
+            "solves": 5.199999988079071,
+            "chain": 2.899999976158142,
+            "friction": 0.40000003576278687,
+            "forces": 2.100000023841858,
+            "constraints": 8.5,
+            "detail": 1.199999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.005246108445094866,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.5210055437364645e-13,
+          "maxOffset": 0.08785600433384266,
+          "maxVelocity": 0.7760414138141059,
+          "tipSpeed": 0.9291735457378132,
+          "kineticEnergy": 0.00000846361475823899,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 12.5,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 858.8999999761581,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 4.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 6,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              1.0693521381861193,
+              7.281752238354346,
+              1.8343207171408509
+            ],
+            "angular": [
+              1.1702380894340318,
+              -0.09115822062306568,
+              -1.4853859197159998
+            ],
+            "omega": [
+              0.14485046057379453,
+              0.4903800678863592,
+              0.08315897061134712
+            ],
+            "air": [
+              0.06107313271610722,
+              0.17079334704950602,
+              -2.9866729221031463
+            ],
+            "peak": 7.418728677518268
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 183
+        }
+      }
+    },
+    {
+      "name": "medium-run-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3395,
+            "contacts": 887,
+            "frictionDissipationJ": 2.05558337380695e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.09999996423721313,
+            "sweep": 1.5,
+            "solves": 5.100000023841858,
+            "chain": 2.199999988079071,
+            "friction": 0.30000001192092896,
+            "forces": 1.699999988079071,
+            "constraints": 7.600000023841858,
+            "detail": 0.800000011920929
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.005532517678770902,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.5210055437364645e-13,
+          "maxOffset": 0.08955821066460685,
+          "maxVelocity": 0.8014751423188582,
+          "tipSpeed": 1.0055975251256235,
+          "kineticEnergy": 0.000008383886826468772,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 10.5,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 788.5,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 4.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 7,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              1.0760235353366046,
+              7.24956932638439,
+              1.8255719149366367
+            ],
+            "angular": [
+              1.171836914944851,
+              -0.08987003507186338,
+              -1.4853071488313283
+            ],
+            "omega": [
+              0.14485046057379453,
+              0.4903800678863592,
+              0.08315897061134712
+            ],
+            "air": [
+              0.06107313271610722,
+              0.17079334704950602,
+              -2.9866729221031463
+            ],
+            "peak": 7.386448960139785
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 231
+        }
+      }
+    },
+    {
+      "name": "medium-run-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 2646,
+            "contacts": 708,
+            "frictionDissipationJ": 2.7242222644757937e-9,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.10000002384185791,
+            "sweep": 1,
+            "solves": 3.699999988079071,
+            "chain": 1.300000011920929,
+            "friction": 0.19999998807907104,
+            "forces": 1.2000000476837158,
+            "constraints": 5.199999988079071,
+            "detail": 0.699999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.004790407954184472,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.7386092565629951e-13,
+          "maxOffset": 0.17795298569666332,
+          "maxVelocity": 2.4802239703476614,
+          "tipSpeed": 2.827588387944408,
+          "kineticEnergy": 0.00001451085102148828,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.400000035762787,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 700.8000000119209,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 4.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 8,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              2.642725054846879,
+              4.519198126758177,
+              -1.22992482358173
+            ],
+            "angular": [
+              -0.18468682104923373,
+              -0.06238401604474303,
+              3.870489375082846
+            ],
+            "omega": [
+              0.1666062734274939,
+              -0.10635078361534858,
+              0.29027670555377577
+            ],
+            "air": [
+              -0.13199539446885197,
+              0.20019058122552943,
+              -2.982551992101375
+            ],
+            "peak": 4.475561619814849
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 318
+        }
+      }
+    },
+    {
+      "name": "medium-jump-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 4080,
+            "contacts": 1116,
+            "frictionDissipationJ": 2.0864662067325144e-10,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0.10000002384185791,
+            "sweep": 0,
+            "solves": 3.600000023841858,
+            "chain": 2.199999988079071,
+            "friction": 0.30000001192092896,
+            "forces": 0.19999998807907104,
+            "constraints": 6.100000023841858,
+            "detail": 0.699999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.00011699773163541185,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.7563728249569976e-13,
+          "maxOffset": 0.025512511110962737,
+          "maxVelocity": 0.16240360358956474,
+          "tipSpeed": 0.12955555217831577,
+          "kineticEnergy": 2.84126644538314e-7,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.300000011920929,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 40448,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 79,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1305.9000000357628,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 9.599999964237213,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 10,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.25254287012114457,
+              -0.6088830611824816,
+              0.27390000143736576
+            ],
+            "angular": [
+              -1.2251417813204686,
+              0.7419774964264387,
+              0.08735437849251877
+            ],
+            "omega": [
+              -0.08421897076930497,
+              0.0814528724123381,
+              0.012211418789100092
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 1.2321372598593083
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 342
+        }
+      }
+    },
+    {
+      "name": "medium-jump-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 3924,
+            "contacts": 863,
+            "frictionDissipationJ": 1.1214037334307607e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0,
+            "sweep": 1.100000023841858,
+            "solves": 2.5,
+            "chain": 1.199999988079071,
+            "friction": 0.19999998807907104,
+            "forces": 1.2000000476837158,
+            "constraints": 3.899999976158142,
+            "detail": 0.800000011920929
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0004018162878874005,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.829647544582258e-13,
+          "maxOffset": 0.2857659776500126,
+          "maxVelocity": 1.3525363799491141,
+          "tipSpeed": 1.4100071567666743,
+          "kineticEnergy": 0.0000261642101114381,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 6.300000011920929,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 38912,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 76,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 726.0999999642372,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 9.599999964237213,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 11,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -0.7285154349098146,
+              -8.52124171658187,
+              -0.4256428590850514
+            ],
+            "angular": [
+              1.7772800421709603,
+              0.7525262914420426,
+              0.017199024729440987
+            ],
+            "omega": [
+              0.18751276546805123,
+              -0.016405824591340254,
+              -0.03323568683295748
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 8.406196365030029
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 390
+        }
+      }
+    },
+    {
+      "name": "medium-jump-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 4002,
+            "contacts": 1109,
+            "frictionDissipationJ": 2.3256824664594372e-10,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.09999996423721313,
+            "sweep": 0,
+            "solves": 3.600000023841858,
+            "chain": 2,
+            "friction": 0.19999998807907104,
+            "forces": 0.19999998807907104,
+            "constraints": 5.800000011920929,
+            "detail": 0.9000000357627869
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.00015215242223472385,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "medium",
+          "nominalLength": 0.2,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.000004959202335230728,
+          "maxOffset": 0.10666617396562081,
+          "maxVelocity": 0.12322829660314755,
+          "tipSpeed": 0.13271496479916048,
+          "kineticEnergy": 4.4247055572023445e-8,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.5,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 37376,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 73,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1274.5,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 9.599999964237213,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 12,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.046451033109471705,
+              -0.08101445943387695,
+              -0.129351463348413
+            ],
+            "angular": [
+              1.1846828894794297,
+              -1.0574532129165144,
+              -0.28464966261304714
+            ],
+            "omega": [
+              0.025696038243007563,
+              -0.08000362891819238,
+              -0.012761521578861557
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 1.194336973695051
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 477
+        }
+      }
+    },
+    {
+      "name": "long-walk-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 2164,
+            "contacts": 465,
+            "frictionDissipationJ": 2.627913989458231e-9,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0,
+            "sweep": 1.699999988079071,
+            "solves": 3.399999976158142,
+            "chain": 2,
+            "friction": 0.10000002384185791,
+            "forces": 1.800000011920929,
+            "constraints": 5.5,
+            "detail": 0.6000000238418579
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.004724273992284163,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 1.2431611295937728e-10,
+          "maxOffset": 0.10124001669909434,
+          "maxVelocity": 1.15030669985829,
+          "tipSpeed": 1.2556712419577907,
+          "kineticEnergy": 0.00007339472875779933,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 30208,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 59,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1243.4000000357628,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 3.900000035762787,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 14,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.7808221688247434,
+              11.272955507323525,
+              1.8405934999308338
+            ],
+            "angular": [
+              -1.6877012910844666,
+              -1.7460851692245618,
+              -0.32340947974972045
+            ],
+            "omega": [
+              -0.15297782724131223,
+              -0.3465249318944645,
+              -0.05580627496200163
+            ],
+            "air": [
+              0.02796985725124934,
+              0.20314073829209645,
+              -1.1529313811294324
+            ],
+            "peak": 11.445592094369731
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 501
+        }
+      }
+    },
+    {
+      "name": "long-walk-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 2031,
+            "contacts": 422,
+            "frictionDissipationJ": 1.199291055358332e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0.10000002384185791,
+            "sweep": 1.5999999642372131,
+            "solves": 4.100000023841858,
+            "chain": 2,
+            "friction": 0.19999998807907104,
+            "forces": 1.699999988079071,
+            "constraints": 6.300000011920929,
+            "detail": 0.6000000238418579
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.010631165366309887,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0007163174783435533,
+          "maxOffset": 0.15949854289755064,
+          "maxVelocity": 0.37738504267608997,
+          "tipSpeed": 0.5250951926359074,
+          "kineticEnergy": 0.0000020068324829996944,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.899999976158142,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 31232,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 61,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1241.5999999642372,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 3.900000035762787,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 1.1102230246251565e-16,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 15,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -1.424810253965045,
+              -0.7354812815865359,
+              -0.801327282998594
+            ],
+            "angular": [
+              -2.804426873690919,
+              -0.5370165221120456,
+              1.7657240444540712
+            ],
+            "omega": [
+              0.02097980357299677,
+              0.477192133004486,
+              0.2394167097054678
+            ],
+            "air": [
+              0.02869612125808743,
+              0.13577641398451348,
+              -1.162772780938641
+            ],
+            "peak": 2.6132995736053832
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 549
+        }
+      }
+    },
+    {
+      "name": "long-walk-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1896,
+            "contacts": 445,
+            "frictionDissipationJ": 1.7297534829562518e-9,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.10000002384185791,
+            "sweep": 1,
+            "solves": 3.299999952316284,
+            "chain": 1.9000000357627869,
+            "friction": 0.19999998807907104,
+            "forces": 1.2000000476837158,
+            "constraints": 5.399999976158142,
+            "detail": 0.699999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.010407269317160411,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 6.093712201504786e-10,
+          "maxOffset": 0.17786474943973415,
+          "maxVelocity": 0.45756340375829757,
+          "tipSpeed": 0.5983953175743758,
+          "kineticEnergy": 0.000007774615543344728,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.700000047683716,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 30720,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 60,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1309.6000000238419,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 3.900000035762787,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "walk",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 1.175,
+          "continuous": true,
+          "source": "16_15",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 16,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -0.7161930339704965,
+              1.0405943726183076,
+              0.7279515191255256
+            ],
+            "angular": [
+              1.6788693117741325,
+              0.8755672807440988,
+              -1.0254180405253317
+            ],
+            "omega": [
+              -0.08373040242146962,
+              0.06191038959847933,
+              0.03592806916447307
+            ],
+            "air": [
+              0.05908987824202802,
+              0.20139036158549453,
+              -1.1520631712763583
+            ],
+            "peak": 1.48791684742695
+          },
+          "airVelocity": [
+            -0.08503582883388437,
+            0,
+            -1.1679332814318069
+          ],
+          "version": 636
+        }
+      }
+    },
+    {
+      "name": "long-run-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1731,
+            "contacts": 277,
+            "frictionDissipationJ": 2.8887056216754725e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0,
+            "integration": 0,
+            "sweep": 1.0999999642372131,
+            "solves": 3.5,
+            "chain": 2.100000023841858,
+            "friction": 0.19999998807907104,
+            "forces": 1.0999999642372131,
+            "constraints": 5.800000011920929,
+            "detail": 1
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.010809909309483733,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0007968703893846962,
+          "maxOffset": 0.14771704247750184,
+          "maxVelocity": 1.8599476714337548,
+          "tipSpeed": 2.5140500152047593,
+          "kineticEnergy": 0.000024975408541177065,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 30208,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 59,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 656.3999999761581,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 14.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 18,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              1.0693521381861193,
+              7.281752238354346,
+              1.8343207171408509
+            ],
+            "angular": [
+              1.1702380894340318,
+              -0.09115822062306568,
+              -1.4853859197159998
+            ],
+            "omega": [
+              0.14485046057379453,
+              0.4903800678863592,
+              0.08315897061134712
+            ],
+            "air": [
+              0.06107313271610722,
+              0.17079334704950602,
+              -2.9866729221031463
+            ],
+            "peak": 7.418728677518268
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 660
+        }
+      }
+    },
+    {
+      "name": "long-run-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1351,
+            "contacts": 218,
+            "frictionDissipationJ": 1.9664384071727643e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.10000002384185791,
+            "integration": 0.09999996423721313,
+            "sweep": 1.100000023841858,
+            "solves": 3.5,
+            "chain": 2,
+            "friction": 0.30000001192092896,
+            "forces": 1.300000011920929,
+            "constraints": 5.800000011920929,
+            "detail": 0.5999999642372131
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.016432990936197663,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0008834660167615915,
+          "maxOffset": 0.23385246026991321,
+          "maxVelocity": 2.428415784203626,
+          "tipSpeed": 3.177276550518944,
+          "kineticEnergy": 0.00004638750524494119,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 30208,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 59,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 622.8000000119209,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 14.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 19,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              1.0760235353366046,
+              7.24956932638439,
+              1.8255719149366367
+            ],
+            "angular": [
+              1.171836914944851,
+              -0.08987003507186338,
+              -1.4853071488313283
+            ],
+            "omega": [
+              0.14485046057379453,
+              0.4903800678863592,
+              0.08315897061134712
+            ],
+            "air": [
+              0.06107313271610722,
+              0.17079334704950602,
+              -2.9866729221031463
+            ],
+            "peak": 7.386448960139785
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 708
+        }
+      }
+    },
+    {
+      "name": "long-run-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1277,
+            "contacts": 261,
+            "frictionDissipationJ": 3.437352171827175e-9,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0,
+            "sweep": 1,
+            "solves": 3.800000011920929,
+            "chain": 3.100000023841858,
+            "friction": 0.19999998807907104,
+            "forces": 1.0999999642372131,
+            "constraints": 7.100000023841858,
+            "detail": 0.6000000238418579
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.01705774128929884,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0006079278323252169,
+          "maxOffset": 0.39989788400751736,
+          "maxVelocity": 2.18754325853473,
+          "tipSpeed": 2.286113010123539,
+          "kineticEnergy": 0.00003861021793023128,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 9.199999988079071,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 30720,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 60,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 816.6999999880791,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 14.300000011920929,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "run",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 0.8,
+          "continuous": true,
+          "source": "16_35",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 20,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              2.642725054846879,
+              4.519198126758177,
+              -1.22992482358173
+            ],
+            "angular": [
+              -0.18468682104923373,
+              -0.06238401604474303,
+              3.870489375082846
+            ],
+            "omega": [
+              0.1666062734274939,
+              -0.10635078361534858,
+              0.29027670555377577
+            ],
+            "air": [
+              -0.13199539446885197,
+              0.20019058122552943,
+              -2.982551992101375
+            ],
+            "peak": 4.475561619814849
+          },
+          "airVelocity": [
+            0.13991769636049867,
+            0,
+            -2.9889025539159775
+          ],
+          "version": 795
+        }
+      }
+    },
+    {
+      "name": "long-jump-0.37",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 2363,
+            "contacts": 611,
+            "frictionDissipationJ": 2.2230617545319515e-10,
+            "cpuMS": 0.10000002384185791,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0.10000002384185791,
+            "sweep": 0,
+            "solves": 3.5,
+            "chain": 1.800000011920929,
+            "friction": 0.19999998807907104,
+            "forces": 0.19999998807907104,
+            "constraints": 5.5,
+            "detail": 0.699999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0003865798760016272,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 5.713027828591066e-10,
+          "maxOffset": 0.025449523527479045,
+          "maxVelocity": 0.13228866260469602,
+          "tipSpeed": 0.14815027115096494,
+          "kineticEnergy": 6.32621334418413e-7,
+          "steps": 23,
+          "time": 0.3833333333333333,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 6.799999952316284,
+          "droppedSeconds": 0,
+          "revision": 24,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 31744,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 62,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1265.4000000357628,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 3,
+            "lastBuildMS": 9.699999988079071,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 0.3833333333333333,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 22,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.25254287012114457,
+              -0.6088830611824816,
+              0.27390000143736576
+            ],
+            "angular": [
+              -1.2251417813204686,
+              0.7419774964264387,
+              0.08735437849251877
+            ],
+            "omega": [
+              -0.08421897076930497,
+              0.0814528724123381,
+              0.012211418789100092
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 1.2321372598593083
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 819
+        }
+      }
+    },
+    {
+      "name": "long-jump-1.17",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1706,
+            "contacts": 363,
+            "frictionDissipationJ": 1.7068864582625715e-9,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0,
+            "sweep": 1.7000000476837158,
+            "solves": 3.399999976158142,
+            "chain": 1.800000011920929,
+            "friction": 0.09999996423721313,
+            "forces": 1.800000011920929,
+            "constraints": 5.299999952316284,
+            "detail": 0.9000000357627869
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0003910325440923858,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0005651183063828391,
+          "maxOffset": 0.3937405658677038,
+          "maxVelocity": 1.283389356720362,
+          "tipSpeed": 1.3279234887282196,
+          "kineticEnergy": 0.00007057363581982872,
+          "steps": 71,
+          "time": 1.183333333333334,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.300000011920929,
+          "droppedSeconds": 0,
+          "revision": 72,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 29696,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 58,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1327.699999988079,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 4,
+            "lastBuildMS": 9.699999988079071,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 1.183333333333334,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 23,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              -0.7285154349098146,
+              -8.52124171658187,
+              -0.4256428590850514
+            ],
+            "angular": [
+              1.7772800421709603,
+              0.7525262914420426,
+              0.017199024729440987
+            ],
+            "omega": [
+              0.18751276546805123,
+              -0.016405824591340254,
+              -0.03323568683295748
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 8.406196365030029
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 867
+        }
+      }
+    },
+    {
+      "name": "long-jump-2.63",
+      "data": {
+        "physics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 2286,
+            "contacts": 542,
+            "frictionDissipationJ": 7.710149659261503e-10,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0,
+            "sweep": 0,
+            "solves": 3.699999988079071,
+            "chain": 3.200000047683716,
+            "friction": 0.09999996423721313,
+            "forces": 0.09999996423721313,
+            "constraints": 7,
+            "detail": 0.800000011920929
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.0008399255284920077,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 2.5907180845052835e-9,
+          "maxOffset": 0.1817321009284298,
+          "maxVelocity": 0.3438786329891458,
+          "tipSpeed": 0.37433526468640926,
+          "kineticEnergy": 2.918313453767603e-7,
+          "steps": 158,
+          "time": 2.633333333333329,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 8.099999964237213,
+          "droppedSeconds": 0,
+          "revision": 159,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        },
+        "audit": {
+          "valid": 28160,
+          "invalidSamples": 0,
+          "count": 512,
+          "verticesPerFiber": 55,
+          "headSign": 1,
+          "bodySign": 1,
+          "insideSamples": 0,
+          "maxNativeDepth": 0,
+          "segmentCrossings": 0,
+          "worst": [],
+          "crossingExamples": [],
+          "cpuMS": 1184.699999988079,
+          "collider": {
+            "method": "six-view native triangle depth/normal conservative visual hull",
+            "exactSDF": false,
+            "headTriangles": 531702,
+            "headUsesExactDisplayedGeometry": true,
+            "headMorphStorageShared": true,
+            "bodyTriangles": 40120,
+            "headResolution": 256,
+            "bodyResolution": 256,
+            "rebuilds": 2,
+            "gpuRebuilds": 5,
+            "lastBuildMS": 9.699999988079071,
+            "motionHz": 60,
+            "visibleFrameSurfaceRefresh": true,
+            "bytes": 12582912
+          },
+          "nativeTriangleCount": 40120,
+          "method": "actual final vertex shader output readback vs native skinned triangles; signed nearest + ray parity; segment crossings",
+          "worldSpace": true
+        },
+        "motion": {
+          "mode": "jump",
+          "playing": true,
+          "active": true,
+          "time": 2.633333333333329,
+          "duration": 2.675,
+          "continuous": false,
+          "source": "16_01",
+          "boneLengthError": 8.326672684688674e-17,
+          "binding": {
+            "version": "R04-display-native-binding/1",
+            "nativeVertices": 25417,
+            "displayVertices": 266098,
+            "triangles": 531702,
+            "nativeBones": 104,
+            "maxInfluences": 9,
+            "weightsTruncated": false,
+            "neutralMaxErrorM": 2.220446049250313e-16,
+            "lineage": [
+              {
+                "from": 25417,
+                "to": 73443
+              },
+              {
+                "from": 73443,
+                "to": 91635
+              },
+              {
+                "from": 91635,
+                "to": 116827
+              },
+              {
+                "from": 116827,
+                "to": 150459
+              },
+              {
+                "from": 150459,
+                "to": 198406
+              },
+              {
+                "from": 198406,
+                "to": 221916
+              },
+              {
+                "from": 221916,
+                "to": 253406
+              },
+              {
+                "from": 253406,
+                "to": 266098
+              }
+            ],
+            "sameMesh": true,
+            "sameMaterial": true,
+            "bindHierarchyChanged": false,
+            "originalAttributesRetained": true,
+            "addedGPUBytes": 14621184,
+            "limitations": [
+              "neutral R04 appearance is transported; pose-dependent ear visibility is not recomputed",
+              "native linear skinning and inherited joint correctives, not muscle/contact physics"
+            ]
+          },
+          "poseCache": {
+            "bakes": 24,
+            "width": 1024,
+            "height": 260,
+            "bytes": 12779520,
+            "nativeVertices": 266098,
+            "precision": "RGBA32F position + complete blended native normal/morph matrix",
+            "oneBakePerVisiblePose": true
+          },
+          "inertia": {
+            "linear": [
+              0.046451033109471705,
+              -0.08101445943387695,
+              -0.129351463348413
+            ],
+            "angular": [
+              1.1846828894794297,
+              -1.0574532129165144,
+              -0.28464966261304714
+            ],
+            "omega": [
+              0.025696038243007563,
+              -0.08000362891819238,
+              -0.012761521578861557
+            ],
+            "air": [
+              0,
+              0,
+              0
+            ],
+            "peak": 1.194336973695051
+          },
+          "airVelocity": [
+            0,
+            0,
+            0
+          ],
+          "version": 954
+        }
+      }
+    },
+    {
+      "name": "actual-root-relative-hair-motion-and-moving-shadow-maps",
+      "data": {
+        "excursionMetres": 0.26761747269065944,
+        "shadowHashes": [
+          4134931724,
+          303750652,
+          2923497563,
+          2682131662,
+          3996869136
+        ],
+        "shadowProxyGuideCount": 96,
+        "sourceTextureType": 1015,
+        "guidePhysics": {
+          "constraintFallbacks": 0,
+          "infeasibleConstraints": 0,
+          "maxPenetration": 0,
+          "bundleContact": {
+            "method": "spatially local guide-bundle closing impulses and Coulomb sliding with compression preload",
+            "coefficient": 0.24,
+            "bundleRadius": 0.0045,
+            "pairs": 1132,
+            "contacts": 246,
+            "frictionDissipationJ": 3.2151403242788063e-9,
+            "cpuMS": 0,
+            "individualFiberSelfCollision": false
+          },
+          "contactFriction": 0.18,
+          "matrixBuilds": 2,
+          "quietSteps": 0,
+          "sleepDrift": 0,
+          "timings": {
+            "binding": 0.09999996423721313,
+            "integration": 0.10000002384185791,
+            "sweep": 1,
+            "solves": 3.199999988079071,
+            "chain": 2.5,
+            "friction": 0.10000002384185791,
+            "forces": 1.199999988079071,
+            "constraints": 5.800000011920929,
+            "detail": 0.699999988079071
+          },
+          "detailModes": 128000,
+          "detailPeakMetres": 0.020708600921999824,
+          "airModel": "advected spatial field, transverse drag and exposure approximation",
+          "model": "gravity + XPBD head-frame linear rod curvature + chain length/contact intersections",
+          "style": "long",
+          "nominalLength": 0.43,
+          "guides": 96,
+          "nodes": 25,
+          "nominalStep": 0.016666666666666666,
+          "actualStep": 0.016666666666666666,
+          "workQuality": 1,
+          "solverMode": "two coupled bend/contact/length iterations",
+          "rootPinned": true,
+          "rootError": 0,
+          "maxRelativeStretch": 0.0002700031097154776,
+          "maxOffset": 0.3612746676483512,
+          "maxVelocity": 3.55534380614672,
+          "tipSpeed": 3.595092527389813,
+          "kineticEnergy": 0.00006167844275694344,
+          "steps": 45,
+          "time": 0.7500000000000007,
+          "wind": 0.38,
+          "windEnabled": false,
+          "paused": false,
+          "active": true,
+          "cpuMS": 7.899999976158142,
+          "droppedSeconds": 0,
+          "revision": 46,
+          "rootSway": false,
+          "stiffness": 0.5,
+          "damping": 1.7
+        }
+      }
+    },
+    {
+      "name": "distant-inertia-remains-active",
+      "data": {
+        "before": 87,
+        "after": 87,
+        "distance": {
+          "automatic": true,
+          "actors": 1,
+          "totalBudget": 128000,
+          "visibleStrands": 1130,
+          "focusIndex": 0,
+          "fineActors": 0,
+          "fineWeight": 0,
+          "activeDetailModes": 0,
+          "cpuMS": 0,
+          "updateMS": 0.09999996423721313,
+          "carrierTriangles": 0,
+          "restFieldCacheBytes": 12812288,
+          "sharedFollicleBuffers": true,
+          "sharedTransmittanceCache": true,
+          "coarseActive": true,
+          "fineContactSolverLimit": 1,
+          "independentCoarseModes": true,
+          "coarseModel": "four directional 3D pendulums, gravity scale, linear/angular/centripetal inertia and air drag",
+          "coarsePeak": 0.09610492435270561,
+          "coarseContact": "GPU contact projection for the moving or externally contacted focus; distant static actors reuse the collision-cleared rest field",
+          "meshSubstitution": false,
+          "entries": [
+            {
+              "pixels": 46.658418359243115,
+              "budget": 873.3230167407849,
+              "segments": 32,
+              "fineWeight": 0
+            }
+          ]
+        },
+        "change": 0.06521528221585271
+      }
+    },
+    {
+      "name": "shader-programs-and-context",
+      "data": {
+        "contextLost": false,
+        "driver": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "fragmentSamplerLimit": 16,
+        "programs": [
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tColor",
+                "size": 1
+              },
+              {
+                "name": "tDepth",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 3
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tFull",
+                "size": 1
+              },
+              {
+                "name": "tDiffuse",
+                "size": 1
+              },
+              {
+                "name": "tBlur",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 16
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "tFull",
+                "size": 1
+              },
+              {
+                "name": "tDiffuse",
+                "size": 1
+              },
+              {
+                "name": "tBlur",
+                "size": 1
+              },
+              {
+                "name": "tAlbedo",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 2
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [],
+            "totalSamplers": 0
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 4
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "cachedHair",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "mrRanges",
+                "size": 1
+              },
+              {
+                "name": "mrEntries",
+                "size": 1
+              },
+              {
+                "name": "mrBones",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 3
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "mrCache0",
+                "size": 1
+              },
+              {
+                "name": "mrCache1",
+                "size": 1
+              },
+              {
+                "name": "mrCache2",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 3
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "mrCache0",
+                "size": 1
+              },
+              {
+                "name": "mrCache1",
+                "size": 1
+              },
+              {
+                "name": "mrCache2",
+                "size": 1
+              },
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 7
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 3
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "mrCache0",
+                "size": 1
+              },
+              {
+                "name": "mrCache1",
+                "size": 1
+              },
+              {
+                "name": "mrCache2",
+                "size": 1
+              },
+              {
+                "name": "uE6Packed",
+                "size": 1
+              },
+              {
+                "name": "uRFPores",
+                "size": 1
+              },
+              {
+                "name": "uRFIndex",
+                "size": 1
+              },
+              {
+                "name": "uETIndex",
+                "size": 1
+              },
+              {
+                "name": "uETPores",
+                "size": 1
+              },
+              {
+                "name": "uLAtlas",
+                "size": 1
+              },
+              {
+                "name": "uIColor",
+                "size": 1
+              },
+              {
+                "name": "uIHeight",
+                "size": 1
+              },
+              {
+                "name": "uFAtlas",
+                "size": 1
+              },
+              {
+                "name": "uFChroma",
+                "size": 1
+              },
+              {
+                "name": "uCShadowMap",
+                "size": 1
+              },
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "neColorLayers",
+                "size": 1
+              },
+              {
+                "name": "neVessels",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 19
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "poseMap",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "chart",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "poseMap",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 1
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "nativePositionMap",
+                "size": 1
+              },
+              {
+                "name": "guideMap",
+                "size": 1
+              },
+              {
+                "name": "detailMap",
+                "size": 1
+              },
+              {
+                "name": "restGuideMap",
+                "size": 1
+              },
+              {
+                "name": "pack0",
+                "size": 1
+              },
+              {
+                "name": "pack1",
+                "size": 1
+              },
+              {
+                "name": "pack2",
+                "size": 1
+              },
+              {
+                "name": "pack3",
+                "size": 1
+              },
+              {
+                "name": "pack4",
+                "size": 1
+              },
+              {
+                "name": "pack5",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 10
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "headSurface",
+                "size": 1
+              },
+              {
+                "name": "bodySurface",
+                "size": 1
+              },
+              {
+                "name": "pack0",
+                "size": 1
+              },
+              {
+                "name": "pack1",
+                "size": 1
+              },
+              {
+                "name": "pack2",
+                "size": 1
+              },
+              {
+                "name": "pack3",
+                "size": 1
+              },
+              {
+                "name": "pack4",
+                "size": 1
+              },
+              {
+                "name": "pack5",
+                "size": 1
+              },
+              {
+                "name": "previousLine",
+                "size": 1
+              },
+              {
+                "name": "desiredMap",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 10
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "shadowGuides",
+                "size": 1
+              },
+              {
+                "name": "shadowFrames",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 2
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "shadowGuides",
+                "size": 1
+              },
+              {
+                "name": "shadowFrames",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 2
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "fineFiberMap",
+                "size": 1
+              },
+              {
+                "name": "nativePositionMap",
+                "size": 1
+              },
+              {
+                "name": "guideMap",
+                "size": 1
+              },
+              {
+                "name": "frameMap",
+                "size": 1
+              },
+              {
+                "name": "detailMap",
+                "size": 1
+              },
+              {
+                "name": "restGuideMap",
+                "size": 1
+              },
+              {
+                "name": "restFrameMap",
+                "size": 1
+              },
+              {
+                "name": "restFiberMap",
+                "size": 1
+              },
+              {
+                "name": "headSurface",
+                "size": 1
+              },
+              {
+                "name": "bodySurface",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              },
+              {
+                "name": "nativeDepth",
+                "size": 1
+              }
+            ],
+            "totalSamplers": 13
+          },
+          {
+            "linked": true,
+            "samplers": [
+              {
+                "name": "envMap",
+                "size": 1
+              },
+              {
+                "name": "directionalShadowMap[0]",
+                "size": 2
+              }
+            ],
+            "totalSamplers": 3
+          }
+        ],
+        "skin": {
+          "version": "SKIN-DNA-R02.1+R06",
+          "recipe": {
+            "schema": "kaopu.skin-dna/2",
+            "preset": "silk",
+            "enabled": true,
+            "quality": "fast",
+            "profile": {
+              "seed": 41731,
+              "melanin": 0.22,
+              "blood": 0.24,
+              "variation": 0.48,
+              "freckles": 0.035,
+              "sun": 0.12,
+              "age": 0.2,
+              "oil": 0.27,
+              "hydration": 0.55,
+              "pores": 0.65,
+              "poreScale": 1,
+              "detail": 0.55
+            },
+            "state": {
+              "flush": 0,
+              "sweat": 0,
+              "dryness": 0
+            }
+          },
+          "material": {
+            "version": "SKIN-DNA-MATERIAL-R02",
+            "compiles": 12,
+            "sourceGeometryChanged": false,
+            "wholeBodyIdentity": true,
+            "measuredOptics": false,
+            "chromophores": "Official BioSkin spectral decoder offline LUT; fixed 2D slice, not medical concentrations",
+            "bioSkinSource": "6cca1a76ac3f53077579c4249983ec91d855801d",
+            "lutBytes": 8976,
+            "sharedFloatTable": true,
+            "extraFragmentSamplers": 0,
+            "addedWrinkleGeometry": false,
+            "noiseCreaseLayer": false,
+            "randomPigmentIslands": false,
+            "pores": "seeded subset and dimensions of retained area-sampled surface candidates",
+            "poreColourDots": false,
+            "specularIndependentOfMelanin": true,
+            "fragmentBytes": 62822,
+            "uniforms": [
+              "uSDOn",
+              "uSDMel",
+              "uSDBlood",
+              "uSDVariation",
+              "uSDFreckles",
+              "uSDSun",
+              "uSDAge",
+              "uSDOil",
+              "uSDHydration",
+              "uSDPores",
+              "uSDPoreScale",
+              "uSDDetail",
+              "uSDFlush",
+              "uSDSweat",
+              "uSDDry",
+              "uSDView",
+              "uSDSeed",
+              "uSDOffset",
+              "uSDBioRow"
+            ]
+          },
+          "eyePacking": {
+            "version": "EYE-COLOR-SAMPLER-PACK-2",
+            "sources": 3,
+            "layers": 3,
+            "width": 1024,
+            "height": 1024,
+            "colorSpace": "sRGB",
+            "vesselDataSeparate": true,
+            "sourceResized": false,
+            "geometryChanged": false,
+            "baseBytes": 12582912,
+            "savedFragmentSamplers": 2,
+            "allPixelsCopied": true,
+            "transparentTexelRGBPreserved": true,
+            "sourceSHA256": [
+              "6cf688756e0867bcae6ce911b8a6a68e0fad0113998087506e41ca6cc642ba70",
+              "ea78bf4b3bae42e463d6f809d7d02321ad768da5e8d16fba034d6067e9fb653e",
+              "04112d02ad7df944a083cc8964efd318f9a3a285853878b8b1ce6e30bf933207"
+            ],
+            "decodedRGBASHA256": [
+              "72e92b530fb910976e22d02ebf0e6630e2ff75bdde757bf588b2b0f92f8b8d06",
+              "86f67a61679bf3438de0cc152cca4b3553cba41daceac6810e99d62796c552fd",
+              "c9dc71bd634accc720846e0389fb4fbff73a6a129c339771f3b5fcbb07b2adc5"
+            ]
+          },
+          "sourceGeometryChanged": false,
+          "surfaceOwner": "SKIN-FULLBODY-R02",
+          "procedural": {
+            "version": "SKIN-FULLBODY-R02",
+            "settings": {
+              "enabled": true,
+              "regionalColor": 0.72,
+              "lidWarmth": 0.46,
+              "noseWarmth": 0.38,
+              "earBlood": 0.44,
+              "earTransmission": 0.58,
+              "bodyVariation": 0.64,
+              "bodyPores": 0.78,
+              "jointTone": 0.42,
+              "neckCreases": 0.34,
+              "beardShadow": 0.04,
+              "audit": 0
+            },
+            "shaderCompiles": 3,
+            "source": "50f9dd769893584dedb62f0bc62db07ebcb1dcc0",
+            "restOffset": [
+              0,
+              0.445,
+              0.016
+            ],
+            "coordinateMethod": "one continuous native csRest minus native head-frame translation; no zero body fRest",
+            "skinMaps": 0,
+            "bodyGeometryChanged": false,
+            "canonicalTopologyChanged": false,
+            "thicknessSource": "native R05 geometry millimetres / path confidence",
+            "transmissionVisibility": "native R06 pinna-exit and head-occlusion field",
+            "fullVolumetricTransport": false,
+            "physicalPhone": false,
+            "userVisualAccepted": false,
+            "lookCalibration": "R02-C2",
+            "bodyMottlingReduced": true,
+            "headC4ChromaRetained": true,
+            "view": "bust",
+            "earBacklightInspection": false,
+            "earBacklightViewStateOnly": true,
+            "earLampDirectionInHeadFrame": [
+              0,
+              0.4,
+              -1
+            ],
+            "earLampIntensity": 4,
+            "nativeViewLightingRestored": true,
+            "transmissionControlLinear": true
+          }
+        },
+        "dermal": {
+          "version": "DERMAL-OPTICS-R01",
+          "preset": "luminous",
+          "scatter": 0.72,
+          "veins": 0.25,
+          "micro": 1.18,
+          "diffusion": true,
+          "surfacePores": "retained surface candidates plus original cellular microrelief, bounded micrometre relief and pixel-footprint filtering",
+          "vessels": "soft procedural intradermal colour absorption on temples and upper cheeks; stable rest-space curves",
+          "scattering": "RGB angular approximation plus retained diffuse-only face diffusion; no volume path tracing",
+          "extraTextureSamplers": 0,
+          "medicalMeasurement": false
+        },
+        "meshCount": 2
+      }
+    }
+  ],
+  "desktopMouseControlled": false
+}
