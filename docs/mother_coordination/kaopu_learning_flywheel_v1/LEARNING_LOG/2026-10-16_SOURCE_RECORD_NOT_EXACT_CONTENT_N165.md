@@ -71,7 +71,7 @@
 
 - regression：`SOURCE-RECORD-NOT-EXACT-CONTENT-001`（Candidate）
 - classification replay：8/8
-- POSTED：false
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6219282410
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - 同一对话内观察到同机制过度表述：2
 - 首次候选通过率、用户纠错次数、同错复发率、stale delivery、accepted delta 内部迭代数及从指令到合法 candidate 时间：unknown
