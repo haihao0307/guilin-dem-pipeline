@@ -64,7 +64,7 @@ R2 已明确规定 `LOCK -> EXECUTE -> VERIFY -> PROMOTE`，只有全部门禁�
 
 - regression：`FINAL-CLAIM-CLOSURE-001`（existing Candidate; N166 evidence update）
 - classification replay：8/8
-- POSTED：false
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6223407254
 - ACKNOWLEDGED / IMPLEMENTED / TARGET-GATE-RUN / ADOPTED / USER-ACCEPTED：false
 - exact-head post-promotion green timelines observed：2
 - 首次候选通过率、用户纠错次数、同错复发率、accepted delta 内部迭代数及从指令到合法 candidate 时间：unknown
