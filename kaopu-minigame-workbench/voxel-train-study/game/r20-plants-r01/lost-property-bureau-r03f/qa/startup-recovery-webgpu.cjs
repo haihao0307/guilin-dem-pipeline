@@ -23,4 +23,4 @@ for(const file of baseline.oldSourceFiles){
 console.log('UNCHANGED_SDF_BASELINE',baseline.baseline,baseline.oldSourceFiles.length,'files');
 execFileSync(process.execPath,[path.join(qa,'core.test.mjs')],{stdio:'inherit'});
 execFileSync(process.execPath,[path.join(qa,'geometry.test.mjs')],{stdio:'inherit'});
-module.exports=require(path.join(qa,'browser.cjs'));
+module.exports=require(path.join(qa,'backpressure-diagnostic.cjs'));
