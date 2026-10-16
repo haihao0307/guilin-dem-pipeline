@@ -13,7 +13,7 @@ export function buildObject(T,family,materials){
   box(.09,.34,.024,[0,.61,.076]);for(const y of [.49,.74]){const b=bolt(0,y,.095);b.rotation.x=Math.PI/2;}
   const pts=[[0,3.5,0],[.12,3.72,0],[.4,3.8,0],[.76,3.8,0]].map(p=>new T.Vector3(...p));put(new T.TubeGeometry(new T.CatmullRomCurve3(pts),28,.044,16,false),materials.metal);
   const shade=put(new T.SphereGeometry(1,28,16,0,Math.PI*2,0,Math.PI*.5),materials.metal,[.76,3.75,0]);shade.scale.set(.31,.14,.22);
-  const lens=put(new T.CircleGeometry(.21,32),materials.lens,[.76,3.733,0]);lens.rotation.x=-Math.PI/2;lens.scale.x=1.3;
+  const lens=put(new T.CircleGeometry(.21,32),materials.lens,[.76,3.733,0]);lens.rotation.x=Math.PI/2;lens.scale.x=1.3;
  }else if(family==='rack'){
   box(2.25,2.38,.12,[0,1.19,-.12],materials.masonry);
   for(const x of [-.9,.9]){box(.15,.26,.028,[x,1.72,0]);for(const y of [1.63,1.81]){const b=bolt(x,y,.025);b.rotation.x=Math.PI/2;}rod([x,1.72,.04],[x,1.88,1.33],.025);rod([x,1.35,.04],[x,1.88,1.28],.019);}

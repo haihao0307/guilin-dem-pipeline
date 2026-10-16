@@ -18,7 +18,7 @@ StreetSample metalSample(vec3 p,float fp){
  float structure=clamp(.48*seam+.45*baseContact,0.,1.);
  float n=mt_kfb(p*8.3+vec3(9.1,2.7,5.3));
  float edge=1.-smoothstep(.1,.38,abs(vLocalN.y));
- float loss=smoothstep(.75-.58*wear,.86-.58*wear,n+.26*structure)*wear;
+ float loss=smoothstep(.85-.36*wear,.96-.36*wear,n+.26*structure)*wear;
  float patchMask=1.-smoothstep(.02,.06,softBox(vec2(p.y-1.15,p.x),vec2(.22,.36),.025));
  loss*=1.-repair*patchMask;
  float rust=clamp(loss*(.35+.65*structure+.28*history),0.,1.);
@@ -28,7 +28,7 @@ StreetSample metalSample(vec3 p,float fp){
  if(uFamily>.5&&uFamily<1.5)fromJoint=exp(-max(1.88-p.y,0.)/.7)*step(p.y,1.88);
  if(uFamily>1.5)fromJoint=exp(-max(2.45-p.y,0.)/.8)*step(p.y,2.45);
  float runoff=history*streakX*fromJoint*(.28+.72*wear);
- vec3 coat=vec3(.065,.105,.087),steel=vec3(.27,.29,.28),oxide=vec3(.22,.069,.020);
+ vec3 coat=vec3(.065,.105,.087),steel=vec3(.27,.29,.28),oxide=vec3(.11,.028,.007);
  float metal=loss*(1.-rust),rough=.44+.22*loss+.25*rust;
  vec3 color=mix(coat,steel,loss);color=mix(color,oxide,rust);
  if(uFamily>.5&&uFamily<1.5){color=mix(vec3(.45,.48,.47),vec3(.34,.36,.34),loss);color=mix(color,vec3(.55,.53,.46),rust*.8);color=mix(color,oxide,rust*structure*.45);metal=1.-rust;rough=.32+.43*rust+.12*loss;}
@@ -72,7 +72,7 @@ StreetSample roadSample(vec3 p,float fp){
  float joint=0.;if(concrete){float dist=abs(mod(q.y+1.5,3.)-1.5);joint=1.-smoothstep(.006,.014+fp,dist);base=mix(base,vec3(.07,.075,.07),joint*.72);}
  float edgeLine=1.-smoothstep(.035,.055+fp,abs(abs(q.x)-3.02));
  float centerLine=(1.-smoothstep(.045,.06+fp,abs(q.x)))*(1.-step(1.9,mod(q.y+4.5,3.)));
- float paint=clamp(edgeLine+centerLine,0.,1.);
+ float paint=clamp(edgeLine+centerLine,0.,1.)*smoothstep(.65,.85,vLocalN.y);
  float lostPaint=smoothstep(.5-.25*wear,.72-.25*wear,mt_kfb(vec3(q*14.,11.)))*wear;
  paint*=1.-lostPaint;paint*=1.-patchMask;
  vec3 marking=mix(vec3(.71,.70,.59),vec3(.73,.50,.075),centerLine);
