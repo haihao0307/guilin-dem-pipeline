@@ -19,6 +19,9 @@ export function buildTrain(T,overrides={}){
  const originalMatter=createTrainMatter(T);Object.assign(M,{paint:originalMatter.paint,gold:originalMatter.brass,brass:originalMatter.brass,steel:originalMatter.steel,iron:originalMatter.iron,black:originalMatter.black,wood:originalMatter.wood,seat:originalMatter.leather,glass:originalMatter.glass});M.paint.side=T.DoubleSide;
  // Candidate optical tuning: preserve the full dielectric shader and finite pane; no alpha substitute.
  M.glass=M.glass.clone();M.glass.name='R04 finite panoramic glass / tinted dielectric';M.glass.color.set('#a9c9bf');M.glass.attenuationColor.set('#366957');M.glass.attenuationDistance=.16;M.glass.envMapIntensity=.45;M.glass.transmission=.96;M.glass.roughness=.035;
+ // QA-only field isolation. Default values preserve the original complete shader exactly.
+ const paintKey=M.paint.customProgramCacheKey;M.paint.customProgramCacheKey=()=>paintKey()+'/r04-diagnostic-uniforms-default-exact';const paintCompile=M.paint.onBeforeCompile;M.paint.onBeforeCompile=(shader,...args)=>{paintCompile(shader,...args);shader.uniforms.r04RoughnessField={value:1};shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform float r04RoughnessField;').replace('(kn(kq*9.)-.5)*.12','(kn(kq*9.)-.5)*.12*r04RoughnessField');M.paint.userData.diagnosticUniforms=shader.uniforms;};
+
 
 
  const group=(n,p=root)=>{const g=new T.Group();g.name=n;p.add(g);return g};
@@ -73,7 +76,9 @@ export function buildTrain(T,overrides={}){
  for(const x of[23.1,26.6]){E.rod([x,0,3.85],[x,0,3.93],.20,'paint','flush sealed oil-water filling cover',40);}
 
  function endCap(x,name){const pts=[];for(let j=-96;j<=96;j++){const side=j<0?-1:1,[y,z]=sectionPoint(sectionAt(x),Math.abs(j)/96);pts.push(new T.Vector2(side*y,z))}const g=new T.ShapeGeometry(new T.Shape(pts)),p=g.attributes.position;for(let i=0;i<p.count;i++)p.setXYZ(i,x,p.getX(i),p.getY(i));g.computeVertexNormals();const o=new T.Mesh(g,M.paint);o.name=name;details.add(o)}
- endCap(D.noseX,'continuous rounded nose closure pending reference clearance');endCap(D.tenderEnd,'flat matching rear oil-water bulkhead');
+ endCap(D.noseX,'sub-pixel terminal closure of continuous rounded nose');
+ // Flush painted inspection closure belongs to the same analytic skin; only its narrow joint is marked.
+ {const x=-.60,pts=[];for(let j=-96;j<=96;j++){const side=j<0?-1:1,t=Math.abs(j)/96,n=shellNormal(T,x,t,side);pts.push(shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.0009));}E.pipe(pts,.0012,'black','fine flush nose inspection seam / shared curvature and paint');}endCap(D.tenderEnd,'flat matching rear oil-water bulkhead');
  const gear=createRunningGear(T,{...D,coachBogieCentres:[]},M);root.add(gear.root);const running=gear.root;
  // Forward frame extensions join the restored bored main plates at X=8.32.
  const F=kit(T,M,running);for(const side of[-1,1])F.box([6.95,side*.50,1.57],[2.74,.034,.42],'iron','forward frame extension to restored main plates');
