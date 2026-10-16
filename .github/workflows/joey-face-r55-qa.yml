@@ -1,8 +1,8 @@
-name: R64 versus R11 original complete-material comparison
+name: R64 versus R14 original complete-material comparison
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/full-material-r11/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/full-material-r14/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        frame: [baseline-r64, candidate-r11]
+        frame: [baseline-r64, candidate-r14]
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r11
+            kaopu-unified-human-workbench/joey-observation-r01/full-material-r14
             kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
             kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
@@ -39,16 +39,16 @@ jobs:
       - name: Verify retained cosmetics and brow contracts
         run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
       - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/full-material-r11/render-native-ci.cjs
+        run: node --check kaopu-unified-human-workbench/joey-observation-r01/full-material-r14/render-native-ci.cjs
       - name: Render complete inherited portrait and restore original archive
         env:
           FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/full-material-r11/render-native-ci.cjs
+        run: node kaopu-unified-human-workbench/joey-observation-r01/full-material-r14/render-native-ci.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-r11-full-material-${{ matrix.frame }}-${{ github.sha }}
-          path: kaopu-unified-human-workbench/joey-observation-r01/full-material-r11/evidence/
+          name: joey-r14-full-material-${{ matrix.frame }}-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/full-material-r14/evidence/
           retention-days: 7
 
 
