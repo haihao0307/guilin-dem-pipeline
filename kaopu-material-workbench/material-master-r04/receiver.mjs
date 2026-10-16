@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id);
 window.addEventListener('error',e=>{errors.push(e.message);lab.ready=false;});
 try{
  const host=$('viewport'),canvas=$('canvas'),renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
- renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setClearColor(0xeae8e2,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+ renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setClearColor(0xeae8e2,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
  renderer.debug.onShaderError=(gl,p,vs,fs)=>{const error=[gl.getProgramInfoLog(p),gl.getShaderInfoLog(vs),gl.getShaderInfoLog(fs)].filter(Boolean).join('\n');errors.push(error);lab.ready=false;$('status').textContent='着色异常';console.error(error);};
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.02,60),controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.minDistance=.25;controls.maxDistance=14;controls.maxPolarAngle=Math.PI*.54;
  scene.add(new T.HemisphereLight(0xfff5e3,0x7c856d,.95));
@@ -19,18 +19,37 @@ try{
  const pmrem=new T.PMREMGenerator(renderer),envTarget=pmrem.fromScene(env,.03);scene.environment=envTarget.texture;scene.environmentIntensity=.72;pmrem.dispose();env.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
  const ground=new T.Mesh(new T.PlaneGeometry(30,30),new T.ShadowMaterial({color:0x52604b,opacity:.17}));ground.rotation.x=-Math.PI/2;ground.position.y=-.006;ground.receiveShadow=true;scene.add(ground);
  let view='front',separation=1.48,pendingBuild=0;
+ // Render only after a real change. OrbitControls emits change while damping settles.
+ // Shadow geometry/light state is static between rebuilds; camera/material changes reuse it.
+ let animationFrame=0,rendering=false,pendingRender=false,minimumFrames=0;
+ function scheduleFrame(){if(!animationFrame&&!rendering)animationFrame=requestAnimationFrame(()=>{animationFrame=0;renderNow();});}
+ function invalidate({shadows=false,frames=1}={}){
+  if(shadows){renderer.shadowMap.needsUpdate=true;lab.shadowInvalidations=(lab.shadowInvalidations||0)+1;}
+  minimumFrames=Math.max(minimumFrames,Math.max(1,frames));pendingRender=true;scheduleFrame();
+ }
+ function renderNow({shadows=false}={}){
+  if(animationFrame){cancelAnimationFrame(animationFrame);animationFrame=0;}
+  if(shadows){renderer.shadowMap.needsUpdate=true;lab.shadowInvalidations=(lab.shadowInvalidations||0)+1;}
+  rendering=true;pendingRender=false;
+  try{controls.update();renderer.render(scene,camera);lab.frames++;minimumFrames=Math.max(0,minimumFrames-1);
+   if(lab.frames-lab.lastBuildFrame>=3&&!errors.length&&!lab.ready){lab.ready=true;$('status').textContent='实时材质';$('loading').hidden=true;}
+  }finally{rendering=false;}
+  if(pendingRender||minimumFrames>0)scheduleFrame();
+  return lab.frames;
+ }
+ controls.addEventListener('change',()=>invalidate());
  function build(){lab.ready=false;for(const g of groups){scene.remove(g);g.userData.dispose();}groups.length=0;shaders.length=0;
   for(let i=0;i<2;i++){const group=buildTileCase(T,{...state,variant:i,wear:i?state.wear:0,stain:i?state.stain:0,wetness:i?state.wetness:0,shaders});groups.push(group);}
   const width=new T.Box3().setFromObject(groups[0]).getSize(new T.Vector3()).x;separation=width*.5+.22;groups.forEach((g,i)=>{g.position.x=(i?1:-1)*separation;scene.add(g);});
   lab.receivers=groups.map(g=>g.userData.receiver);lab.rebuilds=(lab.rebuilds||0)+1;lab.lastBuildFrame=lab.frames;
   $('dimensions').textContent=`${Math.round(state.width*1000)} × ${Math.round(state.height*1000)} mm · 缝 ${(state.joint*1000).toFixed(1)} mm`;
-  $('status').textContent='构建中';setView(view);
+  $('status').textContent='构建中';setView(view);invalidate({shadows:true,frames:3});
  }
- function update(){groups[1]?.userData.update(state);groups[0]?.userData.update({mode:state.mode});lab.updates=(lab.updates||0)+1;}
+ function update(){groups[1]?.userData.update(state);groups[0]?.userData.update({mode:state.mode});lab.updates=(lab.updates||0)+1;invalidate();}
  function setView(value){view=value;lab.view=value;const narrow=host.clientWidth<550,h=groups[1]?.userData.receiver.wallHeight||1.5;
   const p=value==='close'?[separation+.12,h*.57,.57]:value==='joint'?[separation+.08,h*.53,.30]:value==='angle'?[3.5,2.7,4.7]:[.30,1.90,narrow?7.8:5.6];
   const target=value==='close'?[separation+.05,h*.52,0]:value==='joint'?[separation+.02,h*.50,0]:[0,h*.48,-.06];
-  camera.position.fromArray(p);controls.target.fromArray(target);controls.update();document.querySelector('.compare').hidden=['close','joint'].includes(value);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===value));
+  camera.position.fromArray(p);controls.target.fromArray(target);controls.update();document.querySelector('.compare').hidden=['close','joint'].includes(value);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===value));invalidate();
  }
  function syncUI(){for(const k of ['width','height','joint']){$(k).value=state[k]*1000;$(k+'Out').textContent=(state[k]*1000).toFixed(k==='joint'?1:0);}for(const k of ['wear','stain','wetness']){$(k).value=state[k];$(k+'Out').textContent=state[k].toFixed(2);}document.querySelectorAll('[data-case]').forEach(b=>{const active=b.dataset.case===state.finish;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active);});document.querySelectorAll('[data-mode]').forEach(b=>{const active=+b.dataset.mode===state.mode;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active);});$('familyTitle').textContent=TILE_CASES[state.finish].name;$('familyDetail').textContent=TILE_CASES[state.finish].description;}
  function setCase(id){if(!TILE_CASES[id])throw Error('Unknown case');state.finish=id;reset();}
@@ -38,8 +57,8 @@ try{
  for(const k of ['wear','stain','wetness'])$(k).oninput=e=>{state[k]=+e.target.value;$(k+'Out').textContent=state[k].toFixed(2);update();};
  for(const k of ['width','height','joint'])$(k).oninput=e=>{state[k]=+e.target.value*.001;$(k+'Out').textContent=(state[k]*1000).toFixed(k==='joint'?1:0);cancelAnimationFrame(pendingBuild);pendingBuild=requestAnimationFrame(build);};
  document.querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>setCase(b.dataset.case));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=+b.dataset.mode;syncUI();update();});$('reset').onclick=reset;$('resetView').onclick=()=>setView('front');
- let lastNarrow=host.clientWidth<550;function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();const narrow=w<550;if(lastNarrow!==narrow){lastNarrow=narrow;setView(view);}}
- new ResizeObserver(resize).observe(host);Object.assign(lab,{renderer,scene,camera,controls,build,update,setView,setCase,reset});syncUI();build();resize();
- canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lab.ready=false;errors.push('WebGL context lost');$('status').textContent='图形上下文中断';$('error').hidden=false;$('error').textContent='图形上下文中断，请重新加载页面。';});
- function render(){requestAnimationFrame(render);controls.update();renderer.render(scene,camera);lab.frames++;if(lab.frames-lab.lastBuildFrame>=3&&!errors.length){lab.ready=true;$('status').textContent='实时材质';$('loading').hidden=true;}}render();
+ let lastNarrow=host.clientWidth<550;function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();const narrow=w<550;if(lastNarrow!==narrow){lastNarrow=narrow;setView(view);}invalidate();}
+ new ResizeObserver(resize).observe(host);Object.assign(lab,{renderer,scene,camera,controls,build,update,setView,setCase,reset,renderNow,invalidate});syncUI();build();resize();
+ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(animationFrame);animationFrame=0;pendingRender=false;minimumFrames=0;lab.ready=false;errors.push('WebGL context lost');$('status').textContent='图形上下文中断';$('error').hidden=false;$('error').textContent='图形上下文中断，请重新加载页面。';});
+ // build() has scheduled three actual frames. There is no perpetual idle render loop.
 }catch(error){errors.push(String(error));lab.ready=false;$('error').hidden=false;$('error').textContent='无法启动材质预览：'+error.message;$('loading').hidden=true;$('status').textContent='启动失败';console.error(error);}

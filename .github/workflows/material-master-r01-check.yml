@@ -33,7 +33,9 @@ jobs:
           if grep -q '^kaopu-material-workbench/material-master-r02/' "$RUNNER_TEMP/material-changed.txt"; then echo "r02=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r04/' "$RUNNER_TEMP/material-changed.txt"; then echo "r04=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt"; then echo "r03changed=true" >> "$GITHUB_OUTPUT"; fi
-          if grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|README.md|sources/wood-glass-provenance.json|qa/.*)$'; then
+          if grep -q '^kaopu-material-workbench/material-master-r03/catalogue.mjs$' "$RUNNER_TEMP/material-changed.txt" && ! grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(catalogue.mjs|qa/tile-entry.cjs)$'; then
+            echo "r03=tiles" >> "$GITHUB_OUTPUT"
+          elif grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|README.md|sources/wood-glass-provenance.json|qa/.*)$'; then
             echo "r03=full" >> "$GITHUB_OUTPUT"
           else
             echo "r03=receivers" >> "$GITHUB_OUTPUT"
@@ -53,8 +55,13 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
         run: node kaopu-material-workbench/material-master-r04/qa/browser.cjs
+      - name: R03 ceramic catalogue entry
+        if: steps.scope.outputs.r03changed == 'true' && steps.scope.outputs.r03 == 'tiles'
+        env:
+          NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
+        run: node kaopu-material-workbench/material-master-r03/qa/tile-entry.cjs
       - name: R03 atlas rendering and interactions
-        if: steps.scope.outputs.r03changed == 'true'
+        if: steps.scope.outputs.r03changed == 'true' && steps.scope.outputs.r03 != 'tiles'
         env:
           R03_QA_SCOPE: ${{ steps.scope.outputs.r03 }}
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
@@ -80,6 +87,7 @@ jobs:
             kaopu-material-workbench/material-master-r02/qa/browser-receipt.json
             kaopu-material-workbench/material-master-r03/qa/*.png
             kaopu-material-workbench/material-master-r03/qa/browser-receipt.json
+            kaopu-material-workbench/material-master-r03/qa/tile-entry-receipt.json
             kaopu-material-workbench/material-master-r04/qa/*.png
             kaopu-material-workbench/material-master-r04/qa/browser-receipt.json
           retention-days: 14
