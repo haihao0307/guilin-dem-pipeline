@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu/source-record-content-result@1",
+  "fixture": "source_record_not_exact_content_n165.json",
+  "passed": 8,
+  "total": 8,
+  "observedDocumentState": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+  "observedAerialState": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+  "claimBoundary": {
+    "sourceRecordExistence": "OBSERVED_SCOPED",
+    "exactGazetteBodyText": "UNVERIFIED",
+    "exactAerialFrame": "UNVERIFIED",
+    "requestedLocationCoverage": "UNVERIFIED",
+    "finalResearchCompletion": "NOT_CLAIMED"
+  },
+  "results": [
+    {
+      "name": "no source record identity",
+      "expected": "HOLD_SOURCE_RECORD_UNBOUND",
+      "actual": "HOLD_SOURCE_RECORD_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "current correction: gazette bibliographic record or contents only",
+      "expected": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+      "actual": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "current correction: archive program or mission record without exact frame",
+      "expected": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+      "actual": "SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "downloaded book or contact sheet but target page or frame is not located",
+      "expected": "CONTENT_BYTES_ACQUIRED__HOLD_TARGET_SPAN_UNLOCATED",
+      "actual": "CONTENT_BYTES_ACQUIRED__HOLD_TARGET_SPAN_UNLOCATED",
+      "pass": true
+    },
+    {
+      "name": "located page or frame belongs to wrong subject edition date or coverage",
+      "expected": "TARGET_SPAN_LOCATED__HOLD_REQUESTED_SUBJECT_UNBOUND",
+      "actual": "TARGET_SPAN_LOCATED__HOLD_REQUESTED_SUBJECT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "OCR snippet or inferred coverage is not checked against original object",
+      "expected": "TARGET_SPAN_LOCATED__HOLD_TRANSCRIPTION_OR_FRAME_VERIFICATION",
+      "actual": "TARGET_SPAN_LOCATED__HOLD_TRANSCRIPTION_OR_FRAME_VERIFICATION",
+      "pass": true
+    },
+    {
+      "name": "exact page scan and target passage cross-checked",
+      "expected": "EXACT_CONTENT_VERIFIED_SCOPED",
+      "actual": "EXACT_CONTENT_VERIFIED_SCOPED",
+      "pass": true
+    },
+    {
+      "name": "exact aerial frame and requested-location coverage cross-checked",
+      "expected": "EXACT_CONTENT_VERIFIED_SCOPED",
+      "actual": "EXACT_CONTENT_VERIFIED_SCOPED",
+      "pass": true
+    }
+  ]
+}
