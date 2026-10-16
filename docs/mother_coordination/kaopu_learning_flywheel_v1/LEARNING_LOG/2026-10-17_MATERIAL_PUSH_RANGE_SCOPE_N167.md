@@ -64,7 +64,8 @@ No production workflow or Mother branch was modified. No global OS rule was chan
 
 ## Routing state
 
-- Material Mother / Coordinator: `NOT_QUERIED` at log creation.
+- Material Mother / Coordinator: `POSTED` to issue #91 as comment `6226851959`: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6226851959
+- No real reply was present when this receipt was recorded; therefore `ACKNOWLEDGED` remains no.
 - Teacher lifecycle: `RADAR_FOUND -> TEACHER_CANDIDATE -> AUDITION` (local Git replay completed).
 - `ACKNOWLEDGED`: no.
 - `IMPLEMENTED`: no.
