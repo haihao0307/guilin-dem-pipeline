@@ -1,0 +1,66 @@
+{
+  "schema": "kaopu-hk-r07-current-reduced-release/1",
+  "status": "User-authorized scope reduction; entire Hung Hom high-precision patch omitted",
+  "excludedLocalPatches": [
+    "hung_hom"
+  ],
+  "replacement": "Existing 30m background, high-precision detail pending",
+  "includedConvertedFields": 9,
+  "includedOldHighPrecisionPatches": 4,
+  "retainedKowloonIncrementPatches": 4,
+  "actualLocalDisplaySpacingM": [
+    2,
+    5
+  ],
+  "nativeSourceSpacingM": 0.5,
+  "fullRoute0p5mLoaded": false,
+  "omitted": {
+    "compressedPayloadBytes": 535188,
+    "decodedHeightMaskWeightBytes": 1234812,
+    "filesNotPublic": [
+      "packets/hung_hom-2m.spectrum.gz",
+      "packets/hung_hom-5m.spectrum.gz"
+    ],
+    "noAlternateEncodingOrLegacyFallback": true
+  },
+  "payloadBytes": {
+    "terrain30m": 11567740,
+    "highPrecision8Patches": 5890864,
+    "oldFourPatchesBothLods": 5456491,
+    "retainedKowloonFourPatches": 434373,
+    "bothClasses": 17458604
+  },
+  "requiredManifestsBytes": {
+    "terrain30mExclusive": 973143,
+    "highPrecisionExclusive": 54752,
+    "sharedNewManifest": 182928,
+    "terrain30mPayloadPlusExclusive": 12540883,
+    "highPrecisionPayloadPlusExclusive": 5945616,
+    "bothPayloadsAndAllRequiredManifests": 18669427,
+    "sharedAllocation": "Count shared new manifest once; do not allocate it arbitrarily to either class"
+  },
+  "runtimeBytes": {
+    "newSharedLoaderDecoderCode": 7712,
+    "retainedTwoSpectrumKernels": 8806,
+    "sharedLightHost": 193664,
+    "codeCaution": "Existing renderers, clip/seam/install adapters, buildings and train engines are separate; not a complete game-code total"
+  },
+  "decodedBytes": {
+    "currentNineConvertedFieldsHeightMaskWeightArrays": 18793572,
+    "retainedFourKowloonArrays": 686304,
+    "currentInnerTerrainHeightMaskWeightArrays": 19479876,
+    "eagerOuterOceanMask": 4968652,
+    "outerSpectrumAndWaterInventoryCameraDependent": 32022752,
+    "interpretation": "Actual decoded typed-array byte counts. Generated GPU/CPU geometry and temporary coefficient arrays are distinct, not compressed file size."
+  },
+  "validation": {
+    "allNineFieldFloat32BitsMaskAndWeightBytesVerified": true,
+    "noHungHomOrLegacySourceNetworkRequests": true,
+    "missingHungHomArrayRejected": true,
+    "hostSHA256": "fbc0f39dc142166c2a6cd85533dee2cfe0d51cf35bc8e76f1a9c799a5a9028be",
+    "sourceHostOriginalSHA256": "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117",
+    "newHeightQuantizationAdded": false,
+    "coastTunnelAndOtherTerrainUnchanged": true,
+    "browserQA": "Owned by integrated R07 checks, not claimed by local byte test"
+  }
+}

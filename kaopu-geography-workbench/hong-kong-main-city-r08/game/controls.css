@@ -1,0 +1,31 @@
+/* R08: the retained game controls, original icon artwork and full scene. */
+body.r08-landscape-game{--game-brass:#dfc48b;--game-panel:rgba(17,35,33,.92)}
+body.map-panels-folded #trainHUD{display:flex!important}
+body.map-panels-folded #trainHUD #sceneTools{display:none}
+#trainHUD{left:50%;right:auto;bottom:24px;transform:translateX(-50%);z-index:35;max-width:calc(100vw - 28px);max-height:52vh;overflow:auto;align-items:flex-end}
+#driver{width:min(870px,calc(100vw - 32px));box-sizing:border-box;padding:12px 18px;background:var(--game-panel);border:1px solid #d2b87b60;border-radius:14px}
+#driver h3{display:none}#gameStateR08{margin:0;color:var(--game-brass);font-size:13px;letter-spacing:.04em}
+#trainSpeed{font:34px Georgia,serif;display:inline-block;margin:0 16px 0 0}#trainReadout{display:inline-block;font-size:11px;max-width:70%;vertical-align:middle}
+#trainButtons{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px}
+#trainButtons button{min-height:43px;padding:8px 12px;background:#203932;border-color:#bca66a60;color:#eee7d0}
+#trainButtons button:disabled{opacity:.5;cursor:not-allowed}#trainButtons #depart{background:#b99b59;color:#17291f;font-weight:700}
+#trainButtons .rail-control-icon{width:28px;height:28px;vertical-align:middle;margin-right:4px}#trainButtons #emergency{border-color:#b36b5f;background:#542d2c}
+#trainButtons #stationAction{min-height:30px;padding:3px 9px;font-size:10px}#boardingReasonR08{font-size:10px;color:#c8c8b2;flex:1 1 280px}
+#r08DriveSettings{font-size:11px;margin-top:6px}#r08DriveSettings summary{cursor:pointer;color:#d9c493}#r08DriveSettings label{display:inline-flex;align-items:center;gap:5px;margin-right:12px}#r08DriveSettings input[type=number]{width:58px}#r08DriveSettings small{display:block;color:#bdc9bb}#sliders{margin:8px 0}
+#r08GameViews{position:absolute;left:18px;right:18px;top:76px;display:flex;gap:5px;z-index:36;flex-wrap:wrap;pointer-events:auto}#r08GameViews button{background:var(--game-panel);color:#e8e0c6;border-color:#bbaa7b55;font-size:11px;padding:7px 12px}#r08GameViews button[aria-pressed=true]{background:#c9ae70;color:#17291f}#r08MapTools{margin-left:auto}
+body.r08-landscape-game #nextMapToolbar,body.r08-landscape-game #captionBox,body.r08-landscape-game #mapStatus,body.r08-landscape-game #tours{display:none!important}
+body.r08-tools-open #nextMapToolbar{display:flex!important;top:118px;max-height:45vh;overflow:auto}body.r08-tools-open #trainHUD #sceneTools{display:block!important}
+#mast .brand h1{font-size:18px}#mast .brand div>span{font-size:10px}#mast .brand .mark{display:none}#mast{height:66px}
+#sceneTools{width:380px;max-height:43vh;overflow:auto;box-sizing:border-box}
+#sceneTools #routeR04Toolbar,#sceneTools #consistR05Toolbar{position:static;display:flex;margin:7px 0;padding:7px;max-width:100%;font-size:10px;box-sizing:border-box}
+#sceneTools #routeR04Toolbar button,#sceneTools #consistR05Toolbar button{font-size:10px;padding:5px}
+#sceneTools #r04RouteSummary,#sceneTools #r05ConsistStatus{flex:1 1 100%;font-size:10px}.gameAdvanced>summary{cursor:pointer;color:#e9d6a1}#sceneTools details.gameAdvanced{display:block}
+#r08LandscapeHint{display:none;position:absolute;top:126px;left:12px;right:12px;text-align:center;z-index:30;color:#e7d39b;font-size:11px;pointer-events:none}
+@media(max-height:650px) and (min-width:700px){#r08GameViews{top:55px}#mast{height:48px}#mast .brand h1{font-size:14px}#mast .brand div>span{display:none}#trainHUD{bottom:18px;max-height:44vh}#driver{padding:7px 12px}#trainButtons{gap:4px;margin-top:4px}#trainButtons button{min-height:35px;padding:4px 9px}#gameStateR08{font-size:11px}#trainSpeed{font-size:25px}#trainButtons .rail-control-icon{width:22px;height:22px}#boardingReasonR08{font-size:9px}#trainButtons #stationAction{min-height:26px}}
+@media(orientation:portrait){#r08LandscapeHint{display:block}#r08GameViews{top:72px;left:8px;right:8px;gap:3px}#r08GameViews button{font-size:10px;padding:5px 7px}#trainHUD{left:8px;right:8px;transform:none;bottom:14px;max-width:none;max-height:48vh}#driver{width:100%;padding:9px}#trainButtons{gap:4px}#trainButtons button{font-size:11px;padding:5px 8px;min-height:36px}#trainButtons .rail-control-icon{width:20px;height:20px}#trainReadout{font-size:9px}#trainSpeed{font-size:25px}#sceneTools{width:100%}#mast .brand h1{font-size:13px}#mast .brand div>span{display:none}#mast .quick{top:34px}#boardingReasonR08{flex-basis:100%}}
+/* Compact the inherited map summary spacing without removing game controls. */
+body.r08-landscape-game:not(.r08-tools-open) #mapViews,body.r08-landscape-game:not(.r08-tools-open) #mapLegend,body.r08-landscape-game:not(.r08-tools-open) #northCompass{display:none!important}
+body.r08-tools-open #mapViews{top:118px;max-height:92px;overflow:auto}
+body.r08-tools-open #nextMapToolbar{top:220px}
+#driver{padding:8px 14px}#trainReadout{margin:0 0 2px;min-height:0;line-height:1.4}#trainSpeed{font-size:29px;margin:3px 14px 3px 0}#trainButtons{margin-top:5px}
+#r08DriveSettings summary{margin:5px 0 0;padding-top:5px;font-size:10px}#r08DriveSettings{margin-top:3px}#r08DriveSettings[open] summary{margin-bottom:6px}
