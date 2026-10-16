@@ -1,4 +1,4 @@
-name: Material master R01 R02 R03 R04 browser check
+name: Material master R01 R02 R03 R04 R05 browser check
 on:
   push:
     branches: [main]
@@ -7,6 +7,7 @@ on:
       - 'kaopu-material-workbench/material-master-r02/**'
       - 'kaopu-material-workbench/material-master-r03/**'
       - 'kaopu-material-workbench/material-master-r04/**'
+      - 'kaopu-material-workbench/material-master-r05/**'
       - '.github/workflows/material-master-r01-check.yml'
 permissions:
   contents: read
@@ -23,6 +24,7 @@ jobs:
             kaopu-material-workbench/material-master-r02
             kaopu-material-workbench/material-master-r03
             kaopu-material-workbench/material-master-r04
+            kaopu-material-workbench/material-master-r05
           persist-credentials: false
       - name: Determine bounded regression scope
         id: scope
@@ -31,6 +33,7 @@ jobs:
           git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/material-changed.txt"
           if grep -q '^kaopu-material-workbench/material-master-r01/' "$RUNNER_TEMP/material-changed.txt"; then echo "r01=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r02/' "$RUNNER_TEMP/material-changed.txt"; then echo "r02=true" >> "$GITHUB_OUTPUT"; fi
+          if grep -q '^kaopu-material-workbench/material-master-r05/' "$RUNNER_TEMP/material-changed.txt"; then echo "r05=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r04/' "$RUNNER_TEMP/material-changed.txt"; then echo "r04=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt"; then echo "r03changed=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r03/catalogue.mjs$' "$RUNNER_TEMP/material-changed.txt" && ! grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(catalogue.mjs|qa/tile-entry.cjs)$'; then
@@ -50,6 +53,11 @@ jobs:
           npm init -y
           npm install --save-dev playwright@1.55.0
           npx playwright install --with-deps chromium
+      - name: R05 roads and metal connections
+        if: steps.scope.outputs.r05 == 'true'
+        env:
+          NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
+        run: node kaopu-material-workbench/material-master-r05/qa/browser.cjs
       - name: R04 ceramic tile rendering and interactions
         if: steps.scope.outputs.r04 == 'true'
         env:
@@ -90,4 +98,7 @@ jobs:
             kaopu-material-workbench/material-master-r03/qa/tile-entry-receipt.json
             kaopu-material-workbench/material-master-r04/qa/*.png
             kaopu-material-workbench/material-master-r04/qa/browser-receipt.json
+            kaopu-material-workbench/material-master-r05/qa/*.png
+            kaopu-material-workbench/material-master-r05/qa/browser-receipt.json
           retention-days: 14
+

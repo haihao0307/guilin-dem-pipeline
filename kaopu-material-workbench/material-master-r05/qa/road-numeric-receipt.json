@@ -1,0 +1,162 @@
+{
+  "passed": true,
+  "checks": [
+    "Frozen KST1 mother hash matches cited R02 snapshot",
+    "asphalt: all positions/normals finite and expected actual height range",
+    "asphalt: top vertices and side-top use the same field, not a flat normal-only substitute",
+    "asphalt: current water and past traffic history cannot alter fracture geometry",
+    "asphalt: wear updates in place and changes physical height",
+    "asphalt: deformation and shading state share wear, repair, mode and marking control",
+    "asphalt: top triangle winding and exposed side bounds",
+    "asphalt: baseline remains unchanged under wear/repair/wet/history controls",
+    "asphalt: structural mutation requires rebuild rather than divergent fields",
+    "asphalt: continuous variable fracture field",
+    "asphalt: dispose is idempotent",
+    "concrete: all positions/normals finite and expected actual height range",
+    "concrete: top vertices and side-top use the same field, not a flat normal-only substitute",
+    "concrete: current water and past traffic history cannot alter fracture geometry",
+    "concrete: wear updates in place and changes physical height",
+    "concrete: deformation and shading state share wear, repair, mode and marking control",
+    "concrete: top triangle winding and exposed side bounds",
+    "concrete: baseline remains unchanged under wear/repair/wet/history controls",
+    "concrete: structural mutation requires rebuild rather than divergent fields",
+    "Concrete: real 20 mm panel separation and recessed seal, not a painted line",
+    "concrete: continuous variable fracture field",
+    "concrete: dispose is idempotent"
+  ],
+  "summaries": [
+    {
+      "family": "asphalt",
+      "coreFraction": 0.0487225193107546,
+      "erodedCollarFraction": 0.14364230540701128,
+      "halfWidthRange": [
+        0.003915248000062753,
+        0.011739846780513095
+      ],
+      "maxDistanceJumpAt10Micrometres": 0.000018003760387033663,
+      "audit": {
+        "family": "asphalt",
+        "variant": 1,
+        "vertices": 54596,
+        "triangles": 102764,
+        "invalid": 0,
+        "minY": -0.2150000035762787,
+        "maxY": 0.002381217433139682,
+        "macroRange": [
+          -0.029473435133695602,
+          0.002381217433139682
+        ],
+        "meshes": [
+          {
+            "name": "asphalt wearing/base course with displaced surface and cut section",
+            "vertices": 54572,
+            "triangles": 102752
+          },
+          {
+            "name": "Granular support section (schematic)",
+            "vertices": 24,
+            "triangles": 12
+          }
+        ],
+        "state": {
+          "family": "asphalt",
+          "variant": 1,
+          "wear": 0.71,
+          "history": 0.98,
+          "wetness": 0.9,
+          "repair": 0.8,
+          "mode": 5,
+          "width": 3.4,
+          "length": 4.8,
+          "spacing": 0.018,
+          "markings": false,
+          "seed": 23,
+          "topY": 0
+        },
+        "limits": [
+          "Illustrative procedural fracture/aggregate study; no structural fracture, traffic-life, surveyed historic layout or material calibration claim.",
+          "Actual mesh resolves the broad crack/erosion channel and sectional silhouette; apertures and aggregate below grid spacing remain residual normal relief, not open geometry or individual stones.",
+          "Concrete construction separation is real geometry; procedural fracture depressions do not split the slab into independent pieces.",
+          "Current wetness is optical only. No fluid, puddle depth, absorption transport or structural damage simulation.",
+          "No browser visual acceptance is implied by native numerical or shader tests."
+        ],
+        "visualAcceptance": false
+      }
+    },
+    {
+      "family": "concrete",
+      "coreFraction": 0.011467617349970292,
+      "erodedCollarFraction": 0.03502673796791444,
+      "halfWidthRange": [
+        0.0026662676000360833,
+        0.00716541189879503
+      ],
+      "maxDistanceJumpAt10Micrometres": 0.0000315230842189429,
+      "audit": {
+        "family": "concrete",
+        "variant": 1,
+        "vertices": 56152,
+        "triangles": 103164,
+        "invalid": 0,
+        "minY": -0.2549999952316284,
+        "maxY": 0.0015663160011172295,
+        "macroRange": [
+          -0.01865578442811966,
+          0.0015663160011172295
+        ],
+        "meshes": [
+          {
+            "name": "concrete slab 1 with displaced surface and cut section",
+            "vertices": 28040,
+            "triangles": 51564
+          },
+          {
+            "name": "concrete slab 2 with displaced surface and cut section",
+            "vertices": 28040,
+            "triangles": 51564
+          },
+          {
+            "name": "Granular support section (schematic)",
+            "vertices": 24,
+            "triangles": 12
+          },
+          {
+            "name": "20 mm construction joint / recessed top seal",
+            "vertices": 24,
+            "triangles": 12
+          },
+          {
+            "name": "Compressible filler / real slab separation",
+            "vertices": 24,
+            "triangles": 12
+          }
+        ],
+        "state": {
+          "family": "concrete",
+          "variant": 1,
+          "wear": 0.71,
+          "history": 0.98,
+          "wetness": 0.9,
+          "repair": 0.8,
+          "mode": 5,
+          "width": 3.4,
+          "length": 4.8,
+          "spacing": 0.018,
+          "markings": false,
+          "seed": 23,
+          "topY": 0
+        },
+        "limits": [
+          "Illustrative procedural fracture/aggregate study; no structural fracture, traffic-life, surveyed historic layout or material calibration claim.",
+          "Actual mesh resolves the broad crack/erosion channel and sectional silhouette; apertures and aggregate below grid spacing remain residual normal relief, not open geometry or individual stones.",
+          "Concrete construction separation is real geometry; procedural fracture depressions do not split the slab into independent pieces.",
+          "Current wetness is optical only. No fluid, puddle depth, absorption transport or structural damage simulation.",
+          "No browser visual acceptance is implied by native numerical or shader tests."
+        ],
+        "visualAcceptance": false
+      }
+    }
+  ],
+  "visualAcceptance": false,
+  "scope": "CPU geometry, causal invariants, mother hash, field continuity, construction separation, update/disposal. Native EGL shader test is separate. No browser/visual acceptance."
+}
