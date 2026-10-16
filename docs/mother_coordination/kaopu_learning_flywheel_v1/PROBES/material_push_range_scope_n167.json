@@ -1,0 +1,59 @@
+{
+  "probe_id": "material_push_range_scope_n167",
+  "question": "Can HEAD^..HEAD safely select bounded regressions for every existing-branch push?",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "workflow": ".github/workflows/material-master-r01-check.yml",
+    "observed_selector": "git diff --name-only HEAD^ HEAD",
+    "observed_run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/38969423377",
+    "observed_head": "a9d2a45c5ad3b913d64d131332622c2b71daa029"
+  },
+  "hypothesis": "For an existing-branch push containing more than one commit, HEAD^..HEAD can omit production paths changed earlier in the same push; before..after retains the complete pushed range.",
+  "scenarios": [
+    {
+      "id": "single_commit_r04_and_r03",
+      "commits": [
+        [
+          "kaopu-material-workbench/material-master-r04/surface.mjs",
+          "kaopu-material-workbench/material-master-r03/catalogue.mjs"
+        ]
+      ],
+      "expected": "SCOPE_VERIFIED"
+    },
+    {
+      "id": "multi_commit_r04_then_r03",
+      "commits": [
+        ["kaopu-material-workbench/material-master-r04/surface.mjs"],
+        ["kaopu-material-workbench/material-master-r03/catalogue.mjs"]
+      ],
+      "expected": "HOLD_PUSH_SCOPE_INCOMPLETE"
+    },
+    {
+      "id": "multi_commit_r02_then_docs",
+      "commits": [
+        ["kaopu-material-workbench/material-master-r02/index.html"],
+        ["docs/material-note.md"]
+      ],
+      "expected": "HOLD_PUSH_SCOPE_INCOMPLETE"
+    },
+    {
+      "id": "multi_commit_unrelated_then_r03",
+      "commits": [
+        ["docs/material-note.md"],
+        ["kaopu-material-workbench/material-master-r03/catalogue.mjs"]
+      ],
+      "expected": "SCOPE_VERIFIED"
+    }
+  ],
+  "boundary": [
+    "existing branch",
+    "fast-forward push",
+    "finite local Git history",
+    "scope selection only; it does not judge the correctness of the regression tests"
+  ],
+  "explicit_unknowns": [
+    "new branch pushes whose before SHA is all zeroes",
+    "force-push or non-ancestor before/after pairs",
+    "GitHub diff limits and pushes exceeding documented commit limits"
+  ]
+}
