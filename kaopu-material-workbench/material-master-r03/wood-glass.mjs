@@ -260,6 +260,8 @@ export function buildGlassCase(T,options={}){
       plainBox(T,group,'Vertical glazing channel',[.026,s.h+.052,s.t+.016],[s.x+sign*(s.w/2+.013),s.y,0],frame);
       plainBox(T,group,'Horizontal glazing channel',[s.w,.026,s.t+.016],[s.x,s.y+sign*(s.h/2+.013),0],frame);
     }
+    const supportHeight=s.y-s.h/2-.026-.05;
+    for(const side of [-1,1])plainBox(T,group,'Glazing stand support',[.024,supportHeight,.028],[s.x+side*s.w*.27,.05+supportHeight/2,0],frame);
     // Behind each pane: genuinely opaque geometry, so Three's transmission buffer can include it.
     plainBox(T,group,'Opaque transmission target',[s.w+.06,s.h+.06,.012],[s.x,s.y,-.25],light);
     for(let i=0;i<7;i++)plainBox(T,group,'Opaque contrast stripe',[s.w/17,s.h*.9,.008],[s.x+(i-3)*s.w/8,s.y,-.239],i===1?red:i===5?blue:dark);

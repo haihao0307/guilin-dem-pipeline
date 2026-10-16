@@ -16,11 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           sparse-checkout: |
             kaopu-material-workbench/material-master-r01
             kaopu-material-workbench/material-master-r02
             kaopu-material-workbench/material-master-r03
           persist-credentials: false
+      - name: Determine bounded regression scope
+        id: scope
+        shell: bash
+        run: |
+          git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/material-changed.txt"
+          if grep -q '^kaopu-material-workbench/material-master-r01/' "$RUNNER_TEMP/material-changed.txt"; then echo "r01=true" >> "$GITHUB_OUTPUT"; fi
+          if grep -q '^kaopu-material-workbench/material-master-r02/' "$RUNNER_TEMP/material-changed.txt"; then echo "r02=true" >> "$GITHUB_OUTPUT"; fi
+          if grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|qa/.*)$'; then
+            echo "r03=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "r03=receivers" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -31,13 +44,21 @@ jobs:
           npm init -y
           npm install --save-dev playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Check actual rendering and interactions
+      - name: R03 atlas rendering and interactions
+        env:
+          R03_QA_SCOPE: ${{ steps.scope.outputs.r03 }}
+          NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
+        run: node kaopu-material-workbench/material-master-r03/qa/browser.cjs
+      - name: R01 preserved wall regression
+        if: steps.scope.outputs.r01 == 'true'
         env:
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
-        run: |
-          node kaopu-material-workbench/material-master-r03/qa/browser.cjs
-          node kaopu-material-workbench/material-master-r01/qa/browser.cjs
-          node kaopu-material-workbench/material-master-r02/qa/browser.cjs
+        run: node kaopu-material-workbench/material-master-r01/qa/browser.cjs
+      - name: R02 preserved street regression
+        if: steps.scope.outputs.r02 == 'true'
+        env:
+          NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
+        run: node kaopu-material-workbench/material-master-r02/qa/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
