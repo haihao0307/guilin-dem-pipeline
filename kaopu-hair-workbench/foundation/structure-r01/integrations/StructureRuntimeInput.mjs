@@ -2,7 +2,7 @@ import {assertStructure} from '../src/StructureContract.mjs';
 import {connectHairRuntime,assertPhaseTwoAccepted} from './R08Runtime.mjs';
 
 // Recipient-owned layout. Donor caches/solvers must consume this input rather
-// than import their fixed Groom constants (96 guides / 81 nodes / old roots).
+// than import their fixed Groom constants (96 guides / 25 nodes / old roots).
 export function createStructureRuntimeInput(structure, roots, structureSHA256) {
  assertStructure(structure, roots);
  if(!/^[a-f0-9]{64}$/.test(structureSHA256||''))throw Error('Missing structure digest');
