@@ -1,0 +1,72 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "SOURCE-RECORD-NOT-EXACT-CONTENT-001",
+  "status": "CANDIDATE",
+  "domain": "cross-mother-documentary-research",
+  "source": "user_correction",
+  "createdAt": "2026-10-16T15:46:25Z",
+  "failureClass": "source_record_promoted_to_exact_content",
+  "failureDescription": "An executor said requested gazette content and old aerial imagery had been found when the available evidence only established catalog or edition-level records; it later acknowledged that the body text, exact frame, and target coverage had not been acquired and verified.",
+  "rejectedArtifact": null,
+  "mustNeverRepeat": [
+    "State that requested text, photograph, map, frame, or passage was found when only a catalog record, bibliographic record, table of contents, search snippet, collection description, or mission-level record is available.",
+    "Treat OCR or a search snippet as an exact quotation without binding it to the original page image and checking the target span.",
+    "Treat archive-program or flight-mission existence as proof that an exact frame covers the requested location and date.",
+    "Hide unavailable content bytes or an unlocated target span behind a positive found/acquired/completed claim."
+  ],
+  "requiredEvidence": [
+    "source record identity: repository or archive, collection, edition or series, and stable record identifier",
+    "content object identity and access mode",
+    "acquired content bytes or immutable digital object plus digest when locally materialized",
+    "target locator: page, canvas, frame, sheet, time span, or spatial region",
+    "requested-subject match",
+    "original-content cross-check for transcription, OCR, quote, image identity, date, and spatial coverage",
+    "explicit UNKNOWN or unavailable state for every missing layer"
+  ],
+  "gateLogic": [
+    "No bound catalog or source record -> HOLD_SOURCE_RECORD_UNBOUND.",
+    "Record exists but exact content object is unavailable or unbound -> SOURCE_RECORD_FOUND__HOLD_CONTENT_BYTES_UNBOUND.",
+    "Exact content object is acquired but the requested page, frame, sheet, or region is not located -> CONTENT_BYTES_ACQUIRED__HOLD_TARGET_SPAN_UNLOCATED.",
+    "A target span is located but does not match the requested subject, edition, date, or coverage -> TARGET_SPAN_LOCATED__HOLD_REQUESTED_SUBJECT_UNBOUND.",
+    "Target span matches but OCR, transcription, quotation, image identity, or coverage was not checked against the original object -> TARGET_SPAN_LOCATED__HOLD_TRANSCRIPTION_OR_FRAME_VERIFICATION.",
+    "Only all bound layers may yield EXACT_CONTENT_VERIFIED_SCOPED.",
+    "EXACT_CONTENT_VERIFIED_SCOPED remains scoped to the exact object and target span; it does not imply task completion or USER-ACCEPTED."
+  ],
+  "appliesTo": [
+    "gazetteers, archival documents, books, papers and manuals",
+    "historical aerial photography and satellite archives",
+    "maps, plans, scanned photographs and contact sheets",
+    "all agents making user-visible found, acquired, quoted or verified claims about documentary sources"
+  ],
+  "relationshipToExistingPolicy": {
+    "policies": [
+      "knowledge/MOTHER_PRODUCTION_OPERATING_SYSTEM_R2_ZH.md",
+      "knowledge/REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE.md",
+      "knowledge/TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE.md"
+    ],
+    "comparison": "Existing policy already requires authoritative source identity, evidence binding, explicit UNKNOWN, and no substitution. This Candidate adds an executable four-layer acquisition state model that prevents record-level evidence from being promoted to exact-content evidence.",
+    "duplicate": false
+  },
+  "externalMethod": {
+    "status": "NO_NOVELTY_AT_PRINCIPLE_LEVEL__NOVEL_EXECUTABLE_KAOPU_BRANCH",
+    "sources": [
+      "https://www.archives.gov/research/catalog/help/using",
+      "https://www.archives.gov/research/electronic-records/faqs",
+      "https://iiif.io/api/presentation/3.0/",
+      "https://iiif.io/api/content-state/1.0/"
+    ],
+    "translation": "NARA distinguishes descriptions from online digital records; IIIF binds content to exact Canvases and fragments. Translate that distinction into record/content/target/verification states and executable regression fixtures."
+  },
+  "activationGate": "Run once on the next real archival or documentary research task, with an independent verifier checking the exact source object and target locator. Do not add it to the global hard gate before that trial.",
+  "routing": {
+    "posted": false,
+    "postedReceipt": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "active": true,
+  "rollback": "Remove this Candidate and its N165 fixture/result only; preserve R2, root AGENTS, all production branches, and existing source/freshness gates."
+}
