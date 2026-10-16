@@ -12,7 +12,8 @@
     "Infer current runtime capability from a model-family or product-level capability description.",
     "Treat an output-audio tool as proof of input-audio reading or transcription.",
     "Promise dialect understanding when only generic transcription, text editing, or no executable audio route has been verified.",
-    "Ask the user to debug the missing route after an unverified affirmative promise."
+    "Ask the user to debug the missing route after an unverified affirmative promise.",
+    "Recommend an installable external app as working without binding the exact app/version, user platform, task-fit evidence, and an uninstall or rollback path."
   ],
   "requiredEvidence": [
     "exact input handle or digest",
@@ -20,13 +21,18 @@
     "callable input-audio decoder/transcriber identity",
     "executed probe output bound to the exact input",
     "silent or corrupt known-bad control",
-    "pre-frozen scope-quality criterion when claiming dialect understanding or audio-grounded correction"
+    "pre-frozen scope-quality criterion when claiming dialect understanding or audio-grounded correction",
+    "for installable external routes: exact app/version, platform, official install source, scoped task-fit evidence, privacy/cost disclosure, and uninstall or rollback path"
   ],
   "gateLogic": [
     "No exact input -> HOLD_EXACT_INPUT_UNBOUND.",
     "Input exists but exact read is not demonstrated -> INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED.",
     "Readable input without an executed input-audio transcription path -> INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED.",
     "Executed generic transcription without scoped dialect/correction evaluation -> GENERIC_TRANSCRIPTION_EXECUTABLE__HOLD_TASK_SCOPE_QUALITY_UNVERIFIED.",
+    "External app identity or platform not bound -> EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND.",
+    "Named app/platform without scoped task-fit evidence -> EXTERNAL_ROUTE_BOUND__HOLD_TASK_FIT_UNVERIFIED.",
+    "Task fit shown but install source, privacy/cost disclosure, or uninstall/rollback path missing -> EXTERNAL_ROUTE_TASK_FIT_VERIFIED__HOLD_EXIT_COST_UNBOUND.",
+    "Only a bound external route with scoped task-fit evidence, disclosures, and rollback may yield EXTERNAL_ROUTE_SCOPED_CAPABILITY_VERIFIED.",
     "Only the exact-input route plus negative control and scoped evaluation may yield SCOPED_CAPABILITY_ROUTE_VERIFIED.",
     "SCOPED_CAPABILITY_ROUTE_VERIFIED does not claim final transcript accuracy or USER-ACCEPTED."
   ],
@@ -51,6 +57,24 @@
     "translation": "Evaluate the same harness and tool access the user relies on; document and communicate capability limits. Convert this into exact-subject probe fields and executable classification."
   },
   "activationGate": "Run once on a future real capability request before an affirmative promise, then obtain an independent verifier receipt. Do not add it to the global hard gate before that trial.",
+  "followupEvidence": {
+    "observedAt": "2026-10-16",
+    "observation": "The user reported that a recommended app did not work, asked how to remove it, and said the recommendation wasted substantial time.",
+    "known": [
+      "user-reported task fit failed",
+      "the recommendation imposed installation and removal cost on the user"
+    ],
+    "unknown": [
+      "app identity and version",
+      "operating system",
+      "exact failure point",
+      "install source",
+      "whether uninstall guidance was supplied before recommendation"
+    ],
+    "classification": "SAME_LINEAGE_EVIDENCE_UPDATE",
+    "candidateState": "EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND",
+    "novelDelta": "For installable third-party routes, preflight must bind not only capability/task fit but also user-side exit cost and rollback. This extends the existing case without creating a duplicate regression."
+  },
   "routing": {
     "posted": true,
     "postedReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6207593472",
