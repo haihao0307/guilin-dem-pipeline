@@ -1,9 +1,10 @@
-name: Material master R01 browser check
+name: Material master R01 R02 browser check
 on:
   push:
     branches: [main]
     paths:
       - 'kaopu-material-workbench/material-master-r01/**'
+      - 'kaopu-material-workbench/material-master-r02/**'
       - '.github/workflows/material-master-r01-check.yml'
 permissions:
   contents: read
@@ -14,7 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: kaopu-material-workbench/material-master-r01
+          sparse-checkout: |
+            kaopu-material-workbench/material-master-r01
+            kaopu-material-workbench/material-master-r02
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -29,12 +32,16 @@ jobs:
       - name: Check actual rendering and interactions
         env:
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
-        run: node kaopu-material-workbench/material-master-r01/qa/browser.cjs
+        run: |
+          node kaopu-material-workbench/material-master-r01/qa/browser.cjs
+          node kaopu-material-workbench/material-master-r02/qa/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: material-master-r01-browser-evidence
+          name: material-master-r01-r02-browser-evidence
           path: |
             kaopu-material-workbench/material-master-r01/qa/*.png
             kaopu-material-workbench/material-master-r01/qa/browser-receipt.json
+            kaopu-material-workbench/material-master-r02/qa/*.png
+            kaopu-material-workbench/material-master-r02/qa/browser-receipt.json
           retention-days: 14
