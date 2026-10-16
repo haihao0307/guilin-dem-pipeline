@@ -1,0 +1,23 @@
+--- a/lower-body-contact.mjs
++++ b/lower-body-contact.mjs
+@@ -48,16 +48,16 @@
+   for(let k=0;k<7;k++){const mid=(lo+hi)*.5;this.surface.sample(x+d[0]*mid,y+d[1]*mid,z+d[2]*mid,q);this.metrics.queries++;if(q[0]>=margin)hi=mid;else lo=mid;}
+   this.metrics.guidedCrotchContacts=(this.metrics.guidedCrotchContacts||0)+1;return[d[0]*hi,d[1]*hi,d[2]*hi];
+  }
+- projectFine(){const start=performance.now(),s=this.model.source,p=s.p,F=s.faces,w=s.w,nominalMargin=s.settings.clearanceMM*.001;
++ projectFine(options={}){const start=performance.now(),s=this.model.source,p=s.p,F=s.faces,w=s.w,nominalMargin=s.settings.clearanceMM*.001;
+   // The closing thigh gap can be narrower than twice the nominal clearance.
+   // Preserve its 4 mm fit target first, then resolve residual penetration with
+   // a 1 mm local contact margin rather than opposing impossible 4 mm offsets.
+-  let passes=0;for(let pass=0;pass<32;pass++){const margin=pass<16?nominalMargin:Math.min(nominalMargin,.001);let maximum=0;passes++;
+-   for(const i of this.vertices){if(w[i]===0)continue;const k=i*3,q=this.query(p[k],p[k+1],p[k+2],this.vertexCache,i,margin);if(!q)continue;const depth=Math.min(.06,margin-q[0]);if(depth<=.00001)continue;maximum=Math.max(maximum,depth);const normal=[q[1]*depth,q[2]*depth,q[3]*depth],escape=pass>=31&&q[0]<0?this.crotchEscape(p[k],p[k+1],p[k+2],[i],margin,this.vertexSide[i]):null,correction=escape||normal;for(let j=0;j<3;j++)p[k+j]+=correction[j];this.metrics.contacts++;this.metrics.maxCorrectionMM=Math.max(this.metrics.maxCorrectionMM,Math.hypot(...correction)*1000);}
++  let passes=0;for(let pass=0;pass<(options.passes||32);pass++){const margin=options.margin??(pass<16?nominalMargin:Math.min(nominalMargin,.001));let maximum=0;passes++;
++   for(const i of this.vertices){if(w[i]===0)continue;const k=i*3,q=this.query(p[k],p[k+1],p[k+2],this.vertexCache,i,margin);if(!q)continue;const depth=Math.min(.06,margin-q[0]);if(depth<=.00001)continue;maximum=Math.max(maximum,depth);const normal=[q[1]*depth,q[2]*depth,q[3]*depth],escape=options.final!==false&&pass===(options.passes||32)-1&&q[0]<0?this.crotchEscape(p[k],p[k+1],p[k+2],[i],margin,this.vertexSide[i]):null,correction=escape||normal;for(let j=0;j<3;j++)p[k+j]+=correction[j];this.metrics.contacts++;this.metrics.maxCorrectionMM=Math.max(this.metrics.maxCorrectionMM,Math.hypot(...correction)*1000);}
+    for(let n=0;n<this.triangles.length;n++){
+     const f=this.triangles[n],a=F[f],b=F[f+1],c=F[f+2],den=(w[a]+w[b]+w[c])/9;if(!den)continue;
+     const x=(p[a*3]+p[b*3]+p[c*3])/3,y=(p[a*3+1]+p[b*3+1]+p[c*3+1])/3,z=(p[a*3+2]+p[b*3+2]+p[c*3+2])/3,q=this.query(x,y,z,this.triangleCache,n,margin);if(!q)continue;const depth=Math.min(.06,margin-q[0]);if(depth<=.00001)continue;maximum=Math.max(maximum,depth);
+-    const normal=[q[1]*depth,q[2]*depth,q[3]*depth],escape=pass>=31&&q[0]<0?this.crotchEscape(x,y,z,[a,b,c],margin,this.faceSide[f/3]):null,correction=escape||normal;
++    const normal=[q[1]*depth,q[2]*depth,q[3]*depth],escape=options.final!==false&&pass===(options.passes||32)-1&&q[0]<0?this.crotchEscape(x,y,z,[a,b,c],margin,this.faceSide[f/3]):null,correction=escape||normal;
+     // Contact reconstruction translates a material triangle coherently. Using
+     // inverse vertex lumped masses here amplifies tiny seam-split triangles and
+     // creates spikes; dynamics and its mass matrix remain on the coarse model.

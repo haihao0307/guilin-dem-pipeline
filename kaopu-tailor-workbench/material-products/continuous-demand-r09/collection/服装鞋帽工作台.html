@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>KAOPU · 服装案板</title><style>html,body{height:100%;margin:0;overflow:hidden;background:#f5f3ed}iframe{display:block;width:100%;height:100%;border:0}#loading{position:fixed;inset:0;display:grid;place-items:center;font:14px "Microsoft YaHei",sans-serif;color:#61715e;pointer-events:none}#loading[hidden]{display:none}</style></head><body><div id="loading">正在打开服装案板…</div><iframe id="garment-board" title="服装案板 · 先选版型，再选材质" allow="fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe><script>
+const R09_PUBLIC_URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-board-r09-1fb8036d09d9/';
+const local=location.hostname==='127.0.0.1'||location.hostname==='localhost';
+const base=local?new URL('../MP05-Continuous-Demand-R01/releases/r09-1fb8036d09d9/',location.href):location.protocol==='file:'?new URL('http://127.0.0.1:8897/MP05-Continuous-Demand-R01/releases/r09-1fb8036d09d9/'):R09_PUBLIC_URL.startsWith('https:')?new URL(R09_PUBLIC_URL):null;
+const frame=document.getElementById('garment-board');if(base){const look=new URLSearchParams(location.search).get('look');if(look)base.searchParams.set('look',look);frame.src=base.href;frame.onload=()=>document.getElementById('loading').hidden=true;}else document.getElementById('loading').textContent='服装案板正在更新，请稍后重新打开。';
+window.WardrobeStudio={tab:'clothing',frames:()=>({clothing:frame.contentWindow}),select:tab=>tab==='clothing',version:'R09-Board'};
+</script></body></html>

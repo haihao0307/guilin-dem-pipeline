@@ -1,0 +1,244 @@
+{
+  "schema": "mp05/r05-evidence@1",
+  "version": "MP05-R05-Regional",
+  "runtimeTreeSHA": "caa6d2ba5f1fd218dd73cad5a610edf8eb87c76e",
+  "publicURL": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-regional-r05-caa6d2ba5f1f/?look=K03",
+  "publicVerified": true,
+  "localPipelinePerformance": [
+    {
+      "motion": "walk",
+      "wallSeconds": 20.75130000001192,
+      "simulationSeconds": 20.70000000000006,
+      "completedFPS": 57.92408186471737,
+      "simulationToWallRatio": 0.997527865723505,
+      "solverMedianMS": 7.100000023841858,
+      "solverP95MS": 7.599999964237213
+    },
+    {
+      "motion": "run",
+      "wallSeconds": 20.69869999998808,
+      "simulationSeconds": 20.64999999999883,
+      "completedFPS": 58.651026392995654,
+      "simulationToWallRatio": 0.9976471952350013,
+      "solverMedianMS": 7.099999964237213,
+      "solverP95MS": 7.5
+    },
+    {
+      "motion": "jump",
+      "wallSeconds": 20.746600000023843,
+      "simulationSeconds": 20.71666666666549,
+      "completedFPS": 58.03360550637773,
+      "simulationToWallRatio": 0.998557193305972,
+      "solverMedianMS": 7.0,
+      "solverP95MS": 7.699999988079071
+    }
+  ],
+  "localPerformanceStage": "Same regional dynamics pipeline, before final camera and lighting adapter fixes. Final public verification pending.",
+  "physicsProof": [
+    {
+      "name": "gravity changes actual cloth with identical static body",
+      "differenceMM": 66.21087528765202,
+      "passed": true
+    },
+    {
+      "name": "impulse changes persistent cloth without moving body",
+      "differenceMM": 14.9146169424057,
+      "sameBody": true,
+      "passed": true
+    },
+    {
+      "name": "failure atomically rolls back cloth body and clock",
+      "injected": "QA 注入：事务回滚，已回滚本步",
+      "clothDifference": 0,
+      "samePose": true,
+      "sameTime": true,
+      "passed": true
+    },
+    {
+      "name": "recovery after numerical failure",
+      "simulationSeconds": 1.9999999999999978,
+      "lastError": null,
+      "passed": true
+    },
+    {
+      "name": "bend control affects actual dynamics",
+      "differenceMM": 17.88628101348877,
+      "passed": true
+    }
+  ],
+  "physicsProofGLError": 0,
+  "outfitActionChecks": 12,
+  "testedLooks": [
+    "D01",
+    "K03",
+    "K04",
+    "L04"
+  ],
+  "allTestedGarmentsVisible": true,
+  "variantGLErrors": [
+    0
+  ],
+  "aggregate": {
+    "errors": [],
+    "playback": {
+      "version": "MP05-R05-Regional",
+      "selected": "K03",
+      "sim": 0.8000000000000008,
+      "frames": 3,
+      "wall": 38357.89999997616,
+      "src": "http://127.0.0.1:8897/MP05-Continuous-Demand-R01/candidate-r05/?look=K03",
+      "wallSeconds": 10.003800000011921,
+      "simDelta": 10.000000000000115,
+      "framesDelta": 574,
+      "error": null,
+      "backend": "regional-implicit-worker",
+      "visible": [
+        true,
+        true
+      ]
+    },
+    "shoe": {
+      "exists": true,
+      "tab": "shoe"
+    },
+    "hat": {
+      "exists": true,
+      "tab": "hat"
+    },
+    "camera": {
+      "timeUnchanged": true,
+      "stepsUnchanged": true
+    },
+    "returned": {
+      "error": null,
+      "version": "MP05-R05-Regional"
+    }
+  },
+  "cameraInvariant": "Final aggregate comparison waits for worker idle. Earlier variant check sampled one in-flight step and is superseded.",
+  "runtimeBytes": {
+    "checkedFiles": 333,
+    "mismatches": []
+  },
+  "modelLimits": {
+    "fullFreeCloth": false,
+    "paperMetricCertified": false,
+    "allSelfCollision": false,
+    "continuousCollision": false,
+    "regionalLiveDynamics": true,
+    "precomputedGarmentReplay": false
+  },
+  "reports": [
+    {
+      "path": "r05-release-qa.json.gz",
+      "uncompressedSHA256": "90d4c11d18f2859184aaacb25f103912366b00098954251f6a8aef4959006a53",
+      "uncompressedBytes": 2434092
+    },
+    {
+      "path": "r05-variants.json.gz",
+      "uncompressedSHA256": "e451c6f98cfa9d95a8310a6de084e93a6586a6d93a5b967ac8194a178feafaca",
+      "uncompressedBytes": 1050542
+    },
+    {
+      "path": "r05-physics-proof.json.gz",
+      "uncompressedSHA256": "0cca4e46fdb963a2b697bf656e5c122a2511cbb668c43a283e7b347e4ed07185",
+      "uncompressedBytes": 4062
+    },
+    {
+      "path": "r05-runtime-final-bytes.json.gz",
+      "uncompressedSHA256": "e936a17fff9ff635d738cfb9a80c31b7e96bd5d8f316568cfcecf2e70eb9598a",
+      "uncompressedBytes": 55695
+    },
+    {
+      "path": "r05-public-qa.json.gz",
+      "uncompressedSHA256": "18868530222d2d744c5a5c7ea0ab334dac2a1bfd0198092823656338273db8b2",
+      "uncompressedBytes": 262110
+    },
+    {
+      "path": "r05-final-physics-proof.json.gz",
+      "uncompressedSHA256": "203d69d5cf16984d956e3a9e4f49183234b0a2e0ed876aa17bea11337bdec9bd",
+      "uncompressedBytes": 4081
+    }
+  ],
+  "publicCompletedUTC": "2026-10-15T04:08:54.924Z",
+  "device": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1440,
+      1150
+    ],
+    "dpr": 1,
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "publicPerformance": [
+    {
+      "motion": "walk",
+      "wallSeconds": 21.879600000023842,
+      "simulationSeconds": 21.88333333333327,
+      "completedFPS": 57.49648073998744,
+      "simulationToWallRatio": 1.0001706307843572,
+      "solverMedianMS": 7.100000023841858,
+      "solverP95MS": 7.900000035762787,
+      "allGarmentsVisible": true,
+      "notes": "Uninterrupted live playback."
+    },
+    {
+      "motion": "run",
+      "wallSeconds": 21.851699999988078,
+      "simulationSeconds": 21.799999999998764,
+      "completedFPS": 53.31392980869386,
+      "simulationToWallRatio": 0.9976340513557599,
+      "solverMedianMS": 7.199999988079071,
+      "solverP95MS": 8.099999964237213,
+      "allGarmentsVisible": true,
+      "notes": "Uninterrupted live playback."
+    },
+    {
+      "motion": "jump",
+      "wallSeconds": 22.182899999976158,
+      "simulationSeconds": 21.74999999999877,
+      "completedFPS": 57.476705029611566,
+      "simulationToWallRatio": 0.9804849681521418,
+      "solverMedianMS": 7.1500000059604645,
+      "solverP95MS": 8.099999964237213,
+      "allGarmentsVisible": true,
+      "notes": "Repeated jump includes explicit action-restart pauses every 3 seconds."
+    }
+  ],
+  "activeClockSimulationRatio": 0.9987783633810967,
+  "safetyTrips": 0,
+  "pageErrors": [],
+  "httpErrors": [],
+  "publicGLError": 0,
+  "physicalParticles": [
+    402,
+    586
+  ],
+  "visualControlVertices": [
+    4314,
+    6069
+  ],
+  "finalProofOnPublicRuntime": true,
+  "sourceImplementationCommit": "d79de2515c4d8c58df482e3058843f68df7375b1",
+  "pagesCommit": "455c87b7e61db26928415d07f7ba81206418b7f2",
+  "deploymentRunID": 38678842887,
+  "video": {
+    "path": "R05_K03_连续走跑跳.mp4",
+    "bytes": 4568915,
+    "SHA256": "8871fd8045b9dddc9df4a124669da3d93f14b0ae7a5d44cd18574ea28aebca2e",
+    "source": "direct capture of the deployed WebGL canvas, original timing, H264 transcode only",
+    "publicRuntimeTreeSHA": "caa6d2ba5f1fd218dd73cad5a610edf8eb87c76e"
+  },
+  "actualFrameDrawProof": {
+    "sampleFrames": 20,
+    "drawCallsRange": [
+      138,
+      138
+    ],
+    "trianglesIncludingAllPassesRange": [
+      64769906,
+      64769906
+    ],
+    "glError": 0,
+    "note": "Counts are actual WebGL draw calls inside the submitted frame GPU timer, including shadow, geometry and postprocess passes. The legacy instantaneous renderTriangles field may describe only the final fullscreen pass."
+  }
+}
