@@ -1,0 +1,43 @@
+{
+  "case_id": "CANDIDATE_PUSH_RANGE_SCOPE_NOT_LAST_COMMIT_001",
+  "status": "CANDIDATE",
+  "title": "A push-scoped regression selector must cover the pushed range, not only HEAD^..HEAD",
+  "owner_scope": "Material Mother / CI verifier",
+  "failure_mechanism": "For a multi-commit push, selecting tests from HEAD^..HEAD ignores paths changed in earlier commits of the same push. The workflow can be green while a relevant regression family was never selected.",
+  "deduplication": {
+    "nearest_case": "CANDIDATE_CI_GREEN_SKIPPED_CLAIM_001",
+    "why_not_duplicate": "The nearest case verifies declared required steps after selection. This case verifies the integrity of the upstream change-range selector before a required-step manifest exists. An omitted scope is not necessarily represented as a skipped step."
+  },
+  "task_anchor_candidate_fields": [
+    "change_event",
+    "change_range_before_sha",
+    "change_range_after_sha",
+    "change_range_policy",
+    "change_range_ancestry_status"
+  ],
+  "delivery_receipt_candidate_fields": [
+    "observed_before_sha",
+    "observed_after_sha",
+    "computed_changed_paths_digest",
+    "required_regression_scopes",
+    "selected_regression_scopes",
+    "uncovered_regression_scopes"
+  ],
+  "verifier_gate": {
+    "existing_branch_fast_forward_push": "Compute relevant paths from the event before SHA through after SHA. HOLD when any required regression scope is absent from the selected set.",
+    "new_branch_or_non_ancestor_range": "UNKNOWN/HOLD until an explicit, tested range policy is supplied.",
+    "forbidden_substitute": "Do not infer full-push coverage from HEAD^..HEAD or from a green final job alone."
+  },
+  "minimal_reproduction": {
+    "fixture": "../PROBES/material_push_range_scope_n167.json",
+    "probe": "../PROBES/material_push_range_scope_probe_n167.mjs",
+    "result": "../PROBES/material_push_range_scope_result_n167.json",
+    "command": "node material_push_range_scope_probe_n167.mjs material_push_range_scope_n167.json"
+  },
+  "adoption_rule": "Candidate only. Run against one Material workflow push fixture and preserve rollback. Do not make this global until Mother acknowledges relevance and a real workflow run demonstrates the range receipt.",
+  "acceptance": [
+    "All relevant paths in an existing-branch fast-forward push are represented in selected regression scopes.",
+    "The receipt records exact before/after SHAs and the selected/required scope sets.",
+    "Unknown range forms fail closed rather than silently reducing scope."
+  ]
+}
