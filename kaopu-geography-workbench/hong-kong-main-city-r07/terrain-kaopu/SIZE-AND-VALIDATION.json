@@ -1,0 +1,1260 @@
+{
+  "schema": "kaopu-hk-terrain-conversion-measurements/1",
+  "units": {
+    "B": "bytes",
+    "MB": "1000000 bytes",
+    "MiB": "1048576 bytes"
+  },
+  "measurementKind": "Exact persisted compressed data-payload byte counts, not assumed HTTP transfer totals or live heap",
+  "after": {
+    "terrain30m": {
+      "innerConvertedSpectrumAndMaskBytes": 2540642,
+      "outer320ExistingSpectrumAndWaterBytes": 8969968,
+      "outerOceanMaskBytes": 57130,
+      "allPayloadBytes": 11567740,
+      "allPayloadMB": 11.56774,
+      "allPayloadMiB": 11.031856536865234,
+      "outerLoading": "178 eligible non-ocean/non-owned chunks; loaded by view plus neighbor prefetch, not all 320 at startup"
+    },
+    "localHighPrecision": {
+      "oldFivePatchesBoth2m5mConvertedBytes": 5991679,
+      "existingFourKowloon2mSpectrumBytes": 434373,
+      "allPayloadBytes": 6426052,
+      "allPayloadMB": 6.426052,
+      "allPayloadMiB": 6.128360748291016,
+      "nativeSourceSpacingM": 0.5,
+      "actualRuntimeSpacingM": [
+        2,
+        5
+      ],
+      "fullRoute0p5mLoaded": false
+    },
+    "allTerrainPayloadBytes": 17993792,
+    "bundleMetadataBytes": 196023,
+    "lightHostBytes": 195710,
+    "existingOuterManifestBytes": 972267,
+    "existingIncrementManifestBytes": 54752
+  },
+  "before": {
+    "terrain30mPayloadBytes": 11777101,
+    "localHighPrecisionPayloadBytes": 8557501,
+    "allTerrainPayloadBytes": 20334602,
+    "hostBytes": 14691672,
+    "inlineTerrainBase64Bytes": 14497556
+  },
+  "change": {
+    "allPayloadSavedBytes": 2340810,
+    "allPayloadSavedPercent": 11.51146208811955,
+    "innerBackgroundSavedPercent": 7.613118967506581,
+    "oldFiveDetailSavedPercent": 26.239263987961287
+  },
+  "precision": {
+    "elevenConvertedFields": "Exact original Float32 bit hashes and all mask/weight bytes verified in Python and JavaScript; added height quantization zero",
+    "existingFourKowloon": "Existing Float64 local spectrum reused unchanged; 2m derived view, original 0.5m source retained outside production",
+    "outer320": "Existing Float32 spectrum reused unchanged. Prior manifest measured maximum continuous reconstruction difference 0.000003814697265625m vs prior 30m nodes; not newly declared bitwise exact",
+    "originalSourceAccuracy": "Vertical accuracy, native-to-display downsampling, model-datum alignment, authored fiction and outer seam policies remain prior limitations. Zero conversion error is not survey accuracy."
+  },
+  "memory": {
+    "decodedInnerHeightMaskWeightArraysBytes": 20714688,
+    "eagerOuterOceanMaskBytes": 4968652,
+    "existingInnerPreR06GeometryVertexIndexBytes": 177776404,
+    "geometryNote": "Baseline generated vertex+index bytes; R06 coast/tunnel clipping and transient JS copies are additional. Not a disk size or exact browser heap.",
+    "outerPotentialCoefficientAndWaterDecodedInventoryBytes": 32022752,
+    "outerGeometryGPUCapBytes": 100663296,
+    "newPacketExpandedTransientMaxBytes": 11730046,
+    "newCoefficientScratchMaxBytes": 12428496,
+    "newRuntimeCaches": "Worker reconstructs one packet at a time; coefficient, decoded transport and accumulation arrays are transient. Display grids remain same size. GPU geometry generation remains existing host behavior."
+  },
+  "timing": {
+    "environment": "Node v24.19.0 cloud Linux; CPU timing only, not browser/device startup or FPS",
+    "serialIndependentPacketDecodeMs": 408.49463799999995,
+    "maxSinglePacketDecodeMs": 137.669352,
+    "browserTelemetry": "HKKaopuTerrain.stats() records worker mode, load/decode duration, per-field decode, resource encoded/transfer bytes when available. Final browser QA must measure actual UI startup, not infer FPS from file size."
+  },
+  "sourceArchiveInventory": {
+    "meaning": "Offline input archive/container/base-raster sizes, not webpage transfers and not live runtime allocations. ZIP and extracted TIFF are the same source at different storage stages; do not add them as independent terrain content.",
+    "copernicus": {
+      "entries": [
+        {
+          "path": "hk-dem-recovery/copernicus-N22E114.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/Copernicus_DSM_COG_10_N22_00_E114_00_DEM.tif",
+          "tifFileBytes": 25030462,
+          "baseShapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Float32",
+          "decodedBaseRasterBytes": 51840000,
+          "bands": 1,
+          "sizeMatchesManifest": true
+        },
+        {
+          "path": "hk-dem-recovery/copernicus-water-mask.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/AUXFILES/Copernicus_DSM_COG_10_N22_00_E114_00_WBM.tif",
+          "tifFileBytes": 277161,
+          "baseShapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Byte",
+          "decodedBaseRasterBytes": 12960000,
+          "bands": 1,
+          "sizeMatchesManifest": true
+        }
+      ],
+      "totalTifFileBytes": 25307623,
+      "totalDecodedBaseRasterBytes": 64800000
+    },
+    "ceddOriginal40Tiles": {
+      "nativeStepM": 0.5,
+      "count": 40,
+      "totals": {
+        "zipBytes": 201862510,
+        "tifFileBytes": 314743280,
+        "decodedBaseRasterBytes": 288000000,
+        "validCells": 63594871,
+        "noDataCells": 8405129
+      },
+      "allDiskSizesVerified": true,
+      "entries": [
+        {
+          "tile": "11NE11A",
+          "zipBytes": 5786482,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE11A(e837n821,e838n821).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE11A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE11A/11NE11A(e837n821,e838n821).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE11C",
+          "zipBytes": 5711562,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE11C(e837n820,e838n821).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE11C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE11C/11NE11C(e837n820,e838n821).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE1A",
+          "zipBytes": 5667314,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE1A(e837n823,e838n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE1A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE1A/11NE1A(e837n823,e838n824).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE1B",
+          "zipBytes": 5547231,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE1B(e838n823,e839n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE1B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE1B/11NE1B(e838n823,e839n824).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE1C",
+          "zipBytes": 5557572,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE1C(e837n822,e838n823).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE1C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE1C/11NE1C(e837n822,e838n823).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE1D",
+          "zipBytes": 5346404,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE1D(e838n822,e839n823).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE1D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE1D/11NE1D(e838n822,e839n823).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE6A",
+          "zipBytes": 5632446,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE6A(e837n822,e838n822).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE6A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE6A/11NE6A(e837n822,e838n822).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE6B",
+          "zipBytes": 5726435,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE6B(e838n822,e839n822).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE6B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE6B/11NE6B(e838n822,e839n822).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE6C",
+          "zipBytes": 5722181,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE6C(e837n821,e838n822).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NE6C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NE6C/11NE6C(e837n821,e838n822).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW10B",
+          "zipBytes": 5478171,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW10B(e836n822,e837n822).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW10B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW10B/11NW10B(e836n822,e837n822).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW10D",
+          "zipBytes": 5645140,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW10D(e836n821,e837n822).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW10D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW10D/11NW10D(e836n821,e837n822).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW15B",
+          "zipBytes": 5540420,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW15B(e836n821,e837n821).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW15B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW15B/11NW15B(e836n821,e837n821).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW15D",
+          "zipBytes": 5661407,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW15D(e836n820,e837n821).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW15D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW15D/11NW15D(e836n820,e837n821).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW25A",
+          "zipBytes": 5700499,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW25A(e836n818,e836n819).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW25A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW25A/11NW25A(e836n818,e836n819).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW25B",
+          "zipBytes": 5852072,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW25B(e836n818,e837n819).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW25B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW25B/11NW25B(e836n818,e837n819).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW25C",
+          "zipBytes": 5818375,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW25C(e836n818,e836n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW25C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW25C/11NW25C(e836n818,e836n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW25D",
+          "zipBytes": 5828502,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW25D(e836n818,e837n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW25D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW25D/11NW25D(e836n818,e837n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW5B",
+          "zipBytes": 5569007,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW5B(e836n823,e837n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW5B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW5B/11NW5B(e836n823,e837n824).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11NW5D",
+          "zipBytes": 5617515,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW5D(e836n822,e837n823).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11NW5D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11NW5D/11NW5D(e836n822,e837n823).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW4A",
+          "zipBytes": 583793,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 174014,
+          "noDataCells": 1625986,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW4A(e834n817,e835n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW4A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW4A/11SW4A(e834n817,e835n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW4B",
+          "zipBytes": 5425824,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1673312,
+          "noDataCells": 126688,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW4B(e835n817,e836n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW4B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW4B/11SW4B(e835n817,e836n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW4C",
+          "zipBytes": 251875,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 76722,
+          "noDataCells": 1723278,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW4C(e834n816,e835n817).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW4C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW4C/11SW4C(e834n816,e835n817).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW4D",
+          "zipBytes": 2188468,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 683697,
+          "noDataCells": 1116303,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW4D(e835n816,e836n817).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW4D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW4D/11SW4D(e835n816,e836n817).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW5A",
+          "zipBytes": 4178348,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1293331,
+          "noDataCells": 506669,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW5A(e836n817,e836n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW5A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW5A/11SW5A(e836n817,e836n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "11SW5B",
+          "zipBytes": 1609157,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 495747,
+          "noDataCells": 1304253,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11SW5B(e836n817,e837n818).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/11SW5B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/11SW5B/11SW5B(e836n817,e837n818).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7NE22C",
+          "zipBytes": 5840974,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7NE22C(e839n830,e839n830).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7NE22C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7NE22C/7NE22C(e839n830,e839n830).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7NE22D",
+          "zipBytes": 2980130,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 896575,
+          "noDataCells": 903425,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7NE22D(e839n830,e840n830).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7NE22D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7NE22D/7NE22D(e839n830,e840n830).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE16C",
+          "zipBytes": 5841056,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE16C(e837n825,e838n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE16C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE16C/7SE16C(e837n825,e838n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE16D",
+          "zipBytes": 5749041,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE16D(e838n825,e839n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE16D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE16D/7SE16D(e838n825,e839n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE21A",
+          "zipBytes": 5755719,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE21A(e837n824,e838n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE21A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE21A/7SE21A(e837n824,e838n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE21B",
+          "zipBytes": 5711974,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE21B(e838n824,e839n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE21B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE21B/7SE21B(e838n824,e839n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE21C",
+          "zipBytes": 5589299,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE21C(e837n824,e838n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE21C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE21C/7SE21C(e837n824,e838n824).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE21D",
+          "zipBytes": 5530187,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE21D(e838n824,e839n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE21D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE21D/7SE21D(e838n824,e839n824).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE2A",
+          "zipBytes": 5742190,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE2A(e839n829,e839n830).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE2A.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE2A/7SE2A(e839n829,e839n830).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE2B",
+          "zipBytes": 4325524,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1322847,
+          "noDataCells": 477153,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE2B(e839n829,e840n830).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE2B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE2B/7SE2B(e839n829,e840n830).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE2C",
+          "zipBytes": 5444420,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1666550,
+          "noDataCells": 133450,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE2C(e839n828,e839n829).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE2C.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE2C/7SE2C(e839n828,e839n829).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SE2D",
+          "zipBytes": 4353324,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1312076,
+          "noDataCells": 487924,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SE2D(e839n828,e840n829).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SE2D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SE2D/7SE2D(e839n828,e840n829).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SW20D",
+          "zipBytes": 5840880,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SW20D(e836n825,e837n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SW20D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SW20D/7SW20D(e836n825,e837n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SW25B",
+          "zipBytes": 5856369,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SW25B(e836n824,e837n825).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SW25B.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SW25B/7SW25B(e836n824,e837n825).tif",
+          "sizesVerifiedOnDisk": true
+        },
+        {
+          "tile": "7SW25D",
+          "zipBytes": 5655223,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "shapeRC": [
+            1200,
+            1500
+          ],
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/7SW25D(e836n824,e837n824).zip",
+          "zipPath": "hong-kong-map-sea-r03/detail-data/source/7SW25D.zip",
+          "tifPath": "hong-kong-map-sea-r03/detail-data/source/7SW25D/7SW25D(e836n824,e837n824).tif",
+          "sizesVerifiedOnDisk": true
+        }
+      ],
+      "historical390TileSetRecovered": false,
+      "sourceScope": "Forty newly recovered selected tiles, not the historical full 390-tile set and not complete route coverage"
+    },
+    "ceddIncrementThreeNewTiles": {
+      "count": 3,
+      "totals": {
+        "zipBytes": 13726486,
+        "tifFileBytes": 23605746,
+        "decodedBaseRasterBytes": 21600000,
+        "validCells": 4301999,
+        "noDataCells": 1098001
+      },
+      "entries": [
+        {
+          "tile": "11NW20B",
+          "zipBytes": 5662292,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "validCells": 1800000,
+          "noDataCells": 0,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NW20B(e836n819,e837n820).zip",
+          "verification": "Original ZIP and TIFF found under shared workspace; file sizes and full SHA256 verified.",
+          "zipPath": "hk_kowloon_cedd_ground_r01/source/11NW20B.zip",
+          "tifPath": "hk_kowloon_cedd_ground_r01/source/11NW20B/11NW20B(e836n819,e837n820).tif",
+          "sizesVerifiedOnDisk": true,
+          "sha256VerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE16A",
+          "zipBytes": 5057613,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "validCells": 1571973,
+          "noDataCells": 228027,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE16A(e837n819,e838n820).zip",
+          "verification": "Original ZIP and TIFF found under shared workspace; file sizes and full SHA256 verified.",
+          "zipPath": "hk_kowloon_cedd_ground_r01/source/11NE16A.zip",
+          "tifPath": "hk_kowloon_cedd_ground_r01/source/11NE16A/11NE16A(e837n819,e838n820).tif",
+          "sizesVerifiedOnDisk": true,
+          "sha256VerifiedOnDisk": true
+        },
+        {
+          "tile": "11NE16C",
+          "zipBytes": 3006581,
+          "tifFileBytes": 7868582,
+          "decodedBaseRasterBytes": 7200000,
+          "validCells": 930026,
+          "noDataCells": 869974,
+          "sourceURL": "https://bulkdata.csdi.gov.hk/cedd/lidar/2020dtm/11NE16C(e837n819,e838n819).zip",
+          "verification": "Original ZIP and TIFF found under shared workspace; file sizes and full SHA256 verified.",
+          "zipPath": "hk_kowloon_cedd_ground_r01/source/11NE16C.zip",
+          "tifPath": "hk_kowloon_cedd_ground_r01/source/11NE16C/11NE16C(e837n819,e838n819).tif",
+          "sizesVerifiedOnDisk": true,
+          "sha256VerifiedOnDisk": true
+        }
+      ],
+      "reusedOriginalTileIDs": [
+        "11NE11C",
+        "11NW15D"
+      ],
+      "note": "Four runtime rectangles derive from three additional source tiles plus two reused old source tiles; the latter are already counted within the original 40.",
+      "allSizesAndSHA256Verified": true
+    },
+    "ceddUnique43Tiles": {
+      "count": 43,
+      "totals": {
+        "zipBytes": 215588996,
+        "tifFileBytes": 338349026,
+        "decodedBaseRasterBytes": 309600000,
+        "validCells": 67896870,
+        "noDataCells": 9503130
+      },
+      "countScope": "40 original source tiles + 3 separately verified additional source tiles; 2 reused originals are not double-counted."
+    },
+    "oldFiveNativeCrops": {
+      "entries": [
+        {
+          "id": "clocktower",
+          "boundsEPSG2326": [
+            835100,
+            816900,
+            835900,
+            817700
+          ],
+          "fileBytes": 2468579,
+          "shapeRC": [
+            1600,
+            1600
+          ],
+          "decodedFloat32Bytes": 10240000,
+          "nativeValidAreaM2": 327625.5,
+          "nativeNoDataPixels": 1249498,
+          "derivedRawLevels": [
+            {
+              "stepM": 2,
+              "nodes": 160000,
+              "filesBytes": {
+                "hkpd": 640000,
+                "valid": 160000,
+                "full_coverage": 160000,
+                "coverage255": 160000,
+                "egm2008_model": 640000
+              },
+              "totalFiveRawArraysBytes": 1760000
+            },
+            {
+              "stepM": 5,
+              "nodes": 25600,
+              "filesBytes": {
+                "hkpd": 102400,
+                "valid": 25600,
+                "full_coverage": 25600,
+                "coverage255": 25600,
+                "egm2008_model": 102400
+              },
+              "totalFiveRawArraysBytes": 281600
+            }
+          ]
+        },
+        {
+          "id": "hung_hom",
+          "boundsEPSG2326": [
+            836400,
+            817850,
+            837200,
+            818650
+          ],
+          "fileBytes": 4667839,
+          "shapeRC": [
+            1600,
+            1600
+          ],
+          "decodedFloat32Bytes": 10240000,
+          "nativeValidAreaM2": 640000.0,
+          "nativeNoDataPixels": 0,
+          "derivedRawLevels": [
+            {
+              "stepM": 2,
+              "nodes": 160000,
+              "filesBytes": {
+                "hkpd": 640000,
+                "valid": 160000,
+                "full_coverage": 160000,
+                "coverage255": 160000,
+                "egm2008_model": 640000
+              },
+              "totalFiveRawArraysBytes": 1760000
+            },
+            {
+              "stepM": 5,
+              "nodes": 25600,
+              "filesBytes": {
+                "hkpd": 102400,
+                "valid": 25600,
+                "full_coverage": 25600,
+                "coverage255": 25600,
+                "egm2008_model": 102400
+              },
+              "totalFiveRawArraysBytes": 281600
+            }
+          ]
+        },
+        {
+          "id": "second_walled_city",
+          "boundsEPSG2326": [
+            837000,
+            820700,
+            838100,
+            822000
+          ],
+          "fileBytes": 12644663,
+          "shapeRC": [
+            2600,
+            2200
+          ],
+          "decodedFloat32Bytes": 22880000,
+          "nativeValidAreaM2": 1430000.0,
+          "nativeNoDataPixels": 0,
+          "derivedRawLevels": [
+            {
+              "stepM": 2,
+              "nodes": 357500,
+              "filesBytes": {
+                "hkpd": 1430000,
+                "valid": 357500,
+                "full_coverage": 357500,
+                "coverage255": 357500,
+                "egm2008_model": 1430000
+              },
+              "totalFiveRawArraysBytes": 3932500
+            },
+            {
+              "stepM": 5,
+              "nodes": 57200,
+              "filesBytes": {
+                "hkpd": 228800,
+                "valid": 57200,
+                "full_coverage": 57200,
+                "coverage255": 57200,
+                "egm2008_model": 228800
+              },
+              "totalFiveRawArraysBytes": 629200
+            }
+          ]
+        },
+        {
+          "id": "lion_rock_tunnel",
+          "boundsEPSG2326": [
+            836950,
+            822500,
+            838350,
+            825700
+          ],
+          "fileBytes": 38151595,
+          "shapeRC": [
+            6400,
+            2800
+          ],
+          "decodedFloat32Bytes": 71680000,
+          "nativeValidAreaM2": 4480000.0,
+          "nativeNoDataPixels": 0,
+          "derivedRawLevels": [
+            {
+              "stepM": 2,
+              "nodes": 1120000,
+              "filesBytes": {
+                "hkpd": 4480000,
+                "valid": 1120000,
+                "full_coverage": 1120000,
+                "coverage255": 1120000,
+                "egm2008_model": 4480000
+              },
+              "totalFiveRawArraysBytes": 12320000
+            },
+            {
+              "stepM": 5,
+              "nodes": 179200,
+              "filesBytes": {
+                "hkpd": 716800,
+                "valid": 179200,
+                "full_coverage": 179200,
+                "coverage255": 179200,
+                "egm2008_model": 716800
+              },
+              "totalFiveRawArraysBytes": 1971200
+            }
+          ]
+        },
+        {
+          "id": "shatin_candidate",
+          "boundsEPSG2326": [
+            839350,
+            829300,
+            840250,
+            830200
+          ],
+          "fileBytes": 6973373,
+          "shapeRC": [
+            1800,
+            1800
+          ],
+          "decodedFloat32Bytes": 12960000,
+          "nativeValidAreaM2": 740759.75,
+          "nativeNoDataPixels": 276961,
+          "derivedRawLevels": [
+            {
+              "stepM": 2,
+              "nodes": 202500,
+              "filesBytes": {
+                "hkpd": 810000,
+                "valid": 202500,
+                "full_coverage": 202500,
+                "coverage255": 202500,
+                "egm2008_model": 810000
+              },
+              "totalFiveRawArraysBytes": 2227500
+            },
+            {
+              "stepM": 5,
+              "nodes": 32400,
+              "filesBytes": {
+                "hkpd": 129600,
+                "valid": 32400,
+                "full_coverage": 32400,
+                "coverage255": 32400,
+                "egm2008_model": 129600
+              },
+              "totalFiveRawArraysBytes": 356400
+            }
+          ]
+        }
+      ],
+      "totalFileBytes": 64906049,
+      "totalDecodedFloat32Bytes": 128000000,
+      "totalNativeValidAreaM2": 7618385.25,
+      "note": "Derived crops of the 40 original tiles; another storage representation, not extra source coverage or runtime loaded 0.5m arrays."
+    },
+    "otherRecoveredButNotLoaded": {
+      "dataset": "LandsD whole Hong Kong 5m DTM",
+      "archiveBytes": 28706079,
+      "tifFileBytes": 41488527,
+      "baseShapeRC": [
+        9601,
+        12751
+      ],
+      "dtype": "Int32",
+      "decodedBaseRasterBytes": 489689404,
+      "loadedByAuditedR03OrR06Terrain": false
+    },
+    "copernicusFullInnerAndOuterUniqueSources": {
+      "description": "Two east/west 1-degree DEM TIFFs and their official WBM TIFFs. East DEM+WBM already appear in inner-background source ledger; do not add those twice.",
+      "entries": [
+        {
+          "path": "hk_outer_terrain_r01/source/Copernicus_DSM_COG_10_N22_00_E113_00_DEM.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E113_00_DEM/Copernicus_DSM_COG_10_N22_00_E113_00_DEM.tif",
+          "tifFileBytes": 36641041,
+          "decodedBaseRasterBytes": 51840000,
+          "shapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Float32",
+          "reusedByOuterSource": false,
+          "sizeVerified": true,
+          "sha256Verified": true
+        },
+        {
+          "path": "hk_outer_terrain_r01/source/Copernicus_DSM_COG_10_N22_00_E113_00_WBM.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E113_00_DEM/AUXFILES/Copernicus_DSM_COG_10_N22_00_E113_00_WBM.tif",
+          "tifFileBytes": 944900,
+          "decodedBaseRasterBytes": 12960000,
+          "shapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Byte",
+          "reusedByOuterSource": false,
+          "sizeVerified": true,
+          "sha256Verified": true
+        },
+        {
+          "path": "hk-dem-recovery/copernicus-N22E114.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/Copernicus_DSM_COG_10_N22_00_E114_00_DEM.tif",
+          "tifFileBytes": 25030462,
+          "decodedBaseRasterBytes": 51840000,
+          "shapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Float32",
+          "reusedByOuterSource": true,
+          "sizeVerified": true,
+          "sha256Verified": true
+        },
+        {
+          "path": "hk-dem-recovery/copernicus-water-mask.tif",
+          "sourceURL": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N22_00_E114_00_DEM/AUXFILES/Copernicus_DSM_COG_10_N22_00_E114_00_WBM.tif",
+          "tifFileBytes": 277161,
+          "decodedBaseRasterBytes": 12960000,
+          "shapeRC": [
+            3600,
+            3600
+          ],
+          "dtype": "Byte",
+          "reusedByOuterSource": true,
+          "sizeVerified": true,
+          "sha256Verified": true
+        }
+      ],
+      "uniqueTifCount": 4,
+      "totalTifFileBytes": 62893564,
+      "totalDecodedBaseRasterBytes": 129600000
+    }
+  },
+  "coverage": {
+    "noFullRouteCoverage": true,
+    "nativeHalfMetreNotRuntimeHalfMetre": true,
+    "allOriginalHalfMetreLoaded": false,
+    "oldWindowsNativeValidAreaM2": 7618385.25,
+    "incrementRectangleUnionAreaM2": 452684,
+    "caveats": [
+      "Old detail source contribution is less than native crop area: protected story edits and water masks are retained; outer 100m is a synthetic transition.",
+      "Old native crop valid area, weighted runtime contribution area and rectangle envelope are different quantities and must not be interchanged.",
+      "Both LODs represent the same spatial patches; do not add their areas or node counts as unique spatial coverage.",
+      "Four incremental patches have all native source support and weight255, but only limited Kowloon domain; native acquisition 2019-2020 is not historic pre-1997 terrain.",
+      "Increment external height mismatch up to 28.644248867m is closed with explicitly synthetic vertical display geometry, not height blending or survey continuity.",
+      "Lion Rock source is terrain surface, not tunnel rail elevation.",
+      "0.5m native sample spacing is not a claim of vertical accuracy."
+    ]
+  },
+  "integration": {
+    "hostSourceSHA256": "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117",
+    "retainedDynamicProjection": true,
+    "retainedNonArrayMetadataAnchors": true,
+    "retainedCEDDCoastTunnelOrder": true,
+    "newRawTeacherAssetsPublished": false,
+    "oldCasesModified": false,
+    "rollback": "Retained R06 URL and dependencies"
+  },
+  "limitations": [
+    "Binary gzip body bytes are known; metadata/server content-encoding, cache and HTTP overhead require live resource timing.",
+    "Global 30m sum is stored inventory, not first-screen bandwidth.",
+    "No promise of FPS gain. Existing multi-million-vertex generation and clipping still dominate geometry work."
+  ],
+  "requiredMetadataAccounting": {
+    "terrain30mPayloadBytes": 11567740,
+    "terrain30mExclusiveRequiredManifests": {
+      "outerTerrainManifestBytes": 972267,
+      "outerOceanMaskManifestBytes": 876
+    },
+    "terrain30mPayloadPlusExclusiveRequiredManifestsBytes": 12540883,
+    "highPrecisionPayloadBytes": 6426052,
+    "highPrecisionExclusiveRequiredManifestBytes": 54752,
+    "highPrecisionPayloadPlusExclusiveRequiredManifestBytes": 6480804,
+    "sharedNewBundleManifestBytes": 196023,
+    "sharedManifestAllocation": "Contains both background and local detail identities, field coefficient layouts, array references, hashes, provenance and lightweight-host hash. Count once; not arbitrarily divided between classes.",
+    "bothTerrainPayloadsAndAllRequiredDataManifestsBytes": 19217710,
+    "newSharedRuntimeCodeBytes": 7426,
+    "newSharedRuntimeCodeFiles": {
+      "runtime.mjs": 3560,
+      "decode.mjs": 3496,
+      "decode-worker.mjs": 370
+    },
+    "retainedSharedSpectrumKernelCodeBytes": 8806,
+    "retainedSharedSpectrumKernelCodeFiles": {
+      "hong-kong-main-city-r02/outer-terrain/data/height-spectrum.mjs": 4283,
+      "hong-kong-main-city-r03/terrain/data/runtime/height-spectrum.mjs": 4523
+    },
+    "sharedLightHostBytes": 195710,
+    "runtimeScope": "These code figures cover new loading/decoding files and two retained spectrum kernels only. Existing mesh renderers, source install/clip/seam adapters, scene host dependencies, buildings and train engines are not included or claimed to be a complete game runtime total.",
+    "auditDocsTestsAndConverters": "Not necessary runtime data; kept in the delivery package and listed in FILES.json separately."
+  },
+  "releaseApplicability": "Prior full 9-patch conversion inventory retained for comparison only; current reduced release excludes Hung Hom. Use currentRelease below or CURRENT-RELEASE.json.",
+  "currentRelease": {
+    "schema": "kaopu-hk-r07-current-reduced-release/1",
+    "status": "User-authorized scope reduction; entire Hung Hom high-precision patch omitted",
+    "excludedLocalPatches": [
+      "hung_hom"
+    ],
+    "replacement": "Existing 30m background, high-precision detail pending",
+    "includedConvertedFields": 9,
+    "includedOldHighPrecisionPatches": 4,
+    "retainedKowloonIncrementPatches": 4,
+    "actualLocalDisplaySpacingM": [
+      2,
+      5
+    ],
+    "nativeSourceSpacingM": 0.5,
+    "fullRoute0p5mLoaded": false,
+    "omitted": {
+      "compressedPayloadBytes": 535188,
+      "decodedHeightMaskWeightBytes": 1234812,
+      "filesNotPublic": [
+        "packets/hung_hom-2m.spectrum.gz",
+        "packets/hung_hom-5m.spectrum.gz"
+      ],
+      "noAlternateEncodingOrLegacyFallback": true
+    },
+    "payloadBytes": {
+      "terrain30m": 11567740,
+      "highPrecision8Patches": 5890864,
+      "oldFourPatchesBothLods": 5456491,
+      "retainedKowloonFourPatches": 434373,
+      "bothClasses": 17458604
+    },
+    "requiredManifestsBytes": {
+      "terrain30mExclusive": 973143,
+      "highPrecisionExclusive": 54752,
+      "sharedNewManifest": 182928,
+      "terrain30mPayloadPlusExclusive": 12540883,
+      "highPrecisionPayloadPlusExclusive": 5945616,
+      "bothPayloadsAndAllRequiredManifests": 18669427,
+      "sharedAllocation": "Count shared new manifest once; do not allocate it arbitrarily to either class"
+    },
+    "runtimeBytes": {
+      "newSharedLoaderDecoderCode": 7712,
+      "retainedTwoSpectrumKernels": 8806,
+      "sharedLightHost": 193664,
+      "codeCaution": "Existing renderers, clip/seam/install adapters, buildings and train engines are separate; not a complete game-code total"
+    },
+    "decodedBytes": {
+      "currentNineConvertedFieldsHeightMaskWeightArrays": 18793572,
+      "retainedFourKowloonArrays": 686304,
+      "currentInnerTerrainHeightMaskWeightArrays": 19479876,
+      "eagerOuterOceanMask": 4968652,
+      "outerSpectrumAndWaterInventoryCameraDependent": 32022752,
+      "interpretation": "Actual decoded typed-array byte counts. Generated GPU/CPU geometry and temporary coefficient arrays are distinct, not compressed file size."
+    },
+    "validation": {
+      "allNineFieldFloat32BitsMaskAndWeightBytesVerified": true,
+      "noHungHomOrLegacySourceNetworkRequests": true,
+      "missingHungHomArrayRejected": true,
+      "hostSHA256": "fbc0f39dc142166c2a6cd85533dee2cfe0d51cf35bc8e76f1a9c799a5a9028be",
+      "sourceHostOriginalSHA256": "54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117",
+      "newHeightQuantizationAdded": false,
+      "coastTunnelAndOtherTerrainUnchanged": true,
+      "browserQA": "Owned by integrated R07 checks, not claimed by local byte test"
+    }
+  }
+}
