@@ -1,0 +1,66 @@
+{
+  "schema": "kaopu/material-prepromotion-closure-result@1",
+  "fixture": "material_prepromotion_closure_n166.json",
+  "passed": 8,
+  "total": 8,
+  "initialState": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+  "refinementState": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+  "claimBoundary": {
+    "exactHeadWorkflow": "SUCCESS_POST_PROMOTION",
+    "browserEnvironment": "LOCAL_HTTP_CHROMIUM_GITHUB_ACTIONS",
+    "publicHttpsRuntime": "UNVERIFIED",
+    "independentVerifier": "UNBOUND",
+    "userVisualAcceptance": "UNKNOWN",
+    "productionRejection": "NOT_CLAIMED"
+  },
+  "results": [
+    {
+      "name": "missing exact subject identity",
+      "expected": "HOLD_CLAIM_EXACT_GATE_SUBJECT_UNBOUND",
+      "actual": "HOLD_CLAIM_EXACT_GATE_SUBJECT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "green workflow belongs to another head",
+      "expected": "HOLD_CLAIM_EXACT_GATE_SUBJECT_UNBOUND",
+      "actual": "HOLD_CLAIM_EXACT_GATE_SUBJECT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "exact head but gate failed",
+      "expected": "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE",
+      "actual": "HOLD_CLAIM_CRITICAL_EVIDENCE_INCOMPLETE",
+      "pass": true
+    },
+    {
+      "name": "current initial Material commit entered main before its green run",
+      "expected": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "actual": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "pass": true
+    },
+    {
+      "name": "current refined Material commit entered main before its green run",
+      "expected": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "actual": "POST_PROMOTION_REVALIDATED__PREPROMOTION_SEQUENCE_EXCEPTION_RETAINED",
+      "pass": true
+    },
+    {
+      "name": "prepromotion exact-head gate lacks independent verifier",
+      "expected": "HOLD_PREPROMOTION_INDEPENDENT_VERIFIER_UNBOUND",
+      "actual": "HOLD_PREPROMOTION_INDEPENDENT_VERIFIER_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "exact-head gate and independent verifier complete before any promotion",
+      "expected": "PREPROMOTION_GATE_VERIFIED__PROMOTION_ELIGIBLE",
+      "actual": "PREPROMOTION_GATE_VERIFIED__PROMOTION_ELIGIBLE",
+      "pass": true
+    },
+    {
+      "name": "main ref updated only after exact-head gate and verifier",
+      "expected": "PROMOTION_SEQUENCE_VERIFIED",
+      "actual": "PROMOTION_SEQUENCE_VERIFIED",
+      "pass": true
+    }
+  ]
+}
