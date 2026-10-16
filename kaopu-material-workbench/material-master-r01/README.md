@@ -26,4 +26,4 @@
 
 `qa/browser.cjs` 面向 Playwright Chromium，覆盖实际画面非空、研究参数改变右侧像素而不改变左基准、三种母体切换、湿润近景、遮罩、复位与 390px 手机尺寸布局，并输出截图和 JSON。
 
-本地 JavaScript 语法检查与实际 onBeforeCompile 输出的 EGL/GLES 着色器编译已通过。当前容器 Chromium 因 socket EPERM 无法启动；浏览器实帧验收应以之后 QA receipt 为准，编译通过不代替视觉验收。
+本地 JavaScript 语法检查与实际 onBeforeCompile 输出的 EGL/GLES 着色器编译已通过。当前容器 Chromium 因 socket EPERM 无法启动，因此实际浏览器验证在只读 GitHub Actions 中进行。首次运行 38956081867 已通过并产出桌面、近景、手机截图；最终版本以最终 QA receipt 与提交对应关系为准。编译通过不代替视觉验收。
