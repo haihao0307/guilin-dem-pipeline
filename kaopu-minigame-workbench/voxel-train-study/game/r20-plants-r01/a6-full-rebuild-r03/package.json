@@ -1,0 +1,17 @@
+{
+  "name": "a6-full-rebuild-r03",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.mjs --bundle --format=esm --minify --outfile=app.js && esbuild baseline-r02/src/app.mjs --bundle --format=esm --minify --outfile=baseline-r02/app.js",
+    "test": "node tests/r03-cpu.mjs && node tests/running-gear.mjs && node tests/coach-retention.mjs",
+    "test:browser": "node tests/browser.cjs"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5"
+  }
+}
