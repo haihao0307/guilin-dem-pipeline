@@ -1,0 +1,70 @@
+{
+  "schema": "kaopu/capability-promise-preflight-result@1",
+  "fixture": "capability_promise_preflight_n164.json",
+  "passed": 9,
+  "total": 9,
+  "currentState": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED",
+  "claimBoundary": {
+    "textEditingWithoutAudio": "AVAILABLE_BUT_NOT_AUDIO_CORRECTION",
+    "exactAudioRead": "UNVERIFIED",
+    "genericTranscription": "UNVERIFIED",
+    "yunnanDialectQuality": "UNKNOWN",
+    "finalTranscriptAccuracy": "NOT_CLAIMED"
+  },
+  "results": [
+    {
+      "name": "no exact audio subject",
+      "expected": "HOLD_EXACT_INPUT_UNBOUND",
+      "actual": "HOLD_EXACT_INPUT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "current user correction: attachment exists but exact read is unverified",
+      "expected": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED",
+      "actual": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "file bytes readable but only output-audio capability is exposed",
+      "expected": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "actual": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "model family documentation mentions audio but current route was not executed",
+      "expected": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "actual": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "transcriber returns text not bound to exact input digest",
+      "expected": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "actual": "INPUT_READ_VERIFIED__HOLD_TRANSCRIPTION_ROUTE_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "generic transcription works but Yunnan-dialect quality is unmeasured",
+      "expected": "GENERIC_TRANSCRIPTION_EXECUTABLE__HOLD_TASK_SCOPE_QUALITY_UNVERIFIED",
+      "actual": "GENERIC_TRANSCRIPTION_EXECUTABLE__HOLD_TASK_SCOPE_QUALITY_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "audio plus draft transcript cannot be corrected against audio without scoped quality validation",
+      "expected": "GENERIC_TRANSCRIPTION_EXECUTABLE__HOLD_TASK_SCOPE_QUALITY_UNVERIFIED",
+      "actual": "GENERIC_TRANSCRIPTION_EXECUTABLE__HOLD_TASK_SCOPE_QUALITY_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "silent or corrupt negative control is not rejected",
+      "expected": "TRANSCRIPTION_ROUTE_EXECUTED__HOLD_NEGATIVE_CONTROL_UNVERIFIED",
+      "actual": "TRANSCRIPTION_ROUTE_EXECUTED__HOLD_NEGATIVE_CONTROL_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "exact input, executed route, negative control and scoped dialect eval",
+      "expected": "SCOPED_CAPABILITY_ROUTE_VERIFIED",
+      "actual": "SCOPED_CAPABILITY_ROUTE_VERIFIED",
+      "pass": true
+    }
+  ]
+}
