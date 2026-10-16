@@ -81,8 +81,8 @@ float wgDamage(vec3 p,vec3 n){
   vec3 edgeDistance=max(wgHalfSize-abs(p),vec3(0.));
   vec3 tangentEdge=mix(edgeDistance,vec3(10.),step(vec3(.5),abs(n)));
   float edge=1.-smoothstep(.002,.025,min(tangentEdge.x,min(tangentEdge.y,tangentEdge.z)));
-  float patch=wgReceiverNoise(p*vec3(1.2,4.,4.));
-  float score=edge*.64+patch*.34;
+  float wearPatch=wgReceiverNoise(p*vec3(1.2,4.,4.));
+  float score=edge*.64+wearPatch*.34;
   float mask=smoothstep(1.01-effort*.79,1.06-effort*.79,score);
   return mask*smoothstep(0.,.04,effort);
 }
@@ -121,7 +121,7 @@ if(wgPaint>.5){
 }
 diffuseColor.rgb*=ktColor;`);
     shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=ktRoughness;');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nnormal=perturbNormalArb(-vViewPosition,normal,ktHeight);');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 wgDx=dFdx(-vViewPosition),wgDy=dFdy(-vViewPosition),wgR1=cross(wgDy,normal),wgR2=cross(normal,wgDx);float wgDet=dot(wgDx,wgR1);normal=normalize(abs(wgDet)*normal-sign(wgDet)*(dFdx(ktHeight)*wgR1+dFdy(ktHeight)*wgR2));');
     shader.fragmentShader=shader.fragmentShader.replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat*=1.-wgMask;material.clearcoatRoughness=clamp(material.clearcoatRoughness+wgMask*.25,0.,1.);\n#endif');
     shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>','#include <aomap_fragment>\nreflectedLight.indirectDiffuse*=ktCavity;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`if(wgMode>.5&&wgMode<1.5)outgoingLight=ktColor;

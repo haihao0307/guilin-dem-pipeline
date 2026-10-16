@@ -35,9 +35,9 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
         run: |
+          node kaopu-material-workbench/material-master-r03/qa/browser.cjs
           node kaopu-material-workbench/material-master-r01/qa/browser.cjs
           node kaopu-material-workbench/material-master-r02/qa/browser.cjs
-          node kaopu-material-workbench/material-master-r03/qa/browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
