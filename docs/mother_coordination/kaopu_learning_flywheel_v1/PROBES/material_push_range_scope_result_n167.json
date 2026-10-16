@@ -1,0 +1,107 @@
+{
+  "probe_id": "material_push_range_scope_n167",
+  "hypothesis": "For an existing-branch push containing more than one commit, HEAD^..HEAD can omit production paths changed earlier in the same push; before..after retains the complete pushed range.",
+  "command_under_test": "git diff --name-only HEAD^ HEAD",
+  "alternative_for_bounded_existing_branch_push": "git diff --name-only <push-before-sha> <push-after-sha>",
+  "scenarios": [
+    {
+      "id": "single_commit_r04_and_r03",
+      "commit_count": 1,
+      "full_range_paths": [
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs",
+        "kaopu-material-workbench/material-master-r04/surface.mjs"
+      ],
+      "last_commit_paths": [
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs",
+        "kaopu-material-workbench/material-master-r04/surface.mjs"
+      ],
+      "required_scopes": [
+        "r03",
+        "r04"
+      ],
+      "selected_scopes_from_head_parent": [
+        "r03",
+        "r04"
+      ],
+      "missed_scopes": [],
+      "verdict": "SCOPE_VERIFIED"
+    },
+    {
+      "id": "multi_commit_r04_then_r03",
+      "commit_count": 2,
+      "full_range_paths": [
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs",
+        "kaopu-material-workbench/material-master-r04/surface.mjs"
+      ],
+      "last_commit_paths": [
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs"
+      ],
+      "required_scopes": [
+        "r03",
+        "r04"
+      ],
+      "selected_scopes_from_head_parent": [
+        "r03"
+      ],
+      "missed_scopes": [
+        "r04"
+      ],
+      "verdict": "HOLD_PUSH_SCOPE_INCOMPLETE"
+    },
+    {
+      "id": "multi_commit_r02_then_docs",
+      "commit_count": 2,
+      "full_range_paths": [
+        "docs/material-note.md",
+        "kaopu-material-workbench/material-master-r02/index.html"
+      ],
+      "last_commit_paths": [
+        "docs/material-note.md"
+      ],
+      "required_scopes": [
+        "r02"
+      ],
+      "selected_scopes_from_head_parent": [],
+      "missed_scopes": [
+        "r02"
+      ],
+      "verdict": "HOLD_PUSH_SCOPE_INCOMPLETE"
+    },
+    {
+      "id": "multi_commit_unrelated_then_r03",
+      "commit_count": 2,
+      "full_range_paths": [
+        "docs/material-note.md",
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs"
+      ],
+      "last_commit_paths": [
+        "kaopu-material-workbench/material-master-r03/catalogue.mjs"
+      ],
+      "required_scopes": [
+        "r03"
+      ],
+      "selected_scopes_from_head_parent": [
+        "r03"
+      ],
+      "missed_scopes": [],
+      "verdict": "SCOPE_VERIFIED"
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "expected_verdicts_matched": 4,
+    "incomplete_scope_cases": 2,
+    "hypothesis_falsified": false
+  },
+  "boundary": [
+    "existing branch",
+    "fast-forward push",
+    "finite local Git history",
+    "scope selection only; it does not judge the correctness of the regression tests"
+  ],
+  "explicit_unknowns": [
+    "new branch pushes whose before SHA is all zeroes",
+    "force-push or non-ancestor before/after pairs",
+    "GitHub diff limits and pushes exceeding documented commit limits"
+  ]
+}
