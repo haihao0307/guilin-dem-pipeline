@@ -51,3 +51,5 @@ node tools/serve.cjs
 ## 查看当前研究基线
 
 [打开唯一结构工作台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/codex/hair-structure-lab-r01-20261016/kaopu-hair-workbench/foundation/structure-r01/public.html)。首屏只读冻结静态结构，不加载另一套发型或物理演示。公开下载数据固定到 `PAYLOAD_PIN.json` 的提交。
+
+本次公开冷启动：结构约 21.6 秒可操作，共享皮肤约 35.2 秒完全准备好；无加载错误，加载速度仍未通过完整性能验收。[实测记录](evidence/public-load-check.json)。
