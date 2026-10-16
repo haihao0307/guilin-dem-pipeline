@@ -21,10 +21,29 @@
     "scopeQualityCriterionFrozen": false,
     "scopeQualityEvalPassed": false
   },
+  "followupExternalRecommendationObservation": {
+    "routeKind": "external_installable_app",
+    "externalRouteIdentityBound": false,
+    "platformBound": false,
+    "exactTaskFitProbePassed": false,
+    "installSourceVerified": false,
+    "privacyCostDisclosed": false,
+    "uninstallRollbackDeclared": false,
+    "userReport": "the recommended app did not work and cost the user time; the user then asked how to remove it",
+    "unknownFields": [
+      "app identity and version",
+      "computer operating system",
+      "exact failure point",
+      "install source",
+      "whether privacy, cost, or uninstall guidance was provided before recommendation"
+    ],
+    "deduplication": "same failure lineage as CAPABILITY-PROMISE-REQUIRES-EXECUTABLE-PROBE-001; evidence update, not a new regression case"
+  },
   "existingControlComparison": {
     "policy": "Execution Capability Precheck Policy",
     "coveredDirection": "negative capability denial requires a real tool probe",
     "uncoveredDirection": "positive capability promise before an executable end-to-end probe"
   },
-  "expectedState": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED"
+  "expectedState": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED",
+  "followupExpectedState": "EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND"
 }
