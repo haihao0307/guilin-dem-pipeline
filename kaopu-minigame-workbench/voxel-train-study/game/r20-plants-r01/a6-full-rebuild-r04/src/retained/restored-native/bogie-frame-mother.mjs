@@ -1,0 +1,25 @@
+import {applyPartServiceDomain} from './part-service-domain.mjs';
+// Authored two-axle leading truck matching retained88 axle/spring hardpoints.
+// Anatomy informed by NRM A4 overhaul reports 15/46: horns, stretchers, centre
+// pivot, side bearers and suspension. Straight-bench frame, no solved steering.
+export function createBogieFrameMother(T,{axleXM=[1.6764,3.5814],wheelRadiusM=.4826}={}){
+ const root=new T.Group();root.name='88 leading truck load path / retained axle datums';const parts=[],mounts=[],R=wheelRadiusM,cx=(axleXM[0]+axleXM[1])/2,y=.43,z0=.315,z1=.94,plate=.034;
+ const M={paint:new T.MeshStandardMaterial({color:0x26312d,metalness:.02,roughness:.47}),steel:new T.MeshStandardMaterial({color:0x77817d,metalness:.82,roughness:.33}),brass:new T.MeshStandardMaterial({color:0x967843,metalness:.86,roughness:.31})};
+ const add=(g,mat,name,at=[0,0,0])=>{const m=new T.Mesh(g,M[mat]);m.name=name;m.position.set(...at);m.castShadow=m.receiveShadow=true;m.userData={mother:'leading-bogie-frame',sourceBuffersUsed:false,shapeMaterialDomain:'axle horns, spring seats and load-bearing mounting faces'};applyPartServiceDomain(T,m,{role:/socket|spigot|bearing|seat|cap|liner/.test(name)?'bearing seat':/bolt/.test(name)?'fastener':'structural',coating:mat==='paint'});root.add(m);parts.push(m);return m};
+ const box=(at,size,mat,name)=>add(new T.BoxGeometry(...size),mat,name,at);
+ function shaft(a,b,r,mat,name,n=24){const A=new T.Vector3(...a),B=new T.Vector3(...b),g=new T.CylinderGeometry(r,r,A.distanceTo(B),n);g.applyQuaternion(new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),B.clone().sub(A).normalize()));return add(g,mat,name,A.add(B).multiplyScalar(.5).toArray())}
+ for(const side of[-1,1]){
+  const sh=new T.Shape(),x0=axleXM[0]-.29,x1=axleXM[1]+.29;sh.moveTo(x0,z0);for(const x of axleXM){sh.lineTo(x-.15,z0);sh.lineTo(x-.15,R+.17);sh.lineTo(x+.15,R+.17);sh.lineTo(x+.15,z0);}sh.lineTo(x1,z0);sh.lineTo(x1,z1);sh.lineTo(x0,z1);sh.closePath();const g=new T.ExtrudeGeometry(sh,{depth:plate,bevelEnabled:false,curveSegments:16}),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getY(i),d=p.getZ(i);p.setXYZ(i,x,side*y-plate/2+d,z)}// Swapping extrusion Y/Z is a reflection: reverse winding as well as normals.
+  const ix=[];for(let i=0;i<p.count;i+=3)ix.push(i,i+2,i+1);g.setIndex(ix);g.computeVertexNormals();add(g,'paint','leading bogie open-bottom horn plate '+side);
+  for(const x of axleXM){for(const dx of[-.158,.158]){box([x+dx,side*.555,R],[.040,.17,.30],'steel','bogie replaceable journal horn liner '+x+'/'+side+'/'+dx);box([x+dx,side*.474,R+.08],[.065,.125,.10],'paint','bogie horn liner to side plate lug '+x+'/'+side+'/'+dx);}box([x,side*.555,z0+.012],[.38,.17,.024],'paint','bogie removable hornstay '+x+'/'+side);for(const dx of[-.17,.17])shaft([x+dx,side*.555,z0],[x+dx,side*.555,z0+.052],.018,'brass','bogie hornstay bolt '+x+'/'+side+'/'+dx,6);
+   // The retained helix starts at R+.14 and ends at R+.394. Cups seat it
+   // without a side plate crossing the helix. Upper shoulder joins the truck.
+   shaft([x,side*.57,R+.115],[x,side*.57,R+.127],.074,'steel','bogie coil lower seat '+x+'/'+side,32);shaft([x,side*.57,R+.407],[x,side*.57,R+.419],.075,'steel','bogie coil upper cap '+x+'/'+side,32);box([x,side*.50,R+.431],[.21,.22,.024],'paint','bogie upper spring cap bridge '+x+'/'+side);mounts.push({id:'guide-spring-'+x+'-'+side,axle:[x,side*.57,R],lowerSeatZM:R+.127,upperSeatZM:R+.407,loadTo:'bogie side plate via upper cap bridge'});
+  }
+ }
+ for(const x of[axleXM[0]-.23,cx,axleXM[1]+.23])box([x,0,.87],[.13,.86,.14],'paint','bogie transverse stretcher '+x);
+ // Bored centre bearing: spigot and socket are separate coaxial solids.
+ const outer=new T.Shape();outer.absarc(0,0,.17,0,Math.PI*2,false);const hole=new T.Path();hole.absarc(0,0,.1058,0,Math.PI*2,true);outer.holes.push(hole);const g=new T.ExtrudeGeometry(outer,{depth:.105,bevelEnabled:false,curveSegments:48});g.translate(cx,0,.94);add(g,'steel','bogie bored centre pivot socket');shaft([cx,0,.90],[cx,0,1.19],.104,'steel','frame centre pivot spigot',48);box([cx,0,1.25],[.30,1.04,.14],'paint','mainframe pivot mounting stretcher');for(const side of[-1,1]){box([cx,side*.31,1.005],[.32,.20,.11],'paint','bogie lower side bearer '+side);box([cx,side*.31,1.145],[.32,.20,.08],'steel','mainframe upper side bearer '+side);box([cx,side*.31,1.0825],[.29,.18,.045],'brass','sliding side bearer contact liner '+side);}
+ root.userData={mother:'leading-bogie-frame',sourceBuffersUsed:false,mainframePivot:[cx,0,1.19],yawRad:0,lateralDisplacementM:0,steeringOrSpringForcesSolved:false,referenceAnatomy:['https://blog.railwaymuseum.org.uk/sir-nigel-gresley-overhaul-update-15/','https://blog.railwaymuseum.org.uk/sir-nigel-gresley-overhaul-update-46/'],dimensions:'independently authored around preserved88 hardpoints, not surveyed A4'};
+ return{root,parts,mounts,ports:{pivot:[cx,0,1.19],axles:axleXM.map(x=>[x,0,R])},coverageStatus:'straight-bench-mounted-frame; steering unimplemented'};
+}
