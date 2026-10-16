@@ -5,8 +5,8 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {execFileSync}=require('node:child_process');
 const parent=path.resolve(__dirname,'..');
-const base=path.basename(parent)==='architecture-study-r02'?path.dirname(parent):parent;
-const qa=path.join(base,'architecture-study-r02/qa');
+const base=path.basename(parent)==='architecture-study-r03'?path.dirname(parent):parent;
+const qa=path.join(base,'architecture-study-r03/qa');
 const baselinePath=path.join(base,'geometry-orbit-r01/qa/sdf-source-baseline.json');
 const baselineBytes=fs.readFileSync(baselinePath);
 const blobHash=bytes=>crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
@@ -21,5 +21,6 @@ for(const file of baseline.oldSourceFiles){
   if(actual!==file.gitBlob)throw Error('Original SDF source changed: '+file.path+' expected '+file.gitBlob+' actual '+actual);
 }
 console.log('UNCHANGED_SDF_BASELINE',baseline.baseline,baseline.oldSourceFiles.length,'files');
+execFileSync(process.execPath,[path.join(qa,'core.test.mjs')],{stdio:'inherit'});
 execFileSync(process.execPath,[path.join(qa,'geometry.test.mjs')],{stdio:'inherit'});
-module.exports=require(path.join(qa,'public-check.cjs'));
+module.exports=require(path.join(qa,'browser.cjs'));
