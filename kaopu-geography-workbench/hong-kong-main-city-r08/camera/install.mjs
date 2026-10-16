@@ -13,7 +13,7 @@ export function installCameraViews(host,game,{target=globalThis,config=target.HK
  const captured=game.attachTrainScene(value=>value);
  if(!captured?.train?.cab?.root?.userData?.crewClearance?.eyePointCandidateM)throw Error('R08_CAMERA_ORIGINAL_CAB_DATUM_MISSING');
  const cabEye=captured.train.cab.root.userData.crewClearance.eyePointCandidateM.slice();
- const nativeViews={...NATIVE_VIEWS,cab:{eye:cabEye,target:NATIVE_VIEWS.cab.target}};
+ const nativeViews=NATIVE_VIEWS;
  const tunnelStats=tunnel?.stats?.(),coveredIntervals=(tunnelStats?.portals?.coveredIntervals||[]).map(v=>v.slice());
  // Roofless cuttings also have intact walls; constrain the eye inside those.
  const clearanceIntervals=tunnelStats?.renderInterval?[tunnelStats.renderInterval.slice()]:coveredIntervals;

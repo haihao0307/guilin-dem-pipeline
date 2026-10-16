@@ -9,8 +9,10 @@ const norm=a=>{const n=Math.hypot(...a);if(!(n>1e-10))throw Error('CAMERA_SINGUL
 const vec=(a,label)=>{if(!Array.isArray(a)||a.length!==3||!a.every(Number.isFinite))throw Error('CAMERA_INVALID_'+label);return a;};
 const freezePose=(eye,target)=>Object.freeze({eye:Object.freeze(eye),target:Object.freeze(target)});
 export const NATIVE_VIEWS=Object.freeze({
- // Cab mother's original crewClearance.eyePointCandidateM, not a fake cab.
- cab:freezePose([-7.33,.20,3.49],[-6.55,.20,3.05]),
+ // Fixed native head camera above the retained nose, looking forward.
+ front:freezePose([4.35,0,2.60],[35,0,2.60]),
+ // Inside the actual right-side window; all original geometry is retained.
+ cab:freezePose([-7.50,-.95,3.20],[-2.50,-11.20,3.15]),
  // The existing authored eye-view button in train-source/app.mjs, unchanged.
  'engine-interior':freezePose([-8.22,0,3.30],[-6.48,0,3.00]),
  // The existing authored passenger eye view, unchanged, in selected real coach.
@@ -21,8 +23,8 @@ export const NATIVE_VIEWS=Object.freeze({
 export const CAMERA_MODES=Object.freeze([
  Object.freeze({id:'follow',label:'低位跟车',kind:'exterior',description:'低位前侧跟车；保持原站棚，入洞沿真实线路收近'}),
  Object.freeze({id:'side',label:'车侧',kind:'exterior',description:'车侧连续跟随；入洞收至原隧道内壁以内'}),
- Object.freeze({id:'front',label:'机头正面',kind:'exterior',description:'在同线路前方回望现有机头'}),
- Object.freeze({id:'cab',label:'司机驾驶舱',kind:'interior',description:'原驾驶员眼位，看真实炉后仪表与操作件'}),
+ Object.freeze({id:'front',label:'机头前视',kind:'exterior',description:'附着原机头向前看真实轨道与隧道'}),
+ Object.freeze({id:'cab',label:'司机驾驶舱',kind:'interior',description:'原驾驶舱真实侧窗内向侧前看；保留窗框和全部炉后操作件'}),
  Object.freeze({id:'engine-interior',label:'机头内部',kind:'interior',description:'同一真实驾驶/炉后操作舱的后部眼位；没有新增房间'}),
  Object.freeze({id:'coach-interior',label:'客厢内部',kind:'interior',description:'原完整客车的真实过道眼位，保留屋顶、墙与座席'}),
  Object.freeze({id:'tail',label:'车尾向后',kind:'rear-facing',description:'附着在实际末节客车的尾端，持续向后看'})
@@ -54,13 +56,18 @@ export function computeTrainCamera({route,positionM,mode,config,coachIndex=0,cov
  if(nativeViews[mode]){
   if(mode==='coach-interior'||mode==='tail'){selectedCoachIndex=mode==='tail'?config.offsets.length-1:coachIndex;vehicleChainageM=positionM+config.offsets[selectedCoachIndex];}
   if(vehicleChainageM<0||vehicleChainageM>route.length)throw Error('CAMERA_VEHICLE_OUTSIDE_ROUTE');
-  const vehicle=nativeFrame(route,vehicleChainageM),view=nativeViews[mode];nativeEye=view.eye.slice();nativeTarget=view.target.slice();eye=nativeToWorld(vehicle,nativeEye);target=nativeToWorld(vehicle,nativeTarget);eyeChainageM=vehicleChainageM+nativeEye[0];
+  // Old adapters provide the original crew datum as an identity guard.
+  // Use the separately ray-tested window eye for the operational cab view.
+  const vehicle=nativeFrame(route,vehicleChainageM),view=mode==='cab'?NATIVE_VIEWS.cab:nativeViews[mode];nativeEye=view.eye.slice();nativeTarget=view.target.slice();eye=nativeToWorld(vehicle,nativeEye);target=nativeToWorld(vehicle,nativeTarget);eyeChainageM=vehicleChainageM+nativeEye[0];
  }else if(mode==='side'){
   eyeChainageM=clamp(positionM+1.1,0,route.length);tunnelBlend=tunnelProximity([positionM,eyeChainageM],coveredIntervals,transitionM);
+  // Initial station reframe: advance the eye 3m and centre the complete
+  // locomotive/tender. Restore the previously tested side pose inside bore.
+  eyeChainageM=clamp(positionM+1.1+3*(1-tunnelBlend),0,route.length);
   // At 3.1m above rail both endpoints are below the retained station canopy.
   // Only camera offset changes; the complete vehicle and lining stay visible.
   eye=nativeToWorld(nativeFrame(route,eyeChainageM),[0,-(14*(1-tunnelBlend)+3.15*tunnelBlend),3.10]);
-  target=nativeToWorld(engine,[-2.9,0,2.45]);
+  target=nativeToWorld(engine,[-2.9-2.6*(1-tunnelBlend),0,2.45]);
  }else{
   const ahead=mode==='front'?config.frontOffsetM+12:config.frontOffsetM+16;
   eyeChainageM=clamp(positionM+ahead,0,route.length);tunnelBlend=tunnelProximity([positionM,eyeChainageM],coveredIntervals,transitionM);
