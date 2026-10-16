@@ -1,15 +1,24 @@
 {
   "schema": "kaopu/capability-promise-preflight-result@1",
   "fixture": "capability_promise_preflight_n164.json",
-  "passed": 9,
-  "total": 9,
+  "passed": 13,
+  "total": 13,
   "currentState": "INPUT_BOUND__HOLD_INPUT_READ_UNVERIFIED",
+  "followupState": "EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND",
   "claimBoundary": {
     "textEditingWithoutAudio": "AVAILABLE_BUT_NOT_AUDIO_CORRECTION",
     "exactAudioRead": "UNVERIFIED",
     "genericTranscription": "UNVERIFIED",
     "yunnanDialectQuality": "UNKNOWN",
     "finalTranscriptAccuracy": "NOT_CLAIMED"
+  },
+  "externalRecommendationBoundary": {
+    "appIdentity": "UNKNOWN",
+    "platform": "UNKNOWN",
+    "exactFailurePoint": "UNKNOWN",
+    "priorRollbackGuidance": "UNKNOWN",
+    "userReportedTaskFit": "FAILED",
+    "userReportedTimeCost": "POSITIVE"
   },
   "results": [
     {
@@ -64,6 +73,30 @@
       "name": "exact input, executed route, negative control and scoped dialect eval",
       "expected": "SCOPED_CAPABILITY_ROUTE_VERIFIED",
       "actual": "SCOPED_CAPABILITY_ROUTE_VERIFIED",
+      "pass": true
+    },
+    {
+      "name": "follow-up complaint: app and platform cannot be recovered from available evidence",
+      "expected": "EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND",
+      "actual": "EXTERNAL_ROUTE_RECOMMENDED__HOLD_SUBJECT_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "named app and platform but no exact-task probe",
+      "expected": "EXTERNAL_ROUTE_BOUND__HOLD_TASK_FIT_UNVERIFIED",
+      "actual": "EXTERNAL_ROUTE_BOUND__HOLD_TASK_FIT_UNVERIFIED",
+      "pass": true
+    },
+    {
+      "name": "task fit shown but uninstall/rollback path omitted",
+      "expected": "EXTERNAL_ROUTE_TASK_FIT_VERIFIED__HOLD_EXIT_COST_UNBOUND",
+      "actual": "EXTERNAL_ROUTE_TASK_FIT_VERIFIED__HOLD_EXIT_COST_UNBOUND",
+      "pass": true
+    },
+    {
+      "name": "named route, platform, task-fit probe, disclosures and rollback",
+      "expected": "EXTERNAL_ROUTE_SCOPED_CAPABILITY_VERIFIED",
+      "actual": "EXTERNAL_ROUTE_SCOPED_CAPABILITY_VERIFIED",
       "pass": true
     }
   ]
