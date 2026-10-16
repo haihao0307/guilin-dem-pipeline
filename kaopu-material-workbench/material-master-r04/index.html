@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-HK"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eae8e2"><title>陶瓷与釉层 · 香港 PBR 材质大师 R04</title><link rel="stylesheet" href="style.css"></head>
+<body><header><a class="brand" href="../material-master-r03/">KAOPU <span>香港 PBR 材质大师</span></a><div class="edition">RESEARCH RECEIVER · 04<b>陶瓷构造 / CERAMIC ASSEMBLY</b></div><a class="back" href="../material-master-r03/">返回材质目录 ↗</a></header>
+<main><section class="stage"><div class="intro"><div class="eyebrow">BODY / GLAZE / JOINT</div><h1>釉层、坯体与接缝</h1><p>同尺寸、同光照。看清一片砖如何变旧，以及水如何改变它。</p></div>
+<div id="viewport"><canvas id="canvas" aria-label="可旋转的陶瓷墙角与柱体三维对照"></canvas><div class="compare"><span>01 <b>干燥完整基准</b><small>相同规格 · 无污渍</small></span><span>02 <b>可调研究状态</b><small>崩口 / 下淌 / 湿润</small></span></div><div id="error" hidden role="alert"></div><div id="loading" class="loading">正在构建陶瓷接收器…</div></div>
+<div class="viewbar"><span>拖动旋转 · 滚轮缩放 · 双指操作</span><div><button data-view="front" class="active">整体</button><button data-view="angle">转角</button><button data-view="close">近看釉层</button><button data-view="joint">接缝</button><button id="resetView" aria-label="复位视角">↺</button></div></div>
+<div class="legend"><span>实体砖厚与倒角</span><span id="dimensions">米制陶瓷构件</span><span>无照片贴图</span></div>
+<div class="reading"><span>阅读表面</span><p>崩口将釉层移去，露出陶坯；雨痕沿竖缝和上方损伤向下延伸。湿润单独控制即时反射。</p></div></section>
+<aside><div class="sectionlabel">CERAMIC STUDY <span id="status" role="status" aria-live="polite">正在准备</span></div>
+<div class="families" role="group" aria-label="陶瓷案例"><button data-case="glazed" class="active" aria-pressed="true">釉面长砖<small>GLAZED</small></button><button data-case="unglazed" aria-pressed="false">无釉陶砖<small>BODY</small></button><button data-case="mosaic" aria-pressed="false">小马赛克<small>MOSAIC</small></button></div>
+<h2 id="familyTitle">长方釉面砖</h2><p class="detail" id="familyDetail"></p>
+<div class="subhead">构造规格 <small>两侧同步 / mm</small></div><div id="metricControls">
+<label>单片宽度 <output id="widthOut" for="width">198</output><input id="width" type="range" min="16" max="300" step="1" value="198"></label>
+<label>单片高度 <output id="heightOut" for="height">98</output><input id="height" type="range" min="16" max="300" step="1" value="98"></label>
+<label>砂浆接缝 <output id="jointOut" for="joint">4.0</output><input id="joint" type="range" min="1" max="12" step=".5" value="4"></label></div>
+<div class="subhead">表面过程 <small>仅右侧</small></div><div id="controls">
+<label>边缘崩口 <output id="wearOut" for="wear">0.52</output><input id="wear" type="range" min="0" max="1" step=".01" value=".52"></label>
+<label>重力下淌污渍 <output id="stainOut" for="stain">0.52</output><input id="stain" type="range" min="0" max="1" step=".01" value=".52"></label>
+<label>即时湿润 <output id="wetnessOut" for="wetness">0.00</output><input id="wetness" type="range" min="0" max="1" step=".01" value="0"></label></div>
+<div class="subhead">因果通道 <small>同一场求值</small></div><div class="channels" role="group" aria-label="材质诊断"><button data-mode="0" class="active" aria-pressed="true">最终材质</button><button data-mode="1" aria-pressed="false">基色</button><button data-mode="2" aria-pressed="false">粗糙度</button><button data-mode="3" aria-pressed="false">崩口遮罩</button><button data-mode="4" aria-pressed="false">表层覆盖</button><button data-mode="5" aria-pressed="false">下淌路径</button></div>
+<button id="reset" class="reset">重置本案例 <span>↺</span></button>
+<div class="note"><b>独立研究案例 · 非成熟母体</b><p>尺寸与光学值为可审查的设计假设，不是历史建筑实测。砖厚、接缝退台及倒角为实体几何；崩口内部深度为凹凸近似，未切割轮廓。污渍不是流体模拟。</p><a href="README.md">实现边界与使用说明 ↗</a><a href="sources/provenance.json">来源与权利记录 ↗</a></div></aside></main>
+<footer><span>R04 · 新增研究分支，保留 R01 / R02 / R03</span><span>介电材质 · 金属度 0 · 局部米制坐标</span></footer>
+<script type="module" src="receiver.mjs"></script></body></html>
