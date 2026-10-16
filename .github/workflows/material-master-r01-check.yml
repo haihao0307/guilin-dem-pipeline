@@ -29,7 +29,7 @@ jobs:
           git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/material-changed.txt"
           if grep -q '^kaopu-material-workbench/material-master-r01/' "$RUNNER_TEMP/material-changed.txt"; then echo "r01=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r02/' "$RUNNER_TEMP/material-changed.txt"; then echo "r02=true" >> "$GITHUB_OUTPUT"; fi
-          if grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|qa/.*)$'; then
+          if grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|README.md|sources/wood-glass-provenance.json|qa/.*)$'; then
             echo "r03=full" >> "$GITHUB_OUTPUT"
           else
             echo "r03=receivers" >> "$GITHUB_OUTPUT"

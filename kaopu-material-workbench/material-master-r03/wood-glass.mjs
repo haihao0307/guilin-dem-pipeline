@@ -75,7 +75,7 @@ const originalEvaluate=fragmentShaderSource.slice(fragmentShaderSource.indexOf('
 const wearGLSL=`
 uniform float wgWear;uniform float wgStrength;uniform float wgVariant;uniform float wgMode;
 uniform float wgPaint;uniform vec3 wgPaintColor;uniform vec3 wgHalfSize;
-float wgReceiverNoise(vec3 p){return .5+.5*sin(p.x*23.7+sin(p.y*47.3+p.z*13.1))*sin(p.z*31.1+p.y*19.3+1.7);}
+float wgReceiverNoise(vec3 p){return clamp(.72*fbm(p*vec3(1.,3.,3.)+vec3(13.2,7.7,4.1))+.28*valueNoise(p*vec3(7.,29.,29.)+vec3(3.1,19.4,11.6)),0.,1.);}
 float wgDamage(vec3 p,vec3 n){
   float effort=clamp(wgWear*wgStrength*wgVariant,0.,1.);
   vec3 edgeDistance=max(wgHalfSize-abs(p),vec3(0.));
@@ -171,7 +171,7 @@ function receiverGroup(T,kind,options){
 }
 /** Returns THREE.Group. Rebuild for finish/object/dimensions; update wear/strength/mode in place. */
 export function buildWoodCase(T,options={}){
-  const info=finishInfo(options.finish),preset=getYunnanTimberPreset(info.preset),group=receiverGroup(T,'wood',options),state=group.userData.state;
+  const info=finishInfo(options.finish),originalPreset=getYunnanTimberPreset(info.preset),preset={...originalPreset,controls:{...originalPreset.controls,textureScale:options.textureScale??(options.variant===0?1:5.8)}},group=receiverGroup(T,'wood',options),state=group.userData.state;
   const object=options.object??'window';if(!['window','board','round'].includes(object))throw new RangeError(`Unknown wood object: ${object}`);
   let member=0;const shaders=options.shaders??[],materials=[];
   const wood=(name,length,height,depth,position,rotateZ=0,extra={})=>{
@@ -197,7 +197,7 @@ export function buildWoodCase(T,options={}){
     const board=wood('Detached timber board specimen',1.2,.24,.032,[0,.12,.32]);board.rotation.x=-Math.PI*.19;
   }
   group.userData.receiver={...group.userData.receiver,object,finish:info.id,presetId:preset.id,presetLabel:preset.label,
-    sourceHash:SNAPSHOT_HASH,mother:'mothers/timber-original.mjs',grainSpace:'member local; unaffected by group translations',
+    sourceHash:SNAPSHOT_HASH,textureScale:preset.controls.textureScale,scaleSource:'Original large-timber preset 1; small-member receiver scale 5.8 inherited from FH88 WALNUT_PRESET; new receiver selection, not a changed original snapshot',mother:'mothers/timber-original.mjs',grainSpace:'member local; unaffected by group translations',
     originalRetained:['four original presets','growth rings','anisotropic fibres','pores','cracks','tool marks','knots','microheight','actual macro displacement','full mother round support'],
     additions:['Three physical-lighting transport','12 mm seam taper','new edge/patch finish wear receiver',...(info.id==='paint'?['opaque paint: shared mask for colour/roughness/microheight/cavity/clearcoat']:[])],
     limitations:['Parallax disabled in this transport','PBR lighting differs from original standalone mother lighting','Wear is authored demonstration, not calibrated historical aging','Paint film edge relief is bump height; no explicit peeling flakes']};
