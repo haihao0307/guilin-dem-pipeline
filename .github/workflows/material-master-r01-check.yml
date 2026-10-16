@@ -1,4 +1,4 @@
-name: Material master R01 R02 R03 browser check
+name: Material master R01 R02 R03 R04 browser check
 on:
   push:
     branches: [main]
@@ -6,6 +6,7 @@ on:
       - 'kaopu-material-workbench/material-master-r01/**'
       - 'kaopu-material-workbench/material-master-r02/**'
       - 'kaopu-material-workbench/material-master-r03/**'
+      - 'kaopu-material-workbench/material-master-r04/**'
       - '.github/workflows/material-master-r01-check.yml'
 permissions:
   contents: read
@@ -21,6 +22,7 @@ jobs:
             kaopu-material-workbench/material-master-r01
             kaopu-material-workbench/material-master-r02
             kaopu-material-workbench/material-master-r03
+            kaopu-material-workbench/material-master-r04
           persist-credentials: false
       - name: Determine bounded regression scope
         id: scope
@@ -29,6 +31,8 @@ jobs:
           git diff --name-only HEAD^ HEAD > "$RUNNER_TEMP/material-changed.txt"
           if grep -q '^kaopu-material-workbench/material-master-r01/' "$RUNNER_TEMP/material-changed.txt"; then echo "r01=true" >> "$GITHUB_OUTPUT"; fi
           if grep -q '^kaopu-material-workbench/material-master-r02/' "$RUNNER_TEMP/material-changed.txt"; then echo "r02=true" >> "$GITHUB_OUTPUT"; fi
+          if grep -q '^kaopu-material-workbench/material-master-r04/' "$RUNNER_TEMP/material-changed.txt"; then echo "r04=true" >> "$GITHUB_OUTPUT"; fi
+          if grep -q '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt"; then echo "r03changed=true" >> "$GITHUB_OUTPUT"; fi
           if grep '^kaopu-material-workbench/material-master-r03/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(receiver.mjs|wood-glass.mjs|style.css|README.md|sources/wood-glass-provenance.json|qa/.*)$'; then
             echo "r03=full" >> "$GITHUB_OUTPUT"
           else
@@ -44,7 +48,13 @@ jobs:
           npm init -y
           npm install --save-dev playwright@1.55.0
           npx playwright install --with-deps chromium
+      - name: R04 ceramic tile rendering and interactions
+        if: steps.scope.outputs.r04 == 'true'
+        env:
+          NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
+        run: node kaopu-material-workbench/material-master-r04/qa/browser.cjs
       - name: R03 atlas rendering and interactions
+        if: steps.scope.outputs.r03changed == 'true'
         env:
           R03_QA_SCOPE: ${{ steps.scope.outputs.r03 }}
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
@@ -62,7 +72,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: material-master-r01-r02-r03-browser-evidence
+          name: material-master-browser-evidence
           path: |
             kaopu-material-workbench/material-master-r01/qa/*.png
             kaopu-material-workbench/material-master-r01/qa/browser-receipt.json
@@ -70,4 +80,6 @@ jobs:
             kaopu-material-workbench/material-master-r02/qa/browser-receipt.json
             kaopu-material-workbench/material-master-r03/qa/*.png
             kaopu-material-workbench/material-master-r03/qa/browser-receipt.json
+            kaopu-material-workbench/material-master-r04/qa/*.png
+            kaopu-material-workbench/material-master-r04/qa/browser-receipt.json
           retention-days: 14
