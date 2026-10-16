@@ -43,3 +43,7 @@ node tools/serve.cjs
 本地唯一入口：`http://127.0.0.1:8785/preview.html`。离线输入和人物宿主均在本目录冻结；无需 F12 的隐藏构建目录。原生宿主仍按其已有固定地址加载项目资源。本地验证服务器用已有项目缓存映射相同资源，公开页面访问原固定地址。
 
 `BUILD_MANIFEST.json` 固定源文件、输入、人物宿主和结构资产散列；页面在加载时检查压缩数据的长度与 SHA-256；`PUBLIC_BUILD.json` 固定网页压缩块，`PAYLOAD_PIN.json` 固定公开数据提交。
+
+## 查看当前研究基线
+
+[打开唯一结构工作台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/codex/hair-structure-lab-r01-20261016/kaopu-hair-workbench/foundation/structure-r01/public.html)。首屏只读冻结静态结构，不加载另一套发型或物理演示。公开下载数据固定到 `PAYLOAD_PIN.json` 的提交。
