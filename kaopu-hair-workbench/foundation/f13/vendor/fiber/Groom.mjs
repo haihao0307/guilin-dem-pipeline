@@ -1,0 +1,1 @@
+export const GUIDE_COUNT=43,NODES=25,NODE_POWER=1.3,COUNT=43;export const STYLES={medium:{length:.30},long:{length:.43}};
