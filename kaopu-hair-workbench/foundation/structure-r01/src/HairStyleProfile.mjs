@@ -10,11 +10,11 @@ export const ZONES=[
 const regional={hairline:{hem:.312,layer:.008},fringe:{hem:.305,layer:.010},top:{hem:.132,layer:.012},crown:{hem:.122,layer:.010},'left-side':{hem:.139,layer:.010},'right-side':{hem:.144,layer:.011},'left-temple':{hem:.220,layer:.012},'right-temple':{hem:.224,layer:.010},occipital:{hem:.120,layer:.008},nape:{hem:.135,layer:.012}};
 const regionalLengths=Object.fromEntries(ZONES.map(([id])=>[id,{minArc:.020,maxArc:({hairline:.22,fringe:.24,top:.44,crown:.44,'left-side':.36,'right-side':.36,'left-temple':.22,'right-temple':.22,occipital:.38,nape:.24})[id]}]));
 export const PROFILE={
- schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',seed:4729,
- ScalpDomain:{source:'F02.1 native supported domain',exclude:['face','forehead','ear','neck']},
+ schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',revision:'static-flow-02',seed:4729,
+ ScalpDomain:{source:'F02.1 native supported domain intersected with authored P01 lower hairline',exclude:['face','forehead','ear','neck'],lowerHairline:{back:.256,sideRise:.024,temple:.282,fade:.008},boundaryStatus:'authored P01 scalp / neck separation; visual review required'},
  AnatomicalZoneField:{zones:ZONES.map(([id,label])=>({id,label})),status:'authored segmentation; requires visual review'},
  CandidateRootField:{source:'shared F02 candidate bank',resample:false},
- ActiveRootMask:{mode:'stable threshold versus density; exact native support required'},
+ ActiveRootMask:{mode:'stable threshold versus density within native support and explicit scalp/neck boundary'},
  FollicleDensityField:{interior:.94,hairlineFade:.009,partMinimum:.68},
  RootDirectionField:{mode:'projected comb + dividing boundary + local whorl + ear routing'},
  RootLiftField:{interior:.12,hairline:.08},
@@ -23,8 +23,8 @@ export const PROFILE={
  HairlineProfile:{edgeFade:.009,irregularity:.0012,babyHair:{stage:2,enabled:false}},
  RegionalLengthField:{parameter:'physical arc length in metres, separate from spatial cut height',regions:regionalLengths},
  CutField:{mode:'regional hem + authored side sweep + regional layer; no global length multiplier',regions:regional},
- GuideGroom:{samples:97,minPerZone:12,maxPerZone:40,selection:'semantic-zone candidate pool, complete-curve distance, three approximate k-medoids updates',highFrequency:false},
- ClumpGraph:{levels:['macro','mid','micro'],crossPart:false,crossZone:false},
+ GuideGroom:{samples:97,minPerZone:12,maxPerZone:40,selection:'semantic-zone candidate pool, complete-curve distance, three approximate k-medoids updates',highFrequency:false,lowerWidth:.087,lowerDepth:.096},
+ ClumpGraph:{levels:['macro','mid','micro'],crossPart:false,crossZone:false,midDiameter:.045,microDiameter:.026},
  ChildStrandProfile:{stage:2,enabled:false,interpolation:'transported local-frame offsets, never world-position lerp'},
  StrandMaterialField:{stage:2,enabled:false,rootRadius:null,tipRadius:null,lengthVariation:null,melaninVariation:null,roughnessVariation:null,curlRadius:null,curlPitch:null,clumpStrength:null,flyawayProbability:null},
  RestShape:{source:'authored static groom',gravitySolver:false,acceptance:'pending multi-view structure review'},
@@ -35,8 +35,8 @@ export const smooth=x=>{x=clamp(x);return x*x*(3-2*x);};
 export const dot=(a,b)=>a.reduce((s,x,k)=>s+x*b[k],0),add=(a,b)=>a.map((x,k)=>x+b[k]),sub=(a,b)=>a.map((x,k)=>x-b[k]),mul=(a,s)=>a.map(x=>x*s),mix=(a,b,t)=>a.map((x,k)=>x+(b[k]-x)*t),unit=a=>mul(a,1/(Math.hypot(...a)||1));
 export const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 export const project=(v,n)=>sub(v,mul(n,dot(v,n)));
-export function zoneAt(p,edge=1){const[x,y,z]=p,a=Math.abs(x);if(z>.084&&edge<.008)return 0;if(z>.078&&y<.390)return 1;if(a>.064&&y<.335&&z>.028)return x<0?6:7;if(z<-.022&&y<.265)return 9;if(y>.386&&z<.012)return 3;if(y>.360&&a<.065)return 2;if(z<-.024)return 8;return x<0?4:5;}
-export function partX(z){const c=PROFILE.PartingCurves[0].points;let j=0;while(j<c.length-2&&z<c[j+1][2])j++;const a=c[j],b=c[j+1];return a[0]+(b[0]-a[0])*clamp((z-a[2])/(b[2]-a[2]));}
+export function zoneAt(p,edge=1){const[x,y,z]=p,a=Math.abs(x);if(z>.084&&edge<.008)return 0;if(z>.078&&y<.390)return 1;if(a>.064&&y<.335&&z>.028)return x<0?6:7;if(z<-.022&&y<.285)return 9;if(y>.386&&z<.012)return 3;if(y>.360&&a<.065)return 2;if(z<-.024)return 8;return x<0?4:5;}
+export function partX(z){const c=PROFILE.PartingCurves[0].points;let j=0;while(j<c.length-2&&z<c[j+1][2])j++;const a=c[j],b=c[j+1];return (a[0]+(b[0]-a[0])*clamp((z-a[2])/(b[2]-a[2])))*smooth((z+.060)/.030);}
 export function flowAt(p,n,zone,{whorl=true,ear=true}={}){
  const[x,y,z]=p,side=x<partX(z)?-1:1,front=smooth((z-.020)/.070),isFringe=zone===0||zone===1;
  let comb=isFringe?[-.65,-.55,.30]:[side*(.30+.65*front),-.28-(1-front)*.20,-.55*(1-front)-.08];
@@ -50,4 +50,10 @@ export function flowAt(p,n,zone,{whorl=true,ear=true}={}){
  let tangent=unit(project(comb,n));if(Math.hypot(...tangent)<.1)tangent=unit(project([side,0,-.3],n));return tangent;
 }
 export function densityAt(p,edge){const f=PROFILE.FollicleDensityField,part=(1-smooth(Math.abs(p[0]-partX(p[2]))/.007))*smooth((p[1]-.365)/.030)*smooth((p[2]+.04)/.03),w=PROFILE.WhorlField[0],r=Math.hypot(p[0]-w.center[0],p[2]-w.center[2]);return f.interior*smooth((edge+.0005)/f.hairlineFade)*(1-part*(1-f.partMinimum))*(1-(1-w.centerDensity)*(1-smooth(r/w.coreRadius)));}
-export function cutAt(root,zone,seed){const field=PROFILE.CutField.regions[ZONES[zone][0]],asym=(zone===0||zone===1)?.020*Math.max(-1,Math.min(1,root[0]/.07)):0;return Math.min(root[1]-.022,field.hem+field.layer*(seed-.5)+asym);}
+export function cutAt(root,zone,seed){const field=PROFILE.CutField.regions[ZONES[zone][0]],asym=(zone===0||zone===1)?.020*Math.max(-1,Math.min(1,root[0]/.07)):0;return Math.min(root[1]-.022,field.hem+field.layer*(smooth((root[1]-.29)/.13)-.5)+.0008*(seed-.5)+asym);}
+
+export function scalpMargin(p,profile=PROFILE){
+ const [x,y,z]=p,h=profile.ScalpDomain.lowerHairline;
+ const back=h.back+h.sideRise*Math.min(1,(Math.abs(x)/.075)**2),front=smooth((z-.012)/.028);
+ return y-(back+(h.temple-back)*front);
+}

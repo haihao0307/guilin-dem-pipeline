@@ -4,4 +4,10 @@ function good(name,fn){fn();checks.push({name,pass:true});}function bad(name,fn)
 good('compiled profile matches current authored profile',()=>assert.deepEqual(lab.profile,PROFILE));
 good('authored profile',()=>assertProfile(PROFILE));good('published structure',()=>assertStructure(lab,roots));
 bad('reject physics before structure acceptance',()=>assertProfile({...PROFILE,PhysicsProfile:{...PROFILE.PhysicsProfile,enabled:true}}));bad('reject missing regional cut',()=>{const p=structuredClone(PROFILE);delete p.CutField.regions.fringe;assertProfile(p);});bad('reject incomplete root-to-tip guide',()=>{const x=structuredClone(lab);x.guides[0].points.splice(-3);assertStructure(x,roots);});bad('reject broken micro-to-mid ancestry',()=>{const x=structuredClone(lab);x.clumpGraph.find(g=>g.level==='micro').parent='missing';assertStructure(x,roots);});bad('reject missing root bytes',()=>assertStructure(lab,roots.subarray(26)));
+bad('reject representative outside its own clump',()=>{const x=structuredClone(lab),g=x.clumpGraph.find(g=>g.level==='micro');g.representativeGuide=x.guides.find(h=>!g.guides.includes(h.id)).id;assertStructure(x,roots);});
+bad('reject group escaping its parent membership',()=>{const x=structuredClone(lab),g=x.clumpGraph.find(g=>g.level==='micro'),p=x.clumpGraph.find(p=>p.id===g.parent);p.guides=p.guides.filter(id=>id!==g.guides[0]);assertStructure(x,roots);});
+bad('reject inconsistent arc length',()=>{const x=structuredClone(lab);x.guides[0].length*=1.1;assertStructure(x,roots);});
+bad('reject altered native follicle identity',()=>{const x=structuredClone(lab);x.guides[0].root.triangleId++;assertStructure(x,roots);});
+bad('reject non-orthogonal transport frame',()=>{const x=structuredClone(lab);x.guides[0].frames[0]+=1;assertStructure(x,roots);});
+bad('reject active follicle below authored scalp',()=>{const r=roots.slice();for(let i=0;i<lab.rootCount;i++)if(r[i*lab.stride+5]<.24){r[i*lab.stride+25]=1;break;}assertStructure(lab,r);});
 const result={pass:true,checks};fs.writeFileSync(new URL('evidence/contract-checks.json',base),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

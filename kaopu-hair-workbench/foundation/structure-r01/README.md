@@ -4,11 +4,15 @@
 
 **第一轮：结构验收中。第二轮：锁定。** 数值合法不等于发型视觉通过，也不等于已准确还原参考照片。
 
+## 静态结构修订 02
+
+已调整头皮/颈部启用边界、绕耳后的完整下垂路线、连续区域剪裁和按整条发流组织的束群。原有 3,300 个候选绑定不变；当前启用 2,217 个、135 条完整 Guide，三级束群为 16 / 35 / 60。六视角完整显示发尾。[修改依据、前后指标与局限](docs/STATIC-FLOW-02.md)。
+
 ## 已落实的体系
 
 `ScalpDomain → CandidateRootField → ActiveRootMask → RootDirectionField → Parting/Whorl → RegionalLength/Cut → GuideGroom → ClumpGraph → RestShape`
 
-唯一发型入口是 [HairStyleProfile](src/HairStyleProfile.mjs)。生长域、方向、物理弧长与空间剪裁分开；分缝保留毛囊并改变两侧发流；旋涡是有影响范围的方向约束；耳前和耳后拥有明确路线。Guide 保存原生三角面、重心坐标、97 点完整曲线、实际弧长、局部运输坐标和三级束群父链。
+唯一发型入口是 [HairStyleProfile](src/HairStyleProfile.mjs)。生长域、方向、物理弧长与空间剪裁分开；分缝保留毛囊并改变两侧发流；旋涡是有影响范围的方向约束；耳前和耳后拥有明确路线。修订 02 的束群按完整曲线的实际弧长采样距离构造，保留区域、分缝侧与耳前/耳后路线边界。Guide 保存原生三角面、重心坐标、97 点完整曲线、实际弧长、局部运输坐标和三级束群父链。
 
 本次实际输入是 F02/F12 的 **3,300 个候选根**，启用数量由密度场与稳定种子决定。用户指南提到的 64,000 候选库未在当前这条原生输入链中找到，不补撒点凑数，也不把候选数称作最终发丝数。
 
@@ -34,11 +38,11 @@
 需要 Node.js，以及 esbuild。`ESBUILD_PATH` 可指定 esbuild 可执行文件；当前构建器的默认路径只适用于此工作环境。
 
 ```powershell
-node tools/compile-structure.mjs
-node tools/check-contract.mjs
 node tools/build.cjs
 node tools/serve.cjs
 ```
+
+构建会重新生成当前静态结构，执行数据合同、统一输入与静态改进检查，避免使用过期结构资产。
 
 本地唯一入口：`http://127.0.0.1:8785/preview.html`。离线输入和人物宿主均在本目录冻结；无需 F12 的隐藏构建目录。原生宿主仍按其已有固定地址加载项目资源。本地验证服务器用已有项目缓存映射相同资源，公开页面访问原固定地址。
 
