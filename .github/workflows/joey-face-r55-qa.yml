@@ -1,21 +1,17 @@
-name: R23 short hair and bounded verified skin lip migration
+name: R23 complete interactive public preview
 on:
   push:
     branches: ['qa/joey-face-r55-20261013']
-    paths: ['kaopu-unified-human-workbench/joey-observation-r01/full-material-r23/**', 'kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r19/**', '.github/workflows/joey-face-r55-qa.yml']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/**', '.github/workflows/joey-face-r55-qa.yml']
 permissions:
   contents: read
 concurrency:
   group: joey-face-r55-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  native:
+  interactive:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
-    strategy:
-      fail-fast: false
-      matrix:
-        frame: [baseline-r23, candidate-r23]
+    timeout-minutes: 40
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -23,39 +19,17 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r23
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r21
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r19
-            kaopu-unified-human-workbench/joey-observation-r01/hair-u07-long-r19
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r18
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r17
-            kaopu-unified-human-workbench/joey-observation-r01/full-material-r16
-            kaopu-unified-human-workbench/joey-observation-r01/hair-f13-static-r17
-            kaopu-unified-human-workbench/joey-observation-r01/whole-face-fit-r63
-            kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
-            kaopu-unified-human-workbench/joey-observation-r01/nasal-shape-r64
-            kaopu-unified-human-workbench/joey-observation-r01/cheek-continuity-r55
-            kaopu-unified-human-workbench/joey-observation-r01/brow-direction-r58
-            kaopu-unified-human-workbench/joey-observation-r01/lower-face-relations-r57
-            kaopu-unified-human-workbench/joey-observation-r01/appearance-r54
+            kaopu-unified-human-workbench/joey-observation-r01/interactive-r23
       - name: Install matching official browser package
         timeout-minutes: 3
         run: |
-          npm install --prefix "$RUNNER_TEMP/joey-r55" --no-save --ignore-scripts playwright@1.57.0
-          echo "NODE_PATH=$RUNNER_TEMP/joey-r55/node_modules" >> "$GITHUB_ENV"
-      - name: Verify retained cosmetics and brow contracts
-        run: node kaopu-unified-human-workbench/joey-observation-r01/appearance-r65/test.mjs
-      - name: Check original native response bridge syntax
-        run: node --check kaopu-unified-human-workbench/joey-observation-r01/full-material-r23/render-native-ci.cjs
-      - name: Render complete inherited portrait and restore original archive
-        env:
-          FRAME_VIEW: ${{ matrix.frame }}
-        run: node kaopu-unified-human-workbench/joey-observation-r01/full-material-r23/render-native-ci.cjs
+          npm install --prefix "$RUNNER_TEMP/joey-r23" --no-save --ignore-scripts playwright@1.57.0
+          echo "NODE_PATH=$RUNNER_TEMP/joey-r23/node_modules" >> "$GITHUB_ENV"
+      - name: Verify fixed public complete interactive portrait
+        run: node kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/verify.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: joey-r23-full-material-${{ matrix.frame }}-${{ github.sha }}
-          path: kaopu-unified-human-workbench/joey-observation-r01/full-material-r23/evidence/
-          retention-days: 7
-
-
+          name: joey-r23-interactive-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/evidence/
+          retention-days: 14
