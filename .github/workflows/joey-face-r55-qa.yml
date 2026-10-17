@@ -29,7 +29,7 @@ jobs:
         run: |
           ROOT=kaopu-unified-human-workbench/joey-observation-r01/interactive-r23
           mkdir -p "$ROOT/evidence"
-          nohup node "$ROOT/verify-lifecycle.cjs" > "$ROOT/evidence/run.log" 2>&1 &
+          nohup node "$ROOT/verify.cjs" > "$ROOT/evidence/run.log" 2>&1 &
           echo $! > "$ROOT/evidence/process.pid"
       - name: Verify first stage
         run: node kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/wait-stage.cjs first
@@ -37,6 +37,22 @@ jobs:
         if: always()
         with:
           name: joey-r23-first-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/evidence/
+          retention-days: 14
+      - name: Verify controls stage
+        run: node kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/wait-stage.cjs controls
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joey-r23-controls-${{ github.sha }}
+          path: kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/evidence/
+          retention-days: 14
+      - name: Verify camera stage
+        run: node kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/wait-stage.cjs camera
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joey-r23-camera-${{ github.sha }}
           path: kaopu-unified-human-workbench/joey-observation-r01/interactive-r23/evidence/
           retention-days: 14
       - name: Verify complete stage
