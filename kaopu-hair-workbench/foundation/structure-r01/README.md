@@ -2,6 +2,8 @@
 
 ## 当前实施：对照学习文件推进轮廓与发束 08
 
+[打开本轮固定预览](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/63da890c63190e1cf24af364fb004ab08e06fc68/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=silhouette-framing)。本机全新浏览器公开测试：结构 18.97 秒、人物皮肤完整就绪 32.83 秒；两项新研究首次切换约 1.23 / 0.91 秒，十状态缓存切换合计 137 ms，零新增请求。新页面直达指定研究也通过，但同一上下文已有网络缓存，不能把其 15.69 秒当作冷启动改善。[完整公开记录](evidence/public-route08-check.json)。首次加载仍未达标，本轮未完成加载优化。
+
 按[用户文件逐项对照表](docs/LEARNING-CHECKLIST-R08.md)，新增“立体轮廓”和“立体轮廓·耳前渐层”两项当前长度的静态结构研究。31 个下段中束参照驱动 117 条主体路径，保留全部刘海/鬓角与每条主体前 45 mm；原九个状态的配置、几何、毛囊缓冲均由独立历史锁验证不变。当前十个可见选项，第一轮仍未通过完整视觉验收，密集发丝、材质和物理继续锁定。
 
 侧后下段不再集中贴在同一后平面；耳前长束的终点以同侧保留鬓角为参照。上部与耳周仍有交叉，尚不能认为自然性已完成。本文下方 R07 及更早段落为历史。[实现、失败尝试和限制](docs/SILHOUETTE-WISPS-08.md)；[本轮当前画面对照](evidence/route08-review-overview.png)。
