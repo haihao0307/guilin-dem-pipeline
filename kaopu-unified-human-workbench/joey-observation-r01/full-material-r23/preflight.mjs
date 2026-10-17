@@ -1,0 +1,3 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+import{patch}from'../appearance-r65/LipFinish.mjs';import{patchSurface}from'./NativeSurfaceR23.mjs';
+const source=fs.readFileSync(new URL('../source/CommonSkinLayer.mjs',import.meta.url),'utf8'),s={fragmentShader:source,uniforms:{}};patch(s,{});patchSurface(s,{});assert(s.fragmentShader.includes('psPoreSurface(r23MM'));assert(s.fragmentShader.includes('lrFolds(r23MM'));assert(!s.fragmentShader.includes('float csGrooves=sin'));assert.throws(()=>patchSurface(s,{}),/anchor changed/);console.log('Native material anchor and exact donor function tests passed; GPU unverified.');
