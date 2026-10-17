@@ -11,27 +11,98 @@
   "acceptedBaseline": "HUMAN-INTEGRATED-R07 / SKIN-FULLBODY-R02",
   "baselinePreviewSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
   "targetObject": "The existing R07 person's lips, on the same native head, body, rig and editable presets",
-  "targetDefectOrChange": "Restore an independent effective lip-surface contribution after the whole-body skin fragment hook: anatomical colour variation, restrained irregular microstructure, separate dry tissue and local wet-film reflection, and a reproducible original/candidate comparison.",
+  "targetDefectOrChange": "Restore an independent effective lip-surface contribution after the whole-body skin fragment hook: anatomical colour variation, restrained irregular microstructure, separate dry tissue and local wet-film reflection, and a reproducible original/candidate comparison. First-render refinement also attenuates inherited display-mesh main grooves without changing canonical anatomy or saved DNA.",
   "referenceSet": [
-    {"url":"https://onlinelibrary.wiley.com/doi/10.1111/srt.13418","role":"upper/lower lip colour measurements; limited female sample; not a full texture atlas"},
-    {"url":"https://onlinelibrary.wiley.com/doi/full/10.1111/ics.70004","role":"continuous lip-colour diversity; lower-lip local measurements; no ethnicity-locked palette"},
-    {"url":"https://dev.epicgames.com/documentation/unreal-engine/digital-humans?application_version=4.27","role":"independent albedo, roughness, micro-normal and specular channels"},
-    {"url":"https://pubmed.ncbi.nlm.nih.gov/18671764/","role":"do not equate surface wet-film reflection and tissue hydration"},
-    {"url":"https://onlinelibrary.wiley.com/doi/full/10.1111/srt.13563","role":"upper/lower and directional lip-wrinkle distinction; no measured groove-depth constants"}
+    {
+      "url": "https://onlinelibrary.wiley.com/doi/10.1111/srt.13418",
+      "role": "upper/lower lip colour measurements; limited female sample; not a full texture atlas"
+    },
+    {
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1111/ics.70004",
+      "role": "continuous lip-colour diversity; lower-lip local measurements; no ethnicity-locked palette"
+    },
+    {
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/digital-humans?application_version=4.27",
+      "role": "independent albedo, roughness, micro-normal and specular channels"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18671764/",
+      "role": "do not equate surface wet-film reflection and tissue hydration"
+    },
+    {
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1111/srt.13563",
+      "role": "upper/lower and directional lip-wrinkle distinction; no measured groove-depth constants"
+    }
   ],
   "referenceCoverage": {
-    "known": ["the existing native outer/inner lip rails", "original R07 surface code", "R07 stored front and lip QA images as BASELINE_ONLY", "published lip colour and tissue relationships"],
-    "unknown": ["the user's unpushed Codex changes", "person-specific calibrated albedo and BRDF", "clinically measured micro-groove depths for the model", "full spectral tissue transport"],
+    "known": [
+      "the existing native outer/inner lip rails",
+      "original R07 surface code",
+      "R07 stored front and lip QA images as BASELINE_ONLY",
+      "published lip colour and tissue relationships"
+    ],
+    "unknown": [
+      "the user's unpushed Codex changes",
+      "person-specific calibrated albedo and BRDF",
+      "clinically measured micro-groove depths for the model",
+      "full spectral tissue transport"
+    ],
     "modificationBasis": "Measured anatomical distinctions translated into bounded, editable appearance controls. Numerical shader defaults are engineering calibration values, not clinical measurements. No new face identity or replacement mesh."
   },
   "expectedArtifact": "A fixed public HTTPS interactive candidate based on the same R07 person, plus isolated source, research, machine evidence and explicit visual-acceptance-pending receipt",
-  "allowedPaths": ["kaopu-unified-human-workbench/lip-realism-r01/**", ".github/workflows/lip-realism-r01.yml"],
-  "protectedInvariants": ["all pre-existing source and accepted previews", "main and other work branches", "Codex skin work including unpushed changes", "native topology, positions, rig, eye and ear geometry", "whole-body skin outside the bounded lip surface", "current lighting and exposure for A/B", "no force push, merge, or history rewrite"],
-  "forbiddenRoutes": ["replacement character", "external mesh import", "generated reference or screenshot substitute", "single flat lip tint", "periodic deep grooves as realism", "baked highlights", "unmarked old screenshots as current evidence", "claiming software-renderer FPS as user-device performance"],
-  "acceptanceGates": ["exact preserved host-byte hashes", "real shader links", "same-camera and same-light A/B", "bounded pixel difference", "existing pose and lip-shape compatibility", "public fixed commit readback and browser checks", "independent review", "visualAcceptance remains false until user review"],
-  "applicableRegressionCases": ["No whole-lip single colour", "No trench-like striae", "No distorted scale comparison", "Do not modify an inactive inherited shader and claim a visual change"],
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/lip-realism-r01/**",
+    ".github/workflows/lip-realism-r01.yml"
+  ],
+  "protectedInvariants": [
+    "all pre-existing source and accepted previews",
+    "main and other work branches",
+    "Codex skin work including unpushed changes",
+    "canonical native positions and topology, rig, eye and ear geometry; display lip q.red groove relief is the documented local exception",
+    "whole-body skin outside the bounded lip surface",
+    "current lighting and exposure for A/B",
+    "no force push, merge, or history rewrite"
+  ],
+  "forbiddenRoutes": [
+    "replacement character",
+    "external mesh import",
+    "generated reference or screenshot substitute",
+    "single flat lip tint",
+    "periodic deep grooves as realism",
+    "baked highlights",
+    "unmarked old screenshots as current evidence",
+    "claiming software-renderer FPS as user-device performance"
+  ],
+  "acceptanceGates": [
+    "exact preserved host-byte hashes",
+    "real shader links",
+    "same-camera and same-light A/B",
+    "bounded pixel difference",
+    "existing pose and lip-shape compatibility",
+    "public fixed commit readback and browser checks",
+    "independent review",
+    "visualAcceptance remains false until user review"
+  ],
+  "applicableRegressionCases": [
+    "No whole-lip single colour",
+    "No trench-like striae",
+    "No distorted scale comparison",
+    "Do not modify an inactive inherited shader and claim a visual change"
+  ],
   "taskMode": "REPLICATION_LOCKED",
   "creativeAuthorization": false,
   "implementationAuthorization": "The current user explicitly requests independent scientific study and procedural lip treatment on the existing platform.",
-  "real3DChecklist": {"generatedImageSubstitute":false,"productionSourceModified":"pending","interactiveWorkbench":"pending","realtime3D":"inherited host; candidate pending","publicHttpsVerified":false,"screenshotsAloneAreNotDelivery":true}
+  "real3DChecklist": {
+    "generatedImageSubstitute": false,
+    "productionSourceModified": true,
+    "interactiveWorkbench": "first candidate rendered in real Chromium; final candidate pending",
+    "realtime3D": "first candidate actual WebGL linked; final candidate pending",
+    "publicHttpsVerified": false,
+    "screenshotsAloneAreNotDelivery": true
+  },
+  "implementationRefinement": {
+    "evidence": "First actual Chromium screenshots from run 39017094445 show overly strong lip border and inherited long glossy grooves. Original LipBiomechanics writes coarse grooves into display geometry.",
+    "authorizedScope": "Existing request is the lip specialist treatment; preserve canonical identity, topology, skin code, rig and light. Locally reduce inherited native q.red-weighted groove amplitude to 35% during synchronous mother.update, restore DNA immediately. No new mesh or lip volume change.",
+    "verification": "Original/off must restore full pixels and geometry exactly. Enabled display positions may differ only at native lip q.red>0 vertices, normals only their one-ring; canonical, topology and binding unchanged. Maximum position delta 100 micrometres engineering budget. All colour sliders remain surface-only."
+  }
 }

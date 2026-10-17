@@ -22,5 +22,5 @@ const scripts=s=>Array.from(s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g),m
 const originals=scripts(host),result=scripts(preview);
 if(JSON.stringify(result.slice(0,originals.length))!==JSON.stringify(originals))throw Error('Original scripts changed');
 fs.writeFileSync(path.join(dir,'preview.html'),preview);
-fs.writeFileSync(path.join(dir,'BUILD_MANIFEST.json'),JSON.stringify({...metadata,previewSHA256:hash(preview),previewBytes:Buffer.byteLength(preview),originalScriptHashes:originals,hostRestorationExact:true,geometryChanged:false,referenceAssetsImported:0,newImageMaps:0,standaloneOffline:false,inheritedStreamingAssets:true,buildTime:new Date().toISOString()},null,2)+'\n');
+fs.writeFileSync(path.join(dir,'BUILD_MANIFEST.json'),JSON.stringify({...metadata,previewSHA256:hash(preview),previewBytes:Buffer.byteLength(preview),originalScriptHashes:originals,hostRestorationExact:true,canonicalGeometryChanged:false,displayLipReliefAdjusted:true,referenceAssetsImported:0,newImageMaps:0,standaloneOffline:false,inheritedStreamingAssets:true,buildTime:new Date().toISOString()},null,2)+'\n');
 console.log(JSON.stringify({version:metadata.version,source,previewBytes:Buffer.byteLength(preview),previewSHA256:hash(preview),hostRestorationExact:true}));

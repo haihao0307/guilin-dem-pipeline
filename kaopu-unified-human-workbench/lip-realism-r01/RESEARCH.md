@@ -8,7 +8,7 @@
 
 ## 1. 任务与证据边界
 
-用户要求学习唇色研究和数字人方法，观察最新版人物总工作台，改善嘴唇的自然感；皮肤细节由另一条工作线处理。本专项应围绕现有人物的嘴唇做局部、可回退的改动，保留与皮肤工作线的明确接口。**本次增量保留全脸肤色与几何；若观察暴露几何问题，单独记录，不能借本轮嘴唇材质修改扩大范围。**
+用户要求学习唇色研究和数字人方法，观察最新版人物总工作台，改善嘴唇的自然感；皮肤细节由另一条工作线处理。本专项应围绕现有人物的嘴唇做局部、可回退的改动，保留与皮肤工作线的明确接口。**本次保留母型、拓扑、绑定和全脸皮肤代码。首轮真实截图暴露继承主唇沟造成长条反光，因此只允许缩小原生唇红权重内的主沟幅度；不改变唇峰、体积、表情或皮肤几何。显示网格这一局部变化必须独立验证，并在关闭专项时精确恢复。**
 
 两篇指定的 Wiley 论文提供的是**受控测量的局部唇色及其多样性**，没有提供一张能直接覆盖整唇的颜色地图，也没有给出完整的微几何、粗糙度和动态形变模型。把色表中的一个颜色铺满嘴唇，或根据族群名称固定唇色，都超出了证据支持范围。[S1][S2]
 
@@ -144,3 +144,19 @@ S1、S2 的 Lab/LCh 数值对应特定测量与颜色计算条件。它们可以
 - **S6** — Gomi T, Imamura T. *Age-related changes in the vasculature of the dermis of the upper lip vermilion*. Aging. 2019;11:3551–3560. DOI: 10.18632/aging.101996. [原出版机构全文](https://www.aging-us.com/article/101996/text)。核读方法与局限。
 - **S7** — Thibodeau EA, D’Ambrosio JA. *Measurement of lip and skin pigmentation using reflectance spectrophotometry*. European Journal of Oral Sciences. 1997;105:373–375. DOI: 10.1111/j.1600-0722.1997.tb00255.x. [Wiley 原始摘要](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1600-0722.1997.tb00255.x)。访问范围为摘要，不补写未见的数据。
 
+## 8. Epic 数字人方法如何用于当前平台
+
+用户提供的 [Epic Digital Humans（UE 4.27）](https://dev.epicgames.com/documentation/unreal-engine/digital-humans?application_version=4.27) 已核读。文档将底色、粗糙度、反射、散射及法线分别处理，并说明中尺度法线可随表情混合、微法线用于更小细节。其双反射瓣组合不同宽度的反射；唇、牙齿等散射材质相邻时还需控制屏幕空间串色。**本项目采用通道分离和多尺度检查原则，没有声称移植 UE 的扫描资产、双瓣模型或次表面散射实现。**
+
+当前母台采用 Three.js WebGL 材质。依据 [Material.onBeforeCompile](https://threejs.org/docs/pages/Material.html) 与 [MeshPhysicalMaterial](https://threejs.org/docs/pages/MeshPhysicalMaterial.html)，本模块在既有最终材质链之后补充唇部字段，沿用其表面反射与局部 clearcoat 表达湿膜；clearcoat 不是完整体积散射，transmission 也不能直接等同皮肤 SSS。额外着色计算即使没有新增贴图也有成本，因此需要对原版和候选的同机实际帧耗作比较。
+
+依据 [Three.js 色彩管理](https://threejs.org/manual/pages/color-management.html)，颜色应转换到线性工作空间再参与光照。底色观察通道用于把色彩问题与高光问题分开；它显示的仍是经过渲染输出流程的屏幕结果，不是新的实测光谱或临床数据。法线和粗糙度等数据场不应当作 sRGB 颜色处理。
+
+以上实现说明由 root 在 2026-10-17 补充。具体候选是否编译、运行、公开可用，以及视觉差距是否缩小，仍以本轮独立 QA 和实际截图复核为准。
+
+
+## 9. 第一轮真实运行后的修正依据
+
+2026-10-17 的 Chromium run `39017094445` 已实际运行原 R07 与首版候选。原版／关闭专项的正面和嘴部画面、几何逐项一致；开启后口周以外仍有一个像素发生 1/255 级差，因此该轮未通过、未公开发布。候选真实截图同时呈现过强的深红色块与硬唇缘，不能作为自然裸唇接受。后续修正降低基色的红绿差，在唇缘内部加强局部组织过渡，范围权重为零时跳过材质赋值；这些修正的效果仍须新一轮证据验证。
+
+源码追踪还确认：原 `LipBiomechanics.apply` 将主沟高度乘 `microGeometry × q.red` 后写入显示顶点并重算法线，替换片元高度不能消除该部分。候选改为仅在原同步 `mother.update` 执行期间把主沟幅度乘 0.35，立即恢复原 DNA 数值；每次由原无沟派生表面重建，不累积修改。0.35 为基于当前画面的制作起点，不是人体实测比例。独立检查应限定变动到原生唇红顶点及法线一环，并验证 canonical、索引、绑定、其他 DNA、表情、灯光与关闭还原。

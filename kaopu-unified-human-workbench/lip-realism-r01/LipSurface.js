@@ -6,8 +6,8 @@
  * Evidence and the limits of the two supplied lip-colour studies: RESEARCH.md.
  */
 (()=>{'use strict';
-const VERSION='LIP-REALISM-R01',SCHEMA='kaopu/lip-realism@1';
-const defaults=Object.freeze({enabled:true,redness:.44,pigment:.25,upperDifference:.35,variation:.65,edgeSoftness:.34,wetness:.35,roughness:.53,foldStrength:.55,seed:731,diagnostic:0});
+const VERSION='LIP-REALISM-R01',SCHEMA='kaopu/lip-realism@1',COARSE_RELIEF_SCALE=.35;
+const defaults=Object.freeze({enabled:true,redness:.40,pigment:.25,upperDifference:.18,variation:.65,edgeSoftness:.34,wetness:.35,roughness:.53,foldStrength:.55,seed:731,diagnostic:0});
 const limits={redness:[0,1],pigment:[0,1],upperDifference:[-1,1],variation:[0,1],edgeSoftness:[0,1],wetness:[0,1],roughness:[.32,.75],foldStrength:[0,1.2],seed:[1,99999],diagnostic:[0,4]};
 const presets={natural:{...defaults},pigmented:{...defaults,pigment:.69,redness:.32,upperDifference:.55,variation:.72},dry:{...defaults,roughness:.65,wetness:.10,foldStrength:.62}};
 const labels={redness:'红润程度',pigment:'棕褐色素',upperDifference:'上下唇色差',variation:'局部色彩变化',edgeSoftness:'唇缘过渡',wetness:'内缘湿润反射',roughness:'外露唇面粗糙度',foldStrength:'细纹起伏'};
@@ -81,9 +81,9 @@ void lrEvaluate(float oldMask){
  lrDepth=mix((ib-vFRest.y)/max(.001,ib-bottom),(vFRest.y-it)/max(.001,top-it),lrUpper);
  vec2 mm=(vFRest.xy-vec2(${f(r.cx)},${f(r.cy)}))*1000.;
  float footprint=max(length(dFdx(mm)),length(dFdy(mm)));
- float edgeWidth=mix(.00014,.00052,lrEdgeSoftness);
+ float edgeWidth=mix(.00032,.00105,lrEdgeSoftness)*(.75+.5*lrNoise(vec2(u*6.+13.,lrUpper*9.)));
  float aa=max(fwidth(vFRest.y)*.65,edgeWidth);
- float contourJitter=(lrNoise(mm*vec2(1.8,1.1))-.5)*.000045;
+ float contourJitter=(lrNoise(mm*vec2(1.8,1.1))-.5)*.00015;
  float y=vFRest.y+contourJitter;
  float cover=clamp(vCSRegion.x,0.,1.);
  float front=smoothstep(${f(r.front)},${f(r.front+.006)},vFRest.z);
@@ -93,13 +93,16 @@ void lrEvaluate(float oldMask){
  // Original feather is part of the correction domain, removing its fuzzy tint
  // without changing unrelated face/body surface values.
  lrScope=max(lrMask,oldMask)*front*cover;
+ // Derivatives above are evaluated for every fragment before this branch.
+ // Unrelated face/body pixels need no tissue noise or groove evaluation.
+ if(lrScope==0.)return;
  float tissue=(lrNoise(vec2(u*3.4,lrDepth*2.0)+vec2(31.,lrUpper*7.))-.5);
  float smallTissue=(lrNoise(mm*.48+vec2(11.,lrUpper*37.))-.5);
  float pigmentField=.65+.35*lrNoise(vec2(u*2.6+4.,lrDepth*1.7+lrUpper*8.));
  float wetBand=(1.-smoothstep(.015,.30,lrDepth));
  lrWet=clamp(max(wetBand,clamp(vL19State.x,0.,1.)),0.,1.)*lrMask*(.76+.24*lrNoise(mm*.7+61.));
  float tone=smoothstep(.26,.78,dot(lrSkinSrgb,vec3(.2126,.7152,.0722)));
- vec3 color=mix(vec3(.35,.17,.16),vec3(.76,.45,.42),tone);
+ vec3 color=mix(vec3(.34,.20,.19),vec3(.77,.54,.51),tone);
  color+=vec3(.10,-.055,-.025)*(lrRedness-.44);
  color*=exp(-vec3(.18,.27,.28)*lrPigment*pigmentField);
  color*=exp(-vec3(.15,.13,.09)*lrUpperDifference*lrUpper);
@@ -107,7 +110,7 @@ void lrEvaluate(float oldMask){
  color*=1.+tissue*.060*lrVariation;
  // Tissue colour and saliva-film controls are intentionally independent.
  color=mix(color,color*vec3(.90,.85,.91),wetBand*.18);
- float outer=smoothstep(.70,1.03,lrDepth)*(.04+.06*lrNoise(mm*.30+13.));
+ float outer=smoothstep(.62,1.02,lrDepth)*(.28+.24*lrNoise(mm*.30+13.));
  color=mix(color,lrSkinSrgb,outer);
  lrAlbedo=psToLinear(clamp(color,.006,.93));
  float roughVariation=(lrNoise(mm*.8+vec2(19.,3.))-.5)*.032;
@@ -128,15 +131,14 @@ function addSurface(shader,rails,uniforms){
  f=once(f,'float psLipFeather=smoothstep(.02,.94,psL);','float psLipFeather=smoothstep(.02,.94,psL);lrSkinSrgb=psSrgb;lrEvaluate(psLipFeather);');
  f=once(f,'roughnessFactor=psR;',`
  // Final lip ownership comes AFTER all inherited skin colour and relief layers.
- if(lrEnabled>.5){
+ if(lrEnabled>.5&&lrScope>0.){
   vec3 boundedBase=mix(psToLinear(clamp(lrSkinSrgb,.008,.94)),lrAlbedo,lrMask);
   psBase=mix(psBase,boundedBase,lrScope);diffuseColor.rgb=psBase;
-  psH=mix(psH,lrHeight,lrMask);
-  psR=mix(psR,lrR,lrMask);
+  if(lrMask>0.){psH=mix(psH,lrHeight,lrMask);psR=mix(psR,lrR,lrMask);}
  }
  roughnessFactor=psR;`);
  f=once(f,'clearcoatNormal=normal;',`clearcoatNormal=normal;
- if(lrEnabled>.5){
+ if(lrEnabled>.5&&lrMask>0.){
   material.clearcoat=mix(material.clearcoat,.010+.20*lrWetness*lrWet,lrMask);
   material.clearcoatRoughness=mix(material.clearcoatRoughness,.34-.12*lrWetness*lrWet,lrMask);
  }`);
@@ -156,7 +158,17 @@ function boot(){
  const rails=model.lipStructure.rails,mat=skin.material();
  if(!mat?.isMeshPhysicalMaterial)throw Error('当前嘴唇接入需要原平台 MeshPhysicalMaterial');
  const oldCompile=mat.onBeforeCompile,oldKey=mat.customProgramCacheKey.bind(mat);
- let state=validate(defaults),compiles=0,finalFragment='',lastView='macro';
+ let state=validate(defaults),compiles=0,finalFragment='',lastView='macro',geometryApplied=false;
+ // The inherited main grooves are already geometry, not the replaced psH.
+ // Scale only that native local relief during its synchronous calculation.
+ // Restore the actual DNA value in finally: presets, UI and archives keep
+ // their original authoring values, without repeated multiplicative decay.
+ const mother=model.lipStructure.mother,nativeMotherUpdate=mother.update;
+ mother.update=function(geometry){
+  const dna=model.lipStructure.anatomy.settings,original=dna.microGeometry;
+  if(state.enabled)dna.microGeometry=original*COARSE_RELIEF_SCALE;
+  try{return nativeMotherUpdate.call(this,geometry);}finally{dna.microGeometry=original;}
+ };
  const names={enabled:'lrEnabled',redness:'lrRedness',pigment:'lrPigment',upperDifference:'lrUpperDifference',variation:'lrVariation',edgeSoftness:'lrEdgeSoftness',wetness:'lrWetness',roughness:'lrRoughness',foldStrength:'lrFoldStrength',seed:'lrSeed',diagnostic:'lrDiagnostic'},uniforms={};
  for(const[k,n]of Object.entries(names))uniforms[n]={value:k==='enabled'?Number(state[k]):state[k]};
  mat.onBeforeCompile=function(shader,...args){oldCompile.call(this,shader,...args);finalFragment=addSurface(shader,rails,uniforms);compiles++;};
@@ -167,7 +179,7 @@ function boot(){
   return{linked,programId:program?.id??null};
  }
  function report(){
-  const g=gpu();return{version:VERSION,ready:compiles>0&&g.linked,linked:g.linked,shaderCompiles:compiles,programId:g.programId,settings:{...state},source:status.source,view:lastView,geometryMutation:false,geometryChanged:false,newMeshes:0,newImageMaps:0,wholeBodySkinFilesChanged:false,lightingChangedByModule:false,coordinateSystem:'existing native lip outer/inner rails in fRest; follows inherited deformation',fieldsSummary:{outerTop:rails.top.length,outerBottom:rails.bottom.length,innerTop:rails.innerTop.length,innerBottom:rails.innerBottom.length,widthMM:rails.half*2000,upperLowerIndependent:true,wetnessChangesAlbedo:false,pigmentChangesGeometry:false,maskDomain:'union of bounded native lip and inherited lip feather',microAmplitude:'engineering initial micrometre-scale relief, not measured'},fullVolumeScattering:false,visualAcceptance:false,productionReady:false};
+  const g=gpu();return{version:VERSION,ready:compiles>0&&g.linked,linked:g.linked,shaderCompiles:compiles,programId:g.programId,settings:{...state},source:status.source,view:lastView,canonicalGeometryChanged:false,displayLipReliefAdjusted:state.enabled,coarseReliefScale:state.enabled?COARSE_RELIEF_SCALE:1,nativeMicroGeometry:model.lipStructure.anatomy.settings.microGeometry,maxGeometryFurrowMicrons:model.lipStructure.biomechanicsReport?.maxGeometryFurrowMicrons,newMeshes:0,newImageMaps:0,wholeBodySkinFilesChanged:false,lightingChangedByModule:false,coordinateSystem:'existing native lip outer/inner rails in fRest; follows inherited deformation',fieldsSummary:{outerTop:rails.top.length,outerBottom:rails.bottom.length,innerTop:rails.innerTop.length,innerBottom:rails.innerBottom.length,widthMM:rails.half*2000,upperLowerIndependent:true,wetnessChangesAlbedo:false,pigmentChangesGeometry:false,maskDomain:'native lip and inherited lip feather; independently checked against native mouth ROI',microAmplitude:'engineering micrometre-scale relief; inherited coarse groove amplitude locally reduced, not measured anatomy'},fullVolumeScattering:false,visualAcceptance:false,productionReady:false};
  }
  const panel=document.createElement('section');panel.id='lr-controls';
  panel.innerHTML=`<h2>嘴唇专项 <small>R01 · 同一人物</small></h2><p class="lr-intro">上下唇分区、自然细纹与内缘湿润反射。</p><div class="lr-row"><button data-lr-mode="new" aria-pressed="true">本版嘴唇</button><button data-lr-mode="original" aria-pressed="false">原版嘴唇</button></div><p class="lr-note">切换时保持同一人物、镜头和灯光。</p><div class="lr-row lr-views"><button data-lr-view="front">整脸正面</button><button data-lr-view="macro">嘴部正面</button><button data-lr-view="oblique">嘴部斜侧</button><button data-lr-view="bust">头颈同框</button></div><label class="lr-select">唇部状态<select id="lr-preset"><option value="natural">自然裸唇</option><option value="pigmented">色素较深</option><option value="dry">轻微偏干</option></select></label><div class="lr-sliders">${Object.entries(labels).map(([k,label])=>`<label>${label}<output data-lr-value="${k}"></output><input data-lr="${k}" aria-label="${label}" type="range" min="${limits[k][0]}" max="${limits[k][1]}" step=".01"></label>`).join('')}</div><label class="lr-select">观察通道<select id="lr-diagnostic"><option value="0">完整材质</option><option value="1">唇部作用范围</option><option value="2">仅底色</option><option value="3">粗糙度</option><option value="4">表面法线</option></select></label><div class="lr-row"><button data-lr-action="seed">换一份局部变化</button><button data-lr-action="reset">恢复本版默认</button></div><div class="lr-row"><button data-lr-action="save">保存完整人物</button><button data-lr-action="load">载入人物档案</button><input id="lr-file" type="file" accept="application/json" hidden></div><p id="lr-status" role="status"></p><details><summary>本次改善与研究依据</summary><p>区域来自本人的原生唇缘。唇色、粗糙度、细纹与水膜分别控制，数值是制作参数。研究支持唇色的差异与连续变化，不能将论文色表直接铺满嘴唇。本版仍需视觉验收。</p><a href="https://onlinelibrary.wiley.com/doi/10.1111/srt.13418" target="_blank" rel="noopener">上下唇色测量</a> · <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/ics.70004" target="_blank" rel="noopener">自然唇色色域</a> · <a href="https://dev.epicgames.com/documentation/unreal-engine/digital-humans?application_version=4.27" target="_blank" rel="noopener">数字人表面通道</a></details>`;
@@ -181,7 +193,7 @@ function boot(){
   for(const b of panel.querySelectorAll('[data-lr-mode]'))b.setAttribute('aria-pressed',String((b.dataset.lrMode==='new')===state.enabled));
   panel.querySelector('#lr-status').textContent=`${state.enabled?'本版嘴唇':'R07 原版嘴唇对照'} · 同一总台人物 · 局部种子 ${state.seed}`;
  }
- function set(part){state=validate({...state,...part});sync();v.render();status.ready=report().ready;return report();}
+ function set(part){const previous=state.enabled;state=validate({...state,...part});sync();if(!geometryApplied||previous!==state.enabled){v.update();geometryApplied=true;}else v.render();status.ready=report().ready;return report();}
  function view(kind){
   if(!['front','macro','oblique','bust'].includes(kind))throw Error('无效嘴唇观察视角');
   // Reuse the host's framing calculations, then remove perspective skew for
