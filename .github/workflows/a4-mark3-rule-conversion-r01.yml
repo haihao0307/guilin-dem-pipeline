@@ -33,7 +33,15 @@ jobs:
           node student-native-r01/tests/wheel.test.mjs
           for f in student-native-r01/tests/*.mjs; do node "$f"; done
       - name: Actual fixed orthographic native rendering
-        run: node student-native-r01/browser.cjs
+        env:
+          NATIVE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/student-native-r01/index.html
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS "$NATIVE_URL" -o /tmp/native-public-index.html; then break; fi
+            sleep 10
+          done
+          test -s /tmp/native-public-index.html
+          node student-native-r01/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
