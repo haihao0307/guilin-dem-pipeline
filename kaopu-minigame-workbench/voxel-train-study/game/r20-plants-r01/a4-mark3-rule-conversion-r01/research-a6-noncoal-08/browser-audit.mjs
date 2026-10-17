@@ -124,8 +124,8 @@ export async function runNonCoalBrowserAudit({qa=globalThis.CONVERSION_QA,runtim
    sourceVisibility=original.nodes.map(n=>n.visible);originalParent=original.root.parent;reference=cloneReference(original);
   }
   candidate=await loadNonCoalBrowserModel({runtimeBase});report.requests=candidate.requestReport;report.performanceResources=candidate.performanceResources;
-  check(candidate.requestReport.requests.length===167,'All 167 projected runtime dependencies loaded and locked');
-  check(candidate.requestReport.storedDependencyBytes===10799260,'Projected stored dependency byte total exact');
+  check(candidate.requestReport.requests.length===186,'All 186 projected runtime dependencies loaded and locked');
+  check(candidate.requestReport.storedDependencyBytes===10843600,'Projected stored dependency byte total exact');
   check(candidate.g.nodes.length===325&&candidate.g.meshes.length===195&&candidate.g.accessors.length===922,'Actual glTF contains only the retained nodes, meshes and fields');
   check(candidate.requestReport.allGLTFDataIsVerifiedBlob&&candidate.requestReport.sourceAssetFallbackRequests===0,'glTF uses only verified projection buffers/images, no source fallback');
   const ids=candidate.manifest.projection.sourceIndices;
