@@ -1,0 +1,59 @@
+/** CPU-only R02 geometry and source-retention check. No browser or renderer. */
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
+import {loadImage} from '@napi-rs/canvas';
+import * as T from '../vendor/three.module.js';
+import {restoreOriginal,sha256} from '../src/original-chassis-recovery.mjs';
+import {createA6Design} from './a6-design.mjs';
+import {buildSourceReplacementMapping,buildCompleteSourcePartMap} from './source-parts.mjs';
+import {DESIGN_LAYOUT,AUTHORING_D,SOURCE_FIT,authoringX,sourcePoint} from './source-fit.mjs';
+import {CONTROL_SECTIONS,CONTROL_SECTION_MAP,R01_CONTROL_SECTIONS,cutAt,sectionAt,sectionPoint,halfAt} from './continuous-shell.mjs';
+globalThis.self=globalThis;
+globalThis.ProgressEvent=class{constructor(type,props){this.type=type;Object.assign(this,props);}};
+globalThis.createImageBitmap=async blob=>await loadImage(Buffer.from(await blob.arrayBuffer()));
+const originalFetch=globalThis.fetch;globalThis.fetch=async(input,options)=>{const url=input instanceof Request?input.url:String(input);return url.startsWith('file:')?new Response(await fs.readFile(fileURLToPath(url))):originalFetch(input,options);};
+const source=await restoreOriginal('a4');
+const sourceAnimationBefore=JSON.stringify(source.g.animations);
+const matrices=source.nodes.map(n=>({parent:n.parent,matrix:n.matrix.elements.slice(),world:n.matrixWorld.elements.slice()}));
+function matSnapshot(m){return Object.fromEntries(Object.entries(m).flatMap(([k,v])=>{if(v===null||['number','string','boolean'].includes(typeof v))return [[k,v]];if(v?.isColor)return [[k,v.toArray()]];if(v?.isTexture)return [[k,{uuid:v.uuid,source:v.source.uuid,colorSpace:v.colorSpace,flipY:v.flipY,channel:v.channel,wrapS:v.wrapS,wrapT:v.wrapT,minFilter:v.minFilter,magFilter:v.magFilter}]];return [];}));}
+const geometries=source.primitives.map(p=>p.object.geometry),materials=source.primitives.map(p=>p.object.material),materialValues=materials.map(matSnapshot);
+async function fieldHashes(){return Promise.all(source.primitives.map(async p=>({sourceNode:p.sourceNode,attributes:await Promise.all(Object.entries(p.object.geometry.attributes).map(async([name,a])=>[name,await sha256(new Uint8Array(a.array.buffer,a.array.byteOffset,a.array.byteLength))])),index:p.object.geometry.index?await sha256(p.object.geometry.index.array.buffer):null})));}
+const before=await fieldHashes(),design=createA6Design(T,source);design.setVisible(true);source.root.updateMatrixWorld(true);
+assert.equal(source.nodes.length,331);assert.equal(source.primitives.length,200);
+for(const [i,n]of source.nodes.entries()){assert.equal(n.parent,matrices[i].parent);assert.deepEqual(n.matrix.elements,matrices[i].matrix);assert.deepEqual(n.matrixWorld.elements,matrices[i].world);}
+assert.deepEqual(await fieldHashes(),before);assert.equal(JSON.stringify(source.g.animations),sourceAnimationBefore);
+for(const [i,p]of source.primitives.entries()){assert.equal(p.object.geometry,geometries[i]);assert.equal(p.object.material,materials[i]);assert.deepEqual(matSnapshot(p.object.material),materialValues[i]);}
+const bounds=o=>{const b=new T.Box3().setFromObject(o,true);return{min:b.min.toArray(),max:b.max.toArray()};};
+const effectiveVisible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+const meshes=[];design.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
+const visibleSource=source.primitives.filter(p=>effectiveVisible(p.object));
+const hidden=source.primitives.filter(p=>!p.object.visible).map(p=>p.sourceNode);
+design.setVisible(false);assert(source.primitives.every(p=>p.object.visible));design.setVisible(true);
+const axleBounds=[90,94,7].map(node=>({node,...bounds(source.nodes[node])}));
+const shell=design.skin.mesh,p=shell.geometry.attributes.position,idx=shell.geometry.index,glass=shell.geometry.groups[1],glassBox=new T.Box3();
+for(let i=glass.start;i<glass.start+glass.count;i++)glassBox.expandByPoint(new T.Vector3().fromBufferAttribute(p,idx.getX(i)));
+assert(Math.abs(glassBox.max.z-DESIGN_LAYOUT.glassFrontSourceZ)<1e-5);assert(Math.abs(glassBox.min.z-DESIGN_LAYOUT.glassRearSourceZ)<1e-5);
+assert(Math.abs(bounds(shell).max[1]-DESIGN_LAYOUT.crownSourceY)<1e-5);
+assert(design.oilWaterRoof.userData.everyEdgeUsedTwice);assert.equal(design.designGlass.opacity,1);assert.equal(design.designGlass.transmission,1);
+function upperSurface(sourceX,sourceZ){const sec=sectionAt(authoringX(sourceZ)),x=Math.abs(sourceX)/SOURCE_FIT.transverseScale;if(x>=sec[0])return null;let a=0,b=.5;for(let j=0;j<44;j++){const t=(a+b)/2;if(sectionPoint(sec,t)[0]<x)a=t;else b=t;}return sectionPoint(sec,(a+b)/2)[1]+SOURCE_FIT.verticalOffset;}
+const headMesh=meshes.find(o=>o.name==='seated head'),hp=headMesh.geometry.attributes.position;let headMinimum=Infinity,headWorst=null;
+for(let i=0;i<hp.count;i++){const v=new T.Vector3().fromBufferAttribute(hp,i).applyMatrix4(headMesh.matrixWorld),roof=upperSurface(v.x,v.z),gap=roof-v.y;if(gap<headMinimum){headMinimum=gap;headWorst={sourceVertex:v.toArray(),sourceRoofY:roof,verticalGap:gap};}}
+assert(headMinimum>.05,'actual unchanged-size head must clear its LOCAL crown');
+const floor=meshes.find(o=>o.name==='continuous structural cab floor'),floorBounds=bounds(floor);
+const originalUnderTop=bounds(source.nodes[27]).max[1],underGap=floorBounds.min[1]-originalUnderTop;
+assert(underGap>.03,'floor must clear original undercarriage27, not just wheels');
+const sides=new Map();visibleSource.forEach(({object:o})=>(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!sides.has(m)){sides.set(m,m.side);m.side=T.DoubleSide;}}));
+const floorSamples=[];for(const z of[2.7,3.8,5.1,5.6,6.1,6.6])for(const x of[-.8,-.3,0,.3,.8]){const hits=new T.Raycaster(new T.Vector3(x,3.015,z),new T.Vector3(0,-1,0),0,1.5).intersectObjects(visibleSource.map(p=>p.object),false);const h=hits[0];floorSamples.push({x,z,originalTopY:h?.point.y??null,sourceNode:h?.object.userData.originalPrimitive?.node??null,verticalGap:h?floorBounds.min[1]-h.point.y:null});}
+for(const [m,side]of sides)m.side=side;
+const forwardCoverage=[];for(const entry of visibleSource){if(entry.sourceNode===67)continue;const o=entry.object,a=o.geometry.attributes.position;let tested=0,min=Infinity,worst=null,wide=0;for(let i=0;i<a.count;i++){const v=new T.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);if(v.z<7.0||v.z>DESIGN_LAYOUT.noseSourceZ||v.y<2.5)continue;const roof=upperSurface(v.x,v.z);if(roof===null){wide++;continue;}const margin=roof-v.y;tested++;if(margin<min){min=margin;worst=v.toArray();}}if(tested||wide)forwardCoverage.push({sourceNode:entry.sourceNode,testedVertices:tested,minimumRoofMargin:min,outsideWidthVertices:wide,worstSourcePoint:worst,pass:wide===0&&min>.01});}
+const wheelSections=[];for(const axle of SOURCE_FIT.driverPreciseVertexBounds)for(const z of[axle.z[0],(axle.z[0]+axle.z[1])/2,axle.z[1]]){const opening=cutAt(authoringX(z))+SOURCE_FIT.verticalOffset;wheelSections.push({node:axle.node,sourceZ:z,cutY:opening,wheelTopY:axle.y[1],verticalMargin:opening-axle.y[1]});}
+assert(wheelSections.every(r=>r.verticalMargin>.14));
+const visibility=design.auditVisibility();
+const brands=meshes.filter(o=>o.userData.originalContours).map(o=>{let below=0,above=0;const p=o.geometry.attributes.position;for(let i=0;i<p.count;i++){const x=authoringX(p.getZ(i)),h=p.getY(i)-SOURCE_FIT.verticalOffset;if(h<cutAt(x)-.001)below++;if(h>sectionAt(x)[2]+.001)above++;}return{name:o.name,belowShellCutVertices:below,aboveShellCrownVertices:above,bounds:bounds(o),sourceSha256:o.userData.sourceSha256};});
+const report={status:visibility.status==='PASS_REQUIRED_ACTUAL_MESH_RAYS'&&forwardCoverage.every(r=>r.pass)?'PASS_CPU_SOURCE_RETENTION_AND_DECLARED_CAB_GEOMETRY':'FAIL_DECLARED_CAB_GEOMETRY',revision:DESIGN_LAYOUT.revision,source:{nodes:source.nodes.length,meshes:source.primitives.length,geometryFieldHashesUnchanged:true,matricesAndParentsUnchanged:true,animationsUnchanged:true,sourceMaterialsUnchanged:true,originalAxles:[90,94,7],hiddenExteriorPrimitives:hidden,allOriginalsRestoreOnToggle:true,mechanicalRelocations:[]},sourceCoordinateContract:'UNCALIBRATED_SOURCE_UNITS_NOT_METRES',layout:DESIGN_LAYOUT,driverPose:design.root.userData.driverPose,actualEyeSource:design.root.userData.actualEyeSource,landmarks:design.root.userData.driverLandmarks,cabGlassBounds:{min:glassBox.min.toArray(),max:glassBox.max.toArray()},headLocalClearance:{minimumVerticalGap:headMinimum,worst:headWorst,scope:'every actual head vertex against local curved outer canopy; no physical human calibration'},floor:{bounds:floorBounds,originalUndercarriage27Top:originalUnderTop,staticMinimumVerticalGap:underGap,actualSourceTriangleSamples:floorSamples,previousR02Failure:{floorMinY:2.70,floorMaxY:2.80,sourceUnderTopY:originalUnderTop,penetrationAboveOldFloorTop:originalUnderTop-2.80,oldWheelOnlyClearanceWasInsufficient:true}},axleBounds,wheelSections,frontSourceCoverage:forwardCoverage,brands,notVerified:['No physical human/rail/metre calibration','No rendered appearance/optical acceptance in this CPU report','Static pose only; no suspension stroke or operating linkage certification','Original whistle remains and blocks part of yaw fan','Cab support/load paths and source hardware connections are unverified']};
+const dir=new URL('./',import.meta.url);await fs.writeFile(new URL('R03_LAYOUT_QA.json',dir),JSON.stringify(report,null,2)+'\n');await fs.writeFile(new URL('R03_DRIVER_SIGHT_QA.json',dir),JSON.stringify(visibility,null,2)+'\n');
+await fs.writeFile(new URL('R03_DESIGN_CHANGE_MAP.json',dir),JSON.stringify({revision:DESIGN_LAYOUT.revision,sourceLayout:DESIGN_LAYOUT,controlSectionMap:CONTROL_SECTION_MAP,sourceMechanicalNodeMutations:[],driverPose:design.root.userData.driverPose,sourceLocalLandmarks:design.root.userData.driverLandmarks},null,2)+'\n');
+console.log(JSON.stringify({status:report.status,source:report.source,headMinimum,underGap,visibility:visibility.status,forward:visibility.forward.map(r=>({degrees:r.downDegrees,pass:r.pass,firstOpaque:r.firstOpaque})),requiredSide:visibility.outside.filter(r=>r.view==='positive-side').map(r=>({target:r.target,pass:r.pass,firstOpaque:r.firstOpaque})),frontFace:visibility.outside.find(r=>r.view==='front'&&r.target==='head'),failedCover:forwardCoverage.filter(r=>!r.pass),brandsOutside:brands.filter(r=>r.belowShellCutVertices||r.aboveShellCrownVertices)},null,2));
+assert.equal(report.status,'PASS_CPU_SOURCE_RETENTION_AND_DECLARED_CAB_GEOMETRY');

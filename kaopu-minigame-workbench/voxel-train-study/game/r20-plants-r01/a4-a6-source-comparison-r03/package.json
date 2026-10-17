@@ -1,0 +1,13 @@
+{
+  "name": "a4-a6-source-comparison-r03",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-original-recovery-node.mjs && node tests/original-recovery-negative.mjs && node tests/reader-roundtrip.mjs && node tests/source-units.mjs && node tests/design-retention.mjs && python tests/check-viewer-dependencies.py && python tests/public-lock.py && node tests/display-registration.mjs && node design/verify-layout.mjs && node design/coach/test-coach.mjs",
+    "test:browser": "node tests/browser.cjs"
+  },
+  "dependencies": {
+    "three": "0.170.0",
+    "@napi-rs/canvas": "0.1.100"
+  }
+}
