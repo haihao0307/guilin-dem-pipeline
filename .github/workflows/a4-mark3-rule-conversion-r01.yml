@@ -31,7 +31,6 @@ jobs:
       - name: Execute generated exact program and original equality checks
         run: |
           mkdir -p reports
-          python -c "import pathlib,json; [(p.parent/'residual.bin.gz').write_bytes(b''.join((p.parent/x['path']).read_bytes() for x in json.loads(p.read_text())['residual']['parts'])) for p in pathlib.Path('generated').glob('*/storage-manifest.json')]"
           node tools/verify-js.mjs
           node viewer/test-transport.mjs
           node viewer/test-storage.mjs

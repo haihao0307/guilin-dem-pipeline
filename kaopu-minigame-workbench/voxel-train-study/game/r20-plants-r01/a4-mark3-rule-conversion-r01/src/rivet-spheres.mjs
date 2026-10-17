@@ -1,3 +1,4 @@
+import {sphereOffset,sinSample} from './sphere-kernel.mjs';
 /**
  * Mark 3 rivet sphere rule v1. No source coordinates are embedded here.
  * Geometry: 2 ends × 2 columns × 14 rows of radius-0.015 UV spheres.
@@ -9,13 +10,7 @@
  * Sin samples are fixed correctly named IEEE constants; Math.sin/cos are unused.
  */
 const Q = Object.freeze([0, 0.3826834323650897, 0.7071067811865476, 0.9238795325112867, 1]);
-export function sinPi8(i) {
-  i = ((i % 16) + 16) % 16;
-  if (i <= 4) return Q[i];
-  if (i <= 8) return Q[8 - i];
-  if (i <= 12) return -Q[i - 8];
-  return -Q[16 - i];
-}
+export function sinPi8(i) { return sinSample(i,16); }
 export function cosPi8(i) { return sinPi8(i + 4); }
 export function parseRivetRule(input) {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
@@ -47,10 +42,7 @@ export function generateRivetPositions(rule) {
         for (let vertex=0; vertex<samples; ++vertex) {
           const latitude = labels[vertex] >>> 4, longitude = labels[vertex] & 15;
           if (latitude>8) throw Error('Latitude outside sphere');
-          const rho = p[5] * sinPi8(latitude);
-          const dx = rho * sinPi8(longitude);
-          const dy = p[5] * cosPi8(latitude);
-          const dz = rho * cosPi8(longitude);
+          const [dx,dy,dz] = sphereOffset(p[5],latitude,longitude,16,8);
           output[out++] = Math.fround(cx + dx);
           output[out++] = Math.fround(cy + dy);
           const positiveZ = p[4] + dz;

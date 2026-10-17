@@ -1,3 +1,17 @@
+import {decodeRaw as decodeOffsetArc} from './offset-arc-shape.mjs';
+import {decodeRaw as decodeSpokeShape} from './spoke-shape.mjs';
+import {decodeBogieOverlay} from './bogie-overlay.mjs';
+import {decodeRaw as decodeBodyTopology} from './body-topology.mjs';
+import {decodeRoofSweep} from './roof-sweep.mjs';
+import {restoreMaterialBundle} from './material-rules.mjs';
+import {decodeLatheOverlay} from './bogie-lathes.mjs';
+import {decodeRaw as decodeBodyAttributes} from './body-attributes.mjs';
+import {decodeRaw as decodeBodyRings} from './body-rings.mjs';
+import {decodeRaw as decodeWheelTopology} from './wheel-topology.mjs';
+import {decodeRaw as decodeWheelNormal} from './wheel-normal.mjs';
+import {decodeRaw as decodeWheelUV} from './wheel-uv.mjs';
+import {decodeRaw as decodeBodySpheres} from './body-spheres.mjs';
+import {decodeAttributeRule} from './mark3-attributes.mjs';
 import {decodeRaw as decodeWheelHybrid} from './wheel-hybrid.mjs';
 import {decodeSpringTorusPositions} from './spring-tori.mjs';
 import {decodeRaw as decodeWheel} from './wheel-profile.mjs';
@@ -22,7 +36,19 @@ function concatenate(chunks){const out=new Uint8Array(chunks.reduce((n,c)=>n+c.b
 export function generateRule(rule,definition,residual,shapeAssets=new Map()){
  const op=rule.op, spec=componentTypes[definition.componentType];if(!spec)throw Error('Unsupported componentType');
  const [get,set,size]=spec;
- if(op==='radialWheelExact'||op==='radialWheelSubsetExact'||op==='rivetSpheresExact'||op==='springToriExact'){const asset=shapeAssets.get(rule.asset);if(!asset)throw Error('Missing shape asset');const positions=op==='radialWheelExact'?decodeWheel(asset).positions:(op==='radialWheelSubsetExact'?decodeWheelHybrid(asset).positions:(op==='rivetSpheresExact'?decodeRivetPositions(asset):decodeSpringTorusPositions(asset)));return new Uint8Array(positions.buffer,positions.byteOffset,positions.byteLength);}
+ if(op==='latheSparseOverlayExact'||op==='bogieSparseOverlayExact'){
+  const asset=shapeAssets.get(rule.asset);if(!asset)throw Error('Missing shape asset');
+  const {sourceVertexCount,vertexIndices,positions}=(op==='latheSparseOverlayExact'?decodeLatheOverlay:decodeBogieOverlay)(asset),count=definition.count,seen=new Uint8Array(count);
+  if(sourceVertexCount!==count||vertexIndices.length!==rule.generatedVertexCount)throw Error('Sparse geometry count mismatch');
+  for(const i of vertexIndices){if(i>=count||seen[i])throw Error('Invalid sparse geometry indices');seen[i]=1;}
+  const base=concatenate(rule.baseProgram.map(r=>generateRule(r,rule.baseDefinition,residual,shapeAssets)));
+  if(base.length!==(count-vertexIndices.length)*12)throw Error('Sparse geometry base length mismatch');
+  const output=new Uint8Array(count*12),generated=new Uint8Array(positions.buffer,positions.byteOffset,positions.byteLength);let at=0;
+  for(let i=0;i<count;i++)if(!seen[i]){output.set(base.subarray(at,at+12),i*12);at+=12;}
+  vertexIndices.forEach((i,j)=>output.set(generated.subarray(j*12,j*12+12),i*12));return output;
+ }
+ const assetDecoders={radialWheelExact:a=>decodeWheel(a).positions,radialWheelSubsetExact:a=>decodeWheelHybrid(a).positions,spokeProfileExact:a=>decodeSpokeShape(a).positions,offsetArcCompletionExact:a=>decodeOffsetArc(a).positions,rivetSpheresExact:decodeRivetPositions,springToriExact:decodeSpringTorusPositions,wheelNormalsExact:a=>decodeWheelNormal(a).normals,wheelUVProjectionExact:a=>decodeWheelUV(a).uv,affineSphereArrayExact:decodeBodySpheres,mark3AttributeExact:decodeAttributeRule,axialCircleSubsetExact:decodeBodyRings,affineSphereAttributeExact:decodeBodyAttributes,sourceSphereTopologyExact:decodeBodyTopology,retainedProfileSweepExact:decodeRoofSweep,wheelTopologyExact:a=>decodeWheelTopology(a,shapeAssets.get(rule.dependencies[0].path)).indices};
+ if(op in assetDecoders){const asset=shapeAssets.get(rule.asset);if(!asset)throw Error('Missing shape asset');const values=assetDecoders[op](asset);return new Uint8Array(values.buffer,values.byteOffset,values.byteLength);}
  if(op==='residual'){const end=rule.byteOffset+rule.byteLength;if(rule.byteOffset<0||end>residual.length)throw Error('Truncated residual');return residual.slice(rule.byteOffset,end);}
  if(op==='constantTuple'){const tuple=hexBytes(rule.tupleHex),out=new Uint8Array(tuple.length*rule.repeatCount);for(let i=0;i<rule.repeatCount;i++)out.set(tuple,i*tuple.length);return out;}
  if(op==='arithmeticExact'){
@@ -92,12 +118,16 @@ export async function reconstructDocument(manifest,residual,shapeAssets=new Map(
   if(nodes[item.index]!==undefined)throw Error('Node instantiated twice');nodes[item.index]=item.node;graph[item.index]=item.graph;
  }
  for(let i=0;i<nodes.length;i++)if(nodes[i]===undefined)throw Error('Uninstantiated node');
- const skeleton={...clone(manifest.sceneConstants),nodes,meshes};
+ if(!manifest.materialFunctions)throw Error('Missing material functions');
+ const materialValues=restoreMaterialBundle(manifest.materialFunctions),{imageDefinitions,...materialDefinitions}=materialValues;
+ const skeleton={...clone(manifest.sceneConstants),...materialDefinitions,nodes,meshes};
  if(manifest.source.animationsPresent){const curves=new Map(manifest.curveFunctions.map(c=>[c.id,c]));
   for(const a of manifest.animations)for(const s of a.samplerInstances){const c=curves.get(s.function);if(fieldIds.get(s.input)!==c.input||fieldIds.get(s.output)!==c.output)throw Error('Curve field binding mismatch');}
   skeleton.animations=manifest.animations.map(a=>instantiateAnimation(a,curves));
  }
  const document={...clone(manifest.sourceEnvelope),content:{...clone(manifest.contentMetadata),fields,objectGraph:graph,displaySkeleton:skeleton}};
+ if(imageDefinitions.length!==document.content.images.length)throw Error('Image definition count mismatch');
+ document.content.images.forEach((image,i)=>image.definition=imageDefinitions[i]);
  if(await runtimeLock(document.content)!==manifest.source.runtimeDefinitionSHA256)throw Error('Runtime definition integrity mismatch');
  return {document,payload,sharedDecodedFields:decoded};
 }
@@ -118,4 +148,11 @@ export async function loadProgram(baseURL){
  const residual=await get(manifest.residual.path);const shapes=new Map();
  for(const asset of manifest.shapeAssets||[])shapes.set(asset.path,await get(asset.path));
  return reconstructDocument(manifest,residual,shapes);
+}
+
+/** Verify deployment code bytes before presenting its output. readBytes paths are relative to the workbench root. */
+export async function verifyImplementation(manifest,readBytes){
+ if(manifest.implementationLocks?.abi!=='kaopu.exact-component-program/1')throw Error('Implementation ABI mismatch');
+ for(const record of manifest.implementationLocks.runtimeModules){const b=await readBytes(record.path);if(b.byteLength!==record.bytes||await sha256(b)!==record.sha256)throw Error('Implementation integrity mismatch: '+record.path);}
+ return true;
 }
