@@ -1,12 +1,12 @@
 {
   "pass": true,
-  "checkedUTC": "2026-10-17T02:33:50.269Z",
+  "checkedUTC": "2026-10-17T03:07:58.537Z",
   "experiments": [
     {
       "id": "baseline",
-      "structureSHA256": "e35155a54e17d9f4bc159658cad9832f82593b45ab114f5e97f8c2cc8fe1edf7",
-      "active": 2217,
-      "guides": 135,
+      "structureSHA256": "2ababbf2be20b6c4dd2ba813c10919ff9adb40e37ea58b08e7c3e84bf752d61f",
+      "active": 2737,
+      "guides": 165,
       "maxRootDriftMM": 0,
       "maxCutErrorMM": 0,
       "maxCurveChangeMM": 0,
@@ -15,20 +15,20 @@
       "changedDirectionRoots": 0,
       "routeChanges": [],
       "midSectionMeanSpreadMM": {
-        "before": 12.396993819852288,
-        "after": 10.954200546219381
+        "before": 12.106673192783285,
+        "after": 10.679426052390887
       },
       "field": {
         "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2217,
-        "undirectedEdges": 81749,
-        "iterations": 150,
-        "residual": 9.949074535505194e-8,
+        "nodes": 2737,
+        "undirectedEdges": 114721,
+        "iterations": 219,
+        "residual": 9.684354346781385e-8,
         "converged": true,
         "forbiddenEdges": 0,
         "screen": 1.2,
-        "energy": 182.7948242580837,
-        "solveMS": 4479.2372000000005,
+        "energy": 248.67078010023855,
+        "solveMS": 13757.279700000001,
         "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
       },
       "geometryChecks": [
@@ -67,13 +67,13 @@
             },
             {
               "id": "left-side",
-              "active": 271,
-              "guides": 13
+              "active": 345,
+              "guides": 20
             },
             {
               "id": "right-side",
-              "active": 242,
-              "guides": 12
+              "active": 310,
+              "guides": 19
             },
             {
               "id": "left-temple",
@@ -92,8 +92,8 @@
             },
             {
               "id": "nape",
-              "active": 144,
-              "guides": 12
+              "active": 522,
+              "guides": 28
             }
           ]
         },
@@ -101,16 +101,16 @@
           "name": "root anchored to original native triangle",
           "pass": true,
           "details": {
-            "maxErrorMM": 0
+            "maxErrorMM": 0.0000010038276168733228
           }
         },
         {
           "name": "finite complete curves and strictly increasing arcs",
           "pass": true,
           "details": {
-            "guides": 135,
-            "maxStepMM": 4.056570017290095,
-            "maxTurnDegrees": 17.76119667445381
+            "guides": 165,
+            "maxStepMM": 4.056570008875354,
+            "maxTurnDegrees": 17.761212745631514
           }
         },
         {
@@ -133,7 +133,7 @@
           "name": "ear geometry changes intended root direction",
           "pass": true,
           "details": {
-            "roots": 434
+            "roots": 477
           }
         },
         {
@@ -155,11 +155,13 @@
           "pass": true
         },
         {
-          "name": "active roots remain inside authored scalp boundary",
+          "name": "active roots remain inside approved source scalp",
           "pass": true,
           "details": {
-            "active": 2217,
-            "excludedBelowHairline": 609
+            "approvedEligible": 3067,
+            "active": 2737,
+            "restoredStyleRoots": 520,
+            "noAdditionalHeightClip": true
           }
         },
         {
@@ -167,15 +169,15 @@
           "pass": true,
           "details": {
             "method": "screened tangent graph-Laplacian (Jacobi)",
-            "nodes": 2217,
-            "undirectedEdges": 81749,
-            "iterations": 150,
-            "residual": 9.949074535505194e-8,
+            "nodes": 2737,
+            "undirectedEdges": 114721,
+            "iterations": 219,
+            "residual": 9.684354346781385e-8,
             "converged": true,
             "forbiddenEdges": 0,
             "screen": 1.2,
-            "energy": 182.7948242580837,
-            "solveMS": 4479.2372000000005,
+            "energy": 248.67078010023855,
+            "solveMS": 13757.279700000001,
             "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
           }
         },
@@ -449,6 +451,13 @@
           "zone": 2,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/866",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -865,6 +874,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/1928",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/1930",
           "zone": 4,
           "route": "ear-back",
@@ -946,6 +962,13 @@
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2106",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -1033,8 +1056,50 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2372",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2391",
           "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2446",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2460",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2461",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2491",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2503",
+          "zone": 4,
           "route": "back",
           "baselineRoute": "back",
           "rmsMM": 0
@@ -1047,6 +1112,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2550",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2558",
           "zone": 4,
           "route": "ear-back",
@@ -1054,10 +1126,59 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2588",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2693",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2703",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2708",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2714",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2720",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2741",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2757",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -1075,6 +1196,62 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2782",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2794",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2804",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2819",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2829",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2838",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2865",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2869",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2949",
           "zone": 6,
           "route": "ear-front",
@@ -1089,10 +1266,24 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2979",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2981",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/3017",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -1117,6 +1308,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/3171",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/3173",
           "zone": 7,
           "route": "ear-front",
@@ -1129,36 +1327,50 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0
+        },
+        {
+          "id": "guide/3268",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/3279",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
         }
       ]
     },
     {
       "id": "part-small",
-      "structureSHA256": "aba46398fd0775e8f9279a353f0c02d492c72869ff6fa04c4d21ce64cc1ee9e5",
-      "active": 2217,
-      "guides": 135,
+      "structureSHA256": "00eb4a7c8204fe7523d43fa77728d375ffd29e0e17a503fe467be34a92fc73c2",
+      "active": 2737,
+      "guides": 165,
       "maxRootDriftMM": 0,
       "maxCutErrorMM": 0,
       "maxCurveChangeMM": 0.6501711387822855,
-      "meanCurveChangeMM": 0.052735040999429945,
+      "meanCurveChangeMM": 0.04472918365697784,
       "changedGuideCount": 18,
-      "changedDirectionRoots": 769,
+      "changedDirectionRoots": 1070,
       "routeChanges": [],
       "midSectionMeanSpreadMM": {
-        "before": 12.398674255079783,
-        "after": 10.955126019139579
+        "before": 12.108281971115963,
+        "after": 10.680462646985974
       },
       "field": {
         "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2217,
-        "undirectedEdges": 81757,
-        "iterations": 150,
-        "residual": 9.992426284420735e-8,
+        "nodes": 2737,
+        "undirectedEdges": 114735,
+        "iterations": 219,
+        "residual": 9.530993362922349e-8,
         "converged": true,
         "forbiddenEdges": 0,
         "screen": 1.2,
-        "energy": 182.94698632554156,
-        "solveMS": 4821.6216,
+        "energy": 248.74951793536422,
+        "solveMS": 10010.5527,
         "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
       },
       "geometryChecks": [
@@ -1197,13 +1409,13 @@
             },
             {
               "id": "left-side",
-              "active": 271,
-              "guides": 13
+              "active": 345,
+              "guides": 20
             },
             {
               "id": "right-side",
-              "active": 242,
-              "guides": 12
+              "active": 310,
+              "guides": 19
             },
             {
               "id": "left-temple",
@@ -1222,8 +1434,8 @@
             },
             {
               "id": "nape",
-              "active": 144,
-              "guides": 12
+              "active": 522,
+              "guides": 28
             }
           ]
         },
@@ -1231,16 +1443,16 @@
           "name": "root anchored to original native triangle",
           "pass": true,
           "details": {
-            "maxErrorMM": 0
+            "maxErrorMM": 0.0000010038276168733228
           }
         },
         {
           "name": "finite complete curves and strictly increasing arcs",
           "pass": true,
           "details": {
-            "guides": 135,
-            "maxStepMM": 4.055046084392451,
-            "maxTurnDegrees": 17.657364887234486
+            "guides": 165,
+            "maxStepMM": 4.055045826965955,
+            "maxTurnDegrees": 17.65734127067855
           }
         },
         {
@@ -1263,7 +1475,7 @@
           "name": "ear geometry changes intended root direction",
           "pass": true,
           "details": {
-            "roots": 434
+            "roots": 477
           }
         },
         {
@@ -1285,11 +1497,13 @@
           "pass": true
         },
         {
-          "name": "active roots remain inside authored scalp boundary",
+          "name": "active roots remain inside approved source scalp",
           "pass": true,
           "details": {
-            "active": 2217,
-            "excludedBelowHairline": 609
+            "approvedEligible": 3067,
+            "active": 2737,
+            "restoredStyleRoots": 520,
+            "noAdditionalHeightClip": true
           }
         },
         {
@@ -1297,15 +1511,15 @@
           "pass": true,
           "details": {
             "method": "screened tangent graph-Laplacian (Jacobi)",
-            "nodes": 2217,
-            "undirectedEdges": 81757,
-            "iterations": 150,
-            "residual": 9.992426284420735e-8,
+            "nodes": 2737,
+            "undirectedEdges": 114735,
+            "iterations": 219,
+            "residual": 9.530993362922349e-8,
             "converged": true,
             "forbiddenEdges": 0,
             "screen": 1.2,
-            "energy": 182.94698632554156,
-            "solveMS": 4821.6216,
+            "energy": 248.74951793536422,
+            "solveMS": 10010.5527,
             "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
           }
         },
@@ -1580,6 +1794,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.17242488702829892
+        },
+        {
+          "id": "guide/866",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.009428539682054222
         },
         {
           "id": "guide/887",
@@ -1995,6 +2216,13 @@
           "rmsMM": 0.0195768276586182
         },
         {
+          "id": "guide/1928",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0005909183399895745
+        },
+        {
           "id": "guide/1930",
           "zone": 4,
           "route": "ear-back",
@@ -2077,6 +2305,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.0005237514658102581
+        },
+        {
+          "id": "guide/2106",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.003263860379568712
         },
         {
           "id": "guide/2113",
@@ -2163,11 +2398,53 @@
           "rmsMM": 0.011826162724814323
         },
         {
+          "id": "guide/2372",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.011601009745867346
+        },
+        {
           "id": "guide/2391",
           "zone": 9,
           "route": "back",
           "baselineRoute": "back",
           "rmsMM": 0.00007755702923327996
+        },
+        {
+          "id": "guide/2446",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.005581756073672804
+        },
+        {
+          "id": "guide/2460",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.020494685257503278
+        },
+        {
+          "id": "guide/2461",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0007555527504843217
+        },
+        {
+          "id": "guide/2491",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.006713297068189571
+        },
+        {
+          "id": "guide/2503",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.00011353409043335471
         },
         {
           "id": "guide/2527",
@@ -2177,6 +2454,13 @@
           "rmsMM": 0.000017613256488079967
         },
         {
+          "id": "guide/2550",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.011044383398804376
+        },
+        {
           "id": "guide/2558",
           "zone": 4,
           "route": "ear-back",
@@ -2184,11 +2468,60 @@
           "rmsMM": 0.004349527152875904
         },
         {
+          "id": "guide/2588",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0034893878336460264
+        },
+        {
+          "id": "guide/2693",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.003246099893020652
+        },
+        {
+          "id": "guide/2703",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.03501681490134466
+        },
+        {
+          "id": "guide/2708",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.026480527627346775
+        },
+        {
+          "id": "guide/2714",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.001845282315729272
+        },
+        {
+          "id": "guide/2720",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.032777289391051435
+        },
+        {
           "id": "guide/2741",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.00013625200272802398
+        },
+        {
+          "id": "guide/2757",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0003721411715272827
         },
         {
           "id": "guide/2774",
@@ -2205,6 +2538,62 @@
           "rmsMM": 0.0000961814758079871
         },
         {
+          "id": "guide/2782",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.013850085616618022
+        },
+        {
+          "id": "guide/2794",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.005194905112098719
+        },
+        {
+          "id": "guide/2804",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.031894334686958195
+        },
+        {
+          "id": "guide/2819",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.00017776736796395158
+        },
+        {
+          "id": "guide/2829",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0017848455389562503
+        },
+        {
+          "id": "guide/2838",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0001913227423831038
+        },
+        {
+          "id": "guide/2865",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.001959796120786264
+        },
+        {
+          "id": "guide/2869",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0019114254113337496
+        },
+        {
           "id": "guide/2949",
           "zone": 6,
           "route": "ear-front",
@@ -2219,11 +2608,25 @@
           "rmsMM": 0.00008670170452161579
         },
         {
+          "id": "guide/2979",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.016427071698184543
+        },
+        {
           "id": "guide/2981",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.00006927637761057288
+        },
+        {
+          "id": "guide/3017",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.00018609029511898172
         },
         {
           "id": "guide/3024",
@@ -2247,6 +2650,13 @@
           "rmsMM": 0.00007100275876672942
         },
         {
+          "id": "guide/3171",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.005396548580094595
+        },
+        {
           "id": "guide/3173",
           "zone": 7,
           "route": "ear-front",
@@ -2259,36 +2669,50 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.00009626798934838945
+        },
+        {
+          "id": "guide/3268",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.005497182274470731
+        },
+        {
+          "id": "guide/3279",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0037983131131013076
         }
       ]
     },
     {
       "id": "part-left",
-      "structureSHA256": "046221bd7f7ae558efdf3a37d9782fa282b6a42f3462bd0d40366a342d6e8c66",
-      "active": 2217,
-      "guides": 135,
+      "structureSHA256": "10781719abbf045245d85aefe1fbbd116d8cbc57e2b326274a7dfd38ec3ca7f5",
+      "active": 2737,
+      "guides": 165,
       "maxRootDriftMM": 0,
       "maxCutErrorMM": 0,
       "maxCurveChangeMM": 140.57329124419937,
-      "meanCurveChangeMM": 2.467894325703888,
-      "changedGuideCount": 56,
-      "changedDirectionRoots": 1428,
+      "meanCurveChangeMM": 2.0974962537761987,
+      "changedGuideCount": 73,
+      "changedDirectionRoots": 2176,
       "routeChanges": [],
       "midSectionMeanSpreadMM": {
-        "before": 12.288067494828764,
-        "after": 10.818412366950021
+        "before": 12.012622248459492,
+        "after": 10.56604139948055
       },
       "field": {
         "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2217,
-        "undirectedEdges": 81632,
-        "iterations": 150,
-        "residual": 9.899419965867816e-8,
+        "nodes": 2737,
+        "undirectedEdges": 114679,
+        "iterations": 216,
+        "residual": 9.940005459616581e-8,
         "converged": true,
         "forbiddenEdges": 0,
         "screen": 1.2,
-        "energy": 185.3403844706705,
-        "solveMS": 4676.7809,
+        "energy": 250.57287978329288,
+        "solveMS": 9388.2169,
         "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
       },
       "geometryChecks": [
@@ -2327,13 +2751,13 @@
             },
             {
               "id": "left-side",
-              "active": 271,
-              "guides": 13
+              "active": 345,
+              "guides": 20
             },
             {
               "id": "right-side",
-              "active": 242,
-              "guides": 12
+              "active": 310,
+              "guides": 19
             },
             {
               "id": "left-temple",
@@ -2352,8 +2776,8 @@
             },
             {
               "id": "nape",
-              "active": 144,
-              "guides": 12
+              "active": 522,
+              "guides": 28
             }
           ]
         },
@@ -2361,16 +2785,16 @@
           "name": "root anchored to original native triangle",
           "pass": true,
           "details": {
-            "maxErrorMM": 0
+            "maxErrorMM": 0.0000010038276168733228
           }
         },
         {
           "name": "finite complete curves and strictly increasing arcs",
           "pass": true,
           "details": {
-            "guides": 135,
-            "maxStepMM": 3.85561830583674,
-            "maxTurnDegrees": 17.515490631066513
+            "guides": 165,
+            "maxStepMM": 3.8556185041284934,
+            "maxTurnDegrees": 17.515455425145742
           }
         },
         {
@@ -2393,7 +2817,7 @@
           "name": "ear geometry changes intended root direction",
           "pass": true,
           "details": {
-            "roots": 434
+            "roots": 477
           }
         },
         {
@@ -2415,11 +2839,13 @@
           "pass": true
         },
         {
-          "name": "active roots remain inside authored scalp boundary",
+          "name": "active roots remain inside approved source scalp",
           "pass": true,
           "details": {
-            "active": 2217,
-            "excludedBelowHairline": 609
+            "approvedEligible": 3067,
+            "active": 2737,
+            "restoredStyleRoots": 520,
+            "noAdditionalHeightClip": true
           }
         },
         {
@@ -2427,15 +2853,15 @@
           "pass": true,
           "details": {
             "method": "screened tangent graph-Laplacian (Jacobi)",
-            "nodes": 2217,
-            "undirectedEdges": 81632,
-            "iterations": 150,
-            "residual": 9.899419965867816e-8,
+            "nodes": 2737,
+            "undirectedEdges": 114679,
+            "iterations": 216,
+            "residual": 9.940005459616581e-8,
             "converged": true,
             "forbiddenEdges": 0,
             "screen": 1.2,
-            "energy": 185.3403844706705,
-            "solveMS": 4676.7809,
+            "energy": 250.57287978329288,
+            "solveMS": 9388.2169,
             "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
           }
         },
@@ -2710,6 +3136,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 2.1384818081571058
+        },
+        {
+          "id": "guide/866",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.24081018716170471
         },
         {
           "id": "guide/887",
@@ -3125,6 +3558,13 @@
           "rmsMM": 0.2084088639914493
         },
         {
+          "id": "guide/1928",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.01726459503258376
+        },
+        {
           "id": "guide/1930",
           "zone": 4,
           "route": "ear-back",
@@ -3207,6 +3647,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.006979632926868093
+        },
+        {
+          "id": "guide/2106",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.10717336713662594
         },
         {
           "id": "guide/2113",
@@ -3293,11 +3740,53 @@
           "rmsMM": 0.10414738416049622
         },
         {
+          "id": "guide/2372",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.7743049321963137
+        },
+        {
           "id": "guide/2391",
           "zone": 9,
           "route": "back",
           "baselineRoute": "back",
           "rmsMM": 0.0006375797019107196
+        },
+        {
+          "id": "guide/2446",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.17543258710798929
+        },
+        {
+          "id": "guide/2460",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.30531929646156203
+        },
+        {
+          "id": "guide/2461",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.021137747629184106
+        },
+        {
+          "id": "guide/2491",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.1448543065066612
+        },
+        {
+          "id": "guide/2503",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0031400700366469286
         },
         {
           "id": "guide/2527",
@@ -3307,6 +3796,13 @@
           "rmsMM": 0.00015826162601265147
         },
         {
+          "id": "guide/2550",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.23227015256160086
+        },
+        {
           "id": "guide/2558",
           "zone": 4,
           "route": "ear-back",
@@ -3314,11 +3810,60 @@
           "rmsMM": 0.055560346999743104
         },
         {
+          "id": "guide/2588",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0787351153806225
+        },
+        {
+          "id": "guide/2693",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.0866745373078264
+        },
+        {
+          "id": "guide/2703",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 6.76994344074334
+        },
+        {
+          "id": "guide/2708",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.7937935838808035
+        },
+        {
+          "id": "guide/2714",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.039624870439282714
+        },
+        {
+          "id": "guide/2720",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.7563852270888686
+        },
+        {
           "id": "guide/2741",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.0018127407085096038
+        },
+        {
+          "id": "guide/2757",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.010197277640037111
         },
         {
           "id": "guide/2774",
@@ -3335,6 +3880,62 @@
           "rmsMM": 0.0008656564995766141
         },
         {
+          "id": "guide/2782",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.4443502933524093
+        },
+        {
+          "id": "guide/2794",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.10997915715032076
+        },
+        {
+          "id": "guide/2804",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.7756897399361263
+        },
+        {
+          "id": "guide/2819",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.00480133136282678
+        },
+        {
+          "id": "guide/2829",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.037384927692276367
+        },
+        {
+          "id": "guide/2838",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.09408386814060762
+        },
+        {
+          "id": "guide/2865",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.057835480151554666
+        },
+        {
+          "id": "guide/2869",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.05717557995793021
+        },
+        {
           "id": "guide/2949",
           "zone": 6,
           "route": "ear-front",
@@ -3349,11 +3950,25 @@
           "rmsMM": 0.0011514584387123234
         },
         {
+          "id": "guide/2979",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.36260094354064687
+        },
+        {
           "id": "guide/2981",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.0009207143573520204
+        },
+        {
+          "id": "guide/3017",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.004724997414496423
         },
         {
           "id": "guide/3024",
@@ -3377,6 +3992,13 @@
           "rmsMM": 0.0006429959516309272
         },
         {
+          "id": "guide/3171",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.16688318868316715
+        },
+        {
           "id": "guide/3173",
           "zone": 7,
           "route": "ear-front",
@@ -3389,36 +4011,50 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.0008628089944040953
+        },
+        {
+          "id": "guide/3268",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.14576507025311902
+        },
+        {
+          "id": "guide/3279",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.10281203110070107
         }
       ]
     },
     {
       "id": "fringe-open",
-      "structureSHA256": "4411f753d46afc62dd00c298f5c403d465703736f4a55ad66f21e683b6f050c0",
-      "active": 2217,
-      "guides": 135,
+      "structureSHA256": "981d5b8c9cb8ff3f9812a92bd6395e1e8b82797c40271cd05267b7c9f7945cb7",
+      "active": 2737,
+      "guides": 165,
       "maxRootDriftMM": 0,
       "maxCutErrorMM": 0,
       "maxCurveChangeMM": 18.50483901770195,
-      "meanCurveChangeMM": 2.3635867671256494,
+      "meanCurveChangeMM": 1.9338437185573494,
       "changedGuideCount": 24,
       "changedDirectionRoots": 178,
       "routeChanges": [],
       "midSectionMeanSpreadMM": {
-        "before": 12.738052449968922,
-        "after": 11.29842667651155
+        "before": 12.402855687358258,
+        "after": 10.978359270802509
       },
       "field": {
         "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2217,
-        "undirectedEdges": 81749,
-        "iterations": 150,
-        "residual": 9.949074535505194e-8,
+        "nodes": 2737,
+        "undirectedEdges": 114721,
+        "iterations": 219,
+        "residual": 9.684354346781385e-8,
         "converged": true,
         "forbiddenEdges": 0,
         "screen": 1.2,
-        "energy": 181.74721207485658,
-        "solveMS": 4666.0266,
+        "energy": 247.62316791701127,
+        "solveMS": 9556.2796,
         "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
       },
       "geometryChecks": [
@@ -3457,13 +4093,13 @@
             },
             {
               "id": "left-side",
-              "active": 271,
-              "guides": 13
+              "active": 345,
+              "guides": 20
             },
             {
               "id": "right-side",
-              "active": 242,
-              "guides": 12
+              "active": 310,
+              "guides": 19
             },
             {
               "id": "left-temple",
@@ -3482,8 +4118,8 @@
             },
             {
               "id": "nape",
-              "active": 144,
-              "guides": 12
+              "active": 522,
+              "guides": 28
             }
           ]
         },
@@ -3491,16 +4127,16 @@
           "name": "root anchored to original native triangle",
           "pass": true,
           "details": {
-            "maxErrorMM": 0
+            "maxErrorMM": 0.0000010038276168733228
           }
         },
         {
           "name": "finite complete curves and strictly increasing arcs",
           "pass": true,
           "details": {
-            "guides": 135,
-            "maxStepMM": 4.056570017290095,
-            "maxTurnDegrees": 17.76119667445381
+            "guides": 165,
+            "maxStepMM": 4.056570008875354,
+            "maxTurnDegrees": 17.761212745631514
           }
         },
         {
@@ -3523,7 +4159,7 @@
           "name": "ear geometry changes intended root direction",
           "pass": true,
           "details": {
-            "roots": 434
+            "roots": 477
           }
         },
         {
@@ -3545,11 +4181,13 @@
           "pass": true
         },
         {
-          "name": "active roots remain inside authored scalp boundary",
+          "name": "active roots remain inside approved source scalp",
           "pass": true,
           "details": {
-            "active": 2217,
-            "excludedBelowHairline": 609
+            "approvedEligible": 3067,
+            "active": 2737,
+            "restoredStyleRoots": 520,
+            "noAdditionalHeightClip": true
           }
         },
         {
@@ -3557,15 +4195,15 @@
           "pass": true,
           "details": {
             "method": "screened tangent graph-Laplacian (Jacobi)",
-            "nodes": 2217,
-            "undirectedEdges": 81749,
-            "iterations": 150,
-            "residual": 9.949074535505194e-8,
+            "nodes": 2737,
+            "undirectedEdges": 114721,
+            "iterations": 219,
+            "residual": 9.684354346781385e-8,
             "converged": true,
             "forbiddenEdges": 0,
             "screen": 1.2,
-            "energy": 181.74721207485658,
-            "solveMS": 4666.0266,
+            "energy": 247.62316791701127,
+            "solveMS": 9556.2796,
             "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
           }
         },
@@ -3839,6 +4477,13 @@
           "zone": 2,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/866",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -4255,6 +4900,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/1928",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/1930",
           "zone": 4,
           "route": "ear-back",
@@ -4336,6 +4988,13 @@
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2106",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -4423,8 +5082,50 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2372",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2391",
           "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2446",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2460",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2461",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2491",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2503",
+          "zone": 4,
           "route": "back",
           "baselineRoute": "back",
           "rmsMM": 0
@@ -4437,6 +5138,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2550",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2558",
           "zone": 4,
           "route": "ear-back",
@@ -4444,10 +5152,59 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2588",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2693",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2703",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2708",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2714",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2720",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2741",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2757",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -4465,6 +5222,62 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2782",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2794",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2804",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2819",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2829",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2838",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2865",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/2869",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2949",
           "zone": 6,
           "route": "ear-front",
@@ -4479,10 +5292,24 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/2979",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/2981",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/3017",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
           "rmsMM": 0
         },
         {
@@ -4507,6 +5334,13 @@
           "rmsMM": 0
         },
         {
+          "id": "guide/3171",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
           "id": "guide/3173",
           "zone": 7,
           "route": "ear-front",
@@ -4519,19 +5353,33 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0
+        },
+        {
+          "id": "guide/3268",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
+        },
+        {
+          "id": "guide/3279",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0
         }
       ]
     },
     {
       "id": "ear-back",
-      "structureSHA256": "5163b164cd3fa56647a9ad4c0343bec4f56661abc2dc2ecb34893ffba6a14a91",
-      "active": 2217,
-      "guides": 135,
+      "structureSHA256": "8261fcca6538e716ff88926c5c8ec37c2d03b3cf3f8d5982f458406a9eace2d6",
+      "active": 2737,
+      "guides": 165,
       "maxRootDriftMM": 0,
       "maxCutErrorMM": 0,
       "maxCurveChangeMM": 79.35911527622346,
-      "meanCurveChangeMM": 5.356002881017837,
-      "changedGuideCount": 86,
+      "meanCurveChangeMM": 4.772278082375667,
+      "changedGuideCount": 114,
       "changedDirectionRoots": 879,
       "routeChanges": [
         {
@@ -4613,20 +5461,20 @@
         }
       ],
       "midSectionMeanSpreadMM": {
-        "before": 10.387034163846568,
-        "after": 9.085694689147504
+        "before": 10.328489700059674,
+        "after": 9.032811290979982
       },
       "field": {
         "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2217,
-        "undirectedEdges": 81749,
-        "iterations": 150,
-        "residual": 9.875672176512247e-8,
+        "nodes": 2737,
+        "undirectedEdges": 114721,
+        "iterations": 219,
+        "residual": 9.688212225246667e-8,
         "converged": true,
         "forbiddenEdges": 0,
         "screen": 1.2,
-        "energy": 183.1541339721658,
-        "solveMS": 5065.7345,
+        "energy": 249.03435493916817,
+        "solveMS": 9905.0466,
         "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
       },
       "geometryChecks": [
@@ -4665,13 +5513,13 @@
             },
             {
               "id": "left-side",
-              "active": 271,
-              "guides": 13
+              "active": 345,
+              "guides": 20
             },
             {
               "id": "right-side",
-              "active": 242,
-              "guides": 12
+              "active": 310,
+              "guides": 19
             },
             {
               "id": "left-temple",
@@ -4690,8 +5538,8 @@
             },
             {
               "id": "nape",
-              "active": 144,
-              "guides": 12
+              "active": 522,
+              "guides": 28
             }
           ]
         },
@@ -4699,16 +5547,16 @@
           "name": "root anchored to original native triangle",
           "pass": true,
           "details": {
-            "maxErrorMM": 0
+            "maxErrorMM": 0.0000010038276168733228
           }
         },
         {
           "name": "finite complete curves and strictly increasing arcs",
           "pass": true,
           "details": {
-            "guides": 135,
-            "maxStepMM": 3.8068670486995786,
-            "maxTurnDegrees": 19.106938962058933
+            "guides": 165,
+            "maxStepMM": 3.8068667073887865,
+            "maxTurnDegrees": 19.106933858227656
           }
         },
         {
@@ -4731,7 +5579,7 @@
           "name": "ear geometry changes intended root direction",
           "pass": true,
           "details": {
-            "roots": 410
+            "roots": 453
           }
         },
         {
@@ -4753,11 +5601,13 @@
           "pass": true
         },
         {
-          "name": "active roots remain inside authored scalp boundary",
+          "name": "active roots remain inside approved source scalp",
           "pass": true,
           "details": {
-            "active": 2217,
-            "excludedBelowHairline": 609
+            "approvedEligible": 3067,
+            "active": 2737,
+            "restoredStyleRoots": 520,
+            "noAdditionalHeightClip": true
           }
         },
         {
@@ -4765,15 +5615,15 @@
           "pass": true,
           "details": {
             "method": "screened tangent graph-Laplacian (Jacobi)",
-            "nodes": 2217,
-            "undirectedEdges": 81749,
-            "iterations": 150,
-            "residual": 9.875672176512247e-8,
+            "nodes": 2737,
+            "undirectedEdges": 114721,
+            "iterations": 219,
+            "residual": 9.688212225246667e-8,
             "converged": true,
             "forbiddenEdges": 0,
             "screen": 1.2,
-            "energy": 183.1541339721658,
-            "solveMS": 5065.7345,
+            "energy": 249.03435493916817,
+            "solveMS": 9905.0466,
             "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
           }
         },
@@ -5048,6 +5898,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 7.197950978999585
+        },
+        {
+          "id": "guide/866",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.5812783239978526
         },
         {
           "id": "guide/887",
@@ -5463,6 +6320,13 @@
           "rmsMM": 0.35964672369375145
         },
         {
+          "id": "guide/1928",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 3.1200741391128606
+        },
+        {
           "id": "guide/1930",
           "zone": 4,
           "route": "back",
@@ -5545,6 +6409,13 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.35655098803492336
+        },
+        {
+          "id": "guide/2106",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.9032705749957892
         },
         {
           "id": "guide/2113",
@@ -5631,11 +6502,53 @@
           "rmsMM": 2.520238267665603
         },
         {
+          "id": "guide/2372",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.05682945882860905
+        },
+        {
           "id": "guide/2391",
           "zone": 9,
           "route": "back",
           "baselineRoute": "back",
           "rmsMM": 0.16560097240805938
+        },
+        {
+          "id": "guide/2446",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.9733654712593982
+        },
+        {
+          "id": "guide/2460",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.617773084273226
+        },
+        {
+          "id": "guide/2461",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.998515799590836
+        },
+        {
+          "id": "guide/2491",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.2171347592908797
+        },
+        {
+          "id": "guide/2503",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 4.017212740304008
         },
         {
           "id": "guide/2527",
@@ -5645,6 +6558,13 @@
           "rmsMM": 0.0030851337587338777
         },
         {
+          "id": "guide/2550",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.0856260545383782
+        },
+        {
           "id": "guide/2558",
           "zone": 4,
           "route": "back",
@@ -5652,11 +6572,60 @@
           "rmsMM": 16.982578018825247
         },
         {
+          "id": "guide/2588",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.3669892226789453
+        },
+        {
+          "id": "guide/2693",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.8494989685069854
+        },
+        {
+          "id": "guide/2703",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.04246924230618959
+        },
+        {
+          "id": "guide/2708",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.17155294272593488
+        },
+        {
+          "id": "guide/2714",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 4.044998756549463
+        },
+        {
+          "id": "guide/2720",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.5568808171880876
+        },
+        {
           "id": "guide/2741",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.025484647318097978
+        },
+        {
+          "id": "guide/2757",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.70927039623202
         },
         {
           "id": "guide/2774",
@@ -5673,6 +6642,62 @@
           "rmsMM": 0.013595964612802916
         },
         {
+          "id": "guide/2782",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.095960772994175
+        },
+        {
+          "id": "guide/2794",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.7362070868970765
+        },
+        {
+          "id": "guide/2804",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 0.33793290411817306
+        },
+        {
+          "id": "guide/2819",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 3.0047737541742863
+        },
+        {
+          "id": "guide/2829",
+          "zone": 5,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.9587276965810396
+        },
+        {
+          "id": "guide/2838",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 3.768115893715031
+        },
+        {
+          "id": "guide/2865",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.3323910944410917
+        },
+        {
+          "id": "guide/2869",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 3.095936177216006
+        },
+        {
           "id": "guide/2949",
           "zone": 6,
           "route": "ear-front",
@@ -5687,11 +6712,25 @@
           "rmsMM": 0.018066400110669102
         },
         {
+          "id": "guide/2979",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.5281290578211555
+        },
+        {
           "id": "guide/2981",
           "zone": 6,
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.015148757546616851
+        },
+        {
+          "id": "guide/3017",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 4.038944644209523
         },
         {
           "id": "guide/3024",
@@ -5715,6 +6754,13 @@
           "rmsMM": 0.014122189277870598
         },
         {
+          "id": "guide/3171",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.3573759243064067
+        },
+        {
           "id": "guide/3173",
           "zone": 7,
           "route": "ear-front",
@@ -5727,6 +6773,20 @@
           "route": "ear-front",
           "baselineRoute": "ear-front",
           "rmsMM": 0.007677680392963451
+        },
+        {
+          "id": "guide/3268",
+          "zone": 9,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 2.0021468899266526
+        },
+        {
+          "id": "guide/3279",
+          "zone": 4,
+          "route": "back",
+          "baselineRoute": "back",
+          "rmsMM": 1.7961120057971174
         }
       ]
     }

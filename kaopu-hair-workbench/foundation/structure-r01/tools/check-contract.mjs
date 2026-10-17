@@ -10,5 +10,6 @@ bad('reject group escaping its parent membership',()=>{const x=structuredClone(l
 bad('reject inconsistent arc length',()=>{const x=structuredClone(lab);x.guides[0].length*=1.1;assertStructure(x,roots);});
 bad('reject altered native follicle identity',()=>{const x=structuredClone(lab);x.guides[0].root.triangleId++;assertStructure(x,roots);});
 bad('reject non-orthogonal transport frame',()=>{const x=structuredClone(lab);x.guides[0].frames[0]+=1;assertStructure(x,roots);});
-bad('reject active follicle below authored scalp',()=>{const r=roots.slice();for(let i=0;i<lab.rootCount;i++)if(r[i*lab.stride+5]<.24){r[i*lab.stride+25]=1;break;}assertStructure(lab,r);});
+bad('reject active follicle outside approved source domain',()=>{const r=roots.slice();for(let i=0;i<lab.rootCount;i++)if(!lab.sourceDomain.eligibleMask[i]){r[i*lab.stride+25]=1;break;}assertStructure(lab,r);});
+bad('reject a second native-height scalp trim',()=>{const x=structuredClone(lab);x.profile.ScalpDomain.lowerHairline={back:.256};assertStructure(x,roots);});
 const result={pass:true,checks};fs.writeFileSync(new URL('evidence/contract-checks.json',base),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

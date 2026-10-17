@@ -10,11 +10,11 @@ export const ZONES=[
 const regional={hairline:{hem:.312,layer:.008},fringe:{hem:.305,layer:.010},top:{hem:.132,layer:.012},crown:{hem:.122,layer:.010},'left-side':{hem:.139,layer:.010},'right-side':{hem:.144,layer:.011},'left-temple':{hem:.220,layer:.012},'right-temple':{hem:.224,layer:.010},occipital:{hem:.120,layer:.008},nape:{hem:.135,layer:.012}};
 const regionalLengths=Object.fromEntries(ZONES.map(([id])=>[id,{minArc:.020,maxArc:({hairline:.22,fringe:.24,top:.44,crown:.44,'left-side':.36,'right-side':.36,'left-temple':.22,'right-temple':.22,occipital:.38,nape:.24})[id]}]));
 export const PROFILE={
- schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',revision:'editable-flow-03',seed:4729,
- ScalpDomain:{source:'F02.1 native supported domain intersected with authored P01 lower hairline',exclude:['face','forehead','ear','neck'],lowerHairline:{back:.256,sideRise:.024,temple:.282,fade:.008},boundaryStatus:'authored P01 scalp / neck separation; visual review required'},
+ schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',revision:'scalp-restore-04',seed:4729,
+ ScalpDomain:{source:'approved F02.1 boundary mapped by native triangle and barycentric binding',sourceLock:'F02.1@ee3c7fac9f187dd9e5dc81d1363c4814b9a015a3',policy:'approved-source-only',exclude:['face','forehead','ear','neck'],postProjectionClip:false,boundaryStatus:'restore accepted domain; no extra native-height trim'},
  AnatomicalZoneField:{zones:ZONES.map(([id,label])=>({id,label})),status:'authored segmentation; requires visual review'},
  CandidateRootField:{source:'shared F02 candidate bank',resample:false},
- ActiveRootMask:{mode:'stable threshold versus density within native support and explicit scalp/neck boundary'},
+ ActiveRootMask:{mode:'style density inside the unchanged approved eligible mask; never trim the growth domain'},
  FollicleDensityField:{interior:.94,hairlineFade:.009,partMinimum:.68},
  RootDirectionField:{mode:'screened tangent graph-Laplacian with comb / dividing / whorl / ear constraints',controls:{partOffset:0,fringeSweep:0,earBias:0}},
  RootLiftField:{interior:.12,hairline:.08},
@@ -23,11 +23,11 @@ export const PROFILE={
  HairlineProfile:{edgeFade:.009,irregularity:.0012,babyHair:{stage:2,enabled:false}},
  RegionalLengthField:{parameter:'physical arc length in metres, separate from spatial cut height',regions:regionalLengths},
  CutField:{mode:'regional hem + authored side sweep + regional layer; no global length multiplier',regions:regional},
- GuideGroom:{samples:97,minPerZone:12,maxPerZone:40,selection:'semantic-zone candidate pool, complete-curve distance, three approximate k-medoids updates',highFrequency:false,lowerWidth:.087,lowerDepth:.096},
+ GuideGroom:{samples:97,minPerZone:12,maxPerZone:40,selection:'retain existing R03 curves; stratified coverage of restored eligible roots only',highFrequency:false,lowerWidth:.087,lowerDepth:.096},
  ClumpGraph:{levels:['macro','mid','micro'],crossPart:false,crossZone:false,midDiameter:.045,microDiameter:.026},
  ChildStrandProfile:{stage:2,enabled:false,interpolation:'transported local-frame offsets, never world-position lerp'},
  StrandMaterialField:{stage:2,enabled:false,rootRadius:null,tipRadius:null,lengthVariation:null,melaninVariation:null,roughnessVariation:null,curlRadius:null,curlPitch:null,clumpStrength:null,flyawayProbability:null},
- RestShape:{source:'authored static groom',gravitySolver:false,acceptance:'pending multi-view structure review'},
+ RestShape:{source:'retained R03 curves plus static routes from restored roots',gravitySolver:false,acceptance:'pending multi-view structure review'},
  PhysicsProfile:{stage:2,enabled:false,requires:'phase-one accepted',arcLengthDriftLimit:.01}
 };
 export const clamp=x=>Math.max(0,Math.min(1,x));
@@ -51,9 +51,3 @@ export function flowAt(p,n,zone,{whorl=true,ear=true}={}){
 }
 export function densityAt(p,edge){const f=PROFILE.FollicleDensityField,part=(1-smooth(Math.abs(p[0]-partX(p[2]))/.007))*smooth((p[1]-.365)/.030)*smooth((p[2]+.04)/.03),w=PROFILE.WhorlField[0],r=Math.hypot(p[0]-w.center[0],p[2]-w.center[2]);return f.interior*smooth((edge+.0005)/f.hairlineFade)*(1-part*(1-f.partMinimum))*(1-(1-w.centerDensity)*(1-smooth(r/w.coreRadius)));}
 export function cutAt(root,zone,seed){const field=PROFILE.CutField.regions[ZONES[zone][0]],asym=(zone===0||zone===1)?.020*Math.max(-1,Math.min(1,root[0]/.07)):0;return Math.min(root[1]-.022,field.hem+field.layer*(smooth((root[1]-.29)/.13)-.5)+.0008*(seed-.5)+asym);}
-
-export function scalpMargin(p,profile=PROFILE){
- const [x,y,z]=p,h=profile.ScalpDomain.lowerHairline;
- const back=h.back+h.sideRise*Math.min(1,(Math.abs(x)/.075)**2),front=smooth((z-.012)/.028);
- return y-(back+(h.temple-back)*front);
-}

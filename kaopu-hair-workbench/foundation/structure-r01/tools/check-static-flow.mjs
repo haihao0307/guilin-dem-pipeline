@@ -1,5 +1,4 @@
 import fs from 'node:fs';import zlib from 'node:zlib';import crypto from 'node:crypto';import assert from 'node:assert/strict';
-import {scalpMargin} from '../src/HairStyleProfile.mjs';
 import {curveDistance} from '../src/StaticGroomRules.mjs';
 const base=new URL('../',import.meta.url),load=name=>JSON.parse(zlib.gunzipSync(fs.readFileSync(new URL(name,base)))),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const before=load('inputs/static-r01-baseline.json.gz'),after=load('assets/structure.json.gz'),bytes=zlib.gunzipSync(fs.readFileSync(new URL('assets/roots.bin.gz',base))),roots=new Float32Array(Uint8Array.from(bytes).buffer);
@@ -16,7 +15,7 @@ function metrics(data){
 }
 const a=metrics(before),b=metrics(after);assert.ok(b.backProjectionInversionRatio<a.backProjectionInversionRatio*.5);assert.ok(b.medianTipTiltDegrees<a.medianTipTiltDegrees);assert.ok(b.p90TipTiltDegrees<a.p90TipTiltDegrees);
 let excludedActiveRoots=0,invalidActiveRoots=0,active=0;
-for(let i=0;i<after.rootCount;i++){const p=Array.from(roots.subarray(i*after.stride+4,i*after.stride+7)),enabled=roots[i*after.stride+25];if(before.activeMask[i]&&!enabled)excludedActiveRoots++;if(enabled){active++;if(scalpMargin(p)<-.000001)invalidActiveRoots++;}}
+for(let i=0;i<after.rootCount;i++){const p=Array.from(roots.subarray(i*after.stride+4,i*after.stride+7)),enabled=roots[i*after.stride+25];if(before.activeMask[i]&&!enabled)excludedActiveRoots++;if(enabled){active++;if(!after.sourceDomain.eligibleMask[i])invalidActiveRoots++;}}
 assert.equal(invalidActiveRoots,0);
 let maxMeasuredMicroDiameter=0,maxMeasuredMidDiameter=0;
 for(const group of after.clumpGraph){const members=group.guides.map(id=>after.guides.find(g=>g.id===id));let diameter=0;for(const a of members)for(const b of members)diameter=Math.max(diameter,curveDistance(a,b));assert.ok(Math.abs(diameter-group.curveDiameter)<1e-8);if(group.level==='mid'){maxMeasuredMidDiameter=Math.max(maxMeasuredMidDiameter,diameter);assert.ok(diameter<=after.profile.ClumpGraph.midDiameter+1e-10);}if(group.level==='micro'){maxMeasuredMicroDiameter=Math.max(maxMeasuredMicroDiameter,diameter);assert.ok(diameter<=after.profile.ClumpGraph.microDiameter+1e-10);}}

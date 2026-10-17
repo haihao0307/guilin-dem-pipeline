@@ -1,0 +1,39 @@
+name: Approved hair growth domain
+on:
+  push:
+    branches: [codex/hair-structure-lab-r01-20261016]
+    paths:
+      - kaopu-hair-workbench/foundation/structure-r01/**
+      - .github/workflows/hair-scalp-preservation.yml
+  pull_request:
+    paths:
+      - kaopu-hair-workbench/foundation/structure-r01/**
+      - .github/workflows/hair-scalp-preservation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preserve-approved-domain:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kaopu-hair-workbench/foundation/structure-r01
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/structure-r01
+            kaopu-hair-workbench/integrations/fiber-runtime-r08
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Compare applied domain, masks and retained curves to approved authority
+        run: node tools/check-approved-scalp.mjs
+      - name: Check structure and runtime contracts
+        run: |
+          node tools/check-contract.mjs
+          node tools/check-runtime.mjs
+          node tools/check-static-flow.mjs
+      - name: Require visual review of the current build
+        run: node tools/check-review-evidence.cjs

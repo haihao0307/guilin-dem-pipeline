@@ -10,7 +10,7 @@ export const EXPERIMENTS=[
 export function configureExperiment(profile,id='baseline'){
  const experiment=EXPERIMENTS.find(e=>e.id===id);if(!experiment)throw Error('Unknown flow experiment: '+id);
  profile.RootDirectionField.controls={...experiment.controls};
- profile.experiment={...experiment};profile.id='p01-current-flow03-'+id;
+ profile.experiment={...experiment};profile.id='p01-current-scalp04-'+id;
  for(const p of profile.PartingCurves[0].points)p[0]+=experiment.controls.partOffset;
  return experiment;
 }
