@@ -65,3 +65,18 @@ No production workflow, Material file, main, R2 or global gate was modified.
 - Existing regression status remains Candidate/inactive.
 - ACKNOWLEDGED / IMPLEMENTED / TARGET-GATE-RUN / ADOPTED / USER-ACCEPTED: false.
 - Metrics without reliable measurement remain UNKNOWN.
+
+## N170 follow-up — PR #303 positive control
+
+PR #303 supplied the missing positive control for the N168 hypothesis. Its successful run 39023934981 did not relabel failed origin run 39020723675 as successful. Instead it:
+
+- pinned source commit `544ec81bcef6185a553df138585c7059e832a122`, origin artifact 12096734029 and SHA-256 `0c693546...`, origin QA path and SHA-256 `7a416bda...`, plus module/build/preview signatures;
+- retained nine named passed core tests as claim atoms, while explicitly excluding the old performance result, the incomplete cleanup and origin public/share claims;
+- rebuilt the same source, reran synchronized performance and bounded cleanup, then verified exact public HTTPS bytes and desktop/mobile viewport interaction;
+- preserved `physicalPhone=false`, `visualAcceptance=false`, `userVisualAccepted=false` and `productionReady=false`.
+
+Independent GitHub blob cross-check also found `LipSurface.js` blob `c9bcaf85...` and `build.cjs` blob `581a210d...` unchanged between the source commit, verification commit and final PR head. The generated preview is bound by SHA-256 rather than inferred from the branch head.
+
+Classification: `COMPOSITE_COVERAGE_VERIFIED_SCOPED`. A failed run does not poison every completed atom; reuse is legal only when the failure is downstream/non-dominating for the retained atom, exact subject and evidence bytes are bound, invalid claims are excluded, and all missing atoms are rerun fresh.
+
+This is a real affected-Mother `IMPLEMENTED + workflow GATE-RUN` observation for the candidate semantics, but not proof that Material or Coordinator acknowledged N168. The existing regression remains Candidate/inactive because no independent verifier receipt, adoption decision or user acceptance exists.
