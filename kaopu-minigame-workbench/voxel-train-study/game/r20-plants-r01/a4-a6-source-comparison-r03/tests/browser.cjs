@@ -442,11 +442,13 @@ function sameDirections(before, after) {
       report.rasterChecks.push(await inspectRasterProjection(view));
       await shot(screenshot);
       if(view==='side'){
-        const detailPanel=await page.locator('#a6').boundingBox();
-        await page.mouse.move(detailPanel.x+detailPanel.width/2,detailPanel.y+detailPanel.height/2);
-        await page.mouse.wheel(0,-1000);await page.waitForTimeout(150);
+        // Increase raster resolution without centering a zoom on the rear of the train.
+        // The complete cab/driver stays in frame and all four panels retain one scale.
+        await page.setViewportSize({width:3600,height:2200});
+        await page.locator('#side').click();await page.waitForTimeout(200);
         await shot('04-shared-scale-side-driver-detail.png');
-        await page.locator('#side').click();await page.waitForTimeout(100);
+        await page.setViewportSize({width:1800,height:1100});
+        await page.locator('#side').click();await page.waitForTimeout(150);
       }
       // A pointer drag must never reintroduce the rejected free-orbit view.
       const target = await page.locator('#a6').boundingBox();
