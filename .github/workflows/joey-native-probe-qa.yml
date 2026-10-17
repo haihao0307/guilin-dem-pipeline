@@ -1,0 +1,83 @@
+name: Joey isolated native observation probe
+on:
+  push:
+    branches: ['qa/joey-native-observation-r01-20261010']
+    paths:
+      - 'kaopu-unified-human-workbench/joey-observation-r01/**'
+      - '.github/workflows/joey-native-probe-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: joey-native-observation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0b4703359efbae10ffc6c0e5fe3fc081e7eca4fe
+          path: native
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench
+            kaopu-anny-workbench
+            kaopu-mhr-workbench
+      - name: Install pinned official browser package
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-native" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/joey-native/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/joey-native/node_modules" >> "$GITHUB_ENV"
+      - name: Serve fixed native engine without deployment
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/joey-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/native/kaopu-unified-human-workbench/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Render sculpted native face with strictly surface-bound existing eyebrows
+        run: node kaopu-unified-human-workbench/joey-observation-r01/eyefold-r35/render-compat-r35.cjs
+      - name: Keep bounded research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joey-native-probe-${{ github.sha }}
+          path: |
+            joey-native-probe-results/
+            joey-native-candidate-results/
+            joey-relative-mouth-results/
+            joey-archive-file-verification/
+            joey-semantic-response-results/
+            joey-manual-r03-results/
+            joey-manual-r04-results/
+            joey-manual-r05-results/
+            joey-manual-r06-results/
+            joey-eye-control-audit/
+            joey-camera-expression-r02/
+            joey-nose-ab-r07/
+            joey-nose-depth-r08/
+            joey-eyelid-r09/
+            joey-eye-aspect-r10/
+            joey-appearance-r11/
+            joey-lowerface-r12/
+            joey-lip-control-r13/
+            joey-eye-bridge-r14/
+            joey-lid-response-r15/
+            joey-brow-head-r16/
+            joey-brow-flow-r17/
+            joey-eye-expression-r18/
+            joey-final-jacobian-r19/
+            joey-linear-domain-r20/
+            joey-brow-coverage-r21/
+            joey-combined-appearance-r22/
+            joey-eyefold-compat-r35/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
