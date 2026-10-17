@@ -70,4 +70,4 @@ Coordinator 只需回答四件事：
 
 生命周期：`RADAR_FOUND=true / TEACHER_CANDIDATE=true / AUDITION=local-structural-only / PROBATION=false / ACTIVE_TEACHER=false / LEARNED_OUT=false`。
 
-路由：`POSTED` 待 #91 comment；`ACKNOWLEDGED / IMPLEMENTED / PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。指标全部 `unknown`。
+路由：`POSTED=true`（#91 comment `6231378151`）；`ACKNOWLEDGED / IMPLEMENTED / PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。指标全部 `unknown`。
