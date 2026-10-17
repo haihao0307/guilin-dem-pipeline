@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <base href="../../">
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>共同人物 · 人物与动作总台</title>
+ <link rel="stylesheet" href="./full/ui/workbench.css?v=human-r2-20261008">
+ <script type="importmap">{"imports":{"three":"./full/source/registration-vendor/three.module.js","/native/kaopu-unified-human-workbench/":"./"}}</script>
+ <link rel="stylesheet" href="./full/ui/presets.css?v=characters-r02-20261008">
+ <link rel="stylesheet" href="./full/ui/entry-controls.css?v=entry-r06-20261010">
+<style>html,body{margin:0!important;width:100%!important;height:100%!important;overflow:hidden!important;display:block!important}body>header,body>nav,#control-shell,.view-tools,.motion-studio{display:none!important}main,.model-stage,#stage{display:block!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;grid-template-columns:none!important}#stage canvas{display:block;width:100%!important;height:100%!important}</style>
+</head>
+<body class="presets-workbench workbench-entry-layout">
+<header>
+ <a id="overview-back" href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-human-overview/">← 总工作台</a>
+ <strong>共同人物</strong>
+ <span class="header-note">36 种形态 · 同一人物模型</span>
+</header>
+
+<nav id="workbench-entries" class="workbench-entries" aria-label="人物与动作入口">
+ <div class="entry-group primary-entries">
+  <button data-entry-action="shape">人物对照</button>
+  <button data-entry-action="perimeter">擂台对练</button>
+  <button data-entry-action="outside">场外活动</button>
+ </div>
+ <details class="entry-backstage">
+  <summary>后台验证</summary>
+  <div class="backstage-content">
+   <div class="entry-group verification-entries" aria-label="单项动作验证">
+    <strong>单项验证</strong>
+    <button data-entry-action="walk">走路</button>
+    <button data-entry-action="run">跑步</button>
+    <button data-entry-action="jump">小跳</button>
+    <button data-entry-action="hand">手部验证</button>
+    <button data-entry-action="reaction">来拳侧闪验证</button>
+   </div>
+   <p class="entry-note">擂台沿用 R02 的 3 套现有编排。来拳侧闪采用过去骨点观测的规则策略。场外走跑跳为捕捉重定向，仍有适配边界。</p>
+   <div class="backstage-links" aria-label="保留的旧版与研究页">
+    <a class="legacy-link" href="./index-minimal.html">已验最小版</a>
+    <a class="legacy-link" id="shape-r03-entry" href="./shape-r03.html?v=shape-r03-pilot-20261009">R03 六例对照</a>
+    <a class="legacy-link" id="shape-r040-entry" href="./shape-r040.html?v=shape-r040-clavicle-20261009">锁骨胖瘦对照</a>
+    <a class="legacy-entry" href="./boxing-r02.html?v=boxing-r02-stage1-20261009">R02 独立擂台</a>
+    <a class="shape-r031-research-entry" id="shape-r031-entry" href="./shape-r031.html?v=shape-r031-identity-20261009">R03.1 五官骨性研究</a>
+    <a class="motion-research-entry" href="./motion-architecture/">动作研究与验证记录</a>
+    <a class="boxing-entry" href="#workbench-entries">回到场景入口 ↑</a>
+   </div>
+  </div>
+ </details>
+ <div class="entry-group face-choices" id="face-choices" aria-label="原生GNM五官对比">
+  <strong>五官对照</strong>
+  <button data-face-identity="neutral" aria-pressed="false" title="GNM中性">中性</button>
+  <button data-face-identity="long_narrow" aria-pressed="false" title="长脸窄颌 · 长鼻薄唇">长脸窄颌</button>
+  <button data-face-identity="short_broad" aria-pressed="false" title="短脸宽颧 · 短鼻丰唇">短脸宽颧</button>
+  <button data-face-identity="square_jaw" aria-pressed="false" title="方颌低眉 · 阔口直鼻">方颌低眉</button>
+  <button id="undo-face-identity" title="撤回五官切换" aria-label="撤回五官切换" disabled>撤回</button>
+ </div>
+ <button id="cancel-entry" hidden>取消 / 返回人物</button>
+ <output id="entry-status" aria-live="polite">选人物看形态差别，或进入擂台、场外活动。</output>
+</nav>
+<main>
+ <section class="model-stage" aria-label="同一个共同模型">
+  <div class="viewport" id="stage">
+   <canvas id="canvas" aria-label="固定拓扑共同人物三维画面"></canvas>
+   <div class="load-overlay" id="load-overlay">
+    <div class="load-card">
+     <h1>先选一个人</h1>
+     <p>从人物库选形态，或直接进入擂台和场外。</p>
+     <button id="load-model">载入默认人物</button>
+     <button id="cancel-load" hidden>取消载入</button>
+     <progress id="load-progress" max="1" value="0" hidden></progress>
+     <p id="load-status" role="status">首次选择时载入原模型</p>
+    </div>
+   </div>
+   <div class="stage-hint">共同人物 · 同一张网格</div>
+   <div class="model-caption" id="model-caption">25,417 顶点 · 50,624 三角面</div>
+  </div>
+  <div class="view-tools" aria-label="查看模型">
+   <button data-view="three">3/4</button>
+   <button data-view="front">正面</button>
+   <button data-view="rear">背面</button>
+   <button data-view="side">侧面</button>
+   <button data-view="face">面部</button>
+   <button id="view-reset">复位</button>
+   <details class="stage-validation">
+    <summary>模型检查</summary>
+    <div class="stage-validation-content">
+     <button id="skin-settings" aria-expanded="false" aria-controls="skin-panel" disabled>皮肤基础版</button>
+     <button id="wireframe" aria-pressed="false">线框</button>
+     <button id="neck-band" aria-pressed="false">颈部检查</button>
+     <div class="model-status" id="model-status" role="status">参数目录不等于映射验收；完整性按部位列出。</div>
+    </div>
+   </details>
+   <span class="muted">拖动旋转 · 滚轮缩放</span>
+  </div>
+ </section>
+ <aside id="control-shell" class="control-shell" aria-label="36个人物预设与后台参数">
+  <div id="preset-browser" class="preset-host"></div>
+  <div id="advanced-bar" class="advanced-bar" hidden>
+   <button id="close-all-parameters">← 返回人物预设</button>
+   <span>后台参数 · 搜索 / 保存 / 恢复</span>
+  </div>
+  <div id="parameters" class="parameter-host" aria-label="全部原生参数" hidden></div>
+ </aside>
+</main>
+<script>
+(function(){
+ var bootToken=new URL(location.href).searchParams.get('boot'),documentToken=Date.now()+'-'+Math.random().toString(36).slice(2);
+ window.r54Identity={bootToken:bootToken,documentToken:documentToken};
+ window.r54NativeAccepted=!!parent.r54RegisterNative&&parent.r54RegisterNative({bootToken:bootToken,documentToken:documentToken,timeOrigin:performance.timeOrigin});
+ window.r54Send=function(type,payload){if(!window.r54NativeAccepted)return;if(type==='r54-progress')return parent.r54Progress(Object.assign({bootToken:bootToken,documentToken:documentToken},payload||{}));parent.postMessage(Object.assign({type:type,bootToken:bootToken,documentToken:documentToken},payload||{}),location.origin);};
+ window.r54Trace=function(kind,payload){return parent.r54Checkpoint&&parent.r54Checkpoint({bootToken:bootToken,documentToken:documentToken,kind:kind,payload:payload});};
+ window.r54AssertStartupActive=function(){if(!window.r54NativeAccepted||!parent.r54StartupActive(bootToken,documentToken))throw Error('当前启动已停止，不再继续创建场景');};
+ if(!window.r54NativeAccepted)return;
+ window.r54Send('r54-progress',{message:'1/5 正在加载原生引擎与外观模块'});
+ window.addEventListener('error',function(e){if(e.message)window.r54Send('r54-error',{message:'原生页面错误：'+e.message});});
+ window.addEventListener('unhandledrejection',function(e){window.r54Send('r54-error',{message:'原生页面错误：'+String(e.reason&&e.reason.message||e.reason)});});
+ document.addEventListener('webglcontextlost',function(e){window.r54Trace('webglcontextlost',{statusMessage:String(e.statusMessage||''),canvas:{width:e.target.width,height:e.target.height}});window.r54Send('r54-context-lost',{message:'三维绘图上下文已丢失，已停止启动，没有自动重试。请保留本机启动记录。'});},true);
+ document.addEventListener('webglcontextcreationerror',function(e){window.r54Trace('webglcontextcreationerror',{statusMessage:String(e.statusMessage||'')});window.r54Send('r54-context-lost',{message:'三维绘图上下文未能创建，已停止启动。'});},true);
+ document.addEventListener('webglcontextrestored',function(){window.r54Trace('webglcontextrestored',{automaticResume:false});},true);
+})();
+</script>
+<script type="module">
+const send=(type,message)=>window.r54Send(type,{message});
+// Some WebKit network failures leave dynamic import pending. Bound only module
+// downloads; model computation and groom generation have their own progress.
+async function importWithDeadline(url,label){
+ let timer;
+ try{
+  return await Promise.race([
+   import(url),
+   new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+'在30秒内未能载入，请重新载入。')),30000);})
+  ]);
+ }finally{clearTimeout(timer);}
+}
+if(window.r54NativeAccepted&&!window.r54NativeStartPromise)window.r54NativeStartPromise=(async()=>{
+ window.r54AssertStartupActive();
+ await importWithDeadline(new URL('full/ui/browser-app.mjs?v=entry-r06-20261010',document.baseURI).href,'原生引擎模块');
+ window.r54AssertStartupActive();send('r54-progress','1/5 正在加载发眼组件');
+ const module=await importWithDeadline(new URL('install-preview.mjs?v=r54-startup-guard-5',location.href).href,'发眼组件');
+ window.r54AssertStartupActive();await module.mountPreview();
+})().catch(error=>send('r54-error','启动失败：'+error.message));
+</script>
+</body>
+</html>
+
+
