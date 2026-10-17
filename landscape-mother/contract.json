@@ -1,0 +1,91 @@
+{
+  "schema": "landscape-mother-kernel/v1",
+  "id": "landscape-mother-guilin-yangshuo-v001",
+  "title": "桂林阳朔一平方公里 Landscape Mother 内核样板",
+  "status": "experimental_visual_candidate",
+  "renderMode": "interactive-webgl2-3d",
+  "createdAt": "2026-08-30",
+  "source": {
+    "releaseTag": "guilin-native-12p5m-single-truth-v001",
+    "sourceTiffSha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+    "parentTileId": "native-r07-c02",
+    "parentTileFile": "native-r07-c02-2048x2048-i16.bin",
+    "parentTileSha256": "5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215",
+    "parentTileBytes": 8388608,
+    "hydrologyManifest": "osm-waterways-manifest.json"
+  },
+  "sample": {
+    "crs": "EPSG:32649",
+    "center": [448643.75, 2740856.25],
+    "bounds": [448143.75, 2740356.25, 449143.75, 2741356.25],
+    "sideM": 1000,
+    "areaKm2": 1,
+    "truthGrid": [81, 81],
+    "truthSpacingM": 12.5,
+    "desktopSubdivision": 8,
+    "desktopRenderGrid": [641, 641],
+    "desktopRenderSpacingM": 1.5625,
+    "mobileSubdivision": 4,
+    "mobileRenderGrid": [321, 321],
+    "mobileRenderSpacingM": 3.125,
+    "parentTileWindow": [1330, 521, 81, 81],
+    "sourcePixelWindowInteger": true
+  },
+  "seeds": {
+    "shape": 326492026,
+    "fracture": 440923,
+    "strata": 8157341,
+    "color": 730119,
+    "moisture": 110156,
+    "field": 20260830,
+    "sediment": 913721
+  },
+  "formationHierarchy": {
+    "macro": ["truth-elevation", "slope", "curvature", "tpi", "ridge-valley", "water-distance"],
+    "meso": ["profile-recurve", "fracture-branch", "strata-band", "rill", "sediment-shelf", "field-unit"],
+    "micro": ["grain", "pore", "micro-ridge", "roughness", "micro-normal", "ambient-occlusion"]
+  },
+  "displacementBudget": {
+    "surfaceMaxAbsM": 1.25,
+    "fieldMaxAbsM": 0.45,
+    "sourceNodeMaxErrorM": 0.000001,
+    "sourceCellMeanAbsDeltaM": 0.24,
+    "macroBlurMaxAbsDeltaM": 0.40,
+    "peakShiftMaxM": 25.0
+  },
+  "brickMotherTransfer": {
+    "independentSeeds": true,
+    "multiScaleHierarchy": true,
+    "domainWarp": true,
+    "ridgedFbm": true,
+    "cellularPlates": true,
+    "separationMasks": true,
+    "autoLevel": true,
+    "clarity": true,
+    "clut5": true,
+    "splatWeights": true,
+    "correlatedGeometryColorRoughnessNormalAo": true,
+    "uniformFullSurfaceSpeckleDominant": false
+  },
+  "rules": {
+    "truthOverwrite": false,
+    "sourceResampling": false,
+    "syntheticGapFill": false,
+    "verticalScale": 1.0,
+    "proceduralMacroMountains": false,
+    "manualWaterway": false,
+    "syntheticWaterway": false,
+    "materialTextureCount": 0,
+    "terrainImageTextureCount": 0,
+    "imageFileCount": 0,
+    "screenshotArtifactCount": 0,
+    "plantLayerCount": 0,
+    "vegetationInstanceCount": 0,
+    "interactive3DRequired": true,
+    "numericQaOnly": true
+  },
+  "approvals": {
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
