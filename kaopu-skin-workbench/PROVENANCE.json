@@ -1,0 +1,124 @@
+{
+  "schema": "kaopu-skin-provenance/1",
+  "sources": {
+    "anny": {
+      "commit": "d6fc027ced5c17b6b0775dee944096ade7a9ef80",
+      "version": "0.6.1",
+      "license": "Apache-2.0 code; CC0 MakeHuman-derived data"
+    },
+    "gnm": {
+      "commit": "940c36b850d951f14203e751463bc9b422900fad",
+      "assetURL": "https://raw.githubusercontent.com/xrblocks/assets-gnm/134feb02b11fa642a43ff5e7e880246255a74e86/gnm_head_web.bin",
+      "assetSHA256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961",
+      "license": "Apache-2.0 with retained original tongue MIT notice"
+    },
+    "mhr": {
+      "commit": "d96fafa33bbf018647c70c3525e91f53e79d2a14",
+      "assetRelease": "v1.0.1",
+      "sourceModelSHA256": "352e271a6c42729c68554ceaea0c955e866970160c31e35506d782dc0f7377bc",
+      "license": "Apache-2.0 code and assets"
+    },
+    "three": "r170 MIT"
+  },
+  "canonical": {
+    "vertices": 25417,
+    "triangles": 50624,
+    "immutableTopology": true,
+    "protectedFacialEyeOralVertices": 9947,
+    "headRig": "explicit continuous geodesic neck02/head blend",
+    "originalTeachersModified": false,
+    "headScale": "distance from Anny head joint to fixed cranial-top vertex881; not neck length"
+  },
+  "coverage": {
+    "identityChannels": 1,
+    "totalIdentityChannels": 45,
+    "modelPoseChannels": 0,
+    "totalModelPoseChannels": 204,
+    "expressionChannels": 0,
+    "totalExpressionChannels": 72,
+    "activeCanonicalBodyVertices": 1843,
+    "canonicalBodyVertices": 9253
+  },
+  "adapterFingerprint": "97e9c5782fd40bda67cfd203b4d57a93a9132720a06dec2eb2f754fd7d8dd94c",
+  "topologySha256": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+  "skin": {
+    "authors": "KAOPU independent procedural implementation",
+    "reference": "https://www.reallusion.com/character-creator/skingen-function.html",
+    "proprietaryTexturesUsed": false,
+    "teacherGeometryModified": false,
+    "uvRequired": false,
+    "coordinate": "immutable neutral canonical metres",
+    "regionMapping": "official GNM material_id/region_id via canonical recipes; no UV assumptions for Anny",
+    "skinTextureBytes": 0,
+    "logicalGPUAttributeBytes": 813344,
+    "actualVRAMMeasured": false,
+    "realSSS": false,
+    "modelCompatibility": "exact canonical topology only, not universal among teachers"
+  },
+  "verification": {
+    "CPU": "research/skin-model-report.json",
+    "browser": {
+      "runtimeCommit": "3dee6662babe3b3ad678b0b14043b23364665f8a",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/37436542796",
+      "Chromium": "143.0.7499.4",
+      "LinuxWebKit": "26.0",
+      "passed": true,
+      "skinChangesGeometry": false,
+      "referenceStableAcrossBodyPose": true,
+      "twentyEntryCycles": true,
+      "staticAndCameraReturnPixelIdentical": true,
+      "contextRestored": true,
+      "nonGetRequests": []
+    },
+    "visual": {
+      "screenshotsInspected": true,
+      "neutralLightThreeProfiles": true,
+      "microdetailLayerOnOff": true,
+      "limitations": [
+        "No true SSS or full cornea/iris renderer",
+        "Not scan-grade or SkinGen-equivalent",
+        "Original face geometry, eyebrows and eyelashes unchanged"
+      ],
+      "stageAcceptance": "accepted for independent user testing; not SkinGen-equivalent"
+    },
+    "physicalIPhone": false
+  },
+  "files": {
+    "src/app.js": {
+      "bytes": 13691,
+      "sha256": "9acee8fff4e5f9a7297062944a51fb0e8b2f213171477ee9437b34bd3e333062"
+    },
+    "src/UnifiedModel.js": {
+      "bytes": 9242,
+      "sha256": "499f11d2d6857bbba8164e0c96cbee68282386a4424ef7f963dbee8a776ca941"
+    },
+    "src/GNMModel.js": {
+      "bytes": 20105,
+      "sha256": "e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f"
+    },
+    "src/AnnyModel.js": {
+      "bytes": 17601,
+      "sha256": "d313e8d2e0f722247f048b261b968c9eda2adfb03942db81c63fb000ea0c90ca"
+    },
+    "src/SkinMaterial.js": {
+      "bytes": 7427,
+      "sha256": "0b07978ab338ec43f6f560f3ead9e99c7514a233eb99a86d04fd4c2550fe957d"
+    },
+    "assets/canonical.json.gz": {
+      "bytes": 521707,
+      "sha256": "89b13a580788fb0433bff9644a3be622fbcd5cbac163387eb0977d2f08ed884a"
+    },
+    "assets/mhr-torso-delta.json.gz": {
+      "bytes": 113269,
+      "sha256": "04baf46176f42984bfc847dc982426037e1e745bcfe0aed8f60bd6c09be654ac"
+    },
+    "vendor/OrbitControls.js": {
+      "bytes": 32134,
+      "sha256": "80efaadea4f8a636a65fb0bd08bfef62f3d93a0bb94e2e7500f23176c5c07f4e"
+    },
+    "vendor/three.module.js": {
+      "bytes": 1314681,
+      "sha256": "ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb"
+    }
+  }
+}
