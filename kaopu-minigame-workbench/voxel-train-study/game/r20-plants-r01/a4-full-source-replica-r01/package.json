@@ -1,0 +1,13 @@
+{
+  "name": "a4-full-source-replica-r01",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-original-recovery-node.mjs && node tests/original-recovery-negative.mjs && python tests/check-payload-lock.py && python tests/check-viewer-dependencies.py",
+    "test:browser": "node tests/browser.cjs"
+  },
+  "dependencies": {
+    "three": "0.170.0",
+    "@napi-rs/canvas": "0.1.100"
+  }
+}
