@@ -1,0 +1,40 @@
+name: Train math adapter R01 (read-only)
+on:
+  push:
+    branches: [work/train-math-adapter-r01-20261009]
+    paths:
+      - 'kaopu-minigame-workbench/assembly/train-math-r01/**'
+      - '.github/workflows/train-math-adapter-r01.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows
+            kaopu-minigame-workbench/assembly/train-math-r01
+            kaopu-minigame-workbench/voxel-train-study
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public handoff bytes and freeze anchors
+        run: python3 kaopu-minigame-workbench/assembly/train-math-r01/verify-receipt.py
+      - name: Run the unchanged sender's six verification groups
+        run: node kaopu-minigame-workbench/assembly/train-math-r01/source/verify_rules.mjs | tee evidence/source-groups.json
+      - name: Test mathematical adapter and actual Session plus Three integration
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test kaopu-minigame-workbench/assembly/train-math-r01/tests/*.mjs | tee evidence/tests.tap
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: train-math-adapter-r01-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: error
