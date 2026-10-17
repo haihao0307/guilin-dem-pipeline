@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {buildDrivingWheel} from '../src/driving-wheel.mjs';
+let triangles=0;
+for(const opts of [{},{treadDiameter:2.1},{spokeCount:18}]){const w=buildDrivingWheel(opts);assert.equal(w.nominalTreadDiameter,opts.treadDiameter??2.032);assert.equal(w.parts.filter(p=>p.name.startsWith('spoke-')).length,opts.spokeCount??20);for(const p of w.parts){assert(p.positions.every(Number.isFinite));assert.equal(p.normals.length,p.positions.length);assert.equal(p.uvs.length,p.positions.length/3*2);for(let i=0;i<p.indices.length;i+=3){const v=p.indices.slice(i,i+3).map(j=>p.positions.slice(j*3,j*3+3)),a=v[1].map((x,k)=>x-v[0][k]),b=v[2].map((x,k)=>x-v[0][k]),c=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],area=Math.hypot(...c);assert(area>1e-12,p.name+' degenerate');const n=p.normals.slice(p.indices[i]*3,p.indices[i]*3+3);assert(c.reduce((x,y,k)=>x+y*n[k],0)>0,p.name+' normal/winding');triangles++;}}}
+assert.throws(()=>buildDrivingWheel({treadDiameter:NaN}));assert.throws(()=>buildDrivingWheel({spokeCount:3}));const src=fs.readFileSync(new URL('../src/driving-wheel.mjs',import.meta.url),'utf8');assert(!/fetch\(|readFile|\.bin|source-assets|residual/.test(src.replace(/\/\*[^]*?\*\//g,'')));console.log(JSON.stringify({pass:true,trianglesChecked:triangles,sourceAssetRequests:0}));
