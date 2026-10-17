@@ -106,7 +106,17 @@ async function load(url,label,candidate){
  await p.waitForFunction(()=>window.__R05_PRESET_READY__===true,null,{timeout:180000});
  if(candidate){await p.waitForFunction(()=>window.lipRealism?.ready===true,null,{timeout:180000});assert.equal(await p.evaluate(()=>lipRealism.version),VERSION);}
  await p.evaluate(()=>{window.lifelikeIdle?.pause?.();const v=__IDENTITY_QA__.viewer();v.orbit.autoRotate=false;v.orbit.enableDamping=false;v.render();});
- q[label]={url,httpStatus:response.status(),readyMS:Date.now()-start,host};return p;
+ q[label]={url,httpStatus:response.status(),readyMS:Date.now()-start,host};checkpoint();
+ // Finish this page's native startup queue before another page is loaded.
+ // This drain requests no additional viewer render and keeps the same 180s limit.
+ const drain=await stage('startup GPU drain '+label,()=>p.evaluate(()=>{
+  const v=__IDENTITY_QA__.viewer(),r=v.renderer,gl=r.getContext(),pixel=new Uint8Array(4),frameBefore=r.info.render.frame,started=performance.now();
+  const errorBefore=gl.getError();gl.finish();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+  return{method:'synchronous CPU readPixels after native readiness; no new viewer render',elapsedMS:performance.now()-started,rendererFrameBefore:frameBefore,rendererFrameAfter:r.info.render.frame,drawCalls:r.info.render.calls,triangles:r.info.render.triangles,width:gl.drawingBufferWidth,height:gl.drawingBufferHeight,errorBefore,error:gl.getError(),contextLost:gl.isContextLost(),rgba:Array.from(pixel)};
+ }));
+ q[label].startupDrain=drain;q[label].readyAndDrainedMS=Date.now()-start;checkpoint();
+ assert.equal(drain.errorBefore,0,label+' GPU error before startup drain');assert.equal(drain.error,0,label+' GPU error during startup drain');assert.equal(drain.contextLost,false,label+' context lost during startup drain');
+ assert(drain.rendererFrameAfter>0&&drain.drawCalls>0&&drain.triangles>0,label+' native startup did not submit a populated scene');return p;
 }
 async function screenshot(p,name,timeoutMS=120000){
  const b=await bounded('screenshot '+name,async()=>{
@@ -291,8 +301,10 @@ async function performanceChecks(base,p){return test(PERFORMANCE_TEST,async()=>{
  q.performanceMethod={entry:'full existing viewer.render() chain, including host material and diffusion wrappers',completion:'same-callback synchronous CPU readPixels, after gl.finish; every measured sample requires a real native scene draw',order:['baseline','candidate','candidate','baseline'],warmupPerBlock:2,measuredPerBlock:6,views:['macro','bust'],pureGPUTimer:false,interactiveFPS:false};checkpoint();
  try{for(const kind of['macro','bust']){
   progress('performance '+kind,'start');
-  await view(base,kind);await view(p,kind);const protectedState=await state(base);assert.deepEqual(await state(p),protectedState,'Performance A/B camera, lights, or skin differ in '+kind);
-  const verifiedFrames={baseline:small(await frame(base,'performance-baseline-'+kind)),candidate:small(await frame(p,'performance-candidate-'+kind))};
+  await stage('performance '+kind+' view baseline',()=>view(base,kind));await stage('performance '+kind+' view candidate',()=>view(p,kind));
+  const protectedState=await stage('performance '+kind+' state baseline',()=>state(base)),candidateState=await stage('performance '+kind+' state candidate',()=>state(p));
+  assert.deepEqual(candidateState,protectedState,'Performance A/B camera, lights, or skin differ in '+kind);
+  const verifiedFrames={baseline:small(await stage('performance '+kind+' guard frame baseline',()=>frame(base,'performance-baseline-'+kind))),candidate:small(await stage('performance '+kind+' guard frame candidate',()=>frame(p,'performance-candidate-'+kind)))};
   const samples={baseline:[],candidate:[]},blocks=[];
   for(const[blockIndex,[label,target]]of[['baseline',base],['candidate',p],['candidate',p],['baseline',base]].entries()){
    const block={index:blockIndex,label,warmup:[],measured:[]};blocks.push(block);
