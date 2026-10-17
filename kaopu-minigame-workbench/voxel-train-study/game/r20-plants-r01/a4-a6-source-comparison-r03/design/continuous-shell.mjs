@@ -51,13 +51,30 @@ export function stripeAt(x){return .86+1.43*ease5((x-AUTHORING_D.noseX)/(authori
  */
 export const GLASS_FRONT_X=authoringX(DESIGN_LAYOUT.glassFrontSourceZ);
 export const GLASS_REAR_X=authoringX(DESIGN_LAYOUT.glassRearSourceZ);
+// The forward sill is the intersection of the unchanged shell with ONE convex
+// transverse parabola. Its frontal projection is a smooth single arc, including
+// a horizontal tangent at the centreline. Do not multiply a section angle by a
+// longitudinal taper: that creates a centre cusp and two projected side valleys.
+export const WINDSHIELD_LOWER_ARC=Object.freeze({
+ centreSourceY:sectionAt(GLASS_FRONT_X)[2]+SOURCE_FIT.verticalOffset,
+ sourceQuadraticCoefficient:.13,
+ transitionStartSourceZ:8.50,transitionEndSourceZ:7.50,
+ rule:'Y = centreSourceY + 0.13 * sourceX^2; exact shell intersection'
+});
 export function glassBoundaryT(x){
  if(x<GLASS_FRONT_X||x>GLASS_REAR_X)return 0;
  const z=SOURCE_FIT.locoEndSourceZ+(SOURCE_FIT.locoAuthoringEnd-x)*.92,sec=sectionAt(x);
- const front=ease5((DESIGN_LAYOUT.glassFrontSourceZ-z)/1.35),rear=ease5((z-DESIGN_LAYOUT.glassRearSourceZ)/1.45);
- // Non-horizontal swept sill: high at forward return, shallow waist over driver.
- const sillSourceY=3.28+.13*ease5((z-4.8)/2.8)+.05*ease5((2.2-z)/1.3)-.50*ease5((z-8.5)/2.0);
- return tAtZ(sec,sillSourceY-SOURCE_FIT.verticalOffset)*Math.sqrt(front*rear);
+ const rear=ease5((z-DESIGN_LAYOUT.glassRearSourceZ)/1.45);
+ const sideSillSourceY=3.28+.13*ease5((z-4.8)/2.8)+.05*ease5((2.2-z)/1.3);
+ const blend=ease5((WINDSHIELD_LOWER_ARC.transitionStartSourceZ-z)/(WINDSHIELD_LOWER_ARC.transitionStartSourceZ-WINDSHIELD_LOWER_ARC.transitionEndSourceZ));
+ if(blend>=1)return tAtZ(sec,sideSillSourceY-SOURCE_FIT.verticalOffset)*Math.sqrt(rear);
+ const residual=t=>{const [u,y]=sectionPoint(sec,t),sx=u*SOURCE_FIT.transverseScale;
+  const frontY=WINDSHIELD_LOWER_ARC.centreSourceY+WINDSHIELD_LOWER_ARC.sourceQuadraticCoefficient*sx*sx;
+  return y+SOURCE_FIT.verticalOffset-((1-blend)*frontY+blend*sideSillSourceY);
+ };
+ if(residual(0)<=1e-12)return 0;
+ let lo=0,hi=1;for(let i=0;i<44;i++){const t=(lo+hi)/2;if(residual(t)>0)lo=t;else hi=t;}
+ return (lo+hi)/2*Math.sqrt(rear);
 }
 export function glassBoundaryPoint(x,side=1){return shellPoint(x,glassBoundaryT(x),side);}
 export function createContinuousShell(T,D,materials){
