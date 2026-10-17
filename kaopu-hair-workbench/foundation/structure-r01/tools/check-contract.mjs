@@ -20,4 +20,7 @@ bad('reject detached cut metadata',()=>{const x=structuredClone(lab);x.guides[0]
 bad('reject active mask disagreement',()=>{const x=structuredClone(lab);x.activeMask[x.guides[0].rootId]=false;assertStructure(x,roots);});
 bad('reject nonfinite root records',()=>{const r=roots.slice();r[4]=NaN;assertStructure(lab,r);});
 bad('reject nonfinite declared guide length',()=>{const x=structuredClone(lab);x.guides[0].length=NaN;assertStructure(x,roots);});
+bad('reject zero part width',()=>{const p=structuredClone(PROFILE);p.PartingCurves[0].width=0;assertProfile(p);});
+bad('reject nonfinite root lift',()=>{const p=structuredClone(PROFILE);p.RootLiftField.hairline=NaN;assertProfile(p);});
+bad('reject comb editing below authorized arc',()=>{const p=structuredClone(PROFILE);p.GuideGroom.editArc=.20;assertProfile(p);});
 const result={pass:true,checks};fs.writeFileSync(new URL('evidence/contract-checks.json',base),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

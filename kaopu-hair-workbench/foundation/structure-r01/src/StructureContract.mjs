@@ -7,6 +7,10 @@ export function assertProfile(p){
  if(p.ScalpDomain.policy!=='approved-source-only'||p.ScalpDomain.sourceLock!=='F02.1@ee3c7fac9f187dd9e5dc81d1363c4814b9a015a3'||p.ScalpDomain.postProjectionClip!==false||p.ScalpDomain.lowerHairline)throw Error('Approved scalp boundary cannot be overridden by a second clip');
  if(p.CandidateRootField.resample!==false)throw Error('Candidate follicles must preserve stable binding');
  for(const part of p.PartingCurves){if(part.points.length<2||part.points.some(q=>q.length!==3||q.some(x=>!Number.isFinite(x))))throw Error('Invalid parting curve');}
+ for(const part of p.PartingCurves)if(!Number.isFinite(part.width)||part.width<.003||part.width>.025)throw Error('Part influence width outside controlled range');
+ if(![p.RootLiftField.hairline,p.RootLiftField.interior].every(v=>Number.isFinite(v)&&v>=0&&v<=.5))throw Error('Invalid root lift');
+ if(!Number.isFinite(p.RootDirectionField.minimumVectorMagnitude)||p.RootDirectionField.minimumVectorMagnitude<=0||p.RootDirectionField.minimumVectorMagnitude>1)throw Error('Invalid tangent regularization');
+ if(p.GuideGroom.editArc>.085||p.GuideGroom.fringeEditArc>.050)throw Error('Comb edit escaped authorized upper arc');
  for(const w of p.WhorlField)if(!(w.radius>0)||w.strength<0||w.strength>1||!(w.coreRadius>0)||w.coreRadius>=w.radius)throw Error('Invalid whorl');
  if(p.GuideGroom.samples<33||p.GuideGroom.highFrequency!==false)throw Error('Phase one requires complete low-frequency guides');
  if(p.ClumpGraph.levels.join('/')!=='macro/mid/micro'||p.ClumpGraph.crossPart!==false)throw Error('Explicit hierarchical groups required');

@@ -3,7 +3,7 @@ import fs from 'node:fs';import zlib from 'node:zlib';import crypto from 'node:c
 import {unpackExperiment} from '../src/ExperimentTransport.mjs';
 import {assertStructure} from '../src/StructureContract.mjs';
 const base=new URL('../',import.meta.url),read=p=>fs.readFileSync(new URL(p,base)),load=p=>JSON.parse(zlib.gunzipSync(read(p))),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
-const baseline=load('assets/structure.json.gz'),manifest=JSON.parse(read('assets/ASSET_MANIFEST.json')),runtime=JSON.parse(read('BUILD_MANIFEST.json')).htmlSHA256;
+const baseline=load('assets/structure.json.gz');if(baseline.profile.revision!=='scalp-restore-04')throw Error('Historical R04 audit. Use tools/check-flow06.mjs for current parameter-driven structure.');const manifest=JSON.parse(read('assets/ASSET_MANIFEST.json')),runtime=JSON.parse(read('BUILD_MANIFEST.json')).htmlSHA256;
 const dot=(a,b)=>a.reduce((s,v,k)=>s+v*b[k],0),sub=(a,b)=>a.map((v,k)=>v-b[k]),unit=v=>v.map(x=>x/(Math.hypot(...v)||1)),angle=(a,b)=>Math.acos(Math.max(-1,Math.min(1,dot(unit(a),unit(b)))))*180/Math.PI;
 const quantile=(a,p)=>a.slice().sort((a,b)=>a-b)[Math.floor((a.length-1)*p)];
 const cases=[];
