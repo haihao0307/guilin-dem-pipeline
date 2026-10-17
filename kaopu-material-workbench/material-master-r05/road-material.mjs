@@ -18,15 +18,17 @@ export const ROAD_MATERIAL_GLSL=String.raw`
 varying vec3 vRoadRest;varying float vRoadMacro,vRoadFace;varying vec3 vRoadObjectN;
 struct RoadStone{float stone;float id;float crown;};
 RoadStone roadStone(vec2 p,float fp){
- float scale=uRoadFamily>.5?.014:.011;vec2 q=p/scale;ivec2 ij=ivec2(floor(q));float best=1e6,id=0.,radius=.3;
- for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){ivec2 k=ij+ivec2(i,j);float rnd=roadHash(k,uRoadSeed+41);vec2 c=vec2(k)+.16+.68*vec2(rnd,roadHash(k,uRoadSeed+42));float d=length(q-c);if(d<best){best=d;id=rnd;radius=.25+.15*roadHash(k,uRoadSeed+43);}}
- float aa=max(fp/scale*.65,.025);float pebble=1.-smoothstep(radius-aa,radius+aa,best);float crown=1.-smoothstep(0.,radius,best);float resolved=1.-smoothstep(.003,.014,fp);
- return RoadStone(mix(.48,pebble,resolved),id,crown*resolved);
+ float scale=uRoadFamily>.5?.016:.012;vec2 q=p/scale;ivec2 ij=ivec2(floor(q));float best=1e6,id=0.,radius=.3;
+ // Randomly oriented irregular angular sections with a broad size distribution.
+ // Compare surfaces, not centre distances, so large and small grains coexist.
+ for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){ivec2 k=ij+ivec2(i,j);float rnd=roadHash(k,uRoadSeed+41);vec2 c=vec2(k)+.12+.76*vec2(rnd,roadHash(k,uRoadSeed+42));vec2 d=q-c;float angle=6.2831853*roadHash(k,uRoadSeed+44),ca=cos(angle),sa=sin(angle);d=mat2(ca,-sa,sa,ca)*d;d*=vec2(.72+.7*roadHash(k,uRoadSeed+45),.8+.65*roadHash(k,uRoadSeed+46));float r=.10+.48*pow(roadHash(k,uRoadSeed+43),1.65);float facet=max(abs(d.x),max(abs(dot(d,vec2(.42,.91))),abs(dot(d,vec2(-.64,.77)))));float sd=facet-r;if(sd<best){best=sd;id=rnd;radius=r;}}
+ float aa=max(fp/scale*.55,.012),pebble=1.-smoothstep(-aa,aa,best);float crown=clamp(-best/max(radius,.08),0.,1.);float resolved=1.-smoothstep(.003,.014,fp);
+ return RoadStone(mix(.32,pebble,resolved),id,crown*resolved);
 }
 vec2 roadSurfaceUV(vec3 p){vec3 n=abs(vRoadObjectN);if(vRoadFace>.5)return p.xz;if(n.x>n.z)return p.zy;return p.xy;}
 float roadFineHeight(vec3 p,float fp,RoadDamage damage){
  vec2 uv=roadSurfaceUV(p);RoadStone stone=roadStone(uv,fp);bool concrete=uRoadFamily>.5;
- float exposure=concrete?(.10+.76*damage.exposure):(.48+.48*damage.exposure);
+ float exposure=concrete?(.10+.76*damage.exposure):(.25+.48*damage.exposure);
  float h=(stone.crown-.24)*(concrete?.00065:.0013)*exposure;
  if(concrete)h+=roadConcreteMother(p,uRoadWear*uRoadVariant,0.,damage.repairMask,fp).height;
  float fines=(roadNoise(uv*440.,uRoadSeed+49)-.5)*(1.-smoothstep(.0009,.004,fp));
@@ -46,10 +48,10 @@ RoadClosure roadClosure(vec3 p,float fp){
  float top=step(.5,vRoadFace);float depth=uRoadTopY-p.y;float sectionCrack=(1.-smoothstep(damage.depth*.5,damage.depth+.018,depth))*(1.-top);
  float fractureAA=max(fwidth(potential.distance),.00005);float fractureFiltered=1.-smoothstep(potential.halfWidth-fractureAA,potential.halfWidth+fractureAA,potential.distance);
  float fracture=damage.core;fracture=mix(fracture,fractureFiltered*smoothstep(.025,.44,wear*potential.activity)*(1.-damage.repairMask),smoothstep(.002,.009,fp));fracture*=top+sectionCrack;
- float exposure=concrete?(.07+.83*damage.exposure):(.43+.52*damage.exposure);exposure=mix(1.,exposure,top);
+ float exposure=concrete?(.07+.83*damage.exposure):(.25+.48*damage.exposure);exposure=mix(concrete?.68:.60,exposure,top);
  RoadMother mother=roadConcreteMother(p,wear,0.,damage.repairMask,fp);
  vec3 binder=concrete?mother.color:vec3(.027,.030,.032)*( .94+.12*potential.stress );
- vec3 aggregate=concrete?vec3(.25,.255,.24):vec3(.105,.111,.108);aggregate*=.64+.66*stone.id;
+ vec3 aggregate=concrete?vec3(.33,.33,.30):vec3(.060,.064,.062);aggregate*=.80+.34*stone.id;aggregate*=.94+.12*roadNoise(uv*690.,uRoadSeed+57);
  vec3 col=mix(binder,aggregate,stone.stone*exposure);
  // Cut section exposes the same aggregate/paste or binder, not a decorative separate noise map.
  if(!concrete){float baseCourse=1.-smoothstep(.041,.047,depth);col=mix(col*vec3(1.2,1.14,1.02),col,baseCourse);}
@@ -86,7 +88,7 @@ export function makeRoadMaterial(T,state){
   s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 roadDX=dFdx(-vViewPosition),roadDY=dFdy(-vViewPosition),roadR1=cross(roadDY,normal),roadR2=cross(normal,roadDX);float roadDet=dot(roadDX,roadR1);normal=normalize(abs(roadDet)*normal-sign(roadDet)*((dFdx(roadS.residual)+dot(roadS.fineGradient,dFdx(roadSurfaceUV(vRoadRest))))*roadR1+(dFdy(roadS.residual)+dot(roadS.fineGradient,dFdy(roadSurfaceUV(vRoadRest))))*roadR2));');
   s.fragmentShader=s.fragmentShader.replace('#include <opaque_fragment>','if(uRoadMode>.5&&uRoadMode<1.5)outgoingLight=vec3(clamp(.62+roadS.macro*22.,0.,1.));else if(uRoadMode>1.5&&uRoadMode<2.5)outgoingLight=vec3(roadS.rough);else if(uRoadMode>2.5&&uRoadMode<3.5)outgoingLight=roadS.damage;else if(uRoadMode>3.5&&uRoadMode<4.5)outgoingLight=roadS.layers;else if(uRoadMode>4.5)outgoingLight=normal*.5+.5;\n#include <opaque_fragment>');
  };
- material.customProgramCacheKey=()=>`r05-road-field-4-${state.family}`;
+ material.customProgramCacheKey=()=>`r05-road-field-5-${state.family}`;
  material.userData.update=()=>{for(const s of shaders){const v=s.uniforms;v.uRoadWear.value=state.wear;v.uRoadHistory.value=state.history;v.uRoadWet.value=state.wetness;v.uRoadRepair.value=state.repair;v.uRoadVariant.value=state.variant;v.uRoadMode.value=state.mode;v.uRoadMarkings.value=state.markings?1:0;}};
  material.userData.shaders=shaders;
  return material;

@@ -15,12 +15,15 @@ MetalSurface metalField(vec3 p,float fp){
  vec3 warp=vec3(mt_kn(p*3.7+vec3(7,2,4)),mt_kn(p*4.3+vec3(1,8,3)),mt_kn(p*3.1+vec3(6,1,9)))-.5;
  float field=mt_kfb(p*13.+warp*2.8+vec3(2.7,8.4,1.2));
  float scar=1.-smoothstep(.025,.105,abs(mt_kn(p*vec3(31.,4.,19.)+warp)-.52));
- float drive=field+.23*joint+.11*scar;
- float threshold=.96-.52*wear;
- float loss=smoothstep(threshold-.045,threshold+.035,drive)*wear;
- float exposed=smoothstep(threshold+.015,threshold+.105,drive)*wear;
+ float edgeGrain=(mt_kn(p*137.)-.5)*.075+(mt_kn(p*517.)-.5)*.025;
+ float drive=field+.19*joint+.055*scar+edgeGrain;
+ float threshold=1.02-.50*wear;
+ float damageActive=smoothstep(.01,.05,wear);
+ float loss=smoothstep(threshold-.004,threshold+.004,drive)*damageActive;
+ float exposed=smoothstep(threshold+.012,threshold+.020,drive)*damageActive;
  float intact=1.-loss,primer=max(loss-exposed,0.);
- float oxide=exposed*clamp(.22+.53*history+.28*joint,0.,1.);
+ float oxidation=smoothstep(.52-.20*history,.68-.20*history,mt_kn(p*91.+vec3(11,3,7))+.26*joint);
+ float oxide=exposed*oxidation;
  float bare=max(exposed-oxide,0.);
  float macroPit=smoothstep(.59,.84,mt_kn(p*78.+warp))*exposed;
  float micro=mt_kn(p*490.+vec3(11.));float fineGate=1.-smoothstep(.0007,.0035,fp);
@@ -49,5 +52,5 @@ export function makeMetalMaterial(T,{family,variant,origin,state,jointOrigins=[]
  s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat fp=max(length(dFdx(vRestM)),length(dFdy(vRestM)));MetalSurface ms=metalField(vRestM,fp);diffuseColor.rgb=ms.color;');
  s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=ms.rough;').replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor=ms.metal;');
  s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition),r1=cross(dy,normal),r2=cross(normal,dx);float det=dot(dx,r1);normal=normalize(abs(det)*normal-sign(det)*(dFdx(ms.height)*r1+dFdy(ms.height)*r2));');
- s.fragmentShader=s.fragmentShader.replace('#include <opaque_fragment>','if(uMode>.5&&uMode<1.5)outgoingLight=vec3(clamp(.5+ms.height*650.,0.,1.));if(uMode>1.5&&uMode<2.5)outgoingLight=vec3(ms.rough);if(uMode>2.5&&uMode<3.5)outgoingLight=vec3(ms.damage);if(uMode>3.5&&uMode<4.5)outgoingLight=ms.layers;if(uMode>4.5)outgoingLight=normal*.5+.5;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>`metal-layer-r05-${family}-${variant}`;return m;
+ s.fragmentShader=s.fragmentShader.replace('#include <opaque_fragment>','if(uMode>.5&&uMode<1.5)outgoingLight=vec3(clamp(.5+ms.height*650.,0.,1.));if(uMode>1.5&&uMode<2.5)outgoingLight=vec3(ms.rough);if(uMode>2.5&&uMode<3.5)outgoingLight=vec3(ms.damage);if(uMode>3.5&&uMode<4.5)outgoingLight=ms.layers;if(uMode>4.5)outgoingLight=normal*.5+.5;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>`metal-layer-r05-b-${family}-${variant}`;return m;
 }
