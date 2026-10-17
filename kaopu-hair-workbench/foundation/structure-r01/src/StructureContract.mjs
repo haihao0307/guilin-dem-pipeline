@@ -26,6 +26,7 @@ export function assertStructure(lab,roots){assertProfile(lab.profile);if(lab.sch
  // 0.1 micrometre accommodates serialized metre positions and Float32 roots.
  const distance=(a,b)=>Math.hypot(...a.map((v,k)=>v-b[k])),dot=(a,b)=>a.reduce((s,v,k)=>s+v*b[k],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
  for(const g of lab.guides){
+  if(!Number.isFinite(g.length)||g.length<=0)throw Error('Non-finite or invalid declared guide length');
   const N=g.points.length/3,at=n=>g.points.slice(n*3,n*3+3),offset=g.rootId*lab.stride,root=Array.from(roots.subarray(offset+4,offset+7));
   if(distance(at(0),root)>1e-7)throw Error('Guide first point detached from bound root');
   if(!g.cut||!Number.isFinite(g.cut.hem)||!Array.isArray(g.cut.endpoint)||g.cut.endpoint.length!==3||g.cut.endpoint.some(v=>!Number.isFinite(v))||distance(at(N-1),g.cut.endpoint)>1e-7||Math.abs(at(N-1)[1]-g.cut.hem)>1e-7)throw Error('Cut metadata disagrees with actual guide tip');

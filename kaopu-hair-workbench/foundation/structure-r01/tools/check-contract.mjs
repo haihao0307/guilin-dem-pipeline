@@ -19,4 +19,5 @@ bad('reject left-handed orthonormal frame',()=>{const x=structuredClone(lab);for
 bad('reject detached cut metadata',()=>{const x=structuredClone(lab);x.guides[0].cut.endpoint[0]+=.01;assertStructure(x,roots);});
 bad('reject active mask disagreement',()=>{const x=structuredClone(lab);x.activeMask[x.guides[0].rootId]=false;assertStructure(x,roots);});
 bad('reject nonfinite root records',()=>{const r=roots.slice();r[4]=NaN;assertStructure(lab,r);});
+bad('reject nonfinite declared guide length',()=>{const x=structuredClone(lab);x.guides[0].length=NaN;assertStructure(x,roots);});
 const result={pass:true,checks};fs.writeFileSync(new URL('evidence/contract-checks.json',base),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
