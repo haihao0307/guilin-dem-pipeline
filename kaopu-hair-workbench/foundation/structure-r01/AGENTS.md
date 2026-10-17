@@ -13,3 +13,5 @@ For temporal-region work also read `docs/TEMPLE-REGION-REVIEW-04.md`. The existi
 - Full hair remains a persistent scene layer. Diagnostic/region switches must not remove the complete hair or crop its tips. Keep the visibility regression checks.
 - Run the appropriate build and `check-approved-scalp`, contract, runtime, visibility and public checks. Report remaining problems honestly; no dense hair, optical or physical acceptance is implied by sparse guide validity.
 - Follow the user requirement: off-screen QA, no desktop mouse control, and stop a single task at three hours.
+
+The latest audit and learning order are in `docs/RESEARCH.md` under review 05. A declared profile field is not an implemented control: identify its consumer, coordinate frame and observable effect. Retained R03 curves are a repair safeguard, not the future general groom generator. Keep anatomy authority, generated style data and regression references distinct. Use actual root positions, measured curve arcs, curve-aligned right-handed frames and cut endpoints when checking geometric validity; orthogonality or monotonic metadata alone is insufficient.
