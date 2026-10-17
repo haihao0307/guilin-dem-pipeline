@@ -1,0 +1,188 @@
+{
+  "schema": "kaopu.frozen-generative-artifact-contract.v1",
+  "status": "user-approved-core-principle",
+  "date": "2026-09-19",
+  "maintainerRole": "Xiaomao / KAOPU coordination layer",
+  "purpose": "Allow expensive high-quality generation during production, then freeze accepted finite assets for fast deterministic runtime loading.",
+  "boundary": {
+    "coordinationOwns": [
+      "contract maintenance",
+      "artifact identity rules",
+      "manifest rules",
+      "cross-Mother adoption receipts",
+      "boundary and failure tracking"
+    ],
+    "coordinationMustNot": [
+      "implement another Mother's production code",
+      "set another Mother's visualAcceptance",
+      "replace domain truth or performance QA"
+    ],
+    "motherOwns": [
+      "domain truth",
+      "generator implementation",
+      "Seed DNA design",
+      "candidate generation",
+      "human visual review",
+      "frozen export",
+      "runtime and performance QA"
+    ]
+  },
+  "identity": {
+    "requiredComponents": [
+      "generatorVersion",
+      "seedDNA",
+      "parameterDNA",
+      "sourceTruthHash",
+      "coordinateAndScaleContract",
+      "qualityContract"
+    ],
+    "canonicalEncoding": "UTF-8 canonical JSON with recursively sorted keys, normalized units and normalized numeric representation",
+    "artifactId": {
+      "algorithm": "SHA-256",
+      "expression": "SHA256(canonicalGenerationIdentity)"
+    },
+    "rule": "An unchanged ArtifactID must load its accepted frozen artifact instead of regenerating."
+  },
+  "states": [
+    {
+      "id": "authoring",
+      "contains": [
+        "generatorVersion",
+        "seedDNA",
+        "parameterDNA",
+        "sourceTruth",
+        "coordinateSystem",
+        "qualityContract",
+        "generationEnvironment",
+        "parentArtifactId"
+      ]
+    },
+    {
+      "id": "frozen-runtime-artifact",
+      "contains": [
+        "geometry",
+        "materials",
+        "collisionOrDerivedRuntimeData",
+        "bounds",
+        "scale",
+        "fileHashes",
+        "artifactId",
+        "acceptance",
+        "runtimeCompatibility"
+      ]
+    },
+    {
+      "id": "local-runtime-cache",
+      "authority": false,
+      "purpose": "Secondary acceleration only"
+    }
+  ],
+  "seedDNA": {
+    "recommendedLayers": [
+      "master",
+      "shape",
+      "structure",
+      "damage",
+      "cavityOrPore",
+      "materialOrColor",
+      "waterOrWetness",
+      "weather",
+      "inclusionOrBiology",
+      "animationOrBehavior",
+      "detail"
+    ],
+    "isolationRules": [
+      "material seed must not change geometry",
+      "wetness seed must not change cavity placement",
+      "detail seed must not change macro silhouette",
+      "animation seed must not change body identity"
+    ]
+  },
+  "lifecycle": [
+    "G0-input-freeze",
+    "G1-expensive-candidate-generation",
+    "G2-structural-and-visual-QA",
+    "G3-human-acceptance",
+    "G4-frozen-export-and-file-hashing",
+    "G5-fixed-commit-or-CDN-publication",
+    "G6-runtime-load-of-frozen-artifact",
+    "G7-local-secondary-cache",
+    "G8-explicit-new-version-only"
+  ],
+  "authorityOrder": [
+    "fixed-commit-or-CDN-frozen-artifact",
+    "validated-local-cache-with-same-ArtifactID",
+    "authoring-generator-only-when-explicitly-enabled"
+  ],
+  "timeScaleRule": {
+    "statement": "A natural object's macro identity may be frozen when its change is imperceptible within the product or game time span.",
+    "staticExamples": [
+      "mountain macro shape",
+      "rock strata and major cavities",
+      "islands, reef platform and seabed foundation",
+      "historic masonry and components",
+      "accepted biological body mother"
+    ],
+    "dynamicExamples": [
+      "waves and tides",
+      "weather and clouds",
+      "wetness and seasonal state",
+      "animation and behavior phase",
+      "explicit designed destruction events"
+    ]
+  },
+  "qualityPolicy": {
+    "priority": "quality-first",
+    "allowedGenerationTime": "unbounded by runtime frame budget; hours or longer are acceptable when justified",
+    "runtimePolicy": "Do not regenerate accepted assets by default.",
+    "optimizationOrder": [
+      "freeze accepted high-quality output",
+      "avoid runtime regeneration",
+      "compact binary representation",
+      "CDN and HTTP cache",
+      "browser local cache",
+      "on-demand chunks",
+      "stop idle redraw",
+      "Web Worker authoring regeneration"
+    ]
+  },
+  "immutability": {
+    "acceptedArtifactMayBeSilentlyOverwritten": false,
+    "algorithmChangeCreatesNewArtifactId": true,
+    "truthChangeCreatesNewArtifactId": true,
+    "qualityChangeCreatesNewArtifactId": true,
+    "oldAcceptedArtifactMustRemainTraceable": true
+  },
+  "requiredManifestFields": [
+    "schemaVersion",
+    "objectId",
+    "artifactId",
+    "parentArtifactId",
+    "generatorVersion",
+    "seedDNA",
+    "parameterDNAHash",
+    "sourceTruthHash",
+    "coordinateSystem",
+    "unitScale",
+    "qualityContract",
+    "files",
+    "visualAcceptance",
+    "productionReady",
+    "acceptedBy",
+    "acceptedAt",
+    "immutable",
+    "runtimeCompatibility"
+  ],
+  "prohibited": [
+    "seed-only cache keys",
+    "runtime regeneration on every page open",
+    "browser cache as sole authority",
+    "silent overwrite of accepted artifacts",
+    "hidden quality reduction for speed",
+    "mixing static identity with dynamic state",
+    "screenshots as substitutes for runtime artifacts",
+    "automatic visualAcceptance from tests",
+    "cross-Mother production implementation"
+  ],
+  "coreSentence": "Seeds and recipes provide rebuildability; frozen artifacts provide fast loading; hashes and versions prevent drift; human acceptance decides world truth."
+}
