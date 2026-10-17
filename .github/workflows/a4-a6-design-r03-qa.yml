@@ -1,14 +1,12 @@
-name: A4 A6 R03 unified source-backed design QA
+name: A4 A6 R03 public Pages actual viewport verification
 on:
   push:
-    branches: ['qa/a4-a6-source-comparison-r03-20261017', 'gh-pages']
-    paths:
-      - '.github/workflows/a4-a6-design-r03-qa.yml'
-      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/**'
+    branches: ['qa/a4-a6-source-comparison-r03-20261017']
+    paths: ['.github/workflows/a4-a6-design-r03-qa.yml', 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/tests/browser.cjs']
 permissions:
   contents: read
 jobs:
-  original-source:
+  public-pages:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     defaults:
@@ -18,84 +16,35 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: |
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r02/design/retained/branding
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Install pinned registry dependencies and official Chromium
-        id: install
+      - name: Install approved pinned Chromium testing dependencies
         run: |
           npm install --no-audit --no-fund
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Verify complete source bytes materials textures and animations
-        run: npm test && node tests/orthographic-acceptance.mjs
-      - name: Verify network failures deadlines retries and independent deduplicated restores
-        run: node tests/source-loading.mjs
-      - name: Load full local scene in real WebGL and test original animation
-        run: npm run test:browser
-      - name: Upload fixed-axis design views for visual review
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: axis-view-preview-${{ github.sha }}
-          path: |
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/01-source-side-comparison.png
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/02-source-front-comparison.png
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/04-shared-scale-side-driver-detail.png
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/05-driver-native-pixel-crop.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Verify A4 is rendered while Mark3 download is held then complete both pairs
+      - name: Wait for exact repaired public entry bytes, never test stale deployment
         env:
-          TEST_PARTIAL_LOADING: '1'
-          TEST_QA_DIR: qa/partial
+          ENTRY: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/
+        run: |
+          for attempt in $(seq 1 80); do
+            curl -fsSL --max-time 30 "$ENTRY?commit=61897fc8fd2252ee58bb803d9f5a025a8114e2d5&attempt=$attempt" -o /tmp/public-entry.html || true
+            if echo '551b551e5c3e3acb6fdabb405a9946c3b7e60d0733f32c65f0ba8c5e1a53708c  /tmp/public-entry.html' | sha256sum -c -; then exit 0; fi
+            sleep 10
+          done
+          echo 'Expected repaired entry never became public'; exit 1
+      - name: Verify actual public WebGL source scenes, animation and interactions
+        env:
+          TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/?commit=61897fc8fd2252ee58bb803d9f5a025a8114e2d5
+          TEST_QA_DIR: qa/r03-public-final
+          TEST_TIMEOUT_MS: '240000'
         run: npm run test:browser
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: a4-a6-source-comparison-local-${{ github.sha }}
-          path: |
-            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/
-            !kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/public/
+          name: a4-a6-r03-public-final-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/r03-public-final/
           retention-days: 14
           if-no-files-found: error
-      # The deployed entry may still be the previous version. Keep its real failure
-      # evidence without claiming the candidate was deployed or masking local failures.
-      - name: Capture direct public Pages baseline after local QA
-        id: public-baseline
-        if: always() && steps.install.outcome == 'success'
-        continue-on-error: true
-        env:
-          TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/
-          TEST_QA_DIR: qa/public
-          TEST_TIMEOUT_MS: '240000'
-        run: npm run test:browser
-      - name: Upload independent public Pages evidence including failed loads
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        if: always() && steps.install.outcome == 'success'
-        with:
-          name: a4-a6-source-comparison-public-${{ github.sha }}
-          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/public/
-          retention-days: 14
-          if-no-files-found: error
-      - name: Summarize public baseline separately from local candidate result
-        if: always() && steps.install.outcome == 'success'
-        run: |
-          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
-          import fs from 'node:fs';
-          const file = 'qa/public/BROWSER_QA.json';
-          if (!fs.existsSync(file)) {
-            console.log('Public Pages baseline: no report was produced. Inspect the baseline step logs.');
-          } else {
-            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
-            console.log(`Public Pages baseline: ${report.status}`);
-            console.log(`URL: ${report.requestedURL}`);
-            console.log(`Elapsed: ${report.durationMs} ms; HTTP failures: ${report.httpFailures?.length || 0}; failed requests: ${report.failedRequests?.length || 0}`);
-            console.log(`Page status: ${report.lastState?.status || '(not available)'}`);
-            if (report.failure) console.log(`Failure: ${report.failure.split('\n')[0]}`);
-            console.log('The public baseline is reported independently and may predate the candidate. It is not deployment verification.');
-          }
-          NODE
