@@ -58,7 +58,7 @@ export function createA6Design(T,original){
   for(const dx of[-.20,.18]){const x=xc+dx,t=tc-.030*dx/.48,n=shellNormal(T,x,t,side),p=new T.Vector3(...shellPoint(x,t,side)).addScaledVector(n,.025),a=p.clone().addScaledVector(n,.006);E.rod(p.toArray(),a.toArray(),dx<0?.060:.050,'lamp','sealed projector light',40);}
  }
  // Exact original traced number and company plaque; no newly typed company name.
- for(const side of[-1,1]){brand(numberRecipe,B.numberWidth,[B.numberX,side*1.3,B.numberZ],side,M.gold,'original 88 on front fairing clear of three-wheel opening');brand(companyRecipe,B.companyWidth,[B.companyX,side*1.3,B.companyZ],side,M.gold,'original company plaque behind 88 clear of wheel opening');}
+ for(const side of[-1,1]){brand(numberRecipe,B.numberWidth,[B.numberX,side*1.3,B.numberZ],side,M.gold,'original 88 scaled design instance below driver above wheel opening');brand(companyRecipe,B.companyWidth,[B.companyX,side*1.3,B.companyZ],side,M.gold,'complete original company plaque scaled instance aft of 88 above wheel opening');}
  // Wipers sit on the true sloping front windshield, outside the required eye rays.
  for(const side of[-1,1]){const pts=Array.from({length:40},(_,i)=>{const x=GLASS_FRONT_X+.65+1.05*i/39,t=glassBoundaryT(x)*.88,n=shellNormal(T,x,t,side);return shellPoint(x,t,side).map((v,k)=>v+n.getComponent(k)*.026)});E.pipe(pts,.011,'black','curved forward windshield wiper');}
  // R03 floor clears the ACTUAL original undercarriage27 top, not only the wheels.

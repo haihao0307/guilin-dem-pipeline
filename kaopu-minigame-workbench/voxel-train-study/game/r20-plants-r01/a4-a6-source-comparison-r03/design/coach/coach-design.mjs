@@ -1,6 +1,8 @@
 import {createTrainMatter} from '../original-matter/materials/matter.mjs';
 import {COACH_EXTERIOR_SUBSTITUTIONS,PROTECTED_COACH_MECHANICAL_PRIMITIVES,RETAINED_COACH_GLASS_PRIMITIVES,COACH_SOURCE_ENVELOPES as E,validateCoachSource} from './source-coach-map.mjs';
 export {COACH_EXTERIOR_SUBSTITUTIONS,PROTECTED_COACH_MECHANICAL_PRIMITIVES,COACH_SOURCE_ENVELOPES} from './source-coach-map.mjs';
+export function coachRoofProfile(t){const a=Math.PI*t;return[-1.36*Math.cos(a),3.22+(E.newBodyCrownY-3.22)*Math.sin(a)];}
+export function coachRoofNormal(t){const a=Math.PI*t,nx=-(E.newBodyCrownY-3.22)*Math.cos(a),ny=1.36*Math.sin(a),L=Math.hypot(nx,ny);return[nx/L,ny/L];}
 const smooth=t=>{t=Math.min(1,Math.max(0,t));return t*t*t*(t*(t*6-15)+10);};
 /** Source-native axes and source-native lengths; no metric scaling of original meshes. */
 export function coachHemAt(z){const a=Math.abs(z);return E.centralHemY+(E.bogieHemY-E.centralHemY)*smooth((a-5.35)/.47);}
@@ -60,29 +62,28 @@ export function createCoachDesign(T,source,{materials:providedMaterials}={}){
   sidePanel(side,[[-bodyEnd,2.50],[bodyEnd,2.50],[bodyEnd,3.22],[-bodyEnd,3.22]],apertures,windowBelt,'R03 true-aperture continuous window belt '+side);
  }
  // Single rounded transverse roof/shoulder field. Actual original rooftop fittings stay visible.
- const roofHalf=[[1.360,3.22],[1.340,3.48],[1.220,3.75],[.990,3.98],[.700,4.14],[.340,4.21],[0,E.newBodyCrownY]];
- const roofSection=[...roofHalf.map(([x,y])=>new T.Vector3(-x,y,0)),...roofHalf.slice(0,-1).reverse().map(([x,y])=>new T.Vector3(x,y,0))];
- const roofCurve=new T.CatmullRomCurve3(roofSection,false,'centripetal');
- function upperProfile(t){const v=roofCurve.getPoint(t);return new T.Vector2(v.x,v.y);}
+ function upperProfile(t){return new T.Vector2(...coachRoofProfile(t));}
  function outerProfile(t,minY=2.04){
   if(t>=.15&&t<=.85)return upperProfile((t-.15)/.70);
   const side=t<.5?-1:1,u=t<.5?t/.15:(1-t)/.15,y=minY+(3.22-minY)*u;return new T.Vector2(side*coachHalfAt(y),y);
  }
- function skinBand(z0,z1,profile,nu,nv,material,name,parent=shell,offset=0){
-  const pos=[],uv=[],index=[],row=nv+1;
+ function skinBand(z0,z1,profile,nu,nv,material,name,parent=shell,offset=0,normalAt=null){
+  const pos=[],uv=[],normals=[],index=[],row=nv+1;
   for(let wall=0;wall<2;wall++)for(let i=0;i<=nu;i++)for(let j=0;j<=nv;j++){
    const z=z0+(z1-z0)*i/nu,t=j/nv,p=profile(t),pa=profile(Math.max(0,t-.00001)),pb=profile(Math.min(1,t+.00001)),dx=pb.x-pa.x,dy=pb.y-pa.y,L=Math.hypot(dx,dy)||1;
    // For left-to-right roof traversal, the outward normal is (-dy,dx).
-   const d=offset-wall*.022;pos.push(p.x-d*dy/L,p.y+d*dx/L,z);uv.push(t,(z-z0)/(z1-z0));
+   const normal=normalAt?normalAt(t):new T.Vector2(-dy/L,dx/L),d=offset-wall*.022;pos.push(p.x+d*normal.x,p.y+d*normal.y,z);normals.push(normal.x*(wall?-1:1),normal.y*(wall?-1:1),0);uv.push(t,(z-z0)/(z1-z0));
   }
   const layer=(nu+1)*row,quad=(a,b,c,d)=>index.push(a,b,c,b,d,c);
-  for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const a=i*row+j,b=a+row;quad(a,a+1,b,b+1);quad(a+layer,b+layer,a+1+layer,b+1+layer);}
-  for(let i=0;i<nu;i++)for(const j of[0,nv]){const a=i*row+j,b=a+row;if(j===0)quad(a,b,a+layer,b+layer);else quad(a,a+layer,b,b+layer);}
-  for(const i of[0,nu])for(let j=0;j<nv;j++){const a=i*row+j;if(i===0)quad(a,a+layer,a+1,a+1+layer);else quad(a,a+1,a+layer,a+1+layer);}
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(index);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData={finiteThicknessSourceUnits:.022,closed:true};
+  // Separate closing-wall vertices preserve flat cap normals without averaging them into the curved skin.
+  function flatQuad(a,b,c,d){const ids=[a,b,c,d],A=new T.Vector3(...pos.slice(a*3,a*3+3)),B=new T.Vector3(...pos.slice(b*3,b*3+3)),C=new T.Vector3(...pos.slice(c*3,c*3+3)),n=B.sub(A).cross(C.sub(A)).normalize(),base=pos.length/3;for(const id of ids){pos.push(...pos.slice(id*3,id*3+3));uv.push(...uv.slice(id*2,id*2+2));normals.push(n.x,n.y,n.z);}quad(base,base+1,base+2,base+3);}
+  for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const a=i*row+j,b=a+row;quad(a,b,a+1,b+1);quad(a+layer,a+1+layer,b+layer,b+1+layer);}
+  for(let i=0;i<nu;i++)for(const j of[0,nv]){const a=i*row+j,b=a+row;if(j===0)flatQuad(a,a+layer,b,b+layer);else flatQuad(a,b,a+layer,b+layer);}
+  for(const i of[0,nu])for(let j=0;j<nv;j++){const a=i*row+j;if(i===0)flatQuad(a,a+1,a+layer,a+1+layer);else flatQuad(a,a+layer,a+1,a+1+layer);}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(index);g.computeBoundingBox();g.computeBoundingSphere();g.userData={finiteThicknessSourceUnits:.022,closed:true,profileDerivativeNormals:true,capNormalsSeparated:true,surfaceLayerVertexCount:layer,crossSectionSamples:nv+1};
   const mesh=addMesh(g,material,name,parent);mesh.userData={...mesh.userData,geometryRole:parent===shell?'roofShell':'compactInterface',finiteThicknessSourceUnits:.022,openUnderbody:true};return mesh;
  }
- const roof=skinBand(-E.bodyEndZ,E.bodyEndZ,upperProfile,160,144,materials.paint,'R03 continuous rounded green shoulder and roof');shellMeshes.push(roof);
+ const roof=skinBand(-E.bodyEndZ,E.bodyEndZ,upperProfile,160,144,materials.paint,'R03 continuous rounded green shoulder and roof',shell,0,t=>new T.Vector2(...coachRoofNormal(t)));shellMeshes.push(roof);
  // Simple, small overlapping seam only. All source couplers, buffers and hoses remain below.
  for(const side of[-1,1]){
   const a=side*E.bodyEndZ,b=side*11.79,z0=Math.min(a,b),z1=Math.max(a,b);
@@ -104,7 +105,7 @@ export function createCoachDesign(T,source,{materials:providedMaterials}={}){
  sourceNodes:145,sourcePrimitives:89,sourceMaterialsUnchanged:true,sourceTransformsUnchanged:true,sourceGeometryUnchanged:true,sourceDoorSharedGeometryNodes:[130,134],generatedRunningGear:false,sourceUnits:E.units,
  samePaintAsA6:{color:materials.paint.color.getHexString(),metalness:materials.paint.metalness,roughness:materials.paint.roughness,clearcoat:materials.paint.clearcoat},sourceBodyCrownY:E.sourceBodyCrownY,newBodyCrownY:E.newBodyCrownY,
  finiteSkinThicknessSourceUnits:.022,bogieOpeningIntervals:[[-10.50,-5.82],[5.82,10.50]],bogieMinimumHemY:E.bogieHemY,compactInterface:{lengthSourceUnits:11.79-E.bodyEndZ,minimumY:E.interfaceMinimumY,openBottom:true,actualTenderConnectionVerified:false},
- certification:false,limitations:'Static source-unit exterior study. No metric calibration, running rail datum, suspension travel, coupling articulation, loading or aerodynamics certified.',externalDecorativeRivets:0};
+ certification:false,limitations:'Static source-unit exterior study. No metric calibration, running rail datum, suspension travel, coupling articulation, loading or aerodynamics certified.',externalDecorativeRivets:0,roofProfile:'single strictly convex ellipse; no interpolation stations',roofNormals:'analytic exterior/interior normals, separate flat end and hem caps'};
  root.userData=metadata;root.updateMatrixWorld(true);
  return {root,setVisible,getVisible:()=>visible,materials,metadata,shell,details,shellMeshes,collarMeshes,sourceDoorDisplayCopies,windowLoops,sourcePrimitives,E};
 }

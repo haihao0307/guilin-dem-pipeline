@@ -25,8 +25,10 @@ export const DESIGN_LAYOUT=Object.freeze({
  crownSourceY:4.443316818,
  crownReference:{mark3BodyNode:15,mark3BodySourceY:4.227700233,mark3MeasuredWheelMeshBottomY:.207143545,a4MeasuredWheelMeshBottomY:.422760130,relativeCrown:4.020556688,status:'GEOMETRIC_SOURCE_UNIT_REFERENCE_ONLY; wheel mesh minimum is not a certified rail plane'},
  driverOffsetFromCabFront:1.40,driverSourceX:.30,driverLowSeatDelta:-.12,driverEyeSource:[.30,4.175,5.60],originalCabFloor:2.18,newCabFloor:2.6972,newFloorLowestSourceY:3.02,glassFrontSourceZ:10.80,glassRearSourceZ:.40,rearSwitchCount:9,rearSwitchRows:1,
- branding:{wordmarkWidth:7.60,wordmarkX:24.25,wordmarkZ:2.95,redContourWidth:3.65,redContourX:18.20,redContourZ:2.18,numberWidth:1.20,numberX:5.80,numberZ:1.47,companyWidth:1.05,companyX:7.30,companyZ:1.45},
+ branding:{wordmarkWidth:7.60,wordmarkX:24.25,wordmarkZ:2.95,redContourWidth:3.65,redContourX:18.20,redContourZ:2.18,numberWidth:.68,numberX:authoringX(5.60),numberZ:3.005-SOURCE_FIT.verticalOffset,companyWidth:.90,companyX:authoringX(4.55),companyZ:3.02-SOURCE_FIT.verticalOffset-.0111328125},
  sourceMechanicalTransformsChanged:false,sourceAssetsChanged:false,
+ brandingInstanceRevision:'R03_DRIVER_UNDERWINDOW_88_AND_COMPANY_DESIGN_INSTANCES',
+ brandingInstanceNote:'Number88 original contour master remains byte-identical; new design instance width0.68 authoring units, source longitudinal width0.6256, centred Z5.60/Y3.005 after curved sill clearance. Complete company master instance width0.90 at source ink centre approximately Z4.55/Y3.02. Flying Hongkonger unchanged.',
  passengerCarBlueArcs:'REFERENCE_ANNOTATIONS_ONLY; no Mark3 mechanism deleted',
  fitStatus:'VISUAL_LAYOUT_PROPOSAL_ONLY; floor/mechanism, structure and motion clearance remain unverified'
 });
