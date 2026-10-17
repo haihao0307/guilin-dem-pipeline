@@ -8,7 +8,7 @@ import {buildDrivingWheel} from '../student-native-r01/src/driving-wheel.mjs';
 import {batchNativeParts} from '../student-native-r01/src/render-batching.mjs';
 import {A4_DIMENSIONS} from '../student-native-r01/src/dimensions.mjs';
 import {createNativeMaterialLibrary} from '../student-native-r01/src/native-materials.mjs';
-import {SHELL_LIMITS, DEFAULT_SHELL_PARAMETERS, createViewState, selectView, setViewZoom, orbitView, baselineMetresPerPixel, createRebuildQueue, validateShellParameters} from './interaction.mjs';
+import {SHELL_LIMITS, DEFAULT_SHELL_PARAMETERS, createViewState, selectView, setViewZoom, orbitView, baselineMetresPerPixel, createRebuildQueue, validateShellParameters, createRenderQueue} from './interaction.mjs';
 
 const qa = window.NATIVE_QA;
 const stage = document.querySelector('#stage');
@@ -22,7 +22,7 @@ wideLayout.addEventListener('change', event => { parameterDetails.open = event.m
 const panels = [], mechanicalGroups = [], gestureResetters = [];
 const state = createViewState();
 let structureOnly = false, requestedParameters = {...DEFAULT_SHELL_PARAMETERS}, shellParameters = {...DEFAULT_SHELL_PARAMETERS};
-let renderedSize = '', renderFrame = 0, lastBuildError = false;
+let renderedSize = '', lastBuildError = false;
 const renderer = new T.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.outputColorSpace = T.SRGBColorSpace;
@@ -125,11 +125,10 @@ function syncParameterInputs() {
     input.setAttribute('aria-invalid', 'false');
   }
 }
-function requestRender() {
-  if (!renderFrame) renderFrame = requestAnimationFrame(() => { renderFrame = 0; render(); });
-}
-function render() {
-  if (renderFrame) { cancelAnimationFrame(renderFrame); renderFrame = 0; }
+function requestRender() { return frameQueue.request(); }
+// Public render is queue-only too: setters and rebuilds cannot bypass backpressure.
+function render() { return requestRender(); }
+function drawFrame() {
   const sw = stage.clientWidth, sh = stage.clientHeight;
   if (!sw || !sh) return;
   const sizeKey = `${sw}x${sh}`;
@@ -158,7 +157,9 @@ function render() {
     panel.element.querySelector('.scale-label').textContent = `${state.free ? '观察比例' : '正交比例'} ${(scale * 1000).toFixed(2)} mm / CSS px · ${state.zoom.toFixed(2)}×`;
   });
   Object.assign(qa, {view: state.view, freeMode: state.free, metresPerPixel: scale, baseMetresPerPixel: baseScale, scales: panels.map(panel => panel.camera.userData.metresPerPixel), dimensionAcceptanceMode: !state.free});
+  return {...state, structureOnly, shellRevision: qa.shellRevision, metresPerPixel: scale};
 }
+const frameQueue = createRenderQueue({draw: drawFrame, gl: renderer.getContext(), onError: window.fail});
 function resetGestures() { gestureResetters.forEach(reset => reset()); }
 function setView(name) { selectView(state, name); resetGestures(); syncControls(); render(); return {...state}; }
 function setFreeMode(value) {
@@ -307,6 +308,9 @@ Object.defineProperties(qa, {
   requestedShellParameters: {get: () => ({...requestedParameters})},
   shellGroups: {get: () => [locomotiveShellGroup, coachGroup]},
   rebuildState: {get: () => rebuildQueue.state},
+  renderPending: {get: () => frameQueue.pending},
+  renderStats: {get: () => frameQueue.stats},
+  frameStats: {get: () => frameQueue.stats},
 });
 syncControls(); syncParameterInputs(); render();
 stage.setAttribute('aria-busy', 'false');

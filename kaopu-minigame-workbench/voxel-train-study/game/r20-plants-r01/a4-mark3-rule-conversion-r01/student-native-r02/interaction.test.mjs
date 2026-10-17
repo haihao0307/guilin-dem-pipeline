@@ -6,7 +6,7 @@ import {buildMark3Shell} from '../student-native-r01/src/coach-shell.mjs';
 import {
   SHELL_LIMITS, DEFAULT_SHELL_PARAMETERS, validateShellParameters,
   createViewState, selectView, orbitView, setViewZoom,
-  baselineMetresPerPixel, createRebuildQueue,
+  baselineMetresPerPixel, createRebuildQueue, createRenderQueue,
 } from './interaction.mjs';
 
 function assertFiniteGeometry(result) {
@@ -136,4 +136,91 @@ test('failed build rejects its waiters and the queue accepts a later valid edit'
   assert.equal(queue.state.busy, false);
   assert.deepEqual(await queue.enqueue({ok: true}), {ok: true});
   assert.deepEqual(errors, ['controlled failure']);
+});
+
+function renderHarness({withFence = true, failure = false} = {}) {
+  let clock = 0, displayed = {pose: 'initial'}, nextFence = 0;
+  const frames = [], timers = [], draws = [], fences = [], deleted = [], waits = [], errors = [];
+  const gl = withFence ? {
+    SYNC_GPU_COMMANDS_COMPLETE: 1, ALREADY_SIGNALED: 2, CONDITION_SATISFIED: 3, TIMEOUT_EXPIRED: 4, WAIT_FAILED: 5,
+    fenceSync() { const fence = {id: ++nextFence, signaled: false}; fences.push(fence); return fence; },
+    clientWaitSync(fence, flags, timeout) { waits.push({flags, timeout}); return failure ? 5 : fence.signaled ? 3 : 4; },
+    deleteSync(fence) { deleted.push(fence.id); },
+    flush() {},
+  } : {flush() {}};
+  const queue = createRenderQueue({
+    gl,
+    draw() { clock += 5; draws.push({...displayed}); return {...displayed}; },
+    now: () => clock,
+    requestFrame(callback) { frames.push(callback); return frames.length; },
+    cancelFrame() {},
+    defer(callback, delay) { timers.push({callback, delay}); return timers.length; },
+    cancelDeferred() {},
+    onError(error) { errors.push(error.message); },
+  });
+  return {queue, frames, timers, draws, fences, deleted, waits, errors,
+    setState(value) { displayed = value; },
+    runFrame() { assert(frames.length); frames.shift()(); },
+    runTimer() { assert(timers.length); const timer = timers.shift(); clock += timer.delay; timer.callback(); },
+  };
+}
+
+test('render backpressure keeps one GPU frame in flight and coalesces input to latest reset', () => {
+  const h = renderHarness();
+  h.queue.request(); h.runFrame();
+  assert.equal(h.queue.stats.framesSubmitted, 1);
+  assert.equal(h.queue.pending, true);
+  for (let i = 0; i < 8; i++) { h.setState({pose: 'drag-' + i}); h.queue.request(); }
+  h.runTimer();
+  assert.equal(h.queue.stats.framesSubmitted, 1);
+  assert.equal(h.frames.length, 0);
+  assert.equal(h.queue.stats.inFlight, true);
+  // Reset supersedes all intermediate drag poses; already submitted GPU work cannot be canceled.
+  h.setState({pose: 'reset-side', zoom: 1}); h.queue.request();
+  h.fences[0].signaled = true; h.runTimer();
+  assert.equal(h.queue.pending, true);
+  assert.equal(h.frames.length, 1);
+  h.runFrame();
+  assert.deepEqual(h.draws, [{pose: 'initial'}, {pose: 'reset-side', zoom: 1}]);
+  assert.equal(h.queue.stats.framesSubmitted, 2);
+  assert.equal(h.queue.stats.maxFramesInFlight, 1);
+  h.fences[1].signaled = true; h.runTimer();
+  assert.equal(h.queue.pending, false);
+  assert.equal(h.queue.stats.requestedRevision, 10);
+  assert.equal(h.queue.stats.completedRevision, 10);
+  assert.equal(h.queue.stats.framesCompleted, 2);
+  assert.equal(h.queue.stats.coalescedRequests, 9);
+  assert.equal(h.queue.stats.lastGpuCompletionVerified, true);
+  assert.equal(h.queue.stats.lastCpuSubmissionMs, 5);
+  assert.equal(h.queue.stats.lastGpuCompletionElapsedMs, 21);
+  assert.deepEqual(h.queue.stats.lastCompletedState, {pose: 'reset-side', zoom: 1});
+  assert.deepEqual(h.deleted, [1, 2]);
+  assert(h.waits.every(wait => wait.flags === 0 && wait.timeout === 0));
+});
+
+test('no-fence render fallback is bounded and never certifies GPU completion', () => {
+  const h = renderHarness({withFence: false});
+  h.queue.request(); h.runFrame();
+  assert.equal(h.timers[0].delay, 250);
+  for (let i = 0; i < 30; i++) h.queue.request();
+  assert.equal(h.queue.stats.framesSubmitted, 1);
+  assert.equal(h.frames.length, 0);
+  h.runTimer();
+  assert.equal(h.queue.stats.lastGpuCompletionVerified, false);
+  assert.equal(h.queue.stats.lastGpuCompletionElapsedMs, null);
+  assert.equal(h.queue.stats.mode, 'throttled-no-fence');
+  h.runFrame(); h.runTimer();
+  assert.equal(h.queue.stats.framesSubmitted, 2);
+  assert.equal(h.queue.pending, false);
+});
+
+test('failed GPU fence halts submissions and records the failure', () => {
+  const h = renderHarness({failure: true});
+  h.queue.request(); h.runFrame(); h.runTimer();
+  assert.equal(h.queue.pending, false);
+  assert.match(h.queue.stats.failed, /GPU fence wait failed/);
+  assert.equal(h.errors.length, 1);
+  h.queue.request();
+  assert.equal(h.frames.length, 0);
+  assert.equal(h.queue.stats.framesSubmitted, 1);
 });

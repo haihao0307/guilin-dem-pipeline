@@ -94,3 +94,104 @@ export function createRebuildQueue({build, commit, dispose, onBusy, onError, del
     get state() { return {revision, committedRevision, busy: running || !!pending, running}; },
   };
 }
+
+/**
+ * One full frame in flight. Draw always reads the newest state; input does not
+ * enqueue a list of stale poses. WebGL2 fences are polled with timeout=0, never
+ * finish()/blocking waits. The fallback is rate-limited, not proof of GPU idle.
+ */
+export function createRenderQueue({
+  draw, gl, onError,
+  now = () => performance.now(),
+  requestFrame = callback => requestAnimationFrame(callback),
+  cancelFrame = handle => cancelAnimationFrame(handle),
+  defer = (callback, delay) => setTimeout(callback, delay),
+  cancelDeferred = handle => clearTimeout(handle),
+  pollInterval = 16, fallbackInterval = 250,
+}) {
+  const fenceSupported = !!(gl && typeof gl.fenceSync === 'function' && typeof gl.clientWaitSync === 'function' && typeof gl.deleteSync === 'function');
+  let dirty = false, inFlight = false, stopped = false, frameHandle = null, pollHandle = null, fence = null;
+  let startedAt = 0, submittedAt = 0, activeRevision = 0;
+  const stats = {
+    mode: fenceSupported ? 'webgl2-fence' : 'throttled-no-fence', fenceSupported,
+    requestedRevision: 0, submittedRevision: 0, completedRevision: 0,
+    framesSubmitted: 0, framesCompleted: 0, coalescedRequests: 0,
+    maxFramesInFlight: 0, fencePolls: 0, fenceFailures: 0,
+    lastCpuSubmissionMs: null, lastGpuWaitMs: null, lastGpuCompletionElapsedMs: null,
+    maxGpuCompletionElapsedMs: 0, lastGpuCompletionVerified: null,
+    lastRenderedState: null, lastCompletedState: null, failed: null, recentFrames: [],
+    timingMeaning: 'Wall-clock elapsed until fence completion, including CPU submission and scheduling; not a GPU timer query. No-fence fallback cannot verify GPU completion.',
+  };
+  const pending = () => !stopped && (dirty || inFlight || frameHandle !== null);
+  function stopWithError(error) {
+    stopped = true; dirty = false; inFlight = false;
+    if (frameHandle !== null) cancelFrame(frameHandle);
+    if (pollHandle !== null) cancelDeferred(pollHandle);
+    if (fence) gl.deleteSync(fence);
+    frameHandle = pollHandle = fence = null;
+    stats.failed = String(error?.message || error);
+    onError?.(error);
+  }
+  function schedule() {
+    if (!stopped && dirty && !inFlight && frameHandle === null) frameHandle = requestFrame(submit);
+  }
+  function complete(verified) {
+    const finishedAt = now();
+    if (fence) gl.deleteSync(fence);
+    fence = null; pollHandle = null; inFlight = false;
+    stats.framesCompleted += 1; stats.completedRevision = activeRevision;
+    stats.lastGpuCompletionVerified = verified;
+    stats.lastGpuWaitMs = verified ? finishedAt - submittedAt : null;
+    stats.lastGpuCompletionElapsedMs = verified ? finishedAt - startedAt : null;
+    if (verified) stats.maxGpuCompletionElapsedMs = Math.max(stats.maxGpuCompletionElapsedMs, stats.lastGpuCompletionElapsedMs);
+    stats.lastCompletedState = stats.lastRenderedState;
+    stats.recentFrames.push({revision: activeRevision, cpuSubmissionMs: stats.lastCpuSubmissionMs, gpuWaitMs: stats.lastGpuWaitMs, gpuCompletionElapsedMs: stats.lastGpuCompletionElapsedMs, gpuCompletionVerified: verified});
+    if (stats.recentFrames.length > 24) stats.recentFrames.shift();
+    schedule();
+  }
+  function poll() {
+    pollHandle = null;
+    if (stopped || !inFlight || !fence) return;
+    try {
+      stats.fencePolls += 1;
+      const result = gl.clientWaitSync(fence, 0, 0);
+      if (result === gl.ALREADY_SIGNALED || result === gl.CONDITION_SATISFIED) complete(true);
+      else if (result === gl.TIMEOUT_EXPIRED) pollHandle = defer(poll, pollInterval);
+      else throw new Error('GPU fence wait failed; no further frames will be queued');
+    } catch (error) { stopWithError(error); }
+  }
+  function submit() {
+    frameHandle = null;
+    if (stopped || inFlight || !dirty) return;
+    dirty = false; inFlight = true; activeRevision = stats.requestedRevision;
+    stats.submittedRevision = activeRevision; stats.framesSubmitted += 1;
+    stats.maxFramesInFlight = Math.max(stats.maxFramesInFlight, 1);
+    startedAt = now();
+    try {
+      stats.lastRenderedState = draw();
+      submittedAt = now(); stats.lastCpuSubmissionMs = submittedAt - startedAt;
+      if (fenceSupported) fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+      gl?.flush?.();
+      if (fence) pollHandle = defer(poll, pollInterval);
+      else {
+        if (fenceSupported) stats.fenceFailures += 1;
+        stats.mode = 'throttled-no-fence';
+        // At most four submissions/second, slower for expensive CPU submission.
+        // This is an honest fallback bound, not a claim that the GPU has drained.
+        pollHandle = defer(() => complete(false), Math.max(fallbackInterval, stats.lastCpuSubmissionMs * 2));
+      }
+    } catch (error) { stopWithError(error); }
+  }
+  return {
+    request() {
+      if (stopped) return stats.requestedRevision;
+      if (pending()) stats.coalescedRequests += 1;
+      stats.requestedRevision += 1; dirty = true; schedule();
+      return stats.requestedRevision;
+    },
+    get pending() { return pending(); },
+    get stats() {
+      return {...stats, inFlight, dirty, renderPending: pending(), inFlightElapsedMs: inFlight ? now() - startedAt : 0, recentFrames: stats.recentFrames.map(frame => ({...frame}))};
+    },
+  };
+}
