@@ -1,6 +1,7 @@
 import {createTrainMatter} from '../original-matter/materials/matter.mjs';
 import {COACH_EXTERIOR_SUBSTITUTIONS,PROTECTED_COACH_MECHANICAL_PRIMITIVES,RETAINED_COACH_GLASS_PRIMITIVES,COACH_SOURCE_ENVELOPES as E,validateCoachSource} from './source-coach-map.mjs';
 export {COACH_EXTERIOR_SUBSTITUTIONS,PROTECTED_COACH_MECHANICAL_PRIMITIVES,COACH_SOURCE_ENVELOPES} from './source-coach-map.mjs';
+export const COACH_PAINT_FINISH=Object.freeze({color:'064631',metalness:0,roughness:.36,clearcoat:.48,clearcoatRoughness:.32,envMapIntensity:.10});
 export function coachRoofProfile(t){const a=Math.PI*t;return[-1.36*Math.cos(a),3.22+(E.newBodyCrownY-3.22)*Math.sin(a)];}
 export function coachRoofNormal(t){const a=Math.PI*t,nx=-(E.newBodyCrownY-3.22)*Math.cos(a),ny=1.36*Math.sin(a),L=Math.hypot(nx,ny);return[nx/L,ny/L];}
 const smooth=t=>{t=Math.min(1,Math.max(0,t));return t*t*t*(t*(t*6-15)+10);};
@@ -37,7 +38,9 @@ export function createCoachDesign(T,source,{materials:providedMaterials}={}){
  // Source glTF material objects are never reused or edited. Parent-supplied design materials may be shared.
  const sourceMaterialSet=new Set(source.primitives.flatMap(p=>Array.isArray(p.object.material)?p.object.material:[p.object.material]));
  if(Object.values(materials).some(m=>sourceMaterialSet.has(m)))throw Error('COACH_DESIGN_MUST_NOT_MUTATE_SOURCE_MATERIAL');
- if(!providedMaterials){materials.paint.color.set('#064631');materials.paint.metalness=.38;materials.paint.roughness=.22;materials.paint.clearcoat=.92;materials.paint.side=T.DoubleSide;}
+ const paintKernelReference=base.paint;materials.paint=paintKernelReference.clone();materials.paint.onBeforeCompile=paintKernelReference.onBeforeCompile;materials.paint.customProgramCacheKey=paintKernelReference.customProgramCacheKey;
+ materials.paint.name='FH88 / paint / coach dielectric enamel reflection variant';materials.paint.color.set('#'+COACH_PAINT_FINISH.color);for(const key of['metalness','roughness','clearcoat','clearcoatRoughness','envMapIntensity'])materials.paint[key]=COACH_PAINT_FINISH[key];materials.paint.side=T.DoubleSide;
+ materials.paint.userData={...materials.paint.userData,opticalVariant:'coach only: dielectric green enamel, broad subdued environment highlights',sourceMaterialChanged:false,shaderKernelUnchanged:true};
  materials.gold=materials.brass;
  const windowBelt=materials.black.clone();windowBelt.name='R03 continuous deep-green window belt / original FH88 iron kernel';windowBelt.color.set('#071b18');windowBelt.metalness=.40;windowBelt.roughness=.23;windowBelt.clearcoat=.60;windowBelt.onBeforeCompile=materials.black.onBeforeCompile;const blackKey=materials.black.customProgramCacheKey;windowBelt.customProgramCacheKey=()=>blackKey()+'/coach-window-belt-r03';materials.windowBelt=windowBelt;
  const windowLoops=readCoachWindowLoops(T,source),shellMeshes=[],collarMeshes=[],sourceDoorDisplayCopies=[];
@@ -103,9 +106,9 @@ export function createCoachDesign(T,source,{materials:providedMaterials}={}){
  const metadata={revision:'R03_COMPLETE_MARK3_SOURCE_CONTINUOUS_COACH',sourcePreserved:true,windowOpeningsPreserved:true,originalGlassPreserved:true,windowCount:20,windowSourceNodes:[16,20],doorGlassSourceNodes:[128,133],windowBoundary:'actual 30-vertex original pane outlines; no guessed rectangular holes',
  hiddenSourcePrimitiveNodes:[...substituted],protectedMechanicalPrimitiveNodes:[...PROTECTED_COACH_MECHANICAL_PRIMITIVES],allOtherSourcePrimitivesRetained:true,substitutionEvidence:COACH_EXTERIOR_SUBSTITUTIONS,
  sourceNodes:145,sourcePrimitives:89,sourceMaterialsUnchanged:true,sourceTransformsUnchanged:true,sourceGeometryUnchanged:true,sourceDoorSharedGeometryNodes:[130,134],generatedRunningGear:false,sourceUnits:E.units,
- samePaintAsA6:{color:materials.paint.color.getHexString(),metalness:materials.paint.metalness,roughness:materials.paint.roughness,clearcoat:materials.paint.clearcoat},sourceBodyCrownY:E.sourceBodyCrownY,newBodyCrownY:E.newBodyCrownY,
+ paintFinish:{color:materials.paint.color.getHexString(),metalness:materials.paint.metalness,roughness:materials.paint.roughness,clearcoat:materials.paint.clearcoat,clearcoatRoughness:materials.paint.clearcoatRoughness,envMapIntensity:materials.paint.envMapIntensity,type:materials.paint.type},paintRelationToA6:{sameBaseColor:true,sameFH88ShaderFamily:true,opticalParametersIdentical:false,reason:'independent coach dielectric-enamel reflection tuning after actual screenshot review; original source and locomotive materials unchanged'},sourceBodyCrownY:E.sourceBodyCrownY,newBodyCrownY:E.newBodyCrownY,
  finiteSkinThicknessSourceUnits:.022,bogieOpeningIntervals:[[-10.50,-5.82],[5.82,10.50]],bogieMinimumHemY:E.bogieHemY,compactInterface:{lengthSourceUnits:11.79-E.bodyEndZ,minimumY:E.interfaceMinimumY,openBottom:true,actualTenderConnectionVerified:false},
  certification:false,limitations:'Static source-unit exterior study. No metric calibration, running rail datum, suspension travel, coupling articulation, loading or aerodynamics certified.',externalDecorativeRivets:0,roofProfile:'single strictly convex ellipse; no interpolation stations',roofNormals:'analytic exterior/interior normals, separate flat end and hem caps'};
  root.userData=metadata;root.updateMatrixWorld(true);
- return {root,setVisible,getVisible:()=>visible,materials,metadata,shell,details,shellMeshes,collarMeshes,sourceDoorDisplayCopies,windowLoops,sourcePrimitives,E};
+ return {root,setVisible,getVisible:()=>visible,materials,paintKernelReference,metadata,shell,details,shellMeshes,collarMeshes,sourceDoorDisplayCopies,windowLoops,sourcePrimitives,E};
 }

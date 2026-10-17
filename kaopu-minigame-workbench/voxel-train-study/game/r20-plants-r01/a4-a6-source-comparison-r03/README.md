@@ -22,6 +22,14 @@ R02's wheel-top-only cab floor check omitted a higher original underframe surfac
 
 ## Run
 
-npm install; npm test; npm run test:browser. Existing approved GitHub Actions official Chromium performs local and actual-public-origin visual/load tests. Local tests requiring original byte comparisons expect the preserved adjacent R01 directory.
+npm install; npm test; npm run test:browser. Existing approved GitHub Actions official Chromium performs local and actual-public-origin visual/load tests. Local tests requiring original byte comparisons expect the preserved adjacent R01 directory and R02/design/retained/branding baseline.
 
 See ATTRIBUTION.txt for timblewee / Sketchfab CC BY4.0 source credit, CONVERSION_SCOPE.md for limits and docs/KAOPU_Scale_Review_View_Standard_R01.md for mandatory dimensional-view rules. Original private reference photographs are not included in the public package.
+
+## Actual review findings retained
+
+The first rendered coach crown showed tube-like highlights. Its interpolated shoulder had curvature sign reversals; R03 now uses one strictly convex analytic ellipse and separate cap normals, preserving the crown height and original windows/mechanics. Front-view review also rejected a waved windshield edge; the authored opening now follows one smooth transverse arc and is checked on actual boundary vertices. These geometric tests still require screenshot review. Original 88 and company-plaque vector masters remain byte-identical; their design instances sit beneath/behind the driver. The large Flying Hongkonger lettering is unchanged.
+
+The original A4 rest pose contains a laterally projecting grey source mechanism (primitive node 294, parent 293). It is visible in both original and A6 front views and is preserved, not a newly designed attachment. Coach original end faces/coupling parts remain visible behind the new compact collar; a fully integrated end-interface design remains unfinished.
+
+The coach's long convex crown reflected several bright rectangular environment panels as longitudinal bands. Only the new coach paint instance is separately tuned: base #064631, metalness 0, roughness 0.36, clearcoat 0.48, clearcoat roughness 0.32, environment intensity 0.10. The existing FH88 paint shader callbacks are retained. This is the same color/material family with different optical values, not a claim of identical finish parameters. Original source materials and the locomotive paint remain untouched.

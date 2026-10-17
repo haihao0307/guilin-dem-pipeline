@@ -14,7 +14,7 @@ A6 exterior is an independent authored function layer adapted from existing deta
 - Independent metric calibration of each source using verified nominal tread, wheel flange, gauge and axle spacing evidence.
 - Mechanical interpretation of unnamed/merged source components, physical joint graph, brake-force path, suspension dynamics and coupling interfaces.
 - A6 four-driving-axle redesign: no fabricated fourth axle or rigid copied rod animation.
-- Full native parametric/spectral reconstruction of source mechanical parts and coach. Current original coach is complete source-learning expression, not claimed redesigned exterior.
+- Full native parametric/spectral reconstruction of source mechanical parts and coach. R03 now adds a reversible authored coach exterior around the complete source-learning expression; original end faces and coupling hardware still require integrated interface design.
 
 ## License and preservation
 Only licensed visible runtime content, own reader/viewer/design/test code and attribution are published. Non-runtime native archive/evidence metadata is excluded. Public object JSON is therefore not whole-file byte-identical to the local archival original; its complete `content` is preserved exactly. Geometry fields, images, materials, node transforms and animation fields remain exact. Old A4 replica and old A6 candidates are retained separately.

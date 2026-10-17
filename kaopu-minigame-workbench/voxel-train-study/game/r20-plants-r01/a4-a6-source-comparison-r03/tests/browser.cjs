@@ -411,10 +411,10 @@ function sameDirections(before, after) {
       displayRegistrations: COMPARISON.panels.map(p=>({data:p.displayRegistration.userData,sourceLocalUnchanged:JSON.stringify(p.source.root.matrix.elements)===JSON.stringify(p.displayRegistration.userData.originalRootLocalMatrix)})),
       panelLabelsOnTop: [...document.querySelectorAll('.label')].every(element => Number(getComputedStyle(element).zIndex) > 0),
       cabVisibility:COMPARISON.design.auditVisibility(),
-      locomotivePaint:(()=>{const m=COMPARISON.design.skin.mesh.material[0];return{color:m.color.getHexString(),metalness:m.metalness,roughness:m.roughness,clearcoat:m.clearcoat}})(),
+      locomotivePaint:(()=>{const m=COMPARISON.design.skin.mesh.material[0];return{color:m.color.getHexString(),metalness:m.metalness,roughness:m.roughness,clearcoat:m.clearcoat,clearcoatRoughness:m.clearcoatRoughness,envMapIntensity:m.envMapIntensity,type:m.type}})(),
       designGlass: {opacity: COMPARISON.design.designGlass.opacity, transmission: COMPARISON.design.designGlass.transmission},
       oilWaterRoofClosed: COMPARISON.design.oilWaterRoof.userData.everyEdgeUsedTwice,
-      coachDesign:COMPARISON.coachDesign?{metadata:COMPARISON.coachDesign.root.userData,meshCount:(()=>{let n=0;COMPARISON.coachDesign.root.traverse(o=>{if(o.isMesh)n++});return n})(),hiddenSourcePrimitives:COMPARISON.sources[3].primitives.filter(p=>!p.object.visible).map(p=>p.sourceNode),protectedVisible:COMPARISON.coachDesign.root.userData.protectedMechanicalPrimitiveNodes.every(id=>{const a=COMPARISON.sources[3].primitives.filter(p=>p.sourceNode===id);return a.length>0&&a.every(p=>p.object.visible)}),paint:{color:COMPARISON.coachDesign.materials.paint.color.getHexString(),metalness:COMPARISON.coachDesign.materials.paint.metalness,roughness:COMPARISON.coachDesign.materials.paint.roughness,clearcoat:COMPARISON.coachDesign.materials.paint.clearcoat}}:null
+      coachDesign:COMPARISON.coachDesign?{metadata:COMPARISON.coachDesign.root.userData,meshCount:(()=>{let n=0;COMPARISON.coachDesign.root.traverse(o=>{if(o.isMesh)n++});return n})(),hiddenSourcePrimitives:COMPARISON.sources[3].primitives.filter(p=>!p.object.visible).map(p=>p.sourceNode),protectedVisible:COMPARISON.coachDesign.root.userData.protectedMechanicalPrimitiveNodes.every(id=>{const a=COMPARISON.sources[3].primitives.filter(p=>p.sourceNode===id);return a.length>0&&a.every(p=>p.object.visible)}),paint:{color:COMPARISON.coachDesign.materials.paint.color.getHexString(),metalness:COMPARISON.coachDesign.materials.paint.metalness,roughness:COMPARISON.coachDesign.materials.paint.roughness,clearcoat:COMPARISON.coachDesign.materials.paint.clearcoat,clearcoatRoughness:COMPARISON.coachDesign.materials.paint.clearcoatRoughness,envMapIntensity:COMPARISON.coachDesign.materials.paint.envMapIntensity,type:COMPARISON.coachDesign.materials.paint.type}}:null
     }));
     const pose = () => page.evaluate(() => COMPARISON.sources.slice(0, 2).map(source => source.nodes.map(node => node.matrixWorld.elements.slice())));
     const before = await pose();
@@ -447,6 +447,18 @@ function sameDirections(before, after) {
         await page.setViewportSize({width:3600,height:2200});
         await page.locator('#side').click();await page.waitForTimeout(200);
         await shot('04-shared-scale-side-driver-detail.png');
+        // A pixel crop of this exact same axial projection, not a different camera or enlarged person.
+        const driverClip=await page.evaluate(async()=>{
+          const T=await import('./vendor/three.module.js'),p=COMPARISON.panels[1];
+          const v=new T.Vector3().fromArray(COMPARISON.design.root.userData.actualEyeSource);
+          COMPARISON.design.root.localToWorld(v);v.project(p.camera);
+          const r=document.querySelector('#a6').getBoundingClientRect();
+          const x=r.x+(v.x+1)*r.width/2,y=r.y+(1-v.y)*r.height/2;
+          return{x:Math.max(r.x,Math.min(r.right-600,x-300)),y:Math.max(r.y,Math.min(r.bottom-360,y-120)),width:600,height:360};
+        });
+        await page.screenshot({path:path.join(qa,'05-driver-native-pixel-crop.png'),clip:driverClip,timeout:90000});
+        report.screenshots.push('05-driver-native-pixel-crop.png');
+        report.driverPixelCrop={sameCameraNativePixelCrop:true,clip:driverClip};
         await page.setViewportSize({width:1800,height:1100});
         await page.locator('#side').click();await page.waitForTimeout(150);
       }
@@ -485,7 +497,7 @@ function sameDirections(before, after) {
       panelLabelsOnTop: report.runtime.panelLabelsOnTop,
       cabForwardAndStreetVisibility:report.runtime.cabVisibility?.status==='PASS_REQUIRED_ACTUAL_MESH_RAYS',
       coachHasRealDesignLayer:!!report.runtime.coachDesign&&report.runtime.coachDesign.meshCount>0,
-      unifiedLocomotiveCoachPaint:JSON.stringify(report.runtime.locomotivePaint)===JSON.stringify(report.runtime.coachDesign.paint),
+      unifiedLocomotiveCoachPaintFamily:report.runtime.locomotivePaint.color===report.runtime.coachDesign.paint.color && report.runtime.locomotivePaint.type===report.runtime.coachDesign.paint.type,
       coachMechanicalPrimitivesVisible:report.runtime.coachDesign?.protectedVisible===true,
       coachExactExteriorOnly:report.runtime.coachDesign?.hiddenSourcePrimitives.slice().sort((a,b)=>a-b).join(',')==='15,17,18,130,134',
       coachOriginalWindowsRetained:report.runtime.coachDesign?.metadata.windowOpeningsPreserved===true&&report.runtime.coachDesign.metadata.windowCount===20,
