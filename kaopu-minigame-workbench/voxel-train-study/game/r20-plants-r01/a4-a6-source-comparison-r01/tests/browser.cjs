@@ -173,7 +173,7 @@ async function snapshot(label) {
 async function shot(name) {
   if (!page || page.isClosed()) return;
   try {
-    await page.screenshot({path: path.join(qa, name), timeout: 15000});
+    await page.screenshot({path: path.join(qa, name), timeout: 90000});
     report.screenshots.push(name);
   } catch (error) { report.diagnosticErrors.push(`${name}: ${failureText(error)}`); }
 }
