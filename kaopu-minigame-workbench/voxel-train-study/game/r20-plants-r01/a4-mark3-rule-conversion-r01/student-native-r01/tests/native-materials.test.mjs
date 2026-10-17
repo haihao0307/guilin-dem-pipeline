@@ -5,7 +5,8 @@ import crypto from 'node:crypto';
 import * as T from '../../../a4-a6-source-comparison-r03/vendor/three.module.js';
 import {createNativeMaterial, createNativeMaterialLibrary, installNativeMaterials,
   NATIVE_MATERIAL_VERSION, NATIVE_MASTER_RELEASE, NATIVE_MATERIAL_RECIPES,
-  NATIVE_MATERIAL_ALIASES, resolveNativeMaterialRecipe} from '../src/native-materials.mjs';
+  NATIVE_MATERIAL_ALIASES, resolveNativeMaterialRecipe,
+  NATIVE_PAINT_SUBSTITUTIONS, NATIVE_PAINT_TRANSPORT, NATIVE_PAINT_FIELD_SCALE} from '../src/native-materials.mjs';
 import {createTrainMatter} from '../../master-materials-v3-1/vendor/train-r08/materials/matter.mjs';
 import {buildGlassCase, GLASS_RECIPE} from '../../master-materials-v3-1/vendor/material-master-r03/wood-glass.mjs';
 import {PARAMETERIZED_METAL_FIELDS} from '../../master-materials-v3-1/r06-source-parameters.mjs';
@@ -109,7 +110,7 @@ materialTest('every explicit recipe calls a real locked factory and carries desi
   library.dispose();
 });
 
-materialTest('actual R08 paint fragment and R03 finite-glass fragment remain byte-identical', () => {
+materialTest('native R08 paint uses exactly two guarded edits; original normal code and R03 glass remain exact', () => {
   const factory = createTrainMatter(T), rawPaint = compileHook(factory.paint);
   const glassCase = buildGlassCase(T, {variant: 0, wear: 0, strength: 0, mode: 0,
     thickness: GLASS_RECIPE.thickness, compareThickness: GLASS_RECIPE.thickness});
@@ -118,10 +119,33 @@ materialTest('actual R08 paint fragment and R03 finite-glass fragment remain byt
   for (const [id, recipe] of Object.entries(NATIVE_MATERIAL_RECIPES)) {
     const material = library.create(id, {units: 'm', restMatrix: identity()});
     const shader = compileHook(material);
-    if (recipe.family === 'paint') assert.equal(shader.fragmentShader, rawPaint.fragmentShader, id);
+    if (recipe.family === 'paint') {
+      let expected = rawPaint.fragmentShader;
+      for (const [before, after] of NATIVE_PAINT_SUBSTITUTIONS) {
+        assert.equal(expected.split(before).length - 1, 1, 'Exactly one guarded occurrence');
+        expected = expected.replace(before, after);
+      }
+      assert.equal(shader.fragmentShader, expected, id);
+      assert.notEqual(shader.fragmentShader, rawPaint.fragmentShader);
+      assert(!shader.fragmentShader.includes('diffuseColor.rgb*=.94+.09*kp;'));
+      assert(!shader.fragmentShader.includes('kn(kq*9.)'));
+      assert(shader.fragmentShader.includes('(kn(kq*65.)-.5)*.012'));
+      const normalCode = source => source.slice(source.indexOf('float footprint=length(fwidth(kq))*65.;'), source.indexOf('#include <clearcoat_normal_fragment_begin>'));
+      assert(normalCode(rawPaint.fragmentShader).length > 100);
+      assert.equal(normalCode(shader.fragmentShader), normalCode(rawPaint.fragmentShader));
+      assert.equal(material.userData.nativeMaster.paintTransport.substitutionCount, 2);
+      assert.equal(material.userData.nativeMaster.paintTransport.fragmentByteIdentical, false);
+      assert.equal(material.userData.nativeMaster.paintFieldScale.roughness.latticeFrequencyPerM, 65);
+      report.nativePaintFragmentSha256 = hash(shader.fragmentShader);
+    }
     if (recipe.family === 'glass') assert.equal(shader.fragmentShader, rawGlass.fragmentShader, id);
   }
-  report.paintFragmentSha256 = hash(rawPaint.fragmentShader);
+  report.originalPaintFragmentSha256 = hash(rawPaint.fragmentShader);
+  assert.equal(report.originalPaintFragmentSha256, NATIVE_PAINT_TRANSPORT.originalR170HookFragmentSha256);
+  report.nativePaintSubstitutionCount = NATIVE_PAINT_SUBSTITUTIONS.length;
+  report.nativePaintOriginalFragmentEquality = false;
+  report.nativePaintNormalAndBrdfPreserved = true;
+  report.nativePaintFieldScale = structuredClone(NATIVE_PAINT_FIELD_SCALE);
   report.glassFragmentSha256 = hash(rawGlass.fragmentShader);
   report.parameterizedMetalFieldSha256 = hash(PARAMETERIZED_METAL_FIELDS);
   library.dispose(); disposeFamily(factory); glassCase.userData.dispose();

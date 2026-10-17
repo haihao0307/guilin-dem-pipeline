@@ -1,6 +1,6 @@
 {
   "schema": "kaopu.student-native-materials-tests/1",
-  "adapterVersion": "kaopu.student-native-materials/1.0.0",
+  "adapterVersion": "kaopu.student-native-materials/1.1.0",
   "engineRevision": "170",
   "originalModelGeometryLoaded": false,
   "tests": [
@@ -13,7 +13,7 @@
       "passed": true
     },
     {
-      "name": "actual R08 paint fragment and R03 finite-glass fragment remain byte-identical",
+      "name": "native R08 paint uses exactly two guarded edits; original normal code and R03 glass remain exact",
       "passed": true
     },
     {
@@ -47,7 +47,7 @@
       "family": "paint",
       "colorSRGB": "#103e35",
       "metalness": 0,
-      "roughness": 0.255,
+      "roughness": 0.4,
       "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
     },
     {
@@ -55,7 +55,7 @@
       "family": "metal",
       "colorSRGB": "#14191b",
       "metalness": 0,
-      "roughness": 0.39,
+      "roughness": 0.58,
       "factory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial"
     },
     {
@@ -129,7 +129,79 @@
   "physicalCertification": false,
   "lockedFileCount": 17,
   "lockedRelease": "7577ae37c8bc13bc3f7c0204c1857e83074c257a",
-  "paintFragmentSha256": "ee1a0a2a39608dfc3d24acfa7e38a429f94c8215bd2653be23128a5534391ae9",
+  "nativePaintFragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be",
+  "originalPaintFragmentSha256": "ee1a0a2a39608dfc3d24acfa7e38a429f94c8215bd2653be23128a5534391ae9",
+  "nativePaintSubstitutionCount": 2,
+  "nativePaintOriginalFragmentEquality": false,
+  "nativePaintNormalAndBrdfPreserved": true,
+  "nativePaintFieldScale": {
+    "units": "m",
+    "calibratedAgainstRealPaint": false,
+    "fieldInterpretation": "Authored enamel appearance derivative of R08; no corrosion, exposure, rust or aging phase is present.",
+    "originalColor": {
+      "latticeFrequenciesPerM": [
+        3.1,
+        6.603,
+        12.927
+      ],
+      "latticeSpacingsM": [
+        0.3225806451612903,
+        0.15144631228229594,
+        0.07735746886361879
+      ],
+      "octaveWeights": [
+        0.57,
+        0.28,
+        0.15
+      ],
+      "multiplierRange": [
+        0.94,
+        1.03
+      ],
+      "active": false,
+      "interpretation": "Removed uncalibrated macro albedo modulation; not established enamel microstructure."
+    },
+    "color": {
+      "multiplier": 1,
+      "authoredColorPreserved": true
+    },
+    "originalRoughness": {
+      "latticeFrequencyPerM": 9,
+      "latticeSpacingM": 0.1111111111111111,
+      "additiveRange": [
+        -0.06,
+        0.06
+      ],
+      "active": false
+    },
+    "roughness": {
+      "latticeFrequencyPerM": 65,
+      "latticeSpacingM": 0.015384615384615385,
+      "additiveRange": [
+        -0.006,
+        0.006
+      ],
+      "finalClamp": [
+        0.08,
+        0.99
+      ],
+      "interpretation": "Small dimensionless roughness variation using the same locked kn kernel; the design lattice is 15.38 mm, not a measured paint grain."
+    },
+    "normal": {
+      "latticeFrequencyPerM": 65,
+      "latticeSpacingM": 0.015384615384615385,
+      "heightCoefficientM": 0.00002,
+      "ungatedHeightRangeM": [
+        -0.00001,
+        0.00001
+      ],
+      "footprintFadeM": [
+        0.006153846153846154,
+        0.024615384615384615
+      ],
+      "interpretation": "Unchanged footprint-filtered normal microheight. The 20 micrometre design coefficient is not measured paint relief."
+    }
+  },
   "glassFragmentSha256": "e26b45433e61aa7426b2008137efce8cbe0bfb525cc80b57bf1f41030af8edc2",
   "parameterizedMetalFieldSha256": "85d65e7d77ea339d35e3642e15a48199c3de385ba9e943dfeaf1b0c524ed04a3"
 }

@@ -6,12 +6,12 @@
 
 新入口接受自有网格语义和调用方明确提供的固定米制设计 restMatrix，不接受原模型材质定义、源 node/mesh/primitive 索引、glTF parser associations 或源几何。没有老师顶点、全量残差、纹理图片或下载逻辑。未知材质语义报错，不回退成浅灰色。
 
-本地已通过 JavaScript 工厂调用、真实 Three r170 shader-hook 展开、原 fragment 对照、版本和几何不变测试。它们不是 WebGL 驱动编译、整车视觉通过或整车物理尺寸认证。实际渲染编译和正交画面由主线程 CI 验证。
+本地已通过 JavaScript 工厂调用、真实 Three r170 shader-hook 展开、严格受守卫的 fragment 差异对照、版本和几何不变测试。它们不是 WebGL 驱动编译、整车视觉通过或整车物理尺寸认证。实际渲染编译和正交画面由主线程 CI 验证。
 
 ## 真实复用链
 
 - 金属：调用固定 R06 `makeMetalMaterial`，再使用 v3.1 已有的 `PARAMETERIZED_METAL_FIELDS`。这就是既有的 8 处受守卫替换版本，噪声、解析梯度、场结构和 BRDF 接入复用原实现，不新写“金属噪声”。原始 vendor 字节不变，但运行的场不能称原 R06 field 逐字相同。
-- 漆面：实际调用 R08 `createTrainMatter(T).paint`。其材质转移为每个实例或每组相同 rest 域实例；原 fragment callback 逐字不变。保留原 RGB 倍乘、粗糙度扰动及 0.000020 m 设计微高系数。clearcoat/roughness 是本次明确创作的实例配方，不冒充原模型配方或历史测量。
+- 漆面：实际调用 R08 `createTrainMatter(T).paint`。其材质转移为每个实例或每组相同 rest 域实例。第一轮实际图暴露了未校准宏随机斑驳，现采用明确版本 `kaopu.native-r08-enamel-micro-transport/1`：仅两处受守卫替换，去掉宏 RGB 倍乘，将粗糙度扰动改为同一原 kn kernel 的 65/m、±0.006。原工厂文件、20µm 设计微高系数、微法线代码和物理 BRDF 不变。native paint fragment 已不是原 fragment 逐字相同；测试精确证明仅上述两处变化。clearcoat/roughness 是自有实例配方，不冒充原模型配方或历史测量。
 - 玻璃：实际调用 R03 `buildGlassCase`，提取真实 finite-glass 材质并释放工厂展示几何。其原 fragment callback 逐字不变，保留 transmission 0.91、IOR 1.52、14 mm 光学厚度及 3.5 m 衰减距离。
 
 重要：R03 自身把这份玻璃写为 limited dielectric transport，明确不是已恢复的成熟玻璃母体。这里只能称复用固定 R03 有限透射配方。不能把工厂演示箱体的闭合/厚度证明继承到火车自有玻璃：适配器主动移除该项物理厚度认证，所有新 pane 的闭合及实际厚度验证仍为 false。
@@ -20,8 +20,8 @@
 
 | 原生角色 | 配方 | 颜色（sRGB） | 金属度 | 粗糙度 | 实际母体 |
 |---|---|---|---:|---:|---|
-| paint | body-green | #103e35 | 0 | 0.255 | R08 漆面 |
-| blackPaint | black-painted-steel | #14191b | 0 | 0.39 | R06 已参数化完整涂层 |
+| paint | body-green | #103e35 | 0 | 0.40 | R08 原工厂 + 明示微面适配 |
+| blackPaint | black-painted-steel | #14191b | 0 | 0.58 | R06 已参数化完整涂层 |
 | brushedMetal | polished-rod-steel | #b9c2c6 | 1 | 0.21 | R06 已参数化金属 |
 | glass | window-glass | #e0eee8 | 0 | 0.045 | R03 有限玻璃 |
 | interior | interior-cream | #b5aa89 | 0 | 0.57 | R08 漆面 |
@@ -89,6 +89,27 @@ library 缓存 R08/R03 工厂样板，每次 create 返回独立实例。viewer 
 node --test student-native-r01/tests/native-materials.test.mjs
 ```
 
-当前 9 项通过，详情记录在 `qa/native-materials-verification.json`。验证覆盖固定版本 hash、全部配方、原 R08/R03 fragment equality、R06 同一已参数化 field、固定 rest 域、零磨损、未知角色拒绝、单独/批量实例生命周期、失败不部分替换、几何/UV/索引不变及无旧原模型绑定依赖。
+当前 9 项通过，详情记录在 `qa/native-materials-verification.json`。验证覆盖固定版本 hash、全部配方、R08 仅两处受守卫替换且微法线/BRDF 不变、R03 原 fragment equality、R06 同一已参数化 field、固定 rest 域、零磨损、未知角色拒绝、单独/批量实例生命周期、失败不部分替换、几何/UV/索引不变及无旧原模型绑定依赖。
 
 当前未在本子任务执行 WebGL/GPU 编译或视觉验收。整车灯光、环境反射、薄玻璃遮挡/透射、深绿车壳与黑底盘区分、抛光连杆可读性，必须看主线程最终渲染。金属反射尤其依赖合适环境和光源；工厂执行成功不代表整片画面已正确。
+
+## 首轮实际图后的 R01.1 衍生修正候选
+
+2026-10-17 实际 CI 首图 side/front 已检查，不能质量通过：绿色主壳有粗大白色斑驳反射，黑色长圆顶读成横向金属管。此项评价与 CI 是否运行成功分开。
+
+原因由代码与图像共同约束：
+
+1. R08 原漆面 color 的 kfb 输入为 3.1/m；三个 octave 的格点频率为 3.1、6.603、12.927/m，对应约 322.58、151.45、77.36 mm 格距，权重 .57/.28/.15。原 RGB 乘数 .94..1.03。明确米域后，这是宏观颜色调制，不能直接称真实漆微结构。
+2. 原粗糙度 kn 的频率 9/m，格距 111.11 mm，增加维度无关的 ±.06 perceptual roughness，再 clamp [.08,.99]。不是高度、不是涂层厚度，也不是腐蚀字段。
+3. 原 microheight 为同一 kn 在 65/m、15.38 mm 格距下的 20µm 系数，实际未过滤高度范围 ±10µm。其 footprint-AA 在约 6.15..24.62 mm footprint 间淡出。格距与振幅不可混称“20µm 纹理尺寸”。这些都是明确设计值，不是历史油漆实测。
+4. 第一轮实例 body-green R=.255、clearcoat=.32、coatR=.24，叠加 RoomEnvironment 的强亮矩形反射，放大粗糙度的宏变动。blackPaint 虽 M=0，但 R=.39 的圆顶也有横向白亮条；不能仅因高亮把它误诊为金属度参数错误。曲面法线也由壳线单独复核。
+
+获准的新本线最小衍生：
+
+- 用两处逐次“恰好出现一次”守卫替换，删除宏 color kfb 计算及 RGB 乘法；保留明确创作的深绿色 albedo。
+- 将 roughness 从 `kn(kq*9.) × .12` 改为 `kn(kq*65.) × .012`，范围从 ±.06 缩为 ±.006，仍沿用原函数核。不是新增腐蚀或随机锈场。
+- 原 65/m / 20µm micro-normal 和 footprint-AA 全保留；原物理 BRDF、所有原厂文件不改。微面只在可分辨尺度起作用，不应为了远景可见而强行放大。
+- body-green 固定 R=.40、clearcoat=0、envMapIntensity=.60；black-painted-steel 固定 R=.58、envMapIntensity=.45。连杆金属、玻璃和其他母体参数不变。
+- 不改全局曝光或灯光；不是以降低曝光掩盖场问题。基础颜色均匀不等于无光照纯色：仍是实际 MeshPhysicalMaterial、原微法线和金属/介电 PBR。
+
+新适配版本 `kaopu.student-native-materials/1.1.0`。原 R08 hook fragment SHA-256 为 `ee1a0a2a39608dfc3d24acfa7e38a429f94c8215bd2653be23128a5534391ae9`；两处变更后 hash 由测试写入 JSON。原工厂文件 hash 及替换次数同样记录。该版只获准进入第二次出图，仍为 visualAcceptance=false。

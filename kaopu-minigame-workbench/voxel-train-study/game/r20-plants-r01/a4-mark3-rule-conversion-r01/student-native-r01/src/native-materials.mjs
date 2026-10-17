@@ -5,16 +5,18 @@
  *
  * R06 metal uses the already locked eight-substitution field exported by v3.1.
  * Its inherited uniform names contain “Source”; values below are OUR recipes,
- * never copied from an original model. R08 paint and R03 finite-glass fragment
- * callbacks remain unchanged. Only their vertex material-domain assignment moves
- * to an explicitly supplied, immutable native rest frame. No geometry is edited.
+ * never copied from an original model. R03 glass fragment remains unchanged.
+ * R08 paint uses two declared, guarded native-only transport substitutions to
+ * remove inherited macro albedo mottling and narrow roughness to a small-scale
+ * field; the original vendor, normal microheight and BRDF remain unchanged.
+ * Material coordinates use an explicit immutable rest frame. Geometry is not edited.
  */
 import {makeMetalMaterial, METAL_FIELDS} from '../../master-materials-v3-1/vendor/material-master-r06/metal-surface.mjs';
 import {PARAMETERIZED_METAL_FIELDS, SOURCE_RECIPE_VERSION} from '../../master-materials-v3-1/r06-source-parameters.mjs';
 import {createTrainMatter} from '../../master-materials-v3-1/vendor/train-r08/materials/matter.mjs';
 import {buildGlassCase, GLASS_RECIPE} from '../../master-materials-v3-1/vendor/material-master-r03/wood-glass.mjs';
 
-export const NATIVE_MATERIAL_VERSION = 'kaopu.student-native-materials/1.0.0';
+export const NATIVE_MATERIAL_VERSION = 'kaopu.student-native-materials/1.1.0';
 export const NATIVE_MASTER_RELEASE = Object.freeze({
   directory: 'master-materials-v3-1',
   commit: '7577ae37c8bc13bc3f7c0204c1857e83074c257a',
@@ -35,14 +37,14 @@ const freeze = value => {
 export const NATIVE_MATERIAL_RECIPES = freeze({
   'body-green': {
     label: 'Authored deep-green enamel', family: 'paint', colorSRGB: '#103e35',
-    metalness: 0, roughness: 0.255, clearcoat: 0.32, clearcoatRoughness: 0.24,
-    envMapIntensity: 1.0, microReliefM: 0.000020,
-    rationale: 'Authored restrained enamel finish; the extra coat is an appearance choice, not measured historic chemistry.',
+    metalness: 0, roughness: 0.40, clearcoat: 0, clearcoatRoughness: 0.24,
+    envMapIntensity: 0.60, microReliefM: 0.000020,
+    rationale: 'Second native visual candidate: restrained enamel roughness, no unsupported extra clearcoat, reduced instance environment reflection. Native-only two-substitution microfinish transport removes uncalibrated macro mottling; this does not certify visual acceptance.',
   },
   'black-painted-steel': {
     label: 'Authored black-painted steel', family: 'metal', colorSRGB: '#14191b',
-    metalness: 0, roughness: 0.39, envMapIntensity: 1.0, microReliefM: 0.000012,
-    rationale: 'Intact dielectric paint over steel; no bare-metal F0, rust, oil or exposed substrate is invented.',
+    metalness: 0, roughness: 0.58, envMapIntensity: 0.45, microReliefM: 0.000012,
+    rationale: 'Second native visual candidate: rough intact dielectric paint over steel, with restrained environment reflection. No bare-metal F0, rust, oil or exposed substrate is invented.',
   },
   'polished-rod-steel': {
     label: 'Authored polished linkage steel', family: 'metal', colorSRGB: '#b9c2c6',
@@ -92,6 +94,47 @@ export const NATIVE_MATERIAL_RECIPES = freeze({
     metalness: 1, roughness: 0.28, envMapIntensity: 1.1, microReliefM: 0.000004,
     rationale: 'Authored conductor colour for trim; alloy composition and spectral response are not measured.',
   },
+});
+
+/** Native-only derivative of the actual locked R08 paint callback.
+ * Exactly two substitutions; the original vendor and normal/BRDF code stay intact.
+ */
+export const NATIVE_PAINT_TRANSPORT_VERSION = 'kaopu.native-r08-enamel-micro-transport/1';
+export const NATIVE_PAINT_SUBSTITUTIONS = freeze([
+  ['vec3 kq=vKP+vec3(11.00);float kp=kfb(kq*3.1);diffuseColor.rgb*=.94+.09*kp;',
+    'vec3 kq=vKP+vec3(11.00);'],
+  ['roughnessFactor=clamp(roughnessFactor+(kn(kq*9.)-.5)*.12,.08,.99);',
+    'roughnessFactor=clamp(roughnessFactor+(kn(kq*65.)-.5)*.012,.08,.99);'],
+]);
+export const NATIVE_PAINT_TRANSPORT = freeze({
+  version: NATIVE_PAINT_TRANSPORT_VERSION, substitutionCount: 2,
+  originalPaintFactorySha256: 'ddde6a46c197742abed03f5e98b6edcd5cf9ed1e51f3e876cd8b63a7273a674a',
+  originalFieldFactorySha256: 'bbf9376b7a0a69d85627bd6cf4e5662be2557ee67a0a8a83411878bff133d062',
+  originalR170HookFragmentSha256: 'ee1a0a2a39608dfc3d24acfa7e38a429f94c8215bd2653be23128a5534391ae9',
+  originalVendorChanged: false, fragmentByteIdentical: false,
+  noiseKernelChanged: false, normalMicroheightCodeChanged: false, brdfChanged: false,
+  macroAlbedoModulationRemoved: true, actualRenderAcceptance: false,
+});
+/** These are designed metre-domain controls, not historical-paint measurements.
+ * Value-noise lattice spacing is not a periodic surface wavelength.
+ */
+export const NATIVE_PAINT_FIELD_SCALE = freeze({
+  units: 'm', calibratedAgainstRealPaint: false,
+  fieldInterpretation: 'Authored enamel appearance derivative of R08; no corrosion, exposure, rust or aging phase is present.',
+  originalColor: {latticeFrequenciesPerM: [3.1, 6.603, 12.927],
+    latticeSpacingsM: [1 / 3.1, 1 / 6.603, 1 / 12.927], octaveWeights: [0.57, 0.28, 0.15],
+    multiplierRange: [0.94, 1.03], active: false,
+    interpretation: 'Removed uncalibrated macro albedo modulation; not established enamel microstructure.'},
+  color: {multiplier: 1, authoredColorPreserved: true},
+  originalRoughness: {latticeFrequencyPerM: 9, latticeSpacingM: 1 / 9,
+    additiveRange: [-0.06, 0.06], active: false},
+  roughness: {latticeFrequencyPerM: 65, latticeSpacingM: 1 / 65,
+    additiveRange: [-0.006, 0.006], finalClamp: [0.08, 0.99],
+    interpretation: 'Small dimensionless roughness variation using the same locked kn kernel; the design lattice is 15.38 mm, not a measured paint grain.'},
+  normal: {latticeFrequencyPerM: 65, latticeSpacingM: 1 / 65,
+    heightCoefficientM: 0.000020, ungatedHeightRangeM: [-0.000010, 0.000010],
+    footprintFadeM: [0.4 / 65, 1.6 / 65],
+    interpretation: 'Unchanged footprint-filtered normal microheight. The 20 micrometre design coefficient is not measured paint relief.'},
 });
 
 export const NATIVE_MATERIAL_ALIASES = freeze({
@@ -183,6 +226,19 @@ function cloneFactoryMaterial(T, template) {
   if (ownUniforms) material.userData.uniforms = ownUniforms;
   return material;
 }
+function applyNativePaintTransport(material) {
+  const original = material.onBeforeCompile.bind(material), originalKey = material.customProgramCacheKey.bind(material);
+  material.onBeforeCompile = shader => {
+    original(shader);
+    for (const [before, after] of NATIVE_PAINT_SUBSTITUTIONS) {
+      if (shader.fragmentShader.split(before).length !== 2) {
+        throw new Error('Locked R08 native paint substitution drift: ' + before);
+      }
+      shader.fragmentShader = shader.fragmentShader.replace(before, after);
+    }
+  };
+  material.customProgramCacheKey = () => originalKey() + '|' + NATIVE_PAINT_TRANSPORT_VERSION;
+}
 function makeAuthoredMetal(T, recipe) {
   const material = makeMetalMaterial(T, {family: 'sign', variant: 0, origin: [0, 0, 0],
     state: {...ZERO_STATE}, jointOrigins: []});
@@ -233,7 +289,10 @@ export function createNativeMaterialLibrary(T) {
     const recipe = recipeFor(recipeId), domain = restDomain(T, options);
     let material;
     if (recipe.family === 'metal') material = makeAuthoredMetal(T, recipe);
-    else if (recipe.family === 'paint') material = cloneFactoryMaterial(T, paintTemplate ??= makePaintTemplate(T));
+    else if (recipe.family === 'paint') {
+      material = cloneFactoryMaterial(T, paintTemplate ??= makePaintTemplate(T));
+      applyNativePaintTransport(material);
+    }
     else material = cloneFactoryMaterial(T, glassTemplate ??= makeGlassTemplate(T));
     material.name = recipe.label + ' · ' + NATIVE_MATERIAL_VERSION;
     material.color.setStyle(recipe.colorSRGB, T.SRGBColorSpace);
@@ -269,8 +328,10 @@ export function createNativeMaterialLibrary(T) {
       domain: domain.record, actualMasterFactoryCalled: true,
       shaderHookExecuted: false, actualWebGLCompileValidated: false, visualAcceptance: false,
       geometryChanged: false, physicalCertification: false,
+      paintTransport: recipe.family === 'paint' ? structuredClone(NATIVE_PAINT_TRANSPORT) : null,
+      paintFieldScale: recipe.family === 'paint' ? structuredClone(NATIVE_PAINT_FIELD_SCALE) : null,
       microReliefMeasured: false, weathering: {...ZERO_STATE, variant: 0, inferredRust: false, inferredOil: false},
-      fragmentPolicy: recipe.family === 'metal' ? 'Existing locked eight-substitution R06 parameterization; original vendor untouched.' : 'Original factory fragment callback unchanged.',
+      fragmentPolicy: recipe.family === 'metal' ? 'Existing locked eight-substitution R06 parameterization; original vendor untouched.' : recipe.family === 'paint' ? 'Declared native-only two-substitution R08 derivative; vendor, original normal microheight and BRDF unchanged. Not original fragment equality.' : 'Original R03 glass factory fragment callback unchanged.',
       glassLimits: recipe.family === 'glass' ? {
         recipeStatus: GLASS_RECIPE.status, opticalThicknessM: recipe.thicknessM,
         nativePaneClosednessVerified: false, nativePaneThicknessVerified: false,
