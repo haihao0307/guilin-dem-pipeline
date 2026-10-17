@@ -1,0 +1,101 @@
+name: A4 A6 R03 unified source-backed design QA
+on:
+  push:
+    branches: ['qa/a4-a6-source-comparison-r03-20261017', 'gh-pages']
+    paths:
+      - '.github/workflows/a4-a6-design-r03-qa.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/**'
+permissions:
+  contents: read
+jobs:
+  original-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r02/design/retained/branding
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned registry dependencies and official Chromium
+        id: install
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify complete source bytes materials textures and animations
+        run: npm test && node tests/orthographic-acceptance.mjs
+      - name: Verify network failures deadlines retries and independent deduplicated restores
+        run: node tests/source-loading.mjs
+      - name: Load full local scene in real WebGL and test original animation
+        run: npm run test:browser
+      - name: Upload fixed-axis design views for visual review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: axis-view-preview-${{ github.sha }}
+          path: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/01-source-side-comparison.png
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/02-source-front-comparison.png
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/04-shared-scale-side-driver-detail.png
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/05-driver-native-pixel-crop.png
+          retention-days: 14
+          if-no-files-found: error
+      - name: Verify A4 is rendered while Mark3 download is held then complete both pairs
+        env:
+          TEST_PARTIAL_LOADING: '1'
+          TEST_QA_DIR: qa/partial
+        run: npm run test:browser
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: a4-a6-source-comparison-local-${{ github.sha }}
+          path: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/
+            !kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/public/
+          retention-days: 14
+          if-no-files-found: error
+      # The deployed entry may still be the previous version. Keep its real failure
+      # evidence without claiming the candidate was deployed or masking local failures.
+      - name: Capture direct public Pages baseline after local QA
+        id: public-baseline
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        env:
+          TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/
+          TEST_QA_DIR: qa/public
+          TEST_TIMEOUT_MS: '240000'
+        run: npm run test:browser
+      - name: Upload independent public Pages evidence including failed loads
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always() && steps.install.outcome == 'success'
+        with:
+          name: a4-a6-source-comparison-public-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03/qa/public/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Summarize public baseline separately from local candidate result
+        if: always() && steps.install.outcome == 'success'
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import fs from 'node:fs';
+          const file = 'qa/public/BROWSER_QA.json';
+          if (!fs.existsSync(file)) {
+            console.log('Public Pages baseline: no report was produced. Inspect the baseline step logs.');
+          } else {
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            console.log(`Public Pages baseline: ${report.status}`);
+            console.log(`URL: ${report.requestedURL}`);
+            console.log(`Elapsed: ${report.durationMs} ms; HTTP failures: ${report.httpFailures?.length || 0}; failed requests: ${report.failedRequests?.length || 0}`);
+            console.log(`Page status: ${report.lastState?.status || '(not available)'}`);
+            if (report.failure) console.log(`Failure: ${report.failure.split('\n')[0]}`);
+            console.log('The public baseline is reported independently and may predate the candidate. It is not deployment verification.');
+          }
+          NODE
