@@ -1,5 +1,9 @@
 # 按结构顺序学习 · 2026-10-16
 
+## 修订 09：从原则说明到实际消费者
+
+本轮把用户原文件第八节第一、第三项用于当前生成：造型曲线切向进入共享三维格点，原生根以 RK2 追踪完整路径；原生根局部连通与全曲线尺度共同限制中、小束。关闭曲线约束带来约 30.17 mm 最大路径变化，关闭旋涡带来约 0.154 mm，当前旋涡影响较弱。方法、坐标、源码所有者、失败尝试、原始论文算法差别与未完成项收录在 [VOLUME-FLOW-09](VOLUME-FLOW-09.md)。没有声称实现论文一的增量 Cholesky 或论文三的 Delaunay/完整样例合成。
+
 ## 修订 08：完整曲线、中束与体积路线
 
 本轮复读 [Sketching Hairstyles](https://hongbofu.people.ust.hk/doc/sbim07_hairstyle_sketching.pdf)，以及 [Example-Based Hair Geometry Synthesis](https://research.lvdi.wang/publications/hairsynthesis/index.html) 的[论文第 4.1、4.2、5.3 节](https://research.lvdi.wang/publications/hairsynthesis/2009_hairsynthesis.pdf)。研究提示完整曲线、局部位移和空间切向协调应共同参与，毛囊平面分组本身不能决定自然外形。

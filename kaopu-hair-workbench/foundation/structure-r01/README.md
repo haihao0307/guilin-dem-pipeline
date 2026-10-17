@@ -1,5 +1,11 @@
 # KAOPU 头发结构工作台 R01
 
+## 当前实施：参考方法进入生成过程 09
+
+根据学习文件第八节，新增“连续三维发流”：12 条造型曲线约束共享三维场，从原生根重建 141 条主体/鬓角路径，24 条前额/刘海保持。2,559 个启用非刘海根的方向、切向与抬升同步更新，绑定、位置、法线和 F02.1 生长范围不变。中、小束同时满足全曲线尺度与局部原生根图连通。原十一项状态单独锁定；当前十二个运输状态、十一个可见选项。
+
+关闭曲线约束使路径最大变化约 30.17 mm，确认研究原则已进入生成。当前人体中心线穿透为零，新路径最大局部折角约 16.34°；完整自然体积、刘海、发梢与中束外形尚未完成视觉验收，密集发丝、材质和物理继续锁定。[学习文件逐项落实](docs/LEARNING-CHECKLIST-R09.md)、[消费者、失败记录与研究差别](docs/VOLUME-FLOW-09.md)、[当前同机位实际对照](evidence/volume09-review-overview.png)。下方 R08 及更早段落为历史记录。
+
 ## 当前实施：对照学习文件推进轮廓与发束 08
 
 [打开本轮固定预览](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/63da890c63190e1cf24af364fb004ab08e06fc68/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=silhouette-framing)。本机全新浏览器公开测试：结构 18.97 秒、人物皮肤完整就绪 32.83 秒；两项新研究首次切换约 1.23 / 0.91 秒，十状态缓存切换合计 137 ms，零新增请求。新页面直达指定研究也通过，但同一上下文已有网络缓存，不能把其 15.69 秒当作冷启动改善。[完整公开记录](evidence/public-route08-check.json)。首次加载仍未达标，本轮未完成加载优化。

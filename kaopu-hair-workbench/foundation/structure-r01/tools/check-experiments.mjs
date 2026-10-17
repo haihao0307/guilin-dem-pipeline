@@ -4,7 +4,7 @@ import {assertStructure} from '../src/StructureContract.mjs';import {EXPERIMENTS
 const base=new URL('../',import.meta.url),read=p=>fs.readFileSync(new URL(p,base)),load=p=>JSON.parse(zlib.gunzipSync(read(p))),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const roots=p=>new Float32Array(Uint8Array.from(zlib.gunzipSync(read(p))).buffer),baseline=load('assets/structure.json.gz'),baselineRoots=roots('assets/roots.bin.gz'),reports=[];
 const rms=(a,b)=>Math.sqrt(a.reduce((s,x,i)=>s+(x-b[i])**2,0)/(a.length/3))*1000;
-for(const e of EXPERIMENTS.filter(e=>!e.controls.cutPreset&&!e.controls.routePreset)){
+for(const e of EXPERIMENTS.filter(e=>!e.controls.cutPreset&&!e.controls.routePreset&&!e.controls.volumePreset)){
  const prefix=e.id==='baseline'?'assets/':'assets/experiments/'+e.id+'/',lab=load(prefix+'structure.json.gz'),r=roots(prefix+'roots.bin.gz');assertStructure(lab,r);if(e.id!=='baseline')assert.deepEqual(unpackExperiment(baseline,load(prefix+'patch.json.gz'),sha(read('assets/structure.json.gz'))),lab);
  assert.deepEqual(lab.profile.experiment.controls,e.controls);assert.deepEqual(lab.activeMask,baseline.activeMask);assert.deepEqual(lab.guides.map(g=>g.rootId).sort((a,b)=>a-b),baseline.guides.map(g=>g.rootId).sort((a,b)=>a-b));
  for(let i=0;i<lab.rootCount;i++)for(const k of [0,1,2,3,4,5,6,7,8,9,16,17,19,20,21,22,23,25])assert.equal(r[i*lab.stride+k],baselineRoots[i*lab.stride+k],'Preserved root field '+i+'/'+k);
