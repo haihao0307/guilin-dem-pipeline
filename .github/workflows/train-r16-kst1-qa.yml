@@ -1,0 +1,80 @@
+name: Train R16 KST1 real-browser acceptance
+on:
+  push:
+    branches: ['qa/train-r16-kst1-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r16/**'
+      - '.github/workflows/train-r16-kst1-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: train-r16-kst1-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Read fixed pre-optimization candidate for same-runner comparison
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: 966337636c9c5112a126acbdc91244207fb29fcc
+          path: .qa-r16-before
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install pinned official Playwright without package scripts
+        run: npm install --prefix "$RUNNER_TEMP/train-r16" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+      - name: Install Chromium
+        run: |
+          "$RUNNER_TEMP/train-r16/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r16/node_modules" >> "$GITHUB_ENV"
+      - name: Install distribution audio decoder required by preserved baseline tests
+        run: sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Check unchanged baseline and function street
+        run: |
+          mkdir -p train-r16-results
+          node --check "$GAME/r16/tests/r16-browser.cjs"
+          node --test "$GAME"/tests/*.test.mjs "$GAME"/*.test.mjs "$GAME"/r16/tests/*.test.mjs "$GAME"/r16/street/*.test.mjs 2>&1 | tee train-r16-results/unit.txt
+      - name: Serve exact candidate without deployment
+        id: serve
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/train-r16-server.log" 2>&1 &
+          for n in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8765/$GAME/r16/ > /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Inspect actual native WebGL frames and lifecycle
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_QA_OUT: train-r16-results/browser
+        run: node "$GAME/r16/tests/r16-browser.cjs"
+      - name: Measure clean uninstrumented cold and warm startup
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_QA_OUT: train-r16-results/clean
+        run: node "$GAME/r16/tests/r16-clean-startup.cjs"
+      - name: Compare unchanged pre-optimization and candidate on same runner
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_BASELINE_URL: http://127.0.0.1:8765/.qa-r16-before/kaopu-minigame-workbench/voxel-train-study/game/r16/
+          TRAIN_CLEAN_BASELINE_COMMIT: 966337636c9c5112a126acbdc91244207fb29fcc
+          TRAIN_CLEAN_QA_OUT: train-r16-results/paired-light-optimization
+        run: node "$GAME/r16/tests/r16-clean-startup.cjs"
+      - name: Preserve screenshots, exact source hashes, timings and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r16-kst1-${{ github.sha }}
+          path: train-r16-results/
+          compression-level: 0
+          if-no-files-found: warn
+          retention-days: 7
