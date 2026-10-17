@@ -80,3 +80,5 @@ Independent GitHub blob cross-check also found `LipSurface.js` blob `c9bcaf85...
 Classification: `COMPOSITE_COVERAGE_VERIFIED_SCOPED`. A failed run does not poison every completed atom; reuse is legal only when the failure is downstream/non-dominating for the retained atom, exact subject and evidence bytes are bound, invalid claims are excluded, and all missing atoms are rerun fresh.
 
 This is a real affected-Mother `IMPLEMENTED + workflow GATE-RUN` observation for the candidate semantics, but not proof that Material or Coordinator acknowledged N168. The existing regression remains Candidate/inactive because no independent verifier receipt, adoption decision or user acceptance exists.
+
+N170 routing receipt: POSTED to issue #91 as comment 6233503954: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6233503954. No reply was present when recorded; ACKNOWLEDGED remains false.
