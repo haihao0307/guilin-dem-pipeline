@@ -45,7 +45,9 @@ jobs:
       - name: Verify deployed public Pages with actual browser
         env:
           TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/viewer/index.html?deployment=4b2ccd2d
-        run: node viewer/browser.cjs
+        run: |
+          node viewer/wait-public.mjs
+          node viewer/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
