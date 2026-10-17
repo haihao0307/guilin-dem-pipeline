@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>靠谱列车 · 学生原生交互 R02</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#e9e7e0;color:#22302b;font:14px/1.55 system-ui}header,footer{padding:14px 18px;max-width:1560px;margin:auto}h1{font-size:20px;line-height:1.3;margin:0 0 8px}p{margin:5px 0}button,input{font:inherit}button{padding:8px 13px;border:1px solid #89978e;border-radius:6px;color:inherit;background:#fafbf8;cursor:pointer}button:hover{background:#dce8dd}button[aria-pressed=true]{background:#244d3f;color:white;border-color:#244d3f}button:focus-visible,input:focus-visible,.panel:focus-visible{outline:3px solid #5b8bce;outline-offset:3px}.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:12px 0}.zoom-control{display:flex;align-items:center;gap:7px;margin-left:8px}.zoom-control input{width:140px}#mode{display:inline-block;padding:4px 9px;border:1px solid #a2b4a4;border-radius:4px;background:#eff6ee;font-weight:650}#mode.free-mode{color:#713c08;background:#fff0d8;border-color:#c38a3a}.warning{color:#704626;font-size:12px}summary{cursor:pointer;font-size:12px;padding:6px 0;font-weight:600}.parameters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:10px 12px;background:#f5f5f0;border:1px solid #c3ccc2;border-radius:7px}.parameter label{display:block;font-weight:600}.parameter .entry{display:flex;gap:9px;align-items:center}.parameter input[type=range]{width:100%;min-width:60px;accent-color:#286349}.parameter input[type=number]{width:82px;min-height:32px;border:1px solid #a5b0a5;border-radius:4px;padding:2px 5px;background:white}.parameter small{display:block;color:#5f695f;font-size:11px}input[aria-invalid=true]{outline:2px solid #ac3528}#status{min-height:1.55em;font-size:12px;margin-top:8px}#status.error{color:#a42920}#stage{height:70vh;min-height:440px;max-height:1050px;position:relative;display:grid;grid-template-rows:1fr 1fr;gap:1px;background:#a9ada7;overflow:hidden}.panel{position:relative;min-height:0;touch-action:pan-y;cursor:default}.panel.is-free{touch-action:none;cursor:grab}.panel.is-dragging{cursor:grabbing}canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.label{position:absolute;z-index:2;left:10px;top:8px;background:#ffffffdf;padding:4px 7px;font-size:12px;pointer-events:none;max-width:calc(100% - 20px)}.scale-label{position:absolute;z-index:2;left:10px;bottom:8px;background:#ffffffdb;padding:2px 6px;font-size:11px;pointer-events:none}footer{font-size:12px;color:#586459}a{color:#285d4c}.control-hint{font-size:12px;color:#566258;margin:7px 0}@media(max-width:700px){header,footer{padding:12px}.parameters{grid-template-columns:1fr;gap:9px}.parameter label{font-size:12px}.parameter small{font-size:11px}.toolbar{gap:6px}.toolbar button{font-size:12px;padding:8px 10px}.zoom-control{margin-left:0;font-size:12px}#stage{height:64vh;min-height:420px}.label{font-size:10px;left:6px;top:5px}.scale-label{font-size:10px;left:6px}}
+  </style>
+  <script type="importmap">{"imports":{"three":"../../a4-a6-source-comparison-r03/vendor/three.module.js"}}</script>
+</head>
+<body>
+  <header>
+    <h1>学生原生交互 R02 · 外壳参数与结构观察</h1>
+    <p>沿用 R01 全部原生曲面、轮形、机械部件与自有材质。默认正侧，两格始终同米/像素。</p>
+    <p class="warning">已核驱动轮直径 2.032 米及轴距固定。外壳控制为学习设计参数；不是完整车型尺寸、机械联动或外形验收。</p>
+    <div class="toolbar" role="group" aria-label="观察模式">
+      <button id="side" aria-pressed="true">正侧</button><button id="front" aria-pressed="false">正前</button><button id="top" aria-pressed="false">顶面</button><button id="free" aria-pressed="false">自由观察</button><button id="structure" aria-pressed="false">结构剖解 / 外壳</button><button id="reset">恢复参数与视角</button>
+      <label class="zoom-control" for="zoom">同步缩放 <input id="zoom" type="range" min="0.5" max="6" step="0.01" value="1" aria-label="两格同步缩放"><output id="zoom-value" for="zoom">1.00×</output></label>
+    </div>
+    <div id="mode">正交对照 · 正侧 · 两格同米/像素</div>
+    <p id="control-hint" class="control-hint">滚轮 / 缩放条同步缩放。开启自由观察后，可在任一画面拖动旋转，手机单指旋转、双指缩放。正侧 / 正前 / 顶面恢复标准对照视角与初始缩放；画面外可正常滚动页面。</p>
+    <details id="parameter-details" open><summary>外壳学习参数 · 轮轴和机械固定</summary>
+    <div class="parameters" aria-label="外壳学习参数">
+      <div class="parameter"><label for="locoTopHeight">机车主罩最高点（米）</label><div class="entry"><input id="locoTopHeight" type="range" min="3.85" max="4.20" step="0.01" value="4.03"><input id="locoTopHeight-value" type="number" min="3.85" max="4.20" step="0.01" value="4.03" aria-label="机车主罩最高点，米"></div><small>3.85–4.20 m；只改主罩截面，驾驶室、轮径和轴位固定</small></div>
+      <div class="parameter"><label for="locoSideTuck">机车下裙内收比例</label><div class="entry"><input id="locoSideTuck" type="range" min="0.03" max="0.20" step="0.01" value="0.11"><input id="locoSideTuck-value" type="number" min="0.03" max="0.20" step="0.01" value="0.11" aria-label="机车下裙内收比例"></div><small>0.03–0.20；下裙曲面形态，保留轮拱净空与机械结构</small></div>
+      <div class="parameter"><label for="coachRoofTop">车厢裸壳圆顶最高点（米）</label><div class="entry"><input id="coachRoofTop" type="range" min="3.55" max="4.05" step="0.01" value="3.81"><input id="coachRoofTop-value" type="number" min="3.55" max="4.05" step="0.01" value="3.81" aria-label="车厢裸壳圆顶最高点，米"></div><small>3.55–4.05 m；裸壳设计高度，不能当作整车实测总高</small></div>
+    </div>
+    </details>
+    <div id="status" role="status" aria-live="polite">正在执行原生生成函数…</div>
+  </header>
+  <main id="stage" aria-label="同步正交列车视口" aria-busy="true">
+    <section class="panel" id="locomotive" tabindex="0" aria-label="机车视口，开启自由观察可拖动旋转，方向键旋转，加减键缩放"><div class="label">机车 / tender 原生静态结构 · 尺寸细节与机械联动待核</div><div class="scale-label"></div></section>
+    <section class="panel" id="coach" tabindex="0" aria-label="车厢视口，开启自由观察可拖动旋转，方向键旋转，加减键缩放"><div class="label">Mark3 学生壳 / 双 BT10 静态结构 · 内装及功能待补</div><div class="scale-label"></div></section>
+  </main>
+  <footer>固定初始边界、相机中心与各标准视角的基准比例；修改外壳不自动取景、不改机械。自由观察仍为正交投影，但斜视缩短不可用于尺寸验收。<a href="../student-native-r01/README.md">R01 来源与边界</a> · <a href="../CONVERSION_GATE.md">既有门禁</a></footer>
+  <script>
+    window.NATIVE_QA={ready:false,busy:true,errors:[]};
+    window.fail=e=>{NATIVE_QA.errors.push(String(e?.stack||e));document.querySelector('#status').textContent='生成/运行失败：'+(e?.message||e);document.querySelector('#status').classList.add('error');};
+    addEventListener('error',e=>fail(e.error||e.message));addEventListener('unhandledrejection',e=>fail(e.reason));import('./view.mjs').catch(fail);
+  </script>
+</body>
+</html>
