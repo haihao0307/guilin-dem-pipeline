@@ -1,0 +1,417 @@
+{
+  "schema": "kaopu/lip-realism-qa@1",
+  "version": "LIP-REALISM-R01",
+  "mode": "public",
+  "startedAt": "2026-10-17T10:17:10.044Z",
+  "sourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+  "verificationCommit": "f432cc0d099d81db0e87e21d5af0a88ba9e04253",
+  "baseline": {
+    "commit": "5543f756ca3af1428323696324303fa70b8de850",
+    "previewSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "role": "BASELINE_ONLY"
+  },
+  "tests": [
+    {
+      "name": "fixed public candidate starts and a real lip control changes then restores pixels",
+      "passed": true,
+      "elapsedMS": 27095,
+      "result": {
+        "before": {
+          "width": 900,
+          "height": 720,
+          "sha256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3",
+          "nonUniformPixels": 619309
+        },
+        "disabled": {
+          "width": 900,
+          "height": 720,
+          "sha256": "3838668ed601a18497d8929d44f7c6859d77473279d15d4e14031f0238720b0c",
+          "nonUniformPixels": 619309
+        },
+        "roi": {
+          "x0": 93,
+          "x1": 806,
+          "y0": 87,
+          "y1": 610,
+          "vertexCount": 93462,
+          "source": "independent frozen native LipRails ROI projected from existing geometry",
+          "paddingPixels": 8,
+          "yOrigin": "bottom"
+        },
+        "delta": {
+          "changedInside": 104330,
+          "changedOutside": 0,
+          "outsideMax": 0,
+          "insideMax": 71,
+          "outsideBounds": null,
+          "outsideExamples": [],
+          "examplesTruncated": false,
+          "threshold": "exact RGB equality outside independent native mouth ROI"
+        },
+        "geometryCheck": {
+          "domain": {
+            "source": "native l19State.z (LipRegionTopology q.red), captured before toggle",
+            "redVertices": 65952
+          },
+          "invariants": {
+            "index": true,
+            "canonicalPositions": true,
+            "canonicalFaces": true,
+            "vertices": true,
+            "triangles": true,
+            "csRest": true,
+            "fRest": true,
+            "skinIndex": true,
+            "skinWeight": true
+          },
+          "delta": {
+            "compatibleBuffers": true,
+            "changedPositionVertices": 20793,
+            "changedNormalVertices": 28924,
+            "positionOutsideRed": 0,
+            "normalOutsideOneRing": 0,
+            "maxDisplacementMicrons": 31.929469233061557,
+            "redMaskChanges": 0,
+            "nonFiniteValues": 0,
+            "badPositions": [],
+            "badNormals": []
+          },
+          "maxAllowedDisplacementMicrons": 100,
+          "normalDomain": "changed position vertices plus vertices sharing one indexed triangle",
+          "before": {
+            "attributes": {
+              "position": "2a5f53bce3440917bdd9fb42b79c12c0c84594b8b0b29248827f1263c1f9fb74",
+              "normal": "017c38d95be92e43b1991aeb6554148f1dcb754b338b9ff1f817cbc8731f8fdc",
+              "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+              "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+              "skinIndex": null,
+              "skinWeight": null
+            },
+            "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+            "canonicalPositions": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+            "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+            "vertices": 266098,
+            "triangles": 531702
+          },
+          "after": {
+            "attributes": {
+              "position": "7df8b6813bfa503cd8e2a3d12b6b0276aedcf6e8005b06e2546ad11c07a29535",
+              "normal": "ab04793265b00531535f3b57fc6624859793df2435a565f079e8344eae8809e5",
+              "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+              "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+              "skinIndex": null,
+              "skinWeight": null
+            },
+            "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+            "canonicalPositions": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+            "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+            "vertices": 266098,
+            "triangles": 531702
+          }
+        },
+        "report": {
+          "version": "LIP-REALISM-R01",
+          "ready": true,
+          "linked": true,
+          "shaderCompiles": 1,
+          "programId": 8,
+          "settings": {
+            "enabled": true,
+            "redness": 0.4,
+            "pigment": 0.25,
+            "upperDifference": 0.18,
+            "variation": 0.65,
+            "edgeSoftness": 0.34,
+            "wetness": 0.35,
+            "roughness": 0.53,
+            "foldStrength": 0.55,
+            "seed": 731,
+            "diagnostic": 0
+          },
+          "source": {
+            "version": "LIP-REALISM-R01",
+            "sourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+            "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+            "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+            "moduleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d"
+          },
+          "view": "macro",
+          "canonicalGeometryChanged": false,
+          "displayLipReliefAdjusted": true,
+          "coarseReliefScale": 0.35,
+          "nativeMicroGeometry": 1,
+          "maxGeometryFurrowMicrons": 16.03387979725369,
+          "newMeshes": 0,
+          "newImageMaps": 0,
+          "wholeBodySkinFilesChanged": false,
+          "lightingChangedByModule": false,
+          "coordinateSystem": "existing native lip outer/inner rails in fRest; follows inherited deformation",
+          "fieldsSummary": {
+            "outerTop": 7,
+            "outerBottom": 7,
+            "innerTop": 5,
+            "innerBottom": 5,
+            "widthMM": 50.655371939269,
+            "upperLowerIndependent": true,
+            "wetnessChangesAlbedo": false,
+            "pigmentChangesGeometry": false,
+            "maskDomain": "native lip and inherited lip feather; independently checked against native mouth ROI",
+            "microAmplitude": "engineering micrometre-scale relief; inherited coarse groove amplitude locally reduced, not measured anatomy"
+          },
+          "fullVolumeScattering": false,
+          "visualAcceptance": false,
+          "productionReady": false
+        }
+      }
+    },
+    {
+      "name": "390x844 browser viewport remains usable without claiming physical phone certification",
+      "passed": true,
+      "elapsedMS": 10625,
+      "result": {
+        "viewport": [
+          390,
+          844
+        ],
+        "scrollWidth": 390,
+        "ready": true,
+        "controls": 147,
+        "canvas": {
+          "width": 376,
+          "height": 400
+        },
+        "physicalPhone": false
+      }
+    },
+    {
+      "name": "all actual GPU programs link with zero shader and browser errors",
+      "passed": true,
+      "elapsedMS": 1495,
+      "result": [
+        {
+          "linked": [
+            {
+              "id": 0,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 1,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 2,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 3,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 4,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 5,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 6,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 7,
+              "linked": true,
+              "log": ""
+            },
+            {
+              "id": 8,
+              "linked": true,
+              "log": ""
+            }
+          ],
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "WebKit",
+          "error": 0,
+          "drawCalls": 2,
+          "triangles": 531702,
+          "drawAudit": {
+            "elapsedMS": 1490.600000000035,
+            "width": 376,
+            "height": 400,
+            "readback": {
+              "kind": "synchronous CPU Uint8Array readPixels in the same callback as the full viewer render",
+              "x": 188,
+              "y": 200,
+              "width": 1,
+              "height": 1,
+              "rgba": [
+                202,
+                172,
+                153,
+                255
+              ]
+            },
+            "rendererSubmissions": 1,
+            "rendererFrameDelta": 1,
+            "viewerRendersDelta": 1,
+            "passes": [
+              {
+                "scene": "native-person",
+                "nativeCamera": true,
+                "defaultTarget": true,
+                "frameDelta": 1,
+                "drawCalls": 2,
+                "triangles": 531702
+              }
+            ],
+            "defaultFramebuffer": true,
+            "errorBefore": 0,
+            "error": 0,
+            "contextLost": false,
+            "startupFinalFrame": true
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "resourceErrors": [],
+  "screenshots": [
+    {
+      "name": "public-native-desktop",
+      "kind": "native-browser-viewport",
+      "bytes": 594906,
+      "sha256": "a7f79f135e18f10677beda33f0c94f6891ffd17edd7d9181f70ac17e735f67b4"
+    },
+    {
+      "name": "public-lips",
+      "kind": "actual-WebGL-framebuffer",
+      "bytes": 635750,
+      "sha256": "351a3d283860bdd6fab56e1a72e43c7af2dd37516bd3c22f0fb5e55d369eecaa",
+      "framebufferSHA256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3",
+      "width": 900,
+      "height": 720
+    },
+    {
+      "name": "public-baseline-toggle",
+      "kind": "actual-WebGL-framebuffer",
+      "bytes": 644806,
+      "sha256": "897f19b9d27303719f1e29eb88b89bceab6f8f414254b99c2ef23089a5814f85",
+      "framebufferSHA256": "3838668ed601a18497d8929d44f7c6859d77473279d15d4e14031f0238720b0c",
+      "width": 900,
+      "height": 720
+    },
+    {
+      "name": "public-mobile-viewport",
+      "kind": "native-browser-viewport",
+      "bytes": 118140,
+      "sha256": "bd5528837747754b08c4bcf9543c41c72ea1f836683fe4dc0b4c80d9f39701b1"
+    }
+  ],
+  "softwareRenderer": true,
+  "physicalPhone": false,
+  "userVisualAccepted": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "publicHttpsPassed": true,
+  "interactive3D": true,
+  "staticImageSubstitute": false,
+  "sourceModified": true,
+  "shareAllowed": true,
+  "canvasComparison": {
+    "width": 900,
+    "height": 720,
+    "devicePixelRatio": 1,
+    "fixedFramebuffer": true
+  },
+  "limitations": [
+    "Real Chromium WebGL with SwiftShader; not a physical GPU or phone performance certificate.",
+    "Machine checks do not establish anatomical truth or user visual acceptance.",
+    "Framebuffer A/B uses equal 900x720 buffers; native public viewport is captured separately.",
+    "Frozen host retains its existing remote asset loader; offline self-containment is not claimed."
+  ],
+  "lastProgress": {
+    "sequence": 20,
+    "at": "2026-10-17T10:19:00.991Z",
+    "name": "process",
+    "event": "end",
+    "completed": true
+  },
+  "updatedAt": "2026-10-17T10:19:00.991Z",
+  "activeStages": [],
+  "publicCandidate": {
+    "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0db4b3c0e5e6e86663be6466fa7ab4b486bd5420/kaopu-unified-human-workbench/lip-realism-r01/preview.html",
+    "httpStatus": 200,
+    "readyMS": 16305,
+    "host": {
+      "ready": true,
+      "errors": [],
+      "lipErrors": [],
+      "finalFrame": true
+    },
+    "startupDrain": {
+      "method": "synchronous CPU readPixels after native readiness; no new viewer render",
+      "elapsedMS": 51971.90000000002,
+      "rendererFrameBefore": 36,
+      "rendererFrameAfter": 36,
+      "drawCalls": 2,
+      "triangles": 531702,
+      "width": 1052,
+      "height": 630,
+      "errorBefore": 0,
+      "error": 0,
+      "contextLost": false,
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "readyAndDrainedMS": 68286
+  },
+  "publicReadback": {
+    "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0db4b3c0e5e6e86663be6466fa7ab4b486bd5420/kaopu-unified-human-workbench/lip-realism-r01/preview.html",
+    "httpStatus": 200,
+    "bytes": 5475869,
+    "sha256": "4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231"
+  },
+  "previewSHA256": "4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231",
+  "completed": true,
+  "finishedAt": "2026-10-17T10:19:00.990Z",
+  "cleanup": {
+    "method": "Drain each page through synchronous CPU pixel readback; close each page separately without beforeunload; then close Chromium",
+    "pages": [
+      {
+        "index": 0,
+        "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0db4b3c0e5e6e86663be6466fa7ab4b486bd5420/kaopu-unified-human-workbench/lip-realism-r01/preview.html",
+        "alreadyClosed": false,
+        "drain": {
+          "method": "synchronous CPU readPixels; no new viewer render requested",
+          "elapsedMS": 2,
+          "error": 0,
+          "contextLost": false,
+          "rgba": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "closed": true
+      }
+    ],
+    "errors": [],
+    "browserClosed": true,
+    "completed": true
+  }
+}
