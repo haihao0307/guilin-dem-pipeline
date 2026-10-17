@@ -1,0 +1,36 @@
+{
+  "schema": "student-native-a4-shell-design/1",
+  "status": "First native approximate shape study; awaiting visual acceptance",
+  "entry": "../src/a4-shell.mjs::buildA4Shell({main:{},rear:{}})",
+  "coordinateFrame": "Metres, x lateral, y upward from rail, z rearward from the first leading axle. Body silhouette measurements remain provisional despite metre units.",
+  "returnedSchema": "{parts:[{name,material,positions:Float32Array,normals:Float32Array,uvs:Float32Array,indices:Uint32Array,groups,metadata}],parameters,evidence}",
+  "bufferSharing": "Single-material parts may share the generated position/normal/UV arrays; each part has its own index buffer. Do not sum per-part vertex counts as unique vertices.",
+  "mainShell": {
+    "geometry": "Six longitudinal sections. Monotone cubic Hermite interpolation of width, upper height and shoulder height. Elliptic upper cross section, separate side-skirt surfaces with circular driving-wheel clearance lower boundaries.",
+    "sectionControlCount": 24,
+    "controlMeaning": "Six normalized longitudinal locations, six width factors, six top-height factors, six shoulder heights. These are newly authored approximation controls, not a source point table.",
+    "cab": "Three open rectangular side-window regions per side, recessed window reveals, two front windscreen holes, central rear access opening, elliptical roof and end closures.",
+    "sampling": "128 longitudinal intervals plus section/cutout transition sites;48 cross-section intervals. Resolution is separate from shape controls.",
+    "normals": "Analytic cross product of parametric surface derivatives; planar cap/window-reveal normals. UV is generated from the same parameter domain.",
+    "knownApproximationLimits": "Cab windows are deliberately simplified rectangles; source micro-bevels, trim, vents, livery, lights, rivets, interior and mechanical gear are not reconstructed. The main shell is primarily a surface skin, not an engineered finite-thickness structural shell. No source-distance error bound or visual-fidelity acceptance has been established.",
+    "uniqueGeneratedVertices": 8535,
+    "generatedTriangles": 15511
+  },
+  "rearShell": {
+    "geometry": "Nine editable shape/location parameters generate24 ruled planar patches: exterior/interior walls, upper bevel, top rim and lower wall rim. Top and underside are open.",
+    "uniqueGeneratedVertices": 720,
+    "generatedTriangles": 896,
+    "coalIncluded": false,
+    "mechanicsIncluded": false
+  },
+  "verifiedReferenceParameters": {
+    "source": "Shared src/dimensions.mjs; contemporary1935 LNER-provided Silver Link drawing and independent museum width reference are documented in a4-prototype-dimensions-evidence.json.",
+    "width": 2.743,
+    "driveDiameter": 2.032,
+    "driveAxisZ": [3.5814,5.7912,8.001]
+  },
+  "unverifiedShapeParameters": ["nose to first leading axle1.10m", "main outer length13.75m", "top height4.03m", "section shapes", "cab placement and window dimensions", "wheel clearance margin0.07m", "tender start12.9m", "tender length7.6m and upper/lower/bevel dimensions"],
+  "runtimeSourceData": {"teacherRequired":false,"sourceAssetRequests":0,"sourcePointTableBytes":0,"sourceResidualBytes":0,"sourceNormalOrUVFallbackBytes":0},
+  "tests": {"main":"../tests/shell.test.mjs", "rear":"../tests/rear-shell-test.mjs", "checks":"Finite typed arrays, valid indices, nonzero triangles, unit normals, winding, explicit window/wheel-clearance rays, dimension edits, normal updates, parameter rejection. Test results do not prove source fidelity or complete mechanical reconstruction."},
+  "productionOldAssets": "No changes to08 or frozen09/10 research assets by this implementation."
+}

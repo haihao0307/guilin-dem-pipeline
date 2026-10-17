@@ -1,0 +1,135 @@
+{
+  "schema": "kaopu.student-native-materials-tests/1",
+  "adapterVersion": "kaopu.student-native-materials/1.0.0",
+  "engineRevision": "170",
+  "originalModelGeometryLoaded": false,
+  "tests": [
+    {
+      "name": "locked v3.1 and all original vendor bytes are unchanged",
+      "passed": true
+    },
+    {
+      "name": "every explicit recipe calls a real locked factory and carries designed-metre limits",
+      "passed": true
+    },
+    {
+      "name": "actual R08 paint fragment and R03 finite-glass fragment remain byte-identical",
+      "passed": true
+    },
+    {
+      "name": "native aliases are explicit and unknown roles fail without grey fallback",
+      "passed": true
+    },
+    {
+      "name": "metre domain must be explicit rigid right-handed rest frame; no inferred calibration",
+      "passed": true
+    },
+    {
+      "name": "binding changes only material references; position, normal, UV, indices and authored semantics remain exact",
+      "passed": true
+    },
+    {
+      "name": "missing semantics and invalid batch fail transactionally without material replacement",
+      "passed": true
+    },
+    {
+      "name": "independent clones do not share mutable glass uniforms and disposal is bounded",
+      "passed": true
+    },
+    {
+      "name": "native adapter has no original-model binding, loader, fetch, texture or geometry payload dependency",
+      "passed": true
+    }
+  ],
+  "recipeChecks": [
+    {
+      "id": "body-green",
+      "family": "paint",
+      "colorSRGB": "#103e35",
+      "metalness": 0,
+      "roughness": 0.255,
+      "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
+    },
+    {
+      "id": "black-painted-steel",
+      "family": "metal",
+      "colorSRGB": "#14191b",
+      "metalness": 0,
+      "roughness": 0.39,
+      "factory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial"
+    },
+    {
+      "id": "polished-rod-steel",
+      "family": "metal",
+      "colorSRGB": "#b9c2c6",
+      "metalness": 1,
+      "roughness": 0.21,
+      "factory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial"
+    },
+    {
+      "id": "dark-iron",
+      "family": "metal",
+      "colorSRGB": "#51585a",
+      "metalness": 0.92,
+      "roughness": 0.48,
+      "factory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial"
+    },
+    {
+      "id": "window-glass",
+      "family": "glass",
+      "colorSRGB": "#e0eee8",
+      "metalness": 0,
+      "roughness": 0.045,
+      "factory": "vendor/material-master-r03/wood-glass.mjs#buildGlassCase"
+    },
+    {
+      "id": "interior-cream",
+      "family": "paint",
+      "colorSRGB": "#b5aa89",
+      "metalness": 0,
+      "roughness": 0.57,
+      "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
+    },
+    {
+      "id": "roof-black",
+      "family": "paint",
+      "colorSRGB": "#202426",
+      "metalness": 0,
+      "roughness": 0.5,
+      "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
+    },
+    {
+      "id": "buffer-red",
+      "family": "paint",
+      "colorSRGB": "#8e2523",
+      "metalness": 0,
+      "roughness": 0.36,
+      "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
+    },
+    {
+      "id": "matte-black-dielectric",
+      "family": "paint",
+      "colorSRGB": "#171b1c",
+      "metalness": 0,
+      "roughness": 0.82,
+      "factory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint"
+    },
+    {
+      "id": "trim-brass",
+      "family": "metal",
+      "colorSRGB": "#c89849",
+      "metalness": 1,
+      "roughness": 0.28,
+      "factory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial"
+    }
+  ],
+  "javascriptFactoryAndShaderHooksPassed": true,
+  "actualWebGLCompileValidated": false,
+  "visualAcceptance": false,
+  "physicalCertification": false,
+  "lockedFileCount": 17,
+  "lockedRelease": "7577ae37c8bc13bc3f7c0204c1857e83074c257a",
+  "paintFragmentSha256": "ee1a0a2a39608dfc3d24acfa7e38a429f94c8215bd2653be23128a5534391ae9",
+  "glassFragmentSha256": "e26b45433e61aa7426b2008137efce8cbe0bfb525cc80b57bf1f41030af8edc2",
+  "parameterizedMetalFieldSha256": "85d65e7d77ea339d35e3642e15a48199c3de385ba9e943dfeaf1b0c524ed04a3"
+}
