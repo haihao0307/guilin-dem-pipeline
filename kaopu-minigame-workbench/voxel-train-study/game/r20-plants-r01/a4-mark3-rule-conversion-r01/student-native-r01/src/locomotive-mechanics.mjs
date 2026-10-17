@@ -7,7 +7,7 @@ import { A4_DIMENSIONS } from './dimensions.mjs';
  * x = lateral, y = height above nominal rail tread contact, z = rearwards.
  * The first leading axle is z=0. This is not an engineering or kinematic model.
  */
-export const MECHANICS_VERSION = 'native-locomotive-mechanics/1';
+export const MECHANICS_VERSION = 'native-locomotive-mechanics/3-bogie-helical';
 export const MECHANICS_DEFAULTS = Object.freeze({
   axisZ: Object.freeze([...A4_DIMENSIONS.axisZ]),
   driveDiameter: A4_DIMENSIONS.driveDiameter,
@@ -27,11 +27,20 @@ export const MECHANICS_DEFAULTS = Object.freeze({
   springLeaves: 7,
   springLeafThickness: .011,
   springWidth: .12,
-  drivingSpringLength: 1.10,
+  drivingSpringLeaves: A4_DIMENSIONS.driveSpringLeaves,
+  drivingSpringWidth: A4_DIMENSIONS.driveSpringPlateWidth,
+  drivingSpringLeafThickness: A4_DIMENSIONS.driveSpringPlateThickness,
+  drivingSpringLength: A4_DIMENSIONS.driveSpringCentres,
+  trailingSpringLeaves: A4_DIMENSIONS.trailingSpringLeaves,
+  trailingSpringWidth: A4_DIMENSIONS.trailingSpringPlateWidth,
+  trailingSpringLeafThickness: A4_DIMENSIONS.trailingSpringPlateThickness,
+  trailingSpringLength: A4_DIMENSIONS.trailingSpringCentres,
   carryingSpringLength: .76,
   drivingSpringHeight: .42,
   springCamber: .085,
-  crankRadius: .33,
+  crankRadius: A4_DIMENSIONS.drivingCrankRadius, // Derived from the documented 26 in piston stroke / 2.
+  cylinderBore: A4_DIMENSIONS.cylinderBore, // Bore, NOT the outer casing diameter.
+  cylinderStroke: A4_DIMENSIONS.cylinderStroke,
   couplingRodOffset: .177,
   mainRodOffset: .262,
   motionOffset: .36,
@@ -43,6 +52,14 @@ export const MECHANICS_DEFAULTS = Object.freeze({
   crossheadZ: 2.49,
   bogieFrameHeight: .83,
   bogieFrameDepth: .15,
+  bogieSpringMeanRadius: .057,
+  bogieSpringWireRadius: .009,
+  bogieSpringTurns: 6,
+  bogieSpringCenterlineRise: .222,
+  bogieSpringLateralInset: .17,
+  bogieSpringAxleZOffset: .10,
+  bogieSpringSeatAboveAxle: .21,
+  bogieSpringSeatThickness: .026,
   cartazziFrameHalfSeparation: 1.04,
   cartazziWedgeSlope: .14,
   brakeTreadClearance: .018,
@@ -138,6 +155,32 @@ function sector(m,center,xDepth,r0,r1,a0,a1,segments) {
   }
   for(const [a,sign]of[[a0,-1],[a1,1]]){const n=[0,Math.cos(a)*sign,-Math.sin(a)*sign];quad(m,at(-xDepth/2,r0,a),at(xDepth/2,r0,a),at(xDepth/2,r1,a),at(-xDepth/2,r1,a),Array(4).fill(n));}
 }
+/** Continuous circular-section sweep along an analytic helix; no stacked tori.
+ * All tube cross-sections are normal to the helix tangent. End caps close the wire.
+ * This is a provisional round-wire stand-in; the documented Timmis section and
+ * exact working spring/end profile still require an engineering drawing.
+ */
+function helicalWire(m,center,meanRadius,wireRadius,rise,turns,axialSteps,radialSteps=12) {
+  const k=2*Math.PI*turns,L=Math.hypot(meanRadius*k,rise),by=meanRadius*k/L;
+  const ring=(t,v)=>{
+    const theta=k*t,phi=2*Math.PI*v,ct=Math.cos(theta),st=Math.sin(theta),cp=Math.cos(phi),sp=Math.sin(phi);
+    const c=[center[0]+meanRadius*ct,center[1]+rise*t,center[2]+meanRadius*st],n=[ct,0,st],b=[rise/L*st,by,-rise/L*ct];
+    const radial=add(mul(n,cp),mul(b,sp));
+    const dt=add([-meanRadius*k*st,rise,meanRadius*k*ct],mul(add(mul([-k*st,0,k*ct],cp),mul([rise/L*k*ct,0,rise/L*k*st],sp)),wireRadius));
+    const dv=mul(add(mul(n,-sp),mul(b,cp)),2*Math.PI*wireRadius);
+    let normal=unit(cross(dt,dv));if(dot(normal,radial)<0)normal=mul(normal,-1);
+    return {p:add(c,mul(radial,wireRadius)),n:normal};
+  };
+  for(let i=0;i<axialSteps;i++)for(let j=0;j<radialSteps;j++){
+    const q=[ring(i/axialSteps,j/radialSteps),ring((i+1)/axialSteps,j/radialSteps),ring((i+1)/axialSteps,(j+1)/radialSteps),ring(i/axialSteps,(j+1)/radialSteps)];
+    quad(m,...q.map(a=>a.p),q.map(a=>a.n));
+  }
+  for(const [t,sign]of[[0,-1],[1,1]]){
+    const theta=k*t,c=[center[0]+meanRadius*Math.cos(theta),center[1]+rise*t,center[2]+meanRadius*Math.sin(theta)],n=mul(unit([-meanRadius*k*Math.sin(theta),rise,meanRadius*k*Math.cos(theta)]),sign);
+    for(let j=0;j<radialSteps;j++)triangle(m,c,ring(t,j/radialSteps).p,ring(t,(j+1)/radialSteps).p,n);
+  }
+  return {verticalWireRadius:wireRadius*by,normalSection:true};
+}
 function tubePath(m,path,r,radial=10) {
   for(let i=0;i<path.length-1;i++)cylinder(m,path[i],path[i+1],r,radial);
 }
@@ -171,8 +214,8 @@ function parse(options) {
   const p={...MECHANICS_DEFAULTS,...options,axisZ:[...(options.axisZ??MECHANICS_DEFAULTS.axisZ)],tenderAxleIntervals:[...(options.tenderAxleIntervals??MECHANICS_DEFAULTS.tenderAxleIntervals)]};
   for(const[k,v]of Object.entries(p))if(typeof v==='number'&&(!Number.isFinite(v)||v<=0))throw Error(`Invalid positive parameter ${k}`);
   if(p.axisZ.length!==6||!p.axisZ.every(Number.isFinite)||p.axisZ[0]!==0||p.axisZ.some((v,i)=>i>0&&v<=p.axisZ[i-1]))throw Error('Expected ordered six-axle layout from z=0');
-  for(const key of['radialSegments','curveSegments','springLeaves','carryingSpokeCount'])if(!Number.isInteger(p[key]))throw Error('Integer sampling required');
-  if(p.radialSegments<16||p.radialSegments>128||p.curveSegments<6||p.curveSegments>64||p.springLeaves<3||p.springLeaves>14||p.carryingSpokeCount<6||p.carryingSpokeCount>24)throw Error('Sampling outside mechanical budget');
+  for(const key of['radialSegments','curveSegments','springLeaves','drivingSpringLeaves','trailingSpringLeaves','bogieSpringTurns','carryingSpokeCount'])if(!Number.isInteger(p[key]))throw Error('Integer sampling required');
+  if(p.radialSegments<16||p.radialSegments>128||p.curveSegments<6||p.curveSegments>64||p.springLeaves<3||p.springLeaves>24||p.drivingSpringLeaves<3||p.drivingSpringLeaves>24||p.trailingSpringLeaves<3||p.trailingSpringLeaves>24||p.bogieSpringTurns<3||p.bogieSpringTurns>12||p.carryingSpokeCount<6||p.carryingSpokeCount>24)throw Error('Sampling outside mechanical budget');
   if(typeof p.includeCarryingWheels!=='boolean'||typeof p.includeTender!=='boolean')throw Error('Wheel/tender inclusion flags must be boolean');
   if(p.tenderAxleIntervals.length!==3||!p.tenderAxleIntervals.every(v=>Number.isFinite(v)&&v>p.tenderWheelDiameter+.14))throw Error('Invalid tender axle intervals');
   if(p.tenderFrameHalfSeparation<=p.wheelCenterHalfSeparation+p.carryingTyreWidth||p.tenderFrameHalfSeparation>1.3||p.tenderFrameTop<=p.tenderWheelDiameter/2+.65||p.tenderFirstAxleGap<2||p.tenderFrontFrameOverhang>=p.tenderFirstAxleGap-p.rearFrameOverhang-.25)throw Error('Invalid tender/frame separation');
@@ -180,6 +223,8 @@ function parse(options) {
   if(p.frameHalfSeparation+p.axleboxWidth/2>=p.wheelCenterHalfSeparation-p.carryingTyreWidth/2||p.axleRadius>=p.axleboxSize*.38||p.carryingAxleRadius>=p.axleboxSize*.38||p.frameTop-p.frameRailDepth<=R+p.axleboxSize/2||p.framePlateThickness>=p.axleboxWidth||p.cartazziFrameHalfSeparation<=p.wheelCenterHalfSeparation+p.carryingTyreWidth||p.cartazziFrameHalfSeparation>1.3)throw Error('Invalid frame/bearing/wheel relationship');
   if(p.crankRadius<=p.axleRadius||p.crankRadius>=R*.65||p.couplingRodOffset<=.13||p.mainRodOffset<=p.couplingRodOffset+.065||p.motionOffset<=p.mainRodOffset+.065||p.cylinderRadius<=.1||p.crossheadZ<=p.cylinderZ+p.cylinderLength/2+.4||p.crossheadZ>=p.axisZ[2]-.3)throw Error('Invalid motion proportions');
   if(p.carryingRimDepth>=small*.4||p.carryingFlangeWidth>=p.carryingTyreWidth*.45||p.carryingFlangeHeight>=small*.15||p.brakeShoeHalfAngle>=.5||p.springCamber>=.2||p.drivingSpringHeight<.2||p.cartazziWedgeSlope>.4)throw Error('Invalid component cross-section');
+  const coilEnvelope=p.bogieSpringMeanRadius+p.bogieSpringWireRadius;
+  if(p.bogieSpringWireRadius>=p.bogieSpringMeanRadius*.32||p.bogieSpringCenterlineRise/p.bogieSpringTurns<=2*p.bogieSpringWireRadius+.003||p.bogieSpringLateralInset<=coilEnvelope+.085||p.bogieSpringLateralInset>=p.frameHalfSeparation-.10||p.bogieSpringAxleZOffset<.075||p.bogieSpringAxleZOffset+coilEnvelope>=p.axleboxSize*.54||p.bogieSpringSeatAboveAxle<=p.axleboxSize/2+.025)throw Error('Invalid bogie spring clearance or pitch');
   if(p.axisZ[1]-p.axisZ[0]<=p.leadingDiameter+.10||p.axisZ[3]-p.axisZ[2]<=p.driveDiameter+2*p.brakeTreadClearance+p.brakeShoeThickness||p.axisZ[4]-p.axisZ[3]<=p.driveDiameter+2*p.brakeTreadClearance+p.brakeShoeThickness)throw Error('Wheel/adjacent brake envelopes overlap');
   return p;
 }
@@ -229,17 +274,47 @@ export function buildLocomotiveMechanics(options={}) {
     });
   }
   function spring(a,x,y,length,assembly,underslung=false) {
+    const spec=a.kind==='driver'?{leaves:p.drivingSpringLeaves,width:p.drivingSpringWidth,thickness:p.drivingSpringLeafThickness,kind:'1935-coupled'}:a.kind==='cartazzi'?{leaves:p.trailingSpringLeaves,width:p.trailingSpringWidth,thickness:p.trailingSpringLeafThickness,kind:'1935-trailing'}:{leaves:p.springLeaves,width:p.springWidth,thickness:p.springLeafThickness,kind:'provisional-carrying-or-tender'};
+    const primary=spec.kind!=='provisional-carrying-or-tender',pitch=spec.thickness;
     make(`${a.name}-leaf-spring-${Math.sign(x)}`,assembly,m=>{
-      for(let i=0;i<p.springLeaves;i++)leaf(m,x,y+i*p.springLeafThickness,a.z,length*(.48+.52*i/(p.springLeaves-1)),p.springWidth,p.springLeafThickness*.88,p.springCamber,p.curveSegments);
-      cuboid(m,[x,y+p.springLeaves*p.springLeafThickness/2,a.z],[p.springWidth+.035,p.springLeaves*p.springLeafThickness+.035,.13]);
-    });
+      for(let i=0;i<spec.leaves;i++){
+        const fraction=.48+.52*i/(spec.leaves-1);
+        // Common curvature prevents shorter leaves from bulging into longer ones.
+        // Individual blank lengths/camber remain provisional; full-length support
+        // centres and each plate's material width/thickness are separately defined.
+        leaf(m,x,y+i*pitch,a.z,length*fraction,spec.width,spec.thickness,p.springCamber*fraction*fraction,p.curveSegments);
+      }
+      cuboid(m,[x,y+spec.leaves*pitch/2,a.z],[spec.width+.035,spec.leaves*pitch+.035,.13]);
+    },'blackPaint',{springPlateCount:spec.leaves,springPlateWidth:spec.width,springPlateThickness:spec.thickness,springSupportCentres:length,springDimensionEvidence:primary?'The Engineer 1935-09-27 p320 explicit table; editable defaults':'provisional; not inferred from coupled/trailing table',springKind:spec.kind});
     make(`${a.name}-spring-load-links-${Math.sign(x)}`,assembly,m=>{
-      const endY=y+(p.springLeaves-1)*p.springLeafThickness+p.springCamber,anchorY=underslung?a.y-p.axleboxSize*.57:endY+.23;
+      const endY=y+(spec.leaves-1)*pitch+p.springCamber,anchorY=underslung?a.y-p.axleboxSize*.57:endY+.23;
       for(const s of[-1,1]){const z=a.z+s*length/2;cylinder(m,[x,endY,z],[x,anchorY,z],.018,12);annulus(m,[x-.07,endY,z],[x+.07,endY,z],.023,.045,20);cuboid(m,[x,anchorY,z],[.18,.07,.13]);}
-      if(underslung)cylinder(m,[x,y+p.springLeaves*p.springLeafThickness,a.z],[x,a.y-p.axleboxSize/2,a.z],.026,16);
+      if(underslung)cylinder(m,[x,y+spec.leaves*pitch,a.z],[x,a.y-p.axleboxSize/2,a.z],.026,16);
       else cuboid(m,[x,(a.y+p.axleboxSize/2+y)/2,a.z],[.11,Math.max(.025,y-a.y-p.axleboxSize/2),.13]);
     });
   }
+
+  function bogieLoadSpring(a,side) {
+    const springX=side*(p.frameHalfSeparation-p.bogieSpringLateralInset),springZ=a.z+p.bogieSpringAxleZOffset,R=p.bogieSpringMeanRadius,r=p.bogieSpringWireRadius,k=2*Math.PI*p.bogieSpringTurns;
+    const verticalRadius=r*R*k/Math.hypot(R*k,p.bogieSpringCenterlineRise),lowerSeatBottom=a.y+p.bogieSpringSeatAboveAxle,lowerSeatTop=lowerSeatBottom+p.bogieSpringSeatThickness;
+    const wireCenterY=lowerSeatTop+verticalRadius,wireTop=wireCenterY+p.bogieSpringCenterlineRise+verticalRadius,upperSeatTop=wireTop+p.bogieSpringSeatThickness,seatRadius=R+r+.020;
+    const coilMin=[springX-R-r,lowerSeatTop,springZ-R-r],coilMax=[springX+R+r,wireTop,springZ+R+r];
+    const clearance={bogieSideFrame:p.bogieSpringLateralInset-(R+r)-.105/2,mainFrame:p.bogieSpringLateralInset-(R+r)-p.framePlateThickness/2,wheelFlange:p.wheelCenterHalfSeparation-p.carryingTyreWidth/2-p.carryingFlangeWidth/2-(Math.abs(springX)+R+r),oilPot:p.frameHalfSeparation-p.axleboxWidth*.25-(Math.abs(springX)+R+r),axleboxCover:lowerSeatTop-(a.y+p.axleboxSize/2+.050),frontHornZ:p.axleboxSize*.54-(p.bogieSpringAxleZOffset+R+r),selfPitch:p.bogieSpringCenterlineRise/p.bogieSpringTurns-2*r};
+    if(Object.values(clearance).some(v=>v<=0))throw Error('Bogie coil intersects checked local envelope');
+    make(`${a.name}-helical-load-spring-${side}`,'leading-bogie',m=>helicalWire(m,[springX,wireCenterY,springZ],R,r,p.bogieSpringCenterlineRise,p.bogieSpringTurns,p.bogieSpringTurns*p.curveSegments*2,12),'brushedMetal',{springType:'helical',springTypeEvidence:'The Engineer 1935-09-27 p320 explicit bogie spring table',wireSection:'provisional circular; historical Timmis section not reconstructed',wireRadius:r,meanRadius:R,turns:p.bogieSpringTurns,centerlineRise:p.bogieSpringCenterlineRise,springInstallation:'four provisional axle-associated mounting stations, not an engineering placement claim',continuousSweep:true,coilEnvelope:{min:coilMin,max:coilMax},localClearanceMetres:clearance,clearanceScope:'static conservative component envelopes and axial pitch only; no full vehicle swept collision approval'});
+    make(`${a.name}-spring-end-seats-${side}`,'leading-bogie',m=>{
+      cylinder(m,[springX,lowerSeatBottom,springZ],[springX,lowerSeatTop,springZ],seatRadius,32);
+      cylinder(m,[springX,wireTop,springZ],[springX,upperSeatTop,springZ],seatRadius,32);
+      // Lower lug meets the axlebox top cover away from its oil-pot Z envelope.
+      beam(m,[side*p.frameHalfSeparation,lowerSeatBottom+.005,springZ],[springX,lowerSeatBottom+.005,springZ],.040,.030);
+      // Upper bridge stays above the wire, then descends inboard of the frame.
+      const postX=side*(p.frameHalfSeparation-.075),bridgeY=upperSeatTop+.008,footY=p.bogieFrameHeight+p.bogieFrameDepth/2-.009;
+      beam(m,[springX,bridgeY,springZ],[postX,bridgeY,springZ],.04,.016);
+      beam(m,[postX,bridgeY,springZ],[postX,footY,springZ],.018,.04);
+      beam(m,[postX,footY,springZ],[side*p.frameHalfSeparation,footY,springZ],.04,.018);
+    },'blackPaint',{mountingDimensions:'provisional',lowerSeatTopY:lowerSeatTop,upperSeatBottomY:wireTop,contactRule:'wire vertical envelope touches both seats; support lugs retain an axlebox-to-bogie-frame load path'});
+  }
+
   // Two plain coupled shafts and the middle crank axle, with journal geometry.
   for(const a of axles) {
     const assembly=a.kind==='driver'?'coupled-axles':a.kind==='leading'?'leading-bogie':'cartazzi',r=a.kind==='driver'?p.axleRadius:p.carryingAxleRadius;
@@ -253,7 +328,7 @@ export function buildLocomotiveMechanics(options={}) {
       axlebox(a,side*x,assembly);
       horns(a,side*x,a.kind==='leading'?p.bogieFrameHeight:p.frameTop-p.frameRailDepth,assembly);
       if(a.kind==='driver')spring(a,side*x,p.drivingSpringHeight,p.drivingSpringLength,'coupled-suspension',true);
-      if(a.kind==='leading')spring(a,side*x,a.y+.27,p.carryingSpringLength,'leading-bogie');
+      if(a.kind==='leading')bogieLoadSpring(a,side);
     }
   }
   const middle=driverAxes[1],innerCrankY=middle.y+p.crankRadius;
@@ -290,11 +365,11 @@ export function buildLocomotiveMechanics(options={}) {
       wedge(m,x,tail.y+.235,tail.z,.28,.07,.24,side*p.cartazziWedgeSlope);
       wedge(m,x,tail.y+.310,tail.z,.28,.07,.24,-side*p.cartazziWedgeSlope);
     },'brushedMetal');
-    spring(tail,x,tail.y+.35,p.carryingSpringLength*1.35,'cartazzi');
+    spring(tail,x,tail.y+.35,p.trailingSpringLength,'cartazzi');
     make(`cartazzi-spring-end-boxes-${side}`,'cartazzi',m=>{for(const s of[-1,1]){
-      const z=tail.z+s*p.carryingSpringLength*1.35/2;cuboid(m,[x,1.25,z],[.22,.18,.22]);cylinder(m,[x,1.12,z],[x,1.37,z],.026,20);
+      const z=tail.z+s*p.trailingSpringLength/2;cuboid(m,[x,1.25,z],[.22,.18,.22]);cylinder(m,[x,1.12,z],[x,1.37,z],.026,20);
     }});
-    make(`cartazzi-rubber-spring-pads-${side}`,'cartazzi',m=>{for(const s of[-1,1])cylinder(m,[x,1.29,tail.z+s*p.carryingSpringLength*1.35/2],[x,1.34,tail.z+s*p.carryingSpringLength*1.35/2],.067,24);},'rubber');
+    make(`cartazzi-rubber-spring-pads-${side}`,'cartazzi',m=>{for(const s of[-1,1])cylinder(m,[x,1.29,tail.z+s*p.trailingSpringLength/2],[x,1.34,tail.z+s*p.trailingSpringLength/2],.067,24);},'rubber');
   }
 
   // Corridor tender: four independent axle stations and outside bearing frames.
@@ -439,17 +514,17 @@ export function buildLocomotiveMechanics(options={}) {
 
   const verifiedMatch=p.axisZ.every((z,i)=>z===A4_DIMENSIONS.axisZ[i])&&p.driveDiameter===A4_DIMENSIONS.driveDiameter&&p.leadingDiameter===A4_DIMENSIONS.leadingDiameter&&p.trailingDiameter===A4_DIMENSIONS.trailingDiameter&&p.tenderWheelDiameter===1.27&&p.tenderFirstAxleGap===2.784475&&p.tenderAxleIntervals.every((v,i)=>v===[1.6002,1.6764,1.6002][i]);
   const coverage=makeCoverage(parts,assemblyCounts,p);
-  const parameters={...p,derived:{axles,tenderAxles,tenderFrameStart,tenderFrameEnd,frameStart,frameEnd,drivingCrankCenters:driverAxes.map(a=>[0,a.y+p.crankRadius,a.z]),brakeShaftZ:shafts,leadingBogieCenterZ:bz},status:{axlePositionsAndNominalDiameters:verifiedMatch?'dimensioned-primary-drawing':'user-edited-unverified',allOtherDimensions:'provisional-design',wheelCenterHalfSeparation:'provisional; not inferred from track gauge',pose:'same-phase static assembly study; not actual A4 phase'}};
-  return {version:MECHANICS_VERSION,parts,parameters,evidence:{sources:SOURCES,sourceRuntimeDependencies:[],sourcePointBytes:0,sourceAnimationChannelsUsed:0,referenceAnimationChannels:71,units:'m',coordinates:'x lateral; y above rail tread contact; z rearwards from first leading axle',basis:'Primary Silver Link 1935 axle dimensions. Named teacher subtrees establish objects to account for, not mechanical semantics. SNG/NRM maintenance reports establish selected component functions, not 1935 dimensions or exact topology.',verifiedMatch,engineeringValidated:false,kinematicsSolved:false,geometryRules:['closed planar plate/beam construction','analytic cylinders and annuli with open bores','parabolic laminated spring strips','bounded helical bogie side-control spring paths','annular brake-block and expansion-link sectors','shared axlebox, horn, spring, rod-eye and pin constructors'],renderAssumptions:['All components are rigid and static.','No physics engine, adhesion, axle load, spring deflection or brake force has been solved.','No source animation is replayed.','No source mesh or residual is loaded.','Provisional wheel width, back-to-back, track contact, clearances and exact crank phases remain unresolved.']},coverage};
+  const parameters={...p,derived:{axles,tenderAxles,tenderFrameStart,tenderFrameEnd,frameStart,frameEnd,drivingCrankCenters:driverAxes.map(a=>[0,a.y+p.crankRadius,a.z]),brakeShaftZ:shafts,leadingBogieCenterZ:bz},status:{axlePositionsAndNominalDiameters:verifiedMatch?'dimensioned-primary-drawing':'user-edited-unverified',springDimensions:p.drivingSpringLeaves===A4_DIMENSIONS.driveSpringLeaves&&p.drivingSpringWidth===A4_DIMENSIONS.driveSpringPlateWidth&&p.drivingSpringLeafThickness===A4_DIMENSIONS.driveSpringPlateThickness&&p.drivingSpringLength===A4_DIMENSIONS.driveSpringCentres&&p.trailingSpringLeaves===A4_DIMENSIONS.trailingSpringLeaves&&p.trailingSpringWidth===A4_DIMENSIONS.trailingSpringPlateWidth&&p.trailingSpringLeafThickness===A4_DIMENSIONS.trailingSpringPlateThickness&&p.trailingSpringLength===A4_DIMENSIONS.trailingSpringCentres?'dimensioned-primary-table':'user-edited-unverified',cylinderBoreAndStroke:p.cylinderBore===A4_DIMENSIONS.cylinderBore&&p.cylinderStroke===A4_DIMENSIONS.cylinderStroke?'dimensioned-primary-table':'user-edited-unverified',crankRadius:p.crankRadius===p.cylinderStroke/2?'derived-half-stroke-simple-crank':'user-edited-independent',allOtherDimensions:'provisional-design',wheelCenterHalfSeparation:'provisional; not inferred from track gauge',pose:'same-phase static assembly study; not actual A4 phase'}};
+  return {version:MECHANICS_VERSION,parts,parameters,evidence:{sources:SOURCES,sourceRuntimeDependencies:[],sourcePointBytes:0,sourceAnimationChannelsUsed:0,referenceAnimationChannels:71,units:'m',coordinates:'x lateral; y above rail tread contact; z rearwards from first leading axle',basis:'Primary Silver Link 1935 axle dimensions. Named teacher subtrees establish objects to account for, not mechanical semantics. SNG/NRM maintenance reports establish selected component functions, not 1935 dimensions or exact topology.',verifiedMatch,primaryTable:{source:SOURCES.dimensions,page:320,coupledSprings:{plates:A4_DIMENSIONS.driveSpringLeaves,widthMetres:A4_DIMENSIONS.driveSpringPlateWidth,plateThicknessMetres:A4_DIMENSIONS.driveSpringPlateThickness,supportCentresMetres:A4_DIMENSIONS.driveSpringCentres},trailingSprings:{plates:A4_DIMENSIONS.trailingSpringLeaves,widthMetres:A4_DIMENSIONS.trailingSpringPlateWidth,plateThicknessMetres:A4_DIMENSIONS.trailingSpringPlateThickness,supportCentresMetres:A4_DIMENSIONS.trailingSpringCentres},cylinders:{count:3,boreMetres:A4_DIMENSIONS.cylinderBore,strokeMetres:A4_DIMENSIONS.cylinderStroke,outerCasingDimensions:'unverified; not inferred from bore'},crankRadius:{metres:A4_DIMENSIONS.drivingCrankRadius,status:'derived: 26 in stroke / 2 for simple crank',motionSolved:false},bogieSpringType:{table:'helical',currentPrimarySuspension:'four continuous helical-wire forms; historical Timmis wire section, dimensions, turns and mounting remain provisional'}},engineeringValidated:false,kinematicsSolved:false,geometryRules:['closed planar plate/beam construction','analytic cylinders and annuli with open bores','parabolic laminated spring strips','continuous analytic helical primary load-spring tube sweeps','bounded helical bogie side-control spring paths','annular brake-block and expansion-link sectors','shared axlebox, horn, spring, rod-eye and pin constructors'],renderAssumptions:['All components are rigid and static.','No physics engine, adhesion, axle load, spring deflection or brake force has been solved.','No source animation is replayed.','No source mesh or residual is loaded.','Provisional wheel width, back-to-back, track contact, clearances and exact crank phases remain unresolved.']},coverage};
 }
 
 function makeCoverage(parts,assemblyCounts,p){
   const entries=[
     {id:'underframe',represented:['two split plate frames','open driving-axle horn spaces','six cross stretchers','front structural beam','rear dragbox structure','frame fasteners'],missing:['A4-specific frame outline, cut-outs and thickness drawings','cylinder saddle and boiler/ashpan load interfaces','verified dragbox/coupling load path']},
-    {id:'leading-bogie',represented:['two leading shafts/four journal boxes','four horns and laminated springs','two side frames/three cross members','centre pin/bolster','three bearing plates','two side-control spring/cup/stop assemblies'],missing:['actual side-control linkage and clearances','loaded bearing-disc heights','bolster and equalisation dimensions','1935-versus-modern front frame details']},
+    {id:'leading-bogie',represented:['two leading shafts/four journal boxes','four horns and four continuous helical load-spring forms with separate end seats','two side frames/three cross members','centre pin/bolster','three bearing plates','two side-control spring/cup/stop assemblies'],missing:['historical Timmis wire cross-section, wire dimensions/turn count and actual primary spring placement; type is now helical','actual side-control linkage and clearances','loaded bearing-disc heights','bolster and equalisation dimensions','1935-versus-modern front frame details']},
     {id:'carrying-wheels',represented:p.includeCarryingWheels?[`four leading wheels at ${p.leadingDiameter} m nominal tread`,`two Cartazzi wheels at ${p.trailingDiameter} m nominal tread`,'separate open spoked centres and flanged tyres']:[],missing:p.includeCarryingWheels?['verified spoke count, web profiles, tyre width/flange and back-to-back']:['carrying wheels disabled; caller must supply all six']},
     {id:'coupled-axles',represented:['three shafts with middle crank axle gap','six axleboxes with bearing sleeves/oil pots','six horn guides/stays'],missing:['six driving wheels are externally owned and must be supplied by caller','shaft/journal fits and crank-axle engineering dimensions','middle crank angular phase and strength']},
-    {id:'coupled-suspension',represented:['six underslung laminated spring packs','centre load hangers, end hangers and brackets'],missing:['teacher suspension pieces are not proven one-to-one component semantics','verified spring rates, camber and load path','whether any inter-axle compensation applies; none invented']},
+    {id:'coupled-suspension',represented:['six underslung laminated spring packs','centre load hangers, end hangers and brackets'],missing:['teacher suspension pieces are not proven one-to-one component semantics','verified spring rates, camber, individual leaf lengths and load path; plate count/width/thickness/support centres now sourced','whether any inter-axle compensation applies; none invented']},
     {id:'cartazzi',represented:['single carrying axle','outside fixed frame extensions','two journal boxes/horns/stays','paired inclined bearing representations','two leaf packs/four end spring boxes and rubber pads'],missing:['true offset/inclined horn faces and lateral travel limits','inclined-plane contact compatibility','Spenser-box internal construction and loaded state','not a pivoted generic trailing truck']},
     {id:'brakes',represented:['six coupled-wheel arcuate shoes/hangers','three crossbeams','two brake shafts and pull links','two small leading vacuum cylinders and one larger inter-driver cylinder','cylinder support brackets'],missing:['teacher wheel-group names do not establish exact brake component identity','cylinder-piston-to-shaft lever topology and stroke','vacuum pipe/circuit, valves and cabin control','verified rigging leverage/clearances/force','no unsupported brakes added to bogie or Cartazzi carrying wheels']},
     {id:'outside-motion',represented:['two coupling links per side with real open eyes','main connecting rods','crank-pin extensions','crossheads/piston rods','paired slidebars and motion brackets'],missing:['crankpin shoulder/bearing/cotter detail','true crank phases and rod lengths','swept-clearance and closed-loop joint constraints']},
@@ -464,6 +539,6 @@ function makeCoverage(parts,assemblyCounts,p){
     ,{id:'tender-brakes',represented:p.includeTender?['eight shoes/hangers','four crossbeams','longitudinal pulls','operating shaft','three vacuum-cylinder forms']:[],missing:['1935-specific rigging/handbrake/cylinder placement','complete vacuum circuit and mechanical ratio/stroke constraints']}
     ,{id:'tender-drawgear',represented:p.includeTender?['main drawbar and two safety links','vertical pin eyes and interface supports']:[],missing:['verified drawbar pin stations, profiles, slack and forces','buffers and compliant/rubbing interfaces','coupling articulation constraint solution']}
   ];
-  for(const e of entries){e.partNames=parts.filter(p=>p.metadata.assembly===e.id).map(p=>p.name);e.generatedPartCount=e.partNames.length;e.status=e.generatedPartCount?'static-structural-representation-with-open-items':'not-generated';e.dimensionStatus='provisional except declared wheelbase/nominal diameters';}
+  for(const e of entries){e.partNames=parts.filter(p=>p.metadata.assembly===e.id).map(p=>p.name);e.generatedPartCount=e.partNames.length;e.status=e.generatedPartCount?'static-structural-representation-with-open-items':'not-generated';e.dimensionStatus='provisional except declared wheelbase/nominal diameters, coupled/Cartazzi spring table dimensions, cylinder bore/stroke and derived half-stroke crank radius';}
   return {schema:'native-locomotive-functional-coverage/1',complete:false,mechanicalReconstructionComplete:false,kinematicsSolved:false,scope:'Locomotive six-axle underframe and optional four-axle corridor tender mechanical structure; no coach mechanics. All assemblies still have explicit engineering/reconciliation gaps.',assemblyCounts,entries,unresolvedInterface:'Teacher structure at locomotive/tender interface requires independent semantic dissection; no silent merge into Cartazzi.',outOfScopeSourceFunctions:['buffers/couplers and train draw gear detailed mechanism','external/cab steam, water, lubricating and vacuum piping and controls','boiler/firebox/ashpan working internals','coach chassis','decorative fasteners and ancillary equipment outside above structures'],gates:{nativeGeneration:true,sourceRuntimeGeometry:false,driverWheelsDuplicated:false,sourceAnimationPlayback:false,allMechanicalFunctionsComplete:false,completeCandidateAllowed:false}};
 }

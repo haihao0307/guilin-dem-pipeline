@@ -10,7 +10,13 @@
 5. 正侧/正前/顶面正交、统一米制标尺。未证尺寸显式标注，用户视口不提供自由orbit或斜视。
 
 ## 已核米制锚点
-Science Museum Group Mallard目录：驱动轮直径2032mm、宽2743mm、缓冲器间全长21650mm。该长度对应机车+tender对象，不能用于单机头。轴距尚核查。
+Science Museum Group Mallard目录：驱动轮直径2032mm、宽2743mm、缓冲器间全长21650mm。该长度对应机车+tender对象，不能用于单机头。此数据不与下列1935配置总长混用。
+
+The Engineer 1935-09-27 p320、LNER提供图表：Silver Link六轴间距1.905/1.6764/2.2098/2.2098/2.8956m；主轮2.032m、前轮.9652m、尾轮1.1176m。主/尾承载簧16/11片；26in缸行程给普通曲柄半径.3302m的推导。前bogie为螺旋承载簧。局部安装尺寸及运动相位不据此假称已验证。
+
+原刊：https://theengineer.markallengroup.com/production/2018/09/Gresley-Silver-Jubilee.pdf
+
+Mark3 BT10的0.914m轮径、2.6m轴距及16m转向架中心距依据FRA/ORD-78/29历史工程数据；来源、分版本尺寸与未核字段随生成器记录。
 
 官方页面：https://collection.sciencemuseumgroup.org.uk/objects/co205732/london-north-eastern-railway-steam-locomotive-mallard-4-6-2-a4-pacific-class-no-4468-steam-locomotive
 
