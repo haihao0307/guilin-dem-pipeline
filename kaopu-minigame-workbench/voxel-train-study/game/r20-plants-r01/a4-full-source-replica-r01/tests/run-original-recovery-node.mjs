@@ -7,6 +7,8 @@ globalThis.createImageBitmap=async(blob)=>await loadImage(Buffer.from(await blob
 const originalFetch=globalThis.fetch;globalThis.fetch=async(input,options)=>{const url=input instanceof Request?input.url:String(input);if(url.startsWith('file:')){return new Response(await fs.readFile(fileURLToPath(url)));}return originalFetch(input,options);};
 const {verifyRecovery}=await import('./original-recovery-browser.mjs');
 const report=await verifyRecovery();
+await fs.mkdir(new URL('../qa/',import.meta.url),{recursive:true});
+await fs.mkdir(new URL('../provenance/',import.meta.url),{recursive:true});
 await fs.writeFile(new URL('../qa/ORIGINAL_RUNTIME_RECOVERY.json',import.meta.url),JSON.stringify(report.results,null,2));
 await fs.writeFile(new URL('../provenance/ORIGINAL_RUNTIME_NODE_MAPPING.json',import.meta.url),JSON.stringify(report.mappings,null,2));
 await fs.writeFile(new URL('../provenance/ORIGINAL_RUNTIME_CLOSURES.json',import.meta.url),JSON.stringify(report.closures,null,2));
