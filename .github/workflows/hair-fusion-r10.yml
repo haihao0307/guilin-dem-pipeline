@@ -1,0 +1,106 @@
+name: Hair Fusion R10
+on:
+  push:
+    branches: [feature/hair-fusion-r10-20261011]
+    paths:
+      - kaopu-hair-workbench/fusion/r10/**
+      - .github/workflows/hair-fusion-r10.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hair-fusion-r10
+  cancel-in-progress: false
+jobs:
+  build-test-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench
+            kaopu-human-overview
+            .github/workflows/hair-fusion-r10.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch immutable parents and install test tools
+        run: |
+          git fetch --depth=1 origin 40861390bb57673c677a08d5216286d2dcbcf4da
+          npm install --prefix /tmp/hair-r10-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-r10-tools/node_modules node_modules
+          /tmp/hair-r10-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Normalize new source and construct source-pinned fusion
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('kaopu-hair-workbench/fusion/r10')
+          r=(p/'fusion-runtime.js').read_text()
+          r=r.replace("const q=new URLSearchParams(location.search).get('quality');return", "const q=new URLSearchParams(location.hash.slice(1)).get('quality')||new URLSearchParams(location.search).get('quality');return")
+          r=r.replace('href="?quality=', 'href="#quality=')
+          anchor="$('gnmControlScroll').append(quality);"
+          extra="quality.querySelectorAll('a').forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=a.hash;location.reload()});"
+          if extra not in r:r=r.replace(anchor,anchor+extra)
+          if 'scalpCurveHash:' not in r:r=r.replace('qualityRoots:h.options.count,','qualityRoots:h.options.count,scalpCurveHash:hash(h.latestPoints),')
+          (p/'fusion-runtime.js').write_text(r)
+          b=(p/'build.py').read_text()
+          start=b.index("write('finalize.py',")
+          end=b.index("write('BUILD_MANIFEST.json'",start)
+          b=b[:start]+"write('finalize.py',(OUT/'package.py').read_text())\n"+b[end:]
+          (p/'build.py').write_text(b)
+          PY
+          python kaopu-hair-workbench/fusion/r10/build.py
+          python kaopu-hair-workbench/fusion/r10/post-build.py
+          find kaopu-hair-workbench/fusion/r10/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node kaopu-hair-workbench/fusion/r10/bundle.mjs
+          python kaopu-hair-workbench/fusion/r10/finalize.py
+      - name: Browser regression on the exact public bundle
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r10/tests/verify.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r10/public-lite.html
+      - name: Publish only the new R10 directory to its draft branch
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess
+          files=subprocess.check_output(['git','diff','--name-only']).decode().splitlines()
+          assert all(x.startswith('kaopu-hair-workbench/fusion/r10/') for x in files),files
+          PY
+          git config user.name 'KAOPU Hair Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r10
+          git commit -m 'build(hair): R10 source-pinned fusion with local browser evidence'
+          git push origin HEAD:refs/heads/feature/hair-fusion-r10-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r10/public-lite.html"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$url" > kaopu-hair-workbench/fusion/r10/PUBLIC_URL.txt
+          echo "## R10 fixed preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify actual external public rendering and controls
+        run: |
+          node kaopu-hair-workbench/fusion/r10/tests/verify.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record public evidence without changing the tested HTML
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-hair-workbench/fusion/r10');m=json.loads((p/'BUILD_MANIFEST.json').read_text());r=json.loads((p/'evidence/public/report.json').read_text());assert r['success'];assert hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest()==m['htmlSha256'];m['publicBrowserVerified']=True;m['publicPreview']=(p/'PUBLIC_URL.txt').read_text().strip();m['validation']='Real public Chromium software WebGL; desktop and 390x844 viewport; not a physical mobile or Vision Pro test';(p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          PY
+          git add kaopu-hair-workbench/fusion/r10
+          git commit -m 'test(hair): record R10 real-public regression evidence and fixed link'
+          git push origin HEAD:refs/heads/feature/hair-fusion-r10-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-fusion-r10-evidence
+          path: |
+            kaopu-hair-workbench/fusion/r10/evidence
+            kaopu-hair-workbench/fusion/r10/src
+            kaopu-hair-workbench/fusion/r10/BUILD_MANIFEST.json
+            kaopu-hair-workbench/fusion/r10/PUBLIC_URL.txt
+            kaopu-hair-workbench/fusion/r10/RESEARCH.md
+          retention-days: 30

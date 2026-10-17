@@ -1,0 +1,2863 @@
+{
+  "version": "R10.0",
+  "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d560e03d82bdfff0d4cd70c5383f609567151a30/kaopu-hair-workbench/fusion/r10/public-lite.html",
+  "publicMode": true,
+  "started": "2026-10-11T03:45:35.119Z",
+  "device": "Chromium desktop; software WebGL on GitHub Actions; mobile is viewport simulation only",
+  "checks": [
+    "R10 module loaded",
+    "single scene and head",
+    "expanded real controls",
+    "R3 default side sweep",
+    "scalp buffers finite",
+    "roots remain on skin",
+    "ear and nape populated",
+    "all 25 new controls exist in DOM",
+    "01-side-sweep nonblank actual canvas",
+    "02-top nonblank actual canvas",
+    "03-left-ear nonblank actual canvas",
+    "04-nape nonblank actual canvas",
+    "short-crop real finite geometry",
+    "short-crop stable root identity",
+    "style-short-crop nonblank actual canvas",
+    "swept-back real finite geometry",
+    "swept-back stable root identity",
+    "style-swept-back nonblank actual canvas",
+    "side-sweep real finite geometry",
+    "side-sweep stable root identity",
+    "style-side-sweep nonblank actual canvas",
+    "three independent scalp curve results",
+    "left region density really changes",
+    "nape density really changes",
+    "density never relocates roots",
+    "05-real-follicle-roots nonblank actual canvas",
+    "five beard zones exist",
+    "beard geometry finite",
+    "beard true skin roots",
+    "06-natural-beard nonblank actual canvas",
+    "facial region controls change actual draw count",
+    "beard edge softness changes real selection",
+    "save/restore all grooming controls",
+    "invalid import rejected",
+    "original R9 source curves loaded",
+    "teacher-original nonblank actual canvas",
+    "chin-trim R9 source curves loaded",
+    "teacher-chin-trim nonblank actual canvas",
+    "cropped-trim R9 source curves loaded",
+    "teacher-cropped-trim nonblank actual canvas",
+    "old source boundaries kept explicit",
+    "no page or renderer errors",
+    "mobile light root budget",
+    "mobile no horizontal overflow"
+  ],
+  "errors": [],
+  "success": true,
+  "initial": {
+    "ready": true,
+    "graphics": {
+      "phase": "ready",
+      "stage": "application-build",
+      "attempts": 1,
+      "recoveries": 1,
+      "losses": 0,
+      "lastError": null,
+      "autoLossBudget": 2,
+      "activeContexts": 1,
+      "history": [
+        {
+          "event": "stage",
+          "stage": "context-request",
+          "attempt": 1,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "event": "stage",
+          "stage": "precision-vertex-high"
+        },
+        {
+          "event": "precision-result",
+          "shader": "vertex-high",
+          "value": {
+            "precision": 23,
+            "rangeMin": 127,
+            "rangeMax": 127
+          },
+          "lost": false
+        },
+        {
+          "event": "stage",
+          "stage": "precision-fragment-high"
+        },
+        {
+          "event": "precision-result",
+          "shader": "fragment-high",
+          "value": {
+            "precision": 23,
+            "rangeMin": 127,
+            "rangeMax": 127
+          },
+          "lost": false
+        },
+        {
+          "event": "stage",
+          "stage": "three-constructor"
+        },
+        {
+          "event": "renderer-created",
+          "attempt": 1
+        },
+        {
+          "event": "stage",
+          "stage": "application-build"
+        },
+        {
+          "event": "pageshow"
+        },
+        {
+          "event": "ready"
+        }
+      ]
+    },
+    "errors": [],
+    "version": "R10.0 R3+R9 fusion",
+    "fusion": {
+      "version": "R10.0 / R3 + R9",
+      "ready": true,
+      "oneScene": true,
+      "headCount": 1,
+      "source": "R3 region roots + R9 teacher source curves and editor",
+      "qualityRoots": 96000,
+      "scalpCurveHash": 2463249092,
+      "regionalRootCounts": {
+        "crown": 52453,
+        "front": 20235,
+        "left": 10498,
+        "right": 10627,
+        "ear": 9909,
+        "nape": 9145
+      },
+      "rootsVisible": false,
+      "geometryBytes": 262836800,
+      "controlCount": 49,
+      "physics": false,
+      "ten24Loaded": false,
+      "productionAccepted": false,
+      "snapshotSchema": "kaopu.hair.groom@1.0"
+    },
+    "state": {
+      "geometry": "r6",
+      "shadows": true,
+      "shadowCasters": "all",
+      "shadowFilter": "soft",
+      "shadowSeedOffset": 0,
+      "shadowMode": "layered",
+      "coverage": true,
+      "coverageResolve": "blend",
+      "radiusMode": "source-scaled",
+      "light": "both",
+      "view": "three",
+      "zoom": 1,
+      "turntable": false,
+      "case": "neutral",
+      "shading": "fiber",
+      "groom": {
+        "style": "side-sweep",
+        "hairVisible": true,
+        "hairColor": "#291c12",
+        "hairLength": 82,
+        "hairDensity": 100,
+        "hairWidth": 100,
+        "hairRoughness": 46,
+        "hairVolume": 75,
+        "hairline": 0,
+        "frontCoverage": 100,
+        "sideCoverage": 100,
+        "backCoverage": 100,
+        "browsVisible": true,
+        "browsColor": "#21170f",
+        "browsDensity": 100,
+        "browsLength": 100,
+        "browsWidth": 100,
+        "beardVisible": false,
+        "beardColor": "#291c12",
+        "beardDensity": 60,
+        "beardLength": 35,
+        "beardWidth": 90,
+        "moustacheCoverage": 100,
+        "chinCoverage": 100,
+        "hairLeftCoverage": 100,
+        "hairRightCoverage": 100,
+        "hairCrownCoverage": 100,
+        "hairEarCoverage": 100,
+        "hairNapeCoverage": 95,
+        "hairTempleRecession": 0,
+        "hairEdgeSoftness": 55,
+        "hairSideLength": 85,
+        "hairNapeLength": 60,
+        "hairPart": 0,
+        "hairWhorlX": 0,
+        "hairWhorlZ": 0,
+        "hairWhorl": 94,
+        "hairShortFlow": 20,
+        "hairClump": 34,
+        "hairFrizz": 12,
+        "hairFlyaways": 25,
+        "hairRootFine": 65,
+        "beardJawCoverage": 90,
+        "beardCheekCoverage": 78,
+        "beardSideburnCoverage": 82,
+        "beardSoftness": 65,
+        "beardCurl": 32,
+        "beardVariation": 60,
+        "beardRoughness": 58
+      },
+      "panel": "hair"
+    },
+    "camera": {
+      "position": [
+        0.2511236209611191,
+        0.275,
+        0.7129562130561331
+      ],
+      "target": [
+        0,
+        0.265,
+        0.025
+      ],
+      "zoom": 1
+    },
+    "editors": [
+      {
+        "schema": "teacher-groom-editor-v1",
+        "method": "complete-source-segment-prefix",
+        "sourceRevision": 1,
+        "style": "original",
+        "length": 1,
+        "density": 1,
+        "effectiveArcFraction": 1,
+        "count": 14000,
+        "activeStrands": 14000,
+        "sourceSegments": 336000,
+        "drawnSegments": 336000,
+        "drawnTriangles": 672000,
+        "drawIndexCount": 2016000,
+        "drawIndexHash": "9269eb0e",
+        "protectedRootSegments": 2,
+        "sourceHash": "0e04ef49",
+        "sourceAttributeHashes": {
+          "position": "0e04ef49",
+          "tangent": "5085be41",
+          "scalpNormal": "f2aed145",
+          "strandSide": "99c434c5",
+          "along": "b4b579c5",
+          "strandRandom": "6034bdcd",
+          "strandRadius": "d00c4c4d"
+        },
+        "sourceIndexHash": "9269eb0e",
+        "sourceRootHash": "511cb665",
+        "rootHash": "511cb665",
+        "sourcePartingHash": "5eb2ca3a",
+        "sourceBindingRootHash": "d8c15bdb",
+        "rootsExact": true,
+        "attributesExact": true,
+        "rootBindingsPreserved": true,
+        "partingPreserved": true,
+        "sourceGuideIdsPreserved": true,
+        "sourceVerticesMoved": 0,
+        "newSegmentsCreated": 0,
+        "addedTriangleCount": 0,
+        "lengthSummary": {
+          "min": 0.027290349571134506,
+          "max": 0.3615473001042488,
+          "mean": 0.2206086659256159,
+          "minSourceRatio": 1,
+          "maxSourceRatio": 1
+        },
+        "lastApplyMs": 1.7000000000698492,
+        "errors": [],
+        "limitation": "Source-curve cuts, not newly authored bob grooms; existing R8 collision/radius limits are unchanged. Cut tips keep original radii. Width changes are outside this index-only guarantee."
+      },
+      {
+        "schema": "teacher-groom-editor-v1",
+        "method": "complete-source-segment-prefix",
+        "sourceRevision": 1,
+        "style": "original",
+        "length": 1,
+        "density": 1,
+        "effectiveArcFraction": 1,
+        "count": 1000,
+        "activeStrands": 1000,
+        "sourceSegments": 10000,
+        "drawnSegments": 10000,
+        "drawnTriangles": 20000,
+        "drawIndexCount": 60000,
+        "drawIndexHash": "d04b5a7f",
+        "protectedRootSegments": 2,
+        "sourceHash": "c9cb31e9",
+        "sourceAttributeHashes": {
+          "position": "c9cb31e9",
+          "tangent": "a61a0591",
+          "scalpNormal": "02ffbed1",
+          "strandSide": "34169945",
+          "along": "98f083e5",
+          "strandRandom": "0889b081",
+          "strandRadius": "763a78ad"
+        },
+        "sourceIndexHash": "d04b5a7f",
+        "sourceRootHash": "0df4ae19",
+        "rootHash": "0df4ae19",
+        "sourcePartingHash": "5823a5b4",
+        "sourceBindingRootHash": "24480b98",
+        "rootsExact": true,
+        "attributesExact": true,
+        "rootBindingsPreserved": true,
+        "partingPreserved": true,
+        "sourceGuideIdsPreserved": true,
+        "sourceVerticesMoved": 0,
+        "newSegmentsCreated": 0,
+        "addedTriangleCount": 0,
+        "lengthSummary": {
+          "min": 0.0033863311431618125,
+          "max": 0.011904115471639736,
+          "mean": 0.005661075964809701,
+          "minSourceRatio": 1,
+          "maxSourceRatio": 1
+        },
+        "lastApplyMs": 0.30000000004656613,
+        "errors": [],
+        "limitation": "Source-curve cuts, not newly authored bob grooms; existing R8 collision/radius limits are unchanged. Cut tips keep original radii. Width changes are outside this index-only guarantee."
+      }
+    ],
+    "legacyScalp": {
+      "count": 96000,
+      "segments": 16,
+      "scalpTriangleCount": 5023,
+      "scalpArea": 0.06833292107098887,
+      "invalidTriangles": 0,
+      "minWeight": 9.99999993922529e-9,
+      "maxWeight": 0.9999850988388062,
+      "maxSumError": 4.470348358154297e-8,
+      "style": "side-sweep",
+      "regionField": "R03 lower nape / surface follicular units / crown emergence whorl",
+      "follicularUnitCount": 47645,
+      "areaInterpretation": "unclipped candidate triangle area; not exact anatomical scalp area",
+      "hairlineHeight": 0,
+      "frontCoverage": 1,
+      "backCoverage": 1,
+      "sideCoverage": 1,
+      "width": 1,
+      "volume": 0.018000000000000002,
+      "frizz": 0.00015000000000000001,
+      "bindingSegments": 32,
+      "activeCount": 92816,
+      "drawnCount": 92816,
+      "density": 1,
+      "length": 0.06447272727272728,
+      "vertices": 3264000,
+      "triangles": 2970112,
+      "finite": true,
+      "radius": 0.00028,
+      "minScalpNormalLength": 0.9999999999999997,
+      "maxLift": 0.018894404980272093,
+      "lighting": {
+        "legacy": false,
+        "warmPower": 3.2,
+        "coolPower": 3,
+        "ambient": 0.35,
+        "warmDirection": [
+          0.7527099294949816,
+          0.3387194682727417,
+          0.5645324471212362
+        ],
+        "coolDirection": [
+          -0.8377078165833911,
+          0.29319773580418684,
+          0.46073929912086514
+        ],
+        "warmColor": [
+          1,
+          0.45641102317066595,
+          0.171441100722554
+        ],
+        "coolColor": [
+          0.20155625378383743,
+          0.4019777798219466,
+          1
+        ]
+      },
+      "rootHash": 2870748820,
+      "maxRootSurfaceDistance": 0.000020014997117046295,
+      "cachedStyles": [
+        "side-sweep"
+      ],
+      "guideBuilds": 2,
+      "lastSelectionMs": 28.79999999993015,
+      "lastSupportMs": 441.4000000000233,
+      "lastUpdateMs": 417.30000000004657
+    },
+    "facial": {
+      "kind": "gnm-facial-hair",
+      "finite": true,
+      "invalidTriangles": 0,
+      "brows": {
+        "zoneCounts": {
+          "brow": 1200
+        },
+        "width": 1,
+        "activeMoustacheCount": 0,
+        "activeChinCount": 0,
+        "collapsedGuideCount": 0,
+        "region": "brows",
+        "visible": false,
+        "count": 1200,
+        "activeCount": 1020,
+        "density": 0.85,
+        "length": 0.0045,
+        "color": "#21170f",
+        "segments": 8,
+        "vertices": 21600,
+        "triangles": 16320,
+        "candidateTriangleCount": 1546,
+        "invalidGuideTriangles": 0,
+        "invalidTemplateGuidePoints": 0,
+        "clippedGuideCount": 52,
+        "minSignedSurfaceOffset": 0.0000195482442428017,
+        "minTemplateGuideEyeGap": 0.013902870803646914,
+        "minTemplateGuideLipGap": 0.07308259321922833,
+        "invalidTriangles": 0,
+        "invalidTemplateRoots": 0,
+        "minWeight": 0.00006399310223059729,
+        "maxWeight": 0.9973865747451782,
+        "maxSumError": 4.470348358154297e-8,
+        "maxRootSurfaceDistance": 0.000020013506315005035,
+        "rootHash": 1164859729,
+        "finite": true,
+        "minScalpNormalLength": 0.9877411653615781,
+        "minTemplateEyeGap": 0.013902870236404647,
+        "minTemplateLipGap": 0.07308259321922833,
+        "moustacheCount": 0,
+        "chinCount": 0,
+        "radius": 0.000055,
+        "lighting": {
+          "legacy": false,
+          "warmPower": 3.2,
+          "coolPower": 3,
+          "ambient": 0.35,
+          "warmDirection": [
+            0.7527099294949816,
+            0.3387194682727417,
+            0.5645324471212362
+          ],
+          "coolDirection": [
+            -0.8377078165833911,
+            0.29319773580418684,
+            0.46073929912086514
+          ],
+          "warmColor": [
+            1,
+            0.45641102317066595,
+            0.171441100722554
+          ],
+          "coolColor": [
+            0.20155625378383743,
+            0.4019777798219466,
+            1
+          ]
+        },
+        "lastUpdateMs": 26
+      },
+      "beard": {
+        "zoneCounts": {
+          "cheek": 1252,
+          "sideburn": 1056,
+          "jaw": 2536,
+          "moustache": 388,
+          "chin": 1968
+        },
+        "zoneCoverage": [
+          1,
+          1,
+          0.9,
+          0.78,
+          0.82
+        ],
+        "width": 0.9,
+        "moustacheCoverage": 1,
+        "chinCoverage": 1,
+        "activeMoustacheCount": 251,
+        "activeChinCount": 1187,
+        "collapsedGuideCount": 6,
+        "region": "beard",
+        "visible": false,
+        "count": 7200,
+        "activeCount": 3643,
+        "density": 0.6,
+        "length": 0.0035,
+        "color": "#21170f",
+        "segments": 9,
+        "vertices": 144000,
+        "triangles": 65574,
+        "candidateTriangleCount": 10779,
+        "invalidGuideTriangles": 0,
+        "invalidTemplateGuidePoints": 0,
+        "clippedGuideCount": 192,
+        "minSignedSurfaceOffset": 0.000016489424806795312,
+        "minTemplateGuideEyeGap": 0.03012286112532081,
+        "minTemplateGuideLipGap": 0.0036005459648904585,
+        "invalidTriangles": 0,
+        "invalidTemplateRoots": 0,
+        "minWeight": 0.000016382460671593435,
+        "maxWeight": 0.9992872476577759,
+        "maxSumError": 4.470348358154297e-8,
+        "maxRootSurfaceDistance": 0.000020026308299930223,
+        "rootHash": 3001020817,
+        "finite": true,
+        "minScalpNormalLength": 0.8762298430422819,
+        "minTemplateEyeGap": 0.03012286112532081,
+        "minTemplateLipGap": 0.003606897550980049,
+        "moustacheCount": 388,
+        "chinCount": 1968,
+        "radius": 0.0000585,
+        "lighting": {
+          "legacy": false,
+          "warmPower": 3.2,
+          "coolPower": 3,
+          "ambient": 0.35,
+          "warmDirection": [
+            0.7527099294949816,
+            0.3387194682727417,
+            0.5645324471212362
+          ],
+          "coolDirection": [
+            -0.8377078165833911,
+            0.29319773580418684,
+            0.46073929912086514
+          ],
+          "warmColor": [
+            1,
+            0.45641102317066595,
+            0.171441100722554
+          ],
+          "coolColor": [
+            0.20155625378383743,
+            0.4019777798219466,
+            1
+          ]
+        },
+        "lastUpdateMs": 49.89999999990687
+      }
+    },
+    "contactAcceptance": false,
+    "fullRegressionPassed": false,
+    "opacityCapability": {
+      "tested": true,
+      "supported": true,
+      "webgl2": true,
+      "extension": "EXT_color_buffer_float",
+      "format": "RGBA16F / HalfFloatType",
+      "floatBlendExtensionRequired": false,
+      "framebuffer": {
+        "complete": true,
+        "status": 36053,
+        "statusHex": "0x8cd5",
+        "samples": 0
+      },
+      "blendExpected": [
+        64,
+        128,
+        32,
+        191
+      ],
+      "blendActual": [
+        64,
+        128,
+        32,
+        191
+      ],
+      "blendToleranceBytes": 2,
+      "probeRenderCalls": 3,
+      "reason": null,
+      "fullSizeFramebuffers": [
+        {
+          "nearest": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          },
+          "tau": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          }
+        },
+        {
+          "nearest": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          },
+          "tau": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          }
+        }
+      ]
+    },
+    "opacity": {
+      "secondaryTransport": {
+        "strength": 0.22,
+        "model": "bounded per-light shorter-path surrogate, not validated multiple scattering"
+      },
+      "version": "r8-four-layer-tau-1",
+      "enabled": true,
+      "hairCasts": true,
+      "capability": {
+        "tested": true,
+        "supported": true,
+        "webgl2": true,
+        "extension": "EXT_color_buffer_float",
+        "format": "RGBA16F / HalfFloatType",
+        "floatBlendExtensionRequired": false,
+        "framebuffer": {
+          "complete": true,
+          "status": 36053,
+          "statusHex": "0x8cd5",
+          "samples": 0
+        },
+        "blendExpected": [
+          64,
+          128,
+          32,
+          191
+        ],
+        "blendActual": [
+          64,
+          128,
+          32,
+          191
+        ],
+        "blendToleranceBytes": 2,
+        "probeRenderCalls": 3,
+        "reason": null,
+        "fullSizeFramebuffers": [
+          {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          },
+          {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        ]
+      },
+      "mapSize": 512,
+      "depthLayers": 4,
+      "storage": "per light: RGBA8 packed nearest + RGBA16F cumulative tau, samples=0",
+      "colorTextureEstimateBytes": 6291456,
+      "memoryEstimateExcludes": "depth attachments, driver allocations, native opaque shadow maps and transient probe",
+      "tauMapping": "-log(max(1-alpha,1e-6)), alpha=existing analytical ribbon coverage × existing fiber opacity",
+      "blend": {
+        "rgb": "ONE + ONE",
+        "alpha": "ONE + ONE",
+        "equation": "ADD",
+        "explicitCustomBlending": true
+      },
+      "receiverFilter": "four neighboring transmittance taps, 1-texel bilinear reconstruction; no enlarged blur",
+      "depthBias": "each native light shadow bias and normal-biased native shadow coordinate, unchanged",
+      "lights": [
+        {
+          "lightId": 11,
+          "bounds": {
+            "points": 3286000,
+            "depthUnits": "normalized orthographic light-camera depth [0,1]",
+            "nearWorld": 1.1782192936202793,
+            "farWorld": 1.3769807427672005,
+            "paddingWorld": 0.0000049000000000000005,
+            "maximumPhysicalRadiusWorld": 0.00007409881200146628,
+            "antialiasSupportWorld": 0.0008789062499999999,
+            "nearestPossible": 0.4604956708654201,
+            "lastLayerDepth": 0.5416267929662042,
+            "layerFractions": [
+              0.1,
+              0.3,
+              0.6,
+              1
+            ],
+            "lastLayerCoversAllGeometry": true,
+            "fitsNativeFrustumXY": true,
+            "lightMatrix": [
+              1.0344827586206902,
+              -0.4516259576969888,
+              -0.30722854265101285,
+              0,
+              9.570888143320318e-17,
+              1.5681456864478782,
+              -0.13825284419295575,
+              0,
+              -1.3793103448275863,
+              -0.33871946827274174,
+              -0.2304214069882597,
+              0,
+              0.5344827586206892,
+              0.09290937979813069,
+              0.5526016205184929,
+              1
+            ],
+            "near": 0.05,
+            "far": 2.5,
+            "extentsByMesh": [
+              {
+                "mesh": "teacher-brows",
+                "nearWorld": 1.1960160443734282,
+                "farWorld": 1.2818417269427131
+              },
+              {
+                "mesh": "GNM scalp-bound strands",
+                "nearWorld": 1.1782192936202793,
+                "farWorld": 1.3769807427672005
+              }
+            ],
+            "limitation": "Four cumulative knots interpolate extinction through gaps; exact separated-clump transmittance is not represented"
+          },
+          "framebuffer": {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        },
+        {
+          "lightId": 14,
+          "bounds": {
+            "points": 3286000,
+            "depthUnits": "normalized orthographic light-camera depth [0,1]",
+            "nearWorld": 1.1901365727573165,
+            "farWorld": 1.3759336488941805,
+            "paddingWorld": 0.0000049000000000000005,
+            "maximumPhysicalRadiusWorld": 0.00007409881200146628,
+            "antialiasSupportWorld": 0.0008789062499999999,
+            "nearestPossible": 0.46535986643155774,
+            "lastLayerDepth": 0.5411994077119103,
+            "layerFractions": [
+              0.1,
+              0.3,
+              0.6,
+              1
+            ],
+            "lastLayerCoversAllGeometry": true,
+            "fitsNativeFrustumXY": true,
+            "lightMatrix": [
+              0.8308943961588897,
+              0.42817420083266844,
+              0.3419215577891392,
+              0,
+              2.3927220358300795e-17,
+              1.5934197045272878,
+              -0.11967254522619868,
+              0,
+              1.510717083925254,
+              -0.23549581045796775,
+              -0.1880568567840266,
+              0,
+              0.46223207290186863,
+              0.0836311735617179,
+              0.5466187275371964,
+              1
+            ],
+            "near": 0.05,
+            "far": 2.5,
+            "extentsByMesh": [
+              {
+                "mesh": "teacher-brows",
+                "nearWorld": 1.2031422607777622,
+                "farWorld": 1.2958364859591736
+              },
+              {
+                "mesh": "GNM scalp-bound strands",
+                "nearWorld": 1.1901365727573165,
+                "farWorld": 1.3759336488941805
+              }
+            ],
+            "limitation": "Four cumulative knots interpolate extinction through gaps; exact separated-clump transmittance is not represented"
+          },
+          "framebuffer": {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        }
+      ],
+      "receivers": [
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 0
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 0
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 0
+        },
+        {
+          "kind": "head",
+          "material": "",
+          "patchedCompiles": 1
+        }
+      ],
+      "nativeFiberCasters": [
+        {
+          "name": "teacher-scalp",
+          "castShadow": false
+        },
+        {
+          "name": "teacher-brows",
+          "castShadow": false
+        },
+        {
+          "name": "GNM scalp-bound strands",
+          "castShadow": false
+        },
+        {
+          "name": "GNM surface-bound brows",
+          "castShadow": false
+        },
+        {
+          "name": "GNM surface-bound beard",
+          "castShadow": false
+        }
+      ],
+      "updateCalls": 2,
+      "skippedUpdates": 1,
+      "rebuilds": 1,
+      "lastUpdate": {
+        "rendered": false,
+        "reason": "maps unchanged",
+        "enabled": true
+      },
+      "lastBuildCpuMs": 271.70000000006985,
+      "passCounts": {
+        "nearest": 2,
+        "accumulation": 2,
+        "drawCalls": 8
+      },
+      "lastPasses": [
+        {
+          "sequence": 1,
+          "lightId": 11,
+          "kind": "nearest",
+          "cpuSubmissionMs": 115.79999999993015,
+          "gpuMs": 692.862255,
+          "gpuStatus": "measured",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 2,
+          "lightId": 11,
+          "kind": "accumulation",
+          "cpuSubmissionMs": 4.800000000046566,
+          "gpuMs": 870.336115,
+          "gpuStatus": "measured",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 3,
+          "lightId": 14,
+          "kind": "nearest",
+          "cpuSubmissionMs": 0.30000000004656613,
+          "gpuMs": null,
+          "gpuStatus": "pending",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 4,
+          "lightId": 14,
+          "kind": "accumulation",
+          "cpuSubmissionMs": 0.19999999995343387,
+          "gpuMs": null,
+          "gpuStatus": "pending",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        }
+      ],
+      "timerQuerySupported": true,
+      "pendingTimerQueries": 2,
+      "dirty": false,
+      "dirtyReason": "enabled",
+      "lastError": null,
+      "limitations": [
+        "Bounded four-layer extinction approximation; depth interpolation can attenuate empty gaps between separated clumps",
+        "Finite 512² spatial resolution; deterministic analytical coverage does not imply alias-free shadows",
+        "Scalar transmittance only; no colored extinction or multiple scattering",
+        "RGBA16F accumulation has finite precision; extremely dense overlap can saturate or overflow",
+        "GPU timings require available non-disjoint timer queries; CPU times are submission times, not GPU durations",
+        "No iPhone validation implied; capability is checked on the actual running WebGL context"
+      ]
+    },
+    "assets": [
+      {
+        "kind": "head",
+        "bytes": 34937952,
+        "sha256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961"
+      },
+      {
+        "kind": "samplers",
+        "bytes": 2731824,
+        "sha256": "827fc7850022cbc62d4401c6f6782b876c4dfa48f2a6f446d9644b0ba2b8122b"
+      }
+    ],
+    "model": {
+      "vertices": 17821,
+      "identityDim": 253,
+      "expressionDim": 383,
+      "positionHash": 1686585375
+    },
+    "bindings": [
+      {
+        "earEnvelopes": [
+          {
+            "side": -1,
+            "center": [
+              -0.07675252,
+              0.26868798,
+              0.02327114
+            ],
+            "radii": [
+              0.019166394577077722,
+              0.053514073274425075,
+              0.03739714965555106
+            ],
+            "vertexCount": 654,
+            "maxVertexNormalizedRadius": 0.9999900000999989,
+            "bbox": [
+              [
+                -0.09591891457707773,
+                0.2151739067255749,
+                -0.014126009655551063
+              ],
+              [
+                -0.05758612542292228,
+                0.3222020532744251,
+                0.06066828965555106
+              ]
+            ],
+            "radiusMargin": 0.0001254,
+            "safetyMargin": 0.00015
+          },
+          {
+            "side": 1,
+            "center": [
+              0.07671676,
+              0.26864847,
+              0.02327088
+            ],
+            "radii": [
+              0.019287972877800003,
+              0.053409264087300005,
+              0.037323443230700006
+            ],
+            "vertexCount": 653,
+            "maxVertexNormalizedRadius": 0.9999900000999989,
+            "bbox": [
+              [
+                0.057428787122199995,
+                0.21523920591269996,
+                -0.014052563230700005
+              ],
+              [
+                0.0960047328778,
+                0.3220577340873,
+                0.060594323230700006
+              ]
+            ],
+            "radiusMargin": 0.0001254,
+            "safetyMargin": 0.00015
+          }
+        ],
+        "earAvoidance": {
+          "affectedStrands": 727,
+          "proxyHitSegments": 1239,
+          "maxDisplacement": 0.02759788306300534,
+          "totalDisplacement": 41.0017693998752,
+          "maxLengthChange": 0.028751106722010755,
+          "totalLengthChange": 4.697323817652659,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 727,
+          "trueRayTriggerSegments": 1203,
+          "radiusOnlyTriggerSegments": 35,
+          "radiusUnresolvedTriggerSegments": 1,
+          "rootCapApplied": 297,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0,
+          "orbitalTriggeredStrands": 1,
+          "orbitalCorrectedStrands": 1,
+          "orbitalMaxDisplacement": 0.0030485725814072134,
+          "orbitalCappedStrands": 0
+        },
+        "region": "scalp",
+        "count": 14000,
+        "segments": 24,
+        "sourceGuideCount": 376,
+        "retainedSourceGuides": 376,
+        "roles": {
+          "originalMainOrBrow": 346,
+          "originalIndependent": 30,
+          "interpolatedChildren": 13034,
+          "independentChildren": 590
+        },
+        "partIslands": [
+          0,
+          1
+        ],
+        "finite": true,
+        "invalidRoots": 0,
+        "invalidTriangles": 0,
+        "maxRootGap": 0.0001000286059999132,
+        "maxBaryError": 4.470348358154297e-8,
+        "minBary": 0,
+        "minTemplateEyeGap": 0.0000028732904929041394,
+        "length": {
+          "min": 0.027290349571134506,
+          "max": 0.3615473001042488,
+          "mean": 0.2206086659256159
+        },
+        "bounds": [
+          [
+            -0.10618290305137634,
+            0.12529107928276062
+          ],
+          [
+            0.14079172909259796,
+            0.4189540445804596
+          ],
+          [
+            -0.15107250213623047,
+            0.13090121746063232
+          ]
+        ],
+        "freePointCount": 183335,
+        "nearSkinConstraintCount": 152665,
+        "neutralCollisionRepairs": 5910,
+        "maxNeutralCorrection": 0.03476475265872936,
+        "liveCollisionRepairs": 4279,
+        "maxLiveCorrection": 0.005613473586614691,
+        "radius": {
+          "root": 0.000037,
+          "tipFraction": 0.06
+        },
+        "lastBindMs": 13951.099999999977,
+        "lastUpdateMs": 454.4000000000233,
+        "collisionLimit": "Cached local one-way constraints; no universal intersection-free guarantee"
+      },
+      {
+        "earEnvelopes": [],
+        "earAvoidance": {
+          "affectedStrands": 0,
+          "proxyHitSegments": 0,
+          "maxDisplacement": 0,
+          "totalDisplacement": 0,
+          "maxLengthChange": 0,
+          "totalLengthChange": 0,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 0,
+          "trueRayTriggerSegments": 0,
+          "radiusOnlyTriggerSegments": 0,
+          "radiusUnresolvedTriggerSegments": 0,
+          "rootCapApplied": 0,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0,
+          "orbitalTriggeredStrands": 0,
+          "orbitalCorrectedStrands": 0,
+          "orbitalMaxDisplacement": 0,
+          "orbitalCappedStrands": 0
+        },
+        "region": "brows",
+        "count": 1000,
+        "segments": 10,
+        "sourceGuideCount": 88,
+        "retainedSourceGuides": 88,
+        "roles": {
+          "originalMainOrBrow": 88,
+          "originalIndependent": 0,
+          "interpolatedChildren": 912,
+          "independentChildren": 0
+        },
+        "browZones": {
+          "inner": 349,
+          "middle": 357,
+          "outer": 294
+        },
+        "partIslands": [
+          1,
+          0
+        ],
+        "finite": true,
+        "invalidRoots": 0,
+        "invalidTriangles": 0,
+        "maxRootGap": 0.00007001354561232678,
+        "maxBaryError": 4.470348358154297e-8,
+        "minBary": 0,
+        "minTemplateEyeGap": 0.010578047276552472,
+        "length": {
+          "min": 0.0033863311431618125,
+          "max": 0.011904115471639736,
+          "mean": 0.005661075964809701
+        },
+        "bounds": [
+          [
+            -0.05529739335179329,
+            0.05468495935201645
+          ],
+          [
+            0.30770185589790344,
+            0.32673561573028564
+          ],
+          [
+            0.10374781489372253,
+            0.12524491548538208
+          ]
+        ],
+        "freePointCount": 0,
+        "nearSkinConstraintCount": 10000,
+        "neutralCollisionRepairs": 1309,
+        "maxNeutralCorrection": 0.0005261453030310766,
+        "liveCollisionRepairs": 1309,
+        "maxLiveCorrection": 0.0000014510487355387405,
+        "radius": {
+          "root": 0.000045,
+          "tipFraction": 0.06
+        },
+        "lastBindMs": 52.5,
+        "lastUpdateMs": 9.300000000046566,
+        "collisionLimit": "Cached local one-way constraints; no universal intersection-free guarantee"
+      }
+    ],
+    "geometryHashes": [
+      235204425,
+      3385537001
+    ],
+    "frameCount": 2,
+    "drawingBuffer": [
+      822,
+      663
+    ],
+    "samples": 4,
+    "actualAntialias": true,
+    "shadowCasting": {
+      "head": {
+        "cast": true,
+        "receive": true
+      },
+      "fibers": [
+        {
+          "name": "teacher-scalp",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "teacher-brows",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM scalp-bound strands",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM surface-bound brows",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM surface-bound beard",
+          "cast": false,
+          "receive": true
+        }
+      ]
+    },
+    "shadowSeedSamples": [
+      {
+        "name": "teacher-scalp",
+        "seeds": {}
+      },
+      {
+        "name": "teacher-brows",
+        "seeds": {}
+      }
+    ],
+    "shadowFilterType": 1,
+    "shadowCameras": [
+      {
+        "left": -0.29,
+        "right": 0.29,
+        "top": 0.3,
+        "bottom": -0.3,
+        "near": 0.05,
+        "far": 2.5,
+        "radius": 12,
+        "bias": -0.00008,
+        "normalBias": 0.00012,
+        "mapSize": [
+          1536,
+          1536
+        ],
+        "position": [
+          0.9785229083434759,
+          0.7053353087545642,
+          0.7588921812576069
+        ],
+        "color": [
+          1,
+          0.45641102317066595,
+          0.171441100722554
+        ],
+        "intensity": 3.2,
+        "projection": [
+          3.4482758620689657,
+          0,
+          0,
+          0,
+          0,
+          3.3333333333333335,
+          0,
+          0,
+          0,
+          0,
+          -0.8163265306122448,
+          0,
+          0,
+          0,
+          -1.040816326530612,
+          1
+        ]
+      },
+      {
+        "left": -0.29,
+        "right": 0.29,
+        "top": 0.3,
+        "bottom": -0.3,
+        "near": 0.05,
+        "far": 2.5,
+        "radius": 12,
+        "bias": -0.00008,
+        "normalBias": 0.00012,
+        "mapSize": [
+          1536,
+          1536
+        ],
+        "position": [
+          -1.0890201615584083,
+          0.6461570565454429,
+          0.6239610888571246
+        ],
+        "color": [
+          0.20155625378383743,
+          0.4019777798219466,
+          1
+        ],
+        "intensity": 3,
+        "projection": [
+          3.4482758620689657,
+          0,
+          0,
+          0,
+          0,
+          3.3333333333333335,
+          0,
+          0,
+          0,
+          0,
+          -0.8163265306122448,
+          0,
+          0,
+          0,
+          -1.040816326530612,
+          1
+        ]
+      }
+    ],
+    "fiberMaterials": [
+      {
+        "model": "bounded longitudinal/azimuthal fibre approximation",
+        "radiusAttribute": "strandRadius",
+        "radiusUnits": "world",
+        "radiusScale": 1.372222222222222,
+        "coverageAA": true,
+        "coverageMode": "analytic-alpha-blend",
+        "coverageResolve": "blend",
+        "coverageResolveFallback": null,
+        "alphaToCoverage": false,
+        "actualSamples": 4,
+        "framebufferMeasured": true,
+        "drawingBuffer": [
+          822,
+          663
+        ],
+        "viewportHeight": 663,
+        "transparent": true,
+        "depthWrite": false,
+        "shadows": true,
+        "shadowMethod": "per-light native PCF, stochastic single-depth coverage",
+        "shadowViewports": {},
+        "lightingSource": "scene directional lights; independent per-light visibility",
+        "roughness": 0.55,
+        "surfaceSpecular": 0.095,
+        "colorLinear": [
+          0.015208514418949472,
+          0.008568125615105716,
+          0.004776953478513362
+        ],
+        "opacity": 1,
+        "ambientGain": 1,
+        "guides": false,
+        "limitations": [
+          "no multiple scattering or deep opacity maps",
+          "no coloured shadow transmission",
+          "directional lights with PCF only",
+          "non-MSAA fallback uses order-dependent alpha blending"
+        ]
+      },
+      {
+        "model": "bounded longitudinal/azimuthal fibre approximation",
+        "radiusAttribute": "strandRadius",
+        "radiusUnits": "world",
+        "radiusScale": 1,
+        "coverageAA": true,
+        "coverageMode": "analytic-alpha-blend",
+        "coverageResolve": "blend",
+        "coverageResolveFallback": null,
+        "alphaToCoverage": false,
+        "actualSamples": 4,
+        "framebufferMeasured": true,
+        "drawingBuffer": [
+          822,
+          663
+        ],
+        "viewportHeight": 663,
+        "transparent": true,
+        "depthWrite": false,
+        "shadows": true,
+        "shadowMethod": "per-light native PCF, stochastic single-depth coverage",
+        "shadowViewports": {},
+        "lightingSource": "scene directional lights; independent per-light visibility",
+        "roughness": 0.46,
+        "surfaceSpecular": 0.095,
+        "colorLinear": [
+          0.02217388478862708,
+          0.011612245176281512,
+          0.006048833020386069
+        ],
+        "opacity": 1,
+        "ambientGain": 1,
+        "guides": false,
+        "limitations": [
+          "no multiple scattering or deep opacity maps",
+          "no coloured shadow transmission",
+          "directional lights with PCF only",
+          "non-MSAA fallback uses order-dependent alpha blending"
+        ]
+      }
+    ],
+    "shaderLimits": "Realtime approximate fiber lobes and shadow-map visibility, not a complete Cycles/Marschner multiple scattering solution",
+    "r6ProductionUnchanged": true
+  },
+  "final": {
+    "ready": true,
+    "graphics": {
+      "phase": "ready",
+      "stage": "application-build",
+      "attempts": 1,
+      "recoveries": 1,
+      "losses": 0,
+      "lastError": null,
+      "autoLossBudget": 2,
+      "activeContexts": 1,
+      "history": [
+        {
+          "event": "stage",
+          "stage": "context-request",
+          "attempt": 1,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "event": "stage",
+          "stage": "precision-vertex-high"
+        },
+        {
+          "event": "precision-result",
+          "shader": "vertex-high",
+          "value": {
+            "precision": 23,
+            "rangeMin": 127,
+            "rangeMax": 127
+          },
+          "lost": false
+        },
+        {
+          "event": "stage",
+          "stage": "precision-fragment-high"
+        },
+        {
+          "event": "precision-result",
+          "shader": "fragment-high",
+          "value": {
+            "precision": 23,
+            "rangeMin": 127,
+            "rangeMax": 127
+          },
+          "lost": false
+        },
+        {
+          "event": "stage",
+          "stage": "three-constructor"
+        },
+        {
+          "event": "renderer-created",
+          "attempt": 1
+        },
+        {
+          "event": "stage",
+          "stage": "application-build"
+        },
+        {
+          "event": "pageshow"
+        },
+        {
+          "event": "ready"
+        }
+      ]
+    },
+    "errors": [],
+    "version": "R10.0 R3+R9 fusion",
+    "fusion": {
+      "version": "R10.0 / R3 + R9",
+      "ready": true,
+      "oneScene": true,
+      "headCount": 1,
+      "source": "R3 region roots + R9 teacher source curves and editor",
+      "qualityRoots": 96000,
+      "scalpCurveHash": 2463249092,
+      "regionalRootCounts": {
+        "crown": 52453,
+        "front": 20235,
+        "left": 10498,
+        "right": 10627,
+        "ear": 9909,
+        "nape": 9145
+      },
+      "rootsVisible": false,
+      "geometryBytes": 262836800,
+      "controlCount": 49,
+      "physics": false,
+      "ten24Loaded": false,
+      "productionAccepted": false,
+      "snapshotSchema": "kaopu.hair.groom@1.0"
+    },
+    "state": {
+      "geometry": "r6",
+      "shadows": true,
+      "shadowCasters": "all",
+      "shadowFilter": "soft",
+      "shadowSeedOffset": 0,
+      "shadowMode": "layered",
+      "coverage": true,
+      "coverageResolve": "blend",
+      "radiusMode": "source-scaled",
+      "light": "both",
+      "view": "three",
+      "zoom": 1,
+      "turntable": false,
+      "case": "neutral",
+      "shading": "fiber",
+      "groom": {
+        "style": "side-sweep",
+        "hairVisible": true,
+        "hairColor": "#291c12",
+        "hairLength": 82,
+        "hairDensity": 100,
+        "hairWidth": 100,
+        "hairRoughness": 46,
+        "hairVolume": 75,
+        "hairline": 0,
+        "frontCoverage": 100,
+        "sideCoverage": 100,
+        "backCoverage": 100,
+        "browsVisible": true,
+        "browsColor": "#21170f",
+        "browsDensity": 100,
+        "browsLength": 100,
+        "browsWidth": 100,
+        "beardVisible": false,
+        "beardColor": "#291c12",
+        "beardDensity": 60,
+        "beardLength": 35,
+        "beardWidth": 90,
+        "moustacheCoverage": 100,
+        "chinCoverage": 100,
+        "hairLeftCoverage": 100,
+        "hairRightCoverage": 100,
+        "hairCrownCoverage": 100,
+        "hairEarCoverage": 100,
+        "hairNapeCoverage": 95,
+        "hairTempleRecession": 0,
+        "hairEdgeSoftness": 55,
+        "hairSideLength": 85,
+        "hairNapeLength": 60,
+        "hairPart": 0,
+        "hairWhorlX": 0,
+        "hairWhorlZ": 0,
+        "hairWhorl": 94,
+        "hairShortFlow": 20,
+        "hairClump": 34,
+        "hairFrizz": 12,
+        "hairFlyaways": 25,
+        "hairRootFine": 65,
+        "beardJawCoverage": 90,
+        "beardCheekCoverage": 78,
+        "beardSideburnCoverage": 82,
+        "beardSoftness": 65,
+        "beardCurl": 32,
+        "beardVariation": 60,
+        "beardRoughness": 58
+      },
+      "panel": "hair"
+    },
+    "camera": {
+      "position": [
+        0.2511236209611191,
+        0.275,
+        0.7129562130561331
+      ],
+      "target": [
+        0,
+        0.265,
+        0.025
+      ],
+      "zoom": 1
+    },
+    "editors": [
+      {
+        "schema": "teacher-groom-editor-v1",
+        "method": "complete-source-segment-prefix",
+        "sourceRevision": 3,
+        "style": "cropped-trim",
+        "length": 1,
+        "density": 1,
+        "effectiveArcFraction": 0.56,
+        "count": 14000,
+        "activeStrands": 14000,
+        "sourceSegments": 336000,
+        "drawnSegments": 181082,
+        "drawnTriangles": 362164,
+        "drawIndexCount": 1086492,
+        "drawIndexHash": "7534544c",
+        "protectedRootSegments": 2,
+        "sourceHash": "0e04ef49",
+        "sourceAttributeHashes": {
+          "position": "0e04ef49",
+          "tangent": "5085be41",
+          "scalpNormal": "f2aed145",
+          "strandSide": "99c434c5",
+          "along": "b4b579c5",
+          "strandRandom": "6034bdcd",
+          "strandRadius": "d00c4c4d"
+        },
+        "sourceIndexHash": "9269eb0e",
+        "sourceRootHash": "511cb665",
+        "rootHash": "511cb665",
+        "sourcePartingHash": "5eb2ca3a",
+        "sourceBindingRootHash": "d8c15bdb",
+        "rootsExact": true,
+        "attributesExact": true,
+        "rootBindingsPreserved": true,
+        "partingPreserved": true,
+        "sourceGuideIdsPreserved": true,
+        "sourceVerticesMoved": 0,
+        "newSegmentsCreated": 0,
+        "addedTriangleCount": 0,
+        "lengthSummary": {
+          "min": 0.014218172213555355,
+          "max": 0.19641613469893682,
+          "mean": 0.11985128224820486,
+          "minSourceRatio": 0.5013307643233466,
+          "maxSourceRatio": 0.559991716516334
+        },
+        "lastApplyMs": 1.599999999976717,
+        "errors": [],
+        "limitation": "Source-curve cuts, not newly authored bob grooms; existing R8 collision/radius limits are unchanged. Cut tips keep original radii. Width changes are outside this index-only guarantee."
+      },
+      {
+        "schema": "teacher-groom-editor-v1",
+        "method": "complete-source-segment-prefix",
+        "sourceRevision": 3,
+        "style": "original",
+        "length": 1,
+        "density": 1,
+        "effectiveArcFraction": 1,
+        "count": 1000,
+        "activeStrands": 1000,
+        "sourceSegments": 10000,
+        "drawnSegments": 10000,
+        "drawnTriangles": 20000,
+        "drawIndexCount": 60000,
+        "drawIndexHash": "d04b5a7f",
+        "protectedRootSegments": 2,
+        "sourceHash": "c9cb31e9",
+        "sourceAttributeHashes": {
+          "position": "c9cb31e9",
+          "tangent": "a61a0591",
+          "scalpNormal": "02ffbed1",
+          "strandSide": "34169945",
+          "along": "98f083e5",
+          "strandRandom": "0889b081",
+          "strandRadius": "763a78ad"
+        },
+        "sourceIndexHash": "d04b5a7f",
+        "sourceRootHash": "0df4ae19",
+        "rootHash": "0df4ae19",
+        "sourcePartingHash": "5823a5b4",
+        "sourceBindingRootHash": "24480b98",
+        "rootsExact": true,
+        "attributesExact": true,
+        "rootBindingsPreserved": true,
+        "partingPreserved": true,
+        "sourceGuideIdsPreserved": true,
+        "sourceVerticesMoved": 0,
+        "newSegmentsCreated": 0,
+        "addedTriangleCount": 0,
+        "lengthSummary": {
+          "min": 0.0033863311431618125,
+          "max": 0.011904115471639736,
+          "mean": 0.005661075964809701,
+          "minSourceRatio": 1,
+          "maxSourceRatio": 1
+        },
+        "lastApplyMs": 0.19999999995343387,
+        "errors": [],
+        "limitation": "Source-curve cuts, not newly authored bob grooms; existing R8 collision/radius limits are unchanged. Cut tips keep original radii. Width changes are outside this index-only guarantee."
+      }
+    ],
+    "legacyScalp": {
+      "count": 96000,
+      "segments": 16,
+      "scalpTriangleCount": 5023,
+      "scalpArea": 0.06833292107098887,
+      "invalidTriangles": 0,
+      "minWeight": 9.99999993922529e-9,
+      "maxWeight": 0.9999850988388062,
+      "maxSumError": 4.470348358154297e-8,
+      "style": "side-sweep",
+      "regionField": "R03 lower nape / surface follicular units / crown emergence whorl",
+      "follicularUnitCount": 47645,
+      "areaInterpretation": "unclipped candidate triangle area; not exact anatomical scalp area",
+      "hairlineHeight": 0,
+      "frontCoverage": 1,
+      "backCoverage": 1,
+      "sideCoverage": 1,
+      "width": 1,
+      "volume": 0.018000000000000002,
+      "frizz": 0.00015000000000000001,
+      "bindingSegments": 32,
+      "activeCount": 92816,
+      "drawnCount": 92816,
+      "density": 1,
+      "length": 0.06447272727272728,
+      "vertices": 3264000,
+      "triangles": 2970112,
+      "finite": true,
+      "radius": 0.00028,
+      "minScalpNormalLength": 0.9999999999999997,
+      "maxLift": 0.018894404980272093,
+      "lighting": {
+        "legacy": false,
+        "warmPower": 3.2,
+        "coolPower": 3,
+        "ambient": 0.35,
+        "warmDirection": [
+          0.7527099294949816,
+          0.3387194682727417,
+          0.5645324471212362
+        ],
+        "coolDirection": [
+          -0.8377078165833911,
+          0.29319773580418684,
+          0.46073929912086514
+        ],
+        "warmColor": [
+          1,
+          0.45641102317066595,
+          0.171441100722554
+        ],
+        "coolColor": [
+          0.20155625378383743,
+          0.4019777798219466,
+          1
+        ]
+      },
+      "rootHash": 2870748820,
+      "maxRootSurfaceDistance": 0.000020014997117046295,
+      "cachedStyles": [
+        "side-sweep"
+      ],
+      "guideBuilds": 7,
+      "lastSelectionMs": 26.400000000023283,
+      "lastSupportMs": 395.5999999999767,
+      "lastUpdateMs": 430.70000000006985
+    },
+    "facial": {
+      "kind": "gnm-facial-hair",
+      "finite": true,
+      "invalidTriangles": 0,
+      "brows": {
+        "zoneCounts": {
+          "brow": 1200
+        },
+        "width": 1,
+        "activeMoustacheCount": 0,
+        "activeChinCount": 0,
+        "collapsedGuideCount": 0,
+        "region": "brows",
+        "visible": false,
+        "count": 1200,
+        "activeCount": 1020,
+        "density": 0.85,
+        "length": 0.0045,
+        "color": "#21170f",
+        "segments": 8,
+        "vertices": 21600,
+        "triangles": 16320,
+        "candidateTriangleCount": 1546,
+        "invalidGuideTriangles": 0,
+        "invalidTemplateGuidePoints": 0,
+        "clippedGuideCount": 52,
+        "minSignedSurfaceOffset": 0.0000195482442428017,
+        "minTemplateGuideEyeGap": 0.013902870803646914,
+        "minTemplateGuideLipGap": 0.07308259321922833,
+        "invalidTriangles": 0,
+        "invalidTemplateRoots": 0,
+        "minWeight": 0.00006399310223059729,
+        "maxWeight": 0.9973865747451782,
+        "maxSumError": 4.470348358154297e-8,
+        "maxRootSurfaceDistance": 0.000020013506315005035,
+        "rootHash": 1164859729,
+        "finite": true,
+        "minScalpNormalLength": 0.9877411653615781,
+        "minTemplateEyeGap": 0.013902870236404647,
+        "minTemplateLipGap": 0.07308259321922833,
+        "moustacheCount": 0,
+        "chinCount": 0,
+        "radius": 0.000055,
+        "lighting": {
+          "legacy": false,
+          "warmPower": 3.2,
+          "coolPower": 3,
+          "ambient": 0.35,
+          "warmDirection": [
+            0.7527099294949816,
+            0.3387194682727417,
+            0.5645324471212362
+          ],
+          "coolDirection": [
+            -0.8377078165833911,
+            0.29319773580418684,
+            0.46073929912086514
+          ],
+          "warmColor": [
+            1,
+            0.45641102317066595,
+            0.171441100722554
+          ],
+          "coolColor": [
+            0.20155625378383743,
+            0.4019777798219466,
+            1
+          ]
+        },
+        "lastUpdateMs": 7.5
+      },
+      "beard": {
+        "zoneCounts": {
+          "cheek": 1252,
+          "sideburn": 1056,
+          "jaw": 2536,
+          "moustache": 388,
+          "chin": 1968
+        },
+        "zoneCoverage": [
+          1,
+          1,
+          0.9,
+          0.78,
+          0.82
+        ],
+        "width": 0.9,
+        "moustacheCoverage": 1,
+        "chinCoverage": 1,
+        "activeMoustacheCount": 251,
+        "activeChinCount": 1187,
+        "collapsedGuideCount": 6,
+        "region": "beard",
+        "visible": false,
+        "count": 7200,
+        "activeCount": 3643,
+        "density": 0.6,
+        "length": 0.0035,
+        "color": "#21170f",
+        "segments": 9,
+        "vertices": 144000,
+        "triangles": 65574,
+        "candidateTriangleCount": 10779,
+        "invalidGuideTriangles": 0,
+        "invalidTemplateGuidePoints": 0,
+        "clippedGuideCount": 192,
+        "minSignedSurfaceOffset": 0.000016489424806795312,
+        "minTemplateGuideEyeGap": 0.03012286112532081,
+        "minTemplateGuideLipGap": 0.0036005459648904585,
+        "invalidTriangles": 0,
+        "invalidTemplateRoots": 0,
+        "minWeight": 0.000016382460671593435,
+        "maxWeight": 0.9992872476577759,
+        "maxSumError": 4.470348358154297e-8,
+        "maxRootSurfaceDistance": 0.000020026308299930223,
+        "rootHash": 3001020817,
+        "finite": true,
+        "minScalpNormalLength": 0.8762298430422819,
+        "minTemplateEyeGap": 0.03012286112532081,
+        "minTemplateLipGap": 0.003606897550980049,
+        "moustacheCount": 388,
+        "chinCount": 1968,
+        "radius": 0.0000585,
+        "lighting": {
+          "legacy": false,
+          "warmPower": 3.2,
+          "coolPower": 3,
+          "ambient": 0.35,
+          "warmDirection": [
+            0.7527099294949816,
+            0.3387194682727417,
+            0.5645324471212362
+          ],
+          "coolDirection": [
+            -0.8377078165833911,
+            0.29319773580418684,
+            0.46073929912086514
+          ],
+          "warmColor": [
+            1,
+            0.45641102317066595,
+            0.171441100722554
+          ],
+          "coolColor": [
+            0.20155625378383743,
+            0.4019777798219466,
+            1
+          ]
+        },
+        "lastUpdateMs": 25.599999999976717
+      }
+    },
+    "contactAcceptance": false,
+    "fullRegressionPassed": false,
+    "opacityCapability": {
+      "tested": true,
+      "supported": true,
+      "webgl2": true,
+      "extension": "EXT_color_buffer_float",
+      "format": "RGBA16F / HalfFloatType",
+      "floatBlendExtensionRequired": false,
+      "framebuffer": {
+        "complete": true,
+        "status": 36053,
+        "statusHex": "0x8cd5",
+        "samples": 0
+      },
+      "blendExpected": [
+        64,
+        128,
+        32,
+        191
+      ],
+      "blendActual": [
+        64,
+        128,
+        32,
+        191
+      ],
+      "blendToleranceBytes": 2,
+      "probeRenderCalls": 3,
+      "reason": null,
+      "fullSizeFramebuffers": [
+        {
+          "nearest": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          },
+          "tau": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          }
+        },
+        {
+          "nearest": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          },
+          "tau": {
+            "complete": true,
+            "status": 36053,
+            "statusHex": "0x8cd5",
+            "samples": 0
+          }
+        }
+      ]
+    },
+    "opacity": {
+      "secondaryTransport": {
+        "strength": 0.22,
+        "model": "bounded per-light shorter-path surrogate, not validated multiple scattering"
+      },
+      "version": "r8-four-layer-tau-1",
+      "enabled": true,
+      "hairCasts": true,
+      "capability": {
+        "tested": true,
+        "supported": true,
+        "webgl2": true,
+        "extension": "EXT_color_buffer_float",
+        "format": "RGBA16F / HalfFloatType",
+        "floatBlendExtensionRequired": false,
+        "framebuffer": {
+          "complete": true,
+          "status": 36053,
+          "statusHex": "0x8cd5",
+          "samples": 0
+        },
+        "blendExpected": [
+          64,
+          128,
+          32,
+          191
+        ],
+        "blendActual": [
+          64,
+          128,
+          32,
+          191
+        ],
+        "blendToleranceBytes": 2,
+        "probeRenderCalls": 3,
+        "reason": null,
+        "fullSizeFramebuffers": [
+          {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          },
+          {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        ]
+      },
+      "mapSize": 512,
+      "depthLayers": 4,
+      "storage": "per light: RGBA8 packed nearest + RGBA16F cumulative tau, samples=0",
+      "colorTextureEstimateBytes": 6291456,
+      "memoryEstimateExcludes": "depth attachments, driver allocations, native opaque shadow maps and transient probe",
+      "tauMapping": "-log(max(1-alpha,1e-6)), alpha=existing analytical ribbon coverage × existing fiber opacity",
+      "blend": {
+        "rgb": "ONE + ONE",
+        "alpha": "ONE + ONE",
+        "equation": "ADD",
+        "explicitCustomBlending": true
+      },
+      "receiverFilter": "four neighboring transmittance taps, 1-texel bilinear reconstruction; no enlarged blur",
+      "depthBias": "each native light shadow bias and normal-biased native shadow coordinate, unchanged",
+      "lights": [
+        {
+          "lightId": 11,
+          "bounds": {
+            "points": 3286000,
+            "depthUnits": "normalized orthographic light-camera depth [0,1]",
+            "nearWorld": 1.1782192936202793,
+            "farWorld": 1.3769807427672005,
+            "paddingWorld": 0.0000049000000000000005,
+            "maximumPhysicalRadiusWorld": 0.00007409881200146628,
+            "antialiasSupportWorld": 0.0008789062499999999,
+            "nearestPossible": 0.4604956708654201,
+            "lastLayerDepth": 0.5416267929662042,
+            "layerFractions": [
+              0.1,
+              0.3,
+              0.6,
+              1
+            ],
+            "lastLayerCoversAllGeometry": true,
+            "fitsNativeFrustumXY": true,
+            "lightMatrix": [
+              1.0344827586206902,
+              -0.4516259576969888,
+              -0.30722854265101285,
+              0,
+              9.570888143320318e-17,
+              1.5681456864478782,
+              -0.13825284419295575,
+              0,
+              -1.3793103448275863,
+              -0.33871946827274174,
+              -0.2304214069882597,
+              0,
+              0.5344827586206892,
+              0.09290937979813069,
+              0.5526016205184929,
+              1
+            ],
+            "near": 0.05,
+            "far": 2.5,
+            "extentsByMesh": [
+              {
+                "mesh": "teacher-brows",
+                "nearWorld": 1.1960160443734282,
+                "farWorld": 1.2818417269427131
+              },
+              {
+                "mesh": "GNM scalp-bound strands",
+                "nearWorld": 1.1782192936202793,
+                "farWorld": 1.3769807427672005
+              }
+            ],
+            "limitation": "Four cumulative knots interpolate extinction through gaps; exact separated-clump transmittance is not represented"
+          },
+          "framebuffer": {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        },
+        {
+          "lightId": 14,
+          "bounds": {
+            "points": 3286000,
+            "depthUnits": "normalized orthographic light-camera depth [0,1]",
+            "nearWorld": 1.1901365727573165,
+            "farWorld": 1.3759336488941805,
+            "paddingWorld": 0.0000049000000000000005,
+            "maximumPhysicalRadiusWorld": 0.00007409881200146628,
+            "antialiasSupportWorld": 0.0008789062499999999,
+            "nearestPossible": 0.46535986643155774,
+            "lastLayerDepth": 0.5411994077119103,
+            "layerFractions": [
+              0.1,
+              0.3,
+              0.6,
+              1
+            ],
+            "lastLayerCoversAllGeometry": true,
+            "fitsNativeFrustumXY": true,
+            "lightMatrix": [
+              0.8308943961588897,
+              0.42817420083266844,
+              0.3419215577891392,
+              0,
+              2.3927220358300795e-17,
+              1.5934197045272878,
+              -0.11967254522619868,
+              0,
+              1.510717083925254,
+              -0.23549581045796775,
+              -0.1880568567840266,
+              0,
+              0.46223207290186863,
+              0.0836311735617179,
+              0.5466187275371964,
+              1
+            ],
+            "near": 0.05,
+            "far": 2.5,
+            "extentsByMesh": [
+              {
+                "mesh": "teacher-brows",
+                "nearWorld": 1.2031422607777622,
+                "farWorld": 1.2958364859591736
+              },
+              {
+                "mesh": "GNM scalp-bound strands",
+                "nearWorld": 1.1901365727573165,
+                "farWorld": 1.3759336488941805
+              }
+            ],
+            "limitation": "Four cumulative knots interpolate extinction through gaps; exact separated-clump transmittance is not represented"
+          },
+          "framebuffer": {
+            "nearest": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            },
+            "tau": {
+              "complete": true,
+              "status": 36053,
+              "statusHex": "0x8cd5",
+              "samples": 0
+            }
+          }
+        }
+      ],
+      "receivers": [
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 0
+        },
+        {
+          "kind": "fiber",
+          "material": "GNM r7 bounded fibre + per-light visibility",
+          "patchedCompiles": 1
+        },
+        {
+          "kind": "head",
+          "material": "",
+          "patchedCompiles": 1
+        }
+      ],
+      "nativeFiberCasters": [
+        {
+          "name": "teacher-scalp",
+          "castShadow": false
+        },
+        {
+          "name": "teacher-brows",
+          "castShadow": false
+        },
+        {
+          "name": "GNM scalp-bound strands",
+          "castShadow": false
+        },
+        {
+          "name": "GNM surface-bound brows",
+          "castShadow": false
+        },
+        {
+          "name": "GNM surface-bound beard",
+          "castShadow": false
+        }
+      ],
+      "updateCalls": 42,
+      "skippedUpdates": 21,
+      "rebuilds": 21,
+      "lastUpdate": {
+        "rendered": true,
+        "enabled": true,
+        "rebuilds": 21,
+        "renderPasses": 4,
+        "drawCalls": 8,
+        "cpuSubmissionMs": 86.90000000002328
+      },
+      "lastBuildCpuMs": 86.90000000002328,
+      "passCounts": {
+        "nearest": 42,
+        "accumulation": 42,
+        "drawCalls": 212
+      },
+      "lastPasses": [
+        {
+          "sequence": 81,
+          "lightId": 11,
+          "kind": "nearest",
+          "cpuSubmissionMs": 16.5,
+          "gpuMs": 635.521206,
+          "gpuStatus": "measured",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 82,
+          "lightId": 11,
+          "kind": "accumulation",
+          "cpuSubmissionMs": 0.2000000000698492,
+          "gpuMs": null,
+          "gpuStatus": "pending",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 83,
+          "lightId": 14,
+          "kind": "nearest",
+          "cpuSubmissionMs": 0.09999999997671694,
+          "gpuMs": null,
+          "gpuStatus": "pending",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        },
+        {
+          "sequence": 84,
+          "lightId": 14,
+          "kind": "accumulation",
+          "cpuSubmissionMs": 0.09999999997671694,
+          "gpuMs": null,
+          "gpuStatus": "pending",
+          "drawCalls": 2,
+          "samples": 0,
+          "resolution": [
+            512,
+            512
+          ]
+        }
+      ],
+      "timerQuerySupported": true,
+      "pendingTimerQueries": 3,
+      "dirty": false,
+      "dirtyReason": "R10 per-root taper / regional parameters",
+      "lastError": null,
+      "limitations": [
+        "Bounded four-layer extinction approximation; depth interpolation can attenuate empty gaps between separated clumps",
+        "Finite 512² spatial resolution; deterministic analytical coverage does not imply alias-free shadows",
+        "Scalar transmittance only; no colored extinction or multiple scattering",
+        "RGBA16F accumulation has finite precision; extremely dense overlap can saturate or overflow",
+        "GPU timings require available non-disjoint timer queries; CPU times are submission times, not GPU durations",
+        "No iPhone validation implied; capability is checked on the actual running WebGL context"
+      ]
+    },
+    "assets": [
+      {
+        "kind": "head",
+        "bytes": 34937952,
+        "sha256": "fd19f46eef6f8bfb725fceab581e1bc8837209997ca3fd43f3c1735003c86961"
+      },
+      {
+        "kind": "samplers",
+        "bytes": 2731824,
+        "sha256": "827fc7850022cbc62d4401c6f6782b876c4dfa48f2a6f446d9644b0ba2b8122b"
+      }
+    ],
+    "model": {
+      "vertices": 17821,
+      "identityDim": 253,
+      "expressionDim": 383,
+      "positionHash": 1686585375
+    },
+    "bindings": [
+      {
+        "earEnvelopes": [
+          {
+            "side": -1,
+            "center": [
+              -0.07675252,
+              0.26868798,
+              0.02327114
+            ],
+            "radii": [
+              0.019166394577077722,
+              0.053514073274425075,
+              0.03739714965555106
+            ],
+            "vertexCount": 654,
+            "maxVertexNormalizedRadius": 0.9999900000999989,
+            "bbox": [
+              [
+                -0.09591891457707773,
+                0.2151739067255749,
+                -0.014126009655551063
+              ],
+              [
+                -0.05758612542292228,
+                0.3222020532744251,
+                0.06066828965555106
+              ]
+            ],
+            "radiusMargin": 0.0001254,
+            "safetyMargin": 0.00015
+          },
+          {
+            "side": 1,
+            "center": [
+              0.07671676,
+              0.26864847,
+              0.02327088
+            ],
+            "radii": [
+              0.019287972877800003,
+              0.053409264087300005,
+              0.037323443230700006
+            ],
+            "vertexCount": 653,
+            "maxVertexNormalizedRadius": 0.9999900000999989,
+            "bbox": [
+              [
+                0.057428787122199995,
+                0.21523920591269996,
+                -0.014052563230700005
+              ],
+              [
+                0.0960047328778,
+                0.3220577340873,
+                0.060594323230700006
+              ]
+            ],
+            "radiusMargin": 0.0001254,
+            "safetyMargin": 0.00015
+          }
+        ],
+        "earAvoidance": {
+          "affectedStrands": 727,
+          "proxyHitSegments": 1239,
+          "maxDisplacement": 0.02759788306300534,
+          "totalDisplacement": 41.0017693998752,
+          "maxLengthChange": 0.028751106722010755,
+          "totalLengthChange": 4.697323817652659,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 727,
+          "trueRayTriggerSegments": 1203,
+          "radiusOnlyTriggerSegments": 35,
+          "radiusUnresolvedTriggerSegments": 1,
+          "rootCapApplied": 297,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0,
+          "orbitalTriggeredStrands": 1,
+          "orbitalCorrectedStrands": 1,
+          "orbitalMaxDisplacement": 0.0030485725814072134,
+          "orbitalCappedStrands": 0
+        },
+        "region": "scalp",
+        "count": 14000,
+        "segments": 24,
+        "sourceGuideCount": 376,
+        "retainedSourceGuides": 376,
+        "roles": {
+          "originalMainOrBrow": 346,
+          "originalIndependent": 30,
+          "interpolatedChildren": 13034,
+          "independentChildren": 590
+        },
+        "partIslands": [
+          0,
+          1
+        ],
+        "finite": true,
+        "invalidRoots": 0,
+        "invalidTriangles": 0,
+        "maxRootGap": 0.0001000286059999132,
+        "maxBaryError": 4.470348358154297e-8,
+        "minBary": 0,
+        "minTemplateEyeGap": 0.0000028732904929041394,
+        "length": {
+          "min": 0.027290349571134506,
+          "max": 0.3615473001042488,
+          "mean": 0.2206086659256159
+        },
+        "bounds": [
+          [
+            -0.10618290305137634,
+            0.12529107928276062
+          ],
+          [
+            0.14079172909259796,
+            0.4189540445804596
+          ],
+          [
+            -0.15107250213623047,
+            0.13090121746063232
+          ]
+        ],
+        "freePointCount": 183335,
+        "nearSkinConstraintCount": 152665,
+        "neutralCollisionRepairs": 5910,
+        "maxNeutralCorrection": 0.03476475265872936,
+        "liveCollisionRepairs": 4279,
+        "maxLiveCorrection": 0.005613473586614691,
+        "radius": {
+          "root": 0.000037,
+          "tipFraction": 0.06
+        },
+        "lastBindMs": 13951.099999999977,
+        "lastUpdateMs": 438.0999999999767,
+        "collisionLimit": "Cached local one-way constraints; no universal intersection-free guarantee"
+      },
+      {
+        "earEnvelopes": [],
+        "earAvoidance": {
+          "affectedStrands": 0,
+          "proxyHitSegments": 0,
+          "maxDisplacement": 0,
+          "totalDisplacement": 0,
+          "maxLengthChange": 0,
+          "totalLengthChange": 0,
+          "rootMoved": 0,
+          "rootProxyConflicts": 0,
+          "trueTriggerStrands": 0,
+          "trueRayTriggerSegments": 0,
+          "radiusOnlyTriggerSegments": 0,
+          "radiusUnresolvedTriggerSegments": 0,
+          "rootCapApplied": 0,
+          "neckCorrectedStrands": 0,
+          "neckMaxDisplacement": 0,
+          "orbitalTriggeredStrands": 0,
+          "orbitalCorrectedStrands": 0,
+          "orbitalMaxDisplacement": 0,
+          "orbitalCappedStrands": 0
+        },
+        "region": "brows",
+        "count": 1000,
+        "segments": 10,
+        "sourceGuideCount": 88,
+        "retainedSourceGuides": 88,
+        "roles": {
+          "originalMainOrBrow": 88,
+          "originalIndependent": 0,
+          "interpolatedChildren": 912,
+          "independentChildren": 0
+        },
+        "browZones": {
+          "inner": 349,
+          "middle": 357,
+          "outer": 294
+        },
+        "partIslands": [
+          1,
+          0
+        ],
+        "finite": true,
+        "invalidRoots": 0,
+        "invalidTriangles": 0,
+        "maxRootGap": 0.00007001354561232678,
+        "maxBaryError": 4.470348358154297e-8,
+        "minBary": 0,
+        "minTemplateEyeGap": 0.010578047276552472,
+        "length": {
+          "min": 0.0033863311431618125,
+          "max": 0.011904115471639736,
+          "mean": 0.005661075964809701
+        },
+        "bounds": [
+          [
+            -0.05529739335179329,
+            0.05468495935201645
+          ],
+          [
+            0.30770185589790344,
+            0.32673561573028564
+          ],
+          [
+            0.10374781489372253,
+            0.12524491548538208
+          ]
+        ],
+        "freePointCount": 0,
+        "nearSkinConstraintCount": 10000,
+        "neutralCollisionRepairs": 1309,
+        "maxNeutralCorrection": 0.0005261453030310766,
+        "liveCollisionRepairs": 1309,
+        "maxLiveCorrection": 0.0000014510487355387405,
+        "radius": {
+          "root": 0.000045,
+          "tipFraction": 0.06
+        },
+        "lastBindMs": 52.5,
+        "lastUpdateMs": 1.400000000023283,
+        "collisionLimit": "Cached local one-way constraints; no universal intersection-free guarantee"
+      }
+    ],
+    "geometryHashes": [
+      235204425,
+      3385537001
+    ],
+    "frameCount": 42,
+    "drawingBuffer": [
+      822,
+      663
+    ],
+    "samples": 4,
+    "actualAntialias": true,
+    "shadowCasting": {
+      "head": {
+        "cast": true,
+        "receive": true
+      },
+      "fibers": [
+        {
+          "name": "teacher-scalp",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "teacher-brows",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM scalp-bound strands",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM surface-bound brows",
+          "cast": false,
+          "receive": true
+        },
+        {
+          "name": "GNM surface-bound beard",
+          "cast": false,
+          "receive": true
+        }
+      ]
+    },
+    "shadowSeedSamples": [
+      {
+        "name": "teacher-scalp",
+        "seeds": {}
+      },
+      {
+        "name": "teacher-brows",
+        "seeds": {}
+      }
+    ],
+    "shadowFilterType": 1,
+    "shadowCameras": [
+      {
+        "left": -0.29,
+        "right": 0.29,
+        "top": 0.3,
+        "bottom": -0.3,
+        "near": 0.05,
+        "far": 2.5,
+        "radius": 12,
+        "bias": -0.00008,
+        "normalBias": 0.00012,
+        "mapSize": [
+          1536,
+          1536
+        ],
+        "position": [
+          0.9785229083434759,
+          0.7053353087545642,
+          0.7588921812576069
+        ],
+        "color": [
+          1,
+          0.45641102317066595,
+          0.171441100722554
+        ],
+        "intensity": 3.2,
+        "projection": [
+          3.4482758620689657,
+          0,
+          0,
+          0,
+          0,
+          3.3333333333333335,
+          0,
+          0,
+          0,
+          0,
+          -0.8163265306122448,
+          0,
+          0,
+          0,
+          -1.040816326530612,
+          1
+        ]
+      },
+      {
+        "left": -0.29,
+        "right": 0.29,
+        "top": 0.3,
+        "bottom": -0.3,
+        "near": 0.05,
+        "far": 2.5,
+        "radius": 12,
+        "bias": -0.00008,
+        "normalBias": 0.00012,
+        "mapSize": [
+          1536,
+          1536
+        ],
+        "position": [
+          -1.0890201615584083,
+          0.6461570565454429,
+          0.6239610888571246
+        ],
+        "color": [
+          0.20155625378383743,
+          0.4019777798219466,
+          1
+        ],
+        "intensity": 3,
+        "projection": [
+          3.4482758620689657,
+          0,
+          0,
+          0,
+          0,
+          3.3333333333333335,
+          0,
+          0,
+          0,
+          0,
+          -0.8163265306122448,
+          0,
+          0,
+          0,
+          -1.040816326530612,
+          1
+        ]
+      }
+    ],
+    "fiberMaterials": [
+      {
+        "model": "bounded longitudinal/azimuthal fibre approximation",
+        "radiusAttribute": "strandRadius",
+        "radiusUnits": "world",
+        "radiusScale": 1.372222222222222,
+        "coverageAA": true,
+        "coverageMode": "analytic-alpha-blend",
+        "coverageResolve": "blend",
+        "coverageResolveFallback": null,
+        "alphaToCoverage": false,
+        "actualSamples": 4,
+        "framebufferMeasured": true,
+        "drawingBuffer": [
+          822,
+          663
+        ],
+        "viewportHeight": 663,
+        "transparent": true,
+        "depthWrite": false,
+        "shadows": true,
+        "shadowMethod": "per-light native PCF, stochastic single-depth coverage",
+        "shadowViewports": {},
+        "lightingSource": "scene directional lights; independent per-light visibility",
+        "roughness": 0.55,
+        "surfaceSpecular": 0.095,
+        "colorLinear": [
+          0.015208514418949472,
+          0.008568125615105716,
+          0.004776953478513362
+        ],
+        "opacity": 1,
+        "ambientGain": 1,
+        "guides": false,
+        "limitations": [
+          "no multiple scattering or deep opacity maps",
+          "no coloured shadow transmission",
+          "directional lights with PCF only",
+          "non-MSAA fallback uses order-dependent alpha blending"
+        ]
+      },
+      {
+        "model": "bounded longitudinal/azimuthal fibre approximation",
+        "radiusAttribute": "strandRadius",
+        "radiusUnits": "world",
+        "radiusScale": 1,
+        "coverageAA": true,
+        "coverageMode": "analytic-alpha-blend",
+        "coverageResolve": "blend",
+        "coverageResolveFallback": null,
+        "alphaToCoverage": false,
+        "actualSamples": 4,
+        "framebufferMeasured": true,
+        "drawingBuffer": [
+          822,
+          663
+        ],
+        "viewportHeight": 663,
+        "transparent": true,
+        "depthWrite": false,
+        "shadows": true,
+        "shadowMethod": "per-light native PCF, stochastic single-depth coverage",
+        "shadowViewports": {},
+        "lightingSource": "scene directional lights; independent per-light visibility",
+        "roughness": 0.46,
+        "surfaceSpecular": 0.095,
+        "colorLinear": [
+          0.02217388478862708,
+          0.011612245176281512,
+          0.006048833020386069
+        ],
+        "opacity": 1,
+        "ambientGain": 1,
+        "guides": false,
+        "limitations": [
+          "no multiple scattering or deep opacity maps",
+          "no coloured shadow transmission",
+          "directional lights with PCF only",
+          "non-MSAA fallback uses order-dependent alpha blending"
+        ]
+      }
+    ],
+    "shaderLimits": "Realtime approximate fiber lobes and shadow-map visibility, not a complete Cycles/Marschner multiple scattering solution",
+    "r6ProductionUnchanged": true
+  },
+  "mobile": {
+    "d": {
+      "version": "R10.0 / R3 + R9",
+      "ready": true,
+      "oneScene": true,
+      "headCount": 1,
+      "source": "R3 region roots + R9 teacher source curves and editor",
+      "qualityRoots": 36000,
+      "scalpCurveHash": 2787052920,
+      "regionalRootCounts": {
+        "crown": 19520,
+        "front": 7667,
+        "left": 4107,
+        "right": 3969,
+        "ear": 3752,
+        "nape": 3432
+      },
+      "rootsVisible": false,
+      "geometryBytes": 115284800,
+      "controlCount": 49,
+      "physics": false,
+      "ten24Loaded": false,
+      "productionAccepted": false,
+      "snapshotSchema": "kaopu.hair.groom@1.0"
+    },
+    "width": 390,
+    "viewport": 390
+  },
+  "finished": "2026-10-11T03:52:00.203Z"
+}

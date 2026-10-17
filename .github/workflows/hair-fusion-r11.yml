@@ -1,0 +1,93 @@
+name: Hair Fusion R11 Teachers
+on:
+  push:
+    branches: [feature/hair-fusion-r10-20261011]
+    paths:
+      - kaopu-hair-workbench/fusion/r11/**
+      - .github/workflows/hair-fusion-r11.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hair-fusion-r11
+  cancel-in-progress: false
+jobs:
+  build-test-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-hair-workbench
+            kaopu-human-overview
+            .github/workflows/hair-fusion-r11.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load verified R10 and browser tools
+        run: |
+          git fetch --depth=1 origin d560e03d82bdfff0d4cd70c5383f609567151a30
+          npm install --prefix /tmp/hair-r11-tools --no-save esbuild@0.25.10 playwright@1.55.1 pngjs@7.0.0
+          ln -s /tmp/hair-r11-tools/node_modules node_modules
+          python -m pip install Pillow==11.3.0
+          /tmp/hair-r11-tools/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build new teacher integration and real eyebrow geometry
+        run: |
+          python kaopu-hair-workbench/fusion/r11/build11.py
+          find kaopu-hair-workbench/fusion/r11/src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node kaopu-hair-workbench/fusion/r11/bundle.mjs
+          python kaopu-hair-workbench/fusion/r11/package.py
+          node kaopu-hair-workbench/fusion/r11/tests/unit.mjs
+      - name: Actual browser regression with all 14 eyebrow geometries
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/hair-r11-http.log 2>&1 &
+          node kaopu-hair-workbench/fusion/r11/tests/verify11.mjs http://127.0.0.1:8765/kaopu-hair-workbench/fusion/r11/public-lite.html
+      - name: Publish only new R11 files on the unmerged draft branch
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--name-only']).decode().splitlines()
+          assert all(p.startswith('kaopu-hair-workbench/fusion/r11/') for p in paths),paths
+          PY
+          find kaopu-hair-workbench/fusion/r11 -type d -name __pycache__ -prune -exec rm -rf {} +
+          git config user.name 'KAOPU Hair Build'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kaopu-hair-workbench/fusion/r11
+          git commit -m 'build(hair): R11 verified teacher eyebrow library and strand core'
+          git push origin HEAD:refs/heads/feature/hair-fusion-r10-20261011
+          sha=$(git rev-parse HEAD)
+          url="https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/$sha/kaopu-hair-workbench/fusion/r11/public-lite.html"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$url" > kaopu-hair-workbench/fusion/r11/PUBLIC_URL.txt
+          echo "## R11 fixed public preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify the real external URL and all controls
+        run: |
+          node kaopu-hair-workbench/fusion/r11/tests/verify11.mjs '${{ steps.publish.outputs.url }}' --public
+      - name: Record public test evidence without changing tested HTML
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('kaopu-hair-workbench/fusion/r11');m=json.loads((p/'BUILD_MANIFEST.json').read_text());r=json.loads((p/'evidence/public/report.json').read_text());assert r['success'];assert hashlib.sha256((p/'public-lite.html').read_bytes()).hexdigest()==m['htmlSha256'];m['publicBrowserVerified']=True;m['publicPreview']=(p/'PUBLIC_URL.txt').read_text().strip();m['publicChecks']=len(r['checks']);m['validation']='Real public Chromium software WebGL, 1180x900 desktop and 390x844 mobile viewport; not actual mobile hardware or FPS certification';(p/'BUILD_MANIFEST.json').write_text(json.dumps(m,indent=2))
+          PY
+          git add kaopu-hair-workbench/fusion/r11
+          git commit -m 'test(hair): R11 public browser verification, 14 presets and immutable link'
+          git push origin HEAD:refs/heads/feature/hair-fusion-r10-20261011
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hair-fusion-r11-evidence
+          path: |
+            kaopu-hair-workbench/fusion/r11/evidence
+            kaopu-hair-workbench/fusion/r11/src
+            kaopu-hair-workbench/fusion/r11/data/BROW_PROVENANCE.json
+            kaopu-hair-workbench/fusion/r11/BUILD_MANIFEST.json
+            kaopu-hair-workbench/fusion/r11/PUBLIC_URL.txt
+            kaopu-hair-workbench/fusion/r11/TEACHERS.md
+            kaopu-hair-workbench/fusion/r11/licenses
+          retention-days: 30

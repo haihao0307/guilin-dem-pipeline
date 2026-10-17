@@ -1,0 +1,43 @@
+import {chromium} from 'playwright';
+import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import crypto from 'node:crypto';import {PNG} from 'pngjs';
+const url=process.argv[2];if(!url)throw Error('Pass actual local or public preview URL');
+const publicMode=process.argv.includes('--public'),out=path.resolve('kaopu-hair-workbench/fusion/r10/evidence',publicMode?'public':'local');fs.mkdirSync(out,{recursive:true});
+const report={version:'R10.0',url,publicMode,started:new Date().toISOString(),device:'Chromium desktop; software WebGL on GitHub Actions; mobile is viewport simulation only',checks:[],errors:[],success:false};
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+const context=await browser.newContext({viewport:{width:1180,height:900},deviceScaleFactor:1});
+const page=await context.newPage();page.setDefaultTimeout(300000);page.on('pageerror',e=>report.errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text())});
+const check=(name,value)=>{assert(value,name);report.checks.push(name);console.log('PASS',name)};
+const diag=()=>page.evaluate(()=>window.groomStudy.diagnostics());
+async function frame(name){
+ const buffer=await page.screenshot();fs.writeFileSync(path.join(out,name+'.png'),buffer);
+ const png=PNG.sync.read(buffer),r=await page.locator('#canvas').boundingBox();let min=255,max=0;
+ assert(r&&r.width>100&&r.height>100,'visible canvas bounds');
+ for(let y=Math.max(0,Math.ceil(r.y));y<Math.min(png.height,Math.floor(r.y+r.height));y++)for(let x=Math.max(0,Math.ceil(r.x));x<Math.min(png.width,Math.floor(r.x+r.width));x++){const i=(y*png.width+x)*4,v=(png.data[i]+png.data[i+1]+png.data[i+2])/3;min=Math.min(min,v);max=Math.max(max,v)}
+ check(name+' nonblank actual canvas',max-min>45);return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+try{
+ console.log('Opening',url);await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.groomStudy?.ready===true,{},{timeout:300000});await page.evaluate(()=>window.groomStudy.freeze());
+ let d=await diag();report.initial=d;
+ check('R10 module loaded',d.version.includes('R10.0'));check('single scene and head',d.fusion.oneScene&&d.fusion.headCount===1);check('expanded real controls',d.fusion.controlCount===49);check('R3 default side sweep',d.state.groom.style==='side-sweep');check('scalp buffers finite',d.legacyScalp.finite);check('roots remain on skin',d.legacyScalp.maxRootSurfaceDistance<.00005);check('ear and nape populated',d.fusion.regionalRootCounts.ear>100&&d.fusion.regionalRootCounts.nape>100);
+ check('all 25 new controls exist in DOM',await page.evaluate(()=>['hairLeftCoverage','hairRightCoverage','hairCrownCoverage','hairEarCoverage','hairNapeCoverage','hairTempleRecession','hairEdgeSoftness','hairSideLength','hairNapeLength','hairPart','hairWhorlX','hairWhorlZ','hairWhorl','hairShortFlow','hairClump','hairFrizz','hairFlyaways','hairRootFine','beardJawCoverage','beardCheekCoverage','beardSideburnCoverage','beardSoftness','beardCurl','beardVariation','beardRoughness'].every(k=>document.getElementById(k)?.tagName==='INPUT')));const rootHash=d.legacyScalp.rootHash;await frame('01-side-sweep');
+ await page.evaluate(()=>window.groomStudy.fusionCamera('top'));await frame('02-top');
+ await page.evaluate(()=>window.groomStudy.fusionCamera('left'));await frame('03-left-ear');
+ await page.evaluate(()=>window.groomStudy.fusionCamera('nape'));await frame('04-nape');
+ const curves=[];
+ for(const style of ['short-crop','swept-back','side-sweep']){await page.evaluate(s=>window.groomStudy.setStyle(s),style);d=await diag();check(style+' real finite geometry',d.legacyScalp.finite);check(style+' stable root identity',d.legacyScalp.rootHash===rootHash);curves.push(d.fusion.scalpCurveHash);await page.evaluate(()=>window.groomStudy.setCamera('three'));await frame('style-'+style)}
+ check('three independent scalp curve results',new Set(curves).size===3);
+ const before=d.fusion.regionalRootCounts;await page.evaluate(()=>window.groomStudy.setGroom({hairLeftCoverage:25,hairNapeCoverage:35,hairEarCoverage:45}));d=await diag();check('left region density really changes',d.fusion.regionalRootCounts.left<before.left);check('nape density really changes',d.fusion.regionalRootCounts.nape<before.nape);check('density never relocates roots',d.legacyScalp.rootHash===rootHash);
+ await page.evaluate(()=>window.groomStudy.setGroom({hairLeftCoverage:100,hairNapeCoverage:95,hairEarCoverage:100}));await page.evaluate(()=>window.groomStudy.setRoots(true));await page.evaluate(()=>window.groomStudy.fusionCamera('left'));await frame('05-real-follicle-roots');await page.evaluate(()=>window.groomStudy.setRoots(false));
+ await page.evaluate(()=>document.getElementById('fusionBeard').click());d=await diag();check('five beard zones exist',Object.values(d.facial.beard.zoneCounts).filter(v=>v>0).length===5);check('beard geometry finite',d.facial.beard.finite);check('beard true skin roots',d.facial.beard.invalidTriangles===0&&d.facial.beard.maxRootSurfaceDistance<.00005);await page.evaluate(()=>window.groomStudy.fusionCamera('beard'));await frame('06-natural-beard');
+ const all=d.facial.beard.activeCount;await page.evaluate(()=>window.groomStudy.setGroom({beardCheekCoverage:0,beardJawCoverage:0,beardSideburnCoverage:0}));d=await diag();check('facial region controls change actual draw count',d.facial.beard.activeCount<all);await page.evaluate(()=>document.getElementById('fusionBeard').click());
+ await page.evaluate(()=>window.groomStudy.setGroom({beardSoftness:0}));const hardCount=(await diag()).facial.beard.activeCount;await page.evaluate(()=>window.groomStudy.setGroom({beardSoftness:100}));check('beard edge softness changes real selection',(await diag()).facial.beard.activeCount<hardCount);await page.evaluate(()=>window.groomStudy.setGroom({beardSoftness:65}));const saved=await page.evaluate(()=>window.groomStudy.fusionSnapshot());await page.evaluate(()=>document.getElementById('fusionSave').click());await page.evaluate(()=>window.groomStudy.setGroom({hairDensity:40,beardDensity:20,hairPart:45}));await page.evaluate(()=>document.getElementById('fusionRestore').click());const restored=await page.evaluate(()=>window.groomStudy.fusionSnapshot());check('save/restore all grooming controls',JSON.stringify(saved.groom)===JSON.stringify(restored.groom));
+ check('invalid import rejected',await page.evaluate(()=>{try{window.groomStudy.loadFusionSnapshot({schema:'bad'});return false}catch{return true}}));
+ for(const style of ['original','chin-trim','cropped-trim']){await page.evaluate(s=>window.groomStudy.setStyle(s),style);d=await diag();check(style+' R9 source curves loaded',d.state.geometry==='teacher'&&d.bindings.length===2);await page.evaluate(()=>window.groomStudy.setCamera('three'));await frame('teacher-'+style)}
+ if(!publicMode){for(const v of ['smile','surprise']){await page.evaluate(()=>window.groomStudy.setStyle('side-sweep'));await page.evaluate(v=>window.groomStudy.setCase(v),v);d=await diag();check(v+' scalp and beard finite',d.legacyScalp.finite&&d.facial.finite);await frame('expression-'+v)}}
+ await page.evaluate(()=>window.groomStudy.resetAll());d=await diag();check('old source boundaries kept explicit',d.contactAcceptance===false&&d.fusion.physics===false&&d.fusion.ten24Loaded===false);report.final=d;
+ check('no page or renderer errors',report.errors.length===0);
+ await context.close();
+ const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});const mp=await mobile.newPage();mp.on('pageerror',e=>report.errors.push('mobile: '+e));await mp.goto(url+'#quality=light',{waitUntil:'domcontentloaded',timeout:120000});await mp.waitForFunction(()=>window.groomStudy?.ready,{},{timeout:300000});const md=await mp.evaluate(()=>({d:window.groomStudy.fusionDiagnostics(),width:document.documentElement.scrollWidth,viewport:innerWidth}));check('mobile light root budget',md.d.qualityRoots===36000);check('mobile no horizontal overflow',md.width<=md.viewport+2);await mp.screenshot({path:path.join(out,'mobile-390x844.png')});report.mobile=md;await mobile.close();
+ report.success=true;
+}catch(e){report.failure=String(e.stack||e);console.error(report.failure);try{await page.screenshot({path:path.join(out,'FAILURE.png')});report.failureText=await page.locator('body').innerText()}catch{}}finally{report.finished=new Date().toISOString();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
+if(!report.success)process.exitCode=1;
