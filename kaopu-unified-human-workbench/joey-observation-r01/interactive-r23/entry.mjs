@@ -65,8 +65,16 @@ async function boot(){
  state.ready=true;view('r23');mark('正在验证真实画面');
  const gl=v.renderer.getContext();gl.finish();state.nativeUnchanged=await hash(api.positions().buffer)===state.nativeSHA;if(!state.nativeUnchanged)throw Error('挂接改变原生人物');
  state.gpu=hair.verifyGPU();if(!state.gpu.finite||state.gpu.rootErrorMM>.01||state.gpu.staticPathErrorMM>.01)throw Error('完整毛根GPU校验失败');
+
+ // Keep only one complete GPU frame in flight. New UI requests replace the queued draw,
+ // without changing strand count, mesh density, shader quality or camera resolution.
+ const directRender=v.render.bind(v),queue={requested:0,drawn:0,coalesced:0,inFlight:false,pending:false,lastGPUWaitMS:0};state.renderQueue=queue;
+ let frameToken=0,fence=null;
+ function queueDraw(){if(disposed)return;queue.requested++;if(queue.inFlight||frameToken){queue.pending=true;queue.coalesced++;return;}frameToken=requestAnimationFrame(()=>{frameToken=0;if(disposed)return;queue.pending=false;queue.inFlight=true;const began=performance.now();try{directRender();queue.drawn++;fence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);gl.flush();const poll=()=>{if(disposed)return;const result=gl.clientWaitSync(fence,0,0);if(result===gl.TIMEOUT_EXPIRED){setTimeout(poll,16);return;}gl.deleteSync(fence);fence=null;queue.inFlight=false;queue.lastGPUWaitMS=performance.now()-began;if(result===gl.WAIT_FAILED){parent.r23Failure('绘图同步失败，请重新载入。');return;}if(queue.pending){queue.pending=false;queueDraw();}};setTimeout(poll,0);}catch(e){queue.inFlight=false;parent.r23Failure(String(e.message||e));}});}
+ v.render=queueDraw;
+ const settle=()=>new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{if(disposed)return reject(Error('页面已停止'));if(!queue.inFlight&&!queue.pending&&!frameToken)return resolve({waitMS:performance.now()-began,...queue});setTimeout(check,20);};check();});
  const inspect=()=>({...structuredClone(state),ready:state.ready&&!disposed,hair:hair.report(),brows:brows.report(),eye:eye.report(),lip:lip.report(),controls:snapshot(),camera:{position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),projection:v.camera.projectionMatrix.toArray(),target:v.orbit.target.toArray()},canvas:[v.canvas.width,v.canvas.height]});
- window.r23Interactive={report:inspect,snapshot,apply,view,zoom,reset(){apply(structuredClone(defaults));view('r23');return snapshot();},dispose,capture(){v.render();return v.canvas.toDataURL('image/png');},nativeSHA:async()=>hash(api.positions().buffer)};
+ window.r23Interactive={report:inspect,snapshot,apply,view,zoom,settle,reset(){batch(()=>{apply(structuredClone(defaults));view('r23');});return snapshot();},dispose,capture(){v.render();return v.canvas.toDataURL('image/png');},nativeSHA:async()=>hash(api.positions().buffer)};
  state.stage='ready';state.elapsedMS=performance.now()-started;parent.r23Ready(window.r23Interactive);
 }
 boot().catch(e=>{state.ready=false;state.stage='error';state.errors.push(String(e.stack||e));parent.r23Failure(String(e.message||e));worker?.terminate();});
