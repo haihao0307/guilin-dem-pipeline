@@ -1,5 +1,11 @@
 # 按结构顺序学习 · 2026-10-16
 
+## 修订 08：完整曲线、中束与体积路线
+
+本轮复读 [Sketching Hairstyles](https://hongbofu.people.ust.hk/doc/sbim07_hairstyle_sketching.pdf)，以及 [Example-Based Hair Geometry Synthesis](https://research.lvdi.wang/publications/hairsynthesis/index.html) 的[论文第 4.1、4.2、5.3 节](https://research.lvdi.wang/publications/hairsynthesis/2009_hairsynthesis.pdf)。研究提示完整曲线、局部位移和空间切向协调应共同参与，毛囊平面分组本身不能决定自然外形。
+
+本项目将原中束成员映射到下段椭圆体积参照，31 个作者中束驱动 117 条完整主体曲线，保持根前缀与刘海/鬓角。它是当前 P01 静态造型选择，不是论文完整算法：现有完整曲线聚类没有实现论文的连通头皮邻域聚类，也没有实现三维切向场积分和完整样例合成。椭圆宽深、肩部外展与耳前终点参数为作者设定，不能写成实测毛发常数。原学习指南的弧长生成约束、上部与耳周自然性仍未完整解决。[逐项对照](LEARNING-CHECKLIST-R08.md)、[实施记录](SILHOUETTE-WISPS-08.md)。
+
 本轮只借鉴公开研究的问题拆分和表示方法。下面区分论文结论、项目选择与尚未实现部分，不复制训练权重、人物或发型资产。
 
 1. [Sketching Hairstyles, Fu et al., 2007](https://hongbofu.people.ust.hk/doc/sbim07_hairstyle_sketching.pdf)：阅读系统概览与第 4、5 节。流线提供切向约束，分割曲线为两侧设置不同方向；全局场在约束间传播，头发沿场生长。**项目选择**：分缝、旋涡与梳理曲线成为显式数据，不能仅画头皮亮线。本轮使用解析连续场与路径跟踪，尚未实现论文的拉普拉斯场求解和增量 Cholesky；不得称为该算法复现。

@@ -1,5 +1,7 @@
+import {assertSilhouetteField} from './SilhouetteContract.mjs';
 export const PROFILE_FIELDS=['ScalpDomain','AnatomicalZoneField','CandidateRootField','ActiveRootMask','FollicleDensityField','RootDirectionField','RootLiftField','PartingCurves','WhorlField','HairlineProfile','RegionalLengthField','CutField','GuideGroom','ClumpGraph','ChildStrandProfile','StrandMaterialField','RestShape','PhysicsProfile'];
 export function assertProfile(p){
+ if(p?.SilhouetteField)assertSilhouetteField(p.SilhouetteField);
  if(p?.schema!=='kaopu/hair-style-profile@1')throw Error('Unsupported HairStyleProfile');
  for(const name of PROFILE_FIELDS)if(!p[name])throw Error('Missing profile field: '+name);
  const zones=p.AnatomicalZoneField.zones;if(zones.length!==10||new Set(zones.map(z=>z.id)).size!==10)throw Error('Ten distinct anatomical zones required');

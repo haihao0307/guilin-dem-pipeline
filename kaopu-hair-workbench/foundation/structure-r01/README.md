@@ -1,5 +1,11 @@
 # KAOPU 头发结构工作台 R01
 
+## 当前实施：对照学习文件推进轮廓与发束 08
+
+按[用户文件逐项对照表](docs/LEARNING-CHECKLIST-R08.md)，新增“立体轮廓”和“立体轮廓·耳前渐层”两项当前长度的静态结构研究。31 个下段中束参照驱动 117 条主体路径，保留全部刘海/鬓角与每条主体前 45 mm；原九个状态的配置、几何、毛囊缓冲均由独立历史锁验证不变。当前十个可见选项，第一轮仍未通过完整视觉验收，密集发丝、材质和物理继续锁定。
+
+侧后下段不再集中贴在同一后平面；耳前长束的终点以同侧保留鬓角为参照。上部与耳周仍有交叉，尚不能认为自然性已完成。本文下方 R07 及更早段落为历史。[实现、失败尝试和限制](docs/SILHOUETTE-WISPS-08.md)；[本轮当前画面对照](evidence/route08-review-overview.png)。
+
 ## 修订 07 公开实测
 
 [打开当前轻层次剪裁](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/cacba9027dec8988558b7a36f4e02b6e7a4ce374/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=back&experiment=cut-layered)。八个可见对照及独立新浏览器页面的剪裁直达链接均通过；本机本次冷启动结构约 20.38 秒、人物皮肤完整就绪约 34.21 秒。两版剪裁首次切换约 1.34/1.38 秒，八状态缓存切换合计约 104 ms、零新增请求。冷启动仍未达到用户要求，本轮不宣称加载优化完成。[公开测试记录](evidence/public-cut07-check.json)。原版、U 形和轻层次的同机位对照见 [当前实际画面](evidence/cut07-review-overview.png)。
