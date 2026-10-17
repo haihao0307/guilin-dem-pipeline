@@ -11,6 +11,7 @@ export function assertProfile(p){
  if(![p.RootLiftField.hairline,p.RootLiftField.interior].every(v=>Number.isFinite(v)&&v>=0&&v<=.5))throw Error('Invalid root lift');
  if(!Number.isFinite(p.RootDirectionField.minimumVectorMagnitude)||p.RootDirectionField.minimumVectorMagnitude<=0||p.RootDirectionField.minimumVectorMagnitude>1)throw Error('Invalid tangent regularization');
  if(p.GuideGroom.editArc>.085||p.GuideGroom.fringeEditArc>.050)throw Error('Comb edit escaped authorized upper arc');
+ if(p.CutField.study){const c=p.CutField,e=c.envelope,q=c.policy;if(!['cut-u','cut-layered'].includes(c.study)||!e||!q||q.extension!==false||q.rootMotion!==false||q.pathDeformation!==false||q.protectedRootArc!==.085||q.fringeUnchanged!==true||q.templeUnchanged!==true)throw Error('Invalid prefix cut policy');if(![e.sideRise,e.frontRise,e.asymmetry,e.layerStart,e.layerSpan].every(Number.isFinite)||e.sideRise<0||e.frontRise<0||e.layerSpan<=0)throw Error('Invalid spatial cut envelope');for(const {id}of zones){const r=c.regions[id];if(r.edited&&(!Number.isFinite(r.layer)||r.layer<0||r.hem<.135||r.hem>.147))throw Error('Cut escaped current-length study range');}}
  for(const w of p.WhorlField)if(!(w.radius>0)||w.strength<0||w.strength>1||!(w.coreRadius>0)||w.coreRadius>=w.radius)throw Error('Invalid whorl');
  if(p.GuideGroom.samples<33||p.GuideGroom.highFrequency!==false)throw Error('Phase one requires complete low-frequency guides');
  if(p.ClumpGraph.levels.join('/')!=='macro/mid/micro'||p.ClumpGraph.crossPart!==false)throw Error('Explicit hierarchical groups required');
