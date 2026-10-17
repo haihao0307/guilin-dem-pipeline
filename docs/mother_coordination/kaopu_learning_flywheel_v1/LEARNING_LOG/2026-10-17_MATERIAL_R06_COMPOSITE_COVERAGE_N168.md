@@ -60,7 +60,8 @@ No production workflow, Material file, main, R2 or global gate was modified.
 
 ## Routing and lifecycle
 
-- Material Mother / Coordinator: NOT_QUERIED at log creation.
+- Material Mother / Coordinator: POSTED to issue #91 as comment 6229189211: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6229189211
+- No real reply was present when this receipt was recorded; ACKNOWLEDGED remains false.
 - Existing regression status remains Candidate/inactive.
 - ACKNOWLEDGED / IMPLEMENTED / TARGET-GATE-RUN / ADOPTED / USER-ACCEPTED: false.
 - Metrics without reliable measurement remain UNKNOWN.
