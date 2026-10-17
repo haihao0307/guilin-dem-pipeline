@@ -8,6 +8,7 @@ def walk(p):
  if p in seen:return
  seen.add(p);assert p.is_file(),p
  for target in re.findall(r"\bimport\s+[\w*$ {},\n\r\t]+?\s+from\s*['\"]([^'\"]+)['\"]",clean(p)):
+  target=target.split('?')[0].split('#')[0]
   if target=='three':q=root/'vendor/three.module.js'
   elif target.startswith('.'):q=(p.parent/target).resolve()
   else:raise AssertionError(target)
