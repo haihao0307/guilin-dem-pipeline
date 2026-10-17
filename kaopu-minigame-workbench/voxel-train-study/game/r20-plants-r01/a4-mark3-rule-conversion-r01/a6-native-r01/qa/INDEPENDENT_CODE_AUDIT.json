@@ -1,0 +1,725 @@
+{
+  "schema": "kaopu.a6-native-independent-code-audit/1",
+  "auditedAtUtc": "2026-10-17T22:36:04.079624+00:00",
+  "status": "CODE_CPU_READY_FOR_BROWSER_VALIDATION",
+  "visualAcceptance": false,
+  "actualWebGLCompileValidated": false,
+  "engineeringCertification": false,
+  "auditScope": "Independent read-only integration review and CPU geometry/material-hook/ray checks; no browser, network server or publication was started. Only this report was written within the project.",
+  "lockedPriorVersions": {
+    "count": 36,
+    "mismatches": []
+  },
+  "lockedBrandMasters": {
+    "count": 6,
+    "mismatches": []
+  },
+  "frozenMechanics": {
+    "locomotiveParts": 338,
+    "coachParts": 238,
+    "drivingWheelComponents": 24,
+    "drivingWheelDiameter": 2.032,
+    "nativeWheelInstances": 6,
+    "driveAxlesZ": [
+      3.5814,
+      5.7912,
+      8.001
+    ],
+    "wheelPositions": "Original [side*0.75, 1.016, axleZ], left rotation Y=PI retained verbatim from R02",
+    "locomotiveTransform": "identity",
+    "coachTransform": "single rigid translation [0,0,32.34]; both shell and unchanged mechanics share it",
+    "mechanicalArrayMutationTestPassed": true,
+    "mechanicalGenerationOnShellRebuild": false
+  },
+  "runtimeDependencyAudit": {
+    "staticImportGraphFiles": 34,
+    "missingImports": [],
+    "sourceGeometryLoaderOrFetchInNonThreeModules": [],
+    "teacherModelRequestedOrRead": false,
+    "sourceImagesPublished": false,
+    "note": "Shared local Three/RoomEnvironment and authored material shader factories are runtime code dependencies, not teacher-model payloads. Brand contour masters are authorized first-party artwork."
+  },
+  "viewContract": {
+    "default": "connected full train, orthographic side, zoom 1",
+    "worldUnits": "metres",
+    "coachOffsetZ": 32.34,
+    "parameterEditAutoFit": false,
+    "parameterEditRecenter": false,
+    "mechanicalRebuildDuringShellEdit": false,
+    "immutableBaselineBounds": true,
+    "freeOrbit": "explicit opt-in orthographic mode, labelled unsuitable for dimension acceptance",
+    "basis": "Source review plus passing pure interaction/queue tests; actual browser interactions remain unverified."
+  },
+  "cpuTests": {
+    "command": "node --test a6-native-r01/interaction.test.mjs a6-native-r01/tests/materials.test.mjs a6-native-r01/tests/branding.test.mjs",
+    "passed": 23,
+    "failed": 0,
+    "initialFailures": 9,
+    "initialFailureCause": "Linked-roof assertion included outlet/accessory height in body roof crown; corrected to named primary body/roof skins, not a weakened total-height comparison."
+  },
+  "geometry": {
+    "locomotive": {
+      "parts": 94,
+      "triangles": 170118,
+      "vertices": 94144,
+      "reversedTriangles": 0,
+      "degenerateTriangles": 0,
+      "nonfiniteValues": 0
+    },
+    "coach": {
+      "parts": 126,
+      "triangles": 124608,
+      "vertices": 249232,
+      "reversedTriangles": 0,
+      "degenerateTriangles": 0,
+      "nonfiniteValues": 0
+    },
+    "tender": {
+      "parts": 20,
+      "triangles": 52544,
+      "vertices": 157632,
+      "reversedTriangles": 0,
+      "degenerateTriangles": 0,
+      "nonfiniteValues": 0
+    }
+  },
+  "roofShoulderG1": {
+    "locomotiveMaxNormalAngleRadians": 2.1073424255447017e-08,
+    "coachMaxNormalAngleRadians": 2.9802322387695312e-08,
+    "longitudinalSamplesEach": 401,
+    "scope": "Analytic main roof/shoulder joins only; not skirt opening boundaries or complete closed-body topology"
+  },
+  "finiteGlass": {
+    "canopy": {
+      "weldToleranceM": 1e-05,
+      "weldedVertices": 14418,
+      "edgeIncidenceCounts": {
+        "2": 43248
+      },
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0,
+      "minPairedThicknessM": 0.013999769215556972,
+      "maxPairedThicknessM": 0.014000196817847144
+    },
+    "coachPaneCount": 24,
+    "coachAllClosedManifold": true,
+    "coachThickness": [
+      {
+        "name": "left-vestibule-door-front-window-glass",
+        "minThicknessM": 0.013999908525534684,
+        "maxThicknessM": 0.01400012141558387
+      },
+      {
+        "name": "left-vestibule-window-front-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.01399993896484375
+      },
+      {
+        "name": "left-saloon-1-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-2-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-3-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-4-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-5-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-6-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-7-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-saloon-8-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "left-vestibule-window-rear-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.01399993896484375
+      },
+      {
+        "name": "left-vestibule-door-rear-window-glass",
+        "minThicknessM": 0.013999908525534684,
+        "maxThicknessM": 0.01400012141558387
+      },
+      {
+        "name": "right-vestibule-door-front-window-glass",
+        "minThicknessM": 0.013999908525534684,
+        "maxThicknessM": 0.01400012141558387
+      },
+      {
+        "name": "right-vestibule-window-front-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.01399993896484375
+      },
+      {
+        "name": "right-saloon-1-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-2-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-3-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-4-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-5-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-6-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-7-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-saloon-8-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.013999938972964272
+      },
+      {
+        "name": "right-vestibule-window-rear-glass",
+        "minThicknessM": 0.01399993896484375,
+        "maxThicknessM": 0.01399993896484375
+      },
+      {
+        "name": "right-vestibule-door-rear-window-glass",
+        "minThicknessM": 0.013999908525534684,
+        "maxThicknessM": 0.01400012141558387
+      }
+    ],
+    "opticalThicknessM": 0.014,
+    "lampOpticalThicknessM": 0.008,
+    "lampGeometryThicknessM": 0.008,
+    "screenSpaceOpticsLimits": "Closed finite geometry and matching optical thickness do not establish multiple-layer optics, glass safety or visual quality."
+  },
+  "tenderClosure": {
+    "outer": {
+      "weldToleranceM": 1e-05,
+      "weldedVertices": 12962,
+      "edgeIncidenceCounts": {
+        "2": 38880
+      },
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0
+    },
+    "inner": {
+      "weldToleranceM": 1e-05,
+      "weldedVertices": 12962,
+      "edgeIncidenceCounts": {
+        "2": 38880
+      },
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0
+    }
+  },
+  "materials": {
+    "paint": {
+      "masterFactory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint",
+      "shaderHookExecuted": true,
+      "color": "103e35",
+      "metalness": 0,
+      "roughness": 0.4,
+      "envMapIntensity": 0.6,
+      "transmission": 0,
+      "ior": 1.5,
+      "thickness": 0,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {},
+      "fragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be"
+    },
+    "blackPaint": {
+      "masterFactory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial",
+      "shaderHookExecuted": true,
+      "color": "14191b",
+      "metalness": 0,
+      "roughness": 0.58,
+      "envMapIntensity": 0.45,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {
+        "uTrainSourceColor": [
+          0.0069954101845983935,
+          0.00972121731707524,
+          0.010960094003125918
+        ],
+        "uTrainSourceMetallic": 0,
+        "uTrainSourceRoughness": 0.58
+      },
+      "fragmentSha256": "99940b0e18cf81466e07f43dfc835df526cdf965f2d341c29522b5bae3a5db9d"
+    },
+    "brushedMetal": {
+      "masterFactory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial",
+      "shaderHookExecuted": true,
+      "color": "b9c2c6",
+      "metalness": 1,
+      "roughness": 0.21,
+      "envMapIntensity": 1.15,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {
+        "uTrainSourceColor": [
+          0.48514994004665124,
+          0.5394794890033748,
+          0.5647115056965487
+        ],
+        "uTrainSourceMetallic": 1,
+        "uTrainSourceRoughness": 0.21
+      },
+      "fragmentSha256": "99940b0e18cf81466e07f43dfc835df526cdf965f2d341c29522b5bae3a5db9d"
+    },
+    "gold": {
+      "masterFactory": "vendor/material-master-r06/metal-surface.mjs#makeMetalMaterial",
+      "shaderHookExecuted": true,
+      "color": "d6af60",
+      "metalness": 1,
+      "roughness": 0.32,
+      "envMapIntensity": 0.75,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {
+        "uTrainSourceColor": [
+          0.6724431569510133,
+          0.4286904966038916,
+          0.11697066774917994
+        ],
+        "uTrainSourceMetallic": 1,
+        "uTrainSourceRoughness": 0.32
+      },
+      "fragmentSha256": "99940b0e18cf81466e07f43dfc835df526cdf965f2d341c29522b5bae3a5db9d"
+    },
+    "glass": {
+      "masterFactory": "vendor/material-master-r03/wood-glass.mjs#buildGlassCase",
+      "shaderHookExecuted": true,
+      "color": "d7e8de",
+      "metalness": 0,
+      "roughness": 0.045,
+      "envMapIntensity": 0.12,
+      "transmission": 0.96,
+      "ior": 1.45,
+      "thickness": 0.014,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {
+        "wgWear": 0,
+        "wgStrength": 0,
+        "wgVariant": 0
+      },
+      "fragmentSha256": "e26b45433e61aa7426b2008137efce8cbe0bfb525cc80b57bf1f41030af8edc2"
+    },
+    "lamp": {
+      "masterFactory": "vendor/material-master-r03/wood-glass.mjs#buildGlassCase",
+      "shaderHookExecuted": true,
+      "color": "e8eee7",
+      "metalness": 0,
+      "roughness": 0.08,
+      "envMapIntensity": 0.12,
+      "transmission": 0.91,
+      "ior": 1.52,
+      "thickness": 0.008,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {
+        "wgWear": 0,
+        "wgStrength": 0,
+        "wgVariant": 0
+      },
+      "fragmentSha256": "e26b45433e61aa7426b2008137efce8cbe0bfb525cc80b57bf1f41030af8edc2"
+    },
+    "skin": {
+      "masterFactory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint",
+      "shaderHookExecuted": true,
+      "color": "b98d72",
+      "metalness": 0,
+      "roughness": 0.62,
+      "envMapIntensity": 0.5,
+      "transmission": 0,
+      "ior": 1.5,
+      "thickness": 0,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {},
+      "fragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be"
+    },
+    "uniform": {
+      "masterFactory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint",
+      "shaderHookExecuted": true,
+      "color": "263847",
+      "metalness": 0,
+      "roughness": 0.67,
+      "envMapIntensity": 0.4,
+      "transmission": 0,
+      "ior": 1.5,
+      "thickness": 0,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {},
+      "fragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be"
+    },
+    "seat": {
+      "masterFactory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint",
+      "shaderHookExecuted": true,
+      "color": "223b32",
+      "metalness": 0,
+      "roughness": 0.66,
+      "envMapIntensity": 0.4,
+      "transmission": 0,
+      "ior": 1.5,
+      "thickness": 0,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {},
+      "fragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be"
+    },
+    "red": {
+      "masterFactory": "vendor/train-r08/materials/matter.mjs#createTrainMatter(T).paint",
+      "shaderHookExecuted": true,
+      "color": "a62b24",
+      "metalness": 0,
+      "roughness": 0.43,
+      "envMapIntensity": 0.6,
+      "transmission": 0,
+      "ior": 1.5,
+      "thickness": 0,
+      "opacity": 1,
+      "transparent": false,
+      "depthWrite": true,
+      "uniforms": {},
+      "fragmentSha256": "a6534e39519a72d6c0adb703b779f5829f5753f5918e12f3cc3ef5aa96d454be"
+    }
+  },
+  "exteriorMotion": {
+    "verticesChecked": 28752,
+    "minimumVerticalHemMarginM": 0.0248999999999997,
+    "controllingPart": "reverser-reach-rod--1",
+    "method": "All existing outside-motion, outside-valve-gear and outside-cylinder vertices; no z-range exclusions."
+  },
+  "sideOcclusionRecheck": [
+    {
+      "name": "outside-cylinder--1",
+      "sampledTriangleCentres": 134,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "radius-rod--1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "combination-lever--1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "valve-rod-crosshead--1",
+      "sampledTriangleCentres": 188,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "reverser-reach-rod--1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "outside-cylinder-1",
+      "sampledTriangleCentres": 134,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "radius-rod-1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "combination-lever-1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "valve-rod-crosshead-1",
+      "sampledTriangleCentres": 188,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    },
+    {
+      "name": "reverser-reach-rod-1",
+      "sampledTriangleCentres": 132,
+      "occludedByBodyInSideView": 0,
+      "minSideDepthBehindBodyM": null,
+      "examples": []
+    }
+  ],
+  "driver": {
+    "eye": [
+      -0.54,
+      3.375,
+      3.1664
+    ],
+    "head": [
+      -0.54,
+      3.3649999999999998,
+      3.2563999999999997
+    ],
+    "torso": [
+      -0.54,
+      2.96,
+      3.3314
+    ],
+    "leftHand": [
+      -0.6950000000000001,
+      3.11,
+      2.9814
+    ],
+    "rightHand": [
+      -0.385,
+      3.11,
+      2.9814
+    ],
+    "leftFoot": [
+      -0.645,
+      2.36,
+      2.8864
+    ],
+    "rightFoot": [
+      -0.43500000000000005,
+      2.36,
+      2.8864
+    ],
+    "eyeAheadOfFirstDrivingAxleM": 0.41500000000000004,
+    "seatStationZ": 3.3314,
+    "floorTopY": 2.3,
+    "fullAuthoringScale": true,
+    "sideVisibilityCheckRequired": true,
+    "poseStatus": "Authored ergonomic witness; no anatomical or operating certification"
+  },
+  "forwardSightline": [
+    {
+      "trackDistanceAheadM": 2,
+      "firstOpaqueHit": {
+        "part": "a6-low-forward-control-desk",
+        "distance": 0.5394245033582101,
+        "point": [
+          -0.54,
+          2.9109376667261126,
+          2.891400098800659
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 3,
+      "firstOpaqueHit": {
+        "part": "a6-low-forward-control-desk",
+        "distance": 0.501733107449679,
+        "point": [
+          -0.54,
+          3,
+          2.8330666666666664
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 4,
+      "firstOpaqueHit": {
+        "part": "a6-low-forward-control-desk",
+        "distance": 0.5815117059849536,
+        "point": [
+          -0.54,
+          3,
+          2.7219555555555552
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 5,
+      "firstOpaqueHit": {
+        "part": "a6-low-forward-control-desk",
+        "distance": 0.6702738062229809,
+        "point": [
+          -0.54,
+          3,
+          2.610844444444444
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 6,
+      "firstOpaqueHit": {
+        "part": "a6-low-forward-control-desk",
+        "distance": 0.7648983229452423,
+        "point": [
+          -0.54,
+          3,
+          2.4997333333333334
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 8,
+      "firstOpaqueHit": {
+        "part": "a6-continuous-body-with-open-canopy-and-wheel-arches",
+        "distance": 4.630525263110181,
+        "point": [
+          -0.54,
+          1.5751124899417162,
+          -1.1000000238418575
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 10,
+      "firstOpaqueHit": {
+        "part": "a6-continuous-body-with-open-canopy-and-wheel-arches",
+        "distance": 3.9402239111045243,
+        "point": [
+          -0.54,
+          2.1150005400273555,
+          -0.566931733252281
+        ]
+      },
+      "glassHitCount": 0
+    },
+    {
+      "trackDistanceAheadM": 12,
+      "firstOpaqueHit": null,
+      "glassHitCount": 2
+    },
+    {
+      "trackDistanceAheadM": 15,
+      "firstOpaqueHit": null,
+      "glassHitCount": 2
+    },
+    {
+      "trackDistanceAheadM": 20,
+      "firstOpaqueHit": null,
+      "glassHitCount": 2
+    },
+    {
+      "trackDistanceAheadM": 30,
+      "firstOpaqueHit": null,
+      "glassHitCount": 2
+    },
+    {
+      "trackDistanceAheadM": 50,
+      "firstOpaqueHit": null,
+      "glassHitCount": 2
+    }
+  ],
+  "horizontalForwardOpaqueHits": [],
+  "resolvedFindings": [
+    {
+      "finding": "Coach glazing was zero-thickness sideSkin sheets",
+      "resolution": "24 independent normal-offset 14 mm glass solids with closed perimeter; all welded edge-incidence checks pass."
+    },
+    {
+      "finding": "Front valve crosshead fully hidden and portions of radius/combination/reverser rods hidden by body skirt",
+      "initialSampledOcclusionCounts": {
+        "outsideCylinderEachSide": "12/134",
+        "radiusRodEachSide": "65/132",
+        "combinationLeverEachSide": "66/132",
+        "valveRodCrossheadEachSide": "188/188",
+        "reverserReachRodEachSide": "65/132"
+      },
+      "resolution": "Revised front/rear hem without mechanical edits; 0/1436 affected triangle centers hit body in true side rays. All 28752 outside-motion, outside-valve-gear and outside-cylinder vertices clear lower body edge by at least 24.9 mm."
+    },
+    {
+      "finding": "12 m ahead ground eye ray hit canopy seal",
+      "resolution": "Extended real glass opening forward; exact eye [-.54,3.375,3.1664] to ground [-.54,0,-8.8336] now has 0 opaque hits including seal/details, and two glass surface hits."
+    },
+    {
+      "finding": "Lamp projector finite depth 8 mm disagreed with inherited 14 mm optical thickness",
+      "resolution": "Lamp instance optical thickness now 8 mm; window glass remains 14 mm."
+    }
+  ],
+  "remainingLimits": [
+    "No browser/CI, actual shader GPU compile, screenshots, visual proportions/material acceptance or text readability is claimed by this audit.",
+    "Driver eye is 0.415 m ahead of first fixed driving axle, not 0.35 m; parent accepted this exact design placement. Seat and cabin reference stations are different coordinates.",
+    "Near ground 2–6 m ahead is obstructed by desk and 8–10 m by nose in sampled forward rays. The clear 12 m ray is a declared design target, not railway visibility certification.",
+    "Locomotive exterior shell intentionally retains open underside; only glazing and tender closed volumes were checked for welded manifold closedness.",
+    "Static vertex margins and sampled rays do not establish swept-linkage, suspension, thermal, loading, structural or collision certification.",
+    "Nominal coupler connections, cabin equipment, diesel-heated steam operation and oil/water capacity remain provisional designs."
+  ],
+  "auditedFileSha256": {
+    "view.mjs": "9960bd36096232ede5a88dcd32f8d0c5203b4c120cbbb6d69d54900eb0fa0095",
+    "interaction.mjs": "fb745655f399dbdd45d928473f7b6a9a53153a67ec46de9952760a3abee155ba",
+    "interaction.test.mjs": "6e6b3cb2c5ef4e470e04f462cd4da426fa1f1012a5be7cd3782b474e0c490565",
+    "src/a6-locomotive-shell.mjs": "2b9de10d2582e6b47cb6d9e80d7724d119186946e368bf62751f1843ad5a0127",
+    "src/a6-coach-shell.mjs": "8de7df9817cbf27d2db6d473468866cb0658cd2769d1141722b8a90302887c2e",
+    "src/a6-tender-shell.mjs": "b4641b1e8913fa270f35e6bb033425ace33841492635fa90af1d59951ca8f141",
+    "src/a6-geometry.mjs": "9fe0ae54f38c1b8e783bd1ea8d33569fafe6c34ff8ccd99244a8071f5e8c7a8f",
+    "src/a6-shell-geometry.mjs": "1cf123da1b5b22afb3b13a0a387fce137f697fe8b9c46b8a04595ce641b4205c",
+    "src/a6-materials.mjs": "1add5af34b37ff47bdbff8d74e91f43017e3f83f813daee7e9fb6bcf69053f55",
+    "src/a6-branding.mjs": "10ea8eff38872491b6fca403a852b4fc280b081889cad457841dfc2f4bbb0f9a",
+    "tests/materials.test.mjs": "05e00db8bf54240f4eb32587c6ccd00e7b81581993f6cb34497686e0039d6616",
+    "tests/branding.test.mjs": "f79eefaafdcc5f19c8de74a59a95796a1f6ae730fb047515f5803c33de351589"
+  }
+}

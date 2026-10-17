@@ -1,0 +1,185 @@
+{
+  "schema": "native-a6-locomotive-geometry-audit/1",
+  "status": "PASS",
+  "partCount": 94,
+  "vertices": 94144,
+  "triangles": 170118,
+  "finiteAndUnitNormalChecks": true,
+  "canopy": {
+    "edges": 43248,
+    "boundary": 0,
+    "nonmanifold": 0,
+    "degenerate": 0,
+    "thicknessRangeM": [
+      0.013999769215556972,
+      0.014000196817847144
+    ],
+    "actualBodyHole": true
+  },
+  "shoulderG1": {
+    "maximumNormalAngleRadians": 2.1073424255447017e-8,
+    "method": "Compare exact ellipse shoulder normal to exact quadratic tucked-side tangent normal at 401 longitudinal sections"
+  },
+  "sideSight": {
+    "eye": {
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    "head": {
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    "torso": {
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    "leftHand": {
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    "rightHand": {
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    "leftFoot": {
+      "opaqueShellHits": 1,
+      "finiteGlassSurfaceHits": 0
+    },
+    "rightFoot": {
+      "opaqueShellHits": 1,
+      "finiteGlassSurfaceHits": 0
+    }
+  },
+  "forwardSight": [
+    {
+      "target": [
+        -0.54,
+        3.375,
+        -30
+      ],
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    {
+      "target": [
+        -0.54,
+        1.6,
+        -20
+      ],
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    },
+    {
+      "target": [
+        -0.54,
+        0,
+        -8.8336
+      ],
+      "opaqueShellHits": 0,
+      "finiteGlassSurfaceHits": 2
+    }
+  ],
+  "cabSection": {
+    "x": [
+      -1.13,
+      1.13
+    ],
+    "z": [
+      2.29,
+      4.93
+    ],
+    "lowerY": 2.255,
+    "maximumNativeMechanicalVertexY": 2.1492,
+    "controllingPart": "reverser-lifting-link--1",
+    "verticalMarginM": 0.1057999999999999,
+    "method": "Actual native mechanical vertex maximum in floor x/z plan footprint; static vertex-envelope check, not swept triangle/collision certification"
+  },
+  "skinSection": {
+    "minimumLateralMarginM": 0.06581237973261866,
+    "controllingPart": "front-bufferbeam-structural-member",
+    "method": "Compare all native mechanical vertices above skirt to exact analytic shell half-width at their y/z; discrete vertex-envelope test"
+  },
+  "exposedMotion": {
+    "maximumNativeOutsideMotionY": 2.1492,
+    "minimumSkirtVerticalMarginM": 0.0248999999999997,
+    "controllingPart": "reverser-reach-rod--1",
+    "method": "Native exterior-motion and outside-valve-gear vertices across complete locomotive domain; compare each height to the actual analytic lower body edge"
+  },
+  "wheelArches": [
+    {
+      "axisZ": 3.5814,
+      "edgeY": 2.26,
+      "wheelCrownY": 2.032,
+      "nominalWheelCrownClearanceM": 0.22799999999999976,
+      "opaqueSideHitsAtWheelCrown": 0
+    },
+    {
+      "axisZ": 5.7912,
+      "edgeY": 2.26,
+      "wheelCrownY": 2.032,
+      "nominalWheelCrownClearanceM": 0.22799999999999976,
+      "opaqueSideHitsAtWheelCrown": 0
+    },
+    {
+      "axisZ": 8.001,
+      "edgeY": 2.26,
+      "wheelCrownY": 2.032,
+      "nominalWheelCrownClearanceM": 0.22799999999999976,
+      "opaqueSideHitsAtWheelCrown": 0
+    }
+  ],
+  "unchangedMechanics": {
+    "partCount": 338,
+    "sha256Before": "fce3eb457774bab1aa1a74344d2993a6b537213902c97a955e20614cc370eda6",
+    "sha256After": "fce3eb457774bab1aa1a74344d2993a6b537213902c97a955e20614cc370eda6",
+    "parameterChangesDoNotModifyMechanicalArrays": true
+  },
+  "parameterCornerRuns": [
+    {
+      "width": 2.66,
+      "topHeight": 3.98,
+      "cabShift": -0.15
+    },
+    {
+      "width": 2.66,
+      "topHeight": 3.98,
+      "cabShift": 0.15
+    },
+    {
+      "width": 2.66,
+      "topHeight": 4.15,
+      "cabShift": -0.15
+    },
+    {
+      "width": 2.66,
+      "topHeight": 4.15,
+      "cabShift": 0.15
+    },
+    {
+      "width": 2.84,
+      "topHeight": 3.98,
+      "cabShift": -0.15
+    },
+    {
+      "width": 2.84,
+      "topHeight": 3.98,
+      "cabShift": 0.15
+    },
+    {
+      "width": 2.84,
+      "topHeight": 4.15,
+      "cabShift": -0.15
+    },
+    {
+      "width": 2.84,
+      "topHeight": 4.15,
+      "cabShift": 0.15
+    }
+  ],
+  "limitations": [
+    "No suspension travel, wheel/rod animation sweep, thermal or loading envelope is solved.",
+    "Forward rays are three declared targets from one designed eye point, not a visibility standard certification.",
+    "Detailed cabin controls and driver are authored design representations, without a working steam/valve/electrical system.",
+    "Body is an exterior skin with structural underside open; only the finite canopy is claimed closed."
+  ]
+}
