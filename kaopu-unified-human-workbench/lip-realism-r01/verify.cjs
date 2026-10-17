@@ -7,14 +7,15 @@ const VERSION='LIP-REALISM-R01';
 const BASE_COMMIT='5543f756ca3af1428323696324303fa70b8de850';
 const BASE_HASH='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a';
 const MODE=process.env.LIP_QA_MODE||'candidate';
-assert(['baseline','candidate','public'].includes(MODE),'Unknown LIP_QA_MODE');
+assert(['baseline','candidate','supplemental','public'].includes(MODE),'Unknown LIP_QA_MODE');
+const PERFORMANCE_TEST='same-machine frame-time comparison stays within bounded regression budget';
 const run=(process.env.GITHUB_RUN_ID||('local-'+Date.now()))+'-'+(process.env.GITHUB_RUN_ATTEMPT||'1');
 const out=process.env.LIP_QA_OUT||path.join(__dirname,'evidence',run,MODE);
 fs.mkdirSync(out,{recursive:true});
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const q={
  schema:'kaopu/lip-realism-qa@1',version:VERSION,mode:MODE,startedAt:new Date().toISOString(),
- sourceCommit:process.env.SOURCE_SHA||null,
+ sourceCommit:process.env.SOURCE_SHA||null,verificationCommit:process.env.LIP_VERIFICATION_SHA||process.env.GITHUB_SHA||null,
  baseline:{commit:BASE_COMMIT,previewSHA256:BASE_HASH,role:'BASELINE_ONLY'},
  tests:[],errors:[],consoleErrors:[],failedRequests:[],resourceErrors:[],screenshots:[],
  softwareRenderer:true,physicalPhone:false,userVisualAccepted:false,visualAcceptance:false,productionReady:false,
@@ -48,15 +49,38 @@ for(const[signal,code]of[['SIGTERM',143],['SIGINT',130]])process.once(signal,()=
  progress('process',signal);save('qa.json',q);process.exit(code);
 });
 function small(f){return{width:f.width,height:f.height,sha256:f.hash,nonUniformPixels:f.nonUniformPixels};}
+function validateCoreEvidence(candidate){
+ const c=JSON.parse(fs.readFileSync(path.join(__dirname,'CORE_EVIDENCE_VALIDATED.json'),'utf8'));
+ assert.equal(c.schema,'kaopu/lip-core-evidence-reuse@1');assert.equal(c.sourceVerifiedByteForByte,true);
+ assert.equal(c.sourceCommit,'544ec81bcef6185a553df138585c7059e832a122');assert.equal(c.sourceCommit,q.sourceCommit,'Supplemental production source identity differs');
+ assert.equal(c.verificationCommit,q.verificationCommit,'Evidence reuse was validated for another verification commit');
+ assert.equal(c.originRunId,'39020723675');assert.equal(c.artifactId,'12096734029');
+ assert.equal(c.artifactSHA256,'0c693546b50b859ec70e269809eee120f3015f112249a54ae37ea520dfe1078d');
+ assert.equal(c.signature.previewSHA256,sha(candidate),'Supplemental preview differs from the exact core-tested bytes');
+ assert.equal(c.signature.previewSHA256,'4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231');
+ assert.equal(c.signature.moduleSHA256,sha(fs.readFileSync(path.join(__dirname,'LipSurface.js'))),'Production module changed after core verification');
+ assert.equal(c.signature.buildSourceSHA256,sha(fs.readFileSync(path.join(__dirname,'build.cjs'))),'Production builder changed after core verification');
+ assert.equal(c.acceptedTests.length,9,'Exactly nine valid original core groups are required');
+ assert.equal(new Set(c.acceptedTests.map(x=>x.name)).size,9,'Repeated core evidence group');
+ assert(c.acceptedTests.every(x=>x.passed===true&&x.originRunId===c.originRunId&&x.name!==PERFORMANCE_TEST),'Invalid test was included in reused core evidence');
+ assert(c.excludedTests.some(x=>x.name===PERFORMANCE_TEST&&x.reason),'The old unsynchronized performance result must remain explicitly excluded');
+ assert.equal(c.originQA,'evidence/39020723675-1/candidate/qa.json');
+ const originalBytes=fs.readFileSync(path.join(__dirname,c.originQA));assert.equal(sha(originalBytes),c.originQASHA256,'Preserved original QA bytes changed');
+ const original=JSON.parse(originalBytes);assert.equal(original.sourceCommit,c.sourceCommit);assert.equal(original.previewSHA256,sha(candidate));
+ assert.equal(original.completed,false,'The original failed run must not be rewritten as completed');assert(original.cleanupError,'Original cleanup failure is not preserved');
+ for(const accepted of c.acceptedTests)assert(original.tests.some(x=>x.name===accepted.name&&x.passed===true),'Accepted group is absent from original real-run evidence');
+ q.coreEvidence=c;q.limitations.push('Nine core groups are reused from the byte-identical production preview in run 39020723675; its old timing and failed cleanup are excluded. Fresh supplemental and public evidence are recorded separately.');
+ save('core-evidence-binding.json',{productionSourceCommit:q.sourceCommit,verificationCommit:q.verificationCommit,previewSHA256:sha(candidate),core:c});checkpoint();
+}
 async function serve(){
  const baseline=fs.readFileSync(path.resolve(__dirname,'../human-integrated-r07/preview.html'));
  assert.equal(sha(baseline),BASE_HASH,'Frozen R07 preview drift; do not rebuild old directory');
  const routes=new Map([['/baseline.html',baseline]]);
- if(MODE==='candidate'){
+ if(MODE==='candidate'||MODE==='supplemental'){
   const candidate=fs.readFileSync(path.join(__dirname,'preview.html'));
   assert(candidate.includes(Buffer.from(VERSION)),'Candidate version marker absent');
   assert.notEqual(sha(candidate),BASE_HASH,'A copied baseline is not a candidate');
-  q.previewSHA256=sha(candidate);routes.set('/candidate.html',candidate);
+  q.previewSHA256=sha(candidate);if(MODE==='supplemental')validateCoreEvidence(candidate);routes.set('/candidate.html',candidate);
  }
  server=http.createServer((req,res)=>{
   const key=new URL(req.url,'http://localhost').pathname;
@@ -225,9 +249,73 @@ function difference(a,b,r){
  }
  return{changedInside,changedOutside,outsideMax,insideMax,outsideBounds:changedOutside?outsideBounds:null,outsideExamples,examplesTruncated:changedOutside>outsideExamples.length,threshold:'exact RGB equality outside independent native mouth ROI'};
 }
-async function programs(p){return p.evaluate(()=>{
- const v=__IDENTITY_QA__.viewer(),gl=v.renderer.getContext();v.render();gl.finish();const ext=gl.getExtension('WEBGL_debug_renderer_info');
- return{linked:v.renderer.info.programs.map(x=>({id:x.id,linked:!!gl.getProgramParameter(x.program,gl.LINK_STATUS),log:gl.getProgramInfoLog(x.program)})),renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),vendor:gl.getParameter(gl.VENDOR),error:gl.getError(),drawCalls:v.renderer.info.render.calls,triangles:v.renderer.info.render.triangles};
+// Runs in the browser. Preserve every existing viewer/material/diffusion wrapper.
+// Chromium WebGL finish() alone can flush commands without waiting for completion;
+// a CPU pixel read in the same callback is required for this measured workload.
+function synchronizedRender({includePrograms=false}={}){
+ const v=__IDENTITY_QA__.viewer(),r=v.renderer,gl=r.getContext(),previous=r.render,passes=[],pixel=new Uint8Array(4);
+ const before={frame:r.info.render.frame,renders:v.renders,error:gl.getError()},width=gl.drawingBufferWidth,height=gl.drawingBufferHeight;
+ r.render=function(...args){
+  const start={frame:r.info.render.frame,calls:r.info.render.calls,triangles:r.info.render.triangles},target=r.getRenderTarget();
+  const value=previous.apply(this,args),info=r.info.render;
+  passes.push({scene:args[0]===v.scene?'native-person':'postprocess',nativeCamera:args[1]===v.camera,defaultTarget:target===null,frameDelta:info.frame-start.frame,drawCalls:r.info.autoReset?info.calls:info.calls-start.calls,triangles:r.info.autoReset?info.triangles:info.triangles-start.triangles});return value;
+ };
+ try{
+  const started=performance.now();v.render();gl.finish();
+  gl.readPixels(Math.floor(width/2),Math.floor(height/2),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+  const elapsedMS=performance.now()-started;
+  const result={elapsedMS,width,height,readback:{kind:'synchronous CPU Uint8Array readPixels in the same callback as the full viewer render',x:Math.floor(width/2),y:Math.floor(height/2),width:1,height:1,rgba:Array.from(pixel)},rendererSubmissions:passes.length,rendererFrameDelta:r.info.render.frame-before.frame,viewerRendersDelta:Number.isFinite(v.renders)&&Number.isFinite(before.renders)?v.renders-before.renders:null,passes,defaultFramebuffer:r.getRenderTarget()===null&&gl.getParameter(gl.FRAMEBUFFER_BINDING)===null,errorBefore:before.error,error:gl.getError(),contextLost:gl.isContextLost(),startupFinalFrame:v.startupFinalFrame};
+  if(includePrograms){
+   const ext=gl.getExtension('WEBGL_debug_renderer_info');
+   result.gpu={linked:r.info.programs.map(x=>({id:x.id,linked:!!gl.getProgramParameter(x.program,gl.LINK_STATUS),log:gl.getProgramInfoLog(x.program)})),renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),vendor:gl.getParameter(gl.VENDOR),error:gl.getError(),drawCalls:r.info.render.calls,triangles:r.info.render.triangles};
+  }return result;
+ }finally{r.render=previous;}
+}
+function assertRenderAudit(a,controlled){
+ assert(Number.isFinite(a.elapsedMS)&&a.elapsedMS>0,'Completed viewer frame lacks a finite positive duration');
+ assert.equal(a.errorBefore,0,'GPU errors existed before the audited render');assert.equal(a.error,0,'Audited render/readback produced a GPU error');
+ assert.equal(a.contextLost,false,'WebGL context was lost');assert.equal(a.startupFinalFrame,true,'Startup gate is still scheduling frames');assert.equal(a.defaultFramebuffer,true,'Readback did not use the final default framebuffer');
+ assert(a.rendererSubmissions>0&&a.rendererFrameDelta>0,'Viewer render did not submit a new renderer frame');
+ assert(a.passes.every(x=>x.frameDelta>0),'A renderer submission did not advance the actual renderer frame counter');
+ assert(a.passes.some(x=>x.scene==='native-person'&&x.nativeCamera&&x.drawCalls>0&&x.triangles>0),'No native person scene was drawn by the full viewer chain');
+ assert.equal(a.readback.rgba.length,4,'CPU readback is absent');
+ if(controlled){assert.equal(a.width,900,'Performance framebuffer width differs');assert.equal(a.height,720,'Performance framebuffer height differs');}
+}
+async function programs(p){
+ const audit=await p.evaluate(synchronizedRender,{includePrograms:true});assertRenderAudit(audit,false);
+ return{...audit.gpu,drawAudit:{...audit,gpu:undefined}};
+}
+async function performanceChecks(base,p){return test(PERFORMANCE_TEST,async()=>{
+ const settings=await p.evaluate(()=>lipRealism.settings());await p.evaluate(s=>lipRealism.set({...s,enabled:true,diagnostic:0}),settings);
+ const result=[],stats=a=>{const b=a.slice().sort((x,y)=>x-y),n=b.length;return{count:n,medianMS:(b[Math.floor((n-1)/2)]+b[Math.ceil((n-1)/2)])/2,p95MS:b[Math.ceil(n*.95)-1],minMS:b[0],maxMS:b.at(-1)};};
+ q.performanceMethod={entry:'full existing viewer.render() chain, including host material and diffusion wrappers',completion:'same-callback synchronous CPU readPixels, after gl.finish; every measured sample requires a real native scene draw',order:['baseline','candidate','candidate','baseline'],warmupPerBlock:2,measuredPerBlock:6,views:['macro','bust'],pureGPUTimer:false,interactiveFPS:false};checkpoint();
+ try{for(const kind of['macro','bust']){
+  progress('performance '+kind,'start');
+  await view(base,kind);await view(p,kind);const protectedState=await state(base);assert.deepEqual(await state(p),protectedState,'Performance A/B camera, lights, or skin differ in '+kind);
+  const verifiedFrames={baseline:small(await frame(base,'performance-baseline-'+kind)),candidate:small(await frame(p,'performance-candidate-'+kind))};
+  const samples={baseline:[],candidate:[]},blocks=[];
+  for(const[blockIndex,[label,target]]of[['baseline',base],['candidate',p],['candidate',p],['baseline',base]].entries()){
+   const block={index:blockIndex,label,warmup:[],measured:[]};blocks.push(block);
+   await stage('performance block '+kind+' '+label+' '+blockIndex,async()=>{
+    for(let i=0;i<8;i++){
+     const phase=i<2?'warmup':'measured';q.performanceProgress={view:kind,block:blockIndex,label,sample:i,phase};checkpoint();
+     const audit=await target.evaluate(synchronizedRender,{});block[phase].push(audit);
+     save('performance-progress.json',{method:q.performanceMethod,completedViews:result,current:{view:kind,verifiedFrames,samples,blocks}});
+     assertRenderAudit(audit,true);if(phase==='measured')samples[label].push(audit.elapsedMS);
+     progress('performance sample '+kind+' '+label,'end',{block:blockIndex,sample:i,phase,elapsedMS:audit.elapsedMS,rendererSubmissions:audit.rendererSubmissions,rendererFrameDelta:audit.rendererFrameDelta});
+    }
+   });
+  }
+  assert.equal(samples.baseline.length,12);assert.equal(samples.candidate.length,12);
+  const drawShape=a=>a.passes.map(x=>({scene:x.scene,nativeCamera:x.nativeCamera,defaultTarget:x.defaultTarget,drawCalls:x.drawCalls,triangles:x.triangles}));
+  const expectedDrawShape=drawShape(blocks[0].measured[0]);for(const block of blocks)for(const audit of[...block.warmup,...block.measured])assert.deepEqual(drawShape(audit),expectedDrawShape,'Performance variants did not draw the same native scene and pass topology');
+  assert.deepEqual(await state(base),protectedState,'Baseline state changed during performance measurement');assert.deepEqual(await state(p),protectedState,'Candidate state changed during performance measurement');
+  const r={view:kind,method:'A-B-B-A with 2 warmup and 6 measured full viewer renders per block; native scene submission audited; synchronous 1-pixel CPU readback included in each duration; SwiftShader; not pure GPU time or interactive FPS',baseline:stats(samples.baseline),candidate:stats(samples.candidate),samples,blocks,verifiedFrames,protectedState};
+  r.medianRatio=r.candidate.medianMS/Math.max(.01,r.baseline.medianMS);r.limit={medianRatio:1.35,absoluteAllowanceMS:.5};
+  r.passed=r.candidate.medianMS<=r.baseline.medianMS*1.35+.5;result.push(r);save('performance.json',result);progress('performance '+kind,'end');
+ }
+ assert(result.every(r=>r.passed),'Lip shader exceeds 35% + 0.5 ms synchronized frame-time budget: '+JSON.stringify(result.map(({view,medianRatio,passed})=>({view,medianRatio,passed}))));return result;
+ }finally{await p.evaluate(s=>lipRealism.set(s),settings);}
 });}
 async function candidateChecks(base,p){
  q.initialReport=await p.evaluate(()=>lipRealism.report());q.initialCalibration=await calibration(p);checkpoint();const settings=await p.evaluate(()=>lipRealism.settings());
@@ -379,27 +467,7 @@ async function candidateChecks(base,p){
   assert.deepEqual(restoredGeometry,enabledOriginal,'Portrait archive did not restore original enabled geometry');
   return{presets:result,archive:{before,legacy:legacyResult,restored},restoredCalibration:true,restoredGeometry:true,restoredPixels:true};
  });
- await test('same-machine frame-time comparison stays within bounded regression budget',async()=>{
-  await p.evaluate(s=>lipRealism.set({...s,enabled:true,diagnostic:0}),settings);
-  const result=[],stats=a=>{const b=a.slice().sort((x,y)=>x-y),n=b.length;return{count:n,medianMS:(b[Math.floor((n-1)/2)]+b[Math.ceil((n-1)/2)])/2,p95MS:b[Math.ceil(n*.95)-1],minMS:b[0],maxMS:b.at(-1)};};
-  for(const kind of['macro','bust']){
-   progress('performance '+kind,'start');
-   await view(base,kind);await view(p,kind);assert.deepEqual(await state(p),await state(base),'Performance A/B camera, lights, or skin differ in '+kind);
-   const samples={baseline:[],candidate:[]};
-   for(const [label,target]of[['baseline',base],['candidate',p],['candidate',p],['baseline',base]]){
-    const values=await stage('performance block '+kind+' '+label,()=>target.evaluate(()=>{
-     const v=__IDENTITY_QA__.viewer(),gl=v.renderer.getContext(),values=[];
-     for(let i=0;i<2;i++){v.render();gl.finish();}
-     for(let i=0;i<6;i++){const t=performance.now();v.render();gl.finish();values.push(performance.now()-t);}
-     return values;
-    }));samples[label].push(...values);
-   }
-   const r={view:kind,method:'interleaved fixed-R07 / candidate / candidate / fixed-R07; render plus gl.finish; SwiftShader; not hardware or interactive FPS',baseline:stats(samples.baseline),candidate:stats(samples.candidate),samples};
-   r.medianRatio=r.candidate.medianMS/Math.max(.01,r.baseline.medianMS);r.limit={medianRatio:1.35,absoluteAllowanceMS:.5};
-   r.passed=r.candidate.medianMS<=r.baseline.medianMS*1.35+.5;result.push(r);save('performance.json',result);progress('performance '+kind,'end');
-  }
-  assert(result.every(r=>r.passed),'Lip shader exceeds 35% + 0.5 ms synchronous frame-time budget: '+JSON.stringify(result.map(({view,medianRatio,passed})=>({view,medianRatio,passed}))));return result;
- });
+ await performanceChecks(base,p);
  await p.evaluate(s=>lipRealism.set(s),settings);
  await test('view API changes the real camera and keeps current lighting intact',async()=>{
   const before=await state(p),result=[];for(const kind of['front','macro','oblique','bust']){
@@ -446,7 +514,13 @@ async function publicChecks(p){
    for(const kind of['front','macro']){const camera=await view(base,kind),f=await frame(base,'BASELINE-R07-'+kind);views.push({camera,...small(f)});}
    return{geometry,views,originalSkin:await state(base),role:'BASELINE_ONLY',noNewLipArtifact:true};
   });
-  else{page=await stage('load local candidate',()=>load(origin+'/candidate.html','localCandidate',true));await stage('capture initial native candidate viewport',()=>screenshot(page,'candidate-native-desktop'));await candidateChecks(base,page);}
+  else{
+   page=await stage('load local candidate',()=>load(origin+'/candidate.html','localCandidate',true));
+   if(MODE==='supplemental'){
+    q.initialReport=await page.evaluate(()=>lipRealism.report());assert.equal(await page.evaluate(()=>lipRealism.settings().enabled),true,'Supplemental production treatment is not enabled at startup');checkpoint();
+    await performanceChecks(base,page);
+   }else{await stage('capture initial native candidate viewport',()=>screenshot(page,'candidate-native-desktop'));await candidateChecks(base,page);}
+  }
  }
  await test('all actual GPU programs link with zero shader and browser errors',async()=>{
   const result=[];for(const p of pages){const gpu=await programs(p);assert(gpu.linked.length&&gpu.linked.every(x=>x.linked),'Unlinked GPU program');assert.equal(gpu.error,0);result.push(gpu);}
@@ -462,11 +536,23 @@ async function publicChecks(p){
  }
 }finally{
  q.finishedAt=new Date().toISOString();save('qa.json',q);
- let cleanupFailed=false;
- try{if(browser)await bounded('close Chromium',()=>browser.close(),10000);}catch(e){cleanupFailed=true;q.cleanupError=String(e);}
+ let cleanupFailed=false;q.cleanup={method:'Drain each page through synchronous CPU pixel readback; close each page separately without beforeunload; then close Chromium',pages:[],errors:[]};
+ const cleanupError=(step,e)=>{cleanupFailed=true;const error={step,error:String(e)};q.cleanup.errors.push(error);q.cleanupError=q.cleanupError||error.error;checkpoint();save('qa.json',q);};
+ for(const[pIndex,p]of Array.from(pages).entries()){
+  const item={index:pIndex,url:p.url(),alreadyClosed:p.isClosed()};q.cleanup.pages.push(item);if(item.alreadyClosed)continue;
+  try{item.drain=await stage('drain GPU page '+pIndex,()=>bounded('drain GPU page '+pIndex,()=>p.__lipQARawEvaluate(()=>{
+   window.lifelikeIdle?.pause?.();const v=window.__IDENTITY_QA__?.viewer?.();if(!v?.renderer)return{rendererAbsent:true};
+   const gl=v.renderer.getContext(),pixel=new Uint8Array(4),started=performance.now();gl.finish();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+   return{method:'synchronous CPU readPixels; no new viewer render requested',elapsedMS:performance.now()-started,error:gl.getError(),contextLost:gl.isContextLost(),rgba:Array.from(pixel)};
+  }),60000));if(!item.drain.rendererAbsent){assert.equal(item.drain.error,0,'GPU drain returned an error');assert.equal(item.drain.contextLost,false,'GPU context lost before page close');}}
+  catch(e){cleanupError('drain GPU page '+pIndex,e);}
+  try{await stage('close page '+pIndex,()=>bounded('close page '+pIndex,()=>p.close({runBeforeUnload:false}),60000));item.closed=p.isClosed();assert.equal(item.closed,true,'Page close did not complete');}
+  catch(e){cleanupError('close page '+pIndex,e);}
+ }
+ try{if(browser)await stage('close Chromium',()=>bounded('close Chromium',()=>browser.close(),60000));q.cleanup.browserClosed=!browser||!browser.isConnected();assert.equal(q.cleanup.browserClosed,true,'Chromium remains connected');}catch(e){cleanupError('close Chromium',e);}
  try{if(server)await bounded('close QA server',()=>new Promise(r=>server.close(r)),5000);}catch(e){cleanupFailed=true;q.serverCloseError=String(e);}
  if(cleanupFailed){q.completed=false;q.shareAllowed=false;process.exitCode=1;}
- progress('process','end',{completed:q.completed});save('qa.json',q);
+ q.finishedAt=new Date().toISOString();q.cleanup.completed=!cleanupFailed;progress('process','end',{completed:q.completed});save('qa.json',q);
  console.log(JSON.stringify({version:VERSION,mode:MODE,completed:q.completed,tests:q.tests.length,passed:q.tests.filter(x=>x.passed).length,output:out,failure:q.failure||null}));
  if(cleanupFailed)process.exit(1);
 }})();

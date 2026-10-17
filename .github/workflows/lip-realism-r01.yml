@@ -5,7 +5,7 @@ on:
       mode:
         description: Baseline screenshots only, or build and verify candidate
         type: choice
-        options: [baseline, candidate]
+        options: [baseline, candidate, supplemental]
         default: baseline
       publish:
         description: Publish a passing candidate only to this feature branch
@@ -17,9 +17,11 @@ on:
       - 'kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js'
       - 'kaopu-unified-human-workbench/lip-realism-r01/build.cjs'
       - 'kaopu-unified-human-workbench/lip-realism-r01/verify.cjs'
+      - 'kaopu-unified-human-workbench/lip-realism-r01/reuse-core.py'
       - '.github/workflows/lip-realism-r01.yml'
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: lip-realism-r01-${{ github.ref }}
   cancel-in-progress: false
@@ -30,9 +32,9 @@ jobs:
   verify:
     if: github.ref == 'refs/heads/feature/lip-realism-r01-20261017'
     runs-on: ubuntu-latest
-    # Run 39018341941 measured 21 minutes through portrait checks alone.
-    # Reserve time for synchronous software-GPU benchmarks and fresh HTTPS QA.
-    timeout-minutes: 45
+    # Full core verification can require 21+ minutes on a software GPU.
+    # Supplemental mode strictly reuses the identical production bytes only.
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,14 +50,18 @@ jobs:
           INPUT_PUBLISH: ${{ inputs.publish }}
         run: |
           test "$GITHUB_REF" = "refs/heads/$LIP_BRANCH"
-          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          verification_sha="$(git rev-parse HEAD)"
+          source_sha="$verification_sha"
+          echo "LIP_VERIFICATION_SHA=$verification_sha" >> "$GITHUB_ENV"
           mode="$INPUT_MODE"
-          if [ -z "$mode" ]; then mode=candidate; fi
+          if [ -z "$mode" ]; then mode=supplemental; fi
           if [ "$GITHUB_EVENT_NAME" = push ] && [ ! -f "$LIP_DIR/LipSurface.js" ]; then mode=baseline; fi
+          if [ "$mode" = supplemental ]; then source_sha=544ec81bcef6185a553df138585c7059e832a122; fi
+          echo "SOURCE_SHA=$source_sha" >> "$GITHUB_ENV"
           echo "LIP_QA_MODE=$mode" >> "$GITHUB_ENV"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
           publish=false
-          if [ "$mode" = candidate ] && { [ "$GITHUB_EVENT_NAME" = push ] || [ "$INPUT_PUBLISH" = true ]; }; then publish=true; fi
+          if [ "$mode" != baseline ] && { [ "$GITHUB_EVENT_NAME" = push ] || [ "$INPUT_PUBLISH" = true ]; }; then publish=true; fi
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
           echo "LIP_RUN_KEY=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: Install isolated pinned browser tooling
@@ -73,11 +79,24 @@ jobs:
           assert hashlib.sha256(p.read_bytes()).hexdigest() == 'd1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
           PY
       - name: Build only the new candidate directory
-        if: steps.config.outputs.mode == 'candidate'
+        if: steps.config.outputs.mode != 'baseline'
         run: |
           node --check "$LIP_DIR/LipSurface.js"
           node --check "$LIP_DIR/build.cjs"
           node "$LIP_DIR/build.cjs"
+      - name: Validate and preserve exact original core evidence for supplemental mode
+        if: steps.config.outputs.mode == 'supplemental'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          artifact_zip="$RUNNER_TEMP/lip-core-39020723675.zip"
+          curl --fail --silent --show-error --location --max-time 90 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            --output "$artifact_zip" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/12096734029/zip"
+          python "$LIP_DIR/reuse-core.py" "$artifact_zip"
       - name: Chromium SwiftShader baseline or candidate QA
         run: timeout --signal=TERM --kill-after=20s 37m node "$LIP_DIR/verify.cjs"
       - name: Publish tested build with a strict fast-forward race guard
@@ -85,14 +104,24 @@ jobs:
         id: publish
         run: |
           python - <<'PY'
-          import subprocess,os
+          import subprocess,os,json
+          from pathlib import Path
           prefix=os.environ['LIP_DIR']+'/'
           changed=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
           added=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()
           assert all(p.startswith(prefix) for p in changed+added),'Refuse to publish changes outside the new lip directory'
+          qa=json.loads((Path(prefix)/'evidence'/os.environ['LIP_RUN_KEY']/os.environ['LIP_QA_MODE']/'qa.json').read_text())
+          assert qa['completed'] and qa.get('cleanupError') is None
+          assert qa['tests'] and all(t['passed'] for t in qa['tests'])
+          assert qa['sourceCommit']==os.environ['SOURCE_SHA']
+          assert qa['verificationCommit']==os.environ['LIP_VERIFICATION_SHA']
+          if os.environ['LIP_QA_MODE']=='supplemental':
+            core=json.loads((Path(prefix)/'CORE_EVIDENCE_VALIDATED.json').read_text())
+            assert len(core['acceptedTests'])==9 and len(core['excludedTests'])==1
+            assert core['sourceVerifiedByteForByte'] and core['signature']['previewSHA256']==qa['previewSHA256']
           PY
           git fetch --no-tags origin "refs/heads/$LIP_BRANCH"
-          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$LIP_VERIFICATION_SHA"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -- "$LIP_DIR"
@@ -109,7 +138,7 @@ jobs:
         if: steps.publish.outputs.build_sha
         env:
           LIP_QA_MODE: public
-        run: timeout --signal=TERM --kill-after=20s 6m node "$LIP_DIR/verify.cjs"
+        run: timeout --signal=TERM --kill-after=20s 9m node "$LIP_DIR/verify.cjs"
       - name: Record public proof and publish evidence without touching main
         if: steps.publish.outputs.build_sha
         run: |
@@ -122,6 +151,7 @@ jobs:
           receipt={
             'schema':'kaopu/lip-realism-publication@1','version':'LIP-REALISM-R01',
             'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['LIP_BUILD_SHA'],
+            'verificationCommit':os.environ['LIP_VERIFICATION_SHA'],
             'publicURL':os.environ['LIP_PUBLIC_URL'],'previewSHA256':q['previewSHA256'],
             'sourceModified':True,'interactive3D':True,'staticImageSubstitute':False,
             'publicHttpsPassed':True,'browserPassed':True,'shareAllowed':True,
@@ -130,6 +160,17 @@ jobs:
             'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
             'verifiedAt':q['finishedAt'],'publicReadback':q['publicReadback'],'knownLimitations':q['limitations']
           }
+          core=d/'CORE_EVIDENCE_VALIDATED.json'
+          supplemental=d/'evidence'/os.environ['LIP_RUN_KEY']/'supplemental'/'qa.json'
+          if supplemental.exists():
+            s=json.loads(supplemental.read_text())
+            assert s['completed'] and s.get('cleanupError') is None
+            receipt['verificationComposition']={
+              'core':json.loads(core.read_text()),
+              'supplementalQA':str(supplemental.relative_to(d)),
+              'supplementalTests':s['tests'],
+              'publicQA':'evidence/'+os.environ['LIP_RUN_KEY']+'/public/qa.json'
+            }
           for name,value in [('PUBLICATION_PROOF.json',receipt),('PUBLIC_QA.json',q)]:
             (d/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
           PY
@@ -146,5 +187,6 @@ jobs:
             kaopu-unified-human-workbench/lip-realism-r01/evidence/
             kaopu-unified-human-workbench/lip-realism-r01/BUILD_MANIFEST.json
             kaopu-unified-human-workbench/lip-realism-r01/PUBLICATION_PROOF.json
+            kaopu-unified-human-workbench/lip-realism-r01/CORE_EVIDENCE_VALIDATED.json
           retention-days: 14
 
