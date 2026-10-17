@@ -35,7 +35,7 @@ jobs:
           node viewer-08/test-transport.mjs
           node viewer-08/test-storage.mjs
       - name: Real browser source versus converted world matrices and raster equality
-        run: TEST_USER_MASTER=1 node user-viewer-08/browser.cjs
+        run: TEST_USER_MASTER=1 TEST_USER_URL=https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/user-viewer/index.html node user-viewer-08/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
