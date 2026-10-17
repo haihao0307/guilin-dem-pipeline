@@ -1,0 +1,31 @@
+{
+  "caseId": "N169-NEURAL-HANDOFF-DUAL-PLANE",
+  "generatedAt": "2026-10-17T07:42:23Z",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux/x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "gpu": "NOT_TESTED"
+  },
+  "hypothesis": "A learned/tensor payload may be efficient for bulk numeric data, but cannot replace an explicit control contract and representation identity without producing undiagnosable semantic/version/fallback failures.",
+  "fixtureResults": [
+    {"id":"opaque-latent-no-task-contract","mutation":"dropControlContract","expectedDecision":"HOLD_TASK_SEMANTICS_UNBOUND","actualDecision":"HOLD_TASK_SEMANTICS_UNBOUND","pass":true},
+    {"id":"dual-plane-good","mutation":"none","expectedDecision":"VERIFIED_SCOPED","actualDecision":"VERIFIED_SCOPED","pass":true},
+    {"id":"wrong-decoder","mutation":"wrongDecoder","expectedDecision":"HOLD_DECODER_IDENTITY_MISMATCH","actualDecision":"HOLD_DECODER_IDENTITY_MISMATCH","pass":true},
+    {"id":"wrong-model","mutation":"wrongModel","expectedDecision":"HOLD_MODEL_IDENTITY_MISMATCH","actualDecision":"HOLD_MODEL_IDENTITY_MISMATCH","pass":true},
+    {"id":"unsupported-opset","mutation":"wrongOpset","expectedDecision":"HOLD_REPRESENTATION_VERSION_UNSUPPORTED","actualDecision":"HOLD_REPRESENTATION_VERSION_UNSUPPORTED","pass":true},
+    {"id":"wrong-shape","mutation":"wrongShape","expectedDecision":"HOLD_TENSOR_SCHEMA_MISMATCH","actualDecision":"HOLD_TENSOR_SCHEMA_MISMATCH","pass":true},
+    {"id":"corrupted-payload","mutation":"corruptPayload","expectedDecision":"HOLD_PAYLOAD_DIGEST_MISMATCH","actualDecision":"HOLD_PAYLOAD_DIGEST_MISMATCH","pass":true},
+    {"id":"silent-cpu-fallback","mutation":"silentFallback","expectedDecision":"HOLD_SILENT_FALLBACK_FORBIDDEN","actualDecision":"HOLD_SILENT_FALLBACK_FORBIDDEN","pass":true}
+  ],
+  "assertions": {"passed": 8, "total": 8},
+  "benchmarks": [
+    {"floatCount":64,"jsonBytes":1304,"binaryBytes":256,"sizeRatioJsonToBinary":5.094,"medianJsonParseMs":0.001923,"medianBinaryViewMs":0.000251,"scope":"CPU in-memory parse versus typed-array view construction; excludes transport, model inference, GPU transfer, GPU kernel and fidelity cost"},
+    {"floatCount":4096,"jsonBytes":79484,"binaryBytes":16384,"sizeRatioJsonToBinary":4.851,"medianJsonParseMs":0.108541,"medianBinaryViewMs":0.0003,"scope":"CPU in-memory parse versus typed-array view construction; excludes transport, model inference, GPU transfer, GPU kernel and fidelity cost"},
+    {"floatCount":100000,"jsonBytes":1962348,"binaryBytes":400000,"sizeRatioJsonToBinary":4.906,"medianJsonParseMs":3.230551,"medianBinaryViewMs":0.001202,"scope":"CPU in-memory parse versus typed-array view construction; excludes transport, model inference, GPU transfer, GPU kernel and fidelity cost"}
+  ],
+  "decision": "CANDIDATE_DUAL_PLANE_ONLY",
+  "gpuSpeedupClaim": "UNKNOWN",
+  "productionGateRun": false,
+  "userAcceptance": false
+}

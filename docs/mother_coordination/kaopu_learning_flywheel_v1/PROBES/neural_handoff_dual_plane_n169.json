@@ -1,0 +1,27 @@
+{
+  "caseId": "N169-NEURAL-HANDOFF-DUAL-PLANE",
+  "expected": {
+    "taskAnchorId": "KAOPU-N169-CONTROL",
+    "irVersion": 13,
+    "opsetDomain": "ai.kaopu.latent",
+    "opsetVersion": 1,
+    "modelVersion": "1.0.0",
+    "modelSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "decoderSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "dtype": "float32",
+    "shape": [64],
+    "semanticDenotation": "kaopu.synthetic.observation-vector.v1",
+    "executionProvider": "CPUExecutionProvider",
+    "fallbackPolicy": "FAIL_CLOSED"
+  },
+  "fixtures": [
+    {"id": "opaque-latent-no-task-contract", "mutation": "dropControlContract", "expectedDecision": "HOLD_TASK_SEMANTICS_UNBOUND"},
+    {"id": "dual-plane-good", "mutation": "none", "expectedDecision": "VERIFIED_SCOPED"},
+    {"id": "wrong-decoder", "mutation": "wrongDecoder", "expectedDecision": "HOLD_DECODER_IDENTITY_MISMATCH"},
+    {"id": "wrong-model", "mutation": "wrongModel", "expectedDecision": "HOLD_MODEL_IDENTITY_MISMATCH"},
+    {"id": "unsupported-opset", "mutation": "wrongOpset", "expectedDecision": "HOLD_REPRESENTATION_VERSION_UNSUPPORTED"},
+    {"id": "wrong-shape", "mutation": "wrongShape", "expectedDecision": "HOLD_TENSOR_SCHEMA_MISMATCH"},
+    {"id": "corrupted-payload", "mutation": "corruptPayload", "expectedDecision": "HOLD_PAYLOAD_DIGEST_MISMATCH"},
+    {"id": "silent-cpu-fallback", "mutation": "silentFallback", "expectedDecision": "HOLD_SILENT_FALLBACK_FORBIDDEN"}
+  ]
+}
