@@ -47,6 +47,7 @@ jobs:
             echo "r03=receivers" >> "$GITHUB_OUTPUT"
           fi
           if grep -q '^kaopu-material-workbench/material-master-r06/' "$RUNNER_TEMP/material-changed.txt" && ! grep '^kaopu-material-workbench/material-master-r06/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(road-material.mjs|CONCRETE_R06_METHODS.md|qa/.*)$'; then echo "r06scope=concrete" >> "$GITHUB_OUTPUT"; fi
+          if grep -q '^kaopu-material-workbench/material-master-r06/qa/browser.cjs$' "$RUNNER_TEMP/material-changed.txt" && ! grep '^kaopu-material-workbench/material-master-r06/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/qa/browser.cjs$'; then echo "r06scope=mobile" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
