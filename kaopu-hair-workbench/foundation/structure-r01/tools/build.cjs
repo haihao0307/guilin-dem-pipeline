@@ -1,5 +1,7 @@
 const fs=require('fs'),path=require('path'),zlib=require('zlib'),crypto=require('crypto'),cp=require('child_process'),root=path.resolve(__dirname,'..'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');fs.mkdirSync(path.join(root,'.build'),{recursive:true});
 cp.execFileSync(process.execPath,[path.join(root,'tools/compile-structure.mjs')],{stdio:'inherit'});
+cp.execFileSync(process.execPath,[path.join(root,'tools/compile-experiments.mjs')],{stdio:'inherit'});
+cp.execFileSync(process.execPath,[path.join(root,'tools/check-experiments.mjs')],{stdio:'inherit'});
 cp.execFileSync(process.execPath,[path.join(root,'tools/check-contract.mjs')],{stdio:'inherit'});
 cp.execFileSync(process.execPath,[path.join(root,'tools/check-runtime.mjs')],{stdio:'inherit'});
 cp.execFileSync(process.execPath,[path.join(root,'tools/check-static-flow.mjs')],{stdio:'inherit'});

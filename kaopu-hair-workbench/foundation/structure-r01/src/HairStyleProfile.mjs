@@ -10,13 +10,13 @@ export const ZONES=[
 const regional={hairline:{hem:.312,layer:.008},fringe:{hem:.305,layer:.010},top:{hem:.132,layer:.012},crown:{hem:.122,layer:.010},'left-side':{hem:.139,layer:.010},'right-side':{hem:.144,layer:.011},'left-temple':{hem:.220,layer:.012},'right-temple':{hem:.224,layer:.010},occipital:{hem:.120,layer:.008},nape:{hem:.135,layer:.012}};
 const regionalLengths=Object.fromEntries(ZONES.map(([id])=>[id,{minArc:.020,maxArc:({hairline:.22,fringe:.24,top:.44,crown:.44,'left-side':.36,'right-side':.36,'left-temple':.22,'right-temple':.22,occipital:.38,nape:.24})[id]}]));
 export const PROFILE={
- schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',revision:'static-flow-02',seed:4729,
+ schema:'kaopu/hair-style-profile@1',id:'p01-current-structure-r01',name:'当前长度 · 侧分直发结构',revision:'editable-flow-03',seed:4729,
  ScalpDomain:{source:'F02.1 native supported domain intersected with authored P01 lower hairline',exclude:['face','forehead','ear','neck'],lowerHairline:{back:.256,sideRise:.024,temple:.282,fade:.008},boundaryStatus:'authored P01 scalp / neck separation; visual review required'},
  AnatomicalZoneField:{zones:ZONES.map(([id,label])=>({id,label})),status:'authored segmentation; requires visual review'},
  CandidateRootField:{source:'shared F02 candidate bank',resample:false},
  ActiveRootMask:{mode:'stable threshold versus density within native support and explicit scalp/neck boundary'},
  FollicleDensityField:{interior:.94,hairlineFade:.009,partMinimum:.68},
- RootDirectionField:{mode:'projected comb + dividing boundary + local whorl + ear routing'},
+ RootDirectionField:{mode:'screened tangent graph-Laplacian with comb / dividing / whorl / ear constraints',controls:{partOffset:0,fringeSweep:0,earBias:0}},
  RootLiftField:{interior:.12,hairline:.08},
  PartingCurves:[{id:'side-part',points:[[-.010,.420,.094],[-.008,.432,.050],[.003,.427,.010],[.014,.405,-.025]],width:.009}],
  WhorlField:[{id:'crown-whorl',center:[.014,.405,-.025],clockwise:true,radius:.047,strength:.72,centerDensity:.70,coreRadius:.003}],
@@ -39,14 +39,14 @@ export function zoneAt(p,edge=1){const[x,y,z]=p,a=Math.abs(x);if(z>.084&&edge<.0
 export function partX(z){const c=PROFILE.PartingCurves[0].points;let j=0;while(j<c.length-2&&z<c[j+1][2])j++;const a=c[j],b=c[j+1];return (a[0]+(b[0]-a[0])*clamp((z-a[2])/(b[2]-a[2])))*smooth((z+.060)/.030);}
 export function flowAt(p,n,zone,{whorl=true,ear=true}={}){
  const[x,y,z]=p,side=x<partX(z)?-1:1,front=smooth((z-.020)/.070),isFringe=zone===0||zone===1;
- let comb=isFringe?[-.65,-.55,.30]:[side*(.30+.65*front),-.28-(1-front)*.20,-.55*(1-front)-.08];
+ let comb=isFringe?[-.65+(PROFILE.RootDirectionField.controls?.fringeSweep||0),-.55,.30]:[side*(.30+.65*front),-.28-(1-front)*.20,-.55*(1-front)-.08];
  // Separate direction boundary: neither the roots nor their support move.
  const part=smooth((y-.365)/.035)*smooth((z+.045)/.030)*(1-smooth((Math.abs(x-partX(z))-.008)/.030));
  if(!isFringe)comb=mix(comb,[side,-.10,-.16],part*.85);
  if(whorl){const w=PROFILE.WhorlField[0],dx=x-w.center[0],dz=z-w.center[2],r=Math.hypot(dx,dz),weight=(1-smooth(r/w.radius))*smooth((y-.36)/.030)*w.strength;
  // Radial escape keeps the rotational singularity confined to its tiny core.
  const spin=unit([dx*.8+dz*(w.clockwise?1:-1),-.08,dz*.8-dx*(w.clockwise?1:-1)]);comb=mix(unit(comb),spin,weight);}
- if(ear){const a=Math.abs(x),envelope=smooth((a-.050)/.022)*(1-smooth((y-.332)/.028))*(1-smooth(Math.abs(z-.025)/.052));if(envelope>0){const route=zone===6||zone===7||z>.040?[side*.35,-.85,.55]:[side*.25,-.8,-.65];comb=mix(unit(comb),unit(route),envelope*.85);}}
+ if(ear){const a=Math.abs(x),envelope=smooth((a-.050)/.022)*(1-smooth((y-.332)/.028))*(1-smooth(Math.abs(z-.025)/.052));if(envelope>0){const behind=(PROFILE.RootDirectionField.controls?.earBias||0)>0&&zone>1&&zone!==6&&zone!==7;const route=!behind&&(zone===6||zone===7||z>.040)?[side*.35,-.85,.55]:[side*.25,-.8,-.65];comb=mix(unit(comb),unit(route),envelope*.85);}}
  let tangent=unit(project(comb,n));if(Math.hypot(...tangent)<.1)tangent=unit(project([side,0,-.3],n));return tangent;
 }
 export function densityAt(p,edge){const f=PROFILE.FollicleDensityField,part=(1-smooth(Math.abs(p[0]-partX(p[2]))/.007))*smooth((p[1]-.365)/.030)*smooth((p[2]+.04)/.03),w=PROFILE.WhorlField[0],r=Math.hypot(p[0]-w.center[0],p[2]-w.center[2]);return f.interior*smooth((edge+.0005)/f.hairlineFade)*(1-part*(1-f.partMinimum))*(1-(1-w.centerDensity)*(1-smooth(r/w.coreRadius)));}

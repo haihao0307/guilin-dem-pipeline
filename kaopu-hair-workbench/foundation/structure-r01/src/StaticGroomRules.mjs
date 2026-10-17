@@ -10,6 +10,7 @@ export function routeForRoot(root){
  else if(zone===8||zone===9||zone===3)angle=clamp(angle,1.74,Math.PI);
  else angle=clamp(angle,.98,Math.PI);
  if(!fringe&&!temple)angle=Math.min(Math.PI,angle+.45*Math.exp(-1*((angle-1.8)/.55)**2));
+ if(!fringe&&!temple)angle=Math.min(Math.PI,angle+(PROFILE.RootDirectionField.controls?.earBias||0)*.32*Math.exp(-1*((angle-1.6)/.6)**2));
  const route=fringe?'fringe':temple||angle<1.36?'ear-front':angle<2.03?'ear-back':'back';
  const layer=clamp((p[1]-.27)/.16,0,1);
  return{side,angle,route,layer,root:p.slice(),zone,macro:'macro/'+ZONES[zone][0]+'/'+(side<0?'left':'right')};
@@ -17,7 +18,7 @@ export function routeForRoot(root){
 
 export function lowerRail(route,y,hem){
  const {side,angle,layer,root,zone}=route;
- if(zone<=1)return[root[0]-.027,y,.112+.004*smooth((root[1]-.35)/.07)];
+ if(zone<=1)return[root[0]-.027+(PROFILE.RootDirectionField.controls?.fringeSweep||0)*.055,y,.112+.004*smooth((root[1]-.35)/.07)];
  const s=smooth((.30-y)/Math.max(.035,.30-hem));
  const width=PROFILE.GuideGroom.lowerWidth+layer*.005+s*.003;
  const depth=PROFILE.GuideGroom.lowerDepth+layer*.004+s*.002;
@@ -47,7 +48,7 @@ function clusters(members,maxDiameter){
  return result.sort((a,b)=>a.map(g=>g.rootId).sort((x,y)=>x-y)[0]-b.map(g=>g.rootId).sort((x,y)=>x-y)[0]);
 }
 export function buildClumpGraph(guides){
- const graph=[],macroMap=new Map();for(const g of guides){if(!macroMap.has(g.macro))macroMap.set(g.macro,[]);macroMap.get(g.macro).push(g);}
+ const graph=[],macroMap=new Map();for(const g of guides.slice().sort((a,b)=>a.rootId-b.rootId)){if(!macroMap.has(g.macro))macroMap.set(g.macro,[]);macroMap.get(g.macro).push(g);}
  const add=(id,level,parent,members)=>{const medoid=representative(members);let diameter=0;for(const a of members)for(const b of members)diameter=Math.max(diameter,curveDistance(a,b));const group={id,level,parent,zone:members[0].zone,guides:members.map(g=>g.id),representativeGuide:medoid.id,curveDiameter:diameter,method:'complete-curve complete-link clustering within semantic route'};graph.push(group);return group;};
  for(const[id,members]of macroMap){add(id,'macro',null,members);const routes=new Map();for(const g of members){if(!routes.has(g.route))routes.set(g.route,[]);routes.get(g.route).push(g);}
   for(const[route,routeMembers]of routes)for(const[midIndex,midMembers]of clusters(routeMembers,PROFILE.ClumpGraph.midDiameter).entries()){

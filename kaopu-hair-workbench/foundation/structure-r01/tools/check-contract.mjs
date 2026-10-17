@@ -1,4 +1,5 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import zlib from 'node:zlib';import {PROFILE} from '../src/HairStyleProfile.mjs';import {assertProfile,assertStructure} from '../src/StructureContract.mjs';
+import {configureExperiment} from '../src/FlowExperiments.mjs';configureExperiment(PROFILE);
 const base=new URL('../',import.meta.url),lab=JSON.parse(zlib.gunzipSync(fs.readFileSync(new URL('assets/structure.json.gz',base)))),b=zlib.gunzipSync(fs.readFileSync(new URL('assets/roots.bin.gz',base))),roots=new Float32Array(Uint8Array.from(b).buffer),checks=[];
 function good(name,fn){fn();checks.push({name,pass:true});}function bad(name,fn){let rejected=false;try{fn();}catch{rejected=true;}if(!rejected)throw Error('Invalid data was accepted: '+name);checks.push({name,pass:true});}
 good('compiled profile matches current authored profile',()=>assert.deepEqual(lab.profile,PROFILE));
