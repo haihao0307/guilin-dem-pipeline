@@ -40,3 +40,7 @@
 在本仓库对应目录安装锁定的开发依赖 `npm install --ignore-scripts`，运行 `npm run build`。构建器使用同仓库既有 `full-material-r21/eye`、`full-material-r23` 和 `hair-f13-static-r17` 原模块；`vendor/brows` 为本交互版使用的原眉毛适配与安全调参入口。`GENERATOR-SOURCE-LOCK.json` 逐项记录未改动生成模块摘要。`native-template.html` 来自既有 R54 原生页面，不包含私有参考素材。
 
 运行 `npm run test:public` 时设置 `GITHUB_SHA` 为目标提交，或显式指定 `PUBLIC_URL`；测试必须打开真实发布地址，不允许拦截请求替代线上文件。测试截图是 GitHub CI 的 Chromium/SwiftShader 画面。
+
+## 连续调节的重绘约束
+
+交互渲染采用 WebGL2 GPU fence，最多一帧在途；等待期间的输入只更新最新状态并合并为一个待绘请求。重置也在同一批次内应用。没有通过降低发丝数、采样点、像素比或着色质量来减少积压。运行记录中的 `renderQueue` 给出实际请求、完成绘制与合并次数。软件渲染 CI 的绘制耗时不能当作实体手机或硬件显卡的帧率承诺。

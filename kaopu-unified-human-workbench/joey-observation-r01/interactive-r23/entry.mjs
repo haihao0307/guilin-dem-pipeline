@@ -11,7 +11,7 @@ const R23='d01a6fb06828e96d83399a311fa8491bd19276b4';
 const ASSETS='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8a5e2322401217cff808a64d7fa614b710da0db1/kaopu-unified-human-workbench/joey-observation-r01/full-material-r21/eye/assets/';
 const hash=async b=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b)),v=>v.toString(16).padStart(2,'0')).join('');
 const progress=(stage,detail)=>parent.r23Progress(stage,detail);
-let worker,disposed=false,v,api,brows,eye,lip,hair,appearance,light;
+let worker,disposed=false,v,api,brows,eye,lip,hair,appearance,light,stopRenderQueue=()=>{};
 const state={version:'R23-interactive/1',sourceCommit:R23,ready:false,stage:'starting',errors:[],timings:[],cache:{hit:false,saved:false},controlsApplied:0,faceShapeEditing:false,physics:false,photosIncluded:false};
 const started=performance.now();
 function mark(name,detail){state.stage=name;state.timings.push({stage:name,elapsedMS:performance.now()-started});progress(name,detail);if(disposed)throw Error('当前载入已取消');}
@@ -37,9 +37,9 @@ function view(name){if(!state.ready)throw Error('人物尚未就绪');const c=v.
  c.updateProjectionMatrix();c.updateMatrixWorld(true);v.orbit.enabled=true;v.render();state.view=name;
 }
 function zoom(factor){if(!state.ready)return;const offset=v.camera.position.clone().sub(v.orbit.target),distance=Math.max(.36,Math.min(.95,offset.length()*factor));offset.setLength(distance);v.camera.position.copy(v.orbit.target).add(offset);v.camera.updateMatrixWorld(true);v.render();state.view='free';}
-function dispose(){if(disposed)return;disposed=true;worker?.terminate();worker=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();v?.dispose();}catch(e){state.disposeError=String(e);}}
+function dispose(){if(disposed)return;disposed=true;stopRenderQueue();worker?.terminate();worker=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();v?.dispose();}catch(e){state.disposeError=String(e);}}
 window.addEventListener('pagehide',dispose);
-document.addEventListener('webglcontextlost',e=>{e.preventDefault();state.errors.push('WebGL context lost');state.ready=false;parent.r23Failure('绘图上下文丢失，请重新载入。未自动降低头发密度。');worker?.terminate();},true);
+document.addEventListener('webglcontextlost',e=>{if(disposed)return;e.preventDefault();state.errors.push('WebGL context lost');state.ready=false;parent.r23Failure('绘图上下文丢失，请重新载入。未自动降低头发密度。');worker?.terminate();},true);
 async function boot(){
  mark('正在载入原生人物引擎');await import(BASE+'full/ui/browser-app.mjs?v=entry-r06-20261010');
  const until=performance.now()+30000;while(!window.fullCommonWorkbench){if(performance.now()>until)throw Error('原生人物入口未就绪');await new Promise(r=>setTimeout(r,100));}
@@ -68,13 +68,13 @@ async function boot(){
 
  // Keep only one complete GPU frame in flight. New UI requests replace the queued draw,
  // without changing strand count, mesh density, shader quality or camera resolution.
- const directRender=v.render.bind(v),queue={requested:0,drawn:0,coalesced:0,inFlight:false,pending:false,lastGPUWaitMS:0};state.renderQueue=queue;
+ const renderBeforeQueue=v.render,directRender=renderBeforeQueue.bind(v),queue={requested:0,drawn:0,coalesced:0,inFlight:false,pending:false,lastGPUWaitMS:0};state.renderQueue=queue;
  let frameToken=0,fence=null;
  function queueDraw(){if(disposed)return;queue.requested++;if(queue.inFlight||frameToken){queue.pending=true;queue.coalesced++;return;}frameToken=requestAnimationFrame(()=>{frameToken=0;if(disposed)return;queue.pending=false;queue.inFlight=true;const began=performance.now();try{directRender();queue.drawn++;fence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);gl.flush();const poll=()=>{if(disposed)return;const result=gl.clientWaitSync(fence,0,0);if(result===gl.TIMEOUT_EXPIRED){setTimeout(poll,16);return;}gl.deleteSync(fence);fence=null;queue.inFlight=false;queue.lastGPUWaitMS=performance.now()-began;if(result===gl.WAIT_FAILED){parent.r23Failure('绘图同步失败，请重新载入。');return;}if(queue.pending){queue.pending=false;queueDraw();}};setTimeout(poll,0);}catch(e){queue.inFlight=false;parent.r23Failure(String(e.message||e));}});}
- v.render=queueDraw;
+ v.render=queueDraw;stopRenderQueue=()=>{if(frameToken)cancelAnimationFrame(frameToken);frameToken=0;if(fence){gl.deleteSync(fence);fence=null;}queue.pending=false;queue.inFlight=false;v.render=renderBeforeQueue;};
  const settle=()=>new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{if(disposed)return reject(Error('页面已停止'));if(!queue.inFlight&&!queue.pending&&!frameToken)return resolve({waitMS:performance.now()-began,...queue});setTimeout(check,20);};check();});
  const inspect=()=>({...structuredClone(state),ready:state.ready&&!disposed,hair:hair.report(),brows:brows.report(),eye:eye.report(),lip:lip.report(),controls:snapshot(),camera:{position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),projection:v.camera.projectionMatrix.toArray(),target:v.orbit.target.toArray()},canvas:[v.canvas.width,v.canvas.height]});
- window.r23Interactive={report:inspect,snapshot,apply,view,zoom,settle,reset(){batch(()=>{apply(structuredClone(defaults));view('r23');});return snapshot();},dispose,capture(){v.render();return v.canvas.toDataURL('image/png');},nativeSHA:async()=>hash(api.positions().buffer)};
+ window.r23Interactive={report:inspect,snapshot,apply,view,zoom,settle,lifecycle:()=>({disposed,stage:state.stage,disposeError:state.disposeError||null}),reset(){batch(()=>{apply(structuredClone(defaults));view('r23');});return snapshot();},dispose,capture(){v.render();return v.canvas.toDataURL('image/png');},nativeSHA:async()=>hash(api.positions().buffer)};
  state.stage='ready';state.elapsedMS=performance.now()-started;parent.r23Ready(window.r23Interactive);
 }
 boot().catch(e=>{state.ready=false;state.stage='error';state.errors.push(String(e.stack||e));parent.r23Failure(String(e.message||e));worker?.terminate();});
