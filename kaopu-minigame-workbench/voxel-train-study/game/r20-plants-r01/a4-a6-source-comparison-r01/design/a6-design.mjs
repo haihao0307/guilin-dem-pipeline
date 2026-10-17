@@ -4,6 +4,7 @@ import companyRecipe from './retained/branding/company_plaque-gold.mjs';
 import {AUTHORING_D as BASE_D, SOURCE_FIT, sourcePoint, sourceJacobian} from './source-fit.mjs';
 import {SOURCE_SHELL_REPLACEMENTS, buildCompleteSourcePartMap, createSourceVisibilityController} from './source-parts.mjs';
 import {kit} from './geometry.mjs';
+import {createClosedOilWaterRoof} from './closed-oil-water-roof.mjs';
 import {createContinuousShell,sectionAt,sectionPoint,tAtZ,halfAt,shellPoint,shellNormal,cutAt,stripeAt} from './continuous-shell.mjs';
 import {contourShapes} from './retained/branding/contours-injected.mjs';
 import wordmark from './retained/branding/wordmark.mjs';
@@ -17,7 +18,7 @@ export function createA6Design(T,original){
  const M={paint:new T.MeshPhysicalMaterial({color:'#064630',metalness:.58,roughness:.25,clearcoat:1,clearcoatRoughness:.18,side:T.DoubleSide}),gold:mat('#e9bc63',.8,.24),brass:mat('#e9bc63',.8,.24),steel:mat('#acb5bb',.85,.25),iron:mat('#283239',.65,.4),black:mat('#11191c',.1,.6),rubber:mat('#1b2426',.05,.8),red:mat('#a22515',.4,.3),cream:mat('#d9c6a3',.05,.6),wood:mat('#76533b',.08,.44),seat:mat('#233f38',.05,.67),skin:mat('#b68b68',.02,.68),uniform:mat('#233444',.05,.65),glass:new T.MeshPhysicalMaterial({color:'#365a60',metalness:.05,roughness:.12,clearcoat:1,clearcoatRoughness:.08,transparent:true,opacity:.44,side:T.DoubleSide,depthWrite:false}),lamp:new T.MeshStandardMaterial({color:'#fff5d8',emissive:'#fff2ce',emissiveIntensity:1.5})};
  const originalMatter=createTrainMatter(T);Object.assign(M,{paint:originalMatter.paint,gold:originalMatter.brass,brass:originalMatter.brass,steel:originalMatter.steel,iron:originalMatter.iron,black:originalMatter.black,wood:originalMatter.wood,seat:originalMatter.leather,glass:originalMatter.glass});M.paint.side=T.DoubleSide;M.paint.color.set('#064631');M.paint.metalness=.38;M.paint.roughness=.22;M.paint.clearcoat=.92;
  // Candidate optical tuning: preserve the full dielectric shader and finite pane; no alpha substitute.
- M.glass=M.glass.clone();M.glass.name='R04 finite panoramic glass / tinted dielectric';M.glass.color.set('#a9c9bf');M.glass.attenuationColor.set('#366957');M.glass.attenuationDistance=.16;M.glass.envMapIntensity=.45;M.glass.transmission=.96;M.glass.roughness=.035;
+ M.glass=M.glass.clone();M.glass.name='A6 finite panoramic dielectric / low-reflection clear study';M.glass.color.set('#ffffff');M.glass.attenuationColor.set('#a8cabb');M.glass.attenuationDistance=2.5;M.glass.envMapIntensity=.10;M.glass.transmission=1;M.glass.roughness=.008;M.glass.ior=1.45;M.glass.specularIntensity=.30;M.glass.opacity=1;M.glass.depthWrite=true;M.glass.userData={...M.glass.userData,designOpticalRevision:'finite dielectric, reduced environment reflection, no alpha shortcut',sourceMaterialsUnchanged:true,opacityLocked:1};
  // QA-only field isolation. Default values preserve the original complete shader exactly.
  const paintKey=M.paint.customProgramCacheKey;M.paint.customProgramCacheKey=()=>paintKey()+'/r04-diagnostic-uniforms-default-exact';const paintCompile=M.paint.onBeforeCompile;M.paint.onBeforeCompile=(shader,...args)=>{paintCompile(shader,...args);shader.uniforms.r04RoughnessField={value:1};shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform float r04RoughnessField;').replace('(kn(kq*9.)-.5)*.12','(kn(kq*9.)-.5)*.12*r04RoughnessField');M.paint.userData.diagnosticUniforms=shader.uniforms;};
 
@@ -27,6 +28,7 @@ export function createA6Design(T,original){
  const shell=group('01 continuous narrowed exterior'),interior=group('02 long forward cab and retained controls'),details=group('03 exterior contour details',shell),connections=group('05 small aerodynamic tender joint');
  const K=kit(T,M,root),E=kit(T,M,details),I=kit(T,M,interior),J=kit(T,M,connections),L={sideMatrix:(side,at)=>new T.Matrix4().set(-side,0,0,at[0],0,0,side,at[1],0,1,0,at[2],0,0,0,1)};
  const skin=createContinuousShell(T,D,M);shell.add(skin.mesh);
+ const oilWaterRoof=createClosedOilWaterRoof(T,skin,D,M.paint);shell.add(oilWaterRoof);
  // Preserve the finite-glass transport contract: exact outer surface + inward 14mm layer and sealed rim.
  {const source=skin.mesh.geometry,group=source.groups[1],p=source.attributes.position,n=source.attributes.normal,used=new Map(),positions=[],normals=[],ids=[],edges=new Map();for(let j=group.start;j<group.start+group.count;j++){const old=source.index.getX(j);if(!used.has(old)){used.set(old,used.size);positions.push(p.getX(old)-n.getX(old)*.014,p.getY(old)-n.getY(old)*.014,p.getZ(old)-n.getZ(old)*.014);normals.push(-n.getX(old),-n.getY(old),-n.getZ(old));}}for(let j=group.start;j<group.start+group.count;j+=3){const old=[0,1,2].map(k=>source.index.getX(j+k));ids.push(used.get(old[0]),used.get(old[2]),used.get(old[1]));for(let k=0;k<3;k++){const aa=old[k],bb=old[(k+1)%3],key=[aa,bb].sort((a,b)=>a-b).join(',');if(edges.has(key))edges.delete(key);else edges.set(key,[aa,bb]);}}for(const[aa,bb]of edges.values()){const a=used.get(aa),b=used.get(bb),i=positions.length/3;positions.push(p.getX(aa),p.getY(aa),p.getZ(aa),p.getX(bb),p.getY(bb),p.getZ(bb));normals.push(n.getX(aa),n.getY(aa),n.getZ(aa),n.getX(bb),n.getY(bb),n.getZ(bb));ids.push(a,i,b,i,i+1,b);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));g.setIndex(ids);const pane=new T.Mesh(g,M.glass);pane.name='14mm finite canopy inner optical surface and sealed edge';pane.userData={finiteThicknessM:.014,outerSurface:skin.mesh.uuid,originalFiniteGlassTransport:true};shell.add(pane);}
 
@@ -91,12 +93,12 @@ export function createA6Design(T,original){
    sourceShellReplacementRoots:SOURCE_SHELL_REPLACEMENTS.map(x=>x.node),
    sourcePartMap:buildCompleteSourcePartMap(original),
    shellReplacementIsReversible:true,allUnknownSourceNodesRetained:true,
-   finiteCanopyThicknessSourceUnits:.014,sourceCabDisplayCopy:'HIDDEN_STUDY_ONLY',
+   finiteCanopyThicknessSourceUnits:.014,oilWaterRoofClosed:true,oilWaterRoofClosure:{everyEdgeUsedTwice:oilWaterRoof.userData.everyEdgeUsedTwice,manifoldEdgeCount:oilWaterRoof.userData.manifoldEdgeCount,perimeterEdges:oilWaterRoof.userData.perimeterEdges},sourceCoalLoad:{rootNode:311,primitiveNodes:[312,313,314,315,316],treatment:'retained source load, hidden only while closed diesel-steam design is enabled'},sourceCoalLoadReversiblyCovered:true,designCanopyOptics:{opacity:M.glass.opacity,transmission:M.glass.transmission,ior:M.glass.ior,roughness:M.glass.roughness,envMapIntensity:M.glass.envMapIntensity,specularIntensity:M.glass.specularIntensity,attenuationDistance:M.glass.attenuationDistance,finiteThickness:.014},sourceCabDisplayCopy:'HIDDEN_STUDY_ONLY',
    fitStatus:'VISUAL_PROPOSAL_ONLY; source bogie/cab floor overlap and new nose structural support are unresolved',
    originalSourceRootNotIncludedInDesignGroup:true,visualAnchor:'R08 exterior plus user annotations dated 2026-10-16'};
- root.designParts={shell,interior,connections,driver,skin,sourceCab};
+ root.designParts={shell,interior,connections,driver,skin,sourceCab,oilWaterRoof};
  const visibility=createSourceVisibilityController(original,root);
- return{root,...visibility,shell,interior,connections,driver,skin,sourceCabStudy:sourceCab,
+ return{root,...visibility,shell,interior,connections,driver,skin,oilWaterRoof,designGlass:M.glass,sourceCabStudy:sourceCab,
   setSourceCabStudyVisible:on=>{sourceCab.visible=Boolean(on)},sourceFit:SOURCE_FIT};
 }
 

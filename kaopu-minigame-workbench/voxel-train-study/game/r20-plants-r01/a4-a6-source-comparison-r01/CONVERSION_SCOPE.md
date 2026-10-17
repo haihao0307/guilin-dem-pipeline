@@ -18,3 +18,6 @@ A6 exterior is an independent authored function layer adapted from existing deta
 
 ## License and preservation
 Only licensed visible runtime content, own reader/viewer/design/test code and attribution are published. Non-runtime native archive/evidence metadata is excluded. Public object JSON is therefore not whole-file byte-identical to the local archival original; its complete `content` is preserved exactly. Geometry fields, images, materials, node transforms and animation fields remain exact. Old A4 replica and old A6 candidates are retained separately.
+
+## First visual review corrections
+The first real browser screenshot exposed an original coal load above the A6 tender and overly reflective design glazing. The revised A6 presentation substitutes that explicitly identified cargo display with a closed oil/water cover; the original coal nodes remain retained and reappear when the design is disabled. Only authored A6 glazing is tuned; original source material/texture definitions remain locked. This is a conversion comparison first version, pending user shape review.

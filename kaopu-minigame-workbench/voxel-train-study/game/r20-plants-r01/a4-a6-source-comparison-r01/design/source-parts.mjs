@@ -26,10 +26,11 @@ export const SOURCE_SHELL_REPLACEMENTS=Object.freeze([
  {node:280,name:'Text.003_120',replacement:'original 88 under driver feet',reason:'old cab side identification number'},
  {node:282,name:'Main Body.006_121',replacement:'lowered original red flying contour',reason:'original BR tender logo'},
  {node:288,name:'Plane.001_123',replacement:'original company plaque behind 88',reason:'original exterior cab crest'},
+ {node:311,name:'Coal_132',replacement:'closed finite oil-water tank crown',reason:'diesel-steam design uses covered fuel/water tanks; original coal load retained for full A4 restoration'},
  {node:327,name:'Canopy_137',replacement:'small matching-profile tender joint skin',reason:'old elevated cab-to-tender canvas canopy'},
  {node:329,name:'Brass Badge_138',replacement:'original company plaque',reason:'original exterior brass badge'}
 ].map(Object.freeze));
-export const PROTECTED_MECHANICAL_ROOTS=Object.freeze([3,7,11,15,21,24,26,28,42,55,61,66,68,70,74,84,88,90,94,98,100,102,104,107,108,109,110,111,113,114,115,117,118,119,121,123,125,127,128,130,133,138,141,144,146,149,152,154,157,160,164,166,169,171,173,175,177,179,186,189,195,197,200,203,206,209,213,217,221,225,228,230,232,235,238,240,242,244,246,248,250,252,255,258,260,262,264,266,270,284,290,292,293,295,298,300,303,307,311,317,320,323,325]);
+export const PROTECTED_MECHANICAL_ROOTS=Object.freeze([3,7,11,15,21,24,26,28,42,55,61,66,68,70,74,84,88,90,94,98,100,102,104,107,108,109,110,111,113,114,115,117,118,119,121,123,125,127,128,130,133,138,141,144,146,149,152,154,157,160,164,166,169,171,173,175,177,179,186,189,195,197,200,203,206,209,213,217,221,225,228,230,232,235,238,240,242,244,246,248,250,252,255,258,260,262,264,266,270,284,290,292,293,295,298,300,303,307,317,320,323,325]);
 function descendants(nodes,index){return[index,...(nodes[index]?.children||[]).flatMap(i=>descendants(nodes,i))];}
 export function buildSourceReplacementMapping(original){
  const nodes=original.g.nodes;
