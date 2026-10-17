@@ -1,0 +1,12 @@
+const $=id=>document.getElementById(id),data=await fetch('./reference-data.json').then(r=>{if(!r.ok)throw Error('Missing reference data');return r.json()});
+const samples=data.samples;if(!Array.isArray(samples)||!samples.length)throw Error('Empty reference samples');
+const key=s=>JSON.stringify([s.viewDeg,s.lightDeg,s.roughness]);const keys=[...new Set(samples.map(key))];
+keys.forEach(k=>{const[v,l,r]=JSON.parse(k),o=document.createElement('option');o.value=k;o.textContent=`视角 ${v}° / 入射 ${l}° / roughness ${Number(r).toFixed(2)}`;$('slice').append(o)});
+const preferred=keys.find(k=>{const[v,l,r]=JSON.parse(k);return v===30&&l===-30&&Math.abs(r-.4)<1e-5});if(preferred)$('slice').value=preferred;
+const lum=c=>c[0]*.2126+c[1]*.7152+c[2]*.0722;
+function draw(){const rows=samples.filter(s=>key(s)===$('slice').value).sort((a,b)=>a.coverage-b.coverage),c=+$('coverage').value,selected=rows.reduce((a,b)=>Math.abs(b.coverage-c)<Math.abs(a.coverage-c)?b:a);$('coverageOut').textContent=selected.coverage.toFixed(2);const canvas=$('chart'),g=canvas.getContext('2d'),w=canvas.width,h=canvas.height;g.clearRect(0,0,w,h);const max=Math.max(...rows.flatMap(s=>[lum(s.phaseMixed),lum(s.parameterMixed)]),1e-6)*1.12;g.font='15px system-ui';g.strokeStyle='#cbd2c5';g.lineWidth=1;for(let i=0;i<=4;i++){let y=250-i*52;g.beginPath();g.moveTo(60,y);g.lineTo(w-25,y);g.stroke();g.fillStyle='#607064';g.fillText((max*i/4).toPrecision(3),2,y+5)}
+for(const[field,color,label]of[['phaseMixed','#2d7255','逐相 BSDF 响应混合'],['parameterMixed','#ba7044','先混参数后求值']]){g.strokeStyle=color;g.lineWidth=3;g.beginPath();rows.forEach((s,i)=>{const x=60+s.coverage*(w-90),y=250-lum(s[field])/max*208;i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();g.fillStyle=color;g.fillText(label,field==='phaseMixed'?80:420,28)}
+g.fillStyle='#586759';g.fillText('0 · 介质',60,282);g.fillText('钢覆盖率',w/2,282);g.fillText('1 · 钢',w-85,282);g.strokeStyle='#456253';g.setLineDash([4,5]);g.beginPath();g.moveTo(60+selected.coverage*(w-90),40);g.lineTo(60+selected.coverage*(w-90),255);g.stroke();g.setLineDash([]);
+$('values').textContent=`逐相线性 RGB：${selected.phaseMixed.map(v=>v.toPrecision(6)).join(' / ')}；参数混合：${selected.parameterMixed.map(v=>v.toPrecision(6)).join(' / ')}；相对差异：${(selected.relativeError*100).toFixed(2)}%`;
+window.__reference={ready:true,data,selected,key:$('slice').value};}
+$('source').textContent=JSON.stringify({source:data.source,notes:data.notes},null,2);$('coverage').addEventListener('input',draw);$('slice').addEventListener('change',draw);draw();
