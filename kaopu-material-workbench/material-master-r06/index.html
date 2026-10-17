@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-HK"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eae8e2"><title>道路与金属连接 · 香港 PBR 材质大师 R06</title><link rel="stylesheet" href="style.css"></head>
+<body><header><a class="brand" href="../material-master-r03/">KAOPU <span>香港 PBR 材质大师</span></a><div class="edition">RESEARCH RECEIVER · 05<b>体积骨料 / LAYER OPTICS</b></div><a class="back" href="../material-master-r03/">返回材质目录 ↗</a></header>
+<main><section class="stage"><div class="intro"><div class="eyebrow">RELIEF / FRACTURE / CONNECTION</div><h1>让颗粒与剥层有依据</h1><p>程序裂隙、真实断面与完整连接。同一成因，联动形状和材质。</p></div>
+<div id="viewport"><canvas id="canvas" aria-label="可旋转的道路及金属连接三维对照"></canvas><div class="compare"><span>01 <b>干燥完整基准</b><small>相同规格 · 无污渍</small></span><span>02 <b>可调研究状态</b><small>侵蚀 / 分层 / 湿润</small></span></div><div id="error" hidden role="alert"></div><div id="loading" class="loading">正在构建材质接收器…</div></div>
+<div class="viewbar"><span>拖动旋转 · 滚轮缩放 · 双指操作</span><div><button data-view="front" class="active">整体</button><button data-view="angle">转角</button><button data-view="close">近看表面</button><button data-view="side">断面 / 连接</button><button id="resetView" aria-label="复位视角">↺</button></div></div>
+<div class="legend"><span>真实几何与微表面</span><span id="dimensions">米制构件</span><span>无照片贴图</span></div>
+<div class="reading"><span>阅读表面</span><p>大尺度损伤改变实体几何；细尺度起伏保留微表面响应。涂层损失、底材与腐蚀共享因果遮罩。</p></div></section>
+<aside><div class="sectionlabel">R06 RESEARCH <span id="status" role="status" aria-live="polite">正在准备</span></div>
+<div class="families" role="group" aria-label="R06案例"><button data-case="concrete" class="active">旧水泥<small>CONCRETE</small></button><button data-case="asphalt">旧沥青<small>ASPHALT</small></button><button data-case="rack">晾衣架<small>GALVANIZED</small></button><button data-case="sign">招牌钢框<small>PAINTED STEEL</small></button></div><h2 id="familyTitle">旧水泥</h2><p class="detail" id="familyDetail"></p>
+<div class="subhead">表面过程 <small>仅右侧</small></div><div id="controls">
+<label>侵蚀 / 层损失 <output id="wearOut">0.65</output><input id="wear" type="range" min="0" max="1" step="0.01" value="0.65"></label>
+<label>使用历史 / 沉积 <output id="historyOut">0.55</output><input id="history" type="range" min="0" max="1" step="0.01" value="0.55"></label>
+<label>即时湿润 <output id="wetOut">0.00</output><input id="wet" type="range" min="0" max="1" step="0.01" value="0"></label>
+<label id="repairLabel">道路修补 <output id="repairOut">0.20</output><input id="repair" type="range" min="0" max="1" step="0.01" value="0.2"></label></div><div class="subhead">因果通道 <small>同一场求值</small></div><div class="channels" role="group" aria-label="材质诊断"><button data-mode="0" class="active" aria-pressed="true">最终材质</button><button data-mode="1" aria-pressed="false">高度</button><button data-mode="2" aria-pressed="false">粗糙度</button><button data-mode="3" aria-pressed="false">损伤场</button><button data-mode="4" aria-pressed="false">分层 / 露骨料</button><button data-mode="5" aria-pressed="false">法线</button></div>
+<button id="reset" class="reset">重置本案例 <span>↺</span></button>
+<div class="note"><b>独立增量 · 保留旧锚</b><p id="limits">程序损伤是研究模型，非气候年代实测或工程认证。几何采样与微表面细节分开记录。</p><a href="reference.html">Adobe 原实现响应对照 ↗</a><a href="standard.html">靠谱材质强制标准 R01 ↗</a><a href="README.md">R06来源、验证与边界 ↗</a><a href="../material-master-r05/">保留的 R05 对照 ↗</a><a href="../material-master-r03/">返回七类总台 ↗</a></div></aside></main>
+<footer><span>R06 · 道路与金属构造增量，旧版本保留</span><span>待验候选 · 分层材质 · 米制坐标</span></footer>
+<script type="module" src="receiver.mjs"></script></body></html>
