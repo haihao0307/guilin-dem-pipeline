@@ -30,7 +30,9 @@ jobs:
   verify:
     if: github.ref == 'refs/heads/feature/lip-realism-r01-20261017'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    # Run 39018341941 measured 21 minutes through portrait checks alone.
+    # Reserve time for synchronous software-GPU benchmarks and fresh HTTPS QA.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,7 +79,7 @@ jobs:
           node --check "$LIP_DIR/build.cjs"
           node "$LIP_DIR/build.cjs"
       - name: Chromium SwiftShader baseline or candidate QA
-        run: node "$LIP_DIR/verify.cjs"
+        run: timeout --signal=TERM --kill-after=20s 37m node "$LIP_DIR/verify.cjs"
       - name: Publish tested build with a strict fast-forward race guard
         if: steps.config.outputs.publish == 'true'
         id: publish
@@ -107,7 +109,7 @@ jobs:
         if: steps.publish.outputs.build_sha
         env:
           LIP_QA_MODE: public
-        run: node "$LIP_DIR/verify.cjs"
+        run: timeout --signal=TERM --kill-after=20s 6m node "$LIP_DIR/verify.cjs"
       - name: Record public proof and publish evidence without touching main
         if: steps.publish.outputs.build_sha
         run: |

@@ -211,8 +211,53 @@ function boot(){
   lastView=kind;v.render();return{kind,camera:v.camera.position.toArray(),target:v.orbit.target.toArray(),zoom:v.camera.zoom};
  }
  const priorArchive=controller.archive.bind(controller),priorRestore=controller.restore.bind(controller);
- function archive(){return{...priorArchive(),lipRealism:{schema:SCHEMA,version:VERSION,settings:{...state}}};}
- async function restore(a){const own=a?.lipRealism;if(own&&own.schema!==SCHEMA)throw Error('不支持的嘴唇档案');const next=validate(own?own.settings:defaults),copy=structuredClone(a);delete copy.lipRealism;await priorRestore(copy);return set(next);}
+ // Native ET19 calibrates groove strain from a historical neutral surface.
+ // Its original archive omits those reference arrays. A portrait round trip
+ // may recalibrate them, even when canonical geometry and DNA are identical.
+ // Preserve the actual native calibration alongside the new surface settings;
+ // this keeps saved persons exact without changing their authored anatomy.
+ const calibrationSchema='kaopu/lip-calibration@1';
+ const nativeCalibration=()=>mother.surfaces.get(v.currentLip?.geometry);
+ const calibrationCount=nativeCalibration()?.topology.count;
+ const nativeIdentityKey=()=>JSON.stringify([model.state.gnm.identity,model.state.anny.phenotypes,model.state.anny.localChanges,model.identityLab?.settings?.shape]);
+ function encodeReference(a){
+  if(!a)return null;const bytes=new Uint8Array(a.length*4),data=new DataView(bytes.buffer);
+  for(let i=0;i<a.length;i++)data.setFloat32(i*4,a[i],true);
+  let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(binary);
+ }
+ function decodeReference(value,count){
+  if(value===null)return null;
+  if(typeof value!=='string'||value.length!==Math.ceil(count*4/3)*4||!/^[A-Za-z0-9+/]*={0,2}$/.test(value))throw Error('无效唇纹参考数据');
+  const binary=atob(value);if(binary.length!==count*4)throw Error('唇纹参考数据长度不匹配');
+  const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0)),data=new DataView(bytes.buffer),a=new Float32Array(count);
+  for(let i=0;i<count;i++){const n=data.getFloat32(i*4,true);if(!Number.isFinite(n)||n<0)throw Error('无效唇纹参考数值');a[i]=n;}return a;
+ }
+ function calibrationArchive(){
+  const c=nativeCalibration();if(!c)return null;
+  if(c.topology.count!==calibrationCount||c.lastKey!==nativeIdentityKey())throw Error('原生唇纹校准与当前人物不匹配');
+  return{schema:calibrationSchema,count:c.topology.count,lastKey:c.lastKey,byteOrder:'float32-le',reference:encodeReference(c.reference),referenceHorizontal:encodeReference(c.referenceHorizontal)};
+ }
+ function calibrationInput(c){
+  if(c===undefined||c===null)return null;
+  if(c.schema!==calibrationSchema||c.byteOrder!=='float32-le'||!Number.isInteger(c.count)||c.count!==calibrationCount||typeof c.lastKey!=='string'||c.lastKey.length>200000)throw Error('不支持的唇纹校准档案');
+  return{count:c.count,lastKey:c.lastKey,reference:decodeReference(c.reference,c.count),referenceHorizontal:decodeReference(c.referenceHorizontal,c.count)};
+ }
+ function archive(){return{...priorArchive(),lipRealism:{schema:SCHEMA,version:VERSION,settings:{...state},calibration:calibrationArchive()}};}
+ async function restore(a){
+  const own=a?.lipRealism;if(own&&own.schema!==SCHEMA)throw Error('不支持的嘴唇档案');
+  const next=validate(own?own.settings:defaults),calibration=calibrationInput(own?.calibration),copy=structuredClone(a);delete copy.lipRealism;
+  // Match the frozen ET19 key before changing the current person. Its fourth
+  // component is null: this host exposes identityLab.shape, not .settings.shape.
+  // Preserve that native contract here rather than silently changing it.
+  const archivedKey=JSON.stringify([copy?.state?.gnm?.identity,copy?.state?.anny?.phenotypes,copy?.state?.anny?.localChanges,null]);
+  if(calibration&&calibration.lastKey!==archivedKey)throw Error('唇纹校准不属于此人物档案');
+  await priorRestore(copy);
+  if(!calibration)return set(next);
+  const c=nativeCalibration();
+  if(!c||c.topology.count!==calibration.count||nativeIdentityKey()!==calibration.lastKey)throw Error('唇纹校准与载入的人物不匹配');
+  c.reference=calibration.reference;c.referenceHorizontal=calibration.referenceHorizontal;c.lastKey=calibration.lastKey;
+  state=next;sync();v.update();geometryApplied=true;status.ready=report().ready;return report();
+ }
  controller.archive=archive;controller.restore=restore;window.fullCommonWorkbench.archive=archive;window.fullCommonWorkbench.restore=restore;
  function save(){const url=URL.createObjectURL(new Blob([JSON.stringify(archive(),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='lip-realism-r01-person.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  const api={version:VERSION,get ready(){return report().ready;},set,settings:()=>({...state}),report,view,archive,restore,validate,defaults:()=>({...defaults}),presets:()=>structuredClone(presets),fragment:()=>finalFragment};window.lipRealism=api;

@@ -26,9 +26,27 @@ const q={
   'Framebuffer A/B uses equal 900x720 buffers; native public viewport is captured separately.',
   'Frozen host retains its existing remote asset loader; offline self-containment is not claimed.'
  ]};
-let browser,context,page,server;const pages=new Set();
-async function test(name,fn){try{const result=await fn();assert.notEqual(result,false);q.tests.push({name,passed:true,result});console.log('PASS '+name);return result;}catch(e){q.tests.push({name,passed:false,error:String(e)});throw e;}}
-function save(name,value){fs.writeFileSync(path.join(out,name),JSON.stringify(value,null,2)+'\n');}
+let browser,context,page,server;const pages=new Set(),activeStages=[];let progressSequence=0;
+function save(name,value){const target=path.join(out,name),temporary=target+'.tmp';fs.writeFileSync(temporary,JSON.stringify(value,null,2)+'\n');fs.renameSync(temporary,target);}
+function checkpoint(){q.updatedAt=new Date().toISOString();q.activeStages=activeStages.map(x=>({...x}));save('qa.partial.json',q);}
+function progress(name,event,extra={}){
+ const record={sequence:++progressSequence,at:new Date().toISOString(),name,event,...extra};
+ fs.appendFileSync(path.join(out,'progress.jsonl'),JSON.stringify(record)+'\n');q.lastProgress=record;checkpoint();console.log('STAGE '+event+' '+name+(extra.elapsedMS===undefined?'':' '+extra.elapsedMS+' ms'));
+}
+async function stage(name,fn){
+ const current={name,startedAt:new Date().toISOString()},started=Date.now();activeStages.push(current);progress(name,'start');
+ try{const result=await fn();progress(name,'end',{elapsedMS:Date.now()-started});return result;}
+ catch(e){progress(name,'failure',{elapsedMS:Date.now()-started,error:String(e)});throw e;}
+ finally{activeStages.splice(activeStages.indexOf(current),1);checkpoint();}
+}
+async function bounded(name,fn,timeoutMS){
+ let timer;try{return await Promise.race([Promise.resolve().then(fn),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(name+' exceeded '+timeoutMS+' ms; pending browser work is not treated as completed')),timeoutMS);})]);}finally{clearTimeout(timer);}
+}
+async function test(name,fn){return stage(name,async()=>{const started=Date.now();try{const result=await fn();assert.notEqual(result,false);q.tests.push({name,passed:true,elapsedMS:Date.now()-started,result});checkpoint();console.log('PASS '+name);return result;}catch(e){q.tests.push({name,passed:false,elapsedMS:Date.now()-started,error:String(e)});checkpoint();throw e;}});}
+for(const[signal,code]of[['SIGTERM',143],['SIGINT',130]])process.once(signal,()=>{
+ q.completed=false;q.shareAllowed=false;q.failure='QA interrupted by '+signal;q.finishedAt=new Date().toISOString();q.termination={signal,exitCode:code};
+ progress('process',signal);save('qa.json',q);process.exit(code);
+});
 function small(f){return{width:f.width,height:f.height,sha256:f.hash,nonUniformPixels:f.nonUniformPixels};}
 async function serve(){
  const baseline=fs.readFileSync(path.resolve(__dirname,'../human-integrated-r07/preview.html'));
@@ -50,6 +68,7 @@ async function serve(){
 }
 async function load(url,label,candidate){
  const p=await context.newPage();pages.add(p);p.setDefaultTimeout(45000);
+ const evaluate=p.evaluate.bind(p);p.__lipQARawEvaluate=evaluate;p.evaluate=(...args)=>bounded(label+' page.evaluate',()=>evaluate(...args),180000);
  p.on('pageerror',e=>q.errors.push({page:label,error:String(e)}));
  p.on('console',m=>{if(m.type()==='error'&&!/favicon/i.test(m.text()))q.consoleErrors.push({page:label,error:m.text()});});
  p.on('requestfailed',r=>{if(!/favicon/i.test(r.url()))q.failedRequests.push({page:label,url:r.url(),error:r.failure()?.errorText});});
@@ -65,10 +84,13 @@ async function load(url,label,candidate){
  await p.evaluate(()=>{window.lifelikeIdle?.pause?.();const v=__IDENTITY_QA__.viewer();v.orbit.autoRotate=false;v.orbit.enableDamping=false;v.render();});
  q[label]={url,httpStatus:response.status(),readyMS:Date.now()-start,host};return p;
 }
-async function screenshot(p,name){
- await p.evaluate(()=>__IDENTITY_QA__.viewer().render());
- const cdp=await context.newCDPSession(p);
- try{const a=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false}),b=Buffer.from(a.data,'base64');fs.writeFileSync(path.join(out,name+'.png'),b);q.screenshots.push({name,kind:'native-browser-viewport',bytes:b.length,sha256:sha(b)});}finally{await cdp.detach();}
+async function screenshot(p,name,timeoutMS=120000){
+ const b=await bounded('screenshot '+name,async()=>{
+  await p.evaluate(()=>__IDENTITY_QA__.viewer().render());const cdp=await context.newCDPSession(p);
+  try{const a=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});return Buffer.from(a.data,'base64');}
+  finally{await bounded('detach screenshot session',()=>cdp.detach(),5000).catch(()=>{});}
+ },timeoutMS);
+ fs.writeFileSync(path.join(out,name+'.png'),b);q.screenshots.push({name,kind:'native-browser-viewport',bytes:b.length,sha256:sha(b)});checkpoint();
 }
 async function view(p,kind){return p.evaluate(kind=>{
  const v=__IDENTITY_QA__.viewer();v.renderer.setPixelRatio(1);v.renderer.setSize(900,720,false);v.camera.aspect=900/720;
@@ -103,6 +125,33 @@ async function fingerprint(p){return p.evaluate(async()=>{
  const attributes={};for(const k of['position','normal','csRest','fRest','skinIndex','skinWeight'])attributes[k]=await hash(g.attributes[k]?.array);
  return{attributes,index:await hash(g.index?.array),canonicalPositions:await hash(m.positions),canonicalFaces:await hash(m.faces),vertices:g.attributes.position.count,triangles:g.index.count/3};
 });}
+async function calibration(p){return p.evaluate(async()=>{
+ const v=__IDENTITY_QA__.viewer(),m=__IDENTITY_QA__.model(),g=v.currentLip?.geometry,item=m.lipStructure.mother.surfaces.get(g);
+ if(!g||!item||item.topology.geometry!==g)throw Error('Current native lip calibration instance is absent');
+ const count=g.attributes.position.count;if(item.topology.count!==count)throw Error('Native calibration topology count mismatch');
+ if(new Uint8Array(new Uint32Array([0x01020304]).buffer)[0]!==4)throw Error('This byte-exact QA requires the declared little-endian Chromium host');
+ const field=async a=>{
+  if(a===null)return null;
+  if(!(a instanceof Float32Array)||a.length!==count)throw Error('Native calibration must match the native lip geometry vertex count');
+  for(const x of a)if(!Number.isFinite(x)||x<0)throw Error('Native calibration contains an invalid reference length');
+  const bytes=new Uint8Array(a.buffer,a.byteOffset,a.byteLength),digest=await crypto.subtle.digest('SHA-256',bytes);
+  return{sha256:Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join(''),byteLength:a.byteLength,length:a.length};
+ };
+ return{schema:'kaopu/lip-calibration@1',byteOrder:'float32-le',count,lastKey:item.lastKey,reference:await field(item.reference),referenceHorizontal:await field(item.referenceHorizontal)};
+});}
+function serializedCalibration(saved){
+ const c=saved?.lipRealism?.calibration;assert(c&&typeof c==='object','Full lip archive lacks native calibration');
+ assert.equal(c.schema,'kaopu/lip-calibration@1');assert.equal(c.byteOrder,'float32-le');assert(Number.isSafeInteger(c.count)&&c.count>0,'Archived native calibration count is invalid');
+ assert.equal(typeof c.lastKey,'string','Archived native calibration identity key is absent');
+ const field=value=>{
+  if(value===null)return null;assert.equal(typeof value,'string','Archived calibration must contain base64 Float32 bytes or null');
+  const b=Buffer.from(value,'base64');assert.equal(b.toString('base64'),value,'Archived calibration is not canonical base64');assert.equal(b.length,c.count*4,'Archived calibration byte length differs from its native count');
+  for(let i=0;i<b.length;i+=4){const x=b.readFloatLE(i);assert(Number.isFinite(x)&&x>=0,'Archived calibration contains an invalid reference length');}
+  return{sha256:sha(b),byteLength:b.length,length:b.length/4};
+ };
+ return{schema:c.schema,byteOrder:c.byteOrder,count:c.count,lastKey:c.lastKey,reference:field(c.reference),referenceHorizontal:field(c.referenceHorizontal)};
+}
+async function restoreArchive(p,saved,name){return stage(name,()=>bounded(name,()=>p.__lipQARawEvaluate(async archive=>{await fullCommonWorkbench.restore(archive);},saved),300000));}
 async function captureReliefBase(p){
  const hashes=await fingerprint(p),domain=await p.evaluate(()=>{
   const g=__IDENTITY_QA__.viewer().geometry,a=g.attributes,red=new Float32Array(a.position.count);
@@ -181,20 +230,22 @@ async function programs(p){return p.evaluate(()=>{
  return{linked:v.renderer.info.programs.map(x=>({id:x.id,linked:!!gl.getProgramParameter(x.program,gl.LINK_STATUS),log:gl.getProgramInfoLog(x.program)})),renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),vendor:gl.getParameter(gl.VENDOR),error:gl.getError(),drawCalls:v.renderer.info.render.calls,triangles:v.renderer.info.render.triangles};
 });}
 async function candidateChecks(base,p){
- q.initialReport=await p.evaluate(()=>lipRealism.report());const settings=await p.evaluate(()=>lipRealism.settings());
+ q.initialReport=await p.evaluate(()=>lipRealism.report());q.initialCalibration=await calibration(p);checkpoint();const settings=await p.evaluate(()=>lipRealism.settings());
  assert.equal(settings.enabled,true,'New treatment must be enabled at startup');const original=await fingerprint(base),enabledOriginal=await fingerprint(p);
  await test('fixed R07 and disabled candidate preserve geometry and exact pixels',async()=>{
   const result=[];
   for(const kind of['front','macro']){
+   progress('frozen R07 comparison '+kind,'start');
    await p.evaluate(()=>lipRealism.set({enabled:false,diagnostic:0}));await view(base,kind);await view(p,kind);
    assert.deepEqual(await fingerprint(p),original,'Disabled geometry differs from frozen R07 '+kind);
    assert.deepEqual(await state(p),await state(base),'A/B camera skin or lights differ');
    const a=await frame(base,'baseline-'+kind),b=await frame(p,'candidate-disabled-'+kind);
-   assert.equal(a.hash,b.hash,'Disabled module does not recover exact R07 '+kind);result.push({kind,baseline:small(a),disabled:small(b)});
+   assert.equal(a.hash,b.hash,'Disabled module does not recover exact R07 '+kind);result.push({kind,baseline:small(a),disabled:small(b)});progress('frozen R07 comparison '+kind,'end');
   }return result;
  });
  await test('lip pixels change with exact outside-mouth identity and reversible toggle',async()=>{
   const result=[];for(const kind of['front','macro','oblique']){
+   progress('lip toggle '+kind,'start');
    await p.evaluate(()=>lipRealism.set({enabled:false,diagnostic:0}));await view(p,kind);
    const protectedState=await state(p),geometry=await captureReliefBase(p),a=await frame(p,'before-'+kind),r=await roi(p);
    await p.evaluate(s=>lipRealism.set({...s,enabled:true,diagnostic:0}),settings);
@@ -206,14 +257,16 @@ async function candidateChecks(base,p){
    assert.deepEqual(await state(p),protectedState,'Lip controls changed camera lighting or body skin');
    await p.evaluate(()=>lipRealism.set({enabled:false}));assert.equal((await frame(p)).hash,a.hash,'Disabled return is not exact');
    assert.deepEqual(await fingerprint(p),geometry.hashes,'Disabled toggle did not restore exact geometry');
-   result.push({kind,roi:r,delta,geometryCheck,before:small(a),after:small(b)});
+   result.push({kind,roi:r,delta,geometryCheck,before:small(a),after:small(b)});progress('lip toggle '+kind,'end');
   }return result;
  });
  await p.evaluate(s=>lipRealism.set(s),settings);await view(p,'macro');
  await test('mask colour roughness and normal diagnostics reach the framebuffer',async()=>{
   const beauty=await frame(p),geometry=await fingerprint(p),result=[];
   for(const[d,name]of[[1,'mask'],[2,'colour'],[3,'roughness'],[4,'normals']]){
+   progress('diagnostic '+name,'start');
    await p.evaluate(diagnostic=>lipRealism.set({diagnostic}),d);result.push({diagnostic:d,name,...small(await frame(p,'diagnostic-'+name))});assert.deepEqual(await fingerprint(p),geometry,'Diagnostic changed display geometry');
+   progress('diagnostic '+name,'end');
   }
   assert.equal(new Set(result.map(x=>x.sha256)).size,4,'Diagnostics produced identical images');
   await p.evaluate(()=>lipRealism.set({diagnostic:0}));assert.equal((await frame(p)).hash,beauty.hash);return result;
@@ -221,13 +274,14 @@ async function candidateChecks(base,p){
  await test('lip controls affect real pixels while geometry and original skin stay fixed',async()=>{
   const result=[],protectedState=await state(p),geometry=await fingerprint(p);
   for(const key of['redness','pigment','upperDifference','variation','edgeSoftness','wetness','roughness','foldStrength','seed']){
+   progress('control '+key,'start');
    const diagnostic=['wetness','roughness'].includes(key)?3:key==='foldStrength'?4:2,low=key==='seed'?137:key==='roughness'?.34:.15,high=key==='seed'?947:key==='roughness'?.72:.85;
    await p.evaluate(({settings,key,low,diagnostic})=>lipRealism.set({...settings,enabled:true,diagnostic,[key]:low}),{settings,key,low,diagnostic});
    assert.equal(await p.evaluate(k=>lipRealism.settings()[k],key),low,key+' low value not applied');
    const a=await frame(p);assert.deepEqual(await fingerprint(p),geometry,key+' low value changed geometry');await p.evaluate(({key,high})=>lipRealism.set({[key]:high}),{key,high});const b=await frame(p);assert.deepEqual(await fingerprint(p),geometry,key+' high value changed geometry');
    const finalObserved=await p.evaluate(k=>lipRealism.settings()[k],key);assert.equal(finalObserved,high,key+' high value not applied');
    assert.notEqual(a.hash,b.hash,key+' has no framebuffer effect');
-   result.push({key,requested:[low,high],finalObserved,diagnostic,changed:true});
+   result.push({key,requested:[low,high],finalObserved,diagnostic,changed:true});progress('control '+key,'end');
   }
   await p.evaluate(s=>lipRealism.set(s),settings);assert.deepEqual(await state(p),protectedState);assert.deepEqual(await fingerprint(p),geometry);return result;
  });
@@ -255,6 +309,7 @@ async function candidateChecks(base,p){
   const saved=await p.evaluate(()=>fullCommonWorkbench.archive()),savedPose=await p.evaluate(()=>lipWorkbench.pose()),geometryBefore=await fingerprint(p),imageBefore=await frame(p),result=[];
   try{
    for(const action of['speak','pucker']){
+    progress('native pose '+action,'start');
     await p.evaluate(s=>lipRealism.set(s),settings);
     const pose=await p.evaluate(action=>lipWorkbench.perform(action),action);
     assert(pose.jawOpen>0,'Native '+action+' did not open the registered jaw');
@@ -270,7 +325,7 @@ async function candidateChecks(base,p){
     const gpu=await programs(p);assert(gpu.linked.length&&gpu.linked.every(x=>x.linked),'Unlinked program in native '+action);assert.equal(gpu.error,0,'GPU error in native '+action);
     await p.evaluate(()=>lipRealism.set({enabled:false}));assert.equal((await frame(p)).hash,disabled.hash,'Disabled pose does not return exactly');
     assert.deepEqual(await fingerprint(p),geometry.hashes,'Disabled toggle did not restore exact '+action+' geometry');
-    result.push({action,pose,geometryCheck,roi:r,delta,gpu,before:small(disabled),after:small(enabled)});
+    result.push({action,pose,geometryCheck,roi:r,delta,gpu,before:small(disabled),after:small(enabled)});progress('native pose '+action,'end');
    }
   }finally{await p.evaluate(async saved=>{lipWorkbench.stop();await fullCommonWorkbench.restore(saved);},saved);}
   await view(p,'macro');assert.deepEqual(await p.evaluate(()=>lipWorkbench.pose()),savedPose,'Archive did not restore native pose');
@@ -279,12 +334,17 @@ async function candidateChecks(base,p){
   return{poses:result,restoredNativePose:true,restoredGeometry:true,restoredPixels:true};
  });
  await test('existing portrait and skin-tone combinations retain the lip module',async()=>{
-  const saved=await p.evaluate(()=>fullCommonWorkbench.archive());
+  const saved=await p.evaluate(()=>fullCommonWorkbench.archive()),savedGeometry=await fingerprint(p),savedCalibration=await calibration(p),savedFrame=await frame(p,'portrait-archive-saved'),savedState=await state(p),savedROI=await roi(p);
+  save('portrait-saved-archive.json',saved);
+  const archiveCalibration=serializedCalibration(saved),before={geometry:savedGeometry,calibration:savedCalibration,archiveCalibration,frame:small(savedFrame),state:savedState,roi:savedROI};
+  save('portrait-archive-before.json',before);assert.deepEqual(archiveCalibration,savedCalibration,'Archive Float32 calibration bytes differ from the independent native instance');
+  assert(savedCalibration.reference&&savedCalibration.referenceHorizontal,'Neutral portrait lacks native reference calibration');
+  assert.deepEqual(savedGeometry,enabledOriginal,'Geometry drifted before the portrait archive was saved');
   const choices=await p.evaluate(()=>portraitBank.presets().filter(x=>x.id!==portraitBank.selected()).slice(0,2).map(x=>({id:x.id,name:x.name})));
-  assert.equal(choices.length,2,'Two native portraits required');const result=[];
+  assert.equal(choices.length,2,'Two native portraits required');const result=[];let legacyResult;
   try{for(let i=0;i<choices.length;i++){
    const choice=choices[i],tone=i===0?.35:.85;
-   await p.evaluate(async({id,tone,settings})=>{await portraitBank.apply(id);headProceduralSkin.set({tone});lipRealism.set({...settings,enabled:false,diagnostic:0});},{id:choice.id,tone,settings});
+   await stage('apply native portrait '+choice.id,()=>p.evaluate(async({id,tone,settings})=>{await portraitBank.apply(id);headProceduralSkin.set({tone});lipRealism.set({...settings,enabled:false,diagnostic:0});},{id:choice.id,tone,settings}));
    await view(p,'macro');const geometry=await captureReliefBase(p),protectedState=await state(p),disabled=await frame(p,'preset-'+(i+1)+'-disabled'),r=await roi(p);
    await p.evaluate(()=>lipRealism.set({enabled:true}));const enabled=await frame(p,'preset-'+(i+1)+'-lips'),delta=difference(disabled,enabled,r);
    save('preset-'+(i+1)+'-delta.json',{...choice,tone,geometry,roi:r,delta,before:small(disabled),after:small(enabled)});
@@ -292,27 +352,51 @@ async function candidateChecks(base,p){
    assert(delta.changedInside>10&&delta.changedOutside===0,'Preset lip treatment or domain failed');
    assert.deepEqual(await state(p),protectedState,'Portrait lip toggle changed native settings');
    await p.evaluate(()=>lipRealism.set({enabled:false}));assert.deepEqual(await fingerprint(p),geometry.hashes,'Portrait disabled geometry not restored');assert.equal((await frame(p)).hash,disabled.hash,'Portrait disabled pixels not restored');
-   result.push({...choice,tone,geometryCheck,roi:r,delta,report:await p.evaluate(()=>lipRealism.report())});
-  }}finally{await p.evaluate(async({saved,settings})=>{await fullCommonWorkbench.restore(saved);lipRealism.set(settings);},{saved,settings});}
-  await view(p,'macro');assert.deepEqual(await fingerprint(p),enabledOriginal,'Portrait archive did not restore original enabled geometry');return result;
+   result.push({...choice,tone,geometryCheck,roi:r,delta,calibration:await calibration(p),report:await p.evaluate(()=>lipRealism.report())});save('portrait-preset-results.json',result);
+  }
+  await stage('reject mismatched calibration before changing the current portrait',async()=>{
+   const bad=structuredClone(saved);bad.lipRealism.calibration.lastKey='wrong';
+   const beforeBad={geometry:await fingerprint(p),calibration:await calibration(p),state:await state(p),settings:await p.evaluate(()=>lipRealism.settings())};
+   const rejection=await p.evaluate(async archive=>{try{await fullCommonWorkbench.restore(archive);return{rejected:false};}catch(e){return{rejected:true,error:String(e)};}},bad);
+   const afterBad={geometry:await fingerprint(p),calibration:await calibration(p),state:await state(p),settings:await p.evaluate(()=>lipRealism.settings())};
+   save('portrait-archive-invalid-key.json',{method:'Archive of the saved original person with only calibration.lastKey changed to wrong, attempted while a different native portrait is active',rejection,before:beforeBad,after:afterBad});
+   assert(rejection.rejected,'Mismatched calibration identity was accepted');assert.deepEqual(afterBad,beforeBad,'Rejected calibration archive changed the active portrait or native calibration');
+  });
+  const legacy=structuredClone(saved);delete legacy.lipRealism.calibration;
+  await restoreArchive(p,legacy,'restore legacy archive without calibration');await view(p,'macro');
+  const legacyGeometry=await fingerprint(p),legacyCalibration=await calibration(p),legacyFrame=await frame(p,'portrait-archive-legacy'),legacyState=await state(p);
+  legacyResult={method:'Same saved person with only lipRealism.calibration removed; no requirement that the legacy path must differ',geometry:legacyGeometry,calibration:legacyCalibration,frame:small(legacyFrame),state:legacyState,geometryExact:JSON.stringify(legacyGeometry)===JSON.stringify(savedGeometry),calibrationExact:JSON.stringify(legacyCalibration)===JSON.stringify(savedCalibration),pixelsExact:legacyFrame.hash===savedFrame.hash,delta:difference(savedFrame,legacyFrame,savedROI)};
+  save('portrait-archive-legacy.json',legacyResult);
+  }finally{await restoreArchive(p,saved,'restore full archive with native calibration');}
+  await view(p,'macro');const restoredGeometry=await fingerprint(p),restoredCalibration=await calibration(p),restoredFrame=await frame(p,'portrait-archive-restored'),restoredState=await state(p);
+  const restored={geometry:restoredGeometry,calibration:restoredCalibration,frame:small(restoredFrame),state:restoredState,delta:difference(savedFrame,restoredFrame,savedROI)};
+  save('portrait-archive-roundtrip.json',{before,legacy:legacyResult,restored});
+  assert.deepEqual(restoredCalibration,savedCalibration,'Full archive did not restore exact native calibration bytes and identity key');
+  assert.deepEqual(restoredGeometry,savedGeometry,'Full archive did not restore geometry at its save point');
+  assert.equal(restoredFrame.hash,savedFrame.hash,'Full archive did not restore exact framebuffer pixels');
+  assert.deepEqual(restoredState,savedState,'Full archive did not restore native settings, camera and lighting');
+  assert.deepEqual(await p.evaluate(()=>lipRealism.settings()),settings,'Full archive did not restore lip treatment settings');
+  assert.deepEqual(restoredGeometry,enabledOriginal,'Portrait archive did not restore original enabled geometry');
+  return{presets:result,archive:{before,legacy:legacyResult,restored},restoredCalibration:true,restoredGeometry:true,restoredPixels:true};
  });
  await test('same-machine frame-time comparison stays within bounded regression budget',async()=>{
   await p.evaluate(s=>lipRealism.set({...s,enabled:true,diagnostic:0}),settings);
   const result=[],stats=a=>{const b=a.slice().sort((x,y)=>x-y),n=b.length;return{count:n,medianMS:(b[Math.floor((n-1)/2)]+b[Math.ceil((n-1)/2)])/2,p95MS:b[Math.ceil(n*.95)-1],minMS:b[0],maxMS:b.at(-1)};};
   for(const kind of['macro','bust']){
+   progress('performance '+kind,'start');
    await view(base,kind);await view(p,kind);assert.deepEqual(await state(p),await state(base),'Performance A/B camera, lights, or skin differ in '+kind);
    const samples={baseline:[],candidate:[]};
    for(const [label,target]of[['baseline',base],['candidate',p],['candidate',p],['baseline',base]]){
-    const values=await target.evaluate(()=>{
+    const values=await stage('performance block '+kind+' '+label,()=>target.evaluate(()=>{
      const v=__IDENTITY_QA__.viewer(),gl=v.renderer.getContext(),values=[];
      for(let i=0;i<2;i++){v.render();gl.finish();}
      for(let i=0;i<6;i++){const t=performance.now();v.render();gl.finish();values.push(performance.now()-t);}
      return values;
-    });samples[label].push(...values);
+    }));samples[label].push(...values);
    }
    const r={view:kind,method:'interleaved fixed-R07 / candidate / candidate / fixed-R07; render plus gl.finish; SwiftShader; not hardware or interactive FPS',baseline:stats(samples.baseline),candidate:stats(samples.candidate),samples};
    r.medianRatio=r.candidate.medianMS/Math.max(.01,r.baseline.medianMS);r.limit={medianRatio:1.35,absoluteAllowanceMS:.5};
-   r.passed=r.candidate.medianMS<=r.baseline.medianMS*1.35+.5;result.push(r);save('performance.json',result);
+   r.passed=r.candidate.medianMS<=r.baseline.medianMS*1.35+.5;result.push(r);save('performance.json',result);progress('performance '+kind,'end');
   }
   assert(result.every(r=>r.passed),'Lip shader exceeds 35% + 0.5 ms synchronous frame-time budget: '+JSON.stringify(result.map(({view,medianRatio,passed})=>({view,medianRatio,passed}))));return result;
  });
@@ -349,19 +433,20 @@ async function publicChecks(p){
  });q.publicHttpsPassed=true;
 }
 (async()=>{try{
- browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ progress('process','start',{mode:MODE});
+ browser=await stage('launch Chromium SwiftShader',()=>chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}));
  context=await browser.newContext({viewport:{width:1440,height:960},deviceScaleFactor:1});
  if(MODE==='public'){
   assert(/^https:\/\//.test(process.env.LIP_PUBLIC_URL||''),'Public QA needs HTTPS URL');
-  page=await load(process.env.LIP_PUBLIC_URL,'publicCandidate',true);await publicChecks(page);
+  page=await stage('load fixed public candidate',()=>load(process.env.LIP_PUBLIC_URL,'publicCandidate',true));await publicChecks(page);
  }else{
-  const origin=await serve(),base=await load(origin+'/baseline.html','fixedBaseline',false);page=base;
+  const origin=await stage('start isolated QA server',serve),base=await stage('load frozen R07 baseline',()=>load(origin+'/baseline.html','fixedBaseline',false));page=base;
   if(MODE==='baseline')await test('frozen R07 renders baseline front and lip macro',async()=>{
    const geometry=await fingerprint(base),views=[];
    for(const kind of['front','macro']){const camera=await view(base,kind),f=await frame(base,'BASELINE-R07-'+kind);views.push({camera,...small(f)});}
    return{geometry,views,originalSkin:await state(base),role:'BASELINE_ONLY',noNewLipArtifact:true};
   });
-  else{page=await load(origin+'/candidate.html','localCandidate',true);await screenshot(page,'candidate-native-desktop');await candidateChecks(base,page);}
+  else{page=await stage('load local candidate',()=>load(origin+'/candidate.html','localCandidate',true));await stage('capture initial native candidate viewport',()=>screenshot(page,'candidate-native-desktop'));await candidateChecks(base,page);}
  }
  await test('all actual GPU programs link with zero shader and browser errors',async()=>{
   const result=[];for(const p of pages){const gpu=await programs(p);assert(gpu.linked.length&&gpu.linked.every(x=>x.linked),'Unlinked GPU program');assert.equal(gpu.error,0);result.push(gpu);}
@@ -370,10 +455,19 @@ async function publicChecks(p){
  q.interactive3D=true;q.completed=true;q.shareAllowed=MODE==='public';
 }catch(e){
  q.completed=false;q.failure=String(e);q.shareAllowed=false;process.exitCode=1;console.error(String(e));
- try{if(page){await screenshot(page,'failure');save('failure-state.json',await page.evaluate(()=>({head:window.__HEAD_PROC__,lip:window.lipRealism?.report?.(),loader:window.__LIP_P3__,loadStatus:document.querySelector('#load-status')?.textContent})));}}catch(e){q.failureCaptureError=String(e);}
+ checkpoint();save('qa.json',q);
+ if(page){
+  try{await stage('capture failure viewport with 30 second limit',()=>screenshot(page,'failure',30000));}catch(e){q.failureCaptureError=String(e);checkpoint();save('qa.json',q);}
+  try{save('failure-state.json',await bounded('failure state readback',()=>page.evaluate(()=>({head:window.__HEAD_PROC__,lip:window.lipRealism?.report?.(),loader:window.__LIP_P3__,loadStatus:document.querySelector('#load-status')?.textContent})),10000));}catch(e){q.failureStateError=String(e);checkpoint();save('qa.json',q);}
+ }
 }finally{
  q.finishedAt=new Date().toISOString();save('qa.json',q);
+ let cleanupFailed=false;
+ try{if(browser)await bounded('close Chromium',()=>browser.close(),10000);}catch(e){cleanupFailed=true;q.cleanupError=String(e);}
+ try{if(server)await bounded('close QA server',()=>new Promise(r=>server.close(r)),5000);}catch(e){cleanupFailed=true;q.serverCloseError=String(e);}
+ if(cleanupFailed){q.completed=false;q.shareAllowed=false;process.exitCode=1;}
+ progress('process','end',{completed:q.completed});save('qa.json',q);
  console.log(JSON.stringify({version:VERSION,mode:MODE,completed:q.completed,tests:q.tests.length,passed:q.tests.filter(x=>x.passed).length,output:out,failure:q.failure||null}));
- await browser?.close();if(server)await new Promise(r=>server.close(r));
+ if(cleanupFailed)process.exit(1);
 }})();
 
