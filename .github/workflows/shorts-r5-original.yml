@@ -1,0 +1,86 @@
+name: Shorts R5 Original Human
+on:
+  push:
+    branches: [work/shorts-r5-original-human-20260930]
+    paths: [.github/workflows/shorts-r5-original.yml, shorts-r5/**]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: shorts-r5-review
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: shorts-r5
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: 3c3e9a4b7b250f4c8db20c15e2e5fab4ca9ce568
+          path: human
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare browser and build
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk >/dev/null
+          node shorts-r5/build.mjs human dist/shorts-original-r5
+          npm install --prefix .r5-deps --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.55.0
+      - name: Real Chromium rendering and original action checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory dist >/tmp/r5-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/shorts-original-r5/ >/dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME_PATH"
+          node shorts-r5/qa.cjs
+      - name: Publish only this candidate directory
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cp proof/QA.json dist/shorts-original-r5/BROWSER_QA.json
+          cp proof/FIT_CARD.json dist/shorts-original-r5/FIT_CARD.json
+          git init site
+          cd site
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -c protocol.version=2 fetch --depth=1 --filter=blob:none origin gh-pages
+          git update-ref refs/heads/gh-pages FETCH_HEAD
+          git symbolic-ref HEAD refs/heads/gh-pages
+          git reset --mixed HEAD >/dev/null
+          mkdir -p shorts-original-r5
+          cp -a ../dist/shorts-original-r5/. shorts-original-r5/
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A shorts-original-r5
+          if ! git diff --cached --quiet; then
+            git commit -m "publish: original R2 shorts R5.1 motion-review candidate"
+            git push origin HEAD:gh-pages
+          fi
+      - name: Preserve actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts-r5-browser-proof
+          path: proof/
+          if-no-files-found: warn
+      - name: Preserve build for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts-r5-built-site
+          path: dist/
+          if-no-files-found: warn
