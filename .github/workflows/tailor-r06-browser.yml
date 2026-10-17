@@ -1,0 +1,88 @@
+name: Tailor R06 browser verification
+on:
+  push:
+    branches: [fix/tailor-paper-to-cloth-20261008]
+    paths:
+      - '.github/workflows/tailor-r06-browser.yml'
+      - 'kaopu-tailor-workbench/r06/**'
+      - 'kaopu-tailor-workbench/catalogue/r06-*'
+permissions:
+  contents: write
+concurrency:
+  group: tailor-r06-browser
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            kaopu-tailor-workbench
+            kaopu-human-overview
+          fetch-depth: 1
+      - name: Build additive application and collision data
+        run: |
+          python kaopu-tailor-workbench/r06/build_worker.py
+          python kaopu-tailor-workbench/r06/build_ui.py
+          python kaopu-tailor-workbench/r06/build_sdf.py
+          node --check kaopu-tailor-workbench/catalogue/r06-workbench-app.mjs
+          node --check kaopu-tailor-workbench/catalogue/r06-worker.bundle.mjs
+          mkdir -p evidence
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          r=Path('kaopu-tailor-workbench')
+          paths=list((r/'r06').rglob('*'))+list((r/'catalogue').glob('r06-*'))
+          manifest={'version':'R06.2','sourceCommit':os.environ['GITHUB_SHA'],'sourceBranch':os.environ['GITHUB_REF_NAME'],'baselineCommit':'6562c4677b1b14c58f00d686ceb700856118854d','files':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file() and p.name!='BUILD_MANIFEST.json'},'newStyleFitAccepted':False}
+          (r/'r06/BUILD_MANIFEST.json').write_text(json.dumps(manifest,indent=2))
+          PY
+      - name: Browser dependencies
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install chromium --with-deps
+      - name: Execute real browser generation and sewing
+        run: |
+          python -m http.server 8765 > /tmp/tailor-server.log 2>&1 &
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json,traceback
+          out=Path('evidence')
+          with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            page=browser.new_page(viewport={'width':1440,'height':1000})
+            try:
+              exec(compile(Path('kaopu-tailor-workbench/r06/qa.py').read_text(),'r06/qa.py','exec'),{'page':page,'browser':browser,'out':out,'json':json,'Path':Path})
+            except Exception:
+              (out/'FAILURE.txt').write_text(traceback.format_exc())
+              page.screenshot(path=str(out/'failure.png'))
+              (out/'failure-state.json').write_text(json.dumps(page.evaluate('window.__TAILOR_CATALOGUE_QA__?.getState()')))
+              raise
+            finally:browser.close()
+          PY
+      - name: Save only isolated generated source on feature branch
+        if: success()
+        run: |
+          test "$GITHUB_REF_NAME" = 'fix/tailor-paper-to-cloth-20261008'
+          git fetch --no-tags origin "$GITHUB_REF_NAME"
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          cp evidence/R06_BROWSER_REPORT.json kaopu-tailor-workbench/r06/
+          cp evidence/r06-catalogue-generation-audit.json kaopu-tailor-workbench/r06/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-tailor-workbench/r06 kaopu-tailor-workbench/catalogue/r06-*
+          git commit -m 'build(tailor): preserve verified R06 generated application, full-body field and browser report'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          git rev-parse HEAD > evidence/GENERATED_COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-r06-browser-evidence
+          path: |
+            evidence
+            kaopu-tailor-workbench/r06
+            kaopu-tailor-workbench/catalogue/r06-*
+          retention-days: 7
