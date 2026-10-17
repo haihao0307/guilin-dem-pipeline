@@ -1,7 +1,7 @@
-# A4 → A6 / complete coach learning comparison R01
+# A4 → A6 / complete coach learning comparison R02
 
 ## Display and scale
-Four independent scene spaces, one synchronized orthographic camera contract. The model roots and original node transforms are unchanged. A4/A6 share the exact A4 source mechanical basis; Mark3 and its learning-expression copy share exact Mark3 source data. A4 versus Mark3 is NOT certified physical equal-scale: both source manifests explicitly say real dimensions and units are uncalibrated. No conversion to metres or hidden per-model fit is applied. The two source assets remain unassembled; displaying them in separate windows is not a verified coupler connection.
+Four independent scene spaces, one synchronized orthographic camera contract. Source root-local and original node-local transforms are unchanged. A separate display-only parent translates each source by its identified wheel-mesh-envelope minimum Y; displayed world placement changes, but source geometry and data do not. This baseline is not a certified wheel-tread/rail-contact datum. All four panels use one numerical source-unit-per-pixel. A4/A6 share the exact A4 source mechanical basis; Mark3 and its learning-expression copy share exact Mark3 source data. A4 versus Mark3 is NOT certified physical equal-scale: both source manifests explicitly say real dimensions and units are uncalibrated. No conversion to metres or hidden per-model fit is applied. The two source assets remain unassembled; displaying them in separate windows is not a verified coupler connection.
 
 Exact bounds use transformed POSITION vertices (`Box3.setFromObject(object,true)`). Default Box3 transforms the eight corners of a local AABB and can overestimate a rotated wheel: source node 90 actual vertical extent is about 2.13552 source units, versus conservative AABB 2.72149. Neither is proven nominal rolling diameter; no wheel is resized from either figure.
 

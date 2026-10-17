@@ -16,7 +16,7 @@ export const R01_CONTROL_SECTIONS=Object.freeze([
 // Preserve every original transverse section, and its tangent-continuous Bezier
 // construction. Only longitudinal stations and upper crown ordinates are revised.
 const revisedStations=[AUTHORING_D.noseX,AUTHORING_D.noseX+.08,AUTHORING_D.noseX+.75,4.00,5.65,8.00,AUTHORING_D.cabStart+1.55,AUTHORING_D.cabStart+2.80,AUTHORING_D.cabStart+4.60,AUTHORING_D.cabEnd,16.90,17.80,18.40,20.10,20.32,25.80,27.40,28.30];
-export const CONTROL_SECTION_MAP=Object.freeze(R01_CONTROL_SECTIONS.map((s,i)=>Object.freeze({sourceStationIndex:i,previous:s.slice(),revised:[revisedStations[i],s[1],s[2],i>=6?AUTHORING_D.crownHeight:s[3],s[4]],treatment:i>=6?'LONGITUDINAL_REPOSITION_AND_CROWN_REFERENCE':'LONGITUDINAL_REPOSITION_ONLY'})));
+export const CONTROL_SECTION_MAP=Object.freeze(R01_CONTROL_SECTIONS.map((s,i)=>Object.freeze({sourceStationIndex:i,previous:s.slice(),revised:[revisedStations[i],s[1],s[2],i>=6?AUTHORING_D.crownHeight:(DESIGN_LAYOUT.noseCoverControlUpdates[i]?.crownHeight??s[3]),DESIGN_LAYOUT.noseCoverControlUpdates[i]?.shoulder??s[4]],treatment:i>=6?'LONGITUDINAL_REPOSITION_AND_CROWN_REFERENCE':DESIGN_LAYOUT.noseCoverControlUpdates[i]?'LONGITUDINAL_REPOSITION_AND_INTACT_SOURCE_ENVELOPE_COVER':'LONGITUDINAL_REPOSITION_ONLY'})));
 export const CONTROL_SECTIONS=Object.freeze(CONTROL_SECTION_MAP.map(r=>Object.freeze(r.revised)));
 const clamp=x=>Math.max(0,Math.min(1,x));
 export const ease5=x=>{x=clamp(x);return x*x*x*(x*(6*x-15)+10)};

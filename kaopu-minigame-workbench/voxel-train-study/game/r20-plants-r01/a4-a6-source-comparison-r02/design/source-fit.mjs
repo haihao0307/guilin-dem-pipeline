@@ -15,6 +15,9 @@ export const SOURCE_FIT=Object.freeze({
 export function authoringX(sourceZ){return sourceZ>=SOURCE_FIT.locoEndSourceZ?SOURCE_FIT.locoAuthoringEnd+(SOURCE_FIT.locoEndSourceZ-sourceZ)/.92:sourceZ>=SOURCE_FIT.tenderStartSourceZ?20.10+(sourceZ+3.1418)*.22/(-3.3325+3.1418):20.32+(sourceZ+3.3325)*7.98/(-10.9776+3.3325);}
 export const DESIGN_LAYOUT=Object.freeze({
  revision:'R02_USER_BLUE_MARKUP_2026-10-17_0723',
+ noseSourceEnvelopeRevision:'R02_FRONT_SOURCE_COVER_0747',
+ noseCoverControlUpdates:{4:{crownHeight:3.35,shoulder:2.65},5:{crownHeight:4.00,shoulder:2.83}},
+ noseCoverReason:'Cover unmodified original front-bogie upper geometry, mixed front rivets and pipes; source whistle stays at its original mounted position',
  noseSourceZ:13.60,previousNoseSourceZ:16.6382,originalA4NoseSourceZ:11.054,
  cabFrontSourceZ:6.80,cabRearSourceZ:.70,
  wheelOpeningFrontSourceZ:7.1258,wheelOpeningRearSourceZ:.5482,
