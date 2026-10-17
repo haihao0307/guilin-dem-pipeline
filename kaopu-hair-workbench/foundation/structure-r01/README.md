@@ -1,5 +1,9 @@
 # KAOPU 头发结构工作台 R01
 
+## 修订 07 公开实测
+
+[打开当前轻层次剪裁](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/cacba9027dec8988558b7a36f4e02b6e7a4ce374/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=back&experiment=cut-layered)。八个可见对照及独立新浏览器页面的剪裁直达链接均通过；本机本次冷启动结构约 20.38 秒、人物皮肤完整就绪约 34.21 秒。两版剪裁首次切换约 1.34/1.38 秒，八状态缓存切换合计约 104 ms、零新增请求。冷启动仍未达到用户要求，本轮不宣称加载优化完成。[公开测试记录](evidence/public-cut07-check.json)。原版、U 形和轻层次的同机位对照见 [当前实际画面](evidence/cut07-review-overview.png)。
+
 ## 当前实施：长度与剪裁 07
 
 已保留原长度，新增“柔和 U 形剪裁”和“轻层次剪裁”两项对照。两版沿既有发流求终点，保护毛囊、头顶发流、刘海和鬓角；中、小束依据新的完整曲线重建。可勾选“对照剪掉的原发尾”观察差别。当前共八个可见对照，仍为静态稀疏结构，本轮处理下缘轮廓和长短层次，不代表真实发丝粗细或三套独立长度已完成。[实施、发现与证据](docs/LENGTH-CUT-07.md)。下面修订 03–06 保留为历史。
