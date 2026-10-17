@@ -1,0 +1,190 @@
+name: EB1 1.1 fixed HTTPS approved-recipe verification
+on:
+  push:
+    branches: [feature/eb1-public-20261013]
+    paths: [kaopu-lighting/eb1/PUBLISH_TRIGGER.txt]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+      public: ${{ steps.publish.outputs.public }}
+      source: ${{ steps.publish.outputs.source }}
+      core: ${{ steps.publish.outputs.core }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+          ref: feature/eb1-public-20261013
+          sparse-checkout: kaopu-lighting/eb1
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: feature/eb1-unified-lighting-20261013
+          path: upstream
+          fetch-depth: 1
+          sparse-checkout: lighting/eb1
+          persist-credentials: false
+      - name: Publish only a fully browser-verified 1.1 candidate
+        id: publish
+        run: |
+          export EB1_SOURCE="$(git -C upstream rev-parse HEAD)"
+          python project/kaopu-lighting/eb1/publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-11-public-stage
+          path: /tmp/EB1_PUBLIC_STAGE.json
+          retention-days: 30
+  bytes:
+    needs: stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: eb1-11-public-stage
+          path: stage
+      - name: Verify every frozen HTTPS byte without a local substitute
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+        run: |
+          python - <<'PY'
+          import os,json,time,urllib.request,hashlib,concurrent.futures,pathlib
+          stage=json.loads(pathlib.Path('stage/EB1_PUBLIC_STAGE.json').read_text());base=os.environ['URL'];got=None
+          def get(name):
+            with urllib.request.urlopen(base+name,timeout=90) as r:return r.read()
+          for _ in range(90):
+            try:
+              got=json.loads(get('FILES.json'))
+              if got.get('candidateCommit')==stage['candidateCommit']:break
+            except Exception:pass
+            time.sleep(10)
+          assert got and got.get('candidateCommit')==stage['candidateCommit'],'Fixed HTTPS deployment unavailable'
+          assert got['version']=='EB1-1.1.0' and got['coreSHA256']==stage['coreSHA256']
+          assert got['defaultRecipe']==stage['defaultRecipe']
+          assert got['files']==stage['files'],'Published manifest mismatch'
+          def verify(item):
+            n,d=item
+            for i in range(4):
+              try:
+                b=get(n);assert len(b)==d['bytes'] and hashlib.sha256(b).hexdigest()==d['sha256'],n
+                return {'path':n,**d}
+              except Exception:
+                if i==3:raise
+                time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:rows=list(ex.map(verify,got['files'].items()))
+          pathlib.Path('PUBLIC_BYTES.json').write_text(json.dumps({'passed':True,'fixedURL':base,'candidateCommit':stage['candidateCommit'],'version':got['version'],'coreSHA256':got['coreSHA256'],'defaultRecipe':got['defaultRecipe'],'files':rows},indent=2))
+          print('Verified public file count:',len(rows))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eb1-11-public-bytes
+          path: PUBLIC_BYTES.json
+          retention-days: 30
+  browser:
+    needs: [stage,bytes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        case: [lab,leather,hat,denim,shoe,tailor]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/Humanoid-Rig-Lab-Next
+          ref: ${{ needs.stage.outputs.source }}
+          sparse-checkout: lighting/eb1
+          persist-credentials: false
+      - name: Install pinned real browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          rm -rf lighting/eb1/qa
+      - name: Verify exact JSON, old-cache migration, real pixels, native rebuild and reload
+        env:
+          EB1_BASE_URL: ${{ needs.stage.outputs.url }}
+          EB1_SOURCE_SHA: ${{ needs.stage.outputs.source }}
+          EB1_CASES: ${{ matrix.case }}
+        run: python lighting/eb1/qa.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-11-public-browser-${{ matrix.case }}
+          path: lighting/eb1/qa
+          retention-days: 30
+  receipt:
+    needs: [stage,bytes,browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/eb1-public-20261013
+          sparse-checkout: kaopu-lighting/eb1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: eb1-11-public-*
+          path: /tmp/evidence
+      - name: Persist combined public-five plus separately verified private-knit receipt
+        env:
+          URL: ${{ needs.stage.outputs.url }}
+          SOURCE: ${{ needs.stage.outputs.source }}
+          PUBLIC: ${{ needs.stage.outputs.public }}
+          CORE: ${{ needs.stage.outputs.core }}
+        run: |
+          python - <<'PY'
+          import pathlib,json,os,datetime
+          root=pathlib.Path('kaopu-lighting/eb1');recipe=json.loads((root/'USER_RECIPE_20261013.json').read_text());rows={}
+          for p in pathlib.Path('/tmp/evidence').rglob('REPORT.json'):
+            r=json.loads(p.read_text());assert r['version']=='EB1-1.1.0' and r['passed'] and r['publicBrowserVerified']
+            rows.update(r['cases'])
+          expected={'lab','leather','hat','denim','shoe','tailor'}
+          assert set(rows)==expected and all(x['passed'] for x in rows.values())
+          assert all(x.get('userRecipeVerified') and x['initialLighting']['profile']==recipe for x in rows.values())
+          hashes=json.loads(next(pathlib.Path('/tmp/evidence').rglob('PUBLIC_BYTES.json')).read_text())
+          assert hashes['passed'] and hashes['defaultRecipe']==recipe and hashes['coreSHA256']==os.environ['CORE']
+          knit=json.loads((root/'PRIVATE_KNIT_RECEIPT_20261013.json').read_text())
+          assert knit['nativeChromiumVerified'] and knit['approvedRecipeVerified'] and knit['defaultRecipe']==recipe
+          result={
+            'version':'EB1-1.1.0','fixedURL':os.environ['URL'],'candidateCommit':os.environ['SOURCE'],
+            'publicCommit':os.environ['PUBLIC'],'coreSHA256':os.environ['CORE'],'defaultRecipe':recipe,
+            'storageNamespace':'kaopu:lighting:eb1:v1:user-20261013-r1','publicBytesVerified':True,
+            'publicBrowserVerified':True,'verifiedPublicWorkbenches':['leather','denim','tailor','shoe','hat'],
+            'calibrationLabVerified':True,'privateKnitNativeVerified':True,'sixWorkbenchRuntimeRecipeVerified':True,
+            'sixExternalPublicPagesDelivered':False,
+            'knitStatus':'The private native R15 runtime passed exact-recipe browser QA. No public page is claimed because its browser source and assets were not exported.',
+            'oldCacheMigrationVerified':True,'nativeRebuildPersistenceVerified':True,'reloadPersistenceVerified':True,
+            'referencePixelIdentical':False,'eightBinEnvironmentApproximationForCustomShaders':True,
+            'physicalDeviceTested':False,'userAccepted':False,'oldVersionsPreserved':True,
+            'workflowRun':os.environ['GITHUB_RUN_ID'],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'cases':rows,'privateKnitEvidence':knit,'publicFileCount':len(hashes['files'])
+          }
+          (root/'PUBLIC_DELIVERY.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          (root/'DELIVERY.md').write_text(
+            '# EB1 1.1：用户确认配方统一接入\n\n'+result['fixedURL']+'\n\n'
+            '真实公网浏览器已验证皮革、牛仔、服装、鞋子、帽子和独立调光台；私有毛衣 R15 已在其原生仓库单独通过同一配方的真实浏览器验证。完整 JSON、旧缓存迁移、曝光像素变化、原生重建保持和刷新保持均已检查。\n\n'
+            '毛衣外部公网网页未交付：没有把私有浏览器源码和资产公开。统一配方不等于不同材质逐像素相同；手写纤维着色器使用同一光场的八方向正权重近似。2048 阴影图会增加显存与 GPU 开销。\n\n'
+            '旧网址与旧版本保留；Draft PR，不合并、不强推。后续六类工作台默认沿用这套 EB1，除非用户明确更换。\n')
+          print(json.dumps({k:v for k,v in result.items() if k not in ['cases','privateKnitEvidence']},ensure_ascii=False,indent=2))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add kaopu-lighting/eb1/PUBLIC_DELIVERY.json kaopu-lighting/eb1/DELIVERY.md
+          git commit -m 'docs(eb1): verify approved recipe on public five and private knit runtime'
+          git push origin HEAD:refs/heads/feature/eb1-public-20261013
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eb1-11-final-public-receipt
+          path: kaopu-lighting/eb1
+          retention-days: 30
