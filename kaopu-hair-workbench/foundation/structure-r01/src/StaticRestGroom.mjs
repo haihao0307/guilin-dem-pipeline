@@ -48,18 +48,18 @@ export function shapeStaticRest(source,sourceGraph,f,near){
   for(let n=0;n<N;n++)maxDisplacement=Math.max(maxDisplacement,Math.hypot(...sub(g.points.slice(n*3,n*3+3),old.points.slice(n*3,n*3+3))));
   g.cut={...old.cut,hem:g.points.at(-2),endpoint:g.points.slice(-3),operation:'native-connected-wisp-static-rest',sourceStudy:'volume-flow'};rebuildGuide(g);changed++;return g;
  });
- return {guides,report:{revision:f.revision,source:'volume-flow',changedGuides:changed,unchangedFringe:source.filter(g=>g.zone<=1).length,protectedRootArc:f.protectedRootArc,maxDisplacementMM:maxDisplacement*1000,contactLineSearchReductions:projections,method:'complete guide cross-section shaping inside native-root-connected mid wisps; regional cut graduation',physics:false}};
+ return {guides,report:{revision:f.revision,source:'volume-flow',changedGuides:changed,fringeUnaffectedByBodyStep:source.filter(g=>g.zone<=1).length,protectedRootArc:f.protectedRootArc,maxDisplacementMM:maxDisplacement*1000,contactLineSearchReductions:projections,method:'complete guide cross-section shaping inside native-root-connected mid wisps; regional cut graduation',physics:false}};
 }
-export function assertStaticRestIdentity(source,output,f){
+export function assertStaticRestIdentity(source,output,f,preserveFringe=true){
  assertStaticRestField(f);if(source.length!==output.length)throw Error('Static rest lost complete guides');
  for(let i=0;i<source.length;i++){
   const a=source[i],b=output[i];for(const k of ['id','rootId','root','zone','macro'])if(JSON.stringify(a[k])!==JSON.stringify(b[k]))throw Error('Static rest changed native identity');
-  for(let n=0;n<a.arcLengths.length;n++)if(a.zone<=1||a.arcLengths[n]<=f.protectedRootArc)if(a.points.slice(n*3,n*3+3).some((v,k)=>v!==b.points[n*3+k]))throw Error('Static rest changed fringe or native launch');
-  if(Math.abs(a.cut.hem-b.cut.hem)>f.hemVariation+1e-8)throw Error('Static rest escaped regional cut graduation');
+  for(let n=0;n<a.arcLengths.length;n++)if(a.zone<=1?(preserveFringe||n===0):a.arcLengths[n]<=f.protectedRootArc)if(a.points.slice(n*3,n*3+3).some((v,k)=>v!==b.points[n*3+k]))throw Error('Static rest changed fringe or native launch');
+  if(a.zone>1&&Math.abs(a.cut.hem-b.cut.hem)>f.hemVariation+1e-8)throw Error('Static rest escaped regional cut graduation');
  }return true;
 }
 
-export function assertStaticRestBinding(source,output){
+export function assertStaticRestBinding(source,output,preserveFringe=true){
  if(source.length!==output.length)throw Error('Current groom lost guides');
- for(let i=0;i<source.length;i++){const a=source[i],b=output[i];for(const k of ['id','rootId','zone','macro','root'])if(JSON.stringify(a[k])!==JSON.stringify(b[k]))throw Error('Current groom changed native identity');if(a.points.slice(0,3).some((v,k)=>v!==b.points[k]))throw Error('Current groom moved root');if(a.zone<=1&&JSON.stringify(a.points)!==JSON.stringify(b.points))throw Error('Current lower-groom task changed fringe');}return true;
+ for(let i=0;i<source.length;i++){const a=source[i],b=output[i];for(const k of ['id','rootId','zone','macro','root'])if(JSON.stringify(a[k])!==JSON.stringify(b[k]))throw Error('Current groom changed native identity');if(a.points.slice(0,3).some((v,k)=>v!==b.points[k]))throw Error('Current groom moved root');if(preserveFringe&&a.zone<=1&&JSON.stringify(a.points)!==JSON.stringify(b.points))throw Error('Current lower-groom task changed fringe');}return true;
 }

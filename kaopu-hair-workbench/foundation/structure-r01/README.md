@@ -1,6 +1,14 @@
 # KAOPU 头发结构工作台 R01
 
-## 当前实施：参考方法进入生成过程 09
+## 当前阶段：一个当前长度静态发型，S1 尚未整体通过
+
+先读 [固定执行路线](docs/EXECUTION-ROUTE.md)、[当前状态](review/STATUS.json) 和 [逐项自查](docs/STATIC-REST-10.md)。每轮必须记录任务、输入、不可改变项、实际效果、失败与更改、完成性判断和下一项；不以研究编号或自动检查数量表示完成度。
+
+当前唯一工作方案为 `current-rest`，页面默认打开它，旧研究折叠保留。S1.B1 修整主体束形与下缘；S1.B2 修正分缝两侧到刘海的衔接。141 条主体路径在 B2 中逐点不变，24 条刘海重新追踪、178 根方向同步。批准毛囊域、全部原生绑定及十二个旧状态保持。下一项明确为顶部、旋涡到后枕的连续性；整体自然度、三套独立长度和冷启动均未验收，密集发丝/质感/物理仍锁定。
+
+当前只交付灰色稀疏结构，不能把头部透出解释为真实发丝透明度已修复。以下为历史记录；旧链接和旧性能数字不代表当前版本。
+
+## 历史实施：参考方法进入生成过程 09
 
 [打开已实测的三维发流版本](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/76a3bd7d31950c4b6182ce0fc5110ba6d0766bec/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=volume-flow)。本机新浏览器测试十一项状态和独立新页面直达链接通过，零页面错误与失败请求。本次冷启动结构约 23.23 秒、人物完整约 37.23 秒；新状态首次切换约 1.94 秒，十一状态缓存切换合计 144 ms、零新增请求。直达页面同一浏览器上下文已有网络缓存，其 16.61 秒不算冷启动。加载仍未达标。[原始公开记录](evidence/public-volume09-check.json)。
 
@@ -8,7 +16,7 @@
 
 关闭曲线约束使路径最大变化约 30.17 mm，确认研究原则已进入生成。当前人体中心线穿透为零，新路径最大局部折角约 16.34°；完整自然体积、刘海、发梢与中束外形尚未完成视觉验收，密集发丝、材质和物理继续锁定。[学习文件逐项落实](docs/LEARNING-CHECKLIST-R09.md)、[消费者、失败记录与研究差别](docs/VOLUME-FLOW-09.md)、[当前同机位实际对照](evidence/volume09-review-overview.png)。下方 R08 及更早段落为历史记录。
 
-## 当前实施：对照学习文件推进轮廓与发束 08
+## 历史实施：对照学习文件推进轮廓与发束 08
 
 [打开本轮固定预览](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/63da890c63190e1cf24af364fb004ab08e06fc68/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=silhouette-framing)。本机全新浏览器公开测试：结构 18.97 秒、人物皮肤完整就绪 32.83 秒；两项新研究首次切换约 1.23 / 0.91 秒，十状态缓存切换合计 137 ms，零新增请求。新页面直达指定研究也通过，但同一上下文已有网络缓存，不能把其 15.69 秒当作冷启动改善。[完整公开记录](evidence/public-route08-check.json)。首次加载仍未达标，本轮未完成加载优化。
 
@@ -20,7 +28,7 @@
 
 [打开当前轻层次剪裁](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/cacba9027dec8988558b7a36f4e02b6e7a4ce374/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=back&experiment=cut-layered)。八个可见对照及独立新浏览器页面的剪裁直达链接均通过；本机本次冷启动结构约 20.38 秒、人物皮肤完整就绪约 34.21 秒。两版剪裁首次切换约 1.34/1.38 秒，八状态缓存切换合计约 104 ms、零新增请求。冷启动仍未达到用户要求，本轮不宣称加载优化完成。[公开测试记录](evidence/public-cut07-check.json)。原版、U 形和轻层次的同机位对照见 [当前实际画面](evidence/cut07-review-overview.png)。
 
-## 当前实施：长度与剪裁 07
+## 历史实施：长度与剪裁 07
 
 已保留原长度，新增“柔和 U 形剪裁”和“轻层次剪裁”两项对照。两版沿既有发流求终点，保护毛囊、头顶发流、刘海和鬓角；中、小束依据新的完整曲线重建。可勾选“对照剪掉的原发尾”观察差别。当前共八个可见对照，仍为静态稀疏结构，本轮处理下缘轮廓和长短层次，不代表真实发丝粗细或三套独立长度已完成。[实施、发现与证据](docs/LENGTH-CUT-07.md)。下面修订 03–06 保留为历史。
 
@@ -28,7 +36,7 @@
 
 已验证的固定版本：[打开修订 06](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/6dd7912ccb2070ab1ed3332ce20c91a6ca3c7457/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=zones&view=left)。本机新建无缓存浏览器实测：结构约 18.46 秒、皮肤完整就绪约 32.04 秒；五个新增状态首次切换约 0.52–0.99 秒，六状态缓存切换合计 133 ms、零新增请求。全部状态原生几何不变、诊断后发保留、零页面错误及失败请求。**冷启动仍未达到用户标准，本轮不宣称加载优化完成。** 记录见 [公开测试](evidence/public-flow06-check.json)；它只代表此次机器/网络，不是低端设备或物理阶段性能认证。
 
-## 当前实施：区域与连续发流 06
+## 历史实施：区域与连续发流 06
 
 已加入双侧五点太阳穴参照、真实发缝宽度/发际线起翘控制，并修复移动发缝时整束路径跳变。六个可选状态包含“加宽发缝”“降低发际线起翘”；保留同一 F02.1 生长域、2,737 活跃根和 165 条导向发。49 状态连续扫描、七状态结构检查及当前画面已验证。仍为静态稀疏导向发、局部上段编辑；下段出口和发尾固定。详细实现、失败尝试、证据与限制见 [连续发流 06](docs/CONTINUOUS-FLOW-06.md)。下方修订 03—05 为历史。
 

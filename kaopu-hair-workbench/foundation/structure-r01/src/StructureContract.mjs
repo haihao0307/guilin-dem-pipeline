@@ -1,8 +1,10 @@
+import {assertFringeRestField} from './FringeRestGroom.mjs';
 import {assertStaticRestField} from './StaticRestGroom.mjs';
 import {assertSilhouetteField} from './SilhouetteContract.mjs';
 import {assertVolumeField} from './VolumeFlow.mjs';
 export const PROFILE_FIELDS=['ScalpDomain','AnatomicalZoneField','CandidateRootField','ActiveRootMask','FollicleDensityField','RootDirectionField','RootLiftField','PartingCurves','WhorlField','HairlineProfile','RegionalLengthField','CutField','GuideGroom','ClumpGraph','ChildStrandProfile','StrandMaterialField','RestShape','PhysicsProfile'];
 export function assertProfile(p){
+ if(p?.FringeRestField){assertFringeRestField(p.FringeRestField);if(JSON.stringify(p.FringeRestField.part)!==JSON.stringify(p.PartingCurves?.[0]))throw Error('Fringe must consume the actual declared part');}
  if(p?.StaticRestField)assertStaticRestField(p.StaticRestField);
  if(p?.SilhouetteField)assertSilhouetteField(p.SilhouetteField);
  if(p?.VolumeFlowField)assertVolumeField(p.VolumeFlowField);

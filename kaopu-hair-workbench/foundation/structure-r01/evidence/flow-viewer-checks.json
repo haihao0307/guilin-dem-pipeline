@@ -1,9 +1,9 @@
 {
   "pass": true,
-  "checkedUTC": "2026-10-17T03:02:42.125Z",
-  "runtimeSHA256": "74326b74bdc8baa0f151e81c3c26a64301e01f9f7f835ac6d45db57888746974",
+  "checkedUTC": "2026-10-17T08:55:57.990Z",
+  "runtimeSHA256": "e86efcd42e5cca684c36370b08a30d205d3f874cd7b8115e5c74caa2fc47c08a",
   "first": {
-    "experiment": "baseline",
+    "experiment": "current-rest",
     "experimentLoading": false,
     "shaping": true,
     "ready": true,
@@ -12,10 +12,59 @@
     "view": "oblique",
     "zone": "all",
     "level": "mid",
+    "landmarks": true,
+    "wisps": false,
+    "streams": false,
+    "cutReference": false,
     "physics": false,
     "phase": 1,
-    "readyMS": 8888.39999999106,
-    "viewerRevision": "scalp-restore-04",
+    "readyMS": 16173.09999999404,
+    "lastSwitchMS": 59,
+    "loadingTimings": {
+      "startMS": 100.20000000298023,
+      "baseFetchStartMS": 100.29999999701977,
+      "baseFetchedMS": 184.5,
+      "baseParsedMS": 227,
+      "nativeHostReadyMS": 16067,
+      "currentReadyMS": 16173.09999999404
+    },
+    "execution": {
+      "stage": "S1",
+      "stageLabel": "当前长度静态结构",
+      "status": "in_progress",
+      "currentTaskLabel": "主体束形与刘海分侧",
+      "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+      "firstRoundAccepted": false
+    },
+    "workbenchRevision": "static-rest-10",
+    "fringeStudy": {
+      "changedGuides": 24,
+      "updatedRoots": 178,
+      "method": "shared parted fringe field, native tangent/lift launch, regional brow-to-temple graduation"
+    },
+    "restStudy": {
+      "revision": "static-rest-10",
+      "source": "volume-flow",
+      "changedGuides": 141,
+      "fringeUnaffectedByBodyStep": 24,
+      "protectedRootArc": 0.015,
+      "maxDisplacementMM": 4.977303326279267,
+      "contactLineSearchReductions": 61,
+      "method": "complete guide cross-section shaping inside native-root-connected mid wisps; regional cut graduation",
+      "physics": false
+    },
+    "volumeStudy": null,
+    "routeStudy": null,
+    "cutStudy": null,
+    "viewerRevision": "static-rest-10",
+    "wispAuthoring": {
+      "enabled": false,
+      "active": 0
+    },
+    "temporalLandmarks": {
+      "enabled": true,
+      "anchors": 10
+    },
     "hairDisplay": {
       "guides": 165,
       "posteriorGuides": 58,
@@ -252,7 +301,7 @@
       "persistent": true
     },
     "version": "Hair Structure Lab R01",
-    "revision": "scalp-restore-04",
+    "revision": "static-rest-10",
     "approvedEligibleRoots": 3067,
     "person": "P01",
     "nativeMeshSame": true,
@@ -261,13 +310,13 @@
     "guides": 165,
     "groups": {
       "macro": 20,
-      "mid": 40,
-      "micro": 71
+      "mid": 64,
+      "micro": 88
     },
     "phaseOneAcceptance": "pending visual review",
     "phaseTwo": "locked",
     "runtimeIntegration": {
-      "profileId": "p01-current-scalp04-baseline",
+      "profileId": "p01-current-rest10",
       "guideCount": 165,
       "nodeCount": 16005,
       "coordinates": "head-aligned metres",
@@ -281,23 +330,24 @@
       "physicsEnabled": false,
       "denseRendererLoaded": false
     },
-    "experimentLabel": "基准发流",
+    "experimentLabel": "当前长度 · 静态发型",
     "flowField": {
-      "method": "screened tangent graph-Laplacian (Jacobi)",
-      "nodes": 2737,
-      "undirectedEdges": 114721,
-      "iterations": 219,
-      "residual": 9.684354346781385e-8,
+      "revision": "volume-flow-09",
+      "nodes": 53391,
+      "curveConstrainedNodes": 2464,
+      "iterations": 240,
+      "maxLastIterationChange": 0.0000033706768890473526,
+      "method": "screened harmonic interpolation of three vector components; part-aware grid neighbours",
+      "obstacleProjection": "bounded smooth ear-outlet correction baked once into final grid",
+      "baseWeight": 0.15,
+      "curveWeight": 30,
+      "curveStrength": 1,
       "converged": true,
-      "forbiddenEdges": 0,
-      "screen": 1.2,
-      "energy": 248.67078010023855,
-      "solveMS": 10328.9118,
-      "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+      "scope": "Upstream R09 shared field; final current paths additionally consume StaticRestField and connected wisps"
     },
     "clumpShaping": {
-      "accepted": 1778,
-      "maxDisplacementMM": 4.000000000000005
+      "accepted": 0,
+      "maxDisplacementMM": 4.977303326279267
     },
     "mouseControlled": false
   },
@@ -308,15 +358,18 @@
       "sameGeometry": true,
       "samePositions": true,
       "sameFaces": true,
-      "generationMS": 12398
+      "generationMS": 20813
     }
   ],
-  "startupExperimentalRequests": [],
+  "startupExperimentalRequests": [
+    "http://127.0.0.1:8785/assets/experiments/current-rest/patch.json.gz",
+    "http://127.0.0.1:8785/assets/experiments/current-rest/roots.bin.gz"
+  ],
   "corruption": {
     "rejected": true,
     "message": "结构数据版本校验失败",
     "report": {
-      "experiment": "baseline",
+      "experiment": "current-rest",
       "experimentLoading": false,
       "shaping": true,
       "ready": true,
@@ -325,10 +378,59 @@
       "view": "oblique",
       "zone": "all",
       "level": "mid",
+      "landmarks": true,
+      "wisps": false,
+      "streams": false,
+      "cutReference": false,
       "physics": false,
       "phase": 1,
-      "readyMS": 8888.39999999106,
-      "viewerRevision": "scalp-restore-04",
+      "readyMS": 16173.09999999404,
+      "lastSwitchMS": 59,
+      "loadingTimings": {
+        "startMS": 100.20000000298023,
+        "baseFetchStartMS": 100.29999999701977,
+        "baseFetchedMS": 184.5,
+        "baseParsedMS": 227,
+        "nativeHostReadyMS": 16067,
+        "currentReadyMS": 16173.09999999404
+      },
+      "execution": {
+        "stage": "S1",
+        "stageLabel": "当前长度静态结构",
+        "status": "in_progress",
+        "currentTaskLabel": "主体束形与刘海分侧",
+        "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+        "firstRoundAccepted": false
+      },
+      "workbenchRevision": "static-rest-10",
+      "fringeStudy": {
+        "changedGuides": 24,
+        "updatedRoots": 178,
+        "method": "shared parted fringe field, native tangent/lift launch, regional brow-to-temple graduation"
+      },
+      "restStudy": {
+        "revision": "static-rest-10",
+        "source": "volume-flow",
+        "changedGuides": 141,
+        "fringeUnaffectedByBodyStep": 24,
+        "protectedRootArc": 0.015,
+        "maxDisplacementMM": 4.977303326279267,
+        "contactLineSearchReductions": 61,
+        "method": "complete guide cross-section shaping inside native-root-connected mid wisps; regional cut graduation",
+        "physics": false
+      },
+      "volumeStudy": null,
+      "routeStudy": null,
+      "cutStudy": null,
+      "viewerRevision": "static-rest-10",
+      "wispAuthoring": {
+        "enabled": false,
+        "active": 0
+      },
+      "temporalLandmarks": {
+        "enabled": true,
+        "anchors": 10
+      },
       "hairDisplay": {
         "guides": 165,
         "posteriorGuides": 58,
@@ -565,7 +667,7 @@
         "persistent": true
       },
       "version": "Hair Structure Lab R01",
-      "revision": "scalp-restore-04",
+      "revision": "static-rest-10",
       "approvedEligibleRoots": 3067,
       "person": "P01",
       "nativeMeshSame": true,
@@ -574,13 +676,13 @@
       "guides": 165,
       "groups": {
         "macro": 20,
-        "mid": 40,
-        "micro": 71
+        "mid": 64,
+        "micro": 88
       },
       "phaseOneAcceptance": "pending visual review",
       "phaseTwo": "locked",
       "runtimeIntegration": {
-        "profileId": "p01-current-scalp04-baseline",
+        "profileId": "p01-current-rest10",
         "guideCount": 165,
         "nodeCount": 16005,
         "coordinates": "head-aligned metres",
@@ -594,23 +696,24 @@
         "physicsEnabled": false,
         "denseRendererLoaded": false
       },
-      "experimentLabel": "基准发流",
+      "experimentLabel": "当前长度 · 静态发型",
       "flowField": {
-        "method": "screened tangent graph-Laplacian (Jacobi)",
-        "nodes": 2737,
-        "undirectedEdges": 114721,
-        "iterations": 219,
-        "residual": 9.684354346781385e-8,
+        "revision": "volume-flow-09",
+        "nodes": 53391,
+        "curveConstrainedNodes": 2464,
+        "iterations": 240,
+        "maxLastIterationChange": 0.0000033706768890473526,
+        "method": "screened harmonic interpolation of three vector components; part-aware grid neighbours",
+        "obstacleProjection": "bounded smooth ear-outlet correction baked once into final grid",
+        "baseWeight": 0.15,
+        "curveWeight": 30,
+        "curveStrength": 1,
         "converged": true,
-        "forbiddenEdges": 0,
-        "screen": 1.2,
-        "energy": 248.67078010023855,
-        "solveMS": 10328.9118,
-        "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+        "scope": "Upstream R09 shared field; final current paths additionally consume StaticRestField and connected wisps"
       },
       "clumpShaping": {
-        "accepted": 1778,
-        "maxDisplacementMM": 4.000000000000005
+        "accepted": 0,
+        "maxDisplacementMM": 4.977303326279267
       },
       "mouseControlled": false
     }
@@ -630,11 +733,45 @@
       "view": "oblique",
       "zone": "all",
       "level": "mid",
+      "landmarks": true,
+      "wisps": false,
+      "streams": false,
+      "cutReference": false,
       "physics": false,
       "phase": 1,
-      "readyMS": 8888.39999999106,
-      "lastSwitchMS": 43.1000000089407,
-      "viewerRevision": "scalp-restore-04",
+      "readyMS": 16173.09999999404,
+      "lastSwitchMS": 86.79999999701977,
+      "loadingTimings": {
+        "startMS": 100.20000000298023,
+        "baseFetchStartMS": 100.29999999701977,
+        "baseFetchedMS": 184.5,
+        "baseParsedMS": 227,
+        "nativeHostReadyMS": 16067,
+        "currentReadyMS": 16173.09999999404
+      },
+      "execution": {
+        "stage": "S1",
+        "stageLabel": "当前长度静态结构",
+        "status": "in_progress",
+        "currentTaskLabel": "主体束形与刘海分侧",
+        "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+        "firstRoundAccepted": false
+      },
+      "workbenchRevision": "static-rest-10",
+      "fringeStudy": null,
+      "restStudy": null,
+      "volumeStudy": null,
+      "routeStudy": null,
+      "cutStudy": null,
+      "viewerRevision": "continuous-flow-06",
+      "wispAuthoring": {
+        "enabled": false,
+        "active": 0
+      },
+      "temporalLandmarks": {
+        "enabled": true,
+        "anchors": 10
+      },
       "hairDisplay": {
         "guides": 165,
         "posteriorGuides": 58,
@@ -871,7 +1008,7 @@
         "persistent": true
       },
       "version": "Hair Structure Lab R01",
-      "revision": "scalp-restore-04",
+      "revision": "continuous-flow-06",
       "approvedEligibleRoots": 3067,
       "person": "P01",
       "nativeMeshSame": true,
@@ -886,7 +1023,7 @@
       "phaseOneAcceptance": "pending visual review",
       "phaseTwo": "locked",
       "runtimeIntegration": {
-        "profileId": "p01-current-scalp04-fringe-open",
+        "profileId": "p01-current-flow06-fringe-open",
         "guideCount": 165,
         "nodeCount": 16005,
         "coordinates": "head-aligned metres",
@@ -902,21 +1039,23 @@
       },
       "experimentLabel": "② 刘海减小侧扫",
       "flowField": {
-        "method": "screened tangent graph-Laplacian (Jacobi)",
+        "method": "screened tangent graph-Laplacian with continuous part affinity",
         "nodes": 2737,
-        "undirectedEdges": 114721,
-        "iterations": 219,
-        "residual": 9.684354346781385e-8,
+        "undirectedEdges": 119257,
+        "transitionEdges": 10044,
+        "iterations": 214,
+        "residual": 9.846366992440667e-8,
         "converged": true,
         "forbiddenEdges": 0,
+        "minimumRawMagnitude": 0.5507650418869191,
         "screen": 1.2,
-        "energy": 247.62316791701127,
-        "solveMS": 9702.1768,
-        "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+        "cachedGeometry": false,
+        "solveMS": 882.9106000000002,
+        "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
       },
       "clumpShaping": {
-        "accepted": 1778,
-        "maxDisplacementMM": 4.000000000000005
+        "accepted": 0,
+        "maxDisplacementMM": 4.006443131668477
       },
       "mouseControlled": false
     }
@@ -935,11 +1074,45 @@
         "view": "front",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -1176,7 +1349,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -1191,7 +1364,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -1207,21 +1380,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -1239,11 +1414,45 @@
         "view": "left",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -1480,7 +1689,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -1495,7 +1704,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -1511,21 +1720,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -1543,11 +1754,45 @@
         "view": "right",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -1784,7 +2029,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -1799,7 +2044,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -1815,21 +2060,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -1847,11 +2094,45 @@
         "view": "back",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -2088,7 +2369,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -2103,7 +2384,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -2119,21 +2400,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -2151,11 +2434,45 @@
         "view": "top",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -2392,7 +2709,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -2407,7 +2724,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -2423,21 +2740,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -2455,11 +2774,45 @@
         "view": "oblique",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.199999988079071,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 15.199999988079071,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -2696,7 +3049,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -2711,7 +3064,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-baseline",
+          "profileId": "p01-current-flow06-baseline",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -2727,21 +3080,23 @@
         },
         "experimentLabel": "基准发流",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 248.67078010023855,
-          "solveMS": 10328.9118,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 666.7461999999999,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -2759,11 +3114,45 @@
         "view": "front",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -3000,7 +3389,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -3009,13 +3398,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -3031,21 +3420,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -3063,11 +3454,45 @@
         "view": "left",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -3304,7 +3729,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -3313,13 +3738,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -3335,21 +3760,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -3367,11 +3794,45 @@
         "view": "right",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -3608,7 +4069,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -3617,13 +4078,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -3639,21 +4100,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -3671,11 +4134,45 @@
         "view": "back",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -3912,7 +4409,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -3921,13 +4418,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -3943,21 +4440,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -3975,11 +4474,45 @@
         "view": "top",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -4216,7 +4749,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -4225,13 +4758,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -4247,21 +4780,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -4279,11 +4814,45 @@
         "view": "oblique",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 12.900000005960464,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -4520,7 +5089,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -4529,13 +5098,13 @@
         "guides": 165,
         "groups": {
           "macro": 20,
-          "mid": 43,
-          "micro": 72
+          "mid": 40,
+          "micro": 71
         },
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-part-left",
+          "profileId": "p01-current-flow06-part-left",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -4551,21 +5120,23 @@
         },
         "experimentLabel": "① 发缝左移",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114679,
-          "iterations": 216,
-          "residual": 9.940005459616581e-8,
+          "undirectedEdges": 119641,
+          "transitionEdges": 11015,
+          "iterations": 212,
+          "residual": 9.926260368565713e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5534252994384429,
           "screen": 1.2,
-          "energy": 250.57287978329288,
-          "solveMS": 9973.1257,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 948.6174000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1707,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.211345641543834
         },
         "mouseControlled": false
       }
@@ -4583,11 +5154,45 @@
         "view": "front",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -4824,7 +5429,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -4839,7 +5444,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -4855,21 +5460,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -4887,11 +5494,45 @@
         "view": "left",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -5128,7 +5769,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -5143,7 +5784,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -5159,21 +5800,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -5191,11 +5834,45 @@
         "view": "right",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -5432,7 +6109,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -5447,7 +6124,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -5463,21 +6140,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -5495,11 +6174,45 @@
         "view": "back",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -5736,7 +6449,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -5751,7 +6464,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -5767,21 +6480,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -5799,11 +6514,45 @@
         "view": "top",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -6040,7 +6789,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -6055,7 +6804,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -6071,21 +6820,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -6103,11 +6854,45 @@
         "view": "oblique",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 1.2000000029802322,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 35,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -6344,7 +7129,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -6359,7 +7144,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-fringe-open",
+          "profileId": "p01-current-flow06-fringe-open",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -6375,21 +7160,23 @@
         },
         "experimentLabel": "② 刘海减小侧扫",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.684354346781385e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.846366992440667e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507650418869191,
           "screen": 1.2,
-          "energy": 247.62316791701127,
-          "solveMS": 9702.1768,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 882.9106000000002,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1778,
-          "maxDisplacementMM": 4.000000000000005
+          "accepted": 0,
+          "maxDisplacementMM": 4.006443131668477
         },
         "mouseControlled": false
       }
@@ -6407,11 +7194,45 @@
         "view": "front",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -6648,7 +7469,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -6663,7 +7484,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -6679,21 +7500,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -6711,11 +7534,45 @@
         "view": "left",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -6952,7 +7809,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -6967,7 +7824,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -6983,21 +7840,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -7015,11 +7874,45 @@
         "view": "right",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -7256,7 +8149,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -7271,7 +8164,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -7287,21 +8180,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -7319,11 +8214,45 @@
         "view": "back",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -7560,7 +8489,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -7575,7 +8504,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -7591,21 +8520,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -7623,11 +8554,45 @@
         "view": "top",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -7864,7 +8829,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -7879,7 +8844,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -7895,21 +8860,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -7927,11 +8894,45 @@
         "view": "oblique",
         "zone": "all",
         "level": "mid",
+        "landmarks": true,
+        "wisps": false,
+        "streams": false,
+        "cutReference": false,
         "physics": false,
         "phase": 1,
-        "readyMS": 8888.39999999106,
-        "lastSwitchMS": 36.5,
-        "viewerRevision": "scalp-restore-04",
+        "readyMS": 16173.09999999404,
+        "lastSwitchMS": 71,
+        "loadingTimings": {
+          "startMS": 100.20000000298023,
+          "baseFetchStartMS": 100.29999999701977,
+          "baseFetchedMS": 184.5,
+          "baseParsedMS": 227,
+          "nativeHostReadyMS": 16067,
+          "currentReadyMS": 16173.09999999404
+        },
+        "execution": {
+          "stage": "S1",
+          "stageLabel": "当前长度静态结构",
+          "status": "in_progress",
+          "currentTaskLabel": "主体束形与刘海分侧",
+          "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+          "firstRoundAccepted": false
+        },
+        "workbenchRevision": "static-rest-10",
+        "fringeStudy": null,
+        "restStudy": null,
+        "volumeStudy": null,
+        "routeStudy": null,
+        "cutStudy": null,
+        "viewerRevision": "continuous-flow-06",
+        "wispAuthoring": {
+          "enabled": false,
+          "active": 0
+        },
+        "temporalLandmarks": {
+          "enabled": true,
+          "anchors": 10
+        },
         "hairDisplay": {
           "guides": 165,
           "posteriorGuides": 58,
@@ -8168,7 +9169,7 @@
           "persistent": true
         },
         "version": "Hair Structure Lab R01",
-        "revision": "scalp-restore-04",
+        "revision": "continuous-flow-06",
         "approvedEligibleRoots": 3067,
         "person": "P01",
         "nativeMeshSame": true,
@@ -8183,7 +9184,7 @@
         "phaseOneAcceptance": "pending visual review",
         "phaseTwo": "locked",
         "runtimeIntegration": {
-          "profileId": "p01-current-scalp04-ear-back",
+          "profileId": "p01-current-flow06-ear-back",
           "guideCount": 165,
           "nodeCount": 16005,
           "coordinates": "head-aligned metres",
@@ -8199,21 +9200,23 @@
         },
         "experimentLabel": "③ 侧发更多绕耳后",
         "flowField": {
-          "method": "screened tangent graph-Laplacian (Jacobi)",
+          "method": "screened tangent graph-Laplacian with continuous part affinity",
           "nodes": 2737,
-          "undirectedEdges": 114721,
-          "iterations": 219,
-          "residual": 9.688212225246667e-8,
+          "undirectedEdges": 119257,
+          "transitionEdges": 10044,
+          "iterations": 214,
+          "residual": 9.852862821833783e-8,
           "converged": true,
           "forbiddenEdges": 0,
+          "minimumRawMagnitude": 0.5507581241827205,
           "screen": 1.2,
-          "energy": 249.03435493916817,
-          "solveMS": 9991.344299999999,
-          "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+          "cachedGeometry": false,
+          "solveMS": 865.7559000000001,
+          "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
         },
         "clumpShaping": {
-          "accepted": 1782,
-          "maxDisplacementMM": 4.000000000000004
+          "accepted": 0,
+          "maxDisplacementMM": 4.006941927715352
         },
         "mouseControlled": false
       }
@@ -8228,7 +9231,8 @@
       "unshapedGuides": 165,
       "displayState": {
         "experiment": "baseline",
-        "showingUnshapedComparison": false
+        "showingUnshapedComparison": false,
+        "showingCutReference": false
       },
       "locked": true,
       "rootIDs": [
@@ -8407,7 +9411,8 @@
       "unshapedGuides": 165,
       "displayState": {
         "experiment": "part-left",
-        "showingUnshapedComparison": false
+        "showingUnshapedComparison": false,
+        "showingCutReference": false
       },
       "locked": true,
       "rootIDs": [
@@ -8586,7 +9591,8 @@
       "unshapedGuides": 165,
       "displayState": {
         "experiment": "fringe-open",
-        "showingUnshapedComparison": false
+        "showingUnshapedComparison": false,
+        "showingCutReference": false
       },
       "locked": true,
       "rootIDs": [
@@ -8765,7 +9771,8 @@
       "unshapedGuides": 165,
       "displayState": {
         "experiment": "ear-back",
-        "showingUnshapedComparison": false
+        "showingUnshapedComparison": false,
+        "showingCutReference": false
       },
       "locked": true,
       "rootIDs": [
@@ -8949,11 +9956,45 @@
       "view": "back",
       "zone": "all",
       "level": "mid",
+      "landmarks": true,
+      "wisps": false,
+      "streams": false,
+      "cutReference": false,
       "physics": false,
       "phase": 1,
-      "readyMS": 8888.39999999106,
-      "lastSwitchMS": 1.0999999940395355,
-      "viewerRevision": "scalp-restore-04",
+      "readyMS": 16173.09999999404,
+      "lastSwitchMS": 12.399999991059303,
+      "loadingTimings": {
+        "startMS": 100.20000000298023,
+        "baseFetchStartMS": 100.29999999701977,
+        "baseFetchedMS": 184.5,
+        "baseParsedMS": 227,
+        "nativeHostReadyMS": 16067,
+        "currentReadyMS": 16173.09999999404
+      },
+      "execution": {
+        "stage": "S1",
+        "stageLabel": "当前长度静态结构",
+        "status": "in_progress",
+        "currentTaskLabel": "主体束形与刘海分侧",
+        "nextTaskLabel": "顶部旋涡与后枕体积的连续性",
+        "firstRoundAccepted": false
+      },
+      "workbenchRevision": "static-rest-10",
+      "fringeStudy": null,
+      "restStudy": null,
+      "volumeStudy": null,
+      "routeStudy": null,
+      "cutStudy": null,
+      "viewerRevision": "continuous-flow-06",
+      "wispAuthoring": {
+        "enabled": false,
+        "active": 0
+      },
+      "temporalLandmarks": {
+        "enabled": true,
+        "anchors": 10
+      },
       "hairDisplay": {
         "guides": 165,
         "posteriorGuides": 58,
@@ -9190,7 +10231,7 @@
         "persistent": true
       },
       "version": "Hair Structure Lab R01",
-      "revision": "scalp-restore-04",
+      "revision": "continuous-flow-06",
       "approvedEligibleRoots": 3067,
       "person": "P01",
       "nativeMeshSame": true,
@@ -9205,7 +10246,7 @@
       "phaseOneAcceptance": "pending visual review",
       "phaseTwo": "locked",
       "runtimeIntegration": {
-        "profileId": "p01-current-scalp04-ear-back",
+        "profileId": "p01-current-flow06-ear-back",
         "guideCount": 165,
         "nodeCount": 16005,
         "coordinates": "head-aligned metres",
@@ -9221,21 +10262,23 @@
       },
       "experimentLabel": "③ 侧发更多绕耳后",
       "flowField": {
-        "method": "screened tangent graph-Laplacian (Jacobi)",
+        "method": "screened tangent graph-Laplacian with continuous part affinity",
         "nodes": 2737,
-        "undirectedEdges": 114721,
-        "iterations": 219,
-        "residual": 9.688212225246667e-8,
+        "undirectedEdges": 119257,
+        "transitionEdges": 10044,
+        "iterations": 214,
+        "residual": 9.852862821833783e-8,
         "converged": true,
         "forbiddenEdges": 0,
+        "minimumRawMagnitude": 0.5507581241827205,
         "screen": 1.2,
-        "energy": 249.03435493916817,
-        "solveMS": 9991.344299999999,
-        "limits": "Root-domain field only; no volumetric solver or incremental factorization. Local control still requires precompilation."
+        "cachedGeometry": false,
+        "solveMS": 865.7559000000001,
+        "limits": "Scalp field and bounded local comb edits only; fixed rest outlets. Not a volumetric field or arbitrary style generator."
       },
       "clumpShaping": {
-        "accepted": 1782,
-        "maxDisplacementMM": 4.000000000000004
+        "accepted": 0,
+        "maxDisplacementMM": 4.006941927715352
       },
       "mouseControlled": false
     }
