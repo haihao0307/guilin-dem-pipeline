@@ -35,7 +35,7 @@ jobs:
           node viewer-08/test-transport.mjs
           node viewer-08/test-storage.mjs
       - name: Real browser source versus converted world matrices and raster equality
-        run: TEST_NONCOAL=1 TEST_NONCOAL_MASTER=1 node viewer-08/browser.cjs
+        run: TEST_USER_MASTER=1 node user-viewer-08/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
