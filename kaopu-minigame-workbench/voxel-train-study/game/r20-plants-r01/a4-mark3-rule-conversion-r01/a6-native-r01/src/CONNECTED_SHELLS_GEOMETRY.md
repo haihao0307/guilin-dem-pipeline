@@ -50,7 +50,7 @@ The tender is a new analytic closed cross-section sweep with quarter-ellipse com
 
 Run: `node --test a4-mark3-rule-conversion-r01/a6-native-r01/src/a6-connected-shells.test.mjs`.
 
-Result:20/20 passing, including two isolated static-coupling checks. Details and reproducible hashes are in `a6-connected-shells.qa.json`.
+Result:23/23 passing, including isolated static-coupling and flexible-transition checks. Details and reproducible hashes are in `a6-connected-shells.qa.json`.
 
 - Typed arrays, finite values, unit normals, index ranges, nondegenerate Float32 triangles and face/normal orientation.
 -24 actual body openings, retained rounded corners and independent reveals/gaskets.
@@ -71,3 +71,16 @@ The coach emits126 parts; the tender emits20. CPU tests do not establish appeara
 - `tender-end-dragbox-1` is present atz19.827875–20.127875, y1.03–1.465. This is a structural attachment candidate, not proof of a coupling interface.
 - `end-services--1-coupling-head` on the coach is present at localz−11.49…−11.35, coupling design height0.82. At the proposed32.34 offset it reaches globalz20.85…20.99.
 - The explicitly approved `buildA6StaticCoupling({coachOffsetZ:32.34})` in `a6-static-coupling.mjs` now supplies a separately declared6-part static drop adapter/link. Its rear beam attachment face is20.077875, new low pin is[0,.82,20.16], and the existing coach-head construction centre is[0,.82,20.91]. It accounts explicitly for the0.48m height difference and does not use the cross-stretcher as a coupling endpoint. The6 added pieces must be counted separately from fixed338 locomotive/tender pieces,6 main wheels and238 coach pieces, and remain visible in shell-hidden views. This is only an authored static layout connection; compatibility, load transfer, strength, articulation and collision certification remain unverified. No original mechanism was changed.
+
+## First rendered review: independent flexible-looking gap closures
+
+The actual first side and front-three-quarter render was inspected. It showed a broad0.8m locomotive/tender opening and a second tender/coach separation that visually broke the continuous family. `buildA6FlexibleTransitions({crownHeight,coachOffsetZ})` in `a6-flexible-transitions.mjs` now creates6 independent thin-wall appearance parts: green shallow-corrugation panels and one24mm dark seam per interface. These are exterior shrouds, so hide them with the shell; keep the real drawgear and separate static adapter visible.
+
+- Locomotive/tender actual end planes12.10/12.90; new shroud12.106–12.894.
+- Tender rear and coach existing aero-tip20.50/20.895; new shroud20.506–20.889 at coachOffsetZ32.34.
+- Each end leaves6mm to the actual neighbouring cap plane. End sections are sampled from the actual native locomotive, rounded tender cap and coach fairing-tip curves.
+- Each U-shaped wall has16mm cross-section normal inset, its own inside surface and sealed perimeter. There is no opaque bottom spanning the underbody. The lower edge1.72 remains above the drawgear, tender bearings and added static link.
+- Shared crown edits rebuild both shrouds; the middle crowns gently meet the shared nominal crown while their ends follow the actual slightly dipped end caps.
+- CPU tests verify finite arrays, face winding, each part's closedness, endpoint crown matching,6mm cap separation, open mechanical corridor and no triangle intersection with the retained coach gangway's conservative bounding box.
+
+These flexible-looking meshes are static authoring surfaces. Flex, material durability, articulation, coupled turns and loads remain unvalidated. No original mechanical component was changed.

@@ -54,9 +54,10 @@ export function baselineMetresPerPixel(bounds, rectangles, view, margin = 1.16) 
   bounds.forEach((box, index) => {
     const size = box.max.map((value, axis) => value - box.min[axis]);
     const rectangle = rectangles[index];
+    if (!rectangle || !Number.isFinite(rectangle.width) || !Number.isFinite(rectangle.height) || rectangle.width < 2 || rectangle.height < 2) throw new RangeError('Cannot derive a metric scale from a missing or degenerate viewport');
     const width = view === 'side' ? size[2] : size[0];
     const height = view === 'top' ? size[2] : size[1];
-    scale = Math.max(scale, width / Math.max(1, rectangle.width), height / Math.max(1, rectangle.height));
+    scale = Math.max(scale, width / rectangle.width, height / rectangle.height);
   });
   return scale * margin;
 }
@@ -155,7 +156,7 @@ export function createRenderQueue({
     stats.lastGpuCompletionElapsedMs = verified ? finishedAt - startedAt : null;
     if (verified) stats.maxGpuCompletionElapsedMs = Math.max(stats.maxGpuCompletionElapsedMs, stats.lastGpuCompletionElapsedMs);
     stats.lastCompletedState = stats.lastRenderedState;
-    stats.recentFrames.push({revision: activeRevision, cpuSubmissionMs: stats.lastCpuSubmissionMs, gpuWaitMs: stats.lastGpuWaitMs, gpuCompletionElapsedMs: stats.lastGpuCompletionElapsedMs, gpuCompletionVerified: verified});
+    stats.recentFrames.push({revision: activeRevision, renderedState: stats.lastRenderedState, cpuSubmissionMs: stats.lastCpuSubmissionMs, gpuWaitMs: stats.lastGpuWaitMs, gpuCompletionElapsedMs: stats.lastGpuCompletionElapsedMs, gpuCompletionVerified: verified});
     if (stats.recentFrames.length > 24) stats.recentFrames.shift();
     schedule();
   }

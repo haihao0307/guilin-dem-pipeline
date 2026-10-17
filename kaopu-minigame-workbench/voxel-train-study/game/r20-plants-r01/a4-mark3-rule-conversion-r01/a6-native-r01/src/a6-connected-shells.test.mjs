@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {buildA6CoachShell,A6_COACH_DEFAULTS,sampleA6CoachHem,sampleA6CoachSurface} from './a6-coach-shell.mjs';
 import {buildA6TenderShell,sampleTenderHalfWidth,sampleA6TenderSection,sampleA6TenderSideSurface} from './a6-tender-shell.mjs';
+import {buildA6FlexibleTransitions} from './a6-flexible-transitions.mjs';
 import {buildA6StaticCoupling} from './a6-static-coupling.mjs';
 import {buildLocomotiveMechanics} from '../../student-native-r01/src/locomotive-mechanics.mjs';
 import {buildMark3Mechanics} from '../../student-native-r01/src/coach-mechanics.mjs';
@@ -89,5 +90,23 @@ record('new six-part static connection uses actual dragbox and coach-head constr
 record('new static coupling is closed, finite and editable without changing existing mechanics',()=>{
   const hash=partsHash(mechanics.parts),link=buildA6StaticCoupling();geometryHealth(link);for(const p of link.parts){const topology=manifold([p]);assert.equal(topology.nonManifoldEdges,0,p.name);assert.ok(topology.signedVolume>0,p.name);}
   const shifted=buildA6StaticCoupling({coachOffsetZ:32.55});assert.ok(near(shifted.evidence.coach.assembledConstructionCentre[2]-link.evidence.coach.assembledConstructionCentre[2],.21));assert.deepEqual(shifted.evidence.tender,link.evidence.tender);assert.equal(partsHash(mechanics.parts),hash);assert.equal(mechanics.parts.length,238);assert.throws(()=>buildA6StaticCoupling({coachOffsetZ:31}));
+});
+record('both flexible-looking native transitions have finite closed 16 mm walls',()=>{
+  const out=buildA6FlexibleTransitions();assert.equal(out.parts.length,6);geometryHealth(out);
+  for(const p of out.parts){const topo=manifold([p]);assert.equal(topo.nonManifoldEdges,0,p.name);assert.ok(topo.signedVolume>0,p.name);assert.equal(p.metadata.wallThicknessM,.016);assert.equal(p.metadata.originalMechanicalComponent,false);assert.equal(p.metadata.articulationValidated,false);}
+  report.flexibleTransitions={parts:6,interfaces:out.interfaces,bounds:out.bounds,staticDesignOnly:true,originalMechanicsChanged:false};
+});
+record('transition caps stay inside the real empty longitudinal gaps and leave the mechanics corridor open',()=>{
+  const out=buildA6FlexibleTransitions();for(const spec of out.interfaces){const ps=out.parts.filter(p=>p.metadata.interface===spec.id);for(const p of ps)for(let i=0;i<p.positions.length;i+=3){assert.ok(p.positions[i+2]>=spec.fromActualShellZ+.00599);assert.ok(p.positions[i+2]<=spec.toActualShellZ-.00599);assert.ok(p.positions[i+1]>=1.71999);}
+    for(const [z,crown]of [[spec.generatedZ[0],spec.endpointCrowns[0]],[spec.generatedZ[1],spec.endpointCrowns[1]]]){let max=-Infinity;for(const p of ps)for(let i=0;i<p.positions.length;i+=3)if(near(p.positions[i+2],z,1e-5))max=Math.max(max,p.positions[i+1]);assert.ok(near(max,crown,2e-6));}}
+  // Existing coach gangway projects ahead of its body. Test real shroud triangles
+  // against its entire conservative bounding box, not just isolated vertices.
+  const lo=[-.607,1.10,20.8649],hi=[.607,3.277,21.056];let hits=0;
+  for(const p of out.parts.filter(p=>p.metadata.interface==='tender-coach'))for(let k=0;k<p.indices.length;k+=3){let poly=[0,1,2].map(j=>Array.from(p.positions.slice(p.indices[k+j]*3,p.indices[k+j]*3+3)));if([0,1,2].some(a=>poly.every(q=>q[a]<lo[a])||poly.every(q=>q[a]>hi[a])))continue;
+    for(let axis=0;axis<3&&poly.length;axis++)for(const [limit,sign]of [[lo[axis],1],[hi[axis],-1]]){const next=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],da=sign*(a[axis]-limit),db=sign*(b[axis]-limit);if(da>=0)next.push(a);if((da<0)!==(db<0)){const t=da/(da-db);next.push(a.map((x,j)=>x+(b[j]-x)*t));}}poly=next;}if(poly.length)hits++;}
+  assert.equal(hits,0,'new skin cannot intersect the retained forward coach gangway');
+});
+record('transition crown edits preserve separate thin seams and do not mutate any original mechanics',()=>{
+  const hash=partsHash(mechanics.parts);for(const crownHeight of [3.98,4.15]){const out=buildA6FlexibleTransitions({crownHeight,coachOffsetZ:32.34});geometryHealth(out);assert.ok(out.bounds.max[1]<=crownHeight+1e-5);assert.ok(out.bounds.max[1]>crownHeight-.001);assert.equal(out.parts.filter(p=>p.material==='rubber').length,2);assert.equal(partsHash(mechanics.parts),hash);}assert.throws(()=>buildA6FlexibleTransitions({crownHeight:3.5}));
 });
 test('write detailed CPU evidence',()=>{report.coachHash=partsHash(coach.parts);report.tenderHash=partsHash(tender.parts);report.counts.coachTriangles=coach.parts.reduce((n,p)=>n+p.indices.length/3,0);report.counts.tenderTriangles=tender.parts.reduce((n,p)=>n+p.indices.length/3,0);writeFileSync(new URL('a6-connected-shells.qa.json',import.meta.url),JSON.stringify(report,null,2)+'\n');});

@@ -4,6 +4,7 @@ import {buildA6LocomotiveShell} from './src/a6-locomotive-shell.mjs';
 import {buildA6CoachShell} from './src/a6-coach-shell.mjs';
 import {buildA6TenderShell} from './src/a6-tender-shell.mjs';
 import {buildA6StaticCoupling} from './src/a6-static-coupling.mjs';
+import {buildA6FlexibleTransitions} from './src/a6-flexible-transitions.mjs';
 import {buildLocomotiveMechanics} from '../student-native-r01/src/locomotive-mechanics.mjs';
 import {buildMark3Mechanics} from '../student-native-r01/src/coach-mechanics.mjs';
 import {buildDrivingWheel} from '../student-native-r01/src/driving-wheel.mjs';
@@ -25,7 +26,7 @@ wideLayout.addEventListener('change', event => { parameterDetails.open = event.m
 const panels = [], mechanicalGroups = [], gestureResetters = [];
 const state = createViewState();
 let structureOnly = false, requestedParameters = {...DEFAULT_SHELL_PARAMETERS}, shellParameters = {...DEFAULT_SHELL_PARAMETERS};
-let renderedSize = '', lastBuildError = false;
+let renderedSize = '', lastBuildError = false, layoutRetries = 0, layoutRetryTimer = null;
 const renderer = new T.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.outputColorSpace = T.SRGBColorSpace;
@@ -107,6 +108,7 @@ const coachTransform = Object.freeze({position: Object.freeze([0, 0, CONNECTED_L
 const loco = buildA6LocomotiveShell({topHeight: shellParameters.commonRoofHeight, cabShift: -shellParameters.cabForwardShift});
 const coach = buildA6CoachShell({crownHeight: shellParameters.commonRoofHeight});
 const tender = buildA6TenderShell({crownHeight: shellParameters.commonRoofHeight});
+let flexibleTransitions = buildA6FlexibleTransitions({crownHeight: shellParameters.commonRoofHeight, coachOffsetZ: CONNECTED_LAYOUT.coachOffsetZ});
 const wheel = buildDrivingWheel(), locomotiveMechanics = buildLocomotiveMechanics(), coachMechanics = buildMark3Mechanics();
 const connectedScene = scene();
 const staticCoupling = buildA6StaticCoupling({coachOffsetZ: CONNECTED_LAYOUT.coachOffsetZ});
@@ -117,9 +119,10 @@ connectedScene.add(staticCouplingGroup);
 let locomotiveShellGroup = buildGroup(loco, 'editable-a6-locomotive-shell');
 let tenderGroup = buildGroup(tender, 'editable-a6-tender-shell');
 let coachGroup = buildGroup(coach, 'editable-a6-coach-shell', coachTransform);
+let flexibleTransitionGroup = buildGroup(flexibleTransitions, 'editable-a6-flexible-transitions');
 let brandingGroup = createA6Branding(T, {loco, tender, materialLibrary});
 const currentResults = {loco, tender, coach};
-connectedScene.add(locomotiveShellGroup, tenderGroup, coachGroup, brandingGroup);
+connectedScene.add(locomotiveShellGroup, tenderGroup, coachGroup, flexibleTransitionGroup, brandingGroup);
 addMechanical(connectedScene, locomotiveMechanics, 'locked-locomotive-mechanics');
 addMechanical(connectedScene, coachMechanics, 'locked-coach-mechanics', coachTransform);
 for (const z of A4_DIMENSIONS.driveAxisIndices.map(i => A4_DIMENSIONS.axisZ[i])) for (const side of [-1, 1]) {
@@ -163,11 +166,20 @@ function requestRender() { return frameQueue.request(); }
 function render() { return requestRender(); }
 function drawFrame() {
   const sw = stage.clientWidth, sh = stage.clientHeight;
-  if (!sw || !sh) return;
+  if (sw < 2 || sh < 2) {
+    qa.viewport = {valid: false, width: sw, height: sh};
+    if (++layoutRetries > 8) throw new Error('Viewport remained degenerate after bounded layout retries; no new view was drawn');
+    clearTimeout(layoutRetryTimer); layoutRetryTimer = setTimeout(requestRender, 125);
+    return {skipped: 'degenerate-layout', viewport: {...qa.viewport}};
+  }
+  layoutRetries = 0; clearTimeout(layoutRetryTimer); layoutRetryTimer = null;
   const sizeKey = `${sw}x${sh}`;
   if (sizeKey !== renderedSize) { renderer.setSize(sw, sh, false); renderedSize = sizeKey; }
-  const base = stage.getBoundingClientRect(), rectangles = panels.map(panel => panel.element.getBoundingClientRect());
+  // One scene fills the stage. CSS panel DOMRects can transiently collapse during
+  // a screenshot/layout transaction; never substitute a 1px measuring viewport.
+  const viewport = {width: sw, height: sh}, rectangles = [viewport];
   const baseScale = baselineMetresPerPixel(baselineBounds, rectangles, state.view), scale = baseScale / state.zoom;
+  qa.viewport = {valid: true, width: sw, height: sh, drawingBufferWidth: renderer.domElement.width, drawingBufferHeight: renderer.domElement.height};
   renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
   panels.forEach((panel, index) => {
     const r = rectangles[index], camera = panel.camera, centre = new T.Vector3().fromArray(qaCaptureTarget ?? focusTargets[state.focus]);
@@ -184,13 +196,13 @@ function drawFrame() {
     }
     camera.lookAt(centre); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
     camera.userData.metresPerPixel = scale;
-    renderer.setViewport(r.left - base.left, sh - (r.bottom - base.top), r.width, r.height);
-    renderer.setScissor(r.left - base.left, sh - (r.bottom - base.top), r.width, r.height);
+    renderer.setViewport(0, 0, sw, sh);
+    renderer.setScissor(0, 0, sw, sh);
     renderer.render(panel.scene, camera);
     panel.element.querySelector('.scale-label').textContent = `${state.free ? '观察比例' : '正交比例'} ${(scale * 1000).toFixed(2)} mm / CSS px · ${state.zoom.toFixed(2)}×`;
   });
   Object.assign(qa, {view: state.view, freeMode: state.free, metresPerPixel: scale, baseMetresPerPixel: baseScale, scales: panels.map(panel => panel.camera.userData.metresPerPixel), dimensionAcceptanceMode: !state.free});
-  return {...state, structureOnly, shellRevision: qa.shellRevision, metresPerPixel: scale};
+  return {...state, structureOnly, shellRevision: qa.shellRevision, metresPerPixel: scale, viewport: {...qa.viewport}};
 }
 const frameQueue = createRenderQueue({draw: drawFrame, gl: renderer.getContext(), onError: window.fail});
 function resetGestures() { gestureResetters.forEach(reset => reset()); }
@@ -204,11 +216,11 @@ function setFreeMode(value) {
 function setZoom(value) { setViewZoom(state, value); syncControls(); render(); return state.zoom; }
 function showStructure(value) {
   structureOnly = !!value;
-  locomotiveShellGroup.visible = tenderGroup.visible = coachGroup.visible = brandingGroup.visible = !structureOnly;
+  locomotiveShellGroup.visible = tenderGroup.visible = coachGroup.visible = flexibleTransitionGroup.visible = brandingGroup.visible = !structureOnly;
   qa.structureOnly = structureOnly; syncControls(); render();
 }
 const yieldTurn = () => new Promise(resolve => setTimeout(resolve, 0));
-function disposeShellBuild(artifact) { disposeGroup(artifact.locoGroup); disposeGroup(artifact.tenderGroup); disposeGroup(artifact.coachGroup); disposeGroup(artifact.brandingGroup); }
+function disposeShellBuild(artifact) { disposeGroup(artifact.locoGroup); disposeGroup(artifact.tenderGroup); disposeGroup(artifact.coachGroup); disposeGroup(artifact.brandingGroup); disposeGroup(artifact.flexibleTransitionGroup); }
 const rebuildQueue = createRebuildQueue({
   async build(parameters) {
     const artifact = {};
@@ -226,6 +238,9 @@ const rebuildQueue = createRebuildQueue({
         await yieldTurn();
         artifact.coach = buildA6CoachShell({crownHeight: parameters.commonRoofHeight});
         artifact.coachGroup = buildGroup(artifact.coach, 'editable-a6-coach-shell', coachTransform);
+        await yieldTurn();
+        artifact.flexibleTransitions = buildA6FlexibleTransitions({crownHeight: parameters.commonRoofHeight, coachOffsetZ: CONNECTED_LAYOUT.coachOffsetZ});
+        artifact.flexibleTransitionGroup = buildGroup(artifact.flexibleTransitions, 'editable-a6-flexible-transitions');
       }
       if (artifact.locoGroup || artifact.tenderGroup) artifact.brandingGroup = createA6Branding(T, {loco: artifact.loco ?? currentResults.loco, tender: artifact.tender ?? currentResults.tender, materialLibrary});
       return artifact;
@@ -246,6 +261,11 @@ const rebuildQueue = createRebuildQueue({
       const previous = coachGroup; coachGroup = artifact.coachGroup;
       coachGroup.visible = !structureOnly; connectedScene.add(coachGroup); disposeGroup(previous);
       currentResults.coach = artifact.coach; qa.coachParameters = artifact.coach.parameters;
+    }
+    if (artifact.flexibleTransitionGroup) {
+      const previous = flexibleTransitionGroup; flexibleTransitionGroup = artifact.flexibleTransitionGroup;
+      flexibleTransitions = artifact.flexibleTransitions;
+      flexibleTransitionGroup.visible = !structureOnly; connectedScene.add(flexibleTransitionGroup); disposeGroup(previous);
     }
     if (artifact.brandingGroup) {
       const previous = brandingGroup; brandingGroup = artifact.brandingGroup;
@@ -356,10 +376,11 @@ Object.assign(qa, {
   sourceGeometryRequests: 0, geometryGeneration: 'native-curves-and-surfaces',
   wheelDiameter: wheel.nominalTreadDiameter, driveAxisZ: A4_DIMENSIONS.driveAxisIndices.map(i => A4_DIMENSIONS.axisZ[i]),
   mechanicalCoverage: {locomotive: locomotiveMechanics.coverage, coach: coachMechanics.checklist},
+  newDesignTransitionParts: flexibleTransitions.parts.length,
   staticCouplingGroup, staticCouplingEvidence: staticCoupling.evidence, newDesignConnectionParts: staticCoupling.parts.length,
   mechanicalPartCounts: {locomotive: locomotiveMechanics.parts.length, coach: coachMechanics.parts.length, nativeWheelInstances: 6, componentsPerWheel: wheel.parts.length},
   missingMechanical: ['motion constraints and force/clearance validation', 'unverified detailed mechanical dimensions and mounting', 'coach interior equipment and seating', 'coupler functional design'],
-  nativeComponentCount: staticCoupling.parts.length + loco.parts.length + tender.parts.length + coach.parts.length + 6 * wheel.parts.length + locomotiveMechanics.parts.length + coachMechanics.parts.length,
+  nativeComponentCount: flexibleTransitions.parts.length + staticCoupling.parts.length + loco.parts.length + tender.parts.length + coach.parts.length + 6 * wheel.parts.length + locomotiveMechanics.parts.length + coachMechanics.parts.length,
   locoEvidence: loco.evidence, coachInterfaces: coach.interfaces, tenderInterfaces: tender.interfaces,
   brandingMode: 'existing-authored-outline-master',
   materialMode: 'native-master', physicalApproval: false, visualApproval: false,
@@ -368,8 +389,11 @@ Object.defineProperties(qa, {
   state: {get: () => ({...state, structureOnly, busy: qa.busy})},
   shellParameters: {get: () => ({...shellParameters})},
   requestedShellParameters: {get: () => ({...requestedParameters})},
+  flexibleTransitionGroup: {get: () => flexibleTransitionGroup},
+  flexibleTransitionParameters: {get: () => flexibleTransitions.parameters},
+  flexibleTransitionInterfaces: {get: () => flexibleTransitions.interfaces},
   brandingGroup: {get: () => brandingGroup},
-  shellGroups: {get: () => [locomotiveShellGroup, tenderGroup, coachGroup]},
+  shellGroups: {get: () => [locomotiveShellGroup, tenderGroup, coachGroup, flexibleTransitionGroup]},
   rebuildState: {get: () => rebuildQueue.state},
   renderPending: {get: () => frameQueue.pending},
   renderStats: {get: () => frameQueue.stats},

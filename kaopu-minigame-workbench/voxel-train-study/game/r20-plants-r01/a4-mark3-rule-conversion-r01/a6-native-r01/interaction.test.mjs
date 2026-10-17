@@ -133,6 +133,15 @@ test('metric framing uses only immutable default train bounds, not edited shells
   assert.equal(baselineMetresPerPixel(boxes, [{width: 2000, height: 1000}], 'side'), before.side / 2);
 });
 
+test('degenerate layout is rejected instead of silently using a one-pixel metric denominator', () => {
+  const boxes = [{min: [-1.39153, -.028, -1.1], max: [1.39153, 4.495, 43.83]}];
+  for (const rectangle of [{width: 0, height: 670}, {width: 1, height: 670}, {width: 1440, height: 0}, {width: NaN, height: 670}]) {
+    assert.throws(() => baselineMetresPerPixel(boxes, [rectangle], 'front'), /degenerate viewport/);
+  }
+  const scale = baselineMetresPerPixel(boxes, [{width: 1440, height: 335}], 'front');
+  assert(Math.abs(scale - 4.523 / 335 * 1.16) < 1e-12);
+});
+
 test('queued edits resolve to latest value and dispose superseded in-flight artifacts', async () => {
   const committed = [], disposed = [], busy = [];
   let signalStarted, releaseFirst;

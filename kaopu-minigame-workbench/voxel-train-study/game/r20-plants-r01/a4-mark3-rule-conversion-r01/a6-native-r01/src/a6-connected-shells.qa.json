@@ -78,6 +78,18 @@
     {
       "name": "new static coupling is closed, finite and editable without changing existing mechanics",
       "status": "pass"
+    },
+    {
+      "name": "both flexible-looking native transitions have finite closed 16 mm walls",
+      "status": "pass"
+    },
+    {
+      "name": "transition caps stay inside the real empty longitudinal gaps and leave the mechanics corridor open",
+      "status": "pass"
+    },
+    {
+      "name": "transition crown edits preserve separate thin seams and do not mutate any original mechanics",
+      "status": "pass"
     }
   ],
   "counts": {
@@ -410,6 +422,80 @@
     },
     "provisional": true,
     "structuralOrKinematicCertification": false
+  },
+  "flexibleTransitions": {
+    "parts": 6,
+    "interfaces": [
+      {
+        "id": "locomotive-tender",
+        "fromActualShellZ": 12.1,
+        "toActualShellZ": 12.9,
+        "generatedZ": [
+          12.106,
+          12.894
+        ],
+        "endFaceGapM": 0.006,
+        "endpointSectionKinds": [
+          "actual-locomotive-rear-section",
+          "actual-rounded-tender-end-section"
+        ],
+        "endpointCrowns": [
+          4,
+          3.9635581480131243
+        ],
+        "commonCrownParameter": 4.03,
+        "hemY": 1.72,
+        "openUnderside": true,
+        "foldCount": 4,
+        "normalInsetWallM": 0.016,
+        "staticAppearanceOnly": true,
+        "articulationValidated": false
+      },
+      {
+        "id": "tender-coach",
+        "fromActualShellZ": 20.5,
+        "toActualShellZ": 20.895000000000003,
+        "generatedZ": [
+          20.506,
+          20.889000000000003
+        ],
+        "endFaceGapM": 0.006,
+        "endpointSectionKinds": [
+          "actual-rounded-tender-end-section",
+          "actual-coach-front-aero-tip"
+        ],
+        "endpointCrowns": [
+          3.9635581480131243,
+          3.96925
+        ],
+        "commonCrownParameter": 4.03,
+        "hemY": 1.72,
+        "openUnderside": true,
+        "foldCount": 2,
+        "normalInsetWallM": 0.016,
+        "staticAppearanceOnly": true,
+        "articulationValidated": false
+      }
+    ],
+    "bounds": {
+      "min": [
+        -1.350927472114563,
+        1.7200000286102295,
+        12.105999946594238
+      ],
+      "max": [
+        1.350927472114563,
+        4.03000020980835,
+        20.888999938964844
+      ],
+      "size": [
+        2.701854944229126,
+        2.31000018119812,
+        8.782999992370605
+      ]
+    },
+    "staticDesignOnly": true,
+    "originalMechanicsChanged": false
   },
   "coachHash": "67f98196431f7ac59d9635ef31ba21b7c5d44775ac5da0bfa390c0187c4e6963",
   "tenderHash": "26b3c725a85bbd91a681e6a02d5f5134598c0f5afa2b2e22fbb79c00a733339a"
