@@ -1,0 +1,146 @@
+name: Train R20 street character and bounded WebGL cost
+on:
+  push:
+    branches: ['qa/train-r20-street-character-20261010']
+    paths:
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20/**'
+      - '.github/workflows/train-r20-character-qa.yml'
+      - '.github/scripts/train-r20-budget-stage.cjs'
+permissions:
+  contents: read
+concurrency:
+  group: train-r20-character-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  stage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study
+            .github/scripts
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r20-stage" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r20-stage/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r20-stage/node_modules" >> "$GITHUB_ENV"
+      - name: Scheduling, geometry and resource unit checks
+        run: node --test "$GAME/r20/tests/"*.test.mjs
+      - name: Read frozen pre-budget candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 9c5f373975655a4a6df9bb7b9beab490c9ce37ea
+          path: qa-baseline-budget
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20
+      - name: Stage comparison and serve
+        run: |
+          cp -a "qa-baseline-budget/$GAME/r20" "$GAME/r20-before-budget"
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-stage-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$GAME/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Small real WebGL segment and every queue drain frame
+        run: node .github/scripts/train-r20-budget-stage.cjs
+      - name: Preserve stage including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-budget-stage-${{ github.sha }}
+          path: train-r20-budget-stage/
+          compression-level: 0
+          retention-days: 7
+  visual:
+    needs: stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r20" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r20/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r20/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Source, identity, geometry and streaming checks
+        run: |
+          set -o pipefail
+          mkdir -p train-r20-results
+          export R20_QA_OUT=train-r20-results/cpu
+          node --test "$GAME/r20/tests/"*.test.mjs 2>&1 | tee train-r20-results/unit.txt
+      - name: Read frozen pre-cache R20 for identical-pixel comparison
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 0a6e0c4410b2a110957eaf47ddf872e1b3c0d177
+          path: qa-baseline-r20
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20
+      - name: Stage comparison-only baseline beside shared engine
+        run: cp -a "qa-baseline-r20/$GAME/r20" "$GAME/r20-before-cache"
+      - name: Serve candidate and frozen accepted baseline
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$GAME/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Real WebGL appearance and same-machine resource comparison
+        env:
+          TRAIN_QA_OUT: train-r20-results/visual
+        run: node "$GAME/r20/tests/r20-visual-comparison.cjs"
+      - name: Preserve all evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-visual-${{ github.sha }}
+          path: train-r20-results/
+          compression-level: 0
+          retention-days: 7
+  native:
+    needs: stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GAME: kaopu-minigame-workbench/voxel-train-study/game
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study
+      - name: Install official pinned browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/train-r20" --no-save --ignore-scripts --no-audit --no-fund playwright@1.57.0
+          "$RUNNER_TEMP/train-r20/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/train-r20/node_modules" >> "$GITHUB_ENV"
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Serve candidate
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/r20-http.log" 2>&1 &
+          for n in $(seq 1 30); do curl --fail --silent http://127.0.0.1:8765/$GAME/r20/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Native first leg with original controls and shared clock
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20/
+          TRAIN_QA_OUT: train-r20-results/native
+        run: node "$GAME/r20/tests/r20-native-browser.cjs"
+      - name: Phone viewport and trusted touch
+        if: ${{ !cancelled() }}
+        env:
+          TRAIN_GAME_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20/
+          TRAIN_QA_OUT: train-r20-results/mobile
+        run: node "$GAME/r20/tests/r20-mobile-browser.cjs"
+      - name: Preserve native and phone evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-r20-native-${{ github.sha }}
+          path: train-r20-results/
+          compression-level: 0
+          retention-days: 7

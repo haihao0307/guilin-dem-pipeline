@@ -1,0 +1,32 @@
+name: Train R20 scratch isolation correctness
+on:
+  push:
+    branches: ['qa/train-r20-street-character-20261010']
+    paths:
+      - '.github/tests/train-r20-scratch-isolation.test.mjs'
+      - '.github/workflows/train-r20-scratch-isolation-qa.yml'
+permissions:
+  contents: read
+jobs:
+  scratch-isolation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study
+            .github/tests
+      - name: Force interleaved transforms and verify mutation sensitivity
+        run: |
+          set -o pipefail
+          mkdir -p train-r20-scratch-evidence
+          node --test .github/tests/train-r20-scratch-isolation.test.mjs 2>&1 | tee train-r20-scratch-evidence/result.txt
+          sha256sum kaopu-minigame-workbench/voxel-train-study/game/r20/street/render-batches.mjs > train-r20-scratch-evidence/runtime-source.sha256
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: train-r20-scratch-isolation-${{ github.sha }}
+          path: train-r20-scratch-evidence/
+          retention-days: 7
