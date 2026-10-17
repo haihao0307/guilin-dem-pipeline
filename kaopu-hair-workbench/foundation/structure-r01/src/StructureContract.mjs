@@ -1,7 +1,9 @@
+import {assertStaticRestField} from './StaticRestGroom.mjs';
 import {assertSilhouetteField} from './SilhouetteContract.mjs';
 import {assertVolumeField} from './VolumeFlow.mjs';
 export const PROFILE_FIELDS=['ScalpDomain','AnatomicalZoneField','CandidateRootField','ActiveRootMask','FollicleDensityField','RootDirectionField','RootLiftField','PartingCurves','WhorlField','HairlineProfile','RegionalLengthField','CutField','GuideGroom','ClumpGraph','ChildStrandProfile','StrandMaterialField','RestShape','PhysicsProfile'];
 export function assertProfile(p){
+ if(p?.StaticRestField)assertStaticRestField(p.StaticRestField);
  if(p?.SilhouetteField)assertSilhouetteField(p.SilhouetteField);
  if(p?.VolumeFlowField)assertVolumeField(p.VolumeFlowField);
  if(p?.schema!=='kaopu/hair-style-profile@1')throw Error('Unsupported HairStyleProfile');

@@ -1,9 +1,11 @@
+import {staticRestProfile} from './StaticRestGroom.mjs';
 import {cutProfile} from './CutGroomField.mjs';
 import {silhouetteProfile} from './SilhouetteWisps.mjs';
 import {volumeProfile} from './VolumeFlow.mjs';
 // Flow controls retain R06 cuts; explicit R07 cut studies change only endpoints.
 // Values are authored P01 controls, not measurements of a photographed subject.
 export const EXPERIMENTS=[
+ {id:'current-rest',primary:true,label:'当前长度 · 静态发型',description:'当前主方案：逐项检查束形、耳周和下缘；第一轮整体尚未验收。',controls:{partOffset:0,fringeSweep:0,earBias:0,restPreset:'current-rest'}},
  {id:'baseline',label:'基准发流',description:'连续方向场与中束聚合；其他实验每次只改变一项。',controls:{partOffset:0,fringeSweep:0,earBias:0}},
  {id:'part-small',hidden:true,label:'发缝左移 1 毫米 · 稳定性检查',description:'小步变化探针。',controls:{partOffset:-.001,fringeSweep:0,earBias:0}},
  {id:'part-left',label:'① 发缝左移',description:'发缝左移 12 毫米，连续梳理上段；保留原毛囊、下垂出口与剪裁。',controls:{partOffset:-.012,fringeSweep:0,earBias:0}},
@@ -20,13 +22,14 @@ export const EXPERIMENTS=[
 const defaults=new WeakMap();
 export function configureExperiment(profile,id='baseline',overrides={}){
  const experiment=EXPERIMENTS.find(e=>e.id===id);if(!experiment)throw Error('Unknown flow experiment: '+id);
- if(!defaults.has(profile))defaults.set(profile,{part:structuredClone(profile.PartingCurves[0]),hairlineLift:profile.RootLiftField.hairline,directionMode:profile.RootDirectionField.mode,cut:structuredClone(profile.CutField),rest:structuredClone(profile.RestShape),clumps:structuredClone(profile.ClumpGraph)});const initial=defaults.get(profile),controls={...experiment.controls,...overrides};
- profile.RootDirectionField.controls=controls;profile.RootDirectionField.mode=initial.directionMode;profile.PartingCurves[0]=structuredClone(initial.part);profile.PartingCurves[0].width=controls.partWidth??initial.part.width;profile.RootLiftField.hairline=controls.hairlineLift??initial.hairlineLift;
+ if(!defaults.has(profile))defaults.set(profile,{revision:profile.revision,part:structuredClone(profile.PartingCurves[0]),hairlineLift:profile.RootLiftField.hairline,directionMode:profile.RootDirectionField.mode,cut:structuredClone(profile.CutField),rest:structuredClone(profile.RestShape),clumps:structuredClone(profile.ClumpGraph)});const initial=defaults.get(profile),controls={...experiment.controls,...overrides};
+ profile.revision=initial.revision;profile.RootDirectionField.controls=controls;profile.RootDirectionField.mode=initial.directionMode;profile.PartingCurves[0]=structuredClone(initial.part);profile.PartingCurves[0].width=controls.partWidth??initial.part.width;profile.RootLiftField.hairline=controls.hairlineLift??initial.hairlineLift;
  profile.CutField=controls.cutPreset?cutProfile(initial.cut,controls.cutPreset):structuredClone(initial.cut);
- profile.RestShape=structuredClone(initial.rest);profile.ClumpGraph=structuredClone(initial.clumps);delete profile.SilhouetteField;delete profile.VolumeFlowField;
+ profile.RestShape=structuredClone(initial.rest);profile.ClumpGraph=structuredClone(initial.clumps);delete profile.SilhouetteField;delete profile.VolumeFlowField;delete profile.StaticRestField;
  if(controls.routePreset){profile.SilhouetteField=silhouetteProfile(profile,controls.routePreset);profile.CutField=cutProfile(initial.cut,'cut-layered');delete profile.CutField.study;profile.CutField.referenceStudy='cut-layered';profile.CutField.mode='authored lower silhouette routes; inherited end heights plus optional ear-front graduation';profile.CutField.policy={rootMotion:false,fringeUnchanged:true,templeUnchanged:true,protectedRootArc:.045};profile.RestShape={...profile.RestShape,source:'R07 light-layer current groom with explicit source-wisp local loft after 45 mm fixed root arc'};profile.ClumpGraph.partMembership='fixed material side and semantic/ear route; regenerate hierarchy from complete new curves';}
  if(controls.volumePreset){configureExperiment(profile,'silhouette-framing');delete profile.SilhouetteField;profile.VolumeFlowField=volumeProfile(profile);profile.RootDirectionField.controls=controls;profile.RootDirectionField.mode='style-curve constrained shared 3D volume; native tangent/lift launch';profile.RestShape.source='Native-root RK2 streamlines through shared style-curve-constrained 3D field';profile.CutField.mode='regional heights inherited from silhouette-framing; new root-to-tip flow';profile.CutField.policy={rootMotion:false,nativeRootPoints:1,fringeUnchanged:true,templeUnchanged:false};profile.ClumpGraph.partMembership='same semantic material routes; native-root-connected mid/micro hierarchy from new full curves';}
- profile.experiment={...experiment,controls};profile.id='p01-current-flow06-'+id;
+ if(controls.restPreset){configureExperiment(profile,'volume-flow');profile.StaticRestField=staticRestProfile();profile.revision='static-rest-10';profile.RootDirectionField.controls=controls;profile.RestShape.source='Frozen R09 shared flow plus native-root-connected wisp shaping';profile.CutField.mode='inherited regional heights plus bounded root-height graduation';profile.CutField.policy={rootMotion:false,protectedRootArc:profile.StaticRestField.protectedRootArc,fringeUnchanged:true};}
+ profile.experiment={...experiment,controls};profile.id=id==='current-rest'?'p01-current-rest10':'p01-current-flow06-'+id;
  for(const p of profile.PartingCurves[0].points)p[0]+=controls.partOffset;
  return profile.experiment;
 }
