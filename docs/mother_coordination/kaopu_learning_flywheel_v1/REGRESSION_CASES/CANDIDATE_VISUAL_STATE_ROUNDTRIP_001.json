@@ -1,8 +1,8 @@
 {
   "id": "VISUAL-STATE-ROUNDTRIP-001",
   "status": "Candidate",
-  "scope": "single-Mother trial for reversible visual controls that mutate renderer, material, visibility, camera or overlay state",
-  "trigger": "a workflow and final browser state pass while a captured intermediate or restored view remains visually contaminated",
+  "scope": "single-Mother trial for reversible visual controls that mutate renderer, material, visibility, camera or overlay state; includes persisted archive portability when exact restoration is claimed",
+  "trigger": "a workflow and final browser state pass while a captured intermediate or restored view remains visually contaminated, or a saved archive is claimed exact without a clean-slate consumer-context replay",
   "requiredReceiptFields": [
     "testedSubjectSha",
     "controlId",
@@ -17,7 +17,21 @@
     "paintedEvidenceAfterReturn",
     "visualEnvironment",
     "visualDiffDecision",
-    "failedTransition"
+    "failedTransition",
+    "archiveBytesDigest",
+    "producerContextId",
+    "producerContextClosed",
+    "consumerContextId",
+    "freshConsumerContext",
+    "ambientStateReset",
+    "consumerSubjectSha",
+    "consumerEnvironment",
+    "freshContextStateTuple",
+    "freshContextTupleEqualityDecision",
+    "freshContextPaintedEvidence",
+    "freshContextVisualDiffDecision",
+    "identityMismatchRejectedBeforeMutation",
+    "legacyArchiveCompatibilityMode"
   ],
   "assertions": [
     "the restore oracle is an immutable snapshot captured before the first transition, not a mutable object that the transition can contaminate",
@@ -26,15 +40,46 @@
     "at least one repeated round trip must produce the same state tuple as the original baseline",
     "state tuple equality and painted visual evidence are complementary and neither substitutes for the other",
     "a real visual failure rejects the visual-restoration claim without erasing separately valid numerical or workflow evidence",
-    "visual comparison environment and tolerance must be pinned and versioned"
+    "visual comparison environment and tolerance must be pinned and versioned",
+    "a same-page or same-BrowserContext round trip cannot certify portable persisted-archive restoration",
+    "the producer page and BrowserContext must be closed before a clean-slate consumer BrowserContext is created",
+    "only the exact archive bytes and declared immutable inputs may cross the producer-consumer boundary",
+    "the consumer must compare calibration, canonical state, topology, final geometry, settings and painted pixels against the frozen producer oracle",
+    "the archive import must repeat in a second clean-slate consumer context with the same result",
+    "an identity mismatch must fail before any consumer state mutation",
+    "a legacy archive missing output-affecting state may run only under an explicit degraded compatibility state and cannot support an exact-restoration claim"
   ],
   "states": [
     "TECHNICAL_RUN_COMPLETE",
     "VISUAL_STATE_ROUNDTRIP_VERIFIED",
     "HOLD_VISUAL_STATE_ROUNDTRIP_INCOMPLETE",
     "REJECTED_BY_VISUAL_OBSERVATION",
-    "ROOT_CAUSE_CONFIRMED"
+    "ROOT_CAUSE_CONFIRMED",
+    "SAME_CONTEXT_ROUNDTRIP_VERIFIED__HOLD_FRESH_CONTEXT_PORTABILITY_UNTESTED",
+    "ARCHIVE_PORTABILITY_VERIFIED_SCOPED",
+    "HOLD_ARCHIVE_SUBJECT_UNBOUND",
+    "HOLD_FRESH_CONTEXT_PORTABILITY_MISMATCH",
+    "HOLD_FRESH_CONTEXT_REPEAT_UNBOUND",
+    "HOLD_LEGACY_ARCHIVE_EXACT_RESTORE_OVERCLAIM",
+    "HOLD_IDENTITY_REJECTION_UNPROVEN",
+    "IDENTITY_MISMATCH_REJECTED_SCOPED",
+    "LEGACY_ARCHIVE_COMPATIBILITY_DEGRADED"
   ],
+  "archivePortabilityExtension": {
+    "boundedQuestion": "Does exact restoration in one page or BrowserContext prove that the persisted archive restores in a clean-slate BrowserContext after the producer context is closed?",
+    "currentObservedState": "SAME_CONTEXT_ROUNDTRIP_VERIFIED__HOLD_FRESH_CONTEXT_PORTABILITY_UNTESTED",
+    "minimumFalsifiableTrial": [
+      "save archive A and bind its byte digest plus producer subject SHA",
+      "close the producer page and BrowserContext",
+      "create a clean-slate BrowserContext without copied cookies, local storage, session storage or in-memory page state",
+      "load the same tested subject and import only archive A plus declared immutable inputs",
+      "compare calibration, canonical state, topology, final geometry, settings and painted pixels",
+      "repeat in a second clean-slate consumer context",
+      "run a legacy archive missing calibration as an explicit degraded-compatibility negative control",
+      "run a subject-identity mismatch and require rejection before mutation"
+    ],
+    "boundary": "This extension tests browser-session state leakage and persisted-archive completeness. It does not prove device equivalence, cross-browser equivalence, future-version compatibility or user acceptance."
+  },
   "activation": {
     "posted": false,
     "acknowledged": false,
