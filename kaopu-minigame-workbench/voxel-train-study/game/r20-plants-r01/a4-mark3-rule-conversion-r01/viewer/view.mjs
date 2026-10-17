@@ -7,7 +7,7 @@ import {registerWheelEnvelopeDisplay} from '../../a4-a6-source-comparison-r03/sr
 import {reconstructDocument,makeGltfBridge,sha256,verifyImplementation} from '../src/exact-decoder.mjs';
 import {getBytes,unpack} from './transport.mjs';
 import {loadResidualParts} from './storage.mjs';
-const ruleTextures=new URL(location.href).searchParams.has('ruleTextures');
+const ruleTextures=new URL(location.href).searchParams.get('ruleTextures')!=='0';
 const qa=window.CONVERSION_QA,stage=document.querySelector('#stage'),status=document.querySelector('#status'),panels=[],sources=[];
 function progress(id,phase,e={}){qa.progress[id]={phase,...e};status.textContent=Object.entries(qa.progress).map(([k,p])=>k+': '+p.phase+(p.loaded!==undefined?' '+(p.loaded/1048576).toFixed(1)+' MB':'')+(p.attempt?' (第'+p.attempt+'次)':'')).join('\n');}
 const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.debug.onShaderError=(gl,p)=>fail(Error('SHADER '+gl.getProgramInfoLog(p)));stage.append(renderer.domElement);
@@ -35,7 +35,7 @@ renderer.setAnimationLoop(now=>{if(playing){time+=Math.min(.1,(now-last)/1000);f
 async function switchMaterialMode(mode){
  if(!qa.ready)throw Error('Wait for complete source verification before material upgrade.');
  if(!qa.masterBindings){
-  const masterDirectory=new URL(location.href).searchParams.get('masterVersion')==='2'?'master-materials-v2':'master-materials';const masterBase=new URL('../'+masterDirectory+'/',import.meta.url);const lock=JSON.parse(new TextDecoder().decode(await getBytes(new URL('runtime-lock.json',masterBase))));for(const f of lock.files){const bytes=await getBytes(new URL(f.path,masterBase),e=>progress('master','核对大师函数 '+f.path,e));if(bytes.length!==f.bytes||await sha256(bytes)!==f.sha256)throw Error('MASTER_IMPLEMENTATION_INTEGRITY '+f.path);}const {installTrainMaster}=await import('../'+masterDirectory+'/train-binding.mjs');
+  const masterDirectory=new URL(location.href).searchParams.get('masterVersion')==='1'?'master-materials':'master-materials-v2';const masterBase=new URL('../'+masterDirectory+'/',import.meta.url);const lock=JSON.parse(new TextDecoder().decode(await getBytes(new URL('runtime-lock.json',masterBase))));for(const f of lock.files){const bytes=await getBytes(new URL(f.path,masterBase),e=>progress('master','核对大师函数 '+f.path,e));if(bytes.length!==f.bytes||await sha256(bytes)!==f.sha256)throw Error('MASTER_IMPLEMENTATION_INTEGRITY '+f.path);}const {installTrainMaster}=await import('../'+masterDirectory+'/train-binding.mjs');
   qa.masterBindings=panels.filter(p=>p.id.endsWith('converted')).map(p=>({key:p.key,binding:installTrainMaster(T,p.source)}));
  }
  for(const item of qa.masterBindings)item.binding.switchMode(mode);
