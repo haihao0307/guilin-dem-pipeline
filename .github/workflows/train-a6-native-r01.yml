@@ -39,7 +39,17 @@ jobs:
           node a6-native-r01/interaction.test.mjs
           node --check a6-native-r01/view.mjs
           node --check a6-native-r01/browser.cjs
-      - name: Actual connected desktop and mobile interaction
+      - name: Wait for exact reviewed public entry
+        run: |
+          for i in $(seq 1 90); do
+            curl -fsSL --max-time 30 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a6-native-r01/index.html?verify=141c5baa90a9' -o /tmp/public-a6.html || true
+            if echo '141c5baa90a96fe1354af1d90ce7e4b3e0e41e8bf0d5a4d825630c643efdc047  /tmp/public-a6.html' | sha256sum -c -; then exit 0; fi
+            sleep 20
+          done
+          exit 1
+      - name: Actual public connected desktop and mobile interaction
+        env:
+          NATIVE_URL: 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a6-native-r01/index.html'
         run: node a6-native-r01/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
