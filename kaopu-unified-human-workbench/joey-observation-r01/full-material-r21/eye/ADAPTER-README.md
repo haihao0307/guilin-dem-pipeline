@@ -1,0 +1,18 @@
+# R21 ET16 eye appearance adapter on retained R64 geometry
+
+Status: local source-contract and exact R64 numerical tests. Not a GPU-render approval.
+
+Entry: await attachCurrentET16Eyes(fullCommonWorkbench, { assetBase, THREE, parameters }).
+assetBase is a URL directory containing the four assets PNGs, ending in '/'. THREE may be injected; default imports the existing /native/.../three.module.js host module.
+Install after attachAppearanceR52 and before LipFinish. Do not install NativeEyeSurfaceR54. Dispose later material extensions (including LipFinish) before this adapter, then dispose appearance. No automatic redraw on initial attach or dispose; caller owns batched final render. refresh() refreshes contact appearance for the current native state; changed viewer/mesh geometry requires explicit reinstall.
+
+Retained: R64 native positions/indices and display positions/indices, R05 fixed bind-space fEye chart, current head/eye axis, original opaque exterior eye cover, original whole-face skin and material identity. neContact is the sole added display attribute and is restored/removed on disposal. Native/archive state is not changed or extended.
+
+Migrated: actual ET16 Harvey texture sampling, pupil remapping, limbus/pupil/vessel transitions, bounded view-dependent shader refraction, source-correlated sclera/vessel maps, current skin/ocular intersection contact appearance, and actual directional-light-linked finite-source reflections. Contact wetness/shadow apply only to existing eye region; surrounding skin tear shading is excluded to preserve skin. DarkBrown is an authored derivative of Harvey artwork, not measured iris pigment. No separate corneal geometry, eye-display subdivision, eyelid deformation or anatomical closure repair is claimed.
+
+Old E1 color/relief/roughness/clearcoat are replaced in the enabled eye-only shader path; old program/hooks remain available for exact cleanup. set({enabled:false}, 'global') selects original E1 appearance; set({enabled:true}, 'global') reselects ET16. No R54 double reflection. Program key is unique per installation. Changes use source-token checks and abort on host drift. Call report().geometryVerification and require all four exact comparisons true.
+
+Exact source: f1f06cc49b22779831033936cb25e6965836d035 / kaopu-unified-human-workbench/eye-materials. NaturalEyeShader's shader declarations and NaturalEyeState validation are extracted without importing the old viewer or old Three module. EyeContactField is dependency-injected but its intersection/sampling algorithm is unchanged. The new R05 adapter/binding and teardown are authored here.
+Host: d90708f5ead5a0192d4cec1a310bcab58f7f9565 appearance-r54/base/eye-r14; confirmed blobs NativeEyeOptics bf33760d2ed089e04f427a44f177f37cf2fedd2a, R05EyeBridge bfd1d9962bacdec99ed7fd9e82f51ae8ebb58c28. Their recovered content at the original publication commit matches those blob SHAs.
+
+Licensing: retain THIRD_PARTY.md and SOURCE_LOCK.json with the shipped asset/code folder and visible project attribution. Harvey_eye1 and Harvey_eye2 are by callharvey3d, MakeHuman Community system_eye_materials03, listed CC-BY with no version specified. Do not claim CC0/exclusive ownership or invent a version. sclera-clean and sclera-vessels are modified derivatives and retain credit and modification notice. Original PNG bytes must retain their documented SHA-256. Original .mhmat descriptors/shaders with AGPL boilerplate are not copied or executed. This adapter does not relicense Anny/GNM/MakeHuman/Three.js or other existing project dependencies; keep their prior notices. See THIRD_PARTY.md for source and pack links and explicit derivative/optics limitations.
