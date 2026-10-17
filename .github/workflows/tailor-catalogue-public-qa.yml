@@ -1,0 +1,56 @@
+name: Published live garment catalogue verification
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths: ['.github/tailor-catalogue/public-*', '.github/workflows/tailor-catalogue-public-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: tailor-catalogue-public-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  hashes:
+    if: github.head_ref == 'qa/tailor-garments-r03-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/tailor-catalogue
+      - run: node .github/tailor-catalogue/public-hash.cjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalogue-public-hash
+          retention-days: 7
+          path: catalogue-public-hash/**
+  browser:
+    if: github.head_ref == 'qa/tailor-garments-r03-20261006'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/tailor-catalogue
+      - name: Official browser driver
+        run: |
+          npm install --prefix "$RUNNER_TEMP/catalogue-qa" --no-save --ignore-scripts playwright@1.57.0
+          "$RUNNER_TEMP/catalogue-qa/node_modules/.bin/playwright" install --with-deps ${{ matrix.browser }}
+      - name: Real public HTTPS with no route replacement
+        env:
+          NODE_PATH: ${{ runner.temp }}/catalogue-qa/node_modules
+          BROWSER: ${{ matrix.browser }}
+          TAILOR_PUBLIC_BASE: https://haihao0307.github.io/guilin-dem-pipeline
+        run: node .github/tailor-catalogue/public-catalogue.cjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalogue-public-${{ matrix.browser }}
+          retention-days: 7
+          path: catalogue-ui-*/**

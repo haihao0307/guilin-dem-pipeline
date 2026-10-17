@@ -1,0 +1,11 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+import {initialDesign,parameterState,parameterLabel,validateDesignSnapshot} from '../../kaopu-tailor-workbench/catalogue/catalogue-controls.mjs';
+const root='kaopu-tailor-workbench/garment-pattern-catalogue-r01/browser/',schema=JSON.parse(fs.readFileSync(root+'parameter-schema.json')),styles=JSON.parse(fs.readFileSync(root+'styles.json')),make=id=>initialDesign(schema,styles.find(s=>s.id===id));
+for(const p of schema.parameters)assert.ok(parameterLabel(p.path));
+for(const style of styles)assert.deepEqual(validateDesignSnapshot(make(style.id),schema),make(style.id));
+let d=make('Shirt');assert.equal(parameterState('collar.fc_angle',d).enabled,false);assert.equal(parameterState('collar.f_flip_curve',d).enabled,false);d.collar.f_collar.v='CircleArcNeckHalf';assert.equal(parameterState('collar.fc_angle',d).enabled,true);assert.equal(parameterState('collar.f_flip_curve',d).enabled,true);d.collar.f_collar.v='Bezier2NeckHalf';assert.equal(parameterState('collar.f_bezier_x',d).enabled,true);
+d=make('Turtle');assert.equal(parameterState('collar.f_collar',d).enabled,false);assert.equal(parameterState('collar.component.depth',d).enabled,true);d=make('Hood2Panels');assert.equal(parameterState('collar.component.depth',d).enabled,false);assert.equal(parameterState('collar.component.hood_depth',d).enabled,true);
+d=make('LongSleeve');assert.equal(parameterState('sleeve.armhole_shape',d).enabled,false);d.sleeve.armhole_shape.v='ArmholeAngle';assert.equal(parameterState('sleeve.smoothing_coeff',d).enabled,false);d.sleeve.sleeveless.v=true;assert.equal(parameterState('sleeve.smoothing_coeff',d).enabled,true);
+d=make('Strapless');assert.equal(parameterState('sleeve.connecting_width',d).enabled,true);assert.equal(parameterState('collar.fc_depth',d).enabled,true);assert.equal(parameterState('collar.width',d).enabled,false);
+d=make('SimpleLapel');d.collar.f_collar.v='Bezier2NeckHalf';assert.equal(parameterState('collar.b_collar',d).enabled,false);assert.equal(parameterState('collar.f_bezier_x',d).enabled,false);d.left.enable_asym.v=true;assert.equal(parameterState('collar.component.style',d).enabled,false);
+console.log('Source-conditional controls: 122 labels, 23 complete snapshot roundtrips, sleeve/neck/collar/strapless conditions passed');
