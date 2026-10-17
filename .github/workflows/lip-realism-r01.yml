@@ -1,0 +1,148 @@
+name: Lip realism R01 isolated build and browser evidence
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Baseline screenshots only, or build and verify candidate
+        type: choice
+        options: [baseline, candidate]
+        default: baseline
+      publish:
+        description: Publish a passing candidate only to this feature branch
+        type: boolean
+        default: false
+  push:
+    branches: [feature/lip-realism-r01-20261017]
+    paths:
+      - 'kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js'
+      - 'kaopu-unified-human-workbench/lip-realism-r01/build.cjs'
+      - 'kaopu-unified-human-workbench/lip-realism-r01/verify.cjs'
+      - '.github/workflows/lip-realism-r01.yml'
+permissions:
+  contents: write
+concurrency:
+  group: lip-realism-r01-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  LIP_BRANCH: feature/lip-realism-r01-20261017
+  LIP_DIR: kaopu-unified-human-workbench/lip-realism-r01
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/feature/lip-realism-r01-20261017'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Freeze source and select bounded mode
+        id: config
+        env:
+          INPUT_MODE: ${{ inputs.mode }}
+          INPUT_PUBLISH: ${{ inputs.publish }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$LIP_BRANCH"
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          mode="$INPUT_MODE"
+          if [ -z "$mode" ]; then mode=candidate; fi
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ ! -f "$LIP_DIR/LipSurface.js" ]; then mode=baseline; fi
+          echo "LIP_QA_MODE=$mode" >> "$GITHUB_ENV"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          publish=false
+          if [ "$mode" = candidate ] && { [ "$GITHUB_EVENT_NAME" = push ] || [ "$INPUT_PUBLISH" = true ]; }; then publish=true; fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "LIP_RUN_KEY=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Install isolated pinned browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lip-runtime" --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/lip-runtime/node_modules" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/lip-runtime/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Syntax checks and frozen baseline identity
+        run: |
+          node --check "$LIP_DIR/verify.cjs"
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('kaopu-unified-human-workbench/human-integrated-r07/preview.html')
+          assert hashlib.sha256(p.read_bytes()).hexdigest() == 'd1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a'
+          PY
+      - name: Build only the new candidate directory
+        if: steps.config.outputs.mode == 'candidate'
+        run: |
+          node --check "$LIP_DIR/LipSurface.js"
+          node --check "$LIP_DIR/build.cjs"
+          node "$LIP_DIR/build.cjs"
+      - name: Chromium SwiftShader baseline or candidate QA
+        run: node "$LIP_DIR/verify.cjs"
+      - name: Publish tested build with a strict fast-forward race guard
+        if: steps.config.outputs.publish == 'true'
+        id: publish
+        run: |
+          python - <<'PY'
+          import subprocess,os
+          prefix=os.environ['LIP_DIR']+'/'
+          changed=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
+          added=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()
+          assert all(p.startswith(prefix) for p in changed+added),'Refuse to publish changes outside the new lip directory'
+          PY
+          git fetch --no-tags origin "refs/heads/$LIP_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- "$LIP_DIR"
+          git commit -m "build: lip realism R01 candidate and isolated browser evidence"
+          build_sha="$(git rev-parse HEAD)"
+          git push origin "HEAD:refs/heads/$LIP_BRANCH"
+          echo "build_sha=$build_sha" >> "$GITHUB_OUTPUT"
+          echo "LIP_BUILD_SHA=$build_sha" >> "$GITHUB_ENV"
+          raw_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$build_sha/$LIP_DIR/preview.html"
+          echo "LIP_PUBLIC_RAW_URL=$raw_url" >> "$GITHUB_ENV"
+          echo "LIP_PUBLIC_URL=https://htmlpreview.github.io/?$raw_url" >> "$GITHUB_ENV"
+          echo "LIP_EXPECTED_PREVIEW_SHA256=$(sha256sum "$LIP_DIR/preview.html" | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
+      - name: Verify exact published HTTPS bytes, desktop and mobile viewport
+        if: steps.publish.outputs.build_sha
+        env:
+          LIP_QA_MODE: public
+        run: node "$LIP_DIR/verify.cjs"
+      - name: Record public proof and publish evidence without touching main
+        if: steps.publish.outputs.build_sha
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=Path(os.environ['LIP_DIR'])
+          q=json.loads((d/'evidence'/os.environ['LIP_RUN_KEY']/'public'/'qa.json').read_text())
+          assert q['completed'] and q['shareAllowed'] and q['publicHttpsPassed']
+          receipt={
+            'schema':'kaopu/lip-realism-publication@1','version':'LIP-REALISM-R01',
+            'sourceCommit':os.environ['SOURCE_SHA'],'buildCommit':os.environ['LIP_BUILD_SHA'],
+            'publicURL':os.environ['LIP_PUBLIC_URL'],'previewSHA256':q['previewSHA256'],
+            'sourceModified':True,'interactive3D':True,'staticImageSubstitute':False,
+            'publicHttpsPassed':True,'browserPassed':True,'shareAllowed':True,
+            'softwareRenderer':True,'physicalPhone':False,'visualAcceptance':False,
+            'userVisualAccepted':False,'productionReady':False,'mainUnchanged':True,
+            'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'verifiedAt':q['finishedAt'],'publicReadback':q['publicReadback'],'knownLimitations':q['limitations']
+          }
+          for name,value in [('PUBLICATION_PROOF.json',receipt),('PUBLIC_QA.json',q)]:
+            (d/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git fetch --no-tags origin "refs/heads/$LIP_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$LIP_BUILD_SHA"
+          git add -- "$LIP_DIR"
+          git commit -m "test: exact public lip realism R01 publication proof"
+          git push origin "HEAD:refs/heads/$LIP_BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-realism-r01-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            kaopu-unified-human-workbench/lip-realism-r01/evidence/
+            kaopu-unified-human-workbench/lip-realism-r01/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-realism-r01/PUBLICATION_PROOF.json
+          retention-days: 14
+
