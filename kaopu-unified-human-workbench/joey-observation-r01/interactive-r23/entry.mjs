@@ -37,7 +37,7 @@ function view(name){if(!state.ready)throw Error('人物尚未就绪');const c=v.
  c.updateProjectionMatrix();c.updateMatrixWorld(true);v.orbit.enabled=true;v.render();state.view=name;
 }
 function zoom(factor){if(!state.ready)return;const offset=v.camera.position.clone().sub(v.orbit.target),distance=Math.max(.36,Math.min(.95,offset.length()*factor));offset.setLength(distance);v.camera.position.copy(v.orbit.target).add(offset);v.camera.updateMatrixWorld(true);v.render();state.view='free';}
-function dispose(){if(disposed)return;disposed=true;stopRenderQueue();worker?.terminate();worker=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();v?.dispose();}catch(e){state.disposeError=String(e);}}
+function dispose(){if(disposed)return;disposed=true;stopRenderQueue();worker?.terminate();worker=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();/* Native host owns archive capture and final viewer disposal on pagehide. */}catch(e){state.disposeError=String(e);}}
 window.addEventListener('pagehide',dispose);
 document.addEventListener('webglcontextlost',e=>{if(disposed)return;e.preventDefault();state.errors.push('WebGL context lost');state.ready=false;parent.r23Failure('绘图上下文丢失，请重新载入。未自动降低头发密度。');worker?.terminate();},true);
 async function boot(){
