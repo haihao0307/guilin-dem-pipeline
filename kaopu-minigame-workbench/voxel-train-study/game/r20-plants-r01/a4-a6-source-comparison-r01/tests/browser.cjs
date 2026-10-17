@@ -20,7 +20,7 @@ const report = {
   mode: externalURL ? 'PUBLIC_URL_BASELINE' : 'LOCAL_CANDIDATE',
   requestedURL: externalURL, timeoutMs, partialLoading, errors: [], failedRequests: [],
   resources: [], snapshots: [], screenshots: [], diagnosticErrors: [],
-  physicalCalibration: false,
+  physicalCalibration: false, projectionChecks: [], rasterChecks: [], dragChecks: [], zoomChecks: [],
   visualAcceptance: 'Screenshots for review; no automatic A6 aesthetic or mechanical approval'
 };
 const elapsed = () => Math.round(performance.now() - started);
@@ -137,7 +137,7 @@ async function snapshot(label) {
           present: true, ready: Boolean(comparison.ready), errors: safe(comparison.errors || []),
           loading: safe(comparison.loading), state: safe(comparison.state),
           progress: safe(comparison.progress), visiblePanels: safe(comparison.visiblePanels),
-          sourceUnits: comparison.sourceUnits,
+          sourceUnits: comparison.sourceUnits, view: comparison.view,
           keys: Object.keys(comparison), sources: comparison.sources?.map(source => ({
             key: source.key, nodes: source.nodes?.length, meshes: source.primitives?.length
           }))
@@ -176,6 +176,164 @@ async function shot(name) {
     await page.screenshot({path: path.join(qa, name), timeout: 15000});
     report.screenshots.push(name);
   } catch (error) { report.diagnosticErrors.push(`${name}: ${failureText(error)}`); }
+}
+
+async function inspectProjection(expectedView) {
+  return page.evaluate(view => {
+    const close = (a, b, tolerance = 1e-7) => Number.isFinite(a) && Number.isFinite(b) &&
+      Math.abs(a - b) <= tolerance * Math.max(1, Math.abs(b));
+    const expected = {
+      side: {direction: [-1, 0, 0], up: [0, 1, 0]},
+      front: {direction: [0, 0, -1], up: [0, 1, 0]},
+      top: {direction: [0, -1, 0], up: [0, 0, -1]}
+    }[view];
+    const panels = COMPARISON.panels.map(panel => {
+      const camera = panel.camera, rect = panel.element.getBoundingClientRect();
+      camera.updateMatrixWorld(true);
+      const vector = (x, y, z) => camera.position.clone().set(x, y, z);
+      const direction = camera.getWorldDirection(vector(0, 0, 0));
+      const right = vector(1, 0, 0).applyQuaternion(camera.quaternion);
+      const up = vector(0, 1, 0).applyQuaternion(camera.quaternion);
+      const unitsPerPixel = {x: (camera.right - camera.left) / camera.zoom / rect.width,
+        y: (camera.top - camera.bottom) / camera.zoom / rect.height};
+      const expectedPixels = Math.min(rect.width, rect.height) * .1;
+      const length = expectedPixels * unitsPerPixel.x;
+      const span = camera.far - camera.near;
+      const offset = Math.min(span, rect.width * unitsPerPixel.x, rect.height * unitsPerPixel.y) * .1;
+      const probes = [];
+      for (const [depth, fraction] of [['near', .2], ['middle', .5], ['far', .8]]) {
+        const center = camera.position.clone().addScaledVector(direction, camera.near + span * fraction);
+        for (const [position, sign] of [['rear', -1], ['middle', 0], ['front', 1]]) {
+          const location = center.clone().add(vector(0, 0, offset * sign));
+          for (const [axis, axisVector] of [['horizontal', right], ['vertical', up]]) {
+            const start = location.clone().addScaledVector(axisVector, -length / 2).project(camera);
+            const end = location.clone().addScaledVector(axisVector, length / 2).project(camera);
+            const pixels = Math.hypot((end.x - start.x) * rect.width / 2, (end.y - start.y) * rect.height / 2);
+            probes.push({depth, position, axis, worldLength: length, pixels, expectedPixels,
+              passed: close(pixels, expectedPixels)});
+          }
+        }
+      }
+      return {id: panel.id || panel.element.id, source: panel.source.key, width: rect.width, height: rect.height,
+        orthographic: Boolean(camera.isOrthographicCamera), direction: direction.toArray(), up: up.toArray(),
+        unitsPerPixel, probes, projectionMatrix: camera.projectionMatrix.elements.slice(),
+        axisAligned: direction.toArray().every((v, i) => close(v, expected.direction[i])) &&
+          up.toArray().every((v, i) => close(v, expected.up[i])),
+        validClipRange: camera.near >= 0 && camera.far > camera.near,
+        squarePixelScale: unitsPerPixel.x > 0 && close(unitsPerPixel.x, unitsPerPixel.y)};
+    });
+    const byID = Object.fromEntries(panels.map(panel => [panel.id, panel]));
+    const pairChecks = [['a4', 'a6'], ['mark3', 'coach']].map(([left, right]) => {
+      const a = byID[left], b = byID[right];
+      return {left, right, sameSource: Boolean(a && b && a.source === b.source),
+        matched: Boolean(a && b && close(a.unitsPerPixel.x, b.unitsPerPixel.x) && close(a.unitsPerPixel.y, b.unitsPerPixel.y))};
+    });
+    return {expectedView: view, actualView: COMPARISON.view, panels, pairChecks,
+      axisAligned: COMPARISON.view === view && panels.length === 4 && panels.every(p => p.axisAligned),
+      equalProjectedLengths: panels.every(p => p.validClipRange && p.probes.every(probe => probe.passed)),
+      squarePixelScale: panels.every(p => p.squarePixelScale),
+      sourcePairScaleMatched: pairChecks.every(pair => pair.sameSource && pair.matched)};
+  }, expectedView);
+}
+
+async function inspectRasterProjection(expectedView) {
+  return page.evaluate(async view => {
+    const T = await import('three');
+    const renderer = COMPARISON.renderer;
+    const saved = {target: renderer.getRenderTarget(), viewport: renderer.getViewport(new T.Vector4()),
+      scissor: renderer.getScissor(new T.Vector4()), scissorTest: renderer.getScissorTest(),
+      clearColor: renderer.getClearColor(new T.Color()).clone(), clearAlpha: renderer.getClearAlpha()};
+    const scene = new T.Scene();
+    scene.background = new T.Color(0x000000);
+    const geometry = new T.PlaneGeometry(1, 1);
+    const material = new T.MeshBasicMaterial({color: 0xffffff, toneMapped: false, side: T.DoubleSide});
+    const marker = new T.Mesh(geometry, material);
+    scene.add(marker);
+    const groupWorldLengths = new Map();
+    const panels = [];
+    try {
+      renderer.setScissorTest(false);
+      for (const panel of COMPARISON.panels) {
+        const camera = panel.camera.clone();
+        camera.updateMatrixWorld(true);
+        const rect = panel.element.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
+        const xWorldPerPixel = (camera.right - camera.left) / camera.zoom / width;
+        const yWorldPerPixel = (camera.top - camera.bottom) / camera.zoom / height;
+        const source = panel.source.key;
+        if (!groupWorldLengths.has(source)) groupWorldLengths.set(source, xWorldPerPixel * 48);
+        const length = groupWorldLengths.get(source);
+        const target = new T.WebGLRenderTarget(width, height, {depthBuffer: false, stencilBuffer: false});
+        const buffer = new Uint8Array(width * height * 4);
+        const direction = camera.getWorldDirection(new T.Vector3());
+        const span = camera.far - camera.near;
+        const offset = Math.min(span, width * xWorldPerPixel, height * yWorldPerPixel) * .1;
+        const probes = [];
+        marker.quaternion.copy(camera.quaternion);
+        try {
+          renderer.setRenderTarget(target);
+          renderer.setViewport(0, 0, width, height);
+          for (const [depth, fraction] of [['near', .2], ['far', .8]]) {
+            const center = camera.position.clone().addScaledVector(direction, camera.near + span * fraction);
+            for (const [position, sign] of [['rear', -1], ['front', 1]]) {
+              marker.position.copy(center).add(new T.Vector3(0, 0, offset * sign));
+              for (const axis of ['horizontal', 'vertical']) {
+                marker.scale.set(axis === 'horizontal' ? length : xWorldPerPixel * 5,
+                  axis === 'vertical' ? length : yWorldPerPixel * 5, 1);
+                renderer.clear();
+                renderer.render(scene, camera);
+                renderer.readRenderTargetPixels(target, 0, 0, width, height, buffer);
+                let minX = width, maxX = -1, minY = height, maxY = -1, litPixels = 0;
+                for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+                  const i = (y * width + x) * 4;
+                  if (buffer[i] > 127 && buffer[i + 1] > 127 && buffer[i + 2] > 127) {
+                    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y); maxY = Math.max(maxY, y); litPixels++;
+                  }
+                }
+                const rasterPixels = litPixels ? axis === 'horizontal' ? maxX - minX + 1 : maxY - minY + 1 : 0;
+                const expectedPixels = length / (axis === 'horizontal' ? xWorldPerPixel : yWorldPerPixel);
+                const cssPixels = rasterPixels * (axis === 'horizontal' ? rect.width / width : rect.height / height);
+                probes.push({depth, position, axis, worldLength: length, litPixels,
+                  bbox: {minX, maxX, minY, maxY}, rasterPixels, cssPixels, expectedPixels,
+                  errorPixels: Math.abs(rasterPixels - expectedPixels),
+                  passed: litPixels > 0 && Math.abs(rasterPixels - expectedPixels) <= 1 + 1e-7});
+              }
+            }
+          }
+        } finally { target.dispose(); }
+        const spreads = ['horizontal', 'vertical'].map(axis => {
+          const values = probes.filter(probe => probe.axis === axis).map(probe => probe.rasterPixels);
+          return {axis, min: Math.min(...values), max: Math.max(...values),
+            passed: Math.max(...values) - Math.min(...values) <= 1};
+        });
+        panels.push({id: panel.id || panel.element.id, source, width, height, worldLength: length, probes, spreads,
+          passed: probes.every(probe => probe.passed) && spreads.every(spread => spread.passed)});
+      }
+    } finally {
+      scene.remove(marker); geometry.dispose(); material.dispose();
+      renderer.setRenderTarget(saved.target);
+      renderer.setViewport(saved.viewport);
+      renderer.setScissor(saved.scissor);
+      renderer.setScissorTest(saved.scissorTest);
+      renderer.setClearColor(saved.clearColor, saved.clearAlpha);
+      // Markers only existed in the separate test scene. Restore the real view
+      // before ordinary model screenshots, including when the pixel test fails.
+      COMPARISON.render();
+    }
+    const byID = Object.fromEntries(panels.map(panel => [panel.id, panel]));
+    const pairs = [['a4', 'a6'], ['mark3', 'coach']].map(([a, b]) => ({a, b,
+      passed: Boolean(byID[a] && byID[b] && byID[a].worldLength === byID[b].worldLength &&
+        byID[a].probes.every((probe, i) => Math.abs(probe.cssPixels - byID[b].probes[i].cssPixels) <= 1))}));
+    return {view, method: 'same WebGL renderer; isolated white planes; readRenderTargetPixels bounding boxes',
+      tolerancePixels: 1, panels, pairs, passed: panels.length === 4 && panels.every(p => p.passed) && pairs.every(p => p.passed)};
+  }, expectedView);
+}
+
+function sameDirections(before, after) {
+  return before.actualView === after.actualView && before.panels.length === after.panels.length &&
+    before.panels.every((panel, i) => [...panel.direction, ...panel.up].every((v, j) =>
+      Math.abs(v - [...after.panels[i].direction, ...after.panels[i].up][j]) < 1e-8));
 }
 
 (async () => {
@@ -254,7 +412,6 @@ async function shot(name) {
       designGlass: {opacity: COMPARISON.design.designGlass.opacity, transmission: COMPARISON.design.designGlass.transmission},
       oilWaterRoofClosed: COMPARISON.design.oilWaterRoof.userData.everyEdgeUsedTwice
     }));
-    await shot('01-source-side-comparison.png');
     const pose = () => page.evaluate(() => COMPARISON.sources.slice(0, 2).map(source => source.nodes.map(node => node.matrixWorld.elements.slice())));
     const before = await pose();
     await page.locator('#play').click();
@@ -268,25 +425,46 @@ async function shot(name) {
     await page.locator('#shell').click();
     report.originalRestoredByToggle = await page.evaluate(() => COMPARISON.sources[1].primitives.every(primitive => primitive.object.visible));
     await page.locator('#shell').click();
-    await page.locator('#quarter').click();
-    await shot('02-source-quarter-comparison.png');
-    await page.evaluate(() => { COMPARISON.design.designGlass.envMapIntensity = 0; COMPARISON.render(); });
-    await shot('04-glass-diagnostic-no-reflection.png');
-    await page.evaluate(() => { COMPARISON.design.designGlass.visible = false; COMPARISON.render(); });
-    await shot('05-glass-diagnostic-interior-uncovered.png');
-    await page.evaluate(() => {
-      COMPARISON.design.designGlass.visible = true;
-      COMPARISON.design.designGlass.envMapIntensity = .18;
-      COMPARISON.render();
-    });
+    report.noQuarterView = await page.locator('#quarter').count() === 0;
+    for (const [view, screenshot] of [
+      ['side', '01-source-side-comparison.png'],
+      ['front', '02-source-front-comparison.png'],
+      ['top', '03-source-top-comparison.png']
+    ]) {
+      await page.locator('#' + view).click();
+      await page.waitForTimeout(150);
+      const projection = await inspectProjection(view);
+      report.projectionChecks.push(projection);
+      report.rasterChecks.push(await inspectRasterProjection(view));
+      await shot(screenshot);
+      // A pointer drag must never reintroduce the rejected free-orbit view.
+      const target = await page.locator('#a6').boundingBox();
+      await page.mouse.move(target.x + target.width * .4, target.y + target.height * .4);
+      await page.mouse.down();
+      await page.mouse.move(target.x + target.width * .6, target.y + target.height * .6, {steps: 6});
+      await page.mouse.up();
+      const afterDrag = await inspectProjection(view);
+      report.dragChecks.push({view, unchanged: sameDirections(projection, afterDrag), projection: afterDrag});
+      // Zoom may change scale, but it must stay synchronized and axis-aligned.
+      await page.mouse.wheel(0, -160);
+      await page.waitForTimeout(150);
+      const afterZoom = await inspectProjection(view);
+      const ratios = afterZoom.panels.map((panel, i) => panel.unitsPerPixel.x / afterDrag.panels[i].unitsPerPixel.x);
+      report.zoomChecks.push({view, ratios, changed: ratios.every(ratio => ratio < 1 - 1e-6),
+        synchronized: ratios.every(ratio => Math.abs(ratio - ratios[0]) < 1e-8), projection: afterZoom});
+    }
     await page.locator('#side').click();
     await page.setViewportSize({width: 390, height: 844});
     await page.waitForTimeout(200);
-    await shot('03-mobile-comparison.png');
+    for (const view of ['side', 'front', 'top']) {
+      await page.locator('#' + view).click();
+      await page.waitForTimeout(100);
+      report.projectionChecks.push({...await inspectProjection(view), mobile: true});
+      await shot(`04-mobile-${view}-comparison.png`);
+    }
     report.mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
     report.errors.push(...await page.evaluate(() => COMPARISON.errors));
     const counts = report.runtime.sourceCounts;
-    report.sameCamera = report.runtime.cameraMatrices.every(matrix => JSON.stringify(matrix) === JSON.stringify(report.runtime.cameraMatrices[0]));
     report.sameScale = counts.every(source => JSON.stringify(source.scale) === '[1,1,1]');
     report.assertions = {
       sourceNodesPreserved: counts.map(source => source.nodes).join(',') === '331,331,145,145',
@@ -294,7 +472,16 @@ async function shot(name) {
       panelLabelsOnTop: report.runtime.panelLabelsOnTop,
       oilWaterRoofClosed: report.runtime.oilWaterRoofClosed,
       designGlassOpaque: report.runtime.designGlass.opacity === 1,
-      sameCamera: report.sameCamera, sameScale: report.sameScale,
+      sameScale: report.sameScale,
+      noQuarterView: report.noQuarterView,
+      threeAxisAlignedViews: report.projectionChecks.length === 6 && report.projectionChecks.every(check => check.axisAligned),
+      equalProjectedLengths: report.projectionChecks.every(check => check.equalProjectedLengths),
+      equalRasterPixelLengths: report.rasterChecks.length === 3 && report.rasterChecks.every(check => check.passed),
+      sourcePairScaleMatched: report.projectionChecks.every(check => check.sourcePairScaleMatched),
+      squarePixelScale: report.projectionChecks.every(check => check.squarePixelScale),
+      noFreeOrbit: report.dragChecks.length === 3 && report.dragChecks.every(check => check.unchanged && check.projection.axisAligned),
+      synchronizedZoom: report.zoomChecks.length === 3 && report.zoomChecks.every(check => check.changed && check.synchronized && check.projection.sourcePairScaleMatched && check.projection.axisAligned && check.projection.equalProjectedLengths),
+      requiredViewScreenshots: ['01-source-side-comparison.png', '02-source-front-comparison.png', '03-source-top-comparison.png'].every(name => report.screenshots.includes(name)),
       animationMoved: report.animationMoved, animationSynchronized: report.animationSynchronized,
       bindPoseRestored: report.bindPoseRestored, originalRestoredByToggle: report.originalRestoredByToggle,
       mobileFits: !report.mobileOverflow, noRuntimeErrors: !report.errors.length,

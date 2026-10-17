@@ -29,11 +29,18 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Verify complete source bytes materials textures and animations
-        run: npm test
+        run: npm test && node tests/orthographic-acceptance.mjs
       - name: Verify network failures deadlines retries and independent deduplicated restores
         run: node tests/source-loading.mjs
       - name: Load full local scene in real WebGL and test original animation
         run: npm run test:browser
+      - name: Upload fixed-axis side view for visual review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: axis-view-preview-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/01-source-side-comparison.png
+          retention-days: 14
+          if-no-files-found: error
       - name: Verify A4 is rendered while Mark3 download is held then complete both pairs
         env:
           TEST_PARTIAL_LOADING: '1'

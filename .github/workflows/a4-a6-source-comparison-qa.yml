@@ -1,12 +1,14 @@
-name: A4 A6 public Pages loading verification
+name: A4 A6 complete-source comparison QA
 on:
   push:
-    branches: ['qa/a4-a6-source-comparison-r01-20261017']
-    paths: ['.github/workflows/a4-a6-source-comparison-qa.yml']
+    branches: ['qa/a4-a6-source-comparison-r01-20261017', 'gh-pages']
+    paths:
+      - '.github/workflows/a4-a6-source-comparison-qa.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/**'
 permissions:
   contents: read
 jobs:
-  public-pages:
+  original-source:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     defaults:
@@ -20,31 +22,73 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Install approved pinned Chromium testing dependencies
+      - name: Install pinned registry dependencies and official Chromium
+        id: install
         run: |
           npm install --no-audit --no-fund
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Wait for exact repaired public entry bytes, never test stale deployment
+      - name: Verify complete source bytes materials textures and animations
+        run: npm test && node tests/orthographic-acceptance.mjs
+      - name: Verify network failures deadlines retries and independent deduplicated restores
+        run: node tests/source-loading.mjs
+      - name: Load full local scene in real WebGL and test original animation
+        run: npm run test:browser
+      - name: Upload fixed-axis side view for visual review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: axis-view-preview-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/01-source-side-comparison.png
+          retention-days: 14
+          if-no-files-found: error
+      - name: Verify A4 is rendered while Mark3 download is held then complete both pairs
         env:
-          ENTRY: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/
-        run: |
-          for attempt in $(seq 1 80); do
-            curl -fsSL --max-time 30 "$ENTRY?commit=7f0d366e48741abdd09c35f00d7767a2f554fa78&attempt=$attempt" -o /tmp/public-entry.html || true
-            if echo '7f23db26218104d299ceb03b7563e4942f2262c94a87af83a43834ea2dbe5931  /tmp/public-entry.html' | sha256sum -c -; then exit 0; fi
-            sleep 10
-          done
-          echo 'Expected repaired entry never became public'; exit 1
-      - name: Verify actual public WebGL source scenes, animation and interactions
-        env:
-          TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/?commit=7f0d366e48741abdd09c35f00d7767a2f554fa78
-          TEST_QA_DIR: qa/public-final
-          TEST_TIMEOUT_MS: '240000'
+          TEST_PARTIAL_LOADING: '1'
+          TEST_QA_DIR: qa/partial
         run: npm run test:browser
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: a4-a6-public-loading-final-${{ github.sha }}
-          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/public-final/
+          name: a4-a6-source-comparison-local-${{ github.sha }}
+          path: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/
+            !kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/public/
           retention-days: 14
           if-no-files-found: error
+      # The deployed entry may still be the previous version. Keep its real failure
+      # evidence without claiming the candidate was deployed or masking local failures.
+      - name: Capture direct public Pages baseline after local QA
+        id: public-baseline
+        if: always() && steps.install.outcome == 'success'
+        continue-on-error: true
+        env:
+          TEST_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/
+          TEST_QA_DIR: qa/public
+          TEST_TIMEOUT_MS: '240000'
+        run: npm run test:browser
+      - name: Upload independent public Pages evidence including failed loads
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always() && steps.install.outcome == 'success'
+        with:
+          name: a4-a6-source-comparison-public-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r01/qa/public/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Summarize public baseline separately from local candidate result
+        if: always() && steps.install.outcome == 'success'
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import fs from 'node:fs';
+          const file = 'qa/public/BROWSER_QA.json';
+          if (!fs.existsSync(file)) {
+            console.log('Public Pages baseline: no report was produced. Inspect the baseline step logs.');
+          } else {
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            console.log(`Public Pages baseline: ${report.status}`);
+            console.log(`URL: ${report.requestedURL}`);
+            console.log(`Elapsed: ${report.durationMs} ms; HTTP failures: ${report.httpFailures?.length || 0}; failed requests: ${report.failedRequests?.length || 0}`);
+            console.log(`Page status: ${report.lastState?.status || '(not available)'}`);
+            if (report.failure) console.log(`Failure: ${report.failure.split('\n')[0]}`);
+            console.log('The public baseline is reported independently and may predate the candidate. It is not deployment verification.');
+          }
+          NODE
