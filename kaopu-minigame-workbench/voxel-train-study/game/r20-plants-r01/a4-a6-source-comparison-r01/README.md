@@ -1,6 +1,12 @@
 # A4 → A6 source comparison R01
 
-Open index.html through HTTP. Four independent synchronized orthographic spaces preserve original roots. Drag/wheel any view to control all cameras. Side/quarter views, source animation and bind-pose reset, and A6 exterior-layer toggle are available.
+Open index.html through HTTP. Four independent source scenes retain their original root transforms. Dimensional acceptance has only fixed **side / front / top** axis-aligned orthographic views. No oblique-view button or free orbit exists. Mouse wheel changes a shared zoom, never an individual object's fit. Source animation, bind-pose reset, and reversible A6 exterior-layer toggle remain available.
+
+Mandatory rule: [KAOPU dimensional/structural view standard R01](docs/KAOPU_Scale_Review_View_Standard_R01.md). Same-source A4/A6 and Mark3/copy each use their pair's union bounds and exactly the same world-units-per-CSS-pixel (displayed in the page). No cross-source metric equality is asserted. Geometry is never resized for framing.
+
+Source axis convention: X transverse, Y vertical, Z longitudinal. Side camera sits at +X looking −X, screen right −Z/up +Y; front at +Z looking −Z, screen right +X/up +Y; top at +Y looking −Y, screen right +X/up −Z. Near 0.01/far 2000 and positive camera-target distance 1000 are camera settings only. The previous side default was already orthographic and used shared bounds; the rejected behavior was its oblique preset and unrestricted drag rotation, not proven reverse perspective.
+
+Release gate: numerical projected lengths and rendered-pixel equal-size markers at near/far and fore/aft positions must agree, same-source panels must share pixel scale, dragging must not rotate, and actual side/front/top screenshots must be reviewed. `node tests/orthographic-acceptance.mjs` checks camera mathematics; real-browser tests check the rendered pixels and full scenes.
 
 A4/A6 share the exact original three-driving-axle source; original coach and its learning-expression copy share exact full Mark3. A4 and Mark3 source units are not independently calibrated to metres. No claim that the two source assets are a correctly coupled or dimensionally certified train.
 
