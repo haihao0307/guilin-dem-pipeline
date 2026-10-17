@@ -1,0 +1,13 @@
+# Train master candidate v2: source-surface parameterization
+
+This independent directory preserves the checkpoint04/v1 files as an unchanged anchor elsewhere. The prior train result was rejected for changing dark chassis parts into pale zinc. This v2 is a new candidate, not a previously accepted result or default appearance.
+
+The original KAOPU R06 metal and R03 finite-glass vendor files remain byte-identical to the user-selected release anchor 7577ae37c8bc13bc3f7c0204c1857e83074c257a. However, the train v2 adapter deliberately changes the compiled R06 METAL_FIELDS through eight exact guarded substitutions in r06-source-parameters.mjs. It parameterizes intact-phase linear RGB, metallic, coherent diffuse/F0 coverage, roughness, roughness bounds and microheight coefficient. It must not be described as an unchanged field shader. The original noise, analytic-gradient, footprint, phase and damage equations remain present; no zinc branch is selected.
+
+Exact source PBR factors determine the dark-iron, bare-metal and black-painted surface instances. These names describe bounded surface interpretations, not proven alloys. Wear/history/wet/repair/variant are zero and locked off; no oil or weathering is inferred. The original 12-micrometre-labelled intact microheight coefficient remains an explicit candidate parameter in an uncalibrated reference domain, not a measured grain scale. The original R06 roughness clamp [.16,.98] becomes [0,1] to retain source scalar factors; Three r170's own BRDF processing still applies.
+
+Bindings are bounded to 74 audited source node/mesh/primitive tuples within the same 8 material definitions: A4 59 and Mark3 15. This excludes 23 ambiguous former v1 uses, including the black seat region, roof decal and copper-pipe use of Wheels. Body/Roof definitions, artwork, copper/gold, plastic and textiles are not expanded. Exact parser associations, expected source PBR values and captured rest matrices are required. Source material references remain restorable.
+
+Three r170 is injected by the viewer, SHA ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb. The Three MIT license is included; original KAOPU/FH88/timber rights are not relabeled as MIT. Glass retains its existing finite transport and unverified source-thickness caveat.
+
+The stable entry is train-binding.mjs: installTrainMaster(T, source), returning switchMode('source-exact'|'master-upgrade'), records, materialRecords and dispose. Source-exact is default. Runtime lock covers every published dependency file; visual acceptance remains false until separate browser/image review. The manifest's vendor anchor and parameterized field hashes distinguish original source from actual executed shader recipe.

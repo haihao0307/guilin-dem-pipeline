@@ -1,3 +1,5 @@
+import {decodeWindowCandidate} from './window-bevel.mjs';
+import {decodeRaw as decodeQuarterArc} from './quarter-arc.mjs';
 import {decodeRaw as decodeOffsetArc} from './offset-arc-shape.mjs';
 import {decodeRaw as decodeSpokeShape} from './spoke-shape.mjs';
 import {decodeBogieOverlay} from './bogie-overlay.mjs';
@@ -36,9 +38,10 @@ function concatenate(chunks){const out=new Uint8Array(chunks.reduce((n,c)=>n+c.b
 export function generateRule(rule,definition,residual,shapeAssets=new Map()){
  const op=rule.op, spec=componentTypes[definition.componentType];if(!spec)throw Error('Unsupported componentType');
  const [get,set,size]=spec;
- if(op==='latheSparseOverlayExact'||op==='bogieSparseOverlayExact'){
+ const sparseDecoders={latheSparseOverlayExact:decodeLatheOverlay,bogieSparseOverlayExact:decodeBogieOverlay,windowBandSparseOverlayExact:decodeWindowCandidate};
+ if(op in sparseDecoders){
   const asset=shapeAssets.get(rule.asset);if(!asset)throw Error('Missing shape asset');
-  const {sourceVertexCount,vertexIndices,positions}=(op==='latheSparseOverlayExact'?decodeLatheOverlay:decodeBogieOverlay)(asset),count=definition.count,seen=new Uint8Array(count);
+  const {sourceVertexCount,vertexIndices,positions}=sparseDecoders[op](asset),count=definition.count,seen=new Uint8Array(count);
   if(sourceVertexCount!==count||vertexIndices.length!==rule.generatedVertexCount)throw Error('Sparse geometry count mismatch');
   for(const i of vertexIndices){if(i>=count||seen[i])throw Error('Invalid sparse geometry indices');seen[i]=1;}
   const base=concatenate(rule.baseProgram.map(r=>generateRule(r,rule.baseDefinition,residual,shapeAssets)));
@@ -47,7 +50,7 @@ export function generateRule(rule,definition,residual,shapeAssets=new Map()){
   for(let i=0;i<count;i++)if(!seen[i]){output.set(base.subarray(at,at+12),i*12);at+=12;}
   vertexIndices.forEach((i,j)=>output.set(generated.subarray(j*12,j*12+12),i*12));return output;
  }
- const assetDecoders={radialWheelExact:a=>decodeWheel(a).positions,radialWheelSubsetExact:a=>decodeWheelHybrid(a).positions,spokeProfileExact:a=>decodeSpokeShape(a).positions,offsetArcCompletionExact:a=>decodeOffsetArc(a).positions,rivetSpheresExact:decodeRivetPositions,springToriExact:decodeSpringTorusPositions,wheelNormalsExact:a=>decodeWheelNormal(a).normals,wheelUVProjectionExact:a=>decodeWheelUV(a).uv,affineSphereArrayExact:decodeBodySpheres,mark3AttributeExact:decodeAttributeRule,axialCircleSubsetExact:decodeBodyRings,affineSphereAttributeExact:decodeBodyAttributes,sourceSphereTopologyExact:decodeBodyTopology,retainedProfileSweepExact:decodeRoofSweep,wheelTopologyExact:a=>decodeWheelTopology(a,shapeAssets.get(rule.dependencies[0].path)).indices};
+ const assetDecoders={radialWheelExact:a=>decodeWheel(a).positions,radialWheelSubsetExact:a=>decodeWheelHybrid(a).positions,spokeProfileExact:a=>decodeSpokeShape(a).positions,offsetArcCompletionExact:a=>decodeOffsetArc(a).positions,rivetSpheresExact:decodeRivetPositions,springToriExact:decodeSpringTorusPositions,wheelNormalsExact:a=>decodeWheelNormal(a).normals,wheelUVProjectionExact:a=>decodeWheelUV(a).uv,affineSphereArrayExact:decodeBodySpheres,mark3AttributeExact:decodeAttributeRule,axialCircleSubsetExact:decodeBodyRings,affineSphereAttributeExact:decodeBodyAttributes,sourceSphereTopologyExact:decodeBodyTopology,retainedProfileSweepExact:decodeRoofSweep,affineQuarterArcExact:decodeQuarterArc,wheelTopologyExact:a=>decodeWheelTopology(a,shapeAssets.get(rule.dependencies[0].path)).indices};
  if(op in assetDecoders){const asset=shapeAssets.get(rule.asset);if(!asset)throw Error('Missing shape asset');const values=assetDecoders[op](asset);return new Uint8Array(values.buffer,values.byteOffset,values.byteLength);}
  if(op==='residual'){const end=rule.byteOffset+rule.byteLength;if(rule.byteOffset<0||end>residual.length)throw Error('Truncated residual');return residual.slice(rule.byteOffset,end);}
  if(op==='constantTuple'){const tuple=hexBytes(rule.tupleHex),out=new Uint8Array(tuple.length*rule.repeatCount);for(let i=0;i<rule.repeatCount;i++)out.set(tuple,i*tuple.length);return out;}

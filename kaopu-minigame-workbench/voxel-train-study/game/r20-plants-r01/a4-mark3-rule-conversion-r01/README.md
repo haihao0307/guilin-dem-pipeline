@@ -54,3 +54,11 @@ node viewer/test-transport.mjs
 `master-materials/runtime-lock.json` 锁定7个实际运行文件，共125,609 B；旧库核心场原样。适配仅包裹固定源休止坐标域，不修改模型几何/显示标尺。源单位未米制标定，`referenceScale=1` 只是显式参考域，不是物理纹理尺寸认证。源原色与光学可能不同，升级模式须单独图审。
 
 四张纹理的规则实验数据在 `texture-rules/`，仅浏览器审计按需加载，默认源精确页面仍使用原编码图像。Pillow 解码相等、浏览器上传采样相等、主视口像素相等是三项不同证据。浏览器报告必须保留任何JPEG解码或透明RGB差异；不可用其中一项冒充全部平台无损。
+
+## Checkpoint 05 browser verification candidate
+
+The QA URL explicitly selects `?ruleTextures=1&masterVersion=2`. The rule-texture bridge emits DataTexture RGBA directly and blocks encoded source image requests for the converted panels; source-reference panels retain their original images. This is exact region rules plus explicit pixel residual, not a claim of completely procedural texture authorship. CPU bridge tests preserve sampler, UV transform, color-space and alpha semantics. Whole-frame browser equivalence remains a required test.
+
+The independent `master-materials-v2` candidate locks 10 runtime files. It maps 74 unambiguous primitive uses (59 A4 / 15 Mark3), retaining original color/metalness/roughness and deriving diffuse/F0 consistently. The previous fixed zinc recipe is visually rejected and retained only as historical evidence. Candidate visual acceptance cannot be inferred from shader compilation. Source-exact remains the restoration reference. Material coordinates are uncalibrated source-rest units.
+
+A4 historical coal is retained only for complete A4 source replay. A6 is diesel-heated steam with oil/water storage: coal conversion is not an A6 prerequisite. The independent non-coal dependency projection is verified separately; scope removal contributes zero learned-geometry coverage.
