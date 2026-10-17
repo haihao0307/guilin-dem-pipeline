@@ -69,5 +69,5 @@ Existing `VISUAL-STATE-ROUNDTRIP-001` was extended instead of creating a duplica
 
 - No PR #303 production files or Mother branches were modified.
 - No user acceptance, production acceptance or fresh-context gate result is claimed.
-- Mother routing: `NOT_QUERIED`.
-- Lifecycle: `POSTED=false; ACKNOWLEDGED=false; IMPLEMENTED=false; GATE-RUN=false; ADOPTED=false; USER-ACCEPTED=false`.
+- Mother routing: `POSTED` to PR #303 comment https://github.com/haihao0307/guilin-dem-pipeline/pull/303#issuecomment-6239864720.
+- Lifecycle: `POSTED=true; ACKNOWLEDGED=false; IMPLEMENTED=false; GATE-RUN=false; ADOPTED=false; USER-ACCEPTED=false`.
