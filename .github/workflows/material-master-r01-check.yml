@@ -46,6 +46,7 @@ jobs:
           else
             echo "r03=receivers" >> "$GITHUB_OUTPUT"
           fi
+          if grep -q '^kaopu-material-workbench/material-master-r06/' "$RUNNER_TEMP/material-changed.txt" && ! grep '^kaopu-material-workbench/material-master-r06/' "$RUNNER_TEMP/material-changed.txt" | grep -Ev '/(road-material.mjs|CONCRETE_R06_METHODS.md|qa/.*)$'; then echo "r06scope=concrete" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -59,6 +60,7 @@ jobs:
       - name: R06 volume aggregate and reference layer optics
         if: steps.scope.outputs.r06 == 'true'
         env:
+          R06_QA_SCOPE: ${{ steps.scope.outputs.r06scope }}
           NODE_PATH: ${{ runner.temp }}/material-qa/node_modules
         run: node kaopu-material-workbench/material-master-r06/qa/browser.cjs
       - name: R05 roads and metal connections

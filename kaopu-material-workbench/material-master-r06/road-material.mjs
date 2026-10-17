@@ -27,14 +27,18 @@ RoadStone roadStone(vec2 p,float fp){
 }
 // One 3D aggregate volume is cut by every receiver face. No independent side decal.
 RoadStone roadVolumeStone(vec3 p,float fp){
- float cell=.029;vec3 q=(p+vec3(.019,.007,.031))/cell,base=floor(q);float best=1e6,id=0.,radius=.3;
+ float cell=.029;vec3 q=(p+vec3(.019,.007,.031))/cell;
+ q+=.42*(vec3(mt_kn(q*.63+vec3(19,7,3)),mt_kn(q*.63+vec3(3,23,11)),mt_kn(q*.63+vec3(13,5,29)))-.5);
+ vec3 base=floor(q);float best=1e6,id=0.,radius=.3;
  for(int z=0;z<2;z++)for(int y=0;y<2;y++)for(int x=0;x<2;x++){
   vec3 k=base+vec3(float(x),float(y),float(z));float h=mt_kh(k+vec3(float(uRoadSeed)+71.));
   vec3 c=k+(vec3(mt_kh(k+17.),mt_kh(k+33.),mt_kh(k+59.))-.5)*.18;
   vec3 d=q-c;float angle=h*6.2831853;d.xz=mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*d.xz;
+  float tilt=mt_kh(k+73.)*6.2831853;d.xy=mat2(cos(tilt),-sin(tilt),sin(tilt),cos(tilt))*d.xy;
+  float roll=mt_kh(k+97.)*6.2831853;d.yz=mat2(cos(roll),-sin(roll),sin(roll),cos(roll))*d.yz;
   d*=vec3(.83+.55*mt_kh(k+43.),.78+.50*mt_kh(k+46.),.83+.50*mt_kh(k+49.));
   float r=.115+.41*pow(mt_kh(k+61.),.72);
-  float fac=max(max(abs(d.x),abs(d.y)),max(abs(d.z),abs(dot(d,normalize(vec3(.62,.76,.46))))));
+  float fac=max(length(d)*.86,max(abs(d.x),max(abs(d.y)*.93,abs(dot(d,normalize(vec3(.62,.76,.46)))))));
   float sd=fac-r;if(sd<best){best=sd;id=h;radius=r;}
  }
  float aa=max(fp/cell*.55,.008),coverage=1.-smoothstep(-aa,aa,best),gate=1.-smoothstep(.004,.022,fp);
@@ -114,7 +118,7 @@ export function makeRoadMaterial(T,state){
   s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 roadDX=dFdx(-vViewPosition),roadDY=dFdy(-vViewPosition),roadR1=cross(roadDY,normal),roadR2=cross(normal,roadDX);float roadDet=dot(roadDX,roadR1);normal=normalize(abs(roadDet)*normal-sign(roadDet)*((dFdx(roadS.residual)+dot(roadS.fineGradient,dFdx(roadSurfaceUV(vRoadRest))))*roadR1+(dFdy(roadS.residual)+dot(roadS.fineGradient,dFdy(roadSurfaceUV(vRoadRest))))*roadR2));');
   s.fragmentShader=s.fragmentShader.replace('#include <opaque_fragment>','if(uRoadMode>.5&&uRoadMode<1.5)outgoingLight=vec3(clamp(.62+roadS.macro*22.,0.,1.));else if(uRoadMode>1.5&&uRoadMode<2.5)outgoingLight=vec3(roadS.rough);else if(uRoadMode>2.5&&uRoadMode<3.5)outgoingLight=roadS.damage;else if(uRoadMode>3.5&&uRoadMode<4.5)outgoingLight=roadS.layers;else if(uRoadMode>4.5)outgoingLight=normal*.5+.5;\n#include <opaque_fragment>');
  };
- material.customProgramCacheKey=()=>`r06-road-volume-1-${state.family}`;
+ material.customProgramCacheKey=()=>`r06-road-volume-2-${state.family}`;
  material.userData.update=()=>{for(const s of shaders){const v=s.uniforms;v.uRoadWear.value=state.wear;v.uRoadHistory.value=state.history;v.uRoadWet.value=state.wetness;v.uRoadRepair.value=state.repair;v.uRoadVariant.value=state.variant;v.uRoadMode.value=state.mode;v.uRoadMarkings.value=state.markings?1:0;}};
  material.userData.shaders=shaders;
  return material;
