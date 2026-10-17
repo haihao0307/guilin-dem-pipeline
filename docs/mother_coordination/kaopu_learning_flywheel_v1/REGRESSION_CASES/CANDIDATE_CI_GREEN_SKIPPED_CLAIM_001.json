@@ -74,6 +74,60 @@
         ]
       },
       "correctionRegression": "QUERY-SCOPE-NEGATIVE-EVIDENCE-001"
+    },
+    {
+      "observedAt": "2026-10-17T01:00:55Z",
+      "cycle": "N168",
+      "mother": "Material / material-master-r06",
+      "currentRun": {
+        "runId": 38988902424,
+        "headSha": "5543f756ca3af1428323696324303fa70b8de850",
+        "conclusion": "success",
+        "scope": "mobile",
+        "artifactId": 12083639031,
+        "artifactDigest": "sha256:b9e2526f8bcb889d377023ca6b8a8d1a17c215a129c6e9231b5e5c04cdf76f33",
+        "executedReceiptChecks": [
+          "concrete 390px viewport",
+          "no horizontal overflow",
+          "browser error array empty"
+        ],
+        "unsupportedStaticCoverageClaims": [
+          "medium/close/side screenshots",
+          "baseline pixel invariant",
+          "wear wet response",
+          "diagnostic channels",
+          "orbit reset",
+          "idle stop"
+        ]
+      },
+      "referencedFullRun": {
+        "runId": 38987502021,
+        "headSha": "bb6818c9be0ae5d782c9b19cb3b9191f4fad69fa",
+        "artifactId": 12083607823,
+        "artifactDigest": "sha256:b0a84817872b4108ab030ca286745d5b9d770b6e642404d873036d9efb1ad4f3",
+        "roadMaterialBlob": "856750e7b7de4e998b4db2f2e4a03da3117ada5a",
+        "currentRoadMaterialBlob": "1307b78ca6c8a9f7f063a71b3675c55599150ec6",
+        "binding": "STALE_SUBJECT_FOR_CURRENT_ROAD_MATERIAL"
+      },
+      "referencedConcreteRun": {
+        "runId": 38988373429,
+        "headSha": "27a7a0731ccbb1598e612be2fdede106ea0232b8",
+        "conclusion": "failure",
+        "failedPhase": "concrete mobile",
+        "artifactId": 12083987790,
+        "artifactDigest": "sha256:68c32211e7fe68db794602df07b30496a99552cf36ba9a6aad4abb253b643a93",
+        "roadMaterialBlob": "1307b78ca6c8a9f7f063a71b3675c55599150ec6",
+        "partialFactsRetained": [
+          "concrete medium/close/side screenshots exist",
+          "baselineImmutable=true",
+          "candidateResponse=true"
+        ],
+        "bindingGap": "Current receipt records only the run ID; it does not map named coverage claims to exact artifact digest, evidence path/digest, tested subject, or partial-step result."
+      },
+      "expectedState": "MOBILE_CHECK_VERIFIED__HOLD_DECLARED_COVERAGE_UNBOUND",
+      "decision": "NO_NEW_CASE_EXTEND_EXISTING_CANDIDATE",
+      "replay": "5/5",
+      "boundary": "A failed run may contribute explicitly bound partial evidence; it cannot be inherited through a bare run ID or converted into whole-run success."
     }
   ],
   "failureClass": "CLAIM_SCOPE_OVERPROMOTION",
