@@ -39,7 +39,7 @@ async function switchMaterialMode(mode){
   qa.masterBindings=panels.filter(p=>p.id.endsWith('converted')).map(p=>({key:p.key,binding:installTrainMaster(T,p.source)}));
  }
  for(const item of qa.masterBindings)item.binding.switchMode(mode);
- qa.materialMode=mode;qa.materialVersion=new URL(location.href).searchParams.get('masterVersion')==='2'?'2':'1';qa.materialRecords=qa.masterBindings.map(x=>({key:x.key,records:x.binding.records}));
+ qa.materialMode=mode;qa.materialVersion=new URL(location.href).searchParams.get('masterVersion')==='1'?'1':'2';qa.materialRecords=qa.masterBindings.map(x=>({key:x.key,records:x.binding.records}));
  for(const p of panels.filter(p=>p.id.endsWith('converted')))p.element.querySelector('.label').textContent=p.key.toUpperCase()+(mode==='source-exact'?' 函数/模板/残差重建':' 自有大师材质候选 · 未验收');
  render();status.textContent=mode==='source-exact'?'源精确材质已恢复。所有原材质引用保留。':'自有 R06 金属 / R03 玻璃升级候选；配方与源不同，材质域未米制标定。铜金/图案等未适配项保留原材质。';
  return qa.materialRecords;
