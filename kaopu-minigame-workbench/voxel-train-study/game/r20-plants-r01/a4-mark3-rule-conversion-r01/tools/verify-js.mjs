@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {gunzipSync,gzipSync} from 'node:zlib';
+import assert from 'node:assert/strict';
+import {reconstructDocument,sha256,makeGltfBridge} from '../src/exact-decoder.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const reports=[];
+const readRawOrGzip=p=>fs.existsSync(p)?fs.readFileSync(p):gunzipSync(fs.readFileSync(p+'.gz'));
+fs.mkdirSync(path.join(root,'reports'),{recursive:true});
+for(const model of ['a4','mark3']){
+ const base=path.resolve(root,'../a4-a6-source-comparison-r03/source-assets',model),target=path.join(root,'generated',model);
+ const original=JSON.parse(fs.readFileSync(path.join(base,'object.json'))),manifest=JSON.parse(readRawOrGzip(path.join(target,'program.json')));
+ const residual=new Uint8Array(readRawOrGzip(path.join(target,'residual.bin'))),source=gunzipSync(fs.readFileSync(path.join(base,'fields.bin.gz')));
+ const assets=new Map(manifest.shapeAssets.map(a=>[a.path,new Uint8Array(fs.readFileSync(path.join(target,a.path)))]));
+ const {document,payload}=await reconstructDocument(manifest,residual,assets);
+ for(const key of ['fields','objectGraph','displaySkeleton','images','fieldPayload'])assert.deepStrictEqual(document.content[key],original.content[key],model+' '+key);
+ assert.deepStrictEqual(Buffer.from(payload),source);
+ const bridge=makeGltfBridge(document,'fields.bin');assert.equal(bridge.accessors.length,manifest.source.fieldCount);
+ for(const image of manifest.contentMetadata.images)assert.equal(await sha256(fs.readFileSync(path.join(target,image.payload))),image.sha256);
+ const corrupt=residual.slice();corrupt[Math.floor(corrupt.length/2)]^=1;
+ await assert.rejects(reconstructDocument(manifest,corrupt,assets),/Residual integrity mismatch/);
+ const broken=structuredClone(manifest);broken.meshInstances[0].primitiveBindings[0].attributes.POSITION=broken.fieldInstances.length-1;
+ await assert.rejects(reconstructDocument(broken,residual,assets),/Typed field binding mismatch/);
+ await assert.rejects(reconstructDocument(manifest,residual,new Map()),/Missing shape asset/);
+ const changedTemplate=structuredClone(manifest);changedTemplate.meshFunctions[0].primitives[0].properties.mode=1;
+ await assert.rejects(reconstructDocument(changedTemplate,residual,assets),/Runtime definition integrity mismatch/);
+ const changedInstance=structuredClone(manifest),slot=changedInstance.componentInstances.flatMap(i=>i.slots).find(s=>s.properties.matrix||s.properties.translation);
+ (slot.properties.matrix||slot.properties.translation)[0]+=1;
+ await assert.rejects(reconstructDocument(changedInstance,residual,assets),/Runtime definition integrity mismatch/);
+ const changedShape=structuredClone(manifest),changedAssets=new Map(assets),asset=changedShape.shapeAssets[0];
+ const shapeRaw=new Uint8Array(gunzipSync(assets.get(asset.path))),shapeView=new DataView(shapeRaw.buffer,shapeRaw.byteOffset,shapeRaw.byteLength);
+ if(asset.opcode==='radialWheelExact')shapeView.setFloat32(32,shapeView.getFloat32(32,true)+0.001,true);else shapeView.setFloat64(8,shapeView.getFloat64(8,true)+0.001,true);
+ const shapeGzip=new Uint8Array(gzipSync(shapeRaw,{level:9,mtime:0}));changedAssets.set(asset.path,shapeGzip);asset.bytes=shapeGzip.length;asset.sha256=await sha256(shapeGzip);asset.uncompressedSHA256=await sha256(shapeRaw);
+ for(const f of changedShape.fieldFunctions)for(const rule of f.program)if(rule.asset===asset.path)rule.assetSHA256=asset.sha256;
+ await assert.rejects(reconstructDocument(changedShape,residual,changedAssets),/Field integrity mismatch/);
+ const result={model,verifiedFields:manifest.source.fieldCount,nodes:bridge.nodes.length,meshes:bridge.meshes.length,materials:bridge.materials.length,textures:bridge.textures.length,animations:(bridge.animations||[]).length,payloadSHA256:await sha256(payload),residualCorruptionRejected:true,typedFieldMisbindingRejected:true,sharedTemplateMutationRejected:true,instanceTransformMutationRejected:true,shapeParameterMutationRejected:true,missingShapeFailsWithoutFallback:true};reports.push(result);console.log(JSON.stringify(result));
+}
+fs.writeFileSync(path.join(root,'reports/js-verification.json'),JSON.stringify({passed:true,models:reports},null,2)+'\n');
