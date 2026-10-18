@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu/lip-implementation-review@1",
+  "taskId": "LIP-DETAIL-R03-20261018",
+  "role": "Producer",
+  "independentApproval": false,
+  "baseline": {
+    "version": "LIP-REALISM-R01.1",
+    "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+    "moduleSHA256": "4f680a4ab00b40de66b42aef8adcb64e50f3fd3df202d3c6039d412d6a7f31b3"
+  },
+  "productionFiles": {
+    "LipSurface.js": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919",
+    "build.cjs": "ca50a5929da3b4e0f2fb66d9b12b6bd0ecd5d5fd991491318c190d4777ef5435"
+  },
+  "scope": "Only fine normal-height field; revision dispatch, backward-compatible archive migration, three actual comparison buttons, and build identity.",
+  "formulaEngineeringAssumptions": {
+    "candidateSpacingMM": 1.1,
+    "neighbourCells": 5,
+    "mainPresenceThreshold": 0.82,
+    "shortDepthExtent": [
+      0.12,
+      0.3
+    ],
+    "longDepthExtent": [
+      0.3,
+      0.72
+    ],
+    "longClassThreshold": 0.58,
+    "driftMM": [
+      -0.36,
+      0.36
+    ],
+    "bendMM": [
+      -0.14,
+      0.14
+    ],
+    "mainGaussianWidthMM": [
+      0.045,
+      0.08
+    ],
+    "mainPeakMetres": [
+      6e-06,
+      1e-05
+    ],
+    "branchPresenceThreshold": 0.35,
+    "branchRelativePeak": 0.25,
+    "branchOffsetMM": [
+      0.1,
+      0.28
+    ],
+    "independentCrossPresenceThreshold": 0.45,
+    "crossLengthMM": [
+      0.35,
+      0.85
+    ],
+    "crossAngleRadians": [
+      -0.68,
+      0.68
+    ],
+    "crossGaussianWidthMM": [
+      0.018,
+      0.036
+    ],
+    "crossPeakMetres": [
+      2e-06,
+      3.5e-06
+    ],
+    "crossCoordinates": "Centre samples native inner/outer rails at its own root x; direction and distance are evaluated in actual rest millimetres.",
+    "filter": "Same sqrt(width^2 + .30 footprint^2), width/filterWidth area compensation and .055-.34 mm/pixel visibility fade. Smooth endpoints and Gaussian support truncated smoothly from 2.5 to 3.5 width units.",
+    "horizontalSupportBoundMM": 1.280622,
+    "foldStrengthDefault": 0.55,
+    "biologicalMeasurementClaimed": false
+  },
+  "archivePolicy": {
+    "schema": "kaopu/lip-realism@2",
+    "surfaceRevision": [
+      1,
+      3
+    ],
+    "default": 3,
+    "legacyV1": "Only absent version or R01/R01.1; settings must not contain surfaceRevision. Restore explicitly selects revision 1.",
+    "v2": "Absent version or R03 only; explicit integer surfaceRevision 1 or 3 required.",
+    "nativeArchive": "No lipRealism payload selects defaults, revision 3.",
+    "foreignColourArchive": "Reject colourReview property or R02 version before any person mutation.",
+    "calibration": "Existing calibration decode, count, identity key checks remain before priorRestore; exact native arrays and post-restore identity checks preserved."
+  },
+  "uiModes": {
+    "new": {
+      "enabled": true,
+      "surfaceRevision": 3
+    },
+    "previous": {
+      "enabled": true,
+      "surfaceRevision": 1
+    },
+    "original": {
+      "enabled": false,
+      "surfaceRevision": "preserved"
+    }
+  },
+  "protectedByteRanges": {
+    "legacy_lrFolds": {
+      "bytes": 1538,
+      "sha256": "88290cd35217db6a6cb056b886a8750bbaab60ba7333d5657af5554bba11d855"
+    },
+    "native_rails": {
+      "bytes": 820,
+      "sha256": "d94e7730a5525e8a18439d75c1f56dde1a5636ad48e267b624fefdb180b8b8a1"
+    },
+    "colour_roughness_wetness": {
+      "bytes": 1186,
+      "sha256": "9e6e67691b95525b70a5cde95187d7cee1776a41d6529a3596fae2cfbadfddd9"
+    },
+    "mask": {
+      "bytes": 1318,
+      "sha256": "4dcf9445f9231f53a82a0aeef41f27f0417e1b178c02a87ffff6e97541d9661c"
+    },
+    "material_integration_clearcoat": {
+      "bytes": 1632,
+      "sha256": "bfc01a51d584f9b16e052ec23c19c2fe8c45c842d4844adfac7742e654988984"
+    },
+    "native_geometry_hook": {
+      "bytes": 648,
+      "sha256": "3527f936bcdd0f820058da54c7f8367979ed1e23e24806b54fef9600d5e40b14"
+    },
+    "render_update_dispatch": {
+      "bytes": 232,
+      "sha256": "4fa99e9e434a5f5a6df901790bf8f9afbc0fcdeadd2de2fcfba398371d71ae92"
+    },
+    "camera_and_native_calibration": {
+      "bytes": 3598,
+      "sha256": "95ac2dcbbce7282bbf4cd8b90b9daad96431b35ee457ce2ad1d7a335fea9223c"
+    },
+    "restore_calibration_tail": {
+      "bytes": 933,
+      "sha256": "867bb614485300c60cbb60702e00cf30080aefd02ba67b4540f2abf5b2a9ea2a"
+    },
+    "archive_routes_except_download_name": {
+      "bytes": 2021,
+      "sha256": "a7b673fc4f038e6d61fc1c57401260cc038aa045db9f343e527d1ffe998e79cb"
+    }
+  },
+  "originalDefaultsExceptRevisionExact": true,
+  "originalLimitsExact": true,
+  "producerChecks": {
+    "javascriptSyntax": "PASS",
+    "buildSyntax": "PASS",
+    "appendOnlyBuild": "PASS",
+    "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "previewSourceCommit": "local-unpublished",
+    "previewSHA256": "d27ee17f3bb58ee624e99ccd3492f1df149059439bef24498ccd7b262f5c9173",
+    "originalScriptHashes": [
+      "dfe701ef358ab2b6f8f04a12da252784e203d0666188c9087d1305278495823b",
+      "ee62cf4ba320a29a0ffd50da6a11c8f1b8d87142a5427cc4751cfe00300a1809"
+    ]
+  },
+  "pendingIndependentGates": [
+    "Source verifier approval",
+    "R01.1 exact comparison and zero-strength ablation",
+    "P01/P02 closed/open actual image review",
+    "UI/file/alias archive routes and fresh reader exact restoration",
+    "Lip ROI, albedo, roughness and canonical/displayed geometry invariants",
+    "Same-state bounded performance and narrow viewport",
+    "Fixed public HTTPS readback tied to real source SHA"
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}
