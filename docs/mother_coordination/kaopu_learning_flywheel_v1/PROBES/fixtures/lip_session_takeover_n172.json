@@ -1,0 +1,44 @@
+[
+  {
+    "id": "exact-checkpoint-known-no-pending-mutation",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"stopped","attemptedMutation":false,"mutationOutcome":"NOT_ATTEMPTED","nextConcreteCommand":"inspect latest workflow receipt","sameBlockerAttempts":0},
+    "expectedState": "SAFE_TO_RESUME_EXACT_CHECKPOINT",
+    "expectedWriteAllowed": true
+  },
+  {
+    "id": "assistant-said-running-without-live-run",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"running","liveRunReceipt":null,"attemptedMutation":false,"mutationOutcome":"NOT_ATTEMPTED","nextConcreteCommand":"resolve run id","sameBlockerAttempts":1},
+    "expectedState": "HOLD_EXECUTION_LIVENESS_UNBOUND",
+    "expectedWriteAllowed": false
+  },
+  {
+    "id": "create-blob-permission-then-generic-error",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"stopped","attemptedMutation":"CREATE_BLOB","mutationOutcome":"UNKNOWN","nextConcreteCommand":"resolve mutation receipt before retry","sameBlockerAttempts":2},
+    "expectedState": "HOLD_MUTATION_RECEIPT_UNKNOWN",
+    "expectedWriteAllowed": false
+  },
+  {
+    "id": "head-moved-after-handoff",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","priorRunClaim":"stopped","attemptedMutation":false,"mutationOutcome":"NOT_ATTEMPTED","nextConcreteCommand":"rebind task anchor","sameBlockerAttempts":0},
+    "expectedState": "REJECT_STALE_TAKEOVER",
+    "expectedWriteAllowed": false
+  },
+  {
+    "id": "mutation-confirmed-failed-exact-head",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"stopped","attemptedMutation":"CREATE_BLOB","mutationOutcome":"CONFIRMED_FAILED","nextConcreteCommand":"retry once with explicit receipt","sameBlockerAttempts":1},
+    "expectedState": "SAFE_TO_RESUME_EXACT_CHECKPOINT",
+    "expectedWriteAllowed": true
+  },
+  {
+    "id": "missing-task-anchor",
+    "input": {"branch":"feature/lip-realism-r01-20261017","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"stopped","attemptedMutation":false,"mutationOutcome":"NOT_ATTEMPTED","nextConcreteCommand":"continue","sameBlockerAttempts":0},
+    "expectedState": "HOLD_TAKEOVER_RECEIPT_INCOMPLETE",
+    "expectedWriteAllowed": false
+  },
+  {
+    "id": "failed-run-receipt-bound",
+    "input": {"taskId":"PR-303","branch":"feature/lip-realism-r01-20261017","boundHead":"3cc02b999bc9b5bc9310194e65950948500740d3","observedHead":"3cc02b999bc9b5bc9310194e65950948500740d3","priorRunClaim":"failed","liveRunReceipt":"run-123:failure","attemptedMutation":false,"mutationOutcome":"NOT_ATTEMPTED","nextConcreteCommand":"inspect failed job then rerun failed jobs","sameBlockerAttempts":1},
+    "expectedState": "SAFE_TO_RESUME_EXACT_CHECKPOINT",
+    "expectedWriteAllowed": true
+  }
+]
