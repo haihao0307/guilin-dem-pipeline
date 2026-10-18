@@ -113,25 +113,18 @@ void lrEvaluate(float oldMask){
  color=mix(color,color*vec3(.90,.85,.91),wetBand*.18);
  float outer=smoothstep(.62,1.02,lrDepth)*(.28+.24*lrNoise(mm*.30+13.));
  // Keep the exact R01 colour below for a matched comparison. R02 uses the
- // same palette, DNA, seed, geometry and light. These bounded coefficients
- // are production approximations, not measured pigment concentrations.
+ // same palette, DNA, seed, geometry and light. Added low-frequency pigment
+ // and inner darkening were rejected after the first actual image review.
+ // The remaining optional operation changes only the external transition.
  vec3 tissueColour=color;
  lrOuterBlend=outer;
  if(lrRevision>1.5&&lrSpatialColour>.5){
   float exposure=smoothstep(.30,.96,lrDepth);
   float corners=smoothstep(.55,.98,abs(u));
-  // A broad field attached to upper/lower and inner/outer coordinates;
-  // small variation is subordinate, not a layer of painted dark dots.
-  float broad=(lrNoise(vec2(u*2.9+47.,lrDepth*2.1+lrUpper*17.))-.5)*2.;
-  float local=(lrNoise(mm*.48+vec2(11.,lrUpper*37.))-.5)*2.;
-  float pigmentVariation=(broad*.70+local*.30)*lrVariation;
-  tissueColour*=exp(-vec3(.12,.28,.23)*pigmentVariation);
-  // Colour at the inner contact region is independent of the wetness value.
-  float inner=1.-smoothstep(.025,.46,lrDepth);
-  tissueColour*=exp(-vec3(.025,.085,.065)*inner*lrVariation);
-  // Exposed outer tissue transitions towards the FULL current skin result.
-  // Corners and central external lip are not given one uniform feather ring.
-  lrOuterBlend=clamp(outer+lrVariation*(exposure*.20+corners*.10),0.,.68);
+  // Blend into the FULL current perioral skin only near the exterior.
+  // The corner term is also exposure-gated: do not wash out inner corners.
+  // These bounded production coefficients are not biological measurements.
+  lrOuterBlend=clamp(outer+lrVariation*exposure*(.20+corners*.10),0.,.68);
  }
  lrTissueAlbedo=psToLinear(clamp(tissueColour,.006,.93));
  color=mix(color,lrSkinSrgb,outer);
@@ -217,17 +210,17 @@ function boot(){
  }
  const panel=document.createElement('section');panel.id='lr-controls';
  panel.innerHTML=`<h2>嘴唇专项 <small>R01 · 同一人物</small></h2><p class="lr-intro">上下唇分区、自然细纹与内缘湿润反射。</p><div class="lr-row"><button data-lr-mode="new" aria-pressed="true">本版嘴唇</button><button data-lr-mode="original" aria-pressed="false">原版嘴唇</button></div><p class="lr-note">切换时保持同一人物、镜头和灯光。</p><div class="lr-row lr-views"><button data-lr-view="front">整脸正面</button><button data-lr-view="macro">嘴部正面</button><button data-lr-view="oblique">嘴部斜侧</button><button data-lr-view="bust">头颈同框</button></div><label class="lr-select">唇部状态<select id="lr-preset"><option value="natural">自然裸唇</option><option value="pigmented">色素较深</option><option value="dry">轻微偏干</option></select></label><div class="lr-sliders">${Object.entries(labels).map(([k,label])=>`<label>${label}<output data-lr-value="${k}"></output><input data-lr="${k}" aria-label="${label}" type="range" min="${limits[k][0]}" max="${limits[k][1]}" step=".01"></label>`).join('')}</div><label class="lr-select">观察通道<select id="lr-diagnostic"><option value="0">完整材质</option><option value="1">唇部作用范围</option><option value="2">仅底色</option><option value="3">粗糙度</option><option value="4">表面法线</option></select></label><div class="lr-row"><button data-lr-action="seed">换一份局部变化</button><button data-lr-action="reset">恢复本版默认</button></div><div class="lr-row"><button data-lr-action="save">保存完整人物</button><button data-lr-action="load">载入人物档案</button><input id="lr-file" type="file" accept="application/json" hidden></div><p id="lr-status" role="status"></p><details><summary>本次改善与研究依据</summary><p>区域来自本人的原生唇缘。唇色、粗糙度、细纹与水膜分别控制，数值是制作参数。研究支持唇色的差异与连续变化，不能将论文色表直接铺满嘴唇。本版仍需视觉验收。</p><a href="https://onlinelibrary.wiley.com/doi/10.1111/srt.13418" target="_blank" rel="noopener">上下唇色测量</a> · <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/ics.70004" target="_blank" rel="noopener">自然唇色色域</a> · <a href="https://dev.epicgames.com/documentation/unreal-engine/digital-humans?application_version=4.27" target="_blank" rel="noopener">数字人表面通道</a></details>`;
- panel.querySelector('h2').innerHTML='嘴唇色域与边缘 <small>R02 · 同一人物</small>';
- panel.querySelector('.lr-intro').textContent='检查唇面分区、唇缘与周围皮肤的过渡。';
+ panel.querySelector('h2').innerHTML='嘴唇与皮肤过渡 <small>R02 · 同一人物</small>';
+ panel.querySelector('.lr-intro').textContent='对照唇缘与周围皮肤的衔接，检查填色感是否减轻。';
  const comparisonRow=panel.querySelector('[data-lr-mode="new"]').parentElement;
  comparisonRow.style.gridTemplateColumns='repeat(3,1fr)';
  comparisonRow.innerHTML='<button data-lr-comparison="r02" aria-pressed="true">本次调整 R02</button><button data-lr-comparison="r01" aria-pressed="false">改前 R01</button><button data-lr-comparison="r07" aria-pressed="false">早期 R07</button>';
  panel.querySelector('.lr-note').textContent='R01 / R02 只比较颜色；人物、纹理、湿润、镜头和灯光相同。';
  const colourToggle=document.createElement('label');colourToggle.className='lr-select';
- colourToggle.innerHTML='<input id="lr-spatial-colour" type="checkbox" checked> 启用分区色彩（取消后只看边缘修正）';
+ colourToggle.innerHTML='<input id="lr-spatial-colour" type="checkbox" checked> 唇缘过渡（关闭后只保留合成修正）';
  panel.querySelector('.lr-sliders').before(colourToggle);
  const research=panel.querySelector('details');research.querySelector('summary').textContent='本轮改了什么';
- research.querySelector('p').textContent='先阻止旧粉色重复覆盖，再让唇红与完整的口周肤色合成。分区颜色使用原生内外唇缘；空间变化仍是制作近似，可关掉对照。本轮没有改变唇形、细纹或湿润。张口时的内缘和口角连续性尚待单独处理。';
+ research.querySelector('p').textContent='先阻止旧唇色重复覆盖，再让唇红与完整的口周肤色合成。外缘过渡沿本人的内外唇缘计算，可关闭对照。第一版新增的色斑已被图审否决并撤除。本轮未改变唇形、细纹或湿润；唇面纹理和张口时的内缘连续性仍需后续处理。';
  const shell=document.querySelector('#control-shell');if(!shell)throw Error('原人物总台控件容器缺失');shell.prepend(panel);
  const oldPanel=document.querySelector('#ps-controls');if(oldPanel){const fold=document.createElement('details');fold.id='lr-existing';const summary=document.createElement('summary');summary.textContent='展开原有皮肤与灯光参数';fold.append(summary);oldPanel.before(fold);fold.append(oldPanel);}
  const style=document.createElement('style');style.textContent=`#lr-controls{padding:18px 18px 14px;color:#e8e6df;background:#172127;font:13px/1.55 system-ui;flex-shrink:0}#lr-controls h2{font-size:21px;line-height:1.2;margin:0 0 8px}#lr-controls h2 small{font-size:12px;font-weight:400;color:#b6c9c9;margin-left:8px}#lr-controls p{margin:6px 0 10px;font-size:12px;color:#b9c7c8}.lr-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.lr-row button{min-height:36px;font-size:12px}.lr-row button[aria-pressed="true"]{border-color:#d7c091;background:#354440;color:#f6ecdb}.lr-views{gap:5px}.lr-select{display:block;margin:12px 0}.lr-select select{display:block;width:100%;min-height:34px;font-size:12px;margin-top:4px}.lr-sliders label{display:block;margin:8px 0;font-size:12px}.lr-sliders output{float:right;font-variant-numeric:tabular-nums;color:#d8c49c}.lr-sliders input{display:block;width:100%;height:16px;accent-color:#cdb78f}#lr-controls details{font-size:12px;margin-top:8px}#lr-status{border-top:1px solid #405259;padding-top:10px}#lr-existing{border-top:1px solid #566765;font:13px system-ui}#lr-existing>summary{padding:15px;cursor:pointer}#lr-controls .lr-note{font-size:11px}#control-shell{overflow-y:auto!important}#lr-controls a{color:#c6ddcf}@media(max-width:900px){#lr-controls{padding:13px}.lr-sliders{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}#lr-controls h2{font-size:18px}}`;document.head.append(style);
@@ -241,7 +234,7 @@ function boot(){
   const spatialInput=panel.querySelector('#lr-spatial-colour');spatialInput.checked=spatialColour;spatialInput.disabled=comparison!=='r02';
   const oldColour=document.querySelector('[data-ps="lipColor"]');
   if(oldColour){oldColour.disabled=comparison==='r02';oldColour.setAttribute('aria-disabled',String(oldColour.disabled));oldColour.title=oldColour.disabled?'R02 唇色请使用上方红润、色素与色差参数；旧唇色只用于改前对照。':'改前版本的旧唇色参数';}
-  panel.querySelector('#lr-status').textContent=`${{r02:'本次调整 R02',r01:'改前 R01',r07:'早期 R07'}[comparison]} · 同一人物 · ${comparison==='r02'&&!spatialColour?'仅边缘合成修正':'固定局部变化'}`;
+  panel.querySelector('#lr-status').textContent=`${{r02:'本次调整 R02',r01:'改前 R01',r07:'早期 R07'}[comparison]} · 同一人物 · ${comparison==='r02'?(spatialColour?'唇缘过渡开启':'仅边缘合成修正'):'原有材质'}`;
  }
  function set(part){const previous=state.enabled;state=validate({...state,...part});sync();if(!geometryApplied||previous!==state.enabled){v.update();geometryApplied=true;}else v.render();status.ready=report().ready;return report();}
  function compare(mode){if(!['r01','r02','r07'].includes(mode))throw Error('无效嘴唇对照版本');comparison=mode;return set({enabled:mode!=='r07'});}
@@ -325,7 +318,7 @@ function boot(){
   switch(b.dataset.lrAction){case'seed':set({seed:(state.seed*16807)%99991+1});break;case'reset':comparison='r02';spatialColour=true;set(defaults);panel.querySelector('#lr-preset').value='natural';break;case'save':save();break;case'load':panel.querySelector('#lr-file').click();break;}
  }catch(e){panel.querySelector('#lr-status').textContent=String(e);status.errors.push(String(e));console.error('LIP_REALISM_CONTROL',e);}});
  panel.querySelector('#lr-file').onchange=async e=>{try{await restore(JSON.parse(await e.target.files[0].text()));}catch(err){panel.querySelector('#lr-status').textContent=String(err);}finally{e.target.value='';}};
- document.title='KAOPU · 人物总台嘴唇色域 R02';document.querySelector('header strong').textContent='人物总台 · 嘴唇色域 R02';document.documentElement.dataset.lipRealism=VERSION;
+ document.title='KAOPU · 人物总台嘴唇边缘 R02';document.querySelector('header strong').textContent='人物总台 · 嘴唇边缘 R02';document.documentElement.dataset.lipRealism=VERSION;
  document.documentElement.dataset.lipSource=status.source?.sourceCommit||'local';
  set(defaults);view('macro');v.render();status.ready=report().ready;status.report=report();return true;
 }

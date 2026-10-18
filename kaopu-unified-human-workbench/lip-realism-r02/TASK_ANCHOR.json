@@ -29,18 +29,18 @@
   ],
   "boundedHypotheses": [
     "Stopping legacy tint before downstream skin layers and compositing native lip mask once removes residual outer pink without erasing perioral skin.",
-    "Existing lip-native inner/outer and upper/lower coordinates can organize bounded tissue chroma variations more effectively than a nearly constant absolute colour; fixed comparison and spatial ablation must justify this change."
+    "Only the outer lip-to-skin transition may need additional blending; preserve R01 tissue colour and independently compare full beauty with the transition disabled."
   ],
   "acceptanceGates": [
     "Actual beauty and albedo R01/R02 front/macro/oblique comparison reviewed independently",
     "Old psLip no longer contaminates R02 lip-boundary albedo, positive R01/R07 control",
     "Wetness cannot change albedo",
-    "Spatial colour ablation preserves boundary correction and changes intended tissue colour",
+    "Outer-transition ablation preserves source blocking and complete-skin composition; compare both full beauty and base colour.",
     "Unchanged geometry/normals/roughness/camera/light; no changes outside conservative native lip ROI",
     "Final HTTPS exact bytes and browser interactions verified; no screenshot substitute"
   ],
   "deferredFindings": [
-    "Inherited open-mouth inner-rim steps and corner continuity need a separate geometric audit; this colour change does not fix them",
+    "Inherited open-mouth inner-rim/corner continuity needs stage-by-stage vertex evidence; shallow-looking bright interior first needs semantic surface and material identification.",
     "Existing R01 reduces long scratches and highlights; do not claim these as newly fixed",
     "No calibrated subject-specific pigment map or measured optical coefficients"
   ],
@@ -49,10 +49,15 @@
       "id": "LIP-VISUAL-NOT-WETNESS-ONLY",
       "failure": "Control reliability was mistaken for visual progress",
       "gate": "Require visible defect reduction in matched images and independent review; parameter response alone cannot pass."
+    },
+    {
+      "id": "R02-SPATIAL-COLOUR-REJECTED",
+      "failure": "New broad/local pigment modulation made visible mottled patches; measurable change was not visual improvement.",
+      "gate": "Remove rejected pigment modulation and added inner darkening; independently inspect the remaining outer transition against composition-only beauty."
     }
   ],
   "status": "EXECUTING",
-  "sourceModified": false,
+  "sourceModified": true,
   "interactive3D": true,
   "staticImageSubstitute": false,
   "publicHttpsPassed": false,

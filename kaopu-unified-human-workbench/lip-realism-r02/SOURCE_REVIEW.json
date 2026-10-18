@@ -4,22 +4,25 @@
   "reviewer": "/root/lip_visual_source_audit",
   "status": "SOURCE_PASS",
   "visualStatus": "VISUAL_PENDING",
-  "moduleSHA256": "b4c4348e5e09eaf78cd636d23702ba3af8e86f0279a7a9553b449b347d8cad14",
+  "moduleSHA256": "8f3efd5fe101f45a9efa40eba752dd660e83b9654deba57d10d4c0efc6c06f7a",
   "confirmed": [
     "Legacy tint blocked before downstream skin layers only in R02",
     "Complete psBase retained and native mask composited once",
     "R01 fallback expression retained",
     "No change to geometry, roughness, wetness, microfolds or clearcoat",
-    "Spatial-colour ablation separates its contribution from composition repair",
+    "Optional outer transition changes only lrOuterBlend; exposure also gates corner term; R01 tissue colour unchanged.",
     "Comparison/spatial state archived and prevalidated; reset returns R02 defaults"
   ],
   "issuesFoundAndResolved": [
     "New comparison and ablation state initially absent from archive",
-    "Reset initially retained comparison/ablation state"
+    "Reset initially retained comparison/ablation state",
+    "First actual images rejected added broad/local pigment and inner darkening; removed entirely, then independently source-reviewed."
   ],
   "limitations": [
-    "Visual usefulness of bounded spatial colour requires matched image review",
+    "Remaining outer-transition coefficients are production approximations; source pass is not visual acceptance.",
     "Old skin-panel archive closures belong to another concurrent task and are unchanged",
     "Numeric gates prove causal isolation and preservation, not photorealism"
-  ]
+  ],
+  "verifierSHA256": "7e5328286a4d5662a0e7aa7a895b9edd197e59609b99074fa050a2c76b930bb0",
+  "verifierStatus": "FINAL_VERIFIER_SOURCE_PASS"
 }

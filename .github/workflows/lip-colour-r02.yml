@@ -48,8 +48,8 @@ jobs:
         env:
           MODE: core
           QA_OUT: kaopu-unified-human-workbench/lip-realism-r02/evidence/core
-          QA_BUDGET_MS: '1200000'
-        run: timeout --signal=TERM --kill-after=20s 21m node "$SCOPE/verify-colour.cjs"
+          QA_BUDGET_MS: '1440000'
+        run: timeout --signal=TERM --kill-after=20s 25m node "$SCOPE/verify-colour.cjs"
       - name: Publish internally verified candidate with strict fast-forward guard
         id: build
         run: |

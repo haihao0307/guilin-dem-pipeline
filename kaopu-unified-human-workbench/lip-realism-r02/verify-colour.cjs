@@ -24,7 +24,7 @@ const out = path.resolve(process.env.QA_OUT || process.env.LIP_QA_OUT || path.jo
 const width = 640, height = 512;
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const budgetMS = Number(process.env.QA_BUDGET_MS || (MODE === 'public' ? 480000 : 900000));
-assert(Number.isFinite(budgetMS) && budgetMS >= 60000 && budgetMS <= 1200000, 'Invalid bounded QA deadline');
+assert(Number.isFinite(budgetMS) && budgetMS >= 60000 && budgetMS <= 1440000, 'Invalid bounded QA deadline');
 fs.mkdirSync(out, { recursive: true });
 const q = {
   schema: 'kaopu/lip-colour-composition-qa@1', version: VERSION, mode: MODE,
@@ -37,11 +37,22 @@ const q = {
   generatedImageUsed: false, staticImageSubstitute: false, sourceModified: true,
   userVisualAccepted: false, visualAcceptance: false, productionReady: false,
   budgetMS,
+  priorFailureEvidence: {
+    runURL: 'https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39096551073',
+    sourceSHA: 'bf235cbb741de1eb21f469c9e020b95a65f24040',
+    verifierSHA256: '6f5bd3941b1c9e6ec828fb46507efba3fd2f677dc4036f2d547625042ebfa2b5',
+    artifactID: 12124738959,
+    artifactSHA256: '9562ffc044854dc1833bba7f96cca26ad1fdd143771d6f3770a52c08242f9be0',
+    classification: 'The fixed 10% old-feather sampling premise failed before either skin-layer perturbation was executed; this was not a measured skin response failure.',
+    observedMacroProbes: { total: 6392, nonzeroOldFeather: 515, maximumOldFeather: 0.045756502743540255, visibleR01OldTintResponse: 64 },
+    cleanup: 'The original 15-second browser close also timed out after pending native renders; cleanup now explicitly drains each page before closing it, with bounded failure handling.'
+  },
   limitations: [
     'One frozen person, neutral pose, three existing views, one real Chromium SwiftShader runner.',
     'Native LipRails projected ROI is a conservative mouth rectangle, not a pixel-perfect anatomical segmentation.',
     'The retained R01 path is checked against one macro base-colour frame from the byte-identical published R01 page; the remaining views compare paths in the same candidate.',
     'Near-mouth probes use projected native skin vertices 1.5–7 mm outside the outer lip rails in the inherited rest frame; no physiological measurement is claimed.',
+    'The old-feather subset is selected only by a visible R01 old-tint positive control in that native skin region; later skin checks establish nonzero responses, not exact preservation of their full magnitude.',
     'The tests establish composition and preservation properties, not photorealism or user aesthetic approval.',
     'The inherited remote loader is retained; offline operation and real-phone performance are not certified.'
   ]
@@ -331,8 +342,27 @@ async function residualCheck(initial, domain) {
       assert.equal(lowState.head.lipColor, 0); assert.equal(highState.head.lipColor, 1);
       sameExcept(lowState, highState, ['head.lipColor'], 'The old lip colour probe altered another production property');
       const delta = difference(low, high, domain.roi);
-      if (variant === 'r01') localResponse(low, high, domain.roi, 'R01 residual positive control');
-      else assert.equal(low.sha256, high.sha256, 'R02 still depends on the old psLip tint');
+      if (variant === 'r01') {
+        localResponse(low, high, domain.roi, 'R01 residual positive control');
+        // Select the overlap from the unchanged R01 render, before measuring
+        // any R02 skin response. A fixed feather amplitude is not a spatial
+        // guarantee: run 39096551073 observed max 0.0458 in this native band.
+        const probes = [];
+        for (const probe of domain.skinProbes) {
+          if (!(probe.oldFeather > 0)) continue;
+          const index = (probe.yBottom * width + probe.x) * 4;
+          const before = [...low.pixels.subarray(index, index + 3)], after = [...high.pixels.subarray(index, index + 3)];
+          const maxDelta = Math.max(...before.map((value, channel) => Math.abs(value - after[channel])));
+          if (maxDelta > 0) probes.push({ ...probe, positiveControl: { before, after, maxDelta } });
+        }
+        q.skinProbePositiveControl = {
+          selection: 'unchanged native near-mouth skin band AND oldFeather > 0 AND the same pixel visibly responds to R01 lipColor 0 to 1; no R02 response is used for selection',
+          sourceFrames: { low: { file: 'r01-old-lip-colour-0.png', ...small(low) }, high: { file: 'r01-old-lip-colour-1.png', ...small(high) } },
+          nativeProbeCount: domain.skinProbes.length, observedProbeCount: probes.length, probes
+        };
+        writeJSON('native-old-feather-positive-control.json', q.skinProbePositiveControl); checkpoint();
+        assert(probes.length >= 8, 'Fewer than eight native near-mouth pixels visibly respond to the independent R01 old-tint positive control');
+      } else assert.equal(low.sha256, high.sha256, 'R02 still depends on the old psLip tint');
       result[variant] = { before: small(low), after: small(high), delta };
     }
     q.necessityEstablished = true; await resetSettings(initial); return result;
@@ -362,22 +392,28 @@ async function wetnessIndependent(initial) {
     await resetSettings(initial); return { before: small(low), after: small(high), measuredChannel: 'final psBase via existing diagnostic 2' };
   });
 }
-async function spatialAblation(initial, domain) {
-  return test('removing added spatial colour changes lip pixels without changing geometry or production settings', async () => {
+async function edgeTransitionAblation(initial, domain) {
+  return test('outer-edge transition ablation changes lip pixels without changing geometry or production settings', async () => {
     await selectVariant('r02', 2); await page.evaluate(() => lipRealism.ablation({ spatialColour: true }));
-    const beforeState = await state(), enabled = await capture('r02-spatial-colour-enabled');
-    const disabledResult = await page.evaluate(() => lipRealism.ablation({ spatialColour: false })); const disabled = await capture('r02-spatial-colour-disabled');
-    assert.deepEqual(await state(), beforeState, 'Colour ablation changed production settings, geometry, lighting or camera');
-    const delta = localResponse(enabled, disabled, domain.roi, 'Added spatial colour ablation');
+    const beforeState = await state(), enabled = await capture('r02-edge-transition-enabled-colour');
+    const disabledResult = await page.evaluate(() => lipRealism.ablation({ spatialColour: false })); const disabled = await capture('r02-edge-transition-disabled-colour');
+    assert.deepEqual(await state(), beforeState, 'Edge-transition ablation changed production settings, geometry, lighting or camera');
+    const delta = localResponse(enabled, disabled, domain.roi, 'Outer-edge transition ablation');
+    await page.evaluate(() => { lipRealism.set({ diagnostic: 0 }); lipRealism.ablation({ spatialColour: true }); });
+    const beautyState = await state(), enabledBeauty = await capture('r02-edge-transition-enabled-beauty');
+    await page.evaluate(() => lipRealism.ablation({ spatialColour: false }));
+    const disabledBeauty = await capture('r02-edge-transition-disabled-beauty');
+    assert.deepEqual(await state(), beautyState, 'Beauty ablation changed production settings, geometry, lighting or camera');
+    const beautyDelta = localResponse(enabledBeauty, disabledBeauty, domain.roi, 'Complete-material outer-edge transition ablation');
     await page.evaluate(() => lipRealism.ablation({ spatialColour: true })); await resetSettings(initial);
-    return { enabled: small(enabled), disabled: small(disabled), delta, disabledReturn: disabledResult, interpretation: 'causal contribution only; not automatic aesthetic improvement' };
+    return { control: 'outer edge and outer mouth-corner transition only; the spatialColour API name is retained for archive compatibility', disabledMeaning: 'composition correction only', enabled: small(enabled), disabled: small(disabled), delta, beauty: { enabled: small(enabledBeauty), disabled: small(disabledBeauty), delta: beautyDelta }, disabledReturn: disabledResult, interpretation: 'causal contribution only; not automatic aesthetic improvement' };
   });
 }
 async function skinLayers(initial, domain) {
   return test('late beard and regional-colour layers retain actual responses just outside the native lip outline', async () => {
     assert(domain.skinProbes.length >= 12, 'No adequate independent near-mouth skin probe set; do not replace this with whole-face counts');
-    const featherProbes = domain.skinProbes.filter(probe => probe.oldFeather >= .1 && probe.oldFeather <= .9);
-    assert(featherProbes.length >= 8, 'Native near-mouth probes do not sample the old feather overlap; this gate needs an observable overlap, not distant skin pixels');
+    const featherProbes = q.skinProbePositiveControl?.probes || [];
+    assert(featherProbes.length >= 8, 'The near-mouth skin gate requires at least eight probes independently selected by the R01 old-tint positive control');
     const result = [];
     for (const key of ['beardShadow', 'regionalColor']) {
       await resetSettings(initial); await selectVariant('r02', 2);
@@ -391,7 +427,7 @@ async function skinLayers(initial, domain) {
       assert(featherResponse.changed >= 4, key + ' no longer affects the measured old-feather overlap outside the new lip outline');
       result.push({ key, response, featherResponse, before: small(low), after: small(high) });
     }
-    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, result });
+    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, positiveControl: q.skinProbePositiveControl, interpretation: 'nonzero skin-layer responses are retained; exact preservation of response amplitude is not established', result });
     await resetSettings(initial); return result;
   });
 }
@@ -548,7 +584,7 @@ async function core() {
   await residualCheck(initial, domain);
   await preservedChannels(initial);
   await wetnessIndependent(initial);
-  await spatialAblation(initial, domain);
+  await edgeTransitionAblation(initial, domain);
   await skinLayers(initial, domain);
   await colourArchive(initial, comparisons);
   await actualUI(initial, comparisons);
@@ -596,6 +632,50 @@ async function publicSmoke() {
   q.necessityEstablished = local.necessityEstablished; q.publicSmokePassed = true;
 }
 
+async function cleanupBrowser() {
+  const errors = [], started = Date.now();
+  const tabs = context?.pages() || [];
+  q.cleanup = { startedAt: new Date().toISOString(), pageCount: tabs.length, pages: [], errors, completed: false };
+  checkpoint();
+  for (const [index, tab] of tabs.entries()) {
+    const record = { index, url: tab.url(), alreadyClosed: tab.isClosed() }; q.cleanup.pages.push(record); checkpoint();
+    if (record.alreadyClosed) continue;
+    try {
+      record.gpu = await stage('cleanup drain native GPU queue for page ' + index, () => bounded('cleanup GPU queue', () => tab.evaluate(() => {
+        // Setters can submit several native renders without waiting for GPU
+        // completion. Drain that existing work before asking Chromium to close.
+        // No extra frame is drawn and no completed test is reclassified here.
+        window.lifelikeIdle?.pause?.(); window.lipWorkbench?.stop?.();
+        const viewer = window.__IDENTITY_QA__?.viewer?.(), renderer = viewer?.renderer;
+        if (!renderer) return { available: false, reason: 'No native renderer was created on this page' };
+        const gl = renderer.getContext(), start = performance.now(), submittedFrame = renderer.info.render.frame;
+        const errorBefore = gl.getError(), contextLostBefore = gl.isContextLost();
+        gl.finish();
+        if (gl.drawingBufferWidth > 0 && gl.drawingBufferHeight > 0) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+        return { available: true, errorBefore, errorAfter: gl.getError(), contextLostBefore, contextLostAfter: gl.isContextLost(), submittedFrame, frameAfterDrain: renderer.info.render.frame, drawingBuffer: [gl.drawingBufferWidth, gl.drawingBufferHeight], elapsedMS: performance.now() - start };
+      }), 90000));
+      if (record.gpu.available) {
+        assert.equal(record.gpu.errorBefore, 0, 'Native GPU error before cleanup drain');
+        assert.equal(record.gpu.errorAfter, 0, 'Native GPU error after cleanup drain');
+        assert.equal(record.gpu.contextLostBefore, false, 'Native context was lost before cleanup');
+        assert.equal(record.gpu.contextLostAfter, false, 'Native context was lost during cleanup');
+      }
+    } catch (error) { record.drainError = String(error); errors.push({ page: index, stage: 'GPU drain', error: String(error) }); checkpoint(); }
+    try {
+      await stage('cleanup close page ' + index, () => bounded('cleanup close page', () => tab.close({ runBeforeUnload: false }), 15000));
+      record.closed = tab.isClosed(); assert.equal(record.closed, true, 'Native page remained open after close');
+    } catch (error) { record.closeError = String(error); errors.push({ page: index, stage: 'page close', error: String(error) }); checkpoint(); }
+  }
+  try {
+    if (browser) await stage('cleanup close browser after pages', () => bounded('close browser after pages', () => browser.close(), 15000));
+    q.cleanup.browserDisconnected = !browser || !browser.isConnected();
+    assert.equal(q.cleanup.browserDisconnected, true, 'Browser remained connected after cleanup');
+  } catch (error) { errors.push({ stage: 'browser close', error: String(error) }); }
+  q.cleanup.finishedAt = new Date().toISOString(); q.cleanup.elapsedMS = Date.now() - started;
+  q.cleanup.completed = errors.length === 0; checkpoint();
+  if (errors.length) throw Error('Bounded cleanup failed: ' + errors.map(item => item.stage + ': ' + item.error).join(' | '));
+}
+
 (async () => {
   fatalTimer = setTimeout(() => stopImmediately('Bounded QA deadline exceeded; latest completed stage and raw evidence retained', 124), budgetMS);
   try {
@@ -610,11 +690,11 @@ async function publicSmoke() {
     if (MODE === 'public') { q.publicHttpsPassed = true; q.shareAllowed = true; }
   } catch (error) { q.failure = String(error); q.stack = error.stack; q.completed = false; q.shareAllowed = false; process.exitCode = 1; console.error(error); }
   finally {
-    q.finishedAt = new Date().toISOString(); writeJSON('qa.json', q); checkpoint();
-    try { if (browser) await bounded('close browser', () => browser.close(), 15000); }
+    q.verificationFinishedAt = new Date().toISOString(); writeJSON('qa.json', q); checkpoint();
+    try { await cleanupBrowser(); }
     catch (error) { q.cleanupError = String(error); q.completed = false; q.shareAllowed = false; process.exitCode = 1; }
     if (server) { server.closeAllConnections?.(); server.close(); }
-    clearTimeout(fatalTimer); writeJSON('qa.json', q);
+    clearTimeout(fatalTimer); q.finishedAt = new Date().toISOString(); writeJSON('qa.json', q);
     if (MODE === 'public') writeJSON('PUBLICATION_PROOF.json', { version: VERSION, sourceSHA: q.sourceSHA, buildSHA: q.publicBuildSHA, publicURL: q.publicURL, sourceModified: q.sourceModified, interactive3D: q.interactive3D, staticImageSubstitute: false, publicHttpsPassed: q.completed && q.publicHttpsPassed, browserPassed: q.completed && q.browserPassed, shareAllowed: q.completed && q.shareAllowed, visualAcceptance: false, productionReady: false, checkedAt: q.finishedAt, evidence: 'qa.json', failure: q.failure || q.cleanupError || null });
     console.log(JSON.stringify({ mode: MODE, completed: q.completed, tests: q.tests.length, necessityEstablished: q.necessityEstablished, shareAllowed: q.shareAllowed, output: out, failure: q.failure || q.cleanupError || null }));
     if (q.cleanupError) process.exit(1);
