@@ -28,14 +28,13 @@
     "No main mutation, merge, force push, external replacement mesh, image generation or baked shadow"
   ],
   "boundedHypotheses": [
-    "Stopping legacy tint before downstream skin layers and compositing native lip mask once removes residual outer pink without erasing perioral skin.",
-    "Only the outer lip-to-skin transition may need additional blending; preserve R01 tissue colour and independently compare full beauty with the transition disabled."
+    "Stopping legacy tint before downstream skin layers and compositing the unchanged R01 native lip tissue once preserves complete perioral skin; technical necessity and small visual benefit must be reported separately."
   ],
   "acceptanceGates": [
     "Actual beauty and albedo R01/R02 front/macro/oblique comparison reviewed independently",
     "Old psLip no longer contaminates R02 lip-boundary albedo, positive R01/R07 control",
     "Wetness cannot change albedo",
-    "Outer-transition ablation preserves source blocking and complete-skin composition; compare both full beauty and base colour.",
+    "Parameter-specific published R01 regionalColor positive control established before candidate startup; unchanged native near-mouth geometry and camera, no candidate-based probe selection.",
     "Unchanged geometry/normals/roughness/camera/light; no changes outside conservative native lip ROI",
     "Final HTTPS exact bytes and browser interactions verified; no screenshot substitute"
   ],
@@ -53,7 +52,17 @@
     {
       "id": "R02-SPATIAL-COLOUR-REJECTED",
       "failure": "New broad/local pigment modulation made visible mottled patches; measurable change was not visual improvement.",
-      "gate": "Remove rejected pigment modulation and added inner darkening; independently inspect the remaining outer transition against composition-only beauty."
+      "gate": "Added pigment and inner darkening removed entirely; no claimed improvement from undoing a failed addition."
+    },
+    {
+      "id": "R02-EXTRA-EDGE-REJECTED",
+      "failure": "Second actual three-way review found no clear benefit from extra outer blending and mild perceptual vermilion narrowing.",
+      "gate": "Remove its shader, uniform and UI; false-only compatibility state; reject retired true archives before mutation."
+    },
+    {
+      "id": "R02-PARAMETER-SPECIFIC-POSITIVE-CONTROL",
+      "failure": "regionalColor was incorrectly expected to have the same visible old-feather support as old lipColor.",
+      "gate": "Select from the independently loaded published R01 regionalColor response, not successful candidate responses; retain >=8 baseline and >=4 candidate thresholds."
     }
   ],
   "status": "EXECUTING",

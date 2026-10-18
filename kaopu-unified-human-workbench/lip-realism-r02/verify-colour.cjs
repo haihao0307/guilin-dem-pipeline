@@ -37,6 +37,7 @@ const q = {
   generatedImageUsed: false, staticImageSubstitute: false, sourceModified: true,
   userVisualAccepted: false, visualAcceptance: false, productionReady: false,
   budgetMS,
+  candidateScope: 'Legacy lip-tint composition correction only; extra spatial colour and outer-edge transition were withdrawn after independent visual review.',
   priorFailureEvidence: {
     runURL: 'https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39096551073',
     sourceSHA: 'bf235cbb741de1eb21f469c9e020b95a65f24040',
@@ -47,12 +48,21 @@ const q = {
     observedMacroProbes: { total: 6392, nonzeroOldFeather: 515, maximumOldFeather: 0.045756502743540255, visibleR01OldTintResponse: 64 },
     cleanup: 'The original 15-second browser close also timed out after pending native renders; cleanup now explicitly drains each page before closing it, with bounded failure handling.'
   },
+  priorParameterSamplingFailureEvidence: {
+    runURL: 'https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39098058680',
+    sourceSHA: '331b5c469ce822d989a10193d2292c17b94e346a',
+    verifierSHA256: '7e5328286a4d5662a0e7aa7a895b9edd197e59609b99074fa050a2c76b930bb0',
+    artifactID: 12125727373,
+    artifactSHA256: 'a7764a58a8bae00bbefc521ccc4baffff206825369254ae2281e812e34376d34',
+    observedRegionalResponses: { nativeBand: 109, nativeBandSamples: 6392, oldTintPositiveControl: 3, oldTintPositiveControlSamples: 64 },
+    classification: 'regionalColor had nonzero responses but did not meet four responses in the old lipColor positive-control subset. That subset did not establish regionalColor observability; its own published-R01 positive control now runs before candidate startup.'
+  },
   limitations: [
     'One frozen person, neutral pose, three existing views, one real Chromium SwiftShader runner.',
     'Native LipRails projected ROI is a conservative mouth rectangle, not a pixel-perfect anatomical segmentation.',
     'The retained R01 path is checked against one macro base-colour frame from the byte-identical published R01 page; the remaining views compare paths in the same candidate.',
     'Near-mouth probes use projected native skin vertices 1.5–7 mm outside the outer lip rails in the inherited rest frame; no physiological measurement is claimed.',
-    'The old-feather subset is selected only by a visible R01 old-tint positive control in that native skin region; later skin checks establish nonzero responses, not exact preservation of their full magnitude.',
+    'Old-feather probes are selected only from R01: the existing lipColor positive control for beardShadow, and a separate regionalColor positive control from the byte-identical published R01 page. Later skin checks establish nonzero responses, not exact preservation of their full magnitude.',
     'The tests establish composition and preservation properties, not photorealism or user aesthetic approval.',
     'The inherited remote loader is retained; offline operation and real-phone performance are not certified.'
   ]
@@ -128,11 +138,15 @@ async function load(url, expectedVersion = VERSION, label = 'candidate') {
     const viewer = __IDENTITY_QA__.viewer();
     window.lifelikeIdle?.pause?.(); window.lipWorkbench?.stop?.();
     viewer.orbit.autoRotate = false; viewer.orbit.enableDamping = false;
-    return { version: lipRealism.version, finalFrame: viewer.startupFinalFrame, ready: __HEAD_PROC__.ready, headErrors: __HEAD_PROC__.errors, lipErrors: window.__LIP_REALISM__?.errors, nativeLipErrors: window.__LIP_P3__?.errors, compare: typeof lipRealism.compare, ablation: typeof lipRealism.ablation };
+    return { version: lipRealism.version, finalFrame: viewer.startupFinalFrame, ready: __HEAD_PROC__.ready, headErrors: __HEAD_PROC__.errors, lipErrors: window.__LIP_REALISM__?.errors, nativeLipErrors: window.__LIP_P3__?.errors, compare: typeof lipRealism.compare, ablation: typeof lipRealism.ablation, spatialColour: lipRealism.report?.().ablation?.spatialColour, withdrawnTransitionControls: document.querySelectorAll('#lr-spatial-colour').length };
   });
   assert.equal(host.version, expectedVersion); assert(host.finalFrame && host.ready, 'Complete native person startup did not finish');
   for (const key of ['headErrors', 'lipErrors', 'nativeLipErrors']) assert.equal(host[key]?.length || 0, 0, key);
-  if (expectedVersion === VERSION) { assert.equal(host.compare, 'function'); assert.equal(host.ablation, 'function'); }
+  if (expectedVersion === VERSION) {
+    assert.equal(host.compare, 'function'); assert.equal(host.ablation, 'function');
+    assert.equal(host.spatialColour, false, 'The withdrawn colour/edge transition must be disabled by default');
+    assert.equal(host.withdrawnTransitionControls, 0, 'The withdrawn transition control remains in the candidate UI');
+  }
   q[label + 'Startup'] = { url, httpStatus: response.status(), elapsedMS: Date.now() - start, host }; checkpoint();
   await stage('finish native startup GPU queue', () => page.evaluate(() => {
     const renderer = __IDENTITY_QA__.viewer().renderer, gl = renderer.getContext(), pixel = new Uint8Array(4);
@@ -300,10 +314,47 @@ function skinResponse(a, b, probes) {
   }
   return { sampled: probes.length, changed: changed.length, perSide, examples: changed.slice(0, 48) };
 }
+function visibleOldFeatherProbes(low, high, candidates) {
+  const probes = [];
+  for (const probe of candidates) {
+    if (!(probe.oldFeather > 0)) continue;
+    const index = (probe.yBottom * width + probe.x) * 4;
+    const before = [...low.pixels.subarray(index, index + 3)], after = [...high.pixels.subarray(index, index + 3)];
+    const maxDelta = Math.max(...before.map((value, channel) => Math.abs(value - after[channel])));
+    if (maxDelta > 0) probes.push({ ...probe, positiveControl: { before, after, maxDelta } });
+  }
+  return probes;
+}
+async function baselineRegionalPositiveControl() {
+  return test('published R01 regionalColor establishes its own observable old-feather skin probes before candidate startup', async () => {
+    const domain = await nativeDomain();
+    assert(domain.skinProbes.length >= 12, 'Published R01 has no adequate independent native near-mouth skin band');
+    // This is the byte-identical published R01 page. Do not call candidate-only
+    // compare/ablation APIs or select probes from any candidate response.
+    await page.evaluate(() => bodyProceduralSkin.set({ regionalColor: 0 }));
+    const lowState = await state(), low = await capture('published-r01-regional-colour-0');
+    await page.evaluate(() => bodyProceduralSkin.set({ regionalColor: 1 }));
+    const high = await capture('published-r01-regional-colour-1'), highState = await state();
+    assert.equal(lowState.body.regionalColor, 0); assert.equal(highState.body.regionalColor, 1);
+    sameExcept(lowState, highState, ['body.regionalColor'], 'Published R01 regionalColor positive control changed another scene property');
+    sameExcept(lowState, q.baseline.state, ['body.regionalColor'], 'Published R01 regionalColor positive control drifted from the retained reference scene');
+    const probes = visibleOldFeatherProbes(low, high, domain.skinProbes);
+    q.regionalColorPositiveControl = {
+      parameter: 'regionalColor', referencePreviewSHA256: baselineSHA256,
+      selection: 'published R01 native near-mouth skin band AND oldFeather > 0 AND the same pixel visibly responds to regionalColor 0 to 1; no candidate response is used for selection',
+      sourceFrames: { low: { file: 'published-r01-regional-colour-0.png', ...small(low) }, high: { file: 'published-r01-regional-colour-1.png', ...small(high) } },
+      protectedLowState: lowState, nativeProbeCount: domain.skinProbes.length, observedProbeCount: probes.length, probes,
+      interpretation: 'Parameter-specific observability in this fixed 8-bit framebuffer; fewer than eight visible baseline probes blocks candidate execution.'
+    };
+    writeJSON('published-r01-regional-positive-control.json', q.regionalColorPositiveControl); checkpoint();
+    assert(probes.length >= 8, 'Published R01 regionalColor has fewer than eight observable native old-feather skin probes in this 8-bit frame; candidate preservation cannot be tested with this gate');
+    return q.regionalColorPositiveControl;
+  });
+}
 async function resetSettings(initial) {
   await page.evaluate(initial => {
     headProceduralSkin.set(initial.head); bodyProceduralSkin.set(initial.body);
-    lipRealism.set(initial.lip); lipRealism.compare('r02'); lipRealism.ablation({ spatialColour: true });
+    lipRealism.set(initial.lip); lipRealism.compare('r02'); lipRealism.ablation({ spatialColour: false });
   }, initial);
 }
 
@@ -347,14 +398,7 @@ async function residualCheck(initial, domain) {
         // Select the overlap from the unchanged R01 render, before measuring
         // any R02 skin response. A fixed feather amplitude is not a spatial
         // guarantee: run 39096551073 observed max 0.0458 in this native band.
-        const probes = [];
-        for (const probe of domain.skinProbes) {
-          if (!(probe.oldFeather > 0)) continue;
-          const index = (probe.yBottom * width + probe.x) * 4;
-          const before = [...low.pixels.subarray(index, index + 3)], after = [...high.pixels.subarray(index, index + 3)];
-          const maxDelta = Math.max(...before.map((value, channel) => Math.abs(value - after[channel])));
-          if (maxDelta > 0) probes.push({ ...probe, positiveControl: { before, after, maxDelta } });
-        }
+        const probes = visibleOldFeatherProbes(low, high, domain.skinProbes);
         q.skinProbePositiveControl = {
           selection: 'unchanged native near-mouth skin band AND oldFeather > 0 AND the same pixel visibly responds to R01 lipColor 0 to 1; no R02 response is used for selection',
           sourceFrames: { low: { file: 'r01-old-lip-colour-0.png', ...small(low) }, high: { file: 'r01-old-lip-colour-1.png', ...small(high) } },
@@ -392,32 +436,17 @@ async function wetnessIndependent(initial) {
     await resetSettings(initial); return { before: small(low), after: small(high), measuredChannel: 'final psBase via existing diagnostic 2' };
   });
 }
-async function edgeTransitionAblation(initial, domain) {
-  return test('outer-edge transition ablation changes lip pixels without changing geometry or production settings', async () => {
-    await selectVariant('r02', 2); await page.evaluate(() => lipRealism.ablation({ spatialColour: true }));
-    const beforeState = await state(), enabled = await capture('r02-edge-transition-enabled-colour');
-    const disabledResult = await page.evaluate(() => lipRealism.ablation({ spatialColour: false })); const disabled = await capture('r02-edge-transition-disabled-colour');
-    assert.deepEqual(await state(), beforeState, 'Edge-transition ablation changed production settings, geometry, lighting or camera');
-    const delta = localResponse(enabled, disabled, domain.roi, 'Outer-edge transition ablation');
-    await page.evaluate(() => { lipRealism.set({ diagnostic: 0 }); lipRealism.ablation({ spatialColour: true }); });
-    const beautyState = await state(), enabledBeauty = await capture('r02-edge-transition-enabled-beauty');
-    await page.evaluate(() => lipRealism.ablation({ spatialColour: false }));
-    const disabledBeauty = await capture('r02-edge-transition-disabled-beauty');
-    assert.deepEqual(await state(), beautyState, 'Beauty ablation changed production settings, geometry, lighting or camera');
-    const beautyDelta = localResponse(enabledBeauty, disabledBeauty, domain.roi, 'Complete-material outer-edge transition ablation');
-    await page.evaluate(() => lipRealism.ablation({ spatialColour: true })); await resetSettings(initial);
-    return { control: 'outer edge and outer mouth-corner transition only; the spatialColour API name is retained for archive compatibility', disabledMeaning: 'composition correction only', enabled: small(enabled), disabled: small(disabled), delta, beauty: { enabled: small(enabledBeauty), disabled: small(disabledBeauty), delta: beautyDelta }, disabledReturn: disabledResult, interpretation: 'causal contribution only; not automatic aesthetic improvement' };
-  });
-}
 async function skinLayers(initial, domain) {
   return test('late beard and regional-colour layers retain actual responses just outside the native lip outline', async () => {
     assert(domain.skinProbes.length >= 12, 'No adequate independent near-mouth skin probe set; do not replace this with whole-face counts');
-    const featherProbes = q.skinProbePositiveControl?.probes || [];
-    assert(featherProbes.length >= 8, 'The near-mouth skin gate requires at least eight probes independently selected by the R01 old-tint positive control');
     const result = [];
     for (const key of ['beardShadow', 'regionalColor']) {
+      const positiveControl = key === 'regionalColor' ? q.regionalColorPositiveControl : q.skinProbePositiveControl;
+      const featherProbes = positiveControl?.probes || [];
+      assert(featherProbes.length >= 8, key + ' requires at least eight independently selected R01 positive-control probes');
       await resetSettings(initial); await selectVariant('r02', 2);
       await page.evaluate(key => bodyProceduralSkin.set({ [key]: 0 }), key); const lowState = await state(), low = await capture('r02-skin-' + key + '-0');
+      if (key === 'regionalColor') assert.deepEqual(lowState, positiveControl.protectedLowState, 'R02 regionalColor probes no longer share the published R01 geometry, camera, lighting and low-parameter scene');
       await page.evaluate(key => bodyProceduralSkin.set({ [key]: 1 }), key); const high = await capture('r02-skin-' + key + '-1'), highState = await state();
       assert.equal(lowState.body[key], 0); assert.equal(highState.body[key], 1);
       sameExcept(lowState, highState, ['body.' + key], key + ' probe changed another property');
@@ -425,9 +454,9 @@ async function skinLayers(initial, domain) {
       assert(response.changed >= 8, key + ' no longer affects the measured skin just outside the native lip outline');
       const featherResponse = skinResponse(low, high, featherProbes);
       assert(featherResponse.changed >= 4, key + ' no longer affects the measured old-feather overlap outside the new lip outline');
-      result.push({ key, response, featherResponse, before: small(low), after: small(high) });
+      result.push({ key, response, featherResponse, positiveControlSourceFrames: positiveControl.sourceFrames, before: small(low), after: small(high) });
     }
-    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, positiveControl: q.skinProbePositiveControl, interpretation: 'nonzero skin-layer responses are retained; exact preservation of response amplitude is not established', result });
+    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, positiveControls: { beardShadow: q.skinProbePositiveControl, regionalColor: q.regionalColorPositiveControl }, interpretation: 'nonzero skin-layer responses are retained; exact preservation of response amplitude is not established', result });
     await resetSettings(initial); return result;
   });
 }
@@ -444,10 +473,10 @@ async function colourArchive(initial, comparisons) {
     assert.deepEqual(saved.colourReview, { schema: 'kaopu/lip-colour-review@1', comparison: 'r02', spatialColour: false });
     assert.equal(saved.version, VERSION); assert(saved.calibration.count > 0, 'Existing native calibration is missing from the colour-review archive');
     const alternate = await page.evaluate(() => {
-      lipRealism.compare('r01'); lipRealism.ablation({ spatialColour: true }); lipRealism.set({ redness: .91 });
+      lipRealism.compare('r01'); lipRealism.set({ redness: .91 });
       const report = lipRealism.report(); return { comparison: report.comparison, spatialColour: report.ablation.spatialColour, redness: lipRealism.settings().redness };
     });
-    assert.equal(alternate.comparison, 'r01'); assert.equal(alternate.spatialColour, true); assert.equal(alternate.redness, .91);
+    assert.equal(alternate.comparison, 'r01'); assert.equal(alternate.spatialColour, false); assert.equal(alternate.redness, .91);
     await stage('restore the on-page colour-review archive once', () => page.evaluate(async () => {
       await lipRealism.restore(structuredClone(window.__INDEPENDENT_COLOUR_ARCHIVE__));
       window.lifelikeIdle?.pause?.(); lipWorkbench.stop?.();
@@ -459,7 +488,7 @@ async function colourArchive(initial, comparisons) {
     await page.evaluate(() => { lipRealism.compare('r01'); lipRealism.ablation({ spatialColour: false }); lipRealism.set({ redness: .91, diagnostic: 2 }); });
     const reset = page.locator('[data-lr-action="reset"]'); assert.equal(await reset.count(), 1); await reset.click();
     const defaults = await page.evaluate(() => { const report = lipRealism.report(); return { comparison: report.comparison, spatialColour: report.ablation.spatialColour, settings: lipRealism.settings(), defaults: lipRealism.defaults() }; });
-    assert.equal(defaults.comparison, 'r02'); assert.equal(defaults.spatialColour, true); assert.deepEqual(defaults.settings, defaults.defaults);
+    assert.equal(defaults.comparison, 'r02'); assert.equal(defaults.spatialColour, false); assert.deepEqual(defaults.settings, defaults.defaults);
     const resetFrame = await capture('colour-review-reset'); assert.equal(resetFrame.sha256, comparisons.macro.channels.beauty.after.sha256, 'Reset did not restore the recorded default R02 image');
     await page.evaluate(() => { delete window.__INDEPENDENT_COLOUR_ARCHIVE__; }); await resetSettings(initial);
     return { saved, alternate, restored, before: small(before), after: small(after), reset: { comparison: defaults.comparison, spatialColour: defaults.spatialColour, frame: small(resetFrame) }, scope: 'one same-page colourReview round trip; unrelated cold-load or multi-portrait archives were not rerun' };
@@ -573,9 +602,10 @@ async function core() {
   await page.evaluate(() => lipRealism.set({ enabled: true, diagnostic: 2 })); await setView('macro');
   const baselineFrame = await capture('published-r01-macro-colour');
   q.baseline = { previewSHA256: baselineSHA256, bytes: fs.statSync(baselinePath).size, frame: small(baselineFrame), state: await state(), role: 'actual published R01 bytes, independently loaded before candidate' }; checkpoint();
+  await baselineRegionalPositiveControl();
   await stage('close reference before candidate startup', () => bounded('close reference page', () => page.close(), 15000));
   await stage('load candidate', () => load(urls.candidate));
-  await selectVariant('r02', 0); await page.evaluate(() => lipRealism.ablation({ spatialColour: true })); await setView('front');
+  await selectVariant('r02', 0); await page.evaluate(() => lipRealism.ablation({ spatialColour: false })); await setView('front');
   const initial = await state(); q.initialState = initial;
   assert.equal(initial.head.enabled, true); assert.equal(initial.lip.enabled, true);
   const comparisons = await compareViews(initial);
@@ -584,7 +614,6 @@ async function core() {
   await residualCheck(initial, domain);
   await preservedChannels(initial);
   await wetnessIndependent(initial);
-  await edgeTransitionAblation(initial, domain);
   await skinLayers(initial, domain);
   await colourArchive(initial, comparisons);
   await actualUI(initial, comparisons);
@@ -620,7 +649,7 @@ async function publicSmoke() {
     return { url: rawURL, httpStatus: response.status(), bytes: bytes.length, sha256: sha(bytes), buildSHA: match[1] };
   });
   await stage('load fixed public candidate', () => load(publicURL));
-  await selectVariant('r02', 0); await page.evaluate(() => lipRealism.ablation({ spatialColour: true })); await setView('front');
+  await selectVariant('r02', 0); await page.evaluate(() => lipRealism.ablation({ spatialColour: false })); await setView('front');
   const initial = await state();
   await test('public startup matches the same-runner measured person and R02 frame', async () => {
     assert.deepEqual(initial, local.signature.initialState, 'Public startup scene differs from core');
