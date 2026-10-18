@@ -1,0 +1,33 @@
+name: Original teacher A4 public readonly QA
+on:
+  push:
+    branches: ['qa/a4-mark3-rule-conversion-r01-20261017']
+    paths:
+      - '.github/workflows/train-teacher-original-public.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/**'
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify original public teacher scene only
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/browser.cjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: teacher-original-public-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/qa/
+          retention-days: 14
