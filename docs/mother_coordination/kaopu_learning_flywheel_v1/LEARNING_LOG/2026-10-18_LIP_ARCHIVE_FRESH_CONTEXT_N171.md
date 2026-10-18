@@ -65,9 +65,29 @@ If the archive contains or deterministically rebuilds every output-affecting sta
 
 Existing `VISUAL-STATE-ROUNDTRIP-001` was extended instead of creating a duplicate regression. A deterministic evidence classifier was replayed against nine fixtures; 9/9 passed. This is classifier evidence only and is not a production browser run.
 
+## Production positive control — PR #305
+
+At 2026-10-18 15:39 Asia/Shanghai, Draft PR #305 supplied a bound production positive control for the same hypothesis:
+
+- source / verification `489eb0b1520603bb3ddb65f0ec5f12140a2e7e97`; public build `36e5e11a13ba299915dc07e1800c72973f0f7e44`; fixed evidence `c9d6eadc3bf44af50e718a63a8f8581c591cacd7`; reviewed head `57cfade66fb37c260df1dcd836f5cd239cccef41`;
+- workflow run `39095533327` completed successfully with 9/9 scoped checks;
+- the original R01 legacy buttons reproduced a 23,761-byte archive lacking both lip settings and calibration;
+- four repaired save paths produced identical 2,142,762-byte JSON, SHA-256 `b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82`;
+- the producer context closed before either of two reader contexts was created;
+- both readers imported only the disk archive and reproduced calibration, canonical/rest/index/display geometry, persistent parameters and the complete 900×720 framebuffer exactly;
+- wrong identity was rejected before mutation; a legacy archive was accepted only with an explicit no-exact-geometry/calibration/pixel boundary;
+- all four contexts and Chromium closed; error arrays were empty.
+
+The classifier now includes this real positive control and replays 10/10. The scoped evidence state is:
+
+`ARCHIVE_PORTABILITY_VERIFIED_SCOPED`
+
+This applies only to the bound R01.1 source/build, Chromium SwiftShader and declared camera/lighting comparison conditions. It does not establish cross-browser compatibility, physical-device performance, visual acceptance or production readiness.
+
 ## Boundary and routing
 
-- No PR #303 production files or Mother branches were modified.
-- No user acceptance, production acceptance or fresh-context gate result is claimed.
-- Mother routing: `POSTED` to PR #303 comment https://github.com/haihao0307/guilin-dem-pipeline/pull/303#issuecomment-6239864720.
-- Lifecycle: `POSTED=true; ACKNOWLEDGED=false; IMPLEMENTED=false; GATE-RUN=false; ADOPTED=false; USER-ACCEPTED=false`.
+- The learning flywheel did not modify PR #303, PR #305, main or any production Mother branch.
+- PR #305 target artifact is observed `IMPLEMENTED + GATE-RUN` for the scoped archive repair; this is not attributed causally to N171 without an explicit Mother reply.
+- Mother routing: `POSTED` to PR #303 comment https://github.com/haihao0307/guilin-dem-pipeline/pull/303#issuecomment-6239864720 and PR #305 comment https://github.com/haihao0307/guilin-dem-pipeline/pull/305#issuecomment-6247246975.
+- Learning lifecycle: `POSTED=true; ACKNOWLEDGED=false; ADOPTED=false; USER-ACCEPTED=false`.
+- Target evidence: `IMPLEMENTED=true; GATE-RUN=true; visualAcceptance=false; productionReady=false; physicalPhone=false`.
