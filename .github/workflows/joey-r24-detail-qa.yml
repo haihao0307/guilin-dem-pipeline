@@ -22,6 +22,7 @@ jobs:
             kaopu-unified-human-workbench/joey-observation-r01/detail-r24-study
             kaopu-unified-human-workbench/joey-observation-r01/interactive-r23
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r21/eye
+            kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
             kaopu-unified-human-workbench/joey-observation-r01/full-material-r23
             kaopu-unified-human-workbench/joey-observation-r01/hair-f13-static-r17/browser
             kaopu-unified-human-workbench/joey-observation-r01/hair-f13-static-r17/generator
@@ -35,7 +36,9 @@ jobs:
         run: node kaopu-unified-human-workbench/joey-observation-r01/detail-r24-study/build.cjs
       - name: Render unchanged baseline and one native candidate, then restore
         timeout-minutes: 26
+        shell: bash
         run: |
+          set -o pipefail
           ROOT=kaopu-unified-human-workbench/joey-observation-r01/detail-r24-study
           mkdir -p "$ROOT/evidence"
           node "$ROOT/verify.cjs" 2>&1 | tee "$ROOT/evidence/run.log"
