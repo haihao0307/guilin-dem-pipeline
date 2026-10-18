@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/train-teacher-original-public.yml'
       - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/**'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-orthographic-r01/**'
 permissions:
   contents: read
 jobs:
@@ -15,7 +16,10 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-          sparse-checkout: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-orthographic-r01
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-full-source-replica-r01
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -24,7 +28,12 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Verify original public teacher scene only
-        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/browser.cjs
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01 &
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/browser.cjs
+        env:
+          TARGET_URL: http://127.0.0.1:8765/a4-original-orthographic-r01/
+          EXPECT_ORTHOGRAPHIC: '1' 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
