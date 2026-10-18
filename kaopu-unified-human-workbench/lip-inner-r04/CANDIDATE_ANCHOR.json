@@ -1,10 +1,10 @@
 {
   "schema": "kaopu/lip-inner-candidate-anchor@1",
   "version": "LIP-INNER-R04",
-  "baseEvidenceCommit": "24e62a2bb8dd32fa3b561a45cc5a11dc1b56c3c7",
+  "baseEvidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
   "reviewedFiles": {
     "MucosaSurface.js": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
-    "InnerLip.js": "bee372fb1cb27c6a661525f67adf2b33d532ba8ac802cbef15cbeb8ac9bcd95f",
+    "InnerLip.js": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
     "build.cjs": "a832b933fae1d6be9bd7d343fe8b33cc3b5fe9b4db9f8173e3e70330c4b73107",
     "verification/verify-inner.cjs": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
     "SURFACE_CONTRACT.json": "9066c543c39cce3c1c6af52499799d21567f915b90d10d52d9d6c19a86c71cf0"
@@ -21,7 +21,8 @@
   "scope": [
     "existing continuous native oral-skin material responsibility",
     "same-pose R04/R02 comparison and semantic diagnostic",
-    "complete current archive routing and pre-mutation validation"
+    "complete current archive routing and pre-mutation validation",
+    "batch only synchronous R04 startup state changes; restore the native render property before one final real frame"
   ],
   "publicVerification": {
     "mode": "public",
@@ -49,14 +50,29 @@
     "freshContextRestore": true,
     "sameStateIndependentR02OffEquality": true,
     "cleanupRequired": true,
-    "publicURLMustBeImmutableBuild": true
+    "publicURLMustBeImmutableBuild": true,
+    "outputDirectory": "evidence/candidate-02",
+    "browserEvaluateDeadlineMS": 120000
   },
   "sourceReviews": [
     "research/mucosa-candidate-review.json",
     "research/inner-candidate-source-review.json",
-    "root and independent geometry review of actual verifier state/frame/archive routes"
+    "root and independent geometry review of actual verifier state/frame/archive routes",
+    "research/startup-batch-source-review.json"
   ],
   "visualAcceptance": false,
   "productionReady": false,
-  "userVisualApproval": false
+  "userVisualApproval": false,
+  "candidateIteration": 2,
+  "previousCandidate": {
+    "sourceCommit": "6580ecde2082d779018bcfc90e3aa57b03d801ae",
+    "buildCommit": "fbbdba156ba2d799c859ab3094f8f83391f4ddc0",
+    "run": 39108869490,
+    "evidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
+    "qaSHA256": "85f2648061176b92fbf572c8add9dacb359f23a151841940c860610f19af8ef8",
+    "result": "failed initial startup GPU queue drain at fixed120000ms before target frames",
+    "originalEvidence": "evidence/candidate-01/qa.json",
+    "targetPNGCount": 0,
+    "summary": "research/candidate-01-failure-review.json"
+  }
 }

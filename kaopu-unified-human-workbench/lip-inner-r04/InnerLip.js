@@ -51,7 +51,7 @@ function boot(){
  }
  function poseName(){const current=window.lipWorkbench.pose();return ['neutral','jaw','speak','pucker'].find(name=>Object.entries(desiredPose(name)).every(([k,x])=>current[k]===x))||'custom';}
  function gpu(){const gl=v.renderer.getContext(),p=v.renderer.properties.get(mat),program=p.currentProgram||(p.programs&&[...p.programs.values()].at(-1));return{linked:!!program?.program&&!!gl.getProgramParameter(program.program,gl.LINK_STATUS),programId:program?.id??null};}
- function report(){const g=gpu();return{version:VERSION,schema:SCHEMA,ready:compiles>0&&g.linked,linked:g.linked,programId:g.programId,shaderCompiles:compiles,comparison,diagnostic,view:lastView,poseName:poseName(),pose:window.lipWorkbench.pose(),source:status.source,shaderVersion:window.__LIP_INNER_SHADER__.version,baseComparison:base.report().comparison,semanticDomain:'clamp(l19State.x,0,1) * skin coverage * native lip enable; continuous interpolation',nativeShapeAlgorithmChanged:false,comparisonChangesGeometry:base.report().comparison==='r02'?false:null,comparisonGeometryCondition:'matched r04/r02 switches while already using R02 base; returning from legacy R07 first restores inherited R02 relief',canonicalGeometryChanged:false,newMeshes:0,newImageMaps:0,lightingChangedByModule:false,measuredOptics:false,fullVolumeScattering:false,visualAcceptance:false,productionReady:false};}
+ function report(){const g=gpu();return{version:VERSION,schema:SCHEMA,initialization:status.initialization?{...status.initialization}:null,ready:compiles>0&&g.linked,linked:g.linked,programId:g.programId,shaderCompiles:compiles,comparison,diagnostic,view:lastView,poseName:poseName(),pose:window.lipWorkbench.pose(),source:status.source,shaderVersion:window.__LIP_INNER_SHADER__.version,baseComparison:base.report().comparison,semanticDomain:'clamp(l19State.x,0,1) * skin coverage * native lip enable; continuous interpolation',nativeShapeAlgorithmChanged:false,comparisonChangesGeometry:base.report().comparison==='r02'?false:null,comparisonGeometryCondition:'matched r04/r02 switches while already using R02 base; returning from legacy R07 first restores inherited R02 relief',canonicalGeometryChanged:false,newMeshes:0,newImageMaps:0,lightingChangedByModule:false,measuredOptics:false,fullVolumeScattering:false,visualAcceptance:false,productionReady:false};}
  function sync(){
   uniforms.liEnabled.value=comparison==='r04'?1:0;uniforms.liDiagnostic.value=diagnostic;
   for(const b of panel.querySelectorAll('[data-li-compare]'))b.setAttribute('aria-pressed',String(b.dataset.liCompare===comparison));
@@ -103,7 +103,22 @@ function boot(){
  window.innerLip={version:VERSION,get ready(){return report().ready;},compare,inspect,pose,view,report,archive:currentArchive,restore:currentRestore,save,fragment:()=>fragment,shaderEvidence:()=>({originalR02Fragment:originalFragment,finalFragment:fragment,nativeUniformIdentity:structuredClone(nativeUniformIdentity)})};
  document.title='KAOPU · 内唇材质恢复 R04';document.querySelector('header strong').textContent='人物总台 · 内唇 R04';
  document.documentElement.dataset.lipInner=VERSION;document.documentElement.dataset.lipInnerSource=status.source?.sourceCommit||'local';
- window.lifelikeIdle?.pause?.();window.lipWorkbench.stop?.();priorCompare('r02');pose('jaw');view('macro');render();return true;
+ // These native setup APIs each request a render. Commit their synchronous
+ // state changes together, then render the final state once; do not queue
+ // whole-size intermediate frames while the inherited startup GPU is busy.
+ const renderDescriptor=Object.getOwnPropertyDescriptor(v,'render'),originalRender=v.render;
+ const initialization=status.initialization={batched:true,suppressedRenderCalls:0,originalRenderRestored:false};
+ try{
+  Object.defineProperty(v,'render',{configurable:true,writable:true,value(){initialization.suppressedRenderCalls++;}});
+  window.lifelikeIdle?.pause?.();window.lipWorkbench.stop?.();
+  if(base.report().comparison!=='r02')priorCompare('r02');
+  pose('jaw');view('macro');
+ }finally{
+  if(renderDescriptor)Object.defineProperty(v,'render',renderDescriptor);else delete v.render;
+  initialization.originalRenderRestored=v.render===originalRender;
+ }
+ if(!initialization.originalRenderRestored)throw Error('原人物渲染方法未能恢复');
+ render();return true;
 }
 const start=performance.now(),timer=setInterval(()=>{try{if(boot()){clearInterval(timer);return;}if(performance.now()-start>300000){clearInterval(timer);status.errors.push('原人物尚未就绪，内唇修复未启用');}}catch(err){clearInterval(timer);status.errors.push(String(err));console.error('LIP_INNER_INIT',err);}},120);
 addEventListener('pagehide',()=>clearInterval(timer),{once:true});
