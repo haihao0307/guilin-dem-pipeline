@@ -293,11 +293,11 @@ const forbiddenPattern = /source-assets|fields\.bin|checkpoint-0|generated\/|ori
     report.connectionPose=await page.evaluate(()=>NATIVE_QA.couplingPose);assert(report.connectionPose.closureErrorM<1e-9);
     await page.click('#check-connection');await page.waitForFunction(()=>{try{return JSON.parse(document.querySelector('#check-results').textContent).sweep?.schema==='kaopu.a6-coupling-sweep-public/1.0';}catch{return false;}},{},{timeout:60000});
     report.connectionCheck=await page.evaluate(()=>JSON.parse(document.querySelector('#check-results').textContent));assert.equal(report.connectionCheck.sweep.passed,true);await shot('connection-joints-structure');
-    await page.evaluate(()=>{NATIVE_QA.showStructure(false);NATIVE_QA.setCaptureTarget([0,2.8,20.5]);NATIVE_QA.setZoom(4);});await shot('connection-articulation');
+    await page.evaluate(()=>{NATIVE_QA.showStructure(false);NATIVE_QA.setCaptureTarget([0,2.8,20.5]);NATIVE_QA.setZoom(4);});await shot('connection-articulation');await page.locator('#stage').screenshot({path:path.join(out,'connection-articulation-viewport.png')});
     await page.evaluate(()=>NATIVE_QA.applyCoupling(0));await settle();
     await page.click('#check-motion');await page.waitForFunction(()=>document.querySelector('#check-results').textContent.includes('sweptReport')); 
     await page.click('#reset');await settle();assert.deepEqual(await mechanicalDigest(),restDigest);
-    await page.evaluate(()=>{NATIVE_QA.setFocus('locomotive');NATIVE_QA.setZoom(5);NATIVE_QA.setCaptureTarget([0,3.1,7.4]);const i=document.querySelector('#coating-wear');i.value='.65';i.dispatchEvent(new Event('input'));});await shot('coating-wear-detail');
+    await page.evaluate(()=>{NATIVE_QA.setFocus('locomotive');NATIVE_QA.setZoom(5);NATIVE_QA.setCaptureTarget([0,3.1,7.4]);const i=document.querySelector('#coating-wear');i.value='.65';i.dispatchEvent(new Event('input'));});await shot('coating-wear-detail');await page.locator('#stage').screenshot({path:path.join(out,'coating-wear-viewport.png')});
     report.coating=await page.evaluate(()=>NATIVE_QA.coatingState);
     await page.evaluate(()=>{const i=document.querySelector('#coating-wear');i.value='.32';i.dispatchEvent(new Event('input'));});await page.click('#reset');await settle();
     report.checks.push('Bounded orbit rejects end-on drag; deterministic step/pause/reset and joint phase tested; geometry buffers preserved after resets; causal coating compiles. Subsystem blockers remain explicit.');
