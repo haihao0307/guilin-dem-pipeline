@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu/surface-responsibility@1",
+  "id": "native-oral-return-skin",
+  "candidateVersion": "LIP-INNER-R04",
+  "objectMeaning": "The original person already identifies skin returning inside the oral cavity. This region must retain its own surface treatment when the outer skin shader is replaced.",
+  "semanticSource": {
+    "canonical": "headTransfer.d.oral_skin_ids",
+    "transfer": "gnmRecipes -> l19Oral -> interpolated display l19State.x",
+    "domain": "continuous clamp(vL19State.x,0,1) * native skin coverage * native lip enable",
+    "externalRailGate": false,
+    "teethGumsTongueIncluded": false
+  },
+  "responsibilities": {
+    "colour": "reuse existing native lip tone and upper/lower DNA inputs on oral-return skin",
+    "reflection": "restore native mucosa roughness and clearcoat response",
+    "depth": "reuse existing authored mouth-depth visibility approximation only inside the semantic domain",
+    "geometry": "existing native geometry and deformation algorithms retained"
+  },
+  "preservedInterfaces": [
+    "existing native uniform objects",
+    "existing native rest lip rails",
+    "R02 final outer-lip composition",
+    "current full-person archive including calibration"
+  ],
+  "assertions": [
+    "exactly disabled R04 follows the inherited R02 fragment path",
+    "same-pose material comparison retains native geometry, pose, camera, lighting, DNA and calibration",
+    "no triangle reassignment in production",
+    "no new texture maps, mesh or replacement head",
+    "unknown R04 archive implementation is rejected before changing the person"
+  ],
+  "evidenceRequired": [
+    "fixed source/build hashes",
+    "actual native GPU beauty pairs",
+    "actual semantic diagnostic",
+    "actual material slot/vertex attribution",
+    "complete original/final compiled fragment and native uniform identity",
+    "fresh archive readback",
+    "independent limited visual review"
+  ],
+  "rejectedHypothesesThisPerson": [
+    "Kd dental envelope as source of the entire visible segmented rim in the four tested poses",
+    "duplicate selection among the 49 paired rim stations"
+  ],
+  "openQuestions": [
+    "which local deformation step causes the remaining corner folds",
+    "outer lip colour looks filled",
+    "fine-relief organization",
+    "physiological calibration and volumetric tissue transport"
+  ],
+  "measuredOptics": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

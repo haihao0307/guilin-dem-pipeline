@@ -1,0 +1,123 @@
+{
+  "schema": "kaopu/native-oral-material-source-audit@1",
+  "task": "LIP-INNER-R04",
+  "reviewer": "/root/lip_r03_material",
+  "status": "SOURCE_CAUSAL_PATH_CONFIRMED_RUNTIME_PIXEL_ATTRIBUTION_PENDING",
+  "baseline": {
+    "sourceCommit": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "buildCommit": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "receiptHead": "9684ffdda08cbec6afc01c69c2cebc37c9f76c9b",
+    "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "R02ModuleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8"
+  },
+  "scope": "Read-only material/semantic attribution; no production changes, no numerical or visual result fabricated.",
+  "sourceFindings": [
+    {
+      "id": "M01",
+      "fact": "csType material mapping is skin=0, teeth=1, gums=2, tongue=3, scleras=4, irises=5, pupils=6. Original GNM skin vertices receive csRegion.x=1; canonical recipes interpolate coverage only across skin endpoints.",
+      "evidence": "common_skin_semantics"
+    },
+    {
+      "id": "M02",
+      "fact": "oral_skin_ids is a separate native semantic list. H5 interpolates its binary membership via canonical.gnmRecipes into l19Oral. All derived attributes, including this flag, are midpoint-interpolated by inherited display subdivisions.",
+      "evidence": "native_oral_binding"
+    },
+    {
+      "id": "M03",
+      "fact": "Kl clamps l19Oral into samples.inner for csType<.5; writes l19State.x; builds inside (> .25) and oralSurface (> .001 plus csType .5..3.5). The native vertex shader passes l19State and l19Detail to the fragment.",
+      "evidence": "native_oral_topology"
+    },
+    {
+      "id": "M04",
+      "fact": "Original U5 explicitly adds lpMucosa into lpMask, its moist response, mucosal tissue tint, and outgoing-light depth attenuation.",
+      "evidence": "native_regional_optics"
+    },
+    {
+      "id": "M05",
+      "fact": "Procedural-head geometryFor assigns every triangle with csType<.5 and csRegion.x>.5 to its new skin slot, ignoring l19Oral. With full-body active it does not apply the head y limit. Consequently any oral-skin triangle satisfying that predicate is assigned to the procedural skin. Exact live counts require runtime.",
+      "evidence": "head_fragment_replacement"
+    },
+    {
+      "id": "M06",
+      "fact": "The new procedural-head material explicitly copies native vertexShader and uniforms, but discards native fragmentShader. Original mucosa color/roughness/depth behavior cannot survive on that slot merely because l19Oral remains in geometry.",
+      "evidence": "head_fragment_replacement"
+    },
+    {
+      "id": "M07",
+      "fact": "R02 references vL19State.x only in its wet-reflection field while lrMask stays outer-rail/front/cover constrained. It does not restore an independent whole oral-skin material responsibility.",
+      "evidence": "R02 LipSurface.js lrEvaluate and addSurface"
+    },
+    {
+      "id": "M08",
+      "fact": "Non-skin dental, gums and tongue triangles fail the new-skin predicate and retain v.skin.material. Do not globally darken them while repairing lost oral-skin ownership.",
+      "evidence": "common_skin_semantics + head_fragment_replacement"
+    }
+  ],
+  "materialObjects": {
+    "native": "viewer.skin.material",
+    "procedural": "window.headProceduralSkin.material()",
+    "proceduralNameFromSource": "HEAD-PROCEDURAL-R01-NO-SKIN-TEXTURES",
+    "nativeName": "Not assigned by inspected native constructor; runtime must report actual name.",
+    "slots": "Use actual material object identity; source default is [native, procedural], groups 0/1."
+  },
+  "uniformSources": {
+    "uLEnabled": "model.lipStructure.settings.enabled via native updateLips",
+    "uLWet": "model.lipStructure.settings.wetness via native updateLips",
+    "uLPigment": "model.lipStructure.settings.pigment",
+    "uLVariation": "model.lipStructure.settings.colorVariation",
+    "uLUpperShade": "model.lipStructure.settings.upperShade",
+    "uLDryness": "model.lipStructure.settings.dryness",
+    "uLRough": "model.lipStructure.settings.dryRoughness",
+    "uL19Mel": "[anatomy.lowerMelanin, anatomy.upperMelanin]",
+    "uL19Blood": "[anatomy.lowerBlood, anatomy.upperBlood]",
+    "uL19Rough": "[anatomy.lowerRoughness, anatomy.upperRoughness]",
+    "uL19Wet": "[anatomy.lowerWetness, anatomy.upperWetness]",
+    "uL19Oxygen": "anatomy.oxygenation",
+    "uL19Geometry": "anatomy.microGeometry",
+    "uL19Skin": "anatomy.skinRefinement",
+    "csTone/csLipColor/csLipMix": "Inherited common-skin U, updated from viewer.skin.settings; actual colors are linear Three Color values",
+    "retention": "Procedural-head copies the actual native uniform objects from vertexContract, so existing updateLips updates them. Declare any reused native uniforms only once in the new fragment."
+  },
+  "attributeSources": {
+    "l19Oral": "Fixed native oral_skin_ids semantic membership through canonical recipes; interpolated during display subdivision.",
+    "vL19State.x": "clamped l19Oral on csType<.5, independent of current lighting/camera.",
+    "vL19State.y": "Across-furrow tangent stretch; not a mucosa identifier.",
+    "vL19State.z": "Native red/vermilion geometric field; not all oral skin.",
+    "vL19State.w": "Contact/pressure authoring proxy from Ql, not measured perfusion.",
+    "vL19Detail.x": "Microfold visibility/gain.",
+    "vL19Detail.y": "Native geometric furrow amplitude in mm.",
+    "vL19Detail.z": "Native upper/lower flag written only for topology.active (1 upper, 0 lower). Deep oralSkin can be outside active and retain its initial 0. Do not use this as a complete mucosal upper/lower map; the original F5 computes lpUpper from inner rest rails and vFRest.y.",
+    "vL19Detail.w": "On oralSurface: max(0, dot(mouthCenter-currentVertex, currentMouthFront))/max(.35, clamp(currentMouthWidth/restMouthWidth,.35,2.2)). On other active skin this component may be the prior Boolean skin flag! Strict semantic gating is mandatory."
+  },
+  "opticalApproximations": [
+    "lpColor blood/melanin exponents and mucosa RGB multiplier (.83,.67,.68)*.72 are native artistic appearance controls, not measured optical coefficients or concentration.",
+    "Native l19Visibility=.12+.88*exp(-max(0,vL19Detail.w)*120) is an authored mouth-depth visibility approximation. The depth is frontal depth normalized by mouth scale, not measured photon path or volume SSS.",
+    "Native wetGain clamps uLWet/.35 times per-lip wetness. It is a rendering gain, not calibrated physiological hydration.",
+    "Native source itself reports measuredOptics:false, no measured volumetric scattering, no saliva simulation."
+  ],
+  "recommendedAttributionExperiment": {
+    "purpose": "Verify whether semantic native oral-skin shading changes the pale inner surface at matched geometry/pose/light.",
+    "mutation": "Only in a disposable QA page, move procedural-slot triangles whose 3 vertices are skin and l19State.x>=.999 into the existing native slot. Keep mixed triangles unchanged for this narrow attribution.",
+    "restore": "Save original index BufferAttribute and deep copied groups; finally restore exact objects/groups, redraw and compare position/normal data and restored pixels.",
+    "cacheContract": "geometryFor returns cached drawGeometry immediately without mutating its index/groups. Per-frame renderer sets mesh.geometry to that cached object. Assert identity before each diagnostic draw.",
+    "notFinalDesign": "Whole-triangle reassignment hardens a continuous semantic boundary and also restores several older artistic components. It is evidence of material responsibility, not a final quality solution."
+  },
+  "finalImplementationBoundary": [
+    "If real mixed/visible statistics support it, restore a continuous semantic-gated mucosa branch into the shared procedural shader. Do not make another overlapping mesh.",
+    "Do not multiply mucosa inclusion by external lrMask/front/rail silhouette: this is precisely the deeper-surface omission being audited.",
+    "Do not apply depth attenuation outside mucosa; vL19Detail.w is overloaded on non-oral skin.",
+    "Choose upper/lower oral DNA using original F5 rest rails, not vL19Detail.z whose updates cover only topology.active.",
+    "Keep teeth/gums/tongue and external vermilion changes separated in verification; their old native behavior was not removed by the new-skin slot.",
+    "Diagnose frame identity and color/depth contributions independently; a pale frame alone never proves a geometry defect."
+  ],
+  "notEstablished": [
+    "Which exact screenshot pixels are oralSkin vs gums/tongue/teeth.",
+    "Exact current display vertex/triangle counts and indices.",
+    "Any overall visual improvement.",
+    "Real tissue physical calibration."
+  ],
+  "internalFiles": {
+    "excerpts": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/research/native-oral-excerpts.json",
+    "probe": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/research/collect-oral-attribution.cjs"
+  }
+}

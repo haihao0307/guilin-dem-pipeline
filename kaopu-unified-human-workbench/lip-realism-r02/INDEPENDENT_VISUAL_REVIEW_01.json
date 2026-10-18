@@ -1,0 +1,92 @@
+{
+  "schema": "kaopu/independent-lip-visual-review@1",
+  "runId": "39096551073",
+  "reviewerRole": "Independent visual reviewer; no product code edits",
+  "decision": "REJECT_NEW_SPATIAL_COLOUR_FIELD",
+  "reviewScope": "Actual rendered images only; runtime gate failure investigated separately",
+  "inspectedImages": [
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r01-macro-beauty.png",
+      "sha256": "67ceb5f3988052609e5b6356e7d7c68c2339c8ff726d5bbb4f7664c7c4d1c027"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-macro-beauty.png",
+      "sha256": "31c6626e3dae2ed85c3aea4568257740c8d472511bcd35958de3e09499567edc"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r01-front-beauty.png",
+      "sha256": "23ce9065c89fb95eebccedacc47a82039eb27f61c4b47ef3643f7226dab4120b"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-front-beauty.png",
+      "sha256": "85681d0556d0e49bed9eee17bfc4a93ecd9ceec58e0bcd185c68d7fc0cd057cc"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r01-oblique-beauty.png",
+      "sha256": "cfebec27d33af0d2037dcbc4d18f76c37c2f28caba16cf271abf7770b23e4504"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-oblique-beauty.png",
+      "sha256": "2e3332038dfa7af8256121361bd92c52fcde87684739db9dc04efe31c354a92c"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r01-macro-colour.png",
+      "sha256": "e043e7a0a4b64ee5eccba4ec8e71b3abf7f2d4fb380e82095b839431b309e083"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-macro-colour.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r01-oblique-colour.png",
+      "sha256": "27cd648aa7af65173ac525ee2acb53f2d79e1338d0090273548fccbde03e5a5c"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-oblique-colour.png",
+      "sha256": "dc3da98e60c7bcb4812cd829638b5b2ecfe259976f8ea067a3038c917cb97733"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-spatial-colour-enabled.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39096551073/evidence/core/r02-spatial-colour-disabled.png",
+      "sha256": "5a82ee6b922d6d1059c953dd7d075455b96d6276d1d60a74bbf75dda3a886ae0"
+    }
+  ],
+  "observations": [
+    "New broad red/grey blotches are clearly visible on the lower lip in both macro beauty and oblique beauty.",
+    "Colour-only views show those blotches persist without illumination; the variation is not evidence of more coherent surface structure.",
+    "Outline is visibly softer than R01, most notably around upper vermilion, but edge benefit has not been isolated in full shading.",
+    "Full-face beauty shows only a modest mouth difference; no substantial whole-person realism gain is established."
+  ],
+  "ablationInterpretation": {
+    "enabledMatchesMacroColourExactly": true,
+    "r01ToSpatialOffColour": {
+      "changedPixels": 20450,
+      "maximumSingleChannelDifference": 8,
+      "changedBoundsXY": [
+        117,
+        186,
+        524,
+        385
+      ]
+    },
+    "meaning": "Compositing alone affects output; this does not prove that compositing or boundary transition improves full material appearance.",
+    "missingEvidence": "No spatial-off beauty frame in this first artifact."
+  },
+  "recommendedAction": [
+    "Delete broad/local blotches and extra inner darkening.",
+    "Retain frozen original R01 material while independently testing corrected base-colour compositing.",
+    "Test only bounded outer-edge transition as a separate optional hypothesis; do not pre-approve it."
+  ],
+  "nextVisualGate": [
+    "Same-condition R01 beauty, R02 edge-off beauty, and R02 edge-on beauty at macro, front and oblique views.",
+    "No new painted halo, shrunken vermilion, thick outline or lip colour covering readable texture.",
+    "If optional transition has no useful perceptual benefit, disable by default or delete it rather than retaining it because it was implemented."
+  ],
+  "limits": [
+    "The observed first candidate is not the later reduced candidate.",
+    "A technical delta, local control response or source pass is not a visual quality pass."
+  ]
+}
