@@ -12,18 +12,18 @@ const R23='d01a6fb06828e96d83399a311fa8491bd19276b4';
 const ASSETS='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8a5e2322401217cff808a64d7fa614b710da0db1/kaopu-unified-human-workbench/joey-observation-r01/full-material-r21/eye/assets/';
 const hash=async b=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b)),v=>v.toString(16).padStart(2,'0')).join('');
 const progress=(stage,detail)=>parent.r23Progress(stage,detail);
-let worker,disposed=false,v,api,brows,eye,lip,hair,appearance,light,stopRenderQueue=()=>{};
+let worker,workerReject=null,disposed=false,v,api,brows,eye,lip,hair,appearance,light,stopRenderQueue=()=>{};
 const state={version:'R23-interactive/1',sourceCommit:R23,ready:false,stage:'starting',errors:[],timings:[],cache:{hit:false,saved:false},controlsApplied:0,faceShapeEditing:false,physics:false,photosIncluded:false};
 const started=performance.now();
 function mark(name,detail){state.stage=name;state.timings.push({stage:name,elapsedMS:performance.now()-started});progress(name,detail);if(disposed)throw Error('当前载入已取消');}
-function storage(mode,key,value){return new Promise((resolve,reject)=>{const request=indexedDB.open('kaopu-r23-complete-hair',1);request.onupgradeneeded=()=>request.result.createObjectStore('dense');request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result,tx=db.transaction('dense',mode==='get'?'readonly':'readwrite'),store=tx.objectStore('dense'),q=mode==='get'?store.get(key):store.put(value,key);q.onsuccess=()=>{if(mode==='get')resolve(q.result);};q.onerror=()=>reject(q.error);tx.oncomplete=()=>{db.close();if(mode!=='get')resolve(true);};tx.onerror=()=>{db.close();reject(tx.error);};};});}
+function storage(mode,key,value){return new Promise((resolve,reject)=>{let db,tx,done=false;const timer=setTimeout(()=>finish(Error('本机缓存等待超时')),mode==='get'?3000:10000);const finish=(err,value)=>{if(done)return;done=true;clearTimeout(timer);if(err){try{tx?.abort();}catch{}reject(err);}else resolve(value);db?.close();};const request=indexedDB.open('kaopu-r23-complete-hair',1);request.onupgradeneeded=()=>request.result.createObjectStore('dense');request.onblocked=()=>finish(Error('本机缓存被其他页面阻塞'));request.onerror=()=>finish(request.error);request.onsuccess=()=>{db=request.result;if(done){db.close();return;}tx=db.transaction('dense',mode==='get'?'readonly':'readwrite');const store=tx.objectStore('dense'),q=mode==='get'?store.get(key):store.put(value,key);let result;q.onsuccess=()=>{result=q.result;};q.onerror=()=>finish(q.error);tx.oncomplete=()=>finish(null,mode==='get'?result:true);tx.onerror=()=>finish(tx.error);tx.onabort=()=>finish(tx.error||Error('缓存事务中止'));};});}
 async function dense(captured){const key=portrait.expectedDenseSHA256;let cached;
  try{cached=await storage('get',key);if(cached?.buffer&&await hash(cached.buffer)===key){state.cache.hit=true;state.cache.bytes=cached.buffer.byteLength;state.generation=cached.report;mark('已读取本机完整发丝缓存');return cached.buffer;}}catch(e){state.cache.readError=String(e);}
  mark('正在从原始参数生成全部短发','首次约需数分钟；保留全部98,358根发丝，完成后尝试保存在本机。');
- const result=await new Promise((resolve,reject)=>{const url=URL.createObjectURL(new Blob([parent.R23_WORKER],{type:'text/javascript'}));worker=new Worker(url,{type:'module'});URL.revokeObjectURL(url);worker.onmessage=e=>{const m=e.data;if(m.type==='progress'){if(m.stage==='dense')progress('正在生成完整短发',m.generated+' / '+m.total+' 根');else progress('正在生成完整短发',m.stage);}else if(m.type==='complete'){worker.terminate();worker=null;resolve(m);}else if(m.type==='error'){worker.terminate();worker=null;reject(Error(m.error));}};worker.onerror=e=>{worker?.terminate();worker=null;reject(Error(e.message||'完整发丝生成中断'));};worker.postMessage(captured);});
+ const result=await new Promise((resolve,reject)=>{workerReject=reject;const url=URL.createObjectURL(new Blob([parent.R23_WORKER],{type:'text/javascript'}));worker=new Worker(url,{type:'module'});URL.revokeObjectURL(url);worker.onmessage=e=>{const m=e.data;if(m.type==='progress'){if(m.stage==='dense')progress('正在生成完整短发',m.generated+' / '+m.total+' 根');else progress('正在生成完整短发',m.stage);}else if(m.type==='complete'){worker.terminate();worker=null;workerReject=null;resolve(m);}else if(m.type==='error'){worker.terminate();worker=null;workerReject=null;reject(Error(m.error));}};worker.onerror=e=>{worker?.terminate();worker=null;workerReject=null;reject(Error(e.message||'完整发丝生成中断'));};worker.postMessage(captured);});
  if(await hash(result.buffer)!==key)throw Error('完整发丝与已验证R23摘要不同，已停止；不会改用简化发型');
  state.generation=result.report;state.cache.bytes=result.buffer.byteLength;
- try{await storage('put',key,{buffer:result.buffer,report:result.report});state.cache.saved=true;}catch(e){state.cache.writeError=String(e);}
+ state.cache.pending=true;storage('put',key,{buffer:result.buffer,report:result.report}).then(()=>{state.cache.saved=true;},e=>{state.cache.writeError=String(e);}).finally(()=>{state.cache.pending=false;});
  return result.buffer;
 }
 function batch(fn){const render=v.render;let pending=false;v.render=()=>{pending=true;};try{fn();}finally{v.render=render;}render.call(v);return pending;}
@@ -38,15 +38,15 @@ function view(name){if(!state.ready)throw Error('人物尚未就绪');const c=v.
  c.updateProjectionMatrix();c.updateMatrixWorld(true);v.orbit.enabled=true;v.render();state.view=name;
 }
 function zoom(factor){if(!state.ready)return;const offset=v.camera.position.clone().sub(v.orbit.target),distance=Math.max(.36,Math.min(.95,offset.length()*factor));offset.setLength(distance);v.camera.position.copy(v.orbit.target).add(offset);v.camera.updateMatrixWorld(true);v.render();state.view='free';}
-function dispose(){if(disposed)return;disposed=true;stopRenderQueue();worker?.terminate();worker=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();/* Native host owns archive capture and final viewer disposal on pagehide. */}catch(e){state.disposeError=String(e);}}
-window.addEventListener('pagehide',dispose);
+function dispose(){if(disposed)return;disposed=true;stopRenderQueue();worker?.terminate();worker=null;workerReject?.(Error('载入已取消'));workerReject=null;state.ready=false;state.stage='disposed';try{hair?.dispose();brows?.dispose();lip?.dispose();eye?.dispose();light?.dispose();appearance?.dispose();/* Native host owns archive capture and final viewer disposal on pagehide. */}catch(e){state.disposeError=String(e);}}
+window.r25CancelLoad=dispose;window.addEventListener('pagehide',dispose);
 document.addEventListener('webglcontextlost',e=>{if(disposed)return;e.preventDefault();state.errors.push('WebGL context lost');state.ready=false;parent.r23Failure('绘图上下文丢失，请重新载入。未自动降低头发密度。');worker?.terminate();},true);
 async function boot(){
  mark('正在载入原生人物引擎');await import(BASE+'full/ui/browser-app.mjs?v=entry-r06-20261010');
  const until=performance.now()+30000;while(!window.fullCommonWorkbench){if(performance.now()>until)throw Error('原生人物入口未就绪');await new Promise(r=>setTimeout(r,100));}
- api=window.fullCommonWorkbench;mark('正在载入完整人物');await api.load();await api.motion().setMode('shape');api.restore(portrait.archive);v=api.motion().viewer;v.orbit.enabled=false;v.renderer.setPixelRatio(1);
+ api=window.fullCommonWorkbench;mark('正在载入完整人物','正在下载并逐文件校验 GNM、Anny 与 MHR 原有数据；短发尚未开始生成。');await api.load();if(!api.diagnostics()?.ready)throw Error(document.getElementById('load-status')?.textContent||'原生人物载入未完成');if(!api.motion())throw Error('原生动作模块未载入：'+document.getElementById('model-status')?.textContent);mark('正在恢复固定 R23 脸型');await api.motion().setMode('shape');api.restore(portrait.archive);v=api.motion().viewer;v.orbit.enabled=false;v.renderer.setPixelRatio(1);
  state.nativeSHA=await hash(api.positions().buffer);if(state.nativeSHA!==portrait.expectedNativeFloat32SHA256)throw Error('原生R23脸型摘要不同');
- mark('正在挂接原R23眉眼与肤唇');const{attachAppearanceR52}=await import(R54+'base/brow-face-r52/AppearanceR52.mjs');appearance=await attachAppearanceR52(api,{pigmentScale:.55});
+ mark('正在挂接原R23眉眼与肤唇','原生模型已校验完成，正在绑定既有眉眼与材质。');const{attachAppearanceR52}=await import(R54+'base/brow-face-r52/AppearanceR52.mjs');appearance=await attachAppearanceR52(api,{pigmentScale:.55});
  v.scene.traverse(o=>{if(o.name==='Mindfront CC0 surface-bound eyebrows')o.visible=false;});
  eye=await attachCurrentET16Eyes(api,{assetBase:ASSETS,THREE});lip=attachLipFinish(v.skin);brows=attachR05Brows(api);
  const captured=await captureCurrentR64Input(api),buffer=await dense(captured);mark('正在准备完整发丝显卡数据');
@@ -63,8 +63,8 @@ async function boot(){
  }finally{v.render=render;}
  current={schema:'kaopu/r23-controls/1',skin:{...portrait.skin},lip:{enabled:true,edgeGamma:.9,roughness:.50,clearcoat:.12},hair:{roughness:.38,color:'black'},brow:{color:'#191916',density:1.28}};defaults=snapshot();
  v.orbit.enablePan=false;v.orbit.minDistance=.36;v.orbit.maxDistance=.95;v.orbit.minPolarAngle=.35;v.orbit.maxPolarAngle=2.3;v.orbit.enableDamping=false;
- state.ready=true;view('r23');mark('正在验证真实画面');
- const gl=v.renderer.getContext();gl.finish();state.nativeUnchanged=await hash(api.positions().buffer)===state.nativeSHA;if(!state.nativeUnchanged)throw Error('挂接改变原生人物');
+ mark('正在绘制完整人物首帧','完整模型与 98,358 根短发已就绪，正在按原质量绘制。');await new Promise(r=>setTimeout(r,0));state.ready=true;view('r23');mark('正在验证真实画面','首次着色器编译与完整发丝绘制仍在进行；此阶段不下载模型。');
+ const gl=v.renderer.getContext();await new Promise((resolve,reject)=>{const fence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0),began=performance.now();gl.flush();const poll=()=>{if(disposed||gl.isContextLost()){gl.deleteSync(fence);return reject(Error('首帧绘图已中断'));}const result=gl.clientWaitSync(fence,0,0);if(result===gl.TIMEOUT_EXPIRED&&performance.now()-began<180000)return setTimeout(poll,16);gl.deleteSync(fence);if(result===gl.WAIT_FAILED||result===gl.TIMEOUT_EXPIRED)return reject(Error('完整人物首帧绘制未完成，请查看运行记录'));state.firstFrameGPUWaitMS=performance.now()-began;resolve();};setTimeout(poll,0);});state.nativeUnchanged=await hash(api.positions().buffer)===state.nativeSHA;if(!state.nativeUnchanged)throw Error('挂接改变原生人物');
  state.gpu=hair.verifyGPU();if(!state.gpu.finite||state.gpu.rootErrorMM>.01||state.gpu.staticPathErrorMM>.01)throw Error('完整毛根GPU校验失败');
 
  // Keep only one complete GPU frame in flight. New UI requests replace the queued draw,
