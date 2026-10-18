@@ -4,7 +4,7 @@
   "stageLabel": "当前长度静态结构",
   "status": "in_progress",
   "firstRoundAccepted": false,
-  "currentTask": "S1.B3 crown root direction and upper volume implemented; whole S1 acceptance pending",
+  "currentTask": "Startup-12 exact-result parallel initialization and validated cache; S1.B4 ear diagnosis",
   "unchanged": [
     "F02.1 applied growth domain",
     "candidate identities and native root support",
@@ -26,8 +26,8 @@
   "nextStage": "S2: independent ear and chest length designs only after S1 review",
   "phaseTwo": "locked",
   "lastReviewedSource": "8dcfcc8c210f1061fd2da4fd9d2201525526c584",
-  "currentTaskLabel": "顶部旋涡与上段圆度",
-  "nextTaskLabel": "耳周聚束与侧后发尾衔接",
+  "currentTaskLabel": "加载提速与耳周结构复核",
+  "nextTaskLabel": "耳周中束与侧后发尾衔接",
   "iterations": [
     {
       "id": "S1.B1",
@@ -62,9 +62,17 @@
       "scope": "max 3.5 mm native-normal compact loft; first 6 mm crown launch and downstream retained",
       "sixViews": "self_reviewed-current-source",
       "sourceCommit": "8dcfcc8c210f1061fd2da4fd9d2201525526c584"
+    },
+    {
+      "id": "startup-12",
+      "task": "精确结果并行初始化与缓存",
+      "judgment": "本机快速入口与完整质量/回退验证完成；公开网络冷启动仍单独验收",
+      "geometry": "unchanged-R11",
+      "sixViews": "fresh-current-runtime-self-reviewed",
+      "performanceAccepted": false
     }
   ],
-  "currentRuntimeSHA256": "711b26e92cf50c6f8cc7a42c78c5a270583d1a9fc53be55463401d316f9b071c",
+  "currentRuntimeSHA256": "33e693531d9eb9364935b58b752e0a2cf8b40f9e1e502d2e0c31ffc5b7c06268",
   "coldStartupBaseline": {
     "commit": "aa138fa6451ed8e74d9487266da81704a861b9b2",
     "structureMS": 83764,
@@ -72,7 +80,7 @@
     "accepted": false,
     "evidence": "evidence/public-rest10-check.json"
   },
-  "currentEvidence": "evidence/upper11-self-review.json",
+  "currentEvidence": "evidence/startup12-review.json",
   "lastPublicLoader": "7852b999d3c5652172a0a75037c7ce034fbf6dd9",
   "publicVerification": "passed-current-fixed-version",
   "lastPublicColdStartup": {
@@ -81,5 +89,43 @@
     "wholeViewMS": 44839,
     "accepted": false,
     "evidence": "evidence/public-upper11-check.json"
+  },
+  "startupWork": {
+    "id": "startup-12",
+    "status": "local_fast_path_verified_public_separate",
+    "scope": "Scheduling and exact cached results only; all geometry unchanged",
+    "performanceAccepted": false,
+    "coldSerialWholeViewMS": [
+      35209,
+      31076
+    ],
+    "coldParallelWholeViewMS": 15557,
+    "warmWholeViewMS": 10615,
+    "quality": "24 buffers, positions/faces, shader, guides and roots byte identical",
+    "frozenInputs": 49,
+    "evidence": "evidence/startup12-checks.json",
+    "publicVerification": "pending-immutable-version",
+    "localFastURL": "http://127.0.0.1:8786/preview.html",
+    "externalStartupRequests": 0,
+    "deferredPresetImages": 36,
+    "localPreparedResourceFiles": 12,
+    "withdrawn": [
+      "CDN/native-prefetch bridge: failed real loading checks; not shipped"
+    ],
+    "functionalLoaderAssembly": "passed with explicitly labelled exact local native replacement; not public network timing",
+    "fastViewerEvidence": "evidence/startup12-fast-viewer-checks.json",
+    "localNormalBudgetsMS": {
+      "firstComplete": 20000,
+      "repeatComplete": 12000
+    },
+    "publicTargetMS": 30000
+  },
+  "earDiagnosis": {
+    "evidence": "evidence/ear12-audit.json",
+    "geometryChanged": false,
+    "topProjectionSelfCrossings": 1,
+    "minimumProjectedCrossingHeightMM": 17.332893289729007,
+    "selfApproachBelow1MM": 0,
+    "scope": "non-adjacent same-guide segments, arc separation >=10 mm; inter-guide and naturalness unaccepted"
   }
 }

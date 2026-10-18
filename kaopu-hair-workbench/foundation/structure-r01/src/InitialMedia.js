@@ -1,0 +1,3 @@
+// Native preset cards are retained, but their hidden gallery must not compete
+// with the current person. Loading resumes if a card is actually shown.
+(()=>{'use strict';const urls=new WeakMap(),observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){const image=entry.target,url=urls.get(image);if(url&&image.getClientRects().length){image.src=url;urls.delete(image);observer.unobserve(image);}}});window.__HAIR_DEFER_IMAGE__=(image,url)=>{image.loading='lazy';image.decoding='async';image.dataset.hairDeferredImage=url;urls.set(image,url);observer.observe(image);};})();
