@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {buildLocomotiveMechanics} from '../../student-native-r01/src/locomotive-mechanics.mjs';
 import {buildDrivingWheel} from '../../student-native-r01/src/driving-wheel.mjs';
 import {correctA6Mechanics} from '../src/a6-motion-corrections.mjs';
-import {createA6MotionModel,evaluateA6Motion,validateA6MotionCycle,transformA6Point,trianglesIntersectA6,screenA6SweptInterference} from '../src/a6-motion.mjs';
+import {createA6MotionModel,evaluateA6Motion,validateA6MotionCycle,transformA6Point,trianglesIntersectA6,screenA6SweptInterference,inspectA6MeshSurfacePair} from '../src/a6-motion.mjs';
 
 const hash=parts=>createHash('sha256').update(JSON.stringify(parts)).digest('hex');
 const source=buildLocomotiveMechanics(),wheel=buildDrivingWheel(),sourceHash=hash(source.parts),wheelHash=hash(wheel.parts);
@@ -13,8 +13,8 @@ const near=(a,b,tolerance=1e-10)=>assert(Math.abs(a-b)<=tolerance,`${a} != ${b}`
 assert.equal(source.parts.length,338);
 assert.equal(corrected.mechanics.parts.length,338);
 assert.deepEqual(corrected.mechanics.parts.map(p=>p.name),source.parts.map(p=>p.name));
-assert.equal(m.movingPartNames.length,20); // 18 original named parts and 2 explicit additions.
-assert.equal(m.supplementalParts.length,2);
+assert.equal(m.movingPartNames.length,22); // 18 original names, 2 rod extensions, 2 working piston heads.
+assert.equal(m.supplementalParts.length,4);
 assert.equal(m.wheelInstances.length,6);
 assert.equal(new Set(m.movingPartNames).size,m.movingPartNames.length);
 assert.equal(m.sourceGeometryMutated,false);
@@ -38,6 +38,16 @@ near(report.crossheadTravelM,.6604);
 assert.equal(report.fullVehicleApproval,false);
 assert(report.pistonEngagement.minimumRearCoverEngagementM>.10);
 assert(report.pistonEngagement.minimumFrontCoverClearanceM>.07);
+assert(report.pistonEngagement.headFrontToFrontCoverMinimumM>.018);
+assert(report.pistonEngagement.headRearToRearCoverMinimumM>.051);
+near(report.pistonEngagement.radialClearanceM,.002);
+near(report.pistonEngagement.boreRadiusM*2,.4699);
+for(const side of[-1,1]){
+  const cylinder=corrected.mechanics.parts.find(p=>p.name===`outside-cylinder-${side}`);
+  near(cylinder.metadata.wallThicknessM,.02005);near(cylinder.metadata.glandBoreRadiusM,.040);
+  assert.equal(cylinder.metadata.coverBoltCount,24);
+  for(const carrying of corrected.mechanics.parts.filter(p=>/^leading-[12]-wheel-/.test(p.name)))assert.equal(inspectA6MeshSurfacePair(cylinder,carrying).surfaceWitness,null,`Revised cylinder intersects ${carrying.name}`);
+}
 
 // Every mesh remains rigid; no point dictionary, phase cache or geometry rewriting.
 for(let i=0;i<=72;i++){
@@ -56,6 +66,7 @@ for(let i=0;i<=72;i++){
   for(const side of[-1,1]){
     const rod=pose.partTransforms[`outside-piston-rod-${side}`],extension=pose.partTransforms[`a6-piston-rod-hidden-extension-${side}`];
     assert.deepEqual(rod,extension);
+    assert.deepEqual(rod,pose.partTransforms[`a6-working-piston-head-${side}`]);
     const z=transformA6Point(extension,[side*m.parameters.cylinderHalfSeparation,1.016,1.58-.42])[2];
     assert(z>.74&&z<1.58);
     const links=pose.joints.find(j=>j.side===side).links;
@@ -84,4 +95,4 @@ assert.equal(hash(source.parts),sourceHash,'Original mechanical source arrays ch
 assert.equal(hash(wheel.parts),wheelHash,'Original wheel source arrays changed');
 for(const name of m.unsupportedPartNames)assert(!m.movingPartNames.includes(name),'Unsolved source gear was falsely animated');
 assert(!m.movingPartNames.some(name=>/buffer|drawbar|reverser|valve|inside/.test(name)));
-console.log(JSON.stringify({status:'PASS',scope:'native A6 rigid motion/correction contract',componentNamesPreserved:338,explicitAddedParts:2,cycleSamples:report.samples,strokeM:report.crossheadTravelM,maxJointErrorM:report.maximumJointErrorM,originalMechanicalSHA256:sourceHash,originalWheelSHA256:wheelHash,allMechanismsSolved:false}));
+console.log(JSON.stringify({status:'PASS',scope:'native A6 rigid motion/correction contract',componentNamesPreserved:338,explicitAddedParts:4,cycleSamples:report.samples,strokeM:report.crossheadTravelM,maxJointErrorM:report.maximumJointErrorM,originalMechanicalSHA256:sourceHash,originalWheelSHA256:wheelHash,allMechanismsSolved:false}));

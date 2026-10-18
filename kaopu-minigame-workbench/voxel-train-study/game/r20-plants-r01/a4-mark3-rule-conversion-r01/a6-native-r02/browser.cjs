@@ -123,6 +123,7 @@ const forbiddenPattern = /source-assets|fields\.bin|checkpoint-0|generated\/|ori
         mechanicalIds: NATIVE_QA.mechanicalGroups.map(group => group.uuid), newDesignConnectionParts: NATIVE_QA.newDesignConnectionParts, newDesignTransitionParts: NATIVE_QA.newDesignTransitionParts, flexibleTransitionParameters: NATIVE_QA.flexibleTransitionParameters, staticCouplingId: NATIVE_QA.staticCouplingGroup.uuid, staticCouplingVisible: NATIVE_QA.staticCouplingGroup.visible, layout: NATIVE_QA.connectedLayout,
       }));
     }
+    async function flexibleRestDigest(){return page.evaluate(async()=>{const rows=[];for(const mesh of NATIVE_QA.flexibleTransitionGroup.children){const hashes=[];for(const key of ['a6RestPosition','a6RestNormal']){const a=mesh.geometry.getAttribute(key);if(!a)throw Error('Missing flexible rest attribute '+key);hashes.push(Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',a.array.buffer))).join(','));}rows.push({name:mesh.name,hashes});}return rows;});}
     async function mechanicalDigest(kind = 'mechanical') {
       return page.evaluate(async kind => {
         const result = [];
@@ -287,7 +288,8 @@ const forbiddenPattern = /source-assets|fields\.bin|checkpoint-0|generated\/|ori
     await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>NATIVE_QA.playback.state.phase),stoppedPhase);
     assert.equal(await page.evaluate(()=>NATIVE_QA.playback.state.playing),false);
     await page.click('#motion-reset');await settle();
-    await page.evaluate(()=>NATIVE_QA.applyCoupling(3));await settle();
+    const fixedRestMaterialDomain=await flexibleRestDigest();
+    await page.evaluate(()=>NATIVE_QA.applyCoupling(3));await settle();assert.deepEqual(await flexibleRestDigest(),fixedRestMaterialDomain);
     report.connectionPose=await page.evaluate(()=>NATIVE_QA.couplingPose);assert(report.connectionPose.closureErrorM<1e-9);
     await page.click('#check-connection');await page.waitForFunction(()=>{try{return JSON.parse(document.querySelector('#check-results').textContent).sweep?.schema==='kaopu.a6-coupling-sweep-public/1.0';}catch{return false;}},{},{timeout:60000});
     report.connectionCheck=await page.evaluate(()=>JSON.parse(document.querySelector('#check-results').textContent));assert.equal(report.connectionCheck.sweep.passed,true);await shot('connection-joints-structure');

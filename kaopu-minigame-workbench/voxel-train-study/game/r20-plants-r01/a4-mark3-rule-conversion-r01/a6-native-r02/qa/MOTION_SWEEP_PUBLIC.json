@@ -1,11 +1,11 @@
 {
   "schema": "a6-public-motion-report/2",
-  "status": "外侧候选闭环与净隙已修正；配气机构仍未解",
+  "status": "已修正检出的外侧干涉；配气机构仍未解",
   "complete": true,
-  "scope": "固定轴、原生外侧轮杆/滑块候选；保留完整机械和默认机车外壳。不是整车动力学或历史A4配气认证。",
+  "scope": "固定轴、原生外侧轮杆/活塞/滑块候选；保留完整机械和默认机车外壳。不是整车动力学或历史A4配气认证。",
   "sourceHashes": {
-    "src/a6-motion.mjs": "62bab4ceac6c3afcf27d5d31701c54e4b4c8bf50c2aef7e20497a178fb5e739f",
-    "src/a6-motion-corrections.mjs": "6cae7211fc3c3d34ff1e559a24660b80d85cc74b29b38b8d20e87a5ec4615467",
+    "src/a6-motion.mjs": "2010ae788f0ff02908898776c63824da857d0f592671341c6eb7eca7ac0f1f93",
+    "src/a6-motion-corrections.mjs": "d1d160e9c3ac8a6255f5f2ee7acfee32a60a836581582de3f6d93504bf63d87b",
     "src/a6-locomotive-shell.mjs": "2b9de10d2582e6b47cb6d9e80d7724d119186946e368bf62751f1843ad5a0127"
   },
   "defaultShellParameters": {
@@ -14,7 +14,9 @@
   },
   "componentNamesPreserved": 338,
   "explicitNewPistonExtensions": 2,
-  "correctionCount": 36,
+  "explicitNewPistonHeads": 2,
+  "explicitNewComponentCount": 4,
+  "correctionCount": 38,
   "supportedLoop": {
     "schema": "a6-motion-cycle-validation/1",
     "status": "design-kinematic-candidate; actual A4 crank phases unresolved",
@@ -52,7 +54,15 @@
       "minimumRearCoverEngagementM": 0.10627290129693079,
       "minimumFrontCoverClearanceM": 0.07332709870306897,
       "sourceRodAloneMaximumGapM": 0.3137270987030689,
-      "status": "axial-engagement-design-check; gland/piston-head/cylinder-bore geometry unresolved"
+      "status": "working native bore/gland/head geometry; design clearances only",
+      "workingCylinder": true,
+      "headRadiusM": 0.23295,
+      "headThicknessM": 0.06,
+      "boreRadiusM": 0.23495,
+      "radialClearanceM": 0.002,
+      "glandRadialClearanceM": 0.002,
+      "headFrontToFrontCoverMinimumM": 0.018327098703068923,
+      "headRearToRearCoverMinimumM": 0.05127290129693085
     },
     "strokeErrorM": 1.1102230246251565e-16,
     "strokeCaveat": "R02 outside cylinder/guide assembly is aligned to axle height; exact analytic travel equals documented 26-inch stroke. Placement and rod length are still explicit design candidates.",
@@ -69,7 +79,7 @@
       },
       {
         "id": "piston-gland",
-        "status": "axial-engagement-solved; engineering-interface-unresolved",
+        "status": "native-working-geometry; engineering-seals-loads-unresolved",
         "parts": [
           "outside-piston-rod--1",
           "a6-piston-rod-hidden-extension--1",
@@ -78,7 +88,7 @@
           "a6-piston-rod-hidden-extension-1",
           "outside-cylinder-1"
         ],
-        "reason": "A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof."
+        "reason": "Native 469.9 mm working bores, annular 40 mm-radius glands and rigid moving piston heads are modeled. The 20.05 mm casing wall, 2 mm radial clearances and 60 mm piston thickness are explicit design assumptions. Steam sealing, piston rings, packing, pressure, forces and historical casing dimensions are unverified."
       },
       {
         "id": "outside-valve-loop",
@@ -143,7 +153,7 @@
     "intervalCount": 360,
     "continuousEnvelopeScreen": true,
     "exactContinuousTriangleProof": false,
-    "candidateCount": 90,
+    "candidateCount": 100,
     "sampledSurfaceWitnessCount": 6,
     "supportedMechanismSurfaceWitnesses": 0,
     "unsupportedValveReferenceSurfaceWitnesses": 6,
@@ -212,9 +222,158 @@
     "journalSleeveToHubAxialGapM": 0.0014,
     "couplingEyesFaceGapM": 0.005,
     "rearCouplingRodToHubLateralGapM": 0.0045,
-    "crossheadBodyToMainRodLateralGapM": 0.0205,
-    "mainPinToCouplingEyeAxialGapM": 0.0025
+    "crossheadBodyToMainRodLateralGapM": 0.0105,
+    "mainPinToCouplingEyeAxialGapM": 0.0025,
+    "cylinderWallM": 0.02005,
+    "pistonRadialClearanceM": 0.002,
+    "glandRadialClearanceM": 0.002
   },
+  "cylinderLeadingChecks": [
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-1-wheel--1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-1-wheel--1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-1-wheel-1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-1-wheel-1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-2-wheel--1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 9,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-2-wheel--1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-2-wheel-1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder--1",
+        "leading-2-wheel-1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-1-wheel--1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-1-wheel--1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-1-wheel-1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-1-wheel-1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-2-wheel--1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-2-wheel--1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-2-wheel-1-tyre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 18,
+      "solidContainmentTested": false
+    },
+    {
+      "pair": [
+        "outside-cylinder-1",
+        "leading-2-wheel-1-centre"
+      ],
+      "surfaceWitness": null,
+      "triangleTests": 0,
+      "solidContainmentTested": false
+    }
+  ],
   "baselineFailureReport": "../docs/MOTION_BASELINE_FAILURES.json",
   "detailedReport": "../docs/MOTION_CORRECTED_SWEEP.json",
   "fullVehicleApproval": false,
@@ -222,7 +381,7 @@
   "limits": [
     "连续包络覆盖全360°，包络候选仍需判定；离散原始三角形无相交不能冒充连续三角形无碰撞。",
     "未解配气静态参考件保留，现有接头不代表已联动；所有相关相交单独列出。",
-    "活塞杆延长件有轴向啮合余量，但原始缸盖无真实填料函孔、缸内活塞及工作缸孔仍待建模。",
+    "工作缸孔、填料函通孔与刚性活塞头已建模；20.05毫米壁厚、2毫米径向间隙及60毫米活塞厚度为明示设计假设，密封/蒸汽压力/载荷未求解。",
     "没有制动、悬挂、轨道滚动、车钩或车厢动力学求解。默认外壳以外参数更改后需要重扫。"
   ]
 }

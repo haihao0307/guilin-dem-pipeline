@@ -50,8 +50,8 @@ function validateMesh(p) {
   if (!p || typeof p.name!=='string' || !p.positions?.length || p.positions.length%3 || !p.indices?.length || p.indices.length%3) throw Error('Expected complete named indexed native meshes');
   if (!p.positions.every(Number.isFinite) || !p.indices.every(i=>Number.isInteger(i)&&i>=0&&i<p.positions.length/3)) throw Error(`Invalid mesh ${p.name}`);
 }
-function pistonExtension(side,p,length) {
-  const positions=[],normals=[],uvs=[],indices=[],x=side*p.cylinderHalfSeparation,y=p.cylinderHeight,z1=p.cylinderZ+p.cylinderLength/2,z0=z1-length,r=.038,n=p.radialSegments;
+function nativeCylinderZ(name,x,y,z0,z1,r,n,metadata) {
+  const positions=[],normals=[],uvs=[],indices=[];
   const vertex=(point,normal,uv)=>{const i=positions.length/3;positions.push(...point);normals.push(...normal);uvs.push(...uv);return i;};
   for(let i=0;i<n;i++){
     const a=TAU*i/n,b=TAU*(i+1)/n,na=[Math.cos(a),Math.sin(a),0],nb=[Math.cos(b),Math.sin(b),0];
@@ -59,7 +59,11 @@ function pistonExtension(side,p,length) {
     const q=points.map((point,k)=>vertex(point,k===0||k===3?na:nb,[k===0||k===3?i/n:(i+1)/n,k<2?0:1]));indices.push(q[0],q[1],q[2],q[0],q[2],q[3]);
     for(const [z,sign]of [[z0,-1],[z1,1]]){const normal=[0,0,sign],q=[vertex([x,y,z],normal,[.5,.5]),vertex([x+r*na[0],y+r*na[1],z],normal,[.5+.5*na[0],.5+.5*na[1]]),vertex([x+r*nb[0],y+r*nb[1],z],normal,[.5+.5*nb[0],.5+.5*nb[1]])];indices.push(q[0],q[sign<0?2:1],q[sign<0?1:2]);}
   }
-  return {name:`a6-piston-rod-hidden-extension-${side}`,material:'brushedMetal',positions,normals,uvs,indices,metadata:{assembly:'a6-outside-piston-design-extension',designStatus:'new-native-design-candidate',lengthM:length,radiusM:r,motion:'rigidly-joined-to-original-piston-rod',sourceGeometryChanged:false}};
+  return {name,material:'brushedMetal',positions,normals,uvs,indices,metadata:{designStatus:'new-native-design-candidate',lengthM:z1-z0,radiusM:r,motion:'rigidly-joined-to-original-piston-rod',sourceGeometryChanged:false,...metadata}};
+}
+function pistonExtension(side,p,length) {
+  const rear=p.cylinderZ+p.cylinderLength/2;
+  return nativeCylinderZ(`a6-piston-rod-hidden-extension-${side}`,side*p.cylinderHalfSeparation,p.cylinderHeight,rear-length,rear,.038,p.radialSegments,{assembly:'a6-outside-piston-design-extension'});
 }
 
 /** Caller supplies the unchanged buildLocomotiveMechanics/buildDrivingWheel results. */
@@ -84,6 +88,12 @@ export function createA6MotionModel({mechanics, wheel}={}) {
   const pistonEngagement={extensionLengthM:pistonExtensionLength,originalRodLengthM:p.crossheadZ-rear,totalRigidRodLengthM:p.crossheadZ-rear+pistonExtensionLength,cylinderAxialEnvelopeM:[front,rear],forwardRodEndRangeM:pistonFrontRange,minimumRearCoverEngagementM:rear-pistonFrontRange[1],minimumFrontCoverClearanceM:pistonFrontRange[0]-front,sourceRodAloneMaximumGapM:crossheadRange[1]-p.crossheadZ,status:'axial-engagement-design-check; gland/piston-head/cylinder-bore geometry unresolved'};
   if(pistonEngagement.minimumRearCoverEngagementM<=0||pistonEngagement.minimumFrontCoverClearanceM<=0)throw Error('Piston extension does not stay inside the original cylinder axial envelope');
   const supplementalParts=[-1,1].map(side=>pistonExtension(side,p,pistonExtensionLength));
+  if(mechanics.motionDesign?.workingCylinders){
+    const thickness=mechanics.motionDesign.pistonHeadThicknessM,radialGap=mechanics.motionDesign.pistonRadialClearanceM,headRadius=p.cylinderBore/2-radialGap,centerZ=rear-pistonExtensionLength;
+    supplementalParts.push(...[-1,1].map(side=>nativeCylinderZ(`a6-working-piston-head-${side}`,side*p.cylinderHalfSeparation,p.cylinderHeight,centerZ-thickness/2,centerZ+thickness/2,headRadius,p.radialSegments,{assembly:'a6-outside-working-piston-head',boreRadiusM:p.cylinderBore/2,radialClearanceM:radialGap})));
+    Object.assign(pistonEngagement,{status:'working native bore/gland/head geometry; design clearances only',workingCylinder:true,headRadiusM:headRadius,headThicknessM:thickness,boreRadiusM:p.cylinderBore/2,radialClearanceM:radialGap,glandRadialClearanceM:.002,headFrontToFrontCoverMinimumM:pistonFrontRange[0]-thickness/2-(front+.025),headRearToRearCoverMinimumM:(rear-.025)-(pistonFrontRange[1]+thickness/2)});
+    if(pistonEngagement.headFrontToFrontCoverMinimumM<=0||pistonEngagement.headRearToRearCoverMinimumM<=0)throw Error('Piston head collides with cylinder cover axial envelope');
+  }
   for(const part of supplementalParts)byName.set(part.name,part);
   const descriptors=[];
   const requirePart = (name, kind, extra={}) => {
@@ -102,6 +112,7 @@ export function createA6MotionModel({mechanics, wheel}={}) {
     requirePart(`outside-crosshead-${side}`,'crosshead',{side,speedBound:sliderSpeedBound});
     requirePart(`outside-piston-rod-${side}`,'crosshead',{side,speedBound:sliderSpeedBound});
     requirePart(`a6-piston-rod-hidden-extension-${side}`,'crosshead',{side,speedBound:sliderSpeedBound});
+    if(mechanics.motionDesign?.workingCylinders)requirePart(`a6-working-piston-head-${side}`,'crosshead',{side,speedBound:sliderSpeedBound});
   }
   const movingPartNames=descriptors.map(d=>d.name), movingSet=new Set(movingPartNames);
   const fixedReferenceSupports=new Set(['inside-slidebars-and-bracket',...[-1,1].flatMap(s=>[`expansion-link-frame-bracket-${s}`,`expansion-link-trunnion-${s}`])]);
@@ -111,7 +122,7 @@ export function createA6MotionModel({mechanics, wheel}={}) {
   const wheelInstances=axes.flatMap(axis=>[-1,1].map(side=>({name:`locked-drive-wheel-${axis.z}-${side}`,axleIndex:axis.index,side,center:[side*p.wheelCenterHalfSeparation,axleY,axis.z],speedBound:wheelSpeedBound})));
   const blockers=[
     {id:'historical-phase',status:'unresolved',parts:[],reason:'The source has both outside cranks in the same top pose. It provides no verified A4 side/inside phase relation. This candidate keeps that reference and must not be described as historical A4 timing.'},
-    {id:'piston-gland',status:'axial-engagement-solved; engineering-interface-unresolved',parts:[-1,1].flatMap(s=>[`outside-piston-rod-${s}`,`a6-piston-rod-hidden-extension-${s}`,`outside-cylinder-${s}`]),reason:'A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof.'},
+    {id:'piston-gland',status:mechanics.motionDesign?.workingCylinders?'native-working-geometry; engineering-seals-loads-unresolved':'axial-engagement-solved; engineering-interface-unresolved',parts:[-1,1].flatMap(s=>[`outside-piston-rod-${s}`,`a6-piston-rod-hidden-extension-${s}`,`outside-cylinder-${s}`]),reason:mechanics.motionDesign?.workingCylinders?'Native 469.9 mm working bores, annular 40 mm-radius glands and rigid moving piston heads are modeled. The 20.05 mm casing wall, 2 mm radial clearances and 60 mm piston thickness are explicit design assumptions. Steam sealing, piston rings, packing, pressure, forces and historical casing dimensions are unverified.':'A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof.'},
     {id:'outside-valve-loop',status:'static-reference-not-actuated',parts:mechanics.parts.filter(x=>x.metadata?.assembly==='outside-valve-gear').map(x=>x.name),reason:'Return crank/eccentric/expansion-link/die-block/radius/union/combination/reverser joints have no consistent solved source loop. They retain the source pose; moving wheel/crosshead attachment gaps are explicitly reported.'},
     {id:'inside-motion',status:'static-reference-not-actuated',parts:mechanics.parts.filter(x=>x.metadata?.assembly==='inner-motion').map(x=>x.name),reason:'Inside cylinder, piston and slidebar directions are not collinear in the source. Actual inner crank phase and usable slide constraint remain unresolved. Crank webs and inside rod are not independently spun.'},
     {id:'conjugated-valves',status:'static-reference-not-actuated',parts:mechanics.parts.filter(x=>x.metadata?.assembly==='conjugated-valve-gear').map(x=>x.name),reason:'No verified three-cylinder valve constraint graph or complete fulcrum topology exists; no decorative valve animation is substituted.'},
@@ -227,6 +238,12 @@ function firstIntersection(a,b,counter) {
   if(b.tris)return firstIntersection(a.left,b,counter)||firstIntersection(a.right,b,counter);
   return firstIntersection(a.left,b.left,counter)||firstIntersection(a.left,b.right,counter)||firstIntersection(a.right,b.left,counter)||firstIntersection(a.right,b.right,counter);
 }
+/** Exact original-triangle surface test for a selected static placement pair. */
+export function inspectA6MeshSurfacePair(a,b) {
+  validateMesh(a);validateMesh(b);const counter={tests:0};
+  const witness=overlap(boundsOf(a.positions),boundsOf(b.positions))?firstIntersection(bvh(trianglesOf(a)),bvh(trianglesOf(b)),counter):null;
+  return {pair:[a.name,b.name],surfaceWitness:witness,triangleTests:counter.tests,solidContainmentTested:false};
+}
 
 /**
  * Conservative CONTINUOUS sweep screening, not just screenshots at sample angles.
@@ -257,8 +274,12 @@ export function screenA6SweptInterference(model,{stepDegrees=5,obstacles=[],narr
     const rod=`outside-piston-rod-${side}`,extension=`a6-piston-rod-hidden-extension-${side}`,cylinder=`outside-cylinder-${side}`,crosshead=`outside-crosshead-${side}`;
     allowedPairs.set(pairKey(rod,extension),'Rigid butt joint between original rod and explicit native extension; both lengths fixed');
     allowedPairs.set(pairKey(rod,crosshead),'Rigid original piston-rod/crosshead attachment');
-    allowedPairs.set(pairKey(rod,cylinder),'Intended axial rod/gland interface. Original end cap lacks a gland bore; this is an unresolved geometry interface, NOT a clearance pass');
-    allowedPairs.set(pairKey(extension,cylinder),'Internal rod axial engagement; source cylinder is a capped outer form, with no working bore or piston geometry');
+    if(model.sourceMechanics.motionDesign?.workingCylinders){
+      allowedPairs.set(pairKey(extension,`a6-working-piston-head-${side}`),'Rigid piston-head/rod joint; head/cylinder and rod/gland interfaces remain tested');
+    }else{
+      allowedPairs.set(pairKey(rod,cylinder),'Intended axial rod/gland interface. Original end cap lacks a gland bore; this is an unresolved geometry interface, NOT a clearance pass');
+      allowedPairs.set(pairKey(extension,cylinder),'Internal rod axial engagement; source cylinder is a capped outer form, with no working bore or piston geometry');
+    }
     allowedPairs.set(pairKey(`coupling-crank-pin-extension-${side}-3`,`outside-main-rod-big-end-pin-${side}`),'Coaxial rigid middle crankpin/big-end pin stack; separate moving rod eyes remain checked');
   }
   const allowedContacts=[...allowedPairs].map(([key,reason])=>({pair:key.split('|'),reason}));
