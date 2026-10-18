@@ -1,0 +1,40 @@
+name: A4 faithful wheel and grooved rod experiment
+on:
+  push:
+    branches: ['qa/a4-anatomy-rebuild-r03-20261018']
+    paths:
+      - '.github/workflows/train-anatomy-rebuild-r03.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-rebuild-experiment-r03/**'
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-rebuild-experiment-r03
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-full-source-replica-r01
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Same camera and materials original-versus-partial-rebuild test
+        run: |
+          python3 -m http.server 8765 >/tmp/train-server.log 2>&1 &
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-rebuild-experiment-r03/browser.cjs
+        env:
+          TARGET_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-rebuild-experiment-r03/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: a4-anatomy-rebuild-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-rebuild-experiment-r03/qa/
+          retention-days: 14
