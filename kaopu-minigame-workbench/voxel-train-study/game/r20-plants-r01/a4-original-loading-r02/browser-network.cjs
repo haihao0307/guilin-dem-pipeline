@@ -10,12 +10,15 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 async function snapshot(page){return page.evaluate(()=>{
   const q=window.A4_REPLICA,s=q?.source,l=window.LOAD_STATE;
+  const textureBindings=s?s.primitives.flatMap(p=>{const material=p.definition.material,texture=s.g.materials[material]?.pbrMetallicRoughness?.baseColorTexture?.index;if(texture===undefined)return[];
+    const image=s.g.textures[texture].source,map=p.object.material.map;return[{node:p.sourceNode,material,texture,image,payload:s.object.content.images[image].payload,
+      visible:p.object.visible,width:Number(map?.image?.width||0),height:Number(map?.image?.height||0)}];}):[];
   return {ready:!!q?.ready,errors:(q?.errors||[]).map(String),status:document.querySelector('#status')?.textContent||'',
     load:l?{stage:l.stage,url:String(l.url||''),loaded:l.loaded,total:l.total,attempt:l.attempt,failed:l.failed,error:String(l.error||''),events:JSON.parse(JSON.stringify(l.events||[]))}:null,
     source:s?{nodes:s.g.nodes.length,meshes:s.g.meshes.length,materials:s.g.materials.length,images:s.g.images.length,textures:s.g.textures.length,
       clips:s.model.animations.length,tracks:s.model.animations.reduce((n,c)=>n+c.tracks.length,0),allPrimitivesVisible:s.primitives.every(p=>p.object.visible),
-      sourceObjectSHA256:s.root.userData.recovery?.sourceObjectSHA256,generatedReplacementParts:s.root.userData.recovery?.generatedReplacementParts}:null,
-    cameraType:q?.camera?.type,geometryOrMaterialReplacement:q?.geometryOrMaterialReplacement,uiSamples:window.__networkQaUiSamples||[],fieldsProgress:window.__networkQaFieldsProgress||[]};
+      sourceObjectSHA256:s.root.userData.recovery?.sourceObjectSHA256,generatedReplacementParts:s.root.userData.recovery?.generatedReplacementParts,textureBindings}:null,
+    cameraType:q?.camera?.type,geometryOrMaterialReplacement:q?.geometryOrMaterialReplacement,uiSamples:window.__networkQaUiSamples||[],fieldsProgress:window.__networkQaFieldsProgress||[],downloadCompletions:window.__networkQaDownloadCompletions||[]};
 });}
 function assertComplete(state){
   assert(state.ready,JSON.stringify(state));assert.deepEqual(state.errors,[]);assert.equal(state.load?.failed,false);
@@ -25,6 +28,28 @@ function assertComplete(state){
   assert.equal(state.source.sourceObjectSHA256,'749efd6d1b1a19aa97d9d024baa33f4f5df382eb19a2be88c10ef7ba6e1a5fe4');
   assert.notEqual(state.geometryOrMaterialReplacement,true);
   assert.equal(state.cameraType,'OrthographicCamera');
+  assert.equal(new Set(state.source.textureBindings.map(b=>b.texture)).size,3,'All three original texture bindings must exist');
+  assert(state.source.textureBindings.every(b=>b.visible&&b.width>0&&b.height>0),'An original texture image is absent or undecoded');
+}
+
+function classifyRequestFailures(row,serverRequests){
+  row.unexpectedFailures=[];row.completedBodyLifecycleEvents=[];
+  for(const failure of row.requestFailures){
+    const request=row.networkRequests.find(r=>r.id===failure.requestId);
+    if(isFields(failure.url)&&((row.scenario==='partial-fields-disconnect'&&request.attempt===1)||row.scenario==='permanent-fields-failure')){failure.classification='injectedFailure';continue;}
+    const served=serverRequests.filter(r=>r.method==='GET'&&r.pathname===new URL(failure.url).pathname)[request.attempt-1];
+    const completed=row.state.downloadCompletions.find(e=>e.url===failure.url&&e.attempt===request.attempt);
+    // Keep the raw failure. Accept only an ERR_ABORTED for a body independently proven complete at BOTH ends,
+    // after the original loader's SHA/parse gates and actual material-image decoding have passed.
+    const verified=row.state.ready&&!row.state.load.failed&&row.state.errors.length===0&&row.state.source?.sourceObjectSHA256==='749efd6d1b1a19aa97d9d024baa33f4f5df382eb19a2be88c10ef7ba6e1a5fe4';
+    const textures=row.state.source?.textureBindings;
+    if(failure.error==='net::ERR_ABORTED'&&request.resourceType==='fetch'&&request.responseStatus===200&&verified&&
+      textures?.length&&textures.every(b=>b.visible&&b.width>0&&b.height>0)&&new Set(textures.map(b=>b.texture)).size===3&&
+      completed&&completed.total>0&&completed.loaded===completed.total&&served?.finishedAt&&!served.closedEarly&&!served.cut&&
+      served.bytesSent===served.totalBytes&&completed.loaded===served.totalBytes){
+      failure.classification='completedBodyLifecycleEvent';row.completedBodyLifecycleEvents.push({failure,clientCompletion:completed,serverCompletion:{bytesSent:served.bytesSent,totalBytes:served.totalBytes,finishedAt:served.finishedAt},shaAndTextureDecodePassed:true});
+    }else{failure.classification='unexpectedFailure';row.unexpectedFailures.push(failure);}
+  }
 }
 
 async function main(){
@@ -39,14 +64,15 @@ async function main(){
     for(const scenario of ['normal','partial-fields-disconnect','permanent-fields-failure','slow-continuous-fields']){
       const context=await browser.newContext({viewport:{width:1440,height:960},serviceWorkers:'block'}),page=await context.newPage();
       page.setDefaultTimeout(120000);
-      const row={scenario,syntheticFaultInjection:scenario!=='normal',physicalDeviceTested:false,fieldsRequests:[],pageErrors:[],unexpectedFailures:[],httpErrors:[],forbiddenRequests:[],maximumFieldsInFlight:0,routeCount:0,passed:false};
-      cases.push(row);const inFlight=new Set(),requestRecords=new Map();let firstRoute=true;
+      const row={scenario,syntheticFaultInjection:scenario!=='normal',physicalDeviceTested:false,fieldsRequests:[],networkRequests:[],requestFailures:[],cleanupFailures:[],pageErrors:[],unexpectedFailures:[],httpErrors:[],forbiddenRequests:[],maximumFieldsInFlight:0,routeCount:0,passed:false};
+      cases.push(row);const inFlight=new Set(),requestRecords=new Map(),serverStart=fixture.requests.length;let firstRoute=true;
       await page.addInitScript(()=>{
-        window.__networkQaUiSamples=[];window.__networkQaFieldsProgress=[];
+        window.__networkQaUiSamples=[];window.__networkQaFieldsProgress=[];window.__networkQaDownloadCompletions=[];const seen=new WeakSet();
         const install=()=>{const element=document.querySelector('#status');if(!element)return;
           const capture=()=>{
             const text=element.textContent,list=window.__networkQaUiSamples;
             if(list.at(-1)?.text!==text){list.push({at:performance.now(),text});if(list.length>3000)list.shift();}
+            for(const event of window.LOAD_STATE?.events||[])if(event.stage==='下载完成'&&!seen.has(event)){seen.add(event);window.__networkQaDownloadCompletions.push({...event,url:String(event.url),observedAt:performance.now()});}
             // Capture the real public progress while downloading. Later inflate events may evict it from LOAD_STATE's bounded history.
             const e=window.LOAD_STATE?.events?.at(-1),events=window.__networkQaFieldsProgress;
             if(e&&/\/fields\.bin\.gz(?:\?|$)/.test(String(e.url||''))&&Number(e.loaded)>0&&
@@ -58,14 +84,15 @@ async function main(){
       page.on('pageerror',e=>row.pageErrors.push(String(e)));
       page.on('request',request=>{
         if(forbidden(request.url()))row.forbiddenRequests.push(request.url());
-        if(isFields(request.url())){inFlight.add(request);row.maximumFieldsInFlight=Math.max(row.maximumFieldsInFlight,inFlight.size);const record={url:request.url(),startedAt:Date.now()};row.fieldsRequests.push(record);requestRecords.set(request,record);}
+        const record={id:row.networkRequests.length,url:request.url(),resourceType:request.resourceType(),startedAt:Date.now(),attempt:1+row.networkRequests.filter(r=>r.url===request.url()).length};row.networkRequests.push(record);requestRecords.set(request,record);
+        if(isFields(request.url())){inFlight.add(request);row.maximumFieldsInFlight=Math.max(row.maximumFieldsInFlight,inFlight.size);row.fieldsRequests.push(record);}
       });
-      page.on('requestfinished',request=>{if(isFields(request.url()))inFlight.delete(request);});
+      page.on('requestfinished',request=>{const r=requestRecords.get(request);if(r)r.finishedAt=Date.now();if(isFields(request.url()))inFlight.delete(request);});
       page.on('requestfailed',request=>{
-        if(isFields(request.url())){inFlight.delete(request);const r=requestRecords.get(request);if(r)r.failure=request.failure()?.errorText;}
-        else row.unexpectedFailures.push({url:request.url(),error:request.failure()?.errorText});
+        if(isFields(request.url()))inFlight.delete(request);const r=requestRecords.get(request),error=request.failure()?.errorText;if(r){r.failure=error;r.failedAt=Date.now();}
+        (row.observationClosed?row.cleanupFailures:row.requestFailures).push({requestId:r?.id,url:request.url(),error,at:Date.now()});
       });
-      page.on('response',response=>{if(response.status()>=400)row.httpErrors.push({url:response.url(),status:response.status()});});
+      page.on('response',response=>{const r=requestRecords.get(response.request());if(r){r.responseStatus=response.status();r.responseAt=Date.now();}if(response.status()>=400)row.httpErrors.push({url:response.url(),status:response.status()});});
       await page.route(/\/fields\.bin\.gz(?:\?.*)?$/,async route=>{
         row.routeCount++;
         if(scenario==='permanent-fields-failure'){firstRoute=false;await route.abort('connectionreset');return;}
@@ -80,7 +107,7 @@ async function main(){
         await page.goto(url.href,{waitUntil:'domcontentloaded',timeout:120000});
         await page.waitForFunction(()=>window.A4_REPLICA?.ready||(window.LOAD_STATE?.failed&&window.A4_REPLICA?.errors?.length),null,{timeout:300000});
         row.state=await snapshot(page);
-        assert.deepEqual(row.forbiddenRequests,[]);assert.deepEqual(row.unexpectedFailures,[]);assert.deepEqual(row.httpErrors,[]);assert.deepEqual(row.pageErrors,[]);
+        assert.deepEqual(row.forbiddenRequests,[]);assert.deepEqual(row.httpErrors,[]);assert.deepEqual(row.pageErrors,[]);
         assert.equal(row.maximumFieldsInFlight,1,'Fields attempts must be serialized, not overlapping');
         if(scenario==='permanent-fields-failure'){
           assert.equal(row.state.ready,false);assert.equal(row.state.load.failed,true);assert(row.state.errors.length>0);
@@ -124,11 +151,14 @@ async function main(){
             row.slowStream={streamDurationMs,idleMs,serverChunks:served.chunkEvents.length,clientDistinctLoadedValues:loads.length,totalBytes:served.totalBytes,visibleProgressSamples:uiProgress.length};
           }
         }
-        await page.screenshot({path:path.join(output,scenario+'.png')});row.passed=true;
+        await page.screenshot({path:path.join(output,scenario+'.png')});row.state=await snapshot(page);
+        if(scenario!=='permanent-fields-failure')assertComplete(row.state);
+        classifyRequestFailures(row,fixture.requests.slice(serverStart));
+        assert.deepEqual(row.unexpectedFailures,[]);assert.deepEqual(row.httpErrors,[]);assert.deepEqual(row.pageErrors,[]);assert.deepEqual(row.forbiddenRequests,[]);row.passed=true;
       }catch(error){
         row.failure=error.stack||String(error);try{row.failureState=await snapshot(page);await page.screenshot({path:path.join(output,scenario+'-failed.png')});}catch{}
         throw error;
-      }finally{await context.close();}
+      }finally{row.observationClosed=true;await context.close();}
     }
   }finally{
     if(browser)await browser.close();await fixture.close();
@@ -137,4 +167,5 @@ async function main(){
       serverRequests:fixture.requests,limits:['Synthetic CI failure/slow-stream tests are not an iPhone/iPad or user-network reproduction.','No geometry, material, source animation or model files are changed.']},null,2));
   }
 }
-main().catch(error=>{console.error(error);process.exitCode=1;});
+module.exports={classifyRequestFailures};
+if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});
