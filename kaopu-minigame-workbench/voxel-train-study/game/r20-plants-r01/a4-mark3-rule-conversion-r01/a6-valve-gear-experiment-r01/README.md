@@ -40,6 +40,8 @@ Final 1° sweep: 336,534 complete native triangles, 50 moving bodies, 404 static
 
 Concise machine-readable summary: [FINITE_VALVE_PUBLIC.json](docs/FINITE_VALVE_PUBLIC.json).
 
+Metadata erratum: [measured trunnion seating and fork clearance](docs/METADATA_ERRATUM.json). The corrected figures are approximately 10 mm seating and 13 mm lateral clearance; all 354 geometry buffers are byte-for-byte unchanged. Earlier timestamped reports retain their original source context.
+
 ## What is and is not complete
 
 The point-joint mechanism closes over a revolution with the documented 660.4 mm piston stroke. Finite native geometry now accompanies those constraints, including open bores, real die blocks and slots, attached guides and fixed supports. See FINITE_VALVE_SWEEP_LATEST.json for the current full-assembly sweep; no-witness conservative candidates are not a continuous triangle clearance certificate. Actual valve events, inside/Gresley motion, historical side phases and engineering loads remain unresolved. Never apply these solved joints to the old R02 valve meshes: their lengths and topology are incompatible.

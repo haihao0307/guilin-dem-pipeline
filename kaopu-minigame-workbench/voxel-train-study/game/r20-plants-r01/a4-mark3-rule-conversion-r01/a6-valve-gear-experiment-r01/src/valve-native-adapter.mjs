@@ -65,8 +65,8 @@ export function createValveNativeAdapter({baseModel}={}){
       // Offset tail support avoids filling the D slot at its trunnion.
       beam(m,at(add(reference.Q,mul(n,.040))),at(tailRoot),depth,.04);
       pin(m,reference.T,d.lowPlaneM-.0175,d.highPlaneM+.025,.020);
-    },{side,plane:d.lowPlaneM,kind:'rocker',extra:{pivot:constraints.Q},metadata:{slotRadiusM:constraints.slotRadiusM,slotHalfWidthM:d.expansionSlotHalfWidthM,workingAngularLimitsRad:constraints.dimensions.expansionSlotLimitsRad,forkBearingPlaneM:1.263,forkDepthM:.010,portalLateralGapM:.003,openSlot:true}});
-    register(`expansion-link-trunnion-${s}`,m=>pin(m,reference.Q,1.235,1.272,.036),{side,metadata:{static:true,axis:'Q',bearingGapM:.002,rigidSeatDepthM:.020,reason:'Fixed shaft seated in retained portal, bearing fork separated 3 mm from portal and shaft stops 2.5 mm before slot plane'}});
+    },{side,plane:d.lowPlaneM,kind:'rocker',extra:{pivot:constraints.Q},metadata:{slotRadiusM:constraints.slotRadiusM,slotHalfWidthM:d.expansionSlotHalfWidthM,workingAngularLimitsRad:constraints.dimensions.expansionSlotLimitsRad,forkBearingPlaneM:1.263,forkDepthM:.010,portalLateralGapM:.013,openSlot:true}});
+    register(`expansion-link-trunnion-${s}`,m=>pin(m,reference.Q,1.235,1.272,.036),{side,metadata:{static:true,axis:'Q',bearingGapM:.002,rigidSeatDepthM:.010,reason:'Fixed shaft seated in retained portal, bearing fork separated 13 mm from portal and shaft stops 2.5 mm before slot plane'}});
     register(`radius-rod-${s}`,m=>{
       const t=reference.radiusRodDirection,n=[-t[1],t[0]],limits=constraints.dimensions.radiusRodSupportSlotLimitsM;
       eyeLink(m,at(reference.D,high),at(reference.A,high),{depth,width:.040,outerA:.038,outerB:.035,holeA:.018,holeB:.018});
@@ -120,7 +120,7 @@ export function createValveNativeAdapter({baseModel}={}){
     note(`valve-experiment-crosshead-pin-${s}`,`outside-crosshead-${s}`,'Rigid auxiliary gudgeon pin seated 20 mm inside the existing crosshead pin; not a free moving clearance');
     note(`valve-experiment-return-crank-pin-${s}`,`outside-main-rod-big-end-pin-${s}`,'Rigid coaxial 10 mm-overlap pin continuation, both attached to the same crank');
     note(`valve-experiment-return-crank-pin-${s}`,`return-crank-${s}`,'Rigid keyed/press-fit root of the return crank; exact nominal 50 mm bore/pin radius, not a bearing clearance claim');
-    note(`expansion-link-trunnion-${s}`,`expansion-link-frame-bracket-${s}`,'Fixed shaft rigidly seated 20 mm in the existing portal post; this static mount is not a moving clearance or working bearing. The separate rotating fork has a real 38 mm bore around the 36 mm shaft and a 3 mm gap from the portal');
+    note(`expansion-link-trunnion-${s}`,`expansion-link-frame-bracket-${s}`,'Fixed shaft rigidly seated 10 mm in the existing portal post; this static mount is not a moving clearance or working bearing. The separate rotating fork has a real 38 mm bore around the 36 mm shaft and a 13 mm gap from the portal');
     note(`valve-experiment-lifting-bearing-support-${s}`,`expansion-link-frame-bracket-${s}`,'Rigid added support is physically seated on the retained portal outboard post');
     note(`valve-experiment-valve-crosshead-guide-${s}`,`outside-motion-bracket-${s}`,'Rigid valve-guide support physically seated on retained outside-motion portal');
   }

@@ -5,6 +5,8 @@ const project=new URL('../../',import.meta.url),report=JSON.parse(fs.readFileSyn
 assert.equal(s.sampledSurfaceWitnessCount,0,'New finite surface collision');
 assert.deepEqual(report.sourceFilesChangedDuringRun,[],'Sweep dependencies changed during run');
 for(const [path,sha] of Object.entries(report.sourceHashes))assert.equal(createHash('sha256').update(fs.readFileSync(new URL(path,project))).digest('hex'),sha,`Stale sweep ${path}`);
+for(const name of ['a6-motion.mjs','a6-motion-corrections.mjs','a6-locomotive-shell.mjs'])assert.equal(createHash('sha256').update(fs.readFileSync(new URL('a6-native-r03/src/'+name,project))).digest('hex'),report.sourceHashes['a6-native-r02/src/'+name],`R03 runtime diverges from swept dependency ${name}`);
+assert.equal(s.previousExperimentMovingWitnessPairChecks.length,2);
 assert.equal(s.intervalDegrees,1);assert.equal(s.intervals,360);
 assert.equal(s.defaultShellIncluded,true);assert.equal(s.defaultShellBodyCount,94);assert.equal(s.inheritedComponents,338);
 assert.equal(s.originalSixPairChecks.length,6);
