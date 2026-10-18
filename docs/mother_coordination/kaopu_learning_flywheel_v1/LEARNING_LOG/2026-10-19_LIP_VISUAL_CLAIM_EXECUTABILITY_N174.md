@@ -44,5 +44,5 @@ This is a Candidate only. It does not prescribe a universal beauty score and doe
 
 - PR #308 technical target: `IMPLEMENTED=true`, technical `GATE-RUN=true`.
 - Visual correction production regression: `IMPLEMENTED=false`, `GATE-RUN=false`.
-- Learning route: `POSTED=false` until a directed PR comment exists.
+- Learning route: `POSTED=true`; directed receipt: https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6254291302.
 - `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.
