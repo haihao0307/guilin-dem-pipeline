@@ -1,0 +1,2753 @@
+{
+  "cycle": {
+    "schema": "a6-motion-cycle-validation/1",
+    "status": "design-kinematic-candidate; actual A4 crank phases unresolved",
+    "scope": "Supported rigid crank/coupling/main-rod loop only",
+    "samples": 721,
+    "intervalDegrees": 0.5,
+    "toleranceM": 1e-9,
+    "maximumRodLengthErrorM": 8.881784197001252e-16,
+    "maximumJointErrorM": 1.8610729195778454e-15,
+    "maximumAxisErrorM": 0,
+    "maximumRigidMatrixError": 2.220446049250313e-16,
+    "cycleClosureError": 0,
+    "crossheadRangeM": [
+      2.1748252954096468,
+      2.8385840351310456
+    ],
+    "sampledCrossheadRangeM": [
+      2.17482783701704,
+      2.8385833484804266
+    ],
+    "crossheadTravelM": 0.6637587397213989,
+    "documentedPistonStrokeM": 0.6604,
+    "pistonEngagement": {
+      "extensionLengthM": 0.42,
+      "originalRodLengthM": 0.9100000000000004,
+      "totalRigidRodLengthM": 1.3300000000000003,
+      "cylinderAxialEnvelopeM": [
+        0.74,
+        1.5799999999999998
+      ],
+      "forwardRodEndRangeM": [
+        0.8448252954096462,
+        1.5085840351310456
+      ],
+      "minimumRearCoverEngagementM": 0.0714159648689543,
+      "minimumFrontCoverClearanceM": 0.10482529540964625,
+      "sourceRodAloneMaximumGapM": 0.3485840351310454,
+      "status": "axial-engagement-design-check; gland/piston-head/cylinder-bore geometry unresolved"
+    },
+    "strokeErrorM": 0.0033587397213988845,
+    "strokeCaveat": "Original outside slider is vertically offset from the axle. Its candidate travel need not equal the source 26-inch piston stroke; cylinder placement and rod geometry are provisional.",
+    "maximumUnsupportedInterfaceGapM": 0.6604000000000001,
+    "supportedLoopPass": true,
+    "allMechanismsSolved": false,
+    "fullVehicleApproval": false,
+    "blockers": [
+      {
+        "id": "historical-phase",
+        "status": "unresolved",
+        "parts": [],
+        "reason": "The source has both outside cranks in the same top pose. It provides no verified A4 side/inside phase relation. This candidate keeps that reference and must not be described as historical A4 timing."
+      },
+      {
+        "id": "piston-gland",
+        "status": "axial-engagement-solved; engineering-interface-unresolved",
+        "parts": [
+          "outside-piston-rod--1",
+          "a6-piston-rod-hidden-extension--1",
+          "outside-cylinder--1",
+          "outside-piston-rod-1",
+          "a6-piston-rod-hidden-extension-1",
+          "outside-cylinder-1"
+        ],
+        "reason": "A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof."
+      },
+      {
+        "id": "outside-valve-loop",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "return-crank--1",
+          "eccentric-rod--1",
+          "slotted-expansion-link--1",
+          "expansion-link-trunnion--1",
+          "expansion-link-frame-bracket--1",
+          "radius-rod--1",
+          "combination-lever--1",
+          "union-link--1",
+          "valve-rod-crosshead--1",
+          "reverser-lifting-link--1",
+          "reverser-reach-rod--1",
+          "return-crank-1",
+          "eccentric-rod-1",
+          "slotted-expansion-link-1",
+          "expansion-link-trunnion-1",
+          "expansion-link-frame-bracket-1",
+          "radius-rod-1",
+          "combination-lever-1",
+          "union-link-1",
+          "valve-rod-crosshead-1",
+          "reverser-lifting-link-1",
+          "reverser-reach-rod-1"
+        ],
+        "reason": "Return crank/eccentric/expansion-link/die-block/radius/union/combination/reverser joints have no consistent solved source loop. They retain the source pose; moving wheel/crosshead attachment gaps are explicitly reported."
+      },
+      {
+        "id": "inside-motion",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "middle-crank-axle-webs",
+          "inside-piston-and-crosshead",
+          "inside-slidebars-and-bracket",
+          "inside-main-connecting-rod"
+        ],
+        "reason": "Inside cylinder, piston and slidebar directions are not collinear in the source. Actual inner crank phase and usable slide constraint remain unresolved. Crank webs and inside rod are not independently spun."
+      },
+      {
+        "id": "conjugated-valves",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "gresley-conjugating-two-to-one-lever",
+          "gresley-conjugating-equal-lever",
+          "conjugating-valve-rod-links"
+        ],
+        "reason": "No verified three-cylinder valve constraint graph or complete fulcrum topology exists; no decorative valve animation is substituted."
+      },
+      {
+        "id": "rolling-and-loads",
+        "status": "not-solved",
+        "parts": [],
+        "reason": "Fixed-axle, stationary rig only. Carrying/tender/coach wheel rolling, translation along rail, buffers, drawgear, brake actuation, suspension loads, forces and compliance are not actuated or validated."
+      }
+    ]
+  },
+  "sweep": {
+    "schema": "a6-swept-interference-screen/1",
+    "status": "open-interference-candidates",
+    "phaseRangeDegrees": [
+      0,
+      360
+    ],
+    "intervals": 72,
+    "intervalDegrees": 5,
+    "method": "Exact original-vertex midpoint AABBs plus analytic speed-bound padding over every continuous angular interval; optional exact original-triangle sampled surface intersection witnesses.",
+    "geometrySource": "All original vertices and triangles; no mesh decimation or collision mesh substitution",
+    "movingBodyCount": 26,
+    "staticBodyCount": 320,
+    "additionalObstacleCount": 0,
+    "intervalPairTests": 622440,
+    "triangleTests": 404724,
+    "candidateCount": 120,
+    "sampledSurfaceWitnessCount": 40,
+    "candidates": [
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-2",
+          "outside-main-connecting-rod--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 0,
+          "triangleB": 6,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-2",
+          "outside-main-connecting-rod-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 0,
+          "triangleB": 5,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "coupling-rod--1-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 4,
+          "triangleB": 189,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "outside-main-rod-big-end-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 208,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-1",
+          "outside-main-rod-big-end-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 201,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "coupling-rod-1-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 4,
+          "triangleB": 189,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "outside-main-rod-big-end-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 208,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-1",
+          "outside-main-rod-big-end-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 201,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-brake-shoe--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 696,
+          "triangleB": 112,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-journal-bearing--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1824,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "expansion-link-frame-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 2305,
+          "triangleB": 6,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "outside-motion-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 2336,
+          "triangleB": 22,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-brake-shoe-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 326,
+          "triangleB": 4,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-journal-bearing-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1887,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "expansion-link-frame-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 2308,
+          "triangleB": 9,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "outside-motion-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 2524,
+          "triangleB": 19,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-brake-shoe--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 696,
+          "triangleB": 112,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-journal-bearing--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1888,
+          "triangleB": 153,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-brake-shoe-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 326,
+          "triangleB": 4,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-journal-bearing-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1823,
+          "triangleB": 152,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-brake-shoe--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 696,
+          "triangleB": 112,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-journal-bearing--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1824,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-brake-shoe-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 326,
+          "triangleB": 4,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-journal-bearing-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 1887,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-crosshead--1",
+          "combination-lever--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 37,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 197.5,
+          "triangleA": 0,
+          "triangleB": 5,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 4,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-crosshead--1",
+          "union-link--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 50,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 8,
+          "triangleB": 4,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-crosshead-1",
+          "combination-lever-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 37,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 197.5,
+          "triangleA": 0,
+          "triangleB": 5,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 4,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-crosshead-1",
+          "union-link-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 50,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 8,
+          "triangleB": 4,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod--1",
+          "outside-crosshead--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 172,
+          "triangleB": 8,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod--1",
+          "outside-motion-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 8,
+          "triangleB": 1,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod--1",
+          "outside-piston-rod--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 197,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod--1",
+          "outside-slidebars--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 156,
+          "triangleB": 6,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod-1",
+          "outside-crosshead-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 172,
+          "triangleB": 8,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod-1",
+          "outside-motion-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 8,
+          "triangleB": 0,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod-1",
+          "outside-piston-rod-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 197,
+          "triangleB": 77,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod-1",
+          "outside-slidebars-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 156,
+          "triangleB": 5,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin--1",
+          "locked-drive-wheel-5.7912--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 127,
+          "triangleB": 2668,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin--1",
+          "return-crank--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 16,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 142,
+          "triangleB": 166,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin-1",
+          "locked-drive-wheel-5.7912-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 138,
+          "triangleB": 2683,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin-1",
+          "return-crank-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 16,
+        "sampledSurfaceWitness": {
+          "phaseDegrees": 2.5,
+          "triangleA": 0,
+          "triangleB": 201,
+          "meaning": "Original mesh surfaces intersect or touch at this sampled pose. Not a penetration-depth or structural failure measurement."
+        },
+        "sampledPosesTested": 1,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension--1",
+          "outside-slidebars--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 40,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 38,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension-1",
+          "outside-slidebars-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 40,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 38,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-3",
+          "outside-main-connecting-rod--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-3",
+          "outside-main-connecting-rod-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "coupling-crank-pin-extension--1-2"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "coupling-crank-pin-extension--1-3"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "locked-drive-wheel-3.5814--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "locked-drive-wheel-5.7912--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-0",
+          "outside-motion-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          270,
+          275
+        ],
+        "lastIntervalDegrees": [
+          295,
+          300
+        ],
+        "intervalCount": 6,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 4,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-1",
+          "coupling-crank-pin-extension--1-3"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-1",
+          "coupling-crank-pin-extension--1-4"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-1",
+          "locked-drive-wheel-5.7912--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod--1-1",
+          "locked-drive-wheel-8.001--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "coupling-crank-pin-extension-1-2"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "coupling-crank-pin-extension-1-3"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "locked-drive-wheel-3.5814-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "locked-drive-wheel-5.7912-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-0",
+          "outside-motion-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          270,
+          275
+        ],
+        "lastIntervalDegrees": [
+          295,
+          300
+        ],
+        "intervalCount": 6,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 4,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-1",
+          "coupling-crank-pin-extension-1-3"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-1",
+          "coupling-crank-pin-extension-1-4"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-1",
+          "locked-drive-wheel-5.7912-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "coupling-rod-1-1",
+          "locked-drive-wheel-8.001-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-axlebox--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-brake-hanger--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-brake-hanger-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814--1",
+          "driver-1-brake-hanger-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-axlebox-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-brake-hanger-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-brake-hanger-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-3.5814-1",
+          "driver-1-brake-hanger-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-1-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-1-brake-hanger--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-1-brake-hanger-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-1-brake-hanger-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-axlebox--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-brake-hanger--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-brake-hanger-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912--1",
+          "driver-2-brake-hanger-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-1-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-1-brake-hanger-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-1-brake-hanger-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-1-brake-hanger-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-axlebox-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-brake-hanger-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-brake-hanger-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-5.7912-1",
+          "driver-2-brake-hanger-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "cartazzi-frame-extension--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-2-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-2-brake-hanger--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-2-brake-hanger-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-2-brake-hanger-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-axlebox--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-brake-hanger--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-brake-hanger-bracket--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001--1",
+          "driver-3-brake-hanger-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "cartazzi-frame-extension-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-2-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-2-brake-hanger-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-2-brake-hanger-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-2-brake-hanger-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-axlebox-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-brake-crossbeam"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-brake-hanger-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-brake-hanger-bracket-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "locked-drive-wheel-8.001-1",
+          "driver-3-brake-hanger-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 0,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-crosshead--1",
+          "locked-drive-wheel-3.5814--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 50,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 46,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-crosshead--1",
+          "outside-slidebars--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-crosshead-1",
+          "locked-drive-wheel-3.5814-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 50,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 46,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-crosshead-1",
+          "outside-slidebars-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod--1",
+          "outside-main-rod-big-end-pin--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-connecting-rod-1",
+          "outside-main-rod-big-end-pin-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin--1",
+          "eccentric-rod--1"
+        ],
+        "firstIntervalDegrees": [
+          300,
+          305
+        ],
+        "lastIntervalDegrees": [
+          340,
+          345
+        ],
+        "intervalCount": 9,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 8,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-main-rod-big-end-pin-1",
+          "eccentric-rod-1"
+        ],
+        "firstIntervalDegrees": [
+          300,
+          305
+        ],
+        "lastIntervalDegrees": [
+          340,
+          345
+        ],
+        "intervalCount": 9,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 8,
+        "involvesUnsupportedReference": true
+      },
+      {
+        "pair": [
+          "outside-piston-rod--1",
+          "outside-slidebars--1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      },
+      {
+        "pair": [
+          "outside-piston-rod-1",
+          "outside-slidebars-1"
+        ],
+        "firstIntervalDegrees": [
+          0,
+          5
+        ],
+        "lastIntervalDegrees": [
+          355,
+          360
+        ],
+        "intervalCount": 72,
+        "sampledSurfaceWitness": null,
+        "sampledPosesTested": 72,
+        "involvesUnsupportedReference": false
+      }
+    ],
+    "allowedContacts": [
+      {
+        "pair": [
+          "driver-1-axle-shaft",
+          "locked-drive-wheel-3.5814--1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-2",
+          "locked-drive-wheel-3.5814--1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "driver-1-axle-shaft",
+          "locked-drive-wheel-3.5814-1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-2",
+          "locked-drive-wheel-3.5814-1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "driver-2-axle-shaft",
+          "locked-drive-wheel-5.7912--1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-3",
+          "locked-drive-wheel-5.7912--1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "driver-2-axle-shaft",
+          "locked-drive-wheel-5.7912-1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-3",
+          "locked-drive-wheel-5.7912-1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "driver-3-axle-shaft",
+          "locked-drive-wheel-8.001--1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-4",
+          "locked-drive-wheel-8.001--1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "driver-3-axle-shaft",
+          "locked-drive-wheel-8.001-1"
+        ],
+        "reason": "Original coaxial wheel-hub/axle-shaft assembly fit; no working-fit tolerance validation"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-4",
+          "locked-drive-wheel-8.001-1"
+        ],
+        "reason": "Coaxial rigid crankpin extension and wheel crankpin belong to the same rotating crank assembly"
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension--1",
+          "outside-piston-rod--1"
+        ],
+        "reason": "Rigid butt joint between original rod and explicit native extension; both lengths fixed"
+      },
+      {
+        "pair": [
+          "outside-crosshead--1",
+          "outside-piston-rod--1"
+        ],
+        "reason": "Rigid original piston-rod/crosshead attachment"
+      },
+      {
+        "pair": [
+          "outside-cylinder--1",
+          "outside-piston-rod--1"
+        ],
+        "reason": "Intended axial rod/gland interface. Original end cap lacks a gland bore; this is an unresolved geometry interface, NOT a clearance pass"
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension--1",
+          "outside-cylinder--1"
+        ],
+        "reason": "Internal rod axial engagement; source cylinder is a capped outer form, with no working bore or piston geometry"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension--1-3",
+          "outside-main-rod-big-end-pin--1"
+        ],
+        "reason": "Coaxial rigid middle crankpin/big-end pin stack; separate moving rod eyes remain checked"
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension-1",
+          "outside-piston-rod-1"
+        ],
+        "reason": "Rigid butt joint between original rod and explicit native extension; both lengths fixed"
+      },
+      {
+        "pair": [
+          "outside-crosshead-1",
+          "outside-piston-rod-1"
+        ],
+        "reason": "Rigid original piston-rod/crosshead attachment"
+      },
+      {
+        "pair": [
+          "outside-cylinder-1",
+          "outside-piston-rod-1"
+        ],
+        "reason": "Intended axial rod/gland interface. Original end cap lacks a gland bore; this is an unresolved geometry interface, NOT a clearance pass"
+      },
+      {
+        "pair": [
+          "a6-piston-rod-hidden-extension-1",
+          "outside-cylinder-1"
+        ],
+        "reason": "Internal rod axial engagement; source cylinder is a capped outer form, with no working bore or piston geometry"
+      },
+      {
+        "pair": [
+          "coupling-crank-pin-extension-1-3",
+          "outside-main-rod-big-end-pin-1"
+        ],
+        "reason": "Coaxial rigid middle crankpin/big-end pin stack; separate moving rod eyes remain checked"
+      }
+    ],
+    "continuousBroadPhaseComplete": true,
+    "continuousTriangleNarrowPhaseComplete": false,
+    "fullVehicleApproval": false,
+    "allMechanismsSolved": false,
+    "exclusions": [
+      "Unsupported reference mechanisms are preserved but are not working joints.",
+      "Static-static intersections and within-one-wheel original self intersections are outside this motion screen.",
+      "No source animation channels, force dynamics, elasticity, manufacturing fits or historical timing are used.",
+      "Within-one-rigid-body triangles are not self-tested.",
+      "Declared axle/hub contact pairs are excluded from free-clearance tests and listed.",
+      "Bodies not supplied as obstacles, including shells/coach/rails, are not covered.",
+      "Triangle surface tests detect intersection/touching, not full solid containment; no witness means unresolved, never clear.",
+      "No continuous exact triangle-triangle time-of-impact solver or collision-response physics."
+    ],
+    "blockers": [
+      {
+        "id": "historical-phase",
+        "status": "unresolved",
+        "parts": [],
+        "reason": "The source has both outside cranks in the same top pose. It provides no verified A4 side/inside phase relation. This candidate keeps that reference and must not be described as historical A4 timing."
+      },
+      {
+        "id": "piston-gland",
+        "status": "axial-engagement-solved; engineering-interface-unresolved",
+        "parts": [
+          "outside-piston-rod--1",
+          "a6-piston-rod-hidden-extension--1",
+          "outside-cylinder--1",
+          "outside-piston-rod-1",
+          "a6-piston-rod-hidden-extension-1",
+          "outside-cylinder-1"
+        ],
+        "reason": "A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof."
+      },
+      {
+        "id": "outside-valve-loop",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "return-crank--1",
+          "eccentric-rod--1",
+          "slotted-expansion-link--1",
+          "expansion-link-trunnion--1",
+          "expansion-link-frame-bracket--1",
+          "radius-rod--1",
+          "combination-lever--1",
+          "union-link--1",
+          "valve-rod-crosshead--1",
+          "reverser-lifting-link--1",
+          "reverser-reach-rod--1",
+          "return-crank-1",
+          "eccentric-rod-1",
+          "slotted-expansion-link-1",
+          "expansion-link-trunnion-1",
+          "expansion-link-frame-bracket-1",
+          "radius-rod-1",
+          "combination-lever-1",
+          "union-link-1",
+          "valve-rod-crosshead-1",
+          "reverser-lifting-link-1",
+          "reverser-reach-rod-1"
+        ],
+        "reason": "Return crank/eccentric/expansion-link/die-block/radius/union/combination/reverser joints have no consistent solved source loop. They retain the source pose; moving wheel/crosshead attachment gaps are explicitly reported."
+      },
+      {
+        "id": "inside-motion",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "middle-crank-axle-webs",
+          "inside-piston-and-crosshead",
+          "inside-slidebars-and-bracket",
+          "inside-main-connecting-rod"
+        ],
+        "reason": "Inside cylinder, piston and slidebar directions are not collinear in the source. Actual inner crank phase and usable slide constraint remain unresolved. Crank webs and inside rod are not independently spun."
+      },
+      {
+        "id": "conjugated-valves",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "gresley-conjugating-two-to-one-lever",
+          "gresley-conjugating-equal-lever",
+          "conjugating-valve-rod-links"
+        ],
+        "reason": "No verified three-cylinder valve constraint graph or complete fulcrum topology exists; no decorative valve animation is substituted."
+      },
+      {
+        "id": "rolling-and-loads",
+        "status": "not-solved",
+        "parts": [],
+        "reason": "Fixed-axle, stationary rig only. Carrying/tender/coach wheel rolling, translation along rail, buffers, drawgear, brake actuation, suspension loads, forces and compliance are not actuated or validated."
+      }
+    ]
+  }
+}
