@@ -8,6 +8,12 @@
 
 当前只交付灰色稀疏结构，不能把头部透出解释为真实发丝透明度已修复。以下为历史记录；旧链接和旧性能数字不代表当前版本。
 
+## 当前固定公开版本
+
+[打开顶部旋涡与上段圆度版本](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7852b999d3c5652172a0a75037c7ce034fbf6dd9/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=current-rest)。当前 payload 来源 `8dcfcc8`，固定入口 `7852b99`；运行散列与本地六视图一致。公开十二项状态、直达链接、批准生长域和人物几何核对通过，零页面错误和失败请求；启动只取当前方案的两份实验文件。
+
+本机这次新浏览器上下文：结构约 **27.20 秒**、完整人物约 **44.84 秒**，皮肤生成约 15.72 秒；十二状态缓存切换合计约 284 ms、零新增请求。独立新页面直达约 21.69 秒，但同一上下文已有缓存，不能作为冷启动结果。和 R10 的 84/103 秒相差较大，不能据此归因于本轮顶部修改或宣称加载优化已完成。首次加载仍未验收。[公开原始记录](evidence/public-upper11-check.json)、[六视图自审](evidence/upper11-self-review.json)、[前后对照](evidence/upper11-review-overview-1.png)。
+
 ## 历史实施：参考方法进入生成过程 09
 
 [打开已实测的三维发流版本](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/76a3bd7d31950c4b6182ce0fc5110ba6d0766bec/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=volume-flow)。本机新浏览器测试十一项状态和独立新页面直达链接通过，零页面错误与失败请求。本次冷启动结构约 23.23 秒、人物完整约 37.23 秒；新状态首次切换约 1.94 秒，十一状态缓存切换合计 144 ms、零新增请求。直达页面同一浏览器上下文已有网络缓存，其 16.61 秒不算冷启动。加载仍未达标。[原始公开记录](evidence/public-volume09-check.json)。

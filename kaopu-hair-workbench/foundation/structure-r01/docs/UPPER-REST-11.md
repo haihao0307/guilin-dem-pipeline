@@ -63,3 +63,16 @@ R10 公开版本 `aa138fa` 已通过公开状态切换、直达链接和 GitHub 
 落实原文二·3/4 的“根向、分缝和旋涡是同一方向体系”，三·Level 1/2/3 的“先低频完整轮廓和 Guide”，五·第一轮的“六视图检查后才进入后续”。具体逐项表见 [LEARNING-CHECKLIST-R11](LEARNING-CHECKLIST-R11.md)。
 
 [Sketching Hairstyles，§3–5](https://hongbofu.people.ust.hk/doc/sbim07_hairstyle_sketching.pdf) 提供造型/分流曲线约束方向场的方法依据；本轮是受保护的局部作者修改，不是论文的增量 Cholesky 求解器。[Example-Based Hair Geometry Synthesis，§4–5](https://research.lvdi.wang/publications/hairsynthesis/2009_hairsynthesis.pdf) 用于理解发流与层级结构的关系；没有复制其样例几何或宣称实现完整合成。两篇参考都不能替代对当前模型的实际验收。
+
+## R11 固定公开验证
+
+payload `8dcfcc8c210f1061fd2da4fd9d2201525526c584`；入口 `7852b999d3c5652172a0a75037c7ce034fbf6dd9`。[打开当前方案](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7852b999d3c5652172a0a75037c7ce034fbf6dd9/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=current-rest)。十二项状态和深链通过，零页面错误/失败请求；当前完整 Guide、19 条旋涡上段和 49 条体积路径均从固定版本读取。人物 sameGeometry/samePositions/sameFaces 为 true。
+
+本机此次独立无浏览器缓存上下文，结构 27.196 s、人物完整 44.839 s，皮肤生成 15.718 s；缓存切换 284.4 ms/0 请求。直达新页 21.691 s 使用同一上下文缓存，另记而不算冷启动。该次结果不构成低端设备或稳定网络性能验收；本轮没有完成 S3 冷启动优化，和 R10 的大幅差别不能归因于几百字节的顶部控制代码。
+
+## 下一轮 S1 耳周/发尾的执行方法
+
+1. 先按原生根和 Guide ID 定位拥挤路径，区分顶视投影重叠、真实三维交叉、绕耳路线和人体距离；不能只把顶视环形投影压平。
+2. 冻结本轮上段、完整刘海与已审查下段，单独明确耳周允许编辑的连续区间和固定出口；F02.1 仍是独立生长域权威。若需要修改已审查造型，必须明确新范围和同机位理由，不能悄悄刷新旧锁。
+3. 用实际完整路径检查中束关系、耳前/耳后衔接及切口；不靠删根、全推耳后或增加随机噪声掩盖问题。
+4. 每一小项重做实际六视图、人体中心线/弧长/箭头/保护点检查，再记录完成性。整头自然度未通过就继续留在 S1，不提前进入长度、质感或物理阶段。
