@@ -52,7 +52,8 @@ const fixtures = [
   ['identity-mismatch-mutated-first', { ...base, identityMismatch: true }, 'HOLD_IDENTITY_REJECTION_UNPROVEN'],
   ['identity-mismatch-rejected-first', { ...base, identityMismatch: true, rejectedBeforeMutation: true }, 'IDENTITY_MISMATCH_REJECTED_SCOPED'],
   ['fresh-context-repeat-unbound', { ...base, repeatFreshContextExact: false }, 'HOLD_FRESH_CONTEXT_REPEAT_UNBOUND'],
-  ['fresh-context-positive', base, 'ARCHIVE_PORTABILITY_VERIFIED_SCOPED']
+  ['fresh-context-positive', base, 'ARCHIVE_PORTABILITY_VERIFIED_SCOPED'],
+  ['pr305-r01-1-run-39095533327', { ...base, producerContextId: 'pr305-producer', consumerContextId: 'pr305-reader-1+2' }, 'ARCHIVE_PORTABILITY_VERIFIED_SCOPED']
 ];
 
 const results = fixtures.map(([name, input, expected]) => {
