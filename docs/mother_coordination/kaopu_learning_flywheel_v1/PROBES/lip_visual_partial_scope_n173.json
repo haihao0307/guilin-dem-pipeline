@@ -1,0 +1,131 @@
+{
+  "schema": "kaopu.learning-probe/1",
+  "probeId": "LIP-VISUAL-PARTIAL-SCOPE-N173",
+  "boundedQuestion": "Does R04 visibly correct the bound pale inner-wall wedge defect without promoting that local result to whole-lip acceptance?",
+  "observedSubject": {
+    "pullRequest": 308,
+    "branch": "feature/lip-inner-r04-20261018",
+    "sourceCommit": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "buildCommit": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "evidenceCommit": "7d461172a772a6fc29cb3aa44d251c1e04f08f7d",
+    "workflowRun": 39110407426,
+    "workflowJob": 117625141369,
+    "artifactId": 12129804986,
+    "artifactDigest": "sha256:45e7354ccba8f7da9e4d392afa430474d7c24b66395a13dfa49a9dfba2532fc2",
+    "tests": "12/12",
+    "frameSize": "640x512",
+    "visualAcceptance": false,
+    "productionReady": false,
+    "userAccepted": false
+  },
+  "defectSignature": "In named open-mouth views, a pale outside-skin-coloured inner-wall wedge is visible between outer lip and dark oral cavity; the correction must reduce that wedge while keeping the frozen person, geometry, pose, camera and lighting comparison conditions bound.",
+  "pairedViewEvidence": [
+    {
+      "id": "neutral_macro",
+      "r02SHA256": "dd60c3fa008e04b254fee7dce7a24eb6b431314f63e7151404dfe4813803717a",
+      "r04SHA256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a",
+      "actualDifferentPixels": 6,
+      "visualDecision": "NO_PRACTICAL_IMPROVEMENT"
+    },
+    {
+      "id": "jaw_macro",
+      "r02SHA256": "b9a64f5b25bdf5fa1e82e624dade72fb14522ac3af0fb42a57824c2946d26307",
+      "r04SHA256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236",
+      "actualDifferentPixels": 3293,
+      "visualDecision": "CLEAR_IMPROVEMENT"
+    },
+    {
+      "id": "jaw_oblique",
+      "r02SHA256": "859a04a6b75633bbe96779e241b94d3e6984e3f46332db4ee8de443b5ec97d72",
+      "r04SHA256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59",
+      "actualDifferentPixels": 5536,
+      "visualDecision": "CLEAR_IMPROVEMENT"
+    },
+    {
+      "id": "speak_macro",
+      "r02SHA256": "27825f14035f23b52d8beca9a9a521eca3497f49603c70ab3286d8010b0e67b0",
+      "r04SHA256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2",
+      "actualDifferentPixels": 4598,
+      "visualDecision": "CLEAR_IMPROVEMENT"
+    },
+    {
+      "id": "pucker_oblique",
+      "r02SHA256": "3965511d692fbdff3f85d4971173125401e8793b831ab94250c73685895f015d",
+      "r04SHA256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609",
+      "actualDifferentPixels": 1232,
+      "visualDecision": "WEAK_IMPROVEMENT"
+    }
+  ],
+  "decision": "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN",
+  "claimedViewIds": ["jaw_macro", "jaw_oblique", "speak_macro"],
+  "openParentCorrection": [
+    "outer-lip filled colour and waxy smoothness",
+    "flat inner wall and narrow tissue transition",
+    "thin mechanical seam and bright segmented bands",
+    "pinched corners and pulled creases",
+    "block-like teeth",
+    "dynamic continuity",
+    "other-person coverage",
+    "user visual acceptance"
+  ],
+  "cases": [
+    {
+      "id": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "input": {
+        "functionalGatePassed": true,
+        "exactSubjectBound": true,
+        "targetDefectSignatureBound": true,
+        "independentVisualReview": true,
+        "allPlannedPairsPresent": true,
+        "knownBadControlDetected": true,
+        "claimScope": "NAMED_VIEW_SUBSET",
+        "claimedViewIds": ["jaw_macro", "jaw_oblique", "speak_macro"],
+        "userAccepted": false,
+        "pairedViews": [
+          {"id":"neutral_macro","defectPresentInBadControl":false,"defectAbsentOrReducedInCandidate":false,"visualDecision":"NO_PRACTICAL_IMPROVEMENT"},
+          {"id":"jaw_macro","defectPresentInBadControl":true,"defectAbsentOrReducedInCandidate":true,"visualDecision":"CLEAR_IMPROVEMENT"},
+          {"id":"jaw_oblique","defectPresentInBadControl":true,"defectAbsentOrReducedInCandidate":true,"visualDecision":"CLEAR_IMPROVEMENT"},
+          {"id":"speak_macro","defectPresentInBadControl":true,"defectAbsentOrReducedInCandidate":true,"visualDecision":"CLEAR_IMPROVEMENT"},
+          {"id":"pucker_oblique","defectPresentInBadControl":true,"defectAbsentOrReducedInCandidate":true,"visualDecision":"WEAK_IMPROVEMENT"}
+        ]
+      },
+      "expect": "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN"
+    },
+    {
+      "id": "R04_WHOLE_LIP_OVERCLAIM",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "override": {"claimScope":"WHOLE_LIP","claimedViewIds":["jaw_macro","jaw_oblique","speak_macro"]},
+      "expect": "HOLD_CORRECTION_SCOPE_OVERCLAIM"
+    },
+    {
+      "id": "FUNCTIONAL_GREEN_WITHOUT_BOUND_VISUAL_SIGNATURE",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "override": {"targetDefectSignatureBound":false},
+      "expect": "HOLD_USER_CORRECTION_REGRESSION_UNBOUND"
+    },
+    {
+      "id": "NO_KNOWN_BAD_CONTROL",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "override": {"knownBadControlDetected":false},
+      "expect": "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING"
+    },
+    {
+      "id": "CLAIMED_PAIR_MISSING",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "override": {"allPlannedPairsPresent":false},
+      "expect": "HOLD_VISUAL_PAIR_COVERAGE_INCOMPLETE"
+    },
+    {
+      "id": "ONE_CLAIMED_VIEW_STILL_HAS_SIGNATURE",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "overridePair": {"id":"speak_macro","defectAbsentOrReducedInCandidate":false},
+      "expect": "HOLD_USER_CORRECTION_SIGNATURE_RECURRED"
+    },
+    {
+      "id": "SCOPED_USER_ACCEPTANCE_DOES_NOT_CLOSE_PARENT",
+      "inputFrom": "R04_NAMED_OPEN_MOUTH_SUBSET",
+      "override": {"userAccepted":true},
+      "expect": "PARTIAL_CORRECTION_USER_ACCEPTED_SCOPED__PARENT_OPEN"
+    }
+  ]
+}
