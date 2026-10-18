@@ -43,16 +43,26 @@ function classifyRequestFailures(row,serverRequests){
     // after the original loader's SHA/parse gates and actual material-image decoding have passed.
     const verified=row.state.ready&&!row.state.load.failed&&row.state.errors.length===0&&row.state.source?.sourceObjectSHA256==='749efd6d1b1a19aa97d9d024baa33f4f5df382eb19a2be88c10ef7ba6e1a5fe4';
     const textures=row.state.source?.textureBindings;
-    if(failure.error==='net::ERR_ABORTED'&&request.resourceType==='fetch'&&request.responseStatus===200&&verified&&
-      textures?.length&&textures.every(b=>b.visible&&b.width>0&&b.height>0)&&new Set(textures.map(b=>b.texture)).size===3&&
+    const sceneVerified=!!(verified&&textures?.length&&textures.every(b=>b.visible&&b.width>0&&b.height>0)&&new Set(textures.map(b=>b.texture)).size===3);
+    // restoreOriginal awaits the locked object SHA check and JSON.parse BEFORE issuing fields.bin.gz.
+    // The intentional fields failure prevents ready, but cannot undo that already-passed object gate.
+    const fieldsURL=new URL('fields.bin.gz',failure.url).href;
+    const objectGateCrossed=row.scenario==='permanent-fields-failure'&&/\/source-assets\/a4\/object\.json$/.test(failure.url)&&
+      completed?.loaded===1133726&&row.state.load.failed===true&&row.state.load.url===fieldsURL&&
+      row.fieldsRequests.some(r=>r.url===fieldsURL&&r.id>request.id&&r.startedAt>=completed.time);
+    if(failure.error==='net::ERR_ABORTED'&&request.resourceType==='fetch'&&request.responseStatus===200&&(sceneVerified||objectGateCrossed)&&
       completed&&completed.total>0&&completed.loaded===completed.total&&served?.finishedAt&&!served.closedEarly&&!served.cut&&
       served.bytesSent===served.totalBytes&&completed.loaded===served.totalBytes){
-      failure.classification='completedBodyLifecycleEvent';row.completedBodyLifecycleEvents.push({failure,clientCompletion:completed,serverCompletion:{bytesSent:served.bytesSent,totalBytes:served.totalBytes,finishedAt:served.finishedAt},shaAndTextureDecodePassed:true});
+      failure.classification='completedBodyLifecycleEvent';row.completedBodyLifecycleEvents.push({failure,clientCompletion:completed,serverCompletion:{bytesSent:served.bytesSent,totalBytes:served.totalBytes,finishedAt:served.finishedAt},shaAndTextureDecodePassed:sceneVerified,
+        objectShaGatePassed:!!objectGateCrossed,verificationBasis:objectGateCrossed?'Locked object SHA and JSON parse gate crossed before the recorded fields request; full model intentionally unavailable.':'Complete original scene SHA gates and decoded original texture bindings.'});
     }else{failure.classification='unexpectedFailure';row.unexpectedFailures.push(failure);}
   }
 }
 
 async function main(){
+  const allScenarios=['normal','partial-fields-disconnect','permanent-fields-failure','slow-continuous-fields'];
+  const scenarios=process.env.QA_SCENARIOS===undefined?allScenarios:process.env.QA_SCENARIOS.split(',').map(s=>s.trim());
+  assert(scenarios.length>0&&scenarios.every(s=>allScenarios.includes(s))&&new Set(scenarios).size===scenarios.length,'QA_SCENARIOS must contain unique known scenario names');
   const root=path.resolve(process.env.REPO_ROOT||process.cwd()),output=path.resolve(process.env.NETWORK_QA_OUT||path.join(__dirname,'qa-network'));
   const entry=path.relative(root,__dirname);assert(!entry.startsWith('..')&&!path.isAbsolute(entry),'Entry must be inside the served repository');
   fs.mkdirSync(output,{recursive:true});
@@ -61,7 +71,7 @@ async function main(){
   let browser;const cases=[];
   try{
     browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
-    for(const scenario of ['normal','partial-fields-disconnect','permanent-fields-failure','slow-continuous-fields']){
+    for(const scenario of scenarios){
       const context=await browser.newContext({viewport:{width:1440,height:960},serviceWorkers:'block'}),page=await context.newPage();
       page.setDefaultTimeout(120000);
       const row={scenario,syntheticFaultInjection:scenario!=='normal',physicalDeviceTested:false,fieldsRequests:[],networkRequests:[],requestFailures:[],cleanupFailures:[],pageErrors:[],unexpectedFailures:[],httpErrors:[],forbiddenRequests:[],maximumFieldsInFlight:0,routeCount:0,passed:false};
@@ -162,7 +172,7 @@ async function main(){
     }
   }finally{
     if(browser)await browser.close();await fixture.close();
-    fs.writeFileSync(path.join(output,'REPORT.json'),JSON.stringify({status:cases.length===4&&cases.every(x=>x.passed)?'PASS':'FAIL',entryURL,cases,
+    fs.writeFileSync(path.join(output,'REPORT.json'),JSON.stringify({status:cases.length===scenarios.length&&cases.every(x=>x.passed)?'PASS':'FAIL',statusScope:'selected-scenarios',selectedScenarios:scenarios,omittedScenarios:allScenarios.filter(s=>!scenarios.includes(s)),fullSuiteExecuted:scenarios.length===allScenarios.length,entryURL,cases,
       physicalDeviceTested:false,syntheticFaultInjection:true,sourceModelModified:false,fixtureServesRepositoryOnly:true,
       serverRequests:fixture.requests,limits:['Synthetic CI failure/slow-stream tests are not an iPhone/iPad or user-network reproduction.','No geometry, material, source animation or model files are changed.']},null,2));
   }

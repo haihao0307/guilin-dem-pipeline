@@ -1,0 +1,54 @@
+name: Original teacher A4 public readonly QA
+on:
+  push:
+    branches: ['qa/a4-mark3-rule-conversion-r01-20261017']
+    paths:
+      - '.github/workflows/train-original-loading-public.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-public-qa/**'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/**'
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-public-qa
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-full-source-replica-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Await exact Pages entry before public browser check
+        run: |
+          python3 - <<'PYWAIT'
+          import urllib.request,time,hashlib
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/'
+          for attempt in range(60):
+            try:
+              data=urllib.request.urlopen(url,timeout=20).read()
+              if hashlib.sha256(data).hexdigest()=='69eb61efb5f5041d5d83fb429774258071dca44da1aa55459d4cac9de5bb46cb':break
+            except Exception as e: print(attempt,str(e),flush=True)
+            time.sleep(15)
+          else: raise RuntimeError('Expected Pages entry not ready')
+          PYWAIT
+      - name: Verify original public teacher scene only
+        run: |
+          node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-public-qa/browser.cjs
+        env:
+          TARGET_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/
+          EXPECT_ORTHOGRAPHIC: '1' 
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: teacher-original-public-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-public-qa/qa/
+          retention-days: 14
