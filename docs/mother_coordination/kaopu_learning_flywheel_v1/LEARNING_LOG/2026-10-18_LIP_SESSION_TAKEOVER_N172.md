@@ -81,5 +81,5 @@ This is classifier evidence only. No production mutation, browser rerun, workflo
 
 - PR #303 production files and Mother branch were not modified.
 - No production acceptance, adoption or user acceptance is claimed.
-- Mother routing: `NOT_QUERIED`.
-- Lifecycle: `POSTED=false; ACKNOWLEDGED=false; IMPLEMENTED=false; GATE-RUN=false; ADOPTED=false; USER-ACCEPTED=false`.
+- Mother routing: `POSTED` to PR #303 comment https://github.com/haihao0307/guilin-dem-pipeline/pull/303#issuecomment-6245340016.
+- Lifecycle: `POSTED=true; ACKNOWLEDGED=false; IMPLEMENTED=false; GATE-RUN=false; ADOPTED=false; USER-ACCEPTED=false`.
