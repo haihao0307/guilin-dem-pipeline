@@ -1,0 +1,746 @@
+{
+  "schema": "kaopu/lip-archive-fresh-context-qa@1",
+  "version": "LIP-REALISM-R01.1",
+  "startedAt": "2026-10-18T04:00:08.594Z",
+  "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+  "buildCommit": "36e5e11a13ba299915dc07e1800c72973f0f7e44",
+  "verificationCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+  "runId": "39095533327",
+  "runAttempt": "1",
+  "original": {
+    "commit": "0db4b3c0e5e6e86663be6466fa7ab4b486bd5420",
+    "previewSHA256": "4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231",
+    "role": "BASELINE_ONLY"
+  },
+  "candidate": {
+    "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+    "rawURL": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+    "previewSHA256": "29d2e2bcf30cacd10af822de9acfd26dcf1908a212291df0398f1e9cc3b09e5a"
+  },
+  "tests": [
+    {
+      "name": "original R01 legacy save buttons reproduce the missing-lip archive bug",
+      "passed": true,
+      "elapsedMS": 638,
+      "result": {
+        "head": {
+          "name": "original-head-save",
+          "file": "original-head-save.json",
+          "suggestedFilename": "skin-fullbody-r02-person.json",
+          "bytes": 23761,
+          "sha256": "a32a0ba163f556d701c7f8706dc4cf54f1297464e6b07cd54baaa2711d242a34",
+          "hasLipRealism": false,
+          "hasCalibration": false
+        },
+        "body": {
+          "name": "original-body-save",
+          "file": "original-body-save.json",
+          "suggestedFilename": "skin-fullbody-r02-person.json",
+          "bytes": 23761,
+          "sha256": "a32a0ba163f556d701c7f8706dc4cf54f1297464e6b07cd54baaa2711d242a34",
+          "hasLipRealism": false,
+          "hasCalibration": false
+        },
+        "latestRouteContainsLipData": true
+      }
+    },
+    {
+      "name": "archive-only repair preserves default shader, geometry, calibration and full pixels",
+      "passed": true,
+      "elapsedMS": 28542,
+      "result": {
+        "shaders": {
+          "lip": {
+            "sha256": "4ae353c2facf16d6b85febe12973f04960e755241aa8629fc5578e3a9185d88d",
+            "bytes": 28267
+          },
+          "head": {
+            "sha256": "2ad5f16ea48d8f152c92baa3e436392c49ef6a045c3277c0d57ec4293b9d1b86",
+            "bytes": 9745
+          },
+          "body": {
+            "sha256": "d463990caa68caaa75e0b049a2968bb416a5ee8d69d4dc6418a4ae8e94a61fe8",
+            "bytes": 18023
+          }
+        },
+        "geometryExact": true,
+        "calibrationExact": true,
+        "pixelsExact": true,
+        "frame": {
+          "width": 900,
+          "height": 720,
+          "sha256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3",
+          "nonUniformPixels": 619309
+        }
+      }
+    },
+    {
+      "name": "all repaired UI and API saves retain the complete non-default person",
+      "passed": true,
+      "elapsedMS": 807,
+      "result": {
+        "primary": {
+          "name": "saved-person",
+          "file": "saved-person.json",
+          "suggestedFilename": "lip-realism-r01-1-person.json",
+          "bytes": 2142762,
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "hasLipRealism": true,
+          "hasCalibration": true
+        },
+        "head": {
+          "name": "repaired-head-save",
+          "file": "repaired-head-save.json",
+          "suggestedFilename": "lip-realism-r01-1-person.json",
+          "bytes": 2142762,
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "hasLipRealism": true,
+          "hasCalibration": true
+        },
+        "body": {
+          "name": "repaired-body-save",
+          "file": "repaired-body-save.json",
+          "suggestedFilename": "lip-realism-r01-1-person.json",
+          "bytes": 2142762,
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "hasLipRealism": true,
+          "hasCalibration": true
+        },
+        "api": {
+          "name": "repaired-body-api-save",
+          "file": "repaired-body-api-save.json",
+          "suggestedFilename": "lip-realism-r01-1-person.json",
+          "bytes": 2142762,
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "hasLipRealism": true,
+          "hasCalibration": true
+        },
+        "visibleControlChange": true,
+        "aliases": {
+          "controller": {
+            "ownsImplementation": true
+          },
+          "fullCommonWorkbench": {
+            "archiveIsSharedDelegate": true,
+            "restoreIsSharedDelegate": true
+          },
+          "headProceduralSkin": {
+            "archiveIsSharedDelegate": true,
+            "restoreIsSharedDelegate": true
+          },
+          "bodyProceduralSkin": {
+            "archiveIsSharedDelegate": true,
+            "restoreIsSharedDelegate": true
+          },
+          "lipRealism": {
+            "archiveIsSharedDelegate": true,
+            "restoreIsSharedDelegate": true
+          }
+        }
+      }
+    },
+    {
+      "name": "mismatched identity is rejected before a different fresh person can mutate",
+      "passed": true,
+      "elapsedMS": 34225,
+      "result": {
+        "rejection": {
+          "rejected": true,
+          "error": "Error: 唇纹校准不属于此人物档案"
+        },
+        "unchanged": true,
+        "frame": {
+          "width": 900,
+          "height": 720,
+          "sha256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3",
+          "nonUniformPixels": 619309
+        }
+      }
+    },
+    {
+      "name": "fresh reader 1 restores exact disk archive through #ps-file",
+      "passed": true,
+      "elapsedMS": 75278,
+      "result": {
+        "input": {
+          "selector": "#ps-file",
+          "method": "Playwright setInputFiles on existing production input and awaited original async onchange completion",
+          "file": "saved-person.json",
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "status": "本版嘴唇 · 同一总台人物 · 局部种子 2917"
+        },
+        "normalNativeGeometryUpdatePerformed": true,
+        "exactCalibration": true,
+        "exactGeometry": true,
+        "exactParameters": true,
+        "exactPixels": true,
+        "frame": {
+          "width": 900,
+          "height": 720,
+          "sha256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a",
+          "nonUniformPixels": 629223
+        }
+      }
+    },
+    {
+      "name": "fresh reader 2 restores exact disk archive through #lr-file",
+      "passed": true,
+      "elapsedMS": 101082,
+      "result": {
+        "input": {
+          "selector": "#lr-file",
+          "method": "Playwright setInputFiles on existing production input and awaited original async onchange completion",
+          "file": "saved-person.json",
+          "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+          "status": "本版嘴唇 · 同一总台人物 · 局部种子 2917"
+        },
+        "normalNativeGeometryUpdatePerformed": true,
+        "exactCalibration": true,
+        "exactGeometry": true,
+        "exactParameters": true,
+        "exactPixels": true,
+        "frame": {
+          "width": 900,
+          "height": 720,
+          "sha256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a",
+          "nonUniformPixels": 629223
+        }
+      }
+    },
+    {
+      "name": "legacy archive without calibration stays compatible without an exact-pixels claim",
+      "passed": true,
+      "elapsedMS": 69191,
+      "result": {
+        "input": {
+          "selector": "#ps-file",
+          "method": "Playwright setInputFiles on existing production input and awaited original async onchange completion",
+          "file": "legacy-person.json",
+          "sha256": "9aeb5677162108bfe0887d47497cc32ec750c281059aa039c1abbe5d0d4dd2f5",
+          "status": "本版嘴唇 · 同一总台人物 · 局部种子 2917"
+        },
+        "accepted": true,
+        "beforePerturbedRedness": 0.23,
+        "restoredRedness": 0.67,
+        "parametersExact": true,
+        "calibration": {
+          "schema": "kaopu/lip-calibration@1",
+          "byteOrder": "float32-le",
+          "count": 198406,
+          "lastKey": "[[0.1013993,-0.2605456,-0.4194548,-0.4293052,0.6549412,0.3867096,1.0221125,-0.5869233,-0.0901732,0.7514331,1.3634164,-0.2418131,-0.5901718,0.1268409,0.8025497,0.4672439,0.4167226,-0.4955377,-0.9387031,0.8674629,0.3217328,-0.0201716,-0.2361881,0.3692114,-0.0459149,-0.3223047,-0.1474553,0.2063125,-0.5722966,0.5190786,-0.1513666,-0.6688545,0.1952772,-0.369068,-0.1329721,0.2771255,-0.6492724,-1.7448918,-0.940668,0.4898735,-0.631949,-1.4621542,-0.4408762,0.4969007,0.6937219,0.3258974,0.3758564,0.5143166,0.5080719,-0.7943666,-0.3067865,-0.3498633,-0.3397749,-0.5450747,-0.2485926,-0.3968865,-0.0183056,-0.3406246,0.0535184,-1.3448108,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],{\"gender\":0,\"age\":0.74,\"muscle\":0.96,\"weight\":0.66,\"height\":0.39,\"proportions\":0.38,\"cupsize\":0.5,\"firmness\":0.5,\"african\":0.5,\"asian\":0.5,\"caucasian\":0.5},{\"measure-shoulder-dist-incr\":0.27,\"measure-waist-circ-incr\":0.04,\"torso-scale-depth-incr\":0.08,\"hip-scale-horiz-incr\":0.045,\"l-upperarm-fat-incr\":0.04,\"r-upperarm-fat-incr\":0.04,\"l-upperleg-fat-incr\":0.05,\"r-upperleg-fat-incr\":0.05,\"l-upperarm-shoulder-muscle-incr\":0.36,\"r-upperarm-shoulder-muscle-incr\":0.36,\"l-upperleg-muscle-incr\":0.2808,\"r-upperleg-muscle-incr\":0.2808,\"torso-muscle-dorsi-incr\":0.27,\"torso-vshape-incr\":0.216,\"head-fat-incr\":0.12,\"head-scale-horiz-incr\":0.13,\"chin-width-incr\":0.12,\"chin-height-incr\":0.02,\"chin-prominent-incr\":0.06,\"measure-neck-circ-incr\":0.25,\"neck-double-incr\":0.035,\"l-cheek-volume-incr\":0.13,\"r-cheek-volume-incr\":0.13,\"l-cheek-bones-incr\":0.22,\"r-cheek-bones-incr\":0.22,\"chin-bones-incr\":0.08,\"nose-scale-depth-incr\":0.045,\"forehead-temple-incr\":0.035},null]",
+          "reference": {
+            "sha256": "4561b9741300fdd8fe6990c91e91121bab9636979fbe1f6f013ab962598d7d75",
+            "byteLength": 793624,
+            "length": 198406
+          },
+          "referenceHorizontal": {
+            "sha256": "192a0fa114ab4d2c6569cd16abc8304fd7737c7c467319bb117c4b6376f39884",
+            "byteLength": 793624,
+            "length": 198406
+          }
+        },
+        "geometry": {
+          "attributes": {
+            "position": "f5096660238fd138d2afba15f38135482e592e9e1dfbcded36d182bc23cf02fd",
+            "normal": "49ff2bccecff0f7546092199efa6b6885ad35ab586c6b3ac1200843edb25ed5b",
+            "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+            "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+            "skinIndex": null,
+            "skinWeight": null,
+            "l19State": "663f2c3ecb0fc44210280f238b5c27c73692d32ffc47af537ff349ed53b50742",
+            "l19Detail": "1d66b4ff6406a47f65bb385940b87f1650c66f99e1397b0b495187dbd8de59ef"
+          },
+          "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+          "canonicalPositions": "f1eea00904a8fb8d870d27688fb08b8ffeb9da1cc5d8b761ec2c5aa353177a4c",
+          "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+          "vertices": 266098,
+          "triangles": 531702
+        },
+        "frame": {
+          "width": 900,
+          "height": 720,
+          "sha256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a",
+          "nonUniformPixels": 629223
+        },
+        "exactGeometryOrCalibrationOrPixelComparisonPerformed": false
+      }
+    },
+    {
+      "name": "mobile browser viewport remains usable",
+      "passed": true,
+      "elapsedMS": 17658,
+      "result": {
+        "viewport": [
+          390,
+          844
+        ],
+        "scrollWidth": 390,
+        "ready": true,
+        "controls": 8,
+        "saveButton": true,
+        "fileInputs": [
+          true,
+          true
+        ],
+        "canvas": {
+          "width": 376,
+          "height": 400
+        },
+        "physicalPhone": false
+      }
+    },
+    {
+      "name": "every page has zero runtime, shader and resource errors",
+      "passed": true,
+      "elapsedMS": 1,
+      "result": {
+        "contexts": 4,
+        "closed": true,
+        "errors": 0
+      }
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "resourceErrors": [],
+  "contexts": [
+    {
+      "label": "original-r01",
+      "createdAt": "2026-10-18T04:00:08.859Z",
+      "storageStateSupplied": false,
+      "closed": true,
+      "publicReadback": {
+        "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0db4b3c0e5e6e86663be6466fa7ab4b486bd5420/kaopu-unified-human-workbench/lip-realism-r01/preview.html",
+        "httpStatus": 200,
+        "bytes": 5475869,
+        "sha256": "4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231"
+      },
+      "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/0db4b3c0e5e6e86663be6466fa7ab4b486bd5420/kaopu-unified-human-workbench/lip-realism-r01/preview.html",
+      "host": {
+        "ready": true,
+        "errors": [],
+        "lipLoaderErrors": [],
+        "lipErrors": [],
+        "finalFrame": true,
+        "version": "LIP-REALISM-R01",
+        "source": {
+          "version": "LIP-REALISM-R01",
+          "sourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+          "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+          "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+          "moduleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d"
+        },
+        "initialPortrait": "P01"
+      },
+      "readyMS": 24943,
+      "startupDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 91147.8,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 35,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "readyAndDrainedMS": 116101,
+      "finalDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 5335.200000000012,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 41,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pageClosed": true,
+      "closedAt": "2026-10-18T04:02:40.425Z"
+    },
+    {
+      "label": "producer",
+      "createdAt": "2026-10-18T04:02:40.429Z",
+      "storageStateSupplied": false,
+      "closed": true,
+      "publicReadback": {
+        "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+        "httpStatus": 200,
+        "bytes": 5477589,
+        "sha256": "29d2e2bcf30cacd10af822de9acfd26dcf1908a212291df0398f1e9cc3b09e5a"
+      },
+      "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+      "host": {
+        "ready": true,
+        "errors": [],
+        "lipLoaderErrors": [],
+        "lipErrors": [],
+        "finalFrame": true,
+        "version": "LIP-REALISM-R01.1",
+        "source": {
+          "version": "LIP-REALISM-R01.1",
+          "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+          "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+          "inheritedLipVersion": "LIP-REALISM-R01",
+          "inheritedLipSourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+          "inheritedLipModuleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d",
+          "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+          "moduleSHA256": "4f680a4ab00b40de66b42aef8adcb64e50f3fd3df202d3c6039d412d6a7f31b3"
+        },
+        "initialPortrait": "P01"
+      },
+      "readyMS": 24681,
+      "startupDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 90214.60000000003,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 35,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "readyAndDrainedMS": 114902,
+      "finalDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 37.100000000034925,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 57,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pageClosed": true,
+      "closedAt": "2026-10-18T04:06:36.746Z"
+    },
+    {
+      "label": "reader-1",
+      "createdAt": "2026-10-18T04:06:36.776Z",
+      "storageStateSupplied": false,
+      "closed": true,
+      "publicReadback": {
+        "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+        "httpStatus": 200,
+        "bytes": 5477589,
+        "sha256": "29d2e2bcf30cacd10af822de9acfd26dcf1908a212291df0398f1e9cc3b09e5a"
+      },
+      "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+      "host": {
+        "ready": true,
+        "errors": [],
+        "lipLoaderErrors": [],
+        "lipErrors": [],
+        "finalFrame": true,
+        "version": "LIP-REALISM-R01.1",
+        "source": {
+          "version": "LIP-REALISM-R01.1",
+          "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+          "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+          "inheritedLipVersion": "LIP-REALISM-R01",
+          "inheritedLipSourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+          "inheritedLipModuleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d",
+          "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+          "moduleSHA256": "4f680a4ab00b40de66b42aef8adcb64e50f3fd3df202d3c6039d412d6a7f31b3"
+        },
+        "initialPortrait": "P01"
+      },
+      "readyMS": 23697,
+      "startupDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 90131,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 35,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "readyAndDrainedMS": 113837,
+      "finalDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 1.8000000000465661,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 54,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pageClosed": true,
+      "closedAt": "2026-10-18T04:10:20.706Z"
+    },
+    {
+      "label": "reader-2",
+      "createdAt": "2026-10-18T04:10:20.711Z",
+      "storageStateSupplied": false,
+      "closed": true,
+      "publicReadback": {
+        "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+        "httpStatus": 200,
+        "bytes": 5477589,
+        "sha256": "29d2e2bcf30cacd10af822de9acfd26dcf1908a212291df0398f1e9cc3b09e5a"
+      },
+      "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html",
+      "host": {
+        "ready": true,
+        "errors": [],
+        "lipLoaderErrors": [],
+        "lipErrors": [],
+        "finalFrame": true,
+        "version": "LIP-REALISM-R01.1",
+        "source": {
+          "version": "LIP-REALISM-R01.1",
+          "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+          "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+          "inheritedLipVersion": "LIP-REALISM-R01",
+          "inheritedLipSourceCommit": "544ec81bcef6185a553df138585c7059e832a122",
+          "inheritedLipModuleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d",
+          "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+          "moduleSHA256": "4f680a4ab00b40de66b42aef8adcb64e50f3fd3df202d3c6039d412d6a7f31b3"
+        },
+        "initialPortrait": "P01"
+      },
+      "readyMS": 27238,
+      "startupDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 91260.1000000001,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 35,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "readyAndDrainedMS": 118508,
+      "finalDrain": {
+        "method": "synchronous CPU readPixels; no new render",
+        "elapsedMS": 3.900000000023283,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "frame": 70,
+        "drawCalls": 2,
+        "triangles": 531702,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pageClosed": true,
+      "closedAt": "2026-10-18T04:15:27.696Z"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "original-head-save",
+      "file": "original-head-save.json",
+      "suggestedFilename": "skin-fullbody-r02-person.json",
+      "bytes": 23761,
+      "sha256": "a32a0ba163f556d701c7f8706dc4cf54f1297464e6b07cd54baaa2711d242a34",
+      "hasLipRealism": false,
+      "hasCalibration": false
+    },
+    {
+      "name": "original-body-save",
+      "file": "original-body-save.json",
+      "suggestedFilename": "skin-fullbody-r02-person.json",
+      "bytes": 23761,
+      "sha256": "a32a0ba163f556d701c7f8706dc4cf54f1297464e6b07cd54baaa2711d242a34",
+      "hasLipRealism": false,
+      "hasCalibration": false
+    },
+    {
+      "name": "saved-person",
+      "file": "saved-person.json",
+      "suggestedFilename": "lip-realism-r01-1-person.json",
+      "bytes": 2142762,
+      "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+      "hasLipRealism": true,
+      "hasCalibration": true
+    },
+    {
+      "name": "repaired-head-save",
+      "file": "repaired-head-save.json",
+      "suggestedFilename": "lip-realism-r01-1-person.json",
+      "bytes": 2142762,
+      "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+      "hasLipRealism": true,
+      "hasCalibration": true
+    },
+    {
+      "name": "repaired-body-save",
+      "file": "repaired-body-save.json",
+      "suggestedFilename": "lip-realism-r01-1-person.json",
+      "bytes": 2142762,
+      "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+      "hasLipRealism": true,
+      "hasCalibration": true
+    },
+    {
+      "name": "repaired-body-api-save",
+      "file": "repaired-body-api-save.json",
+      "suggestedFilename": "lip-realism-r01-1-person.json",
+      "bytes": 2142762,
+      "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+      "hasLipRealism": true,
+      "hasCalibration": true
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "original-default",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 635750,
+      "sha256": "351a3d283860bdd6fab56e1a72e43c7af2dd37516bd3c22f0fb5e55d369eecaa",
+      "framebufferSHA256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3"
+    },
+    {
+      "name": "candidate-default",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 635750,
+      "sha256": "351a3d283860bdd6fab56e1a72e43c7af2dd37516bd3c22f0fb5e55d369eecaa",
+      "framebufferSHA256": "62acd21b56612a784c018cccb9461afba46cd9316948c30ee264e5e60967fbf3"
+    },
+    {
+      "name": "producer-saved",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 654321,
+      "sha256": "8c8bff78c84c9133081984782263b5174491026c6a5d58711c8675346798b870",
+      "framebufferSHA256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a"
+    },
+    {
+      "name": "reader-1-restored",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 654321,
+      "sha256": "8c8bff78c84c9133081984782263b5174491026c6a5d58711c8675346798b870",
+      "framebufferSHA256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a"
+    },
+    {
+      "name": "reader-2-restored",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 654321,
+      "sha256": "8c8bff78c84c9133081984782263b5174491026c6a5d58711c8675346798b870",
+      "framebufferSHA256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a"
+    },
+    {
+      "name": "legacy-compatible",
+      "kind": "actual-WebGL-framebuffer",
+      "width": 900,
+      "height": 720,
+      "bytes": 654321,
+      "sha256": "8c8bff78c84c9133081984782263b5174491026c6a5d58711c8675346798b870",
+      "framebufferSHA256": "7b4f113739829c97fbeaf15acdee3488083f2496d97238a75b00618e2c04431a"
+    },
+    {
+      "name": "mobile-390x844",
+      "kind": "native-browser-viewport",
+      "bytes": 122608,
+      "sha256": "1f8f301c30af3a661e2818482a48f28c3651d5d41151278d29e597688d2440b3"
+    }
+  ],
+  "completed": true,
+  "shareAllowed": true,
+  "publicHttpsPassed": true,
+  "browserPassed": true,
+  "interactive3D": true,
+  "sourceModified": true,
+  "staticImageSubstitute": false,
+  "visualAcceptance": false,
+  "userVisualAccepted": false,
+  "productionReady": false,
+  "softwareRenderer": true,
+  "physicalPhone": false,
+  "canvasComparison": {
+    "width": 900,
+    "height": 720,
+    "devicePixelRatio": 1,
+    "pixelTolerance": 0
+  },
+  "limitations": [
+    "Archive routing and fresh BrowserContext recovery only; no new lip anatomy, shader, or performance result is claimed.",
+    "Full-frame byte equality is a same-machine Chromium SwiftShader check, not a physical GPU or physical phone certificate.",
+    "Camera and neutral inspection lighting are explicitly reapplied comparison conditions; these are not claimed to be archived.",
+    "portraitBank.selected() is a UI selection cache; persisted identity is verified from archived native identity and geometry.",
+    "The frozen host retains its remote asset loader. Offline self-containment is not claimed.",
+    "Legacy archives without calibration are accepted for compatibility; no exact calibration, geometry or pixel recovery is claimed for them."
+  ],
+  "lastProgress": {
+    "sequence": 96,
+    "at": "2026-10-18T04:15:27.763Z",
+    "name": "process",
+    "event": "end",
+    "completed": true
+  },
+  "updatedAt": "2026-10-18T04:15:27.763Z",
+  "activeStages": [],
+  "browserVersion": "145.0.7632.6",
+  "playwrightVersion": "1.58.2",
+  "diskTransfer": {
+    "file": "saved-person.json",
+    "sha256": "b4997d2a61ec816c634b39f27f1ff6cfd15be0d80acff681606df97cf0b5dd82",
+    "bytes": 2142762,
+    "producerClosedAt": "2026-10-18T04:06:36.746Z",
+    "transport": "saved JSON bytes on disk; no page objects or browser storage passed to readers"
+  },
+  "cleanup": {
+    "completed": true,
+    "browserClosed": true,
+    "errors": []
+  },
+  "finishedAt": "2026-10-18T04:15:27.763Z"
+}
