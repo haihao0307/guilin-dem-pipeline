@@ -12,7 +12,7 @@ permissions:
 jobs:
   connected-native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 50
     defaults:
       run:
         working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01
@@ -42,7 +42,20 @@ jobs:
           node a6-native-r03/interaction.test.mjs
           node --check a6-native-r03/view.mjs
           node --check a6-native-r03/browser.cjs
-      - name: Actual connected desktop and mobile interaction
+      - name: Wait for exact public R03 publication
+        env:
+          NATIVE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a6-native-r03/index.html
+        run: |
+          matched=0
+          for i in $(seq 1 90); do
+            curl -fsSL --max-time 30 "$NATIVE_URL?verify=$i" -o /tmp/a6-public.html || true
+            if [ "$(sha256sum /tmp/a6-public.html 2>/dev/null | cut -d' ' -f1)" = "af2ff9aed1bd253b8a96a7929ce1e0cd89320cbfc72c9eb94e06ac3e99a42042" ]; then matched=1; break; fi
+            sleep 20
+          done
+          test "$matched" = 1
+      - name: Actual PUBLIC desktop and mobile interaction
+        env:
+          NATIVE_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a6-native-r03/index.html
         run: node a6-native-r03/browser.cjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
