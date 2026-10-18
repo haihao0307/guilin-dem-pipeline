@@ -1,0 +1,150 @@
+name: Lip R01.1 complete archive routing and fresh context recovery
+on:
+  push:
+    branches: [fix/lip-r01-archive-recovery-20261018]
+    paths:
+      - 'kaopu-unified-human-workbench/lip-realism-r01-1/LipSurface.js'
+      - 'kaopu-unified-human-workbench/lip-realism-r01-1/build.cjs'
+      - 'kaopu-unified-human-workbench/lip-realism-r01-1/verify-fresh.cjs'
+      - '.github/workflows/lip-r01-fresh-restore.yml'
+permissions:
+  contents: write
+concurrency:
+  group: lip-r01-fresh-restore-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  LIP_BRANCH: fix/lip-r01-archive-recovery-20261018
+  LIP_DIR: kaopu-unified-human-workbench/lip-realism-r01-1
+jobs:
+  verify:
+    if: github.repository == 'haihao0307/guilin-dem-pipeline' && github.ref == 'refs/heads/fix/lip-r01-archive-recovery-20261018'
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          sparse-checkout: |
+            .github/workflows
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/lip-realism-r01
+            kaopu-unified-human-workbench/lip-realism-r01-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Freeze exact source and evidence paths
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$LIP_BRANCH"
+          test "$GITHUB_REPOSITORY" = haihao0307/guilin-dem-pipeline
+          lip_source_sha="$(git rev-parse HEAD)"
+          test "$lip_source_sha" = "$GITHUB_SHA"
+          echo "SOURCE_SHA=$lip_source_sha" >> "$GITHUB_ENV"
+          echo "LIP_VERIFICATION_SHA=$lip_source_sha" >> "$GITHUB_ENV"
+          echo "LIP_RUN_KEY=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          echo "LIP_QA_OUT=$LIP_DIR/qa/fresh-context/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Install isolated browser tooling pinned to original R01 QA
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lip-archive-runtime" --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/lip-archive-runtime/node_modules" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/lip-archive-runtime/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Syntax, frozen host and unchanged original production checks
+        run: |
+          node --check "$LIP_DIR/LipSurface.js"
+          node --check "$LIP_DIR/build.cjs"
+          node --check "$LIP_DIR/verify-fresh.cjs"
+          python - <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          expected={
+            'kaopu-unified-human-workbench/human-integrated-r07/preview.html':'d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a',
+            'kaopu-unified-human-workbench/lip-realism-r01/preview.html':'4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231',
+            'kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js':'0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d'
+          }
+          for file,digest in expected.items():
+            assert sha256(Path(file).read_bytes()).hexdigest()==digest,file+' changed'
+          PY
+      - name: Build only the separate R01.1 candidate directory
+        run: node "$LIP_DIR/build.cjs"
+      - name: Publish fixed unverified candidate bytes with fast-forward race guard
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          from pathlib import Path
+          from hashlib import sha256
+          directory=Path(os.environ['LIP_DIR'])
+          allowed={str(directory/'preview.html'),str(directory/'BUILD_MANIFEST.json')}
+          changed=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
+          untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()
+          assert set(changed+untracked)<=allowed,'Build modified paths outside the two declared outputs'
+          manifest=json.loads((directory/'BUILD_MANIFEST.json').read_text())
+          assert manifest['version']=='LIP-REALISM-R01.1'
+          assert manifest['sourceCommit']==os.environ['SOURCE_SHA']
+          assert manifest['hostRestorationExact']
+          assert manifest['previewSHA256']==sha256((directory/'preview.html').read_bytes()).hexdigest()
+          PY
+          git fetch --no-tags origin "refs/heads/$LIP_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -f -- "$LIP_DIR/preview.html" "$LIP_DIR/BUILD_MANIFEST.json"
+          git commit -m "build: fixed unverified lip R01.1 archive repair candidate"
+          lip_build_sha="$(git rev-parse HEAD)"
+          git push origin "HEAD:refs/heads/$LIP_BRANCH"
+          echo "LIP_BUILD_SHA=$lip_build_sha" >> "$GITHUB_ENV"
+          echo "LIP_EXPECTED_PREVIEW_SHA256=$(sha256sum "$LIP_DIR/preview.html" | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
+      - name: Bounded public QA including two new reader contexts
+        run: timeout --signal=TERM --kill-after=20s 20m node "$LIP_DIR/verify-fresh.cjs"
+      - name: Validate actual completion and persist this run only
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          from pathlib import Path
+          from hashlib import sha256
+          directory=Path(os.environ['LIP_DIR'])
+          evidence=Path(os.environ['LIP_QA_OUT'])
+          qa=json.loads((evidence/'qa.json').read_text())
+          assert qa['completed'] and qa['shareAllowed'] and qa['publicHttpsPassed'] and qa['browserPassed']
+          assert qa['cleanup']['completed'] and qa['cleanup']['browserClosed'] and not qa.get('cleanupError')
+          assert qa['tests'] and all(t['passed'] for t in qa['tests'])
+          assert qa['sourceCommit']==os.environ['SOURCE_SHA']
+          assert qa['buildCommit']==os.environ['LIP_BUILD_SHA']
+          assert qa['verificationCommit']==os.environ['LIP_VERIFICATION_SHA']
+          assert qa['candidate']['previewSHA256']==os.environ['LIP_EXPECTED_PREVIEW_SHA256']
+          assert len(qa['contexts'])==4 and all(c['closed'] for c in qa['contexts'])
+          assert all(not qa[key] for key in ['errors','consoleErrors','failedRequests','resourceErrors'])
+          assert qa['diskTransfer']['sha256']==sha256((evidence/'saved-person.json').read_bytes()).hexdigest()
+          assert len([t for t in qa['tests'] if t['name'].startswith('fresh reader ')])==2
+          receipt={
+            'schema':'kaopu/lip-archive-repair-publication@1','version':'LIP-REALISM-R01.1',
+            'sourceCommit':qa['sourceCommit'],'buildCommit':qa['buildCommit'],'verificationCommit':qa['verificationCommit'],
+            'publicURL':qa['candidate']['publicURL'],'previewSHA256':qa['candidate']['previewSHA256'],
+            'verifiedAt':qa['finishedAt'],'runId':qa['runId'],'runAttempt':qa['runAttempt'],
+            'qaPath':str(evidence/'qa.json'),'sourceModified':True,'archiveRoutingChanged':True,
+            'productionRenderingChanged':False,'interactive3D':True,'staticImageSubstitute':False,
+            'publicHttpsPassed':True,'browserPassed':True,'shareAllowed':True,
+            'visualAcceptance':False,'userVisualAccepted':False,'productionReady':False,
+            'softwareRenderer':True,'physicalPhone':False,'knownLimitations':qa['limitations']
+          }
+          (directory/'PUBLICATION_PROOF.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          changed=subprocess.check_output(['git','diff','--name-only','HEAD'],text=True).splitlines()
+          untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()
+          assert all(p==str(directory/'PUBLICATION_PROOF.json') or p.startswith(str(evidence)+'/') for p in changed+untracked),'Unrelated changes appeared during QA'
+          for p in evidence.rglob('*'):
+            if p.is_file():assert p.suffix in {'.json','.jsonl','.png'},'Unexpected evidence file type'
+          PY
+          git fetch --no-tags origin "refs/heads/$LIP_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$LIP_BUILD_SHA"
+          git add -f -- "$LIP_QA_OUT" "$LIP_DIR/PUBLICATION_PROOF.json"
+          git commit -m "test: public R01.1 complete saves and fresh context recovery evidence"
+          git push origin "HEAD:refs/heads/$LIP_BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-r01-archive-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.LIP_QA_OUT }}/
+            kaopu-unified-human-workbench/lip-realism-r01-1/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-realism-r01-1/PUBLICATION_PROOF.json
+          if-no-files-found: warn
+          retention-days: 30
