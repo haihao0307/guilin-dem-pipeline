@@ -1,0 +1,30 @@
+{
+  "reviewedAt": "2026-10-18T06:18:29.530981+00:00",
+  "reviewType": "Independent review of first failed R03 run and bounded QA correction",
+  "failedRun": 39102640232,
+  "failedSourceCommit": "3e5d1dfb11cb8a40982e3ff964d06d2ff13d4d0f",
+  "failedBuildCommit": "be2b7b70f9a08e9f5e053c8ac9d22e8396672499",
+  "failedArtifactID": 12127561625,
+  "failedArtifactZIP_SHA256": "3ae77996afe54801c7f757141f4b90fe5aa57c598ef6f6ab47f44abdd9c68932",
+  "failedQA_SHA256": "5a1a3f0eae0dda7518c1acde1fbf0b628d5e41024a82782088ce2902df49e4cd",
+  "productionModuleSHA256": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919",
+  "verificationBeforeSHA256": "5115e0a1843174419dd790c3932c8a45f5a115294040db2367b43dca0d8a2e3b",
+  "verificationAfterSHA256": "2f4f3e8fd21e0b00659447a888cfe366c2e10196068459823e01ffee0c384baa",
+  "failureReviewSHA256": "cd25b915c62732a2bd301d3227358d34c40d452039e2d204d5065d7a4a339cad",
+  "producer": "lip_fresh_qa",
+  "independentVerifier": "lip_progress_audit",
+  "rootReview": "Read failed actual QA, capture-helper diff and successful R01.1 helper; inspected public candidate using actual controls.",
+  "sourceReviewOutcome": "PASS for the bounded QA-only correction; actual next run is still required.",
+  "scope": [
+    "Only frame() changed in the verification script; bytes outside helper unchanged.",
+    "Full native synchronous render, finish and full RGBA read now occur within one browser callback.",
+    "Actual context attributes, counter advance, GL/default framebuffer/draw metadata, pixel hash and nonuniform count are checkpointed before assertions.",
+    "Blank-frame rejection, exact RGBA/geometry/calibration/ROI comparisons and cleanup gates retained.",
+    "Frozen production, builder, workflow, 20% performance ceiling and 24-minute budget unchanged."
+  ],
+  "failureAcknowledgement": "The first static review missed the lifetime of a default framebuffer across separate browser tasks. Old draw counters cannot certify retained pixels. First run is failed, not superseded by a fabricated pass.",
+  "publicOrGPUVerificationPassed": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "reference": "https://registry.khronos.org/webgl/specs/latest/1.0/#THE_DRAWING_BUFFER"
+}

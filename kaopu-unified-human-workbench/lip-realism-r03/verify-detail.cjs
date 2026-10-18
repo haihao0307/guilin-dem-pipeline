@@ -89,12 +89,24 @@ async function controlledView(p){return evaluate(p,()=>{
  return{kind:'native macro',controlled:true,archived:false,width:900,height:720,light:'neutral',position:v.camera.position.toArray(),target:v.orbit.target.toArray(),zoom:v.camera.zoom,fov:v.camera.fov,aspect:v.camera.aspect};
 });}
 async function frame(p,name){
- // Each caller first uses an actual production UI/API action that renders.
- // Drain and read that submitted final frame instead of requesting a duplicate
- // full diffusion render. Require the real renderer counter to have advanced.
- const d=await evaluate(p,()=>{const v=__IDENTITY_QA__.viewer(),r=v.renderer,gl=r.getContext(),errorBefore=gl.getError();gl.finish();const width=gl.drawingBufferWidth,height=gl.drawingBufferHeight,a=new Uint8Array(width*height*4);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,a);let s='';for(let i=0;i<a.length;i+=32768)s+=String.fromCharCode(...a.subarray(i,i+32768));return{width,height,bytes:btoa(s),errorBefore,error:gl.getError(),contextLost:gl.isContextLost(),frame:r.info.render.frame,calls:r.info.render.calls,triangles:r.info.render.triangles,defaultFramebuffer:r.getRenderTarget()===null&&gl.getParameter(gl.FRAMEBUFFER_BINDING)===null};});
- assert.equal(d.errorBefore,0,'GPU error before framebuffer read');assert.equal(d.error,0,'Framebuffer WebGL error');assert.equal(d.contextLost,false);assert.equal(d.width,900);assert.equal(d.height,720);assert(d.defaultFramebuffer,'Readback did not use the final native framebuffer');assert(d.frame>(p.__qaLastFrameRead??-1),'No new production render since previous full-frame read');assert(d.calls>0&&d.triangles>0,'Native scene draw missing');p.__qaLastFrameRead=d.frame;
- const bytes=Buffer.from(d.bytes,'base64');assert.equal(bytes.length,900*720*4);let nonUniformPixels=0;for(let i=4;i<bytes.length;i+=4)if(bytes[i]!==bytes[0]||bytes[i+1]!==bytes[1]||bytes[i+2]!==bytes[2])nonUniformPixels++;
+ // The frozen host does not preserve its default drawing buffer. A render in
+ // an earlier browser task can already have been composited and cleared even
+ // when renderer.info still reports its draw. Use the successful R01.1 method:
+ // complete native viewer.render -> finish -> CPU readPixels in ONE callback.
+ // Do not bypass the inherited material/diffusion wrappers or alter context
+ // attributes to keep an old frame alive.
+ const d=await evaluate(p,()=>{
+  const v=__IDENTITY_QA__.viewer(),r=v.renderer,gl=r.getContext(),errorBefore=gl.getError(),frameBefore=r.info.render.frame,viewerRendersBefore=v.renders,contextAttributes=gl.getContextAttributes(),started=performance.now();
+  const renderResult=v.render(),renderReturnedThenable=!!renderResult&&typeof renderResult.then==='function';
+  gl.finish();const width=gl.drawingBufferWidth,height=gl.drawingBufferHeight,a=new Uint8Array(width*height*4);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,a);const readbackMS=performance.now()-started;
+  let s='';for(let i=0;i<a.length;i+=32768)s+=String.fromCharCode(...a.subarray(i,i+32768));
+  return{width,height,bytes:btoa(s),errorBefore,error:gl.getError(),contextLost:gl.isContextLost(),contextAttributes,frameBefore,frameAfter:r.info.render.frame,viewerRendersBefore,viewerRendersAfter:v.renders,renderReturnedThenable,sameCallbackRenderAndRead:true,readbackMS,calls:r.info.render.calls,triangles:r.info.render.triangles,defaultFramebuffer:r.getRenderTarget()===null&&gl.getParameter(gl.FRAMEBUFFER_BINDING)===null};
+ });
+ const bytes=Buffer.from(d.bytes,'base64');let nonUniformPixels=0;for(let i=4;i<bytes.length;i+=4)if(bytes[i]!==bytes[0]||bytes[i+1]!==bytes[1]||bytes[i+2]!==bytes[2])nonUniformPixels++;
+ // Record the actual return values before any gate can throw. This is raw
+ // readback evidence, not a PASS; PNGs and comparison gates remain unchanged.
+ const {bytes:encodedBytes,...audit}=d;q.frameReadbacks??=[];q.frameReadbacks.push({page:p.__qaLabel,name:name||null,method:'same-callback full native viewer.render -> gl.finish -> CPU RGBA readPixels',...audit,byteLength:bytes.length,framebufferSHA256:sha(bytes),nonUniformPixels,firstRGBA:[...bytes.subarray(0,4)]});checkpoint();
+ assert.equal(d.errorBefore,0,'GPU error before framebuffer read');assert.equal(d.error,0,'Framebuffer WebGL error');assert.equal(d.contextLost,false);assert.equal(d.renderReturnedThenable,false,'Native viewer.render is asynchronous; same-callback frame cannot be certified');assert.equal(d.width,900);assert.equal(d.height,720);assert(d.defaultFramebuffer,'Readback did not use the final native framebuffer');assert(d.frameAfter>d.frameBefore,'Native viewer.render did not advance the renderer in this callback');assert(d.frameAfter>(p.__qaLastFrameRead??-1),'No new production render since previous full-frame read');assert(d.calls>0&&d.triangles>0,'Native scene draw missing');assert.equal(bytes.length,900*720*4);p.__qaLastFrameRead=d.frameAfter;
  assert(nonUniformPixels>d.width*d.height*.01,'Blank framebuffer');const f={width:d.width,height:d.height,bytes,hash:sha(bytes),nonUniformPixels};
  if(name){const png=new PNG({width:d.width,height:d.height});for(let y=0;y<d.height;y++)bytes.copy(png.data,y*d.width*4,(d.height-1-y)*d.width*4,(d.height-y)*d.width*4);const b=PNG.sync.write(png);fs.writeFileSync(path.join(out,name+'.png'),b);q.screenshots.push({name,kind:'actual-WebGL-framebuffer',width:f.width,height:f.height,bytes:b.length,sha256:sha(b),framebufferSHA256:f.hash});}return f;
 }
