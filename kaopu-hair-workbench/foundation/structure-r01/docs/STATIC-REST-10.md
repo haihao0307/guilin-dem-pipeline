@@ -64,3 +64,7 @@ R09 的旋涡只参与较弱先验；其消融路径差约 0.154 mm，视觉作�
 | review/STATUS | 当前阶段、每步判断、未完成项、下一项 | 不因检查通过自动改成整阶段已验收 |
 
 冷启动按新公开页面独立计时。新主方案会与原生人物准备并行预取，历史数据仍按需加载；这只是避免新增等待，不提前宣布 S3 性能通过。人物皮肤算法未改。
+
+## 进入 B3 后的保留方式
+
+R10 的最终产品固定在 aa138fa（payload 5605dca）。inputs/rest10-reference.patch.json.gz 与 roots 文件逐字节来自该不可变提交，由 upper-rest-r11 锁校验；不是从 B3 候选生成的审批。B1/B2 检查继续对该产品执行原约束。compile-rest10 只重现到 .build/rest10-rebuild，不能覆盖当前 R11 产品。后续上段改动另见 [UPPER-REST-11](UPPER-REST-11.md)。
