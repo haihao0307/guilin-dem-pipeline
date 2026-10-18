@@ -38,7 +38,13 @@ function classifyRequestFailures(row,serverRequests){
     const request=row.networkRequests.find(r=>r.id===failure.requestId);
     if(isFields(failure.url)&&((row.scenario==='partial-fields-disconnect'&&request.attempt===1)||row.scenario==='permanent-fields-failure')){failure.classification='injectedFailure';continue;}
     const served=serverRequests.filter(r=>r.method==='GET'&&r.pathname===new URL(failure.url).pathname)[request.attempt-1];
-    const completed=row.state.downloadCompletions.find(e=>e.url===failure.url&&e.attempt===request.attempt);
+    const rewritten=new URL(request.url);rewritten.searchParams.set('_qaSlow','1');
+    // Only reconcile the exact URL rewrite made by this local slow-stream fixture. Do not strip arbitrary query parameters.
+    const ownSlowRewrite=row.scenario==='slow-continuous-fields'&&isFields(request.url)&&request.attempt===1&&
+      rewritten.hostname==='127.0.0.1'&&rewritten.origin===new URL(row.url).origin&&!new URL(request.url).searchParams.has('_qaSlow')&&
+      failure.url===rewritten.href&&served?.slow===true&&new URL(served.url,failure.url).href===rewritten.href;
+    const completionURL=ownSlowRewrite?request.url:failure.url;
+    const completed=row.state.downloadCompletions.find(e=>e.url===completionURL&&e.attempt===request.attempt);
     // Keep the raw failure. Accept only an ERR_ABORTED for a body independently proven complete at BOTH ends,
     // after the original loader's SHA/parse gates and actual material-image decoding have passed.
     const verified=row.state.ready&&!row.state.load.failed&&row.state.errors.length===0&&row.state.source?.sourceObjectSHA256==='749efd6d1b1a19aa97d9d024baa33f4f5df382eb19a2be88c10ef7ba6e1a5fe4';
@@ -54,6 +60,7 @@ function classifyRequestFailures(row,serverRequests){
       completed&&completed.total>0&&completed.loaded===completed.total&&served?.finishedAt&&!served.closedEarly&&!served.cut&&
       served.bytesSent===served.totalBytes&&completed.loaded===served.totalBytes){
       failure.classification='completedBodyLifecycleEvent';row.completedBodyLifecycleEvents.push({failure,clientCompletion:completed,serverCompletion:{bytesSent:served.bytesSent,totalBytes:served.totalBytes,finishedAt:served.finishedAt},shaAndTextureDecodePassed:sceneVerified,
+        fixtureURLReconciliation:ownSlowRewrite?{rule:'exact-local-slow-fixture-query',requestURL:request.url,observedFailureURL:failure.url}:null,
         objectShaGatePassed:!!objectGateCrossed,verificationBasis:objectGateCrossed?'Locked object SHA and JSON parse gate crossed before the recorded fields request; full model intentionally unavailable.':'Complete original scene SHA gates and decoded original texture bindings.'});
     }else{failure.classification='unexpectedFailure';row.unexpectedFailures.push(failure);}
   }
