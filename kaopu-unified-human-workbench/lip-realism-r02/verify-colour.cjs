@@ -57,12 +57,30 @@ const q = {
     observedRegionalResponses: { nativeBand: 109, nativeBandSamples: 6392, oldTintPositiveControl: 3, oldTintPositiveControlSamples: 64 },
     classification: 'regionalColor had nonzero responses but did not meet four responses in the old lipColor positive-control subset. That subset did not establish regionalColor observability; its own published-R01 positive control now runs before candidate startup.'
   },
+  priorRegionalObservabilityFailureEvidence: {
+    runURL: 'https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39100007306',
+    sourceSHA: '3fe2aa9329b75b44c13c61b8df8cd94a5fc6b54e',
+    verifierSHA256: 'efd77963bedbb8639fbfc581c9dc92d3181660a8981240723c1a30b9667236c3',
+    artifactID: 12126411431,
+    artifactSHA256: 'dfc4a62bb76ba65c1830c65a99b49724f0c3db47045aa0e3b959a0de0060da94',
+    qaSHA256: 'f62e124699f40c084b080eba1b6d44b73b09425a183aec255b9df3b263eacf8d',
+    observedPublishedR01RegionalOverlap: { nativeBandSamples: 6392, nonzeroOldFeatherSamples: 515, visibleResponses: 4, upper: 3, lower: 1, maximumChannelDeltaDN: 1 },
+    candidateStarted: false, completed: false,
+    classification: 'The published R01 baseline itself had fewer than eight visible regionalColor responses in the thin old-feather intersection. This was a preflight observability failure, not a candidate pass or failure; quantitative preservation in that intersection is not claimed by this scoped suite.'
+  },
+  skinResponseScope: {
+    beardShadow: 'Nonzero responses in the unchanged native near-mouth skin band and its independently selected R01 old-tint-positive old-feather overlap.',
+    regionalColor: 'Nonzero responses in the unchanged native near-mouth skin band and at its independently visible published-R01 regionalColor positive-control pixels.',
+    regionalColorThinOldFeatherPreservationEstablished: false,
+    fullResponseAmplitudePreservationEstablished: false
+  },
   limitations: [
     'One frozen person, neutral pose, three existing views, one real Chromium SwiftShader runner.',
     'Native LipRails projected ROI is a conservative mouth rectangle, not a pixel-perfect anatomical segmentation.',
     'The retained R01 path is checked against one macro base-colour frame from the byte-identical published R01 page; the remaining views compare paths in the same candidate.',
     'Near-mouth probes use projected native skin vertices 1.5–7 mm outside the outer lip rails in the inherited rest frame; no physiological measurement is claimed.',
-    'Old-feather probes are selected only from R01: the existing lipColor positive control for beardShadow, and a separate regionalColor positive control from the byte-identical published R01 page. Later skin checks establish nonzero responses, not exact preservation of their full magnitude.',
+    'beardShadow uses the R01 lipColor-positive old-feather overlap. regionalColor uses its own visible positive control across the unchanged native near-mouth band in the byte-identical published R01 page, without an old-feather restriction. Neither set is selected from candidate responses.',
+    'regionalColor preservation in the thin old-feather intersection is not quantified: the original baseline had only four visible one-DN responses there. Skin checks establish nonzero observable responses, not exact preservation of their full magnitude.',
     'The tests establish composition and preservation properties, not photorealism or user aesthetic approval.',
     'The inherited remote loader is retained; offline operation and real-phone performance are not certified.'
   ]
@@ -314,10 +332,10 @@ function skinResponse(a, b, probes) {
   }
   return { sampled: probes.length, changed: changed.length, perSide, examples: changed.slice(0, 48) };
 }
-function visibleOldFeatherProbes(low, high, candidates) {
+function visibleNativeProbes(low, high, candidates, { requireOldFeather = true } = {}) {
   const probes = [];
   for (const probe of candidates) {
-    if (!(probe.oldFeather > 0)) continue;
+    if (requireOldFeather && !(probe.oldFeather > 0)) continue;
     const index = (probe.yBottom * width + probe.x) * 4;
     const before = [...low.pixels.subarray(index, index + 3)], after = [...high.pixels.subarray(index, index + 3)];
     const maxDelta = Math.max(...before.map((value, channel) => Math.abs(value - after[channel])));
@@ -326,7 +344,7 @@ function visibleOldFeatherProbes(low, high, candidates) {
   return probes;
 }
 async function baselineRegionalPositiveControl() {
-  return test('published R01 regionalColor establishes its own observable old-feather skin probes before candidate startup', async () => {
+  return test('published R01 regionalColor establishes observable native near-mouth skin probes before candidate startup', async () => {
     const domain = await nativeDomain();
     assert(domain.skinProbes.length >= 12, 'Published R01 has no adequate independent native near-mouth skin band');
     // This is the byte-identical published R01 page. Do not call candidate-only
@@ -338,16 +356,17 @@ async function baselineRegionalPositiveControl() {
     assert.equal(lowState.body.regionalColor, 0); assert.equal(highState.body.regionalColor, 1);
     sameExcept(lowState, highState, ['body.regionalColor'], 'Published R01 regionalColor positive control changed another scene property');
     sameExcept(lowState, q.baseline.state, ['body.regionalColor'], 'Published R01 regionalColor positive control drifted from the retained reference scene');
-    const probes = visibleOldFeatherProbes(low, high, domain.skinProbes);
+    const probes = visibleNativeProbes(low, high, domain.skinProbes, { requireOldFeather: false });
     q.regionalColorPositiveControl = {
       parameter: 'regionalColor', referencePreviewSHA256: baselineSHA256,
-      selection: 'published R01 native near-mouth skin band AND oldFeather > 0 AND the same pixel visibly responds to regionalColor 0 to 1; no candidate response is used for selection',
+      scope: 'unchanged native near-mouth skin band; thin old-feather preservation is not quantified',
+      selection: 'published R01 native near-mouth skin band AND the same pixel visibly responds to regionalColor 0 to 1; no old-feather restriction and no candidate response is used for selection',
       sourceFrames: { low: { file: 'published-r01-regional-colour-0.png', ...small(low) }, high: { file: 'published-r01-regional-colour-1.png', ...small(high) } },
       protectedLowState: lowState, nativeProbeCount: domain.skinProbes.length, observedProbeCount: probes.length, probes,
-      interpretation: 'Parameter-specific observability in this fixed 8-bit framebuffer; fewer than eight visible baseline probes blocks candidate execution.'
+      interpretation: 'Parameter-specific observability across the unchanged native near-mouth skin band in this fixed 8-bit framebuffer; fewer than eight visible baseline probes blocks candidate execution. This establishes no quantitative preservation in the thin old-feather intersection.'
     };
     writeJSON('published-r01-regional-positive-control.json', q.regionalColorPositiveControl); checkpoint();
-    assert(probes.length >= 8, 'Published R01 regionalColor has fewer than eight observable native old-feather skin probes in this 8-bit frame; candidate preservation cannot be tested with this gate');
+    assert(probes.length >= 8, 'Published R01 regionalColor has fewer than eight observable native near-mouth skin probes in this 8-bit frame; candidate response cannot be tested with this gate');
     return q.regionalColorPositiveControl;
   });
 }
@@ -398,7 +417,7 @@ async function residualCheck(initial, domain) {
         // Select the overlap from the unchanged R01 render, before measuring
         // any R02 skin response. A fixed feather amplitude is not a spatial
         // guarantee: run 39096551073 observed max 0.0458 in this native band.
-        const probes = visibleOldFeatherProbes(low, high, domain.skinProbes);
+        const probes = visibleNativeProbes(low, high, domain.skinProbes);
         q.skinProbePositiveControl = {
           selection: 'unchanged native near-mouth skin band AND oldFeather > 0 AND the same pixel visibly responds to R01 lipColor 0 to 1; no R02 response is used for selection',
           sourceFrames: { low: { file: 'r01-old-lip-colour-0.png', ...small(low) }, high: { file: 'r01-old-lip-colour-1.png', ...small(high) } },
@@ -437,13 +456,14 @@ async function wetnessIndependent(initial) {
   });
 }
 async function skinLayers(initial, domain) {
-  return test('late beard and regional-colour layers retain actual responses just outside the native lip outline', async () => {
+  return test('native near-mouth skin retains observable regional responses and beard responses in the independent old-feather overlap', async () => {
     assert(domain.skinProbes.length >= 12, 'No adequate independent near-mouth skin probe set; do not replace this with whole-face counts');
     const result = [];
     for (const key of ['beardShadow', 'regionalColor']) {
       const positiveControl = key === 'regionalColor' ? q.regionalColorPositiveControl : q.skinProbePositiveControl;
-      const featherProbes = positiveControl?.probes || [];
-      assert(featherProbes.length >= 8, key + ' requires at least eight independently selected R01 positive-control probes');
+      const positiveControlProbes = positiveControl?.probes || [];
+      const positiveControlScope = key === 'regionalColor' ? 'native near-mouth skin band' : 'old-feather overlap outside the new lip outline';
+      assert(positiveControlProbes.length >= 8, key + ' requires at least eight independently selected R01 positive-control probes');
       await resetSettings(initial); await selectVariant('r02', 2);
       await page.evaluate(key => bodyProceduralSkin.set({ [key]: 0 }), key); const lowState = await state(), low = await capture('r02-skin-' + key + '-0');
       if (key === 'regionalColor') assert.deepEqual(lowState, positiveControl.protectedLowState, 'R02 regionalColor probes no longer share the published R01 geometry, camera, lighting and low-parameter scene');
@@ -452,11 +472,11 @@ async function skinLayers(initial, domain) {
       sameExcept(lowState, highState, ['body.' + key], key + ' probe changed another property');
       const response = skinResponse(low, high, domain.skinProbes);
       assert(response.changed >= 8, key + ' no longer affects the measured skin just outside the native lip outline');
-      const featherResponse = skinResponse(low, high, featherProbes);
-      assert(featherResponse.changed >= 4, key + ' no longer affects the measured old-feather overlap outside the new lip outline');
-      result.push({ key, response, featherResponse, positiveControlSourceFrames: positiveControl.sourceFrames, before: small(low), after: small(high) });
+      const positiveControlResponse = skinResponse(low, high, positiveControlProbes);
+      assert(positiveControlResponse.changed >= 4, key + ' no longer affects the independently measured ' + positiveControlScope);
+      result.push({ key, response, positiveControlScope, positiveControlResponse, positiveControlSourceFrames: positiveControl.sourceFrames, before: small(low), after: small(high) });
     }
-    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, positiveControls: { beardShadow: q.skinProbePositiveControl, regionalColor: q.regionalColorPositiveControl }, interpretation: 'nonzero skin-layer responses are retained; exact preservation of response amplitude is not established', result });
+    writeJSON('near-mouth-skin-responses.json', { source: domain.probeSource, probes: domain.skinProbes, positiveControls: { beardShadow: q.skinProbePositiveControl, regionalColor: q.regionalColorPositiveControl }, scope: q.skinResponseScope, interpretation: 'nonzero observable skin-layer responses are retained in their declared domains; regionalColor preservation in the thin old-feather intersection and exact preservation of response amplitude are not established', result });
     await resetSettings(initial); return result;
   });
 }
