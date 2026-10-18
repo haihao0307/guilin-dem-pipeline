@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu/lip-iteration-review@1",
+  "iteration": 4,
+  "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+  "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+  "runId": "39100909391",
+  "core": {
+    "completed": true,
+    "testsPassed": 11,
+    "testsTotal": 11,
+    "qaSHA256": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+    "cleanupPassed": true
+  },
+  "publicAttempt": {
+    "runId": "39100909391",
+    "artifactId": "12127080792",
+    "qaPath": "evidence/public-attempt-39100909391/qa.json",
+    "qaSHA256": "6ded12f6184cd7922a9c064c40669b03da26a2d62b115cffcab48c388dc445a5",
+    "publicComplete": false,
+    "initialStateCaptured": false
+  },
+  "observedFailure": "Public raw page bytes matched and native 3D startup completed; strict state comparison then rejected optional own light.ground/target undefined keys absent from serialized core. Pixel, UI and mobile public gates had not run.",
+  "evidenceLimit": "The old failure did not save the fresh initial state before assertion. Do not claim an offline normalization empirically proved the full public state equal.",
+  "decision": "Retain exact passed core and production; perform a separately bound public-only recovery with the independently reviewed optional-key representation fix.",
+  "verificationChange": "Delete only final ===undefined optional light ground/target keys; all actual scene numbers, arrays, frame SHA, UI, mobile and cleanup assertions remain strict. Record publicInitialState before assertion.",
+  "newPublicStatus": "PENDING",
+  "finalVisualDecision": "BOUNDED_VISUAL_NONREGRESSION_CONFIRMED_FOR_COMPOSITING_CORRECTION",
+  "significantVisualImprovementEstablished": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

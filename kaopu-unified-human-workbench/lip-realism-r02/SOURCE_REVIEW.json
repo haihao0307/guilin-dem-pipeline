@@ -3,7 +3,7 @@
   "taskId": "LIP-VISUAL-COLOUR-R02-20261018",
   "reviewer": "/root/lip_visual_source_audit",
   "status": "FINAL_SOURCE_PASS",
-  "visualStatus": "FINAL_SOURCE_VISUAL_PENDING; both additional artistic effects rejected",
+  "visualStatus": "BOUNDED_VISUAL_NONREGRESSION_CONFIRMED_FOR_COMPOSITING_CORRECTION; overall lip quality unresolved",
   "moduleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
   "verifierSHA256": "35be7f4e420427e69841755380bc0999ba949af288884e4357b16ffc6cb95503",
   "verifierStatus": "FINAL_SCOPED_VERIFIER_SOURCE_PASS",
@@ -17,10 +17,25 @@
     "Final efd77963 to 35be7f4 diff independently checked: only approved regional support domain and truthful scope/failure metadata changed; original thresholds, scene equality, pixel, geometry, cleanup and public gates unchanged."
   ],
   "limitations": [
-    "The published R01 whole native-band regional baseline has 107 observable one-DN points; final candidate execution remains pending. Its thin old-feather intersection has only 4, so that narrower quantitative claim is withdrawn.",
+    "Final core passed: regionalColor retained observable response at 84 of 107 independently selected original-R01 native-band positive points; all changes were one-DN. The thin old-feather intersection and exact amplitude preservation remain unproven.",
     "Source correctness does not prove substantial visual improvement.",
     "Colour organization, fine surface organization and dynamic inner-lip issues remain unresolved.",
     "Original skin-panel archive closures and PR303 concurrent recovery work unchanged."
   ],
-  "scopedEvidencePlan": "RegionalColor is tested only for observable response in the same full native near-mouth band; the thin old-feather intersection and exact amplitude preservation are explicitly unproven. Beard retains the independent old-feather gate."
+  "scopedEvidencePlan": "RegionalColor is tested only for observable response in the same full native near-mouth band; the thin old-feather intersection and exact amplitude preservation are explicitly unproven. Beard retains the independent old-feather gate.",
+  "executionEvidence": {
+    "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "coreRunId": "39100909391",
+    "coreQA": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+    "coreTestsPassed": 11,
+    "publicStatus": "RECOVERY_PENDING",
+    "finalVisualReview": "INDEPENDENT_VISUAL_REVIEW_FINAL.json"
+  },
+  "publicRecoveryVerifierReview": {
+    "status": "PUBLIC_RECOVERY_VERIFIER_SOURCE_PASS",
+    "reviewer": "/root/lip_visual_source_audit",
+    "sha256": "753683da5aa94114c14ead1c8661aba1d2f6e1b0baa3ea02564cf1ab0da4338c",
+    "scope": "Optional undefined light-key representation plus exactly pinned old-core compatibility, before-assertion state evidence and truthful cross-run metadata; no production or threshold changes."
+  }
 }

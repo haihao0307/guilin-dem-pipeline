@@ -1,0 +1,105 @@
+{
+  "schema": "kaopu/independent-lip-visual-review@1",
+  "runId": "39100909391",
+  "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+  "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+  "previewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+  "qaSHA256": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+  "reviewerRole": "Independent visual reviewer; no production code changes",
+  "decision": "BOUNDED_VISUAL_NONREGRESSION_CONFIRMED_FOR_COMPOSITING_CORRECTION",
+  "coreReportCompleted": true,
+  "coreReportedTestsPassed": 11,
+  "inspectedImages": [
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r01-front-beauty.png",
+      "sha256": "23ce9065c89fb95eebccedacc47a82039eb27f61c4b47ef3643f7226dab4120b",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-front-beauty.png",
+      "sha256": "c7dccb1e42dc6c3028ecda80e47ea7d25b9ebe2a77b2df2e30186e8cdce9692c",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r01-macro-beauty.png",
+      "sha256": "67ceb5f3988052609e5b6356e7d7c68c2339c8ff726d5bbb4f7664c7c4d1c027",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-macro-beauty.png",
+      "sha256": "dd60c3fa008e04b254fee7dce7a24eb6b431314f63e7151404dfe4813803717a",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r01-oblique-beauty.png",
+      "sha256": "cfebec27d33af0d2037dcbc4d18f76c37c2f28caba16cf271abf7770b23e4504",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-oblique-beauty.png",
+      "sha256": "6a7e5cf9fdd172e8d5fd723f7fea53fb32f525ce9c9dbe63b325dcb769e958b9",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r01-macro-colour.png",
+      "sha256": "e043e7a0a4b64ee5eccba4ec8e71b3abf7f2d4fb380e82095b839431b309e083",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-macro-colour.png",
+      "sha256": "5a82ee6b922d6d1059c953dd7d075455b96d6276d1d60a74bbf75dda3a886ae0",
+      "matchesSourceBoundQA": true,
+      "width": 640,
+      "height": 512
+    }
+  ],
+  "secondRoundReferenceComparison": [
+    {
+      "channel": "beauty",
+      "currentImage": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-macro-beauty.png",
+      "secondRoundCompositingOnlyReference": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39098058680/evidence/core/r02-edge-transition-disabled-beauty.png",
+      "fileExact": true,
+      "pixelExact": true,
+      "changedPixels": 0
+    },
+    {
+      "channel": "colour",
+      "currentImage": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39100909391/evidence/core/r02-macro-colour.png",
+      "secondRoundCompositingOnlyReference": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/evidence/r02-ci-39098058680/evidence/core/r02-edge-transition-disabled-colour.png",
+      "fileExact": true,
+      "pixelExact": true,
+      "changedPixels": 0
+    }
+  ],
+  "findings": [
+    "Final macro beauty and base colour are file-exact and pixel-exact matches to second-round compositing-only references.",
+    "Actual final front, macro and oblique images show no newly added broad colour blotches, obvious surrounding-skin washout or texture covering.",
+    "Visual difference from R01 is small; the correction is defensible on compositing correctness, not substantial aesthetic gain.",
+    "The nearly uniform painted-vermilion appearance remains unresolved.",
+    "Previously documented surface-organization and inner-lip movement continuity problems are not certified solved by this correction."
+  ],
+  "retentionDecision": "Keep the bounded single-compositing correction subject to the independent technical and public delivery gates. New spatial patches and extra outer-edge transition remain withdrawn.",
+  "visualAcceptance": false,
+  "userVisualAccepted": false,
+  "wholeLipRealismImprovedEstablished": false,
+  "limits": [
+    "Actual frame review applies to this source and fixed build only.",
+    "This review does not substitute for public readback, source review or technical validation.",
+    "Non-regression in the reviewed views is not anatomical or aesthetic acceptance."
+  ],
+  "publicDeliveryAtReview": "Public phase was running when source-bound core images were obtained; no public success is claimed here."
+}

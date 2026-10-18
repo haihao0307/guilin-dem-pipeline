@@ -1,4 +1,4 @@
-name: Lip colour R02 actual comparison and fixed HTTPS verification
+name: Lip R02 fixed public recovery with retained core evidence
 on:
   push:
     branches: [feature/lip-colour-r02-20261018]
@@ -6,6 +6,7 @@ on:
       - 'kaopu-unified-human-workbench/lip-realism-r02/*.js'
       - 'kaopu-unified-human-workbench/lip-realism-r02/*.cjs'
       - 'kaopu-unified-human-workbench/lip-realism-r02/TASK_ANCHOR.json'
+      - 'kaopu-unified-human-workbench/lip-realism-r02/PUBLIC_RECOVERY_ANCHOR.json'
       - '.github/workflows/lip-colour-r02.yml'
 permissions:
   contents: write
@@ -13,99 +14,108 @@ concurrency:
   group: lip-colour-r02-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  compare-and-publish:
+  verify-fixed-public:
     if: github.ref == 'refs/heads/feature/lip-colour-r02-20261018'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 15
     env:
       SCOPE: kaopu-unified-human-workbench/lip-realism-r02
+      MODE: public
+      SOURCE_SHA: 01cfde47476b7be6764e9c6a79d925462511539b
+      RECOVERY_SHA: ${{ github.sha }}
       CANDIDATE_PATH: kaopu-unified-human-workbench/lip-realism-r02/preview.html
-      BASELINE_PATH: kaopu-unified-human-workbench/lip-realism-r02/baseline-r01.html
-      SOURCE_SHA: ${{ github.sha }}
+      CANDIDATE_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html
+      LOCAL_QA_PATH: kaopu-unified-human-workbench/lip-realism-r02/evidence/core/qa.json
+      QA_OUT: kaopu-unified-human-workbench/lip-realism-r02/evidence/public-recovery
+      QA_BUDGET_MS: '480000'
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
           sparse-checkout: |
-            kaopu-unified-human-workbench/human-integrated-r07
             kaopu-unified-human-workbench/lip-realism-r02
             .github/workflows
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install isolated pinned real browser verification
-        run: |
-          npm install --prefix "$RUNNER_TEMP/lip-colour-runtime" --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
-          echo "NODE_PATH=$RUNNER_TEMP/lip-colour-runtime/node_modules" >> "$GITHUB_ENV"
-          "$RUNNER_TEMP/lip-colour-runtime/node_modules/.bin/playwright" install --with-deps chromium
-      - name: Compile isolated candidate and byte-identical published R01 baseline
-        run: |
-          node --check "$SCOPE/LipSurface.js"
-          node --check "$SCOPE/verify-colour.cjs"
-          node "$SCOPE/build.cjs"
-      - name: Diagnose baseline then measure the candidate in real Chromium
-        env:
-          MODE: core
-          QA_OUT: kaopu-unified-human-workbench/lip-realism-r02/evidence/core
-          QA_BUDGET_MS: '1440000'
-        run: timeout --signal=TERM --kill-after=20s 25m node "$SCOPE/verify-colour.cjs"
-      - name: Publish internally verified candidate with strict fast-forward guard
-        id: build
+      - name: Bind the exact passed core and immutable production before recovery
         run: |
           test "$GITHUB_REF_NAME" = feature/lip-colour-r02-20261018
+          test "$(git rev-parse HEAD)" = "$RECOVERY_SHA"
           python - <<'PY'
           import os,json,hashlib
           from pathlib import Path
           p=Path(os.environ['SCOPE'])
+          a=json.loads((p/'PUBLIC_RECOVERY_ANCHOR.json').read_text()); f=a['fixed']
+          assert a['mode']==os.environ['MODE']=='public'
+          assert a['review']['verifierStatus']=='PUBLIC_RECOVERY_VERIFIER_SOURCE_PASS'
+          assert a['review']['workflowStatus']=='PUBLIC_RECOVERY_WORKFLOW_SOURCE_PASS'
+          assert f['sourceSHA']==os.environ['SOURCE_SHA']
+          assert a['publicURL']==os.environ['CANDIDATE_URL']
+          expected={'preview.html':f['previewSHA256'],'BUILD_MANIFEST.json':f['manifestSHA256'],'LipSurface.js':f['moduleSHA256'],'evidence/core/qa.json':f['coreSHA256'],'verify-colour.cjs':f['publicVerifierSHA256'],a['originalFailure']['qaPath']:a['originalFailure']['qaSHA256']}
+          for file,digest in expected.items():
+              assert hashlib.sha256((p/file).read_bytes()).hexdigest()==digest,file
           q=json.loads((p/'evidence/core/qa.json').read_text())
-          assert q['completed'] and q['browserPassed'] and q['interactive3D'] and q['necessityEstablished']
-          assert q['baselineMatched'] and not q.get('cleanupError')
-          assert q['sourceSHA']==os.environ['SOURCE_SHA']
-          assert q['tests'] and all(t['passed'] for t in q['tests'])
-          assert hashlib.sha256((p/'preview.html').read_bytes()).hexdigest()==q['previewSHA256']
+          assert q['completed'] and q['browserPassed'] and q['interactive3D'] and q['necessityEstablished'] and q['baselineMatched']
+          assert q['sourceSHA']==f['sourceSHA'] and q['verifierSHA256']==f['coreVerifierSHA256'] and q['previewSHA256']==f['previewSHA256']
+          assert len(q['tests'])==11 and all(t['passed'] for t in q['tests'])
+          assert q['cleanup']['completed'] and not q.get('cleanupError')
+          assert all(not q[k] for k in ['pageErrors','consoleErrors','failedRequests','resourceErrors'])
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          assert m['sourceCommit']==f['sourceSHA'] and m['moduleSHA256']==f['moduleSHA256'] and m['previewSHA256']==f['previewSHA256']
+          v=json.loads((p/a['visualReview']).read_text())
+          assert v['sourceSHA']==f['sourceSHA'] and v['buildSHA']==f['buildSHA'] and v['previewSHA256']==f['previewSHA256']
+          assert v['decision']=='BOUNDED_VISUAL_NONREGRESSION_CONFIRMED_FOR_COMPOSITING_CORRECTION'
+          assert v['visualAcceptance'] is False and a['visualAcceptance'] is False and a['productionReady'] is False
+          print('Exact frozen core, production, preview, failed attempt and reviewed public verifier bound; no rebuild.')
           PY
-          git fetch --no-tags origin "$GITHUB_REF_NAME"
-          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -f -- "$SCOPE/preview.html" "$SCOPE/BUILD_MANIFEST.json" "$SCOPE/evidence/core"
-          git commit -m 'build: measured lip colour R02 candidate and R01 comparisons [skip ci]'
-          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
-          build_sha="$(git rev-parse HEAD)"
-          echo "sha=$build_sha" >> "$GITHUB_OUTPUT"
-      - name: Verify exact fixed public page and desktop/mobile viewport interactions
-        env:
-          MODE: public
-          CANDIDATE_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.sha }}/kaopu-unified-human-workbench/lip-realism-r02/preview.html
-          LOCAL_QA_PATH: kaopu-unified-human-workbench/lip-realism-r02/evidence/core/qa.json
-          QA_OUT: kaopu-unified-human-workbench/lip-realism-r02/evidence/public
-          QA_BUDGET_MS: '480000'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the same pinned browser configuration on the recovery runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lip-colour-runtime" --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          echo "NODE_PATH=$RUNNER_TEMP/lip-colour-runtime/node_modules" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/lip-colour-runtime/node_modules/.bin/playwright" install --with-deps chromium
+          node --check "$SCOPE/verify-colour.cjs"
+      - name: Verify fixed public state, exact core frame and desktop/mobile interactions
         run: timeout --signal=TERM --kill-after=20s 9m node "$SCOPE/verify-colour.cjs"
-      - name: Preserve exact public readback proof without touching main
+      - name: Preserve the public recovery proof with a strict fast-forward guard
         run: |
           python - <<'PY'
-          import json,os
+          import json,os,hashlib
           from pathlib import Path
-          p=Path(os.environ['SCOPE'])
-          q=json.loads((p/'evidence/public/qa.json').read_text())
-          assert q['completed'] and q['shareAllowed'] and q['publicHttpsPassed']
-          assert not q.get('cleanupError')
-          proof=json.loads((p/'evidence/public/PUBLICATION_PROOF.json').read_text())
-          proof.update(runId=os.environ['GITHUB_RUN_ID'],runAttempt=os.environ['GITHUB_RUN_ATTEMPT'],previewSHA256=q['previewSHA256'],visualReview='PENDING_INDEPENDENT_IMAGE_REVIEW',physicalPhone=False,mainUnchanged=True)
+          p=Path(os.environ['SCOPE']); out=Path(os.environ['QA_OUT'])
+          a=json.loads((p/'PUBLIC_RECOVERY_ANCHOR.json').read_text()); f=a['fixed']
+          q=json.loads((out/'qa.json').read_text())
+          assert q['completed'] and q['shareAllowed'] and q['publicHttpsPassed'] and q['browserPassed']
+          assert q['cleanup']['completed'] and not q.get('cleanupError')
+          assert q['tests'] and all(t['passed'] for t in q['tests'])
+          assert all(not q[k] for k in ['pageErrors','consoleErrors','failedRequests','resourceErrors'])
+          assert q['sourceSHA']==f['sourceSHA'] and q['publicBuildSHA']==f['buildSHA'] and q['previewSHA256']==f['previewSHA256']
+          c=q['coreVerifierCompatibility']
+          for key in ['sourceSHA','buildSHA','previewSHA256','moduleSHA256','coreSHA256','coreVerifierSHA256','publicVerifierSHA256']:
+              assert c[key]==f[key],key
+          assert c['recoverySourceSHA']==os.environ['RECOVERY_SHA'] and c['originalCoreUnmodified'] is True
+          assert hashlib.sha256((p/'evidence/core/qa.json').read_bytes()).hexdigest()==f['coreSHA256']
+          proof=json.loads((out/'PUBLICATION_PROOF.json').read_text())
+          proof.update(runId=os.environ['GITHUB_RUN_ID'],runAttempt=os.environ['GITHUB_RUN_ATTEMPT'],recoverySourceSHA=os.environ['RECOVERY_SHA'],coreRunId=f['coreRunId'],coreQA_SHA256=f['coreSHA256'],coreVerifierSHA256=f['coreVerifierSHA256'],publicVerifierSHA256=f['publicVerifierSHA256'],previewSHA256=q['previewSHA256'],publicQA_SHA256=hashlib.sha256((out/'qa.json').read_bytes()).hexdigest(),visualReview=a['visualReview'],visualReviewDecision='BOUNDED_VISUAL_NONREGRESSION_CONFIRMED_FOR_COMPOSITING_CORRECTION',visualAcceptance=False,productionReady=False,significantOverallVisualImprovementEstablished=False,physicalPhone=False,mainMutationPerformed=False,evidence='evidence/public-recovery/qa.json',originalFailure=a['originalFailure'],rendererRelation=c['rendererRelation'])
           (p/'PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n')
           PY
           git fetch --no-tags origin "$GITHUB_REF_NAME"
-          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
-          git add -f -- "$SCOPE/PUBLICATION_PROOF.json" "$SCOPE/evidence/public"
-          git commit -m 'test: fixed HTTPS lip colour R02 readback [skip ci]'
+          test "$(git rev-parse FETCH_HEAD)" = "$RECOVERY_SHA"
+          test "$(git rev-parse HEAD)" = "$RECOVERY_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f -- "$SCOPE/PUBLICATION_PROOF.json" "$SCOPE/evidence/public-recovery"
+          git commit -m 'test: exact fixed HTTPS R02 public recovery evidence [skip ci]'
           git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: lip-colour-r02-${{ github.run_id }}-${{ github.run_attempt }}
+          name: lip-colour-r02-public-recovery-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            kaopu-unified-human-workbench/lip-realism-r02/evidence/
-            kaopu-unified-human-workbench/lip-realism-r02/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-realism-r02/evidence/public-recovery/
             kaopu-unified-human-workbench/lip-realism-r02/PUBLICATION_PROOF.json
+            kaopu-unified-human-workbench/lip-realism-r02/PUBLIC_RECOVERY_ANCHOR.json
+            kaopu-unified-human-workbench/lip-realism-r02/ITERATION_04_PUBLIC_REVIEW.json
+            kaopu-unified-human-workbench/lip-realism-r02/INDEPENDENT_VISUAL_REVIEW_FINAL.json
           retention-days: 30
