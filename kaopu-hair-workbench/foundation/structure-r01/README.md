@@ -14,6 +14,10 @@
 
 本轮实际实施：完整皮肤计算与人物初始化并行、精确结果持久缓存、当前发型数据提前读取、四份页面数据并行、隐藏的 36 张人物预览图延迟到可见后读取。原生分发/CDN 试验未通过真实入口，已撤回。当前几何仍为 R11，只完成耳周三维定位，未把加载修改算作新造型。见 [加载实施与逐项检查](docs/STARTUP-12.md)。公开网络冷启动仍独立验收，不能套用本机秒数。
 
+## 当前固定公开包 · startup-12
+
+[固定公开加载器](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/54d046dd88b9cd70c5154157b8fdd0c822bf568f/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=current-rest)，payload `066fa222`。精确本地替换的加载器组装测试通过；真实公开网络在 120 秒观察结束仍只完成原生模型 3/9 块、3 MiB，皮肤 Worker 约 21.45 秒已完成。因此公开网络冷启动仍未达标，日常测试使用上面的本机快速入口。这里没有用本机数字冒充公开速度。[公开失败原始记录](evidence/public-startup12-failure.json)、[本机完整对照](evidence/startup12-checks.json)、[当前六视图](evidence/startup12-fast-viewer-checks.json)。
+
 ## 上一次固定公开版本 · R11
 
 [打开顶部旋涡与上段圆度版本](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/7852b999d3c5652172a0a75037c7ce034fbf6dd9/kaopu-hair-workbench/foundation/structure-r01/public.html#layer=static&view=oblique&experiment=current-rest)。当前 payload 来源 `8dcfcc8`，固定入口 `7852b99`；运行散列与本地六视图一致。公开十二项状态、直达链接、批准生长域和人物几何核对通过，零页面错误和失败请求；启动只取当前方案的两份实验文件。
