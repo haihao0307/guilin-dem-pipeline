@@ -50,7 +50,8 @@
     "Valid freshness, browser, capability and state-roundtrip evidence remains preserved and separate from visual correction closure.",
     "Before presenting the next candidate as correcting the user rejection, run the bound oracle on the exact candidate and prove a known bad control is rejected.",
     "A regression pass is not USER-ACCEPTED; only a later user receipt may close that state.",
-    "If the rejection cannot yet be operationalized without inventing a subjective universal threshold, keep the visual correction open and ask the relevant Mother to define the smallest observable signature."
+    "If the rejection cannot yet be operationalized without inventing a subjective universal threshold, keep the visual correction open and ask the relevant Mother to define the smallest observable signature.",
+    "A technical matched-pair run that records nonzero pixel deltas is not an executable visual correction regression unless the required manifest runs a reason-bearing defect oracle and rejects a known-bad control."
   ],
   "states": [
     "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
@@ -63,7 +64,8 @@
     "HOLD_CORRECTION_SCOPE_UNBOUND",
     "HOLD_CORRECTION_SCOPE_OVERCLAIM",
     "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN",
-    "PARTIAL_CORRECTION_USER_ACCEPTED_SCOPED__PARENT_OPEN"
+    "PARTIAL_CORRECTION_USER_ACCEPTED_SCOPED__PARENT_OPEN",
+    "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE"
   ],
   "cases": [
     {
@@ -287,6 +289,46 @@
         "USER-ACCEPTED": false
       },
       "postedReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6249552508"
+    },
+    {
+      "evidenceUpdateId": "LIP-INNER-R04-VISUAL-CLAIM-EXECUTABILITY-N174",
+      "status": "TARGET_TECHNICAL_GATE_RUN__MANUAL_VISUAL_OBSERVATION_RETAINED__VISUAL_CORRECTION_REGRESSION_NOT_IMPLEMENTED",
+      "target": {
+        "mother": "Human/Lip",
+        "pr": 308,
+        "branch": "feature/lip-inner-r04-20261018",
+        "headSha": "ab2641ef0bfe038aafd3956611590c9e4ab9d09e",
+        "sourceSha": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+        "buildSha": "f70e40b301ea964956d9915ab820e4efe1105549",
+        "workflowRun": 39110407426
+      },
+      "observation": {
+        "matchedPairTechnicalTests": "5/5 passed",
+        "recordedDifferenceFields": [
+          "changedPixels",
+          "maximumChannelDN",
+          "meanMaxChannelDN"
+        ],
+        "visualDefectOracleInProductionWorkflow": false,
+        "knownBadDefectRejectionInProductionWorkflow": false,
+        "independentManualVisualReview": true,
+        "reviewedVisualFilesInRequiredManifest": false
+      },
+      "retainedPriorResult": "N173 manual PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN remains valid for exact reviewed frames.",
+      "currentProductionRegressionDecision": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE",
+      "classifierReplay": "10/10",
+      "minimalTrial": "Bind three named view pairs, independent verifier receipt, defect ROI/mask, directional metric/threshold, and require R02 known-bad fail plus candidate pass.",
+      "decision": "EXTEND_EXISTING_CASE_NO_NEW_REGRESSION",
+      "lifecycle": {
+        "POSTED": false,
+        "ACKNOWLEDGED": false,
+        "TARGET_IMPLEMENTED": true,
+        "TARGET_TECHNICAL_GATE_RUN": true,
+        "VISUAL_REGRESSION_IMPLEMENTED": false,
+        "VISUAL_REGRESSION_GATE_RUN": false,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      }
     }
   ]
 }
