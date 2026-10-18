@@ -226,8 +226,8 @@ function drawFrame() {
 }
 const frameQueue = createRenderQueue({draw: drawFrame, gl: renderer.getContext(), onError: window.fail});
 function evaluatedCombinedMotion(phase){
-  const core=evaluateA6Motion(motionModel,phase);
-  return {...core,blockers:core.blockers.map(b=>b.id==='outside-valve-loop'?{...b,status:'finite-fixed-setting-constraint-candidate',parts:valveAdapter.movingPartNames,reason:'Outside finite linkage is driven by fixed-length and two-slot constraints; actual steam events, historical phases, full reverser travel and loads remain unresolved.'}:b)};
+  const {unsupportedInterfaceGaps:priorR02ReferenceGaps,...core}=evaluateA6Motion(motionModel,phase);
+  return {...core,priorR02ReferenceGaps,interfaceEvidence:'Current solved valve joints and residuals are in valvePose; legacy static-reference gaps are priorR02ReferenceGaps only.',blockers:core.blockers.map(b=>b.id==='outside-valve-loop'?{...b,status:'finite-fixed-setting-constraint-candidate',parts:valveAdapter.movingPartNames,reason:'Outside finite linkage is driven by fixed-length and two-slot constraints; actual steam events, historical phases, full reverser travel and loads remain unresolved.'}:b)};
 }
 let currentMotionPose = evaluatedCombinedMotion(0);
 let currentValvePose = evaluateValveNativeAdapter(valveAdapter,0);
