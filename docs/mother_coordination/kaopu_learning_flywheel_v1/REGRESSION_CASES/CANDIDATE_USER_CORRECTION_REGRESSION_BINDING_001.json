@@ -58,7 +58,12 @@
     "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING",
     "HOLD_USER_CORRECTION_SIGNATURE_RECURRED",
     "CORRECTION_REGRESSION_VERIFIED_NOT_USER_ACCEPTED",
-    "USER_ACCEPTED"
+    "USER_ACCEPTED",
+    "HOLD_VISUAL_PAIR_COVERAGE_INCOMPLETE",
+    "HOLD_CORRECTION_SCOPE_UNBOUND",
+    "HOLD_CORRECTION_SCOPE_OVERCLAIM",
+    "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN",
+    "PARTIAL_CORRECTION_USER_ACCEPTED_SCOPED__PARENT_OPEN"
   ],
   "cases": [
     {
@@ -241,6 +246,46 @@
       "adoption": "CANDIDATE_ONLY_TARGETED_SKIN_TRIAL_REQUIRED",
       "userAccepted": false,
       "routingReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/pull/288#issuecomment-6176946595"
+    },
+    {
+      "evidenceUpdateId": "LIP-INNER-R04-PARTIAL-SCOPE-N173",
+      "status": "TARGET_IMPLEMENTED_GATE_RUN__PARTIAL_CORRECTION_VERIFIED_SCOPED__ROUTING_NOT_YET_POSTED",
+      "target": {
+        "mother": "Human/Lip",
+        "pr": 308,
+        "branch": "feature/lip-inner-r04-20261018",
+        "sourceSha": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+        "buildSha": "f70e40b301ea964956d9915ab820e4efe1105549",
+        "evidenceSha": "7d461172a772a6fc29cb3aa44d251c1e04f08f7d",
+        "workflowRun": 39110407426,
+        "artifactId": 12129804986,
+        "artifactDigest": "sha256:45e7354ccba8f7da9e4d392afa430474d7c24b66395a13dfa49a9dfba2532fc2"
+      },
+      "defectSignature": "Pale outside-skin-coloured inner-wall wedges in named open-mouth views.",
+      "claimedViewIds": [
+        "jaw_macro",
+        "jaw_oblique",
+        "speak_macro"
+      ],
+      "excludedFromCorrectionClosure": [
+        "neutral_macro",
+        "pucker_oblique",
+        "whole-lip realism",
+        "dynamic continuity",
+        "other-person coverage",
+        "user acceptance"
+      ],
+      "replay": "7/7",
+      "result": "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN",
+      "decision": "EXTEND_EXISTING_CASE_NO_NEW_REGRESSION",
+      "lifecycle": {
+        "POSTED": false,
+        "ACKNOWLEDGED": false,
+        "IMPLEMENTED": true,
+        "GATE-RUN": true,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      }
     }
   ]
 }
