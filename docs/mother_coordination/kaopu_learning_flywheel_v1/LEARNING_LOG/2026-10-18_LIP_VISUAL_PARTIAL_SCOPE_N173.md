@@ -44,6 +44,6 @@ The executable classifier requires exact subject binding, a reason-bearing defec
 ## Lifecycle
 
 - Target PR #308: `IMPLEMENTED=true`, production `GATE-RUN=true`.
-- Learning update: `POSTED=false` until the directed PR comment exists.
+- Learning update: `POSTED=true`; directed receipt: https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6249552508.
 - `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.
 - No production Mother branch, main, R2, root AGENTS or global gate changed.
