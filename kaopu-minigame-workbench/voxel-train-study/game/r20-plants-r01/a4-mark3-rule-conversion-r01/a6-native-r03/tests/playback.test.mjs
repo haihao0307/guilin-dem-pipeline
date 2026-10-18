@@ -1,0 +1,3 @@
+import assert from 'node:assert/strict';import {createPlayback} from '../src/a6-playback.mjs';
+let t=0,fn=null,pending=false,applied=0;const c=createPlayback({apply:()=>applied++,requestRender:()=>{},isRenderPending:()=>pending,now:()=>t,schedule:f=>(fn=f,1),cancel:()=>fn=null});
+c.play();c.play();t=100;fn();assert.ok(Math.abs(c.state.phaseDegrees-1)<1e-10);pending=true;t=1000;fn();assert.ok(Math.abs(c.state.phaseDegrees-1)<1e-10);c.step();assert.equal(c.state.playing,false);assert.ok(Math.abs(c.state.phaseDegrees-6)<1e-10);c.reset();assert.equal(c.state.phase,0);assert.throws(()=>c.setSpeed(31));assert.throws(()=>c.step(31));assert.equal(applied,3);console.log('playback deterministic controls passed');

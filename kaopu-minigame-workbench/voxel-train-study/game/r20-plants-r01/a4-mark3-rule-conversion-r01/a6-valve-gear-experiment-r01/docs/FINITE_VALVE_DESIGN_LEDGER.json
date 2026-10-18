@@ -1,0 +1,819 @@
+{
+  "schema": "a6-finite-valve-design-ledger/1",
+  "moduleHashes": {
+    "valve-constraints.mjs": "010e5493321b38994cfb72804249801a171c405de4da7c5d8bbac2fbd1b48e71",
+    "valve-native-adapter.mjs": "84ded84db0e0b3eed0941edcddd993ceebfa7446f60a4f8318dbc4d2cec852c3",
+    "valve-native-primitives.mjs": "d059a38993f010cf4718a255402f08bdee6fe921e3ad42fad0c36a25a24c57f1"
+  },
+  "designStatus": "design candidate; primary chassis locks retained; historical gear dimensions unresolved",
+  "primaryLocks": {
+    "wheelTreadDiameterM": 2.032,
+    "crankRadiusM": 0.3302,
+    "pistonStrokeM": 0.6604,
+    "driverAxisZM": [
+      3.5814,
+      5.7912,
+      8.001
+    ]
+  },
+  "dimensions": {
+    "eccentricPitchRadiusM": 0.145,
+    "eccentricReferenceAngleRad": 1.5707963267948966,
+    "eccentricRodLengthM": 2.36,
+    "expansionTailRadiusM": 0.3,
+    "trunnionY": 1.58,
+    "trunnionZ": 3.55,
+    "valveHeightM": 1.82,
+    "combinationUpperArmM": 0.08,
+    "combinationLowerArmM": 0.72,
+    "referenceValveZ": 2.25,
+    "referenceCrossheadZ": 2.49,
+    "referenceExpansionDieAngleRad": -0.12,
+    "referenceLiftingDieBehindExpansionDieM": 0.4,
+    "expansionSlotLimitsRad": [
+      -0.28,
+      0.28
+    ],
+    "radiusRodSupportSlotLimitsM": [
+      -0.46,
+      -0.075
+    ]
+  },
+  "finiteSections": {
+    "lowPlaneM": 1.292,
+    "highPlaneM": 1.342,
+    "plateDepthM": 0.035,
+    "expansionSlotHalfWidthM": 0.03,
+    "expansionDieHalfWidthM": 0.028,
+    "expansionDieHalfAngleRad": 0.024,
+    "liftingSlotHalfWidthM": 0.03,
+    "liftingDieHalfWidthM": 0.028,
+    "liftingDieHalfLengthM": 0.026,
+    "dieDepthM": 0.031,
+    "dieBoreRadiusM": 0.02,
+    "diePinRadiusM": 0.018,
+    "pinRunningRadialGapM": 0.002,
+    "designStatus": "explicit native design assumptions; no historical dimension claim"
+  },
+  "derived": {
+    "mainRodLengthM": 3.317672901296931,
+    "physicalReturnCrankLengthM": 0.3606342191195949,
+    "radiusRodLengthM": 1.3388054376943648,
+    "unionLengthM": 0.25427544120500534,
+    "H": [
+      1.6895039701427494,
+      3.97601731496814
+    ]
+  },
+  "corrections": [
+    {
+      "name": "return-crank--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1960,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "eccentric-rod--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1560,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "slotted-expansion-link--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 544,
+      "newVertexCount": 5328,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "expansion-link-trunnion--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 400,
+      "newVertexCount": 400,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Fixed shaft seated in retained portal, bearing fork separated 13 mm from portal and shaft stops 2.5 mm before slot plane"
+    },
+    {
+      "name": "radius-rod--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 2480,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "combination-lever--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 3120,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "union-link--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1960,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "valve-rod-crosshead--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 464,
+      "newVertexCount": 824,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "reverser-lifting-link--1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 3920,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Three-pivot bellcrank supported on a real fixed shaft; H fixed during one wheel cycle"
+    },
+    {
+      "name": "reverser-reach-rod--1",
+      "kind": "rigid-rest-placement",
+      "translationM": [
+        -0.23199999999999998,
+        0,
+        0
+      ],
+      "reason": "Keep full original reach rod geometry and length; connect to the fixed-setting bellcrank J plane",
+      "oldGeometryRetainedIn": "../a6-native-r02"
+    },
+    {
+      "name": "return-crank-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1960,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "eccentric-rod-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1560,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "slotted-expansion-link-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 544,
+      "newVertexCount": 5328,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "expansion-link-trunnion-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 400,
+      "newVertexCount": 400,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Fixed shaft seated in retained portal, bearing fork separated 13 mm from portal and shaft stops 2.5 mm before slot plane"
+    },
+    {
+      "name": "radius-rod-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 2480,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "combination-lever-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 3120,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "union-link-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 1960,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "valve-rod-crosshead-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 464,
+      "newVertexCount": 824,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Replace non-closing reference by solved joint/slot geometry; no old-mesh scaling"
+    },
+    {
+      "name": "reverser-lifting-link-1",
+      "kind": "explicit-same-name-native-finite-geometry-revision",
+      "oldVertexCount": 792,
+      "newVertexCount": 3920,
+      "oldGeometryRetainedIn": "../a6-native-r02",
+      "reason": "Three-pivot bellcrank supported on a real fixed shaft; H fixed during one wheel cycle"
+    },
+    {
+      "name": "reverser-reach-rod-1",
+      "kind": "rigid-rest-placement",
+      "translationM": [
+        0.23199999999999998,
+        0,
+        0
+      ],
+      "reason": "Keep full original reach rod geometry and length; connect to the fixed-setting bellcrank J plane",
+      "oldGeometryRetainedIn": "../a6-native-r02"
+    }
+  ],
+  "supplementalParts": [
+    {
+      "name": "valve-experiment-crosshead-pin--1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "joint": "actual R02 crosshead gudgeon to union-link C eye",
+        "radialRunningGapM": 0.002,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 400,
+      "triangles": 160
+    },
+    {
+      "name": "valve-experiment-return-crank-pin--1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "joint": "rigid coaxial continuation of actual R02 main crankpin",
+        "rigidMount": true,
+        "eccentricRodLateralGapM": 0.0075,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 400,
+      "triangles": 160
+    },
+    {
+      "name": "valve-experiment-expansion-die--1",
+      "metadata": {
+        "features": [
+          {
+            "kind": "extruded-die-through-bore",
+            "axis": "x",
+            "centerYZ": [
+              1.737927106002358,
+              3.5789591329424804
+            ],
+            "xMin": -1.3075,
+            "xMax": -1.2765,
+            "holeRadius": 0.02,
+            "angularSegments": 114,
+            "outerCornerCount": 50,
+            "capConstruction": "ray-edge-intersection-annular-strips",
+            "openThroughBore": true
+          }
+        ],
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "finiteDie": true,
+        "trueThroughBore": true,
+        "radialHalfWidthM": 0.028,
+        "angularHalfLengthRad": 0.024,
+        "nominalSlotRadialGapM": 0.002,
+        "pinRadiusM": 0.018,
+        "boreRadiusM": 0.02,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 1824,
+      "triangles": 912
+    },
+    {
+      "name": "valve-experiment-lifting-die--1",
+      "metadata": {
+        "features": [
+          {
+            "kind": "extruded-die-through-bore",
+            "axis": "x",
+            "centerYZ": [
+              1.6895039701427494,
+              3.97601731496814
+            ],
+            "xMin": -1.3575000000000002,
+            "xMax": -1.3265,
+            "holeRadius": 0.02,
+            "angularSegments": 68,
+            "outerCornerCount": 4,
+            "capConstruction": "ray-edge-intersection-annular-strips",
+            "openThroughBore": true
+          }
+        ],
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "finiteDie": true,
+        "trueThroughBore": true,
+        "halfLengthM": 0.026,
+        "halfWidthM": 0.028,
+        "pinRadiusM": 0.018,
+        "boreRadiusM": 0.02,
+        "nominalSlotWidthGapM": 0.002,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 1088,
+      "triangles": 544
+    },
+    {
+      "name": "valve-experiment-lifting-bearing-support--1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "static": true,
+        "attachedTo": "expansion-link-frame-bracket--1",
+        "nominalBearingGapM": 0.002,
+        "pivotYZM": [
+          1.95,
+          3.85
+        ],
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 424,
+      "triangles": 172
+    },
+    {
+      "name": "valve-experiment-valve-crosshead-guide--1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "static": true,
+        "guideHeightM": 1.82,
+        "guideZRangeM": [
+          2.1,
+          2.65
+        ],
+        "verticalBlockFaceGapM": 0.015,
+        "attachedTo": "outside-motion-bracket--1",
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 264,
+      "triangles": 132
+    },
+    {
+      "name": "valve-experiment-crosshead-pin-1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "joint": "actual R02 crosshead gudgeon to union-link C eye",
+        "radialRunningGapM": 0.002,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 400,
+      "triangles": 160
+    },
+    {
+      "name": "valve-experiment-return-crank-pin-1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "joint": "rigid coaxial continuation of actual R02 main crankpin",
+        "rigidMount": true,
+        "eccentricRodLateralGapM": 0.0075,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 400,
+      "triangles": 160
+    },
+    {
+      "name": "valve-experiment-expansion-die-1",
+      "metadata": {
+        "features": [
+          {
+            "kind": "extruded-die-through-bore",
+            "axis": "x",
+            "centerYZ": [
+              1.737927106002358,
+              3.5789591329424804
+            ],
+            "xMin": 1.2765,
+            "xMax": 1.3075,
+            "holeRadius": 0.02,
+            "angularSegments": 114,
+            "outerCornerCount": 50,
+            "capConstruction": "ray-edge-intersection-annular-strips",
+            "openThroughBore": true
+          }
+        ],
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "finiteDie": true,
+        "trueThroughBore": true,
+        "radialHalfWidthM": 0.028,
+        "angularHalfLengthRad": 0.024,
+        "nominalSlotRadialGapM": 0.002,
+        "pinRadiusM": 0.018,
+        "boreRadiusM": 0.02,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 1824,
+      "triangles": 912
+    },
+    {
+      "name": "valve-experiment-lifting-die-1",
+      "metadata": {
+        "features": [
+          {
+            "kind": "extruded-die-through-bore",
+            "axis": "x",
+            "centerYZ": [
+              1.6895039701427494,
+              3.97601731496814
+            ],
+            "xMin": 1.3265,
+            "xMax": 1.3575000000000002,
+            "holeRadius": 0.02,
+            "angularSegments": 68,
+            "outerCornerCount": 4,
+            "capConstruction": "ray-edge-intersection-annular-strips",
+            "openThroughBore": true
+          }
+        ],
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "finiteDie": true,
+        "trueThroughBore": true,
+        "halfLengthM": 0.026,
+        "halfWidthM": 0.028,
+        "pinRadiusM": 0.018,
+        "boreRadiusM": 0.02,
+        "nominalSlotWidthGapM": 0.002,
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 1088,
+      "triangles": 544
+    },
+    {
+      "name": "valve-experiment-lifting-bearing-support-1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "static": true,
+        "attachedTo": "expansion-link-frame-bracket-1",
+        "nominalBearingGapM": 0.002,
+        "pivotYZM": [
+          1.95,
+          3.85
+        ],
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 424,
+      "triangles": 172
+    },
+    {
+      "name": "valve-experiment-valve-crosshead-guide-1",
+      "metadata": {
+        "assembly": "experimental-outside-valve-gear",
+        "designStatus": "explicit native design assumptions; no historical dimension claim",
+        "sourceRuntimeDependencies": [],
+        "sourceAnimationChannelsUsed": 0,
+        "static": true,
+        "guideHeightM": 1.82,
+        "guideZRangeM": [
+          2.1,
+          2.65
+        ],
+        "verticalBlockFaceGapM": 0.015,
+        "attachedTo": "outside-motion-bracket-1",
+        "nativeGeometry": true,
+        "indexed": true
+      },
+      "vertices": 264,
+      "triangles": 132
+    }
+  ],
+  "jointSnapshots": [
+    {
+      "phaseDegrees": 0,
+      "E": [
+        1.016,
+        5.9361999999999995
+      ],
+      "T": [
+        1.282861487249447,
+        3.59133647590675
+      ],
+      "beta": 0,
+      "circleMarginM": 0.20805252095400695,
+      "D": [
+        1.737927106002358,
+        3.5789591329424804
+      ],
+      "V": [
+        1.82,
+        2.25
+      ],
+      "A": [
+        1.9000000000000001,
+        2.25
+      ],
+      "U": [
+        1.1,
+        2.25
+      ],
+      "C": [
+        1.016,
+        2.4900000000000007
+      ],
+      "P": [
+        1.3462,
+        5.7912
+      ],
+      "Q": [
+        1.58,
+        3.55
+      ],
+      "H": [
+        1.6895039701427494,
+        3.97601731496814
+      ],
+      "slotAngle": -0.12,
+      "combinationAngle": 0,
+      "supportCoordinateM": -0.4000000000000002,
+      "radiusRodDirection": [
+        0.12105783964902127,
+        -0.9926454550641494
+      ]
+    },
+    {
+      "phaseDegrees": 90,
+      "E": [
+        0.871,
+        5.7912
+      ],
+      "T": [
+        1.2911688077888086,
+        3.4689041159745964
+      ],
+      "beta": 0.4119530080192619,
+      "circleMarginM": 0.29067191245396895,
+      "D": [
+        1.7301579353354413,
+        3.649660880989025
+      ],
+      "V": [
+        1.82,
+        2.3471361451070183
+      ],
+      "A": [
+        1.8956527900111706,
+        2.3211235450154137
+      ],
+      "U": [
+        1.1391248898994655,
+        2.581249545931458
+      ],
+      "C": [
+        1.016,
+        2.8037270987030687
+      ],
+      "P": [
+        1.016,
+        6.1213999999999995
+      ],
+      "Q": [
+        1.58,
+        3.55
+      ],
+      "H": [
+        1.6895039701427494,
+        3.97601731496814
+      ],
+      "slotAngle": -0.13471531402896478,
+      "combinationAngle": -0.3311782748999822,
+      "supportCoordinateM": -0.3288788027305091,
+      "radiusRodDirection": [
+        0.12361382021329231,
+        -0.9923304003467176
+      ]
+    },
+    {
+      "phaseDegrees": 180,
+      "E": [
+        1.016,
+        5.6462
+      ],
+      "T": [
+        1.391864080790563,
+        3.3163231378522466
+      ],
+      "beta": 1.031174423252824,
+      "circleMarginM": 0.11074882010793763,
+      "D": [
+        1.7086765452482124,
+        3.8403571293702936
+      ],
+      "V": [
+        1.82,
+        2.489822473933203
+      ],
+      "A": [
+        1.896025401253099,
+        2.5147250513962955
+      ],
+      "U": [
+        1.1357713887221101,
+        2.2656992767653725
+      ],
+      "C": [
+        1.016,
+        2.4900000000000007
+      ],
+      "P": [
+        0.6858,
+        5.7912
+      ],
+      "Q": [
+        1.58,
+        3.55
+      ],
+      "H": [
+        1.6895039701427494,
+        3.97601731496814
+      ],
+      "slotAngle": -0.2377804789899806,
+      "combinationAngle": 0.3165419873315351,
+      "supportCoordinateM": -0.1370082975319991,
+      "radiusRodDirection": [
+        0.13993732825550145,
+        -0.9901603628507416
+      ]
+    },
+    {
+      "phaseDegrees": 270,
+      "E": [
+        1.161,
+        5.7912
+      ],
+      "T": [
+        1.3027267363555195,
+        3.435459451424667
+      ],
+      "beta": 0.5299730484826097,
+      "circleMarginM": 0.22003035944699656,
+      "D": [
+        1.7266912436055821,
+        3.673470944825626
+      ],
+      "V": [
+        1.82,
+        2.3059727041892235
+      ],
+      "A": [
+        1.8900204114712995,
+        2.3446656231459255
+      ],
+      "U": [
+        1.1898162967583041,
+        1.9577364335789063
+      ],
+      "C": [
+        1.016,
+        2.1433270987030695
+      ],
+      "P": [
+        1.016,
+        5.461
+      ],
+      "Q": [
+        1.58,
+        3.55
+      ],
+      "H": [
+        1.6895039701427494,
+        3.97601731496814
+      ],
+      "slotAngle": -0.14333828107541854,
+      "combinationAngle": 0.5048332370940686,
+      "supportCoordinateM": -0.30482322646742427,
+      "radiusRodDirection": [
+        0.12199619397049664,
+        -0.9925305681220672
+      ]
+    },
+    {
+      "phaseDegrees": 360,
+      "E": [
+        1.016,
+        5.9361999999999995
+      ],
+      "T": [
+        1.282861487249447,
+        3.59133647590675
+      ],
+      "beta": 0,
+      "circleMarginM": 0.20805252095400695,
+      "D": [
+        1.737927106002358,
+        3.5789591329424804
+      ],
+      "V": [
+        1.82,
+        2.25
+      ],
+      "A": [
+        1.9000000000000001,
+        2.25
+      ],
+      "U": [
+        1.1,
+        2.25
+      ],
+      "C": [
+        1.016,
+        2.4900000000000007
+      ],
+      "P": [
+        1.3462,
+        5.7912
+      ],
+      "Q": [
+        1.58,
+        3.55
+      ],
+      "H": [
+        1.6895039701427494,
+        3.97601731496814
+      ],
+      "slotAngle": -0.12,
+      "combinationAngle": 0,
+      "supportCoordinateM": -0.4000000000000002,
+      "radiusRodDirection": [
+        0.12105783964902127,
+        -0.9926454550641494
+      ]
+    }
+  ],
+  "finiteSlotChecks": {
+    "expansionDieRadialGapM": 0.0019999999999999983,
+    "expansionDieAngularEndGapRad": 0.007764085838047663,
+    "liftingDieSideGapM": 0.0019999999999999983,
+    "liftingDieEndGapM": 0.022109933076129094,
+    "pinNominalRadialGapM": 0.0020000000000000018,
+    "expansionDieAxialGapM": 0.0020000000000000018,
+    "liftingDieAxialGapM": 0.0020000000000000018,
+    "declaredSlotLimits": {
+      "expansionRad": [
+        -0.28,
+        0.28
+      ],
+      "liftingM": [
+        -0.46,
+        -0.075
+      ]
+    },
+    "travelExtremaSampleCount": 1441,
+    "continuousSlotTravelProof": false,
+    "status": "exact local section deductions from sampled-cycle travel extrema; not a continuous slot-travel proof"
+  },
+  "unresolved": [
+    "Inside motion and conjugated Gresley linkage are still static references.",
+    "Valve chest/ports, lap/lead/admission and steam events unresolved.",
+    "Cab reverser actuator is held at one declared setting; no control sweep or force/elasticity model."
+  ]
+}
