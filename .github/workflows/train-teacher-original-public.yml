@@ -11,7 +11,7 @@ permissions:
 jobs:
   original:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -27,12 +27,24 @@ jobs:
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
+      - name: Await exact Pages entry before public browser check
+        run: |
+          python3 - <<'PYWAIT'
+          import urllib.request,time,hashlib
+          url='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-orthographic-r01/'
+          for attempt in range(60):
+            try:
+              data=urllib.request.urlopen(url,timeout=20).read()
+              if hashlib.sha256(data).hexdigest()=='3a33aade468b03d49d82595a7a90744fab69eaf6f7fc1f460fb61e1c97b50649':break
+            except Exception as e: print(attempt,str(e),flush=True)
+            time.sleep(15)
+          else: raise RuntimeError('Expected Pages entry not ready')
+          PYWAIT
       - name: Verify original public teacher scene only
         run: |
-          python3 -m http.server 8765 --bind 127.0.0.1 --directory kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01 &
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/teacher-original-public-qa/browser.cjs
         env:
-          TARGET_URL: http://127.0.0.1:8765/a4-original-orthographic-r01/
+          TARGET_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-orthographic-r01/
           EXPECT_ORTHOGRAPHIC: '1' 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
