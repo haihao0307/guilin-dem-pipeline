@@ -2,6 +2,22 @@
 
 这是一份从嘴唇专项 R01 接续的完整人物存档修复。它继续使用同一原生人物与 R01 唇部外观。
 
+## 已发布的固定工作台
+
+[打开 R01.1 嘴唇工作台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/36e5e11a13ba299915dc07e1800c72973f0f7e44/kaopu-unified-human-workbench/lip-realism-r01-1/preview.html)。
+
+2026-10-18 的 [Actions 39095533327](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39095533327) 已成功结束，专项 **9/9** 通过。通过真实保存按钮获得同一档案，关闭生产者后，在两个全新 BrowserContext 分别通过旧皮肤输入与顶部嘴唇输入恢复；正常重新计算后，校准、几何、参数与受控条件下的完整像素仍精确一致。原 R01 与修复版的默认着色器、几何、校准和画面也完全一致。
+
+| 身份 | 固定提交 |
+| --- | --- |
+| 生产源码与验证脚本 | `489eb0b1520603bb3ddb65f0ec5f12140a2e7e97` |
+| 公开运行构建 | `36e5e11a13ba299915dc07e1800c72973f0f7e44` |
+| 本轮原始证据 | `c9d6eadc3bf44af50e718a63a8f8581c591cacd7` |
+
+HTML SHA256：`29d2e2bcf30cacd10af822de9acfd26dcf1908a212291df0398f1e9cc3b09e5a`。发布回执见 [PUBLICATION_PROOF.json](PUBLICATION_PROOF.json)，全部原始档案、快照与真实帧见 [本轮 QA](qa/fresh-context/39095533327-1/)。源码续接与审核见 [Draft PR305](https://github.com/haihao0307/guilin-dem-pipeline/pull/305) 和 `RECOVERY_REVIEW.json`。
+
+此处通过的是完整人物存档修复及真实公开运行检查。用户视觉验收与生产就绪保持待定。
+
 ## 这次修复的实际问题
 
 R01 顶部的嘴唇保存入口已经写入 `lipRealism` 参数及两份原生唇纹校准。保留在旧皮肤面板中的完整人物保存、载入按钮，以及头部和全身皮肤的公开档案 API，却仍调用较早捕获的 R02 函数。通过这些入口保存会漏掉嘴唇内容。
