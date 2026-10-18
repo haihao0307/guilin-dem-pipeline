@@ -1,12 +1,12 @@
 {
   "schema": "kaopu/lip-inner-candidate-anchor@1",
   "version": "LIP-INNER-R04",
-  "baseEvidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
+  "baseEvidenceCommit": "4fa69b91723a294cad3a48bd931842ccb43adb8c",
   "reviewedFiles": {
     "MucosaSurface.js": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
     "InnerLip.js": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
     "build.cjs": "a832b933fae1d6be9bd7d343fe8b33cc3b5fe9b4db9f8173e3e70330c4b73107",
-    "verification/verify-inner.cjs": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+    "verification/verify-inner.cjs": "e15be8a0b29e8345290d710c7773f0a989fed9b93f6266a2863959b7425686a8",
     "SURFACE_CONTRACT.json": "9066c543c39cce3c1c6af52499799d21567f915b90d10d52d9d6c19a86c71cf0"
   },
   "diagnosis": {
@@ -51,28 +51,44 @@
     "sameStateIndependentR02OffEquality": true,
     "cleanupRequired": true,
     "publicURLMustBeImmutableBuild": true,
-    "outputDirectory": "evidence/candidate-02",
-    "browserEvaluateDeadlineMS": 120000
+    "outputDirectory": "evidence/candidate-03",
+    "browserEvaluateDeadlineMS": 120000,
+    "savePreFrameComparison": "All native person, geometry, calibration, camera and lighting fields; drawGeometry cache excluded only before render. Actual save before/after remains full exact. Fresh actual draw/frame compared in full against earlier actual matched pair."
   },
   "sourceReviews": [
     "research/mucosa-candidate-review.json",
     "research/inner-candidate-source-review.json",
     "root and independent geometry review of actual verifier state/frame/archive routes",
-    "research/startup-batch-source-review.json"
+    "research/startup-batch-source-review.json",
+    "research/save-preframe-source-review.json"
   ],
   "visualAcceptance": false,
   "productionReady": false,
   "userVisualApproval": false,
-  "candidateIteration": 2,
-  "previousCandidate": {
-    "sourceCommit": "6580ecde2082d779018bcfc90e3aa57b03d801ae",
-    "buildCommit": "fbbdba156ba2d799c859ab3094f8f83391f4ddc0",
-    "run": 39108869490,
-    "evidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
-    "qaSHA256": "85f2648061176b92fbf572c8add9dacb359f23a151841940c860610f19af8ef8",
-    "result": "failed initial startup GPU queue drain at fixed120000ms before target frames",
-    "originalEvidence": "evidence/candidate-01/qa.json",
-    "targetPNGCount": 0,
-    "summary": "research/candidate-01-failure-review.json"
-  }
+  "candidateIteration": 3,
+  "previousCandidates": [
+    {
+      "sourceCommit": "6580ecde2082d779018bcfc90e3aa57b03d801ae",
+      "buildCommit": "fbbdba156ba2d799c859ab3094f8f83391f4ddc0",
+      "run": 39108869490,
+      "evidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
+      "qaSHA256": "85f2648061176b92fbf572c8add9dacb359f23a151841940c860610f19af8ef8",
+      "result": "failed initial startup GPU queue drain at fixed120000ms before target frames",
+      "originalEvidence": "evidence/candidate-01/qa.json",
+      "targetPNGCount": 0,
+      "summary": "research/candidate-01-failure-review.json"
+    },
+    {
+      "sourceCommit": "b4abc9a1d11953869063acf28d6a9e67c080cf4e",
+      "buildCommit": "70dc8a62c0f03f701580030aed77e53284d21948",
+      "run": 39109600185,
+      "evidenceCommit": "4fa69b91723a294cad3a48bd931842ccb43adb8c",
+      "qaSHA256": "c662bd7bc5330dcb41230f7c2c65b0fa974b3d8365134edf856cb2137c54ebe5",
+      "result": "9 passed; save setup compares a pre-render draw cache to prior rendered frame; overall failed before actual downloads",
+      "originalEvidence": "evidence/candidate-02/qa.json",
+      "targetPNGCount": 12,
+      "summary": "research/candidate-02-failure-review.json"
+    }
+  ],
+  "candidate03ProductModulesUnchangedFromCandidate02": true
 }

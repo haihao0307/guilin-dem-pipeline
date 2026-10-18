@@ -188,7 +188,8 @@ async function cleanup(){const start=Date.now(),errors=[];for(const c of browser
   q.cleanup={completed:errors.length===0,browserDisconnected:!browser||!browser.isConnected(),errors,elapsedMS:Date.now()-start};checkpoint();assert(q.cleanup.completed&&q.cleanup.browserDisconnected,'Bounded browser cleanup failed');}
 // During suppressed pose/restore setup, mesh.geometry may still name the prior
 // frame's cached draw object. The post-render complete state gate includes it.
-function commonPerson(s){const x=structuredClone(s);delete x.camera;delete x.lighting;delete x.drawGeometry;return x;}
+function preFrameState(s){const x=structuredClone(s);delete x.drawGeometry;return x;}
+function commonPerson(s){const x=preFrameState(s);delete x.camera;delete x.lighting;return x;}
 async function saveShaders(label){const data=await page.evaluate(()=>__LI_VERIFY__.shaders());assert(data.linked);assert(data.expanded.length>=2&&data.expanded.every(x=>x.compiled&&x.source),'Actual expanded compiled GLSL absent');
   assert(data.nativeUniforms.length===15&&data.nativeUniforms.every(x=>x.nativePresent&&x.skinPresent&&x.sameObject),'Native uniform object ownership lost');
   const record={programId:data.programId,linked:data.linked,programLog:data.programLog,source:data.source,nativeUniforms:data.nativeUniforms,templates:{},expanded:[]};
@@ -250,7 +251,10 @@ async function publicChecks(){
     await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
     await page.evaluate(({width,height})=>{__LI_VERIFY__.size(width,height);__LI_VERIFY__.poseView('jaw','macro');__LI_VERIFY__.inspect(0);__LI_VERIFY__.compare('r04');},{width,height});
     await page.evaluate(reference=>__LI_VERIFY__.align(reference),pairs['jaw/macro'].state);
-    const before=await state();assert.deepEqual(before,pairs['jaw/macro'].state,'Save setup changed the held person');
+    const before=await state();
+    q.savePreFrameState=before;
+    q.savePreFrameScope={excluded:['drawGeometry'],cameraAndLightingIncluded:true,reference:'Previously rendered jaw/macro R04 pair; native inputs remain exact before saving. Draw cache is compared in full after the fresh actual render.'};checkpoint();
+    assert.deepEqual(preFrameState(before),preFrameState(pairs['jaw/macro'].state),'Save setup changed the held person, camera or lighting');
     q.downloads=[];
     for(const[label,selector]of selectors){
       const promise=page.waitForEvent('download',{timeout:30000});await page.locator(selector).click();const download=await promise;
@@ -264,7 +268,9 @@ async function publicChecks(){
       q.downloads.push({label,selector,file,suggestedFilename:download.suggestedFilename(),sha256:sha(bytes),bytes:bytes.length,innerLip:archive.innerLip});
       assert.deepEqual(await state(),before,'Actual save altered person state');checkpoint();
     }
-    q.archiveReferenceState=before;
+    // Keep the measured pre-frame state above intact. The fresh actual draw is
+    // compared against the actual earlier draw, never a fabricated cache.
+    q.archiveReferenceState=pairs['jaw/macro'].state;
     return{actualDOMDownloads:3,innerLipSchema:'kaopu/lip-inner@1',calibrationRetained:true};
   });
   await test('unknown and null R04 archive declarations reject before native mutation',async()=>{
