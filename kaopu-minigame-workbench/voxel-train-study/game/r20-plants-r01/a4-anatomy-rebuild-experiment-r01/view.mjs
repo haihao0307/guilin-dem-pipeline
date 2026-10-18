@@ -1,0 +1,22 @@
+import * as T from 'three';
+import {RoomEnvironment} from '../a4-full-source-replica-r01/vendor/RoomEnvironment.mjs';
+import {restoreOriginal} from '../a4-full-source-replica-r01/src/original-chassis-recovery.mjs';
+import {applyAcceptanceCamera,projectedExtents} from './same-scale-camera.mjs';
+// Local rebuilding adapters are supplied only after their CPU shape tests pass.
+import {applyRebuilds} from './apply-rebuilds.mjs';
+const qa=window.EXPERIMENT,stage=document.querySelector('#stage'),status=document.querySelector('#status');
+const source=await restoreOriginal('a4');source.showAll();
+const candidate=source.root.clone(true),candidateNodes=new Map();candidate.traverse(n=>{if(n.userData.originalNode)candidateNodes.set(n.userData.originalNode.index,n);});
+if(candidateNodes.size!==331)throw Error('SOURCE_NODE_CLONE_INCOMPLETE');
+const replacements=applyRebuilds(T,source,candidateNodes);qa.replacements=replacements;
+const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;stage.append(renderer.domElement);renderer.debug.onShaderError=(gl,p)=>fail(Error('SHADER '+gl.getProgramInfoLog(p)));
+const studio=new RoomEnvironment(),pmrem=new T.PMREMGenerator(renderer),environment=pmrem.fromScene(studio,.04).texture;studio.dispose();pmrem.dispose();
+const panels=[['original',source.root,source.nodes],['candidate',candidate,candidateNodes]].map(([id,root,nodes])=>{const scene=new T.Scene();scene.background=new T.Color('#e9e6dd');scene.environment=environment;scene.add(root);scene.add(new T.HemisphereLight(0xffffff,0x6a6c66,1.2));const sun=new T.DirectionalLight(0xfff3db,2);sun.position.set(10,20,15);scene.add(sun);return{id,root,nodes,scene,element:document.getElementById(id)};});
+const camera=new T.OrthographicCamera();let focus='wheel',view='side',phase=0;const framing=new Map();const getNode=(p,id)=>p.nodes instanceof Map?p.nodes.get(id):p.nodes[id];
+function selectedNodes(){return focus==='wheel'?[8,9,10]:focus==='rod'?[103]:null;}
+function render(){const selected=selectedNodes(),union=new T.Box3();for(const p of panels){p.root.updateMatrixWorld(true);p.root.traverse(n=>{if(n.isMesh)n.visible=!selected||selected.includes(n.userData.originalPrimitive?.node);});if(selected)for(const id of selected)union.union(new T.Box3().setFromObject(getNode(p,id),true));else union.union(new T.Box3().setFromObject(p.root,true));}
+const box=stage.getBoundingClientRect(),w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);const size=union.getSize(new T.Vector3()),ext=projectedExtents(size,view),rs=panels.map(p=>p.element.getBoundingClientRect());const frameKey=focus+':'+view+':'+w+':'+h;let fixed=framing.get(frameKey);if(!fixed){fixed={scale:Math.max(...rs.map(r=>Math.max(ext.width/r.width,ext.height/r.height)))*1.15,center:union.getCenter(new T.Vector3())};framing.set(frameKey,fixed);}const {scale,center}=fixed;renderer.setScissorTest(false);renderer.clear();renderer.setScissorTest(true);
+for(let i=0;i<panels.length;i++){const p=panels[i],r=rs[i];applyAcceptanceCamera(T,camera,{view,center,worldUnitsPerPixel:scale,width:r.width,height:r.height});renderer.setViewport(r.left-box.left,h-(r.bottom-box.top),r.width,r.height);renderer.setScissor(r.left-box.left,h-(r.bottom-box.top),r.width,r.height);renderer.render(p.scene,camera);}
+Object.assign(qa,{focus,view,phase,worldUnitsPerPixel:scale,cameraShared:true,independentFit:false,sourceNodeCount:source.nodes.length,candidateNodeCount:candidateNodes.size});status.textContent=`${focus} · 两格共用同相机/同光照/同材质，${scale.toFixed(8)} 源单位/CSS像素，未标定为米。\n${JSON.stringify(replacements.summary)}`;}
+for(const id of ['wheel','rod','all'])document.getElementById(id).onclick=()=>{focus=id;render();};for(const id of ['side','front','top'])document.getElementById(id).onclick=()=>{view=id;render();};document.getElementById('phase').onclick=()=>{phase=phase===0?1:0;source.setTime(phase);for(const [id,n]of candidateNodes){const r=source.nodes[id];n.position.copy(r.position);n.quaternion.copy(r.quaternion);n.scale.copy(r.scale);n.matrix.copy(r.matrix);}render();};addEventListener('resize',render);
+Object.assign(qa,{ready:true,source,candidate,candidateNodes,panels,renderer,camera,render});render();
