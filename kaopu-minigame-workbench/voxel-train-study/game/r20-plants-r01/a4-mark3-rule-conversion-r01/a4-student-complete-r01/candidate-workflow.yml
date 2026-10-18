@@ -1,0 +1,41 @@
+name: A4 complete student single-view QA
+on:
+  push:
+    branches: ['qa/a4-mark3-rule-conversion-r01-20261017']
+    paths:
+      - '.github/workflows/train-a4-student-complete-r01.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a4-student-complete-r01/**'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a6-valve-gear-experiment-r01/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  connected-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-a6-source-comparison-r03
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Actual single student rendering and animation
+        run: node a4-student-complete-r01/browser.cjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: train-a4-student-complete-r01-${{ github.sha }}-${{ github.run_attempt }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/a4-student-complete-r01/qa/
+          retention-days: 14
+          if-no-files-found: error
