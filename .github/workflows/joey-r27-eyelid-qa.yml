@@ -34,6 +34,7 @@ jobs:
       - name: Loading transport unit checks
         run: node --test kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/test-startup.mjs
       - name: Build independent page from fixed existing layers
+        if: ${{ !hashFiles('kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/PUBLIC-CHECK.json') }}
         timeout-minutes: 3
         run: node kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/build.cjs
       - name: Render unchanged baseline and one native candidate, then restore
@@ -43,7 +44,11 @@ jobs:
           set -o pipefail
           ROOT=kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27
           mkdir -p "$ROOT/evidence"
-          node "$ROOT/verify.cjs" 2>&1 | tee "$ROOT/evidence/run.log"
+          if [ -f "$ROOT/PUBLIC-CHECK.json" ]; then
+            node "$ROOT/verify-public.cjs" 2>&1 | tee "$ROOT/evidence/run.log"
+          else
+            node "$ROOT/verify.cjs" 2>&1 | tee "$ROOT/evidence/run.log"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

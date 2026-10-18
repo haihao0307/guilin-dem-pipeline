@@ -1,0 +1,5 @@
+'use strict';
+const fs=require('node:fs'),assert=require('node:assert/strict'),{checkReport}=require('./check-report.cjs');
+const input=process.argv[2];if(!input)throw Error('Pass the saved real QA JSON');const r=JSON.parse(fs.readFileSync(input));const result=checkReport(r);const tests=[];
+for(const [name,change] of [['meaningful body drift',x=>x.candidate.bodyMM=.002],['non-finite body drift',x=>x.candidate.bodyMM=NaN],['lost original strand',x=>x.candidate.hair.count--],['modified native rollback',x=>x.restored.nativeSHA='different'],['modified pixel rollback',x=>x.screenshots[2].sha256='different'],['reversed triangle',x=>x.candidate.minNormalDot=-.01]]){const x=structuredClone(r);change(x);assert.throws(()=>checkReport(x),name);tests.push({name,rejected:true});}
+console.log(JSON.stringify({schema:'kaopu/r27-postcondition-replay/1',sourceRun:39108737512,sourceCIStatus:'failed at obsolete exact-zero-body assertion',replay:'All recorded real render postconditions checked; no new browser execution in this replay',result,negativeChecks:tests},null,2));
