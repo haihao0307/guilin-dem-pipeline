@@ -1,0 +1,28 @@
+{
+  "schema": "kaopu/bounded-independent-source-review@1",
+  "taskId": "LIP-ARCHIVE-RECOVERY-R01-1-20261018",
+  "reviewedAt": "2026-10-18",
+  "result": "PASS_SOURCE_SCOPE_ONLY",
+  "producer": "lip_archive_review",
+  "independentVerifier": "lip_progress_audit",
+  "sourceFiles": {
+    "LipSurface.js": "4f680a4ab00b40de66b42aef8adcb64e50f3fd3df202d3c6039d412d6a7f31b3",
+    "build.cjs": "2c4ee1959907be337cb57e98b6ef95d4f61ccf9bc9df51a0c96197c3ae815dd6"
+  },
+  "frozenInputs": {
+    "originalR01Module": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d",
+    "hostR07HTML": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a"
+  },
+  "findings": [
+    "Parameter defaults, limits, shader generation and optical functions remain byte-identical to R01.",
+    "Native geometry and material hooks, sync/set/view, calibration encoding and restore implementation remain byte-identical.",
+    "The new capture listener on control-shell is an ancestor of the earlier ps-controls capture listener; it runs before the earlier stopImmediatePropagation.",
+    "The interception matches only full-person PS save/load and FB save inside the retained skin panel.",
+    "Controller implementations retain previously bound R02 closures; dynamic public delegates do not form a recursion cycle in the frozen host.",
+    "The archive schema and legacy missing-calibration path are unchanged. Canceling an empty file selection returns without restoring.",
+    "Both files pass Node syntax checks; append-only build restores the frozen host and original script bytes exactly."
+  ],
+  "runtimeVerification": "PENDING_SEPARATE_REAL_BROWSER_QA",
+  "visualAcceptance": false,
+  "productionReady": false
+}
