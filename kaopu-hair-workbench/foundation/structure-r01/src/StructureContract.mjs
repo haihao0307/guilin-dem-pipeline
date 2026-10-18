@@ -1,3 +1,4 @@
+import {assertEarRestField} from './EarRestGroom.mjs';
 import {assertCrownVolumeField} from './CrownRestVolume.mjs';
 import {assertUpperRestField} from './UpperRestGroom.mjs';
 import {assertFringeRestField} from './FringeRestGroom.mjs';
@@ -6,6 +7,7 @@ import {assertSilhouetteField} from './SilhouetteContract.mjs';
 import {assertVolumeField} from './VolumeFlow.mjs';
 export const PROFILE_FIELDS=['ScalpDomain','AnatomicalZoneField','CandidateRootField','ActiveRootMask','FollicleDensityField','RootDirectionField','RootLiftField','PartingCurves','WhorlField','HairlineProfile','RegionalLengthField','CutField','GuideGroom','ClumpGraph','ChildStrandProfile','StrandMaterialField','RestShape','PhysicsProfile'];
 export function assertProfile(p){
+ if(p?.EarRestField){assertEarRestField(p.EarRestField);if(!p.CrownVolumeField)throw Error('Ear rest requires frozen upper operators');}
  if(p?.CrownVolumeField){assertCrownVolumeField(p.CrownVolumeField);if(!p.UpperRestField)throw Error('Crown volume requires the protected upper groom');}
  if(p?.UpperRestField){assertUpperRestField(p.UpperRestField);if(JSON.stringify(p.UpperRestField.whorl)!==JSON.stringify(p.WhorlField?.[0])||JSON.stringify(p.UpperRestField.part)!==JSON.stringify(p.PartingCurves?.[0]))throw Error('Upper groom must consume declared whorl and part');}
  if(p?.FringeRestField){assertFringeRestField(p.FringeRestField);if(JSON.stringify(p.FringeRestField.part)!==JSON.stringify(p.PartingCurves?.[0]))throw Error('Fringe must consume the actual declared part');}

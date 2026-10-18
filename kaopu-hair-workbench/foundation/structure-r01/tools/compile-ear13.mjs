@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import zlib from 'node:zlib';
+import crypto from 'node:crypto';
+import {loadRest11Reference} from './Rest11Reference.mjs';
+import {earGeometry} from './Ear13Geometry.mjs';
+import {shapeEarRest,assertEarPreserved} from '../src/EarRestGroom.mjs';
+import {PROFILE} from '../src/HairStyleProfile.mjs';
+import {configureExperiment} from '../src/FlowExperiments.mjs';
+import {buildVolumeClumps} from '../src/VolumeClumps.mjs';
+import {assertStructure} from '../src/StructureContract.mjs';
+import {packExperiment} from '../src/ExperimentTransport.mjs';
+const base=new URL('../',import.meta.url),read=p=>fs.readFileSync(new URL(p,base)),sha=b=>crypto.createHash('sha256').update(b).digest('hex'),source=loadRest11Reference(),{accept}=earGeometry();
+configureExperiment(PROFILE,'current-rest');
+const out=shapeEarRest(source.lab.guides,source.lab.clumpGraph,PROFILE.EarRestField,accept),raw=shapeEarRest(source.lab.unshapedGuides,source.lab.clumpGraph,PROFILE.EarRestField,accept),lab={...structuredClone(source.lab),profile:structuredClone(PROFILE),guides:out.guides,unshapedGuides:raw.guides,earStudy:out.report};
+lab.clumpGraph=buildVolumeClumps(lab.guides,source.roots,lab.profile);for(const g of lab.unshapedGuides){const current=lab.guides.find(q=>q.id===g.id);g.mid=current.mid;g.micro=current.micro;}
+assertEarPreserved(source.lab.guides,lab.guides,PROFILE.EarRestField,source.lab.clumpGraph);assertEarPreserved(source.lab.unshapedGuides,lab.unshapedGuides,PROFILE.EarRestField,source.lab.clumpGraph);assertStructure(lab,source.roots);assertStructure({...lab,guides:lab.unshapedGuides},source.roots);
+const rounded=JSON.parse(JSON.stringify(lab,(k,v)=>typeof v==='number'&&/^\d+$/.test(k)?Math.round(v*1e9)/1e9:v)),bytes=read('assets/structure.json.gz'),baseline=JSON.parse(zlib.gunzipSync(bytes)),prefix='assets/experiments/current-rest/';
+for(const[name,value]of [['structure.json.gz',rounded],['patch.json.gz',packExperiment(baseline,rounded,sha(bytes))]])fs.writeFileSync(new URL(prefix+name,base),zlib.gzipSync(Buffer.from(JSON.stringify(value)),{level:9}));
+fs.copyFileSync(new URL(source.lock.referenceFiles[prefix+'roots.bin.gz'].path,base),new URL(prefix+'roots.bin.gz',base));
+console.log(JSON.stringify({pass:true,study:out.report,rawChanged:raw.report.changedGuides}));

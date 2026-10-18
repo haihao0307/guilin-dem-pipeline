@@ -10,11 +10,11 @@ def save(im,name):
  p=evidence/name;im.save(p);outputs[name]=hashlib.sha256(p.read_bytes()).hexdigest()
 labels={'front':'正面','left':'左侧','right':'右侧','back':'背面','top':'顶部','oblique':'斜侧'}
 for index,views in enumerate([['front','left','back'],['right','top','oblique']],1):
- im=Image.new('RGB',(1200,1540),'#f4f5ed');draw=ImageDraw.Draw(im);draw.text((15,10),'固定 R10 · 同机位对照',font=font,fill='#355547');draw.text((615,10),'当前 R11 · 整体尚未验收',font=font,fill='#355547')
+ im=Image.new('RGB',(1200,1540),'#f4f5ed');draw=ImageDraw.Draw(im);draw.text((15,10),'固定 R10 · 同机位对照',font=font,fill='#355547');draw.text((615,10),'当前 R13 · 整体尚未验收',font=font,fill='#355547')
  for row,view in enumerate(views):
   for col,state in enumerate(['before','after']):
    im.paste(tile(f'upper11-{state}-{view}.png',(592,444)),(col*600+4,row*493+48));draw.text((col*600+15,row*493+458),labels[view],font=font,fill='white')
- draw.text((15,1514),'稀疏导向结构：本轮修整顶部根向与圆度；整头束形、质感、物理和首次加载仍未验收。',font=small,fill='#355547');save(im,f'upper11-review-overview-{index}.png')
+ draw.text((15,1514),'稀疏导向结构：保留顶部根向与圆度，继续耳周束群；整头自然度、质感、物理和公网加载仍未验收。',font=small,fill='#355547');save(im,f'upper11-review-overview-{index}.png')
 im=Image.new('RGB',(1440,1160),'#f4f5ed');draw=ImageDraw.Draw(im)
 for row,mode in enumerate(['zones','active','directions']):
  for col,view in enumerate(['left','right','back']):
