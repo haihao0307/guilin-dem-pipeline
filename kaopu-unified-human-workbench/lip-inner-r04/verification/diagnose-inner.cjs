@@ -154,12 +154,52 @@ function installHarness() {
   const refs = { render: v.render, rendererRender: v.renderer.render, viewerUpdate: v.update, lipUpdate: lip.update, solverApply: solver.apply, motherUpdate: ls.mother.update };
   const descriptors = { render: own(v, 'render'), rendererRender: own(v.renderer, 'render'), viewerUpdate: own(v, 'update'), lipUpdate: own(lip, 'update'), solverApply: own(solver, 'apply'), motherUpdate: own(ls.mother, 'update') };
   const saveCamera = () => ({ position: v.camera.position.toArray(), quaternion: v.camera.quaternion.toArray(), target: v.orbit.target.toArray(), aspect: v.camera.aspect, fov: v.camera.fov, zoom: v.camera.zoom, near: v.camera.near, far: v.camera.far });
+  // ih.render() normally resolves exposure and fold-light placement during a
+  // real frame. Lock the restoration reference only after that frame, while
+  // preserving its earlier pre-frame state as separate diagnostic evidence.
+  function saveLighting() {
+    v.scene.updateMatrixWorld(true);
+    const transforms = new Map(), lights = [];
+    const saveTransform = object => {
+      if (transforms.has(object)) return;
+      transforms.set(object, { object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone(),
+        matrix: object.matrix.clone(), matrixWorld: object.matrixWorld.clone(), matrixAutoUpdate: object.matrixAutoUpdate,
+        matrixWorldAutoUpdate: object.matrixWorldAutoUpdate });
+    };
+    v.scene.traverse(object => {
+      if (!object.isLight) return;
+      saveTransform(object); if (object.target) saveTransform(object.target);
+      lights.push({ object, color: object.color.clone(), groundColor: object.groundColor?.clone(), intensity: object.intensity, visible: object.visible });
+    });
+    if (!v.cineRig?.center?.isVector3) throw Error('Expected original lighting rig center is unavailable');
+    return { transforms, lights, exposure: v.renderer.toneMappingExposure,
+      rig: v.cineRig, centerObject: v.cineRig.center, center: v.cineRig.center.clone() };
+  }
+  function restoreLighting(savedLighting) {
+    if (v.cineRig !== savedLighting.rig || v.cineRig.center !== savedLighting.centerObject) throw Error('Original lighting rig/center object identity changed');
+    const currentLights = []; v.scene.traverse(object => { if (object.isLight) currentLights.push(object); });
+    if (currentLights.length !== savedLighting.lights.length || currentLights.some((object, i) => object !== savedLighting.lights[i].object)) throw Error('Original lighting object set changed');
+    // center is K1's existing lighting-placement input. Do not replace or
+    // bypass setFoldLook, apply, render, or any geometry/deformation method.
+    savedLighting.centerObject.copy(savedLighting.center);
+    for (const value of savedLighting.transforms.values()) {
+      const object = value.object;
+      object.position.copy(value.position); object.quaternion.copy(value.quaternion); object.scale.copy(value.scale);
+      object.matrix.copy(value.matrix); object.matrixWorld.copy(value.matrixWorld);
+      object.matrixAutoUpdate = value.matrixAutoUpdate; object.matrixWorldAutoUpdate = value.matrixWorldAutoUpdate;
+    }
+    for (const value of savedLighting.lights) {
+      value.object.color.copy(value.color); if (value.groundColor) value.object.groundColor.copy(value.groundColor);
+      value.object.intensity = value.intensity; value.object.visible = value.visible;
+    }
+    v.renderer.toneMappingExposure = savedLighting.exposure; v.scene.updateMatrixWorld(true);
+  }
   const saved = {
     state: clone(model.state), performance: clone(ls.performance.settings), ownerBeforeJaw: ls.performance.ownerBeforeJaw,
     dna: clone(ls.anatomy.settings), lipSettings: clone(ls.settings), realism: lipRealism.settings(),
     referenceObject: solver.reference, reference: solver.reference?.slice() || null,
     horizontalObject: solver.referenceHorizontal, horizontal: solver.referenceHorizontal?.slice() || null,
-    lastKey: solver.lastKey, camera: saveCamera()
+    lastKey: solver.lastKey, camera: saveCamera(), lighting: saveLighting()
   };
   if (!saved.reference || !saved.horizontal) throw Error('Frozen R02 native neutral calibration is missing');
   const ids = [...new Set([...top.active, ...top.oralSurface])].sort((a, b) => a - b);
@@ -183,7 +223,16 @@ function installHarness() {
     return [name, { itemSize: a.itemSize, buffer }];
   }));
   const interventions = [], traces = [];
-  let activeAblation = null, restoreCompleted = false;
+  let activeAblation = null, restoreCompleted = false, baselineLightingLockedAfterFrame = false;
+  function lockRenderedBaselineLighting() {
+    if (baselineLightingLockedAfterFrame) throw Error('Rendered baseline lighting was already locked');
+    saved.lighting = saveLighting(); baselineLightingLockedAfterFrame = true;
+    return { lockedAfterFirstNativeFrame: true, exposure: saved.lighting.exposure, center: saved.lighting.center.toArray(),
+      lightObjects: saved.lighting.lights.map(value => ({ uuid: value.object.uuid, type: value.object.type })),
+      restoredFieldWhitelist: ['original light/target position', 'original light/target quaternion', 'original light/target scale',
+        'original light/target matrix', 'original light/target matrixWorld', 'original matrix update flags',
+        'original light color/groundColor/intensity/visible', 'renderer toneMappingExposure', 'original cineRig.center vector value'] };
+  }
   function withoutRender(label, fn) {
     const before = v.render, descriptor = own(v, 'render'), frameBefore = v.renderer.info.render.frame;
     let suppressed = 0;
@@ -432,13 +481,14 @@ function installHarness() {
       const c = saved.camera; v.camera.position.fromArray(c.position); v.camera.quaternion.fromArray(c.quaternion); v.orbit.target.fromArray(c.target);
       for (const key of ['aspect', 'fov', 'zoom', 'near', 'far']) v.camera[key] = c[key];
       v.camera.updateProjectionMatrix(); v.orbit.update();
+      restoreLighting(saved.lighting);
     });
     restoreCompleted = true;
     return { material, state: await state(), interventions: clone(interventions), restored: true };
   }
-  const api = { numerical, camera, poseForFrame, state, beginNativeMaterialAblation, endNativeMaterialAblation, restoreScene,
+  const api = { numerical, camera, poseForFrame, state, lockRenderedBaselineLighting, beginNativeMaterialAblation, endNativeMaterialAblation, restoreScene,
     ablationGeometryIsCurrent: () => !activeAblation || activeAblation.g === v.mesh.geometry,
-    report: () => ({ interventions: clone(interventions), restoreCompleted, activeAblation: !!activeAblation,
+    report: () => ({ interventions: clone(interventions), restoreCompleted, baselineLightingLockedAfterFrame, activeAblation: !!activeAblation,
       traces: traces.map(t => ({ poseName: t.poseName, counts: t.counts, hooksRestored: t.hooksRestored, capturedStages: t.snapshots.map(s => s.name) })) }),
     domainReport: async () => ({ source: 'unchanged native solver.topology, fixed before measured perturbations',
       nativeTopologyCount: top.count, selectedVertices: ids.length, selectedVertexIDsSHA256: await digest(new Uint32Array(ids)),
@@ -605,8 +655,10 @@ async function cleanupBrowser() {
     browser = await chromium.launch(options); context = await browser.newContext({ viewport: q.browserViewport, deviceScaleFactor: 1 });
     await test('immutable R02 bytes and native neutral startup', load);
     q.installation = await page.evaluate(installHarness); q.domain = await page.evaluate(() => __LIP_R04_DIAG__.domainReport());
-    q.initialState = await page.evaluate(() => __LIP_R04_DIAG__.state()); checkpoint();
+    q.initialPreFrameState = await page.evaluate(() => __LIP_R04_DIAG__.state()); checkpoint();
     const neutral = await capture('neutral-macro-r02');
+    q.baselineLightingLock = await page.evaluate(() => __LIP_R04_DIAG__.lockRenderedBaselineLighting());
+    q.initialState = await page.evaluate(() => __LIP_R04_DIAG__.state()); checkpoint();
     q.attribution = await page.evaluate(collectOralAttribution); writeJSON('material-attribution.json', q.attribution); checkpoint();
     for (const pose of ['neutral', 'jaw', 'speak', 'pucker']) {
       await test('trace original native stages: ' + pose, async () => {
@@ -645,6 +697,8 @@ async function cleanupBrowser() {
       assert.deepEqual(q.restoration.state, q.initialState, 'Final native scene differs from the saved controlled R02 baseline');
       const frame = await capture('restored-neutral-macro-r02', { save: false });
       assert.equal(frame.sha256, neutral.sha256, 'Restored native neutral framebuffer differs');
+      q.restoration.afterFrameState = await page.evaluate(() => __LIP_R04_DIAG__.state());
+      assert.deepEqual(q.restoration.afterFrameState, q.initialState, 'Normal native render changed the restored reference scene');
       return { stateExact: true, frameExact: true, frameSHA256: frame.sha256 };
     });
     q.diagnosticInterventions = await page.evaluate(() => __LIP_R04_DIAG__.report());

@@ -1,0 +1,38 @@
+{
+  "schema": "kaopu/lip-inner-diagnostic-recovery@1",
+  "originalSource": "0021244195ae23243b3b4dc73f269f547d66b9bb",
+  "originalRun": 39106942241,
+  "originalRunConclusion": "failure",
+  "originalQASHA256": "2371cee61da7bde65e54544fb70596311d6278382cbd806cd60909e37198f505",
+  "testsPassed": 6,
+  "testsTotal": 7,
+  "actualFramesSaved": 6,
+  "boundedMaterialExperimentPassed": true,
+  "fullDiagnosticPassed": false,
+  "exactMismatchLeaves": 9,
+  "mismatch": "exposure and two DirectionalLight positions/targets; camera, geometry, canonical arrays, state, pose, DNA and calibration exact",
+  "sourceCause": [
+    "native render resolves exposure from foldProfile",
+    "native update reframes cineRig.center",
+    "initial state was sampled before the first measured frame"
+  ],
+  "checkerFix": [
+    "retain initialPreFrameState",
+    "lock reference state and actual lighting after the first real frame",
+    "restore original light and target objects, values, exposure and native lighting center after normal neutral update",
+    "keep full state and frame SHA equality; additionally compare full state after restored real frame"
+  ],
+  "unchanged": [
+    "numeric geometry hooks and thresholds",
+    "material experiment scope",
+    "native methods and algorithms",
+    "all equality requirements"
+  ],
+  "persistenceFix": "Explicit git add -f for ignored evidence paths; preserve original artifact via actions/download-artifact",
+  "firstArtifactID": 12127914315,
+  "firstArtifactRun": 39106942241,
+  "reviewedRecoveryVerifierSHA256": "0935fdb1806f2af288133e44437efc98bf88a314a455591e50bd15c2d1c3553f",
+  "sourceReview": "independent geometry reviewer and root checked lighting ownership and strict recovery diff",
+  "visualAcceptance": false,
+  "productionReady": false
+}
