@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu/task-anchor@2",
+  "taskId": "LIP-VISUAL-COLOUR-R02-20261018",
+  "dispatchTime": "2026-10-18T03:42:11Z",
+  "userDirective": "先看嘴唇主要问题，再调整；单调湿润没有明显提升。审核者须提出理由、反证、自审与实际前后比较。",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/lip-colour-r02-20261018",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "targetObject": "同一原生人物的唇红组织与口周颜色过渡",
+  "targetDefectOrChange": "R01 底色接近统一灰粉填充；新旧唇色重复合成，早期肤色快照覆盖后续皮肤层。",
+  "referenceSet": {
+    "inheritedR07": "5543f756ca3af1428323696324303fa70b8de850",
+    "R01Source": "544ec81bcef6185a553df138585c7059e832a122",
+    "R01Build": "0db4b3c0e5e6e86663be6466fa7ab4b486bd5420",
+    "R01ModuleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d"
+  },
+  "acceptedBaseline": "R07 existing same-person host; R01 is an evidence-backed comparison, not user-accepted photorealism.",
+  "expectedArtifact": "Isolated real 3D R02 workbench with same-view R01/R02/R07 comparison, fixed verified HTTPS and draft PR",
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/lip-realism-r02/",
+    ".github/workflows/lip-colour-r02.yml"
+  ],
+  "protectedInvariants": [
+    "R01/R02 canonical and display geometry, normals, native identity and rig identical",
+    "R01/R02 roughness, wetness, microfolds, lighting and camera identical",
+    "Original R07 host and R01 source files unchanged",
+    "No overwrite of PR303 archive-recovery work",
+    "No main mutation, merge, force push, external replacement mesh, image generation or baked shadow"
+  ],
+  "boundedHypotheses": [
+    "Stopping legacy tint before downstream skin layers and compositing native lip mask once removes residual outer pink without erasing perioral skin.",
+    "Existing lip-native inner/outer and upper/lower coordinates can organize bounded tissue chroma variations more effectively than a nearly constant absolute colour; fixed comparison and spatial ablation must justify this change."
+  ],
+  "acceptanceGates": [
+    "Actual beauty and albedo R01/R02 front/macro/oblique comparison reviewed independently",
+    "Old psLip no longer contaminates R02 lip-boundary albedo, positive R01/R07 control",
+    "Wetness cannot change albedo",
+    "Spatial colour ablation preserves boundary correction and changes intended tissue colour",
+    "Unchanged geometry/normals/roughness/camera/light; no changes outside conservative native lip ROI",
+    "Final HTTPS exact bytes and browser interactions verified; no screenshot substitute"
+  ],
+  "deferredFindings": [
+    "Inherited open-mouth inner-rim steps and corner continuity need a separate geometric audit; this colour change does not fix them",
+    "Existing R01 reduces long scratches and highlights; do not claim these as newly fixed",
+    "No calibrated subject-specific pigment map or measured optical coefficients"
+  ],
+  "regressionCases": [
+    {
+      "id": "LIP-VISUAL-NOT-WETNESS-ONLY",
+      "failure": "Control reliability was mistaken for visual progress",
+      "gate": "Require visible defect reduction in matched images and independent review; parameter response alone cannot pass."
+    }
+  ],
+  "status": "EXECUTING",
+  "sourceModified": false,
+  "interactive3D": true,
+  "staticImageSubstitute": false,
+  "publicHttpsPassed": false,
+  "browserPassed": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}
