@@ -1,0 +1,232 @@
+{
+  "schema": "kaopu/lip-detail-independent-budget-review@1",
+  "taskId": "LIP-DETAIL-R03-20261018",
+  "reviewedAt": "2026-10-18T07:02:59Z",
+  "reviewerAgent": "lip_progress_audit",
+  "decision": "PASS_FOR_ONE_BOUNDED_FULL_RERUN",
+  "scope": "Independent review of the frozen root-cause analysis and the two-line overall time budget correction only. This is not a QA completion, publication, or visual acceptance decision.",
+  "currentRunStatus": "HOLD",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/lip-detail-r03-20261018",
+  "reviewedFailedRun": {
+    "runId": 39103596354,
+    "jobId": 117604694560,
+    "sourceCommit": "0d221486ee735afc644170d968a06db7cf9e67f4",
+    "verificationCommit": "0d221486ee735afc644170d968a06db7cf9e67f4",
+    "buildCommit": "fcb444d5fd4a737ded545d36f72f8756b9f7f477",
+    "completedPassedGates": 12,
+    "requiredGates": 15,
+    "shareAllowed": false,
+    "finalCleanupCompleted": false
+  },
+  "reviewedDocuments": {
+    "ROOT_CAUSE_REVIEW_39103596354.md": {
+      "sha256": "b16560845b1975ff276883c6dfc3be526bdfbe1b0f946bc9a5226debfff7a1be",
+      "bytes": 20289,
+      "readInFull": true
+    },
+    "INDEPENDENT_QA_REVIEW_39103596354.json": {
+      "sha256": "b987383d71313a809e99b938a0b964258179d5b0df7f371f9705c6db0e9e3480",
+      "bytes": 17700
+    },
+    "qa/detail-r03/39103596354-1/ARTIFACT_MANIFEST.json": {
+      "sha256": "6f38133338bc6576bd0d55e6191644bd2882502cb71d5ef482d6be6876710905",
+      "all66OriginalFileHashesAndByteCountsChecked": true,
+      "preservedVerbatimFileCount": 10,
+      "all10PreservedFilesExact": true
+    }
+  },
+  "rootCause": {
+    "firstRun": {
+      "id": 39102640232,
+      "failure": "Blank framebuffer on the first original baseline read",
+      "cause": "Cross-callback reuse of a non-preserved default framebuffer",
+      "targetedFixRevalidated": "All 55 second-run full framebuffer readbacks used one synchronous native render/finish/read callback with nonblank pixels and zero recorded GL errors"
+    },
+    "secondRun": {
+      "id": 39103596354,
+      "failure": "Outer 24-minute process budget sent SIGTERM during fresh-reader startup drain",
+      "evidence": "Startup drain had only 52.368 seconds before the outer signal; its own unchanged 180-second limit had not expired. Earlier same-run drains took 72.8701 and 79.5285 seconds. No cold file restore had started."
+    },
+    "sharedCauseAssessment": "The earlier QA orchestration assumed frame persistence and a total software-rendering cost without full workload measurements. This is a reasoned assessment supported by the two direct failures, not an assertion that the production shader failed.",
+    "repositoryRequiredEightCommonCauseQuestionsAddressed": true,
+    "repositoryFailureBudgetNotErased": true
+  },
+  "rawTimingVerification": {
+    "sourceFile": "qa/detail-r03/39103596354-1/progress.jsonl",
+    "sha256": "866e1e2283987c4ee4d807070a566f844ca1896fba235606cef8f05d693157f8",
+    "qaStartedAt": "2026-10-18T06:19:29.151Z",
+    "allRCRStageMillisecondsAndUTCValuesMatchRawEvidence": true,
+    "stageElapsedMS": {
+      "cold load fixed-r01-1-baseline": 93268,
+      "cold load r03-producer": 98596,
+      "ancient host archive compatibility": 2841,
+      "same person P01-closed": 254167,
+      "same person P01-open": 224221,
+      "same person P02-closed": 237299,
+      "same person P02-open": 218054,
+      "schema migrations reject before mutation": 1661,
+      "R07 original and mode round trips": 50000,
+      "synchronized macro performance": 104176,
+      "fine-relief zero and real slider": 78303,
+      "all v2 complete-person saves": 856
+    },
+    "fourScenarioSumMS": 933741,
+    "elapsedAtFreshReaderColdLoadStartMS": 1366844,
+    "readerStartupDrainRemainingBeforeSignalMS": 52368,
+    "originalContextsStartupDrainMS": [
+      72870.09999999998,
+      79528.5
+    ]
+  },
+  "historicalCostReference": {
+    "purpose": "Cost estimation only; no historical pass is reused as R03 acceptance",
+    "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c9d6eadc3bf44af50e718a63a8f8581c591cacd7/kaopu-unified-human-workbench/lip-realism-r01-1/qa/fresh-context/39095533327-1/qa.json",
+    "evidenceCommit": "c9d6eadc3bf44af50e718a63a8f8581c591cacd7",
+    "runId": 39095533327,
+    "independentlyRefetchedFromGitHub": true,
+    "sourceCommit": "489eb0b1520603bb3ddb65f0ec5f12140a2e7e97",
+    "buildCommit": "36e5e11a13ba299915dc07e1800c72973f0f7e44",
+    "coldReadersReadyAndDrainedMS": [
+      113837,
+      118508
+    ],
+    "coldFileRestoreExactGateMS": [
+      75278,
+      101082
+    ],
+    "mobileViewportMS": 17658,
+    "allCitedValuesExact": true
+  },
+  "budgetArithmetic": {
+    "observedFrontSeconds": 1366.844,
+    "estimatedTailSeconds": {
+      "freshColdLoadAndDrain": 120,
+      "fileRestoreNativeUpdateAndExactComparisons": 120,
+      "mobileActualControls": 60,
+      "normalFinalChecksAndCleanup": 60
+    },
+    "estimatedSuccessPathSeconds": 1726.844,
+    "frontRunnerMarginFraction": 0.15,
+    "frontRunnerMarginSeconds": 205.0266,
+    "estimatedPathPlusMarginSeconds": 1931.8706,
+    "qaHardLimitSeconds": 2040,
+    "additionalHeadroomSeconds": 108.12940000000003,
+    "jobHardLimitSeconds": 2520,
+    "jobMinusQABudgetSeconds": 480,
+    "arithmeticIndependentlyRecomputed": true,
+    "qualification": "The unexecuted tail and 15% margin are explicit planning assumptions, not measured R03 completion time, a confidence interval, or a worst-case completion guarantee. Every unchanged substep can fail first."
+  },
+  "workflowReview": {
+    "file": ".github/workflows/lip-detail-r03.yml",
+    "beforeSHA256": "a710ce9914deb91cd9ce728ffe9926048583a3e397d5475cfeb783fe422053d9",
+    "afterSHA256": "e200043b736fd250079e363e16942e872b10f8429ece28ff5c8e8bae9261643c",
+    "exactTwoChangedLines": [
+      {
+        "line": 22,
+        "before": "    timeout-minutes: 32",
+        "after": "    timeout-minutes: 42"
+      },
+      {
+        "line": 101,
+        "before": "        run: timeout --signal=TERM --kill-after=20s 24m node \"$LIP_DIR/verify-detail.cjs\"",
+        "after": "        run: timeout --signal=TERM --kill-after=20s 34m node \"$LIP_DIR/verify-detail.cjs\""
+      }
+    ],
+    "reverseOnlyThoseTwoChangesRestoresOldBytesSHA256": true,
+    "yamlParsePassed": true,
+    "jobTimeoutMinutesBefore": 32,
+    "jobTimeoutMinutesAfter": 42,
+    "qaTimeoutMinutesBefore": 24,
+    "qaTimeoutMinutesAfter": 34,
+    "termSignalAndKillAfter20SecondsUnchanged": true,
+    "newSourceOrVerificationCommitCreatedByReviewer": false
+  },
+  "unchangedProductionAndQAFileSHA256": {
+    "LipSurface.js": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919",
+    "build.cjs": "ca50a5929da3b4e0f2fb66d9b12b6bd0ecd5d5fd991491318c190d4777ef5435",
+    "verify-detail.cjs": "2f4f3e8fd21e0b00659447a888cfe366c2e10196068459823e01ffee0c384baa",
+    "TASK_ANCHOR.json": "b1aa306c8c5ce8377590fc1382c67f654df3ffab447a0f4d19a6789ec70b0206"
+  },
+  "unchangedContract": {
+    "requiredGateCount": 15,
+    "requiredGates": [
+      "protected production source",
+      "original defaults retained",
+      "ancient host archive compatibility",
+      "same person P01-closed",
+      "same person P01-open",
+      "same person P02-closed",
+      "same person P02-open",
+      "schema migrations reject before mutation",
+      "R07 original and mode round trips",
+      "synchronized macro performance",
+      "fine-relief zero and real slider",
+      "all v2 complete-person saves",
+      "fresh reader exact disk restore",
+      "mobile viewport controls",
+      "zero runtime and resource errors"
+    ],
+    "fullFreshRerunRequired": true,
+    "priorPassesCarriedForward": false,
+    "scenarioCount": 4,
+    "scenarios": [
+      "P01-closed",
+      "P01-open",
+      "P02-closed",
+      "P02-open"
+    ],
+    "fullFramebufferDimensions": [
+      900,
+      720
+    ],
+    "pixelTolerance": 0,
+    "comparisonChannels": "RGBA",
+    "nativeGeometryCalibrationParametersAndStateExact": true,
+    "freshReaderCreatedOnlyAfterBaselineAndProducerClose": true,
+    "realFileInputAndDiskBytesOnly": true,
+    "normalNativeUpdateAfterColdRestoreRequired": true,
+    "mobileActualViewport": [
+      390,
+      844
+    ],
+    "performanceMeasuredSamples": 16,
+    "performanceWarmupSamples": 4,
+    "performanceBlockOrder": [
+      "baseline",
+      "candidate",
+      "candidate",
+      "baseline"
+    ],
+    "performanceRatioLimit": 1.2,
+    "fullNativeRenderAndSameCallbackGPUCompletionRequired": true,
+    "startupDrainTimeoutMS": 180000,
+    "ordinaryEvaluateTimeoutMS": 180000,
+    "fileInputCompletionTimeoutMS": 300000,
+    "gpuPageContextAndBrowserCleanupEachTimeoutMS": 60000,
+    "sourceBuildAndPublicHTMLBindingsRequired": true,
+    "allThreeContextsAndBrowserClosedBeforePublicationProof": true,
+    "errorsConsoleRequestsAndResourcesMustBeEmpty": true,
+    "allRequiredGateNamesExactNoMissingOrDuplicate": true,
+    "gitScopeAndFastForwardRaceGuardsUnchanged": true,
+    "wholeVerifierAndAllWorkflowExceptBudgetBytesExact": true
+  },
+  "stopConditions": [
+    "Only one complete rerun is supported by this budget review.",
+    "If the next run fails an assertion, a substep timeout, cleanup, the 34-minute QA budget or the 42-minute job budget, keep HOLD and preserve its exact raw evidence.",
+    "Do not automatically dispatch a fourth run, increase the budget again, modify production detail by guesswork, lower any gate, or combine old partial passes into a publication proof.",
+    "A subsequent action requires root to examine that next concrete failure and define a new bounded response under the existing task."
+  ],
+  "acceptance": {
+    "publicationApproved": false,
+    "shareAllowed": false,
+    "visualAcceptance": false,
+    "userVisualAccepted": false,
+    "productionReady": false,
+    "newRunOutcomeUnknown": true
+  },
+  "authorizationScope": "The user already requested recovery and continuation, and root scoped this reversible isolated repair. This review adds no user confirmation or external permission requirement.",
+  "filesModifiedByThisBudgetReview": [
+    "INDEPENDENT_BUDGET_REVIEW_39103596354.json"
+  ]
+}

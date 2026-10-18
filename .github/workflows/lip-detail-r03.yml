@@ -19,7 +19,7 @@ jobs:
   verify:
     if: github.repository == 'haihao0307/guilin-dem-pipeline' && github.ref == 'refs/heads/feature/lip-detail-r03-20261018'
     runs-on: ubuntu-latest
-    timeout-minutes: 32
+    timeout-minutes: 42
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,7 +98,7 @@ jobs:
           echo "LIP_BUILD_SHA=$lip_build_sha" >> "$GITHUB_ENV"
           echo "LIP_EXPECTED_PREVIEW_SHA256=$(sha256sum "$LIP_DIR/preview.html" | cut -d ' ' -f 1)" >> "$GITHUB_ENV"
       - name: Bounded fixed public R03 comparisons and one fresh reader
-        run: timeout --signal=TERM --kill-after=20s 24m node "$LIP_DIR/verify-detail.cjs"
+        run: timeout --signal=TERM --kill-after=20s 34m node "$LIP_DIR/verify-detail.cjs"
       - name: Validate actual completion and persist this run only
         run: |
           python - <<'PY'

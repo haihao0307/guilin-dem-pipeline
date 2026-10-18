@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu/lip-independent-archive-review@1",
+  "taskId": "LIP-DETAIL-R03-20261018",
+  "reviewedAt": "2026-10-18 06:54:41 UTC",
+  "role": "Independent reviewer of raw archive evidence",
+  "scope": "Read-only verification of the four real downloaded v2 person archives, saved producer snapshot, native calibration, API alias assertions and the exact unfinished reader stage.",
+  "run": {
+    "id": "39103596354",
+    "attempt": 1,
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39103596354",
+    "jobId": "117604694560",
+    "artifactId": "12128276470",
+    "artifactSHA256": "efca9508703f82a261a00e35a88c06be88e884a18e03fdd2f4a5cc6f7375d790",
+    "artifactDigestIndependentlyRecomputed": true
+  },
+  "provenance": {
+    "sourceCommit": "0d221486ee735afc644170d968a06db7cf9e67f4",
+    "buildCommit": "fcb444d5fd4a737ded545d36f72f8756b9f7f477",
+    "verificationCommit": "0d221486ee735afc644170d968a06db7cf9e67f4",
+    "productionModuleSHA256": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919",
+    "builderSHA256": "ca50a5929da3b4e0f2fb66d9b12b6bd0ecd5d5fd991491318c190d4777ef5435",
+    "verificationScriptSHA256": "2f4f3e8fd21e0b00659447a888cfe366c2e10196068459823e01ffee0c384baa",
+    "previewSHA256": "7ea453e7ae7fb19a808cb160838d2fa17ec56e6724832233728aba1bd1b0d71a",
+    "artifactEvidenceRoot": "qa/detail-r03/39103596354-1/"
+  },
+  "archiveAudit": {
+    "verdict": "PASS",
+    "files": [
+      {
+        "file": "saved-person-v2.json",
+        "entry": "R03 complete-person save button"
+      },
+      {
+        "file": "legacy-head-save-v2.json",
+        "entry": "Legacy head complete-person save button"
+      },
+      {
+        "file": "legacy-body-save-v2.json",
+        "entry": "Legacy body complete-person save button"
+      },
+      {
+        "file": "body-api-save-v2.json",
+        "entry": "bodyProceduralSkin.save()"
+      }
+    ],
+    "commonBytes": 2142819,
+    "commonSHA256": "d5bccb06852a0157af4387a16e259d324c7dc11b5fec976f6e24889b44ea2ae0",
+    "rawBytesComparedIndependently": true,
+    "allFourRawBytesExact": true,
+    "schema": "kaopu/lip-realism@2",
+    "version": "LIP-REALISM-R03",
+    "settings": {
+      "enabled": true,
+      "redness": 0.4,
+      "pigment": 0.25,
+      "upperDifference": 0.18,
+      "variation": 0.65,
+      "edgeSoftness": 0.34,
+      "wetness": 0.35,
+      "roughness": 0.53,
+      "foldStrength": 0.67,
+      "seed": 731,
+      "diagnostic": 0,
+      "surfaceRevision": 3
+    },
+    "producerSnapshotEvidence": "saved-producer.json",
+    "producerSnapshotFileSHA256": "4598455a3c0a080f7c46ff42335448d3a4f7808b8182817957ea29a197ef8b95",
+    "completeParametersMatchProducerSnapshot": true,
+    "parameterComparisonRule": "Compare the complete parsed archive after removing only lipRealism.calibration against saved-producer.snapshot.parameters. Calibration is independently decoded and compared below; no other fields are removed or normalized.",
+    "allNativeFieldsEqualP02OpenLegacyBaseline": true,
+    "baselineComparisonRule": "Remove only the lipRealism extension from each archive and compare every remaining native field with P02-open-baseline-v1.json.",
+    "producerDownloadMetadataAndDiskTransferExact": true
+  },
+  "calibrationAudit": {
+    "verdict": "PASS",
+    "schema": "kaopu/lip-calibration@1",
+    "byteOrder": "float32-le",
+    "count": 198406,
+    "strictBase64Decode": true,
+    "fields": {
+      "reference": {
+        "decodedSHA256": "4561b9741300fdd8fe6990c91e91121bab9636979fbe1f6f013ab962598d7d75",
+        "bytes": 793624,
+        "floatCount": 198406,
+        "allFiniteNonnegative": true,
+        "nonzeroCount": 87914
+      },
+      "referenceHorizontal": {
+        "decodedSHA256": "192a0fa114ab4d2c6569cd16abc8304fd7737c7c467319bb117c4b6376f39884",
+        "bytes": 793624,
+        "floatCount": 198406,
+        "allFiniteNonnegative": true,
+        "nonzeroCount": 87914
+      }
+    },
+    "decodedArraysMatchProducerNativeMemoryFingerprints": true,
+    "schemaCountByteOrderAndLastKeyMatchProducerSnapshot": true,
+    "parsedIdentityKeyMatchesActualArchivedPerson": true,
+    "identityKeyRule": "JSON.parse(lastKey) equals [state.gnm.identity, state.anny.phenotypes, state.anny.localChanges, null], preserving the frozen host contract."
+  },
+  "aliasAudit": {
+    "verdict": "PASS_WITH_SCOPED_COVERAGE",
+    "evidence": "api-aliases.json",
+    "evidenceSHA256": "416a0e306a37c705d698c37364433130a099be93a04888db1e265cad66a02c63",
+    "recordMatchesSavedProducer": true,
+    "delegates": [
+      "fullCommonWorkbench",
+      "headProceduralSkin",
+      "bodyProceduralSkin",
+      "lipRealism"
+    ],
+    "archiveAndRestoreFunctionReferencesShared": true,
+    "actualArchiveResultsComparedFor": [
+      "controller",
+      "fullCommonWorkbench",
+      "headProceduralSkin",
+      "bodyProceduralSkin",
+      "lipRealism"
+    ],
+    "allActualArchiveResultsEqualSavedPerson": true,
+    "assertionImplementationReadAndBoundToVerifierSHA": true,
+    "limitation": "The controller ownsImplementation label is descriptive. Evidence comes from the actual controller archive result and delegate identity assertions. No successful fresh-context restore is inferred from archive equality or restore-function identity."
+  },
+  "readerAndFailureScope": {
+    "verdict": "NOT_EXECUTED_FOR_RESTORE",
+    "freshContextCreated": true,
+    "storageStateSupplied": false,
+    "publicBytesReadbackExact": true,
+    "hostReady": true,
+    "coldLoadStartedAt": "2026-10-18T06:42:15.995Z",
+    "startupDrainStartedAt": "2026-10-18T06:42:36.493Z",
+    "startupDrainCompleted": false,
+    "freshReaderRestoreGroupStarted": false,
+    "readerNativeFileInputStarted": false,
+    "readerRestoredSnapshotAvailable": false,
+    "readerRestoredFrameAvailable": false,
+    "readerContextClosed": false,
+    "interruptedAt": "2026-10-18T06:43:28.861Z",
+    "failure": "Interrupted by SIGTERM",
+    "exitCode": 143,
+    "secondsRemainingAtColdLoad": 72.866,
+    "secondsRemainingAtStartupDrain": 52.368,
+    "priorCompletedStartupDrainsSeconds": [
+      72.8701,
+      79.5285
+    ],
+    "inference": "The remaining time at the fresh reader drain was shorter than both earlier completed startup drains. This timeout does not establish a restore-function failure or a GPU deadlock.",
+    "completedGroups": 12,
+    "completedGroupsAllPassed": true,
+    "pendingGroups": [
+      "fresh reader exact disk restore",
+      "mobile viewport controls",
+      "zero runtime and resource errors"
+    ],
+    "recordedRuntimeErrorArraysEmptySoFar": true,
+    "finalRuntimeAndCleanupGatePassed": false
+  },
+  "overallVerdict": "HOLD",
+  "scopeConclusion": "Four real full-person exports and their saved producer/calibration evidence pass independent verification. Actual fresh-reader disk restore, mobile and final runtime/cleanup remain unverified.",
+  "completed": false,
+  "browserPassed": false,
+  "publicHttpsPassed": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "requiredFollowup": "Independently verify the third bounded run's actual disk-file input, immediate and post-update calibration, complete restored snapshot and controlled full-frame pixels against its saved producer evidence before upgrading the cold-restore verdict.",
+  "mutationScope": "Only this new audit record is written. Production, verifier, workflow and remote branch are not modified by this review."
+}
