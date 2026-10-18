@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>靠谱列车 · A6 原生连编可编辑 R03</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#e9e7e0;color:#22302b;font:14px/1.55 system-ui}header,footer{padding:14px 18px;max-width:1560px;margin:auto}h1{font-size:20px;line-height:1.3;margin:0 0 8px}p{margin:5px 0}button,input{font:inherit}button{padding:8px 13px;border:1px solid #89978e;border-radius:6px;color:inherit;background:#fafbf8;cursor:pointer}button:hover{background:#dce8dd}button[aria-pressed=true]{background:#244d3f;color:white;border-color:#244d3f}button:focus-visible,input:focus-visible,.panel:focus-visible{outline:3px solid #5b8bce;outline-offset:3px}.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:12px 0}.zoom-control{display:flex;align-items:center;gap:7px;margin-left:8px}.zoom-control input{width:140px}#mode{display:inline-block;padding:4px 9px;border:1px solid #a2b4a4;border-radius:4px;background:#eff6ee;font-weight:650}#mode.free-mode{color:#713c08;background:#fff0d8;border-color:#c38a3a}.warning{color:#704626;font-size:12px}summary{cursor:pointer;font-size:12px;padding:6px 0;font-weight:600}.parameters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:10px 12px;background:#f5f5f0;border:1px solid #c3ccc2;border-radius:7px}.parameter label{display:block;font-weight:600}.parameter .entry{display:flex;gap:9px;align-items:center}.parameter input[type=range]{width:100%;min-width:60px;accent-color:#286349}.parameter input[type=number]{width:82px;min-height:32px;border:1px solid #a5b0a5;border-radius:4px;padding:2px 5px;background:white}.parameter small{display:block;color:#5f695f;font-size:11px}input[aria-invalid=true]{outline:2px solid #ac3528}#status{min-height:1.55em;font-size:12px;margin-top:8px}#status.error{color:#a42920}#stage{height:clamp(260px,31vh,420px);position:relative;display:block;background:#a9ada7;overflow:hidden}.panel{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;touch-action:pan-y;cursor:default}.panel.is-free{touch-action:none;cursor:grab}.panel.is-dragging{cursor:grabbing}canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.label{position:absolute;z-index:2;left:10px;top:8px;background:#ffffffdf;padding:4px 7px;font-size:12px;pointer-events:none;max-width:calc(100% - 20px)}.scale-label{position:absolute;z-index:2;left:10px;bottom:8px;background:#ffffffdb;padding:2px 6px;font-size:11px;pointer-events:none}footer{font-size:12px;color:#586459}a{color:#285d4c}.control-hint{font-size:12px;color:#566258;margin:7px 0}@media(max-width:700px){header,footer{padding:12px}.parameters{grid-template-columns:1fr;gap:9px}.parameter label{font-size:12px}.parameter small{font-size:11px}.toolbar{gap:6px}.toolbar button{font-size:12px;padding:8px 10px}.zoom-control{margin-left:0;font-size:12px}#stage{height:clamp(250px,32vh,340px)}.label{font-size:10px;left:6px;top:5px}.scale-label{font-size:10px;left:6px}}
+  </style>
+  <script type="importmap">{"imports":{"three":"../../a4-a6-source-comparison-r03/vendor/three.module.js"}}</script>
+</head>
+<body>
+  <header>
+    <h1>A6 原生连编可编辑 R03</h1>
+    <p>柴油加热蒸汽机车、油水车与车厢在同一个米制空间中；不使用煤炭。驾驶室前移至第一大轮上方略靠前；整列共用车顶高度。</p>
+    <p class="warning">待审设计候选。驱动轮直径 2.032 m、机车全部 338 件机械、6 个原生驱动轮实例、车厢 238 件机械完整保留。外侧传动与双销连接可检查；外侧配气正在独立闭链验证；内缸、真实配气事件、载荷与轨道运行仍未解。</p>
+    <div class="toolbar" role="group" aria-label="观察模式">
+      <button id="side" aria-pressed="true">正侧</button><button id="front" aria-pressed="false">正前</button><button id="top" aria-pressed="false">顶面</button><button id="free" aria-pressed="false">侧向审阅</button><button id="structure" aria-pressed="false">结构剖解 / 外壳</button><button id="reset">恢复参数与视角</button>
+    </div>
+    <div class="toolbar" role="group" aria-label="观察中心与缩放">
+      <span>观察中心</span><button id="focus-train" aria-pressed="true">全列</button><button id="focus-locomotive" aria-pressed="false">机车</button><button id="focus-coach" aria-pressed="false">车厢</button>
+      <button id="zoom-out" aria-label="缩小">−</button><button id="zoom-in" aria-label="放大">＋</button>
+      <label class="zoom-control" for="zoom">缩放 <input id="zoom" type="range" min="0.5" max="6" step="0.01" value="1" aria-label="整列正交缩放"><output id="zoom-value" for="zoom">1.00×</output></label>
+    </div>
+    <div id="mode">正交观察 · 正侧 · 全列中心 · 同一米制空间</div>
+    <p class="control-hint">切换观察中心只平移相机，不自动放大。滚轮、＋／− 或缩放条放大细节。开启侧向审阅后，只允许正侧左右 20°、俯仰 15°；禁止沿列车轴线观察。标准视角恢复初始缩放，修改外壳不自动取景。画面外可正常滚动页面。</p>
+    <details id="parameter-details" open><summary>A6 外壳设计参数 · 轮轴和全部机械固定</summary>
+      <div class="parameters" aria-label="A6 外壳设计参数">
+        <div class="parameter"><label for="commonRoofHeight">整列共同车体冠高（米）</label><div class="entry"><input id="commonRoofHeight" type="range" min="3.98" max="4.15" step="0.01" value="4.03"><input id="commonRoofHeight-value" type="number" min="3.98" max="4.15" step="0.01" value="4.03" aria-label="整列共同车体冠高，米"></div><small>3.98–4.15 m；联动机车、油水车和车厢外壳车顶，排口另计；保持轮径、轴位与底盘不变</small></div>
+        <div class="parameter"><label for="cabForwardShift">驾驶室向前微调（米）</label><div class="entry"><input id="cabForwardShift" type="range" min="-0.15" max="0.15" step="0.01" value="0"><input id="cabForwardShift-value" type="number" min="-0.15" max="0.15" step="0.01" value="0" aria-label="驾驶室向前微调，米"></div><small>−0.15–＋0.15 m；正值向车头。默认眼点在第一大轮中心前 0.415 m；范围内保持略靠前</small></div>
+      </div>
+    </details>
+    <details id="motion-details"><summary>动态演示与连接检查 · 局部运动学候选</summary>
+      <div class="toolbar" aria-label="动态演示">
+        <button id="motion-play">播放</button><button id="motion-pause">暂停</button><button id="motion-step">单步 ＋5°</button><button id="motion-reset">动态复位</button>
+        <label>相位速度 <input id="motion-speed" type="range" min="1" max="30" value="10"> <output id="motion-speed-value">10°/s</output></label>
+        <button id="check-motion">查看周期干涉检查</button><button id="check-connection">查看连接检查</button>
+      </div>
+      <label>连接关节台架角度 <input id="connection-angle" type="range" min="-3" max="3" step="0.1" value="0"> <output id="connection-angle-value">0.0°</output></label><p id="connection-status" class="warning">偏航仅检查销接；罩体随动已纳入检查，轨道约束尚未闭合。</p>
+      <p id="motion-status" role="status">相位 0° · 暂停</p>
+      <label>漆层磨耗 <input id="coating-wear" type="range" min="0" max="1" step="0.01" value="0.32"> <output id="coating-value">0.32</output></label>
+      <p class="warning">展示约束求解，不等于整机工程验证。未闭合阀动、原内缸与未证实接口将明确列出；不作为运行安全依据。</p>
+      <pre id="check-results" style="white-space:pre-wrap;font-size:12px;max-height:180px;overflow:auto;border:1px solid #bac5b9;padding:8px" hidden></pre>
+    </details>
+    <div id="status" role="status" aria-live="polite">正在执行 A6 原生生成函数…</div>
+  </header>
+  <main id="stage" aria-label="A6 整列单场景正交视口" aria-busy="true">
+    <section class="panel" id="train" tabindex="0" aria-label="整列视口，开启侧向审阅可拖动旋转，方向键旋转，加减键缩放"><div class="label">A6 机车 ＋ 油水车 ＋ 车厢 · 全部原生生成 / 米制场景</div><div class="scale-label"></div></section>
+  </main>
+  <footer>初始边界只采集一次。外壳编辑不重建机械、不重置比例；动态控件单独改变求解关节姿态。车厢初始平移 32.34 m；新双销牵引与随动护罩为限定角度台架候选。侧向审阅受限，尺寸以正侧／正前／顶面核对。<a href="./README.md">A6 实现与验证边界</a> · <a href="../a6-native-r02/index.html">保留的 A6 R02</a> · <a href="../student-native-r01/README.md">原生机械与材质来源</a></footer>
+  <script>
+    window.NATIVE_QA={ready:false,busy:true,errors:[]};
+    window.fail=e=>{NATIVE_QA.errors.push(String(e?.stack||e));document.querySelector('#status').textContent='生成/运行失败：'+(e?.message||e);document.querySelector('#status').classList.add('error');};
+    addEventListener('error',e=>fail(e.error||e.message));addEventListener('unhandledrejection',e=>fail(e.reason));import('./view.mjs').catch(fail);
+  </script>
+</body>
+</html>

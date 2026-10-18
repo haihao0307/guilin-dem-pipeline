@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {createValveConstraintModel,evaluateValveConstraints,validateValveConstraintCycle,PRIMARY_LOCKS} from '../src/valve-constraints.mjs';
+import {buildLocomotiveMechanics} from '../../student-native-r01/src/locomotive-mechanics.mjs';
+import {buildDrivingWheel} from '../../student-native-r01/src/driving-wheel.mjs';
+import {correctA6Mechanics} from '../../a6-native-r02/src/a6-motion-corrections.mjs';
+import {createA6MotionModel,evaluateA6Motion} from '../../a6-native-r02/src/a6-motion.mjs';
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const frozenRoot=path.resolve(root,'../a6-native-r02');
+const files=['src/a6-motion.mjs','src/a6-motion-corrections.mjs','view.mjs','docs/MOTION_CORRECTED_SWEEP.json','qa/MOTION_SWEEP_PUBLIC.json'];
+const digest=buffer=>createHash('sha256').update(buffer).digest('hex');
+const before=Object.fromEntries(files.map(file=>[file,digest(fs.readFileSync(path.join(frozenRoot,file)))]));
+const source=buildLocomotiveMechanics(),wheel=buildDrivingWheel(),sourceHash=digest(JSON.stringify(source.parts)),wheelHash=digest(JSON.stringify(wheel.parts));
+const base=createA6MotionModel({mechanics:correctA6Mechanics(source).mechanics,wheel});
+const model=createValveConstraintModel(),report=validateValveConstraintCycle(model);
+const near=(a,b,t=1e-10)=>assert(Math.abs(a-b)<t,`${a} differs from ${b}`);
+assert(report.constraintCyclePass);
+assert(report.maxConstraintErrorM<2e-12);
+assert(model.rawCycleClosure<1e-12,'Actual continued root, not modulo phase, must close');
+assert.deepEqual(PRIMARY_LOCKS,{wheelTreadDiameterM:2.032,crankRadiusM:.3302,pistonStrokeM:.6604,driverAxisZM:[3.5814,5.7912,8.001]});
+near(model.mainRodLengthM,base.rodLength);
+const zero=evaluateValveConstraints(model,0);
+assert.deepEqual(evaluateValveConstraints(model,2*Math.PI),zero);
+assert.deepEqual(evaluateValveConstraints(model,-2*Math.PI),zero);
+let state=246813579;
+for(let i=0;i<300;i++){
+  state=(Math.imul(1664525,state)+1013904223)>>>0;
+  const theta=state/2**32*2*Math.PI,q=evaluateValveConstraints(model,theta),b=evaluateA6Motion(base,theta);
+  // R02 slider point is reconstructed from its exact rigid delta transform.
+  const matrix=b.partTransforms['outside-crosshead-1'];
+  near(q.joints.C[0],base.parameters.cylinderHeight);
+  near(q.joints.C[1],base.parameters.crossheadZ+matrix[14]);
+  assert(q.residualM<2e-12);
+  assert(q.checks.expansionSlotMarginRad>0&&q.checks.liftingSlotMarginM>0);
+  for(const [k,v]of Object.entries(q.checks))if(k.endsWith('ErrorM'))assert(v<2e-12,`${k}=${v}`);
+  assert.deepEqual(evaluateValveConstraints(model,theta),q,'Evaluation depends on call order');
+}
+assert.throws(()=>evaluateValveConstraints(model,NaN),/finite/);
+assert.throws(()=>createValveConstraintModel({crankRadiusM:.2}),/locked/);
+assert.throws(()=>createValveConstraintModel({referenceCrossheadZ:2.5}),/locks/);
+assert.throws(()=>createValveConstraintModel({eccentricRodLengthM:.1}),/Unreachable/);
+assert.throws(()=>validateValveConstraintCycle(model,{samples:5}),/>=360/);
+// A pin is not conflated with the radius-rod input, unlike the old two-pin mesh.
+near(Math.hypot(...zero.joints.A.map((v,i)=>v-zero.joints.V[i])),.08);
+near(Math.hypot(...zero.joints.U.map((v,i)=>v-zero.joints.V[i])),.72);
+assert.notDeepEqual(zero.joints.A,zero.joints.V);
+assert(!report.actualValveEventsSolved&&!report.fullVehicleApproval&&!report.allMeshesSweepValidated);
+assert.equal(source.parts.length,338);
+assert.equal(digest(JSON.stringify(source.parts)),sourceHash);
+assert.equal(digest(JSON.stringify(wheel.parts)),wheelHash);
+for(const file of files)assert.equal(digest(fs.readFileSync(path.join(frozenRoot,file))),before[file],`Frozen R02 changed: ${file}`);
+const result={...report,frozenR02FileHashes:before,sourceComponentCount:338,sourceMechanicalSHA256:sourceHash,sourceWheelSHA256:wheelHash,candidateDimensions:model.dimensions,derivedDimensions:{mainRodLengthM:model.mainRodLengthM,physicalReturnCrankLengthM:model.physicalReturnCrankLengthM,radiusRodLengthM:model.radiusRodLengthM,expansionSlotRadiusM:model.slotRadiusM,unionLinkLengthM:model.unionLengthM,liftingDieYZM:model.H},constraintGraph:model.constraintGraph};
+fs.writeFileSync(path.join(root,'docs/CONSTRAINT_CYCLE_REPORT.json'),JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify({status:'PASS',samples:report.samples,maxConstraintErrorM:report.maxConstraintErrorM,rawRootCycleClosure:report.rawRootCycleClosure,pistonStrokeM:report.pistonStrokeM,frozenR02Unchanged:true,meshCollisionsSolved:false}));

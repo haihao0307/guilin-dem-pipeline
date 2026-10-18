@@ -1,0 +1,165 @@
+{
+  "schema": "a6-finite-valve-public/1",
+  "status": "外侧配气固定换向设置候选已闭环；0处离散相交，302个连续包络候选待细判",
+  "auditComplete": true,
+  "historicalA4Timing": false,
+  "allMechanismsSolved": false,
+  "fullVehicleApproval": false,
+  "sourceHashes": {
+    "a6-valve-gear-experiment-r01/src/valve-native-adapter.mjs": "476a89d1e8da655f9c682ed8420a466b0ddc7c654b2efd80a22f93b5db37b316",
+    "a6-valve-gear-experiment-r01/src/valve-native-primitives.mjs": "d059a38993f010cf4718a255402f08bdee6fe921e3ad42fad0c36a25a24c57f1",
+    "a6-valve-gear-experiment-r01/src/valve-constraints.mjs": "010e5493321b38994cfb72804249801a171c405de4da7c5d8bbac2fbd1b48e71",
+    "a6-valve-gear-experiment-r01/src/valve-sweep.mjs": "fc95ab37a8bd5705a9e6c199a209f9ee33daef924cb07bf2dd098cf3e1ae5e8f",
+    "a6-valve-gear-experiment-r01/tests/valve-sweep-report.mjs": "20a5937a49e039555802138d7ada3aef03ca2564270d6d557e6cb75cbfcadd9e",
+    "a6-native-r02/src/a6-motion.mjs": "2010ae788f0ff02908898776c63824da857d0f592671341c6eb7eca7ac0f1f93",
+    "a6-native-r02/src/a6-motion-corrections.mjs": "d1d160e9c3ac8a6255f5f2ee7acfee32a60a836581582de3f6d93504bf63d87b",
+    "a6-native-r02/src/a6-locomotive-shell.mjs": "2b9de10d2582e6b47cb6d9e80d7724d119186946e368bf62751f1843ad5a0127",
+    "student-native-r01/src/locomotive-mechanics.mjs": "e48370fd770917a9cde8268444ef07907fef3b7708b7fa64262f3047423666f0",
+    "student-native-r01/src/driving-wheel.mjs": "1431479f17e6881452aea9428c5a36959cd9c8487f94d3ae33ef8667c7ab7884"
+  },
+  "componentCoverage": {
+    "inheritedNames": 338,
+    "sameNameNativeRevisions": 20,
+    "newValveParts": 12,
+    "retainedBasePistonAdditions": 4,
+    "totalMechanicalComponents": 354,
+    "valveMovingParts": 22,
+    "totalMovingBodiesIncludingWheels": 50
+  },
+  "primaryDimensions": {
+    "wheelTreadDiameterM": 2.032,
+    "driverAxesZM": [
+      3.5814,
+      5.7912,
+      8.001
+    ],
+    "crankRadiusM": 0.3302,
+    "pistonStrokeM": 0.6604
+  },
+  "supported": "两侧同相设计候选，固定换向设置：回动曲柄、偏心杆、膨胀连杆、有限圆弧滑块、带真实后槽的半径杆、有限提杆滑块、三销组合杆、联合杆与实际阀十字头导向",
+  "constraints": {
+    "samples": 1441,
+    "pass": true,
+    "maxConstraintErrorM": 1.8862079026003337e-13,
+    "rawRootCycleClosure": 7.985569699102916e-16,
+    "pistonStrokeM": 0.6603999999999992,
+    "candidateValveTravelM": 0.2447947143812783
+  },
+  "finiteInterfaces": {
+    "expansionDieRadialGapM": 0.0019999999999999983,
+    "expansionDieAngularEndGapRad": 0.007764085838047663,
+    "liftingDieSideGapM": 0.0019999999999999983,
+    "liftingDieEndGapM": 0.022109933076129094,
+    "pinNominalRadialGapM": 0.0020000000000000018,
+    "expansionDieAxialGapM": 0.0020000000000000018,
+    "liftingDieAxialGapM": 0.0020000000000000018,
+    "declaredSlotLimits": {
+      "expansionRad": [
+        -0.28,
+        0.28
+      ],
+      "liftingM": [
+        -0.46,
+        -0.075
+      ]
+    },
+    "travelExtremaSampleCount": 1441,
+    "continuousSlotTravelProof": false,
+    "status": "exact local section deductions from sampled-cycle travel extrema; not a continuous slot-travel proof",
+    "sampledWorkingInterfaceWitnesses": 0
+  },
+  "sweep": {
+    "intervalDegrees": 1,
+    "intervals": 360,
+    "nativeTriangleCount": 336534,
+    "movingBodyCount": 50,
+    "staticBodyCount": 404,
+    "defaultShellBodyCount": 94,
+    "defaultShellIncluded": true,
+    "sampledSurfaceWitnessCount": 0,
+    "unresolvedContinuousCandidateCount": 302,
+    "continuousBroadPhaseComplete": true,
+    "continuousTriangleNarrowPhaseComplete": false,
+    "sourceFilesChangedDuringRun": []
+  },
+  "provenSeparatedPairs": [
+    {
+      "pair": [
+        "outside-crosshead--1",
+        "combination-lever--1"
+      ],
+      "gapM": 0.012500035285949673,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "outside-crosshead--1",
+        "union-link--1"
+      ],
+      "gapM": 0.005000035285949833,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "outside-main-rod-big-end-pin--1",
+        "return-crank--1"
+      ],
+      "gapM": 0.01750003051757809,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "outside-crosshead-1",
+        "combination-lever-1"
+      ],
+      "gapM": 0.012500035285949673,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "outside-crosshead-1",
+        "union-link-1"
+      ],
+      "gapM": 0.005000035285949833,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "outside-main-rod-big-end-pin-1",
+        "return-crank-1"
+      ],
+      "gapM": 0.01750003051757809,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "eccentric-rod--1",
+        "valve-experiment-return-crank-pin--1"
+      ],
+      "gapM": 0.007500000000000062,
+      "continuousLateralSeparationPass": true
+    },
+    {
+      "pair": [
+        "eccentric-rod-1",
+        "valve-experiment-return-crank-pin-1"
+      ],
+      "gapM": 0.007500000000000062,
+      "continuousLateralSeparationPass": true
+    }
+  ],
+  "limits": [
+    "历史左右/内缸相位、阀搭口/导程/气口/截汽率、阀箱内部、Gresley共轭杆及内缸仍未解。",
+    "固定换向设置有真实支承，但未验证换向全行程或驾驶室控制驱动。",
+    "1,441相位的槽行程极值与1°三角面扫描都不是连续精确极值或连续三角形无碰撞证明。",
+    "只豁免逐项列明的刚性装配连接，销眼、滑块/槽及阀十字头/导框仍参加实际网格检查。",
+    "未做实体完全包含、自身网格相交、受力、弹性、热变形、制造公差或完整蒸汽循环认证。"
+  ],
+  "evidence": {
+    "rawSweep": "FINITE_VALVE_SWEEP_LATEST.json",
+    "preservedFirstFailure": "FINITE_VALVE_SWEEP_FIRST_FAILURE.json",
+    "originalSixWitnesses": "R02_SIX_COLLISION_WITNESSES.json",
+    "dimensionLedger": "FINITE_VALVE_DESIGN_LEDGER.json",
+    "sourceAndTopology": "VALVE_MECHANISM_PROPOSAL_ZH.md"
+  }
+}

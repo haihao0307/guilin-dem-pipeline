@@ -1,0 +1,121 @@
+{
+  "schema": "a6-valve-constraint-cycle/1",
+  "status": "fixed-reverser-setting design kinematic candidate",
+  "samples": 1441,
+  "constraintCyclePass": true,
+  "maxConstraintErrorM": 1.8862079026003337e-13,
+  "rawRootCycleClosure": 7.985569699102916e-16,
+  "pistonStrokeM": 0.6603999999999992,
+  "pistonStrokeErrorM": -7.771561172376096e-16,
+  "valveTravelM": 0.2447947143812783,
+  "minExpansionSlotMarginRad": 0.039764085838047664,
+  "minLiftingSlotMarginM": 0.05810993307612909,
+  "minFourBarCircleMarginM": 0.10607661824093606,
+  "ranges": {
+    "valveZ": [
+      2.245557179675675,
+      2.4903518940569533
+    ],
+    "crossheadZ": [
+      2.1433270987030695,
+      2.8037270987030687
+    ],
+    "expansionDieAngleRad": [
+      -0.24023591416195236,
+      -0.11993128948946599
+    ],
+    "liftingDieCoordinateM": [
+      -0.40054750314717463,
+      -0.1331099330761291
+    ],
+    "expansionBodyAngleRad": [
+      -0.0034172594888393915,
+      1.0390896411267785
+    ],
+    "combinationAngleRad": [
+      -0.35172774176423766,
+      0.5271849587930367
+    ]
+  },
+  "finiteDieBlocksValidated": false,
+  "allMeshesSweepValidated": false,
+  "actualValveEventsSolved": false,
+  "historicalA4Timing": false,
+  "fullVehicleApproval": false,
+  "limits": [
+    "Point joint constraints only; finite die-block, bearing and slot clearances still require native solid design and swept tests.",
+    "No valve lap, lead, port width, cutoff or admission mode has been inferred.",
+    "The fixed reverser setting has no numerical cutoff claim.",
+    "Left/right phase and inside/Gresley conjugated mechanism are unresolved.",
+    "This experiment does not change the frozen R02 page or its six collision reports."
+  ],
+  "frozenR02FileHashes": {
+    "src/a6-motion.mjs": "2010ae788f0ff02908898776c63824da857d0f592671341c6eb7eca7ac0f1f93",
+    "src/a6-motion-corrections.mjs": "d1d160e9c3ac8a6255f5f2ee7acfee32a60a836581582de3f6d93504bf63d87b",
+    "view.mjs": "76f9ef2ab9308ff77e4aa05e94420069ad8388788d70ebe85aa77bb39878e288",
+    "docs/MOTION_CORRECTED_SWEEP.json": "469d89925188cc0fb2d3f9dd767b1b5789755fbd58af99125674dbbce6c33bae",
+    "qa/MOTION_SWEEP_PUBLIC.json": "51a1443f1923a1cf6759f8ed17720a217771fc95e53d36d5faedcc7761d94c9f"
+  },
+  "sourceComponentCount": 338,
+  "sourceMechanicalSHA256": "3a14562b161bd37fc3c1ffe91a1e29ac0db2125a8fc72b984000f5a0ca194506",
+  "sourceWheelSHA256": "4051926de58ac31e2dac5aa2daadf6b2eadfa13822157e7a3b450dcd1869b340",
+  "candidateDimensions": {
+    "eccentricPitchRadiusM": 0.145,
+    "eccentricReferenceAngleRad": 1.5707963267948966,
+    "eccentricRodLengthM": 2.36,
+    "expansionTailRadiusM": 0.3,
+    "trunnionY": 1.58,
+    "trunnionZ": 3.55,
+    "valveHeightM": 1.82,
+    "combinationUpperArmM": 0.08,
+    "combinationLowerArmM": 0.72,
+    "referenceValveZ": 2.25,
+    "referenceCrossheadZ": 2.49,
+    "referenceExpansionDieAngleRad": -0.12,
+    "referenceLiftingDieBehindExpansionDieM": 0.4,
+    "expansionSlotLimitsRad": [
+      -0.28,
+      0.28
+    ],
+    "radiusRodSupportSlotLimitsM": [
+      -0.46,
+      -0.075
+    ]
+  },
+  "derivedDimensions": {
+    "mainRodLengthM": 3.317672901296931,
+    "physicalReturnCrankLengthM": 0.3606342191195949,
+    "radiusRodLengthM": 1.3388054376943648,
+    "expansionSlotRadiusM": 1.3388054376943648,
+    "unionLinkLengthM": 0.25427544120500534,
+    "liftingDieYZM": [
+      1.6895039701427494,
+      3.97601731496814
+    ]
+  },
+  "constraintGraph": {
+    "ground": [
+      "driver-axis O",
+      "expansion-link trunnion Q",
+      "fixed-setting lifting-arm die H",
+      "piston horizontal guide",
+      "valve horizontal guide"
+    ],
+    "rigidLinks": [
+      "return crank P–E, rigid to wheel",
+      "eccentric rod E–T",
+      "expansion link with trunnion Q, tail T and curved slot",
+      "radius rod D–A with rear straight support slot",
+      "three-pin combination lever A–V–U",
+      "union link C–U",
+      "piston rod/crosshead C",
+      "valve crosshead V"
+    ],
+    "slidingJoints": [
+      "D follows the rotating expansion-link circular slot",
+      "fixed H slides inside the radius rod rear straight slot",
+      "C and V follow their distinct fixed horizontal guides"
+    ],
+    "control": "H remains fixed for this one reverser setting; the reverser reach rod is not oscillated"
+  }
+}
