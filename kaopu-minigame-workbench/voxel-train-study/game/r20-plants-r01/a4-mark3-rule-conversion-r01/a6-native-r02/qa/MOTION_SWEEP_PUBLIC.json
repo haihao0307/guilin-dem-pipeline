@@ -1,0 +1,228 @@
+{
+  "schema": "a6-public-motion-report/2",
+  "status": "外侧候选闭环与净隙已修正；配气机构仍未解",
+  "complete": true,
+  "scope": "固定轴、原生外侧轮杆/滑块候选；保留完整机械和默认机车外壳。不是整车动力学或历史A4配气认证。",
+  "sourceHashes": {
+    "src/a6-motion.mjs": "62bab4ceac6c3afcf27d5d31701c54e4b4c8bf50c2aef7e20497a178fb5e739f",
+    "src/a6-motion-corrections.mjs": "6cae7211fc3c3d34ff1e559a24660b80d85cc74b29b38b8d20e87a5ec4615467",
+    "src/a6-locomotive-shell.mjs": "2b9de10d2582e6b47cb6d9e80d7724d119186946e368bf62751f1843ad5a0127"
+  },
+  "defaultShellParameters": {
+    "topHeight": 4.03,
+    "cabShift": 0
+  },
+  "componentNamesPreserved": 338,
+  "explicitNewPistonExtensions": 2,
+  "correctionCount": 36,
+  "supportedLoop": {
+    "schema": "a6-motion-cycle-validation/1",
+    "status": "design-kinematic-candidate; actual A4 crank phases unresolved",
+    "scope": "Supported rigid crank/coupling/main-rod loop only",
+    "samples": 1441,
+    "intervalDegrees": 0.25,
+    "toleranceM": 1e-9,
+    "maximumRodLengthErrorM": 8.881784197001252e-16,
+    "maximumJointErrorM": 1.897149936107019e-15,
+    "maximumAxisErrorM": 0,
+    "maximumRigidMatrixError": 2.220446049250313e-16,
+    "cycleClosureError": 0,
+    "crossheadRangeM": [
+      2.143327098703069,
+      2.803727098703069
+    ],
+    "sampledCrossheadRangeM": [
+      2.1433270987030695,
+      2.8037270987030687
+    ],
+    "crossheadTravelM": 0.6604000000000001,
+    "documentedPistonStrokeM": 0.6604,
+    "pistonEngagement": {
+      "extensionLengthM": 0.42,
+      "originalRodLengthM": 0.9100000000000004,
+      "totalRigidRodLengthM": 1.3300000000000003,
+      "cylinderAxialEnvelopeM": [
+        0.74,
+        1.5799999999999998
+      ],
+      "forwardRodEndRangeM": [
+        0.813327098703069,
+        1.473727098703069
+      ],
+      "minimumRearCoverEngagementM": 0.10627290129693079,
+      "minimumFrontCoverClearanceM": 0.07332709870306897,
+      "sourceRodAloneMaximumGapM": 0.3137270987030689,
+      "status": "axial-engagement-design-check; gland/piston-head/cylinder-bore geometry unresolved"
+    },
+    "strokeErrorM": 1.1102230246251565e-16,
+    "strokeCaveat": "R02 outside cylinder/guide assembly is aligned to axle height; exact analytic travel equals documented 26-inch stroke. Placement and rod length are still explicit design candidates.",
+    "maximumUnsupportedInterfaceGapM": 0.6604000000000001,
+    "supportedLoopPass": true,
+    "allMechanismsSolved": false,
+    "fullVehicleApproval": false,
+    "blockers": [
+      {
+        "id": "historical-phase",
+        "status": "unresolved",
+        "parts": [],
+        "reason": "The source has both outside cranks in the same top pose. It provides no verified A4 side/inside phase relation. This candidate keeps that reference and must not be described as historical A4 timing."
+      },
+      {
+        "id": "piston-gland",
+        "status": "axial-engagement-solved; engineering-interface-unresolved",
+        "parts": [
+          "outside-piston-rod--1",
+          "a6-piston-rod-hidden-extension--1",
+          "outside-cylinder--1",
+          "outside-piston-rod-1",
+          "a6-piston-rod-hidden-extension-1",
+          "outside-cylinder-1"
+        ],
+        "reason": "A new 0.42 m native hidden extension stays inside the source cylinder axial envelope throughout the stroke and preserves the original rod. Source cylinder caps have no gland bore, no internal piston head or real working bore; intended rod penetration through the cap is declared, not counted as free-clearance proof."
+      },
+      {
+        "id": "outside-valve-loop",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "return-crank--1",
+          "eccentric-rod--1",
+          "slotted-expansion-link--1",
+          "expansion-link-trunnion--1",
+          "expansion-link-frame-bracket--1",
+          "radius-rod--1",
+          "combination-lever--1",
+          "union-link--1",
+          "valve-rod-crosshead--1",
+          "reverser-lifting-link--1",
+          "reverser-reach-rod--1",
+          "return-crank-1",
+          "eccentric-rod-1",
+          "slotted-expansion-link-1",
+          "expansion-link-trunnion-1",
+          "expansion-link-frame-bracket-1",
+          "radius-rod-1",
+          "combination-lever-1",
+          "union-link-1",
+          "valve-rod-crosshead-1",
+          "reverser-lifting-link-1",
+          "reverser-reach-rod-1"
+        ],
+        "reason": "Return crank/eccentric/expansion-link/die-block/radius/union/combination/reverser joints have no consistent solved source loop. They retain the source pose; moving wheel/crosshead attachment gaps are explicitly reported."
+      },
+      {
+        "id": "inside-motion",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "middle-crank-axle-webs",
+          "inside-piston-and-crosshead",
+          "inside-slidebars-and-bracket",
+          "inside-main-connecting-rod"
+        ],
+        "reason": "Inside cylinder, piston and slidebar directions are not collinear in the source. Actual inner crank phase and usable slide constraint remain unresolved. Crank webs and inside rod are not independently spun."
+      },
+      {
+        "id": "conjugated-valves",
+        "status": "static-reference-not-actuated",
+        "parts": [
+          "gresley-conjugating-two-to-one-lever",
+          "gresley-conjugating-equal-lever",
+          "conjugating-valve-rod-links"
+        ],
+        "reason": "No verified three-cylinder valve constraint graph or complete fulcrum topology exists; no decorative valve animation is substituted."
+      },
+      {
+        "id": "rolling-and-loads",
+        "status": "not-solved",
+        "parts": [],
+        "reason": "Fixed-axle, stationary rig only. Carrying/tender/coach wheel rolling, translation along rail, buffers, drawgear, brake actuation, suspension loads, forces and compliance are not actuated or validated."
+      }
+    ]
+  },
+  "screen": {
+    "intervalDegrees": 1,
+    "intervalCount": 360,
+    "continuousEnvelopeScreen": true,
+    "exactContinuousTriangleProof": false,
+    "candidateCount": 90,
+    "sampledSurfaceWitnessCount": 6,
+    "supportedMechanismSurfaceWitnesses": 0,
+    "unsupportedValveReferenceSurfaceWitnesses": 6,
+    "shellSurfaceWitnesses": 0,
+    "shellIncluded": true,
+    "method": "Exact original-vertex midpoint AABBs plus analytic speed-bound padding over every continuous angular interval; optional exact original-triangle sampled surface intersection witnesses."
+  },
+  "unsupportedSurfaceWitnesses": [
+    {
+      "pair": [
+        "outside-crosshead--1",
+        "combination-lever--1"
+      ],
+      "phaseDegrees": 0.5
+    },
+    {
+      "pair": [
+        "outside-crosshead--1",
+        "union-link--1"
+      ],
+      "phaseDegrees": 0.5
+    },
+    {
+      "pair": [
+        "outside-crosshead-1",
+        "combination-lever-1"
+      ],
+      "phaseDegrees": 0.5
+    },
+    {
+      "pair": [
+        "outside-crosshead-1",
+        "union-link-1"
+      ],
+      "phaseDegrees": 0.5
+    },
+    {
+      "pair": [
+        "outside-main-rod-big-end-pin--1",
+        "return-crank--1"
+      ],
+      "phaseDegrees": 0.5
+    },
+    {
+      "pair": [
+        "outside-main-rod-big-end-pin-1",
+        "return-crank-1"
+      ],
+      "phaseDegrees": 0.5
+    }
+  ],
+  "supportedSurfaceWitnesses": [],
+  "primaryDimensions": {
+    "wheelTreadDiameterM": 2.032,
+    "driverAxisZM": [
+      3.5814,
+      5.7912,
+      8.001
+    ],
+    "crankRadiusM": 0.3302,
+    "documentedPistonStrokeM": 0.6604
+  },
+  "measurableCandidateGaps": {
+    "driverBrakeMinimumTaperRadialGapM": 0.01072,
+    "brakeOuterOverhangM": 0.0006,
+    "journalSleeveToHubAxialGapM": 0.0014,
+    "couplingEyesFaceGapM": 0.005,
+    "rearCouplingRodToHubLateralGapM": 0.0045,
+    "crossheadBodyToMainRodLateralGapM": 0.0205,
+    "mainPinToCouplingEyeAxialGapM": 0.0025
+  },
+  "baselineFailureReport": "../docs/MOTION_BASELINE_FAILURES.json",
+  "detailedReport": "../docs/MOTION_CORRECTED_SWEEP.json",
+  "fullVehicleApproval": false,
+  "allMechanismsSolved": false,
+  "limits": [
+    "连续包络覆盖全360°，包络候选仍需判定；离散原始三角形无相交不能冒充连续三角形无碰撞。",
+    "未解配气静态参考件保留，现有接头不代表已联动；所有相关相交单独列出。",
+    "活塞杆延长件有轴向啮合余量，但原始缸盖无真实填料函孔、缸内活塞及工作缸孔仍待建模。",
+    "没有制动、悬挂、轨道滚动、车钩或车厢动力学求解。默认外壳以外参数更改后需要重扫。"
+  ]
+}
