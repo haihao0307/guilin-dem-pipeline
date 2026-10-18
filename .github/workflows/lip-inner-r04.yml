@@ -1,0 +1,104 @@
+name: Lip inner R04 diagnosis
+on:
+  push:
+    branches: [feature/lip-inner-r04-20261018]
+    paths:
+      - kaopu-unified-human-workbench/lip-inner-r04/**
+      - .github/workflows/lip-inner-r04.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: lip-inner-r04-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-inner-r04
+            kaopu-unified-human-workbench/lip-realism-r02
+            kaopu-unified-human-workbench/human-integrated-r07
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify frozen baseline and reviewed diagnostic
+        run: |
+          python - <<'PYVERIFY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench')
+          a=json.loads((p/'lip-inner-r04/TASK_ANCHOR.json').read_text())
+          files={p/'lip-realism-r02/preview.html':a['baseline']['previewSHA256'],p/'lip-realism-r02/LipSurface.js':a['baseline']['moduleSHA256'],p/'human-integrated-r07/preview.html':a['baseline']['hostSHA256'],p/'lip-inner-r04/verification/diagnose-inner.cjs':a['diagnostic']['verifierSHA256']}
+          for f,expected in files.items():
+            actual=hashlib.sha256(f.read_bytes()).hexdigest()
+            assert actual==expected,(str(f),actual,expected)
+          print('Frozen source and reviewed diagnostic hashes match.')
+          PYVERIFY
+      - name: Install bounded runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Diagnose native R02
+        env:
+          MODE: diagnose
+          SOURCE_SHA: ${{ github.sha }}
+          BASELINE_SOURCE_SHA: 01cfde47476b7be6764e9c6a79d925462511539b
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-inner-r04/evidence/diagnosis
+          QA_BUDGET_MS: 720000
+        run: timeout --signal=TERM --kill-after=20s 13m node kaopu-unified-human-workbench/lip-inner-r04/verification/diagnose-inner.cjs
+      - name: Verify diagnostic completion without aesthetic promotion
+        run: |
+          node - <<'JSVERIFY'
+          const fs=require('fs'),assert=require('assert/strict');
+          const p='kaopu-unified-human-workbench/lip-inner-r04/';
+          const a=JSON.parse(fs.readFileSync(p+'TASK_ANCHOR.json'));
+          const q=JSON.parse(fs.readFileSync(p+'evidence/diagnosis/qa.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
+          for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert.equal(q.tests.length,7);assert(q.tests.every(t=>t.passed));
+          assert.equal(q.frames.filter(f=>f.saved).length,6);
+          assert.equal(q.sourceSHA,a.baseline.sourceCommit);assert.equal(q.buildSHA,a.baseline.buildCommit);
+          assert.equal(q.previewSHA256,a.baseline.previewSHA256);assert.equal(q.verifierSHA256,a.diagnostic.verifierSHA256);
+          assert.equal(q.diagnosticCommit,process.env.GITHUB_SHA);
+          assert.equal(q.productionSourceModified,false);assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
+          console.log('Seven diagnostic stages completed. Visual acceptance remains false.');
+          JSVERIFY
+      - name: Preserve raw completed or failed diagnostic evidence
+        if: always()
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+          TASK_BRANCH: feature/lip-inner-r04-20261018
+        run: |
+          python - <<'PYEXISTS'
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-inner-r04/evidence/diagnosis')
+          assert p.exists() and any(p.iterdir()),'No diagnostic output exists to preserve.'
+          PYEXISTS
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- kaopu-unified-human-workbench/lip-inner-r04/evidence/diagnosis
+          if ! git diff --cached --quiet; then
+            git commit -m "Record R04 immutable R02 diagnosis evidence [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-inner-r04-diagnosis-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-inner-r04/evidence/diagnosis
+            kaopu-unified-human-workbench/lip-inner-r04/TASK_ANCHOR.json
+            kaopu-unified-human-workbench/lip-inner-r04/research
+            kaopu-unified-human-workbench/lip-inner-r04/verification/diagnose-inner.cjs
+          if-no-files-found: error
+          retention-days: 30
