@@ -1,0 +1,35 @@
+name: Original A4 loading progress and fault injection
+on:
+  push:
+    branches: ['qa/a4-mark3-rule-conversion-r01-20261017']
+    paths:
+      - '.github/workflows/train-original-loading.yml'
+      - 'kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/**'
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02
+            kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-full-source-replica-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Actual source, slow stream, abort, and finite failure tests
+        run: node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/browser-network.cjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: original-a4-loading-${{ github.sha }}
+          path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-original-loading-r02/qa-network/
+          retention-days: 14
