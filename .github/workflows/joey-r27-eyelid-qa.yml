@@ -1,0 +1,55 @@
+name: R27 isolated new-reference portrait
+on:
+  push:
+    branches: ['qa/joey-face-r55-20261013']
+    paths: ['kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/**', '.github/workflows/joey-r27-eyelid-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: joey-r27-eyelid-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27
+            kaopu-unified-human-workbench/joey-observation-r01/interactive-r23
+            kaopu-unified-human-workbench/joey-observation-r01/full-material-r21/eye
+            kaopu-unified-human-workbench/joey-observation-r01/appearance-r65
+            kaopu-unified-human-workbench/joey-observation-r01/full-material-r23
+            kaopu-unified-human-workbench/joey-observation-r01/hair-f13-static-r17/browser
+            kaopu-unified-human-workbench/joey-observation-r01/hair-f13-static-r17/generator
+      - name: Use established official package versions
+        timeout-minutes: 3
+        run: |
+          npm install --prefix "$RUNNER_TEMP/joey-r27" --no-save --ignore-scripts esbuild@0.25.5 playwright@1.57.0
+          echo "NODE_PATH=$RUNNER_TEMP/joey-r27/node_modules" >> "$GITHUB_ENV"
+      - name: Loading transport unit checks
+        run: node --test kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/test-startup.mjs
+      - name: Build independent page from fixed existing layers
+        timeout-minutes: 3
+        run: node kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/build.cjs
+      - name: Render unchanged baseline and one native candidate, then restore
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          set -o pipefail
+          ROOT=kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27
+          mkdir -p "$ROOT/evidence"
+          node "$ROOT/verify.cjs" 2>&1 | tee "$ROOT/evidence/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joey-r27-eyelid-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/evidence/
+            kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/BUILD.json
+            kaopu-unified-human-workbench/joey-observation-r01/new-reference-r27/index.html
+          retention-days: 14
