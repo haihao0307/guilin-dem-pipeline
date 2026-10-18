@@ -1,0 +1,170 @@
+{
+  "pass": true,
+  "checkedUTC": "2026-10-18T06:23:35.224Z",
+  "sources": {
+    "src/VolumeFlow.mjs": "8635b2248e8b64fef9b394424290aad7f97a20b065fbb100c92142543dc8ed32",
+    "src/VolumeClumps.mjs": "bcf2b6570a0cd39661f950525bd0bcf1f324d5ad21ce1c07f772023c31b520c5",
+    "src/FlowExperiments.mjs": "c81e178a92ee281605c2c57cdc5f0f30b9e0c0e22771249f2deb20e41bc18ecd",
+    "src/StructureContract.mjs": "36a0a1233898a394850903d00935baf64822bd1b6cd1feaad793e92d8623e50d",
+    "tools/compile-volume09.mjs": "86d5bd9afeae15ed5021492c017c89e4d4af09bb504a89379c3d118562d5303d",
+    "tools/check-volume09.mjs": "64c993fd0f62bed770712cc94001bb223ceffcf15708e39616814042f0d860cd",
+    "locks/volume-edit-r09.json": "6f0c86bb772b8ba5adb923a21eb83598224b6ee448b0b961913c5650e2fee8cc"
+  },
+  "sourceGuidesSHA256": "627ac4851e1459e7e559fe3572c01af8ac6ec6a9b8e91761e78e64d8c9e5f1ee",
+  "rootSHA256": "064f0b8eaf9a255098b6cc93e15d1a62ba498c5a50ef5cad889ff0dce35db506",
+  "patchSHA256": "fa5e03676902dcfc232e65e1246ca43add1cb3e577515804d9f04e78df591a18",
+  "patchSourceStructureSHA256": "a6ce0745174e862f804ad7a060d8359395fff0b7570e340b0bdc94942bfa0275",
+  "field": {
+    "nodes": 53391,
+    "curveConstrainedNodes": 2464,
+    "iterations": 240,
+    "maxLastIterationChange": 0.0000033706768890473526,
+    "method": "screened harmonic interpolation of three vector components; part-aware grid neighbours",
+    "obstacleProjection": "bounded smooth ear-outlet correction baked once into final grid",
+    "baseWeight": 0.15,
+    "curveWeight": 30,
+    "curveStrength": 1
+  },
+  "preserved": {
+    "guides": 165,
+    "editedGuides": 141,
+    "nativeRootPoints": 1
+  },
+  "rootDirectionEdits": 2559,
+  "maxRootDirectionError": 4.196321529873671e-8,
+  "actual": {
+    "bodyCrossings": 0,
+    "maxTurnDegrees": 16.334989286560063,
+    "maxWidthMM": 223.076132
+  },
+  "raw": {
+    "bodyCrossings": 0,
+    "maxTurnDegrees": 16.334989286560063,
+    "maxWidthMM": 223.076132
+  },
+  "diametersMM": {
+    "macro": 208.04121224591017,
+    "mid": 44.883939508858646,
+    "micro": 25.99116051544144
+  },
+  "groups": {
+    "macro": 20,
+    "mid": 65,
+    "micro": 91
+  },
+  "disagreements": {
+    "before": {
+      "volumeY": [
+        0.25,
+        0.405
+      ],
+      "proximityMM": 3,
+      "minDirectionAngleDegrees": 35,
+      "events": 1,
+      "uniqueGuidePairs": 1
+    },
+    "after": {
+      "volumeY": [
+        0.25,
+        0.405
+      ],
+      "proximityMM": 3,
+      "minDirectionAngleDegrees": 35,
+      "events": 0,
+      "uniqueGuidePairs": 0
+    }
+  },
+  "retainedLowerDiagnostic": {
+    "sectionY": 0.17,
+    "planeZ": -0.083,
+    "halfWidthMM": 6,
+    "source": {
+      "samples": 101,
+      "oldPlaneCrowding": 24
+    },
+    "current": {
+      "samples": 101,
+      "oldPlaneCrowding": 14
+    }
+  },
+  "controlled": [
+    {
+      "curveStrength": 0.9,
+      "bodyCrossings": 0,
+      "maxTurnDegrees": 16.17648191590306,
+      "maxWidthMM": 223.120784490642,
+      "maxDifferenceFromPublishedMM": 0.535930706016168
+    },
+    {
+      "curveStrength": 0.95,
+      "bodyCrossings": 0,
+      "maxTurnDegrees": 16.282444302534937,
+      "maxWidthMM": 223.09773550951223,
+      "maxDifferenceFromPublishedMM": 0.2547743122292609
+    },
+    {
+      "curveStrength": 1,
+      "bodyCrossings": 0,
+      "maxTurnDegrees": 16.334984606588993,
+      "maxWidthMM": 223.07613192153562,
+      "maxDifferenceFromPublishedMM": 8.392201598380859e-7
+    }
+  ],
+  "ablations": [
+    {
+      "kind": "without-style-curves",
+      "maxGuideDifferenceMM": 30.16581923958171,
+      "curveConstrainedNodes": 0
+    },
+    {
+      "kind": "without-whorl",
+      "maxGuideDifferenceMM": 0.15415161329241395,
+      "curveConstrainedNodes": 2464
+    }
+  ],
+  "negative": [
+    {
+      "kind": "moved-root",
+      "rejected": true
+    },
+    {
+      "kind": "modified-fringe",
+      "rejected": true
+    },
+    {
+      "kind": "changed-cut",
+      "rejected": true
+    },
+    {
+      "kind": "changed-native-root-buffer",
+      "rejected": true
+    },
+    {
+      "kind": "root-direction-disagrees",
+      "rejected": true
+    },
+    {
+      "kind": "nonfinite-grid",
+      "rejected": true
+    },
+    {
+      "kind": "zero-grid-vector",
+      "rejected": true
+    },
+    {
+      "kind": "missing-style-curve",
+      "rejected": true
+    },
+    {
+      "kind": "invalid-trace-step",
+      "rejected": true
+    },
+    {
+      "kind": "body-penetration",
+      "rejected": true
+    }
+  ],
+  "phaseTwo": "locked",
+  "firstRoundAccepted": false,
+  "limits": "Low-frequency current P01 structure, not dense coverage, final beauty, finite-radius self contact or dynamics."
+}

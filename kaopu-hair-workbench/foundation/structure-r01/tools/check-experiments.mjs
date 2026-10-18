@@ -1,0 +1,26 @@
+import fs from 'node:fs';import zlib from 'node:zlib';import crypto from 'node:crypto';import assert from 'node:assert/strict';
+import {unpackExperiment} from '../src/ExperimentTransport.mjs';
+import {assertStructure} from '../src/StructureContract.mjs';import {EXPERIMENTS} from '../src/FlowExperiments.mjs';
+const base=new URL('../',import.meta.url),read=p=>fs.readFileSync(new URL(p,base)),load=p=>JSON.parse(zlib.gunzipSync(read(p))),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const roots=p=>new Float32Array(Uint8Array.from(zlib.gunzipSync(read(p))).buffer),baseline=load('assets/structure.json.gz'),baselineRoots=roots('assets/roots.bin.gz'),reports=[];
+const rms=(a,b)=>Math.sqrt(a.reduce((s,x,i)=>s+(x-b[i])**2,0)/(a.length/3))*1000;
+for(const e of EXPERIMENTS.filter(e=>!e.controls.cutPreset&&!e.controls.routePreset&&!e.controls.volumePreset&&!e.controls.restPreset)){
+ const prefix=e.id==='baseline'?'assets/':'assets/experiments/'+e.id+'/',lab=load(prefix+'structure.json.gz'),r=roots(prefix+'roots.bin.gz');assertStructure(lab,r);if(e.id!=='baseline')assert.deepEqual(unpackExperiment(baseline,load(prefix+'patch.json.gz'),sha(read('assets/structure.json.gz'))),lab);
+ assert.deepEqual(lab.profile.experiment.controls,e.controls);assert.deepEqual(lab.activeMask,baseline.activeMask);assert.deepEqual(lab.guides.map(g=>g.rootId).sort((a,b)=>a-b),baseline.guides.map(g=>g.rootId).sort((a,b)=>a-b));
+ for(let i=0;i<lab.rootCount;i++)for(const k of [0,1,2,3,4,5,6,7,8,9,16,17,19,20,21,22,23,25])assert.equal(r[i*lab.stride+k],baselineRoots[i*lab.stride+k],'Preserved root field '+i+'/'+k);
+ let maxRootDriftMM=0,maxCutErrorMM=0;const changes=lab.guides.map(g=>{const b=baseline.guides.find(q=>q.id===g.id);maxRootDriftMM=Math.max(maxRootDriftMM,rms(g.points.slice(0,3),b.points.slice(0,3)));maxCutErrorMM=Math.max(maxCutErrorMM,Math.abs(g.points.at(-2)-b.points.at(-2))*1000);return{id:g.id,zone:g.zone,route:g.route,baselineRoute:b.route,rmsMM:rms(g.points,b.points)};});
+ assert.equal(maxRootDriftMM,0);assert.ok(maxCutErrorMM<1e-9);assert.deepEqual(lab.profile.CutField,baseline.profile.CutField);assert.deepEqual(lab.profile.RegionalLengthField,baseline.profile.RegionalLengthField);
+ assert.ok(lab.flowField.converged&&lab.flowField.forbiddenEdges===0&&lab.flowField.residual<1e-7);
+ const checks=JSON.parse(read(e.id==='baseline'?'evidence/structural-checks.json':prefix+'checks.json'));assert.equal(checks.pass,true);
+ const directionDelta=Array.from({length:lab.rootCount},(_,i)=>r[i*lab.stride+25]?rms(Array.from(r.subarray(i*lab.stride+10,i*lab.stride+13)),Array.from(baselineRoots.subarray(i*lab.stride+10,i*lab.stride+13)))/1000:0);
+ if(e.id!=='baseline')assert.ok(Math.max(...changes.map(c=>c.rmsMM))>.1,'Control must actually alter complete geometry');
+ if(e.id==='fringe-open')assert.ok(changes.filter(c=>c.zone>1).every(c=>c.rmsMM<1e-6),'Fringe edit leaked to other regions');
+ if(e.id==='ear-back')assert.ok(changes.filter(c=>c.zone<=1).every(c=>c.rmsMM<1e-6),'Ear edit leaked into fringe');
+ for(const g of lab.guides){const b=lab.unshapedGuides.find(q=>q.id===g.id);assert.deepEqual(g.points.slice(0,3),b.points.slice(0,3));assert.deepEqual(g.points.slice(-3),b.points.slice(-3));}
+ const stations=lab.clumpShaping.sections.flatMap(s=>s.stations.filter(p=>p.arcFraction===.5)),before=stations.reduce((s,p)=>s+p.beforeMM,0)/stations.length,after=stations.reduce((s,p)=>s+p.afterMM,0)/stations.length;
+ assert.equal(lab.clumpShaping.newContractionApplied,false);assert.ok(lab.clumpShaping.referenceMaxDifferenceMM<=4+Math.sqrt(3)*1e-6,'Frozen shaping reference exceeded 4 mm plus the two-endpoint 1 nm serialization error bound');assert.ok(after<before*.98,'Mid-wisp operation must measurably alter cross-section spread');
+ reports.push({id:e.id,structureSHA256:sha(read(prefix+'structure.json.gz')),active:lab.activeMask.filter(Boolean).length,guides:lab.guides.length,maxRootDriftMM,maxCutErrorMM,maxCurveChangeMM:Math.max(...changes.map(c=>c.rmsMM)),meanCurveChangeMM:changes.reduce((s,c)=>s+c.rmsMM,0)/changes.length,changedGuideCount:changes.filter(c=>c.rmsMM>.1).length,changedDirectionRoots:directionDelta.filter(x=>x>.001).length,routeChanges:changes.filter(c=>c.route!==c.baselineRoute),midSectionMeanSpreadMM:{before,after},field:lab.flowField,geometryChecks:checks.checks,changes});
+}
+const small=reports.find(r=>r.id==='part-small');assert.ok(small.meanCurveChangeMM<1.5&&small.maxCurveChangeMM<8,'1 mm part edit caused a large shape jump');
+const report={pass:true,checkedUTC:new Date().toISOString(),experiments:reports,notes:['1 mm stability bound applies to this tested P01 control state, not every root near a moving dividing boundary.','Active mask and guide IDs intentionally frozen for controlled experiments. Each future hairstyle still needs its own authored mask.','Mean cross-section reduction proves the geometry operation ran; it is not a beauty score or physical measurement.','Zero centerline/body intersections do not validate finite-radius, self or dynamic collision.'],visualAcceptance:'pending'};
+fs.writeFileSync(new URL('evidence/flow-experiments-checks.json',base),JSON.stringify(report,null,2));console.log(JSON.stringify({pass:true,experiments:reports.map(({changes,geometryChecks,field,...r})=>r)},null,2));

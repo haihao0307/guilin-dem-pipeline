@@ -1,0 +1,26 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import zlib from 'node:zlib';import {PROFILE} from '../src/HairStyleProfile.mjs';import {assertProfile,assertStructure} from '../src/StructureContract.mjs';
+import {configureExperiment} from '../src/FlowExperiments.mjs';configureExperiment(PROFILE);
+const base=new URL('../',import.meta.url),lab=JSON.parse(zlib.gunzipSync(fs.readFileSync(new URL('assets/structure.json.gz',base)))),b=zlib.gunzipSync(fs.readFileSync(new URL('assets/roots.bin.gz',base))),roots=new Float32Array(Uint8Array.from(b).buffer),checks=[];
+function good(name,fn){fn();checks.push({name,pass:true});}function bad(name,fn){let rejected=false;try{fn();}catch{rejected=true;}if(!rejected)throw Error('Invalid data was accepted: '+name);checks.push({name,pass:true});}
+good('compiled profile matches current authored profile',()=>assert.deepEqual(lab.profile,PROFILE));
+good('authored profile',()=>assertProfile(PROFILE));good('published structure',()=>assertStructure(lab,roots));
+bad('reject physics before structure acceptance',()=>assertProfile({...PROFILE,PhysicsProfile:{...PROFILE.PhysicsProfile,enabled:true}}));bad('reject missing regional cut',()=>{const p=structuredClone(PROFILE);delete p.CutField.regions.fringe;assertProfile(p);});bad('reject incomplete root-to-tip guide',()=>{const x=structuredClone(lab);x.guides[0].points.splice(-3);assertStructure(x,roots);});bad('reject broken micro-to-mid ancestry',()=>{const x=structuredClone(lab);x.clumpGraph.find(g=>g.level==='micro').parent='missing';assertStructure(x,roots);});bad('reject missing root bytes',()=>assertStructure(lab,roots.subarray(26)));
+bad('reject representative outside its own clump',()=>{const x=structuredClone(lab),g=x.clumpGraph.find(g=>g.level==='micro');g.representativeGuide=x.guides.find(h=>!g.guides.includes(h.id)).id;assertStructure(x,roots);});
+bad('reject group escaping its parent membership',()=>{const x=structuredClone(lab),g=x.clumpGraph.find(g=>g.level==='micro'),p=x.clumpGraph.find(p=>p.id===g.parent);p.guides=p.guides.filter(id=>id!==g.guides[0]);assertStructure(x,roots);});
+bad('reject inconsistent arc length',()=>{const x=structuredClone(lab);x.guides[0].length*=1.1;assertStructure(x,roots);});
+bad('reject altered native follicle identity',()=>{const x=structuredClone(lab);x.guides[0].root.triangleId++;assertStructure(x,roots);});
+bad('reject non-orthogonal transport frame',()=>{const x=structuredClone(lab);x.guides[0].frames[0]+=1;assertStructure(x,roots);});
+bad('reject active follicle outside approved source domain',()=>{const r=roots.slice();for(let i=0;i<lab.rootCount;i++)if(!lab.sourceDomain.eligibleMask[i]){r[i*lab.stride+25]=1;break;}assertStructure(lab,r);});
+bad('reject a second native-height scalp trim',()=>{const x=structuredClone(lab);x.profile.ScalpDomain.lowerHairline={back:.256};assertStructure(x,roots);});
+bad('reject first point detached from its native root',()=>{const x=structuredClone(lab);x.guides[0].points[0]+=.001;assertStructure(x,roots);});
+bad('reject fabricated monotonic arcs with matching declared length',()=>{const x=structuredClone(lab),g=x.guides[0];g.arcLengths=g.arcLengths.map(v=>v*1.01);g.length=g.arcLengths.at(-1);assertStructure(x,roots);});
+bad('reject reversed orthonormal tangent',()=>{const x=structuredClone(lab),g=x.guides[0];for(let k=0;k<3;k++){g.frames[k]*=-1;g.frames[6+k]*=-1;}assertStructure(x,roots);});
+bad('reject left-handed orthonormal frame',()=>{const x=structuredClone(lab);for(let k=6;k<9;k++)x.guides[0].frames[k]*=-1;assertStructure(x,roots);});
+bad('reject detached cut metadata',()=>{const x=structuredClone(lab);x.guides[0].cut.endpoint[0]+=.01;assertStructure(x,roots);});
+bad('reject active mask disagreement',()=>{const x=structuredClone(lab);x.activeMask[x.guides[0].rootId]=false;assertStructure(x,roots);});
+bad('reject nonfinite root records',()=>{const r=roots.slice();r[4]=NaN;assertStructure(lab,r);});
+bad('reject nonfinite declared guide length',()=>{const x=structuredClone(lab);x.guides[0].length=NaN;assertStructure(x,roots);});
+bad('reject zero part width',()=>{const p=structuredClone(PROFILE);p.PartingCurves[0].width=0;assertProfile(p);});
+bad('reject nonfinite root lift',()=>{const p=structuredClone(PROFILE);p.RootLiftField.hairline=NaN;assertProfile(p);});
+bad('reject comb editing below authorized arc',()=>{const p=structuredClone(PROFILE);p.GuideGroom.editArc=.20;assertProfile(p);});
+const result={pass:true,checks};fs.writeFileSync(new URL('evidence/contract-checks.json',base),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

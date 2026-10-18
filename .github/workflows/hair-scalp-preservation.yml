@@ -1,0 +1,68 @@
+name: Approved hair growth domain
+on:
+  push:
+    branches: [codex/hair-structure-lab-r01-20261016]
+    paths:
+      - kaopu-hair-workbench/foundation/structure-r01/**
+      - .github/workflows/hair-scalp-preservation.yml
+  pull_request:
+    paths:
+      - kaopu-hair-workbench/foundation/structure-r01/**
+      - .github/workflows/hair-scalp-preservation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preserve-approved-domain:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kaopu-hair-workbench/foundation/structure-r01
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            kaopu-hair-workbench/foundation/structure-r01
+            kaopu-hair-workbench/integrations/fiber-runtime-r08
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Compare applied domain, masks and retained curves to approved authority
+        run: node tools/check-approved-scalp.mjs
+      - name: Check structure and runtime contracts
+        run: |
+          node tools/check-contract.mjs
+          node tools/check-runtime.mjs
+          node tools/check-static-flow.mjs
+      - name: Require visual review of the current build
+        run: node tools/check-review-evidence.cjs
+      - name: Check continuous flow and protected lower groom across the edit interval
+        run: node tools/check-flow06.mjs
+      - name: Check current-length cut geometry, hierarchy and protected source paths
+        run: node tools/check-cut07.mjs
+      - name: Preserve the nine historical studies as references
+        run: node tools/check-retained-studies08.mjs
+      - name: Check lower silhouettes, medium wisps and temple-linked graduation
+        run: node tools/check-silhouette08.mjs
+      - name: Compare implementation evidence to the unchanged user learning guide
+        run: node tools/check-learning08.mjs
+      - name: Preserve all eleven pre-volume study profiles, curves and native root buffers
+        run: node tools/check-retained-studies09.mjs
+      - name: Verify actual shared volume tracing, control ablation and connected wisps
+        run: node tools/check-volume09.mjs
+      - name: Verify current connected-wisp rest and twelve immutable historical states
+        run: node tools/check-rest10.mjs
+      - name: Verify parted fringe, actual root arrows and reviewed body preservation
+        run: node tools/check-fringe10.mjs
+
+      - name: Verify crown launch, immutable R10 downstream points and root directions
+        run: node tools/check-upper11.mjs
+      - name: Verify bounded crown volume and protected launches
+        run: node tools/check-crown11.mjs
+
+      - name: Preserve startup quality, validated caching and fallback evidence
+        run: node tools/check-startup12-contract.cjs
+
+      - name: Verify scoped ear wisps against immutable R11 and protected native data
+        run: node tools/check-ear13.mjs
