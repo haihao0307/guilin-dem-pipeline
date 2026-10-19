@@ -51,7 +51,8 @@
     "Before presenting the next candidate as correcting the user rejection, run the bound oracle on the exact candidate and prove a known bad control is rejected.",
     "A regression pass is not USER-ACCEPTED; only a later user receipt may close that state.",
     "If the rejection cannot yet be operationalized without inventing a subjective universal threshold, keep the visual correction open and ask the relevant Mother to define the smallest observable signature.",
-    "A technical matched-pair run that records nonzero pixel deltas is not an executable visual correction regression unless the required manifest runs a reason-bearing defect oracle and rejects a known-bad control."
+    "A required nonzero material-response predicate prevents zero-delta passes, but remains distinct from a visual correction oracle; direction-blind equal-magnitude changes cannot close the named defect.",
+    "A machine-checked independent-review receipt may gate evidence binding when it binds exact subject/build, named pair digests, actual independent reviewer identity, defect decisions and the known-bad judgement; it does not automate aesthetic judgement."
   ],
   "states": [
     "HOLD_USER_CORRECTION_REGRESSION_UNBOUND",
@@ -312,12 +313,16 @@
         "visualDefectOracleInProductionWorkflow": false,
         "knownBadDefectRejectionInProductionWorkflow": false,
         "independentManualVisualReview": true,
-        "reviewedVisualFilesInRequiredManifest": false
+        "reviewedVisualFilesInRequiredManifest": false,
+        "requiredMaterialResponsePredicate": "jaw/oblique.changedPixels > 0",
+        "zeroDeltaPassesFullWorkflow": false,
+        "directionBlindResponseCanPass": true,
+        "correctionDirectionEvaluated": false
       },
       "retainedPriorResult": "N173 manual PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN remains valid for exact reviewed frames.",
       "currentProductionRegressionDecision": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE",
-      "classifierReplay": "10/10",
-      "minimalTrial": "Bind three named view pairs, independent verifier receipt, defect ROI/mask, directional metric/threshold, and require R02 known-bad fail plus candidate pass.",
+      "classifierReplay": "12/12",
+      "minimalTrial": "Machine-check an independent review receipt binding exact subject/build, three named pair digests, reviewer identity, defect decisions and R02 known-bad judgement. Missing/stale/substituted/self-approved review holds. Numeric ROI/directional thresholds remain Candidate-only pending over-dark/flat-wall counterexamples.",
       "decision": "EXTEND_EXISTING_CASE_NO_NEW_REGRESSION",
       "lifecycle": {
         "POSTED": true,
@@ -329,7 +334,8 @@
         "ADOPTED": false,
         "USER-ACCEPTED": false
       },
-      "postedReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6254291302"
+      "postedReceipt": "https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6254291302",
+      "coordinationClarification": "https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6274356026"
     }
   ]
 }

@@ -17,7 +17,7 @@ The production workflow is strong on technical identity and replayability: it bi
 It does not execute the defect-correction claim:
 
 1. Every pair test computes only `changedPixels`, `maximumChannelDN` and `meanMaxChannelDN`, explicitly describing the result as a measured response rather than an aesthetic score.
-2. No threshold, direction, defect ROI/mask, or assertion requires the pale inner-wall wedge to be reduced. Neutral/macro passes with six changed pixels; zero change or a worse wedge would also satisfy the current pair-test structure.
+2. No threshold, direction or defect ROI/mask requires the pale inner-wall wedge to be reduced. The complete workflow does contain a final `jaw/oblique.changedPixels > 0` response assertion, so zero delta cannot pass. However, that predicate is direction-blind: equal-magnitude darkening and lightening both pass, even though only one may move the named defect in the intended direction.
 3. `CANDIDATE_ANCHOR.reviewedFiles` includes the two product modules, build, verifier and `SURFACE_CONTRACT.json`. It does not include the independent visual review, final visual binding or final audit receipt.
 4. The workflow's closing step explicitly keeps `visualAcceptance=false` and says aesthetic acceptance remains separate.
 
@@ -36,7 +36,7 @@ The isolated classifier replays the observed R04 and nine counterfactual control
 
 ## Minimal falsifiable single-Mother trial
 
-For the three named views (`jaw_macro`, `jaw_oblique`, `speak_macro`), require a manifest binding exact R02/candidate frames, independent verifier receipt digest, the reason-bearing wedge signature, and a per-view ROI or mask with a directional metric and threshold. R02 must fail; the candidate must pass all three. Missing atoms or an unexecuted oracle stay HOLD. Neutral, pucker, whole-lip realism, dynamic continuity, other-person coverage and user acceptance remain out of scope.
+For the three named views (`jaw_macro`, `jaw_oblique`, `speak_macro`), the bounded next trial is a machine-checked independent-review receipt: bind the exact subject/build, all three R02/candidate pair digests, actual independent reviewer identity, defect-specific per-view decisions, and the R02 known-bad judgement. Missing, substituted, stale or producer-self-approved review must HOLD; new pixels require a new review. This automates evidence binding, not aesthetic judgement. A numeric ROI/directional threshold remains Candidate-only until an over-dark or flat-wall counterexample can be rejected. Neutral, pucker, whole-lip realism, dynamic continuity, other-person coverage and user acceptance remain out of scope.
 
 This is a Candidate only. It does not prescribe a universal beauty score and does not modify PR #308, R2, main or a production workflow.
 
@@ -45,4 +45,5 @@ This is a Candidate only. It does not prescribe a universal beauty score and doe
 - PR #308 technical target: `IMPLEMENTED=true`, technical `GATE-RUN=true`.
 - Visual correction production regression: `IMPLEMENTED=false`, `GATE-RUN=false`.
 - Learning route: `POSTED=true`; directed receipt: https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6254291302.
+- Coordination clarification: `POSTED`, not `ACKNOWLEDGED`; https://github.com/haihao0307/guilin-dem-pipeline/pull/308#issuecomment-6274356026.
 - `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.

@@ -19,24 +19,33 @@
   },
   "observation": {
     "technicalGate": "The workflow verifies source/build identity, native state, five matched frame pairs, shader/uniform ownership, saves, fresh-context restore, public bytes and cleanup.",
-    "deltaOnly": "Each pair test returns changedPixels, maximumChannelDN and meanMaxChannelDN with the explicit interpretation 'A measured response, not an aesthetic score.' No minimum, direction, defect mask or correction oracle is asserted.",
-    "counterexample": "neutral/macro passes with only 6 changed pixels; the same test would also pass if the defect were unchanged or worsened because the visual defect decision is not evaluated.",
+    "deltaOnly": "Each pair records changedPixels, maximumChannelDN and meanMaxChannelDN. The complete verifier also requires jaw/oblique.changedPixels > 0, so zero response fails; the response remains direction-blind and is not a correction oracle.",
+    "counterexample": "A synthetic one-pixel evaluation of the literal difference() gives the same changed=1, max=16 and mean=16 for RGB128→112 and RGB128→144. Both satisfy the response predicate although they move in opposite directions; zero change fails.",
     "requiredManifestGap": "CANDIDATE_ANCHOR.reviewedFiles binds production modules, build, verifier and SURFACE_CONTRACT only. independent-visual-review.json, final-visual-binding.json and FINAL_AUDIT_RECEIPT.json are not consumed by the production workflow.",
-    "retainedEvidence": "N173's independent manual finding remains valid for the exact reviewed frames; this result narrows only the production GATE-RUN claim."
+    "retainedEvidence": "N173's independent manual finding remains valid for the exact reviewed frames; this result narrows only the production GATE-RUN claim.",
+    "responsePredicate": "Final required verifier assertion: jaw/oblique.changedPixels > 0. This establishes a material response only."
   },
   "decision": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE",
   "minimalFalsifiableTrial": {
-    "scope": ["jaw_macro", "jaw_oblique", "speak_macro"],
-    "requiredManifest": [
-      "exact candidate and R02 control frame identities",
-      "independent verifier identity and receipt digest",
-      "reason-bearing pale-inner-wall defect signature",
-      "per-view defect ROI or mask plus directional metric and threshold",
-      "known-bad R02 control must fail",
-      "candidate must pass all three named views",
-      "neutral/pucker/whole-lip/dynamic/other-person/user acceptance remain excluded"
+    "scope": [
+      "jaw_macro",
+      "jaw_oblique",
+      "speak_macro"
     ],
-    "failureRule": "Missing manifest atom, unexecuted oracle, known-bad control not rejected, or any named view retaining the signature => HOLD. Do not infer aesthetic closure from nonzero pixel delta."
+    "preferredBoundedGate": [
+      "exact subject and build identity",
+      "all three R02/candidate pair digests",
+      "actual independent reviewer identity",
+      "defect-specific per-view decisions",
+      "R02 known-bad judgement",
+      "missing, substituted, stale or producer-self-approved review must HOLD",
+      "new pixels require a new review; same-byte reuse preserves original scope and date"
+    ],
+    "candidateNumericGate": [
+      "per-view ROI or mask plus directional metric and threshold",
+      "remain Candidate-only until an over-dark or flat-wall counterexample is rejected"
+    ],
+    "failureRule": "A nonzero response alone is not correction evidence. Missing receipt atoms or an unexecuted decision gate stay HOLD."
   },
   "cases": [
     {
@@ -52,63 +61,117 @@
         "knownBadControlDetected": false,
         "candidateDefectAbsentOrReduced": true,
         "claimScope": "NAMED_VIEW_SUBSET",
-        "userAccepted": false
+        "userAccepted": false,
+        "materialResponsePredicatePassed": true
       },
       "expect": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE"
     },
     {
       "id": "TECHNICAL_GATE_FAILED",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"technicalGatePassed": false},
+      "override": {
+        "technicalGatePassed": false
+      },
       "expect": "HOLD_FUNCTIONAL_GATE_FAIL"
     },
     {
       "id": "SUBJECT_UNBOUND",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"exactSubjectBound": false},
+      "override": {
+        "exactSubjectBound": false
+      },
       "expect": "HOLD_CORRECTION_SCOPE_UNBOUND"
     },
     {
       "id": "PAIR_COVERAGE_INCOMPLETE",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"allPairFramesBound": false},
+      "override": {
+        "allPairFramesBound": false
+      },
       "expect": "HOLD_VISUAL_PAIR_COVERAGE_INCOMPLETE"
     },
     {
       "id": "INDEPENDENT_REVIEW_MISSING",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"independentVisualReview": false},
+      "override": {
+        "independentVisualReview": false
+      },
       "expect": "HOLD_INDEPENDENT_VISUAL_REVIEW_MISSING"
     },
     {
       "id": "MANIFEST_BOUND_BUT_ORACLE_NOT_EXECUTED",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"visualClaimInRequiredManifest": true, "executableDefectOracle": true, "oracleRun": false},
+      "override": {
+        "visualClaimInRequiredManifest": true,
+        "executableDefectOracle": true,
+        "oracleRun": false
+      },
       "expect": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE"
     },
     {
       "id": "ORACLE_RUN_WITHOUT_BAD_CONTROL_REJECTION",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"visualClaimInRequiredManifest": true, "executableDefectOracle": true, "oracleRun": true},
+      "override": {
+        "visualClaimInRequiredManifest": true,
+        "executableDefectOracle": true,
+        "oracleRun": true
+      },
       "expect": "HOLD_USER_CORRECTION_POSITIVE_CONTROL_MISSING"
     },
     {
       "id": "KNOWN_BAD_REJECTED_BUT_CANDIDATE_SIGNATURE_RECURS",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"visualClaimInRequiredManifest": true, "executableDefectOracle": true, "oracleRun": true, "knownBadControlDetected": true, "candidateDefectAbsentOrReduced": false},
+      "override": {
+        "visualClaimInRequiredManifest": true,
+        "executableDefectOracle": true,
+        "oracleRun": true,
+        "knownBadControlDetected": true,
+        "candidateDefectAbsentOrReduced": false
+      },
       "expect": "HOLD_USER_CORRECTION_SIGNATURE_RECURRED"
     },
     {
       "id": "SCOPED_EXECUTABLE_CORRECTION_USER_PENDING",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"visualClaimInRequiredManifest": true, "executableDefectOracle": true, "oracleRun": true, "knownBadControlDetected": true},
+      "override": {
+        "visualClaimInRequiredManifest": true,
+        "executableDefectOracle": true,
+        "oracleRun": true,
+        "knownBadControlDetected": true
+      },
       "expect": "PARTIAL_CORRECTION_VERIFIED_SCOPED__HOLD_PARENT_CORRECTION_OPEN"
     },
     {
       "id": "SCOPED_EXECUTABLE_CORRECTION_USER_ACCEPTED_PARENT_OPEN",
       "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
-      "override": {"visualClaimInRequiredManifest": true, "executableDefectOracle": true, "oracleRun": true, "knownBadControlDetected": true, "userAccepted": true},
+      "override": {
+        "visualClaimInRequiredManifest": true,
+        "executableDefectOracle": true,
+        "oracleRun": true,
+        "knownBadControlDetected": true,
+        "userAccepted": true
+      },
       "expect": "PARTIAL_CORRECTION_USER_ACCEPTED_SCOPED__PARENT_OPEN"
+    },
+    {
+      "id": "ZERO_RESPONSE_FAILS_REQUIRED_RESPONSE_PREDICATE",
+      "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
+      "override": {
+        "materialResponsePredicatePassed": false
+      },
+      "expect": "HOLD_FUNCTIONAL_GATE_FAIL"
+    },
+    {
+      "id": "EQUAL_MAGNITUDE_OPPOSITE_DIRECTION_REMAINS_UNDECIDED",
+      "inputFrom": "R04_OBSERVED_TECHNICAL_GREEN_MANUAL_VISUAL_ONLY",
+      "override": {
+        "materialResponsePredicatePassed": true,
+        "visualClaimInRequiredManifest": false,
+        "executableDefectOracle": false,
+        "oracleRun": false
+      },
+      "expect": "TECHNICAL_DELTA_VERIFIED__HOLD_VISUAL_CORRECTION_CLAIM_NOT_EXECUTABLE"
     }
-  ]
+  ],
+  "replay": "12/12"
 }

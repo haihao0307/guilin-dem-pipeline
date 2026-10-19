@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 export function classify(input) {
-  if (!input.technicalGatePassed) return 'HOLD_FUNCTIONAL_GATE_FAIL';
+  if (!input.technicalGatePassed || !input.materialResponsePredicatePassed) return 'HOLD_FUNCTIONAL_GATE_FAIL';
   if (!input.exactSubjectBound) return 'HOLD_CORRECTION_SCOPE_UNBOUND';
   if (!input.allPairFramesBound) return 'HOLD_VISUAL_PAIR_COVERAGE_INCOMPLETE';
   if (!input.independentVisualReview) return 'HOLD_INDEPENDENT_VISUAL_REVIEW_MISSING';
