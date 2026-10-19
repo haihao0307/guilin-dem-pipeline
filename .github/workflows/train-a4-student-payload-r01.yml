@@ -1,4 +1,4 @@
-name: A4 independent student payload and preservation regression
+name: A4 public independent student verification
 on:
   push:
     branches: ['qa/a4-student-payload-r01-20261018']
@@ -29,12 +29,15 @@ jobs:
       - name: Same camera and materials original-versus-partial-rebuild test
         run: |
           python3 -m http.server 8765 >/tmp/train-server.log 2>&1 &
+          python3 kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-student-payload-r01/tests/verify-public.py
           node kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-student-payload-r01/browser.cjs
         env:
-          TARGET_URL: http://127.0.0.1:8765/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-student-payload-r01/
+          PUBLIC_MAIN_ONLY: 1
+          TARGET_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-student-payload-r01/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: a4-anatomy-rebuild-${{ github.sha }}
           path: kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-anatomy-student-payload-r01/qa/
           retention-days: 14
+
