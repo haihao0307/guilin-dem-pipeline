@@ -8,12 +8,19 @@
     "artifactId": 12248830128,
     "artifactDigest": "sha256:19753026ae4153ba1ead664b9828f9c82e3ce6c2a05222feb213283cffe3769a"
   },
-  "finding": "GLOBAL_REINITIALIZATION_NOT_RESUME",
+  "finding": "GLOBAL_REDRESS_RESTART_VERIFIED_SCOPED__RESUME_STILL_HOLD",
   "currentStatus": "HOLD_REENTRY_NOT_ATOMIC",
   "observations": {
     "globalResetDetected": true,
     "initialIntersectionCheckIsNotClearanceProof": true,
     "delayedFailureReproduced": true,
+    "positiveControlMode": "GLOBAL_REDRESS_RESTART",
+    "positiveControlHeadSha": "5186f8a5d71a5e75059539f83a31b2ba1e53042b",
+    "positiveControlWorkflowRun": 39391889463,
+    "positiveControlCycles": 3,
+    "positiveControlMinimumAcceptedSteps": 31,
+    "positiveControlSelectedFullGeometryChecks": 48,
+    "positiveControlStatus": "PASS_GLOBAL_REDRESS_RESTART_SCOPED",
     "renderDemandAffectsSolver": false,
     "failureResidualExcessMM": 0.544
   },
@@ -41,15 +48,27 @@
       "actual": "CANDIDATE_ATOMIC_REENTRY_PASS",
       "expected": "CANDIDATE_ATOMIC_REENTRY_PASS",
       "passed": true
+    },
+    {
+      "id": "pr315-global-redress-restart-positive-control",
+      "actual": "PASS_GLOBAL_REDRESS_RESTART_SCOPED",
+      "expected": "PASS_GLOBAL_REDRESS_RESTART_SCOPED",
+      "passed": true
+    },
+    {
+      "id": "same-evidence-cannot-claim-resume",
+      "actual": "HOLD_RESTART_MISLABELED_AS_RESUME",
+      "expected": "HOLD_RESTART_MISLABELED_AS_RESUME",
+      "passed": true
     }
   ],
   "summary": {
-    "passed": 4,
-    "total": 4
+    "passed": 6,
+    "total": 6
   },
   "nonClaims": [
-    "Does not prove a new solver implementation.",
+    "Does not prove atomic retained-state reinsertion or resume.",
     "Does not relax the 0.5 mm contact threshold or the 1.45 stretch threshold.",
-    "Does not prove user acceptance or production readiness."
+    "Does not certify continuous collision, complete self-collision, arbitrary layering, user acceptance or merge readiness."
   ]
 }
