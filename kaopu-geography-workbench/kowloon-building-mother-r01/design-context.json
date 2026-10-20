@@ -1,0 +1,17 @@
+{
+  "schema": "kaopu.building-context-policy/0.1-proposed",
+  "actualBuildings": {
+    "B367642137201063C0": {"address": "33 La Salle Road", "use": "unknown", "securityModel": "unknown"},
+    "B359971994401063C0": {"use": "unknown", "securityModel": "unknown", "designWindowEvidence": "authored_trial_not_observed"},
+    "B369121858401063C0": {"use": "unknown", "securityModel": "unknown"}
+  },
+  "precedence": ["verified_building_specific_evidence", "explicit_user_design_choice", "proposed_type_default", "leave_unknown"],
+  "proposedRules": [
+    {"context": "staffed luxury hotel public-facing facade", "grilleDefault": "do_not_auto_add", "reason": "Security may be provided by building operation instead; this is not a universal prohibition.", "evidence": "user_design_logic", "appliedToActualBuilding": false},
+    {"context": "residential facade", "grilleDefault": "optional_pending_evidence_or_design_choice", "reason": "Dwelling security, opening safety, ventilation and operation can affect the choice. Never infer actual presence from residential use alone.", "evidence": "user_design_logic", "appliedToActualBuilding": false},
+    {"context": "door sizing", "roleRequired": ["public entrance", "guestroom", "service", "residential entrance"], "rule": "Do not use one large-door preset for all doors of a hotel.", "implementation": "not_implemented_in_this_trial"}
+  ],
+  "missingEvidencePolicy": "Unknown actual use remains unknown. No hotel/residential preset is assigned to any of the three source models.",
+  "peninsulaHotel": {"status": "not_in_this_identified_batch", "oldNewSplit": "requires source IDs and verified boundaries; never split by height alone", "grille": "no grille generated"},
+  "window": {"type": "simplified outward side-hung single leaf", "parametersAre": "authored design variables, not measurements", "hardwareMechanics": "simple hinge, not a friction-stay/four-bar hardware simulation", "guide": "Single-leaf prototype keeps its opening width at or below 0.7 m, conservatively following the cited side-hung window design guidance. This is not regulatory or structural certification."}
+}
