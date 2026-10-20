@@ -6594,7 +6594,7 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
 </script>
 
 <!-- LIP-EDGE-R07 APPEND-ONLY NATIVE RETURN -->
-<script>window.__LIP_EDGE_SOURCE__={"version":"LIP-EDGE-R07","sourceCommit":"d7c542d00704de91644ddcb17e59fd3ace1a75f7","baselineSource":"1e1e216c2005f4c318da190e1b3b160cc4bd4a6d","baselineBuild":"1237284ea60f9c198b2b63543f098a7551a9af2f","baselineSHA256":"a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac","modules":{"src/EdgeContinuity.js":"b3fa1037719ad1aa447bcb69b2d27a07f64587f339d257b49a8ec7da5db2c9b0","src/EdgeLip.js":"80386185745bf1362a0826bf0559cfdc9a463fe5b61a6edba3ac97f59f726237"}};
+<script>window.__LIP_EDGE_SOURCE__={"version":"LIP-EDGE-R07","sourceCommit":"334476334e01c8aa028fae65842c2c977038ccd9","baselineSource":"1e1e216c2005f4c318da190e1b3b160cc4bd4a6d","baselineBuild":"1237284ea60f9c198b2b63543f098a7551a9af2f","baselineSHA256":"a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac","modules":{"src/EdgeContinuity.js":"6459d6c6f8b023962b2dac904105aef80f4c1a385d7522865aa44f084b5b4d52","src/EdgeLip.js":"80386185745bf1362a0826bf0559cfdc9a463fe5b61a6edba3ac97f59f726237"}};
 /* R07 candidate 01: bounded, screened fairing of the original lower return.
  * No replacement surface. Existing body/contact one-ring is fixed. Binding
  * uses original rest/index and graph distance, never the erroneous upper tag.
@@ -6604,7 +6604,8 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
 (function () {
   'use strict';
   if (window.__LIP_EDGE_SOLVER__) throw Error('Edge solver already exists');
-  const VERSION='native-lower-return-fairing@1', LENGTH=.001, MAX_DELTA_MM=.6;
+  const VERSION='native-lower-return-fairing@2', LENGTH=.001, MAX_DELTA_MM=.6;
+  const ZERO_REST_THRESHOLD=1e-12;
   const MAX_ITERATIONS=512, RESIDUAL_MM=.0001, RELATIVE_RESIDUAL=1e-6;
   const own=(o,k)=>Object.getOwnPropertyDescriptor(o,k);
   const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
@@ -6660,7 +6661,12 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
     // Full original index. No topology.neighbors, no sampled edge subset.
     for(let k=0;k<c.index.length;k+=3){const ids=[c.index[k],c.index[k+1],c.index[k+2]];if(ids.some(id=>!Number.isInteger(id)||id<0||id>=n))throw Error('Invalid native triangle index');for(const[a0,b0]of[[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]])if(c.type[a0]<.5&&c.type[b0]<.5){const a=Math.min(a0,b0),b=Math.max(a0,b0);if(a===b){degenerate++;continue;}packed.push(a*n+b);}}
     packed.sort((a,b)=>a-b);let unique=0;for(let k=0;k<packed.length;k++)if(k===0||packed[k]!==packed[k-1])packed[unique++]=packed[k];packed.length=unique;
-    const degree=new Uint32Array(n),lengths=new Float64Array(unique);for(let k=0;k<unique;k++){const a=Math.floor(packed[k]/n),b=packed[k]-a*n,l=Math.hypot(...sub(point(c.rest,a),point(c.rest,b)));if(!(l>1e-12)||!Number.isFinite(l))throw Error('Degenerate original rest edge');lengths[k]=l;degree[a]++;degree[b]++;}
+    const degree=new Uint32Array(n),lengths=new Float64Array(unique),zeroEndpoints=new Uint8Array(n);
+    let exactZero=0,nearZero=0,minimumZeroLength=Infinity,maximumZeroLength=0;const zeroExamples=[];
+    for(let k=0;k<unique;k++){const a=Math.floor(packed[k]/n),b=packed[k]-a*n,l=Math.hypot(...sub(point(c.rest,a),point(c.rest,b)));if(!Number.isFinite(l))throw Error('Nonfinite original rest edge');
+      if(l<=ZERO_REST_THRESHOLD){if(l===0)exactZero++;else nearZero++;zeroEndpoints[a]=zeroEndpoints[b]=1;minimumZeroLength=Math.min(minimumZeroLength,l);maximumZeroLength=Math.max(maximumZeroLength,l);if(zeroExamples.length<16)zeroExamples.push({a,b,originalLengthMetres:l,carrierCostMetres:0});lengths[k]=0;}
+      else lengths[k]=l;degree[a]++;degree[b]++;
+    }
     c.offset=new Uint32Array(n+1);for(let i=0;i<n;i++)c.offset[i+1]=c.offset[i]+degree[i];c.adjacent=new Uint32Array(c.offset[n]);c.edgeLength=new Float64Array(c.offset[n]);const cursor=c.offset.slice();
     for(let k=0;k<unique;k++){const a=Math.floor(packed[k]/n),b=packed[k]-a*n,l=lengths[k];let j=cursor[a]++;c.adjacent[j]=b;c.edgeLength[j]=l;j=cursor[b]++;c.adjacent[j]=a;c.edgeLength[j]=l;}
     const lower=[],upper=[],contacts=new Set();for(const p of c.pairs){for(const key of['lower','upper']){const id=p[key];if(!Number.isInteger(id)||id<0||id>=n||c.type[id]>=.5)throw Error('Invalid native contact sample');contacts.add(id);}lower.push(p.lower);upper.push(p.upper);}
@@ -6670,7 +6676,11 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
     for(let id=0;id<n;id++){if(c.samples[id].v>=-.015){protectBase[id]=1;c.bodyIds.push(id);}if(c.type[id]>=.5)c.nonSkinIds.push(id);if(Math.abs(c.samples[id].u)>=.7)c.cornerIds.push(id);}
     for(const id of c.contactIds)protectBase[id]=1;protect.set(protectBase);
     // Exactly one original-index ring around the base set, no recursive growth.
-    for(let k=0;k<c.index.length;k+=3){const a=c.index[k],b=c.index[k+1],d=c.index[k+2];if(protectBase[a]||protectBase[b]||protectBase[d])protect[a]=protect[b]=protect[d]=1;}
+    const zeroCollar=zeroEndpoints.slice();
+    for(let k=0;k<c.index.length;k+=3){const a=c.index[k],b=c.index[k+1],d=c.index[k+2];if(protectBase[a]||protectBase[b]||protectBase[d])protect[a]=protect[b]=protect[d]=1;
+      if(zeroEndpoints[a]||zeroEndpoints[b]||zeroEndpoints[d])zeroCollar[a]=zeroCollar[b]=zeroCollar[d]=1;}
+    const bodyContactRingCount=protect.reduce((s,x)=>s+x,0),bodyContactRingFingerprint=fingerprint(protect),bodyContactMask=protect.slice();let zeroAddedProtected=0;c.zeroRestIds=[];
+    for(let id=0;id<n;id++)if(zeroCollar[id]){c.zeroRestIds.push(id);if(!protect[id])zeroAddedProtected++;protect[id]=1;}
     c.freeIds=[];c.crestIds=[];const freeIndex=new Int32Array(n).fill(-1);
     for(let id=0;id<n;id++){
       const s=c.samples[id];let margin=du.distance[id]-dl.distance[id];
@@ -6682,22 +6692,28 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
     for(let id=0;id<n;id++)if(c.type[id]<.5&&c.oral[id]>=1-1e-7&&c.samples[id].v<-.02&&c.samples[id].v>-.65&&Math.abs(c.samples[id].u)<.7&&dl.distance[id]+.001<du.distance[id]){
       for(let k=c.offset[id];k<c.offset[id+1];k++)if(c.oral[c.adjacent[k]]<1-1e-7){c.crestIds.push(id);break;}
     }
-    c.rows=c.freeIds.map(id=>{const neighbors=[];let diagonal=degree[id]/(LENGTH*LENGTH*gain[id]);for(let k=c.offset[id];k<c.offset[id+1];k++){const j=c.adjacent[k],weight=1/(c.edgeLength[k]*c.edgeLength[k]);if(!(weight>0)||!Number.isFinite(weight))throw Error('Invalid positive rest weight');diagonal+=weight;neighbors.push({id:j,free:freeIndex[j],weight});}return{id,diagonal,neighbors};});
+    c.rows=c.freeIds.map(id=>{const neighbors=[];let diagonal=degree[id]/(LENGTH*LENGTH*gain[id]);for(let k=c.offset[id];k<c.offset[id+1];k++){const j=c.adjacent[k],length=c.edgeLength[k];if(!(length>ZERO_REST_THRESHOLD))throw Error('Zero-cost carrier edge reached a free fairing row');const weight=1/(length*length);if(!(weight>0)||!Number.isFinite(weight))throw Error('Invalid positive rest weight');diagonal+=weight;neighbors.push({id:j,free:freeIndex[j],weight});}return{id,diagonal,neighbors};});
     c.affectedTriangles=[];for(let k=0;k<c.index.length;k+=3)if(freeIndex[c.index[k]]>=0||freeIndex[c.index[k+1]]>=0||freeIndex[c.index[k+2]]>=0)c.affectedTriangles.push(k);
     c.freeIndex=freeIndex;
     c.binding={method:'Screened positive original-rest graph fairing of current lower return positions in mouth-up/front only',smoothingLengthRestMM:LENGTH*1000,maximumProposedDeltaMM:MAX_DELTA_MM,
       engineeringParametersNotPhysiology:true,poseUsedForInstall:false,nativeVertices:n,scannedTriangles:c.index.length/3,fullIndexPasses:3,usedTopologyNeighbors:false,uniqueSkinEdges:unique,degenerateIndexEdges:degenerate,
       bodyVertices:c.bodyIds.length,uniqueContactVertices:c.contactIds.length,contactPairSlots:49,contactVertexSlots:98,nonSkinVertices:c.nonSkinIds.length,cornerVertices:c.cornerIds.length,
-      baseBodyAndContactVertices:protectBase.reduce((s,x)=>s+x,0),bodyAndContactOneRingVertices:protect.reduce((s,x)=>s+x,0),freeReturnVertices:c.freeIds.length,protectedVertices:c.protectedIds.length,
+      baseBodyAndContactVertices:protectBase.reduce((s,x)=>s+x,0),bodyAndContactOneRingVertices:bodyContactRingCount,freeReturnVertices:c.freeIds.length,protectedVertices:c.protectedIds.length,
+      zeroRestEdges:{thresholdMetres:ZERO_REST_THRESHOLD,exactZeroEdges:exactZero,positiveNearZeroEdges:nearZero,totalZeroCostEdges:exactZero+nearZero,
+        minimumOriginalLengthMetres:exactZero+nearZero?minimumZeroLength:null,maximumOriginalLengthMetres:exactZero+nearZero?maximumZeroLength:null,
+        endpointVertices:zeroEndpoints.reduce((s,x)=>s+x,0),endpointAndOneRingVertices:c.zeroRestIds.length,additionalProtectedVertices:zeroAddedProtected,
+        freeRowsTouchingZeroCostEdges:0,carrierEdgesRetained:true,protectionFingerprint:fingerprint(zeroCollar),
+        meaning:'All original skin edges retained for carrier paths. Finite length<=1e-12m has zero path cost; its endpoints plus exactly one original-index ring are fixed. No zero-length inverse weight is constructed.',
+        examples:zeroExamples.map(e=>({...e,a:{id:e.a,rest:point(c.rest,e.a),csType:c.type[e.a],u:c.samples[e.a].u,v:c.samples[e.a].v,inner:c.samples[e.a].inner,rawOral:c.oral[e.a],rawUpper:c.samples[e.a].upper,lowerDistanceMM:dl.distance[e.a]*1000,upperDistanceMM:du.distance[e.a]*1000},b:{id:e.b,rest:point(c.rest,e.b),csType:c.type[e.b],u:c.samples[e.b].u,v:c.samples[e.b].v,inner:c.samples[e.b].inner,rawOral:c.oral[e.b],rawUpper:c.samples[e.b].upper,lowerDistanceMM:dl.distance[e.b]*1000,upperDistanceMM:du.distance[e.b]*1000}})),omittedExamples:Math.max(0,exactZero+nearZero-zeroExamples.length)},
       crestVertices:c.crestIds.length,freeCrestVertices:c.crestIds.filter(id=>freeIndex[id]>=0).length,affectedTriangles:c.affectedTriangles.length,lowerDistanceSettled:dl.settled,upperDistanceSettled:du.settled,
-      nativeRestFingerprint:fingerprint(c.rest),nativeIndexFingerprint:fingerprint(c.index),freeVertexFingerprint:fingerprint(new Uint32Array(c.freeIds)),protectedBodyContactFingerprint:fingerprint(protect),ownershipFingerprint:c.ownership,
+      nativeRestFingerprint:fingerprint(c.rest),nativeIndexFingerprint:fingerprint(c.index),freeVertexFingerprint:fingerprint(new Uint32Array(c.freeIds)),protectedBodyContactFingerprint:bodyContactRingFingerprint,protectedBodyContactAndDegenerateFingerprint:fingerprint(protect),ownershipFingerprint:c.ownership,
       domain:'csType<.5; -.65<v<-.02; abs(u)<.7; rest graph lower-pair distance +1mm < upper-pair distance; positive smooth fades; body v>=-.015 plus original pair IDs and exactly one raw-index ring fixed',
       fades:'v -.65 to -.50 and -.08 to -.02; abs(u) .55 to .70; lower-vs-upper graph separation 1 to 3mm',
       lowerCarrier:'Multi-source shortest rest-edge paths from original upper/lower 49 pair IDs. Native sample.upper is never used for ownership.',
       crestRule:'Observed semantic crest candidates: pure oral=1 with a neighboring oral<1, within the lower return domain. Recorded, not fixed and not assumed to exhaust the anatomical crest.',
       jawGate:{start:.08,end:.24,formula:'smooth(.08,.24,jawOpen)',purpose:'Engineering visibility/activity scope, not a physiological threshold; no poseName special case'},
       solver:{method:'Diagonal-preconditioned conjugate gradients, SPD screened correction system',maximumIterations:MAX_ITERATIONS,maximumNormalizedResidualMM:RESIDUAL_MM,maximumRelativeResidual:RELATIVE_RESIDUAL},
-      examples:[19668,149748,104455,131023,69547,140180].filter(id=>id<n).map(id=>({id,u:c.samples[id].u,v:c.samples[id].v,inner:c.samples[id].inner,rawUpper:c.samples[id].upper,lowerDistanceMM:dl.distance[id]*1000,upperDistanceMM:du.distance[id]*1000,free:freeIndex[id]>=0,gain:gain[id],bodyContactRingProtected:!!protect[id]}))};
+      examples:[19668,149748,104455,131023,69547,140180].filter(id=>id<n).map(id=>({id,u:c.samples[id].u,v:c.samples[id].v,inner:c.samples[id].inner,rawUpper:c.samples[id].upper,lowerDistanceMM:dl.distance[id]*1000,upperDistanceMM:du.distance[id]*1000,free:freeIndex[id]>=0,gain:gain[id],bodyContactRingProtected:!!bodyContactMask[id],zeroRestCollarProtected:!!zeroCollar[id],combinedProtection:!!protect[id]}))};
   }
   function solve(c,values){
     const rows=c.rows,n=rows.length,d=new Float64Array(n),rhs=new Float64Array(n),r=new Float64Array(n),direction=new Float64Array(n),z=new Float64Array(n),work=new Float64Array(n);
@@ -6726,9 +6742,9 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
     for(const offset of c.affectedTriangles){const ids=[c.index[offset],c.index[offset+1],c.index[offset+2]],old=ids.map(id=>point(before,id)),now=ids.map(id=>point(staged,id)),a=cross(sub(old[1],old[0]),sub(old[2],old[0])),b=cross(sub(now[1],now[0]),sub(now[2],now[0])),la=Math.hypot(...a),lb=Math.hypot(...b);if(!(la>1e-16)||!(lb>1e-16)||!Number.isFinite(la+lb))throw Error('Degenerate affected triangle in fairing proposal');const ratio=lb/la,cosine=dot(a,b)/(la*lb);minAreaRatio=Math.min(minAreaRatio,ratio);minOrientationCosine=Math.min(minOrientationCosine,cosine);if(cosine<=0)flips++;}
     rec.triangleGuard={checkedTriangles:c.affectedTriangles.length,finite:true,flippedTriangles:flips,minimumAreaRatio:minAreaRatio,minimumOrientationCosine:minOrientationCosine,requiredMinimumAreaRatio:.1,passed:flips===0&&minAreaRatio>=.1};
     if(!rec.triangleGuard.passed)throw Error('Entire fairing proposal rejected: local area/orientation guard');
-    rec.bodyComparedVertices=c.bodyIds.length;rec.contactComparedVertices=c.contactIds.length;rec.protectedComparedVertices=c.protectedIds.length;
+    rec.zeroRestComparedVertices=c.zeroRestIds.length;rec.zeroRestDirectExact=selectedExact(staged,before,c.zeroRestIds);rec.bodyComparedVertices=c.bodyIds.length;rec.contactComparedVertices=c.contactIds.length;rec.protectedComparedVertices=c.protectedIds.length;
     rec.bodyDirectExact=selectedExact(staged,before,c.bodyIds);rec.contactDirectExact=selectedExact(staged,before,c.contactIds);rec.nonSkinDirectExact=selectedExact(staged,before,c.nonSkinIds);rec.cornerDirectExact=selectedExact(staged,before,c.cornerIds);rec.protectedDirectExact=selectedExact(staged,before,c.protectedIds);
-    if(!rec.bodyDirectExact||!rec.contactDirectExact||!rec.nonSkinDirectExact||!rec.cornerDirectExact||!rec.protectedDirectExact)throw Error('A protected domain changed in the staged proposal');
+    if(!rec.zeroRestDirectExact||!rec.bodyDirectExact||!rec.contactDirectExact||!rec.nonSkinDirectExact||!rec.cornerDirectExact||!rec.protectedDirectExact)throw Error('A protected domain changed in the staged proposal');
     for(const id of c.freeIds){const d=sub(point(staged,id),point(before,id)),length=Math.hypot(...d)*1000;if(!Number.isFinite(length))throw Error('Nonfinite staged coordinate');rec.maximumAppliedDeltaMM=Math.max(rec.maximumAppliedDeltaMM,length);rec.lateralComponentMaximumMM=Math.max(rec.lateralComponentMaximumMM,Math.abs(dot(d,f.x))*1000);if(length>0)rec.changedVertices++;}
     if(rec.maximumAppliedDeltaMM>MAX_DELTA_MM+.0001||rec.lateralComponentMaximumMM>.0001)throw Error('Staged Float32 correction violates displacement/component bounds');
     let crestChanged=0,maxCrest=0,maxUp=0,maxFront=0;const examples=[];
@@ -6755,7 +6771,7 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
       const reason=invalidation(c,true);if(reason){invalidate(c,reason);return Reflect.apply(c.originalApply,this,args);}
       const jaw=c.structure.performance.jawOpen;if(!Number.isFinite(jaw)||jaw<0||jaw>1)throw Error('Invalid native jaw input');const gate=smooth(.08,.24,jaw);
       const rec={call:++c.calls,completed:false,hooksRestored:false,bypass:gate===0,reason:gate===0?'jaw gate zero: direct inherited evaluator':null,jawOpen:jaw,jawGate:gate,normalCalls:0,changedVertices:0,maximumProposedDeltaMM:0,maximumAppliedDeltaMM:0,lateralComponentMaximumMM:0,
-        bodyDirectExact:true,contactDirectExact:true,nonSkinDirectExact:true,cornerDirectExact:true,protectedDirectExact:true,bodyComparedVertices:0,contactComparedVertices:0,protectedComparedVertices:0,linearSolve:null,triangleGuard:null,crestDisplacement:null,committed:false,allOriginalStagesExecuted:false};
+        zeroRestDirectExact:true,zeroRestComparedVertices:0,bodyDirectExact:true,contactDirectExact:true,nonSkinDirectExact:true,cornerDirectExact:true,protectedDirectExact:true,bodyComparedVertices:0,contactComparedVertices:0,protectedComparedVertices:0,linearSolve:null,triangleGuard:null,crestDisplacement:null,committed:false,allOriginalStagesExecuted:false};
       if(gate===0){try{const answer=Reflect.apply(c.originalApply,this,args);rec.completed=true;rec.allOriginalStagesExecuted=true;rec.hooksRestored=true;c.last=rec;return answer;}catch(error){rec.error=String(error);c.last=rec;c.errors.push(String(error));invalidate(c,'Unexpected inherited evaluation failure');throw error;}}
       const g=c.geometry,normal=g.computeVertexNormals,nd=own(g,'computeVertexNormals'),pairsMap=c.pairs.map,pmd=own(c.pairs,'map'),iterator=c.top.lips[Symbol.iterator],ild=own(c.top.lips,Symbol.iterator),array=bound(c),f=frame(c);
       let answer,failure=null;c.running=true;
