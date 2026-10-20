@@ -27,7 +27,7 @@ with sync_playwright() as pw:
   page.locator('#stairFocus').click();s=state(page);assert s['stair']['effectiveEnabled'] and s['stair']['openingApplied']
   assert s['stair']['dimensions']['totalRisers']==20 and s['stair']['headroom']['minimumClearanceM']>=2
   assert len(s['stair']['scene']['solids'])==3 and all(m['closedSolid'] and m['solidVolumeCubicMetres']>0 for m in s['stair']['scene']['solids'])
-  assert len(s['floors']['openings'])==22;opening=next(o for o in s['floors']['openings'] if o['purpose']=='stair');assert opening['hostSlabId']=='slab-002'
+  assert len(s['floors']['openings'])==22;opening=next(o for o in s['floors']['openings'] if o.get('purpose')=='stair');assert opening['hostSlabId']=='slab-002'
   assert s['stair']['lowerFFLM']==s['floors']['floors'][0]['fflM'] and s['stair']['upperFFLM']==s['floors']['floors'][1]['fflM']
   assert not s['stair']['circulationComplete'] and not s['stair']['navigationConnectionEnabled'] and not s['stair']['evacuationPermitted']
   shot(page,'stairs-closeup.png');report['checks'].append({'default_actual_stair_and_hosted_hole':s['stair']})
@@ -50,7 +50,7 @@ with sync_playwright() as pw:
   report['checks'].append({'display_assembly_endpoint_host_suppression_and_reversible_opening':'passed'})
   page.locator('#reset').click();s=state(page);assert not s['stair']['enabled'] and not s['floors']['enabled']
   reset=page.evaluate('window.__BUILDING_MOTHER__.roots[1].children.filter(o=>o.userData.patchId).map(o=>({id:o.userData.patchId,p:Array.from(o.geometry.attributes.position.array),n:Array.from(o.geometry.attributes.normal.array)}))');assert reset==original
-  page.locator('#windowFocus').click();page.evaluate('window.__BUILDING_MOTHER__.setWindow({angleDegrees:80})');assert state(page)['windowInspection']['scene']['displayedAngleDegrees']==80
+  page.locator('#windowFocus').click();page.evaluate('window.__BUILDING_MOTHER__.setWindow({angleDegrees:80})');assert abs(state(page)['windowInspection']['scene']['displayedAngleDegrees']-80)<1e-8
   page.locator('#reset').click();page.locator('#stairFocus').click();page.set_viewport_size({'width':390,'height':844});shot(page,'stairs-mobile.png')
   assert page.locator('#failure').is_hidden();assert not report['errors'];assert not state(page)['errors'];assert state(page)['renderer']['triangles']>100
   report['checks'].append({'exact_source_arrays_reset_window_regression_mobile_webgl':'passed'})
