@@ -24,6 +24,80 @@ def fingerprint(data: bytes) -> dict:
     }
 
 
+def derive_mid_surface_modules(output_root: Path, upstream: Path = UPSTREAM) -> dict:
+    """Derive only the carrier-coordinate configuration; retain source bytes.
+
+    Keep each exact source edit in the public provenance file. In particular,
+    none of the original yarn/atlas/seam-frame shaders or sampling code is
+    edited. Both seam render paths consume the same height-adjusted routes.
+    """
+    generated = []
+
+    def derive(source_name: str, output_name: str, edits: list) -> None:
+        original = (upstream / source_name).read_bytes()
+        content = original.decode('utf-8')
+        patches = []
+
+        def replace_exact(before: str, after: str, reason: str) -> None:
+            nonlocal content
+            if content.count(before) != 1:
+                raise SystemExit('A reviewed mid-surface adaptation no longer matches exactly once: '
+                                 + source_name + ': ' + before[:120])
+            content = content.replace(before, after, 1)
+            patches.append({'reason': reason, 'occurrences': 1, 'before': before, 'after': after})
+
+        # The derived files live beside each other, outside upstream/. Rewrite
+        # only complete import statements; all retained dependencies stay at
+        # their original, byte-identical upstream paths.
+        imports = list(re.finditer(r'''(?m)^import[^\r\n]*?from\s*['"](\./[^'"]+)['"];''', content))
+        for match in imports:
+            before, specifier = match.group(0), match.group(1)
+            target = './sewn-trims-mid-surface.mjs' if (
+                source_name == 'continuous-solid.mjs' and specifier == './sewn-trims.mjs'
+            ) else '../upstream/' + specifier[2:]
+            replace_exact(before, before.replace(specifier, target, 1), 'Resolve retained dependency from the coordinate adapter directory.')
+        for before, after, reason in edits:
+            replace_exact(before, after, reason)
+        result = content.encode('utf-8')
+        relative = 'coordinate-adapter/' + output_name
+        target = output_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(result)
+        generated.append({'path': relative, 'sourcePath': 'upstream/' + source_name,
+                          'source': fingerprint(original), 'derived': fingerprint(result), 'patches': patches})
+
+    derive('continuous-solid.mjs', 'continuous-solid.mjs', [
+        ('export async function buildContinuousSolid(native,packet,info,{renderer,signal,onProgress,requestRender}={}){',
+         'export async function buildContinuousSolid(native,packet,info,{renderer,signal,onProgress,requestRender,carrierOffsetMeters}={}){\n'
+         " if(!Number.isFinite(carrierOffsetMeters)||carrierOffsetMeters<0)throw Error('Invalid physical mid-surface placement contract');",
+         'Accept the recorded original carrier placement as an explicit coordinate contract.'),
+        ('uOffset:knit?layout.outer:d.thickness*.6+.25', 'uOffset:0',
+         'The carrier is the physical mid-surface; keep the original yarn shader and set its placement uniform to zero from creation.'),
+        ('sewnTrims(native,packet,info,{renderer,uniforms:deformer.uniforms})',
+         'sewnTrims(native,packet,info,{renderer,uniforms:deformer.uniforms,carrierOffsetMeters})',
+         'Apply the same coordinate contract to native seam routes.'),
+    ])
+    derive('sewn-trims.mjs', 'sewn-trims-mid-surface.mjs', [
+        ('export function sewnTrims(native,packet,info,{renderer,uniforms}={}){',
+         'export function sewnTrims(native,packet,info,{renderer,uniforms,carrierOffsetMeters=0}={}){\n'
+         " if(!Number.isFinite(carrierOffsetMeters)||carrierOffsetMeters<0)throw Error('Invalid physical mid-surface seam placement');",
+         'Accept the source placement in metres without changing native stitch routes or thread sections.'),
+        ('function bind(path,arc,lateral,height){arc=',
+         'function bind(path,arc,lateral,height){height-=carrierOffsetMeters;arc=',
+         'Subtract placement once before creating the shared route samples used by CPU and GPU seam paths.'),
+    ])
+    return {
+        'schema': 'physical-yarn-mid-surface@1',
+        'method': 'Physical mid-surface carrier, zero native yarn placement uniform, and matching native seam-route height adjustment.',
+        'upstreamFilesModified': False,
+        'originalYarnShaderAndShapePreserved': True,
+        'originalContinuousSamplerPreserved': True,
+        'physicalThicknessChanged': False,
+        'untouchedShaderSources': ['material-shaders.mjs', 'surface-binding.mjs', 'yarn-frame-atlas.mjs', 'gpu-seam-frames.mjs'],
+        'generatedFiles': generated,
+    }
+
+
 def build() -> None:
     for path in [SOURCE / 'shell.html', SOURCE / 'app.mjs', SOURCE / 'style.css', SOURCE / 'native-host.mjs', UPSTREAM / 'platform-runtime' / 'preview.html']:
         if not path.is_file():
@@ -151,6 +225,7 @@ def build() -> None:
         shutil.copyfile(path, target)
         authored_manifest.append({'path': relative.as_posix(), **fingerprint(path.read_bytes())})
     (DIST / 'index.html').write_bytes(loader.encode('utf-8'))
+    coordinate_adaptation = derive_mid_surface_modules(DIST)
     if (ROOT / 'BUILD_MANIFEST.json').is_file():
         shutil.copyfile(ROOT / 'BUILD_MANIFEST.json', DIST / 'BUILD_MANIFEST.json')
     manifest = {
@@ -183,6 +258,7 @@ def build() -> None:
         },
         'sameDocumentNativeHost': True,
         'iframeRequired': False,
+        'coordinateAdaptation': coordinate_adaptation,
         'upstreamFiles': source_manifest,
         'authoredFiles': authored_manifest,
         'upstreamBytes': sum(row['bytes'] for row in source_manifest),

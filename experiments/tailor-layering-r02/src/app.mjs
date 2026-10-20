@@ -2,8 +2,9 @@ import {loadNativeHost} from './native-host.mjs';
 import {prepareGarment} from './garment-prep.mjs';
 import {nativeGarmentMesh} from './upstream/outfits-r043.mjs';
 import {mapPanelUV} from './upstream/panel-grain.mjs';
-import {buildContinuousSolid} from './upstream/continuous-solid.mjs';
+import {buildMidSurfaceSolid} from './mid-surface-solid.mjs';
 import {installRenderBackpressure} from './upstream/render-backpressure.mjs';
+import {createRenderDemand} from './render-demand.mjs';
 
 const $ = id => document.querySelector('#layer-app #' + CSS.escape(id)) || document.getElementById(id);
 const root = $('layer-app');
@@ -18,7 +19,33 @@ let loopGeneration = 0, frameStamp = 0, lastPresentation = null, initialSampling
 const items = new Map();
 const templates = new Map();
 const state = {friction: .3, wind: 0, contactEnabled: true};
+const demand = createRenderDemand();
+let demandEnabled = true, diagnosticTimer = null, diagnosticAt = -Infinity;
+const visualAudit = {uploadedByGarment:{},lastUploadedSnapshotIDByGarment:{},lastUploadedPhysicalStepByGarment:{},
+  latestSnapshotIDByGarment:{},shadowInvalidations:0,hiddenWakeRequestsSkipped:0,diagnosticWrites:0};
 const started = performance.now();
+
+function dirtyShadow() {if(host){host.lighting.dirty();visualAudit.shadowInvalidations++;}}
+function needsGeometry(id) {
+  const it=items.get(id);
+  // group.visible=false removes this garment from both beauty and shadows.
+  // Camera occlusion alone is deliberately not interpreted as this condition.
+  return !!it && (!it.solid || it.solid.group.visible);
+}
+function commitGeometry(required=needsGeometry) {
+  const result=demand.commit({required,apply:(id,row)=>deform(items.get(id),row)});
+  if(result.uploadedIDs.length)dirtyShadow();
+  return result;
+}
+function updateSolid(it,moving) {
+  const before=it.solid.stats.resamples;
+  const shape=(it.solid.chunks||[]).map(c=>[c.uniforms?.uMorph?.value,c.uniforms?.uCrimp?.value]);
+  it.solid.motion(moving);it.solid.update(host.viewer.camera);
+  // The retained shadow material uses the same atlas and morph as beauty.
+  // Camera-driven resampling can therefore change a shadow without physics.
+  if(before!==it.solid.stats.resamples || (it.solid.chunks||[]).some((c,i)=>
+    c.uniforms?.uMorph?.value!==shape[i]?.[0] || c.uniforms?.uCrimp?.value!==shape[i]?.[1]))dirtyShadow();
+}
 
 class ClothBridge {
   constructor() {
@@ -63,6 +90,7 @@ function progress(value) {
 
 function controls() {
   const disabled = !ready || busy;
+  root.dataset.busy=String(busy);
   for (const input of root.querySelectorAll('button,input')) input.disabled = disabled;
   for (const kind of Object.keys(definitions)) if ($('add-' + kind)) $('add-' + kind).disabled = disabled || items.has(kind);
   for (const id of ['remove-selected','isolate-selected','color','thickness','tug','view-detail']) $(id).disabled = disabled || !items.has(selected);
@@ -107,21 +135,26 @@ function selection() {
 
 function visibility() {
   const separated = $('exploded').checked;
+  let changed=false;
   for (const it of items.values()) {
     if (!it.solid) continue;
-    it.solid.group.visible = !isolated || it.id === selected;
+    const visible=!isolated || it.id === selected;
     const offset = separated ? (it.id === 'inner' ? -.42 : it.id === 'outer' ? .42 : 0) : 0;
+    changed ||= it.solid.group.visible!==visible || it.solid.group.position.x!==offset;
+    it.solid.group.visible = visible;
     it.solid.group.position.x = offset;
     it.mesh.position.x = offset;
     it.mesh.updateMatrixWorld(true);
   }
   if (host) {
+    changed ||= host.viewer.mesh.visible!==!isolated || host.lighting.floor.visible!==!isolated;
     host.viewer.mesh.visible = !isolated;
     host.viewer.scene.traverse(node => {
       if (node.userData?.platformAppearance) node.visible = !isolated;
     });
     host.lighting.floor.visible = !isolated;
-    host.lighting.dirty(); host.viewer.render();
+    if(changed)dirtyShadow();
+    host.viewer.render();
   }
   root.dataset.inspectMode = isolated ? 'isolated' : separated ? 'separated' : 'outfit';
 }
@@ -154,37 +187,53 @@ function deform(it, row) {
     it.oriented = true;
   }
   const p = g.attributes.position.array;
-  const offset = it.renderOffsetMeters || 0;
-  // The retained yarn shader offsets yarns from its carrier. Physics runs at
-  // the yarn envelope's mid-surface; move only the invisible carrier back.
-  for (let k = 0; k < p.length; k++) p[k] = row.positions[k] - row.normals[k] * offset;
+  // Carrier and physical envelope now share the same mid-surface. Subtracting
+  // vertex normals and re-adding a normalized interpolated normal is not an
+  // inverse on curved triangles (the neckline/shoulder failure in R01).
+  // The audited builder removes only that legacy placement translation from
+  // yarns and sewn trims; native strand shape and source shaders stay intact.
+  p.set(row.positions);
   g.attributes.normal.array.set(row.normals);
   g.attributes.position.needsUpdate = g.attributes.normal.needsUpdate = true;
   g.computeBoundingBox(); g.computeBoundingSphere();
-  it.current = row;
   it.solid?.deform();
+  visualAudit.uploadedByGarment[it.id]=(visualAudit.uploadedByGarment[it.id]||0)+1;
+  visualAudit.lastUploadedSnapshotIDByGarment[it.id]=row.snapshotID;
+  visualAudit.lastUploadedPhysicalStepByGarment[it.id]=row.physicalStep;
 }
 
-let contactDots = null;
+let contactDots = null, contactDotSignature = '';
 function updateContactDots(audit) {
-  if (!host) return;
+  if (!host) return false;
+  const points=$('contacts').checked && state.contactEnabled ? (audit?.contact?.sampleContactPoints || []) : [];
+  const signature=points.length?JSON.stringify(points.map(p=>p.point)):'';
+  if(signature===contactDotSignature)return false;
+  contactDotSignature=signature;
   if (contactDots) {host.viewer.scene.remove(contactDots); contactDots.geometry.dispose(); contactDots.material.dispose(); contactDots = null;}
-  if (!$('contacts').checked || !state.contactEnabled) return;
-  const points = audit?.contact?.sampleContactPoints || [];
-  if (!points.length) return;
+  if (!points.length) return true;
   const geometry = new host.THREE.BufferGeometry();
   geometry.setAttribute('position', new host.THREE.Float32BufferAttribute(points.flatMap(p => p.point),3));
   contactDots = new host.THREE.Points(geometry, new host.THREE.PointsMaterial({color:0xff744d,size:.007,depthTest:false,transparent:true,opacity:.9}));
   contactDots.renderOrder = 100;
   host.viewer.scene.add(contactDots);
+  return true;
 }
 
-function diagnostic() {
+function diagnostic(force=false) {
+  if(!force && performance.now()-diagnosticAt<200){
+    diagnosticTimer??=setTimeout(()=>{diagnosticTimer=null;diagnostic(true);},200);
+    return;
+  }
+  if(diagnosticTimer!==null){clearTimeout(diagnosticTimer);diagnosticTimer=null;}
+  diagnosticAt=performance.now();visualAudit.diagnosticWrites++;
   const a = latest?.audit || {};
   const rows = [...items.values()].map(it => ({id:it.id,preset:it.presetId,
     displayVertices:it.mesh.geometry.attributes.position.count,solverParticles:it.current?.particles,
     solverTriangles:it.current?.triangles,sewnPairs:it.current?.seamPairs,
-    envelopeMM:it.baseThickness * 1000,extraMM:it.extraMM,carrierOffsetMM:(it.renderOffsetMeters || 0) * 1000,
+    envelopeMM:it.baseThickness * 1000,extraMM:it.extraMM,carrierOffsetMM:0,
+    sourcePlacementOffsetMM:(it.renderOffsetMeters || 0) * 1000,
+    renderCoordinateContract:'Physical yarn-envelope mid-surface for carrier, native yarns and sewn trims',
+    coordinateAdapter:it.solid?.stats?.coordinateAdapter,
     material:it.info.id,representation:it.solid?.stats?.representation,
     opaqueBackingSheets:it.solid?.stats?.opaqueBackingSheets,
     fixedDistanceTiers:it.solid?.stats?.fixedDistanceTiers,
@@ -197,7 +246,9 @@ function diagnostic() {
     physics:a,render:{calls:lastPresentation?.calls,triangles:lastPresentation?.triangles,
       counterScope:'Submitted work across the complete presentation: yarn preparation, shadows, native scene and skin composition; not unique mesh triangles',
       frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.(),
-      presentationQueue:host?.presentationQueue,initialSampling,lastSamplingPreparation},
+      presentationQueue:host?.presentationQueue,initialSampling,lastSamplingPreparation,
+      demand:{...demand.audit(),...visualAudit,enabled:demandEnabled,hiddenSimulationSkipped:false,
+        occludedRegionCullingImplemented:false,requiredIDs:[...items.keys()].filter(needsGeometry)}},
     bootTimings:host?.bootTimings,
     elapsedLoadMS:frameStamp || Math.round(performance.now()-started)};
   $('diagnostics').textContent = JSON.stringify(value,null,2);
@@ -206,15 +257,24 @@ function diagnostic() {
 
 function apply(data) {
   latest = data;
+  const rows=[];
   for (const row of data.rows || []) {
     const it = items.get(row.id);
-    if (it) deform(it,row);
+    if(it){
+      it.current=row;
+      visualAudit.latestSnapshotIDByGarment[row.id]=data.id;
+      rows.push({...row,snapshotID:data.id,physicalStep:data.audit?.completedSteps});
+    }
   }
+  demand.stage(rows);
+  // This control reproduces unconditional visual invalidation for an honest
+  // same-solver A/B comparison. It never sends a physics setting to the worker.
+  if(!demandEnabled){demand.invalidate();commitGeometry(id=>items.has(id));dirtyShadow();}
   const audit = data.audit || {};
   $('metric-layers').textContent = String(items.size);
   $('metric-contacts').textContent = state.contactEnabled ? (audit.contact ? String(audit.contact.contactCount ?? audit.contact.residualCount ?? 0) : '待求解') : '已关闭';
   $('metric-step').textContent = audit.completedSteps ? Number(audit.solverMS || 0).toFixed(0) + ' ms' : '待求解';
-  updateContactDots(audit);
+  const dotsChanged=updateContactDots(audit);
   if (ready && !busy && !failure) {
     const seconds = Number(audit.simulationSeconds || 0).toFixed(3);
     const residual = audit.contact?.residualMaxPenetration;
@@ -223,14 +283,19 @@ function apply(data) {
       (Number.isFinite(residual) ? ' · 离散接触残余 ' + (residual * 1000).toFixed(2) + ' mm' : ''));
   }
   diagnostic();
-  host?.lighting.dirty(); host?.viewer.render();
+  if(!demandEnabled || dotsChanged || demand.hasPending(needsGeometry))host?.viewer.render();
 }
 
 async function buildVisual(it) {
-  it.solid = await buildContinuousSolid(it.mesh,it.packet,it.info,{
+  commitGeometry(id=>id===it.id);
+  it.solid = await buildMidSurfaceSolid(it.mesh,it.packet,it.info,{
     renderer:host.viewer.renderer,
+    renderOffsetMeters:it.renderOffsetMeters,
     onProgress:(fraction,panel) => progress('生成' + it.name + '的原实体材料 · ' + Math.round(fraction * 100) + '% · ' + panel),
-    requestRender:() => host.viewer.render()
+    requestRender:() => {
+      if(demandEnabled && !needsGeometry(it.id)){visualAudit.hiddenWakeRequestsSkipped++;return;}
+      host.viewer.render();
+    }
   });
   host.viewer.scene.add(it.solid.group);
   await host.viewer.renderer.compileAsync(it.solid.group,host.viewer.camera,host.viewer.scene);
@@ -258,11 +323,13 @@ async function prepareSampling(scope, visibleOnly = true) {
   // 180 ms morph. Explicit view commands can prepare those same samples before
   // submitting a complete native skin/outfit frame for every atlas update.
   const active=[...items.values()].filter(it=>!visibleOnly || it.solid?.group.visible);
+  const activeIDs=new Set(active.map(it=>it.id));
+  commitGeometry(id=>activeIDs.has(id));
   const began=performance.now();let rounds=0,stableSince=null,signature=null,gpuWaitMS=0,settled=false;
   let updateCPUMS=0,maximumUpdateCPUMS=0;
   while(active.length && rounds<100 && performance.now()-began<12000){
     const updateBegan=performance.now();
-    for(const it of active){it.solid.motion(false);it.solid.update(host.viewer.camera);}
+    for(const it of active)updateSolid(it,false);
     const duration=performance.now()-updateBegan;updateCPUMS+=duration;maximumUpdateCPUMS=Math.max(maximumUpdateCPUMS,duration);
     gpuWaitMS+=await waitForPreparedGPU();rounds++;
     const current=active.map(it=>({id:it.id,resamples:it.solid.stats.resamples,
@@ -308,18 +375,25 @@ function serializePresentation() {
   const queue={requested:0,completed:0,presentingThrough:0,inFlight:false,pending:false,coalesced:0,
     policy:'One native presentation in flight; requests retain the newest state; the source frame gate verifies completion'};
   host.presentationQueue=queue;
-  host.markPresentationStart=()=>{queue.presentingThrough=queue.requested;queue.pending=false;};
+  const publishQueue=()=>{
+    root.dataset.renderPending=String(queue.pending);
+    root.dataset.renderInFlight=String(queue.inFlight);
+    root.dataset.renderRequested=String(queue.requested);
+    root.dataset.renderCompleted=String(queue.completed);
+  };
+  publishQueue();
+  host.markPresentationStart=()=>{queue.presentingThrough=queue.requested;queue.pending=false;publishQueue();};
   function dispatch(){
     if(queue.inFlight||!queue.pending||busy)return;
-    queue.pending=false;queue.inFlight=true;
+    queue.pending=false;queue.inFlight=true;publishQueue();
     submit().then(ok=>{
       const through=queue.presentingThrough;
-      queue.inFlight=false;queue.completed=through;
+      queue.inFlight=false;queue.completed=through;publishQueue();
       for(let i=waiters.length-1;i>=0;i--)if(waiters[i].id<=through){waiters[i].resolve(ok);waiters.splice(i,1);}
       if(queue.pending)dispatch();
       diagnostic();
     }).catch(error=>{
-      queue.inFlight=false;queue.pending=false;
+      queue.inFlight=false;queue.pending=false;publishQueue();
       for(const waiter of waiters.splice(0))waiter.reject(error);
       fail(error);
     });
@@ -328,12 +402,15 @@ function serializePresentation() {
     const id=++queue.requested;
     if(queue.inFlight||queue.pending)queue.coalesced++;
     queue.pending=true;
+    publishQueue();
     const result=new Promise((resolve,reject)=>waiters.push({id,resolve,reject}));
     dispatch();diagnostic();return result;
   };
+  host.flushPresentation=dispatch;
 }
 
 function disposeItem(it) {
+  demand.remove(it.id);
   if (it.solid) host.viewer.scene.remove(it.solid.group);
   it.solid?.dispose(); it.mesh.geometry.dispose();
   for (const material of Array.isArray(it.plain) ? it.plain : [it.plain]) material.dispose();
@@ -342,7 +419,9 @@ function disposeItem(it) {
 function frame(angle = 'front', detail = false) {
   if (!host) return;
   const {THREE,viewer} = host;
-  const meshes = detail && items.has(selected) ? [items.get(selected).mesh] : [viewer.mesh,...[...items.values()].map(it=>it.mesh)];
+  commitGeometry(id=>needsGeometry(id) && (!detail || id===selected));
+  const meshes = detail && items.has(selected) ? [items.get(selected).mesh] :
+    [...(isolated?[]:[viewer.mesh]),...[...items.values()].filter(it=>needsGeometry(it.id)).map(it=>it.mesh)];
   const box = new THREE.Box3();
   for (const mesh of meshes) {mesh.updateMatrixWorld(true); box.union(new THREE.Box3().setFromObject(mesh));}
   const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
@@ -353,10 +432,10 @@ function frame(angle = 'front', detail = false) {
   viewer.orbit.target.copy(center); viewer.orbit.minDistance = .025; viewer.orbit.maxDistance = 15;
   viewer.camera.near = .002; viewer.camera.updateProjectionMatrix(); viewer.orbit.update();
   for (const it of items.values()) it.solid?.detail(detail && it.id === selected);
-  host.lighting.dirty(); viewer.render();
+  viewer.render();
 }
 
-function stop() {playing=false;loopGeneration++;controls();diagnostic();}
+function stop() {const wasPlaying=playing;playing=false;loopGeneration++;controls();if(wasPlaying&&!failure)host?.viewer.render();diagnostic(true);}
 function fail(error) {
   failure = error?.message || String(error); stop();
   status(failure,true);
@@ -365,7 +444,7 @@ function fail(error) {
     const note = $('layer-loading').querySelector('.layer-loading-card > span:last-child');
     if (note) note.textContent = '本页需要 WebGL 2。请使用支持三维显示的浏览器重新载入；研究说明仍可阅读。';
   }
-  diagnostic(); controls(); console.error(error);
+  diagnostic(true); controls(); console.error(error);
 }
 
 async function stepOnce() {apply(await bridge.call('step',{dt:1/120}));}
@@ -385,7 +464,7 @@ async function operation(action) {
   stop(); busy=true;controls();
   try {await action(); failure=null;}
   catch(error) {fail(error);}
-  finally {busy=false;list();selection();if(latest && !failure) apply(latest);}
+  finally {busy=false;list();selection();if(latest && !failure) apply(latest);host?.flushPresentation?.();diagnostic(true);}
 }
 
 async function inspectView(action) {
@@ -414,6 +493,7 @@ async function add(kind) {
 async function removeSelected() {
   const it = items.get(selected);if(!it)return;
   await operation(async () => {
+    await waitForCurrentPresentation();
     const data=await bridge.call('remove',{garmentId:it.id});
     items.delete(it.id);disposeItem(it);selected=items.has('outer')?'outer':items.keys().next().value;
     isolated=false;apply(data);visibility();
@@ -441,6 +521,13 @@ function bind() {
   $('play').onclick=play;
   $('step').onclick=()=>operation(stepOnce);
   $('reset').onclick=()=>operation(async()=>{apply(await bridge.call('reset'));failure=null;});
+  $('audit-contact').onclick=()=>operation(async()=>{apply(await bridge.call('snapshot',{bodySamples:true}));});
+  $('render-demand').onchange=e=>{
+    demandEnabled=e.target.checked;
+    if(!demandEnabled && latest)apply(latest);
+    else host.viewer.render();
+    diagnostic(true);
+  };
   for(const kind of Object.keys(definitions)) $('add-'+kind).onclick=()=>add(kind);
   $('remove-selected').onclick=removeSelected;
   $('isolate-selected').onclick=()=>{isolated=true;visibility();diagnostic();};
@@ -509,7 +596,8 @@ async function boot() {
       if(host.renderSuspended())return false;
       host.markPresentationStart?.();
       host.viewer.renderer.info.reset();
-      for(const it of items.values())if(it.solid?.group.visible){it.solid.motion(playing);it.solid.update(host.viewer.camera);}
+      commitGeometry(demandEnabled?needsGeometry:id=>items.has(id));
+      for(const it of items.values())if(it.solid?.group.visible)updateSolid(it,playing);
       const result=nativeRender();
       const submitted=host.viewer.renderer.info.render;
       lastPresentation={calls:submitted.calls,triangles:submitted.triangles,points:submitted.points,lines:submitted.lines};
@@ -533,7 +621,7 @@ async function boot() {
     if(!await host.viewer.render())throw new Error('原生人物与衣物的首帧绘制失败。');
     ready=true;frameStamp=Math.round(performance.now()-started);failure=null;
     $('layer-loading').hidden=true;selection();
-    status('穿着结构已载入 · 3 件独立衣物 · 联合沉降待检查');diagnostic();
+    status('穿着结构已载入 · 3 件独立衣物 · 可开始持续接触检查');diagnostic(true);
     root.dataset.ready='true';
   }catch(error){fail(error);}
 }

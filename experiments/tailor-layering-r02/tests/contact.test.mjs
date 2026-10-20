@@ -110,12 +110,41 @@ test('surface contact responds where vertex-only distance would miss, with finit
 
 test('finite search neighbourhood deliberately makes no deep-intersection claim', () => {
   const [a, b] = fixture({ triangleMass: [0, 0, 0], z: -0.1 });
-  a.previous = new Float64Array([0.25, 0.25, 0.1]);
+  a.previous = a.positions.slice();
   const out = new LayerContact(options).solve([a, b]);
   near(a.positions[2], -0.1);
   assert.equal(out.contactCount, 0);
-  assert.match(out.residualScope, /bounded discrete/);
+  assert.match(out.residualScope, /bounded cross-garment/);
   assert.equal(out.continuousCollision, false);
+});
+
+test('a swept vertex crossing beyond the endpoint neighbourhood is corrected reciprocally', () => {
+  const [a,b]=fixture({pointMass:0,triangleMass:[1,1,1],z:0});
+  a.thickness=b.thickness=.004;
+  b.previous=b.positions.slice();for(let j=2;j<b.positions.length;j+=3){b.previous[j]=-.020;b.positions[j]=.020;}
+  const fixed=a.positions.slice(),initial=b.positions.slice();
+  const solver=new LayerContact({contactMargin:0,searchMargin:.003,maxCorrection:.01});
+  const out=solver.solve([a,b],{passes:8});
+  assert.deepEqual(a.positions,fixed);
+  assert.ok(b.positions.some((v,j)=>Math.abs(v-initial[j])>.001));
+  assert.ok(out.sweptCrossingCount>0);
+  assert.ok(out.residualMaxPenetration<1e-6);
+  assert.equal(out.sweptVertexFace,true);
+  assert.equal(out.continuousCollision,false);
+});
+
+test('an unresolved swept impact is retained when another projection moves it beyond the search radius', () => {
+  const [a,b]=fixture({triangleMass:[0,0,0],z:-.020});a.thickness=b.thickness=.004;
+  a.previous=new Float64Array([.25,.25,.020]);
+  const solver=new LayerContact({contactMargin:0,searchMargin:.003,maxCorrection:.002});
+  const first=solver.solve([a,b],{passes:1,measureResidual:false});
+  assert.ok(first.sweptCrossingCount>0);near(a.positions[2],-.018);
+  a.positions[2]=-.030;a.previous=a.positions.slice();
+  const copy=a.positions.slice(),measured=solver.measure([a,b]);
+  near(measured.residualMaxPenetration,.034);assert.deepEqual(a.positions,copy);
+  solver.solve([a,b],{passes:20});near(a.positions[2],.004);
+  solver.reset();a.positions[2]=-.030;a.previous=a.positions.slice();
+  assert.equal(solver.solve([a,b],{passes:2}).contactCount,0);
 });
 
 test('read-only measurement observes real residual without changing cloth or previous state', () => {
@@ -131,4 +160,79 @@ test('read-only measurement observes real residual without changing cloth or pre
   assert.equal(out.measurementOnly, true);
   rows.forEach((row, i) => assert.deepEqual(row.positions, before[i]));
   assert.deepEqual(rows[0].previous, previous);
+});
+
+test('an internal triangle diagonal preserves the material side during a shallow crossing', () => {
+  const square={id:'square',positions:new Float64Array([0,0,0,1,0,0,0,1,0,1,1,0]),triangles:new Int32Array([0,1,2,1,3,2]),inverseMass:new Float64Array(4),thickness:.004};
+  const point={id:'point',positions:new Float64Array([.5,.5,-.001]),previous:new Float64Array([.5,.5,.001]),triangles:new Int32Array(),inverseMass:new Float64Array([1]),thickness:.004};
+  const solver=new LayerContact({contactMargin:0,searchMargin:.01,maxCorrection:.004});
+  const result=solver.solve([point,square],{passes:2});
+  near(point.positions[2],.004);
+  assert.equal(result.residualCount,0);
+});
+
+test('adjacent triangle Voronoi regions do not create a fictitious diagonal obstacle', () => {
+  const sheet={id:'sheet',positions:new Float64Array([0,0,0,.02,0,0,0,.02,0,.02,.02,0]),triangles:new Int32Array([0,1,2,1,3,2]),inverseMass:new Float64Array(4),thickness:.006};
+  const point={id:'point',positions:new Float64Array([.012,.012,.002]),triangles:new Int32Array(),thickness:.006};
+  const result=new LayerContact({contactMargin:0,searchMargin:.003,maxCorrection:.01}).solve([point,sheet],{passes:1});
+  near(point.positions[0],.012);near(point.positions[1],.012);near(point.positions[2],.006);
+  assert.equal(result.contactCount,1);
+});
+
+test('conservative broadphase reuse rebuilds for an independently moving source or target', () => {
+  const cached=new LayerContact({...options,cacheSkin:.006}),fresh=new LayerContact({...options,cacheSkin:.006,broadphaseCache:false});
+  const a=fixture({triangleMass:[0,0,0]}),b=fixture({triangleMass:[0,0,0]});
+  for(let step=0;step<10;step++) {
+    for(const rows of [a,b]){rows[0].previous=rows[0].positions.slice();rows[1].previous=rows[1].positions.slice();rows[0].positions[0]+=.001;rows[0].positions[2]-=.004;if(step===5)for(let j=2;j<rows[1].positions.length;j+=3)rows[1].positions[j]+=.02;}
+    const ra=cached.solve(a,{passes:2}),rb=fresh.solve(b,{passes:2});
+    a.forEach((row,i)=>row.positions.forEach((x,j)=>near(x,b[i].positions[j],1e-9)));
+    near(ra.residualMaxPenetration,rb.residualMaxPenetration,1e-9);
+    assert.equal(ra.residualCount,rb.residualCount);
+  }
+});
+
+test('replacing a garment topology discards its prior contact side and candidate state', () => {
+  const solver=new LayerContact(options),rows=fixture({triangleMass:[0,0,0]});
+  solver.solve(rows,{passes:1});
+  rows[0].positions[2]=-.002;rows[0].previous=rows[0].positions.slice();
+  rows[1]={...rows[1],triangles:Uint32Array.from(rows[1].triangles)};
+  solver.solve(rows,{passes:1});
+  near(rows[0].positions[2],-.01);
+});
+
+test('an unresolved crossing cannot become a zero-residual wrong-side state on the next solver call', () => {
+  const sheet={id:'sheet',positions:new Float64Array([0,0,0,1,0,0,0,1,0]),triangles:new Int32Array([0,1,2]),inverseMass:new Float64Array(3),thickness:.004};
+  const point={id:'point',positions:new Float64Array([.25,.25,-.005]),previous:new Float64Array([.25,.25,.003]),triangles:new Int32Array(),inverseMass:new Float64Array([1]),thickness:.004};
+  const solver=new LayerContact({contactMargin:0,searchMargin:.01,maxCorrection:.002});
+  const first=solver.solve([point,sheet],{passes:1});
+  near(point.positions[2],-.003);near(first.residualMaxPenetration,.007);
+  point.previous=point.positions.slice();
+  const second=solver.solve([point,sheet],{passes:2});
+  assert.ok(point.positions[2]>0);
+  near(second.residualMaxPenetration,.003);
+  point.previous=point.positions.slice();
+  solver.solve([point,sheet],{passes:2});
+  near(point.positions[2],.004);
+});
+
+test('an unresolved crossing carries its material side across an internal triangle diagonal', () => {
+  const sheet={id:'sheet',positions:new Float64Array([0,0,0,1,0,0,0,1,0,1,1,0]),triangles:new Int32Array([0,1,2,1,3,2]),inverseMass:new Float64Array(4),thickness:.004};
+  const point={id:'point',positions:new Float64Array([.49,.49,-.020]),previous:new Float64Array([.49,.49,.020]),triangles:new Int32Array(),thickness:.004};
+  const solver=new LayerContact({contactMargin:0,searchMargin:.003,maxCorrection:.002});
+  solver.solve([point,sheet],{passes:1});near(point.positions[2],-.018);
+  point.previous=point.positions.slice();point.positions[0]=point.positions[1]=.51;
+  const result=solver.solve([point,sheet],{passes:1});
+  near(point.positions[2],-.016);near(result.residualMaxPenetration,.020);
+  point.previous=point.positions.slice();solver.solve([point,sheet],{passes:16});near(point.positions[2],.004);
+});
+
+test('moving around a true free boundary releases history without a later ghost side', () => {
+  const sheet={id:'sheet',positions:new Float64Array([0,0,0,1,0,0,0,1,0]),triangles:new Int32Array([0,1,2]),inverseMass:new Float64Array(3),thickness:.004};
+  const point={id:'point',positions:new Float64Array([.006,.25,-.003]),previous:new Float64Array([.006,.25,.003]),triangles:new Int32Array(),thickness:.004};
+  const solver=new LayerContact({contactMargin:0,searchMargin:.003,maxCorrection:.001});
+  solver.solve([point,sheet],{passes:1});near(point.positions[2],-.002);
+  point.previous=point.positions.slice();point.positions[0]=-.006;
+  const outside=solver.solve([point,sheet],{passes:1});assert.equal(outside.contactCount,0);assert.equal(outside.residualCount,0);
+  point.previous=point.positions.slice();point.positions[0]=.006;
+  solver.solve([point,sheet],{passes:1});near(point.positions[2],-.003);
 });

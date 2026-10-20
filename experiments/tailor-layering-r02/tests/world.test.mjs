@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { auditMeshIntersections } from './mesh-intersections.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const upstream = path.join(root, 'reference/mp05-studio-r10');
@@ -120,7 +121,7 @@ test('failed native finish restores cloth state, simulation time and reported co
   assert.equal(world.totalCorrections, 0);
 });
 
-test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the frozen real native body', async () => {
+test('prepared original P02/T08/T03 advance continuously with bounded strain and independent intersection checks', async () => {
   // Asset transport only: execute the actual browser preparation module and
   // retain its hash validation, seam refinement, mid-surface and paper edits.
   // The fixture deliberately holds old=current; the new viewer's live native
@@ -151,6 +152,9 @@ test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the f
   assert.ok(initialization.after.residualMaxPenetration < initialization.before.residualMaxPenetration);
   assert.equal(initialization.persistentLayerOffset, false);
   assert.equal(initialization.visualAccepted, false);
+  assert.ok(initialization.after.maxEdgeStretch < initialization.orderedPlacementAfter.maxEdgeStretch,
+    'reciprocal initialization relaxation repairs paper strain caused by ordered placement');
+  assert.ok(initialization.after.residualMaxPenetration < initialization.orderedPlacementAfter.residualMaxPenetration);
   const preparedReset = preparedWorld.rows.map(a => a.s.p.slice());
   assert.deepEqual(preparedWorld.rows.map(a => a.id), ['pants', 'inner', 'outer']);
   assert.deepEqual(prepared.map(a => a.positions.length / 3), [3230, 4766, 2334]);
@@ -161,15 +165,30 @@ test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the f
     assert.equal(a.source.placementReport.persistentOutwardConstraint, false);
   }
   const observations = [];
-  for (let step = 0; step < 2; step++) {
+  const geometry=()=>auditMeshIntersections(preparedWorld.rows.map(a=>({id:a.id,positions:a.s.p,indices:a.s.faces})),{sampleLimit:8});
+  const initializedGeometry=geometry();
+  assert.equal(initializedGeometry.hasReportedIntersections,false);
+  assert.equal(initializedGeometry.degenerateTriangles,0);
+  for (let step = 0; step < 24; step++) {
     const before = preparedWorld.rows.map(a => a.s.p.slice());
     const start = performance.now();
     preparedWorld.step(1 / 120);
     const actualWallMS = performance.now() - start;
-    const snapshot = preparedWorld.snapshot({ bodySamples: true }), audit = snapshot.audit;
+    const inspectGeometry=step===0||(step+1)%6===0;
+    const snapshot = preparedWorld.snapshot({ bodySamples: inspectGeometry }), audit = snapshot.audit;
     assert.equal(audit.seamGapMM, 0);
-    assert.equal(audit.bodySampledVertices, preparedWorld.rows.reduce((n, a) => n + a.s.count, 0));
-    assert.match(audit.bodyMetric, /no edge or whole-surface certificate/);
+    assert.ok(audit.maxEdgeStretch<1.4,'sustained cloth/body projection must not reproduce the R01 2.38x short-edge stretch');
+    assert.ok(audit.contact.residualMaxPenetration<.0005,'measured remaining middle-surface thickness violation stays below 0.5 mm in this fixture');
+    let intersectionAudit=null;
+    if(inspectGeometry){
+      assert.equal(audit.bodySampledVertices,preparedWorld.rows.reduce((n,a)=>n+a.s.count,0));
+      assert.match(audit.bodyMetric,/no edge or whole-surface certificate/);
+      assert.equal(audit.bodyInsideVertices,0);
+      assert.equal(audit.bodyThicknessOverlappingVertices,0,'all sampled vertices keep at least their own half-thickness from the body');
+      intersectionAudit=geometry();
+      assert.equal(intersectionAudit.hasReportedIntersections,false,'independent edge/triangle and coplanar test reports no cross-garment intersections');
+      assert.equal(intersectionAudit.degenerateTriangles,0);
+    }
     assert.ok(Number.isFinite(audit.contact.residualMaxPenetration));
     assert.equal(audit.contact.measuredAfterBodyProjection, true);
     const movement = preparedWorld.rows.map((a, i) => {
@@ -184,13 +203,14 @@ test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the f
       assert.equal(snapshot.rows[i].positions.length, a.source.positions.length);
       return { id: a.id, maxDisplacementMM: maxDisplacementM * 1000 };
     });
-    observations.push({ actualWallMS, stageTimingsMS: audit.stageTimingsMS, contactCount: audit.contact.contactCount,
+    observations.push({ step:step+1,actualWallMS, stageTimingsMS: audit.stageTimingsMS, contactCount: audit.contact.contactCount,
       residualMM: audit.contact.residualMaxPenetration * 1000, maxEdgeStretch: audit.maxEdgeStretch,
-      bodyMinimumMM: audit.bodyMinimumMM, bodyInsideVertices: audit.bodyInsideVertices, seamGapMM: audit.seamGapMM, movement });
+      bodyMinimumMM: audit.bodyMinimumMM, bodyInsideVertices: audit.bodyInsideVertices, seamGapMM: audit.seamGapMM, movement,intersectionAudit });
   }
+  assert.ok(Math.abs(preparedWorld.time-.2)<1e-12,'24 accepted steps advance 0.2 simulated seconds, without resets or frozen garments');
   console.log('PREPARED_LAYERING_NUMERICAL_PROBE ' + JSON.stringify({
     input: 'actual prepareGarment P02/T08/T03; real frozen native body with old=current', visualAccepted: false,
-    preparationMS, initialization, garmentTriangles: preparedWorld.rows.reduce((n, a) => n + a.s.faces.length / 3, 0),
+    preparationMS, initialization,initializedGeometry,simulatedSeconds:preparedWorld.time,garmentTriangles: preparedWorld.rows.reduce((n, a) => n + a.s.faces.length / 3, 0),
     garments: preparedWorld.rows.map(a => ({ id: a.id, particles: a.s.count, thicknessMM: a.thickness * 1000,
       bodyClearanceMM: a.s.settings.clearanceMM, fixedParticles: a.s.w.filter(w => w === 0).length })), observations,
   }));

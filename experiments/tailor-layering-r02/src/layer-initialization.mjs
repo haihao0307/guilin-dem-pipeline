@@ -12,11 +12,14 @@ import { MeshContact } from './upstream/mesh-contact.mjs';
  */
 export function initializeLayers(world, {
   iterations = 24,
+  relaxationIterations = 24,
+  interiorSamples = true,
   extraClearance = .0015,
   searchRadius = .045,
   maxCorrection = .003,
 } = {}) {
   if (!Number.isInteger(iterations) || iterations < 1 || iterations > 128) throw new RangeError('Invalid initialization iterations');
+  if (!Number.isInteger(relaxationIterations) || relaxationIterations < 0 || relaxationIterations > 128) throw new RangeError('Invalid initialization relaxation iterations');
   for (const value of [extraClearance, searchRadius, maxCorrection]) if (!Number.isFinite(value) || value < 0) throw new RangeError('Invalid initialization length');
   if (!(searchRadius > 0 && maxCorrection > 0)) throw new RangeError('Initialization radius and correction must be positive');
   const began = performance.now();
@@ -38,6 +41,18 @@ export function initializeLayers(world, {
   const saved = rows.map(a => a.s.p.slice());
   const e = world.e, h = 1 / 240;
   let projectionCorrections = 0, maxAppliedCorrectionM = 0;
+  const projectSample=(garment,mesh,ids,bary,gap)=>{
+    const p=garment.s.p,w=garment.s.w;let x=0,y=0,z=0,effective=0;
+    for(let j=0;j<ids.length;j++){const k=ids[j]*3;x+=bary[j]*p[k];y+=bary[j]*p[k+1];z+=bary[j]*p[k+2];effective+=bary[j]*bary[j]*w[ids[j]];}
+    if(!(effective>0))return;
+    const face=mesh.nearest(x,y,z,searchRadius);if(face<0)return;const q=mesh.best;let nx=0,ny=0,nz=0;
+    for(let j=0;j<3;j++){const v=mesh.faces[face+j]*3,b=q[4+j];nx+=b*mesh.normals[v];ny+=b*mesh.normals[v+1];nz+=b*mesh.normals[v+2];}
+    const length=Math.hypot(nx,ny,nz);if(!(length>1e-10))return;nx/=length;ny/=length;nz/=length;
+    const signed=(x-q[1])*nx+(y-q[2])*ny+(z-q[3])*nz;if(signed>=gap)return;
+    const correction=Math.min(maxCorrection,gap-signed),lambda=correction/effective;
+    for(let j=0;j<ids.length;j++){const k=ids[j]*3,scale=w[ids[j]]*bary[j]*lambda;p[k]+=scale*nx;p[k+1]+=scale*ny;p[k+2]+=scale*nz;}
+    projectionCorrections++;maxAppliedCorrectionM=Math.max(maxAppliedCorrectionM,correction);
+  };
   for (const a of rows) {
     e.reset_lambda(a.edges.ptr, a.s.edges.length, 4, 3);
     e.reset_lambda(a.bends.ptr, a.s.bends.length, 6, 4);
@@ -59,31 +74,28 @@ export function initializeLayers(world, {
       for (let upper = lower + 1; upper < rows.length; upper++) {
         const garment = rows[upper], p = garment.s.p;
         const gap = (garment.thickness + obstacle.thickness) * .5 + world.contacts.contactMargin + extraClearance;
-        for (let vertex = 0; vertex < garment.s.count; vertex++) {
-          if (garment.s.w[vertex] === 0) continue;
-          const k = vertex * 3, face = mesh.nearest(p[k], p[k + 1], p[k + 2], searchRadius);
-          if (face < 0) continue;
-          const q = mesh.best;
-          let nx = 0, ny = 0, nz = 0;
-          for (let j = 0; j < 3; j++) {
-            const v = mesh.faces[face + j] * 3, b = q[4 + j];
-            nx += b * mesh.normals[v]; ny += b * mesh.normals[v + 1]; nz += b * mesh.normals[v + 2];
-          }
-          const normalLength = Math.hypot(nx, ny, nz);
-          if (!(normalLength > 1e-10)) continue;
-          nx /= normalLength; ny /= normalLength; nz /= normalLength;
-          const signed = (p[k] - q[1]) * nx + (p[k + 1] - q[2]) * ny + (p[k + 2] - q[3]) * nz;
-          if (signed >= gap) continue;
-          const correction = Math.min(maxCorrection, gap - signed);
-          p[k] += correction * nx; p[k + 1] += correction * ny; p[k + 2] += correction * nz;
-          projectionCorrections++;
-          maxAppliedCorrectionM = Math.max(maxAppliedCorrectionM, correction);
+        for(let vertex=0;vertex<garment.s.count;vertex++)projectSample(garment,mesh,[vertex],[1],gap);
+        if(interiorSamples&&(iteration%2===1||iteration===iterations-1)) {
+          for(const edge of garment.s.edges)projectSample(garment,mesh,[edge.a,edge.b],[.5,.5],gap);
+          const faces=garment.s.faces;for(let f=0;f<faces.length;f+=3)projectSample(garment,mesh,[faces[f],faces[f+1],faces[f+2]],[1/3,1/3,1/3],gap);
         }
       }
     }
   }
-  // Body projection can compete with the final ordered placement. Audit the
-  // resulting state after this projection; do not reuse pre-projection metrics.
+  // The ordered placement alone can stretch short paper edges substantially.
+  // Relax that metric error before creating simulation velocities: this phase
+  // uses the same reciprocal mass response as dynamics, with no layer order.
+  const orderedMeasurement=world.contacts.measure(surfaceInput()),orderedAudit=world.audit();
+  const orderedPlacementAfter={contactCount:orderedMeasurement.contactCount,residualMaxPenetration:orderedMeasurement.residualMaxPenetration,maxEdgeStretch:orderedAudit.maxEdgeStretch};
+  const relaxationPrevious=rows.map(a=>a.s.p.slice());
+  world.contacts.reset();
+  for(let iteration=0;iteration<relaxationIterations;iteration++) {
+    rows.forEach((a,i)=>relaxationPrevious[i].set(a.s.p));
+    for(const a of rows){const s=a.s;e.strain_batch(a.p.ptr,a.w.ptr,a.edges.ptr,s.edges.length,s.family==='knit'?.82:.90,s.family==='knit'?1.18:1.12);world.projectBody(a,false,iteration===0);}
+    world.contacts.solve(rows.map((a,i)=>({id:a.id,positions:a.s.p,previous:relaxationPrevious[i],triangles:a.s.faces,inverseMass:a.s.w,thickness:a.thickness})),{passes:1,friction:0,measureResidual:false});
+  }
+  // Body projection can compete with cloth contact. Audit the resulting state
+  // after this projection; never reuse pre-projection residual measurements.
   for (const a of rows) { world.projectBody(a, false, true); a.s.expand(); }
   let maxDisplacementM = 0;
   rows.forEach((a, index) => {
@@ -97,8 +109,8 @@ export function initializeLayers(world, {
   const after = world.contacts.measure(surfaceInput()), afterAudit = world.audit();
   const improved = after.contactCount < before.contactCount && after.residualMaxPenetration < before.residualMaxPenetration;
   const report = {
-    method: 'One-time local outer-side triangle projection after seam welding, interleaved with original paper and static native-body constraints',
-    order: rows.map(a => a.id), iterations, extraClearanceM: extraClearance, searchRadiusM: searchRadius,
+    method: 'One-time ordered dressing after seam welding, then reciprocal cloth/paper/body metric relaxation before velocity initialization',
+    order: rows.map(a => a.id), iterations, relaxationIterations,interiorSamples,orderedPlacementAfter,extraClearanceM: extraClearance, searchRadiusM: searchRadius,
     directionalPlacementOnlyDuringInitialization: true, persistentLayerOffset: false,
     projectionCorrections, maxAppliedCorrectionM, maxDisplacementM,
     applied: improved, before: beforeMetrics,

@@ -1,7 +1,8 @@
 # Install as .github/workflows/tailor-layering-r02.yml in the parent repository.
-# Phase one captures the actual browser world input. It does not publish or
-# certify rendering/continuous simulation; those gates follow this baseline.
-name: Tailor layering R02 — native input capture
+# PR pushes run only the explicitly labelled display/demand preflight.
+# Release requires a separate full run: all four browser scenarios AND the
+# exact current-native capture/replay job. Preflight success is not release QA.
+name: Tailor layering R02 — retained native acceptance
 
 on:
   pull_request:
@@ -9,56 +10,124 @@ on:
       - 'experiments/tailor-layering-r02/**'
       - '.github/workflows/tailor-layering-r02.yml'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Preflight is display/demand only; full is the complete release matrix.'
+        required: true
+        default: preflight
+        type: choice
+        options:
+          - preflight
+          - full
+          - capture
 
 permissions:
   contents: read
 
 concurrency:
-  group: tailor-layering-r02-capture-${{ github.event.pull_request.number || github.ref }}
+  group: tailor-layering-r02-${{ github.event.pull_request.number || github.ref }}-${{ inputs.mode || 'preflight' }}
   cancel-in-progress: true
 
 jobs:
-  native-capture:
-    name: Capture current native body and garment inputs
+  browser:
+    if: github.event_name != 'workflow_dispatch' || inputs.mode != 'capture'
+    name: '${{ inputs.mode || ''preflight'' }} / real browser / ${{ matrix.scenario }}'
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: ${{ fromJSON(inputs.mode == 'full' && '["display","demand","continuous","reentry"]' || '["display","demand"]') }}
+    env:
+      LAYERING_CI_SCENARIO: ${{ matrix.scenario }}
+      LAYERING_CI_SCOPE: ${{ inputs.mode || 'preflight' }}
     defaults:
       run:
         shell: bash
         working-directory: experiments/tailor-layering-r02
     steps:
-      - name: Check out only the R02 experiment
+      - name: Check out the exact R02 source
         uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
           sparse-checkout: experiments/tailor-layering-r02
           sparse-checkout-cone-mode: true
-
       - name: Use Node 22
         uses: actions/setup-node@v6.4.0
         with:
           node-version: '22'
-
       - name: Use Python 3
         uses: actions/setup-python@v6.3.0
         with:
           python-version: '3.12'
-
-      - name: Prepare evidence and pinned real Chromium
+      - name: Prepare evidence and the pinned real Chromium
         run: |
           mkdir -p evidence
           npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
           .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
-
-      - name: Download and verify the retained native runtime
+      - name: Download and verify the retained public native runtime
         run: python tools/download-reference.py
-
-      - name: Build the application and check capture syntax
+      - name: Build and validate focused observers and render-demand logic
         run: |
           python tools/build.py | tee evidence/build.log
-          node --check tests/capture-native-ci.mjs
+          node --check tests/browser-ci.mjs
+          node --check tests/scenarios-r02.mjs
+          node --check tests/observed-geometry.mjs
+          node --test tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+      - name: Exercise the actual page and save real browser evidence
+        env:
+          CI: 'true'
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory dist > evidence/http-server.log 2>&1 &
+          layer_server_pid=$!
+          trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
+          node tests/browser-ci.mjs | tee evidence/browser-run.log
+      - name: Retain observed geometry and unchanged real screenshots, even on failure
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r02-${{ inputs.mode || 'preflight' }}-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r02/evidence/
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
 
-      - name: Observe the original native cloth Worker initialization
+  native-replay:
+    if: github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == 'capture')
+    name: '${{ inputs.mode }} / capture actual native inputs and replay'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+        working-directory: experiments/tailor-layering-r02
+    steps:
+      - name: Check out the exact R02 source
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: experiments/tailor-layering-r02
+          sparse-checkout-cone-mode: true
+      - name: Use Node 22
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+      - name: Use Python 3
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Prepare evidence and the pinned real Chromium
+        run: |
+          mkdir -p evidence
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+      - name: Download, verify and build the retained runtime
+        run: |
+          python tools/download-reference.py
+          python tools/build.py | tee evidence/build.log
+          node --check tests/capture-native-ci.mjs
+          node --check tests/native-replay.mjs
+      - name: Observe original init input from the real current native page
         env:
           CI: 'true'
         run: |
@@ -66,18 +135,23 @@ jobs:
           layer_server_pid=$!
           trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
           node tests/capture-native-ci.mjs | tee evidence/native-capture.log
-
-      - name: Retain exact native inputs and provenance even on failure
+      - name: Validate contact, integration and read-only geometry checks
+        if: inputs.mode == 'full'
+        run: node --test tests/contact.test.mjs tests/world.test.mjs tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+      - name: Replay the exact captured native input for two seconds plus a separate perturbed run
+        if: inputs.mode == 'full'
+        run: node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode both --label r02 | tee evidence/native-replay.log
+      - name: Retain exact current-native input and full replay evidence even on failure
         if: always()
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r02-native-input-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r02-${{ inputs.mode }}-native-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r02/evidence/
           if-no-files-found: warn
           retention-days: 14
           compression-level: 6
 
-# Exact release versions checked against the official upstream release pages:
+# Retained pinned tool releases:
 # https://github.com/actions/checkout/releases/tag/v6.0.2
 # https://github.com/actions/setup-node/releases/tag/v6.4.0
 # https://github.com/actions/setup-python/releases/tag/v6.3.0

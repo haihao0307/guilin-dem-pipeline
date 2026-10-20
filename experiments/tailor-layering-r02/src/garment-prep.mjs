@@ -211,10 +211,12 @@ async function placeOnNativeBody(packet, host, extraM, envelope, progress) {
  * mid-surface. positions uses Y-up meters. The packet retains the original mm
  * origin: [x*1000, (y+host.groundShift)*1000, z*1000].
  *
- * Each rendered frame must use carrier = physicalPositions - outwardNormals *
- * renderOffsetMeters, pass those same normals to the original solid deformer,
- * and leave the original shader's uOffset intact. No placement offset is a
- * persistent constraint. The rest metric remains the edited, separate UV paper.
+ * Render carrier = physicalPositions. The audited mid-surface builder removes
+ * the legacy carrier-placement translation from yarns and sewn trims at
+ * binding time; their native local geometry, shaders and sampling remain.
+ * renderOffsetMeters records that source placement translation for adapting
+ * trim heights. No placement offset is a persistent constraint. The rest
+ * metric remains the edited, separate UV paper.
  */
 export async function prepareGarment({host, presetId, kind = 'inner', progress = () => {}} = {}) {
   const choice = DEFAULTS[kind];
@@ -272,7 +274,7 @@ export async function prepareGarment({host, presetId, kind = 'inner', progress =
     envelopeSafetyMM: ENVELOPE_SAFETY_M * 1000,
     renderOffsetMM: envelope.renderOffsetMeters * 1000,
     nativeEnvelope: envelope.nativeEnvelope,
-    coordinateContract: 'Y-up meters for physical mid-surface; packet uses original mm origin; render carrier = mid-surface - outward normal * renderOffsetMeters',
+    coordinateContract: 'Y-up meters for physical yarn-envelope mid-surface; packet uses original mm origin; render carrier equals physical mid-surface; native yarn and trim bindings remove only legacy carrier-placement translation',
     paperEditScope: section ? 'Independent panel UV width enlarged for a 100 mm estimated torso-circumference allowance; not a certified finished-garment size' : 'Retained MP05 body-size grading only',
     followUpRequired: 'Joint free-cloth settlement and visual review; source static acceptance does not accept this new layering'
   };

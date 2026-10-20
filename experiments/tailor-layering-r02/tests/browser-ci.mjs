@@ -1,12 +1,17 @@
 // Real browser acceptance. This file intentionally refuses to launch a browser
 // in the current interactive workspace; GitHub Actions is the execution host.
-// No application internals, synthetic screenshots or replacement meshes are used.
+// Controls drive the actual app. Read-only Worker observation and independent
+// triangle checks inspect its exact input/output; no substitute geometry is used.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { inflateSync } from 'node:zlib';
+import { inflateSync, gzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
+import { installClothObserver, readClothObservation, waitForClothIdle } from './cloth-observer.mjs';
+import { runContinuousInterval, runRemovalCycles } from './scenarios-r02.mjs';
+import { auditObservedGeometry, assertNoObservedCrossings } from './observed-geometry.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const EVIDENCE = path.join(ROOT, 'evidence');
@@ -17,6 +22,8 @@ const LOCATOR_TIMEOUT_MS = 120_000;
 const GPU_IDLE_TIMEOUT_MS = 180_000;
 const BROWSER_BUDGET_MS = 1_200_000;
 const SCREENSHOT_TIMEOUT_MS = 180_000;
+const CONTINUOUS_SECONDS = 2;
+const DYNAMIC_LIMITS = {maxEdgeStretch: 1.45, seamGapMM: .01, contactResidualM: .0005};
 const PROGRESS_PREFIX = 'KAOPU_CI_OBSERVATION ';
 const EXPECTED = {
   inner: { preset: 'T08', material: 'knit-fine-0' },
@@ -30,14 +37,17 @@ const pageErrors = [];
 const requests = [];
 const forbiddenRequests = [];
 const progressEvents = [];
-let browser, context, page, watchdog, heartbeat;
+let browser, context, page, watchdog, heartbeat, nativeWorldInput;
 let failure = null;
 let phase = 'setup', lastDOMObservation = null, lastDOMObservedAt = null;
 let evidenceWrites = Promise.resolve();
 const summary = {
-  schema: 'kaopu-real-webgl-acceptance@1',
+  schema: 'kaopu-real-webgl-acceptance@2',
   startedUTC: new Date().toISOString(),
   scenario: SCENARIO,
+  suiteScope: process.env.LAYERING_CI_SCOPE || 'unspecified',
+  requiredReleaseMatrixMember: process.env.LAYERING_CI_SCOPE === 'full',
+  requiresAllOtherReleaseJobs: true,
   scenariosCompleted: [],
   passed: false,
   execution: 'GitHub Actions, fresh Playwright Chromium context, software WebGL',
@@ -46,10 +56,14 @@ const summary = {
   budgetsMS: { ready: READY_TIMEOUT_MS, locator: LOCATOR_TIMEOUT_MS, GPUIdle: GPU_IDLE_TIMEOUT_MS,
     browser: BROWSER_BUDGET_MS, screenshot: SCREENSHOT_TIMEOUT_MS },
   viewport: { width: 1440, height: 1000, deviceScaleFactor: 1 },
+  dynamicLimits: {...DYNAMIC_LIMITS, stretchPhase: 'Completed dynamic steps; initial placement stretch is recorded separately'},
+  geometryChecks: [],
   limitations: [
     'This checks the fixed native person, two retained tops and retained P02 shorts.',
-    'Contact metrics describe discrete vertex-triangle tests, not continuous collision or all intersections.',
+    'Selected actual middle-surface snapshots receive an independent complete triangle-pair check; times between snapshots, self-intersections and individual yarns are not certified.',
+    'Published thickness residuals and full body vertex-distance audits complement surface crossing tests; they do not certify complete continuous collision.',
     'No real-time speed threshold, calibrated friction claim or arbitrary-motion guarantee is made.',
+    'Performance comparison preserves geometry and sampling; its small same-session timings are observations, not a cross-device benchmark.',
   ],
 };
 
@@ -211,6 +225,7 @@ async function waitIdle(timeout = GPU_IDLE_TIMEOUT_MS) {
     const app = document.getElementById('layer-app');
     if (app?.dataset.status === 'error') return true;
     if (app?.dataset.ready !== 'true' || app.querySelector('#reset')?.disabled) return false;
+    if (app.dataset.busy === 'true' || app.dataset.renderPending === 'true' || app.dataset.renderInFlight === 'true') return false;
     let value;
     try { value = JSON.parse(app.querySelector('#diagnostics')?.textContent || 'null'); } catch { return false; }
     const gate = value?.render?.frameGate;
@@ -234,7 +249,7 @@ async function waitIdle(timeout = GPU_IDLE_TIMEOUT_MS) {
 }
 
 function verifyGarments(value, ids = ['inner', 'outer', 'pants']) {
-  assert.equal(value.version, 'TAILOR-LAYERING-R01');
+  assert.equal(value.version, 'TAILOR-LAYERING-R02');
   assert.deepEqual(value.dynamicGarments.map(row => row.id).sort(), [...ids].sort(), 'Independent garment identities changed');
   assert.equal(value.physics.garmentCount, ids.length, 'The shared solver must contain exactly the displayed independent garments');
   assert.equal(value.nativePerson.sameModel, true);
@@ -244,6 +259,8 @@ function verifyGarments(value, ids = ['inner', 'outer', 'pants']) {
   assert.match(value.nativePerson.topology, /^[0-9a-f]{64}$/i);
   assert.equal(value.physics.staticNativeBody, true);
   assert.equal(value.physics.continuousCollision, false);
+  assert.equal(value.physics.sweptVertexFace, true);
+  assert.equal(value.physics.edgeEdgeCollision, false);
   for (const row of value.dynamicGarments) {
     assert.equal(row.preset, EXPECTED[row.id].preset);
     assert.equal(row.material, EXPECTED[row.id].material, 'A retained material was replaced');
@@ -328,6 +345,140 @@ async function advance(id = 'step') {
   return after;
 }
 
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const arrayHash = (values, Type) => {
+  const array = Type.from(values);
+  return hash(Buffer.from(array.buffer, array.byteOffset, array.byteLength));
+};
+function geometryDigest(snapshot) {
+  assert.ok(snapshot?.rows?.length, 'A real cloth Worker snapshot is required');
+  return snapshot.rows.map(row => ({id: row.id,
+    positions: arrayHash(row.positions, Float32Array), normals: arrayHash(row.normals, Float32Array),
+    topology: arrayHash(row.indices, Uint32Array)})).sort((a, b) => a.id.localeCompare(b.id));
+}
+
+async function verifyNativeObservation() {
+  const identity = await page.evaluate(async () => {
+    const input = globalThis.__KAOPU_CI_CLOTH_OBSERVER__?.init;
+    const model = window.__IDENTITY_QA__?.model?.(), viewer = window.__IDENTITY_QA__?.viewer?.();
+    if (!input?.body || !model?.positions || !model?.faces) throw new Error('Actual native model or original init input missing');
+    const expected = new Float32Array(model.positions.length);
+    for (let i = 0; i < expected.length; i += 3) {
+      expected[i] = model.positions[i]; expected[i + 1] = model.positions[i + 2]; expected[i + 2] = -model.positions[i + 1];
+    }
+    const actual = input.body.positions;
+    const bytes = value => new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    const equalBytes = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
+    const digest = async data => [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))]
+      .map(value => value.toString(16).padStart(2, '0')).join('');
+    return {bodyPositionType: actual.constructor.name, exactYUpBytesMatch: equalBytes(bytes(actual), bytes(expected)),
+      exactTopologyMatch: input.body.faces.length === model.faces.length && input.body.faces.every((value, i) => value === model.faces[i]),
+      nativeGeometrySHA256: await digest(bytes(model.positions)),
+      observedBodySHA256: await digest(bytes(actual)),
+      vertices: actual.length / 3, triangles: input.body.faces.length / 3,
+      sameCanvas: viewer?.canvas === document.querySelector('#layer-app #layer-stage canvas'),
+      platformReady: window.platformReview?.ready?.() === true,
+      coordinateConversion: '[native x,native z,-native y], no additional ground shift'};
+  });
+  assert.equal(identity.bodyPositionType, 'Float32Array');
+  assert.equal(identity.exactYUpBytesMatch, true, 'Worker body differs from the current real native model');
+  assert.equal(identity.exactTopologyMatch, true, 'Worker body topology differs from the current real native model');
+  assert.equal(identity.sameCanvas, true);
+  assert.equal(identity.platformReady, true);
+  assert.equal(identity.vertices, 25417);
+  assert.equal(identity.triangles, 50624);
+  const traffic = await readClothObservation(page, {geometry: true, initialInput: true});
+  assert.equal(traffic.errors.length, 0);
+  assert.equal(traffic.pending.length, 0);
+  nativeWorldInput = traffic.init;
+  const file = 'native-world-observation.json.gz';
+  const bytes = gzipSync(Buffer.from(JSON.stringify({schema: 'kaopu-browser-init-observation@1',
+    identity, init: nativeWorldInput,
+    scope: 'Numeric observation from this acceptance run; exact typed-byte baseline capture is a separate artifact'})), {level: 6});
+  await fs.writeFile(path.join(EVIDENCE, file), bytes);
+  summary.nativeObservation = {...identity, file, fileSHA256: hash(bytes), fileBytes: bytes.length,
+    initialObserverCopyMS: traffic.snapshotCopyMS};
+  return traffic;
+}
+
+function assertPhysicalMetrics(physics, {dynamic = true, fullBody = false, particles} = {}) {
+  assert.ok(Number.isFinite(physics.maxEdgeStretch));
+  assert.ok(Number.isFinite(physics.seamGapMM));
+  assert.ok(physics.seamGapMM <= DYNAMIC_LIMITS.seamGapMM, 'Sewn boundaries opened');
+  if (dynamic && physics.completedSteps > 0) {
+    assert.ok(physics.maxEdgeStretch <= DYNAMIC_LIMITS.maxEdgeStretch,
+      'A completed dynamic step exceeded the retained source 1.45x stretch guard');
+    assert.ok(physics.contact, 'A completed contact-enabled step must retain its measurement');
+    assert.equal(physics.contact.measuredAfterBodyProjection, true);
+    assert.ok(Number.isFinite(physics.contact.residualMaxPenetration));
+    assert.ok(physics.contact.residualMaxPenetration <= DYNAMIC_LIMITS.contactResidualM,
+      'Measured middle-surface thickness residual exceeded the 0.5 mm engineering acceptance bound');
+  }
+  if (fullBody) {
+    assert.equal(physics.bodySampledVertices, particles, 'Every physical cloth vertex must be measured against the actual native body');
+    assert.equal(physics.bodyInsideVertices, 0, 'A cloth vertex is inside the current native body');
+    assert.ok(Number.isFinite(physics.bodyMinimumMM) && physics.bodyMinimumMM >= 0);
+    assert.match(physics.bodyMetric, /all cloth vertices/);
+  }
+}
+
+async function geometryCheckpoint(name, snapshot) {
+  assert.match(name, /^[a-z0-9-]+$/);
+  const report = auditObservedGeometry({body: nativeWorldInput.body, snapshot});
+  const rawName = `${name}-geometry.json.gz`, reportName = `${name}-geometry-audit.json`;
+  const bytes = gzipSync(Buffer.from(JSON.stringify({schema: 'kaopu-actual-response-checkpoint@1',
+    nativeBodyObservation: summary.nativeObservation.file, snapshot})), {level: 6});
+  await fs.writeFile(path.join(EVIDENCE, rawName), bytes);
+  await fs.writeFile(path.join(EVIDENCE, reportName), JSON.stringify(report, null, 2) + '\n');
+  const row = {name, requestID: snapshot.id, physicalStep: snapshot.audit.completedSteps,
+    physicalSeconds: snapshot.audit.simulationSeconds, rawName, rawSHA256: hash(bytes), rawBytes: bytes.length,
+    reportName, garmentPairs: report.garmentPairs, bodyPairs: report.bodyPairs,
+    degenerateTriangles: report.intersections.degenerateTriangles,
+    hasReportedIntersections: report.intersections.hasReportedIntersections, elapsedMS: report.intersections.elapsedMS};
+  summary.geometryChecks.push(row);
+  // Persist the actual failing geometry before enforcing the gate.
+  assertNoObservedCrossings(report);
+  return row;
+}
+
+async function continuousCheckpoint({before, after, metrics, traffic, geometryStates}) {
+  assert.equal(traffic.droppedCheckpoints, 0, 'Selected intermediate geometry was discarded before acceptance');
+  let metricError;
+  for (const response of metrics.responseAudits) {
+    try {assertPhysicalMetrics(response.audit);} catch (error) {metricError ??= error;}
+  }
+  const states = new Map(geometryStates.map(row => [row.requestID, row.snapshot]));
+  states.set(traffic.snapshot.id, traffic.snapshot);
+  const reports = [];
+  for (const [id, snapshot] of states) {
+    reports.push(await geometryCheckpoint(`generation-${traffic.checkpointGeneration}-reply-${id}`, snapshot));
+  }
+  assert.equal(after.physics.completedSteps, traffic.snapshot.audit.completedSteps);
+  assert.ok(after.physics.simulationSeconds > before.physics.simulationSeconds);
+  if (metricError) throw metricError;
+  return reports;
+}
+
+async function fullBodyAudit(name, {enforcePhysics = true} = {}) {
+  markPhase('full-body-audit:' + name);
+  await waitForClothIdle(page);
+  const before = await readClothObservation(page, {geometry: true});
+  await clickAndWait('audit-contact');
+  await waitForClothIdle(page);
+  const after = await readClothObservation(page, {geometry: true});
+  const value = await diagnostic();
+  assert.equal(after.audit.completedSteps, before.audit.completedSteps);
+  assert.equal(after.audit.simulationSeconds, before.audit.simulationSeconds);
+  assert.deepEqual(geometryDigest(after.snapshot), geometryDigest(before.snapshot), 'The read-only contact audit moved real cloth');
+  const particles = value.dynamicGarments.reduce((sum, row) => sum + row.solverParticles, 0);
+  assert.equal(value.physics.bodySampledVertices, particles);
+  assert.ok(Number.isFinite(value.physics.bodyMinimumMM));
+  if (enforcePhysics) assertPhysicalMetrics(value.physics,
+    {dynamic: value.physics.completedSteps > 0, fullBody: true, particles});
+  await record(name, {fullBodyAudit: true, physicalLimitsEnforced: enforcePhysics, actualWorkerReply: after.snapshot.id});
+  return {value, traffic: after};
+}
+
 async function setColor(value) {
   await page.locator('#layer-app #color').evaluate((input, color) => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, color);
@@ -336,9 +487,130 @@ async function setColor(value) {
   await waitIdle();
 }
 
+async function setRenderDemand(enabled) {
+  const before = await readClothObservation(page, {geometry: true});
+  await page.locator('#layer-app #render-demand').setChecked(enabled);
+  await waitIdle(); await waitForClothIdle(page);
+  const after = await readClothObservation(page, {geometry: true}), value = await diagnostic();
+  assert.equal(value.render.demand.enabled, enabled);
+  assert.equal(value.render.demand.hiddenSimulationSkipped, false);
+  assert.equal(value.render.demand.occludedRegionCullingImplemented, false);
+  assert.equal(after.requestCount, before.requestCount, 'Render optimization toggle sent an unsolicited physics operation');
+  assert.deepEqual(geometryDigest(after.snapshot), geometryDigest(before.snapshot));
+  assert.equal(after.audit.simulationSeconds, before.audit.simulationSeconds);
+  assert.equal(after.audit.completedSteps, before.audit.completedSteps);
+}
+
+async function runDemandComparison() {
+  markPhase('same-state-render-demand-comparison');
+  await clickAndWait('all-visible');
+  const trials = [], pixelsByMode = new Map();
+  let identicalResetGeometry;
+  // ABBA reduces a simple one-way cache warming bias. Timings remain a small
+  // observational sample, while exact upload/frame counts are deterministic
+  // work measurements. The same current body, garments and materials persist.
+  for (const [index, enabled] of [false, true, true, false].entries()) {
+    await clickAndWait('reset'); await waitForClothIdle(page);
+    await setRenderDemand(enabled);
+    const before = await diagnostic(), beforeTraffic = await readClothObservation(page, {geometry: true});
+    assert.equal(before.playing, false);
+    assert.equal(before.physics.completedSteps, 0);
+    assert.equal(before.physics.simulationSeconds, 0);
+    const digest = geometryDigest(beforeTraffic.snapshot);
+    identicalResetGeometry ??= digest;
+    assert.deepEqual(digest, identicalResetGeometry, 'A/B modes did not start from identical reset geometry');
+    const started = Date.now(), name = `demand-${enabled ? 'on' : 'off'}-trial-${index + 1}`;
+    const {value: after, traffic} = await fullBodyAudit(name, {enforcePhysics: false});
+    const wallMS = Date.now() - started;
+    assert.deepEqual(geometryDigest(traffic.snapshot), digest);
+    assert.equal(traffic.audit.completedSteps, 0);
+    assert.equal(traffic.audit.simulationSeconds, 0);
+    verifyGarments(after);
+    const perGarmentUploads = Object.fromEntries(['pants', 'inner', 'outer'].map(id => [id,
+      (after.render.demand.uploadedByGarment[id] || 0) - (before.render.demand.uploadedByGarment[id] || 0)]));
+    for (const [id, count] of Object.entries(perGarmentUploads)) {
+      if (enabled) assert.equal(count, 0, id + ' re-uploaded exact unchanged geometry in demand mode');
+      else assert.ok(count > 0, id + ' did not exercise the unconditional comparison path');
+    }
+    const trial = {name, enabled, wallMS, physicalSeconds: 0, physicsSteps: 0,
+      workerResponses: traffic.responseCount - beforeTraffic.responseCount,
+      perGarmentUploads,
+      submittedFrames: after.render.frameGate.submitted - before.render.frameGate.submitted,
+      completedFrames: after.render.frameGate.completed - before.render.frameGate.completed,
+      geometryStageMS: after.render.demand.stageMS - before.render.demand.stageMS,
+      nativeCommitMS: after.render.demand.commitMS - before.render.demand.commitMS,
+      unchangedRows: after.render.demand.unchangedRows - before.render.demand.unchangedRows,
+      diagnosticWrites: after.render.demand.diagnosticWrites - before.render.demand.diagnosticWrites,
+      geometryDigest: digest};
+    assert.equal(trial.workerResponses, 1, 'The visible audit operation must perform exactly one real snapshot request');
+    assert.equal(trial.submittedFrames, trial.completedFrames);
+    trials.push(trial);
+    await record(name + '-measurement', {sameStateRenderComparison: trial});
+    if (!pixelsByMode.has(enabled)) pixelsByMode.set(enabled, await capture(enabled ? 'demand-on' : 'demand-off'));
+  }
+  const pixels = pixelDifference(pixelsByMode.get(false), pixelsByMode.get(true));
+  assert.ok(pixels.changedFraction <= .005 && pixels.meanMaximumChannelDelta <= 1,
+    'Optimization changed the paused, same-state native canvas beyond the declared pixel tolerance');
+  const onFrames = trials.filter(row => row.enabled).reduce((sum, row) => sum + row.submittedFrames, 0);
+  const offFrames = trials.filter(row => !row.enabled).reduce((sum, row) => sum + row.submittedFrames, 0);
+  assert.ok(onFrames < offFrames, 'The same-state demand path did not reduce actual native frame submissions');
+  summary.renderDemandComparison = {order: ['off', 'on', 'on', 'off'], trials, pixels,
+    optimizationSubmittedFrames: onFrames, comparisonSubmittedFrames: offFrames,
+    geometryAndClockIdentical: true, solverParametersChanged: false,
+    interpretation: 'Repeated read-only snapshot actions in one paused page after identical resets; upload/frame counts prove avoided work, small timing samples do not establish real-time performance. This comparison does not accept the initial physical fit; separate continuous, removal and native replay gates enforce it.'};
+  await setRenderDemand(true);
+}
+
+async function runHiddenRestore() {
+  markPhase('isolated-geometry-deferral-and-restoration');
+  await clickAndWait('reset'); await waitForClothIdle(page);
+  await setRenderDemand(true);
+  await page.locator('#layer-app #layer-list [data-garment="outer"]').click();
+  await clickAndWait('isolate-selected');
+  const before = await diagnostic(), beforeTraffic = await readClothObservation(page, {geometry: true});
+  assert.equal(before.displayOnlyIsolation, true);
+  assert.deepEqual(before.render.demand.requiredIDs, ['outer']);
+  const sustained = await runContinuousInterval({page, diagnostic, record, capture, waitIdle,
+    seconds: .2, name: 'isolated-sustained', checkpoint: continuousCheckpoint});
+  const {value: hidden, traffic: hiddenTraffic} = await fullBodyAudit('isolated-body-audit');
+  verifyGarments(hidden);
+  const beforeGeometry = new Map(geometryDigest(beforeTraffic.snapshot).map(row => [row.id, row]));
+  const afterGeometry = new Map(geometryDigest(hiddenTraffic.snapshot).map(row => [row.id, row]));
+  for (const id of ['pants', 'inner']) {
+    assert.equal(hidden.render.demand.uploadedByGarment[id], before.render.demand.uploadedByGarment[id],
+      id + ' uploaded geometry while explicitly hidden from both beauty and shadows');
+    assert.equal(hidden.render.demand.lastUploadedSnapshotIDByGarment[id], before.render.demand.lastUploadedSnapshotIDByGarment[id]);
+    assert.ok(hidden.render.demand.pendingIDs.includes(id), id + ' did not retain its newer hidden geometry');
+    assert.notEqual(afterGeometry.get(id).positions, beforeGeometry.get(id).positions,
+      id + ' was incorrectly frozen in physical simulation while hidden');
+    assert.equal(hidden.render.demand.latestSnapshotIDByGarment[id], hiddenTraffic.snapshot.id);
+  }
+  await clickAndWait('all-visible'); await waitForClothIdle(page);
+  const shown = await diagnostic(), shownTraffic = await readClothObservation(page, {geometry: true});
+  verifyGarments(shown);
+  assert.equal(shown.displayOnlyIsolation, false);
+  assert.equal(shownTraffic.requestCount, hiddenTraffic.requestCount, 'Restoring display sent a physics mutation');
+  assert.deepEqual(geometryDigest(shownTraffic.snapshot), geometryDigest(hiddenTraffic.snapshot));
+  assert.equal(shown.physics.simulationSeconds, hidden.physics.simulationSeconds);
+  assert.deepEqual(shown.render.demand.pendingIDs, []);
+  for (const id of ['pants', 'inner']) {
+    assert.ok(shown.render.demand.uploadedByGarment[id] > hidden.render.demand.uploadedByGarment[id]);
+    assert.equal(shown.render.demand.lastUploadedSnapshotIDByGarment[id], hiddenTraffic.snapshot.id,
+      id + ' did not restore the newest retained geometry');
+    assert.equal(shown.render.demand.lastUploadedPhysicalStepByGarment[id], hidden.physics.completedSteps);
+  }
+  await capture('restored-newest-hidden-geometry');
+  summary.hiddenGeometryRestore = {actualSeconds: sustained.metrics.actualSeconds, actualSteps: sustained.metrics.actualSteps,
+    hiddenGarments: ['pants', 'inner'], hiddenUploads: {pants: 0, inner: 0},
+    hiddenGarmentsStillPhysicallyEvolved: true, restoredSnapshotID: hiddenTraffic.snapshot.id,
+    restoredPhysicalStep: hidden.physics.completedSteps, newestGeometryPresented: true,
+    bodyAndOtherGarmentsWereOnlyDisplayHidden: true, occlusionCullingClaimed: false};
+}
+
 try {
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Browser execution is reserved for GitHub Actions; do not launch a local browser for this test.');
-  assert.ok(['all', 'display', 'contact'].includes(SCENARIO), 'LAYERING_CI_SCENARIO must be all, display or contact');
+  assert.ok(['all', 'display', 'demand', 'continuous', 'reentry'].includes(SCENARIO),
+    'LAYERING_CI_SCENARIO must be all, display, demand, continuous or reentry');
   await fs.mkdir(EVIDENCE, { recursive: true });
   const require = createRequire(path.join(ROOT, '.ci-runtime', 'package.json'));
   const { chromium } = require('playwright');
@@ -350,9 +622,8 @@ try {
   assert.equal(provenance.iframeRequired, false);
   assert.equal(provenance.upstreamFiles.length, 286);
   summary.sourceProvenance = provenance;
-  // Run2 continued through real garment generation at 288 seconds. Keep full
-  // original rendering and allow its first software-GPU frame to finish. The
-  // 24-minute job leaves time to retain evidence after this browser ceiling.
+  // Keep the exact original rendering. Each acceptance job owns one real page
+  // and its complete budget; no quality reduction is used to finish faster.
   watchdog = setTimeout(() => {
     failure = new Error('Browser acceptance exceeded its 20-minute budget.');
     appendProgress({ kind: 'browser-budget-exceeded', phase });
@@ -365,6 +636,7 @@ try {
   summary.browserVersion = browser.version();
   context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1,
     colorScheme: 'light', locale: 'zh-CN', reducedMotion: 'reduce' });
+  await installClothObserver(context);
   await installProgressObserver();
   // No signed-in state, external models, remote scripts or user profile.
   await context.route('**/*', async route => {
@@ -416,6 +688,7 @@ try {
   }, null, { timeout: READY_TIMEOUT_MS, polling: 250 });
   assert.equal(await page.locator('#layer-app').getAttribute('data-ready'), 'true', await page.locator('#layer-app #load-text').textContent());
   await waitIdle();
+  await waitForClothIdle(page);
   assert.equal(await page.locator('iframe').count(), 0);
   assert.equal(await page.locator('#layer-app #layer-stage canvas').count(), 1);
   assert.equal(await page.locator('#layer-app #layer-stage canvas').isVisible(), true);
@@ -425,7 +698,13 @@ try {
   const initial = await diagnostic();
   verifyGarments(initial);
   assert.equal(initial.playing, false);
+  const initialTraffic = await verifyNativeObservation();
   await capture('initial');
+
+  if (['all', 'continuous', 'reentry'].includes(SCENARIO)) {
+    await geometryCheckpoint('initial', initialTraffic.snapshot);
+    await fullBodyAudit('initial-body-audit');
+  }
 
   // Each scenario keeps one continuous, real page/scene. CI runs both scenarios
   // on separate runners, and requires both jobs to pass the complete gates.
@@ -468,48 +747,51 @@ try {
     summary.scenariosCompleted.push('display');
   }
 
-  if (SCENARIO === 'all' || SCENARIO === 'contact') {
-    // Advance the real native-body scene. Contact counts are measurements, with
-    // no requirement that residuals vanish or that one step run in real time.
-    let stepped = await advance();
-    await record('stepped');
-    if (stepped.physics.contact.contactCount === 0) {
-      stepped = await advance('push');
-      await record('pushed');
-    }
-    assert.ok(stepped.physics.contact.contactCount > 0, 'The contact probe did not produce measurable inter-garment contact');
-    const countBeforeRemoval = stepped.physics.contact.contactCount;
-    assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').getAttribute('aria-pressed'), 'true', 'Step and push must preserve the selected outer garment');
-    await clickAndWait('remove-selected');
-    const removed = await diagnostic();
-    verifyGarments(removed, ['inner', 'pants']);
-    assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').count(), 0);
-    assert.equal((await page.locator('#layer-app #metric-layers').textContent()).trim(), '2');
-    assert.equal(removed.physics.contact, null, 'Removing an object must retire the old contact evidence');
-    assert.equal((await page.locator('#layer-app #metric-contacts').textContent()).trim(), '待求解');
-    await capture('removed');
-    const afterRemovalStep = await advance();
-    verifyGarments(afterRemovalStep, ['inner', 'pants']);
-    summary.contactRemoval = {
-      beforeRemoval: countBeforeRemoval,
-      immediatelyAfterRemoval: null,
-      afterNextSolve: afterRemovalStep.physics.contact.contactCount,
-      oldEvidenceRetired: removed.physics.contact === null,
-      remainingGarments: ['inner', 'pants'],
-      interpretation: 'Removal retires previous contact evidence and displays unmeasured (待求解), not a measured zero; the next real solve measures the two remaining independent garments.',
-    };
-    await record('removed-stepped');
-
-    await clickAndWait('add-outer');
-    const restored = await diagnostic();
-    verifyGarments(restored);
-    assert.equal(await page.locator('#layer-app #layer-list [data-garment]').count(), 3);
-    assert.equal(await page.locator('#layer-app #add-outer').isDisabled(), true);
-    await capture('restored');
-    summary.scenariosCompleted.push('contact');
+  if (SCENARIO === 'all' || SCENARIO === 'demand') {
+    await runDemandComparison();
+    await runHiddenRestore();
+    summary.scenariosCompleted.push('demand');
   }
 
-  assert.deepEqual(summary.scenariosCompleted, SCENARIO === 'all' ? ['display', 'contact'] : [SCENARIO]);
+  if (SCENARIO === 'all' || SCENARIO === 'continuous') {
+    if (SCENARIO === 'all') {await clickAndWait('reset'); await waitForClothIdle(page);}
+    markPhase('continuous-native-world');
+    const sustained = await runContinuousInterval({page, diagnostic, record, waitIdle,
+      capture: name => capture(name + '-view'), seconds: CONTINUOUS_SECONDS,
+      name: 'sustained', checkpoint: continuousCheckpoint});
+    await fullBodyAudit('sustained-body-audit');
+    summary.continuous = {actualSeconds: sustained.metrics.actualSeconds, actualSteps: sustained.metrics.actualSteps,
+      wallMS: sustained.metrics.wallMS, maximumRecordedStretch: sustained.metrics.maximumRecordedStretch,
+      selectedGeometryChecks: sustained.metrics.geometryChecks};
+    // Exercise the existing, bounded normal UI impulse after actual settling.
+    // No direct Worker message, fabricated pointer or altered geometry is used.
+    const pushed = await advance('push');
+    assertPhysicalMetrics(pushed.physics);
+    await waitForClothIdle(page);
+    await geometryCheckpoint('bounded-push', (await readClothObservation(page, {geometry: true})).snapshot);
+    const recovered = await runContinuousInterval({page, diagnostic, record, waitIdle,
+      capture: name => capture(name + '-view'), seconds: .25,
+      name: 'push-recovery', checkpoint: continuousCheckpoint});
+    await fullBodyAudit('push-recovery-body-audit');
+    summary.boundedPerturbation = {control: 'push', physicalSecondsAfterImpulse: recovered.metrics.actualSeconds,
+      actualSteps: recovered.metrics.actualSteps, selectedGeometryChecks: recovered.metrics.geometryChecks};
+    summary.scenariosCompleted.push('continuous');
+  }
+
+  if (SCENARIO === 'all' || SCENARIO === 'reentry') {
+    markPhase('repeated-removal-and-restoration');
+    const cycles = await runRemovalCycles({page, diagnostic, record, waitIdle, verifyGarments,
+      capture: name => capture(name + '-view'), checkpoint: continuousCheckpoint,
+      cycles: 3, secondsWhileRemoved: .2, secondsAfterRestore: .25,
+      initialCheckpoint: async ({cycle, traffic}) => geometryCheckpoint(`cycle-${cycle}-restored-initial`, traffic.snapshot),
+      afterCycle: async ({cycle}) => fullBodyAudit(`cycle-${cycle}-restored-body-audit`)});
+    summary.removalCycles = cycles.map((row, i) => ({cycle: i + 1,
+      restoredActualSeconds: row.metrics.actualSeconds, restoredActualSteps: row.metrics.actualSteps,
+      maximumRecordedStretch: row.metrics.maximumRecordedStretch, geometryChecks: row.metrics.geometryChecks}));
+    summary.scenariosCompleted.push('reentry');
+  }
+
+  assert.deepEqual(summary.scenariosCompleted, SCENARIO === 'all' ? ['display', 'demand', 'continuous', 'reentry'] : [SCENARIO]);
   assert.equal(forbiddenRequests.length, 0, 'The build requested resources outside the verified local closure');
   assert.equal(pageErrors.length, 0, 'Browser JavaScript errors occurred');
   const failedResources = requests.filter(row => row.status >= 400 && !new URL(row.url).pathname.endsWith('/favicon.ico'));
@@ -556,5 +838,7 @@ try {
 }
 
 console.log(JSON.stringify({ passed: summary.passed, scenario: SCENARIO, scenariosCompleted: summary.scenariosCompleted, elapsedMS: summary.elapsedMS, screenshots: observations.map(row => row.name),
-  contactRemoval: summary.contactRemoval, error: summary.error?.message }, null, 2));
+  suiteScope: summary.suiteScope, continuous: summary.continuous && {seconds: summary.continuous.actualSeconds, steps: summary.continuous.actualSteps},
+  demandFrames: summary.renderDemandComparison && {on: summary.renderDemandComparison.optimizationSubmittedFrames, off: summary.renderDemandComparison.comparisonSubmittedFrames},
+  error: summary.error?.message }, null, 2));
 if (failure) throw failure;
