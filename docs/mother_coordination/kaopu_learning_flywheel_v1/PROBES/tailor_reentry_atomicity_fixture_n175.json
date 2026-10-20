@@ -1,0 +1,55 @@
+{
+  "schema": "kaopu.tailor-reentry-atomicity-fixture/1",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "pullRequest": 315,
+    "headSha": "93021f352c0fedc53709edd46c30a91235190fee",
+    "workflowRun": 39386779708,
+    "artifactId": 12248830128,
+    "artifactDigest": "sha256:19753026ae4153ba1ead664b9828f9c82e3ce6c2a05222feb213283cffe3769a"
+  },
+  "observed": {
+    "renderDemandAffectsSolver": false,
+    "removedSet": {
+      "garments": ["pants", "inner"],
+      "completedSteps": 28,
+      "simulationSeconds": 0.23333333333333364
+    },
+    "restoredInitial": {
+      "garments": ["pants", "inner", "outer"],
+      "completedSteps": 0,
+      "simulationSeconds": 0,
+      "properCrossingTrianglePairs": 0,
+      "thicknessClearanceChecked": false,
+      "continuousTimeChecked": false
+    },
+    "reentryFailure": {
+      "acceptedStepsBeforeFailure": 3,
+      "failedAttemptedStep": 4,
+      "clothContactResidualMM": 1.044,
+      "maximumAllowedContactResidualMM": 0.5,
+      "maximumEdgeStretch": 1.442,
+      "maximumAllowedEdgeStretch": 1.45,
+      "bodyEnvelopeGapMM": 0,
+      "rollbackScope": "FAILED_STEP_ONLY"
+    },
+    "sourceEffectsOnAdd": {
+      "initializesAllCurrentGarments": true,
+      "copiesCurrentPositionToSavedInitialAndOld": true,
+      "zerosVelocityForAllCurrentGarments": true,
+      "resetsWorldAndGarmentClock": true,
+      "resetsContactCachesAndHistory": true,
+      "stagesNewMemberOutsideActiveWorld": false,
+      "preCommitActiveWorldIdentityChecked": false
+    }
+  },
+  "candidateGate": {
+    "minimumAcceptedStepsAfterReentry": 24,
+    "minimumRemoveReinsertCycles": 3,
+    "requiresFrozenActiveWorldSnapshot": true,
+    "requiresStagingWorld": true,
+    "requiresActiveWorldIdentityUntilCommit": true,
+    "requiresThicknessAndIntersectionChecks": true,
+    "failedInsertionLeavesActiveWorldUnchanged": true
+  }
+}
