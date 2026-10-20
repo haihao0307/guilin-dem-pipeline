@@ -63,6 +63,6 @@ This is a technical-method Candidate, not a new regression case, because no user
 - Production local geometry evidence: `IMPLEMENTED=true`, `GATE-RUN=true` at exact PR head/workflow above.
 - End-to-end geometry-route proof: `IMPLEMENTED=false`, `GATE-RUN=false`.
 - Candidate classifier only: `GATE-RUN=true` (7/7 synthetic controls).
-- Mother route: `POSTED=false` until the directed PR comment is created.
+- Mother route: `POSTED=true`; directed receipt: <https://github.com/haihao0307/guilin-dem-pipeline/pull/321#issuecomment-6294850559>.
 - `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.
 - Teacher lifecycle: `NOT_QUERIED/UNKNOWN`; no external teacher was needed for this bounded internal evidence-composition question.
