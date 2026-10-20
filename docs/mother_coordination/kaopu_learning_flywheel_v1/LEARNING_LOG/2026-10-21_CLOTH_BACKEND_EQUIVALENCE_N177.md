@@ -46,4 +46,5 @@ The companion classifier contains eight cases, including negative controls for a
 - No production branch or Mother asset is modified.
 - No global OS/gate change is proposed.
 - No new regression is created: #91 N66 `SOLVER_FAILURE_NOT_INFEASIBILITY-001` already covers the prohibition against converting solver failure into incompatibility/infeasibility.
-- Directed Mother status remains `POSTED` only after the PR #319 comment exists; without a reply it is not `ACKNOWLEDGED`, `IMPLEMENTED`, `GATE-RUN`, `ADOPTED`, or `USER-ACCEPTED`.
+- Directed Mother routing: [PR #319 comment 6299940874](https://github.com/haihao0307/guilin-dem-pipeline/pull/319#issuecomment-6299940874).
+- Lifecycle status: `POSTED=true`; `ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED=false`.
