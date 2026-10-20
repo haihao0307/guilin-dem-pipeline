@@ -152,7 +152,7 @@ async function waitForNative(){
  while(true){
   const api=window.hairF13,report=api?.report?.();
   if(report?.errors?.length)throw Error('原生人物初始化失败：'+JSON.stringify(report.errors));
-  if(report?.ready){const raw=api._raw?.();if(!raw?.THREE?.Mesh||!raw.PhotoDynamics||!raw.viewer||!raw.model||!raw.fibers||!raw.motion||!raw.dynamics)throw Error('已锁定 F13 原生接口不完整');return api;}
+  if(report?.ready){const raw=api._raw?.(),missing=[];if(typeof raw?.THREE?.Mesh!=='function')missing.push('THREE.Mesh');if(typeof raw?.PhotoDynamics!=='function')missing.push('PhotoDynamics');for(const key of ['viewer','model','fibers','motion'])if(!raw?.[key])missing.push(key);if(missing.length)throw Error('已锁定 F13 原生接口不完整，缺少：'+missing.join(', '));return api;}
   if(performance.now()-started>480000)throw Error('原生人物初始化超时');
   await sleep(150);
  }
