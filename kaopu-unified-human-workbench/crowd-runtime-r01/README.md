@@ -4,6 +4,10 @@
 
 ## 运行方式
 
+**交付未完成**：最后单步读数补丁已发布，但 Browser 连接鉴权错误（HTTP 401）阻断了最后一次公开页交互复核。完整物理实测来自前一候选，版本和剩余步骤见 [交付记录](DELIVERY_VALIDATION.json)。
+
+[打开固定 HTTPS 试用页](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2a80bd5d584a3bb64610ebc27ed468eb490065fb/kaopu-unified-human-workbench/crowd-runtime-r01/public.html)。首次载入会准备完整原始发丝并适配衣物，请等待“完整人物已就绪”。
+
 打开本目录 `public.html` 的固定 HTTPS 发布入口。准备完成后，可切换人数、行走/跑步/跳跃/静止，开始、暂停或单步；拖动旋转视角，滚轮缩放，选择人物后近看与移动。测量按钮记录当前配置的 60 个完整求解步骤。
 
 测量期间锁定人数、动作、物理设置和视角；可以点击“暂停并中止”结束本次测量。记录会区分中止和完整的 60 步，不混合两种配置或把中止写成测量完成。

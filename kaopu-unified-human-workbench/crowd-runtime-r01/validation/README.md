@@ -2,6 +2,30 @@
 
 证据按实际测试的候选版本保留。根目录源码可能已包含后续修复；旧 JSON 不随源码更新，也不自动成为最新候选的通过记录。
 
+## 当前整合试验与公开交互版本
+
+固定入口：https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2a80bd5d584a3bb64610ebc27ed468eb490065fb/kaopu-unified-human-workbench/crowd-runtime-r01/public.html
+
+最后网页提交为 `2a80bd5d584a3bb64610ebc27ed468eb490065fb`，运行包为 `6eb95d4703f0298a3332f5022e713d3a78ce08ec`，应用 SHA-256 为 `84288be6063fbb378d9b397ceb20a39b76dc13a38c2040aa002908c8ee71233f`。**交付未完成**：导航后 Browser 的 DOM、截图和操作接口返回 HTTP 401；未取得最终网页截图或单步补丁的实际交互通过记录。具体阻塞与待做项见 `../DELIVERY_VALIDATION.json` 和 `browser-final-connection-block.json`。前一候选的完整物理结果如下，不改写成最后网页的通过。
+
+下面完整动作和物理记录来自前一网页 `66a6da288df89db2fa8cc339755eb59918aa9817`、运行包 `dac5a556a257d798b9bbc88cfb2065249f576008`（应用 SHA-256 `4a99bb91b325cc52821b077dfe269390aa5534affa19044e278a59b26848ffb3`）。这些文件名的 `final` 表示鞋与碰撞历史修复后的整合候选，不能据此把文件改写成后来网页的测试。后续变化仅是单步完成后的 HUD/JSON 强制刷新；49 个实际构建文件中 48 个字节未变，精确差异见 `final-ui-only-diff.json`。
+
+| 记录 | 实际检查 | 保存结果 |
+| --- | --- | --- |
+| `browser-2p-ready-final.json` | 2 人实际 P01 初始化和穿鞋截图 | 原完整部件显示；静态每脚 1,067 点通过实际鞋内层采样；双人姿态同步 |
+| `browser-benchmark-abort-final.json` | 测量中暂停，等待在途帧收尾并恢复输入 | 53/60 样本明确为 aborted，随后可重新测量 |
+| `browser-2p-walk-final.json` | 重新测量 60 步 | completed，58.85 ms / 16.77 提交帧每秒 |
+| `browser-4p-move-final.json` | 暂停前移 0.1 m、左转 10° | 只改变人物 1，动作/求解时间不增加；内含 benchmark 是旧 2 人测量历史 |
+| `browser-4p-after-move-final.json` | 移动后保留同一行走动作再运行 60 步 | tick 117–176，全体同帧，无错误；92.39 ms / 10.56 提交帧每秒 |
+| `browser-4p-run-final.json` | 四人原跑步 60 步 | 覆盖 0.8 秒周期，无错误；113.01 ms / 8.58 提交帧每秒 |
+| `browser-4p-jump-part-1-final.json` 至 `part-3-final.json` | 三次相连、未重置动作的 60 步 | tick 239–418，累计 180 步/3 秒，覆盖 2.675 秒原跳跃及落地，结束姿态保持；三段报告都保留 |
+| `browser-1p-walk-final.json` | 从 4 人减到 1 人后运行 60 步 | 活动头发为 1、鞋为 2、皮肤通道为 1；104.80 ms / 9.36 提交帧每秒，属于较晚会话样本 |
+| `browser-single-step-display-reproduced.json` | 单步后显示滞后复现 | 实际 tick 419 / 3.0167 秒，旧 UI 仍显示 3.00；随后已修复单步 handler |
+
+以上各次性能记录为各自时段、取景和热身状态下的提交节奏。尤其不能以较晚 1 人样本推断人数扩展效率或 GPU 性能；无受控显卡占用/呈现计时。四人最后一段跳跃平均 128.96 ms、7.54 提交帧每秒。当前完整渲染负载仍高，不满足实时大规模 NPC 目标。
+
+实际 P01 的脚背控制点有时出现 `missingClosedUpper`，射线恰好穿过原第三排鞋眼。`browser-p01-eyelet-interpretation-final.json` 保留原参数与坐标核对；这不是已检出的上盖穿出，也不是后踝穿出。保存姿态的前掌/脚趾均通过，不等于整段动作逐帧、连续全表面穿着验收。旧 MP05 夹具的跳跃后踝边界另见鞋夹具记录，不能混用两种人物结论。
+
 ## 首个完整场景候选（历史记录）
 
 网页提交 `7eec4163160b245a189086315b6fcb80dfa11b0a`，运行包提交 `a83bd174cd25e25cfd660703a78661a2e0cc2ebc`。以下原始记录来自实际 Chrome 页面中的 `#runtime-evidence`，不是组件估算或 Node 渲染替身。
@@ -14,7 +38,7 @@
 | [browser-2p-walk-first.json](browser-2p-walk-first.json) | 2 人行走 | 60 | 全体身体、头发、衣物同帧；无错误、求解回滚或安全拒绝 |
 | [browser-4p-walk-first.json](browser-4p-walk-first.json) | 4 人行走 | 60 | 全体同帧；无错误、回滚或安全拒绝 |
 | [browser-4p-run-first.json](browser-4p-run-first.json) | 4 人跑步 | 60 | 覆盖 0.8 秒原跑步周期；全体同帧，无错误 |
-| [browser-4p-jump-cycle-first.json](browser-4p-jump-cycle-first.json) | 4 人跳跃 | 累计 180 | 累计模拟 3 秒，覆盖 2.675 秒原跳跃周期及落地；全体同帧，无错误；JSON 中测量样本为最后一次 60 步 |
+| [browser-4p-jump-cycle-first.json](browser-4p-jump-cycle-first.json) | 4 人跳跃 | 累计 180 | 累计模拟 3 秒，覆盖 2.675 秒原跳跃周期及落地（原动作非循环，结束姿态保持）；全体同帧，无错误；JSON 中测量样本为最后一次 60 步 |
 
 这批记录确认所选原模块已实际共同运行。它同时暴露了闭口帆布鞋的包头贴合问题，因此不作为鞋已验收或最终交付版本的证明。后续鞋配尺、移动时头发碰撞历史及测量交互修复须以新候选验证。首轮 `benchmark` 尚无后来加入的配置快照、完成/中止状态字段，不据此声称测量交互修复已经过浏览器验收。
 
@@ -28,7 +52,7 @@
 
 记录的 `submittedFrameFPS` 按完整更新及 CPU 渲染提交完成的相邻间隔计算，表示运行提交速率；没有使用 GPU 完成计时或显示器呈现时间。`stepMeanMS` / `stepP95MS` 是统一步骤的实际经过时间，亦非 GPU 执行时间。`simulationPerWallSecond` 明确给出实际模拟速度，不能把每次推进 1/60 秒称为达到了实时 60 Hz。
 
-人数切换会自动改变构图距离；原服装会按连续像素误差调整采样。不同场景的热身状态也不同。因此这些首轮记录用于稳定性与瓶颈观察，不能用其中 4 人高于 2 人的提交速率推断扩展效率。CPU 的衣物等待与头发计算有时间重叠，二者不能直接相加。
+人数切换会自动改变构图距离；原服装会按连续像素误差调整采样。不同场景的热身状态也不同。因此这些记录用于运行状态与瓶颈观察，不能从不同人数的提交速率推断扩展效率。CPU 的衣物等待与头发计算有时间重叠，二者不能直接相加。
 
 ## 显示部件与受力范围
 
