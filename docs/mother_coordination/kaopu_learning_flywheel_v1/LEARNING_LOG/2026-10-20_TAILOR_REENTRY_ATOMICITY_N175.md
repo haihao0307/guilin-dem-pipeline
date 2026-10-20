@@ -40,7 +40,7 @@ This is a genuine positive control and narrows N175: a product may intentionally
 | --- | --- | --- |
 | `HIDDEN_RENDER_ONLY` | Keep `p/v/old`, constraints, contact participation, clock and member set live; defer only beauty upload/atlas work where shadow demand allows. | Existing direction is valid. |
 | `PHYSICS_DORMANT` | Preserve exact state and declare contact-history invalidation/rebuild; require scoped clearance proof before resume. | Candidate only; no such proof observed. |
-| `REMOVED_AND_REINSERTED` | Stage the new member against a frozen snapshot outside the active world; run intersection plus thickness gates and a delayed-failure window; atomically commit or leave the old world unchanged. | Required for PR #315's semantics; not implemented. |
+| `REMOVED_AND_REINSERTED` | Stage the new member against a frozen snapshot outside the active world; run intersection plus thickness gates and a delayed-failure window; atomically commit or leave the old world unchanged. | Required only if the intended semantic is retained-state resume; not implemented. |
 | `GLOBAL_REDRESS_RESTART` | Declare that all garments and clocks restart; build a new lineage; run the full restart and geometry gate; make no retained-state continuity claim. | Implemented and gate-run at current PR head, scoped to the published re-entry scenario. |
 
 State custody for retained garments includes at least position, velocity, previous position, rest/constraint identity, material/thickness parameters, contact-history policy, clock/substep, member-set digest and exact body pose. A topology/member-set change is not an uninterrupted continuation merely because the visible garment IDs match again.
