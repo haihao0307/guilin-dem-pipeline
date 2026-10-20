@@ -43,6 +43,14 @@ jobs:
       - name: Render bounded r05 door guards and three-floor candidate
         run: |
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/interior-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r05-browser
+      - name: Save early r05 visual evidence for review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: r05-visual-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r05-browser
+          if-no-files-found: warn
+          retention-days: 1
       - name: Render the published HTTPS checkpoint and verify served file hashes
         run: |
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/browser.py --url https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/ --expected-build 2026-10-20-floor-window-pbr-r03 --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/public-browser

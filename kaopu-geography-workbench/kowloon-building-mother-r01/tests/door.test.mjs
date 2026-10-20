@@ -5,7 +5,7 @@ import * as THREE from '../../hk-three-buildings-r01/viewer/vendor/three.module.
 import {buildFloors} from '../r04/floors.mjs';
 import {deriveCirculationProposal, buildCirculation} from '../r05/circulation.mjs';
 import {defaultGuardConfig, deriveGuardProposal, buildGuards} from '../r05/guards.mjs';
-import {DOOR_ROLE_PRESETS, defaultDoorConfig, deriveDoorProposal, buildDoor, inspectDoor, sampleDoorSweep, setDoorAngle, auditDoorHostGeometry} from '../r05/door.mjs';
+import {DOOR_ROLE_PRESETS, defaultDoorConfig, deriveDoorProposal, buildDoor, inspectDoor, sampleDoorSweep, setDoorAngle, auditDoorHostGeometry, auditDoorPassage} from '../r05/door.mjs';
 const score = JSON.parse(await readFile(new URL('../../hk-three-buildings-r01/geometry/B359971994401063C0.score.json', import.meta.url), 'utf8'));
 const near = (a, b, eps = 1e-5) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 const graph = deriveCirculationProposal(score, {enabled: true}, {enabled: true});
@@ -244,4 +244,65 @@ test('actual fixed-host external audit clears default stairs/guards/slabs but ca
   intruder.visible = false; assert.equal(auditDoorHostGeometry(THREE, door, [intruder]).clear, false);
   intruder.userData.effectiveEnabled = false; assert.equal(auditDoorHostGeometry(THREE, door, [intruder]).clear, true);
   assert.deepEqual(poseSnapshot(door), before);
+});
+
+
+test('fully open left and right doors admit an actually supported 0.70 by 1.90 m swept L-corridor to both shared-floor lane centres', () => {
+  for (const swing of ['left', 'right']) {
+    const {circulation, door} = setup({swing, angleDeg: 100});
+    const stairs = buildCirculation(THREE, circulation), guards = buildGuards(THREE, deriveGuardProposal(circulation));
+    const floors = buildFloors(THREE, score, circulation.configWithOpenings), before = poseSnapshot(door);
+    const r = auditDoorPassage(THREE, door, [stairs, guards, floors]);
+    assert.equal(r.clear, true); assert.equal(r.geometryClear, true); assert.equal(r.supported, true);
+    near(r.widthM, 0.7); near(r.heightM, 1.9); near(r.thresholdFFLM, circulation.floorState.floors[1].fflM);
+    assert.equal(r.volumes.length, 3); assert.equal(r.paths.length, 2);
+    assert.deepEqual(r.paths[0].nodesDoorLocal, [[0, 0, 1], [0, 0, -0.6], [0.7, 0, -0.6]]);
+    assert.deepEqual(r.paths[1].nodesDoorLocal, [[0, 0, 1], [0, 0, -0.6], [-0.7, 0, -0.6]]);
+    assert.equal(r.supportRayCount, 234); assert.deepEqual(r.supportErrors, []); assert.deepEqual(r.collisions, []);
+    assert.ok(r.triangleTests > 0); assert.match(r.basis, /full_swept_rectangular_prisms/);
+    assert.equal(r.navigationConnectionEnabled, false); assert.equal(r.egressCertified, false);
+    assert.deepEqual(poseSnapshot(door), before, 'Corridor test never changes the displayed door pose');
+  }
+});
+
+test('closed and 45-degree display poses block the same straight doorway corridor even though the door motion sweep clears', () => {
+  const {circulation} = setup(), stairs = buildCirculation(THREE, circulation);
+  const guards = buildGuards(THREE, deriveGuardProposal(circulation)), floors = buildFloors(THREE, score, circulation.configWithOpenings);
+  for (const swing of ['left', 'right']) for (const angleDeg of [0, 45]) {
+    const {door} = setup({swing, angleDeg}), r = auditDoorPassage(THREE, door, [stairs, guards, floors]);
+    assert.equal(sampleDoorSweep(THREE, door, [stairs, guards, floors]).clear, true);
+    assert.equal(r.clear, false); assert.equal(r.supported, true);
+    assert.ok(r.collisions.some(c => c.obstacleId.endsWith(':leaf')));
+    assert.ok(r.collisions.every(c => c.obstacleId.startsWith(door.name)), 'Rail/stair solids are not the approach obstruction');
+  }
+});
+
+test('visible rail behind doorway is the intentional same-floor center-gap bar beyond the transfer turn, not a doorway cross-bar', () => {
+  const {circulation, door} = setup({angleDeg: 100}), guards = buildGuards(THREE, deriveGuardProposal(circulation));
+  const rail = guards.children.find(m => m.userData.role === 'guard-toprail'
+    && m.userData.railRunIds.includes('floor-002:opening-guard:residual-front'));
+  assert.ok(rail); assert.deepEqual(rail.userData.hostFloorIds, ['floor-002']);
+  const inverse = door.matrixWorld.clone().invert().multiply(rail.matrixWorld), pos = rail.geometry.attributes.position;
+  let minS = Infinity, maxS = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const p = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(inverse);
+    minS = Math.min(minS, -p.z); maxS = Math.max(maxS, -p.z); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+  }
+  assert.ok(minS > 1.13 && maxS < 1.2); assert.ok(minY > 0.94 && maxY < 1.01);
+  const floors = buildFloors(THREE, score, circulation.configWithOpenings);
+  const r = auditDoorPassage(THREE, door, [guards, floors]);
+  const maxCorridorS = Math.max(...r.volumes.map(v => -v.minDoorLocal[2])); near(maxCorridorS, 0.95);
+  assert.ok(minS - maxCorridorS > 0.18); assert.equal(r.clear, true);
+});
+
+test('corridor detects an actual solid beside the centreline inside the lateral swept volume, and refuses missing slab support', () => {
+  const {circulation, door} = setup({angleDeg: 100}), floors = buildFloors(THREE, score, circulation.configWithOpenings);
+  const obstacle = obstacleAt(door, [0.8, 1, -0.3], 0.05); obstacle.name = 'off-centre-lateral-obstruction';
+  const bad = auditDoorPassage(THREE, door, [floors, obstacle]);
+  assert.equal(bad.clear, false); assert.ok(bad.collisions.some(c => c.volumeId.endsWith('turn-to-departure') && c.obstacleId === obstacle.name));
+  assert.ok(bad.collisions.every(c => c.volumeId !== 'door-passage:approach-through-frame'));
+  assert.equal(bad.supported, true);
+  const unsupported = auditDoorPassage(THREE, door, []);
+  assert.equal(unsupported.geometryClear, true); assert.equal(unsupported.supported, false); assert.equal(unsupported.clear, false);
+  assert.ok(unsupported.supportErrors.some(e => e.includes('Actual slab-002 support ray failed')));
 });

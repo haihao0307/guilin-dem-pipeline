@@ -66,6 +66,16 @@ test('every full post base contacts its real tread, platform or retained host sl
   assert.ok(audit.supportSampleCount >= derived.posts.length * 12);
   assert.deepEqual(audit.unsupported, []); assert.deepEqual(audit.collisions, []);
   assert.ok(audit.triangleTests > 0);
+  assert.equal(audit.intendedNamedHostOnly, true);
+  assert.equal(audit.rayStartAboveBaseM, 0.0005); assert.equal(audit.rayMaximumDistanceM, 0.001);
+  assert.ok(audit.minimumRetainedMarginM > 0.00999);
+  assert.ok(audit.minimumHostTopNormalDot > 0.999999);
+  for (const c of audit.supportContacts) {
+    assert.ok(c.surfaceBoundaryEdgeCount >= 4); assert.ok(c.fullCapRadiusM >= derived.config.postRadius);
+    assert.ok(c.retainedMarginM > 0.00999); assert.ok(c.geometryBaseErrorM < 1e-5);
+    if (c.supportKind !== 'retained-slab-top') assert.equal(c.surfaceBoundaryEdgeCount, 4);
+    assert.ok(c.actualHostHitElevationRangeM.every(h => Math.abs(h - c.expectedBaseLocalEastUpSouth[1]) < 1e-5));
+  }
   for (const contact of audit.supportContacts) assert.ok(contact.maximumContactErrorM < 1e-5);
 });
 
@@ -152,4 +162,30 @@ test('disabling the upper pair closes the unused left opening edge but leaves th
   assert.ok(ray.intersectObjects(liveMeshes(guards), false).length);
   clearSegment(liveMeshes(guards), localPoint(p, 0.9, 0.7, p.upperFFLM + 0.975), localPoint(p, 1.5, 0.7, p.upperFFLM + 0.975));
   assert.equal(auditGuardGeometry(THREE, derived, guards, [stairs, floors]).valid, true);
+});
+
+
+test('short named-host proof rejects a physically lifted post even if its symbolic planned support is unchanged', () => {
+  const {derived, guards, stairs, floors} = setup();
+  const post = guards.getObjectByName('guard-post-53'); post.position.y += 0.002;
+  const audit = auditGuardGeometry(THREE, derived, guards, [stairs, floors], {reject: false});
+  const contact = audit.supportContacts.find(c => c.supportId === post.name);
+  assert.equal(contact.supported, false); assert.ok(contact.geometryBaseErrorM > 0.0019);
+  assert.equal(contact.maximumContactErrorM, null);
+});
+
+test('support proof requires an upward actual host face and full-cap retained margin, not any ray hit', () => {
+  const {derived, circulation, guards, stairs, floors} = setup();
+  floors.remove(floors.getObjectByName('slab-001'));
+  const downwardFace = new THREE.Mesh(new THREE.PlaneGeometry(50, 50).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({side: THREE.DoubleSide}));
+  downwardFace.name = 'slab-001'; downwardFace.position.y = circulation.pairs[0].lowerFFLM;
+  const faceAudit = auditGuardGeometry(THREE, derived, guards, [stairs, floors, downwardFace], {reject: false});
+  const faceContacts = faceAudit.supportContacts.filter(c => c.hostGeometryId === 'slab-001');
+  assert.ok(faceContacts.length);
+  assert.ok(faceContacts.every(c => !c.supported && c.minimumHostTopNormalDot < -0.999999 && c.maximumContactErrorM < 1e-5));
+  const clean = setup(), outer = clean.guards.getObjectByName('guard-post-53'), v = clean.circulation.pairs[1].basis.lateralEastNorth;
+  outer.position.set(-v[0] * 0.02, 0, v[1] * 0.02);
+  const edgeAudit = auditGuardGeometry(THREE, clean.derived, clean.guards, [clean.stairs, clean.floors], {reject: false});
+  const edgeContact = edgeAudit.supportContacts.find(c => c.supportId === outer.name);
+  assert.equal(edgeContact.supported, false); assert.ok(edgeContact.retainedMarginM < -0.0099);
 });

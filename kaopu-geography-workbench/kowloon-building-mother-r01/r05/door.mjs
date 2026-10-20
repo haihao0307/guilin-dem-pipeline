@@ -152,7 +152,8 @@ export function deriveDoorProposal(floorState, stairPlan, config = {}) {
     frame: {width: c.width + 2 * c.frameWidth, height: c.height + c.frameWidth, fixed: true},
     leaf: {width: leafWidth, height: leafHeight, thickness: c.leafThickness, bottomGapM: c.clearance,
       pivotLocal: [hingeX, 0, pivotZ], signedAngleDeg: (c.swing === 'left' ? -1 : 1) * c.angleDeg},
-    support: {analyticHostSlabContainment: true, conservativeSwingFootprint: swingLoop, actualMeshRayTested: false,
+    landingConnection: {landingDepth: stairPlan.config.landingDepth, laneCenterLateralM: (stairPlan.config.flightWidth + stairPlan.config.centerGap) / 2},
+    support: {analyticHostSlabContainment: true, hostSlabLoops: clone(slab.loops), conservativeSwingFootprint: swingLoop, actualMeshRayTested: false,
       overheadSlabs, fixedHostOverheadClear: !penetratingSlab, fixedHostExternalMeshTested: false},
     safety: {buildingComplianceVerified: false, fireResistanceVerified: false, egressCertified: false,
       structuralSupportVerified: false, exactContinuousSweepCertified: false, realLocationVerified: false},
@@ -327,24 +328,17 @@ export function sampleDoorSweep(THREE, group, obstacles = [], options = {}) {
     contactEpsilonM: o.epsilon, obstacleMeshCount: meshes.length, externalObstacleMeshCount: external.length, selfObstacleMeshCount: self.length, triangleTests,
     sampling: 'angular_samples_not_continuous_certification', exactContinuousSweepCertified: false};
 }
-/** Fixed partition/frame vs external physical geometry; intended face contact is
- * ignored by box erosion, not by making the host or floor transparent. */
-export function auditDoorHostGeometry(THREE, group, obstacles = [], options = {}) {
-  requireRuntime(THREE); doorParts(group);
-  for (const key of Object.keys(options)) if (key !== 'epsilon') throw Error(`Unknown fixed-host audit option: ${key}`);
-  const epsilon = options.epsilon ?? 1e-5;
-  if (!Number.isFinite(epsilon) || epsilon < 0 || epsilon > 0.001) throw Error('Fixed-host contact epsilon must be 0–0.001 m');
-  const meshes = obstacleMeshes(obstacles, group), fixed = [], collisions = [];
-  group.updateWorldMatrix(true, true);
-  group.traverse(mesh => {if (mesh.isMesh && ['proposed-partition-solid', 'fixed-frame-solid'].includes(mesh.userData.role)) fixed.push(mesh);});
-  const cached = new Map(meshes.map(mesh => {
+/** Exact triangle/box tests for bounded original rectangular solids/volumes.
+ * Complete closed obstacle containment is checked as well as surface crossing. */
+function auditBoxesAgainstMeshes(THREE, parts, meshes, epsilon) {
+  const collisions = [], cached = new Map(meshes.map(mesh => {
     mesh.geometry.computeBoundingBox();
     return [mesh.uuid, {local: mesh.geometry.boundingBox.clone(), world: mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld)}];
   }));
   const triangle = new THREE.Triangle(), inverse = new THREE.Matrix4(), transform = new THREE.Matrix4();
   let triangleTests = 0;
-  for (const part of fixed) {
-    part.geometry.computeBoundingBox(); const box = part.geometry.boundingBox.clone().expandByScalar(-epsilon);
+  for (const part of parts) {
+    const box = part.box.clone().expandByScalar(-epsilon);
     const worldBox = box.clone().applyMatrix4(part.matrixWorld); inverse.copy(part.matrixWorld).invert();
     for (const obstacle of meshes) {
       const bounds = cached.get(obstacle.uuid); if (!worldBox.intersectsBox(bounds.world)) continue;
@@ -373,12 +367,102 @@ export function auditDoorHostGeometry(THREE, group, obstacles = [], options = {}
           hit = hits.length % 2 === 1;
         }
       }
-      if (hit) collisions.push({fixedId: part.name, obstacleId: obstacle.name || obstacle.uuid});
+      if (hit) collisions.push({volumeId: part.name, obstacleId: obstacle.name || obstacle.uuid});
     }
   }
-  return {clear: collisions.length === 0, collisions, fixedMeshCount: fixed.length, externalObstacleMeshCount: meshes.length,
-    triangleTests, contactEpsilonM: epsilon, basis: 'actual_external_mesh_triangles_against_fixed_partition_frame_local_boxes',
+  return {collisions, triangleTests};
+}
+/** Fixed partition/frame vs external physical geometry; intended face contact is
+ * ignored by box erosion, not by making the host or floor transparent. */
+export function auditDoorHostGeometry(THREE, group, obstacles = [], options = {}) {
+  requireRuntime(THREE); doorParts(group);
+  for (const key of Object.keys(options)) if (key !== 'epsilon') throw Error(`Unknown fixed-host audit option: ${key}`);
+  const epsilon = options.epsilon ?? 1e-5;
+  if (!Number.isFinite(epsilon) || epsilon < 0 || epsilon > 0.001) throw Error('Fixed-host contact epsilon must be 0–0.001 m');
+  const meshes = obstacleMeshes(obstacles, group), fixed = [];
+  group.updateWorldMatrix(true, true);
+  group.traverse(mesh => {
+    if (mesh.isMesh && ['proposed-partition-solid', 'fixed-frame-solid'].includes(mesh.userData.role)) {
+      mesh.geometry.computeBoundingBox(); fixed.push({name: mesh.name, box: mesh.geometry.boundingBox, matrixWorld: mesh.matrixWorld});
+    }
+  });
+  const result = auditBoxesAgainstMeshes(THREE, fixed, meshes, epsilon);
+  return {clear: result.collisions.length === 0, collisions: result.collisions.map(c => ({fixedId: c.volumeId, obstacleId: c.obstacleId})),
+    fixedMeshCount: fixed.length, externalObstacleMeshCount: meshes.length, triangleTests: result.triangleTests,
+    contactEpsilonM: epsilon, basis: 'actual_external_mesh_triangles_against_fixed_partition_frame_local_boxes',
     buildingComplianceVerified: false, structuralSupportVerified: false};
+}
+/**
+ * A bounded, authored rectangular-body corridor proof at the CURRENT door pose.
+ * Each path segment is swept by a square floor footprint; union of the resulting
+ * boxes includes the corner turn. No point-only body clearance approximation.
+ * Both branches turn on the retained slab before the center-gap guard and end
+ * at arrival/departure lane centres. This is NOT a walk controller, full stair
+ * route, human-factors model, accessibility rule, or navigation/egress approval.
+ */
+export function auditDoorPassage(THREE, group, obstacles = [], options = {}) {
+  requireRuntime(THREE); doorParts(group); group.updateWorldMatrix(true, true);
+  const defaults = {width: 0.7, height: 1.9, approachDepth: 1, epsilon: 1e-5};
+  for (const key of Object.keys(options)) if (!(key in defaults)) throw Error(`Unknown passage option: ${key}`);
+  const o = {...defaults, ...options};
+  for (const [key, value] of Object.entries(o)) if (!Number.isFinite(value)) throw Error(`Passage ${key} must be finite`);
+  if (o.width < 0.3 || o.width > 1.5 || o.height < 0.5 || o.height > 2.5 || o.approachDepth < 0.3 || o.approachDepth > 2
+    || o.epsilon < 0 || o.epsilon > 0.001) throw Error('Passage dimensions exceed authored bounded experiment limits, not code rules');
+  const p = group.userData.state, c = p.config, connection = p.landingConnection;
+  if (!connection || !p.support.hostSlabLoops) throw Error('Derived landing connection and actual host slab loops required');
+  const landingZ = c.runOffset - connection.landingDepth / 2, half = o.width / 2;
+  const start = [0, 0, o.approachDepth], turn = [0, 0, landingZ];
+  const paths = ['departure', 'arrival'].map(lane => {
+    const x = c.lateralOffset + (lane === 'departure' ? 1 : -1) * connection.laneCenterLateralM;
+    const nodesDoorLocal = [start, turn, [x, 0, landingZ]];
+    return {lane, nodesDoorLocal,
+      nodesStairRunLateral: nodesDoorLocal.map(q => [c.runOffset - q[2], c.lateralOffset - q[0]]),
+      nodesWorld: nodesDoorLocal.map(q => new THREE.Vector3(...q).applyMatrix4(group.matrixWorld).toArray()),
+      endpointParentFloorId: p.parentFloorId};
+  });
+  const boxes = [{name: 'door-passage:approach-through-frame', box: new THREE.Box3(
+    new THREE.Vector3(-half, 0, Math.min(start[2], turn[2]) - half),
+    new THREE.Vector3(half, o.height, Math.max(start[2], turn[2]) + half)), matrixWorld: group.matrixWorld}];
+  for (const path of paths) {
+    const endX = path.nodesDoorLocal[2][0];
+    boxes.push({name: `door-passage:turn-to-${path.lane}`, box: new THREE.Box3(
+      new THREE.Vector3(Math.min(0, endX) - half, 0, landingZ - half),
+      new THREE.Vector3(Math.max(0, endX) + half, o.height, landingZ + half)), matrixWorld: group.matrixWorld});
+  }
+  const external = obstacleMeshes(obstacles, group), self = [];
+  group.traverse(mesh => {if (mesh.isMesh) self.push(mesh);});
+  const result = auditBoxesAgainstMeshes(THREE, boxes, [...external, ...self], o.epsilon);
+  const hostMeshes = external.filter(m => m.name === p.hostSlabId || m.userData.slabId === p.hostSlabId);
+  const supportErrors = [], supportLoops = [], up = new THREE.Vector3(0, 1, 0).transformDirection(group.matrixWorld);
+  let supportRayCount = 0;
+  const basisPoint = (x, z) => [p.basis.originEastUpSouth[0] + p.basis.x[0] * x + p.basis.z[0] * z,
+    -p.basis.originEastUpSouth[2] - p.basis.x[2] * x - p.basis.z[2] * z];
+  const loops = p.support.hostSlabLoops, supportState = {footprint: {sourceLoops: [loops[0]]},
+    openings: loops.slice(1).map(loop => ({hostSlabId: p.hostSlabId, footprintLoop: loop}))};
+  for (const volume of boxes) {
+    const b = volume.box, loop = [[b.min.x, b.min.z], [b.max.x, b.min.z], [b.max.x, b.max.z], [b.min.x, b.max.z]].map(([x, z]) => basisPoint(x, z));
+    supportLoops.push({volumeId: volume.name, footprintLoop: loop});
+    try {assertSupported(loop, supportState, p.hostSlabId, volume.name);} catch (e) {supportErrors.push(e.message);}
+    const nx = Math.max(1, Math.ceil((b.max.x - b.min.x) / 0.15)), nz = Math.max(1, Math.ceil((b.max.z - b.min.z) / 0.15));
+    for (let ix = 0; ix <= nx; ix++) for (let iz = 0; iz <= nz; iz++) {
+      const point = new THREE.Vector3(b.min.x + (b.max.x - b.min.x) * ix / nx, 0, b.min.z + (b.max.z - b.min.z) * iz / nz).applyMatrix4(group.matrixWorld);
+      const ray = new THREE.Raycaster(point.clone().addScaledVector(up, 0.01), up.clone().negate(), 0, 0.02);
+      const hit = ray.intersectObjects(hostMeshes, false)[0]; supportRayCount++;
+      if (!hit || hit.point.distanceTo(point) > 2e-5) supportErrors.push(`Actual ${p.hostSlabId} support ray failed for ${volume.name} sample ${ix},${iz}`);
+    }
+  }
+  const geometryClear = result.collisions.length === 0, supported = supportErrors.length === 0;
+  return {schema: 'kaopu.bounded-door-to-landing-passage-audit/0.1',
+    clear: geometryClear && supported && p.effectiveEnabled, geometryClear, supported, effectiveEnabled: p.effectiveEnabled,
+    doorMatrixWorld: Array.from(group.matrixWorld.elements),
+    parentFloorId: p.parentFloorId, hostSlabId: p.hostSlabId, thresholdFFLM: p.threshold.elevationM,
+    doorAngleDeg: group.userData.currentAngleDeg, swing: c.swing, widthM: o.width, heightM: o.height,
+    squareFootprintM: [o.width, o.width], paths, volumes: boxes.map(v => ({volumeId: v.name, minDoorLocal: v.box.min.toArray(), maxDoorLocal: v.box.max.toArray()})),
+    collisions: result.collisions, triangleTests: result.triangleTests, externalObstacleMeshCount: external.length, doorComponentMeshCount: self.length,
+    supportRayCount, supportErrors, supportLoops, contactEpsilonM: o.epsilon,
+    basis: 'full_swept_rectangular_prisms_against_actual_mesh_triangles_plus_full_slab_footprint_containment_and_support_rays',
+    navigationConnectionEnabled: false, egressCertified: false, buildingComplianceVerified: false,
+    warning: 'Bounded authored body-volume check to the two landing lane centres only. Not an accessible route, continuous stair navigation, or safety certification.'};
 }
 /** Transactional pose edit. Rejected angle/collision leaves pose and state intact. */
 export function setDoorAngle(THREE, group, angleDeg, obstacles = [], options = {}) {

@@ -266,23 +266,68 @@ export function auditGuardGeometry(THREE, derived, group, walkingRoots, {contact
     return result;
   };
   const walkingData = walking.map(mesh => ({mesh, triangles: triangles(mesh), bounds: new THREE.Box3().setFromObject(mesh)}));
-  const supports = [], collisions = [];
+  const supports = [], collisions = [], boundaryCache = new Map();
   const up = new THREE.Vector3(0, 1, 0).transformDirection(group.matrixWorld);
+  const groupInverse = group.matrixWorld.clone().invert();
+  const rayStartAboveBaseM = 0.0005, rayMaximumDistanceM = 0.001;
+  function surfaceBoundary(host, elevation) {
+    const cacheKey = `${host.uuid}:${elevation.toFixed(5)}`;
+    if (boundaryCache.has(cacheKey)) return boundaryCache.get(cacheKey);
+    const edges = new Map(), data = walkingData.find(d => d.mesh === host);
+    for (const tri of data.triangles) {
+      const normal = new THREE.Triangle(...tri).getNormal(new THREE.Vector3());
+      if (normal.dot(up) < 0.999999 || tri.some(p => Math.abs(p.dot(up) - elevation) > 2e-5)) continue;
+      for (let i = 0; i < 3; i++) {
+        const a = tri[i], b = tri[(i + 1) % 3], key = [keyPoint(a.toArray()), keyPoint(b.toArray())].sort().join('|');
+        const record = edges.get(key) ?? {a, b, count: 0}; record.count++; edges.set(key, record);
+      }
+    }
+    // Internal triangulation diagonals occur twice. Only actual surface/hole
+    // perimeter edges occur once, including individual tread/riser boundaries.
+    const boundary = [...edges.values()].filter(edge => edge.count === 1);
+    boundaryCache.set(cacheKey, boundary); return boundary;
+  }
   for (const post of derived.posts.filter(p => p.effectiveEnabled)) {
     const mesh = group.getObjectByName(post.solidId), host = walking.find(m => m.name === post.support.hostGeometryId);
-    if (!host) {supports.push({supportId: post.solidId, supported: false, reason: 'actual support host mesh absent'}); continue;}
-    const base = new THREE.Vector3(...post.start).applyMatrix4(group.matrixWorld), samples = [base];
-    const pos = mesh.geometry.attributes.position, unique = new Set();
-    for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - post.start[1]) < 2e-5) {
-      const p = vertex(mesh, i), k = keyPoint(p.toArray()); if (!unique.has(k)) {unique.add(k); samples.push(p);}
-    }
-    let supported = true, maxErrorM = 0;
+    if (!host) {supports.push({supportId: post.solidId, hostGeometryId: post.support.hostGeometryId,
+      supported: false, reason: 'actual named support host mesh absent'}); continue;}
+    const expectedBase = new THREE.Vector3(...post.start).applyMatrix4(group.matrixWorld);
+    const position = mesh.geometry.attributes.position, unique = new Map();
+    const vertices = Array.from({length: position.count}, (_, i) => vertex(mesh, i));
+    const actualBottomPlane = Math.min(...vertices.map(p => p.dot(up)));
+    for (const p of vertices) if (Math.abs(p.dot(up) - actualBottomPlane) < 2e-6) unique.set(keyPoint(p.toArray()), p);
+    const cap = [...unique.values()], base = cap.reduce((sum, p) => sum.add(p), new THREE.Vector3()).multiplyScalar(1 / cap.length);
+    const samples = [base, ...cap], normalMatrix = new THREE.Matrix3().getNormalMatrix(host.matrixWorld);
+    const geometryBaseErrorM = expectedBase.distanceTo(base);
+    let supported = cap.length >= 4 && geometryBaseErrorM <= contactToleranceM, maxErrorM = 0, minimumNormalDot = 1;
+    let minimumHitElevationM = Infinity, maximumHitElevationM = -Infinity;
     for (const p of samples) {
-      const hit = new THREE.Raycaster(p.clone().addScaledVector(up, 0.005), up.clone().negate(), 0, 0.01).intersectObject(host, false)[0];
+      // Exactly the declared host, never the complete scene or a lower fallback.
+      // A 1 mm ray cannot catch a lower tread/slab and pass as intended support.
+      const hit = new THREE.Raycaster(p.clone().addScaledVector(up, rayStartAboveBaseM), up.clone().negate(),
+        0, rayMaximumDistanceM).intersectObject(host, false)[0];
       const error = hit ? hit.point.distanceTo(p) : Infinity;
-      maxErrorM = Math.max(maxErrorM, error); if (error > contactToleranceM) supported = false;
+      const normalDot = hit ? hit.face.normal.clone().applyNormalMatrix(normalMatrix).dot(up) : -1;
+      maxErrorM = Math.max(maxErrorM, error); minimumNormalDot = Math.min(minimumNormalDot, normalDot);
+      if (!hit || hit.object !== host || error > contactToleranceM || normalDot < 0.999999) supported = false;
+      if (hit) {const h = hit.point.clone().applyMatrix4(groupInverse).y;
+        minimumHitElevationM = Math.min(minimumHitElevationM, h); maximumHitElevationM = Math.max(maximumHitElevationM, h);}
     }
-    supports.push({supportId: post.solidId, hostGeometryId: host.name, supported, sampleCount: samples.length, maximumContactErrorM: Number.isFinite(maxErrorM) ? maxErrorM : null});
+    const boundary = surfaceBoundary(host, expectedBase.dot(up));
+    const centerBoundaryDistanceM = boundary.length ? Math.min(...boundary.map(edge =>
+      new THREE.Line3(edge.a, edge.b).closestPointToPoint(base, true, new THREE.Vector3()).distanceTo(base))) : null;
+    // Use the complete circular cap radius, not the smaller projected 12-sided
+    // polygon width. This leaves a conservative retained-support margin.
+    const fullCapRadiusM = Math.max(post.radius * mesh.matrixWorld.getMaxScaleOnAxis(), ...cap.map(p => p.distanceTo(base)));
+    const retainedMarginM = centerBoundaryDistanceM === null ? null : centerBoundaryDistanceM - fullCapRadiusM;
+    if (retainedMarginM === null || retainedMarginM < -contactToleranceM) supported = false;
+    supports.push({supportId: post.solidId, hostGeometryId: host.name, supportKind: post.support.supportKind,
+      expectedBaseLocalEastUpSouth: copy(post.start), actualBaseLocalEastUpSouth: base.clone().applyMatrix4(groupInverse).toArray(),
+      supported, sampleCount: samples.length, maximumContactErrorM: Number.isFinite(maxErrorM) ? maxErrorM : null,
+      geometryBaseErrorM, minimumHostTopNormalDot: minimumNormalDot,
+      actualHostHitElevationRangeM: Number.isFinite(minimumHitElevationM) ? [minimumHitElevationM, maximumHitElevationM] : null,
+      surfaceBoundaryEdgeCount: boundary.length, fullCapRadiusM, centerBoundaryDistanceM, retainedMarginM,
+      boundaryBasis: 'actual_named_host_upward_coplanar_mesh_triangle_perimeter_excluding_internal_diagonals'});
   }
   let triangleTests = 0, broadPhasePairs = 0;
   const insideClosedMesh = (point, tris) => {
@@ -329,6 +374,9 @@ export function auditGuardGeometry(THREE, derived, group, walkingRoots, {contact
   const result = {valid: !unsupported.length && !collisions.length, actualMeshesChecked: true,
     supportContactCount: supports.length, supportSampleCount: supports.reduce((n, p) => n + (p.sampleCount ?? 0), 0),
     supportContacts: supports, unsupported, collisions, triangleTests, broadPhasePairs, contactToleranceM,
+    rayStartAboveBaseM, rayMaximumDistanceM, intendedNamedHostOnly: true,
+    minimumRetainedMarginM: supports.length && supports.every(p => p.retainedMarginM != null) ? Math.min(...supports.map(p => p.retainedMarginM)) : null,
+    minimumHostTopNormalDot: supports.length ? Math.min(...supports.map(p => p.minimumHostTopNormalDot ?? -1)) : null,
     basis: 'actual_guard_convex_triangle_planes_vs_actual_walking_triangles_plus_full_post_base_support_rays',
     structuralCertification: false, intendedPostRailAssemblyJointsExcluded: true};
   if (reject && !result.valid) throw Error(`Guard geometry rejected: ${unsupported.length} unsupported bases, ${collisions.length} unintended walking-solid overlaps`);
