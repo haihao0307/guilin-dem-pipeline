@@ -55,12 +55,24 @@ async function main(){
   const keep=new Set(actors.map(a=>a.root));for(const child of [...viewer.scene.children])if(!keep.has(child))viewer.scene.remove(child);
   const courtyard=createCourtyard(THREE);viewer.scene.add(courtyard.group);
   viewer.scene.background=new THREE.Color('#e8e1d3');
-  const hemi=new THREE.HemisphereLight(0xf8f4e7,0x8b8b76,2.2);viewer.scene.add(hemi);
-  const sun=new THREE.DirectionalLight(0xffefd6,3.4);sun.position.set(-4,9,7);sun.target.position.set(0,0,-.5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-9,right:9,top:8,bottom:-8,near:.5,far:25});sun.shadow.bias=-.0005;sun.shadow.normalBias=.018;viewer.scene.add(sun,sun.target);
-  const fill=new THREE.DirectionalLight(0xdce9ef,.65);fill.position.set(5,4,-2);viewer.scene.add(fill);
+  // R07's setFoldLook() disables only direct scene-child lights on each draw.
+  // Its own rigs use Groups; our environment follows that same ownership
+  // boundary while retaining the native renderer and all material hooks.
+  const lighting=new THREE.Group();lighting.name='courtyard/environment-lighting';viewer.scene.add(lighting);
+  const hemi=new THREE.HemisphereLight(0xf8f4e7,0x8b8b76,2.2);hemi.name='courtyard/sky';
+  const sun=new THREE.DirectionalLight(0xffefd6,3.4);sun.name='courtyard/sun';sun.position.set(-4,9,7);sun.target.position.set(0,0,-.5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-9,right:9,top:8,bottom:-8,near:.5,far:25});sun.shadow.bias=-.0005;sun.shadow.normalBias=.018;
+  const fill=new THREE.DirectionalLight(0xdce9ef,.65);fill.name='courtyard/fill';fill.position.set(5,4,-2);
+  lighting.add(hemi,sun,sun.target,fill,fill.target);
+  const lightingReport=()=>({owner:lighting.name,visible:lighting.visible,lights:[hemi,sun,fill].map(light=>{
+    let effectiveVisible=true;for(let node=light;node;node=node.parent)if(!node.visible)effectiveVisible=false;
+    return {name:light.name,type:light.type,parent:light.parent?.name,visible:light.visible,effectiveVisible,
+      enabled:effectiveVisible&&light.intensity>0,intensity:light.intensity,color:light.color.getHexString(),position:light.position.toArray()};
+  }),scope:'the same three authored environment lights under one scene Group; native render/material hooks retained'});
   viewer.renderer.shadowMap.enabled=true;viewer.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));
-  viewer.camera.near=.05;viewer.camera.far=65;viewer.camera.fov=38;viewer.camera.zoom=1;viewer.camera.updateProjectionMatrix();
-  viewer.orbit.minDistance=2;viewer.orbit.maxDistance=26;viewer.orbit.maxPolarAngle=Math.PI*.46;viewer.orbit.enablePan=true;
+  viewer.camera.near=.05;viewer.camera.far=100;viewer.camera.fov=38;viewer.camera.zoom=1;viewer.camera.updateProjectionMatrix();
+  viewer.orbit.minDistance=2;viewer.orbit.maxDistance=60;viewer.orbit.maxPolarAngle=Math.PI*.46;viewer.orbit.enablePan=true;
+  const sceneBounds=new THREE.Box3().setFromObject(courtyard.group),sceneCorners=[];
+  for(const x of [sceneBounds.min.x,sceneBounds.max.x])for(const y of [sceneBounds.min.y,sceneBounds.max.y])for(const z of [sceneBounds.min.z,sceneBounds.max.z])sceneCorners.push(new THREE.Vector3(x,y,z));
   const renderQueue=manageRendering(viewer);
   const sim=new LifeSimulation({seed:20261020,colliders:courtyard.colliders,spots:courtyard.spots});
   // The visible self-service shelf holds six portions, matching available stock.
@@ -78,15 +90,24 @@ async function main(){
   for(const a of sim.actors){const el=document.createElement('button');el.className='person-label '+a.id.toLowerCase();el.innerHTML=`<i></i>${a.name}<span>…</span>`;el.setAttribute('aria-label','观察'+a.name);el.onclick=()=>select(a.id,true);$('person-labels').append(el);labelElements.set(a.id,el);}
 
   function select(id,follow=false){selected=id;if(follow)camera('follow');updateUI();}
+  function fitOverview(){
+    const target=sceneBounds.getCenter(new THREE.Vector3()),direction=new THREE.Vector3(9.6,8.6,14.2).normalize();
+    const right=new THREE.Vector3().crossVectors(viewer.camera.up,direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize();
+    const tanY=Math.tan(THREE.MathUtils.degToRad(viewer.camera.fov*.5)),tanX=tanY*viewer.camera.aspect;
+    let distance=1;
+    for(const corner of sceneCorners){const delta=corner.clone().sub(target),depth=delta.dot(direction);
+      distance=Math.max(distance,depth+Math.abs(delta.dot(right))/(tanX*.89),depth+Math.abs(delta.dot(up))/(tanY*.76));}
+    viewer.orbit.target.copy(target);viewer.camera.position.copy(target).addScaledVector(direction,distance);
+  }
   function camera(mode){
     cameraMode=mode;const actor=sim.actor(selected);let target,p;
-    if(mode==='all'){target=[-.4,.7,.0];p=[9.2,9.3,14.2];}
+    if(mode==='all')fitOverview();
     else if(mode==='near'){target=[-.55,.78,.30];p=[5.8,5.6,9.7];}
     else{target=[actor.x,1.05,actor.z];p=[actor.x+2.8,2.65,actor.z+4.5];}
-    viewer.orbit.target.set(...target);viewer.camera.position.set(...p);viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();
+    if(mode!=='all'){viewer.orbit.target.set(...target);viewer.camera.position.set(...p);}viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();
     for(const b of app.querySelectorAll('[data-camera]'))b.setAttribute('aria-pressed',String(b.dataset.camera===mode));viewer.render();
   }
-  function resize(){const r=stage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;viewer.camera.updateProjectionMatrix();viewer.render();}
+  function resize(){const r=stage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;if(cameraMode==='all'){fitOverview();viewer.orbit.update();}viewer.camera.updateProjectionMatrix();viewer.render();}
   new ResizeObserver(resize).observe(stage);addEventListener('resize',resize);
   function labels(){const r=stage.getBoundingClientRect();for(const actor of actors){const el=labelElements.get(actor.id),mouth=reports[actor.id]?.mouth;const p=(mouth?new THREE.Vector3(mouth[0],mouth[1]+.34,mouth[2]):new THREE.Vector3(actor.root.position.x,actor.measurements.heightM+.19,actor.root.position.z)).project(viewer.camera);el.style.transform=`translate(-50%,-100%) translate(${(p.x*.5+.5)*r.width}px,${(-p.y*.5+.5)*r.height}px)`;el.hidden=p.z>1||p.z< -1;el.classList.toggle('selected',actor.id===selected);}}
   const showData=value=>{$('data-panel').hidden=!value;$('data-toggle').setAttribute('aria-expanded',String(value));updateUI();};
@@ -101,7 +122,7 @@ async function main(){
   function currentReport(){return {version:window.__NPC_BUILD__,ready,paused,speed,time:sim.time,selected,cameraMode,
     startup:window.__NPC_STARTUP__||null,
     source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,binding:a.binding.report}))},
-    simulation:sim.snapshot(),motions:reports,items:items.snapshot(),audit,render:renderQueue.status(),garments:dresses.map(d=>d?.report||null),scene:courtyard.metrics,
+    simulation:sim.snapshot(),motions:reports,items:items.snapshot(),audit,render:renderQueue.status(),garments:dresses.map(d=>d?.report||null),scene:courtyard.metrics,lighting:lightingReport(),
     assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[],
       completed:window.__NPC_ASSETS__?.completed||[],failed:window.__NPC_ASSETS__?.failed||[],nativeTransport:window.__R05_STREAM__?.report?.()?.transport||null},errors,visualAcceptance:false,productionReady:false};}
   function updateUI(){

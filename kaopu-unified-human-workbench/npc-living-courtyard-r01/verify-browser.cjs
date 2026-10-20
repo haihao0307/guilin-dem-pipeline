@@ -213,6 +213,10 @@ async function nativeRenderEvidence() {
           programID:p?.id??null,linked:!!p?.program&&gl.getProgramParameter(p.program,gl.LINK_STATUS),
           log:p?.program?gl.getProgramInfoLog(p.program):'missing GPU program'};})});
     });
+    const lights=[];viewer.scene.traverse(light=>{if(!light.isLight)return;let effectiveVisible=true;
+      for(let node=light;node;node=node.parent)if(!node.visible)effectiveVisible=false;
+      lights.push({name:light.name,type:light.type,intensity:light.intensity,color:light.color?.getHexString(),
+        visible:light.visible,effectiveVisible,parent:light.parent?.name,position:light.position.toArray()});});
     const debug=gl.getExtension('WEBGL_debug_renderer_info');
     return{sameThreeRuntime:viewer.mesh?.constructor===window.__NPC_THREE__?.Mesh,
       meshes,contextLost:gl.isContextLost(),renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
@@ -222,8 +226,7 @@ async function nativeRenderEvidence() {
       render:{...renderer.info.render},memory:{...renderer.info.memory},events:window.__NPC_VERIFY_EVENTS__||[],
       finalRaster:{pixelRatio:renderer.getPixelRatio(),expectedPixelRatio:Math.min(devicePixelRatio||1,1.25),
         width:renderer.domElement.width,height:renderer.domElement.height,css:renderer.domElement.getBoundingClientRect().toJSON()},
-      sceneLighting:{lights:viewer.scene.children.filter(x=>x.isLight).map(x=>({type:x.type,intensity:x.intensity,
-        color:x.color?.getHexString(),visible:x.visible,position:x.position.toArray()})),
+      sceneLighting:{lights,
         overrideMaterial:viewer.scene.overrideMaterial?.type||null,toneMapping:renderer.toneMapping,
         exposure:renderer.toneMappingExposure,camera:viewer.camera.position.toArray(),aspect:viewer.camera.aspect}};
   },undefined,FRAME_MS);
@@ -232,6 +235,7 @@ async function nativeRenderEvidence() {
 async function responsiveEvidence() {
   await pause(true);await hideDataPanel();await bounded('resize actual browser viewport to 390 x 844',()=>page.setViewportSize({width:390,height:844}));
   await click('[data-camera="all"]');await screenshot('06-phone-390x844');
+  await overviewEvidence('phone-overview-framing');
   await hideDataPanel();
   const layout=await evaluate('read actual responsive layout',()=>{const rect=s=>document.querySelector(s)?.getBoundingClientRect().toJSON();
     return{width:innerWidth,height:innerHeight,documentWidth:document.documentElement.scrollWidth,
@@ -250,6 +254,22 @@ async function responsiveEvidence() {
   await saveDOM('phone-dom');report.phoneViewport={tested:true,physicalPhone:false,layout};
   await bounded('restore desktop viewport',()=>page.setViewportSize(report.environment.viewport));
   await click('[data-camera="all"]');await ensureDataPanel();return report.phoneViewport;
+}
+
+async function overviewEvidence(name){
+  const frame=await evaluate('read actual full-courtyard projection '+name,()=>{
+    const T=window.__NPC_THREE__,viewer=window.__IDENTITY_QA__.viewer(),group=viewer.scene.getObjectByName('KAOPU-original-living-courtyard');
+    if(!group)throw Error('The actual original courtyard is missing');
+    const box=new T.Box3().setFromObject(group),corners=[];
+    for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+      corners.push(new T.Vector3(x,y,z).project(viewer.camera).toArray());}
+    return{bounds:{min:box.min.toArray(),max:box.max.toArray()},corners,aspect:viewer.camera.aspect,
+      camera:viewer.camera.position.toArray(),target:viewer.orbit.target.toArray()};
+  });
+  put(name+'.json',frame);
+  assert(frame.corners.every(p=>p.every(Number.isFinite)&&Math.abs(p[0])<=.90&&Math.abs(p[1])<=.77&&p[2]>-1&&p[2]<1),
+    'Full overview retains the actual courtyard bounds with visible margin: '+name);
+  return frame;
 }
 
 function contactProof(evidence,kind) {
@@ -500,19 +520,28 @@ async function main() {
     assert.equal(native.finalRaster.pixelRatio,native.finalRaster.expectedPixelRatio,'Final courtyard restores its full display raster after hidden startup');
     assert(Math.abs(native.finalRaster.width-native.finalRaster.css.width*native.finalRaster.pixelRatio)<=1);
     assert(Math.abs(native.finalRaster.height-native.finalRaster.css.height*native.finalRaster.pixelRatio)<=1);
+    const environment=native.sceneLighting.lights.filter(light=>light.parent==='courtyard/environment-lighting');
+    assert.equal(environment.length,3,'All three authored courtyard lights are present under their native-compatible Group');
+    assert(environment.every(light=>light.effectiveVisible&&light.intensity>0),'The actual completed frame retains active courtyard illumination');
     return native;
   });
   await check('real first/all/near and both full-person screenshots',async()=>{
     await screenshot('01-first-frame');await hideDataPanel();await click('[data-camera="all"]');await screenshot('02-all');
+    await overviewEvidence('desktop-overview-framing');
     const desktop=await evaluate('read actual desktop app layout',()=>{const app=document.querySelector('#life-app'),style=getComputedStyle(app);
       return{width:innerWidth,height:innerHeight,app:app.getBoundingClientRect().toJSON(),
         journal:document.querySelector('#life-app>.journal').getBoundingClientRect().toJSON(),
         view:document.querySelector('#life-view').getBoundingClientRect().toJSON(),padding:style.padding,gap:style.gap,
-        brandBackground:getComputedStyle(document.querySelector('#life-app .brand')).backgroundColor};});
+        brandBackground:getComputedStyle(document.querySelector('#life-app .brand')).backgroundColor,
+        brand:document.querySelector('#life-app .brand').getBoundingClientRect().toJSON(),
+        people:document.querySelector('#life-app .people').getBoundingClientRect().toJSON(),
+        originalOverlays:[...document.querySelectorAll('#stage>.stage-hint,#stage>#model-caption')].map(el=>({class:el.className,display:getComputedStyle(el).display}))};});
     put('desktop-layout.json',desktop);assert(Math.abs(desktop.journal.width-310)<=1,'Journal retains its authored desktop width');
     assert(desktop.view.width>600,'The actual 3D courtyard has the main desktop viewing area');
     assert.equal(desktop.padding,'0px');assert.equal(desktop.gap,'0px');
     assert.equal(desktop.brandBackground,'rgba(0, 0, 0, 0)','Canonical host header styles do not leak into the app');
+    assert(desktop.people.top>=desktop.brand.bottom+20,'Journal brand and people section do not overlap');
+    assert(desktop.originalOverlays.every(el=>el.display==='none'),'Original workbench captions stay out of the courtyard UI');
     await hideDataPanel();await click('[data-camera="near"]');await screenshot('03-near');
     for(const id of ['A','B']){await hideDataPanel();await click('[data-person="'+id+'"]');await click('[data-camera="follow"]');await screenshot(id==='A'?'04-person-A':'05-person-B');}
     await saveDOM('desktop-dom');return{screenshots:report.screenshots.map(s=>s.file),visualAcceptance:false};
