@@ -31,7 +31,9 @@ with sync_playwright() as pw:
   assert s['stair']['lowerFFLM']==s['floors']['floors'][0]['fflM'] and s['stair']['upperFFLM']==s['floors']['floors'][1]['fflM']
   assert not s['stair']['circulationComplete'] and not s['stair']['navigationConnectionEnabled'] and not s['stair']['evacuationPermitted']
   shot(page,'stairs-closeup.png');report['checks'].append({'default_actual_stair_and_hosted_hole':s['stair']})
-  page.locator('#stairGhost').uncheck();shot(page,'stairs-opaque-hosts.png');assert not state(page)['floorGhost']
+  page.locator('#stairOpening').click();shot(page,'stairs-opaque-hosts.png');assert not state(page)['floorGhost']
+  visible=page.evaluate('''async () => {const T=await import(new URL('../hk-three-buildings-r01/viewer/vendor/three.module.js',location.href));const a=window.__BUILDING_MOTHER__,p=a.snapshot().stair,root=a.roots[1],meshes=[...root.userData.stairs.children,...root.userData.floors.children.filter(o=>['slab-001','slab-002'].includes(o.userData.slabId))];return p.walkingPatches.map(patch=>{const en=[0,1].map(i=>patch.footprintLoop.reduce((s,p)=>s+p[i],0)/patch.footprintLoop.length),target=new T.Vector3(en[0],patch.elevationM,-en[1]).applyMatrix4(root.matrixWorld),d=target.clone().sub(a.camera.position),hit=new T.Raycaster(a.camera.position,d.clone().normalize()).intersectObjects(meshes,false)[0];return {id:patch.id,visible:!!hit&&Math.abs(hit.distance-d.length())<.01};});}''')
+  assert len(visible)==21 and all(v['visible'] for v in visible);report['checks'].append({'opaque_view_actual_triangle_visibility_all_18_treads_and_3_landings':visible})
   page.locator('#stairOverview').click();shot(page,'two-floor-overview.png')
   page.evaluate('window.__BUILDING_MOTHER__.setFloors({floorToFloor:3.4,slabThickness:0.24})');s=state(page);assert abs(s['stair']['floorDeltaM']-3.4)<1e-8
   assert s['stair']['dimensions']['totalRisers']==22;assert abs(s['stair']['dimensions']['actualRiser']*22-3.4)<1e-8
