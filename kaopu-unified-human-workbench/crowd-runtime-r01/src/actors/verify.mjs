@@ -8,13 +8,18 @@ import {readFile, writeFile} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import * as THREE from 'three';
-import {NativeMotion} from '../../../perf-audit/hair/f13/vendor/fiber/NativeMotion.mjs';
-import {buildStyle, STYLES} from '../../../perf-audit/garments/shoe-workshop/r14/src/model.mjs';
+import {NativeMotion} from '../../vendor/f13/vendor/fiber/NativeMotion.mjs';
+import {THREE as motionTHREE} from '../../vendor/f13/vendor/motion/Core.mjs';
+import * as explicitVendorTHREE from '../cloth/upstream/vendor/three.module.js';
+import {buildStyle, STYLES} from '../../vendor/shoe-workshop/r14/src/model.mjs';
 import {createNativeActorFactory} from './NativeActorFactory.mjs';
 import {measureNativeFeet, createNativeShoeFactory} from './NativeShoeBinding.mjs';
 
 globalThis.window = {};
-const fixtureBytes = await readFile(new URL('../../../perf-audit/garments/mp05-r10/assets/native-person.json.gz', import.meta.url));
+assert.equal(THREE.Mesh, motionTHREE.Mesh);
+assert.equal(THREE.Mesh, explicitVendorTHREE.Mesh);
+assert.equal(THREE.Mesh, (await import(new URL('../cloth/upstream/vendor/three.module.js', import.meta.url).href)).Mesh);
+const fixtureBytes = await readFile(new URL('../cloth/upstream/assets/native-person.json.gz', import.meta.url));
 const fixture = JSON.parse(gunzipSync(fixtureBytes));
 const model = {...fixture, positions: Float32Array.from(fixture.positions), faces: Uint32Array.from(fixture.faces),
   lastBodyDriver: {rig: fixture.rig, packet: {weights: fixture.rig.weights, restPositionsPerInfluence: fixture.rig.restPositionsPerInfluence}}};
@@ -23,7 +28,17 @@ const display = new Float32Array(model.positions.length);
 for (let i = 0; i < display.length; i += 3) display.set([model.positions[i], model.positions[i + 2], -model.positions[i + 1]], i);
 geometry.setAttribute('position', new THREE.BufferAttribute(display, 3)); geometry.setIndex(new THREE.BufferAttribute(model.faces, 1));
 geometry.computeVertexNormals();
-geometry.addGroup(0, 12000, 0); geometry.addGroup(12000, model.faces.length - 12000, 1);
+// Match the actual F13 procedural renderer's two geometry identities: native
+// ancestry retains the original indices; visible geometry shares attributes
+// and only reorders complete triangles into the original material groups.
+const visibleGeometry = new THREE.BufferGeometry();
+visibleGeometry.attributes = geometry.attributes;
+visibleGeometry.morphAttributes = geometry.morphAttributes;
+const sortedIndex = new Uint32Array(model.faces.length);
+sortedIndex.set(model.faces.subarray(12000)); sortedIndex.set(model.faces.subarray(0, 12000), model.faces.length - 12000);
+visibleGeometry.setIndex(new THREE.BufferAttribute(sortedIndex, 1));
+visibleGeometry.addGroup(0, model.faces.length - 12000, 0);
+visibleGeometry.addGroup(model.faces.length - 12000, 12000, 1);
 const material = new THREE.MeshPhysicalMaterial({roughness: .42}), secondary = new THREE.MeshStandardMaterial({roughness: .71});
 const immutableShapeTexture = new THREE.DataTexture(new Float32Array([.1, .2, .3, 1]), 1, 1);
 const optical = {uFPass: {value: 0}, uCKeyView: {value: new THREE.Vector3(1, 2, 3)},
@@ -32,22 +47,41 @@ material.onBeforeCompile = shader => {
   Object.assign(shader.uniforms, optical);
 };
 const scene = new THREE.Scene(), renderer = {getContext() {throw Error('A GPU operation is outside this test');}};
-const mesh = new THREE.Mesh(geometry, [material, secondary]);
+const mesh = new THREE.Mesh(visibleGeometry, [material, secondary]);
 mesh.position.y = -Math.min(...Array.from(model.positions).filter((_, i) => i % 3 === 2));
 scene.add(mesh); mesh.updateMatrixWorld(true);
 const viewer = {mesh, geometry, scene, renderer, skin: {material},
   surfaces: new Map([['fixture-control', {geometry, levels: []}]]),
   currentOcular: {source: geometry, geometry, pairs: []}};
+// The observed original HEAD-PROCEDURAL-R01 secondary hook delegates to the
+// LIVE primary compiler, then retains its own fragment surface. This exact
+// relationship caused the first browser candidate to capture donor skinning.
+secondary.onBeforeCompile = s => {
+  const vertexContract = {uniforms: {...s.uniforms}, vertexShader: s.vertexShader, fragmentShader: s.fragmentShader};
+  viewer.skin.material.onBeforeCompile(vertexContract, viewer.renderer);
+  s.vertexShader = vertexContract.vertexShader; Object.assign(s.uniforms, vertexContract.uniforms);
+  s.fragmentShader = '// retained procedural fragment fixture\n' + s.fragmentShader;
+};
 const raw = {model, viewer, motion: new NativeMotion(model, viewer)};
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const geometryHash = () => sha(Buffer.concat([...Object.values(geometry.attributes), geometry.index]
   .map(a => Buffer.from(a.array.buffer, a.array.byteOffset, a.array.byteLength))));
 const beforeHash = geometryHash();
+await raw.motion.prepare();
+const donorCompile = material.onBeforeCompile, donorKey = material.customProgramCacheKey;
 const factory = await createNativeActorFactory({THREE, raw});
 const a = await factory.create({id: 'a', position: [-1.3, 0, .2], rotationY: -.25, mode: 'walk', phaseSeconds: .21});
 const b = await factory.create({id: 'b', position: [1.3, 0, -.2], rotationY: .4, mode: 'run', phaseSeconds: .08});
 const checks = [];
 function checked(name, callback) { callback(); checks.push({name, passed: true}); }
+checked('dynamic secondary delegation freezes pre-motion code and restores the live donor wrapper', () => {
+  assert.equal(material.onBeforeCompile, donorCompile);
+  assert.equal(material.customProgramCacheKey, donorKey);
+  assert.equal(a.report().separateNativeAndVisibleGeometry, true);
+  assert.equal(a.viewer.geometry, geometry); assert.equal(a.motion.native.geometry, geometry);
+  assert.equal(a.mesh.geometry, visibleGeometry); assert.equal(b.mesh.geometry, visibleGeometry);
+  assert.deepEqual(a.mesh.geometry.index.array, sortedIndex);
+});
 checked('original full-CSR 104-bone constructors and native captured clips', () => {
   assert.ok(a.motion instanceof NativeMotion); assert.ok(b.motion instanceof NativeMotion);
   assert.equal(a.motion.native.names.length, 104);
@@ -57,7 +91,7 @@ checked('original full-CSR 104-bone constructors and native captured clips', () 
   assert.notEqual(a.motion.clip, b.motion.clip);
 });
 checked('shared original mesh attributes/groups with independent material and bone/cache resources', () => {
-  assert.equal(a.mesh.geometry, geometry); assert.equal(b.mesh.geometry, geometry);
+  assert.equal(a.mesh.geometry, visibleGeometry); assert.equal(b.mesh.geometry, visibleGeometry);
   assert.equal(a.mesh.material.length, 2); assert.equal(a.mesh.geometry.groups.length, 2);
   assert.notEqual(a.mesh.material[0], b.mesh.material[0]);
   assert.notEqual(a.motion.native.boneData, b.motion.native.boneData);
@@ -85,9 +119,22 @@ checked('each material receives one animation header and its own same-actor nati
     assert.equal(shader.uniforms.uFPass.value, 2);
     assert.deepEqual(shader.uniforms.uCKeyView.value.toArray(), [-3, 4, 5]);
   }
+  for (const shader of [shaders[1], shaders[3]]) {
+    assert.ok(shader.fragmentShader.startsWith('// retained procedural fragment fixture\n'));
+    assert.equal(shader.uniforms.uFPass, optical.uFPass);
+  }
   assert.notEqual(shaders[0].uniforms.mrBones, shaders[2].uniforms.mrBones);
   assert.notEqual(shaders[0].uniforms.mrActive, shaders[2].uniforms.mrActive);
   optical.uFPass.value = 0;
+});
+const secondaryCompile = secondary.onBeforeCompile;
+secondary.onBeforeCompile = shader => {secondaryCompile(shader); shader.vertexShader = 'uniform sampler2D mrRanges;\n' + shader.vertexShader;};
+await assert.rejects(() => createNativeActorFactory({THREE, raw}), error => {
+  assert.match(error.message, /Original animation wrapper/); assert.equal(error.capture.materialIndex, 1); return true;
+});
+secondary.onBeforeCompile = secondaryCompile;
+checked('an unknown remaining animation wrapper is rejected and the donor is restored on failure', () => {
+  assert.equal(material.onBeforeCompile, donorCompile); assert.equal(material.customProgramCacheKey, donorKey);
 });
 checked('source detachment preserves original optical-control visibility and new actors', () => {
   assert.ok(factory.sourceObjects.includes(raw.viewer.mesh));
@@ -149,11 +196,13 @@ checked('original captured jump and neutral idle remain finite with fixed bone l
   assert.equal(a.motion.mode, 'jump'); assert.ok(a.motion.clip.metrics.sourceClip);
   a.advance(1 / 60, 3); assert.ok(a.finalSkinMatrixData.every(Number.isFinite));
   assert.ok(a.motion.sampler.boneError() < 1e-5);
+  assert.equal(a.mesh.geometry, visibleGeometry); assert.equal(a.motion.native.geometry, geometry);
 });
 await a.setMotion('idle');
 checked('idle publishes a neutral current pose instead of stale jump matrices', () => {
   a.advance(1 / 60, 4);
   a.finalSkinMatrices.forEach(row => row.forEach((v, i) => assert.ok(Math.abs(v - (i % 5 === 0 ? 1 : 0)) < 2e-6)));
+  assert.equal(a.mesh.geometry, visibleGeometry);
 });
 const beforeDispose = {actor: a.report(), shoes: shoeFactory.report()};
 let originalGeometryDisposals = 0, sharedShoeDisposals = 0;
@@ -172,6 +221,8 @@ checked('last shoe owner releases each native geometry once; donor body ownershi
 const evidence = {schema: 'native-crowd-actor-interface-verification/1', measuredAtUTC: new Date().toISOString(),
   scope: 'CPU interface/coordinate/resource verification using original F13 motion code and retained MP05 104-bone control-topology fixture; no browser P01 rendering, no GPU timings or FPS',
   fixtureCompressedSHA256: sha(fixtureBytes), completeBrowserDisplayMeshTested: false,
+  commonThreeSHA256: sha(await readFile(new URL('../cloth/upstream/vendor/three.module.js', import.meta.url))),
+  threeModuleIdentityVerified: ['bare three', 'original NativeMotion relative vendor import', 'explicit vendor path', 'absolute file URL'],
   tests: checks, nativeControlGeometrySHA256Before: beforeHash, nativeControlGeometrySHA256After: geometryHash(),
   nativeShoeGeometrySHA256Before: shoeBefore, nativeShoeGeometrySHA256After: hashShoe(),
   feet: Object.fromEntries(Object.entries(footMeasurements).map(([side, f]) => [side,

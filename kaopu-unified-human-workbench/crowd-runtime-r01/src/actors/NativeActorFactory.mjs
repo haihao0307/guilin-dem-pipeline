@@ -16,7 +16,7 @@ const frozenPrograms = new Map();
 const materialsOf = mesh => Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 const identityRow = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
-function captureMaterial(THREE, source, compile, renderer) {
+function captureMaterial(THREE, source, compile, renderer, context = {}) {
   const libraryName = source.isMeshPhysicalMaterial ? 'physical'
     : source.isMeshStandardMaterial ? 'standard'
     : source.isMeshPhongMaterial ? 'phong'
@@ -33,7 +33,11 @@ function captureMaterial(THREE, source, compile, renderer) {
     fragmentShader: template.fragmentShader, defines: {...source.defines}};
   compile.call(source, shader, renderer);
   if (/uniform\s+sampler2D\s+mr(?:Ranges|Cache0)/.test(shader.vertexShader)) {
-    throw Error('Original animation wrapper was not removed before freezing the source material');
+    const error = Error('Original animation wrapper was not removed before freezing the source material');
+    error.capture = {...context, materialType: source.type, materialName: source.name,
+      nativeUniforms: Object.keys(shader.uniforms).filter(key => /^mr/.test(key)),
+      compileStart: String(compile).slice(0, 600)};
+    throw error;
   }
   const custom = {};
   for (const [key, uniform] of Object.entries(shader.uniforms)) {
@@ -132,13 +136,38 @@ export async function createNativeActorFactory({THREE, raw, renderer = raw?.view
   await raw.motion.prepare();
   if (raw.motion.native.names.length !== 104) throw Error('Expected the native 104-bone rig');
   source.mesh.updateWorldMatrix(true, false);
-  const baseMatrix = source.mesh.matrixWorld.clone(), geometry = source.geometry;
+  const baseMatrix = source.mesh.matrixWorld.clone(), nativeGeometry = source.geometry,
+    geometry = source.mesh.geometry;
+  // The original procedural body renderer keeps the full ancestry geometry
+  // in viewer.geometry, but displays a second geometry with the same attribute
+  // objects and an original sorted index/two material groups. NativeBinding
+  // needs the former for its ear/ocular lineage identity checks; rendering must
+  // retain the latter so the complete native procedural skin stays visible.
+  if (geometry !== nativeGeometry && (geometry.index?.count !== nativeGeometry.index?.count
+      || Object.keys(nativeGeometry.attributes).some(key => geometry.attributes[key] !== nativeGeometry.attributes[key]))) {
+    throw Error('Original visible geometry must share the complete native attributes and triangle count');
+  }
   const sourceMaterials = materialsOf(source.mesh), primaryIndex = sourceMaterials.indexOf(source.skin.material);
   if (primaryIndex < 0) throw Error('Original primary skin material is absent from the visible mesh');
-  const captures = sourceMaterials.map(material => captureMaterial(THREE, material,
-    material === source.skin.material ? raw.motion.savedMaterial.compile : material.onBeforeCompile, renderer));
-  const sourceAttachments = (raw.motion.attachments || []).map(item => ({...item,
-    capture: materialsOf(item.object).map(material => captureMaterial(THREE, material, material.onBeforeCompile, renderer))}));
+  const primary = source.skin.material, saved = raw.motion.savedMaterial,
+    activeCompile = primary.onBeforeCompile, activeKey = primary.customProgramCacheKey;
+  let captures, sourceAttachments;
+  // HEAD-PROCEDURAL-R01's secondary material dynamically calls
+  // viewer.skin.material.onBeforeCompile to inherit native vertex deformation.
+  // Freeze all appearance programs in one synchronous pre-motion transaction:
+  // merely passing saved.compile for the primary would leave that secondary
+  // delegation pointing at the donor's already installed NativeBinding.
+  if (saved?.material !== primary || typeof saved.compile !== 'function') throw Error('Original pre-motion material capture is unavailable');
+  try {
+    primary.onBeforeCompile = saved.compile; primary.customProgramCacheKey = saved.key;
+    captures = sourceMaterials.map((material, materialIndex) => captureMaterial(THREE, material,
+      material.onBeforeCompile, renderer, {kind: 'body', materialIndex, primary: material === primary}));
+    sourceAttachments = (raw.motion.attachments || []).map(item => ({...item,
+      capture: materialsOf(item.object).map((material, materialIndex) => captureMaterial(THREE, material,
+        material.onBeforeCompile, renderer, {kind: 'attachment', objectName: item.object.name, materialIndex}))}));
+  } finally {
+    primary.onBeforeCompile = activeCompile; primary.customProgramCacheKey = activeKey;
+  }
   const actors = new Map();
   let disposed = false;
 
@@ -175,11 +204,11 @@ export async function createNativeActorFactory({THREE, raw, renderer = raw?.view
     });
     scene.add(worldRoot); worldRoot.updateWorldMatrix(true, true);
     const viewer = Object.assign(Object.create(Object.getPrototypeOf(source)), source, {
-      mesh, geometry, renderer, scene: {children: attachments},
+      mesh, geometry: nativeGeometry, renderer, scene: {children: attachments},
       skin: Object.assign(Object.create(Object.getPrototypeOf(source.skin)), source.skin, {material: materials[primaryIndex]}),
     });
     // A non-rendered original-frame facade is available for CPU rest queries.
-    const localMesh = new THREE.Mesh(geometry, mesh.material);
+    const localMesh = new THREE.Mesh(nativeGeometry, mesh.material);
     localMesh.matrixAutoUpdate = false; localMesh.matrix.copy(baseMatrix); localMesh.updateMatrixWorld(true);
     const localViewer = Object.assign(Object.create(Object.getPrototypeOf(viewer)), viewer, {mesh: localMesh, scene});
     const motion = new NativeMotion(model, viewer, message => onProgress({id, message}));
@@ -206,6 +235,9 @@ export async function createNativeActorFactory({THREE, raw, renderer = raw?.view
         } else {
           await motion.select(next); if (phase) motion.apply(phase);
         }
+        // Original select restores native.geometry for the single-person
+        // renderer. Our actors retain its already-built procedural draw groups.
+        mesh.geometry = geometry;
         if (attachments.length) motion.updateAttachments();
         finalData.set(motion.native.boneData); worldRoot.updateWorldMatrix(true, true);
         return motion.report();
@@ -234,7 +266,7 @@ export async function createNativeActorFactory({THREE, raw, renderer = raw?.view
         worldRoot.updateWorldMatrix(true, true); actor.shoes?.update(tickId);
         return true;
       },
-      prepareRender() { if (!actorDisposed) motion.prepareRender(); },
+      prepareRender() { if (!actorDisposed) { mesh.geometry = geometry; motion.prepareRender(); } },
       report() { return {id, source: ACTOR_SOURCE, geometryShared: mesh.geometry === geometry,
         sameRendererScene: viewer.renderer === renderer && viewer.scene === scene,
         runtimeMeshUsesCommonTHREE: mesh instanceof THREE.Mesh,
@@ -242,6 +274,10 @@ export async function createNativeActorFactory({THREE, raw, renderer = raw?.view
         historicalSourceMeshConstructorMatches: sourceMeshConstructorMatches,
         motionConstructorInjected: NativeMotion !== raw.motion.constructor,
         appearanceUniformOwnership: 'shared original pre-native P01 optical/shape wrappers; independent actor native.U',
+        sourceMaterialCapture: 'synchronous original pre-motion primary compiler; dynamic secondary delegation retained',
+        nativeAncestryGeometryRetained: motion.native.geometry === nativeGeometry,
+        visibleSourceGeometryRetained: mesh.geometry === geometry,
+        separateNativeAndVisibleGeometry: geometry !== nativeGeometry,
         sharedOriginalUniforms: captures.map(c => Object.keys(c.custom || c.source.uniforms || {})),
         displayVertices: geometry.attributes.position.count, triangles: geometry.index.count / 3,
         materialCount: materials.length, groups: geometry.groups.map(g => ({...g})),

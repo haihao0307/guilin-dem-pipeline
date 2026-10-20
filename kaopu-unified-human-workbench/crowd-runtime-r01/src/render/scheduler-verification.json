@@ -1,0 +1,29 @@
+{
+  "schema": "unified-scheduler-control-flow-verification/1",
+  "atUTC": "2026-10-20T07:05:08.786Z",
+  "mainSHA256": "7783c10ad2c25611bbc2209be7cd280230eddf55ea3f2289e213b1398c867a68",
+  "scope": "actual main.mjs scheduling functions with deferred worker and renderer interfaces; no native solver timings, GPU execution, browser appearance or FPS claim",
+  "tests": [
+    {
+      "name": "selected motion stays unpublished until all cloth actors accept the exact final pose",
+      "passed": true
+    },
+    {
+      "name": "one rejected cloth actor waits for all workers, then freezes every rendering and movement entry",
+      "passed": true
+    },
+    {
+      "name": "hair errors also drain already-started cloth workers before freezing the scene",
+      "passed": true
+    },
+    {
+      "name": "successful unified tick advances once and counts native pose-bake draw submissions",
+      "passed": true
+    }
+  ],
+  "remainingBrowserChecks": [
+    "complete reset/rebuild through actual DOM and workers",
+    "render routing and native face optics on actual GPU",
+    "initial selected-pose solver acceptance for the actual P01"
+  ]
+}

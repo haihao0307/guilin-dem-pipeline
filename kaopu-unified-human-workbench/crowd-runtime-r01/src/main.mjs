@@ -67,7 +67,9 @@ function resize(){if(!stage||state.renderFrozen)return;const box=stage.getBoundi
 function cameraHome(focus=false){
   const actor=actors.find(a=>a.id===state.selected)||actors[0];
   const target=focus&&actor?actor.worldRoot.position.clone().add(new THREE.Vector3(0,1.15,0)):new THREE.Vector3(0,.97,0);
-  const distance=focus?2.5:state.count===4?6.7:state.count===2?4.4:3.5;
+  const halfFOV=Math.tan(viewer.camera.fov*Math.PI/360);
+  const fitDistance=Math.max(2.04/(2*halfFOV),(Math.max(1,actors.length)-1)*1.22/(2*halfFOV*Math.max(.1,viewer.camera.aspect))+1.05/(2*halfFOV*Math.max(.1,viewer.camera.aspect)))*1.08;
+  const distance=focus?2.5:fitDistance;
   viewer.camera.position.copy(target).add(new THREE.Vector3(distance*.12,distance*.11,distance));
   viewer.orbit.target.copy(target);viewer.camera.zoom=1;viewer.camera.updateProjectionMatrix();viewer.orbit.update();cameraDirty=true;
   if(!pendingTick)renderScene();
@@ -117,6 +119,7 @@ async function changeCount(count,{rebuild=false}={}){
   // Acquire the UI transition lock before waiting for an in-flight frame.
   state.playing=false;state.busy=true;updateHUD(true);
   if(pendingTick)await pendingTick.catch(()=>{});
+  if(state.renderFrozen&&!rebuild){state.busy=false;updateHUD(true);return;}
   state.busy=true;state.count=count;state.ready=false;updateHUD(true);
   try{
     if(rebuild)while(actors.length){const actor=actors.pop();actor.hair.dispose();actor.cloth.dispose();actor.dispose();}
