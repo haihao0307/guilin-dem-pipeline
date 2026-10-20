@@ -119,7 +119,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
   if(rig.count!==104) throw Error(`R07 native bone count changed: ${rig.count}`);
   const root=new THREE.Group();root.name=`NPC-${spec.id}`;root.position.set(spec.x,binding.floorOffset,spec.z);root.add(mesh);
   viewer.scene.add(root);root.updateMatrixWorld(true);
-  const fingers={},patches={};
+  const fingers={},patches={},handSurfaceVertices={};
   for(const side of SIDES) {
     const wrist=rig.restP[rig.index.get(`wrist.${side}`)], frame=rig.hand[side];
     const palmLength=norm(sub(rig.restP[rig.index.get(`finger3-1.${side}`)],wrist));
@@ -127,6 +127,12 @@ function makeActor(model, viewer, spec, preset, measurements) {
     const palmPatch=findSkinPatch(geometry,palmGoal,{maxDistance:palmLength*.44,
       forward:frame.forward,palm:frame.palm,wrist,alongMin:palmLength*.32,alongMax:palmLength*.8});
     patches[side]={palm:palmPatch,fingers:[]};
+    const handJoints=new Set(rig.descendants[rig.index.get(`wrist.${side}`)]),handVertices=[];
+    for(let i=0;i<geometry.attributes.position.count;i++) {
+      const start=binding.displayRange[i*4],count=binding.displayRange[i*4+1];
+      for(let k=0;k<count;k++)if(handJoints.has(binding.displayPacked[(start+k)*8+3])&&binding.displayPacked[(start+k)*8+4]>1e-6){handVertices.push(i);break;}
+    }
+    handSurfaceVertices[side]=handVertices;
     for(let f=1;f<=5;f++) {
       const ids=[1,2,3].map(k=>rig.index.get(`finger${f}-${k}.${side}`));
       const points=ids.map(id=>rig.restP[id]), tip=add(points[2],scale(sub(points[2],points[1]),.65));
@@ -136,15 +142,15 @@ function makeActor(model, viewer, spec, preset, measurements) {
     }
   }
   const feet=SIDES.map(side=>{
-    const foot=rig.restP[rig.index.get(`foot.${side}`)];let id=-1,best=Infinity;
+    const foot=rig.restP[rig.index.get(`foot.${side}`)];let id=-1,lowest=Infinity,best=Infinity;
     for(let i=0;i<binding.N;i++){
-      const p=restVertex(geometry,i);if(p[2]>-binding.floorOffset+.025)continue;
-      const d=norm(sub(p,foot));if(d<best){best=d;id=i;}
+      const p=restVertex(geometry,i);if(p[0]*foot[0]<=0||p[2]>-binding.floorOffset+.025)continue;
+      const d=norm(sub(p,foot));if(p[2]<lowest-1e-7||(Math.abs(p[2]-lowest)<1e-7&&d<best)){lowest=p[2];best=d;id=i;}
     }
     if(id<0)throw Error('Native planted foot surface is unavailable');
-    return {id,rest:restVertex(geometry,id)};
+    return {id,side,rest:restVertex(geometry,id)};
   });
-  const active={side:spec.side,grip:0};let last={};
+  const active={side:spec.side,grip:0};let last={},lastGoal=null,lastSolution=null;
   const toLocal = target => {root.updateWorldMatrix(true,false);return native(root.worldToLocal(asVector(target)));};
   const toWorld = target => {root.updateWorldMatrix(true,false);return root.localToWorld(display(target));};
   const directionNative = direction => {
@@ -183,13 +189,14 @@ function makeActor(model, viewer, spec, preset, measurements) {
     }
   }
   function diagnostic(target=null,solved=null) {
-    const checked=rig.validate();let footSurfaceErrorM=0;
-    for(const foot of feet)footSurfaceErrorM=Math.max(footSurfaceErrorM,norm(sub(binding.sampleVertex(foot.id,true),foot.rest)));
+    const checked=rig.validate();let footSurfaceErrorM=0;const footWorld={};
+    for(const foot of feet){const point=binding.sampleVertex(foot.id,true);footSurfaceErrorM=Math.max(footSurfaceErrorM,norm(sub(point,foot.rest)));footWorld[foot.side]=toWorld(point).toArray();}
     const palm=toWorld(sample(patches[active.side].palm));
     const fingertips=patches[active.side].fingers.map(p=>toWorld(sample(p)));
     last={side:active.side,grip01:active.grip,palm:palm.toArray(),
       handErrorM:target?palm.distanceTo(asVector(target)):0,reachClamped:!!solved?.clamped,
       boneLengthErrorM:checked.maxBoneLengthError,footSurfaceErrorM,
+      footAnchorsWorld:footWorld,footWorldYM:Object.fromEntries(Object.entries(footWorld).map(([side,p])=>[side,p[1]])),
       fingerAnchors:fingertips.map(p=>p.toArray()),fingerMinimumYM:Math.min(...fingertips.map(p=>p.y)),
       finite:checked.finite,orientation:'world palm +Z, fingers -Y during reach'};
     return last;
@@ -198,6 +205,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
     id:spec.id,label:spec.label,root,mesh,binding,rig,side:spec.side,floorOffset:binding.floorOffset,
     identity:{id:spec.id,label:spec.label,presetId:preset.id,stage:preset.stage,build:preset.build,
       phenotypes:structuredClone(preset.phenotypes),localChanges:structuredClone(preset.localChanges),
+      portraitId:spec.portrait,portraitName:window.portraitBank.presets().find(p=>p.id===spec.portrait)?.name,
       source:'R07 complete native generated person',shapeCalibratedToRealPerson:false},
     measurements:{...measurements,heightM:binding.height,heightCM:binding.height*100,
       floorOffsetM:binding.floorOffset,armL:rig.limbs.armL.upper+rig.limbs.armL.lower,
@@ -210,7 +218,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
     handAnchor(side=active.side){return toWorld(sample(patches[side].palm));},
     fingerAnchors(side=active.side){return patches[side].fingers.map(p=>toWorld(sample(p)));},
     contactAnchors(side=active.side){return {palm:this.handAnchor(side),fingers:this.fingerAnchors(side)};},
-    rest(){active.grip=0;resetRig();binding.animate(rig.skinMatrices);return diagnostic();},
+    rest(){active.grip=0;lastGoal=null;lastSolution=null;resetRig();binding.animate(rig.skinMatrices);return diagnostic();},
     reachability(target,side=active.side){
       if(!SIDES.includes(side))throw Error('Native reach side must be L or R');
       const limb=rig.limbs['arm'+side],wrist=rig.restP[limb.c],rotation=orientFor(side);
@@ -236,9 +244,22 @@ function makeActor(model, viewer, spec, preset, measurements) {
         if(norm(error)<.00035||solved.clamped)break;
         wristTarget=add(wristTarget,error);
       }
-      return diagnostic(worldTarget,solved);
+      lastGoal=worldTarget.clone();lastSolution=solved;return diagnostic(lastGoal,lastSolution);
     },
-    diagnostics(){return {...last,binding:binding.report};},
+    diagnostics({tableTopY=null}={}){
+      // Sample the actual weighted hand surface only on diagnostic requests,
+      // not at every physics substep. This catches a curled intermediate
+      // phalanx below the table even when the fingertip itself is above it.
+      root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity;
+      for(const id of handSurfaceVertices[active.side]) {
+        const p=display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
+        handSurfaceMinimumYM=Math.min(handSurfaceMinimumYM,p.y);
+      }
+      const live=diagnostic(lastGoal,lastSolution);
+      return {...live,binding:binding.report,handSurfaceMinimumYM,
+        handSurfaceSampleCount:handSurfaceVertices[active.side].length,
+        handTableClearanceM:Number.isFinite(tableTopY)?handSurfaceMinimumYM-tableTopY:null};
+    },
     dispose(){root.removeFromParent();binding.dispose();geometry.dispose();for(const f of frozen)f.material.dispose();for(const texture of textureCopies.values())texture.dispose();}
   };
   binding.report.materialShaderSnapshots=frozen.map(f=>f.report);
@@ -256,19 +277,20 @@ export async function createActors({onProgress=()=>{}}={}) {
   while(performance.now()-started<300000) {
     qa=window.__IDENTITY_QA__;viewer=qa?.viewer?.();model=qa?.model?.();controller=qa?.controller?.();
     if(viewer?.mesh&&model?.positions?.length&&controller&&window.__LIP_P3__?.ready&&
-      window.headProceduralSkin&&window.bodyProceduralSkin&&window.__HEAD_PROC__?.gpuVerified)break;
+      window.headProceduralSkin&&window.bodyProceduralSkin&&window.portraitBank?.apply&&window.__HEAD_PROC__?.gpuVerified)break;
     if(performance.now()-lastProgress>2000){onProgress('正在载入原生 R07 人物，等待完整皮肤与 GPU 首帧');lastProgress=performance.now();}
     await new Promise(resolve=>setTimeout(resolve,100));
   }
   if(!viewer?.mesh||!model?.positions?.length||!controller)throw Error('R07 native viewer/model did not finish loading');
   if(!window.headProceduralSkin||!window.bodyProceduralSkin||!window.__HEAD_PROC__?.gpuVerified)
     throw Error('R07 complete procedural skin did not finish GPU linking: '+(window.__HEAD_PROC__?.errors||[]).join('; '));
+  if(!window.portraitBank?.apply||!model.r05Stream?.prepare)throw Error('R07 native portrait / complete coefficient pager is unavailable');
   await viewer.skin.faceReady;await viewer.skin.naturalEyesReady;
   window.lifelikeIdle?.pause?.(true);
   const catalog=window.fullCommonWorkbench?.allPresets?.();if(!catalog)throw Error('Native R02 identity catalogue is unavailable');
-  const specs=[{id:'A',label:'A · 高瘦',build:'tall-slim',side:'L',x:-.40,z:-.06},
-    {id:'B',label:'B · 矮壮',build:'short-heavy',side:'R',x:.40,z:-.06},
-    {id:'C',label:'C · 结实',build:'sturdy',side:'R',x:1.45,z:-.10}];
+  const specs=[{id:'A',label:'A · 高瘦',build:'tall-slim',portrait:'P01',side:'L',x:-.40,z:-.06},
+    {id:'B',label:'B · 矮壮',build:'short-heavy',portrait:'P02',side:'R',x:.40,z:-.06},
+    {id:'C',label:'C · 结实',build:'sturdy',portrait:'P05',side:'R',x:1.45,z:-.10}];
   const saved=controller.archive(),base=controller.state(),actors=[];
   const wasVisible=viewer.mesh.visible;
   try {
@@ -281,7 +303,15 @@ export async function createActors({onProgress=()=>{}}={}) {
       state.anny.localChanges=structuredClone(preset.localChanges);
       state.anny.pose={};state.anny.translations={};
       if(state.gnm){state.gnm.rotation=state.gnm.rotation.map(()=>0);state.gnm.translation=[0,0,0];}
+      await model.r05Stream.prepare(state);
       await controller.commit(state);viewer.render();await pauseFrame();
+      const bodySignature=JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges]);
+      onProgress(`正在应用 ${spec.label} 的原生脸型 ${spec.portrait}`);
+      const applied=await window.portraitBank.apply(spec.portrait);
+      if(applied?.id!==spec.portrait||window.portraitBank.selected()!==spec.portrait)throw Error('Native portrait application was cancelled');
+      if(JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges])!==bodySignature)
+        throw Error('Portrait application unexpectedly changed native body identity');
+      viewer.render();await pauseFrame();
       viewer.render();
       const measurement=structuredClone(window.fullCommonWorkbench.measurements?.()||{});
       const actor=makeActor(model,viewer,spec,preset,measurement);actors.push(actor);

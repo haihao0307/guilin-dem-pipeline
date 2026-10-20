@@ -1,0 +1,324 @@
+{
+  "schema": "npc-independent-causal-qa/1",
+  "createdAt": "2026-10-20T03:07:19.029Z",
+  "sourceHash": "b339a559a951904152b4fc9e20a4b9cdd20bced3475039f24a805c4dbef37b1b",
+  "sourceHashAtStart": "b339a559a951904152b4fc9e20a4b9cdd20bced3475039f24a805c4dbef37b1b",
+  "sourceUnchangedDuringTest": true,
+  "scope": "TEST_FIXTURE_ONLY actor adapters; production LifeWorld and vendored Cannon execute unchanged",
+  "testsCoverage": [
+    "rigid-body gravity/support causality",
+    "finite grip force",
+    "ownership and cancellation state",
+    "world-result feedback"
+  ],
+  "doesNotProve": [
+    "native people or surface IK",
+    "finger geometry or collisions",
+    "body/foot/table clearance",
+    "browser or mobile execution",
+    "public delivery",
+    "visual acceptance"
+  ],
+  "passed": true,
+  "counts": {
+    "passed": 10,
+    "total": 10
+  },
+  "tests": [
+    {
+      "name": "gravity and actual table support remain causal without any actor",
+      "pass": true,
+      "measurements": {
+        "supported": {
+          "y": 1.0197583961608376,
+          "supported": true,
+          "constraints": 0
+        },
+        "after": {
+          "y": 0.19598398146139456,
+          "velocityY": -3.9471191638741128,
+          "supported": false,
+          "goal": false
+        }
+      }
+    },
+    {
+      "name": "no grip may be created with a palm that misses by 5 cm",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 4.016666666666656,
+          "maxHeight": 1.0208,
+          "maxOwners": 0,
+          "maxConstraints": 0,
+          "maxGripAxisForceN": 0,
+          "maxGripForceNormN": 0,
+          "maxGripAxisTorqueNm": 0,
+          "timeout": false
+        },
+        "result": {
+          "result": "contact-failed",
+          "detail": "表皮手掌没有进入接触容差",
+          "duration": 4.016666666666656,
+          "contactM": null,
+          "maxHoldErrorM": 0,
+          "phases": [
+            "waiting",
+            "approach"
+          ]
+        },
+        "contacts": 0
+      }
+    },
+    {
+      "name": "light object performs a physical lift, then release and supported settling",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.1607947974944157,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 2.2435809385964984,
+          "maxGripForceNormN": 2.2435809385964984,
+          "maxGripAxisTorqueNm": 0.0358952865346345,
+          "timeout": false
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 7.266666666666818,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963080588543432,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "position": [
+          0.09986577520028593,
+          1.0199989161936025,
+          0.43997987030025615
+        ],
+        "goal": true
+      }
+    },
+    {
+      "name": "finite assisted grip cannot carry a 100 kg object as an animated prop",
+      "pass": true,
+      "measurements": {
+        "massKg": 100,
+        "outcome": {
+          "elapsed": 2.8166666666666593,
+          "maxHeight": 1.0208,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 24,
+          "maxGripForceNormN": 38.34656802794632,
+          "maxGripAxisTorqueNm": 0.8,
+          "timeout": false
+        },
+        "result": {
+          "result": "grip-broken",
+          "detail": "握持接触误差超过 7 cm，释放物品",
+          "duration": 2.8166666666666593,
+          "contactM": 0,
+          "maxHoldErrorM": 0.0700001996046227,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift"
+          ]
+        }
+      }
+    },
+    {
+      "name": "two requests share one physical item and preserve unique grip ownership",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.1607947974944157,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 2.2435809385964984,
+          "maxGripForceNormN": 2.2435809385964984,
+          "maxGripAxisTorqueNm": 0.0358952865346345,
+          "timeout": false
+        },
+        "results": [
+          {
+            "result": "completed",
+            "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+            "duration": 7.266666666666818,
+            "contactM": 0,
+            "maxHoldErrorM": 0.011963080588543432,
+            "phases": [
+              "waiting",
+              "approach",
+              "close",
+              "lift",
+              "transfer",
+              "lower",
+              "verify"
+            ]
+          },
+          {
+            "result": "already-sorted",
+            "detail": "物品已由另一人放稳，无需重复执行",
+            "duration": 6.6750000000001215,
+            "contactM": null,
+            "maxHoldErrorM": 0,
+            "phases": [
+              "waiting"
+            ]
+          }
+        ],
+        "contacts": [
+          {
+            "id": "A",
+            "errorM": 0,
+            "time": 2.066666666666662
+          }
+        ]
+      }
+    },
+    {
+      "name": "removing support during transport prevents successful placement",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.000000000000138,
+          "maxHeight": 1.1607947974944157,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 2.2435809385964984,
+          "maxGripForceNormN": 2.2435809385964984,
+          "maxGripAxisTorqueNm": 0.0358952865346345,
+          "timeout": false
+        },
+        "result": {
+          "result": "world-result-failed",
+          "detail": "支撑面已移开，物品下落，任务失败",
+          "duration": 7.000000000000138,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963080588543432,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "y": 0.16038584306014753
+      }
+    },
+    {
+      "name": "changing the placement zone during transfer is observed by the production task",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.1607947975388175,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 2.243580938596498,
+          "maxGripForceNormN": 2.243580938596498,
+          "maxGripAxisTorqueNm": 0.03589528653463449,
+          "timeout": false
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 7.266666666666818,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963080588545238,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "x": -0.12013422479968439,
+        "target": [
+          -0.12,
+          1.0208,
+          0.44
+        ]
+      }
+    },
+    {
+      "name": "cancelling a held item frees both the constraint and the visible grip",
+      "pass": true,
+      "measurements": {
+        "phase": "cancelled",
+        "semanticGrip": 0,
+        "actorGrip": 0,
+        "heldBy": null,
+        "reservedBy": null,
+        "constraints": 0
+      }
+    },
+    {
+      "name": "helper can acquire the physical item after holder cancellation",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 9.333333333333444,
+          "maxHeight": 1.1607947979426154,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "maxGripAxisForceN": 2.24358093859658,
+          "maxGripForceNormN": 2.24358093859658,
+          "maxGripAxisTorqueNm": 0.03589178339805853,
+          "timeout": false
+        },
+        "cancelled": {
+          "heldBy": null,
+          "reservedBy": null,
+          "constraints": 0
+        },
+        "b": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 9.333333333333444,
+          "contactM": 0,
+          "maxHoldErrorM": 0.01196308058848015,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        }
+      }
+    },
+    {
+      "name": "review text invalidates its old success when physical support disappears",
+      "pass": true,
+      "measurements": {
+        "phase": "需重新复核",
+        "checked": false,
+        "reason": "物品位置、支撑或稳定状态已改变",
+        "t": 7.258333333333484,
+        "stable": 0
+      }
+    }
+  ]
+}

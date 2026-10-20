@@ -1,7 +1,7 @@
 import * as CANNON from './vendor/cannon-es.js';
 
 // Dimensions are metres. The visible station is built from these same values.
-export const DIM = Object.freeze({ tableTop: .87, tableHalf: [.62, .035, .26], tableCentre: [0, .835, .45], radius: .032, height: .14, gripHeight: .048, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, .9408, .37], target: [.12, .9408, .45] });
+export const DIM = Object.freeze({ tableTop: .95, tableHalf: [.62, .035, .23], tableCentre: [0, .915, .52], radius: .032, height: .14, gripHeight: .048, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, 1.0208, .37], target: [.10, 1.0208, .44] });
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smooth=t=>{t=clamp(t,0,1);return t*t*t*(t*(t*6-15)+10)};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
