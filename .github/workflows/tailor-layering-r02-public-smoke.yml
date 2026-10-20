@@ -1,0 +1,77 @@
+# This is a bounded post-publication check of the fixed public R02 URL.
+# Install only on a new check branch descended directly from source 5186f8a.
+# Open a Draft PR against the frozen R02 source branch. Do not add files under
+# experiments/tailor-layering-r02/ to that PR: those would trigger the full CI.
+name: Tailor layering R02 — fixed public smoke
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - 'fix/tailor-layering-r02-contact-demand-20261020'
+    paths:
+      - '.github/workflows/tailor-layering-r02-public-smoke.yml'
+      - '.github/scripts/tailor-layering-r02-public-smoke.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tailor-layering-r02-public-smoke-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  public-smoke:
+    name: Fixed public HTTPS / real Chromium / one step and manual contact audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      CI: 'true'
+      LAYERING_PUBLIC_URL: 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/layering-r02-20261020-5186f8a/'
+      SMOKE_OUT: smoke-evidence
+      SMOKE_EXPECTED_SOURCE_SHA: '5186f8a5d71a5e75059539f83a31b2ba1e53042b'
+      SMOKE_CHECKOUT_SHA: ${{ github.event.pull_request.head.sha }}
+      SMOKE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - name: Check out the exact check script and retained read-only observer
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/scripts
+            experiments/tailor-layering-r02/tests
+          sparse-checkout-cone-mode: true
+      - name: Record the exact check checkout and require the frozen source base
+        run: |
+          set -euo pipefail
+          mkdir -p smoke-evidence
+          git log -1 --format=%H | tee smoke-evidence/checkout-sha.txt
+          test "$(git rev-parse HEAD)" = "$SMOKE_CHECKOUT_SHA"
+          test "$SMOKE_BASE_SHA" = "$SMOKE_EXPECTED_SOURCE_SHA"
+      - name: Use the retained Node version
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+      - name: Install the retained Playwright and Chromium environment
+        run: |
+          set -euo pipefail
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+          node --check .github/scripts/tailor-layering-r02-public-smoke.mjs
+      - name: Inspect the fixed public page without rebuilding or serving it
+        run: |
+          set -euo pipefail
+          node .github/scripts/tailor-layering-r02-public-smoke.mjs | tee smoke-evidence/smoke-run.log
+      - name: Retain unmodified browser evidence, including on failure
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r02-public-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: smoke-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
