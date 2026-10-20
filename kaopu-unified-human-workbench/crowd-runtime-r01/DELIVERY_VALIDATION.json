@@ -1,0 +1,60 @@
+{
+  "schema": "crowd-runtime-delivery-validation@1",
+  "recordedAtUTC": "2026-10-20 09:24:26 UTC",
+  "status": "交付未完成",
+  "reason": "Final public-page interaction verification is blocked by the Browser connection returning HTTP 401 for DOM, screenshots and interactions after navigation. Tab URL/title metadata remains available; this is not evidence of a page runtime failure or a passed visual gate.",
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/2a80bd5d584a3bb64610ebc27ed468eb490065fb/kaopu-unified-human-workbench/crowd-runtime-r01/public.html",
+  "publicCommit": "2a80bd5d584a3bb64610ebc27ed468eb490065fb",
+  "payloadCommit": "6eb95d4703f0298a3332f5022e713d3a78ce08ec",
+  "runtimeSHA256": "84288be6063fbb378d9b397ceb20a39b76dc13a38c2040aa002908c8ee71233f",
+  "publicHTMLSHA256": "34afb70029463ac4962392070a5177b5239112edfe8aac889fcfb97a54d86d6e",
+  "mainSHA256": "61ef95099637f2bca8db443b6b852a49e543dcfe97263e1099d983cd92b1ddbb",
+  "draftPullRequest": "https://github.com/haihao0307/guilin-dem-pipeline/pull/317",
+  "finalPublicVisualGatePassed": false,
+  "finalPublicInteractionGatePassed": false,
+  "previousRealBrowserCandidate": {
+    "publicCommit": "66a6da288df89db2fa8cc339755eb59918aa9817",
+    "payloadCommit": "dac5a556a257d798b9bbc88cfb2065249f576008",
+    "runtimeSHA256": "4a99bb91b325cc52821b077dfe269390aa5534affa19044e278a59b26848ffb3",
+    "checks": [
+      "Actual complete native P01 body, F13 hair, original T03/P02 cloth and R14 shoes visibly rendered",
+      "1 / 2 / 4 actors; independent original motion and same-frame body/hair/cloth updates",
+      "Actual benchmark abort with 53 measured samples and safe in-flight transaction settlement, then fresh completed 60-step run",
+      "Paused 0.1 m movement and 10-degree turn of one actor; three others unchanged; subsequent 60 full-dynamics steps",
+      "Four-person run 60 steps; three unreset jump segments totalling 180 simulation steps / 3 s; original non-continuous jump ends at 2.675 s and holds its final pose",
+      "4-to-1 removal leaves one active hair/body/cloth owner, two shoe instances and one body skin pass",
+      "Actual native shoe sampled rest fit and saved forefoot/toe checks; native eyelet ray gaps documented separately"
+    ]
+  },
+  "finalPatch": {
+    "scope": "Only await completion and force HUD/evidence refresh in the single-step button handler; simulation and rendering source outside that handler unchanged.",
+    "sourceComparison": "validation/final-ui-only-diff.json",
+    "localSchedulerTests": {
+      "passed": 4,
+      "total": 4
+    },
+    "localBenchmarkAndSingleStepTests": {
+      "passed": 8,
+      "total": 8
+    }
+  },
+  "sourceBuild": {
+    "clothSourcesVerified": 50,
+    "clothWorkerSHA256": "1bfb6db116563c50f6dfd9c1d64c84aa0d2ca0d4b40be769896f00173fb5fec7",
+    "geometryWorkerSHA256": "78240ff46c6c026fc1435bfda74e19936f2587d0bb5646a999a399813cd28714",
+    "githubActionsRunsForBranch": 0
+  },
+  "pending": [
+    "Restore Browser connection authorization",
+    "On the same fixed public URL, verify the real 3D scene, single-step HUD/evidence refresh and final 1 / 2 / 4 actor interactions",
+    "Save final candidate browser evidence and mark its actual visual/interaction gate result"
+  ],
+  "limitations": [
+    "Trial still has heavy complete original multi-pass rendering cost; no real-time large-crowd performance claim",
+    "submittedFrameFPS measures unified update/render-submission intervals, not GPU completion or display presentation",
+    "Footwear follows foot bones with static whole-shoe sizing; no independent footwear force solver",
+    "Regional cloth and guide-based hair dynamics retain their original solver scope; no cross-NPC or hair-cloth coupled collision",
+    "Saved shoe sampling snapshots do not certify continuous full-surface collision-free wearer fit",
+    "Visual acceptance remains pending user review"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "native-character-crowd-runtime-r01",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:sources": "python3 build/prepare-sources.py && python3 src/cloth/prepare-upstream.py",
+    "build": "node build/main-bundle.mjs && python3 build/pack-app.py"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

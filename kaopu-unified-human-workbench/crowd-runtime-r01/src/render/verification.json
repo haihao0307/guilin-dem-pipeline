@@ -1,0 +1,47 @@
+{
+  "schema": "multi-person-face-routing-interface-verification/1",
+  "atUTC": "2026-10-20T07:22:04.925Z",
+  "scope": "routing/state restoration under mocked GL interface; no real framebuffer, GPU benchmark or visual acceptance",
+  "originalSourceSHA256": "146b1f02a8e475501b948df0b07a93e59e80924f8af4dbf9bda1f9ccb96189d1",
+  "adapterSHA256": "0519d9469fb72221dfe89a09360bc34c870e881237793b9f96386c4d9330b942",
+  "tests": [
+    {
+      "name": "beauty pass forwards without depth copies or mesh filtering",
+      "passed": true
+    },
+    {
+      "name": "both auxiliary targets contain every actor mesh and exact original depth-only blit parameters",
+      "passed": true
+    },
+    {
+      "name": "failure restores read framebuffer, camera, every mesh, light, background and clear state",
+      "passed": true
+    },
+    {
+      "name": "original MSAA, type, format, size and resolved-depth guards retain full-render fallback",
+      "passed": true
+    },
+    {
+      "name": "other scenes and disabled routing retain original calls and do not alter masks",
+      "passed": true
+    },
+    {
+      "name": "disposing the outer routing restores the exact existing hair wrapper",
+      "passed": true
+    }
+  ],
+  "audit": {
+    "enabled": true,
+    "skinPasses": 2,
+    "depthCopies": 3,
+    "fallbackPasses": 5,
+    "lastSkinMeshes": 2,
+    "method": "same-frame beauty depth + all native actor skin auxiliary passes",
+    "removedVisibleGeometry": false,
+    "disposed": false,
+    "occlusion": "exact current beauty-pass depth",
+    "nativeFaceDiffusionPreserved": true,
+    "skinSelection": "all actor.mesh; source brow/lash occlusion remains in beauty depth",
+    "wrapperOrder": "face routing -> native HairPassCache -> native renderer"
+  }
+}

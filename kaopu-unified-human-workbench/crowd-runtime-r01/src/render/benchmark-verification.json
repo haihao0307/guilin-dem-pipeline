@@ -1,0 +1,41 @@
+{
+  "schema": "unified-benchmark-control-flow-verification/1",
+  "atUTC": "2026-10-20T09:15:04.023Z",
+  "mainSHA256": "61ef95099637f2bca8db443b6b852a49e543dcfe97263e1099d983cd92b1ddbb",
+  "tests": [
+    {
+      "name": "new measurement drains an old tick and clears previous records before collecting its own samples",
+      "passed": true
+    },
+    {
+      "name": "measurement locks configuration, movement, step and camera entries including direct control callbacks",
+      "passed": true
+    },
+    {
+      "name": "pause aborts a partial run only after all in-flight workers settle, with no late sample or false completion",
+      "passed": true
+    },
+    {
+      "name": "a new completed run contains exactly 60 fresh accepted steps and restores all controls",
+      "passed": true
+    },
+    {
+      "name": "explicit reset ends a live benchmark and drains its pending step before pose reset",
+      "passed": true
+    },
+    {
+      "name": "native worker failure clears the active benchmark and preserves failure freeze/capture evidence",
+      "passed": true
+    },
+    {
+      "name": "viewport resize aborts measurement before changing its recorded camera or canvas dimensions",
+      "passed": true
+    },
+    {
+      "name": "paused single-step completion forces current HUD and evidence after all workers, including an existing tick without another solve",
+      "passed": true
+    }
+  ],
+  "scope": "actual main.mjs handlers and measurement lifecycle with deferred worker/DOM/renderer interfaces; no native solver timings, browser rendering or FPS claim",
+  "browserCheckRemaining": "click Pause during a real measurement, confirm aborted record and restored input, then complete a new 60-step run"
+}
