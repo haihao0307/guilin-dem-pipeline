@@ -1,6 +1,8 @@
 // TEST_FIXTURE_ONLY. These actor fixtures have no geometry and certify only
 // the production LifeWorld's rigid-body/state causality. They do not certify
 // native-person IK, skin contact, appearance, browser operation, or delivery.
+// They also omit configureGrasp and native surface diagnostics, so they do not
+// validate calibrated grasp admissibility or actual hand/prop penetration.
 import {LifeWorld, DIM} from '../LifeWorld.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync, writeFileSync} from 'node:fs';
@@ -124,7 +126,7 @@ const sourceUnchangedDuringTest=sourceHash===sourceHashAtStart;
 const report={schema:'npc-independent-causal-qa/1',createdAt:new Date().toISOString(),sourceHash,sourceHashAtStart,sourceUnchangedDuringTest,
   scope:'TEST_FIXTURE_ONLY actor adapters; production LifeWorld and vendored Cannon execute unchanged',
   testsCoverage:['rigid-body gravity/support causality','finite grip force','ownership and cancellation state','world-result feedback'],
-  doesNotProve:['native people or surface IK','finger geometry or collisions','body/foot/table clearance','browser or mobile execution','public delivery','visual acceptance'],
+  doesNotProve:['native people or surface IK','configured native grasp admissibility','finger geometry or collisions','body/foot/table clearance','browser or mobile execution','public delivery','visual acceptance'],
   passed:sourceUnchangedDuringTest&&tests.every(t=>t.pass),counts:{passed:tests.filter(t=>t.pass).length,total:tests.length},tests};
 writeFileSync(new URL('./motion_sources-causal-report.json',import.meta.url),JSON.stringify(report,null,2));
 console.log(JSON.stringify({passed:report.passed,counts:report.counts,tests:tests.map(t=>({name:t.name,pass:t.pass,error:t.error?.split('\n')[0]}))},null,2));

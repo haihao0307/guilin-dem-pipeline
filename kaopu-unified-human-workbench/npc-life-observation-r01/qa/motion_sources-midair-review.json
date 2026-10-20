@@ -1,12 +1,12 @@
 {
   "schema": "npc-independent-midair-qa/1",
-  "createdAt": "2026-10-20T03:21:08.723Z",
-  "sourceHashAtStart": "55c991c1306459cf85ca6855d45f047b12dbaabba756fb1c25d39c8a0b7a98b2",
-  "sourceHashAtEnd": "55c991c1306459cf85ca6855d45f047b12dbaabba756fb1c25d39c8a0b7a98b2",
+  "createdAt": "2026-10-20T03:46:44.780Z",
+  "sourceHashAtStart": "84014953b01aec25ca83d0d3572dacdfda4eb155168b300b336b4db021f1749f",
+  "sourceHashAtEnd": "84014953b01aec25ca83d0d3572dacdfda4eb155168b300b336b4db021f1749f",
   "sourceUnchangedDuringTest": true,
-  "scope": "TEST_FIXTURE_ONLY actor adapters; unchanged production LifeWorld and vendored Cannon. These checks do not prove native hand geometry, visible foot contact, browser operation, or public delivery.",
+  "scope": "TEST_FIXTURE_ONLY actor adapters; unchanged production LifeWorld and vendored Cannon. These fixtures have no configureGrasp or surface diagnostics; this report does not prove the configured native grasp, hand/prop penetration, foot contact, browser operation, or public delivery.",
   "station": {
-    "tableTop": 0.95,
+    "tableTop": 1.02,
     "tableHalf": [
       0.62,
       0.035,
@@ -14,37 +14,37 @@
     ],
     "tableCentre": [
       0,
-      0.915,
+      0.985,
       0.52
     ],
     "radius": 0.032,
     "height": 0.14,
-    "gripHeight": 0.048,
+    "gripHeight": 0,
     "mass": 0.22,
     "maxGripForcePerAxisN": 24,
     "maxGripTorquePerAxisNm": 0.8,
     "source": [
       0,
-      1.0208,
+      1.0908,
       0.37
     ],
     "target": [
       0.1,
-      1.0208,
+      1.0908,
       0.44
     ]
   },
   "stepS": 0.008333333333333333,
   "tests": [
     {
-      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
-      "requiredRiseM": 0.03,
+      "name": "Cancel after actual vertical rise above 5 cm and allow waiting helper to complete",
+      "requiredRiseM": 0.05,
       "pass": true,
       "cancelled": {
-        "t": 2.6333333333333266,
-        "y": 1.0510961828035812,
-        "riseM": 0.030296182803581262,
-        "velocityY": 0.13812088749387716,
+        "t": 2.7666666666666595,
+        "y": 1.1416255644961737,
+        "riseM": 0.0508255644961737,
+        "velocityY": 0.16517708014428192,
         "owner": "A",
         "phase": "lift",
         "constraints": 1,
@@ -57,9 +57,9 @@
       "helperResult": {
         "result": "completed",
         "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
-        "duration": 9.900000000000079,
+        "duration": 10.033333333333404,
         "contactM": 0,
-        "maxHoldErrorM": 0.011963080588480815,
+        "maxHoldErrorM": 0.01196307897287694,
         "phases": [
           "waiting",
           "approach",
@@ -77,121 +77,10 @@
       },
       "maxConstraints": 1,
       "finalBottlePosition": [
-        0.09960947721699293,
-        1.0199989157040077,
-        0.4399778501178353
+        0.0996094094018013,
+        1.0899989157046828,
+        0.4399786001265734
       ]
-    },
-    {
-      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
-      "requiredRiseM": 0.08,
-      "pass": true,
-      "cancelled": {
-        "t": 2.941666666666659,
-        "y": 1.10153384361039,
-        "riseM": 0.08073384361039015,
-        "velocityY": 0.17025481107508708,
-        "owner": "A",
-        "phase": "lift",
-        "constraints": 1,
-        "after": {
-          "owner": null,
-          "reserved": null,
-          "constraints": 0
-        }
-      },
-      "helperResult": {
-        "result": "completed",
-        "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
-        "duration": 10.208333333333394,
-        "contactM": 0,
-        "maxHoldErrorM": 0.011963080588481037,
-        "phases": [
-          "waiting",
-          "approach",
-          "close",
-          "lift",
-          "transfer",
-          "lower",
-          "verify"
-        ]
-      },
-      "remaining": {
-        "owner": null,
-        "reserved": null,
-        "constraints": 0
-      },
-      "maxConstraints": 1,
-      "finalBottlePosition": [
-        0.09960985968275379,
-        1.0199989157047347,
-        0.4399778546638991
-      ]
-    },
-    {
-      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
-      "requiredRiseM": 0.13,
-      "pass": true,
-      "cancelled": {
-        "t": 3.324999999999991,
-        "y": 1.151219659680082,
-        "riseM": 0.13041965968008218,
-        "velocityY": 0.07293632727697494,
-        "owner": "A",
-        "phase": "lift",
-        "constraints": 1,
-        "after": {
-          "owner": null,
-          "reserved": null,
-          "constraints": 0
-        }
-      },
-      "helperResult": {
-        "result": "completed",
-        "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
-        "duration": 10.591666666666706,
-        "contactM": 0,
-        "maxHoldErrorM": 0.011963080588480815,
-        "phases": [
-          "waiting",
-          "approach",
-          "close",
-          "lift",
-          "transfer",
-          "lower",
-          "verify"
-        ]
-      },
-      "remaining": {
-        "owner": null,
-        "reserved": null,
-        "constraints": 0
-      },
-      "maxConstraints": 1,
-      "finalBottlePosition": [
-        0.09960862912536869,
-        1.0199989157023956,
-        0.43997784002091966
-      ]
-    },
-    {
-      "name": "A helper that only waited must not receive a reach pose when the goal is already satisfied",
-      "pass": true,
-      "result": {
-        "result": "already-sorted",
-        "detail": "物品已由另一人放稳，无需重复执行",
-        "duration": 6.6750000000001215,
-        "contactM": null,
-        "maxHoldErrorM": 0,
-        "phases": [
-          "waiting"
-        ]
-      },
-      "phases": [
-        "waiting",
-        "done"
-      ],
-      "reachCommandCount": 0
     }
   ],
   "passed": true

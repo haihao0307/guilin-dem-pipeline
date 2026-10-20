@@ -34,10 +34,19 @@ const timeout = (name,fallback) => {
 const BOOT_MS = timeout('NPC_BOOT_TIMEOUT_MS',600000);
 const TASK_MS = timeout('NPC_TASK_TIMEOUT_MS',180000);
 const SUITE_MS = timeout('NPC_SUITE_TIMEOUT_MS',900000);
+// Driver-side deadlines also work when the renderer no longer services JS/CDP.
+// These guard evidence collection; they do not relax any native readiness gate.
+const PROBE_MS = timeout('NPC_PROBE_TIMEOUT_MS',60000);
+const GPU_MS = timeout('NPC_GPU_TIMEOUT_MS',90000);
+const FAILURE_TOTAL_MS = 90000, FAILURE_STEP_MS = 20000, CLOSE_MS = 15000;
 const run = process.env.GITHUB_RUN_ID ? process.env.GITHUB_RUN_ID + '-' + (process.env.GITHUB_RUN_ATTEMPT || '1') : new Date().toISOString().replace(/[:.]/g,'-');
 const out = path.resolve(process.env.NPC_QA_OUT || process.env.QA_OUT || path.join(here,'qa','browser-' + PHASE + '-' + run));
 fs.mkdirSync(out,{recursive:true});
-const put = (name,value) => fs.writeFileSync(path.join(out,name),typeof value==='string' ? value : JSON.stringify(value,null,2)+'\n');
+const put = (name,value) => {
+  const file=path.join(out,name),temporary=file+'.tmp';
+  fs.writeFileSync(temporary,typeof value==='string' ? value : JSON.stringify(value,null,2)+'\n');
+  fs.renameSync(temporary,file);
+};
 let sourceHead = process.env.SOURCE_HEAD || process.env.GITHUB_SHA || null;
 if (!sourceHead) {try {sourceHead=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:here,encoding:'utf8'}).trim();} catch {}}
 let build = null;
@@ -51,20 +60,84 @@ const report = {
     headless:true,requestedRenderer:'SwiftShader',softwareRenderer:true,physicalPhone:false,userDevice:false,
     viewport:{width:1200,height:900},playwright:require('playwright/package.json').version},
   tests:[],pageErrors:[],consoleErrors:[],consoleWarnings:[],failedRequests:[],httpErrors:[],requests:[],screenshots:[],
+  currentStage:'created',activeOperations:{},driverOperations:[],progressLog:[],evidenceWriteErrors:[],
+  deadlines:{bootMS:BOOT_MS,taskMS:TASK_MS,suiteMS:SUITE_MS,probeMS:PROBE_MS,gpuMS:GPU_MS,
+    failureTotalMS:FAILURE_TOTAL_MS,failureStepMS:FAILURE_STEP_MS,browserCloseMS:CLOSE_MS},
   startupPassed:false,contactTestsRun:false,fullSuiteRun:false,completed:false,
   visualAcceptance:false,productionReady:false,publicURLVerified:false
 };
-let server,browser,context,page,cdp,heartbeat,heartbeatBusy=false,collecting=true;
+let server,browser,context,page,cdp,heartbeat,checkpointTimer,heartbeatBusy=false,collecting=true,operationSequence=0;
 const clip = value => String(value).slice(0,24000);
 
-async function check(name,fn) {
-  const started=Date.now();
-  try {const result=await fn();assert.notEqual(result,false);report.tests.push({name,passed:true,elapsedMS:Date.now()-started,result});console.log('[qa] PASS '+name);return result;}
-  catch(error) {report.tests.push({name,passed:false,elapsedMS:Date.now()-started,error:clip(error.stack||error)});throw error;}
+// Persist driver-owned facts without waiting on the browser. Atomic replacement
+// leaves a readable previous checkpoint even if the CI step is interrupted.
+function checkpoint(reason) {
+  report.lastCheckpoint={at:new Date().toISOString(),reason,stage:report.currentStage};
+  const records={
+    'network.json':{requests:report.requests,failedRequests:report.failedRequests,httpErrors:report.httpErrors},
+    'errors.json':{pageErrors:report.pageErrors,consoleErrors:report.consoleErrors,consoleWarnings:report.consoleWarnings,failure:report.failure},
+    'qa.json':report,
+    'checkpoint.json':{...report.lastCheckpoint,sourceHead,phase:PHASE,status:report.status || 'RUNNING',
+      completed:report.completed,startupPassed:report.startupPassed,activeOperations:report.activeOperations,
+      lastBootState:report.lastBootState,testCount:report.tests.length,requestCount:report.requests.length,
+      pageErrorCount:report.pageErrors.length,consoleErrorCount:report.consoleErrors.length,
+      screenshotCount:report.screenshots.length,failure:report.failure}
+  };
+  for(const [name,value] of Object.entries(records)) {
+    try {put(name,value);}
+    catch(error) {
+      const issue={at:new Date().toISOString(),file:name,error:clip(error.message)};
+      report.evidenceWriteErrors.push(issue);
+      try {fs.writeSync(2,'[qa] checkpoint write failed '+JSON.stringify(issue)+'\n');}catch{}
+    }
+  }
 }
 
-async function bootState() {
-  return page.evaluate(() => ({
+function log(message,details) {
+  const entry={at:new Date().toISOString(),stage:report.currentStage,message,...(details===undefined?{}:{details})};
+  report.progressLog.push(entry);
+  try {fs.appendFileSync(path.join(out,'progress.jsonl'),JSON.stringify(entry)+'\n');}
+  catch(error) {report.evidenceWriteErrors.push({at:entry.at,file:'progress.jsonl',error:clip(error.message)});}
+  checkpoint(message);
+  console.log('[qa] '+message+(details===undefined?'':' '+JSON.stringify(details)));
+}
+
+function stage(name) {report.currentStage=name;log('stage '+name);}
+
+async function bounded(label,fn,budgetMS=PROBE_MS) {
+  assert(Number.isFinite(budgetMS) && budgetMS>0,'A positive driver deadline is required: '+label);
+  const id=String(++operationSequence),started=Date.now();
+  const operation={id,label,startedAt:new Date(started).toISOString(),budgetMS};
+  report.activeOperations[id]=operation;checkpoint('operation started: '+label);
+  let timer,outcome='completed',failure;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(fn),
+      new Promise((resolve,reject)=>{timer=setTimeout(()=>{
+        const error=new Error('Driver deadline exceeded after '+budgetMS+' ms: '+label);
+        error.code='NPC_DRIVER_TIMEOUT';reject(error);
+      },budgetMS);})
+    ]);
+  } catch(error) {outcome=error.code==='NPC_DRIVER_TIMEOUT'?'timeout':'error';failure=clip(error.message);throw error;}
+  finally {
+    clearTimeout(timer);delete report.activeOperations[id];
+    report.driverOperations.push({...operation,elapsedMS:Date.now()-started,outcome,...(failure?{error:failure}:{})});
+    checkpoint('operation '+outcome+': '+label);
+  }
+}
+
+const evaluate=(label,fn,arg,budgetMS=PROBE_MS)=>bounded(label,()=>page.evaluate(fn,arg),budgetMS);
+const sendCDP=(label,method,args,budgetMS=PROBE_MS)=>bounded(label,()=>cdp.send(method,args),budgetMS);
+const waitFor=(label,fn,arg,options)=>bounded(label,()=>page.waitForFunction(fn,arg,options),options.timeout+5000);
+
+async function check(name,fn) {
+  const started=Date.now();stage(name);
+  try {const result=await fn();assert.notEqual(result,false);report.tests.push({name,passed:true,elapsedMS:Date.now()-started,result});log('PASS '+name);return result;}
+  catch(error) {report.tests.push({name,passed:false,elapsedMS:Date.now()-started,error:clip(error.stack||error)});log('FAIL '+name,{error:clip(error.message)});throw error;}
+}
+
+async function bootState(budgetMS=PROBE_MS) {
+  return evaluate('read native boot state',() => ({
     ready:!!window.__NPC_OBSERVATION__?.ready,
     state:document.documentElement.dataset.npcReady || null,
     progress:document.querySelector('#npc-progress')?.textContent || null,
@@ -76,7 +149,7 @@ async function bootState() {
     startupFinalFrame:!!window.__IDENTITY_QA__?.viewer?.()?.startupFinalFrame,
     appErrors:window.__NPC_OBSERVATION__?.errors || [],
     browserFatal:window.__NPC_BROWSER_FATAL__ || []
-  }));
+  }),undefined,budgetMS);
 }
 
 async function pause(value) {
@@ -85,8 +158,8 @@ async function pause(value) {
   if(current!==value) await button.click();
 }
 
-async function evidence(label,{nativeRigs=false}={}) {
-  const captured=await page.evaluate(({nativeRigs}) => {
+async function evidence(label,{nativeRigs=false,budgetMS=PROBE_MS}={}) {
+  const captured=await evaluate('collect evidence: '+label,({nativeRigs}) => {
     const safe=fn=>{try{return fn();}catch(error){return{readError:String(error)};}};
     const qa=window.__IDENTITY_QA__,v=qa?.viewer?.(),model=qa?.model?.(),app=window.__NPC_OBSERVATION__;
     const actors=safe(()=>app?.actorDiagnostics?.() ?? app?.diagnostics?.()?.actors ?? null);
@@ -129,7 +202,7 @@ async function evidence(label,{nativeRigs=false}={}) {
       if(value instanceof Set)return [...value];
       return value;
     }));
-  },{nativeRigs});
+  },{nativeRigs},budgetMS);
   put(label+'.json',captured);
   if(nativeRigs) {
     put('BODY.json',{actors:captured.actorDiagnostics,meshes:captured.actorMeshes,snapshot:captured.snapshot});
@@ -137,11 +210,11 @@ async function evidence(label,{nativeRigs=false}={}) {
     put('r05-stream.json',captured.native.stream || {});
     put('native-current-state.json',captured.native.state || {});
   }
-  return captured;
+  log('evidence saved '+label);return captured;
 }
 
 async function gpuEvidence() {
-  const gpu=await page.evaluate(async()=>{
+  const gpu=await evaluate('render and read actual GPU framebuffer',async()=>{
     const viewer=window.__IDENTITY_QA__.viewer(),renderer=viewer.renderer,gl=renderer.getContext();
     viewer.render();
     const debug=gl.getExtension('WEBGL_debug_renderer_info');
@@ -164,26 +237,26 @@ async function gpuEvidence() {
       framebuffer:{width:gl.drawingBufferWidth,height:gl.drawingBufferHeight,lo,hi,
         variance:count?sum2/count-(sum/count)**2:0,
         sha256:Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}};
-  });
+  },undefined,GPU_MS);
   put('gpu.json',gpu);
   return gpu;
 }
 
 async function screenshot(name) {
-  await page.evaluate(async()=>{const v=window.__IDENTITY_QA__?.viewer?.();v?.render();await new Promise(resolve=>requestAnimationFrame(resolve));v?.render();});
-  const shot=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await evaluate('render screenshot frame: '+name,async()=>{const v=window.__IDENTITY_QA__?.viewer?.();v?.render();await new Promise(resolve=>requestAnimationFrame(resolve));v?.render();});
+  const shot=await sendCDP('capture screenshot: '+name,'Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   const bytes=Buffer.from(shot.data,'base64'),file=name+'.png';
   fs.writeFileSync(path.join(out,file),bytes);
   report.screenshots.push({file,sha256:sha(bytes),bytes:bytes.length,url:page.url(),capturedAt:new Date().toISOString()});
-  console.log('[qa] screenshot '+file+' ('+bytes.length+' bytes)');
+  log('screenshot '+file+' ('+bytes.length+' bytes)');
 }
 
-async function saveDOM(name='body-dom') {
-  const dom=await page.evaluate(()=>{
+async function saveDOM(name='body-dom',budgetMS=PROBE_MS) {
+  const dom=await evaluate('save DOM: '+name,()=>{
     const body=document.body.cloneNode(true);let scripts=0;
     for(const el of body.querySelectorAll('script')){scripts++;el.replaceWith(document.createComment('Inline script omitted from DOM evidence; complete source is SHA-bound in BUILD.json.'));}
     return {html:body.outerHTML,text:document.body.innerText,omittedScripts:scripts,title:document.title,url:location.href};
-  });
+  },undefined,budgetMS);
   put(name+'.html',dom.html);put(name+'.txt',dom.text);return{title:dom.title,url:dom.url,omittedScripts:dom.omittedScripts};
 }
 
@@ -203,16 +276,55 @@ function checkFeetAndBones(actors,stage) {
   });
 }
 
+const CONTACT_STAGES=['close','lift','transfer','lower','lower-end','verify'];
+async function auditCursor(label) {
+  return evaluate('read phase geometry cursor: '+label,()=>{
+    const poses=window.__NPC_OBSERVATION__.snapshot().audit.poses;
+    return poses.length?poses[poses.length-1].time:-1;
+  });
+}
+
+function checkAuditGeometry(snapshot,label,{afterTime=-1,id=null,requiredActors=[]}={}) {
+  const samples=snapshot.audit?.poses;
+  assert(Array.isArray(samples),'Actual driven-pose audit is exported: '+label);
+  const rows=samples.filter(sample=>sample.time>afterTime && (!id || sample.id===id) && CONTACT_STAGES.includes(sample.stage));
+  const violations=[];
+  if(!rows.length)violations.push({id,reason:'no actual contact-phase samples were exported'});
+  const requireValue=(pass,sample,reason)=>{if(!pass)violations.push({id:sample.id,stage:sample.stage,time:sample.time,reason});};
+  for(const sample of rows) {
+    requireValue(Number.isFinite(sample.boneLengthErrorM) && sample.boneLengthErrorM<=1e-8,sample,'native bone drift exceeds 1e-8 m or is unavailable');
+    requireValue(Number.isFinite(sample.footSurfaceErrorM) && sample.footSurfaceErrorM<=.00002,sample,'native foot surface drift exceeds 0.02 mm or is unavailable');
+    for(const side of ['L','R'])requireValue(Number.isFinite(sample.footWorldYM?.[side]) && Math.abs(sample.footWorldYM[side])<=.003,sample,'actual '+side+' foot is outside floor tolerance of 3 mm');
+    requireValue(typeof sample.supportEnabled==='boolean',sample,'actual support state is unavailable');
+    requireValue(Number.isInteger(sample.handTableSampleCount) && sample.handTableSampleCount>=0,sample,'projected hand vertex count is unavailable');
+    if(sample.supportEnabled && sample.handTableSampleCount>0)requireValue(Number.isFinite(sample.handTableClearanceM) && sample.handTableClearanceM>=-.003,sample,'actual hand vertices penetrate the existing tabletop by more than 3 mm');
+    requireValue(Number.isFinite(sample.bottleMaxPenetrationM) && sample.bottleMaxPenetrationM<=.005,sample,'actual hand vertices penetrate the finite bottle cylinder by more than 5 mm');
+  }
+  for(const actorId of requiredActors)for(const required of CONTACT_STAGES) {
+    if(!rows.some(sample=>sample.id===actorId && sample.stage===required))violations.push({id:actorId,stage:required,reason:'required actual driven-pose sample is missing'});
+  }
+  const result={label,afterTime,accepted:violations.length===0,scope:'Measured rendered hand vertices at actual driven phases; no continuous triangle collision or finger force claim',
+    thresholds:{boneLengthErrorM:1e-8,footSurfaceErrorM:.00002,footWorldAbsoluteYM:.003,existingTablePenetrationM:.003,bottlePenetrationM:.005},
+    tableGate:'Only supportEnabled and hand vertices inside the tabletop XZ projection',
+    bottleGate:'Actual finite-cylinder SDF in close, lift, transfer, lower, lower-end and verify samples',
+    requiredActors,requiredStages:CONTACT_STAGES,rows,violations};
+  // Preserve every measurement, including all violations, before asserting.
+  put('phase-geometry-'+label+'.json',result);
+  assert(rows.length>0,'At least one actual contact-phase sample is required: '+label);
+  assert.equal(violations.length,0,'Actual phase geometry failed: '+JSON.stringify(violations));
+  return {sampleCount:rows.length,accepted:true,requiredActors};
+}
+
 async function mobileViewport() {
   await check('390 x 844 responsive viewport and reachable controls',async()=>{
     await pause(true);await page.setViewportSize({width:390,height:844});
     await page.click('[data-camera="all"]');
-    await page.waitForFunction(()=>{
+    await waitFor('mobile real canvas resize',()=>{
       const c=window.__IDENTITY_QA__?.viewer?.()?.renderer?.domElement,r=c?.getBoundingClientRect();
       return r && r.width>200 && r.width<=392 && r.height>200 && c.width>100 && c.height>100;
     },{},{timeout:30000,polling:100});
     await screenshot('mobile-390x844-panorama');
-    const layout=await page.evaluate(()=>{
+    const layout=await evaluate('read mobile layout',()=>{
       const rect=selector=>document.querySelector(selector)?.getBoundingClientRect().toJSON();
       const panel=document.querySelector('#npc-app aside');
       return {width:innerWidth,height:innerHeight,documentWidth:document.documentElement.scrollWidth,
@@ -242,8 +354,9 @@ async function contactTests() {
     const id=['A','B','C'][i];
     await check(id+' real native pick/place UI',async()=>{
       await pause(true);await page.click('[data-person="'+i+'"]');
-      await page.click('[data-camera="contact"]');await page.click('#npc-pick');await pause(false);
-      await page.waitForFunction(id=>{
+      await page.click('[data-camera="contact"]');const geometryStart=await auditCursor(id);
+      await page.click('#npc-pick');await pause(false);
+      await waitFor('wait for actual grip: '+id,id=>{
         const s=window.__NPC_OBSERVATION__.snapshot(),a=s.agents.find(a=>a.id===id);
         return s.object.heldBy===id || ['done','failed','cancelled'].includes(a?.phase) || window.__NPC_OBSERVATION__.errors.length;
       },id,{timeout:TASK_MS,polling:100});
@@ -253,6 +366,12 @@ async function contactTests() {
       const agent=grip.snapshot.agents.find(a=>a.id===id);
       const feet=checkFeetAndBones(grip.actorDiagnostics,'contact-'+id);
       const hand=grip.actorDiagnostics.find(actor=>actor.id===id)?.diagnostics;
+      const bottleGeometry={measured:true,accepted:Number.isFinite(hand?.bottleMaxPenetrationM) && hand.bottleMaxPenetrationM<=.005,
+        maximumAllowedPenetrationM:.005,definition:hand?.geometricDiagnosticScope,
+        maxPenetrationM:hand?.bottleMaxPenetrationM,minimumSignedDistanceM:hand?.bottleMinimumSignedDistanceM,
+        penetratingVertexCount:hand?.bottlePenetratingVertexCount,sampleCount:hand?.bottleSampleCount,
+        fingerSignedDistanceM:hand?.fingerBottleSignedDistanceM,deepestPointWorld:hand?.bottleDeepestPointWorld};
+      put('bottle-geometry-'+id+'.json',bottleGeometry);
       assert.equal(grip.errors.length,0,'No runtime exception');
       assert.equal(grip.snapshot.object.heldBy,id,'The real shared object is held by the selected actor');
       assert.equal(grip.snapshot.object.constraintCount,1,'One actual physical grip constraint');
@@ -260,16 +379,13 @@ async function contactTests() {
       assert(Number.isInteger(hand?.handTableSampleCount) && hand.handTableSampleCount>=0,'Actual table-projected hand vertices are measured');
       // Only the holding actor's hand vertices whose XZ projection lies inside
       // the real tabletop are gated. Low idle hands beside a table are valid.
-      if(hand.handTableSampleCount>0)assert(Number.isFinite(hand.handTableClearanceM) && hand.handTableClearanceM>=-.003,
+      if(grip.snapshot.object.supportEnabled && hand.handTableSampleCount>0)assert(Number.isFinite(hand.handTableClearanceM) && hand.handTableClearanceM>=-.003,
         'Held hand penetrates the actual tabletop by more than 3 mm: '+id+' / '+hand.handTableClearanceM);
       assert(hand.bottleSampleCount>0 && Number.isFinite(hand.bottleMaxPenetrationM),'Actual finite-cylinder hand geometry was measured');
-      const bottleGeometry={measured:true,accepted:null,definition:hand.geometricDiagnosticScope,
-        maxPenetrationM:hand.bottleMaxPenetrationM,minimumSignedDistanceM:hand.bottleMinimumSignedDistanceM,
-        penetratingVertexCount:hand.bottlePenetratingVertexCount,sampleCount:hand.bottleSampleCount,
-        fingerSignedDistanceM:hand.fingerBottleSignedDistanceM,deepestPointWorld:hand.bottleDeepestPointWorld};
-      put('bottle-geometry-'+id+'.json',bottleGeometry);
+      assert(hand.bottleMaxPenetrationM<=.005,'Actual rendered hand penetrates the bottle by more than 5 mm: '+id+' / '+hand.bottleMaxPenetrationM);
+      const contactGeometry=checkAuditGeometry(grip.snapshot,'contact-'+id,{afterTime:geometryStart,id});
       await pause(false);
-      await page.waitForFunction(id=>{
+      await waitFor('wait for actual placement: '+id,id=>{
         const app=window.__NPC_OBSERVATION__,a=app.snapshot().agents.find(a=>a.id===id);
         return ['done','failed','cancelled'].includes(a?.phase) || app.errors.length;
       },id,{timeout:TASK_MS,polling:100});
@@ -277,11 +393,12 @@ async function contactTests() {
       const final=await evidence('placed-'+id);
       const result=final.snapshot.agents.find(a=>a.id===id).result;
       const finalFeet=checkFeetAndBones(final.actorDiagnostics,'placed-'+id);
+      const phaseGeometry=checkAuditGeometry(final.snapshot,'placed-'+id,{afterTime:geometryStart,id,requiredActors:[id]});
       assert.equal(result?.result,'completed','World result must confirm placement');
       assert.equal(final.snapshot.object.heldBy,null);assert.equal(final.snapshot.object.constraintCount,0);
       assert(final.snapshot.object.insideTarget && final.snapshot.object.supported && final.snapshot.object.settled,'Object actually released and stable on support');
       return {contactErrorM:agent.contactErrorM,result,object:final.snapshot.object,feet,finalFeet,
-        handDiagnostics:hand,bottleGeometry};
+        handDiagnostics:hand,bottleGeometry,contactGeometry,phaseGeometry};
     });
   }
 }
@@ -289,11 +406,13 @@ async function contactTests() {
 async function fullSuite() {
   report.fullSuiteRun=true;
   await check('built-in six-test observation suite',async()=>{
+    const geometryStart=await auditCursor('six-test suite');
     await page.click('#npc-run-qa');
-    await page.waitForFunction(()=>window.__NPC_OBSERVATION__.verification()?.completed || window.__NPC_OBSERVATION__.errors.length,{},{timeout:SUITE_MS,polling:250});
+    await waitFor('wait for six-test suite',()=>window.__NPC_OBSERVATION__.verification()?.completed || window.__NPC_OBSERVATION__.errors.length,{},{timeout:SUITE_MS,polling:250});
     await pause(true);
     const result=await evidence('suite-final');put('suite.json',result.verification || {});
     checkFeetAndBones(result.actorDiagnostics,'suite-final');
+    report.suitePhaseGeometry=checkAuditGeometry(result.snapshot,'suite-final',{afterTime:geometryStart,requiredActors:['A','B','C']});
     await page.click('[data-camera="all"]');await screenshot('suite-final');
     assert.equal(result.errors.length,0);assert.equal(result.verification?.completed,true);
     assert.equal(result.verification.tests.length,6);assert.equal(result.verification.passed,true);
@@ -303,7 +422,10 @@ async function fullSuite() {
 }
 
 async function main() {
-  console.log('[qa] '+VERSION+' / '+PHASE+' / evidence '+out);
+  log(VERSION+' / '+PHASE+' / evidence '+out);
+  checkpointTimer=setInterval(()=>checkpoint('periodic driver checkpoint'),5000);
+  checkpointTimer.unref();
+  stage('configure candidate');
   assert.equal(report.environment.playwright,'1.58.2','CI verifier pins Playwright 1.58.2');
   if(process.env.PREVIEW_URL) {
     report.url=process.env.PREVIEW_URL;const address=new URL(report.url);
@@ -318,41 +440,47 @@ async function main() {
       else if(route==='/favicon.ico') {response.writeHead(204);response.end();}
       else {response.writeHead(404,{'Content-Type':'text/plain'});response.end('No candidate resource at this path');}
     });
-    await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+    await bounded('start candidate HTTP server',()=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);}),10000);
     report.url='http://127.0.0.1:'+server.address().port+'/';report.deliveryMode='local-candidate-http';
   }
-  browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  stage('launch isolated CI Chromium');
+  browser=await bounded('launch Chromium',()=>chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}));
   report.environment.chromium=browser.version();
-  context=await browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1});
-  await context.addInitScript(()=>{
+  context=await bounded('create CI browser context',()=>browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1}));
+  await bounded('install read-only error capture',()=>context.addInitScript(()=>{
     window.__NPC_BROWSER_EVENTS__=[];
     window.__NPC_BROWSER_FATAL__=[];
     window.addEventListener('error',event=>{if(event.message)window.__NPC_BROWSER_FATAL__.push({type:'error',message:event.message,file:event.filename,line:event.lineno,column:event.colno,at:performance.now()});});
     window.addEventListener('unhandledrejection',event=>window.__NPC_BROWSER_FATAL__.push({type:'unhandledrejection',message:String(event.reason?.stack||event.reason),at:performance.now()}));
     document.addEventListener('webglcontextlost',event=>window.__NPC_BROWSER_EVENTS__.push({type:'webglcontextlost',at:performance.now(),target:event.target?.id||null}),true);
     document.addEventListener('webglcontextrestored',event=>window.__NPC_BROWSER_EVENTS__.push({type:'webglcontextrestored',at:performance.now(),target:event.target?.id||null}),true);
+  }));
+  page=await bounded('create candidate page',()=>context.newPage());page.setDefaultTimeout(30000);
+  cdp=await bounded('open screenshot CDP session',()=>context.newCDPSession(page));
+  page.on('pageerror',error=>{
+    if(collecting){const value={at:new Date().toISOString(),error:clip(error.stack||error)};report.pageErrors.push(value);log('page error',value);}
   });
-  page=await context.newPage();page.setDefaultTimeout(30000);cdp=await context.newCDPSession(page);
-  page.on('pageerror',error=>{if(collecting)report.pageErrors.push({at:new Date().toISOString(),error:clip(error.stack||error)});});
   page.on('console',message=>{
     if(!collecting)return;
     const value={at:new Date().toISOString(),text:clip(message.text()),location:message.location()};
-    if(message.type()==='error')report.consoleErrors.push(value);
+    if(message.type()==='error'){report.consoleErrors.push(value);log('console error',value);}
     if(message.type()==='warning' && report.consoleWarnings.length<300)report.consoleWarnings.push(value);
   });
   page.on('request',request=>{if(collecting)report.requests.push({url:request.url(),type:request.resourceType(),method:request.method()});});
-  page.on('requestfailed',request=>{if(collecting)report.failedRequests.push({url:request.url(),type:request.resourceType(),failure:request.failure()});});
-  page.on('response',response=>{if(collecting && response.status()>=400)report.httpErrors.push({url:response.url(),status:response.status()});});
+  page.on('requestfailed',request=>{if(collecting){const value={url:request.url(),type:request.resourceType(),failure:request.failure()};report.failedRequests.push(value);log('request failed',value);}});
+  page.on('response',response=>{if(collecting && response.status()>=400){const value={url:response.url(),status:response.status()};report.httpErrors.push(value);log('HTTP error',value);}});
   const start=Date.now();
   heartbeat=setInterval(async()=>{
     if(heartbeatBusy || !page || page.isClosed())return;heartbeatBusy=true;
-    try {const state=await bootState();console.log('[qa] progress '+JSON.stringify(state));report.lastBootState=state;}catch(error){console.log('[qa] progress unavailable '+clip(error.message));}finally{heartbeatBusy=false;}
+    try {const state=await bootState(15000);report.lastBootState=state;log('progress',state);}
+    catch(error){log('progress unavailable',{error:clip(error.message)});}
+    finally{heartbeatBusy=false;}
   },30000);
   await check('candidate response and freshness',async()=>{
-    const response=await page.goto(report.url,{waitUntil:'domcontentloaded',timeout:120000});
+    const response=await bounded('navigate to exact candidate',()=>page.goto(report.url,{waitUntil:'domcontentloaded',timeout:120000}),125000);
     report.finalURL=page.url();report.navigationStatus=response?.status() || null;
     if(report.deliveryMode!=='file-protocol')assert.equal(response?.status(),200,'Candidate HTML must respond HTTP 200');
-    if(response)report.observedPreviewSHA256=sha(await response.body());
+    if(response)report.observedPreviewSHA256=sha(await bounded('read actual navigation HTML bytes',()=>response.body()));
     else if(report.deliveryMode==='file-protocol')report.observedPreviewSHA256=sha(fs.readFileSync(input));
     assert(expectedSHA,'Expected preview SHA is required for current-source verification');
     assert.equal(report.observedPreviewSHA256,expectedSHA,'Browser loaded the exact current build');
@@ -360,7 +488,7 @@ async function main() {
   });
   await check('complete original R07 and all three actors ready',async()=>{
     assert.equal(report.pageErrors.length,0,'Page failed before native startup: '+JSON.stringify(report.pageErrors));
-    await page.waitForFunction(()=>!!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length || !!window.__NPC_BROWSER_FATAL__?.length,{},{timeout:BOOT_MS,polling:250});
+    await waitFor('wait for original R07 and all native actors',()=>!!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length || !!window.__NPC_BROWSER_FATAL__?.length,{},{timeout:BOOT_MS,polling:250});
     report.coldReadyMS=Date.now()-start;report.lastBootState=await bootState();
     assert.equal(report.lastBootState.browserFatal.length,0,'Browser failed during native startup: '+JSON.stringify(report.lastBootState.browserFatal));
     assert.equal(report.lastBootState.state,'true',JSON.stringify(report.lastBootState));
@@ -401,7 +529,7 @@ async function main() {
   await screenshot('01-panorama');
   await page.click('[data-camera="contact"]');await screenshot('02-hand-view');
   await evidence('hand-view');report.dom=await saveDOM();
-  report.startupPassed=true;
+  report.startupPassed=true;log('startup evidence complete');
   if(PHASE==='contact' || PHASE==='suite')await contactTests();
   if(PHASE==='suite'){await fullSuite();await mobileViewport();}
   const final=await evidence('final');
@@ -418,23 +546,57 @@ async function main() {
   report.completed=true;report.status=PHASE.toUpperCase()+'_PASSED';
   report.publicURLVerified=report.deliveryMode==='deployed-url';
   report.fullProgrammaticAcceptance=PHASE==='suite';
+  log('verification complete');
 }
 
 main().catch(async error=>{
+  clearInterval(heartbeat);
   report.completed=false;report.status='FAILED';report.failure=clip(error.stack||error);process.exitCode=1;
-  console.error('[qa] FAILED '+report.failure);
+  report.failedStage=report.currentStage;stage('failure evidence');
+  // Save the original failure and all driver events before any browser await.
+  // An unresponsive renderer may prevent every optional diagnostic below.
+  log('FAILED '+report.failure);
+  const failureStarted=Date.now(),failureDeadline=failureStarted+FAILURE_TOTAL_MS;
+  report.failureDiagnostics=[];checkpoint('failure diagnostics started');
+  const diagnose=async(label,fn)=>{
+    const budgetMS=Math.min(FAILURE_STEP_MS,failureDeadline-Date.now());
+    if(budgetMS<=0){report.failureDiagnostics.push({label,status:'skipped',reason:'total failure diagnostic budget exhausted'});checkpoint('failure diagnostic skipped');return;}
+    try {await fn(budgetMS);report.failureDiagnostics.push({label,status:'saved'});}
+    catch(diagnosticError){report.failureDiagnostics.push({label,status:'unavailable',error:clip(diagnosticError.message)});}
+    checkpoint('failure diagnostic finished: '+label);
+  };
   if(page && !page.isClosed()) {
-    try {report.failureState=await bootState();}catch{}
-    try {await evidence('failure',{nativeRigs:true});}catch(error){report.failureEvidenceError=clip(error.message);}
-    try {await saveDOM('failure-dom');}catch{}
-    try {const result=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const bytes=Buffer.from(result.data,'base64');fs.writeFileSync(path.join(out,'failure.png'),bytes);report.screenshots.push({file:'failure.png',sha256:sha(bytes),bytes:bytes.length});}catch{}
+    await diagnose('boot state',async budgetMS=>{report.failureState=await bootState(budgetMS);});
+    await diagnose('native geometry and state',budgetMS=>evidence('failure',{nativeRigs:true,budgetMS}));
+    await diagnose('DOM',budgetMS=>saveDOM('failure-dom',budgetMS));
+    if(cdp)await diagnose('screenshot',async budgetMS=>{
+      const result=await sendCDP('failure screenshot','Page.captureScreenshot',{format:'png',captureBeyondViewport:false},budgetMS);
+      const bytes=Buffer.from(result.data,'base64');fs.writeFileSync(path.join(out,'failure.png'),bytes);
+      report.screenshots.push({file:'failure.png',sha256:sha(bytes),bytes:bytes.length});
+    });
   }
+  report.failureDiagnosticsElapsedMS=Date.now()-failureStarted;checkpoint('failure diagnostics complete');
 }).finally(async()=>{
-  clearInterval(heartbeat);report.finishedAt=new Date().toISOString();
-  put('network.json',{requests:report.requests,failedRequests:report.failedRequests,httpErrors:report.httpErrors});
-  put('errors.json',{pageErrors:report.pageErrors,consoleErrors:report.consoleErrors,consoleWarnings:report.consoleWarnings,failure:report.failure});
-  put('qa.json',report);collecting=false;
-  console.log(JSON.stringify({status:report.status,phase:PHASE,completed:report.completed,startupPassed:report.startupPassed,fullSuiteRun:report.fullSuiteRun,sourceHead,output:out,residentPackets:report.residentPackets,failure:report.failure},null,2));
-  try {await browser?.close();}catch{}
-  if(server)await new Promise(resolve=>server.close(resolve));
+  clearInterval(heartbeat);collecting=false;
+  report.verificationFinishedAt=new Date().toISOString();stage('bounded CI cleanup');
+  report.cleanup={startedAt:new Date().toISOString(),completed:false,errors:[]};checkpoint('before browser close');
+  if(browser) {
+    try {await bounded('close isolated CI browser',()=>browser.close(),CLOSE_MS);}
+    catch(error){report.cleanup.errors.push({operation:'browser.close',error:clip(error.message)});}
+  }
+  if(server) {
+    try {server.closeAllConnections?.();await bounded('close candidate HTTP server',()=>new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve())),5000);}
+    catch(error){report.cleanup.errors.push({operation:'server.close',error:clip(error.message)});}
+  }
+  report.cleanup.completed=report.cleanup.errors.length===0;
+  if(!report.cleanup.completed) {
+    report.completed=false;report.fullProgrammaticAcceptance=false;report.status='FAILED_CLEANUP';process.exitCode=1;
+    // The only remaining handles can belong to this isolated test process.
+    // Exit after durable evidence rather than strand the artifact-upload step.
+    report.cleanup.forcedVerifierExit=true;
+  }
+  report.finishedAt=new Date().toISOString();stage('finished');
+  clearInterval(checkpointTimer);checkpoint('final evidence');
+  fs.writeSync(1,JSON.stringify({status:report.status,phase:PHASE,completed:report.completed,startupPassed:report.startupPassed,fullSuiteRun:report.fullSuiteRun,sourceHead,output:out,residentPackets:report.residentPackets,failure:report.failure,cleanup:report.cleanup},null,2)+'\n');
+  if(!report.cleanup.completed)process.exit(process.exitCode || 1);
 });

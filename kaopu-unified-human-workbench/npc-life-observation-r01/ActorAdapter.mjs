@@ -104,6 +104,115 @@ function findSkinPatch(geometry, target, {maxDistance, forward, palm, wrist, alo
   return chosen;
 }
 
+/** A convex palm pad must reach the prop before the central palm hollow.
+ * Select an actual vertex of a rendered triangle in the distal palm, using
+ * native shape, normals and all CSR influences. Finger/thenar influences are
+ * excluded here because those surfaces move during thumb opposition. */
+function findPalmSupport(geometry,binding,rig,side,handVertices) {
+  const wrist=rig.restP[rig.index.get(`wrist.${side}`)],frame=rig.hand[side];
+  const length=norm(sub(rig.restP[rig.index.get(`finger3-1.${side}`)],wrist));
+  const normals=geometry.attributes.normal;let id=-1,support=-Infinity,alignment=0;
+  for(const i of handVertices) {
+    const p=restVertex(geometry,i),along=dot(sub(p,wrist),frame.forward);
+    if(along<length*.52||along>length*.8)continue;
+    const normal=unit([normals.getX(i),-normals.getZ(i),normals.getY(i)]),a=dot(normal,frame.palm);
+    if(a<.3)continue;
+    const start=binding.displayRange[i*4],count=binding.displayRange[i*4+1];let moving=0;
+    for(let k=0;k<count;k++) {
+      const j=binding.displayPacked[(start+k)*8+3],w=binding.displayPacked[(start+k)*8+4];
+      if(/finger[1-5]|metacarpal1/.test(rig.names[j]))moving+=w;
+    }
+    if(moving>1e-6)continue;
+    const distance=dot(sub(p,wrist),frame.palm);
+    if(distance>support){id=i;support=distance;alignment=a;}
+  }
+  if(id<0)throw Error(`Native ${side} palm has no stable convex contact pad`);
+  const index=geometry.index.array;
+  for(let k=0;k<index.length;k+=3)for(let v=0;v<3;v++)if(index[k+v]===id) {
+    const barycentric=[0,0,0];barycentric[v]=1;
+    return {indices:[index[k],index[k+1],index[k+2]],barycentric,
+      rest:restVertex(geometry,id),normalAlignment:alignment,vertex:id,
+      selection:'shape-derived convex distal-palm support; actual rendered triangle vertex'};
+  }
+  throw Error('The native palm support is not part of a rendered triangle');
+}
+
+/** Offline per-identity/side fit. Every candidate uses the complete native
+ * skin, including blended joint-conditioned rest points. It fits an upright
+ * finite cylinder in the palm frame; runtime World still verifies the actual
+ * prop pose. This is a geometric assisted-grip envelope, not a force solver. */
+function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,shape}) {
+  const frame=rig.hand[side],sign=side==='L'?1:-1,across=unit(cross(frame.forward,frame.palm));
+  const digitVertices=Array.from({length:5},(_,f)=>handVertices.filter(i=>{
+    const start=binding.displayRange[i*4],count=binding.displayRange[i*4+1];
+    for(let k=0;k<count;k++)if(rig.names[binding.displayPacked[(start+k)*8+3]].startsWith(`finger${f+1}-`)&&binding.displayPacked[(start+k)*8+4]>1e-6)return true;
+    return false;
+  }));
+  function samplePatch(){let p=[0,0,0];for(let k=0;k<3;k++)if(patch.barycentric[k])p=add(p,scale(binding.sampleVertex(patch.indices[k],true),patch.barycentric[k]));return p;}
+  function pose(values,open) {
+    for(const v of rig.rotationDeltas)v.fill(0);rig.rootTranslation.fill(0);
+    for(let f=1;f<=5;f++) {
+      const t=values[f-1],finger=fingers[side+f];
+      const a=f===1?[open.angle+(22-open.angle)*t,34*t,28*t]:[60*t,76*t,45*t];
+      finger.ids.forEach((id,k)=>{rig.rotationDeltas[id]=scale(finger.axes[k],a[k]);});
+    }
+    const thumb=rig.index.get(`finger1-1.${side}`),opposition=open.opposition+(28-open.opposition)*values[0];
+    rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(frame.forward,sign*opposition));
+    rig.fk();binding.animate(rig.skinMatrices);
+  }
+  function evaluate(values,open,details=false) {
+    pose(values,open);const anchor=samplePatch();let minimum=Infinity,minY=Infinity,deepest=null;
+    const distances=details?new Map():null;
+    for(const id of handVertices) {
+      const delta=sub(binding.sampleVertex(id,true),anchor);
+      const x=sign*dot(delta,frame.forward),y=-sign*dot(delta,across)+shape.gripHeight,
+        z=dot(delta,frame.palm)-shape.radius;
+      const radial=Math.hypot(x,z)-shape.radius,axial=Math.abs(y)-shape.height*.5;
+      const distance=Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0);
+      if(distance<minimum){minimum=distance;deepest=id;}minY=Math.min(minY,y);
+      if(details)distances.set(id,distance);
+    }
+    return {minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:minY,deepestVertex:deepest,
+      ...(details?{fingerSurfaceMinimumSignedDistanceM:digitVertices.map(ids=>Math.min(...ids.map(i=>distances.get(i)))),
+        fingerNearVertexCounts:digitVertices.map(ids=>ids.filter(i=>Math.abs(distances.get(i))<=.003).length)}:{})};
+  }
+  const zero=[0,0,0,0,0];let open=null,openCheck=null;
+  // Native zero already contains curved fingers. Thumb extension/opposition
+  // is searched explicitly; no geometry, bone length or collision tolerance
+  // is altered to manufacture an admissible result.
+  for(const candidate of [{angle:-35,opposition:-35},{angle:-35,opposition:-45},
+    {angle:-45,opposition:-35},{angle:-45,opposition:-45},{angle:-25,opposition:-45}]) {
+    const check=evaluate(zero,candidate,true);
+    if(check.minimumSignedDistanceM>=-.0005){open=candidate;openCheck=check;break;}
+  }
+  if(!open)return {admissible:false,reason:'No tested native open-thumb pose clears the actual cylinder',shape};
+  const closure=zero.slice(),tolerance=.001;
+  for(let f=0;f<5;f++) {
+    let accepted=0,rejected=null;
+    for(let i=1;i<=40;i++) {
+      const candidate=closure.slice();candidate[f]=i/40;
+      if(evaluate(candidate,open).minimumSignedDistanceM < -tolerance){rejected=i/40;break;}
+      accepted=i/40;
+    }
+    if(rejected!==null) {
+      let lo=accepted,hi=rejected;
+      for(let i=0;i<12;i++){const mid=(lo+hi)*.5,candidate=closure.slice();candidate[f]=mid;
+        if(evaluate(candidate,open).minimumSignedDistanceM>=-tolerance)lo=mid;else hi=mid;}
+      accepted=lo;
+    }
+    closure[f]=accepted;
+  }
+  const trajectory=Array.from({length:21},(_,i)=>evaluate(closure.map(v=>v*i/20),open));
+  const closed=evaluate(closure,open,true),minimum=Math.min(...trajectory.map(x=>x.minimumSignedDistanceM));
+  const touchingFingers=closed.fingerNearVertexCounts.slice(1).filter(n=>n>=3).length;
+  const admissible=minimum>=-.0011&&touchingFingers>=3&&closure.slice(1).every(v=>v>=.05);
+  return {admissible,reason:admissible?null:'Native open-to-close envelope lacks clearance or sufficient finger surface contacts',
+    side,shape,open,closure,openCheck,closed,trajectorySamples:trajectory.length,
+    minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:Math.min(...trajectory.map(x=>x.minimumYMFromBottleCenter)),
+    touchingNonThumbFingers:touchingFingers,boneLengthErrorM:rig.validate().maxBoneLengthError,
+    scope:'complete weighted hand vertex samples; first-contact per-finger bisection; no force/friction or continuous-triangle guarantee'};
+}
+
 function makeActor(model, viewer, spec, preset, measurements) {
   // The rendered R07 mesh carries its two sorted material groups. Cloning only
   // viewer.geometry would discard that full-body procedural-skin selection.
@@ -119,7 +228,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
   if(rig.count!==104) throw Error(`R07 native bone count changed: ${rig.count}`);
   const root=new THREE.Group();root.name=`NPC-${spec.id}`;root.position.set(spec.x,binding.floorOffset,spec.z);root.add(mesh);
   viewer.scene.add(root);root.updateMatrixWorld(true);
-  const fingers={},patches={},handSurfaceVertices={};
+  const fingers={},patches={},handSurfaceVertices={},handFingerMembership={};
   for(const side of SIDES) {
     const wrist=rig.restP[rig.index.get(`wrist.${side}`)], frame=rig.hand[side];
     const palmLength=norm(sub(rig.restP[rig.index.get(`finger3-1.${side}`)],wrist));
@@ -133,6 +242,14 @@ function makeActor(model, viewer, spec, preset, measurements) {
       for(let k=0;k<count;k++)if(handJoints.has(binding.displayPacked[(start+k)*8+3])&&binding.displayPacked[(start+k)*8+4]>1e-6){handVertices.push(i);break;}
     }
     handSurfaceVertices[side]=handVertices;
+    handFingerMembership[side]=new Map(handVertices.map(i=>{
+      const start=binding.displayRange[i*4],count=binding.displayRange[i*4+1];let mask=0;
+      for(let k=0;k<count;k++) {
+        const joint=rig.names[binding.displayPacked[(start+k)*8+3]],match=joint.match(/^finger([1-5])-/);
+        if(match&&binding.displayPacked[(start+k)*8+4]>1e-6)mask|=1<<(Number(match[1])-1);
+      }
+      return [i,mask];
+    }));
     for(let f=1;f<=5;f++) {
       const ids=[1,2,3].map(k=>rig.index.get(`finger${f}-${k}.${side}`));
       const points=ids.map(id=>rig.restP[id]), tip=add(points[2],scale(sub(points[2],points[1]),.65));
@@ -150,7 +267,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
     if(id<0)throw Error('Native planted foot surface is unavailable');
     return {id,side,rest:restVertex(geometry,id)};
   });
-  const active={side:spec.side,grip:0};let last={},lastGoal=null,lastSolution=null;
+  const active={side:spec.side,grip:0};let last={},lastGoal=null,lastSolution=null,graspReport=null;
   const toLocal = target => {root.updateWorldMatrix(true,false);return native(root.worldToLocal(asVector(target)));};
   const toWorld = target => {root.updateWorldMatrix(true,false);return root.localToWorld(display(target));};
   const directionNative = direction => {
@@ -165,18 +282,22 @@ function makeActor(model, viewer, spec, preset, measurements) {
     return out;
   }
   function orientFor(side) {return basisRotation(rig.hand[side].forward,rig.hand[side].palm,
-    directionNative([0,-1,0]),directionNative([0,0,1]));}
+    directionNative([side==='L'?1:-1,0,0]),directionNative([0,0,1]));}
   function fingerPose(side,amount) {
+    const fit=graspReport?.sides[side];
+    if(!fit?.admissible)return;
     for(let f=1;f<=5;f++) {
-      const finger=fingers[side+f], open=f===1?[7,8,5]:[8,12,7], closed=f===1?[22,34,28]:[60,76,45];
-      finger.ids.forEach((id,k)=>{rig.rotationDeltas[id]=scale(finger.axes[k],open[k]+(closed[k]-open[k])*amount);});
+      const finger=fingers[side+f],t=fit.closure[f-1]*amount;
+      const angles=f===1?[fit.open.angle+(22-fit.open.angle)*t,34*t,28*t]:[60*t,76*t,45*t];
+      finger.ids.forEach((id,k)=>{rig.rotationDeltas[id]=scale(finger.axes[k],angles[k]);});
     }
     const thumb=rig.index.get(`finger1-1.${side}`),sign=side==='L'?1:-1;
-    rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(rig.hand[side].forward,sign*28*amount));
+    const opposition=fit.open.opposition+(28-fit.open.opposition)*fit.closure[0]*amount;
+    rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(rig.hand[side].forward,sign*opposition));
   }
-  function resetRig(grip=0,side=active.side) {
+  function resetRig(grip=0,side=active.side,reaching=false) {
     for(const v of rig.rotationDeltas)v.fill(0);rig.rootTranslation.fill(0);
-    for(const s of SIDES)fingerPose(s,s===side?grip:0);
+    if(reaching)fingerPose(side,grip);
     rig.fk();
     // Both arms hang beside the native body. The untouched torso and lower
     // hierarchy keep both feet at exactly their generated rest coordinates.
@@ -198,7 +319,8 @@ function makeActor(model, viewer, spec, preset, measurements) {
       boneLengthErrorM:checked.maxBoneLengthError,footSurfaceErrorM,
       footAnchorsWorld:footWorld,footWorldYM:Object.fromEntries(Object.entries(footWorld).map(([side,p])=>[side,p[1]])),
       fingerAnchors:fingertips.map(p=>p.toArray()),fingerMinimumYM:Math.min(...fingertips.map(p=>p.y)),
-      finite:checked.finite,orientation:'world palm +Z, fingers -Y during reach'};
+      graspAdmissible:!!graspReport?.sides[active.side]?.admissible,
+      finite:checked.finite,orientation:'world palm +Z; fingers +X for L / -X for R during cylindrical reach'};
     return last;
   }
   const actor={
@@ -213,7 +335,25 @@ function makeActor(model, viewer, spec, preset, measurements) {
     materialReport:frozen.map(f=>f.report),
     contactReport:{kind:'display skin triangle barycentric anchors',palms:Object.fromEntries(SIDES.map(s=>[s,patches[s].palm])),
       fingers:Object.fromEntries(SIDES.map(s=>[s,patches[s].fingers])),
-      forceOrFrictionMeasured:false,closure:'authored native finger rotations; contact must be validated by World'},
+      forceOrFrictionMeasured:false,closure:'requires per-native-shape finite-cylinder contact calibration'},
+    graspReport:null,
+    configureGrasp({radius,height,gripHeight=0}={}){
+      if(![radius,height,gripHeight].every(Number.isFinite)||radius<=0||height<=0||Math.abs(gripHeight)>=height*.5)
+        throw Error('Native grasp calibration requires a positive cylinder and an interior axial gripHeight');
+      const shape={kind:'upright-cylinder',radius,height,gripHeight},sides={};
+      try {
+        for(const side of SIDES) {
+          const patch=findPalmSupport(geometry,binding,rig,side,handSurfaceVertices[side]);
+          patches[side].palm=patch;
+          sides[side]=fitCylinderGrasp({rig,binding,fingers,patch,handVertices:handSurfaceVertices[side],side,shape});
+        }
+        graspReport={shape,sides,admissible:SIDES.every(s=>sides[s].admissible)};
+        this.graspReport=graspReport;
+        this.contactReport.palms=Object.fromEntries(SIDES.map(s=>[s,patches[s].palm]));
+        this.contactReport.closure='shape-specific weighted hand surface fit with first-contact bisection';
+        return graspReport;
+      } finally {this.rest();}
+    },
     setSide(side){if(!SIDES.includes(side))throw Error('Native reach side must be L or R');active.side=side;this.side=side;return this;},
     handAnchor(side=active.side){return toWorld(sample(patches[side].palm));},
     fingerAnchors(side=active.side){return patches[side].fingers.map(p=>toWorld(sample(p)));},
@@ -230,7 +370,8 @@ function makeActor(model, viewer, spec, preset, measurements) {
     setReach(target,grip01=0,side=active.side){
       if(!SIDES.includes(side))throw Error('Native reach side must be L or R');
       const worldTarget=asVector(target);if(!worldTarget.toArray().every(Number.isFinite)||!Number.isFinite(grip01))throw Error('Non-finite hand goal');
-      active.side=side;active.grip=clamp(grip01,0,1);resetRig(active.grip,side);
+      if(!graspReport?.sides[side]?.admissible)throw Error(`NPC ${spec.id} ${side} hand has no admissible calibrated cylinder grasp`);
+      active.side=side;active.grip=clamp(grip01,0,1);resetRig(active.grip,side,true);
       const limb=rig.limbs['arm'+side],rotation=orientFor(side),localGoal=toLocal(worldTarget);
       const shoulder=pos(rig.posedMatrices[limb.a]),sign=side==='L'?1:-1,length=limb.upper+limb.lower;
       const pole=add(shoulder,[sign*length*.58,-length*.08,-length*.43]);
@@ -270,7 +411,8 @@ function makeActor(model, viewer, spec, preset, measurements) {
         return {distance:Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0),local};
       };
       root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity,tableMinimumYM=Infinity,tableSampleCount=0;
-      let minCylinderDistance=Infinity,penetratingCount=0,deepestPoint=null,deepestLocal=null;
+      let minCylinderDistance=Infinity,penetratingCount=0,deepestPoint=null,deepestLocal=null,deepestVertex=null;
+      const fingerSurfaceMinimum=Array(5).fill(Infinity),fingerNearCounts=Array(5).fill(0),fingerContactPoints=Array(5).fill(null);
       for(const id of handSurfaceVertices[active.side]) {
         const p=display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
         handSurfaceMinimumYM=Math.min(handSurfaceMinimumYM,p.y);
@@ -278,7 +420,13 @@ function makeActor(model, viewer, spec, preset, measurements) {
           tableMinimumYM=Math.min(tableMinimumYM,p.y);tableSampleCount++;
         }
         if(cylinder){const result=cylinderDistance(p);if(result.distance<0)penetratingCount++;
-          if(result.distance<minCylinderDistance){minCylinderDistance=result.distance;deepestPoint=p.toArray();deepestLocal=result.local.toArray();}}
+          if(result.distance<minCylinderDistance){minCylinderDistance=result.distance;deepestPoint=p.toArray();deepestLocal=result.local.toArray();deepestVertex=id;}
+          const mask=handFingerMembership[active.side].get(id);
+          for(let f=0;f<5;f++)if(mask&(1<<f)){
+            if(result.distance<fingerSurfaceMinimum[f]){fingerSurfaceMinimum[f]=result.distance;fingerContactPoints[f]=p.toArray();}
+            if(Math.abs(result.distance)<=.003)fingerNearCounts[f]++;
+          }
+        }
       }
       const live=diagnostic(lastGoal,lastSolution);
       const minimumInsideTable=tableSampleCount?tableMinimumYM:null;
@@ -290,8 +438,12 @@ function makeActor(model, viewer, spec, preset, measurements) {
         bottleMaxPenetrationM:cylinder?Math.max(0,-minCylinderDistance):null,
         bottlePenetratingVertexCount:cylinder?penetratingCount:null,
         bottleSampleCount:cylinder?handSurfaceVertices[active.side].length:0,
-        bottleDeepestPointWorld:deepestPoint,bottleDeepestPointLocal:deepestLocal,
+        bottleDeepestPointWorld:deepestPoint,bottleDeepestPointLocal:deepestLocal,bottleDeepestVertex:deepestVertex,
         fingerBottleSignedDistanceM:cylinder?live.fingerAnchors.map(p=>cylinderDistance(asVector(p)).distance):null,
+        fingerSurfaceMinimumSignedDistanceM:cylinder?fingerSurfaceMinimum:null,
+        fingerNearBottleVertexCounts:cylinder?fingerNearCounts:null,
+        fingerClosestBottlePointsWorld:cylinder?fingerContactPoints:null,
+        graspFit:graspReport?.sides[active.side]||null,
         geometricDiagnosticScope:'weighted rendered hand vertices; finite-cylinder signed distance and table XZ projection; not continuous triangle collision or contact force'};
     },
     dispose(){root.removeFromParent();binding.dispose();geometry.dispose();for(const f of frozen)f.material.dispose();for(const texture of textureCopies.values())texture.dispose();}

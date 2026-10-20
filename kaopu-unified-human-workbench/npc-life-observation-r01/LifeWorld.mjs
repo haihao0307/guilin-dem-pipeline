@@ -1,7 +1,7 @@
 import * as CANNON from './vendor/cannon-es.js';
 
 // Dimensions are metres. The visible station is built from these same values.
-export const DIM = Object.freeze({ tableTop: .95, tableHalf: [.62, .035, .23], tableCentre: [0, .915, .52], radius: .032, height: .14, gripHeight: .048, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, 1.0208, .37], target: [.10, 1.0208, .44] });
+export const DIM = Object.freeze({ tableTop: 1.02, tableHalf: [.62, .035, .23], tableCentre: [0, .985, .52], radius: .032, height: .14, gripHeight: 0, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, 1.0908, .37], target: [.10, 1.0908, .44] });
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smooth=t=>{t=clamp(t,0,1);return t*t*t*(t*(t*6-15)+10)};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
@@ -23,7 +23,7 @@ export class LifeWorld {
     this.world.addBody(this.floor);this.world.addBody(this.table);this.world.addBody(this.bottle);
     this.agents=new Map(actors.map((actor,i)=>[actor.id,{actor,id:actor.id,role:i===0?'整理员':i===1?'协助员':'复核员',phase:'idle',phaseTime:0,task:null,result:null,handTarget:null,gripValue:0,stable:0,maxContactError:0,firstContactError:null,history:[],cancelCount:0}]));
     this.handBodies=new Map(actors.map(actor=>{const b=new CANNON.Body({mass:0,type:CANNON.Body.KINEMATIC,collisionFilterGroup:0,collisionFilterMask:0,shape:new CANNON.Sphere(.009)});this.world.addBody(b);return[actor.id,b]}));
-    this.audit={maxOwners:0,maxGripConstraints:0,contacts:[],tasks:[],worldChangedTests:[],cancellations:[],physicsSteps:0};
+    this.audit={maxOwners:0,maxGripConstraints:0,contacts:[],tasks:[],poses:[],worldChangedTests:[],cancellations:[],physicsSteps:0};
     this.review={phase:'待观察',checked:false,reason:'尚未发现已释放且稳定的收纳物品'};
     this.emit('world-ready',null,{engine:'cannon-es@0.20.0',gravity:9.81,massKg:DIM.mass,assistedGrip:true});
   }
@@ -35,12 +35,13 @@ export class LifeWorld {
   request(id,reason='manual'){
     const a=this.agents.get(id);if(!a)throw Error('Unknown actor '+id);
     if(!['idle','done','failed','cancelled'].includes(a.phase))return false;
-    a.result=null;a.history=[];a.maxContactError=0;a.firstContactError=null;a.started=this.time;a.task={skill:'place-in-zone',object:'bottle-01',reason,targetRevision:this.targetRevision};a.gripValue=0;a.handTarget=this.hand(a);this.change(a,'waiting');return true;
+    a.result=null;a.history=[];a.poseSamplePhase=null;a.maxContactError=0;a.firstContactError=null;a.started=this.time;a.task={skill:'place-in-zone',object:'bottle-01',reason,targetRevision:this.targetRevision};a.gripValue=0;a.handTarget=this.hand(a);this.change(a,'waiting');return true;
   }
   startIdentityPlan(){this.autonomous=true;this.review={phase:'等待整理完成',checked:false,reason:'读取同一物理世界'};this.request(this.actors[0].id,'role:tidier');this.request(this.actors[1].id,'role:helper');this.emit('plan',null,{roles:['整理员负责收纳','协助员等待同物使用权','复核员读取释放/支撑/稳定结果']});}
   acquire(a){if(this.reservedBy&&this.reservedBy!==a.id)return false;this.reservedBy=a.id;this.emit('reserve',a.id,{object:'bottle-01'});return true}
   attach(a){
     if(this.grip||this.heldBy||this.reservedBy!==a.id)throw Error('Grip invariant violated');
+    if(a.actor.configureGrasp && !a.actor.graspReport?.sides?.[a.actor.side]?.admissible)throw Error('Native grasp geometry has not been accepted');
     const palm=this.hand(a),contact=this.contactAnchor(),error=dist(palm,contact);
     if(error>.012)return false; // Geometry measured after current IK. No timer-only latch.
     const body=this.handBodies.get(a.id);body.position.set(...palm);body.quaternion.set(0,0,0,1);body.velocity.set(0,0,0);
@@ -56,7 +57,8 @@ export class LifeWorld {
   settled(){return this.support()&&this.bottle.velocity.length()<.018&&this.bottle.angularVelocity.length()<.09;}
   inside(){return Math.hypot(this.bottle.position.x-this.target[0],this.bottle.position.z-this.target[2])<.052&&Math.abs(this.bottle.position.y-DIM.height/2-DIM.tableTop)<.012;}
   goal(){return !this.heldBy&&!this.grip&&this.inside()&&this.settled();}
-  drive(a,target,grip){a.handTarget=target;a.gripValue=grip;a.actor.setReach(target,grip);const p=this.hand(a),body=this.handBodies.get(a.id);body.position.set(...p);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);return dist(p,target)}
+  samplePose(a,stage=a.phase){if(!a.actor.diagnostics)return;const d=a.actor.diagnostics({tableTopY:DIM.tableTop,tableBounds:{minX:DIM.tableCentre[0]-DIM.tableHalf[0],maxX:DIM.tableCentre[0]+DIM.tableHalf[0],minZ:DIM.tableCentre[2]-DIM.tableHalf[2],maxZ:DIM.tableCentre[2]+DIM.tableHalf[2]},bottle:{position:this.bottle.position,quaternion:this.bottle.quaternion,radius:DIM.radius,height:DIM.height}});const keys=['grip01','palm','handErrorM','reachClamped','boneLengthErrorM','footSurfaceErrorM','footWorldYM','fingerAnchors','handTableSampleCount','handTableClearanceM','bottleMaxPenetrationM','bottlePenetratingVertexCount','bottleDeepestPointWorld'];this.audit.poses.push({id:a.id,stage,time:this.time,supportEnabled:this.supportEnabled,heldBy:this.heldBy,bottle:arr(this.bottle.position),...Object.fromEntries(keys.map(k=>[k,d[k]]))});if(this.audit.poses.length>100)this.audit.poses.shift();}
+  drive(a,target,grip){a.handTarget=target;a.gripValue=grip;a.actor.setReach(target,grip);const p=this.hand(a),body=this.handBodies.get(a.id);body.position.set(...p);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);if(a.poseSamplePhase!==a.phase){a.poseSamplePhase=a.phase;this.samplePose(a);}return dist(p,target)}
   tick(dt){
     this.time+=dt;this.audit.physicsSteps++;
     for(const a of this.agents.values()){
@@ -89,7 +91,7 @@ export class LifeWorld {
       }else if(a.phase==='lower'){
         const target=this.targetAnchor(.004);this.drive(a,mix(a.startHand,target,t/1.4),1);
         const error=dist(this.contactAnchor(),this.hand(a));
-        if(t>=1.4&&error<.015&&this.bottle.position.y<DIM.tableTop+DIM.height/2+.025){this.release(a,'place');a.retreat=offset(this.hand(a),[0,.03,-.14]);this.change(a,'verify');}
+        if(t>=1.4&&error<.015&&this.bottle.position.y<DIM.tableTop+DIM.height/2+.025){this.samplePose(a,'lower-end');this.release(a,'place');a.retreat=offset(this.hand(a),[0,.03,-.14]);this.change(a,'verify');}
         else if(t>4)this.finish(a,'place-failed','物品没有靠近实际放置表面');
       }else if(a.phase==='verify'){
         this.drive(a,mix(a.startHand,a.retreat,t/.9),0);
