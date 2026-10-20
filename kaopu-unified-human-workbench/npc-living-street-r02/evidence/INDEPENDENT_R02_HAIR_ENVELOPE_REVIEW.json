@@ -1,0 +1,110 @@
+{
+  "schema": "courtyard-independent-r02-hair-envelope-review/1",
+  "reviewedAt": "2026-10-20T08:55:38.570748+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "scope": "Independent read-only algorithm/source, existing point-comparison evidence and isolated clean prepare/import-closure review. No long numerical suite repeated and no renderer/browser/public validation claimed.",
+  "status": "ALLOW_BOUNDED_OPTIMIZATION_IN_NEXT_DIAGNOSTIC_CANDIDATE",
+  "sourceSHA256": {
+    "vendor/appearance/hair-static-envelope-exact.mjs": "6d5c2af70699f93bbafa6ba837e3930cf6fa6045c052578fbe8bc618bf3bcfe0",
+    "vendor/appearance/hair-long/StaticSurfaceEnvelope.js": "9139dd5dcdf097530dd50890decbfee8644147cfc36cd4fed731a208fa05ea0a",
+    "vendor/appearance/hair-long/LongHairLayer.js": "32d280293d07437c4fe795bf795b17f340b0519f3189b261b4e92c9d1b0cdd32",
+    "vendor/appearance/hair-long-adapted/LongHairLayer.js": "d1d0859b4be5183a6174705cea8d33cbd55f009b52541383acbb953604ba1fd5",
+    "vendor/appearance/cloth-adapted/mesh-contact.mjs": "0fe9b8e0840c7b35c4ee3fce9b7d648c220043783ad6166314812472ddde8ff3",
+    "prepare-appearance.cjs": "1fd60e740a74640f5885ec0f5c87d846b77fcb26e0e98485c762accd61847766",
+    "appearance-source-lock.json": "c58423656eb466dec96c5fbf44f7b5f96e5e08b6e457b3c7d16aa4c15d9dfd40",
+    "src/NativeHair.mjs": "8dd68641446d1d9ad82da02416826219dd6f54487c06f287b9dc3ce10f83cd8d",
+    "evidence/check-hair-envelope-exact.mjs": "c9917d8ad8f9dd5585775845bac17c59181b8c3efe14a53de8c8d694addb0839",
+    "evidence/run-hair-envelope-full.cjs": "e2a8cadc42acce567376bafbe9d0fd7c15abaea796731d5ed685bd0cd9d97014",
+    "evidence/hair-envelope-shadow.mjs": "7d0dd7ac3fb848cd1d1acd62bca0a40375f82322504cb01285663f9e493b2ae4"
+  },
+  "algorithmReview": {
+    "originalCandidateDomain": "Every original face is inserted into all inclusive floor(min/max/cell) grid cells. A query visits the 27 cells centered at floor(point/cell).",
+    "acceleratedCandidateDomain": "A face survives iff its inclusive 3D cell bounds intersect query center +/-1 on every axis. BVH node cell bounds safely bound all descendant faces; individual face bounds are still checked at leaves. This is the same union of original 27-cell candidates, not a larger global closest-point search.",
+    "nearestArithmetic": "The acceleration uses MeshContact only for its tree and face ordering. Actual closest points use the same retained Three Triangle.closestPointToPoint and Vector3.distanceToSquared as the donor. Face normals use the same Three Triangle.getNormal, stored in Float64.",
+    "tieOrder": "The original seen-set first encounters a face at the lexicographically earliest intersecting cell, then source face ID. The new bestOrder tuple [max(faceLoX,queryLoX), max(faceLoY,queryLoY), max(faceLoZ,queryLoZ), faceId] reconstructs that order for exactly equal squared distances. Strict greater-than distance pruning retains equal-distance candidates.",
+    "unchangedParameters": {
+      "cellM": 0.025,
+      "nearestRadiusM": 0.035,
+      "clearanceM": 0.0015,
+      "maximumStepM": 0.004,
+      "maximumIterations": 16
+    },
+    "unchangedProjection": "Same signed distance to chosen face normal, same early exits, same capped addScaledVector correction and iteration order.",
+    "geometryLifecycle": "The production long-hair update constructs one envelope and projects its points synchronously while body geometry stays fixed. This is a static geometry acceleration, not hair dynamics or a new body collision solver.",
+    "newSourceBlockerFound": false
+  },
+  "originalHairRetained": {
+    "all68DonorRowsExactlyEqualPriorLock": true,
+    "all68DonorBytesSHA256AndGitBlobVerified": true,
+    "originalLongHairRootCount": 32000,
+    "originalSurfaceSegments": 20,
+    "originalTailSegments": 20,
+    "totalSegments": 40,
+    "sourceLongHairBodyUnchangedExceptImportAdaptation": true,
+    "NativeHairAdapterEqualPriorFrozenFile": true,
+    "noRootOrSegmentThinning": true,
+    "noDensityLODIntroduced": true,
+    "sourceDrawSelection": "Any pre-existing donor strand selection remains unchanged; the optimization neither changes it nor removes source roots, segments or faces."
+  },
+  "numericEvidenceReviewed": {
+    "nearSurfaceAndBoundary": {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/HAIR_ENVELOPE_EXACT_COMPARE.json",
+      "sha256": "d14f0f05a1292e713daba8e3afe0c8036a5ba5c743514c73fa1ba362849ff34d",
+      "sourceTriangles": 50624,
+      "points": 3215,
+      "strictlyDifferent": 0,
+      "maximumDifferenceM": 0,
+      "originalCorrections": 13067,
+      "acceleratedCorrections": 13067,
+      "maximumDisplacementM": 0.03632648714572501,
+      "pointComparisonPass": true
+    },
+    "fullLongTail": {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/HAIR_ENVELOPE_FULL_LONG_COMPARE.json",
+      "sha256": "8d2fb96dee4e0025e9372a2569708440ba82702423498ee7794c6defc9361ff4",
+      "points": 640000,
+      "strictlyDifferent": 0,
+      "maximumDifferenceM": 0,
+      "originalMS": 35094.68958099935,
+      "acceleratedMS": 7609.820301999751,
+      "observedProjectionSpeedup": 4.6117632464694305,
+      "originalCorrections": 0,
+      "acceleratedCorrections": 0
+    },
+    "interpretation": "The 640000 real long-tail projection calls all matched and show the observed projection-time improvement on this fixture. They made zero corrections in both versions, so the separate 3215-point near-surface/grid-boundary comparison with 13067 corrections supplies the nontrivial projection-equivalence evidence. This is not a universal timing promise or six-wearer visual acceptance.",
+    "longTestsRerunByIndependentReviewer": false
+  },
+  "cleanPreparationExecutedByReviewer": {
+    "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_HAIR_CLEAN_CLOSURE.json",
+    "sha256": "4a9234c490575f5c20c1f58cdc941583124f5399659e8e0fc0a6991a78b45ec2",
+    "isolatedDirectory": "/tmp/r02-hair-closure-review-1792486476693",
+    "sourceFiles": 68,
+    "cacheOnly": true,
+    "downloaded": 0,
+    "generatedFiles": 45,
+    "longHairEntryResolved": true,
+    "includesNewOwnModule": true,
+    "includesGeneratedMeshContact": true,
+    "entryHasOnlyExpectedImportChanges": true,
+    "externalImports": [
+      "three"
+    ],
+    "externalImportInterpretation": "three is intentionally external only in this static closure probe. The production build supplies its existing single retained native Three runtime. This probe is not a separately shipped bundle.",
+    "productionSourceFilesModifiedByReviewer": false
+  },
+  "packagingRequirement": {
+    "newOwnSourceMustBeCommitted": "vendor/appearance/hair-static-envelope-exact.mjs",
+    "reason": "The 68-source donor preparation reproduces original and adapted donor files. This new local optimization is an application source dependency, not a donor download. The clean closure passed with this explicit source file present; omit it and the production bundle cannot resolve the adapted LongHair import."
+  },
+  "remainingScope": {
+    "currentSixPortraitHairRendering": "pending current candidate actual browser views",
+    "dynamicHairBodyAndGarmentCollision": "not established by static envelope equivalence",
+    "wholeApplicationVisualQuality": "pending; unrelated dynamic garment defects remain outside this optimization approval",
+    "publicAndStandaloneCurrentCandidate": "pending separate gates"
+  },
+  "optimizationMayEnterCandidate": true,
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

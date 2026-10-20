@@ -55,7 +55,16 @@ function makeRain(scene){
 async function main(){
   const {actors,viewer}=await createActors({onProgress:p=>{$('load-progress').textContent=typeof p==='string'?p:JSON.stringify(p);}});
   if(actors.length!==6)throw Error('这一版必须使用六个完整原生人物');
-  for(const actor of actors){$('load-progress').textContent=`按 ${actor.id} 的真实手形校准抓取`;const fit=actor.configureGrasp({radius:.032,height:.14,gripHeight:0});if(!fit.admissible)throw Error(actor.id+' 原生手形未通过抓取标定');}
+  const graspStartup=[];
+  for(const actor of actors){
+    $('load-progress').textContent=`按 ${actor.id} 的真实手形校准抓取`;
+    const fit=actor.configureGrasp({radius:.032,height:.14,gripHeight:0});graspStartup.push({actor:actor.id,fit});
+    if(!fit.admissible){
+      $('life-diagnostics').textContent=JSON.stringify({phase:'native-grasp-calibration',sourceHead:window.__NPC_BUILD__.sourceHead,graspStartup,failedHandFixture:actor.graspFailureFixture},null,2);
+      console.error('Native grasp calibration details',JSON.stringify(graspStartup));
+      throw Error(actor.id+' 原生手形未通过抓取标定');
+    }
+  }
   const keep=new Set(actors.map(a=>a.root));for(const child of [...viewer.scene.children])if(!keep.has(child))viewer.scene.remove(child);
   const courtyard=createCourtyard(THREE);viewer.scene.add(courtyard.group);
   viewer.scene.background=new THREE.Color('#e8e1d3');

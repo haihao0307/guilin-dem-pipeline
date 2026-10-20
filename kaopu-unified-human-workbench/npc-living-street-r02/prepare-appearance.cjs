@@ -35,6 +35,10 @@ async function prepareAppearance({cachedOnly=false,quiet=false}={}) {
   for(const entry of lock.adaptedCopies) {
     let text=fs.readFileSync(localFile(entry.source),'utf8');
     if(entry.output.startsWith('hair-long-adapted/'))text=text.replaceAll("'/native/kaopu-unified-human-workbench/full/source/registration-vendor/three.module.js'","'three'");
+    if(entry.output==='hair-long-adapted/LongHairLayer.js') {
+      const before="from './StaticSurfaceEnvelope.js'";assert(text.includes(before),'Native long-hair envelope import changed');
+      text=text.replace(before,"from '../hair-static-envelope-exact.mjs'");
+    }
     if(entry.output.startsWith('hair-short-adapted/'))text=text.replaceAll("'../vendor/three.module.js'","'three'");
     if(['cloth-adapted/solid-helpers.mjs','cloth-adapted/solid-textiles.mjs'].includes(entry.output)) {
       const before="new URL('./geometry-worker.mjs',import.meta.url)";assert(text.includes(before),'Native cloth worker source changed');

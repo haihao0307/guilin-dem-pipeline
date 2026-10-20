@@ -255,7 +255,11 @@ export class NativeMotion {
         const q=clamp(this.settleTime/.24,0,1),from=this.settleFrom[side];
         world=lerp(from,world,smooth(q));world[1]=Math.max(0,world[1])+Math.sin(Math.PI*q)*H*.019;
       }
-      targets[side]={world,yaw,planted:this.settleTime>=.24};
+      // Pickup retains the original R04 BasicActions anatomical knee plane.
+      // A small fixed lateral pole projects inward when the hips are low and
+      // the feet are outside them; on the short body it crossed both knees.
+      const kneePoleOffset=mode==='pickup'?[(side==='L'?1:-1)*H*.08,-H*.45,-H*.12]:null;
+      targets[side]={world,yaw,planted:this.settleTime>=.24,kneePoleOffset};
     }
     return targets;
   }
@@ -275,11 +279,12 @@ export class NativeMotion {
   _solveFoot(side,goal,yaw) {
     const rig=this.rig,limb=rig.limbs['leg'+side],foot=this.footDefs[side];
     const local=this._native(goal.world),rotation=goal.rotation||axisRotation([0,0,1],angleDelta(yaw,goal.yaw));
+    const poleOffset=goal.kneePoleOffset||[side==='L'?.015:-.015,-this.height*.42,-this.height*.045];
     const offset=sub(foot.rest,rig.restP[limb.c]);
     let ankle=sub(local,mv(rotation,offset)),solved;
     for(let i=0;i<4;i++) {
       const hip=pos(rig.posedMatrices[limb.a]);
-      const pole=add(hip,[side==='L'?.015:-.015,-this.height*.42,-this.height*.045]);
+      const pole=add(hip,poleOffset);
       solved=rig.solveLimb(limb,ankle,pole,.9999);rig.orientSkin(limb.c,rotation);
       const error=sub(local,this.tools.sampleVertex(foot.id));
       if(norm(error)<.00020)break;
@@ -295,7 +300,7 @@ export class NativeMotion {
       // Preserve the source heel/toe angle and solve the same fixed bone
       // lengths at the measured sole height. No body mesh warp is applied.
       ankle[2]+=error;correction+=error;
-      const hip=pos(rig.posedMatrices[limb.a]),pole=add(hip,[side==='L'?.015:-.015,-this.height*.42,-this.height*.045]);
+      const hip=pos(rig.posedMatrices[limb.a]),pole=add(hip,poleOffset);
       solved=rig.solveLimb(limb,ankle,pole,.9999);rig.orientSkin(limb.c,rotation);low=this._soleMinimum(side);
     }
     const position=this._world(this.tools.sampleVertex(foot.id)),target=goal.world.slice();target[1]+=correction;
@@ -429,7 +434,11 @@ export class NativeMotion {
       const shoulder=rig.restP[rig.limbs.armR.a],arm=rig.limbs.armR.upper+rig.limbs.armR.lower;
       const goalY=worldTarget?.[1]??.10,trunk=shoulder[2]-this.hipCenter[2];
       const required=this.floorOffset+shoulder[2]-goalY-arm*.78-trunk*(1-Math.cos(34*DEG));
-      const maximumDrop=this.floorOffset+this.hipCenter[2]-Math.max(.18,H*.105);
+      // Preserve the source R04 squat depth (.008 + .325 of stature).
+      // Lowering the pelvis further to satisfy a low hand target folded the
+      // thighs into one another. The existing bounded trunk reach supplies
+      // the remaining distance without changing fixed native leg lengths.
+      const maximumDrop=Math.min(H*(.008+.325),this.floorOffset+this.hipCenter[2]-Math.max(.18,H*.105));
       const down=clamp(required,H*.28,maximumDrop);
       const crouch=this.library.crouchEnvelope(crouchProgress,'down');
       crouchWeight=crouch;rootDrop=down*crouch;rootFore=-H*.013*crouch;lean=34*crouch;

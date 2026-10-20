@@ -1,0 +1,136 @@
+{
+  "schema": "courtyard-independent-r02-pickup-review/1",
+  "reviewedAt": "2026-10-20T08:50:54.639363+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "scope": "Read-only source delta and producer numeric evidence review of the bounded pickup knee-plane/depth correction. No production or verifier edits; no redundant 1572-frame run performed by reviewer.",
+  "status": "BOUNDED_SOURCE_PATCH_SUPPORTED_WITH_EXPLICIT_INTEGRATION_GAPS",
+  "sourceSHA256": {
+    "src/NativeMotion.mjs": "a85cd8dfddc85f25762c721d2ac060d97c82e3469e5bb39dc76aae75f29caa22",
+    "src/ItemWorld.mjs": "081dd8238aba8469d541729b148606769f01a79939d2374521f1d026c1b35102",
+    "src/ActorAdapter.mjs": "fb72b3cb46526d4b34d8f62e2b5e7303a8047ecb7d6a5b31ea69aa2b685d9a8f",
+    "src/NativeShoes.mjs": "07aae849b614386c850b3fd3ac08dd103ffbed25d3920b69d89fb2617c80c90d",
+    "src/NativeMotionLibrary.mjs": "06d14f764da813e1356f17d6147b95496b2b0e0f4bcbcbd24c3b790e0d7906cb",
+    "src/NativeRig.mjs": "de5b7b2bac4ea0ff98ab6ec31fc38defc012d863b821696ef61d11bac596e7ad",
+    "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+    "evidence/check-pickup-knee-six.mjs": "3bae51f0480cb5319516d726a084eb7e0de158a67a9fc1d4d56d9940d1d4dd66",
+    "evidence/run-pickup-knee-six.cjs": "d0700e693f860bfd4fb933e24520f145bfca6eb1da99f1d271ef9e54c22f8cf7",
+    "evidence/PICKUP_KNEE_SIX_CANONICAL_SHOES.json": "83b40dd8121fe58f6ceb73aeb92ce9b71c0aa29ab3b6f8d7dc179e85b88708f4",
+    "vendor/appearance/cloth-r10/assets/native-person.json.gz": "937c94073151c39b1afa08aa1a75df46263453c593fb0579e03615fdf3f8dfb3",
+    "vendor/motion/r04/BasicActions.mjs": "0e5cc6b1e6fc5f54efeaff6d098ba8b84d56da08617a93155444c089ff221777",
+    "motion-source-lock.json": "2fa089207a68f89d8c87b36f24ba77c12d661d57eff7760dc6047a91c2f6a16a"
+  },
+  "previousMotionSHA256": "e7cfec23b0f088fa62fdfc7a4360d9a1dffcbbb2451ded4f129910f688c30990",
+  "sourceDelta": {
+    "onlyFourDiffHunks": true,
+    "changes": [
+      "Pickup foot goals supply original R04 anatomical knee-pole offset.",
+      "Both initial foot solve and original full-sole grounding correction use that supplied offset.",
+      "Pickup maximum root drop is capped by H*(.008+.325), with prior minimum hip height retained."
+    ],
+    "unchangedByThisPatch": [
+      "Non-pickup foot-pole fallback",
+      "SeatMotionPath and explicit standStartFactor",
+      "Native skeleton/bone lengths/skin weights",
+      "Source contact and completion tolerances",
+      "ItemWorld object construction, constraints and receipt gates",
+      "Garment or shoe geometry"
+    ],
+    "newSourceDefectFound": false
+  },
+  "R04SourceCheck": {
+    "sourceCommit": "4de5f1d420a43355014bc1e6e572dd9c25058eb8",
+    "sourcePath": "kaopu-unified-human-workbench/motion-review-r04/BasicActions.mjs",
+    "sourceGitBlobSha": "63bb0476235897b19a0438223c417c0ef45c6789",
+    "originalSHA256": "d85812ccc9273b8fd54069d425963cd0f141ab5feb3a11ac8e79de65577c9667",
+    "bundledSHA256": "0e5cc6b1e6fc5f54efeaff6d098ba8b84d56da08617a93155444c089ff221777",
+    "bundledHashAndBytesMatchLock": true,
+    "anatomicalKneePole": "[side * H * .08, -H * .45, -H * .12]",
+    "originalRootTranslationZ": "-H * (.008 + .325 * q)",
+    "sourceMaximumDropM": "H * .333 at q=1",
+    "interpretation": "These literals are present in the locked R04 BasicActions source. The contact adapter retains R04 timing and pose base, then applies bounded target-dependent trunk/limb correction. It is not a claim that the entire pickup equals an unmodified captured clip."
+  },
+  "numericEvidenceReviewed": {
+    "producerReport": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/PICKUP_KNEE_SIX_CANONICAL_SHOES.json",
+    "sourceHashMatchesCandidate": true,
+    "actors": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "framesPerActor": 262,
+    "totalFrames": 1572,
+    "sequences": "201 pickup samples at neutral yaw/origin plus 61 at rotated yaw and another origin",
+    "allRecordedRequiredChecksPass": true,
+    "minimumKneeSignedSeparationM": 0.2065678782815722,
+    "maxBoneLengthErrorM": 9.575673587391975e-16,
+    "maxShoeSoleErrorM": 2.953522144216736e-08,
+    "minimumShoeSoleHeightM": -2.9535221379717314e-08,
+    "maxFixturePalmSourceErrorM": 1.5550795306814963e-07,
+    "canonicalBodyVertices": 9253,
+    "canonicalBodyFaces": 18416,
+    "neutralCanonicalCSRMaxErrorM": 1.1678435495201184e-07,
+    "minimumShoeSoleVerticesPerSide": 9877,
+    "maximumShoeSoleVerticesPerSide": 28831,
+    "allMaximumDropsAtSourceCap": true,
+    "whatIsEstablished": "Positive anatomical knee separation throughout sampled cycles; fixed native bone lengths; full original R14 sole grounding on the canonical wearer mesh; reach to the fixture targets.",
+    "canonicalConstructionAudit": "canonicalBody reconstructs every 9253 recipe vertex and merges every weighted bone contribution; NativeShoes.fitNativeShoeSide then measures this canonical body and retains all generated sole/heel/rubber/welt vertices. This part is not merely the old raw Anny shoe proof.",
+    "importantLimits": [
+      "The test prepares NativeMotionLibrary and constructs NativeMotion before canonicalBody(actor). poseTools closures for samplePalm, palmRest, feet and sole skin anchors still sample raw Anny vertices. Production ActorAdapter uses live barycentric patches on the displayed R07 skin. These are not identical effectors.",
+      "Test applyGrip is empty; complete rendered fingers and grip quality are not established.",
+      "The canonical remap is the body prefix, not the complete integrated R07 portrait/head rendering.",
+      "Fixture target is a fixed [0,.09,.43] transformed by world yaw/origin, and progress advances independently of object acquisition.",
+      "No ItemWorld or Cannon constraint is run in this 1572-frame report.",
+      "Body winding diagnostics retain nonzero self-overlap, including torso/thigh/calf regions. Positive knee separation is not continuous skin or garment collision clearance."
+    ]
+  },
+  "productionItemContractReview": {
+    "interfaceCompatible": true,
+    "actualTarget": "ItemWorld.motionInput supplies a point on the current dynamic finite-cylinder surface, opposing the current palm normal. For a settled upright bottle at the nominal approach point this is approximately 0.398 m forward at y about 0.07 m, unlike the fixed fixture target. Tipped or moved bottles produce other points.",
+    "graspGate": {
+      "nativeContactPhase": true,
+      "nativeContactReady": true,
+      "finiteAndPoseValid": true,
+      "maximumSurfaceErrorM": 0.012,
+      "maximumPenetrationM": 0.004,
+      "exclusiveHeldBy": true
+    },
+    "assistance": {
+      "type": "Cannon LockConstraint",
+      "maximumForceN": 16,
+      "itemRemainsDynamicDuringTransport": true
+    },
+    "collectCompletionGate": {
+      "nativeCompleted": true,
+      "itemProgressAtLeast": 0.98,
+      "maximumConstraintErrorM": 0.035,
+      "maximumPalmEndErrorM": 0.018,
+      "minimumActualLiftM": 0.24,
+      "minimumObjectBottomY": 0.25,
+      "maximumActualBagPalmErrorM": 0.02
+    },
+    "clockOnlySuccessAllowed": false,
+    "currentMotionPhysicalTransportRegressionVerified": false,
+    "remainingEvidence": "Run the existing real collect path on the exact integrated new-motion browser candidate and retain actual native palm/bottle/constraint/lift/bag evidence plus close views. A fresh canonical/full-display-palm + Cannon fixture may support numerics, but cannot replace rendered evidence."
+  },
+  "ciBoundary": {
+    "parentReportedDiagnosticHead": "22e9fefa978d5dbceeebec64ac12905268ee520a",
+    "parentReportedRun": 39395982937,
+    "parentReportedReleaseCandidate": false,
+    "interpretation": "This in-progress diagnostic was reported to contain the prior motion. Its startup or images cannot verify the new a85cd8df correction. No artifact was downloaded or browser controlled in this review."
+  },
+  "evidenceLayers": {
+    "source": "bounded pickup change supported by locked R04 source; no new source blocker found",
+    "numeric": "producer 1572-frame result reviewed with canonical-body/original-sole and raw-effector boundaries explicitly retained",
+    "browser": "current new-motion full native actor, palm, transport, shoes, garments and motion views pending",
+    "public": "R02 pending; no current candidate share approval"
+  },
+  "knownRemainingVisualBlocker": "Dynamic garment/body intersection remains reported and unresolved; this pickup patch alone does not approve it.",
+  "mayEnterNextDiagnosticCandidate": true,
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

@@ -124,7 +124,7 @@ function findSkinPatch(geometry, target, {maxDistance, forward, palm, wrist, alo
  * Select an actual vertex of a rendered triangle in the distal palm, using
  * native shape, normals and all CSR influences. Finger/thenar influences are
  * excluded here because those surfaces move during thumb opposition. */
-function findPalmSupport(geometry,binding,rig,side,handVertices) {
+export function findPalmSupport(geometry,binding,rig,side,handVertices) {
   const wrist=rig.restP[rig.index.get(`wrist.${side}`)],frame=rig.hand[side];
   const length=norm(sub(rig.restP[rig.index.get(`finger3-1.${side}`)],wrist));
   const normals=geometry.attributes.normal;let id=-1,support=-Infinity,alignment=0;
@@ -157,7 +157,7 @@ function findPalmSupport(geometry,binding,rig,side,handVertices) {
  * skin, including blended joint-conditioned rest points. It fits an upright
  * finite cylinder in the palm frame; runtime World still verifies the actual
  * prop pose. This is a geometric assisted-grip envelope, not a force solver. */
-function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,shape}) {
+export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,shape}) {
   const frame=rig.hand[side],sign=side==='L'?1:-1,across=unit(cross(frame.forward,frame.palm));
   const digitVertices=Array.from({length:5},(_,f)=>handVertices.filter(i=>{
     const start=binding.displayRange[i*4],count=binding.displayRange[i*4+1];
@@ -174,6 +174,12 @@ function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,shape}) {
     }
     const thumb=rig.index.get(`finger1-1.${side}`),opposition=open.opposition+(28-open.opposition)*values[0];
     rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(frame.forward,sign*opposition));
+    // The rounded native hand's thenar pad is predominantly bound to the
+    // existing thumb metacarpal. Extend that actual joint only when all
+    // original open poses fail; taper it with the same calibrated thumb
+    // closure at runtime. No skin position or bone length is changed.
+    rig.rotationDeltas[rig.index.get(`metacarpal1.${side}`)]=
+      scale(frame.forward,sign*(open.metacarpalOpposition??0)*(1-values[0]));
     rig.fk();binding.animate(rig.skinMatrices);
   }
   function evaluate(values,open,details=false) {
@@ -197,7 +203,11 @@ function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,shape}) {
   // is searched explicitly; no geometry, bone length or collision tolerance
   // is altered to manufacture an admissible result.
   for(const candidate of [{angle:-35,opposition:-35},{angle:-35,opposition:-45},
-    {angle:-45,opposition:-35},{angle:-45,opposition:-45},{angle:-25,opposition:-45}]) {
+    {angle:-45,opposition:-35},{angle:-45,opposition:-45},{angle:-25,opposition:-45},
+    // This single bounded fallback was derived from measured original-hand
+    // clearance at -8/-10 degrees, with a 0.1 mm open-pose margin. It remains
+    // subject to every unchanged open, closure and surface-contact gate.
+    {angle:-45,opposition:-45,metacarpalOpposition:-11.6}]) {
     const check=evaluate(zero,candidate,true);
     if(check.minimumSignedDistanceM>=-.0005){open=candidate;openCheck=check;break;}
   }
@@ -338,6 +348,8 @@ function makeActor(model, viewer, spec, preset, measurements) {
     const thumb=rig.index.get(`finger1-1.${side}`),sign=side==='L'?1:-1;
     const opposition=fit.open.opposition+(28-fit.open.opposition)*fit.closure[0]*amount;
     rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(rig.hand[side].forward,sign*opposition));
+    rig.rotationDeltas[rig.index.get(`metacarpal1.${side}`)]=scale(rig.hand[side].forward,
+      sign*(fit.open.metacarpalOpposition??0)*(1-fit.closure[0]*amount));
   }
   function resetRig(grip=0,side=active.side,reaching=false) {
     for(const v of rig.rotationDeltas)v.fill(0);rig.rootTranslation.fill(0);
@@ -419,6 +431,26 @@ function makeActor(model, viewer, spec, preset, measurements) {
         }
         graspReport={shape,sides,admissible:SIDES.every(s=>sides[s].admissible)};
         this.graspReport=graspReport;
+        if(!graspReport.admissible){
+          // Capture the exact rendered hand ancestry on failure. This is a
+          // read-only diagnostic fixture; it never changes a pose or a gate.
+          const ids=[...new Set(SIDES.flatMap(s=>[...handSurfaceVertices[s],...patches[s].palm.indices]))].sort((a,b)=>a-b),
+            remap=new Map(ids.map((id,i)=>[id,i])),P=geometry.attributes.position,N=geometry.attributes.normal,
+            ranges=[],entries=[];
+          for(const id of ids){const start=binding.displayRange[id*4],count=binding.displayRange[id*4+1];
+            ranges.push(entries.length/8,count,0,0);
+            for(let k=0;k<count;k++)entries.push(...binding.displayPacked.subarray((start+k)*8,(start+k+1)*8));}
+          this.graspFailureFixture={schema:'npc-exact-displayed-hands/1',actor:spec.id,shape,
+            sourceDisplayVertices:P.count,originalVertexIds:ids,
+            positions:ids.flatMap(id=>[P.getX(id),P.getY(id),P.getZ(id)]),
+            normals:ids.flatMap(id=>[N.getX(id),N.getY(id),N.getZ(id)]),
+            rig:structuredClone(binding.rig),displayRange:ranges,displayPacked:entries,
+            fingers:structuredClone(fingers),
+            sides:Object.fromEntries(SIDES.map(s=>[s,{handVertices:handSurfaceVertices[s].map(id=>remap.get(id)),
+              patch:{...structuredClone(patches[s].palm),indices:patches[s].palm.indices.map(id=>remap.get(id))}}])),
+            sourceFit:structuredClone(graspReport),weightsTruncated:false,
+            scope:'Every displayed hand vertex and every native CSR influence from this actual failed actor; no generated substitute hand'};
+        }
         this.contactReport.palms=Object.fromEntries(SIDES.map(s=>[s,patches[s].palm]));
         this.contactReport.closure='shape-specific weighted hand surface fit with first-contact bisection';
         return graspReport;
