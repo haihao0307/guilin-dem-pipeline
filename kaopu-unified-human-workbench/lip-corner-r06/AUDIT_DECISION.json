@@ -1,0 +1,58 @@
+{
+  "schema": "kaopu/lip-corner-candidate-decision@1",
+  "dateUTC": "2026-10-20",
+  "stage": "candidate-authorized; actual candidate render and visual acceptance pending",
+  "diagnosis": {
+    "sourceCommit": "f523e6861dac2deaa96614e81358585cef6b8a2d",
+    "evidenceCommit": "c0b402a99e9c3b66dfdf437e9e3225a091f81291",
+    "workflowRun": 39378015760,
+    "qaSHA256": "67c352b2e79f4d76517da0f85405b5eff490799266d5f3ebec076e6f81a07141",
+    "boundarySHA256": "2f55344304c567d67012a1427fbeac40bb9115d8aeba97250b1c4cafc40cac71",
+    "testsPassed": "6/6",
+    "nativeFrames": 5,
+    "originalStateAndPixelsRestoredExactly": true,
+    "boundaryProjectionAvailable": false
+  },
+  "confirmed": [
+    "The fixed full-pucker pose has cornerLeft=cornerRight=0; those controls cannot directly explain this fold.",
+    "Removing only the corner-local x contraction changes the commissures most clearly, but widens the mouth and weakens pucker.",
+    "Removing local forward or transverse-compensation terms leaves the prominent corner folds in the native-size images.",
+    "The original indexed geometry includes external active/inactive edges with substantial x-term jumps.",
+    "The hard u=1.25 ROI and the narrow corner vertical normalization are separate contributing support-field candidates; the diagnostic does not isolate their individual visible responsibility."
+  ],
+  "rejectedAsProductionRepair": [
+    "Use any of the three diagnostic removals as a finished repair.",
+    "Reduce the native pucker amount, widen the mouth, or erase all normal corner creases.",
+    "Declare the u=1.25 hard cutoff the proven location of the visible fold: actual projection binding was unavailable.",
+    "Only fill the original analytic u=1.25..1.33 tail and assume adequate visible gain: the sampled major outer endpoints would receive only about 0.2 mm versus about 1.4 mm of adjacent x motion."
+  ],
+  "candidate": {
+    "change": "Extend only the existing pucker x displacement into connected, originally inactive exterior skin near the corners.",
+    "method": "Use the complete original index and native fRest edge lengths to obtain same-side exterior boundary anchors. Positively interpolate their current native before-local x contributions over a bounded 4 mm rest-surface neighbourhood and smoothly decay to zero.",
+    "engineeringLengthMM": 4,
+    "lengthIsMeasuredPhysiology": false,
+    "preserve": [
+      "Never directly write an originally active vertex or the protected central mouth.",
+      "Retain original forward and up displacement terms and the R05 evaluator.",
+      "At pucker=0 call the original R05 evaluator directly, without temporary stage hooks or added position writes.",
+      "Do not change canonical geometry, native topology or semantic memberships, the material, shader, controls, camera or lighting.",
+      "Exclude teeth, inner surfaces and non-front exterior domains from the additional transmission.",
+      "Preserve exact R05-off comparison, complete-person archives and old public versions."
+    ],
+    "numericalMotivation": "The two sampled outer points have several adjacent native moving anchors about 0.9..1.76 mm away. A positive bounded extension can transfer materially more of that existing motion than the truncated analytic tail, while preserving every original moving source point. The sampled estimate is not a full-graph or visual result.",
+    "failureConditions": [
+      "No clear native-size improvement in the target corner transition.",
+      "New dimples, bulges, stretched patches or hard support-boundary creases.",
+      "Loss of central pucker, commissure trajectory, original normal grooves or prior R05 speaking benefit.",
+      "Any change to captured neutral, jaw or speaking geometry/pixels.",
+      "Mismatch in independent R05, archive restore, protected native inputs or actual material/shader ownership."
+    ]
+  },
+  "visualAcceptance": false,
+  "productionReady": false,
+  "limits": [
+    "This is a bounded geometric tissue-transmission construction, not a finite-element muscle/contact simulation.",
+    "One native person and sampled poses do not establish validity for every identity or every action combination.",
+    "Lip thickness, waxy outer appearance and oral detail remain outside this repair."
+  ]
+}
