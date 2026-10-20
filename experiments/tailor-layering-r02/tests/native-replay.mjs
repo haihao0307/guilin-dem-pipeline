@@ -17,6 +17,7 @@
  * Discrete checkpoint checks are not continuous collision or yarn certificates.
  */
 import fs from 'node:fs/promises';
+import {writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -107,19 +108,30 @@ try {
     const checkpointSteps = new Set([0, 1, 6, 12, 18, 24, 60, 120, 180, 240, args.steps]);
     if (mode === 'perturb') for (const step of [61, 66, 121, 126, 181, 186]) checkpointSteps.add(step);
     let world;const bodyEnvelopeAuditor=createBodyEnvelopeAudit(input.body);
-    const saveState=async step=>{
-      if(!args.saveState||!world)return;
+    const stateRecord=step=>{
       const c=world.contacts,reference=g=>({id:g.id,count:g.count});
       const history={options:Object.fromEntries(['cellSize','searchMargin','contactMargin','maxCorrection','sampleLimit','cacheSkin','tolerance','maxCellsPerTriangle','broadphaseCache'].map(key=>[key,c[key]])),
         sides:[...c._sides],frameSides:[...c._frameSides],edgeReferences:[...c._edgeReferences],
         history:[...c._history],pending:[...c._pending].map(([key,value])=>[key,{...value,a:reference(value.a),b:reference(value.b)}]),
         restoreNote:'Reattach each history/pending triangles reference to its surface triangles object by garment id, and pending a/b to prepared surfaces; JSON cannot retain object identity.'};
-      await fs.writeFile(path.join(args.output,label+'.state.json'),JSON.stringify({step,simulationSeconds:world.time,inputSHA256:summary.inputSHA256,sourceSHA256,
-        surfaces:world.surfaces(),contactHistory:history},(key,value)=>ArrayBuffer.isView(value)?Array.from(value):value));
+      return{step,simulationSeconds:world.time,inputSHA256:summary.inputSHA256,sourceSHA256,
+        surfaces:world.surfaces(),velocities:world.rows.map(a=>({id:a.id,velocity:a.s.v,time:a.s.time,steps:a.s.steps})),contactHistory:history};
     };
+    const serializeState=value=>JSON.stringify(value,(key,item)=>ArrayBuffer.isView(item)?Array.from(item):item);
+    const saveState=async step=>{if(args.saveState&&world)await fs.writeFile(path.join(args.output,label+'.state.json'),serializeState(stateRecord(step)));};
     try {
       const started = performance.now(),creationCPU=process.cpuUsage();
       world = await LayerWorld.create(input.body, input.rows, kernelBytes, input.options);
+      if(args.saveState){
+        const settle=world.settle.bind(world);
+        world.settle=(...settings)=>{
+          const result=settle(...settings);
+          // Record the rejected geometry before step() rolls it back. This
+          // observer only runs after the unchanged solve/measurement finished.
+          if(!result.converged)writeFileSync(path.join(args.output,label+'.rejected-state.json'),serializeState({...stateRecord(world.steps+1),rejected:true,settling:result}));
+          return result;
+        };
+      }
       summary.creationMS = performance.now() - started;
       {const cpu=process.cpuUsage(creationCPU);summary.creationCPUms={user:cpu.user/1000,system:cpu.system/1000,total:(cpu.user+cpu.system)/1000};}
       summary.initialization = world.initializationReport;
@@ -181,7 +193,8 @@ try {
         summary.maxima.fixedDriftMM = Math.max(summary.maxima.fixedDriftMM, fixedDrift);
         summary.completedSteps = step; summary.simulationSeconds = audit.simulationSeconds;
         await fs.appendFile(logPath, JSON.stringify(row) + '\n');
-        if (checkpoint) {await saveState(step);await save(); console.log(JSON.stringify({label, step, seconds: audit.simulationSeconds, solverMS: audit.solverMS, stretch: audit.maxEdgeStretch,
+        await saveState(step);
+        if (checkpoint) {await save(); console.log(JSON.stringify({label, step, seconds: audit.simulationSeconds, solverMS: audit.solverMS, stretch: audit.maxEdgeStretch,
           residualMM: Number.isFinite(residualMM) ? residualMM : null, intersections: row.geometry.hasReportedIntersections, bodyOverlapMM: row.bodyThicknessOverlapMM}));}
       };
       await inspect(0, null);

@@ -140,7 +140,7 @@ export class LayerWorld {
   const rows=this.rows.filter(a=>a.enabled).map(a=>({id:a.id,...this.envelope(a)}));
   return{maxHalfThicknessOverlapM:Math.max(0,...rows.map(r=>r.maxHalfThicknessOverlapM)),maxClearanceDeficitM:Math.max(0,...rows.map(r=>r.maxClearanceDeficitM)),triangles:rows.reduce((sum,r)=>sum+r.triangles,0),rows};
  }
- settle({initializing=false,maxPasses=10,maxCorrections=5000,maxStretch=1.4,maxPenetration=.0004,solveContacts=null}={}) {
+ settle({initializing=false,maxPasses=20,maxCorrections=5000,maxStretch=1.4,maxPenetration=.0004,solveContacts=null}={}) {
   const began=performance.now(),rows=this.rows.filter(a=>a.enabled),contactEnabled=initializing||this.options.contactEnabled;
   const acceptanceLimits={maxEdgeStretch:initializing?maxStretch:1.45,maxResidualPenetrationM:initializing?maxPenetration:.0005,bodyHalfThicknessOverlapToleranceMM:.001};
   let inputs=this.surfaces();if(initializing)inputs=inputs.map(g=>({...g,previous:g.positions}));
