@@ -109,7 +109,11 @@ function installFrameHarness(){
   const v=__IDENTITY_QA__.viewer(),m=__IDENTITY_QA__.model(),ls=m.lipStructure;
   const initialFunctions={render:v.render,rendererRender:v.renderer.render,update:v.update,motherUpdate:ls.mother.update};
   const baselinePose=lipWorkbench.pose(),interventions=[];
-  const initialMaterials=(Array.isArray(v.mesh.material)?v.mesh.material:[v.mesh.material]).map(mat=>({mat,compile:mat.onBeforeCompile,key:mat.customProgramCacheKey}));
+  // Native update temporarily resets mesh.material to the native material;
+  // the existing renderer wrapper installs its draw slots only on actual draw.
+  // Track both existing owners here, including during fresh-restore setup.
+  // Actual drawGeometry.materialSlots still comes from the rendered mesh below.
+  const initialMaterials=[v.skin.material,headProceduralSkin.material()].map(mat=>({mat,compile:mat.onBeforeCompile,key:mat.customProgramCacheKey}));
   const initialUniformMaps={native:v.renderer.properties.get(v.skin.material).uniforms,skin:v.renderer.properties.get(headProceduralSkin.material()).uniforms};
   const hash=async a=>a?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(a.buffer,a.byteOffset,a.byteLength))),x=>x.toString(16).padStart(2,'0')).join(''):null;
   function withoutRender(label,fn){const d=Object.getOwnPropertyDescriptor(v,'render'),old=v.render,frame=v.renderer.info.render.frame;let suppressed=0;
@@ -137,7 +141,7 @@ function installFrameHarness(){
     const r={type:o.type,name:o.name,position:o.position.toArray(),quaternion:o.quaternion.toArray(),scale:o.scale.toArray(),matrix:o.matrixWorld.toArray(),color:o.color.toArray(),intensity:o.intensity,visible:o.visible};
     if(o.groundColor)r.ground=o.groundColor.toArray();if(o.target)r.target={position:o.target.position.toArray(),quaternion:o.target.quaternion.toArray(),scale:o.target.scale.toArray(),matrix:o.target.matrixWorld.toArray()};result.push(r);});return result;}
   const hashText=text=>hash(new TextEncoder().encode(text));
-  async function materials(){const mats=Array.isArray(v.mesh.material)?v.mesh.material:[v.mesh.material],result=[];
+  async function materials(){const mats=[v.skin.material,headProceduralSkin.material()],result=[];
     for(let index=0;index<mats.length;index++){
       const mat=mats[index],original=initialMaterials[index],values={};
       for(const key of['color','roughness','metalness','ior','specularIntensity','specularColor','clearcoat','clearcoatRoughness','transmission','thickness','opacity','side','transparent','wireframe','depthTest','depthWrite','alphaTest','vertexColors','flatShading','normalScale','bumpScale','displacementScale','displacementBias','emissive','emissiveIntensity','envMapIntensity','attenuationColor','attenuationDistance'])values[key]=arrayValue(mat[key]);

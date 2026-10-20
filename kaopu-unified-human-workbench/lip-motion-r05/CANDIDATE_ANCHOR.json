@@ -1,20 +1,32 @@
 {
   "schema": "kaopu/lip-motion-candidate-anchor@1",
   "version": "LIP-MOTION-R05",
-  "candidate": 1,
+  "candidate": 2,
   "reviewedFiles": {
     "build.cjs": "6e3bc18d5e1e469395155a8640a723021e7fb9b3c290f392363cce40f382b880",
     "src/MotionContinuity.js": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
     "src/MotionLip.js": "eb5ba162e7c17dd3d22d639f3f595431c4e0beb56e1ba571d094fbca1ec3e50b",
-    "verification/verify-motion.cjs": "6e71eb56a9427594dff1db7a78f54f63e03594860f41501e7d9da72bcca1aaff",
-    "AUDIT_DECISION.json": "46c5afaf429ff71a8cf9968f3aa07575a9eb93c4313bae07747117001eda3724"
+    "verification/verify-motion.cjs": "810c43302ff3c203bc20525416d52df13ac00467c09ea8f78cdb7ab41bd7689f",
+    "AUDIT_DECISION.json": "46c5afaf429ff71a8cf9968f3aa07575a9eb93c4313bae07747117001eda3724",
+    "src/MotionContinuity.source-note.json": "0308db42adee1962fc2755849be208db01e8d8aa4e38bf062caf219009fe23f0"
   },
   "diagnosis": {
     "run": 39358962855,
     "source": "a904630990b3623d095025cdffb4c33db144135d",
     "qaSHA256": "1a37357b74275c459cc8d9dcd067e83430268fa898fc372a4fb891288bfcc549"
   },
-  "previousCandidates": [],
+  "previousCandidates": [
+    {
+      "candidate": 1,
+      "source": "6afff1bd9de706b33bb29c20e049d1cae7d4ea35",
+      "build": "6b608928ecc8d124a87759ce8a65f06eb7325589",
+      "run": 39364023766,
+      "evidenceCommit": "03d4fd7a6451cb8f35370f6d651ed5ead01b04d2",
+      "originalEvidence": "evidence/candidate-01/qa.json",
+      "qaSHA256": "0462d80c1ef8004bf4eaad8b97d682fa5854d07d4142c911488bd0afbd25e653",
+      "failure": "Verification enumerated the transient mesh material draw list before rendering rather than both stable existing material owners."
+    }
+  ],
   "visualAcceptance": false,
   "productionReady": false
 }
