@@ -123,6 +123,15 @@ function installFrameHarness(){
   function align(reference){return withoutRender('explicit comparison camera and lighting alignment',()=>{
     const c=reference.camera;v.camera.position.fromArray(c.position);v.camera.quaternion.fromArray(c.quaternion);v.orbit.target.fromArray(c.target);
     for(const k of['aspect','fov','zoom','near','far'])v.camera[k]=c[k];v.camera.updateProjectionMatrix();v.orbit.update();
+    // OrbitControls resolves its internal state with a floating-point round trip.
+    // Diagnosis-01 changed only target.x's last bit here. Reapply the exact saved
+    // pose to the SAME objects after that update; all downstream equality gates
+    // remain strict and no camera field is omitted or compared with a tolerance.
+    const orbitResolvedCamera={position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),target:v.orbit.target.toArray()};
+    v.camera.position.fromArray(c.position);v.camera.quaternion.fromArray(c.quaternion);v.orbit.target.fromArray(c.target);v.camera.updateMatrixWorld(true);
+    const exactCamera={position:v.camera.position.toArray(),quaternion:v.camera.quaternion.toArray(),target:v.orbit.target.toArray()};
+    for(const key of['position','quaternion','target'])if(exactCamera[key].length!==c[key].length||exactCamera[key].some((value,index)=>!Object.is(value,c[key][index])))throw Error('Exact comparison camera restoration failed: '+key);
+    interventions.push({label:'exact reference camera after native orbit update',orbitResolvedCamera,exactCamera,cameraPoseExact:true,cameraToleranceUsed:false});
     const actual=[];v.scene.traverse(o=>{if(o.isLight)actual.push(o);});const saved=reference.lighting.lights;
     if(actual.length!==saved.length)throw Error('Comparison native light count differs');
     v.cineRig.center.fromArray(reference.lighting.center);

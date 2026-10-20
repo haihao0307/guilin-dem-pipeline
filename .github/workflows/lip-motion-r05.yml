@@ -37,7 +37,7 @@ jobs:
       - name: Capture actual immutable R04 attribution frames
         env:
           MODE: diagnose
-          QA_OUT: kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+          QA_OUT: kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-02
           QA_BUDGET_MS: 960000
         run: timeout --signal=TERM --kill-after=20s 17m node kaopu-unified-human-workbench/lip-motion-r05/verification/diagnose-motion.cjs
       - name: Preserve completed or failed original evidence
@@ -51,8 +51,8 @@ jobs:
           test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          if test -d kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01; then
-            git add -f -- kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+          if test -d kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-02; then
+            git add -f -- kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-02
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Record actual R05 attribution evidence [skip ci]"
@@ -63,7 +63,7 @@ jobs:
         with:
           name: lip-motion-r05-attribution-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-02
             kaopu-unified-human-workbench/lip-motion-r05/verification
             kaopu-unified-human-workbench/lip-motion-r05/TASK_ANCHOR.json
           if-no-files-found: error
