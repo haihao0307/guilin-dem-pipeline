@@ -1,0 +1,56 @@
+{
+  "schema": "kaopu/lip-motion-audit-decision@1",
+  "version": "LIP-MOTION-R05",
+  "userGoal": "A visible useful improvement, with preserved expression, on the existing native person.",
+  "baseline": {
+    "version": "LIP-INNER-R04",
+    "source": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "build": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "previewSHA256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8"
+  },
+  "diagnosis": {
+    "run": 39358962855,
+    "source": "a904630990b3623d095025cdffb4c33db144135d",
+    "evidenceCommit": "e6daed7bac0d48eade9a67e9407ffedefe40f447",
+    "file": "evidence/diagnosis-02/qa.json",
+    "qaSHA256": "1a37357b74275c459cc8d9dcd067e83430268fa898fc372a4fb891288bfcc549",
+    "actualGPUFrames": 12,
+    "completedTests": 5,
+    "originalPixelRestorationExact": true,
+    "priorFailureRetained": "evidence/diagnosis-01/qa.json",
+    "priorFailureCause": "Native orbit.update introduced a last-place target-coordinate difference. Exact references are now reapplied after the native update. Strict camera and state comparisons remain enabled."
+  },
+  "observations": [
+    {
+      "evidence": ["speak-macro-r04.png", "speak-macro-no-bump.png", "speak-macro-albedo.png"],
+      "finding": "Segmented inner-edge strips survive removal of procedural bump; small silhouette steps survive albedo-only rendering.",
+      "inference": "Procedural bump or wetness alone cannot account for the visible defect. Geometry and its surface responsibility must be checked."
+    },
+    {
+      "evidence": ["speak-macro-no-local.png", "speak-visible-triangles.json"],
+      "finding": "Removing native local actions reduces the strips. The three sampled upper strips contain both upper:true and upper:false native samples on the same visible return surface.",
+      "inference": "Native local action directions can pull neighboring inner-surface samples oppositely. A bounded tissue-ownership correction is justified.",
+      "uncertainty": "CPU projected triangles are geometric attribution with explicit MSAA uncertainty, not exact GPU fragment ownership."
+    },
+    {
+      "evidence": ["speak-macro-no-local.png"],
+      "finding": "The no-local image is byte-identical to the previous R04 jaw-only image.",
+      "rejectedShortcut": "Disabling the local action is not a repair even if declared pose numbers remain unchanged. Actual expression geometry must be retained."
+    },
+    {
+      "evidence": ["pucker-oblique-r04.png", "pucker-oblique-no-local.png", "pucker-oblique-no-closure.png"],
+      "finding": "No-local widens and weakens the pucker. No-closure separates the central lip edges and exposes a broader tooth strip while corner folds persist.",
+      "rejectedShortcut": "Removing pucker or closure is not a fix for corner mechanics or a natural lip seal."
+    }
+  ],
+  "candidateContract": {
+    "owns": "Evaluated native inner-return-surface action direction; continuous tissue following.",
+    "preserves": ["canonical person and topology", "native declared pose values", "outer lip action amplitude", "original material and wetness controls", "native camera and lighting", "R04 ancestor bytes", "whole-person archive routes"],
+    "mustDemonstrate": ["visible benefit at the native comparison size", "actual expression remains distinct from jaw-only ablation", "neutral and jaw poses do not regress", "intermediate expression states do not jump", "off reproduces the independently loaded immutable R04", "fresh archived person reproduces the original candidate frame"],
+    "rejectionConditions": ["better appearance caused only by weaker expression", "new cracks or thin sheets", "unrelated material or person changes", "numbers pass but visible improvement is negligible"],
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "remainingBroaderIssues": ["outer lip smooth filled appearance", "corner folds under pucker", "tooth and oral depth appearance"],
+  "scope": "This bounded repair does not establish complete anatomical understanding or complete lip realism."
+}

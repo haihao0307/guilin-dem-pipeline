@@ -1,0 +1,117 @@
+{
+  "schema": "kaopu/independent-lip-diagnostic-visual-review@1",
+  "reviewer": "/root/lip_r05_visual_review",
+  "reviewDate": "2026-10-20",
+  "status": "partial-diagnostic-reviewed-rerun-and-production-candidate-pending",
+  "scope": "Independent direct viewing of all seven actual diagnosis-01 PNGs. Read-only inspection of raw QA and local bytes. No product code modification, browser control, or push.",
+  "provenance": {
+    "diagnosticCommit": "0e0e7625838627ab8fe69f2c0480425f5cbaaa27",
+    "sourceSHA": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "buildSHA": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "verifierSHA256": "6551d333a29b7f0c0ff124ffb2c657075cee2656b96a597eb3974e53fbbd5a9b",
+    "evidenceDirectory": "../evidence/diagnosis-01",
+    "qaSHA256": "87e280c9b9e0ba1ac3567c9cd3a64ea9c9db836abf401782d034e88e40d387b4",
+    "frameWidth": 640,
+    "frameHeight": 512,
+    "actualOriginalPNGViewed": true,
+    "imagesEdited": false,
+    "QAUsedToInferBeautyAcceptance": false,
+    "independentRuntimeReexecution": false
+  },
+  "runStatus": {
+    "completed": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "shareAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "savedFrames": 7,
+    "speakAttributionSubtest": "passed in supplied raw QA; baseline state and restored pixels exact",
+    "puckerAttributionSubtest": "failed before a complete controlled attribution sequence",
+    "puckerFailure": {
+      "assertion": "Material-only attribution changed unrelated state",
+      "reportedDifferingLeaf": "camera.target[0]",
+      "actual": -0.00008757935122447683,
+      "expected": -0.00008757935122447681,
+      "interpretation": "The displayed assertion identifies a last-digit camera-target difference. This review does not waive the failed invariant or treat the unfinished pucker sequence as passed."
+    },
+    "missingFromThisBatch": ["pucker/albedo", "pucker/no-local", "pucker/no-closure", "pucker complete restoration", "end-of-sequence original shader restoration"]
+  },
+  "images": [
+    {"file": "speak-macro-r04.png", "sha256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2", "bytes": 325245, "viewed": true},
+    {"file": "speak-macro-no-bump.png", "sha256": "a8b3b1733fac2a1af3973ee379352e055c5a9891c1f3bcb6948792ac22dcc39f", "bytes": 280351, "viewed": true},
+    {"file": "speak-macro-albedo.png", "sha256": "ab9448893a9579ed8308f1873d7a8d5fcb69076bfa7ad2d82707068eb01c1229", "bytes": 219446, "viewed": true},
+    {"file": "speak-macro-no-local.png", "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236", "bytes": 321401, "viewed": true},
+    {"file": "speak-macro-restored.png", "sha256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2", "bytes": 325245, "viewed": true},
+    {"file": "pucker-oblique-r04.png", "sha256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609", "bytes": 292475, "viewed": true},
+    {"file": "pucker-oblique-no-bump.png", "sha256": "706271cac9addd51b689bacb18abac900e1b759dae2f96e12c17b82774a232ee", "bytes": 250379, "viewed": true}
+  ],
+  "findings": [
+    {
+      "id": "speak-no-bump",
+      "observation": "去掉诊断所针对的程序凹凸后，脸部微小斑点和表面细节明显变化，但上唇内缘分段浅色薄片和下唇内缘亮带仍清楚存在；口角折叠也仍在。",
+      "supportedInference": "该凹凸着色不是 speak 机械内缘存在的必要条件，也不足以单独解释这组缺陷。",
+      "notSupported": "不能据此断言所有法线问题都不存在。该模式保留网格几何和原几何法线；几何形变引起的法线或高光变化仍可能参与。",
+      "causalStrength": "bounded controlled evidence for speak under supplied harness invariants"
+    },
+    {
+      "id": "speak-albedo",
+      "observation": "去掉明暗与高光表现后，外唇成为平色块，但上内缘处粉色表面与暗口腔的边界仍可见阶梯状转折或缺口；牙齿依旧可见。",
+      "supportedInference": "上缘的不连续不能被完整归因为湿润反光；几何投影、遮挡或离散表面分界必须继续排查。",
+      "notSupported": "这张图没有独立证明网格孔洞、厚度不足、拓扑错误或具体哪个顶点/三角形负责。底色诊断改变了表面表现，不是成品候选。",
+      "causalStrength": "bounded controlled evidence for speak under supplied harness invariants"
+    },
+    {
+      "id": "speak-no-local",
+      "observation": "关闭局部形变路径后，上内缘的一串浅色薄片明显减弱，下内缘的机械亮带也更弱；外唇填色感、口角尖折和牙齿分块仍在。",
+      "supportedInference": "speak 特有的内缘缺陷对该局部形变路径有明确响应，下一步应定位其中哪个局部计算或连续性处理引入了不合理转折。",
+      "criticalBoundary": "这是归因消融，不是修复。停止表达原有局部动作可以减少瑕疵，但同时失去用户要求的表情能力。",
+      "independentByteCheck": {
+        "comparisonFile": "../../lip-inner-r04/evidence/candidate-03/jaw-macro-r04.png",
+        "samePNGBytes": true,
+        "samePNG_SHA256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236",
+        "meaning": "本张 no-local 实际画面与既有 R04 普通张口图逐字节相同，不能宣传为仍保持 speak 特征的新嘴唇。"
+      },
+      "notSupported": "尚不能从这个整段关闭实验分离出单个子阶段的贡献，也不能推导所有局部动作都应该关闭。",
+      "causalStrength": "strong response to the tested whole local-path ablation; mechanism not yet isolated"
+    },
+    {
+      "id": "speak-restoration",
+      "observation": "恢复图重新出现与 speak 基线一致的上下内缘分段表现。",
+      "independentByteCheck": {"baselineAndRestoredPNGBytesExact": true, "sha256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2"},
+      "supportedInference": "本组 speak 画面干预可恢复，减少了不可逆状态漂移冒充改善的可能。",
+      "notSupported": "恢复基线只支持实验控制，不代表该基线或任何消融图达到视觉质量要求。"
+    },
+    {
+      "id": "pucker-no-bump-provisional",
+      "observation": "已保存的 no-bump 图中，薄而近横向的嘴缝、灰色牙齿细条和口角强牵拉折痕仍在；脸部表面细节减弱后，部分折叠阴影反而更显眼。",
+      "provisionalInference": "仅从已见图像，机械嘴缝没有随着被关闭的凹凸表现消失。",
+      "controlCaveat": "本轮 pucker 的严格状态检查失败，未完成完整归因和恢复；以上仅保留为对已见图像的观察，等待复跑再给受控归因结论。",
+      "notSupported": "没有本轮 no-local/no-closure 实际图，因此不能将 speak 的因果结论直接推广到 pucker，也不能提前把问题归给闭口接触步骤。"
+    }
+  ],
+  "sourceAttributionBoundaries": [
+    "可见三角形采样文件被原 QA 明确标为 CPU frontmost-triangle attribution，而不是 GPU fragment-ID 归属证据。本次视觉评价未用其样本直接指认瑕疵所属网格。",
+    "no-bump、albedo 与 no-local 的干预范围依据本轮 raw QA；本次独立视觉审核没有重新执行或逐行证明诊断着色器。",
+    "没有对现实人物或解剖参考作新的比例测量，结论是可见连续性与自然观感的审核，不是生物结构的定量证明。",
+    "固定静态图不证明帧间连续性、其他人物或实际移动设备表现。"
+  ],
+  "candidateAcceptanceFocus": {
+    "scope": "A real R05 production repair, preserving meaningful pose behavior, must be reviewed separately from these ablations.",
+    "mandatoryBeautyViews": ["neutral/macro", "speak/macro", "pucker/oblique", "jaw/macro", "jaw/oblique"],
+    "sameConditions": ["人物和材质设定", "用户输入的姿态参数", "镜头与光照", "输出尺寸"],
+    "observableBenefit": "在原生 640×512 的 speak 和 pucker beauty 对照中，内缘转折、接缝或口角连接应有无需放大就可指认的改善。",
+    "poseIntegrity": "保持参数名称或数值不够；实际网格仍须表达 speak/pucker 的有效动作，不能将结果退回 jaw 或 neutral 来隐藏问题。",
+    "doNotAcceptAsRepair": ["直接采用 no-local 消融", "减小或关闭原本动作", "更换为 albedo 或整体压暗", "删除牙齿或缩小开口遮住缺陷", "仅凭像素变化或测试通过宣称观感提升"],
+    "regressionChecks": ["自然闭口轮廓与原有唇体保持", "不新增开口孔洞或穿插", "内侧修复继续成立", "牙齿和口角连接没有新增明显断裂"],
+    "separateDecisions": ["局部内缘改善", "本轮实际可感知收益", "动作能力与退步", "整体嘴唇质感"],
+    "globalAppearanceLimit": "外唇大片平滑填色和宽软高光仍是整体观感瓶颈。只修复窄亮带，不足以自动通过整体质感验收。"
+  },
+  "decision": {
+    "diagnosis01OverallPass": false,
+    "productionCandidateReviewed": false,
+    "localVisualRepairAccepted": false,
+    "overallLipVisualAcceptance": false,
+    "recommendedNextAction": "完成 pucker 受控诊断；针对确有实际画面响应的局部路径做更窄修复，再看真实同条件候选图。"
+  }
+}

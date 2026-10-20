@@ -1,0 +1,536 @@
+{
+  "schema": "kaopu/lip-r05-readonly-geometry-audit@1",
+  "reviewedAtUTC": "2026-10-18T09:53:36.891310+00:00",
+  "reviewer": "/root/lip_r05_geometry_audit",
+  "scope": "Read-only source and retained actual R04 frames/stages. No published R04 changes, no browser control, no pushes, no new runtime/render claim.",
+  "baseline": {
+    "sourceCommit": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "buildCommit": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "handoffCommit": "ab2641ef0bfe038aafd3956611590c9e4ab9d09e",
+    "previewSHA256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8"
+  },
+  "decision": {
+    "productionGeometryChangeJustifiedYet": false,
+    "newCandidateVisuallyReviewed": false,
+    "code": "BIND_VISIBLE_BAND_TO_A_SMALL_GEOMETRIC_TERM_BEFORE_EDITING",
+    "summary": "The speak bright band cannot be attributed to the closure position stage: the retained native trace proves that stage displaced no vertex for speak. Local upper/lower directional terms, closure support discontinuity for pucker, native shape and midpoint normal-threshold refinement remain separate hypotheses. Rank and test them using the actual bright-band pixels; numeric maxima alone do not select a production repair."
+  },
+  "personallyViewedFinalR04Frames": [
+    {
+      "path": "kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/speak-macro-r04.png",
+      "observation": "A thin segmented salmon/light band lies just inside the upper mouth opening; a lower inner bright rim also appears segmented. Sharp corner folds and blocky teeth remain. This is observed appearance, not proof of its geometric source."
+    },
+    {
+      "path": "kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/pucker-oblique-r04.png",
+      "observation": "The mouth gap is an unusually straight thin line with visible tooth slivers; both corners pinch, and strong pulled folds run into adjacent cheek skin. This is observed appearance, not a measurement of discontinuity."
+    }
+  ],
+  "evidenceBoundaries": [
+    "Retained stage traces were captured against R02 before R04 material restoration. R04 deliberately left geometry and native deformation unchanged, so the traces remain relevant to inherited geometry; they are not newly measured R05 evidence.",
+    "The diagnostic nativeRim group contains 46,646 display vertices, defined by roi && abs(u)<.98 && -.28<v<.7 && depth<.0035. It is a broad surface band, not the exact visible inner opening curve.",
+    "The traces retain largest moved vertices and aggregate edge differences but not the identity of the maximum-gradient edge. A maximum cannot be assigned to the visible band without new endpoint and projection evidence.",
+    "Stage statistics are not quality scores. The largest displacement may be a correct mouth action; a large relative edge delta can occur on a tiny edge.",
+    "Global lighting, wetness, camera and identity changes would confound the requested geometric attribution."
+  ],
+  "findings": [
+    {
+      "id": "G1",
+      "priority": 1,
+      "name": "Hard upper/lower directional classification on connected oral skin",
+      "status": "SOURCE_CONFIRMED_MECHANISM_VISIBLE_RESPONSIBILITY_UNPROVEN",
+      "source": [
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "L5.sample",
+          "line1": 4118,
+          "characterOffset0": 4635504,
+          "uniqueSourceNeedle": "f=c>=(d+p)*.5",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Ql.apply local actions",
+          "line1": 4173,
+          "characterOffset0": 4656278,
+          "uniqueSourceNeedle": "H+=(C.upper?.0018*a.upperRaise:-.0024*a.lowerDepress)*Tt(C.u,.9)*u",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Ql.apply closure displacement",
+          "line1": 4173,
+          "characterOffset0": 4657347,
+          "uniqueSourceNeedle": "x(D,0,(C.upper?1:-1)*I.delta*O,0)",
+          "occurrences": 1
+        }
+      ],
+      "mechanism": "Upper is a binary classification against the rest-space midpoint of interpolated inner top/bottom rails. Local upperRaise/lowerDepress and funnel/roll direction terms, plus closure, use this label as opposite-signed commands. These command fields are not blended across upper/lower labels on connected oral return/corner topology.",
+      "actualRetainedEvidence": "Speak local-action nativeRim edge difference p95 0.0022109 mm, max 0.5314993 mm; oral-return max 0.6136177 mm. Sparse extrema warrant locating label-crossing edges. Speak closure displacement is exactly zero in every reported group.",
+      "minimalExperiment": "Keep the declared speak pose (.36 jaw, .2 upperRaise, .12 lowerDepress), R04 material, exact camera/light and neutral reference. Temporarily gate only the directional upperRaise/lowerDepress term to zero for one normal native render. Record actual changed geometry and visible bright-band response. This is an attribution counterfactual that changes evaluated motion, not an acceptable production improvement by itself.",
+      "candidateRepairIfConfirmed": "Construct an independent continuous motion ownership weight on the original connected skin graph, anchored to the real upper/lower lip lobes and fading through their corner/inner-wall connection. Blend only the opposing action terms using that weight; retain the stored semantic upper flag for material ownership. Protect the actual lip contact rails and do not blend opposing lips merely because they are spatially close.",
+      "risk": "A rest-space distance smoothstep alone can mix the upper/lower lobes across a closed lip slit. Using a connected-graph field avoids that false spatial adjacency, but its anchors and visible transition width still need evidence. Smoothing the original positions would alter mouth identity and is not the proposed repair."
+    },
+    {
+      "id": "G2",
+      "priority": 2,
+      "name": "Closure does not reuse the continuous activation weight or its depth support",
+      "status": "SOURCE_CONFIRMED_MECHANISM_VISIBLE_RESPONSIBILITY_UNPROVEN",
+      "source": [
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Kl constructor active domain",
+          "line1": 4173,
+          "characterOffset0": 4650527,
+          "uniqueSourceNeedle": "l.skin&&l.weight>.001&&this.active.push(a)",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Ql.apply closure support",
+          "line1": 4173,
+          "characterOffset0": 4657261,
+          "uniqueSourceNeedle": "O=Tt(Math.max(0,C.v),.92)*(1-f0(.94,1.14,Math.abs(C.u)))*Math.max(C.front,C.inner*.7)",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Ql.apply closure displacement",
+          "line1": 4173,
+          "characterOffset0": 4657347,
+          "uniqueSourceNeedle": "x(D,0,(C.upper?1:-1)*I.delta*O,0)",
+          "occurrences": 1
+        }
+      ],
+      "mechanism": "The local-action phase multiplies displacement by C.weight. The closure phase iterates the same weight>.001 active list but omits C.weight. For negative v, max(0,v) makes the Gaussian one. Deep/inner skin can therefore receive substantial closure until membership drops out of the active list, rather than fading with the support that defined active.",
+      "actualRetainedEvidence": "Pucker closure nativeRim neighbor delta max 1.2371656 mm (p95 .0181813 mm), oral-return max 1.6649338 mm (p95 .0355878 mm). This remains a candidate mechanism, not a located pixel cause.",
+      "minimalExperiment": "During the normal original solver call, capture the position array at pairs.map entry (after local motion); at lips[Symbol.iterator] entry restore those positions once (after closure). Preserve the closure pressure field for a geometry-only ablation and explicitly label that isolation. Let the original dental envelope, normals, micro displacement and final renderer execute. Capture R04 pucker with identical declared inputs and actual same camera/light; restore method descriptors in finally and require exact baseline recovery.",
+      "candidateRepairIfConfirmed": "Use a closure-support field that smoothly fades to zero at the actual activation/depth boundary. One bounded first candidate is to multiply closure by a smooth activation guard on C.weight at the low-weight boundary, rather than multiply by the entire weight and weaken all inner contact. Preserve full strength on native contact anchors. Record how this changes pressure/strain semantics before deciding whether to apply the same support there.",
+      "risk": "Removing closure or attenuating the entire field can hide corner creases simply by reopening the mouth. Retention requires matched intended mouth state, no new lip penetration, native rail contact behavior and a visible reduction of the artifact."
+    },
+    {
+      "id": "G3",
+      "priority": 3,
+      "name": "Piecewise-linear interpolation of closure samples has derivative kinks",
+      "status": "SOURCE_CONFIRMED_INTERPOLATION_TYPE_VISIBLE_RESPONSIBILITY_UNPROVEN",
+      "source": [
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "Ql.apply closure interpolation E",
+          "line1": 4173,
+          "characterOffset0": 4657011,
+          "uniqueSourceNeedle": "let C=E0((D+.94)/1.88)*(b.length-1)",
+          "occurrences": 1
+        }
+      ],
+      "mechanism": "The closure delta and closure pressure fields are linear between 49 uniform nominal u knots. Their values are continuous, but adjacent interval slopes need not match. This is separate from the already rejected duplicated sample-ID hypothesis.",
+      "minimalExperiment": "For pucker only, evaluate a shape-preserving C1 Hermite interpolation of the exact same 49 delta values; preserve every knot value and bound the interpolant within each interval endpoint range. Render with all other terms identical. The old linear interpolation remains the off path.",
+      "candidateRepairIfConfirmed": "Use local monotone cubic slope limiting for the closure and pressure profiles, retaining authored knots and zero overshoot, instead of averaging or resampling the original rim mesh.",
+      "risk": "Different interpolation can change projected gap between contact samples; even an overshoot-free curve needs actual local penetration/contact checks. It cannot fix the speak band because the original speak closure displacement is zero."
+    },
+    {
+      "id": "G4",
+      "priority": 3,
+      "name": "Native lip shape owns a small explicit ridge and corner indentation",
+      "status": "SOURCE_CONFIRMED_COMPETING_HYPOTHESIS",
+      "source": [
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "O1.update native lip shape ridge",
+          "line1": 4525,
+          "characterOffset0": 4938812,
+          "uniqueSourceNeedle": "b+=13e-5*y*f",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "O1.update native corner shape",
+          "line1": 4525,
+          "characterOffset0": 4938825,
+          "uniqueSourceNeedle": "b-=38e-5*i.corners*Tt(Math.abs(u)-.92,.12)*Tt(d-.33,1.2)",
+          "occurrences": 1
+        }
+      ],
+      "mechanism": "The original native shape layer adds an explicit ridge near v=1.04 and a narrow corner recess near abs(u)=.92, with an additional inward x shift around .91. These are retained authored shape terms, not effects introduced by R04.",
+      "minimalExperiment": "First project the visible bright band and its triangles into native (u,v). The ridge is an OUTER-edge term (v around 1.04), whereas the observed upper bright band seems near the inner opening. Only if its surface coordinates overlap should its single 13e-5 term be gated to zero. Independently gate the narrow corner indentation/inward term for a corner-shape comparison.",
+      "candidateRepairIfConfirmed": "Tie any necessary ridge/corner profile to the existing anatomical section and continuous deformation, rather than a constant narrow recess. Do not zero all structure settings merely to erase a visible artifact.",
+      "risk": "The ridge may support correct vermilion definition. Removing it indiscriminately can worsen the already soft boundary and mask a material problem."
+    },
+    {
+      "id": "G5",
+      "priority": 4,
+      "name": "Midpoint refinement changes abruptly at a normal-dot threshold",
+      "status": "SOURCE_CONFIRMED_COMPETING_HYPOTHESIS",
+      "source": [
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "O1.update midpoint refinement",
+          "line1": 4525,
+          "characterOffset0": 4937533,
+          "uniqueSourceNeedle": "if(Math.abs(d[m]-d[y])<.01&&w>.82)",
+          "occurrences": 1
+        },
+        {
+          "file": "kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+          "function": "O1.update midpoint refinement amount",
+          "line1": 4525,
+          "characterOffset0": 4937648,
+          "uniqueSourceNeedle": "let S=M.roi?.34:.2*i.eyeSmoothing",
+          "occurrences": 1
+        }
+      ],
+      "mechanism": "For inserted display midpoint vertices, the normal-projected curvature correction is enabled only when the parent normal dot exceeds .82. The correction is bounded at .15 mm in lip ROI. Crossing that threshold with motion changes from no correction to nonzero correction; the topology remains indexed and valid.",
+      "minimalExperiment": "Trace a few real visible band/corner triangles back to their O1 parent edges and measure w through the tested pose. If threshold crossing coincides with the visible segment, try a smooth gain over a narrow normal-dot interval while keeping type equality and the existing .15 mm cap. Capture the same pose sequence.",
+      "risk": "This gate may intentionally protect sharp tissue transitions. Global smoothing could erase anatomy or soften mesh boundaries; it should only be altered after the actual visible parent edges are identified."
+    }
+  ],
+  "minimumNewEvidence": [
+    "Normal R04 speak and pucker frames using the already frozen camera/light and decoded framebuffer hashes.",
+    "Capture each phase full position array internally; for maximum and visible-nearby edge-delta differences retain both endpoint IDs, semantic upper/inner/weight/v/depth, actual parent triangle IDs, projected screen coordinates, and frontmost visibility.",
+    "Choose one source term whose support overlaps the actual visible artifact, change only that term for a causal frame, then restore exact baseline state and actual pixel hash.",
+    "Only render a repair candidate after the causal frame changes the target artifact. Compare gains in speak/pucker with neutral/jaw regressions; retain intended expression and existing person, material, archive and contact behavior.",
+    "Report whether the bright band itself was reduced, not merely how many pixels changed or how much a numeric edge maximum fell."
+  ],
+  "experimentationHooks": {
+    "existingVerifiedDiagnosticSource": "kaopu-unified-human-workbench/lip-inner-r04/verification/diagnose-inner.cjs",
+    "range": "numerical() around lines 308–378; original wrappers track lip.update, solver.apply, pairs.map, lips[Symbol.iterator] and geometry.computeVertexNormals.",
+    "stageOrder": [
+      "after_subdivision",
+      "after_native_lip_shape",
+      "before_local",
+      "after_local",
+      "after_closure",
+      "after_envelope",
+      "after_micro",
+      "final"
+    ],
+    "important": "These hooks originally only capture numeric snapshots. A new experiment must call normal native render to create new evidence and must restore original own-property descriptors exactly; reusing the old numeric output is not a visual test."
+  },
+  "retainedStageEvidence": [
+    {
+      "file": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/evidence/diagnosis-recovery-39107556193/stages-speak.json",
+      "sha256": "f2fb1382a78be629ae37e9615b85f593ea0bfa511006361f88f6852e16196a55",
+      "calibrationUnchanged": true,
+      "executedMicroGeometry": 0.35,
+      "transitions": [
+        {
+          "from": "after_subdivision",
+          "to": "after_native_lip_shape",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 26615,
+              "maxDisplacementMM": 0.7650772995405677,
+              "maxNeighborDeltaDifferenceMM": 0.1883329215322705,
+              "p95NeighborDeltaDifferenceMM": 0.05566944056064173,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.9240654949806143
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 34467,
+              "maxDisplacementMM": 0.3651101130004887,
+              "maxNeighborDeltaDifferenceMM": 0.17474917544967525,
+              "p95NeighborDeltaDifferenceMM": 0.017130908547322563,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.9240654949806143
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 46646,
+              "maxDisplacementMM": 0.7669542224944792,
+              "maxNeighborDeltaDifferenceMM": 0.14467035845170803,
+              "p95NeighborDeltaDifferenceMM": 0.03015663690018222,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.9240654949806143
+            }
+          }
+        },
+        {
+          "from": "before_local",
+          "to": "after_local",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 27632,
+              "maxDisplacementMM": 0.3409053265419159,
+              "maxNeighborDeltaDifferenceMM": 0.6136176990273682,
+              "p95NeighborDeltaDifferenceMM": 0.012431137434711692,
+              "maxNeighborDeltaPerPreviousEdgeLength": 8.240942329601692
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 36955,
+              "maxDisplacementMM": 0.17021351562372236,
+              "maxNeighborDeltaDifferenceMM": 0.305942254896565,
+              "p95NeighborDeltaDifferenceMM": 0.009024764866165914,
+              "maxNeighborDeltaPerPreviousEdgeLength": 8.240942329601692
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 46646,
+              "maxDisplacementMM": 0.34090532651266164,
+              "maxNeighborDeltaDifferenceMM": 0.531499291197085,
+              "p95NeighborDeltaDifferenceMM": 0.0022109346847305708,
+              "maxNeighborDeltaPerPreviousEdgeLength": 8.240942329601692
+            }
+          }
+        },
+        {
+          "from": "after_local",
+          "to": "after_closure",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            }
+          }
+        },
+        {
+          "from": "after_closure",
+          "to": "after_envelope",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            }
+          }
+        },
+        {
+          "from": "after_micro",
+          "to": "final",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 1025,
+              "maxDisplacementMM": 0.2098587544647808,
+              "maxNeighborDeltaDifferenceMM": 0.30199150950899795,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.23300906402102686
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 2134,
+              "maxDisplacementMM": 0.2098587544647808,
+              "maxNeighborDeltaDifferenceMM": 0.30199150950899795,
+              "p95NeighborDeltaDifferenceMM": 8.33000234328132e-06,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.23300906402102686
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/evidence/diagnosis-recovery-39107556193/stages-pucker.json",
+      "sha256": "2df734e125c1675100bcbdde0d04340e4905e2b8492078ce0494f0cf61dd9a2a",
+      "calibrationUnchanged": true,
+      "executedMicroGeometry": 0.35,
+      "transitions": [
+        {
+          "from": "after_subdivision",
+          "to": "after_native_lip_shape",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 26615,
+              "maxDisplacementMM": 0.7849689371842062,
+              "maxNeighborDeltaDifferenceMM": 0.19323624631116731,
+              "p95NeighborDeltaDifferenceMM": 0.05711119481219711,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.6630496182400808
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 34468,
+              "maxDisplacementMM": 0.374593646276648,
+              "maxNeighborDeltaDifferenceMM": 0.17928504649149207,
+              "p95NeighborDeltaDifferenceMM": 0.017574318659492678,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.9544875373655421
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 46646,
+              "maxDisplacementMM": 0.7868642891397155,
+              "maxNeighborDeltaDifferenceMM": 0.14845542419142657,
+              "p95NeighborDeltaDifferenceMM": 0.03094333133568162,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.9544875373655421
+            }
+          }
+        },
+        {
+          "from": "before_local",
+          "to": "after_local",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 27632,
+              "maxDisplacementMM": 4.339526237540989,
+              "maxNeighborDeltaDifferenceMM": 1.8742378441050433,
+              "p95NeighborDeltaDifferenceMM": 0.18414322361172472,
+              "maxNeighborDeltaPerPreviousEdgeLength": 2.3357022118617814
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 36955,
+              "maxDisplacementMM": 4.688736402558105,
+              "maxNeighborDeltaDifferenceMM": 1.8742378441050433,
+              "p95NeighborDeltaDifferenceMM": 0.28855719803342605,
+              "maxNeighborDeltaPerPreviousEdgeLength": 4.704858893794095
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 46646,
+              "maxDisplacementMM": 4.657627928123866,
+              "maxNeighborDeltaDifferenceMM": 0.26499759873085366,
+              "p95NeighborDeltaDifferenceMM": 0.04589294527361433,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.8204514718054163
+            }
+          }
+        },
+        {
+          "from": "after_local",
+          "to": "after_closure",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 26695,
+              "maxDisplacementMM": 0.8333014808086335,
+              "maxNeighborDeltaDifferenceMM": 1.6649337721145139,
+              "p95NeighborDeltaDifferenceMM": 0.03558775904962268,
+              "maxNeighborDeltaPerPreviousEdgeLength": 7.450734589786066
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 33541,
+              "maxDisplacementMM": 0.2935242719458412,
+              "maxNeighborDeltaDifferenceMM": 0.5851410675075209,
+              "p95NeighborDeltaDifferenceMM": 0.011743283991043537,
+              "maxNeighborDeltaPerPreviousEdgeLength": 6.658263916368571
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 46637,
+              "maxDisplacementMM": 0.8309170008212055,
+              "maxNeighborDeltaDifferenceMM": 1.2371655888741524,
+              "p95NeighborDeltaDifferenceMM": 0.018181323119835873,
+              "maxNeighborDeltaPerPreviousEdgeLength": 6.658263916368571
+            }
+          }
+        },
+        {
+          "from": "after_closure",
+          "to": "after_envelope",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 1,
+              "maxDisplacementMM": 0.05799844541646275,
+              "maxNeighborDeltaDifferenceMM": 0.05799844541646275,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.42114964214105166
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 1,
+              "maxDisplacementMM": 0.05799844541646275,
+              "maxNeighborDeltaDifferenceMM": 0.05799844541646275,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.42114964214105166
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            }
+          }
+        },
+        {
+          "from": "after_micro",
+          "to": "final",
+          "groups": {
+            "oralReturnSkin": {
+              "vertices": 28347,
+              "moved": 1029,
+              "maxDisplacementMM": 0.20565627950733592,
+              "maxNeighborDeltaDifferenceMM": 0.3018844079204292,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.22021670865038215
+            },
+            "cornerSkin": {
+              "vertices": 37483,
+              "moved": 2144,
+              "maxDisplacementMM": 0.20565627950733592,
+              "maxNeighborDeltaDifferenceMM": 0.3018844079204292,
+              "p95NeighborDeltaDifferenceMM": 9.313225746154785e-06,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0.22021670865038215
+            },
+            "nativeRim": {
+              "vertices": 46646,
+              "moved": 0,
+              "maxDisplacementMM": 0,
+              "maxNeighborDeltaDifferenceMM": 0,
+              "p95NeighborDeltaDifferenceMM": 0,
+              "maxNeighborDeltaPerPreviousEdgeLength": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "excludedHypothesesNotRepeated": [
+    "Dental envelope displaces the entire native rim in the four recorded poses.",
+    "49 rim pair IDs are duplicated."
+  ],
+  "constraints": [
+    "Frozen source is bundled/minified. Patch only unique verified source needles or wrap verified native boundaries; never edit the published R04 artifact.",
+    "The head is a coupled procedural geometry, deformer, material and archive system. A fast ad hoc mesh smoothing may improve a screenshot while changing expression, identity or stored behavior.",
+    "CI full native GPU frames are relatively expensive; locate the source support first, then run the smallest decisive comparison. A numerical-only edit cannot satisfy this user request.",
+    "This audit does not claim general biomechanical validity, full collision detection, measured tissue parameters, all 36 identities or real-time mobile performance."
+  ]
+}

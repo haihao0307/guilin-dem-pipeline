@@ -1,0 +1,811 @@
+{
+  "schema": "kaopu/independent-lip-geometry-diagnostic-review@1",
+  "task": "LIP-INNER-R04-20261018",
+  "reviewedAtUTC": "2026-10-18T07:25:47.230286+00:00",
+  "reviewer": "independent geometry and deformation auditor /root/lip_r03_geometry",
+  "evidence": {
+    "runID": 39106942241,
+    "diagnosticCommit": "0021244195ae23243b3b4dc73f269f547d66b9bb",
+    "diagnosticVerifierSHA256": "f7b62cb1c4c75bd17deb263540f7ae08777f1ab31da083f2fcf6cd20280d371a",
+    "baselineSourceCommit": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "baselineBuildCommit": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "baselinePreviewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+    "qaSHA256": "2371cee61da7bde65e54544fb70596311d6278382cbd806cd60909e37198f505",
+    "artifactZIP_SHA256": "1f0e765a63af420d0fe579b4a6e548b2868bb7b764570885cbc8fc7f9a76a4e5",
+    "originalWholeRunCompleted": false,
+    "originalTestPassedCount": 6,
+    "originalTestCount": 7,
+    "allSixPNGHashesMatchedOriginalQA": true,
+    "allFourPoseStagesRead": true
+  },
+  "decision": {
+    "code": "PRESERVE_GEOMETRY_PRIORITIZE_EVIDENCE_BACKED_ORAL_MATERIAL_OWNERSHIP",
+    "geometryModificationJustifiedByCurrentEvidence": false,
+    "exactLayerIntroducingVisibleSteppedRimEstablished": false,
+    "diagnosticWholeRunPassed": false,
+    "productionChangeReviewed": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "reason": "现有数据排除了口腔包络导致整条原生内缘位移及49对重复采样这两项具体怀疑。材质归属消融在同一几何上消除了张口斜侧的浅色板状区域。局部动作与闭唇约束存在较集中邻边修正，但没有阶段渲染/可见三角对应，不能据幅度直接认定折段来源；本轮应保留全部几何，只推进有直接消融证据的材质归属修正。"
+  },
+  "frames": [
+    {
+      "name": "neutral-macro-r02",
+      "file": "neutral-macro-r02.png",
+      "pngSHA256": "dd60c3fa008e04b254fee7dce7a24eb6b431314f63e7151404dfe4813803717a",
+      "framebufferRGBA_SHA256": "4e938508f2885a37fe452933ff99343fd5ef54974023e750ab714407f506751c",
+      "personallyInspected": true,
+      "observation": "同一R02自然近景。整体填色感与唇缘已有表现仍在；这帧不能单独定位唇缝起伏的几何来源。"
+    },
+    {
+      "name": "pucker-oblique-r02",
+      "file": "pucker-oblique-r02.png",
+      "pngSHA256": "5b6e5cd34b4a372fdd86b113839430c2ae3bfe26106c4f66a84a44fc8e5cd1ac",
+      "framebufferRGBA_SHA256": "0cfef8dcf676d0c43b0b5f1c6437a88bbe00af6de7cca8fc77e527e6e696487f",
+      "personallyInspected": true,
+      "observation": "噘嘴时仍有口角收束与内缘分段的观感。只看到最终画面，尚未把可见片段关联到阶段中的具体三角形或顶点。"
+    },
+    {
+      "name": "jaw-macro-r02",
+      "file": "jaw-macro-r02.png",
+      "pngSHA256": "cec91e4a69860fbae492f9da5e326c34514abc55f8f6feca494c14746c6d3f3d",
+      "framebufferRGBA_SHA256": "630974f6c0cb3625fbb85484a7a4efd5b9429e8b1271784d57a864d6d511e893",
+      "personallyInspected": true,
+      "observation": "仅张口时，口腔两侧可见浅色三角区域，牙列及口角轮廓保留。"
+    },
+    {
+      "name": "jaw-oblique-r02",
+      "file": "jaw-oblique-r02.png",
+      "pngSHA256": "40d189e71d109902efbfd1634fd873f5052f3d4e50b8c2b15986a3d6313c1688",
+      "framebufferRGBA_SHA256": "f5c8c2a4bdadaf4fc730b1c4e8913d474c0e8322c4759ff745f359dc486952a8",
+      "personallyInspected": true,
+      "observation": "仅张口斜侧时，近侧口腔有明显浅色板状区域；外唇与牙列构成独立可见边界。"
+    },
+    {
+      "name": "jaw-oblique-native-material-experiment",
+      "file": "jaw-oblique-native-material-experiment.png",
+      "pngSHA256": "c8d10bfd1fa2d9261aaf5bc3c48aa753bd51c1bdddc6bff59b177c703a58016a",
+      "framebufferRGBA_SHA256": "592ce065e156568011cc8d7c705bd62913b4bb0e1d6ba2c9a8d3c48888f8cf5e",
+      "personallyInspected": true,
+      "observation": "同几何、同相机、同灯光的原材质归属消融中，近侧浅色板状区域变为暗口腔区域，外唇轮廓和牙列形状未随之改变。"
+    },
+    {
+      "name": "jaw-macro-native-material-experiment",
+      "file": "jaw-macro-native-material-experiment.png",
+      "pngSHA256": "66b793eeb375c218f068c668b5d32540a1cb1595a830641e34e928b123cf844d",
+      "framebufferRGBA_SHA256": "2d924a4e2123881b807a3bcd5e5a454b84f2c2d6088e9384a01a31c9eb12fe97",
+      "personallyInspected": true,
+      "observation": "同条件正面消融中，两侧浅色三角明显减弱或消失；没有由此证明内唇几何或整体嘴唇质感达标。"
+    }
+  ],
+  "poseStageFindings": [
+    {
+      "pose": "neutral",
+      "stagesFile": "stages-neutral.json",
+      "stagesSHA256": "7e473fb5969c4b51fcfcfab2e6f346984cbb78ca80ced53196f05c4c2f90139f",
+      "hookCounts": {
+        "lipUpdate": 1,
+        "lipNormals": 2,
+        "solverApply": 1,
+        "pairsMap": 1,
+        "lipsIterator": 1,
+        "solverNormals": 2
+      },
+      "hooksRestored": true,
+      "calibrationUnchanged": true,
+      "stageOrder": [
+        "after_subdivision",
+        "after_native_lip_shape",
+        "before_local",
+        "after_local",
+        "after_closure",
+        "after_envelope",
+        "after_micro",
+        "final"
+      ],
+      "envelope": {
+        "movedDomainVertices": 1,
+        "maximumDisplacementMM": 0.038254529893143985,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.038254529893143985,
+        "nativeRimMovedVertices": 0,
+        "nativeRimMaximumDisplacementMM": 0,
+        "movedVertices": [
+          {
+            "id": 185608,
+            "u": 0.2656087200714377,
+            "v": 1.0063785162876238,
+            "upper": true,
+            "depth": 0.007590077441234466,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0.9654122410937916,
+            "red": 0.0458411196914541,
+            "rim": false,
+            "front": 1,
+            "roi": true,
+            "displacementMM": 0.038254529893143985,
+            "before": [
+              0.0068024201318621635,
+              0.6717115640640259,
+              0.11592812836170197
+            ],
+            "after": [
+              0.006801925133913755,
+              0.6717115044593811,
+              0.11596637964248657
+            ],
+            "deltaMM": [
+              -0.0004949979484081268,
+              -5.9604644775390625e-05,
+              0.038251280784606934
+            ]
+          }
+        ]
+      },
+      "localAction": {
+        "maximumDisplacementMM": 0,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0
+      },
+      "closure": {
+        "maximumDisplacementMM": 0.027060562063628835,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.0535250788673767
+      },
+      "postSolverFinalDisplay": {
+        "lipRedMovedVertices": 0,
+        "nativeRimMovedVertices": 0,
+        "oralReturnMaximumDisplacementMM": 0.21070333960221624,
+        "largestOralReturnExamples": [
+          {
+            "id": 38547,
+            "u": 1.465126069367935,
+            "v": 10.66060492499954,
+            "upper": true,
+            "depth": 0.05804833853078151,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.21070333960221624,
+            "before": [
+              0.034818001091480255,
+              0.670426607131958,
+              0.04993147775530815
+            ],
+            "after": [
+              0.03489245846867561,
+              0.6703596115112305,
+              0.04974610358476639
+            ],
+            "deltaMM": [
+              0.07445737719535828,
+              -0.06699562072753906,
+              -0.1853741705417633
+            ]
+          },
+          {
+            "id": 39009,
+            "u": 1.5057720673502613,
+            "v": 3.603563995205228,
+            "upper": true,
+            "depth": 0.05351567724180484,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.20501469491858534,
+            "before": [
+              0.03595080226659775,
+              0.6634362936019897,
+              0.05498499795794487
+            ],
+            "after": [
+              0.03607095405459404,
+              0.6633122563362122,
+              0.05487450212240219
+            ],
+            "deltaMM": [
+              0.12015178799629211,
+              -0.12403726577758789,
+              -0.11049583554267883
+            ]
+          }
+        ]
+      },
+      "biomechanics": {
+        "dentalEnvelopeContacts": 1,
+        "maxDentalProjectionMM": 0.03825397013634997,
+        "remainingFrontalEnvelopePenetrationMM": 0,
+        "mouthBoundaryEdges": 0,
+        "mouthNonManifoldEdges": 0,
+        "minimumPairedGapMM": 0.08736498686947149,
+        "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+        "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified"
+      }
+    },
+    {
+      "pose": "jaw",
+      "stagesFile": "stages-jaw.json",
+      "stagesSHA256": "7cfff8089e27e5fefad40db417f4a5116105e670e35fcc41217a2181a74575a5",
+      "hookCounts": {
+        "lipUpdate": 1,
+        "lipNormals": 2,
+        "solverApply": 1,
+        "pairsMap": 1,
+        "lipsIterator": 1,
+        "solverNormals": 2
+      },
+      "hooksRestored": true,
+      "calibrationUnchanged": true,
+      "stageOrder": [
+        "after_subdivision",
+        "after_native_lip_shape",
+        "before_local",
+        "after_local",
+        "after_closure",
+        "after_envelope",
+        "after_micro",
+        "final"
+      ],
+      "envelope": {
+        "movedDomainVertices": 1,
+        "maximumDisplacementMM": 0.004990083106393222,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.004990083106393222,
+        "nativeRimMovedVertices": 0,
+        "nativeRimMaximumDisplacementMM": 0,
+        "movedVertices": [
+          {
+            "id": 195810,
+            "u": -0.33841187086394975,
+            "v": 1.0118768317782882,
+            "upper": true,
+            "depth": 0.00749969425739111,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0.9635791419710923,
+            "red": 0.03256860976125664,
+            "rim": false,
+            "front": 1,
+            "roi": true,
+            "displacementMM": 0.004990083106393222,
+            "before": [
+              -0.008894435130059719,
+              0.6719008684158325,
+              0.11523371934890747
+            ],
+            "after": [
+              -0.008894486352801323,
+              0.6719005107879639,
+              0.11523869633674622
+            ],
+            "deltaMM": [
+              -5.122274160385132e-05,
+              -0.00035762786865234375,
+              0.004976987838745117
+            ]
+          }
+        ]
+      },
+      "localAction": {
+        "maximumDisplacementMM": 0,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0
+      },
+      "closure": {
+        "maximumDisplacementMM": 0.034126475150104606,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.06777465401480799
+      },
+      "postSolverFinalDisplay": {
+        "lipRedMovedVertices": 0,
+        "nativeRimMovedVertices": 0,
+        "oralReturnMaximumDisplacementMM": 0.2098587544647808,
+        "largestOralReturnExamples": [
+          {
+            "id": 53520,
+            "u": -1.4599643682791494,
+            "v": 2.093993754985757,
+            "upper": true,
+            "depth": 0.054007061451372795,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.2098587544647808,
+            "before": [
+              -0.034778449684381485,
+              0.6584709882736206,
+              0.05036284029483795
+            ],
+            "after": [
+              -0.034897562116384506,
+              0.6584182977676392,
+              0.05019829049706459
+            ],
+            "deltaMM": [
+              -0.11911243200302124,
+              -0.05269050598144531,
+              -0.1645497977733612
+            ]
+          },
+          {
+            "id": 39009,
+            "u": 1.5057720673502613,
+            "v": 3.603563995205228,
+            "upper": true,
+            "depth": 0.05351567724180484,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.19886008598821478,
+            "before": [
+              0.035955674946308136,
+              0.6618428230285645,
+              0.052822358906269073
+            ],
+            "after": [
+              0.03607473522424698,
+              0.661767303943634,
+              0.052682120352983475
+            ],
+            "deltaMM": [
+              0.11906027793884277,
+              -0.07551908493041992,
+              -0.14023855328559875
+            ]
+          }
+        ]
+      },
+      "biomechanics": {
+        "dentalEnvelopeContacts": 1,
+        "maxDentalProjectionMM": 0.004989100915397948,
+        "remainingFrontalEnvelopePenetrationMM": 0,
+        "mouthBoundaryEdges": 0,
+        "mouthNonManifoldEdges": 0,
+        "minimumPairedGapMM": 0.08446911776309983,
+        "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+        "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified"
+      }
+    },
+    {
+      "pose": "speak",
+      "stagesFile": "stages-speak.json",
+      "stagesSHA256": "f2fb1382a78be629ae37e9615b85f593ea0bfa511006361f88f6852e16196a55",
+      "hookCounts": {
+        "lipUpdate": 1,
+        "lipNormals": 2,
+        "solverApply": 1,
+        "pairsMap": 1,
+        "lipsIterator": 1,
+        "solverNormals": 2
+      },
+      "hooksRestored": true,
+      "calibrationUnchanged": true,
+      "stageOrder": [
+        "after_subdivision",
+        "after_native_lip_shape",
+        "before_local",
+        "after_local",
+        "after_closure",
+        "after_envelope",
+        "after_micro",
+        "final"
+      ],
+      "envelope": {
+        "movedDomainVertices": 0,
+        "maximumDisplacementMM": 0,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0,
+        "nativeRimMovedVertices": 0,
+        "nativeRimMaximumDisplacementMM": 0,
+        "movedVertices": []
+      },
+      "localAction": {
+        "maximumDisplacementMM": 0.3409053265419159,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.6136176990273682
+      },
+      "closure": {
+        "maximumDisplacementMM": 0,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0
+      },
+      "postSolverFinalDisplay": {
+        "lipRedMovedVertices": 0,
+        "nativeRimMovedVertices": 0,
+        "oralReturnMaximumDisplacementMM": 0.2098587544647808,
+        "largestOralReturnExamples": [
+          {
+            "id": 53520,
+            "u": -1.4599643682791494,
+            "v": 2.093993754985757,
+            "upper": true,
+            "depth": 0.054007061451372795,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.2098587544647808,
+            "before": [
+              -0.034778449684381485,
+              0.6584709882736206,
+              0.05036284029483795
+            ],
+            "after": [
+              -0.034897562116384506,
+              0.6584182977676392,
+              0.05019829049706459
+            ],
+            "deltaMM": [
+              -0.11911243200302124,
+              -0.05269050598144531,
+              -0.1645497977733612
+            ]
+          },
+          {
+            "id": 39009,
+            "u": 1.5057720673502613,
+            "v": 3.603563995205228,
+            "upper": true,
+            "depth": 0.05351567724180484,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.19886008598821478,
+            "before": [
+              0.035955674946308136,
+              0.6618428230285645,
+              0.052822358906269073
+            ],
+            "after": [
+              0.03607473522424698,
+              0.661767303943634,
+              0.052682120352983475
+            ],
+            "deltaMM": [
+              0.11906027793884277,
+              -0.07551908493041992,
+              -0.14023855328559875
+            ]
+          }
+        ]
+      },
+      "biomechanics": {
+        "dentalEnvelopeContacts": 0,
+        "maxDentalProjectionMM": 0,
+        "remainingFrontalEnvelopePenetrationMM": 0,
+        "mouthBoundaryEdges": 0,
+        "mouthNonManifoldEdges": 0,
+        "minimumPairedGapMM": 0.22288707317137668,
+        "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+        "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified"
+      }
+    },
+    {
+      "pose": "pucker",
+      "stagesFile": "stages-pucker.json",
+      "stagesSHA256": "2df734e125c1675100bcbdde0d04340e4905e2b8492078ce0494f0cf61dd9a2a",
+      "hookCounts": {
+        "lipUpdate": 1,
+        "lipNormals": 2,
+        "solverApply": 1,
+        "pairsMap": 1,
+        "lipsIterator": 1,
+        "solverNormals": 2
+      },
+      "hooksRestored": true,
+      "calibrationUnchanged": true,
+      "stageOrder": [
+        "after_subdivision",
+        "after_native_lip_shape",
+        "before_local",
+        "after_local",
+        "after_closure",
+        "after_envelope",
+        "after_micro",
+        "final"
+      ],
+      "envelope": {
+        "movedDomainVertices": 1,
+        "maximumDisplacementMM": 0.05799844541646275,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 0.05799844541646275,
+        "nativeRimMovedVertices": 0,
+        "nativeRimMaximumDisplacementMM": 0,
+        "movedVertices": [
+          {
+            "id": 134865,
+            "u": -0.8626676728814667,
+            "v": 0.9519671396290654,
+            "upper": false,
+            "depth": 0.0027319772622249883,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0.9810950237489082,
+            "red": 0.2662927013817953,
+            "rim": false,
+            "front": 1,
+            "roi": true,
+            "displacementMM": 0.05799844541646275,
+            "before": [
+              -0.017210934311151505,
+              0.6584756970405579,
+              0.11170262843370438
+            ],
+            "after": [
+              -0.017211662605404854,
+              0.658474862575531,
+              0.11176061630249023
+            ],
+            "deltaMM": [
+              -0.0007282942533493042,
+              -0.0008344650268554688,
+              0.057987868785858154
+            ]
+          }
+        ]
+      },
+      "localAction": {
+        "maximumDisplacementMM": 4.688736402558105,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 1.8742378441050433
+      },
+      "closure": {
+        "maximumDisplacementMM": 0.8333014808086335,
+        "maximumOralReturnNeighborDeltaDifferenceMM": 1.6649337721145139
+      },
+      "postSolverFinalDisplay": {
+        "lipRedMovedVertices": 0,
+        "nativeRimMovedVertices": 0,
+        "oralReturnMaximumDisplacementMM": 0.20565627950733592,
+        "largestOralReturnExamples": [
+          {
+            "id": 38547,
+            "u": 1.465126069367935,
+            "v": 10.66060492499954,
+            "upper": true,
+            "depth": 0.05804833853078151,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.20565627950733592,
+            "before": [
+              0.03481951728463173,
+              0.6703696250915527,
+              0.0498020201921463
+            ],
+            "after": [
+              0.03489665314555168,
+              0.6703112721443176,
+              0.049620527774095535
+            ],
+            "deltaMM": [
+              0.07713586091995239,
+              -0.05835294723510742,
+              -0.181492418050766
+            ]
+          },
+          {
+            "id": 53520,
+            "u": -1.4599643682791494,
+            "v": 2.093993754985757,
+            "upper": true,
+            "depth": 0.054007061451372795,
+            "type": 0,
+            "inner": 1,
+            "skin": true,
+            "weight": 0,
+            "red": 0,
+            "rim": false,
+            "front": 0,
+            "roi": false,
+            "displacementMM": 0.20098679727726712,
+            "before": [
+              -0.03480745851993561,
+              0.6611249446868896,
+              0.05395153909921646
+            ],
+            "after": [
+              -0.03490028530359268,
+              0.6610319018363953,
+              0.05379948019981384
+            ],
+            "deltaMM": [
+              -0.09282678365707397,
+              -0.09304285049438477,
+              -0.1520588994026184
+            ]
+          }
+        ]
+      },
+      "biomechanics": {
+        "dentalEnvelopeContacts": 1,
+        "maxDentalProjectionMM": 0.0579978917848601,
+        "remainingFrontalEnvelopePenetrationMM": 0,
+        "mouthBoundaryEdges": 0,
+        "mouthNonManifoldEdges": 0,
+        "minimumPairedGapMM": 0.08568740607907671,
+        "contactScope": "fixed opposing rim samples and frontal dental/gum/tongue triangle envelope; not whole-mesh CCD",
+        "volumeStatus": "reciprocal transverse compensation; enclosed lip volume is NOT verified"
+      }
+    }
+  ],
+  "fixedDomain": {
+    "nativeTopologyCount": 198406,
+    "selectedVertices": 103732,
+    "selectedVertexIDsSHA256": "238894dea1e291f400f27b6edd63c21b8cf56b8673a72213006eef4a624a4167",
+    "neighborEdges": 265161,
+    "neighborEdgesSHA256": "4da4e0341202e419e8ebe0c19cd70d66c8bad686018970adb5d72a12bd023a28",
+    "pairedSections": 49,
+    "uniqueUpperRimVertices": 49,
+    "uniqueLowerRimVertices": 49,
+    "groups": {
+      "activeAndOral": {
+        "vertices": 103732,
+        "neighborEdges": 265161
+      },
+      "lipRed": {
+        "vertices": 64511,
+        "neighborEdges": 190868
+      },
+      "oralReturnSkin": {
+        "vertices": 28347,
+        "neighborEdges": 84388
+      },
+      "cornerSkin": {
+        "vertices": 37483,
+        "neighborEdges": 111268
+      },
+      "nativeRim": {
+        "vertices": 46646,
+        "neighborEdges": 137598
+      },
+      "teethGumsTongue": {
+        "vertices": 15103,
+        "neighborEdges": 0
+      }
+    },
+    "semanticSHA256": {
+      "fRest": "8f9dcd391cf15d9a86105515cb52a9085b274c0f4e3c29b39a61e0b44850a598",
+      "csType": "3e760543c14eadfd49e27c600dfe47aae359bf4b68640034f455e0b7a505a0e3",
+      "l19Oral": "df2c4ddacf85a8d99d0113051c277a70bd64a6d47c9064fcc5dceeb4b67ebe44"
+    }
+  },
+  "counterEvidence": [
+    {
+      "hypothesis": "Kd的112×112四格最大值包络前推造成所见整条内缘折段",
+      "observation": "neutral/jaw/pucker各仅1个域顶点前推，speak为0；四姿态nativeRim组均0点移动。被前推的3个点均rim=false。",
+      "decision": "在此人物及四姿态上，不支持把整条可见内缘问题归因Kd；不得因静态源码怀疑便平滑采样或移除碰撞保护。",
+      "limit": "不是对所有人物、所有姿态或包络算法正确性的全域证明。"
+    },
+    {
+      "hypothesis": "49对rim实际重复选同顶点，导致采样覆盖不足",
+      "observation": {
+        "pairedSections": 49,
+        "uniqueUpper": 49,
+        "uniqueLower": 49
+      },
+      "decision": "本冻结人物中重复采样这一具体假设被排除。",
+      "limit": "独立ID数量并不证明49对具有正确解剖对应或全唇接触正确性。"
+    }
+  ],
+  "materialAttributionVisualReview": {
+    "materialChangeOnlyExperiment": true,
+    "geometricAttributesAndCanonicalStatePassedOriginalStrictComparison": true,
+    "movedFullyOralSkinTriangles": 49358,
+    "otherOralContainingSkinTrianglesRetainedByStrictThreshold": 16213,
+    "threshold": "all three csType<0.5 AND l19State.x>=0.999",
+    "macroChangedPixels": 318,
+    "obliqueChangedPixels": 1879,
+    "observation": "实际看过正面和斜侧两组。原程序皮肤路径中的口腔浅色三角/板状区域在原生口腔材质归属实验中明显消失；外唇轮廓、牙列及口角几何表现保持。",
+    "causalClaim": "可见浅色块至少有已证实的材质路径成分，不能只因原画面发白而认定几何扁平。",
+    "notClaimed": [
+      "不是完整口腔外观达标",
+      "不是完整黏膜物理光学实现",
+      "未将原材质整包替换认定为最终production方案",
+      "像素变化量不是审美分数"
+    ]
+  },
+  "remainingCandidatesAndLimits": [
+    "pucker局部动作的oralReturn邻边修正差最大1.8742378441 mm，closure阶段最大1.6649337721 mm；speak局部动作最大0.6136176990 mm。这些值只定位值得后续查看的连接区域，不作为几何错误或视觉通过阈值。",
+    "如继续定位，应考虑Ql局部动作的upper硬分支及上下缘closure对连接组织的作用，但现有资料没有证明它们就是可见折段首次出现的位置。",
+    "Ql细沟之后到最终显示，lipRed和nativeRim同ID位置均不再移动；少量深内口腔点仍有约0.21 mm改动，其最大样本front=0、weight=0且|u|约1.46，不能误称为前唇缘改动。",
+    "本轮阶段证据是固定同ID数值截面和最终画面，尚未渲染每一个阶段或将可见异常像素射线绑定到具体三角。无法得出确切首次出现层的结论。",
+    "原生报告明确contact只涉及固定对缘采样与前向包络，闭合体积和全网格连续碰撞并未验证。零boundary/nonmanifold计数不能代替以上验证。"
+  ],
+  "firstFailurePreserved": {
+    "overallRunFailed": true,
+    "failingTest": "exact original scene and framebuffer restoration",
+    "stateDifferenceLeafCount": 9,
+    "stateDifferences": [
+      {
+        "path": ".exposure",
+        "expected": 1,
+        "actual": 0.9796846411136478
+      },
+      {
+        "path": ".lights[8].matrix[13]",
+        "expected": 1.15690771266234,
+        "actual": 1.156667118513704
+      },
+      {
+        "path": ".lights[8].matrix[14]",
+        "expected": 0.7638525528115048,
+        "actual": 0.7638862145346417
+      },
+      {
+        "path": ".lights[8].target[13]",
+        "expected": 0.7165724039077759,
+        "actual": 0.71633180975914
+      },
+      {
+        "path": ".lights[8].target[14]",
+        "expected": 0.029960371553897858,
+        "actual": 0.02999403327703476
+      },
+      {
+        "path": ".lights[9].matrix[13]",
+        "expected": 1.0977294604532188,
+        "actual": 1.097488866304583
+      },
+      {
+        "path": ".lights[9].matrix[14]",
+        "expected": 0.6289214604110225,
+        "actual": 0.6289551221341594
+      },
+      {
+        "path": ".lights[9].target[13]",
+        "expected": 0.7165724039077759,
+        "actual": 0.71633180975914
+      },
+      {
+        "path": ".lights[9].target[14]",
+        "expected": 0.029960371553897858,
+        "actual": 0.02999403327703476
+      }
+    ],
+    "allOtherSerializedStateLeavesEqual": true,
+    "finalRestoredFramebufferCompared": false,
+    "sourceSupportedExplanation": "旧检查器在首次实际render前记录initialState。ih.setFoldLook在正常render时设置exposure=2**foldProfile.exposure；Q1.update通过cineRig.reframe改变灯位center，后续setFoldLook以它放置fold灯。缺少这层lighting上下文恢复，导致9个实际状态差异。不能将整轮标为通过。"
+  },
+  "recoveryCheckerSourceReview": {
+    "file": "verification/diagnose-inner.cjs",
+    "sha256": "0935fdb1806f2af288133e44437efc98bf88a314a455591e50bd15c2d1c3553f",
+    "bytes": 60987,
+    "status": "SOURCE_REVIEW_PASSED_RUNTIME_PENDING",
+    "changesReviewed": [
+      "保留initialPreFrameState，首次正常native frame之后锁定实际initialState与灯光上下文",
+      "最后model/viewer原生更新后恢复原cineRig.center对象的原值、原light/target对象变换/灯光值和曝光",
+      "未重写或绕开setFoldLook/apply/render；未伪造foldLightKey",
+      "原四姿态hook、计数、固定语义域与calibration检查不变",
+      "原完整state和实际frame SHA严格相等门槛保留，并新增正常render后state严格检查"
+    ],
+    "runtimePassClaimed": false
+  }
+}

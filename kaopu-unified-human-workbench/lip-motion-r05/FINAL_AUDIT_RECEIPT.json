@@ -1,0 +1,105 @@
+{
+  "schema": "kaopu/lip-motion-final-audit@1",
+  "version": "LIP-MOTION-R05",
+  "publicDeliverable": true,
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/11ed0391f798b5323f4eb4aefec4307fc0b9aee0/kaopu-unified-human-workbench/lip-motion-r05/preview.html",
+  "sourceCommit": "a8bba75322c12df151ecbcebc416087b5248aa5f",
+  "buildCommit": "11ed0391f798b5323f4eb4aefec4307fc0b9aee0",
+  "evidenceCommit": "a67347c6ad64ad44542e63844ab1186820297dfb",
+  "previewSHA256": "231cc60f696e1bfbe7831e5afb5bfb845f7358391dacd25bc3efa00c7a21710b",
+  "workflowRun": 39365181687,
+  "workflowURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39365181687",
+  "draftPR": "https://github.com/haihao0307/guilin-dem-pipeline/pull/309",
+  "mergePerformed": false,
+  "baseline": {
+    "version": "LIP-INNER-R04",
+    "source": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "build": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "previewSHA256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8",
+    "ancestorBytesRestoredExact": true
+  },
+  "productionModules": {
+    "src/MotionContinuity.js": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+    "src/MotionLip.js": "eb5ba162e7c17dd3d22d639f3f595431c4e0beb56e1ba571d094fbca1ec3e50b"
+  },
+  "decision": {
+    "localRepairWorthRetaining": true,
+    "reason": "Clear reduction of the segmented upper inner-edge strip in high-progress speaking, with preserved visible outer action and exact neutral/jaw frames. Pucker central seam is cleaner but the aperture is also narrower.",
+    "overallLipRealismAccepted": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "additionalProductTuningNeededForThisBoundedRepair": false
+  },
+  "verification": {
+    "qa": "evidence/candidate-02/qa.json",
+    "qaSHA256": "8f9ba7a29518a2c00813d4c6baa97cd7d55b56ae0b081c232f8f7876c296d484",
+    "publicationProof": "evidence/candidate-02/PUBLICATION_PROOF.json",
+    "publicationProofSHA256": "d73c5235a5c9eb9f0245d71921003c6a4340d63b5c2e3b1490961838c7ab75f4",
+    "testsPassed": 17,
+    "testsTotal": 17,
+    "matchedPairs": 11,
+    "savedGPUImages": 24,
+    "actualReadbacks": 25,
+    "naturalUIScreenshot": "evidence/candidate-02/workbench-r05-ui.png",
+    "naturalUIScreenshotSHA256": "a8720ed1ec7ffc078fc04515d493bcee92774df14921ddbeb69bb35e48b6e0c6",
+    "browserErrors": {
+      "pageErrors": 0,
+      "consoleErrors": 0,
+      "failedRequests": 0,
+      "resourceErrors": 0
+    },
+    "cleanupCompleted": true,
+    "independentR04ActualStateAndPixelsExact": true,
+    "actualDOMDownloads": 3,
+    "allDownloadedArchivesByteExact": true,
+    "downloadedArchiveSHA256": "e9b05bbc10c684fe11d0768278a5e235490d331d1d28b6f1a7c4c337d88e8314",
+    "freshRestore": {
+      "actualDownloadedArchive": true,
+      "nativeStateExact": true,
+      "actualPixelsExact": true,
+      "pose": "pucker",
+      "progress": 0.5,
+      "uiLabel": "50%",
+      "cameraAndLightsExplicitlyAligned": true,
+      "archiveOwnsCameraAndLights": false
+    }
+  },
+  "visualEvidence": {
+    "reviewFiles": {
+      "research/candidate-01-visual-review.json": "444498f1fa2965a2b5df8881439fd41561ec7816369775b0d04c797032fd85dc",
+      "research/candidate-01-motion-review.json": "28eec4a975074cf8759ea3c3a6d8c1f0bb3351efaffb0545f1395166cf30d6f6",
+      "research/final-visual-binding.json": "0b84fa8e3a8bad9cd1b09f8a1a21734227452bdcf7b1b65c99146d16c63a61f5"
+    },
+    "finalAndReviewedBeautyPNGByteExact": 22,
+    "finalAndReviewedUIPNGByteExact": 1,
+    "imageEditingUsed": false,
+    "generatedImageUsed": false,
+    "sameProductModules": true
+  },
+  "selfReview": {
+    "diagnosticFailureRetained": "evidence/diagnosis-01/qa.json",
+    "candidateFailureRetained": "evidence/candidate-01/qa.json",
+    "candidateFailureQA_SHA256": "0462d80c1ef8004bf4eaad8b97d682fa5854d07d4142c911488bd0afbd25e653",
+    "verifierRepair": "VERIFIER_RECOVERY_REVIEW.json",
+    "verifierRepairSHA256": "2aaecb66395357cc5763ca6aae16cbb69570a9667acc837b08ab938b504808cd",
+    "candidate02Change": "Read two stable existing material owners instead of a transient mesh draw-slot list. Real drawn slots, full post-frame state and pixel checks were retained.",
+    "checksUsedAsAestheticScore": false
+  },
+  "remainingIssues": [
+    "Outer lip filled/waxy appearance and broad soft highlights",
+    "Sharp pucker corners and surrounding folds",
+    "Thin mouth seam with weak visible tissue thickness",
+    "Gray blocky teeth and simplified oral depth"
+  ],
+  "scopeLimits": [
+    "One current native person and the sampled poses/views",
+    "640x512 comparison framebuffer and 1280x900 public UI",
+    "Static 25/50/75/100 percent samples do not prove all continuous frames",
+    "Hidden intersection, complete contact physics and physiological amplitude are not certified",
+    "Physical phone and other people not verified"
+  ],
+  "artifact": {
+    "id": 12238194669,
+    "zipSHA256": "2019cdde4328d17c5da069bbad72cb07f7f4c1880827a3aba2a3b4a223d18641"
+  }
+}

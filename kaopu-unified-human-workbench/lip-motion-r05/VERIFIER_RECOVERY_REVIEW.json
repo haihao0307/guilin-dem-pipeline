@@ -1,0 +1,53 @@
+{
+  "schema": "kaopu/lip-motion-verifier-recovery@1",
+  "failedCandidate": 1,
+  "failedRun": 39364023766,
+  "originalEvidence": "evidence/candidate-01/qa.json",
+  "originalEvidenceSHA256": "0462d80c1ef8004bf4eaad8b97d682fa5854d07d4142c911488bd0afbd25e653",
+  "actualCompletedEvidence": {
+    "passedTests": 13,
+    "totalAttemptedTests": 14,
+    "savedGPUFrames": 22,
+    "naturalUIScreenshot": true,
+    "cleanupCompleted": true,
+    "browserDisconnected": true,
+    "browserAndResourceErrors": 0
+  },
+  "failure": "Independent R04 pre-render state had only the native material in mesh.material; the previously rendered reference also contained the procedural skin draw slot.",
+  "nativeSourceEvidence": {
+    "fixedR04PreviewSHA256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8",
+    "updateMaterialAssignment": "Native skin.update temporarily assigns mesh.material = native material.",
+    "actualDrawAssignment": "The existing head renderer wrapper assigns [native material, procedural material] during actual rendering."
+  },
+  "minimalRepair": {
+    "file": "verification/verify-motion.cjs",
+    "beforeSHA256": "6e71eb56a9427594dff1db7a78f54f63e03594860f41501e7d9da72bcca1aaff",
+    "afterSHA256": "810c43302ff3c203bc20525416d52df13ac00467c09ea8f78cdb7ab41bd7689f",
+    "changedExpressions": [
+      "initialMaterials stable owner enumeration",
+      "materials() stable owner enumeration"
+    ],
+    "stableOwners": [
+      "viewer.skin.material",
+      "headProceduralSkin.material()"
+    ],
+    "newMaterialObjects": 0
+  },
+  "gatesPreserved": [
+    "original material object identity",
+    "material compile hooks and program cache keys",
+    "complete material parameter values",
+    "actual compiled GLSL",
+    "15 native uniform objects and values",
+    "actual rendered drawGeometry.materialSlots",
+    "complete post-render independent R04 state equality",
+    "complete post-render independent R04 pixel equality",
+    "fresh downloaded archive complete post-render state and pixel equality"
+  ],
+  "productModulesUnchanged": {
+    "build.cjs": "6e3bc18d5e1e469395155a8640a723021e7fb9b3c290f392363cce40f382b880",
+    "src/MotionContinuity.js": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+    "src/MotionLip.js": "eb5ba162e7c17dd3d22d639f3f595431c4e0beb56e1ba571d094fbca1ec3e50b"
+  },
+  "conclusion": "The verifier now distinguishes stable material ownership from a per-draw binding cache. Original failed evidence remains immutable. Candidate 02 must run the full required checks; visual benefit is reviewed separately."
+}
