@@ -637,6 +637,12 @@ async function main() {
     assert.equal(initial.version,VERSION);assert.equal(initial.build.canonicalVersion,'HUMAN-INTEGRATED-R07');
     assert.equal(initial.build.canonicalSHA256,'d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a');
     assert.equal(initial.sameThreeRuntime,true);assert.equal(initial.actorMeshes.length,3);
+    assert.equal(initial.renderScheduler?.startupDrain?.completed,true,'Ready requires earlier native startup GPU commands to have drained');
+    assert(Number.isInteger(initial.renderScheduler?.completed) && initial.renderScheduler.completed>=1,'Ready requires at least one completed native scene frame');
+    assert.equal(initial.actorMeshes.filter(mesh=>mesh.visible===true && mesh.parentVisible===true).length,3,'Ready requires all three complete native people to be visible');
+    const initialMaterials=initial.actorMeshes.flatMap(mesh=>mesh.materials);
+    assert.equal(initialMaterials.length,6,'The three native people must retain all six material instances');
+    assert(initialMaterials.every(material=>Number.isInteger(material.programID)),'Ready requires all six native materials to have an actual GPU program');
     assert.equal(initial.snapshot.agents.length,3);assert.equal(initial.actorDiagnostics?.length,3,'Read-only actorDiagnostics must export all native actors');
     assert.equal(new Set(initial.snapshot.agents.map(a=>a.identity.presetId)).size,3,'Three distinct native forms');
     for(const actor of initial.snapshot.agents) {
