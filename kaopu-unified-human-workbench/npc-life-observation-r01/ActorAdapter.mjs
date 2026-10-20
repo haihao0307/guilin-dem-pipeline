@@ -186,9 +186,11 @@ function makeActor(model, viewer, spec, preset, measurements) {
     const checked=rig.validate();let footSurfaceErrorM=0;
     for(const foot of feet)footSurfaceErrorM=Math.max(footSurfaceErrorM,norm(sub(binding.sampleVertex(foot.id,true),foot.rest)));
     const palm=toWorld(sample(patches[active.side].palm));
+    const fingertips=patches[active.side].fingers.map(p=>toWorld(sample(p)));
     last={side:active.side,grip01:active.grip,palm:palm.toArray(),
       handErrorM:target?palm.distanceTo(asVector(target)):0,reachClamped:!!solved?.clamped,
       boneLengthErrorM:checked.maxBoneLengthError,footSurfaceErrorM,
+      fingerAnchors:fingertips.map(p=>p.toArray()),fingerMinimumYM:Math.min(...fingertips.map(p=>p.y)),
       finite:checked.finite,orientation:'world palm +Z, fingers -Y during reach'};
     return last;
   }
@@ -249,9 +251,18 @@ function makeActor(model, viewer, spec, preset, measurements) {
  * generator owns one mutable output. The captured actors do not retain it as
  * their animation source. */
 export async function createActors({onProgress=()=>{}}={}) {
-  const qa=window.__IDENTITY_QA__,viewer=qa?.viewer?.(),model=qa?.model?.(),controller=qa?.controller?.();
-  if(!viewer?.mesh||!model?.positions?.length||!controller)throw Error('R07 native viewer/model is not ready');
-  if(!window.headProceduralSkin||!window.bodyProceduralSkin)throw Error('R07 procedural head/body skin is not installed');
+  let qa,viewer,model,controller;
+  const started=performance.now();let lastProgress=-Infinity;
+  while(performance.now()-started<300000) {
+    qa=window.__IDENTITY_QA__;viewer=qa?.viewer?.();model=qa?.model?.();controller=qa?.controller?.();
+    if(viewer?.mesh&&model?.positions?.length&&controller&&window.__LIP_P3__?.ready&&
+      window.headProceduralSkin&&window.bodyProceduralSkin&&window.__HEAD_PROC__?.gpuVerified)break;
+    if(performance.now()-lastProgress>2000){onProgress('正在载入原生 R07 人物，等待完整皮肤与 GPU 首帧');lastProgress=performance.now();}
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+  if(!viewer?.mesh||!model?.positions?.length||!controller)throw Error('R07 native viewer/model did not finish loading');
+  if(!window.headProceduralSkin||!window.bodyProceduralSkin||!window.__HEAD_PROC__?.gpuVerified)
+    throw Error('R07 complete procedural skin did not finish GPU linking: '+(window.__HEAD_PROC__?.errors||[]).join('; '));
   await viewer.skin.faceReady;await viewer.skin.naturalEyesReady;
   window.lifelikeIdle?.pause?.(true);
   const catalog=window.fullCommonWorkbench?.allPresets?.();if(!catalog)throw Error('Native R02 identity catalogue is unavailable');

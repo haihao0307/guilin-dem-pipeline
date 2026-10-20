@@ -1,7 +1,7 @@
 import * as CANNON from './vendor/cannon-es.js';
 
 // Dimensions are metres. The visible station is built from these same values.
-export const DIM = Object.freeze({ tableTop: .87, tableHalf: [.62, .035, .26], tableCentre: [0, .835, .45], radius: .032, height: .14, mass: .22, source: [0, .9408, .37], target: [.12, .9408, .45] });
+export const DIM = Object.freeze({ tableTop: .87, tableHalf: [.62, .035, .26], tableCentre: [0, .835, .45], radius: .032, height: .14, gripHeight: .048, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, .9408, .37], target: [.12, .9408, .45] });
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smooth=t=>{t=clamp(t,0,1);return t*t*t*(t*(t*6-15)+10)};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
@@ -30,8 +30,8 @@ export class LifeWorld {
   emit(type,id,data={}){const event={t:+this.time.toFixed(3),type,actor:id,...data};this.events.push(event);if(this.events.length>160)this.events.shift();this.onEvent(event);return event}
   change(a,phase){a.phase=phase;a.phaseTime=0;a.stable=0;a.startHand=a.handTarget?.slice()||this.hand(a);a.history.push(phase);this.emit('phase',a.id,{phase});}
   hand(a){const p=a.actor.handAnchor();return Array.isArray(p)?p.slice():[p.x,p.y,p.z]}
-  contactAnchor(){const p=this.bottle.pointToWorldFrame(new CANNON.Vec3(0,0,-DIM.radius));return arr(p)}
-  targetAnchor(height=0){return offset(this.target,[0,height,-DIM.radius])}
+  contactAnchor(){const p=this.bottle.pointToWorldFrame(new CANNON.Vec3(0,DIM.gripHeight,-DIM.radius));return arr(p)}
+  targetAnchor(height=0){return offset(this.target,[0,height+DIM.gripHeight,-DIM.radius])}
   request(id,reason='manual'){
     const a=this.agents.get(id);if(!a)throw Error('Unknown actor '+id);
     if(!['idle','done','failed','cancelled'].includes(a.phase))return false;
@@ -99,8 +99,12 @@ export class LifeWorld {
       }
       if(this.heldBy===a.id){const error=dist(this.contactAnchor(),this.hand(a));a.maxContactError=Math.max(a.maxContactError,error);if(error>.07)this.finish(a,'grip-broken','握持接触误差超过 7 cm，释放物品');}
     }
+    // Cannon 0.20 GSSolver clamps its impulse lambda to equation min/maxForce.
+    // Convert N and N*m to step impulses explicitly; otherwise 24 means 2880 N
+    // at 120 Hz. Update even on the first attach step and when single-stepping.
+    if(this.grip)this.grip.equations.forEach((e,i)=>{const impulse=(i<3?DIM.maxGripForcePerAxisN:DIM.maxGripTorquePerAxisNm)*dt;e.minForce=-impulse;e.maxForce=impulse;});
     this.world.step(dt);
-    if(this.autonomous){if(this.goal()){this.review.stable=(this.review.stable||0)+dt;if(this.review.stable>.6&&!this.review.checked){this.review={phase:'复核完成',checked:true,reason:'已释放 + 目标区域 + 真实支撑 + 稳定速度',t:this.time};this.emit('review-confirmed',this.actors[2]?.id,{worldMeasurements:true});}}else{this.review.stable=0;this.review.checked=false;}}
+    if(this.autonomous){if(this.goal()){this.review.stable=(this.review.stable||0)+dt;if(this.review.stable>.6&&!this.review.checked){this.review={phase:'复核完成',checked:true,reason:'已释放 + 目标区域 + 真实支撑 + 稳定速度',t:this.time};this.emit('review-confirmed',this.actors[2]?.id,{worldMeasurements:true});}}else{const changed=this.review.checked;this.review.stable=0;this.review.checked=false;if(changed){this.review.phase='需重新复核';this.review.reason='物品位置、支撑或稳定状态已改变';this.emit('review-invalidated',this.actors[2]?.id,{worldMeasurements:true});}}}
     this.audit.maxOwners=Math.max(this.audit.maxOwners,this.heldBy?1:0);this.audit.maxGripConstraints=Math.max(this.audit.maxGripConstraints,this.world.constraints.length);
     if(this.world.constraints.length>1||((this.grip===null)!==(this.heldBy===null)))throw Error('Shared ownership invariant failed');
   }

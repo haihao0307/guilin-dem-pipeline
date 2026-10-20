@@ -7,6 +7,8 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const cp = require('node:child_process');
 const assert = require('node:assert/strict');
+const {promisify} = require('node:util');
+const execFile = promisify(cp.execFile);
 const here = __dirname;
 const vendor = path.join(here, 'vendor');
 const tarballURL = 'https://registry.npmjs.org/cannon-es/-/cannon-es-0.20.0.tgz';
@@ -17,6 +19,12 @@ const lockedFiles = {
 };
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const nativeBase = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/475ead2759159b83927a1aa8ae6879595e1d18bc/kaopu-unified-human-workbench/human-integrated-r05/';
+async function download(url) {
+  // curl respects the build environment's configured network proxy. This is a
+  // build-time byte fetch only; no package lifecycle or downloaded script runs.
+  const {stdout} = await execFile('curl',['--fail','--silent','--show-error','--location','--max-time','120',url],{encoding:'buffer',maxBuffer:8*1024*1024});
+  return stdout;
+}
 
 async function prepareNativePackets() {
   const argv = process.argv.slice(2);
@@ -42,9 +50,7 @@ async function prepareNativePackets() {
       const target=path.join(assets,chunk.local);
       let content=fs.existsSync(target)?fs.readFileSync(target):null;
       if(!content || content.byteLength!==chunk.bytes || hash(content)!==chunk.sha256) {
-        const response=await fetch(chunk.url,{signal:AbortSignal.timeout(120000)});
-        assert(response.ok,'Native chunk HTTP '+response.status+' '+chunk.local);
-        content=Buffer.from(await response.arrayBuffer());
+        content=await download(chunk.url);
         assert.equal(content.byteLength,chunk.bytes,'Native chunk length '+chunk.local);
         assert.equal(hash(content),chunk.sha256,'Native chunk SHA '+chunk.local);
         fs.writeFileSync(target,content);
@@ -69,9 +75,7 @@ async function main() {
   fs.mkdirSync(vendor, {recursive:true});
   const missing = Object.entries(lockedFiles).some(([name, lock]) => !fs.existsSync(path.join(vendor,name)) || hash(fs.readFileSync(path.join(vendor,name))) !== lock.sha256);
   if (missing) {
-    const response = await fetch(tarballURL);
-    assert(response.ok, 'Official NPM tarball HTTP ' + response.status);
-    const data = Buffer.from(await response.arrayBuffer());
+    const data = await download(tarballURL);
     assert.equal('sha512-' + crypto.createHash('sha512').update(data).digest('base64'), integrity, 'Official NPM tarball integrity');
     const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'npc-cannon-'));
     const tgz = path.join(temp,'cannon-es-0.20.0.tgz');

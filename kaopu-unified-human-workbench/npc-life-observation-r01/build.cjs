@@ -188,6 +188,8 @@ async function main() {
 
   const cannonPath = path.join(here, 'vendor/cannon-es.js');
   assert.equal(hash(fs.readFileSync(cannonPath)), CANNON_SHA256, 'Official cannon-es 0.20.0 changed');
+  const cannonLicense = fs.readFileSync(path.join(here,'vendor/cannon-es.LICENSE'),'utf8');
+  assert.equal(hash(cannonLicense),'4714d0272f50cb21fe46fe29333c7c600d3c85b5ebd2a80f4db07e8cfccbf5b2','Cannon MIT license retained');
   const manifestBytes = fs.readFileSync(path.resolve(here, '../human-integrated-r06/StreamingManifest.json'));
   const assets = JSON.parse(manifestBytes);
   const offline = process.argv.includes('--offline');
@@ -254,10 +256,10 @@ async function main() {
     assetMode: report.assetMode, sameThreeRuntime: true
   };
   html = patch(html, '</head>',
-    '<script>window.__MOTION_DEFER_IDLE__=true;window.__NPC_LIFE_BUILD__=' + JSON.stringify(bootstrap) + ';</script>' +
+    '<script>window.__MOTION_DEFER_IDLE__=true;window.__NPC_LIFE_BUILD__=' + JSON.stringify(bootstrap) + ';window.__NPC_BUILD__=window.__NPC_LIFE_BUILD__;</script>' +
     (embedded ? '<script data-npc-native-assets>' + embedded.script.replaceAll('</script', '<\\/script') + '</script>' : '') +
     (css ? '<style data-npc-workbench-style>' + css.replaceAll('</style', '<\\/style') + '</style>' : '') + '</head>');
-  html = patch(html, '</body>', '<script data-npc-workbench>' + workbench.replaceAll('</script', '<\\/script') + '</script></body>');
+  html = patch(html, '</body>', '<script data-npc-workbench>/*! cannon-es 0.20.0\n' + cannonLicense + '\n*/\n' + workbench.replaceAll('</script', '<\\/script') + '</script></body>');
   html = html.replace(/<title>[^<]*<\/title>/, '<title>生活动作观察室 · NPC R01</title>');
   assert.equal(hash(fs.readFileSync(hostPath)), HOST_SHA256, 'Build must not mutate the canonical source');
   const outputPath = path.join(here, offline ? 'standalone.html' : 'preview.html');
