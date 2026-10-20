@@ -398,7 +398,21 @@ try {
   summary.nonApplicationFaviconIssues = issues.filter(r => r.url === rootFavicon && r.status === 404);
   summary.applicationNetworkIssues = issues.filter(r => !(r.url === rootFavicon && r.status === 404));
   summary.consoleErrors = consoleMessages.filter(r => r.type === 'error');
-  const criticalConsole = summary.consoleErrors.filter(r => !(r.location.url === rootFavicon && summary.nonApplicationFaviconIssues.length));
+  const faviconConsole = summary.consoleErrors.filter(r => r.location.url === rootFavicon
+    && /^Failed to load resource: the server responded with a status of 404\b/.test(r.text));
+  // Chromium may report its browser-initiated favicon in the page console but
+  // omit that request from page.on('request'/'response'). Verify the exact URL
+  // explicitly before classifying only this exact 404 as non-application.
+  if (faviconConsole.length && summary.nonApplicationFaviconIssues.length === 0) {
+    const response = await context.request.get(rootFavicon, {timeout: 30_000});
+    summary.siteRootFaviconProbe = {url: rootFavicon, finalURL: response.url(), status: response.status(),
+      requestKind: 'Explicit read-only HTTPS check of the exact browser-reported site-root favicon'};
+    if (response.status() === 404 && response.url() === rootFavicon)
+      summary.nonApplicationFaviconIssues.push({event: 'explicit-http-verification', url: rootFavicon, status: 404});
+  }
+  summary.nonApplicationFaviconConsole = summary.nonApplicationFaviconIssues.length ? faviconConsole : [];
+  const criticalConsole = summary.consoleErrors.filter(r => !summary.nonApplicationFaviconConsole.includes(r));
+  summary.applicationConsoleErrors = criticalConsole;
   assert.equal(pageErrors.length, 0, 'Browser pageerror occurred');
   assert.equal(summary.applicationNetworkIssues.length, 0, 'A public application dependency failed');
   assert.equal(criticalConsole.length, 0, 'Browser console error occurred');
