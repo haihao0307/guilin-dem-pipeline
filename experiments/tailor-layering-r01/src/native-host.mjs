@@ -9,13 +9,15 @@ import {loadPerson as loadFrozenPerson} from './upstream/person/load-person.mjs'
 // This adapter takes ownership of that exact viewer; it creates no second body.
 const SOURCE_REVISION = 'd413d108704af47cf531ee8c25d93f682c3176e3';
 
-// A render request made while transferring the canvas/lighting is not a new
-// visual state that needs presenting. Keep the exact native draw closure, but
-// defer presentation until the host application has built the complete outfit.
-// The application can wrap this stable delegate before releasing the hold.
+// build.py holds the native viewer presentation entries before startup, while
+// preserving the original material/control readiness state machine. Continue
+// that hold through canvas/lighting transfer and complete outfit construction.
+// The application can wrap this stable native delegate before releasing both
+// holds. The original renderer and its precomputation operations stay intact.
 function deferNativeDrawing(viewer, bootTimings) {
   const nativeDraw = viewer.render.bind(viewer);
   let suspended = true;
+  const coldHoldAtTransfer = globalThis.__LAYER_COLD_PRESENTATION_HOLD__ === true;
   const stats = {deferredRequests: 0, nativeDrawCalls: 0, nativeDrawSubmitMS: 0,
     lastNativeDrawSubmitMS: null, firstNativeDrawSubmitMS: null, releasedAtMS: null};
   viewer.render = (...args) => {
@@ -31,13 +33,26 @@ function deferNativeDrawing(viewer, bootTimings) {
     }
   };
   const audit = () => ({...stats, suspended,
-    policy: 'Hold intermediate preparation frames; the original native draw is unchanged',
+    coldStart: {...globalThis.__LAYER_COLD_PRESENTATION_AUDIT__, installedAtTransfer: coldHoldAtTransfer,
+      held: globalThis.__LAYER_COLD_PRESENTATION_HOLD__ === true,
+      scope: 'Deferred native viewer presentation entry requests; direct renderer precomputation is unchanged'},
+    policy: 'Hold native viewer presentation from cold startup through outfit preparation; release the original draw with the complete composition',
     geometryChanged: false, materialsChanged: false,
     timingScope: 'CPU draw invocation including synchronous WebGL waits; GPU completion is reported by the original frame gate'});
   bootTimings.presentation = stats;
   return {
     release() {
-      if (suspended) {suspended = false; stats.releasedAtMS = performance.now() - bootTimings.startedAt;}
+      if (suspended) {
+        const now = performance.now();
+        globalThis.__LAYER_COLD_PRESENTATION_HOLD__ = false;
+        const coldStart = globalThis.__LAYER_COLD_PRESENTATION_AUDIT__;
+        if (coldStart) {
+          coldStart.releasedAtMS = now;
+          coldStart.heldDurationMS = now - coldStart.startedAtMS;
+        }
+        suspended = false;
+        stats.releasedAtMS = now - bootTimings.startedAt;
+      }
       return audit();
     },
     suspended: () => suspended,

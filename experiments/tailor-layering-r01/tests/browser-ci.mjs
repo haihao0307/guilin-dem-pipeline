@@ -11,10 +11,12 @@ import { inflateSync } from 'node:zlib';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const EVIDENCE = path.join(ROOT, 'evidence');
 const BASE = 'http://127.0.0.1:8765/';
+const SCENARIO = process.env.LAYERING_CI_SCENARIO || 'all';
 const READY_TIMEOUT_MS = 480_000;
-const GPU_IDLE_TIMEOUT_MS = 120_000;
-const BROWSER_BUDGET_MS = 840_000;
-const SCREENSHOT_TIMEOUT_MS = 60_000;
+const LOCATOR_TIMEOUT_MS = 120_000;
+const GPU_IDLE_TIMEOUT_MS = 180_000;
+const BROWSER_BUDGET_MS = 1_200_000;
+const SCREENSHOT_TIMEOUT_MS = 180_000;
 const PROGRESS_PREFIX = 'KAOPU_CI_OBSERVATION ';
 const EXPECTED = {
   inner: { preset: 'T08', material: 'knit-fine-0' },
@@ -35,11 +37,13 @@ let evidenceWrites = Promise.resolve();
 const summary = {
   schema: 'kaopu-real-webgl-acceptance@1',
   startedUTC: new Date().toISOString(),
+  scenario: SCENARIO,
+  scenariosCompleted: [],
   passed: false,
   execution: 'GitHub Actions, fresh Playwright Chromium context, software WebGL',
   publicationPerformed: false,
   screenshotsAreBrowserCaptures: true,
-  budgetsMS: { ready: READY_TIMEOUT_MS, GPUIdle: GPU_IDLE_TIMEOUT_MS,
+  budgetsMS: { ready: READY_TIMEOUT_MS, locator: LOCATOR_TIMEOUT_MS, GPUIdle: GPU_IDLE_TIMEOUT_MS,
     browser: BROWSER_BUDGET_MS, screenshot: SCREENSHOT_TIMEOUT_MS },
   viewport: { width: 1440, height: 1000, deviceScaleFactor: 1 },
   limitations: [
@@ -210,8 +214,10 @@ async function waitIdle(timeout = GPU_IDLE_TIMEOUT_MS) {
     let value;
     try { value = JSON.parse(app.querySelector('#diagnostics')?.textContent || 'null'); } catch { return false; }
     const gate = value?.render?.frameGate;
+    const presentation = value?.render?.presentationQueue;
     if (value?.error || gate?.failed) return true;
-    return gate && gate.pending === 0 && gate.inFlight === 0;
+    return gate && gate.pending === 0 && gate.inFlight === 0
+      && (!presentation || (presentation.pending === false && presentation.inFlight === false));
   }, null, { timeout, polling: 250 });
   const value = await diagnostic();
   const gate = value.render.frameGate;
@@ -220,6 +226,10 @@ async function waitIdle(timeout = GPU_IDLE_TIMEOUT_MS) {
   assert.equal(gate.pending, 0, 'A display update is still pending');
   assert.equal(gate.inFlight, 0, 'Native GPU rendering has not finished');
   assert.ok(gate.submitted > 0 && gate.completed === gate.submitted, 'Every submitted native frame must complete');
+  if (value.render.presentationQueue) {
+    assert.equal(value.render.presentationQueue.pending, false, 'A coalesced presentation is still pending');
+    assert.equal(value.render.presentationQueue.inFlight, false, 'A serialized presentation is still in flight');
+  }
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 
@@ -302,7 +312,7 @@ async function capture(name, { requireScene = true } = {}) {
 
 async function clickAndWait(id, timeout = GPU_IDLE_TIMEOUT_MS) {
   markPhase('control:' + id);
-  await page.locator(`#layer-app #${id}`).click({ timeout: 30_000 });
+  await page.locator(`#layer-app #${id}`).click({ timeout: LOCATOR_TIMEOUT_MS });
   await waitIdle(timeout);
 }
 
@@ -328,6 +338,7 @@ async function setColor(value) {
 
 try {
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Browser execution is reserved for GitHub Actions; do not launch a local browser for this test.');
+  assert.ok(['all', 'display', 'contact'].includes(SCENARIO), 'LAYERING_CI_SCENARIO must be all, display or contact');
   await fs.mkdir(EVIDENCE, { recursive: true });
   const require = createRequire(path.join(ROOT, '.ci-runtime', 'package.json'));
   const { chromium } = require('playwright');
@@ -341,9 +352,9 @@ try {
   summary.sourceProvenance = provenance;
   // Run2 continued through real garment generation at 288 seconds. Keep full
   // original rendering and allow its first software-GPU frame to finish. The
-  // 18-minute job leaves time to retain evidence after this browser ceiling.
+  // 24-minute job leaves time to retain evidence after this browser ceiling.
   watchdog = setTimeout(() => {
-    failure = new Error('Browser acceptance exceeded its 14-minute budget.');
+    failure = new Error('Browser acceptance exceeded its 20-minute budget.');
     appendProgress({ kind: 'browser-budget-exceeded', phase });
     browser?.close().catch(() => {});
   }, BROWSER_BUDGET_MS);
@@ -363,7 +374,7 @@ try {
     return route.abort('blockedbyclient');
   });
   page = await context.newPage();
-  page.setDefaultTimeout(30_000);
+  page.setDefaultTimeout(LOCATOR_TIMEOUT_MS);
   page.on('console', message => {
     const row = { type: message.type(), text: message.text(), location: message.location(), wallMS: Date.now() - began };
     consoleMessages.push(row);
@@ -416,75 +427,84 @@ try {
   assert.equal(initial.playing, false);
   await capture('initial');
 
-  // Independent display and dye tests operate through the normal controls.
-  await page.locator('#layer-app #layer-list [data-garment="outer"]').click();
-  await clickAndWait('isolate-selected');
-  assert.equal((await diagnostic()).displayOnlyIsolation, true);
-  const isolatedPixels = await capture('isolated');
-  const originalColor = await page.locator('#layer-app #color').inputValue();
-  await setColor('#ee285a');
-  const recoloredPixels = await capture('recolored');
-  const dyeDifference = pixelDifference(isolatedPixels, recoloredPixels);
-  assert.ok(dyeDifference.changedFraction > .005, 'Changing the selected dye did not visibly alter the actual canvas');
-  summary.dyePixelDifference = dyeDifference;
-  await setColor(originalColor);
-  await clickAndWait('view-detail');
-  await capture('detail');
-  await clickAndWait('all-visible');
-  await clickAndWait('view-front');
+  // Each scenario keeps one continuous, real page/scene. CI runs both scenarios
+  // on separate runners, and requires both jobs to pass the complete gates.
+  if (SCENARIO === 'all' || SCENARIO === 'display') {
+    // Independent display and dye tests operate through the normal controls.
+    assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').getAttribute('aria-pressed'), 'true', 'The real default selection must be the outer garment');
+    await clickAndWait('isolate-selected');
+    assert.equal((await diagnostic()).displayOnlyIsolation, true);
+    const isolatedPixels = await capture('isolated');
+    const originalColor = await page.locator('#layer-app #color').inputValue();
+    await setColor('#ee285a');
+    const recoloredPixels = await capture('recolored');
+    const dyeDifference = pixelDifference(isolatedPixels, recoloredPixels);
+    assert.ok(dyeDifference.changedFraction > .005, 'Changing the selected dye did not visibly alter the actual canvas');
+    summary.dyePixelDifference = dyeDifference;
+    await setColor(originalColor);
+    await clickAndWait('view-detail');
+    await capture('detail');
+    await clickAndWait('all-visible');
+    await clickAndWait('view-front');
 
-  // The displayed separation is a view operation: it must leave every exposed
-  // physics measurement and the simulation clock unchanged.
-  const beforeSeparation = await diagnostic();
-  await page.locator('#layer-app #exploded').check();
-  await waitIdle();
-  const separated = await diagnostic();
-  assert.equal(separated.displayOnlySeparation, true);
-  assert.deepEqual(separated.physics, beforeSeparation.physics, 'Exploded view changed the physics state');
-  verifyGarments(separated);
-  await capture('separated');
-  await page.locator('#layer-app #exploded').uncheck();
-  await waitIdle();
-  assert.deepEqual((await diagnostic()).physics, beforeSeparation.physics);
-
-  // Advance the real native-body scene. Contact counts are measurements, with
-  // no requirement that residuals vanish or that one step run in real time.
-  let stepped = await advance();
-  await record('stepped');
-  if (stepped.physics.contact.contactCount === 0) {
-    stepped = await advance('push');
-    await record('pushed');
+    // The displayed separation is a view operation: it must leave every exposed
+    // physics measurement and the simulation clock unchanged.
+    const beforeSeparation = await diagnostic();
+    await page.locator('#layer-app #exploded').check();
+    await waitIdle();
+    const separated = await diagnostic();
+    assert.equal(separated.displayOnlySeparation, true);
+    assert.deepEqual(separated.physics, beforeSeparation.physics, 'Exploded view changed the physics state');
+    verifyGarments(separated);
+    await capture('separated');
+    await page.locator('#layer-app #exploded').uncheck();
+    await waitIdle();
+    assert.deepEqual((await diagnostic()).physics, beforeSeparation.physics);
+    summary.scenariosCompleted.push('display');
   }
-  assert.ok(stepped.physics.contact.contactCount > 0, 'The contact probe did not produce measurable inter-garment contact');
-  const countBeforeRemoval = stepped.physics.contact.contactCount;
-  await page.locator('#layer-app #layer-list [data-garment="outer"]').click();
-  await clickAndWait('remove-selected');
-  const removed = await diagnostic();
-  verifyGarments(removed, ['inner', 'pants']);
-  assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').count(), 0);
-  assert.equal((await page.locator('#layer-app #metric-layers').textContent()).trim(), '2');
-  assert.equal(removed.physics.contact, null, 'Removing an object must retire the old contact evidence');
-  assert.equal((await page.locator('#layer-app #metric-contacts').textContent()).trim(), '待求解');
-  await capture('removed');
-  const afterRemovalStep = await advance();
-  verifyGarments(afterRemovalStep, ['inner', 'pants']);
-  summary.contactRemoval = {
-    beforeRemoval: countBeforeRemoval,
-    immediatelyAfterRemoval: null,
-    afterNextSolve: afterRemovalStep.physics.contact.contactCount,
-    oldEvidenceRetired: removed.physics.contact === null,
-    remainingGarments: ['inner', 'pants'],
-    interpretation: 'Removal retires previous contact evidence and displays unmeasured (待求解), not a measured zero; the next real solve measures the two remaining independent garments.',
-  };
-  await record('removed-stepped');
 
-  await clickAndWait('add-outer', 150_000);
-  const restored = await diagnostic();
-  verifyGarments(restored);
-  assert.equal(await page.locator('#layer-app #layer-list [data-garment]').count(), 3);
-  assert.equal(await page.locator('#layer-app #add-outer').isDisabled(), true);
-  await capture('restored');
+  if (SCENARIO === 'all' || SCENARIO === 'contact') {
+    // Advance the real native-body scene. Contact counts are measurements, with
+    // no requirement that residuals vanish or that one step run in real time.
+    let stepped = await advance();
+    await record('stepped');
+    if (stepped.physics.contact.contactCount === 0) {
+      stepped = await advance('push');
+      await record('pushed');
+    }
+    assert.ok(stepped.physics.contact.contactCount > 0, 'The contact probe did not produce measurable inter-garment contact');
+    const countBeforeRemoval = stepped.physics.contact.contactCount;
+    await page.locator('#layer-app #layer-list [data-garment="outer"]').click();
+    await clickAndWait('remove-selected');
+    const removed = await diagnostic();
+    verifyGarments(removed, ['inner', 'pants']);
+    assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').count(), 0);
+    assert.equal((await page.locator('#layer-app #metric-layers').textContent()).trim(), '2');
+    assert.equal(removed.physics.contact, null, 'Removing an object must retire the old contact evidence');
+    assert.equal((await page.locator('#layer-app #metric-contacts').textContent()).trim(), '待求解');
+    await capture('removed');
+    const afterRemovalStep = await advance();
+    verifyGarments(afterRemovalStep, ['inner', 'pants']);
+    summary.contactRemoval = {
+      beforeRemoval: countBeforeRemoval,
+      immediatelyAfterRemoval: null,
+      afterNextSolve: afterRemovalStep.physics.contact.contactCount,
+      oldEvidenceRetired: removed.physics.contact === null,
+      remainingGarments: ['inner', 'pants'],
+      interpretation: 'Removal retires previous contact evidence and displays unmeasured (待求解), not a measured zero; the next real solve measures the two remaining independent garments.',
+    };
+    await record('removed-stepped');
 
+    await clickAndWait('add-outer');
+    const restored = await diagnostic();
+    verifyGarments(restored);
+    assert.equal(await page.locator('#layer-app #layer-list [data-garment]').count(), 3);
+    assert.equal(await page.locator('#layer-app #add-outer').isDisabled(), true);
+    await capture('restored');
+    summary.scenariosCompleted.push('contact');
+  }
+
+  assert.deepEqual(summary.scenariosCompleted, SCENARIO === 'all' ? ['display', 'contact'] : [SCENARIO]);
   assert.equal(forbiddenRequests.length, 0, 'The build requested resources outside the verified local closure');
   assert.equal(pageErrors.length, 0, 'Browser JavaScript errors occurred');
   const failedResources = requests.filter(row => row.status >= 400 && !new URL(row.url).pathname.endsWith('/favicon.ico'));
@@ -530,6 +550,6 @@ try {
   await browser?.close().catch(() => {});
 }
 
-console.log(JSON.stringify({ passed: summary.passed, elapsedMS: summary.elapsedMS, screenshots: observations.map(row => row.name),
+console.log(JSON.stringify({ passed: summary.passed, scenario: SCENARIO, scenariosCompleted: summary.scenariosCompleted, elapsedMS: summary.elapsedMS, screenshots: observations.map(row => row.name),
   contactRemoval: summary.contactRemoval, error: summary.error?.message }, null, 2));
 if (failure) throw failure;

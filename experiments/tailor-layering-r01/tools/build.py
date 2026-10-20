@@ -58,6 +58,18 @@ def build() -> None:
         if not (UPSTREAM / 'platform-runtime' / 'asset-cache' / cached_name).is_file():
             raise SystemExit('A retained skin image is absent from the verified cache: ' + cached_name)
     replace_once(image_expression, 'new URL("./upstream/platform-runtime/asset-cache/"+' + json.dumps(image_cache, separators=(',', ':')) + '[e],location.href).href')
+    # The native startup coalescer (Nn.prototype.render) must still run: its
+    # material/control readiness transition sets startupFinalFrame before it
+    # delegates to the drawing methods below. Suppress only these two viewer
+    # presentation entries, so platformReview can finish preparation without
+    # queueing hidden full-resolution body frames. Direct renderer operations
+    # such as PMREM, texture preparation and shadow precomputation stay intact.
+    native_face_entry = 'render(){if(this.inNativeUpdate)return;let e=this.model?.faceSurface?.settings,t=this.model?.eyeSurface?.settings;return this.faceDiffusion'
+    held_face_entry = 'render(){if(this.inNativeUpdate)return;if(globalThis.__LAYER_COLD_PRESENTATION_HOLD__){if(globalThis.__LAYER_COLD_PRESENTATION_AUDIT__)globalThis.__LAYER_COLD_PRESENTATION_AUDIT__.faceEntryRequests++;return}let e=this.model?.faceSurface?.settings,t=this.model?.eyeSurface?.settings;return this.faceDiffusion'
+    replace_once(native_face_entry, held_face_entry)
+    native_base_entry = 'render(){this.active&&!this.lost&&(this.renderer.render(this.scene,this.camera),this.renders++)}'
+    held_base_entry = 'render(){if(globalThis.__LAYER_COLD_PRESENTATION_HOLD__){if(globalThis.__LAYER_COLD_PRESENTATION_AUDIT__)globalThis.__LAYER_COLD_PRESENTATION_AUDIT__.baseEntryRequests++;return}this.active&&!this.lost&&(this.renderer.render(this.scene,this.camera),this.renders++)}'
+    replace_once(native_base_entry, held_base_entry)
     original_title = re.search(r'<title>[^<]*</title>', html)
     if not original_title:
         raise SystemExit('The retained native HTML has no title.')
@@ -90,6 +102,10 @@ def build() -> None:
    html=html.replace(before,()=>after);
   }
   if(await digest(new TextEncoder().encode(html))!=='__ASSEMBLED_SHA__')throw Error('叠穿宿主组装校验不一致。');
+  // document.open/write keeps this Window. Install the presentation hold before
+  // any retained runtime script can construct its viewer or request a frame.
+  window.__LAYER_COLD_PRESENTATION_HOLD__=true;
+  window.__LAYER_COLD_PRESENTATION_AUDIT__={startedAtMS:performance.now(),faceEntryRequests:0,baseEntryRequests:0,releasedAtMS:null,heldDurationMS:null};
   document.open();document.write(html);document.close();
  } catch(error) {status.textContent=error.message;status.setAttribute('role','alert');console.error(error);}
 })();
@@ -154,8 +170,17 @@ def build() -> None:
             'Resolve the original cached-asset adapter under upstream/platform-runtime/asset-cache.',
             'Accept URL objects as well as string and Request inputs in the same-document fetch adapter.',
             'Resolve the two original face detail/chroma ImageLoader inputs to their unchanged, verified local cached bytes.',
+            'Hold the original L1 face-diffusion and A1 base viewer presentation entries during preparation; preserve the Nn startup readiness transition and all direct renderer precomputation. Release only through native-host.releaseRender().',
             'Add host title, importmap, stylesheet, shell and application module; keep the original runtime DOM and scripts.'
         ],
+        'coldStartPresentationHold': {
+            'installedBeforeNativeRuntimeScripts': True,
+            'exactEntryPatchCounts': {'faceDiffusionViewer': 1, 'baseViewer': 1},
+            'originalStartupReadinessTransitionPreserved': True,
+            'directRendererOperationsUnchanged': True,
+            'release': 'native-host.releaseRender()',
+            'readinessMeaning': 'Native preparation state; final presentation is separately awaited by the host application.'
+        },
         'sameDocumentNativeHost': True,
         'iframeRequired': False,
         'upstreamFiles': source_manifest,

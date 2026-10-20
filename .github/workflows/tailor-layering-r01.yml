@@ -18,10 +18,16 @@ concurrency:
 
 jobs:
   verify:
+    name: Real WebGL — ${{ matrix.scenario }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [display, contact]
     # Software WebGL must finish the unmodified native skin and solid yarns.
-    # The browser has a separate 14-minute ceiling, leaving artifact time here.
-    timeout-minutes: 18
+    # Each independent scenario runs in its own fresh runner and browser.
+    # Both matrix jobs must pass. The browser ceiling leaves artifact time here.
+    timeout-minutes: 24
     defaults:
       run:
         shell: bash
@@ -62,6 +68,7 @@ jobs:
       - name: Render and interact with actual three-dimensional garments
         env:
           CI: 'true'
+          LAYERING_CI_SCENARIO: ${{ matrix.scenario }}
         run: |
           python -m http.server 8765 --bind 127.0.0.1 --directory dist > evidence/http-server.log 2>&1 &
           layer_server_pid=$!
@@ -72,16 +79,16 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r01-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r01-evidence-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r01/evidence/
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Retain the verified static build for separate review and publication
-        if: success()
+      - name: Retain static build for combined scenario review and separate publication
+        if: success() && matrix.scenario == 'display'
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r01-dist-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r01-dist-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r01/dist/
           if-no-files-found: error
           compression-level: 6

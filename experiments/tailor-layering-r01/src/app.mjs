@@ -14,7 +14,7 @@ const definitions = {
 };
 let host, bridge, selected = 'outer', ready = false, busy = false, playing = false;
 let failure = null, isolated = false, latest = null, ray, pointer, dragPlane, dragged = null;
-let loopGeneration = 0, frameStamp = 0;
+let loopGeneration = 0, frameStamp = 0, lastPresentation = null, initialSampling = null;
 const items = new Map();
 const templates = new Map();
 const state = {friction: .3, wind: 0, contactEnabled: true};
@@ -194,8 +194,10 @@ function diagnostic() {
       topology:host?.identity?.topologySHA256,revision:host?.sourceRevision,iframes:document.querySelectorAll('iframe').length},
     displayOnlySeparation:$('exploded').checked,displayOnlyIsolation:isolated,
     initializationOrder:['pants','inner','outer'],dynamicGarments:rows,
-    physics:a,render:{calls:host?.viewer.renderer.info.render.calls,triangles:host?.viewer.renderer.info.render.triangles,
-      frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.()},
+    physics:a,render:{calls:lastPresentation?.calls,triangles:lastPresentation?.triangles,
+      counterScope:'Submitted work across the complete presentation: yarn preparation, shadows, native scene and skin composition; not unique mesh triangles',
+      frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.(),
+      presentationQueue:host?.presentationQueue,initialSampling},
     bootTimings:host?.bootTimings,
     elapsedLoadMS:frameStamp || Math.round(performance.now()-started)};
   $('diagnostics').textContent = JSON.stringify(value,null,2);
@@ -234,6 +236,91 @@ async function buildVisual(it) {
   await host.viewer.renderer.compileAsync(it.solid.group,host.viewer.camera,host.viewer.scene);
   const failed = host.viewer.renderer.info.programs?.filter(p => p.diagnostics?.runnable === false) || [];
   if (failed.length) throw new Error('原实体材料着色器编译失败。');
+}
+
+async function waitForPreparedGPU() {
+  const gl=host.viewer.renderer.getContext(), sync=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);
+  if(!sync)throw new Error('实体材料准备无法建立 GPU 完成标记。');
+  gl.flush();const began=performance.now();
+  try {
+    while(true){
+      const value=gl.clientWaitSync(sync,0,0);
+      if(value===gl.WAIT_FAILED || gl.isContextLost())throw new Error('实体材料准备时三维上下文失效。');
+      if(value!==gl.TIMEOUT_EXPIRED)return performance.now()-began;
+      if(performance.now()-began>180000)throw new Error('实体材料准备超过 180 秒。');
+      await new Promise(resolve=>setTimeout(resolve,16));
+    }
+  }finally{gl.deleteSync(sync);}
+}
+
+async function prepareInitialSampling() {
+  // Use the unchanged source sampler at the actual final camera and viewport.
+  // It may need several updates to drain its per-update work budget. Presenting
+  // the full native skin/outfit between those preparation updates is needless.
+  // Real elapsed time still drives the original hysteresis and morph rules.
+  frame('front');
+  const began=performance.now();let rounds=0,stableSince=null,signature=null,gpuWaitMS=0,settled=false;
+  let updateCPUMS=0,maximumUpdateCPUMS=0;
+  while(rounds<100 && performance.now()-began<12000){
+    const updateBegan=performance.now();
+    for(const it of items.values()){it.solid.motion(false);it.solid.update(host.viewer.camera);}
+    const duration=performance.now()-updateBegan;updateCPUMS+=duration;maximumUpdateCPUMS=Math.max(maximumUpdateCPUMS,duration);
+    gpuWaitMS+=await waitForPreparedGPU();rounds++;
+    const current=[...items.values()].map(it=>({id:it.id,resamples:it.solid.stats.resamples,
+      demandQuality:Math.round((it.solid.resources().continuousDemand.output?.qVisual||0)*1000)/1000,
+      queue:it.solid.stats.queuedResamples,chunks:(it.solid.chunks||[]).map(c=>({
+        segments:c.current.segments,sides:c.current.sides,atlas:!!c.current.atlas,
+        previous:!!c.previous,wake:Number.isFinite(c.samplingWakeAt),deferred:!!c.deferred}))}));
+    const next=JSON.stringify(current);
+    const outstanding=current.some(row=>row.queue || row.chunks.some(c=>c.previous||c.wake));
+    if(next!==signature || outstanding)stableSince=null;
+    else stableSince??=performance.now();
+    signature=next;
+    progress('按当前视角准备原实体纱线 · '+rounds+' 轮');
+    if(stableSince!==null && performance.now()-stableSince>=500 && performance.now()-began>=1200){settled=true;break;}
+    await new Promise(resolve=>setTimeout(resolve,34));
+  }
+  initialSampling={method:'Unmodified continuous source sampler, actual camera and viewport, real elapsed time, before first full presentation',
+    rounds,elapsedMS:performance.now()-began,gpuWaitMS,updateCPUMS,maximumUpdateCPUMS,settledAtObservedTargets:settled,
+    stoppedByBudget:!settled,continuousSamplingRemainsActive:true,geometryOrQualityPolicyReplaced:false,
+    garments:[...items.values()].map(it=>({id:it.id,submittedYarnTriangles:it.solid.stats.submittedYarnTriangles,
+      resamples:it.solid.stats.resamples,queuedResamples:it.solid.stats.queuedResamples,
+      uncachedNativeChunks:it.solid.stats.uncachedNativeChunks,frameAtlasBytes:it.solid.stats.frameAtlasBytes,
+      deferredChunks:(it.solid.chunks||[]).filter(c=>c.deferred).length,
+      sourceDemand:it.solid.resources().continuousDemand,globalAtlasMemory:it.solid.stats.globalAtlasMemory}))};
+}
+
+function serializePresentation() {
+  // The retained gate proves GPU completion. Keep only one native frame in
+  // flight so synchronous driver queries in the next skin pass cannot block
+  // the UI behind a previous full frame on a slow renderer.
+  const submit=host.viewer.render.bind(host.viewer),waiters=[];
+  const queue={requested:0,completed:0,presentingThrough:0,inFlight:false,pending:false,coalesced:0,
+    policy:'One native presentation in flight; requests retain the newest state; the source frame gate verifies completion'};
+  host.presentationQueue=queue;
+  host.markPresentationStart=()=>{queue.presentingThrough=queue.requested;queue.pending=false;};
+  function dispatch(){
+    if(queue.inFlight||!queue.pending||busy)return;
+    queue.pending=false;queue.inFlight=true;
+    submit().then(ok=>{
+      const through=queue.presentingThrough;
+      queue.inFlight=false;queue.completed=through;
+      for(let i=waiters.length-1;i>=0;i--)if(waiters[i].id<=through){waiters[i].resolve(ok);waiters.splice(i,1);}
+      if(queue.pending)dispatch();
+      diagnostic();
+    }).catch(error=>{
+      queue.inFlight=false;queue.pending=false;
+      for(const waiter of waiters.splice(0))waiter.reject(error);
+      fail(error);
+    });
+  }
+  host.viewer.render=()=>{
+    const id=++queue.requested;
+    if(queue.inFlight||queue.pending)queue.coalesced++;
+    queue.pending=true;
+    const result=new Promise((resolve,reject)=>waiters.push({id,resolve,reject}));
+    dispatch();diagnostic();return result;
+  };
 }
 
 function disposeItem(it) {
@@ -392,12 +479,21 @@ async function boot() {
       node.inert = true; node.setAttribute('aria-hidden','true');
     }
     const nativeRender=host.viewer.render.bind(host.viewer);
+    // Native face diffusion finishes with a fullscreen composition pass.
+    // Count the complete presentation instead of only that final two-triangle
+    // quad; this changes renderer statistics, not any submitted geometry.
+    host.viewer.renderer.info.autoReset=false;
     host.viewer.render=()=>{
       // Atlas preparation also submits WebGL work, so hold it together with
       // the native draw until the complete first outfit has been assembled.
       if(host.renderSuspended())return false;
+      host.markPresentationStart?.();
+      host.viewer.renderer.info.reset();
       for(const it of items.values())if(it.solid?.group.visible){it.solid.motion(playing);it.solid.update(host.viewer.camera);}
-      return nativeRender();
+      const result=nativeRender();
+      const submitted=host.viewer.renderer.info.render;
+      lastPresentation={calls:submitted.calls,triangles:submitted.triangles,points:submitted.points,lines:submitted.lines};
+      return result;
     };
     bridge=new ClothBridge();
     for(const kind of ['pants','inner','outer']){
@@ -406,10 +502,10 @@ async function boot() {
     progress('组装各件独立裁片、接缝与共享接触求解器');
     apply(await bridge.call('init',{body:{positions:host.bodyPositions,faces:host.bodyFaces},rows:[...items.values()].map(workerRow),options:state}));
     for(const it of items.values())await buildVisual(it);
+    await prepareInitialSampling();
     host.releaseRender();
     installRenderBackpressure(host.viewer);
-    const scheduleRender=host.viewer.render.bind(host.viewer);
-    host.viewer.render=()=>scheduleRender().then(ok=>{diagnostic();return ok;});
+    serializePresentation();
     progress('绘制原生人物与三件独立实体衣物');
     host.viewer.canvas.style.visibility='visible';
     bind();list();selection();visibility();frame('front');
