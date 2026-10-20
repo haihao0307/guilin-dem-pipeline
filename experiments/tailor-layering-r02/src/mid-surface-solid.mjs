@@ -7,6 +7,8 @@
  * build.py derives two explicitly audited modules from the pinned source:
  * yarn placement starts at zero, and seam route heights subtract the former
  * placement. Yarn shaders, tube profiles, materials and sampling stay native.
+ * The same audited derivative releases a finished morph's previous atlas before
+ * an otherwise unused deformation update. Active morphs keep both native atlases.
  */
 export async function buildMidSurfaceSolid(native, packet, info, options = {}) {
   const {renderOffsetMeters, ...nativeOptions} = options;
@@ -49,6 +51,15 @@ export async function buildMidSurfaceSolid(native, packet, info, options = {}) {
       originalMaterialUnchanged: true,
       originalContinuousSamplerUnchanged: true,
       physicalThicknessChanged: false,
+    };
+    // These describe the applied scheduling contract, not measured savings.
+    solid.stats.renderSchedulingAdapter = {
+      schema: 'expired-yarn-frame-atlas-order@1',
+      expiredPreviousDisposedBeforeAtlasUpdate: true,
+      activeMorphUpdatesBothAtlases: true,
+      originalMorphDurationMS: 180,
+      originalAtlasShaderUnchanged: true,
+      originalSamplingDecisionsUnchanged: true,
     };
     return solid;
   } catch (error) {

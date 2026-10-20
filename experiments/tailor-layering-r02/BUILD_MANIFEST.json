@@ -29,11 +29,11 @@
   "iframe": false,
   "bodyMotion": "paused original native body",
   "renderRepresentation": "Retained continuous original closed yarns and sewn trims",
-  "clothModel": "Independent material-coordinate XPBD garments with shared discrete two-way point-triangle contact",
+  "clothModel": "Independent material-coordinate XPBD garments with shared discrete reciprocal vertex-face and edge-edge contact",
   "collisionThickness": "Geometric yarn envelope plus explicitly modeled margin; not measured fabric thickness",
   "globalOuterAttraction": false,
   "continuousCollision": false,
-  "edgeEdgeCollision": false,
+  "edgeEdgeCollision": true,
   "completeSelfCollision": false,
   "materialCalibration": false,
   "productionApproved": false,
@@ -46,5 +46,25 @@
   "renderDemand": "Exact geometry change detection, latest snapshot presentation, explicit hidden object deferral with unchanged solver",
   "automaticOccludedRegionCulling": false,
   "sourceUpstreamBytesPreserved": true,
-  "verificationStatus": "preflight pending; current-native physical fixes still in progress"
+  "verificationStatus": "Release requires every full CI matrix member at the tested source commit; see the associated artifacts and published verification record",
+  "expiredYarnAtlasUpdates": "Release expired previous atlas before deformation updates; unchanged 180 ms active morph, sampler and shader",
+  "bodyEnvelopeModel": "Actual static native-body BVH; bidirectional vertex-face and finite edge-edge proximity constraints, combined with native signed vertex projection; independent complete triangle crossing and envelope audits in native replay",
+  "solverAcceptance": {
+    "maximumDynamicEdgeStretch": 1.45,
+    "maximumClothContactResidualMM": 0.5,
+    "maximumBodyHalfThicknessOverlapMM": 0.001,
+    "maximumSeamGapMM": 0.01,
+    "preferredEdgeStretch": 1.4,
+    "preferredContactResidualMM": 0.4,
+    "onFailure": "Restore the step-start geometry, velocities and persistent contact history, report the failure and do not advance physical time",
+    "tailWorkPolicy": "Repair strain only above the unchanged hard limit; stop after fresh same-round strain/contact/body checks all pass; report stricter preferences without chasing them past a valid coupled state"
+  },
+  "simulationClock": "Serial fixed-step timer independent of requestAnimationFrame; unchanged 1/120 s step; no catch-up or omitted physics steps",
+  "referenceBodyLoading": "Derived unchanged position/index byte ranges from the pinned old reference body; original and runtime geometry SHA-256 checks; no old skin, rig, archive or actor payload is requested",
+  "referenceBodyPayload": {
+    "originalGzipBytes": 3220845,
+    "geometryGzipBytes": 512124,
+    "descriptorBytes": 2094,
+    "scope": "Only the old coordinate-reference asset, not the current visible native person, total-page traffic or frame rate"
+  }
 }

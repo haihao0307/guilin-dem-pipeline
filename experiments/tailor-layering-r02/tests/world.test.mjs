@@ -13,7 +13,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const upstream = path.join(root, 'reference/mp05-studio-r10');
 const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'kaopu-layer-world-test-'));
 after(() => fs.rm(temporary, { recursive: true, force: true }));
-for (const name of ['layer-world.mjs', 'layer-contact.mjs', 'layer-initialization.mjs', 'garment-prep.mjs']) {
+for (const name of ['layer-world.mjs', 'layer-contact.mjs', 'layer-initialization.mjs', 'body-envelope.mjs', 'garment-prep.mjs']) {
   await fs.copyFile(path.join(root, 'src', name), path.join(temporary, name));
 }
 await fs.symlink(upstream, path.join(temporary, 'upstream'), 'dir');
@@ -38,6 +38,43 @@ for (const id of ['T08', 'T03']) {
 }
 const bytes = await fs.readFile(path.join(upstream, 'cloth-kernel.wasm'));
 let world;
+
+test('settling accepts only simultaneous hard strain, contact and body limits, without chasing a stricter preference', () => {
+  // Exercise the actual stopping controller with measured-state witnesses.
+  // These scalar witnesses are a controller regression, not a cloth fixture.
+  // The first three states each fail a different hard limit; combining their
+  // individually good metrics would incorrectly accept a nonexistent state.
+  const states = [
+    {stretch:1.3985151538280451,penetration:.0004596615309791219,body:2e-6},
+    {stretch:1.46,penetration:.00038245409254624666,body:0},
+    {stretch:1.342757502559026,penetration:.0008683956260341378,body:0},
+    {stretch:1.4097817022530017,penetration:.00038245409254624666,body:0},
+  ];
+  let stage=0;const measuredBodyAt=[];
+  const host={rows:[{id:'controller-fixture',enabled:true,s:{count:0,p:new Float64Array(),w:new Float64Array(),edges:[],family:'knit'}}],options:{contactEnabled:true,friction:0},surfaces:()=>[],
+    contacts:{measure:()=>({residualMaxPenetration:states[stage].penetration}),solve:()=>{stage++;return{};}},
+    audit:({bodySamples=false}={})=>({maxEdgeStretch:states[stage].stretch,...(bodySamples?{bodyThicknessOverlapMM:0,bodyInsideVertices:0}:{})}),
+    measureBodyEnvelope:()=>{measuredBodyAt.push(stage);return{maxHalfThicknessOverlapM:states[stage].body};},
+    projectBody:()=>{},envelope:()=>{},
+  };
+  const result=LayerWorld.prototype.settle.call(host,{maxPasses:10});
+  assert.equal(stage,3,'all three invalid coupled states require another pass');
+  assert.equal(result.passes,3,'the first fully acceptable state ends work');
+  assert.deepEqual(result.observations.slice(1).map(o=>o.active.length),[0,1,0],'only a violated hard strain limit requests active strain repair');
+  assert.equal(result.converged,true);
+  assert.equal(result.preferredTargetMet,false,'a missed preference is disclosed, not used to disturb accepted geometry');
+  assert.deepEqual(measuredBodyAt,[0,3],'body geometry is freshly measured on the same candidate state');
+  assert.equal(result.measurement.residualMaxPenetration,states[3].penetration);
+  assert.equal(result.audit.maxEdgeStretch,states[3].stretch);
+  assert.deepEqual(result.acceptanceLimits,{maxEdgeStretch:1.45,maxResidualPenetrationM:.0005,bodyHalfThicknessOverlapToleranceMM:.001});
+
+  stage=0;states.forEach(s=>{s.stretch=1.39;s.penetration=.0003;s.body=2e-6;});
+  measuredBodyAt.length=0;
+  const rejected=LayerWorld.prototype.settle.call(host,{maxPasses:2});
+  assert.equal(stage,2);
+  assert.equal(rejected.converged,false,'an unresolved body-envelope violation remains a failure at the work cap');
+  assert.equal(rejected.bodyEnvelope.maxHalfThicknessOverlapM,2e-6);
+});
 
 test('actual native body and T08/T03 garments step with finite positions and welded seam agreement', async () => {
   const began = performance.now();
@@ -100,6 +137,10 @@ test('thickness updates body clearance, invalid settings are atomic, and retired
 
 test('failed native finish restores cloth state, simulation time and reported contact evidence', () => {
   world.reset();
+  // Give the transaction actual per-surface history and pending contacts to
+  // restore; clearing them would alter the next attempt's collision semantics.
+  world.contacts.solve(world.surfaces(),{passes:1});
+  const contactBefore=world.contacts.checkpoint();
   const before = world.rows.map(a => ({ p: a.s.p.slice(), v: a.s.v.slice(), old: a.s.old.slice() }));
   const nativeExports = world.e;
   world.e = { ...nativeExports, finish: () => 0 };
@@ -119,6 +160,8 @@ test('failed native finish restores cloth state, simulation time and reported co
   assert.equal(world.steps, 0);
   assert.equal(world.lastContact, null);
   assert.equal(world.totalCorrections, 0);
+  const contactAfter=world.contacts.checkpoint();
+  for(const key of ['history','sides','frameSides','edgeReferences','pending'])assert.deepEqual(contactAfter[key],contactBefore[key],key+' is restored with the failed step');
 });
 
 test('prepared original P02/T08/T03 advance continuously with bounded strain and independent intersection checks', async () => {

@@ -5,6 +5,7 @@ import {mapPanelUV} from './upstream/panel-grain.mjs';
 import {buildMidSurfaceSolid} from './mid-surface-solid.mjs';
 import {installRenderBackpressure} from './upstream/render-backpressure.mjs';
 import {createRenderDemand} from './render-demand.mjs';
+import {runFixedStepLoop} from './simulation-clock.mjs';
 
 const $ = id => document.querySelector('#layer-app #' + CSS.escape(id)) || document.getElementById(id);
 const root = $('layer-app');
@@ -227,6 +228,10 @@ function diagnostic(force=false) {
   if(diagnosticTimer!==null){clearTimeout(diagnosticTimer);diagnosticTimer=null;}
   diagnosticAt=performance.now();visualAudit.diagnosticWrites++;
   const a = latest?.audit || {};
+  const demandAudit=demand.audit();
+  const deferredHidden=demandAudit.pendingIDs.filter(id=>!needsGeometry(id)).length;
+  $('render-work').textContent='几何更新 '+demandAudit.uploadedRows+' 次 · 识别重复 '+demandAudit.unchangedRows+' 次'+
+    (deferredHidden?' · '+deferredHidden+' 件隐藏衣物待显示时更新':'');
   const rows = [...items.values()].map(it => ({id:it.id,preset:it.presetId,
     displayVertices:it.mesh.geometry.attributes.position.count,solverParticles:it.current?.particles,
     solverTriangles:it.current?.triangles,sewnPairs:it.current?.seamPairs,
@@ -247,7 +252,7 @@ function diagnostic(force=false) {
       counterScope:'Submitted work across the complete presentation: yarn preparation, shadows, native scene and skin composition; not unique mesh triangles',
       frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.(),
       presentationQueue:host?.presentationQueue,initialSampling,lastSamplingPreparation,
-      demand:{...demand.audit(),...visualAudit,enabled:demandEnabled,hiddenSimulationSkipped:false,
+      demand:{...demandAudit,...visualAudit,enabled:demandEnabled,hiddenSimulationSkipped:false,
         occludedRegionCullingImplemented:false,requiredIDs:[...items.keys()].filter(needsGeometry)}},
     bootTimings:host?.bootTimings,
     elapsedLoadMS:frameStamp || Math.round(performance.now()-started)};
@@ -278,8 +283,9 @@ function apply(data) {
   if (ready && !busy && !failure) {
     const seconds = Number(audit.simulationSeconds || 0).toFixed(3);
     const residual = audit.contact?.residualMaxPenetration;
+    const stepBudgetMS=1000*(audit.nominalStepSeconds||1/120);
     status((playing ? '求解中' : '已暂停') + ' · 模拟 ' + seconds + ' 秒' +
-      (audit.solverMS > 16.7 ? ' · 慢于实时' : '') +
+      (audit.solverMS > stepBudgetMS ? ' · 慢于实时' : '') +
       (Number.isFinite(residual) ? ' · 离散接触残余 ' + (residual * 1000).toFixed(2) + ' mm' : ''));
   }
   diagnostic();
@@ -442,7 +448,7 @@ function fail(error) {
   if (!ready) {
     $('layer-loading').hidden = false; $('load-text').textContent = failure;
     const note = $('layer-loading').querySelector('.layer-loading-card > span:last-child');
-    if (note) note.textContent = '本页需要 WebGL 2。请使用支持三维显示的浏览器重新载入；研究说明仍可阅读。';
+    if (note) note.textContent = '准备尚未完成，上方显示具体原因。可以重新载入再试；研究说明仍可阅读。';
   }
   diagnostic(true); controls(); console.error(error);
 }
@@ -453,10 +459,7 @@ async function play() {
   if (!ready || busy || failure) return;
   playing=true; const generation=++loopGeneration; controls();
   try {
-    while (playing && generation===loopGeneration) {
-      await stepOnce();
-      await new Promise(resolve => requestAnimationFrame(resolve));
-    }
+    await runFixedStepLoop({step:stepOnce,active:()=>playing&&generation===loopGeneration});
   } catch(error) {fail(error);}
 }
 
@@ -525,7 +528,7 @@ function bind() {
   $('render-demand').onchange=e=>{
     demandEnabled=e.target.checked;
     if(!demandEnabled && latest)apply(latest);
-    else host.viewer.render();
+    else if(demand.hasPending(needsGeometry))host.viewer.render();
     diagnostic(true);
   };
   for(const kind of Object.keys(definitions)) $('add-'+kind).onclick=()=>add(kind);

@@ -6,6 +6,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {verifyReferenceBodyLoading} from './reference-body-observation.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const EVIDENCE = path.join(ROOT, 'evidence');
@@ -22,7 +23,7 @@ const summary = {schema: 'kaopu-native-world-capture@1', startedUTC: new Date().
   execution: 'GitHub Actions, fresh real Chromium, software WebGL',
   visualAcceptancePerformed: false, simulationPerformedByProbe: false,
   rendererOrReadinessModifiedByProbe: false, publicationPerformed: false};
-const consoleMessages = [], pageErrors = [], requests = [], forbiddenRequests = [];
+const consoleMessages = [], pageErrors = [], requests = [], requestStarts = [], forbiddenRequests = [];
 let browser, context, page, timeout, heartbeat, failure, source;
 let resolveCapture, rejectCapture;
 const captured = new Promise((resolve, reject) => {resolveCapture = resolve; rejectCapture = reject;});
@@ -102,7 +103,10 @@ function verifyInput(value) {
   };
   assert.match(identity.adapterFingerprint, /^[0-9a-f]{64}$/i);
   assert.equal(identity.personRevision, source.buildManifest.personRevision);
-  return {identity, bodyVertices: body.array.length / 3, bodyTriangles: faces.array.length / 3, garments};
+  const referenceBodyLoading = verifyReferenceBodyLoading({baseURL: BASE, provenance: source.provenance,
+    allocation: value.nativeProbe.referenceBodyAllocation, requestStarts,
+    responses: requests.filter(row => row.kind !== 'request-start')});
+  return {identity, bodyVertices: body.array.length / 3, bodyTriangles: faces.array.length / 3, garments, referenceBodyLoading};
 }
 
 try {
@@ -162,6 +166,7 @@ try {
       summary.bodyVertices = checks.bodyVertices;
       summary.bodyTriangles = checks.bodyTriangles;
       summary.garments = checks.garments;
+      summary.referenceBodyLoading = checks.referenceBodyLoading;
       console.log('NATIVE_CAPTURE_SAVED ' + JSON.stringify({...artifact,
         bodyVertices: checks.bodyVertices, bodyTriangles: checks.bodyTriangles,
         garments: checks.garments.map(row => ({id: row.id, vertices: row.vertices}))}));
@@ -218,6 +223,7 @@ try {
             state: model.state, adapterFingerprint: model.archive().adapterFingerprint,
             platformReady: window.platformReview?.ready?.() === true,
             sameNativeCanvasInStage: document.querySelector('#layer-app #layer-stage canvas') === viewer.canvas,
+            referenceBodyAllocation: window.__LAYER_NATIVE_TIMINGS__?.referenceBodyAllocation,
             iframeCount: document.querySelectorAll('iframe').length});
           copy.observer = {browserMS: performance.now(), copyMS: performance.now() - began,
             pageURL: location.href, originalMethodInvoked: false, originalMethodThrew: false,
@@ -259,6 +265,10 @@ try {
     if (/^NATIVE_CAPTURE_(COPY|SERIALIZE|DELIVERY)_FAILED /.test(row.text)) rejectCapture(new Error(row.text));
   });
   page.on('pageerror', error => {pageErrors.push({message: error.message, stack: error.stack}); rejectCapture(error);});
+  page.on('request', request => {
+    const row = {kind: 'request-start', url: request.url(), wallMS: Date.now() - started};
+    requestStarts.push(row); requests.push(row);
+  });
   page.on('response', response => requests.push({url: response.url(), status: response.status(), wallMS: Date.now() - started}));
   page.on('requestfailed', request => requests.push({url: request.url(), failure: request.failure()?.errorText, wallMS: Date.now() - started}));
   timeout = setTimeout(() => rejectCapture(new Error('Actual native init capture exceeded 300 seconds')), CAPTURE_TIMEOUT_MS);

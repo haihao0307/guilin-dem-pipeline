@@ -5,7 +5,8 @@
  *   --output evidence/native-replay --steps 240 --mode both
  *
  * --mode baseline|perturb|both (default both), --source <project> (default this
- * project), --label <safe-name> (default native), --stop-on-failure (optional).
+ * project), --label <safe-name> (default native), --stop-on-failure (optional),
+ * --save-state (optional exact surfaces and persistent-contact diagnostics).
  * Exact captured typed-array bytes are restored; no body, rest metric, material,
  * solver setting or source text is substituted. The optional source directory
  * permits an explicit R01 comparison with the identical captured input.
@@ -21,12 +22,14 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {auditMeshIntersections} from './mesh-intersections.mjs';
+import {createBodyEnvelopeAudit} from './body-envelope-audit.mjs';
 
 const ownProject = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = {source: ownProject, input: 'evidence/native-world-input.json', output: 'evidence/native-replay', steps: 240, mode: 'both', label: 'native'};
 for (let i = 2; i < process.argv.length; i++) {
   const key = process.argv[i];
   if (key === '--stop-on-failure') {args.stopOnFailure = true; continue;}
+  if (key === '--save-state') {args.saveState = true; continue;}
   if (!/^--(source|input|output|steps|mode|label)$/.test(key) || !process.argv[i + 1]) throw Error('Unknown or incomplete argument: ' + key);
   args[key.slice(2)] = process.argv[++i];
 }
@@ -67,8 +70,8 @@ await fs.mkdir(args.output, {recursive: true});
 let failed = false;
 try {
   const upstream = path.join(args.source, 'reference/mp05-studio-r10');
-  for (const file of ['layer-world.mjs', 'layer-contact.mjs', 'layer-initialization.mjs']) {
-    const bytes = await fs.readFile(path.join(args.source, 'src', file));
+  for (const file of ['layer-world.mjs', 'layer-contact.mjs', 'layer-initialization.mjs', 'body-envelope.mjs']) {
+    let bytes;try{bytes = await fs.readFile(path.join(args.source, 'src', file));}catch(error){if(file==='body-envelope.mjs'&&error.code==='ENOENT')continue;throw error;}
     sourceSHA256['src/' + file] = sha(bytes);
     await fs.writeFile(path.join(temp, file), bytes);
   }
@@ -85,6 +88,7 @@ try {
     const summary = {schema: 'kaopu-native-layer-replay@2', label, mode, inputPath: args.input,
       inputSHA256: sha(inputBytes), inputIdentity: input.identity, provenance: input.source,
       coordinateSystem: input.coordinateSystem, sourceProject: args.source, sourceSHA256,
+      executionEnvironment:{node:process.version,execArgv:process.execArgv,platform:process.platform,arch:process.arch,logicalCPUs:os.cpus().length},
       originalOptions: input.options, requestedSteps: args.steps, completedSteps: 0,
       physicsStepSeconds: 1 / 120, simulationSeconds: 0, perturbations: [], checkpoints: [],
       maxima: {dynamicEdgeStretch: 0, contactResidualMM: null, speedMPS: 0, fixedDriftMM: 0},
@@ -92,9 +96,9 @@ try {
         completedRequestedSteps: true, finiteState: true, fixedDriftToleranceMM: .001,
         dynamicEdgeStretchMaximum: 1.45, contactResidualMaximumMM: .5,
         bodyHalfThicknessOverlapToleranceMM: .001,
-        noReportedTriangleIntersectionsAtCheckpoints: true, noDegenerateTrianglesAtCheckpoints: true,
+        noReportedTriangleIntersectionsAtEveryStep: true, noDegenerateTrianglesAtEveryStep: true,
         initializationStretchExcludedFromDynamicStretchGate: true,
-        scope: 'Discrete middle surfaces at saved checkpoints, full vertex/body distances and solver thickness residual; no continuous-time, self-collision or rendered-yarn certificate',
+        scope: 'Discrete full middle-surface intersections, all vertex/body signed distances, independent triangle/body half-thickness distances and solver cloth thickness residual at every completed step; no continuous-time, self-collision or rendered-yarn certificate',
       }}};
     const timings = [], failures = new Map(), maximumMove = new Map();
     const fail = (code, step, details) => {const old = failures.get(code); if (old) {old.lastStep = step; old.count++;} else failures.set(code, {code, firstStep: step, lastStep: step, count: 1, firstDetails: details});};
@@ -102,16 +106,27 @@ try {
     await fs.writeFile(logPath, '');
     const checkpointSteps = new Set([0, 1, 6, 12, 18, 24, 60, 120, 180, 240, args.steps]);
     if (mode === 'perturb') for (const step of [61, 66, 121, 126, 181, 186]) checkpointSteps.add(step);
-    let world;
+    let world;const bodyEnvelopeAuditor=createBodyEnvelopeAudit(input.body);
+    const saveState=async step=>{
+      if(!args.saveState||!world)return;
+      const c=world.contacts,reference=g=>({id:g.id,count:g.count});
+      const history={options:Object.fromEntries(['cellSize','searchMargin','contactMargin','maxCorrection','sampleLimit','cacheSkin','tolerance','maxCellsPerTriangle','broadphaseCache'].map(key=>[key,c[key]])),
+        sides:[...c._sides],frameSides:[...c._frameSides],edgeReferences:[...c._edgeReferences],
+        history:[...c._history],pending:[...c._pending].map(([key,value])=>[key,{...value,a:reference(value.a),b:reference(value.b)}]),
+        restoreNote:'Reattach each history/pending triangles reference to its surface triangles object by garment id, and pending a/b to prepared surfaces; JSON cannot retain object identity.'};
+      await fs.writeFile(path.join(args.output,label+'.state.json'),JSON.stringify({step,simulationSeconds:world.time,inputSHA256:summary.inputSHA256,sourceSHA256,
+        surfaces:world.surfaces(),contactHistory:history},(key,value)=>ArrayBuffer.isView(value)?Array.from(value):value));
+    };
     try {
-      const started = performance.now();
+      const started = performance.now(),creationCPU=process.cpuUsage();
       world = await LayerWorld.create(input.body, input.rows, kernelBytes, input.options);
       summary.creationMS = performance.now() - started;
+      {const cpu=process.cpuUsage(creationCPU);summary.creationCPUms={user:cpu.user/1000,system:cpu.system/1000,total:(cpu.user+cpu.system)/1000};}
       summary.initialization = world.initializationReport;
       summary.garments = world.rows.map(a => ({id: a.id, particles: a.s.count, triangles: a.s.faces.length / 3, thicknessM: a.thickness, fixedParticles: Array.from(a.s.w).filter(w => w === 0).length}));
       const fixedReference = world.rows.map(a => a.s.p.slice());
-      const inspect = async (step, previous) => {
-        const checkpoint = checkpointSteps.has(step), audit = world.audit({bodySamples: checkpoint});
+      const inspect = async (step, previous,stepCPU=null) => {
+        const checkpoint = checkpointSteps.has(step), audit = world.audit({bodySamples: true});
         const contact = step === 0 ? world.contacts.measure(world.surfaces()) : audit.contact;
         const compactContact = contact ? {contactCount: contact.contactCount, residualCount: contact.residualCount,
           residualMaxPenetration: contact.residualMaxPenetration, residualScope: contact.residualScope,
@@ -129,21 +144,30 @@ try {
           return {id: a.id, maxMoveMM: moved * 1000, maxFixedDriftMM: fixedDrift * 1000, finite: a.s.p.every(Number.isFinite) && a.s.v.every(Number.isFinite)};
         });
         const row = {step, simulationSeconds: audit.simulationSeconds, solverMS: audit.solverMS,
-          stageTimingsMS: audit.stageTimingsMS, maxEdgeStretch: audit.maxEdgeStretch, seamGapMM: audit.seamGapMM,
+          stageTimingsMS: audit.stageTimingsMS, processCPUms:stepCPU, maxEdgeStretch: audit.maxEdgeStretch, seamGapMM: audit.seamGapMM,
           contact: compactContact, movement, maxSpeedMPS: speed,
           bodySampledVertices: audit.bodySampledVertices, bodyMinimumMM: audit.bodyMinimumMM,
           bodyInsideVertices: audit.bodyInsideVertices, bodyThicknessOverlapMM: audit.bodyThicknessOverlapMM ?? null,
           bodyThicknessOverlappingVertices: audit.bodyThicknessOverlappingVertices ?? null,
-          bodyPerGarment: audit.bodyPerGarment ?? null, geometry: null};
-        if (checkpoint) {
+          bodyPerGarment: audit.bodyPerGarment ?? null, geometry: null,
+          bodyEnvelope:world.lastBodyEnvelope?{maxHalfThicknessOverlapM:world.lastBodyEnvelope.maxHalfThicknessOverlapM,maxClearanceDeficitM:world.lastBodyEnvelope.maxClearanceDeficitM,triangles:world.lastBodyEnvelope.triangles}:null,
+          settling: world.lastSettling ? {converged:world.lastSettling.converged,passes:world.lastSettling.passes,totalActiveCorrections:world.lastSettling.totalActiveCorrections,settlingMS:world.lastSettling.settlingMS,final:world.lastSettling.observations.at(-1)} : null};
+        {
           row.geometry = auditMeshIntersections([...world.rows.map(a => ({id: a.id, positions: a.s.p, indices: a.s.faces})),
-            {id: '__actual_native_body__', positions: input.body.positions, indices: input.body.faces}], {sampleLimit: 16});
+            {id: '__actual_native_body__', positions: input.body.positions, indices: input.body.faces}], {sampleLimit: checkpoint ? 16 : 0});
+          row.independentBodyEnvelope=bodyEnvelopeAuditor.measure(world.surfaces(),{sampleLimit:checkpoint?16:0});
+          if(!Number.isFinite(row.independentBodyEnvelope.maxHalfThicknessOverlapMM)||row.independentBodyEnvelope.maxHalfThicknessOverlapMM>.001)fail('body-surface-half-thickness-overlap',step,row.independentBodyEnvelope);
+          if(row.independentBodyEnvelope.degenerateTriangles!==0||row.independentBodyEnvelope.scope?.completeForInputTriangles!==true)fail('incomplete-body-surface-audit',step,row.independentBodyEnvelope.scope);
           if (row.geometry.hasReportedIntersections) fail('triangle-intersections', step, row.geometry.pairs.filter(p => p.properCrossingTrianglePairs || p.boundaryCurveTrianglePairs || p.coplanarOverlapTrianglePairs));
           if (row.geometry.degenerateTriangles) fail('degenerate-triangles', step, row.geometry.degenerateTriangles);
+          if (row.geometry.scope?.allNondegenerateInputTrianglePairsCovered !== true) fail('incomplete-triangle-audit', step, row.geometry.scope);
+          const expectedVertices=world.rows.reduce((sum,a)=>sum+a.s.count,0);
+          if(row.bodySampledVertices!==expectedVertices||!Number.isFinite(row.bodyMinimumMM)||!Number.isFinite(row.bodyThicknessOverlapMM))fail('incomplete-body-audit',step,{expectedVertices,measured:row.bodySampledVertices,minimumMM:row.bodyMinimumMM,overlapMM:row.bodyThicknessOverlapMM});
           if (row.bodyInsideVertices > 0) fail('cloth-vertices-inside-body', step, row.bodyInsideVertices);
           if (row.bodyThicknessOverlapMM === null) fail('body-thickness-not-measured', step, null);
           else if (row.bodyThicknessOverlapMM > .001) fail('body-half-thickness-overlap', step, row.bodyThicknessOverlapMM);
-          summary.checkpoints.push(row);
+          if(checkpoint)summary.checkpoints.push(row);
+          summary.independentlyAuditedDiscreteStates=step+1;
         }
         if (movement.some(m => !m.finite) || !Number.isFinite(audit.maxEdgeStretch)) fail('nonfinite-state', step, movement);
         const fixedDrift = Math.max(...movement.map(m => m.maxFixedDriftMM));
@@ -157,7 +181,7 @@ try {
         summary.maxima.fixedDriftMM = Math.max(summary.maxima.fixedDriftMM, fixedDrift);
         summary.completedSteps = step; summary.simulationSeconds = audit.simulationSeconds;
         await fs.appendFile(logPath, JSON.stringify(row) + '\n');
-        if (checkpoint) {await save(); console.log(JSON.stringify({label, step, seconds: audit.simulationSeconds, solverMS: audit.solverMS, stretch: audit.maxEdgeStretch,
+        if (checkpoint) {await saveState(step);await save(); console.log(JSON.stringify({label, step, seconds: audit.simulationSeconds, solverMS: audit.solverMS, stretch: audit.maxEdgeStretch,
           residualMM: Number.isFinite(residualMM) ? residualMM : null, intersections: row.geometry.hasReportedIntersections, bodyOverlapMM: row.bodyThicknessOverlapMM}));}
       };
       await inspect(0, null);
@@ -169,12 +193,12 @@ try {
           world.perturb(id, kind); summary.perturbations.push({beforeStep: step, garment: id, kind});
         }
         const previous = world.rows.map(a => a.s.p.slice());
-        world.step(1 / 120);
-        await inspect(step, previous);
+        const stepCPUStart=process.cpuUsage();world.step(1 / 120);const stepCPU=process.cpuUsage(stepCPUStart);
+        await inspect(step, previous,{user:stepCPU.user/1000,system:stepCPU.system/1000,total:(stepCPU.user+stepCPU.system)/1000});
       }
       if (summary.completedSteps !== args.steps || Math.abs(summary.simulationSeconds - args.steps / 120) > 1e-9) fail('incomplete-physical-progress', summary.completedSteps, {requestedSteps: args.steps, seconds: summary.simulationSeconds});
       for (const a of world.rows) if (a.s.w.some(w => w > 0) && !(maximumMove.get(a.id) > 1e-8)) fail('no-measured-garment-motion', summary.completedSteps, a.id);
-    } catch (error) {summary.error = {message: error.message, stack: error.stack}; fail('replay-error', summary.completedSteps, error.message);}
+    } catch (error) {summary.error = {message: error.message, stack: error.stack,diagnostics:error.diagnostics}; fail('replay-error', summary.completedSteps, error.message);}
     const sorted = timings.slice().sort((a, b) => a - b);
     summary.timing = sorted.length ? {count: sorted.length, minMS: sorted[0], medianMS: sorted[Math.floor(sorted.length * .5)], p95MS: sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * .95))], maxMS: sorted.at(-1)} : null;
     summary.maximumSingleStepMoveMM = Object.fromEntries(Array.from(maximumMove, ([id, value]) => [id, value * 1000]));

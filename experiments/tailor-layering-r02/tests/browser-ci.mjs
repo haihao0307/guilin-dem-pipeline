@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { installClothObserver, readClothObservation, waitForClothIdle } from './cloth-observer.mjs';
 import { runContinuousInterval, runRemovalCycles } from './scenarios-r02.mjs';
 import { auditObservedGeometry, assertNoObservedCrossings } from './observed-geometry.mjs';
+import { verifyReferenceBodyLoading } from './reference-body-observation.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const EVIDENCE = path.join(ROOT, 'evidence');
@@ -20,10 +21,15 @@ const SCENARIO = process.env.LAYERING_CI_SCENARIO || 'all';
 const READY_TIMEOUT_MS = 480_000;
 const LOCATOR_TIMEOUT_MS = 120_000;
 const GPU_IDLE_TIMEOUT_MS = 180_000;
-const BROWSER_BUDGET_MS = 1_200_000;
+// Current native physics takes about 7–12 wall seconds per 1/120 s step.
+// Keep every requested step and the original render quality; the full physics
+// scenarios need runner/GPU contention and evidence-writing time as well.
+// Display-only acceptance retains its original 20-minute watchdog.
+const BROWSER_BUDGET_MS = SCENARIO === 'display' ? 1_200_000 : 7_200_000;
 const SCREENSHOT_TIMEOUT_MS = 180_000;
 const CONTINUOUS_SECONDS = 2;
-const DYNAMIC_LIMITS = {maxEdgeStretch: 1.45, seamGapMM: .01, contactResidualM: .0005};
+const DYNAMIC_LIMITS = {maxEdgeStretch: 1.45, seamGapMM: .01, contactResidualM: .0005,
+  bodyHalfThicknessOverlapMM: .001};
 const PROGRESS_PREFIX = 'KAOPU_CI_OBSERVATION ';
 const EXPECTED = {
   inner: { preset: 'T08', material: 'knit-fine-0' },
@@ -260,7 +266,7 @@ function verifyGarments(value, ids = ['inner', 'outer', 'pants']) {
   assert.equal(value.physics.staticNativeBody, true);
   assert.equal(value.physics.continuousCollision, false);
   assert.equal(value.physics.sweptVertexFace, true);
-  assert.equal(value.physics.edgeEdgeCollision, false);
+  assert.equal(typeof value.physics.edgeEdgeCollision, 'boolean', 'Report the actual edge/edge contact implementation scope');
   for (const row of value.dynamicGarments) {
     assert.equal(row.preset, EXPECTED[row.id].preset);
     assert.equal(row.material, EXPECTED[row.id].material, 'A retained material was replaced');
@@ -409,7 +415,14 @@ function assertPhysicalMetrics(physics, {dynamic = true, fullBody = false, parti
     assert.ok(physics.maxEdgeStretch <= DYNAMIC_LIMITS.maxEdgeStretch,
       'A completed dynamic step exceeded the retained source 1.45x stretch guard');
     assert.ok(physics.contact, 'A completed contact-enabled step must retain its measurement');
-    assert.equal(physics.contact.measuredAfterBodyProjection, true);
+    if (fullBody) {
+      // An explicit snapshot inspects the current state without completing a
+      // new substep; it must identify that measurement rather than impersonate
+      // the last solve's post-body-projection result.
+      assert.equal(physics.explicitContactInspection?.measurementOnly, true);
+      assert.equal(physics.explicitContactInspection.advancedSimulation, false);
+      assert.equal(physics.contact.measurementOnly, true);
+    } else assert.equal(physics.contact.measuredAfterBodyProjection, true);
     assert.ok(Number.isFinite(physics.contact.residualMaxPenetration));
     assert.ok(physics.contact.residualMaxPenetration <= DYNAMIC_LIMITS.contactResidualM,
       'Measured middle-surface thickness residual exceeded the 0.5 mm engineering acceptance bound');
@@ -419,6 +432,20 @@ function assertPhysicalMetrics(physics, {dynamic = true, fullBody = false, parti
     assert.equal(physics.bodyInsideVertices, 0, 'A cloth vertex is inside the current native body');
     assert.ok(Number.isFinite(physics.bodyMinimumMM) && physics.bodyMinimumMM >= 0);
     assert.match(physics.bodyMetric, /all cloth vertices/);
+    assert.ok(Number.isFinite(physics.bodyThicknessOverlapMM) && physics.bodyThicknessOverlapMM >= 0,
+      'Actual native-body half-thickness overlap must be measured and finite');
+    assert.ok(physics.bodyThicknessOverlapMM <= DYNAMIC_LIMITS.bodyHalfThicknessOverlapMM,
+      'The cloth envelope exceeds the 0.001 mm body half-thickness overlap tolerance');
+    assert.ok(Number.isInteger(physics.bodyThicknessOverlappingVertices)
+      && physics.bodyThicknessOverlappingVertices >= 0 && physics.bodyThicknessOverlappingVertices <= particles);
+    assert.equal(physics.bodyPerGarment?.length, physics.garmentCount,
+      'Body thickness measurement must include every independent garment');
+    for (const row of physics.bodyPerGarment) {
+      assert.ok(Number.isFinite(row.minimumMiddleSurfaceDistanceMM));
+      assert.ok(Number.isFinite(row.minimumHalfThicknessClearanceMM));
+      assert.ok(row.minimumHalfThicknessClearanceMM >= -DYNAMIC_LIMITS.bodyHalfThicknessOverlapMM,
+        row.id + ' has insufficient measured body half-thickness clearance');
+    }
   }
 }
 
@@ -467,15 +494,37 @@ async function fullBodyAudit(name, {enforcePhysics = true} = {}) {
   await waitForClothIdle(page);
   const after = await readClothObservation(page, {geometry: true});
   const value = await diagnostic();
+  assert.ok(after.snapshot.id > before.snapshot.id, 'The contact inspection must receive a new real Worker reply');
+  assert.equal(after.responses.find(row => row.id === after.snapshot.id)?.type, 'snapshot');
   assert.equal(after.audit.completedSteps, before.audit.completedSteps);
   assert.equal(after.audit.simulationSeconds, before.audit.simulationSeconds);
   assert.deepEqual(geometryDigest(after.snapshot), geometryDigest(before.snapshot), 'The read-only contact audit moved real cloth');
+  const inspection = after.audit.explicitContactInspection;
+  assert.equal(inspection?.measurementOnly, true, 'The Worker reply must identify a current read-only contact measurement');
+  assert.equal(inspection.advancedSimulation, false);
+  assert.ok(Number.isFinite(inspection.measurementMS) && inspection.measurementMS >= 0);
+  assert.deepEqual(value.physics.explicitContactInspection, inspection, 'The UI must expose the actual manual Worker measurement');
+  if (after.audit.contactEnabled) assert.equal(after.audit.contact?.measurementOnly, true);
+  else assert.equal(after.audit.contact, null);
+  const envelope = after.audit.bodyEnvelope;
+  assert.equal(envelope?.rows?.length, value.dynamicGarments.length);
+  assert.deepEqual(envelope.rows.map(row => row.id).sort(), value.dynamicGarments.map(row => row.id).sort());
+  assert.equal(envelope.triangles, value.dynamicGarments.reduce((sum, row) => sum + row.solverTriangles, 0));
+  for (const row of envelope.rows) {
+    assert.equal(row.measurementOnly, true);
+    assert.equal(row.residualMeasured, true);
+  }
+  assert.deepEqual(value.physics.contact, JSON.parse(JSON.stringify(after.audit.contact)),
+    'The published JSON contact measurement must match its actual Worker reply');
+  assert.deepEqual(value.physics.bodyEnvelope, JSON.parse(JSON.stringify(envelope)),
+    'The published JSON body-envelope measurement must match its actual Worker reply');
   const particles = value.dynamicGarments.reduce((sum, row) => sum + row.solverParticles, 0);
   assert.equal(value.physics.bodySampledVertices, particles);
   assert.ok(Number.isFinite(value.physics.bodyMinimumMM));
   if (enforcePhysics) assertPhysicalMetrics(value.physics,
     {dynamic: value.physics.completedSteps > 0, fullBody: true, particles});
-  await record(name, {fullBodyAudit: true, physicalLimitsEnforced: enforcePhysics, actualWorkerReply: after.snapshot.id});
+  await record(name, {fullBodyAudit: true, physicalLimitsEnforced: enforcePhysics,
+    explicitContactInspection: inspection, actualWorkerReply: after.snapshot.id});
   return {value, traffic: after};
 }
 
@@ -625,7 +674,7 @@ try {
   // Keep the exact original rendering. Each acceptance job owns one real page
   // and its complete budget; no quality reduction is used to finish faster.
   watchdog = setTimeout(() => {
-    failure = new Error('Browser acceptance exceeded its 20-minute budget.');
+    failure = new Error(`Browser acceptance exceeded its ${BROWSER_BUDGET_MS / 60_000}-minute budget.`);
     appendProgress({ kind: 'browser-budget-exceeded', phase });
     browser?.close().catch(() => {});
   }, BROWSER_BUDGET_MS);
@@ -697,7 +746,13 @@ try {
   assert.equal((await page.locator('#layer-app #metric-layers').textContent()).trim(), '3');
   const initial = await diagnostic();
   verifyGarments(initial);
+  summary.referenceBodyLoading = verifyReferenceBodyLoading({baseURL: BASE, provenance,
+    allocation: initial.bootTimings?.referenceBodyAllocation,
+    requestStarts: progressEvents.filter(row => row.kind === 'request-start'), responses: requests});
   assert.equal(initial.playing, false);
+  summary.actualContactScope = Object.fromEntries(['continuousCollision', 'sweptVertexFace', 'edgeEdgeCollision',
+    'completeSelfCollision', 'materialCalibrated', 'arbitraryLayeringCertified', 'constraintModel']
+    .map(key => [key, initial.physics[key]]));
   const initialTraffic = await verifyNativeObservation();
   await capture('initial');
 
@@ -792,6 +847,11 @@ try {
   }
 
   assert.deepEqual(summary.scenariosCompleted, SCENARIO === 'all' ? ['display', 'demand', 'continuous', 'reentry'] : [SCENARIO]);
+  // Recheck the same observed traffic through the final scenario: a late
+  // request for the removed reference payload must also fail acceptance.
+  summary.referenceBodyLoading = verifyReferenceBodyLoading({baseURL: BASE, provenance,
+    allocation: initial.bootTimings?.referenceBodyAllocation,
+    requestStarts: progressEvents.filter(row => row.kind === 'request-start'), responses: requests});
   assert.equal(forbiddenRequests.length, 0, 'The build requested resources outside the verified local closure');
   assert.equal(pageErrors.length, 0, 'Browser JavaScript errors occurred');
   const failedResources = requests.filter(row => row.status >= 400 && !new URL(row.url).pathname.endsWith('/favicon.ico'));

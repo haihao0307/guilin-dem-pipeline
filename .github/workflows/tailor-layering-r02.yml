@@ -1,7 +1,7 @@
 # Install as .github/workflows/tailor-layering-r02.yml in the parent repository.
-# PR pushes run only the explicitly labelled display/demand preflight.
-# Release requires a separate full run: all four browser scenarios AND the
-# exact current-native capture/replay job. Preflight success is not release QA.
+# PR pushes run the complete release matrix: all four browser scenarios AND
+# the exact current-native capture/replay job. Manual preflight/capture modes
+# remain available and are explicitly labelled; they are not release QA.
 name: Tailor layering R02 — retained native acceptance
 
 on:
@@ -14,7 +14,7 @@ on:
       mode:
         description: 'Preflight is display/demand only; full is the complete release matrix.'
         required: true
-        default: preflight
+        default: full
         type: choice
         options:
           - preflight
@@ -25,22 +25,25 @@ permissions:
   contents: read
 
 concurrency:
-  group: tailor-layering-r02-${{ github.event.pull_request.number || github.ref }}-${{ inputs.mode || 'preflight' }}
+  group: tailor-layering-r02-${{ github.event.pull_request.number || github.ref }}-${{ inputs.mode || 'full' }}
   cancel-in-progress: true
 
 jobs:
   browser:
     if: github.event_name != 'workflow_dispatch' || inputs.mode != 'capture'
-    name: '${{ inputs.mode || ''preflight'' }} / real browser / ${{ matrix.scenario }}'
+    name: '${{ inputs.mode || ''full'' }} / real browser / ${{ matrix.scenario }}'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # Physics scenarios retain their full steps and quality. Allow the
+    # 120-minute browser watchdog plus setup, final evidence and upload;
+    # display-only execution retains its original job budget.
+    timeout-minutes: ${{ matrix.scenario == 'display' && 30 || 150 }}
     strategy:
       fail-fast: false
       matrix:
-        scenario: ${{ fromJSON(inputs.mode == 'full' && '["display","demand","continuous","reentry"]' || '["display","demand"]') }}
+        scenario: ${{ fromJSON((inputs.mode || 'full') == 'full' && '["display","demand","continuous","reentry"]' || '["display","demand"]') }}
     env:
       LAYERING_CI_SCENARIO: ${{ matrix.scenario }}
-      LAYERING_CI_SCOPE: ${{ inputs.mode || 'preflight' }}
+      LAYERING_CI_SCOPE: ${{ inputs.mode || 'full' }}
     defaults:
       run:
         shell: bash
@@ -73,7 +76,7 @@ jobs:
           node --check tests/browser-ci.mjs
           node --check tests/scenarios-r02.mjs
           node --check tests/observed-geometry.mjs
-          node --test tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+          node --test tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/simulation-clock.test.mjs tests/reference-body.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
       - name: Exercise the actual page and save real browser evidence
         env:
           CI: 'true'
@@ -86,17 +89,24 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r02-${{ inputs.mode || 'preflight' }}-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r02-${{ inputs.mode || 'full' }}-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r02/evidence/
           if-no-files-found: warn
           retention-days: 14
           compression-level: 6
 
   native-replay:
-    if: github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == 'capture')
-    name: '${{ inputs.mode }} / capture actual native inputs and replay'
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == 'capture'))
+    name: '${{ inputs.mode || ''full'' }} / actual native replay / ${{ matrix.replay }}'
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    # Each 240-step native replay also audits every complete triangle surface.
+    # The old 45-minute job can expire before that unchanged work completes.
+    # Input capture alone retains its original budget.
+    timeout-minutes: ${{ inputs.mode == 'capture' && 45 || 150 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        replay: ${{ fromJSON(inputs.mode == 'capture' && '["baseline"]' || '["baseline","perturb"]') }}
     defaults:
       run:
         shell: bash
@@ -136,16 +146,16 @@ jobs:
           trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
           node tests/capture-native-ci.mjs | tee evidence/native-capture.log
       - name: Validate contact, integration and read-only geometry checks
-        if: inputs.mode == 'full'
-        run: node --test tests/contact.test.mjs tests/world.test.mjs tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
-      - name: Replay the exact captured native input for two seconds plus a separate perturbed run
-        if: inputs.mode == 'full'
-        run: node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode both --label r02 | tee evidence/native-replay.log
+        if: github.event_name == 'pull_request' || inputs.mode == 'full'
+        run: node --test tests/contact.test.mjs tests/body-envelope.test.mjs tests/body-envelope-audit.test.mjs tests/world.test.mjs tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/simulation-clock.test.mjs tests/reference-body.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+      - name: Replay the exact captured native input for two physical seconds
+        if: github.event_name == 'pull_request' || inputs.mode == 'full'
+        run: node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode '${{ matrix.replay }}' --label r02 | tee evidence/native-replay.log
       - name: Retain exact current-native input and full replay evidence even on failure
         if: always()
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r02-${{ inputs.mode }}-native-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r02-${{ inputs.mode || 'full' }}-native-${{ matrix.replay }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r02/evidence/
           if-no-files-found: warn
           retention-days: 14

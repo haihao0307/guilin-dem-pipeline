@@ -4,7 +4,10 @@ import {readClothObservation, waitForClothIdle, retainClothSteps} from './cloth-
 // Helpers for the regular browser test. They use the visible application
 // controls and read the actual Worker responses; they never call LayerWorld.
 export async function runContinuousInterval({page, diagnostic, record, capture, waitIdle,
-  seconds = 2, timeout = 1_200_000, name = 'sustained', checkpoint}) {
+  // The unchanged 240-step interval currently takes 28–48 minutes in local
+  // native physics alone. Allow a slower CI runner without reducing physical
+  // time, step count or any per-response/geometry acceptance condition.
+  seconds = 2, timeout = 5_400_000, name = 'sustained', checkpoint}) {
   assert.equal(typeof checkpoint, 'function', 'Continuous acceptance requires an independent geometry checker');
   assert.ok(Number.isFinite(seconds) && seconds >= .1, 'A continuous interval must cover at least 0.1 physical seconds');
   await waitForClothIdle(page);

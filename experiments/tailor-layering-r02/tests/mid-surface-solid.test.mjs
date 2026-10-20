@@ -1,5 +1,5 @@
-// Coordinate and serialization regressions using the retained Three.js and
-// real native seam implementation. These are CPU tests, not GPU/visual gates.
+// Coordinate, serialization and atlas scheduling regressions using retained
+// native implementations. These are CPU tests, not GPU/visual gates.
 import test, {after} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -18,7 +18,9 @@ const adaptation = JSON.parse(await fs.readFile(path.join(root, 'dist/SOURCE_PRO
 assert.ok(adaptation, 'Build the mid-surface deliverable before running this regression.');
 await fs.mkdir(path.join(temporary, 'coordinate-adapter'), {recursive: true});
 for (const item of adaptation.generatedFiles) await fs.copyFile(path.join(root, 'dist', item.path), path.join(temporary, item.path));
-for (const name of ['sewn-trims.mjs', 'gpu-seam-frames.mjs', 'material-settings.mjs', 'native/knit-r11.mjs', 'native/leather-seam-r13.mjs']) {
+for (const name of ['sewn-trims.mjs', 'gpu-seam-frames.mjs', 'material-settings.mjs', 'native/knit-r11.mjs', 'native/leather-seam-r13.mjs',
+  'yarn-frame-atlas.mjs', 'material-shaders.mjs', 'surface-binding.mjs', 'panel-grain.mjs', 'geometry-core.mjs',
+  'native/cotton-surface.js', 'native/noise-kernel.js']) {
   const destination = path.join(temporary, 'upstream', name);
   await fs.mkdir(path.dirname(destination), {recursive: true});
   await fs.copyFile(path.join(upstream, name), destination);
@@ -31,6 +33,7 @@ const T = await import(pathToFileURL(path.join(temporary, 'node_modules/three/in
 const {sewnTrims: originalTrims} = await import(pathToFileURL(path.join(temporary, 'upstream/sewn-trims.mjs')));
 const {sewnTrims: adaptedTrims} = await import(pathToFileURL(path.join(temporary, 'coordinate-adapter/sewn-trims-mid-surface.mjs')));
 const {withSettings, layerLayout} = await import(pathToFileURL(path.join(temporary, 'upstream/material-settings.mjs')));
+const {YarnFrameAtlas} = await import(pathToFileURL(path.join(temporary, 'upstream/yarn-frame-atlas.mjs')));
 const catalog = JSON.parse(await fs.readFile(path.join(upstream, 'materials.json'), 'utf8'));
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const norm = v => {const l = Math.hypot(...v); return v.map(x => x / Math.max(l, 1e-20));};
@@ -77,6 +80,106 @@ test('curved carrier regression: direct physical middle positions remove the nor
     const physicalCarrier = positions.map(p => [...p]);
     const center = bary(physicalCarrier).map((v, k) => v + n[k] * 0);
     assert.deepEqual(center, midpoint);
+  }
+});
+
+// Execute the exact original/derived update statements recorded by build.py,
+// with the original YarnFrameAtlas class. The capture renderer observes native
+// submission calls; it does not execute GLSL or claim GPU timing/visual coverage.
+const continuousItem = adaptation.generatedFiles.find(item => item.sourcePath === 'upstream/continuous-solid.mjs');
+const orderingPatch = continuousItem.patches.find(patch => patch.reason.startsWith('Dispose an expired previous atlas'));
+assert.ok(orderingPatch, 'The deliverable must contain the audited expired-atlas scheduling patch.');
+const continuousSource = await fs.readFile(path.join(temporary, continuousItem.path), 'utf8');
+const originalContinuous = await fs.readFile(path.join(upstream, 'continuous-solid.mjs'), 'utf8');
+assert.equal(continuousSource.split(orderingPatch.after).length - 1, 1);
+assert.equal(originalContinuous.split(orderingPatch.before).length - 1, 1);
+const originalOrdering = new Function('c', 'revision', 'now', 'cached', 'release', 'assignUniforms', orderingPatch.before);
+const derivedOrdering = new Function('c', 'revision', 'now', 'cached', 'release', 'assignUniforms', orderingPatch.after);
+const nativeHelper = name => {
+  const line = continuousSource.split(/\r?\n/).find(line => line.trim().startsWith(`function ${name}(`));
+  assert.ok(line, `The original ${name} helper must remain present.`);
+  return new Function(`return (${line.trim()});`)();
+};
+const releaseNativeRecord = nativeHelper('release'), assignNativeUniforms = nativeHelper('assignUniforms');
+
+function runAtlasOrdering(order, elapsed, dirty = true) {
+  const events = [], memoryBefore = YarnFrameAtlas.memory().residentBytes;
+  const existingTarget = {name: 'original-view-target'};
+  let target = existingTarget;
+  const renderer = {
+    capabilities: {maxTextureSize: 2048}, shadowMap: {enabled: true, needsUpdate: true},
+    getRenderTarget: () => target, setRenderTarget(value) {target = value;},
+    render(scene) {
+      assert.equal(this.shadowMap.enabled, false, 'The original atlas pass must still disable shadow rendering.');
+      assert.doesNotMatch(scene.children[0].material.fragmentShader, /\buMorph\b/,
+        'Morph is applied in the yarn draw; changing its uniform before atlas generation must not alter atlas samples.');
+      events.push(`${scene.userData.recordName}:submit`);
+    },
+  };
+  const uniforms = {uMorph: {value: 0}, uCrimp: {value: 1}};
+  const interval = new T.DataTexture(new Float32Array([0, 1, 0, 0]), 1, 1, T.RGBAFormat, T.FloatType);
+  const record = name => {
+    const atlas = new YarnFrameAtlas(renderer, uniforms, interval, 1, 4, 3);
+    atlas.scene.userData.recordName = name;
+    atlas.revision = 7;
+    atlas.target.addEventListener('dispose', () => events.push(`${name}:dispose-atlas`));
+    const geometry = new T.BufferGeometry();
+    geometry.addEventListener('dispose', () => events.push(`${name}:dispose-geometry`));
+    return {atlas, geometry, sides: name === 'current' ? 8 : 6};
+  };
+  const current = record('current'), previous = record('previous');
+  const c = {current, previous, uniforms: {...uniforms, ...current.atlas.uniforms(), ...previous.atlas.uniforms('Previous')}, transitionStart: 1000};
+  try {
+    order(c, dirty ? 8 : 7, 1000 + elapsed, true, releaseNativeRecord, assignNativeUniforms);
+    assert.equal(target, existingTarget, 'Atlas updates must restore the actual previous render target.');
+    assert.deepEqual(renderer.shadowMap, {enabled: true, needsUpdate: true});
+    return {
+      events: [...events], currentSubmissions: current.atlas.submissions, previousSubmissions: previous.atlas.submissions,
+      final: {morph: c.uniforms.uMorph.value, previousPresent: c.previous !== null,
+        previousTextureIsCurrent: c.uniforms.uPreviousP.value === current.atlas.target.textures[0],
+        currentDisposed: current.atlas.disposed, previousDisposed: previous.atlas.disposed},
+    };
+  } finally {
+    releaseNativeRecord(current);
+    if (!previous.atlas.disposed) releaseNativeRecord(previous);
+    interval.dispose();
+    assert.equal(YarnFrameAtlas.memory().residentBytes, memoryBefore);
+  }
+}
+
+test('expired native atlas is disposed before current deformation update, without changing final morph/uniforms', () => {
+  assert.equal(adaptation.expiredAtlasUpdateOrdering.originalMorphDurationMS, 180);
+  assert.equal(adaptation.expiredAtlasUpdateOrdering.steadyStateSpeedupClaimed, false);
+  for (const elapsed of [180, 720]) {
+    const original = runAtlasOrdering(originalOrdering, elapsed), derived = runAtlasOrdering(derivedOrdering, elapsed);
+    assert.deepEqual(original.events, ['current:submit', 'previous:submit', 'previous:dispose-atlas', 'previous:dispose-geometry'],
+      'The original fixture must reproduce the otherwise unused previous-atlas submission.');
+    assert.deepEqual(derived.events, ['previous:dispose-atlas', 'previous:dispose-geometry', 'current:submit']);
+    assert.equal(derived.currentSubmissions, 1);
+    assert.equal(derived.previousSubmissions, 0);
+    assert.deepEqual(derived.final, original.final);
+    assert.deepEqual(derived.final, {morph: 1, previousPresent: false, previousTextureIsCurrent: true,
+      currentDisposed: false, previousDisposed: true});
+  }
+});
+
+test('active native morph retains and updates both atlases at the original interpolation value', () => {
+  for (const elapsed of [0, 90, 179.9]) {
+    const original = runAtlasOrdering(originalOrdering, elapsed), derived = runAtlasOrdering(derivedOrdering, elapsed);
+    assert.deepEqual(derived.events, ['current:submit', 'previous:submit']);
+    assert.deepEqual(derived, original);
+    assert.ok(Math.abs(derived.final.morph - elapsed / 180) < 1e-12);
+    assert.equal(derived.final.previousPresent, true);
+    assert.equal(derived.final.previousTextureIsCurrent, false);
+  }
+});
+
+test('unchanged atlas revisions still submit no work; expiry alone is not reported as GPU savings', () => {
+  for (const elapsed of [90, 180]) {
+    const original = runAtlasOrdering(originalOrdering, elapsed, false), derived = runAtlasOrdering(derivedOrdering, elapsed, false);
+    assert.deepEqual(derived, original);
+    assert.equal(derived.currentSubmissions, 0);
+    assert.equal(derived.previousSubmissions, 0);
   }
 });
 

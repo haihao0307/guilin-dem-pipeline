@@ -133,6 +133,7 @@
         <label class="layer-check"><input id="cloth-contact" type="checkbox" checked><span>衣物间碰撞</span><span class="layer-check-tag">参与模拟</span></label>
         <label class="layer-check"><input id="render-demand" type="checkbox" checked><span>按需更新画面</span><span class="layer-check-tag">节省显示计算</span></label>
         <p class="layer-field-note">单独查看时暂缓隐藏衣物的画面更新；各件衣服仍共同参与碰撞。</p>
+        <p id="render-work" class="layer-work-count" aria-live="off">等待显示更新数据。</p>
         <button id="audit-contact" type="button">检查当前接触</button>
       </section>
 
@@ -141,10 +142,11 @@
         <div class="layer-help-content">
           <p>每件衣物保留独立对象、材料与形变。这里研究的是衣物穿在一起之后的接触关系。</p>
           <p>初始穿着顺序与运动中的碰撞需要分别处理。接触基础间隙按原实体纱线的几何包络计算，滑杆只增加余量。这不是现实织物的实测厚度。</p>
-          <p>当前摩擦采用切向相对位移阻尼近似。碰撞保留未解接触的侧别，并检查部分线性点面穿越；尚不具备完整连续碰撞、自碰撞或高速动作保证。</p>
+          <p>当前摩擦采用切向相对位移阻尼近似。普通接触按实际距离处理，真实穿越才保留恢复方向；碰撞检查覆盖部分线性点面与边边穿越，人体接触还检查布面内部的最近特征。尚不具备完整连续碰撞、自碰撞或高速动作保证。</p>
           <p>“本批接触约束”统计最近一批求解遇到的约束；橙点只显示本步最终复测仍有残余的样本。两者不一一对应，未显示样本不代表全部表面没有相交。</p>
           <p>本轮限定两种上衣与原款短裤、静止人物；上身两层叠穿。三件衣物分别保留对象，并参与同一模拟流程。连续防穿插、任意动作和其他衣物组合仍待验证。</p>
           <p>按需更新不改变布料求解、实体纱线或采样质量。看不见但仍接触外层的布料继续运算；针织孔隙、袖口和领口可能露出内层，因此未按“被外套盖住”直接删除内层几何。关闭此开关可在同一场景比较重复显示更新的开销。</p>
+          <p>“检查当前接触”只复测当前衣形与接触余量，不推进模拟。卸下衣物会释放其显示对象，并把对应物理内存留作后续穿着复用；单独查看只是隐藏画面，衣物仍在穿着中。</p>
           <div class="layer-help-links"><a href="https://support.clo3d.com/hc/en-us/articles/115000294487-Use-Layer-Drape-Additional-Garment" target="_blank" rel="noopener noreferrer">CLO · 初始层序</a><a href="https://www.sidefx.com/docs/houdini/nodes/sop/vellumsolver.html" target="_blank" rel="noopener noreferrer">Vellum · 层间接触</a></div>
           <h4>当前诊断</h4>
           <pre id="diagnostics" aria-live="polite">等待模拟数据。</pre>

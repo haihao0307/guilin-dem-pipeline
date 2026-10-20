@@ -1,5 +1,28 @@
 import { MeshContact } from './upstream/mesh-contact.mjs';
 
+// Actual finite segment/triangle witnesses, rather than fixed midpoint samples.
+// This traverses the retained triangle BVH, never a body proxy or radius shell.
+function segmentIntersections(mesh,p,i,j) {
+  i*=3;j*=3;
+  const ax=p[i],ay=p[i+1],az=p[i+2],dx=p[j]-ax,dy=p[j+1]-ay,dz=p[j+2]-az;
+  const lo=[Math.min(ax,p[j]),Math.min(ay,p[j+1]),Math.min(az,p[j+2])],hi=[Math.max(ax,p[j]),Math.max(ay,p[j+1]),Math.max(az,p[j+2])];
+  const stack=[0],hits=[],q=mesh.p,faces=mesh.faces;
+  while(stack.length){const node=mesh.nodes[stack.pop()],box=node.box;
+    if(lo[0]>box[3]+1e-10||lo[1]>box[4]+1e-10||lo[2]>box[5]+1e-10||hi[0]<box[0]-1e-10||hi[1]<box[1]-1e-10||hi[2]<box[2]-1e-10)continue;
+    if(node.left>=0){stack.push(node.left,node.right);continue;}
+    for(let fIndex=node.lo;fIndex<node.hi;fIndex++){
+      const face=mesh.tri[fIndex],a=faces[face]*3,b=faces[face+1]*3,c=faces[face+2]*3,ux=q[b]-q[a],uy=q[b+1]-q[a+1],uz=q[b+2]-q[a+2],vx=q[c]-q[a],vy=q[c+1]-q[a+1],vz=q[c+2]-q[a+2];
+      const px=dy*vz-dz*vy,py=dz*vx-dx*vz,pz=dx*vy-dy*vx,det=ux*px+uy*py+uz*pz;
+      if(Math.abs(det)<1e-18)continue;
+      const tx=ax-q[a],ty=ay-q[a+1],tz=az-q[a+2],u=(tx*px+ty*py+tz*pz)/det;if(u< -1e-8||u>1+1e-8)continue;
+      const qx=ty*uz-tz*uy,qy=tz*ux-tx*uz,qz=tx*uy-ty*ux,v=(dx*qx+dy*qy+dz*qz)/det;if(v< -1e-8||u+v>1+1e-8)continue;
+      const t=(vx*qx+vy*qy+vz*qz)/det;if(t<=1e-8||t>=1-1e-8)continue;
+      hits.push({face,t,bary:[1-u-v,u,v]});
+    }
+  }
+  return hits;
+}
+
 /**
  * Bounded, one-time dressing of the ALREADY SEWN physical garment surfaces.
  * This is an initialization procedure, not a force used by LayerWorld.step.
@@ -30,17 +53,34 @@ export function initializeLayers(world, {
   const before = world.contacts.measure(surfaceInput());
   const beforeAudit = world.audit();
   const beforeMetrics = { contactCount: before.contactCount, residualMaxPenetration: before.residualMaxPenetration, maxEdgeStretch: beforeAudit.maxEdgeStretch };
-  if (before.contactCount === 0) return {
-    method: 'No ordered projection needed: bounded vertex-triangle initialization query found no thickness violations',
-    order: rows.map(a => a.id), iterations: 0, applied: false, before: beforeMetrics, after: { ...beforeMetrics },
+  if (before.contactCount === 0) {
+   const {measurement, audit, ...settling}=world.settle({initializing:true});
+   if(!settling.converged)throw Error('Initial paper/body/contact constraints did not converge within the bounded dressing work');
+   return {
+    method: 'No ordered projection needed; reciprocal paper/body/contact settling before velocity initialization',
+    order: rows.map(a => a.id), iterations: 0, applied: false, before: beforeMetrics,
+    after: {contactCount:measurement.contactCount,residualMaxPenetration:measurement.residualMaxPenetration,maxEdgeStretch:audit.maxEdgeStretch},
+    settling,
     directionalPlacementOnlyDuringInitialization: true, persistentLayerOffset: false,
     residualScope: before.residualScope, initializationMS: performance.now() - began,
     continuousCollision: false, arbitraryLayeringCertified: false, visualAccepted: false,
-  };
+   };
+  }
   const meshes = rows.map(a => new MeshContact(a.s.p, a.s.faces));
   const saved = rows.map(a => a.s.p.slice());
   const e = world.e, h = 1 / 240;
-  let projectionCorrections = 0, maxAppliedCorrectionM = 0;
+  let projectionCorrections = 0, crossingCorrections=0, maxAppliedCorrectionM = 0;
+  const projectWitness=(garment,ids,bary,target,normal,gap)=>{
+    const p=garment.s.p,w=garment.s.w;let signed=0,effective=0;
+    for(let d=0;d<3;d++){let point=0;for(let j=0;j<ids.length;j++)point+=bary[j]*p[ids[j]*3+d];signed+=(point-target[d])*normal[d];}
+    for(let j=0;j<ids.length;j++)effective+=bary[j]**2*w[ids[j]];
+    if(!(effective>0)||signed>=gap)return;
+    const correction=Math.min(maxCorrection,gap-signed),lambda=correction/effective;
+    for(let j=0;j<ids.length;j++){const k=ids[j]*3,scale=w[ids[j]]*bary[j]*lambda;for(let d=0;d<3;d++)p[k+d]+=scale*normal[d];}
+    projectionCorrections++;crossingCorrections++;maxAppliedCorrectionM=Math.max(maxAppliedCorrectionM,correction);
+  };
+  const interpolate=(values,ids,bary)=>[0,1,2].map(d=>ids.reduce((sum,id,j)=>sum+bary[j]*values[id*3+d],0));
+  const unit=vector=>{const length=Math.hypot(...vector);return length>1e-12?vector.map(v=>v/length):null;};
   const projectSample=(garment,mesh,ids,bary,gap)=>{
     const p=garment.s.p,w=garment.s.w;let x=0,y=0,z=0,effective=0;
     for(let j=0;j<ids.length;j++){const k=ids[j]*3;x+=bary[j]*p[k];y+=bary[j]*p[k+1];z+=bary[j]*p[k+2];effective+=bary[j]*bary[j]*w[ids[j]];}
@@ -78,6 +118,17 @@ export function initializeLayers(world, {
         if(interiorSamples&&(iteration%2===1||iteration===iterations-1)) {
           for(const edge of garment.s.edges)projectSample(garment,mesh,[edge.a,edge.b],[.5,.5],gap);
           const faces=garment.s.faces;for(let f=0;f<faces.length;f+=3)projectSample(garment,mesh,[faces[f],faces[f+1],faces[f+2]],[1/3,1/3,1/3],gap);
+          // An intersection can lie far from every vertex, edge midpoint and
+          // centroid. Project its actual barycentric witness during dressing.
+          for(const edge of garment.s.edges)for(const hit of segmentIntersections(mesh,p,edge.a,edge.b)){
+            const ids=Array.from(mesh.faces.slice(hit.face,hit.face+3)),target=interpolate(mesh.p,ids,hit.bary),n=unit(interpolate(mesh.normals,ids,hit.bary));
+            if(n)projectWitness(garment,[edge.a,edge.b],[1-hit.t,hit.t],target,n,gap);
+          }
+          const upperMesh=meshes[upper];upperMesh.refit();
+          for(const edge of obstacle.s.edges)for(const hit of segmentIntersections(upperMesh,obstacle.s.p,edge.a,edge.b)){
+            const lowerIDs=[edge.a,edge.b],lowerBary=[1-hit.t,hit.t],target=interpolate(mesh.p,lowerIDs,lowerBary),n=unit(interpolate(mesh.normals,lowerIDs,lowerBary));
+            if(n)projectWitness(garment,Array.from(upperMesh.faces.slice(hit.face,hit.face+3)),hit.bary,target,n,gap);
+          }
         }
       }
     }
@@ -96,7 +147,12 @@ export function initializeLayers(world, {
   }
   // Body projection can compete with cloth contact. Audit the resulting state
   // after this projection; never reuse pre-projection residual measurements.
-  for (const a of rows) { world.projectBody(a, false, true); a.s.expand(); }
+  for (const a of rows) world.projectBody(a, false, true);
+  // Resolve the measured short-edge tail BEFORE corrected dressing positions
+  // become a dynamic velocity. This phase has no gravity or pose attraction.
+  const {measurement: settledMeasurement, audit: settledAudit, ...settling}=world.settle({initializing:true});
+  if(!settling.converged)throw Error('Initial paper/body/contact constraints did not converge within the bounded dressing work');
+  for(const a of rows)a.s.expand();
   let maxDisplacementM = 0;
   rows.forEach((a, index) => {
     for (let i = 0; i < a.s.count; i++) {
@@ -112,7 +168,7 @@ export function initializeLayers(world, {
     method: 'One-time ordered dressing after seam welding, then reciprocal cloth/paper/body metric relaxation before velocity initialization',
     order: rows.map(a => a.id), iterations, relaxationIterations,interiorSamples,orderedPlacementAfter,extraClearanceM: extraClearance, searchRadiusM: searchRadius,
     directionalPlacementOnlyDuringInitialization: true, persistentLayerOffset: false,
-    projectionCorrections, maxAppliedCorrectionM, maxDisplacementM,
+    projectionCorrections,crossingCorrections, maxAppliedCorrectionM, maxDisplacementM,settling,
     applied: improved, before: beforeMetrics,
     after: { contactCount: after.contactCount, residualMaxPenetration: after.residualMaxPenetration, maxEdgeStretch: afterAudit.maxEdgeStretch },
     residualScope: after.residualScope, initializationMS: performance.now() - began,

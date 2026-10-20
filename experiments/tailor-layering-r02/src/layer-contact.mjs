@@ -7,15 +7,18 @@
  *   Brochu et al., exact CCD (2012), for the boundary of this discrete method:
  *   https://www.cs.ubc.ca/~rbridson/docs/brochu-siggraph2012-ccd.pdf
  *
- * This combines proximity contacts with a linearly swept vertex/triangle
- * endpoint-side guard. It does not stop at time of impact: crossing and then
+ * This combines unsigned closest-feature proximity contacts with linearly swept
+ * vertex/triangle and edge/edge endpoint-side guards. It does not stop at time
+ * of impact: crossing and then
  * returning to the original side within one step is not prevented. It is not
  * complete CCD: grazing/coplanar motion, self collision and arbitrary
  * already-intersecting meshes are not covered.
  * A bounded neighbourhood and the actual last-step swept bounds are searched.
- * Previously known surface side is preserved at triangle interiors
- * and internal mesh edges/vertices. Only actual open mesh boundaries use an
- * unsigned closest-feature distance, so a triangle diagonal is not an opening.
+ * Only a proven finite swept crossing establishes persistent directed history.
+ * Its material side is preserved at triangle interiors and transported across
+ * internal mesh edges/vertices until resolved or legitimately released at an
+ * actual open boundary. Ordinary proximity does not infer a material side from
+ * a folded feature normal, so a triangle diagonal is not treated as an opening.
  *
  * Garments retain their own positions, topology, previous state and mass. Only
  * `positions` is mutated. thickness means TOTAL physical cloth thickness; the
@@ -47,7 +50,7 @@ function emptyResult() {
     residualMaxPenetration: 0,
     residualCount: 0,
     residualCandidateCount: 0,
-    residualScope: 'bounded cross-garment proximity/swept vertex-triangle queries plus retained unresolved contacts',
+    residualScope: 'bounded cross-garment vertex-face and interior edge-edge proximity/swept queries plus retained unresolved contacts',
     continuousCollision: false,
     sweptVertexFace: true,
     sweptVertexFaceScope: 'linear vertex/triangle endpoint-side recovery; no global time-of-impact or cross-and-return guarantee',
@@ -63,7 +66,7 @@ function emptyResult() {
 
 // Closest point on a triangle using its vertex, edge and face Voronoi regions.
 // Output: [qx, qy, qz, b0, b1, b2, squared distance].
-function closestPoint(px, py, pz, positions, indices, offset, out) {
+export function closestPoint(px, py, pz, positions, indices, offset, out) {
   const ia = indices[offset] * 3;
   const ib = indices[offset + 1] * 3;
   const ic = indices[offset + 2] * 3;
@@ -174,7 +177,7 @@ function sweptCrossing(a, vertex, b, face, scratch) {
 
 // Closest points of two finite segments. Output is [s,t,ax-bx,ay-by,az-bz,d²].
 // Endpoint regions remain vertex/face constraints; EE handles the two interiors.
-function closestSegments(p, a, b, q, c, d, out) {
+export function closestSegments(p, a, b, q, c, d, out) {
   a*=3;b*=3;c*=3;d*=3;
   const ux=p[b]-p[a],uy=p[b+1]-p[a+1],uz=p[b+2]-p[a+2];
   const vx=q[d]-q[c],vy=q[d+1]-q[c+1],vz=q[d+2]-q[c+2];
@@ -198,9 +201,9 @@ function edgeNormal(a,edgeA,b,edgeB,previous,out) {
   out[0]=nx/length;out[1]=ny/length;out[2]=nz/length;return true;
 }
 
-function sweptEdgeCrossing(a,edgeA,b,edgeB,scratch) {
+function sweptEdgeCrossing(a,edgeA,b,edgeB,scratch,reference=null,events=false) {
   const ea=a.topology.edgeVertices,eb=b.topology.edgeVertices,indices=[ea[edgeA*2],ea[edgeA*2+1],eb[edgeB*2],eb[edgeB*2+1]],old=scratch.edgeOld||(scratch.edgeOld=new Float64Array(12)),delta=scratch.edgeDelta||(scratch.edgeDelta=new Float64Array(12));
-  for(let v=0;v<4;v++){const g=v<2?a:b,k=indices[v]*3;for(let d=0;d<3;d++){old[v*3+d]=g.previous[k+d];delta[v*3+d]=g.positions[k+d]-old[v*3+d];}}
+  for(let v=0;v<4;v++){const g=v<2?a:b,k=indices[v]*3;for(let d=0;d<3;d++){old[v*3+d]=reference?reference[v*3+d]:g.previous[k+d];delta[v*3+d]=g.positions[k+d]-old[v*3+d];}}
   const u=[old[3]-old[0],old[4]-old[1],old[5]-old[2]],v=[old[9]-old[6],old[10]-old[7],old[11]-old[8]],r=[old[0]-old[6],old[1]-old[7],old[2]-old[8]];
   const du=[delta[3]-delta[0],delta[4]-delta[1],delta[5]-delta[2]],dv=[delta[9]-delta[6],delta[10]-delta[7],delta[11]-delta[8]],dr=[delta[0]-delta[6],delta[1]-delta[7],delta[2]-delta[8]];
   const cross=(x,y)=>[x[1]*y[2]-x[2]*y[1],x[2]*y[0]-x[0]*y[2],x[0]*y[1]-x[1]*y[0]],dot=(x,y)=>x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
@@ -213,13 +216,15 @@ function sweptEdgeCrossing(a,edgeA,b,edgeB,scratch) {
   else if(Math.abs(B)>scale*1e-14){const t=-C/B;if(t>0&&t<1)stops.push(t);}
   stops.sort((x,y)=>x-y);
   const p=scratch.edgeAtTime||(scratch.edgeAtTime=new Float64Array(12)),q=scratch.edgeRootClosest||(scratch.edgeRootClosest=new Float64Array(6));
+  let first=null,orientationFlips=0;
   for(let i=0;i+1<stops.length;i++){
     let lo=stops[i],hi=stops[i+1],left=value(lo),right=value(hi);if(left===0||left*right>=0)continue;
     const side=Math.sign(left);for(let j=0;j<36;j++){const mid=(lo+hi)*.5,f=value(mid);if(f===0){lo=hi=mid;break;}if(Math.sign(f)===side)lo=mid;else hi=mid;}
     const time=(lo+hi)*.5;for(let j=0;j<12;j++)p[j]=old[j]+time*delta[j];
-    if(closestSegments(p,0,1,p,2,3,q)&&q[5]<1e-16&&q[0]>INTERIOR_EPS&&q[0]<1-INTERIOR_EPS&&q[1]>INTERIOR_EPS&&q[1]<1-INTERIOR_EPS)return{side,time,s:q[0],t:q[1]};
+    if(closestSegments(p,0,1,p,2,3,q)&&q[5]<1e-16&&q[0]>INTERIOR_EPS&&q[0]<1-INTERIOR_EPS&&q[1]>INTERIOR_EPS&&q[1]<1-INTERIOR_EPS){first||={side,time,s:q[0],t:q[1]};if(!events)return first;}
+    else orientationFlips++;
   }
-  return null;
+  return events?{crossing:first,orientationFlips}:first;
 }
 
 class TriangleHash {
@@ -290,8 +295,9 @@ class TriangleHash {
  * solve([{ id, positions, previous?, triangles, inverseMass?, thickness,
  *          enabled?: true }], { friction?: 0..1, passes?: 2 })
  *
- * Counts refer to vertex/triangle constraints, not unique physical contact
- * patches. Both directions are tested. maxCorrectedPenetration is the largest
+ * Counts refer to vertex/triangle and interior edge/edge constraints, not unique
+ * physical contact patches. Vertex/face directions are tested reciprocally.
+ * maxCorrectedPenetration is the largest
  * applied relative normal correction, NOT a claim that all penetration ended.
  * Residual is independently recomputed after the final correction over the
  * bounded search domain; it is not a full triangle-intersection audit.
@@ -309,6 +315,8 @@ export class LayerContact {
     this.broadphaseCache=options.broadphaseCache!==false;
     this._history = new Map();
     this._sides = new Map();
+    this._frameSides = new Map();
+    this._edgeReferences = new Map();
     this._pending = new Map();
     this._topologies = new WeakMap();
     this._broadphases = new Map();
@@ -318,9 +326,30 @@ export class LayerContact {
   reset() {
     this._history.clear();
     this._sides.clear();
+    this._frameSides.clear();
+    this._edgeReferences.clear();
     this._pending.clear();
     this._broadphases.clear();
     this._edgeBroadphases.clear();
+    return this;
+  }
+
+  // Transactional host rollback must retain proven crossing provenance as
+  // well as positions. These maps contain immutable per-call history values;
+  // solve replaces them and rebinds pending contacts to newly prepared inputs.
+  // Geometry belongs to the host and must be restored separately.
+  checkpoint() {
+    return {owner:this,history:new Map(this._history),sides:new Map(this._sides),
+      frameSides:new Map(this._frameSides),edgeReferences:new Map(this._edgeReferences),pending:new Map(this._pending)};
+  }
+
+  restore(checkpoint) {
+    if(checkpoint?.owner!==this)throw new TypeError('Contact checkpoint belongs to a different solver');
+    this._history=new Map(checkpoint.history);this._sides=new Map(checkpoint.sides);
+    this._frameSides=new Map(checkpoint.frameSides);this._edgeReferences=new Map(checkpoint.edgeReferences);
+    this._pending=new Map(checkpoint.pending);
+    this._broadphases.clear();this._edgeBroadphases.clear();
+    this._releasedSides=new Set();this._edgeWorkingReferences=new Map(this._edgeReferences);this._stats=null;
     return this;
   }
 
@@ -402,66 +431,38 @@ export class LayerContact {
   }
 
   _contact(a, vertex, b, face, gap, radius, oldSides, newSides, scratch) {
-    const index = vertex * 3, p = a.positions;
-    const q = scratch.closest;
-    if (!closestPoint(p[index], p[index + 1], p[index + 2], b.positions, b.triangles, face, q)) return null;
-    let crossing=null;
-    if(q[6]>radius*radius) {
-      // The distance from a point to a linearly moving triangle is Lipschitz
-      // bounded by the point travel plus the largest triangle-vertex travel.
-      // A garment-wide maximum is conservative and cheap to maintain while
-      // reciprocal corrections move its vertices during this sweep.
-      if(q[6]>(a.motion[vertex]+b.maxMotion)**2)return null;
-      crossing=sweptCrossing(a,vertex,b,face,scratch);
-      if(!crossing)return null;
+    if(radius<Infinity&&separatedVFSweep(a,vertex,b,face,radius))return null;
+    const index=vertex*3,p=a.positions,q=scratch.closest;
+    if(!closestPoint(p[index],p[index+1],p[index+2],b.positions,b.triangles,face,q))return null;
+    // Actual feature motion bounds a possible finite-triangle crossing. A
+    // proximity pseudonormal can reverse at a fold without any physical hit,
+    // so its sign is never the evidence used to create directed history.
+    const motion=a.motion[vertex]+Math.max(b.motion[b.triangles[face]],b.motion[b.triangles[face+1]],b.motion[b.triangles[face+2]]);
+    let crossing=q[6]<=motion*motion+1e-20?sweptCrossing(a,vertex,b,face,scratch):null;
+    if(q[6]>radius*radius&&!crossing)return null;
+    if(crossing){
       for(let d=0;d<3;d++){q[d]=0;for(let j=0;j<3;j++)q[d]+=crossing.bary[j]*b.positions[b.triangles[face+j]*3+d];q[3+d]=crossing.bary[d];}
       q[6]=(p[index]-q[0])**2+(p[index+1]-q[1])**2+(p[index+2]-q[2])**2;
     }
-    const n = scratch.normal;
-    const feature=this._feature(b,face,q);
+    const n=scratch.normal,feature=this._feature(b,face,q);
     if(!crossing&&this._featureOwner(a,vertex,b,face,feature,q,scratch)!==face)return null;
     const featureScratch=scratch.featureNormal||(scratch.featureNormal=new Float64Array(3));
-    if (!this._featureNormal(b.positions,b.triangles,face,feature,n,featureScratch)) return null;
-    const key = JSON.stringify([a.id, vertex, b.id, face / 3]);
-    const prevNormal = scratch.previousNormal;
-    let previousSideDistance = 0;
-    if (this._featureNormal(b.previous,b.triangles,face,feature,prevNormal,featureScratch)) {
-      for (let k = 0; k < 3; k++) {
-        let point = 0;
-        for (let j = 0; j < 3; j++) point += q[3 + j] * b.previous[b.triangles[face + j] * 3 + k];
-        previousSideDistance += (a.previous[index + k] - point) * prevNormal[k];
-      }
-    }
-    const delta = [p[index] - q[0], p[index + 1] - q[1], p[index + 2] - q[2]];
-    const planeDistance = delta[0] * n[0] + delta[1] * n[1] + delta[2] * n[2];
-    // An unresolved constraint owns its original side across solver calls.
-    // A still-crossed previous position must not silently redefine that side.
-    const retainedSide=newSides.get(key)||oldSides.get(key);
-    let side = retainedSide || crossing?.side || (Math.abs(previousSideDistance)>EPS?Math.sign(previousSideDistance):Math.sign(planeDistance)||1);
-    if(!retainedSide&&!crossing&&side*planeDistance<0) {
-      crossing=sweptCrossing(a,vertex,b,face,scratch);
-      // Passing around a feature is not passing through it. Do not infer an
-      // impact solely from the signs of two unrelated triangle projections.
-      if(!crossing)side=Math.sign(planeDistance)||side;
-    }
-    let distance;
-    if (!feature) {
-      distance = side * planeDistance;
-      n[0] *= side; n[1] *= side; n[2] *= side;
-    } else {
-      distance = Math.sqrt(q[6]);
-      const sign=feature.boundary?1:side*(Math.sign(planeDistance)||side);
-      if (distance > EPS) {
-        n[0] = sign*delta[0] / distance; n[1] = sign*delta[1] / distance; n[2] = sign*delta[2] / distance;
-      } else {
-        n[0] *= side; n[1] *= side; n[2] *= side;
-      }
+    if(!this._featureNormal(b.positions,b.triangles,face,feature,n,featureScratch))return null;
+    const key=JSON.stringify([a.id,vertex,b.id,face/3]);
+    const delta=[p[index]-q[0],p[index+1]-q[1],p[index+2]-q[2]],planeDistance=delta[0]*n[0]+delta[1]*n[1]+delta[2]*n[2];
+    if(feature?.boundary)this._releaseSide(key,oldSides,newSides);
+    const retainedSide=newSides.get(key)||oldSides.get(key),directed=!feature?.boundary&&!!(retainedSide||crossing);
+    const side=retainedSide||crossing?.side||Math.sign(planeDistance)||1;
+    let distance=Math.sqrt(q[6]);
+    if(directed&&!feature){distance=side*planeDistance;for(let d=0;d<3;d++)n[d]*=side;}
+    else{
+      const sign=directed?side*(Math.sign(planeDistance)||side):1;
+      if(distance>EPS)for(let d=0;d<3;d++)n[d]=sign*delta[d]/distance;else for(let d=0;d<3;d++)n[d]*=side;
       distance*=sign;
     }
-    const penetration = gap - distance;
-    if (!(penetration > this.tolerance)) return null;
-    if(!feature?.boundary)newSides.set(key,side);
-    return { key, vertex, face, bary: [q[3], q[4], q[5]], normal: [n[0], n[1], n[2]], penetration, side, crossing:!!crossing, a, b };
+    const penetration=gap-distance;if(!(penetration>this.tolerance))return null;
+    if(directed){newSides.set(key,side);this._releasedSides?.delete(key);}
+    return{key,vertex,face,bary:[q[3],q[4],q[5]],normal:[n[0],n[1],n[2]],penetration,side,directed,boundaryFeature:!!feature?.boundary,crossing:!!crossing,a,b};
   }
 
   _buildCandidates(a,b,radius) {
@@ -519,30 +520,49 @@ export class LayerContact {
     return out;
   }
 
+  _releaseSide(key,oldSides,newSides) {
+    if(oldSides.has(key)||newSides.has(key)||this._edgeWorkingReferences?.has(key)){
+      oldSides.delete(key);newSides.delete(key);this._releasedSides?.add(key);this._edgeWorkingReferences?.delete(key);
+    }
+  }
+
+  _edgeReference(contact) {
+    const result=new Float64Array(12),{a,b,idsA,idsB}=contact;
+    for(let v=0;v<4;v++){const g=v<2?a:b,id=v<2?idsA[v]:idsB[v-2];for(let d=0;d<3;d++)result[v*3+d]=g.positions[id*3+d];}
+    return result;
+  }
+
   _edgeContact(a,edgeA,b,edgeB,gap,radius,oldSides,newSides,scratch) {
     const ea=a.topology.edgeVertices,eb=b.topology.edgeVertices,q=scratch.edgeClosest||(scratch.edgeClosest=new Float64Array(6));
     const ai=ea[edgeA*2],aj=ea[edgeA*2+1],bi=eb[edgeB*2],bj=eb[edgeB*2+1];
+    if(radius<Infinity&&separatedEESweep(a,ai,aj,b,bi,bj,radius))return null;
     if(!closestSegments(a.positions,ai,aj,b.positions,bi,bj,q))return null;
-    let crossing=null;
-    if(q[5]>radius*radius){
-      if(q[5]>(Math.max(a.motion[ai],a.motion[aj])+Math.max(b.motion[bi],b.motion[bj]))**2)return null;
-      crossing=sweptEdgeCrossing(a,edgeA,b,edgeB,scratch);if(!crossing)return null;
+    const motion=Math.max(a.motion[ai],a.motion[aj])+Math.max(b.motion[bi],b.motion[bj]);
+    let crossing=q[5]<=motion*motion+1e-20?sweptEdgeCrossing(a,edgeA,b,edgeB,scratch):null;
+    if(q[5]>radius*radius&&!crossing)return null;
+    if(crossing){
       q[0]=crossing.s;q[1]=crossing.t;
       for(let d=0;d<3;d++)q[2+d]=(1-q[0])*a.positions[ai*3+d]+q[0]*a.positions[aj*3+d]-(1-q[1])*b.positions[bi*3+d]-q[1]*b.positions[bj*3+d];
       q[5]=q[2]**2+q[3]**2+q[4]**2;
     }
-    if(q[0]<=INTERIOR_EPS||q[0]>=1-INTERIOR_EPS||q[1]<=INTERIOR_EPS||q[1]>=1-INTERIOR_EPS)return null;
-    const n=scratch.edgeNormal||(scratch.edgeNormal=new Float64Array(3)),pn=scratch.previousEdgeNormal||(scratch.previousEdgeNormal=new Float64Array(3));
-    if(!edgeNormal(a,edgeA,b,edgeB,false,n))return null;
-    const key=JSON.stringify([a.id,'edge:'+edgeA,b.id,edgeB]),currentDistance=q[2]*n[0]+q[3]*n[1]+q[4]*n[2];
-    let previousDistance=0;
-    if(edgeNormal(a,edgeA,b,edgeB,true,pn))for(let d=0;d<3;d++)previousDistance+=((1-q[0])*a.previous[ai*3+d]+q[0]*a.previous[aj*3+d]-(1-q[1])*b.previous[bi*3+d]-q[1]*b.previous[bj*3+d])*pn[d];
-    const retained=newSides.get(key)||oldSides.get(key);
-    let side=retained||crossing?.side||(Math.abs(previousDistance)>EPS?Math.sign(previousDistance):Math.sign(currentDistance)||1);
-    if(!retained&&!crossing&&side*currentDistance<0){crossing=sweptEdgeCrossing(a,edgeA,b,edgeB,scratch);if(!crossing)side=Math.sign(currentDistance)||side;}
-    const penetration=gap-side*currentDistance;if(!(penetration>this.tolerance))return null;
-    newSides.set(key,side);
-    return{kind:'edge-edge',key,a,b,edgeA,edgeB,idsA:[ai,aj],idsB:[bi,bj],baryA:[1-q[0],q[0]],baryB:[1-q[1],q[1]],normal:[n[0]*side,n[1]*side,n[2]*side],side,penetration,crossing:!!crossing};
+    const key=JSON.stringify([a.id,'edge:'+edgeA,b.id,edgeB]);
+    if(q[0]<=INTERIOR_EPS||q[0]>=1-INTERIOR_EPS||q[1]<=INTERIOR_EPS||q[1]>=1-INTERIOR_EPS){this._releaseSide(key,oldSides,newSides);return null;}
+    const n=scratch.edgeNormal||(scratch.edgeNormal=new Float64Array(3));if(!edgeNormal(a,edgeA,b,edgeB,false,n))return null;
+    const currentDistance=q[2]*n[0]+q[3]*n[1]+q[4]*n[2];let retained=newSides.get(key)||oldSides.get(key);
+    const reference=this._edgeWorkingReferences?.get(key);
+    if(retained&&reference){
+      // A true unresolved crossing survives legal changes of the u×v frame.
+      // Proximity alone does not create a persistent side in the first place.
+      const events=sweptEdgeCrossing(a,edgeA,b,edgeB,scratch,reference,true);
+      if(events?.orientationFlips%2){retained=-retained;oldSides.set(key,retained);newSides.set(key,retained);}
+    }
+    const directed=!!(retained||crossing),side=retained||crossing?.side||Math.sign(currentDistance)||1,distance=directed?side*currentDistance:Math.sqrt(q[5]);
+    const direction=directed||distance<=EPS?[n[0]*side,n[1]*side,n[2]*side]:[q[2]/distance,q[3]/distance,q[4]/distance];
+    const contact={kind:'edge-edge',key,a,b,edgeA,edgeB,idsA:[ai,aj],idsB:[bi,bj],baryA:[1-q[0],q[0]],baryB:[1-q[1],q[1]],normal:direction,side,directed,penetration:gap-distance,crossing:!!crossing};
+    if(retained)this._edgeWorkingReferences?.set(key,this._edgeReference(contact));
+    if(!(contact.penetration>this.tolerance))return null;
+    if(directed){newSides.set(key,side);this._releasedSides?.delete(key);this._edgeWorkingReferences?.set(key,this._edgeReference(contact));}
+    return contact;
   }
 
   _buildEdgeCandidates(a,b,radius) {
@@ -585,18 +605,33 @@ export class LayerContact {
       if(owner===face)break;
       side*=b.topology.orientations[face/3]*b.topology.orientations[owner/3];face=owner;
     }
-    const key=JSON.stringify([a.id,vertex,b.id,face/3]),hadSide=newSides.has(key),priorSide=newSides.get(key);newSides.set(key,side);
+    const key=JSON.stringify([a.id,vertex,b.id,face/3]),hadSide=newSides.has(key),priorSide=newSides.get(key);
+    // Two independently valid facet constraints can have opposite signs at a
+    // sharp fold. Migration must not overwrite the destination's established
+    // side with the departed facet's sign and invent a crossing of the fold.
+    const establishedSide=newSides.get(key)||oldSides.get(key);
+    // An unsigned true-boundary distance has no material-side constraint to
+    // transport. Its incidental face sign must never become an internal side
+    // when a later reciprocal correction changes the nearest feature.
+    const seed=establishedSide||(prior.directed&&!prior.boundaryFeature?side:0);
+    if(seed)newSides.set(key,seed);
+    if(key!==prior.key)this._releaseSide(prior.key,oldSides,newSides);
     const contact=this._contact(a,vertex,b,face,gap,Infinity,oldSides,newSides,scratch);
     // A path around a true free boundary releases the side constraint. A
     // temporary seed must not turn that legal release into a later ghost.
-    if(!contact){if(hadSide)newSides.set(key,priorSide);else newSides.delete(key);}
+    if(!contact){if(hadSide&&!this._releasedSides?.has(key))newSides.set(key,priorSide);else newSides.delete(key);}
     return contact;
   }
 
   _retainedSides(garments) {
-    if(garments.every(g=>g.historyMatches))return this._sides;
-    const ids=new Set(garments.filter(g=>g.historyMatches).map(g=>g.id)),sides=new Map();
+    const ids=new Set(garments.filter(g=>g.historyMatches).map(g=>g.id)),sides=new Map(),sameFrame=new Set();
     for(const [key,side]of this._sides){const [a,,b]=JSON.parse(key);if(ids.has(a)&&ids.has(b))sides.set(key,side);}
+    for(const g of garments){const previous=this._history.get(g.id)?.previous;if(g.historyMatches&&previous?.length===g.previous.length&&g.previous.every((x,i)=>x===previous[i]))sameFrame.add(g.id);}
+    // Several projection calls can share one integration substep. A resolved
+    // crossing must not be reinterpreted backwards while explicit `previous`
+    // still describes its formerly wrong-side state. This memory expires when
+    // that previous state advances; only unresolved contacts survive a frame.
+    for(const [key,side]of this._frameSides){const [a,,b]=JSON.parse(key);if(sameFrame.has(a)&&sameFrame.has(b))sides.set(key,side);}
     return sides;
   }
 
@@ -650,6 +685,7 @@ export class LayerContact {
       if(length>EPS){const scale=Math.min(friction,friction*correction/length)/effective;for(const [g,ids,bary,sign]of groups)for(let j=0;j<2;j++){const k=ids[j]*3,weight=sign*(g.inverseMass?g.inverseMass[ids[j]]:1)*bary[j]*scale;for(let d=0;d<3;d++)g.positions[k+d]-=weight*tangent[d];}}
     }
     for(const [g,ids]of groups)for(const id of ids){const k=id*3,m=Math.hypot(g.positions[k]-g.previous[k],g.positions[k+1]-g.previous[k+1],g.positions[k+2]-g.previous[k+2]);g.motion[id]=m;g.maxMotion=Math.max(g.maxMotion,m);}
+    if(contact.directed)this._edgeWorkingReferences?.set(contact.key,this._edgeReference(contact));
     return correction;
   }
 
@@ -673,6 +709,7 @@ export class LayerContact {
     if (!Number.isInteger(passes) || passes < 1 || passes > 32) throw new RangeError('passes must be an integer between 1 and 32');
     if (typeof measureResidual !== 'boolean') throw new TypeError('measureResidual must be boolean');
     const garments = this._prepare(inputs), result = emptyResult();
+    this._releasedSides=new Set();this._edgeWorkingReferences=new Map(this._edgeReferences);
     this._stats=result.timings={broadphaseBuildMS:0,broadphaseBuildCount:0,broadphaseReuseCount:0};
     const previousSides = this._retainedSides(garments), nextSides = new Map(), contacts = new Map(), fixed = new Set(),crossings=new Set();
     const pending=this._activePending(garments),residualScratch={closest:new Float64Array(7),normal:new Float64Array(3),previousNormal:new Float64Array(3)};
@@ -735,8 +772,11 @@ export class LayerContact {
     // Replace, rather than append, state: disabled/removed garments leave no
     // collision objects or retained history behind. Position history is copied;
     // only the immutable topology identity is retained to detect replacement.
-    this._history = new Map(garments.map(g => [g.id, { positions: Float64Array.from(g.positions), triangles: g.triangles }]));
-    this._sides = garments.length > 1 ? new Map([...nextPending].map(([key,c])=>[key,c.side])) : new Map();
+    this._history = new Map(garments.map(g => [g.id, { positions: Float64Array.from(g.positions), previous:Float64Array.from(g.previous),triangles: g.triangles }]));
+    this._sides = garments.length > 1 ? new Map([...nextPending].filter(([,c])=>c.directed&&!c.boundaryFeature).map(([key,c])=>[key,c.side])) : new Map();
+    this._frameSides=garments.length>1?new Map([...previousSides,...nextSides]):new Map();
+    for(const key of this._releasedSides)this._frameSides.delete(key);
+    this._edgeReferences=new Map([...this._edgeWorkingReferences].filter(([key])=>this._frameSides.has(key)||this._sides.has(key)));
     this._pending = garments.length > 1 ? nextPending : new Map();
     const ids=new Set(garments.map(g=>g.id));for(const [key,cache]of this._broadphases)if(!ids.has(cache.aId)||!ids.has(cache.bId))this._broadphases.delete(key);
     for(const [key,cache]of this._edgeBroadphases)if(!ids.has(cache.aId)||!ids.has(cache.bId))this._edgeBroadphases.delete(key);
@@ -751,6 +791,7 @@ export class LayerContact {
   measure(inputs) {
     if (!Array.isArray(inputs)) throw new TypeError('garments must be an array');
     const garments = this._prepare(inputs), result = emptyResult(), sides = new Map(),previousSides=this._retainedSides(garments);
+    this._releasedSides=new Set();this._edgeWorkingReferences=new Map(this._edgeReferences);
     this._stats=result.timings={broadphaseBuildMS:0,broadphaseBuildCount:0,broadphaseReuseCount:0};
     result.measurementOnly = true;
     result.residualScope = 'bounded cross-garment vertex-face and interior edge-edge proximity/swept queries plus retained unresolved contacts at measured positions';
@@ -775,3 +816,28 @@ export class LayerContact {
 }
 
 export default LayerContact;
+
+// Conservative rejection inside a reused broadphase skin. Always read live
+// endpoints, including earlier reciprocal corrections in this very pass.
+// The 1e-8 m expansion retains the swept feature test's spatial tolerance.
+// Unbounded retained constraints deliberately bypass this proximity rejection.
+function separatedVFSweep(a,vertex,b,face,radius) {
+  const p=a.positions,old=a.previous,q=b.positions,prior=b.previous,t=b.triangles,k=vertex*3;
+  const i=t[face]*3,j=t[face+1]*3,l=t[face+2]*3,r=radius+1e-8;
+  for(let d=0;d<3;d++) {
+    const lo=Math.min(p[k+d],old[k+d])-r,hi=Math.max(p[k+d],old[k+d])+r;
+    if(q[i+d]>hi&&q[j+d]>hi&&q[l+d]>hi&&prior[i+d]>hi&&prior[j+d]>hi&&prior[l+d]>hi)return true;
+    if(q[i+d]<lo&&q[j+d]<lo&&q[l+d]<lo&&prior[i+d]<lo&&prior[j+d]<lo&&prior[l+d]<lo)return true;
+  }
+  return false;
+}
+function separatedEESweep(a,ai,aj,b,bi,bj,radius) {
+  const p=a.positions,old=a.previous,q=b.positions,prior=b.previous,r=radius+1e-8;
+  ai*=3;aj*=3;bi*=3;bj*=3;
+  for(let d=0;d<3;d++) {
+    const lo=Math.min(p[ai+d],p[aj+d],old[ai+d],old[aj+d])-r,hi=Math.max(p[ai+d],p[aj+d],old[ai+d],old[aj+d])+r;
+    if(q[bi+d]>hi&&q[bj+d]>hi&&prior[bi+d]>hi&&prior[bj+d]>hi)return true;
+    if(q[bi+d]<lo&&q[bj+d]<lo&&prior[bi+d]<lo&&prior[bj+d]<lo)return true;
+  }
+  return false;
+}

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 import re
 import shutil
+import struct
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,11 +27,13 @@ def fingerprint(data: bytes) -> dict:
 
 
 def derive_mid_surface_modules(output_root: Path, upstream: Path = UPSTREAM) -> dict:
-    """Derive only the carrier-coordinate configuration; retain source bytes.
+    """Derive the coordinate contract and expired-atlas ordering; retain source.
 
     Keep each exact source edit in the public provenance file. In particular,
-    none of the original yarn/atlas/seam-frame shaders or sampling code is
+    none of the original yarn/atlas/seam-frame shaders or sampling decisions is
     edited. Both seam render paths consume the same height-adjusted routes.
+    An already-finished morph releases its previous atlas before updating it;
+    the original timing, active-morph updates and final uniforms are retained.
     """
     generated = []
 
@@ -66,6 +70,10 @@ def derive_mid_surface_modules(output_root: Path, upstream: Path = UPSTREAM) -> 
         generated.append({'path': relative, 'sourcePath': 'upstream/' + source_name,
                           'source': fingerprint(original), 'derived': fingerprint(result), 'patches': patches})
 
+    atlas_updates = 'c.current.atlas?.update(revision);c.previous?.atlas?.update(revision);'
+    morph_expiry = ('if(c.previous){c.uniforms.uMorph.value=Math.min(1,(now-c.transitionStart)/180);'
+                    'if(c.uniforms.uMorph.value>=1){release(c.previous);c.previous=null;'
+                    "if(cached)assignUniforms(c.uniforms,c.current.atlas.uniforms('Previous'));}}")
     derive('continuous-solid.mjs', 'continuous-solid.mjs', [
         ('export async function buildContinuousSolid(native,packet,info,{renderer,signal,onProgress,requestRender}={}){',
          'export async function buildContinuousSolid(native,packet,info,{renderer,signal,onProgress,requestRender,carrierOffsetMeters}={}){\n'
@@ -76,6 +84,8 @@ def derive_mid_surface_modules(output_root: Path, upstream: Path = UPSTREAM) -> 
         ('sewnTrims(native,packet,info,{renderer,uniforms:deformer.uniforms})',
          'sewnTrims(native,packet,info,{renderer,uniforms:deformer.uniforms,carrierOffsetMeters})',
          'Apply the same coordinate contract to native seam routes.'),
+        (atlas_updates + morph_expiry, morph_expiry + atlas_updates,
+         'Dispose an expired previous atlas before deformation updates; preserve the original 180 ms morph, active dual updates and final uniforms.'),
     ])
     derive('sewn-trims.mjs', 'sewn-trims-mid-surface.mjs', [
         ('export function sewnTrims(native,packet,info,{renderer,uniforms}={}){',
@@ -93,8 +103,84 @@ def derive_mid_surface_modules(output_root: Path, upstream: Path = UPSTREAM) -> 
         'originalYarnShaderAndShapePreserved': True,
         'originalContinuousSamplerPreserved': True,
         'physicalThicknessChanged': False,
+        'expiredAtlasUpdateOrdering': {
+            'schema': 'expired-yarn-frame-atlas-order@1',
+            'method': 'Evaluate the original morph completion and release expired previous resources before the existing current/previous atlas updates.',
+            'benefitCondition': 'The previous atlas would need a new geometry or crimp update, but its original 180 ms morph has already completed.',
+            'activeMorphUpdatesBothAtlases': True,
+            'originalMorphDurationMS': 180,
+            'originalSamplerTargetsAndHysteresisPreserved': True,
+            'originalAtlasShaderPreserved': True,
+            'steadyStateSpeedupClaimed': False,
+            'measuredGPUSpeedup': None,
+        },
         'untouchedShaderSources': ['material-shaders.mjs', 'surface-binding.mjs', 'yarn-frame-atlas.mjs', 'gpu-seam-frames.mjs'],
         'generatedFiles': generated,
+    }
+
+
+def derive_reference_body(output_root: Path, upstream: Path = UPSTREAM) -> dict:
+    """Package the unchanged old reference geometry without unused skin/rig data.
+
+    This is not the visible native person. Both original typed-array hashes are
+    verified before writing a deterministic gzip package; the browser verifies
+    the compressed package and both unchanged geometry byte ranges again.
+    """
+    source_path = upstream / 'assets' / 'native-person.json.gz'
+    source_bytes = source_path.read_bytes()
+    manifest_bytes = (upstream / 'assets' / 'PERSON_MANIFEST.json').read_bytes()
+    source_manifest = json.loads(manifest_bytes)
+    if hashlib.sha256(source_bytes).hexdigest() != source_manifest['fileSHA256']:
+        raise SystemExit('The original reference body compressed bytes do not match their identity.')
+    data = json.loads(gzip.decompress(source_bytes))
+    positions = struct.pack('<' + str(len(data['positions'])) + 'f', *data['positions'])
+    faces = struct.pack('<' + str(len(data['faces'])) + 'I', *data['faces'])
+    if hashlib.sha256(positions).hexdigest() != source_manifest['geometrySHA256']:
+        raise SystemExit('The reference body position bytes changed during packaging.')
+    if hashlib.sha256(faces).hexdigest() != source_manifest['topologySHA256']:
+        raise SystemExit('The reference body triangle bytes changed during packaging.')
+    payload = positions + faces
+    packed = gzip.compress(payload, compresslevel=9, mtime=0)
+    fields = data['skinFields']
+    avoided_values = sum(len(fields[key]) for key in ['rest', 'regions', 'extra', 'types']) + len(data['positions'])
+    descriptor = {
+        'schema': 'kaopu-reference-body-geometry@1',
+        'file': 'geometry.bin.gz',
+        'compressedSHA256': hashlib.sha256(packed).hexdigest(),
+        'compressedBytes': len(packed),
+        'uncompressedBytes': len(payload),
+        'byteOrder': 'little-endian',
+        'positions': {'offsetBytes': 0, 'length': len(data['positions']), 'bytes': len(positions), 'component': 'float32',
+                      'sha256': source_manifest['geometrySHA256']},
+        'faces': {'offsetBytes': len(positions), 'length': len(data['faces']), 'bytes': len(faces), 'component': 'uint32',
+                  'sha256': source_manifest['topologySHA256']},
+        'sourceManifest': source_manifest,
+        'sourceCompressedBytes': len(source_bytes),
+        'avoidedCompressedPayloadBytes': len(source_bytes) - len(packed),
+        'avoidedOldSkinAndActorTypedArrayBytes': avoided_values * 4,
+        'visibleNativePersonChanged': False,
+    }
+    target = output_root / 'reference-body'
+    target.mkdir(parents=True, exist_ok=True)
+    (target / descriptor['file']).write_bytes(packed)
+    descriptor_bytes = (json.dumps(descriptor, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
+    (target / 'manifest.json').write_bytes(descriptor_bytes)
+    return {
+        'schema': descriptor['schema'],
+        'method': 'Read only the unchanged old reference positions and triangle indices; do not load its unused rig, skin fields, archive or animation actor.',
+        'source': {'path': 'upstream/assets/native-person.json.gz', **fingerprint(source_bytes)},
+        'sourceManifest': {'path': 'upstream/assets/PERSON_MANIFEST.json', **fingerprint(manifest_bytes)},
+        'generatedFiles': [
+            {'path': 'reference-body/geometry.bin.gz', **fingerprint(packed)},
+            {'path': 'reference-body/manifest.json', **fingerprint(descriptor_bytes)},
+        ],
+        'positionsSHA256': source_manifest['geometrySHA256'],
+        'topologySHA256': source_manifest['topologySHA256'],
+        'avoidedCompressedPayloadBytes': descriptor['avoidedCompressedPayloadBytes'],
+        'avoidedOldSkinAndActorTypedArrayBytes': descriptor['avoidedOldSkinAndActorTypedArrayBytes'],
+        'networkScope': 'This one old-reference-body asset only; descriptor overhead is reported separately. Not total-page traffic or a frame-rate claim.',
+        'originalSourceFilesModified': False,
+        'visibleNativePersonChanged': False,
     }
 
 
@@ -226,6 +312,7 @@ def build() -> None:
         authored_manifest.append({'path': relative.as_posix(), **fingerprint(path.read_bytes())})
     (DIST / 'index.html').write_bytes(loader.encode('utf-8'))
     coordinate_adaptation = derive_mid_surface_modules(DIST)
+    reference_body_packaging = derive_reference_body(DIST)
     if (ROOT / 'BUILD_MANIFEST.json').is_file():
         shutil.copyfile(ROOT / 'BUILD_MANIFEST.json', DIST / 'BUILD_MANIFEST.json')
     manifest = {
@@ -259,6 +346,7 @@ def build() -> None:
         'sameDocumentNativeHost': True,
         'iframeRequired': False,
         'coordinateAdaptation': coordinate_adaptation,
+        'referenceBodyPackaging': reference_body_packaging,
         'upstreamFiles': source_manifest,
         'authoredFiles': authored_manifest,
         'upstreamBytes': sum(row['bytes'] for row in source_manifest),

@@ -3,7 +3,7 @@ import {MaterialLighting} from './upstream/lighting.mjs';
 import {installCoverageAntialias} from './upstream/coverage-antialias.mjs';
 import {installFacePassRouting} from './upstream/face-pass-routing.mjs';
 import {modelIdentity} from './upstream/source-contract.mjs';
-import {loadPerson as loadFrozenPerson} from './upstream/person/load-person.mjs';
+import {loadReferenceBody} from './reference-body.mjs';
 
 // The original public runtime is initialized in this document by build.py.
 // This adapter takes ownership of that exact viewer; it creates no second body.
@@ -132,7 +132,7 @@ export async function loadNativeHost({stage, progress = () => {}} = {}) {
   const lockURL = new URL('./upstream/SOURCE_LOCK.json', import.meta.url);
   const [identity, frozen, lockResponse] = await Promise.all([
     modelIdentity(model),
-    loadFrozenPerson(),
+    loadReferenceBody(),
     fetch(lockURL)
   ]);
   if (!lockResponse.ok) throw new Error('服装来源锁读取失败：' + lockResponse.status);
@@ -143,6 +143,7 @@ export async function loadNativeHost({stage, progress = () => {}} = {}) {
     throw new Error('新旧人物拓扑不同，原衣片的对应关系不能复用。');
   }
   mark('verify-native-and-frozen-body-identities', began);
+  bootTimings.referenceBodyAllocation=frozen.allocationAudit;
 
   // Reuse the canvas, scene, original skin, all geometry and the native controls.
   began = performance.now();

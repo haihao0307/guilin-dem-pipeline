@@ -31,7 +31,7 @@ function unionBox(triangles, start, end) {
   return box;
 }
 
-function makeMesh(mesh, epsilon, leafSize) {
+export function makeMesh(mesh, epsilon, leafSize) {
   if (!mesh || typeof mesh.id !== 'string' || !mesh.id) throw new TypeError('Each mesh needs its own string id');
   const p = mesh.positions, indices = mesh.indices ?? mesh.triangles;
   if (!p || !indices || p.length % 3 || indices.length % 3) throw new TypeError(mesh.id + ': invalid position or triangle array');
@@ -146,7 +146,7 @@ function coplanarOverlap(a, b, epsilon) {
   return {kind: worldArea > epsilon * epsilon ? 'coplanar-overlap' : 'touch', areaM2: worldArea, point};
 }
 
-function trianglePair(a, b, epsilon) {
+export function trianglePair(a, b, epsilon) {
   const da = a.points.map(point => signedDistance(point, b));
   const db = b.points.map(point => signedDistance(point, a));
   const minA = Math.min(...da), maxA = Math.max(...da), minB = Math.min(...db), maxB = Math.max(...db);
