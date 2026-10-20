@@ -10,7 +10,12 @@ const suite=read(process.env.NPC_SUITE_REPORT||'/tmp/courtyard-suite/qa.json');
 const offline=read(process.env.NPC_OFFLINE_REPORT||'/tmp/courtyard-offline/qa.json');
 assert.equal(suite.sourceHead,head);assert.equal(suite.status,'SUITE_PASSED');
 assert.equal(suite.fullSuitePassed,true);assert.equal(suite.autonomousChainPassed,true);
-assert.equal(offline.sourceHead,head);assert.equal(offline.status,'STARTUP_PASSED');assert.equal(offline.startupPassed,true);
+assert.equal(offline.sourceHead,head);assert.equal(offline.status,'OFFLINE_PASSED');assert.equal(offline.startupPassed,true);
+assert.equal(offline.offlineVerified,true);assert.equal(offline.autonomousChainPassed,true);
+assert.equal(offline.deliveryMode,'standalone-file-offline');assert.equal(new URL(offline.finalURL).protocol,'file:');
+assert.equal(offline.offline.networkDisabledBeforeNavigation,true);assert.equal(offline.offline.serviceWorkersBlocked,true);
+assert.equal(offline.offline.externalNetworkRequests,0);assert.equal(offline.offline.sidecarFileRequests,0);
+assert.equal(offline.offline.blockedRequests.length,0);assert.equal(offline.offline.serverUsed,false);
 const build=read(path.join(here,'BUILD.json')),single=read(path.join(here,'BUILD.standalone.json'));
 assert.equal(build.version,'NPC-LIVING-COURTYARD-R01');assert.equal(build.assetMode,'same-origin-native-packets');
 assert.equal(single.standalone,true);assert.equal(offline.observedPreviewSHA256,single.previewSHA256);
@@ -45,7 +50,7 @@ build.standaloneRuntimeVerified=true;
 build.packagedNativePacketCount=lock.packetIds.length;
 build.packagedNativeChunkCount=lock.chunks.length;
 build.packagedNativeCompressedBytes=lock.compressedBytes;
-build.verification={nativeInteractionSuite:true,standaloneStartup:true,publicURLVerified:false,
+build.verification={nativeInteractionSuite:true,standaloneStartup:true,standaloneFileOffline:true,standaloneAutonomousChain:true,publicURLVerified:false,
   suiteReportSHA256:hash(fs.readFileSync(process.env.NPC_SUITE_REPORT||'/tmp/courtyard-suite/qa.json')),
   offlineReportSHA256:hash(fs.readFileSync(process.env.NPC_OFFLINE_REPORT||'/tmp/courtyard-offline/qa.json'))};
 build.visualAcceptance=false;build.productionReady=false;

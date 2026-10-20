@@ -11,6 +11,8 @@
  * NPC_QA_PHASE=suite   : startup + actual autonomous food chain, seated B,
  *                       real UI interruption/shop closure/rain observations.
  * NPC_QA_PHASE=public  : exact fixed PREVIEW_URL + startup + autonomous chain.
+ * NPC_QA_PHASE=offline : actual file:// navigation with networking disabled,
+ *                       startup + autonomous chain + zero sidecar resources.
  *
  * Default document: dist/index.html. BUILD.json is in this project root.
  * All dist resources are served from the same origin, including native packets.
@@ -23,12 +25,13 @@ const http=require('node:http');
 const crypto=require('node:crypto');
 const cp=require('node:child_process');
 const assert=require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
 const {chromium}=require('playwright');
 
 const VERSION='NPC-LIVING-COURTYARD-R01';
 const CANONICAL_SHA='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a';
 const PHASE=process.env.NPC_QA_PHASE||'startup';
-assert(['startup','suite','public'].includes(PHASE),'NPC_QA_PHASE must be startup, suite or public');
+assert(['startup','suite','public','offline'].includes(PHASE),'NPC_QA_PHASE must be startup, suite, public or offline');
 const here=__dirname,input=path.resolve(process.env.PREVIEW_FILE||path.join(here,'dist/index.html'));
 const staticRoot=path.resolve(process.env.NPC_STATIC_ROOT||path.dirname(input));
 const run=process.env.GITHUB_RUN_ID?process.env.GITHUB_RUN_ID+'-'+(process.env.GITHUB_RUN_ATTEMPT||'1'):new Date().toISOString().replace(/[:.]/g,'-');
@@ -53,7 +56,8 @@ let browser,context,page,cdp,server,checkpointTimer,watchdog,operationId=0,failu
 const report={schema:'kaopu/living-courtyard-browser-verification@1',version:VERSION,phase:PHASE,sourceHead,
   startedAt:new Date(started).toISOString(),status:'RUNNING',stage:'created',completed:false,
   sourceGate:{passed:false},startupPassed:false,autonomousChainPassed:false,fullSuiteRun:false,fullSuitePassed:false,
-  publicURLVerified:false,visualAcceptance:false,productionReady:false,
+  publicURLVerified:false,offlineVerified:false,visualAcceptance:false,productionReady:false,
+  offline:{requested:PHASE==='offline',networkDisabledBeforeNavigation:false,serviceWorkersBlocked:false,blockedRequests:[]},
   environment:{runner:process.env.GITHUB_ACTIONS==='true'?'GitHub Actions isolated Chromium':'isolated development Chromium',
     userDevice:false,physicalPhone:false,headless:true,softwareRenderer:true,requestedRenderer:'SwiftShader',
     viewport:{width:1360,height:900},playwright:require('playwright/package.json').version},
@@ -99,6 +103,34 @@ async function check(name,fn) {
   catch(error){report.tests.push({name,passed:false,elapsedMS:Date.now()-start,error:clip(error.stack||error)});log('FAIL '+name,{message:clip(error.message)});throw error;}
 }
 
+function requestRecord(request) {
+  const url=request.url();
+  // The actual PNG bytes are independently checked from the rendered material.
+  // Keep inline payloads out of every repeating request-log checkpoint.
+  return{url:url.startsWith('data:')?url.slice(0,url.indexOf(',')+1)+'[inline payload omitted]':url,
+    ...(url.startsWith('data:')?{inlineURLSHA256:sha(url),inlineURLCharacters:url.length}:{}),
+    type:request.resourceType(),method:request.method()};
+}
+
+function assertResourceScope() {
+  const origin=new URL(report.url).origin;
+  const unexpected=report.requests.filter(request=>{
+    const url=new URL(request.url);
+    if(['data:','blob:'].includes(url.protocol))return false;
+    if(PHASE==='offline')return request.url!==report.url||request.type!=='document';
+    return !['http:','https:'].includes(url.protocol)||url.origin!==origin;
+  });
+  assert.equal(unexpected.length,0,'All runtime resources are embedded or belong to the exact delivered origin: '+JSON.stringify(unexpected));
+  if(PHASE==='offline'){
+    assert.equal(report.offline.networkDisabledBeforeNavigation,true);
+    assert.equal(report.offline.serviceWorkersBlocked,true);
+    assert.equal(report.offline.blockedRequests.length,0,'No attempted external requests in offline file operation');
+  }
+  return{unexpectedResources:unexpected,requestCount:report.requests.length,
+    externalNetworkRequests:report.requests.filter(r=>/^https?:/.test(r.url)).length,
+    sidecarFileRequests:report.requests.filter(r=>r.url.startsWith('file:')&&r.url!==report.url).length};
+}
+
 async function ensureDataPanel() {
   const open=await bounded('read observation panel toggle',()=>page.locator('#data-toggle').getAttribute('aria-expanded'));
   if(open!=='true')await click('#data-toggle');
@@ -125,6 +157,7 @@ async function readState(label,{save=false,budget=PROBE_MS}={}) {
   return state;
 }
 function assertHealthy(state) {
+  assertResourceScope();
   assert.equal(state.ready,true,'Page reports native ready');
   assert.equal(state.errors?.length,0,'No application errors: '+JSON.stringify(state.errors));
   assert.equal(state.assets?.missing?.length,0,'No missing native runtime assets');
@@ -205,10 +238,24 @@ async function screenshot(name) {
 }
 
 async function nativeRenderEvidence() {
-  return evaluate('read actual scene meshes and linked native materials',()=>{
+  const evidence=await evaluate('read actual scene meshes and linked native materials',()=>{
     const viewer=window.__IDENTITY_QA__?.viewer?.(),renderer=viewer?.renderer,gl=renderer?.getContext();
     if(!viewer||!renderer||!gl)throw Error('Actual native viewer missing');
-    const meshes=[];
+    const meshes=[],faceTextureImages=[],imageIDs=new Map();
+    const textureEvidence=texture=>{
+      if(!texture?.isTexture)return null;
+      const image=texture.image,src=image?.currentSrc||image?.src||null;let imageIndex=null;
+      if(src){
+        if(!imageIDs.has(src)){imageIDs.set(src,faceTextureImages.length);faceTextureImages.push({src,
+          complete:image.complete,naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight});}
+        imageIndex=imageIDs.get(src);
+      }
+      const gpuTexture=renderer.properties.get(texture).__webglTexture;
+      return{uuid:texture.uuid,imageIndex,colorSpace:texture.colorSpace,flipY:texture.flipY,
+        wrapS:texture.wrapS,wrapT:texture.wrapT,generateMipmaps:texture.generateMipmaps,
+        minFilter:texture.minFilter,magFilter:texture.magFilter,
+        gpuTextureAllocated:!!gpuTexture&&gl.isTexture(gpuTexture)};
+    };
     viewer.scene.traverse(mesh=>{
       if(!mesh.isMesh||!/^NPC-[AB]-R07-complete-native-person$/.test(mesh.name))return;
       const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
@@ -216,8 +263,9 @@ async function nativeRenderEvidence() {
         positionCount:mesh.geometry.attributes.position.count,triangles:mesh.geometry.index?.count/3,
         groups:mesh.geometry.groups,attributes:Object.keys(mesh.geometry.attributes),
         rootPosition:mesh.parent?.position.toArray(),rootQuaternion:mesh.parent?.quaternion.toArray(),
-        materials:materials.map(m=>{const p=renderer.properties.get(m).currentProgram;return{name:m.name,uuid:m.uuid,type:m.type,
+        materials:materials.map(m=>{const properties=renderer.properties.get(m),p=properties.currentProgram;return{name:m.name,uuid:m.uuid,type:m.type,
           programID:p?.id??null,linked:!!p?.program&&gl.getProgramParameter(p.program,gl.LINK_STATUS),
+          faceTextures:Object.fromEntries(['uFAtlas','uFChroma'].map(name=>[name,textureEvidence(properties.uniforms?.[name]?.value)])),
           log:p?.program?gl.getProgramInfoLog(p.program):'missing GPU program'};})});
     });
     const lights=[];viewer.scene.traverse(light=>{if(!light.isLight)return;let effectiveVisible=true;
@@ -226,7 +274,10 @@ async function nativeRenderEvidence() {
         visible:light.visible,effectiveVisible,parent:light.parent?.name,position:light.position.toArray()});});
     const debug=gl.getExtension('WEBGL_debug_renderer_info');
     return{sameThreeRuntime:viewer.mesh?.constructor===window.__NPC_THREE__?.Mesh,
-      meshes,contextLost:gl.isContextLost(),renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
+      meshes,faceTextureImages,nativeTextureConstants:{NoColorSpace:window.__NPC_THREE__.NoColorSpace,
+        ClampToEdgeWrapping:window.__NPC_THREE__.ClampToEdgeWrapping,LinearMipmapLinearFilter:window.__NPC_THREE__.LinearMipmapLinearFilter,
+        LinearFilter:window.__NPC_THREE__.LinearFilter},
+      contextLost:gl.isContextLost(),renderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
       vendor:debug?gl.getParameter(debug.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),
       version:gl.getParameter(gl.VERSION),programs:(renderer.info.programs||[]).map(p=>({id:p.id,name:p.name,
         linked:!!p.program&&gl.getProgramParameter(p.program,gl.LINK_STATUS),log:p.program?gl.getProgramInfoLog(p.program):null})),
@@ -237,6 +288,35 @@ async function nativeRenderEvidence() {
         overrideMaterial:viewer.scene.overrideMaterial?.type||null,toneMapping:renderer.toneMapping,
         exposure:renderer.toneMappingExposure,camera:viewer.camera.position.toArray(),aspect:viewer.camera.aspect}};
   },undefined,FRAME_MS);
+  const lock=report.build.nativeFaceTextures;
+  assert.equal(lock?.mode,'embedded-original-png-data-uri','Original face PNGs are explicitly bound by this build');
+  assert.equal(lock.files.length,2);assert.equal(evidence.faceTextureImages.length,2,'Rendered material references resolve to the two original PNGs');
+  for(const image of evidence.faceTextureImages){
+    const src=image.src;delete image.src;
+    assert(src.startsWith('data:image/png;base64,'),'The actual loaded material image is embedded PNG data');
+    const bytes=Buffer.from(src.slice('data:image/png;base64,'.length),'base64');
+    image.embedded=true;image.bytes=bytes.length;image.sha256=sha(bytes);
+    const expected=lock.files.find(file=>file.sha256===image.sha256);
+    assert(expected,'The actual decoded source bytes match a locked original PNG');
+    assert.equal(image.bytes,expected.bytes);assert.equal(image.complete,true);
+    assert.equal(image.naturalWidth,expected.width);assert.equal(image.naturalHeight,expected.height);
+    image.originalName=expected.name;
+  }
+  for(const mesh of evidence.meshes){
+    assert(mesh.materials.some(material=>material.linked&&material.faceTextures.uFAtlas&&material.faceTextures.uFChroma),
+      'Each rendered native person retains a linked material with both original face images');
+    for(const material of mesh.materials)for(const [uniform,texture]of Object.entries(material.faceTextures)){
+      if(!texture)continue;
+      const image=evidence.faceTextureImages[texture.imageIndex],expected=uniform==='uFAtlas'?'detail.png':'chroma.png';
+      assert(image&&image.originalName===expected,'The rendered material uniform references its correct original image: '+uniform);
+      assert.equal(texture.colorSpace,evidence.nativeTextureConstants.NoColorSpace);assert.equal(texture.flipY,false);
+      assert.equal(texture.wrapS,evidence.nativeTextureConstants.ClampToEdgeWrapping);assert.equal(texture.wrapT,evidence.nativeTextureConstants.ClampToEdgeWrapping);
+      assert.equal(texture.generateMipmaps,true);assert.equal(texture.minFilter,evidence.nativeTextureConstants.LinearMipmapLinearFilter);
+      assert.equal(texture.magFilter,evidence.nativeTextureConstants.LinearFilter);
+    }
+  }
+  evidence.embeddedFaceTextureReferencesVerified=true;
+  return evidence;
 }
 
 async function responsiveEvidence() {
@@ -473,15 +553,31 @@ async function main() {
     report.sourceGate={passed:true,sourceHead,buildFile:buildPath,previewSHA256:expected,sourceFiles,browserAcceptance:false};
     put('source-gate.json',report.sourceGate);return report.sourceGate;
   });
-  report.url=process.env.PREVIEW_URL||await startServer();const address=new URL(report.url);
-  assert(['http:','https:'].includes(address.protocol),'Use actual HTTP(S) candidate URLs');
-  report.deliveryMode=['127.0.0.1','localhost','[::1]'].includes(address.hostname)?'same-origin-local-candidate':'fixed-deployed-url';
+  if(PHASE==='offline'){
+    assert(!process.env.PREVIEW_URL,'Offline phase opens the exact built file, not a server URL');
+    assert.equal(report.build.standalone,true);assert.equal(report.build.assetMode,'embedded-native-packets');
+    assert(fs.existsSync(input),'The exact standalone file exists');
+    report.url=pathToFileURL(input).href;report.deliveryMode='standalone-file-offline';
+  }else{
+    report.url=process.env.PREVIEW_URL||await startServer();const address=new URL(report.url);
+    assert(['http:','https:'].includes(address.protocol),'Use actual HTTP(S) candidate URLs');
+    report.deliveryMode=['127.0.0.1','localhost','[::1]'].includes(address.hostname)?'same-origin-local-candidate':'fixed-deployed-url';
+  }
   if(PHASE==='public')assert.equal(report.deliveryMode,'fixed-deployed-url','Public phase requires the fixed PREVIEW_URL');
   stage('launch independent Chromium');
   assert.equal(report.environment.playwright,'1.58.2','CI pins Playwright 1.58.2');
   browser=await bounded('launch isolated SwiftShader Chromium',()=>chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),45000);
   report.environment.chromium=browser.version();
-  context=await bounded('create isolated browser context',()=>browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1}));
+  context=await bounded('create isolated browser context',()=>browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1,serviceWorkers:'block'}));
+  if(PHASE==='offline'){
+    report.offline.serviceWorkersBlocked=true;
+    await bounded('disable networking before standalone file navigation',()=>context.setOffline(true));
+    report.offline.networkDisabledBeforeNavigation=true;
+    await bounded('record and reject attempted offline network resources',()=>context.route(/^https?:\/\//,async route=>{
+      report.offline.blockedRequests.push(requestRecord(route.request()));
+      checkpoint('offline external dependency rejected');await route.abort('internetdisconnected');
+    }));
+  }
   await bounded('install read-only WebGL/fatal error listeners',()=>context.addInitScript(()=>{
     window.__NPC_VERIFY_EVENTS__=[];
     document.addEventListener('webglcontextlost',e=>window.__NPC_VERIFY_EVENTS__.push({type:'webglcontextlost',at:performance.now(),target:e.target?.id||null}),true);
@@ -489,7 +585,7 @@ async function main() {
   }));
   page=await bounded('create verifier page',()=>context.newPage());page.setDefaultTimeout(15000);
   cdp=await bounded('create screenshot and document CDP session',()=>context.newCDPSession(page));
-  // The self-contained HTML includes every native packet (about 65 MB). Keep
+  // The self-contained HTML includes every selected native packet. Keep
   // its actual browser response in this session, and read it through this same
   // session; Playwright's separate default response cache can evict it.
   const documentResponses=[],completedTransfers=new Map();
@@ -502,9 +598,9 @@ async function main() {
   page.on('pageerror',e=>{report.pageErrors.push({at:new Date().toISOString(),message:clip(e.stack||e)});checkpoint('page error');});
   page.on('console',m=>{const row={at:new Date().toISOString(),text:clip(m.text()),location:m.location()};
     if(m.type()==='error'){report.consoleErrors.push(row);checkpoint('console error');}else if(m.type()==='warning'&&report.consoleWarnings.length<200)report.consoleWarnings.push(row);});
-  page.on('request',r=>report.requests.push({url:r.url(),type:r.resourceType(),method:r.method()}));
-  page.on('requestfailed',r=>{report.failedRequests.push({url:r.url(),type:r.resourceType(),failure:r.failure()});checkpoint('request failed');});
-  page.on('response',r=>{if(r.status()>=400){report.httpErrors.push({url:r.url(),status:r.status()});checkpoint('HTTP failure');}});
+  context.on('request',r=>report.requests.push(requestRecord(r)));
+  context.on('requestfailed',r=>{report.failedRequests.push({...requestRecord(r),failure:r.failure()});checkpoint('request failed');});
+  context.on('response',r=>{if(r.status()>=400){report.httpErrors.push({...requestRecord(r.request()),status:r.status()});checkpoint('HTTP failure');}});
   await check('actual navigation loads the exact current HTML',async()=>{
     const response=await bounded('navigate exact candidate URL',()=>page.goto(report.url,{waitUntil:'domcontentloaded',timeout:120000}),125000);
     assert.equal(response?.status(),200);report.finalURL=page.url();assert.equal(report.finalURL,report.url,'The exact candidate URL is loaded');
@@ -586,19 +682,27 @@ async function main() {
   });
   await check('390 x 844 responsive screenshot and accessible UI controls',responsiveEvidence);
   report.startupPassed=true;log('STARTUP PASSED — autonomous suite has not been inferred');
-  if(PHASE==='suite'||PHASE==='public')await check('actual autonomous food chain and B seated',()=>autonomousChain({controls:PHASE==='suite'}));
+  if(['suite','public','offline'].includes(PHASE))await check('actual autonomous food chain and B seated',()=>autonomousChain({controls:PHASE==='suite'}));
   if(PHASE==='suite')await check('real UI weather and new-object response',weatherAndSpawn);
   await ensureDataPanel();const final=await readState('final',{save:true});
   await check('no missing native assets, runtime, HTTP or ownership errors',async()=>{assertHealthy(final);return{nativeAssetsMissing:0,applicationErrors:0,pageErrors:0,consoleErrors:0,httpErrors:0,failedRequests:0,invariants:final.simulation.invariants};});
+  if(PHASE==='offline')await check('actual standalone file operates offline without sidecar resources',async()=>{
+    assert.equal(new URL(report.finalURL).protocol,'file:');assert.equal(report.deliveryMode,'standalone-file-offline');
+    assert.equal(final.assets.mode,'embedded');assert.equal(report.autonomousChainPassed,true);
+    const scope=assertResourceScope();assert.equal(scope.externalNetworkRequests,0);assert.equal(scope.sidecarFileRequests,0);
+    report.offline={...report.offline,...scope,actualFileURL:report.finalURL,actualDocumentSHA256:report.observedPreviewSHA256,
+      nativeStartupPassed:true,autonomousPhysicalChainPassed:true,serverUsed:false,verified:true};
+    report.offlineVerified=true;put('offline-proof.json',report.offline);return report.offline;
+  });
   await saveDOM('final-dom');
   report.fullSuitePassed=PHASE==='suite';report.completed=true;report.status=PHASE.toUpperCase()+'_PASSED';
   report.publicURLVerified=PHASE==='public'&&report.autonomousChainPassed&&report.deliveryMode==='fixed-deployed-url';
-  log('verification complete',{status:report.status,startupPassed:report.startupPassed,fullSuitePassed:report.fullSuitePassed,publicURLVerified:report.publicURLVerified});
+  log('verification complete',{status:report.status,startupPassed:report.startupPassed,fullSuitePassed:report.fullSuitePassed,offlineVerified:report.offlineVerified,publicURLVerified:report.publicURLVerified});
 }
 
 main().catch(async error=>{
   failureMode=true;report.failedStage=report.stage;report.failure=clip(error.stack||error);report.status='FAILED';report.completed=false;
-  report.fullSuitePassed=false;report.publicURLVerified=false;process.exitCode=1;stage('bounded failure evidence');checkpoint('original failure saved before any browser wait');
+  report.fullSuitePassed=false;report.offlineVerified=false;report.publicURLVerified=false;process.exitCode=1;stage('bounded failure evidence');checkpoint('original failure saved before any browser wait');
   if(lastDOM)put('last-successful-dom-state.json',lastDOM);
   const deadline=Math.min(Date.now()+FAILURE_MS,started+TOTAL_MS-CLOSE_MS-2000);
   const diagnose=async(label,fn)=>{const budget=Math.min(12000,deadline-Date.now());if(budget<=0){report.failureDiagnostics.push({label,status:'skipped',reason:'failure capture deadline'});return;}
@@ -621,10 +725,10 @@ main().catch(async error=>{
   if(browser)try{await bounded('close independent browser',()=>browser.close(),CLOSE_MS);}catch(e){report.cleanup.errors.push(clip(e.message));}
   if(server)try{server.closeAllConnections?.();await bounded('close same-origin server',()=>new Promise((resolve,reject)=>server.close(e=>e?reject(e):resolve())),3000);}catch(e){report.cleanup.errors.push(clip(e.message));}
   report.cleanup.completed=report.cleanup.errors.length===0;
-  if(!report.cleanup.completed){report.completed=false;report.fullSuitePassed=false;report.publicURLVerified=false;report.status='FAILED_CLEANUP';process.exitCode=1;}
+  if(!report.cleanup.completed){report.completed=false;report.fullSuitePassed=false;report.offlineVerified=false;report.publicURLVerified=false;report.status='FAILED_CLEANUP';process.exitCode=1;}
   report.finishedAt=new Date().toISOString();report.elapsedMS=Date.now()-started;clearInterval(checkpointTimer);checkpoint('final durable evidence');clearTimeout(watchdog);
   fs.writeSync(1,JSON.stringify({status:report.status,phase:PHASE,sourceGatePassed:report.sourceGate.passed,startupPassed:report.startupPassed,
-    autonomousChainPassed:report.autonomousChainPassed,fullSuitePassed:report.fullSuitePassed,publicURLVerified:report.publicURLVerified,
+    autonomousChainPassed:report.autonomousChainPassed,fullSuitePassed:report.fullSuitePassed,offlineVerified:report.offlineVerified,publicURLVerified:report.publicURLVerified,
     visualAcceptance:false,output:out,elapsedMS:report.elapsedMS,failure:report.failure},null,2)+'\n');
   if(!report.cleanup.completed)process.exit(1);
 });

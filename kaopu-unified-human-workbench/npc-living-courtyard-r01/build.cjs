@@ -25,6 +25,7 @@ const HOST_SHA256 = 'd1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781
 const CANNON_SHA256 = 'f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c';
 const here = __dirname;
 const hostPath = path.resolve(here, 'vendor/r07-preview.html');
+const faceLockPath = path.join(here, 'native-face-assets.json');
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const patch = (source, anchor, replacement, count = 1) => {
   assert.equal(source.split(anchor).length, count + 1, 'R07 adapter anchor: ' + anchor);
@@ -131,6 +132,46 @@ function threeAliasPlugin() {
   };
 }
 
+function embeddedNativeFaceTextures(html) {
+  const lock = JSON.parse(fs.readFileSync(faceLockPath, 'utf8'));
+  assert.equal(lock.canonicalSHA256, HOST_SHA256, 'Face textures belong to this exact R07 source');
+  assert.deepEqual(lock.files.map(file => file.name), ['detail.png', 'chroma.png']);
+  const dataURIs = {};
+  for (const file of lock.files) {
+    const bytes = fs.readFileSync(path.join(here, 'vendor', file.local));
+    assert.equal(bytes.length, file.bytes, 'Native face texture size ' + file.name);
+    assert.equal(hash(bytes), file.sha256, 'Native face texture SHA ' + file.name);
+    assert.equal(file.mimeType, 'image/png');
+    assert(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])), 'Native face PNG signature ' + file.name);
+    assert.equal(bytes.toString('ascii',12,16), 'IHDR');
+    assert.equal(bytes.readUInt32BE(16), file.width);
+    assert.equal(bytes.readUInt32BE(20), file.height);
+    assert.equal(bytes[24], file.bitDepth);
+    assert.equal(bytes[25], file.colorType);
+    dataURIs[file.name] = 'data:image/png;base64,' + bytes.toString('base64');
+  }
+  // Only replace the transport argument of the original TextureLoader call.
+  // Its original NoColorSpace/flipY/wrap/mipmap/filter then-clause is retained.
+  html = patch(html,
+    'new URL("./assets/"+e,"' + lock.sourceModuleURL + '").href',
+    '(' + JSON.stringify(dataURIs) + ')[e]');
+  const license = fs.readFileSync(path.join(here, 'vendor', lock.license.local));
+  assert.equal(license.length, lock.license.bytes, 'Native face license size');
+  assert.equal(hash(license), lock.license.sha256, 'Original native face license retained');
+  // The source UI already includes the attribution link. Keep it functional
+  // without a network dependency, retaining all source credits verbatim.
+  html = patch(html,
+    'new URL("./THIRD_PARTY.txt","' + lock.sourceModuleURL.replace('FaceSkin.mjs','FaceUI.mjs') + '").href',
+    JSON.stringify('data:text/plain;charset=utf-8;base64,' + license.toString('base64')));
+  return {html, report:{
+    mode:'embedded-original-png-data-uri',
+    sourceCommit:lock.sourceCommit, lockSHA256:hash(fs.readFileSync(faceLockPath)),
+    files:lock.files, license:lock.license,
+    unchangedTextureSettings:lock.unchangedTextureSettings,
+    resampled:false, recolored:false, originalLicenseEmbedded:true
+  }};
+}
+
 function embeddedNativeAssets(manifestBytes) {
   const lockPath = path.join(here,'vendor/PACKETS.json');
   assert(fs.existsSync(lockPath), 'Offline packet cache missing. Run prepare.cjs --packets <observed native packet IDs> or --all-native.');
@@ -207,6 +248,8 @@ async function main() {
   assert.equal(original.byteLength, 5449139, 'Canonical R07 host byte count');
   verifyNativeExports(original.toString('utf8'));
   let html = exposeNativeThree(original.toString('utf8'));
+  const nativeFaceTextures = embeddedNativeFaceTextures(html);
+  html = nativeFaceTextures.html;
 
   // R06 already starts native idle lazily. This second guard prevents a hidden
   // original control from triggering the expensive facial bake during actor work.
@@ -246,6 +289,7 @@ async function main() {
     nativeGeometryRetained: true,
     allNativeCoefficientsRetained: true,
     nativeSkinAndEyeTexturesRetained: true,
+    nativeFaceTextures: nativeFaceTextures.report,
     idleCalibration: 'deferred',
     hiddenCatalogueThumbnails: 'not-requested',
     assetMode: offline ? 'embedded-native-packets' : 'same-origin-native-packets',
@@ -310,7 +354,8 @@ async function main() {
   assert.equal(hash(fs.readFileSync(hostPath)), HOST_SHA256, 'Build must not mutate the canonical source');
   const outputPath = path.join(here, offline ? 'standalone.html' : 'dist/index.html');
   fs.writeFileSync(outputPath, html);
-  const sourceFiles = Object.keys(built.metafile.inputs).filter(file => !file.startsWith('r07-native:'));
+  const sourceFiles = Object.keys(built.metafile.inputs).filter(file => !file.startsWith('r07-native:'))
+    .concat(path.relative(process.cwd(), faceLockPath));
   Object.assign(report, {
     builtAt: new Date().toISOString(), esbuildVersion: esbuild.version,
     previewBytes: Buffer.byteLength(html), previewSHA256: hash(html),

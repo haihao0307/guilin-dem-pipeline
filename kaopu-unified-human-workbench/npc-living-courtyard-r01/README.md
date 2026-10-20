@@ -16,9 +16,9 @@ Two complete native HUMAN-INTEGRATED-R07 people inhabit an original interactive 
 
 `node src/life-tests.mjs` runs renderer-independent semantic tests. Their acknowledgements are test fixtures and do not prove visual contact.
 
-`node build.cjs` verifies the locked source and dependency hashes, checks every resulting inline script, bundles the authored modules and emits `dist/index.html`. Native compressed packets are copied to `dist/assets/` and are fetched from the same origin, retaining their original checksums. The published page does not depend on a runtime third-party CDN.
+`node build.cjs` verifies the locked source and dependency hashes, checks every resulting inline script, bundles the authored modules and emits `dist/index.html`. Native compressed packets are copied to `dist/assets/` and are fetched from the same origin, retaining their original checksums. The R07 face detail/chroma PNGs are embedded as exact original bytes in both builds, with their original texture settings and attribution retained. Their pinned source URLs, sizes, image dimensions and SHA-256 values are recorded in `native-face-assets.json`; the delivered runtime needs no remote texture download.
 
-`node build.cjs --offline` produces a separate self-contained HTML from the verified packet cache. Its runtime verification must be recorded separately; creating this file alone does not certify offline operation.
+`node build.cjs --offline` additionally embeds the verified native packet cache into one HTML. Its actual `file://` startup, interaction and zero-network verification must be recorded separately; creating the file or serving it through HTTP does not certify offline operation.
 
 ## Simulation and execution
 

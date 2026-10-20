@@ -19,11 +19,35 @@ const lockedFiles = {
 };
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const nativeBase = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/475ead2759159b83927a1aa8ae6879595e1d18bc/kaopu-unified-human-workbench/human-integrated-r05/';
+const faceAssets = require('./native-face-assets.json');
 async function download(url) {
   // curl respects the build environment's configured network proxy. This is a
   // build-time byte fetch only; no package lifecycle or downloaded script runs.
   const {stdout} = await execFile('curl',['--fail','--silent','--show-error','--location','--max-time','120',url],{encoding:'buffer',maxBuffer:8*1024*1024});
   return stdout;
+}
+
+async function prepareNativeFaceTextures() {
+  for (const file of [...faceAssets.files, faceAssets.license]) {
+    const target = path.join(vendor, file.local);
+    let bytes = fs.existsSync(target) ? fs.readFileSync(target) : null;
+    if (!bytes || bytes.length !== file.bytes || hash(bytes) !== file.sha256) {
+      bytes = await download(file.url);
+      assert.equal(bytes.length, file.bytes, 'Native face asset size ' + file.name);
+      assert.equal(hash(bytes), file.sha256, 'Native face asset SHA ' + file.name);
+      fs.mkdirSync(path.dirname(target), {recursive:true});
+      fs.writeFileSync(target, bytes);
+    }
+    if (file.mimeType === 'image/png') {
+      assert(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])), 'Original PNG signature ' + file.name);
+      assert.equal(bytes.toString('ascii',12,16), 'IHDR');
+      assert.equal(bytes.readUInt32BE(16), file.width);
+      assert.equal(bytes.readUInt32BE(20), file.height);
+      assert.equal(bytes[24], file.bitDepth);
+      assert.equal(bytes[25], file.colorType);
+    }
+  }
+  console.log('Native face textures verified: exact detail/chroma PNG bytes and original attribution.');
 }
 
 async function prepareNativePackets() {
@@ -108,6 +132,7 @@ async function main() {
     const host=await download('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/5543f756ca3af1428323696324303fa70b8de850/kaopu-unified-human-workbench/human-integrated-r07/preview.html');
     assert.equal(hash(host),hostHash,'Canonical R07 host integrity');fs.writeFileSync(hostPath,host);
   }
+  await prepareNativeFaceTextures();
   await prepareNativePackets();
   console.log('Dependencies verified: Cannon 0.20.0, esbuild 0.25.11; Three comes from the unchanged canonical host.');
 }

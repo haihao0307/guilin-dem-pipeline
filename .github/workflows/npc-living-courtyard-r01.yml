@@ -52,11 +52,11 @@ jobs:
         working-directory: kaopu-unified-human-workbench/npc-living-courtyard-r01
         run: |
           node build.cjs --offline
-      - name: Verify the self-contained document with real Chromium
+      - name: Verify the standalone file and autonomous actions with networking disabled
         timeout-minutes: 17
         working-directory: kaopu-unified-human-workbench/npc-living-courtyard-r01
         env:
-          NPC_QA_PHASE: startup
+          NPC_QA_PHASE: offline
           NPC_QA_OUT: /tmp/courtyard-offline
           PREVIEW_FILE: standalone.html
           NPC_BUILD_FILE: BUILD.standalone.json
