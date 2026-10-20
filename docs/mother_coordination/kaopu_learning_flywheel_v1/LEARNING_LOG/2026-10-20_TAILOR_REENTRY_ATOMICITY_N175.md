@@ -24,6 +24,16 @@ This failure is not caused by render-demand deferral. The display/demand path sa
 4. The initial independent geometry audit explicitly does not check thickness clearance or continuous time. Zero triangle crossings at step 0 therefore cannot authorize continued dynamics.
 5. Step rollback protects the start of the failed fourth step. It does not prove that the pre-reentry two-garment active world remains available unchanged if the entire insertion attempt is rejected.
 
+## Follow-up positive control at current PR head
+
+PR #315 advanced to `5186f8a5d71a5e75059539f83a31b2ba1e53042b`. Workflow `39391889463` and re-entry artifact `12251619456` (`sha256:69fb34accaa6b561f7fdf1667df922754fe7d4aaa7f5235f6d74fc94f7ef0297`) pass the required six-job matrix. The re-entry member completes three remove/restart cycles with 34, 31 and 32 accepted restored steps and 48 selected full geometry checks.
+
+The source and test contract remain explicit: `world.add()` calls the all-garment `initialize()` path, and the test expects garment/world clocks to return to zero. The corrective change scopes dynamic strain repair to garments whose edges violate the hard limit; it does not introduce a staging world, preserve the accepted two-garment state, or resume its clock.
+
+Updated finding: `GLOBAL_REDRESS_RESTART_VERIFIED_SCOPED__RESUME_STILL_HOLD`.
+
+This is a genuine positive control and narrows N175: a product may intentionally implement `GLOBAL_REDRESS_RESTART`, reset every garment and clock, and pass a restart gate. It may not call that operation retained-state resume. Atomic staging remains necessary only if the intended semantic is `REMOVED_AND_REINSERTED` with continuity of the accepted inner world.
+
 ## State contract candidate
 
 | Operation | State obligation | Decision |
@@ -31,6 +41,7 @@ This failure is not caused by render-demand deferral. The display/demand path sa
 | `HIDDEN_RENDER_ONLY` | Keep `p/v/old`, constraints, contact participation, clock and member set live; defer only beauty upload/atlas work where shadow demand allows. | Existing direction is valid. |
 | `PHYSICS_DORMANT` | Preserve exact state and declare contact-history invalidation/rebuild; require scoped clearance proof before resume. | Candidate only; no such proof observed. |
 | `REMOVED_AND_REINSERTED` | Stage the new member against a frozen snapshot outside the active world; run intersection plus thickness gates and a delayed-failure window; atomically commit or leave the old world unchanged. | Required for PR #315's semantics; not implemented. |
+| `GLOBAL_REDRESS_RESTART` | Declare that all garments and clocks restart; build a new lineage; run the full restart and geometry gate; make no retained-state continuity claim. | Implemented and gate-run at current PR head, scoped to the published re-entry scenario. |
 
 State custody for retained garments includes at least position, velocity, previous position, rest/constraint identity, material/thickness parameters, contact-history policy, clock/substep, member-set digest and exact body pose. A topology/member-set change is not an uninterrupted continuation merely because the visible garment IDs match again.
 
@@ -44,7 +55,7 @@ From one frozen two-garment accepted snapshot, compare current global reinitiali
 4. Before commit, prove the active-world hash is unchanged. On any staging failure, discard staging and prove the same again.
 5. Commit the complete new member set once, with a new lineage/state digest. Only post-commit time may advance as the new world.
 
-The isolated historical classifier reproduces the actual hold and three counterfactual controls: 4/4. It creates `TAILOR-REENTRY-ATOMICITY-001` as inactive Candidate because existing cases cover history phase, solver-claim scope and byte staging, but not live member-set atomicity.
+The isolated historical classifier reproduces the original hold, three earlier controls, the current restart positive control, and a false resume claim: 6/6. It keeps `TAILOR-REENTRY-ATOMICITY-001` inactive because the product semantic choice has not been acknowledged by the Tailor Mother.
 
 ## Boundaries and lifecycle
 
@@ -53,4 +64,6 @@ This does not implement a solver, relax thresholds, prove arbitrary motion, cert
 - Production failure: `OBSERVED`.
 - Candidate regression historical replay: `GATE-RUN=true` only for the classifier, not the production gate.
 - Mother route: `POSTED=true`; directed receipt: <https://github.com/haihao0307/guilin-dem-pipeline/pull/315#issuecomment-6286171974>.
-- `ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`.
+- For `GLOBAL_REDRESS_RESTART` only: `IMPLEMENTED=true`, `GATE-RUN=true` at workflow `39391889463`.
+- For atomic retained-state reinsertion: `IMPLEMENTED / GATE-RUN=false`.
+- `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false` for the N175 contract; the Mother has not answered the semantic choice.
