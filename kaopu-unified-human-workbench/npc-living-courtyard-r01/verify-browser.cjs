@@ -179,6 +179,8 @@ async function saveDOM(label,budget=PROBE_MS) {
 
 async function screenshot(name) {
   await hideDataPanel();
+  if(page.viewportSize().width>800)await bounded('show journal heading before screenshot '+name,
+    ()=>page.locator('#life-app .brand').scrollIntoViewIfNeeded({timeout:15000}));
   const frame=await evaluate('wait for completed native GPU frame '+name,async()=>{
     const app=window.__LIVING_COURTYARD__,viewer=window.__IDENTITY_QA__?.viewer?.();
     if(!app?.awaitFrame||!viewer?.renderer)throw Error('Actual native frame waiter is unavailable');
@@ -297,7 +299,8 @@ function contactProof(evidence,kind) {
 
 async function autonomousChain({controls=false}={}) {
   report.fullSuiteRun=controls;await ensureDataPanel();await click('[data-person="A"]');await click('#reset');
-  await ensureDataPanel();if((await bounded('read speed control',()=>page.locator('#speed').textContent())).trim()!=='2×')await click('#speed');
+  await ensureDataPanel();const initialSpeed=controls?'1×':'2×';
+  if((await bounded('read speed control',()=>page.locator('#speed').textContent())).trim()!==initialSpeed)await click('#speed');
   await pause(false);
   const until=Math.min(Date.now()+CHAIN_MS,activeDeadline),receipts=new Map();let seat=null,interrupted=null,shopClosed=null,lastTime=-1;
   while(Date.now()<until) {
@@ -315,10 +318,11 @@ async function autonomousChain({controls=false}={}) {
     }
     if(controls&&!interrupted&&a.task?.kind==='collect') {
       const itemAction=s.items.actions.find(r=>r.actorId==='A'&&r.token===a.task.token);
-      if(itemAction?.grasped&&!itemAction.finished&&itemAction.progress>.60&&itemAction.progress<.90) {
+      if(itemAction?.grasped&&!itemAction.finished) {
+        const observedToken=a.task.token;
         await pause(true);const before=await readState('interrupt-before',{save:true});
         const actor=before.simulation.actors.find(x=>x.id==='A'),active=before.items.actions.find(x=>x.actorId==='A');
-        if(actor.task?.kind==='collect'&&active?.grasped&&!active.finished) {
+        if(actor.task?.kind==='collect'&&actor.task.token===observedToken&&active?.token===observedToken&&active.grasped&&!active.finished) {
           const token=actor.task.token,id=actor.task.targetId;await click('#interrupt');await pause(false);
           const after=await waitState('physical-interruption',state=>{
             const item=state.items.items.find(i=>i.id===id);return !state.items.actions.some(r=>r.token===token)&&item&&item.heldBy===null;
@@ -329,6 +333,7 @@ async function autonomousChain({controls=false}={}) {
           assert(Math.hypot(item.position[0]-logical.x,item.position[2]-logical.z)<.001,'Released real bottle position stays synchronized with navigation');
           interrupted={token,bottleId:id,before:actor,after:actorAfter,physical:item,logical};put('physical-interruption.json',interrupted);
           log('Real UI interruption released held bottle without a transaction');
+          if((await bounded('read speed after physical interruption',()=>page.locator('#speed').textContent())).trim()!=='2×')await click('#speed');
         } else await pause(false);
       }
     }
