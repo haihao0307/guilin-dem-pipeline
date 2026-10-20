@@ -52,5 +52,5 @@ This does not implement a solver, relax thresholds, prove arbitrary motion, cert
 
 - Production failure: `OBSERVED`.
 - Candidate regression historical replay: `GATE-RUN=true` only for the classifier, not the production gate.
-- Mother route: `POSTED=false` until the directed PR comment exists.
+- Mother route: `POSTED=true`; directed receipt: <https://github.com/haihao0307/guilin-dem-pipeline/pull/315#issuecomment-6286171974>.
 - `ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`.
