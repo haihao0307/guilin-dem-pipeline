@@ -1,0 +1,89 @@
+import {THREE,createActors} from './ActorAdapter.mjs';
+import {LifeWorld,DIM} from './LifeWorld.mjs';
+
+const phaseNames={idle:'待命',waiting:'等待物品使用权',approach:'伸手接近',close:'接触 / 闭指',lift:'抬离桌面',transfer:'移向收纳区',lower:'降低物品',verify:'松手 / 检查落稳',done:'任务结束',failed:'未完成',cancelled:'已中断'};
+const html=`<header><div><div class="eyebrow">KAOPU / HUMAN × ENVIRONMENT</div><h1>生活动作观察台</h1></div><div class="top-meta">R07 完整人物 · R01 交互<br><span id="npc-ready">正在准备人物</span></div></header>
+<aside><section class="section"><h2>01 / 选择工作位人物</h2><p>同一套原生骨骼与完整皮肤，三种实际体型。切换人物后，重新按其手臂尺寸求解接触。</p><div id="npc-choices"><button class="actor-select" data-person="0" disabled><b>A</b><span>高瘦<small>原生身体 / P01</small></span></button><button class="actor-select" data-person="1" disabled><b>B</b><span>矮壮<small>原生身体 / P02</small></span></button><button class="actor-select" data-person="2" disabled><b>C</b><span>结实<small>原生身体 / P05</small></span></button></div><div class="row"><button id="npc-pair" disabled>双人共同工作位</button><button id="npc-pick" disabled>选中人物拿放</button></div></section>
+<section class="section"><h2>02 / 任务与协作</h2><button class="primary" id="npc-plan" disabled>按身份开始整理</button><div class="row"><button id="npc-contend" disabled>两人争用同一物品</button><button id="npc-cancel" disabled>中断当前持有者</button></div><div class="row"><button id="npc-pause" disabled>暂停</button><button id="npc-step" disabled>单步 1/120 秒</button><button id="npc-reset" disabled>重置场景</button></div><p id="npc-status" role="status">正在从当前人物总平台准备完整人物与独立动作绑定。</p><div id="npc-agents"></div></section>
+<section class="section"><h2>03 / 改变环境，观察结果</h2><div class="row"><button id="npc-target" disabled>移动收纳区</button><button id="npc-support" disabled>移开支撑面</button></div><p>拿起后可移开桌面：松手时物品会下落，任务应报告失败。物理世界的结果直接决定回执。</p><button id="npc-run-qa" disabled>运行这一版验收</button><pre id="npc-qa">尚未运行本次验收。</pre></section>
+<details><summary>实时数据与事件</summary><pre id="npc-events"></pre><button id="npc-export" disabled>导出本次数据 JSON</button><pre id="npc-data"></pre></details><p>本轮：固定桌边站位、程序 IK、有限力辅助握持、刚体拿放、同场景 NPC 占用。身体保持原生蒙皮；尚未接入整房间导航、完整手指摩擦抓握或跨设备联机。</p></aside>
+<section id="npc-view" aria-label="生活人物与物品实时三维场景"><div class="view-tools"><button data-camera="all">全景</button><button data-camera="contact">手部接触</button><button data-camera="side">侧面</button><button id="npc-debug">接触标记</button></div><div id="npc-stats">准备物理世界…</div><div id="npc-caption">实时三维 · 拖动旋转 / 滚轮缩放<br>人物使用当前主线 R07 原生形态与完整程序皮肤</div><div id="npc-loader"><div class="load-box"><h2>准备三种完整人物</h2><div class="line"></div><p id="npc-progress">读取固定版本的原生形态与皮肤依赖。</p></div></div></section>`;
+const app=document.createElement('div');app.id='npc-app';app.innerHTML=html;document.body.classList.add('npc-observe');document.body.append(app);const $=id=>document.getElementById(id);const sourceStage=$('stage');if(sourceStage)$('npc-view').prepend(sourceStage);
+const errors=[];addEventListener('error',e=>{errors.push(String(e.message));});addEventListener('unhandledrejection',e=>{errors.push(String(e.reason?.message||e.reason));});
+const fmt=(n,d=3)=>Number.isFinite(n)?n.toFixed(d):'—';
+
+function visibleWorld(scene){
+  const root=new THREE.Group();root.name='NPC life shared world';scene.add(root);
+  const mat=(color,roughness=.72)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0});
+  const wood=mat('#655347'),edge=mat('#423e39'),floorMat=mat('#334047',.91),ceramic=mat('#bdc9b5',.42),cap=mat('#46594f',.48),targetMat=new THREE.MeshBasicMaterial({color:'#bad8b1',transparent:true,opacity:.2,depthWrite:false});
+  const box=(size,pos,material,parent=root)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...pos);parent.add(m);return m};
+  box([7,.08,5],[.4,-.044,.4],floorMat);
+  const table=new THREE.Group();root.add(table);box(DIM.tableHalf.map(v=>v*2),DIM.tableCentre,wood,table);for(const x of[-.51,.51])for(const z of[.25,.64])box([.045,DIM.tableTop-.07,.045],[x,(DIM.tableTop-.07)/2,z],edge,table);
+  const bottle=new THREE.Group();root.add(bottle);const body=new THREE.Mesh(new THREE.CylinderGeometry(DIM.radius,DIM.radius,DIM.height,32),ceramic);bottle.add(body);const lid=new THREE.Mesh(new THREE.CylinderGeometry(DIM.radius*.9,DIM.radius*.9,.009,32),cap);lid.position.y=DIM.height/2-.006;bottle.add(lid);
+  const zone=box([.16,.002,.15],[DIM.target[0],DIM.tableTop+.001,DIM.target[2]],targetMat);
+  const markMaterial=new THREE.MeshBasicMaterial({color:'#eaca8a',depthTest:false});const targetMark=new THREE.Mesh(new THREE.SphereGeometry(.009,12,8),markMaterial);root.add(targetMark);targetMark.visible=false;
+  const hands=[];for(let i=0;i<3;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.006,12,8),new THREE.MeshBasicMaterial({color:i===0?'#72e9d1':i===1?'#83baff':'#d8beee',depthTest:false}));root.add(m);m.visible=false;hands.push(m);}
+  return{root,table,bottle,zone,targetMark,hands,sync(w,debug){bottle.position.copy(w.bottle.position);bottle.quaternion.copy(w.bottle.quaternion);table.visible=w.supportEnabled;zone.position.set(w.target[0],DIM.tableTop+.001,w.target[2]);targetMark.position.set(...w.contactAnchor());targetMark.visible=debug;w.actors.forEach((a,i)=>{const p=a.handAnchor();hands[i].position.set(...(Array.isArray(p)?p:[p.x,p.y,p.z]));hands[i].visible=debug;});}};
+}
+
+async function main(){
+  const result=await createActors({onProgress:p=>{$('npc-progress').textContent=typeof p==='string'?p:JSON.stringify(p);}});
+  const {actors,viewer}=result;if(actors.length!==3)throw Error('Observation requires three complete native actors');
+  actors.forEach((a,i)=>{a.id=a.id||['A','B','C'][i];});
+  const canvas=viewer.renderer.domElement;if(!sourceStage.contains(canvas))sourceStage.append(canvas);
+  viewer.renderer.setPixelRatio(1);viewer.camera.near=.02;viewer.camera.far=30;viewer.camera.updateProjectionMatrix();
+  const props=visibleWorld(viewer.scene);let selected=0,pair=false,paused=false,debug=false,acc=0,last=performance.now(),lastUI=0,frameMS=[],probe=null;
+  const world=new LifeWorld(actors,{onEvent:()=>{}});
+  function station(mode){
+    world.reset();pair=mode==='pair';
+    actors.forEach((a,i)=>{const base=a.floorOffset??a.binding?.floorOffset??0;const p=pair?[[ -.40,base,-.06],[.40,base,-.06],[1.48,base,-.10]][i]:(i===selected?[0,base,-.06]:[i<selected?-1.05:1.1+(i-selected-1)*.82,base,-.13]);a.root.position.set(...p);a.root.rotation.set(0,0,0);a.setSide?.(pair?(i===0?'L':'R'):'R');a.rest();a.root.updateMatrixWorld(true);});
+    for(const [i,b] of [...document.querySelectorAll('[data-person]')].entries())b.setAttribute('aria-pressed',String(!pair&&i===selected));$('npc-pair').setAttribute('aria-pressed',String(pair));camera('all');
+  }
+  function camera(mode){let p,target;if(mode==='contact'){p=[.7,1.3,1.65];target=[.02,1.02,.32];}else if(mode==='side'){p=[3.2,1.55,1.3];target=[.25,1,.1];}else{p=[1.7,1.65,4.0];target=[.28,.92,.10];}viewer.camera.position.set(...p);viewer.orbit.target.set(...target);viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();viewer.render();}
+  function resize(){const r=sourceStage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;viewer.camera.updateProjectionMatrix();viewer.render();}
+  const ro=new ResizeObserver(resize);ro.observe(sourceStage);addEventListener('resize',resize);
+  $('npc-pair').onclick=()=>station('pair');for(const b of document.querySelectorAll('[data-person]'))b.onclick=()=>{selected=+b.dataset.person;station('single');};
+  $('npc-pick').onclick=()=>world.request(actors[selected].id);
+  $('npc-plan').onclick=()=>{if(!pair)station('pair');world.startIdentityPlan();};
+  $('npc-contend').onclick=()=>{if(!pair)station('pair');world.request(actors[0].id,'contention-test');world.request(actors[1].id,'contention-test');};
+  $('npc-cancel').onclick=()=>{const id=world.heldBy||world.reservedBy||actors[selected].id;world.cancel(id);};
+  $('npc-pause').onclick=()=>{paused=!paused;$('npc-pause').textContent=paused?'继续':'暂停';};$('npc-step').onclick=()=>{paused=true;$('npc-pause').textContent='继续';world.tick(1/120);props.sync(world,debug);viewer.render();updateUI();};
+  $('npc-reset').onclick=()=>{world.reset();probe=null;$('npc-run-qa').disabled=false;};$('npc-target').onclick=()=>world.moveTarget();$('npc-support').onclick=()=>{world.setSupport(!world.supportEnabled);$('npc-support').textContent=world.supportEnabled?'移开支撑面':'恢复支撑面';};
+  for(const b of document.querySelectorAll('[data-camera]'))b.onclick=()=>camera(b.dataset.camera);
+  $('npc-debug').onclick=()=>{debug=!debug;props.sync(world,debug);};
+  function download(){const data={...world.snapshot(),errors,performance:perf(),build:window.__NPC_BUILD__,verification:probe?.report||null};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='npc-life-observation-r01-data.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  $('npc-export').onclick=download;
+  const perf=()=>{const s=frameMS.slice().sort((a,b)=>a-b);return{samples:s.length,medianFrameMS:s.length?s[Math.floor(s.length*.5)]:null,p95FrameMS:s.length?s[Math.floor(s.length*.95)]:null,renderer:viewer.renderer.getContext().getParameter(viewer.renderer.getContext().RENDERER),pixelRatio:viewer.renderer.getPixelRatio(),visibleActors:actors.filter(a=>a.root.visible).length};};
+  function updateUI(){const s=world.snapshot(),obj=s.object;$('npc-ready').textContent=`${actors.length} 个完整人物 · ${paused?'已暂停':'实时运行'}`;
+    $('npc-status').textContent=world.heldBy?`${world.heldBy} 正在握持；物品受有限力约束。`:world.reservedBy?`${world.reservedBy} 已取得物品使用权。`:world.goal()?'物品已经释放并在收纳区稳定。':'物品处于共享物理世界，等待任务。';
+    $('npc-agents').innerHTML=s.agents.map(a=>`<div class="agent-line"><b>${a.id} / ${a.role}</b> · ${phaseNames[a.phase]||a.phase}${a.result?`<br>${a.result.detail||''}`:''}</div>`).join('')+(world.autonomous?`<div class="agent-line">C / ${world.review.phase}<br>${world.review.reason}</div>`:'');
+    const current=s.agents.find(a=>a.id===world.heldBy);$('npc-stats').innerHTML=`<div><span class="label">物品持有者</span><b>${obj.heldBy||'无'}</b></div><div><span class="label">实际约束数</span>${obj.constraintCount}</div><div><span class="label">接触误差</span>${current?fmt(current.contactErrorM*1000,1)+' mm':'—'}</div><div><span class="label">物品高度</span>${fmt(obj.position[1])} m</div><div><span class="label">实际支撑</span>${obj.supported?'桌面接触':'无桌面接触'}</div><div><span class="label">速度</span>${fmt(Math.hypot(...obj.velocity))} m/s</div><div><span class="label">物理时间</span>${fmt(world.time,1)} s</div><div><span class="label">最近帧耗</span>${fmt(perf().medianFrameMS,0)} ms</div>`;
+    $('npc-events').textContent=s.events.slice(-10).map(e=>`${fmt(e.t,2)}  ${e.actor||'世界'}  ${e.type}${e.phase?' / '+phaseNames[e.phase]:''}`).join('\n');
+    if($('npc-data').parentElement.open)$('npc-data').textContent=JSON.stringify({...s,performance:perf(),errors},null,2);
+    $('npc-caption').innerHTML=`实时三维 · 拖动旋转 / 滚轮缩放<br>${pair?'A 与 B 共享一件物品，C 读取结果':'当前工作位 '+actors[selected].id+'；其余人物保留在同一场景'}<br>当前人物的完整细分表皮与骨骼绑定：${actors.map(a=>a.binding?.report?.displayVertices||'?').join(' / ')} 顶点`;
+  }
+  // QA is explicit and observable. It drives the same task methods and measures the same world.
+  class ProbeSuite{
+    constructor(){this.index=0;this.started=false;this.report={startedAt:new Date().toISOString(),completed:false,tests:[],errors};this.tests=[...actors.map((_,i)=>({name:`${actors[i].id} 原生体型拿放`,kind:'pick',actor:i})),{name:'双人同时申请与等待',kind:'contention'},{name:'持有途中中断与重新申请',kind:'cancel'},{name:'移走支撑后不得报告放置成功',kind:'support'}];}
+    update(){const test=this.tests[this.index];if(!test)return;
+      if(!this.started){selected=test.actor||0;station(test.kind==='contention'||test.kind==='cancel'?'pair':'single');this.start=world.time;this.phase='run';this.started=true;this.action=false;this.contactStart=world.audit.contacts.length;if(['contention','cancel'].includes(test.kind)){world.request(actors[0].id);world.request(actors[1].id);}else world.request(actors[selected].id);}
+      const a=world.agents.get(actors[test.actor||0].id),b=world.agents.get(actors[1].id);
+      if(test.kind==='support'&&a.phase==='transfer'&&!this.action){world.setSupport(false);this.action=true;}
+      if(test.kind==='cancel'&&a.phase==='lift'&&!this.action){world.cancel(a.id);this.action=true;this.cancelState={constraints:world.world.constraints.length,heldBy:world.heldBy,reservedBy:world.reservedBy};}
+      let done=false,pass=false,detail;
+      if(test.kind==='pick'&&['done','failed'].includes(a.phase)){done=true;pass=a.result?.result==='completed'&&a.firstContactError<=.012&&a.maxContactError<.025;detail={result:a.result,goal:world.goal(),measurements:a.actor.measurements};}
+      if(test.kind==='contention'&&['done','failed'].includes(a.phase)&&['done','failed'].includes(b.phase)){done=true;pass=a.result?.result==='completed'&&b.result?.result==='already-sorted'&&world.audit.maxGripConstraints<=1;detail={a:a.result,b:b.result,maxConstraints:world.audit.maxGripConstraints};}
+      if(test.kind==='cancel'&&this.action&&['done','failed'].includes(b.phase)){done=true;pass=this.cancelState.constraints===0&&this.cancelState.heldBy===null&&this.cancelState.reservedBy===null&&b.result?.result==='completed';detail={cancel:this.cancelState,b:b.result};}
+      if(test.kind==='support'&&a.phase==='failed'){done=true;pass=this.action&&a.result?.result==='world-result-failed'&&world.bottle.position.y<.2&&!world.heldBy&&!world.grip;detail={result:a.result,bodyY:world.bottle.position.y};}
+      if(world.time-this.start>35){done=true;pass=false;detail={timeout:true,phase:a.phase,b:b.phase,result:a.result};}
+      $('npc-qa').textContent=`验收 ${this.index+1}/${this.tests.length} · ${test.name}\n`+this.report.tests.map(t=>`${t.pass?'通过':'失败'} · ${t.name}`).join('\n');
+      if(done){this.report.tests.push({name:test.name,pass,detail});this.index++;this.started=false;if(this.index>=this.tests.length){this.report.completed=true;this.report.passed=this.report.tests.every(t=>t.pass);this.report.performance=perf();this.report.finishedAt=new Date().toISOString();$('npc-qa').textContent=`验收完成 · ${this.report.tests.filter(t=>t.pass).length}/${this.report.tests.length} 通过\n`+this.report.tests.map(t=>`${t.pass?'通过':'失败'} · ${t.name}`).join('\n');$('npc-run-qa').disabled=false;document.documentElement.dataset.npcQa=this.report.passed?'passed':'failed';$('npc-data').textContent=JSON.stringify({verification:this.report,snapshot:world.snapshot(),errors},null,2);}}
+    }
+  }
+  $('npc-run-qa').onclick=()=>{probe=new ProbeSuite();$('npc-run-qa').disabled=true;paused=false;$('npc-pause').textContent='暂停';};
+  window.__NPC_OBSERVATION__={version:'NPC-LIFE-OBSERVATION-R01',ready:true,snapshot:()=>world.snapshot(),verification:()=>probe?.report,performance:perf,errors};
+  station('single');resize();props.sync(world,debug);viewer.render();for(const b of app.querySelectorAll('button'))b.disabled=false;$('npc-loader').hidden=true;document.documentElement.dataset.npcReady='true';updateUI();
+  function frame(now){const elapsed=(now-last)/1000;last=now;if(elapsed>0&&elapsed<3){frameMS.push(elapsed*1000);if(frameMS.length>180)frameMS.shift();}try{if(!paused){acc+=Math.min(elapsed,.5);let steps=0;while(acc>=1/120&&steps<60){if(probe&&!probe.report.completed)probe.update();world.tick(1/120);acc-=1/120;steps++;}}else acc=0;props.sync(world,debug);viewer.render();if(now-lastUI>240){updateUI();lastUI=now;}}catch(e){paused=true;errors.push(e.message);$('npc-status').textContent='运行暂停：'+e.message;console.error(e);}requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);
+}
+main().catch(error=>{errors.push(error.message);$('npc-progress').textContent='当前构建未就绪：'+error.message;$('npc-status').textContent='人物或交互绑定未通过，尚未进入观察。';document.documentElement.dataset.npcReady='failed';console.error(error);});

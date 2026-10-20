@@ -1,0 +1,75 @@
+name: NPC life observation R01 candidate
+on:
+  push:
+    branches: [feature/npc-life-observation-r01-20261020]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-life-observation-r01/**'
+      - '.github/workflows/npc-life-observation-r01.yml'
+permissions:
+  contents: write
+concurrency:
+  group: npc-life-observation-r01
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/human-integrated-r06
+            kaopu-unified-human-workbench/npc-life-observation-r01
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Build exact canonical-host candidate
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r01/prepare.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r01/build.cjs
+      - name: Stage isolated public candidate
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),crypto=require('crypto');
+          const dir='kaopu-unified-human-workbench/npc-life-observation-r01';
+          const m=JSON.parse(fs.readFileSync(dir+'/BUILD.json'));
+          m.sourceHead=process.env.SOURCE_HEAD;
+          m.publicPath='npc-life-observation/r01-20261020/'+process.env.SOURCE_HEAD+'/';
+          m.publicURL='https://haihao0307.github.io/guilin-dem-pipeline/'+m.publicPath;
+          fs.writeFileSync(dir+'/BUILD.json',JSON.stringify(m,null,2));
+          fs.mkdirSync('/tmp/npc-public',{recursive:true});
+          fs.copyFileSync(dir+'/preview.html','/tmp/npc-public/index.html');
+          fs.copyFileSync(dir+'/BUILD.json','/tmp/npc-public/BUILD.json');
+          console.log(m.publicURL);
+          JS
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public-pages
+          sparse-checkout: npc-life-observation
+      - name: Publish only the new version directory
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          cd public-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          out="npc-life-observation/r01-20261020/${SOURCE_HEAD}"
+          mkdir -p "$out"
+          cp /tmp/npc-public/index.html "$out/index.html"
+          cp /tmp/npc-public/BUILD.json "$out/BUILD.json"
+          git add -- "$out"
+          git commit -m "Publish isolated NPC observation candidate ${SOURCE_HEAD}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npc-life-observation-${{ github.sha }}
+          path: /tmp/npc-public
+          retention-days: 14
