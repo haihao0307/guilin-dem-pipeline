@@ -1,0 +1,49 @@
+name: NPC living courtyard R01 candidate
+on:
+  push:
+    branches: [feature/npc-living-courtyard-r01-20261020]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-living-courtyard-r01/**'
+      - '.github/workflows/npc-living-courtyard-r01.yml'
+permissions:
+  contents: read
+concurrency:
+  group: npc-living-courtyard-r01-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/npc-living-courtyard-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare verified canonical dependencies
+        run: node kaopu-unified-human-workbench/npc-living-courtyard-r01/prepare.cjs --all-native
+      - name: Check life rules and build current candidate
+        working-directory: kaopu-unified-human-workbench/npc-living-courtyard-r01
+        run: |
+          node src/life-tests.mjs
+          node build.cjs
+      - name: Prepare the repository browser verification runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Check both complete native people and capture the scene
+        env:
+          NPC_QA_PHASE: startup
+          NPC_QA_OUT: /tmp/courtyard-browser
+          NPC_BOOT_TIMEOUT_MS: 600000
+          SOURCE_HEAD: ${{ github.sha }}
+        run: node kaopu-unified-human-workbench/npc-living-courtyard-r01/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: courtyard-startup-${{ github.sha }}
+          path: |
+            /tmp/courtyard-browser
+            kaopu-unified-human-workbench/npc-living-courtyard-r01/BUILD.json
+          retention-days: 14
