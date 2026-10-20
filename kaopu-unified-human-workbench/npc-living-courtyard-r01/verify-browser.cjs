@@ -104,6 +104,11 @@ async function ensureDataPanel() {
   if(open!=='true')await click('#data-toggle');
   const expanded=await bounded('read diagnostics details disclosure',()=>page.locator('#data-panel details').getAttribute('open'));
   if(expanded===null)await click('#data-panel details summary');
+  const separation=await evaluate('read actual observation panel and playback separation',()=>{
+    const panel=document.querySelector('#data-panel').getBoundingClientRect(),controls=document.querySelector('.playback').getBoundingClientRect();
+    return{panelBottom:panel.bottom,controlsTop:controls.top,gap:controls.top-panel.bottom};
+  });
+  assert(separation.gap>=8,'Observation panel leaves the real playback controls unobstructed');
 }
 async function hideDataPanel() {
   if(await bounded('read observation panel visibility',()=>page.locator('#data-toggle').getAttribute('aria-expanded'))==='true')await click('#data-close');
