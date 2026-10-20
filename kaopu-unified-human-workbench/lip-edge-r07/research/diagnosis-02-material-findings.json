@@ -1,0 +1,186 @@
+{
+  "schema": "kaopu/r07-material-diagnosis-review@1",
+  "reviewedAt": "2026-10-20T08:19:33.667740+00:00",
+  "scope": "Read-only review of actual R06 GPU frames and reversible R07 diagnostic evidence; no product or original evidence changes.",
+  "evidence": {
+    "directory": "evidence/diagnosis-02",
+    "qaSHA256": "98301a388d4a5c0cb32bfa7d6518309ce0a35eb274431f2e6bdc96ba6bbf2501",
+    "completed": true,
+    "testsPassed": 6,
+    "testsTotal": 6,
+    "errorCounts": {
+      "pageErrors": 0,
+      "consoleErrors": 0,
+      "failedRequests": 0,
+      "resourceErrors": 0
+    },
+    "images": [
+      {
+        "file": "evidence/diagnosis-02/jaw-macro-original-r06.png",
+        "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236"
+      },
+      {
+        "file": "evidence/diagnosis-02/jaw-macro-no-bump.png",
+        "sha256": "67c6339b79a42a871fa05b4a179bfabfe75111f7d7b91bf0a8e5aa1b0f6fa2d2"
+      },
+      {
+        "file": "evidence/diagnosis-02/jaw-macro-albedo.png",
+        "sha256": "49cd0293058ea67fb980f7a033c5d56c4bf5db32c0da5841b45be1f7c495ee99"
+      },
+      {
+        "file": "evidence/diagnosis-02/jaw-oblique-original-r06.png",
+        "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59"
+      },
+      {
+        "file": "evidence/diagnosis-02/jaw-oblique-no-bump.png",
+        "sha256": "3662147e71d035b1cfdb894321b42890f445ea1061773d3212649d39a079e234"
+      },
+      {
+        "file": "evidence/diagnosis-02/jaw-oblique-albedo.png",
+        "sha256": "d413fc850e6d0a4a60ef13a061ad4a85125d0cb36a9ffa21a3c3808cb4621a54"
+      },
+      {
+        "file": "evidence/diagnosis-02/speak-macro-original-r06.png",
+        "sha256": "6e0161151560e2f363c403851cef17ba58640142b23c76fe88d2e5bf0b62bd03"
+      },
+      {
+        "file": "evidence/diagnosis-02/speak-macro-no-bump.png",
+        "sha256": "c4b3879ed2aba0cf2f5e31f72b81e2d8e9ab292eb482842e6d3f71e914dbdba0"
+      },
+      {
+        "file": "evidence/diagnosis-02/speak-macro-albedo.png",
+        "sha256": "7ba568fa291d5209a3f9a8378df4892d064d6d9d34eb1673bebb802807982517"
+      }
+    ],
+    "originalFinalFragmentTemplateSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6"
+  },
+  "conclusion": {
+    "target": "The narrow hard lower inner-lip boundary beside the lower teeth in jaw and speaking poses.",
+    "proceduralBumpPrimaryCauseSupported": false,
+    "wrongOpticalPartitionDemonstrated": false,
+    "finding": "The target remains narrow and sharply bounded in both no-bump and albedo frames. Removing procedural normal relief barely changes its pixels. The material-only evidence favors investigating the actual return geometry, envelope, interpolated mesh normals and occlusion; it does not by itself identify a particular geometric stage as causal.",
+    "scopeLimit": "This conclusion concerns the photographed localized inner edge on one frozen person, not all lip material quality or all expressions.",
+    "nextAdjustment": "Do not increase whole-lip volume or tune wetness on this evidence. Use the indexed native/draw sections and reversible stage evidence to locate the actual lower-lip return before choosing a constrained structural change."
+  },
+  "visualObservations": [
+    {
+      "views": [
+        "jaw-macro",
+        "jaw-oblique",
+        "speak-macro"
+      ],
+      "observation": "No-bump mainly removes fine skin shading; the narrow lower lip boundary beside teeth remains."
+    },
+    {
+      "views": [
+        "jaw-macro",
+        "jaw-oblique",
+        "speak-macro"
+      ],
+      "observation": "Albedo removes illumination and the R04 post-light depth-visibility multiplier, while retaining geometry, occlusion and authored color. A broader rounded lower return does not emerge merely from this change."
+    },
+    {
+      "views": [
+        "jaw-oblique"
+      ],
+      "observation": "Orange/brown oral color is visible toward the mouth corner, distinct from the pink exterior. A palette/domain transition exists, but its presence alone does not establish wrong ownership or explain the central lower hard edge."
+    },
+    {
+      "views": [
+        "jaw-macro",
+        "jaw-oblique",
+        "speak-macro"
+      ],
+      "observation": "The exterior lower lip body already reads as rounded in the original beauty frames; these frames do not support uniformly inflating the whole lip."
+    }
+  ],
+  "noBumpTargetROI": {
+    "definition": "Maximum absolute RGB channel difference per pixel, original versus no-bump; integer display DN. Coordinates are half-open [x0,y0,x1,y1] in 640 x 512 images. Descriptive evidence, not an aesthetic acceptance score.",
+    "rows": [
+      {
+        "view": "jaw-macro",
+        "bounds": [
+          220,
+          307,
+          430,
+          339
+        ],
+        "pixels": 6720,
+        "changedPixels": 24,
+        "maxDN": 1,
+        "meanMaxDN": 0.0035714285714285713,
+        "p95MaxDN": 0
+      },
+      {
+        "view": "jaw-oblique",
+        "bounds": [
+          260,
+          305,
+          450,
+          339
+        ],
+        "pixels": 6460,
+        "changedPixels": 11,
+        "maxDN": 1,
+        "meanMaxDN": 0.0017027863777089784,
+        "p95MaxDN": 0
+      },
+      {
+        "view": "speak-macro",
+        "bounds": [
+          220,
+          307,
+          430,
+          339
+        ],
+        "pixels": 6720,
+        "changedPixels": 18,
+        "maxDN": 1,
+        "meanMaxDN": 0.0026785714285714286,
+        "p95MaxDN": 0
+      }
+    ]
+  },
+  "isolationEvidence": {
+    "actualDiagnosticUniformValues": {
+      "no-bump": 1,
+      "albedo": 2
+    },
+    "surfaceReports": "All six diagnostic surface reports have pendingHashes=0, hashEvidenceComplete=true and errors=[].",
+    "preserved": "Native and draw geometry, canonical and before-local bytes, semantics, original material owners, parameters, native uniform objects/values, camera, lighting and native function/solver hook identities were exact in the diagnostic reports.",
+    "restoration": "All three pose/view windows restore native state, actual pixels, actual shader and R05/R06 solver call counts exactly.",
+    "vertexShaderUntouched": true,
+    "addedUniforms": [
+      "r07EdgeSurfaceMode"
+    ],
+    "originalFinalFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+    "diagnosticFinalFragmentSHA256": "297e5e56c0a0b18b089fae6a723218c41cef0532e634b166977b2599fe3085a8",
+    "noBumpMeaning": "Restores fbGeomN after the normal psH block and before the clearcoat normal block. It preserves geometry and geometric/interpolated mesh normals; it is not a zero-normal or zero-geometry experiment.",
+    "albedoMeaning": "Sets outgoingLight=psBase before the opaque fragment chunk. It retains authored optical partition colors, alpha/occlusion and silhouette while bypassing accumulated lighting and R04 outgoingLight depth visibility."
+  },
+  "opticalPartitionAssessment": {
+    "source": "../lip-inner-r04/MucosaSurface.js and the actual original-r06 final fragment template in this evidence.",
+    "oralWeight": "liOral = clamp(vL19State.x,0,1) * clamp(vCSRegion.x,0,1) * (1-step(.5,vCSType)); liWeight also requires liEnabled and uLEnabled.",
+    "upperLower": "liUpper is a hard rest-space split at the midpoint of lrInnerTop/lrInnerBottom. It is independent from the R05 motion-carrier repair. Whether that classification is wrong on the visible target remains unproven.",
+    "effects": "The R04 block blends base color, roughness and clearcoat, attenuates psH, and multiplies outgoingLight by mix(1,.12+.88*exp(-max(0,vL19Detail.w)*120),liWeight). The added block does not create a new alpha cut or geometric silhouette.",
+    "caveat": "Albedo is not an independent ablation of oral weight, upper/lower palette or the visibility term. Current frames cannot apportion these terms individually.",
+    "semanticCounterexample": {
+      "nativeID": 19658,
+      "stateX": 0,
+      "detailW": 1,
+      "meaning": "detailW=1 must not be read as strong mucosal darkening at this point: the oral weight is zero."
+    },
+    "oralExample": {
+      "nativeID": 175637,
+      "stateX": 1,
+      "detailW": 0.006792196538299322,
+      "boundedVisibility": 0.5094978412277565,
+      "meaning": "This distinct native point has an active oral optical response. It is not assumed to be connected to the other point, a visible fragment, or a tissue-thickness measurement."
+    }
+  },
+  "remainingUncertainty": [
+    "A shared hard edge under beauty/no-bump/albedo does not alone separate native envelope shape, evaluated mesh normals, contact/closure and occlusion.",
+    "Raw semantic v, detail.w and gaps between arbitrary points are not physical lip-edge thickness.",
+    "No current evidence demonstrates that increasing wetness or changing global material parameters would repair the localized return."
+  ]
+}

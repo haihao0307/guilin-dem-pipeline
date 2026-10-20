@@ -1,4 +1,4 @@
-name: Lip edge R07 causal diagnosis
+name: Lip edge R07 public candidate
 on:
   push:
     branches: [feature/lip-edge-r07-20261020]
@@ -13,9 +13,9 @@ concurrency:
   group: lip-edge-r07-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  diagnose-native-r06:
+  build-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 24
+    timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,87 +24,125 @@ jobs:
             .github/workflows
             kaopu-unified-human-workbench/lip-edge-r07
             kaopu-unified-human-workbench/lip-corner-r06
-            kaopu-unified-human-workbench/lip-motion-r05
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify frozen native R06 and reviewed diagnosis code
+      - name: Verify reviewed source and actual edge diagnostic provenance
         run: |
-          python - <<'PY'
+          python - <<'PYVERIFY'
           import hashlib,json
           from pathlib import Path
           p=Path('kaopu-unified-human-workbench/lip-edge-r07')
-          a=json.loads((p/'DIAGNOSIS_ANCHOR.json').read_text())
+          a=json.loads((p/'CANDIDATE_ANCHOR.json').read_text())
           for name,expected in a['reviewedFiles'].items():
               actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
               assert actual==expected,(name,actual,expected)
-          b=json.loads((p/'TASK_ANCHOR.json').read_text())['baseline']
-          previous=p.parent/'lip-corner-r06'
-          for name,key in [('preview.html','previewSHA256'),('evidence/candidate-03/qa.json','qaSHA256'),('FINAL_RECEIPT.json','receiptSHA256')]:
-              assert hashlib.sha256((previous/name).read_bytes()).hexdigest()==b[key],name
-          q=json.loads((previous/'evidence/candidate-03/qa.json').read_text())
-          r=json.loads((previous/'FINAL_RECEIPT.json').read_text())
+          raw=p/a['diagnosis']['evidence']
+          assert hashlib.sha256(raw.read_bytes()).hexdigest()==a['diagnosis']['qaSHA256']
+          q=json.loads(raw.read_text())
+          assert q['diagnosticCommit']==a['diagnosis']['sourceCommit']
           assert q['completed'] and q['cleanup']['completed'] and q['cleanup']['browserDisconnected']
-          assert all(t['passed'] for t in q['tests']) and len(q['tests'])==15
+          assert len(q['tests'])==6 and all(t['passed'] for t in q['tests'])
           assert all(not q[k] for k in ['pageErrors','consoleErrors','failedRequests','resourceErrors'])
-          assert r['decision']['localRepairWorthRetaining'] and not r['decision']['wholeLipVisualAcceptance']
-          print('Frozen accepted R06 and reviewed read-only R07 diagnostics verified.')
-          PY
-      - name: Install fixed browser runtime
-        run: |
-          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
-          npx playwright install --with-deps chromium
-      - name: Diagnose actual immutable R06 public workbench
+          assert len(q['restorations'])==3 and all(all(r[k] for k in ['nativeStateExact','nativePixelsExact','actualShaderExact','solverCallsExact']) for r in q['restorations'])
+          assert len(q['geometryProbes'])==5 and len(q['envelopeObservations'])==5
+          assert all(r['acceptedR06StateAndPixelsExact'] for r in q['baselineObservations'])
+          baseline=json.loads((p/'TASK_ANCHOR.json').read_text())['baseline']
+          assert hashlib.sha256((p.parent/'lip-corner-r06/preview.html').read_bytes()).hexdigest()==baseline['previewSHA256']
+          print('Reviewed native edge source, accepted R06 and original actual diagnosis verified.')
+          PYVERIFY
+      - name: Build exact inherited R06 plus native R07 candidate
         env:
-          MODE: public
-          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
-          QA_BUDGET_MS: 900000
-        run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-edge-r07/verification/diagnose-edge.cjs
-      - name: Verify completed diagnosis and exact restoration
-        run: |
-          node - <<'JS'
-          const fs=require('fs'),assert=require('assert/strict');
-          const p='kaopu-unified-human-workbench/lip-edge-r07/';
-          const q=JSON.parse(fs.readFileSync(p+'evidence/diagnosis-02/qa.json'));
-          const a=JSON.parse(fs.readFileSync(p+'DIAGNOSIS_ANCHOR.json'));
-          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);assert.equal(q.cleanup.browserDisconnected,true);
-          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
-          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
-          assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);
-          assert.equal(q.geometryProbes.length,5);assert.equal(q.envelopeObservations.length,5);
-          assert(q.baselineObservations.every(r=>r.acceptedR06StateAndPixelsExact));
-          assert(q.geometryProbeRestore.restored&&q.envelopeProbeRestore.restored);
-          assert(q.restorations.length===3 && q.restorations.every(r=>r.nativeStateExact&&r.nativePixelsExact&&r.actualShaderExact&&r.solverCallsExact));
-          assert.equal(q.diagnosticCommit,process.env.GITHUB_SHA);assert.equal(q.productionRepair,false);
-          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);assert.equal(q.shareAllowed,false);
-          console.log('Actual diagnosis completed; no product improvement claimed.');
-          JS
-      - name: Preserve actual completed or failed diagnosis evidence
-        if: always()
+          SOURCE_SHA: ${{ github.sha }}
+        run: node kaopu-unified-human-workbench/lip-edge-r07/build.cjs
+      - name: Publish immutable candidate build to isolated draft branch
+        id: build
         env:
-          TASK_BRANCH: feature/lip-edge-r07-20261020
           EXPECTED_HEAD: ${{ github.sha }}
+          TASK_BRANCH: feature/lip-edge-r07-20261020
         run: |
           git fetch origin "$TASK_BRANCH"
           CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
           test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02; then
-            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
+          git add -f -- kaopu-unified-human-workbench/lip-edge-r07/preview.html kaopu-unified-human-workbench/lip-edge-r07/BUILD_MANIFEST.json
+          git commit -m "Build immutable native lip-edge R07 candidate [skip ci]"
+          git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          R07_BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$R07_BUILD_SHA" >> "$GITHUB_ENV"
+          echo "BUILD_SHA=$R07_BUILD_SHA" >> "$GITHUB_OUTPUT"
+          python - <<'PYRECEIPT'
+          import json,os,subprocess
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-edge-r07')
+          build=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          r={'schema':'kaopu/lip-edge-candidate-build@1','sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':build,'previewSHA256':m['previewSHA256'],'publicURL':'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/lip-edge-r07/preview.html','workflowRun':int(os.environ['GITHUB_RUN_ID']),'technicalVerification':'pending','visualAcceptance':False,'productionReady':False}
+          (p/'CANDIDATE_BUILD.json').write_text(json.dumps(r,indent=2)+'\n')
+          PYRECEIPT
+      - name: Install fixed browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Verify actual immutable public workbench
+        env:
+          MODE: public
+          SOURCE_SHA: ${{ github.sha }}
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-edge-r07/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
+          QA_BUDGET_MS: 900000
+        run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-edge-r07/verification/verify-edge.cjs
+      - name: Verify candidate completion without aesthetic promotion
+        run: |
+          node - <<'JSVERIFY'
+          const fs=require('fs'),assert=require('assert/strict');
+          const p='kaopu-unified-human-workbench/lip-edge-r07/';
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-01/qa.json'));
+          const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
+          const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
+          for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
+          for(const k of ['publicHttpsPassed','browserPassed','shareAllowed'])assert.equal(q[k],true,k);
+          assert.equal(q.cleanup.browserDisconnected,true);
+          assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);
+          assert.equal(q.sourceSHA,process.env.GITHUB_SHA);assert.equal(q.buildSHA,process.env.BUILD_SHA);
+          assert.equal(q.previewSHA256,m.previewSHA256);assert.equal(q.verifierSHA256,a.reviewedFiles['verification/verify-edge.cjs']);
+          assert.equal(q.geometryProbes.length,4);assert(q.geometryProbes.every(r=>r.provenance.nativeStateExact&&r.provenance.solverCallsExact&&r.provenance.nativeRenderCounterExact));
+          assert.equal(q.numericEncoding.schema,'kaopu/qa-nonfinite@1');
+          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
+          console.log('Actual public candidate checks completed; aesthetic acceptance remains separate.');
+          JSVERIFY
+      - name: Preserve actual completed or failed candidate evidence
+        if: always() && steps.build.outcome == 'success'
+        env:
+          TASK_BRANCH: feature/lip-edge-r07-20261020
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$BUILD_SHA"
+          git add -f -- kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_BUILD.json
+          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01; then
+            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
           fi
           if ! git diff --cached --quiet; then
-            git commit -m "Record actual R07 lip-edge diagnostic evidence [skip ci]"
+            git commit -m "Record actual public R07 candidate evidence [skip ci]"
             git push origin "HEAD:refs/heads/$TASK_BRANCH"
           fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: lip-edge-r07-diagnosis-${{ github.sha }}
+          name: lip-edge-r07-public-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
-            kaopu-unified-human-workbench/lip-edge-r07/TASK_ANCHOR.json
-            kaopu-unified-human-workbench/lip-edge-r07/DIAGNOSIS_ANCHOR.json
-            kaopu-unified-human-workbench/lip-edge-r07/verification
+            kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
+            kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_BUILD.json
+            kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_ANCHOR.json
+            kaopu-unified-human-workbench/lip-edge-r07/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-edge-r07/src/EdgeContinuity.js
+            kaopu-unified-human-workbench/lip-edge-r07/src/EdgeLip.js
+            kaopu-unified-human-workbench/lip-edge-r07/verification/verify-edge.cjs
+            kaopu-unified-human-workbench/lip-edge-r07/verification/EdgeGeometryProbe.js
           if-no-files-found: error
           retention-days: 30
