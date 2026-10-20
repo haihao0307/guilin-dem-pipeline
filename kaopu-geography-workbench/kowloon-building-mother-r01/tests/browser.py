@@ -1,22 +1,48 @@
-"""Reproducible actual Chromium/WebGL QA. Requires existing Playwright+Chromium.
-This test does not claim to have run merely because the file is present.
+"""Actual Chromium/WebGL QA; requires installed Playwright/Chromium.
+The presence of this script is not evidence that it passed.
 """
-import argparse,json,pathlib
+import argparse,json,pathlib,traceback
 from playwright.sync_api import sync_playwright
-p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',default='evidence/browser');a=p.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True)
-checks=[]
+p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',default='evidence/browser');p.add_argument('--expected-build');a=p.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True)
+report={'url':a.url,'status':'running','checks':[],'errors':[],'screenshots':[],'rendererKind':'Forced software ANGLE/SwiftShader; not physical-device performance'}
+def shot(page,name):
+ page.screenshot(path=str(out/name));report['screenshots'].append(name)
 with sync_playwright() as pw:
- browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+ browser=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
- errors=[];page.on('pageerror',lambda e: errors.append(str(e)))
- page.goto(a.url,wait_until='networkidle');page.wait_for_function('window.__BUILDING_MOTHER__?.ready')
- for index in range(3):
-  page.locator(f'[data-building="{index}"]').click();page.screenshot(path=str(out/f'baseline-{index}.png'));checks.append({'baseline':index,'state':page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies')})
- page.locator('#windowFocus').click();page.screenshot(path=str(out/'window-closed.png'))
- for angle in [40,80,0]:
-  page.locator('#window-angleDegrees').fill(str(angle));page.screenshot(path=str(out/f'window-{angle}.png'))
- page.locator('[data-visible="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==21
- page.locator('[data-visible="p003"]').check();page.locator('[data-enabled="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==20 and s['export']['designWindow']['suppressedByHost']
- page.locator('#reset').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is False
- page.set_viewport_size({'width':390,'height':844});page.screenshot(path=str(out/'mobile.png'));assert page.locator('#failure').is_hidden();assert errors==[]
- (out/'results.json').write_text(json.dumps({'checks':checks,'errors':errors,'status':'passed'},indent=2));browser.close()
+ page.on('pageerror',lambda e: report['errors'].append(str(e)))
+ try:
+  page.goto(a.url,wait_until='networkidle');page.wait_for_function('window.__BUILDING_MOTHER__?.ready')
+  report['build']=page.locator('meta[name="kaopu-build"]').get_attribute('content')
+  if a.expected_build: assert report['build']==a.expected_build
+  for index in range(3):
+   page.locator(f'[data-building="{index}"]').click();shot(page,f'baseline-{index}.png')
+   report['checks'].append({'baseline':index,'state':page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies')})
+  page.locator('#windowFocus').click();shot(page,'window-closed.png')
+  for angle in [40,80,0]:
+   page.locator('#window-angleDegrees').evaluate("(el, value) => { el.value=String(value); el.dispatchEvent(new Event('input',{bubbles:true})); }",angle)
+   shot(page,f'window-{angle}.png')
+   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.angleDegrees')==angle
+   assert abs(page.evaluate('window.__BUILDING_MOTHER__.snapshot().windowInspection.scene.displayedAngleDegrees')-angle)<1e-8
+  page.locator('[data-visible="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==21
+  page.locator('[data-visible="p003"]').check();page.locator('[data-enabled="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==20 and s['export']['designWindow']['suppressedByHost']
+  report['checks'].append({'display_vs_assembly_and_host_suppression':'passed'})
+  page.locator('#floorInspect').click();shot(page,'floor-cutaway.png');s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert s['floors']['slabCount']==21 and len(s['floors']['openings'])==21
+  assert all(stop['fflM']==next(f['fflM'] for f in s['floors']['floors'] if f['floorId']==stop['floorId']) for stop in s['serviceInterfaces']['stops'])
+  report['checks'].append({'floors':s['floors'],'serviceInterfaces':s['serviceInterfaces']})
+  page.locator('#windowFocus').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies[1].visiblePatches')==20
+  page.locator('#reset').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is False
+  page.set_viewport_size({'width':390,'height':844});shot(page,'mobile.png')
+  assert page.locator('#failure').is_hidden();assert report['errors']==[]
+  assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().errors')==[]
+  assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().renderer.triangles')>=50
+  assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().pbr.enabled') is True
+  report['checks'].append({'repeated_views_reset_mobile_pbr':'passed'})
+  report['status']='passed'
+ except Exception:
+  report['status']='failed';report['failure']=traceback.format_exc()
+  try: shot(page,'failure.png')
+  except Exception: pass
+  raise
+ finally:
+  (out/'results.json').write_text(json.dumps(report,indent=2));browser.close()

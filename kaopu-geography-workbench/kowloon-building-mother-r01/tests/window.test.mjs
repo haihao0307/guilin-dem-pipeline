@@ -127,6 +127,26 @@ test('tint and angle validation reject invalid values and the actual glass uses 
   }
 });
 
+test('authored transmission and roughness drive physical glass, retain opacity 1 and validate range', () => {
+  assert.equal(defaultWindowConfig().glassTransmission, 0.82);
+  assert.equal(defaultWindowConfig().glassRoughness, 0.08);
+  for (const [glassTransmission, glassRoughness] of [[0, 0], [0.43, 0.29], [1, 1]]) {
+    const c = cfg({glassTransmission, glassRoughness});
+    const material = buildWindow(THREE, score, c).userData.refs.glass.material;
+    assert.equal(material.transmission, glassTransmission);
+    assert.equal(material.roughness, glassRoughness);
+    assert.equal(material.opacity, 1);
+    assert.equal(material.ior, 1.5);
+    assert.equal(inspectWindow(score, c).config.glassTransmission, glassTransmission);
+    assert.equal(inspectWindow(score, c).config.glassRoughness, glassRoughness);
+  }
+  for (const key of ['glassTransmission', 'glassRoughness']) {
+    for (const value of [-0.001, 1.001, NaN, Infinity, '0.5', null]) {
+      assert.throws(() => validateWindow(score, cfg({[key]: value})), new RegExp(key));
+    }
+  }
+});
+
 test('host fitting, minimum glass room, unknown types and unsupported deformation fail explicitly', () => {
   for (const invalid of [
     {width: 100}, {width: 0.701}, {sill: 0}, {sill: 70}, {centerAlongWall: 0},
