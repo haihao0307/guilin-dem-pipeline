@@ -3,6 +3,7 @@ import {prepareGarment} from './garment-prep.mjs';
 import {nativeGarmentMesh} from './upstream/outfits-r043.mjs';
 import {mapPanelUV} from './upstream/panel-grain.mjs';
 import {buildContinuousSolid} from './upstream/continuous-solid.mjs';
+import {installRenderBackpressure} from './upstream/render-backpressure.mjs';
 
 const $ = id => document.querySelector('#layer-app #' + CSS.escape(id)) || document.getElementById(id);
 const root = $('layer-app');
@@ -193,7 +194,9 @@ function diagnostic() {
       topology:host?.identity?.topologySHA256,revision:host?.sourceRevision,iframes:document.querySelectorAll('iframe').length},
     displayOnlySeparation:$('exploded').checked,displayOnlyIsolation:isolated,
     initializationOrder:['pants','inner','outer'],dynamicGarments:rows,
-    physics:a,render:{calls:host?.viewer.renderer.info.render.calls,triangles:host?.viewer.renderer.info.render.triangles},
+    physics:a,render:{calls:host?.viewer.renderer.info.render.calls,triangles:host?.viewer.renderer.info.render.triangles,
+      frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.()},
+    bootTimings:host?.bootTimings,
     elapsedLoadMS:frameStamp || Math.round(performance.now()-started)};
   $('diagnostics').textContent = JSON.stringify(value,null,2);
   return value;
@@ -390,6 +393,9 @@ async function boot() {
     }
     const nativeRender=host.viewer.render.bind(host.viewer);
     host.viewer.render=()=>{
+      // Atlas preparation also submits WebGL work, so hold it together with
+      // the native draw until the complete first outfit has been assembled.
+      if(host.renderSuspended())return false;
       for(const it of items.values())if(it.solid?.group.visible){it.solid.motion(playing);it.solid.update(host.viewer.camera);}
       return nativeRender();
     };
@@ -400,9 +406,16 @@ async function boot() {
     progress('组装各件独立裁片、接缝与共享接触求解器');
     apply(await bridge.call('init',{body:{positions:host.bodyPositions,faces:host.bodyFaces},rows:[...items.values()].map(workerRow),options:state}));
     for(const it of items.values())await buildVisual(it);
-    ready=true;frameStamp=Math.round(performance.now()-started);failure=null;
-    $('layer-loading').hidden=true;host.viewer.canvas.style.visibility='visible';
+    host.releaseRender();
+    installRenderBackpressure(host.viewer);
+    const scheduleRender=host.viewer.render.bind(host.viewer);
+    host.viewer.render=()=>scheduleRender().then(ok=>{diagnostic();return ok;});
+    progress('绘制原生人物与三件独立实体衣物');
+    host.viewer.canvas.style.visibility='visible';
     bind();list();selection();visibility();frame('front');
+    if(!await host.viewer.render())throw new Error('原生人物与衣物的首帧绘制失败。');
+    ready=true;frameStamp=Math.round(performance.now()-started);failure=null;
+    $('layer-loading').hidden=true;selection();
     status('穿着结构已载入 · 3 件独立衣物 · 联合沉降待检查');diagnostic();
     root.dataset.ready='true';
   }catch(error){fail(error);}

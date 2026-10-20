@@ -19,7 +19,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    # Software WebGL must finish the unmodified native skin and solid yarns.
+    # The browser has a separate 14-minute ceiling, leaving artifact time here.
+    timeout-minutes: 18
     defaults:
       run:
         shell: bash

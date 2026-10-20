@@ -11,6 +11,11 @@ import { inflateSync } from 'node:zlib';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const EVIDENCE = path.join(ROOT, 'evidence');
 const BASE = 'http://127.0.0.1:8765/';
+const READY_TIMEOUT_MS = 480_000;
+const GPU_IDLE_TIMEOUT_MS = 120_000;
+const BROWSER_BUDGET_MS = 840_000;
+const SCREENSHOT_TIMEOUT_MS = 60_000;
+const PROGRESS_PREFIX = 'KAOPU_CI_OBSERVATION ';
 const EXPECTED = {
   inner: { preset: 'T08', material: 'knit-fine-0' },
   outer: { preset: 'T03', material: 'knit-soft-0' },
@@ -22,8 +27,11 @@ const consoleMessages = [];
 const pageErrors = [];
 const requests = [];
 const forbiddenRequests = [];
-let browser, context, page, watchdog;
+const progressEvents = [];
+let browser, context, page, watchdog, heartbeat;
 let failure = null;
+let phase = 'setup', lastDOMObservation = null, lastDOMObservedAt = null;
+let evidenceWrites = Promise.resolve();
 const summary = {
   schema: 'kaopu-real-webgl-acceptance@1',
   startedUTC: new Date().toISOString(),
@@ -31,12 +39,72 @@ const summary = {
   execution: 'GitHub Actions, fresh Playwright Chromium context, software WebGL',
   publicationPerformed: false,
   screenshotsAreBrowserCaptures: true,
+  budgetsMS: { ready: READY_TIMEOUT_MS, GPUIdle: GPU_IDLE_TIMEOUT_MS,
+    browser: BROWSER_BUDGET_MS, screenshot: SCREENSHOT_TIMEOUT_MS },
+  viewport: { width: 1440, height: 1000, deviceScaleFactor: 1 },
   limitations: [
     'This checks the fixed native person, two retained tops and retained P02 shorts.',
     'Contact metrics describe discrete vertex-triangle tests, not continuous collision or all intersections.',
     'No real-time speed threshold, calibrated friction claim or arbitrary-motion guarantee is made.',
   ],
 };
+
+function appendProgress(value) {
+  const event = { observedUTC: new Date().toISOString(), wallMS: Date.now() - began, ...value };
+  progressEvents.push(event);
+  // Incremental evidence survives a blocked renderer or a later job timeout.
+  // Only public DOM/performance observations and local request URLs are saved.
+  evidenceWrites = evidenceWrites.then(() => fs.appendFile(path.join(EVIDENCE, 'browser-progress.ndjson'), JSON.stringify(event) + '\n'))
+    .catch(error => { failure ??= error; });
+}
+
+function markPhase(value) {
+  phase = value;
+  appendProgress({ kind: 'test-phase', phase });
+}
+
+async function installProgressObserver() {
+  await context.addInitScript(({ prefix }) => {
+    let lastEmission = -Infinity;
+    const emit = value => console.debug(prefix + JSON.stringify(value));
+    function observeDOM(reason) {
+      const now = performance.now();
+      if (reason !== 'heartbeat' && now - lastEmission < 2000) return;
+      const app = document.getElementById('layer-app');
+      if (!app) return;
+      lastEmission = now;
+      let diagnostic = null;
+      try { diagnostic = JSON.parse(app.querySelector('#diagnostics')?.textContent || 'null'); } catch {}
+      const canvas = app.querySelector('#layer-stage canvas');
+      emit({ kind: 'public-dom', reason, browserMS: now,
+        ready: app.dataset.ready || null, status: app.dataset.status || null,
+        loadText: app.querySelector('#load-text')?.textContent || null,
+        statusText: app.querySelector('#layer-status')?.textContent || null,
+        loadingHiddenAttribute: app.querySelector('#layer-loading')?.hidden ?? null,
+        canvas: canvas ? { width: canvas.width, height: canvas.height } : null,
+        garmentIDs: diagnostic?.dynamicGarments?.map(row => row.id) || [],
+        physicsSteps: diagnostic?.physics?.completedSteps ?? null,
+        render: diagnostic?.render || null,
+        bootTimings: diagnostic?.bootTimings || null,
+        error: diagnostic?.error || null,
+      });
+    }
+    // Observe published UI only. No application methods, geometry, WebGL state,
+    // solver inputs or readiness flags are modified by this diagnostic probe.
+    new MutationObserver(() => observeDOM('mutation')).observe(document, {
+      subtree: true, childList: true, characterData: true, attributes: true,
+      attributeFilter: ['data-ready', 'data-status'],
+    });
+    setInterval(() => observeDOM('heartbeat'), 5000);
+    if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
+      new PerformanceObserver(list => {
+        const entries = list.getEntries().filter(entry => entry.duration >= 250)
+          .map(entry => ({ startMS: entry.startTime, durationMS: entry.duration, name: entry.name }));
+        if (entries.length) emit({ kind: 'completed-longtasks', browserMS: performance.now(), entries });
+      }).observe({ type: 'longtask', buffered: true });
+    }
+  }, { prefix: PROGRESS_PREFIX });
+}
 
 function paeth(a, b, c) {
   const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
@@ -134,13 +202,24 @@ async function record(name, extra = {}) {
   return value;
 }
 
-async function waitIdle(timeout = 120_000) {
+async function waitIdle(timeout = GPU_IDLE_TIMEOUT_MS) {
   await page.waitForFunction(() => {
     const app = document.getElementById('layer-app');
     if (app?.dataset.status === 'error') return true;
-    return app?.dataset.ready === 'true' && !app.querySelector('#reset')?.disabled;
-  }, null, { timeout });
-  await diagnostic();
+    if (app?.dataset.ready !== 'true' || app.querySelector('#reset')?.disabled) return false;
+    let value;
+    try { value = JSON.parse(app.querySelector('#diagnostics')?.textContent || 'null'); } catch { return false; }
+    const gate = value?.render?.frameGate;
+    if (value?.error || gate?.failed) return true;
+    return gate && gate.pending === 0 && gate.inFlight === 0;
+  }, null, { timeout, polling: 250 });
+  const value = await diagnostic();
+  const gate = value.render.frameGate;
+  assert.ok(gate, 'Published GPU frame-gate evidence is missing');
+  assert.equal(gate.failed, false, 'A submitted native GPU frame failed');
+  assert.equal(gate.pending, 0, 'A display update is still pending');
+  assert.equal(gate.inFlight, 0, 'Native GPU rendering has not finished');
+  assert.ok(gate.submitted > 0 && gate.completed === gate.submitted, 'Every submitted native frame must complete');
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 
@@ -200,8 +279,10 @@ async function webglFacts() {
 }
 
 async function capture(name, { requireScene = true } = {}) {
-  await page.screenshot({ path: path.join(EVIDENCE, `${name}.png`), fullPage: false, animations: 'disabled', timeout: 45_000 });
-  const buffer = await page.locator('#layer-app #layer-stage canvas').screenshot({ path: path.join(EVIDENCE, `${name}-canvas.png`), animations: 'disabled', timeout: 45_000 });
+  markPhase('capture:' + name);
+  await waitIdle();
+  await page.screenshot({ path: path.join(EVIDENCE, `${name}.png`), fullPage: false, animations: 'disabled', timeout: SCREENSHOT_TIMEOUT_MS });
+  const buffer = await page.locator('#layer-app #layer-stage canvas').screenshot({ path: path.join(EVIDENCE, `${name}-canvas.png`), animations: 'disabled', timeout: SCREENSHOT_TIMEOUT_MS });
   const decoded = decodePNG(buffer), pixels = pixelStats(decoded), gl = await webglFacts();
   if (requireScene) {
     assert.equal(gl.context, true, 'No real WebGL context');
@@ -219,7 +300,8 @@ async function capture(name, { requireScene = true } = {}) {
   return decoded;
 }
 
-async function clickAndWait(id, timeout = 120_000) {
+async function clickAndWait(id, timeout = GPU_IDLE_TIMEOUT_MS) {
+  markPhase('control:' + id);
   await page.locator(`#layer-app #${id}`).click({ timeout: 30_000 });
   await waitIdle(timeout);
 }
@@ -257,12 +339,14 @@ try {
   assert.equal(provenance.iframeRequired, false);
   assert.equal(provenance.upstreamFiles.length, 286);
   summary.sourceProvenance = provenance;
-  // Leave time inside the 12-minute CI job to retain evidence after a slow GPU
-  // compile or failed interaction. Normal rendering may take several minutes.
+  // Run2 continued through real garment generation at 288 seconds. Keep full
+  // original rendering and allow its first software-GPU frame to finish. The
+  // 18-minute job leaves time to retain evidence after this browser ceiling.
   watchdog = setTimeout(() => {
-    failure = new Error('Browser acceptance exceeded its 8-minute budget.');
+    failure = new Error('Browser acceptance exceeded its 14-minute budget.');
+    appendProgress({ kind: 'browser-budget-exceeded', phase });
     browser?.close().catch(() => {});
-  }, 480_000);
+  }, BROWSER_BUDGET_MS);
   browser = await chromium.launch({ headless: true, channel: 'chromium', timeout: 60_000, args: [
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
     '--ignore-gpu-blocklist', '--disable-dev-shm-usage',
@@ -270,6 +354,7 @@ try {
   summary.browserVersion = browser.version();
   context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1,
     colorScheme: 'light', locale: 'zh-CN', reducedMotion: 'reduce' });
+  await installProgressObserver();
   // No signed-in state, external models, remote scripts or user profile.
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -279,15 +364,45 @@ try {
   });
   page = await context.newPage();
   page.setDefaultTimeout(30_000);
-  page.on('console', message => consoleMessages.push({ type: message.type(), text: message.text(), location: message.location(), wallMS: Date.now() - began }));
-  page.on('pageerror', error => pageErrors.push({ message: error.message, stack: error.stack }));
-  page.on('response', response => requests.push({ url: response.url(), status: response.status(), type: response.request().resourceType() }));
-  page.on('requestfailed', request => requests.push({ url: request.url(), failure: request.failure()?.errorText, type: request.resourceType() }));
+  page.on('console', message => {
+    const row = { type: message.type(), text: message.text(), location: message.location(), wallMS: Date.now() - began };
+    consoleMessages.push(row);
+    if (row.text.startsWith(PROGRESS_PREFIX)) {
+      try {
+        const observation = JSON.parse(row.text.slice(PROGRESS_PREFIX.length));
+        if (observation.kind === 'public-dom') { lastDOMObservation = observation; lastDOMObservedAt = Date.now(); }
+        appendProgress(observation);
+      } catch (error) { appendProgress({ kind: 'progress-observer-error', message: String(error) }); }
+    } else appendProgress({ kind: 'console', ...row });
+  });
+  page.on('pageerror', error => {
+    const row = { message: error.message, stack: error.stack, wallMS: Date.now() - began };
+    pageErrors.push(row); appendProgress({ kind: 'page-error', ...row });
+  });
+  page.on('request', request => appendProgress({ kind: 'request-start', url: request.url(), type: request.resourceType() }));
+  page.on('response', response => {
+    const row = { url: response.url(), status: response.status(), type: response.request().resourceType(), wallMS: Date.now() - began };
+    requests.push(row); appendProgress({ kind: 'response', ...row });
+  });
+  page.on('requestfailed', request => {
+    const row = { url: request.url(), failure: request.failure()?.errorText, type: request.resourceType(), wallMS: Date.now() - began };
+    requests.push(row); appendProgress({ kind: 'request-failed', ...row });
+  });
+  heartbeat = setInterval(() => {
+    const row = { kind: 'runner-heartbeat', phase, browserConnected: browser.isConnected(),
+      lastDOMAgeMS: lastDOMObservedAt === null ? null : Date.now() - lastDOMObservedAt,
+      lastStatus: lastDOMObservation?.statusText || null,
+      frameGate: lastDOMObservation?.render?.frameGate || null };
+    appendProgress(row);
+    console.log('CI_PROGRESS ' + JSON.stringify({ wallMS: Date.now() - began, ...row }));
+  }, 15_000);
+  markPhase('navigation');
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  markPhase('native-person-and-garments-ready');
   await page.waitForFunction(() => {
     const app = document.getElementById('layer-app');
     return app?.dataset.ready === 'true' || app?.dataset.status === 'error';
-  }, null, { timeout: 240_000 });
+  }, null, { timeout: READY_TIMEOUT_MS, polling: 250 });
   assert.equal(await page.locator('#layer-app').getAttribute('data-ready'), 'true', await page.locator('#layer-app #load-text').textContent());
   await waitIdle();
   assert.equal(await page.locator('iframe').count(), 0);
@@ -349,17 +464,17 @@ try {
   assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').count(), 0);
   assert.equal((await page.locator('#layer-app #metric-layers').textContent()).trim(), '2');
   assert.equal(removed.physics.contact, null, 'Removing an object must retire the old contact evidence');
-  assert.equal((await page.locator('#layer-app #metric-contacts').textContent()).trim(), '0');
+  assert.equal((await page.locator('#layer-app #metric-contacts').textContent()).trim(), '待求解');
   await capture('removed');
   const afterRemovalStep = await advance();
   verifyGarments(afterRemovalStep, ['inner', 'pants']);
   summary.contactRemoval = {
     beforeRemoval: countBeforeRemoval,
-    immediatelyAfterRemoval: 0,
+    immediatelyAfterRemoval: null,
     afterNextSolve: afterRemovalStep.physics.contact.contactCount,
     oldEvidenceRetired: removed.physics.contact === null,
     remainingGarments: ['inner', 'pants'],
-    interpretation: 'Immediate count is cleared on removal; next-solve count measures the two remaining independent garments.',
+    interpretation: 'Removal retires previous contact evidence and displays unmeasured (待求解), not a measured zero; the next real solve measures the two remaining independent garments.',
   };
   await record('removed-stepped');
 
@@ -381,25 +496,35 @@ try {
 } catch (error) {
   failure ??= error;
   summary.error = { message: failure.message || String(failure), stack: failure.stack };
+  appendProgress({ kind: 'acceptance-failed', phase, error: summary.error });
   if (page && !page.isClosed()) {
     try {
       summary.failureDOM = await page.locator('#layer-app').innerText({ timeout: 5000 });
-      await page.screenshot({ path: path.join(EVIDENCE, 'failure.png'), fullPage: false, timeout: 15_000 });
+    } catch (domError) { summary.failureDOMError = String(domError); }
+    // A blocked DOM read must not prevent an independent real screenshot attempt.
+    try {
+      await page.screenshot({ path: path.join(EVIDENCE, 'failure.png'), fullPage: false, timeout: SCREENSHOT_TIMEOUT_MS });
     } catch (captureError) { summary.failureCaptureError = String(captureError); }
   }
 } finally {
   clearTimeout(watchdog);
+  clearInterval(heartbeat);
   summary.elapsedMS = Date.now() - began;
   summary.observations = observations;
+  summary.lastPhase = phase;
+  summary.lastPublicDOMObservation = lastDOMObservation;
+  summary.progressEventCount = progressEvents.length;
   summary.consoleErrorCount = consoleMessages.filter(row => row.type === 'error').length;
   summary.pageErrors = pageErrors;
   summary.forbiddenRequests = forbiddenRequests;
   await fs.mkdir(EVIDENCE, { recursive: true });
+  await evidenceWrites;
   await Promise.all([
     fs.writeFile(path.join(EVIDENCE, 'browser-metrics.json'), JSON.stringify(summary, null, 2) + '\n'),
     fs.writeFile(path.join(EVIDENCE, 'browser-console.json'), JSON.stringify(consoleMessages, null, 2) + '\n'),
     fs.writeFile(path.join(EVIDENCE, 'browser-network.json'), JSON.stringify(requests, null, 2) + '\n'),
     fs.writeFile(path.join(EVIDENCE, 'browser-errors.json'), JSON.stringify(pageErrors, null, 2) + '\n'),
+    fs.writeFile(path.join(EVIDENCE, 'browser-progress.json'), JSON.stringify(progressEvents, null, 2) + '\n'),
   ]);
   await context?.close().catch(() => {});
   await browser?.close().catch(() => {});
