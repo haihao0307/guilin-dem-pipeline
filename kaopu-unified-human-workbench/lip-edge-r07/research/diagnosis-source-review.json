@@ -1,0 +1,120 @@
+{
+  "schema": "kaopu/lip-edge-diagnosis-source-review@1",
+  "reviewer": "independent visual/source reviewer; no product edits",
+  "createdUTC": "2026-10-20T07:47:11Z",
+  "scope": "Static diagnostic runner, task/workflow bindings and material helper call contract only. No browser execution or new visual claim.",
+  "verdict": "No runner call-order or exact-restoration logic blocker found. Packaging and actual browser results remain pending.",
+  "sourceBindings": [
+    {
+      "path": "kaopu-unified-human-workbench/lip-edge-r07/verification/diagnose-edge.cjs",
+      "sha256": "bf7216922f34d2cd66d9b2ddb0b6e8405cd4edfe148c47659a08b3fabee85e91",
+      "bytes": 53233
+    },
+    {
+      "path": "kaopu-unified-human-workbench/lip-edge-r07/TASK_ANCHOR.json",
+      "sha256": "2e5d0adf86f727bb9cae5f59c8f44426441889dd12e4272e591a54820394840d",
+      "bytes": 3681
+    },
+    {
+      "path": ".github/workflows/lip-edge-r07.yml",
+      "sha256": "44c31063e53d96a056e2d725a33c6a7aac799595827c09cb22145de7959fca19",
+      "bytes": 5600
+    },
+    {
+      "path": "kaopu-unified-human-workbench/lip-edge-r07/verification/EdgeSurfaceAttribution.js",
+      "sha256": "5b08d7f7fc887073edb41fb7006d8d9c0edd85c759d4f602d9e69352e808de1e",
+      "bytes": 22793
+    },
+    {
+      "path": "kaopu-unified-human-workbench/lip-corner-r06/verification/verify-corner.cjs",
+      "sha256": "d49f5099a8536aeda31842d37e9f60f54db0fc84d84ee6efdbdfd83efc7aaa7a",
+      "bytes": 70435
+    }
+  ],
+  "callOrder": {
+    "beforeTemporaryHook": "Pose/view and R06 comparison are set; original GPU frame, complete state, solver reports, shader and read-only geometry sample are recorded. surface.install reads compatibility only before attach.",
+    "whileAttached": [
+      "surface.setMode changes only the diagnostic shader/control",
+      "capture calls original viewer.render through temporary restored renderer.render observation and performs actual readPixels",
+      "surface.report verifies frozen inputs without R06 report",
+      "shaderRecord reads actual attached GPU GLSL and pure innerLip.shaderEvidence",
+      "actualDiagnosticUniform reads r07EdgeSurfaceMode from current WebGLProgram and checks 1/2"
+    ],
+    "forbiddenCallsAbsentInWindow": [
+      "cornerLip.report",
+      "__LIP_CORNER_SOLVER__.report",
+      "state",
+      "reportSolvers",
+      "native update",
+      "pose setters"
+    ],
+    "restoreOrder": "try/finally invokes surface.restore; it detaches the exact compile/cache hooks and descriptors before querying cornerLip/motionLip reports. Then a real restored frame and complete state/shader/solver records are checked.",
+    "indirectReaderChecked": "innerLip.shaderEvidence returns original/final fragment closure strings and cloned nativeUniformIdentity; it does not report, update or render. CornerLip has no periodic sync after its boot interval is cleared; runner pauses idle/playback."
+  },
+  "restorationChecks": {
+    "completeState": "Uses deepEqual(finalState, originalState), not the relaxed protectedState helper. Includes native/draw geometry and semantic hashes, canonical buffers, material identities/hooks/parameters, person/pose/settings, native before-local base, calibration, final contact samples, camera and light state.",
+    "callsAndValidity": "Deep equality of compact original/restored R05/R06 solver records, including calls, errors, enabled, installed and valid; explicit implementations/comparison checks.",
+    "actualPixels": "Exact original/restored raw RGBA SHA-256 for each of the three windows. PNGs are lossless writes from those actual native readbacks.",
+    "actualShader": "Exact expanded vertex/fragment source hashes and compiled status, inherited template content and original native uniform ownership/values. Program IDs need not be identical and are not used as a source-content proxy.",
+    "originalHooks": "Helper separately checks exact compile/cache function objects, own descriptors, cache value, native diagnostic values and protected inputs.",
+    "diagnosticReality": "Requires distinct original/no-bump/albedo framebuffer responses, actual GPU uniform values 1/2, real compile evidence, exactly one added diagnostic uniform and original vertex/native uniform identities retained. Differences establish a response, not image quality."
+  },
+  "inheritedVerifierCheck": {
+    "sourceSHA256": "d49f5099a8536aeda31842d37e9f60f54db0fc84d84ee6efdbdfd83efc7aaa7a",
+    "exactTextRanges": [
+      {
+        "range": "installFrameHarness function to capture declaration",
+        "bytes": 14821,
+        "sha256": "6ee444a75b7dc81b6d21531a9abfa05d63f08801eb54af8c2a909788c358ab83"
+      },
+      {
+        "range": "capture/difference/state to closePage declaration",
+        "bytes": 3154,
+        "sha256": "000ae7171d1f93cb154b9de2f59feb788e143ab7b33c18751842fb025e7024cf"
+      },
+      {
+        "range": "shaderRecord and shaderFingerprint",
+        "bytes": 2005,
+        "sha256": "6bf42e28ad7df3d687df399f7e6e62c9c10132d3fc915f7cbdfd8661c43a31c5"
+      }
+    ],
+    "boundary": "These named ranges are exact. The entire R07 runner is intentionally not the original verifier: target constants, QA schema, diagnosis flow and finish receipt differ."
+  },
+  "versionAndWorkflow": {
+    "r05AncestorSource": "a8bba75322c12df151ecbcebc416087b5248aa5f",
+    "r05AncestorBuild": "11ed0391f798b5323f4eb4aefec4307fc0b9aee0",
+    "frozenR06Source": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "frozenR06Build": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "r06EvidenceCommit": "b842748b5ceb8bec0c0809d91d850071e2a53412",
+    "reviewRecordCommit": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+    "diagnosticCommit": "Recorded separately as GITHUB_SHA; workflow postcheck requires an exact match. The R07 run does not label itself a new product build.",
+    "matrix": "Five pose/view tests plus provenance = six tests; jaw macro, jaw oblique and speak macro each have original/no-bump/albedo/restored (12 frames), plus neutral macro and pucker oblique (2 frames).",
+    "transportAndCleanup": "Strict request/page/console/resource gates remain after cleanup. Collected transport observations do not erase failed requests. Timeout/failure paths remain incomplete.",
+    "evidenceCommit": "Workflow preserves only R07 evidence on the named branch after checking current remote head equals the triggering diagnostic commit; no force push. The resulting evidence commit is distinct from the triggering source and frozen R06 build.",
+    "claims": "productionRepair, visualAcceptance, productionReady and shareAllowed remain false for diagnostics even if technical execution succeeds."
+  },
+  "requiredPackagingFollowups": [
+    {
+      "path": "kaopu-unified-human-workbench/lip-edge-r07/DIAGNOSIS_ANCHOR.json",
+      "status": "not-yet-present-at-review",
+      "requiredBeforeRun": true,
+      "reason": "Workflow precheck directly reads this file and must receive the final reviewedFiles hashes and requiredChecks counts before dispatch."
+    },
+    {
+      "path": "kaopu-unified-human-workbench/lip-edge-r07/verification/EdgeGeometryProbe.js",
+      "status": "not-yet-present-at-review",
+      "requiredBeforeRun": true,
+      "reason": "Runner loads this helper and calls install/sample/restore. Its implementation is being prepared by the geometry reviewer and was not available for this source review."
+    }
+  ],
+  "runtimeStatus": "not-run-by-this-reviewer; no current diagnostic pass claimed",
+  "visualAcceptance": false,
+  "productionRepair": false,
+  "productFilesChanged": false,
+  "originalEvidenceChanged": false,
+  "limits": [
+    "Geometry helper implementation and final diagnostic anchor were not available at this snapshot.",
+    "Static inspection cannot establish actual shader compile/render/cache behaviour, exact restoration or visual causality; the frozen browser run must establish those.",
+    "No-bump removes the inherited procedural normal perturbation only; albedo retains colour transforms and visibility. Neither establishes physical lip thickness."
+  ]
+}

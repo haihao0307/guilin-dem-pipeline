@@ -1,0 +1,109 @@
+name: Lip edge R07 causal diagnosis
+on:
+  push:
+    branches: [feature/lip-edge-r07-20261020]
+    paths:
+      - kaopu-unified-human-workbench/lip-edge-r07/**
+      - .github/workflows/lip-edge-r07.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-edge-r07-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnose-native-r06:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-edge-r07
+            kaopu-unified-human-workbench/lip-corner-r06
+            kaopu-unified-human-workbench/lip-motion-r05
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify frozen native R06 and reviewed diagnosis code
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-edge-r07')
+          a=json.loads((p/'DIAGNOSIS_ANCHOR.json').read_text())
+          for name,expected in a['reviewedFiles'].items():
+              actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          b=json.loads((p/'TASK_ANCHOR.json').read_text())['baseline']
+          previous=p.parent/'lip-corner-r06'
+          for name,key in [('preview.html','previewSHA256'),('evidence/candidate-03/qa.json','qaSHA256'),('FINAL_RECEIPT.json','receiptSHA256')]:
+              assert hashlib.sha256((previous/name).read_bytes()).hexdigest()==b[key],name
+          q=json.loads((previous/'evidence/candidate-03/qa.json').read_text())
+          r=json.loads((previous/'FINAL_RECEIPT.json').read_text())
+          assert q['completed'] and q['cleanup']['completed'] and q['cleanup']['browserDisconnected']
+          assert all(t['passed'] for t in q['tests']) and len(q['tests'])==15
+          assert all(not q[k] for k in ['pageErrors','consoleErrors','failedRequests','resourceErrors'])
+          assert r['decision']['localRepairWorthRetaining'] and not r['decision']['wholeLipVisualAcceptance']
+          print('Frozen accepted R06 and reviewed read-only R07 diagnostics verified.')
+          PY
+      - name: Install fixed browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Diagnose actual immutable R06 public workbench
+        env:
+          MODE: public
+          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+          QA_BUDGET_MS: 900000
+        run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-edge-r07/verification/diagnose-edge.cjs
+      - name: Verify completed diagnosis and exact restoration
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),assert=require('assert/strict');
+          const p='kaopu-unified-human-workbench/lip-edge-r07/';
+          const q=JSON.parse(fs.readFileSync(p+'evidence/diagnosis-01/qa.json'));
+          const a=JSON.parse(fs.readFileSync(p+'DIAGNOSIS_ANCHOR.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);assert.equal(q.cleanup.browserDisconnected,true);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
+          assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);
+          assert.equal(q.geometryProbes.length,5);assert.equal(q.envelopeObservations.length,5);
+          assert(q.baselineObservations.every(r=>r.acceptedR06StateAndPixelsExact));
+          assert(q.geometryProbeRestore.restored&&q.envelopeProbeRestore.restored);
+          assert(q.restorations.length===3 && q.restorations.every(r=>r.nativeStateExact&&r.nativePixelsExact&&r.actualShaderExact&&r.solverCallsExact));
+          assert.equal(q.diagnosticCommit,process.env.GITHUB_SHA);assert.equal(q.productionRepair,false);
+          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);assert.equal(q.shareAllowed,false);
+          console.log('Actual diagnosis completed; no product improvement claimed.');
+          JS
+      - name: Preserve actual completed or failed diagnosis evidence
+        if: always()
+        env:
+          TASK_BRANCH: feature/lip-edge-r07-20261020
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01; then
+            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Record actual R07 lip-edge diagnostic evidence [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-edge-r07-diagnosis-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-edge-r07/TASK_ANCHOR.json
+            kaopu-unified-human-workbench/lip-edge-r07/DIAGNOSIS_ANCHOR.json
+            kaopu-unified-human-workbench/lip-edge-r07/verification
+          if-no-files-found: error
+          retention-days: 30
