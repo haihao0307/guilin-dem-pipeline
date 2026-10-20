@@ -31,6 +31,7 @@ jobs:
           node --experimental-default-type=module --test kaopu-geography-workbench/kowloon-building-mother-r01/tests/*.test.mjs
           node --check kaopu-geography-workbench/kowloon-building-mother-r01/r03/app.mjs
           node --check kaopu-geography-workbench/kowloon-building-mother-r01/r04/app.mjs
+          node --check kaopu-geography-workbench/kowloon-building-mother-r01/r05/app.mjs
       - name: Render real WebGL and test interrupted flows
         run: |
           python -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/kowloon-http.log" 2>&1 &
@@ -39,6 +40,9 @@ jobs:
       - name: Render the bounded two-floor staircase candidate
         run: |
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/stairs-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-browser
+      - name: Render bounded r05 door guards and three-floor candidate
+        run: |
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/interior-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r05-browser
       - name: Render the published HTTPS checkpoint and verify served file hashes
         run: |
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/browser.py --url https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/ --expected-build 2026-10-20-floor-window-pbr-r03 --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/public-browser
@@ -54,5 +58,6 @@ jobs:
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/public-browser
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-browser
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-public-browser
+            kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r05-browser
           if-no-files-found: warn
           retention-days: 1
