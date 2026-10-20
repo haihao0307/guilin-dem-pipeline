@@ -1,0 +1,170 @@
+{
+  "schema": "native-single-body-hair-browser-evidence-review@1",
+  "reviewedUTC": "2026-10-20T03:31:15.981670+00:00",
+  "reviewer": "independent benchmark reviewer",
+  "reviewMode": "Read-only evidence/source review and summary consistency arithmetic; no browser interaction, no performance rerun",
+  "input": {
+    "evidenceFile": "BROWSER_EVIDENCE.json",
+    "bytes": 11654,
+    "sha256": "b07efe8dac24ee000cb9600b6c2873def0324556abcb0f26e9d409cb11e637f4",
+    "sourceRuntimeSHA256": "cfe4f39708d1212ba768f9af31a3253a27f9988ab2f7f52f9e0ca55fdc72f790",
+    "sourceReviewFile": "PROBE_SOURCE_REVIEW.json",
+    "sourceReviewSha256": "d5ff4ad0debb9d3cb5e5dc3993384192c5f2d592c3f18420a27be9b69a002bed",
+    "companionInspectorSha256": "2c227e0ed524dd96a0be5dea235f534a5594fd05ace92514b5d50684ef140bd6",
+    "companionPublicSha256": "d99ac6e4fbe78f7e2c19959109434f532729d236e74f2fef03170cde01b5a62a",
+    "companionSourceReviewMatchesCurrentFiles": true,
+    "originalEvidenceUnmodified": true
+  },
+  "verdict": {
+    "requestedFixedStepRunComplete": true,
+    "recordedCountsAndEndpointProgressionInternallyConsistent": true,
+    "validCompleteGpuQuerySummaryPresent": true,
+    "rawSampleStatisticsIndependentlyRecomputed": false,
+    "realTimePacingUnexplained": true,
+    "hardwareCapacityEstimateSupported": false,
+    "completeNpcSceneFpsMeasured": false,
+    "summary": "120个更新与GPU查询计数完整，物理与动作按请求推进；存在约1秒的异常rAF采样节奏，不能从本次数据给出硬件帧率上限。"
+  },
+  "environmentReportedByWebGL": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (NVIDIA)",
+    "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "drawingBuffer": [
+      1425,
+      1506
+    ],
+    "dpr": 1.5,
+    "visibility": "visible"
+  },
+  "environmentLimits": {
+    "hardwareLabel": "WebGL unmasked adapter reports NVIDIA GeForce RTX 4070 Ti SUPER through ANGLE D3D11; this is not a software SwiftShader label",
+    "cpuModelRecorded": false,
+    "visibilityCheckedAtEachSample": true,
+    "continuousVisibilityTraceSaved": false,
+    "browserOrPlatformPacingCauseEstablished": false
+  },
+  "completenessChecks": {
+    "requestedMeasuredUpdates": 120,
+    "completedMeasuredUpdates": 120,
+    "warmupUpdates": 20,
+    "cpuSummarySamples": 120,
+    "gpuSummarySamples": 120,
+    "drawCountSamples": 120,
+    "triangleCountSamples": 120,
+    "rafIntervalSamples": 119,
+    "rafIntervalCountReason": "120 measured rAF starting timestamps yield 119 consecutive intervals; this is not a missing update",
+    "gpuPending": 0,
+    "gpuDisjoint": false,
+    "cancelled": false,
+    "recordedErrors": [],
+    "totalFrameCounterIncrease": 140,
+    "guidePhysicsStepIncrease": 140,
+    "underlyingGuideSolverStepIncrease": 140,
+    "originalPoseBakeIncrease": 140,
+    "motionSecondsIncrease": 2.33333333333333,
+    "measuredSimulationSeconds": 1.9999999999999967,
+    "requestedStepSeconds": 0.016666666666666666,
+    "fixedRequestedStepsDropped": false,
+    "wallTimeCatchupApplied": false,
+    "topLevelElapsedField": "Both run.initial.elapsed and run.final.elapsed stay zero in manual mode; use motionReport.time and physics counters for actual progression"
+  },
+  "measuredSummaries": {
+    "cpuUpdateAndSubmissionWallMS": {
+      "samples": 120,
+      "mean": 78.69166666418315,
+      "p50": 71.60000002384186,
+      "p95": 119.30000001192093,
+      "min": 55.69999998807907,
+      "max": 167.19999998807907
+    },
+    "gpuElapsedCommandIntervalMS": {
+      "samples": 120,
+      "mean": 32.369861866666675,
+      "p50": 17.048576,
+      "p95": 84.772864,
+      "min": 10.305536,
+      "max": 127.645248
+    },
+    "rafStartIntervalMS": {
+      "samples": 119,
+      "mean": 981.8966386554623,
+      "p50": 1034.399999999965,
+      "p95": 1067.6999999999534,
+      "min": 50,
+      "max": 1084.2999999999884
+    },
+    "totalDrawCallsPerUpdate": {
+      "samples": 120,
+      "mean": 23,
+      "p50": 23,
+      "p95": 23,
+      "min": 23,
+      "max": 23
+    },
+    "submittedTrianglesAcrossNativePassesPerUpdate": {
+      "samples": 120,
+      "mean": 13714940,
+      "p50": 13714940,
+      "p95": 13714940,
+      "min": 13714940,
+      "max": 13714940
+    },
+    "measuredWallSeconds": 116.91770000001195,
+    "warmupAndMeasuredWallSeconds": 136.5006999999881
+  },
+  "timingDefinitions": {
+    "cpu": "Wall interval around _stepNoReport(1/60), including native motion, guide physics, attachments/camera and rendering submission; not exclusive CPU busy time or pure solver time",
+    "gpu": "EXT_disjoint_timer_query_webgl2 TIME_ELAPSED interval begins before the combined CPU update and ends after submission. It can include GPU idle gaps while CPU work prepares later commands; it is not exclusive GPU execution time",
+    "raf": "Intervals between measured requestAnimationFrame callback starting timestamps; reflects pacing observed in this test session, not independently measured display presentations or hardware throughput",
+    "wall": "Includes waiting between callbacks. Asynchronous GPU query drain follows the end timestamp and is excluded",
+    "addition": "CPU and GPU intervals may overlap. They cannot be added into a frame budget, and neither can be added to the independent clothing timings from a different Node/CPU environment"
+  },
+  "arithmeticFromSummariesNotNewMeasurements": {
+    "summedCpuUpdateIntervalsMS": 9442.999999701977,
+    "summedRafIntervalsMS": 116845.70000000001,
+    "measuredWallMS": 116917.70000001194,
+    "wallMinusRafIntervalsMS": 72.00000001193257,
+    "boundaryInterpretation": "72 ms remainder is compatible with the last measured update and endpoint overhead; it is a consistency check, not reconstruction of raw samples",
+    "measuredWallSecondsPerSimulatedSecond": 58.45885000000607,
+    "observedBenchmarkUpdatesPerWallSecond": 1.0263629886662817,
+    "observedRafIntervalReciprocalHz": 1.0184371354701114,
+    "theseRatesAreNotHardwareFpsLimits": true
+  },
+  "rawDataLimit": {
+    "perSampleArraysArchived": false,
+    "availableData": "Only summary count/mean/p50/p95/min/max and run endpoint reports are archived",
+    "independentVerificationPossible": "Count consistency, range ordering, expected simulation progress, source instrumentation checks and relationships between summary totals",
+    "independentVerificationNotPossible": "Recompute browser means/percentiles from original values, inspect time ordering/outliers, pair CPU and GPU samples, or independently diagnose the long rAF intervals",
+    "contrastWithClothRecord": "Cloth R02 retains its 720 raw CPU samples and was independently recomputed. Do not make the same raw-data verification claim for this browser file."
+  },
+  "scope": {
+    "body": "Original P01, 266098 displayed vertices / 531702 body triangles; native binding reports 104 bones, full original influences retained",
+    "hair": "Original F13, 114171 display strands with 49 path samples; guide simulation is 43 guides x 25 nodes",
+    "action": "walk only, fixed 1/60 step, wind false, native wax/freedom settings retained",
+    "drawCounts": "23 submitted draw calls and 13714940 submitted triangles per measured update across native passes; not a count of only visible on-screen triangles",
+    "clothingIncluded": false,
+    "shoesIncluded": false,
+    "multipleNpcsIncluded": false,
+    "worldAndAiIncluded": false,
+    "latestStructuralHairAcceptanceEstablished": false,
+    "fullPerStrandPhysics": false,
+    "finiteWidthCollisionOrVisualQualityCertified": false
+  },
+  "safeConclusions": [
+    "原生单人身体＋F13密发及现有导向物理在该浏览器完成了20步预热和120步采样，没有记录到异常或未完成GPU查询。",
+    "浏览器报告RTX4070TiSUPER/ANGLE D3D11，绘制缓冲1425×1506、DPR1.5；结果只描述这一实际会话与此固定动作设置。",
+    "本次CPU更新与提交区间均值78.69ms、P95 119.30ms；GPU查询时间区间均值32.37ms、P95 84.77ms，属于不同且可能重叠的时间区间。",
+    "采样的2秒模拟耗费116.918秒wall time，rAF间隔均值981.90ms/P95 1067.70ms；延迟来源尚未确证，必须连同数字报告。",
+    "可以据此优先剖析身体/头发的逐步更新、同步和提交成本；目前没有建立渲染吞吐量、用户设备容量或完整多人场景的性能上限。"
+  ],
+  "unsupportedConclusions": [
+    "RTX4070TiSUPER只能约1FPS运行该角色。",
+    "以1000/CPU均值、1000/GPU均值或1000/(CPU+GPU均值)作为实测FPS。",
+    "把本浏览器CPU/GPU区间和另一容器的衣物CPU时间相加得到完整NPC帧耗时。",
+    "仅因GPU区间小于CPU区间就确定纯CPU瓶颈、GPU利用率或优化后的可达FPS。",
+    "120次采样已被逐帧原始数据复核，或rAF异常已经证明来自浏览器/网络/远程环境中的某一具体原因。",
+    "F13导向物理的完成证明最新结构线已通过验收，或证明全部显示发丝独立物理及完整碰撞正确。"
+  ],
+  "allImplementedReviewAssertionsPassed": true
+}
