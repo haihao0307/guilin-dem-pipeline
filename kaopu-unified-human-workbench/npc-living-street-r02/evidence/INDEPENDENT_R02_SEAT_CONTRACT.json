@@ -1,0 +1,113 @@
+{
+  "schema": "courtyard-independent-r02-seat-contract/1",
+  "reviewedAt": "2026-10-20T08:36:57.161Z",
+  "scope": "SOURCE_CONTRACT_FIXTURE_ONLY: actual LifeSimulation and actual unchanged prefix of NativeMotion.update; no native rig execution, images, browser or public pass.",
+  "sourceSHA256": {
+    "src/LifeSimulation.mjs": "f65db05ad18e31266e768bfb24373f14338b35e9a50636ac971f1bf25490e705",
+    "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+    "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+    "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a",
+    "src/NativeMotion.mjs": "e7cfec23b0f088fa62fdfc7a4360d9a1dffcbbb2451ded4f129910f688c30990",
+    "src/NativeRig.mjs": "de5b7b2bac4ea0ff98ab6ec31fc38defc012d863b821696ef61d11bac596e7ad",
+    "src/Workbench.mjs": "7b09eae5f714782510491694720021db526148f6f48a5362557c687f786bb745"
+  },
+  "snapshotDirectory": "/tmp/r02-seat-contract-1792485417127",
+  "checks": [
+    {
+      "name": "current-curve seat sweep freezes pose/time and keeps reservation",
+      "pass": true,
+      "startGap": 0.024273747508448018,
+      "predictedEndGap": 0.009999999999999787,
+      "before": {
+        "x": -2.45,
+        "z": 1.9084987801456061,
+        "elapsed": 0.8,
+        "progress": 0.5517241379310345,
+        "seatOwner": "D"
+      },
+      "after": {
+        "x": -2.45,
+        "z": 1.9084987801456061,
+        "elapsed": 0.8,
+        "progress": 0.5517241379310345,
+        "seatOwner": "D",
+        "seatBlockedFor": 0.05
+      }
+    },
+    {
+      "name": "half-sit reversal shares live factor under sim-before-motion frame order",
+      "pass": true,
+      "errorM": 0,
+      "before": {
+        "x": -2.45,
+        "z": 1.8830889917695472,
+        "progress": 0.5,
+        "factor": 0.5
+      },
+      "phaseStartFactor": 0.5,
+      "simFactor": 0.4885057471264368,
+      "actual": {
+        "root": [
+          -2.45,
+          0,
+          1.8890948034909947
+        ],
+        "standStart": 0.5
+      },
+      "simRoot": [
+        -2.45,
+        1.8890948034909947
+      ]
+    },
+    {
+      "name": "early blocked stand retry is detected without an artificial progress-zero frame",
+      "pass": true,
+      "errorM": 0,
+      "old": {
+        "progress": 0.01,
+        "standStartFactor": 0.5,
+        "seatFactor": 0.495,
+        "root": [
+          -2.45,
+          1.8857243039480451
+        ],
+        "token": "run-1-activity-1:2"
+      },
+      "rejection": {
+        "accepted": true,
+        "committed": false,
+        "reason": "execution-failed"
+      },
+      "blocked": {
+        "progress": 0.01,
+        "executionBlocked": true,
+        "token": "run-1-activity-1:3",
+        "seatOwner": "D"
+      },
+      "restart": {
+        "standStartFactor": 0.495,
+        "progress": 0,
+        "token": "run-1-activity-1:4"
+      },
+      "newProgress": 0.020202020202020204,
+      "simFactor": 0.485,
+      "actual": {
+        "root": [
+          -2.45,
+          0,
+          1.8908888326260287
+        ],
+        "standStart": 0.495
+      },
+      "simRoot": [
+        -2.45,
+        1.8908888326260287
+      ],
+      "wouldTriggerWorkbenchRootError": false
+    }
+  ],
+  "allChecksPassed": true,
+  "candidateApproved": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

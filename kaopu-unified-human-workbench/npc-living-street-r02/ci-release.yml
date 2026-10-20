@@ -1,0 +1,170 @@
+name: NPC living street R02 candidate
+on:
+  push:
+    branches: [feature/npc-living-street-r02-20261020]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-living-street-r02/**'
+      - '.github/workflows/npc-living-street-r02-verify.yml'
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: npc-living-street-r02-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SOURCE_HEAD: ${{ github.sha }}
+      NPC_BOOT_TIMEOUT_MS: 900000
+      NPC_TOTAL_TIMEOUT_MS: 1800000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/npc-living-street-r02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read integration diagnostic versus reviewed release scope
+        id: integration
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: |
+          node -e 'const fs=require("fs"),s=JSON.parse(fs.readFileSync("INTEGRATION_STATUS.json","utf8"));if(typeof s.releaseCandidate!=="boolean")throw Error("releaseCandidate must be an explicit boolean");fs.appendFileSync(process.env.GITHUB_OUTPUT,"release_candidate="+s.releaseCandidate+"\n");console.log(JSON.stringify({releaseCandidate:s.releaseCandidate,diagnosticOnly:!s.releaseCandidate,deliveryAcceptance:false}));'
+      - name: Build the SHA-locked native candidate
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: |
+          node prepare.cjs --all-native
+          node src/life-tests.mjs
+          node build.cjs --check-host
+          node build.cjs
+      - name: Prepare isolated real Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Observe six complete native people and current actual resource requests
+        timeout-minutes: 31
+        env:
+          NPC_QA_PHASE: startup
+          NPC_QA_OUT: /tmp/street-observed
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: street-observed-${{ github.sha }}
+          path: /tmp/street-observed
+          retention-days: 14
+      - name: Package only the current source-head observed native packet closure
+        if: steps.integration.outputs.release_candidate == 'true'
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: |
+          node prune-observed.cjs --evidence /tmp/street-observed/final.json --qa /tmp/street-observed/qa.json --output vendor/PACKETS.json
+          node build.cjs
+      - name: Verify six native people, clothes, hair, shoes, physical actions and environment
+        if: steps.integration.outputs.release_candidate == 'true'
+        timeout-minutes: 31
+        env:
+          NPC_QA_PHASE: suite
+          NPC_QA_OUT: /tmp/street-suite
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.integration.outputs.release_candidate == 'true'
+        with:
+          name: street-suite-${{ github.sha }}
+          path: /tmp/street-suite
+          retention-days: 14
+      - name: Package the same observed native packet set into one document
+        if: steps.integration.outputs.release_candidate == 'true'
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: |
+          node build.cjs --offline
+      - name: Verify actual standalone file startup and a new-bottle interaction with networking disabled
+        if: steps.integration.outputs.release_candidate == 'true'
+        timeout-minutes: 31
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        env:
+          NPC_QA_PHASE: offline
+          NPC_QA_OUT: /tmp/street-offline
+          PREVIEW_FILE: standalone.html
+          NPC_BUILD_FILE: BUILD.standalone.json
+        run: node verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.integration.outputs.release_candidate == 'true'
+        with:
+          name: street-standalone-${{ github.sha }}
+          path: |
+            /tmp/street-offline
+            kaopu-unified-human-workbench/npc-living-street-r02/standalone.html
+            kaopu-unified-human-workbench/npc-living-street-r02/BUILD.standalone.json
+            kaopu-unified-human-workbench/npc-living-street-r02/vendor/PACKETS.json
+            kaopu-unified-human-workbench/npc-living-street-r02/vendor/PACKETS.json.provenance.json
+          retention-days: 30
+      - name: Require executed gates and stage only exact candidate resources
+        if: steps.integration.outputs.release_candidate == 'true'
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/stage-public.cjs
+      - name: Verify the existing Pages destination before any publication
+        if: steps.integration.outputs.release_candidate == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          NPC_HTTP_OUT: /tmp/street-public-http
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/request-public-build.cjs --check
+      - uses: actions/checkout@v4
+        if: steps.integration.outputs.release_candidate == 'true'
+        with:
+          ref: gh-pages
+          path: public-pages
+          sparse-checkout: npc-living-street
+      - name: Publish one new version directory on the existing Pages site
+        if: steps.integration.outputs.release_candidate == 'true'
+        run: |
+          cd public-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          out="npc-living-street/r02-20261020/${SOURCE_HEAD}"
+          if test -e "$out"; then
+            echo 'The immutable candidate directory already exists; refusing to overwrite it.'
+            exit 1
+          fi
+          mkdir -p "$out"
+          cp -R /tmp/street-public/. "$out/"
+          git add -- "$out"
+          git commit -m "Publish isolated living street R02 candidate ${SOURCE_HEAD}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then
+              printf 'PAGES_SOURCE_SHA=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+              exit 0
+            fi
+          done
+          exit 1
+      - name: Request a build of the existing branch-backed Pages site
+        if: steps.integration.outputs.release_candidate == 'true'
+        timeout-minutes: 22
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          NPC_HTTP_OUT: /tmp/street-public-http
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/request-public-build.cjs
+      - name: Wait for exact public HTML and source receipt
+        if: steps.integration.outputs.release_candidate == 'true'
+        timeout-minutes: 22
+        env:
+          NPC_HTTP_OUT: /tmp/street-public-http
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/wait-public.cjs
+      - name: Verify the fixed public webpage and a real new-bottle interaction
+        if: steps.integration.outputs.release_candidate == 'true'
+        timeout-minutes: 31
+        env:
+          NPC_QA_PHASE: public
+          NPC_QA_OUT: /tmp/street-public-browser
+          PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/npc-living-street/r02-20261020/${{ github.sha }}/
+        run: node kaopu-unified-human-workbench/npc-living-street-r02/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.integration.outputs.release_candidate == 'true'
+        with:
+          name: street-public-${{ github.sha }}
+          path: |
+            /tmp/street-public-browser
+            /tmp/street-public-http
+            kaopu-unified-human-workbench/npc-living-street-r02/BUILD.json
+          retention-days: 30
