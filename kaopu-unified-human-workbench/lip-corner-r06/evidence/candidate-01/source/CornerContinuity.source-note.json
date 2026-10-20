@@ -1,0 +1,92 @@
+{
+  "schema": "kaopu/r06-corner-continuity-source-note@1",
+  "recordedUTC": "2026-10-20T06:18:58.878395+00:00",
+  "reviewer": "/root/lip_r05_geometry_audit",
+  "status": "First production candidate prepared; actual candidate render acceptance pending",
+  "source": {
+    "file": "CornerContinuity.js",
+    "sha256": "19b9ba791d7d42887431dd5ff8b1ee7fbcd832c52c89c27c9cf26e461f0b1084",
+    "bytes": 23568,
+    "version": "native-corner-x-followthrough@1"
+  },
+  "basis": {
+    "baselineSourceCommit": "a8bba75322c12df151ecbcebc416087b5248aa5f",
+    "baselineBuildCommit": "11ed0391f798b5323f4eb4aefec4307fc0b9aee0",
+    "diagnosticRun": "39378015760",
+    "diagnosticQaSHA256": "67c352b2e79f4d76517da0f85405b5eff490799266d5f3ebec076e6f81a07141",
+    "geometryReview": "../research/diagnosis-01-geometry-review.json",
+    "geometryReviewSHA256": "09a117f3645b485b24b4c67c066f9267f15d9fe003ce46192c577707b368c1ad",
+    "nativeSourceAudit": "../research/r06-corner-source-audit.json",
+    "nativeSourceAuditSHA256": "4e7be2dc149514c0291671a3d6c97337e0d8a17b1867b75f509d85ac4de2cc07"
+  },
+  "causalScope": "The actual no-x counterfactual has the strongest corner response but visibly weakens pucker. This candidate retains source motion and adds bounded peripheral reception. Actual attribution to a specific rendered u=1.25 edge is still unavailable; the candidate is a falsifiable engineering hypothesis.",
+  "api": {
+    "global": "window.__LIP_CORNER_SOLVER__",
+    "methods": [
+      "install(viewer,model)",
+      "setEnabled(boolean)",
+      "report()",
+      "uninstall()"
+    ],
+    "install": "Any current pose with compatible enabled R05. Weights derive only from native fRest, original indexed adjacency and original sample fields, never the current posed geometry. No install, enable, disable or uninstall performs an update or render.",
+    "uninstall": "Restore the exact captured R05 solver.apply function and own descriptor. Must happen before R05 is rebuilt. Returns nativeUpdateRequired=true."
+  },
+  "construction": {
+    "indexScope": "Scan every original top.geometry.index triangle. Never use the filtered top.neighbors or the diagnostic top256 edge subset.",
+    "anchors": "Original active exterior vertices directly adjacent to eligible inactive exterior vertices; original native weighted x displacement is their live value.",
+    "recipients": "Only original inactive vertices. Original active membership, samples and semantics are read-only.",
+    "exterior": "Same side of native u, type<.5, inner<=.005, v>=0, front>.25, depth<6mm, abs(u)>.64 and<1.6, and restY within the original exterior vertical envelope.",
+    "continuousGuards": "front smooth .25-.75; depth fade 3.5-6mm; u gain .64-.84 and fade1.5-1.6; 1mm fading margins at the inherited broad vertical envelope. The actual target depths near2.55mm are retained.",
+    "support": "4mm shortest indexed fRest path; paths travel only through eligible inactive exterior skin after leaving an active boundary anchor. This cannot bridge across empty space, oral tissue, the opposite mouth side or through the active lip.",
+    "kernel": "For each reached inactive point and anchor, t=pathDistance/4mm and kernel=(1-t)^4*(4t+1)/max(distance^2,1e-12). Normalize all positive anchor kernels. Multiply by exterior gain and 1-smooth(0,4mm,nearestAnchorDistance).",
+    "justification": "Positive interpolation is bounded by original anchor contributions. Physical graph distance replaces the collapsed 1mm v normalization only for receiving peripheral displacement. Four millimetres spans a short transition beyond the observed sub2mm crossing edges; it is not a measured physiological length.",
+    "untouched": "Original fRest, index, csType, l19Oral, active list, native sample weights, topology, original shape, material recipes, DNA and labels."
+  },
+  "evaluation": {
+    "frame": "Original ao mouth x and center: normalize(lm54-lm48), midpoint(lm62,lm66), then convert both using [a0,a2,-a1].",
+    "anchorTerm": "-.23 * currentPucker * dot(currentNativeBeforeLocalPosition-frame.center,frame.x) * nativeAnchorWeight",
+    "addedComponent": "Add only the positively interpolated scalar along the current native mouth x axis to eligible inactive recipients. Do not subtract motion from anchors; no extra up or front term.",
+    "phase": "Instance wrapper outside R05.apply; temporary pairs.map wrapper is captured by R05. R05 local ownership correction executes first; R06 then adds the recipient x field; the original map computes closure samples normally. Original closure, R05 closure ownership, envelope, normals, strain and microgeometry all execute.",
+    "actualGuards": "Compare solver.base bytes with the original apply-entry position array. Snapshot all original active positions and all abs(u)<=.64 positions immediately before the addition and verify exact equality after it.",
+    "puckerZero": "Call the captured original R05 function directly, with no nested R06 hook, position read/write, pose change or support evaluation.",
+    "positiveKernelLimit": "The exact result is a bounded engineering transfer, not a volume/force/biomechanics solve. Downstream native normal and strain fields may respond to neighbouring geometry."
+  },
+  "compatibilityAndInvalidation": {
+    "matchedSource": "Fixed R05 source a8bba753... and enabled valid native-return-motion-ownership@1; R04 material active, R02 base active, beauty diagnostics off.",
+    "materialScope": "Exact reviewed material authoring recipe recorded by diagnosis-01 for R02 lip, head, body, native lip material controls and anatomy optics. Historical/custom settings are never overwritten or relabeled by this module; it disables and falls through to the captured R05 evaluator.",
+    "nativeMicrogeometry": "R02 temporarily multiplies anatomy.microGeometry by .35 inside mother.update. The guard expects the native .35 during solver evaluation and the authored1 outside evaluation, so the inherited transient is not mislabeled as a custom material.",
+    "ownershipAndIdentity": "Capture R05 ownership fingerprint, original semantic/index array identities and lengths, original active membership and identity/native shape key. Known native person, geometry, topology, shape, ownership, version or material changes disable the candidate and retain original evaluation.",
+    "referenceFingerprints": "Binding reports rest/index/active fingerprints for repeatability. They are FNV1a plus length diagnostics, not artifact SHA256. The host constructs new native semantic/topology domains for supported changes; references and native identity keys protect that lifecycle.",
+    "unexpectedFailures": "Wrong stage count, nonfinite data, canonical position aliasing, changed descriptors or unexpected native evaluation errors are surfaced; temporary inner descriptors are restored in finally. These are not silently treated as supported edits."
+  },
+  "reportGates": {
+    "enabledPucker": "last.completed=true, hooksRestored=true, pairMapCalls=1, puckerZeroBypass=false, beforeLocalBaseMatchesEntry=true, activeDirectDeltaZero=true, centerDirectDeltaZero=true, positive actual compared counts, and actual changed count/max distance.",
+    "enabledZeroPucker": "last.completed=true, hooksRestored=true, pairMapCalls=0, puckerZeroBypass=true, changed count/max distance0 and compared counts0. Exact final arrays/pixels must be verified externally.",
+    "disabled": "Pass through without updating last; verifier must not interpret stale last as a current execution.",
+    "calls": "Real enabled R06 wrapper execution count.",
+    "knownVertexExamples": "32640/47150/12828/18024 appear only in reporting. They never define eligibility, graph construction, interpolation or pose behavior."
+  },
+  "localVerification": {
+    "syntax": "node --check passed",
+    "fixture": "12-vertex native/index fixture with nested R05 map and iterator restoration, actual per-update base reset and original local/closure execution.",
+    "passed": [
+      "Arbitrary-pose install and identical binding after a different install pose.",
+      "Same-side bounded full-index transfer without original-active or central direct writes.",
+      "Negative-v and deep unlabelled oral points excluded.",
+      "X-only contribution bounded by source anchor amplitudes.",
+      "Pucker-zero entire resulting position array exactly equals direct R05.",
+      "Exact prior R05 apply and inner map/iterator descriptors restored.",
+      "Material customization disables without resetting its value and native evaluation continues.",
+      "Identity change disables without errors and native evaluation continues."
+    ],
+    "nativeCalls": 6,
+    "scope": "Algebra and lifecycle evidence only, not rendered product acceptance."
+  },
+  "limits": [
+    "The actual renderer/native prefix mismatch prevented projected edge attribution in diagnosis-01. This candidate must earn its visible benefit in actual matched frames.",
+    "Existing pucker motion within active skin, static corner recess, lip return geometry, volume compensation, contact scope and material appearance are not newly validated.",
+    "No full physiological claim or claim that thin inner lip edges are solved."
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}

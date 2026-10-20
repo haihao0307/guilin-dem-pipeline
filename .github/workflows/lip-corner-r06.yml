@@ -1,0 +1,163 @@
+name: Lip corner R06 public candidate
+on:
+  push:
+    branches: [feature/lip-corner-r06-20261020]
+    paths:
+      - kaopu-unified-human-workbench/lip-corner-r06/**
+      - .github/workflows/lip-corner-r06.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-corner-r06-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-corner-r06
+            kaopu-unified-human-workbench/lip-motion-r05
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify reviewed source and actual corner diagnostic provenance
+        run: |
+          python - <<'PYVERIFY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-corner-r06')
+          a=json.loads((p/'CANDIDATE_ANCHOR.json').read_text())
+          for name,expected in a['reviewedFiles'].items():
+              actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          raw=p/a['diagnosis']['evidence']
+          assert hashlib.sha256(raw.read_bytes()).hexdigest()==a['diagnosis']['qaSHA256']
+          q=json.loads(raw.read_text())
+          assert q['completed'] and q['cleanup']['completed'] and all(t['passed'] for t in q['tests'])
+          assert q['restoration']['nativeStateExact'] and q['restoration']['nativePixelsExact']
+          baseline=json.loads((p/'TASK_ANCHOR.json').read_text())['baseline']
+          assert hashlib.sha256((p.parent/'lip-motion-r05/preview.html').read_bytes()).hexdigest()==baseline['previewSHA256']
+          for previous in a.get('previousCandidates',[]):
+              raw=p/previous['originalEvidence']
+              assert hashlib.sha256(raw.read_bytes()).hexdigest()==previous['qaSHA256']
+              prior=json.loads(raw.read_text())
+              rejection=p/previous['rejectionRecord']
+              assert hashlib.sha256(rejection.read_bytes()).hexdigest()==previous['rejectionSHA256']
+              decision=json.loads(rejection.read_text())
+              assert decision['candidate']==previous['candidate']
+              assert decision['sourceCommit']==previous['sourceCommit']==prior['sourceSHA']
+              assert decision['buildCommit']==previous['buildCommit']==prior['buildSHA']
+              assert decision['qaSHA256']==previous['qaSHA256']
+              assert decision['localRepairWorthRetaining'] is False
+              assert decision['visualAcceptance'] is False and decision['productionReady'] is False
+              assert type(previous['technicalCompleted']) is bool
+              assert prior['completed'] is previous['technicalCompleted']
+              assert decision['overallTechnicalPass'] is previous['technicalCompleted']
+              if previous['technicalCompleted']:
+                  assert all(prior[k] for k in ['browserPassed','publicHttpsPassed','shareAllowed'])
+                  assert all(not prior[k] for k in ['pageErrors','consoleErrors','failedRequests','resourceErrors'])
+                  assert prior['cleanup']['completed'] and prior['cleanup']['browserDisconnected']
+                  assert all(t['passed'] for t in prior['tests'])
+                  assert all(not prior.get(k) for k in ['failure','restorationError','cleanupError'])
+              else:
+                  assert prior['failure']
+          print('Reviewed corner correction source, frozen R05 and original causal evidence retained.')
+          PYVERIFY
+      - name: Build exact inherited R05 plus native R06 candidate
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: node kaopu-unified-human-workbench/lip-corner-r06/build.cjs
+      - name: Publish immutable candidate build to isolated draft branch
+        id: build
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+          TASK_BRANCH: feature/lip-corner-r06-20261020
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -f -- kaopu-unified-human-workbench/lip-corner-r06/preview.html kaopu-unified-human-workbench/lip-corner-r06/BUILD_MANIFEST.json
+          git commit -m "Build immutable native lip-corner R06 candidate [skip ci]"
+          git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          R06_BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$R06_BUILD_SHA" >> "$GITHUB_ENV"
+          echo "BUILD_SHA=$R06_BUILD_SHA" >> "$GITHUB_OUTPUT"
+          python - <<'PYRECEIPT'
+          import json,os,subprocess
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-corner-r06')
+          build=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          r={'schema':'kaopu/lip-corner-candidate-build@1','sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':build,'previewSHA256':m['previewSHA256'],'publicURL':'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/lip-corner-r06/preview.html','workflowRun':int(os.environ['GITHUB_RUN_ID']),'technicalVerification':'pending','visualAcceptance':False,'productionReady':False}
+          (p/'CANDIDATE_BUILD.json').write_text(json.dumps(r,indent=2)+'\n')
+          PYRECEIPT
+      - name: Install fixed browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Verify actual immutable public workbench
+        env:
+          MODE: public
+          SOURCE_SHA: ${{ github.sha }}
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-corner-r06/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-03
+          QA_BUDGET_MS: 900000
+        run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-corner-r06/verification/verify-corner.cjs
+      - name: Verify candidate completion without aesthetic promotion
+        run: |
+          node - <<'JSVERIFY'
+          const fs=require('fs'),assert=require('assert/strict');
+          const p='kaopu-unified-human-workbench/lip-corner-r06/';
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-03/qa.json'));
+          const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
+          const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
+          for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
+          for(const k of ['publicHttpsPassed','browserPassed','shareAllowed'])assert.equal(q[k],true,k);
+          assert.equal(q.cleanup.browserDisconnected,true);
+          assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);
+          assert.equal(q.sourceSHA,process.env.GITHUB_SHA);assert.equal(q.buildSHA,process.env.BUILD_SHA);
+          assert.equal(q.previewSHA256,m.previewSHA256);assert.equal(q.verifierSHA256,a.reviewedFiles['verification/verify-corner.cjs']);
+          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
+          console.log('Actual public candidate checks completed; aesthetic acceptance remains separate.');
+          JSVERIFY
+      - name: Preserve actual completed or failed candidate evidence
+        if: always() && steps.build.outcome == 'success'
+        env:
+          TASK_BRANCH: feature/lip-corner-r06-20261020
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$BUILD_SHA"
+          git add -f -- kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_BUILD.json
+          if test -d kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-03; then
+            git add -f -- kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-03
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Record actual public R06 candidate evidence [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-corner-r06-public-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-03
+            kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_BUILD.json
+            kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_ANCHOR.json
+            kaopu-unified-human-workbench/lip-corner-r06/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-corner-r06/src/CornerContinuity.js
+            kaopu-unified-human-workbench/lip-corner-r06/src/CornerLip.js
+            kaopu-unified-human-workbench/lip-corner-r06/verification/verify-corner.cjs
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,18 @@
+{
+  "schema": "kaopu/lip-corner-ui-source-review@1",
+  "reviewedUTC": "2026-10-20T06:19:54.618895+00:00",
+  "scope": "Static archive and wrapper lifecycle review; actual browser verification remains required.",
+  "finding": "An inherited material/version change must disable an active R06 solver and rebuild native geometry, rather than only changing the comparison label.",
+  "change": "sync uses the previous R06 comparison as well as the current solver state: report() may already invalidate enabled, so entering an incompatible state still disables R06, runs a native update to remove evaluated displacement, then updates the label and renders.",
+  "preserved": [
+    "Uninstall the outer R06 evaluator before an R05 reinstall or restore.",
+    "Keep the complete prior R05 archive, including lipMotion pose/progress, and add lipCorner mode.",
+    "Use window capture for inherited save routes before existing document capture handlers.",
+    "Accept older full-person archives in an explicitly inherited or R05 mode; do not silently activate R06."
+  ],
+  "interfaceContract": "Corner solver install must support the currently completed native pose; it cannot silently assume the R05 jaw=.36 calibration precondition.",
+  "actualDOMDownloadsVerified": false,
+  "freshArchiveVerified": false,
+  "moduleSHA256AtReview": "10133e7dd63c66ab615525f4fdf43cfa91afef574198aa89768eab7618da5d22",
+  "regressionGate": "Actual inherited R02 DOM click must also produce native geometry and before-local input exactly equal to the already captured R06-off state; restoring R06 must recover the complete pre-frame person."
+}

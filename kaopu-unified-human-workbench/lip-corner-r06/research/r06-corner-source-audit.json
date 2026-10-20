@@ -1,0 +1,291 @@
+{
+  "schema": "kaopu/r06-corner-source-audit@1",
+  "reviewer": "/root/lip_r05_geometry_audit",
+  "recordedUTC": "2026-10-20T05:39:38Z",
+  "status": "Source mechanisms identified; five-frame R05 subterm diagnosis prepared; no R06 production repair or visual improvement accepted",
+  "scope": "Read the inherited native geometry and motion evaluator, inspect prior actual images and limited visible-triangle records, and implement an isolated diagnostic helper. This audit does not infer physiological correctness from parameter names or numerical probes.",
+  "baseline": {
+    "version": "LIP-MOTION-R05",
+    "sourceCommit": "a8bba75322c12df151ecbcebc416087b5248aa5f",
+    "buildCommit": "11ed0391f798b5323f4eb4aefec4307fc0b9aee0",
+    "receiptCommit": "d69c75703f03eac17b02ce37543f628d387ba01a",
+    "preview": "../../lip-motion-r05/preview.html",
+    "previewSHA256": "231cc60f696e1bfbe7831e5afb5bfb845f7358391dacd25bc3efa00c7a21710b",
+    "ownershipModule": "../../lip-motion-r05/src/MotionContinuity.js",
+    "ownershipModuleSHA256": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+    "declaredDiagnosticPose": {
+      "pucker": 0.82,
+      "seal": 0.24,
+      "jawOpen": 0.06,
+      "allOtherLocalActions": 0
+    }
+  },
+  "nativeSource": {
+    "path": "../../lip-inner-r04/preview.html",
+    "sha256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8",
+    "locations": "Zero-based Unicode character offsets and one-based lines in the frozen R04 preview; not byte offsets. Complete named source blocks were also compared with the R05 preview.",
+    "blocks": [
+      {
+        "name": "L5 rest-coordinate rails and ao displayed mouth frame",
+        "startAnchor": "function L5(",
+        "exclusiveEndAnchor": "Ke();function D5(",
+        "characterOffset": 4634999,
+        "line": 4118,
+        "characters": 1093,
+        "utf8SHA256": "42aa737e2392f0cb83229f94f06c00f90caffda9724b805ce987e77c58baa038",
+        "identicalInR05": true
+      },
+      {
+        "name": "Kl topology, native sample weights, active set and filtered neighbors",
+        "startAnchor": "Kl=class{",
+        "exclusiveEndAnchor": ";var Kd=class{",
+        "characterOffset": 4649399,
+        "line": 4173,
+        "characters": 3245,
+        "utf8SHA256": "8cb54e178c93936f39116e3764128f37a108a57f840427d8f0146cf308ca0938",
+        "identicalInR05": true
+      },
+      {
+        "name": "Ql.apply native local motion, closure, envelope, normals and strain-driven furrows",
+        "startAnchor": "Ql=class{",
+        "exclusiveEndAnchor": ";var Gs=",
+        "characterOffset": 4654436,
+        "line": 4173,
+        "characters": 5374,
+        "utf8SHA256": "e9b134e61ee537cc552ab0569cc3e5a848c11ab1b579d147bb0027dc48a82187",
+        "identicalInR05": true
+      },
+      {
+        "name": "O1.update native fixed-stencil refinement and static lip shape",
+        "startAnchor": "O1=class{",
+        "exclusiveEndAnchor": ";var Nn=class extends F1",
+        "characterOffset": 4935451,
+        "line": 4525,
+        "characters": 4321,
+        "utf8SHA256": "5d51c49cdd5ad3544593e3b161dfb6d994c2d17511445910837ab282b1c46ff5",
+        "identicalInR05": true
+      }
+    ]
+  },
+  "stageOrder": [
+    "Native identity/expression surface and O1 refinement/static shape produce the displayed input surface.",
+    "Ql.apply saves its before-local position array as solver.base.",
+    "Ql applies weighted local x/up/front motion to topology.active.",
+    "R05 adds only its fixed inner-return upper/lower ownership difference at the pairs.map boundary.",
+    "The R06 diagnostic, when enabled, subtracts one corner-supported pucker component at this same boundary after the R05 local correction.",
+    "Native opposing-pair gaps and closure deltas are computed from the resulting geometry; native closure executes.",
+    "R05 corrects closure direction for the same fixed inner-return ownership field.",
+    "Native dental envelope, normals, strain/pressure-driven microgeometry and final normals execute normally."
+  ],
+  "findings": [
+    {
+      "id": "C1-unfinished-outer-support",
+      "priority": 1,
+      "sourceStatus": "Confirmed conditional field truncation in source; visible responsibility unproven",
+      "sourceBlocks": ["L5", "Kl", "Ql.apply"],
+      "mechanism": "The exterior native skin ROI ends abruptly at abs(u)<1.25, while its analytic outer motion weight is designed to fade through abs(u)=1.33. For an exterior vertex without inner ownership, crossing the hard ROI boundary makes skin=false and weight=0 before that fade is complete.",
+      "equations": {
+        "roi": "type<.5 && abs(u)<1.25 && restY>bottom-.01 && restY<top+.014 && front>.001",
+        "skin": "type<.5 && (roi || inner>.005)",
+        "outerWeight": "(1-smooth(.98,1.33,abs(u)))*gauss(max(0,v-.8),1.1)*front",
+        "innerWeight": "inner*.65*(1-smooth(.014,.034,depth))*(1-smooth(1.2,1.6,abs(u)))",
+        "weight": "skin ? max(outerWeight,innerWeight) : 0",
+        "active": "skin && weight>.001"
+      },
+      "analyticValues": {
+        "outerLateralFactorAtHardCutoff": 0.13285131195335298,
+        "conditions": "The actual weight also includes vertical/front factors and the inner-owner alternative. This factor is an algebraic value, not a measured vertex jump."
+      },
+      "whyItCouldMatter": "A nonzero displacement on one endpoint and zero on an adjacent endpoint can concentrate strain and rotate a surface normal across a narrow band. All three pucker terms share this outer weight, so testing only roughness or wetness cannot diagnose this mechanism.",
+      "whatCouldDisproveVisibleAttribution": [
+        "The crossing edges project outside the visible corner folds or are occluded.",
+        "Actual adjacent vertices have negligible remaining weight or negligible local term jumps.",
+        "The visible sharp corner is generated within the active region rather than at its outer boundary."
+      ],
+      "whyFullIndexIsRequired": "Kl.neighbors only includes edges whose two endpoint samples are skin. It omits the skin-to-nonskin transition under investigation. The diagnostic scans every original geometry index triangle instead.",
+      "productionStatus": "No support extension implemented; wait for actual subterm frames and edge projections."
+    },
+    {
+      "id": "C2-pucker-components-share-one-region",
+      "priority": 1,
+      "sourceStatus": "Exact local term decomposition confirmed; which component produces the visible hard fold remains unproven",
+      "sourceBlocks": ["ao", "Ql.apply"],
+      "frame": {
+        "x": "Unit landmark54-landmark48",
+        "up": "Unit landmark27-landmark8 after removing its x component",
+        "front": "Unit cross(x,up), oriented toward landmark30",
+        "center": "Midpoint of landmarks62 and66",
+        "displayConversion": "Every axis and the center convert from canonical axes using [a0,a2,-a1]. Native position-buffer contributions must use these displayed axes.",
+        "scale": "Native anatomy.scale(width(48,54))"
+      },
+      "equations": {
+        "O": "dot(beforeLocalPosition-center,x)",
+        "N": "dot(beforeLocalPosition-center,up)",
+        "stretch": "stretchLeft*(1-smooth(-.16,.16,u))+stretchRight*smooth(-.16,.16,u)",
+        "Q": "1-.23*pucker-.12*funnel+.18*stretch",
+        "transverse": "min(1.18,1/sqrt(max(.65,Q)))",
+        "puckerX": "-.23*pucker*O*weight",
+        "puckerFront": ".0036*pucker*gauss(u,.85)*scale*weight",
+        "puckerTransverseContribution": "N*(transverse(Q)-transverse(Q+.23*pucker))*weight"
+      },
+      "analyticValuesAtDeclaredPose": {
+        "Q": 0.8114,
+        "xContractionCoefficientBeforeWeight": 0.1886,
+        "transverseScaleBeforeWeight": 1.1101521345712146,
+        "forwardPeakMetresAtScaleOneBeforeWeight": 0.002952,
+        "meaning": "Formula coefficients, not measured facial displacement or proved tissue-volume preservation."
+      },
+      "explicitCornerAction": "The separate .0028*cornerMix*gauss(abs(u)-.82,.33)*scale up-axis term is zero in this pucker preset because cornerLeft and cornerRight are both zero.",
+      "responsibilityLimit": "The transverse compensation uses distance from the whole mouth center. The native source itself reports that enclosed lip volume is not verified and labels the solver reduced constraints, not FEM.",
+      "minimalTest": "Independently remove x, front, and the pucker-specific nonlinear transverse term only within the same corner field. Recompute native closure and retain all downstream stages. A term-removal result is diagnostic and may reduce corner action; it cannot be accepted as a finished same-action repair."
+    },
+    {
+      "id": "C3-static-corner-roll-taper",
+      "priority": 2,
+      "sourceStatus": "Confirmed independent static shape mechanism; connection to perceived thin edge remains an inference",
+      "sourceBlocks": ["O1.update", "Kl"],
+      "mechanism": "The static forward lip roll fades laterally with 1-smooth(.78,1.06,abs(u)), while the local motion outer weight still has a lateral factor of approximately .867 at abs(u)=1.06. O1 also subtracts a narrow forward recess around abs(u)=.92 and adds an inward x shape term around abs(u)=.91. A thin or sharply recessed corner may therefore preexist the pucker motion and become more noticeable under contraction.",
+      "equations": {
+        "shapeLateralSupport": "f=1-smooth(.78,1.06,abs(u))",
+        "shapeVerticalSupport": "g=smooth(-.4,-.02,v)*(1-smooth(1.25,2.6,v))*front",
+        "upperRoll": ".0008*upperVolume*gauss(v-.4,.56)*(.42+.58*gauss(abs(u)-.46,.3))",
+        "lowerRoll": ".001*lowerVolume*gauss(v-.4,.56)*(.4+.6*gauss(abs(u)-.32,.29))",
+        "cornerRecessBeforeFG": "-.00038*corners*gauss(abs(u)-.92,.12)*gauss(v-.33,1.2)",
+        "cornerInwardShapeBeforeG": "-sign(u)*.00012*corners*gauss(abs(u)-.91,.12)",
+        "application": "Forward and up terms multiply f*g; inward x multiplies g. All are scaled by structure and native width scale and use the existing displacement cap."
+      },
+      "analyticOuterMotionFactorAtShapeFadeEnd": 0.8671486880466471,
+      "notEstablished": [
+        "That the actual lip has insufficient physical thickness.",
+        "That a natural commissure recess or every fold should be removed.",
+        "That changing static corners or structure settings would preserve the same person and neutral lip shape."
+      ],
+      "decision": "Keep this mechanism separate from the first five motion frames. Do not alter static lip volume, add a circular rim, or flatten the original mesh without further evidence."
+    },
+    {
+      "id": "C4-R05-correction-scope",
+      "priority": 2,
+      "sourceStatus": "Confirmed R05 support boundary; limited earlier pixel probes support that the sampled outer corner is not the reassigned inner-return tissue",
+      "source": "../../lip-motion-r05/src/MotionContinuity.js",
+      "sourceLines": [110, 128, 164, 183],
+      "mechanism": "R05 retains the native red lip body and changes upper/lower directional ownership only on a fixed negative-v inner-return field. Its correction excludes v>=-.015, excludes abs(u)>=1.10, and fades out by red=1. The inherited pucker x/front/transverse terms themselves do not depend on upper/lower ownership.",
+      "consequence": "R05 can correctly improve inner-return direction while retaining an outer corner support or shape problem. Extending its upper/lower reassignment to all corners would target a different issue and is not supported by current evidence.",
+      "priorTriangleProbe": {
+        "path": "../../lip-motion-r05/evidence/diagnosis-02/pucker-visible-triangles.json",
+        "sha256": "34dff0f9d7908fd1bd14ee74956ffcc13acf95484c76b264389b8fb7104a1155",
+        "leftPixelXY": [218, 294],
+        "leftCandidateTriangle": 293297,
+        "leftVertexIDs": [132677, 170693, 170694],
+        "leftApproximateU": [-0.8831, -0.8813, -0.8802],
+        "rightPixelXY": [493, 301],
+        "rightCandidateTriangle": 179081,
+        "rightVertexIDs": [156953, 96336, 156954],
+        "rightApproximateU": [0.86296, 0.86049, 0.86154],
+        "commonFields": "type=0, inner=0, weight=1, front=1, near-v=0 and red near1",
+        "limit": "These earlier R04 CPU triangle hits are close to MSAA edges and explicitly do not establish certain whole-pixel fragment ownership. They locate a candidate surface region; they do not prove the current R05 fold belongs solely to these triangles."
+      }
+    }
+  ],
+  "actualImagesPreviouslyViewedThisR06Round": [
+    {
+      "path": "../../lip-motion-r05/evidence/candidate-02/pucker-oblique-r05.png",
+      "sha256": "c33d73d6a69f60f58566ef2c6c90e417739fb699085dee75729be3a1cf84494d",
+      "observation": "R05 retains sharp corner traction and concentrated light/dark folds despite the improved central inner opening."
+    },
+    {
+      "path": "../../lip-motion-r05/evidence/candidate-02/neutral-macro-r05.png",
+      "sha256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a",
+      "observation": "A milder corner crease/transition is present before the full pucker. This is compatible with a static shape contribution but does not identify it uniquely."
+    },
+    {
+      "path": "../../lip-motion-r05/evidence/diagnosis-02/pucker-oblique-r04.png",
+      "sha256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609",
+      "observation": "Earlier original stage baseline for the two counterfactuals below; not an R06 frame."
+    },
+    {
+      "path": "../../lip-motion-r05/evidence/diagnosis-02/pucker-oblique-no-local.png",
+      "sha256": "654114a9612a263a73ee273f10b3e433fe43d59350b362f6d92ba5fdcd59157e",
+      "observation": "The mouth becomes wider and less puckered; strong corner pinching reduces. This implicates the local motion path broadly while demonstrating why disabling it cannot be a production repair."
+    },
+    {
+      "path": "../../lip-motion-r05/evidence/diagnosis-02/pucker-oblique-no-closure.png",
+      "sha256": "422386247e15cbc6c3c3700a55af5f68bcf3bef4ad665553c71cb91420c1a4d9",
+      "observation": "The central opening increases while sharp corner folds remain. Removing the closure position update does not sufficiently explain the corner issue. Downstream pressure fields were still present in that earlier experiment."
+    }
+  ],
+  "diagnosticImplementation": {
+    "path": "../verification/CornerAttribution.js",
+    "sha256": "fd586186f43ca2ed2d2ed983f9dcec4582259bf6c4c28ab25eec8c598af39c36",
+    "bytes": 20014,
+    "version": "LIP-CORNER-R06-ATTRIBUTION-01",
+    "global": "window.__R06_CORNER_DIAG__",
+    "api": ["setMode(mode)", "report()", "restore()", "boundaryEdges()"],
+    "modes": ["baseline", "no-x", "no-front", "no-compensation"],
+    "frames": ["baseline-r05", "corner-no-x", "corner-no-front", "corner-no-transverse-compensation", "restored-r05"],
+    "gain": "smooth(.64,.84,abs(nativeSample.u)) on original active skin with type<.5",
+    "centerProtection": "Every abs(u)<=.64 vertex is compared before and after the direct diagnostic correction, regardless of type. It must be exactly unchanged. Later native closure and normals may respond indirectly.",
+    "baselineSemantics": "Installation observes only and does not replace solver.apply. The first nonbaseline setMode attaches the outer instance wrapper. Baseline setMode detaches and restores the exact captured R05 descriptor. No mode call performs update or render.",
+    "hookSemantics": "Use only instance-level solver.apply and topology.pairs.map descriptors. R05's local correction runs before the R06 map callback; native closure samples are then recomputed. Finally restore the captured map descriptor and verify the lips iterator descriptor was also restored by R05.",
+    "restoration": "restore() detaches exact original R05 apply ownership, terminates this helper's installed state and returns nativeUpdateRequired=true. The runner explicitly updates and renders the restored baseline; helper restore never updates or renders itself.",
+    "guards": [
+      "Require the exact R05 workbench version and enabled/valid fixed R05 ownership reference.",
+      "Require completed pucker=.82, seal=.24, jawOpen=.06 and all other local actions zero.",
+      "Require unchanged model/geometry/topology identity and a noncanonical position buffer.",
+      "At each pairs.map entry, require solver.base bytes equal the captured baseline solver.base and outer apply-entry bytes.",
+      "Require one synchronous native pairs.map call and exact restoration of inner descriptors.",
+      "Reject concurrent or unexpected wrapper ownership and nonfinite contributions."
+    ],
+    "reportContract": {
+      "topLevel": ["mode", "errors", "installed", "wrapperAttached", "originalApplyDescriptorRestored", "baselineBeforeLocalFingerprint", "baselineOwnershipFingerprint", "nativeUpdateRequired"],
+      "lastExecution": ["mode", "completed", "innerHooksRestored", "beforeLocalExact", "entryNativeBeforeLocalExact", "centerDirectDeltaZero", "pairMapCalls", "directChangedVertices", "maxDirectCorrectionMM"],
+      "fingerprintLimit": "Runtime fingerprints are FNV1a plus byte length for change detection; artifact provenance uses the SHA256 recorded separately."
+    },
+    "boundaryScan": {
+      "source": "All original top.geometry.index triangles, never top.neighbors",
+      "crossings": "Deduplicated edges whose endpoints differ in original active membership",
+      "candidateFilter": "Both endpoint native types<.5, maximum abs(u)>=.64, minimum abs(u)<=1.6",
+      "records": "Rest fRest positions, native sample fields, before-local and frozen evaluated R05 display positions, three native term contributions and endpoint jumps, edge lengths, candidate triangle IDs, and projected endpoints when binding is proven.",
+      "selection": "Top 256 combined term jumps plus up to 128 greatest-jump edges whose endpoints project into the requested corner ROIs; exact total scanned/candidate/returned counts remain explicit.",
+      "actualGeometryBinding": "Verify actual mesh geometry can contain the native prefix and its position/fRest/csType arrays and item sizes equal the native prefix. On mismatch, return projection unavailable; never invent a correspondence.",
+      "projection": "Actual mesh.matrixWorld, camera.matrixWorldInverse and camera.projectionMatrix. The point records refer to frozen R05 baseline positions in the matching camera.",
+      "leftROI_XYXY_Inclusive": [150, 240, 255, 380],
+      "rightROI_XYXY_Inclusive": [455, 240, 600, 380],
+      "referenceFramebuffer": [640, 512],
+      "limitations": "No occlusion or frontmost-fragment test. Being inside a broad visual ROI is candidate correspondence, not proof of visible responsibility. The native fRest point is not asserted to be a canonical-model vertex ID."
+    },
+    "localVerification": {
+      "syntax": "node --check passed",
+      "syntheticFixture": "An ephemeral four-vertex Node VM fixture reproduced the original local/map/closure/iterator nesting and per-update before-local reset. It checked observational installation, separate component arithmetic, central exact protection, no collateral axes, descriptor lifecycle, a full-index crossing scan with verified prefix projection, and no helper-triggered render/update.",
+      "result": "Passed, with errors empty and exact R05 descriptor restoration.",
+      "scope": "Algebra and lifecycle verification only. No R06 real-frame success or beauty improvement is claimed by this synthetic fixture."
+    },
+    "forbiddenMutationsNotUsed": ["global prototype hooks", "rewriting original source", "canonical or DNA edits", "material changes", "editing or pushing published R05"]
+  },
+  "conditionalProductionDecision": {
+    "firstCandidateOnlyIfSupported": "If actual images identify a local pucker component and original-index projections place a material active/inactive displacement jump at the visible crease, extend the missing native pucker displacement into adjacent exterior native skin through the already intended analytic fade. Keep all currently active central and corner trajectories intact.",
+    "boundedProposal": "Use only excluded type0 exterior vertices whose only failed ROI condition is the lateral cutoff, with the existing vertical/front guards and a nonzero existing analytic support from abs(u)=1.25 to1.33. Add the same original component(s) at the local boundary; preserve native closure, R05 ownership, original neutral shape, topology, materials and normals pipeline.",
+    "whyThisCouldBeNecessary": "It would restore continuity across a truncated responsibility boundary by moving the adjacent recipient tissue, without purchasing a smoother image by suppressing the prescribed central pucker or smoothing away the original shape.",
+    "whatMustStillBeProved": [
+      "Actual visible fold improvement at native 640x512 in matched R05/R06 beauty frames.",
+      "The original central and active corner trajectories remain directly unchanged, while intended peripheral follow-through is the only added position field.",
+      "No new ridge at the extension's endpoint or unrelated skin region.",
+      "No regression of R05 speak/jaw inner-return benefit or intermediate pucker shapes.",
+      "No claim that the inherited unverified volume compensation has become a measured anatomical tissue model."
+    ],
+    "alternativeIfBoundaryDoesNotMap": "Do not implement a speculative support extension merely because its algebra is attractive. Use the subterm frames to decide whether the active corner itself, a static return/roll term, or downstream normal/strain response needs a different isolated experiment.",
+    "notAnAcceptedRepair": ["global pucker reduction", "removing the entire local motion stage", "removing closure", "whole-surface geometric smoothing", "uniformly thickening the rim", "wetness-only tuning"]
+  },
+  "deprioritizedOrExcluded": [
+    "The earlier dental-envelope whole-rim attribution and duplicate 49 contact-rail hypothesis were already rejected; this audit does not reopen them.",
+    "O1 midpoint refinement contains a normal-dot threshold of .82 and a bounded lip-region correction. It remains a possible secondary source, but no actual mapped threshold crossing currently justifies making it the first experiment.",
+    "No additional browser frames or product mutations were made by this reviewer for this source record. The root owns five-frame execution and technical/visual acceptance."
+  ],
+  "selfReview": {
+    "strongestConfirmedReason": "The code demonstrably terminates exterior motion ownership before its own weight has faded out. This is a concrete responsibility mismatch worth testing.",
+    "strongestCounterargument": "A demonstrable field mismatch can be invisible, occluded, too small, or spatially unrelated to the corner fold. The visible lip edge also has an independent static shape taper.",
+    "decisionBeforeImages": "Do not accept or ship a production improvement from the source mechanism alone. Run the bounded five-frame counterfactual and inspect its full-index boundary candidates together with the actual beauty images.",
+    "R06VisualAcceptance": false,
+    "R06ProductImplementedByThisReviewer": false,
+    "overallLipRealismAccepted": false
+  }
+}

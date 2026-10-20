@@ -1,0 +1,74 @@
+{
+  "schema": "kaopu/lip-corner-candidate-decision@1",
+  "candidate": "candidate-03",
+  "createdUTC": "2026-10-20T07:02:09.089016+00:00",
+  "status": "source-and-verifier-reviewed; actual public native verification and visual acceptance pending",
+  "problem": "Candidate-02 visibly reduced the lower outer corner bright wedge but introduced or accentuated upper/outside angular depressions and stair-like bands at high pucker progress. Root and independent visual review rejected delivery despite successful technical verification.",
+  "hypothesis": "Redistribute the entire native pucker-induced local displacement vector over the same peripheral skin domain, instead of redistributing only its lateral component. This tests a specific possible component mismatch; it is not proof that all remaining folds share this cause.",
+  "boundedNativeDifference": {
+    "heldFixed": [
+      "same before-local native positions",
+      "all non-pucker action parameters",
+      "current native mouth frame and anatomy scale",
+      "native weights and active set as sources"
+    ],
+    "Q0": "1 - 0.12*funnel + 0.18*interpolatedStretch",
+    "Qp": "Q0 - 0.23*pucker",
+    "h": "min(1.18, 1/sqrt(max(0.65,Q)))",
+    "dx": "-0.23*pucker * dot(beforeLocal-center, mouthX) * nativeWeight",
+    "dup": "dot(beforeLocal-center, mouthUp) * (h(Qp)-h(Q0)) * nativeWeight",
+    "dfront": "0.0036*pucker * exp(-(nativeU/0.85)^2) * anatomy.scale(currentMouthWidth) * nativeWeight",
+    "inactiveSource": "zero",
+    "redistribution": "Apply the identical screened positive native rest-index graph operator to each vector component, then add only redistributed-minus-original pucker increments at the existing local/closure boundary.",
+    "preserved": "All other local terms, R05 ownership, original contact/closure, dental envelope and later original stages continue."
+  },
+  "whyThisChangeIsNecessaryToTest": "Simply lowering strength would obscure whether the visibly improved lower corner and newly banded upper corner are two consequences of treating one component alone. The vector candidate holds the domain, graph, smoothing length, lip boundaries, pose and appearance fixed so the additional pucker components are the concrete intervention.",
+  "protectedDomains": [
+    "native vermilion, all native rim samples and original contact samples",
+    "conservative rail-body mask abs(u)<=1 and 0<=v<=1.05 within native roi",
+    "exactly one original-index neighbour ring around that union",
+    "center abs(native u)<=0.64",
+    "oral/inner and negative-v points remain ineligible"
+  ],
+  "engineeringParameters": {
+    "smoothingLengthRestMM": 4,
+    "physicalMeasurement": false,
+    "hardFourMillimetreSupportCutoff": false,
+    "maximumIterationsPerComponent": 512,
+    "maximumNormalizedResidualMM": 0.0001,
+    "maximumRelativeResidual": 1e-06,
+    "numericalInterpretation": "Algebraic convergence diagnostics, not displacement accuracy or physiological validity."
+  },
+  "requiredIndependentEvidence": [
+    "Actual before-local to local displacement agreement with predicted pucker vector for every eligible originally active point in the pure-pucker presets, before any R06 write; record per-axis Float32 tolerance and measured residual. Mixed local actions must report unavailability instead of passing.",
+    "Each component has a separately measured actual equation residual, positive weights and bounded output; all three must converge.",
+    "Original lip core, original contact samples and center remain exactly unchanged by the direct correction; all 49 final native contact-pair positions and identifiers remain exact.",
+    "Unchanged neutral, jaw and speaking complete native state and pixels; actual shaders and material uniform owners unchanged.",
+    "Whole original-size before/after pucker at 25/50/75/100 percent, both macro and oblique full pucker; compare against candidate-02 as well as frozen R05.",
+    "Same original 15 checks, 20 saved native frames, 21 readbacks, natural UI, three actual DOM saves, fresh context restore and strict four error arrays."
+  ],
+  "visualAcceptanceCriteria": {
+    "mustImprove": "Preserve the reduced lower bright wedge while reducing the newly salient upper/outside angular depressions and stacked band reading; preserve mouth width, lip volume and native pucker response.",
+    "mustReject": [
+      "old bright wedge simply restored",
+      "new upper or lower corner connection artifact",
+      "lip flattening, widening or pucker suppression",
+      "regression in unchanged control poses",
+      "technical failure or missing original evidence"
+    ],
+    "scope": "The same native person and sampled views/poses; normal contraction wrinkles may remain. No narrowed region can substitute for whole-image review."
+  },
+  "limitations": [
+    "The core mask is a conservative native-field construction, not measured tissue anatomy.",
+    "The original transverse compensation itself remains an unverified geometric approximation; this does not establish volume preservation.",
+    "Fixed core/collar boundary behaviour and the original static corner shape are alternative possible causes and remain subject to visual review.",
+    "Existing thin lip edge, waxy material response and coarse oral/teeth details are outside this bounded corner correction.",
+    "Unsupported historical or custom authoring states retain their existing disable behaviour."
+  ],
+  "visualAcceptance": false,
+  "localRepairWorthRetaining": false,
+  "productionReady": false,
+  "reviewedModuleSHA256": "106bfb769e21f3e56ae35521509d17ce903f2b2e30f613f2a60af6e95896c970",
+  "reviewedVerifierSHA256": "d49f5099a8536aeda31842d37e9f60f54db0fc84d84ee6efdbdfd83efc7aaa7a",
+  "interventionIsolation": "The original x scalar source and graph solve remain the same as candidate-02; the up/front solves use that identical matrix. Vector magnitude validation throws on failure and never normalizes or rescales x. This identifies the joint up/front intervention, not their separate effects."
+}

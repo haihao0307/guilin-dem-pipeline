@@ -1,0 +1,52 @@
+{
+  "schema": "kaopu/lip-corner-candidate-decision@2",
+  "candidate": "candidate-02",
+  "dateUTC": "2026-10-20T06:35:09.536718+00:00",
+  "stage": "Implement a single revised candidate; actual candidate render and acceptance pending",
+  "previous": {
+    "record": "CANDIDATE_01_REJECTION.json",
+    "sha256": "18c5704ebbe35746c6175cc503eac34dd7a04a84a9e73d493ebf97e1f3d9cf71",
+    "sourceCommit": "46c662aad5cdc20513cc3b630296c024a64c38ba",
+    "evidenceCommit": "ac5f3f43075401cf55742f2dea88cd284db2ba59",
+    "actualFunctionalTestsPassed": 15,
+    "overallTechnicalPass": false,
+    "visibleRepairAccepted": false
+  },
+  "lesson": "Keeping every original active point immutable preserved the original peripheral gradient. Actual native images showed inadequate response at the principal crease, despite a functioning inactive exterior extension. Protection must follow the lip core and contact meaning, not the broad original active list.",
+  "hypothesis": "Redistribute only the original pucker x displacement in peripheral skin, including peripheral active points, while preserving the true lip core, contact trajectories, oral tissues and central mouth. A smoother peripheral displacement field can reduce the abrupt corner shear without reducing the source pucker action.",
+  "construction": {
+    "domain": "Original full indexed native rest surface, same-side eligible exterior skin. Preserve original anatomy labels and topology.",
+    "protected": "Original top.lips (red>.025), native rim samples and original 49 contact-pair slots, oral/negative-v tissue, native rail lip-body approximation abs(u)<=1 and 0<=v<=1.05, one original indexed neighbor ring around the protected lip domain, and central abs(u)<=.64. Pair slots are not assumed to contain 98 distinct vertex IDs.",
+    "coreReason": "The fixed Xl rail interpolation clamps beyond its endpoints. L5 v uses a 1mm minimum denominator, so v alone is not a tissue label and v=1 need not exactly equal the outer rail at narrow corners. Original red soft edges extend to negative v and v=1.04; native lip/rim membership is protected together with the bounded rail approximation. Do not lock peripheral red=0 points at abs(u) around1.21 merely because v is below1.",
+    "field": "A positive-weight screened graph smoothing of the current original native pucker x contribution, with protected and domain-exterior values fixed. Preserve a native-value term so the periphery does not become a single rigid patch.",
+    "scaleMM": 4,
+    "scaleMeaning": "Engineering smoothing length, not a hard 4mm support boundary from the lip core and not a measured tissue modulus.",
+    "boundary": "Existing continuous exterior and lateral guards return the correction to the original field; the domain extends beyond the original abs(u)=1.25 hard cutoff.",
+    "solver": "Diagonal-preconditioned conjugate gradients on the equivalent symmetric positive definite system; at most512 iterations; actual residual is recomputed after each iteration and any roundoff bounding. Require normalized local residual<=0.0001mm and relative L2 residual<=0.000001. These are algebraic convergence diagnostics, not bounds on global displacement error or physiological accuracy.",
+    "appliedChange": "Add only the solved-minus-original pucker scalar along the current native mouth x direction. Preserve native forward, up, funnel, stretch, R05 ownership, closure and later stages. No rest-shape smoothing."
+  },
+  "requiredEvidence": [
+    "Actual full-native 49 contact pairs exact on/off.",
+    "Protected core, one ring and central points directly exact; all-active exact is deliberately replaced because peripheral active points are the intended recipients.",
+    "At pucker=0 direct original R05 call; captured neutral, jaw and speaking complete state and pixels exact.",
+    "Same frozen original material, actual shader/uniforms, canonical arrays, topology, camera and lights.",
+    "Same complete-person save/restore and actual inherited mode regression gates.",
+    "One unchanged bounded image matrix; actual native-size corner improvement without new dimples, bulges or loss of motion.",
+    "Strict original request/resource error gates, with added native transport evidence if a request fails."
+  ],
+  "failureConditions": [
+    "Principal crease remains essentially unchanged.",
+    "Visible improvement is obtained by weakening core pucker or changing contact trajectories.",
+    "New boundary folds, stretched patches, bulges or dimples.",
+    "Numerical field fails convergence, finite or range checks.",
+    "Any native state, original material, archive or public-browser gate fails."
+  ],
+  "visualAcceptance": false,
+  "localRepairWorthRetaining": false,
+  "productionReady": false,
+  "limits": [
+    "Displacement-field regularization is an engineering construction, not measured biomechanics or a contact/volume solve.",
+    "One frozen person and selected poses do not certify all identities or combined actions.",
+    "Thin lip edges, waxy appearance and oral detail remain separate work."
+  ]
+}
