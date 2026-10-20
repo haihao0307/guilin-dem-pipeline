@@ -15,8 +15,10 @@ with sync_playwright() as pw:
   page.goto(a.url,wait_until='networkidle');page.wait_for_function('window.__BUILDING_MOTHER__?.ready')
   report['build']=page.locator('meta[name="kaopu-build"]').get_attribute('content')
   if a.expected_build: assert report['build']==a.expected_build
+  original_meshes={}
   for index in range(3):
    page.locator(f'[data-building="{index}"]').click();shot(page,f'baseline-{index}.png')
+   original_meshes[index]=page.evaluate('window.__BUILDING_MOTHER__.roots[window.__BUILDING_MOTHER__.snapshot().selected].children.filter(o=>o.userData.patchId).map(o=>({id:o.userData.patchId,p:Array.from(o.geometry.attributes.position.array),n:Array.from(o.geometry.attributes.normal.array)}))')
    report['checks'].append({'baseline':index,'state':page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies')})
   page.locator('#windowFocus').click();shot(page,'window-closed.png')
   for angle in [40,80,0]:
@@ -24,14 +26,25 @@ with sync_playwright() as pw:
    shot(page,f'window-{angle}.png')
    assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.angleDegrees')==angle
    assert abs(page.evaluate('window.__BUILDING_MOTHER__.snapshot().windowInspection.scene.displayedAngleDegrees')-angle)<1e-8
+  page.evaluate('window.__BUILDING_MOTHER__.setWindow({width:0.55,height:1.6,glassColor:"#997a55",glassTransmission:0.5,glassRoughness:0.25})')
+  altered=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert abs(altered['windowInspection']['aperture']['areaSquareMetres']-0.88)<1e-8
+  page.evaluate('window.__BUILDING_MOTHER__.setWindow({width:0.68,height:1.2,glassColor:"#77b6c6",glassTransmission:0.82,glassRoughness:0.08})')
+  report['checks'].append({'window_dimension_and_physical_glass_inputs':'passed'})
   page.locator('[data-visible="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==21
   page.locator('[data-visible="p003"]').check();page.locator('[data-enabled="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==20 and s['export']['designWindow']['suppressedByHost']
   report['checks'].append({'display_vs_assembly_and_host_suppression':'passed'})
   page.locator('#floorInspect').click();shot(page,'floor-cutaway.png');s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert s['floors']['slabCount']==21 and len(s['floors']['openings'])==21
   assert all(stop['fflM']==next(f['fflM'] for f in s['floors']['floors'] if f['floorId']==stop['floorId']) for stop in s['serviceInterfaces']['stops'])
   report['checks'].append({'floors':s['floors'],'serviceInterfaces':s['serviceInterfaces']})
+  page.evaluate('''() => { const a=window.__BUILDING_MOTHER__, s=a.snapshot(), states={};s.floors.slabs.forEach((slab,i)=>states[slab.slabId]={visible:i>=s.floors.slabs.length-3});a.setFloors({floorStates:states});const c=a.roots[1].position.clone();c.y=s.floors.floors.at(-1).fflM;c.z=0;a.camera.position.copy(c).add(a.camera.position.clone().set(2.8,7.2,5.5));a.camera.lookAt(c);a.camera.updateMatrixWorld(true);a.renderer.render(a.scene,a.camera); }''')
+  shot(page,'floor-shaft-closeup.png');report['checks'].append({'shaft_closeup':'top three design slabs visible; camera only, holes and thickness unchanged'})
   page.locator('#windowFocus').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies[1].visiblePatches')==20
   page.locator('#reset').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is False
+  reset_meshes=page.evaluate('window.__BUILDING_MOTHER__.roots[1].children.filter(o=>o.userData.patchId).map(o=>({id:o.userData.patchId,p:Array.from(o.geometry.attributes.position.array),n:Array.from(o.geometry.attributes.normal.array)}))')
+  assert reset_meshes==original_meshes[1], 'Actual rendered vertex and normal arrays must return exactly to baseline after window cuts and reset'
+  assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().floors.enabled') is False
+  assert all(not item['sourceMutated'] for item in page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies'))
+  report['checks'].append({'actual_rendered_arrays_exact_after_reset':'passed'})
   page.set_viewport_size({'width':390,'height':844});shot(page,'mobile.png')
   assert page.locator('#failure').is_hidden();assert report['errors']==[]
   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().errors')==[]

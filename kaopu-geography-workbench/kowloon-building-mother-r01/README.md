@@ -63,6 +63,6 @@
 
 ## 验证与运行
 
-从包含相邻基线的仓库根目录起 HTTP 服务，打开本目录。运行 `node --test tests/*.test.mjs`。浏览器脚本 `tests/browser.py` 使用已安装 Chromium/Playwright，读取真实 WebGL 并保存截图；脚本存在不等于通过。最终状态和准确覆盖见 `evidence/validation.json`，未测项目不得宣称完成。
+从包含相邻基线的仓库根目录起 HTTP 服务，打开本目录。运行 `node --test tests/*.test.mjs`。浏览器脚本 `tests/browser.py` 使用已安装 Chromium/Playwright，读取真实 WebGL 并保存截图；脚本存在不等于通过。39 项 CPU 测试及 [候选版真实 Chromium 检查](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39413137884) 已通过，9 张真实截图保存于该检查的短期 artifact；HTTPS 发布后的复验仍单独记录，不把 localhost 成功冒充上线成功。最终状态和准确覆盖见 `evidence/validation.json`，未测项目不得宣称完成。
 
 回滚：仅移除本独立目录及其新增发布提交，不改动旧案例、旧锚点或其他目录。无强推、无历史改写。
