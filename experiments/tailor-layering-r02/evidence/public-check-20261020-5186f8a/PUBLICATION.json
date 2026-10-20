@@ -60,8 +60,8 @@
     "unrelatedEntriesPreserved": true
   },
   "publicHTTPVerified": true,
-  "publicBrowserVerified": false,
-  "deliveryStatus": "Public release deployed and byte-verified; final connected-Chrome operation check blocked by connection authorization.",
+  "publicBrowserVerified": true,
+  "deliveryStatus": "Fixed public R02 deployed, byte-verified, and verified by direct-public-URL CI Chromium one-step/contact smoke; six prior acceptance jobs passed. Local-browser authorization remains blocked and runtime remains far slower than realtime.",
   "deployedPages": {
     "runID": 39398316398,
     "headCommit": "b216200c1db0e28eea9a37f14d78e726cb9237d6",
@@ -89,27 +89,287 @@
       }
     ]
   },
-  "postDeploymentCheckedUTC": "2026-10-20T09:22:49.735796+00:00",
+  "postDeploymentCheckedUTC": "2026-10-20T10:23:41.617697+00:00",
   "postDeploymentEvidence": {
     "branch": "evidence/tailor-layering-r02-public-check-20261020-5186f8a",
     "path": "experiments/tailor-layering-r02/evidence/public-check-20261020-5186f8a",
     "files": {
-      "PUBLIC_HTTP_VERIFICATION.json": {
-        "bytes": 18210,
-        "sha256": "91a0209904d98830f54a38358c7db08a8994c62fa267977df0f90c3425133f92",
-        "gitBlob": "1309e3cfa4b12db70f9a806374c9fc80f869805c"
+      "INTEGRATION_SCOPE.md": {
+        "bytes": 7539,
+        "sha256": "5c63e06bfeac84720ebc037ca0fb84a104573666213edb3fdb671f63921bccff",
+        "gitBlob": "6f9ae09ef92a384e72bee0e3c6c3473c4af82146"
       },
       "PUBLIC_BROWSER_CHECK.json": {
         "bytes": 4081,
         "sha256": "09416d2741431bf02a118203463249a817db48fee79ae2f46eb63316a2a6f36c",
         "gitBlob": "2db81fdd77a41682270009df2a135396ecf8309f"
       },
-      "INTEGRATION_SCOPE.md": {
-        "bytes": 7539,
-        "sha256": "5c63e06bfeac84720ebc037ca0fb84a104573666213edb3fdb671f63921bccff",
-        "gitBlob": "6f9ae09ef92a384e72bee0e3c6c3473c4af82146"
+      "PUBLIC_CHECK_RESULTS.md": {
+        "bytes": 3991,
+        "sha256": "3dff2f26f58856c51c36e72b696424f73bb09dfc4fc94b8c44787c0120d89187",
+        "gitBlob": "4210251cc4b8b1d7a2a790ab6aead4ad15e3a4c7"
+      },
+      "PUBLIC_CI_BROWSER_CHECK.json": {
+        "bytes": 8486,
+        "sha256": "14a203caaac74e1a466ba8a0d87e99b583987fb35b33059778321c8dee6e74a6",
+        "gitBlob": "66d48a3855854aa59580eb8dfeb61e07757dd3e5"
+      },
+      "PUBLIC_CLOUD_BROWSER_BLOCKED.json": {
+        "bytes": 16916,
+        "sha256": "4bd2376508b6a876fb30fdbfc8e4bc9e3e15b80b5da4a096ac09beb5d1d73c7a",
+        "gitBlob": "d8f759df11438c657b9abaf3a5bcfb1197a7a0d4"
+      },
+      "PUBLIC_HTTP_VERIFICATION.json": {
+        "bytes": 18210,
+        "sha256": "91a0209904d98830f54a38358c7db08a8994c62fa267977df0f90c3425133f92",
+        "gitBlob": "1309e3cfa4b12db70f9a806374c9fc80f869805c"
+      },
+      "ci-public-smoke-39406172235/CI_RUN.json": {
+        "bytes": 2681,
+        "sha256": "15e357f62b37d1f0078280835f1d9cae77c03ed0a44d4eada5085eceb18d172a",
+        "gitBlob": "2d7016b27120868c794c615a00981805d264dc32"
+      },
+      "ci-public-smoke-39406172235/browser-console.json": {
+        "bytes": 1487,
+        "sha256": "1fd5f66ffe887718a6526a28db04991cb5b5b649591ea1b890421dcf66d8b40c",
+        "gitBlob": "0c05776a018849e608c26ae1dcf979b227e97d33"
+      },
+      "ci-public-smoke-39406172235/browser-errors.json": {
+        "bytes": 3,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "gitBlob": "fe51488c7066f6687ef680d6bfaa4f7768ef205c"
+      },
+      "ci-public-smoke-39406172235/browser-network.json": {
+        "bytes": 46453,
+        "sha256": "1e700e0fb60400bd0d4f870c2b02005032096ffe21e6fcefe024a6858ab48119",
+        "gitBlob": "265f490d9a39002af3fa9282fda32d0700c99987"
+      },
+      "ci-public-smoke-39406172235/checkout-sha.txt": {
+        "bytes": 41,
+        "sha256": "a2bdf03940a7c459684a7d707dab9ec1d32bdda3403bae1029592cf0e82fedbf",
+        "gitBlob": "ca21d8eadef5f2dd80317ac071f512cd72991aa5"
+      },
+      "ci-public-smoke-39406172235/failure-latest-accepted-worker-observation.json.gz": {
+        "bytes": 637789,
+        "sha256": "19a8a15275bf4b994fbe8411c1dee1ee285ead362e1dd7d56ed6d676197ab441",
+        "gitBlob": "349c3c9f9227aab92d5d2062d5586aa1cab4efbc"
+      },
+      "ci-public-smoke-39406172235/failure.png": {
+        "bytes": 352966,
+        "sha256": "ab51fb0600ef53480a51108b6ffb6b429f23213ce2c260ef96a986b9f863a087",
+        "gitBlob": "4f85e99ca5e59e8bb815de688b35a446e9e17683"
+      },
+      "ci-public-smoke-39406172235/initial-canvas.png": {
+        "bytes": 213293,
+        "sha256": "700265353e9d6a6cf3b5ac65dae1fbe23b618f062f9bbb6a12f77bc421b5460f",
+        "gitBlob": "975b2cc5825dbef66c4316b930480f62f0739dc0"
+      },
+      "ci-public-smoke-39406172235/initial-worker-observation.json.gz": {
+        "bytes": 2759675,
+        "sha256": "804909721fbcabf65ca883c28168222b2f4ac860f2759c804fe2cef7a84bfc03",
+        "gitBlob": "538e6f551c91bac21f7b7aa148935164cf6f0b0c"
+      },
+      "ci-public-smoke-39406172235/initial.json": {
+        "bytes": 104445,
+        "sha256": "9fb02dadb7bb6ba0b3e1202fe2343101c913f67ca9786a071dff2a58bbab0ccf",
+        "gitBlob": "2c92e41243964cfc2b4e05319aea8051b9601bfb"
+      },
+      "ci-public-smoke-39406172235/initial.png": {
+        "bytes": 351770,
+        "sha256": "60a6f2f594b71fb8e71f1fea9a216f973838dd10bbc58bb5dafb4c7645cdf3fe",
+        "gitBlob": "00f0fad7187c4bdeff2c3d5b61be0c54fad946a9"
+      },
+      "ci-public-smoke-39406172235/manual-inspection-canvas.png": {
+        "bytes": 212627,
+        "sha256": "5fe10529c92961d8e117d8972b48f4bb1d58860d4eef85465fd9ae7faaa914ce",
+        "gitBlob": "1d7b38b930b0cdd20d8198376c4d7b0af881fbfb"
+      },
+      "ci-public-smoke-39406172235/manual-inspection-worker-observation.json.gz": {
+        "bytes": 637795,
+        "sha256": "34d8c6dc58381a658ef30a7239f5bd375663fb1fb79402dbba91ecea039f6ba4",
+        "gitBlob": "10d6afdb1008057bbc0223a428912c19b409ee4a"
+      },
+      "ci-public-smoke-39406172235/manual-inspection.json": {
+        "bytes": 122948,
+        "sha256": "9bef316fcaa51faa2b579889b7e9520faf574f088695b561b1e4f01030cbd614",
+        "gitBlob": "ad9d19b1eec48eaed1be361b14947d989a679f14"
+      },
+      "ci-public-smoke-39406172235/manual-inspection.png": {
+        "bytes": 352966,
+        "sha256": "ab51fb0600ef53480a51108b6ffb6b429f23213ce2c260ef96a986b9f863a087",
+        "gitBlob": "4f85e99ca5e59e8bb815de688b35a446e9e17683"
+      },
+      "ci-public-smoke-39406172235/progress.json": {
+        "bytes": 776,
+        "sha256": "463fabe2931fef677b256c1ccd9e5265b799c167022c46880e70c054be4f3f41",
+        "gitBlob": "f72752e9433212a035bdd08fccbdd33df0779c47"
+      },
+      "ci-public-smoke-39406172235/progress.ndjson": {
+        "bytes": 605,
+        "sha256": "5a7e45c9f22e0927d75851ab059d163a339c41fc93674b72f1d0442bdb17d17b",
+        "gitBlob": "df5e3878f62aba71938c7a25a3741523f2a3051b"
+      },
+      "ci-public-smoke-39406172235/public-SOURCE_PROVENANCE.json": {
+        "bytes": 89969,
+        "sha256": "b2e7b1640e15e52a8e152084a6b3dc0c00dedb3f45143269d83499b5ec2afa96",
+        "gitBlob": "d7092394fab209d80aebb8a536ef4ed3e9275457"
+      },
+      "ci-public-smoke-39406172235/public-smoke-summary.json": {
+        "bytes": 525409,
+        "sha256": "3bf05112eae5341c5cb6bc21742756f81bdc997113c33fe4f721f41c32501eee",
+        "gitBlob": "ddf4e4170b6f1eaf88377959f18970429e9be8f9"
+      },
+      "ci-public-smoke-39406172235/smoke-run.log": {
+        "bytes": 1644,
+        "sha256": "5f25887319c0b533ed7bb5aaa641defe048d9bfd05bfba62049b6ca64bdfa5e3",
+        "gitBlob": "96e84f75bdb313e84d10bc666aef4c2d7dfc5361"
+      },
+      "ci-public-smoke-39406172235/stepped-canvas.png": {
+        "bytes": 212627,
+        "sha256": "5fe10529c92961d8e117d8972b48f4bb1d58860d4eef85465fd9ae7faaa914ce",
+        "gitBlob": "1d7b38b930b0cdd20d8198376c4d7b0af881fbfb"
+      },
+      "ci-public-smoke-39406172235/stepped-worker-observation.json.gz": {
+        "bytes": 636738,
+        "sha256": "0ff51df7d8cbf067bb68e784fb2b0c0668dd2ae2c056d1666433df961315f7af",
+        "gitBlob": "19947334c994d9ffb610c1d44c8fc21a881dfc53"
+      },
+      "ci-public-smoke-39406172235/stepped.json": {
+        "bytes": 121813,
+        "sha256": "574f75750041b3a8baedf58b7c2ac6fb53977b1d7cc892a5df5e7448be776e14",
+        "gitBlob": "ebbdc782f1a319da003d20081cfe1ba3a7bda8a9"
+      },
+      "ci-public-smoke-39406172235/stepped.png": {
+        "bytes": 350781,
+        "sha256": "bce222918604bdc38f6b58773d3e1f5ea5f484935ef33ebfd40d109e4b67b041",
+        "gitBlob": "7aa3c26ff1f2cf64f0f3ed528782a928069ba7a5"
+      },
+      "ci-public-smoke-39406909155/CI_RUN.json": {
+        "bytes": 2892,
+        "sha256": "104a6dadaf40159e5b453ce926ce909f24468875d428fabd76af01957df3c105",
+        "gitBlob": "a68ecba9ac6f626649015e2cb3c64ec32c0b57a0"
+      },
+      "ci-public-smoke-39406909155/browser-console.json": {
+        "bytes": 1487,
+        "sha256": "565913bf619dd58c5ecee859b33a47877d8366c2c68fe039939efdcaf83ec71a",
+        "gitBlob": "b1174e7cbacf2c3b45bcd5fb7e4f62eaae66960b"
+      },
+      "ci-public-smoke-39406909155/browser-errors.json": {
+        "bytes": 3,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "gitBlob": "fe51488c7066f6687ef680d6bfaa4f7768ef205c"
+      },
+      "ci-public-smoke-39406909155/browser-network.json": {
+        "bytes": 46453,
+        "sha256": "73c6c6c13f55c567df6cb1ce365732ac345198f75e9cd52ce7c0789baa212a8a",
+        "gitBlob": "322d2473525eecd1f07a6940f598ed7d71aa76f9"
+      },
+      "ci-public-smoke-39406909155/checkout-sha.txt": {
+        "bytes": 41,
+        "sha256": "0efed89385a39de6dc12d51013476a721bb3665219bc3e691fd92d85e496d21d",
+        "gitBlob": "32914d8f640010de9534759b8e7538c4d8703992"
+      },
+      "ci-public-smoke-39406909155/initial-canvas.png": {
+        "bytes": 213293,
+        "sha256": "700265353e9d6a6cf3b5ac65dae1fbe23b618f062f9bbb6a12f77bc421b5460f",
+        "gitBlob": "975b2cc5825dbef66c4316b930480f62f0739dc0"
+      },
+      "ci-public-smoke-39406909155/initial-worker-observation.json.gz": {
+        "bytes": 2759710,
+        "sha256": "67efcc70ae5f14679db636d4842f6f05b70e2628f64d8cb2b990620c91591e40",
+        "gitBlob": "3f9d72282cf413a5ccee7ce26a7f9dcf58c35377"
+      },
+      "ci-public-smoke-39406909155/initial.json": {
+        "bytes": 104410,
+        "sha256": "2aff8d0c86b3f4483c2ff5626fca7f04a45e8c60ed5121ce8eecb61c36e34c17",
+        "gitBlob": "e35e34b6f9e5628ed53d2047ea42ec86adec0479"
+      },
+      "ci-public-smoke-39406909155/initial.png": {
+        "bytes": 351770,
+        "sha256": "60a6f2f594b71fb8e71f1fea9a216f973838dd10bbc58bb5dafb4c7645cdf3fe",
+        "gitBlob": "00f0fad7187c4bdeff2c3d5b61be0c54fad946a9"
+      },
+      "ci-public-smoke-39406909155/manual-inspection-canvas.png": {
+        "bytes": 212627,
+        "sha256": "5fe10529c92961d8e117d8972b48f4bb1d58860d4eef85465fd9ae7faaa914ce",
+        "gitBlob": "1d7b38b930b0cdd20d8198376c4d7b0af881fbfb"
+      },
+      "ci-public-smoke-39406909155/manual-inspection-worker-observation.json.gz": {
+        "bytes": 637821,
+        "sha256": "4c779ec706ada16a8809abe7857fde82a3af27899d069067531875ea373590ff",
+        "gitBlob": "5e9beba7aeccf3df918b7985c532f5957d6850f5"
+      },
+      "ci-public-smoke-39406909155/manual-inspection.json": {
+        "bytes": 122921,
+        "sha256": "081afc26883bcc0a0ab06a111f564272e09d30e16911d7b1afd1519fc5531e45",
+        "gitBlob": "6670f62cc4a082985af503dbd8fae0728de84cf2"
+      },
+      "ci-public-smoke-39406909155/manual-inspection.png": {
+        "bytes": 353446,
+        "sha256": "50b1ed04ee2270e85394e3e7b6a22118a010982cb9023391e02889b36f640970",
+        "gitBlob": "b2c800c9be66c1cabb6f1e17ed756f32e79566b5"
+      },
+      "ci-public-smoke-39406909155/progress.json": {
+        "bytes": 878,
+        "sha256": "c0ef3e0d886ba1750c1a65c3466191391cc050bf40bda3e4e357aa32686606b7",
+        "gitBlob": "42290d367b78513b75c251ec3d3edb9b66a181cb"
+      },
+      "ci-public-smoke-39406909155/progress.ndjson": {
+        "bytes": 683,
+        "sha256": "6066938730e058da70687cc3648dd527aac9b8bed3570c8c38968eaf4afc2538",
+        "gitBlob": "1563742624130c076c326001eb014eb861ec9294"
+      },
+      "ci-public-smoke-39406909155/public-SOURCE_PROVENANCE.json": {
+        "bytes": 89969,
+        "sha256": "b2e7b1640e15e52a8e152084a6b3dc0c00dedb3f45143269d83499b5ec2afa96",
+        "gitBlob": "d7092394fab209d80aebb8a536ef4ed3e9275457"
+      },
+      "ci-public-smoke-39406909155/public-smoke-summary.json": {
+        "bytes": 399041,
+        "sha256": "a8dddc3d21d631f839bb020a69951ca70acbe65e9f8a548cdecc122edd526c6c",
+        "gitBlob": "b90cbe4d36aeb92572338f13d95952b9d1203299"
+      },
+      "ci-public-smoke-39406909155/smoke-run.log": {
+        "bytes": 1693,
+        "sha256": "f1bd2127f31d1e4f9b618e83c8c923c07ce3b2b8ad4a518d3da8b27ad15b802a",
+        "gitBlob": "5d9f2f8a8fbb8e08029ff6b4add7621e8a09bca4"
+      },
+      "ci-public-smoke-39406909155/stepped-canvas.png": {
+        "bytes": 212627,
+        "sha256": "5fe10529c92961d8e117d8972b48f4bb1d58860d4eef85465fd9ae7faaa914ce",
+        "gitBlob": "1d7b38b930b0cdd20d8198376c4d7b0af881fbfb"
+      },
+      "ci-public-smoke-39406909155/stepped-worker-observation.json.gz": {
+        "bytes": 636745,
+        "sha256": "5fb0d5ff70942b1f12620bd269435503557580525aed795a5b453eab0c7bb5bf",
+        "gitBlob": "e6b7967f7e245f8db83e3626ffcc3d4743a80c3c"
+      },
+      "ci-public-smoke-39406909155/stepped.json": {
+        "bytes": 121786,
+        "sha256": "cf8c7a19109dddfb4ea88b0d769a37b9b8d51c80b567bbda64f1e9b0f240f502",
+        "gitBlob": "4371e67caa20806e179922b0dc0c22df63115970"
+      },
+      "ci-public-smoke-39406909155/stepped.png": {
+        "bytes": 351128,
+        "sha256": "ad223f594706e552a39871afda6f02f540a14553eec84ab15f014ecc37592f5a",
+        "gitBlob": "cdc00586f50929cbb97ebdad2fce24a5d649bdab"
+      },
+      "tailor-r02-cloud-webgl-blocked-1792488751875.jpg": {
+        "bytes": 62873,
+        "sha256": "13b2d12d864f2d95e0c692348a5c203a2b3fe49a6ac94c78d578fcb8cbf59f27",
+        "gitBlob": "ad9909658a95612c9b6fa90b86ce81e2baa1b2b9"
       }
     },
-    "scope": "Records saved on an independent evidence branch based on frozen source commit; released R02 subtree, source PR branch and gh-pages remain unchanged."
+    "scope": "Original local-browser blocked record retained; added cloud failure and both public CI attempts, including successful direct-public-URL check. Evidence branch only; source branch and fixed gh-pages release are unchanged."
+  },
+  "publicBrowserVerificationEnvironment": "GitHub Actions Chromium with software WebGL; not the user local browser or GPU",
+  "localConnectedChromeVerified": false,
+  "publicBrowserCheck": {
+    "report": "PUBLIC_CI_BROWSER_CHECK.json",
+    "runID": 39406909155,
+    "conclusion": "success",
+    "checkCommit": "7713a5d1297db006cb05ad5d7bd2996b467fa76e",
+    "rawEvidenceDirectory": "ci-public-smoke-39406909155",
+    "publicApplicationChanged": false
   }
 }
