@@ -14,7 +14,7 @@ const definitions = {
 };
 let host, bridge, selected = 'outer', ready = false, busy = false, playing = false;
 let failure = null, isolated = false, latest = null, ray, pointer, dragPlane, dragged = null;
-let loopGeneration = 0, frameStamp = 0, lastPresentation = null, initialSampling = null;
+let loopGeneration = 0, frameStamp = 0, lastPresentation = null, initialSampling = null, lastSamplingPreparation = null;
 const items = new Map();
 const templates = new Map();
 const state = {friction: .3, wind: 0, contactEnabled: true};
@@ -197,7 +197,7 @@ function diagnostic() {
     physics:a,render:{calls:lastPresentation?.calls,triangles:lastPresentation?.triangles,
       counterScope:'Submitted work across the complete presentation: yarn preparation, shadows, native scene and skin composition; not unique mesh triangles',
       frameGate:host?.viewer.frameGate?.audit(),initialization:host?.renderAudit?.(),
-      presentationQueue:host?.presentationQueue,initialSampling},
+      presentationQueue:host?.presentationQueue,initialSampling,lastSamplingPreparation},
     bootTimings:host?.bootTimings,
     elapsedLoadMS:frameStamp || Math.round(performance.now()-started)};
   $('diagnostics').textContent = JSON.stringify(value,null,2);
@@ -253,26 +253,25 @@ async function waitForPreparedGPU() {
   }finally{gl.deleteSync(sync);}
 }
 
-async function prepareInitialSampling() {
-  // Use the unchanged source sampler at the actual final camera and viewport.
-  // It may need several updates to drain its per-update work budget. Presenting
-  // the full native skin/outfit between those preparation updates is needless.
-  // Real elapsed time still drives the original hysteresis and morph rules.
-  frame('front');
+async function prepareSampling(scope, visibleOnly = true) {
+  // Keep the source's actual camera, per-update budget, temporal hysteresis and
+  // 180 ms morph. Explicit view commands can prepare those same samples before
+  // submitting a complete native skin/outfit frame for every atlas update.
+  const active=[...items.values()].filter(it=>!visibleOnly || it.solid?.group.visible);
   const began=performance.now();let rounds=0,stableSince=null,signature=null,gpuWaitMS=0,settled=false;
   let updateCPUMS=0,maximumUpdateCPUMS=0;
-  while(rounds<100 && performance.now()-began<12000){
+  while(active.length && rounds<100 && performance.now()-began<12000){
     const updateBegan=performance.now();
-    for(const it of items.values()){it.solid.motion(false);it.solid.update(host.viewer.camera);}
+    for(const it of active){it.solid.motion(false);it.solid.update(host.viewer.camera);}
     const duration=performance.now()-updateBegan;updateCPUMS+=duration;maximumUpdateCPUMS=Math.max(maximumUpdateCPUMS,duration);
     gpuWaitMS+=await waitForPreparedGPU();rounds++;
-    const current=[...items.values()].map(it=>({id:it.id,resamples:it.solid.stats.resamples,
+    const current=active.map(it=>({id:it.id,resamples:it.solid.stats.resamples,
       demandQuality:Math.round((it.solid.resources().continuousDemand.output?.qVisual||0)*1000)/1000,
       queue:it.solid.stats.queuedResamples,chunks:(it.solid.chunks||[]).map(c=>({
         segments:c.current.segments,sides:c.current.sides,atlas:!!c.current.atlas,
         previous:!!c.previous,wake:Number.isFinite(c.samplingWakeAt),deferred:!!c.deferred}))}));
     const next=JSON.stringify(current);
-    const outstanding=current.some(row=>row.queue || row.chunks.some(c=>c.previous||c.wake));
+    const outstanding=current.some(row=>row.queue || row.chunks.some(c=>c.previous||c.wake||c.deferred));
     if(next!==signature || outstanding)stableSince=null;
     else stableSince??=performance.now();
     signature=next;
@@ -280,14 +279,25 @@ async function prepareInitialSampling() {
     if(stableSince!==null && performance.now()-stableSince>=500 && performance.now()-began>=1200){settled=true;break;}
     await new Promise(resolve=>setTimeout(resolve,34));
   }
-  initialSampling={method:'Unmodified continuous source sampler, actual camera and viewport, real elapsed time, before first full presentation',
+  return {scope,method:'Unmodified continuous source sampler, actual camera and viewport, real elapsed time, before the requested complete presentation',
     rounds,elapsedMS:performance.now()-began,gpuWaitMS,updateCPUMS,maximumUpdateCPUMS,settledAtObservedTargets:settled,
     stoppedByBudget:!settled,continuousSamplingRemainsActive:true,geometryOrQualityPolicyReplaced:false,
-    garments:[...items.values()].map(it=>({id:it.id,submittedYarnTriangles:it.solid.stats.submittedYarnTriangles,
+    garments:active.map(it=>({id:it.id,submittedYarnTriangles:it.solid.stats.submittedYarnTriangles,
       resamples:it.solid.stats.resamples,queuedResamples:it.solid.stats.queuedResamples,
       uncachedNativeChunks:it.solid.stats.uncachedNativeChunks,frameAtlasBytes:it.solid.stats.frameAtlasBytes,
       deferredChunks:(it.solid.chunks||[]).filter(c=>c.deferred).length,
       sourceDemand:it.solid.resources().continuousDemand,globalAtlasMemory:it.solid.stats.globalAtlasMemory}))};
+}
+
+async function waitForCurrentPresentation() {
+  // During an operation, pending snapshots remain coalesced. Let the one
+  // already submitted frame complete before issuing atlas preparation work.
+  const began=performance.now();
+  while(host.presentationQueue?.inFlight){
+    if(failure)throw new Error(failure);
+    if(performance.now()-began>180000)throw new Error('上一幅三维画面尚未完成。');
+    await new Promise(resolve=>setTimeout(resolve,16));
+  }
 }
 
 function serializePresentation() {
@@ -378,16 +388,26 @@ async function operation(action) {
   finally {busy=false;list();selection();if(latest && !failure) apply(latest);}
 }
 
+async function inspectView(action) {
+  await operation(async()=>{
+    await waitForCurrentPresentation();
+    action();
+    lastSamplingPreparation=await prepareSampling('explicit-inspection-view');
+  });
+}
+
 async function add(kind) {
   if (items.has(kind)) return;
   await operation(async () => {
+    await waitForCurrentPresentation();
     progress('准备独立衣物 · '+definitions[kind].name);
     let prepared = templates.get(kind);
     if (!prepared) {prepared = await prepareGarment({host,...definitions[kind],progress});templates.set(kind,prepared);}
     const it = newItem(structuredClone(prepared));
     try {apply(await bridge.call('add',{row:workerRow(it)}));await buildVisual(it);}
     catch(error) {await bridge.call('remove',{garmentId:it.id});items.delete(it.id);disposeItem(it);throw error;}
-    selected=kind;isolated=false;visibility();
+    selected=kind;isolated=false;visibility();frame('front');
+    lastSamplingPreparation=await prepareSampling('added-independent-garment');
   });
 }
 
@@ -424,7 +444,7 @@ function bind() {
   for(const kind of Object.keys(definitions)) $('add-'+kind).onclick=()=>add(kind);
   $('remove-selected').onclick=removeSelected;
   $('isolate-selected').onclick=()=>{isolated=true;visibility();diagnostic();};
-  $('all-visible').onclick=()=>{isolated=false;$('exploded').checked=false;visibility();diagnostic();};
+  $('all-visible').onclick=()=>inspectView(()=>{isolated=false;$('exploded').checked=false;visibility();frame('front');});
   $('exploded').onchange=()=>{visibility();diagnostic();};
   $('contacts').onchange=()=>{updateContactDots(latest?.audit);host.viewer.render();};
   $('color').oninput=e=>{const it=items.get(selected);if(it)recolor(it,e.target.value);};
@@ -435,8 +455,8 @@ function bind() {
   for(const [id,key]of [['friction','friction'],['wind','wind'],['cloth-contact','contactEnabled']]){
     $(id).onchange=e=>{state[key]=e.target.type==='checkbox'?e.target.checked:Number(e.target.value);bridge.call('settings',{options:state}).then(apply).catch(fail);};
   }
-  for(const angle of ['front','side','back'])$('view-'+angle).onclick=()=>frame(angle);
-  $('view-detail').onclick=()=>frame('front',true);
+  for(const angle of ['front','side','back'])$('view-'+angle).onclick=()=>inspectView(()=>frame(angle));
+  $('view-detail').onclick=()=>inspectView(()=>frame('front',true));
   for(const [id,kind]of [['tug','tug'],['push','push']])$(id).onclick=()=>operation(async()=>{
     apply(await bridge.call('perturb',{garmentId:kind==='push'?'outer':selected,kind}));await stepOnce();
   });
@@ -502,7 +522,8 @@ async function boot() {
     progress('组装各件独立裁片、接缝与共享接触求解器');
     apply(await bridge.call('init',{body:{positions:host.bodyPositions,faces:host.bodyFaces},rows:[...items.values()].map(workerRow),options:state}));
     for(const it of items.values())await buildVisual(it);
-    await prepareInitialSampling();
+    frame('front');
+    initialSampling=await prepareSampling('initial-complete-outfit',false);
     host.releaseRender();
     installRenderBackpressure(host.viewer);
     serializePresentation();

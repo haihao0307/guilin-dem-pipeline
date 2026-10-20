@@ -444,8 +444,9 @@ try {
     await setColor(originalColor);
     await clickAndWait('view-detail');
     await capture('detail');
+    // The application restores the full-outfit front camera in this action.
+    // A second view-front action would redraw the same accepted state.
     await clickAndWait('all-visible');
-    await clickAndWait('view-front');
 
     // The displayed separation is a view operation: it must leave every exposed
     // physics measurement and the simulation clock unchanged.
@@ -457,9 +458,13 @@ try {
     assert.deepEqual(separated.physics, beforeSeparation.physics, 'Exploded view changed the physics state');
     verifyGarments(separated);
     await capture('separated');
-    await page.locator('#layer-app #exploded').uncheck();
-    await waitIdle();
-    assert.deepEqual((await diagnostic()).physics, beforeSeparation.physics);
+    // A dedicated display job ends at its verified separated view. Restore it
+    // only when the same page will continue into the contact scenario.
+    if (SCENARIO === 'all') {
+      await page.locator('#layer-app #exploded').uncheck();
+      await waitIdle();
+      assert.deepEqual((await diagnostic()).physics, beforeSeparation.physics);
+    }
     summary.scenariosCompleted.push('display');
   }
 
@@ -474,7 +479,7 @@ try {
     }
     assert.ok(stepped.physics.contact.contactCount > 0, 'The contact probe did not produce measurable inter-garment contact');
     const countBeforeRemoval = stepped.physics.contact.contactCount;
-    await page.locator('#layer-app #layer-list [data-garment="outer"]').click();
+    assert.equal(await page.locator('#layer-app #layer-list [data-garment="outer"]').getAttribute('aria-pressed'), 'true', 'Step and push must preserve the selected outer garment');
     await clickAndWait('remove-selected');
     const removed = await diagnostic();
     verifyGarments(removed, ['inner', 'pants']);

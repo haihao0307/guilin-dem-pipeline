@@ -86,7 +86,7 @@
 
       <div class="layer-metrics" aria-label="当前模拟数据">
         <div class="layer-metric"><span class="layer-metric-label">独立衣物</span><strong id="metric-layers">—</strong></div>
-        <div class="layer-metric"><span class="layer-metric-label">当前接触</span><strong id="metric-contacts">—</strong></div>
+        <div class="layer-metric"><span class="layer-metric-label">本批接触约束</span><strong id="metric-contacts">—</strong></div>
         <div class="layer-metric"><span class="layer-metric-label">本步耗时</span><strong id="metric-step">—</strong></div>
         <div class="layer-metric-note"><svg aria-hidden="true"><use href="#layer-icon-info"/></svg><span>接触数据随模拟更新，<br>不代表已通过所有动作验证。</span></div>
       </div>
@@ -129,7 +129,7 @@
       <section class="layer-control-section layer-check-section">
         <h3>检查方式</h3>
         <label class="layer-check"><input id="exploded" type="checkbox"><span>分开查看衣层</span></label>
-        <label class="layer-check"><input id="contacts" type="checkbox"><span>显示接触点</span></label>
+        <label class="layer-check"><input id="contacts" type="checkbox"><span>显示残余接触样本</span></label>
         <label class="layer-check"><input id="cloth-contact" type="checkbox" checked><span>衣物间碰撞</span><span class="layer-check-tag">参与模拟</span></label>
       </section>
 
@@ -139,6 +139,7 @@
           <p>每件衣物保留独立对象、材料与形变。这里研究的是衣物穿在一起之后的接触关系。</p>
           <p>初始穿着顺序与运动中的碰撞需要分别处理。接触基础间隙按原实体纱线的几何包络计算，滑杆只增加余量。这不是现实织物的实测厚度。</p>
           <p>当前摩擦采用切向相对位移阻尼近似；接触使用离散的点与三角形检查，尚未实现连续碰撞检测。</p>
+          <p>“本批接触约束”统计最近一批求解遇到的约束；橙点只显示本步最终复测仍有残余的样本。两者不一一对应，未显示样本不代表全部表面没有相交。</p>
           <p>本轮限定两种上衣与原款短裤、静止人物；上身两层叠穿。三件衣物分别保留对象，并参与同一模拟流程。连续防穿插、任意动作和其他衣物组合仍待验证。</p>
           <div class="layer-help-links"><a href="https://support.clo3d.com/hc/en-us/articles/115000294487-Use-Layer-Drape-Additional-Garment" target="_blank" rel="noopener noreferrer">CLO · 初始层序</a><a href="https://www.sidefx.com/docs/houdini/nodes/sop/vellumsolver.html" target="_blank" rel="noopener noreferrer">Vellum · 层间接触</a></div>
           <h4>当前诊断</h4>
