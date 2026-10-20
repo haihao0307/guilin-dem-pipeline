@@ -107,7 +107,7 @@ try {
     await fs.writeFile(logPath, '');
     const checkpointSteps = new Set([0, 1, 6, 12, 18, 24, 60, 120, 180, 240, args.steps]);
     if (mode === 'perturb') for (const step of [61, 66, 121, 126, 181, 186]) checkpointSteps.add(step);
-    let world;const bodyEnvelopeAuditor=createBodyEnvelopeAudit(input.body);
+    let world,independentFailureStateSaved=false,productionStepThrew=false;const bodyEnvelopeAuditor=createBodyEnvelopeAudit(input.body);
     const stateRecord=step=>{
       const c=world.contacts,reference=g=>({id:g.id,count:g.count});
       const history={options:Object.fromEntries(['cellSize','searchMargin','contactMargin','maxCorrection','sampleLimit','cacheSkin','tolerance','maxCellsPerTriangle','broadphaseCache'].map(key=>[key,c[key]])),
@@ -115,23 +115,27 @@ try {
         history:[...c._history],pending:[...c._pending].map(([key,value])=>[key,{...value,a:reference(value.a),b:reference(value.b)}]),
         restoreNote:'Reattach each history/pending triangles reference to its surface triangles object by garment id, and pending a/b to prepared surfaces; JSON cannot retain object identity.'};
       return{step,simulationSeconds:world.time,inputSHA256:summary.inputSHA256,sourceSHA256,
-        surfaces:world.surfaces(),velocities:world.rows.map(a=>({id:a.id,velocity:a.s.v,time:a.s.time,steps:a.s.steps})),contactHistory:history};
+        surfaces:world.surfaces(),velocities:world.rows.map(a=>({id:a.id,velocity:a.s.v,time:a.s.time,steps:a.s.steps})),
+        solverState:world.rows.map(a=>({id:a.id,saved:a.saved,initial:a.s.initial,settings:a.s.settings,
+          edgeData:a.edges.view,bendData:a.bends.view,bodyCache:a.cache.view})),
+        worldState:{time:world.time,steps:world.steps,options:world.options,lastDT:world.lastDT,
+          lastContact:world.lastContact,lastSettling:world.lastSettling,lastBodyEnvelope:world.lastBodyEnvelope,
+          totalCorrections:world.totalCorrections,initializationReport:world.initializationReport},contactHistory:history};
     };
     const serializeState=value=>JSON.stringify(value,(key,item)=>ArrayBuffer.isView(item)?Array.from(item):item);
     const saveState=async step=>{if(args.saveState&&world)await fs.writeFile(path.join(args.output,label+'.state.json'),serializeState(stateRecord(step)));};
     try {
       const started = performance.now(),creationCPU=process.cpuUsage();
       world = await LayerWorld.create(input.body, input.rows, kernelBytes, input.options);
-      if(args.saveState){
-        const settle=world.settle.bind(world);
-        world.settle=(...settings)=>{
-          const result=settle(...settings);
-          // Record the rejected geometry before step() rolls it back. This
-          // observer only runs after the unchanged solve/measurement finished.
-          if(!result.converged)writeFileSync(path.join(args.output,label+'.rejected-state.json'),serializeState({...stateRecord(world.steps+1),rejected:true,settling:result}));
-          return result;
-        };
-      }
+      const settle=world.settle.bind(world);
+      world.settle=(...settings)=>{
+        const result=settle(...settings);
+        // Always retain a failure witness before step() rolls it back. Normal
+        // accepted steps incur no state cloning or file output here;
+        // --save-state controls only the optional accepted-step checkpoints.
+        if(!result.converged)writeFileSync(path.join(args.output,label+'.rejected-state.json'),serializeState({...stateRecord(world.steps+1),rejected:true,settling:result}));
+        return result;
+      };
       summary.creationMS = performance.now() - started;
       {const cpu=process.cpuUsage(creationCPU);summary.creationCPUms={user:cpu.user/1000,system:cpu.system/1000,total:(cpu.user+cpu.system)/1000};}
       summary.initialization = world.initializationReport;
@@ -192,6 +196,15 @@ try {
         summary.maxima.speedMPS = Math.max(summary.maxima.speedMPS, speed);
         summary.maxima.fixedDriftMM = Math.max(summary.maxima.fixedDriftMM, fixedDrift);
         summary.completedSteps = step; summary.simulationSeconds = audit.simulationSeconds;
+        if(failures.size&&!independentFailureStateSaved){
+          // The production step may accept a state that the independent full
+          // geometry audit rejects. Preserve that different kind of failure
+          // separately; it is neither a rolled-back nor a rejected solve state.
+          await fs.writeFile(path.join(args.output,label+'.failed-independent-audit-state.json'),serializeState({
+            ...stateRecord(step),productionAcceptedDiscreteState:true,independentAuditRejected:true,
+            audit:row,failures:Array.from(failures.values())}));
+          independentFailureStateSaved=true;
+        }
         await fs.appendFile(logPath, JSON.stringify(row) + '\n');
         await saveState(step);
         if (checkpoint) {await save(); console.log(JSON.stringify({label, step, seconds: audit.simulationSeconds, solverMS: audit.solverMS, stretch: audit.maxEdgeStretch,
@@ -206,12 +219,23 @@ try {
           world.perturb(id, kind); summary.perturbations.push({beforeStep: step, garment: id, kind});
         }
         const previous = world.rows.map(a => a.s.p.slice());
-        const stepCPUStart=process.cpuUsage();world.step(1 / 120);const stepCPU=process.cpuUsage(stepCPUStart);
+        const stepCPUStart=process.cpuUsage();
+        try {world.step(1 / 120);} catch (error) {productionStepThrew=true;throw error;}
+        const stepCPU=process.cpuUsage(stepCPUStart);
         await inspect(step, previous,{user:stepCPU.user/1000,system:stepCPU.system/1000,total:(stepCPU.user+stepCPU.system)/1000});
       }
       if (summary.completedSteps !== args.steps || Math.abs(summary.simulationSeconds - args.steps / 120) > 1e-9) fail('incomplete-physical-progress', summary.completedSteps, {requestedSteps: args.steps, seconds: summary.simulationSeconds});
       for (const a of world.rows) if (a.s.w.some(w => w > 0) && !(maximumMove.get(a.id) > 1e-8)) fail('no-measured-garment-motion', summary.completedSteps, a.id);
-    } catch (error) {summary.error = {message: error.message, stack: error.stack,diagnostics:error.diagnostics}; fail('replay-error', summary.completedSteps, error.message);}
+    } catch (error) {
+      summary.error = {message: error.message, stack: error.stack,diagnostics:error.diagnostics};
+      // A production step with this fixed valid dt restores its previous state
+      // before throwing. Errors from an audit or evidence write do not prove
+      // any rollback, so keep their current state under a different filename.
+      if(world)writeFileSync(path.join(args.output,label+(productionStepThrew?'.last-accepted-state.json':'.state-after-error.json')),
+        serializeState({...stateRecord(world.steps),productionStepThrew,rolledBackLastAcceptedState:productionStepThrew,
+          stateAfterNonStepError:!productionStepThrew,error:summary.error}));
+      fail('replay-error', summary.completedSteps, error.message);
+    }
     const sorted = timings.slice().sort((a, b) => a - b);
     summary.timing = sorted.length ? {count: sorted.length, minMS: sorted[0], medianMS: sorted[Math.floor(sorted.length * .5)], p95MS: sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * .95))], maxMS: sorted.at(-1)} : null;
     summary.maximumSingleStepMoveMM = Object.fromEntries(Array.from(maximumMove, ([id, value]) => [id, value * 1000]));

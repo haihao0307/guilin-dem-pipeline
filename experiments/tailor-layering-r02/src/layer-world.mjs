@@ -27,15 +27,20 @@ const bodyClearanceMM=thickness=>Math.max(2,thickness*500+.5);
 // it again through a later neighbour. This is an active-set ordering of the
 // SAME original engineering strain inequalities, not altered paper rests.
 // A correction only invalidates edges incident to its two moved particles.
-function repairActiveStrain(world,a,{limit=5000,maxCorrection=.001,tolerance=1e-5}={}) {
+function repairActiveStrain(world,a,{limit=5000,maxCorrection=.001,tolerance=1e-5,stopAtMaxStretch=null}={}) {
  const s=a.s,p=s.p,w=s.w,edges=s.edges,lower=s.family==='knit'?.82:.90,upper=s.family==='knit'?1.18:1.12;
  let adjacency=a.strainAdjacency;if(!adjacency){adjacency=Array.from({length:s.count},()=>[]);edges.forEach((edge,i)=>{adjacency[edge.a].push(i);adjacency[edge.b].push(i);});a.strainAdjacency=adjacency;}
- const versions=new Uint32Array(edges.length),queue=[];
- const score=i=>{const e=edges[i],u=e.a*3,v=e.b*3,length=Math.hypot(p[u]-p[v],p[u+1]-p[v+1],p[u+2]-p[v+2]);return Math.max(length/e.rest-upper,lower-length/e.rest,0);};
+ // Dynamic repair addresses this garment's failed acceptance metric. Once
+ // every edge satisfies that metric, let contact/body relaxation continue;
+ // chasing all original preferred strain bounds would disturb other garments
+ // that already pass. The original material sweeps and targets are unchanged.
+ // Dressing passes keep their previous complete active-set behaviour.
+ const versions=new Uint32Array(edges.length),queue=[],hardViolated=new Uint8Array(edges.length);let hardViolatedEdges=0;
+ const score=i=>{const e=edges[i],u=e.a*3,v=e.b*3,length=Math.hypot(p[u]-p[v],p[u+1]-p[v+1],p[u+2]-p[v+2]);if(stopAtMaxStretch!==null){const above=Number(length/e.rest>stopAtMaxStretch);hardViolatedEdges+=above-hardViolated[i];hardViolated[i]=above;}return Math.max(length/e.rest-upper,lower-length/e.rest,0);};
  const push=i=>{const value=score(i),version=++versions[i];if(value<=tolerance)return;const item={i,value,version};let at=queue.length;queue.push(item);while(at){const parent=(at-1)>>1;if(queue[parent].value>=value)break;queue[at]=queue[parent];at=parent;}queue[at]=item;};
  const pop=()=>{const first=queue[0],last=queue.pop();if(queue.length){let at=0;while(at*2+1<queue.length){let child=at*2+1;if(child+1<queue.length&&queue[child+1].value>queue[child].value)child++;if(queue[child].value<=last.value)break;queue[at]=queue[child];at=child;}queue[at]=last;}return first;};
  for(let i=0;i<edges.length;i++)push(i);let corrections=0,visits=0;
- while(queue.length&&corrections<limit){const item=pop();visits++;if(item.version!==versions[item.i])continue;
+ while(queue.length&&corrections<limit&&(stopAtMaxStretch===null||hardViolatedEdges>0)){const item=pop();visits++;if(item.version!==versions[item.i])continue;
   const edge=edges[item.i],i=edge.a*3,j=edge.b*3,dx=p[j]-p[i],dy=p[j+1]-p[i+1],dz=p[j+2]-p[i+2],length=Math.hypot(dx,dy,dz),mass=w[edge.a]+w[edge.b];if(!(length>1e-12&&mass>0))continue;
   const target=Math.max(lower*edge.rest,Math.min(upper*edge.rest,length)),error=length-target;if(Math.abs(error)/edge.rest<=tolerance)continue;
   const lambda=Math.max(-maxCorrection,Math.min(maxCorrection,error))/(length*mass);
@@ -44,7 +49,7 @@ function repairActiveStrain(world,a,{limit=5000,maxCorrection=.001,tolerance=1e-
   for(const index of adjacency[edge.a])push(index);for(const index of adjacency[edge.b])push(index);
  }
  let worstStrainExcess=0,immovableViolatedEdges=0;for(let i=0;i<edges.length;i++){const v=score(i);worstStrainExcess=Math.max(worstStrainExcess,v);if(v>tolerance&&w[edges[i].a]+w[edges[i].b]===0)immovableViolatedEdges++;}
- return{garment:a.id,corrections,visits,queuedEntries:queue.length,worstStrainExcess,immovableViolatedEdges};
+ return{garment:a.id,corrections,visits,queuedEntries:queue.length,worstStrainExcess,immovableViolatedEdges,stopAtMaxStretch,hardViolatedEdges:stopAtMaxStretch===null?null:hardViolatedEdges};
 }
 
 /** Independent garments, one simulation clock. SI units throughout.
@@ -162,7 +167,7 @@ export class LayerWorld {
    // already acceptable metric while resolving a remaining contact deficit.
    // The complete original distance/bend/strain sweeps remain in every step.
    const repairMetric=audit.maxEdgeStretch>acceptanceLimits.maxEdgeStretch;
-   const active=repairMetric?rows.map(a=>repairActiveStrain(this,a,{limit:maxCorrections})):[];
+   const active=repairMetric?rows.map(a=>repairActiveStrain(this,a,{limit:maxCorrections,stopAtMaxStretch:initializing?null:acceptanceLimits.maxEdgeStretch})):[];
    totalActiveCorrections+=active.reduce((sum,item)=>sum+item.corrections,0);
    if(this._timing)this._timing.activeStrainMS+=performance.now()-start;
    for(const a of rows){this.projectBody(a,repairMetric,true);this.envelope(a,true);}
@@ -207,7 +212,7 @@ export class LayerWorld {
   const started=performance.now(),active=this.rows.filter(r=>r.enabled),sub=this.options.substeps,h=dt/sub,e=this.e;
   for(const a of active){for(const key of ['p','v','old'])a.backup[key].set(a.s[key]);a.backup.time=a.s.time;a.backup.steps=a.s.steps;}
   const contactCheckpoint=this.contacts.checkpoint();
-  const previous={time:this.time,steps:this.steps,lastContact:this.lastContact,lastDT:this.lastDT,solveMS:this.solveMS,timings:this.timings,totalCorrections:this.totalCorrections,lastSettling:this.lastSettling,lastBodyEnvelope:this.lastBodyEnvelope};let corrections=0;
+  const previous={time:this.time,steps:this.steps,lastContact:this.lastContact,lastDT:this.lastDT,solveMS:this.solveMS,timings:this.timings,totalCorrections:this.totalCorrections,lastSettling:this.lastSettling,lastBodyEnvelope:this.lastBodyEnvelope};let corrections=0,finalMeasurement=null;
   const timing={membraneMS:0,bodyProjectionMS:0,bodyVelocityMS:0,bodyEnvelopeMS:0,activeStrainMS:0,layerContactMS:0,layerBroadphaseMS:0,layerAuditMS:0};this._timing=timing;
   const solveContacts=passes=>{const t=performance.now();this.lastContact=this.contacts.solve(this.surfaces(),{friction:this.options.friction,passes,measureResidual:false});timing.layerContactMS+=performance.now()-t;timing.layerBroadphaseMS+=this.lastContact.timings?.broadphaseBuildMS||0;corrections+=this.lastContact.correctionCount;};
   try {
@@ -232,10 +237,14 @@ export class LayerWorld {
     if(this.options.contactEnabled){solveContacts(1);for(const a of active)this.projectBody(a,false,false);}else this.lastContact=null;
     const settled=this.settle({solveContacts});
     if(!settled.converged){const error=Error('衣物约束在本步工作上限内未收敛（最大边长比 '+settled.audit.maxEdgeStretch.toFixed(3)+'，衣间剩余 '+((settled.measurement?.residualMaxPenetration||0)*1000).toFixed(3)+' mm，人体面包络缺口 '+((settled.bodyEnvelope?.maxHalfThicknessOverlapM||0)*1000).toFixed(3)+' mm）');error.diagnostics=settled;throw error;}
+    finalMeasurement=settled.measurement;
     for(const a of active){if(!e.finish(a.p.ptr,a.v.ptr,a.old.ptr,a.w.ptr,a.s.count,h,1))throw Error('出现非有限数值');this.finishBodyVelocity(a,h);for(let i=0;i<a.s.p.length;i++)if(Math.abs(a.s.p[i]-a.saved[i])>.40)throw Error('超出本轮受限位移');}
     this.time+=h;
    }
-   if(this.options.contactEnabled){const t=performance.now(),measurement=this.contacts.measure(this.surfaces());timing.layerAuditMS+=performance.now()-t;Object.assign(this.lastContact,{residualMaxPenetration:measurement.residualMaxPenetration,residualCount:measurement.residualCount,residualCandidateCount:measurement.residualCandidateCount,residualScope:measurement.residualScope,sampleContactPoints:measurement.sampleContactPoints,measuredAfterBodyProjection:true});}
+   // The last settle measured after its final body projection. The retained
+   // WASM finish and body-contact damping only update velocity, so positions,
+   // previous positions and contact history still describe that exact state.
+   if(this.options.contactEnabled){const measurement=finalMeasurement;Object.assign(this.lastContact,{residualMaxPenetration:measurement.residualMaxPenetration,residualCount:measurement.residualCount,residualCandidateCount:measurement.residualCandidateCount,residualScope:measurement.residualScope,sampleContactPoints:measurement.sampleContactPoints,measuredAfterBodyProjection:true});}
    for(const a of active){a.s.time=this.time;a.s.steps+=sub;a.s.expand();}
    this.steps++;this.totalCorrections+=corrections;this.lastDT=dt;this.timings=timing;this.solveMS=performance.now()-started;
   } catch(error) {for(const a of active){for(const key of ['p','v','old'])a.s[key].set(a.backup[key]);a.s.time=a.backup.time;a.s.steps=a.backup.steps;a.s.expand();a.cache.view.fill(-1);}Object.assign(this,previous);this.contacts.restore(contactCheckpoint);const failure=Error(error.message+'；已恢复本步之前的衣形');failure.diagnostics=error.diagnostics;throw failure;}

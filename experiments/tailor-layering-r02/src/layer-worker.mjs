@@ -29,4 +29,4 @@ async function handle(d) {
  const transfer=result.rows.flatMap(r=>[r.positions.buffer,r.normals.buffer]);
  self.postMessage({id:d.id,...result},transfer);
 }
-self.onmessage=({data:d})=>{chain=chain.then(()=>handle(d)).catch(e=>self.postMessage({id:d.id,error:e.message,stack:e.stack}));};
+self.onmessage=({data:d})=>{chain=chain.then(()=>handle(d)).catch(e=>self.postMessage({id:d.id,error:e.message,stack:e.stack,diagnostics:e.diagnostics??null}));};

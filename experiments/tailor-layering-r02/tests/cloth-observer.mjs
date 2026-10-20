@@ -40,10 +40,16 @@ export async function installClothObserver(context, {
           if (!request) return;
           observation.pending.delete(data.id);
           observation.responseCount++;
+          // Preserve diagnostics only on the actual error reply. These are
+          // rejected-step measurements; they do not replace the latest
+          // successfully accepted geometry below or fabricate a snapshot.
+          const errorDetails = data.error ? {workerStack: data.stack || null,
+            diagnostics: data.diagnostics == null ? null : structuredClone(data.diagnostics)} : null;
           observation.responses.push({id: data.id, type: request.type,
             wallMS: performance.now(), elapsedMS: performance.now() - request.wallMS,
-            error: data.error || null, audit: data.audit ? structuredClone(data.audit) : null});
-          if (data.error) observation.errors.push({id: data.id, type: request.type, message: data.error});
+            error: data.error || null, ...(errorDetails || {}),
+            audit: data.audit ? structuredClone(data.audit) : null});
+          if (data.error) observation.errors.push({id: data.id, type: request.type, message: data.error, ...errorDetails});
           if (data.rows && data.audit) {
             // Retain the received object by reference; copying every geometry
             // would add an artificial per-step allocation to performance tests.

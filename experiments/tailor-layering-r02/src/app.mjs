@@ -15,7 +15,7 @@ const definitions = {
   pants: {presetId: 'P02', kind: 'pants', name: '原款短裤', note: '下装 · P02 · 原实体牛仔', order: 0}
 };
 let host, bridge, selected = 'outer', ready = false, busy = false, playing = false;
-let failure = null, isolated = false, latest = null, ray, pointer, dragPlane, dragged = null;
+let failure = null, failureDetails = null, isolated = false, latest = null, ray, pointer, dragPlane, dragged = null;
 let loopGeneration = 0, frameStamp = 0, lastPresentation = null, initialSampling = null, lastSamplingPreparation = null;
 const items = new Map();
 const templates = new Map();
@@ -58,7 +58,12 @@ class ClothBridge {
       if (!pending) return;
       this.pending.delete(data.id);
       clearTimeout(pending.timer);
-      if (data.error) pending.reject(new Error(data.error)); else pending.resolve(data);
+      if (data.error) {
+        const error = new Error(data.error);
+        error.diagnostics = data.diagnostics ?? null;
+        error.workerStack = data.stack;
+        pending.reject(error);
+      } else pending.resolve(data);
     };
     this.worker.onerror = event => {
       const error = new Error(event.message || '布料工作线程运行失败。');
@@ -243,7 +248,7 @@ function diagnostic(force=false) {
     opaqueBackingSheets:it.solid?.stats?.opaqueBackingSheets,
     fixedDistanceTiers:it.solid?.stats?.fixedDistanceTiers,
     yarnSpans:it.solid?.stats?.yarnSpans,placement:it.placementReport}));
-  const value = {version:'TAILOR-LAYERING-R02',ready,playing,error:failure,
+  const value = {version:'TAILOR-LAYERING-R02',ready,playing,error:failure,errorDetails:failureDetails,
     nativePerson:{sameModel:host?.sameNativeModel,sameViewer:host?.sameNativeViewer,
       topology:host?.identity?.topologySHA256,revision:host?.sourceRevision,iframes:document.querySelectorAll('iframe').length},
     displayOnlySeparation:$('exploded').checked,displayOnlyIsolation:isolated,
@@ -443,7 +448,7 @@ function frame(angle = 'front', detail = false) {
 
 function stop() {const wasPlaying=playing;playing=false;loopGeneration++;controls();if(wasPlaying&&!failure)host?.viewer.render();diagnostic(true);}
 function fail(error) {
-  failure = error?.message || String(error); stop();
+  failure = error?.message || String(error); failureDetails = error?.diagnostics ?? null; stop();
   status(failure,true);
   if (!ready) {
     $('layer-loading').hidden = false; $('load-text').textContent = failure;
@@ -465,7 +470,7 @@ async function play() {
 
 async function operation(action) {
   stop(); busy=true;controls();
-  try {await action(); failure=null;}
+  try {await action(); failure=null; failureDetails=null;}
   catch(error) {fail(error);}
   finally {busy=false;list();selection();if(latest && !failure) apply(latest);host?.flushPresentation?.();diagnostic(true);}
 }

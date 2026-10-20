@@ -865,6 +865,37 @@ try {
   summary.error = { message: failure.message || String(failure), stack: failure.stack };
   appendProgress({ kind: 'acceptance-failed', phase, error: summary.error });
   if (page && !page.isClosed()) {
+    let observationTimeout;
+    try {
+      // Read the observer directly: diagnostic() intentionally throws when
+      // the application has failed, and must not prevent evidence recovery.
+      // This sends no Worker action and does not wait for/render a new frame.
+      const traffic = await Promise.race([
+        readClothObservation(page, {geometry: true, checkpoints: true, initialInput: true}),
+        new Promise((_, reject) => {observationTimeout = setTimeout(() =>
+          reject(new Error('Failure Worker observation exceeded its 10-second readout budget')), 10_000);}),
+      ]);
+      const scope = {
+        snapshot: 'Latest successful application Worker reply, before the error; last accepted geometry, not rejected-step geometry',
+        checkpoints: 'Previously accepted Worker replies retained by the read-only observer',
+        diagnostics: 'Measurements attached by the Worker to rejected/error responses; no rejected geometry, velocity or contact history is implied',
+        initialInput: 'Read-only numeric copy of the original current-native init message',
+        additionalWorkerMessagesSent: false, applicationOrSolverStateModified: false,
+      };
+      const file = 'failure-worker-observation.json.gz';
+      const bytes = gzipSync(Buffer.from(JSON.stringify({schema: 'kaopu-failed-worker-observation@1',
+        phase, error: summary.error, scope, sourceProvenance: summary.sourceProvenance,
+        nativeBodyObservation: summary.nativeObservation?.file || null, traffic})), {level: 6});
+      await fs.writeFile(path.join(EVIDENCE, file), bytes);
+      summary.failureWorkerObservation = {file, bytes: bytes.length, sha256: hash(bytes), scope,
+        latestAcceptedReplyID: traffic.snapshot?.id ?? null,
+        latestAcceptedStep: traffic.snapshot?.audit?.completedSteps ?? null,
+        latestAcceptedSimulationSeconds: traffic.snapshot?.audit?.simulationSeconds ?? null,
+        retainedCheckpoints: traffic.checkpoints?.length ?? 0,
+        errorReplyIDs: traffic.errors.filter(row => Number.isInteger(row.id)).map(row => row.id),
+        measuredErrorReplyIDs: traffic.errors.filter(row => row.diagnostics != null).map(row => row.id)};
+    } catch (observationError) {summary.failureWorkerObservationError = String(observationError);}
+    finally {clearTimeout(observationTimeout);}
     try {
       summary.failureDOM = await page.locator('#layer-app').innerText({ timeout: 5000 });
     } catch (domError) { summary.failureDOMError = String(domError); }

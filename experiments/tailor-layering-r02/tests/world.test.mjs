@@ -76,6 +76,36 @@ test('settling accepts only simultaneous hard strain, contact and body limits, w
   assert.equal(rejected.bodyEnvelope.maxHalfThicknessOverlapM,2e-6);
 });
 
+test('dynamic tail repairs only a garment exceeding the hard strain limit and stops after its failed edges pass', () => {
+  const makeRow=(id,stretch)=>({id,enabled:true,s:{count:2,p:Float64Array.of(0,0,0,.01*stretch,0,0),
+    w:Float64Array.of(1,2),edges:[{a:0,b:1,rest:.01}],family:'knit'}});
+  const rows=[makeRow('pants',1.30),makeRow('inner',1.29),makeRow('outer',1.46)];
+  // Repairing the first outer edge stretches its initially valid neighbour
+  // above 1.45. The local counter must notice that new violation before stop.
+  Object.assign(rows[2].s,{count:3,p:Float64Array.of(0,0,0,.0146,0,0,.029,0,0),
+    w:Float64Array.of(1,2,1),edges:[{a:0,b:1,rest:.01},{a:1,b:2,rest:.01}]});
+  const before=rows.map(a=>a.s.p.slice()),rests=rows.map(a=>a.s.edges.map(e=>e.rest)),projected=[];
+  const ratio=a=>Math.max(...a.s.edges.map(e=>Math.hypot(...[0,1,2].map(d=>a.s.p[e.b*3+d]-a.s.p[e.a*3+d]))/e.rest));
+  const host={rows,options:{contactEnabled:true,friction:0},surfaces:()=>[],
+    contacts:{measure:()=>({residualMaxPenetration:0}),solve:()=>({})},
+    audit:({bodySamples=false}={})=>({maxEdgeStretch:Math.max(...rows.map(ratio)),...(bodySamples?{bodyThicknessOverlapMM:0,bodyInsideVertices:0}:{})}),
+    measureBodyEnvelope:()=>({maxHalfThicknessOverlapM:0}),projectBody:()=>{},envelope:()=>{},
+    projectBodyVertex:a=>projected.push(a.id),
+  };
+  const result=LayerWorld.prototype.settle.call(host,{maxPasses:20});
+  assert.equal(result.converged,true);
+  assert.equal(result.passes,1);
+  assert.deepEqual(result.observations[1].active.map(a=>[a.garment,a.corrections,a.hardViolatedEdges]),
+    [['pants',0,0],['inner',0,0],['outer',2,0]]);
+  assert.deepEqual(rows[0].s.p,before[0]);
+  assert.deepEqual(rows[1].s.p,before[1]);
+  assert.ok(ratio(rows[2])>1.18&&ratio(rows[2])<=1.45,'the extra repair stops at the unchanged hard limit without chasing a preferred rest bound');
+  assert.deepEqual(projected,['outer','outer','outer','outer']);
+  assert.deepEqual(rows.map(a=>a.s.edges.map(e=>e.rest)),rests,'original paper rest lengths are preserved');
+  const massWeightedDisplacement=Array.from(rows[2].s.w,(w,i)=>(rows[2].s.p[i*3]-before[2][i*3])/w).reduce((sum,v)=>sum+v,0);
+  assert.ok(Math.abs(massWeightedDisplacement)<1e-15,'original inverse-mass weighting is preserved');
+});
+
 test('actual native body and T08/T03 garments step with finite positions and welded seam agreement', async () => {
   const began = performance.now();
   world = await LayerWorld.create(body, rows, bytes);
