@@ -13,7 +13,7 @@ const executable = source.slice(0, tail).replace(/^import[^\n]*\n/gm, '');
 const microtasks = async () => {for (let i = 0; i < 16; i++) await Promise.resolve();};
 function deferred() {let resolve, reject; const promise = new Promise((a, b) => {resolve = a; reject = b;}); return {promise, resolve, reject};}
 
-function environment() {
+function environment({clock = performance} = {}) {
   const nodes = new Map(), events = new Map(), queues = [[], []], log = [];
   const element = (id, dataset = {}) => ({id, dataset, disabled: false, value: '', checked: false,
     textContent: '', style: {}, classList: {toggle() {}}});
@@ -38,7 +38,7 @@ function environment() {
     if (selector === '#crowd-app button,#crowd-app select,#crowd-app input') return controls;
     return [];
   }};
-  const context = vm.createContext({THREE, performance, setTimeout, clearTimeout, document,
+  const context = vm.createContext({THREE, performance: clock, setTimeout, clearTimeout, document,
     window: {addEventListener: (name, fn) => events.set(name, fn)}, navigator: {},
     console: {error: (...args) => log.push(['error', ...args])}});
   vm.runInContext(executable + `\nglobalThis.api={state,actors,startBenchmark,abortBenchmark,step,fail,resize,cameraHome,moveActor,changeCount,
@@ -178,6 +178,42 @@ await check('viewport resize aborts measurement before changing its recorded cam
   assert.equal(api.state.lastBenchmark.abortReason, 'viewport-resized');
   assert.equal(api.state.lastBenchmark.configuration.viewport[0], 1280);
   assert.equal(viewer.canvas.width, 900); assert.equal(viewer.canvas.height, 650);
+});
+
+await check('paused single-step completion forces current HUD and evidence after all workers, including an existing tick without another solve', async () => {
+  let now = 100;
+  const {api, nodes, actors, viewer, deferFrame} = environment({clock: {now: () => now}});
+  const pair = deferFrame(); let finished = false;
+  const clicking = nodes.get('step-button').onclick().then(() => {finished = true;});
+  await microtasks();
+  assert.equal(finished, false); assert.equal(api.state.playing, false);
+  assert.equal(nodes.get('time-stat').textContent, '0.00');
+  pair[0].resolve(); await microtasks(); assert.equal(finished, false); assert.equal(viewer.renders, 0);
+  now = 120; // Well within the normal 500 ms HUD throttle; tick 1 does not trigger the 10-tick evidence write.
+  pair[1].resolve(); await clicking;
+  assert.equal(api.pendingTick, null); assert.equal(viewer.renders, 1);
+  assert.equal(nodes.get('time-stat').textContent, '0.02');
+  assert.equal(nodes.get('step-stat').textContent, '20.0');
+  let report = JSON.parse(nodes.get('runtime-evidence').textContent);
+  assert.equal(report.tick, 1); assert.equal(report.lastSubmittedFrame.tick, 1);
+  assert.equal(report.latestSamples.length, 1); assert.equal(report.simulationSeconds, 1 / 60);
+  assert.ok(actors.every(a => a.advances === 1));
+
+  now = 130; api.state.playing = true;
+  const nextPair = deferFrame(), existing = api.step(); await microtasks();
+  const inFlight = api.pendingTick; let stopped = false;
+  const joining = nodes.get('step-button').onclick().then(() => {stopped = true;});
+  await microtasks();
+  assert.equal(api.state.playing, false); assert.equal(api.pendingTick, inFlight);
+  assert.equal(stopped, false); assert.ok(actors.every(a => a.advances === 2));
+  nextPair[0].resolve(); await microtasks(); assert.equal(stopped, false);
+  now = 155; nextPair[1].resolve(); await existing; await joining;
+  assert.equal(api.pendingTick, null); assert.equal(viewer.renders, 2);
+  assert.equal(nodes.get('time-stat').textContent, '0.03');
+  report = JSON.parse(nodes.get('runtime-evidence').textContent);
+  assert.equal(report.tick, 2); assert.equal(report.lastSubmittedFrame.tick, 2);
+  assert.equal(report.latestSamples.length, 2); assert.equal(report.simulationSeconds, 2 / 60);
+  assert.ok(actors.every(a => a.advances === 2));
 });
 
 const evidence = {schema: 'unified-benchmark-control-flow-verification/1', atUTC: new Date().toISOString(),

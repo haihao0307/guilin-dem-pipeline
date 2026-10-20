@@ -1,0 +1,1884 @@
+{
+  "schema": "p01-native-canvas-eyelet-ray-interpretation/1",
+  "reviewedAtUTC": "2026-10-20T09:09:45.695Z",
+  "scope": "Read-only source-coordinate interpretation of saved real-browser P01 snapshots; no new animation, rendering, performance test or runtime modification.",
+  "source": {
+    "repository": "haihao0307/Humanoid-Rig-Lab-Next",
+    "commit": "4306b375404a40b7b9842f29cfa5e53fcde70278",
+    "lock": "build/sources.lock.json",
+    "files": [
+      {
+        "path": "vendor/shoe-workshop/r14/src/kernel.mjs",
+        "bytes": 16327,
+        "sha256": "366d03fca66cfc7744c32ff7a551a5e9bb73b7278699b5400eba6f94506d21af",
+        "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/4306b375404a40b7b9842f29cfa5e53fcde70278/shoe-workshop/r14/src/kernel.mjs"
+      },
+      {
+        "path": "vendor/shoe-workshop/r14/src/monk-canvas.mjs",
+        "bytes": 34647,
+        "sha256": "62e0bcb5e83338b3464a0a0dea99a46d0ccb01cd89814ab811da4ba16264fe99",
+        "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/4306b375404a40b7b9842f29cfa5e53fcde70278/shoe-workshop/r14/src/monk-canvas.mjs"
+      }
+    ]
+  },
+  "nativeRecipe": {
+    "length": 1.0677299263664828,
+    "width": 1.1184368469084818,
+    "instep": 8,
+    "thickness": 1.35,
+    "bend": 0
+  },
+  "fit": {
+    "fitScale": [
+      1.3875,
+      1.631264404296875,
+      1.08125
+    ],
+    "renderedBoundsM": [
+      0.17517586584091185,
+      0.15294019530678543,
+      0.3263122450828552
+    ],
+    "renderedMidsoleTopAboveDesignZeroM": 0.022837701660156248,
+    "renderedInsoleTopAboveDesignZeroM": 0.024958345385742188
+  },
+  "sourceParameters": {
+    "units": "native millimetres before fitScale",
+    "lastLengthMm": 297.8966494562487,
+    "eyeletStations": [
+      0.36,
+      0.414,
+      0.468,
+      0.522,
+      0.576
+    ],
+    "canvasThicknessMm": 0.8,
+    "quarterOuterOffsetMm": 0.85,
+    "facingOuterOffsetMm": 1.65,
+    "quarterHoleRadiusMm": 2.95,
+    "facingHoleRadiusMm": 2.48,
+    "eyeThetaFormula": "side * (throat(s) + (0.015 + 0.345) / 2)",
+    "throatFrontGapRadians": 0.235,
+    "throatC1Blend": 0.12,
+    "eyeletProfile": [
+      [
+        2.15,
+        0.3
+      ],
+      [
+        2.5,
+        0.48
+      ],
+      [
+        3.4,
+        0.25
+      ],
+      [
+        3.4,
+        0.04
+      ],
+      [
+        2.52,
+        0
+      ],
+      [
+        2.5,
+        -1.6500000000000001
+      ],
+      [
+        2.15,
+        -1.6500000000000001
+      ]
+    ],
+    "eyeletAngularSegments": 24,
+    "innerBoreRadiusMm": 2.15,
+    "innerBorePolygonInscribedRadiusMm": 2.1316064519536924
+  },
+  "method": {
+    "ray": "P + lambda * (0,1,0) in native shoe coordinates",
+    "normal": "original last.normal(station, theta)",
+    "planeCenter": "original last.at(station, theta, original layer offset)",
+    "lambda": "dot(normal, planeCenter - P) / normal.y",
+    "radialDistance": "length(rayPlaneHit - planeCenter)",
+    "renderedVerticalDistance": "native vertical distance * saved fitScale.y",
+    "distinction": "The runtime inner-canvas test asks whether an XZ ray hits canvas. Original eyelet cutouts intentionally have no canvas there. No runtime gate or original geometry was changed by this review."
+  },
+  "snapshots": [
+    {
+      "path": "validation/browser-2p-ready-final.json",
+      "publicCommit": "66a6da288df89db2fa8cc339755eb59918aa9817",
+      "payloadCommit": "dac5a556a257d798b9bbc88cfb2065249f576008",
+      "runtimeSHA256": "4a99bb91b325cc52821b077dfe269390aa5534affa19044e278a59b26848ffb3",
+      "reportSHA256": "1405cff1f0693fb48eda7f9e11b0cecb83bb70bd36961a83401cea6f21d05b97",
+      "reportHashSerialization": "UTF-8 JSON.stringify(parsed.report); wrapper wording is excluded",
+      "ready": true,
+      "tick": 1,
+      "mode": "walk",
+      "actors": 2,
+      "errors": [],
+      "interventions": [],
+      "originalShoeResource": {
+        "style": "canvas",
+        "params": {
+          "length": 1.0677299263664828,
+          "width": 1.1184368469084818,
+          "instep": 8,
+          "thickness": 1.35,
+          "bend": 0
+        },
+        "activeShoes": 4,
+        "trianglesPerShoe": 91492,
+        "geometryObjects": 39
+      },
+      "feet": [
+        {
+          "actor": "1",
+          "side": "L",
+          "motionTimeSeconds": 0,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222321435605683,
+              "minInsoleClearanceMm": 0.19999343397575037,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222321435605683,
+              "minInsoleClearanceMm": 0.19999343397575037,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222321435605683,
+              "minInsoleClearanceMm": 0.19999343397575037,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "1",
+          "side": "R",
+          "motionTimeSeconds": 0,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 1,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.22231393825659,
+              "minInsoleClearanceMm": 0.200000904892539,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": false
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.22231393825659,
+              "minInsoleClearanceMm": 0.200000904892539,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.22231393825659,
+              "minInsoleClearanceMm": 0.200000904892539,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": [
+            {
+              "nativeVertex": 4115,
+              "shoeLocalMm": [
+                -20.4480084595033,
+                63.36838418115519,
+                -10.015343878037964
+              ],
+              "station": 0.4663798035448905,
+              "nativeFootLocalMm": [
+                -27.763834051212847,
+                78.20450948015556,
+                58.86338578150393
+              ],
+              "forefoot": false,
+              "toes": false,
+              "innerPart": null,
+              "missingClosedUpper": true,
+              "verticalUpperClearanceMm": null,
+              "insoleClearanceMm": 78.41224408678545
+            }
+          ]
+        },
+        {
+          "actor": "2",
+          "side": "L",
+          "motionTimeSeconds": 0.23,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165517336194,
+              "minInsoleClearanceMm": 0.2000586747542833,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165517336194,
+              "minInsoleClearanceMm": 0.2000586747542833,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165517336194,
+              "minInsoleClearanceMm": 0.2000586747542833,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "2",
+          "side": "R",
+          "motionTimeSeconds": 0.23,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222317825781343,
+              "minInsoleClearanceMm": 0.20001120320398152,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222317825781343,
+              "minInsoleClearanceMm": 0.20001120320398152,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222317825781343,
+              "minInsoleClearanceMm": 0.20001120320398152,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        }
+      ]
+    },
+    {
+      "path": "validation/browser-2p-walk-final.json",
+      "publicCommit": "66a6da288df89db2fa8cc339755eb59918aa9817",
+      "payloadCommit": "dac5a556a257d798b9bbc88cfb2065249f576008",
+      "runtimeSHA256": "4a99bb91b325cc52821b077dfe269390aa5534affa19044e278a59b26848ffb3",
+      "reportSHA256": "52fa2e3309a20be794d39694928da24863723e59beaa46f3e85c735d714fafef",
+      "reportHashSerialization": "UTF-8 JSON.stringify(parsed.report); wrapper wording is excluded",
+      "ready": true,
+      "tick": 115,
+      "mode": "walk",
+      "actors": 2,
+      "errors": [],
+      "interventions": [],
+      "originalShoeResource": {
+        "style": "canvas",
+        "params": {
+          "length": 1.0677299263664828,
+          "width": 1.1184368469084818,
+          "instep": 8,
+          "thickness": 1.35,
+          "bend": 0
+        },
+        "activeShoes": 4,
+        "trianglesPerShoe": 91492,
+        "geometryObjects": 39
+      },
+      "feet": [
+        {
+          "actor": "1",
+          "side": "L",
+          "motionTimeSeconds": 1.8999999999999981,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 1,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222316460238615,
+              "minInsoleClearanceMm": 0.20003870454889672,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": false
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222316460238615,
+              "minInsoleClearanceMm": 0.20003870454889672,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222316460238615,
+              "minInsoleClearanceMm": 0.20003870454889672,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": [
+            {
+              "nativeVertex": 8658,
+              "shoeLocalMm": [
+                -20.199264829086225,
+                61.37949101996033,
+                -10.458505567194067
+              ],
+              "station": 0.4648921678498768,
+              "nativeFootLocalMm": [
+                -27.370506177113963,
+                74.96009886234889,
+                58.42291823604287
+              ],
+              "forefoot": false,
+              "toes": false,
+              "innerPart": null,
+              "missingClosedUpper": true,
+              "verticalUpperClearanceMm": null,
+              "insoleClearanceMm": 75.16783346897878
+            }
+          ]
+        },
+        {
+          "actor": "1",
+          "side": "R",
+          "motionTimeSeconds": 1.8999999999999981,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222315393448297,
+              "minInsoleClearanceMm": 0.19999638359680957,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222315393448297,
+              "minInsoleClearanceMm": 0.19999638359680957,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.222315393448297,
+              "minInsoleClearanceMm": 0.19999638359680957,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "2",
+          "side": "L",
+          "motionTimeSeconds": 2.1299999999999977,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223163898755383,
+              "minInsoleClearanceMm": 0.20002861137318764,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223163898755383,
+              "minInsoleClearanceMm": 0.20002861137318764,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223163898755383,
+              "minInsoleClearanceMm": 0.20002861137318764,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "2",
+          "side": "R",
+          "motionTimeSeconds": 2.1299999999999977,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223166361367386,
+              "minInsoleClearanceMm": 0.1999986076416596,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223166361367386,
+              "minInsoleClearanceMm": 0.1999986076416596,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223166361367386,
+              "minInsoleClearanceMm": 0.1999986076416596,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        }
+      ]
+    },
+    {
+      "path": "validation/browser-4p-after-move-final.json",
+      "publicCommit": "66a6da288df89db2fa8cc339755eb59918aa9817",
+      "payloadCommit": "dac5a556a257d798b9bbc88cfb2065249f576008",
+      "runtimeSHA256": "4a99bb91b325cc52821b077dfe269390aa5534affa19044e278a59b26848ffb3",
+      "reportSHA256": "569431ea36c86c297be709977e20957bcfda4ab40c64b0f3f75adfbd3b85ba1b",
+      "reportHashSerialization": "UTF-8 JSON.stringify(parsed.report); wrapper wording is excluded",
+      "ready": true,
+      "tick": 176,
+      "mode": "walk",
+      "actors": 4,
+      "errors": [],
+      "interventions": [
+        {
+          "tick": 116,
+          "actor": "1",
+          "direction": "forward"
+        },
+        {
+          "tick": 116,
+          "actor": "1",
+          "direction": "turn-left"
+        }
+      ],
+      "originalShoeResource": {
+        "style": "canvas",
+        "params": {
+          "length": 1.0677299263664828,
+          "width": 1.1184368469084818,
+          "instep": 8,
+          "thickness": 1.35,
+          "bend": 0
+        },
+        "activeShoes": 8,
+        "trianglesPerShoe": 91492,
+        "geometryObjects": 39
+      },
+      "feet": [
+        {
+          "actor": "1",
+          "side": "L",
+          "motionTimeSeconds": 1.0000000000000013,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223157041999757,
+              "minInsoleClearanceMm": 0.1999898576002878,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223157041999757,
+              "minInsoleClearanceMm": 0.1999898576002878,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223157041999757,
+              "minInsoleClearanceMm": 0.1999898576002878,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "1",
+          "side": "R",
+          "motionTimeSeconds": 1.0000000000000013,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223162251011463,
+              "minInsoleClearanceMm": 0.20005175508135645,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223162251011463,
+              "minInsoleClearanceMm": 0.20005175508135645,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223162251011463,
+              "minInsoleClearanceMm": 0.20005175508135645,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "2",
+          "side": "L",
+          "motionTimeSeconds": 1.2300000000000006,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223151893346604,
+              "minInsoleClearanceMm": 0.20004807878596118,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223151893346604,
+              "minInsoleClearanceMm": 0.20004807878596118,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223151893346604,
+              "minInsoleClearanceMm": 0.20004807878596118,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "2",
+          "side": "R",
+          "motionTimeSeconds": 1.2300000000000006,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 1,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223136457905133,
+              "minInsoleClearanceMm": 0.2000308515425233,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": false
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223136457905133,
+              "minInsoleClearanceMm": 0.2000308515425233,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223136457905133,
+              "minInsoleClearanceMm": 0.2000308515425233,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": [
+            {
+              "nativeVertex": 4115,
+              "shoeLocalMm": [
+                -20.397586296701316,
+                62.89773232422555,
+                -10.06960764532607
+              ],
+              "station": 0.4661976471917152,
+              "nativeFootLocalMm": [
+                -27.68812358564112,
+                77.43675185913001,
+                58.812347388083765
+              ],
+              "forefoot": false,
+              "toes": false,
+              "innerPart": null,
+              "missingClosedUpper": true,
+              "verticalUpperClearanceMm": null,
+              "insoleClearanceMm": 77.64448646575991
+            }
+          ]
+        },
+        {
+          "actor": "3",
+          "side": "L",
+          "motionTimeSeconds": 1.46,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165779372422,
+              "minInsoleClearanceMm": 0.20006683271117084,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165779372422,
+              "minInsoleClearanceMm": 0.20006683271117084,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223165779372422,
+              "minInsoleClearanceMm": 0.20006683271117084,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "3",
+          "side": "R",
+          "motionTimeSeconds": 1.46,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223101210413643,
+              "minInsoleClearanceMm": 0.20004769408094603,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223101210413643,
+              "minInsoleClearanceMm": 0.20004769408094603,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223101210413643,
+              "minInsoleClearanceMm": 0.20004769408094603,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "4",
+          "side": "L",
+          "motionTimeSeconds": 1.6899999999999986,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223138183426423,
+              "minInsoleClearanceMm": 0.20002476836984706,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223138183426423,
+              "minInsoleClearanceMm": 0.20002476836984706,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223138183426423,
+              "minInsoleClearanceMm": 0.20002476836984706,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        },
+        {
+          "actor": "4",
+          "side": "R",
+          "motionTimeSeconds": 1.6899999999999986,
+          "sourceFootControlVertices": 1067,
+          "staticSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2222891071410857,
+              "minInsoleClearanceMm": 0.2000000000000006,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "currentSections": {
+            "all": {
+              "samples": 1067,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223153484747264,
+              "minInsoleClearanceMm": 0.20004989712346577,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "forefoot": {
+              "samples": 899,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223153484747264,
+              "minInsoleClearanceMm": 0.20004989712346577,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            },
+            "toes": {
+              "samples": 792,
+              "aboveInnerUpper": 0,
+              "missingClosedUpper": 0,
+              "belowInsole": 0,
+              "minVerticalUpperClearanceMm": 3.2223153484747264,
+              "minInsoleClearanceMm": 0.20004989712346577,
+              "maxUpperProtrusionMm": 0,
+              "maxInsolePenetrationMm": 0,
+              "passed": true
+            }
+          },
+          "firstFailures": []
+        }
+      ]
+    }
+  ],
+  "pointInterpretations": [
+    {
+      "evidencePath": "validation/browser-2p-ready-final.json",
+      "tick": 1,
+      "actor": "1",
+      "footSide": "R",
+      "motionTimeSeconds": 0,
+      "observedDiagnostic": {
+        "nativeVertex": 4115,
+        "shoeLocalMm": [
+          -20.4480084595033,
+          63.36838418115519,
+          -10.015343878037964
+        ],
+        "station": 0.4663798035448905,
+        "nativeFootLocalMm": [
+          -27.763834051212847,
+          78.20450948015556,
+          58.86338578150393
+        ],
+        "forefoot": false,
+        "toes": false,
+        "innerPart": null,
+        "missingClosedUpper": true,
+        "verticalUpperClearanceMm": null,
+        "insoleClearanceMm": 78.41224408678545
+      },
+      "fitScale": [
+        1.3875,
+        1.631264404296875,
+        1.08125
+      ],
+      "nearestNativeEyelet": {
+        "station": 0.468,
+        "side": -1,
+        "index": 2,
+        "thetaRadians": -0.41500053712680945,
+        "normalNative": [
+          -0.3835714818860989,
+          0.8441826323187024,
+          0.37447109578066073
+        ],
+        "surfaces": [
+          {
+            "name": "quarter-aperture",
+            "offsetAlongNativeNormalMm": 0.85,
+            "nativeApertureRadiusMm": 2.95,
+            "centerNativeMm": [
+              -18.81589167498932,
+              78.91918514756249,
+              -9.21439235118639
+            ],
+            "verticalRayHitNativeMm": [
+              -20.4480084595033,
+              78.53289402377544,
+              -10.015343878037964
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.8586418102944893,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 15.164509842620248,
+            "planeAbovePointRenderedYMm": 24.737325114876015
+          },
+          {
+            "name": "facing-aperture",
+            "offsetAlongNativeNormalMm": 1.65,
+            "nativeApertureRadiusMm": 2.48,
+            "centerNativeMm": [
+              -19.1227488604982,
+              79.59453125341746,
+              -8.914815474561863
+            ],
+            "verticalRayHitNativeMm": [
+              -20.4480084595033,
+              79.48055625866726,
+              -10.015343878037964
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.7264026387378824,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 16.11217207751207,
+            "planeAbovePointRenderedYMm": 26.28321278595147
+          },
+          {
+            "name": "eyelet-inner-bore-top",
+            "offsetAlongNativeNormalMm": 1.95,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -19.23782030506403,
+              79.84778604311306,
+              -8.802474145827663
+            ],
+            "verticalRayHitNativeMm": [
+              -20.4480084595033,
+              79.8359295967517,
+              -10.015343878037964
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.713402734845877,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 16.4675454155965,
+            "planeAbovePointRenderedYMm": 26.862920662604758
+          },
+          {
+            "name": "eyelet-inner-bore-bottom",
+            "offsetAlongNativeNormalMm": -2.220446049250313e-16,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -18.489855915386137,
+              78.2016299100916,
+              -9.532692782599952
+            ],
+            "verticalRayHitNativeMm": [
+              -20.4480084595033,
+              77.5260028992029,
+              -10.015343878037964
+            ],
+            "radialDistanceInNativeHolePlaneMm": 2.126919209514652,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 14.157618718047695,
+            "planeAbovePointRenderedYMm": 23.09481946435836
+          }
+        ]
+      },
+      "bothBoreEndpointsInside24GonInscribedCircle": true,
+      "conclusion": "The saved vertical diagnostic ray passes through the native third eyelet opening. The point is below its hole planes. This missingClosedUpper result is a coverage failure, not evidence that this point penetrates the shoe material or rear ankle."
+    },
+    {
+      "evidencePath": "validation/browser-2p-walk-final.json",
+      "tick": 115,
+      "actor": "1",
+      "footSide": "L",
+      "motionTimeSeconds": 1.8999999999999981,
+      "observedDiagnostic": {
+        "nativeVertex": 8658,
+        "shoeLocalMm": [
+          -20.199264829086225,
+          61.37949101996033,
+          -10.458505567194067
+        ],
+        "station": 0.4648921678498768,
+        "nativeFootLocalMm": [
+          -27.370506177113963,
+          74.96009886234889,
+          58.42291823604287
+        ],
+        "forefoot": false,
+        "toes": false,
+        "innerPart": null,
+        "missingClosedUpper": true,
+        "verticalUpperClearanceMm": null,
+        "insoleClearanceMm": 75.16783346897878
+      },
+      "fitScale": [
+        1.3875,
+        1.631264404296875,
+        1.08125
+      ],
+      "nearestNativeEyelet": {
+        "station": 0.468,
+        "side": -1,
+        "index": 2,
+        "thetaRadians": -0.41500053712680945,
+        "normalNative": [
+          -0.3835714818860989,
+          0.8441826323187024,
+          0.37447109578066073
+        ],
+        "surfaces": [
+          {
+            "name": "quarter-aperture",
+            "offsetAlongNativeNormalMm": 0.85,
+            "nativeApertureRadiusMm": 2.95,
+            "centerNativeMm": [
+              -18.81589167498932,
+              78.91918514756249,
+              -9.21439235118639
+            ],
+            "verticalRayHitNativeMm": [
+              -20.199264829086225,
+              78.84249788941909,
+              -10.458505567194067
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.8621009406803202,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 17.46300686945876,
+            "planeAbovePointRenderedYMm": 28.486781498139877
+          },
+          {
+            "name": "facing-aperture",
+            "offsetAlongNativeNormalMm": 1.65,
+            "nativeApertureRadiusMm": 2.48,
+            "centerNativeMm": [
+              -19.1227488604982,
+              79.59453125341746,
+              -8.914815474561863
+            ],
+            "verticalRayHitNativeMm": [
+              -20.199264829086225,
+              79.79016012431092,
+              -10.458505567194067
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.8921248341065893,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 18.410669104350585,
+            "planeAbovePointRenderedYMm": 30.03266916921534
+          },
+          {
+            "name": "eyelet-inner-bore-top",
+            "offsetAlongNativeNormalMm": 1.95,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -19.23782030506403,
+              79.84778604311306,
+              -8.802474145827663
+            ],
+            "verticalRayHitNativeMm": [
+              -20.199264829086225,
+              80.14553346239533,
+              -10.458505567194067
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.9379032914504144,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 18.766042442435012,
+            "planeAbovePointRenderedYMm": 30.61237704586862
+          },
+          {
+            "name": "eyelet-inner-bore-bottom",
+            "offsetAlongNativeNormalMm": -2.220446049250313e-16,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -18.489855915386137,
+              78.2016299100916,
+              -9.532692782599952
+            ],
+            "verticalRayHitNativeMm": [
+              -20.199264829086225,
+              77.83560676484653,
+              -10.458505567194067
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.9781762027712073,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 16.45611574488621,
+            "planeAbovePointRenderedYMm": 26.844275847622225
+          }
+        ]
+      },
+      "bothBoreEndpointsInside24GonInscribedCircle": true,
+      "conclusion": "The saved vertical diagnostic ray passes through the native third eyelet opening. The point is below its hole planes. This missingClosedUpper result is a coverage failure, not evidence that this point penetrates the shoe material or rear ankle."
+    },
+    {
+      "evidencePath": "validation/browser-4p-after-move-final.json",
+      "tick": 176,
+      "actor": "2",
+      "footSide": "R",
+      "motionTimeSeconds": 1.2300000000000006,
+      "observedDiagnostic": {
+        "nativeVertex": 4115,
+        "shoeLocalMm": [
+          -20.397586296701316,
+          62.89773232422555,
+          -10.06960764532607
+        ],
+        "station": 0.4661976471917152,
+        "nativeFootLocalMm": [
+          -27.68812358564112,
+          77.43675185913001,
+          58.812347388083765
+        ],
+        "forefoot": false,
+        "toes": false,
+        "innerPart": null,
+        "missingClosedUpper": true,
+        "verticalUpperClearanceMm": null,
+        "insoleClearanceMm": 77.64448646575991
+      },
+      "fitScale": [
+        1.3875,
+        1.631264404296875,
+        1.08125
+      ],
+      "nearestNativeEyelet": {
+        "station": 0.468,
+        "side": -1,
+        "index": 2,
+        "thetaRadians": -0.41500053712680945,
+        "normalNative": [
+          -0.3835714818860989,
+          0.8441826323187024,
+          0.37447109578066073
+        ],
+        "surfaces": [
+          {
+            "name": "quarter-aperture",
+            "offsetAlongNativeNormalMm": 0.85,
+            "nativeApertureRadiusMm": 2.95,
+            "centerNativeMm": [
+              -18.81589167498932,
+              78.91918514756249,
+              -9.21439235118639
+            ],
+            "verticalRayHitNativeMm": [
+              -20.397586296701316,
+              78.57987522735041,
+              -10.06960764532607
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.829831221079528,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 15.682142903124864,
+            "planeAbovePointRenderedYMm": 25.581721500964445
+          },
+          {
+            "name": "facing-aperture",
+            "offsetAlongNativeNormalMm": 1.65,
+            "nativeApertureRadiusMm": 2.48,
+            "centerNativeMm": [
+              -19.1227488604982,
+              79.59453125341746,
+              -8.914815474561863
+            ],
+            "verticalRayHitNativeMm": [
+              -20.397586296701316,
+              79.52753746224224,
+              -10.06960764532607
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.7214074516102447,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 16.62980513801669,
+            "planeAbovePointRenderedYMm": 27.127609172039904
+          },
+          {
+            "name": "eyelet-inner-bore-top",
+            "offsetAlongNativeNormalMm": 1.95,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -19.23782030506403,
+              79.84778604311306,
+              -8.802474145827663
+            ],
+            "verticalRayHitNativeMm": [
+              -20.397586296701316,
+              79.88291080032667,
+              -10.06960764532607
+            ],
+            "radialDistanceInNativeHolePlaneMm": 1.718114725354163,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 16.985178476101115,
+            "planeAbovePointRenderedYMm": 27.707317048693188
+          },
+          {
+            "name": "eyelet-inner-bore-bottom",
+            "offsetAlongNativeNormalMm": -2.220446049250313e-16,
+            "nativeApertureRadiusMm": 2.15,
+            "centerNativeMm": [
+              -18.489855915386137,
+              78.2016299100916,
+              -9.532692782599952
+            ],
+            "verticalRayHitNativeMm": [
+              -20.397586296701316,
+              77.57298410277787,
+              -10.06960764532607
+            ],
+            "radialDistanceInNativeHolePlaneMm": 2.0791604865094704,
+            "insideNominalOpening": true,
+            "planeAbovePointNativeYMm": 14.675251778552314,
+            "planeAbovePointRenderedYMm": 23.939215850446793
+          }
+        ]
+      },
+      "bothBoreEndpointsInside24GonInscribedCircle": true,
+      "conclusion": "The saved vertical diagnostic ray passes through the native third eyelet opening. The point is below its hole planes. This missingClosedUpper result is a coverage failure, not evidence that this point penetrates the shoe material or rear ankle."
+    }
+  ],
+  "conclusions": {
+    "static": "All saved rest-fit checks for the actual P01 pass for all 1067 native foot control vertices per foot, including 899 forefoot and 792 toe-region points.",
+    "dynamic": "In the saved ready, walk-end and four-person-after-move snapshots, all forefoot/toe checks pass and no tested point is reported above the inner upper or below the insole. Each snapshot has one non-forefoot point with missingClosedUpper, consistent with the same native third eyelet opening.",
+    "fourPersonAfterMove": "At tick 176 all eight feet pass forefoot/toe checks; seven pass the complete coverage check, actor 2 right-foot vertex 4115 has the single native-eyelet coverage case. The moved/turned actor 1 has both feet fully passing in this snapshot.",
+    "userFacingLimitZH": "鞋已按真实人物重新配适，已保存姿态中的前掌和脚趾检查通过；动态脚背点的竖向检测射线可能穿过原鞋眼而报缺面。这些采样不能证明整段动作逐帧、连续全表面都无穿透，当前鞋仍是刚性骨骼绑定。"
+  },
+  "limitations": [
+    "Saved snapshots are not per-frame shoe-section logs; the benchmark frame array contains timing/draw statistics.",
+    "This diagnosis concerns vertices 4115/8658 at the original eyelet. The old MP05 fixture jump rear-ankle penetration is separate evidence and is not a measured P01 penetration.",
+    "The circle/plane calculations interpret the native design opening and its 24-segment metal bore. They are not a complete skinned-body triangle collision test or a footwear force/comfort solver.",
+    "Runtime source, original native assets and the three browser evidence reports were not modified."
+  ]
+}

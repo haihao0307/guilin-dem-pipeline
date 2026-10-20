@@ -322,7 +322,12 @@ function moveActor(direction){
 function bindControls(){
   document.querySelectorAll('[data-count]').forEach(button=>button.onclick=()=>changeCount(Number(button.dataset.count)));
   $('play-button').onclick=()=>{if(state.renderFrozen||state.busy)return;if(benchmark)return abortBenchmark('paused-by-user');state.playing=!state.playing;if(!state.playing)for(const actor of actors)actor.cloth.pause();updateHUD(true);writeEvidence();};
-  $('step-button').onclick=()=>{if(benchmark)return;state.playing=false;step().catch(fail);updateHUD(true);};
+  $('step-button').onclick=async()=>{
+    if(benchmark)return;state.playing=false;
+    const inFlight=pendingTick,task=inFlight||step();updateHUD(true);
+    try{await task;updateHUD(true);writeEvidence();}
+    catch(error){if(!inFlight)fail(error);} // An existing tick retains its owning pump/handler failure path.
+  };
   $('reset-button').onclick=async()=>{if(state.busy)return;await abortBenchmark('reset');if(state.renderFrozen){await changeCount(state.count,{rebuild:true});return;}state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;await changeCount(state.count,{rebuild:true});return;}state.busy=true;try{await setAction(state.mode);state.simulationSeconds=0;state.samples=[];state.busy=false;renderScene();showStatus('完整动作与衣物已同步重置');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
   $('motion-select').onchange=async event=>{if(benchmark||state.busy||state.renderFrozen){event.target.value=state.mode;return;}const mode=event.target.value;state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;updateHUD(true);return;}state.busy=true;try{await setAction(mode);state.samples=[];state.busy=false;renderScene();showStatus('身体与衣物已同步切换，点击开始运行');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
   $('speed-select').onchange=event=>{if(benchmark){event.target.value=String(state.speed);return;}state.speed=Number(event.target.value);state.samples=[];writeEvidence();};
