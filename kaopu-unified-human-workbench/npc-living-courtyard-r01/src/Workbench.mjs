@@ -101,7 +101,8 @@ async function main(){
   function currentReport(){return {version:window.__NPC_BUILD__,ready,paused,speed,time:sim.time,selected,cameraMode,
     source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,binding:a.binding.report}))},
     simulation:sim.snapshot(),motions:reports,items:items.snapshot(),audit,render:renderQueue.status(),garments:dresses.map(d=>d?.report||null),scene:courtyard.metrics,
-    assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[]},errors,visualAcceptance:false,productionReady:false};}
+    assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[],
+      completed:window.__NPC_ASSETS__?.completed||[],failed:window.__NPC_ASSETS__?.failed||[],nativeTransport:window.__R05_STREAM__?.report?.()?.transport||null},errors,visualAcceptance:false,productionReady:false};}
   function updateUI(){
     const a=sim.actor(selected),minutes=Math.floor(sim.time/3),clock=9*60+minutes;
     $('life-clock').textContent=`${String(Math.floor(clock/60)%24).padStart(2,'0')}:${String(clock%60).padStart(2,'0')}`;

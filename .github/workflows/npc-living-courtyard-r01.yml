@@ -22,7 +22,10 @@ jobs:
         with:
           node-version: 22
       - name: Prepare verified canonical dependencies
-        run: node kaopu-unified-human-workbench/npc-living-courtyard-r01/prepare.cjs --all-native
+        working-directory: kaopu-unified-human-workbench/npc-living-courtyard-r01
+        run: |
+          node prepare.cjs --all-native
+          node prune-observed.cjs --evidence observed-assets.json --qa observed-assets-qa.json --output vendor/PACKETS.json
       - name: Check life rules and build current candidate
         working-directory: kaopu-unified-human-workbench/npc-living-courtyard-r01
         run: |

@@ -122,6 +122,11 @@ function assertHealthy(state) {
   assert.equal(state.ready,true,'Page reports native ready');
   assert.equal(state.errors?.length,0,'No application errors: '+JSON.stringify(state.errors));
   assert.equal(state.assets?.missing?.length,0,'No missing native runtime assets');
+  assert.equal(state.assets?.failed?.length,0,'No native chunk delivery or integrity failures');
+  if(state.assets?.mode==='same-origin-native-packets'){
+    assert.equal(state.assets.completed.length,state.assets.served.length,'Every native HTTP body was fully read and SHA256-verified before delivery');
+    assert(state.assets.completed.every(c=>c.networkBodyFullyRead&&c.bytes>0&&/^[a-f0-9]{64}$/.test(c.sha256)));
+  }
   assert.equal(state.simulation?.invariants?.ok,true,'World ownership/currency invariants hold');
   assert.equal(report.pageErrors.length,0,'No browser page errors');
   assert.equal(report.consoleErrors.length,0,'No browser console errors');
@@ -213,7 +218,11 @@ async function nativeRenderEvidence() {
       vendor:debug?gl.getParameter(debug.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),
       version:gl.getParameter(gl.VERSION),programs:(renderer.info.programs||[]).map(p=>({id:p.id,name:p.name,
         linked:!!p.program&&gl.getProgramParameter(p.program,gl.LINK_STATUS),log:p.program?gl.getProgramInfoLog(p.program):null})),
-      render:{...renderer.info.render},memory:{...renderer.info.memory},events:window.__NPC_VERIFY_EVENTS__||[]};
+      render:{...renderer.info.render},memory:{...renderer.info.memory},events:window.__NPC_VERIFY_EVENTS__||[],
+      sceneLighting:{lights:viewer.scene.children.filter(x=>x.isLight).map(x=>({type:x.type,intensity:x.intensity,
+        color:x.color?.getHexString(),visible:x.visible,position:x.position.toArray()})),
+        overrideMaterial:viewer.scene.overrideMaterial?.type||null,toneMapping:renderer.toneMapping,
+        exposure:renderer.toneMappingExposure,camera:viewer.camera.position.toArray(),aspect:viewer.camera.aspect}};
   },undefined,FRAME_MS);
 }
 
@@ -489,6 +498,15 @@ async function main() {
   });
   await check('real first/all/near and both full-person screenshots',async()=>{
     await screenshot('01-first-frame');await hideDataPanel();await click('[data-camera="all"]');await screenshot('02-all');
+    const desktop=await evaluate('read actual desktop app layout',()=>{const app=document.querySelector('#life-app'),style=getComputedStyle(app);
+      return{width:innerWidth,height:innerHeight,app:app.getBoundingClientRect().toJSON(),
+        journal:document.querySelector('#life-app>.journal').getBoundingClientRect().toJSON(),
+        view:document.querySelector('#life-view').getBoundingClientRect().toJSON(),padding:style.padding,gap:style.gap,
+        brandBackground:getComputedStyle(document.querySelector('#life-app .brand')).backgroundColor};});
+    put('desktop-layout.json',desktop);assert(Math.abs(desktop.journal.width-310)<=1,'Journal retains its authored desktop width');
+    assert(desktop.view.width>600,'The actual 3D courtyard has the main desktop viewing area');
+    assert.equal(desktop.padding,'0px');assert.equal(desktop.gap,'0px');
+    assert.equal(desktop.brandBackground,'rgba(0, 0, 0, 0)','Canonical host header styles do not leak into the app');
     await hideDataPanel();await click('[data-camera="near"]');await screenshot('03-near');
     for(const id of ['A','B']){await hideDataPanel();await click('[data-person="'+id+'"]');await click('[data-camera="follow"]');await screenshot(id==='A'?'04-person-A':'05-person-B');}
     await saveDOM('desktop-dom');return{screenshots:report.screenshots.map(s=>s.file),visualAcceptance:false};
@@ -516,6 +534,10 @@ main().catch(async error=>{
     await diagnose('boot state',async budget=>put('failure-boot.json',await readBoot(budget)));
     await diagnose('displayed diagnostics',async budget=>put('failure-dom-state.json',await readState('failure',{budget})));
     await diagnose('DOM',budget=>saveDOM('failure-dom',budget));
+    await diagnose('expose failed scene for visual review',async budget=>{
+      if(await page.locator('#data-toggle').getAttribute('aria-expanded',{timeout:budget})==='true')
+        await page.locator('#data-close').click({timeout:budget});
+    });
     if(cdp)await diagnose('actual failure screenshot',async budget=>{
       const result=await bounded('capture failed real scene',()=>cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false}),budget);
       const bytes=Buffer.from(result.data,'base64');fs.writeFileSync(path.join(out,'failure.png'),bytes);report.screenshots.push({file:'failure.png',sha256:sha(bytes),bytes:bytes.length,completedFrameNotAsserted:true});

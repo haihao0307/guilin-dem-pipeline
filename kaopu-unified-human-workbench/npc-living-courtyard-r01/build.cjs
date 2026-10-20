@@ -175,9 +175,29 @@ function localNativeAssets() {
     assert.equal(hash(fs.readFileSync(p)),chunk.sha256,'Local chunk integrity '+chunk.local);
     const out=path.join(here,'dist/assets',chunk.local);
     if(!fs.existsSync(out)||hash(fs.readFileSync(out))!==chunk.sha256)fs.copyFileSync(p,out);
-    local[chunk.url]='assets/'+chunk.local;
+    local[chunk.url]={file:'assets/'+chunk.local,bytes:chunk.bytes,sha256:chunk.sha256};
   }
-  const script=`(()=>{const entries=${JSON.stringify(local)},realFetch=globalThis.fetch.bind(globalThis);const state={mode:'same-origin-native-packets',served:[],missing:[]};window.__NPC_ASSETS__=state;globalThis.fetch=async function(input,init){const u=new URL(typeof input==='string'?input:input.url||String(input),location.href).href;if(entries[u]){state.served.push(u);return realFetch(new URL(entries[u],location.href).href,init);}if(u.startsWith('data:')||u.startsWith('blob:')||u.startsWith(location.origin+'/'))return realFetch(input,init);state.missing.push(u);throw Error('Unregistered runtime dependency: '+u);};})();`;
+  const script=`(()=>{
+const entries=${JSON.stringify(local)},realFetch=globalThis.fetch.bind(globalThis);
+const state={mode:'same-origin-native-packets',served:[],completed:[],failed:[],missing:[]};window.__NPC_ASSETS__=state;
+globalThis.fetch=async function(input,init){
+ const u=new URL(typeof input==='string'?input:input.url||String(input),location.href).href,entry=entries[u];
+ if(entry){
+  state.served.push(u);
+  try{
+   const response=await realFetch(new URL(entry.file,location.href).href,init);
+   if(!response.ok)throw Error('Native chunk HTTP '+response.status+': '+entry.file);
+   const bytes=await response.arrayBuffer();
+   if(bytes.byteLength!==entry.bytes)throw Error('Native chunk byte length mismatch: '+entry.file);
+   const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
+   if(digest!==entry.sha256)throw Error('Native chunk SHA256 mismatch: '+entry.file);
+   state.completed.push({url:u,bytes:bytes.byteLength,sha256:digest,networkBodyFullyRead:true});
+   return new Response(bytes,{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(bytes.byteLength),'X-NPC-Asset':'verified-same-origin-native'}});
+  }catch(error){state.failed.push({url:u,message:String(error.message||error)});throw error;}
+ }
+ if(u.startsWith('data:')||u.startsWith('blob:')||u.startsWith(location.origin+'/'))return realFetch(input,init);
+ state.missing.push(u);throw Error('Unregistered runtime dependency: '+u);
+};})();`;
   return {lock,script};
 }
 
