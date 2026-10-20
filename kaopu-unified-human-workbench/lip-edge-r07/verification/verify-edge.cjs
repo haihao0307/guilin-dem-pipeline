@@ -142,11 +142,51 @@ async function load(url,label,isR07,captureNaturalUI=false){
   }});
   p.on('response',r=>{if(r.status()>=400&&!/favicon/i.test(r.url())){q.resourceErrors.push({label,url:r.url(),status:r.status()});checkpoint();}});
   const s=Date.now(),r=await p.goto(url,{waitUntil:'domcontentloaded',timeout:90000});assert.equal(r.status(),200);
-  await p.waitForFunction(()=>window.__HEAD_PROC__?.ready||window.__HEAD_PROC__?.errors?.length,null,{timeout:300000});
-  await p.waitForFunction(()=>window.innerLip?.ready||window.__LIP_INNER__?.errors?.length,null,{timeout:180000});
-  await p.waitForFunction(()=>window.motionLip?.ready||window.__LIP_MOTION__?.errors?.length,null,{timeout:300000});
-  await p.waitForFunction(()=>window.cornerLip?.ready||window.__LIP_CORNER__?.errors?.length,null,{timeout:300000});
-  if(isR07)await p.waitForFunction(()=>window.edgeLip?.ready||window.__LIP_EDGE__?.errors?.length,null,{timeout:300000});
+  // Inspect raw initialization statuses before using any controller report or
+  // native setup call. An initializer can fail before publishing its API.
+  const startupLayers=[['head','__HEAD_PROC__','headProceduralSkin',300000],['base','__LIP_REALISM__','lipRealism',180000],
+    ['inner','__LIP_INNER__','innerLip',180000],['motion','__LIP_MOTION__','motionLip',300000],
+    ['corner','__LIP_CORNER__','cornerLip',300000],['edge','__LIP_EDGE__','edgeLip',300000]];
+  const startupStatus=()=>p.evaluate(layers=>{
+    const result={at:new Date().toISOString(),readOnly:true,controllerReportsExplicitlyCalled:false,nativeUpdatesCalled:0,nativeRendersCalled:0,layers:{}};
+    for(const[name,statusKey,apiKey]of layers){
+      const status=window[statusKey],api=window[apiKey],entry={statusKey,apiKey,statusPresent:!!status,apiPresent:!!api,
+        statusReady:status?.ready===true,statusVersion:status?.version??null,apiVersion:api?.version??null,
+        errors:Array.isArray(status?.errors)?status.errors.map(String):status?.errors==null?[]:[String(status.errors)],
+        apiErrors:Array.isArray(api?.errors)?api.errors.map(String):api?.errors==null?[]:[String(api.errors)],
+        apiReady:false,reportAvailable:typeof api?.report==='function'};
+      // Capture a failing readiness getter as evidence; never let it mask the
+      // original status errors or skip collecting the remaining layers.
+      try{entry.apiReady=api?.ready===true;}catch(error){entry.readyReadError=String(error);}
+      result.layers[name]=entry;
+    }
+    const native=window.__LIP_P3__;result.native={present:!!native,errors:Array.isArray(native?.errors)?native.errors.map(String):native?.errors==null?[]:[String(native.errors)]};
+    return result;
+  },startupLayers);
+  for(const[layer,statusKey,apiKey,timeout]of startupLayers.filter(x=>x[0]!=='base'&&(isR07||x[0]!=='edge'))){
+    let waitError=null;
+    try{
+      await p.waitForFunction(({layers,layer,statusKey,apiKey})=>{
+        if(layers.some(([,key])=>window[key]?.errors?.length)||window.__LIP_P3__?.errors?.length)return true;
+        try{return layer==='head'?window[statusKey]?.ready===true:window[apiKey]?.ready===true;}catch{return true;}
+      },{layers:startupLayers,layer,statusKey,apiKey},{timeout});
+    }catch(error){waitError=String(error);}
+    const observation={label,url,layer,elapsedMS:Date.now()-s,waitError,...await startupStatus()},issues=[];
+    for(const[name,entry]of Object.entries(observation.layers)){
+      for(const error of entry.errors)issues.push(name+' initialization: '+error);
+      for(const error of entry.apiErrors)issues.push(name+' API: '+error);
+      if(entry.readyReadError)issues.push(name+' ready getter: '+entry.readyReadError);
+    }
+    for(const error of observation.native.errors)issues.push('native initialization: '+error);
+    if(waitError)issues.push('startup wait: '+waitError);
+    const target=observation.layers[layer];
+    if(!target.apiPresent||!(layer==='head'?target.statusReady:target.apiReady))issues.push(layer+' target API is not ready ('+apiKey+')');
+    if(layer==='inner'&&(!observation.layers.base.apiPresent||!observation.layers.base.apiReady))issues.push('base target API is not ready (lipRealism)');
+    observation.issues=issues;q.startupStatusObservations||=[];q.startupStatusObservations.push(observation);
+    if(issues.length){q.startupFailures||=[];q.startupFailures.push(observation);}
+    checkpoint();
+    assert.equal(issues.length,0,label+' startup '+layer+' failed: '+issues.join(' | '));
+  }
   const startup=await p.evaluate(isR07=>{
     const v=__IDENTITY_QA__.viewer();window.lifelikeIdle?.pause?.();window.lipWorkbench.stop?.();v.orbit.autoRotate=false;v.orbit.enableDamping=false;
     return{title:document.title,finalFrame:v.startupFinalFrame,headReady:__HEAD_PROC__.ready,
@@ -409,7 +449,10 @@ async function controlState(){return page.evaluate(()=>{
 function checkSolver(report,mode){
   assert.equal(report.comparison,mode);assert.equal(report.implementation,report.solver.version);assert(report.ready);assert.equal(report.innerComparison,'r04');assert.equal(report.motionComparison,'r05');assert.equal(report.cornerComparison,'r06');
   const s=report.solver;assert(s.installed&&s.valid);assert.equal(s.enabled,mode==='r07');assert.equal(s.errors.length,0);
-  assert.equal(s.version,'native-lower-return-fairing@1');
+  assert.equal(s.version,'native-lower-return-fairing@2');
+  const z=s.binding.zeroRestEdges;assert(z&&z.carrierEdgesRetained);assert.equal(z.thresholdMetres,1e-12);assert.equal(z.freeRowsTouchingZeroCostEdges,0);
+  assert.equal(z.totalZeroCostEdges,z.exactZeroEdges+z.positiveNearZeroEdges);assert(z.endpointAndOneRingVertices>=z.endpointVertices&&z.additionalProtectedVertices<=z.endpointAndOneRingVertices);
+  if(z.totalZeroCostEdges>0){assert(z.endpointVertices>0);assert(Number.isFinite(z.minimumOriginalLengthMetres)&&z.minimumOriginalLengthMetres>=0&&z.maximumOriginalLengthMetres<=z.thresholdMetres);}else assert.equal(z.endpointAndOneRingVertices,0);
   assert(s.binding.freeReturnVertices>0&&s.binding.freeCrestVertices>0,'The bounded field does not include the diagnosed return crest');
   assert.equal(s.binding.smoothingLengthRestMM,1);assert.equal(s.binding.maximumProposedDeltaMM,.6);
   assert.equal(s.binding.contactPairSlots,49);assert.equal(s.binding.contactVertexSlots,98);
@@ -419,10 +462,11 @@ function checkSolver(report,mode){
     const t=Math.max(0,Math.min(1,(report.pose.jawOpen-.08)/(.24-.08))),expectedGate=t*t*(3-2*t);
     assert(Math.abs(l.jawGate-expectedGate)<1e-12,'R07 activation does not follow the actual native jaw value');
     assert.equal(l.bypass,expectedGate===0);assert(l.allOriginalStagesExecuted);
-    for(const key of['bodyDirectExact','contactDirectExact','nonSkinDirectExact','cornerDirectExact','protectedDirectExact'])assert.equal(l[key],true,key);
+    for(const key of['bodyDirectExact','contactDirectExact','nonSkinDirectExact','cornerDirectExact','protectedDirectExact','zeroRestDirectExact'])assert.equal(l[key],true,key);
     if(expectedGate===0){assert.equal(l.normalCalls,0);assert.equal(l.changedVertices,0);assert.equal(l.committed,false);assert.equal(l.maximumAppliedDeltaMM,0);}
     else{
       assert.equal(l.normalCalls,2);assert.equal(l.committed,true);assert(l.changedVertices>0);
+      assert.equal(l.zeroRestComparedVertices,z.endpointAndOneRingVertices);
       assert.equal(l.bodyComparedVertices,s.binding.bodyVertices);assert(l.bodyComparedVertices>0);
       assert.equal(l.contactComparedVertices,s.binding.uniqueContactVertices);assert(l.contactComparedVertices>0);
       assert.equal(l.protectedComparedVertices,s.binding.protectedVertices);assert(l.protectedComparedVertices>0);

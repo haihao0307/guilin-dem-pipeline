@@ -90,7 +90,7 @@ jobs:
           MODE: public
           SOURCE_SHA: ${{ github.sha }}
           PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-edge-r07/preview.html
-          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
+          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-02
           QA_BUDGET_MS: 900000
         run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-edge-r07/verification/verify-edge.cjs
       - name: Verify candidate completion without aesthetic promotion
@@ -98,7 +98,7 @@ jobs:
           node - <<'JSVERIFY'
           const fs=require('fs'),assert=require('assert/strict');
           const p='kaopu-unified-human-workbench/lip-edge-r07/';
-          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-01/qa.json'));
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-02/qa.json'));
           const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
           const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
           assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
@@ -124,8 +124,8 @@ jobs:
           CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
           test "$CURRENT_HEAD" = "$BUILD_SHA"
           git add -f -- kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_BUILD.json
-          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01; then
-            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
+          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-02; then
+            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-02
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Record actual public R07 candidate evidence [skip ci]"
@@ -136,7 +136,7 @@ jobs:
         with:
           name: lip-edge-r07-public-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-01
+            kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-02
             kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_BUILD.json
             kaopu-unified-human-workbench/lip-edge-r07/CANDIDATE_ANCHOR.json
             kaopu-unified-human-workbench/lip-edge-r07/BUILD_MANIFEST.json
