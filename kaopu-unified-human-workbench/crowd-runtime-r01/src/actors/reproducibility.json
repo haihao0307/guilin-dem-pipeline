@@ -1,0 +1,161 @@
+{
+  "schema": "crowd-runtime-relocated-interface-reproduction/1",
+  "atUTC": "2026-10-20T07:22:05Z",
+  "scope": "Independent directory copy; original algorithms and source bytes; CPU interface/control-flow only. No browser execution, GPU measurement, complete P01 visual acceptance or FPS.",
+  "isolatedDirectory": "/tmp/crowd-runtime-repro-i3swh0mv/relocated-runtime",
+  "outsideArtifactInputs": false,
+  "networkUsedForReproduction": false,
+  "runtimeMainModifiedByThisCheck": false,
+  "mainSHA256": "23a56c6a3aa2cff14f16ab8e7b392aa04bb734c14aab4b2f6314b594d4d44394",
+  "factorySHA256": "e4907241f42bc66b4cd907d6c5aa12a46bfe1d8da7c44cc036cae5ca207c1eec",
+  "sourcesLockSHA256": "a5bcfb3b4e7f6dd20f8be5b97e6f6aa89e3e349c0f07229a2d88bcef09d9e6f2",
+  "originalSourceLocks": {
+    "buildFiles": 31,
+    "clothFiles": 50,
+    "sourceBytesVerified": 17824759
+  },
+  "three": {
+    "testLoader": "src/actors/test-loader.mjs",
+    "three": "src/cloth/upstream/vendor/three.module.js",
+    "threeSHA256": "8d005745635da964647405fefcf57e55f52aea9ea6689b1d043e88569b38e513",
+    "aliases": [
+      "three",
+      "relative import ending /three.module.js",
+      "absolute file URL ending /three.module.js"
+    ],
+    "fixture": "src/cloth/upstream/assets/native-person.json.gz",
+    "fixtureSHA256": "937c94073151c39b1afa08aa1a75df46263453c593fb0579e03615fdf3f8dfb3",
+    "restoredBy": "src/cloth/prepare-upstream.py",
+    "json": "Loader reads source JSON verbatim into ES module default export; original capture bytes unchanged.",
+    "scope": "CPU/interface verification uses one MP05 original Three r170 module (original 1000000 object ID offset preserved). Browser still uses the original F13 B1 namespace, injected at runtime."
+  },
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "build/prepare-sources.py",
+        "--verify-only"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"verifiedFiles\": 31}",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "src/cloth/prepare-upstream.py",
+        "--verify-only"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"files\": 50, \"sourceBytes\": 14559903, \"allHashesMatched\": true, \"modifiedOriginalSources\": false}",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--loader",
+        "./src/actors/test-loader.mjs",
+        "./src/actors/verify.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"passed\":14,\"total\":14,\"scope\":\"CPU interface/coordinate/resource verification using original F13 motion code and retained MP05 104-bone control-topology fixture; no browser P01 rendering, no GPU timings or FPS\",\"shoeGroundLiftM\":0.014649999976158155,\"originalShoeRecipes\":1}",
+      "stderr": "(node:16) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:\n--import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"./src/actors/test-loader.mjs\", pathToFileURL(\"./\"));'\n(Use `node --trace-warnings ...` to show where the warning was created)"
+    },
+    {
+      "command": [
+        "node",
+        "src/render/verify.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"passed\":6,\"total\":6,\"scope\":\"routing/state restoration under mocked GL interface; no real framebuffer, GPU benchmark or visual acceptance\"}",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "src/render/scheduler-verify.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"passed\":4,\"total\":4,\"scope\":\"actual main.mjs scheduling functions with deferred worker and renderer interfaces; no native solver timings, GPU execution, browser appearance or FPS claim\"}",
+      "stderr": ""
+    }
+  ],
+  "results": {
+    "actorsAndShoes": 14,
+    "faceRouting": 6,
+    "scheduler": 4,
+    "allPassed": true
+  },
+  "nativeMotionSourceFiles": [
+    {
+      "path": "vendor/f13/vendor/fiber/NativeMotion.mjs",
+      "bytes": 9937,
+      "sha256": "fd0b230c4b9ec3882a79667a458eefffee5191923e88aa68e6eb8e7ef3f8078a"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/16_01-SOURCE.json",
+      "bytes": 612121,
+      "sha256": "280841e04099650e0bb935b6f6ce0725d2efa80664de549b7cfa46eac92ec0a1"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/16_35-SOURCE.json",
+      "bytes": 180349,
+      "sha256": "ba432e27bb3c48981a96ef8975201e0dad015ac039e0ab098caaf325e1c719a3"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/16_15-SOURCE.json",
+      "bytes": 519605,
+      "sha256": "05dc08b3f1faaa70c736149e738dd4f238b28b270bfe4ed5594bf7a74fb23d40"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/ArmContinuity.mjs",
+      "bytes": 3648,
+      "sha256": "86ca78a237831107c010b8ec3e6bd79e64579629ec8f3308a38706b3a895b4bb"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/NativeRig.mjs",
+      "bytes": 9962,
+      "sha256": "5e28ef7472813993e372090c90d1abff7b09e994edc23ee576a4d4b904b54c04"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/CapturedCycles.mjs",
+      "bytes": 9005,
+      "sha256": "0f480c7d6fc0094ff4ab2b574324ea42b13a244db9de7bf67a04466d03fad8f0"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/Core.mjs",
+      "bytes": 11118,
+      "sha256": "d34ce0c86c3a727c532e9b53938ba264a663770b863cc3f559665d0f0df5221a"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/CapturedController.mjs",
+      "bytes": 1827,
+      "sha256": "a43b67512e044581121aa73547c8e590baa89448e8706c29e2c9a39e88bae48e"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/NaturalRetarget.mjs",
+      "bytes": 12178,
+      "sha256": "e3d92f8ed52c5e6843b3e59c89a17553ec17e284d88f1126422abcbc09c56afd"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/Motion.mjs",
+      "bytes": 24719,
+      "sha256": "5f646bc3585dfd40f67f28a3ef8eaacf8779ef9951c18a9c76d91adbe19750d0"
+    },
+    {
+      "path": "vendor/f13/vendor/motion/NativeWalkRetarget.mjs",
+      "bytes": 11203,
+      "sha256": "2654a1f3744605d80b38ebe8744de0ca3af38a0d2186109d7064e3d9b31eacb5"
+    },
+    {
+      "path": "vendor/f13/vendor/fiber/NativePoseCache.mjs",
+      "bytes": 3301,
+      "sha256": "fc0a9f66616b48a9f96856c637cd3891dd27cc406f0f07bdb79381f6c587c63b"
+    }
+  ],
+  "generatedEvidence": {
+    "src/actors/verification.json": "6c62648c11eb88050e19a4719fb5f510e7531329d678fd3238b762d83b4a807d",
+    "src/render/verification.json": "90feb37aad5bff2ad04ad54054d197a90e47eaf1aecac84fa75b32cae6c848c1",
+    "src/render/scheduler-verification.json": "a86621de75dbe20cddabfd9738a055a38380ad470daa01588a32ebd43da2a4aa"
+  }
+}

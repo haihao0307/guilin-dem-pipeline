@@ -1,9 +1,16 @@
 {
   "schema": "native-crowd-actor-interface-verification/1",
-  "measuredAtUTC": "2026-10-20T07:17:52.388Z",
+  "measuredAtUTC": "2026-10-20T07:48:52.629Z",
   "scope": "CPU interface/coordinate/resource verification using original F13 motion code and retained MP05 104-bone control-topology fixture; no browser P01 rendering, no GPU timings or FPS",
   "fixtureCompressedSHA256": "937c94073151c39b1afa08aa1a75df46263453c593fb0579e03615fdf3f8dfb3",
   "completeBrowserDisplayMeshTested": false,
+  "commonThreeSHA256": "8d005745635da964647405fefcf57e55f52aea9ea6689b1d043e88569b38e513",
+  "threeModuleIdentityVerified": [
+    "bare three",
+    "original NativeMotion relative vendor import",
+    "explicit vendor path",
+    "absolute file URL"
+  ],
   "tests": [
     {
       "name": "dynamic secondary delegation freezes pre-motion code and restores the live donor wrapper",
@@ -64,8 +71,8 @@
   ],
   "nativeControlGeometrySHA256Before": "56dbaf806a3efce8396041068f3738a9a090e745d7c098c8f0b8e5cf33397a78",
   "nativeControlGeometrySHA256After": "56dbaf806a3efce8396041068f3738a9a090e745d7c098c8f0b8e5cf33397a78",
-  "nativeShoeGeometrySHA256Before": "1e5b73b637e4dc2edc2fdd535598d2cf06c2aa78088b628c574a783710d63b33",
-  "nativeShoeGeometrySHA256After": "1e5b73b637e4dc2edc2fdd535598d2cf06c2aa78088b628c574a783710d63b33",
+  "nativeShoeGeometrySHA256Before": "9c44e586ab048beef63a3d9bd8a4e58f35712637fdc5e3306dc098185b23c42f",
+  "nativeShoeGeometrySHA256After": "9c44e586ab048beef63a3d9bd8a4e58f35712637fdc5e3306dc098185b23c42f",
   "feet": {
     "L": {
       "footBone": "foot.L",
@@ -213,18 +220,19 @@
         "materialShared": true,
         "independentTransforms": true,
         "frameSequence": 4,
-        "requiredSoleLiftM": 0.014649999976158155,
+        "requiredSoleLiftM": 0.025440690909875104,
         "autoGroundLift": true,
         "originalDesignParameters": {
           "length": 1.031390611580223,
           "width": 1.110795398220619,
-          "instep": 0,
+          "instep": 8,
           "thickness": 1.35,
           "bend": 0
         },
         "forceSolved": false,
         "independentFootwearPhysics": false,
         "wearerFitValidated": false,
+        "fitScope": "actual wearer control vertices; static whole-shoe size and placement; exact inner canvas triangle section samples, not a complete collision/comfort certification",
         "toeFlexion": "tracked anatomical toe joints; rigid shoe, no runtime geometric flex solver",
         "feet": [
           {
@@ -238,25 +246,122 @@
             "sourceFootVertices": 1067,
             "measuredFootLengthM": 0.2757579806308822,
             "measuredFootWidthM": 0.10952272141494437,
+            "fitScale": [
+              1.3875,
+              1.5639027633666995,
+              1.06875
+            ],
+            "fitYawDegrees": -6,
+            "fitPlacementMm": {
+              "canonicalX": 5.449260051222939,
+              "yAboveSourceFootFloor": -24.424154150973006,
+              "forward": 81.9811273032403
+            },
+            "renderedShoeBoundsM": [
+              0.17405947308540343,
+              0.1466334927296523,
+              0.31170389900207524
+            ],
+            "renderedLastLengthM": 0.30754134179925535,
+            "renderedMidsoleTopAboveDesignZeroM": 0.021894638687133792,
+            "renderedInsoleTopAboveDesignZeroM": 0.023927712279510505,
+            "sampledRestSections": {
+              "scope": "original full-CSR control vertices versus actual inner canvas triangles at the same XZ; curved insole from the original last; vertical section clearances, not complete surface collision certification",
+              "units": "rendered millimetres after fitScale",
+              "innerTriangles": 19200,
+              "openCollarSamples": 90,
+              "all": {
+                "samples": 1067,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 3.8508982308635344,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "forefoot": {
+                "samples": 898,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.98074377909413,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "toes": {
+                "samples": 791,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.98074377909413,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              }
+            },
+            "sampledCurrentPoseSections": {
+              "scope": "original full-CSR control vertices versus actual inner canvas triangles at the same XZ; curved insole from the original last; vertical section clearances, not complete surface collision certification",
+              "units": "rendered millimetres after fitScale",
+              "innerTriangles": 19200,
+              "openCollarSamples": 90,
+              "all": {
+                "samples": 1067,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 3.8509118890220275,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "forefoot": {
+                "samples": 898,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.9807497303330335,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "toes": {
+                "samples": 791,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.9807497303330335,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              }
+            },
             "footWorld": [
               -0.40470828200817394,
-              0.09529224520169854,
+              0.1060829361354153,
               0.2063846725089944
             ],
             "toeWorld": [
               [
                 -0.44216002311946717,
-                0.04568476940088351,
+                0.05647546033460027,
                 0.3601055806406013
               ],
               [
                 -0.39654262822309816,
-                0.041552331652556895,
+                0.05234302258627366,
                 0.361390023352711
               ],
               [
                 -0.3622599640200262,
-                0.041377878540803326,
+                0.05216856947452009,
                 0.3477710212034926
               ]
             ]
@@ -272,25 +377,122 @@
             "sourceFootVertices": 1067,
             "measuredFootLengthM": 0.2757579806308822,
             "measuredFootWidthM": 0.10952272141494437,
+            "fitScale": [
+              1.3875,
+              1.5639027633666995,
+              1.06875
+            ],
+            "fitYawDegrees": 6,
+            "fitPlacementMm": {
+              "canonicalX": 5.449260051222939,
+              "yAboveSourceFootFloor": -24.424154150973006,
+              "forward": 81.9811273032403
+            },
+            "renderedShoeBoundsM": [
+              0.17405947308540343,
+              0.1466334927296523,
+              0.31170389900207524
+            ],
+            "renderedLastLengthM": 0.30754134179925535,
+            "renderedMidsoleTopAboveDesignZeroM": 0.021894638687133792,
+            "renderedInsoleTopAboveDesignZeroM": 0.023927712279510505,
+            "sampledRestSections": {
+              "scope": "original full-CSR control vertices versus actual inner canvas triangles at the same XZ; curved insole from the original last; vertical section clearances, not complete surface collision certification",
+              "units": "rendered millimetres after fitScale",
+              "innerTriangles": 19200,
+              "openCollarSamples": 90,
+              "all": {
+                "samples": 1067,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 3.8508982308635344,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "forefoot": {
+                "samples": 898,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.98074377909413,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "toes": {
+                "samples": 791,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.98074377909413,
+                "minInsoleClearanceMm": 0.19999999999999798,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              }
+            },
+            "sampledCurrentPoseSections": {
+              "scope": "original full-CSR control vertices versus actual inner canvas triangles at the same XZ; curved insole from the original last; vertical section clearances, not complete surface collision certification",
+              "units": "rendered millimetres after fitScale",
+              "innerTriangles": 19200,
+              "openCollarSamples": 90,
+              "all": {
+                "samples": 1067,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 3.8509118890220275,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "forefoot": {
+                "samples": 898,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.9807497303330335,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              },
+              "toes": {
+                "samples": 791,
+                "aboveInnerUpper": 0,
+                "missingClosedUpper": 0,
+                "belowInsole": 0,
+                "minVerticalUpperClearanceMm": 6.9807497303330335,
+                "minInsoleClearanceMm": 0.20000127100181125,
+                "maxUpperProtrusionMm": 0,
+                "maxInsolePenetrationMm": 0,
+                "passed": true
+              }
+            },
             "footWorld": [
               -0.7949534765169126,
-              0.09529224520169854,
+              0.1060829361354153,
               0.18685613629043268
             ],
             "toeWorld": [
               [
                 -0.7730353215830932,
-                0.04568476940088351,
+                0.05647546033460027,
                 0.34354801544621516
               ],
               [
                 -0.8185530498185498,
-                0.041552331652556895,
+                0.05234302258627366,
                 0.3402719009037932
               ],
               [
                 -0.8513048119815574,
-                0.041377878540803326,
+                0.05216856947452009,
                 0.323298381539242
               ]
             ]
@@ -319,12 +521,12 @@
           "params": {
             "length": 1.031390611580223,
             "width": 1.110795398220619,
-            "instep": 0,
+            "instep": 8,
             "thickness": 1.35,
             "bend": 0
           },
           "activeShoes": 4,
-          "trianglesPerShoe": 90496,
+          "trianglesPerShoe": 91144,
           "geometryObjects": 39
         }
       ],

@@ -67,6 +67,18 @@ export function placeSolver(photo, matrix) {
   d.writeOffsets();
 }
 
+/** UI placement/action reset is a discontinuity, not a collider velocity. */
+export function resetCollisionHistory(photo) {
+  const collisions = photo.collisions;
+  collisions.update(1 / 60, true);
+  if (collisions.surface?.frame && collisions.surface.previousFrame) {
+    collisions.surface.previousFrame.copy(collisions.surface.frame);
+  }
+  // The original native reset retains the previous pose's candidate pairs.
+  // Rebuild the same native pairs from the reset particles on their first step.
+  if (photo.dynamics.bundleFriction) photo.dynamics.bundleFriction.count = 0;
+}
+
 /**
  * Read the body's final pose, without advancing it. Collision rest frames live
  * in the actor's initial world placement, so bone transport is M(t) S M(0)^-1.

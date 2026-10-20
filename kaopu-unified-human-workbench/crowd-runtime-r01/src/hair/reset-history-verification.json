@@ -1,0 +1,45 @@
+{
+  "scope": "original F13 collider reset API; retained MP05 104-bone/control-mesh fixture; head-joint binding fixture; GPU raster/readback suppressed",
+  "fullSolverOrBrowserTest": false,
+  "nativeColliderCount": 10,
+  "formerFalseSpeedMetersPerSecond": 76.03774377636002,
+  "resetVelocityMetersPerSecond": [
+    0,
+    0,
+    0
+  ],
+  "nextTrueVelocityMetersPerSecond": [
+    0.12000000000001343,
+    0,
+    0
+  ],
+  "poseRefreshes": 3,
+  "skippedRasterCalls": 10,
+  "checks": [
+    {
+      "name": "negative control: missing history reset produces UI displacement velocity",
+      "passed": true
+    },
+    {
+      "name": "original reset API synchronizes head, ten shapes, inverses and surface history",
+      "passed": true
+    },
+    {
+      "name": "reset contact speed and contact impulse contain no placement jump",
+      "passed": true
+    },
+    {
+      "name": "first unchanged native step has zero artificial collider velocity",
+      "passed": true
+    },
+    {
+      "name": "subsequent 2 mm movement uses only its own 1/60-second velocity",
+      "passed": true
+    }
+  ],
+  "files": {
+    "index.mjs": "62aeb892968296beb243eafdd3209896ff786ccd26f60bc87c7db4c09913eb0e",
+    "placement.mjs": "7863830f67b008aeb33be09a8e13e2df35808c5ddb018597d113217b6563a04f",
+    "reset-history.verify.mjs": "1704081894dcd43bbf55ee89200a318aa53c079a180cadbc4d1d203c105dc78f"
+  }
+}

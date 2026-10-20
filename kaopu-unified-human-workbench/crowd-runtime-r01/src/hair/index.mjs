@@ -1,4 +1,4 @@
-import { assertRigid, createMotionFacade, placeSolver } from './placement.mjs';
+import { assertRigid, createMotionFacade, placeSolver, resetCollisionHistory } from './placement.mjs';
 
 export const SOURCE_LOCK = Object.freeze({
   repository: 'haihao0307/guilin-dem-pipeline',
@@ -217,7 +217,7 @@ export function createHairFactory({ THREE, template, PhotoDynamics, renderViewer
         viewer.mesh.updateWorldMatrix(true, false);
         solverMesh.matrixWorld.copy(viewer.mesh.matrixWorld);
         bridge.sync(solverMesh.matrixWorld); bridge.resetKinematics();
-        photo.reset(); photo.dynamics.active = true; lastTick = null;
+        photo.reset(); resetCollisionHistory(photo); photo.dynamics.active = true; lastTick = null;
       },
       report({ diagnostics = false } = {}) {
         const report = {

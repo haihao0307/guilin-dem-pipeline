@@ -22,8 +22,11 @@ shoes.bind(actor); // 原 canvas；鞋底抬高在衣发初始化前完成
 const hair = hairFactory.create(actor);
 const cloth = await createClothActor({
   THREE, renderer, actorPacket: actor.actorPacket, model: actor.model,
-  parent: actor.worldRoot, baseMeshMatrix: actor.baseMeshMatrix,
+  parent: actor.worldRoot,
 });
+cloth.group.matrixAutoUpdate = false;
+cloth.group.matrix.copy(actor.baseMeshMatrix);
+cloth.group.updateWorldMatrix(true, true);
 
 // scene coordinator is the sole clock; fixed dt, no concurrent in-flight tick
 actor.advance(dt, tickId);
@@ -32,7 +35,7 @@ await cloth.update({dt, skinMatrices: actor.finalSkinMatrices,
 hair.update(dt, tickId);
 actor.prepareRender();
 cloth.renderUpdate(camera);
-renderer.render(scene, camera);
+viewer.render(); // 保留原皮肤多pass以及已安装的衣发路由
 ```
 
 `raw` 是原页的 `{viewer, model, motion, fibers, dynamics}`。身体 factory 不创建 renderer，不接管页面 rAF，也不销毁原 donor。入口负责暂停原循环、隐藏 donor，以及统一帧提交和错误处理。`THREE` 必须来自选定的共同模块，额外导出 `ShaderLib` 和 `UniformsUtils`。所有 bare `three` 导入同样指向该模块。
@@ -52,6 +55,8 @@ renderer.render(scene, camera);
 | `worldRoot` | NPC 场地位置、转向，以及鞋底抬高。 |
 | `baseMeshMatrix` | 原 donor 的 mesh.matrixWorld 基准，包含其原身体显示原点/落地偏移。身体、鞋和衣物需使用同一个基准。 |
 | 完整身体 geometry | 同一 P01 静态 attributes、index、groups 共享，工厂不写、不释放原资源。 |
+| `actor.viewer.geometry` / `motion.native.geometry` | 原完整谱系几何，供原 NativeBinding 与 pose cache；保留 ear/ocular 等对象身份。 |
+| `actor.mesh.geometry` | 原 renderer 已生成的程序皮肤显示几何：attributes 与谱系几何共享，原 sorted index 和两个材质组完整保留。`setMotion` / `prepareRender` 恢复这份显示几何。 |
 | 身体材质 | 每人独立，保留原 shader/材质组；原 P01 光学/形体 uniform wrapper 共享且保持 live，以便 faceDiffusion 的 `uFPass` 与 cineRig 的 `uC*` 原样更新；native bones/pose render target 与 `native.U` 每人独立。 |
 | 原 R14 鞋资源 | 相同完整 recipe 共享 geometry/material/textures；每只鞋独立 Group/Mesh 变换。 |
 
@@ -61,15 +66,23 @@ renderer.render(scene, camera);
 
 `advance(dt, tickId)` 拒绝回退 tick，重复同 tick 返回 false。它仅推进一次原动作，更新附件，发布矩阵并更新鞋。暂停后重启或重置时仍要保持调度 tick 单调。`setMotion('idle')` 明确将当前矩阵重置为中性，不残留之前 jump 的骨矩阵。动作生成及帧采样算法均来自原 F13，没有新增动作结果重播缓存。
 
+原程序皮肤次材质会动态调用主皮肤的 `onBeforeCompile`。冻结原外观时，适配器在一个同步事务内临时恢复 `raw.motion.savedMaterial` 的原主编译器和 key，捕获全部身体/附件程序后在 `finally` 恢复原动作包装。没有删除 shader 中的蒙皮代码；残留 `mrRanges` / `mrCache0` 仍直接拒绝。每人随后由其独立 NativeBinding 包装一次。
+
 ## 复现本地 CPU 验证
 
-从 crowd-runtime-r01 的上级目录运行：
+从本 `crowd-runtime-r01` 目录运行；可将整个目录复制到别处，命令不依赖会话工作区：
 
 ```sh
-node --loader ./crowd-runtime-r01/src/actors/test-loader.mjs ./crowd-runtime-r01/src/actors/verify.mjs
+python3 build/prepare-sources.py
+python3 src/cloth/prepare-upstream.py
+node --loader ./src/actors/test-loader.mjs ./src/actors/verify.mjs
+node src/render/verify.mjs
+node src/render/scheduler-verify.mjs
 ```
 
-依赖相邻只读审计源 `perf-audit/hair/f13` 与 `perf-audit/garments`。`verification.json` 记录 12 项检查：原动作构造器/clip、双角色骨与 pose cache 隔离、全部材质组 shader 仅包一层、原光学 pass/灯位 wrapper 随原控制器同步、移出donor保留控制柄、单 tick 推进、rest packet、鞋单位/镜像、脚动态与转向互不干扰、buffer 字节不变、中性恢复及共享资源释放。该测试直接运行原 native 运动代码、原鞋几何，使用旧 MP05 原 104 骨骼人物控制拓扑作接口夹具，未生成新的简化模型供网页使用。
+原 F13 的 10 个模块和 3 份动作 JSON 位于 `vendor/f13/vendor/`，原 R14 鞋位于 `vendor/shoe-workshop/`，均由 `build/sources.lock.json` 锁定固定 commit、长度和 SHA-256。原 MP05 的 104 骨骼人物夹具与 Three r170 复用 `src/cloth/upstream/` 及其独立 source lock，不重复保存大文件。加载器把 bare `three`、原生模块内的相对 Three 路径和绝对 file URL 都指向同一份原 MP05 Three，原 ID 偏移保持。JSON 只在 Node 加载时转为默认导出，磁盘原字节不变。已保留依赖时，两个 prepare 命令都可加 `--verify-only` 离线核验。
+
+`verification.json` 记录 14 项身体/鞋接口检查，包含原动作构造器/clip、双角色骨与 pose cache 隔离、全部材质组仅一层蒙皮、次材质动态委托与异常恢复、原程序皮肤显示分组、原光学 pass/灯位 wrapper 同步、单 tick 推进、rest packet、鞋单位/镜像、骨跟随与转向互不干扰、buffer 字节不变、中性恢复及共享资源释放。`src/render/verification.json` 为 6 项路由恢复检查，`scheduler-verification.json` 为 4 项实际调度控制流检查。人物接口测试使用旧 MP05 原 104 骨骼控制拓扑；并未生成新的简化模型供网页使用。
 
 这份 CPU 证据不包含 P01 完整显示网格的实际渲染，不包含原 R14 材质的本轮浏览器验收，也不包含 GPU 帧率。原鞋材质和几何精确共享验证仍见前一轮 shoe-sharing 归档。本轮网页结果应另行记录。
 

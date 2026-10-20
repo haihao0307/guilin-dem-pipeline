@@ -1,7 +1,7 @@
 // Math/lifecycle tests only. These do not claim a rendered F13/GPU benchmark.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as THREE from '../../../perf-audit/hair/f13/vendor/three.module.js';
+import * as THREE from '../cloth/upstream/vendor/three.module.js';
 import { assertRigid, createMotionFacade, placeSolver } from './placement.mjs';
 import { createHairFactory, SOURCE_LOCK } from './index.mjs';
 

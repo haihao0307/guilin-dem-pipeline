@@ -94,6 +94,21 @@ template. Uniformly scaling the visible body is not a valid replacement for
 authoring another shape. Teleports or action changes can call `hair.reset()`;
 continuous root movement is consumed through the moving frame and collisions.
 
+Reset also calls the native collider reset API, synchronizes the surface's
+previous frame, and rebuilds native bundle-contact candidates on the next step.
+This prevents a UI placement jump from becoming a one-frame collider velocity.
+The original collider API refreshes its surface field during reset; the normal
+per-frame solver path and physical parameters are unchanged.
+
+For a paused UI placement change, follow `hair.reset()` with
+`hair.update(0, currentTickId)`. This publishes the current head-center lighting
+reference and tick without advancing either physics or body motion.
+
+`solverSteps` and `updates` are lifetime counters. `solverSeconds` restarts on
+reset. A retained actor can therefore report 120 lifetime steps after two
+60-step runs while a newly added actor reports 60; both should report 1 second
+for the current run and the same latest scene tick.
+
 ## Runtime controls and inspection
 
 Instances expose `setPhysics(boolean)`, `setWind(boolean)`, `setColor(name)`,
@@ -106,3 +121,26 @@ queries separately. Sharing immutable buffers is not evidence of a particular
 FPS. Rendering, skin/material composition and collision quality still require
 actual browser checks with several actors. Adapter math/ownership tests are not
 a substitute for those checks.
+
+## Verification records
+
+`verification.json` records the initial adapter's five math/ownership checks,
+including the exact files tested at that time. `reset-history-verification.json`
+records the subsequent targeted reset fix and its own current source hashes.
+The original mock suite was not rerun or relabeled as native physics evidence.
+
+To repeat the reset regression from this project directory:
+
+```sh
+python3 build/prepare-sources.py --verify-only
+node --loader ./src/actors/test-loader.mjs ./src/hair/reset-history.verify.mjs
+```
+
+It executes the unchanged F13 `CollisionProxies` constructor and matrix/contact
+APIs against the retained MP05 104-bone/control-mesh fixture. A head-joint
+binding supplies its test frame, and GPU raster/readback is suppressed only in
+the test. The regression covers all ten native collider records, demonstrates
+the former false placement velocity, checks zero velocity after reset, and
+checks the next actual 2 mm displacement. It does not claim P01 visual or full
+guide-solver validation. Browser reports live in the project's `validation/`
+directory and retain their own scope and tested version.

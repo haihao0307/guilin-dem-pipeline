@@ -1,4 +1,5 @@
 import {prepareSharedNativeShoe} from './SharedNativeShoes.mjs';
+import {nativeFootSamples, fitNativeCanvasFoot, createCanvasInnerSurface, checkNativeShoeSections} from './NativeShoeFit.mjs';
 
 export const SHOE_SOURCE = Object.freeze({
   repository: 'haihao0307/Humanoid-Rig-Lab-Next',
@@ -69,28 +70,39 @@ export function measureNativeFeet(THREE, model, native) {
  * operation, so it is deliberately not presented as a force/pressure solver.
  */
 export function createFootShoeBinding({THREE, actor, nativeModel, shared, measurements,
-  autoGroundLift = true} = {}) {
+  fitting, innerSurface, autoGroundLift = true} = {}) {
   if (!actor?.motion?.native || !actor.worldRoot || !actor.baseMeshMatrix) throw Error('Prepared original body actor required');
   const feet = measurements || measureNativeFeet(THREE, actor.model, actor.motion.native);
   const items = [], toePoint = new THREE.Vector3();
   let disposed = false, lastTick = null;
   const modelBounds = new THREE.Box3();
   for (const part of nativeModel.parts) modelBounds.union(part.geometry.boundingBox);
+  const inner = innerSurface || createCanvasInnerSurface(nativeModel);
   for (const side of SIDES) {
-    const foot = feet[side], shoe = shared.create({name: 'R14-' + nativeModel.style.id + '-' + actor.id + '-' + side, mirror: side === 'R'});
+    const foot = feet[side], samples = nativeFootSamples(THREE, actor.model, foot);
+    const fit = fitting?.[side] || fitNativeCanvasFoot(nativeModel.last, samples);
+    const restSections = checkNativeShoeSections(nativeModel.last, inner, samples, fit);
+    if (!restSections.forefoot.passed) {
+      const error = Error('Original canvas forefoot failed the fitted inner-triangle section check');
+      error.shoeFit = {side, fit, restSections}; throw error;
+    }
+    const shoe = shared.create({name: 'R14-' + nativeModel.style.id + '-' + actor.id + '-' + side, mirror: side === 'R'});
     const frame = new THREE.Group(); frame.name = 'native-' + foot.footName + '-shoe-' + actor.id;
     frame.matrixAutoUpdate = false; frame.add(shoe); actor.worldRoot.add(frame);
-    const centerZ = (foot.bounds.zMin + foot.bounds.zMax) * .5 + .003;
-    const centerX = (foot.bounds.xMin + foot.bounds.xMax) * .5;
-    const origin = foot.ankle.clone().addScaledVector(foot.forward, centerZ).addScaledVector(foot.right, centerX);
-    // Original last units are mm. The flat native canvas insole sits 14 mm
-    // above the outsole; retain its exact design without scaling the person.
-    origin.y = foot.bounds.yMin - nativeModel.last.soleTop(.5) * .001;
-    const restFit = new THREE.Matrix4().makeBasis(foot.right, foot.up, foot.forward).setPosition(origin);
+    const mirror = side === 'R' ? -1 : 1, angle = mirror * fit.angleDegrees * Math.PI / 180;
+    const right = foot.right.clone().multiplyScalar(Math.cos(angle)).addScaledVector(foot.forward, -Math.sin(angle));
+    const forward = foot.forward.clone().multiplyScalar(Math.cos(angle)).addScaledVector(foot.right, Math.sin(angle));
+    const origin = foot.ankle.clone().addScaledVector(forward, fit.cz * .001).addScaledVector(right, mirror * fit.cx * .001);
+    origin.y = foot.bounds.yMin + fit.cy * .001;
+    // Keep unit conversion/mirror on the shared shoe child. The explicit
+    // static frame scale changes the complete original shoe, including sole
+    // thickness. No vertex, normal, UV, index, material or foot is changed.
+    const restFit = new THREE.Matrix4().makeBasis(right, foot.up, forward).setPosition(origin)
+      .multiply(new THREE.Matrix4().makeScale(fit.sx, fit.sy, fit.sz));
     const restActor = actor.baseMeshMatrix.clone().multiply(restFit);
     const localScale = new THREE.Matrix4().makeScale(side === 'R' ? -.001 : .001, .001, .001);
     const restBounds = modelBounds.clone().applyMatrix4(restActor.clone().multiply(localScale));
-    items.push({side, foot, shoe, frame, restFit, restBounds,
+    items.push({side, foot, shoe, frame, restFit, restBounds, fit, restSections,
       toeWorld: foot.toeRest.map(() => new THREE.Vector3()), footWorld: new THREE.Vector3()});
   }
   const requiredSoleLiftM = Math.max(0, -Math.min(...items.map(item => item.restBounds.min.y)));
@@ -125,10 +137,20 @@ export function createFootShoeBinding({THREE, actor, nativeModel, shared, measur
       requiredSoleLiftM, autoGroundLift,
       originalDesignParameters: {...nativeModel.last.params},
       forceSolved: false, independentFootwearPhysics: false, wearerFitValidated: false,
+      fitScope: 'actual wearer control vertices; static whole-shoe size and placement; exact inner canvas triangle section samples, not a complete collision/comfort certification',
       toeFlexion: 'tracked anatomical toe joints; rigid shoe, no runtime geometric flex solver',
-      feet: items.map(({side, foot, footWorld, toeWorld}) => ({side, footBone: foot.footName,
+      feet: items.map(({side, foot, footWorld, toeWorld, fit, restSections}) => ({side, footBone: foot.footName,
         toeBones: foot.toeNames, sourceFootVertices: foot.vertices.length,
         measuredFootLengthM: foot.lengthM, measuredFootWidthM: foot.widthM,
+        fitScale: [fit.sx, fit.sy, fit.sz], fitYawDegrees: (side === 'R' ? -1 : 1) * fit.angleDegrees,
+        fitPlacementMm: {canonicalX: fit.cx, yAboveSourceFootFloor: fit.cy, forward: fit.cz},
+        renderedShoeBoundsM: modelBounds.getSize(new THREE.Vector3()).multiply(new THREE.Vector3(fit.sx, fit.sy, fit.sz)).multiplyScalar(.001).toArray(),
+        renderedLastLengthM: nativeModel.last.L * fit.sz * .001,
+        renderedMidsoleTopAboveDesignZeroM: nativeModel.last.soleTop(.5) * fit.sy * .001,
+        renderedInsoleTopAboveDesignZeroM: (nativeModel.last.soleTop(.5) + 1.3) * fit.sy * .001,
+        sampledRestSections: restSections,
+        sampledCurrentPoseSections: checkNativeShoeSections(nativeModel.last, inner,
+          nativeFootSamples(THREE, actor.model, foot, actor.motion.native, actor.motion.skinMatrix(foot.footName)), fit),
         footWorld: footWorld.toArray(), toeWorld: toeWorld.map(p => p.toArray())}))}; },
     dispose() {
       if (disposed) return;
@@ -168,16 +190,24 @@ export async function createNativeShoeFactory({THREE, renderer, buildStyle, Styl
         width: (Math.max(feet.L.widthM, feet.R.widthM) * 1000 + 6) / definition.width,
       };
       const recipe = {length: clamp(desired.length, .9, 1.1), width: clamp(desired.width, .88, 1.15),
-        instep: 0, thickness: 1.35, bend: 0, ...params};
+        instep: 8, thickness: 1.35, bend: 0, ...params};
       const key = JSON.stringify([style, ...Object.entries(recipe).sort(([a], [b]) => a.localeCompare(b))]);
       let resource = cache.get(key);
       if (!resource) {
         const model = buildStyle(style, recipe);
-        resource = {model, shared: prepareSharedNativeShoe(model, materials), desired, recipe}; cache.set(key, resource);
+        resource = {model, shared: prepareSharedNativeShoe(model, materials), desired, recipe,
+          inner: createCanvasInnerSurface(model), fits: new WeakMap()}; cache.set(key, resource);
       }
       if (probe) for (const part of probe.parts) part.geometry.dispose();
+      let fitting = resource.fits.get(feet);
+      if (!fitting) {
+        onProgress('按原生脚部截面匹配完整 R14 鞋尺寸');
+        fitting = Object.fromEntries(SIDES.map(side => [side,
+          fitNativeCanvasFoot(resource.model.last, nativeFootSamples(THREE, actor.model, feet[side]))]));
+        resource.fits.set(feet, fitting);
+      }
       const binding = createFootShoeBinding({THREE, actor, nativeModel: resource.model,
-        shared: resource.shared, measurements: feet, autoGroundLift});
+        shared: resource.shared, measurements: feet, fitting, innerSurface: resource.inner, autoGroundLift});
       const originalReport = binding.report;
       binding.report = () => ({...originalReport(), nativeSizeRequest: desired,
         nativeSizeClamped: desired.length !== recipe.length || desired.width !== recipe.width});

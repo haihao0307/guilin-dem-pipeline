@@ -20,7 +20,8 @@ const number=(value,digits=1)=>Number.isFinite(value)?value.toFixed(digits):'—
 function showStatus(message){state.phase=message; if($('runtime-status'))$('runtime-status').textContent=message; writeEvidence();}
 function fail(error){
   state.playing=false; state.busy=false; state.renderFrozen=true;
-  const item={message:error.message||String(error),stack:error.stack||'',clothFailure:error.clothFailure,
+  abortBenchmark('runtime-failure');
+  const item={message:error.message||String(error),stack:error.stack||'',capture:error.capture,shoeFit:error.shoeFit,clothFailure:error.clothFailure,
     frameTransaction:error.frameTransaction,audit:error.audit,tick:state.tick,
     canvasFrozenAt:state.lastSubmittedFrame,requiredRecovery:'complete actor/cloth/hair rebuild using Reset'};
   state.errors.push(item); console.error('Crowd runtime',error);
@@ -35,7 +36,7 @@ function installUI(){
   #crowd-app,#crowd-app *{box-sizing:border-box}#crowd-app{position:fixed;inset:0;z-index:2147480000;display:grid;grid-template-rows:72px 1fr;background:var(--paper)}
   #crowd-app button,#crowd-app select{font:inherit;line-height:1.4;cursor:pointer;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:9px 13px;min-height:39px;box-shadow:none;letter-spacing:0;text-transform:none}
   #crowd-app button:hover{border-color:#6b8b74;background:#edf2e9}#crowd-app button:disabled{opacity:.4;cursor:wait}#crowd-app button.active,#crowd-app .primary{background:var(--green);color:#fff;border-color:var(--green)}
-  .cr-header{padding:14px 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px}.cr-title{font-size:20px;font-weight:650;letter-spacing:.04em}.cr-tag{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-top:2px}.cr-badge{border:1px solid #bdcbbd;border-radius:30px;padding:5px 11px;font-size:12px;background:#e9efe5;white-space:nowrap}
+  .cr-header{padding:14px 25px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--paper);color:var(--ink)}.cr-title{font-size:20px;font-weight:650;letter-spacing:.04em}.cr-tag{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-top:2px}.cr-badge{border:1px solid #bdcbbd;border-radius:30px;padding:5px 11px;font-size:12px;background:#e9efe5;white-space:nowrap}
   .cr-workspace{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 306px}.cr-stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:#e8ebe3}.cr-stage canvas{width:100%!important;height:100%!important;display:block!important;outline:none;position:absolute!important;inset:0!important}
   .cr-topline{position:absolute;z-index:2;top:19px;left:23px;right:23px;display:flex;justify-content:space-between;gap:12px;pointer-events:none}.cr-caption{font-size:12px;color:#344b40;background:#f5f6efdd;padding:8px 12px;border:1px solid #d9e0d6;border-radius:9px}.cr-caption strong{font-size:13px}.cr-hint{position:absolute;bottom:18px;left:23px;font-size:12px;color:#516558;background:#f5f6efdf;padding:7px 11px;border-radius:6px;pointer-events:none}
   .cr-sidebar{background:#fafbf6;border-left:1px solid var(--line);padding:20px;overflow:auto}.cr-section{padding-bottom:20px;margin-bottom:18px;border-bottom:1px solid var(--line)}.cr-section:last-child{border:0;margin:0}.cr-label{font-size:11px;letter-spacing:.13em;color:var(--muted);font-weight:650;margin-bottom:9px}.cr-row{display:flex;gap:7px;margin:8px 0;align-items:center}.cr-row>*{flex:1}.cr-row label{display:flex;align-items:center;gap:8px}.cr-row input[type=checkbox]{accent-color:var(--green);width:16px;height:16px}.cr-row select{width:100%}.cr-note{font-size:12px;line-height:1.65;color:var(--muted);margin:8px 0 0}.cr-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.cr-stat{background:#edf1e8;border:1px solid #dce3d7;border-radius:9px;padding:10px}.cr-stat b{display:block;font-size:23px;font-weight:550;line-height:1.2;font-variant-numeric:tabular-nums}.cr-stat span{font-size:11px;color:var(--muted)}
@@ -58,13 +59,14 @@ function installUI(){
   for(const child of [...document.body.children])if(child!==app&&child.tagName!=='SCRIPT')child.style.display='none';
   resizeObserver=new ResizeObserver(resize); resizeObserver.observe(stage);
   viewer.orbit.removeEventListener('change',viewer.onOrbit);
-  viewer.orbit.addEventListener('change',()=>{cameraDirty=true;if(!state.busy&&!pendingTick)renderScene();});
+  viewer.orbit.addEventListener('change',()=>{if(benchmark)return;cameraDirty=true;if(!state.busy&&!pendingTick)renderScene();});
   bindControls(); updateHUD(true);
 }
 
-function resize(){if(!stage||state.renderFrozen)return;const box=stage.getBoundingClientRect();if(box.width<1||box.height<1)return;viewer.renderer.setSize(box.width,box.height,false);viewer.camera.aspect=box.width/box.height;viewer.camera.updateProjectionMatrix();cameraDirty=true;if(state.ready&&!state.busy&&!pendingTick)renderScene();}
+function resize(){if(!stage||state.renderFrozen)return;if(benchmark){abortBenchmark('viewport-resized').then(resize);return;}const box=stage.getBoundingClientRect();if(box.width<1||box.height<1)return;viewer.renderer.setSize(box.width,box.height,false);viewer.camera.aspect=box.width/box.height;viewer.camera.updateProjectionMatrix();cameraDirty=true;if(state.ready&&!state.busy&&!pendingTick)renderScene();}
 
 function cameraHome(focus=false){
+  if(benchmark)return;
   const actor=actors.find(a=>a.id===state.selected)||actors[0];
   const target=focus&&actor?actor.worldRoot.position.clone().add(new THREE.Vector3(0,1.15,0)):new THREE.Vector3(0,.97,0);
   const halfFOV=Math.tan(viewer.camera.fov*Math.PI/360);
@@ -115,6 +117,7 @@ function placements(){
 }
 
 async function changeCount(count,{rebuild=false}={}){
+  if(benchmark){if(!rebuild)return;await abortBenchmark('actor-rebuild');}
   if(state.busy||(state.renderFrozen&&!rebuild))return;
   // Acquire the UI transition lock before waiting for an in-flight frame.
   state.playing=false;state.busy=true;updateHUD(true);
@@ -169,6 +172,7 @@ async function settleCloth(promises,context,earlyError=null){
 
 async function step(){
   if(!state.ready||state.busy||pendingTick||state.renderFrozen)return;
+  const measuredRun=benchmark?.status==='running'?benchmark:null;
   const task=(async()=>{
     const started=performance.now(),dt=state.speed/60,tick=++state.tick;
     let bodyMS=0,hairMS=0;
@@ -186,7 +190,9 @@ async function step(){
       submissionCompletedAt:end,drawCalls:viewer.renderer.info.render.calls,triangles:viewer.renderer.info.render.triangles,
       fullHair:state.hairPhysics,speed:state.speed};
     state.samples.push(sample);if(state.samples.length>1200)state.samples.shift();
-    if(benchmark){benchmark.samples.push(sample);if(benchmark.samples.length>=benchmark.steps)finishBenchmark();}
+    if(measuredRun&&benchmark===measuredRun&&measuredRun.status==='running'){
+      measuredRun.samples.push(sample);if(measuredRun.samples.length===measuredRun.steps)finishBenchmark();
+    }
     updateHUD();
     if(state.tick%10===0)writeEvidence();
   })();
@@ -223,13 +229,14 @@ function updateHUD(force=false){
   $('draw-stat').textContent=m?String(Math.round(m.drawCalls)):'—';
   $('timing-note').textContent=m?'模拟 / 实际时间：'+number(m.simulationPerWallSecond,2)+'×。包含原生多遍提交；此为运行提交速率，不是GPU完成或屏幕呈现测量。':'准备完成后可逐步或连续运行。';
   $('scene-caption').textContent=state.count+' 位完整人物';
-  $('ready-badge').textContent=state.renderFrozen?'冻结 · 需要重置':state.busy?'原生模块接入中':state.playing?'正在运行':'可交互 · 已暂停';
-  $('play-button').textContent=state.playing?'暂停运行':'开始运行';
+  $('ready-badge').textContent=state.renderFrozen?'冻结 · 需要重置':state.busy?'原生模块接入中':benchmark?'测量中 · 配置已锁定':state.playing?'正在运行':'可交互 · 已暂停';
+  $('play-button').textContent=benchmark?'暂停并中止':state.playing?'暂停运行':'开始运行';
   for(const node of document.querySelectorAll('#crowd-app button,#crowd-app select,#crowd-app input')){
-    node.disabled=state.busy||!state.ready||state.renderFrozen;
+    node.disabled=state.busy||!state.ready||state.renderFrozen||!!benchmark;
   }
+  if(benchmark&&!state.busy&&state.ready&&!state.renderFrozen&&benchmark.status!=='aborting')$('play-button').disabled=false;
   if(state.renderFrozen&&!state.busy&&actorFactory&&hairFactory&&shoeFactory)$('reset-button').disabled=false;
-  if(!state.busy)$('copy-button').disabled=false;
+  if(!state.busy&&!benchmark)$('copy-button').disabled=false;
   for(const node of document.querySelectorAll('[data-count]'))node.classList.toggle('active',Number(node.dataset.count)===state.count);
 }
 
@@ -241,7 +248,9 @@ function writeEvidence(){
     simulationSeconds:state.simulationSeconds,mode:state.mode,hairPhysics:state.hairPhysics,errors:state.errors,interventions:state.interventions,
     renderFrozen:state.renderFrozen,lastSubmittedFrame:state.lastSubmittedFrame,poseSynchronizations:state.poseSynchronizations,
     gpu:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,viewport:viewer?[viewer.canvas.width,viewer.canvas.height]:null,
-    latestMetrics:metric(state.samples.slice(-60)),latestSamples:state.samples.slice(-70),benchmark:state.lastBenchmark||null,
+    latestMetrics:metric(state.samples.slice(-60)),latestSamples:state.samples.slice(-70),
+    benchmark:benchmark?{status:benchmark.status,startedAt:benchmark.startedAt,requestedSteps:benchmark.steps,
+      completedSteps:benchmark.samples.length,configuration:benchmark.configuration,abortReason:benchmark.abortReason||null}:state.lastBenchmark||null,
     body:actors.map(actor=>actor.report()),hair:hairFactory?.report(),shoes:shoeFactory?.report(),faceRouting:faceRouting?.audit(),
     cloth:actors.map(actor=>({id:actor.id,...actor.cloth.audit()})),
     finitePose:actors.every(actor=>finite(actor.finalSkinMatrixData)),
@@ -251,37 +260,79 @@ function writeEvidence(){
   $('runtime-evidence').textContent=JSON.stringify(report);return report;
 }
 
-function finishBenchmark(){
-  const run=benchmark;benchmark=null;state.playing=false;
-  state.lastBenchmark={startedAt:run.startedAt,finishedAt:new Date().toISOString(),metrics:metric(run.samples),samples:run.samples};
+async function startBenchmark(){
+  if(benchmark||state.renderFrozen||state.busy||!state.ready)return;
+  const run={status:'starting',steps:60,samples:[],startedAt:null,configuration:null};
+  benchmark=run;state.lastBenchmark=null;state.samples=[];state.playing=false;
+  const orbit=viewer?.orbit;
+  if(orbit){run.orbitState={enabled:orbit.enabled,autoRotate:orbit.autoRotate};orbit.enabled=false;orbit.autoRotate=false;}
+  $('benchmark-result').textContent='等待当前步骤完成，随后记录 60 步…';
+  showStatus('测量准备中，配置与视角已锁定');updateHUD(true);
+  // An already-running normal step belongs to its original configuration and
+  // must settle before this new measurement starts collecting samples.
+  if(pendingTick)await pendingTick.catch(()=>{});
+  if(benchmark!==run||run.status!=='starting'||state.renderFrozen)return;
+  const camera=viewer.camera;
+  run.configuration={count:actors.length,mode:state.mode,speed:state.speed,hairPhysics:state.hairPhysics,wind:state.wind,
+    actors:actors.map(actor=>({id:actor.id,position:actor.worldRoot.position.toArray(),rotationY:actor.worldRoot.rotation.y})),
+    viewport:[viewer.canvas.width,viewer.canvas.height],camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),
+      fov:camera.fov,aspect:camera.aspect,zoom:camera.zoom,target:orbit?.target?.toArray()}};
+  run.startedAt=new Date().toISOString();run.startedTick=state.tick;run.status='running';
+  state.samples=[];state.playing=true;$('benchmark-result').textContent='正在记录 60 个实际步骤…';
+  showStatus('正在测量全部原生模块；暂停将中止本次测量');updateHUD(true);
+}
+
+function abortBenchmark(reason){
+  const run=benchmark;if(!run)return Promise.resolve();
+  if(run.abortPromise)return run.abortPromise;
+  run.status='aborting';run.abortReason=reason;state.playing=false;
+  if(!state.renderFrozen)showStatus('已请求中止测量，等待当前步骤结束');updateHUD(true);
+  const finish=()=>{if(benchmark===run)finishBenchmark('aborted',reason);};
+  // Keep configuration and camera input locked until every in-flight actor
+  // transaction has settled. Its unfinished sample is not added to this run.
+  if(pendingTick)run.abortPromise=pendingTick.catch(()=>{}).then(finish);
+  else {finish();run.abortPromise=Promise.resolve();}
+  return run.abortPromise;
+}
+
+function finishBenchmark(status='completed',abortReason=null){
+  const run=benchmark;if(!run)return;
+  benchmark=null;state.playing=false;
+  if(run.orbitState&&viewer?.orbit)Object.assign(viewer.orbit,run.orbitState);
+  for(const actor of actors)actor.cloth.pause();
+  state.lastBenchmark={status,abortReason,requestedSteps:run.steps,completedSteps:run.samples.length,
+    startedAt:run.startedAt,startedTick:run.startedTick,finishedAt:new Date().toISOString(),
+    configuration:run.configuration,metrics:metric(run.samples),samples:run.samples};
   const m=state.lastBenchmark.metrics;
-  $('benchmark-result').textContent=`${m.actors} 人 / ${m.sampleCount} 步\n运行提交 ${number(m.submittedFrameFPS)} 帧/秒\n单步平均 ${number(m.stepMeanMS)} ms\n单步 P95 ${number(m.stepP95MS)} ms\n模拟 / 实际 ${number(m.simulationPerWallSecond,2)}×`;
-  showStatus('60 步测量完成，已暂停');updateHUD(true);writeEvidence();
+  const summary=status==='completed'?`${m.actors} 人 / ${m.sampleCount} 步`:`测量已中止：${run.samples.length} / ${run.steps} 步`;
+  $('benchmark-result').textContent=summary+(m?`\n运行提交 ${number(m.submittedFrameFPS)} 帧/秒\n单步平均 ${number(m.stepMeanMS)} ms\n单步 P95 ${number(m.stepP95MS)} ms\n模拟 / 实际 ${number(m.simulationPerWallSecond,2)}×`:'');
+  if(!state.renderFrozen)showStatus(status==='completed'?'60 步测量完成，已暂停':`测量已中止（${run.samples.length}/${run.steps} 步），已暂停`);
+  updateHUD(true);writeEvidence();
 }
 
 function moveActor(direction){
-  if(state.busy||pendingTick||state.renderFrozen)return;
+  if(benchmark||state.busy||pendingTick||state.renderFrozen)return;
   const actor=actors.find(a=>a.id===state.selected);if(!actor)return;
   if(direction==='turn-left'||direction==='turn-right')actor.worldRoot.rotation.y+=(direction==='turn-left'?1:-1)*Math.PI/18;
   else {const deltas={forward:[0,0,-.1],back:[0,0,.1],left:[-.1,0,0],right:[.1,0,0]};actor.worldRoot.position.add(new THREE.Vector3(...deltas[direction]));}
-  actor.worldRoot.updateWorldMatrix(true,true);actor.shoes.update();actor.hair.reset();
+  actor.worldRoot.updateWorldMatrix(true,true);actor.shoes.update();actor.hair.reset();actor.hair.update(0,state.tick);
   state.interventions.push({tick:state.tick,actor:actor.id,direction});renderScene();writeEvidence();
 }
 
 function bindControls(){
   document.querySelectorAll('[data-count]').forEach(button=>button.onclick=()=>changeCount(Number(button.dataset.count)));
-  $('play-button').onclick=()=>{if(state.renderFrozen||state.busy)return;state.playing=!state.playing;if(!state.playing)for(const actor of actors)actor.cloth.pause();updateHUD(true);writeEvidence();};
-  $('step-button').onclick=()=>{state.playing=false;step().catch(fail);updateHUD(true);};
-  $('reset-button').onclick=async()=>{if(state.busy)return;if(state.renderFrozen){await changeCount(state.count,{rebuild:true});return;}state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;await changeCount(state.count,{rebuild:true});return;}state.busy=true;try{await setAction(state.mode);state.simulationSeconds=0;state.samples=[];state.busy=false;renderScene();showStatus('完整动作与衣物已同步重置');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
-  $('motion-select').onchange=async event=>{if(state.busy||state.renderFrozen)return;const mode=event.target.value;state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;updateHUD(true);return;}state.busy=true;try{await setAction(mode);state.samples=[];state.busy=false;renderScene();showStatus('身体与衣物已同步切换，点击开始运行');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
-  $('speed-select').onchange=event=>{state.speed=Number(event.target.value);state.samples=[];writeEvidence();};
-  $('hair-physics').onchange=event=>{state.hairPhysics=event.target.checked;actors.forEach(actor=>actor.hair.setPhysics(state.hairPhysics));renderScene();writeEvidence();};
-  $('wind').onchange=event=>{state.wind=event.target.checked;actors.forEach(actor=>actor.hair.setWind(state.wind));writeEvidence();};
-  $('actor-select').onchange=event=>{state.selected=event.target.value;};
+  $('play-button').onclick=()=>{if(state.renderFrozen||state.busy)return;if(benchmark)return abortBenchmark('paused-by-user');state.playing=!state.playing;if(!state.playing)for(const actor of actors)actor.cloth.pause();updateHUD(true);writeEvidence();};
+  $('step-button').onclick=()=>{if(benchmark)return;state.playing=false;step().catch(fail);updateHUD(true);};
+  $('reset-button').onclick=async()=>{if(state.busy)return;await abortBenchmark('reset');if(state.renderFrozen){await changeCount(state.count,{rebuild:true});return;}state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;await changeCount(state.count,{rebuild:true});return;}state.busy=true;try{await setAction(state.mode);state.simulationSeconds=0;state.samples=[];state.busy=false;renderScene();showStatus('完整动作与衣物已同步重置');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
+  $('motion-select').onchange=async event=>{if(benchmark||state.busy||state.renderFrozen){event.target.value=state.mode;return;}const mode=event.target.value;state.playing=false;state.busy=true;updateHUD(true);if(pendingTick)await pendingTick.catch(()=>{});if(state.renderFrozen){state.busy=false;updateHUD(true);return;}state.busy=true;try{await setAction(mode);state.samples=[];state.busy=false;renderScene();showStatus('身体与衣物已同步切换，点击开始运行');updateHUD(true);writeEvidence();}catch(error){fail(error);}};
+  $('speed-select').onchange=event=>{if(benchmark){event.target.value=String(state.speed);return;}state.speed=Number(event.target.value);state.samples=[];writeEvidence();};
+  $('hair-physics').onchange=event=>{if(benchmark){event.target.checked=state.hairPhysics;return;}state.hairPhysics=event.target.checked;actors.forEach(actor=>actor.hair.setPhysics(state.hairPhysics));renderScene();writeEvidence();};
+  $('wind').onchange=event=>{if(benchmark){event.target.checked=state.wind;return;}state.wind=event.target.checked;actors.forEach(actor=>actor.hair.setWind(state.wind));writeEvidence();};
+  $('actor-select').onchange=event=>{if(benchmark){event.target.value=state.selected;return;}state.selected=event.target.value;};
   $('home-button').onclick=()=>cameraHome();$('focus-button').onclick=()=>cameraHome(true);
   document.querySelectorAll('[data-move]').forEach(button=>button.onclick=()=>moveActor(button.dataset.move));
   window.addEventListener('keydown',event=>{if(event.target?.matches('input,select,textarea'))return;const direction={w:'forward',s:'back',a:'left',d:'right',q:'turn-left',e:'turn-right'}[event.key.toLowerCase()];if(direction){event.preventDefault();moveActor(direction);}});
-  $('benchmark-button').onclick=()=>{if(state.renderFrozen||state.busy)return;benchmark={steps:60,samples:[],startedAt:new Date().toISOString()};state.samples=[];state.playing=true;$('benchmark-result').textContent='正在记录 60 个实际步骤…';showStatus('正在测量全部原生模块');updateHUD(true);};
+  $('benchmark-button').onclick=()=>startBenchmark().catch(fail);
   $('copy-button').onclick=async()=>{const report=writeEvidence();try{await navigator.clipboard.writeText(JSON.stringify(report,null,2));showStatus('运行记录已复制');}catch{showStatus('复制未成功，可展开浏览器中的运行记录。');}};
 }
 
@@ -311,7 +362,7 @@ async function boot(){
   ground.name='crowd-stage-ground';ground.rotation.x=-Math.PI/2;ground.position.y=-.003;ground.receiveShadow=true;viewer.scene.add(ground);
   viewer.renderer.setClearColor('#e8ece4');
   state.busy=false;await changeCount(2);pump();
-  window.addEventListener('pagehide',()=>{clearTimeout(pumpTimer);resizeObserver?.disconnect();faceRouting?.dispose();for(const actor of actors){actor.hair.dispose();actor.cloth.dispose();}shoeFactory.dispose();actorFactory.dispose();hairFactory.dispose();});
+  window.addEventListener('pagehide',()=>{if(benchmark)finishBenchmark('aborted','page-hidden');clearTimeout(pumpTimer);resizeObserver?.disconnect();faceRouting?.dispose();for(const actor of actors){actor.hair.dispose();actor.cloth.dispose();}shoeFactory.dispose();actorFactory.dispose();hairFactory.dispose();});
 }
 
 boot().catch(error=>{
