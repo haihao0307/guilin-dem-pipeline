@@ -11,10 +11,20 @@
     "workflowRun": 39386779708,
     "summary": "After pants and inner advanced 28 steps, adding outer reset the whole world to step 0; the restored initial mesh had zero discrete crossings, then step 4 failed at 1.044 mm contact residual after three accepted steps."
   },
+  "positiveControl": {
+    "headSha": "5186f8a5d71a5e75059539f83a31b2ba1e53042b",
+    "workflowRun": 39391889463,
+    "artifactId": 12251619456,
+    "artifactDigest": "sha256:69fb34accaa6b561f7fdf1667df922754fe7d4aaa7f5235f6d74fc94f7ef0297",
+    "mode": "GLOBAL_REDRESS_RESTART",
+    "result": "PASS_GLOBAL_REDRESS_RESTART_SCOPED",
+    "summary": "Three explicit remove/restart cycles passed with 34, 31 and 32 accepted restored steps, 48 selected full geometry checks, and the required six-job release matrix. Source and tests still intentionally reset every garment and both clocks to step 0, so this is a restart control, not retained-state resume."
+  },
   "modeStates": [
     "HIDDEN_RENDER_ONLY",
     "PHYSICS_DORMANT",
-    "REMOVED_AND_REINSERTED"
+    "REMOVED_AND_REINSERTED",
+    "GLOBAL_REDRESS_RESTART"
   ],
   "mustNeverRepeat": [
     "call a global redress and clock/history reset a resume",
@@ -22,6 +32,7 @@
     "mutate the active accepted world while testing a new member without an atomic rollback point",
     "approve re-entry from the initial frame or fewer steps than the known delayed-failure window",
     "remove collision participants merely because their rendering is hidden"
+    ,"use a passing global-redress restart as evidence of retained-state resume"
   ],
   "requiredEvidence": [
     "declared re-entry mode",
@@ -37,6 +48,7 @@
     "HIDDEN_RENDER_ONLY keeps all solver and contact participation live",
     "PHYSICS_DORMANT requires exact state retention plus a scoped clearance/contact-history policy",
     "REMOVED_AND_REINSERTED must stage outside the active world and commit atomically only after its gate passes",
+    "GLOBAL_REDRESS_RESTART may reset all garments and clocks only when restart semantics are explicit and no retained-state continuity is claimed",
     "a failed staging attempt leaves the prior active world and its accepted lineage unchanged",
     "existing 0.5 mm contact and 1.45 stretch thresholds remain unchanged"
   ],
@@ -51,6 +63,9 @@
     "ACKNOWLEDGED": false,
     "CANDIDATE_CLASSIFIER_IMPLEMENTED": true,
     "CANDIDATE_CLASSIFIER_GATE_RUN": true,
+    "GLOBAL_REDRESS_RESTART_IMPLEMENTED": true,
+    "GLOBAL_REDRESS_RESTART_GATE_RUN": true,
+    "GLOBAL_REDRESS_RESTART_GATE_RUN_ID": 39391889463,
     "IMPLEMENTED": false,
     "GATE_RUN": false,
     "ADOPTED": false,
