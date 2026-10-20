@@ -15,6 +15,16 @@ const display = p => new THREE.Vector3(p[0], p[2], -p[1]);
 const asVector = p => p?.isVector3 ? p.clone() : p && 'x' in p ? new THREE.Vector3(p.x,p.y,p.z) : new THREE.Vector3(...p);
 const pauseFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
 const hash = text => { let h = 2166136261; for (let i=0;i<text.length;i++) h = Math.imul(h ^ text.charCodeAt(i),16777619); return (h>>>0).toString(16); };
+// Program identity depends on exact shader source, never on the person using
+// it. Three retains its normal material/defines/light variants around this
+// key. The exact-source Map also avoids treating a short hash collision as
+// equivalent code; only the small stable token enters Three's program key.
+const frozenProgramSources = new Map();
+function frozenProgramKey(vertexShader,fragmentShader) {
+  const source=JSON.stringify([vertexShader,fragmentShader]);
+  if(!frozenProgramSources.has(source))frozenProgramSources.set(source,`npc-r01-frozen-source-${frozenProgramSources.size+1}`);
+  return frozenProgramSources.get(source);
+}
 
 /** Material.clone does NOT copy onBeforeCompile. Capture the original chained
  * shader now, while its morphology fields still belong to this identity. Only
@@ -53,18 +63,21 @@ function freezeMaterial(source, renderer, actorId, textureCopies) {
     if (!(key in initial) || initial[key] !== uniform) frozen[key] = {value:copy(uniform.value)};
   }
   const material = source.clone(), vertexShader=shader.vertexShader, fragmentShader=shader.fragmentShader;
-  const sourceKey = source.customProgramCacheKey();
+  const programKey = frozenProgramKey(vertexShader,fragmentShader);
   material.name = `${source.name || source.type}/npc-${actorId}`;
   material.defines = {...source.defines, ...shader.defines};
   material.onBeforeCompile = live => {
     live.vertexShader = vertexShader; live.fragmentShader = fragmentShader;
     Object.assign(live.uniforms, frozen);
   };
-  material.customProgramCacheKey = () => `${sourceKey}/npc-${actorId}/${hash(vertexShader+fragmentShader)}`;
+  // Each material still owns its frozen uniform objects and copied data
+  // textures; sharing the GPU program does not share these material values.
+  material.customProgramCacheKey = () => programKey;
   material.needsUpdate = true;
   return {material, ownedTextures, report:{sourceType:source.type, sourceName:source.name,
     frozenCustomUniforms:Object.keys(frozen), vertexShaderHash:hash(vertexShader),
-    fragmentShaderHash:hash(fragmentShader), chainedR07ShaderRetained:true}};
+    fragmentShaderHash:hash(fragmentShader), programCacheKey:programKey,
+    chainedR07ShaderRetained:true}};
 }
 
 function restVertex(geometry, id) {
@@ -226,7 +239,8 @@ function makeActor(model, viewer, spec, preset, measurements) {
   const binding=new NativeBinding(model,{...viewer,mesh,geometry});binding.activate(true);
   const rig=new NativeRig({...binding.rig,stature:binding.height});
   if(rig.count!==104) throw Error(`R07 native bone count changed: ${rig.count}`);
-  const root=new THREE.Group();root.name=`NPC-${spec.id}`;root.position.set(spec.x,binding.floorOffset,spec.z);root.add(mesh);
+  const root=new THREE.Group();root.name=`NPC-${spec.id}`;root.visible=false;
+  root.position.set(spec.x,binding.floorOffset,spec.z);root.add(mesh);
   viewer.scene.add(root);root.updateMatrixWorld(true);
   const fingers={},patches={},handSurfaceVertices={},handFingerMembership={};
   for(const side of SIDES) {
@@ -510,6 +524,10 @@ export async function createActors({onProgress=()=>{}}={}) {
     await controller.restore(saved);viewer.mesh.visible=wasVisible;viewer.render();
   }
   viewer.mesh.visible=false;
+  // Host commits/portrait updates above draw only their current native model.
+  // All snapshots become renderable together after the host is restored. The
+  // Workbench's next frame draws them with its final camera/world setup.
+  for(const actor of actors)actor.root.visible=true;
   onProgress('三个完整人物已就绪；后续只更新各自骨矩阵');
   return {actors,viewer};
 }

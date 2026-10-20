@@ -1,10 +1,10 @@
 {
-  "schema": "npc-independent-midair-qa/1",
-  "createdAt": "2026-10-20T03:46:44.780Z",
-  "sourceHashAtStart": "84014953b01aec25ca83d0d3572dacdfda4eb155168b300b336b4db021f1749f",
-  "sourceHashAtEnd": "84014953b01aec25ca83d0d3572dacdfda4eb155168b300b336b4db021f1749f",
+  "schema": "npc-independent-midair-qa/2",
+  "createdAt": "2026-10-20T04:14:03.166Z",
+  "sourceHashAtStart": "9cf05f138b9afad7f24d42e8542647d64edab973575470d3a9bb5bb9f61f7347",
+  "sourceHashAtEnd": "9cf05f138b9afad7f24d42e8542647d64edab973575470d3a9bb5bb9f61f7347",
   "sourceUnchangedDuringTest": true,
-  "scope": "TEST_FIXTURE_ONLY actor adapters; unchanged production LifeWorld and vendored Cannon. These fixtures have no configureGrasp or surface diagnostics; this report does not prove the configured native grasp, hand/prop penetration, foot contact, browser operation, or public delivery.",
+  "scope": "TEST_FIXTURE_ONLY actor adapters; unchanged production LifeWorld and vendored Cannon. Fixtures omit configureGrasp and surface diagnostics; these checks do not prove calibrated native grasp, hand geometry, visible withdrawal, foot contact, browser rendering, or delivery.",
   "station": {
     "tableTop": 1.02,
     "tableHalf": [
@@ -37,22 +37,49 @@
   "stepS": 0.008333333333333333,
   "tests": [
     {
-      "name": "Cancel after actual vertical rise above 5 cm and allow waiting helper to complete",
-      "requiredRiseM": 0.05,
+      "name": "Cancel in midair above 5 cm, withdraw A, and let waiting B complete",
       "pass": true,
+      "requiredRiseM": 0.05,
       "cancelled": {
-        "t": 2.7666666666666595,
-        "y": 1.1416255644961737,
-        "riseM": 0.0508255644961737,
-        "velocityY": 0.16517708014428192,
-        "owner": "A",
-        "phase": "lift",
-        "constraints": 1,
+        "before": {
+          "time": 2.7666666666666595,
+          "y": 1.1416255644961737,
+          "riseM": 0.0508255644961737,
+          "velocityY": 0.16517708014428192,
+          "owner": "A",
+          "reserved": "A",
+          "constraints": 1
+        },
         "after": {
           "owner": null,
           "reserved": null,
           "constraints": 0
+        },
+        "handAfterRelease": [
+          0.0006304693018042855,
+          1.1512753080422928,
+          0.3379447912050887
+        ],
+        "cancelledResult": {
+          "result": "cancelled",
+          "detail": "已移除握持约束与占用；物品继续进行刚体模拟"
+        },
+        "recovery": {
+          "action": "withdraw-open-hand",
+          "progress": 0
         }
+      },
+      "withdrawn": {
+        "time": 3.6749999999999896,
+        "hand": [
+          0.0006304693018042855,
+          1.1812753080422929,
+          0.19794479120508868
+        ],
+        "recovery": null,
+        "owner": null,
+        "reserved": "B",
+        "constraints": 0
       },
       "helperResult": {
         "result": "completed",
@@ -80,6 +107,74 @@
         0.0996094094018013,
         1.0899989157046828,
         0.4399786001265734
+      ]
+    },
+    {
+      "name": "Completed open-hand withdrawal never reattaches or reacquires the released object",
+      "pass": true,
+      "cancelled": {
+        "before": {
+          "time": 2.7666666666666595,
+          "y": 1.1416255644961737,
+          "riseM": 0.0508255644961737,
+          "velocityY": 0.16517708014428192,
+          "owner": "A",
+          "reserved": "A",
+          "constraints": 1
+        },
+        "after": {
+          "owner": null,
+          "reserved": null,
+          "constraints": 0
+        },
+        "handAfterRelease": [
+          0.0006304693018042855,
+          1.1512753080422928,
+          0.3379447912050887
+        ],
+        "cancelledResult": {
+          "result": "cancelled",
+          "detail": "已移除握持约束与占用；物品继续进行刚体模拟"
+        },
+        "recovery": {
+          "action": "withdraw-open-hand",
+          "progress": 0
+        }
+      },
+      "physicsStepsAfterCancel": 180,
+      "maxProgress": 0.9999999999999991,
+      "progressMonotonic": true,
+      "ownershipOrConstraintLeaked": false,
+      "hand": [
+        0.0006304693018042855,
+        1.1812753080422929,
+        0.19794479120508868
+      ],
+      "handDelta": [
+        0,
+        0.030000000000000027,
+        -0.14
+      ],
+      "finalGrip": 0,
+      "finalPhase": "cancelled",
+      "finalRecovery": null,
+      "withdrawEvents": [
+        {
+          "t": 3.675,
+          "type": "hand-withdrawn",
+          "actor": "A",
+          "objectUnconstrained": true
+        }
+      ],
+      "remaining": {
+        "owner": null,
+        "reserved": null,
+        "constraints": 0
+      },
+      "finalBottlePosition": [
+        0.0006406247126400427,
+        1.089998916001826,
+        0.36990444140930034
       ]
     }
   ],

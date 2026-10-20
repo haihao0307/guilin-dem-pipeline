@@ -8,6 +8,8 @@
  * Default: startup -> real GPU/three actors -> panorama and hand-view evidence.
  * NPC_QA_PHASE=contact explicitly runs the three real UI pick/place tasks.
  * NPC_QA_PHASE=suite explicitly runs the workbench's six-test observation suite.
+ * NPC_QA_PHASE=public verifies the deployed exact SHA, three complete people,
+ * one real A pick/place task and the 390 x 844 viewport, without a second suite.
  * PREVIEW_URL selects a fixed deployed URL. Otherwise serve only PREVIEW_FILE
  * (default: this directory's preview.html) on an ephemeral loopback port.
  */
@@ -22,7 +24,7 @@ const {chromium} = require('playwright');
 
 const VERSION = 'NPC-LIFE-OBSERVATION-R01';
 const PHASE = process.env.NPC_QA_PHASE || 'startup';
-assert(['startup','contact','suite'].includes(PHASE), 'NPC_QA_PHASE must be startup, contact, or suite');
+assert(['startup','contact','suite','public'].includes(PHASE), 'NPC_QA_PHASE must be startup, contact, suite, or public');
 const here = __dirname;
 const input = path.resolve(process.env.PREVIEW_FILE || path.join(here,'preview.html'));
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -37,7 +39,12 @@ const SUITE_MS = timeout('NPC_SUITE_TIMEOUT_MS',900000);
 // Driver-side deadlines also work when the renderer no longer services JS/CDP.
 // These guard evidence collection; they do not relax any native readiness gate.
 const PROBE_MS = timeout('NPC_PROBE_TIMEOUT_MS',60000);
-const GPU_MS = timeout('NPC_GPU_TIMEOUT_MS',90000);
+// The measured full-quality SwiftShader baseline needed ~184 s to drain a GPU
+// readback and ~208 s around a later screenshot. Keep bounded headroom while
+// recording the new single-frame scheduler's actual completion time.
+const GPU_MS = timeout('NPC_GPU_TIMEOUT_MS',240000);
+const FRAME_MS = timeout('NPC_FRAME_TIMEOUT_MS',240000);
+const CAPTURE_MS = timeout('NPC_CAPTURE_TIMEOUT_MS',120000);
 const FAILURE_TOTAL_MS = 90000, FAILURE_STEP_MS = 20000, CLOSE_MS = 15000;
 const run = process.env.GITHUB_RUN_ID ? process.env.GITHUB_RUN_ID + '-' + (process.env.GITHUB_RUN_ATTEMPT || '1') : new Date().toISOString().replace(/[:.]/g,'-');
 const out = path.resolve(process.env.NPC_QA_OUT || process.env.QA_OUT || path.join(here,'qa','browser-' + PHASE + '-' + run));
@@ -61,7 +68,7 @@ const report = {
     viewport:{width:1200,height:900},playwright:require('playwright/package.json').version},
   tests:[],pageErrors:[],consoleErrors:[],consoleWarnings:[],failedRequests:[],httpErrors:[],requests:[],screenshots:[],
   currentStage:'created',activeOperations:{},driverOperations:[],progressLog:[],evidenceWriteErrors:[],
-  deadlines:{bootMS:BOOT_MS,taskMS:TASK_MS,suiteMS:SUITE_MS,probeMS:PROBE_MS,gpuMS:GPU_MS,
+  deadlines:{bootMS:BOOT_MS,taskMS:TASK_MS,suiteMS:SUITE_MS,probeMS:PROBE_MS,gpuMS:GPU_MS,frameMS:FRAME_MS,captureMS:CAPTURE_MS,
     failureTotalMS:FAILURE_TOTAL_MS,failureStepMS:FAILURE_STEP_MS,browserCloseMS:CLOSE_MS},
   startupPassed:false,contactTestsRun:false,fullSuiteRun:false,completed:false,
   visualAcceptance:false,productionReady:false,publicURLVerified:false
@@ -162,7 +169,14 @@ async function evidence(label,{nativeRigs=false,budgetMS=PROBE_MS}={}) {
   const captured=await evaluate('collect evidence: '+label,({nativeRigs}) => {
     const safe=fn=>{try{return fn();}catch(error){return{readError:String(error)};}};
     const qa=window.__IDENTITY_QA__,v=qa?.viewer?.(),model=qa?.model?.(),app=window.__NPC_OBSERVATION__;
-    const actors=safe(()=>app?.actorDiagnostics?.() ?? app?.diagnostics?.()?.actors ?? null);
+    let actors=safe(()=>app?.actorDiagnostics?.() ?? app?.diagnostics?.()?.actors ?? null);
+    // All original weights and matrices are retained in the initial/failure
+    // raw-rig files. Later contacts need current geometry, not another 13 MB
+    // serialization of the same immutable rig on every inspection.
+    if(!nativeRigs && Array.isArray(actors))actors=actors.map(actor=>{
+      const {rig,nativeRig,bindingRig,...current}=actor;
+      return {...current,nativeRigEvidence:'native-rigs.json'};
+    });
     const actorMeshes=[];
     v?.scene?.traverse(mesh=>{
       if(!mesh.isMesh || !/^NPC-[ABC]-R07-complete-native-person$/.test(mesh.name))return;
@@ -178,6 +192,7 @@ async function evidence(label,{nativeRigs=false,budgetMS=PROBE_MS}={}) {
       version:app?.version,ready:app?.ready,build:window.__NPC_BUILD__ || window.__NPC_LIFE_BUILD__,
       snapshot:safe(()=>app?.snapshot?.()),performance:safe(()=>app?.performance?.()),
       verification:safe(()=>app?.verification?.()),actorDiagnostics:actors,actorMeshes,
+      renderScheduler:safe(()=>app?.renderStatus?.()),nativeRigsIncluded:nativeRigs,
       native:{stream:safe(()=>model?.r05Stream?.report?.() || window.__R05_STREAM__?.report?.()),
         state:nativeRigs?safe(()=>qa?.controller?.()?.state()):undefined,
         hostRig:nativeRigs?safe(()=>model?.lastBodyDriver?.rig):undefined,
@@ -214,40 +229,101 @@ async function evidence(label,{nativeRigs=false,budgetMS=PROBE_MS}={}) {
 }
 
 async function gpuEvidence() {
-  const gpu=await evaluate('render and read actual GPU framebuffer',async()=>{
-    const viewer=window.__IDENTITY_QA__.viewer(),renderer=viewer.renderer,gl=renderer.getContext();
-    viewer.render();
-    const debug=gl.getExtension('WEBGL_debug_renderer_info');
-    const programs=(renderer.info.programs || []).map(program=>({
-      id:program.id,name:program.name,linked:!!program.program && gl.getProgramParameter(program.program,gl.LINK_STATUS),
-      log:program.program?gl.getProgramInfoLog(program.program):'missing native WebGL program',
-      usedTimes:program.usedTimes
-    }));
-    const pixels=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);
-    gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-    let lo=255,hi=0,sum=0,sum2=0,count=0;
-    for(let i=0;i<pixels.length;i+=16){const lum=(pixels[i]+pixels[i+1]+pixels[i+2])/3;lo=Math.min(lo,lum);hi=Math.max(hi,lum);sum+=lum;sum2+=lum*lum;count++;}
-    const digest=await crypto.subtle.digest('SHA-256',pixels);
-    return {available:!!gl,contextLost:gl.isContextLost(),vendor:gl.getParameter(gl.VENDOR),renderer:gl.getParameter(gl.RENDERER),
-      unmaskedVendor:debug?gl.getParameter(debug.UNMASKED_VENDOR_WEBGL):null,
-      unmaskedRenderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,
-      version:gl.getParameter(gl.VERSION),shadingLanguage:gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
-      limits:{fragmentTextureUnits:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),vertexTextureUnits:gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),combinedTextureUnits:gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),maxTextureSize:gl.getParameter(gl.MAX_TEXTURE_SIZE)},
-      programs,memory:renderer.info.memory,render:renderer.info.render,pixelRatio:renderer.getPixelRatio(),
-      framebuffer:{width:gl.drawingBufferWidth,height:gl.drawingBufferHeight,lo,hi,
-        variance:count?sum2/count-(sum/count)**2:0,
-        sha256:Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}};
+  const gpu=await evaluate('complete one native GPU frame and read its PBO',async()=>{
+    const app=window.__NPC_OBSERVATION__,viewer=window.__IDENTITY_QA__.viewer(),renderer=viewer.renderer,gl=renderer.getContext();
+    if(typeof app?.awaitFrame!=='function' || typeof app?.onRender!=='function' || typeof app?.renderStatus!=='function')
+      throw Error('The actual native render scheduler does not expose awaitFrame/onRender/renderStatus');
+    if(typeof gl.fenceSync!=='function' || typeof gl.getBufferSubData!=='function')
+      throw Error('Real WebGL2 fence and pixel-pack-buffer completion are required');
+    const began=performance.now(),schedulerBefore=app.renderStatus();
+    const buffer=gl.createBuffer();if(!buffer)throw Error('Could not allocate the full-resolution GPU evidence readback buffer');
+    let unsubscribe,captured=null,captureError=null;
+    try {
+      // Run immediately after the real host render, before the scheduler fence.
+      // Read pixels into a PBO in that same JS turn: the default framebuffer is
+      // not assumed to survive a later RAF. No extra render is issued here.
+      unsubscribe=app.onRender(({serial})=>{
+        unsubscribe?.();
+        const started=performance.now(),previous=gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING);
+        try {
+          const width=gl.drawingBufferWidth,height=gl.drawingBufferHeight;
+          if(width<=0 || height<=0)throw Error('The real native drawing buffer has no pixels');
+          gl.bindBuffer(gl.PIXEL_PACK_BUFFER,buffer);
+          gl.bufferData(gl.PIXEL_PACK_BUFFER,width*height*4,gl.STREAM_READ);
+          gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,0);
+          captured={width,height,renderFrame:renderer.info.render.frame,submittedSerial:serial,
+            queuedAtMS:performance.now()-began,readCommandMS:performance.now()-started};
+        } catch(error) {captureError=String(error.stack||error);}
+        finally {gl.bindBuffer(gl.PIXEL_PACK_BUFFER,previous);}
+      });
+      const completedFrame=await app.awaitFrame({fresh:true}),completedAtMS=performance.now()-began;
+      if(captureError)throw Error('Actual GPU readback command failed: '+captureError);
+      if(!captured)throw Error('No real host render was observed for the requested fresh frame');
+      const schedulerAfter=app.renderStatus();
+      if(schedulerAfter.startupDrain?.completed!==true)throw Error('Earlier native startup GPU commands have not drained');
+      if(!Number.isFinite(schedulerAfter.maxInFlight) || schedulerAfter.maxInFlight>1)
+        throw Error('The native renderer queued more than one GPU frame');
+      if(schedulerAfter.inFlight!==0 || schedulerAfter.submitted!==schedulerAfter.completed || schedulerAfter.completed!==captured.submittedSerial)
+        throw Error('The measured framebuffer does not have its matching completed scheduler fence');
+      const pixels=new Uint8Array(captured.width*captured.height*4),copyStarted=performance.now();
+      const previous=gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING);
+      try {gl.bindBuffer(gl.PIXEL_PACK_BUFFER,buffer);gl.getBufferSubData(gl.PIXEL_PACK_BUFFER,0,pixels);}
+      finally {gl.bindBuffer(gl.PIXEL_PACK_BUFFER,previous);}
+      const cpuCopyMS=performance.now()-copyStarted,readbackGLError=gl.getError();
+      if(readbackGLError!==gl.NO_ERROR)throw Error('Actual GPU readback GL error '+readbackGLError);
+      const debug=gl.getExtension('WEBGL_debug_renderer_info'),programStarted=performance.now();
+      const programs=(renderer.info.programs || []).map(program=>({
+        id:program.id,name:program.name,linked:!!program.program && gl.getProgramParameter(program.program,gl.LINK_STATUS),
+        log:program.program?gl.getProgramInfoLog(program.program):'missing native WebGL program',usedTimes:program.usedTimes
+      }));
+      const programStatusMS=performance.now()-programStarted;
+      let lo=255,hi=0,sum=0,sum2=0,count=0;
+      for(let i=0;i<pixels.length;i+=16){const lum=(pixels[i]+pixels[i+1]+pixels[i+2])/3;lo=Math.min(lo,lum);hi=Math.max(hi,lum);sum+=lum;sum2+=lum*lum;count++;}
+      const digest=await crypto.subtle.digest('SHA-256',pixels);
+      return {available:!!gl,contextLost:gl.isContextLost(),vendor:gl.getParameter(gl.VENDOR),renderer:gl.getParameter(gl.RENDERER),
+        unmaskedVendor:debug?gl.getParameter(debug.UNMASKED_VENDOR_WEBGL):null,
+        unmaskedRenderer:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,
+        version:gl.getParameter(gl.VERSION),shadingLanguage:gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+        limits:{fragmentTextureUnits:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),vertexTextureUnits:gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),combinedTextureUnits:gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),maxTextureSize:gl.getParameter(gl.MAX_TEXTURE_SIZE)},
+        programs,memory:renderer.info.memory,render:renderer.info.render,pixelRatio:renderer.getPixelRatio(),
+        readback:{method:'full-resolution WebGL2 PBO; read command in actual host onRender before scheduler fence',
+          verifierDirectRenders:0,completedFrame,readbackGLError,schedulerBefore,schedulerAfter,
+          timing:{queuedAtMS:captured.queuedAtMS,readCommandMS:captured.readCommandMS,completedAtMS,
+            waitAfterReadCommandMS:completedAtMS-captured.queuedAtMS,cpuCopyMS,programStatusMS,totalMS:performance.now()-began}},
+        framebuffer:{width:captured.width,height:captured.height,renderFrame:captured.renderFrame,submittedSerial:captured.submittedSerial,lo,hi,
+          variance:count?sum2/count-(sum/count)**2:0,
+          sha256:Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')}};
+    } finally {unsubscribe?.();gl.deleteBuffer(buffer);}
   },undefined,GPU_MS);
   put('gpu.json',gpu);
   return gpu;
 }
 
 async function screenshot(name) {
-  await evaluate('render screenshot frame: '+name,async()=>{const v=window.__IDENTITY_QA__?.viewer?.();v?.render();await new Promise(resolve=>requestAnimationFrame(resolve));v?.render();});
-  const shot=await sendCDP('capture screenshot: '+name,'Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  const frame=await evaluate('await completed native screenshot frame: '+name,async()=>{
+    const app=window.__NPC_OBSERVATION__,viewer=window.__IDENTITY_QA__?.viewer?.();
+    if(typeof app?.awaitFrame!=='function' || typeof app?.renderStatus!=='function')throw Error('Real native frame completion is unavailable');
+    const began=performance.now(),before=app.renderStatus(),completedFrame=await app.awaitFrame({fresh:true});
+    const after=app.renderStatus();
+    if(!Number.isFinite(after.maxInFlight) || after.maxInFlight>1)throw Error('More than one native GPU frame was in flight');
+    if(after.inFlight!==0 || after.submitted!==after.completed)throw Error('Screenshot requested before its real native GPU frame completed');
+    return {before,after,completedFrame,waitMS:performance.now()-began,renderFrame:viewer.renderer.info.render.frame,
+      canvas:{width:viewer.renderer.domElement.width,height:viewer.renderer.domElement.height}};
+  },undefined,FRAME_MS);
+  const captureStarted=Date.now();
+  const shot=await sendCDP('capture screenshot: '+name,'Page.captureScreenshot',{format:'png',captureBeyondViewport:false},CAPTURE_MS);
+  const captureMS=Date.now()-captureStarted;
   const bytes=Buffer.from(shot.data,'base64'),file=name+'.png';
   fs.writeFileSync(path.join(out,file),bytes);
-  report.screenshots.push({file,sha256:sha(bytes),bytes:bytes.length,url:page.url(),capturedAt:new Date().toISOString()});
+  const record={file,sha256:sha(bytes),bytes:bytes.length,url:page.url(),capturedAt:new Date().toISOString(),
+    verifierDirectRenders:0,frame,captureMS};
+  // Save the image's completed-frame proof before attempting further browser reads.
+  report.screenshots.push(record);put(name+'-frame.json',record);checkpoint('screenshot pixels saved: '+name);
+  record.afterCapture=await evaluate('read scheduler after screenshot: '+name,()=>({
+    scheduler:window.__NPC_OBSERVATION__.renderStatus(),renderFrame:window.__IDENTITY_QA__.viewer().renderer.info.render.frame
+  }));
+  record.submittedDuringCapture=record.afterCapture.scheduler.submitted-frame.after.submitted;
+  put(name+'-frame.json',record);
   log('screenshot '+file+' ('+bytes.length+' bytes)');
 }
 
@@ -348,9 +424,10 @@ async function mobileViewport() {
   });
 }
 
-async function contactTests() {
+async function contactTests({firstOnly=false}={}) {
   report.contactTestsRun=true;
-  for(let i=0;i<3;i++) {
+  report.contactActorsTested=[];
+  for(let i=0;i<(firstOnly?1:3);i++) {
     const id=['A','B','C'][i];
     await check(id+' real native pick/place UI',async()=>{
       await pause(true);await page.click('[data-person="'+i+'"]');
@@ -400,6 +477,7 @@ async function contactTests() {
       return {contactErrorM:agent.contactErrorM,result,object:final.snapshot.object,feet,finalFeet,
         handDiagnostics:hand,bottleGeometry,contactGeometry,phaseGeometry};
     });
+    report.contactActorsTested.push(id);checkpoint('contact actor completed: '+id);
   }
 }
 
@@ -418,6 +496,65 @@ async function fullSuite() {
     assert.equal(result.verification.tests.length,6);assert.equal(result.verification.passed,true);
     assert(result.verification.tests.every(test=>test.pass===true),'All six tests must report their measured pass result');
     return result.verification;
+  });
+}
+
+async function identityInteraction() {
+  await check('identity-task UI, independent review invalidation and actual JSON export',async()=>{
+    await pause(true);await page.click('#npc-reset');
+    const geometryStart=await auditCursor('identity plan');
+    await page.click('#npc-plan');await pause(false);
+    await waitFor('A sorts, B observes ownership and C confirms the result',()=>{
+      const app=window.__NPC_OBSERVATION__,s=app.snapshot();
+      return app.errors.length || (s.agents.find(a=>a.id==='A')?.result?.result==='completed' &&
+        s.agents.find(a=>a.id==='B')?.result?.result==='already-sorted' && s.review.checked);
+    },{},{timeout:TASK_MS,polling:100});
+    await pause(true);
+    const plan=await evidence('identity-plan');
+    assert.equal(plan.errors.length,0);
+    assert.equal(plan.snapshot.agents.find(a=>a.id==='A').result.result,'completed');
+    assert.equal(plan.snapshot.agents.find(a=>a.id==='B').result.result,'already-sorted');
+    assert.equal(plan.snapshot.review.checked,true);
+    assert(plan.snapshot.events.some(event=>event.type==='review-confirmed' && event.actor==='C'),'C actually confirmed the shared world result');
+    const feet=checkFeetAndBones(plan.actorDiagnostics,'identity-plan');
+    const geometry=checkAuditGeometry(plan.snapshot,'identity-plan',{afterTime:geometryStart,requiredActors:['A']});
+    await page.click('[data-camera="all"]');await screenshot('identity-plan');
+    const targetRevisionBefore=plan.snapshot.targetRevision;
+    await page.click('#npc-target');await pause(false);
+    await waitFor('C invalidates its previous result after the target changes',()=>{
+      const app=window.__NPC_OBSERVATION__,s=app.snapshot();
+      return app.errors.length || (!s.review.checked && s.events.some(event=>event.type==='review-invalidated' && event.actor==='C'));
+    },{},{timeout:TASK_MS,polling:100});
+    await pause(true);
+    const changed=await evidence('identity-review-invalidated');
+    assert.equal(changed.errors.length,0);assert.equal(changed.snapshot.review.checked,false);
+    assert.equal(changed.snapshot.targetRevision,targetRevisionBefore+1);
+    assert.notDeepEqual(changed.snapshot.target,plan.snapshot.target);
+    assert(changed.snapshot.events.some(event=>event.type==='review-invalidated' && event.actor==='C'));
+    assert.equal(changed.snapshot.object.insideTarget,false,'The old placement is no longer inside the moved target');
+    const exportDetails=page.locator('#npc-app details');
+    if(await exportDetails.getAttribute('open')===null)await exportDetails.locator('summary').click();
+    await page.locator('#npc-export').scrollIntoViewIfNeeded();
+    const current=await evaluate('read paused authoritative world for export',()=>window.__NPC_OBSERVATION__.snapshot());
+    const [download]=await bounded('capture actual UI JSON download',()=>Promise.all([
+      page.waitForEvent('download',{timeout:30000}),page.click('#npc-export')
+    ]),35000);
+    const file='identity-ui-export.json';
+    await bounded('save actual UI JSON download',()=>download.saveAs(path.join(out,file)));
+    assert.equal(await bounded('check UI download completed',()=>download.failure()),null);
+    assert.equal(download.suggestedFilename(),'npc-life-observation-r01-data.json');
+    const bytes=fs.readFileSync(path.join(out,file)),exported=JSON.parse(bytes.toString('utf8'));
+    assert.equal(exported.version,VERSION);assert.equal(exported.time,current.time);
+    assert.deepEqual(exported.object,current.object);assert.deepEqual(exported.target,current.target);
+    assert.equal(exported.targetRevision,current.targetRevision);assert.deepEqual(exported.events,current.events);
+    assert.deepEqual(exported.review,current.review);assert.deepEqual(exported.agents,current.agents);
+    assert.equal(exported.errors.length,0);
+    const result={actualUI:true,plan:{aResult:'completed',bResult:'already-sorted',cReviewChecked:true},
+      invalidated:{cReviewChecked:false,targetRevisionBefore,targetRevisionAfter:current.targetRevision},
+      geometry,feet,export:{file,suggestedFilename:download.suggestedFilename(),bytes:bytes.length,sha256:sha(bytes),
+        authoritativeWorldMatched:true,eventCount:current.events.length,targetRevision:current.targetRevision}};
+    await exportDetails.locator('summary').click();
+    put('identity-ui-verification.json',result);report.identityUI=result;return result;
   });
 }
 
@@ -443,10 +580,11 @@ async function main() {
     await bounded('start candidate HTTP server',()=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);}),10000);
     report.url='http://127.0.0.1:'+server.address().port+'/';report.deliveryMode='local-candidate-http';
   }
+  if(PHASE==='public')assert.equal(report.deliveryMode,'deployed-url','The public phase requires PREVIEW_URL for the actual deployed candidate');
   stage('launch isolated CI Chromium');
   browser=await bounded('launch Chromium',()=>chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}));
   report.environment.chromium=browser.version();
-  context=await bounded('create CI browser context',()=>browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1}));
+  context=await bounded('create CI browser context',()=>browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1,acceptDownloads:true}));
   await bounded('install read-only error capture',()=>context.addInitScript(()=>{
     window.__NPC_BROWSER_EVENTS__=[];
     window.__NPC_BROWSER_FATAL__=[];
@@ -530,8 +668,9 @@ async function main() {
   await page.click('[data-camera="contact"]');await screenshot('02-hand-view');
   await evidence('hand-view');report.dom=await saveDOM();
   report.startupPassed=true;log('startup evidence complete');
-  if(PHASE==='contact' || PHASE==='suite')await contactTests();
-  if(PHASE==='suite'){await fullSuite();await mobileViewport();}
+  if(PHASE==='contact' || PHASE==='suite' || PHASE==='public')await contactTests({firstOnly:PHASE==='public'});
+  if(PHASE==='suite'){await fullSuite();await identityInteraction();}
+  if(PHASE==='suite' || PHASE==='public')await mobileViewport();
   const final=await evidence('final');
   await check('no page, resource, application or WebGL errors',async()=>{
     assert.equal(report.pageErrors.length,0);assert.equal(report.consoleErrors.length,0);
@@ -544,7 +683,7 @@ async function main() {
     return {pageErrors:0,consoleErrors:0,failedRequests:0,httpErrors:0,appErrors:0};
   });
   report.completed=true;report.status=PHASE.toUpperCase()+'_PASSED';
-  report.publicURLVerified=report.deliveryMode==='deployed-url';
+  report.publicURLChecksPassed=report.deliveryMode==='deployed-url';
   report.fullProgrammaticAcceptance=PHASE==='suite';
   log('verification complete');
 }
@@ -589,8 +728,9 @@ main().catch(async error=>{
     catch(error){report.cleanup.errors.push({operation:'server.close',error:clip(error.message)});}
   }
   report.cleanup.completed=report.cleanup.errors.length===0;
+  report.publicURLVerified=!!(report.completed && report.cleanup.completed && report.publicURLChecksPassed);
   if(!report.cleanup.completed) {
-    report.completed=false;report.fullProgrammaticAcceptance=false;report.status='FAILED_CLEANUP';process.exitCode=1;
+    report.completed=false;report.fullProgrammaticAcceptance=false;report.publicURLVerified=false;report.status='FAILED_CLEANUP';process.exitCode=1;
     // The only remaining handles can belong to this isolated test process.
     // Exit after durable evidence rather than strand the artifact-upload step.
     report.cleanup.forcedVerifierExit=true;
