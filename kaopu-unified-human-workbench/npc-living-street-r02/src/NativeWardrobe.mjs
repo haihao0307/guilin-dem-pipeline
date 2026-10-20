@@ -199,7 +199,7 @@ export async function prepareNativeWardrobeControl(actor,{lookId=LOOK_BY_ACTOR[a
     dispose(){for(const i of items){i.mesh.geometry.dispose();for(const m of i.mesh.material)m.dispose();}}};
 }
 
-export async function createNativeWardrobe({renderer,onProgress=()=>{}}={}) {
+export async function createNativeWardrobe({renderer,onProgress=()=>{},requestRender}={}) {
   if(!renderer)throw Error('Native materials need the existing renderer');
   const source=await sourceData(),wearers=new Set();
   async function attach(actor,{lookId=LOOK_BY_ACTOR[actor.id]||'D01'}={}) {
@@ -211,7 +211,7 @@ export async function createNativeWardrobe({renderer,onProgress=()=>{}}={}) {
       const packet=await appearanceData(id),mesh=nativeGarmentMesh(T,packet,GROUND_SHIFT),binding=bindGarment(actor,packet,mesh,source,role);
       const material=materialRecords.find(m=>m.id===materialId);if(!material)throw Error('Missing native textile '+materialId);
       if(material.family==='knit')throw Error('Knit is not enabled in R02: accepted P02 C2 source remains isolated from these six denim/leather looks');
-      const info=withSettings(material),solid=await buildContinuousSolid(mesh,packet,info,{renderer,
+      const info=withSettings(material),solid=await buildContinuousSolid(mesh,packet,info,{renderer,requestRender,
         onProgress:(fraction,panel)=>onProgress({actor:actor.id,role,phase:'original material',fraction,panel})});
       // The source garment is a hidden control surface, as in its own MP05
       // workbench. Only its complete native yarns/seams render; no opaque cover.
@@ -219,19 +219,31 @@ export async function createNativeWardrobe({renderer,onProgress=()=>{}}={}) {
         native:new Float32Array(binding.count*3),contactFaces:new Int32Array(binding.count).fill(-1)});
       await pause();
     }
-    let updates=0,lastUpdateMS=0,lastContact={corrections:0,minimumSignedDistanceM:Infinity,maximumProjectionM:0};
+    let updates=0,deformations=0,unchangedPoseUpdates=0,lastPose=null,lastWorld=null,lastUpdateMS=0,lastContact={corrections:0,minimumSignedDistanceM:Infinity,maximumProjectionM:0};
     const localCamera={fov:45,position:new T.Vector3(),matrixWorld:new T.Matrix4(),matrixWorldInverse:new T.Matrix4(),projectionMatrix:new T.Matrix4(),updateMatrixWorld(){}};
     const wardrobe={actor,group,items,lookId,
       update(camera) {
-        const start=performance.now();lastContact=deformControl(actor,items,posedBody,contact);
-        if(camera){actor.root.updateWorldMatrix(true,false);camera.updateMatrixWorld();
+        const start=performance.now(),matrices=actor.rig.skinMatrices;
+        // These static bound garments depend on the complete native pose. A
+        // camera redraw must not invalidate their source yarn/seam atlases.
+        // Compare every coefficient exactly: even a tiny real change updates
+        // the original control surface. No time interval or error tolerance.
+        const poseChanged=!lastPose||matrices.some((m,i)=>m.length!==lastPose[i]?.length||m.some((v,j)=>v!==lastPose[i][j]));
+        if(poseChanged){lastContact=deformControl(actor,items,posedBody,contact);lastPose=matrices.map(m=>Float64Array.from(m));deformations++;}
+        else unchangedPoseUpdates++;
+        actor.root.updateWorldMatrix(true,false);
+        const world=actor.root.matrixWorld.elements,rootMoved=!lastWorld||world.some((v,i)=>v!==lastWorld[i]);
+        lastWorld=Float64Array.from(world);
+        for(const item of items)item.solid.motion(poseChanged||rootMoved);
+        if(camera){camera.updateMatrixWorld();
           localCamera.fov=camera.fov;localCamera.matrixWorld.copy(actor.root.matrixWorld).invert().multiply(camera.matrixWorld);
           localCamera.position.setFromMatrixPosition(localCamera.matrixWorld);
           localCamera.matrixWorldInverse.copy(localCamera.matrixWorld).invert();localCamera.projectionMatrix.copy(camera.projectionMatrix);
           for(const item of items)item.solid.update(localCamera);}
         updates++;lastUpdateMS=performance.now()-start;
       },
-      report(){return {actor:actor.id,lookId,source:SOURCE,originalLook:{...look},updates,lastUpdateMS,contact:lastContact,
+      report(){return {actor:actor.id,lookId,source:SOURCE,originalLook:{...look},updates,deformations,unchangedPoseUpdates,
+        invalidation:'all native skin-matrix coefficients compared exactly; immutable binding, topology and paper; camera/material sampling still updates on every submitted batch',lastUpdateMS,contact:lastContact,
         bodyClipping:false,bodyGeometryChanged:false,freeClothPhysics:false,visualVerified:false,
         members:items.map(i=>({role:i.role,id:i.id,materialId:i.materialId,binding:i.binding.report,material:i.solid.stats,resources:i.solid.resources()}))};},
       dispose(){for(const i of items){i.solid.dispose();i.mesh.geometry.dispose();for(const m of i.mesh.material)m.dispose();}group.removeFromParent();wearers.delete(wardrobe);}};

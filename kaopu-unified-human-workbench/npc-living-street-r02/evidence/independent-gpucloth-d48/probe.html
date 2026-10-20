@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Original GPUCloth — adapter preflight</title>
+<style>body{font:15px/1.5 system-ui;margin:32px;background:#eef2f4;color:#17212a}pre{white-space:pre-wrap}</style>
+<h1>Original GPUCloth adapter preflight</h1>
+<p>This page measures adapter availability only. No cloth solver runs.</p>
+<pre id="status">Ready for CI runner.</pre>
+<script type="module">
+import {probeGPU} from './gpu-environment.mjs';
+globalThis.__GPU_D48_RUN__ = async () => {
+  let result;
+  try { result = await probeGPU(); }
+  catch (error) { result = {status:'WEBGPU_PROBE_FAILED',eligible:false,error:{message:error.message,stack:error.stack}}; }
+  document.querySelector('#status').textContent = JSON.stringify(result,null,2);
+  await globalThis.__GPU_D48_EMIT__({type:'probe',data:result});
+  await globalThis.__GPU_D48_EMIT__({type:'terminal',data:result});
+  return result;
+};
+</script>
+</html>

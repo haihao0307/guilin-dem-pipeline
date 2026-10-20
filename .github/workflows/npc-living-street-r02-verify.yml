@@ -12,6 +12,41 @@ concurrency:
   group: npc-living-street-r02-${{ github.sha }}
   cancel-in-progress: false
 jobs:
+  original_gpu_cloth_fit:
+    name: Original GPU cloth D48 source comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      SOURCE_HEAD: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-unified-human-workbench/npc-living-street-r02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare the unchanged original solver and frozen D input
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: node evidence/independent-gpucloth-d48/prepare.cjs --out /tmp/r02-original-gpucloth-d48-site
+      - name: Prepare isolated Chromium for the original GPU solver
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Observe the actual adapter and execute the original 48 fitting frames
+        timeout-minutes: 22
+        working-directory: kaopu-unified-human-workbench/npc-living-street-r02
+        run: node evidence/independent-gpucloth-d48/run-ci.cjs --site /tmp/r02-original-gpucloth-d48-site --out /tmp/r02-original-gpucloth-d48-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-gpu-cloth-d48-${{ github.sha }}
+          path: |
+            /tmp/r02-original-gpucloth-d48-results
+            /tmp/r02-original-gpucloth-d48-site/BUILD.json
+            /tmp/r02-original-gpucloth-d48-site/SOURCE_LOCK.json
+          retention-days: 30
   candidate:
     runs-on: ubuntu-latest
     timeout-minutes: 180

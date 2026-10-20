@@ -102,7 +102,7 @@ async function main(){
   sim.shop.stock=6;
   const progress=p=>{$('load-progress').textContent=typeof p==='string'?p:`${actors.find(a=>a.id===p.actor)?.profile?.name||p.actor||''} · ${p.style?({short:'短发',buzz:'寸头',medium:'中长发',long:'长发'}[p.style]):p.role==='top'?'上衣':p.role==='bottom'?'裤装':'服饰'}${Number.isFinite(p.fraction)?' '+Math.round(p.fraction*100)+'%':''}`;};
   const shoes=await createNativeShoeSystem({renderer:viewer.renderer,onProgress:progress});
-  const wardrobe=await createNativeWardrobe({renderer:viewer.renderer,onProgress:progress});
+  const wardrobe=await createNativeWardrobe({renderer:viewer.renderer,onProgress:progress,requestRender:()=>viewer.render()});
   const hair=createNativeHairSystem({renderer:viewer.renderer,onProgress:progress});
   const motion=new Map(),shadows=new Map();
   for(const actor of actors){
