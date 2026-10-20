@@ -39,6 +39,7 @@ const clip=(s,n=16000)=>String(s).slice(0,n);
 const duration=(name,fallback)=>{const value=Number(process.env[name]||fallback);assert(Number.isFinite(value)&&value>0,'Invalid '+name);return value;};
 const TOTAL_MS=Math.min(900000,duration('NPC_TOTAL_TIMEOUT_MS',900000));
 const BOOT_MS=duration('NPC_BOOT_TIMEOUT_MS',420000);
+const BOOT_READ_MS=Math.min(120000,BOOT_MS);
 const FRAME_MS=duration('NPC_FRAME_TIMEOUT_MS',150000);
 const CAPTURE_MS=duration('NPC_CAPTURE_TIMEOUT_MS',60000);
 const CHAIN_MS=duration('NPC_CHAIN_TIMEOUT_MS',300000);
@@ -56,7 +57,7 @@ const report={schema:'kaopu/living-courtyard-browser-verification@1',version:VER
   environment:{runner:process.env.GITHUB_ACTIONS==='true'?'GitHub Actions isolated Chromium':'isolated development Chromium',
     userDevice:false,physicalPhone:false,headless:true,softwareRenderer:true,requestedRenderer:'SwiftShader',
     viewport:{width:1360,height:900},playwright:require('playwright/package.json').version},
-  deadlines:{totalMS:TOTAL_MS,bootMS:BOOT_MS,frameMS:FRAME_MS,captureMS:CAPTURE_MS,chainMS:CHAIN_MS,
+  deadlines:{totalMS:TOTAL_MS,bootMS:BOOT_MS,bootReadMS:BOOT_READ_MS,frameMS:FRAME_MS,captureMS:CAPTURE_MS,chainMS:CHAIN_MS,
     probeMS:PROBE_MS,failureMS:FAILURE_MS,closeMS:CLOSE_MS},
   tests:[],screenshots:[],observations:[],pageErrors:[],consoleErrors:[],consoleWarnings:[],failedRequests:[],httpErrors:[],requests:[],
   operations:[],activeOperations:{},progress:[],failureDiagnostics:[],evidenceWriteErrors:[]};
@@ -167,7 +168,7 @@ async function readBoot(budget=PROBE_MS) {
     loaderHidden:document.querySelector('#life-loader')?.hidden,
     runtimeReady:!!window.__LIVING_COURTYARD__?.ready,headReady:!!window.__HEAD_PROC__?.ready,
     headGPUVerified:!!window.__HEAD_PROC__?.gpuVerified,headErrors:window.__HEAD_PROC__?.errors||[],
-    errors:window.__NPC_VERIFY_EVENTS__||[],title:document.title}),undefined,budget);
+    errors:window.__NPC_VERIFY_EVENTS__||[],startup:window.__NPC_STARTUP__||null,title:document.title}),undefined,budget);
 }
 async function saveDOM(label,budget=PROBE_MS) {
   const dom=await evaluate('save DOM '+label,()=>{const body=document.body.cloneNode(true);let omitted=0;
@@ -219,6 +220,8 @@ async function nativeRenderEvidence() {
       version:gl.getParameter(gl.VERSION),programs:(renderer.info.programs||[]).map(p=>({id:p.id,name:p.name,
         linked:!!p.program&&gl.getProgramParameter(p.program,gl.LINK_STATUS),log:p.program?gl.getProgramInfoLog(p.program):null})),
       render:{...renderer.info.render},memory:{...renderer.info.memory},events:window.__NPC_VERIFY_EVENTS__||[],
+      finalRaster:{pixelRatio:renderer.getPixelRatio(),expectedPixelRatio:Math.min(devicePixelRatio||1,1.25),
+        width:renderer.domElement.width,height:renderer.domElement.height,css:renderer.domElement.getBoundingClientRect().toJSON()},
       sceneLighting:{lights:viewer.scene.children.filter(x=>x.isLight).map(x=>({type:x.type,intensity:x.intensity,
         color:x.color?.getHexString(),visible:x.visible,position:x.position.toArray()})),
         overrideMaterial:viewer.scene.overrideMaterial?.type||null,toneMapping:renderer.toneMapping,
@@ -471,7 +474,7 @@ async function main() {
   await check('native R07 boot and first completed scene frame',async()=>{
     const until=Math.min(Date.now()+BOOT_MS,activeDeadline);let lastLog=0,boot;
     while(Date.now()<until) {
-      boot=await readBoot();report.lastBootState=boot;
+      boot=await readBoot(Math.min(BOOT_READ_MS,Math.max(1,until-Date.now())));report.lastBootState=boot;
       if(boot.npcReady==='failed'||report.pageErrors.length||boot.errors.length)throw Error('Native startup failed: '+JSON.stringify(boot));
       if(boot.npcReady==='true'&&boot.runtimeReady)break;
       if(Date.now()-lastLog>15000){log('native boot progress',boot);lastLog=Date.now();}
@@ -494,6 +497,9 @@ async function main() {
     assert.equal(native.meshes.flatMap(m=>m.materials).length,4,'Both people retain both native material instances');
     assert(native.meshes.flatMap(m=>m.materials).every(m=>Number.isInteger(m.programID)&&m.linked),'All four original materials linked on the actual GPU');
     assert(native.programs.length>0&&native.programs.every(p=>p.linked));assert.equal(native.events.length,0);
+    assert.equal(native.finalRaster.pixelRatio,native.finalRaster.expectedPixelRatio,'Final courtyard restores its full display raster after hidden startup');
+    assert(Math.abs(native.finalRaster.width-native.finalRaster.css.width*native.finalRaster.pixelRatio)<=1);
+    assert(Math.abs(native.finalRaster.height-native.finalRaster.css.height*native.finalRaster.pixelRatio)<=1);
     return native;
   });
   await check('real first/all/near and both full-person screenshots',async()=>{

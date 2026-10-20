@@ -515,59 +515,121 @@ function makeActor(model, viewer, spec, preset, measurements) {
 export async function createActors({onProgress=()=>{}}={}) {
   let qa,viewer,model,controller;
   const started=performance.now();let lastProgress=-Infinity;
-  while(performance.now()-started<300000) {
-    qa=window.__IDENTITY_QA__;viewer=qa?.viewer?.();model=qa?.model?.();controller=qa?.controller?.();
-    if(viewer?.mesh&&model?.positions?.length&&controller&&window.__LIP_P3__?.ready&&
-      window.headProceduralSkin&&window.bodyProceduralSkin&&window.portraitBank?.apply&&window.__HEAD_PROC__?.gpuVerified)break;
-    if(performance.now()-lastProgress>2000){onProgress('正在载入原生 R07 人物，等待完整皮肤与 GPU 首帧');lastProgress=performance.now();}
-    await new Promise(resolve=>setTimeout(resolve,100));
-  }
-  if(!viewer?.mesh||!model?.positions?.length||!controller)throw Error('R07 native viewer/model did not finish loading');
-  if(!window.headProceduralSkin||!window.bodyProceduralSkin||!window.__HEAD_PROC__?.gpuVerified)
-    throw Error('R07 complete procedural skin did not finish GPU linking: '+(window.__HEAD_PROC__?.errors||[]).join('; '));
-  if(!window.portraitBank?.apply||!model.r05Stream?.prepare)throw Error('R07 native portrait / complete coefficient pager is unavailable');
-  await viewer.skin.faceReady;await viewer.skin.naturalEyesReady;
-  window.lifelikeIdle?.pause?.(true);
-  const catalog=window.fullCommonWorkbench?.allPresets?.();if(!catalog)throw Error('Native R02 identity catalogue is unavailable');
-  const specs=[{id:'A',label:'A · 高瘦',build:'tall-slim',portrait:'P01',side:'L',x:-.40,z:-.06},
-    {id:'B',label:'B · 矮壮',build:'short-heavy',portrait:'P02',side:'R',x:.40,z:-.06}];
-  const saved=controller.archive(),base=controller.state(),actors=[];
-  const wasVisible=viewer.mesh.visible;
+  const startup=window.__NPC_STARTUP__={version:'npc-native-startup-raster@1',startedAtMS:started,
+    completed:false,error:null,phase:'waiting-for-native-viewer',timings:[],
+    raster:{capPixelRatio:.5,originalPixelRatio:null,restoredPixelRatio:null,limiting:false,changes:[]}};
+  let raster=null,prepared=false;const actors=[];
+  const sample=()=>{
+    const renderer=raster?.renderer||viewer?.renderer;if(!renderer)return null;
+    const size=renderer.getSize(new THREE.Vector2());
+    return {pixelRatio:renderer.getPixelRatio(),logicalSize:[size.x,size.y],
+      canvasSize:[renderer.domElement.width,renderer.domElement.height],hostRenderCount:viewer?.renders??null};
+  };
+  const mark=(phase,detail={})=>{
+    const atMS=performance.now()-started,previous=startup.timings.at(-1);
+    if(previous)previous.durationMS=atMS-previous.atMS;
+    startup.phase=phase;startup.timings.push({phase,atMS,raster:sample(),...detail});
+  };
+  const limitRaster=()=>{
+    if(raster||!viewer?.renderer)return;
+    const renderer=viewer.renderer,originalPixelRatio=renderer.getPixelRatio(),setPixelRatio=renderer.setPixelRatio;
+    if(!(originalPixelRatio>0)||!Number.isFinite(originalPixelRatio))throw Error('Native renderer has an invalid pixel ratio');
+    raster={renderer,originalPixelRatio,setPixelRatio};startup.raster.originalPixelRatio=originalPixelRatio;
+    // R07's ResizeObserver calls setSize(), which retains this pixel ratio.
+    // Guard any additional native ratio request until the original host has
+    // been restored and hidden. Geometry, shaders and GPU readiness stay native.
+    renderer.setPixelRatio=function(value){
+      const result=setPixelRatio.call(this,value===undefined?value:Math.min(value,.5));
+      startup.raster.changes.push({atMS:performance.now()-started,requested:value??null,actual:sample()});
+      return result;
+    };
+    startup.raster.limiting=true;renderer.setPixelRatio(originalPixelRatio);
+    mark('native-bootstrap-at-limited-raster');
+  };
+  mark('waiting-for-native-viewer');
   try {
-    for(const spec of specs) {
-      onProgress(`正在生成 ${spec.label}：完整 R07 人物与原生骨架`);
-      const preset=catalog.find(p=>p.collection==='r02'&&p.stage==='adult'&&p.build===spec.build&&p.phenotypes.gender===0);
-      if(!preset)throw Error(`Native adult male preset is missing: ${spec.build}`);
-      const state=structuredClone(base);
-      state.anny.phenotypes={...state.anny.phenotypes,...preset.phenotypes};
-      state.anny.localChanges=structuredClone(preset.localChanges);
-      state.anny.pose={};state.anny.translations={};
-      if(state.gnm){state.gnm.rotation=state.gnm.rotation.map(()=>0);state.gnm.translation=[0,0,0];}
-      await model.r05Stream.prepare(state);
-      await controller.commit(state);viewer.render();await pauseFrame();
-      const bodySignature=JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges]);
-      onProgress(`正在应用 ${spec.label} 的原生脸型 ${spec.portrait}`);
-      const applied=await window.portraitBank.apply(spec.portrait);
-      if(applied?.id!==spec.portrait||window.portraitBank.selected()!==spec.portrait)throw Error('Native portrait application was cancelled');
-      if(JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges])!==bodySignature)
-        throw Error('Portrait application unexpectedly changed native body identity');
-      viewer.render();await pauseFrame();
-      viewer.render();
-      const measurement=structuredClone(window.fullCommonWorkbench.measurements?.()||{});
-      const actor=makeActor(model,viewer,spec,preset,measurement);actors.push(actor);
-      onProgress(`${spec.label} 已冻结：${actor.binding.report.displayVertices.toLocaleString()} 表面顶点 / 104 原生骨`);
-      await pauseFrame();
+    while(performance.now()-started<300000) {
+      qa=window.__IDENTITY_QA__;viewer=qa?.viewer?.();model=qa?.model?.();controller=qa?.controller?.();
+      limitRaster();
+      if(viewer?.mesh&&model?.positions?.length&&controller&&window.__LIP_P3__?.ready&&
+        window.headProceduralSkin&&window.bodyProceduralSkin&&window.portraitBank?.apply&&window.__HEAD_PROC__?.gpuVerified)break;
+      if(performance.now()-lastProgress>2000){onProgress('正在载入原生 R07 人物，等待完整皮肤与 GPU 首帧');lastProgress=performance.now();}
+      await new Promise(resolve=>setTimeout(resolve,100));
     }
+    if(!viewer?.mesh||!model?.positions?.length||!controller)throw Error('R07 native viewer/model did not finish loading');
+    if(!window.headProceduralSkin||!window.bodyProceduralSkin||!window.__HEAD_PROC__?.gpuVerified)
+      throw Error('R07 complete procedural skin did not finish GPU linking: '+(window.__HEAD_PROC__?.errors||[]).join('; '));
+    if(!window.portraitBank?.apply||!model.r05Stream?.prepare)throw Error('R07 native portrait / complete coefficient pager is unavailable');
+    mark('native-skin-ready');await viewer.skin.faceReady;await viewer.skin.naturalEyesReady;
+    window.lifelikeIdle?.pause?.(true);
+    const catalog=window.fullCommonWorkbench?.allPresets?.();if(!catalog)throw Error('Native R02 identity catalogue is unavailable');
+    const specs=[{id:'A',label:'A · 高瘦',build:'tall-slim',portrait:'P01',side:'L',x:-.40,z:-.06},
+      {id:'B',label:'B · 矮壮',build:'short-heavy',portrait:'P02',side:'R',x:.40,z:-.06}];
+    const saved=controller.archive(),base=controller.state(),wasVisible=viewer.mesh.visible;
+    let generated=false,restored=false;
+    try {
+      for(const spec of specs) {
+        mark(spec.id+':prepare-native-coefficients');
+        onProgress(`正在生成 ${spec.label}：完整 R07 人物与原生骨架`);
+        const preset=catalog.find(p=>p.collection==='r02'&&p.stage==='adult'&&p.build===spec.build&&p.phenotypes.gender===0);
+        if(!preset)throw Error(`Native adult male preset is missing: ${spec.build}`);
+        const state=structuredClone(base);
+        state.anny.phenotypes={...state.anny.phenotypes,...preset.phenotypes};
+        state.anny.localChanges=structuredClone(preset.localChanges);
+        state.anny.pose={};state.anny.translations={};
+        if(state.gnm){state.gnm.rotation=state.gnm.rotation.map(()=>0);state.gnm.translation=[0,0,0];}
+        await model.r05Stream.prepare(state);
+        mark(spec.id+':commit-native-body');
+        await controller.commit(state);viewer.render();await pauseFrame();
+        const bodySignature=JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges]);
+        mark(spec.id+':apply-native-portrait');
+        onProgress(`正在应用 ${spec.label} 的原生脸型 ${spec.portrait}`);
+        const applied=await window.portraitBank.apply(spec.portrait);
+        if(applied?.id!==spec.portrait||window.portraitBank.selected()!==spec.portrait)throw Error('Native portrait application was cancelled');
+        if(JSON.stringify([model.state.anny.phenotypes,model.state.anny.localChanges])!==bodySignature)
+          throw Error('Portrait application unexpectedly changed native body identity');
+        viewer.render();await pauseFrame();
+        viewer.render();
+        mark(spec.id+':freeze-complete-native-actor');
+        const measurement=structuredClone(window.fullCommonWorkbench.measurements?.()||{});
+        const actor=makeActor(model,viewer,spec,preset,measurement);actors.push(actor);
+        mark(spec.id+':native-actor-frozen',{displayVertices:actor.binding.report.displayVertices,nativeBones:actor.binding.report.nativeBones});
+        onProgress(`${spec.label} 已冻结：${actor.binding.report.displayVertices.toLocaleString()} 表面顶点 / 104 原生骨`);
+        await pauseFrame();
+      }
+      generated=true;
+    } finally {
+      mark('restore-original-native-host');
+      try {await controller.restore(saved);restored=true;}
+      finally {
+        viewer.mesh.visible=generated&&restored?false:wasVisible;
+        startup.hostRestored=restored;startup.originalMeshHidden=!viewer.mesh.visible;
+        mark('original-native-host-restoration-settled');
+      }
+      viewer.render();
+    }
+    // Host commits/portrait updates above draw only their current native model.
+    // The Workbench draws both snapshots with its final camera/world setup,
+    // after the outer finally restores the renderer's original pixel ratio.
+    for(const actor of actors)actor.root.visible=true;
+    onProgress('两个完整人物已就绪；后续只更新各自骨矩阵');
+    prepared=true;return {actors,viewer};
   } catch(error) {
+    startup.error=String(error?.message||error);
     for(const actor of actors)actor.dispose();throw error;
   } finally {
-    await controller.restore(saved);viewer.mesh.visible=wasVisible;viewer.render();
+    try {
+      if(raster){
+        const {renderer,setPixelRatio,originalPixelRatio}=raster;
+        renderer.setPixelRatio=setPixelRatio;
+        setPixelRatio.call(renderer,originalPixelRatio);
+        startup.raster.limiting=false;startup.raster.restoredPixelRatio=renderer.getPixelRatio();
+        if(startup.raster.restoredPixelRatio!==originalPixelRatio)throw Error('Native startup pixel ratio did not restore');
+      }
+    } catch(error) {startup.error=String(error?.message||error);throw error;}
+    finally {
+      startup.completed=prepared&&!startup.error;startup.elapsedMS=performance.now()-started;
+      mark(startup.completed?'native-actors-ready-at-restored-raster':'native-startup-failed');
+    }
   }
-  viewer.mesh.visible=false;
-  // Host commits/portrait updates above draw only their current native model.
-  // All snapshots become renderable together after the host is restored. The
-  // Workbench's next frame draws them with its final camera/world setup.
-  for(const actor of actors)actor.root.visible=true;
-  onProgress('两个完整人物已就绪；后续只更新各自骨矩阵');
-  return {actors,viewer};
 }

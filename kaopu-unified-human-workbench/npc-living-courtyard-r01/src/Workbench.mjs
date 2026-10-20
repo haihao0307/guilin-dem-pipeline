@@ -99,6 +99,7 @@ async function main(){
   $('need-hunger').oninput=e=>sim.setActorNeed(selected,'hunger',+e.target.value/100);$('need-fatigue').oninput=e=>sim.setActorNeed(selected,'fatigue',+e.target.value/100);
 
   function currentReport(){return {version:window.__NPC_BUILD__,ready,paused,speed,time:sim.time,selected,cameraMode,
+    startup:window.__NPC_STARTUP__||null,
     source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,binding:a.binding.report}))},
     simulation:sim.snapshot(),motions:reports,items:items.snapshot(),audit,render:renderQueue.status(),garments:dresses.map(d=>d?.report||null),scene:courtyard.metrics,
     assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[],
