@@ -129,12 +129,35 @@ export class LifeSimulation {
   }
   _canStand(p,radius=.25){return p.x>=-5.8&&p.x<=5.8&&p.z>=-2&&p.z<=3.8&&!this.obstacles.some(r=>inside(p,r,radius+.02));}
   _clear(a,b,radius=.25){return !this.obstacles.some(r=>crosses(a,b,r,radius+.02));}
-  _route(start,end,radius=start.radius??.25){
-    if(!this._canStand(end,radius))return null;
-    if(this._clear(start,end,radius))return [copy(end)];
+  /** Whole swept segment versus navigation discs, using the existing 15 mm gap. */
+  _clearActors(start,end,radius,others){
+    const dx=end.x-start.x,dz=end.z-start.z,length2=dx*dx+dz*dz;
+    return others.every(other=>{
+      const sx=start.x-other.x,sz=start.z-other.z,required=radius+other.radius+.015;
+      // Older states can already be just inside the gap. Permit only an outward
+      // escape, never a further reduction in separation or a smaller radius.
+      if(Math.hypot(sx,sz)<required)return sx*dx+sz*dz>=-1e-12;
+      const u=length2?clamp(-(sx*dx+sz*dz)/length2):0;
+      return Math.hypot(sx+dx*u,sz+dz*u)>=required-1e-10;
+    });
+  }
+  _route(start,end,radius=start.radius??.25,others=[]){
+    const free=p=>this._canStand(p,radius)&&others.every(other=>distance(p,other)>=radius+other.radius+.015);
+    const clear=(a,b)=>this._clear(a,b,radius)&&this._clearActors(a,b,radius,others);
+    if(!free(end))return null;
+    if(clear(start,end))return [copy(end)];
     const nodes=[copy(start),copy(end)];
     for(const r of this.obstacles)for(const x of [r.minX-radius-.06,r.maxX+radius+.06])for(const z of [r.minZ-radius-.06,r.maxZ+radius+.06]){
-      const p=point(x,z);if(this._canStand(p,radius))nodes.push(p);
+      const p=point(x,z);if(free(p))nodes.push(p);
+    }
+    // Temporary actor nodes join the same graph as counter/bench corners, so a
+    // blocked rear passage can lead around the real counter's front instead.
+    for(const other of others){
+      const ring=(radius+other.radius+.015+.04)/Math.cos(Math.PI/12);
+      for(let i=0;i<12;i++){
+        const angle=i*Math.PI/6,p=point(other.x+Math.cos(angle)*ring,other.z+Math.sin(angle)*ring);
+        if(free(p))nodes.push(p);
+      }
     }
     const d=nodes.map(()=>Infinity),previous=nodes.map(()=>-1),closed=new Set();d[0]=0;
     while(closed.size<nodes.length){
@@ -142,7 +165,7 @@ export class LifeSimulation {
       if(index<0||!Number.isFinite(d[index]))break;
       if(index===1){const path=[];for(let i=1;i!==0;i=previous[i]){if(i<0)return null;path.unshift(nodes[i]);}return path;}
       closed.add(index);
-      for(let j=0;j<nodes.length;j++)if(!closed.has(j)&&this._clear(nodes[index],nodes[j],radius)){
+      for(let j=0;j<nodes.length;j++)if(!closed.has(j)&&clear(nodes[index],nodes[j])){
         const candidate=d[index]+distance(nodes[index],nodes[j]);
         if(candidate<d[j]){d[j]=candidate;previous[j]=index;}
       }
@@ -270,52 +293,41 @@ export class LifeSimulation {
   _move(a,dt){
     const t=a.task;if(!t)return;
     t.elapsed+=dt;
-    const waypoint=t.detour||t.route[t.routeIndex];if(!waypoint){this._arrive(a);return;}
-    const dx=waypoint.x-a.x,dz=waypoint.z-a.z,d=Math.hypot(dx,dz);
-    if(d<.035){
-      a.x=waypoint.x;a.z=waypoint.z;
-      if(t.detour){t.detour=null;const route=this._route(a,t.to,a.radius);if(!route){this._fail(a,'让路后重新寻找可达的目标');return;}t.route=route;t.routeIndex=0;}
-      else {t.routeIndex++;if(t.routeIndex>=t.route.length)this._arrive(a);}
-      return;
-    }
-    let vx=dx/d,vz=dz/d;
-    for(const other of this.actors)if(other!==a){
-      const ox=other.x-a.x,oz=other.z-a.z,od=Math.hypot(ox,oz),ahead=(vx*ox+vz*oz)/Math.max(od,1e-6);
-      if(od<.88&&od>.001&&ahead>.25){
-        const strength=(.88-od)/.40;const sideX=vz,sideZ=-vx;
-        vx+=sideX*strength;vz+=sideZ*strength;
+    // This limit also applies while every step is rejected.
+    if(t.elapsed>Math.max(20,t.duration*3+8)){this._fail(a,'没有及时到达，重新考虑路线');return;}
+    t.navigationAnchor??=point(a.x,a.z);t.blockedFor+=dt;
+    const others=this.actors.filter(other=>other!==a);
+    let waypoint=t.detour||t.route[t.routeIndex];if(!waypoint){this._arrive(a);return;}
+    const blocker=others.find(other=>distance(a,other)<1.05&&!this._clearActors(a,waypoint,a.radius,[other]));
+    if(blocker&&(t.lastDetourAt??-10)<this.time-.25&&
+      (a.id>blocker.id||!blocker.task||blocker.task.phase!=='approach')){
+      const route=this._route(a,t.to,a.radius,others);t.lastDetourAt=this.time;
+      if(route){
+        t.detour=null;t.route=route;t.routeIndex=0;waypoint=route[0];
+        let previous=a;t.totalDistance=t.travelled;
+        for(const p of route){t.totalDistance+=distance(previous,p);previous=p;}
+        this._event('yielded',a.id,`${a.name}稍微让开，让对方先过`);
       }
     }
-    const length=Math.hypot(vx,vz);vx/=length;vz/=length;
-    const speed=a.walkSpeed*(1-a.needs.fatigue*.13),step=Math.min(speed*dt,d);
-    let next=point(a.x+vx*step,a.z+vz*step);
-    const collision=this.actors.some(other=>other!==a&&distance(next,other)<a.radius+other.radius+.015&&distance(next,other)<distance(a,other)-1e-5);
+    const dx=waypoint.x-a.x,dz=waypoint.z-a.z,d=Math.hypot(dx,dz),vx=d?dx/d:0,vz=d?dz/d:0;
+    const speed=a.walkSpeed*(1-a.needs.fatigue*.13),arriving=d<.035,step=arriving?d:Math.min(speed*dt,d);
+    // Follow the checked line directly. Side steering would invalidate its sweep.
+    const next=point(a.x+vx*step,a.z+vz*step);
+    const collision=!this._clearActors(a,next,a.radius,others);
     if(collision||!this._canStand(next,a.radius)||!this._clear(a,next,a.radius)){
-      a.moving=false;a.speed=0;a.velocity=point(0,0);t.blockedFor+=dt;
-      const blocker=this.actors.find(other=>other!==a&&distance(a,other)<1.05);
-      if(blocker&&t.blockedFor>.25&&!t.detour&&(t.lastDetourAt||-10)<this.time-2&&
-        (a.id>blocker.id||!blocker.task||blocker.task.phase!=='approach')){
-        const ux=dx/d,uz=dz/d;
-        // One agent yields into genuine free ground; the other keeps its route.
-        // Test both sides because a fixed steering side can point into a planter.
-        const offsets=[[uz,-ux],[-uz,ux],[-ux+uz,-uz-ux],[-ux-uz,-uz+ux]];
-        for(const [sx,sz]of offsets){
-          const sn=Math.hypot(sx,sz),target=point(a.x+sx/sn*.82,a.z+sz/sn*.82);
-          if(this._canStand(target,a.radius)&&this._clear(a,target,a.radius)&&distance(target,blocker)>a.radius+blocker.radius+.12){
-            const first=point(a.x+sx/sn*.035,a.z+sz/sn*.035);
-            if(distance(first,blocker)<a.radius+blocker.radius+.015)continue;
-            t.detour=target;t.lastDetourAt=this.time;t.blockedFor=0;
-            this._event('yielded',a.id,`${a.name}稍微让开，让对方先过`);break;
-          }
-        }
-      }
+      a.moving=false;a.speed=0;a.velocity=point(0,0);
       if(t.blockedFor>5)this._fail(a,'道路暂时被占，先做别的事情');return;
     }
-    t.blockedFor=0;a.x=next.x;a.z=next.z;a.moving=true;a.speed=speed;
+    a.x=next.x;a.z=next.z;a.moving=step>0;a.speed=a.moving?speed:0;
     a.velocity=point(vx*speed,vz*speed);a.distanceTravelled+=step;t.travelled+=step;
     a.yaw+=angleDelta(a.yaw,Math.atan2(vx,vz))*Math.min(1,dt*8);
     t.progress=clamp(t.travelled/Math.max(t.totalDistance,.01));
-    if(t.elapsed>Math.max(20,t.duration*3+8))this._fail(a,'没有及时到达，重新考虑路线');
+    // Micrometre-scale substeps cannot keep a stalled route alive indefinitely.
+    if(distance(a,t.navigationAnchor)>=.03){t.navigationAnchor=point(a.x,a.z);t.blockedFor=0;}
+    if(arriving){
+      if(t.detour){t.detour=null;const route=this._route(a,t.to,a.radius,others);if(!route){this._fail(a,'让路后重新寻找可达的目标');return;}t.route=route;t.routeIndex=0;}
+      else {t.routeIndex++;if(t.routeIndex>=t.route.length)this._arrive(a);}
+    }else if(t.blockedFor>5)this._fail(a,'道路暂时被占，先做别的事情');
   }
   _validatePending(a){
     const t=a.task;if(!t)return false;

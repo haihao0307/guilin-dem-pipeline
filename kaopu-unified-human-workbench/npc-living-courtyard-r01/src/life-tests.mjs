@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {LifeSimulation,LIFE_LOCATIONS} from './LifeSimulation.mjs';
 
 const results=[];
+let navigationRegression=null;
 function test(name,fn){try{fn();results.push({name,passed:true});}catch(error){results.push({name,passed:false,error:error.stack});}}
 function one(seed=711){const initial=new LifeSimulation({seed});return new LifeSimulation({seed,actors:[initial.actorTemplate[0]]});}
 function advance(sim,seconds,{ack=true,onStep=null}={}){
@@ -176,6 +177,70 @@ test('actual scene counter / bench / planter footprints support yielding without
   assert.ok(sim.events.every(e=>e.type!=='failed'));
 });
 
+test('observed rain-shelter stall escapes a stationary person and the real counter without overlap',()=>{
+  // TEST_FIXTURE_ONLY: replay the numeric failure from suite-cb0e5e99,
+  // timeout-B-rain-shelter-arrival.json. No animation/contact acknowledgement.
+  // Hold A at its observed shelter while B retains the failed task and detour.
+  const colliders=[
+    {id:'building--3.62',min:[-6.145,0,-4.44],max:[-1.0950000000000002,2.82,-3.28]},
+    {id:'building-2.62',min:[-.9049999999999998,0,-4.44],max:[6.145,2.82,-3.28]},
+    {id:'bakery-counter',min:[2.29,0,-1.1],max:[4.51,.95,-.4]},
+    {id:'recycling-counter',min:[-5.41,0,-1.05],max:[-4.19,.85,-.35]},
+    {id:'bench',min:[-4.35,0,1.2],max:[-1.75,1.05,1.92]},
+    {id:'pot--4.6-1.57',center:[-4.6,.195,1.57],radius:.252},
+    {id:'pot--1.5-1.54',center:[-1.5,.215,1.54],radius:.28350000000000003},
+    {id:'pot--0.63--2.67',center:[-.63,.215,-2.67],radius:.252},
+    {id:'pot-5.72--2.61',center:[5.72,.245,-2.61],radius:.3045},
+    {id:'pot-6.1-3.72',center:[6.1,.265,3.72],radius:.336},
+    {id:'olive-tree-planter',min:[-6.455,0,-.265],max:[-5.6850000000000005,.3,.585]}
+  ];
+  const sim=new LifeSimulation({colliders}),a=sim.actor('A'),b=sim.actor('B');
+  sim.time=160.56769999999102;sim.raining=true;
+  Object.assign(a,{x:1.9,z:-1.8,task:null,waitUntil:sim.time+60});
+  Object.assign(b,{x:1.326533252168927,z:-1.9152232597681313,yaw:1.054014498795139});
+  b.needs.fatigue=1;
+  b.task={id:'run-2-activity-16',token:'run-2-activity-16:0',epoch:0,kind:'shelter',targetId:'shelterB',
+    phase:'approach',elapsed:35.80560000000128,duration:16.28742244473516,progress:.7838562444051035,
+    from:{x:-3.65,z:2.3},to:{x:4.9,z:-1.8},reason:'下雨了，先到熟悉的屋檐下',score:91.035559591699,
+    route:[{x:4.9,z:-1.8}],routeIndex:0,travelled:8.170878584684475,totalDistance:10.423950364630503,
+    motion:'walk',waitForAcknowledgement:false,blockedFor:1.4666000000000938,startedAt:124.76209999999197,
+    detour:{x:1.2925822155630535,z:-1.136498050864792},lastDetourAt:140.0618333333254};
+  const token=b.task.token,started=sim.time,gap=a.radius+b.radius+.015;
+  const initialSeparation=Math.hypot(a.x-b.x,a.z-b.z);
+  let minimumSeparation=initialSeparation,minimumAfterEscape=Infinity,escaped=false;
+  const routeChanges=[];let oldRoute='';
+  for(let i=0;sim.time-started<30;i++){
+    const previous={x:b.x,z:b.z},before=Math.hypot(a.x-b.x,a.z-b.z);
+    // Include the small remainder substeps seen in the real RAF-driven loop.
+    sim.update(i%4===3?.0000666666667:1/30);
+    const dx=b.x-previous.x,dz=b.z-previous.z,length=Math.hypot(dx,dz);
+    const along=length?(a.x-previous.x)*dx/length+(a.z-previous.z)*dz/length:0;
+    const after=Math.hypot(a.x-b.x,a.z-b.z);
+    const swept=length&&along>0&&along<length
+      ?Math.abs(dx*(a.z-previous.z)-dz*(a.x-previous.x))/length:Math.min(before,after);
+    minimumSeparation=Math.min(minimumSeparation,swept);
+    assert.ok(swept>=Math.min(before,gap)-1e-9,'A move reduces the saved near-contact separation or crosses the original safety gap');
+    if(escaped)minimumAfterEscape=Math.min(minimumAfterEscape,swept);
+    if(after>=gap)escaped=true;
+    assert.ok(sim._canStand(b,b.radius),'Navigation disc enters an actual scene collider');
+    assert.ok(sim._clear(previous,b,b.radius),'Swept step crosses an actual scene collider');
+    assert.ok(length<=b.walkSpeed*(1-b.needs.fatigue*.13)*(i%4===3?.0000666666667:1/30)+.035+1e-9,'Movement exceeds the existing speed/snap bound');
+    assert.deepEqual(sim.checkInvariants(),{ok:true,errors:[]});
+    const route=JSON.stringify(b.task?.route);
+    if(route!==oldRoute){routeChanges.push({at:sim.time,route:b.task?.route});oldRoute=route;}
+    if(b.task?.kind==='shelter'&&b.task.phase==='rest')break;
+    assert.equal(b.task?.token,token,'The observed shelter attempt was abandoned rather than reaching its target');
+  }
+  assert.equal(b.task?.kind,'shelter');assert.equal(b.task.phase,'rest');
+  assert.ok(Math.hypot(b.x-4.9,b.z+1.8)<.01,'B did not reach the unchanged shelterB');
+  assert.equal(a.x,1.9);assert.equal(a.z,-1.8);assert.equal(sim.resources.bakery,null);
+  assert.ok(escaped&&minimumAfterEscape>=gap-1e-9);
+  assert.ok(sim.events.every(e=>e.type!=='failed'));
+  navigationRegression={scope:'TEST_FIXTURE_ONLY; 2D swept navigation discs, not a browser/3D-contact pass',
+    source:'suite-cb0e5e99/timeout-B-rain-shelter-arrival.json',initialSeparation,requiredSeparation:gap,
+    minimumSeparation,minimumAfterEscape,simulatedSeconds:sim.time-started,arrived:{x:b.x,z:b.z},routeChanges};
+});
+
 test('callbacks from a previous reset cannot confirm a new task',()=>{
   const sim=one(),a=sim.actors[0];a.money=0;a.needs.hunger=.9;a.needs.fatigue=.02;
   until(sim,()=>a.task?.kind==='collect'&&a.task.phase==='interact',40,{ack:false});
@@ -189,6 +254,6 @@ test('callbacks from a previous reset cannot confirm a new task',()=>{
 });
 
 const report={suite:'KAOPU autonomous life semantic checks',scope:'TEST_FIXTURE_ONLY; external acknowledgements are simulated, not a 3D-contact or browser pass',
-  passed:results.filter(r=>r.passed).length,total:results.length,results};
+  passed:results.filter(r=>r.passed).length,total:results.length,results,navigationRegression};
 console.log(JSON.stringify(report,null,2));
 if(report.passed!==report.total)process.exitCode=1;
