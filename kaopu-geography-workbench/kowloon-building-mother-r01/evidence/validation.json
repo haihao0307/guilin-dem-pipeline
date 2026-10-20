@@ -1,6 +1,6 @@
 {
-  "status": "candidate_cpu_and_actual_chromium_passed_https_verification_pending",
-  "timestampUtc": "2026-10-20T11:13:00Z",
+  "status": "r02_https_passed_r03_immutable_release_compatibility_candidate",
+  "timestampUtc": "2026-10-20T11:31:00Z",
   "cpu": {
     "command": "node --test tests/*.test.mjs",
     "tests": 39,
@@ -33,7 +33,12 @@
       "no JavaScript or shader errors"
     ],
     "visualReview": "actual window-80, floor-cutaway, baseline-1 and mobile PNGs inspected; no blank canvas or rendering blocker",
-    "publicHttps": "pending after scoped Pages publication"
+    "publicHttps": {
+      "status": "passed",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39415050163",
+      "servedAssetHashesMatch": true,
+      "physicalDevicePerformance": false
+    }
   },
   "notCertified": [
     "historical appearance",
@@ -51,5 +56,13 @@
       "cpuTests": 24,
       "actualBrowser": "superseded by candidate pass above; original preview had no floors"
     }
-  ]
+  ],
+  "releaseCompatibility": {
+    "status": "pending_candidate_QA",
+    "immutableOwnGraph": "r03/",
+    "preservedInitialHtml": "legacy-r01.html",
+    "preservedInitialImplementation": "legacy-r01-app.mjs",
+    "intermediateHtmlFixture": "tests/fixtures/cached-r02.html",
+    "reason": "r02 HTML could coexist with cached unversioned first app in returning browser; immutable graph and explicit compatibility entry prevent future mixed entry versions"
+  }
 }

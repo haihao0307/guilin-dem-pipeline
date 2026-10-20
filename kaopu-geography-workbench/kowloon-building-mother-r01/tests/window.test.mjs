@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 import * as THREE from '../../hk-three-buildings-r01/viewer/vendor/three.module.js';
 import {reconstructBuffers} from '../../hk-three-buildings-r01/geometry/reconstruct.mjs';
-import {defaultWindowConfig, validateWindow, cutHostedWindow, buildWindow, inspectWindow} from '../window.mjs';
+import {defaultWindowConfig, validateWindow, cutHostedWindow, buildWindow, inspectWindow} from '../r03/window.mjs';
 
 const score = JSON.parse(await readFile(new URL('../../hk-three-buildings-r01/geometry/B359971994401063C0.score.json', import.meta.url), 'utf8'));
 const cfg = changes => ({...defaultWindowConfig(), enabled: true, ...changes});

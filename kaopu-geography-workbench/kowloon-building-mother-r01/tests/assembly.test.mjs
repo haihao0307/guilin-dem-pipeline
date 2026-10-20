@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import * as THREE from '../../hk-three-buildings-r01/viewer/vendor/three.module.js';
 import {reconstructBuffers} from '../../hk-three-buildings-r01/geometry/reconstruct.mjs';
-import {createAssembly,evaluate,evaluateScore,setState,setTop,setTranslation,exportAssembly,resetAssembly,coincidentEdges,assemblyStats} from '../assembly.mjs';
+import {createAssembly,evaluate,evaluateScore,setState,setTop,setTranslation,exportAssembly,resetAssembly,coincidentEdges,assemblyStats} from '../r03/assembly.mjs';
 const ids=['B367642137201063C0','B359971994401063C0','B369121858401063C0'];const scores=ids.map(id=>JSON.parse(fs.readFileSync(new URL(`../../hk-three-buildings-r01/geometry/${id}.score.json`,import.meta.url))));
 for(const score of scores){test(`${score.objectId}: all original reconstructed vertices/normals retained in order`,()=>{const a=createAssembly(score),old=reconstructBuffers(score,THREE),parts=evaluate(a,THREE);assert.deepEqual(new Float32Array(parts.flatMap(p=>Array.from(p.positions))),old.positions);assert.deepEqual(new Float32Array(parts.flatMap(p=>Array.from(p.normals))),old.normals);assert.equal(parts.length,score.reconstruction.operations.length);assert.deepEqual(a.source,score);});}
 test('225 source-derived patches, never replacement boxes',()=>{assert.equal(scores.reduce((n,s)=>n+s.reconstruction.operations.length,0),225);});

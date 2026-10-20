@@ -16,7 +16,7 @@ with sync_playwright() as pw:
   report['build']=page.locator('meta[name="kaopu-build"]').get_attribute('content')
   if a.expected_build: assert report['build']==a.expected_build
   report['productionAssetSha256']={}
-  for asset in ['index.html','style.css','app.mjs','assembly.mjs','window.mjs','floors.mjs','services.mjs']:
+  for asset in ['index.html','r03/style.css','r03/app.mjs','r03/assembly.mjs','r03/window.mjs','r03/floors.mjs','r03/services.mjs','app.mjs','legacy-r01.html','legacy-r01-app.mjs','window.mjs','assembly.mjs','style.css']:
    response=page.request.get(a.url+asset);assert response.status==200
    actual=hashlib.sha256(response.body()).hexdigest();expected=hashlib.sha256((pathlib.Path(__file__).resolve().parents[1]/asset).read_bytes()).hexdigest()
    assert actual==expected, 'Served production asset does not match tested source: '+asset
@@ -57,6 +57,12 @@ with sync_playwright() as pw:
   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().renderer.triangles')>=50
   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().pbr.enabled') is True
   report['checks'].append({'repeated_views_reset_mobile_pbr':'passed'})
+  legacy=browser.new_page(viewport={'width':1200,'height':800});legacy.goto(a.url+'legacy-r01.html',wait_until='networkidle');legacy.wait_for_function('window.__BUILDING_MOTHER__?.ready');assert legacy.locator('[data-building]').count()==3
+  legacy.locator('#windowFocus').click();assert legacy.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is True;legacy.close()
+  report['checks'].append({'initial_cached_html_and_preserved_dependencies':'passed_via_legacy_r01_entry'})
+  cached=browser.new_page(viewport={'width':1200,'height':800});cached.route(a.url+'cached-r02-fixture',lambda route:route.fulfill(status=200,content_type='text/html',body=(pathlib.Path(__file__).resolve().parent/'fixtures/cached-r02.html').read_text()))
+  cached.goto(a.url+'cached-r02-fixture',wait_until='networkidle');cached.wait_for_function('window.__BUILDING_MOTHER__?.ready');cached.locator('#floorInspect').click();assert cached.evaluate('window.__BUILDING_MOTHER__.snapshot().floors.slabCount')==21;cached.close()
+  report['checks'].append({'intermediate_cached_r02_html':'passed_via_compatibility_entry_to_immutable_release'})
   blocked=browser.new_page(viewport={'width':1200,'height':800})
   blocked.add_init_script('''const originalGetContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:originalGetContext.call(this,type,...args)}''')
   blocked.goto(a.url,wait_until='networkidle');blocked.locator('#failure').wait_for(state='visible');assert blocked.locator('#loading').is_hidden()

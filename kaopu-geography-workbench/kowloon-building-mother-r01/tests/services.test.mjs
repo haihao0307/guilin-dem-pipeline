@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {defaultFloorConfig,inspectFloors} from '../floors.mjs';import {deriveServiceInterfaces} from '../services.mjs';
+import {defaultFloorConfig,inspectFloors} from '../r03/floors.mjs';import {deriveServiceInterfaces} from '../r03/services.mjs';
 const score=JSON.parse(fs.readFileSync(new URL('../../hk-three-buildings-r01/geometry/B359971994401063C0.score.json',import.meta.url)));
 test('every proposed stop uses stable floor identity and actual design FFL, never label height',()=>{const f=inspectFloors(score,{...defaultFloorConfig(),enabled:true}),s=deriveServiceInterfaces(f);assert.equal(s.stops.length,21);for(const stop of s.stops){const floor=f.floors.find(x=>x.floorId===stop.floorId);assert.equal(stop.positionLocalEastUpSouth[1],floor.fflM);assert.equal(stop.fflM,floor.fflM);assert.equal(stop.navigationConnectionEnabled,false);}assert.equal(s.circulationComplete,false);assert.equal(s.car.modeled,false);});
 test('spacing changes propagate into proposed service stops',()=>{const s=deriveServiceInterfaces(inspectFloors(score,{...defaultFloorConfig(),enabled:true,floorToFloor:4}));assert.equal(s.stops[1].fflM-s.stops[0].fflM,4);});
