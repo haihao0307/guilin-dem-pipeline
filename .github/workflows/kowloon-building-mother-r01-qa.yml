@@ -42,6 +42,9 @@ jobs:
       - name: Render the published HTTPS checkpoint and verify served file hashes
         run: |
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/browser.py --url https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/ --expected-build 2026-10-20-floor-window-pbr-r03 --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/public-browser
+      - name: Render published r04 HTTPS staircase and verify served hashes
+        run: |
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/stairs-browser.py --url https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/r04.html --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-public-browser
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
@@ -50,5 +53,6 @@ jobs:
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/browser
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/public-browser
             kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-browser
+            kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r04-public-browser
           if-no-files-found: warn
           retention-days: 1
