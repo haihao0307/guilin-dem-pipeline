@@ -1,0 +1,210 @@
+{
+  "schema": "kaopu/lip-r05-material-audit@1",
+  "role": "read-only independent material and normal attribution; no production edit, no new render, no browser control",
+  "task": "Find falsifiable causes of thin bright rim bands, segmented seams and pulled corners after R04; do not substitute source plausibility for visible causal evidence.",
+  "basis": {
+    "production_source": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "production_build": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "ci_run": 39110407426,
+    "files": [
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/MucosaSurface.js",
+        "sha256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+        "bytes": 8606
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+        "sha256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+        "bytes": 30243
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/r04-finalFragment-template.glsl",
+        "sha256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "bytes": 31703
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/r04-fragment-expanded.glsl",
+        "sha256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e",
+        "bytes": 102573
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/qa.json",
+        "sha256": "c42223993e9c79cd73e6038239f7bcd8f9220db7aea241510f35d64e3794275c",
+        "bytes": 406635
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/human-integrated-r07/preview.html",
+        "sha256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+        "bytes": 5449139
+      }
+    ],
+    "images_actually_viewed": [
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/speak-macro-r04.png",
+        "sha256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2",
+        "bytes": 325245
+      },
+      {
+        "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03/pucker-oblique-r04.png",
+        "sha256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609",
+        "bytes": 292475
+      }
+    ],
+    "scope": "Current frozen person and two existing static production frames. No new ablation image exists in this review."
+  },
+  "direct_visual_observations": [
+    {
+      "frame": "speak-macro-r04.png",
+      "finding": "An exposed narrow upper inner strip has short repeated light segments against a dark cavity. Lower inner rim is a narrow glossy pink band, brighter toward the corners. Outer lip is smooth with broad highlights; corners are pinched.",
+      "cause_status": "not_proven"
+    },
+    {
+      "frame": "pucker-oblique-r04.png",
+      "finding": "Narrow nearly straight mouth slit contains interleaved pink inner strip and pale/gray tooth fragments; both corners pull outward into sharp folds.",
+      "cause_status": "not_proven"
+    }
+  ],
+  "findings": [
+    {
+      "id": "H1-height-ownership-gradient",
+      "status": "source_supported_hypothesis_not_visual_cause",
+      "source": [
+        "LipSurface.js:addSurface",
+        "MucosaSurface.js:psH *= 1-liWeight",
+        "r04-finalFragment-template.glsl:normal fragment"
+      ],
+      "mechanism": "R02 forms H=(1-M)*Hskin+M*Hlip, then R04 forms Hfinal=(1-I)*H. Whole-field dFdx/dFdy therefore includes (Hlip-Hskin)*grad(M) and -H*grad(I), in addition to gradients of intrinsic detail. A coverage transition may contribute a normal slope even when both detail fields contain arbitrary different zero offsets.",
+      "counterweight": "This is not automatically an error: a deliberate fading physical height field has such derivatives. Current shader detail is micrometre-scale; actual R02 startup report records 16.03387979725369 micrometres maximum coarse geometry furrow for its sampled startup pose, not a demonstrated explanation of a visibly large strip. Slope is also clamped to 0.26.",
+      "test": "No shader relief in the procedural skin material, keeping geometry/normals, colors, roughness, coat, lights and pose exact. Compare standard and no-relief frames in speak/macro and pucker/oblique. If the segmentation and strip silhouette remain, reject shader micro-normal as primary cause.",
+      "conditional_fix": "Only if no-relief removes a relevant defect: preserve per-field slopes, use a common zero reference or finite-support zero-at-boundary detail, and blend slopes across a semantic transition. Do not remove all texture as the final fix."
+    },
+    {
+      "id": "H2-rest-upper-lower-split",
+      "status": "source_supported_hypothesis_low_priority",
+      "mechanism": "Both R02 lrUpper and R04 liUpper are step((innerTop+innerBottom)/2, rest.y). Separate upper/lower palette, roughness and random-field seeds jump at that rest midline. R04 deliberately uses original inner rails, not incomplete deep-oral detail.z.",
+      "counterweight": "This is one continuous midline split, not a 49-station division. Separate upper and lower surfaces need different tissue responsibility; changing to a broad smoothstep without mapped pixel evidence could blur across unrelated tissue. It cannot by itself justify periodic horizontal segmentation.",
+      "test": "Semantic RGB diagnostics at actual defect pixels: upper/lower identity, lrDepth, liOral. Read fRest and csType for visible contributing geometry, avoiding extrapolation from nonvisible samples.",
+      "conditional_fix": "Only move or smooth the classifier if a displayed continuous skin patch demonstrably crosses the classifier boundary incorrectly. Keep deep oral and teeth exclusions."
+    },
+    {
+      "id": "H3-exterior-front-and-coverage",
+      "status": "source_supported_hypothesis",
+      "mechanism": "R02 mask uses rest.z smoothstep(front, front+0.006), rest.xy rail bounds, lateral smoothstep over |u| 0.965..1.005, and skin coverage. This is attached to rest coordinates, not camera angle. R04 oral domain does not use that front gate.",
+      "counterweight": "Six-millimetre front fade is continuous and not a repeated station mask. Some dark-to-light boundary may come from exposed tissue/geometry; a wider tint domain is not yet justified.",
+      "test": "Render final albedo (existing lipRealism.set({diagnostic:2})) with R04 diagnostics off, plus a semantic triplet (liOral,lrMask,clamped lrDepth) before output transforms. If strip segmentation exists in albedo and follows ownership, inspect coverage. If albedo is continuous but beauty is segmented, inspect normal/material lighting and geometry.",
+      "conditional_fix": "Repair semantic responsibility only on supported surfaces; never spread lip pigment into nearby exterior skin to hide an exposed rim."
+    },
+    {
+      "id": "H4-reflection-film",
+      "status": "source_supported_hypothesis_secondary",
+      "mechanism": "R02 lrWet already includes lrMask, then lrR/coat are blended by lrMask again, so the wet contribution includes squared mask behavior near feathered coverage. R04 blends a native inner endpoint once. Actual native lower/upper wet gains are 0.45/0.35; corresponding full-inner roughness is 0.3955/0.4665 and coat is 0.1585/0.1265 at csOil=0.18.",
+      "counterweight": "These are computed authored shader endpoints, not measured tissue values. Existing R02 image already had bands before R04. Film can amplify a narrow exposed surface but cannot establish why that surface is segmented.",
+      "test": "If the albedo/no-relief result warrants it, separately disable the local added clearcoat contribution while retaining base specular and geometry, or inspect diffuse-only versus final lighting. Do not simultaneously change albedo, roughness, and coat and call that a single-cause test.",
+      "conditional_fix": "Repair duplicate coverage only if a mapped visible material edge is caused by it; no global wetness adjustment as the deliverable."
+    },
+    {
+      "id": "H5-flat-inner-wall",
+      "status": "source_explains_limited_material_variation_but_not_full_visual_cause",
+      "mechanism": "R04 inner color inherits pcBase low-frequency native skin variation, then an upper/lower constant optical endpoint and a single continuous oral mask. It intentionally omits exterior atlas/mottle, fades facial psH to zero and darkens by a smooth depth approximation 0.12+0.88*exp(-depth*120). There is no measured volumetric path, fine mucosal normal field or view-dependent internal occlusion solution.",
+      "counterweight": "R04 fixed the incorrect pale interior responsibility. Adding arbitrary noise may destroy this clear scoped gain and repeats R02 rejected artistic experiments. Its remaining flatness alone does not identify which richer tissue model is needed.",
+      "test": "Preserve R04 and diagnose actual rim continuity first. For later tissue refinement, test a stable semantic coordinate/scale model under at least two lighting directions and at least two identities; surface color, geometry, roughness and normals should be independently inspectable."
+    },
+    {
+      "id": "H6-wrap-and-depth",
+      "status": "not_a_periodic_segmentation_generator_in_source",
+      "mechanism": "psDirect uses smooth light wrap with a broad normal-dependent correction. R04 applies exponential depth visibility on oral skin to all outgoing light. Neither contains lip-station indexing or a periodic seam generator.",
+      "counterweight": "Both can amplify existing normal/depth discontinuities. Source inspection cannot exclude those interactions without matched shader diagnostics.",
+      "test": "Compare actual geometric normals and final normals; if both show the same segmented shape and no-bump retains it, prioritize geometry stage attribution."
+    }
+  ],
+  "minimal_experiment_sequence": [
+    {
+      "id": "E1",
+      "name": "existing albedo diagnostic",
+      "cost": "No new geometry or shader feature needed; uses existing diagnostic uniform.",
+      "action": "Record base lip settings and liDiagnostic, keep liDiagnostic=0, use lipRealism.set({diagnostic:2}), render actual same pose/camera/light frame, restore exact settings and obtain exact baseline restored frame.",
+      "interpretation": "Persistent colored segmentation may involve albedo/ownership or geometry exposure; absence of segmentation moves priority toward lighting/normal. Albedo alone does not prove no geometry contribution."
+    },
+    {
+      "id": "E2",
+      "name": "no procedural shader relief",
+      "cost": "One compile-time diagnostic variant, no new UI/product control.",
+      "action": "After R04 normal perturbation and immediately before #include <clearcoat_normal_fragment_begin>, insert normal=fbGeomN; keep all other product state identical and diagnostic=0. Native non-skin shader is unchanged; therefore first map whether defect pixels use procedural skin.",
+      "interpretation": "If appearance barely changes, reject shader micro-normal as primary cause. If a defect vanishes, confirm with material normal output and preserve the original geometric normals; do not call it geometry repaired."
+    },
+    {
+      "id": "E3",
+      "name": "actual geometric versus final normal",
+      "cost": "Two local diagnostic outputs only if E1/E2 leave normal attribution unresolved.",
+      "action": "Output fbGeomN*0.5+0.5 and existing final normal diagnostic, same actual mesh. Document that fbGeomN is the normal after normal_fragment_maps but before psH in this no-normal-map material.",
+      "interpretation": "Coincident segmentation in both means it survives shader-relief removal; proceed to actual geometry stages."
+    },
+    {
+      "id": "E4",
+      "name": "mapped material responsibility",
+      "cost": "One bounded semantic image and exact visible-vertex/triangle probes only if persistent color edge requires them.",
+      "action": "Output continuous liOral, lrMask, lrDepth (with explicit display normalization) and report material slot/csType/skin coverage for pixels around the strip.",
+      "interpretation": "A false assignment must be shown on the displayed contributing surface before expanding/relabeling any domain."
+    }
+  ],
+  "invariants": [
+    "Use actual frozen R04 person, native source geometry and neutral calibration; do not regenerate a different person.",
+    "Match pose, camera, existing lights and exposure; no geometry/draw-group mutation for E1/E2.",
+    "Native material and procedural material responsibilities must be reported. A shader-only experiment cannot explain a triangle it does not shade.",
+    "Save actual expanded shader, full rendered PNG/readback, relevant state hashes and actual restored baseline frame.",
+    "One cause per ablation. No-bump plus darker color plus smoother geometry is not attributable.",
+    "Diagnostic pass does not mean a product improvement. Preserve useful texture, lip volume and R04 inner-wall gain in final candidate."
+  ],
+  "prioritized_decision": "Run E1 and E2 in parallel with geometry-stage visual attribution. No production material change is yet justified by this read-only review. A single clear geometric cause may produce larger visible improvement than another round of wetness/noise tuning.",
+  "rejected_shortcuts": [
+    "Raise or lower wetness globally and declare texture fixed",
+    "Darken the entire thin rim to conceal a geometry flaw",
+    "Broaden outer lip mask without visible semantic attribution",
+    "Smooth the whole mouth mesh without matching source stage to defect",
+    "Describe the single upper/lower step as a 49-segment shader division"
+  ],
+  "measurements": {
+    "native_live_uniform_values": {
+      "csTone": [
+        0.4783886152068392,
+        0.3027395457075832,
+        0.20825665925233006
+      ],
+      "csLipColor": [
+        0.3139887133649649,
+        0.09989872823822872,
+        0.09084171117479915
+      ],
+      "csLipMix": 0.6,
+      "csRoughness": 0.62,
+      "csOil": 0.18,
+      "uLEnabled": 1,
+      "uLPigment": 0.68,
+      "uLUpperShade": 0.45,
+      "uLWet": 0.35,
+      "uLRough": 0.53,
+      "uL19Mel": [
+        0.16,
+        0.26
+      ],
+      "uL19Blood": [
+        0.54,
+        0.48
+      ],
+      "uL19Rough": [
+        0.49,
+        0.54
+      ],
+      "uL19Wet": [
+        0.45,
+        0.35
+      ],
+      "uL19Oxygen": 0.72
+    },
+    "reported_startup_max_geometry_furrow_micrometres": 16.03387979725369,
+    "measurement_limit": "Reported inherited R02 startup sample only; not all poses and not a causal image metric."
+  },
+  "visual_cause_confirmed": false,
+  "production_material_change_recommended_now": false,
+  "ready_for_parent_experiment_implementation": true
+}

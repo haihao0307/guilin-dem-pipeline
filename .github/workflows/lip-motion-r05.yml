@@ -1,0 +1,70 @@
+name: Lip motion R05 actual attribution
+on:
+  push:
+    branches: [feature/lip-motion-r05-20261020]
+    paths:
+      - kaopu-unified-human-workbench/lip-motion-r05/**
+      - .github/workflows/lip-motion-r05.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-motion-r05-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-motion-r05
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check bounded diagnostic source
+        run: |
+          node --check kaopu-unified-human-workbench/lip-motion-r05/verification/diagnose-motion.cjs
+          node --check kaopu-unified-human-workbench/lip-motion-r05/verification/MotionAttribution.js
+          node --check kaopu-unified-human-workbench/lip-motion-r05/verification/SurfaceAttribution.js
+      - name: Install fixed browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Capture actual immutable R04 attribution frames
+        env:
+          MODE: diagnose
+          QA_OUT: kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+          QA_BUDGET_MS: 960000
+        run: timeout --signal=TERM --kill-after=20s 17m node kaopu-unified-human-workbench/lip-motion-r05/verification/diagnose-motion.cjs
+      - name: Preserve completed or failed original evidence
+        if: always()
+        env:
+          TASK_BRANCH: feature/lip-motion-r05-20261020
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if test -d kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01; then
+            git add -f -- kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Record actual R05 attribution evidence [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-motion-r05-attribution-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-motion-r05/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-motion-r05/verification
+            kaopu-unified-human-workbench/lip-motion-r05/TASK_ANCHOR.json
+          if-no-files-found: error
+          retention-days: 30
