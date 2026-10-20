@@ -1,22 +1,31 @@
 {
   "schema": "kaopu/lip-corner-candidate-anchor@1",
-  "candidate": "candidate-01",
-  "createdUTC": "2026-10-20T06:19:54.619798+00:00",
+  "candidate": "candidate-02",
+  "createdUTC": "2026-10-20T06:45:08.112179+00:00",
   "baselineSourceCommit": "a8bba75322c12df151ecbcebc416087b5248aa5f",
   "baselineBuildCommit": "11ed0391f798b5323f4eb4aefec4307fc0b9aee0",
   "reviewedFiles": {
     "build.cjs": "07f4ad6b354769090d7cc09627080ee73dbd961ae21f978825599e25919e6b63",
-    "src/CornerContinuity.js": "19b9ba791d7d42887431dd5ff8b1ee7fbcd832c52c89c27c9cf26e461f0b1084",
-    "src/CornerContinuity.source-note.json": "b397a4b517e456cf9f2d36635d440e66910e34ba7e93897f2a4f4ee5dd766469",
+    "src/CornerContinuity.js": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
+    "src/CornerContinuity.source-note.json": "33eb6666c1464887aea06b9d3b207cb65a6c6e0995db07134ca426faad00a62e",
     "src/CornerLip.js": "10133e7dd63c66ab615525f4fdf43cfa91afef574198aa89768eab7618da5d22",
-    "verification/verify-corner.cjs": "6a5768e49db5b6c735f0c05a9e4da673134fad27701e8cba8e3b68e046598c05",
+    "verification/verify-corner.cjs": "48c32741c9630607f2c06393cfcd3d0ad5778e524dea22d4003a520598a186da",
     "AUDIT_DECISION.json": "caca608ea60a524d6c353c9a54500abf706ab25c9c9e652271fe32317912f7df",
     "DIAGNOSIS_RECEIPT.json": "01d466caebde0e0b1d4889b809dc3eda8e4ef051c821fa386ad53af0cb8068a8",
     "research/baseline-visual-review.json": "867e0513b45e6ea9e123699cf9efa074b980a46248755a6b3e2720ee644b3c15",
     "research/diagnosis-01-visual-review.json": "de51da4d421cfdd939aa08cb7600810a3137d6c2a864325fa353be09d582030e",
     "research/diagnosis-01-geometry-review.json": "09a117f3645b485b24b4c67c066f9267f15d9fe003ce46192c577707b368c1ad",
     "research/r06-corner-source-audit.json": "4e7be2dc149514c0291671a3d6c97337e0d8a17b1867b75f509d85ac4de2cc07",
-    "research/ui-source-review.json": "47f2b5c7f9848ee4af08a61edf50695467c7494330b668f22487f6e9d20239c7"
+    "research/ui-source-review.json": "47f2b5c7f9848ee4af08a61edf50695467c7494330b668f22487f6e9d20239c7",
+    "CANDIDATE_01_REJECTION.json": "18c5704ebbe35746c6175cc503eac34dd7a04a84a9e73d493ebf97e1f3d9cf71",
+    "CANDIDATE_02_DECISION.json": "08618cf511041776d155c3c3eb4c96a04edc4a66f8314ccc33550b0be4f5bdd0",
+    "research/candidate-01-technical-review.json": "3a83e6d1798b20c56f3911dd54a9aaef746c6198e4b1862c3e2ee09dfb9df2e2",
+    "research/candidate-01-visual-review.json": "a73ff6a68f6f35e088b76ae27625a46e70c71c41d80f148d2141c9e929a03748",
+    "research/candidate-01-geometry-review.json": "a846362edfec29946e8e27abe989fa9ad911d23adf313d492dd49754f811280f",
+    "research/candidate-02-synthetic-check.json": "58693c02a5eee07f236cd0309692ddaea20fcda6ffb5562fbe500c2734c2147f",
+    "verification/check-corner-numerics.cjs": "43d3a09ceb05d6ed59633c6de2fd9e8b0c86026443a3558e3ea78f007fc7d054",
+    "evidence/candidate-01/source/CornerContinuity.js": "19b9ba791d7d42887431dd5ff8b1ee7fbcd832c52c89c27c9cf26e461f0b1084",
+    "evidence/candidate-01/source/CornerContinuity.source-note.json": "b397a4b517e456cf9f2d36635d440e66910e34ba7e93897f2a4f4ee5dd766469"
   },
   "diagnosis": {
     "sourceCommit": "f523e6861dac2deaa96614e81358585cef6b8a2d",
@@ -25,10 +34,20 @@
     "evidence": "evidence/diagnosis-01/qa.json",
     "qaSHA256": "67c352b2e79f4d76517da0f85405b5eff490799266d5f3ebec076e6f81a07141"
   },
-  "hypothesis": "A short extension of the preserved native pucker x contribution into adjacent originally inactive exterior skin can reduce the abrupt corner transition without weakening native active motion. Actual native rendered images decide whether to retain it.",
-  "engineeringSupportMM": 4,
-  "supportIsMeasuredPhysiology": false,
-  "previousCandidates": [],
+  "hypothesis": "Redistribute only the original pucker x contribution over eligible peripheral skin, allowing originally active peripheral points to respond, while fixing the original vermilion/rim, bounded rail core, contact samples, one-ring collar and center. Actual native-size images decide retention.",
+  "previousCandidates": [
+    {
+      "candidate": "candidate-01",
+      "sourceCommit": "46c662aad5cdc20513cc3b630296c024a64c38ba",
+      "buildCommit": "3d65536a3fe069b95f52ddea01963036d84c3e1d",
+      "evidenceCommit": "ac5f3f43075401cf55742f2dea88cd284db2ba59",
+      "originalEvidence": "evidence/candidate-01/qa.json",
+      "qaSHA256": "c86801b2a382bc8cb81ffbb0bcbf497902697449b1aada8eba0749cd51587e36",
+      "disposition": "Rejected for insufficient native-size visual benefit; 15 functional tests passed but aggregate technical result failed for one native chunk request abort. Original result retained.",
+      "rejectionRecord": "CANDIDATE_01_REJECTION.json",
+      "rejectionSHA256": "18c5704ebbe35746c6175cc503eac34dd7a04a84a9e73d493ebf97e1f3d9cf71"
+    }
+  ],
   "requiredChecks": {
     "tests": 15,
     "savedNativeFrames": 20,
@@ -39,5 +58,14 @@
     "freshFullPersonArchiveExact": true
   },
   "visualAcceptance": false,
-  "productionReady": false
+  "productionReady": false,
+  "engineeringSmoothingLengthMM": 4,
+  "smoothingLengthIsMeasuredPhysiology": false,
+  "hardFourMillimetreSupportCutoff": false,
+  "numericalLimits": {
+    "maximumIterations": 512,
+    "maximumNormalizedResidualMM": 0.0001,
+    "maximumRelativeResidual": 1e-06,
+    "interpretation": "Algebraic convergence diagnostics, not global displacement error or physiological accuracy."
+  }
 }

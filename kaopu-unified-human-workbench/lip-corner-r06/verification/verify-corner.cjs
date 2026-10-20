@@ -27,7 +27,7 @@ fs.mkdirSync(out,{recursive:true});
 const q={schema:'kaopu/lip-corner-public-qa@1',version:VERSION,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
   verifierSHA256:sha(fs.readFileSync(__filename)),startedAt:new Date().toISOString(),budgetMS,
   framebuffer:{width,height,pixelRatio:1},browserViewport:{width:1280,height:900},
-  tests:[],frames:[],pageErrors:[],consoleErrors:[],failedRequests:[],resourceErrors:[],
+  tests:[],frames:[],pageErrors:[],consoleErrors:[],failedRequests:[],resourceErrors:[],transportObservations:[],transportObservationDrains:[],
   completed:false,publicHttpsPassed:false,browserPassed:false,shareAllowed:false,
   visualAcceptance:false,productionReady:false,physicalPhone:false,generatedImageUsed:false,staticImageSubstitute:false,
   limitations:[
@@ -39,13 +39,60 @@ const q={schema:'kaopu/lip-corner-public-qa@1',version:VERSION,mode:'public',sou
     'Pixel response and solver completion do not establish aesthetic quality or measured physiological correctness. The actual frames need visual review.',
     'Twenty saved native images, one fresh native readback and one original 1280x900 browser UI screenshot; no physical-phone performance claim.'
   ]};
-let browser,page,context,fatalTimer,seq=0;const active=[];
+let browser,page,context,fatalTimer,seq=0;const active=[],transportPages=new Map(),pendingTransport=new Set();let transportSequence=0;
 function json(name,value){const p=path.join(out,name),t=p+'.tmp';fs.writeFileSync(t,JSON.stringify(value,null,2)+'\n');fs.renameSync(t,p);}
 function checkpoint(){q.updatedAt=new Date().toISOString();q.activeStages=active.map(x=>({...x}));json('qa.partial.json',q);}
 function progress(name,event,detail={}){const r={sequence:++seq,name,event,at:new Date().toISOString(),...detail};q.lastProgress=r;fs.appendFileSync(path.join(out,'progress.jsonl'),JSON.stringify(r)+'\n');checkpoint();console.log(event.toUpperCase()+' '+name);}
 async function bounded(name,fn,ms=120000){let timer;try{return await Promise.race([Promise.resolve().then(fn),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(name+' exceeded '+ms+' ms; pending work is not a pass')),ms);})]);}finally{clearTimeout(timer);}}
 async function stage(name,fn){const item={name,startedAt:new Date().toISOString()},s=Date.now();active.push(item);progress(name,'start');try{const value=await fn();progress(name,'end',{elapsedMS:Date.now()-s});return value;}catch(e){progress(name,'failure',{elapsedMS:Date.now()-s,error:String(e)});throw e;}finally{active.splice(active.indexOf(item),1);checkpoint();}}
 async function test(name,fn){return stage(name,async()=>{const s=Date.now();try{const result=await fn();q.tests.push({name,passed:true,elapsedMS:Date.now()-s,result});checkpoint();return result;}catch(e){q.tests.push({name,passed:false,elapsedMS:Date.now()-s,error:String(e)});checkpoint();throw e;}});}
+function observedTime(){return{at:new Date().toISOString(),hostMonotonicNS:process.hrtime.bigint().toString()};}
+// Native snapshot/report APIs only: no retry, prepare, compute, pause, cancel,
+// update or render. A failed request remains a failure even when the native
+// transport later recovers. The event and the later browser observation have
+// separate clocks so a queued snapshot cannot masquerade as the failure time.
+function observeTransport(p,trigger,event=null){
+  const binding=transportPages.get(p),start=Date.now(),record={id:++transportSequence,label:binding?.label||'unknown page',trigger,event,
+    requested:observedTime(),url:p.url(),readOnly:true,deadlineMS:10000,status:'pending'};
+  q.transportObservations.push(record);
+  if(!binding||binding.closing||p.isClosed()){
+    record.status='unavailable';record.reason=!binding?'Page observation binding absent':binding.closing?'Page teardown already started':'Page already closed';record.finished=observedTime();record.elapsedMS=Date.now()-start;checkpoint();
+    return{record,settled:Promise.resolve(record)};
+  }
+  let settled;
+  settled=(async()=>{
+    try{
+      record.snapshot=await bounded(binding.label+' read-only transport snapshot',()=>binding.evaluate(()=>{
+        const started=performance.now(),result={browserAt:new Date().toISOString(),timeOrigin:performance.timeOrigin,performanceNow:started,url:location.href,apis:{}};
+        const read=(name,owner,key)=>{
+          if(!owner||typeof owner[key]!=='function')return{source:name,available:false,reason:'Native API absent at observation'};
+          try{return{source:name,available:true,value:Reflect.apply(owner[key],owner,[])};}catch(e){return{source:name,available:true,error:String(e)};}
+        };
+        result.apis.lipP3=read('__LIP_P3__.snapshot',window.__LIP_P3__,'snapshot');
+        result.apis.transport=read('__LIP_P3__.transport.snapshot',window.__LIP_P3__?.transport,'snapshot');
+        result.apis.stream=read('__R05_STREAM__.report',window.__R05_STREAM__,'report');
+        result.elapsedMS=performance.now()-started;return result;
+      }),record.deadlineMS);
+      record.status='captured';
+    }catch(e){record.status='unavailable';record.error=String(e);}
+    finally{record.finished=observedTime();record.elapsedMS=Date.now()-start;pendingTransport.delete(settled);binding.pending.delete(settled);checkpoint();}
+    return record;
+  })();
+  pendingTransport.add(settled);binding.pending.add(settled);
+  // Event handlers do not await this task. Keep a rejection handler attached;
+  // the drain inspects every settlement and records unexpected observer errors.
+  settled.catch(e=>{q.transportObservationErrors||=[];q.transportObservationErrors.push({id:record.id,error:String(e)});});
+  return{record,settled};
+}
+async function drainTransportObservations(p,label){
+  const start=Date.now(),pending=p?transportPages.get(p)?.pending:pendingTransport,record={label,scope:p?'page':'all pages',started:observedTime(),rounds:0,settled:0};
+  for(let round=0;pending?.size&&round<3;round++){
+    const tasks=[...pending],results=await Promise.allSettled(tasks);record.rounds++;record.settled+=results.length;
+    for(const result of results)if(result.status==='rejected')throw Error('Transport observation failed to settle safely: '+String(result.reason));
+  }
+  record.remaining=pending?.size||0;record.completed=record.remaining===0;record.elapsedMS=Date.now()-start;q.transportObservationDrains.push(record);checkpoint();
+  assert(record.completed,label+' transport observations still pending');assert.equal(q.transportObservationErrors?.length||0,0,'Unexpected transport observation error');return record;
+}
 function terminated(reason,code){q.completed=false;q.shareAllowed=false;q.failure=reason;q.finishedAt=new Date().toISOString();progress('process','terminated',{reason});json('qa.json',q);process.exit(code);}
 for(const[s,c]of[['SIGTERM',143],['SIGINT',130]])process.once(s,()=>terminated('Interrupted by '+s,c));
 
@@ -73,9 +120,13 @@ async function provenance(){
 async function load(url,label,isR06,captureNaturalUI=false){
   const c=await browser.newContext({viewport:q.browserViewport,deviceScaleFactor:1,acceptDownloads:true});
   const p=await c.newPage();p.setDefaultTimeout(30000);const evaluate=p.evaluate.bind(p);p.evaluate=(...args)=>bounded(label+' browser evaluate',()=>evaluate(...args));
+  transportPages.set(p,{label,evaluate,pending:new Set(),closing:false});
   p.on('pageerror',e=>{q.pageErrors.push({label,error:String(e)});checkpoint();});
   p.on('console',m=>{if(m.type()==='error'&&!/favicon/i.test(m.text())){q.consoleErrors.push({label,error:m.text()});checkpoint();}});
-  p.on('requestfailed',r=>{if(!/favicon/i.test(r.url())){q.failedRequests.push({label,url:r.url(),error:r.failure()?.errorText});checkpoint();}});
+  p.on('requestfailed',r=>{if(!/favicon/i.test(r.url())){
+    const failure={label,url:r.url(),error:r.failure()?.errorText,observed:observedTime(),index:q.failedRequests.length};q.failedRequests.push(failure);
+    failure.transportObservationID=observeTransport(p,'requestfailed',{failedRequestIndex:failure.index,url:failure.url,error:failure.error,observed:failure.observed}).record.id;checkpoint();
+  }});
   p.on('response',r=>{if(r.status()>=400&&!/favicon/i.test(r.url())){q.resourceErrors.push({label,url:r.url(),status:r.status()});checkpoint();}});
   const s=Date.now(),r=await p.goto(url,{waitUntil:'domcontentloaded',timeout:90000});assert.equal(r.status(),200);
   await p.waitForFunction(()=>window.__HEAD_PROC__?.ready||window.__HEAD_PROC__?.errors?.length,null,{timeout:300000});
@@ -91,6 +142,7 @@ async function load(url,label,isR06,captureNaturalUI=false){
       source:isR06?document.documentElement.dataset.lipCornerSource:null,version:isR06?cornerLip.version:null,
       report:isR06?cornerLip.report():motionLip.report(),errors:{head:__HEAD_PROC__.errors,base:__LIP_REALISM__.errors,inner:__LIP_INNER__.errors,motion:window.__LIP_MOTION__?.errors||[],motionSolver:window.__LIP_MOTION_SOLVER__?.report?.().errors||[],corner:window.__LIP_CORNER__?.errors||[],cornerSolver:window.__LIP_CORNER_SOLVER__?.report?.().errors||[],native:window.__LIP_P3__?.errors||[]}};
   },isR06);
+  const startupTransport=observeTransport(p,'startup ready before GPU drain');await startupTransport.settled;startup.transportObservationID=startupTransport.record.id;
   assert(startup.headReady&&startup.finalFrame);assert.equal(startup.baseSource,INHERITED_SOURCE);assert.equal(startup.baseVersion,'LIP-REALISM-R02');
   assert.equal(startup.innerSource,INNER_SOURCE);assert.equal(startup.innerVersion,'LIP-INNER-R04');assert.equal(startup.innerReport.source.sourceCommit,INNER_SOURCE);assert.equal(startup.innerReport.baseComparison,'r02');assert.equal(startup.innerReport.comparison,'r04');assert.equal(startup.innerReport.diagnostic,0);
   assert.equal(startup.motionSource,BASE_SOURCE);assert.equal(startup.motionVersion,'LIP-MOTION-R05');assert.equal(startup.motionReport.source.sourceCommit,BASE_SOURCE);assert.equal(startup.motionReport.schema,'kaopu/lip-motion@1');assert.equal(startup.motionReport.comparison,'r05');assert(startup.motionReport.ready);assert(startup.motionReport.solver.installed&&startup.motionReport.solver.enabled&&startup.motionReport.solver.valid);
@@ -238,11 +290,14 @@ async function capture(name,save=true){return stage('native GPU frame '+name,asy
 });}
 function difference(a,b){let changed=0,max=0,total=0;for(let i=0;i<a.pixels.length;i+=4){const d=Math.max(...[0,1,2].map(k=>Math.abs(a.pixels[i+k]-b.pixels[i+k])));if(d)changed++;max=Math.max(max,d);total+=d;}return{changedPixels:changed,maximumChannelDN:max,meanMaxChannelDN:total/(width*height),interpretation:'A measured response, not an aesthetic score.'};}
 async function state(){return page.evaluate(()=>__LC_VERIFY__.state());}
-async function closePage(p,label){if(!p||p.isClosed())return;const r=await bounded(label+' GPU drain',()=>p.evaluate(()=>{window.lifelikeIdle?.pause?.();window.lipWorkbench?.stop?.();const renderer=window.__IDENTITY_QA__?.viewer?.()?.renderer;if(!renderer)return{available:false};const gl=renderer.getContext(),before=gl.getError(),lost=gl.isContextLost(),frame=renderer.info.render.frame;gl.finish();if(gl.drawingBufferWidth&&gl.drawingBufferHeight)gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));return{available:true,before,after:gl.getError(),lostBefore:lost,lostAfter:gl.isContextLost(),frameBefore:frame,frameAfter:renderer.info.render.frame};}),90000);
+async function closePage(p,label){if(!p)return;await drainTransportObservations(p,label+' before GPU drain');if(p.isClosed())return;const r=await bounded(label+' GPU drain',()=>p.evaluate(()=>{window.lifelikeIdle?.pause?.();window.lipWorkbench?.stop?.();const renderer=window.__IDENTITY_QA__?.viewer?.()?.renderer;if(!renderer)return{available:false};const gl=renderer.getContext(),before=gl.getError(),lost=gl.isContextLost(),frame=renderer.info.render.frame;gl.finish();if(gl.drawingBufferWidth&&gl.drawingBufferHeight)gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));return{available:true,before,after:gl.getError(),lostBefore:lost,lostAfter:gl.isContextLost(),frameBefore:frame,frameAfter:renderer.info.render.frame};}),90000);
   if(r.available){assert.equal(r.before,0);assert.equal(r.after,0);assert.equal(r.lostBefore,false);assert.equal(r.lostAfter,false);assert.equal(r.frameBefore,r.frameAfter);}
-  await bounded(label+' close page',()=>p.close({runBeforeUnload:false}),15000);assert(p.isClosed());q.closedPages||=[];q.closedPages.push({label,gpu:r,closed:true});checkpoint();}
+  await drainTransportObservations(p,label+' before page close');const binding=transportPages.get(p);if(binding)binding.closing=true;
+  await bounded(label+' close page',()=>p.close({runBeforeUnload:false}),15000);assert(p.isClosed());await drainTransportObservations(p,label+' after page close');q.closedPages||=[];q.closedPages.push({label,gpu:r,closed:true});checkpoint();}
 async function cleanup(){const start=Date.now(),errors=[];for(const c of browser?.contexts()||[])for(const p of c.pages())try{await closePage(p,'final cleanup');}catch(e){errors.push(String(e));}
+  for(const binding of transportPages.values())binding.closing=true;
   try{if(browser)await bounded('close final browser',()=>browser.close(),15000);}catch(e){errors.push(String(e));}
+  try{await drainTransportObservations(null,'final browser closed');}catch(e){errors.push(String(e));}
   q.cleanup={completed:errors.length===0,browserDisconnected:!browser||!browser.isConnected(),errors,elapsedMS:Date.now()-start};checkpoint();assert(q.cleanup.completed&&q.cleanup.browserDisconnected,'Bounded browser cleanup failed');}
 // During suppressed pose/restore setup, mesh.geometry may still name the prior
 // frame's cached draw object. The post-render complete state gate includes it.
@@ -284,6 +339,9 @@ async function controlState(){return page.evaluate(()=>{
 function checkSolver(report,mode){
   assert.equal(report.comparison,mode);assert.equal(report.implementation,report.solver.version);assert(report.ready);assert.equal(report.innerComparison,'r04');assert.equal(report.motionComparison,'r05');
   const s=report.solver;assert(s.installed&&s.valid);assert.equal(s.enabled,mode==='r06');assert.equal(s.errors.length,0);
+  assert.equal(s.version,'native-corner-x-followthrough@2');
+  const solveLimits={maximumIterations:512,maximumNormalizedResidualMM:1e-4,maximumRelativeResidual:1e-6};
+  for(const[key,value]of Object.entries(solveLimits))assert.equal(s.binding.solver[key],value,'Reviewed graph solver limit changed: '+key);
   if(mode==='r06'){
     const last=s.last;assert(last?.completed&&last?.hooksRestored,'R06 native phase or temporary-hook restoration incomplete');
     assert(Number.isFinite(report.pose.pucker)&&report.pose.pucker>=0,'Actual pucker input unavailable');
@@ -291,13 +349,20 @@ function checkSolver(report,mode){
     assert(Number.isInteger(last.directChangedVertices)&&last.directChangedVertices>=0);assert(Number.isFinite(last.maxDirectCorrectionMM)&&last.maxDirectCorrectionMM>=0);
     if(report.pose.pucker===0){
       assert.equal(last.puckerZeroBypass,true);assert.equal(last.pairMapCalls,0);assert.equal(last.directChangedVertices,0);assert.equal(last.maxDirectCorrectionMM,0);
-      assert.equal(last.activeVerticesCompared,0);assert.equal(last.centerVerticesCompared,0);
+      assert.equal(last.coreVerticesCompared,0);assert.equal(last.contactVerticesCompared,0);assert.equal(last.centerVerticesCompared,0);assert.equal(last.changedOriginallyActiveVertices,0);assert.equal(last.linearSolve,null);
     }else{
-      assert.equal(last.puckerZeroBypass,false);assert.equal(last.pairMapCalls,1);assert.equal(last.activeDirectDeltaZero,true);assert.equal(last.centerDirectDeltaZero,true);
+      assert.equal(last.puckerZeroBypass,false);assert.equal(last.pairMapCalls,1);assert.equal(last.coreDirectDeltaZero,true);assert.equal(last.contactDirectDeltaZero,true);assert.equal(last.centerDirectDeltaZero,true);
       assert.equal(last.beforeLocalBaseMatchesEntry,true,'R06 used a different native before-local buffer');
-      assert(Number.isInteger(last.activeVerticesCompared)&&last.activeVerticesCompared>0,'No actual original-active vertices were checked');
-      assert(Number.isInteger(last.centerVerticesCompared)&&last.centerVerticesCompared>0,'No actual central vertices were checked');
+      for(const[field,bound]of[['coreVerticesCompared','protectedCoreAndOneRingVertices'],['contactVerticesCompared','uniqueContactVertices'],['centerVerticesCompared','centerVertices']]){
+        assert(Number.isInteger(last[field])&&last[field]>0,'No actual protected-domain vertices were checked: '+field);assert.equal(last[field],s.binding[bound],'Protected-domain comparison omitted bound vertices: '+field);
+      }
       assert(last.directChangedVertices>0&&last.maxDirectCorrectionMM>0,'The selected pucker correction made no evaluated geometric intervention');
+      assert(Number.isInteger(last.changedOriginallyActiveVertices)&&last.changedOriginallyActiveVertices>0&&last.changedOriginallyActiveVertices<=last.directChangedVertices,'No original active exterior vertices actually responded');
+      const solve=last.linearSolve;assert(solve?.converged&&solve.finite&&solve.positiveWeights&&solve.noOvershoot,'Exterior graph solver did not meet its numerical conditions');
+      for(const[key,value]of Object.entries(solveLimits))assert.equal(solve[key],value,'Actual graph solve changed the reviewed limit: '+key);
+      assert(Number.isInteger(solve.iterations)&&solve.iterations>=0&&solve.iterations<=solveLimits.maximumIterations,'Invalid graph solve iteration count');
+      assert(Number.isFinite(solve.maxResidualMM)&&solve.maxResidualMM>=0&&solve.maxResidualMM<=solveLimits.maximumNormalizedResidualMM,'Actual normalized graph residual exceeds the reviewed limit');
+      assert(Number.isFinite(solve.relativeResidual)&&solve.relativeResidual>=0&&solve.relativeResidual<=solveLimits.maximumRelativeResidual,'Actual relative graph residual exceeds the reviewed limit');
     }
   }
   // The inherited R05 stage must still complete in both R06 comparison modes.
@@ -447,12 +512,17 @@ async function publicChecks(){
     browser=await chromium.launch(options);context=await browser.newContext({viewport:q.browserViewport,deviceScaleFactor:1});
     await test('fixed public bytes reviewed source modules and exact R05 ancestor',provenance);await context.close();
     await publicChecks();
+    await drainTransportObservations(null,'before strict verification error gate');
     for(const key of['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[key].length,0,key);
     q.completed=true;q.publicHttpsPassed=true;q.browserPassed=true;q.shareAllowed=true;
   }catch(e){q.completed=false;q.shareAllowed=false;q.failure=String(e);q.stack=e.stack;process.exitCode=1;console.error(e);}
   finally{
     q.verificationFinishedAt=new Date().toISOString();json('qa.json',q);checkpoint();
-    try{await cleanup();}catch(e){q.cleanupError=String(e);q.completed=false;q.shareAllowed=false;process.exitCode=1;}
+    try{await cleanup();}catch(e){q.cleanupError=String(e);q.completed=false;q.publicHttpsPassed=false;q.browserPassed=false;q.shareAllowed=false;process.exitCode=1;}
+    // Teardown can emit a late failure too. It is recorded and still fails the
+    // same four zero-error gates; ERR_ABORTED is never exempted or filtered.
+    try{for(const key of['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[key].length,0,key+' after cleanup');}
+    catch(e){q.finalErrorGateFailure=String(e);q.failure||=String(e);q.completed=false;q.publicHttpsPassed=false;q.browserPassed=false;q.shareAllowed=false;process.exitCode=1;}
     clearTimeout(fatalTimer);q.finishedAt=new Date().toISOString();json('qa.json',q);
     json('PUBLICATION_PROOF.json',{schema:'kaopu/lip-corner-publication@1',version:VERSION,sourceSHA:SOURCE,buildSHA:BUILD,previewSHA256:q.previewSHA256,publicURL:PUBLIC_URL,
       verifierSHA256:q.verifierSHA256,checkedAt:q.finishedAt,publicHttpsPassed:q.completed&&q.publicHttpsPassed,browserPassed:q.completed&&q.browserPassed,shareAllowed:q.completed&&q.shareAllowed,

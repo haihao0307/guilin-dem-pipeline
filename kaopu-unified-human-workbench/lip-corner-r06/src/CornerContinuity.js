@@ -1,12 +1,14 @@
-/* R06 candidate: continue native pucker x displacement into the immediately
- * adjacent exterior skin. Original active vertices are immutable anchors.
- * Four millimetres is a bounded engineering support, not measured physiology.
- * No original shape smoothing, material edits, semantic edits or new geometry.
+/* R06 candidate 02: redistribute only the native pucker x increment on
+ * verified peripheral exterior skin, including originally active vertices.
+ * Lip rail body, native vermilion/rim, contact samples and center are fixed.
+ * Four millimetres is a graph smoothing length, not a hard support cutoff or
+ * measured physiology. No original shape, material, semantic or topology edit.
  */
 (function () {
   'use strict';
   if (window.__LIP_CORNER_SOLVER__) throw Error('Corner motion module already exists');
-  const VERSION = 'native-corner-x-followthrough@1', RADIUS = .004;
+  const VERSION = 'native-corner-x-followthrough@2', LENGTH = .004;
+  const MAX_ITERATIONS = 512, RESIDUAL_MM = .0001, RELATIVE_RESIDUAL = 1e-6;
   const R05_SOURCE = 'a8bba75322c12df151ecbcebc416087b5248aa5f';
   const own = (o, k) => Object.getOwnPropertyDescriptor(o, k);
   const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -113,63 +115,159 @@
     return smooth(.64, .84, u) * (1 - smooth(1.5, 1.6, u)) * smooth(.25, .75, s.front) *
       (1 - smooth(.0035, .006, Math.max(0, s.depth))) * smooth(s.bot - .01, s.bot - .009, y) * (1 - smooth(s.top + .013, s.top + .014, y));
   }
-  function heapPush(h, item) {
-    let i = h.length; h.push(item);
-    while (i) { const p = (i - 1) >> 1; if (h[p][1] <= item[1]) break; h[i] = h[p]; i = p; } h[i] = item;
-  }
-  function heapPop(h) {
-    const first = h[0], last = h.pop(); if (!h.length) return first;
-    let i = 0;
-    while (true) { let k = i * 2 + 1; if (k >= h.length) break; if (k + 1 < h.length && h[k + 1][1] < h[k][1]) k++; if (h[k][1] >= last[1]) break; h[i] = h[k]; i = k; }
-    h[i] = last; return first;
+  function exteriorSurface(c, id) {
+    const s = c.samples[id], y = c.rest[id * 3 + 1];
+    return s.type < .5 && s.inner <= .005 && s.v >= 0 && s.front > .25 && s.depth < .006 && Math.abs(s.u) < 1.7 && y > s.bot - .01 && y < s.top + .014;
   }
   function buildBand(c) {
-    const gain = new Float64Array(c.count), graph = new Map(), seeds = new Set();
-    for (let id = 0; id < c.count; id++) gain[id] = exteriorGain(c, id);
+    const baseCore = new Uint8Array(c.count), core = new Uint8Array(c.count), surface = new Uint8Array(c.count);
+    const gain = new Float64Array(c.count), graph = new Map(), contacts = new Set();
+    let railBodyVertices = 0, rimVertices = 0;
+    for (const id of c.top.lips) baseCore[id] = 1;
+    for (const pair of c.top.pairs) { contacts.add(pair.upper); contacts.add(pair.lower); baseCore[pair.upper] = baseCore[pair.lower] = 1; }
+    for (let id = 0; id < c.count; id++) {
+      const s = c.samples[id];
+      // v describes the lip body only inside the outer rail endpoints.
+      // In particular u=1.21,v=.78 is not made lip core by this test.
+      if (s.roi && Math.abs(s.u) <= 1 && s.v >= 0 && s.v <= 1.05) { baseCore[id] = 1; railBodyVertices++; }
+      if (s.rim) { baseCore[id] = 1; rimVertices++; }
+      surface[id] = exteriorSurface(c, id) ? 1 : 0;
+    }
+    core.set(baseCore);
+    for (let i = 0; i < c.index.length; i += 3) {
+      const ids = [c.index[i], c.index[i + 1], c.index[i + 2]];
+      for (const a of ids) if (baseCore[a]) for (const b of ids) core[b] = 1;
+    }
+    c.coreIds = []; c.contactIds = [...contacts].sort((a, b) => a - b);
+    for (let id = 0; id < c.count; id++) {
+      if (core[id]) c.coreIds.push(id);
+      if (!core[id]) gain[id] = exteriorGain(c, id);
+    }
+    let degenerateEdgeVisits = 0;
     function link(a, b) {
-      if (!gain[a] || !gain[b] || Math.sign(c.samples[a].u) !== Math.sign(c.samples[b].u) || (c.active[a] && c.active[b])) return;
+      if (!(gain[a] || gain[b]) || !surface[a] || !surface[b] || Math.sign(c.samples[a].u) !== Math.sign(c.samples[b].u)) return;
       const d = Math.hypot(c.rest[a * 3] - c.rest[b * 3], c.rest[a * 3 + 1] - c.rest[b * 3 + 1], c.rest[a * 3 + 2] - c.rest[b * 3 + 2]);
-      if (!(d > 1e-10 && d < RADIUS)) return;
-      if (!graph.has(a)) graph.set(a, new Map()); if (!graph.has(b)) graph.set(b, new Map());
-      graph.get(a).set(b, d); graph.get(b).set(a, d);
-      if (c.active[a] && !c.active[b]) seeds.add(a); if (c.active[b] && !c.active[a]) seeds.add(b);
+      if (!(d > 1e-10)) { degenerateEdgeVisits++; return; }
+      const weight = 1 / (d * d); if (!Number.isFinite(weight) || !(weight > 0)) throw Error('Invalid indexed rest edge weight');
+      if (gain[a]) { if (!graph.has(a)) graph.set(a, new Map()); graph.get(a).set(b, weight); }
+      if (gain[b]) { if (!graph.has(b)) graph.set(b, new Map()); graph.get(b).set(a, weight); }
     }
     for (let i = 0; i < c.index.length; i += 3) { const a = c.index[i], b = c.index[i + 1], d = c.index[i + 2]; link(a, b); link(b, d); link(d, a); }
-    c.seedIds = [...seeds].sort((a, b) => a - b);
-    const recipients = new Map(); let links = 0;
-    for (let si = 0; si < c.seedIds.length; si++) {
-      const seed = c.seedIds[si], distances = new Map(), heap = [];
-      for (const [id, d] of graph.get(seed) || []) if (!c.active[id]) { distances.set(id, d); heapPush(heap, [id, d]); }
-      while (heap.length) {
-        const [id, d] = heapPop(heap); if (d !== distances.get(id) || d >= RADIUS) continue;
-        for (const [next, length] of graph.get(id) || []) {
-          if (c.active[next]) continue; const nd = d + length;
-          if (nd < RADIUS && nd < (distances.get(next) ?? Infinity)) { distances.set(next, nd); heapPush(heap, [next, nd]); }
-        }
-      }
-      for (const [id, d] of distances) {
-        const t = d / RADIUS, w = (1 - t) ** 4 * (4 * t + 1) / Math.max(d * d, 1e-12);
-        if (!(w > 0)) continue;
-        let r = recipients.get(id); if (!r) { r = { id, minDistance: d, sum: 0, influences: [] }; recipients.set(id, r); }
-        r.minDistance = Math.min(r.minDistance, d); r.sum += w; r.influences.push([si, w]); links++;
-      }
+    c.freeIds = [...graph.keys()].sort((a, b) => a - b);
+    const freeIndex = new Int32Array(c.count); freeIndex.fill(-1);
+    c.freeIds.forEach((id, i) => { freeIndex[id] = i; });
+    const rows = [], relevant = new Set(), fixed = new Set();
+    let links = 0, minimumWeight = Infinity, maximumWeight = 0;
+    for (const id of c.freeIds) {
+      if (core[id] || Math.abs(c.samples[id].u) <= .64) throw Error('Protected native vertex entered free exterior field');
+      const adjacent = [...graph.get(id)].sort((a, b) => a[0] - b[0]);
+      const mass = adjacent.length / (LENGTH * LENGTH * gain[id]); let diagonal = mass;
+      const neighbors = adjacent.map(([other, weight]) => {
+        diagonal += weight; relevant.add(other); if (freeIndex[other] < 0) fixed.add(other);
+        minimumWeight = Math.min(minimumWeight, weight); maximumWeight = Math.max(maximumWeight, weight); links++;
+        return { id: other, free: freeIndex[other], weight };
+      });
+      if (!(mass > 0) || !Number.isFinite(diagonal)) throw Error('Invalid positive graph mass or diagonal');
+      relevant.add(id); rows.push({ id, mass, diagonal, neighbors });
     }
-    c.recipients = [...recipients.values()].sort((a, b) => a.id - b.id);
-    for (const r of c.recipients) {
-      if (c.active[r.id] || Math.abs(c.samples[r.id].u) <= .64) throw Error('Protected native vertex entered recipient band');
-      r.gain = gain[r.id] * (1 - smooth(0, RADIUS, r.minDistance));
-      for (const link of r.influences) link[1] /= r.sum;
+    // Each free/free edge has identical positive weight in both rows. The
+    // positive mass makes the Dirichlet graph matrix strictly positive definite.
+    for (let i = 0; i < rows.length; i++) for (const edge of rows[i].neighbors) if (edge.free >= 0) {
+      if (graph.get(edge.id)?.get(rows[i].id) !== edge.weight) throw Error('Asymmetric native rest graph');
     }
-    c.binding = { method: 'Positive short-range interpolation of the original native x contribution, on the full original indexed rest graph',
-      supportRestMM: RADIUS * 1000, supportIsMeasuredPhysiology: false, inputPoseUsedForBinding: false,
+    const component = new Int32Array(rows.length); component.fill(-1); let components = 0;
+    for (let i = 0; i < rows.length; i++) if (component[i] < 0) {
+      const queue = [i]; component[i] = components;
+      for (let q = 0; q < queue.length; q++) for (const edge of rows[queue[q]].neighbors) if (edge.free >= 0 && component[edge.free] < 0) { component[edge.free] = components; queue.push(edge.free); }
+      components++;
+    }
+    c.rows = rows; c.relevantIds = [...relevant].sort((a, b) => a - b); c.component = component; c.components = components;
+    const baseCoreCount = baseCore.reduce((sum, x) => sum + x, 0);
+    c.binding = {
+      method: 'Screened positive rest-graph smoothing of only the original pucker x increment, with fixed core and exterior boundary values',
+      smoothingLengthRestMM: LENGTH * 1000, smoothingLengthIsMeasuredPhysiology: false, hardFourMillimetreSupportCutoff: false, inputPoseUsedForBinding: false,
       nativeVertices: c.count, originalActiveVertices: c.activeIds.length, centerVertices: c.centerIds.length,
-      scannedTriangles: c.index.length / 3, usedTopologyNeighbors: false, boundaryAnchors: c.seedIds.length, recipientVertices: c.recipients.length, interpolationLinks: links,
-      nativeRestFingerprint: fingerprint(c.rest), nativeIndexFingerprint: fingerprint(c.index), originalActiveFingerprint: fingerprint(c.active), ownershipFingerprint: c.ownership,
-      exteriorRule: 'Same-side native type<.5, inner<=.005, v>=0, front>.25, depth<6mm; native exterior vertical region; all original active vertices excluded',
-      fades: 'front .25-.75; depth 3.5-6mm; short physical rest distance 0-4mm; outer lateral and exterior vertical guards',
-      interpolation: 'Shortest indexed path through inactive eligible skin; positive compact kernel (1-t)^4*(4t+1)/distance^2, normalized across anchors; smooth nearest-distance fade to zero',
-      sourceValues: 'Each current before-local native anchor x contribution; no stored posed displacement',
-      examples: c.recipients.filter(r => [32640, 47150, 12828, 18024].includes(r.id)).map(r => ({ id: r.id, u: c.samples[r.id].u, v: c.samples[r.id].v, front: c.samples[r.id].front, depthMM: c.samples[r.id].depth * 1000, minRestDistanceMM: r.minDistance * 1000, gain: r.gain, anchors: r.influences.length })) };
+      nativeVermilionVertices: c.top.lips.length, nativeRimVertices: rimVertices, railBodyVertices, protectedBaseCoreVertices: baseCoreCount,
+      protectedCoreAndOneRingVertices: c.coreIds.length, protectedOneRingAddedVertices: c.coreIds.length - baseCoreCount,
+      contactPairSlots: c.top.pairs.length, contactVertexSlots: c.top.pairs.length * 2, uniqueContactVertices: c.contactIds.length,
+      scannedTriangles: c.index.length / 3, fullIndexPasses: 2, usedTopologyNeighbors: false, freeExteriorVertices: rows.length,
+      freeOriginallyActiveVertices: rows.filter(r => c.active[r.id]).length, freeOriginallyInactiveVertices: rows.filter(r => !c.active[r.id]).length,
+      fixedBoundaryVertices: fixed.size, positiveDirectedLinks: links, connectedFreeComponents: components, degenerateEdgeVisits,
+      minimumPositiveWeight: Number.isFinite(minimumWeight) ? minimumWeight : null, maximumPositiveWeight: maximumWeight,
+      nativeRestFingerprint: fingerprint(c.rest), nativeIndexFingerprint: fingerprint(c.index), originalActiveFingerprint: fingerprint(c.active),
+      protectedCoreFingerprint: fingerprint(core), freeVertexFingerprint: fingerprint(new Uint32Array(c.freeIds)), ownershipFingerprint: c.ownership,
+      coreRule: 'Union of native top.lips, all samples.rim, original pairs, and native roi with abs(u)<=1 and 0<=v<=1.05; plus exactly one full-index neighbour ring. Negative-v and oral points are ineligible for edits.',
+      exteriorRule: 'Same-side native type<.5, inner<=.005, v>=0, front>.25, depth<6mm; native exterior vertical region; free points exclude core and abs(u)<=.64',
+      fades: 'Coefficient g: u .64-.84 and 1.5-1.6; front .25-.75; depth 3.5-6mm; 1mm outer vertical fades. Domain is not cut 4mm from the lip core.',
+      equation: '(degree_i/(ell^2*g_i)+sum_j 1/length_ij^2)*d_i - sum_free_j d_j/length_ij^2 = degree_i*native_i/(ell^2*g_i)+sum_fixed_j native_j/length_ij^2',
+      solver: { method: 'Diagonal-preconditioned conjugate gradients on the symmetric positive-definite correction system; actual residual recomputed', maximumIterations: MAX_ITERATIONS, maximumNormalizedResidualMM: RESIDUAL_MM, maximumRelativeResidual: RELATIVE_RESIDUAL },
+      sourceValues: 'Current before-local native pucker x contribution; zero for originally inactive vertices; no posed displacement stored at install',
+      examples: [32639, 32640, 47099, 47150, 12828, 18024].filter(id => id < c.count).map(id => ({ id, u: c.samples[id].u, v: c.samples[id].v, front: c.samples[id].front, depthMM: c.samples[id].depth * 1000, originalActive: !!c.active[id], protectedCore: !!core[id], freeExterior: freeIndex[id] >= 0, gain: gain[id] }))
+    };
+  }
+  function redistribute(c, native, rec) {
+    const rows = c.rows, count = rows.length, correction = new Float64Array(count), rhs = new Float64Array(count);
+    const residual = new Float64Array(count), direction = new Float64Array(count), work = new Float64Array(count), z = new Float64Array(count);
+    const min = new Float64Array(c.components).fill(Infinity), max = new Float64Array(c.components).fill(-Infinity);
+    for (let i = 0; i < count; i++) {
+      const row = rows[i], value = native[row.id], component = c.component[i];
+      if (!Number.isFinite(value)) throw Error('Non-finite native source increment');
+      min[component] = Math.min(min[component], value); max[component] = Math.max(max[component], value);
+      for (const edge of row.neighbors) {
+        const other = native[edge.id]; if (!Number.isFinite(other)) throw Error('Non-finite native boundary increment');
+        rhs[i] += edge.weight * (other - value); min[component] = Math.min(min[component], other); max[component] = Math.max(max[component], other);
+      }
+    }
+    function multiply(input, output) {
+      for (let i = 0; i < count; i++) {
+        let value = rows[i].diagonal * input[i];
+        for (const edge of rows[i].neighbors) if (edge.free >= 0) value -= edge.weight * input[edge.free];
+        output[i] = value;
+      }
+    }
+    const inner = (a, b) => { let value = 0; for (let i = 0; i < count; i++) value += a[i] * b[i]; return value; };
+    const rhsNorm = Math.sqrt(inner(rhs, rhs));
+    function actualResidual() {
+      multiply(correction, work); let maxMM = 0, norm2 = 0;
+      for (let i = 0; i < count; i++) { residual[i] = rhs[i] - work[i]; maxMM = Math.max(maxMM, Math.abs(residual[i]) / rows[i].diagonal * 1000); norm2 += residual[i] * residual[i]; }
+      return { maxResidualMM: maxMM, relativeResidual: rhsNorm > 0 ? Math.sqrt(norm2) / rhsNorm : Math.sqrt(norm2) };
+    }
+    let measure = actualResidual(), iterations = 0;
+    const converged = () => Number.isFinite(measure.maxResidualMM) && Number.isFinite(measure.relativeResidual) && measure.maxResidualMM <= RESIDUAL_MM && measure.relativeResidual <= RELATIVE_RESIDUAL;
+    for (let i = 0; i < count; i++) direction[i] = z[i] = residual[i] / rows[i].diagonal;
+    let rz = inner(residual, z);
+    while (!converged() && iterations < MAX_ITERATIONS) {
+      multiply(direction, work); const denominator = inner(direction, work);
+      if (!(denominator > 0) || !(rz > 0) || !Number.isFinite(denominator) || !Number.isFinite(rz)) throw Error('Positive graph solver lost finite definiteness');
+      const alpha = rz / denominator;
+      for (let i = 0; i < count; i++) { correction[i] += alpha * direction[i]; residual[i] -= alpha * work[i]; }
+      iterations++;
+      // Recompute the true residual every iteration; reported convergence never
+      // relies only on the conjugate-gradient recurrence.
+      measure = actualResidual();
+      if (converged()) break;
+      for (let i = 0; i < count; i++) z[i] = residual[i] / rows[i].diagonal;
+      const next = inner(residual, z), beta = next / rz;
+      for (let i = 0; i < count; i++) direction[i] = z[i] + beta * direction[i];
+      rz = next;
+    }
+    let boundClampedVertices = 0, maximumPreClampBoundViolationMM = 0;
+    for (let i = 0; i < count; i++) {
+      const value = native[rows[i].id] + correction[i], component = c.component[i];
+      if (!Number.isFinite(value)) throw Error('Non-finite solved exterior increment');
+      const bounded = clamp(value, min[component], max[component]), violationMM = Math.abs(value - bounded) * 1000;
+      maximumPreClampBoundViolationMM = Math.max(maximumPreClampBoundViolationMM, violationMM);
+      // Only numerical roundoff may be bounded. A material maximum-principle
+      // failure is an error, not a hidden artistic clamp.
+      if (violationMM > RESIDUAL_MM) throw Error('Exterior increment exceeds the positive source bounds');
+      if (value !== bounded) { correction[i] = bounded - native[rows[i].id]; boundClampedVertices++; }
+    }
+    measure = actualResidual();
+    rec.linearSolve = { converged: converged(), iterations, ...measure, maximumIterations: MAX_ITERATIONS, maximumNormalizedResidualMM: RESIDUAL_MM,
+      maximumRelativeResidual: RELATIVE_RESIDUAL, finite: true, positiveWeights: true, noOvershoot: true, boundClampedVertices, maximumPreClampBoundViolationMM,
+      residualDefinition: 'max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check' };
+    if (!rec.linearSolve.converged) throw Error('Exterior graph solve did not reach the declared residual tolerances');
+    return correction;
   }
   let context = null;
   function install(viewer, model) {
@@ -188,7 +286,7 @@
     c.sourceKey = sourceKey(c);
     c.materials = [viewer.skin.material, window.headProceduralSkin.material()].map((material, i) => ({ material, native: i === 0, compile: material.onBeforeCompile, cacheKey: material.customProgramCacheKey, values: materialValues(material) }));
     buildBand(c);
-    if (!c.seedIds.length || !c.recipients.length) { invalidate(c, 'No eligible exterior follow-through band exists for this native surface'); return report(); }
+    if (!c.freeIds.length) { invalidate(c, 'No eligible exterior increment field exists for this native surface'); return report(); }
     c.wrapper = function (...args) {
       if (!c.enabled) return Reflect.apply(c.originalApply, this, args);
       if (this !== c.solver || c.running) throw Error('Unexpected corner solver call');
@@ -196,8 +294,8 @@
       const amount = c.structure.performance.settings.pucker;
       if (!Number.isFinite(amount) || amount < 0 || amount > 1) throw Error('Invalid native pucker input');
       const rec = { call: ++c.calls, completed: false, hooksRestored: false, pairMapCalls: 0, puckerInput: amount, puckerZeroBypass: amount === 0,
-        activeDirectDeltaZero: true, centerDirectDeltaZero: true, directChangedVertices: 0, maxDirectCorrectionMM: 0,
-        activeVerticesCompared: 0, centerVerticesCompared: 0, beforeLocalBaseMatchesEntry: null, allOriginalStagesExecuted: true };
+        coreDirectDeltaZero: true, contactDirectDeltaZero: true, centerDirectDeltaZero: true, directChangedVertices: 0, changedOriginallyActiveVertices: 0, maxDirectCorrectionMM: 0,
+        coreVerticesCompared: 0, contactVerticesCompared: 0, centerVerticesCompared: 0, beforeLocalBaseMatchesEntry: null, linearSolve: null, allOriginalStagesExecuted: true };
       if (amount === 0) {
         // No nested hooks, position reads/writes or pose substitution here.
         try { const answer = Reflect.apply(c.originalApply, this, args); rec.completed = true; rec.hooksRestored = true; c.last = rec; return answer; }
@@ -210,27 +308,25 @@
         put(pairs, 'map', function (...mapArgs) {
           if (this !== pairs || ++rec.pairMapCalls !== 1) throw Error('Native local motion boundary changed');
           rec.beforeLocalBaseMatchesEntry = sameBytes(solver.base, entry); if (!rec.beforeLocalBaseMatchesEntry) throw Error('Current native before-local position buffer was not captured');
-          const activeBefore = selectedPositions(array, c.activeIds), centerBefore = selectedPositions(array, c.centerIds);
-          rec.activeVerticesCompared = c.activeIds.length; rec.centerVerticesCompared = c.centerIds.length;
-          const anchors = new Float64Array(c.seedIds.length);
-          for (let i = 0; i < c.seedIds.length; i++) {
-            const id = c.seedIds[i]; anchors[i] = -.23 * amount * dot(sub(point(solver.base, id), f.center), f.x) * c.samples[id].weight;
-          }
+          const coreBefore = selectedPositions(array, c.coreIds), contactBefore = selectedPositions(array, c.contactIds), centerBefore = selectedPositions(array, c.centerIds);
+          rec.coreVerticesCompared = c.coreIds.length; rec.contactVerticesCompared = c.contactIds.length; rec.centerVerticesCompared = c.centerIds.length;
+          const native = new Float64Array(c.count);
+          for (const id of c.relevantIds) if (c.active[id]) native[id] = -.23 * amount * dot(sub(point(solver.base, id), f.center), f.x) * c.samples[id].weight;
+          const correction = redistribute(c, native, rec);
           const examples = [];
-          for (const r of c.recipients) {
-            let delta = 0; for (const [si, w] of r.influences) delta += anchors[si] * w;
-            delta *= r.gain;
-            if (!Number.isFinite(delta)) throw Error('Non-finite exterior follow-through');
+          for (let i = 0; i < c.rows.length; i++) {
+            const id = c.rows[i].id, delta = correction[i];
+            if (!Number.isFinite(delta)) throw Error('Non-finite exterior increment correction');
             if (Math.abs(delta) < 1e-12) continue;
-            const before = point(array, r.id);
-            for (let k = 0; k < 3; k++) array[r.id * 3 + k] += f.x[k] * delta;
-            const actual = Math.hypot(...sub(point(array, r.id), before)) * 1000;
-            if (actual > 0) { rec.directChangedVertices++; rec.maxDirectCorrectionMM = Math.max(rec.maxDirectCorrectionMM, actual); }
-            if ([32640, 47150, 12828, 18024].includes(r.id)) examples.push({ id: r.id, nativeXContributionAddedMM: delta * 1000, actualDistanceMM: actual });
+            const before = point(array, id);
+            for (let k = 0; k < 3; k++) if (f.x[k] !== 0) array[id * 3 + k] += f.x[k] * delta;
+            const actual = Math.hypot(...sub(point(array, id), before)) * 1000;
+            if (actual > 0) { rec.directChangedVertices++; if (c.active[id]) rec.changedOriginallyActiveVertices++; rec.maxDirectCorrectionMM = Math.max(rec.maxDirectCorrectionMM, actual); }
+            if ([32639, 32640, 47099, 47150, 12828, 18024].includes(id)) examples.push({ id, originalActive: !!c.active[id], nativePuckerXMM: native[id] * 1000, redistributedPuckerXMM: (native[id] + delta) * 1000, correctionXMM: delta * 1000, actualDistanceMM: actual });
           }
           rec.examples = examples;
-          rec.activeDirectDeltaZero = selectedExact(array, c.activeIds, activeBefore); rec.centerDirectDeltaZero = selectedExact(array, c.centerIds, centerBefore);
-          if (!rec.activeDirectDeltaZero || !rec.centerDirectDeltaZero) throw Error('A protected original active or central vertex changed directly');
+          rec.coreDirectDeltaZero = selectedExact(array, c.coreIds, coreBefore); rec.contactDirectDeltaZero = selectedExact(array, c.contactIds, contactBefore); rec.centerDirectDeltaZero = selectedExact(array, c.centerIds, centerBefore);
+          if (!rec.coreDirectDeltaZero || !rec.contactDirectDeltaZero || !rec.centerDirectDeltaZero) throw Error('A protected lip core, contact sample or central vertex changed directly');
           // R05 has performed its own local ownership correction before this
           // callback. Original closure and every later stage continue normally.
           return Reflect.apply(map, this, mapArgs);
@@ -277,13 +373,14 @@
     if (c?.valid && !c.running) { const reason = invalidation(c, false); if (reason) invalidate(c, reason); }
     return structuredClone({ version: VERSION, installed: !!c?.attached, enabled: !!c?.enabled, disabled: !c?.enabled, valid: !!c?.valid,
       invalidationReason: c?.invalidationReason || null, binding: c?.binding || null, last: c?.last || null, calls: c?.calls || 0, errors: c?.errors || [],
-      component: 'Native mouth-frame x only; original pucker source motion is retained', originalActiveVerticesProtected: true, centerRule: 'abs(native u)<=.64',
+      component: 'Only the native pucker mouth-frame x increment is redistributed on eligible exterior skin; every other native motion term remains unchanged', originalActiveVerticesProtected: false,
+      protectedDomains: 'Native rail body, vermilion, rim, original contact samples and one-ring collar; center abs(native u)<=.64; oral and negative-v excluded', centerRule: 'abs(native u)<=.64',
       puckerZero: 'Direct original R05 evaluation without nested R06 hooks or position writes', poseUsedForInstall: false,
       canonicalPositionsChanged: false, topologyChanged: false, semanticFieldsChangedByModule: false, materialChanged: false, dnaWritten: false, newMeshes: 0,
       fullBiomechanics: false, visualAcceptance: false, productionReady: false,
-      limitations: ['Four millimetres and the positive interpolation kernel are bounded engineering choices, not measured tissue mechanics.',
-        'Direct anchor protection does not prevent original downstream normals and strain from responding to neighbouring geometry.',
-        'The original local coordinate normalization, closure, pressure, contact scope and unverified volume compensation remain unchanged.',
+      limitations: ['Four millimetres is an engineering smoothing length, not a physical tissue measurement or a hard support cutoff.',
+        'The rail-body/core mask is a conservative construction from native fields, not measured tissue anatomy; downstream final contact equality still requires actual verification.',
+        'The original closure, pressure, contact scope, forward/up motion and unverified volume compensation remain unchanged.',
         'Unsupported historical or custom material states disable this candidate without changing those states or their labels.'] });
   }
   window.__LIP_CORNER_SOLVER__ = Object.freeze({ version: VERSION, install, setEnabled, report, uninstall });

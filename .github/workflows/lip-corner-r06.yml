@@ -89,7 +89,7 @@ jobs:
           MODE: public
           SOURCE_SHA: ${{ github.sha }}
           PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-corner-r06/preview.html
-          QA_OUT: kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-01
+          QA_OUT: kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-02
           QA_BUDGET_MS: 900000
         run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-corner-r06/verification/verify-corner.cjs
       - name: Verify candidate completion without aesthetic promotion
@@ -97,16 +97,16 @@ jobs:
           node - <<'JSVERIFY'
           const fs=require('fs'),assert=require('assert/strict');
           const p='kaopu-unified-human-workbench/lip-corner-r06/';
-          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-01/qa.json'));
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-02/qa.json'));
           const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
           const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
           assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
           for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
           for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
-          assert(q.tests.length>=12);assert(q.tests.every(t=>t.passed));
+          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
           for(const k of ['publicHttpsPassed','browserPassed','shareAllowed'])assert.equal(q[k],true,k);
           assert.equal(q.cleanup.browserDisconnected,true);
-          assert(q.frames.filter(f=>f.saved).length>=20);assert(q.frames.length>=21);
+          assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);
           assert.equal(q.sourceSHA,process.env.GITHUB_SHA);assert.equal(q.buildSHA,process.env.BUILD_SHA);
           assert.equal(q.previewSHA256,m.previewSHA256);assert.equal(q.verifierSHA256,a.reviewedFiles['verification/verify-corner.cjs']);
           assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
@@ -121,8 +121,8 @@ jobs:
           CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
           test "$CURRENT_HEAD" = "$BUILD_SHA"
           git add -f -- kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_BUILD.json
-          if test -d kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-01; then
-            git add -f -- kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-01
+          if test -d kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-02; then
+            git add -f -- kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-02
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Record actual public R06 candidate evidence [skip ci]"
@@ -133,7 +133,7 @@ jobs:
         with:
           name: lip-corner-r06-public-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-01
+            kaopu-unified-human-workbench/lip-corner-r06/evidence/candidate-02
             kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_BUILD.json
             kaopu-unified-human-workbench/lip-corner-r06/CANDIDATE_ANCHOR.json
             kaopu-unified-human-workbench/lip-corner-r06/BUILD_MANIFEST.json

@@ -1,0 +1,120 @@
+{
+  "schema": "r06/candidate02-synthetic-check@1",
+  "moduleSHA256": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
+  "fixture": {
+    "vertices": 1056,
+    "triangles": 1920,
+    "pairs": 49,
+    "uniqueContactVertices": 16,
+    "scope": "Synthetic indexed surface and a controlled native-stage stub, not the actual browser/Anny geometry, normals, closure or visual acceptance."
+  },
+  "passed": true,
+  "nativeCalls": 8,
+  "results": [
+    {
+      "test": "active and inactive exterior field with protected core/contact/center and unchanged forward/up",
+      "binding": {
+        "method": "Screened positive rest-graph smoothing of only the original pucker x increment, with fixed core and exterior boundary values",
+        "smoothingLengthRestMM": 4,
+        "smoothingLengthIsMeasuredPhysiology": false,
+        "hardFourMillimetreSupportCutoff": false,
+        "inputPoseUsedForBinding": false,
+        "nativeVertices": 1056,
+        "originalActiveVertices": 508,
+        "centerVertices": 160,
+        "nativeVermilionVertices": 130,
+        "nativeRimVertices": 104,
+        "railBodyVertices": 140,
+        "protectedBaseCoreVertices": 166,
+        "protectedCoreAndOneRingVertices": 208,
+        "protectedOneRingAddedVertices": 42,
+        "contactPairSlots": 49,
+        "contactVertexSlots": 98,
+        "uniqueContactVertices": 16,
+        "scannedTriangles": 1920,
+        "fullIndexPasses": 2,
+        "usedTopologyNeighbors": false,
+        "freeExteriorVertices": 600,
+        "freeOriginallyActiveVertices": 200,
+        "freeOriginallyInactiveVertices": 400,
+        "fixedBoundaryVertices": 76,
+        "positiveDirectedLinks": 3446,
+        "connectedFreeComponents": 2,
+        "degenerateEdgeVisits": 0,
+        "minimumPositiveWeight": 499998.9047660178,
+        "maximumPositiveWeight": 1000003.3974734093,
+        "nativeRestFingerprint": "9552a1c1:12672",
+        "nativeIndexFingerprint": "b29c3bd5:23040",
+        "originalActiveFingerprint": "8c5102c1:1056",
+        "protectedCoreFingerprint": "61cfa525:1056",
+        "freeVertexFingerprint": "536445a6:2400",
+        "ownershipFingerprint": "fixture-ownership",
+        "coreRule": "Union of native top.lips, all samples.rim, original pairs, and native roi with abs(u)<=1 and 0<=v<=1.05; plus exactly one full-index neighbour ring. Negative-v and oral points are ineligible for edits.",
+        "exteriorRule": "Same-side native type<.5, inner<=.005, v>=0, front>.25, depth<6mm; native exterior vertical region; free points exclude core and abs(u)<=.64",
+        "fades": "Coefficient g: u .64-.84 and 1.5-1.6; front .25-.75; depth 3.5-6mm; 1mm outer vertical fades. Domain is not cut 4mm from the lip core.",
+        "equation": "(degree_i/(ell^2*g_i)+sum_j 1/length_ij^2)*d_i - sum_free_j d_j/length_ij^2 = degree_i*native_i/(ell^2*g_i)+sum_fixed_j native_j/length_ij^2",
+        "solver": {
+          "method": "Diagonal-preconditioned conjugate gradients on the symmetric positive-definite correction system; actual residual recomputed",
+          "maximumIterations": 512,
+          "maximumNormalizedResidualMM": 0.0001,
+          "maximumRelativeResidual": 0.000001
+        },
+        "sourceValues": "Current before-local native pucker x contribution; zero for originally inactive vertices; no posed displacement stored at install",
+        "examples": []
+      },
+      "last": {
+        "call": 1,
+        "completed": true,
+        "hooksRestored": true,
+        "pairMapCalls": 1,
+        "puckerInput": 0.82,
+        "puckerZeroBypass": false,
+        "coreDirectDeltaZero": true,
+        "contactDirectDeltaZero": true,
+        "centerDirectDeltaZero": true,
+        "directChangedVertices": 600,
+        "changedOriginallyActiveVertices": 200,
+        "maxDirectCorrectionMM": 1.3686995953321457,
+        "coreVerticesCompared": 208,
+        "contactVerticesCompared": 16,
+        "centerVerticesCompared": 160,
+        "beforeLocalBaseMatchesEntry": true,
+        "linearSolve": {
+          "converged": true,
+          "iterations": 28,
+          "maxResidualMM": 3.4850680941051696e-7,
+          "relativeResidual": 6.303712002296482e-7,
+          "maximumIterations": 512,
+          "maximumNormalizedResidualMM": 0.0001,
+          "maximumRelativeResidual": 0.000001,
+          "finite": true,
+          "positiveWeights": true,
+          "noOvershoot": true,
+          "boundClampedVertices": 0,
+          "maximumPreClampBoundViolationMM": 0,
+          "residualDefinition": "max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check"
+        },
+        "allOriginalStagesExecuted": true,
+        "examples": []
+      },
+      "fixtureCrossingEdge": {
+        "a": 85,
+        "b": 86,
+        "originalIncrementJumpMM": 1.118263229727745,
+        "redistributedIncrementJumpMM": 0.2794284373521805
+      }
+    },
+    {
+      "test": "pucker zero exact direct pass-through",
+      "passed": true
+    },
+    {
+      "test": "arbitrary pose install and exact descriptor restore",
+      "passed": true
+    },
+    {
+      "test": "custom authoring invalidates without changing setting and continues original evaluator",
+      "passed": true
+    }
+  ]
+}
