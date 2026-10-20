@@ -1,0 +1,57 @@
+{
+  "schema": "kaopu.regression-case/3.0",
+  "caseId": "TAILOR-REENTRY-ATOMICITY-001",
+  "status": "CANDIDATE_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": "Tailor Mother garment member removal and re-entry only",
+  "trigger": "A garment is removed from the physics member set and later reinserted while retained garments have advanced.",
+  "realFailure": {
+    "pullRequest": 315,
+    "headSha": "93021f352c0fedc53709edd46c30a91235190fee",
+    "workflowRun": 39386779708,
+    "summary": "After pants and inner advanced 28 steps, adding outer reset the whole world to step 0; the restored initial mesh had zero discrete crossings, then step 4 failed at 1.044 mm contact residual after three accepted steps."
+  },
+  "modeStates": [
+    "HIDDEN_RENDER_ONLY",
+    "PHYSICS_DORMANT",
+    "REMOVED_AND_REINSERTED"
+  ],
+  "mustNeverRepeat": [
+    "call a global redress and clock/history reset a resume",
+    "treat zero discrete middle-surface crossings as thickness-clearance proof",
+    "mutate the active accepted world while testing a new member without an atomic rollback point",
+    "approve re-entry from the initial frame or fewer steps than the known delayed-failure window",
+    "remove collision participants merely because their rendering is hidden"
+  ],
+  "requiredEvidence": [
+    "declared re-entry mode",
+    "exact active member-set digest and accepted state digest before staging",
+    "retained p/v/old, constraints/rest, material/thickness, contact-history policy, clock and body-pose identity",
+    "staging-world identity distinct from the active world",
+    "independent intersection and thickness-clearance checks",
+    "at least 24 accepted steps after re-entry and three remove/reinsert cycles for this candidate",
+    "failed-insertion proof that the prior active-world digest is unchanged",
+    "atomic commit receipt for the new member set"
+  ],
+  "gateLogic": [
+    "HIDDEN_RENDER_ONLY keeps all solver and contact participation live",
+    "PHYSICS_DORMANT requires exact state retention plus a scoped clearance/contact-history policy",
+    "REMOVED_AND_REINSERTED must stage outside the active world and commit atomically only after its gate passes",
+    "a failed staging attempt leaves the prior active world and its accepted lineage unchanged",
+    "existing 0.5 mm contact and 1.45 stretch thresholds remain unchanged"
+  ],
+  "dedupe": {
+    "AUTHORING_NATIVE_HISTORY_SEPARATION_001": "related but insufficient: it separates authoring reset from native continuity; it does not govern member-set mutation or atomic active-world commit",
+    "SOLVER_FAILURE_NOT_INFEASIBILITY_001": "orthogonal: it limits claims from solver failure; it does not define re-entry custody",
+    "PARTIAL_TRANSFER_NOT_PARENT_001": "analogous staging principle but applies to byte transfer, not live physical state"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "rollbackPoint": "93021f352c0fedc53709edd46c30a91235190fee"
+}
