@@ -1,7 +1,7 @@
 """Actual Chromium/WebGL QA; requires installed Playwright/Chromium.
 The presence of this script is not evidence that it passed.
 """
-import argparse,json,pathlib,traceback
+import argparse,json,pathlib,traceback,hashlib
 from playwright.sync_api import sync_playwright
 p=argparse.ArgumentParser();p.add_argument('--url',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',default='evidence/browser');p.add_argument('--expected-build');a=p.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True)
 report={'url':a.url,'status':'running','checks':[],'errors':[],'screenshots':[],'rendererKind':'Forced software ANGLE/SwiftShader; not physical-device performance'}
@@ -15,6 +15,12 @@ with sync_playwright() as pw:
   page.goto(a.url,wait_until='networkidle');page.wait_for_function('window.__BUILDING_MOTHER__?.ready')
   report['build']=page.locator('meta[name="kaopu-build"]').get_attribute('content')
   if a.expected_build: assert report['build']==a.expected_build
+  report['productionAssetSha256']={}
+  for asset in ['index.html','style.css','app.mjs','assembly.mjs','window.mjs','floors.mjs','services.mjs']:
+   response=page.request.get(a.url+asset);assert response.status==200
+   actual=hashlib.sha256(response.body()).hexdigest();expected=hashlib.sha256((pathlib.Path(__file__).resolve().parents[1]/asset).read_bytes()).hexdigest()
+   assert actual==expected, 'Served production asset does not match tested source: '+asset
+   report['productionAssetSha256'][asset]=actual
   original_meshes={}
   for index in range(3):
    page.locator(f'[data-building="{index}"]').click();shot(page,f'baseline-{index}.png')
@@ -36,7 +42,7 @@ with sync_playwright() as pw:
   page.locator('#floorInspect').click();shot(page,'floor-cutaway.png');s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert s['floors']['slabCount']==21 and len(s['floors']['openings'])==21
   assert all(stop['fflM']==next(f['fflM'] for f in s['floors']['floors'] if f['floorId']==stop['floorId']) for stop in s['serviceInterfaces']['stops'])
   report['checks'].append({'floors':s['floors'],'serviceInterfaces':s['serviceInterfaces']})
-  page.evaluate('''() => { const a=window.__BUILDING_MOTHER__, s=a.snapshot(), states={};s.floors.slabs.forEach((slab,i)=>states[slab.slabId]={visible:i>=s.floors.slabs.length-3});a.setFloors({floorStates:states});const c=a.roots[1].position.clone();c.y=s.floors.floors.at(-1).fflM;c.z=0;a.camera.position.copy(c).add(a.camera.position.clone().set(2.8,7.2,5.5));a.camera.lookAt(c);a.camera.updateMatrixWorld(true);a.renderer.render(a.scene,a.camera); }''')
+  page.evaluate('''() => { const a=window.__BUILDING_MOTHER__, s=a.snapshot(), states={};s.floors.slabs.forEach((slab,i)=>states[slab.slabId]={visible:i>=s.floors.slabs.length-3});a.setFloors({floorStates:states});const c=a.roots[1].position.clone();c.y=s.floors.floors.at(-1).fflM;c.z=0;a.camera.position.copy(c).add(a.camera.position.clone().set(0.5,7.2,0.7));a.camera.lookAt(c);a.camera.updateMatrixWorld(true);a.renderer.render(a.scene,a.camera); }''')
   shot(page,'floor-shaft-closeup.png');report['checks'].append({'shaft_closeup':'top three design slabs visible; camera only, holes and thickness unchanged'})
   page.locator('#windowFocus').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies[1].visiblePatches')==20
   page.locator('#reset').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is False
@@ -51,6 +57,11 @@ with sync_playwright() as pw:
   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().renderer.triangles')>=50
   assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().pbr.enabled') is True
   report['checks'].append({'repeated_views_reset_mobile_pbr':'passed'})
+  blocked=browser.new_page(viewport={'width':1200,'height':800})
+  blocked.add_init_script('''const originalGetContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:originalGetContext.call(this,type,...args)}''')
+  blocked.goto(a.url,wait_until='networkidle');blocked.locator('#failure').wait_for(state='visible');assert blocked.locator('#loading').is_hidden()
+  shot(blocked,'handled-renderer-unavailable.png');blocked.close()
+  report['checks'].append({'renderer_unavailable_does_not_leave_loading_overlay':'passed_in_deliberately_disabled_second_page'})
   report['status']='passed'
  except Exception:
   report['status']='failed';report['failure']=traceback.format_exc()
