@@ -8,7 +8,8 @@ import {defaultFloorConfig,validateFloorConfig,buildFloors,inspectFloors} from '
 import {deriveServiceInterfaces} from './services.mjs';
 const $=id=>document.getElementById(id),errors=[];
 window.__BUILDING_MOTHER__={ready:false,version:'2026-10-20-floor-window-pbr-r02',errors};
-const renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0xcfd8c9,0);
+window.addEventListener('error',e=>{errors.push(e.message);$('loading').hidden=true;$('failure').hidden=false;$('failure').textContent='三维试验未能载入：'+e.message+'。本浏览器未通过渲染检查，原始案例未改变。';});
+const renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true,preserveDrawingBuffer:true});renderer.debug.onShaderError=(gl,program,vertex,fragment)=>{const message='材质编译失败：'+gl.getShaderInfoLog(vertex)+' '+gl.getShaderInfoLog(fragment)+' '+gl.getProgramInfoLog(program);errors.push(message);$('loading').hidden=true;$('failure').hidden=false;$('failure').textContent=message;};renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0xcfd8c9,0);
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.01,3000),controls=new OrbitControls(camera,$('view'));controls.enableDamping=false;controls.addEventListener('change',render);
 scene.add(new THREE.HemisphereLight(0xffffff,0x879578,2.1));const sun=new THREE.DirectionalLight(0xfff4df,3.1);sun.position.set(65,130,80);scene.add(sun);const fill=new THREE.DirectionalLight(0xd4e6fb,1);fill.position.set(-60,30,-80);scene.add(fill);
 const grid=new THREE.GridHelper(250,50,0x9aab94,0xb6c3ad);grid.position.y=-.06;grid.material.transparent=true;grid.material.opacity=.23;scene.add(grid);
