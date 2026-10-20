@@ -1,0 +1,100 @@
+name: Lip corner R06 causal diagnosis
+on:
+  push:
+    branches: [feature/lip-corner-r06-20261020]
+    paths:
+      - kaopu-unified-human-workbench/lip-corner-r06/**
+      - .github/workflows/lip-corner-r06.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-corner-r06-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/lip-corner-r06
+            kaopu-unified-human-workbench/lip-motion-r05
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify reviewed diagnostic source and frozen R05
+        run: |
+          python - <<'PYVERIFY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-corner-r06')
+          baseline=p.parent/'lip-motion-r05'
+          a=json.loads((p/'DIAGNOSIS_ANCHOR.json').read_text())
+          for name,expected in a['reviewedFiles'].items():
+              actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          b=json.loads((p/'TASK_ANCHOR.json').read_text())['baseline']
+          assert hashlib.sha256((baseline/'preview.html').read_bytes()).hexdigest()==b['previewSHA256']
+          assert hashlib.sha256((baseline/'evidence/candidate-02/qa.json').read_bytes()).hexdigest()==b['qaSHA256']
+          q=json.loads((baseline/'evidence/candidate-02/qa.json').read_text())
+          assert q['completed'] and q['cleanup']['completed'] and all(t['passed'] for t in q['tests'])
+          print('Reviewed local attribution code and frozen successful R05 baseline verified.')
+          PYVERIFY
+      - name: Install fixed actual browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Diagnose fixed public R05 pucker
+        env:
+          MODE: public
+          SOURCE_SHA: ${{ github.sha }}
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/11ed0391f798b5323f4eb4aefec4307fc0b9aee0/kaopu-unified-human-workbench/lip-motion-r05/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-corner-r06/evidence/diagnosis-01
+          QA_BUDGET_MS: 600000
+        run: timeout --signal=TERM --kill-after=20s 11m node kaopu-unified-human-workbench/lip-corner-r06/verification/diagnose-corner.cjs
+      - name: Verify completed causal experiment without aesthetic promotion
+        run: |
+          node - <<'JSVERIFY'
+          const fs=require('fs'),assert=require('assert/strict');
+          const q=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/lip-corner-r06/evidence/diagnosis-01/qa.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
+          for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert(q.tests.length>0);assert(q.tests.every(t=>t.passed));
+          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
+          console.log('Actual local causal experiment and exact restoration completed; product acceptance is pending.');
+          JSVERIFY
+      - name: Preserve actual successful or failed diagnosis
+        if: always()
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+          TASK_BRANCH: feature/lip-corner-r06-20261020
+        run: |
+          if test -d kaopu-unified-human-workbench/lip-corner-r06/evidence/diagnosis-01; then
+            git fetch origin "$TASK_BRANCH"
+            CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+            test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add -f -- kaopu-unified-human-workbench/lip-corner-r06/evidence/diagnosis-01
+            if ! git diff --cached --quiet; then
+              git commit -m "Record actual R06 corner diagnosis [skip ci]"
+              git push origin "HEAD:refs/heads/$TASK_BRANCH"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-corner-r06-diagnosis-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-corner-r06/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-corner-r06/verification
+            kaopu-unified-human-workbench/lip-corner-r06/research
+            kaopu-unified-human-workbench/lip-corner-r06/DIAGNOSIS_ANCHOR.json
+            kaopu-unified-human-workbench/lip-corner-r06/TASK_ANCHOR.json
+          if-no-files-found: error
+          retention-days: 30
