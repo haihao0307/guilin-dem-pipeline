@@ -14,9 +14,13 @@ with sync_playwright() as pw:
   page.locator(f'[data-building="{index}"]').click();page.screenshot(path=str(out/f'baseline-{index}.png'));checks.append({'baseline':index,'state':page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies')})
  page.locator('#windowFocus').click();page.screenshot(path=str(out/'window-closed.png'))
  for angle in [40,80,0]:
-  page.locator('#window-angleDegrees').fill(str(angle));page.screenshot(path=str(out/f'window-{angle}.png'))
+  page.locator('#window-angleDegrees').press('Home')
+  for _ in range(angle): page.locator('#window-angleDegrees').press('ArrowRight')
+  page.screenshot(path=str(out/f'window-{angle}.png'))
  page.locator('[data-visible="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==21
  page.locator('[data-visible="p003"]').check();page.locator('[data-enabled="p003"]').uncheck();s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert len(s['export']['operations'])==20 and s['export']['designWindow']['suppressedByHost']
+ page.locator('#floorInspect').click();page.screenshot(path=str(out/'floor-cutaway.png'));s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert s['floors']['slabCount']==21 and len(s['floors']['openings'])==21
+ page.locator('#windowFocus').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies[1].visiblePatches')==20
  page.locator('#reset').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().window.enabled') is False
  page.set_viewport_size({'width':390,'height':844});page.screenshot(path=str(out/'mobile.png'));assert page.locator('#failure').is_hidden();assert errors==[]
  (out/'results.json').write_text(json.dumps({'checks':checks,'errors':errors,'status':'passed'},indent=2));browser.close()
