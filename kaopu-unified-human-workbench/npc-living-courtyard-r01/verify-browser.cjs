@@ -488,7 +488,17 @@ async function main() {
     window.addEventListener('unhandledrejection',e=>window.__NPC_VERIFY_EVENTS__.push({type:'unhandledrejection',message:String(e.reason?.stack||e.reason),at:performance.now()}));
   }));
   page=await bounded('create verifier page',()=>context.newPage());page.setDefaultTimeout(15000);
-  cdp=await bounded('create screenshot CDP session',()=>context.newCDPSession(page));
+  cdp=await bounded('create screenshot and document CDP session',()=>context.newCDPSession(page));
+  // The self-contained HTML includes every native packet (about 65 MB). Keep
+  // its actual browser response in this session, and read it through this same
+  // session; Playwright's separate default response cache can evict it.
+  const documentResponses=[],completedTransfers=new Map();
+  report.documentCapture={maxResourceBufferSize:128*1024*1024,maxTotalBufferSize:256*1024*1024,
+    source:'actual navigation response, retained and read through the same CDP session'};
+  cdp.on('Network.responseReceived',event=>{if(event.type==='Document')documentResponses.push(event);});
+  cdp.on('Network.loadingFinished',event=>completedTransfers.set(event.requestId,event));
+  await bounded('retain full native document response',()=>cdp.send('Network.enable',{
+    maxResourceBufferSize:report.documentCapture.maxResourceBufferSize,maxTotalBufferSize:report.documentCapture.maxTotalBufferSize}));
   page.on('pageerror',e=>{report.pageErrors.push({at:new Date().toISOString(),message:clip(e.stack||e)});checkpoint('page error');});
   page.on('console',m=>{const row={at:new Date().toISOString(),text:clip(m.text()),location:m.location()};
     if(m.type()==='error'){report.consoleErrors.push(row);checkpoint('console error');}else if(m.type()==='warning'&&report.consoleWarnings.length<200)report.consoleWarnings.push(row);});
@@ -497,7 +507,25 @@ async function main() {
   page.on('response',r=>{if(r.status()>=400){report.httpErrors.push({url:r.url(),status:r.status()});checkpoint('HTTP failure');}});
   await check('actual navigation loads the exact current HTML',async()=>{
     const response=await bounded('navigate exact candidate URL',()=>page.goto(report.url,{waitUntil:'domcontentloaded',timeout:120000}),125000);
-    assert.equal(response?.status(),200);report.finalURL=page.url();report.observedPreviewSHA256=sha(await bounded('read actual HTTP document bytes',()=>response.body()));
+    assert.equal(response?.status(),200);report.finalURL=page.url();assert.equal(report.finalURL,report.url,'The exact candidate URL is loaded');
+    const tree=await bounded('identify actual main document frame',()=>cdp.send('Page.getFrameTree'));
+    const documents=documentResponses.filter(event=>event.frameId===tree.frameTree.frame.id&&
+      event.loaderId===tree.frameTree.frame.loaderId&&event.response.url===report.finalURL);
+    assert.equal(documents.length,1,'One actual main-frame navigation response matches the candidate URL');
+    const document=documents[0];assert.equal(document.response.status,200);
+    await bounded('confirm the exact document transfer completed',async()=>{
+      const until=Date.now()+10000;
+      while(!completedTransfers.has(document.requestId)&&Date.now()<until)await delay(25);
+      assert(completedTransfers.has(document.requestId),'The captured main document has its actual loadingFinished event');
+    },15000);
+    const body=await bounded('read retained actual browser document bytes',()=>cdp.send('Network.getResponseBody',{requestId:document.requestId}));
+    const bytes=Buffer.from(body.body,body.base64Encoded?'base64':'utf8');
+    assert.equal(bytes.length,report.build.previewBytes,'All actual document bytes are retained');
+    report.observedPreviewSHA256=sha(bytes);
+    report.documentCapture.navigation={requestId:document.requestId,frameId:document.frameId,loaderId:document.loaderId,url:document.response.url,
+      status:document.response.status,mimeType:document.response.mimeType,bytes:bytes.length,base64Encoded:body.base64Encoded,
+      loadingFinished:completedTransfers.get(document.requestId),sha256:report.observedPreviewSHA256};
+    put('navigation-document.json',report.documentCapture);
     assert.equal(report.observedPreviewSHA256,report.expectedPreviewSHA256,'No stale candidate or wrong branch document');
     return{url:report.finalURL,status:response.status(),sha256:report.observedPreviewSHA256};
   });
