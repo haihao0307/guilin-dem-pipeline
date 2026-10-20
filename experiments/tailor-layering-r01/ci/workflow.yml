@@ -1,0 +1,95 @@
+# Install as .github/workflows/tailor-layering-r01.yml in the parent repository.
+# This workflow verifies an isolated Chromium render; it never publishes a site.
+name: Tailor layering R01 — real WebGL acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/tailor-layering-r01/**'
+      - '.github/workflows/tailor-layering-r01.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tailor-layering-r01-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        shell: bash
+        working-directory: experiments/tailor-layering-r01
+    steps:
+      - name: Check out only the experiment
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: experiments/tailor-layering-r01
+          sparse-checkout-cone-mode: true
+
+      - name: Use Node 22
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Use Python 3
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Prepare evidence and pinned Playwright
+        run: |
+          mkdir -p evidence
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Download and verify the pinned native runtime
+        run: python tools/download-reference.py
+
+      - name: Build the same-document native scene
+        run: python tools/build.py | tee evidence/build.log
+
+      - name: Run numerical contact and original-body probes
+        run: node --test --test-reporter=tap tests/*.test.mjs | tee evidence/numerical.tap
+
+      - name: Render and interact with actual three-dimensional garments
+        env:
+          CI: 'true'
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory dist > evidence/http-server.log 2>&1 &
+          layer_server_pid=$!
+          trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
+          node tests/browser-ci.mjs
+
+      - name: Retain measurements and real screenshots even on failure
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r01-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r01/evidence/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain the verified static build for separate review and publication
+        if: success()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r01-dist-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r01/dist/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 14
+
+# Exact release versions checked against the official upstream release pages:
+# https://github.com/actions/checkout/releases/tag/v6.0.2
+# https://github.com/actions/setup-node/releases/tag/v6.4.0
+# https://github.com/actions/setup-python/releases/tag/v6.3.0
+# https://github.com/actions/upload-artifact/releases/tag/v6.0.0
+# https://github.com/microsoft/playwright/releases/tag/v1.64.0
+# https://playwright.dev/docs/ci
+# https://playwright.dev/docs/browsers
