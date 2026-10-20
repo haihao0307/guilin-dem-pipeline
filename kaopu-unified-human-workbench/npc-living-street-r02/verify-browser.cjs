@@ -853,6 +853,7 @@ async function main() {
     report.startupPerformance={coldReadyMS:Date.now()-started,nativeStartup:s.startup,render:s.render,appearanceUpdateMS:s.audit.appearanceUpdateMS,performanceAcceptance:false};
     for(const a of s.source.identities){const b=a.binding;assert.equal(b.nativeBones,104);assert.equal(b.weightsTruncated,false);assert.equal(b.r07MaterialGroups,2);assert.equal(b.originalAttributesRetained,true);assert(b.displayVertices>=b.nativeVertices);}
     assert.equal(s.render.startupDrain.completed,true);assert(s.render.completed>=1&&s.render.maxInFlight<=1);
+    assert.equal(s.render.outsideBatchRenderPasses,0,'No native renderer passes escape the complete appearance/beauty submission batch');
     assert(s.assets.servedCount>0&&s.assets.missing.length===0);
     const manifest=JSON.parse(fs.readFileSync(path.join(here,'vendor/StreamingManifest.json'))),urlPacket=new Map();
     for(const packet of manifest.files)for(const chunk of packet.chunks)urlPacket.set(new URL(chunk.url,report.build.nativeBase).href,packet.id);

@@ -1,0 +1,164 @@
+{
+  "schema": "npc-r02-independent-render-queue-source-review/1",
+  "createdAt": "2026-10-20T09:18:11.354763+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "scope": "Read-only source audit of the original GPU queue gap, latest root-authored batch scheduling/counters and startup assertion. Exact supplied small CPU scheduling fixture rerun in an isolated temporary copy. No browser run, CI polling, production edit, or GPU performance benchmark.",
+  "status": "BOUNDED_SOURCE_FIX_AND_CPU_SCHEDULING_FIXTURE_SUPPORTED_FOR_NEXT_DIAGNOSTIC",
+  "originalSourceSHA256": {
+    "src/RenderQueue.mjs": "01d4694cabe836af6b15b1f915fc4992358756e5e702e5d0caf782d5416c6c4c",
+    "src/Workbench.mjs": "a82991d68fbdee369f02c736bc70f040747e774f8583614ac97c7a0f7f4996a3"
+  },
+  "reviewedCandidateSourceSHA256": {
+    "src/RenderQueue.mjs": "bcf4d4181bfb07be57f1b940569b9cffb8ab157ad280035f145c3449d8fc8bfe",
+    "src/Workbench.mjs": "b6fa13c1041279d58f833c1343781bd9087c9e65822e1e035c12c0fc4b122c6c",
+    "src/NativeWardrobe.mjs": "72b4668c4b3845b5b36ef3f00e62ef24f71ae266c2a33bb031136e99f03002f3",
+    "src/NativeShoes.mjs": "07aae849b614386c850b3fd3ac08dd103ffbed25d3920b69d89fb2617c80c90d",
+    "src/NativeHair.mjs": "8dd68641446d1d9ad82da02416826219dd6f54487c06f287b9dc3ce10f83cd8d",
+    "src/NativeMotion.mjs": "a85cd8dfddc85f25762c721d2ac060d97c82e3469e5bb39dc76aae75f29caa22",
+    "vendor/appearance/cloth-adapted/continuous-solid.mjs": "067e1e35560b7ef2b2213212cb59413b80b8d7d418cfdb8588e61cc1976a252c",
+    "vendor/appearance/cloth-adapted/yarn-frame-atlas.mjs": "5cc30483be5f7d4349d13b434c61c5990bf86c455cbc82795e316b29872d2054",
+    "vendor/appearance/cloth-adapted/gpu-seam-frames.mjs": "13673a90135f105570f1e003f745673b8688b30d324b47418d777b8c6e731dd2",
+    "vendor/appearance/cloth-adapted/solid-textiles.mjs": "256d601ba743a524815e8a0b9141e6a5f3a813cf286af6e3c91682922b13b5db",
+    "vendor/appearance/cloth-adapted/continuous-demand.mjs": "d1a50d588e4a134d1d38ea8fcb758999fe99af186580904552b3488a861247af",
+    "verify-browser.cjs": "ce9a1e8db473a755b0f12c0382b65cf4f7a7cb4190f8723db641869421dedd06",
+    "evidence/check-render-submission.mjs": "8a1563ec5a39f010885e57bcea2c50d18923864dcbfa0491d451410a8ab93a17",
+    "evidence/RENDER_SUBMISSION_FIXTURE.json": "d14a7ee8b698460679d53730cb9ef155ea5a29f3983b91140d199e6ea2582c90"
+  },
+  "originalGap": {
+    "confirmed": true,
+    "chain": [
+      "Workbench.frame called updateAppearance before renderQueue.pump on every running rAF; camera, resize, reset and initialization also called it directly.",
+      "wardrobe.update(camera) -> deformControl -> solid.deform() -> solid.update(localCamera).",
+      "continuous-solid.deform increments revision; update refreshes current/previous yarn atlases and can resample into another atlas.",
+      "YarnFrameAtlas.update skips only identical revisions, then calls renderer.setRenderTarget and renderer.render directly, bypassing managed viewer.render.",
+      "deform also marks seams dirty; trims.prepare -> gpu-seam-frames.prepare directly draws another render target. Leather solids share this seam path.",
+      "RenderQueue.pump returns on a pending TIMEOUT_EXPIRED after the above commands have already been submitted."
+    ],
+    "consequence": "A pending fence acknowledges commands submitted before it. Later rAF callbacks could append appearance GPU work behind it without an application-level bound; maxManagedInFlight=1 covered beauty rather than the complete batch. Browser/driver backpressure may impose another limit; this is not an unlimited-memory claim.",
+    "secondaryCost": "Repeated CPU deformation/contact queries/normal recomputation while a new displayed batch could not be accepted."
+  },
+  "actualPatchReview": {
+    "sourceBlockers": [],
+    "mayEnterNextDiagnosticCandidate": true,
+    "order": [
+      "Complete prior fence or return while pending.",
+      "Require dirty request.",
+      "Synchronously execute beforeListeners against latest pose/camera.",
+      "Original native beauty draw and synchronous onRender listeners.",
+      "Insert/flush one fence after the full batch."
+    ],
+    "singleAppearanceHook": "renderQueue.onBeforeRender(updateAppearance)",
+    "directCallsRemovedFrom": [
+      "frame",
+      "camera",
+      "resize",
+      "reset",
+      "initialization"
+    ],
+    "readyFalseFirstFrameCovered": true,
+    "requestCoalescingAndCompletedFrameWaiterOpportunityRetained": true,
+    "originalMaterialsGeometryDensityAndSamplingUnchangedByThisPatch": true,
+    "callbackBoundary": "Current updateAppearance and its callees are synchronous. Hook API does not await callbacks: future asynchronous GPU work after callback return would escape the fence."
+  },
+  "newCounters": {
+    "implementation": "appearancePreparation measures before-listener renderer.info.render.frame delta, accumulated preparation batches, and CPU-side elapsed wall time. Counters are recorded before beauty; completion durations are recorded only when the batch fence is observed complete.",
+    "interpretation": "Render-frame deltas are actual renderer call accounting, not completed GPU pass timing. CPU-side wall time may include driver stalls/compilation. Fence elapsed time includes synchronous preparation, submission, compilation and polling delay; it is not pure GPU execution time.",
+    "limit": "Counters alone do not prove responsiveness or absence of every possible external renderer call. Combined source ownership and actual pending-interval observations are needed."
+  },
+  "nativeMeasurementDiagnostic": {
+    "readOnly": true,
+    "bodyOrBindingModified": false,
+    "source": "actor.nativeSource.positions = binding.positions; full original native per-identity body plus GNM portrait, not subdivided display mesh.",
+    "operation": "Reads all XYZ triples, writes new min/max arrays and native Z height max[2]-min[2] to __NPC_STARTUP__.actorMeasurements before grasp/appearance initialization.",
+    "nativeHeightAxisCorrect": true,
+    "fullAndBodyVertexCountsDistinguished": true,
+    "boundary": "Diagnostics only; no new wearer scaling or garment-fit acceptance. Actual values still require the next real candidate startup."
+  },
+  "relatedChecks": {
+    "shoePhysics": "NativeMotion._soleMinimum uses original solePointsNative transformed by current rig.skinMatrices, not the visual attachment Group. Gating shoes.update does not stale this contact calculation.",
+    "bodyPhysics": "poseTools.commit invokes NativeBinding.animate without renderer.render. Existing simulation/contacts can continue while display is pending.",
+    "asyncPaths": "continuous-solid timers/rAF invoke only requestRender, not update or rendering. NativeWardrobe currently supplies no such callback; any later callback must stay request-only.",
+    "hair": "Long-hair construction uses a local no-op viewer facade. Runtime hair.update performs periodic root diagnostics; hair drawing remains inside beauty.",
+    "initialization": "One-time original material/shoe bakes may occur after the initial native fence. That initial fence is not completion of all appearance startup. The first completed managed batch fence covers prior commands on the same context.",
+    "resize": "The fix gates appearance draws triggered by resize, not every canvas resize/allocation operation.",
+    "stateCorrelation": "Live UI/simulation can advance beyond the last displayed batch. Pause before requesting a fresh frame or retain submitted-state metadata when correlating screenshot poses and diagnostics."
+  },
+  "necessaryValidation": [
+    {
+      "layer": "small queue fixture",
+      "requirement": "Repeated TIMEOUT_EXPIRED yields zero new before hook/draw calls; release permits one before -> draw -> fence batch using latest state. Include first frame, request during callback, failed callback/fence, and awaitFrame ordering. This is scheduling evidence only.",
+      "status": "Provided bounded subset passed independently; failure/reentrant-callback cases were not added or claimed."
+    },
+    {
+      "layer": "next actual current-head diagnostic",
+      "requirement": "On the next actual current-head diagnostic, observe pending-interval outsideBatchRenderPasses plus wardrobe/yarn/seam accounting. Do not interpret zero as whole-lifetime renderer interception or as a performance pass."
+    },
+    {
+      "layer": "actual UI and image",
+      "requirement": "Confirm first frame, paused OrbitControls/camera/resize, reset and resume display current shoes/cloth/hair. Use a completed fresh frame for correlated image evidence."
+    },
+    {
+      "layer": "actual timing",
+      "requirement": "Record first-frame and subsequent whole-batch elapsed time. Queue containment does not make a single expensive batch fast; promotion needs actual timings and images."
+    }
+  ],
+  "evidenceLayers": {
+    "source": "Latest frozen RenderQueue/Workbench/startup assertion and pending-interval counter have no new source blocker within the inspected scope.",
+    "numeric": "Exact provided small CPU scheduling fixture independently rerun in isolation; all assertions passed and output matched the supplied result. No real GPU benchmark.",
+    "browser": "No current-head browser performance/image result inspected for this change.",
+    "public": "No R02 public approval."
+  },
+  "limits": [
+    "Exact contribution to current CI delay remains unmeasured.",
+    "Garment/body intersections and complete motion visual quality remain unresolved.",
+    "Current-head six-person rendering and release gates remain separate."
+  ],
+  "releaseCandidate": false,
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "updatedAt": "2026-10-20T09:24:14.205391+00:00",
+  "previousReviewSHA256": "29ca3bf2c097926cd2f154512323d4cf7a8cdbc968cc284ca6419d95a2800ab4",
+  "outsideBatchCounterReview": {
+    "noNewSourceBlocker": true,
+    "increment": "While a managed batch is pending, pump compares actual renderer.info.render.frame with pending.lastNativeFrame, adds positive difference, then advances lastNativeFrame. A pass is not counted again on subsequent pumps.",
+    "baseline": "Stored after synchronous before hooks, beauty and onRender listeners have completed and the batch fence has been inserted.",
+    "measuredScope": "Renderer frame increments observed during managed pending intervals only.",
+    "excludedIntervals": [
+      "Initial startup fence is deliberately excluded.",
+      "When pending is null, including the completed-frame reader opportunity and idle time, no delta is collected.",
+      "status() exposes the last pump observation; it does not itself sample newly submitted passes."
+    ],
+    "startupAssertion": "assert.equal(s.render.outsideBatchRenderPasses, 0) is a strict zero assertion; missing or nonzero values fail.",
+    "assertionInterpretation": "Zero supports no escaped renderer-frame increments in observed managed-pending intervals. It does not certify all rendering throughout the page lifetime, all raw GL commands, or performance.",
+    "counterReset": "Each new managed pending batch stores the current renderer frame as its baseline; original initialization passes are not retrospectively labeled escapes.",
+    "disposition": "This bounded observation is useful for the identified pending-time atlas backlog risk and is sufficient to proceed to the next diagnostic alongside source ownership. Preserve the scope in reported claims."
+  },
+  "independentSchedulingFixture": {
+    "providedFixture": "evidence/check-render-submission.mjs",
+    "isolatedRoot": "/tmp/r02-render-queue-review-39y53skb",
+    "sourceSHA256": "bcf4d4181bfb07be57f1b940569b9cffb8ab157ad280035f145c3449d8fc8bfe",
+    "exitCode": 0,
+    "exactProvidedResultMatched": true,
+    "passedChecks": [
+      "Initial fence prevents premature appearance.",
+      "100 requests during pending produce no additional appearance or beauty.",
+      "Next batch consumes the newest pose.",
+      "Appearance precedes beauty.",
+      "Completed-frame waiter resolves after the fence.",
+      "Preparation frame deltas accumulate as expected.",
+      "A deliberately escaped renderer-frame increment during pending is detected."
+    ],
+    "notExercised": [
+      "Callback/fence failure paths.",
+      "Request raised from inside a before callback.",
+      "Real WebGL fence execution, actual renderer pass cost, images or interactive responsiveness."
+    ],
+    "scope": "CPU scheduling and frame-counter logic with explicit renderer/fence test doubles. The producer field realCounterContractTested is a mock contract check, not real-browser validation.",
+    "producerEvidenceUnmodified": true,
+    "realBrowserValidated": false,
+    "performanceAcceptance": false,
+    "visualAcceptance": false
+  }
+}

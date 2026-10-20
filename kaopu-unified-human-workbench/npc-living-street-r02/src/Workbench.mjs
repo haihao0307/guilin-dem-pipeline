@@ -55,6 +55,16 @@ function makeRain(scene){
 async function main(){
   const {actors,viewer}=await createActors({onProgress:p=>{$('load-progress').textContent=typeof p==='string'?p:JSON.stringify(p);}});
   if(actors.length!==6)throw Error('这一版必须使用六个完整原生人物');
+  // Preserve actual complete-head/body dimensions before appearance startup.
+  // The donor garment grading needs the complete native height, not the
+  // shorter body-only diagnostic fixture or a nominal stature parameter.
+  if(window.__NPC_STARTUP__)window.__NPC_STARTUP__.actorMeasurements=actors.map(actor=>{
+    const P=actor.nativeSource.positions,min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+    for(let i=0;i<P.length;i+=3)for(let d=0;d<3;d++){min[d]=Math.min(min[d],P[i+d]);max[d]=Math.max(max[d],P[i+d]);}
+    return {id:actor.id,presetId:actor.identity.presetId,nativeVertices:P.length/3,bodyVertices:actor.nativeSource.bodyCount,
+      completeNativeBounds:{min,max,heightM:max[2]-min[2]},bindingHeightM:actor.binding.height,
+      source:'actual frozen complete R07 native positions including the current GNM portrait'};
+  });
   const graspStartup=[];
   for(const actor of actors){
     $('load-progress').textContent=`按 ${actor.id} 的真实手形校准抓取`;
@@ -126,9 +136,9 @@ async function main(){
     else if(mode==='near'){target=[actor.x,.82,actor.z];p=[actor.x+5.2,5.3,actor.z+7.6];}
     else{target=[actor.x,.95,actor.z];p=[actor.x+2.5,2.25,actor.z+4.0];}
     if(mode!=='all'){viewer.orbit.target.set(...target);viewer.camera.position.set(...p);}viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();
-    for(const b of app.querySelectorAll('[data-camera]'))b.setAttribute('aria-pressed',String(b.dataset.camera===mode));if(ready)updateAppearance();viewer.render();
+    for(const b of app.querySelectorAll('[data-camera]'))b.setAttribute('aria-pressed',String(b.dataset.camera===mode));viewer.render();
   }
-  function resize(){const r=stage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;if(cameraMode==='all'){fitOverview();viewer.orbit.update();}viewer.camera.updateProjectionMatrix();if(ready)updateAppearance();viewer.render();}
+  function resize(){const r=stage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;if(cameraMode==='all'){fitOverview();viewer.orbit.update();}viewer.camera.updateProjectionMatrix();viewer.render();}
   new ResizeObserver(resize).observe(stage);addEventListener('resize',resize);
   function labels(){const r=stage.getBoundingClientRect();for(const actor of actors){const el=labelElements.get(actor.id),mouth=reports[actor.id]?.mouth;const p=(mouth?new THREE.Vector3(mouth[0],mouth[1]+.34,mouth[2]):new THREE.Vector3(actor.root.position.x,actor.measurements.heightM+.19,actor.root.position.z)).project(viewer.camera);el.style.transform=`translate(-50%,-100%) translate(${(p.x*.5+.5)*r.width}px,${(-p.y*.5+.5)*r.height}px)`;el.hidden=p.z>1||p.z< -1;el.classList.toggle('selected',actor.id===selected);}}
   const showData=value=>{$('data-panel').hidden=!value;$('data-toggle').setAttribute('aria-expanded',String(value));updateUI();};
@@ -136,7 +146,7 @@ async function main(){
   for(const b of app.querySelectorAll('[data-camera]'))b.onclick=()=>camera(b.dataset.camera);
   $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?icons.play:icons.pause;$('pause').setAttribute('aria-label',paused?'继续生活':'暂停生活');updateUI();};
   $('speed').onclick=()=>{speed=speed===1?2:1;$('speed').textContent=speed+'×';updateUI();};
-  $('reset').onclick=()=>{sim.reset();for(const actor of actors){motion.get(actor.id).reset();sim.actor(actor.id).capabilities={...actor.motionCapabilities};}items.reset();environment.reset();audit.interactions=[];audit.motionFailures=[];audit.minActorDistance=Infinity;audit.minPairClearanceM=Infinity;audit.maxBoneLengthErrorM=0;audit.maxFootPenetrationM=0;paused=false;$('pause').textContent=icons.pause;$('pause').setAttribute('aria-label','暂停生活');execute(0);updateAppearance();updateUI();};
+  $('reset').onclick=()=>{sim.reset();for(const actor of actors){motion.get(actor.id).reset();sim.actor(actor.id).capabilities={...actor.motionCapabilities};}items.reset();environment.reset();audit.interactions=[];audit.motionFailures=[];audit.minActorDistance=Infinity;audit.minPairClearanceM=Infinity;audit.maxBoneLengthErrorM=0;audit.maxFootPenetrationM=0;paused=false;$('pause').textContent=icons.pause;$('pause').setAttribute('aria-label','暂停生活');execute(0);viewer.render();updateUI();};
   const reflectEnvironment=()=>{courtyard.update(sim,0);rain.update(sim.time,sim.raining,sim.environment.windStrength);updateLighting();viewer.render();updateUI();};
   $('add-bottle').onclick=()=>{sim.spawnBottleNear(selected);updateUI();};$('shop-toggle').onclick=()=>{sim.setShopOpen(!sim.shop.open);reflectEnvironment();};$('rain-toggle').onclick=()=>{sim.toggleRain();reflectEnvironment();};$('interrupt').onclick=()=>{sim.interrupt(selected);updateUI();};
   $('wind-toggle').onclick=()=>{sim.toggleWind();reflectEnvironment();};$('plant-dry').onclick=()=>{sim.dryPlanter();reflectEnvironment();};$('dusk-toggle').onclick=()=>{sim.toggleDusk();reflectEnvironment();};$('look-selected').onclick=()=>camera('follow');
@@ -206,13 +216,17 @@ async function main(){
   function updateLighting(){const dusk=sim.environment.dusk;sun.intensity=dusk?1.15:sim.raining?1.5:3.4;sun.color.set(dusk?0xffb579:0xffefd6);hemi.intensity=dusk?1.35:sim.raining?1.9:2.2;fill.intensity=dusk?.85:.65;viewer.scene.background.set(dusk?'#d6c3b0':sim.raining?'#ced8d1':'#e8e1d3');for(const m of lampMaterials)m.emissiveIntensity=dusk?1.7:.55;}
   let appearanceCamera='';
   function updateAppearance(){const started=performance.now();shoes.update();wardrobe.update(viewer.camera);hair.update();appearanceCamera=viewer.camera.matrixWorld.elements.join(',')+'|'+viewer.camera.projectionMatrix.elements.join(',');audit.appearanceUpdateMS=performance.now()-started;}
+  // The original textile atlas and seam preparation submit real GPU draws.
+  // Run them together with the native beauty draw, after the prior fence.
+  // The callback also runs for the initial frame before ready becomes true.
+  renderQueue.onBeforeRender(updateAppearance);
   window.__LIVING_STREET__=window.__LIVING_COURTYARD__={snapshot:currentReport,ready:false,awaitFrame:o=>renderQueue.awaitFrame(o)};
   function frame(now){
     const elapsed=Math.max(0,(now-last)/1000);last=now;
     try{
       if(ready&&!paused){let dt=Math.min(elapsed,.12)*speed;while(dt>.00001){const step=Math.min(dt,1/30);execute(step);dt-=step;}}
       if(cameraMode==='follow'&&ready){const a=sim.actor(selected),target=new THREE.Vector3(a.x,.95,a.z),delta=target.clone().sub(viewer.orbit.target);viewer.orbit.target.add(delta);viewer.camera.position.add(delta);viewer.orbit.update();}
-      if(ready&&(!paused||appearanceCamera!==viewer.camera.matrixWorld.elements.join(',')+'|'+viewer.camera.projectionMatrix.elements.join(',')))updateAppearance();
+      if(ready&&appearanceCamera!==viewer.camera.matrixWorld.elements.join(',')+'|'+viewer.camera.projectionMatrix.elements.join(','))viewer.render();
       if(ready&&!paused&&now-lastRender>32){viewer.render();lastRender=now;}
       renderQueue.pump();labels();
       if(now-lastUI>320){updateUI();lastUI=now;}
@@ -220,7 +234,7 @@ async function main(){
     }catch(error){paused=true;errors.push(error.message);$('run-state').textContent='检查发现问题，已暂停';document.documentElement.dataset.npcReady='failed';console.error(error);}
     requestAnimationFrame(frame);
   }
-  execute(0);camera('all');resize();updateAppearance();viewer.render();requestAnimationFrame(frame);
+  execute(0);camera('all');resize();viewer.render();requestAnimationFrame(frame);
   $('load-progress').textContent='六位居民已就绪，正在绘制街道的第一帧';
   await renderQueue.awaitFrame({fresh:true});ready=true;window.__LIVING_COURTYARD__.ready=true;last=performance.now();
   for(const b of app.querySelectorAll('button'))b.disabled=false;$('life-loader').hidden=true;document.documentElement.dataset.npcReady='true';updateUI();
