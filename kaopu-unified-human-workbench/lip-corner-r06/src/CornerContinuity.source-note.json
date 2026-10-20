@@ -1,13 +1,13 @@
 {
-  "schema": "kaopu/r06-corner-continuity-source-note@2",
-  "recordedUTC": "2026-10-20T06:44:14.978851+00:00",
+  "schema": "kaopu/r06-corner-continuity-source-note@3",
+  "recordedUTC": "2026-10-20T07:08:58.699014+00:00",
   "reviewer": "/root/lip_r05_geometry_audit",
-  "status": "Second candidate frozen after local numerical/protection verification; actual candidate render acceptance pending",
+  "status": "Third candidate frozen after local vector/source-agreement verification; actual candidate render acceptance pending",
   "source": {
     "file": "CornerContinuity.js",
-    "sha256": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
-    "bytes": 32270,
-    "version": "native-corner-x-followthrough@2"
+    "sha256": "106bfb769e21f3e56ae35521509d17ce903f2b2e30f613f2a60af6e95896c970",
+    "bytes": 40960,
+    "version": "native-corner-pucker-vector@3"
   },
   "basis": {
     "baselineSourceCommit": "a8bba75322c12df151ecbcebc416087b5248aa5f",
@@ -26,9 +26,20 @@
     "immutableCandidate01Module": "../evidence/candidate-01/source/CornerContinuity.js",
     "immutableCandidate01ModuleSHA256": "19b9ba791d7d42887431dd5ff8b1ee7fbcd832c52c89c27c9cf26e461f0b1084",
     "immutableCandidate01Note": "../evidence/candidate-01/source/CornerContinuity.source-note.json",
-    "immutableCandidate01NoteSHA256": "b397a4b517e456cf9f2d36635d440e66910e34ba7e93897f2a4f4ee5dd766469"
+    "immutableCandidate01NoteSHA256": "b397a4b517e456cf9f2d36635d440e66910e34ba7e93897f2a4f4ee5dd766469",
+    "rejectedCandidate02Source": "64d8efc88b3c585d4130ffff1d5aa9158691a02d",
+    "rejectedCandidate02Build": "ca2d64435b1721cb12de257389926f4e879fa958",
+    "rejectedCandidate02QaSHA256": "5a5078992cb2747c914110403bd1f978414eeb76cbb577ea7331f4acb825de28",
+    "candidate02GeometryReview": "../research/candidate-02-geometry-review.json",
+    "candidate02GeometryReviewSHA256": "d05685ce672b2c96735217ae1df3817597790a4e8076f495745bb39637712d38",
+    "immutableCandidate02Module": "../evidence/candidate-02/source/CornerContinuity.js",
+    "immutableCandidate02ModuleSHA256": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
+    "immutableCandidate02Note": "../evidence/candidate-02/source/CornerContinuity.source-note.json",
+    "immutableCandidate02NoteSHA256": "33eb6666c1464887aea06b9d3b207cb65a6c6e0995db07134ca426faad00a62e",
+    "candidate02SourceCopyProvenance": "../evidence/candidate-02/source/SOURCE_PROVENANCE.json",
+    "sourceCopyMeaning": "Post-CI supplementary exact source copies, explicitly marked; original candidate02 CI files were not edited."
   },
-  "causalScope": "Candidate01 moved neighbouring exterior skin while preserving every original active point, but the principal visible pointed corner remained. The next falsifiable hypothesis is that the active peripheral x-increment gradient also needs redistribution. This candidate changes only that component in verified exterior skin; it does not assert that x support is the sole cause or that the visible lip is now accepted.",
+  "causalScope": "Candidate02 visibly reduced the former large bright wedge but root and the independent visual reviewer rejected its stronger upper/outer stepped bands at75/100%. The geometry reviewer had initially favoured retaining a narrow local gain; that disagreement remains recorded. Candidate03 tests whether redistributing x alone while leaving native up/front gradients unchanged creates a component mismatch. It redistributes the complete native pucker difference with the same graph and fixed core. This remains a hypothesis; a fixed-core/collar constraint or static shape could still account for the objectionable folds.",
   "api": {
     "global": "window.__LIP_CORNER_SOLVER__",
     "methods": [
@@ -48,28 +59,38 @@
     "centerAndOral": "All abs(u)<=.64 positions remain directly untouched. Type>=.5, inner>.005, v<0, deep or non-front surfaces are ineligible for direct correction; unlabeled negative-v oral returns cannot receive it.",
     "exterior": "Same side of native u, type<.5, inner<=.005, v>=0, front>.25, depth<6mm, abs(u)>.64 and<1.6, and restY within the original exterior vertical envelope.",
     "continuousGuards": "front smooth .25-.75; depth fade 3.5-6mm; u gain .64-.84 and fade1.5-1.6; 1mm fading margins at the inherited broad vertical envelope. The actual target depths near2.55mm are retained.",
-    "freeDomain": "Both original active and inactive exterior vertices are free unless in the fixed core/collar/center. Same-side exterior indexed neighbours just beyond the fading free domain are fixed at their original native pucker increments. No edits to native active membership or sample weights.",
+    "freeDomain": "Both original active and inactive exterior vertices are free unless in the fixed core/collar/center. Same-side exterior indexed neighbours just beyond the fading free domain are fixed at their original native pucker increments. No edits to native active membership or sample weights. The candidate02 free mask, core/rim/contact/center sets, original index graph, gain values,4mm smoothing length, diagonal masses and matrix coefficients are unchanged in candidate03.",
     "physicalScale": "ell=4mm is a smoothing length in the graph equation, not a4mm hard support band from the lip. The free lateral domain extends beyond the original1.25 cutoff and coefficient g fades through abs(u)=1.5..1.6 back to the native field. Thus the approximately6.3mm distance from u1 to1.25 is not truncated at4mm.",
     "edges": "For each unique eligible original indexed edge, w_ij=1/restLength_ij^2>0. Use identical free/free weights in both matrix rows. Zero-length edges are skipped and visits reported. Original rest positions are never averaged or changed.",
-    "equation": "Let native_i be the current original pucker x increment (zero if not originally active), g_i the continuous exterior gain and mass_i=degree_i/(ell^2*g_i)>0. Solve (mass_i+sum_j w_ij)*d_i-sum_free_j(w_ij*d_j)=mass_i*native_i+sum_fixed_j(w_ij*native_j). Equivalently A*correction_i=sum_j w_ij*(native_j-native_i). Fixed points have correction0.",
-    "whySPD": "The free/free weights are symmetric positive. Each row has positive mass in addition to the graph Laplacian and fixed boundary contribution, giving a strictly positive-definite correction system. The exact scalar solution obeys the maximum principle within each free component including its native source and fixed boundary values.",
+    "equation": "Let native_i be the selected x/up/front component of the current original pucker increment (zero if not originally active), g_i the continuous exterior gain and mass_i=degree_i/(ell^2*g_i)>0. Solve (mass_i+sum_j w_ij)*d_i-sum_free_j(w_ij*d_j)=mass_i*native_i+sum_fixed_j(w_ij*native_j). Equivalently A*correction_i=sum_j w_ij*(native_j-native_i). Fixed points have correction0. Apply this identical matrix independently to native mouth-frame x,up,front components; there is no separately tuned component support or strength.",
+    "whySPD": "The free/free weights are symmetric positive. Each row has positive mass in addition to the graph Laplacian and fixed boundary contribution, giving a strictly positive-definite correction system. The exact scalar solution obeys the maximum principle within each free component including its native source and fixed boundary values. Applying the same positive linear operator to all components gives a coherent vector interpolation with fixed boundary sources; the source vector magnitude maximum is separately checked per free connected component.",
     "untouched": "Original fRest, index, csType, l19Oral, active list, native sample weights, topology, original shape, material recipes, DNA and labels."
   },
   "numerics": {
-    "method": "Diagonal-preconditioned conjugate gradients; current correction initialized0 on every evaluation. Recompute actual A*correction-rhs every iteration and after the bound check; no stale posed solution is reused.",
+    "method": "For each of x/up/front, run the unchanged candidate02 diagonal-preconditioned conjugate-gradient scalar solve on the same SPD matrix and current component source. Recompute actual residuals throughout and retain each full component report. Aggregate iteration count is the maximum component count, with the total separately recorded.",
     "maximumIterations": 512,
     "maximumNormalizedResidualMM": 0.0001,
     "maximumRelativeResidual": 1e-06,
     "residualDefinition": "max_i(abs((A*correction-rhs)_i)/A_ii)*1000 in mm, plus Euclidean residual norm divided by RHS norm. Both must pass. These are algebraic stationarity criteria, not a certified global solution-error bound or measured physiological precision.",
     "thresholdReason": "An initial1e-6mm/1e-8relative proposal was stricter than useful Float32 final-position resolution. The reviewed1e-4mm/1e-6relative gates retain a small algebraic tolerance without requiring irrelevant extra iterations.",
     "bounds": "Check the solved scalar against native source and fixed-boundary min/max for each connected free component. A violation larger than1e-4mm throws. Only a sub-tolerance numeric violation may be clamped; count and maximum pre-clamp violation are reported, and the actual residual is recomputed and required to pass afterwards.",
-    "finite": "Nonfinite positions/source values/edge weights/diagonals/iterates, loss of positive definiteness, unresolved residual or a material bound violation are surfaced as failures. No broad catch silently turns them into a successful fallback."
+    "finite": "Nonfinite positions/source values/edge weights/diagonals/iterates, loss of positive definiteness, unresolved residual or a material bound violation are surfaced as failures. No broad catch silently turns them into a successful fallback.",
+    "xIsolation": "The candidate02 x source formula, graph and scalar PCG code remain unchanged. Its result is never re-solved, normalized or scaled in response to up/front. The final vector magnitude check only accepts or throws. The unchanged scalar sub-tolerance roundoff-bound policy remains independent for each component.",
+    "vectorBounds": "For each free connected component, compare the maximum norm of redistributed source vectors against the maximum norm among its original native sources and fixed-boundary sources. An excess above1e-4mm throws. This check does not normalize or otherwise modify the vector or x component."
   },
   "evaluation": {
-    "frame": "Original ao mouth x and center: normalize(lm54-lm48), midpoint(lm62,lm66), then convert both using [a0,a2,-a1].",
-    "nativeTerm": "-.23 * currentPucker * dot(currentNativeBeforeLocalPosition-frame.center,frame.x) * nativeSampleWeight for originally active vertices; zero for inactive vertices.",
-    "writtenComponent": "Add only (solvedPuckerX-originalPuckerX)*current native mouth x to free exterior positions. Funnel/stretch x contributions, pucker forward and transverse up contributions, authored pose and all other original terms remain. Zero frame-axis components are not written, preserving signed zeros as well as numeric coordinates.",
-    "phase": "Instance wrapper outside R05.apply; temporary pairs.map wrapper is captured by R05. R05 local ownership correction executes first; R06 then redistributes only the exterior pucker x field; the original map computes closure samples normally. Original closure, R05 closure ownership, envelope, normals, strain and microgeometry all execute.",
+    "frame": "Reproduce native ao(model): x=unit(lm54-lm48); canonical up=unit((lm27-lm8)-x*dot(lm27-lm8,x)); front=unit(cross(x,up)), reversed if pointing away from lm30-center; center=(lm62+lm66)/2. Convert x/up/front/center with [p0,p2,-p1]. Width is length(lm54-lm48), without an invented clamp; scale is original anatomy.scale(width).",
+    "componentDifference": {
+      "definitions": "At the current before-local position, O=dot(position-center,x), N=dot(position-center,up), W=original sample weight, G=stretchLeft*(1-smooth(-.16,.16,u))+stretchRight*smooth(-.16,.16,u). Q0=1-.12*funnel+.18*G; Qp=1-.23*pucker-.12*funnel+.18*G, preserving native operation order; h(Q)=min(1.18,1/sqrt(max(.65,Q))).",
+      "x": "-.23*pucker*O*W",
+      "up": "N*(h(Qp)-h(Q0))*W",
+      "front": ".0036*pucker*exp(-(u/.85)^2)*anatomy.scale(width)*W",
+      "inactive": "All three original source components are exactly0 for originally inactive vertices."
+    },
+    "counterfactualScope": "This is the native local pucker difference with every other action and the current before-local position held fixed. It does not temporarily change the user pose, rerun pucker0, or subtract other expression terms. Jaw state is already represented in before-local positions.",
+    "r05Ownership": "R05 opposing local ownership correction depends only on upperRaise/lowerDepress/funnel/roll, not pucker. Moreover the eligible free exterior has v>=0 and is outside R05 negative-v correction support. It therefore does not alter the pucker component difference being redistributed here.",
+    "writtenComponent": "For every free exterior point, add mouthX*(solvedX-nativeX)+mouthUp*(solvedUp-nativeUp)+mouthFront*(solvedFront-nativeFront). Do not modify zero coordinate shifts. Original static shape, non-pucker local contributions, authored pose and every later native phase continue.",
+    "phase": "Outer instance wrapper around the exact captured R05.apply. R05 performs its local ownership correction before this pairs.map callback; source agreement reads that actual array before any R06 writes. R06 then redistributes the pucker vector, after which the original map computes closure samples. Original closure, R05 closure ownership, envelope, normals, strain and microgeometry all execute normally.",
     "actualGuards": "Compare native solver.base bytes against apply-entry positions. Snapshot core+one-ring, unique original contact IDs and abs(u)<=.64 immediately before correction; require exact direct equality afterwards. Actual final contact equality still requires external QA because native downstream stages execute normally.",
     "puckerZero": "Call the captured original R05 function directly, with no nested R06 hook, position read/write, pose change or support evaluation.",
     "sourcePose": "Binding is reconstructed from rest/index/native semantics only. Live before-local positions provide each current native increment, and install can bind any current pose."
@@ -83,8 +104,8 @@
     "unexpectedFailures": "Wrong stage count, nonfinite data, canonical position aliasing, changed descriptors or unexpected native evaluation errors are surfaced; temporary inner descriptors are restored in finally. These are not silently treated as supported edits."
   },
   "reportGates": {
-    "enabledPucker": "completed/hooksRestored true, pairMapCalls1, beforeLocalBaseMatchesEntry true; core/contact/center direct-zero flags true with counts equal binding; directChangedVertices and changedOriginallyActiveVertices positive in the declared pucker tests; finite positive max correction; linearSolve converged/finite/positiveWeights/noOvershoot true with actual tolerances satisfied.",
-    "enabledZeroPucker": "puckerZeroBypass true, mapCalls0, all comparison/change counts0, max correction0, linearSolve null, completed/hooksRestored true. External full final state and pixels must be exact.",
+    "enabledPucker": "All candidate02 core/contact/center and real phase/count gates remain. linearSolve.components.x/up/front must independently converge within1e-4mm normalized and1e-6relative residual and512iterations; aggregate maxima/sum and vectorMagnitudeBound are recorded. In the declared pure-pucker UI cases, sourceAgreement must be available/passed, sampled and nonzero, with maxNormalizedErrorRatio<=1.",
+    "enabledZeroPucker": "puckerZeroBypass true, mapCalls0, all comparison/change counts0, max correction0, linearSolve and sourceAgreement null, completed/hooksRestored true. External full final state and pixels must be exact.",
     "disabled": "Pass through without updating last; verifier must not interpret stale last as a current execution.",
     "calls": "Real enabled R06 wrapper execution count.",
     "knownExamples": "32639/32640/47099/47150/12828/18024 appear only in reports and never determine masks, graph construction, solution or behavior.",
@@ -92,9 +113,9 @@
   },
   "localVerification": {
     "script": "../verification/check-corner-numerics.cjs",
-    "scriptSHA256": "43d3a09ceb05d6ed59633c6de2fd9e8b0c86026443a3558e3ea78f007fc7d054",
-    "result": "../research/candidate-02-synthetic-check.json",
-    "resultSHA256": "58693c02a5eee07f236cd0309692ddaea20fcda6ffb5562fbe500c2734c2147f",
+    "scriptSHA256": "fd51a7e95ee4c1ea013b3b17cf9eebf0365dee34fbb8019fd0e0480ce30b314b",
+    "result": "../research/candidate-03-synthetic-check.json",
+    "resultSHA256": "88c444ba5cd445478e30acb47d8d6ab4598c9e376f7e18f8d53453be9272b4a6",
     "fixture": {
       "vertices": 1056,
       "triangles": 1920,
@@ -115,7 +136,7 @@
       "centerDirectDeltaZero": true,
       "directChangedVertices": 600,
       "changedOriginallyActiveVertices": 200,
-      "maxDirectCorrectionMM": 1.3686995953321457,
+      "maxDirectCorrectionMM": 1.3755496481742673,
       "coreVerticesCompared": 208,
       "contactVerticesCompared": 16,
       "centerVerticesCompared": 160,
@@ -123,8 +144,9 @@
       "linearSolve": {
         "converged": true,
         "iterations": 28,
+        "totalComponentIterations": 84,
         "maxResidualMM": 3.4850680941051696e-07,
-        "relativeResidual": 6.303712002296482e-07,
+        "relativeResidual": 7.908906042831118e-07,
         "maximumIterations": 512,
         "maximumNormalizedResidualMM": 0.0001,
         "maximumRelativeResidual": 1e-06,
@@ -133,25 +155,136 @@
         "noOvershoot": true,
         "boundClampedVertices": 0,
         "maximumPreClampBoundViolationMM": 0,
-        "residualDefinition": "max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check"
+        "residualDefinition": "Each component uses the same SPD matrix; aggregate maxima are not a global vector solution-error bound. Full actual scalar residuals remain separately reported.",
+        "components": {
+          "x": {
+            "converged": true,
+            "iterations": 28,
+            "maxResidualMM": 3.4850680941051696e-07,
+            "relativeResidual": 6.303712002296482e-07,
+            "maximumIterations": 512,
+            "maximumNormalizedResidualMM": 0.0001,
+            "maximumRelativeResidual": 1e-06,
+            "finite": true,
+            "positiveWeights": true,
+            "noOvershoot": true,
+            "boundClampedVertices": 0,
+            "maximumPreClampBoundViolationMM": 0,
+            "residualDefinition": "max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check"
+          },
+          "up": {
+            "converged": true,
+            "iterations": 28,
+            "maxResidualMM": 3.723897227238806e-08,
+            "relativeResidual": 5.673343555712305e-07,
+            "maximumIterations": 512,
+            "maximumNormalizedResidualMM": 0.0001,
+            "maximumRelativeResidual": 1e-06,
+            "finite": true,
+            "positiveWeights": true,
+            "noOvershoot": true,
+            "boundClampedVertices": 0,
+            "maximumPreClampBoundViolationMM": 0,
+            "residualDefinition": "max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check"
+          },
+          "front": {
+            "converged": true,
+            "iterations": 28,
+            "maxResidualMM": 6.56817336675443e-08,
+            "relativeResidual": 7.908906042831118e-07,
+            "maximumIterations": 512,
+            "maximumNormalizedResidualMM": 0.0001,
+            "maximumRelativeResidual": 1e-06,
+            "finite": true,
+            "positiveWeights": true,
+            "noOvershoot": true,
+            "boundClampedVertices": 0,
+            "maximumPreClampBoundViolationMM": 0,
+            "residualDefinition": "max abs(A*correction-rhs)/diagonal in mm; relative Euclidean residual also required; both recomputed after bounds check"
+          }
+        },
+        "vectorMagnitudeBound": {
+          "withinTolerance": true,
+          "maximumExcessMM": 0,
+          "toleranceMM": 0.0001,
+          "connectedComponents": [
+            {
+              "component": 0,
+              "sourceMaximumMM": 4.657434575163791,
+              "redistributedMaximumMM": 3.685873146105414
+            },
+            {
+              "component": 1,
+              "sourceMaximumMM": 4.657434575163791,
+              "redistributedMaximumMM": 3.6039950746157494
+            }
+          ]
+        }
+      },
+      "sourceAgreement": {
+        "available": true,
+        "passed": true,
+        "sampleCount": 200,
+        "expectedSampleCount": 200,
+        "nonzeroActualSamples": 200,
+        "nonzeroPredictedSamples": 200,
+        "maxResidualMM": 1.2284579815510632e-06,
+        "maxNormalizedErrorRatio": 0.4988602983457863,
+        "maxToleranceMM": 2.793991901397877e-06,
+        "axisMaximumResidualMM": {
+          "x": 9.172492208050359e-07,
+          "y": 9.292069459246004e-07,
+          "z": 3.505188684199993e-07
+        },
+        "toleranceRule": "Per display coordinate: one Float32 ULP at max(abs(before),abs(predictedFinal)) plus 64*Number.EPSILON*(abs(before)+abs(predictedIncrement)+1), all in native metres; require every normalized coordinate error<=1",
+        "location": "Actual original local plus R05 local ownership boundary, before any R06 correction or closure; compare actual position-minus-base with the predicted complete pucker increment"
       },
       "allOriginalStagesExecuted": true,
+      "maximumComponentCorrectionMM": {
+        "x": 1.3687004264926745,
+        "up": 0.16001379397264592,
+        "front": 0.22026506079786068
+      },
       "examples": []
     },
-    "independentFixtureCutEdge": {
-      "a": 85,
-      "b": 86,
-      "originalIncrementJumpMM": 1.118263229727745,
-      "redistributedIncrementJumpMM": 0.2794284373521805
+    "sameFixtureCandidate02Isolation": {
+      "test": "immutable candidate02 and candidate03 retain the identical x solve and fixture x result",
+      "passed": true,
+      "priorModuleSHA256": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
+      "xScalarSolveRecordExact": true,
+      "fixtureXCoordinatesExact": true,
+      "restCoreAndFreeFingerprintsExact": true,
+      "scope": "Same controlled axis-aligned indexed fixture before downstream native stages; not actual rendered pixel equality."
     },
-    "scope": "Controlled1056-vertex indexed grid with explicit active/inactive/negative-v/deep/semantic barriers and a native-stage stub. It validates this graph solver, phase integration and lifecycle locally; it does not substitute for actual Anny evaluation, normals, closure, browser rendering or visual acceptance."
+    "actualDiscrepancyDetection": {
+      "test": "actual source discrepancy is rejected before correction and descriptors restored",
+      "passed": true,
+      "perturbedNativeCoordinateMM": 0.2
+    },
+    "availabilityPolicy": {
+      "test": "mixed actions explicitly make source agreement unavailable",
+      "passed": true,
+      "scope": "Availability policy only; not a full mixed-action validation."
+    },
+    "scope": "Same controlled1056-vertex full-index fixture as candidate02, now with independently expressed native local x/up/front stage equations. It verifies source residual/rounding behavior, fixed domain, descriptor lifecycle and exactly retained candidate02 x solve locally. It does not replace actual Anny geometry, downstream constraints, browser rendering or visual acceptance."
   },
   "limits": [
-    "The original diagnostic draw/native prefix mismatch prevented exact projected triangle attribution. Candidate02 remains a testable motion-field hypothesis.",
-    "Protecting native sample trajectories does not prove complete surface contact, tissue mechanics or physiological amplitude.",
-    "Static corner recess, lip-return shape, forward/up compensation, material appearance and thin inner edges remain independently unvalidated.",
-    "The engineering core mask, one-ring collar and4mm smoothing scale are not measured anatomy."
+    "The component mismatch mechanism is a hypothesis, and the visible stepped corner folds may also depend on the fixed core/collar boundary or static corner shape.",
+    "The unchanged original reciprocal up-compensation formula is not validated as physiology; only its pucker difference is redistributed.",
+    "The reported mathematical residual is not a global vector solution-error or physiological-precision bound.",
+    "Source agreement is restricted to pure local pucker/tissueDepth1; mixed-action visual behavior is not newly validated.",
+    "Direct core/contact/center protection and final49-pair equality do not certify whole-surface contact, collision safety, skin anatomy or animation performance.",
+    "No claim that the thin inner lip edge or whole-mouth realism is solved."
   ],
   "visualAcceptance": false,
-  "productionReady": false
+  "productionReady": false,
+  "actualSourceAgreement": {
+    "independentObservedQuantity": "For every free originally-active point, read actual position minus original solver.base at the local/closure boundary. Compare it with the predicted complete native pucker source vector. This is a comparison against actual native stage output, not against the correction solver or a second copy of its output.",
+    "availability": "Only when funnel,press,rollIn,rollOut,stretchLeft,stretchRight,upperRaise,lowerDepress,cornerLeft,cornerRight are all exactly0 and tissueDepth exactly1. Seal/adhesion/release occur after this boundary and jaw has already been applied, so they do not make the local-source check unavailable.",
+    "mixed": "Other local actions or tissueDepth!=1 produce available:false with a reason and sampleCount0, with no passed:true claim. This records an applicability limit; mixed-action quality is not claimed as validated.",
+    "samples": "Expected count is binding.freeOriginallyActiveVertices. Require actual sampleCount equal expected and positive. Also measure and require positive nonzeroActualSamples and nonzeroPredictedSamples; do not pass an empty or all-zero source.",
+    "tolerance": "For each displayed coordinate, allow one Float32 ULP at max(abs(before),abs(predictedFinal)), plus64*Number.EPSILON*(abs(before)+abs(predictedIncrement)+1) in metres. This bounds final position rounding and a conservative double-operation margin. Gate every coordinate by error/tolerance<=1; record the maximum ratio, Euclidean residual maximum, Euclidean tolerance maximum and axis maxima.",
+    "failure": "If available but outside the rounding envelope, throw before any R06 position writes; restore temporary hooks in finally. The source agreement is not used to fit or tune the vector.",
+    "zeroPucker": "The original-function bypass installs no nested hooks and performs no source sampling; sourceAgreement is null."
+  }
 }

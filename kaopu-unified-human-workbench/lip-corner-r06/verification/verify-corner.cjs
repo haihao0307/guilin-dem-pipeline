@@ -339,9 +339,16 @@ async function controlState(){return page.evaluate(()=>{
 function checkSolver(report,mode){
   assert.equal(report.comparison,mode);assert.equal(report.implementation,report.solver.version);assert(report.ready);assert.equal(report.innerComparison,'r04');assert.equal(report.motionComparison,'r05');
   const s=report.solver;assert(s.installed&&s.valid);assert.equal(s.enabled,mode==='r06');assert.equal(s.errors.length,0);
-  assert.equal(s.version,'native-corner-x-followthrough@2');
+  assert.equal(s.version,'native-corner-pucker-vector@3');
   const solveLimits={maximumIterations:512,maximumNormalizedResidualMM:1e-4,maximumRelativeResidual:1e-6};
   for(const[key,value]of Object.entries(solveLimits))assert.equal(s.binding.solver[key],value,'Reviewed graph solver limit changed: '+key);
+  function checkSolve(solve,label){
+    assert(solve?.converged&&solve.finite&&solve.positiveWeights&&solve.noOvershoot,label+' graph solver did not meet its numerical conditions');
+    for(const[key,value]of Object.entries(solveLimits))assert.equal(solve[key],value,label+' graph solve changed the reviewed limit: '+key);
+    assert(Number.isInteger(solve.iterations)&&solve.iterations>=0&&solve.iterations<=solveLimits.maximumIterations,label+' graph solve iteration count invalid');
+    assert(Number.isFinite(solve.maxResidualMM)&&solve.maxResidualMM>=0&&solve.maxResidualMM<=solveLimits.maximumNormalizedResidualMM,label+' actual normalized graph residual exceeds the reviewed limit');
+    assert(Number.isFinite(solve.relativeResidual)&&solve.relativeResidual>=0&&solve.relativeResidual<=solveLimits.maximumRelativeResidual,label+' actual relative graph residual exceeds the reviewed limit');
+  }
   if(mode==='r06'){
     const last=s.last;assert(last?.completed&&last?.hooksRestored,'R06 native phase or temporary-hook restoration incomplete');
     assert(Number.isFinite(report.pose.pucker)&&report.pose.pucker>=0,'Actual pucker input unavailable');
@@ -349,7 +356,7 @@ function checkSolver(report,mode){
     assert(Number.isInteger(last.directChangedVertices)&&last.directChangedVertices>=0);assert(Number.isFinite(last.maxDirectCorrectionMM)&&last.maxDirectCorrectionMM>=0);
     if(report.pose.pucker===0){
       assert.equal(last.puckerZeroBypass,true);assert.equal(last.pairMapCalls,0);assert.equal(last.directChangedVertices,0);assert.equal(last.maxDirectCorrectionMM,0);
-      assert.equal(last.coreVerticesCompared,0);assert.equal(last.contactVerticesCompared,0);assert.equal(last.centerVerticesCompared,0);assert.equal(last.changedOriginallyActiveVertices,0);assert.equal(last.linearSolve,null);
+      assert.equal(last.coreVerticesCompared,0);assert.equal(last.contactVerticesCompared,0);assert.equal(last.centerVerticesCompared,0);assert.equal(last.changedOriginallyActiveVertices,0);assert.equal(last.linearSolve,null);assert.equal(last.sourceAgreement,null);
     }else{
       assert.equal(last.puckerZeroBypass,false);assert.equal(last.pairMapCalls,1);assert.equal(last.coreDirectDeltaZero,true);assert.equal(last.contactDirectDeltaZero,true);assert.equal(last.centerDirectDeltaZero,true);
       assert.equal(last.beforeLocalBaseMatchesEntry,true,'R06 used a different native before-local buffer');
@@ -358,11 +365,26 @@ function checkSolver(report,mode){
       }
       assert(last.directChangedVertices>0&&last.maxDirectCorrectionMM>0,'The selected pucker correction made no evaluated geometric intervention');
       assert(Number.isInteger(last.changedOriginallyActiveVertices)&&last.changedOriginallyActiveVertices>0&&last.changedOriginallyActiveVertices<=last.directChangedVertices,'No original active exterior vertices actually responded');
-      const solve=last.linearSolve;assert(solve?.converged&&solve.finite&&solve.positiveWeights&&solve.noOvershoot,'Exterior graph solver did not meet its numerical conditions');
-      for(const[key,value]of Object.entries(solveLimits))assert.equal(solve[key],value,'Actual graph solve changed the reviewed limit: '+key);
-      assert(Number.isInteger(solve.iterations)&&solve.iterations>=0&&solve.iterations<=solveLimits.maximumIterations,'Invalid graph solve iteration count');
-      assert(Number.isFinite(solve.maxResidualMM)&&solve.maxResidualMM>=0&&solve.maxResidualMM<=solveLimits.maximumNormalizedResidualMM,'Actual normalized graph residual exceeds the reviewed limit');
-      assert(Number.isFinite(solve.relativeResidual)&&solve.relativeResidual>=0&&solve.relativeResidual<=solveLimits.maximumRelativeResidual,'Actual relative graph residual exceeds the reviewed limit');
+      const solve=last.linearSolve;checkSolve(solve,'Aggregate pucker');
+      const names=['x','up','front'];assert.deepEqual(Object.keys(solve.components||{}).sort(),[...names].sort(),'A pucker component solve is absent or unexpected');
+      const parts=names.map(name=>{const part=solve.components[name];checkSolve(part,'Pucker '+name);return part;});
+      for(const key of['iterations','maxResidualMM','relativeResidual'])assert.equal(solve[key],Math.max(...parts.map(part=>part[key])),'Aggregate does not retain the actual maximum component '+key);
+      assert.equal(solve.totalComponentIterations,parts.reduce((sum,part)=>sum+part.iterations,0),'Aggregate component iteration total differs');
+      const vector=solve.vectorMagnitudeBound;assert.equal(vector?.withinTolerance,true,'Pucker vector exceeds the declared source magnitude bound');
+      assert.equal(vector.toleranceMM,solveLimits.maximumNormalizedResidualMM);assert(Number.isFinite(vector.maximumExcessMM)&&vector.maximumExcessMM>=0&&vector.maximumExcessMM<=vector.toleranceMM,'Actual vector magnitude excess exceeds the reviewed limit');
+      assert.equal(vector.connectedComponents.length,s.binding.connectedFreeComponents,'Vector bound omitted a free graph component');
+      for(const component of vector.connectedComponents){assert(Number.isFinite(component.sourceMaximumMM)&&component.sourceMaximumMM>=0&&Number.isFinite(component.redistributedMaximumMM)&&component.redistributedMaximumMM>=0);assert(component.redistributedMaximumMM<=component.sourceMaximumMM+vector.toleranceMM,'A free graph component exceeded its source magnitude bound');}
+      // These fixed pucker poses have no other local action. The source is
+      // compared to the actual original local displacement before R06 or
+      // closure, using the module's audited per-coordinate Float32 ULP rule.
+      // A missing/mixed-action observation cannot count as an agreement pass.
+      const agreement=last.sourceAgreement;assert.equal(agreement?.available,true,'Actual pure-pucker native source agreement is unavailable');assert.equal(agreement.passed,true,'Actual native pucker source differs from the predicted three-component increment');
+      assert(Number.isInteger(agreement.sampleCount)&&agreement.sampleCount>0);assert.equal(agreement.sampleCount,agreement.expectedSampleCount);assert.equal(agreement.sampleCount,s.binding.freeOriginallyActiveVertices,'Native source check omitted original active exterior samples');
+      for(const key of['nonzeroActualSamples','nonzeroPredictedSamples'])assert(Number.isInteger(agreement[key])&&agreement[key]>0&&agreement[key]<=agreement.sampleCount,'Native source agreement contains no measured nonzero displacement: '+key);
+      assert(Number.isFinite(agreement.maxNormalizedErrorRatio)&&agreement.maxNormalizedErrorRatio>=0&&agreement.maxNormalizedErrorRatio<=1,'Actual native source error exceeds its per-coordinate Float32 ULP bound');
+      assert(Number.isFinite(agreement.maxResidualMM)&&agreement.maxResidualMM>=0&&Number.isFinite(agreement.maxToleranceMM)&&agreement.maxToleranceMM>0&&agreement.maxResidualMM<=agreement.maxToleranceMM,'Native source agreement residual or tolerance is invalid');
+      assert.deepEqual(Object.keys(agreement.axisMaximumResidualMM||{}).sort(),['x','y','z']);for(const value of Object.values(agreement.axisMaximumResidualMM))assert(Number.isFinite(value)&&value>=0&&value<=agreement.maxToleranceMM,'Actual native source axis error is invalid');
+      assert(typeof agreement.toleranceRule==='string'&&agreement.toleranceRule.includes('one Float32 ULP')&&agreement.toleranceRule.includes('64*Number.EPSILON'),'Native source agreement used an unexpected rounding rule');
     }
   }
   // The inherited R05 stage must still complete in both R06 comparison modes.

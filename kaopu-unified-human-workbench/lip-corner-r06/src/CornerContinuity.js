@@ -1,4 +1,4 @@
-/* R06 candidate 02: redistribute only the native pucker x increment on
+/* R06 candidate 03: redistribute the complete native pucker increment on
  * verified peripheral exterior skin, including originally active vertices.
  * Lip rail body, native vermilion/rim, contact samples and center are fixed.
  * Four millimetres is a graph smoothing length, not a hard support cutoff or
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   if (window.__LIP_CORNER_SOLVER__) throw Error('Corner motion module already exists');
-  const VERSION = 'native-corner-x-followthrough@2', LENGTH = .004;
+  const VERSION = 'native-corner-pucker-vector@3', LENGTH = .004;
   const MAX_ITERATIONS = 512, RESIDUAL_MM = .0001, RELATIVE_RESIDUAL = 1e-6;
   const R05_SOURCE = 'a8bba75322c12df151ecbcebc416087b5248aa5f';
   const own = (o, k) => Object.getOwnPropertyDescriptor(o, k);
@@ -16,6 +16,7 @@
   const point = (a, i) => [a[i * 3], a[i * 3 + 1], a[i * 3 + 2]];
   const sub = (a, b) => a.map((x, k) => x - b[k]);
   const dot = (a, b) => a.reduce((s, x, k) => s + x * b[k], 0);
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   function unit(a) { const n = Math.hypot(...a); if (!(n > 1e-10)) throw Error('Degenerate native mouth frame'); return a.map(x => x / n); }
   function sameDescriptor(a, b) { return a === undefined ? b === undefined : b !== undefined && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].every(k => a[k] === b[k]); }
   function put(o, k, value) {
@@ -104,8 +105,58 @@
   }
   function frame(c) {
     const lm = i => c.model.faceSurface.fields.landmark(c.model.positions, i), a = lm(48), b = lm(54);
-    const x = unit(sub(b, a)), center = lm(62).map((q, k) => (q + lm(66)[k]) * .5), convert = p => [p[0], p[2], -p[1]];
-    return { x: convert(x), center: convert(center) };
+    const x = unit(sub(b, a)), vertical = sub(lm(27), lm(8)), up = unit(vertical.map((q, k) => q - x[k] * dot(vertical, x)));
+    const center = lm(62).map((q, k) => (q + lm(66)[k]) * .5); let front = unit(cross(x, up));
+    if (dot(front, sub(lm(30), center)) < 0) front = front.map(q => -q);
+    const width = Math.hypot(...sub(b, a)), scale = c.structure.anatomy.scale(width), convert = p => [p[0], p[2], -p[1]];
+    if (!Number.isFinite(scale) || !(scale > 0)) throw Error('Invalid native anatomical scale');
+    return { x: convert(x), up: convert(up), front: convert(front), center: convert(center), width, scale };
+  }
+  function puckerComponents(c, f, amount) {
+    const actions = c.structure.performance.settings, native = { x: new Float64Array(c.count), up: new Float64Array(c.count), front: new Float64Array(c.count) };
+    const transverse = q => Math.min(1.18, 1 / Math.sqrt(Math.max(.65, q)));
+    for (const id of c.relevantIds) if (c.active[id]) {
+      const s = c.samples[id], relative = sub(point(c.solver.base, id), f.center), lateralMix = smooth(-.16, .16, s.u);
+      const stretch = actions.stretchLeft * (1 - lateralMix) + actions.stretchRight * lateralMix;
+      const q0 = 1 - .12 * actions.funnel + .18 * stretch, qp = 1 - .23 * amount - .12 * actions.funnel + .18 * stretch;
+      native.x[id] = -.23 * amount * dot(relative, f.x) * s.weight;
+      native.up[id] = dot(relative, f.up) * (transverse(qp) - transverse(q0)) * s.weight;
+      native.front[id] = .0036 * amount * Math.exp(-((s.u / .85) ** 2)) * f.scale * s.weight;
+      if (![native.x[id], native.up[id], native.front[id]].every(Number.isFinite)) throw Error('Non-finite native pucker component');
+    }
+    return native;
+  }
+  function checkSourceAgreement(c, f, native, array) {
+    const actions = c.structure.performance.settings, expectedSampleCount = c.binding.freeOriginallyActiveVertices;
+    const otherLocal = ['funnel', 'press', 'rollIn', 'rollOut', 'stretchLeft', 'stretchRight', 'upperRaise', 'lowerDepress', 'cornerLeft', 'cornerRight'];
+    const mixed = otherLocal.filter(k => actions[k] !== 0);
+    if (mixed.length || c.structure.anatomy.settings.tissueDepth !== 1) return {
+      available: false, reason: mixed.length ? 'Other local actions are nonzero or unavailable: ' + mixed.join(',') : 'Native tissueDepth is not exactly 1', sampleCount: 0, expectedSampleCount
+    };
+    const result = { available: true, passed: false, sampleCount: 0, expectedSampleCount, nonzeroActualSamples: 0, nonzeroPredictedSamples: 0, maxResidualMM: 0, maxNormalizedErrorRatio: 0, maxToleranceMM: 0,
+      axisMaximumResidualMM: { x: 0, y: 0, z: 0 },
+      toleranceRule: 'Per display coordinate: one Float32 ULP at max(abs(before),abs(predictedFinal)) plus 64*Number.EPSILON*(abs(before)+abs(predictedIncrement)+1), all in native metres; require every normalized coordinate error<=1',
+      location: 'Actual original local plus R05 local ownership boundary, before any R06 correction or closure; compare actual position-minus-base with the predicted complete pucker increment' };
+    const labels = ['x', 'y', 'z'];
+    for (const id of c.freeIds) if (c.active[id]) {
+      let residualSquared = 0, toleranceSquared = 0, nonzeroActual = false, nonzeroPredicted = false;
+      for (let k = 0; k < 3; k++) {
+        const before = c.solver.base[id * 3 + k], predicted = f.x[k] * native.x[id] + f.up[k] * native.up[id] + f.front[k] * native.front[id];
+        const actual = array[id * 3 + k] - before, error = Math.abs(actual - predicted), magnitude = Math.max(Math.abs(before), Math.abs(before + predicted));
+        const ulp = magnitude > 0 ? 2 ** Math.max(-149, Math.floor(Math.log2(magnitude)) - 23) : 2 ** -149;
+        const tolerance = ulp + 64 * Number.EPSILON * (Math.abs(before) + Math.abs(predicted) + 1);
+        if (![before, predicted, actual, error, tolerance].every(Number.isFinite) || !(tolerance > 0)) throw Error('Non-finite native source agreement sample');
+        residualSquared += error * error; toleranceSquared += tolerance * tolerance;
+        nonzeroActual ||= actual !== 0; nonzeroPredicted ||= predicted !== 0;
+        result.maxNormalizedErrorRatio = Math.max(result.maxNormalizedErrorRatio, error / tolerance);
+        result.axisMaximumResidualMM[labels[k]] = Math.max(result.axisMaximumResidualMM[labels[k]], error * 1000);
+      }
+      result.sampleCount++; result.maxResidualMM = Math.max(result.maxResidualMM, Math.sqrt(residualSquared) * 1000);
+      if (nonzeroActual) result.nonzeroActualSamples++; if (nonzeroPredicted) result.nonzeroPredictedSamples++;
+      result.maxToleranceMM = Math.max(result.maxToleranceMM, Math.sqrt(toleranceSquared) * 1000);
+    }
+    result.passed = result.sampleCount > 0 && result.sampleCount === expectedSampleCount && result.nonzeroActualSamples > 0 && result.nonzeroPredictedSamples > 0 && result.maxNormalizedErrorRatio <= 1;
+    return result;
   }
   // This mask describes exterior eligibility for a displacement recipient. It
   // never replaces csType, oral ownership, native weight, active or lip labels.
@@ -184,7 +235,7 @@
     c.rows = rows; c.relevantIds = [...relevant].sort((a, b) => a - b); c.component = component; c.components = components;
     const baseCoreCount = baseCore.reduce((sum, x) => sum + x, 0);
     c.binding = {
-      method: 'Screened positive rest-graph smoothing of only the original pucker x increment, with fixed core and exterior boundary values',
+      method: 'Screened positive rest-graph redistribution of the complete native pucker increment using the identical matrix for x, up and front, with fixed core and exterior boundary values',
       smoothingLengthRestMM: LENGTH * 1000, smoothingLengthIsMeasuredPhysiology: false, hardFourMillimetreSupportCutoff: false, inputPoseUsedForBinding: false,
       nativeVertices: c.count, originalActiveVertices: c.activeIds.length, centerVertices: c.centerIds.length,
       nativeVermilionVertices: c.top.lips.length, nativeRimVertices: rimVertices, railBodyVertices, protectedBaseCoreVertices: baseCoreCount,
@@ -201,7 +252,7 @@
       fades: 'Coefficient g: u .64-.84 and 1.5-1.6; front .25-.75; depth 3.5-6mm; 1mm outer vertical fades. Domain is not cut 4mm from the lip core.',
       equation: '(degree_i/(ell^2*g_i)+sum_j 1/length_ij^2)*d_i - sum_free_j d_j/length_ij^2 = degree_i*native_i/(ell^2*g_i)+sum_fixed_j native_j/length_ij^2',
       solver: { method: 'Diagonal-preconditioned conjugate gradients on the symmetric positive-definite correction system; actual residual recomputed', maximumIterations: MAX_ITERATIONS, maximumNormalizedResidualMM: RESIDUAL_MM, maximumRelativeResidual: RELATIVE_RESIDUAL },
-      sourceValues: 'Current before-local native pucker x contribution; zero for originally inactive vertices; no posed displacement stored at install',
+      sourceValues: 'Current before-local native pucker difference relative to pucker=0 with every other local action held fixed; x/up/front use one identical matrix; zero for originally inactive vertices; no posed displacement stored at install',
       examples: [32639, 32640, 47099, 47150, 12828, 18024].filter(id => id < c.count).map(id => ({ id, u: c.samples[id].u, v: c.samples[id].v, front: c.samples[id].front, depthMM: c.samples[id].depth * 1000, originalActive: !!c.active[id], protectedCore: !!core[id], freeExterior: freeIndex[id] >= 0, gain: gain[id] }))
     };
   }
@@ -269,6 +320,31 @@
     if (!rec.linearSolve.converged) throw Error('Exterior graph solve did not reach the declared residual tolerances');
     return correction;
   }
+  function redistributeVector(c, native, rec) {
+    const corrections = {}, components = {}, names = ['x', 'up', 'front'];
+    for (const name of names) { const part = {}; corrections[name] = redistribute(c, native[name], part); components[name] = part.linearSolve; }
+    const sourceMaximum = new Float64Array(c.components), solvedMaximum = new Float64Array(c.components);
+    for (let i = 0; i < c.rows.length; i++) {
+      const row = c.rows[i], component = c.component[i];
+      for (const id of [row.id, ...row.neighbors.map(edge => edge.id)]) sourceMaximum[component] = Math.max(sourceMaximum[component], Math.hypot(native.x[id], native.up[id], native.front[id]));
+      solvedMaximum[component] = Math.max(solvedMaximum[component], Math.hypot(...names.map(name => native[name][row.id] + corrections[name][i])));
+    }
+    let maximumExcessMM = 0;
+    for (let i = 0; i < c.components; i++) maximumExcessMM = Math.max(maximumExcessMM, (solvedMaximum[i] - sourceMaximum[i]) * 1000);
+    if (!Number.isFinite(maximumExcessMM) || maximumExcessMM > RESIDUAL_MM) throw Error('Redistributed pucker vector exceeds the positive source magnitude bound');
+    const parts = Object.values(components);
+    rec.linearSolve = {
+      converged: parts.every(x => x.converged), iterations: Math.max(...parts.map(x => x.iterations)), totalComponentIterations: parts.reduce((sum, x) => sum + x.iterations, 0),
+      maxResidualMM: Math.max(...parts.map(x => x.maxResidualMM)), relativeResidual: Math.max(...parts.map(x => x.relativeResidual)),
+      maximumIterations: MAX_ITERATIONS, maximumNormalizedResidualMM: RESIDUAL_MM, maximumRelativeResidual: RELATIVE_RESIDUAL,
+      finite: parts.every(x => x.finite), positiveWeights: parts.every(x => x.positiveWeights), noOvershoot: parts.every(x => x.noOvershoot) && maximumExcessMM <= RESIDUAL_MM,
+      boundClampedVertices: parts.reduce((sum, x) => sum + x.boundClampedVertices, 0), maximumPreClampBoundViolationMM: Math.max(...parts.map(x => x.maximumPreClampBoundViolationMM)),
+      residualDefinition: 'Each component uses the same SPD matrix; aggregate maxima are not a global vector solution-error bound. Full actual scalar residuals remain separately reported.',
+      components, vectorMagnitudeBound: { withinTolerance: maximumExcessMM <= RESIDUAL_MM, maximumExcessMM, toleranceMM: RESIDUAL_MM,
+        connectedComponents: Array.from(sourceMaximum, (x, i) => ({ component: i, sourceMaximumMM: x * 1000, redistributedMaximumMM: solvedMaximum[i] * 1000 })) }
+    };
+    return corrections;
+  }
   let context = null;
   function install(viewer, model) {
     if (context) uninstall();
@@ -295,7 +371,7 @@
       if (!Number.isFinite(amount) || amount < 0 || amount > 1) throw Error('Invalid native pucker input');
       const rec = { call: ++c.calls, completed: false, hooksRestored: false, pairMapCalls: 0, puckerInput: amount, puckerZeroBypass: amount === 0,
         coreDirectDeltaZero: true, contactDirectDeltaZero: true, centerDirectDeltaZero: true, directChangedVertices: 0, changedOriginallyActiveVertices: 0, maxDirectCorrectionMM: 0,
-        coreVerticesCompared: 0, contactVerticesCompared: 0, centerVerticesCompared: 0, beforeLocalBaseMatchesEntry: null, linearSolve: null, allOriginalStagesExecuted: true };
+        coreVerticesCompared: 0, contactVerticesCompared: 0, centerVerticesCompared: 0, beforeLocalBaseMatchesEntry: null, linearSolve: null, sourceAgreement: null, allOriginalStagesExecuted: true };
       if (amount === 0) {
         // No nested hooks, position reads/writes or pose substitution here.
         try { const answer = Reflect.apply(c.originalApply, this, args); rec.completed = true; rec.hooksRestored = true; c.last = rec; return answer; }
@@ -310,19 +386,28 @@
           rec.beforeLocalBaseMatchesEntry = sameBytes(solver.base, entry); if (!rec.beforeLocalBaseMatchesEntry) throw Error('Current native before-local position buffer was not captured');
           const coreBefore = selectedPositions(array, c.coreIds), contactBefore = selectedPositions(array, c.contactIds), centerBefore = selectedPositions(array, c.centerIds);
           rec.coreVerticesCompared = c.coreIds.length; rec.contactVerticesCompared = c.contactIds.length; rec.centerVerticesCompared = c.centerIds.length;
-          const native = new Float64Array(c.count);
-          for (const id of c.relevantIds) if (c.active[id]) native[id] = -.23 * amount * dot(sub(point(solver.base, id), f.center), f.x) * c.samples[id].weight;
-          const correction = redistribute(c, native, rec);
+          const native = puckerComponents(c, f, amount);
+          rec.sourceAgreement = checkSourceAgreement(c, f, native, array);
+          if (rec.sourceAgreement.available && !rec.sourceAgreement.passed) throw Error('Actual original local displacement disagrees with the predicted pure-pucker source');
+          const correction = redistributeVector(c, native, rec), names = ['x', 'up', 'front'];
+          rec.maximumComponentCorrectionMM = { x: 0, up: 0, front: 0 };
           const examples = [];
           for (let i = 0; i < c.rows.length; i++) {
-            const id = c.rows[i].id, delta = correction[i];
-            if (!Number.isFinite(delta)) throw Error('Non-finite exterior increment correction');
-            if (Math.abs(delta) < 1e-12) continue;
+            const id = c.rows[i].id, delta = names.map(name => correction[name][i]);
+            if (!delta.every(Number.isFinite)) throw Error('Non-finite exterior increment correction');
+            for (let j = 0; j < names.length; j++) rec.maximumComponentCorrectionMM[names[j]] = Math.max(rec.maximumComponentCorrectionMM[names[j]], Math.abs(delta[j]) * 1000);
+            if (Math.hypot(...delta) < 1e-12) continue;
             const before = point(array, id);
-            for (let k = 0; k < 3; k++) if (f.x[k] !== 0) array[id * 3 + k] += f.x[k] * delta;
+            for (let k = 0; k < 3; k++) {
+              const shift = f.x[k] * delta[0] + f.up[k] * delta[1] + f.front[k] * delta[2];
+              if (shift !== 0) array[id * 3 + k] += shift;
+            }
             const actual = Math.hypot(...sub(point(array, id), before)) * 1000;
             if (actual > 0) { rec.directChangedVertices++; if (c.active[id]) rec.changedOriginallyActiveVertices++; rec.maxDirectCorrectionMM = Math.max(rec.maxDirectCorrectionMM, actual); }
-            if ([32639, 32640, 47099, 47150, 12828, 18024].includes(id)) examples.push({ id, originalActive: !!c.active[id], nativePuckerXMM: native[id] * 1000, redistributedPuckerXMM: (native[id] + delta) * 1000, correctionXMM: delta * 1000, actualDistanceMM: actual });
+            if ([32639, 32640, 47099, 47150, 12828, 18024].includes(id)) examples.push({ id, originalActive: !!c.active[id],
+              nativePuckerMM: Object.fromEntries(names.map(name => [name, native[name][id] * 1000])),
+              redistributedPuckerMM: Object.fromEntries(names.map((name, j) => [name, (native[name][id] + delta[j]) * 1000])),
+              correctionMM: Object.fromEntries(names.map((name, j) => [name, delta[j] * 1000])), actualDistanceMM: actual });
           }
           rec.examples = examples;
           rec.coreDirectDeltaZero = selectedExact(array, c.coreIds, coreBefore); rec.contactDirectDeltaZero = selectedExact(array, c.contactIds, contactBefore); rec.centerDirectDeltaZero = selectedExact(array, c.centerIds, centerBefore);
@@ -373,14 +458,16 @@
     if (c?.valid && !c.running) { const reason = invalidation(c, false); if (reason) invalidate(c, reason); }
     return structuredClone({ version: VERSION, installed: !!c?.attached, enabled: !!c?.enabled, disabled: !c?.enabled, valid: !!c?.valid,
       invalidationReason: c?.invalidationReason || null, binding: c?.binding || null, last: c?.last || null, calls: c?.calls || 0, errors: c?.errors || [],
-      component: 'Only the native pucker mouth-frame x increment is redistributed on eligible exterior skin; every other native motion term remains unchanged', originalActiveVerticesProtected: false,
+      component: 'The complete native pucker difference relative to pucker=0 is redistributed in mouth-frame x/up/front using one identical matrix; every other local action is held fixed', originalActiveVerticesProtected: false,
       protectedDomains: 'Native rail body, vermilion, rim, original contact samples and one-ring collar; center abs(native u)<=.64; oral and negative-v excluded', centerRule: 'abs(native u)<=.64',
       puckerZero: 'Direct original R05 evaluation without nested R06 hooks or position writes', poseUsedForInstall: false,
       canonicalPositionsChanged: false, topologyChanged: false, semanticFieldsChangedByModule: false, materialChanged: false, dnaWritten: false, newMeshes: 0,
       fullBiomechanics: false, visualAcceptance: false, productionReady: false,
       limitations: ['Four millimetres is an engineering smoothing length, not a physical tissue measurement or a hard support cutoff.',
         'The rail-body/core mask is a conservative construction from native fields, not measured tissue anatomy; downstream final contact equality still requires actual verification.',
-        'The original closure, pressure, contact scope, forward/up motion and unverified volume compensation remain unchanged.',
+        'The original pucker transverse compensation formula is retained in the source difference but its peripheral increment is redistributed; its physiological validity is not established.',
+        'Actual source agreement is available only for pure-pucker local actions with tissueDepth=1; mixed-action integration is not claimed as externally validated.',
+        'The original closure, pressure, contact scope, static shape and every non-pucker motion contribution remain unchanged.',
         'Unsupported historical or custom material states disable this candidate without changing those states or their labels.'] });
   }
   window.__LIP_CORNER_SOLVER__ = Object.freeze({ version: VERSION, install, setEnabled, report, uninstall });

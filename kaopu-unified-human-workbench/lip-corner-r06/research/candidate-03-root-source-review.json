@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu/lip-corner-root-source-review@1",
+  "candidate": "candidate-03",
+  "reviewedUTC": "2026-10-20T07:08:05.853259+00:00",
+  "moduleSHA256": "106bfb769e21f3e56ae35521509d17ce903f2b2e30f613f2a60af6e95896c970",
+  "candidate02ModuleSHA256": "ea34342e08938762cd8ed8f37d2333332a0b6cc600b2f6ad6314020c10ddbe00",
+  "frozenNativeR05SHA256": "231cc60f696e1bfbe7831e5afb5bfb845f7358391dacd25bc3efa00c7a21710b",
+  "literalComparisons": {
+    "exteriorGainExact": true,
+    "exteriorSurfaceExact": true,
+    "coreAndGraphConstructionExact": true,
+    "scalarPCGExact": true
+  },
+  "manualFindings": [
+    "Full mouth frame follows frozen native ao: landmark 48/54 lateral axis; orthogonalized 27/8 up; cross-product front oriented toward landmark 30; same display-coordinate conversion and anatomy.scale(width).",
+    "Pucker components are a native local-stage difference with pucker zero and every other action held fixed. The nonlinearity of the transverse factor is retained; pucker is not incorrectly treated as independently linear in the mixed-action case.",
+    "Source agreement compares untouched actual original local/R05 boundary positions against the predicted vector before any R06 write, only when local contributions other than pucker are zero and tissueDepth is exactly one. Availability, sample counts and nonzero samples must be required by real verification.",
+    "The identical scalar solve is called independently for x/up/front. The vector magnitude check only accepts or throws; it does not rescale, normalize or clamp the x component in response to up/front.",
+    "The correction writes only eligible free points; protected point snapshots and original stage/hook restoration remain in place. Pucker zero still calls the original evaluator directly.",
+    "Each scalar result retains its own recomputed algebraic residual. Aggregate maxima are explicitly not a global solution-error bound.",
+    "The defined masks, 4mm engineering scale and scalar graph algorithm are unchanged from candidate-02, so the main experiment is the added up/front redistribution. A successful result would not identify which added component alone caused it."
+  ],
+  "status": "source-review-passed; actual native source agreement, full runtime gates and visual benefit remain pending",
+  "limitations": [
+    "Synthetic x equality does not establish equality for every native point; actual before-local state, binding records and available source examples must also be checked.",
+    "The original native transverse compensation and core mask are not validated biomechanics.",
+    "The first two candidates demonstrate that mathematical convergence and preserved controls do not establish visual quality."
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}
