@@ -1,0 +1,449 @@
+{
+  "schema": "crowd-cloth-adapter-functional-verification@1",
+  "startedUTC": "2026-10-20T06:30:40.442Z",
+  "scope": {
+    "originalReferenceBodyFixture": true,
+    "P01FitVerified": false,
+    "renderingVerified": false,
+    "performanceBenchmark": false,
+    "originalJointFitRequired": true,
+    "externalMatrixProtocol": true,
+    "transactionalRollback": true
+  },
+  "tests": [
+    {
+      "name": "All 48 native joint-fit steps executed",
+      "passed": true
+    },
+    {
+      "name": "One external pose accepted with no internal action advance",
+      "passed": true
+    },
+    {
+      "name": "All native skin matrices match the supplied pose",
+      "passed": true
+    },
+    {
+      "name": "Duplicate frame cannot advance the solver",
+      "passed": true
+    },
+    {
+      "name": "Invalid external matrix rejected before mutation",
+      "passed": true
+    },
+    {
+      "name": "Native solve failure restores prior input pose and exact garment outputs",
+      "passed": true
+    },
+    {
+      "name": "Reset permits a fresh external sequence",
+      "passed": true
+    }
+  ],
+  "initialization": {
+    "backend": "original-wasm-joint-fit",
+    "fallbackReason": null,
+    "completedFitSteps": 48,
+    "requiredFitSteps": 48,
+    "fittingPhysicalSeconds": 0.8,
+    "grading": {
+      "top": {
+        "width": 1.02,
+        "length": 1,
+        "measurements": [
+          {
+            "joint": "spine02",
+            "depthRatio": 1,
+            "widthRatio": 1
+          },
+          {
+            "joint": "spine03",
+            "depthRatio": 1,
+            "widthRatio": 1
+          },
+          {
+            "joint": "upperarm01.L",
+            "depthRatio": 1,
+            "widthRatio": 1
+          },
+          {
+            "joint": "upperarm01.R",
+            "depthRatio": 1,
+            "widthRatio": 1
+          }
+        ]
+      },
+      "bottom": {
+        "width": 1.02,
+        "length": 1,
+        "measurements": [
+          {
+            "joint": "spine01",
+            "depthRatio": 1,
+            "widthRatio": 1
+          },
+          {
+            "joint": "upperleg01.L",
+            "depthRatio": 1,
+            "widthRatio": 1
+          },
+          {
+            "joint": "upperleg01.R",
+            "depthRatio": 1,
+            "widthRatio": 1
+          }
+        ]
+      }
+    },
+    "jointFitSkipped": false,
+    "reusedFittedState": false,
+    "currentPerson": {
+      "geometrySHA256": "fbc056553c1731b790769124bee121554f0800400271eaf564a0ad5e6f458571",
+      "topologySHA256": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+      "stateSHA256": "f6a60588040d2967ac619c5352c52355cbd02b12890f88cc976d0c2fbe50c0b7",
+      "adapterFingerprint": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5"
+    },
+    "sourceProof": {
+      "source": {
+        "members": [
+          {
+            "presetId": "T03",
+            "recipeHash": "6b39ad161eff755a32bc3610b107a5bf4f181ba978bd95671241e4ba817407ca",
+            "paperSHA256": "3240c5d9b130f74b9b79300655d13694bfca455c0d55536cf123f4ec1d87973b",
+            "materialSHA256": "412a5fb6963d16778ef0e102cfaf96aeb5b01365c72bd1d063c4fcc79846a49f",
+            "variantRequest": null,
+            "staticGatePassed": true,
+            "complete": true
+          },
+          {
+            "presetId": "P02",
+            "recipeHash": "39361c076e9972c18c1406a76ba00009259c45f7e79c7426c1e6d009905ba103",
+            "paperSHA256": "ba0666533ecaec09140fc2dc232f8bada3f2d713321c979ca9a60bacf642b73f",
+            "materialSHA256": "4e97ab0b1ac7d4a19158c8b530e313d130d175a765e422a60960b6629290e99a",
+            "variantRequest": null,
+            "staticGatePassed": true,
+            "complete": true
+          }
+        ],
+        "sameOriginalPerson": true,
+        "originalCoordinates": true,
+        "jointClothCollisionCertified": false
+      },
+      "target": {
+        "members": [
+          {
+            "presetId": "T03",
+            "recipeHash": "727f0c18e0c4cb72cc8077bcdeaa87cc777330be4dcb18695838132516d41787",
+            "paperSHA256": "3878b605d53d4eb4b910e39b59cd4c9665d4243ac4e7c35631c54261f431d353",
+            "materialSHA256": "f4300ba29afd7fa582a1f8d02d948aab534326b080ab28d68904f6f054d2f3e8",
+            "variantRequest": null,
+            "staticGatePassed": false,
+            "complete": true
+          },
+          {
+            "presetId": "P02",
+            "recipeHash": "313759db6f39aa12c7aa9c5c8c94dee5fae6ab8a25efbe8933fe8c6508fcf61a",
+            "paperSHA256": "e8e780b50938dd9c7518d125e6a94d1654ad5a7c1e291bb36731b897beee1cd3",
+            "materialSHA256": "38faf600cfde23dbf0a58978ab5da7aebcb376e0825d625c44de43f726042140",
+            "variantRequest": null,
+            "staticGatePassed": false,
+            "complete": true
+          }
+        ],
+        "sameOriginalPerson": true,
+        "originalCoordinates": true,
+        "jointClothCollisionCertified": false
+      }
+    },
+    "fitContact": {
+      "motion": "idle",
+      "motionTime": 0,
+      "simulationSeconds": 0.7999999999999984,
+      "frameSequence": 48,
+      "solverMs": 378.06418699999995,
+      "nativeRig": {
+        "source": "original Anny local-ref FK",
+        "bones": 104,
+        "weights": "unpruned original joint-conditioned influences",
+        "maxBoneLengthErrorMM": 0,
+        "topologyChanged": false,
+        "pose": {}
+      },
+      "bodyMinimumSampleMM": 3.2791820772230844,
+      "pairMinimumSampleMM": 2.1009999999999938,
+      "pairSamples": 1427,
+      "pairTargetMM": 2.1009999999999995,
+      "pairedCorrections": 753,
+      "continuousCollision": false,
+      "allSelfCollision": false,
+      "clothShapeSkinning": false,
+      "bodyFrameMatchesCloth": true
+    },
+    "fitGarments": [
+      {
+        "type": "XPBD-distance-and-dihedral",
+        "gravityMS2": 9.81,
+        "seconds": 0.7999999999999984,
+        "substeps": 192,
+        "particles": 2226,
+        "originalVertices": 2334,
+        "sewnPairs": 108,
+        "seamGapMM": 0,
+        "waistAnchors": 0,
+        "shoulderAnchors": 0,
+        "distanceConstraints": 6550,
+        "dihedralConstraints": 6212,
+        "minBodyVertexDistanceMM": "Infinity",
+        "minBodyInteriorSampleMM": "Infinity",
+        "maxMoveMM": 54.52901682105646,
+        "minEdgeStretch": 0.8990127742344151,
+        "maxEdgeStretch": 1.1639593570444289,
+        "contactCorrections": 892,
+        "safetyTrips": 0,
+        "densityKgM2": 0.39,
+        "materialCalibrated": false,
+        "continuousCollision": false,
+        "restMetric": "original flat paper",
+        "kinematicShapeAttraction": false,
+        "strainGuard": "engineering limits, not fabric calibration"
+      },
+      {
+        "type": "XPBD-distance-and-dihedral",
+        "gravityMS2": 9.81,
+        "seconds": 0.7999999999999984,
+        "substeps": 192,
+        "particles": 2893,
+        "originalVertices": 3261,
+        "sewnPairs": 389,
+        "seamGapMM": 0,
+        "waistAnchors": 33,
+        "shoulderAnchors": 0,
+        "distanceConstraints": 8849,
+        "dihedralConstraints": 8418,
+        "minBodyVertexDistanceMM": "Infinity",
+        "minBodyInteriorSampleMM": "Infinity",
+        "maxMoveMM": 25.988759859982633,
+        "minEdgeStretch": 0.8999999999999998,
+        "maxEdgeStretch": 1.1427921280910809,
+        "contactCorrections": 2345,
+        "safetyTrips": 0,
+        "densityKgM2": 0.39,
+        "materialCalibrated": false,
+        "continuousCollision": false,
+        "restMetric": "original flat paper",
+        "kinematicShapeAttraction": false,
+        "strainGuard": "engineering limits, not fabric calibration"
+      }
+    ],
+    "fitMetrics": {
+      "steps": 48,
+      "rollbacks": 0,
+      "rowsPrepared": 0,
+      "rollbackBytes": 1563576
+    },
+    "currentFitContactAfterRegionalSetup": {
+      "motion": "idle",
+      "motionTime": 0,
+      "simulationSeconds": 0.7999999999999984,
+      "frameSequence": 48,
+      "solverMs": 378.06418699999995,
+      "nativeRig": {
+        "source": "original Anny local-ref FK",
+        "bones": 104,
+        "weights": "unpruned original joint-conditioned influences",
+        "maxBoneLengthErrorMM": 0,
+        "topologyChanged": false,
+        "pose": {}
+      },
+      "bodyMinimumSampleMM": 3.9999999063329614,
+      "pairMinimumSampleMM": 2.105787371729377,
+      "pairSamples": 256,
+      "pairTargetMM": 2.1009999999999995,
+      "pairedCorrections": 753,
+      "continuousCollision": false,
+      "allSelfCollision": false,
+      "clothShapeSkinning": true,
+      "bodyFrameMatchesCloth": true
+    },
+    "nativeRuntimeSafetyThresholdsChanged": false,
+    "wearerFitAccepted": false,
+    "liveBackend": "regional-implicit-worker",
+    "creationMS": 24301.890463,
+    "physicalParticles": [
+      195,
+      248
+    ],
+    "visualControlVertices": [
+      2334,
+      3261
+    ]
+  },
+  "finalAudit": {
+    "frameSequence": 1,
+    "physicalFrameSequence": 51,
+    "timeSeconds": 0.016666666666666666,
+    "simulatedSeconds": 0.016666666666666666,
+    "fittingPhysicalSeconds": 0,
+    "solverMS": 29.016711000000214,
+    "physicsSource": "native-live-externally-clocked",
+    "backend": "regional-implicit-worker",
+    "internalActionAdvance": false,
+    "actionResultReplay": false,
+    "bodyFrameMatchesCloth": true,
+    "lastError": null,
+    "safetyTrips": 1,
+    "pipeline": {
+      "steps": 2,
+      "rollbacks": 1,
+      "gpuMS": null,
+      "readbackBytes": 0,
+      "substepHz": 240,
+      "implicitIterations": 8,
+      "gravityMS2": 9.81,
+      "contactModel": "posed surface, foreign hand and forearm proxies, floor and actual lower-garment triangles",
+      "interGarmentCollision": true,
+      "pairedModel": "discrete coarse top versus full animated bottom surface",
+      "foreignRegions": {
+        "count": 6,
+        "source": "current native mesh and rig rest geometry",
+        "ids": [
+          "lowerarm01.L",
+          "lowerarm02.L",
+          "hand.L",
+          "lowerarm01.R",
+          "lowerarm02.R",
+          "hand.R"
+        ],
+        "regions": [
+          {
+            "id": "lowerarm01.L",
+            "type": "capsule",
+            "radiiMM": [
+              50.497945255092326,
+              50.497945255092326,
+              50.497945255092326
+            ]
+          },
+          {
+            "id": "lowerarm02.L",
+            "type": "capsule",
+            "radiiMM": [
+              31.41405593977606,
+              31.41405593977606,
+              31.41405593977606
+            ]
+          },
+          {
+            "id": "hand.L",
+            "type": "ellipsoid",
+            "radiiMM": [
+              60.24593114852905,
+              68.78761504776776,
+              75.99427551031113
+            ]
+          },
+          {
+            "id": "lowerarm01.R",
+            "type": "capsule",
+            "radiiMM": [
+              50.921778946708194,
+              50.921778946708194,
+              50.921778946708194
+            ]
+          },
+          {
+            "id": "lowerarm02.R",
+            "type": "capsule",
+            "radiiMM": [
+              31.414055939776066,
+              31.414055939776066,
+              31.414055939776066
+            ]
+          },
+          {
+            "id": "hand.R",
+            "type": "ellipsoid",
+            "radiiMM": [
+              60.25092303752899,
+              68.78761504776776,
+              75.99427551031113
+            ]
+          }
+        ]
+      },
+      "model": "skeletal reference with regional implicit secondary cloth",
+      "fullFreeCloth": false,
+      "paperMetricCertified": false,
+      "physicalMassKG": [
+        0.17872824922329864,
+        0.23123405856418677
+      ],
+      "physicalParticles": [
+        195,
+        248
+      ],
+      "visualControlVertices": [
+        2226,
+        2893
+      ],
+      "dynamicParticles": [
+        178,
+        229
+      ],
+      "fixedReferenceParticles": [
+        17,
+        19
+      ],
+      "maxOffsetMM": 1.6061216516801566,
+      "lowerBodyContact": {
+        "model": "current native lower-body triangles; seam-neighborhood physical control projection",
+        "queryReuse": "skip only for exactly unchanged posed body and exactly unchanged sample coordinates with satisfied clearance",
+        "bodyTriangles": 15918,
+        "nativeBodyTriangles": 50624,
+        "coarseControls": 248,
+        "fineVertices": 590,
+        "fineTriangles": 851,
+        "continuousCollision": false,
+        "clothSelfCollision": false,
+        "contacts": 0,
+        "maxCorrectionMM": 0,
+        "refitMS": 2.8604709999999614,
+        "coarseMS": 2.571101000001363,
+        "fineMS": 4.836425000001327,
+        "queries": 1670,
+        "safelySkippedQueries": 0,
+        "maxFineOffsetMM": 1.5951284240791128,
+        "passes": 1,
+        "guidedCrotchContacts": 0
+      },
+      "averageImplicitIterations": 7.625,
+      "velocityErrorBoundMetersPerSecond": 1.0445083106109686e-30,
+      "velocityToleranceMetersPerSecond": 0,
+      "foreignContacts": 0,
+      "pairedContacts": 0,
+      "contactMS": 5.902001000002201,
+      "floorContacts": 0,
+      "floorY": -0.9858653545379639,
+      "poseMS": 0.03898499999922933,
+      "referenceMS": 11.846894000002067,
+      "dynamicsMS": 10.227294999996957,
+      "reconstructionMS": 0.9999279999974533
+    },
+    "bodyRevision": 3,
+    "clothRevision": 51,
+    "nativeRig": {
+      "source": "original Anny local-ref FK",
+      "bones": 104,
+      "weights": "unpruned original joint-conditioned influences",
+      "maxBoneLengthErrorMM": 1.3877787807814457e-13,
+      "topologyChanged": false,
+      "pose": {}
+    },
+    "fullFreeCloth": false,
+    "allSelfCollision": false,
+    "continuousCollision": false,
+    "wearerFitAccepted": false
+  },
+  "passed": true,
+  "finishedUTC": "2026-10-20T06:31:05.115Z"
+}
