@@ -64,6 +64,10 @@ if (fs.existsSync(buildPath)) build=JSON.parse(fs.readFileSync(buildPath,'utf8')
 const expectedSHA = process.env.NPC_EXPECT_SHA256 || build?.previewSHA256 || null;
 const report = {
   schema:'kaopu/npc-browser-verification@1',version:VERSION,phase:PHASE,
+  verifierSourceSHA256:sha(fs.readFileSync(__filename)),
+  geometryContract:'R02-other-solids-and-window-precontact@3',
+  previousVerifierSourceSHA256:'21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111',
+  initialR02VerifierSourceSHA256:'706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b',
   startedAt:new Date().toISOString(),sourceHead,build,expectedPreviewSHA256:expectedSHA,
   environment:{purpose:'repository candidate CI',runner:process.env.GITHUB_ACTIONS==='true'?'GitHub Actions':'isolated development test',
     headless:true,requestedRenderer:'SwiftShader',softwareRenderer:true,physicalPhone:false,userDevice:false,
@@ -356,6 +360,96 @@ function checkFeetAndBones(actors,stage) {
 }
 
 const CONTACT_STAGES=['close','lift','transfer','lower','lower-end','verify'];
+// Bottle recovery uses short intermediate stage names. Window recovery has
+// separate '*-transition' names and a terminal 'rest' stage below.
+const BOTTLE_RECOVERY_STAGES=[
+  'withdraw-start','withdraw','withdraw-end',
+  'rest-start','rest','rest-end'
+];
+const OTHER_SOLID_PENETRATION_M=.003;
+
+// An operated cylinder keeps its existing 5 mm assisted-contact tolerance.
+// Every other physical box/cylinder uses the existing 3 mm solid tolerance.
+// Require the expected cylinder and its real descriptor so that omitting a
+// neighbouring cylinder cannot silently produce a zero aggregate penetration.
+function otherSolidViolations(geometry,{operatedObjectId,requiredCylinderId,poseMetadata=false}) {
+  const violations=[];
+  const requireValue=(pass,reason)=>{if(!pass)violations.push(reason);};
+  requireValue(Number.isInteger(geometry?.solidSampleCount) && geometry.solidSampleCount>0,
+    'Actual native hand/forearm samples against other solids are missing');
+  const handCount=geometry?.solidParts?.hand?.sampleCount;
+  const forearmCount=geometry?.solidParts?.forearm?.sampleCount;
+  requireValue(Number.isInteger(handCount) && handCount>0 &&
+    Number.isInteger(forearmCount) && forearmCount>0,
+    'Other-solid diagnostics require both hand and forearm surface vertices');
+  requireValue(handCount+forearmCount===geometry?.solidSampleCount,
+    'Other-solid sample count must include the complete declared hand and forearm');
+  requireValue(Number.isFinite(geometry?.solidMaxPenetrationM) &&
+    geometry.solidMaxPenetrationM<=OTHER_SOLID_PENETRATION_M,
+    'Native hand/forearm penetrates another physical solid by more than 3 mm');
+  if(poseMetadata)requireValue(geometry?.operatedObjectId===operatedObjectId,
+    'The driven pose must identify its operated object without reclassifying its contact tolerance');
+
+  const byCylinder=geometry?.solidByCylinder;
+  const required=byCylinder?.[requiredCylinderId];
+  requireValue(Number.isInteger(required?.sampleCount) && required.sampleCount>0,
+    'Expected non-operated cylinder lacks actual surface samples: '+requiredCylinderId);
+  requireValue(!Object.hasOwn(byCylinder || {},operatedObjectId),
+    'The operated cylinder must not be silently tightened to the other-solid 3 mm tolerance');
+  for(const [kind,reports] of [['box',geometry?.solidByBox],['cylinder',byCylinder]]) {
+    requireValue(reports && typeof reports==='object' && !Array.isArray(reports),
+      'Per-object other-solid '+kind+' reports are missing');
+    for(const [id,measured] of Object.entries(reports || {})) {
+      requireValue(Number.isInteger(measured?.sampleCount) && measured.sampleCount>0,
+        'Other '+kind+' has no native surface samples: '+id);
+      requireValue(measured?.sampleCount===geometry?.solidSampleCount,
+        'Other '+kind+' must sample the same complete hand and forearm surface: '+id);
+      requireValue(Number.isFinite(measured?.maxPenetrationM) &&
+        measured.maxPenetrationM<=OTHER_SOLID_PENETRATION_M,
+        'Native hand/forearm penetrates other '+kind+' by more than 3 mm: '+id);
+    }
+  }
+
+  const cylinders=geometry?.solidCylinders;
+  requireValue(Array.isArray(cylinders) && cylinders.some(shape=>shape?.id===requiredCylinderId),
+    'The expected other cylinder must retain its actual pose and dimensions: '+requiredCylinderId);
+  for(const shape of Array.isArray(cylinders)?cylinders:[]) {
+    if(!shape || typeof shape!=='object') {
+      requireValue(false,'An actual other-cylinder descriptor is missing');
+      continue;
+    }
+    requireValue(shape.id!==operatedObjectId,
+      'The operated cylinder is incorrectly included among other solid descriptors');
+    requireValue(Array.isArray(shape.position) && shape.position.length===3 && shape.position.every(Number.isFinite),
+      'Other-cylinder position is not a finite world-space point: '+shape.id);
+    requireValue(Array.isArray(shape.quaternion) && shape.quaternion.length===4 &&
+      shape.quaternion.every(Number.isFinite) && Math.abs(Math.hypot(...shape.quaternion)-1)<1e-4,
+      'Other-cylinder orientation is not a normalized world-space quaternion: '+shape.id);
+    requireValue(Number.isFinite(shape.radius) && shape.radius>0 &&
+      Number.isFinite(shape.height) && shape.height>0,
+      'Other-cylinder finite dimensions are missing: '+shape.id);
+    requireValue(Number.isInteger(byCylinder?.[shape.id]?.sampleCount) && byCylinder[shape.id].sampleCount>0,
+      'A declared other cylinder was not sampled: '+shape.id);
+    const measuredShape=byCylinder?.[shape.id]?.geometry;
+    requireValue(measuredShape?.kind==='finite-local-Y-cylinder',
+      'Other-cylinder report must identify the finite cylinder including its caps: '+shape.id);
+    requireValue(Array.isArray(measuredShape?.position) &&
+      measuredShape.position.length===3 && measuredShape.position.every((value,index)=>
+        Number.isFinite(value) && Math.abs(value-shape.position?.[index])<1e-10),
+      'Other-cylinder measurement and source world position disagree: '+shape.id);
+    const sourceQ=shape.quaternion,measuredQ=measuredShape?.quaternion;
+    const validQ=Array.isArray(sourceQ) && sourceQ.length===4 && sourceQ.every(Number.isFinite) &&
+      Array.isArray(measuredQ) && measuredQ.length===4 && measuredQ.every(Number.isFinite) &&
+      Math.hypot(...sourceQ)>0 && Math.abs(Math.hypot(...measuredQ)-1)<1e-10;
+    const quaternionDot=validQ?sourceQ.reduce((sum,value,index)=>sum+value*measuredQ[index],0)/Math.hypot(...sourceQ):null;
+    requireValue(validQ && Math.abs(Math.abs(quaternionDot)-1)<1e-10,
+      'Other-cylinder measurement and source orientation disagree: '+shape.id);
+    requireValue(measuredShape?.radius===shape.radius && measuredShape?.height===shape.height,
+      'Other-cylinder measurement and source finite dimensions disagree: '+shape.id);
+  }
+  return violations;
+}
+
 async function auditCursor(label) {
   return evaluate('read phase geometry cursor: '+label,()=>{
     const poses=window.__NPC_OBSERVATION__.snapshot().audit.poses;
@@ -363,35 +457,96 @@ async function auditCursor(label) {
   });
 }
 
-function checkAuditGeometry(snapshot,label,{afterTime=-1,id=null,requiredActors=[]}={}) {
+function checkAuditGeometry(snapshot,label,{
+  afterTime=-1,id=null,requiredActors=[],requireRecovery=false,expectedTaskCounts=null
+}={}) {
   const samples=snapshot.audit?.poses;
   assert(Array.isArray(samples),'Actual driven-pose audit is exported: '+label);
-  const rows=samples.filter(sample=>sample.time>afterTime && (!id || sample.id===id) && CONTACT_STAGES.includes(sample.stage));
+  // Include every recorded phase, including approach and recovery. The old
+  // contact-only filter hid collisions with a neighbouring window handle.
+  const rows=samples.filter(sample=>(!Number.isFinite(sample.time) || sample.time>afterTime) &&
+    (!id || sample.id===id));
   const violations=[];
   if(!rows.length)violations.push({id,reason:'no actual contact-phase samples were exported'});
   const requireValue=(pass,sample,reason)=>{if(!pass)violations.push({id:sample.id,stage:sample.stage,time:sample.time,reason});};
   for(const sample of rows) {
+    requireValue(Number.isFinite(sample.taskStartedTime),sample,'the actual task identity is missing from the driven pose');
+    requireValue(Number.isFinite(sample.time) && sample.time>=sample.taskStartedTime,
+      sample,'the driven pose precedes its actual task or has no finite time');
     requireValue(Number.isFinite(sample.boneLengthErrorM) && sample.boneLengthErrorM<=1e-8,sample,'native bone drift exceeds 1e-8 m or is unavailable');
     requireValue(Number.isFinite(sample.footSurfaceErrorM) && sample.footSurfaceErrorM<=.00002,sample,'native foot surface drift exceeds 0.02 mm or is unavailable');
     for(const side of ['L','R'])requireValue(Number.isFinite(sample.footWorldYM?.[side]) && Math.abs(sample.footWorldYM[side])<=.003,sample,'actual '+side+' foot is outside floor tolerance of 3 mm');
     requireValue(typeof sample.supportEnabled==='boolean',sample,'actual support state is unavailable');
     requireValue(Number.isInteger(sample.handTableSampleCount) && sample.handTableSampleCount>=0,sample,'projected hand vertex count is unavailable');
     if(sample.supportEnabled && sample.handTableSampleCount>0)requireValue(Number.isFinite(sample.handTableClearanceM) && sample.handTableClearanceM>=-.003,sample,'actual hand vertices penetrate the existing tabletop by more than 3 mm');
-    requireValue(Number.isFinite(sample.bottleMaxPenetrationM) && sample.bottleMaxPenetrationM<=.005,sample,'actual hand vertices penetrate the finite bottle cylinder by more than 5 mm');
+    if(CONTACT_STAGES.includes(sample.stage))requireValue(Number.isFinite(sample.bottleMaxPenetrationM) && sample.bottleMaxPenetrationM<=.005,sample,'actual hand vertices penetrate the finite bottle cylinder by more than 5 mm');
+    for(const reason of otherSolidViolations(sample,{
+      operatedObjectId:'bottle-01',requiredCylinderId:'window-handle-01',poseMetadata:true
+    }))requireValue(false,sample,reason);
+    if(sample.stage==='rest-end')requireValue(Number.isFinite(sample.restPoseErrorRad) && sample.restPoseErrorRad<=1e-4,
+      sample,'completed native bottle recovery did not reach the original rest pose');
   }
   for(const actorId of requiredActors)for(const required of CONTACT_STAGES) {
     if(!rows.some(sample=>sample.id===actorId && sample.stage===required))violations.push({id:actorId,stage:required,reason:'required actual driven-pose sample is missing'});
   }
+  const recovery=[],taskCounts={};
+  if(requireRecovery) {
+    const tasks=new Map();
+    for(const sample of rows) {
+      const key=sample.id+':'+sample.taskStartedTime;
+      if(!tasks.has(key))tasks.set(key,[]);
+      tasks.get(key).push(sample);
+    }
+    for(const taskRows of tasks.values()) {
+      const first=taskRows[0];
+      taskCounts[first.id]=(taskCounts[first.id]||0)+1;
+      for(let index=1;index<taskRows.length;index++) {
+        if(taskRows[index].time<taskRows[index-1].time)violations.push({
+          id:first.id,taskStartedTime:first.taskStartedTime,
+          reason:'actual bottle task samples are not in chronological order'
+        });
+      }
+      for(const stage of BOTTLE_RECOVERY_STAGES) {
+        if(!taskRows.some(sample=>sample.stage===stage))
+          violations.push({id:first.id,taskStartedTime:first.taskStartedTime,stage,reason:'required actual bottle exit sample is missing'});
+      }
+      const summary={id:first.id,taskStartedTime:first.taskStartedTime};
+      for(const [name,stages] of [
+        ['withdrawal',['withdraw-start','withdraw','withdraw-end']],
+        ['rest',['rest-start','rest','rest-end']]
+      ]) {
+        const selected=taskRows.filter(sample=>stages.includes(sample.stage));
+        const transitionCount=selected.filter(sample=>sample.stage===stages[1]).length;
+        let maxSampleGapSeconds=0;
+        for(let index=1;index<selected.length;index++)maxSampleGapSeconds=Math.max(maxSampleGapSeconds,
+          selected[index].time-selected[index-1].time);
+        if(transitionCount<4 || maxSampleGapSeconds>.15)violations.push({
+          id:first.id,taskStartedTime:first.taskStartedTime,stage:name,
+          reason:'actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps',
+          transitionCount,maxSampleGapSeconds
+        });
+        summary[name]={transitionCount,maxSampleGapSeconds};
+      }
+      recovery.push(summary);
+    }
+    for(const [actorId,expected] of Object.entries(expectedTaskCounts || {})) {
+      if(taskCounts[actorId]!==expected)violations.push({
+        id:actorId,reason:'an entire expected bottle task is missing from the phase audit or duplicated',
+        expectedTaskCount:expected,actualTaskCount:taskCounts[actorId]||0
+      });
+    }
+  }
   const result={label,afterTime,accepted:violations.length===0,scope:'Measured rendered hand vertices at actual driven phases; no continuous triangle collision or finger force claim',
-    thresholds:{boneLengthErrorM:1e-8,footSurfaceErrorM:.00002,footWorldAbsoluteYM:.003,existingTablePenetrationM:.003,bottlePenetrationM:.005},
+    thresholds:{boneLengthErrorM:1e-8,footSurfaceErrorM:.00002,footWorldAbsoluteYM:.003,existingTablePenetrationM:.003,bottlePenetrationM:.005,otherSolidPenetrationM:OTHER_SOLID_PENETRATION_M},
     tableGate:'Only supportEnabled and hand vertices inside the tabletop XZ projection',
     bottleGate:'Actual finite-cylinder SDF in close, lift, transfer, lower, lower-end and verify samples',
-    requiredActors,requiredStages:CONTACT_STAGES,rows,violations};
+    otherSolidGate:'Actual full native hand and forearm against physical boxes and non-operated finite cylinders in every recorded phase and exit; window-handle-01 must be sampled',
+    requiredActors,requiredStages:CONTACT_STAGES,requireRecovery,expectedTaskCounts,taskCounts,recovery,rows,violations};
   // Preserve every measurement, including all violations, before asserting.
   put('phase-geometry-'+label+'.json',result);
   assert(rows.length>0,'At least one actual contact-phase sample is required: '+label);
   assert.equal(violations.length,0,'Actual phase geometry failed: '+JSON.stringify(violations));
-  return {sampleCount:rows.length,accepted:true,requiredActors};
+  return {sampleCount:rows.length,accepted:true,requiredActors,taskCounts,recovery};
 }
 
 const WINDOW_TARGET_DEG={open:-35,close:0};
@@ -520,13 +675,9 @@ function checkWindowContact(captured,id,label) {
   requireValue(Number.isFinite(hand?.bottleMaxPenetrationM) &&
     hand.bottleMaxPenetrationM<=WINDOW_TOLERANCES.handlePenetrationM,
     'Actual hand surface penetrates the finite handle cylinder by more than 5 mm');
-  requireValue(Number.isInteger(hand?.solidSampleCount) && hand.solidSampleCount>0,
-    'Actual hand and forearm vertices are sampled against window solids');
-  requireValue(Number.isFinite(hand?.solidMaxPenetrationM) &&
-    hand.solidMaxPenetrationM<=WINDOW_TOLERANCES.solidPenetrationM,
-    'Actual hand or forearm surface penetrates a window solid by more than 3 mm');
-  requireValue(hand?.solidParts?.hand?.sampleCount>0 && hand?.solidParts?.forearm?.sampleCount>0,
-    'Both actual hand and forearm surface samples are present');
+  for(const reason of otherSolidViolations(hand,{
+    operatedObjectId:'window-handle-01',requiredCylinderId:'bottle-01'
+  }))requireValue(false,reason);
   const result={
     label,id,accepted:violations.length===0,
     scope:'Actual native hand and forearm vertices at the captured physical interaction; no continuous triangle or finger-friction guarantee',
@@ -547,6 +698,8 @@ function checkRestErrors(errors,label) {
   return errors;
 }
 
+const WINDOW_APPROACH_STAGES=['approach-start','approach-transition','approach-end'];
+
 function auditWindowPoses(windowSnapshot,token,label,{fullSwing=false}={}) {
   const rows=windowSnapshot.audit?.poses?.filter(pose=>pose.taskToken===token);
   assert(Array.isArray(rows) && rows.length>0,'Actual driven window poses are exported: '+label);
@@ -565,18 +718,16 @@ function auditWindowPoses(windowSnapshot,token,label,{fullSwing=false}={}) {
     requireValue(pose.hingeConstraintCount===1,pose,'Permanent hinge is absent');
     requireValue(Number.isInteger(pose.gripConstraintCount) && pose.gripConstraintCount>=0 && pose.gripConstraintCount<=1,
       pose,'Temporary grip count is invalid');
-    requireValue(Number.isInteger(pose.solidSampleCount) && pose.solidSampleCount>0,
-      pose,'Actual native surface/solid samples are absent');
-    requireValue(pose.solidParts?.hand?.sampleCount>0 && pose.solidParts?.forearm?.sampleCount>0,
-      pose,'Actual hand and forearm samples are both required');
-    requireValue(Number.isFinite(pose.solidMaxPenetrationM) &&
-      pose.solidMaxPenetrationM<=WINDOW_TOLERANCES.solidPenetrationM,
-      pose,'Native hand/forearm penetrates an actual window/table solid by more than 3 mm');
+    for(const reason of otherSolidViolations(pose,{
+      operatedObjectId:'window-handle-01',requiredCylinderId:'bottle-01',poseMetadata:true
+    }))requireValue(false,pose,reason);
     if(pose.heldBy===pose.id) {
       requireValue(pose.reachClamped===false,pose,'Actual native window reach was clamped');
       requireValue(Number.isFinite(pose.contactErrorM) &&
         pose.contactErrorM<WINDOW_TOLERANCES.handContactErrorM,
         pose,'Actual palm/handle separation exceeds 25 mm');
+    }
+    if(pose.heldBy===pose.id || WINDOW_APPROACH_STAGES.includes(pose.stage)) {
       requireValue(Number.isFinite(pose.maxHandlePenetrationM) &&
         pose.maxHandlePenetrationM<=WINDOW_TOLERANCES.handlePenetrationM,
         pose,'Actual hand penetrates the finite handle cylinder by more than 5 mm');
@@ -590,6 +741,53 @@ function auditWindowPoses(windowSnapshot,token,label,{fullSwing=false}={}) {
   for(const stage of ['contact','release','withdraw-start','withdraw-end','rest-start','rest']) {
     if(!rows.some(pose=>pose.stage===stage))violations.push({stage,reason:'Required actual driven phase is absent'});
   }
+  // These callers audit tasks that reached real handle contact, including
+  // mid-swing cancellation. A cancellation before contact has no invented end.
+  const approach=rows.filter(pose=>WINDOW_APPROACH_STAGES.includes(pose.stage));
+  for(const stage of WINDOW_APPROACH_STAGES) {
+    if(!approach.some(pose=>pose.stage===stage))violations.push({
+      stage,reason:'Actual window approach before contact lacks a required surface sample'
+    });
+  }
+  const approachStart=approach.find(pose=>pose.stage==='approach-start');
+  const approachEnd=approach.find(pose=>pose.stage==='approach-end');
+  const approachTransitionCount=approach.filter(pose=>pose.stage==='approach-transition').length;
+  let maxApproachSampleGapSeconds=0,maxApproachIKHandErrorM=null;
+  for(let index=0;index<approach.length;index++) {
+    const pose=approach[index],motion=pose.approach;
+    requireValue(pose.phase==='approach' && pose.gripConstraintCount===0 && pose.heldBy!==pose.id,
+      pose,'Approach evidence must precede actual handle attachment');
+    requireValue(Number.isFinite(pose.time) && Number.isFinite(motion?.elapsed) && motion.elapsed>=0,
+      pose,'Actual approach time is missing');
+    if(pose.stage==='approach-start') {
+      requireValue(motion?.elapsed===0,pose,'Approach start must preserve the actual initial pose at zero elapsed time');
+    }
+    // A segment may interpolate native local joint rotations without issuing
+    // an IK target. Preserve its raw metadata; do not invent a requested palm
+    // or constrain the producer to an unaccepted candidate's segment names.
+    if(Array.isArray(motion?.requestedPalm) && motion.requestedPalm.length===3 &&
+      motion.requestedPalm.every(Number.isFinite) && Number.isFinite(pose.handErrorM))
+      maxApproachIKHandErrorM=Math.max(maxApproachIKHandErrorM??0,pose.handErrorM);
+    if(approachStart && Number.isFinite(motion?.elapsed))requireValue(
+      Math.abs(pose.time-approachStart.time-motion.elapsed)<1e-6,
+      pose,'Approach elapsed time disagrees with the same task world-time interval');
+    if(index>0) {
+      const gap=pose.time-approach[index-1].time;
+      requireValue(Number.isFinite(gap) && gap>=0,pose,'Approach samples are not chronologically ordered');
+      maxApproachSampleGapSeconds=Math.max(maxApproachSampleGapSeconds,gap);
+    }
+  }
+  if(approachTransitionCount<4 || maxApproachSampleGapSeconds>.15)violations.push({
+    reason:'Actual window approach lacks intermediate surface samples at at most 0.15 second gaps',
+    approachTransitionCount,maxApproachSampleGapSeconds
+  });
+  if(approachStart && approachEnd) {
+    requireValue(rows.indexOf(approachStart)<rows.indexOf(approachEnd) &&
+      rows.indexOf(approachEnd)<rows.findIndex(pose=>pose.stage==='contact'),approachEnd,
+      'Actual approach start, end and handle contact are not in causal order');
+  }
+  const approachDurationSeconds=approachStart && approachEnd?approachEnd.time-approachStart.time:null;
+  const approachSegments=[...new Set(approach.map(pose=>pose.approach?.segment).filter(value=>typeof value==='string'))];
   const recovery=rows.filter(pose=>['rest-start','rest-transition','rest'].includes(pose.stage));
   const recoveryTransitionCount=recovery.filter(pose=>pose.stage==='rest-transition').length;
   if(recoveryTransitionCount<4)violations.push({reason:'Native rest recovery lacks intermediate surface samples'});
@@ -624,8 +822,9 @@ function auditWindowPoses(windowSnapshot,token,label,{fullSwing=false}={}) {
   }
   const result={
     label,taskToken:token,accepted:violations.length===0,fullSwing,
-    scope:'Actual native driven poses at contact, approximately every 5 degrees, release, and approximately every 0.1 seconds of withdrawal and native rest recovery; no continuous triangle-collision guarantee',
+    scope:'Actual native hand/forearm against physical boxes and non-operated cylinders during approach, contact, approximately every 5 degrees, release, and approximately every 0.1 seconds of approach, withdrawal and native rest recovery; operated-handle hand SDF uses the unchanged 5 mm gate during approach and holding; no continuous triangle-collision guarantee',
     thresholds:WINDOW_TOLERANCES,rows,swingCount,maxSampleAngleGapDeg,
+    approachTransitionCount,maxApproachSampleGapSeconds,approachDurationSeconds,approachSegments,maxApproachIKHandErrorM,
     withdrawalTransitionCount,maxWithdrawalSampleGapSeconds,
     recoveryTransitionCount,maxRecoverySampleGapSeconds,violations
   };
@@ -633,6 +832,7 @@ function auditWindowPoses(windowSnapshot,token,label,{fullSwing=false}={}) {
   put(file,result);
   assert.equal(violations.length,0,'Actual along-path window geometry failed: '+JSON.stringify(violations));
   return {file,taskToken:token,accepted:true,sampleCount:rows.length,swingCount,maxSampleAngleGapDeg,
+    approachTransitionCount,maxApproachSampleGapSeconds,approachDurationSeconds,approachSegments,maxApproachIKHandErrorM,
     withdrawalTransitionCount,maxWithdrawalSampleGapSeconds,
     recoveryTransitionCount,maxRecoverySampleGapSeconds};
 }
@@ -889,6 +1089,20 @@ async function contactTests({firstOnly=false}={}) {
       checkActorResourceExclusion(grip.snapshot,'bottle contact '+id);
       const feet=checkFeetAndBones(grip.actorDiagnostics,'contact-'+id);
       const hand=grip.actorDiagnostics.find(actor=>actor.id===id)?.diagnostics;
+      const otherViolations=otherSolidViolations(hand,{
+        operatedObjectId:'bottle-01',requiredCylinderId:'window-handle-01'
+      });
+      const otherSolids={
+        operatedObjectId:'bottle-01',requiredCylinderId:'window-handle-01',
+        maximumAllowedPenetrationM:OTHER_SOLID_PENETRATION_M,
+        accepted:otherViolations.length===0,violations:otherViolations,
+        solidMaxPenetrationM:hand?.solidMaxPenetrationM,
+        solidSampleCount:hand?.solidSampleCount,solidParts:hand?.solidParts,
+        solidByBox:hand?.solidByBox,solidByCylinder:hand?.solidByCylinder,
+        solidCylinders:hand?.solidCylinders,solidDeepest:hand?.solidDeepest,
+        solidDiagnosticScope:hand?.solidDiagnosticScope
+      };
+      put('other-solids-contact-'+id+'.json',otherSolids);
       const bottleGeometry={measured:true,accepted:Number.isFinite(hand?.bottleMaxPenetrationM) && hand.bottleMaxPenetrationM<=.005,
         maximumAllowedPenetrationM:.005,definition:hand?.geometricDiagnosticScope,
         maxPenetrationM:hand?.bottleMaxPenetrationM,minimumSignedDistanceM:hand?.bottleMinimumSignedDistanceM,
@@ -906,22 +1120,25 @@ async function contactTests({firstOnly=false}={}) {
         'Held hand penetrates the actual tabletop by more than 3 mm: '+id+' / '+hand.handTableClearanceM);
       assert(hand.bottleSampleCount>0 && Number.isFinite(hand.bottleMaxPenetrationM),'Actual finite-cylinder hand geometry was measured');
       assert(hand.bottleMaxPenetrationM<=.005,'Actual rendered hand penetrates the bottle by more than 5 mm: '+id+' / '+hand.bottleMaxPenetrationM);
+      assert.equal(otherViolations.length,0,'Actual held-hand other-solid geometry failed: '+JSON.stringify(otherViolations));
       const contactGeometry=checkAuditGeometry(grip.snapshot,'contact-'+id,{afterTime:geometryStart,id});
       await pause(false);
-      await waitFor('wait for actual placement: '+id,id=>{
+      await waitFor('wait for actual placement and native recovery: '+id,id=>{
         const app=window.__NPC_OBSERVATION__,a=app.snapshot().agents.find(a=>a.id===id);
-        return ['done','failed','cancelled'].includes(a?.phase) || app.errors.length;
+        return (['done','failed','cancelled'].includes(a?.phase) && !a?.recovery) || app.errors.length;
       },id,{timeout:TASK_MS,polling:100});
       await pause(true);
       const final=await evidence('placed-'+id);
       const result=final.snapshot.agents.find(a=>a.id===id).result;
       const finalFeet=checkFeetAndBones(final.actorDiagnostics,'placed-'+id);
-      const phaseGeometry=checkAuditGeometry(final.snapshot,'placed-'+id,{afterTime:geometryStart,id,requiredActors:[id]});
+      const phaseGeometry=checkAuditGeometry(final.snapshot,'placed-'+id,{
+        afterTime:geometryStart,id,requiredActors:[id],requireRecovery:true,expectedTaskCounts:{[id]:1}
+      });
       assert.equal(result?.result,'completed','World result must confirm placement');
       assert.equal(final.snapshot.object.heldBy,null);assert.equal(final.snapshot.object.constraintCount,0);
       assert(final.snapshot.object.insideTarget && final.snapshot.object.supported && final.snapshot.object.settled,'Object actually released and stable on support');
       return {contactErrorM:agent.contactErrorM,result,object:final.snapshot.object,feet,finalFeet,
-        handDiagnostics:hand,bottleGeometry,contactGeometry,phaseGeometry};
+        handDiagnostics:hand,bottleGeometry,otherSolids,contactGeometry,phaseGeometry};
     });
     report.contactActorsTested.push(id);checkpoint('contact actor completed: '+id);
   }
@@ -936,7 +1153,12 @@ async function fullSuite() {
     await pause(true);
     const result=await evidence('suite-final');put('suite.json',result.verification || {});
     checkFeetAndBones(result.actorDiagnostics,'suite-final');
-    report.suitePhaseGeometry=checkAuditGeometry(result.snapshot,'suite-final',{afterTime:geometryStart,requiredActors:['A','B','C']});
+    report.suitePhaseGeometry=checkAuditGeometry(result.snapshot,'suite-final',{
+      afterTime:geometryStart,requiredActors:['A','B','C'],requireRecovery:true,
+      // Six unchanged bottle cases: three individual tasks, A contention,
+      // A cancellation then B completion, and A support-removal failure.
+      expectedTaskCounts:{A:4,B:2,C:1}
+    });
     await page.click('[data-camera="all"]');await screenshot('suite-final');
     assert.equal(result.errors.length,0);assert.equal(result.verification?.completed,true);
     assert(result.verification.tests.length>=12,'R02 retains six old cases and includes six window cases');
@@ -1116,8 +1338,9 @@ async function identityInteraction() {
     await page.click('#npc-plan');await pause(false);
     await waitFor('A sorts, B observes ownership and C confirms the result',()=>{
       const app=window.__NPC_OBSERVATION__,s=app.snapshot();
-      return app.errors.length || (s.agents.find(a=>a.id==='A')?.result?.result==='completed' &&
-        s.agents.find(a=>a.id==='B')?.result?.result==='already-sorted' && s.review.checked);
+      const a=s.agents.find(actor=>actor.id==='A'),b=s.agents.find(actor=>actor.id==='B');
+      return app.errors.length || (a?.result?.result==='completed' && !a.recovery &&
+        b?.result?.result==='already-sorted' && !b.recovery && s.review.checked);
     },{},{timeout:TASK_MS,polling:100});
     await pause(true);
     const plan=await evidence('identity-plan');
@@ -1127,7 +1350,9 @@ async function identityInteraction() {
     assert.equal(plan.snapshot.review.checked,true);
     assert(plan.snapshot.events.some(event=>event.type==='review-confirmed' && event.actor==='C'),'C actually confirmed the shared world result');
     const feet=checkFeetAndBones(plan.actorDiagnostics,'identity-plan');
-    const geometry=checkAuditGeometry(plan.snapshot,'identity-plan',{afterTime:geometryStart,requiredActors:['A']});
+    const geometry=checkAuditGeometry(plan.snapshot,'identity-plan',{
+      afterTime:geometryStart,requiredActors:['A'],requireRecovery:true,expectedTaskCounts:{A:1}
+    });
     await page.click('[data-camera="all"]');await screenshot('identity-plan');
     const targetRevisionBefore=plan.snapshot.targetRevision;
     await page.click('#npc-target');await pause(false);

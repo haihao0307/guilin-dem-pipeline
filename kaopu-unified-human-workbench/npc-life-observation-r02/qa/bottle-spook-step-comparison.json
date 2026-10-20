@@ -1,0 +1,253 @@
+{
+  "schema": "npc-bottle-spook-step-comparison/1",
+  "recordedAt": "2026-10-20T07:37:37.733Z",
+  "evidenceOrigin": "Read-only in-memory experiment executed before the production correction; original tool output chunk 19b6cb.",
+  "baselineSourceSha256": "862bbc28dc6a85f26eacdb605328e8d27a9bdd5ec6582fc0700a0602bf33bbda",
+  "windowSourceSha256": "7382c1b5af96bd017ceec9bbae2eb1f41473145437bca459d47b668109c53354",
+  "cannonSourceSha256": "f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c",
+  "scope": "TEST_FIXTURE_ONLY commanded palm adapters; actual production LifeWorld/Cannon bodies, constraints, table, bottle and window. No native skin is measured here.",
+  "nativeSkinVerified": false,
+  "browserVerified": false,
+  "productionFilesModifiedByExperiment": false,
+  "bodyPoseWrittenByExperiment": false,
+  "method": {
+    "baseline": "Run unmodified production LifeWorld at fixed 1/120 s. Lock equations retain Cannon constructor setSpookParams(1e7,4,1/60).",
+    "candidate": "Only for the isolated world instance, wrap world.step: immediately before the original physical step, setSpookParams(1e7,4,h) on all six existing Lock equations. No change to the original force/torque impulse caps, targets, phase times, actor input or body pose.",
+    "fixture": "handAnchor returns the last target; setReach copies the requested target. No IK, bones or skin. Initial palm [0,1.05,-0.15].",
+    "measurement": "After each production tick while gripped, transform the actual fixture palm to the bottle local frame and evaluate exact finite local-Y cylinder SDF; retain maximum negative distance. Also retain equation multipliers and actual released goal.",
+    "primaryTarget": [
+      0,
+      1.0908,
+      0.44
+    ],
+    "alternateTarget": [
+      -0.06,
+      1.0908,
+      0.4
+    ],
+    "noClaim": "Palm penetration is not the maximum hand-skin penetration and is not a native-human acceptance result."
+  },
+  "cases": [
+    {
+      "result": "completed",
+      "duration": 7.5000000000001625,
+      "finalGoal": true,
+      "stiffness": 10000000,
+      "relaxation": 4,
+      "forceLimitPerAxisN": 24,
+      "torqueLimitPerAxisNm": 0.8,
+      "physicsDt": 0.008333333333333333,
+      "variant": "original_60hz_coefficients",
+      "region": "primary",
+      "coefficientDt": 0.016666666666666666,
+      "maxPalmCylinderPenetrationM": 0.004736275722324556,
+      "peak": {
+        "phase": "transfer",
+        "time": 4.433333333333343,
+        "phaseTime": 0.8583333333333327,
+        "palm": [
+          0.0002722886849882723,
+          1.2304542420421734,
+          0.3777443783150814
+        ],
+        "contact": [
+          0.0003149116054519248,
+          1.2303970236810355,
+          0.3730082911114832
+        ],
+        "bottlePosition": [
+          0.00005652660481992651,
+          1.2303965233002312,
+          0.4050072479216836
+        ],
+        "bottleQuaternion": [
+          0.000007801107933426083,
+          -0.004037298572340562,
+          0.000004311228072723851,
+          0.9999918500371859
+        ],
+        "bottleVelocity": [
+          -0.0007302007519359112,
+          0.0009272305346823689,
+          0.08113696573741105
+        ],
+        "equation": {
+          "a": 14.117647058823529,
+          "b": 0.9411764705882353,
+          "eps": 0.00008470588235294117
+        }
+      },
+      "maxGripAxisForceN": 2.243580938592694,
+      "maxGripAxisTorqueNm": 0.03589990715217863,
+      "maxHoldErrorM": 0.011963080610124773
+    },
+    {
+      "result": "completed",
+      "duration": 7.5000000000001625,
+      "finalGoal": true,
+      "stiffness": 10000000,
+      "relaxation": 4,
+      "forceLimitPerAxisN": 24,
+      "torqueLimitPerAxisNm": 0.8,
+      "physicsDt": 0.008333333333333333,
+      "variant": "original_60hz_coefficients",
+      "region": "alternate",
+      "coefficientDt": 0.016666666666666666,
+      "maxPalmCylinderPenetrationM": 0.0017878296293527482,
+      "peak": {
+        "phase": "transfer",
+        "time": 4.433333333333343,
+        "phaseTime": 0.8583333333333327,
+        "palm": [
+          -0.033814758769119366,
+          1.2304542420421734,
+          0.35501968001234296
+        ],
+        "contact": [
+          -0.029715831726552074,
+          1.2303970236810355,
+          0.352987795556873
+        ],
+        "bottlePosition": [
+          -0.029974216727004836,
+          1.2303965233002312,
+          0.3849867523670748
+        ],
+        "bottleQuaternion": [
+          0.000007801107933409294,
+          -0.00403729856953991,
+          0.000004311228072745686,
+          0.9999918500371973
+        ],
+        "bottleVelocity": [
+          -0.07022136390838511,
+          0.0009272305346823551,
+          0.034809523633878715
+        ],
+        "equation": {
+          "a": 14.117647058823529,
+          "b": 0.9411764705882353,
+          "eps": 0.00008470588235294117
+        }
+      },
+      "maxGripAxisForceN": 2.243580938592694,
+      "maxGripAxisTorqueNm": 0.03589990715217863,
+      "maxHoldErrorM": 0.01196308061012477
+    },
+    {
+      "result": "completed",
+      "duration": 7.5000000000001625,
+      "finalGoal": true,
+      "stiffness": 10000000,
+      "relaxation": 4,
+      "forceLimitPerAxisN": 24,
+      "torqueLimitPerAxisNm": 0.8,
+      "physicsDt": 0.008333333333333333,
+      "variant": "actual_120hz_coefficients",
+      "region": "primary",
+      "coefficientDt": 0.008333333333333333,
+      "maxPalmCylinderPenetrationM": 0.0020488048629174055,
+      "peak": {
+        "phase": "transfer",
+        "time": 4.400000000000008,
+        "phaseTime": 0.8249999999999995,
+        "palm": [
+          0.00029677589230043215,
+          1.2304231476660208,
+          0.37502345849210456
+        ],
+        "contact": [
+          0.00031521359486554257,
+          1.2303980259132978,
+          0.3729747352644887
+        ],
+        "bottlePosition": [
+          0.000056828594233587506,
+          1.2303975254772146,
+          0.4049736920746882
+        ],
+        "bottleQuaternion": [
+          0.000007801971658764963,
+          -0.0040372985723436654,
+          0.000004311231559869296,
+          0.9999918500371792
+        ],
+        "bottleVelocity": [
+          -0.0007369431227184761,
+          0.0009357860359266723,
+          0.0818861508150956
+        ],
+        "equation": {
+          "a": 28.235294117647058,
+          "b": 0.9411764705882353,
+          "eps": 0.0003388235294117647
+        }
+      },
+      "maxGripAxisForceN": 2.2457436883518684,
+      "maxGripAxisTorqueNm": 0.03593072764621116,
+      "maxHoldErrorM": 0.006053022020365617
+    },
+    {
+      "result": "completed",
+      "duration": 7.5000000000001625,
+      "finalGoal": true,
+      "stiffness": 10000000,
+      "relaxation": 4,
+      "forceLimitPerAxisN": 24,
+      "torqueLimitPerAxisNm": 0.8,
+      "physicsDt": 0.008333333333333333,
+      "variant": "actual_120hz_coefficients",
+      "region": "alternate",
+      "coefficientDt": 0.008333333333333333,
+      "maxPalmCylinderPenetrationM": 0.000843148218220624,
+      "peak": {
+        "phase": "transfer",
+        "time": 4.400000000000008,
+        "phaseTime": 0.8249999999999995,
+        "palm": [
+          -0.031459892533795976,
+          1.2304231476660208,
+          0.3538523462080403
+        ],
+        "contact": [
+          -0.029686790249338044,
+          1.2303980259132978,
+          0.35297339936842315
+        ],
+        "bottlePosition": [
+          -0.029945175249757087,
+          1.2303975254772146,
+          0.38497235617862435
+        ],
+        "bottleQuaternion": [
+          0.000007801971658745016,
+          -0.004037298569016844,
+          0.000004311231559895241,
+          0.9999918500371927
+        ],
+        "bottleVelocity": [
+          -0.07086975884896302,
+          0.0009357860359266584,
+          0.035130940332542784
+        ],
+        "equation": {
+          "a": 28.235294117647058,
+          "b": 0.9411764705882353,
+          "eps": 0.0003388235294117647
+        }
+      },
+      "maxGripAxisForceN": 2.2457436883518684,
+      "maxGripAxisTorqueNm": 0.03593072764621116,
+      "maxHoldErrorM": 0.006053022020365617
+    }
+  ],
+  "interpretation": {
+    "coefficientMismatchConfirmed": true,
+    "primaryPalmPeakReductionM": 0.0026874708594071504,
+    "forceBoundsPreserved": true,
+    "allFixtureTasksCompleted": true,
+    "nativeEvidenceReference": "qa/native-cross-object-production-contact-peak.json",
+    "nativeComparison": "Baseline fixture peak time/velocity/palm closely reproduce the actual native primary transfer peak; native full-skin peak is about 5.73 mm, whereas the fixture only measures the palm anchor.",
+    "requiredNextGate": "Run actual production native hand/forearm surface verification and independent browser checks with unchanged 5 mm operated-cylinder and 3 mm other-solid tolerances."
+  }
+}

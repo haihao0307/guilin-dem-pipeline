@@ -1,7 +1,7 @@
 {
   "schema": "kaopu/bounded-interaction-root-cause-review@1",
   "taskId": "NPC-LIFE-OBSERVATION-R02-20261020",
-  "state": "SOURCE_NUMERICAL_RECHECK_PASSED_BROWSER_PENDING",
+  "state": "CURRENT_NATIVE_PASSED_BROWSER_VISUAL_AND_PUBLIC_PENDING",
   "productionCandidatePublished": false,
   "gatesUnchanged": true,
   "findings": [
@@ -120,6 +120,179 @@
         "native-window-cancel-early.json",
         "native-window-cancel-early-support-off.json"
       ]
+    },
+    {
+      "id": "bottle-contact-camera-window-occlusion",
+      "status": "CAMERA_CORRECTED_CURRENT_HEAD_BROWSER_AND_FRAME_RECHECK_PENDING",
+      "cause": "The inherited R01 contact camera lies on the far side of the newly introduced R02 window frame. Actual contact-A/B/C images show the near vertical frame and table edge hiding the bottle and gripping palm, even though the motion and data gates pass.",
+      "evidence": {
+        "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "workflowRun": 39381766332,
+        "artifactId": 12246661955,
+        "previewSHA256": "452e2750b8c16d362db5b48f067f59aa761df9a93e0433c4ccd15da70fdb96d7",
+        "programmaticChecksPassed": 13,
+        "builtInCasesPassed": 12,
+        "visualAcceptance": false,
+        "sourceEvidence": [
+          "audit-r02-suite-review.json",
+          "root-r02-suite-review.json"
+        ]
+      },
+      "correction": "Move only the bottle-contact observation camera to the open left side and raise its elevation. Keep all humans, object geometry, materials, visibility, poses, physics and acceptance thresholds unchanged. Use the measured actual source-to-target release path to choose the left-side angle, including extended fingers while opening the grip at the target.",
+      "oldCamera": {
+        "position": [
+          0.7,
+          1.38,
+          1.65
+        ],
+        "target": [
+          0.02,
+          1.07,
+          0.34
+        ]
+      },
+      "newCamera": {
+        "position": [
+          -1.05,
+          1.6,
+          0.9
+        ],
+        "target": [
+          0.045,
+          1.12,
+          0.4
+        ]
+      },
+      "requiredRecheck": "Full existing same-source browser suite, explicit independent inspection of A/B/C contact screenshots, and exact public URL browser acceptance before delivery."
+    },
+    {
+      "id": "non-operated-window-handle-omitted",
+      "status": "FIXED_CURRENT_PRODUCTION_NATIVE_RECHECK_PASSED",
+      "cause": "The first R02 bottle placement target at x=0.10,z=0.44 left the open native index finger inside the separate closed window handle. The inherited bottle audit measured the operated bottle and tabletop, and window.solidBoxes excluded cylinders. Numeric success did not imply clearance against this omitted physical object.",
+      "evidence": {
+        "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "sourceEvidence": "bottle-window-handle-first-failure.json",
+        "witnessKind": "Actual browser-rendered finger surface anchors; not a whole-hand maximum",
+        "anchorPenetrationM": {
+          "A": 0.012743988336635797,
+          "B": 0.015164396904732601,
+          "C": 0.015042936674102614
+        }
+      },
+      "correction": "Sample actual weighted hand and forearm surface vertices against oriented finite non-operated cylinders, include them in the unchanged other-solid 3mm gate, and preserve per-object sample counts, transforms, dimensions and witnesses. Bottle tasks include the actual window handle; window tasks include the actual bottle. Keep the operated cylinder separate under the existing assisted-contact contract. Record bottle withdrawal and rest intermediate and terminal poses by task start time. Move the two table targets outside the window handle release envelope without altering native bones or stations.",
+      "firstLayoutFailure": {
+        "sourceEvidence": "native-cross-object-first-layout-failure.json",
+        "target": [
+          -0.08,
+          1.0908,
+          0.44
+        ],
+        "actor": "A single",
+        "maximumPalmErrorM": 0.011129,
+        "reachClamped": true,
+        "decision": "Reject this otherwise collision-clear target because the native low reach is clamped; do not adjust bone lengths or pose-error gates."
+      },
+      "candidateTargets": {
+        "initial": [
+          0,
+          1.0908,
+          0.44
+        ],
+        "alternate": [
+          -0.06,
+          1.0908,
+          0.4
+        ]
+      },
+      "requiredRecheck": "Full current-production native paths at both targets and all supported stations; strengthened full browser suite and exact public browser verification. Prior 29b3 programmatic/public passes remain historical and do not satisfy this new object-coverage check.",
+      "measuredCurrent": {
+        "reports": [
+          "native-cross-object-production.json",
+          "native-window-cross-object.json",
+          "native-window-cancel-cross-object.json"
+        ],
+        "bottlePaths": 15,
+        "windowCycles": 6,
+        "windowCancellations": 8,
+        "allPassed": true,
+        "maximumOtherSolidPenetrationM": 0,
+        "sampleStepSeconds": 0.008333333333333333
+      }
+    },
+    {
+      "id": "bottle-approach-edge-and-spook-time-step",
+      "status": "FIXED_CURRENT_PRODUCTION_NATIVE_15_PATHS_PASSED",
+      "cause": "Every-1/120s native production sampling found two peaks missed by phase-only observations: the straight low open-hand approach grazed the table edge; during fastest transfer, generic LockConstraint equations retained Cannon 1/60s SPOOK coefficients while the actual world ran at 1/120s. The latter produced a moving-palm lead into the real bottle.",
+      "evidence": {
+        "productionWorldBeforeCorrectionSHA256": "862bbc28dc6a85f26eacdb605328e8d27a9bdd5ec6582fc0700a0602bf33bbda",
+        "sourceEvidence": [
+          "native-cross-object-live-first-failure.json",
+          "native-cross-object-production-contact-peak.json",
+          "bottle-spook-step-comparison.json"
+        ],
+        "worstApproachTablePenetrationM": 0.011424488881464495,
+        "exampleHeldBottlePenetrationM": 0.0057319115634266,
+        "heldPeakTimeSeconds": 4.433333333333333,
+        "heldPeakStage": "transfer",
+        "iterationParentHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "sourceScope": "The numerical failure belongs to the explicitly hashed local production world derived from the first browser candidate; it is not claimed to be a measurement of that earlier commit."
+      },
+      "correction": "Keep the original approach endpoints and 1.4s duration, adding a 40mm-peak vertical arc 4*smooth(u)*(1-smooth(u)). Set each existing grip equation to the original stiffness 1e7 and relaxation 4 with the actual dt before solving. Preserve the 24N/axis and 0.8Nm/axis limits and all native geometry; no physical bottle transform is overwritten.",
+      "measuredCurrent": {
+        "sourceEvidence": "native-cross-object-production.json",
+        "worldSHA256": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+        "productionPathsPassed": 15,
+        "productionPathsTotal": 15,
+        "sampleStepSeconds": 0.008333333333333333,
+        "maxOtherSolidPenetrationM": 0,
+        "maxHeldCylinderPenetrationM": 0.0030625321710137272,
+        "finalRestPoseErrorRad": 0
+      },
+      "specificRemainingGate": "Current complete R07 browser and public acceptance still required."
+    },
+    {
+      "id": "opened-window-precontact-handle-crossing",
+      "status": "FIXED_CURRENT_PRODUCTION_NATIVE_RECHECK_PASSED",
+      "cause": "When closing an already-open leaf, a direct diagonal path from native rest to the handle sent open fingers through the handle before palm contact. The previous held-contact gate did not cover this pre-contact interval.",
+      "evidence": {
+        "sourceEvidence": "native-window-approach-first-failure.json",
+        "windowSourceBeforeCorrectionSHA256": "7382c1b5af96bd017ceec9bbae2eb1f41473145437bca459d47b668109c53354",
+        "precontactHandlePenetrationM": {
+          "A": 0.028658761,
+          "B": 0.012197351,
+          "C": 0.020348574
+        },
+        "otherBottlePenetrationM": 0,
+        "scope": "Actual native body surface at every physics step; these own-handle approach witnesses are separate from the passed non-operated bottle check."
+      },
+      "requiredRecheck": "Complete current canonical R07 browser rendering/UI and strengthened approach-inclusive verification, actual frame inspection, and exact public browser verification.",
+      "rejectedNormalOnlyCandidate": {
+        "sourceEvidence": "native-window-pregrasp-candidate.json",
+        "actor": "C",
+        "windowAngleDeg": -35,
+        "ownHandleMaxPenetrationM": 0,
+        "otherSolid": "leaf-left-rail",
+        "forearmVertex": 5058,
+        "maximumOtherSolidPenetrationM": 0.016954727,
+        "decision": "Reject the normal-only approach even though it clears the handle, because the real forearm intersects the physical rail. Preserve the same 3mm other-solid gate."
+      },
+      "correction": "Reverse the already measured release path: use the actual table safe plane and actual handle normal to derive a lowered prepose, interpolate native local skin-rotation deltas from the real initial pose to that prepose, then follow the exit segment in reverse to the live handle. Preserve original matrices, finite reach and actual approach surface evidence; do not write the window body transform.",
+      "measuredCurrent": {
+        "windowSourceSHA256": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+        "actorSourceSHA256": "e33ce703703cfb418004c4931452ff91701dca593dad5c96ab787b855c38c7be",
+        "reports": [
+          "native-window-cross-object.json",
+          "native-window-cancel-cross-object.json"
+        ],
+        "completedOpenClosePaths": 6,
+        "completedCancelPaths": 8,
+        "allPassed": true,
+        "approachClampedSamples": 0,
+        "maxFullCycleHandlePenetrationM": 0.0023189731187537796,
+        "maxCancellationHandlePenetrationM": 0.0034624726524529748,
+        "maxOtherSolidPenetrationM": 0,
+        "finalRestPoseErrorRad": 0
+      }
     }
   ],
   "probeContractCorrection": {
@@ -131,22 +304,53 @@
     "originalFrozenBrowserOtherSolidLimitM": 0.003,
     "independentVerifierSHA256": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b",
     "decision": "Preserve the original probe output, align its cylinder metric to the already frozen contract, and keep production quintic withdrawal and independent thresholds unchanged. Browser cylinder assertions apply to actual grip-contact samples; this numerical probe additionally reports the post-release inertial cylinder interaction.",
-    "dynamicObservation": "After mid-swing cancellation the real unmotorized leaf retained angular velocity and moved approximately 9 degrees during withdrawal; all sampled hand/forearm versus other actual solids remained clear."
+    "dynamicObservation": "After mid-swing cancellation the real unmotorized leaf retained angular velocity and moved approximately 9 degrees during withdrawal; all sampled hand/forearm versus other actual solids remained clear.",
+    "scope": "Historical first-candidate contract correction; the corrected candidate additionally checks pre-contact handle samples under the same 5mm cylinder threshold."
   },
   "finalSourceHashes": {
-    "ActorAdapter.mjs": "f7c1604782811d7742c85820c42dcb383b21bb8dea215f7d289b24a9e10ea39d",
+    "ActorAdapter.mjs": "e33ce703703cfb418004c4931452ff91701dca593dad5c96ab787b855c38c7be",
     "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
     "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1",
-    "LifeWorld.mjs": "ce3489e4539787010aac078ca128b5cd7e11ac24e75bd3360808bfc40d82386b",
-    "WindowInteraction.mjs": "97284a3cefc521cdfc2a7d8bae1e263f7328e5a14dcf3cde0ef582e415b84ce7",
-    "verify-browser.cjs": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b"
+    "LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+    "WindowInteraction.mjs": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+    "RenderQueue.mjs": "01d4694cabe836af6b15b1f915fc4992358756e5e702e5d0caf782d5416c6c4c",
+    "Workbench.mjs": "b12c6c317c69e1f7e60bba88855f17195040ca8cd91c5f17c33294785f60e022",
+    "verify-browser.cjs": "95a31e78656d4a05d70c0b38767395175247f485fe34f49359d043e65323e628",
+    "build.cjs": "36bb2a6eec88ac42505c6bc88ad9d8469c27539f8d8a3d92b7057d9c3079d225",
+    "prepare.cjs": "e3d50873b1f59e2632469176bf9dcdef8f99dec3586597a9bfa9655380d365f5",
+    "wait-public.cjs": "b8be69123372875a8466b44f0d03d9584747480c2c14a88cfd22a278570baf5b",
+    "styles.css": "f6134588c7b78ba3b466123aff8bde1c47a045315ff75a49300f9813840ac59f"
   },
   "finalCurrentSourceReports": [
-    "native-frame-recovery.json",
-    "native-withdraw-clearance-actual.json",
-    "native-window-cancel-dynamic.json",
-    "native-window-cancel-early.json",
-    "native-window-cancel-early-support-off.json",
-    "native-bottle-recovery.json"
-  ]
+    "native-cross-object-production.json",
+    "native-window-cross-object.json",
+    "native-window-cancel-cross-object.json",
+    "window-causal-report.json",
+    "window-host-integration-report.json",
+    "r01-causal-regression-report.json",
+    "audit-window-precontact-contract.json",
+    "native-corrected-production-summary.json"
+  ],
+  "updatedAt": "2026-10-20T08:04:04.370962+00:00",
+  "coverageExpanded": [
+    "actual non-operated cylinders",
+    "bottle withdrawal and rest evidence",
+    "window approach surface and actual start/intermediate/end timing"
+  ],
+  "historicalCoreReports": {
+    "reports": [
+      "native-frame-recovery.json",
+      "native-withdraw-clearance-actual.json",
+      "native-window-cancel-dynamic.json",
+      "native-window-cancel-early.json",
+      "native-window-cancel-early-support-off.json",
+      "native-bottle-recovery.json"
+    ],
+    "scope": "Preserved source-bound pre-correction reports. NativeBinding and NativeRig remain byte-identical; current motion is separately checked by the reports below. These older reports are not relabeled as current-source executions."
+  },
+  "localBuildPreflight": {
+    "passed": true,
+    "builtAt": "2026-10-20T08:01:02.550Z",
+    "scope": "Local syntax, dependency and canonical-host build only; not public or browser acceptance."
+  }
 }

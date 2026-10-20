@@ -30,6 +30,7 @@ export const WINDOW_DIM=freeze({
   radius:.032,height:.14,handleLocal:sub(handleCentre,leafCentre),
   handleAnchorLocal:sub(add(handleCentre,[0,0,-.032]),leafCentre),
   maxGripForcePerAxisN:24,contactToleranceM:.012,maxHandleLeadM:.0012,
+  approachPrePositionSeconds:1.15,approachContactEntrySeconds:.65,
   gripBreakDistanceM:.035,targetToleranceRad:2*Math.PI/180,
   releaseToleranceRad:.8*Math.PI/180,settledAngularSpeedRadS:.05,
   stableSeconds:.6,withdrawSeconds:.9,withdrawNormalDistanceM:.12,withdrawVerticalOffsetM:-.10,withdrawTableMarginM:.15,
@@ -95,7 +96,7 @@ export class WindowInteraction {
     this.blocker.windowPartId=bp.id;this.world.addBody(this.blocker);
     this.agents=new Map(this.host.actors.map(actor=>[actor.id,{id:actor.id,actor,side:'L',phase:'idle',
       phaseTime:0,task:null,result:null,recovery:null,handTarget:null,gripValue:0,stable:0,
-      generation:0,history:[],maxContactErrorM:0,firstContactErrorM:null,usedHand:false}]));
+      generation:0,history:[],maxContactErrorM:0,firstContactErrorM:null,usedHand:false,approach:null}]));
     this.emit('ready',null,{hingeCount:1,assistedPointGrip:true,maxGripForcePerAxisN:24});
   }
   emit(type,id,data={}){
@@ -110,6 +111,21 @@ export class WindowInteraction {
   angle(){const axis=this.leaf.quaternion.vmult(new CANNON.Vec3(1,0,0));return Math.atan2(-axis.z,axis.x);}
   angularSpeed(){return this.leaf.angularVelocity.dot(new CANNON.Vec3(0,1,0));}
   handleCenter(){return arr(this.leaf.pointToWorldFrame(vec(WINDOW_DIM.handleLocal)));}
+  handleCylinder(){
+    const i=WINDOW_DIM.leafParts.findIndex(part=>part.id==='handle');
+    return {id:'window-handle-01',position:arr(this.leaf.pointToWorldFrame(this.leaf.shapeOffsets[i])),
+      quaternion:this.leaf.quaternion.mult(this.leaf.shapeOrientations[i]).toArray(),
+      radius:WINDOW_DIM.handleRadius,height:WINDOW_DIM.handleHeight};
+  }
+  otherCylinders(){
+    // A controller-only host may contain no bottle. An empty list means there
+    // is no such body in that world; production reads its actual collision shape.
+    const body=this.host.bottle;if(!body)return [];
+    const i=body.shapes.findIndex(s=>s.type===CANNON.Shape.types.CYLINDER),s=body.shapes[i];
+    if(!s||s.radiusTop!==s.radiusBottom)throw Error('Window obstacle diagnostics require the actual equal-radius bottle cylinder');
+    return [{id:'bottle-01',position:arr(body.pointToWorldFrame(body.shapeOffsets[i])),
+      quaternion:body.quaternion.mult(body.shapeOrientations[i]).toArray(),radius:s.radiusTop,height:s.height}];
+  }
   handleAnchor(){return arr(this.leaf.pointToWorldFrame(vec(WINDOW_DIM.handleAnchorLocal)));}
   frame(side='L'){return {palm:rotated(this.leaf.quaternion,[0,0,1]),
     forward:rotated(this.leaf.quaternion,[side==='L'?1:-1,0,0]),
@@ -138,7 +154,7 @@ export class WindowInteraction {
     if(!['open','close'].includes(operation))throw Error('Window operation must be open or close');
     const a=this.agents.get(id);if(!a)throw Error('Unknown window actor '+id);
     if(this.ownsActor(id)||this.host.actorBusy?.(id))return false;
-    const serial=++this.nextTask;a.side=a.actor.side||'L';a.generation++;a.result=null;a.recovery=null;a.handTarget=null;
+    const serial=++this.nextTask;a.side=a.actor.side||'L';a.generation++;a.result=null;a.recovery=null;a.handTarget=null;a.approach=null;
     a.gripValue=0;a.history=[];a.maxContactErrorM=0;a.firstContactErrorM=null;a.usedHand=false;
     a.started=this.host.time;a.stuckSeconds=0;a.obstructionSeconds=0;
     a.task={id:'window-task-'+serial,taskId:'window-task-'+serial,token:id+':window:'+serial,
@@ -150,27 +166,58 @@ export class WindowInteraction {
   acquire(a){if(this.reservedBy&&this.reservedBy!==a.id)return false;a.side=a.actor.side||'L';
     this.reservedBy=a.id;this.targetAngle=a.task.targetAngleRad;this.revision++;
     this.emit('reserved',a.id,{taskToken:a.task.token,operation:a.task.operation});return true;}
+  syncHandBody(a){
+    const palm=this.hand(a),body=this.host.handBodies.get(a.id);
+    body.position.set(...palm);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);
+    return palm;
+  }
   drive(a,target,grip,frame=this.frame(a.side)){
     a.handTarget=target.slice();a.gripValue=grip;a.usedHand=true;
     a.actor.setReach(target,grip,a.side,frame);
-    const palm=this.hand(a),body=this.host.handBodies.get(a.id);
-    body.position.set(...palm);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);
+    const palm=this.syncHandBody(a);
     return distance(palm,target);
   }
+  beginApproach(a){
+    const anchor=this.handleAnchor(),frame=this.frame(a.side);
+    if(!(frame.palm[2]>0))throw Error('Window approach requires a +Z-facing palm in this fixed work station');
+    // Enter along the already measured withdrawal path in reverse. The low
+    // pose clears the rail; local quaternion motion reaches it from native rest.
+    let normalDistanceM=WINDOW_DIM.withdrawNormalDistanceM,tableRearZ=null,safePalmZ=null;
+    if(this.host.table){this.host.table.updateAABB();tableRearZ=this.host.table.aabb.lowerBound.z;
+      safePalmZ=tableRearZ-WINDOW_DIM.withdrawTableMarginM;
+      normalDistanceM=Math.max(normalDistanceM,(anchor[2]-safePalmZ)/frame.palm[2]);}
+    const preTarget=add(add(anchor,scale(frame.palm,-normalDistanceM)),[0,WINDOW_DIM.withdrawVerticalOffsetM,0]);
+    const reach=a.actor.reachability?.(preTarget,a.side,frame);
+    if(reach&&(reach.reachable===false||reach.errorM>.00035)){
+      this.finish(a,'unreachable','安全接近姿态超出当前完整人物手臂可达范围');return;
+    }
+    a.approach={segment:'native-pose-transition',elapsed:0,preTarget,frame,normalDistanceM,tableRearZ,safePalmZ,
+      prePositionSeconds:WINDOW_DIM.approachPrePositionSeconds,contactEntrySeconds:WINDOW_DIM.approachContactEntrySeconds,
+      entryStart:null,entryFrom:null,nextPoseAt:.1};
+    this.change(a,'approach');a.usedHand=true;a.handTarget=null;a.gripValue=0;
+    a.actor.beginReachTransition(preTarget,{duration:WINDOW_DIM.approachPrePositionSeconds,side:a.side,frame});
+    this.syncHandBody(a);this.samplePose(a,'approach-start');
+  }
+  approachState(a){const p=a.approach;if(!p||a.phase!=='approach')return null;
+    return {segment:p.segment,elapsed:p.elapsed,prePositionSeconds:p.prePositionSeconds,contactEntrySeconds:p.contactEntrySeconds,
+      normalDistanceM:p.normalDistanceM,tableRearZ:p.tableRearZ,safePalmZ:p.safePalmZ,preTarget:p.preTarget.slice(),
+      entryStart:p.entryStart,entryFrom:p.entryFrom?.slice()??null,requestedPalm:a.handTarget?.slice()??null};
+  }
   geometry(a){if(!a.actor.diagnostics)return {nativeGeometryMeasured:false};
-    const d=a.actor.diagnostics({bottle:{position:vec(this.handleCenter()),quaternion:this.leaf.quaternion,
-      radius:WINDOW_DIM.handleRadius,height:WINDOW_DIM.handleHeight},solidBoxes:this.solidBoxes()});
-    return {nativeGeometryMeasured:true,handErrorM:d.handErrorM,reachClamped:d.reachClamped,
+    const operated=this.handleCylinder(),solidCylinders=this.otherCylinders();
+    const d=a.actor.diagnostics({bottle:operated,solidBoxes:this.solidBoxes(),solidCylinders});
+    return {nativeGeometryMeasured:true,operatedObjectId:operated.id,solidCylinders,handErrorM:d.handErrorM,reachClamped:d.reachClamped,
       boneLengthErrorM:d.boneLengthErrorM,footSurfaceErrorM:d.footSurfaceErrorM,footWorldYM:d.footWorldYM,
       maxHandlePenetrationM:d.bottleMaxPenetrationM,penetratingVertexCount:d.bottlePenetratingVertexCount,
       graspAdmissible:d.graspAdmissible,restPoseErrorRad:d.restPoseErrorRad,finite:d.finite,
       solidMaxPenetrationM:d.solidMaxPenetrationM,solidSampleCount:d.solidSampleCount,
-      solidDeepest:d.solidDeepest,solidParts:d.solidParts,solidByBox:d.solidByBox};
+      solidDeepest:d.solidDeepest,solidParts:d.solidParts,solidByBox:d.solidByBox,solidByCylinder:d.solidByCylinder};
   }
   samplePose(a,stage,measured=null){
     if(!a.actor.diagnostics)return;
     const record={id:a.id,taskToken:a.task?.token||a.result?.taskToken||null,
-      operation:a.task?.operation||a.result?.operation||null,stage,time:this.host.time,physicsStep:this.audit.physicsSteps,
+      operation:a.task?.operation||a.result?.operation||null,phase:a.phase,stage,time:this.host.time,physicsStep:this.audit.physicsSteps,
+      approach:this.approachState(a),
       angleDeg:degrees(this.angle()),quaternion:this.leaf.quaternion.toArray(),handleAnchor:this.handleAnchor(),
       palm:this.hand(a),contactErrorM:distance(this.hand(a),this.handleAnchor()),grip:a.gripValue,
       heldBy:this.heldBy,gripConstraintCount:this.grip?1:0,hingeConstraintCount:this.world.constraints.includes(this.hinge)?1:0,
@@ -299,7 +346,7 @@ export class WindowInteraction {
     this.leaf.velocity.set(0,0,0);this.leaf.angularVelocity.set(0,0,0);this.leaf.force.set(0,0,0);this.leaf.torque.set(0,0,0);
     this.leaf.aabbNeedsUpdate=true;this.leaf.wakeUp();
     for(const a of this.agents.values()){a.actor.rest?.();a.phase='idle';a.phaseTime=0;a.task=null;a.result=null;
-      a.recovery=null;a.handTarget=null;a.gripValue=0;a.usedHand=false;}
+      a.recovery=null;a.handTarget=null;a.gripValue=0;a.usedHand=false;a.approach=null;}
     this.revision++;this.emit('reset',null,{explicitUserSetup:true,hingeConstraintCount:1});
   }
   preStep(dt){
@@ -311,11 +358,19 @@ export class WindowInteraction {
         if(this.goal(a.task.targetAngleRad)){a.noInteraction=true;this.change(a,'verify');continue;}
         const frame=this.frame(a.side),reach=a.actor.reachability?.(this.handleAnchor(),a.side,frame);
         if(reach&&(reach.reachable===false||reach.errorM>.025)){this.finish(a,'unreachable','把手超出当前完整人物手臂可达范围');continue;}
-        a.noInteraction=false;a.startHand=this.hand(a);this.change(a,'approach');
+        a.noInteraction=false;this.beginApproach(a);
       }else if(a.phase==='approach'){
-        this.drive(a,mix(a.startHand,this.handleAnchor(),t/1.4),0);
-        if(t>=1.4&&distance(this.hand(a),this.handleAnchor())<=WINDOW_DIM.contactToleranceM)this.change(a,'close-grip');
-        else if(t>4)this.finish(a,'contact-failed','真实掌面未到达把手接触门槛');
+        const p=a.approach;p.elapsed=t;
+        if(p.segment==='native-pose-transition'){
+          const complete=a.actor.updateReachTransition(dt);a.handTarget=null;this.syncHandBody(a);
+          if(complete){p.segment='contact-entry';p.entryStart=t;p.entryFrom=this.hand(a);
+            this.samplePose(a,'approach-transition');p.nextPoseAt=t+.1;}
+        }else this.drive(a,mix(p.entryFrom,this.handleAnchor(),(t-p.entryStart)/WINDOW_DIM.approachContactEntrySeconds),0);
+        if(p.entryStart!==null&&t-p.entryStart+1e-10>=WINDOW_DIM.approachContactEntrySeconds&&
+          distance(this.hand(a),this.handleAnchor())<=WINDOW_DIM.contactToleranceM){
+          this.samplePose(a,'approach-end');this.change(a,'close-grip');
+        }else if(t>4)this.finish(a,'contact-failed','真实掌面未到达把手接触门槛');
+        else if(t+1e-10>=p.nextPoseAt){this.samplePose(a,'approach-transition');p.nextPoseAt=t+.1;}
       }else if(a.phase==='close-grip'){
         this.drive(a,this.handleAnchor(),clamp(t/.65,0,1));
         if(t>=.65&&this.attach(a)){a.startAngle=this.angle();a.stuckReference=this.angle();a.stuckSeconds=0;a.obstructionSeconds=0;this.change(a,'swing');}
@@ -386,6 +441,7 @@ export class WindowInteraction {
         forcePerAxisN:this.grip?this.grip.equations.map(e=>e.multiplier||0):[0,0,0],
         maxGripForcePerAxisN:WINDOW_DIM.maxGripForcePerAxisN},
       agents:[...this.agents.values()].map(a=>({id:a.id,side:a.side,phase:a.phase,task:a.task,result:a.result,
+        approach:this.approachState(a),
         recovery:a.recovery?{phase:a.recovery.phase,normalDistanceM:a.recovery.normalDistanceM,tableRearZ:a.recovery.tableRearZ,
           mode:a.recovery.mode,noContact:a.recovery.noContact,sourcePhase:a.recovery.sourcePhase,reason:a.recovery.reason,
           safePalmZ:a.recovery.safePalmZ,target:a.recovery.to?.slice()??null,

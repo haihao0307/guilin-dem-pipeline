@@ -290,7 +290,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
     return {id,side,rest:restVertex(geometry,id)};
   });
   const active={side:spec.side,grip:0,frame:null};
-  let last={},lastGoal=null,lastSolution=null,graspReport=null,restPose=null,recovery=null;
+  let last={},lastGoal=null,lastSolution=null,graspReport=null,restPose=null,recovery=null,reachTransition=null;
   const toLocal = target => {root.updateWorldMatrix(true,false);return native(root.worldToLocal(asVector(target)));};
   const toWorld = target => {root.updateWorldMatrix(true,false);return root.localToWorld(display(target));};
   const directionNative = direction => {
@@ -366,8 +366,9 @@ function makeActor(model, viewer, spec, preset, measurements) {
       graspAdmissible:!!graspReport?.sides[active.side]?.admissible,
       restPoseErrorRad:restError(),
       recovery:recovery?{kind:'local-quaternion-to-native-rest',progress:Math.min(1,recovery.elapsed/recovery.duration),duration:recovery.duration}:null,
+      reachTransition:reachTransition?{kind:'local-quaternion-to-native-reach',progress:Math.min(1,reachTransition.elapsed/reachTransition.duration),duration:reachTransition.duration,targetPalm:reachTransition.target.toArray(),side:active.side}:null,
       finite:checked.finite,reachFrame:active.frame?structuredClone(active.frame):null,
-      orientation:recovery?'local quaternion recovery to native resting arms':active.frame?
+      orientation:reachTransition?'local quaternion transition to an actually reachable native prepose':recovery?'local quaternion recovery to native resting arms':active.frame?
         'world palm/forward frame; actual weighted native surface contact':
         'world palm +Z; fingers +X for L / -X for R during cylindrical reach'};
     return last;
@@ -408,14 +409,49 @@ function makeActor(model, viewer, spec, preset, measurements) {
     fingerAnchors(side=active.side){return patches[side].fingers.map(p=>toWorld(sample(p)));},
     contactAnchors(side=active.side){return {palm:this.handAnchor(side),fingers:this.fingerAnchors(side)};},
     rest(){
-      recovery=null;active.grip=0;active.frame=null;lastGoal=null;lastSolution=null;
+      recovery=null;reachTransition=null;active.grip=0;active.frame=null;lastGoal=null;lastSolution=null;
       resetRig();if(!restPose)restPose=capturePose();binding.animate(rig.skinMatrices);return diagnostic();
     },
     capturePose(){return capturePose();},
+    /** Lift from the current native pose without forcing its resting palm to
+     * accept the destination wrist frame. The endpoint uses the same surface
+     * corrected IK as setReach; only fixed-pivot local rotation deltas blend.
+     * The temporary endpoint solve is restored before this call returns. */
+    beginReachTransition(target,{duration=1.15,side=active.side,frame=null}={}){
+      if(!Number.isFinite(duration)||duration<=0)throw Error('Native reach transition needs a positive finite duration');
+      if(active.grip>1e-6)throw Error('Release the held object before beginning a native reach transition');
+      const from=capturePose(),saved={side:active.side,grip:active.grip,frame:active.frame,lastGoal,lastSolution,recovery,reachTransition};
+      let to,goal,solution;
+      try{
+        goal=asVector(target);const d=this.setReach(goal,0,side,frame);
+        if(d.reachClamped||d.handErrorM>.00035)throw Error('Native reach transition endpoint is outside actual palm reach');
+        to=capturePose();solution=lastSolution;
+      }catch(error){
+        applyPose(from);active.side=saved.side;this.side=saved.side;active.grip=saved.grip;active.frame=saved.frame;
+        lastGoal=saved.lastGoal;lastSolution=saved.lastSolution;recovery=saved.recovery;reachTransition=saved.reachTransition;
+        throw error;
+      }
+      applyPose(from);lastGoal=null;lastSolution=null;recovery=null;
+      if(poseSampler.angularDistance(from,to)<1e-7){applyPose(to);lastGoal=goal.clone();lastSolution=solution;reachTransition=null;return true;}
+      reachTransition={from,to,duration,elapsed:0,target:goal.clone(),solution};return false;
+    },
+    updateReachTransition(dt){
+      if(!Number.isFinite(dt)||dt<0)throw Error('Native reach transition needs a finite nonnegative time step');
+      if(!reachTransition)return true;
+      const transition=reachTransition;
+      transition.elapsed=Math.min(transition.duration,transition.elapsed+dt);
+      // Accumulating 1/120 s may finish a few ulps below an exact duration.
+      if(transition.duration-transition.elapsed<1e-12)transition.elapsed=transition.duration;
+      const t=transition.elapsed/transition.duration,ease=t*t*t*(10+t*(-15+6*t));
+      applyPose(poseSampler.interpolate(transition.from,transition.to,ease));
+      if(transition.elapsed>=transition.duration){lastGoal=transition.target.clone();lastSolution=transition.solution;reachTransition=null;return true;}
+      return false;
+    },
+    hasReachTransition(){return reachTransition!==null;},
     beginRest({duration=.65}={}){
       if(!Number.isFinite(duration)||duration<=0)throw Error('Rest recovery needs a positive finite duration');
       if(active.grip>1e-6)throw Error('Release and withdraw the open hand before beginning rest recovery');
-      const from=capturePose();lastGoal=null;lastSolution=null;active.frame=null;
+      const from=capturePose();reachTransition=null;lastGoal=null;lastSolution=null;active.frame=null;
       if(poseSampler.angularDistance(from,restPose)<1e-7){recovery=null;applyPose(restPose);return true;}
       recovery={from,duration,elapsed:0};return false;
     },
@@ -442,7 +478,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
       const worldTarget=asVector(target);if(!worldTarget.toArray().every(Number.isFinite)||!Number.isFinite(grip01))throw Error('Non-finite hand goal');
       if(!graspReport?.sides[side]?.admissible)throw Error(`NPC ${spec.id} ${side} hand has no admissible calibrated cylinder grasp`);
       const reachFrame=checkedFrame(side,frame);
-      recovery=null;active.side=side;this.side=side;active.grip=clamp(grip01,0,1);active.frame=frame===null?null:reachFrame;
+      recovery=null;reachTransition=null;active.side=side;this.side=side;active.grip=clamp(grip01,0,1);active.frame=frame===null?null:reachFrame;
       resetRig(active.grip,side,true);
       const limb=rig.limbs['arm'+side],rotation=orientFor(side,reachFrame),localGoal=toLocal(worldTarget);
       const shoulder=pos(rig.posedMatrices[limb.a]),sign=side==='L'?1:-1,length=limb.upper+limb.lower;
@@ -459,7 +495,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
       }
       lastGoal=worldTarget.clone();lastSolution=solved;return diagnostic(lastGoal,lastSolution);
     },
-    diagnostics({tableTopY=null,tableBounds=null,bottle=null,solidBoxes=[]}={}){
+    diagnostics({tableTopY=null,tableBounds=null,bottle=null,solidBoxes=[],solidCylinders=[]}={}){
       // Sample the actual weighted hand surface only on diagnostic requests,
       // not at every physics substep. This catches a curled intermediate
       // phalanx below the table even when the fingertip itself is above it.
@@ -476,10 +512,10 @@ function makeActor(model, viewer, spec, preset, measurements) {
         const inverse=new THREE.Quaternion(...values).normalize().invert();
         cylinder={center,inverse,radius:bottle.radius,halfHeight:bottle.height*.5};
       }
-      const cylinderDistance = p => {
-        const local=p.clone().sub(cylinder.center).applyQuaternion(cylinder.inverse);
+      const cylinderDistance = (p,shape=cylinder) => {
+        const local=p.clone().sub(shape.center).applyQuaternion(shape.inverse);
         // Exact signed distance to the finite local-Y cylinder, including caps.
-        const radial=Math.hypot(local.x,local.z)-cylinder.radius,axial=Math.abs(local.y)-cylinder.halfHeight;
+        const radial=Math.hypot(local.x,local.z)-shape.radius,axial=Math.abs(local.y)-shape.halfHeight;
         return {distance:Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0),local};
       };
       if(!Array.isArray(solidBoxes))throw Error('Solid geometry diagnostics require an array of boxes');
@@ -491,10 +527,22 @@ function makeActor(model, viewer, spec, preset, measurements) {
           !values.every(Number.isFinite)||Math.hypot(...values)<1e-9)throw Error('A solid box needs an id, finite pose and positive halfExtents');
         return {id:box.id,center,half,inverse:new THREE.Quaternion(...values).normalize().invert()};
       });
+      if(!Array.isArray(solidCylinders))throw Error('Solid geometry diagnostics require an array of cylinders');
+      const cylinders=solidCylinders.map(shape=>{
+        const center=asVector(shape.position),q=shape.quaternion;
+        const values=Array.isArray(q)||ArrayBuffer.isView(q)?Array.from(q):q?[q.x,q.y,q.z,q.w]:null;
+        if(typeof shape.id!=='string'||!shape.id||!center.toArray().every(Number.isFinite)||
+          !values||values.length!==4||!values.every(Number.isFinite)||Math.hypot(...values)<1e-9||
+          !Number.isFinite(shape.radius)||!Number.isFinite(shape.height)||shape.radius<=0||shape.height<=0)
+          throw Error('A solid cylinder needs an id, finite pose and positive radius/height');
+        const orientation=new THREE.Quaternion(...values).normalize();
+        return {id:shape.id,center,quaternion:orientation.toArray(),inverse:orientation.clone().invert(),radius:shape.radius,halfHeight:shape.height*.5};
+      });
+      const solidCount=boxes.length+cylinders.length;
       root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity,tableMinimumYM=Infinity,tableSampleCount=0;
       let minCylinderDistance=Infinity,penetratingCount=0,deepestPoint=null,deepestLocal=null,deepestVertex=null;
       const fingerSurfaceMinimum=Array(5).fill(Infinity),fingerNearCounts=Array(5).fill(0),fingerContactPoints=Array(5).fill(null);
-      const surfaceCache=boxes.length?new Map():null;
+      const surfaceCache=solidCount?new Map():null;
       for(const id of handSurfaceVertices[active.side]) {
         const p=display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
         surfaceCache?.set(id,p);
@@ -516,11 +564,13 @@ function makeActor(model, viewer, spec, preset, measurements) {
         deepestPointWorld:null,deepestVertex:null,deepestPart:null,deepestObjectId:null});
       const solid=newSolidReport(),solidParts={hand:newSolidReport(),forearm:newSolidReport()};
       const solidByBox=Object.fromEntries(boxes.map(box=>[box.id,newSolidReport()]));
+      const solidByCylinder=Object.fromEntries(cylinders.map(shape=>[shape.id,{...newSolidReport(),
+        geometry:{kind:'finite-local-Y-cylinder',position:shape.center.toArray(),quaternion:shape.quaternion.slice(),radius:shape.radius,height:shape.halfHeight*2}}]));
       const recordSolid=(report,d,p,id,part,objectId)=>{
         if(d<report.minimumSignedDistanceM){report.minimumSignedDistanceM=d;report.maxPenetrationM=Math.max(0,-d);
           report.deepestPointWorld=p.toArray();report.deepestVertex=id;report.deepestPart=part;report.deepestObjectId=objectId;}
       };
-      if(boxes.length)for(const id of armSurfaceVertices[active.side]){
+      if(solidCount)for(const id of armSurfaceVertices[active.side]){
         const p=surfaceCache.get(id)||display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
         const part=handSurfaceSets[active.side].has(id)?'hand':'forearm';solid.sampleCount++;solidParts[part].sampleCount++;
         if(part==='forearm'&&(!tableBounds||(p.x>=tableBounds.minX&&p.x<=tableBounds.maxX&&p.z>=tableBounds.minZ&&p.z<=tableBounds.maxZ))){
@@ -533,8 +583,13 @@ function makeActor(model, viewer, spec, preset, measurements) {
           recordSolid(solid,d,p,id,part,box.id);recordSolid(solidParts[part],d,p,id,part,box.id);
           solidByBox[box.id].sampleCount++;recordSolid(solidByBox[box.id],d,p,id,part,box.id);
         }
+        for(const shape of cylinders){
+          const d=cylinderDistance(p,shape).distance;
+          recordSolid(solid,d,p,id,part,shape.id);recordSolid(solidParts[part],d,p,id,part,shape.id);
+          solidByCylinder[shape.id].sampleCount++;recordSolid(solidByCylinder[shape.id],d,p,id,part,shape.id);
+        }
       }
-      for(const report of [solid,...Object.values(solidParts),...Object.values(solidByBox)])
+      for(const report of [solid,...Object.values(solidParts),...Object.values(solidByBox),...Object.values(solidByCylinder)])
         if(!Number.isFinite(report.minimumSignedDistanceM))report.minimumSignedDistanceM=null;
       const live=diagnostic(lastGoal,lastSolution);
       const minimumInsideTable=tableSampleCount?tableMinimumYM:null;
@@ -553,12 +608,13 @@ function makeActor(model, viewer, spec, preset, measurements) {
         fingerSurfaceMinimumSignedDistanceM:cylinder?fingerSurfaceMinimum:null,
         fingerNearBottleVertexCounts:cylinder?fingerNearCounts:null,
         fingerClosestBottlePointsWorld:cylinder?fingerContactPoints:null,
-        solidMaxPenetrationM:boxes.length?solid.maxPenetrationM:null,
+        solidMaxPenetrationM:solidCount?solid.maxPenetrationM:null,
         solidMinimumSignedDistanceM:solid.minimumSignedDistanceM,solidSampleCount:solid.sampleCount,
-        solidEvaluationCount:solid.sampleCount*boxes.length,
+        solidEvaluationCount:solid.sampleCount*solidCount,
         solidDeepest:{pointWorld:solid.deepestPointWorld,vertex:solid.deepestVertex,part:solid.deepestPart,objectId:solid.deepestObjectId},
-        solidParts,solidByBox,
-        solidDiagnosticScope:'actual weighted hand and lower-arm descendant surface vertices; oriented finite-box SDF; no continuous triangle collision',
+        solidParts,solidByBox,solidByCylinder,
+        solidCylinders:cylinders.map(shape=>({id:shape.id,position:shape.center.toArray(),quaternion:shape.quaternion.slice(),radius:shape.radius,height:shape.halfHeight*2})),
+        solidDiagnosticScope:'actual weighted hand and lower-arm descendant surface vertices; oriented finite-box and finite-cylinder SDF including caps; no continuous triangle collision',
         graspFit:graspReport?.sides[active.side]||null,
         geometricDiagnosticScope:'weighted rendered hand vertices; finite-cylinder signed distance and table XZ projection; not continuous triangle collision or contact force'};
     },

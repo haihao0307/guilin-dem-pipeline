@@ -2,7 +2,7 @@ import * as CANNON from './vendor/cannon-es.js';
 import {WindowInteraction} from './WindowInteraction.mjs';
 
 // Dimensions are metres. The visible station is built from these same values.
-export const DIM = Object.freeze({ tableTop: 1.02, tableHalf: [.62, .035, .23], tableCentre: [0, .985, .52], radius: .032, height: .14, gripHeight: 0, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, source: [0, 1.0908, .37], target: [.10, 1.0908, .44], bottleWithdrawLiftM:.03, bottleWithdrawMinimumM:.14, bottleWithdrawTableMarginM:.19 });
+export const DIM = Object.freeze({ tableTop: 1.02, tableHalf: [.62, .035, .23], tableCentre: [0, .985, .52], radius: .032, height: .14, gripHeight: 0, mass: .22, maxGripForcePerAxisN:24, maxGripTorquePerAxisNm:.8, gripStiffness:1e7, gripRelaxation:4, source: [0, 1.0908, .37], target: [0, 1.0908, .44], alternateTarget: [-.06, 1.0908, .40], bottleApproachLiftM:.04, bottleWithdrawLiftM:.03, bottleWithdrawMinimumM:.14, bottleWithdrawTableMarginM:.19 });
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smooth=t=>{t=clamp(t,0,1);return t*t*t*(t*(t*6-15)+10)};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
@@ -37,7 +37,7 @@ export class LifeWorld {
   request(id,reason='manual'){
     const a=this.agents.get(id);if(!a)throw Error('Unknown actor '+id);
     if(!['idle','done','failed','cancelled'].includes(a.phase)||a.retraction||a.actor.hasRecovery?.()||this.window?.ownsActor(id))return false;
-    a.result=null;a.retraction=null;a.history=[];a.poseSamplePhase=null;a.maxContactError=0;a.firstContactError=null;a.started=this.time;a.task={skill:'place-in-zone',object:'bottle-01',reason,targetRevision:this.targetRevision};a.gripValue=0;a.handTarget=this.hand(a);this.change(a,'waiting');return true;
+    a.result=null;a.retraction=null;a.history=[];a.poseSamplePhase=null;a.withdrawNextPoseAt=.1;a.withdrawEndRecorded=false;a.maxContactError=0;a.firstContactError=null;a.started=this.time;a.task={skill:'place-in-zone',object:'bottle-01',reason,targetRevision:this.targetRevision};a.gripValue=0;a.handTarget=this.hand(a);this.change(a,'waiting');return true;
   }
   startIdentityPlan(){this.autonomous=true;this.review={phase:'等待整理完成',checked:false,reason:'读取同一物理世界'};this.request(this.actors[0].id,'role:tidier');this.request(this.actors[1].id,'role:helper');this.emit('plan',null,{roles:['整理员负责收纳','协助员等待同物使用权','复核员读取释放/支撑/稳定结果']});}
   acquire(a){if(this.reservedBy&&this.reservedBy!==a.id)return false;this.reservedBy=a.id;this.emit('reserve',a.id,{object:'bottle-01'});return true}
@@ -70,10 +70,12 @@ export class LifeWorld {
   }
   beginRecovery(a,{withdraw=true}={}){
     if(withdraw){
-      a.retraction={stage:'withdraw',...this.bottleWithdrawal(a),time:0};
+      a.retraction={stage:'withdraw',...this.bottleWithdrawal(a),time:0,nextPoseAt:.1};
+      this.samplePose(a,'withdraw-start');
     }else if(a.actor.beginRest){
       a.actor.beginRest({duration:.65});
-      a.retraction={stage:'rest',time:0};
+      a.retraction={stage:'rest',time:0,nextPoseAt:.1};
+      this.samplePose(a,'rest-start');
     }else{
       a.actor.rest();a.retraction=null;
     }
@@ -84,12 +86,18 @@ export class LifeWorld {
     r.time+=dt;
     if(r.stage==='withdraw'){
       this.drive(a,mix(r.from,r.to,r.time/.9),0);
+      if(r.time+1e-9>=r.nextPoseAt||r.time>=.9){
+        this.samplePose(a,r.time>=.9?'withdraw-end':'withdraw');r.nextPoseAt=r.time+.1;
+      }
       if(r.time>=.9){
         this.emit('hand-withdrawn',a.id,{objectUnconstrained:true});
         this.beginRecovery(a,{withdraw:false});
       }
     }else{
       const complete=a.actor.updateRecovery?.(dt) ?? true;
+      if(r.time+1e-9>=r.nextPoseAt||complete){
+        this.samplePose(a,complete?'rest-end':'rest');r.nextPoseAt=r.time+.1;
+      }
       if(complete){
         a.retraction=null;a.handTarget=this.hand(a);a.gripValue=0;
         this.emit('hand-at-rest',a.id,{skill:'place-in-zone',restPoseErrorRad:a.actor.diagnostics?.().restPoseErrorRad??null});
@@ -122,14 +130,27 @@ export class LifeWorld {
     this.emit('cancelled',id,{from:was});return true;
   }
   setSupport(enabled){this.supportEnabled=enabled;this.table.collisionResponse=enabled;this.table.collisionFilterMask=enabled?-1:0;this.bottle.wakeUp();this.audit.worldChangedTests.push({test:'support',enabled,time:this.time});this.emit('support-changed',null,{enabled});}
-  moveTarget(){this.target[0]=this.target[0]>.05?-.12:.12;this.targetRevision++;this.emit('target-moved',null,{target:this.target.slice(),revision:this.targetRevision});}
+  // Both observation targets leave space for the open hand beside the window handle.
+  moveTarget(){this.target=(dist(this.target,DIM.target)<.001?DIM.alternateTarget:DIM.target).slice();this.targetRevision++;this.emit('target-moved',null,{target:this.target.slice(),revision:this.targetRevision});}
   reset(){this.window?.reset();for(const a of this.agents.values())this.cancel(a.id);this.reservedBy=this.heldBy=null;this.setSupport(true);this.target=DIM.target.slice();this.targetRevision++;this.bottle.position.set(...DIM.source);this.bottle.quaternion.set(0,0,0,1);this.bottle.velocity.set(0,0,0);this.bottle.angularVelocity.set(0,0,0);this.bottle.force.set(0,0,0);this.bottle.torque.set(0,0,0);this.bottle.wakeUp();for(const a of this.agents.values()){a.actor.rest();a.phase='idle';a.retraction=null;a.task=null;a.result=null;a.handTarget=null;a.gripValue=0;}this.autonomous=false;this.review={phase:'待观察',checked:false,reason:'新一轮'};this.emit('reset',null,{explicitUserSetup:true});}
   support(){return this.supportEnabled&&this.world.contacts.some(c=>(c.bi===this.bottle&&c.bj===this.table)||(c.bj===this.bottle&&c.bi===this.table));}
   settled(){return this.support()&&this.bottle.velocity.length()<.018&&this.bottle.angularVelocity.length()<.09;}
   inside(){return Math.hypot(this.bottle.position.x-this.target[0],this.bottle.position.z-this.target[2])<.052&&Math.abs(this.bottle.position.y-DIM.height/2-DIM.tableTop)<.012;}
   goal(){return !this.heldBy&&!this.grip&&this.inside()&&this.settled();}
-  samplePose(a,stage=a.phase){if(!a.actor.diagnostics)return;const d=a.actor.diagnostics({tableTopY:DIM.tableTop,tableBounds:{minX:DIM.tableCentre[0]-DIM.tableHalf[0],maxX:DIM.tableCentre[0]+DIM.tableHalf[0],minZ:DIM.tableCentre[2]-DIM.tableHalf[2],maxZ:DIM.tableCentre[2]+DIM.tableHalf[2]},bottle:{position:this.bottle.position,quaternion:this.bottle.quaternion,radius:DIM.radius,height:DIM.height}});const keys=['grip01','palm','handErrorM','reachClamped','boneLengthErrorM','footSurfaceErrorM','footWorldYM','fingerAnchors','handTableSampleCount','handTableClearanceM','bottleMaxPenetrationM','bottlePenetratingVertexCount','bottleDeepestPointWorld'];this.audit.poses.push({id:a.id,stage,time:this.time,supportEnabled:this.supportEnabled,heldBy:this.heldBy,bottle:arr(this.bottle.position),...Object.fromEntries(keys.map(k=>[k,d[k]]))});if(this.audit.poses.length>100)this.audit.poses.shift();}
-  drive(a,target,grip){a.handTarget=target;a.gripValue=grip;a.actor.setReach(target,grip);const p=this.hand(a),body=this.handBodies.get(a.id);body.position.set(...p);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);if(a.poseSamplePhase!==a.phase){a.poseSamplePhase=a.phase;this.samplePose(a);}return dist(p,target)}
+  samplePose(a,stage=a.phase){
+    if(!a.actor.diagnostics)return;
+    const solidCylinders=[this.window.handleCylinder()];
+    const d=a.actor.diagnostics({tableTopY:DIM.tableTop,
+      tableBounds:{minX:DIM.tableCentre[0]-DIM.tableHalf[0],maxX:DIM.tableCentre[0]+DIM.tableHalf[0],minZ:DIM.tableCentre[2]-DIM.tableHalf[2],maxZ:DIM.tableCentre[2]+DIM.tableHalf[2]},
+      bottle:{position:this.bottle.position,quaternion:this.bottle.quaternion,radius:DIM.radius,height:DIM.height},
+      solidBoxes:this.window.solidBoxes(),solidCylinders});
+    const keys=['grip01','palm','handErrorM','reachClamped','boneLengthErrorM','footSurfaceErrorM','footWorldYM','fingerAnchors','handTableSampleCount','handTableClearanceM','bottleMaxPenetrationM','bottlePenetratingVertexCount','bottleDeepestPointWorld','restPoseErrorRad','finite','solidMaxPenetrationM','solidMinimumSignedDistanceM','solidSampleCount','solidEvaluationCount','solidDeepest','solidParts','solidByBox','solidByCylinder','solidDiagnosticScope'];
+    this.audit.poses.push({id:a.id,operatedObjectId:'bottle-01',taskStartedTime:a.started,phase:a.phase,stage,time:this.time,
+      supportEnabled:this.supportEnabled,heldBy:this.heldBy,bottle:arr(this.bottle.position),bottleQuaternion:this.bottle.quaternion.toArray(),solidCylinders,
+      ...Object.fromEntries(keys.map(k=>[k,d[k]]))});
+    if(this.audit.poses.length>512)this.audit.poses.shift();
+  }
+  drive(a,target,grip){a.handTarget=target;a.gripValue=grip;a.actor.setReach(target,grip);const p=this.hand(a),body=this.handBodies.get(a.id);body.position.set(...p);body.velocity.set(0,0,0);body.angularVelocity.set(0,0,0);if(!a.retraction&&a.poseSamplePhase!==a.phase){a.poseSamplePhase=a.phase;this.samplePose(a);}return dist(p,target)}
   tick(dt){
     this.time+=dt;this.audit.physicsSteps++;
     for(const a of this.agents.values()){
@@ -146,7 +167,11 @@ export class LifeWorld {
         continue;
       }
       if(a.phase==='approach'){
-        const goal=this.contactAnchor();this.drive(a,mix(a.startHand,goal,t/1.4),0);
+        const goal=this.contactAnchor(),progress=smooth(t/1.4),target=mix(a.startHand,goal,t/1.4);
+        // Lift the open native hand over the actual table edge before contact.
+        // The arc keeps the original endpoints and zero endpoint velocities.
+        target[1]+=DIM.bottleApproachLiftM*4*progress*(1-progress);
+        this.drive(a,target,0);
         if(t>=1.4&&dist(this.hand(a),goal)<.012){this.change(a,'close');}
         else if(t>4)this.finish(a,'contact-failed','表皮手掌没有进入接触容差');
       }else if(a.phase==='close'){
@@ -164,10 +189,12 @@ export class LifeWorld {
       }else if(a.phase==='lower'){
         const target=this.targetAnchor(.004);this.drive(a,mix(a.startHand,target,t/1.4),1);
         const error=dist(this.contactAnchor(),this.hand(a));
-        if(t>=1.4&&error<.015&&this.bottle.position.y<DIM.tableTop+DIM.height/2+.025){this.samplePose(a,'lower-end');this.release(a,'place');a.retreat=this.bottleWithdrawal(a).to;this.change(a,'verify');}
+        if(t>=1.4&&error<.015&&this.bottle.position.y<DIM.tableTop+DIM.height/2+.025){this.samplePose(a,'lower-end');this.release(a,'place');a.retreat=this.bottleWithdrawal(a).to;this.change(a,'verify');this.samplePose(a,'withdraw-start');a.withdrawNextPoseAt=.1;a.withdrawEndRecorded=false;}
         else if(t>4)this.finish(a,'place-failed','物品没有靠近实际放置表面');
       }else if(a.phase==='verify'){
         this.drive(a,mix(a.startHand,a.retreat,t/.9),0);
+        if(t>=.9&&!a.withdrawEndRecorded){this.samplePose(a,'withdraw-end');a.withdrawEndRecorded=true;}
+        else if(t<.9&&t+1e-9>=a.withdrawNextPoseAt){this.samplePose(a,'withdraw');a.withdrawNextPoseAt=t+.1;}
         a.stable=this.goal()?a.stable+dt:0;
         if(a.stable>.6&&t>=.9)this.finish(a,'completed','已松手；物品在目标区内受到桌面支撑，速度连续低于阈值');
         else if(this.bottle.position.y<.2||t>4)this.finish(a,'world-result-failed',this.supportEnabled?'物品未在目标区域稳定落下':'支撑面已移开，物品下落，任务失败');
@@ -177,7 +204,13 @@ export class LifeWorld {
     // Cannon 0.20 GSSolver clamps its impulse lambda to equation min/maxForce.
     // Convert N and N*m to step impulses explicitly; otherwise 24 means 2880 N
     // at 120 Hz. Update even on the first attach step and when single-stepping.
-    if(this.grip)this.grip.equations.forEach((e,i)=>{const impulse=(i<3?DIM.maxGripForcePerAxisN:DIM.maxGripTorquePerAxisNm)*dt;e.minForce=-impulse;e.maxForce=impulse;});
+    if(this.grip)this.grip.equations.forEach((e,i)=>{
+      // Cannon creates generic equations with 1/60s SPOOK coefficients. Use
+      // this world's actual step while retaining the same stiffness/relaxation.
+      e.setSpookParams(DIM.gripStiffness,DIM.gripRelaxation,dt);
+      const impulse=(i<3?DIM.maxGripForcePerAxisN:DIM.maxGripTorquePerAxisNm)*dt;
+      e.minForce=-impulse;e.maxForce=impulse;
+    });
     this.window?.preStep(dt);
     this.world.step(dt);
     this.window?.postStep(dt);

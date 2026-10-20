@@ -12,7 +12,15 @@ Opening succeeds only after the actual angle is within tolerance, the leaf has l
 
 The exit path uses the actual table body as an environmental input. Window release lowers the open hand by 100 mm and withdraws along the measured palm normal; near the closed window it extends that withdrawal until the palm target is 150 mm behind the table's rear edge. Bottle release retains its 30 mm upward clearance and places the exit target at least 190 mm behind that edge. These are measured sufficient allowances for the subsequent swept finger and forearm surfaces, including the paired right-hand station. They are not claimed universal settings for arbitrary rooms. An early cancellation that has made no handle contact and is already behind the safe plane returns directly to native rest instead of forcing the hand below its reach envelope.
 
+Window approach reverses this measured exit path. The native actor first blends its real current pose toward the reachable lowered prepose using local skin-rotation deltas for 1.15 seconds. It then follows the reverse withdrawal segment toward the actual handle over 0.65 seconds, before closing its fingers. This avoids forcing the destination wrist frame onto the resting palm, and avoids the forearm/window-rail collision found in a normal-only pregrasp attempt. The first segment is a joint-space transition with no invented Cartesian palm target. Actual approach start, intermediate and end poses are recorded under the same task token; cancellation retains only the motion that actually occurred.
+
 Native recovery interpolates local skin-rotation deltas around the original joint pivots. It preserves the small residuals in the source rest matrices and therefore the exact original bone lengths; converting those matrices to conventional normalized absolute quaternions was rejected by the numerical gate. First-failure measurements and their corrections are retained in `qa/root-cause-review.json` and the associated raw reports.
+
+The table collection targets also account for the nearby window handle and the tall person's low reach. A first placement target let the open index finger intersect that other cylinder; the original bottle audit did not include it. The corrected diagnostics include the actual non-operated cylinder in both directions: the window handle during bottle tasks, and the bottle during window tasks. Weighted hand and forearm surface samples cover withdrawal and native rest as well as grasped poses. The target-change control still changes the physical goal far enough to invalidate the previous stable result. This is a measured layout for this workbench, not general automatic obstacle avoidance.
+
+Continuous native bottle checks also exposed a table-edge sweep during approach and a contact peak during the fastest transfer. The approach retains its original endpoints and 1.4 second duration with a 40 mm vertical clearance arc. The existing grip equations now use their original stiffness and relaxation with the actual 1/120 second solver step, instead of Cannon's default 1/60 second coefficients. The finite 24 N per-axis force and 0.8 Nm per-axis torque limits remain in effect. Neither correction writes the bottle's physical transform. Both collection targets and all supported bottle stations are checked with actual production physics through completed rest.
+
+The bottle-contact camera observes from the open left side above the table. The previous camera was blocked by the new window frame; its real screenshots and failed independent visual review are retained. No scene object is hidden to clear a camera.
 
 ## State and integration
 
@@ -32,9 +40,13 @@ Numerical checks are distinct from complete native browser verification:
 - `qa/native-frame-recovery.mjs` uses the accepted native rig/CSR data to exercise current production hand-frame and recovery functions; it does not certify head rendering or GPU operation.
 - `qa/native-withdraw-clearance.mjs actual` samples complete window withdrawal and rest paths against the actual pane, rails, mounts, frame, stops, blocker and table shapes.
 - `qa/native-live-recovery.mjs` combines the production world and native body fixture to inspect dynamic window cancellation, early no-contact recovery and bottle exit paths. The fixture requires the accepted R01 `native-rigs.json` and `initial.json` artifacts plus unchanged canonical packet cache; it is separate from the reproducible full-browser CI gate.
+- `qa/native-cross-object-clearance.mjs` checks both bottle targets against the actual window handle, including continuous production approach, held motion and completed withdrawal/rest. Authored pose-path results and actual rigid-body results have separate reports.
+- `qa/native-window-cross-object.mjs` checks actual production opening and closing against the other bottle and the window's own handle, including the previously unmeasured pre-contact interval.
 - `verify-browser.cjs` independently verifies complete native startup, actual UI operations, full hand/forearm surface samples, retained R01 cases, the twelve in-page cases, current world export and a 390 px viewport. It captures the actual rendered frame through the existing queue.
 
 The frozen contact tolerances distinguish the assisted handle cylinder (5 mm) from other physical solids (3 mm). A temporary numerical probe initially applied 3 mm to both; its original result is preserved with that discrepancy identified. The production path and independent browser thresholds were not changed to accommodate the probe.
+
+The later cross-object correction strengthens object coverage under those same thresholds. It requires actual per-cylinder descriptors and nonzero hand/forearm samples, so a missing other object cannot silently pass as zero penetration. The earlier verifier and its first browser results are preserved as historical evidence, not reused as acceptance for the corrected candidate.
 
 The R02 workflow uses one suite startup, retains the original full-native startup gates, then publishes only a new immutable version directory. It must subsequently read back the exact public HTML/build and repeat key interactions in a real browser. A generated local build is not public acceptance. Final publication proof is stored on a separate evidence branch pointing to the exact tested runtime head, so adding the receipt cannot change the tested runtime.
 
@@ -53,4 +65,4 @@ User attachments 01–04 guided the identity/behavior/pose/physics/skin boundari
 - A fixed public HTTPS URL must pass HTTP, version, resource and real-browser checks before sharing.
 - Screenshots alone fail delivery; human visual acceptance and production readiness remain separate from machine tests.
 
-Current local status: candidate implementation and independent verification are in progress. Final acceptance comes from the current-head CI artifacts and publication receipt.
+Read acceptance from the exact runtime's CI artifacts and publication receipt. The corrected native production summary is separate from the preserved first-candidate reports; numerical or contract checks alone do not establish browser or public acceptance.

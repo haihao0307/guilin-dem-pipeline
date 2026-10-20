@@ -15,12 +15,17 @@ const test=async(name,fn)=>{try{tests.push({name,pass:true,measurements:await fn
   catch(e){tests.push({name,pass:false,error:e.stack,measurements:e.measurements});}};
 
 function fixture(id,{missM=0,reachable=true}={}){
-  return {id,side:id==='B'?'R':'L',pose:[-.1,1.16,.03],grip:0,recovering:null,restBegins:[],
+  return {id,side:id==='B'?'R':'L',pose:[-.1,1.16,.03],grip:0,recovering:null,reaching:null,restBegins:[],
     handAnchor(){return this.pose.slice();},
-    setReach(p,grip,side,frame){this.pose=p.map((v,i)=>v+(i===0?missM:0));this.grip=grip;this.lastFrame=frame;this.side=side;},
+    setReach(p,grip,side,frame){this.reaching=null;this.pose=p.map((v,i)=>v+(i===0?missM:0));this.grip=grip;this.lastFrame=frame;this.side=side;},
+    // Linear TEST_FIXTURE_ONLY motion input; no native quaternion/skin claim.
+    beginReachTransition(p,{duration,side,frame}){this.reaching={from:this.pose.slice(),to:p.map((v,i)=>v+(i===0?missM:0)),t:0,duration};this.side=side;this.lastFrame=frame;this.grip=0;},
+    updateReachTransition(dt){const r=this.reaching;if(!r)return true;r.t+=dt;const done=r.t+1e-10>=r.duration,t=done?1:r.t/r.duration;
+      this.pose=r.from.map((v,i)=>v+(r.to[i]-v)*t);if(done)this.reaching=null;return done;},
+    hasReachTransition(){return !!this.reaching;},
     reachability(){return{reachable,errorM:reachable?0:.2};},
-    rest(){this.pose=[-.1,1.16,.03];this.grip=0;this.recovering=null;},
-    beginRest({duration}){this.restBegins.push({at:this.host.time,palm:this.pose.slice()});this.recovering={from:this.pose.slice(),t:0,duration};},
+    rest(){this.pose=[-.1,1.16,.03];this.grip=0;this.recovering=null;this.reaching=null;},
+    beginRest({duration}){this.reaching=null;this.restBegins.push({at:this.host.time,palm:this.pose.slice()});this.recovering={from:this.pose.slice(),t:0,duration};},
     updateRecovery(dt){if(!this.recovering)return true;const r=this.recovering;r.t+=dt;
       this.pose=r.from.map((x,i)=>x+([- .1,1.16,.03][i]-x)*Math.min(1,r.t/r.duration));
       if(r.t>=r.duration){this.rest();return true;}return false;},

@@ -9,11 +9,16 @@ const hashes=()=>Object.fromEntries(files.map(p=>[p,createHash('sha256').update(
 const sourceAtStart=hashes(),dt=1/120,tests=[];
 const check=(ok,message,evidence)=>{if(!ok){const e=Error(message);e.evidence=evidence;throw e;}};
 const test=async(name,fn)=>{try{tests.push({name,pass:true,evidence:await fn()});}catch(e){tests.push({name,pass:false,error:e.stack,evidence:e.evidence});}};
-function actor(id){return {id,side:'L',pose:[0,1.05,-.15],visibleGrip:0,recovery:null,restStarted:0,restUpdated:0,reachCalls:0,
-  handAnchor(){return this.pose.slice();},setReach(p,g){this.reachCalls++;this.pose=p.slice();this.visibleGrip=g;},
-  rest(){this.pose=[0,1.05,-.15];this.visibleGrip=0;this.recovery=null;},
+function actor(id){return {id,side:'L',pose:[0,1.05,-.15],visibleGrip:0,recovery:null,reaching:null,restStarted:0,restUpdated:0,reachCalls:0,
+  handAnchor(){return this.pose.slice();},setReach(p,g){this.reaching=null;this.reachCalls++;this.pose=p.slice();this.visibleGrip=g;},
+  // Linear TEST_FIXTURE_ONLY input; the native adapter owns real pose blending.
+  beginReachTransition(p,{duration}){this.reaching={from:this.pose.slice(),to:p.slice(),elapsed:0,duration};},
+  updateReachTransition(delta){const r=this.reaching;if(!r)return true;r.elapsed+=delta;const done=r.elapsed+1e-10>=r.duration,t=done?1:r.elapsed/r.duration;
+    this.pose=r.from.map((v,i)=>v+(r.to[i]-v)*t);if(done)this.reaching=null;return done;},
+  hasReachTransition(){return !!this.reaching;},
+  rest(){this.pose=[0,1.05,-.15];this.visibleGrip=0;this.recovery=null;this.reaching=null;},
   reachability(){return {reachable:true,errorM:0};},
-  beginRest({duration}){this.restStarted++;this.recovery={elapsed:0,duration,from:this.pose.slice()};},
+  beginRest({duration}){this.reaching=null;this.restStarted++;this.recovery={elapsed:0,duration,from:this.pose.slice()};},
   updateRecovery(delta){this.restUpdated++;const r=this.recovery;if(!r)return true;r.elapsed+=delta;
     const t=Math.min(1,r.elapsed/r.duration);this.pose=r.from.map((x,i)=>x+([0,1.05,-.15][i]-x)*t);
     if(t>=1){this.rest();return true;}return false;},
@@ -72,13 +77,14 @@ await test('host.cancel routes an actual moving window to immediate grip release
     const e=make(),a=e.actors[0];e.setSupport(supportEnabled);check(e.window.request('A','open'),'Early-cancel setup request failed');
     const approach=run(e,()=>e.window.agents.get('A').phase==='approach'&&e.window.agents.get('A').phaseTime>=.1-1e-10,{seconds:1});
     const task=e.window.agents.get('A').task,palm=a.handAnchor(),reachCalls=a.reachCalls;
-    check(!approach.timeout&&e.window.agents.get('A').firstContactErrorM===null,'Early-cancel setup already contacted the handle');
+    check(!approach.timeout&&e.window.agents.get('A').firstContactErrorM===null&&a.hasReachTransition(),
+      'Early-cancel setup was not in an uncontacted native pose transition');
     check(e.cancel('A'),'Actual host rejected the early cancellation');
     const cancelled=e.snapshot(),agent=cancelled.window.agents.find(a=>a.id==='A'),r=agent.recovery;
     check(r?.phase==='rest'&&r.mode==='direct-rest-no-contact'&&r.noContact===true&&r.sourcePhase==='approach'&&r.reason==='cancelled'
       &&r.target===null&&near(r.tableRearZ,.29)&&near(r.safePalmZ,.14)&&palm[2]<=r.safePalmZ,
       'A safe uncontacted hand did not enter an honest native-pose recovery', {supportEnabled,palm,agent});
-    check(a.reachCalls===reachCalls&&a.hasRecovery()&&cancelled.constraints.total===1&&!cancelled.window.object.reservedBy&&!cancelled.window.object.heldBy,
+    check(a.reachCalls===reachCalls&&a.hasRecovery()&&!a.hasReachTransition()&&cancelled.constraints.total===1&&!cancelled.window.object.reservedBy&&!cancelled.window.object.heldBy,
       'Early cancel issued an extra Cartesian reach or retained a resource', {reachCalls,after:a.reachCalls,counts:cancelled.constraints});
     check(!e.request('A'),'Bottle task stole an actor during direct native rest');
     const recovered=run(e,()=>!e.window.ownsActor('A'),{seconds:1}),events=e.events.filter(x=>x.taskToken===task.token);

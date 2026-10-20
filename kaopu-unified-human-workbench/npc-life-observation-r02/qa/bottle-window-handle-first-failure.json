@@ -1,0 +1,115 @@
+{
+  "schema": "npc-bottle-window-handle-first-failure/1",
+  "capturedAt": "2026-10-20T07:19:28.874647+00:00",
+  "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+  "passed": false,
+  "rootCause": "The bottle placement zone puts the released fully open native index finger into the separate closed window handle. Earlier bottle diagnostics omitted this non-operated cylinder. A camera change cannot fix physical intersection.",
+  "evidenceScope": "Existing real Chromium phase surface anchors and actual window handle pose; anchor-only first witness, not a whole-hand maximum. Handle orientation is upright within 1.7e-7rad; displayed SDF uses that vertical finite cylinder.",
+  "otherSolidToleranceM": 0.003,
+  "firstWitnessMaxPenetrationM": 0.015164396904732601,
+  "witnesses": [
+    {
+      "actor": "A",
+      "stage": "verify",
+      "time": 6.908333333333466,
+      "surfaceAnchorIndex": 1,
+      "part": "finger surface anchor",
+      "pointWorld": [
+        0.20460683437402127,
+        1.1652767199672995,
+        0.42745271652117256
+      ],
+      "cylinder": {
+        "id": "window-handle-01",
+        "position": [
+          0.18999999821824948,
+          1.199994239821701,
+          0.44
+        ],
+        "quaternion": [
+          -3.061616659240085e-17,
+          -8.210599032525902e-17,
+          8.096302651144592e-08,
+          0.9999999999999967
+        ],
+        "radius": 0.032,
+        "height": 0.14
+      },
+      "signedDistanceM": -0.012743988336635797,
+      "penetrationM": 0.012743988336635797,
+      "poseFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-A.json",
+      "poseFileSHA256": "c07ee3c279331f0244feb62a74076d517c7b4829a9925ffb8830b64e3eac8f9a",
+      "handleFrameFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/contact-A.json",
+      "handleFrameFileSHA256": "f88b4b0227ffb4645b11665a5424351cafa7904e2f6a9980b919c7448684e036"
+    },
+    {
+      "actor": "B",
+      "stage": "verify",
+      "time": 14.474999999999818,
+      "surfaceAnchorIndex": 1,
+      "part": "finger surface anchor",
+      "pointWorld": [
+        0.19215196465174705,
+        1.1554920255808363,
+        0.423302498029631
+      ],
+      "cylinder": {
+        "id": "window-handle-01",
+        "position": [
+          0.18999999821824948,
+          1.199994239821701,
+          0.44
+        ],
+        "quaternion": [
+          -3.061620290529421e-17,
+          -8.731001124483199e-17,
+          8.096302651144588e-08,
+          0.9999999999999967
+        ],
+        "radius": 0.032,
+        "height": 0.14
+      },
+      "signedDistanceM": -0.015164396904732601,
+      "penetrationM": 0.015164396904732601,
+      "poseFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-B.json",
+      "poseFileSHA256": "d13905645d71b7d79d48d9440a33971f50dbc07666a1d5f4442435d8077f9ad6",
+      "handleFrameFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/contact-B.json",
+      "handleFrameFileSHA256": "9941240ae66b0105b1d87259dec9a28f644f2cce21e099c3ddb29afe052b0078"
+    },
+    {
+      "actor": "C",
+      "stage": "verify",
+      "time": 22.091666666666054,
+      "surfaceAnchorIndex": 1,
+      "part": "finger surface anchor",
+      "pointWorld": [
+        0.19967829806621779,
+        1.161855304428488,
+        0.42607618914623907
+      ],
+      "cylinder": {
+        "id": "window-handle-01",
+        "position": [
+          0.18999999821824948,
+          1.199994239821701,
+          0.44
+        ],
+        "quaternion": [
+          -3.061616356592957e-17,
+          -7.587833293933422e-17,
+          8.09630265114459e-08,
+          0.9999999999999967
+        ],
+        "radius": 0.032,
+        "height": 0.14
+      },
+      "signedDistanceM": -0.015042936674102614,
+      "penetrationM": 0.015042936674102614,
+      "poseFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-C.json",
+      "poseFileSHA256": "6a573a43a1d6ac72ed956e74b0c1d519b325ee380ddf8521c629305a32c3a7c5",
+      "handleFrameFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/contact-C.json",
+      "handleFrameFileSHA256": "e9dbe1b611685413e299d12ea38b2d98e02420889b5b5f4a57148f433e33db63"
+    }
+  ],
+  "nextAction": "Add actual oriented extra cylinder SDF over every selected weighted hand and forearm vertex; preserve the operated cylinder 5mm contract and re-evaluate the real placement region."
+}
