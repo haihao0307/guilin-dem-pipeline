@@ -1,0 +1,152 @@
+{
+  "schema": "kaopu/bounded-interaction-root-cause-review@1",
+  "taskId": "NPC-LIFE-OBSERVATION-R02-20261020",
+  "state": "SOURCE_NUMERICAL_RECHECK_PASSED_BROWSER_PENDING",
+  "productionCandidatePublished": false,
+  "gatesUnchanged": true,
+  "findings": [
+    {
+      "id": "native-rest-matrix-residual",
+      "status": "FIXED_CURRENT_SOURCE_NUMERICAL_RECHECK_PASSED",
+      "cause": "The inherited raw native rest rotation blocks include a small non-orthogonal residual. The first recovery implementation converted absolute local transforms into normalized quaternions, then conventional FK removed that residual and changed exact native joint lengths.",
+      "evidence": {
+        "actor": "A",
+        "stepSeconds": 0.008333333333333333,
+        "oldMaxBoneLengthErrorM": 2.121115633e-07,
+        "oldMaxFootJointDriftM": 4.518340087e-07,
+        "fixedMaxBoneLengthErrorM": 1.387778781e-16,
+        "fixedMaxFootJointDriftM": 2.780973289e-17
+      },
+      "correction": "Interpolate local skin-rotation deltas and use native fixed joint pivots/rest translations. Preserve canonical matrices, human proportions and the 1e-8m bone gate.",
+      "sourceEvidence": "native-recovery-first-failure.json"
+    },
+    {
+      "id": "hand-and-forearm-sweep-during-release",
+      "status": "FIXED_CURRENT_SOURCE_NUMERICAL_RECHECK_PASSED",
+      "cause": "A clear palm endpoint and valid handle contact do not constrain the complete weighted finger and forearm surface trajectory. The initial upward withdrawal let C forearm sweep the conservative leaf envelope; lowering alone cleared that envelope but near-closed rest interpolation then swept fingertips into the real table. Both checks must use the entire exit path and all actual object shapes.",
+      "evidence": {
+        "actor": "C",
+        "side": "L",
+        "windowAngleDeg": -35,
+        "vertex": 6604,
+        "restTimeSeconds": 0.0833333333333,
+        "restProgress": 0.1282051282051,
+        "pointWorldM": [
+          0.214830005,
+          1.317135379,
+          0.252295634
+        ],
+        "palmWorldM": [
+          0.422595502,
+          1.218195646,
+          0.076147683
+        ],
+        "maximumLeafEnvelopePenetrationM": 0.017997649241942082,
+        "withdrawEnvelopePenetrationM": 0.017984,
+        "envelopeIsConservative": "The 36mm full leaf envelope is thicker than the actual 12mm pane; its 17.9976mm result is not an actual glass penetration-depth claim.",
+        "actualTable": {
+          "failedPaths": 12,
+          "totalPaths": 36,
+          "maxActualBoxPenetrationM": 0.03499966684279052,
+          "sourceEvidence": "native-recovery-table-first-failure.json"
+        }
+      },
+      "additionalVerification": "Record withdrawal and rest intermediate samples in the actual body-derived solid geometry; retain separate contact, release, rest-start and final rest evidence.",
+      "correction": "Withdraw 0.10m downward and at least 0.12m opposite the actual palm normal. Read the actual Cannon table AABB rear edge and extend normal withdrawal until the palm target is behind that edge by 0.15m. This is a measured sufficient swept-hand allowance, not a claimed mathematical minimum. Near-closed withdrawal becomes longer; fully open withdrawal keeps the measured reachable 0.12m distance. Preserve actors, stations, physical shapes and all original numerical gates.",
+      "measuredRecheck": {
+        "sourceEvidence": "native-withdraw-clearance-actual.json",
+        "passed": true,
+        "paths": 36,
+        "stepSeconds": 0.008333333333333333,
+        "withdrawStepsPerPath": 108,
+        "restStepsPerPath": 78,
+        "maxActualSolidPenetrationM": 0,
+        "minTableSignedDistanceM": 0.022285281888797387,
+        "minReachMarginM": 0.05998013489990994,
+        "maxBoneErrorM": 4.440892098500626e-16,
+        "geometrySourceHashes": {
+          "WindowInteraction.mjs": "97284a3cefc521cdfc2a7d8bae1e263f7328e5a14dcf3cde0ef582e415b84ce7",
+          "LifeWorld.mjs": "ce3489e4539787010aac078ca128b5cd7e11ac24e75bd3360808bfc40d82386b"
+        }
+      },
+      "remainingSpecificRisks": [
+        "Full canonical-head/material/GPU rendering, actual UI operation and public HTTP execution still require the current-head Chromium and publication gates."
+      ]
+    },
+    {
+      "id": "bottle-rest-table-sweep",
+      "status": "FIXED_CURRENT_SOURCE_NUMERICAL_RECHECK_PASSED",
+      "cause": "The newly completed native rest motion after bottle withdrawal sweeps fingertips farther toward the table than the former partial withdrawal. A 150mm table-edge allowance cleared all release cases but still let A single and B paired-right cancellation poses touch the table.",
+      "evidence": {
+        "sourceEvidence": "native-bottle-recovery-table014-first-failure.json",
+        "candidate150mmFailedPaths": 2,
+        "testedPaths": 10,
+        "maxCandidate150mmTablePenetrationM": 0.005892341878534574
+      },
+      "correction": "Read the actual table AABB rear edge. Keep the original 30mm upward exit and at least 140mm rearward movement, but limit the exit palm to rearEdgeZ minus 190mm. Use this same helper for both lower-to-verify withdrawal and cancelled/failed task recovery.",
+      "measuredCandidate": {
+        "paths": 10,
+        "maxTablePenetrationM": 0,
+        "minTableSignedDistanceM": 0.009525350301276686,
+        "reachClamped": false,
+        "withdrawStepsPerPath": 108,
+        "restStepsPerPath": 78
+      },
+      "sourceEvidence": "native-bottle-recovery.json"
+    },
+    {
+      "id": "early-no-contact-cancel-overreach",
+      "status": "FIXED_CURRENT_SOURCE_NUMERICAL_RECHECK_PASSED",
+      "cause": "Cancelling just after approach starts can leave the hand already behind the table safe plane and near its natural reach boundary. Applying the contact-exit downward offset anyway commands an unreachable target.",
+      "evidence": {
+        "sourceEvidence": "native-window-cancel-early-first-failure.json",
+        "actor": "A",
+        "approachSeconds": 0.1,
+        "maxPalmTargetErrorM": 0.11281613823666846,
+        "reachClamped": true,
+        "maxSolidPenetrationM": 0
+      },
+      "correction": "Only when firstContactErrorM is exactly null and the actual palm is behind the actual table rear safe plane, start native rest directly. Read the existing physical table body even when support collision is disabled. Record a no-contact direct-rest mode and do not fabricate a withdrawal event. Actual-contact cancellation retains the full measured withdrawal.",
+      "measuredCandidate": {
+        "supportEnabled": [
+          true,
+          false
+        ],
+        "maxSolidPenetrationM": 0,
+        "reachClamped": false,
+        "finalRestPoseErrorRad": 0
+      },
+      "sourceEvidence": [
+        "native-window-cancel-early.json",
+        "native-window-cancel-early-support-off.json"
+      ]
+    }
+  ],
+  "probeContractCorrection": {
+    "sourceEvidence": "native-window-cancel-dynamic-first-report.json",
+    "measuredMaxCylinderPenetrationM": 0.0034624726524530927,
+    "measuredMaxOtherSolidPenetrationM": 0,
+    "temporaryProbeCylinderLimitM": 0.003,
+    "originalFrozenBrowserCylinderLimitM": 0.005,
+    "originalFrozenBrowserOtherSolidLimitM": 0.003,
+    "independentVerifierSHA256": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b",
+    "decision": "Preserve the original probe output, align its cylinder metric to the already frozen contract, and keep production quintic withdrawal and independent thresholds unchanged. Browser cylinder assertions apply to actual grip-contact samples; this numerical probe additionally reports the post-release inertial cylinder interaction.",
+    "dynamicObservation": "After mid-swing cancellation the real unmotorized leaf retained angular velocity and moved approximately 9 degrees during withdrawal; all sampled hand/forearm versus other actual solids remained clear."
+  },
+  "finalSourceHashes": {
+    "ActorAdapter.mjs": "f7c1604782811d7742c85820c42dcb383b21bb8dea215f7d289b24a9e10ea39d",
+    "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+    "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1",
+    "LifeWorld.mjs": "ce3489e4539787010aac078ca128b5cd7e11ac24e75bd3360808bfc40d82386b",
+    "WindowInteraction.mjs": "97284a3cefc521cdfc2a7d8bae1e263f7328e5a14dcf3cde0ef582e415b84ce7",
+    "verify-browser.cjs": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b"
+  },
+  "finalCurrentSourceReports": [
+    "native-frame-recovery.json",
+    "native-withdraw-clearance-actual.json",
+    "native-window-cancel-dynamic.json",
+    "native-window-cancel-early.json",
+    "native-window-cancel-early-support-off.json",
+    "native-bottle-recovery.json"
+  ]
+}
