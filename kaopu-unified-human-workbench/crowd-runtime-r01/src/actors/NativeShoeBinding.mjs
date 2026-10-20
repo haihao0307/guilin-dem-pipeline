@@ -80,10 +80,10 @@ export function createFootShoeBinding({THREE, actor, nativeModel, shared, measur
   const inner = innerSurface || createCanvasInnerSurface(nativeModel);
   for (const side of SIDES) {
     const foot = feet[side], samples = nativeFootSamples(THREE, actor.model, foot);
-    const fit = fitting?.[side] || fitNativeCanvasFoot(nativeModel.last, samples);
+    const fit = fitting?.[side] || fitNativeCanvasFoot(nativeModel.last, samples, inner);
     const restSections = checkNativeShoeSections(nativeModel.last, inner, samples, fit);
-    if (!restSections.forefoot.passed) {
-      const error = Error('Original canvas forefoot failed the fitted inner-triangle section check');
+    if (!restSections.all.passed || !restSections.forefoot.passed || !restSections.toes.passed) {
+      const error = Error('Original canvas foot failed the fitted inner-triangle section check');
       error.shoeFit = {side, fit, restSections}; throw error;
     }
     const shoe = shared.create({name: 'R14-' + nativeModel.style.id + '-' + actor.id + '-' + side, mirror: side === 'R'});
@@ -203,7 +203,7 @@ export async function createNativeShoeFactory({THREE, renderer, buildStyle, Styl
       if (!fitting) {
         onProgress('按原生脚部截面匹配完整 R14 鞋尺寸');
         fitting = Object.fromEntries(SIDES.map(side => [side,
-          fitNativeCanvasFoot(resource.model.last, nativeFootSamples(THREE, actor.model, feet[side]))]));
+          fitNativeCanvasFoot(resource.model.last, nativeFootSamples(THREE, actor.model, feet[side]), resource.inner)]));
         resource.fits.set(feet, fitting);
       }
       const binding = createFootShoeBinding({THREE, actor, nativeModel: resource.model,

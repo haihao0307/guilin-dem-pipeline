@@ -60,9 +60,19 @@ viewer.render(); // 保留原皮肤多pass以及已安装的衣发路由
 | 身体材质 | 每人独立，保留原 shader/材质组；原 P01 光学/形体 uniform wrapper 共享且保持 live，以便 faceDiffusion 的 `uFPass` 与 cineRig 的 `uC*` 原样更新；native bones/pose render target 与 `native.U` 每人独立。 |
 | 原 R14 鞋资源 | 相同完整 recipe 共享 geometry/material/textures；每只鞋独立 Group/Mesh 变换。 |
 
-原鞋使用 mm、Y-up、+Z 指向鞋尖；鞋子局部比例为 `[.001,.001,.001]`，右脚为 `[-.001,.001,.001]`。两边从真实 `foot.L/R` 骨骼、原 toe1/3/5-1 关节和完整足部 CSR 顶点测量位置和朝向。原 length/width 参数只在其允许范围内调节。默认原 canvas 的平底更直接匹配原平地动作。
+原鞋使用 mm、Y-up、+Z 指向鞋尖；鞋子局部单位比例为 `[.001,.001,.001]`，右脚为 `[-.001,.001,.001]`。两边从真实 `foot.L/R` 骨骼、原 toe1/3/5-1 关节和完整足部 CSR 顶点测量位置和朝向。原 length/width 参数只在其允许范围内调节，默认 instep 为原范围内的 8。绑定父 frame 另有显式 `fitScale`，因此单位转换保持 .001，并不表示完整鞋实际尺寸没有变化。
 
-当前鞋是 **真实 foot 矩阵驱动的刚性绑定**：toe 关节用于中性轴校准并持续记录世界位置；没有另外制造足部压力、鞋材质力学或动态鞋头弯曲解算器。保留的 R14 `bend` 仍属于原几何设计参数。穿着适配、脚趾穿透和视觉外观待网页验收。
+当前鞋是 **真实 foot 矩阵驱动的刚性绑定**：toe 关节用于中性轴校准并持续记录世界位置；没有另外制造足部压力、鞋材质力学或动态鞋头弯曲解算器。本次截面适配只支持未弯曲的原 canvas，`bend` 仍是上游几何设计参数。
+
+### 原鞋穿着尺寸修复
+
+首次实际网页暴露了总长/总宽选尺的不足：即使总 bounds 能放下脚，原楦的前端、后腰和鞋垫上翘仍可能与实际足部相交。`NativeShoeFit.mjs` 按当前人物的完整足部 CSR 控制顶点计算静态三轴尺寸、脚轴微调和摆位，检查原 `soleTop(s)+1.3 mm` 鞋垫曲线；绑定保留 39 个原鞋部件、所有原 geometry/material，额外尺寸只写入独立 Object3D frame。右脚镜像只应用一次。鞋底也会随 Y 比例变厚，没有隐藏这一变化。
+
+每脚报告输出 `fitScale`、`fitYawDegrees`、原鞋外部实际 bounds、鞋底/鞋垫的实际高度，以及 `sampledRestSections` / `sampledCurrentPoseSections`。后两者使用原帮面、鞋舌、前帮内层的 19,200 个三角面建立 XZ 索引，测当前原生控制顶点与内层的竖向间隙。鞋口只根据原实际开放区域记录；没有隐藏身体足部。它们是点与截面的采样证据，不能当作连续全表面碰撞、舒适度或鞋材力学验收。
+
+旧 MP05 人物夹具的原规则每脚前掌 898 点中有 150 点高于内层、32 点没有上盖截面，最多高出 19.26 mm。修复后静态每脚 1,067 点全部通过；额外比例约 `[1.375,1.56565,1.075]`，外部 bounds 约宽 172.5 × 高 146.8 × 长 313.5 mm，原 14 mm 鞋底设计高度变为约 21.9 mm。尺寸偏宽厚是完整原鞋缩放的实际代价，当前浏览器 P01 会重新计算自己的数值，不能套用这组旧夹具结果。
+
+使用原 walk/run/jump 各 25 个相位，150 个单脚快照的前掌和脚趾均未检出包头、鞋垫穿出；前掌最小竖向上盖净空约 7.00 mm。walk/run 的整脚也通过；jump 有 4/50 单脚快照在后踝/鞋口附近出现最多 4.49 mm 上盖穿出，完整原始结果保留在 JSON 中。这是刚性鞋跟随 foot 骨、后踝仍受其他骨混合影响的边界。没有为消除结果而修改动作、隐藏脚或缓存动作输出。真正的 P01 完整显示网格和实际网页外观另由浏览器验收。
 
 `advance(dt, tickId)` 拒绝回退 tick，重复同 tick 返回 false。它仅推进一次原动作，更新附件，发布矩阵并更新鞋。暂停后重启或重置时仍要保持调度 tick 单调。`setMotion('idle')` 明确将当前矩阵重置为中性，不残留之前 jump 的骨矩阵。动作生成及帧采样算法均来自原 F13，没有新增动作结果重播缓存。
 
@@ -76,6 +86,7 @@ viewer.render(); // 保留原皮肤多pass以及已安装的衣发路由
 python3 build/prepare-sources.py
 python3 src/cloth/prepare-upstream.py
 node --loader ./src/actors/test-loader.mjs ./src/actors/verify.mjs
+node --loader ./src/actors/test-loader.mjs ./src/actors/shoe-fit-verify.mjs
 node src/render/verify.mjs
 node src/render/scheduler-verify.mjs
 ```
@@ -83,6 +94,10 @@ node src/render/scheduler-verify.mjs
 原 F13 的 10 个模块和 3 份动作 JSON 位于 `vendor/f13/vendor/`，原 R14 鞋位于 `vendor/shoe-workshop/`，均由 `build/sources.lock.json` 锁定固定 commit、长度和 SHA-256。原 MP05 的 104 骨骼人物夹具与 Three r170 复用 `src/cloth/upstream/` 及其独立 source lock，不重复保存大文件。加载器把 bare `three`、原生模块内的相对 Three 路径和绝对 file URL 都指向同一份原 MP05 Three，原 ID 偏移保持。JSON 只在 Node 加载时转为默认导出，磁盘原字节不变。已保留依赖时，两个 prepare 命令都可加 `--verify-only` 离线核验。
 
 `verification.json` 记录 14 项身体/鞋接口检查，包含原动作构造器/clip、双角色骨与 pose cache 隔离、全部材质组仅一层蒙皮、次材质动态委托与异常恢复、原程序皮肤显示分组、原光学 pass/灯位 wrapper 同步、单 tick 推进、rest packet、鞋单位/镜像、骨跟随与转向互不干扰、buffer 字节不变、中性恢复及共享资源释放。`src/render/verification.json` 为 6 项路由恢复检查，`scheduler-verification.json` 为 4 项实际调度控制流检查。人物接口测试使用旧 MP05 原 104 骨骼控制拓扑；并未生成新的简化模型供网页使用。
+
+`shoe-fit-verification.json` 记录本次旧规则对照、静态拟合和三动作全部相位的原始截面统计；实际 `shoe.matrixWorld` 逆变换与检测坐标（包含人物位移、转向、右镜像、非均匀尺寸、落地抬高）最大差约 `7.38e-13 mm`，原身体/原鞋 buffers 的前后 SHA-256 一致。没有 GPU 操作或 FPS 指标。
+
+实际 P01 的首轮截面候选曾检出 3 个缺少内层上盖的足部点，其中 1 个属于前掌；原连续 last 的拟合目标不能代替原分片/鞋眼几何。当前选择器在接受任何候选前都强制检查原实际内层，整脚、前掌和脚趾均通过后才保留，不放宽原门槛。旧原夹具每脚的 19 个可竞争候选中实际拒绝了 9 个；回归直接断言原内层检查确实拒绝过候选。报告为异常保留最多 8 个顶点 ID 和局部坐标。
 
 这份 CPU 证据不包含 P01 完整显示网格的实际渲染，不包含原 R14 材质的本轮浏览器验收，也不包含 GPU 帧率。原鞋材质和几何精确共享验证仍见前一轮 shoe-sharing 归档。本轮网页结果应另行记录。
 

@@ -67,12 +67,24 @@ function evaluateCandidate(last, samples, candidate) {
   return {...candidate, sy, cy, cost};
 }
 
-export function fitNativeCanvasFoot(last, samples) {
+export function fitNativeCanvasFoot(last, samples, inner) {
   if (last.style.id !== 'canvas' || last.params.bend !== 0) throw Error('Wearer section fitting currently requires the original unbent R14 canvas shoe');
-  let best = null, tested = 0;
+  if (!inner?.sample) throw Error('Actual original canvas inner triangles are required while selecting the wearer fit');
+  let best = null, tested = 0, actualChecks = 0, actualRejected = 0, bestRejected = null;
   const consider = candidate => {
     tested++; const fit = evaluateCandidate(last, samples, candidate);
-    if (fit && (!best || fit.cost < best.cost)) best = fit;
+    if (!fit || (best && fit.cost >= best.cost)) return;
+    // A continuous design last alone cannot certify the actual perforated
+    // native panels. Test their unmodified inner triangles before accepting
+    // any size or placement, rather than failing only after choosing it.
+    actualChecks++;
+    const checked = checkNativeShoeSections(last, inner, samples, fit);
+    if (!checked.all.passed || !checked.forefoot.passed || !checked.toes.passed) {
+      actualRejected++;
+      if (!bestRejected || fit.cost < bestRejected.fit.cost) bestRejected = {fit, checked};
+      return;
+    }
+    best = fit;
   };
   for (const angleDegrees of [-12, -6, 0, 6, 12]) {
     const c = Math.cos(radians(angleDegrees)), s = Math.sin(radians(angleDegrees));
@@ -86,7 +98,10 @@ export function fitNativeCanvasFoot(last, samples) {
       for (const dx of [-4, 4]) for (const dz of [-6, 6]) consider({angleDegrees, sx, sz, cx: baseX + dx, cz: baseZ + dz});
     }
   }
-  if (!best) throw Error('Original canvas cannot contain this foot within the supported static sizing range');
+  if (!best) {
+    const error = Error('Original canvas has no passing actual inner-triangle fit within the supported static sizing range');
+    error.shoeFit = {tested, actualChecks, actualRejected, bestRejected}; throw error;
+  }
   for (const scale of [1, .5, .25]) {
     const steps = {angleDegrees: 3 * scale, sx: .05 * scale, sz: .025 * scale, cx: 2 * scale, cz: 2 * scale};
     for (let round = 0; round < 10; round++) {
@@ -95,8 +110,8 @@ export function fitNativeCanvasFoot(last, samples) {
       if (before === best) break;
     }
   }
-  return {...best, testedCandidates: tested, sourceSamples: samples.length,
-    method: 'whole original shoe: native recipe, static three-axis size and anatomical placement; sampled original last and curved insole',
+  return {...best, testedCandidates: tested, actualInnerChecks: actualChecks, actualInnerRejected: actualRejected, sourceSamples: samples.length,
+    method: 'whole original shoe: native recipe, static three-axis size and anatomical placement; original last/insole proposal followed by mandatory actual inner-triangle acceptance',
     geometryBuffersModified: false, actionFramesCached: false};
 }
 
@@ -146,7 +161,7 @@ export function createCanvasInnerSurface(nativeModel) {
 export function checkNativeShoeSections(last, inner, samples, fit) {
   const make = () => ({samples: 0, aboveInnerUpper: 0, missingClosedUpper: 0, belowInsole: 0,
     minVerticalUpperClearanceMm: Infinity, minInsoleClearanceMm: Infinity, maxUpperProtrusionMm: 0, maxInsolePenetrationMm: 0});
-  const all = make(), forefoot = make(), toes = make(); let openCollarSamples = 0;
+  const all = make(), forefoot = make(), toes = make(), firstFailures = []; let openCollarSamples = 0;
   for (const p of samples) {
     const [x, y, z] = shoeCoordinates(p, fit), s = z / last.L + .5, roof = inner.sample(x, z);
     const floorClearance = (y - last.soleTop(s) - 1.3) * fit.sy;
@@ -154,6 +169,12 @@ export function checkNativeShoeSections(last, inner, samples, fit) {
     const center = last.center(s), width = last.width(s) * (1 + (x < center ? .028 : -.016) * smooth(.28, .65, s));
     const open = !roof && s > last.style.collar[0] && s < .33 && Math.abs(x - center) < width * Math.sin(last.collarAngle(s));
     if (open) openCollarSamples++;
+    if (firstFailures.length < 8 && ((!roof && !open) || (roof && upperClearance < -.05) || floorClearance < -.05)) {
+      firstFailures.push({nativeVertex: p.id, shoeLocalMm: [x, y, z], station: s,
+        nativeFootLocalMm: [p.x, p.y, p.z], forefoot: p.forefoot, toes: p.toes,
+        innerPart: roof?.part ?? null, missingClosedUpper: !roof && !open,
+        verticalUpperClearanceMm: roof ? upperClearance : null, insoleClearanceMm: floorClearance});
+    }
     for (const row of [all, ...(p.forefoot ? [forefoot] : []), ...(p.toes ? [toes] : [])]) {
       row.samples++; if (!roof && !open) row.missingClosedUpper++;
       if (roof && upperClearance < -.05) row.aboveInnerUpper++;
@@ -169,5 +190,5 @@ export function checkNativeShoeSections(last, inner, samples, fit) {
     row.passed = !row.aboveInnerUpper && !row.missingClosedUpper && !row.belowInsole;
   }
   return {scope: 'original full-CSR control vertices versus actual inner canvas triangles at the same XZ; curved insole from the original last; vertical section clearances, not complete surface collision certification',
-    units: 'rendered millimetres after fitScale', innerTriangles: inner.triangles, openCollarSamples, all, forefoot, toes};
+    units: 'rendered millimetres after fitScale', innerTriangles: inner.triangles, openCollarSamples, all, forefoot, toes, firstFailures};
 }

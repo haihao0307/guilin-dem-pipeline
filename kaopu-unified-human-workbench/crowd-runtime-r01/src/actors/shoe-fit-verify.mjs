@@ -51,6 +51,10 @@ const factory = await createNativeShoeFactory({THREE, renderer, buildStyle, styl
   nativeMaterials: {get() {return material;}}});
 const shoes = factory.bind(actor), geometries = shoes.items[0].shoe.children.map(m => m.geometry), shoeBefore = bufferHash(geometries);
 const staticReport = shoes.report();
+const candidateAcceptance = shoes.items.map(({side, fit}) => ({side, testedCandidates: fit.testedCandidates,
+  actualInnerChecks: fit.actualInnerChecks, actualInnerRejected: fit.actualInnerRejected}));
+assert.ok(candidateAcceptance.every(f => f.actualInnerChecks > 0));
+assert.ok(candidateAcceptance.some(f => f.actualInnerRejected > 0), 'native inner-triangle failures must actually reject otherwise feasible candidate fits');
 for (const foot of staticReport.feet) {
   assert.equal(foot.sampledRestSections.all.passed, true);
   assert.equal(foot.sampledRestSections.forefoot.passed, true);
@@ -100,7 +104,7 @@ assert.equal(bufferHash([geometry]), bodyBefore); assert.equal(bufferHash(geomet
 const result = {schema: 'original-r14-canvas-wearer-section-check/1', measuredAtUTC: new Date().toISOString(),
   fixture: {compressedSHA256: sha(fixtureBytes), name: 'retained MP05 full-CSR 104-bone control person', currentBrowserP01: false},
   scope: 'CPU geometric point and original inner-triangle section checks; no GPU, no FPS, no complete surface/comfort certification',
-  beforeFit, fittedRest: staticReport, actions, maximumCoordinateErrorMm,
+  beforeFit, fittedRest: staticReport, candidateAcceptance, actions, maximumCoordinateErrorMm,
   bodyGeometrySHA256Before: bodyBefore, bodyGeometrySHA256After: bufferHash([geometry]),
   nativeShoeGeometrySHA256Before: shoeBefore, nativeShoeGeometrySHA256After: bufferHash(geometries),
   preserved: {originalPartsPerShoe: geometries.length, fullCSR: true, footVisible: true, originalMotionUntouched: true,
@@ -112,4 +116,4 @@ const result = {schema: 'original-r14-canvas-wearer-section-check/1', measuredAt
 await writeFile(new URL('./shoe-fit-verification.json', import.meta.url), JSON.stringify(result, null, 2) + '\n');
 factory.dispose(); motion.dispose();
 console.log(JSON.stringify({passed: true, phaseSamples: 75, perFootSnapshots: 150, maximumCoordinateErrorMm,
-  actions: actions.map(({frames, ...a}) => a), fitScale: staticReport.feet[0].fitScale, renderedShoeBoundsM: staticReport.feet[0].renderedShoeBoundsM}));
+  candidateAcceptance, actions: actions.map(({frames, ...a}) => a), fitScale: staticReport.feet[0].fitScale, renderedShoeBoundsM: staticReport.feet[0].renderedShoeBoundsM}));
