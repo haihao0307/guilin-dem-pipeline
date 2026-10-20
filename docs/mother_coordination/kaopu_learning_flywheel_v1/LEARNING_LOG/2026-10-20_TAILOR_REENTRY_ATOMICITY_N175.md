@@ -64,6 +64,7 @@ This does not implement a solver, relax thresholds, prove arbitrary motion, cert
 - Production failure: `OBSERVED`.
 - Candidate regression historical replay: `GATE-RUN=true` only for the classifier, not the production gate.
 - Mother route: `POSTED=true`; directed receipt: <https://github.com/haihao0307/guilin-dem-pipeline/pull/315#issuecomment-6286171974>.
+- Positive-control follow-up: `POSTED=true`; directed receipt: <https://github.com/haihao0307/guilin-dem-pipeline/pull/315#issuecomment-6290174634>.
 - For `GLOBAL_REDRESS_RESTART` only: `IMPLEMENTED=true`, `GATE-RUN=true` at workflow `39391889463`.
 - For atomic retained-state reinsertion: `IMPLEMENTED / GATE-RUN=false`.
 - `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false` for the N175 contract; the Mother has not answered the semantic choice.
