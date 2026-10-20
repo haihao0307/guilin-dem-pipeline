@@ -66,8 +66,10 @@ const report = {
   schema:'kaopu/npc-browser-verification@1',version:VERSION,phase:PHASE,
   verifierSourceSHA256:sha(fs.readFileSync(__filename)),
   geometryContract:'R02-other-solids-and-window-precontact@3',
-  previousVerifierSourceSHA256:'21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111',
+  previousVerifierSourceSHA256:'95a31e78656d4a05d70c0b38767395175247f485fe34f49359d043e65323e628',
+  crossObjectVerifierSourceSHA256:'21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111',
   initialR02VerifierSourceSHA256:'706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b',
+  jsonExportComparison:'Normalize numeric negative zero only; retain all keys, array order, undefined and nonfinite values for strict mismatch detection',
   startedAt:new Date().toISOString(),sourceHead,build,expectedPreviewSHA256:expectedSHA,
   environment:{purpose:'repository candidate CI',runner:process.env.GITHUB_ACTIONS==='true'?'GitHub Actions':'isolated development test',
     headless:true,requestedRenderer:'SwiftShader',softwareRenderer:true,physicalPhone:false,userDevice:false,
@@ -1295,14 +1297,31 @@ async function windowInteractionUI({includeCancel=true}={}) {
   checkpoint('actual window UI verification complete');
 }
 
+// JSON represents numeric -0 as 0. Change that one value for comparison while
+// preserving all keys/descriptors and array order. Undefined/nonfinite values
+// remain intact, so lossy serialization of them still fails strict equality.
+function normalizeExportNegativeZero(value) {
+  if(typeof value==='number')return Object.is(value,-0)?0:value;
+  if(value===null || typeof value!=='object')return value;
+  const prototype=Object.getPrototypeOf(value);
+  if(!Array.isArray(value) && prototype!==Object.prototype && prototype!==null)return value;
+  const result=Array.isArray(value)?[]:Object.create(prototype);
+  for(const key of Reflect.ownKeys(value)) {
+    const descriptor=Object.getOwnPropertyDescriptor(value,key);
+    if(Object.hasOwn(descriptor,'value'))descriptor.value=normalizeExportNegativeZero(descriptor.value);
+    Object.defineProperty(result,key,descriptor);
+  }
+  return result;
+}
+
 async function windowExportUI() {
   await check('actual JSON export preserves physical window task data',async()=>{
     await pause(true);
     const details=page.locator('#npc-app details');
     if(await details.getAttribute('open')===null)await details.locator('summary').click();
     await page.locator('#npc-export').scrollIntoViewIfNeeded();
-    const current=await evaluate('read actual paused window data before UI export',
-      ()=>JSON.parse(JSON.stringify(window.__NPC_OBSERVATION__.snapshot())));
+    const current=normalizeExportNegativeZero(await evaluate('read actual paused window data before UI export',
+      ()=>window.__NPC_OBSERVATION__.snapshot()));
     const [download]=await bounded('capture window-state UI download',()=>Promise.all([
       page.waitForEvent('download',{timeout:30000}),page.click('#npc-export')
     ]),35000);
@@ -1370,7 +1389,8 @@ async function identityInteraction() {
     const exportDetails=page.locator('#npc-app details');
     if(await exportDetails.getAttribute('open')===null)await exportDetails.locator('summary').click();
     await page.locator('#npc-export').scrollIntoViewIfNeeded();
-    const current=await evaluate('read paused authoritative world for export',()=>window.__NPC_OBSERVATION__.snapshot());
+    const current=normalizeExportNegativeZero(await evaluate('read paused authoritative world for export',
+      ()=>window.__NPC_OBSERVATION__.snapshot()));
     const [download]=await bounded('capture actual UI JSON download',()=>Promise.all([
       page.waitForEvent('download',{timeout:30000}),page.click('#npc-export')
     ]),35000);
