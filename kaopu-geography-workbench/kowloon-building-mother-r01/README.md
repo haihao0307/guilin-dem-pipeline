@@ -66,3 +66,7 @@
 从包含相邻基线的仓库根目录起 HTTP 服务，打开本目录。运行 `node --test tests/*.test.mjs`。浏览器脚本 `tests/browser.py` 使用已安装 Chromium/Playwright，读取真实 WebGL 并保存截图；脚本存在不等于通过。39 项 CPU 测试及 [候选版真实 Chromium 检查](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39413137884) 已通过，9 张真实截图保存于该检查的短期 artifact；HTTPS 发布后的复验仍单独记录，不把 localhost 成功冒充上线成功。最终状态和准确覆盖见 `evidence/validation.json`，未测项目不得宣称完成。
 
 回滚：仅移除本独立目录及其新增发布提交，不改动旧案例、旧锚点或其他目录。无强推、无历史改写。
+
+## 发布兼容性
+
+当前页面从不可变的 `r03/` 目录加载整套自有模块和样式，模块内部引用同一目录。共享的原始测量包与 PBR 来源保持不变。`app.mjs` 仅是兼容先前缓存 HTML 的入口；无版本的第一版仍转入保留的 `legacy-r01-app.mjs`，中间楼板版本转入 `r03/app.mjs`。`legacy-r01.html` 用于复验第一版 HTML 和旧依赖仍可渲染，不是新增建筑项目。不得覆盖已经交付的版本目录来静默升级；后续版本新建自己的目录。

@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 import * as THREE from '../../hk-three-buildings-r01/viewer/vendor/three.module.js';
-import {cutHostedWindow, defaultWindowConfig} from '../window.mjs';
-import {defaultFloorConfig, validateFloorConfig, buildFloors, inspectFloors} from '../floors.mjs';
+import {cutHostedWindow, defaultWindowConfig} from '../r03/window.mjs';
+import {defaultFloorConfig, validateFloorConfig, buildFloors, inspectFloors} from '../r03/floors.mjs';
 
 const score = JSON.parse(await readFile(new URL('../../hk-three-buildings-r01/geometry/B359971994401063C0.score.json', import.meta.url), 'utf8'));
 const cfg = changes => ({...defaultFloorConfig(), enabled: true, ...changes});

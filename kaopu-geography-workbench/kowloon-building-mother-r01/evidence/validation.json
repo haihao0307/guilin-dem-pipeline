@@ -1,6 +1,6 @@
 {
-  "status": "candidate_cpu_and_actual_chromium_passed_https_verification_pending",
-  "timestampUtc": "2026-10-20T11:13:00Z",
+  "status": "r03_immutable_release_candidate_passed_https_pending",
+  "timestampUtc": "2026-10-20T11:34:00Z",
   "cpu": {
     "command": "node --test tests/*.test.mjs",
     "tests": 39,
@@ -17,11 +17,11 @@
   },
   "browser": {
     "status": "passed_on_candidate",
-    "build": "2026-10-20-floor-window-pbr-r02",
-    "commit": "cfb1c5a0e9d2184206a45d264a9b18b777b6ef04",
-    "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39413137884",
+    "build": "2026-10-20-floor-window-pbr-r03",
+    "commit": "c3ed2ca7e0e9173e9dead633a893d974691f9cde",
+    "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39415672090",
     "renderer": "Chromium ANGLE SwiftShader software WebGL, not device performance",
-    "screenshotCount": 9,
+    "screenshotCount": 11,
     "checks": [
       "three measured source shells",
       "real cut and volumetric frame sash glass",
@@ -30,10 +30,15 @@
       "21 thick concave slabs with 21 independent real voids",
       "service proposal stops aligned to floor FFL, no navigation or modeled lift",
       "reset and mobile layout",
-      "no JavaScript or shader errors"
+      "no JavaScript or shader errors",
+      "served production file SHA-256 equals source",
+      "actual rendered arrays exactly restored after window cuts and reset",
+      "initial HTML and legacy dependencies render",
+      "intermediate r02 cached HTML fixture works through compatibility entry",
+      "deliberately disabled WebGL shows error instead of loading forever"
     ],
     "visualReview": "actual window-80, floor-cutaway, baseline-1 and mobile PNGs inspected; no blank canvas or rendering blocker",
-    "publicHttps": "pending after scoped Pages publication"
+    "publicHttps": "pending after immutable release publication"
   },
   "notCertified": [
     "historical appearance",
@@ -50,6 +55,21 @@
       "features": "225 patches and authored hosted window",
       "cpuTests": 24,
       "actualBrowser": "superseded by candidate pass above; original preview had no floors"
+    },
+    {
+      "revision": "3c500350e228b826d20be5ccec129792ce6da7b8",
+      "build": "2026-10-20-floor-window-pbr-r02",
+      "actualBrowser": "passed on real HTTPS with served asset hashes",
+      "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39415050163",
+      "limitation": "Returning browser could mix fresh HTML and old unversioned app; r03 isolates release graph."
     }
-  ]
+  ],
+  "releaseCompatibility": {
+    "status": "passed_on_candidate_for_both_preserved_initial_and_intermediate_HTML",
+    "immutableOwnGraph": "r03/",
+    "preservedInitialHtml": "legacy-r01.html",
+    "preservedInitialImplementation": "legacy-r01-app.mjs",
+    "intermediateHtmlFixture": "tests/fixtures/cached-r02.html",
+    "reason": "r02 HTML could coexist with cached unversioned first app in returning browser; immutable graph and explicit compatibility entry prevent future mixed entry versions"
+  }
 }

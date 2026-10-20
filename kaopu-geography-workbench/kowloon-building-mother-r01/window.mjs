@@ -28,8 +28,6 @@ export function defaultWindowConfig() {
     frameWidth: 0.08,
     frameDepth: 0.16,
     glassColor: '#78b8c8',
-    glassTransmission: 0.82,
-    glassRoughness: 0.08,
     angleDegrees: 0,
     showClearance: false,
   };
@@ -44,10 +42,7 @@ function normalizedConfig(config) {
   }
   if (typeof c.hostPatchId !== 'string' || !c.hostPatchId) throw Error('hostPatchId is required');
   if (c.type !== 'casement-outward-oneleaf') throw Error('Only the bounded outward single-leaf casement is supported');
-  for (const key of ['width', 'height', 'sill', 'frameWidth', 'frameDepth', 'angleDegrees', 'glassTransmission', 'glassRoughness']) finite(c[key], key);
-  for (const key of ['glassTransmission', 'glassRoughness']) {
-    if (c[key] < 0 || c[key] > 1) throw Error(`${key} must be 0–1`);
-  }
+  for (const key of ['width', 'height', 'sill', 'frameWidth', 'frameDepth', 'angleDegrees']) finite(c[key], key);
   if (c.centerAlongWall !== null) finite(c.centerAlongWall, 'centerAlongWall');
   if (c.width <= 0 || c.height <= 0) throw Error('Window width and height must be positive');
   // Bounded single-leaf prototype guide, not code-compliance certification.
@@ -274,7 +269,7 @@ export function buildWindow(THREE, score, config = {}) {
   addBar(THREE, leaf, sashMaterial, 'sash-bottom', [lw - 2 * sw, sw, sd], [lw / 2, sw / 2, 0], 'moving-sash');
   addBar(THREE, leaf, sashMaterial, 'sash-top', [lw - 2 * sw, sw, sd], [lw / 2, lh - sw / 2, 0], 'moving-sash');
   const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: '#ffffff', transmission: c.glassTransmission, opacity: 1, roughness: c.glassRoughness,
+    color: '#ffffff', transmission: 0.82, opacity: 1, roughness: 0.08,
     metalness: 0, ior: 1.5, thickness: d.glassThickness,
     attenuationColor: c.glassColor, attenuationDistance: 0.035,
   });
