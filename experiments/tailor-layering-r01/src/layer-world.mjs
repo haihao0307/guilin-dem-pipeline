@@ -1,6 +1,7 @@
 import {ClothSolver} from './upstream/material-physics.mjs';
 import {MeshContact,outwardPacket} from './upstream/mesh-contact.mjs';
 import {LayerContact} from './layer-contact.mjs';
+import {initializeLayers} from './layer-initialization.mjs';
 
 const DEFAULTS={friction:.3,wind:0,contactEnabled:true,substeps:2,iterations:6};
 function checkedSettings(base,patch) {
@@ -35,8 +36,8 @@ export class LayerWorld {
   this.options=checkedSettings(DEFAULTS,options);this.freeBlocks=[];this.poolBytes=0;this.reusedBytes=0;this.allocationOwner=null;
   this.contacts=new LayerContact({cellSize:.025,searchMargin:.003,contactMargin:.0005,maxCorrection:.004,sampleLimit:40});
   this.body=new MeshContact(body.positions,body.faces);this.bodyMesh=this.makeMesh(this.body);
-  this.lastContact=null;this.solveMS=0;this.totalCorrections=0;this.drag=null;this.lastDT=null;this.timings=null;this._timing=null;
-  for(const row of rows)this.add(row);
+  this.lastContact=null;this.solveMS=0;this.totalCorrections=0;this.drag=null;this.lastDT=null;this.timings=null;this._timing=null;this.initializationReport=null;
+  this._collectingRows=true;for(const row of rows)this.add(row);this._collectingRows=false;this.initialize();
  }
  alloc(T,data) {
   const a=typeof data==='number'?new T(data):T.from(data),capacity=Math.ceil(a.byteLength/8)*8;
@@ -67,8 +68,17 @@ export class LayerWorld {
   a.faces=this.alloc(Int32Array,s.faces);a.edges=this.alloc(Float64Array,s.edges.flatMap(e=>[e.a,e.b,e.rest,0]));a.bends=this.alloc(Float64Array,s.bends.flatMap(b=>[b.a,b.b,b.c,b.d,0,b.rest]));
   a.cache=this.alloc(Int32Array,new Int32Array(s.count+s.edges.length+s.faces.length/3).fill(-1));
   a.saved=s.p.slice();a.backup={p:s.p.slice(),v:s.v.slice(),old:s.old.slice()};a.outputIndices=Uint32Array.from(oriented.packet.spec.panels.flatMap((p,idx,all)=>{const offset=all.slice(0,idx).reduce((n,q)=>n+q.uvMm.length,0);return p.triangles.flatMap(t=>t.map(i=>i+offset));}));
-  this.rows.push(a);this.contacts.reset();return a;
-  }catch(error){this.release(a.allocations);throw error;}finally{this.allocationOwner=null;}
+  this.rows.push(a);this.contacts.reset();if(!this._collectingRows)this.initialize();return a;
+  }catch(error){this.rows=this.rows.filter(existing=>existing!==a);this.release(a.allocations);throw error;}finally{this.allocationOwner=null;}
+ }
+ initialize() {
+  const original=this.rows.map(a=>a.s.p.slice());
+  try {
+   const report=initializeLayers(this);
+   for(const a of this.rows){a.saved.set(a.s.p);a.s.initial.set(a.s.p);a.s.old.set(a.s.p);a.s.v.fill(0);a.s.time=0;a.s.steps=0;a.cache.view.fill(-1);a.s.expand();}
+   this.contacts.reset();this.lastContact=null;this.time=0;this.steps=0;this.lastDT=null;this.timings=null;this.solveMS=0;this.totalCorrections=0;this.drag=null;this.initializationReport=report;
+   return report;
+  }catch(error){this.rows.forEach((a,i)=>{a.s.p.set(original[i]);a.s.expand();a.cache.view.fill(-1);});this.contacts.reset();throw Error('初始叠穿放置失败：'+error.message);}
  }
  remove(id) {const removed=this.rows.filter(r=>r.id===id);this.rows=this.rows.filter(r=>r.id!==id);for(const a of removed)this.release(a.allocations);if(this.drag?.id===id)this.drag=null;this.contacts.reset();this.lastContact=null;}
  surfaces() {return this.rows.filter(r=>r.enabled).map(r=>({id:r.id,positions:r.s.p,previous:r.s.old,triangles:r.s.faces,inverseMass:r.s.w,thickness:r.thickness,enabled:true}));}
@@ -134,6 +144,6 @@ export class LayerWorld {
    for(const [i,j]of s.seamPairs){seamGap=Math.max(seamGap,Math.hypot(s.output[i*3]-s.output[j*3],s.output[i*3+1]-s.output[j*3+1],s.output[i*3+2]-s.output[j*3+2]));}
    if(bodySamples)for(let i=0;i<s.count;i++){const j=i*3,d=this.body.sample(s.p[j],s.p[j+1],s.p[j+2],q)[0];minBody=Math.min(minBody,d);bodyVertices++;if(d<0)bodyInsideVertices++;}
   }
-  return {simulationSeconds:this.time,completedSteps:this.steps,solverMS:this.solveMS,stageTimingsMS:this.timings,garmentCount:this.rows.length,contactEnabled:!!this.options.contactEnabled,contact:this.lastContact,totalCorrections:this.totalCorrections,maxEdgeStretch:maxStretch,seamGapMM:seamGap*1000,bodyMinimumMM:bodySamples&&bodyVertices?minBody*1000:null,bodySampledVertices:bodySamples?bodyVertices:null,bodyInsideVertices:bodySamples?bodyInsideVertices:null,bodyMetric:bodySamples?'all cloth vertices against actual static native-body triangles; no edge or whole-surface certificate':'not sampled in this snapshot; collision solver uses actual static native-body triangles',bodyClearancePerGarmentMM:this.rows.map(a=>({id:a.id,value:a.s.settings.clearanceMM})),substepsPerStep:this.options.substeps,solverIterations:this.options.iterations,simulationHz:this.lastDT?1/this.lastDT:null,nominalStepSeconds:this.lastDT,continuousCollision:false,completeSelfCollision:false,materialCalibrated:false,arbitraryLayeringCertified:false,fullFreeClothMembrane:false,constraintModel:'flat-paper edge-distance XPBD, dihedral bend and engineering strain bounds',kinematicShapeAttraction:false,staticNativeBody:true,temporaryBodyMotion:false,wasmReservedBytes:this.poolBytes,wasmReusedBytes:this.reusedBytes,wasmFreeBlockBytes:this.freeBlocks.reduce((sum,b)=>sum+b.capacity,0)};
+  return {simulationSeconds:this.time,completedSteps:this.steps,solverMS:this.solveMS,stageTimingsMS:this.timings,garmentCount:this.rows.length,contactEnabled:!!this.options.contactEnabled,contact:this.lastContact,initialization:this.initializationReport,totalCorrections:this.totalCorrections,maxEdgeStretch:maxStretch,seamGapMM:seamGap*1000,bodyMinimumMM:bodySamples&&bodyVertices?minBody*1000:null,bodySampledVertices:bodySamples?bodyVertices:null,bodyInsideVertices:bodySamples?bodyInsideVertices:null,bodyMetric:bodySamples?'all cloth vertices against actual static native-body triangles; no edge or whole-surface certificate':'not sampled in this snapshot; collision solver uses actual static native-body triangles',bodyClearancePerGarmentMM:this.rows.map(a=>({id:a.id,value:a.s.settings.clearanceMM})),substepsPerStep:this.options.substeps,solverIterations:this.options.iterations,simulationHz:this.lastDT?1/this.lastDT:null,nominalStepSeconds:this.lastDT,continuousCollision:false,completeSelfCollision:false,materialCalibrated:false,arbitraryLayeringCertified:false,fullFreeClothMembrane:false,constraintModel:'flat-paper edge-distance XPBD, dihedral bend and engineering strain bounds',kinematicShapeAttraction:false,staticNativeBody:true,temporaryBodyMotion:false,wasmReservedBytes:this.poolBytes,wasmReusedBytes:this.reusedBytes,wasmFreeBlockBytes:this.freeBlocks.reduce((sum,b)=>sum+b.capacity,0)};
  }
 }

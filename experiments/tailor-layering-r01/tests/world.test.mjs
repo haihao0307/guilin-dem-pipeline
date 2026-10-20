@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const upstream = path.join(root, 'reference/mp05-studio-r10');
 const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'kaopu-layer-world-test-'));
 after(() => fs.rm(temporary, { recursive: true, force: true }));
-for (const name of ['layer-world.mjs', 'layer-contact.mjs', 'garment-prep.mjs']) {
+for (const name of ['layer-world.mjs', 'layer-contact.mjs', 'layer-initialization.mjs', 'garment-prep.mjs']) {
   await fs.copyFile(path.join(root, 'src', name), path.join(temporary, name));
 }
 await fs.symlink(upstream, path.join(temporary, 'upstream'), 'dir');
@@ -67,7 +67,7 @@ test('actual native body and T08/T03 garments step with finite positions and wel
       bodyInsideVertices: audit.bodyInsideVertices, seamGapMM: audit.seamGapMM });
   }
   console.log('WORLD_NUMERICAL_PROBE ' + JSON.stringify({
-    input: 'retained original T08/T03 worn independently; no layered placement preprocessing',
+    input: 'retained original T08/T03 with one-time welded-layer initialization; no prepareGarment body transfer or paper edits',
     visualAccepted: false, creationMS, particles: 6540, garmentTriangles: 12686, bodyTriangles: 50624,
     observations,
   }));
@@ -89,6 +89,12 @@ test('thickness updates body clearance, invalid settings are atomic, and retired
   assert.equal(world.rows.length, 2);
   assert.equal(world.poolBytes, allocated);
   assert.ok(world.reusedBytes > 0);
+  assert.equal(world.time, 0, 'adding a layer records a new initial configuration');
+  for (const a of world.rows) {
+    assert.deepEqual(a.saved, a.s.p);
+    assert.deepEqual(a.s.old, a.s.p);
+    assert.ok(a.s.v.every(v => v === 0));
+  }
 });
 
 test('failed native finish restores cloth state, simulation time and reported contact evidence', () => {
@@ -139,6 +145,13 @@ test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the f
   } finally { globalThis.fetch = originalFetch; }
   const preparationMS = performance.now() - prepStart;
   const preparedWorld = await LayerWorld.create({ positions: host.bodyPositions, faces: host.bodyFaces }, prepared, bytes);
+  const initialization = preparedWorld.audit().initialization;
+  assert.equal(initialization.applied, true);
+  assert.ok(initialization.after.contactCount < initialization.before.contactCount);
+  assert.ok(initialization.after.residualMaxPenetration < initialization.before.residualMaxPenetration);
+  assert.equal(initialization.persistentLayerOffset, false);
+  assert.equal(initialization.visualAccepted, false);
+  const preparedReset = preparedWorld.rows.map(a => a.s.p.slice());
   assert.deepEqual(preparedWorld.rows.map(a => a.id), ['pants', 'inner', 'outer']);
   assert.deepEqual(prepared.map(a => a.positions.length / 3), [3230, 4766, 2334]);
   assert.ok(preparedWorld.rows[0].s.w.some(w => w === 0), 'retained pants waist pins participate as fixed particles');
@@ -177,8 +190,13 @@ test('prepared original P02/T08/T03 garment middlesurfaces jointly step on the f
   }
   console.log('PREPARED_LAYERING_NUMERICAL_PROBE ' + JSON.stringify({
     input: 'actual prepareGarment P02/T08/T03; real frozen native body with old=current', visualAccepted: false,
-    preparationMS, garmentTriangles: preparedWorld.rows.reduce((n, a) => n + a.s.faces.length / 3, 0),
+    preparationMS, initialization, garmentTriangles: preparedWorld.rows.reduce((n, a) => n + a.s.faces.length / 3, 0),
     garments: preparedWorld.rows.map(a => ({ id: a.id, particles: a.s.count, thicknessMM: a.thickness * 1000,
       bodyClearanceMM: a.s.settings.clearanceMM, fixedParticles: a.s.w.filter(w => w === 0).length })), observations,
   }));
+  preparedWorld.reset();
+  preparedWorld.rows.forEach((a, i) => {
+    assert.deepEqual(a.s.p, preparedReset[i], 'reset returns the initialized physical surfaces');
+    assert.deepEqual(a.s.old, a.s.p);
+  });
 });

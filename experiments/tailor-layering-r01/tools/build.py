@@ -48,6 +48,16 @@ def build() -> None:
     if html.count(original_input) != 1:
         raise SystemExit('The retained native fetch input adapter has changed.')
     replace_once(original_input, replacement_input)
+    # ImageLoader uses <img>, not fetch, so the original fetch shim cannot
+    # redirect these two retained skin maps. Use their already verified cached
+    # bytes as well; do not remove or replace the native skin inputs.
+    face_module = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/02f596def9d07ebfc187e1eb18ad345a57c8a6b6/kaopu-unified-human-workbench/face-transfer/FaceSkin.mjs'
+    image_expression = 'new URL("./assets/"+e,"' + face_module + '").href'
+    image_cache = {name: hashlib.sha256((face_module.rsplit('/', 1)[0] + '/assets/' + name).encode()).hexdigest() for name in ['detail.png', 'chroma.png']}
+    for cached_name in image_cache.values():
+        if not (UPSTREAM / 'platform-runtime' / 'asset-cache' / cached_name).is_file():
+            raise SystemExit('A retained skin image is absent from the verified cache: ' + cached_name)
+    replace_once(image_expression, 'new URL("./upstream/platform-runtime/asset-cache/"+' + json.dumps(image_cache, separators=(',', ':')) + '[e],location.href).href')
     original_title = re.search(r'<title>[^<]*</title>', html)
     if not original_title:
         raise SystemExit('The retained native HTML has no title.')
@@ -143,6 +153,7 @@ def build() -> None:
         'nativeRuntimePatches': [
             'Resolve the original cached-asset adapter under upstream/platform-runtime/asset-cache.',
             'Accept URL objects as well as string and Request inputs in the same-document fetch adapter.',
+            'Resolve the two original face detail/chroma ImageLoader inputs to their unchanged, verified local cached bytes.',
             'Add host title, importmap, stylesheet, shell and application module; keep the original runtime DOM and scripts.'
         ],
         'sameDocumentNativeHost': True,

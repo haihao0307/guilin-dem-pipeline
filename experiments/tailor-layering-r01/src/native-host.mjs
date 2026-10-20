@@ -22,7 +22,7 @@ function yUp(nativePositions) {
 function sourceError() {
   const state = window.__LIP_P3__;
   if (!Array.isArray(state?.errors) || state.errors.length === 0) return null;
-  return state.errors.map(value => typeof value === 'string' ? value : value?.message || String(value)).join('；');
+  return state.errors.map(value => typeof value === 'string' ? value : value?.message || value?.error?.message || (value?.target?.src ? '人物贴图载入失败：' + value.target.src : String(value))).join('；');
 }
 
 async function waitForNative(progress) {
