@@ -168,3 +168,16 @@ test('parent assembly transform carries every component and hinge exactly once',
     nearVector(after.scene[key].slice(12, 15), before.scene[key].slice(12, 15).map((v, i) => v + [7, 4, -3][i]));
   }
 });
+
+test('building rotations 0, 90 and 180 degrees preserve the wall-relative hinge and sash relationship', () => {
+  const c=cfg({angleDegrees:45}),group=buildWindow(THREE,score,c),parent=new THREE.Group();parent.add(group);parent.updateMatrixWorld(true);
+  const first=inspectWindow(score,c,group),hinge=new THREE.Vector3(...first.scene.hingeWorld);
+  const fixed=group.userData.refs.fixedFrame.matrix.clone(),pivot=group.userData.refs.pivot.matrix.clone();
+  for(const theta of [0,Math.PI/2,Math.PI]){
+    parent.rotation.y=theta;parent.updateMatrixWorld(true);const state=inspectWindow(score,c,group);
+    nearVector(state.scene.hingeWorld,hinge.clone().applyAxisAngle(new THREE.Vector3(0,1,0),theta).toArray());
+    assert.deepEqual(group.userData.refs.fixedFrame.matrix.elements,fixed.elements);
+    assert.deepEqual(group.userData.refs.pivot.matrix.elements,pivot.elements);
+    assert.equal(state.scene.displayedAngleDegrees,45);
+  }
+});

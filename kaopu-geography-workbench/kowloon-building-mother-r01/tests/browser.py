@@ -42,6 +42,10 @@ with sync_playwright() as pw:
   page.locator('#floorInspect').click();shot(page,'floor-cutaway.png');s=page.evaluate('window.__BUILDING_MOTHER__.snapshot()');assert s['floors']['slabCount']==21 and len(s['floors']['openings'])==21
   assert all(stop['fflM']==next(f['fflM'] for f in s['floors']['floors'] if f['floorId']==stop['floorId']) for stop in s['serviceInterfaces']['stops'])
   report['checks'].append({'floors':s['floors'],'serviceInterfaces':s['serviceInterfaces']})
+  page.locator('#shellEnabled').uncheck();suppressed=page.evaluate('window.__BUILDING_MOTHER__.snapshot().export');assert suppressed['authoredFloors']['enabled'] is False and len(suppressed['serviceInterfaces']['stops'])==0
+  assert page.evaluate('window.__BUILDING_MOTHER__.roots[1].userData.floors.visible') is False
+  page.locator('#shellEnabled').check();assert len(page.evaluate('window.__BUILDING_MOTHER__.snapshot().export.serviceInterfaces.stops'))==21
+  report['checks'].append({'whole_host_suppresses_floor_render_and_exported_service_stops':'passed'})
   page.evaluate('''() => { const a=window.__BUILDING_MOTHER__, s=a.snapshot(), states={};s.floors.slabs.forEach((slab,i)=>states[slab.slabId]={visible:i>=s.floors.slabs.length-3});a.setFloors({floorStates:states});const c=a.roots[1].position.clone();c.y=s.floors.floors.at(-1).fflM;c.z=0;a.camera.position.copy(c).add(a.camera.position.clone().set(0.5,7.2,0.7));a.camera.lookAt(c);a.camera.updateMatrixWorld(true);a.renderer.render(a.scene,a.camera); }''')
   shot(page,'floor-shaft-closeup.png');report['checks'].append({'shaft_closeup':'top three design slabs visible; camera only, holes and thickness unchanged'})
   page.locator('#windowFocus').click();assert page.evaluate('window.__BUILDING_MOTHER__.snapshot().assemblies[1].visiblePatches')==20
