@@ -57,7 +57,7 @@ jobs:
       - name: Diagnose actual immutable R06 public workbench
         env:
           MODE: public
-          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+          QA_OUT: kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
           QA_BUDGET_MS: 900000
         run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-edge-r07/verification/diagnose-edge.cjs
       - name: Verify completed diagnosis and exact restoration
@@ -65,7 +65,7 @@ jobs:
           node - <<'JS'
           const fs=require('fs'),assert=require('assert/strict');
           const p='kaopu-unified-human-workbench/lip-edge-r07/';
-          const q=JSON.parse(fs.readFileSync(p+'evidence/diagnosis-01/qa.json'));
+          const q=JSON.parse(fs.readFileSync(p+'evidence/diagnosis-02/qa.json'));
           const a=JSON.parse(fs.readFileSync(p+'DIAGNOSIS_ANCHOR.json'));
           assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);assert.equal(q.cleanup.browserDisconnected,true);
           for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
@@ -90,8 +90,8 @@ jobs:
           test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01; then
-            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+          if test -d kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02; then
+            git add -f -- kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Record actual R07 lip-edge diagnostic evidence [skip ci]"
@@ -102,7 +102,7 @@ jobs:
         with:
           name: lip-edge-r07-diagnosis-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-edge-r07/evidence/diagnosis-02
             kaopu-unified-human-workbench/lip-edge-r07/TASK_ANCHOR.json
             kaopu-unified-human-workbench/lip-edge-r07/DIAGNOSIS_ANCHOR.json
             kaopu-unified-human-workbench/lip-edge-r07/verification

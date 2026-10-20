@@ -20,12 +20,12 @@ assert.equal(PUBLIC_URL,'https://htmlpreview.github.io/?'+RAW,'Public URL must n
 const taskScope=path.resolve(__dirname,'..');
 const scope=path.resolve(__dirname,'../../lip-corner-r06'),previewPath=process.env.CANDIDATE_PATH||path.join(scope,'preview.html');
 const manifestPath=process.env.BUILD_MANIFEST_PATH||path.join(scope,'BUILD_MANIFEST.json');
-const out=path.resolve(process.env.QA_OUT||path.join(taskScope,'evidence','diagnosis-01'));
+const out=path.resolve(process.env.QA_OUT||path.join(taskScope,'evidence','diagnosis-02'));
 const width=640,height=512,budgetMS=Number(process.env.QA_BUDGET_MS||900000);
 assert(Number.isFinite(budgetMS)&&budgetMS>=120000&&budgetMS<=960000,'Invalid bounded deadline');
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
 fs.mkdirSync(out,{recursive:true});
-const q={schema:'kaopu/lip-edge-diagnosis-qa@1',version:'LIP-EDGE-R07-DIAGNOSIS-01',baselineVersion:VERSION,diagnosticCommit:process.env.GITHUB_SHA||null,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
+const q={schema:'kaopu/lip-edge-diagnosis-qa@1',version:'LIP-EDGE-R07-DIAGNOSIS-02',baselineVersion:VERSION,diagnosticCommit:process.env.GITHUB_SHA||null,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
   verifierSHA256:sha(fs.readFileSync(__filename)),startedAt:new Date().toISOString(),budgetMS,
   framebuffer:{width,height,pixelRatio:1},browserViewport:{width:1280,height:900},
   tests:[],frames:[],pageErrors:[],consoleErrors:[],failedRequests:[],resourceErrors:[],transportObservations:[],transportObservationDrains:[],
@@ -383,6 +383,22 @@ async function probe(tag){
   const record={tag,file,sha256:sha(fs.readFileSync(path.join(out,file))),bytes:fs.statSync(path.join(out,file)).size,nativeStateExact:true,solverCallsExact:true};
   q.geometryProbes||=[];q.geometryProbes.push(record);checkpoint();return record;
 }
+function acceptedStateFromJSON(stored,actual){
+  // R06's JSON evidence predates a tagged non-finite-number encoding.
+  // JSON.stringify(+Infinity) writes null. Decode ONLY these two documented
+  // material attenuation distances, and require actual positive Infinity.
+  // Do not stringify the entire actual state or normalize other null/NaN data.
+  const decoded=structuredClone(stored),fields=[];
+  assert.equal(decoded.materials.length,2);assert.equal(actual.materials.length,2);
+  for(let i=0;i<2;i++){
+    assert.equal(decoded.materials[i].values.attenuationDistance,null,'Unexpected serialized R06 attenuation-distance encoding');
+    assert.equal(actual.materials[i].values.attenuationDistance,Infinity,'Actual native attenuation distance is not positive Infinity');
+    decoded.materials[i].values.attenuationDistance=Infinity;
+    fields.push('materials['+i+'].values.attenuationDistance');
+  }
+  q.acceptedReferenceEncoding={source:'Original R06 JSON evidence retained unchanged',decodedFields:fields,storedValue:null,requiredActualValue:'positive Infinity',allOtherFieldsComparedWithoutConversion:true};
+  return decoded;
+}
 async function diagnosticChecks(){
   const primary=await load(PUBLIC_URL,'immutable R06 for edge diagnosis',true,false);page=primary.page;
   const accepted=JSON.parse(fs.readFileSync(path.join(scope,'evidence/candidate-03/qa.json')));
@@ -416,7 +432,7 @@ async function diagnosticChecks(){
       const alignment=await page.evaluate(reference=>__LC_VERIFY__.align(reference),reference.onState);
       const original=await capture(tag+'-original-r06'),originalState=await state(),originalSolvers=await reportSolvers();
       assertNativeState(originalState);checkOriginalSolvers(originalSolvers);
-      assert.deepEqual(originalState,reference.onState,'Read-only diagnostics changed accepted R06 native state');
+      assert.deepEqual(originalState,acceptedStateFromJSON(reference.onState,originalState),'Read-only diagnostics changed accepted R06 native state');
       assert.equal(original.sha256,reference.onSHA256,'Read-only diagnostics changed accepted R06 actual pixels');
       const originalShader=await shaderRecord(tag+'-original-r06',materialWindow),geometry=await probe(tag);
       q.baselineObservations||=[];q.baselineObservations.push({tag,state:originalState,solvers:originalSolvers,frameSHA256:original.sha256,shader:originalShader,geometry,acceptedR06StateAndPixelsExact:true,explicitReferenceViewAlignment:alignment});checkpoint();

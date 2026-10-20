@@ -1,0 +1,21 @@
+{
+  "schema": "kaopu/lip-edge-diagnosis-failure@1",
+  "sourceCommit": "cfddcc0cf34ebfe4e6298d7570ec29c0cbfa8822",
+  "evidenceCommit": "6f9134f59023cb5c846176fa5cd8c6c750b0b9d2",
+  "workflowRun": 39390262883,
+  "job": 118519828861,
+  "evidence": "evidence/diagnosis-01/qa.json",
+  "qaSHA256": "8903f0fdb9b026ba6e7e59a9ce2e1f65c58cf4ae4d594776ad21601059ea7916",
+  "technicalCompleted": false,
+  "browserDiagnosisStarted": true,
+  "nativeFrames": 1,
+  "failure": "AssertionError [ERR_ASSERTION]: Read-only diagnostics changed accepted R06 native state\n+ actual - expected\n... Skipped lines\n\n  {\n    baseComparison: 'r02',\n    baseLip: {\n      diagnostic: 0,\n      edgeSoftness: 0.34,\n...\n          ],\n+         attenuationDistance: Infinity,\n-         attenuationDistance: null,\n          bumpScale: 1,\n          clearcoat: 0.06,\n          clearcoatRoughness: 0.4,\n          color: [\n            1,\n...\n          ],\n+         attenuationDistance: Infinity,\n-         attenuationDistance: null,\n          bumpScale: 1,\n          clearcoat: 0.025,\n          clearcoatRoughness: 0.4,\n          color: [\n            1,\n",
+  "cause": "The old R06 persisted JSON stores positive Infinity attenuationDistance as null. The new cross-run assertion compared that JSON null directly to the actual runtime Infinity.",
+  "repair": "Explicitly decode only both known native material attenuationDistance fields from JSON null to positive Infinity; require actual Infinity, and compare every other state field without conversion. Keep original shader, pixels, geometry and restore gates unchanged.",
+  "firstActualFrameMatchesAcceptedR06": true,
+  "firstActualFrameSHA256": "02e4664c5a863c052305e98ba69b7b7e601b16e148898bf594fe971d20638a67",
+  "artifactSHA256": "8ffa57d60f1334f32775764fd06a6c2ce563ba3ed5ee8d28e96c80538f22d255",
+  "remainingViewsAndMaterialWindows": "Not reached; no cause or product improvement concluded.",
+  "visualAcceptance": false,
+  "productionReady": false
+}
