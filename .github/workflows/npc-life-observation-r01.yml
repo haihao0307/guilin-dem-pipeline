@@ -33,7 +33,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify complete native people in real Chromium
         env:
-          NPC_QA_PHASE: startup
+          NPC_QA_PHASE: suite
           NPC_QA_OUT: /tmp/npc-browser
         run: node kaopu-unified-human-workbench/npc-life-observation-r01/verify-browser.cjs
       - name: Stage isolated public candidate

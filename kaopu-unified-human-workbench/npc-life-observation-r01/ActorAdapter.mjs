@@ -12,7 +12,7 @@ const {clamp, add, sub, scale, dot, cross, norm, unit, pos, mv, basisRotation} =
 const SIDES = ['L', 'R'];
 const native = p => [p.x, -p.z, p.y];
 const display = p => new THREE.Vector3(p[0], p[2], -p[1]);
-const asVector = p => p?.isVector3 ? p.clone() : new THREE.Vector3(...p);
+const asVector = p => p?.isVector3 ? p.clone() : p && 'x' in p ? new THREE.Vector3(p.x,p.y,p.z) : new THREE.Vector3(...p);
 const pauseFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
 const hash = text => { let h = 2166136261; for (let i=0;i<text.length;i++) h = Math.imul(h ^ text.charCodeAt(i),16777619); return (h>>>0).toString(16); };
 
@@ -246,19 +246,53 @@ function makeActor(model, viewer, spec, preset, measurements) {
       }
       lastGoal=worldTarget.clone();lastSolution=solved;return diagnostic(lastGoal,lastSolution);
     },
-    diagnostics({tableTopY=null}={}){
+    diagnostics({tableTopY=null,tableBounds=null,bottle=null}={}){
       // Sample the actual weighted hand surface only on diagnostic requests,
       // not at every physics substep. This catches a curled intermediate
       // phalanx below the table even when the fingertip itself is above it.
-      root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity;
+      if(tableBounds&&!['minX','maxX','minZ','maxZ'].every(k=>Number.isFinite(tableBounds[k])))
+        throw Error('Table bounds require finite minX/maxX/minZ/maxZ');
+      if(tableBounds&&(tableBounds.minX>tableBounds.maxX||tableBounds.minZ>tableBounds.maxZ))throw Error('Table bounds are reversed');
+      let cylinder=null;
+      if(bottle){
+        const center=asVector(bottle.position),q=bottle.quaternion;
+        const values=Array.isArray(q)||ArrayBuffer.isView(q)?Array.from(q):q?[q.x,q.y,q.z,q.w]:null;
+        if(!center.toArray().every(Number.isFinite)||!values||values.length!==4||!values.every(Number.isFinite)||
+          Math.hypot(...values)<1e-9||!(bottle.radius>0)||!(bottle.height>0)||!Number.isFinite(bottle.radius)||!Number.isFinite(bottle.height))
+          throw Error('Bottle geometry requires finite position/quaternion and positive radius/height');
+        const inverse=new THREE.Quaternion(...values).normalize().invert();
+        cylinder={center,inverse,radius:bottle.radius,halfHeight:bottle.height*.5};
+      }
+      const cylinderDistance = p => {
+        const local=p.clone().sub(cylinder.center).applyQuaternion(cylinder.inverse);
+        // Exact signed distance to the finite local-Y cylinder, including caps.
+        const radial=Math.hypot(local.x,local.z)-cylinder.radius,axial=Math.abs(local.y)-cylinder.halfHeight;
+        return {distance:Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0),local};
+      };
+      root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity,tableMinimumYM=Infinity,tableSampleCount=0;
+      let minCylinderDistance=Infinity,penetratingCount=0,deepestPoint=null,deepestLocal=null;
       for(const id of handSurfaceVertices[active.side]) {
         const p=display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
         handSurfaceMinimumYM=Math.min(handSurfaceMinimumYM,p.y);
+        if(!tableBounds||(p.x>=tableBounds.minX&&p.x<=tableBounds.maxX&&p.z>=tableBounds.minZ&&p.z<=tableBounds.maxZ)){
+          tableMinimumYM=Math.min(tableMinimumYM,p.y);tableSampleCount++;
+        }
+        if(cylinder){const result=cylinderDistance(p);if(result.distance<0)penetratingCount++;
+          if(result.distance<minCylinderDistance){minCylinderDistance=result.distance;deepestPoint=p.toArray();deepestLocal=result.local.toArray();}}
       }
       const live=diagnostic(lastGoal,lastSolution);
+      const minimumInsideTable=tableSampleCount?tableMinimumYM:null;
       return {...live,binding:binding.report,handSurfaceMinimumYM,
         handSurfaceSampleCount:handSurfaceVertices[active.side].length,
-        handTableClearanceM:Number.isFinite(tableTopY)?handSurfaceMinimumYM-tableTopY:null};
+        handTableMinimumYM:minimumInsideTable,handTableSampleCount:tableSampleCount,
+        handTableClearanceM:Number.isFinite(tableTopY)&&tableSampleCount?tableMinimumYM-tableTopY:null,
+        bottleMinimumSignedDistanceM:cylinder?minCylinderDistance:null,
+        bottleMaxPenetrationM:cylinder?Math.max(0,-minCylinderDistance):null,
+        bottlePenetratingVertexCount:cylinder?penetratingCount:null,
+        bottleSampleCount:cylinder?handSurfaceVertices[active.side].length:0,
+        bottleDeepestPointWorld:deepestPoint,bottleDeepestPointLocal:deepestLocal,
+        fingerBottleSignedDistanceM:cylinder?live.fingerAnchors.map(p=>cylinderDistance(asVector(p)).distance):null,
+        geometricDiagnosticScope:'weighted rendered hand vertices; finite-cylinder signed distance and table XZ projection; not continuous triangle collision or contact force'};
     },
     dispose(){root.removeFromParent();binding.dispose();geometry.dispose();for(const f of frozen)f.material.dispose();for(const texture of textureCopies.values())texture.dispose();}
   };

@@ -1,0 +1,198 @@
+{
+  "schema": "npc-independent-midair-qa/1",
+  "createdAt": "2026-10-20T03:21:08.723Z",
+  "sourceHashAtStart": "55c991c1306459cf85ca6855d45f047b12dbaabba756fb1c25d39c8a0b7a98b2",
+  "sourceHashAtEnd": "55c991c1306459cf85ca6855d45f047b12dbaabba756fb1c25d39c8a0b7a98b2",
+  "sourceUnchangedDuringTest": true,
+  "scope": "TEST_FIXTURE_ONLY actor adapters; unchanged production LifeWorld and vendored Cannon. These checks do not prove native hand geometry, visible foot contact, browser operation, or public delivery.",
+  "station": {
+    "tableTop": 0.95,
+    "tableHalf": [
+      0.62,
+      0.035,
+      0.23
+    ],
+    "tableCentre": [
+      0,
+      0.915,
+      0.52
+    ],
+    "radius": 0.032,
+    "height": 0.14,
+    "gripHeight": 0.048,
+    "mass": 0.22,
+    "maxGripForcePerAxisN": 24,
+    "maxGripTorquePerAxisNm": 0.8,
+    "source": [
+      0,
+      1.0208,
+      0.37
+    ],
+    "target": [
+      0.1,
+      1.0208,
+      0.44
+    ]
+  },
+  "stepS": 0.008333333333333333,
+  "tests": [
+    {
+      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
+      "requiredRiseM": 0.03,
+      "pass": true,
+      "cancelled": {
+        "t": 2.6333333333333266,
+        "y": 1.0510961828035812,
+        "riseM": 0.030296182803581262,
+        "velocityY": 0.13812088749387716,
+        "owner": "A",
+        "phase": "lift",
+        "constraints": 1,
+        "after": {
+          "owner": null,
+          "reserved": null,
+          "constraints": 0
+        }
+      },
+      "helperResult": {
+        "result": "completed",
+        "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+        "duration": 9.900000000000079,
+        "contactM": 0,
+        "maxHoldErrorM": 0.011963080588480815,
+        "phases": [
+          "waiting",
+          "approach",
+          "close",
+          "lift",
+          "transfer",
+          "lower",
+          "verify"
+        ]
+      },
+      "remaining": {
+        "owner": null,
+        "reserved": null,
+        "constraints": 0
+      },
+      "maxConstraints": 1,
+      "finalBottlePosition": [
+        0.09960947721699293,
+        1.0199989157040077,
+        0.4399778501178353
+      ]
+    },
+    {
+      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
+      "requiredRiseM": 0.08,
+      "pass": true,
+      "cancelled": {
+        "t": 2.941666666666659,
+        "y": 1.10153384361039,
+        "riseM": 0.08073384361039015,
+        "velocityY": 0.17025481107508708,
+        "owner": "A",
+        "phase": "lift",
+        "constraints": 1,
+        "after": {
+          "owner": null,
+          "reserved": null,
+          "constraints": 0
+        }
+      },
+      "helperResult": {
+        "result": "completed",
+        "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+        "duration": 10.208333333333394,
+        "contactM": 0,
+        "maxHoldErrorM": 0.011963080588481037,
+        "phases": [
+          "waiting",
+          "approach",
+          "close",
+          "lift",
+          "transfer",
+          "lower",
+          "verify"
+        ]
+      },
+      "remaining": {
+        "owner": null,
+        "reserved": null,
+        "constraints": 0
+      },
+      "maxConstraints": 1,
+      "finalBottlePosition": [
+        0.09960985968275379,
+        1.0199989157047347,
+        0.4399778546638991
+      ]
+    },
+    {
+      "name": "Cancel after actual vertical rise and allow waiting helper to complete",
+      "requiredRiseM": 0.13,
+      "pass": true,
+      "cancelled": {
+        "t": 3.324999999999991,
+        "y": 1.151219659680082,
+        "riseM": 0.13041965968008218,
+        "velocityY": 0.07293632727697494,
+        "owner": "A",
+        "phase": "lift",
+        "constraints": 1,
+        "after": {
+          "owner": null,
+          "reserved": null,
+          "constraints": 0
+        }
+      },
+      "helperResult": {
+        "result": "completed",
+        "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+        "duration": 10.591666666666706,
+        "contactM": 0,
+        "maxHoldErrorM": 0.011963080588480815,
+        "phases": [
+          "waiting",
+          "approach",
+          "close",
+          "lift",
+          "transfer",
+          "lower",
+          "verify"
+        ]
+      },
+      "remaining": {
+        "owner": null,
+        "reserved": null,
+        "constraints": 0
+      },
+      "maxConstraints": 1,
+      "finalBottlePosition": [
+        0.09960862912536869,
+        1.0199989157023956,
+        0.43997784002091966
+      ]
+    },
+    {
+      "name": "A helper that only waited must not receive a reach pose when the goal is already satisfied",
+      "pass": true,
+      "result": {
+        "result": "already-sorted",
+        "detail": "物品已由另一人放稳，无需重复执行",
+        "duration": 6.6750000000001215,
+        "contactM": null,
+        "maxHoldErrorM": 0,
+        "phases": [
+          "waiting"
+        ]
+      },
+      "phases": [
+        "waiting",
+        "done"
+      ],
+      "reachCommandCount": 0
+    }
+  ],
+  "passed": true
+}

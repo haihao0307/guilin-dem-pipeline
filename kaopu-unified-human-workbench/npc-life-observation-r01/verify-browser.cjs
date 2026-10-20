@@ -74,7 +74,8 @@ async function bootState() {
     headErrors:window.__HEAD_PROC__?.errors || [],
     nativeReady:!!window.__LIP_P3__?.ready,
     startupFinalFrame:!!window.__IDENTITY_QA__?.viewer?.()?.startupFinalFrame,
-    appErrors:window.__NPC_OBSERVATION__?.errors || []
+    appErrors:window.__NPC_OBSERVATION__?.errors || [],
+    browserFatal:window.__NPC_BROWSER_FATAL__ || []
   }));
 }
 
@@ -186,6 +187,55 @@ async function saveDOM(name='body-dom') {
   put(name+'.html',dom.html);put(name+'.txt',dom.text);return{title:dom.title,url:dom.url,omittedScripts:dom.omittedScripts};
 }
 
+function checkFeetAndBones(actors,stage) {
+  assert.equal(actors?.length,3,'Three real actor diagnostics at '+stage);
+  return actors.map(actor=>{
+    const d=actor.diagnostics,feet=d?.footWorldYM;
+    assert.equal(d?.finite,true,'Finite native pose '+actor.id+' / '+stage);
+    assert(Number.isFinite(d.footSurfaceErrorM) && d.footSurfaceErrorM<=.00002,
+      'Native foot surface drift exceeds 0.02 mm: '+actor.id+' / '+stage+' / '+d.footSurfaceErrorM);
+    assert(Number.isFinite(d.boneLengthErrorM) && d.boneLengthErrorM<=1e-8,
+      'Native bone length drift: '+actor.id+' / '+stage+' / '+d.boneLengthErrorM);
+    assert(feet && Object.keys(feet).length===2,'Both actual foot surfaces exported: '+actor.id);
+    for(const side of ['L','R'])assert(Number.isFinite(feet[side]) && Math.abs(feet[side])<=.003,
+      'Foot is not on the shared floor within 3 mm: '+actor.id+' '+side+' / '+stage+' / '+feet[side]);
+    return {id:actor.id,feet,footSurfaceErrorM:d.footSurfaceErrorM,boneLengthErrorM:d.boneLengthErrorM};
+  });
+}
+
+async function mobileViewport() {
+  await check('390 x 844 responsive viewport and reachable controls',async()=>{
+    await pause(true);await page.setViewportSize({width:390,height:844});
+    await page.click('[data-camera="all"]');
+    await page.waitForFunction(()=>{
+      const c=window.__IDENTITY_QA__?.viewer?.()?.renderer?.domElement,r=c?.getBoundingClientRect();
+      return r && r.width>200 && r.width<=392 && r.height>200 && c.width>100 && c.height>100;
+    },{},{timeout:30000,polling:100});
+    await screenshot('mobile-390x844-panorama');
+    const layout=await page.evaluate(()=>{
+      const rect=selector=>document.querySelector(selector)?.getBoundingClientRect().toJSON();
+      const panel=document.querySelector('#npc-app aside');
+      return {width:innerWidth,height:innerHeight,documentWidth:document.documentElement.scrollWidth,
+        app:rect('#npc-app'),canvas:rect('#npc-view canvas'),panel:rect('#npc-app aside'),
+        panelClientWidth:panel.clientWidth,panelScrollWidth:panel.scrollWidth,
+        primaryControls:[...document.querySelectorAll('#npc-app button')].map(button=>({id:button.id,camera:button.dataset.camera,disabled:button.disabled}))};
+    });
+    put('mobile-layout.json',layout);
+    assert.equal(layout.width,390);assert.equal(layout.height,844);
+    assert(layout.documentWidth<=392,'No document horizontal overflow');
+    assert(layout.app.width<=392 && layout.canvas.width<=392,'App and real canvas fit viewport');
+    assert(layout.panelScrollWidth<=layout.panelClientWidth+2,'Control panel has no horizontal overflow');
+    const primary=page.locator('#npc-plan');await primary.scrollIntoViewIfNeeded();
+    const box=await primary.boundingBox();
+    assert(box && box.x>=-1 && box.x+box.width<=391 && box.y>=0 && box.y+box.height<=845,'Identity-task control remains reachable in scrolling panel');
+    assert.equal(await primary.isEnabled(),true);
+    await screenshot('mobile-390x844-controls');
+    await evidence('mobile-final');await saveDOM('mobile-dom');
+    report.mobileViewport={tested:true,physicalPhone:false,width:390,height:844,layout};
+    return report.mobileViewport;
+  });
+}
+
 async function contactTests() {
   report.contactTestsRun=true;
   for(let i=0;i<3;i++) {
@@ -201,10 +251,23 @@ async function contactTests() {
       const grip=await evidence('contact-'+id);
       await screenshot('contact-'+id);
       const agent=grip.snapshot.agents.find(a=>a.id===id);
+      const feet=checkFeetAndBones(grip.actorDiagnostics,'contact-'+id);
+      const hand=grip.actorDiagnostics.find(actor=>actor.id===id)?.diagnostics;
       assert.equal(grip.errors.length,0,'No runtime exception');
       assert.equal(grip.snapshot.object.heldBy,id,'The real shared object is held by the selected actor');
       assert.equal(grip.snapshot.object.constraintCount,1,'One actual physical grip constraint');
       assert(Number.isFinite(agent.contactErrorM) && agent.contactErrorM<.025,'Rendered hand contact error below 25 mm');
+      assert(Number.isInteger(hand?.handTableSampleCount) && hand.handTableSampleCount>=0,'Actual table-projected hand vertices are measured');
+      // Only the holding actor's hand vertices whose XZ projection lies inside
+      // the real tabletop are gated. Low idle hands beside a table are valid.
+      if(hand.handTableSampleCount>0)assert(Number.isFinite(hand.handTableClearanceM) && hand.handTableClearanceM>=-.003,
+        'Held hand penetrates the actual tabletop by more than 3 mm: '+id+' / '+hand.handTableClearanceM);
+      assert(hand.bottleSampleCount>0 && Number.isFinite(hand.bottleMaxPenetrationM),'Actual finite-cylinder hand geometry was measured');
+      const bottleGeometry={measured:true,accepted:null,definition:hand.geometricDiagnosticScope,
+        maxPenetrationM:hand.bottleMaxPenetrationM,minimumSignedDistanceM:hand.bottleMinimumSignedDistanceM,
+        penetratingVertexCount:hand.bottlePenetratingVertexCount,sampleCount:hand.bottleSampleCount,
+        fingerSignedDistanceM:hand.fingerBottleSignedDistanceM,deepestPointWorld:hand.bottleDeepestPointWorld};
+      put('bottle-geometry-'+id+'.json',bottleGeometry);
       await pause(false);
       await page.waitForFunction(id=>{
         const app=window.__NPC_OBSERVATION__,a=app.snapshot().agents.find(a=>a.id===id);
@@ -213,10 +276,12 @@ async function contactTests() {
       await pause(true);
       const final=await evidence('placed-'+id);
       const result=final.snapshot.agents.find(a=>a.id===id).result;
+      const finalFeet=checkFeetAndBones(final.actorDiagnostics,'placed-'+id);
       assert.equal(result?.result,'completed','World result must confirm placement');
       assert.equal(final.snapshot.object.heldBy,null);assert.equal(final.snapshot.object.constraintCount,0);
       assert(final.snapshot.object.insideTarget && final.snapshot.object.supported && final.snapshot.object.settled,'Object actually released and stable on support');
-      return {contactErrorM:agent.contactErrorM,result,object:final.snapshot.object};
+      return {contactErrorM:agent.contactErrorM,result,object:final.snapshot.object,feet,finalFeet,
+        handDiagnostics:hand,bottleGeometry};
     });
   }
 }
@@ -228,6 +293,7 @@ async function fullSuite() {
     await page.waitForFunction(()=>window.__NPC_OBSERVATION__.verification()?.completed || window.__NPC_OBSERVATION__.errors.length,{},{timeout:SUITE_MS,polling:250});
     await pause(true);
     const result=await evidence('suite-final');put('suite.json',result.verification || {});
+    checkFeetAndBones(result.actorDiagnostics,'suite-final');
     await page.click('[data-camera="all"]');await screenshot('suite-final');
     assert.equal(result.errors.length,0);assert.equal(result.verification?.completed,true);
     assert.equal(result.verification.tests.length,6);assert.equal(result.verification.passed,true);
@@ -239,7 +305,10 @@ async function fullSuite() {
 async function main() {
   console.log('[qa] '+VERSION+' / '+PHASE+' / evidence '+out);
   assert.equal(report.environment.playwright,'1.58.2','CI verifier pins Playwright 1.58.2');
-  if(process.env.PREVIEW_URL) {report.url=process.env.PREVIEW_URL;report.deliveryMode=/^file:/.test(report.url)?'file-protocol':'deployed-url';}
+  if(process.env.PREVIEW_URL) {
+    report.url=process.env.PREVIEW_URL;const address=new URL(report.url);
+    report.deliveryMode=address.protocol==='file:'?'file-protocol':(['localhost','127.0.0.1','[::1]','0.0.0.0'].includes(address.hostname)?'local-candidate-url':'deployed-url');
+  }
   else if(process.env.NPC_QA_FILE_PROTOCOL==='1') {report.url=pathToFileURL(input).href;report.deliveryMode='file-protocol';}
   else {
     const bytes=fs.readFileSync(input);report.localPreviewSHA256=sha(bytes);
@@ -257,6 +326,9 @@ async function main() {
   context=await browser.newContext({viewport:report.environment.viewport,deviceScaleFactor:1});
   await context.addInitScript(()=>{
     window.__NPC_BROWSER_EVENTS__=[];
+    window.__NPC_BROWSER_FATAL__=[];
+    window.addEventListener('error',event=>{if(event.message)window.__NPC_BROWSER_FATAL__.push({type:'error',message:event.message,file:event.filename,line:event.lineno,column:event.colno,at:performance.now()});});
+    window.addEventListener('unhandledrejection',event=>window.__NPC_BROWSER_FATAL__.push({type:'unhandledrejection',message:String(event.reason?.stack||event.reason),at:performance.now()}));
     document.addEventListener('webglcontextlost',event=>window.__NPC_BROWSER_EVENTS__.push({type:'webglcontextlost',at:performance.now(),target:event.target?.id||null}),true);
     document.addEventListener('webglcontextrestored',event=>window.__NPC_BROWSER_EVENTS__.push({type:'webglcontextrestored',at:performance.now(),target:event.target?.id||null}),true);
   });
@@ -287,8 +359,10 @@ async function main() {
     return {url:report.finalURL,status:report.navigationStatus,sha256:report.observedPreviewSHA256};
   });
   await check('complete original R07 and all three actors ready',async()=>{
-    await page.waitForFunction(()=>!!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length,{},{timeout:BOOT_MS,polling:250});
+    assert.equal(report.pageErrors.length,0,'Page failed before native startup: '+JSON.stringify(report.pageErrors));
+    await page.waitForFunction(()=>!!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length || !!window.__NPC_BROWSER_FATAL__?.length,{},{timeout:BOOT_MS,polling:250});
     report.coldReadyMS=Date.now()-start;report.lastBootState=await bootState();
+    assert.equal(report.lastBootState.browserFatal.length,0,'Browser failed during native startup: '+JSON.stringify(report.lastBootState.browserFatal));
     assert.equal(report.lastBootState.state,'true',JSON.stringify(report.lastBootState));
     assert.equal(report.lastBootState.ready,true);assert.equal(report.lastBootState.gpuVerified,true);
     assert.equal(report.lastBootState.headErrors.length,0);assert.equal(report.lastBootState.appErrors.length,0);
@@ -309,6 +383,7 @@ async function main() {
       assert.equal(rig?.names?.length,104,'Raw 104-bone rig exported for '+actor.id);
       assert.equal(rig?.parents?.length,104);assert.equal(rig?.restMatrices?.length,104);
     }
+    report.initialFeetAndBones=checkFeetAndBones(initial.actorDiagnostics,'initial');
     assert(initial.native.stream.residentPackets.includes('hot'));
     report.residentPackets=initial.native.stream.residentPackets;
     return {coldReadyMS:report.coldReadyMS,actors:initial.snapshot.agents.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,binding:a.binding})),residentPackets:report.residentPackets};
@@ -327,8 +402,8 @@ async function main() {
   await page.click('[data-camera="contact"]');await screenshot('02-hand-view');
   await evidence('hand-view');report.dom=await saveDOM();
   report.startupPassed=true;
-  if(PHASE==='contact')await contactTests();
-  if(PHASE==='suite')await fullSuite();
+  if(PHASE==='contact' || PHASE==='suite')await contactTests();
+  if(PHASE==='suite'){await fullSuite();await mobileViewport();}
   const final=await evidence('final');
   await check('no page, resource, application or WebGL errors',async()=>{
     assert.equal(report.pageErrors.length,0);assert.equal(report.consoleErrors.length,0);

@@ -259,8 +259,20 @@ async function main() {
     '<script>window.__MOTION_DEFER_IDLE__=true;window.__NPC_LIFE_BUILD__=' + JSON.stringify(bootstrap) + ';window.__NPC_BUILD__=window.__NPC_LIFE_BUILD__;</script>' +
     (embedded ? '<script data-npc-native-assets>' + embedded.script.replaceAll('</script', '<\\/script') + '</script>' : '') +
     (css ? '<style data-npc-workbench-style>' + css.replaceAll('</style', '<\\/style') + '</style>' : '') + '</head>');
-  html = patch(html, '</body>', '<script data-npc-workbench>/*! cannon-es 0.20.0\n' + cannonLicense + '\n*/\n' + workbench.replaceAll('</script', '<\\/script') + '</script></body>');
+  // The official LICENSE already contains a complete /* ... */ block. Keep it
+  // as-is; wrapping it in another block comment would leave a stray closing */
+  // and prevent the entire observation script from parsing in the browser.
+  html = patch(html, '</body>', '<script data-npc-workbench>/*! cannon-es 0.20.0 */\n' + cannonLicense + '\n' + workbench.replaceAll('</script', '<\\/script') + '</script></body>');
   html = html.replace(/<title>[^<]*<\/title>/, '<title>生活动作观察室 · NPC R01</title>');
+  // Gate the actual final HTML, including wrappers, licenses and injected
+  // bootstrap/asset scripts. Checking only the pre-insertion esbuild output
+  // does not detect syntax errors introduced by HTML assembly.
+  const finalScripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+  assert.equal(finalScripts.length,offline?5:4,'All final inline scripts are retained');
+  const finalScriptSyntax=finalScripts.map((match,index)=>{
+    new vm.Script(match[1],{filename:'final-npc-html-script-'+index+'.js'});
+    return {index,bytes:Buffer.byteLength(match[1]),sha256:hash(match[1])};
+  });
   assert.equal(hash(fs.readFileSync(hostPath)), HOST_SHA256, 'Build must not mutate the canonical source');
   const outputPath = path.join(here, offline ? 'standalone.html' : 'preview.html');
   fs.writeFileSync(outputPath, html);
@@ -269,6 +281,7 @@ async function main() {
     builtAt: new Date().toISOString(), esbuildVersion: esbuild.version,
     previewBytes: Buffer.byteLength(html), previewSHA256: hash(html),
     workbenchBytes: Buffer.byteLength(workbench), sourceFiles,
+    adapterSHA256:hash(fs.readFileSync(__filename)),finalInlineScriptSyntaxChecked:true,finalScriptSyntax,
     sourceSHA256: Object.fromEntries(sourceFiles.map(file => [file, hash(fs.readFileSync(path.resolve(file)))])),
     styleFiles: cssPaths.map(file => path.basename(file))
   });

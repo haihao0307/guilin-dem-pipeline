@@ -32,15 +32,15 @@ async function main(){
   actors.forEach((a,i)=>{a.id=a.id||['A','B','C'][i];});
   const canvas=viewer.renderer.domElement;if(!sourceStage.contains(canvas))sourceStage.append(canvas);
   viewer.renderer.setPixelRatio(1);viewer.camera.near=.02;viewer.camera.far=30;viewer.camera.updateProjectionMatrix();
-  const props=visibleWorld(viewer.scene);let selected=0,pair=false,paused=false,debug=false,acc=0,last=performance.now(),lastUI=0,frameMS=[],probe=null;
+  const props=visibleWorld(viewer.scene);let selected=0,pair=false,paused=false,debug=false,currentView='all',acc=0,last=performance.now(),lastUI=0,frameMS=[],probe=null;
   const world=new LifeWorld(actors,{onEvent:()=>{}});
   function station(mode){
-    world.reset();pair=mode==='pair';
-    actors.forEach((a,i)=>{const base=a.floorOffset??a.binding?.floorOffset??0;const p=pair?[[ -.31,base,.05],[.38,base,0],[1.48,base,-.10]][i]:(i===selected?[0,base,[.05,0,.02][i]]:[i<selected?-1.05:1.1+(i-selected-1)*.82,base,-.13]);a.root.position.set(...p);a.root.rotation.set(0,0,0);a.setSide?.(pair?(i===0?'L':'R'):'L');a.rest();a.root.updateMatrixWorld(true);});
+    world.reset();pair=mode==='pair';if(pair)selected=0;$('npc-pick').textContent=(pair?'工作位 A':actors[selected].id)+' 拿放';
+    actors.forEach((a,i)=>{const base=a.floorOffset??a.binding?.floorOffset??0;const p=pair?[[ -.31,base,.05],[.38,base,0],[1.48,base,-.10]][i]:(i===selected?[0,base,[.05,0,.02][i]]:[[...actors.keys()].filter(n=>n!==selected).indexOf(i)===0?-1.02:1.02,base,-.13]);a.root.position.set(...p);a.root.rotation.set(0,0,0);a.setSide?.(pair?(i===0?'L':'R'):'L');a.rest();a.root.updateMatrixWorld(true);});
     for(const [i,b] of [...document.querySelectorAll('[data-person]')].entries())b.setAttribute('aria-pressed',String(!pair&&i===selected));$('npc-pair').setAttribute('aria-pressed',String(pair));camera('all');
   }
-  function camera(mode){let p,target;if(mode==='contact'){p=[.7,1.3,1.65];target=[.02,1.02,.32];}else if(mode==='side'){p=[3.2,1.55,1.3];target=[.25,1,.1];}else{p=[1.7,1.65,4.0];target=[.28,.92,.10];}viewer.camera.position.set(...p);viewer.orbit.target.set(...target);viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();viewer.render();}
-  function resize(){const r=sourceStage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;viewer.camera.updateProjectionMatrix();viewer.render();}
+  function camera(mode){currentView=mode;let p,target;if(mode==='contact'){p=[.7,1.38,1.65];target=[.02,1.07,.34];}else if(mode==='side'){p=[3.2,1.55,1.3];target=[.25,1,.1];}else{const xs=actors.map(a=>a.root.position.x),cx=(Math.min(...xs)+Math.max(...xs))/2,width=Math.max(...xs)-Math.min(...xs)+.8,height=Math.max(...actors.map(a=>a.measurements.heightM)),tan=Math.tan(viewer.camera.fov*Math.PI/360),d=Math.max(3.7,width/(2*tan*Math.max(.25,viewer.camera.aspect))*1.15,height/(2*tan)*1.12);target=[cx,.94,.12];p=[cx+d*.18,.94+d*.16,.12+d];}viewer.camera.position.set(...p);viewer.orbit.target.set(...target);viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();viewer.render();}
+  function resize(){const r=sourceStage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;viewer.camera.updateProjectionMatrix();if(currentView==='all')camera('all');else viewer.render();}
   const ro=new ResizeObserver(resize);ro.observe(sourceStage);addEventListener('resize',resize);
   $('npc-pair').onclick=()=>station('pair');for(const b of document.querySelectorAll('[data-person]'))b.onclick=()=>{selected=+b.dataset.person;station('single');};
   $('npc-pick').onclick=()=>world.request(actors[selected].id);
@@ -69,7 +69,7 @@ async function main(){
       if(!this.started){selected=test.actor||0;station(test.kind==='contention'||test.kind==='cancel'?'pair':'single');this.start=world.time;this.phase='run';this.started=true;this.action=false;this.contactStart=world.audit.contacts.length;if(['contention','cancel'].includes(test.kind)){world.request(actors[0].id);world.request(actors[1].id);}else world.request(actors[selected].id);}
       const a=world.agents.get(actors[test.actor||0].id),b=world.agents.get(actors[1].id);
       if(test.kind==='support'&&a.phase==='transfer'&&!this.action){world.setSupport(false);this.action=true;}
-      if(test.kind==='cancel'&&a.phase==='lift'&&!this.action){world.cancel(a.id);this.action=true;this.cancelState={constraints:world.world.constraints.length,heldBy:world.heldBy,reservedBy:world.reservedBy};}
+      if(test.kind==='cancel'&&a.phase==='lift'&&world.heldBy===a.id&&world.bottle.position.y>DIM.source[1]+.05&&!this.action){const before={heightM:world.bottle.position.y,liftM:world.bottle.position.y-DIM.source[1],velocityY:world.bottle.velocity.y,constraints:world.world.constraints.length};world.cancel(a.id);this.action=true;this.cancelState={before,constraints:world.world.constraints.length,heldBy:world.heldBy,reservedBy:world.reservedBy};}
       let done=false,pass=false,detail;
       if(test.kind==='pick'&&['done','failed'].includes(a.phase)){done=true;pass=a.result?.result==='completed'&&a.firstContactError<=.012&&a.maxContactError<.025;detail={result:a.result,goal:world.goal(),measurements:a.actor.measurements};}
       if(test.kind==='contention'&&['done','failed'].includes(a.phase)&&['done','failed'].includes(b.phase)){done=true;pass=a.result?.result==='completed'&&b.result?.result==='already-sorted'&&world.audit.maxGripConstraints<=1;detail={a:a.result,b:b.result,maxConstraints:world.audit.maxGripConstraints};}
@@ -81,7 +81,7 @@ async function main(){
     }
   }
   $('npc-run-qa').onclick=()=>{probe=new ProbeSuite();$('npc-run-qa').disabled=true;paused=false;$('npc-pause').textContent='暂停';};
-  window.__NPC_OBSERVATION__={version:'NPC-LIFE-OBSERVATION-R01',ready:true,snapshot:()=>world.snapshot(),verification:()=>probe?.report,performance:perf,errors,actorDiagnostics:()=>actors.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,diagnostics:a.diagnostics(),binding:a.binding.report,rig:a.binding.rig,materialReport:a.materialReport,contactReport:a.contactReport}))};
+  window.__NPC_OBSERVATION__={version:'NPC-LIFE-OBSERVATION-R01',ready:true,snapshot:()=>world.snapshot(),verification:()=>probe?.report,performance:perf,errors,actorDiagnostics:()=>actors.map(a=>({id:a.id,identity:a.identity,measurements:a.measurements,diagnostics:a.diagnostics({tableTopY:DIM.tableTop,tableBounds:{minX:DIM.tableCentre[0]-DIM.tableHalf[0],maxX:DIM.tableCentre[0]+DIM.tableHalf[0],minZ:DIM.tableCentre[2]-DIM.tableHalf[2],maxZ:DIM.tableCentre[2]+DIM.tableHalf[2]},bottle:{position:world.bottle.position,quaternion:world.bottle.quaternion,radius:DIM.radius,height:DIM.height}}),binding:a.binding.report,rig:a.binding.rig,materialReport:a.materialReport,contactReport:a.contactReport}))};
   station('single');resize();props.sync(world,debug);viewer.render();for(const b of app.querySelectorAll('button'))b.disabled=false;$('npc-loader').hidden=true;document.documentElement.dataset.npcReady='true';updateUI();
   function frame(now){const elapsed=(now-last)/1000;last=now;if(elapsed>0&&elapsed<3){frameMS.push(elapsed*1000);if(frameMS.length>180)frameMS.shift();}try{if(!paused){acc+=Math.min(elapsed,.5);let steps=0;while(acc>=1/120&&steps<60){if(probe&&!probe.report.completed)probe.update();world.tick(1/120);acc-=1/120;steps++;}}else acc=0;props.sync(world,debug);viewer.render();if(now-lastUI>240){updateUI();lastUI=now;}}catch(e){paused=true;errors.push(e.message);$('npc-status').textContent='运行暂停：'+e.message;console.error(e);}requestAnimationFrame(frame);}
   requestAnimationFrame(frame);
