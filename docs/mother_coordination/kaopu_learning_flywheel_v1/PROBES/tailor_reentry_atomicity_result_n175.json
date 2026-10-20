@@ -1,0 +1,55 @@
+{
+  "schema": "kaopu.tailor-reentry-atomicity-probe-result/1",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "pullRequest": 315,
+    "headSha": "93021f352c0fedc53709edd46c30a91235190fee",
+    "workflowRun": 39386779708,
+    "artifactId": 12248830128,
+    "artifactDigest": "sha256:19753026ae4153ba1ead664b9828f9c82e3ce6c2a05222feb213283cffe3769a"
+  },
+  "finding": "GLOBAL_REINITIALIZATION_NOT_RESUME",
+  "currentStatus": "HOLD_REENTRY_NOT_ATOMIC",
+  "observations": {
+    "globalResetDetected": true,
+    "initialIntersectionCheckIsNotClearanceProof": true,
+    "delayedFailureReproduced": true,
+    "renderDemandAffectsSolver": false,
+    "failureResidualExcessMM": 0.544
+  },
+  "cases": [
+    {
+      "id": "actual-pr315-reentry",
+      "actual": "HOLD_REENTRY_NOT_ATOMIC",
+      "expected": "HOLD_REENTRY_NOT_ATOMIC",
+      "passed": true
+    },
+    {
+      "id": "render-only-hide",
+      "actual": "PASS_RENDER_ONLY",
+      "expected": "PASS_RENDER_ONLY",
+      "passed": true
+    },
+    {
+      "id": "dormant-without-clearance-proof",
+      "actual": "HOLD_DORMANT_STATE_OR_CLEARANCE_UNKNOWN",
+      "expected": "HOLD_DORMANT_STATE_OR_CLEARANCE_UNKNOWN",
+      "passed": true
+    },
+    {
+      "id": "counterfactual-atomic-reentry",
+      "actual": "CANDIDATE_ATOMIC_REENTRY_PASS",
+      "expected": "CANDIDATE_ATOMIC_REENTRY_PASS",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "total": 4
+  },
+  "nonClaims": [
+    "Does not prove a new solver implementation.",
+    "Does not relax the 0.5 mm contact threshold or the 1.45 stretch threshold.",
+    "Does not prove user acceptance or production readiness."
+  ]
+}
