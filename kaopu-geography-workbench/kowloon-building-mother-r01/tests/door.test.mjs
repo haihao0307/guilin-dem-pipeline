@@ -306,3 +306,29 @@ test('corridor detects an actual solid beside the centreline inside the lateral 
   assert.equal(unsupported.geometryClear, true); assert.equal(unsupported.supported, false); assert.equal(unsupported.clear, false);
   assert.ok(unsupported.supportErrors.some(e => e.includes('Actual slab-002 support ray failed')));
 });
+
+test('fixed casing is proud of the partition with back-face contact, no overlapping wall volume or z-fighting front faces', () => {
+  for (const config of [{}, {wallThickness: 0.18, frameDepth: 0.03, leafThickness: 0.06, clearance: 0.006}]) {
+    const {door, proposal: p} = setup(config), {host, frame} = parts(door);
+    const boxLocal = mesh => {mesh.geometry.computeBoundingBox(); mesh.updateMatrix(); return mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrix);};
+    const walls = host.children.map(boxLocal), casing = frame.children.filter(m => m.userData.role === 'fixed-frame-solid');
+    assert.equal(casing.length, 3);
+    for (const mesh of casing) {
+      const box = boxLocal(mesh); near(box.min.z, p.config.wallThickness / 2, 1e-7);
+      near(box.max.z, p.config.wallThickness / 2 + p.config.frameDepth, 1e-7);
+      assert.equal(mesh.material.polygonOffset, false, 'Geometry contact, not polygonOffset masking');
+      let positiveContact = false;
+      for (const wall of walls) {
+        const overlap = ['x', 'y', 'z'].map(axis => Math.min(box.max[axis], wall.max[axis]) - Math.max(box.min[axis], wall.min[axis]));
+        assert.equal(overlap.every(v => v > 1e-7), false, 'No positive-volume frame/partition intersection');
+        if (overlap[0] > 1e-7 && overlap[1] > 1e-7) {near(overlap[2], 0, 1e-7); positiveContact = true;}
+        assert.ok(box.max.z - wall.max.z >= p.config.frameDepth - 1e-7, 'Front surfaces are physically separated by casing depth');
+      }
+      assert.equal(positiveContact, true, 'Each casing solid has real back-face contact with its host');
+    }
+    for (const plate of frame.children.filter(m => m.userData.role === 'visible-fixed-hinge-plate')) {
+      near(boxLocal(plate).min.z, p.config.wallThickness / 2 + p.config.frameDepth, 1e-7);
+    }
+    assert.equal(sampleDoorSweep(THREE, door).clear, true, 'Proud frame still clears leaf/handles over full 0–100 degree sweep');
+  }
+});

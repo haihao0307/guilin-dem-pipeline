@@ -191,7 +191,9 @@ export function buildDoor(THREE, proposal, options = {}) {
     [0, (c.wallHeight + c.height) / 2, 0], materials.host, 'proposed-partition-solid');
   // Fixed frame stays entirely outside the aperture. There is no floor bar,
   // invented threshold or opacity-based wall opening.
-  const frameZ = c.wallThickness / 2 - c.frameDepth / 2;
+  // Proud casing: its back face contacts the wall front; it is not a
+  // coincident front face buried inside the partition (which z-fights).
+  const frameZ = c.wallThickness / 2 + c.frameDepth / 2;
   for (const side of [-1, 1]) box(frame, `frame-jamb-${side}`, [c.frameWidth, c.height, c.frameDepth],
     [side * (c.width / 2 + c.frameWidth / 2), c.height / 2, frameZ], materials.frame, 'fixed-frame-solid');
   box(frame, 'frame-header', [p.frame.width, c.frameWidth, c.frameDepth],
@@ -211,7 +213,7 @@ export function buildDoor(THREE, proposal, options = {}) {
     hinge.name = `${p.doorId}:fixed-hinge-${fraction}`; hinge.position.set(p.leaf.pivotLocal[0], c.height * fraction, p.leaf.pivotLocal[2]);
     hinge.userData = {role: 'visible-fixed-hinge-barrel'}; frame.add(hinge);
     box(frame, `fixed-hinge-plate-${fraction}`, [c.frameWidth + 0.02, 0.055, 0.008],
-      [p.leaf.pivotLocal[0] - side * c.frameWidth / 2, c.height * fraction, c.wallThickness / 2 + 0.004], materials.metal, 'visible-fixed-hinge-plate');
+      [p.leaf.pivotLocal[0] - side * c.frameWidth / 2, c.height * fraction, c.wallThickness / 2 + c.frameDepth + 0.004], materials.metal, 'visible-fixed-hinge-plate');
     box(pivot, `moving-hinge-plate-${fraction}`, [0.045, 0.055, 0.008],
       [side * 0.024, c.height * fraction, -c.leafThickness / 2 - 0.004], materials.metal, 'moving-hinge-plate', true);
   }
