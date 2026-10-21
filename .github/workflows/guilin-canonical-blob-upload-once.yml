@@ -1,5 +1,5 @@
-# Same fixed blobs: diagnosed recovery after HTTP 422, no ref writes.
-name: Upload seven verified Guilin canonical blobs once
+# Same verified seven sources, one fixed isolated evidence ref; no Pages writes.
+name: Transfer seven verified Guilin canonical shards once
 on:
   push:
     branches: ['trial/guilin-canonical-blob-upload-20261021']
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 2
           sparse-checkout: |
             qa/guilin-canonical-blob-upload-once.py
-      - name: Verify seven fixed public assets and upload blobs only
+      - name: Verify seven fixed public assets and normally push isolated evidence branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: python qa/guilin-canonical-blob-upload-once.py
