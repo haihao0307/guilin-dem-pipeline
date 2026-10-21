@@ -292,7 +292,7 @@ async function main() {
     await waitState('Keyboard panel selection', state => state.selectedPanel === 'wb_front' && state.geometry.selectedPanel === 'wb_front');
     await page.locator('#patternSvg [data-panel-id="wb_front"]').press('Enter');
     await waitState('Clear panel selection', state => state.selectedPanel === null && state.geometry.selectedPanel === null);
-    await page.locator('[data-view="detail"]').click();
+    await clickView('detail');
     await saveScreenshot('detail');
 
     await page.locator('[data-display="fabric"]').click();
@@ -381,6 +381,8 @@ async function main() {
   } finally {
     clearTimeout(suiteTimer);
     try { await browser?.close(); } catch (error) { report.browser.closeError = error.message; }
+    // A timed-out run must never be converted into a pass by a late continuation.
+    report.passed = report.passed && !report.failure && report.consoleErrors.length === 0 && report.pageErrors.length === 0 && !report.contextLossObserved && report.standaloneCoreNetworkRequests === 0;
     report.completedAt = timestamp();
     report.durationMs = Date.parse(report.completedAt) - Date.parse(report.startedAt);
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2) + '\n');
