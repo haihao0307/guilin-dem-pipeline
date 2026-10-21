@@ -31,6 +31,7 @@ jobs:
       - name: Candidate direct field WebGL parity and visual QA
         run: |
           python -m http.server 8765 >/tmp/r06-http.log 2>&1 &
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-microbench.py --url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/r06.html --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
           python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-browser.py --url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/r06.html --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
       - name: Immutable R03 R04 R05 actual browser regression
         run: python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-regression.py --base-url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/ --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/old-regression

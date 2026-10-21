@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied} from '../r06/field.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded} from '../r06/field.mjs';
 import {createHostRecord,transformLocalToHost,transformHostToLocal,validateHostDomain} from '../r06/host.mjs';
 const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,`${a} ≠ ${b}`);
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
@@ -186,4 +186,24 @@ test('occupancy parity holds on both sides of stair nosings, aperture reveals an
   const q=plus(p,[dx,dy,dz]),sd=queryStructure(spec,q).distance;if(Math.abs(sd)<1e-8)continue;assert.equal(structureOccupied(spec,q),sd<0,JSON.stringify({q,sd}));checked++;
  }
  assert.ok(checked>1000);
+});
+
+test('trig-free arc wedge and pruned distance are equivalent to finite-arc reference',()=>{
+ let seed=761;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(let i=0;i<5000;i++){const p=[(random()-.5)*6,random()*6-1,random()*8-1];
+  const a=railDistance(spec.rail,p),b=railDistanceBounded(spec.rail,p);near(a.distance,b.distance,1e-10);
+  for(const arc of spec.rail.pieces.filter(q=>q.kind==='arc')){const c=closestOnArc(p,arc),d=closestOnArcTrigFree(p,arc);near(c.distance,d.distance,1e-10);near(distance(c.point,d.point),0,1e-10);}
+ }
+ const glsl=buildFieldGLSL(spec);assert.doesNotMatch(glsl,/\b(?:atan|sin|cos)\s*\(/);assert.match(glsl,/return sqrt\(rd\)-/);
+});
+test('analytic rail piece bounds contain interior extrema, not merely endpoints',()=>{
+ const q=Math.SQRT1_2,arc={kind:'arc',center:[0,0,0],u:[q,q,0],v:[-q,q,0],radius:1,sweep:Math.PI/2,start:[q,q,0],end:[-q,q,0]},b=railPieceBounds(arc);near(b.max[1],1,1e-8);assert.ok(b.max[1]>arc.start[1]+.2);
+ for(const piece of spec.rail.pieces)for(let i=0;i<=100;i++){const p=railPointAt(spec.rail,piece.pathOffset+piece.length*i/100).point;for(let axis=0;axis<3;axis++)assert.ok(p[axis]>=piece.bounds.min[axis]&&p[axis]<=piece.bounds.max[axis]);}
+});
+test('diagnostic trace modes isolate structure and rail while the default stays combined',()=>{
+ const q=railPointAt(spec.rail,spec.rail.length*.16),radial=unit(cross(q.tangent,[0,1,0])),ro=plus(q.point,radial,.3),rd=radial.map(v=>-v);
+ const combined=traceFieldAnalytic(spec,ro,rd),rail=traceFieldAnalytic(spec,ro,rd,{diagnosticMode:2});assert.equal(rail.objectId,401);near(rail.t,combined.t);assert.equal(rail.structuralPlaneTests,0);
+ const structure=traceFieldAnalytic(spec,[2,4,0],[0,-1,0],{diagnosticMode:1});assert.equal(structure.objectId,102);assert.equal(structure.steps,0);
+ const emptyRail=traceFieldAnalytic(spec,[2,4,0],[0,-1,0],{diagnosticMode:2});assert.equal(emptyRail.status,2);assert.throws(()=>traceFieldAnalytic(spec,ro,rd,{diagnosticMode:99}));
+ const glsl=buildFieldGLSL(spec);assert.match(glsl,/#ifndef FIELD_TRACE_VARIANT/);assert.match(glsl,/#if FIELD_TRACE_VARIANT != 1/);assert.match(glsl,/#if FIELD_TRACE_VARIANT != 2/);assert.match(glsl,/fieldTraceRayModeClipped/);
 });

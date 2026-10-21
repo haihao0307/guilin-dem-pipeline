@@ -79,6 +79,7 @@ export function filletPath(points,radius,mode='rounded'){
   if(n>EPS){pieces.push({kind:'line',start,end,tangentStart:dirs[i],tangentEnd:dirs[i],length:n,pathOffset:offset});offset+=n;}
   if(corners.has(i+1)){const arc=corners.get(i+1);pieces.push({...arc,pathOffset:offset});offset+=arc.length;}
  }
+ for(const piece of pieces)piece.bounds=railPieceBounds(piece);
  return {pieces,length:offset,controlPath:P,mode,tangentContinuous:mode==='rounded',junctionRule:mode==='rounded'?'G1 exact line/circular-arc joins':'C0 angular centerline with hard union of swept tube regions'};
 }
 export function railPointAt(path,s){
@@ -86,6 +87,14 @@ export function railPointAt(path,s){
  if(p.kind==='line')return {point:add(p.start,mul(sub(p.end,p.start),t)),tangent:p.tangentStart,piece:p};
  const a=t*p.sweep;return {point:add(p.center,mul(add(mul(p.u,Math.cos(a)),mul(p.v,Math.sin(a))),p.radius)),tangent:add(mul(p.u,-Math.sin(a)),mul(p.v,Math.cos(a))),piece:p};
 }
+/** Exact analytic arc coordinate extrema, not samples or endpoint-only bounds. */
+export function railPieceBounds(piece){const points=[piece.start,piece.end];if(piece.kind==='arc')for(let axis=0;axis<3;axis++){
+ const base=Math.atan2(piece.v[axis],piece.u[axis]);for(let k=-2;k<=2;k++){const a=base+k*Math.PI;if(a>=0&&a<=piece.sweep)points.push(add(piece.center,mul(add(mul(piece.u,Math.cos(a)),mul(piece.v,Math.sin(a))),piece.radius)));}}
+ return {min:[0,1,2].map(i=>Math.min(...points.map(p=>p[i]))-1e-9),max:[0,1,2].map(i=>Math.max(...points.map(p=>p[i]))+1e-9)};}
+export function closestOnArcTrigFree(p,arc){const q=sub(p,arc.center),x=dot(q,arc.u),y=dot(q,arc.v),rho=Math.hypot(x,y);
+ if(rho>EPS&&y>=0&&x*Math.sin(arc.sweep)-y*Math.cos(arc.sweep)>=0){const point=add(arc.center,mul(add(mul(arc.u,x),mul(arc.v,y)),arc.radius/rho));return {distance:length(sub(p,point)),point,t:Math.atan2(y,x)/arc.sweep};}
+ const start=length(sub(p,arc.start)),end=length(sub(p,arc.end));return start<=end?{distance:start,point:arc.start,t:0}:{distance:end,point:arc.end,t:1};}
+export function railDistanceBounded(path,p){let best={distance:Infinity};for(const piece of path.pieces){const b=piece.bounds??railPieceBounds(piece),q=p.map((v,i)=>Math.max(b.min[i]-v,0,v-b.max[i]));if(dot(q,q)>best.distance*best.distance)continue;const hit=piece.kind==='line'?closestOnLine(p,piece.start,piece.end):closestOnArcTrigFree(p,piece);if(hit.distance<best.distance)best={...hit,pathS:piece.pathOffset+hit.t*piece.length,piece};}return best;}
 export function railDistance(path,p){let best={distance:Infinity};for(const piece of path.pieces){const hit=piece.kind==='line'?closestOnLine(p,piece.start,piece.end):closestOnArc(p,piece);if(hit.distance<best.distance)best={...hit,pathS:piece.pathOffset+hit.t*piece.length,piece};}return best;}
 export function deriveField(input={}){
  const c=validateConfig(input),rise=c.floorHeight/(2*c.risersPerFlight),n=c.risersPerFlight-1,run=n*c.treadDepth,W=2*c.flightWidth+c.centerGap,L=c.landingDepth,total=2*L+run,mid=c.floorHeight/2;
@@ -180,12 +189,16 @@ export function buildFieldGLSL(spec){
  const insideCode=poly=>poly.map((b,i)=>{const a=poly[(i+poly.length-1)%poly.length];return `a=${v(a)};b=${v(b)};float cross${i}=(b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x);if(abs(cross${i})<1e-7&&all(greaterThanEqual(p,min(a,b)))&&all(lessThanEqual(p,max(a,b))))return true;if((a.y>p.y)!=(b.y>p.y)){if(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}`;}).join('\n');
  const footprintInside=insideCode(c.footprint2D),serviceInside=insideCode(c.serviceVoid2D);
  const polygon=polyCode(c.footprint2D),servicePolygon=polyCode(c.serviceVoid2D),flightHeight=d.treadsPerFlight*d.rise,railCenter=spec.rail.bounds.min.map((n,i)=>(n+spec.rail.bounds.max[i])/2),railHalf=spec.rail.bounds.min.map((n,i)=>(spec.rail.bounds.max[i]-n)/2);
- const rail=spec.rail.pieces.map(s=>s.kind==='line'?`rd=min(rd,segment3(p,${v(s.start)},${v(s.end)}));`:`rd=min(rd,arc3(p,${v(s.center)},${v(s.u)},${v(s.v)},${f(s.radius)},${f(s.sweep)},${v(s.start)},${v(s.end)}));`).join('\n');
+ const rail=spec.rail.pieces.map(s=>`if(fieldBoundsSquared(p,${v(s.bounds.min)},${v(s.bounds.max)})<=rd){rd=min(rd,${s.kind==='line'?`segment3Squared(p,${v(s.start)},${v(s.end)})`:`arc3Squared(p,${v(s.center)},${v(s.u)},${v(s.v)},${f(s.radius)},${f(Math.sin(s.sweep))},${f(Math.cos(s.sweep))},${v(s.start)},${v(s.end)})`});}`).join('\n');
  return `
+#ifndef FIELD_TRACE_VARIANT
+#define FIELD_TRACE_VARIANT 0
+#endif
 struct FieldHit { float distance; float objectId; float materialRole; vec3 local; };
 float segment2Squared(vec2 p,vec2 a,vec2 b){vec2 ab=b-a,q=p-(a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0));return dot(q,q);}
-float segment3(vec3 p,vec3 a,vec3 b){vec3 ab=b-a;return length(p-(a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0)));}
-float arc3(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),a=atan(y,x);if(length(vec2(x,y))>1e-9&&a>=0.0&&a<=sweep)return length(q-r*(u*cos(a)+v*sin(a)));return min(length(p-start),length(p-end));}
+float fieldBoundsSquared(vec3 p,vec3 lo,vec3 hi){vec3 q=max(max(lo-p,p-hi),0.0);return dot(q,q);}
+float segment3Squared(vec3 p,vec3 a,vec3 b){vec3 ab=b-a,q=p-(a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0));return dot(q,q);}
+float arc3Squared(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sinSweep,float cosSweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),rho2=x*x+y*y;if(rho2>1e-18&&y>=0.0&&x*sinSweep-y*cosSweep>=0.0){vec3 delta=q-r*(u*x+v*y)*inversesqrt(rho2);return dot(delta,delta);}return min(dot(p-start,p-start),dot(p-end,p-end));}
 float fieldBox(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);}
 float fieldExtrude(float d,float y,float h){vec2 q=vec2(d,abs(y)-h);return length(max(q,0.0))+min(max(q.x,q.y),0.0);}
 float footprintDistance(vec2 p){float best=1e20;bool inside=false;vec2 a,b;${polygon}return inside?-sqrt(best):sqrt(best);}
@@ -197,7 +210,7 @@ float profileDistance(vec2 p){float z=p.x,y=p.y,rise=${f(d.rise)},td=${f(c.tread
  for(int i=0;i<${d.treadsPerFlight};i++){float a=float(i)*td,b=float(i+1)*td,h=float(i+1)*rise;best=min(best,segment2Squared(p,vec2(a,h),vec2(b,h)));if(i<${d.treadsPerFlight-1})best=min(best,segment2Squared(p,vec2(b,h),vec2(b,h+rise)));}
  best=min(best,segment2Squared(p,vec2(run,n*rise),vec2(run,under)));if(run-brk>1e-9)best=min(best,segment2Squared(p,vec2(run,under),vec2(brk,0.0)));best=min(best,segment2Squared(p,vec2(brk,0.0),vec2(0.0)));
  float top=rise*(floor(clamp(z,0.0,run-1e-6)/td)+1.0),bottom=max(0.0,z*rise/td-th);bool inside=z>=0.0&&z<=run&&y>=bottom&&y<=top;return inside?-sqrt(best):sqrt(best);}
-float railDistanceField(vec3 p){float rd=1e20;${rail}return rd-${f(c.railRadius)};}
+float railDistanceField(vec3 p){float rd=1e20;${rail}return sqrt(rd)-${f(c.railRadius)};}
 void fieldTake(inout FieldHit h,float d,float id,float role,vec3 p){if(d<h.distance){h.distance=d;h.objectId=id;h.materialRole=role;h.local=p;}}
 bool fieldStructureOccupied(vec3 p,float clipX){if(p.x<clipX)return false;bool lower=p.y>=${f(-c.slabThickness)}&&p.y<=0.0,upper=p.y>=${f(c.floorHeight-c.slabThickness)}&&p.y<=${f(c.floorHeight)};if((lower||upper)&&fieldFootprintInside(p.xz)&&!fieldServiceInside(p.xz)){if(lower||!(abs(p.x)<${f(d.totalWidth/2)}&&p.z>${f(d.z0)}&&p.z<${f(d.totalLength)}))return true;}
  if(abs(p.x+${f((c.flightWidth+c.centerGap)/2)})<=${f(c.flightWidth/2)}&&fieldProfileInside(vec2(p.z-${f(d.z0)},p.y)))return true;
@@ -274,38 +287,40 @@ function rayInterval(origin,direction,bounds){let lo=-Infinity,hi=Infinity;for(l
  return [lo,hi];}
 /** Exact planar-candidate structural trace + bounded rail-only conservative
  * marching. maxSteps counts rail evaluations, NOT plane tests or full queries. */
-export function traceFieldAnalytic(spec,origin,direction,{maxSteps=512,maxDistance=100,clipX=null,epsilon=.00015,epsilonScale=.000025}={}){
+export function traceFieldAnalytic(spec,origin,direction,{maxSteps=512,maxDistance=100,clipX=null,epsilon=.00015,epsilonScale=.000025,diagnosticMode=0}={}){
+ if(![0,1,2].includes(diagnosticMode))throw Error('diagnosticMode must be 0 (combined), 1 (structure) or 2 (rail)');
  const rd=norm(direction),span=rayInterval(origin,rd,spec.bounds),cut=clipX??-1e20;
  if(!span||span[1]<0)return {hit:false,status:2,reason:'outside_bounds',steps:0,structuralPlaneTests:0};
+ const planeCount=diagnosticMode===2?0:spec.structurePlanes.length;
  const start=Math.max(0,span[0]),end=Math.min(span[1],maxDistance);let nearest=end+1,structural=null,candidates=0;
  const accept=(t,n,domains=null)=>{if(t<start-1e-6||t>end||t>=nearest)return;const p=add(origin,mul(rd,t));if(domains&&!domains.some(q=>planeDomainContains(spec,q,p)))return;candidates++;const e=.0004,dp=structureOccupied(spec,plusVector(p,n,e),cut),dm=structureOccupied(spec,plusVector(p,n,-e),cut);
   // Reject internal touching faces: a true union boundary has exterior on at
   // least one normal side. This is a domain check, never a new polygon surface.
   if(dp===dm)return;nearest=t;structural={point:p,normal:mul(n,dp?-1:1)};};
- for(const p of spec.structurePlanes){const den=dot(p.normal,rd);if(Math.abs(den)>1e-12)accept((p.offset-dot(p.normal,origin))/den,p.normal,p.domains);}
- if(clipX!==null&&Math.abs(rd[0])>1e-12)accept((cut-origin[0])/rd[0],[1,0,0]);
+ if(diagnosticMode!==2)for(const p of spec.structurePlanes){const den=dot(p.normal,rd);if(Math.abs(den)>1e-12)accept((p.offset-dot(p.normal,origin))/den,p.normal,p.domains);}
+ if(diagnosticMode!==2&&clipX!==null&&Math.abs(rd[0])>1e-12)accept((cut-origin[0])/rd[0],[1,0,0]);
  let steps=0;
- if(spec.config.railsEnabled){const bounds=copy(spec.rail.bounds);bounds.min[0]=Math.max(bounds.min[0],cut);const railSpan=bounds.min[0]<=bounds.max[0]?rayInterval(origin,rd,bounds):null;
+ if(diagnosticMode!==1&&spec.config.railsEnabled){const bounds=copy(spec.rail.bounds);bounds.min[0]=Math.max(bounds.min[0],cut);const railSpan=bounds.min[0]<=bounds.max[0]?rayInterval(origin,rd,bounds):null;
   if(railSpan){let t=Math.max(start,railSpan[0]),limit=Math.min(end,railSpan[1],structural?nearest:end);if(limit>=t){
-   for(;steps<maxSteps;steps++){const p=add(origin,mul(rd,t)),d=Math.max(railDistance(spec.rail,p).distance-spec.config.railRadius,cut-p[0]);
-    if(Math.abs(d)<Math.max(epsilon,t*epsilonScale)){const closest=railDistance(spec.rail,p),normal=cut-p[0]>=closest.distance-spec.config.railRadius?[-1,0,0]:norm(sub(p,closest.point));return {hit:true,status:1,reason:'rail_field',t,point:p,normal,...queryField(spec,p),steps:steps+1,structuralPlaneTests:spec.structurePlanes.length,structuralDomainQueries:candidates};}
+   for(;steps<maxSteps;steps++){const p=add(origin,mul(rd,t)),d=Math.max(railDistanceBounded(spec.rail,p).distance-spec.config.railRadius,cut-p[0]);
+    if(Math.abs(d)<Math.max(epsilon,t*epsilonScale)){const closest=railDistance(spec.rail,p),normal=cut-p[0]>=closest.distance-spec.config.railRadius?[-1,0,0]:norm(sub(p,closest.point));return {hit:true,status:1,reason:'rail_field',t,point:p,normal,...queryField(spec,p),steps:steps+1,structuralPlaneTests:planeCount,structuralDomainQueries:candidates};}
     t+=Math.abs(d)*.85;if(t>limit)break;
    }
-   if(steps>=maxSteps)return {hit:false,status:3,reason:'rail_step_budget',t,steps,structuralPlaneTests:spec.structurePlanes.length,structuralDomainQueries:candidates};
+   if(steps>=maxSteps)return {hit:false,status:3,reason:'rail_step_budget',t,steps,structuralPlaneTests:planeCount,structuralDomainQueries:candidates};
   }}
  }
- if(structural)return {hit:true,status:1,reason:'analytic_structural_boundary',t:nearest,...structural,...queryField(spec,structural.point),steps,structuralPlaneTests:spec.structurePlanes.length,structuralDomainQueries:candidates};
- return {hit:false,status:2,reason:'all_bounded_candidates_excluded',steps,structuralPlaneTests:spec.structurePlanes.length,structuralDomainQueries:candidates};
+ if(structural)return {hit:true,status:1,reason:'analytic_structural_boundary',t:nearest,...structural,...queryField(spec,structural.point),steps,structuralPlaneTests:planeCount,structuralDomainQueries:candidates};
+ return {hit:false,status:2,reason:'all_bounded_candidates_excluded',steps,structuralPlaneTests:planeCount,structuralDomainQueries:candidates};
 }
 const plusVector=(p,n,s)=>p.map((v,i)=>v+n[i]*s);
 function buildTraceGLSL(spec){const planes=spec.structurePlanes.map(p=>v([...p.normal,p.offset])).join(',\n'),c=spec.config,d=spec.dimensions;
  const domainCode=q=>q.kind==='bounds'?`(fieldDomainBounds(p,${v(q.min)},${v(q.max)})${q.excludeOpening?`&&!(abs(p.x)<${f(c.doorWidth/2)}&&p.y>${f(c.floorHeight-.0001)}&&p.y<${f(c.floorHeight+c.doorHeight+.0001)})`:''})`:q.kind==='profile'?`(fieldProfileInside(vec2(${f(q.dir)}*(p.z-${f(q.start)}),p.y-${f(q.base)})))`:`(fieldFootprintInside(p.xz)&&!fieldServiceInside(p.xz)${q.floor?`&&!(abs(p.x)<${f(d.totalWidth/2)}&&p.z>${f(d.z0)}&&p.z<${f(d.totalLength)})`:''})`;
- const railClosest=spec.rail.pieces.map(s=>s.kind==='line'?`q=fieldLineClosest(p,${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`:`q=fieldArcClosest(p,${v(s.center)},${v(s.u)},${v(s.v)},${f(s.radius)},${f(s.sweep)},${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`).join('\n');
+ const railClosest=spec.rail.pieces.map(s=>s.kind==='line'?`q=fieldLineClosest(p,${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`:`q=fieldArcClosest(p,${v(s.center)},${v(s.u)},${v(s.v)},${f(s.radius)},${f(Math.sin(s.sweep))},${f(Math.cos(s.sweep))},${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`).join('\n');
  const boundMin=spec.structurePlanes.map(p=>v(p.bounds.min)).join(','),boundMax=spec.structurePlanes.map(p=>v(p.bounds.max)).join(',');
  const domains=spec.structurePlanes.map((p,i)=>`case ${i}:return ${p.domains.map(domainCode).join('||')};`).join('\n');return `
 vec3 fieldRayNormal=vec3(0,1,0);
 vec3 fieldLineClosest(vec3 p,vec3 a,vec3 b){vec3 ab=b-a;return a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0);}
-vec3 fieldArcClosest(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),a=atan(y,x);if(x*x+y*y>1e-18&&a>=0.0&&a<=sweep)return center+r*(u*cos(a)+v*sin(a));return dot(p-start,p-start)<=dot(p-end,p-end)?start:end;}
+vec3 fieldArcClosest(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sinSweep,float cosSweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),rho2=x*x+y*y;if(rho2>1e-18&&y>=0.0&&x*sinSweep-y*cosSweep>=0.0)return center+r*(u*x+v*y)*inversesqrt(rho2);return dot(p-start,p-start)<=dot(p-end,p-end)?start:end;}
 vec3 fieldRailNormal(vec3 p,float clipX){float best=1e20,d;vec3 closest=p,q;${railClosest}if(clipX-p.x>=sqrt(best)-${f(c.railRadius)})return vec3(-1,0,0);return normalize(p-closest);}
 const int FIELD_STRUCTURE_PLANE_COUNT=${spec.structurePlanes.length};
 const vec4 FIELD_BOUNDARY_EQUATIONS[${spec.structurePlanes.length}]=vec4[](${planes});
@@ -316,14 +331,17 @@ bool fieldDomainBounds(vec3 p,vec3 lo,vec3 hi){for(int i=0;i<3;i++){float tol=hi
 bool fieldBoundaryDomain(int index,vec3 p){switch(index){${domains}}return false;}
 float fieldClippedStructure(vec3 p,float clipX){return max(mapStructure(p).distance,clipX-p.x);}
 void fieldConsiderPlane(vec3 ro,vec3 rd,vec4 equation,int planeIndex,float start,float finish,float clipX,inout float nearest,inout bool found){float den=dot(equation.xyz,rd);if(abs(den)<1e-8)return;float t=(equation.w-dot(equation.xyz,ro))/den;if(t<start-.00001||t>finish||t>=nearest)return;vec3 p=ro+rd*t;if(planeIndex>=0&&(!fieldDomainBounds(p,FIELD_DOMAIN_MIN[planeIndex],FIELD_DOMAIN_MAX[planeIndex])||!fieldBoundaryDomain(planeIndex,p)))return;float e=.0004;bool dp=fieldStructureOccupied(p+equation.xyz*e,clipX),dm=fieldStructureOccupied(p-equation.xyz*e,clipX);if(dp==dm)return;nearest=t;found=true;fieldRayNormal=dp?-equation.xyz:equation.xyz;}
-bool fieldTraceRayClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){
+bool fieldTraceRayModeClipped(vec3 ro,vec3 rd,float clipX,int diagnosticMode,out float t,out FieldHit hit,out int steps,out int status){
  fieldRayNormal=vec3(0,1,0);hit.distance=1e20;hit.objectId=0.0;hit.materialRole=0.0;hit.local=ro;steps=0;status=2;t=0.0;vec2 span;
  if(!fieldRayInterval(ro,rd,${v(spec.bounds.min)},${v(spec.bounds.max)},span)||span.y<0.0)return false;
  float start=max(span.x,0.0),finish=span.y,nearest=finish+1.0;bool found=false;
- for(int i=0;i<FIELD_STRUCTURE_PLANE_COUNT;i++)fieldConsiderPlane(ro,rd,FIELD_BOUNDARY_EQUATIONS[i],i,start,finish,clipX,nearest,found);
- if(clipX>-1e10)fieldConsiderPlane(ro,rd,vec4(1,0,0,clipX),-1,start,finish,clipX,nearest,found);
+ #if FIELD_TRACE_VARIANT != 2
+ if(diagnosticMode!=2)for(int i=0;i<FIELD_STRUCTURE_PLANE_COUNT;i++)fieldConsiderPlane(ro,rd,FIELD_BOUNDARY_EQUATIONS[i],i,start,finish,clipX,nearest,found);
+ if(diagnosticMode!=2&&clipX>-1e10)fieldConsiderPlane(ro,rd,vec4(1,0,0,clipX),-1,start,finish,clipX,nearest,found);
+ #endif
+ #if FIELD_TRACE_VARIANT != 1
  ${spec.config.railsEnabled?`vec3 railMin=${v(spec.rail.bounds.min)},railMax=${v(spec.rail.bounds.max)};railMin.x=max(railMin.x,clipX);vec2 railSpan;
- if(railMin.x<=railMax.x&&fieldRayInterval(ro,rd,railMin,railMax,railSpan)){
+ if(diagnosticMode!=1&&railMin.x<=railMax.x&&fieldRayInterval(ro,rd,railMin,railMax,railSpan)){
   float rayT=max(start,railSpan.x),limit=min(min(finish,railSpan.y),found?nearest:finish);bool escaped=limit<rayT;
   if(!escaped)for(int i=0;i<512;i++){steps=i+1;vec3 p=ro+rd*rayT;float d=max(railDistanceField(p),clipX-p.x),eps=max(.00015,rayT*.000025);
    if(abs(d)<eps){t=rayT;hit=mapField(p);fieldRayNormal=fieldRailNormal(p,clipX);status=1;return true;}
@@ -331,7 +349,9 @@ bool fieldTraceRayClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit h
   }
   if(!escaped){t=rayT;status=3;return false;}
  }`:''}
+ #endif
  if(found){t=nearest;hit=mapField(ro+rd*t);status=1;return true;}return false;
 }
+bool fieldTraceRayClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){return fieldTraceRayModeClipped(ro,rd,clipX,0,t,hit,steps,status);}
 bool fieldTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit hit,out int steps,out int status){return fieldTraceRayClipped(ro,rd,-1e20,t,hit,steps,status);}
 `;}
