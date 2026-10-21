@@ -1,0 +1,111 @@
+{
+  "schema": "kaopu/lip-edge-r07-source-note@1",
+  "version": "native-lower-return-fairing@2",
+  "writtenUTC": "2026-10-20T08:37:08.219094+00:00",
+  "scope": "Candidate02 fixes a confirmed original-rest graph degeneracy encountered before any candidate01 render. Geometry hypothesis, fairing parameters, original body/contact/area/cap gates unchanged; no visual acceptance yet.",
+  "files": {
+    "src/EdgeContinuity.js": {
+      "sha256": "6459d6c6f8b023962b2dac904105aef80f4c1a385d7522865aa44f084b5b4d52",
+      "bytes": 31076
+    },
+    "verification/check-edge-numerics.cjs": {
+      "sha256": "cf8526a79a48a14ee69b9cfa284e120bc83f3d689e662cade165470f0c3db57f",
+      "bytes": 8423
+    },
+    "research/diagnosis-02-geometry-findings.json": {
+      "sha256": "bc41ba0306a336dedfa91645e4710a73c83d9e62ded4085e7ade9a6042a9f00b",
+      "bytes": 364092
+    },
+    "research/candidate-02-synthetic-check.json": {
+      "sha256": "75f564cd4c8faaf68b24cd4c6876edd999a839206fdb609b67adda2a1ff214f3",
+      "bytes": 14787
+    }
+  },
+  "causalDecision": {
+    "positiveEvidence": "Actual R06 jaw/speak native and draw cross-sections share connected existing lower return paths. The crest concentrates a geometric tangent/face-normal turn: center about71.4 degrees; sides jaw about50 degrees and speak about64. Native raw upper=true at these actual lower return crests cannot define motion carrier.",
+    "rejectedExplanation": "The v=.05 dental-envelope entry gate creates zero observed crossing-edge displacement jump in current jaw/speak. Jaw moves only one upper vertex 0.004990mm; speak moves zero. No dental algorithm modification is justified by this target.",
+    "negativeEvidence": "Connected inner return and several-mm anchor separation refute a missing-sheet assumption, but do not measure tissue thickness. Existing material diagnostics also do not establish missing bulk.",
+    "candidateHypothesis": "Spread the turn over nearby existing lower return triangles with bounded positive screened fairing while fixing the lip body, contacts and mouth-width component. Actual new matched images decide whether the visible hard edge improves."
+  },
+  "binding": {
+    "poseIndependent": true,
+    "source": "Current original solver.topology.geometry fRest/index/csType/l19Oral and top.samples/pairs",
+    "graph": "Scan every original triangle, retain all unique original skin-skin edges in CSR. Finite length<=1e-12m has zero carrier cost and explicit counts; nonfinite rejects. All inverse weights remain strictly positive/nonzero because zero-edge endpoint-and-one-ring collars are fixed.",
+    "lower": "Lower distance plus1mm must be less than upper distance, gain ramps from1 to3mm difference. No use of native upper tag for carrier.",
+    "domain": "csType<.5; -.65<v<-.02; abs(u)<.7; fades v[-.65,-.50] and[-.08,-.02],abs(u)[.55,.70].",
+    "fixed": "Every vertex with v>=-.015, all original49pair IDs, then exactly one original-index neighbor ring of that union. All nonfree vertices remain fixed, including nonskin, upper carrier, mouth corners and far boundaries. Additionally, endpoints of every finite rest edge<=1e-12m and exactly one original-index ring around that frozen endpoint set are fixed; body/contact one-ring statistics and fingerprint remain separately recorded.",
+    "crest": "Pure oral=1 with any adjacent oral<1 in the lower negative-v region. Track its actual movement; do not claim this identifies every anatomical crest. Require freeCrestVertices>0 so a binding that misses the measured target cannot run.",
+    "fingerprints": "Rest/index/free/protection/ownership recorded. Normal geometry identity, references, shape/material authoring and API ownership guards disable stale binding; no posed correction is stored."
+  },
+  "fairing": {
+    "components": [
+      "mouth-up",
+      "mouth-front"
+    ],
+    "mouthXIncrement": 0,
+    "screeningLengthRestMM": 1,
+    "jawGate": {
+      "formula": "smooth(.08,.24,jawOpen)",
+      "poseNameSpecialCase": false,
+      "zeroForCurrentNeutralAndPucker": true,
+      "engineeringNotPhysiology": true
+    },
+    "equation": "For each selected current position component p: [degree_i/(ell^2*g_i)+sum_j w_ij] delta_i - sum_free_j w_ij delta_j = sum_j w_ij(p_j-p_i), w_ij=1/restLength_ij^2; fixed delta=0. Solve independently for up and front with the identical SPD matrix, then multiply both deltas by the continuous jaw gate.",
+    "input": "Actual current positions after original native closure/R05 correction/R06 and dental envelope, immediately before first computeVertexNormals. This is a current shape fairing, not a rest-mesh mutation or a pucker displacement redistribution.",
+    "solver": "Diagonal-preconditioned conjugate gradients, max512 iterations/component, actual residual recomputed every iteration; max abs(A*delta-rhs)/diagonal<=0.0001mm and relative L2 residual<=1e-6. Report does not equate residual with solution error or biological precision.",
+    "bounds": "Scalar positive source bounds checked without artistic clamping. Entire proposal staged in a separate Float32 array. Max gated 3D proposed displacement must be<=0.6mm; actual quantized displacement<=0.6001mm; mouth-x leakage<=0.0001mm from Float32 storage only.",
+    "triangleGuard": "Every original triangle incident to a free vertex is checked after Float32 quantization. Finite nondegenerate area, original-to-proposed normal dot>0 and proposed/original area>=.1 required. This is a local fold/collapse guard, not full collision detection.",
+    "atomicCommit": "All solve, finite, scalar-bound, cap, triangle and protected-position checks finish before any native position write. Then only free vertex up/front-derived coordinates are committed. No per-vertex cap or vector normalization.",
+    "engineeringValuesNotMeasuredAnatomy": true
+  },
+  "execution": {
+    "wrapper": "Instance-level outer wrapper around exact existing R06 solver.apply, never global prototype or native text replacement.",
+    "stage": "Temporarily wrap only geometry.computeVertexNormals. First native call runs staged fairing then original normals; second call runs original normals only. Require exactly2 synchronous calls. Original closure, envelope, strain, microgeometry, final normals/bounds continue.",
+    "restoration": "Finally restores the exact original computeVertexNormals descriptor and verifies inherited pairs.map/lips iterator identities/descriptors. uninstall restores exact R06 apply descriptor; an intervening owner is an error rather than silently overwritten.",
+    "zeroGate": "Call inherited R06 directly without normal hook or position writes; last recordsnormalCalls0, no solve, no triangle guard and no comparison counts.",
+    "reportCompatibility": "Outside evaluation use cornerLip.report to inherit the actual R06/R05/R04 compatibility decision; never edgeLip.report. Inside outer apply R02 temporarily sets microGeometry=.35 while R06 pucker0 bypass is not running. Therefore never call ancestor report in this interval: use original-bound source/authoring/material/API/reference checks and the recorded expected transient micro value. Original R06 evaluator still performs its own inEvaluation guards.",
+    "normalInvalidation": "Identity, topology, calibration, material or ancestor state changes disable and fall through to inherited native evaluation; no user labels or parameters rewritten.",
+    "unexpectedFailure": "Throw after exact temporary descriptor restoration and disable candidate. If later inherited stages fail after commit, native update is required after detach; EdgeLip pose/compare/restore recovery is responsible for clearing a partially evaluated frame. Proposal guard failures happen before native writes.",
+    "stageCompletionEvidence": "last.allOriginalStagesExecuted starts false and becomes true only after the inherited synchronous call returns normally and the required normal stage count has passed (or the original zero-gate bypass returns normally). Failure records do not claim completed stages."
+  },
+  "reportContract": {
+    "binding": "freeReturnVertices/freeCrestVertices/crestVertices; global body/nonSkin/contact/protection counts and raw-index fingerprints; zeroRestEdges exact/nearzero totals, real original length range, retained zero costs, endpoint-plus-one-ring protection counts/fingerprint and up to16 endpoint semantic/distance examples",
+    "last": "completed/hooksRestored/bypass/reason/jawOpen/jawGate/normalCalls/changedVertices/maximumProposedDeltaMM/maximumAppliedDeltaMM/lateralComponentMaximumMM/direct exact flags and compared counts/linearSolve(up,front)/triangleGuard/crestDisplacement/committed; zeroRestDirectExact and zeroRestComparedVertices",
+    "verificationBoundary": "Direct exact flags are at the staged boundary. Independent full native final position SHAs for body/nonskin/49 contact pairs must still match R06 after microgeometry; direct flags do not replace those checks."
+  },
+  "localVerification": {
+    "syntaxPassed": true,
+    "fixture": {
+      "sha256": "cf8526a79a48a14ee69b9cfa284e120bc83f3d689e662cade165470f0c3db57f",
+      "bytes": 8423
+    },
+    "actualResult": {
+      "sha256": "75f564cd4c8faaf68b24cd4c6876edd999a839206fdb609b67adda2a1ff214f3",
+      "bytes": 14787
+    },
+    "scope": "Synthetic indexed strip crease only: graph binding, nonempty free crest, finite SPD residual, nonzero fairing, body/contact/protected exact,2normal stage lifecycle, half gate, neutral/pucker0 exact, normal identity invalidation fallback, uninstall restoration, transient report isolation, and excessive proposal rejected before position writes. This is not a person-specific visual or biological validation.",
+    "nonzeroRestFixtureMathExactlyMatches01": true,
+    "zeroRestFixture": "One genuine original rest edge is set to length0 while actual display geometry and original index remain unchanged. Both endpoints plus the independent original-index one-ring must be exact, free crest remains nonempty and changes, zero-cost carrier distances of endpoints are equal from both upper/lower seeds, free rows never touch zero costs. Original nonzero fixture and excessive-proposal failure still pass."
+  },
+  "remainingRisks": [
+    "Fairing can shift the crest, reduce opening or soften a useful ridge; the cap and area guard do not make those changes desirable.",
+    "The stable lower graph/negative-v domain is an engineering ownership approximation. Unusual anatomy can fail binding and must not reuse another person's weights.",
+    "Final surface visibility and tooth occlusion are not inferred from cross-section length. Teeth and the actual declared jaw/speak/pucker inputs must remain identical.",
+    "Static supported-pose evidence will not establish arbitrary action mixtures, all animation derivatives, full-volume conservation or whole-mesh contact."
+  ],
+  "acceptance": "Retain only if actual same-person jaw/speak macro+oblique visibly gain a readable continuous lower return without lip/body/contact/teeth regressions; require current neutral and pucker exact and actual archive/half-progress restore. A lower angle or passing technical gate alone is insufficient.",
+  "confirmedFailureAndFix": {
+    "candidate01QA": "evidence/candidate-01/qa.json",
+    "observedFailure": "Degenerate original rest edge",
+    "candidate01Frames": 0,
+    "noVisualJudgmentPossible": true,
+    "previousSourcePreserved": "evidence/candidate-01/source (explicit post-failure exact source copies, not original CI artifact)",
+    "candidate01SyntheticSHA256": "4b638c18d04d80fe3997e8bb27f2570049563047f3b159acae8cf4addf67aec8",
+    "thresholdMetres": 1e-12,
+    "nonfiniteStillRejected": true,
+    "exactZeroAndPositiveNearZeroCountedSeparately": true,
+    "carrier": "Retain every original skin edge. Finite length<=threshold has zero carrier cost; strict-distance improvement Dijkstra supports zero cycles without cycling. Report real original lengths and endpoint semantics/coordinates/distances.",
+    "fairing": "Endpoints and exactly one ring from frozen endpoint mask are directly fixed; union with unchanged body/pair one-ring. A free row explicitly rejects any cost<=threshold before inverse length squared. No original topology, rest position or label is rewritten.",
+    "requiredActualEvidence": "Real binding must show counts/ranges/protected scale and retain free crest; a successful synthetic case does not establish whole-person coverage or image improvement."
+  }
+}

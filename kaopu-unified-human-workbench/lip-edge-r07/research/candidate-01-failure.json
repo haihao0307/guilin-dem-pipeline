@@ -1,0 +1,87 @@
+{
+  "schema": "kaopu/lip-edge-r07-candidate-failure@1",
+  "candidate": "candidate-01",
+  "recordedUTC": "2026-10-20T08:35:08.846245+00:00",
+  "sourceCommit": "d7c542d00704de91644ddcb17e59fd3ace1a75f7",
+  "buildCommit": "998f17a8a1be7302700f7f35c7b5c935edd9f15d",
+  "evidenceCommit": "979838bf95967201fe42e76725b8f7184a172af7",
+  "workflowRun": 39393670693,
+  "job": 118531004238,
+  "artifact": {
+    "id": 12251215735,
+    "bytes": 62328,
+    "sha256": "f9f4112a31bbdeba0071f0c32cd7372bf8ea8860b5153533c33e431034aa950a"
+  },
+  "originalQA": {
+    "path": "evidence/candidate-01/qa.json",
+    "sha256": "ce300264ea60128922b80f4bf8da4c81109ec7a6a3029a73345b3e9c2efd126b"
+  },
+  "publicPreviewSHA256": "94dd9a3939f6d165e23b1f9ac3380d7c9cada556dabe4b424e4e7b95c4f32321",
+  "originalTests": [
+    {
+      "name": "fixed public bytes reviewed source modules and exact R06 ancestor",
+      "passed": true,
+      "elapsedMS": 908,
+      "result": {
+        "baseline": {
+          "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/1237284ea60f9c198b2b63543f098a7551a9af2f/kaopu-unified-human-workbench/lip-corner-r06/preview.html",
+          "status": 200,
+          "bytes": 5593463,
+          "sha256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac"
+        },
+        "public": {
+          "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/998f17a8a1be7302700f7f35c7b5c935edd9f15d/kaopu-unified-human-workbench/lip-edge-r07/preview.html",
+          "status": 200,
+          "bytes": 5645608,
+          "sha256": "94dd9a3939f6d165e23b1f9ac3380d7c9cada556dabe4b424e4e7b95c4f32321"
+        },
+        "manifestSHA256": "cd1c7a1dc92e7cc9f5037ec7ad1de77dd3a2a4b7dd8d8d2701ba9e8dcd22d94f",
+        "reviewedAppendRemovedR06Exact": true,
+        "inheritedScriptHashesExact": true,
+        "verificationHelpers": {
+          "EdgeGeometryProbe.js": {
+            "sourcePath": "verification/EdgeGeometryProbe.js",
+            "sourceCommit": "d7c542d00704de91644ddcb17e59fd3ace1a75f7",
+            "sha256": "3f8d4b5a162695d4cbaec4e88f489454d74b1e7b6e55d3eea8a239af1fd365c5",
+            "bytes": 11758,
+            "file": "EdgeGeometryProbe-source.js",
+            "role": "Read-only verification helper; not appended to the product or included in its material/geometry implementation"
+          }
+        }
+      }
+    }
+  ],
+  "originalFailure": "Error: page.evaluate: ReferenceError: edgeLip is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:8:86)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+  "pageErrors": [
+    {
+      "label": "R07 public",
+      "error": "Error: Degenerate original rest edge"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "label": "R07 public",
+      "error": "LIP_EDGE_INIT Error: Degenerate original rest edge\n    at build (<anonymous>:67:239)\n    at Object.install (<anonymous>:154:5)\n    at installEdge (<anonymous>:295:56)\n    at <anonymous>:353:13\n    at heldView (<anonymous>:264:20)\n    at <anonymous>:350:55\n    at batch (<anonymous>:238:16)\n    at compare (<anonymous>:350:9)\n    at <anonymous>:484:67\n    at batch (<anonymous>:238:16)"
+    }
+  ],
+  "cleanup": {
+    "completed": true,
+    "browserDisconnected": true,
+    "errors": [],
+    "elapsedMS": 72550
+  },
+  "nativeSavedFrames": 0,
+  "nativeReadbacks": 0,
+  "rootCause": "The original rest-edge length precondition failed during graph binding. Candidate01 used the same error for lengths <=1e-12m and nonfinite lengths, so this failure alone does not distinguish them. Candidate02 records actual finite zero/near-zero edges and continues to reject nonfinite lengths.",
+  "secondaryFailure": "The absent edgeLip API resulted from the earlier initialization failure. The verifier dereferenced it after waiting for ready or startup errors; this obscured the original error in its top-level failure, while raw page/console evidence retained the original cause.",
+  "nextAction": [
+    "Retain original graph connectivity with nonnegative zero-cost collapsed edges for carrier distances. Reject nonfinite lengths.",
+    "Fix collapsed-edge endpoints and one original-index ring, so no free fairing row can use a singular weight; preserve existing body/contact protection and free-crest requirement.",
+    "Record actual collapsed-edge counts/examples and resulting domain, then repeat the same original public frame/state/geometry/archive checks in a separate candidate02 directory.",
+    "Make startup evidence collection optional-API-safe and report original errors before attempting ready-only controls."
+  ],
+  "repairAccepted": false,
+  "visualConclusion": "No candidate frames exist; no positive or negative aesthetic inference is made.",
+  "visualAcceptance": false,
+  "productionReady": false
+}

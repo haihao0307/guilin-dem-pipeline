@@ -1,0 +1,171 @@
+{
+  "schema": "kaopu/lip-edge-r07-geometry-source-audit@1",
+  "reviewer": "lip_r05_geometry_audit",
+  "reviewedUTC": "2026-10-20T07:58:47.791943+00:00",
+  "scope": "Read-only source audit and independent native/draw section diagnostic; no production geometry/material/action change.",
+  "baseline": {
+    "source": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "fixedBuild": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "retentionRecord": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c"
+  },
+  "target": "In jaw/speak, the lower exterior vermilion appears to end abruptly in a narrow hard line near the lower teeth. Evaluate readability of its existing inward return. Do not presume missing volume throughout the lip.",
+  "firstJudgment": {
+    "physicalThinnessProven": false,
+    "replacementSurfaceJustified": false,
+    "productionCorrectionSelected": false,
+    "confirmed": "Native topology retains indexed oral return, and R04/R05/R06 preserve original topology. Its existence and semantic count alone do not prove a sufficiently rounded visible return, continuous normal turning, valid thickness or contact area.",
+    "nextDecision": "Use exact final triangle-plane intersections and actual stage displacement together with matched beauty/no-bump/albedo/semantic views; a static flat-looking band cannot on its own establish the mechanism."
+  },
+  "sources": [
+    {
+      "path": "lip-inner-r04/InnerLip.js",
+      "sha256": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
+      "bytes": 15508
+    },
+    {
+      "path": "lip-inner-r04/MucosaSurface.js",
+      "sha256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+      "bytes": 8606
+    },
+    {
+      "path": "lip-motion-r05/src/MotionContinuity.js",
+      "sha256": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+      "bytes": 17050
+    },
+    {
+      "path": "lip-corner-r06/src/CornerContinuity.js",
+      "sha256": "106bfb769e21f3e56ae35521509d17ce903f2b2e30f613f2a60af6e95896c970",
+      "bytes": 40960
+    },
+    {
+      "path": "lip-corner-r06/preview.html",
+      "sha256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac",
+      "bytes": 5593463
+    },
+    {
+      "path": "lip-edge-r07/verification/EdgeGeometryProbe.js",
+      "sha256": "3f8d4b5a162695d4cbaec4e88f489454d74b1e7b6e55d3eea8a239af1fd365c5",
+      "bytes": 11758
+    }
+  ],
+  "nativeAnchors": [
+    {
+      "function": "L5 + ao",
+      "path": "lip-corner-r06/preview.html",
+      "characterOffset": 4634999,
+      "line": 4118,
+      "sha256": "42aa737e2392f0cb83229f94f06c00f90caffda9724b805ce987e77c58baa038",
+      "facts": [
+        "Four landmark rails are defined on native rest coordinates. v is an upper/lower rail-normalized coordinate with a minimum 1 mm denominator, not physical thickness.",
+        "ao derives x, up, front, center from current canonical landmarks and converts canonical [x,y,z] to display [x,z,-y].",
+        "Outside rail endpoints Xl clamps the rail value; the meanings of v and upper do not expand automatically to tissue anatomy."
+      ]
+    },
+    {
+      "function": "Kl",
+      "path": "lip-corner-r06/preview.html",
+      "characterOffset": 4649399,
+      "line": 4173,
+      "sha256": "8cb54e178c93936f39116e3764128f37a108a57f840427d8f0146cf308ca0938",
+      "facts": [
+        "top.lips is red > .025; native rim is a different u/v/depth condition; neither is a watertight thickness volume.",
+        "49 sections choose opposing original rim vertex IDs by a score, not continuous closest triangle contact.",
+        "mouthBoundaryEdges/nonmanifold counts and retained indexed geometry are topological observations, not local surface separation or self-contact proofs."
+      ]
+    },
+    {
+      "function": "Ql.apply",
+      "path": "lip-corner-r06/preview.html",
+      "characterOffset": 4654436,
+      "line": 4173,
+      "sha256": "e9b134e61ee537cc552ab0569cc3e5a848c11ab1b579d147bb0027dc48a82187",
+      "facts": [
+        "solver.base stores actual pre-local positions; this includes prior native jaw evaluation and is not neutral rest.",
+        "Native local actions -> pairs.map closure samples -> interpolated active closure -> dental envelope -> normals -> normal-displaced microgeometry -> final normals/bounds.",
+        "R05 corrects local return ownership before delegated pairs.map, and closure direction before delegated top.lips iterator. R06 correction is between the first of those and native pair sample evaluation."
+      ]
+    }
+  ],
+  "closure": {
+    "equation": "C = dot(Pupper-Plower,up); N=max(seal,.45*press,adhesion*(1-smooth(I,I+.19,release+.76*jawOpen))); delta=clamp((max(.00009*scale,C*(1-N))-C)/2,-.006*scale,.006*scale). Native active vertices get signed interpolated delta times support; R05 then corrects selected return ownership.",
+    "jawSpeakConditional": "For the declared jaw/speak poses, seal/press/adhesion are zero. If every actual pair gap is above .00009*scale, native closure delta is exactly zero. Record actual gaps before attributing this target to closure.",
+    "limits": [
+      "The 90 micrometre floor is a target opposing up-projection gap, not edge tissue thickness.",
+      "A positive gap on these 49 pairs does not prove no triangle intersection, complete lip contact or valid saliva.",
+      "Turning closure off changes mouth contact; it is not a production thickness repair."
+    ]
+  },
+  "dentalEnvelopeHypothesis": {
+    "condition": "Only top.lips vertices with .05 <= v <= 1.05 are considered; source has no smooth cross-v=.05 entry fade.",
+    "motion": "Positive front deficit to native dental/gum/tongue frontal triangle envelope + .00016*scale, capped at .004*scale.",
+    "test": "Independent EdgeEnvelopeStageProbe observes actual pre/post loop displacement and raw-index adjacent delta differences crossing v=.05. Compare this with final sections and matched pixels.",
+    "notYetProven": "The gate is a source discontinuity candidate. It is not established that the visible lower line crosses this gate or that the loop moves it in these current poses. R04 already excluded whole-rim displacement in its tested poses."
+  },
+  "microgeometry": {
+    "native": "After envelope normals, positions are displaced along those normals by atlas(u,v,upper)*furrows*microGeometry*red*pressure*(1-.85*inner), then normals are recomputed.",
+    "limit": "Shader no-bump does not disable native geometric microrelief. Persistent no-bump structure therefore does not alone distinguish coarse topology from normal-displaced native relief.",
+    "noChange": "R07 probe does not change furrows, atlas, material, normals or microGeometry."
+  },
+  "protectedResponsibilities": [
+    "R04 continuous native oral-skin material ownership is not a new return geometry or thickness model. l19Detail.w is bounded mouth-forward depth, not anatomical thickness or an optical path.",
+    "R05 ownership is a separately calibrated fixed carrier; overwriting sample.upper or applying old signs can reintroduce the rejected hanging strips and closure-return inversion.",
+    "R06 fixes peripheral pucker vector continuity and protects native core/rim/contact/center; it is a pucker=0 original-call bypass. This jaw/speak target must not be disguised as an R06 field gain change.",
+    "R06 must uninstall before any R05 rebinding; another outer wrapper must restore instance descriptors in reverse order. Current section helper installs no wrappers.",
+    "Keep original tooth/gum/tongue geometry and contact pair IDs. Moving teeth or reducing jaw/speak amplitude would invalidate the intended comparison."
+  ],
+  "diagnostic": {
+    "file": "lip-edge-r07/verification/EdgeGeometryProbe.js",
+    "api": [
+      "install(viewer,model)",
+      "sample()",
+      "report()",
+      "restore()"
+    ],
+    "synchronous": true,
+    "updates": 0,
+    "renders": 0,
+    "hooks": 0,
+    "data": "Native topology.geometry and actual viewer.mesh.geometry are independently intersected with mouth-x planes u=-.45,0,.45. All original triangles are scanned; exact intersection endpoints retain vertex edges/t, triangle IDs, material groups, geometric face normal, interpolated raw attributes and per-vertex semantics.",
+    "roi": {
+      "upMM": [
+        -35,
+        22
+      ],
+      "frontMM": [
+        -25,
+        20
+      ],
+      "typeFilter": null
+    },
+    "bounds": "Return up to 2400 intersections per station in original index order with total counts/truncation explicit; no top.neighbors or presumed native/draw prefix.",
+    "readOnly": "Local FNV byte fingerprints of every attribute/index and solver.base/canonical positions; independent runner retains stronger full-state SHA/call checks.",
+    "limitations": [
+      "Planes are geometric cuts, not automatically tissue paths or a thickness metric. Use shared original edge IDs to reconstruct connected section paths.",
+      "Interpolated vertex normals are distinct from geometric triangle normals. Neither alone proves normal winding or self-intersection.",
+      "Draw position attributes precede any GPU-only skin/morph/displacement. The probe records this limitation and mesh transform; it does not label a section as a visible pixel.",
+      "Only identical position and index array references establish correspondence in this minimal helper; otherwise native and draw domains remain independent.",
+      "No manual section sign or semantic identity is promoted to physiological correctness."
+    ]
+  },
+  "localVerification": {
+    "syntax": "node --check passed",
+    "syntheticKernel": {
+      "passed": true,
+      "planes": 3,
+      "independentDomains": 2,
+      "segmentsPerPlane": 2,
+      "exactPlaneCoordinateToleranceNativeMM": 1e-10,
+      "noInputMutation": true,
+      "noUpdateRenderOrApplyExecuted": true,
+      "restoreDisallowsFurtherSample": true
+    },
+    "interpretation": "Synthetic test verifies the intersection kernel and observational contract, not the current person, real render or repair quality."
+  },
+  "pendingActualEvidence": [
+    "Current R06 final lower-edge native/draw section connectivity, normal turn and raw semantic transition",
+    "Exact native envelope activity and cross-v=.05 displacement in current jaw/speak",
+    "Matched material diagnostic/beauty evidence at the same actual lower-edge pixels",
+    "Actual depth/occlusion relationship to lower teeth, without modifying them"
+  ],
+  "minimalNextRepairRule": "Select a production mechanism only if the same original lower return triangles exhibit a specific proven position/normal discontinuity or semantic responsibility failure. Repair that original field in place with a reversible gate, preserving actions, teeth, R05/R06 and contact; no added overlay/alternative mesh and no blanket lip thickening."
+}

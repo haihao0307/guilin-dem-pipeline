@@ -1,0 +1,255 @@
+{
+  "schema": "kaopu/lip-edge-r07-diagnostic-visual-findings@1",
+  "createdUTC": "2026-10-20T08:16:31Z",
+  "reviewer": "independent visual reviewer",
+  "scope": "Personally viewed all 12 original 640x512 full frames from jaw/macro, jaw/oblique and speak/macro. No crop, resize, generated image, retouch or composite was used.",
+  "binding": {
+    "diagnosticCommit": "2b2664f9fab33e85a9e5497a501fef81bd0484b9",
+    "baselineSource": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "baselineBuild": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "qaFile": "evidence/diagnosis-02/qa.json",
+    "qaSHA256": "98301a388d4a5c0cb32bfa7d6518309ce0a35eb274431f2e6bdc96ba6bbf2501",
+    "helpers": {
+      "EdgeGeometryProbe.js": {
+        "sha256": "3f8d4b5a162695d4cbaec4e88f489454d74b1e7b6e55d3eea8a239af1fd365c5",
+        "bytes": 11758
+      },
+      "EdgeSurfaceAttribution.js": {
+        "sha256": "5b08d7f7fc887073edb41fb7006d8d9c0edd85c759d4f602d9e69352e808de1e",
+        "bytes": 22793
+      },
+      "EdgeEnvelopeStageProbe.js": {
+        "sha256": "9196dd4c59528770d0541cb3a2173f417c0e4e6a0120d5a8e9c1b49bdea94696",
+        "bytes": 18772
+      }
+    }
+  },
+  "technicalEvidence": {
+    "qaCompleted": true,
+    "passedTests": 6,
+    "totalTests": 6,
+    "savedNativeFrames": 14,
+    "cleanupCompleted": true,
+    "originalRestoration": [
+      {
+        "tag": "jaw-macro",
+        "originalRestoredPNGBytesExact": true
+      },
+      {
+        "tag": "jaw-oblique",
+        "originalRestoredPNGBytesExact": true
+      },
+      {
+        "tag": "speak-macro",
+        "originalRestoredPNGBytesExact": true
+      }
+    ],
+    "boundary": "Technical success and exact restoration validate this comparison; they do not establish a production improvement or anatomical correctness."
+  },
+  "principalFinding": {
+    "statement": "三组 no-bump 都没有实质修复下内缘的短硬转折。高频凹凸不是这次缺陷的充分解释；下一步主要应检查已变形表面的转折、宏观法线及牙齿/口腔遮挡关系。材质与照明明显影响硬边的明暗强度，但这些消融图尚不能把主因唯一分配给几何厚度、某条法线或 dental-envelope loop。",
+    "priority": "Investigate the evaluated lower-return surface and its visibility before another fine-bump or wetness adjustment.",
+    "geometricThicknessDeficitProven": false,
+    "specificNativeStageProvenByTheseImages": false,
+    "geometryVersusLightingFullySeparated": false
+  },
+  "perView": [
+    {
+      "view": "jaw-macro",
+      "beautyObservation": "下唇外侧已经有宽而饱满的曲面，问题集中在靠下牙的一段内缘：外侧亮面迅速终止于窄而硬的边，向口内折回的短表面不易读出。两侧仍有灰色不规则块和折缝；上唇内缘有宽窄不均的暗带。",
+      "noBumpObservation": "皮肤细孔和细小起伏减弱，主体唇形、下缘紧贴牙列的关系及短硬边仍在。唇体也没有因此多出可见的连续内转面。",
+      "albedoObservation": "外唇的大幅明暗、高光以及上唇黑边明显减弱，整体变成平坦色块；口部轮廓、下牙与下唇边界的位置、两侧灰色块仍在。下内缘仍只读成窄带。",
+      "interpretation": "不支持以高频程序凹凸作为主要修复手段。albedo 的平坦化不能当作转折变圆或厚度正确。"
+    },
+    {
+      "view": "jaw-oblique",
+      "beautyObservation": "斜侧同样显示有体积的下外唇与很短的内侧回转；牙列从下边界紧邻处升起，左侧口角内还可见折线与暗色/灰色结构。",
+      "noBumpObservation": "粗大的过渡、轮廓与牙列遮挡关系基本保留，细纹减弱没有解决转折可读性。",
+      "albedoObservation": "上、下唇的立体光照消失，侧壁变成较平的暖色片；口腔开口、牙列前后的遮挡以及短的下内缘依旧。上缘局部仍有细小暗缺口，不能据此擅自认定穿模。",
+      "interpretation": "斜侧使可见表面与遮挡问题更值得追踪，但单一平色图仍无法区分已有回转面被遮住、宏观法线过急或真实形状过急。"
+    },
+    {
+      "view": "speak-macro",
+      "beautyObservation": "说话姿态也保留同类下内缘硬收口；下外唇的体积并不缺，局部转入内侧的过程显得过短。R05 保留的上内缘状态不应为了本轮下缘而回退。",
+      "noBumpObservation": "皮肤更平滑，仍未出现有意义的下内缘改善；开口和牙齿关系没有因此变得自然。",
+      "albedoObservation": "上唇暗滚边与下唇亮面消失，但下内缘仍窄，牙齿灰块与口腔暗平面仍明显。",
+      "interpretation": "与 jaw 的响应一致，使单纯材质细凹凸修复的优先级更低；不能把上唇阴影减少误当成下内缘修复。"
+    }
+  ],
+  "causalBoundaries": [
+    {
+      "claim": "移除被测试的程序细凹凸，足以修复当前下内缘。",
+      "assessment": "not-supported",
+      "reason": "三组 no-bump 中同类短硬边均保留；主要变化是细节与皮肤平滑度。"
+    },
+    {
+      "claim": "明暗着色会强化硬边与蜡样观感。",
+      "assessment": "supported-with-scope",
+      "reason": "albedo 中大部分唇体明暗、高光和上缘暗带明显减弱；这证明这些视觉线索依赖着色，但不区分具体 BRDF、灯光、宏观法线或原有遮蔽项。"
+    },
+    {
+      "claim": "应优先检查变形后表面转折及可见性，而不是继续只调湿度/细凹凸。",
+      "assessment": "supported-priority-inference",
+      "reason": "原图已有外唇体积，去掉细凹凸仍无内转面改善，且斜侧也保留短边与牙列贴近关系。是工作优先级推断，不是唯一根因证明。"
+    },
+    {
+      "claim": "下唇一定缺少实体厚度，必须整体加厚。",
+      "assessment": "not-established",
+      "reason": "Beauty 与 albedo 都无法测量实体截面；内转面可能过急、法线变化过急、被牙列遮挡或语义分层不易读。"
+    },
+    {
+      "claim": "dental-envelope loop 是这条可见硬边的唯一来源。",
+      "assessment": "not-established-by-this-visual-review",
+      "reason": "当前三种表面模式都冻结同一已求值几何。阶段位移与 v=.05 邻接差应由独立真实阶段证据解释，再由候选同条件图验证，不能从 no-bump/albedo 直接推导。"
+    },
+    {
+      "claim": "灰色牙齿、口角块状结构和暗口腔都属于同一个唇材质问题。",
+      "assessment": "not-established",
+      "reason": "它们在两种诊断中仍明显，诊断只作用于既有程序皮肤材质；未改变的物体不能仅凭图像归因到唇 shader。"
+    }
+  ],
+  "nextCandidateTarget": {
+    "minimumUsefulChange": "在保留原 beauty 材质的 jaw/macro、jaw/oblique 和 speak/macro 全图中，中央下内缘从外侧唇体转向内侧的短过程应更连续、更容易辨认；改善必须在 640x512 原尺寸直接看出，不能只靠放大、差分图或更小的像素变化宣称有效。",
+    "acceptanceConditions": [
+      "中央下缘的刀口式明暗/形状转折减弱；有可读的短内转面，而不是把整个下唇增厚、向外充气或涂出亮线。",
+      "正面与斜侧同时成立，并保留说话/张口程度、口宽与唇体轮廓。牙齿可见面积的变化必须能与实际表面改善对应，单纯把牙遮住不算收益。",
+      "在已约定的 jaw 25/50/75/100 离散样本中检查过渡，不允许中间姿态新阶梯、新凹坑或瞬间鼓包。离散通过不声明连续动画通过。",
+      "保留闭口自然唇缝、R05 上内缘收益和 R06 噘嘴口角收益；自然沟槽不要求全部消掉。"
+    ],
+    "rejectConditions": [
+      "仅细纹/湿润感改变，原尺寸仍看不出内转面改善。",
+      "以缩小开口、削弱动作、压平唇体或挡住灰牙作为主要收益。",
+      "出现均匀亮管、悬浮薄条、反向尖折、双层脊、裂缝、新鼓包或口角堆叠。",
+      "正面改善但斜侧恶化，或破坏此前 R05/R06 已保留效果。",
+      "只有材质诊断模式看起来平顺，原 beauty 下仍是同一短硬边。"
+    ],
+    "noNewAnatomicalClaim": "不以可见边宽、局部位移、封闭度或牙齿遮挡作为生理厚度/接触正确性的证明。"
+  },
+  "frames": [
+    {
+      "file": "evidence/diagnosis-02/jaw-macro-original-r06.png",
+      "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236",
+      "bytes": 321401,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-macro-no-bump.png",
+      "sha256": "67c6339b79a42a871fa05b4a179bfabfe75111f7d7b91bf0a8e5aa1b0f6fa2d2",
+      "bytes": 275355,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-macro-albedo.png",
+      "sha256": "49cd0293058ea67fb980f7a033c5d56c4bf5db32c0da5841b45be1f7c495ee99",
+      "bytes": 220205,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-macro-restored-r06.png",
+      "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236",
+      "bytes": 321401,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-oblique-original-r06.png",
+      "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59",
+      "bytes": 283029,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-oblique-no-bump.png",
+      "sha256": "3662147e71d035b1cfdb894321b42890f445ea1061773d3212649d39a079e234",
+      "bytes": 244587,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-oblique-albedo.png",
+      "sha256": "d413fc850e6d0a4a60ef13a061ad4a85125d0cb36a9ffa21a3c3808cb4621a54",
+      "bytes": 190175,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/jaw-oblique-restored-r06.png",
+      "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59",
+      "bytes": 283029,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/speak-macro-original-r06.png",
+      "sha256": "6e0161151560e2f363c403851cef17ba58640142b23c76fe88d2e5bf0b62bd03",
+      "bytes": 323093,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/speak-macro-no-bump.png",
+      "sha256": "c4b3879ed2aba0cf2f5e31f72b81e2d8e9ab292eb482842e6d3f71e914dbdba0",
+      "bytes": 278080,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/speak-macro-albedo.png",
+      "sha256": "7ba568fa291d5209a3f9a8378df4892d064d6d9d34eb1673bebb802807982517",
+      "bytes": 221119,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    },
+    {
+      "file": "evidence/diagnosis-02/speak-macro-restored-r06.png",
+      "sha256": "6e0161151560e2f363c403851cef17ba58640142b23c76fe88d2e5bf0b62bd03",
+      "bytes": 323093,
+      "dimensions": [
+        640,
+        512
+      ],
+      "directlyViewedFullOriginalAtNativeSize": true
+    }
+  ],
+  "reviewMethodBoundary": "Independent direct visual judgment was sent to root before QA metadata was read. QA was then read only for provenance/restoration binding. This report does not substitute numerical or visual success for one another.",
+  "productionChangeReviewed": false,
+  "visualAcceptance": false,
+  "wholeLipRealismAccepted": false,
+  "productionReady": false
+}

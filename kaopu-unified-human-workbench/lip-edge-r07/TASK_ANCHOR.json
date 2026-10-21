@@ -1,0 +1,64 @@
+{
+  "schema": "kaopu/lip-edge-r07-task@1",
+  "createdUTC": "2026-10-20T07:39:50Z",
+  "task": "Audit and improve the readable outer-to-inner lower-lip return in opening and speaking while preserving the accepted native R06 person.",
+  "status": "diagnosis-in-progress; no new product improvement claimed",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/lip-edge-r07-20261020",
+  "parentCommit": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+  "baseline": {
+    "version": "LIP-CORNER-R06",
+    "implementation": "native-corner-pucker-vector@3",
+    "sourceCommit": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "buildCommit": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "previewSHA256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac",
+    "evidenceCommit": "b842748b5ceb8bec0c0809d91d850071e2a53412",
+    "qaSHA256": "5ececcf803cbaad296323f422006abb4c73e86740b1e2eecd38da5e526f3f28d",
+    "reviewRecordCommit": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+    "receiptSHA256": "b636523b27d7c0179a8f587ea82f8fbe1734a3d6498b41f4b059ceea8f187bae",
+    "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/1237284ea60f9c198b2b63543f098a7551a9af2f/kaopu-unified-human-workbench/lip-corner-r06/preview.html"
+  },
+  "observedProblem": "In the reviewed jaw and speaking frames, the lower outer lip has visible volume but ends in a narrow hard edge near the lower teeth; a short continuous turn into the inner surface is hard to read.",
+  "notAssumed": [
+    "A thin-looking rendered edge does not establish missing tissue thickness.",
+    "Whole-lip volume statistics, native semantic depth and shader thickness are not the measured cross-section of this visible edge.",
+    "A naturally dark seam or commissure is not automatically a defect.",
+    "The prior R06 corner correction does not certify inner-return anatomy or contact."
+  ],
+  "constraints": [
+    "Keep the native parameterized person and original topology; no external mesh or generated-image substitute.",
+    "Preserve the accepted R05 speaking ownership and R06 peripheral pucker correction.",
+    "Do not hide the defect by changing teeth, reducing opening, flattening the lip body or adding a uniform bright rim.",
+    "Separate visual observations, geometric measurements, numerical checks and physiological claims.",
+    "Archive full person and implementation identity; align camera/light explicitly for image comparisons.",
+    "Isolated Draft PR, fast-forward only, no merge, force push or history rewrite.",
+    "Deliver a fixed public HTTPS build only after actual browser rendering and matched visual review."
+  ],
+  "diagnosticScope": {
+    "nativeBaselineOnly": true,
+    "poses": [
+      "neutral",
+      "jaw",
+      "speak",
+      "pucker"
+    ],
+    "materialWindows": [
+      "jaw/macro",
+      "jaw/oblique",
+      "speak/macro"
+    ],
+    "surfaceModes": [
+      "original",
+      "no-bump",
+      "albedo",
+      "restored-original"
+    ],
+    "surfaceInvariant": "Freeze already evaluated R06 geometry during temporary shader diagnostics; do not trigger native pose, update or R06 compatibility report while the diagnostic compile hook is attached.",
+    "geometryInvariant": "Read actual native/draw buffers and original indexed triangles. Any section is labelled by its real coordinate frame; no presumed native-to-draw prefix mapping.",
+    "restoration": "Exact original material functions/descriptors, full native state, solver enabled state/call counts, expanded shader, uniforms and native pixels.",
+    "productionFix": false,
+    "nativeStageObserver": "Forward only the original top.lips iterator during already requested native updates. Capture before dental projection and natural iterator exhaustion; detach after R05/R06 unwind. No extra update/render or position writes. Require accepted R06 full state and actual pixels after explicit held view alignment."
+  },
+  "visualAcceptance": false,
+  "productionReady": false
+}

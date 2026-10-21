@@ -1,0 +1,976 @@
+{
+  "schema": "kaopu/lip-edge-r07-return-design-review@1",
+  "reviewer": "/root/r07_return_design_review",
+  "reviewedAtUTC": "2026-10-21T02:47:24.392575+00:00",
+  "reviewedAtAsiaShanghai": "2026-10-21T10:47:24.392575+08:00",
+  "decision": {
+    "furtherProductGeometryChangeRecommendedNow": false,
+    "blindAdditionalLengthOrAreaConstraintRecommended": false,
+    "forcePureOralWallTowardCameraRecommended": false,
+    "pinCrestUpAcceptedAsProductFix": false,
+    "maxPointSixMMConstraintsProvenImpossible": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "reason": "现有 raw-index 连通剖面证明 @2 降低了尖转，同时缩短并压低可见肩部；但只恢复 crest 的约 1.3–1.7px 单点投影，或在固定局部两端与局部弧长条件下再平顺，都不足以自证用户要求的明显效果。当前没有充分证据选择新的几何目标，不为产生下一版而盲加约束。",
+    "conditionalBound": "约 0.1–0.3px 的新增投影跨度上限，仅在局部肩部两端位置与该局部弧长同时固定、相机和截面不变的更强假设下成立。它不是现有 0.6mm/body/contact 约束下的普遍上限，更不是生理结论。"
+  },
+  "reviewScope": {
+    "independentGeometryReview": true,
+    "stages": [
+      "Read current @2 solver and independently recompute actual native/draw paths, camera-facing signs and same-edge crest projection counterfactual.",
+      "Inspect full mixed-shoulder slopes and curvature distribution; derive conditional fixed-endpoint/local-arc ellipse bound and assess whether another geometry experiment is justified."
+    ],
+    "personallyViewedImagesByThisReviewer": 0,
+    "visualFindingsAttribution": "candidate02 原尺寸视觉拒绝来自已绑定的独立视觉报告。candidate03 两项消融未改善硬边、no-depth-visibility 使两侧口内突兀发亮的结论由 /root 与独立材质 reviewer 亲看后通过 /root 消息提供；本报告不冒充第三次独立亲看。",
+    "browserExecutedByThisReviewer": false,
+    "runtimeEvidenceSource": "Recorded actual CI evidence, QA and raw geometry; this review did not execute the product browser.",
+    "productFilesChanged": false,
+    "geometryOrImageEdited": false,
+    "newMeshCreated": false,
+    "onlyRequestedReviewAndReadOnlyAnalysisScriptWritten": true
+  },
+  "sourceBinding": {
+    "files": [
+      {
+        "path": "lip-edge-r07/src/EdgeContinuity.js",
+        "sha256": "6459d6c6f8b023962b2dac904105aef80f4c1a385d7522865aa44f084b5b4d52",
+        "bytes": 31076
+      },
+      {
+        "path": "lip-edge-r07/research/candidate-02-visual-review.json",
+        "sha256": "e10b188bc893badd3de8279a48e2adfda258b09aff70b65cd4c6dd5af7a62966",
+        "bytes": 20508
+      },
+      {
+        "path": "lip-edge-r07/research/diagnosis-02-geometry-findings.json",
+        "sha256": "bc41ba0306a336dedfa91645e4710a73c83d9e62ded4085e7ade9a6042a9f00b",
+        "bytes": 364092
+      },
+      {
+        "path": "lip-corner-r06/preview.html",
+        "sha256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac",
+        "bytes": 5593463
+      }
+    ],
+    "candidate02And03RawGeometryAndQABindings": "computedAnalysis.candidates contains SHA-256 and byte lengths for both QA files and all eight original raw geometry files; every geometry hash is checked against its own QA geometryProbes entry.",
+    "candidate02And03SharedBeauty": "Twenty shared PNGs were independently read and hashed by this script, and their registered GPU readback hashes compared; all are exact. This script does not independently decode PNG pixel data.",
+    "candidate03RunURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39533086280",
+    "candidate03PublicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/26a2558b66ffc014dc6142d9bdca7379cfa78d5a/kaopu-unified-human-workbench/lip-edge-r07/preview.html"
+  },
+  "technicalAndVisualSeparation": {
+    "candidate02": {
+      "testsPassed": 11,
+      "testsRecorded": 12,
+      "savedFrames": 20,
+      "technicalCompleted": false,
+      "visualRejected": true,
+      "failure": "Actual old R02 switch left R05 enabled; separate from insufficient visual benefit."
+    },
+    "candidate03": {
+      "testsPassed": 15,
+      "testsRecorded": 15,
+      "savedFrames": 26,
+      "readbacks": 27,
+      "technicalCompleted": true,
+      "publicHttpsPassed": true,
+      "browserPassed": true,
+      "visualAcceptanceFromQA": false,
+      "productionReadyFromQA": false,
+      "exposureWindows": 2,
+      "errorCounts": {
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "failedRequests": 0,
+        "resourceErrors": 0
+      },
+      "cleanup": {
+        "completed": true,
+        "browserDisconnected": true,
+        "errors": [],
+        "elapsedMS": 751
+      }
+    },
+    "interpretation": "candidate03 修复并通过真实旧版切换、保存恢复和曝光诊断的技术检查。共享 beauty 和几何测量与 candidate02 完全一致；技术通过没有自动推翻原视觉拒绝。两种曝光消融无收益，也不证明唯一几何根因或全部材质因素已被排除。"
+  },
+  "sourceAudit": {
+    "implementation": "native-lower-return-fairing@2",
+    "system": "For each mouth-up/front coordinate independently: (D+L) delta = -L x, with D_i=degree_i/(length^2*gain_i) and positive rest-edge weights 1/restLength^2.",
+    "meaning": "当前能量折中原位置保持与邻接坐标差异。外围保护不能防止自由 crest 降低或肩部收缩；crest 当前被记录但没有固定。",
+    "preservedArchitecture": [
+      "Complete original skin index/rest graph and lower-versus-upper carrier distances.",
+      "Existing body/contact one-ring, all non-skin and zero-rest collars fixed.",
+      "0.6mm entire-proposal rejection, finite/convergence and local area/orientation checks before writes.",
+      "Original mouth-x correction zero before Float32 storage; jaw gate and full inherited microgeometry/normal stages retained."
+    ],
+    "semanticSource": "Original R06 sets l19Oral from membership in headTransfer.d.oral_skin_ids, interpolated by canonical.gnmRecipes. This is authored native semantics, not a measured anatomical mucosa length/thickness boundary.",
+    "semanticSourceExcerpt": "l[n.bodyCount+p]=(c.has(h)?1-d:0)+(c.has(u)?d:0)",
+    "engineeringNotPhysiology": true
+  },
+  "findings": [
+    {
+      "name": "Existing full return arc is not visible width",
+      "conclusion": "6–7mm 路径包含浅斜 mixed shoulder、crest 和背向内壁。深度行程和背向段不自动成为屏幕宽度。",
+      "support": "Reconstructed independently connected native/draw paths, actual camera and pure-oral face-normal signs in computedAnalysis."
+    },
+    {
+      "name": "Pure oral orientation",
+      "conclusion": "在三切面的同一选定路径中，pure oral=1 段数为 19/17/20。jaw/speak 的 R06 与 @2 均为 0 段朝向实际 macro 相机；native/draw 结果一致。",
+      "limit": "只指这些实际截面和几何面法线，未重建 GPU 后遮挡或证明全域不可见。不能据此要求内壁必须翻向镜头。"
+    },
+    {
+      "name": "Current sharp turn and shallow shoulder",
+      "conclusion": "原始 mixed shoulder 弧长只比弦长多约 0.38–1.03%。中央肩部最后一段上升约 11.18°，随后的背壁第一段下降约 60.24°；主要约 71.42° 尖转位于两者连接，而非整段肩部处处高度弯曲。",
+      "scope": "Tangent angles are 2-D section directions; adjacent triangle-normal angles are separately reported and must not be conflated."
+    },
+    {
+      "name": "Fairing is already stronger than its visible benefit",
+      "conclusion": "@2 jaw 中央肩部内部最大邻面转角由 17.98° 降至 6.20°，局部肩部弧长由 1.805mm 缩至 1.506mm，约短 16.6%。更低弯曲数值仍未通过原尺寸视觉目标。"
+    },
+    {
+      "name": "Pin crest counterfactual is small and incomplete",
+      "conclusion": "同一原生 crest crossing edge 的 up 下沉为 jaw .171/.147/.164mm，speak .198/.147/.196mm。仅沿 mouth-up 恢复这些单点、保留 @2 front 时，投影抬升约 jaw 1.47/1.29/1.41px，speak 1.70/1.28/1.68px。",
+      "limit": "不是完整 constrained solve，不预测周围点、后续微几何或遮挡，也不是实际可见宽度收益。"
+    },
+    {
+      "name": "Conditional local arc bound",
+      "conclusion": "固定肩部两个端点和局部弧长 L 后，任意路径点满足 |P-A|+|P-B|<=L，因此位于半短轴 sqrt(L²-d²)/2 的椭圆内。实际相机的线性分式投影极值给出新增 Y 跨度上限约 0.1–0.3px。",
+      "limit": "这是额外更强条件下的几何投影允许区域；不是当前产品条件的普遍界，也不限制小位移造成的高光/法线变化，更不代表审美不可能。"
+    },
+    {
+      "name": "Global length or area is insufficient",
+      "conclusion": "整条路径保长允许把收缩量补到背向内壁；总面积保持允许在不可见区域补偿。二者都没有规定有依据的肩部端点运动或目标切线，也不能阻止移动色带、改变轮廓或遮掉下牙。"
+    }
+  ],
+  "keyNumericalRows": [
+    {
+      "pose": "jaw-macro",
+      "u": -0.45,
+      "originalShoulderArcMM": 1.3118451427261977,
+      "originalShoulderChordMM": 1.3067284196755269,
+      "originalArcExcessMM": 0.005116723050670791,
+      "originalArcExcessPercent": 0.3915674422954263,
+      "originalDeltaUpMM": 0.39941311332553564,
+      "originalBackwardFrontTravelMM": 1.2441898278362924,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 15.24912674170746,
+      "originalCrestIncomingTiltDegrees": 18.539020038925283,
+      "originalFirstInnerTiltDegrees": -28.311515469830933,
+      "originalCrestSectionTangentTurnDegrees": 46.85053550875622,
+      "r07ShoulderArcMM": 1.082473942223646,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 12.594061306014208,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.1025267744128655
+    },
+    {
+      "pose": "jaw-macro",
+      "u": 0,
+      "originalShoulderArcMM": 1.805276027911813,
+      "originalShoulderChordMM": 1.786967070069956,
+      "originalArcExcessMM": 0.018308957841856932,
+      "originalArcExcessPercent": 1.0245828335907925,
+      "originalDeltaUpMM": 0.7456267045874414,
+      "originalBackwardFrontTravelMM": 1.6239741768022284,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 17.983860106523213,
+      "originalCrestIncomingTiltDegrees": 11.181422929608242,
+      "originalFirstInnerTiltDegrees": -60.243167365334166,
+      "originalCrestSectionTangentTurnDegrees": 71.4245902949424,
+      "r07ShoulderArcMM": 1.5063930279684288,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 6.202793630326203,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.29334996556286796
+    },
+    {
+      "pose": "jaw-macro",
+      "u": 0.45,
+      "originalShoulderArcMM": 1.3290903422789222,
+      "originalShoulderChordMM": 1.3166853936995353,
+      "originalArcExcessMM": 0.012404948579386899,
+      "originalArcExcessPercent": 0.942134593331545,
+      "originalDeltaUpMM": 0.29068722047613127,
+      "originalBackwardFrontTravelMM": 1.2841967784703252,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 18.759096847653876,
+      "originalCrestIncomingTiltDegrees": 16.071365922224118,
+      "originalFirstInnerTiltDegrees": -32.29158995422586,
+      "originalCrestSectionTangentTurnDegrees": 48.36295587644998,
+      "r07ShoulderArcMM": 1.0863281166909668,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 14.78491953312373,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.30133989461211286
+    },
+    {
+      "pose": "speak-macro",
+      "u": -0.45,
+      "originalShoulderArcMM": 1.3258553479547448,
+      "originalShoulderChordMM": 1.3208483270527247,
+      "originalArcExcessMM": 0.005007020902020098,
+      "originalArcExcessPercent": 0.37907614367749254,
+      "originalDeltaUpMM": 0.4434383940460629,
+      "originalBackwardFrontTravelMM": 1.2441875637394189,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 15.009412190275798,
+      "originalCrestIncomingTiltDegrees": 20.693712057340715,
+      "originalFirstInnerTiltDegrees": -39.87030999676526,
+      "originalCrestSectionTangentTurnDegrees": 60.564022054105976,
+      "r07ShoulderArcMM": 1.0918839580399076,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 14.700634861514864,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.09397313959607345
+    },
+    {
+      "pose": "speak-macro",
+      "u": 0,
+      "originalShoulderArcMM": 1.8052766726671035,
+      "originalShoulderChordMM": 1.786969257663643,
+      "originalArcExcessMM": 0.01830741500346056,
+      "originalArcExcessPercent": 1.0244952410315422,
+      "originalDeltaUpMM": 0.7456326018919412,
+      "originalBackwardFrontTravelMM": 1.6239738762772031,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 17.983828232438995,
+      "originalCrestIncomingTiltDegrees": 11.200956291178834,
+      "originalFirstInnerTiltDegrees": -60.24304901906535,
+      "originalCrestSectionTangentTurnDegrees": 71.4440053102442,
+      "r07ShoulderArcMM": 1.506427629337832,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 6.203708429102195,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.2922179831763856
+    },
+    {
+      "pose": "speak-macro",
+      "u": 0.45,
+      "originalShoulderArcMM": 1.3412176949190617,
+      "originalShoulderChordMM": 1.328701765518744,
+      "originalArcExcessMM": 0.012515929400317649,
+      "originalArcExcessPercent": 0.9419667923321606,
+      "originalDeltaUpMM": 0.34099480866220366,
+      "originalBackwardFrontTravelMM": 1.2842004992048768,
+      "originalShoulderInternalMaximumFaceTurnDegrees": 18.60856983929298,
+      "originalCrestIncomingTiltDegrees": 18.964017345568063,
+      "originalFirstInnerTiltDegrees": -43.65385098478004,
+      "originalCrestSectionTangentTurnDegrees": 62.6178683303481,
+      "r07ShoulderArcMM": 1.0948034305542185,
+      "r07ShoulderInternalMaximumFaceTurnDegrees": 16.88909965160952,
+      "fixedEndpointsAndLocalArcAdditionalYSpanUpperBoundPixels": 0.27739036818030627
+    }
+  ],
+  "conditionalPinCrestDesignNotImplemented": {
+    "status": "Not recommended as the next product version merely because it is a small change; retained only as a falsifiable design option.",
+    "systemDesign": [
+      "Retain current rest/index carrier, gains, protected domains and front system.",
+      "For mouth-up only, remove currently free semantic crest IDs from unknowns and impose deltaUp=0 by Dirichlet elimination.",
+      "Keep original coordinates in RHS neighbour differences; fixed crest delta contributes zero. Rebuild the up free-index mapping, never zero solved crest entries after solving.",
+      "The reduced up matrix is a principal submatrix of the existing SPD matrix. Preserve PCG residual checks, whole-proposal cap and triangle guards.",
+      "Report per-component free counts and crest constraint-mask hash. Matched current binding would have 3848 front unknowns and 3714 up unknowns after removing 134 free crest vertices; calculate rather than hardcode."
+    ],
+    "nativeStageCaveat": "写入前的 crest up 约束可以精确；之后原生微几何沿改变后的法线运行，最终 crest 仍须独立测量，不可宣称最终原图轮廓精确。",
+    "whyNotEnough": "该约束最多先取消收缩的一部分，混合带另一端可能同步移动，尖转也可能重集中在锚点一环。没有证据使其足以满足明显改善。"
+  },
+  "falsificationConditionsForAnyFutureGeometryCandidate": [
+    "Original-size jaw front, jaw oblique and speak beauty still read as the same narrow hard edge, even if angle/residual/displacement metrics improve.",
+    "The semantic crest is held but shoulder outer endpoint movement still shrinks its visible or potential projected extent.",
+    "Full connected path shows an equal or larger new concentrated turn at the constrained crest or neighbouring ring.",
+    "Apparent gain depends on hiding lower teeth, reducing aperture/action, swelling the outer lip, or forcing the inner wall toward the chosen camera.",
+    "Final inherited microgeometry changes protected native body/contact/non-skin positions, despite a locally valid intermediate proposal.",
+    "Intermediate pose samples add ridges, dents or abrupt bands; neutral/pucker or real saves/restore/historical comparison regress."
+  ],
+  "exposureUpdate": {
+    "qaBinding": {
+      "path": "lip-edge-r07/evidence/candidate-03/qa.json",
+      "sha256": "f119a733a88c2ee7ae00c4bbbec9be52376ec7b09890ecd1d9b9656b562f267e",
+      "bytes": 3437917
+    },
+    "exactRestorationEvidence": [
+      {
+        "tag": "jaw-macro-r07",
+        "restoreFlags": {
+          "nativeStateExact": true,
+          "solverReportsAndCallsExact": true,
+          "originalPixelsExact": true,
+          "originalShaderExact": true
+        },
+        "originalReadbackSHA256": "e2e713c77bd71a7b78910ec4c1b1ce34b46136837b505e6048509b28f30c0333",
+        "restoredReadbackSHA256": "e2e713c77bd71a7b78910ec4c1b1ce34b46136837b505e6048509b28f30c0333",
+        "variants": [
+          {
+            "mode": "no-oral-tint",
+            "image": {
+              "path": "lip-edge-r07/evidence/candidate-03/jaw-macro-r07-no-oral-tint.png",
+              "sha256": "f48061af7ef97ca866db596b4099c57101d05fa30fe59dc2ee7269e3db1d5038",
+              "bytes": 321692
+            },
+            "probe": {
+              "path": "lip-edge-r07/evidence/candidate-03/jaw-macro-r07-no-oral-tint-probe.json",
+              "sha256": "0d7c3bfb7e972c743f4eb49cbbd7b01833e94cc1a9faccca9032e7d6cd63180f",
+              "bytes": 71532
+            },
+            "readbackSHA256": "0fde6ab421ac4abe51a556952e04818813f8b0419b63f975b275392c0ad63e16",
+            "measuredDifference": {
+              "changedPixels": 2701,
+              "maximumChannelDN": 26,
+              "meanMaxChannelDN": 0.1061431884765625,
+              "interpretation": "A measured response, not an aesthetic score."
+            }
+          },
+          {
+            "mode": "no-depth-visibility",
+            "image": {
+              "path": "lip-edge-r07/evidence/candidate-03/jaw-macro-r07-no-depth-visibility.png",
+              "sha256": "df8a31402aa989d7904dd1b05224307800b3d111470677bf44734626f54abba5",
+              "bytes": 321535
+            },
+            "probe": {
+              "path": "lip-edge-r07/evidence/candidate-03/jaw-macro-r07-no-depth-visibility-probe.json",
+              "sha256": "6bc05c89325420cfc994d38c6802d1bab49d04b2e772193e694ea3b3a84ec4d3",
+              "bytes": 137076
+            },
+            "readbackSHA256": "49a668f7c92dbad0e98ada094547d2f005908629fb85d9de7cc1bd1429265ad4",
+            "measuredDifference": {
+              "changedPixels": 2734,
+              "maximumChannelDN": 139,
+              "meanMaxChannelDN": 0.467919921875,
+              "interpretation": "A measured response, not an aesthetic score."
+            }
+          }
+        ]
+      },
+      {
+        "tag": "speak-macro-r07",
+        "restoreFlags": {
+          "nativeStateExact": true,
+          "solverReportsAndCallsExact": true,
+          "originalPixelsExact": true,
+          "originalShaderExact": true
+        },
+        "originalReadbackSHA256": "eedfa52953ee91a64ee19251b8c24920937d273d799d3eeee4c578627906e4cb",
+        "restoredReadbackSHA256": "eedfa52953ee91a64ee19251b8c24920937d273d799d3eeee4c578627906e4cb",
+        "variants": [
+          {
+            "mode": "no-oral-tint",
+            "image": {
+              "path": "lip-edge-r07/evidence/candidate-03/speak-macro-r07-no-oral-tint.png",
+              "sha256": "3800f25eee7c361c718fbcfc3908747a38a3ef0c7eb13e6c163e934e2e2beb79",
+              "bytes": 323221
+            },
+            "probe": {
+              "path": "lip-edge-r07/evidence/candidate-03/speak-macro-r07-no-oral-tint-probe.json",
+              "sha256": "cc87c9fcd461070bbb794f6651271dd5ed2ba7982a8d2cd892a460064819c91d",
+              "bytes": 71533
+            },
+            "readbackSHA256": "15da0ea973111f29576c6867f216db59cf43f2c2f3dad66698b4ece4626c91b3",
+            "measuredDifference": {
+              "changedPixels": 2831,
+              "maximumChannelDN": 26,
+              "meanMaxChannelDN": 0.112750244140625,
+              "interpretation": "A measured response, not an aesthetic score."
+            }
+          },
+          {
+            "mode": "no-depth-visibility",
+            "image": {
+              "path": "lip-edge-r07/evidence/candidate-03/speak-macro-r07-no-depth-visibility.png",
+              "sha256": "5f6ca2dfa6f63dccd47677d12d89e5c1fbb687f8e8af74e41f2ef7b6b337bc82",
+              "bytes": 323065
+            },
+            "probe": {
+              "path": "lip-edge-r07/evidence/candidate-03/speak-macro-r07-no-depth-visibility-probe.json",
+              "sha256": "e0031da3ed0fd40cdd24dd74398022edfdee1dc6be6b05b96fbf4dc39ff82591",
+              "bytes": 137077
+            },
+            "readbackSHA256": "02c8a56e2cde69bbed29800ea4339f375fa0c26b68215acf2c3c117688e468aa",
+            "measuredDifference": {
+              "changedPixels": 2863,
+              "maximumChannelDN": 139,
+              "meanMaxChannelDN": 0.5015869140625,
+              "interpretation": "A measured response, not an aesthetic score."
+            }
+          }
+        ]
+      }
+    ],
+    "visualConclusionSource": "2026-10-21 parent message from /root after root and an independent material reviewer personally viewed original frames.",
+    "reportedVisualConclusion": "no-oral-tint 和 no-depth-visibility 均未改善下唇窄硬边；取消 depth visibility 反而使两侧口内突兀发亮。",
+    "reviewerDidNotPersonallyViewTheseImages": true,
+    "inferenceLimit": "受控消融响应与精确恢复证明诊断执行有效；这些消融未改善目标，不等于已经证明唯一几何根因或允许删除原材质规则。"
+  },
+  "nextEvidenceBeforeChoosingAnotherShape": [
+    "Locate the same indexed shoulder–crest–inner turn in native generation/rest, before-local and final evaluated positions to identify which stage creates the sharp connection.",
+    "If a new local shape is proposed, specify its boundary positions/tangents and why those are appropriate before adding a length/area constraint.",
+    "A useful candidate must address the actual shoulder-to-inner connection, retain aperture/outer body/tooth visibility, and pass original beauty views; it cannot be selected solely by a lower bending-energy score."
+  ],
+  "reproduction": {
+    "command": "python kaopu-unified-human-workbench/lip-edge-r07/research/analyze-return-visibility.py",
+    "output": "JSON to stdout only; no input, mesh, image or repository files are changed.",
+    "requirements": "Python standard library, existing analyze-return-sections.py, candidate02/03 QA, four raw geometry files per candidate, and the twenty shared original PNGs.",
+    "verificationPerformed": "Executed script and parsed JSON; all eight geometry hashes match registered QA; 24 section rows and both six-row pin counterfactual lists are exact across candidates; all twenty shared PNG hashes and registered GPU readback hashes match."
+  },
+  "computedAnalysis": {
+    "schema": "kaopu/lip-return-visibility-analysis@1",
+    "detailPolicy": "Only key tables and raw input hashes retained here. Run the read-only script for all 24 detailed section rows, frame hashes and exact intermediate values.",
+    "readOnly": true,
+    "analyzer": {
+      "path": "research/analyze-return-visibility.py",
+      "bytes": 15032,
+      "sha256": "a8be6495a7a7ef0d79efe491af1732927cc9c0167da3e4e3e3fac5616af3981e"
+    },
+    "pathAnalyzer": {
+      "path": "research/analyze-return-sections.py",
+      "bytes": 5639,
+      "sha256": "0eb3d8fcd1d17ef8ff3ce3694459c730dca2d96a2882a5b44a240a9c031e5289"
+    },
+    "candidates": {
+      "candidate-02": {
+        "sourceSHA": "334476334e01c8aa028fae65842c2c977038ccd9",
+        "buildSHA": "5cc5184c585a60e40278628dbd6643ff261cb8ab",
+        "qa": {
+          "path": "evidence/candidate-02/qa.json",
+          "bytes": 2885012,
+          "sha256": "db688c764bee7e88e863c8d11aff161c11f5af020f45cb34995696137c3a9b1a"
+        },
+        "completed": false,
+        "testsPassed": 11,
+        "testsRecorded": 12,
+        "savedFrames": 20,
+        "readbacks": 20,
+        "visualAcceptance": false,
+        "geometryFiles": [
+          {
+            "path": "evidence/candidate-02/jaw-macro-r06-geometry.json",
+            "bytes": 17725066,
+            "sha256": "8944f6be7c4c23b3512e6d9963dd397fa66bd2f6899b54899b99bae3ab43509e"
+          },
+          {
+            "path": "evidence/candidate-02/jaw-macro-r07-geometry.json",
+            "bytes": 17725258,
+            "sha256": "72d83be44f337fe2380c948b4d67975a11f3da98046cda3081410ae8660cc6c2"
+          },
+          {
+            "path": "evidence/candidate-02/speak-macro-r06-geometry.json",
+            "bytes": 17702560,
+            "sha256": "716214875ef1fb0ba4c599e72de55ef6c66b9a0980136e0604be0ef5d514368d"
+          },
+          {
+            "path": "evidence/candidate-02/speak-macro-r07-geometry.json",
+            "bytes": 17702646,
+            "sha256": "71536766c56362fb6339f72c58fb8ae261542074bd60b342089559224b65ed39"
+          }
+        ]
+      },
+      "candidate-03": {
+        "sourceSHA": "f50eb3012bbe15fbfb4d1a915cfbac3fdba60f04",
+        "buildSHA": "26a2558b66ffc014dc6142d9bdca7379cfa78d5a",
+        "qa": {
+          "path": "evidence/candidate-03/qa.json",
+          "bytes": 3437917,
+          "sha256": "f119a733a88c2ee7ae00c4bbbec9be52376ec7b09890ecd1d9b9656b562f267e"
+        },
+        "completed": true,
+        "testsPassed": 15,
+        "testsRecorded": 15,
+        "savedFrames": 26,
+        "readbacks": 27,
+        "visualAcceptance": false,
+        "geometryFiles": [
+          {
+            "path": "evidence/candidate-03/jaw-macro-r06-geometry.json",
+            "bytes": 17725066,
+            "sha256": "7601d27dce501e904571dfcf527a577bd381d98f15433377b10a72fb9358515f"
+          },
+          {
+            "path": "evidence/candidate-03/jaw-macro-r07-geometry.json",
+            "bytes": 17725258,
+            "sha256": "2b4dfe8b9f1fb12c4840bda5d0da17278ed17e44936a3002c40009f84625d877"
+          },
+          {
+            "path": "evidence/candidate-03/speak-macro-r06-geometry.json",
+            "bytes": 17702560,
+            "sha256": "39d015c7e73c20803ff6c4952406f875f0c34bf41ea857b3695bfdceb9295ea7"
+          },
+          {
+            "path": "evidence/candidate-03/speak-macro-r07-geometry.json",
+            "bytes": 17702646,
+            "sha256": "af9a5ea2cc1ec1cc66d159d2c6b9dbac468b34d92b17d3999eb98dd71468c4b7"
+          }
+        ]
+      }
+    },
+    "candidate02And03SectionMeasurementsExact": true,
+    "candidate02And03PinCounterfactualExact": true,
+    "sharedBeautyComparison": {
+      "count": 20,
+      "allPNGsByteExact": true,
+      "allRegisteredReadbackHashesExact": true,
+      "actualPixelDecodingByThisScript": false
+    },
+    "actualMacroCamera": {
+      "position": [
+        -8.415261212139653e-07,
+        0.6594023044659669,
+        0.2207939730769753
+      ],
+      "quaternion": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "target": [
+        -8.415261212139653e-07,
+        0.6594023044659669,
+        0.12246060210364333
+      ],
+      "aspect": 1.25,
+      "fov": 31,
+      "zoom": 1,
+      "near": 0.01,
+      "far": 50,
+      "projection": [
+        2.8847068070087,
+        0,
+        0,
+        0,
+        0,
+        3.6058835087608747,
+        0,
+        0,
+        0,
+        0,
+        -1.0004000800160031,
+        -1,
+        0,
+        0,
+        -0.020004000800160033,
+        0
+      ]
+    },
+    "eyeInMouthMM": [
+      0.9758186139601832,
+      10.088250024963097,
+      98.06381921438762
+    ],
+    "nativeAndDrawFacingRows": [
+      {
+        "tag": "jaw-macro-r06",
+        "u": -0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.577983206297811,
+        "nativePathArcMM": 6.09218298642856,
+        "drawPathArcMM": 6.09218298642856,
+        "nativeMaximumAdjacentFaceTurnDegrees": 49.78574002411136,
+        "drawMaximumAdjacentFaceTurnDegrees": 49.78574002411136,
+        "nativePureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8566253318381787,
+            -0.3039576765439462
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8566253318381787,
+            -0.3039576765439462
+          ]
+        }
+      },
+      {
+        "tag": "jaw-macro-r06",
+        "u": 0,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 8.402106324646269,
+        "nativePathArcMM": 7.027033000225066,
+        "drawPathArcMM": 7.027033000225066,
+        "nativeMaximumAdjacentFaceTurnDegrees": 71.38793530929692,
+        "drawMaximumAdjacentFaceTurnDegrees": 71.38793530929692,
+        "nativePureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9412338262572719,
+            -0.6379894566062265
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9412338262572719,
+            -0.6379894566062265
+          ]
+        }
+      },
+      {
+        "tag": "jaw-macro-r06",
+        "u": 0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.409435785328977,
+        "nativePathArcMM": 6.0180368969166,
+        "drawPathArcMM": 6.0180368969166,
+        "nativeMaximumAdjacentFaceTurnDegrees": 50.46338164195013,
+        "drawMaximumAdjacentFaceTurnDegrees": 50.46338164195013,
+        "nativePureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8588405123247796,
+            -0.36499825033610034
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8588405123247796,
+            -0.36499825033610034
+          ]
+        }
+      },
+      {
+        "tag": "jaw-macro-r07",
+        "u": -0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.676577318897225,
+        "nativePathArcMM": 5.811920500997691,
+        "drawPathArcMM": 5.811920500997691,
+        "nativeMaximumAdjacentFaceTurnDegrees": 18.396767260076988,
+        "drawMaximumAdjacentFaceTurnDegrees": 18.396767260076988,
+        "nativePureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8566253318381787,
+            -0.1344151738004109
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8566253318381787,
+            -0.1344151738004109
+          ]
+        }
+      },
+      {
+        "tag": "jaw-macro-r07",
+        "u": 0,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 8.500731342636747,
+        "nativePathArcMM": 6.757461099299953,
+        "drawPathArcMM": 6.757461099299953,
+        "nativeMaximumAdjacentFaceTurnDegrees": 25.737588609455237,
+        "drawMaximumAdjacentFaceTurnDegrees": 25.737588609455237,
+        "nativePureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9429517064161631,
+            -0.20941648527846385
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9429517064161631,
+            -0.20941648527846385
+          ]
+        }
+      },
+      {
+        "tag": "jaw-macro-r07",
+        "u": 0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.504457494007362,
+        "nativePathArcMM": 5.7357128347716095,
+        "drawPathArcMM": 5.7357128347716095,
+        "nativeMaximumAdjacentFaceTurnDegrees": 18.272031019568058,
+        "drawMaximumAdjacentFaceTurnDegrees": 18.272031019568058,
+        "nativePureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8520790528823305,
+            -0.20228092976624443
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8520790528823305,
+            -0.20228092976624443
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r06",
+        "u": -0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.657486723192581,
+        "nativePathArcMM": 6.162946695789048,
+        "drawPathArcMM": 6.162946695789048,
+        "nativeMaximumAdjacentFaceTurnDegrees": 63.26986234540936,
+        "drawMaximumAdjacentFaceTurnDegrees": 63.26986234540936,
+        "nativePureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8562451934257946,
+            -0.45595839162704116
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8562451934257946,
+            -0.45595839162704116
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r06",
+        "u": 0,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 8.549207646496614,
+        "nativePathArcMM": 7.027008712141634,
+        "drawPathArcMM": 7.027008712141634,
+        "nativeMaximumAdjacentFaceTurnDegrees": 71.40705629902898,
+        "drawMaximumAdjacentFaceTurnDegrees": 71.40705629902898,
+        "nativePureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.940371576864672,
+            -0.6362031306874641
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.940371576864672,
+            -0.6362031306874641
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r06",
+        "u": 0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.4829575024512245,
+        "nativePathArcMM": 6.102074892653492,
+        "drawPathArcMM": 6.102074892653492,
+        "nativeMaximumAdjacentFaceTurnDegrees": 64.02455733166234,
+        "drawMaximumAdjacentFaceTurnDegrees": 64.02455733166234,
+        "nativePureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8580567425562463,
+            -0.5063802339337302
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8580567425562463,
+            -0.5063802339337302
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r07",
+        "u": -0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.770595728660673,
+        "nativePathArcMM": 5.8599144096770495,
+        "drawPathArcMM": 5.8599144096770495,
+        "nativeMaximumAdjacentFaceTurnDegrees": 16.30121749320461,
+        "drawMaximumAdjacentFaceTurnDegrees": 16.30121749320461,
+        "nativePureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8562451934257946,
+            -0.18946610264614863
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 19,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8562451934257946,
+            -0.18946610264614863
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r07",
+        "u": 0,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 8.647936726311412,
+        "nativePathArcMM": 6.7579449537884155,
+        "drawPathArcMM": 6.7579449537884155,
+        "nativeMaximumAdjacentFaceTurnDegrees": 25.764416966826918,
+        "drawMaximumAdjacentFaceTurnDegrees": 25.764416966826918,
+        "nativePureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9421026351237716,
+            -0.20690234142409966
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 17,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.9421026351237716,
+            -0.20690234142409966
+          ]
+        }
+      },
+      {
+        "tag": "speak-macro-r07",
+        "u": 0.45,
+        "materialSides": [
+          0,
+          0
+        ],
+        "eyeElevationAtSemanticCrestDegrees": 7.594580198111113,
+        "nativePathArcMM": 5.793189886817199,
+        "drawPathArcMM": 5.793189886817199,
+        "nativeMaximumAdjacentFaceTurnDegrees": 16.88909965160952,
+        "drawMaximumAdjacentFaceTurnDegrees": 16.88909965160952,
+        "nativePureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8514058801629479,
+            -0.25641169527388163
+          ]
+        },
+        "drawPureOralFacing": {
+          "pureOralSegments": 20,
+          "frontFacingPureOralSegments": 0,
+          "facingCosineRange": [
+            -0.8514058801629479,
+            -0.25641169527388163
+          ]
+        }
+      }
+    ],
+    "pinCrestUpCounterfactual": [
+      {
+        "pose": "jaw",
+        "u": -0.45,
+        "sameOriginalEdgeKey": [
+          104455,
+          131023
+        ],
+        "restoreUpMM": 0.1708261006126559,
+        "singlePointProjectedRisePixels": 1.4679958369510473,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      },
+      {
+        "pose": "jaw",
+        "u": 0,
+        "sameOriginalEdgeKey": [
+          19668,
+          149748
+        ],
+        "restoreUpMM": 0.14682769645549953,
+        "singlePointProjectedRisePixels": 1.28616054926772,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      },
+      {
+        "pose": "jaw",
+        "u": 0.45,
+        "sameOriginalEdgeKey": [
+          69547,
+          140180
+        ],
+        "restoreUpMM": 0.16427569704878708,
+        "singlePointProjectedRisePixels": 1.413698893630169,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      },
+      {
+        "pose": "speak",
+        "u": -0.45,
+        "sameOriginalEdgeKey": [
+          104455,
+          131023
+        ],
+        "restoreUpMM": 0.1981945497346187,
+        "singlePointProjectedRisePixels": 1.7028025625548935,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      },
+      {
+        "pose": "speak",
+        "u": 0,
+        "sameOriginalEdgeKey": [
+          19668,
+          149748
+        ],
+        "restoreUpMM": 0.14652883218208235,
+        "singlePointProjectedRisePixels": 1.2830519032308416,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      },
+      {
+        "pose": "speak",
+        "u": 0.45,
+        "sameOriginalEdgeKey": [
+          69547,
+          140180
+        ],
+        "restoreUpMM": 0.19554266695998157,
+        "singlePointProjectedRisePixels": 1.6824134408644795,
+        "meaning": "Move this same crest point only along mouth-up to its R06 height, retaining R07 front. Not a constrained solve, post-microgeometry prediction, or visible-width guarantee."
+      }
+    ],
+    "limits": [
+      "Three cuts per pose only; no whole-surface or physiological claim.",
+      "Geometric facing is based on actual recorded draw attributes and face normals; no GPU displacement or occlusion reconstruction.",
+      "Arc and projection are not anatomical thickness or actual visible pixel coverage.",
+      "Fixed local endpoints plus local arc are additional assumptions, not consequences of the 0.6mm/body/contact constraints.",
+      "This script verifies PNG bytes and compares registered GPU readback hashes; it does not independently decode PNG pixels.",
+      "No lower angle, nonzero pixel difference, solver convergence or derived bound is an aesthetic pass."
+    ]
+  },
+  "limits": [
+    "Arc length, projection span, l19Oral membership, depth proxy and paired gaps are not tissue thickness or measured anatomy.",
+    "Three cuts, two macro poses and existing sampled images do not prove whole-lip shape, continuous motion, global collision, volume conservation or physiology.",
+    "No physical-phone performance claim or third independent visual approval is made.",
+    "No image, camera, material, product geometry or external mesh was edited to create this report.",
+    "Equal-arc circular shoulder figures are only a 2-D geometric reference, not an implemented candidate, universal curvature lower bound or impossibility proof."
+  ]
+}

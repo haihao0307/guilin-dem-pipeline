@@ -1,0 +1,279 @@
+{
+  "schema": "kaopu/lip-edge-r07-baseline-material-review@1",
+  "reviewer": "lip_r05_material_audit",
+  "reviewedUTC": "2026-10-20T07:46:59.275513+00:00",
+  "scope": "Read-only source/material audit of retained R06 candidate-03 and its R04/R05 inheritance; new diagnostic helper only. No product, ancestor, pose, geometry, shader authoring or original-evidence edits.",
+  "target": "Narrow hard-looking lower inner edge next to teeth in jaw and speak. The visibly rounded exterior lip body is not assumed to lack bulk.",
+  "baseline": {
+    "candidate": "R06 candidate-03",
+    "sourceCommit": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "buildCommit": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "previewSHA256": "8327f49f72bcf8688c4c57a3dce5dc0bd3fd1cbd7da1f78df9291bb7e9e32ad1",
+    "qaSHA256": "5ececcf803cbaad296323f422006abb4c73e86740b1e2eecd38da5e526f3f28d",
+    "preserveAcceptedPeripheralPuckerRepair": true
+  },
+  "firstJudgment": {
+    "confirmed": "R04 restored continuous oral-skin material responsibility; R05 repaired selected return-surface motion ownership; R06 candidate-03 changes peripheral pucker continuity while protecting lip core/rim/contact samples. These versions do not establish measured rim thickness or full surface contact.",
+    "priority": "First separate a shader/semantic seam from a geometric turn/contact-boundary defect at the actual visible lower edge.",
+    "notProven": [
+      "The mesh lacks a connected inner return.",
+      "The lower lip body needs to become thicker.",
+      "The current visible hard edge is caused by wetness, l19Oral, psH or one particular contact step.",
+      "A scalar material thickness value or paired gap measures anatomical lip-edge thickness."
+    ],
+    "productionMaterialChangeJustifiedNow": false
+  },
+  "sourceFiles": [
+    {
+      "path": "lip-corner-r06/preview.html",
+      "sha256": "8327f49f72bcf8688c4c57a3dce5dc0bd3fd1cbd7da1f78df9291bb7e9e32ad1",
+      "bytes": 5593450
+    },
+    {
+      "path": "lip-corner-r06/src/CornerContinuity.js",
+      "sha256": "106bfb769e21f3e56ae35521509d17ce903f2b2e30f613f2a60af6e95896c970",
+      "bytes": 40960
+    },
+    {
+      "path": "lip-corner-r06/evidence/candidate-03/qa.json",
+      "sha256": "5ececcf803cbaad296323f422006abb4c73e86740b1e2eecd38da5e526f3f28d",
+      "bytes": 2186174
+    },
+    {
+      "path": "lip-corner-r06/evidence/candidate-03/speak-macro-r06-finalFragment-template.glsl",
+      "sha256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+      "bytes": 31703
+    },
+    {
+      "path": "lip-corner-r06/evidence/candidate-03/speak-macro-r06-fragment-expanded.glsl",
+      "sha256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e",
+      "bytes": 102573
+    },
+    {
+      "path": "lip-inner-r04/InnerLip.js",
+      "sha256": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
+      "bytes": 15508
+    },
+    {
+      "path": "lip-inner-r04/MucosaSurface.js",
+      "sha256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+      "bytes": 8606
+    },
+    {
+      "path": "lip-realism-r02/LipSurface.js",
+      "sha256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+      "bytes": 30243
+    },
+    {
+      "path": "lip-motion-r05/src/MotionContinuity.js",
+      "sha256": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+      "bytes": 17050
+    },
+    {
+      "path": "lip-motion-r05/research/diagnosis-02-visual-review.json",
+      "sha256": "7f01e12a7008307ea805dc6911eadefc66baa14a4a51fb39b0cb0c93d928ca1c",
+      "bytes": 6511
+    },
+    {
+      "path": "lip-motion-r05/evidence/diagnosis-02/qa.json",
+      "sha256": "1a37357b74275c459cc8d9dcd067e83430268fa898fc372a4fb891288bfcc549",
+      "bytes": 1313411
+    }
+  ],
+  "directImageReview": {
+    "images": [
+      {
+        "path": "lip-corner-r06/evidence/candidate-03/jaw-macro-r06.png",
+        "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236"
+      },
+      {
+        "path": "lip-corner-r06/evidence/candidate-03/jaw-oblique-r06.png",
+        "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59"
+      },
+      {
+        "path": "lip-corner-r06/evidence/candidate-03/speak-macro-r06.png",
+        "sha256": "6e0161151560e2f363c403851cef17ba58640142b23c76fe88d2e5bf0b62bd03"
+      }
+    ],
+    "observations": [
+      "The lower external lip remains visibly rounded with a broad highlight. Close to the teeth it terminates in a much narrower, comparatively straight inner band.",
+      "The inner band and the cavity border remain readable from the oblique jaw view; a screenshot alone cannot distinguish an abruptly turned continuous surface, a material transition or actual insufficient cross-sectional depth.",
+      "Existing coarse tooth shapes and cavity shading affect edge contrast. They are separate native materials and must not be recoloured to claim a lip-edge repair."
+    ],
+    "causalBoundary": "No current R06 material ablation or section measurement has yet been rendered for this R07 audit."
+  },
+  "materialGeometryCoupling": [
+    {
+      "id": "native-oral-semantic",
+      "status": "source_fact",
+      "source": [
+        "R06 preview: H5, Kl, Ql",
+        "R04 MucosaSurface.js apply"
+      ],
+      "mechanism": "H5 maps native oral_skin_ids through canonical recipes to l19Oral; the indexed display subdivision interpolates attributes. Kl clamps this into samples.inner for skin and l19State.x. R04 liOral is clamp(l19State.x)*skinCoverage*(1-step(.5,csType)); it is not a measured wet-dry junction or thickness field.",
+      "constraint": "Keep actual csType/material-slot attribution. Native teeth/gums/tongue remain on viewer.skin.material; the helper changes only headProceduralSkin.material(). A color line following liOral does not itself prove a geometric boundary."
+    },
+    {
+      "id": "r04-surface-optics",
+      "status": "source_fact_with_unproven_visual_role",
+      "source": [
+        "R04 MucosaSurface.js liWeight/liUpper/liVisibility",
+        "R02 LipSurface.js lrEvaluate/addSurface"
+      ],
+      "mechanism": "R04 blends a native mucosa color/roughness/coat endpoint once by liWeight, fades shader height psH by 1-liWeight, and applies .12+.88*exp(-max(0,l19Detail.w)*120) to outgoing light. R02 exterior coverage instead uses rest rails, front/lateral fade, and a normalized rail-depth wet band.",
+      "constraint": "l19Detail.w on oral surfaces is current mouth-forward depth normalized by mouth scale, not optical path or rim thickness. psH masking can contribute derivative terms at a semantic transition; its existence in code is not a visible-cause finding."
+    },
+    {
+      "id": "rest-palette-versus-repaired-carrier",
+      "status": "specific_testable_hypothesis",
+      "source": [
+        "Native rail sample upper = rest.y >= (innerTop+innerBottom)/2",
+        "R02 lrUpper",
+        "R04 liUpper",
+        "R05 MotionContinuity install and apply"
+      ],
+      "mechanism": "R02/R04 still choose upper/lower optical endpoints with a hard rest-rail midline classifier. R05 computes a different smooth motion carrier for selected negative-v return vertices from fixed jaw-reference distances, without changing those material labels. A return region may therefore move with one lip while retaining the other optical endpoint.",
+      "support": "R05 recorded 6641 changed ownership vertices in the retained baseline; that global count does not identify the current visible lower-edge pixels.",
+      "minimalCheck": "At actual contributing lower-edge triangles, compare rest-based upper, native v/inner/red/depth, material slot and the R05 carrier when available. If no mismatched region contributes to the defect, reject this explanation.",
+      "constraint": "Do not simply blend upper/lower palettes globally. Motion carrier is an engineering construction, not automatically an anatomical material label."
+    },
+    {
+      "id": "actual-native-contact-scope",
+      "status": "source_fact_and_specific_testable_hypothesis",
+      "source": [
+        "R06 preview: Kl pairs construction",
+        "R06 preview: Ql closure and dental envelope"
+      ],
+      "mechanism": "Kl selects 49 opposing rim samples. Ql computes a mouth-up projected pair gap and applies interpolated vertical closure. Its dental/gum/tongue frontal-envelope correction then only processes i.lips with .05 <= native v <= 1.05; v<.05 is skipped. Eligible points are pushed along mouth front toward envelopeDepth+.00016*scale, capped at .004*scale.",
+      "hypothesis": "A hard response boundary near v=.05 could create or preserve a sharp cross-sectional turn adjacent to a near-tooth inner band.",
+      "minimalCheck": "Locate the visible edge on original indexed triangles; record both endpoints of edges straddling v=.05, their surface tangent/normal, current front coordinates and any actual envelope correction. The hypothesis fails if the displayed hard turn does not align with that response boundary or no differential correction occurs.",
+      "constraint": "The .00009*scale minimum paired gap is an authored closure tolerance, not anatomical lip-edge thickness. Pair-gap success and front-envelope protection do not prove finite-area contact, whole-mesh nonintersection or continuous collision detection."
+    },
+    {
+      "id": "geometry-versus-shader-relief",
+      "status": "source_fact",
+      "source": [
+        "R02 LipSurface.js mother.update wrapper",
+        "R06 preview: Ql normal/microgeometry sequence",
+        "R04 shader psH normal block"
+      ],
+      "mechanism": "R02 scales original coarse furrow microGeometry during native evaluation. Ql runs local motion, closure and envelope correction, recomputes mesh normals, adds atlas displacement along those normals using red/strain/pressure/inner factors, then recomputes normals again. The later procedural shader psH is a separate normal perturbation.",
+      "constraint": "The no-bump experiment resets normal to fbGeomN after psH; it retains all evaluated geometry, mesh normals and native coarse relief. If the edge remains, it only refutes this shader-relief contribution as necessary, not all normal/geometry causes."
+    },
+    {
+      "id": "r06-inheritance-boundary",
+      "status": "source_and_verified_baseline_fact",
+      "source": [
+        "R06 CornerContinuity.js graph core/exterior masks",
+        "R06 candidate-03 qa.json"
+      ],
+      "mechanism": "R06 protects native lips, rim, contact samples and one-ring core plus the center, and excludes oral/negative-v edits. It is an exact no-op for the tested jaw and speak states, so those edge shapes remain inherited R05 results.",
+      "constraint": "Retain this accepted peripheral pucker correction and original 49 contact samples unless a separately justified R07 contact design explicitly changes the contract. A local edge fix must not be achieved by weakening full-mouth motion or reopening a closed mouth."
+    }
+  ],
+  "thicknessDefinitions": {
+    "visibleBandWidth": "Projected width of a rendered strip; depends on camera, occlusion and albedo, and is not a physical thickness measurement.",
+    "vermilionHeight": "External inner-to-outer rail distance; does not specify the lower return curvature or wet-dry contact region.",
+    "localReturnProfile": "Connected original-index cross-section from external vermilion through the turn into the oral return, in a documented local frame. Its extent and tangent rotation can diagnose a sharp fold without pretending it is a full enclosed volume.",
+    "enclosedTissueThickness": "Requires supported opposing tissue surfaces/section correspondence and an anatomical definition. Neither l19Oral nor l19Detail.w provides that measurement.",
+    "materialThicknessProperty": {
+      "actualNativeAndProceduralValues": [
+        {
+          "material": "",
+          "transmission": 0,
+          "thickness": 0
+        },
+        {
+          "material": "HEAD-PROCEDURAL-R01-NO-SKIN-TEXTURES",
+          "transmission": 0,
+          "thickness": 0
+        }
+      ],
+      "meaning": "Both actual material thickness values are 0 with transmission 0. This is a rendering parameter state, not proof that the mesh has zero geometric tissue thickness."
+    }
+  },
+  "externalFirstPartyFact": {
+    "title": "The dirty lip trick",
+    "authors": [
+      "Nicholas Wilson Jones",
+      "Cynthia Verchere"
+    ],
+    "year": 2008,
+    "journal": "Canadian Journal of Plastic Surgery 16(4):228",
+    "doi": "10.1177/229255030801600411",
+    "pmid": "19949503",
+    "originalURL": "https://www.pulsus.com/scholarly-articles/the-dirty-lip-trick.pdf",
+    "publisherRecordURL": "https://journals.sagepub.com/doi/10.1177/229255030801600411",
+    "officialIndexURL": "https://pubmed.ncbi.nlm.nih.gov/19949503/",
+    "sourceType": "First-party clinical surgical-technique note, original publisher PDF, authors at British Columbia Children's Hospital, Canada; metadata independently checked on US NLM PubMed.",
+    "retrievedUTC": "2026-10-20",
+    "retrievalRef": "turn23view1",
+    "access": "Original one-page PDF full text read through web retrieval; PMC full-page route showed a browser-check page and was not relied upon as read full text.",
+    "supportedFact": "The wet-dry/red line marks the transition between oral mucosa and lip vermilion and serves as a surgical anatomical landmark.",
+    "inferenceForThisAudit": "A material tissue-transition label and a geometric cut/turn are different concepts. The current l19Oral mask cannot be declared the physiological wet-dry line without checking its actual surface location.",
+    "doesNotSupply": [
+      "A numerical healthy lip-edge thickness target for this person.",
+      "A roll radius or deformation rule.",
+      "Contact-area or pressure calibration.",
+      "A reason to map general whole-lip thickness statistics onto the displayed narrow edge."
+    ],
+    "quoteUsed": false
+  },
+  "inheritedDiagnosticEvidence": {
+    "basis": "R05 diagnosis-02 on immutable R04; original QA and independent visual review are hash-listed above.",
+    "supported": "The older central thin slit and tooth fragments remained when procedural shader relief was bypassed and in albedo; removing closure position updates widened the opening. This justified separating surface shading from closure/geometry.",
+    "boundary": "That experiment predates R05 carrier correction and R06. It is a prior that guides current testing, not current R06 proof, and does not justify disabling closure."
+  },
+  "minimalCurrentExperiment": {
+    "posesViews": [
+      "jaw/macro",
+      "jaw/oblique",
+      "speak/macro"
+    ],
+    "perPoseSequence": [
+      "Render current R06 original and capture full state, actual shader and geometric samples.",
+      "Open frozen-surface diagnostic window; render no-bump with all evaluated native buffers, original settings, camera and lights held exact.",
+      "Render final-albedo output with the same frozen surface.",
+      "Restore original compile/cache descriptors; render original again and require full state, pixels, actual shader and R05/R06 calls exact."
+    ],
+    "interpretation": [
+      "Loss of a line only in no-bump implicates shader relief but does not repair geometry. Persistence rules out that particular detail perturbation as necessary.",
+      "Albedo retains authored tissue colours and the actual surface silhouette/occlusion while removing lighting and the oral-depth multiplier. A line disappearing in albedo may be a shading cue; that alone does not prove a semantic or geometric cause.",
+      "Combine actual visible-triangle labels with original-index cross-sections. A physically continuous return with a palette-only seam calls for material responsibility review; an abrupt tangent turn retained by no-bump points toward evaluated geometry; missing/degenerate return connectivity would be a different structural problem."
+    ],
+    "constraints": [
+      "No geometry, semantic, canonical, original native uniform or source-parameter mutation.",
+      "No material cloning, new sheet, global thickening, arbitrary darker strip or lower wetness as the result.",
+      "Avoid R06 report/update/pose calls during a temporary compile-hook window; compatibility protection must remain intact.",
+      "After restore, compare actual attached GPU shader source rather than trusting only the cached innerLip.shaderEvidence template.",
+      "Do not use screenshot band width, material thickness or pair gap as anatomical thickness."
+    ]
+  },
+  "diagnosticHelper": {
+    "path": "lip-edge-r07/verification/EdgeSurfaceAttribution.js",
+    "sha256": "5b08d7f7fc887073edb41fb7006d8d9c0edd85c759d4f602d9e69352e808de1e",
+    "bytes": 22793,
+    "api": "__R07_EDGE_SURFACE__.install(viewer,model), setMode(original|no-bump|albedo), report(), restore()",
+    "status": "Diagnostic only; no production repair and no actual R07 GPU evidence yet.",
+    "allAPIsSynchronous": true,
+    "asyncHashRule": "WebCrypto SHA-256 tasks are tracked by pendingHashes; wait for zero, require hashEvidenceComplete and errors=[] before persisting records.",
+    "nativeSafety": "Original-mode install is observational. A single new uniform selects two tightly anchored fragment operations. No native setter, render or update is called. All existing compile-stage uniform objects are retained; original 15 shared native uniform identities and values are checked.",
+    "cacheReviewFix": "Root source review caught that a repeated static cache key could reuse a prior window's program/control without onBeforeCompile. Each install now uses a unique monotonic /window-N diagnostic suffix, capped at 16 windows; restore returns the exact original function/descriptor/cache value.",
+    "checksPerformed": {
+      "nodeSyntax": true,
+      "boundedSyntheticOwnershipFixture": true,
+      "activeWindowR06ReportCalls": 0,
+      "helperRenderCalls": 0,
+      "helperUpdateCalls": 0,
+      "retainedNativeUniforms": 15,
+      "ownDescriptorsRestoredExactly": true,
+      "secondWindowCacheKeyDistinct": true,
+      "originalCacheValueRestored": true,
+      "changedBufferRejectedWithoutOverwritingIt": true,
+      "failurePathDetachesOwnHooks": true,
+      "sha256TasksCompleted": true
+    },
+    "testBoundary": "The synthetic fixture checks this helper's state/ownership/cache logic only. It neither creates a native GPU frame nor establishes visual or actual Three compilation success; those remain the root runner's gates."
+  },
+  "nextDecision": "Await matched current R06 no-bump/albedo frames and read-only section/semantic evidence before choosing a production R07 mechanism. Prioritize the lower edge near teeth, preserve existing outer lip bulk and accepted R06 pucker continuity."
+}
