@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  # Exercise the real simulator through its documented action API, not a replacement CPU model.
  simple=(app/'buildings/Simple.bld').read_text()
  simple=re.sub(r'<Function runloop>.*?<EndFunction>','',simple,flags=re.S|re.I)
- actions={'QHall':'Floor 0:Call Panel 1, up','QCar':'Elevator 1:Car 1, 3','QClose':'Elevator 1:Car 1, close','QSensor':'Elevator 1:Car 1, sensor','QReset':'Elevator 1:Car 1, sensorreset','QReturn':'Elevator 1:Car 1, 0','QStop':'Elevator 1:Car 1, stop'}
+ actions={'QHall':'Floor 0:Call Station 1, up','QCar':'Elevator 1:Car 1, 3','QClose':'Elevator 1:Car 1, close','QSensor':'Elevator 1:Car 1, sensor','QReset':'Elevator 1:Car 1, sensorreset','QReturn':'Elevator 1:Car 1, 0','QStop':'Elevator 1:Car 1, stop'}
  extra='\nSet qa_stage = 0\n'+''.join('AddAction '+k+', '+v+'\n' for k,v in actions.items())
  extra+='<Function runloop>\n'
  for i,(at,act) in enumerate([(3,'QHall'),(12,'QCar'),(13,'QSensor'),(15,'QClose'),(22,'QReset'),(23,'QClose'),(60,'QReturn'),(90,'QStop')]):
