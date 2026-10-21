@@ -6,7 +6,7 @@ function paint(s){
   const shell=el('npc-boot-shell');if(shell)shell.hidden=s.status==='ready';
   if(el('npc-boot-title'))el('npc-boot-title').textContent=s.status==='failed'?'场景加载已停止':s.status==='ready'?'完整场景已就绪':'正在打开生活动作观察台';
   if(el('npc-boot-progress'))el('npc-boot-progress').textContent=s.failure?.message||s.label;
-  if(el('npc-boot-elapsed'))el('npc-boot-elapsed').textContent='已用 '+Math.floor(s.elapsedMS/1000)+' 秒 · R03 · 完整原生人物';
+  if(el('npc-boot-elapsed'))el('npc-boot-elapsed').textContent='已用 '+Math.floor(s.elapsedMS/1000)+' 秒 · R04 · 完整原生人物';
   if(el('npc-boot-detail'))el('npc-boot-detail').textContent=s.failure?'错误 '+s.failure.code+'。可重新加载，或复制诊断以定位原因。':'正在生成三个完整人物并准备皮肤与眼睛。每个阶段都有等待上限。';
   if(el('npc-boot-track'))el('npc-boot-track').textContent=s.steps.map(x=>(x.endedMS===null?'进行中':'已完成')+' · '+x.label+' · '+((x.endedMS??s.elapsedMS)-x.startedMS).toFixed(0)+' ms').join('\n');
   if(el('npc-boot-actions'))el('npc-boot-actions').hidden=s.status!=='failed';

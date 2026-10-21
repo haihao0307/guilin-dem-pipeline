@@ -3,10 +3,10 @@
 // Read only the isolated URL produced by this source build. Never accept an
 // older cached page or a successful HTTP response with different HTML bytes.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {releaseTarget,validateBuildReceipt}=require('./ReleaseContract.cjs');
 const build=JSON.parse(fs.readFileSync(path.join(__dirname,'BUILD.json')));
-assert.match(build.sourceHead,/^[a-f0-9]{40}$/);
-const expected='https://haihao0307.github.io/guilin-dem-pipeline/npc-life-observation/r03-20261020/'+build.sourceHead+'/';
-assert.equal(build.publicURL,expected);
+validateBuildReceipt(build);
+const expected=releaseTarget(build.sourceHead).publicURL;
 const out=process.env.NPC_HTTP_OUT||'/tmp/npc-live-http';fs.mkdirSync(out,{recursive:true});
 const report={sourceHead:build.sourceHead,url:expected,expectedSHA256:build.previewSHA256,startedAt:new Date().toISOString(),attempts:[],passed:false};
 const save=()=>fs.writeFileSync(path.join(out,'public-http.json'),JSON.stringify(report,null,2));
@@ -22,6 +22,7 @@ const save=()=>fs.writeFileSync(path.join(out,'public-http.json'),JSON.stringify
         if(response.status===200&&response.url===expected&&attempt.bytes===build.previewBytes&&attempt.sha256===build.previewSHA256){
           const metaResponse=await fetch(expected+'BUILD.json',{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});
           assert.equal(metaResponse.status,200);const meta=await metaResponse.json();
+          validateBuildReceipt(meta);
           assert.equal(meta.sourceHead,build.sourceHead);assert.equal(meta.previewSHA256,build.previewSHA256);assert.equal(meta.previewBytes,build.previewBytes);assert.equal(meta.version,'NPC-LIFE-OBSERVATION-R04');assert.equal(meta.standalone,true);assert.equal(meta.publicURL,expected);
           report.passed=true;report.finishedAt=new Date().toISOString();report.buildMetadataVerified=true;
         }

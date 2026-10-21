@@ -30,6 +30,7 @@ jobs:
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-assets.cjs
       - name: Verify bounded boot and continuous-frame evidence contracts
         run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r04-release-contract.cjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-boot-render-contract.mjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-continuous-contract-test.cjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-navigation-payload.cjs
@@ -59,6 +60,7 @@ jobs:
           path: |
             /tmp/npc-browser
             kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-*.json
+            kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r04-release-contract.json
             kaopu-unified-human-workbench/npc-life-observation-r04/qa/*-report.json
           retention-days: 14
       - name: Stage byte-identical isolated public candidate
@@ -68,15 +70,14 @@ jobs:
           node - <<'JS'
           const fs=require('fs'),crypto=require('crypto'),assert=require('assert/strict');
           const dir='kaopu-unified-human-workbench/npc-life-observation-r04';
+          const {releaseTarget,validateBuildReceipt}=require('./'+dir+'/ReleaseContract.cjs');
           const bytes=fs.readFileSync(dir+'/preview.html');
           const m=JSON.parse(fs.readFileSync(dir+'/BUILD.json'));
           assert.equal(m.version,'NPC-LIFE-OBSERVATION-R04');assert.equal(m.standalone,true);
           assert.equal(bytes.length,m.previewBytes);
           assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),m.previewSHA256);
-          assert.match(process.env.SOURCE_HEAD,/^[a-f0-9]{40}$/);
-          m.sourceHead=process.env.SOURCE_HEAD;
-          m.publicPath='npc-life-observation/r04-20261021/'+process.env.SOURCE_HEAD+'/';
-          m.publicURL='https://haihao0307.github.io/guilin-dem-pipeline/'+m.publicPath;
+          Object.assign(m,releaseTarget(process.env.SOURCE_HEAD));
+          validateBuildReceipt(m);
           fs.writeFileSync(dir+'/BUILD.json',JSON.stringify(m,null,2)+'\n');
           fs.mkdirSync('/tmp/npc-public',{recursive:true});
           fs.copyFileSync(dir+'/preview.html','/tmp/npc-public/index.html');
@@ -92,10 +93,10 @@ jobs:
         env:
           SOURCE_HEAD: ${{ github.sha }}
         run: |
+          out=$(node -p "require('./kaopu-unified-human-workbench/npc-life-observation-r04/BUILD.json').publicPath.replace(/\/$/, '')")
           cd public-pages
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          out="npc-life-observation/r04-20261021/${SOURCE_HEAD}"
           for attempt in 1 2 3; do
             git fetch origin gh-pages
             base=$(git rev-parse origin/gh-pages)
@@ -130,8 +131,8 @@ jobs:
           NPC_QA_PHASE: public
           NPC_QA_OUT: /tmp/npc-live-browser
           NPC_BOOT_TIMEOUT_MS: 200000
-          PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/npc-life-observation/r04-20261021/${{ github.sha }}/
-        run: node kaopu-unified-human-workbench/npc-life-observation-r04/verify-browser.cjs
+        run: |
+          PREVIEW_URL="$(node -p "require('./kaopu-unified-human-workbench/npc-life-observation-r04/BUILD.json').publicURL")" node kaopu-unified-human-workbench/npc-life-observation-r04/verify-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

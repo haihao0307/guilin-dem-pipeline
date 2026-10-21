@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu/r04-root-cause-review@1",
+  "status": "ROOT_CAUSE_REVIEW_COMPLETE_BEFORE_NEXT_CANDIDATE",
+  "recordedAt": "2026-10-21T07:31:54.329036+00:00",
+  "baseCandidate": "4c845da4c34b006752e8d3917687d324bb41a4ec",
+  "findings": [
+    {
+      "observedIn": "3b9813d67b4c86ad66fcd28cdff0432b815258d0",
+      "runId": 39559346711,
+      "classification": "actual browser acceptance failure",
+      "cause": "The previous bottle task final pose and next task start shared simulation time 8.191666666666842; a timestamp epsilon mixed old task evidence into the new task.",
+      "correction": "Bind continuous completed frames, authoritative result and complete native geometry to one exact task token. Preserve all physical, recovery and timing thresholds.",
+      "independentReplay": "Original captured evidence reproduces 8 violations; exact A:bottle:3 evidence contains all 26 samples, 75 completed task frames, 9 withdrawal and 6 rest intermediate samples. Negative missing-stage, penetration and identity cases still reject."
+    },
+    {
+      "observedIn": "4c845da4c34b006752e8d3917687d324bb41a4ec",
+      "runId": 39561246191,
+      "classification": "static publication defect discovered before delivery; candidate superseded",
+      "cause": "Release target was copied into multiple files. The HTTP checker retained r03-20261020 while staging used r04-20261021; two boot labels also retained R03.",
+      "correction": "One pure ReleaseContract generates the exact version/path/URL. Staged BUILD is validated and consumed by publisher and public browser; local and remote HTTP receipts use the same contract. Update both visible boot labels.",
+      "regression": "20 release-contract cases reject stale paths, heads, versions, missing slashes and invalid metadata before expensive browser execution."
+    }
+  ],
+  "independentReview": {
+    "geometryAndTokenScope": "Reviewed against original verifier and first actual browser artifact; no gate weakened.",
+    "releaseModuleAndConsumers": "Independent read of module, workflow, build, local/remote receipt validation and initial/updated visible labels; no known blocker."
+  },
+  "preserved": [
+    "NativeBinding, NativeRig, ActorAdapter, ObservationClock, RenderQueue and Cannon unchanged",
+    "Five original physical algorithm-region hashes retained",
+    "Original geometry/contact/recovery thresholds retained",
+    "Original cold-start, task, continuous-action and GPU deadlines retained",
+    "Old public versions and unrelated tree entries retained"
+  ],
+  "nextGate": "Fresh exact-head full file-protocol browser suite, exact public bytes and real public browser verification; superseded receipts cannot satisfy delivery.",
+  "deliveryComplete": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

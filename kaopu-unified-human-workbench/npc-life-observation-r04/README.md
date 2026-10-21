@@ -65,6 +65,8 @@ The fixed 1/120 s step, finite assisted grip, actual hinged window, permanent hi
 
 The workflow builds one standalone HTML, tests its exact file in isolated Chromium, appends only a new immutable npc-life-observation/r04-20261021/<source-head>/ directory, then verifies those exact public HTTPS bytes in another real Chromium session. Previous versions and unrelated branches/trees remain. Source is a draft PR; no merge, rebase, force push or history deletion.
 
+ReleaseContract.cjs owns the version and immutable public target. Staging creates and validates one BUILD receipt; publication and browser verification read that receipt, and the HTTP checker independently validates its local and remote identities. Twenty inexpensive release-contract cases run before Chromium to reject old release directories, mismatched heads/versions and inconsistent addresses. The root-cause review for the two pre-delivery corrections is recorded in qa/r04-root-cause-review.json.
+
 CPU checks retain boot/render/trace/navigation contracts and all 21 physical causal cases; they add command and state boundary cases. They are labeled fixture evidence, never native GPU/browser evidence.
 
 The full browser suite retains 180 s cold readiness and identity-task gates, the 0.12 s observed-frame bound, full native meshes/materials/images, the 12 numerical cases, actual open/close/cancel, native recovery, resource exclusion and 390 × 844 viewport checks. A viewport test is not a physical-phone test. The three uninterrupted UI actions retain their 600 s group deadline.

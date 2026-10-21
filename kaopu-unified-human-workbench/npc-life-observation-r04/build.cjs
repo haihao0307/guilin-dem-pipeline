@@ -20,7 +20,7 @@ const vm = require('node:vm');
 const {standalonePayload}=require('./StandalonePayload.cjs');
 const {patchNativeBoot,nativeBootScript}=require('./NativeBootPatch.cjs');
 
-const VERSION = 'NPC-LIFE-OBSERVATION-R04';
+const {VERSION} = require('./ReleaseContract.cjs');
 const CANONICAL_SHA = '5543f756ca3af1428323696324303fa70b8de850';
 const HOST_SHA256 = 'd1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a';
 const CANNON_SHA256 = 'f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c';
@@ -285,7 +285,7 @@ requestAnimationFrame(t=>{state.firstRAFMS=t;state.shellVisibleAtFirstRAF=visibl
     adapterSHA256:hash(fs.readFileSync(__filename)),finalInlineScriptSyntaxChecked:true,finalScriptSyntax,
     sourceSHA256: Object.fromEntries(sourceFiles.map(file => [file, hash(fs.readFileSync(path.resolve(file)))])),
     styleFiles: cssPaths.map(file => path.basename(file)),
-    buildModuleSHA256:Object.fromEntries(['build.cjs','prepare.cjs','AssetContract.cjs','StandalonePayload.cjs','NativeBootPatch.cjs','BootShell.html','BootShell.css'].map(f=>[f,hash(fs.readFileSync(path.join(here,f)))])),
+    buildModuleSHA256:Object.fromEntries(['build.cjs','prepare.cjs','ReleaseContract.cjs','AssetContract.cjs','StandalonePayload.cjs','NativeBootPatch.cjs','BootShell.html','BootShell.css'].map(f=>[f,hash(fs.readFileSync(path.join(here,f)))])),
     nativeScriptsRetained:2,shellFirstExecution:true
   });
   fs.writeFileSync(path.join(here, 'BUILD.json'), JSON.stringify(report, null, 2) + '\n');
