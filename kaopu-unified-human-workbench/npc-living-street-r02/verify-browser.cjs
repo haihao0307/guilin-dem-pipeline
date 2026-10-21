@@ -493,6 +493,34 @@ function contactProof(evidence,kind) {
   }
 }
 
+const observedFoodSamples=new Set();
+async function observeFoodGeometry(state){
+  const active=(state.items?.actions||[]).filter(row=>['buy','eat'].includes(row.kind)&&row.grasped&&!row.finished);
+  for(const action of active){
+    const key=action.token+':'+Math.floor(action.progress*10);
+    if(observedFoodSamples.has(key))continue;
+    const geometry=await evaluate('read actual native food interaction '+key,id=>{
+      const app=window.__LIVING_STREET__;
+      if(typeof app?.probeInteractionGeometry!=='function')throw Error('Read-only actual native geometry probe missing');
+      return app.probeInteractionGeometry(id);
+    },action.actorId);
+    // A real action may finish between independent observations. Do not label
+    // the next action as a sample of an earlier phase token.
+    if(geometry.token!==action.token||!geometry.grasped||geometry.prop?.kind!=='bread')continue;
+    observedFoodSamples.add(key);report.foodGeometry??=[];report.foodGeometry.push(geometry);
+    put('actual-food-geometry.json',report.foodGeometry);
+    const native=geometry.native;
+    assert.equal(geometry.mutation,false);assert.equal(native.graspProfile,'bread');
+    assert(native.propSampleCount>0&&native.propSampleCount===native.handSurfaceSampleCount,
+      'Every actual rendered hand vertex is sampled during food transport');
+    assert(native.propMaximumPenetrationM<=.004,'The held loaf does not deeply enter the actual native hand');
+    for(const fixture of native.fixtureChecks)assert(fixture.maximumPenetrationM<=.004,
+      'The complete actual hand clears '+fixture.id+' during '+geometry.stage);
+    assert(native.mouthSupport?.candidates>0&&native.mouthSupport.originalDisplayVertices>100000,
+      'Mouth contact uses actual refined native lip geometry');
+  }
+}
+
 async function autonomousChain({controls=false}={}) {
   report.fullSuiteRun=controls;await ensureDataPanel();await click('[data-person="A"]');await click('#reset');
   await ensureDataPanel();const initialSpeed=controls?'1×':'2×';
@@ -501,6 +529,8 @@ async function autonomousChain({controls=false}={}) {
   const until=liveNow()+CHAIN_MS,receipts=new Map();let seat=null,interrupted=null,shopClosed=null,lastTime=-1;
   while(liveNow()<until&&Date.now()<activeDeadline) {
     const s=await readState('autonomous-chain');assertHealthy(s);
+    await observeFoodGeometry(s);
+    if(liveNow()>=until||Date.now()>=activeDeadline)break;
     if(s.time-lastTime>.4){observe(s,'autonomous-chain');lastTime=s.time;}
     const a=s.simulation.actors.find(a=>a.id==='A'),b=s.simulation.actors.find(a=>a.id==='B'),bm=s.motions.B;
     if(!seat&&b?.pose==='seated'&&bm?.mode==='sitting'&&bm.poseValid&&bm.seatErrorM<=.012&&bm.footErrorM<=.015) {
@@ -556,6 +586,9 @@ async function autonomousChain({controls=false}={}) {
         controls:{physicalInterruption:interrupted,closedShop:shopClosed},endTime:s.time};
       put('autonomous-chain.json',report.autonomousChain);await pause(true);await screenshot('07-food-chain-complete');
       if(controls){assert(interrupted,'Suite requires a real held-item interruption; it was not observed');assert(shopClosed,'Suite requires a pending purchase rejected by shop closure');}
+      assert(liveNow()<until&&Date.now()<activeDeadline,'Food proof and final frame both meet their deadlines');
+      assert((report.foodGeometry||[]).some(g=>g.actor==='A'&&g.kind==='buy'),'Observed actual native purchase geometry');
+      assert((report.foodGeometry||[]).some(g=>g.actor==='A'&&g.kind==='eat'),'Observed actual native eating geometry');
       report.autonomousChainPassed=true;return report.autonomousChain;
     }
     await delay(300);
@@ -859,7 +892,11 @@ async function main() {
     for(const a of s.source.identities){assert.deepEqual([a.identity.presetId,a.identity.portraitId,a.identity.sex,a.identity.hair],EXPECTED[a.id].slice(0,4));}
     const cards=await bounded('read six actual person cards',()=>page.locator('#people-cards [data-person]').count());assert.equal(cards,6);
     report.startupPerformance={coldReadyMS:Date.now()-started,nativeStartup:s.startup,render:s.render,appearanceUpdateMS:s.audit.appearanceUpdateMS,performanceAcceptance:false};
-    for(const a of s.source.identities){const b=a.binding;assert.equal(b.nativeBones,104);assert.equal(b.weightsTruncated,false);assert.equal(b.r07MaterialGroups,2);assert.equal(b.originalAttributesRetained,true);assert(b.displayVertices>=b.nativeVertices);}
+    for(const a of s.source.identities){const b=a.binding;assert.equal(b.nativeBones,104);assert.equal(b.weightsTruncated,false);assert.equal(b.r07MaterialGroups,2);assert.equal(b.originalAttributesRetained,true);assert(b.displayVertices>=b.nativeVertices);
+      assert.equal(a.graspProfiles?.bottle?.admissible,true);assert(a.graspProfiles?.bread,'Bread is calibrated separately on each native hand');
+      assert.equal(a.pickupStance?.passed,true);assert.equal(a.pickupStance.schema,'native-pickup-stance/1');
+      assert.equal(a.mouthSupport?.originalDisplayVertices,b.displayVertices);assert(a.mouthSupport.candidates>0);
+      assert.notEqual(a.mouthSupport.upperVertex,a.mouthSupport.lowerVertex,'Actual native upper and lower vermilion supports are distinct');}
     assert.equal(s.render.startupDrain.completed,true);assert(s.render.completed>=1&&s.render.maxInFlight<=1);
     assert.equal(s.render.outsideBatchRenderPasses,0,'No native renderer passes escape the complete appearance/beauty submission batch');
     assert(s.assets.servedCount>0&&s.assets.missing.length===0);
@@ -905,9 +942,15 @@ async function main() {
     assert.equal(desktop.brandBackground,'rgba(0, 0, 0, 0)','Canonical host header styles do not leak into the app');
     assert(desktop.people.top>=desktop.brand.bottom+20,'Journal brand and people section do not overlap');
     assert(desktop.originalOverlays.every(el=>el.display==='none'),'Original workbench captions stay out of the courtyard UI');
-    if(['startup','suite'].includes(PHASE)){
+    // This same workflow already captures the six-person gallery on the
+    // startup instance. The suite spends its finite GPU time on dynamic
+    // interactions and responsive views of the same sealed source bytes.
+    if(PHASE==='startup'){
       await hideDataPanel();await click('[data-camera="near"]');await screenshot('03-near');
-      for(const id of IDS){await hideDataPanel();await click('[data-person="'+id+'"]');await click('[data-camera="follow"]');await screenshot('person-'+id);}
+      for(const id of IDS){await hideDataPanel();await click('[data-person="'+id+'"]');await click('[data-camera="follow"]');await screenshot('person-'+id);
+        const view=await readState('follow-camera-'+id);assert.equal(view.camera.actor,id);assert.equal(view.camera.mode,'follow');
+        assert.equal(view.camera.candidates,48);assert.equal(view.camera.probes,6);assert.equal(view.camera.occludedProbes,0,'Selected native resident is not hidden by street geometry: '+id);
+        put('follow-camera-'+id+'.json',view.camera);}
     }
     await saveDOM('desktop-dom');return{screenshots:report.screenshots.map(s=>s.file),visualAcceptance:false};
   });

@@ -117,6 +117,10 @@ async function main(){
     $('load-progress').textContent=`${actor.profile.name} · 检查穿鞋后的落脚与把手可达范围`;
     const executor=new NativeMotion(actor);executor.assessCapabilities({spots:courtyard.spots,getInteractionTarget:courtyard.getInteractionTarget});
     actor.motionCapabilities.bread=actor.graspProfiles.bread?.admissible===true;
+    const pickupStance=executor.assessPickupStance();actor.motionCapabilities.pickup=pickupStance.passed;
+    if(window.__NPC_STARTUP__)(window.__NPC_STARTUP__.pickupStances??=[]).push(pickupStance);
+    if(!pickupStance.passed)throw Error(actor.profile.name+' 的实际鞋底、手掌与拾取站位尚未通过检查');
+    executor.reset();
     sim.actor(actor.id).capabilities={...actor.motionCapabilities};motion.set(actor.id,executor);
     const shadow=softShadow();viewer.scene.add(shadow);shadows.set(actor.id,shadow);
   }
@@ -161,7 +165,7 @@ async function main(){
 
   function currentReport(){return {version:window.__NPC_BUILD__,ready,paused,speed,time:sim.time,selected,cameraMode,
     startup:window.__NPC_STARTUP__||null,
-    source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,profile:a.profile,measurements:a.measurements,binding:a.binding.report,capabilities:a.motionCapabilityReport,graspProfiles:a.graspProfiles,mouthSupport:a.poseTools.mouthSupport}))},
+    source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,profile:a.profile,measurements:a.measurements,binding:a.binding.report,capabilities:a.motionCapabilityReport,pickupStance:a.pickupStance,graspProfiles:a.graspProfiles,mouthSupport:a.poseTools.mouthSupport}))},
     camera:sceneCamera.report(),
     simulation:sim.snapshot(),motions:reports,items:items.snapshot(),environment:environment.snapshot(),audit,render:renderQueue.status(),garments:wardrobe.report(),footwear:shoes.report(),hair:hair.report(),scene:courtyard.metrics,lighting:lightingReport(),
     assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[],
@@ -228,7 +232,8 @@ async function main(){
   // Run them together with the native beauty draw, after the prior fence.
   // The callback also runs for the initial frame before ready becomes true.
   renderQueue.onBeforeRender(updateAppearance);
-  window.__LIVING_STREET__=window.__LIVING_COURTYARD__={snapshot:currentReport,ready:false,awaitFrame:o=>renderQueue.awaitFrame(o)};
+  window.__LIVING_STREET__=window.__LIVING_COURTYARD__={snapshot:currentReport,ready:false,awaitFrame:o=>renderQueue.awaitFrame(o),
+    probeInteractionGeometry:id=>items.probeInteractionGeometry(id)};
   function frame(now){
     const elapsed=Math.max(0,(now-last)/1000);last=now;
     try{

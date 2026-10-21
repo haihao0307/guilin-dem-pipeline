@@ -22,7 +22,7 @@ export const ITEM_PHYSICS = Object.freeze({
   bottleMassKg:.035, breadHalfExtentsM:[.075,.035,.045], breadMassKg:.11,
   contactToleranceM:.012, maximumAllowedPalmPenetrationM:.004,
   transportToleranceM:.035, mouthSurfaceToleranceM:.025,
-  minimumBottleLiftM:.24, assistedMaximumForceN:16,
+  minimumBottleLiftM:.24, assistedMaximumForceN:16,assistedMaximumTorqueNm:.512,
   fixedStepSeconds:1/120, solverIterations:18
 });
 
@@ -85,8 +85,9 @@ export class ItemWorld {
     this.world.broadphase=new CANNON.NaiveBroadphase();
     this.items=new Map();this.records=new Map();this.reports=new Map();this.bags=new Map();this.history=[];
     this.clock=0;this.serial=0;this.runSequence=this.sim.runSequence;
-    this.metrics={physicalSteps:0,actualGrasps:0,verifiedBottleLifts:0,receipts:0,failedAttempts:0,
+    this.metrics={physicalSteps:0,physicalSubsteps:0,maximumSubstepSeconds:0,actualGrasps:0,verifiedBottleLifts:0,receipts:0,failedAttempts:0,
       maximumObservedConstraintErrorM:0,maximumObservedPalmPenetrationM:0,
+      maximumConstraintForceN:0,maximumConstraintTorqueNm:0,
       successes:{collect:0,buy:0,recycle:0,eat:0}};
     this._boxFixture('paving',STREET_LAYOUT.floor.center,STREET_LAYOUT.floor.size);
     for(const c of this.courtyard?.colliders||[]) {
@@ -287,7 +288,7 @@ export class ItemWorld {
       initialBread:state.inventory.bread,initialBottles:state.inventory.bottles.slice(),
       contactEvidence:null,deliveries:[],failure:null,stableSamples:0,minimumContactErrorM:null,
       maximumLiftM:0,maximumConstraintErrorM:0,minimumMouthDistanceM:null,firstMouthAt:null,
-      constraint:null,hand:null,sourceTarget:null,sourceOffset:null,gripOffsetLocal:null};
+      constraint:null,hand:null,handTarget:null,sourceTarget:null,sourceOffset:null,gripOffsetLocal:null};
     if(!items.length)record.failure=t.kind==='buy'?'柜台目前没有可取的面包，掉落品需要整理':'找不到与所有权一致的实物';
     this.records.set(state.id,record);this._beginCycle(record,state);return record;
   }
@@ -350,9 +351,10 @@ export class ItemWorld {
 
   contactTarget(state) {return this.motionInput(state).target||null;}
 
-  _handPose(hand,report) {
+  _reportedHandPose(report) {
     const p=vec(report.palm),n=vec(report.palmNormal)||[0,0,1];
-    hand.position.set(...p);
+    if(!finite(p)||!finite(n))throw Error('Native hand pose must be finite');
+    const orientation=new CANNON.Quaternion();
     const axis=vec(report.handCylinderAxis),forwardHand=vec(report.handForward);
     if(finite(axis)&&finite(forwardHand)){
       const T=this.THREE,z=new T.Vector3(...n).normalize(),y=new T.Vector3(...axis);
@@ -360,11 +362,9 @@ export class ItemWorld {
       const x=new T.Vector3().crossVectors(y,z).normalize();
       if(!Number.isFinite(x.x)||x.lengthSq()<.99||y.lengthSq()<.99)throw Error('Degenerate native hand frame');
       const matrix=new T.Matrix4().makeBasis(x,y,z),q=new T.Quaternion().setFromRotationMatrix(matrix).normalize();
-      hand.quaternion.set(q.x,q.y,q.z,q.w);
-    }else hand.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.atan2(n[0],n[2]));
-    // This is an externally driven kinematic target. Dynamic object transforms
-    // are never overwritten during transport, and forces are finite.
-    hand.velocity.setZero();hand.angularVelocity.setZero();hand.aabbNeedsUpdate=true;
+      orientation.set(q.x,q.y,q.z,q.w);
+    }else orientation.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.atan2(n[0],n[2]));
+    return {position:p,quaternion:orientation};
   }
 
   _grasp(record,item,report) {
@@ -376,15 +376,17 @@ export class ItemWorld {
     if(item.heldBy&&item.heldBy!==record.actorId)return false;
     this._makeDynamic(item);
     const hand=new CANNON.Body({mass:0,type:CANNON.Body.KINEMATIC,collisionFilterGroup:0,collisionFilterMask:0});
-    this._handPose(hand,report);this.world.addBody(hand);
+    const initial=this._reportedHandPose(report);hand.position.set(...initial.position);hand.quaternion.copy(initial.quaternion);
+    this.world.addBody(hand);
     const constraint=new CANNON.LockConstraint(hand,item.body,{maxForce:ITEM_PHYSICS.assistedMaximumForceN});
     constraint.collideConnected=false;this.world.addConstraint(constraint);
-    record.hand=hand;record.constraint=constraint;record.grasped=true;record.stage='transport';
+    record.hand=hand;record.handTarget=initial;record.constraint=constraint;record.grasped=true;record.stage='transport';
     record.initialObjectPosition=position(item);record.gripOffsetLocal=hand.pointToLocalFrame(item.body.position).toArray();
     record.gripOffsetWorld=sub(position(item),palm);record.initialBottomY=this._bottomY(item);
     record.contactEvidence={surfaceErrorM:Math.abs(signed),signedSurfaceDistanceM:signed,
       nativePalmTargetErrorM:report.contactErrorM,nativeBoneLengthErrorM:report.boneLengthErrorM,
-      objectAt:position(item),palmAt:palm,at:this.clock,finiteForceLimitN:ITEM_PHYSICS.assistedMaximumForceN};
+      objectAt:position(item),palmAt:palm,at:this.clock,finiteForceLimitN:ITEM_PHYSICS.assistedMaximumForceN,
+      finiteTorqueLimitNm:ITEM_PHYSICS.assistedMaximumTorqueNm};
     item.heldBy=record.actorId;item.mode='held';item.lastProof=record.contactEvidence;
     this.metrics.actualGrasps++;return true;
   }
@@ -393,7 +395,7 @@ export class ItemWorld {
     if(record.constraint)this.world.removeConstraint(record.constraint);
     if(record.hand)this.world.removeBody(record.hand);
     const item=this.items?.get(record.items?.[record.index]);if(item)item.heldBy=null;
-    record.constraint=null;record.hand=null;record.grasped=false;
+    record.constraint=null;record.hand=null;record.handTarget=null;record.grasped=false;
   }
 
   _bottomY(item) {
@@ -437,13 +439,12 @@ export class ItemWorld {
       if(!record.grasped)record.progress=Math.min(.48,record.progress+dt/Math.max(1.4,record.duration));
     }
     if(record.grasped) {
-      this._handPose(record.hand,report);
+      record.handTarget=this._reportedHandPose(report);
       record.progress=Math.min(1,Math.max(.48,record.progress)+dt/Math.max(1.4,record.duration));
       const error=this._constraintError(record,item);
       record.maximumConstraintErrorM=Math.max(record.maximumConstraintErrorM,error);
       this.metrics.maximumObservedConstraintErrorM=Math.max(this.metrics.maximumObservedConstraintErrorM,error);
       const lift=item.body.position.y-record.initialObjectPosition[1];record.maximumLiftM=Math.max(record.maximumLiftM,lift);
-      if(error>.20&&record.age>1){record.failure='有限力辅助抓握发生滑脱';return;}
     }
     if(record.age>24&&!record.finished)record.failure=record.grasped?'实物没有到达动作完成位置':'原生掌面未与实物形成有效接触';
   }
@@ -492,6 +493,61 @@ export class ItemWorld {
         verifiedMouthSamples:record.stableSamples,consumptionModel:'visible bite transition at actual native mouth; no teeth or digestion physics'};
       record.finished=true;
     }
+  }
+
+  _advancePhysics(dt){
+    if(dt<=0)return;
+    // The native pose is sampled at the simulation boundary. Drive its
+    // kinematic palm continuously through every physical substep, including
+    // angular velocity, instead of teleporting a zero-velocity constraint.
+    // Only the driver is prescribed; each held object stays fully dynamic.
+    const frames=[...this.records.values()].filter(r=>r.grasped&&r.hand&&r.handTarget).map(record=>({record,
+      from:record.hand.position.clone(),qFrom:record.hand.quaternion.clone(),
+      to:new CANNON.Vec3(...record.handTarget.position),qTo:record.handTarget.quaternion.clone()}));
+    const count=Math.max(1,Math.ceil(dt/ITEM_PHYSICS.fixedStepSeconds-1e-9)),step=dt/count;
+    this.metrics.maximumSubstepSeconds=Math.max(this.metrics.maximumSubstepSeconds,step);
+    for(let i=0;i<count;i++){
+      for(const frame of frames){
+        const {record,from,to,qFrom,qTo}=frame,hand=record.hand;if(!hand||!record.constraint)continue;
+        // This pinned Cannon GSSolver clamps accumulated lambda (impulse),
+        // then reports multiplier=lambda/h. Convert N and N m to per-step
+        // impulses; dividing each orthogonal axis by sqrt(3) also bounds the
+        // vector norm instead of permitting sqrt(3) times the stated force.
+        record.constraint.equations.forEach((equation,index)=>{
+          const limit=(index<3?ITEM_PHYSICS.assistedMaximumForceN:ITEM_PHYSICS.assistedMaximumTorqueNm)*step/Math.sqrt(3);
+          equation.minForce=-limit;equation.maxForce=limit;
+        });
+        const b=(i+1)/count,p1=new CANNON.Vec3(),q1=new CANNON.Quaternion();
+        from.lerp(to,b,p1);qFrom.slerp(qTo,b,q1);
+        // Read the actual integrated driver pose, then prescribe velocities
+        // towards the next sample. Neither the hand nor the object is snapped
+        // to a transform during transport.
+        p1.vsub(hand.position,hand.velocity);hand.velocity.scale(1/step,hand.velocity);
+        const rotation=q1.mult(hand.quaternion.conjugate());if(rotation.w<0){rotation.x*=-1;rotation.y*=-1;rotation.z*=-1;rotation.w*=-1;}
+        const vectorLength=Math.hypot(rotation.x,rotation.y,rotation.z),angle=2*Math.atan2(vectorLength,rotation.w);
+        if(vectorLength>1e-12)hand.angularVelocity.set(rotation.x*angle/(vectorLength*step),rotation.y*angle/(vectorLength*step),rotation.z*angle/(vectorLength*step));
+        else hand.angularVelocity.setZero();
+        hand.aabbNeedsUpdate=true;
+      }
+      this.world.step(step);this.metrics.physicalSubsteps++;
+      for(const frame of frames){
+        const record=frame.record,hand=record.hand,item=this.items.get(record.items[record.index]);
+        if(!hand||!item||!record.constraint)continue;
+        const reaction=record.constraint.equations.map(e=>e.multiplier||0);
+        this.metrics.maximumConstraintForceN=Math.max(this.metrics.maximumConstraintForceN,Math.hypot(...reaction.slice(0,3)));
+        this.metrics.maximumConstraintTorqueNm=Math.max(this.metrics.maximumConstraintTorqueNm,Math.hypot(...reaction.slice(3)));
+        const error=this._constraintError(record,item),signed=this._surfaceDistance(item,hand.position.toArray());
+        record.maximumConstraintErrorM=Math.max(record.maximumConstraintErrorM,error);
+        this.metrics.maximumObservedConstraintErrorM=Math.max(this.metrics.maximumObservedConstraintErrorM,error);
+        this.metrics.maximumObservedPalmPenetrationM=Math.max(this.metrics.maximumObservedPalmPenetrationM,Math.max(0,-signed));
+        if(error>ITEM_PHYSICS.transportToleranceM||signed< -ITEM_PHYSICS.maximumAllowedPalmPenetrationM||Math.abs(signed)>ITEM_PHYSICS.contactToleranceM){
+          record.failure='实际抓握超出接触范围，已释放实物';
+          record.constraintFailure={errorM:error,signedPalmSurfaceDistanceM:signed,physicalSubstep:this.metrics.physicalSubsteps};
+          this._release(record);
+        }
+      }
+    }
+    this.metrics.physicalSteps++;
   }
 
   _nextRecycle(record,state) {
@@ -569,7 +625,7 @@ export class ItemWorld {
       if(record)this._tickRecord(record,state,reports.get(state.id),step);
     }
     this._syncVisuals(0);
-    if(step>0){this.world.step(ITEM_PHYSICS.fixedStepSeconds,step,30);this.metrics.physicalSteps++;}
+    this._advancePhysics(step);
     const receipts=[];
     for(const state of this.sim.actors) {
       const record=this.records.get(state.id);if(!record)continue;
@@ -579,7 +635,7 @@ export class ItemWorld {
         this._release(record);record.emitted=true;this.metrics.failedAttempts++;this.metrics.receipts++;
         receipts.push({id:state.id,token:record.token,success:false,reason:record.failure,evidence:{
           scope:'physical-executor-rejected',age:record.age,minimumSurfaceErrorM:record.minimumContactErrorM,
-          maximumConstraintErrorM:record.maximumConstraintErrorM,objectIds:record.items.slice()}});
+          maximumConstraintErrorM:record.maximumConstraintErrorM,constraintFailure:record.constraintFailure||null,objectIds:record.items.slice()}});
       } else if(record.finished&&state.task?.progress>=.98) {
         record.emitted=true;this.metrics.receipts++;this.metrics.successes[record.kind]++;
         receipts.push({id:state.id,token:record.token,success:true,evidence:{
@@ -601,13 +657,41 @@ export class ItemWorld {
         age:r.age,objectIds:r.items.slice(),index:r.index,grasped:r.grasped,emitted:r.emitted,finished:r.finished,
         sourceTarget:r.sourceTarget,minimumContactErrorM:r.minimumContactErrorM,maximumLiftM:r.maximumLiftM,
         maximumConstraintErrorM:r.maximumConstraintErrorM,minimumMouthDistanceM:r.minimumMouthDistanceM,
-        failure:r.failure,deliveries:r.deliveries.slice()})),history:clone(this.history),
+        failure:r.failure,constraintFailure:r.constraintFailure||null,deliveries:r.deliveries.slice()})),history:clone(this.history),
       scope:{human:'complete native body; kinematic IK supplied by NativeMotion',
-        grasp:'real palm-surface threshold, finite-force assisted rigid constraint; no independent finger friction claim',
+        grasp:'real palm-surface threshold, finite-force assisted rigid constraint; continuous linear/angular kinematic driving at substeps no larger than 1/120 s; no independent finger friction claim',
         bottles:'dynamic finite cylinders; contacts and actual transport measured',
         bread:'visible ellipsoid; conservative box collision hull; measured mouth approach and visual bite',
         inventory:'logical ownership belongs to LifeSimulation; bag storage explicitly kinematic',
         interruption:'released objects remain at actual positions; staged owned bottles retain ownership; dropped unsold bread needs recovery'}};
+  }
+
+  /** Read-only inspection of the current real actor, loaf and collision world.
+   * This neither advances the simulation nor places a prop or a skeleton.
+   */
+  probeInteractionGeometry(actorId){
+    const actor=this.actors.get(actorId),state=this.sim.actor(actorId),record=this.records.get(actorId),
+      item=record&&this.items.get(record.items[record.index]);
+    if(!actor?.diagnostics||!state)throw Error('Native geometry probe requires an actual actor');
+    const fixtures=[];
+    for(const body of this.world.bodies){
+      if(!/^bakery-(counter|tray|serving-board)$/.test(body._itemFixture||''))continue;
+      body.updateAABB();fixtures.push({id:body._itemFixture,min:body.aabb.lowerBound.toArray(),max:body.aabb.upperBound.toArray()});
+    }
+    const prop=item?{id:item.id,kind:item.kind,position:position(item),quaternion:item.body.quaternion.toArray(),
+      ...(item.kind==='bread'?{halfExtentsM:ITEM_PHYSICS.breadHalfExtentsM.slice()}:{radius:ITEM_PHYSICS.bottleRadiusM,height:ITEM_PHYSICS.bottleHeightM})}:null;
+    const native=actor.diagnostics({prop,fixtures:record?.kind==='buy'?fixtures:[]}),contacts=[];
+    if(item)for(const contact of this.world.contacts){
+      if(contact.bi!==item.body&&contact.bj!==item.body)continue;
+      const other=contact.bi===item.body?contact.bj:contact.bi;if(!other._itemFixture)continue;
+      const gap=contact.bj.position.vadd(contact.rj).vsub(contact.bi.position).vsub(contact.ri);
+      contacts.push({fixture:other._itemFixture,signedGapM:contact.ni.dot(gap)});
+    }
+    return {schema:'native-actual-interaction-geometry/1',actor:actorId,time:this.clock,
+      token:state.task?.token||null,kind:state.task?.kind||null,phase:state.task?.phase||null,
+      progress:record?.progress??null,stage:record?.stage||null,grasped:!!record?.grasped,
+      prop,native,contacts,actualMouthDistanceM:item?this._surfaceDistance(item,native.actualMouthSurface):null,
+      mutation:false,scope:'current complete native display hand and lip support; current dynamic rigid object and original authored fixtures'};
   }
 
   dispose() {

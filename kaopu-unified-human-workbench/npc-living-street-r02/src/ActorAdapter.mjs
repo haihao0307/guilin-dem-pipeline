@@ -247,6 +247,23 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
     scope:'complete weighted hand vertex samples; first-contact per-finger bisection; no force/friction or continuous-triangle guarantee'};
 }
 
+/** The same calibrated native finger composition is used by the live actor
+ * and numerical geometry verification. All sixteen native finger/thumb
+ * joints remain native; this function changes rotation deltas only. */
+export function applyNativeFittedGrip(rig,fingers,fit,side,amount){
+  if(!fit?.admissible)return;
+  for(let f=1;f<=5;f++) {
+    const finger=fingers[side+f],t=fit.closure[f-1]*amount;
+    const angles=f===1?[fit.open.angle+(22-fit.open.angle)*t,34*t,28*t]:[60*t,76*t,45*t];
+    finger.ids.forEach((id,k)=>{rig.rotationDeltas[id]=scale(finger.axes[k],angles[k]);});
+  }
+  const thumb=rig.index.get(`finger1-1.${side}`),sign=side==='L'?1:-1;
+  const opposition=fit.open.opposition+(28-fit.open.opposition)*fit.closure[0]*amount;
+  rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(rig.hand[side].forward,sign*opposition));
+  rig.rotationDeltas[rig.index.get(`metacarpal1.${side}`)]=scale(rig.hand[side].forward,
+    sign*(fit.open.metacarpalOpposition??0)*(1-fit.closure[0]*amount));
+}
+
 /** The native L5 rails classify the actual frozen display geometry. Selecting
  * from the body-prefix or a guessed head offset misses the refined lips. */
 export function findNativeMouthSupport(geometry,model){
@@ -370,18 +387,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
   function orientFor(side) {return basisRotation(rig.hand[side].forward,rig.hand[side].palm,
     directionNative([side==='L'?1:-1,0,0]),directionNative([0,0,1]));}
   function fingerPose(side,amount) {
-    const fit=graspReport?.sides[side];
-    if(!fit?.admissible)return;
-    for(let f=1;f<=5;f++) {
-      const finger=fingers[side+f],t=fit.closure[f-1]*amount;
-      const angles=f===1?[fit.open.angle+(22-fit.open.angle)*t,34*t,28*t]:[60*t,76*t,45*t];
-      finger.ids.forEach((id,k)=>{rig.rotationDeltas[id]=scale(finger.axes[k],angles[k]);});
-    }
-    const thumb=rig.index.get(`finger1-1.${side}`),sign=side==='L'?1:-1;
-    const opposition=fit.open.opposition+(28-fit.open.opposition)*fit.closure[0]*amount;
-    rig.rotationDeltas[thumb]=add(rig.rotationDeltas[thumb],scale(rig.hand[side].forward,sign*opposition));
-    rig.rotationDeltas[rig.index.get(`metacarpal1.${side}`)]=scale(rig.hand[side].forward,
-      sign*(fit.open.metacarpalOpposition??0)*(1-fit.closure[0]*amount));
+    applyNativeFittedGrip(rig,fingers,graspReport?.sides[side],side,amount);
   }
   function resetRig(grip=0,side=active.side,reaching=false) {
     for(const v of rig.rotationDeltas)v.fill(0);rig.rootTranslation.fill(0);
@@ -533,25 +539,32 @@ function makeActor(model, viewer, spec, preset, measurements) {
       }
       lastGoal=worldTarget.clone();lastSolution=solved;return diagnostic(lastGoal,lastSolution);
     },
-    diagnostics({tableTopY=null,tableBounds=null,bottle=null}={}){
+    diagnostics({tableTopY=null,tableBounds=null,bottle=null,prop=null,fixtures=[]}={}){
       // Sample the actual weighted hand surface only on diagnostic requests,
       // not at every physics substep. This catches a curled intermediate
       // phalanx below the table even when the fingertip itself is above it.
       if(tableBounds&&!['minX','maxX','minZ','maxZ'].every(k=>Number.isFinite(tableBounds[k])))
         throw Error('Table bounds require finite minX/maxX/minZ/maxZ');
       if(tableBounds&&(tableBounds.minX>tableBounds.maxX||tableBounds.minZ>tableBounds.maxZ))throw Error('Table bounds are reversed');
-      let cylinder=null;
-      if(bottle){
-        const center=asVector(bottle.position),q=bottle.quaternion;
+      if(bottle&&prop)throw Error('Choose exactly one actual diagnostic prop');
+      const object=prop||bottle;let cylinder=null;
+      if(object){
+        const center=asVector(object.position),q=object.quaternion;
         const values=Array.isArray(q)||ArrayBuffer.isView(q)?Array.from(q):q?[q.x,q.y,q.z,q.w]:null;
         if(!center.toArray().every(Number.isFinite)||!values||values.length!==4||!values.every(Number.isFinite)||
-          Math.hypot(...values)<1e-9||!(bottle.radius>0)||!(bottle.height>0)||!Number.isFinite(bottle.radius)||!Number.isFinite(bottle.height))
-          throw Error('Bottle geometry requires finite position/quaternion and positive radius/height');
+          Math.hypot(...values)<1e-9)throw Error('Prop geometry requires a finite position and quaternion');
+        if(object.kind==='bread'?!Array.isArray(object.halfExtentsM)||object.halfExtentsM.length!==3||object.halfExtentsM.some(v=>!Number.isFinite(v)||v<=0):
+          !(object.radius>0)||!(object.height>0)||!Number.isFinite(object.radius)||!Number.isFinite(object.height))
+          throw Error('Prop geometry requires positive actual dimensions');
         const inverse=new THREE.Quaternion(...values).normalize().invert();
-        cylinder={center,inverse,radius:bottle.radius,halfHeight:bottle.height*.5};
+        cylinder={center,inverse,kind:object.kind||'bottle',radius:object.radius,halfHeight:object.height*.5,halfExtentsM:object.halfExtentsM};
       }
       const cylinderDistance = p => {
         const local=p.clone().sub(cylinder.center).applyQuaternion(cylinder.inverse);
+        if(cylinder.kind==='bread'){
+          const h=cylinder.halfExtentsM,v=local.toArray(),k0=Math.hypot(...v.map((x,i)=>x/h[i])),k1=Math.hypot(...v.map((x,i)=>x/(h[i]*h[i])));
+          return {distance:k1<1e-12?-Math.min(...h):k0*(k0-1)/k1,local};
+        }
         // Exact signed distance to the finite local-Y cylinder, including caps.
         const radial=Math.hypot(local.x,local.z)-cylinder.radius,axial=Math.abs(local.y)-cylinder.halfHeight;
         return {distance:Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0),local};
@@ -559,9 +572,19 @@ function makeActor(model, viewer, spec, preset, measurements) {
       root.updateWorldMatrix(true,false);let handSurfaceMinimumYM=Infinity,tableMinimumYM=Infinity,tableSampleCount=0;
       let minCylinderDistance=Infinity,penetratingCount=0,deepestPoint=null,deepestLocal=null,deepestVertex=null;
       const fingerSurfaceMinimum=Array(5).fill(Infinity),fingerNearCounts=Array(5).fill(0),fingerContactPoints=Array(5).fill(null);
+      const fixtureChecks=fixtures.map(f=>{
+        if(!Array.isArray(f.min)||!Array.isArray(f.max)||f.min.length!==3||f.max.length!==3||[...f.min,...f.max].some(v=>!Number.isFinite(v)))throw Error('Actual fixture AABB is incomplete');
+        return {id:f.id,min:f.min.slice(),max:f.max.slice(),insideVertices:0,maximumPenetrationM:0,deepestVertex:null};
+      });
       for(const id of handSurfaceVertices[active.side]) {
         const p=display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld);
         handSurfaceMinimumYM=Math.min(handSurfaceMinimumYM,p.y);
+        for(const fixture of fixtureChecks){
+          const v=p.toArray();if(v.every((x,i)=>x>fixture.min[i]&&x<fixture.max[i])){
+            fixture.insideVertices++;const depth=Math.min(...v.flatMap((x,i)=>[x-fixture.min[i],fixture.max[i]-x]));
+            if(depth>fixture.maximumPenetrationM){fixture.maximumPenetrationM=depth;fixture.deepestVertex=id;}
+          }
+        }
         if(!tableBounds||(p.x>=tableBounds.minX&&p.x<=tableBounds.maxX&&p.z>=tableBounds.minZ&&p.z<=tableBounds.maxZ)){
           tableMinimumYM=Math.min(tableMinimumYM,p.y);tableSampleCount++;
         }
@@ -589,8 +612,13 @@ function makeActor(model, viewer, spec, preset, measurements) {
         fingerSurfaceMinimumSignedDistanceM:cylinder?fingerSurfaceMinimum:null,
         fingerNearBottleVertexCounts:cylinder?fingerNearCounts:null,
         fingerClosestBottlePointsWorld:cylinder?fingerContactPoints:null,
+        propKind:cylinder?.kind||null,propMinimumSignedDistanceM:cylinder?minCylinderDistance:null,
+        propMaximumPenetrationM:cylinder?Math.max(0,-minCylinderDistance):null,
+        propSampleCount:cylinder?handSurfaceVertices[active.side].length:0,
+        fixtureChecks,graspProfile:active.profile,
+        mouthSupport,actualMouthSurface:toWorld(sampleLiveVertex(mouthSupport.vertex)).toArray(),
         graspFit:graspReport?.sides[active.side]||null,
-        geometricDiagnosticScope:'weighted rendered hand vertices; finite-cylinder signed distance and table XZ projection; not continuous triangle collision or contact force'};
+        geometricDiagnosticScope:'every weighted rendered hand vertex; actual prop-local cylinder/ellipsoid surface and authored fixture AABBs; no continuous-triangle or independent friction claim'};
     },
     dispose(){root.removeFromParent();binding.dispose();geometry.dispose();for(const f of frozen)f.material.dispose();for(const texture of textureCopies.values())texture.dispose();}
   };
