@@ -26,13 +26,13 @@ jobs:
         run: python -m http.server 8765 >/tmp/server.log 2>&1 &
       - name: Real GLSL compile/link gate
         run: timeout 90s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-study-browser.py --stage compile --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-study-r01
-      - name: Frozen-versus-indexed exact image and hit A/B, failure fallback and stage timing
-        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-spatial-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-spatial-index-r01
+      - name: Frozen-versus-aperture-index exact hit/pixel A-B, near-plane/fallback and stage timing
+        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-aperture-spatial-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-aperture-index-r01
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: floor-spatial-index-${{ github.sha }}
-          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-spatial-index-r01
+          name: floor-aperture-index-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-aperture-index-r01
           retention-days: 1
       - name: Full unchanged-source, window and mobile interaction regression
         run: timeout 360s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-study-browser.py --stage app --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-study-r01
