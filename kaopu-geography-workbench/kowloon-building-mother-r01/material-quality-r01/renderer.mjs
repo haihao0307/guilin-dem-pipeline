@@ -74,10 +74,10 @@ float displayDistance(vec3 p){
  #endif
 if(uCutaway>.5)d=max(d,-p.x-.2);return d;}
 vec3 colorId(float id){return .35+.6*cos(vec3(0.,2.,4.)+id*1.37);}
-// R07 explicitly bounded optical model: one finite pane, two Snell/Fresnel
-// interfaces, Beer-Lambert over actual metres, ONE transmitted scene ray.
-// Reflections and total-internal-reflection fallback sample only the sky.
-// A second pane terminates as a tinted surface; no recursive transport/caustics.
+// Current receiver keeps the frozen R07 finite-pane transmission calculation.
+// Reflection adds ONE actual displayed-scene ray, with authored sky on a miss.
+// TIR still uses sky only; second glass hits terminate without recursive optics.
+// Secondary terminal shading uses geometric normals and an approximate footprint.
 #if FIELD_HOSTED
 vec3 hostedSky(vec3 d){
  // Authored analytic daylight lighting environment, not a captured Hong Kong sky.
@@ -86,6 +86,7 @@ vec3 hostedSky(vec3 d){
  float cloud=(.5+.5*sin(d.x*9.+sin(d.z*13.)))*(.5+.5*sin(d.z*11.-d.x*4.));
  return mix(base,vec3(.92,.94,.96),smoothstep(.60,.84,cloud)*smoothstep(.05,.35,d.y)*.56)+vec3(8.,7.6,6.8)*sun;
 }
+vec3 hostedDisplayColor(vec3 radiance){vec3 mapped=radiance/(1.+radiance);return pow(max(mapped,vec3(0.)),vec3(1./2.2));}
 vec3 hostedTerminalShade(FieldHit h,vec3 n,vec3 rd,float t){
  if(dot(n,rd)>0.)n=-n;
  FieldSurface s=sampleFieldMaterial(h,contextMaterialDirection(h,n),max(t*.0008,.001));
@@ -114,9 +115,15 @@ vec4 shadeFieldHit(vec3 rd,float t,FieldHit h,int steps,int status,vec3 n){
  vec3 p=uEye+rd*t;
  vec3 sky=mix(vec3(.82,.87,.86),vec3(.48,.62,.67),clamp(rd.y*.6+.4,0.,1.));
  if(status==3){return vec4(.85,.12,.55,1.);}
- if(status!=1){return vec4(sky,1.);}
+ if(status!=1){
  #if FIELD_HOSTED
- if(uRenderMode==0&&h.materialRole>5.5){vec3 optical=hostedGlassRadiance(uEye,rd,t,h,n);optical=optical/(1.+optical);return vec4(pow(max(optical,vec3(0.)),vec3(1./2.2)),1.);}
+ return vec4(hostedDisplayColor(hostedSky(rd)),1.);
+ #else
+ return vec4(sky,1.);
+ #endif
+ }
+ #if FIELD_HOSTED
+ if(uRenderMode==0&&h.materialRole>5.5){return vec4(hostedDisplayColor(hostedGlassRadiance(uEye,rd,t,h,n)),1.);}
  #endif
  if(dot(n,rd)>0.)n=-n;
  if(uRenderMode==1){return vec4(colorId(h.objectId)*(.4+.6*max(dot(n,normalize(vec3(-.4,1.,-.5))),0.)),1.);}
@@ -281,10 +288,23 @@ export function buildRendererSources(spec,traceVariant=0){
   rayResult:HEAD+INPUT_MRT+SPLIT_PROBE,
   opticsProbe:spec.fieldKind==='hosted-context'?stage(0)+source+'uniform vec3 uGlassColor; uniform float uGlassTransmission,uGlassIOR;\n'+HOSTED_OPTICS+OPTICS_PROBE:null};
 }
+/** Current display receiver contract; never mutates the frozen R07 recipe. */
+export function materialQualityOpticalContract(spec,options={}){
+ if(spec?.fieldKind!=='hosted-context')return spec?.opticalContract??null;
+ return {...spec.opticalContract,receiverRevision:'material-quality-r01',
+  reflection:options.sceneReflection===0?'authored_analytic_environment_only':'one_actual_displayed_scene_reflection_ray_with_analytic_sky_miss',
+  reflectionWeight:'combined_two_interface_Fresnel_weight_on_one_reflected_ray_not_separate_internal_reflection_paths',
+  lightingEnvironment:'authored_analytic_daylight_not_captured_Hong_Kong_illumination',
+  primaryBackground:'same_analytic_sky_and_display_conversion_as_glass_environment',
+  transmission:'unchanged_R07_finite_pane_Snell_Fresnel_Beer_Lambert_metres',
+  secondaryShading:'geometric_normal_and_approximate_secondary_distance_footprint_no_microheight_normal',
+  multiplePanes:'second_pane_is_terminal_tinted_surface_not_recursive_transmission',
+  totalInternalReflection:'analytic_sky_only_approximation_no_internal_bounce'};
+}
 /** Describes the actual rendering query; finite test counts are not march budgets. */
-export function rendererDiagnosticContract(spec,traceVariant=0,traceMode=0){
+export function rendererDiagnosticContract(spec,traceVariant=0,traceMode=0,options={}){
  const kind=spec.fieldKind;
- if(kind==='hosted-context')return {rayMethod:'finite source candidate filtering plus authored and hosted analytic domains',metric:'source BVH visits + authored and hosted finite-domain candidate tests',stepCap:null,stepCapKind:'finite query count, not a march budget',iterationBudget:null,unresolvedExpected:false,hitEpsilon:'source finite-plane residual <0.00002m; hosted exact rounded-rectangle interval predicates with Float32 tolerance',stepRule:'retain only selected patch masks; continue source traversal after rejected candidates; analytic hosted interval endpoints, no ray marching',missCondition:'all finite source, authored and hosted candidates rejected',opticalModel:spec.opticalContract};
+ if(kind==='hosted-context')return {rayMethod:'finite source candidate filtering plus authored and hosted analytic domains',metric:'source BVH visits + authored and hosted finite-domain candidate tests',stepCap:null,stepCapKind:'finite query count, not a march budget',iterationBudget:null,unresolvedExpected:false,hitEpsilon:'source finite-plane residual <0.00002m; hosted exact rounded-rectangle interval predicates with Float32 tolerance',stepRule:'retain only selected patch masks; continue source traversal after rejected candidates; analytic hosted interval endpoints, no ray marching',missCondition:'all finite source, authored and hosted candidates rejected',opticalModel:materialQualityOpticalContract(spec,options)};
  if(kind==='measured-surface')return {rayMethod:'finite measured-plane and boundary intersection with BVH',metric:'BVH node visits',stepCap:spec.nodes.length,stepCapKind:'finite query upper bound, not a march budget',iterationBudget:null,unresolvedExpected:false,hitEpsilon:'ray/plane residual plus finite-boundary distance <0.00002m in the GPU predicate',stepRule:'finite source plane intersections with outer-loop and hole predicates; BVH traversal, no ray marching',missCondition:'BVH traversal found no source patch satisfying the ray/plane and finite-boundary predicates'};
  if(kind==='evidence-assembly')return {rayMethod:'finite authored-prism plane and union-boundary intersection',metric:'finite host plane tests',stepCap:spec.counts.analyticBoundaryPlanes,stepCapKind:'finite query upper bound, not a march budget',iterationBudget:null,unresolvedExpected:false,hitEpsilon:'no distance-march hit epsilon; finite cap/side-domain tests and union seam checks at +/-0.00001m',stepRule:'enumerate exact finite authored cap and side candidates; reject buried union seams, no ray marching',missCondition:'all relevant finite authored plane candidates failed their own domains or were buried inside the authored union'};
  if(kind==='case-context')return {rayMethod:'display-restricted measured BVH plus rigid authored finite-domain intersection',metric:'source BVH visits + authored finite plane tests',stepCap:spec.measured.nodes.length+spec.counts.analyticBoundaryPlanes,stepCapKind:'combined finite query upper bound, not a march budget',iterationBudget:null,unresolvedExpected:false,hitEpsilon:'source finite-surface predicate <0.00002m; authored exact cap/side domains with +/-0.00001m union seam checks',stepRule:'query both independent finite-field paths; apply source display interval without adding caps; choose nearest eligible hit, no ray marching',missCondition:'neither the display-restricted measured source nor the authored finite-domain query produced an eligible hit'};
@@ -383,7 +403,7 @@ export class FieldRenderer{
   const count=(steps,status,objectId)=>{sum+=steps;max=Math.max(max,steps);histogram[steps]=(histogram[steps]??0)+1;if(status===1){hits++;ids[objectId]=(ids[objectId]??0)+1;}else if(status===2)misses++;else{unresolved++;if(unresolvedPixelSamples.length<16)unresolvedPixelSamples.push({x:diagnosticPixelIndex%this.canvas.width,y:Math.floor(diagnosticPixelIndex/this.canvas.width),origin:'bottom-left',steps,status});}diagnosticPixelIndex++;};
   if(split){this.draw();const primary=this.readTarget(this.targets[0]),final=this.readTarget(this.targets[1]),normalId=this.readTarget(this.targets[1],1);rescuePixelCount=0;maxPrimarySteps=0;let primarySum=0;for(let i=0;i<final.length;i+=4){count(Math.round(final[i+2]),Math.round(final[i+1]),Math.round(normalId[i+3]));const steps=Math.round(primary[i+3]);primarySum+=steps;maxPrimarySteps=Math.max(maxPrimarySteps,steps);if(Math.round(primary[i+1])===3)rescuePixelCount++;}meanPrimarySteps=primarySum/pixels;for(const sample of unresolvedPixelSamples){const i=(sample.y*this.canvas.width+sample.x)*4;sample.primaryState=Array.from(primary.slice(i,i+4));sample.finalState=Array.from(final.slice(i,i+4));sample.stateLayout=['rayT','status','marchIterations','primaryIterations'];}
   }else{this.draw({diagnostic:true});const a=new Uint8Array(pixels*4);g.readPixels(0,0,this.canvas.width,this.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);for(let i=0;i<a.length;i+=4){const d=decodeDiagnosticPixel(a[i],a[i+1],a[i+2]);count(d.steps,d.status,d.objectId);}if(!this.spec.fieldKind){this.draw({diagnostic:2});g.readPixels(0,0,this.canvas.width,this.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);rescuePixelCount=0;let primarySum=0;maxPrimarySteps=0;for(let i=0;i<a.length;i+=4){primarySum+=a[i];maxPrimarySteps=Math.max(maxPrimarySteps,a[i]);if(a[i+1]>127)rescuePixelCount++;}meanPrimarySteps=primarySum/pixels;}this.draw();}
-  return {width:this.canvas.width,height:this.canvas.height,pixels,hits,misses,unresolved,rescuePixelCount,meanPrimarySteps,maxPrimarySteps,meanSteps:sum/pixels,maxSteps:max,...rendererDiagnosticContract(this.spec,this.traceVariant??0,this.options.traceMode??0),stepCountsSaturateAt255:!split,readback:split?'exact Float32 primary and final MRT attachments':'8-bit packed diagnostic pass',screenPassesPerFrame:split?3:1,structuralPlaneCount:this.spec.structurePlanes?.length??null,ambientOcclusionEnabled:!!this.options.occlusion,histogram,unresolvedPixelSamples,camera:{eye:[...this.options.eye],target:[...this.options.target],fov:this.options.fov},visibleObjectPixels:ids,unresolvedColor:'#d91f8c'};
+  return {width:this.canvas.width,height:this.canvas.height,pixels,hits,misses,unresolved,rescuePixelCount,meanPrimarySteps,maxPrimarySteps,meanSteps:sum/pixels,maxSteps:max,...rendererDiagnosticContract(this.spec,this.traceVariant??0,this.options.traceMode??0,this.options),stepCountsSaturateAt255:!split,readback:split?'exact Float32 primary and final MRT attachments':'8-bit packed diagnostic pass',screenPassesPerFrame:split?3:1,structuralPlaneCount:this.spec.structurePlanes?.length??null,ambientOcclusionEnabled:!!this.options.occlusion,histogram,unresolvedPixelSamples,camera:{eye:[...this.options.eye],target:[...this.options.target],fov:this.options.fov},visibleObjectPixels:ids,unresolvedColor:'#d91f8c'};
  }
  async benchmarkStages(frames=3){
   this.assertLive();
@@ -416,5 +436,5 @@ export class FieldRenderer{
   this.invalidated=true;
  }
  resourceSnapshot(){return {rendererId:this.rendererId,resourceEpoch:this.resourceEpoch,invalidated:this.invalidated,capabilities:{...this.capabilities},vao:resourceId(this.vao),programs:Object.fromEntries(Object.entries(this.programs??{}).map(([k,v])=>[k,resourceId(v)])),descriptorTextures:Object.fromEntries(['descriptors','assemblyDescriptors','fieldDescriptors','apertureDescriptors'].filter(k=>this[k]).map(k=>[k,resourceId(this[k].texture)])),targets:(this.targets??[]).map(t=>({width:t.width,height:t.height,framebuffer:resourceId(t.framebuffer),textures:t.textures.map(resourceId)})),probePrograms:[...(this.probePrograms?.values()??[])].map(resourceId),rayProbePrograms:Object.values(this.rayProbePrograms??{}).map(resourceId),opticsProbeProgram:resourceId(this.opticsProbeProgram),profileFirstDraw:this.profileFirstDraw};}
- snapshot(){return {resources:this.resourceSnapshot(),gpu:this.gpu,width:this.canvas.width,height:this.canvas.height,drawCount:this.drawCount,compileCount:this.compileCount,specUpdateCount:this.specUpdateCount,programReuseCount:this.programReuseCount,lastSpecUpdate:this.lastSpecUpdate,compileProfile:this.compileProfile,modelTriangles:0,vertexBuffers:0,indexBuffers:0,screenTrianglesPerPass:1,screenPassesPerFrame:this.isSplitActive()?3:1,screenTrianglesPerFrame:this.isSplitActive()?3:1,floatQueryReadback:!!this.floatExtension,renderer:this.isSplitActive()?'WebGL2 direct analytic field: primary Float32 MRT, unresolved-only rescue, shared shade':'WebGL2 direct analytic field ray evaluation',noMeshFallback:true,opticalModel:this.spec?.opticalContract??null};}
+ snapshot(){return {resources:this.resourceSnapshot(),gpu:this.gpu,width:this.canvas.width,height:this.canvas.height,drawCount:this.drawCount,compileCount:this.compileCount,specUpdateCount:this.specUpdateCount,programReuseCount:this.programReuseCount,lastSpecUpdate:this.lastSpecUpdate,compileProfile:this.compileProfile,modelTriangles:0,vertexBuffers:0,indexBuffers:0,screenTrianglesPerPass:1,screenPassesPerFrame:this.isSplitActive()?3:1,screenTrianglesPerFrame:this.isSplitActive()?3:1,floatQueryReadback:!!this.floatExtension,renderer:this.isSplitActive()?'WebGL2 direct analytic field: primary Float32 MRT, unresolved-only rescue, shared shade':'WebGL2 direct analytic field ray evaluation',noMeshFallback:true,opticalModel:materialQualityOpticalContract(this.spec,this.options)};}
 }
