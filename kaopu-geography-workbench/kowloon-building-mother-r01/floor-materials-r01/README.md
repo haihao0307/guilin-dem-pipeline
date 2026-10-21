@@ -35,3 +35,6 @@ R06 金属比 R07 常量框材质有更多实际通道：涂层高度、微结�
 - GPU probe 需要 1×1 RGBA32F 四附件；依次读回 baseColor/roughness、height/coat/coatRoughness/metallic、coverageDiffuse/tileMask、F0/cavity。不经过 tone mapping。`verifyFloorMaterialReadback` 检查范围；两组金属/墙面点还须通过 `verifyFloorMaterialProbeVariation`，防止只接平色。
 - 应记录实际 cold compile、首次 draw/readback 时间、GL 错误及输出。像素小样本通过也不代表整楼层渲染、近景速度、视觉或最终材质验收通过。
 - 本任务 GPU 未执行：一次已有 Playwright 启动在缺少可执行文件阶段失败，没有创建浏览器/GL 上下文。随后父任务明确由统一 candidate QA 做 GPU 检查；没有重试、安装、提权或自建 CI。CPU 测试不代替 GPU 结论。
+
+### Bounded floor-slice integration correction
+The integrated floor slice deliberately exposes only the painted design-door receiver. The earlier optional timber adapter sketch is not shipped or imported by this default module. No dependency on an unpublished material-quality candidate is required. `buildFloorMaterialGLSL({doorFinish:'wood'})` rejects in this bounded version. The original timber work remains preserved in its own existing workbench; this slice does not claim it was used. The physical material output is consumed through coverageDiffuse/F0, roughness, clearcoat and metre-based microheight. Microheight remains shading-only, not an actual geometric tile bevel.
