@@ -11,7 +11,7 @@ async def main():
     if not a.compile_only:
      v=await page.evaluate('probe.sourceParity()');assert v['old']['sha']==v['ground']['sha'];assert v['old']['error']==v['ground']['error']==0;r['cases'][id]['sourceParity']=v;print('SOURCE UNCHANGED',id,flush=True)
      rays=await page.evaluate('probe.basementRayParity()');r['cases'][id]['rayParity']=rays
-     for ray in rays:assert ray['cpu']['hit'] and ray['gpu']['status']==1 and abs(ray['cpu']['t']-ray['gpu']['t'])<.0005 and ray['error']==0,ray
+     for ray in rays:assert ray['cpu']['hit'] and ray['gpu']['status']==1 and abs(ray['cpu']['t']-ray['gpu']['t'])<.0005 and ray['error']==0 and ray['kept']['status']==1 and abs(ray['gpu']['t']-ray['kept']['t'])<.0005 and ray['clipped']['status']==0,ray
      print('BASEMENT CPU GPU RAYS',id,len(rays),flush=True)
     await page.close()
    if not a.compile_only:
