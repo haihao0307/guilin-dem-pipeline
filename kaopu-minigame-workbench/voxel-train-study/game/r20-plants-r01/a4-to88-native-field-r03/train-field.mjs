@@ -9,7 +9,8 @@ export const MATERIALS=Object.freeze([
  {name:'authored graphite roof',base:[.035,.045,.046],metallic:.12,roughness:.36,clearcoat:.15,basis:'specified'},
  {name:'authored dark glass candidate',base:[.027,.047,.054],metallic:0,roughness:.095,clearcoat:1,basis:'specified opaque optical stand-in; no transmission simulation'},
  {name:'datum brass',base:[.72,.42,.12],metallic:.7,roughness:.32,clearcoat:0,basis:'diagnostic only, not physical part'},
- {name:'authored machined steel',base:[.45,.48,.50],metallic:.94,roughness:.23,clearcoat:0,basis:'specified generic material, not measured historical finish'}]);
+ {name:'authored machined steel',base:[.45,.48,.50],metallic:.94,roughness:.23,clearcoat:0,basis:'specified generic material, not measured historical finish'},
+ {name:'authored bufferbeam red',base:[.25,.019,.017],metallic:.1,roughness:.32,clearcoat:.3,basis:'specified design paint, not surveyed'}]);
 export const DEFAULTS=Object.freeze({noseSweep:0,shoulderWidth:1,paint:[.019,.12,.075],roughness:.24,cabRoofRoundness:.22,tenderShoulder:.18});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export function validateParameters(p){
@@ -19,14 +20,21 @@ export function validateParameters(p){
 }
 export function makeParts(options={}){
  const p=validateParameters({...DEFAULTS,...options,paint:options.paint??[...DEFAULTS.paint]});
- const rows=[[-6.2,1.20,2.75,1.10],[-5.5,1.24,2.80,1.06],[-3,1.18,2.86,.98],[0,1.12,2.82,.96],[1.5,1.01,2.53,1.10],[2.8,.81,2.25+p.noseSweep,1.02],[3.8,.47,1.94+p.noseSweep,.78],[4.4,.13,1.58,.46]].map(a=>[a[0],a[1]*p.shoulderWidth,a[2],a[3]]);
+ const rows=[[-6.2,1.20,2.75,1.10],[-5.5,1.24,2.80,1.06],[-3,1.18,2.86,.98],[0,1.12,2.82,.96],[1.5,1.12,2.70,1.12],[2.8,1.0,2.55+p.noseSweep,1.08],[3.8,.87,2.2+p.noseSweep,.80],[4.4,.63,1.83,.55]].map(a=>[a[0],a[1]*p.shoulderWidth,a[2],a[3]]);
  return [
-  {id:'skin.main',label:'自有连续前罩/锅炉外罩',kind:1,material:0,bounds:[[-6.2,-1.31,.85],[4.4,1.31,3.94]],sections:rows,slopes:monotoneSlopes(rows),position:[0,0,0],size:[0,0,0],rounding:0,subtractDriverClearance:true,basis:'specified exterior design within source envelope, NOT historical profile fit'},
-  {id:'skin.cab',label:'自有驾驶室外壳',kind:2,material:0,bounds:[[-8.7,-1.28,1.70],[-6.18,1.28,3.9878]],sections:[],position:[-7.44,0,2.8439],size:[1.26,1.28,1.1439],rounding:p.cabRoofRoundness,basis:'specified cab shape, official maximum height; window cuts not surveyed'},
-  {id:'skin.tender',label:'自有煤水车箱体',kind:3,material:0,bounds:[[-16.25,-1.28,1.28],[-9.2,1.28,3.75]],sections:[],position:[-12.725,0,2.515],size:[3.525,1.28,1.235],rounding:p.tenderShoulder,basis:'specified continuous tank exterior, official axle anchors remain independent'},
-  {id:'cab.glass.design',label:'自有侧窗材质候选',kind:4,material:2,bounds:[[-8.01,-1.281,2.82],[-6.81,1.281,3.49]],sections:[],position:[-7.41,0,3.155],size:[.60,1.281,.335],rounding:.12,basis:'specified optical stand-in, window frame and transmission unresolved'}
+  {id:'skin.main',group:'main',label:'自有连续前罩/锅炉外罩',kind:1,material:0,bounds:[[-6.2,-1.31,.85],[4.4,1.31,3.94]],sections:rows,slopes:monotoneSlopes(rows),position:[0,0,0],size:[0,0,0],rounding:0,subtractDriverClearance:true,basis:'specified exterior design within source envelope, NOT historical profile fit'},
+  {id:'skin.cab',group:'cab',label:'自有驾驶室外壳',kind:2,material:0,bounds:[[-8.7,-1.28,1.70],[-6.18,1.28,3.88]],sections:[],position:[-7.44,0,2.79],size:[1.26,1.28,1.09],rounding:p.cabRoofRoundness,basis:'specified cab shape below roof envelope; window cuts not surveyed'},
+  {id:'skin.tender',group:'tender',label:'自有煤水车箱体',kind:3,material:0,bounds:[[-16.25,-1.28,1.28],[-9.2,1.28,3.75]],sections:[],position:[-12.725,0,2.515],size:[3.525,1.28,1.235],rounding:p.tenderShoulder,basis:'specified continuous tank exterior, official axle anchors remain independent'},
+  {id:'cab.glass.design',group:'cab',label:'自有侧窗材质候选',kind:4,material:2,bounds:[[-8.01,-1.281,2.82],[-6.81,1.281,3.49]],sections:[],position:[-7.41,0,3.155],size:[.60,1.281,.335],rounding:.12,basis:'specified optical stand-in, window frame and transmission unresolved'},
+  boxPart('design.footplate','踏板与下缘设计','main',6,1,[-2.075,0,1.22],[6.725,1.3716,.11],.04),
+  boxPart('design.tender.base','煤水车下缘设计','tender',7,1,[-12.725,0,1.25],[3.625,1.3716,.11],.04),
+  boxPart('design.cab.roof','驾驶室顶盖设计','cab',7,1,[-7.45,0,3.9139],[1.35,1.33,.0739],.06),
+  boxPart('design.front.beam','前端横梁外观设计','main',7,5,[4.6,0,1.17],[.12,1.35,.20],.04),
+  boxPart('design.tender.beam','煤水车后端横梁外观设计','tender',7,5,[-16.45,0,1.17],[.12,1.35,.20],.04),
+  {id:'design.exhaust',label:'自有排气口形状',group:'main',kind:8,material:1,bounds:[[.82,-.22,3.69],[1.38,.22,3.97]],position:[1.1,0,3.83],size:[.28,.22,.14],sections:[],rounding:0,basis:'specified hollow outlet silhouette; not surveyed pipe construction'}
  ];
 }
+function boxPart(id,label,group,kind,material,position,size,rounding){return{id,label,group,kind,material,position,size,rounding,sections:[],bounds:[position.map((v,i)=>v-size[i]),position.map((v,i)=>v+size[i])],basis:'specified exterior design within official envelope; not a measured structural or buffer assembly'};}
 // Shape-preserving C1 cubic Hermite profile. Flat-at-every-station smoothstep
 // caused repeated shoulder bulges; slopes are shared across adjacent segments.
 export function monotoneSlopes(rows){
@@ -47,8 +55,10 @@ export function roundedBox(q,b,r){const d=q.map((v,i)=>Math.abs(v)-(b[i]-r));ret
 export function field(part,p){
  const q=p.map((v,i)=>v-part.position[i]);let d;
  if(part.kind===5){const a=Math.hypot(q[0],q[2])-part.size[0],b=Math.abs(q[1])-part.size[1];return Math.min(Math.max(a,b),0)+Math.hypot(Math.max(a,0),Math.max(b,0));}
+ if(part.kind===8){const a=(Math.hypot(q[0]/part.size[0],q[1]/part.size[1])-1)*Math.min(part.size[0],part.size[1]),b=Math.abs(q[2])-part.size[2],outer=Math.min(Math.max(a,b),0)+Math.hypot(Math.max(a,0),Math.max(b,0)),inner=(Math.hypot(q[0]/(part.size[0]-.07),q[1]/(part.size[1]-.07))-1)*Math.min(part.size[0]-.07,part.size[1]-.07);return Math.max(outer,-inner);}
  if(part.kind===1){const[w,c,h]=profileAt(part,p[0]);const radial=(Math.pow(Math.pow(Math.abs(p[1]/w),2.4)+Math.pow(Math.abs((p[2]-c)/h),2.4),1/2.4)-1)*Math.min(w,h);d=Math.max(radial,-6.2-p[0],p[0]-4.4);for(const x of [0,-2.2098,-4.4196])d=Math.max(d,1.085-Math.hypot(p[0]-x,p[2]-1.016));return d;}
  d=roundedBox(q,part.size,part.rounding);
+ if(part.kind===6){for(const x of [0,-2.2098,-4.4196])d=Math.max(d,1.085-Math.hypot(p[0]-x,p[2]-1.016));}
  if(part.kind===2){const cavity=roundedBox(q,[1.15,1.17,1.02],Math.max(.03,part.rounding-.04));d=Math.max(d,-cavity);const win=roundedBox([p[0]+7.41,p[1],p[2]-3.155],[.60,2,.335],.12);d=Math.max(d,-win);}
  if(part.kind===3){const coal=roundedBox([p[0]+10.65,p[1],p[2]-3.8],[1.05,1.08,.65],.16);d=Math.max(d,-coal);}
  if(part.kind===4){d=Math.max(d,.0-(Math.abs(p[1])-1.245));}
@@ -59,6 +69,7 @@ export function wheelDatums(phase=0){
  return DIMENSIONS.axisX.map((x,i)=>({id:i<6?'loco.axis.'+(i+1):'tender.axis.'+(i-5),center:[x,0,r[i]],radius:r[i],phase:phase*1.016/r[i],lateralWheelBack:null,profile:null,role:'analytic datum, not rendered wheel solid'}));
 }
 export function safetyBound(part){
+ if(part.kind===8)return 2;
  if(part.kind!==1)return 1;
  let slope=0;for(let i=0;i<part.sections.length-1;i++){const a=part.sections[i],b=part.sections[i+1],dx=b[0]-a[0];slope=Math.max(slope,1.5*(Math.abs(b[1]-a[1])+Math.abs(b[2]-a[2])+Math.abs(b[3]-a[3]))/dx);}
  // Conservative practical distance estimate, NOT a certified exact signed distance.
