@@ -16,6 +16,11 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-geography-workbench/elevator-learning-qa-r01
+      - name: Complete the one verified Ubuntu runtime dependency
+        run: |
+          mkdir -p elevator-qa-text
+          apt-cache policy libnotify4 | tee elevator-qa-text/apt-policy.txt
+          sudo apt-get install -y --no-install-recommends libnotify4 2>&1 | tee elevator-qa-text/apt-install.txt
       - name: Check existing display and libraries then observe official runtime
         env:
           QA_LOG_DIR: elevator-qa-text
@@ -26,6 +31,8 @@ jobs:
         with:
           name: elevator-teacher-text-${{ github.sha }}
           path: |
+            elevator-qa-text/apt-policy.txt
+            elevator-qa-text/apt-install.txt
             elevator-qa-text/result.json
             elevator-qa-text/dependencies.txt
             elevator-qa-text/execution.txt
