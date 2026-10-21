@@ -1,0 +1,280 @@
+{
+  "schema": "lip-r03-history-counterevidence-review@1",
+  "scope": "Read-only historical source/review audit. No medical research, product mutation, remote write, new rendering, or visual approval.",
+  "requestedBaseCommit": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+  "lineageCorrection": {
+    "finding": "The R06 lineage carries R01 lrFolds via R02 -> R04 -> R05 -> R06; independent PR307/R03 is not in that directory tree or lineage.",
+    "directEvidence": [
+      "R06 workbench root directory has no lip-realism-r03.",
+      "R04 README explicitly continues R02 and states independent parallel R03.",
+      "R05 README explicitly continues R04 and states independent parallel R03.",
+      "R06's inherited R02 source has the exact original R01 lrFolds."
+    ],
+    "parallelR03": {
+      "pr": 307,
+      "base": "57cfade66fb37c260df1dcd836f5cd239cccef41",
+      "source": "64035bd49dae68e7d7451b44340d65842134e4b5",
+      "build": "292e7f3aa6293a35752e17211c227adb59f2c384",
+      "evidence": "b4a20d115dfcb865375fc8618a1d7f584426ac3e",
+      "handoff": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "moduleSHA256": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919"
+    }
+  },
+  "originAndSelection": {
+    "originalSourceCommit": "1f50adc107320e593aaefb4c5d8698b55c29a51d",
+    "legacyFoldsBytes": 1538,
+    "legacyFoldsSHA256": "88290cd35217db6a6cb056b886a8750bbaab60ba7333d5657af5554bba11d855",
+    "equalFunctions": [
+      "R01 initial 1f50adc1",
+      "R01 second 5fb576a6",
+      "R01 final in 57cfade6",
+      "R06 inherited R02 at aa4a4efe",
+      "retained old-function comparison in R03 e0349af4"
+    ],
+    "parameters": {
+      "primaryPeakBeforeOtherMultipliersMetres": [
+        5e-06,
+        1.1e-05
+      ],
+      "gaussianWidthMM": [
+        0.035,
+        0.065
+      ],
+      "cellSpacingMM": 1.05,
+      "footprintGaussianFactor": 0.3,
+      "globalVisibilityFullUntilMMPerPixel": 0.055,
+      "globalVisibilityZeroAtMMPerPixel": 0.34,
+      "defaultFoldStrength": 0.55
+    },
+    "meaning": "Width is the Gaussian denominator parameter, not full visible groove width. The 5-11 micrometre coefficient is not final depth: branch overlap, along envelope, width/filterWidth, global visibility, edge envelope, foldStrength, strain, wetness and material mask act afterwards. Cell spacing is not exact adjacent-groove spacing because roots jitter.",
+    "documentedReason": "Original source explicitly calls spacing and heights engineering initial values. R01 research/README discuss pixel filtering and avoiding regular deep grooves. R03 implementation review calls the same Gaussian/filter/visibility values inherited. No quantitative derivation or tuning sweep for these exact thresholds was located in the reviewed committed records.",
+    "notSupported": "The reviewed history does not support saying these values were selected after a stronger/wider fine-normal candidate failed. They were unchanged from first committed introduction."
+  },
+  "productionHistory": {
+    "R01": [
+      {
+        "sha": "1f50adc107320e593aaefb4c5d8698b55c29a51d",
+        "change": "Introduced all current fine-function dimensions and global visibility."
+      },
+      {
+        "sha": "5fb576a6fcb87c7a51d7f9ec5ecda07de81fb71f",
+        "change": "Altered colour/edge and added coarse native geometry scale .35; fine function byte-identical."
+      },
+      {
+        "sha": "544ec81bcef6185a553df138585c7059e832a122",
+        "change": "Preserved native calibration in archives; fine function byte-identical."
+      }
+    ],
+    "R03": [
+      {
+        "sha": "3e5d1dfb11cb8a40982e3ff964d06d2ff13d4d0f",
+        "change": "Only committed R03 production-source introduction found in path history through e0349af4. Subsequent failures/recovery changed QA budgets/readback, not relief dimensions."
+      }
+    ],
+    "coverage": "GitHub commits endpoint queried for each exact source path at the fixed branch head, per_page=100; returned 3 R01 and 1 R03 entries. No claim about uncommitted or other unnamed experiments."
+  },
+  "actualPastCounterevidence": [
+    {
+      "case": "R01 first actual run 39017094445",
+      "basis": "Historical R01 RESEARCH.md sections 9-10 and README, plus first-to-second source diff.",
+      "observedByOriginalReview": "Strong deep red block and hard lip boundary; inherited native main grooves continued to produce long bright streaks. First run also failed one outside-ROI pixel by 1/255.",
+      "action": "Second source added native geometry COARSE_RELIEF_SCALE=.35 and changed colour/edge, leaving fine lrFolds unchanged. Later record reports lower-lip bright streak reduction.",
+      "boundary": "This is evidence against reinstating old coarse geometry merely to obtain more detail. Multiple simultaneous changes prevent claiming a clean isolated amplitude experiment. It is not a rejected high-amplitude shader-fine-groove candidate."
+    },
+    {
+      "case": "R03 diagnosis of legacy lrFolds",
+      "basis": "R03 RESEARCH.md",
+      "observedByOriginalReview": "Each 1.05 mm cell contains a main groove with similar extent and exactly one branch, leaving topological/vertical repetition.",
+      "boundary": "Boosting current fine amplitude alone can reveal the same repeated organization more strongly; this is a mechanism-based concern, not a new rendering verdict."
+    },
+    {
+      "case": "R03 accepted bounded increment",
+      "basis": "R03 independent final QA visualReview and root manual UI review.",
+      "candidate": {
+        "spacingMM": 1.1,
+        "mainPeakMetres": [
+          6e-06,
+          1e-05
+        ],
+        "mainGaussianWidthMM": [
+          0.045,
+          0.08
+        ],
+        "mainPresence": 0.82,
+        "branchPresenceConditional": 0.35,
+        "branchRelativePeak": 0.25,
+        "independentCrossPresence": 0.45,
+        "crossPeakMetres": [
+          2e-06,
+          3.5e-06
+        ],
+        "globalFadeUnchanged": true
+      },
+      "observedByOriginalReview": "Slight reduction of continuous straight vertical fine streak regularity. Maximum per-channel beauty delta 5-6/255 over four matched scenes. Rich natural branching was not clearly established; coarse grooves, highlights, broad pink field and soft edge remained.",
+      "boundary": "The slightly broader R03 main Gaussian widths were not rejected in these reviews. No substantial realism claim, no user visual approval, no productionReady. Geometry, albedo and roughness stayed exact.",
+      "cost": "Reported synchronized SwiftShader render/readback median ratio 1.1926052183, near fixed 1.20 budget; not user GPU FPS."
+    },
+    {
+      "case": "R03 recorded failed runs",
+      "runs": [
+        "39102640232",
+        "39103596354"
+      ],
+      "causes": [
+        "Render and readPixels in different callbacks produced empty first baseline frame.",
+        "24-minute QA budget expired while starting fresh reader, after 12/15 tests."
+      ],
+      "boundary": "These are QA/runtime completion failures, not evidence of grooves being rejected for white edges, regular carving, or shimmer."
+    }
+  ],
+  "limitsAndDecision": {
+    "originalHistoricalPNGViewedInThisNarrowAudit": false,
+    "observationsAttribution": "Visual findings above belong to the original frozen historical reviews; this audit independently read those reviews and recomputed source hashes.",
+    "noLocatedEvidence": [
+      "A parameter sweep establishing physiological dimensions.",
+      "A wider/stronger R01 fine-normal candidate that was visually rejected before current values were chosen.",
+      "A tested removal of global visibility separately from Gaussian footprint filtering.",
+      "A recorded motion-flicker rejection for these exact fine fields."
+    ],
+    "decision": "Continue the already isolated GPU diagnostic; history neither forbids that test nor approves retaining a new field. Keep native coarse-geometry attenuation separate. Evaluate resolved structure and scene-scale/motion behaviour before any amplitude decision. R03's organization and archive/performance constraints cannot be silently imported into R06.",
+    "approvedProductChange": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "sources": [
+    {
+      "file": "R03_README.md",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/README.md",
+      "gitBlobSHA1": "751ea3d553dc1419f4bf7b0e99745b7d7abc1d10",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/README.md",
+      "bytes": 10162,
+      "sha256": "d4f64532483ea8fb7ce68867ac0d9eeb40cecc7dd1208a12f49a8345d2713e25"
+    },
+    {
+      "file": "R03_RESEARCH.md",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/RESEARCH.md",
+      "gitBlobSHA1": "86bdfef4c3dbce018b99244f880696b45ecbdb39",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/RESEARCH.md",
+      "bytes": 3664,
+      "sha256": "86c74a0fe99a9d4bd5c18ff6c570a1715a20c2e747ed923b035e962a82a9f7fa"
+    },
+    {
+      "file": "R03_IMPLEMENTATION_REVIEW.json",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/IMPLEMENTATION_REVIEW.json",
+      "gitBlobSHA1": "619f8b10b0c6de600fb3115246f5ec6ebdfdae81",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/IMPLEMENTATION_REVIEW.json",
+      "bytes": 5580,
+      "sha256": "4c64c4927347717cf51ab0727e7f945f354fdfeeac6f09b6f436c4f99a2eade5"
+    },
+    {
+      "file": "R03_LipSurface.js",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/LipSurface.js",
+      "gitBlobSHA1": "0daa2907fb18a0915d29d97475c0c0e4ac8c76e6",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/LipSurface.js",
+      "bytes": 33273,
+      "sha256": "c3bc194d725628746395c9a8f68ad7ab74ba0470568ef639410d6962a3a32919"
+    },
+    {
+      "file": "R03_INDEPENDENT_SOURCE_REVIEW.json",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/INDEPENDENT_SOURCE_REVIEW.json",
+      "gitBlobSHA1": "7e8f4656a37b010c2fe9d89ba954204898452215",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/INDEPENDENT_SOURCE_REVIEW.json",
+      "bytes": 2944,
+      "sha256": "bd842b2145aa007da6616688792ff1dee5f3cbaad0520d076d293895ac6f409a"
+    },
+    {
+      "file": "R03_INDEPENDENT_QA_REVIEW.json",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/INDEPENDENT_QA_REVIEW_39106266137.json",
+      "gitBlobSHA1": "b28ca4e0476f545cecfa6769131343f5aed27da2",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/INDEPENDENT_QA_REVIEW_39106266137.json",
+      "bytes": 63735,
+      "sha256": "84c8e8575c4aa0acc97f5448bf0be92e4d19c06b6b6fea59fb145409867e1781"
+    },
+    {
+      "file": "R03_ROOT_MANUAL_UI_REVIEW.json",
+      "ref": "e0349af4301760ac79807b9d1aa0b9eb0d6447ea",
+      "path": "kaopu-unified-human-workbench/lip-realism-r03/ROOT_MANUAL_UI_REVIEW_39106266137.json",
+      "gitBlobSHA1": "5b219cf1f5ad65cf9147ac190c4ebe198ed19e01",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/e0349af4301760ac79807b9d1aa0b9eb0d6447ea/kaopu-unified-human-workbench/lip-realism-r03/ROOT_MANUAL_UI_REVIEW_39106266137.json",
+      "bytes": 2921,
+      "sha256": "62c2c8a653ee07f02cae91528e11ea3404bdee3377e80a87afdccff358f76102"
+    },
+    {
+      "file": "R01_README.md",
+      "ref": "57cfade66fb37c260df1dcd836f5cd239cccef41",
+      "path": "kaopu-unified-human-workbench/lip-realism-r01/README.md",
+      "gitBlobSHA1": "72bc68912afe1d4a2a89d4c09d61c5157a6da524",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/57cfade66fb37c260df1dcd836f5cd239cccef41/kaopu-unified-human-workbench/lip-realism-r01/README.md",
+      "bytes": 6075,
+      "sha256": "a6c58554fc4957a2ee4f7c7e3a669b222c3194fc5ceb8be6ba7f8f0dd2ae5422"
+    },
+    {
+      "file": "R01_RESEARCH.md",
+      "ref": "57cfade66fb37c260df1dcd836f5cd239cccef41",
+      "path": "kaopu-unified-human-workbench/lip-realism-r01/RESEARCH.md",
+      "gitBlobSHA1": "311bcb638e2aae1af7fc0f8034eae0e6debcb857",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/57cfade66fb37c260df1dcd836f5cd239cccef41/kaopu-unified-human-workbench/lip-realism-r01/RESEARCH.md",
+      "bytes": 25134,
+      "sha256": "2222e820a096eeb8d7ee7f1abc8ae69624718826a445f1a09af79d73547b10de"
+    },
+    {
+      "file": "R01_LipSurface.js",
+      "ref": "57cfade66fb37c260df1dcd836f5cd239cccef41",
+      "path": "kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "gitBlobSHA1": "c9bcaf85e4d70ae810ff8024e7d727924ccea4ab",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/57cfade66fb37c260df1dcd836f5cd239cccef41/kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "bytes": 26325,
+      "sha256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d"
+    },
+    {
+      "file": "R01_INITIAL_LipSurface.js",
+      "ref": "1f50adc107320e593aaefb4c5d8698b55c29a51d",
+      "path": "kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "gitBlobSHA1": "a01875a0e82432161f941b3368bec24db4dfd625",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/1f50adc107320e593aaefb4c5d8698b55c29a51d/kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "bytes": 21458,
+      "sha256": "8d077ce58d664ff2100a9e2c7e7b4cb697bd2238aa861d717c7f95a91fa0432d"
+    },
+    {
+      "file": "R01_SECOND_LipSurface.js",
+      "ref": "5fb576a6fcb87c7a51d7f9ec5ecda07de81fb71f",
+      "path": "kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "gitBlobSHA1": "00d17c34fb64252081b17b0033f216b365ac1bc1",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/5fb576a6fcb87c7a51d7f9ec5ecda07de81fb71f/kaopu-unified-human-workbench/lip-realism-r01/LipSurface.js",
+      "bytes": 22837,
+      "sha256": "8ce8a7c84138e3dd240030e58b76ea79d9f0ccca246b20077ad587d47259592d"
+    },
+    {
+      "file": "R06_INHERITED_R02_LipSurface.js",
+      "ref": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+      "path": "kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+      "gitBlobSHA1": "85c1e0232e0de53ab3d80e2d59db716f464a327b",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/aa4a4efeb96e80e737a6c7ee129085f7f83df69c/kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+      "bytes": 30243,
+      "sha256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8"
+    }
+  ],
+  "readOnlyChainSources": [
+    {
+      "ref": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+      "path": "kaopu-unified-human-workbench/lip-corner-r06/README.md",
+      "gitBlobSHA1": "60cab6c5353b58daaad9bccb6e25c69e8deeba99"
+    },
+    {
+      "ref": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+      "path": "kaopu-unified-human-workbench/lip-motion-r05/README.md",
+      "gitBlobSHA1": "2dd0a6ef5bc381e997911989cb806bb9c16bc06e"
+    },
+    {
+      "ref": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
+      "path": "kaopu-unified-human-workbench/lip-inner-r04/README.md",
+      "gitBlobSHA1": "250a4563b8073e9e0de50153eda17b6532a0f0fa"
+    }
+  ]
+}
