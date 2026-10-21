@@ -69,7 +69,7 @@ jobs:
           p=Path('kaopu-unified-human-workbench/lip-surface-r08')
           build=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           m=json.loads((p/'BUILD_MANIFEST.json').read_text())
-          r={'schema':'kaopu/lip-surface-candidate-build@1','sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':build,'previewSHA256':m['previewSHA256'],'publicURL':'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/lip-surface-r08/preview.html','workflowRun':int(os.environ['GITHUB_RUN_ID']),'technicalVerification':'pending','visualAcceptance':False,'productionReady':False}
+          r={'schema':'kaopu/lip-surface-candidate-build@2','candidate':'02','implementation':m['surfaceImplementation'],'archiveSchema':m['archiveSchema'],'sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':build,'previewSHA256':m['previewSHA256'],'publicURL':'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/lip-surface-r08/preview.html','workflowRun':int(os.environ['GITHUB_RUN_ID']),'technicalVerification':'pending','visualAcceptance':False,'productionReady':False}
           (p/'CANDIDATE_BUILD.json').write_text(json.dumps(r,indent=2)+'\n')
           PYRECEIPT
       - name: Install fixed browser runtime
@@ -81,7 +81,7 @@ jobs:
           MODE: public
           SOURCE_SHA: ${{ github.sha }}
           PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-surface-r08/preview.html
-          QA_OUT: kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+          QA_OUT: kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02
           QA_BUDGET_MS: 900000
         run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-surface-r08/verification/verify-surface.cjs
       - name: Verify candidate completion without aesthetic promotion
@@ -89,7 +89,7 @@ jobs:
           node - <<'JSVERIFY'
           const fs=require('fs'),assert=require('assert/strict');
           const p='kaopu-unified-human-workbench/lip-surface-r08/';
-          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-01/qa.json'));
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-02/qa.json'));
           const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
           const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
           assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
@@ -102,8 +102,13 @@ jobs:
           assert.equal(q.sourceSHA,process.env.GITHUB_SHA);assert.equal(q.buildSHA,process.env.BUILD_SHA);
           assert.equal(q.previewSHA256,m.previewSHA256);assert.equal(q.verifierSHA256,a.reviewedFiles['verification/verify-surface.cjs']);
           assert.equal(q.independentR06.length,2);assert.equal(q.downloads.length,3);
-          assert.equal(q.factorComparisons.variants.length,2);
-          for(const k of ['nativeStateExact','solverReportsAndCallsExact','pixelsRestoredExact','actualShaderRestoredExact'])assert.equal(q.factorComparisons[k],true,k);
+          assert.equal(q.implementation,'native-lip-surface@2');assert.equal(q.archiveSchema,'kaopu/lip-surface@2');assert.deepEqual(m.surfaceModes,['r08','r06']);
+          assert.deepEqual(q.legacyRestore.map(x=>x.kind),['r06','compatible-r02']);
+          for(const item of q.legacyRestore)for(const k of ['stateExact','frameExact','actualOriginalShaderAndAllActiveUniformsExact','surfaceOff'])assert.equal(item[k],true,item.kind+' '+k);
+          assert.equal(q.malformed.length,5);assert(q.malformed.every(x=>x.rejected&&x.stateUnchanged&&x.controlAndSolverUnchanged&&x.nativeRenderCounterUnchanged));
+          assert(q.malformed.some(x=>x.kind==='rejected-surface-v1'&&x.sourceFixture.sha256==='f0947821ca3a5ed13e8ecc8bca4873b3ba601b70568f2d562bc256b4fb667d61'));
+          assert(q.malformed.some(x=>x.kind==='old-implementation-with-v2-schema'));
+          assert.deepEqual(q.actualCounts,{testGroups:14,savedNativePNGs:17,nativeImageReadbacks:21,naturalUIScreenshots:1,actualDOMDownloads:4,rejectedArchiveCases:5,legacyArchiveCases:2});
           assert(q.inheritedControlRegression.actualDOMDownload&&q.inheritedControlRegression.historicalArchiveRetainsCorrectComparisons);
           assert(q.freshRestore.stateExact&&q.freshRestore.frameExact);
           assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
@@ -118,8 +123,8 @@ jobs:
           CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
           test "$CURRENT_HEAD" = "$BUILD_SHA"
           git add -f -- kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_BUILD.json
-          if test -d kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01; then
-            git add -f -- kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+          if test -d kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02; then
+            git add -f -- kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Record actual public R08 candidate evidence [skip ci]"
@@ -130,7 +135,7 @@ jobs:
         with:
           name: lip-surface-r08-public-${{ github.sha }}
           path: |
-            kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+            kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02
             kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_BUILD.json
             kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_ANCHOR.json
             kaopu-unified-human-workbench/lip-surface-r08/BUILD_MANIFEST.json
