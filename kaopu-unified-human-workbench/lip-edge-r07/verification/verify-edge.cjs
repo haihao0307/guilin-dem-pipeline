@@ -1,5 +1,5 @@
 'use strict';
-/* Public, bounded R07 candidate verification. Twenty saved native GPU images,
+/* Public, bounded R07 candidate verification. Twenty original plus six diagnostic saved native GPU images,
  * one fresh archive readback and one natural UI screenshot. Reuses the frozen
  * R06 native proof path; no numerical response is promoted to visual acceptance.
  * The reviewed mechanism gates a bounded lower-return correction, preserves
@@ -28,6 +28,8 @@ assert(Number.isFinite(budgetMS)&&budgetMS>=120000&&budgetMS<=960000,'Invalid bo
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
 const geometryProbeSource=fs.readFileSync(path.join(__dirname,'EdgeGeometryProbe.js'),'utf8');
 const GEOMETRY_PROBE_SHA='3f8d4b5a162695d4cbaec4e88f489454d74b1e7b6e55d3eea8a239af1fd365c5';
+const exposureProbeSource=fs.readFileSync(path.join(__dirname,'EdgeExposureProbe.js'),'utf8');
+const EXPOSURE_PROBE_SHA='18d9e511bdd11cfdeb0c0eb282cdc0ecc91ed42d735c9eb7d27f5242f7c58922';
 fs.mkdirSync(out,{recursive:true});
 const q={schema:'kaopu/lip-edge-public-qa@1',version:VERSION,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
   verifierSHA256:sha(fs.readFileSync(__filename)),startedAt:new Date().toISOString(),budgetMS,
@@ -46,7 +48,7 @@ const q={schema:'kaopu/lip-edge-public-qa@1',version:VERSION,mode:'public',sourc
     'Independently loaded immutable R06 must match R07-off at speaking and pucker after explicit camera/light alignment; the R05 ancestor retains its own frozen source identity.',
     'Fresh archive checks restore the actual half-progress jaw person, lipEdge/lipCorner/lipMotion layers and controls. Camera and lighting are explicitly aligned, not claimed to be owned by the archive.',
     'Pixel response and solver completion do not establish aesthetic quality or measured physiological correctness. The actual frames need visual review.',
-    'Twenty saved native images, one fresh native readback and one original 1280x900 browser UI screenshot; no physical-phone performance claim.'
+    'Twenty original saved native images plus six frozen single-factor diagnostic/restoration frames, one fresh native readback and one original 1280x900 browser UI screenshot; no physical-phone performance claim.'
   ]};
 let browser,page,context,fatalTimer,seq=0;const active=[],transportPages=new Map(),pendingTransport=new Set();let transportSequence=0;
 function qaNumberReplacer(key,value){return typeof value==='number'&&!Number.isFinite(value)?{__qaNonFiniteNumber:Number.isNaN(value)?'NaN':value===Infinity?'Infinity':'-Infinity'}:value;}
@@ -110,6 +112,9 @@ async function provenance(){
   assert.equal(sha(geometryProbeSource),GEOMETRY_PROBE_SHA,'Reviewed read-only geometry probe bytes changed');
   const helperFile='EdgeGeometryProbe-source.js';fs.writeFileSync(path.join(out,helperFile),geometryProbeSource);
   q.helpers={'EdgeGeometryProbe.js':{sourcePath:'verification/EdgeGeometryProbe.js',sourceCommit:SOURCE,sha256:GEOMETRY_PROBE_SHA,bytes:Buffer.byteLength(geometryProbeSource),file:helperFile,role:'Read-only verification helper; not appended to the product or included in its material/geometry implementation'}};
+  assert.equal(sha(exposureProbeSource),EXPOSURE_PROBE_SHA,'Reviewed frozen-surface exposure probe bytes changed');
+  fs.writeFileSync(path.join(out,'EdgeExposureProbe-source.js'),exposureProbeSource);
+  q.helpers['EdgeExposureProbe.js']={sourcePath:'verification/EdgeExposureProbe.js',sourceCommit:SOURCE,sha256:EXPOSURE_PROBE_SHA,bytes:Buffer.byteLength(exposureProbeSource),file:'EdgeExposureProbe-source.js',role:'Temporary single-factor shading diagnosis only; absent from the product append and fully restored before any native update'};
   const preview=fs.readFileSync(previewPath),manifest=JSON.parse(fs.readFileSync(manifestPath));
   assert.equal(manifest.version,VERSION);assert.equal(manifest.sourceCommit,SOURCE);assert.equal(manifest.baselineSource,BASE_SOURCE);assert.equal(manifest.baselineBuild,BASE_BUILD);assert.equal(manifest.baselineSHA256,BASE_HASH);
   assert.equal(manifest.baselineRestorationExact,true);assert.equal(sha(preview),manifest.previewSHA256);
@@ -394,6 +399,49 @@ async function geometrySample(tag,frame){
     nativeSegments:result.native.sections.map(s=>s.totalSegments),drawSegments:result.draw.sections.map(s=>s.totalSegments)};
   q.geometryProbes||=[];q.geometryProbes.push(record);checkpoint();return record;
 }
+async function exposureReport(){
+  await page.waitForFunction(()=>{const r=__R07_EDGE_EXPOSURE__.report();return r.pendingHashes===0||r.errors.length>0;},null,{timeout:30000});
+  const r=await page.evaluate(()=>__R07_EDGE_EXPOSURE__.report());assert.equal(r.pendingHashes,0);assert.equal(r.errors.length,0);return r;
+}
+async function exposureWindow(tag,original,originalState,originalShader){
+  // This window freezes the already rendered native person. No state(),
+  // controller/solver report, pose, update or parameter setter is called while
+  // a temporary compile hook is attached. Those APIs enforce product owners.
+  const solvers=()=>page.evaluate(()=>({edge:__LIP_EDGE_SOLVER__.report(),corner:__LIP_CORNER_SOLVER__.report(),motion:__LIP_MOTION_SOLVER__.report()}));
+  const beforeSolvers=await solvers(),originalGPU=await page.evaluate(()=>__LE_VERIFY__.shaders());
+  const install=await page.evaluate(()=>__R07_EDGE_EXPOSURE__.install(__IDENTITY_QA__.viewer(),__IDENTITY_QA__.model()));
+  assert.equal(install.mode,'original');assert.equal(install.wrapperAttached,false);
+  const variants=[];let restoration;
+  try{
+    for(const mode of ['no-oral-tint','no-depth-visibility']){
+      await page.evaluate(mode=>__R07_EDGE_EXPOSURE__.setMode(mode),mode);
+      const frame=await capture(tag+'-'+mode),probe=await exposureReport(),shader=await shaderRecord(tag+'-'+mode,true),gpu=await page.evaluate(()=>__LE_VERIFY__.shaders());
+      assert.equal(probe.mode,mode);assert.equal(probe.wrapperAttached,true);assert.equal(probe.hashEvidenceComplete,true);
+      for(const [key,value] of Object.entries(probe.invariants))if(key==='changedBuffers')assert.equal(value.length,0);else assert.equal(value,true,'Frozen exposure input: '+key);
+      const compiled=probe.compileRecords.at(-1);assert.equal(compiled.modeAtCompile,mode);assert.equal(compiled.addedUniforms.length,0);
+      for(const key of ['exactUniqueOriginalAnchors','exactlyOneStatementReplaced','allOtherFragmentBytesExact','tintOutputAssignmentPreserved','existingUniformObjectsPreserved','requiredNativeUniformsSameOriginal','vertexShaderUntouchedByDiagnostic'])assert.equal(compiled[key],true,'Exposure compile contract: '+key);
+      const replacement=mode==='no-oral-tint'?{anchor:'psBase=mix(psBase,liColor,liWeight);',value:'psBase=psBase; /* R07_EDGE_EXPOSURE_DIAGNOSTIC */'}:{anchor:'outgoingLight*=mix(1.,liVisibility,liWeight);',value:'outgoingLight=outgoingLight; /* R07_EDGE_EXPOSURE_DIAGNOSTIC */'};
+      assert.equal(gpu.expanded.length,originalGPU.expanded.length);
+      for(const actual of gpu.expanded){const prior=originalGPU.expanded.find(x=>x.type===actual.type);assert(prior);
+        if(actual.type==='fragment'){assert.equal(prior.source.split(replacement.anchor).length,2,'Diagnostic fragment anchor is not unique');assert.equal(actual.source,prior.source.replace(replacement.anchor,replacement.value),'Actual GPU fragment contains changes beyond the single declared factor');}
+        else assert.equal(actual.source,prior.source,'Diagnostic changed actual GPU vertex shader');}
+      assert.deepEqual(shader.nativeUniforms,originalShader.nativeUniforms,'Diagnostic changed original native uniforms');
+      assert.notEqual(frame.sha256,original.sha256,'Declared factor produced no actual native image response');
+      const file=tag+'-'+mode+'-probe.json';json(file,probe);
+      variants.push({mode,frameName:frame.name,frameSHA256:frame.sha256,pngSHA256:frame.pngSHA256,difference:difference(original,frame),probeFile:file,probeSHA256:sha(fs.readFileSync(path.join(out,file))),shader,actualGPUOnlyDeclaredFragmentReplacement:true,actualGPUVertexExact:true});
+    }
+  }finally{restoration=await page.evaluate(()=>__R07_EDGE_EXPOSURE__.restore());}
+  const restored=await capture(tag+'-exposure-restored'),finalState=await state(),finalSolvers=await solvers(),finalShader=await shaderRecord(tag+'-exposure-restored',true),probe=await exposureReport();
+  assert.deepEqual(finalState,originalState,'Frozen-surface exposure window did not restore complete native state');
+  assert.deepEqual(finalSolvers,beforeSolvers,'Frozen-surface exposure window changed solver state or evaluation calls');
+  assert.equal(restored.sha256,original.sha256,'Frozen-surface exposure window did not restore original pixels');
+  assert.deepEqual(shaderFingerprint(finalShader),shaderFingerprint(originalShader),'Frozen-surface exposure window did not restore original GPU shader/uniforms');
+  assert.equal(probe.mode,'original');assert.equal(probe.wrapperAttached,false);
+  const restoredProof=probe.restoration||restoration.restoration;
+  for(const key of ['compileFunctionExact','cacheFunctionExact','compileOwnDescriptorExact','cacheOwnDescriptorExact','cacheValueExact','diagnosticsExact','allProtectedInputsExact','r05AndR06StillEnabledValid','r05CallsUnchanged','r06CallsUnchanged','r07StillEnabledValid','r07CallsUnchanged'])assert.equal(restoredProof[key],true,'Exposure hook restoration invariant: '+key);
+  q.exposureComparisons||=[];q.exposureComparisons.push({tag,originalFrame:original.name,originalSHA256:original.sha256,variants,restoredFrame:restored.name,restoredSHA256:restored.sha256,restoration:probe.restoration||restoration.restoration,
+    nativeStateExact:true,solverReportsAndCallsExact:true,originalPixelsExact:true,originalShaderExact:true,meaning:'Single-factor diagnosis on frozen candidate geometry; neither shading variant is a product modification or accepted look.'});checkpoint();
+}
 async function closePage(p,label){if(!p)return;await drainTransportObservations(p,label+' before GPU drain');if(p.isClosed())return;const r=await bounded(label+' GPU drain',()=>p.evaluate(()=>{window.lifelikeIdle?.pause?.();window.lipWorkbench?.stop?.();const renderer=window.__IDENTITY_QA__?.viewer?.()?.renderer;if(!renderer)return{available:false};const gl=renderer.getContext(),before=gl.getError(),lost=gl.isContextLost(),frame=renderer.info.render.frame;gl.finish();if(gl.drawingBufferWidth&&gl.drawingBufferHeight)gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));return{available:true,before,after:gl.getError(),lostBefore:lost,lostAfter:gl.isContextLost(),frameBefore:frame,frameAfter:renderer.info.render.frame};}),90000);
   if(r.available){assert.equal(r.before,0);assert.equal(r.after,0);assert.equal(r.lostBefore,false);assert.equal(r.lostAfter,false);assert.equal(r.frameBefore,r.frameAfter);}
   await drainTransportObservations(p,label+' before page close');const binding=transportPages.get(p);if(binding)binding.closing=true;
@@ -490,6 +538,7 @@ function checkSolver(report,mode){
 async function publicChecks(){
   const primary=await load(PUBLIC_URL,'R07 public',true,true);page=primary.page;
   await page.addScriptTag({content:geometryProbeSource});
+  await page.addScriptTag({content:exposureProbeSource});
   const pairs={},matrix=[['neutral','macro',1],['jaw','macro',1],['jaw','oblique',1],['speak','macro',1],['pucker','oblique',1],['pucker','macro',1],...[.25,.5,.75].map(progress=>['jaw','oblique',progress])];
   q.geometryMutationScope={allowedAttributeLeaves:['geometry.attributes.position','geometry.attributes.normal','geometry.attributes.l19State','geometry.attributes.l19Detail','drawGeometry.attributes.position','drawGeometry.attributes.normal','drawGeometry.attributes.l19State','drawGeometry.attributes.l19Detail'],canonicalPositions:false,canonicalFaces:false,indices:false,groups:false,semanticInputArrays:false,nativeBeforeLocalInput:false,originalContactPairIDs:false,finalBodyAndNonSkinPositions:false,finalContactPositions:false,material:false,shader:false,camera:false,lighting:false};
   let referenceShader;
@@ -500,6 +549,7 @@ async function publicChecks(){
     if(amount===1&&view==='macro'&&['jaw','speak'].includes(pose))await geometrySample(tag+'-r07',on);
     const onShader=await shaderRecord(tag+'-r07',pose==='speak'&&amount===1),onFingerprint=shaderFingerprint(onShader);
     if(referenceShader)assert.deepEqual(onFingerprint,referenceShader,'R07 pose changed the original material/shader/native uniform state');else referenceShader=onFingerprint;
+    if(amount===1&&view==='macro'&&['jaw','speak'].includes(pose))await exposureWindow(tag+'-r07',on,onState,onShader);
     await page.evaluate(()=>__LE_VERIFY__.compare('r06'));
     const off=await capture(tag+'-r06'),offState=await state(),offReport=await page.evaluate(()=>edgeLip.report());assertNativeState(offState);checkSolver(offReport,'r06');
     if(amount===1&&view==='macro'&&['jaw','speak'].includes(pose))await geometrySample(tag+'-r06',off);
@@ -631,7 +681,8 @@ async function publicChecks(){
       archiveOwnsCameraAndLighting:false,comparisonCameraAndLightingExplicitlyAligned:true};
     q.freshInterventions=await page.evaluate(()=>__LE_VERIFY__.report());assert(q.freshInterventions.functionsOriginal);return q.freshRestore;
   });
-  assert.equal(q.frames.filter(x=>x.saved).length,20);assert.equal(q.frames.length,21);assert.equal(q.tests.length,15);assert(q.workbenchUI?.actualBrowserScreenshot);
+  assert.equal(q.frames.filter(x=>x.saved).length,26);assert.equal(q.frames.length,27);assert.equal(q.tests.length,15);assert(q.workbenchUI?.actualBrowserScreenshot);
+  assert.equal(q.exposureComparisons.length,2);assert(q.exposureComparisons.every(x=>x.nativeStateExact&&x.solverReportsAndCallsExact&&x.originalPixelsExact&&x.originalShaderExact));
   assert.deepEqual(q.geometryProbes.map(x=>x.tag),['jaw-macro-r07','jaw-macro-r06','speak-macro-r07','speak-macro-r06'],'Expected four read-only sections tied to the existing actual frames');
 }
 
