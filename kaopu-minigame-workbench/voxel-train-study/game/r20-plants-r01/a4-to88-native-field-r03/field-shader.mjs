@@ -18,10 +18,12 @@ float boxSDF(vec3 p,vec3 b,float r){vec3 q=abs(p)-(b-vec3(r));return length(max(
 vec3 profile(float x){int k=0;for(int i=0;i<6;i++){if(i<uSectionCount-2&&x>uSections[i+1].x)k=i+1;}vec4 a=uSections[k],b=uSections[k+1];float dx=b.x-a.x,t=clamp((x-a.x)/dx,0.0,1.0),t2=t*t,t3=t2*t;return (2.0*t3-3.0*t2+1.0)*a.yzw+(t3-2.0*t2+t)*dx*uSlopes[k]+(-2.0*t3+3.0*t2)*b.yzw+(t3-t2)*dx*uSlopes[k+1];}
 float field(vec3 p){
  if(uKind==5){vec3 q=p-uPos;vec2 d=vec2(length(q.xz)-uSize.x,abs(q.y)-uSize.y);return min(max(d.x,d.y),0.0)+length(max(d,0.0));}
+ if(uKind==9){vec3 q=p-uPos;float a=(length(q.yz/uSize.yz)-1.0)*uSize.z,b=(length(q.yz/(uSize.yz-.05))-1.0)*(uSize.z-.05);return max(max(a,-b),max(abs(q.x)-uSize.x,-q.z));}
+ if(uKind==10){vec3 q=p-uPos;float top=3.50+.035*cos(p.x*18.0)*sin(p.y*17.0)+.025*sin(p.x*9.0+p.y*13.0);return max(max(abs(q.x)-uSize.x,abs(q.y)-uSize.y),max(3.15-p.z,p.z-top));}
  if(uKind==8){vec3 q=p-uPos;float a=(length(q.xy/uSize.xy)-1.0)*min(uSize.x,uSize.y),b=abs(q.z)-uSize.z;vec2 d=vec2(a,b);float outer=min(max(d.x,d.y),0.0)+length(max(d,0.0)),inner=(length(q.xy/(uSize.xy-.07))-1.0)*min(uSize.x-.07,uSize.y-.07);return max(outer,-inner);}
  if(uKind==1){vec3 a=profile(p.x);vec2 n=vec2(abs(p.y/a.x),abs((p.z-a.y)/a.z));float d=(pow(pow(n.x,2.4)+pow(n.y,2.4),1.0/2.4)-1.0)*min(a.x,a.z);d=max(d,max(-6.2-p.x,p.x-4.4));for(int i=0;i<3;i++)d=max(d,1.085-length(vec2(p.x+float(i)*2.2098,p.z-1.016)));return d;}
  vec3 q=p-uPos;float d=boxSDF(q,uSize,uRounding);
- if(uKind==6)for(int i=0;i<3;i++)d=max(d,1.085-length(vec2(p.x+float(i)*2.2098,p.z-1.016)));
+ if(uKind==6){d=abs(p.z-1.22)-.08;for(int i=0;i<3;i++)d=min(d,abs(length(vec2(p.x+float(i)*2.2098,p.z-1.016))-1.16)-.075);for(int i=0;i<3;i++)d=max(d,1.085-length(vec2(p.x+float(i)*2.2098,p.z-1.016)));d=max(d,max(max(abs(q.x)-uSize.x,abs(q.y)-uSize.y),1.11-p.z));}
  if(uKind==2){d=max(d,-boxSDF(q,vec3(1.15,1.17,1.02),max(.03,uRounding-.04)));d=max(d,-boxSDF(p-vec3(-7.41,0,3.155),vec3(.60,2,.335),.12));}
  if(uKind==3)d=max(d,-boxSDF(p-vec3(-10.65,0,3.8),vec3(1.05,1.08,.65),.16));
  if(uKind==4)d=max(d,1.245-abs(p.y));

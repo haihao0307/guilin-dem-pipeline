@@ -21,7 +21,10 @@ jobs:
           sparse-checkout: |
             kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-to88-native-field-r03
       - name: CPU geometry and provenance boundaries
-        run: node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-to88-native-field-r03/tests/*.test.mjs
+        run: |
+          set -o pipefail
+          mkdir -p kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-to88-native-field-r03/evidence
+          node --test kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-to88-native-field-r03/tests/*.test.mjs | tee kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-to88-native-field-r03/evidence/cpu-results.log
       - name: Install pinned official browser test packages
         run: |
           python -m pip install playwright==1.57.0 Pillow==12.0.0
