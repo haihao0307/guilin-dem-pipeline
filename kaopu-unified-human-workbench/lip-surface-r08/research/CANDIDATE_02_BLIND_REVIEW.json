@@ -1,0 +1,165 @@
+{
+  "schema": "kaopu/lip-surface-candidate-02-blind-review@1",
+  "status": "complete-unblinded-after-independent-review",
+  "date": "2026-10-21",
+  "sourceCommit": "70457c86c20e724235705ff45fd919ac822dba8e",
+  "buildCommit": "dcded3a1b471d32ce191296939b6266e6d41e62a",
+  "evidenceCommit": "ef970bc114be9470e082ced03f061ce9e346063b",
+  "reviewerType": "Independent AI agent; not an external human study.",
+  "methodLimits": [
+    "Reviewer viewed seven ordered A/B pairs without the pair mapping, QA, source or parameter values in this review.",
+    "The same reviewer had seen earlier local experimental variants. This is order/label blindness, not a new naive reviewer or a double-blind human study.",
+    "Only static images were supplied. No temporal stability verdict follows."
+  ],
+  "originalReport": {
+    "filename": "public-review.json",
+    "sha256": "02be4f41405d246126cdc355097b4345908114b6e8f66f1235cf9f654d73f41d",
+    "bytes": 10039,
+    "utf8Text": "{\n  \"review_type\": \"公开候选原生图独立顺序盲审\",\n  \"language\": \"zh-CN\",\n  \"reviewer\": \"r08_fine_blind\",\n  \"scope\": {\n    \"method\": \"使用 view_image 按 P1 至 P7 顺序逐对查看，每对按 A、B 顺序显示原生图片。共亲自查看 14 张图，未编辑或缩放生成其他图片，未计算像素差。\",\n    \"images\": [\n      \"P1-A.png\", \"P1-B.png\", \"P2-A.png\", \"P2-B.png\", \"P3-A.png\", \"P3-B.png\",\n      \"P4-A.png\", \"P4-B.png\", \"P5-A.png\", \"P5-B.png\", \"P6-A.png\", \"P6-B.png\", \"P7-A.png\", \"P7-B.png\"\n    ],\n    \"blind_integrity\": \"本轮只读取指定的 14 张盲审图片；未读取映射、QA、源码、实验参数或其他版本图片文件，未推断 A/B 与候选身份的关系。\",\n    \"reference_basis\": \"沿用此前亲自查看的 VISIA 中间 standard panel 与健康低脱屑 score 0/1 的组织特征；不进行跨人物、光照和尺度的数值色匹配。\",\n    \"static_only\": true,\n    \"temporal_limit\": \"这些材料全部是静态图片。不同视角或张口状态的单帧不能证明运动连续性、抗闪烁、变形中的稳定性或动画质量通过。\"\n  },\n  \"pair_preferences\": [\n    {\"pair\": \"P1\", \"preference\": \"A\", \"strength\": \"小幅\", \"confidence\": \"中等\"},\n    {\"pair\": \"P2\", \"preference\": \"B\", \"strength\": \"小幅\", \"confidence\": \"中等偏低\"},\n    {\"pair\": \"P3\", \"preference\": \"不可辨\", \"strength\": \"无稳定差异\", \"confidence\": \"对不可稳定区分有中等置信度\"},\n    {\"pair\": \"P4\", \"preference\": \"B\", \"strength\": \"很弱\", \"confidence\": \"偏低\"},\n    {\"pair\": \"P5\", \"preference\": \"A\", \"strength\": \"很弱\", \"confidence\": \"偏低\"},\n    {\"pair\": \"P6\", \"preference\": \"B\", \"strength\": \"很弱\", \"confidence\": \"偏低\"},\n    {\"pair\": \"P7\", \"preference\": \"B\", \"strength\": \"很弱\", \"confidence\": \"偏低\"}\n  ],\n  \"pair_reviews\": {\n    \"P1\": {\n      \"view\": \"正面闭口近景\",\n      \"preference\": \"A\",\n      \"observed_difference\": \"A 的下唇左侧、中央及上唇局部有更容易读到的轻细纹；B 的相应区域更连续、更柔滑。\",\n      \"concrete_benefit\": \"A 减少了一点唇面过于空滑的感觉，细节存在但尚未明显成为独立主效果。收益集中在近景局部表面。\",\n      \"natural_organization\": \"纹理的显隐和局部长度有变化，较能留在柔软底面里；仍缺乏较宽沟纹与细小组织共同构成的层次。\",\n      \"scratch_risk\": \"低至中等。下唇左侧仍有细竖线倾向，但本对未见强烈、突出的刻痕退化。\",\n      \"counterevidence\": \"大块柔和亮区、均匀粉色色面及唇缘观感基本相同，整体蜡感仍明显。\",\n      \"decision\": \"小幅偏好 A，可以保留为局部小改进。\"\n    },\n    \"P2\": {\n      \"view\": \"斜向闭口近景\",\n      \"preference\": \"B\",\n      \"observed_difference\": \"B 的上唇中部和下唇中央可见略清楚的轻细纹；A 在这些位置更平滑。\",\n      \"concrete_benefit\": \"从斜向观看时，B 的唇面略少完全连续的光滑感，局部纹理仍较克制。\",\n      \"natural_organization\": \"方向大体随可见唇面延伸，没有在此单帧中出现明显粗裂或过密刷纹；但组织信息仍偏薄。\",\n      \"scratch_risk\": \"低至中等。少量细线可以被单独读出，尚未达到明显破坏自然度的程度。\",\n      \"counterevidence\": \"整体体积、高光形态及唇缘几乎没有可感知升级，优势在正常整体观看时较弱。\",\n      \"decision\": \"小幅偏好 B，只支持局部细节收益。\"\n    },\n    \"P3\": {\n      \"view\": \"正面全脸尺度\",\n      \"preference\": \"不可辨\",\n      \"observed_difference\": \"原生显示尺度下，无法稳定辨认两张嘴唇的质感差异，也无法稳定选择一张更自然。\",\n      \"concrete_benefit\": \"未观察到可可靠报告的收益。\",\n      \"natural_organization\": \"嘴唇在全脸中的占比使微小纹理不再成为可读因素；两张的整体人物观感处于同一档。\",\n      \"scratch_risk\": \"此尺度下未能稳定区分风险，不应把看不见风险解释为风险已经消除。\",\n      \"counterevidence\": \"近景中的细纹优势没有转化为本对可辨认的整体真人化。\",\n      \"decision\": \"不分胜负，不把近景收益外推到全脸效果。\"\n    },\n    \"P4\": {\n      \"view\": \"正面张口近景\",\n      \"preference\": \"B\",\n      \"observed_difference\": \"B 的上唇中部和下唇中央出现更多可读的轻细线；A 的这些区域更光滑。两张的大尺度唇面和口内形态观感相近。\",\n      \"concrete_benefit\": \"B 给张开的唇面补了一点轻微表面组织，局部较少完全平滑的色面。\",\n      \"natural_organization\": \"细节没有在本单帧中变成明显粗大裂痕；但部分线条较独立，组织融合仍不充分。\",\n      \"scratch_risk\": \"中等。上唇中央的短线与下唇中央少量细长线容易被单独注意到，收益与刻线风险之间的余量较小。\",\n      \"counterevidence\": \"下唇宽亮区仍然平滑；张口后的整体真实性没有明显提升。\",\n      \"decision\": \"很弱地偏好 B，可以作为局部微改保留，但不构成强验收证据。\"\n    },\n    \"P5\": {\n      \"view\": \"斜向张口近景\",\n      \"preference\": \"A\",\n      \"observed_difference\": \"A 的下唇中央、偏左区域以及上唇中部可读到更轻细的纹理；B 的底面更平滑。\",\n      \"concrete_benefit\": \"A 在此斜向张口状态下略多一点唇面细节，尚未形成大片粗糙或颗粒覆盖。\",\n      \"natural_organization\": \"细线总体较轻，局部组织方向仍可接受；并未建立充分的中等尺度沟纹层次。\",\n      \"scratch_risk\": \"低至中等。上唇中部和下唇中央有少量独立细线，仍需克制。\",\n      \"counterevidence\": \"两张的主高光、唇缘和整体柔滑感非常接近，整体改进弱。\",\n      \"decision\": \"很弱地偏好 A，只认可近景局部收益。\"\n    },\n    \"P6\": {\n      \"view\": \"正面张口近景\",\n      \"preference\": \"B\",\n      \"observed_difference\": \"B 的上唇和下唇中央细纹更容易辨认，A 的对应表面更连续平滑。\",\n      \"concrete_benefit\": \"B 略减少了唇面空滑感，新增细节在本帧仍相对克制。\",\n      \"natural_organization\": \"没有观察到明显粗裂或整片刷纹，但细线与较宽组织之间的关系仍不充分。\",\n      \"scratch_risk\": \"中等。部分上唇短细线和下唇细长线仍有独立刻画的风险。\",\n      \"counterevidence\": \"本对与其他张口图的相似性不能用于判断时间连续性；静态优势也很小，不能声称动态表现通过。\",\n      \"decision\": \"很弱地偏好 B；此结果只支持本单帧中的局部微改。\"\n    },\n    \"P7\": {\n      \"view\": \"斜向、唇形有明显收缩变化的近景\",\n      \"preference\": \"B\",\n      \"observed_difference\": \"B 的上唇中部和下唇局部有更清楚的细线，表面纹理更可读；A 的部分区域更平滑。\",\n      \"concrete_benefit\": \"B 略增加了局部唇面组织感，在现有较明显的唇面起伏之外补充了轻微细节。\",\n      \"natural_organization\": \"细纹大体仍随可见唇面延伸，但局部较密、较直的线条更容易独立于底面。\",\n      \"scratch_risk\": \"中等，是本组偏好判断中需要更保守的一对。部分上唇和下唇细线存在刷线或刻线倾向，继续增强会很容易失去净收益。\",\n      \"counterevidence\": \"细纹更可见不等于变形后的组织更真实；本帧总体自然度优势很弱，无法支持强结论。\",\n      \"decision\": \"很弱地偏好 B，保留风险说明，不把它作为整体质感显著改善的证据。\"\n    }\n  },\n  \"overall_assessment\": {\n    \"local_small_improvement\": {\n      \"can_retain\": true,\n      \"scope\": \"多数近景中的偏好侧可以保留为局部小改进。可见收益主要是少量唇面区域不再完全空滑，轻细纹更可读，并且本组没有出现占据整片唇面的粗粒或强刻线退化。\",\n      \"mapping_condition\": \"本报告没有解盲。A/B 仅在各自配对内有效，不能把所有 A 或所有 B 当作同一个版本。若解盲后多数偏好侧对应同一候选，可据此支持该候选的局部小改进；版本归并应由拥有映射的协调者完成。\",\n      \"gain_size\": \"小，且多对只达到很弱的偏好。收益集中在近景，P3 全脸尺度不可稳定区分。\",\n      \"confidence\": \"中等偏低。静态近景支持有限正向，不能将微弱选择包装成明显质量跃升。\"\n    },\n    \"overall_obvious_human_realism\": {\n      \"achieved\": false,\n      \"reason\": \"多数版本仍由宽柔高光、大面积均匀色面和柔糊唇缘主导。较宽沟纹、细小起伏、微表面和局部亮暗没有充分组成自然组织，整体蜡感没有可靠而显著地消失。\",\n      \"full_face_evidence\": \"P3 在全脸尺度不可稳定区分，是对整体明显真人化主张的直接限制。\"\n    },\n    \"scratch_risk\": \"未见像强刻线方案那样明显的全面退化，但风险并未消失。张口及唇形变化近景中的少量上唇短线、下唇细长线仍可能被读成独立刻画，不能继续无条件加深。\",\n    \"dynamic_validation\": {\n      \"performed\": false,\n      \"anti_flicker_pass\": \"无法判断\",\n      \"reason\": \"只有静态单帧，没有连续运动或时间采样证据。\"\n    },\n    \"final_decision\": \"有条件认可为局部小改进；不认可达到整体明显真人化，也不认可动态抗闪烁已通过。\"\n  },\n  \"reference_interpretation\": {\n    \"healthy_target\": \"真人标准图与低脱屑参考强调的是不同尺度沟纹、沟间表面和细小亮暗共同形成的组织；无需引入严重干裂或起皮。\",\n    \"remaining_gap\": \"本组的轻细纹比完全平滑区域略好，但仍不足以补齐这种组织关系。\",\n    \"color_limit\": \"不根据参考人物颜色要求当前人物做数值匹配。\"\n  },\n  \"authorized_actions_performed\": \"仅写入本 public-review.json；未修改产品、图片、其他报告或外部状态。\"\n}\n"
+  },
+  "postReviewMapping": [
+    {
+      "blind": "P1-A.png",
+      "original": "neutral-macro-r08.png",
+      "sha256": "9ad34cc78328516110b955c628dd378ed643715b279d373c8c250319f3e0bb1e"
+    },
+    {
+      "blind": "P1-B.png",
+      "original": "neutral-macro-r06.png",
+      "sha256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a"
+    },
+    {
+      "blind": "P2-A.png",
+      "original": "neutral-oblique-r06.png",
+      "sha256": "47add0b6001c9d4014c477f6452b4ae5f4aba8b16cb60e13c59602b2343b3693"
+    },
+    {
+      "blind": "P2-B.png",
+      "original": "neutral-oblique-r08.png",
+      "sha256": "2f665485266c1e44141d71456996c7ea599e3e8901f5cb8e1434149ad9eecf61"
+    },
+    {
+      "blind": "P3-A.png",
+      "original": "neutral-front-r08.png",
+      "sha256": "1a8d9af819e54cca731f3d5ac34bb12f1dc44e426a91f05985e2c3334cbdb7b7"
+    },
+    {
+      "blind": "P3-B.png",
+      "original": "neutral-front-r06.png",
+      "sha256": "1a8d9af819e54cca731f3d5ac34bb12f1dc44e426a91f05985e2c3334cbdb7b7"
+    },
+    {
+      "blind": "P4-A.png",
+      "original": "jaw-macro-r06.png",
+      "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236"
+    },
+    {
+      "blind": "P4-B.png",
+      "original": "jaw-macro-r08.png",
+      "sha256": "21b7ce7caf4764067372f0c1b7adfc4aa85bf26793e18a79611db689cc05a1bf"
+    },
+    {
+      "blind": "P5-A.png",
+      "original": "jaw-oblique-r08.png",
+      "sha256": "ce6efb8ba2e8293a79030823940e886bbef8b44b838fed88ed4009235c526a6b"
+    },
+    {
+      "blind": "P5-B.png",
+      "original": "jaw-oblique-r06.png",
+      "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59"
+    },
+    {
+      "blind": "P6-A.png",
+      "original": "speak-macro-r06.png",
+      "sha256": "6e0161151560e2f363c403851cef17ba58640142b23c76fe88d2e5bf0b62bd03"
+    },
+    {
+      "blind": "P6-B.png",
+      "original": "speak-macro-r08.png",
+      "sha256": "ab39d50cb171c41e423dc1e7deec72ce9f66ae13f005c4a60661c2ab37186061"
+    },
+    {
+      "blind": "P7-A.png",
+      "original": "pucker-oblique-r06.png",
+      "sha256": "0134f219be0074f821d8e9f3712b5214e7ad6e1bb0fd3490281a8be821e448a2"
+    },
+    {
+      "blind": "P7-B.png",
+      "original": "pucker-oblique-r08.png",
+      "sha256": "2e5df1a440b61f879e7242f0d63715bcf7895679c61e88307c6cb1401aed967f"
+    }
+  ],
+  "postReviewResolution": [
+    {
+      "pair": "P1",
+      "preference": "A",
+      "strength": "小幅",
+      "confidence": "中等",
+      "preferredOriginal": "neutral-macro-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    },
+    {
+      "pair": "P2",
+      "preference": "B",
+      "strength": "小幅",
+      "confidence": "中等偏低",
+      "preferredOriginal": "neutral-oblique-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    },
+    {
+      "pair": "P3",
+      "preference": "不可辨",
+      "strength": "无稳定差异",
+      "confidence": "对不可稳定区分有中等置信度",
+      "preferredOriginal": null,
+      "preferredVersion": null,
+      "interpretation": "No stable visible difference; original R06/R08 full-face PNGs are byte-identical."
+    },
+    {
+      "pair": "P4",
+      "preference": "B",
+      "strength": "很弱",
+      "confidence": "偏低",
+      "preferredOriginal": "jaw-macro-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    },
+    {
+      "pair": "P5",
+      "preference": "A",
+      "strength": "很弱",
+      "confidence": "偏低",
+      "preferredOriginal": "jaw-oblique-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    },
+    {
+      "pair": "P6",
+      "preference": "B",
+      "strength": "很弱",
+      "confidence": "偏低",
+      "preferredOriginal": "speak-macro-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    },
+    {
+      "pair": "P7",
+      "preference": "B",
+      "strength": "很弱",
+      "confidence": "偏低",
+      "preferredOriginal": "pucker-oblique-r08.png",
+      "preferredVersion": "r08",
+      "interpretation": "A weak qualitative preference, not a statistical experiment or aesthetic score."
+    }
+  ],
+  "conclusion": {
+    "boundedLocalGainCanBeRetained": true,
+    "overallObviousHumanRealism": false,
+    "fullFaceBenefit": false,
+    "temporalStabilityTested": false,
+    "productionReady": false,
+    "reason": "Six close-up preferences resolve to candidate-02 R08, with small or very weak benefit. The full-face pair is indistinguishable. Pucker and open-mouth fine-line engraving risk remains. Do not turn this result into a claim of significant overall realism."
+  }
+}
