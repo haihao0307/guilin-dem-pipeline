@@ -2,6 +2,7 @@
  * Caller owns geometry, light transport, normal conversion and renderer lifecycle.
  * No meshes, texture assets, geometry queries, BRDF or lighting are imported.
  */
+import {periodicBox2D,PERIODIC_COVERAGE_GLSL} from './periodic-coverage.mjs';
 import {CERAMIC_SOURCE_GLSL,METAL_SOURCE_GLSL,CONCRETE_PLASTER_SOURCE_GLSL} from './sources/field-sources.mjs';
 // This floor slice uses only a design painted door; optional timber remains in its original workbench, not a runtime dependency.
 
@@ -35,8 +36,8 @@ export function normalizeFloorMaterialOptions(input={}){
 export function sampleTileCell(role,pointM,footprintM=0,options={}){
  if(role!==10&&role!==11)throw new RangeError('Tile role must be 10 or 11');
  vector(pointM,3,-1e7,1e7,'pointM');if(!Number.isFinite(footprintM)||footprintM<0)throw new RangeError('Nonnegative physical footprint required');
- const p=normalizeFloorMaterialOptions(options),tile=role===10?p.floorTileM:p.exteriorTileM,joint=role===10?p.floorJointM:p.exteriorJointM,uv=role===10?[pointM[0],pointM[2]]:pointM.slice(0,2),pitch=tile.map(x=>x+joint),cell=uv.map((v,i)=>Math.floor(v/pitch[i])),local=uv.map((v,i)=>v-(cell[i]+.5)*pitch[i]),edge=local.map((v,i)=>tile[i]/2-Math.abs(v)),aa=Math.max(.000001,footprintM*.55),coverage=edge.map(d=>smooth(-aa,aa,d));
- const tileMask=coverage[0]*coverage[1],d=Math.min(...edge),bevel=smooth(0,p.bevelWidthM,d),height=-p.groutRecessM+tileMask*(p.groutRecessM-p.bevelDropM*(1-bevel));
+ const p=normalizeFloorMaterialOptions(options),tile=role===10?p.floorTileM:p.exteriorTileM,joint=role===10?p.floorJointM:p.exteriorJointM,uv=role===10?[pointM[0],pointM[2]]:pointM.slice(0,2),pitch=tile.map(x=>x+joint),cell=uv.map((v,i)=>Math.floor(v/pitch[i])),local=uv.map((v,i)=>v-(cell[i]+.5)*pitch[i]),edge=local.map((v,i)=>tile[i]/2-Math.abs(v)),filtered=periodicBox2D(uv,tile,joint,[footprintM,footprintM]);
+ const tileMask=filtered.coverage,d=Math.min(...edge),bevel=smooth(0,p.bevelWidthM,d),height=-p.groutRecessM+tileMask*(p.groutRecessM-p.bevelDropM*(1-bevel));
  return {role,units:'metres',uvM:uv,cell,localM:local,tileM:[...tile],jointM:joint,pitchM:pitch,tileMask,bevelHeightM:height,geometryDisplacementM:0};
 }
 
@@ -65,30 +66,49 @@ struct FloorMaterialSample {
 ${metalSource}
 ${ceramicSource}
 ${plasterSource}
+${PERIODIC_COVERAGE_GLSL}
 
 FloorMaterialSample fmDielectric(vec3 color,float rough,float height,float coat,float coatRough){return FloorMaterialSample(color,rough,0.,height,coat,coatRough,color,vec3(.04),vec2(-1.),1.,vec2(0.),1.);}
 // Derivative of the cubic smoothstep, in inverse metres.
 float fmSmoothDerivative(float a,float b,float x){float q=clamp((x-a)/(b-a),0.,1.);return x>a&&x<b?6.*q*(1.-q)/(b-a):0.;}
-FloorMaterialSample fmCeramic(vec2 uv,float fp,float objectId,bool floorTile){
+FloorMaterialSample fmCeramic(vec2 uv,vec2 footprint,float objectId,bool floorTile){
+ float fp=max(footprint.x,footprint.y);
  vec2 size=floorTile?${val(p.floorTileM)}:${val(p.exteriorTileM)};float joint=floorTile?${val(p.floorJointM)}:${val(p.exteriorJointM)};
  vec2 pitch=size+joint,cell=floor(uv/pitch),q=uv-(cell+.5)*pitch,edge=size*.5-abs(q);
- float aa=max(.000001,fp*.55);vec2 cover=smoothstep(vec2(-aa),vec2(aa),edge);float mask=cover.x*cover.y;
+ vec3 integrated=pcBox2D(uv,size,vec2(joint),max(footprint,vec2(.000001)));float mask=integrated.x;
  fmR04_ctPosition=vec3(q,0.);fmR04_ctObjectNormal=vec3(0,0,1);fmR04_ctCell=vec3(cell,objectId);
  fmR04_ctSize=size;fmR04_ctWear=0.;fmR04_ctStain=0.;fmR04_ctWet=0.;fmR04_ctVariant=1.;fmR04_ctGlaze=1.;fmR04_ctBaseRoughness=floorTile?.34:.29;fmR04_ctMode=0.;
  fmR04_ctColor=floorTile?${val(p.floorColor)}:${val(p.exteriorColor)};fmR04_ctBody=vec3(.48,.32,.20);
  vec3 color;float rough,height,coat,coatRough,chip,deposit;
  fmR04_ctEvaluate(color,rough,height,coat,coatRough,chip,deposit);
+ // Keep the original R04 resolved output; subpixel pooling and random firing
+ // use their area/ensemble means. This is a statistical filter of those two
+ // micro-variations, not an exact integral of every random tile's finite domain.
+ float seed=cell.x*3.71+cell.y*13.9+objectId*41.3;
+ float firing=fmR04_ctHash(seed+8.2)-.5;
+ float pool=1.-smoothstep(.0007,.003,min(edge.x,edge.y));
+ // Integral of pooling over a rectangular tile: density of min(edge) is
+ // 2*(size.x+size.y-4*d)/area. Integral pooling=0.00185,
+ // integral d*pooling=0.0000018435 for the unchanged 0.7..3 mm cubic.
+ float poolMean=2.*((size.x+size.y)*.00185-4.*.0000018435)/(size.x*size.y);
+ float poolGate=1.-smoothstep(.0007,.006,fp);
+ float firingGate=1.-smoothstep(.2,1.5,max(footprint.x/pitch.x,footprint.y/pitch.y));
+ color+=fmR04_ctColor*(.085*firing*(firingGate-1.)-.045*(mix(poolMean,pool,poolGate)-pool));
+
  // New finite-footprint receiving filter. The original R04 has no LOD system.
  // A resolved glazed face has its original 0.32 mm film; remove only its constant
  // datum, and attenuate unresolved waviness. This never changes ray geometry.
  float reliefGate=1.-smoothstep(.001,.012,fp);
  float faceHeight=(height-.00032)*reliefGate;
  float d=min(edge.x,edge.y),bevel=smoothstep(0.,${val(p.bevelWidthM)},d);
- float top=${val(p.groutRecessM)}-${val(p.bevelDropM)}*(1.-bevel);
+ float bevelGate=1.-smoothstep(${val(p.bevelWidthM*.5)},${val(p.bevelWidthM*2)},fp);
+ // A cubic edge band has integral b/2 and first moment 3*b*b/20.
+ float bevelMean=2.*((size.x+size.y)*${val(p.bevelWidthM*.5)}-4.*${val(p.bevelWidthM*p.bevelWidthM*.15)})/(size.x*size.y);
+ float top=${val(p.groutRecessM)}-${val(p.bevelDropM)}*mix(bevelMean,1.-bevel,bevelGate);
  float bevelHeight=-${val(p.groutRecessM)}+mask*top;
- vec2 dMask=vec2(fmSmoothDerivative(-aa,aa,edge.x)*cover.y,fmSmoothDerivative(-aa,aa,edge.y)*cover.x)*-sign(q);
+ vec2 dMask=integrated.yz;
  vec2 dEdge=edge.x<=edge.y?vec2(-sign(q.x),0.):vec2(0.,-sign(q.y));
- vec2 bevelGradient=dMask*top+mask*${val(p.bevelDropM)}*fmSmoothDerivative(0.,${val(p.bevelWidthM)},d)*dEdge;
+ vec2 bevelGradient=dMask*top+mask*${val(p.bevelDropM)}*bevelGate*fmSmoothDerivative(0.,${val(p.bevelWidthM)},d)*dEdge;
  // Grout is a new metric field adaptation of R04's private mortar receiver;
  // no per-tile Mesh, recessed mesh plane or hidden geometric bevel is imported.
  float grain=fmR06_mt_kn(vec3(uv*2300.,objectId));float grainGate=fmR06_mt_resolved(2300.,fp);
@@ -119,15 +139,17 @@ FloorMaterialSample fmDoor(vec3 localM,vec3 localNormal,float footprintM){
 // localMetres: role 10 uses X/Z floor chart; role 11/12/14 uses X/Y face chart;
 // role 13 uses rigid member-local XYZ. localNormal is in THAT same frame.
 // objectId must be stable in [0,65535] and may not contain camera/time values.
-FloorMaterialSample sampleFloorMaterial(float role,vec3 localMetres,vec3 localNormal,float physicalFootprintM,float stableObjectId){
- float fp=max(physicalFootprintM,.000001);
+FloorMaterialSample sampleFloorMaterialFootprint(float role,vec3 localMetres,vec3 localNormal,vec2 footprint,float stableObjectId){
+ float fp=max(max(footprint.x,footprint.y),.000001);
  if(role<9.5||role>14.5)return fmDielectric(vec3(1.,0.,1.),1.,0.,0.,1.);
- if(role<10.5)return fmCeramic(localMetres.xz,fp,stableObjectId,true);
- if(role<11.5)return fmCeramic(localMetres.xy,fp,stableObjectId,false);
+ if(role<10.5)return fmCeramic(localMetres.xz,footprint,stableObjectId,true);
+ if(role<11.5)return fmCeramic(localMetres.xy,footprint,stableObjectId,false);
  if(role<12.5)return fmWallPaint(localMetres,fp);
  if(role<13.5)return fmMetal(localMetres,localNormal,fp);
  return fmDoor(localMetres,localNormal,fp);
 }
+FloorMaterialSample sampleFloorMaterial(float role,vec3 localMetres,vec3 localNormal,float physicalFootprintM,float stableObjectId){return sampleFloorMaterialFootprint(role,localMetres,localNormal,vec2(physicalFootprintM),stableObjectId);}
+
 `;
 }
 export const FLOOR_MATERIAL_GLSL=buildFloorMaterialGLSL();
