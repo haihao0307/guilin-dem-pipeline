@@ -26,6 +26,8 @@ manifest = json.loads((ROOT / 'original-manifest.json').read_text())
 candidate = (ROOT / 'index.html').read_text()
 assert "window.__LM__={cancelGeneration," in candidate
 candidate = candidate.replace("window.__LM__={cancelGeneration,", "window.__LM__={auditData:()=>activeData,cancelGeneration,", 1)
+# Test-only delay exposes the otherwise brief upload-to-first-frame cancellation window.
+candidate = candidate.replace("async function completeFrame(){", "async function completeFrame(){if(window.__QA_DELAY_NEXT_FRAME__){const delay=window.__QA_DELAY_NEXT_FRAME__;window.__QA_DELAY_NEXT_FRAME__=0;window.__QA_FRAME_WAITING__=true;await new Promise(r=>setTimeout(r,delay));window.__QA_FRAME_WAITING__=false;}", 1)
 (ROOT / 'index.html').write_text(candidate)
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -77,6 +79,14 @@ with sync_playwright() as p:
     select(2);page.wait_for_timeout(800);select(3);page.wait_for_timeout(800);select(0)
     r=ready(0,20);page.wait_for_timeout(4000);assert read()['preset']==0 and read()['triangles']==manifest['entries'][0]['triangles'];record('rapid_switch_latest_wins',r)
 
+    accepted=page.evaluate("()=>window.__LM__.getState()")
+    imported={**accepted,'recipe':manifest['entries'][2]['recipe'],'view':{**accepted['view'],'heightScale':1.55,'theta':accepted['view']['theta']+.25}}
+    page.evaluate("s=>{window.__QA_RESTORE_DONE__=false;window.__LM__.restoreState(s).then(()=>window.__QA_RESTORE_DONE__=true)}",imported)
+    page.wait_for_timeout(1000);page.locator('#cancelGeneration').click();ready(0,8)
+    page.wait_for_function("()=>window.__QA_RESTORE_DONE__")
+    assert page.evaluate("()=>window.__LM__.getState()")['view']==accepted['view']
+    record('cancelled_import_cannot_overwrite_view',read())
+
     select(2);r=ready(2,180);assert r['mode']=='generated';assert r['cacheEntries']==1
     resources=page.evaluate("()=>performance.getEntriesByType('resource').map(r=>r.name)")
     assert not any('/cache-preview/P03.lmc' in url for url in resources),resources
@@ -90,12 +100,31 @@ with sync_playwright() as p:
 
     select(0);ready(0,20);select(2);r=ready(2,8);assert r['mode']=='bounded-memory';record('bounded_memory_revisit_P03',r)
 
+    select(0);ready(0,20)
+    fingerprint=page.evaluate("()=>window.__LM__.bufferFingerprint()")
+    page.evaluate("()=>{window.__QA_DELAY_NEXT_FRAME__=2000}");select(2)
+    page.wait_for_function("()=>window.__QA_FRAME_WAITING__===true")
+    assert read()['triangles']==manifest['entries'][2]['triangles']
+    page.locator('#cancelGeneration').click();r=ready(0,8)
+    assert page.evaluate("()=>window.__LM__.bufferFingerprint()") == fingerprint
+    page.wait_for_timeout(2500);assert read()['preset']==0 and read()['triangles']==manifest['entries'][0]['triangles']
+    record('first_frame_cancel_restores_previous_mesh',r)
+
     select(1);r=ready(1,180);assert r['mode']=='generated' and r['cacheEntries']==1;record('P02_replaces_single_cached_result',r)
     select(2)
     page.wait_for_function("()=>document.querySelector('#step').textContent.includes('采样函数材质')",timeout=180000)
     assert read()['busy'];page.locator('#cancelGeneration').click();r=ready(1,8);page.wait_for_timeout(3000)
     assert read()['preset']==1 and read()['seed']==211 and read()['cacheEntries']==1
     record('GPU_material_cancel_restores_P02',r)
+    fingerprint=page.evaluate("()=>window.__LM__.bufferFingerprint()")
+    accepted=page.evaluate("()=>window.__LM__.getState()")
+    page.evaluate("()=>window.__LM__.setMaterial({shellWarp:window.__LM__.state.shellWarp-.01})")
+    page.wait_for_function("()=>window.__LM__.isSurfaceUpdating")
+    select(2);page.wait_for_timeout(500);page.locator('#cancelGeneration').click();r=ready(1,8)
+    page.wait_for_timeout(2000)
+    assert page.evaluate("()=>window.__LM__.getState()")['view']==accepted['view']
+    assert page.evaluate("()=>window.__LM__.bufferFingerprint()") == fingerprint
+    record('surface_refresh_switch_cancel_is_consistent',r)
     assert not errors and not read()['errors'],errors
     page.screenshot(path=str(OUT/'P02-after-GPU-cancel.png'))
     record('final_no_errors',{'pageErrors':errors,'runtimeErrors':read()['errors'],'requestFailures':failed,'final':read()})
