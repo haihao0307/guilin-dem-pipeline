@@ -65,6 +65,35 @@ function envelope(rows,{minimum=0,knots=17}={}) {
   return {values:Array.from(values),sample};
 }
 
+/** Positive C2 tensor envelope in height and periodic azimuth. The full
+ * measured requirement is assigned to every active coefficient, so the
+ * convex combination never falls below an input requirement. Directions
+ * without a requirement no longer inherit the opposite tongue's maximum. */
+function directionalEnvelope(rows,{heightKnots=9,angleKnots=12}={}) {
+  const values=Array.from({length:heightKnots},()=>new Float64Array(angleKnots));
+  const wrap=i=>(i%angleKnots+angleKnots)%angleKnots;
+  const angleCell=theta=>((theta/(2*Math.PI))%1+1)%1*angleKnots;
+  const basis=u=>{const v=1-u;return{
+    w:[v*v*v/6,(3*u*u*u-6*u*u+4)/6,(-3*u*u*u+3*u*u+3*u+1)/6,u*u*u/6],
+    d:[-v*v/2,(9*u*u-12*u)/6,(-9*u*u+6*u+3)/6,u*u/2]};};
+  for(const [height,theta,requirement]of rows){
+    const hi=Math.min(heightKnots-2,Math.floor(clamp(height)*(heightKnots-1))),ai=Math.floor(angleCell(theta));
+    for(let h=hi-1;h<=hi+2;h++)for(let a=ai-1;a<=ai+2;a++){
+      const row=values[clamp(h,0,heightKnots-1)],index=wrap(a);row[index]=Math.max(row[index],requirement);
+    }
+  }
+  function sample(height,theta){
+    const h=clamp(height)*(heightKnots-1),hi=Math.min(heightKnots-2,Math.floor(h)),a=angleCell(theta),ai=Math.floor(a),H=basis(h-hi),A=basis(a-ai);
+    let value=0,heightDerivative=0,angleDerivative=0;
+    for(let j=0;j<4;j++)for(let k=0;k<4;k++){
+      const v=values[clamp(hi+j-1,0,heightKnots-1)][wrap(ai+k-1)];
+      value+=v*H.w[j]*A.w[k];heightDerivative+=v*H.d[j]*A.w[k];angleDerivative+=v*H.w[j]*A.d[k];
+    }
+    return{value,heightDerivative:height<0||height>1?0:heightDerivative*(heightKnots-1),angleDerivative:angleDerivative*angleKnots/(2*Math.PI)};
+  }
+  return{values:values.map(row=>Array.from(row)),sample,heightKnots,angleKnots};
+}
+
 /** Positions are in the original unmirrored R14 millimetre frame. Left/right
  * reflection belongs to the renderer's one existing shoe scale, exactly once. */
 export function createNativeShoeField(foot,last,{scaleM,centerF,centerR,clearanceM=.0015,insoleClearanceM=.0025}={}) {
@@ -127,9 +156,8 @@ export function createNativeShoeField(foot,last,{scaleM,centerF,centerR,clearanc
  * A single radial field applies to all original parts and their attachments. */
 export function createNativeShoeApertureField(actor,source,base,foot) {
   const body=new MeshContact(actor.nativeSource.positions,actor.nativeSource.faces),scaleM=base.scaleM;
-  const cx=-base.mirror*base.centerR/scaleM,cz=-base.centerF/scaleM,r0=.055/scaleM,r1=foot.length*.7/scaleM;
-  if(!(r1>r0))throw Error('Native ankle aperture radial support is degenerate');
-  const target=base.report.clearanceTargetM,query=new Float64Array(4),requirements=[],failures=[];
+  const cx=-base.mirror*base.centerR/scaleM,cz=-base.centerF/scaleM,r1=foot.length*.7/scaleM;let r0=Infinity;
+  const target=base.report.clearanceTargetM,query=new Float64Array(4),requirements=[],angularRequirements=[],measured=[],failures=[];let largestRequirement=null;
   const native=p=>{const r=base.mirror*p[0]*scaleM+base.centerR,f=p[2]*scaleM+base.centerF;return[foot.foot[0]+foot.right[0]*r+foot.forward[0]*f,foot.foot[1]+foot.right[1]*r+foot.forward[1]*f,p[1]*scaleM+base.baseZ];};
   const radial=r=>{const u=clamp(r<r0?r/r0:(r-r0)/(r1-r0)),s=u*u*u*(10+u*(-15+6*u)),d=30*u*u*(1-u)*(1-u);return r<r0?{g:s,dg:d/r0}:{g:1-s,dg:-d/(r1-r0)};};
   // Exact ray exits through the same original body triangles as the nearest
@@ -146,38 +174,59 @@ export function createNativeShoeApertureField(actor,source,base,foot) {
       }
     }return hit;
   }
-  const samples=[],seen=new Set();let ymax=0,minimumBefore=Infinity,nearSamples=0;
+  const samples=[],seen=new Set(),seenEdges=new Set();let ymax=0,minimumBefore=Infinity,nearSamples=0;
   for(const part of source.parts){if(!/^canvas-(quarter-|rounded-vamp|independent-tongue)/.test(part.id))continue;
     const P=part.geometry.attributes.position.array,I=part.geometry.index.array;
     for(const group of part.geometry.groups.filter(g=>g.materialIndex===1))for(let k=group.start;k<group.start+group.count;k+=3){
       const vertices=[I[k],I[k+1],I[k+2]],points=vertices.map(id=>base.evaluate(xyz(P,id)).p);
       for(let n=0;n<3;n++){const key=part.id+'/'+vertices[n];if(!seen.has(key)){seen.add(key);samples.push(points[n]);}}
       samples.push([0,1,2].map(c=>(points[0][c]+points[1][c]+points[2][c])/3));
+      for(let n=0;n<3;n++){const m=(n+1)%3,a=vertices[n],b=vertices[m],key=part.id+'/'+Math.min(a,b)+'/'+Math.max(a,b);if(!seenEdges.has(key)){seenEdges.add(key);samples.push(points[n].map((v,c)=>(v+points[m][c])*.5));}}
     }
   }
   for(const p of samples)ymax=Math.max(ymax,p[1]);
   for(const p of samples){const q=native(p);body.sample(...q,query);minimumBefore=Math.min(minimumBefore,query[0]);if(query[0]>=target)continue;nearSamples++;
-    const x=p[0]-cx,z=p[2]-cz,r=Math.hypot(x,z),rad=radial(r);
-    if(r<1e-7||rad.g<1e-6){failures.push({point:p,distanceM:query[0],reason:'outside supported ankle field'});continue;}
+    const x=p[0]-cx,z=p[2]-cz,r=Math.hypot(x,z);
+    if(r<1e-7||r>=r1){failures.push({point:p,distanceM:query[0],reason:'outside supported ankle field'});continue;}
     const direction=[(foot.right[0]*base.mirror*x+foot.forward[0]*z)/r,(foot.right[1]*base.mirror*x+foot.forward[1]*z)/r,0];
     let move;
     if(query[0]<0){const hit=exitRay(q,direction);if(!hit||hit.normalCosine<=.05){failures.push({point:p,distanceM:query[0],reason:'no well-directed complete-body exit'});continue;}move=hit.distance+target/hit.normalCosine;}
     else{const cosine=dot(direction,Array.from(query.subarray(1)));if(cosine<=.05){failures.push({point:p,distanceM:query[0],reason:'near surface does not face radial direction'});continue;}move=(target-query[0])/cosine;}
-    requirements.push([p[1]/ymax,move/scaleM/rad.g]);
+    measured.push({p,r,move,distanceM:query[0]});r0=Math.min(r0,r);
   }
   if(failures.length)throw Error('Measured ankle fitting could not preserve a radial exit: '+JSON.stringify(failures.slice(0,3)));
-  const displacement=envelope(requirements,{knots:17}),maximum=Math.max(...displacement.values),radialDerivativeLowerBound=1-maximum*1.875/(r1-r0);
-  if(!(radialDerivativeLowerBound>0))throw Error('Measured ankle fitting would fold its continuous radial map');
-  function evaluate(p){const q=base.evaluate(p),x=q.p[0]-cx,z=q.p[2]-cz,r=Math.hypot(x,z),rad=radial(r),h=displacement.sample(q.p[1]/ymax),d=h.value,dy=h.derivative/ymax;
+  if(!measured.length)r0=r1*.25;
+  if(!(r1>r0))throw Error('Native ankle aperture radial support is degenerate');
+  for(const {p,r,move,distanceM}of measured){const rad=radial(r),requirement=move/scaleM/rad.g;requirements.push([p[1]/ymax,requirement]);
+    angularRequirements.push([p[1]/ymax,Math.atan2(p[0]-cx,p[2]-cz),requirement]);
+    if(!largestRequirement||requirement>largestRequirement.displacementMm)largestRequirement={pointMm:p,distanceM,radialDistanceMm:r,weight:rad.g,rayMoveM:move,displacementMm:requirement};
+  }
+  const displacement=envelope(requirements,{knots:9}),maximum=Math.max(...displacement.values),radialDerivativeLowerBound=1-maximum*1.875/(r1-r0);
+  if(!(radialDerivativeLowerBound>0))throw Error('Measured ankle fitting would fold its continuous radial map: '+JSON.stringify({actor:actor.id,side:foot.side,maximumDisplacementMm:maximum,radialSupportMm:[r0,r1],radialDerivativeLowerBound,largestRequirement}));
+  const directional=directionalEnvelope(angularRequirements),soleBlendMm=source.last.style.sole;let soleCeilingMm=-Infinity;
+  for(const part of source.parts){if(!/sole|heel|rubber|welt/.test(part.id+' '+part.role))continue;
+    const p=part.geometry.attributes.position;for(let i=0;i<p.count;i++)soleCeilingMm=Math.max(soleCeilingMm,base.evaluate([p.getX(i),p.getY(i),p.getZ(i)]).p[1]);
+  }
+  if(!Number.isFinite(soleCeilingMm))throw Error('Actual complete sole is required for the aperture transition');
+  function atHeightAngle(y,theta){
+    const h=displacement.sample(y/ymax),u=clamp((y-soleCeilingMm)/soleBlendMm);
+    // Preserve the previous complete sole positions exactly, including X/Z.
+    if(u===0)return{d:h.value,dy:h.derivative/ymax,da:0};
+    const a=directional.sample(y/ymax,theta),w=u*u*u*(10+u*(-15+6*u)),dw=30*u*u*(1-u)*(1-u)/soleBlendMm;
+    return{d:h.value+(a.value-h.value)*w,dy:h.derivative/ymax+(a.heightDerivative/ymax-h.derivative/ymax)*w+(a.value-h.value)*dw,da:a.angleDerivative*w};
+  }
+  function evaluate(p){const q=base.evaluate(p),x=q.p[0]-cx,z=q.p[2]-cz,r=Math.hypot(x,z),rad=radial(r),{d,dy,da}=atHeightAngle(q.p[1],Math.atan2(x,z));
     if(r<1e-10)return q;
-    const f=1+d*rad.g/r,a=d*(rad.dg*r-rad.g)/(r*r*r),b=dy*rad.g/r;
-    const j=[f+a*x*x,b*x,a*x*z,0,1,0,a*x*z,b*z,f+a*z*z];
+    const f=1+d*rad.g/r,a=d*(rad.dg*r-rad.g)/(r*r*r),b=dy*rad.g/r,c=da*rad.g/(r*r*r),dx=a*x+c*z,dz=a*z-c*x;
+    const j=[f+x*dx,b*x,x*dz,0,1,0,z*dx,b*z,f+z*dz];
     return {p:[cx+x*f,q.p[1],cz+z*f],j:multiply(j,q.j)};
   }
-  return {...base,evaluate,normal:transportedNormal,report:{...base.report,schema:'native-canvas-wearer-field/rebuilt-3',
-    aperture:{schema:'complete-body-neutral-aperture/1',allBodyVertices:actor.nativeSource.bodyCount,allBodyTriangles:actor.nativeSource.faces.length/3,
+  return {...base,evaluate,normal:transportedNormal,report:{...base.report,schema:'native-canvas-wearer-field/rebuilt-4',
+    aperture:{schema:'complete-body-neutral-directional-aperture/1',allBodyVertices:actor.nativeSource.bodyCount,allBodyTriangles:actor.nativeSource.faces.length/3,
       measuredInnerSamples:samples.length,nearSamples,minimumSignedDistanceBeforeM:minimumBefore,axisMm:[cx,cz],radialSupportMm:[r0,r1],heightRangeMm:ymax,
-      displacementMm:displacement.values,maximumRadialDisplacementMm:maximum,radialDerivativeLowerBound,actualBodyExitMeasured:true,perFrameProjection:false}}};
+      displacementMm:displacement.values,directionalDisplacementMm:directional.values,heightKnots:directional.heightKnots,angleKnots:directional.angleKnots,
+      soleCeilingMm,soleBlendMm,solePositionsPreserved:true,verticalPositionsPreserved:true,
+      maximumRadialDisplacementMm:maximum,radialDerivativeLowerBound,largestRequirement,actualBodyExitMeasured:true,perFrameProjection:false}}};
 }
 
 function transformMetadata(part,field) {

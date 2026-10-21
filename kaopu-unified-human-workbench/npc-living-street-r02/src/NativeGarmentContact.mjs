@@ -53,13 +53,17 @@ export class NativeGarmentContact{
     // distance gradient is not either adjacent face normal. For that case,
     // q + margin * normalize(p-q) is the exact minimum-displacement clearance
     // candidate (the distance field is 1-Lipschitz). Accept only after the
-    // same complete-body outside/distance/side/bound checks. This cannot turn
+    // same complete-body outside/distance/bound checks. An already exterior
+    // point owns its current outside branch: a folded fixed body-face normal
+    // must not veto this actual minimum radial clearance and force a farther
+    // exit across an armhole. Inside points retain the fixed-side guard below.
+    // This cannot turn
     // a 3.4 micrometre positive-clearance deficit into a 69 mm face jump.
     if(!initial.inside&&initial.distance>1e-14&&initial.distance<margin){
       this.metrics.outsideRadialCandidates++;
       const nearest=Array.from(m.best.subarray(1,4)),direction=[x-nearest[0],y-nearest[1],z-nearest[2]].map(v=>v/initial.distance),
         delta=direction.map(v=>v*(margin-initial.distance)),endpoint=point.map((v,k)=>v+delta[k]);
-      if((!preferredNormal||delta.reduce((s,v,k)=>s+v*preferredNormal[k],0)>0)&&Math.hypot(...endpoint.map((v,k)=>v-origin[k]))<=limit){
+      if(Math.hypot(...endpoint.map((v,k)=>v-origin[k]))<=limit){
         this.metrics.endpointChecks++;const proof=this.inspect(...endpoint);
         if(!proof.inside&&proof.distance>=margin-1e-10){this.metrics.outsideRadialAccepted++;return {...initial,delta,endpoint,direction,sourceFace:initial.face,endpointFace:proof.face,endpointDistance:proof.distance,endpointWinding:proof.winding,reason:'verified minimum exterior clearance',resolved:true};}
       }

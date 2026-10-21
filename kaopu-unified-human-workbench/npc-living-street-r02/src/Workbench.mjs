@@ -233,7 +233,7 @@ async function main(){
   // The callback also runs for the initial frame before ready becomes true.
   renderQueue.onBeforeRender(updateAppearance);
   window.__LIVING_STREET__=window.__LIVING_COURTYARD__={snapshot:currentReport,ready:false,awaitFrame:o=>renderQueue.awaitFrame(o),
-    probeInteractionGeometry:id=>items.probeInteractionGeometry(id)};
+    probeInteractionGeometry:id=>items.probeInteractionGeometry(id),nativeMouthTemplates:()=>actors.map(a=>a.mouthContactFixture())};
   function frame(now){
     const elapsed=Math.max(0,(now-last)/1000);last=now;
     try{

@@ -9,6 +9,7 @@ import {MeshContact,closestTriangle} from '../vendor/appearance/cloth-r10/mesh-c
 import {createGarmentMetric,createGarmentSolverMetric,expandGarmentDisplay} from './NativeGarmentMetric.mjs';
 import {NativeGarmentContact,nativeFaceNormal} from './NativeGarmentContact.mjs';
 import {compileContinuousGarmentReference} from './NativeGarmentReference.mjs';
+import {WaistAttachments} from '../vendor/appearance/cloth-r10/waist-attachments.mjs';
 
 const GROUND_SHIFT=.9858653545379639;
 const sourceCache=new WeakMap();
@@ -108,9 +109,20 @@ function poseReferences(metric,target,source){
     refs.push({ids,bary,offset,weights:[...weights].flat(),face:f,region:regions[i]});maximumInfluences=Math.max(maximumInfluences,weights.size);
   }
   const field=compileContinuousGarmentReference(metric,target,source,regions);
-  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,field,
+  // Restore the source's separate contract for the declared fixed waistband
+  // sites. Their original triangle/bary/local-frame offset is carried by the
+  // actual posed body. The continuous field still transports all other sites;
+  // no new pin, body deformation or garment-wide triangle mapping is added.
+  const waistWorld=metric.role==='bottom'&&metric.sourcePins.length?{
+    solvers:[null,{p:metric.fittedNative.slice(),pins:Array.from(metric.sourcePins)}],
+    body:contact,actor:{positions:body}
+  }:null;
+  const waist=waistWorld?new WaistAttachments(waistWorld):null;
+  const waistAttachment=waist?{method:'unchanged original WaistAttachments fixed body triangle + barycentric point + local basis offset',sourceSHA256:'bf63216f946e834ace38ccd2118f822de52bab3045d757d49b79a140e9269bd6',originalPins:waist.rows.length,additionalPins:0}:null;
+  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,field,waistAttachment,
     sample(posedBody,skinMatrices,out=new Float64Array(metric.count*3),normals=new Float64Array(metric.count*3)){
       field.sample(posedBody,skinMatrices,out);
+      if(waist){waistWorld.actor.positions=posedBody;waistWorld.solvers[1].p=out;waist.begin();waist.apply(1);}
       for(let i=0;i<refs.length;i++){
         const r=refs[i],k=i*3,n=nativeFaceNormal(posedBody,faces,r.face);normals.set(n,k);
       }return {positions:out,normals};

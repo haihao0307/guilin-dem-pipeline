@@ -78,7 +78,10 @@ for source in sys.argv[1:]:
  path=pathlib.Path(source);data=json.loads(path.read_text());objects=[mesh(data['body'],(.73,.43,.29))]
  for g in data['garments']:objects.append(mesh(g,(.19,.31,.46) if g['id'].startswith('P') else (.42,.55,.60)))
  out=path.parent/'depth-raster';out.mkdir(exist_ok=True);images=[]
- for name,direction in [('front',[0,-1,0]),('side',[1,0,0]),('back',[0,1,0])]:
+ # A captured actor can turn within native coordinates. Use the actual
+ # posed hip axis supplied by the fixture, never label fixed axes as anatomy.
+ views=[(name,data['viewBasis'][name]) for name in ('front','side','back')] if 'viewBasis' in data else [('native-y-negative',[0,-1,0]),('native-x-positive',[1,0,0]),('native-y-positive',[0,1,0])]
+ for name,direction in views:
   bind_fbo(0x8D40,MS);clear_color(.94,.95,.96,1);clear(0x4000|0x0100);m=camera(data['body'],direction);uniform_matrix(MVP,1,0,m.ctypes.data_as(C.POINTER(F)))
   for vao,count,color in objects:uniform3(PIGMENT,*color);bind_vao(vao);draw(4,count,0x1405,None)
   bind_fbo(0x8CA8,MS);bind_fbo(0x8CA9,RESOLVE);blit(0,0,W,H,0,0,W,H,0x4000,0x2600);bind_fbo(0x8D40,RESOLVE);finish();pixels=np.empty((H,W,4),np.uint8);read_pixels(0,0,W,H,0x1908,0x1401,pixels.ctypes.data);img=Image.fromarray(pixels[::-1].copy(),'RGBA').convert('RGB');namepath=out/(path.stem+'-'+name+'.png');img.save(namepath);images.append(img);meta['files'].append(str(namepath))

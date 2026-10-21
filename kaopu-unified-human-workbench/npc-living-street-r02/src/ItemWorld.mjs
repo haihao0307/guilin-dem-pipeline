@@ -308,14 +308,14 @@ export class ItemWorld {
     // Both paths propose PALM positions. Measure the complete physical hull
     // from that palm, including the off-centre long-axis end grip, instead of
     // treating the loaf's centre as its handle. This radius remains valid for
-    // every yaw during transport and is frozen at the actual grasp.
+    // every rigid rotation during transport and is frozen at the actual grasp.
     let propRadius=0,minPropY=Infinity;
     for(const x of [-half[0],half[0]])for(const y of [-half[1],half[1]])for(const z of [-half[2],half[2]]) {
       const v=item.body.pointToWorldFrame(new CANNON.Vec3(x,y,z));
-      propRadius=Math.max(propRadius,Math.hypot(v.x-source[0],v.z-source[2]));
+      propRadius=Math.max(propRadius,Math.hypot(v.x-source[0],v.y-source[1],v.z-source[2]));
       minPropY=Math.min(minPropY,v.y-source[1]);
     }
-    const radius=Math.max(propRadius,hand?.horizontalReachM||0);
+    const radius=Math.max(propRadius,hand?.maximumPalmRadiusM||hand?.horizontalReachM||0);
     let top=-Infinity,exit=-Infinity;
     for(const body of this.world.bodies){
       if(!/^bakery-(counter|tray|serving-board)$/.test(body._itemFixture||''))continue;
@@ -332,9 +332,10 @@ export class ItemWorld {
       liftMarginM=.012,palmY=top+Math.max(-minPropY,-minHandY)+liftMarginM,
       travel=Math.max(0,exit+radius+liftMarginM-source[0]*outward[0]-source[2]*outward[2]);
     return {counterTopY:top,palmClearanceY:palmY,
+      approachPalmClearanceY:top+(hand?.maximumPalmRadiusM||hand?.horizontalReachM||0)+liftMarginM,
       exitPoint:[record.sourceTarget[0]+outward[0]*travel,palmY,record.sourceTarget[2]+outward[2]*travel],
       breadHalfExtentsM:half.slice(),minimumHandYMFromPalm:minHandY,
-      horizontalHandRadiusM:hand?.horizontalReachM||0,horizontalPropRadiusFromPalmM:propRadius,
+      horizontalHandRadiusM:hand?.horizontalReachM||0,maximumHandPalmRadiusM:hand?.maximumPalmRadiusM||0,maximumPropPalmRadiusM:propRadius,
       horizontalClearanceRadiusM:radius,minimumPropYMFromPalm:minPropY,liftMarginM,fixtures,
       source:'current Cannon fixture AABBs and this native hand\'s complete weighted grasp envelope'};
   }
@@ -628,7 +629,12 @@ export class ItemWorld {
           // A confirmed insertion settles visibly inside its bag. Stored items
           // are explicit kinematic cargo, never counted as a friction grasp.
           const p=item.storeFrom&&t<1?item.storeFrom.map((v,i)=>v+(target[i]-v)*t):target;
-          item.body.position.set(...p);item.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),state.yaw);
+          item.body.position.set(...p);
+          const targetQuaternion=new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0,1,0),state.yaw);
+          // Use the same settling interval for orientation and position. The
+          // actual grasp may have rolled the loaf; storage must not snap it.
+          if(item.storeQuaternion&&t<1)item.storeQuaternion.slerp(targetQuaternion,t,item.body.quaternion);
+          else item.body.quaternion.copy(targetQuaternion);
         }
       } else if(item.mode==='consumed') {
         const t=clamp((this.clock-item.consumedAt)/.30);item.mesh.scale.setScalar(Math.max(.001,1-t));

@@ -25,7 +25,7 @@ const capture=(actor,state,report,frame)=>{
  const token=state.task?.token;if(!token||report.mode!=='pickup')return;
  const rows=poses.get(token)||[];rows.push({actor:actor.id,token,frame,time:sim.time,phase:report.stage,sourceFrame:report.capturedPickup.sourceFrame,attached:report.capturedPickup.acquisitionInput,
   skinMatrices:Float64Array.from(actor.rig.skinMatrices.flatMap(m=>Array.from(m))),posedMatrices:Float64Array.from(actor.rig.posedMatrices.flatMap(m=>Array.from(m))),
-  rootMatrix:Float64Array.from(actor.root.matrixWorld.elements),rootWorld:actor.root.position.toArray(),rootTranslation:actor.rig.rootTranslation.slice(),feet:copy(report.feet)});poses.set(token,rows);
+  rootMatrix:Float64Array.from(actor.root.matrixWorld.elements),rootWorld:actor.root.position.toArray(),rootQuaternion:actor.root.quaternion.toArray(),rootTranslation:actor.rig.rootTranslation.slice(),feet:copy(report.feet)});poses.set(token,rows);
 };
 const drop=id=>{const b=sim.spawnBottleNear(id);if(!b)throw Error('Public bottle spawn returned no available spot near '+id);spawned.push({requestedNear:id,time:sim.time,bottle:copy(b)});};
 for(const actor of actors){const state=sim.actor(actor.id);reports[actor.id]=actor.motion.update({mode:'idle',dt:0,time:0,x:state.x,z:state.z,yaw:state.yaw});}

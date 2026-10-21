@@ -359,8 +359,8 @@ export class NativeMotion {
     const extra=best*clamp(weight,0,1);distance(extra);return {extraDegrees:extra,wristDistanceM:norm(sub(wrist,pos(rig.posedMatrices[limb.a]))),armLengthM:limb.upper+limb.lower,withinReach:score<=limit};
   }
 
-  _reach(world,side='R',turn=0,orientationWeight=1,objectContact=false,allowObjectYaw=false) {
-    if(objectContact)return solveNativeObjectReach(this,world,{side,turn,orientationWeight,allowYaw:allowObjectYaw});
+  _reach(world,side='R',turn=0,orientationWeight=1,objectContact=false,allowObjectYaw=false,palmRoll=0,allowFreeRoll=false) {
+    if(objectContact)return solveNativeObjectReach(this,world,{side,turn,palmRoll,orientationWeight,allowYaw:allowObjectYaw,allowFreeRoll});
     const rig=this.rig,limb=rig.limbs['arm'+side],sign=side==='L'?1:-1;
     const local=this._native(world),handRotation=this._contactHandRotation(side,turn,orientationWeight,objectContact);
     let wrist=sub(local,mv(handRotation,sub(this.tools.palmRest(side),rig.restP[limb.c]))),solved;
@@ -559,7 +559,10 @@ export class NativeMotion {
         stage=p<.96?'transport':mode==='eat'?'at-mouth':mode==='trade'&&sourceGrip?'at-counter':'at-bag';
       }
       const orientationWeight=mode==='trade'&&!sourceGrip&&graspProfile==='bread'?smooth(p/.15):smooth(p/.30);
-      solution=this._reach(goal,this.side,handTurn,orientationWeight,true,p>.55);
+      const palmRoll=mode==='trade'&&!sourceGrip&&graspProfile==='bread'?
+        (this.side==='R'?1:-1)*Math.PI*.5*smooth((p-.84)/.16):0;
+      solution=this._reach(goal,this.side,handTurn,orientationWeight,true,p>.55,palmRoll,
+        mode==='trade'&&!sourceGrip&&graspProfile==='bread'&&p<.25);
     }
     const checked=rig.validate(),palm=this._world(this.tools.samplePalm(this.side));
     const palmNormal=this._direction(unit(mv(rotation(rig.skinMatrices[rig.limbs['arm'+this.side].c]),rig.hand[this.side].palm)),yaw);
@@ -578,7 +581,7 @@ export class NativeMotion {
     this.tools.commit({side:this.side,grip:closure,target:goal,solution});
     const report={mode,progress:p,stage,side:this.side,palm,palmNormal,handForward,handCylinderAxis,
       wristBendDegrees,wristGateActive,objectReach:solution?.originalCoupledElbowRoll?{
-        wristBendDegrees,objectTurnRadians:solution.objectTurnRadians,palmErrorM:solution.actualPalmErrorM,
+        wristBendDegrees,objectTurnRadians:solution.objectTurnRadians,objectPalmRollRadians:solution.objectPalmRollRadians,freeApproachRollRadians:solution.freeApproachRollRadians,palmErrorM:solution.actualPalmErrorM,
         originalCoupledElbowRoll:true,clamped:!!solution.clamped}:null,
       gripCenter:add(palm,scale(palmNormal,this.actor.graspReport?.shape?.halfExtentsM?.[2]||this.actor.graspReport?.shape?.radius||.032)),
       bagTarget,mouth,mouthSurface,mouthSupport:this.tools.mouthSupport||null,mouthApproachClearanceM:mouthGripDepthM+mouthClearanceM,mouthGripDepthM,mouthClearanceM,graspProfile,

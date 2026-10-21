@@ -925,6 +925,27 @@ async function main() {
     return native;
   });
   await check('complete original clothing, shoes and requested hair on all six native people',appearanceEvidence);
+  await check('read-only exact refined native mouth supports for all six people',async()=>{
+    const fixtures=await evaluate('capture exact refined lip CSR without changing the scene',()=>{
+      const app=window.__LIVING_STREET__;if(typeof app?.nativeMouthTemplates!=='function')throw Error('Exact native mouth fixture is unavailable');
+      return app.nativeMouthTemplates();
+    });
+    assert.deepEqual(fixtures.map(x=>x.actor),IDS);
+    for(const f of fixtures){
+      assert.equal(f.mutation,false);assert.equal(f.weightsTruncated,false);assert.equal(f.rig.names.length,104);
+      assert.equal(f.sourceDisplayVertices,f.mouthSupport.originalDisplayVertices);assert(f.sourceDisplayVertices>100000);
+      for(const v of f.vertices){
+        assert(v.entries.length>0&&v.entries.length%8===0);const p=[0,0,0];let sum=0;
+        for(let k=0;k<v.entries.length;k+=8){const e=v.entries,m=f.currentSkinMatrices[e[k+3]],w=e[k+4];sum+=w;
+          for(let q=0;q<3;q++)p[q]+=w*(m[q*4]*e[k]+m[q*4+1]*e[k+1]+m[q*4+2]*e[k+2]+m[q*4+3]);}
+        assert(Math.abs(sum-1)<1e-4);assert(Math.hypot(...p.map((x,i)=>x-v.currentNative[i]))<1e-10);
+        const d=[p[0],p[2],-p[1]],m=f.currentWorldMatrix,world=d.map((_,q)=>m[q]*d[0]+m[q+4]*d[1]+m[q+8]*d[2]+m[q+12]);
+        assert(Math.hypot(...world.map((x,i)=>x-v.currentWorld[i]))<1e-9);
+      }
+    }
+    put('native-mouth-supports.json',{sourceHead,canonicalSHA256:CANONICAL_SHA,mutation:false,fixtures});
+    return{actors:fixtures.length,originalRefinedLips:true,completeCSR:true,wholeHeadCollisionAcceptance:false,eatingCompletionAcceptance:false};
+  });
   await check('actual current street and complete-person screenshots',async()=>{
     await screenshot('01-first-frame');
     await overviewEvidence('desktop-overview-framing');

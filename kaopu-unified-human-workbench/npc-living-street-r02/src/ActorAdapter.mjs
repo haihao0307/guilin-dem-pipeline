@@ -198,7 +198,7 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
     rig.fk();binding.animate(rig.skinMatrices);
   }
   function evaluate(values,open,details=false) {
-    pose(values,open);const anchor=samplePatch();let minimum=Infinity,minY=Infinity,deepest=null,horizontalReachM=0;
+    pose(values,open);const anchor=samplePatch();let minimum=Infinity,minY=Infinity,deepest=null,horizontalReachM=0,maximumPalmRadiusM=0;
     const distances=details?new Map():null;
     for(const id of handVertices) {
       const delta=sub(binding.sampleVertex(id,true),anchor);
@@ -214,9 +214,10 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
       }
       if(distance<minimum){minimum=distance;deepest=id;}minY=Math.min(minY,y);
       horizontalReachM=Math.max(horizontalReachM,Math.hypot(x,dot(delta,frame.palm)));
+      maximumPalmRadiusM=Math.max(maximumPalmRadiusM,norm(delta));
       if(details)distances.set(id,distance);
     }
-    return {minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:minY,horizontalReachM,deepestVertex:deepest,
+    return {minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:minY,horizontalReachM,maximumPalmRadiusM,deepestVertex:deepest,
       ...(details?{fingerSurfaceMinimumSignedDistanceM:digitVertices.map(ids=>Math.min(...ids.map(i=>distances.get(i)))),
         fingerNearVertexCounts:digitVertices.map(ids=>ids.filter(i=>Math.abs(distances.get(i))<=.003).length)}:{})};
   }
@@ -250,14 +251,50 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
     }
     closure[f]=accepted;
   }
+  const contactRetention=[];
+  if(shape.kind==='ellipsoid') {
+    let current=evaluate(closure,open,true);
+    const touching=check=>check.fingerNearVertexCounts.slice(1).filter(n=>n>=3).length;
+    // A curved native digit can touch a convex surface shallowly, then curl
+    // clear again without ever exceeding the original 1 mm penetration stop.
+    // Retain that existing surface contact only if the final fit lacks the
+    // required three fingers. Reuse the original [0,1] scalar curl path and
+    // forty calibration intervals; no extra joint range or contact tolerance.
+    for(let f=1;f<5&&touching(current)<3;f++) {
+      if(current.fingerNearVertexCounts[f]>=3)continue;
+      const before=closure[f];let previous=null,exit=null;
+      for(let i=0;i<=40;i++) {
+        const t=before*i/40,candidate=closure.slice();candidate[f]=t;
+        const check=evaluate(candidate,open,true),gap=check.fingerSurfaceMinimumSignedDistanceM[f];
+        if(previous&&previous.gap<=0&&gap>0&&
+          previous.minimum>=-tolerance&&check.minimumSignedDistanceM>=-tolerance)exit=[previous.t,t];
+        previous={t,gap,minimum:check.minimumSignedDistanceM};
+      }
+      if(!exit)continue;
+      let [lo,hi]=exit;
+      for(let i=0;i<24;i++) {
+        const mid=(lo+hi)*.5,candidate=closure.slice();candidate[f]=mid;
+        if(evaluate(candidate,open,true).fingerSurfaceMinimumSignedDistanceM[f]<=0)lo=mid;else hi=mid;
+      }
+      const candidate=closure.slice();candidate[f]=(lo+hi)*.5;
+      const check=evaluate(candidate,open,true);
+      if(check.minimumSignedDistanceM>=-tolerance&&check.fingerNearVertexCounts[f]>=3&&touching(check)>touching(current)) {
+        contactRetention.push({finger:f+1,originalClosure:before,retainedClosure:candidate[f],exitBracket:exit,
+          gapBeforeM:current.fingerSurfaceMinimumSignedDistanceM[f],gapAfterM:check.fingerSurfaceMinimumSignedDistanceM[f],
+          nearVertices:check.fingerNearVertexCounts[f],method:'last measured shallow contact exit on the unchanged original curl path'});
+        closure[f]=candidate[f];current=check;
+      }
+    }
+  }
   const trajectory=Array.from({length:21},(_,i)=>evaluate(closure.map(v=>v*i/20),open));
   const closed=evaluate(closure,open,true),minimum=Math.min(...trajectory.map(x=>x.minimumSignedDistanceM));
   const touchingFingers=closed.fingerNearVertexCounts.slice(1).filter(n=>n>=3).length;
   const admissible=minimum>=-.0011&&touchingFingers>=3&&closure.slice(1).every(v=>v>=.05);
   return {admissible,reason:admissible?null:'Native open-to-close envelope lacks clearance or sufficient finger surface contacts',
-    side,shape,open,closure,openCheck,closed,trajectorySamples:trajectory.length,
+    side,shape,open,closure,openCheck,closed,contactRetention,trajectorySamples:trajectory.length,
     minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:Math.min(...trajectory.map(x=>x.minimumYMFromBottleCenter)),
     horizontalReachM:Math.max(...trajectory.map(x=>x.horizontalReachM)),
+    maximumPalmRadiusM:Math.max(...trajectory.map(x=>x.maximumPalmRadiusM)),
     touchingNonThumbFingers:touchingFingers,boneLengthErrorM:rig.validate().maxBoneLengthError,
     scope:'complete weighted hand vertex samples; first-contact per-finger bisection; no force/friction or continuous-triangle guarantee'};
 }
@@ -522,6 +559,21 @@ function makeActor(model, viewer, spec, preset, measurements) {
     fingerAnchors(side=active.side){return patches[side].fingers.map(p=>toWorld(sample(p)));},
     contactAnchors(side=active.side){return {palm:this.handAnchor(side),fingers:this.fingerAnchors(side)};},
     rest(){active.grip=0;lastGoal=null;lastSolution=null;resetRig();binding.animate(rig.skinMatrices);return diagnostic();},
+    mouthContactFixture(){
+      // Read only: preserve the exact refined native lip supports and every
+      // CSR influence so numerical arm/food checks can use these same lips.
+      const ids=[...new Set([mouthSupport.vertex,mouthSupport.upperVertex,mouthSupport.lowerVertex])];
+      root.updateWorldMatrix(true,false);
+      return {schema:'native-refined-mouth-support-fixture/1',actor:spec.id,identity:structuredClone(this.identity),
+        sourceDisplayVertices:geometry.attributes.position.count,nativeVertices:binding.N,
+        heightM:binding.height,floorOffsetM:binding.floorOffset,weightsTruncated:false,mutation:false,
+        mouthSupport:structuredClone(mouthSupport),rig:structuredClone(binding.rig),
+        vertices:ids.map(id=>{const start=binding.displayRange[id*4],count=binding.displayRange[id*4+1];
+          return {id,rest:restVertex(geometry,id),entries:Array.from(binding.displayPacked.subarray(start*8,(start+count)*8)),
+            currentNative:sampleLiveVertex(id),currentWorld:toWorld(sampleLiveVertex(id)).toArray()};}),
+        currentSkinMatrices:rig.skinMatrices.map(m=>Array.from(m)),currentWorldMatrix:root.matrixWorld.toArray(),
+        scope:'Actual original R07 L5 selected refined lip vertices with full CSR. This read-only fixture does not assert whole-head collision, material, rendering or eating completion.'};
+    },
     reachability(target,side=active.side){
       if(!SIDES.includes(side))throw Error('Native reach side must be L or R');
       const limb=rig.limbs['arm'+side],wrist=rig.restP[limb.c],rotation=orientFor(side);

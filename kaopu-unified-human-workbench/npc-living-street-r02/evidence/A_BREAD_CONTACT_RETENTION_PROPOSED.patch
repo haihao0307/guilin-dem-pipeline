@@ -1,0 +1,51 @@
+--- a/src/ActorAdapter.mjs
++++ b/src/ActorAdapter.mjs
+@@ -251,12 +251,47 @@
+     }
+     closure[f]=accepted;
+   }
++  const contactRetention=[];
++  if(shape.kind==='ellipsoid') {
++    let current=evaluate(closure,open,true);
++    const touching=check=>check.fingerNearVertexCounts.slice(1).filter(n=>n>=3).length;
++    // A curved native digit can touch a convex surface shallowly, then curl
++    // clear again without ever exceeding the original 1 mm penetration stop.
++    // Retain that existing surface contact only if the final fit lacks the
++    // required three fingers. Reuse the original [0,1] scalar curl path and
++    // forty calibration intervals; no extra joint range or contact tolerance.
++    for(let f=1;f<5&&touching(current)<3;f++) {
++      if(current.fingerNearVertexCounts[f]>=3)continue;
++      const before=closure[f];let previous=null,exit=null;
++      for(let i=0;i<=40;i++) {
++        const t=before*i/40,candidate=closure.slice();candidate[f]=t;
++        const check=evaluate(candidate,open,true),gap=check.fingerSurfaceMinimumSignedDistanceM[f];
++        if(previous&&previous.gap<=0&&gap>0&&
++          previous.minimum>=-tolerance&&check.minimumSignedDistanceM>=-tolerance)exit=[previous.t,t];
++        previous={t,gap,minimum:check.minimumSignedDistanceM};
++      }
++      if(!exit)continue;
++      let [lo,hi]=exit;
++      for(let i=0;i<24;i++) {
++        const mid=(lo+hi)*.5,candidate=closure.slice();candidate[f]=mid;
++        if(evaluate(candidate,open,true).fingerSurfaceMinimumSignedDistanceM[f]<=0)lo=mid;else hi=mid;
++      }
++      const candidate=closure.slice();candidate[f]=(lo+hi)*.5;
++      const check=evaluate(candidate,open,true);
++      if(check.minimumSignedDistanceM>=-tolerance&&check.fingerNearVertexCounts[f]>=3&&touching(check)>touching(current)) {
++        contactRetention.push({finger:f+1,originalClosure:before,retainedClosure:candidate[f],exitBracket:exit,
++          gapBeforeM:current.fingerSurfaceMinimumSignedDistanceM[f],gapAfterM:check.fingerSurfaceMinimumSignedDistanceM[f],
++          nearVertices:check.fingerNearVertexCounts[f],method:'last measured shallow contact exit on the unchanged original curl path'});
++        closure[f]=candidate[f];current=check;
++      }
++    }
++  }
+   const trajectory=Array.from({length:21},(_,i)=>evaluate(closure.map(v=>v*i/20),open));
+   const closed=evaluate(closure,open,true),minimum=Math.min(...trajectory.map(x=>x.minimumSignedDistanceM));
+   const touchingFingers=closed.fingerNearVertexCounts.slice(1).filter(n=>n>=3).length;
+   const admissible=minimum>=-.0011&&touchingFingers>=3&&closure.slice(1).every(v=>v>=.05);
+   return {admissible,reason:admissible?null:'Native open-to-close envelope lacks clearance or sufficient finger surface contacts',
+-    side,shape,open,closure,openCheck,closed,trajectorySamples:trajectory.length,
++    side,shape,open,closure,openCheck,closed,contactRetention,trajectorySamples:trajectory.length,
+     minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:Math.min(...trajectory.map(x=>x.minimumYMFromBottleCenter)),
+     horizontalReachM:Math.max(...trajectory.map(x=>x.horizontalReachM)),
+     maximumPalmRadiusM:Math.max(...trajectory.map(x=>x.maximumPalmRadiusM)),

@@ -1,30 +1,30 @@
 {
-  "schema": "garment-wip-checkpoint/1",
+  "schema": "garment-wip-checkpoint/5",
   "releaseCandidate": false,
   "runtimeWardrobeIntegrated": false,
-  "neutralStatus": "D T03/P01 actual sampled full-body >=4mm and source-sewn full wearer-rest numerical initialization achieved",
-  "dynamicStatus": "99 cold-start rejected; actual sequential warm-start cache pending; no whole-motion rejection claimed",
+  "neutralStatus": "D T03/P01 exact runtime Float32 packed-display body and complete CSR sampled full-body 4mm initialization passed",
+  "dynamicStatus": "Original source waist transport resolves walk7. Actual initial idle plus walk0..20: 22 chronological poses accepted. First failure walk21: T03 one positive-clearance deficit, inside0, max wearer edge1.291; P01 passed with inside0 and all4mm. No full-chain or visual acceptance.",
   "newDependencies": [
-    "src/NativeGarmentReference.mjs (pure number arrays; no external files beyond 72-source lock)"
+    "Original waist-attachments.mjs source locked as file73, SHA bf63216f946e834ace38ccd2118f822de52bab3045d757d49b79a140e9269bd6; now imported only by NativeGarmentFit. Existing source mesh-contact.mjs supplies its only dependency."
   ],
   "files": [
     {
       "path": "src/NativeGarmentContact.mjs",
-      "bytes": 6448,
-      "sha256": "8f7af68fdcb9c5f52ae381e128763190b6331ceb77f73856f53293d166a85597",
-      "gitBlob": "f7cf63b7c3419652f0173427ccdd9610a669dba8"
+      "bytes": 6635,
+      "sha256": "2a70afc51af9dfdd81c85d847511f27fab751ff6758468ee1743289ee813ed4d",
+      "gitBlob": "a809675b487598d47c5676580e375a0f75d6ff94"
     },
     {
       "path": "src/NativeGarmentCorrective.mjs",
-      "bytes": 8549,
-      "sha256": "750acacbdbc904173beed5ec850bea89d773a65e3cfbb89631e912e214785f59",
-      "gitBlob": "3a98dcd36e44529884ba42e1ce520fcfb282b8c3"
+      "bytes": 8925,
+      "sha256": "376431ce7997d316445a393bf62769939883eb3886220cf6c8c75e3ee7a86aba",
+      "gitBlob": "25e009533cec88aebfc5ae5de78ab3966ff72abe"
     },
     {
       "path": "src/NativeGarmentFit.mjs",
-      "bytes": 14808,
-      "sha256": "ebb1f5247174a43d2dfcc024e002d0dcdd4047299867dede55336d7a375511d7",
-      "gitBlob": "003e93762ae4c2956afba3d7a1d70b2b9e9a5da2"
+      "bytes": 15877,
+      "sha256": "692689aeb593c05f1495b0785570b571d834fa46530342e056ffeaebc4e0f0f8",
+      "gitBlob": "22fde2897e85d8ef484cc3bf6091544fdb4ea753"
     },
     {
       "path": "src/NativeGarmentMetric.mjs",
@@ -39,46 +39,135 @@
       "gitBlob": "b1190302d6ca39882c2f1616926a95dd6b78f878"
     },
     {
-      "path": "evidence/garment-wearer-metric/check-captured-pose.mjs",
-      "bytes": 5008,
-      "sha256": "18d6a082f314ca00dae50d5fe773408e7a487f7fb4bc6dcae52e18c444218557",
-      "gitBlob": "95c6470d9d1a6137e3db08af10711c2a14e44196"
-    },
-    {
-      "path": "evidence/garment-wearer-metric/check-captured-reference.mjs",
-      "bytes": 3606,
-      "sha256": "d0089d2721f627ea1db8eb1b0884f58aadc6cb1d3528c4b56a534831a6b65fdc",
-      "gitBlob": "58acdbee98b8ae208b15e1fbdcb544e28b5ea173"
+      "path": "evidence/garment-wearer-metric/check-continuous-captured-pose.mjs",
+      "bytes": 16812,
+      "sha256": "d197e2096db0bea600b5e2a23231ad999f115e203a06ce1eb7a67fc1fbb96973",
+      "gitBlob": "392d93761f0cef83bfa4477c06d8ab8a2cde015a"
     },
     {
       "path": "evidence/garment-wearer-metric/depth-raster.py",
-      "bytes": 8590,
-      "sha256": "e7333345e5bc128877cd1461f4cccf34744e7d7ed6c8c211c7705d502ec5f5d3",
-      "gitBlob": "ba5c731e41b700a9c17f9ec07182b858a9b7c28f"
+      "bytes": 8887,
+      "sha256": "aec114575635e33afeba92ad49d0baa2c422be5547f619952f45cb3f1c8e3612",
+      "gitBlob": "92a86a8d80f591edb00b93da334c58e6000d832f"
     },
     {
-      "path": "evidence/garment-wearer-metric/D_ACTUAL_CONTACT99_GARMENT.json",
-      "bytes": 54803,
-      "sha256": "939869374aec38e1e22bedfa433ccd4ecfff9cd9da34eb5148e00141c03c0147",
-      "gitBlob": "90c697fa883a493f8ce52e1dc09027bc0c71a40c"
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_BODY_REPLAY_CONTRACT.json",
+      "bytes": 516,
+      "sha256": "12c89a31d3d82435bd0c02e636adca9282e374d3764a1a18e2c29220e6c8a038",
+      "gitBlob": "f3d966fd5526b42e1b8b87cedbeba897de33ad36"
     },
     {
-      "path": "evidence/garment-wearer-metric/D_CONTACT99_REFERENCE_EDGE_RCA.json",
-      "bytes": 16633,
-      "sha256": "b7ba4b9f26173b3b8727ed57b1f75ad77a996f6af926870d8076432d5a662b07",
-      "gitBlob": "8e2fb2e95094076dc91048feaf33dfa71cc73d88"
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_CAPTURE_GARMENT.json",
+      "bytes": 44474,
+      "sha256": "9c44ec7209497514b636fbdc866fd3d2c6c6fdf7b646d6b5e2a444930a8aaad6",
+      "gitBlob": "750614657ebb07aa4cf94c9fca45a3ffe920a2b4"
     },
     {
-      "path": "evidence/garment-wearer-metric/D_CONTACT99_PAIRED_REFERENCE.json",
-      "bytes": 19671,
-      "sha256": "4910d256d5b17c138deb4fd4dfbc9f284c540db60182f92275246e8ddf618d98",
-      "gitBlob": "93f1ca4dbff01445545ab7133198921d69e5b736"
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_CAPTURE_RESULT.json",
+      "bytes": 3671,
+      "sha256": "32bbb598b45e985aac2153050b617d00fb0feed7f00da85a9c04cae86ff00425",
+      "gitBlob": "2687c1c096756c6eb57a115e3c1ede7dc7940d6a"
     },
     {
-      "path": "evidence/garment-wearer-metric/D_CONTACT99_CHAIN_INPUT_EQUIVALENCE.json",
-      "bytes": 431,
-      "sha256": "e7a1c8b9ea3ef36d4e4fe015d2648e634aee23adc8d4bf24a818d7f616a74fa9",
-      "gitBlob": "2196ae48ea2392a58f1f37da0190ebd37651c443"
+      "path": "evidence/garment-wearer-metric/D_ENTRY_T03_CONTACT_TRACE.json",
+      "bytes": 258620,
+      "sha256": "331a95ed02287650f29a7ee460a109b32f819c30956a725501ac00fc0d94a34c",
+      "gitBlob": "3c6c23af99936979f5439e6f824df25cfec8c4b1"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_T03_RADIAL_HEMISPHERE_RCA.json",
+      "bytes": 47078,
+      "sha256": "cd94626735689780b9557acc27c78ebda53968cd13744b5f5aea7f0377321d3d",
+      "gitBlob": "79411e6c95e2f5dfb6c5036dd9baf0cdec68b59c"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_NEUTRAL_STATE.json",
+      "bytes": 1080714,
+      "sha256": "56989042bd32372279468d4a055c853313a65b81934c7168dc8c8e30911c34b1",
+      "gitBlob": "a15d18d62a4bec5e098ca894c78e49f96ad182eb"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_RADIAL_FIX_COMPARISON.json",
+      "bytes": 2039,
+      "sha256": "846b61c45ae5270ec7d2b16a4a76562e0ffd5711ddac03ce044fb7522ce96bdc",
+      "gitBlob": "8d5f3a485e6130c56af241e858d20c5df73c274e"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_RADIAL_FIX_MAXIMUM_EDGES.json",
+      "bytes": 2284,
+      "sha256": "919f24aed2439d9b40465a15bfe3ebc65d56c9af2d25f240d8623a8a1fb81a3a",
+      "gitBlob": "6335770d88e7e2b94e582652e1e77c8dec7c3933"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-outside-radial-hemisphere/RECEIPT.json",
+      "bytes": 2302,
+      "sha256": "8fb3a704f905aa793cfbae272c9d02fd28293f44e00d2ea05084c208a538c1e0",
+      "gitBlob": "284cfe8910b1e769609b994df80fb68b41218d9e"
+    },
+    {
+      "path": "appearance-source-lock.json",
+      "bytes": 40866,
+      "sha256": "8621cafc4aa133516f5a522afe966708639e758f38c53f53ef1321da68f4b409",
+      "gitBlob": "a9dd3387b4653a01b90073f6b149d34cc9863bda"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-idle-positive-clearance.mjs",
+      "bytes": 5899,
+      "sha256": "dc286d202dcd28416cc994ae583046e9e4a3f081e76d41385bad4f98b788cc6c",
+      "gitBlob": "4a95098c61d7c84447175b74f8a17ead154609fa"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-cold-entry-material-side.mjs",
+      "bytes": 5337,
+      "sha256": "c9989d1f13e9aae7c8145959f8521fa184c2c84320ee355e518adc1632554958",
+      "gitBlob": "696c12356b4e51f168f29d02bb246ab2a5a0e7dc"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_INITIAL_IDLE_POSITIVE_CLEARANCE_RCA.json",
+      "bytes": 6732,
+      "sha256": "f7091602e66e6f58037c8a3c3ac2461615f96ec74137a27131174f5768299518",
+      "gitBlob": "893da9be0a0868309f5e6472c61fec41dfcec161"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK7_POSITIVE_CLEARANCE_RCA.json",
+      "bytes": 3810,
+      "sha256": "fff306469fc84eccd6049c05861e47edb1a2e88130739ecd07c416c89c73326d",
+      "gitBlob": "4cb1e7dfeb6d66ab963b6a8e272ce6830f598de1"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_COLD_ENTRY_LEFT_MATERIAL_SIDE_RCA.json",
+      "bytes": 9063,
+      "sha256": "3b30c8c2d4bbd203da10a0a677c7c7adb1d25b0e0d53aa4734e1f715687e07d3",
+      "gitBlob": "9f74a65ad65f4049cf77cae07a6cf8566bf2de48"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk7-source-waist.mjs",
+      "bytes": 6886,
+      "sha256": "51950adfe6c6f50fb17d2dfc8949030250c123f4abaf451e7ce5b1c1b414a65b",
+      "gitBlob": "8da6b241489b80b7a1cc268b4da6dddaddf0efce"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK7_ORIGINAL_WAIST_TARGETS.json",
+      "bytes": 5179,
+      "sha256": "e629ea9e4009296e4f0a300ea989d082ed65e4fec97b74e748661852accf72c1",
+      "gitBlob": "923680491dad92e9824fabefa10ef1afcb037219"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ORIGINAL_WAIST_CHAIN_CHECKPOINT.json",
+      "bytes": 303618,
+      "sha256": "18b4ab45258d41470024f4c6217bccabd26b7173dcf0f8a35895d67a3ee3967b",
+      "gitBlob": "3449a1885630df4b35e9cbca69ab68490d88726b"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-source-waist-transport/RECEIPT.json",
+      "bytes": 1332,
+      "sha256": "3a7a93c46d32f4ca36dc2e77a6319261db3e15794357ab7e120179128a7d5e02",
+      "gitBlob": "4e93feaabd571fbe56355c20a13a157b2282775c"
     }
-  ]
+  ],
+  "sourcePlanningMarginM": 0.00401,
+  "sourceAuditMarginM": 0.004,
+  "localPlanningGuardM": 1e-05,
+  "createdAtUTC": "2026-10-21T03:50:06.730116+00:00",
+  "runningReportNotIncluded": "Actual sequence stopped at first failure walk21; D_ORIGINAL_WAIST_CHAIN_CHECKPOINT.json is now the complete bounded-run receipt."
 }
