@@ -38,10 +38,10 @@ if(material<=3){float shadow=1.;for(int i=0;i<32;i++){if(i>=lampCount)break;vec2
 float fog=1.-exp(-best*.0013);outColor=mix(outColor,vec3(.70,.76,.67),fog);outColor=pow(max(outColor,vec3(0)),vec3(.85));fragColor=vec4(outColor,1.);}`;
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 // Test/diagnostic query executes the exact same GLSL frame and nearestRoad functions.
-function gpuProbe(points,input=spec){
+function gpuProbe(points,input=spec,footprint=false){
  if(!gl.getExtension('EXT_color_buffer_float'))throw Error('Float query framebuffer unavailable');
  const packet=segmentPacket(input);if(packet.count>64)throw Error('Too many segments');
- const fs=fragment.slice(0,fragment.indexOf('void main()'))+'uniform vec2 probe;void main(){vec3 f;float id=nearestRoad(probe,f);fragColor=vec4(f,id);}';
+ const fs=fragment.slice(0,fragment.indexOf('void main()'))+'uniform vec2 probe;void main(){vec3 f;float id=nearestRoad(probe,f);fragColor='+ (footprint?'vec4(unionD(probe),0.,0.,1.);':'vec4(f,id);')+'}';
  const pr=gl.createProgram();gl.attachShader(pr,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(pr,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(pr));
  const tex=gl.createTexture(),fb=gl.createFramebuffer();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,1,1,0,gl.RGBA,gl.FLOAT,null);gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Query framebuffer incomplete');
  gl.useProgram(pr);gl.uniform4fv(gl.getUniformLocation(pr,'roads'),new Float32Array(packet.segments.flat()));gl.uniform4fv(gl.getUniformLocation(pr,'segmentMeta'),new Float32Array(packet.meta.flat()));gl.uniform1i(gl.getUniformLocation(pr,'segmentCount'),packet.count);gl.viewport(0,0,1,1);
