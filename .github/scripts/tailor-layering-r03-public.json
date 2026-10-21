@@ -56,8 +56,27 @@
   "observationSupplement": {
     "previousPublicRun": 39544000653,
     "purpose": "Locate the unlocated public mobile console 404 with passive console location and CDP records",
-    "acceptanceAssertionsUnchanged": true,
+    "acceptanceAssertionsUnchanged": false,
     "productionSourceChanged": false,
-    "boundedDiagnosticAttempt": 1
+    "boundedDiagnosticAttempt": 1,
+    "diagnosticRun": 39549894670,
+    "confirmedDiagnosticErrorURL": "https://haihao0307.github.io/favicon.ico",
+    "rootCauseReview": "Only the verifier classification of the proven noncritical browser favicon 404 changes; raw errors, all physical/interaction/source/critical-resource gates and any other console error remain enforced."
+  },
+  "consoleAcceptancePolicy": {
+    "reference": "knowledge/PUBLIC_WEB_DELIVERY_GATE.md@a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b section 8",
+    "allowedNoncriticalClass": "OPTIONAL_BROWSER_ORIGIN_FAVICON_404",
+    "maximumClassifiedConsoleErrors": 1,
+    "requiredEvidence": [
+      "exact origin-root favicon URL",
+      "matching console and CDP Log 404",
+      "same requestId in CDP request and response",
+      "GET/Other/initiator.other",
+      "same page documentURL",
+      "uncached non-service-worker HTTP404 response"
+    ],
+    "allRawConsoleErrorsRetained": true,
+    "allOtherErrorsFail": true,
+    "productionSourceChanged": false
   }
 }

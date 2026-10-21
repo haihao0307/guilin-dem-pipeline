@@ -101,7 +101,9 @@ jobs:
           PY
       - name: Check the real mobile entrance and touch interaction
         if: matrix.viewport == 'mobile'
-        run: node ../../.github/scripts/tailor-layering-r03-mobile.mjs | tee evidence/public-mobile.log
+        run: |
+          node --test ../../.github/scripts/tailor-layering-r03-console-classifier.test.mjs
+          node ../../.github/scripts/tailor-layering-r03-mobile.mjs | tee evidence/public-mobile.log
       - name: Preserve the actual public browser evidence
         if: always()
         uses: actions/upload-artifact@v6.0.0

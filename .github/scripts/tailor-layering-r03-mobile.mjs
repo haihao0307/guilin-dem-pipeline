@@ -9,6 +9,7 @@ import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {inflateSync} from 'node:zlib';
 import {installClothObserver, readClothObservation, waitForClothIdle} from '../../experiments/tailor-layering-r03/tests/cloth-observer.mjs';
+import {classifyPublicConsole} from './tailor-layering-r03-console-classifier.mjs';
 
 const ROOT = fileURLToPath(new URL('../../experiments/tailor-layering-r03/', import.meta.url));
 const OUTPUT = path.join(ROOT, 'evidence/public-mobile');
@@ -22,7 +23,7 @@ const summary = {schema: 'kaopu-r03-public-mobile@1', passed: false,
   scope: 'Real native scene entrance, actual touch view change, scrollable controls and layout; not a mobile hardware or performance certification.',
   visualAcceptance: false, productionReady: false, screenshotsAreOriginalBrowserCaptures: true,
   pageErrors: [], console: [], network: [], captures: [], controls: [],
-  observationSupplement: {purpose: 'Locate the unlocated console 404 in public run 39544000653; preserve every original acceptance assertion',
+  observationSupplement: {purpose: 'Retain raw console/CDP observations; classify only the independently located optional origin-root favicon 404 under the project public-delivery policy',
     mode: 'Passive console location and CDP Log/Network observations; no routing, filtering, cache override or application changes'},
   cdp: {log: [], requests: [], responses: [], loadingFailures: []}};
 let browser, context, page, failure, watchdog, heartbeat;
@@ -197,8 +198,11 @@ try {
   assert.equal(await page.locator('#layer-app #contact-demand').isChecked(), true);
   assert.match(summary.controls.find(row => row.selector === '#contact-demand').text, /按需接触计算/);
   assert.equal(summary.pageErrors.length, 0);
-  assert.equal(summary.console.filter(row => row.type === 'error').length, 0);
-  assert.equal(summary.network.filter(row => (row.status >= 400 || row.failure) && !new URL(row.url).pathname.endsWith('/favicon.ico')).length, 0);
+  summary.consoleAcceptance = classifyPublicConsole(summary, BASE);
+  assert.equal(summary.consoleAcceptance.passed, true, 'Unclassified console or CDP error; the only eligible noncritical record is the fully matched browser origin favicon 404');
+  const classifiedIconURLs = new Set(summary.consoleAcceptance.acceptedNoncriticalBrowserResourceErrors.map(row => row.url));
+  assert.equal(summary.network.filter(row => (row.status >= 400 || row.failure)
+    && !(row.status === 404 && !row.failure && classifiedIconURLs.has(row.url))).length, 0);
   if (failure) throw failure;
   summary.passed = true; progress('passed');
 } catch (error) {
