@@ -36,9 +36,9 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  extra='\nSet qa_stage = 0\n'+''.join('AddAction '+k+', '+v+'\n' for k,v in actions.items())
  extra+='<Function runloop>\n'
  for i,(at,act) in enumerate([(3,'QHall'),(7,'QSensor'),(8,'QCar'),(10,'QClose'),(22,'QReset'),(23,'QClose'),(60,'QReturn'),(62,'QStop')]):
-  extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] Print QA_OBSERVE action={act} uptime=%uptime%\n'
-  extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] RunAction {act}\n'
-  extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] Set qa_stage = {i+1}\n'
+  extra+=f' if[%uptime% > {at*1000} & %qa_stage% = {i}] Print QA_OBSERVE action={act} uptime=%uptime%\n'
+  extra+=f' if[%uptime% > {at*1000} & %qa_stage% = {i}] RunAction {act}\n'
+  extra+=f' if[%uptime% > {at*1000} & %qa_stage% = {i}] Set qa_stage = {i+1}\n'
  extra+='<EndFunction>\n'
  (app/'buildings/QA-Teacher-Temporary.bld').write_text(simple+extra)
  log=root/'execution.log'
