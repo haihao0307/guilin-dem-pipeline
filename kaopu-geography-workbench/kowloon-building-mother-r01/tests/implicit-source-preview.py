@@ -9,7 +9,7 @@ with sync_playwright() as pw:
  try:
   page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=90000);page.wait_for_function('window.__IMPLICIT_BUILDING__');assert page.evaluate('window.__IMPLICIT_BUILDING__.ready')
   for case in ['lowrise','kcc','warehouse']:
-   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id)',case);page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()');page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(1)')
+   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id)',case);page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()');page.evaluate('window.__IMPLICIT_BUILDING__.awaitSettled()');page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(1)')
    name='r06-source-'+case+'-candidate.png';page.screenshot(path=str(out/name),full_page=False);r['screenshots'].append(name)
    r['cases'][case]={'snapshot':page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()'),'diagnostics':page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()')};assert r['cases'][case]['snapshot']['reconstruction']['allSourcePatchesRetained'];assert r['cases'][case]['diagnostics']['unresolved']==0
    print('CAPTURED '+name,flush=True)

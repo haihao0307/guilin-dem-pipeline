@@ -3,7 +3,7 @@
 import argparse, hashlib, json, pathlib, time, urllib.request
 from playwright.sync_api import sync_playwright
 P=pathlib.Path(__file__).resolve().parents[1]
-FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md','r06/context.mjs','r06/sources/official-footprints.json']
+FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md','r06/context.mjs','r06/sources/official-footprints.json','r06/frame-scheduler.mjs']
 a=argparse.ArgumentParser();a.add_argument('--url',required=True);a.add_argument('--output',required=True);a=a.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True);report={'url':a.url,'hashes':{},'screenshots':[]}
 base=a.url.rsplit('/',1)[0]+'/'
 for f in FILES:
@@ -23,7 +23,7 @@ with sync_playwright() as p:
   assert report['startupScaleTimings'][-1]['medianMs']<600,'160x112 exceeds600ms warmed frame budget; high-resolution run withheld rather than queued blindly'
   page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()')
   def shot(name):
-   page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()')
+   page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()');page.evaluate('window.__IMPLICIT_BUILDING__.awaitSettled()')
    page.screenshot(path=str(out/(name+'.png')),full_page=False);report['screenshots'].append(name+'.png');print('STAGE screenshot '+name,flush=True)
   shot('r06-field-stairs')
   print('STAGE parity',flush=True);report['parity']=page.evaluate('window.__IMPLICIT_BUILDING__.parity()');assert report['parity']['passed'],report['parity'];report['rayParity']=page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()');assert report['rayParity']['passed'],report['rayParity']
@@ -66,6 +66,14 @@ with sync_playwright() as p:
    c['invalid']=page.evaluate("""()=>{const a=window.__IMPLICIT_BUILDING__,before=JSON.stringify(a.snapshot().config);let rejected=false;try{a.applyAssembly({interiorTranslationXZ:[95,95]})}catch(e){rejected=true;}return {rejected,unchanged:before===JSON.stringify(a.snapshot().config)}}""");assert all(c['invalid'].values())
    page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['sourceBoundContexts'][case_id]=c
    page.click('#open-source');page.wait_for_function('(id)=>window.__IMPLICIT_BUILDING__.snapshot().caseId===id',arg=case_id);assert page.evaluate('window.__IMPLICIT_BUILDING__.snapshot().reconstruction.allSourcePatchesRetained')
+  # Real Chromium interaction, not a claim about iOS GPU or 60fps.
+  page.evaluate("window.__IMPLICIT_BUILDING__.setCase('kcc-assembled')");page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()');page.evaluate('window.__IMPLICIT_BUILDING__.awaitSettled()')
+  box=page.locator('#view').bounding_box();x=box['x']+box['width']*.5;y=box['y']+box['height']*.5;page.mouse.move(x,y);page.mouse.down();start=time.monotonic();page.mouse.move(x+36,y+18,steps=12)
+  page.wait_for_function("()=>{const s=window.__IMPLICIT_BUILDING__.scheduling();return s.interacting&&s.lastDispatch?.quality==='interaction'&&s.lastDispatch.revision===s.revision}",timeout=120000)
+  page.screenshot(path=str(out/'r06-interaction-moving.png'));moving_seconds=time.monotonic()-start;moving=page.evaluate('window.__IMPLICIT_BUILDING__.scheduling()');assert moving['currentResolution']['width']<=160;assert moving['maxPendingCallbacks']<=2;assert moving['geometryLod'] is False
+  start=time.monotonic();page.mouse.up();settled=page.evaluate('window.__IMPLICIT_BUILDING__.awaitSettled()');page.screenshot(path=str(out/'r06-interaction-settled.png'));settled_seconds=time.monotonic()-start;assert settled['caseId']=='kcc-assembled';assert settled['scheduling']['pendingCallbacks']==0;assert settled['scheduling']['currentResolution']==settled['scheduling']['settledViewportResolution']
+  report['interaction']={'moving':moving,'settled':settled,'inputToMovingScreenshotWallSeconds':moving_seconds,'pointerUpToSettledScreenshotWallSeconds':settled_seconds,'measurement':'Playwright input, readiness wait and completed screenshot wall time; includes tool/capture overhead, not isolated GPU/presentation latency; desktop software Chromium, not iOS device','sameFieldAtBothResolutions':True};report['screenshots']+=['r06-interaction-moving.png','r06-interaction-settled.png']
+  page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport();window.__IMPLICIT_BUILDING__.setResolution(64,64)');page.wait_for_timeout(350);pinned=page.evaluate('window.__IMPLICIT_BUILDING__.scheduling()');assert pinned['resolutionMode']=='explicit-pinned' and pinned['currentResolution']=={'width':64,'height':64} and pinned['pendingCallbacks']==0;report['interaction']['explicitPinCancelledAutomaticWork']=True
   page.evaluate("window.__IMPLICIT_BUILDING__.setCase('design')")
   page.set_viewport_size({'width':390,'height':844});page.evaluate("window.__IMPLICIT_BUILDING__.setView('stairs')");shot('r06-mobile');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   report['runtimeAudit']=page.evaluate('window.__GL_AUDIT__');assert report['runtimeAudit']['buffers']==0;assert report['runtimeAudit']['indexDraws']==0;assert set(report['runtimeAudit']['drawCounts'])=={3}

@@ -9,6 +9,11 @@ import {CASE_SCHEMA,queryCase,intersectCaseRay,buildCaseGLSL} from './cases.mjs'
 import {ASSEMBLY_SCHEMA,queryAssembly,queryAssemblyInside,assemblyNormal,intersectAssemblyRay,buildAssemblyGLSL,assemblyLocalToSource,sourceToAssemblyLocal} from './assemblies.mjs';
 
 export const CONTEXT_SCHEMA='kaopu.case-function-context/0.1';
+// Identity/material arbitration only, matching the measured patch tie scale.
+// Coincident source boundaries and authored footprint edges can evaluate a few
+// Float32 ulps apart. Do not change the minimum distance, zero set or occupancy.
+export const CONTEXT_IDENTITY_TIE_METRES=0.00001;
+const sourceIdentityWins=(sourceDistance,designDistance)=>designDistance>=0&&sourceDistance<=designDistance+CONTEXT_IDENTITY_TIE_METRES;
 const copy=x=>structuredClone(x),finite=(p,n)=>Array.isArray(p)&&p.length===n&&p.every(Number.isFinite);
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,t)=>a.map(x=>x*t),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),length=a=>Math.hypot(...a);
 const unit=a=>mul(a,1/length(a));
@@ -54,8 +59,8 @@ export function queryContext(spec,p,{display=false}={}){
  validatePoint(spec,p);if(typeof display!=='boolean')throw Error('display must be boolean');
  const source=queryCase(spec.measured,p),design=queryAssembly(spec.assembly,sourceToAssemblyLocal(spec.assembly,p));
  if(display)source.distance=Math.max(source.distance,domainValue(spec,p));
- const component=source.distance<=design.distance?'source':'assembly',h=component==='source'?source:design;
- return {...h,component,coordinateFrame:component==='source'?'source-local':'diagram-local',sourceModelId:spec.sourceModelId,queryScope:display?'display_clipped_lower_bound':'authoritative_full_data',sourceOccupancy:null,designInside:design.inside,inside:component==='source'?null:design.inside};
+ const component=sourceIdentityWins(source.distance,design.distance)?'source':'assembly',h=component==='source'?source:design;
+ return {...h,distance:Math.min(source.distance,design.distance),component,coordinateFrame:component==='source'?'source-local':'diagram-local',sourceModelId:spec.sourceModelId,queryScope:display?'display_clipped_lower_bound':'authoritative_full_data',sourceOccupancy:null,designInside:design.inside,inside:component==='source'?null:design.inside};
 }
 export function contextNormal(spec,p,options={}){const h=queryContext(spec,p,options);return h.component==='source'?copy(h.normal):rotate(spec.alignmentTransform,assemblyNormal(spec.assembly,h.local));}
 /** Material coordinates and their directional derivatives use the same frame. */
@@ -100,10 +105,13 @@ vec3 contextDesignLocal(vec3 p){return contextInverseRotate(p-contextTranslation
 vec3 contextMaterialDirection(FieldHit h,vec3 worldDirection){return h.objectId>=2000.0?contextInverseRotate(worldDirection):worldDirection;}
 float contextDisplayDomain(vec3 p){return max(max(${f(d.heightRange[0])}-p.y,p.y-(${f(d.heightRange[1])})),${f(d.cutPlane.offset)}-dot(${vec(d.cutPlane.normal)},p));}
 // Authoritative DATA query: unsigned measured shell + signed authored solids.
-FieldHit mapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));if(a.distance<=b.distance)return a;return b;}
+// Outside-only identity tie: retain source identity near numerical coincidence,
+// but return the true min. Every strictly negative design distance wins.
+bool contextSourceIdentityWins(float sourceDistance,float designDistance){return designDistance>=0.0&&sourceDistance<=designDistance+${f(CONTEXT_IDENTITY_TIE_METRES)};}
+FieldHit mapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));float nearest=min(a.distance,b.distance);if(contextSourceIdentityWins(a.distance,b.distance)){a.distance=nearest;return a;}b.distance=nearest;return b;}
 float mapDistance(vec3 p){return min(contextSource_mapDistance(p),contextDesign_mapDistance(contextDesignLocal(p)));}
 // DISPLAY ONLY lower bound. No new zero set, cap, volume, or model geometry.
-FieldHit displayMapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));a.distance=max(a.distance,contextDisplayDomain(p));if(a.distance<=b.distance)return a;return b;}
+FieldHit displayMapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));a.distance=max(a.distance,contextDisplayDomain(p));float nearest=min(a.distance,b.distance);if(contextSourceIdentityWins(a.distance,b.distance)){a.distance=nearest;return a;}b.distance=nearest;return b;}
 float displayMapDistance(vec3 p){return min(max(contextSource_mapDistance(p),contextDisplayDomain(p)),contextDesign_mapDistance(contextDesignLocal(p)));}
 vec3 fieldNormal(vec3 p){FieldHit h=mapField(p);return h.objectId<2000.0?contextSource_caseNormalForId(h.objectId):contextRotate(contextDesign_fieldNormal(h.local));}
 vec3 fieldRayNormal=vec3(0,1,0);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded,traceFieldHybrid,traceFieldPrimaryOnly,traceFieldRescueFrom} from '../r06/field.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded,traceFieldHybrid,traceFieldPrimaryOnly,traceFieldRescueFrom,packFieldDescriptors,FIELD_BOUNDARY_DESCRIPTOR_LAYOUT} from '../r06/field.mjs';
 import {createHostRecord,transformLocalToHost,transformHostToLocal,validateHostDomain} from '../r06/host.mjs';
 const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,`${a} ≠ ${b}`);
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
@@ -108,7 +108,7 @@ test('step budget exhaustion is unresolved, never silently a geometric miss',()=
 });
 test('same configuration is deterministic and no model mesh constructors or buffers exist',()=>{
  assert.deepEqual(deriveField(),deriveField());assert.equal(buildFieldGLSL(spec),buildFieldGLSL(deriveField()));
- const source=readFileSync(new URL('../r06/field.mjs',import.meta.url),'utf8');assert.doesNotMatch(source,/new\s+(?:THREE\.)?(?:Mesh|BufferGeometry|CylinderGeometry|BoxGeometry|Float32Array|Uint16Array|Uint32Array)\s*\(/);
+ const source=readFileSync(new URL('../r06/field.mjs',import.meta.url),'utf8');assert.doesNotMatch(source,/new\s+(?:THREE\.)?(?:Mesh|BufferGeometry|CylinderGeometry|BoxGeometry|Uint16Array|Uint32Array)\s*\(/);
  assert.doesNotMatch(source,/marching.?cubes|createVertexArray|bufferData|drawElements/i);
  const glsl=buildFieldGLSL(spec);assert.match(glsl,/struct FieldHit/);assert.match(glsl,/float mapDistance\(vec3 p\)/);assert.match(glsl,/vec3 fieldNormal\(vec3 p\)/);
 });
@@ -154,7 +154,7 @@ test('under-stair view grid has no unresolved distant structural grazing pixels'
  assert.ok(hits>60);assert.ok(maxSteps<512);
 });
 test('emitted analytic trace contains only plane equations and bounded field queries',()=>{
- assert.ok(spec.structurePlanes.length>60&&spec.structurePlanes.length<100);const glsl=buildFieldGLSL(spec);assert.match(glsl,/bool fieldTraceRayClipped/);assert.match(glsl,/bool fieldTraceRay\(/);assert.match(glsl,/FieldHit mapStructure/);assert.match(glsl,/FIELD_BOUNDARY_EQUATIONS/);
+ assert.ok(spec.structurePlanes.length>60&&spec.structurePlanes.length<100);const glsl=buildFieldGLSL(spec);assert.match(glsl,/bool fieldTraceRayClipped/);assert.match(glsl,/bool fieldTraceRay\(/);assert.match(glsl,/FieldHit mapStructure/);assert.match(glsl,/fieldBoundaryDescriptors/);assert.doesNotMatch(glsl,/FIELD_BOUNDARY_EQUATIONS|switch\(index\)/);
  for(const p of spec.structurePlanes){near(Math.hypot(...p.normal),1);assert.ok(Number.isFinite(p.offset));}
 });
 
@@ -242,4 +242,28 @@ test('split primary/rescue with Float32 handoff matches the combined CPU oracle'
  }assert.ok(rescues>30);
  assert.throws(()=>traceFieldRescueFrom(spec,[0,0,0],[0,1,0],-1,128));
  const glsl=buildFieldGLSL(spec);assert.match(glsl,/#ifndef FIELD_KERNEL_STAGE/);assert.match(glsl,/#if FIELD_KERNEL_STAGE != 1/);assert.match(glsl,/bool fieldTracePrimaryOnlyClipped/);assert.match(glsl,/bool fieldTraceRescueFromClipped/);
+});
+function decodeBoundaryParameters(source,packed){
+ const record=i=>Array.from(packed.data.slice(i*4,i*4+4)),out=structuredClone(source);out.bounds={min:source.bounds.min.map(Math.fround),max:source.bounds.max.map(Math.fround)};out.structurePlanes=source.structurePlanes.map((p,i)=>{const eq=record(1+i*3),lo=record(2+i*3),hi=record(3+i*3),domains=[];
+  for(let j=0;j<hi[3];j++){const at=lo[3]+j*3,m=record(at),a=record(at+1),b=record(at+2);domains.push(m[0]===0?{kind:'bounds',min:a.slice(0,3),max:b.slice(0,3),excludeOpening:!!m[1]}:m[0]===1?{kind:'profile',dir:m[3],start:a[0],base:a[1]}:{kind:'slabPlan',floor:!!m[2]});}
+  return {...p,normal:eq.slice(0,3),offset:eq[3],bounds:{min:lo.slice(0,3),max:hi.slice(0,3)},domains};});return out;
+}
+test('compact boundary texture roundtrips every plane/domain parameter with outward broad bounds',()=>{
+ assert.equal(FIELD_BOUNDARY_DESCRIPTOR_LAYOUT.planeTexels,3);
+ for(const source of [spec,deriveField({floorHeight:3.6,risersPerFlight:11,doorWidth:1.1}),deriveField({wallEnabled:false})]){
+  const packed=packFieldDescriptors(source),decoded=decodeBoundaryParameters(source,packed);assert.deepEqual(packFieldDescriptors(source),packed);assert.ok(packed.data instanceof Float32Array);assert.ok(packed.texelCount*4<=packed.data.length);assert.ok(packed.width<=256);assert.equal(packed.planeCount,source.structurePlanes.length);assert.equal(packed.domainCount,source.structurePlanes.reduce((n,p)=>n+p.domains.length,0));
+  for(let i=0;i<source.structurePlanes.length;i++){const a=source.structurePlanes[i],b=decoded.structurePlanes[i];assert.deepEqual(b.normal,a.normal.map(Math.fround));assert.equal(b.offset,Math.fround(a.offset));assert.equal(b.domains.length,a.domains.length);
+   for(let axis=0;axis<3;axis++){assert.ok(b.bounds.min[axis]<=a.bounds.min[axis]-3e-5);assert.ok(b.bounds.max[axis]>=a.bounds.max[axis]+3e-5);}
+   for(let j=0;j<a.domains.length;j++){const q=a.domains[j],r=b.domains[j];assert.equal(q.kind,r.kind);if(q.kind==='bounds'){assert.deepEqual(r.min,q.min.map(Math.fround));assert.deepEqual(r.max,q.max.map(Math.fround));assert.equal(r.excludeOpening,!!q.excludeOpening);}else if(q.kind==='profile'){near(r.dir,q.dir);assert.equal(r.start,Math.fround(q.start));assert.equal(r.base,Math.fround(q.base));}else assert.equal(r.floor,!!q.floor);}
+  }
+ }
+ assert.throws(()=>packFieldDescriptors(null));
+ const glsl=buildFieldGLSL(spec);assert.match(glsl,/texelFetch\(fieldBoundaryDescriptors/);assert.doesNotMatch(glsl,/switch\(index\)|const vec4 FIELD_BOUNDARY_EQUATIONS|FIELD_DOMAIN_MIN\[/);assert.ok(glsl.length<33000);
+});
+test('Float32 boundary parameters preserve analytic ray masks, semantic IDs and depth',()=>{
+ const decoded=decodeBoundaryParameters(spec,packFieldDescriptors(spec));let hits=0;
+ const eye=[5,.35,6.5],target=[0,1.3,2.8],f=unit(target.map((v,i)=>v-eye[i])),r=unit(cross(f,[0,1,0])),up=cross(r,f);
+ for(const clipX of [null,-.2])for(let y=0;y<20;y++)for(let x=0;x<28;x++){const rd=unit(plus(plus(f,r,((x+.5)/28*2-1)*1.4*.41421356),up,(1-(y+.5)/20*2)*.41421356)),a=traceFieldAnalytic(spec,eye,rd,{clipX,epsilon:1e-7,epsilonScale:0}),b=traceFieldAnalytic(decoded,eye,rd,{clipX,epsilon:1e-7,epsilonScale:0});assert.equal(b.status,a.status);if(a.hit){hits++;assert.equal(b.objectId,a.objectId);near(b.t,a.t,.0003);}}
+ assert.ok(hits>300);
+ for(const [ro,rd]of [[[-.7,1.42,3.71],[0,0,1]],[[2,2.99999,-2],[0,.000002,1]],[[-.7,-.1,.5],[.4759111227281487,-.015441944199864522,.8793578052322961]]]){const a=traceFieldAnalytic(spec,ro,rd),b=traceFieldAnalytic(decoded,ro,rd);assert.equal(b.status,a.status);assert.equal(b.objectId,a.objectId);near(b.t,a.t,.0003);}
 });

@@ -357,11 +357,33 @@ export function traceFieldRescueFrom(spec,origin,direction,startT,usedPrimarySte
  return {...result,t:result.t===undefined?undefined:startT+result.t,steps:usedPrimarySteps+result.steps,primarySteps:usedPrimarySteps,rescueUsed:true,reason:'analytic_rescue_'+result.reason};
 }
 const plusVector=(p,n,s)=>p.map((v,i)=>v+n[i]*s);
-function buildTraceGLSL(spec){const planes=spec.structurePlanes.map(p=>v([...p.normal,p.offset])).join(',\n'),c=spec.config,d=spec.dimensions;
- const domainCode=q=>q.kind==='bounds'?`(fieldDomainBounds(p,${v(q.min)},${v(q.max)})${q.excludeOpening?`&&!(abs(p.x)<${f(c.doorWidth/2)}&&p.y>${f(c.floorHeight-.0001)}&&p.y<${f(c.floorHeight+c.doorHeight+.0001)})`:''})`:q.kind==='profile'?`(fieldProfileInside(vec2(${f(q.dir)}*(p.z-${f(q.start)}),p.y-${f(q.base)})))`:`(fieldFootprintInside(p.xz)&&!fieldServiceInside(p.xz)${q.floor?`&&!(abs(p.x)<${f(d.totalWidth/2)}&&p.z>${f(d.z0)}&&p.z<${f(d.totalLength)})`:''})`;
+/** Float32 scalar coefficients of analytic finite boundary functions, not
+ * mesh vertices, triangle indices, occupancy samples, or voxel storage.
+ * Plane: equation; broad min / first domain texel; broad max / domain count.
+ * Domain: kind / aperture exclusion / floor flag / direction; min or profile
+ * start/base; max. Actual source/CPU equations remain double precision. */
+export const FIELD_BOUNDARY_DESCRIPTOR_LAYOUT=Object.freeze({version:1,headerTexels:1,planeTexels:3,domainTexels:3});
+const fieldF32Scratch=new DataView(new ArrayBuffer(4));
+function fieldOutwardFloat32(value,upper){let rounded=Math.fround(value);if(!Number.isFinite(rounded))throw Error('Boundary coefficient exceeds Float32 range');if(upper?rounded>=value:rounded<=value)return rounded;if(rounded===0)return upper?2**-149:-(2**-149);fieldF32Scratch.setFloat32(0,rounded);let bits=fieldF32Scratch.getUint32(0);bits+=(rounded>0)===upper?1:-1;fieldF32Scratch.setUint32(0,bits);return fieldF32Scratch.getFloat32(0);}
+export function packFieldDescriptors(spec){
+ if(spec?.schema!==FIELD_SCHEMA||!spec.structurePlanes?.length)throw Error('deriveField result required');
+ const planeCount=spec.structurePlanes.length,domainCount=spec.structurePlanes.reduce((n,p)=>n+p.domains.length,0),domainBase=1+planeCount*3,texelCount=domainBase+domainCount*3;
+ if(texelCount>=2**24||planeCount>256)throw Error('Bounded analytic descriptor budget exceeded');
+ const width=Math.min(256,2**Math.ceil(Math.log2(Math.sqrt(texelCount)))),height=Math.ceil(texelCount/width),data=new Float32Array(width*height*4);
+ const put=(at,values)=>{if(values.some(v=>!Number.isFinite(v)||!Number.isFinite(Math.fround(v))))throw Error('Finite boundary parameters required');data.set(values,at*4);};
+ put(0,[1,planeCount,domainCount,Math.max(...spec.structurePlanes.map(p=>p.domains.length))]);let domainAt=domainBase;
+ for(let i=0;i<planeCount;i++){const p=spec.structurePlanes[i],at=1+i*3;put(at,[...p.normal,p.offset]);
+  // Widen only acceleration bounds; exact finite face domains are unchanged.
+  put(at+1,[...p.bounds.min.map(v=>fieldOutwardFloat32(v-3e-5,false)),domainAt]);put(at+2,[...p.bounds.max.map(v=>fieldOutwardFloat32(v+3e-5,true)),p.domains.length]);
+  for(const q of p.domains){const kind={bounds:0,profile:1,slabPlan:2}[q.kind];if(kind===undefined)throw Error('Unknown analytic boundary domain');
+   put(domainAt,[kind,q.excludeOpening?1:0,q.floor?1:0,q.dir??0]);put(domainAt+1,kind===0?[...q.min,0]:kind===1?[q.start,q.base,0,0]:[0,0,0,0]);put(domainAt+2,kind===0?[...q.max,0]:[0,0,0,0]);domainAt+=3;
+  }
+ }
+ return {schema:'kaopu.analytic-boundary-parameters/1',data,width,height,texelCount,planeCount,domainCount};
+}
+function buildTraceGLSL(spec){const c=spec.config,d=spec.dimensions;
  const railClosest=spec.rail.pieces.map(s=>s.kind==='line'?`q=fieldLineClosest(p,${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`:`q=fieldArcClosest(p,${v(s.center)},${v(s.u)},${v(s.v)},${f(s.radius)},${f(Math.sin(s.sweep))},${f(Math.cos(s.sweep))},${v(s.start)},${v(s.end)});d=dot(p-q,p-q);if(d<best){best=d;closest=q;}`).join('\n');
- const boundMin=spec.structurePlanes.map(p=>v(p.bounds.min)).join(','),boundMax=spec.structurePlanes.map(p=>v(p.bounds.max)).join(',');
- const domains=spec.structurePlanes.map((p,i)=>`case ${i}:return ${p.domains.map(domainCode).join('||')};`).join('\n');return `
+ return `
 vec3 fieldRayNormal=vec3(0,1,0);
 int fieldRailStepBudget=512;
 float fieldRailTolerance=.00015;
@@ -374,21 +396,25 @@ vec3 fieldLineClosest(vec3 p,vec3 a,vec3 b){vec3 ab=b-a;return a+ab*clamp(dot(p-
 vec3 fieldArcClosest(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sinSweep,float cosSweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),rho2=x*x+y*y;if(rho2>1e-18&&y>=0.0&&x*sinSweep-y*cosSweep>=0.0)return center+r*(u*x+v*y)*inversesqrt(rho2);return dot(p-start,p-start)<=dot(p-end,p-end)?start:end;}
 vec3 fieldRailNormal(vec3 p,float clipX){float best=1e20,d;vec3 closest=p,q;${railClosest}if(clipX-p.x>=sqrt(best)-${f(c.railRadius)})return vec3(-1,0,0);return normalize(p-closest);}
 const int FIELD_STRUCTURE_PLANE_COUNT=${spec.structurePlanes.length};
-const vec4 FIELD_BOUNDARY_EQUATIONS[${spec.structurePlanes.length}]=vec4[](${planes});
-const vec3 FIELD_DOMAIN_MIN[${spec.structurePlanes.length}]=vec3[](${boundMin});
-const vec3 FIELD_DOMAIN_MAX[${spec.structurePlanes.length}]=vec3[](${boundMax});
-
+const int FIELD_MAX_DOMAINS_PER_PLANE=${Math.max(...spec.structurePlanes.map(p=>p.domains.length))};
+uniform highp sampler2D fieldBoundaryDescriptors;
+vec4 fieldBoundaryRecord(int index){int width=textureSize(fieldBoundaryDescriptors,0).x;return texelFetch(fieldBoundaryDescriptors,ivec2(index%width,index/width),0);}
 bool fieldDomainBounds(vec3 p,vec3 lo,vec3 hi){for(int i=0;i<3;i++){float tol=hi[i]-lo[i]<1e-9?.00003:0.0;if(p[i]<lo[i]-tol||p[i]>hi[i]+tol)return false;}return true;}
-bool fieldBoundaryDomain(int index,vec3 p){switch(index){${domains}}return false;}
-float fieldClippedStructure(vec3 p,float clipX){return max(mapStructure(p).distance,clipX-p.x);}
-void fieldConsiderPlane(vec3 ro,vec3 rd,vec4 equation,int planeIndex,float start,float finish,float clipX,inout float nearest,inout bool found){float den=dot(equation.xyz,rd);if(abs(den)<1e-8)return;float t=(equation.w-dot(equation.xyz,ro))/den;if(t<start-.00001||t>finish||t>=nearest)return;vec3 p=ro+rd*t;if(planeIndex>=0&&(!fieldDomainBounds(p,FIELD_DOMAIN_MIN[planeIndex],FIELD_DOMAIN_MAX[planeIndex])||!fieldBoundaryDomain(planeIndex,p)))return;float e=.0004;bool dp=fieldStructureOccupied(p+equation.xyz*e,clipX),dm=fieldStructureOccupied(p-equation.xyz*e,clipX);if(dp==dm)return;nearest=t;found=true;fieldRayNormal=dp?-equation.xyz:equation.xyz;}
+bool fieldBoundaryDomain(int first,int count,vec3 p){for(int j=0;j<FIELD_MAX_DOMAINS_PER_PLANE;j++){if(j>=count)break;int at=first+j*3;vec4 meta=fieldBoundaryRecord(at),lo=fieldBoundaryRecord(at+1),hi=fieldBoundaryRecord(at+2);
+ if(meta.x<.5){if(fieldDomainBounds(p,lo.xyz,hi.xyz)&&!(meta.y>.5&&abs(p.x)<${f(c.doorWidth/2)}&&p.y>${f(c.floorHeight-.0001)}&&p.y<${f(c.floorHeight+c.doorHeight+.0001)}))return true;}
+ else if(meta.x<1.5){if(fieldProfileInside(vec2(meta.w*(p.z-lo.x),p.y-lo.y)))return true;}
+ else if(fieldFootprintInside(p.xz)&&!fieldServiceInside(p.xz)&&!(meta.z>.5&&abs(p.x)<${f(d.totalWidth/2)}&&p.z>${f(d.z0)}&&p.z<${f(d.totalLength)}))return true;
+ }return false;}
+void fieldConsiderPlane(vec3 ro,vec3 rd,vec4 equation,vec3 broadMin,vec3 broadMax,int firstDomain,int domainCount,float start,float finish,float clipX,inout float nearest,inout bool found){float den=dot(equation.xyz,rd);if(abs(den)<1e-8)return;float t=(equation.w-dot(equation.xyz,ro))/den;if(t<start-.00001||t>finish||t>=nearest)return;vec3 p=ro+rd*t;
+ if(firstDomain>=0&&(!fieldDomainBounds(p,broadMin,broadMax)||!fieldBoundaryDomain(firstDomain,domainCount,p)))return;float e=.0004;bool dp=fieldStructureOccupied(p+equation.xyz*e,clipX),dm=fieldStructureOccupied(p-equation.xyz*e,clipX);if(dp==dm)return;nearest=t;found=true;fieldRayNormal=dp?-equation.xyz:equation.xyz;}
 bool fieldTraceRayAnalyticClipped(vec3 ro,vec3 rd,float clipX,int diagnosticMode,out float t,out FieldHit hit,out int steps,out int status){
  fieldRayNormal=vec3(0,1,0);hit.distance=1e20;hit.objectId=0.0;hit.materialRole=0.0;hit.local=ro;steps=0;status=2;t=0.0;vec2 span;
  if(!fieldRayInterval(ro,rd,${v(spec.bounds.min)},${v(spec.bounds.max)},span)||span.y<0.0)return false;
  float start=max(span.x,0.0),finish=span.y,nearest=finish+1.0;bool found=false;
  #if FIELD_TRACE_VARIANT != 2
- if(diagnosticMode!=2)for(int i=0;i<FIELD_STRUCTURE_PLANE_COUNT;i++)fieldConsiderPlane(ro,rd,FIELD_BOUNDARY_EQUATIONS[i],i,start,finish,clipX,nearest,found);
- if(diagnosticMode!=2&&clipX>-1e10)fieldConsiderPlane(ro,rd,vec4(1,0,0,clipX),-1,start,finish,clipX,nearest,found);
+ if(diagnosticMode!=2){vec4 header=fieldBoundaryRecord(0);if(header.x!=1.0||int(header.y+.5)!=FIELD_STRUCTURE_PLANE_COUNT){status=3;return false;}
+ for(int i=0;i<FIELD_STRUCTURE_PLANE_COUNT;i++){int at=1+i*3;vec4 equation=fieldBoundaryRecord(at),lo=fieldBoundaryRecord(at+1),hi=fieldBoundaryRecord(at+2);fieldConsiderPlane(ro,rd,equation,lo.xyz,hi.xyz,int(lo.w+.5),int(hi.w+.5),start,finish,clipX,nearest,found);}}
+ if(diagnosticMode!=2&&clipX>-1e10)fieldConsiderPlane(ro,rd,vec4(1,0,0,clipX),vec3(0),vec3(0),-1,0,start,finish,clipX,nearest,found);
  #endif
  #if FIELD_TRACE_VARIANT != 1
  ${spec.config.railsEnabled?`vec3 railMin=${v(spec.rail.bounds.min)},railMax=${v(spec.rail.bounds.max)};railMin.x=max(railMin.x,clipX);vec2 railSpan;
