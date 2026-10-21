@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded} from '../r06/field.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded,traceFieldHybrid} from '../r06/field.mjs';
 import {createHostRecord,transformLocalToHost,transformHostToLocal,validateHostDomain} from '../r06/host.mjs';
 const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,`${a} ≠ ${b}`);
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
@@ -206,4 +206,22 @@ test('diagnostic trace modes isolate structure and rail while the default stays 
  const structure=traceFieldAnalytic(spec,[2,4,0],[0,-1,0],{diagnosticMode:1});assert.equal(structure.objectId,102);assert.equal(structure.steps,0);
  const emptyRail=traceFieldAnalytic(spec,[2,4,0],[0,-1,0],{diagnosticMode:2});assert.equal(emptyRail.status,2);assert.throws(()=>traceFieldAnalytic(spec,ro,rd,{diagnosticMode:99}));
  const glsl=buildFieldGLSL(spec);assert.match(glsl,/#ifndef FIELD_TRACE_VARIANT/);assert.match(glsl,/#if FIELD_TRACE_VARIANT != 1/);assert.match(glsl,/#if FIELD_TRACE_VARIANT != 2/);assert.match(glsl,/fieldTraceRayModeClipped/);
+});
+
+test('hybrid rescues grazing rays and internal zero seams without raising the shared budget',()=>{
+ const nearly=traceFieldHybrid(spec,[2,2.99999,-2],[0,.000002,1]);assert.equal(nearly.rescueUsed,true);near(nearly.point[1],3,1e-8);near(nearly.t,5,1e-6);assert.equal(nearly.objectId,102);
+ const parallel=traceFieldHybrid(spec,[2,2.99999,-2],[0,0,1]);assert.equal(parallel.status,2);assert.equal(parallel.rescueUsed,true);
+ const joined=traceFieldHybrid(spec,[-.7,1.42,3.71],[0,0,1]);assert.equal(joined.objectId,203);near(joined.t,1.21,.0002);
+ const interior=traceFieldHybrid(spec,[-.7,-.1,.5],[.4759111227281487,-.015441944199864522,.8793578052322961]);assert.equal(interior.status,1);assert.equal(interior.objectId,101);near(interior.point[1],-.2,1e-8);
+ for(const h of [nearly,parallel,joined,interior])assert.ok(h.steps<=512);
+ const q=railPointAt(spec.rail,spec.rail.length*.16),radial=unit(cross(q.tangent,[0,1,0])),ro=plus(q.point,radial,.3),none=traceFieldHybrid(spec,ro,radial.map(v=>-v),{maxSteps:0});assert.equal(none.status,3);assert.equal(none.steps,0);
+});
+test('hybrid masks, semantic IDs and depths agree with the high-precision analytic oracle in six actual camera views',()=>{
+ const views=[[[.35,7,3.9],[0,1.2,2.7],45],[[0,2.95,2.2],[0,2.5,4.6],70],[[3.4,5.6,-4.3],[0,4.25,0],45],[[30,32,-22],[-1,1.6,-6],45],[[5,.35,6.5],[0,1.3,2.8],45],[[-.7,-.1,.5],[-.7,.6,2.5],45]];
+ let rescued=0,primary=0;
+ for(const [eye,target,fov]of views){const f=unit(target.map((v,i)=>v-eye[i])),r=unit(cross(f,[0,1,0])),up=cross(r,f),tan=Math.tan(fov*Math.PI/360),w=32,h=24;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const rd=unit(plus(plus(f,r,((x+.5)/w*2-1)*w/h*tan),up,(1-(y+.5)/h*2)*tan)),a=traceFieldAnalytic(spec,eye,rd,{epsilon:1e-7,epsilonScale:0}),b=traceFieldHybrid(spec,eye,rd);
+   assert.equal(b.status,a.status,JSON.stringify({eye,x,y,a,b}));assert.notEqual(b.status,3);assert.ok(b.steps<=512);if(b.rescueUsed)rescued++;else primary++;if(a.hit){assert.equal(b.objectId,a.objectId);near(b.t,a.t,.0003);}
+  }
+ }assert.ok(rescued>10);assert.ok(primary>rescued*5);
 });

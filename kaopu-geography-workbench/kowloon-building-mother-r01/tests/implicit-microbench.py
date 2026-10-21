@@ -12,17 +12,23 @@ with sync_playwright() as pw:
   for mode,name in [(4,'empty'),(1,'structure'),(2,'rail'),(3,'conservative-march'),(0,'combined')]:
    print('MICRO '+name,flush=True);page.evaluate(f'{api}.setResolution(1,1);{api}.setTraceVariant({mode});{api}.setRenderOptions({{renderMode:1,traceMode:0}})')
    r={'compile':page.evaluate(f'{api}.snapshot().renderer.compileProfile'),'1x1':page.evaluate(f'{api}.benchmark(1)')};page.evaluate(f'{api}.setResolution(32,32)');r['32x32']=page.evaluate(f'{api}.benchmark(3)')
-   if r['32x32']['medianMs']<25:
+   if r['32x32']['medianMs']<75:
     page.evaluate(f'{api}.setResolution(160,112)');r['160x112']=page.evaluate(f'{api}.benchmark(3)')
+   
+   if name=='combined':r['diagnostics']=page.evaluate(f'{api}.diagnostics()')
    report['paths'][name]=r;(out/'microbench.json').write_text(json.dumps(report,indent=2));print(json.dumps({'path':name,'timings':{k:round(v['medianMs'],2) for k,v in r.items() if 'medianMs' in v}}),flush=True)
   report['cases']={}
-  for case in ['kcc','lowrise','warehouse']:
+  for case in ['kcc','lowrise','warehouse','lowrise-assembly','kcc-assembly','warehouse-assembly']:
    print('MICRO source '+case,flush=True);page.evaluate(f'{api}.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id)',case);page.evaluate(f'{api}.setRenderOptions({{renderMode:1,traceMode:0}})')
    r={'compile':page.evaluate(f'{api}.snapshot().renderer.compileProfile'),'1x1':page.evaluate(f'{api}.benchmark(1)')};page.evaluate(f'{api}.setResolution(32,32)');r['32x32']=page.evaluate(f'{api}.benchmark(3)')
-   if r['32x32']['medianMs']<25:
+   if r['32x32']['medianMs']<75:
     page.evaluate(f'{api}.setResolution(160,112)');r['160x112']=page.evaluate(f'{api}.benchmark(3)')
    report['cases'][case]=r;(out/'microbench.json').write_text(json.dumps(report,indent=2));print(json.dumps({'case':case,'timings':{k:round(v['medianMs'],2) for k,v in r.items() if 'medianMs' in v}}),flush=True)
+  if report['paths']['combined'].get('160x112',{}).get('medianMs',1e20)<600:
+   page.evaluate(f'{api}.setResolution(1,1)');page.evaluate(f"{api}.setCase('design')");page.evaluate(f"{api}.setView('stairs');{api}.setRenderOptions({{renderMode:0,traceMode:0}});{api}.setResolution(600,420)")
+   page.screenshot(path=str(out/'kernel-after-isolation.png'));report['kernelScreenshot']='kernel-after-isolation.png'
   report['status']='measured';assert not report['errors'],report['errors'];assert report['paths']['combined'].get('160x112',{}).get('medianMs',1e20)<600,'Combined path exceeds staged160 budget; full QA withheld'
+  assert all(r.get('160x112',{}).get('medianMs',1e20)<600 for r in report['cases'].values()),'A source path exceeds staged160 budget; full QA withheld'
  except Exception as e:
   report['status']='failed';report['error']=str(e);raise
  finally:

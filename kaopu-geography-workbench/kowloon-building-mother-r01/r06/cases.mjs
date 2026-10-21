@@ -85,7 +85,12 @@ export function traceCase(spec,origin,direction,{maxSteps=256,maxDistance=500,ep
 }
 /** Exact ray intersection against the same finite source planes and boundary
  * predicates. Optional direct renderer path: no iterative distance budget. */
-function rayBounds(origin,rd,best,bounds){let lo=0,hi=best;for(let a=0;a<3;a++){if(Math.abs(rd[a])<1e-12){if(origin[a]<bounds.min[a]||origin[a]>bounds.max[a])return false;continue;}const x=(bounds.min[a]-origin[a])/rd[a],y=(bounds.max[a]-origin[a])/rd[a];lo=Math.max(lo,Math.min(x,y));hi=Math.min(hi,Math.max(x,y));if(hi<lo)return false;}return true;}
+function rayBounds(origin,rd,best,bounds){let lo=0,hi=best;for(let a=0;a<3;a++){
+ // Match the finite-boundary predicate tolerance conservatively. Exact thin
+ // AABBs otherwise reject edge hits after the source frame round trip.
+ const min=bounds.min[a]-1e-8,max=bounds.max[a]+1e-8;
+ if(Math.abs(rd[a])<1e-12){if(origin[a]<min||origin[a]>max)return false;continue;}
+ const x=(min-origin[a])/rd[a],y=(max-origin[a])/rd[a];lo=Math.max(lo,Math.min(x,y));hi=Math.min(hi,Math.max(x,y));if(hi<lo)return false;}return true;}
 function patchContains(patch,p){const q=sub(p,patch.origin),uv=[dot(q,patch.u),dot(q,patch.v)];if(insideLoop(uv,patch.loops[0])&&!patch.loops.slice(1).some(l=>insideLoop(uv,l)))return true;return patchDistance(patch,p)<=1e-8;}
 export function intersectCaseRay(spec,origin,direction,{maxDistance=10000,accelerated=true}={}){
  if(spec?.schema!==CASE_SCHEMA||!finiteArray(origin,3)||!finiteArray(direction,3)||len(direction)<1e-12)throw Error('Measured case and valid ray required');const rd=normal(direction);let t=maxDistance,index=-1,nodeVisits=0,patchTests=0;
@@ -98,6 +103,52 @@ export function intersectCaseRay(spec,origin,direction,{maxDistance=10000,accele
 const f=n=>{if(!Number.isFinite(n))throw Error('Non-finite field constant');return Number(n).toFixed(12).replace(/0+$/,'').replace(/\.$/,'.0');};
 const vec=(a,n=a.length)=>`vec${n}(${a.map(f).join(',')})`;
 const array=(type,name,items)=>`const ${type} ${name}[${items.length}]=${type}[${items.length}](${items.join(',')});`;
+/** Emit a compact branch tree with literal plane/domain constants. Dynamic
+ * indexing of large const arrays is very expensive on some WebGL2 drivers.
+ * These are the SAME source plane equations and finite boundary predicates:
+ * neither object geometry nor a surrogate closed-volume approximation.
+ * Small bounded groups avoid duplicating all single-patch BVH bounds in GLSL. */
+function buildStaticCaseRayGLSL(patches,nodes){
+ const domainEpsilon=.00002;
+ const loopEdges=loop=>loop.map((b,i)=>({a:loop[(i+loop.length-1)%loop.length],b}));
+ const convexSign=loop=>{
+  const edges=loopEdges(loop),area=edges.reduce((s,{a,b})=>s+a[0]*b[1]-b[0]*a[1],0),sign=Math.sign(area);
+  // Check every boundary coordinate, not only adjacent turns. No simplification.
+  return sign&&edges.every(({a,b})=>loop.every(p=>sign*((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]))>=0))?sign:0;
+ };
+ const domains=patches.map((patch,k)=>{
+  const edges=patch.loops.map(loopEdges),predicates=patch.loops.map((loop,j)=>{
+   const sign=convexSign(loop);
+   if(sign)return `bool in${j}=${edges[j].map(({a,b})=>`(dot(uv-${vec(a)},${vec([sign*(a[1]-b[1]),sign*(b[0]-a[0])])})>=0.0)`).join('&&')};`;
+   return `bool in${j}=false;`+edges[j].map(({a,b})=>`in${j}=in${j}!=caseRayCross(uv,${vec([...a,...b])});`).join('');
+  }).join('\n');
+  const inside=patch.loops.map((_,j)=>j?`!in${j}`:'in0').join('&&');
+  return `bool caseRayDomain${k}(vec2 uv){${predicates}\nif(${inside})return true;\nreturn ${edges.flat().map(({a,b})=>`caseRayEdgeSquared(uv,${vec([...a,...b])})<=${f(domainEpsilon**2)}`).join('||')};}\n`+
+   `void caseRayPatch${k}(vec3 ro,vec3 rd,inout float t,inout FieldHit h,inout int best){\nfloat den=dot(rd,${vec(patch.n)});if(abs(den)<1e-12)return;float candidate=dot(${vec(patch.origin)}-ro,${vec(patch.n)})/den;if(candidate<0.0||candidate>t)return;\nvec3 p=ro+rd*candidate,q=p-${vec(patch.origin)};vec2 uv=vec2(dot(q,${vec(patch.u)}),dot(q,${vec(patch.v)}));\nif(caseRayDomain${k}(uv)&&(candidate<t||(candidate==t&&(best<0||${k}<best)))){best=${k};t=candidate;h.distance=0.0;h.objectId=${f(1000+k)};h.materialRole=${f(patch.materialRole)};h.local=p;}}`;
+ }).join('\n');
+ const emit=i=>{
+  const node=nodes[i],leaves=nodes.slice(i,node.skip).filter(n=>n.patchIndex>=0);
+  const body=leaves.length<=4?leaves.map(n=>`caseRayPatch${n.patchIndex}(ro,rd,t,h,best);`).join('\n'):emit(i+1)+emit(nodes[i+1].skip);
+  return `nodeVisits++;if(caseRayBoundsStatic(ro,inv,parallel,${vec(node.min)},${vec(node.max)},t)){\n${body}}\n`;
+ };
+ return `
+// Exact polygon crossing and finite-edge distance; no sampled occupancy.
+bool caseRayCross(vec2 p,vec4 ab){vec2 a=ab.xy,b=ab.zw;return ((a.y>p.y)!=(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x);}
+float caseRayEdgeSquared(vec2 p,vec4 ab){vec2 a=ab.xy,d=ab.zw-a;float den=dot(d,d),s=den>1e-24?clamp(dot(p-a,d)/den,0.0,1.0):0.0;vec2 q=p-(a+d*s);return dot(q,q);}
+bool caseRayBoundsStatic(vec3 ro,vec3 inv,bvec3 parallel,vec3 bmin,vec3 bmax,float best){
+ // Padding is conservative query tolerance only, never a surface change.
+ bmin-=vec3(0.00002);bmax+=vec3(0.00002);vec3 a=(bmin-ro)*inv,b=(bmax-ro)*inv,lo=min(a,b),hi=max(a,b);
+ if(parallel.x){if(ro.x<bmin.x||ro.x>bmax.x)return false;lo.x=0.0;hi.x=1e20;}
+ if(parallel.y){if(ro.y<bmin.y||ro.y>bmax.y)return false;lo.y=0.0;hi.y=1e20;}
+ if(parallel.z){if(ro.z<bmin.z||ro.z>bmax.z)return false;lo.z=0.0;hi.z=1e20;}
+ return max(0.0,max(lo.x,max(lo.y,lo.z)))<=min(best,min(hi.x,min(hi.y,hi.z)));}
+${domains}
+bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int nodeVisits){
+ t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;nodeVisits=0;int best=-1;
+ bvec3 parallel=lessThan(abs(rd),vec3(1e-12));vec3 inv=1.0/vec3(parallel.x?1.0:rd.x,parallel.y?1.0:rd.y,parallel.z?1.0:rd.z);
+ ${emit(0)}return best>=0;}
+`;
+}
 /** One stackless BVH of analytic scalar bounds; no recursion, draw geometry,
  * triangle reconstruction, texture voxel storage or model vertex attributes. */
 export function buildCaseGLSL(spec){
@@ -125,10 +176,7 @@ float caseBound(vec3 p,int i){return length(max(max(caseBVHMin[i]-p,p-caseBVHMax
 FieldHit mapField(vec3 p){FieldHit h;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=p;int i=0,best=-1;
  for(int visit=0;visit<${nodes.length};visit++){if(i>=${nodes.length})break;if(caseBound(p,i)>h.distance+0.00001){i=caseBVHLinks[i].y;continue;}int k=caseBVHLinks[i].x;
  if(k>=0){float d=casePatchDistance(k,p);if(d<h.distance-0.00001||(abs(d-h.distance)<=0.00001&&(best<0||k<best))){best=k;h.objectId=float(k+1000);h.materialRole=caseRoles[k];}h.distance=min(h.distance,d);}i++;}return h;}
-bool caseRayBounds(vec3 ro,vec3 rd,int i,float best){float lo=0.0,hi=best;for(int a=0;a<3;a++){if(abs(rd[a])<1e-10){if(ro[a]<caseBVHMin[i][a]||ro[a]>caseBVHMax[i][a])return false;}else{float x=(caseBVHMin[i][a]-ro[a])/rd[a],y=(caseBVHMax[i][a]-ro[a])/rd[a];lo=max(lo,min(x,y));hi=min(hi,max(x,y));if(hi<lo)return false;}}return true;}
-bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int nodeVisits){t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;nodeVisits=0;int i=0,best=-1;
- for(int visit=0;visit<${nodes.length};visit++){if(i>=${nodes.length})break;nodeVisits++;if(!caseRayBounds(ro,rd,i,t)){i=caseBVHLinks[i].y;continue;}int k=caseBVHLinks[i].x;
- if(k>=0){float den=dot(rd,caseN[k]);if(abs(den)>1e-10){float candidate=dot(caseOrigins[k]-ro,caseN[k])/den;if(candidate>=0.0&&candidate<=t){vec3 p=ro+rd*candidate;float d=casePatchDistance(k,p);if(d<0.00002&&(candidate<t||(candidate==t&&(best<0||k<best)))){best=k;t=candidate;h.distance=0.0;h.objectId=float(k+1000);h.materialRole=caseRoles[k];h.local=p;}}}}i++;}return best>=0;}
+${buildStaticCaseRayGLSL(patches,nodes)}
 float mapDistance(vec3 p){return mapField(p).distance;}
 vec3 fieldNormal(vec3 p){int k=int(mapField(p).objectId)-1000;return k>=0&&k<${patches.length}?caseN[k]:vec3(0,1,0);}
 `;

@@ -24,3 +24,72 @@ test('surface distance reference marcher reaches real tower wall but does not cl
 test('source-aware case facts are separate and floor numbers are not summed or copied',()=>{assert.equal(CASE_PROFILES[ids[0]].storeys.officialPart,2);assert.equal(CASE_PROFILES[ids[1]].storeys.officialPart,24);assert.equal(CASE_PROFILES[ids[1]].storeys.ownerWholeBuilding,28);assert.equal(CASE_PROFILES[ids[2]].storeys.officialPart,12);assert.equal(CASE_PROFILES[ids[2]].storeys.additionPermitted,false);assert.notEqual(CASE_PROFILES[ids[0]].part,CASE_PROFILES[ids[2]].part);});
 test('unknown cases, unsupported operations and source-scale changes reject explicitly',()=>{const s=structuredClone(scores[0]);s.objectId='arbitrary-box';assert.throws(()=>deriveMeasuredCase(s));const t=structuredClone(scores[0]);t.edits.scaleEast=2;assert.throws(()=>deriveMeasuredCase(t),/preserves/);const u=structuredClone(scores[0]);u.reconstruction.operations[0].kind='mesh';assert.throws(()=>deriveMeasuredCase(u),/Unsupported/);assert.throws(()=>deriveMeasuredCase(scores[0],{floorCount:99}),/Unknown/);});
 test('same source produces deterministicfield without renderobject construction',()=>{for(const s of specs){const glsl=buildCaseGLSL(s);assert.equal(glsl,buildCaseGLSL(s));assert.ok(glsl.includes('caseTraceRay'));assert.ok(glsl.includes('caseBVHLinks'));assert.ok(!/attribute|layout\s*\(location|sampler3D|texture\(/.test(glsl));assert.ok(!/new\s+THREE|BufferGeometry|triangulateShape|drawElements|createBuffer|MarchingCubes/.test(glsl));}const source=readFileSync(new URL('../r06/cases.mjs',import.meta.url),'utf8');assert.ok(!/import.*three|new\s+THREE|BufferGeometry|triangulateShape|createBuffer|drawElements/.test(source));});
+// An independent finite-polygon ray oracle. It does not call queryCase,
+// patchDistance, patchContains, or the BVH traversal being tested.
+function oracleRay(spec,origin,direction,maxDistance=10000){
+ const norm=Math.hypot(...direction),rd=direction.map(v=>v/norm);let best=null;
+ function inLoop(q,loop){let crossings=0;for(let j=0;j<loop.length;j++){const a=loop[j],b=loop[(j+1)%loop.length];if((a[1]<=q[1]&&b[1]>q[1])||(b[1]<=q[1]&&a[1]>q[1])){const x=a[0]+(q[1]-a[1])*(b[0]-a[0])/(b[1]-a[1]);if(x>q[0])crossings++;}}return crossings%2===1;}
+ function onBoundary(q,loops){return loops.some(loop=>loop.some((a,j)=>{const b=loop[(j+1)%loop.length],dx=b[0]-a[0],dy=b[1]-a[1],d=dx*dx+dy*dy,t=d?Math.max(0,Math.min(1,((q[0]-a[0])*dx+(q[1]-a[1])*dy)/d)):0;return Math.hypot(q[0]-a[0]-dx*t,q[1]-a[1]-dy*t)<=1e-8;}));}
+ for(let k=0;k<spec.patches.length;k++){
+  const patch=spec.patches[k],den=dot(rd,patch.n);if(Math.abs(den)<1e-12)continue;
+  const t=dot(sub(patch.origin,origin),patch.n)/den;if(t<0||t>maxDistance||(best&&t>best.t))continue;
+  const p=add(origin,mul(rd,t)),rel=sub(p,patch.origin),uv=[dot(rel,patch.u),dot(rel,patch.v)];
+  const inDomain=inLoop(uv,patch.loops[0])&&!patch.loops.slice(1).some(loop=>inLoop(uv,loop));
+  if((inDomain||onBoundary(uv,patch.loops))&&(!best||t<best.t||(t===best.t&&k<best.index)))best={t,index:k,objectId:patch.objectId,point:p};
+ }
+ return best;
+}
+function compareOracle(spec,ro,rd,options={}){
+ const expected=oracleRay(spec,ro,rd,options.maxDistance),actual=intersectCaseRay(spec,ro,rd,options);
+ assert.equal(actual.hit,!!expected,JSON.stringify({ro,rd,actual,expected}));
+ if(expected){close(actual.t,expected.t,1e-8);assert.equal(actual.objectId,expected.objectId);assert.deepEqual(actual.local,actual.point);assert.equal(actual.materialRole,spec.patches[expected.index].materialRole);}
+ return actual;
+}
+const testCase=operations=>{const source=structuredClone(scores[0]);source.reconstruction.operations=operations;return deriveMeasuredCase(source);};
+const square=[[-2,-2],[2,-2],[2,2],[-2,2]];
+test('analytic source rays match independent oracle from outside and inside bounds',()=>{
+ for(const spec of specs)for(let i=0;i<160;i++){
+  const ro=i%2?spec.sourceBounds.min.map((v,a)=>v+rnd()*(spec.sourceBounds.max[a]-v)):randPoint(spec);
+  compareOracle(spec,ro,[rnd()-.5,rnd()-.5,rnd()-.5]);
+ }
+});
+test('both faces, zero-distance starts, parallel and grazing rays have explicit finite-domain semantics',()=>{
+ const spec=testCase([{id:'plane',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]}]);
+ for(const sign of [-1,1]){const h=compareOracle(spec,[0,sign,0],[0,-sign,0]);assert.equal(h.hit,true);close(h.t,1);assert.equal(h.normal[1],1);}
+ assert.equal(compareOracle(spec,[0,0,0],[0,1,0],{maxDistance:0}).t,0);
+ assert.equal(compareOracle(spec,[0,1,0],[1,0,0]).hit,false);
+ // A coplanar ray has no isolated transversal intersection. It is not turned
+ // into an invented solid occupancy or an arbitrary coplanar hit.
+ assert.equal(compareOracle(spec,[0,0,0],[1,0,0]).hit,false);
+ const grazing=compareOracle(spec,[0,1e-8,0],[1,-1e-8,0]);assert.equal(grazing.hit,true);close(grazing.t,1);
+ assert.equal(compareOracle(spec,[0,1,0],[0,-1,0],{maxDistance:.5}).hit,false);
+});
+test('finite polygon holes pass rays, retain both boundary sides, and ignore winding orientation',()=>{
+ const hole=[[-.5,-.5],[-.5,.5],[.5,.5],[.5,-.5]];
+ for(const reversed of [false,true]){const spec=testCase([{id:'ring',kind:'roofPlane',heightPlane:[0,0,0],loops:[reversed?square.toReversed():square,reversed?hole.toReversed():hole]}]);
+  for(const y of [-1,1])for(const [x,z,hit] of [[0,0,false],[1,0,true],[.5,0,true],[2,0,true],[2.01,0,false]])assert.equal(compareOracle(spec,[x,y,z],[0,-y,0]).hit,hit);
+ }
+});
+test('exact coincident source patches retain stable lowest-index material and ID tie semantics',()=>{
+ const spec=testCase([{id:'first',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]},{id:'second',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]}]);spec.patches[1].materialRole=3;
+ for(const y of [-1,1]){const h=compareOracle(spec,[0,y,0],[0,-y,0]);assert.equal(h.objectId,1000);assert.equal(h.sourcePatchId,'first');assert.equal(h.materialRole,1);}
+});
+test('generated hot source ray path is bounded and constant, without full-field re-query',()=>{
+ for(const spec of specs){const source=buildCaseGLSL(spec),start=source.indexOf('// Exact polygon crossing'),end=source.indexOf('float mapDistance',start),ray=source.slice(start,end);
+  assert.equal((ray.match(/void caseRayPatch\d+\(/g)||[]).length,spec.patches.length);
+  assert.equal((ray.match(/caseRayPatch\d+\(ro,rd,t,h,best\)/g)||[]).length,spec.patches.length);
+  assert.doesNotMatch(ray,/caseOrigins\[|caseRanges\[|caseEdges\[|caseBVHLinks\[|mapField\(|casePatchDistance\(/);
+  assert.match(ray,/caseRayBoundsStatic/);assert.match(ray,/bvec3 parallel/);
+  assert.ok((ray.match(/nodeVisits\+\+/g)||[]).length<spec.nodes.length);
+  assert.ok(source.length<spec.counts.boundaryCoordinates*550+12000,'Bound generated shader size per source boundary');
+ }
+});
+test('source boundary and edge-midpoint rays preserve accelerated/exhaustive hit parity',()=>{
+ for(const spec of specs)for(const patch of spec.patches)for(const loop of patch.loops)for(let i=0;i<loop.length;i++){
+  const a=loop[i],b=loop[(i+1)%loop.length];for(const uv of [a,[(a[0]+b[0])/2,(a[1]+b[1])/2]])for(const sign of [-1,1]){
+   const at=point(patch,uv),ro=add(at,mul(patch.n,sign*.03125)),rd=mul(patch.n,-sign);
+   const actual=intersectCaseRay(spec,ro,rd),expected=intersectCaseRay(spec,ro,rd,{accelerated:false});
+   assert.equal(actual.hit,expected.hit,patch.sourcePatchId);if(actual.hit){close(actual.t,expected.t,1e-8);assert.equal(actual.objectId,expected.objectId,patch.sourcePatchId);}
+  }
+ }
+});

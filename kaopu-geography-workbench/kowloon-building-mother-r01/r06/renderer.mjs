@@ -2,6 +2,7 @@
 import {buildFieldGLSL} from './field.mjs';
 import {buildCaseGLSL} from './cases.mjs';
 import {buildAssemblyGLSL} from './assemblies.mjs';
+import {buildContextGLSL} from './context.mjs';
 import {MOTHER_GLSL,MATERIAL_GLSL} from './material.mjs';
 const VERTEX=`#version 300 es
 precision highp float;
@@ -39,7 +40,14 @@ void main(){
  #endif
  #endif
  vec3 p=uEye+rd*t;
- if(uDiagnostic==1){outColor=vec4(float(min(steps,255))/255.,float(status)/255.,status==1?(h.objectId>=2000.?h.objectId-1999.:h.objectId>=1000.?h.objectId-999.:(h.objectId==101.?1.:h.objectId==102.?2.:h.objectId==201.?3.:h.objectId==202.?4.:h.objectId==203.?5.:h.objectId==301.?6.:7.))/255.:0.,1.);return;}
+ if(uDiagnostic==2){
+ #if FIELD_SURFACE
+ outColor=vec4(float(min(steps,255))/255.,0.,0.,1.);
+ #else
+ outColor=vec4(float(min(fieldPrimarySteps,255))/255.,fieldRayUsedRescue?1.:0.,0.,1.);
+ #endif
+ return;}
+ if(uDiagnostic==1){float id=status==1?h.objectId:0.;outColor=vec4(float(min(steps,255))/255.,(float(status)+8.*floor(id/256.))/255.,mod(id,256.)/255.,1.);return;}
  vec3 sky=mix(vec3(.82,.87,.86),vec3(.48,.62,.67),clamp(rd.y*.6+.4,0.,1.));
  if(status==3){outColor=vec4(.85,.12,.55,1.);return;}
  if(status!=1){outColor=vec4(sky,1.);return;}
@@ -52,12 +60,20 @@ void main(){
  if(uRenderMode==1){outColor=vec4(colorId(h.objectId)*(.4+.6*max(dot(n,normalize(vec3(-.4,1.,-.5))),0.)),1.);return;}
  if(uRenderMode==2){float s=float(steps)/100.;outColor=vec4(clamp(vec3(s,.7-s*.4,1.-s),0.,1.),1.);return;}
  float footprint=max(t*2.*tan(uFov*.5)/uResolution.y,.0001);
- FieldSurface surface=sampleFieldMaterial(h,n,footprint);
+ vec3 materialNormal=n;
+ #if FIELD_CONTEXT
+ materialNormal=contextMaterialDirection(h,n);
+ #endif
+ FieldSurface surface=sampleFieldMaterial(h,materialNormal,footprint);
  // The same final field query provides material role and local coordinates.
  // Material microheight is shading only, never a hidden silhouette deformation.
  vec3 tangent=normalize(cross(n,abs(n.y)<.9?vec3(0,1,0):vec3(1,0,0))),bitangent=cross(n,tangent);
- float eps=max(footprint,.0008);FieldHit ht=h;ht.local=h.local+tangent*eps;FieldHit hb=h;hb.local=h.local+bitangent*eps;
- float dh1=(sampleFieldMaterial(ht,n,footprint).height-surface.height)/eps,dh2=(sampleFieldMaterial(hb,n,footprint).height-surface.height)/eps;
+ vec3 localTangent=tangent,localBitangent=bitangent;
+ #if FIELD_CONTEXT
+ localTangent=contextMaterialDirection(h,tangent);localBitangent=contextMaterialDirection(h,bitangent);
+ #endif
+ float eps=max(footprint,.0008);FieldHit ht=h;ht.local=h.local+localTangent*eps;FieldHit hb=h;hb.local=h.local+localBitangent*eps;
+ float dh1=(sampleFieldMaterial(ht,materialNormal,footprint).height-surface.height)/eps,dh2=(sampleFieldMaterial(hb,materialNormal,footprint).height-surface.height)/eps;
  n=normalize(n-clamp(dh1,-.3,.3)*tangent-clamp(dh2,-.3,.3)*bitangent);
  vec3 view=normalize(uEye-p),sun=normalize(vec3(-.55,1.,-.45));
  float ao=1.;if(uOcclusion>.5)for(int i=1;i<=3;i++){float r=float(i)*.14;ao-=max(r-max(displayDistance(p+n*r),0.),0.)/(r*9.);}
@@ -86,7 +102,11 @@ void main(){int i=int(gl_FragCoord.x);vec3 p=uPoints[i];
  #elif PROBE_KIND == 1
  outColor=vec4(fieldNormal(p),h.distance);
  #elif PROBE_KIND == 2
- FieldSurface s=sampleFieldMaterial(h,fieldNormal(p),.001);outColor=vec4(s.baseColor,s.roughness);
+ vec3 materialNormal=fieldNormal(p);
+ #if FIELD_CONTEXT
+ materialNormal=contextMaterialDirection(h,materialNormal);
+ #endif
+ FieldSurface s=sampleFieldMaterial(h,materialNormal,.001);outColor=vec4(s.baseColor,s.roughness);
  #else
  outColor=vec4(h.local,1.);
  #endif
@@ -94,17 +114,18 @@ void main(){int i=int(gl_FragCoord.x);vec3 p=uPoints[i];
 }`;
 function shader(gl,type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const log=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error('Field shader compile failed: '+log);}return s;}
 function program(gl,fragment){const p=gl.createProgram(),vs=shader(gl,gl.VERTEX_SHADER,VERTEX),fs=shader(gl,gl.FRAGMENT_SHADER,fragment);gl.attachShader(p,vs);gl.attachShader(p,fs);gl.linkProgram(p);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+export const decodeDiagnosticPixel=(r,g,b)=>({steps:r,status:g%8,objectId:b+256*Math.floor(g/8)});
 const quantile=(a,q)=>a.slice().sort((a,b)=>a-b)[Math.floor((a.length-1)*q)];
 export class FieldRenderer{
  constructor(canvas){this.canvas=canvas;const gl=this.gl=canvas.getContext('webgl2',{antialias:false,alpha:false,preserveDrawingBuffer:true});if(!gl)throw Error('WebGL2 is unavailable. No mesh fallback is used.');gl.disable(gl.DITHER);this.vao=gl.createVertexArray();gl.bindVertexArray(this.vao);this.floatExtension=gl.getExtension('EXT_color_buffer_float');this.timerExtension=gl.getExtension('EXT_disjoint_timer_query_webgl2');const info=gl.getExtension('WEBGL_debug_renderer_info');this.gpu=info?gl.getParameter(info.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);this.vertexBufferCount=0;this.indexBufferCount=0;this.modelTriangles=0;this.screenTrianglesPerPass=1;this.options={eye:[7,7,-7],target:[0,1.8,2.5],fov:45*Math.PI/180,cutaway:0,renderMode:0,age:.18,wet:.08,materialEnabled:1,occlusion:0,traceMode:0};}
- setSpec(spec){const start=performance.now(),gl=this.gl,code=spec.fieldKind==='measured-surface'?buildCaseGLSL(spec):spec.fieldKind==='evidence-assembly'?buildAssemblyGLSL(spec):buildFieldGLSL(spec),source=typeof code==='string'?code:code.source,head=HEAD+'#define FIELD_TRACE_VARIANT '+(this.traceVariant??0)+'\n#define FIELD_SURFACE '+(spec.fieldKind==='measured-surface'||spec.fieldKind==='evidence-assembly'?'1':'0')+'\n#define FIELD_MEASURED '+(spec.fieldKind==='measured-surface'?'1':'0')+'\n';const render=program(gl,head+source+MOTHER_GLSL+MATERIAL_GLSL+RENDER);if(this.renderProgram)gl.deleteProgram(this.renderProgram);for(const p of this.probePrograms?.values()??[])gl.deleteProgram(p);this.probePrograms=new Map();this.renderProgram=render;this.spec=spec;this.fieldSource=source;this.probeHead=head;this.compileCount=(this.compileCount??0)+1;this.compileProfile={traceVariant:this.traceVariant??0,sourceCharacters:source.length,renderCompileLinkWallMs:performance.now()-start,probesCompiledLazily:true,probeCompileMs:{}};}
+ setSpec(spec){const start=performance.now(),gl=this.gl,code=spec.fieldKind==='measured-surface'?buildCaseGLSL(spec):spec.fieldKind==='evidence-assembly'?buildAssemblyGLSL(spec):spec.fieldKind==='case-context'?buildContextGLSL(spec):buildFieldGLSL(spec),source=typeof code==='string'?code:code.source,head=HEAD+'#define FIELD_CONTEXT '+(spec.fieldKind==='case-context'?'1':'0')+'\n#define FIELD_TRACE_VARIANT '+(this.traceVariant??0)+'\n#define FIELD_SURFACE '+(spec.fieldKind==='measured-surface'||spec.fieldKind==='evidence-assembly'||spec.fieldKind==='case-context'?'1':'0')+'\n#define FIELD_MEASURED '+(spec.fieldKind==='measured-surface'?'1':'0')+'\n';const render=program(gl,head+source+MOTHER_GLSL+MATERIAL_GLSL+RENDER);if(this.renderProgram)gl.deleteProgram(this.renderProgram);for(const p of this.probePrograms?.values()??[])gl.deleteProgram(p);this.probePrograms=new Map();this.renderProgram=render;this.spec=spec;this.fieldSource=source;this.probeHead=head;this.compileCount=(this.compileCount??0)+1;this.compileProfile={traceVariant:this.traceVariant??0,sourceCharacters:source.length,renderCompileLinkWallMs:performance.now()-start,probesCompiledLazily:true,probeCompileMs:{}};}
  setTraceVariant(variant){if(![0,1,2,3,4].includes(variant))throw Error('Invalid diagnostic trace variant');this.traceVariant=variant;this.setSpec(this.spec);}
  ensureProbe(kind){if(!this.probePrograms.has(kind)){const start=performance.now(),p=program(this.gl,this.probeHead+'#define PROBE_KIND '+kind+'\n'+this.fieldSource+(kind===2?MOTHER_GLSL+MATERIAL_GLSL:'')+PROBE);this.probePrograms.set(kind,p);this.compileProfile.probeCompileMs[kind]=performance.now()-start;}return this.probePrograms.get(kind);}
  uniforms(p){const g=this.gl,o=this.options,L=n=>g.getUniformLocation(p,n);g.uniform1f(L('uAge'),o.age);g.uniform1f(L('uWet'),o.wet);g.uniform1f(L('uMaterialEnabled'),o.materialEnabled);return L;}
- draw({diagnostic=false}={}){const gl=this.gl,c=this.canvas,o=this.options;gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.bindVertexArray(this.vao);gl.viewport(0,0,c.width,c.height);gl.useProgram(this.renderProgram);const L=this.uniforms(this.renderProgram);gl.uniform2f(L('uResolution'),c.width,c.height);for(const[n,v]of [['uEye',o.eye],['uTarget',o.target],['uBoundsMin',this.spec.bounds.min],['uBoundsMax',this.spec.bounds.max]])gl.uniform3fv(L(n),v);gl.uniform1f(L('uFov'),o.fov);gl.uniform1f(L('uCutaway'),o.cutaway);gl.uniform1f(L('uOcclusion'),o.occlusion);gl.uniform1i(L('uRenderMode'),o.renderMode);gl.uniform1i(L('uTraceMode'),o.traceMode??0);gl.uniform1i(L('uDiagnostic'),diagnostic?1:0);gl.drawArrays(gl.TRIANGLES,0,3);this.drawCount=(this.drawCount??0)+1;const err=gl.getError();if(err)throw Error('WebGL error '+err);}
+ draw({diagnostic=false}={}){const gl=this.gl,c=this.canvas,o=this.options;gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.bindVertexArray(this.vao);gl.viewport(0,0,c.width,c.height);gl.useProgram(this.renderProgram);const L=this.uniforms(this.renderProgram);gl.uniform2f(L('uResolution'),c.width,c.height);for(const[n,v]of [['uEye',o.eye],['uTarget',o.target],['uBoundsMin',this.spec.bounds.min],['uBoundsMax',this.spec.bounds.max]])gl.uniform3fv(L(n),v);gl.uniform1f(L('uFov'),o.fov);gl.uniform1f(L('uCutaway'),o.cutaway);gl.uniform1f(L('uOcclusion'),o.occlusion);gl.uniform1i(L('uRenderMode'),o.renderMode);gl.uniform1i(L('uTraceMode'),o.traceMode??0);gl.uniform1i(L('uDiagnostic'),typeof diagnostic==='number'?diagnostic:diagnostic?1:0);gl.drawArrays(gl.TRIANGLES,0,3);this.drawCount=(this.drawCount??0)+1;const err=gl.getError();if(err)throw Error('WebGL error '+err);}
  resize(width,height){width=Math.max(1,Math.round(width));height=Math.max(1,Math.round(height));if(this.canvas.width===width&&this.canvas.height===height)return;this.canvas.width=width;this.canvas.height=height;this.draw();}
  probe(points,kind=0,directions=null){if(!this.floatExtension)throw Error('Float GPU query readback unavailable; parity is not verified');if(!points.length||points.length>128)throw Error('Probe requires1..128points');const g=this.gl,probeProgram=this.ensureProbe(kind),t=g.createTexture(),fb=g.createFramebuffer();try{g.bindTexture(g.TEXTURE_2D,t);g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,points.length,1,0,g.RGBA,g.FLOAT,null);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);g.bindFramebuffer(g.FRAMEBUFFER,fb);g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,t,0);if(g.checkFramebufferStatus(g.FRAMEBUFFER)!==g.FRAMEBUFFER_COMPLETE)throw Error('Float query framebuffer incomplete');g.useProgram(probeProgram);g.bindVertexArray(this.vao);const L=this.uniforms(probeProgram);g.uniform3fv(L('uPoints[0]'),new Float32Array(points.flat()));g.uniform1i(L('uProbeKind'),kind);if(directions)g.uniform3fv(L('uDirections[0]'),new Float32Array(directions.flat()));g.viewport(0,0,points.length,1);g.drawArrays(g.TRIANGLES,0,3);const out=new Float32Array(points.length*4);g.readPixels(0,0,points.length,1,g.RGBA,g.FLOAT,out);return points.map((_,i)=>Array.from(out.slice(i*4,i*4+4)));}finally{g.bindFramebuffer(g.FRAMEBUFFER,null);g.deleteFramebuffer(fb);g.deleteTexture(t);g.viewport(0,0,this.canvas.width,this.canvas.height);}}
- diagnostics(){const g=this.gl;this.draw({diagnostic:true});const a=new Uint8Array(this.canvas.width*this.canvas.height*4);g.readPixels(0,0,this.canvas.width,this.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);let hits=0,misses=0,unresolved=0,sum=0,max=0;const histogram=Array(256).fill(0),ids={};for(let i=0;i<a.length;i+=4){const steps=a[i],status=a[i+1];sum+=steps;max=Math.max(max,steps);histogram[steps]++;if(status===1){hits++;const id=this.spec.fieldKind==='evidence-assembly'?a[i+2]+1999:this.spec.fieldKind==='measured-surface'?a[i+2]+999:[0,101,102,201,202,203,301,401][a[i+2]];ids[id]=(ids[id]??0)+1;}else if(status===2)misses++;else unresolved++;}this.draw();return {width:this.canvas.width,height:this.canvas.height,pixels:a.length/4,hits,misses,unresolved,meanSteps:sum/(a.length/4),maxSteps:max,metric:this.spec.fieldKind==='evidence-assembly'?'finite host plane tests':this.spec.fieldKind==='measured-surface'?'BVH node visits':'rail-only march steps; structural faces analytic',stepCap:this.spec.fieldKind==='evidence-assembly'?this.spec.counts.analyticBoundaryPlanes:this.spec.fieldKind==='measured-surface'?this.spec.nodes.length:512,stepCountsSaturateAt255:true,structuralPlaneCount:this.spec.structurePlanes?.length??null,ambientOcclusionEnabled:!!this.options.occlusion,histogram,visibleObjectPixels:ids,hitEpsilon:'max(0.00015m,rayDistance*0.000025)',stepRule:'analytic finite structural boundaries; rail-only conservative march with no unsafe minimum step',missCondition:'finite boundary tests rejected all candidates and rail interval exhausted geometrically; budget exhaustion remains unresolved',unresolvedColor:'#d91f8c'};}
+ diagnostics(){const g=this.gl;this.draw({diagnostic:true});const a=new Uint8Array(this.canvas.width*this.canvas.height*4);g.readPixels(0,0,this.canvas.width,this.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);let hits=0,misses=0,unresolved=0,sum=0,max=0;const histogram=Array(256).fill(0),ids={};for(let i=0;i<a.length;i+=4){const {steps,status,objectId}=decodeDiagnosticPixel(a[i],a[i+1],a[i+2]);sum+=steps;max=Math.max(max,steps);histogram[steps]++;if(status===1){hits++;const id=objectId;ids[id]=(ids[id]??0)+1;}else if(status===2)misses++;else unresolved++;}let rescuePixelCount=null,meanPrimarySteps=null,maxPrimarySteps=null;if(!this.spec.fieldKind){this.draw({diagnostic:2});g.readPixels(0,0,this.canvas.width,this.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);rescuePixelCount=0;let primarySum=0;maxPrimarySteps=0;for(let i=0;i<a.length;i+=4){primarySum+=a[i];maxPrimarySteps=Math.max(maxPrimarySteps,a[i]);if(a[i+1]>127)rescuePixelCount++;}meanPrimarySteps=primarySum/(a.length/4);}this.draw();return {width:this.canvas.width,height:this.canvas.height,pixels:a.length/4,hits,misses,unresolved,rescuePixelCount,meanPrimarySteps,maxPrimarySteps,meanSteps:sum/(a.length/4),maxSteps:max,metric:this.spec.fieldKind==='evidence-assembly'?'finite host plane tests':this.spec.fieldKind==='measured-surface'?'BVH node visits':'primary field evaluations + rescue rail evaluations; rescue structural faces analytic',stepCap:this.spec.fieldKind==='evidence-assembly'?this.spec.counts.analyticBoundaryPlanes:this.spec.fieldKind==='measured-surface'?this.spec.nodes.length:512,stepCountsSaturateAt255:true,structuralPlaneCount:this.spec.structurePlanes?.length??null,ambientOcclusionEnabled:!!this.options.occlusion,histogram,visibleObjectPixels:ids,hitEpsilon:'kernel primary/rescue 0.00001m; grazing or non-boundary candidates require analytic recovery',stepRule:'conservative primary with shared512 evaluation budget; unresolved/grazing recovery uses exact finite structural boundaries and rail-only conservative tracing; no unsafe minimum step',missCondition:'finite boundary tests rejected all candidates and rail interval exhausted geometrically; budget exhaustion remains unresolved',unresolvedColor:'#d91f8c'};}
  async benchmark(frames=12){const timings=[];for(let i=0;i<frames+2;i++){await new Promise(r=>requestAnimationFrame(r));const start=performance.now();this.draw();this.gl.finish();this.gl.readPixels(0,0,1,1,this.gl.RGBA,this.gl.UNSIGNED_BYTE,new Uint8Array(4));if(i>=2)timings.push(performance.now()-start);}return {measurement:'wallclock draw plus gl.finish and pixel readback, not isolated GPU timer',samples:timings,medianMs:quantile(timings,.5),p95Ms:quantile(timings,.95),width:this.canvas.width,height:this.canvas.height,gpu:this.gpu,timerExtensionAvailable:!!this.timerExtension,modelTriangles:0,screenTrianglesPerPass:1,vertexBuffers:0,indexBuffers:0};}
  snapshot(){return {gpu:this.gpu,width:this.canvas.width,height:this.canvas.height,drawCount:this.drawCount,compileCount:this.compileCount,compileProfile:this.compileProfile,modelTriangles:0,vertexBuffers:0,indexBuffers:0,screenTrianglesPerPass:1,floatQueryReadback:!!this.floatExtension,renderer:'WebGL2 direct analytic field ray evaluation',noMeshFallback:true};}
 }
