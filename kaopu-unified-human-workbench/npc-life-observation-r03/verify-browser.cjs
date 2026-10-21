@@ -372,31 +372,104 @@ async function gpuEvidence() {
   return gpu;
 }
 
-async function screenshot(name) {
-  const frame=await evaluate('await completed native screenshot frame: '+name,async()=>{
-    const app=window.__NPC_OBSERVATION__,viewer=window.__IDENTITY_QA__?.viewer?.();
-    if(typeof app?.awaitFrame!=='function' || typeof app?.renderStatus!=='function')throw Error('Real native frame completion is unavailable');
-    const began=performance.now(),before=app.renderStatus(),completedFrame=await app.awaitFrame({fresh:true});
-    const after=app.renderStatus();
+// BEGIN screenshot capture semantics.
+// These are two observed endpoints around an asynchronous UI capture. They do
+// not identify the PNG with a unique completed GPU frame. The strict same-frame
+// continuous.after evidence is collected separately by the continuous driver.
+async function readScreenshotCaptureState({fresh,task}) {
+  const app=window.__NPC_OBSERVATION__,viewer=window.__IDENTITY_QA__?.viewer?.();
+  if(typeof app?.awaitFrame!=='function' || typeof app?.renderStatus!=='function')throw Error('Real native frame completion is unavailable');
+  const began=performance.now(),before=fresh?app.renderStatus():null;
+  const completedFrame=fresh?await app.awaitFrame({fresh:true}):null;
+  const after=app.renderStatus(),lastCompleted=app.observation().lastCompleted;
+  if(fresh){
     if(!Number.isFinite(after.maxInFlight) || after.maxInFlight>1)throw Error('More than one native GPU frame was in flight');
     if(after.inFlight!==0 || after.submitted!==after.completed)throw Error('Screenshot requested before its real native GPU frame completed');
-    return {before,after,completedFrame,waitMS:performance.now()-began,renderFrame:viewer.renderer.info.render.frame,
-      canvas:{width:viewer.renderer.domElement.width,height:viewer.renderer.domElement.height}};
-  },undefined,FRAME_MS);
+    if(lastCompleted?.serial!==after.completed)throw Error('Screenshot barrier metadata does not match its completed native frame');
+  }
+  const snapshot=task?app.snapshot():null;
+  const actor=task?(task.kind==='bottle'?snapshot.agents:snapshot.window.agents).find(a=>a.id===task.actorId):null;
+  const physical=task?(task.kind==='bottle'?snapshot.object:snapshot.window.object):null;
+  const physicalFields=task?.kind==='bottle'?
+    ['id','position','quaternion','velocity','heldBy','reservedBy','constraintCount','supported','settled','insideTarget']:
+    ['id','position','quaternion','angleDeg','angularVelocityRadS','heldBy','reservedBy','gripConstraintCount','hingeConstraintCount','goalOpen','goalClosed','targetAngleDeg','settled'];
+  const point={capturedAtMS:performance.now(),submittedSerial:after.submitted,completedSerial:after.completed,
+    inFlight:after.inFlight,completedFrameSerial:lastCompleted?.serial??null,metadata:lastCompleted?.metadata??null,
+    ready:app.ready,errors:[...app.errors],worldTime:snapshot?.time??null,
+    actor:actor?{id:actor.id,phase:actor.phase,recovery:actor.recovery,result:actor.result,grip:actor.grip}:null,
+    object:physical?Object.fromEntries(physicalFields.map(key=>[key,physical[key]])):null};
+  return {before,after,completedFrame,point,waitMS:performance.now()-began,renderFrame:viewer.renderer.info.render.frame,
+    canvas:{width:viewer.renderer.domElement.width,height:viewer.renderer.domElement.height}};
+}
+
+function checkRunningCaptureEndpoints(preBarrier,postRead,task) {
+  assert(['bottle','window'].includes(task.kind));
+  assert(Number.isInteger(task.sceneEpoch)&&Number.isFinite(task.taskStarted));
+  assert(Number.isInteger(task.contractCompletedSerial)&&task.contractCompletedSerial>0);
+  assert.equal(preBarrier.inFlight,0,'The pre-capture barrier has completed');
+  assert.equal(preBarrier.submittedSerial,preBarrier.completedSerial);
+  for(const [label,point] of [['preBarrier',preBarrier],['postRead',postRead]]){
+    const metadata=point.metadata,drawn=(task.kind==='bottle'?metadata?.agents:metadata?.windowAgents)?.find(a=>a.id===task.actorId);
+    assert.equal(point.ready,true,label+' app is ready');assert.equal(point.errors.length,0,label+' has no app errors');
+    assert(Number.isFinite(point.capturedAtMS));assert(Number.isInteger(point.completedSerial));
+    assert(point.completedSerial>=task.contractCompletedSerial,label+' follows the strict continuous.after frame');
+    assert.equal(point.completedFrameSerial,point.completedSerial,label+' metadata belongs to its reported completed frame');
+    assert(Number.isInteger(point.submittedSerial)&&point.submittedSerial>=point.completedSerial);
+    assert([0,1].includes(point.inFlight));assert.equal(point.submittedSerial-point.completedSerial,point.inFlight);
+    assert.equal(metadata?.sceneEpoch,task.sceneEpoch,label+' preserves the task scene epoch');
+    assert.equal(metadata?.mode,'observation');assert.equal(metadata?.paused,false);
+    assert.equal(drawn?.taskStarted,task.taskStarted,label+' preserves the completed task start');
+    assert.equal(drawn?.phase,'done');assert.equal(drawn?.recovery,null);
+    assert.equal(point.actor?.id,task.actorId);assert.equal(point.actor?.phase,'done');assert.equal(point.actor?.recovery,null);
+    assert.equal(point.actor?.result?.result,'completed');assert.equal(point.actor?.grip,0);
+    assert.equal(point.object?.heldBy,null);assert.equal(point.object?.reservedBy,null);
+    assert.equal(point.object?.settled,true);
+    if(task.kind==='bottle'){
+      assert.equal(metadata.bottle?.heldBy,null);assert.equal(point.object.id,'bottle-01');
+      assert.equal(point.object.constraintCount,0);assert.equal(point.object.supported,true);assert.equal(point.object.insideTarget,true);
+    }else{
+      assert(['open','close'].includes(task.operation));assert.equal(typeof task.taskToken,'string');assert(task.taskToken.length>0);
+      assert.equal(drawn.taskToken,task.taskToken,label+' preserves the window task token');
+      assert.equal(point.actor.result.taskToken,task.taskToken);assert.equal(point.actor.result.operation,task.operation);
+      assert.equal(point.actor.result.released,true);assert.equal(point.actor.result.gripConstraintCount,0);assert.equal(point.actor.result.hingeConstraintCount,1);
+      assert.equal(metadata.window?.heldBy,null);assert.equal(point.object.id,'window-01');
+      assert.equal(point.object.gripConstraintCount,0);assert.equal(point.object.hingeConstraintCount,1);
+      assert.equal(point.object[task.operation==='open'?'goalOpen':'goalClosed'],true);
+    }
+  }
+  assert(postRead.capturedAtMS>=preBarrier.capturedAtMS);
+  assert(postRead.completedSerial>=preBarrier.completedSerial);assert(postRead.submittedSerial>=preBarrier.submittedSerial);
+  // Goal/release/recovery semantics must hold at both actual read points. The
+  // continuing rigid-body simulation may move a released prop slightly; no
+  // equality of prop positions, angles or full snapshots is claimed here.
+  return {accepted:true,scope:'observed task state at two capture endpoints; not unique PNG frame attribution',
+    kind:task.kind,actorId:task.actorId,operation:task.operation??null,sceneEpoch:task.sceneEpoch,
+    taskStarted:task.taskStarted,taskToken:task.taskToken??null,contractCompletedSerial:task.contractCompletedSerial};
+}
+// END screenshot capture semantics.
+
+async function screenshot(name,{task=null}={}) {
+  const {point:preBarrier,...frame}=await evaluate('await completed native screenshot frame: '+name,
+    readScreenshotCaptureState,{fresh:true,task},FRAME_MS);
   const captureStarted=Date.now();
   const shot=await sendCDP('capture screenshot: '+name,'Page.captureScreenshot',{format:'png',captureBeyondViewport:false},CAPTURE_MS);
   const captureMS=Date.now()-captureStarted;
   const bytes=Buffer.from(shot.data,'base64'),file=name+'.png';
   fs.writeFileSync(path.join(out,file),bytes);
   const record={file,sha256:sha(bytes),bytes:bytes.length,url:page.url(),capturedAt:new Date().toISOString(),
-    verifierDirectRenders:0,frame,captureMS};
-  // Save the image's completed-frame proof before attempting further browser reads.
+    verifierDirectRenders:0,frame,captureMS,preBarrier,
+    captureScope:task?'post-completion-running-capture':'ui-capture-after-native-barrier',exactFrameMatched:false};
+  // Preserve the actual PNG and the preceding barrier read even if the later
+  // browser read fails. This is not proof that the PNG depicts that exact frame.
   report.screenshots.push(record);put(name+'-frame.json',record);checkpoint('screenshot pixels saved: '+name);
-  record.afterCapture=await evaluate('read scheduler after screenshot: '+name,()=>({
-    scheduler:window.__NPC_OBSERVATION__.renderStatus(),renderFrame:window.__IDENTITY_QA__.viewer().renderer.info.render.frame
-  }));
-  record.submittedDuringCapture=record.afterCapture.scheduler.submitted-frame.after.submitted;
-  put(name+'-frame.json',record);
+  const afterCapture=await evaluate('read scheduler after screenshot: '+name,readScreenshotCaptureState,{fresh:false,task});
+  record.afterCapture={scheduler:afterCapture.after,renderFrame:afterCapture.renderFrame};record.postRead=afterCapture.point;
+  record.submissionsSinceBarrier=record.postRead.submittedSerial-preBarrier.submittedSerial;
+  record.completedFramesSinceBarrier=record.postRead.completedSerial-preBarrier.completedSerial;
+  record.submittedDuringCapture=record.submissionsSinceBarrier;
+  record.submissionCountInterval='preBarrier through postRead; includes CDP capture, PNG disk write, checkpoint and browser read; submittedDuringCapture is a compatibility alias, not the CDP-only capture interval';
+  try {if(task)record.runningCaptureEndpoints=checkRunningCaptureEndpoints(preBarrier,record.postRead,task);}
+  finally {put(name+'-frame.json',record);}
   log('screenshot '+file+' ('+bytes.length+' bytes)');
 }
 
@@ -1696,6 +1769,7 @@ async function main() {
   await page.click('[data-camera="contact"]');await screenshot('02-hand-view');
   await evidence('hand-view');report.dom=await saveDOM();
   report.startupPassed=true;log('startup evidence complete');
+  if(PHASE==='suite')await identityInteraction();
   if(PHASE==='suite'||PHASE==='public')await check('three uninterrupted real-UI actions and completed-frame contracts',async()=>{
     report.continuousUI=await runContinuousUI({page,evaluate,waitFor,bounded,put,stage,maxWallMS:600000,frameMS:FRAME_MS,
       onCompleted:async entry=>{
@@ -1710,7 +1784,9 @@ async function main() {
           geometry={receipt:checkWindowReceipt(capture.snapshot.window,'A',entry.operation,entry.label),
             rest:checkWindowRest(capture.actorDiagnostics,entry.label),rendered:checkWindowRender(capture,entry.label)};
         }
-        await screenshot(entry.label+'-completed');
+        await screenshot(entry.label+'-completed',{task:{kind:entry.kind,actorId:entry.actorId,operation:entry.operation??null,
+          sceneEpoch:entry.contract.sceneEpoch,taskStarted:entry.contract.taskStarted,taskToken:entry.contract.taskToken,
+          contractCompletedSerial:entry.after.renderStatus.completed}});
         return {feet,resourceExclusion,geometry};
       }});
     assert.equal(report.continuousUI.completed,true);
@@ -1719,7 +1795,6 @@ async function main() {
   if(PHASE==='contact' || PHASE==='suite')await contactTests();
   if(PHASE==='suite') {
     await fullSuite();
-    await identityInteraction();
     await windowInteractionUI();
     await windowExportUI();
   }
