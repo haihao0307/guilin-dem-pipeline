@@ -1,0 +1,11 @@
+# 88 authored function-field candidate R03
+
+Four locally bounded continuous fields: main fairing, cab shell, tender shell and a separate opaque glass-material candidate. Shape is evaluated directly in the fragment shader; no teacher geometry, texture, animation or tessellated shape is retained. One shared bounded shader and per-part projected scissor rectangles avoid a monolithic whole-train expression. Full-screen raster proxy triangles are used to invoke the field renderer and are not shape triangles.
+
+Source dimensional baseline: LNER-supplied Silver Link drawing, The Engineer, 27 September 1935, p320: https://theengineer.markallengroup.com/production/2018/09/Gresley-Silver-Jubilee.pdf#page=3
+
+The 10 axle datums, wheel diameters and outer width/height constraints remain separate from authored profile stations. Exterior controls and materials are explicitly design choices, not claimed historical measurements. Wheel-back spacing, flange/tread geometry, bearings, suspension pivots, rods and coupler travel are unresolved and are NOT silently generated. The optional center-plane wheel circles are measurement overlays, not physical wheels.
+
+This is an in-progress exterior/component field candidate, NOT a complete train or accepted design. Original A4, prior versions and production pages are untouched. All screenshots are internal QA evidence. No teacher/model or magazine images are in this folder.
+
+Run via HTTP and open index.html. CPU checks: node --test tests/*.test.mjs. GPU/browser checks: tests/browser.py with --url and --output. GPU checks include 32 CPU/GPU field-value probes, actual editable shape and material pixels, isolation and mobile controls. Renderer timings are measured on the test hardware, not promised production frame rates. The distance estimate is conservative and bounded in this implementation, not claimed an exact signed-distance formula.

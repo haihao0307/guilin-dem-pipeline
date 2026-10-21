@@ -1,0 +1,14 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import{DIMENSIONS,DEFAULTS,makeParts,profileAt,field,wheelDatums,safetyBound,validateParameters}from'../train-field.mjs';
+test('official axle count, intervals and total',()=>{assert.equal(DIMENSIONS.axisX.length,10);const x=DIMENSIONS.axisX;for(const[a,b]of [[x[0]-x[5],10.8966],[x[6]-x[9],4.8768],[x[0]-x[9],18.557875],[x[5]-x[6],2.784475]])assert.ok(Math.abs(a-b)<1e-10)});
+test('gauge never fills wheel back or physical wheel profile',()=>{assert.equal(DIMENSIONS.wheelBackToBack,null);assert.equal(DIMENSIONS.wheelProfile,null);for(const w of wheelDatums())assert.equal(w.lateralWheelBack,null)});
+test('continuity at all loft stations',()=>{const p=makeParts()[0];for(const a of p.sections.slice(1,-1)){const l=profileAt(p,a[0]-1e-7),r=profileAt(p,a[0]+1e-7);for(let i=0;i<3;i++)assert.ok(Math.abs(l[i]-r[i])<1e-6)}});
+test('field is finite across authored range',()=>{for(const noseSweep of [-.25,0,.25])for(const shoulderWidth of [.9,1,1.05])for(const p of makeParts({noseSweep,shoulderWidth})){for(let i=0;i<2000;i++){const q=p.bounds[0].map((v,j)=>v+(p.bounds[1][j]-v)*((i*(j*12+13)%1999)/1999));assert.ok(Number.isFinite(field(p,q)))}}});
+test('driver clearance excludes three reference rolling disks',()=>{const p=makeParts()[0];for(const x of [0,-2.2098,-4.4196])for(let i=0;i<120;i++){const t=i*Math.PI/60;assert.ok(field(p,[x+1.016*Math.cos(t),1.0,1.016+1.016*Math.sin(t)])>=.069-1e-9)}});
+test('continuous skin stays inside official overall width and height bounds',()=>{for(const p of makeParts()){assert.ok(p.bounds[1][1]-p.bounds[0][1]<DIMENSIONS.maxWidth);assert.ok(p.bounds[1][2]<=DIMENSIONS.maxHeight)}});
+test('shape changes do not shift any official axle',()=>{const a=wheelDatums();makeParts({noseSweep:.2,shoulderWidth:1.04});assert.deepEqual(a,wheelDatums());assert.notDeepEqual(makeParts()[0].sections,makeParts({noseSweep:.2})[0].sections)});
+test('material values remain independent of geometry',()=>{assert.deepEqual(makeParts({roughness:.1}),makeParts({roughness:.6}))});
+test('unknown physical geometry not substituted with rendered teacher data',()=>{const p=JSON.stringify(makeParts());for(const k of ['vertices','triangles','textureURL','fields.bin','source-assets','glTF'])assert.ok(!p.includes(k));assert.equal(wheelDatums().every(x=>x.profile===null),true)});
+test('same driven wheel phase and different idle radius',()=>{const w=wheelDatums(1);assert.equal(w[2].phase,w[3].phase);assert.equal(w[3].phase,w[4].phase);assert.notEqual(w[0].phase,w[2].phase)});
+test('invalid controls rejected',()=>{for(const q of [{noseSweep:Infinity},{shoulderWidth:2},{paint:[NaN,0,0]}])assert.throws(()=>validateParameters({...DEFAULTS,...q}))});
+test('distance safety denominator positive and limited',()=>{for(const p of makeParts()){assert.ok(safetyBound(p)>=1);assert.ok(safetyBound(p)<20)}});
