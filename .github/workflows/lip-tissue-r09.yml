@@ -25,8 +25,6 @@ jobs:
       R09_DIR: kaopu-unified-human-workbench/lip-tissue-r09
       BASELINE_PREVIEW_PATH: kaopu-unified-human-workbench/lip-surface-r08/preview.html
       BASELINE_QA_PATH: kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02/qa.json
-      NODE_PATH: ${{ runner.temp }}/lip-r09-runtime/node_modules
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/lip-r09-browsers
       QA_BUDGET_MS: 900000
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +41,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Set isolated runtime paths after runner initialization
+        run: |
+          echo "NODE_PATH=$RUNNER_TEMP/lip-r09-runtime/node_modules" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/lip-r09-browsers" >> "$GITHUB_ENV"
       - name: Verify isolated scope, expected head and frozen inputs
         id: scope
         run: |
