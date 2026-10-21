@@ -1,4 +1,4 @@
-name: Guilin storage-only adapter QA (no deploy)
+name: Guilin storage-only public acceptance (no deploy)
 on:
   push:
     branches: [qa/guilin-storage-adapter-20261021]
@@ -33,8 +33,10 @@ jobs:
         run: node qa/guilin-storage-only-20261021/test_canonical_tile_source.cjs
       - name: Actual HTTP Range and rejection-path test
         run: node qa/guilin-storage-only-20261021/test_http_transport.cjs
-      - name: Real Chromium baseline/candidate comparison, desktop and mobile
-        run: python qa/guilin-storage-only-20261021/ci_browser_qa.py
+      - name: Read-only actual Pages hashes, ranges, desktop and mobile browser
+        env:
+          GUILIN_PUBLIC_COMMIT: "b573bf1e93fa5fcf2bea3690d2aacf31a0716907"
+        run: python qa/guilin-storage-only-20261021/public_browser_qa.py
       - name: Preserve actual QA evidence (not a production deployment)
         if: always()
         uses: actions/upload-artifact@v4
