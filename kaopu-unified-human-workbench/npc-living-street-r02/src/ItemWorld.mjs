@@ -255,10 +255,10 @@ export class ItemWorld {
   }
 
   _surfaceTowardActor(item,state) {
-    // NativeMotion's actual palm normal points forward during acquisition.
-    // Choose the real surface opposing THAT normal, also for side-bag cargo;
-    // a radial torso-to-bag point would introduce a hidden lateral grip offset.
-    const d=scale(forward(state),-1);
+    // Select the real surface opposing the calibrated native palm normal.
+    // The loaf uses its long-axis end; bottles keep the original forward grip.
+    const turn=this.actors.get(state.id)?.graspProfiles?.[item.kind]?.shape?.contactYawRadians||0,
+      d=scale(forward({yaw:state.yaw+turn}),-1);
     const local=item.body.vectorToLocalFrame(asCannon(d));
     let t;
     if(item.kind==='bottle')t=Math.min(.032/Math.max(1e-12,Math.hypot(local.x,local.z)),.07/Math.max(1e-12,Math.abs(local.y)));
@@ -301,10 +301,21 @@ export class ItemWorld {
   }
 
   _buyClearance(record,item,state) {
-    const half=ITEM_PHYSICS.breadHalfExtentsM,source=item?.stockOrigin||position(item),
+    if(record.buyClearance)return record.buyClearance;
+    const half=ITEM_PHYSICS.breadHalfExtentsM,source=record.sourceTarget,
       hand=this.actors.get(state.id)?.graspProfiles?.bread?.sides?.R,
-      radius=Math.max(Math.hypot(half[0],half[2]),hand?.horizontalReachM||0),
       outward=scale(forward(state),-1),fixtures=[];
+    // Both paths propose PALM positions. Measure the complete physical hull
+    // from that palm, including the off-centre long-axis end grip, instead of
+    // treating the loaf's centre as its handle. This radius remains valid for
+    // every yaw during transport and is frozen at the actual grasp.
+    let propRadius=0,minPropY=Infinity;
+    for(const x of [-half[0],half[0]])for(const y of [-half[1],half[1]])for(const z of [-half[2],half[2]]) {
+      const v=item.body.pointToWorldFrame(new CANNON.Vec3(x,y,z));
+      propRadius=Math.max(propRadius,Math.hypot(v.x-source[0],v.z-source[2]));
+      minPropY=Math.min(minPropY,v.y-source[1]);
+    }
+    const radius=Math.max(propRadius,hand?.horizontalReachM||0);
     let top=-Infinity,exit=-Infinity;
     for(const body of this.world.bodies){
       if(!/^bakery-(counter|tray|serving-board)$/.test(body._itemFixture||''))continue;
@@ -318,12 +329,13 @@ export class ItemWorld {
     }
     if(!fixtures.length)throw Error('Bread has no measured bakery collision surface');
     const minHandY=Number.isFinite(hand?.minimumYMFromBottleCenter)?hand.minimumYMFromBottleCenter:0,
-      liftMarginM=.012,palmY=top+Math.max(half[1],-minHandY)+liftMarginM,
+      liftMarginM=.012,palmY=top+Math.max(-minPropY,-minHandY)+liftMarginM,
       travel=Math.max(0,exit+radius+liftMarginM-source[0]*outward[0]-source[2]*outward[2]);
     return {counterTopY:top,palmClearanceY:palmY,
       exitPoint:[record.sourceTarget[0]+outward[0]*travel,palmY,record.sourceTarget[2]+outward[2]*travel],
       breadHalfExtentsM:half.slice(),minimumHandYMFromPalm:minHandY,
-      horizontalHandRadiusM:radius,liftMarginM,fixtures,
+      horizontalHandRadiusM:hand?.horizontalReachM||0,horizontalPropRadiusFromPalmM:propRadius,
+      horizontalClearanceRadiusM:radius,minimumPropYMFromPalm:minPropY,liftMarginM,fixtures,
       source:'current Cannon fixture AABBs and this native hand\'s complete weighted grasp envelope'};
   }
 
@@ -335,7 +347,8 @@ export class ItemWorld {
     if(!record)return {};
     const item=this.items.get(record.items[record.index]);
     if(item&&!record.grasped&&record.stage==='reach')record.sourceTarget=this._surfaceTowardActor(item,state);
-    const source=record.sourceTarget||[state.x,.8,state.z];
+    const source=record.sourceTarget||[state.x,.8,state.z],
+      graspShape=this.actors.get(state.id)?.graspProfiles?.[item?.kind]?.shape;
     let target=source,gripTarget=null;
     if(record.kind==='recycle') {
       const offset=record.gripOffsetWorld||scale(forward(state),.032);
@@ -344,9 +357,10 @@ export class ItemWorld {
     return {mode:modes[record.kind],target:plain(target),gripTarget:gripTarget&&plain(gripTarget),
       progress:record.progress,grip:record.grasped?1:clamp((record.progress-.30)/.16),
       graspProfile:item?.kind||'bottle',
+      objectGripYaw:graspShape?.contactYawRadians||0,
       ...(record.kind==='collect'?{pickupAttached:record.grasped&&!!record.constraint}:{}),
       ...(record.kind==='buy'&&item?{buyClearance:this._buyClearance(record,item,state)}:{}),
-      ...(record.kind==='eat'?{mouthGripDepthM:ITEM_PHYSICS.breadHalfExtentsM[2]*2,mouthClearanceM:.012}:{})};
+      ...(record.kind==='eat'?{mouthGripDepthM:(graspShape?.halfExtentsM?.[2]||ITEM_PHYSICS.breadHalfExtentsM[0])*2,mouthClearanceM:.012}:{})};
   }
 
   contactTarget(state) {return this.motionInput(state).target||null;}
@@ -374,6 +388,7 @@ export class ItemWorld {
     if(!report.contactPhase||!report.contactReady||report.finite===false||report.poseValid===false||
       Math.abs(signed)>ITEM_PHYSICS.contactToleranceM||signed< -ITEM_PHYSICS.maximumAllowedPalmPenetrationM)return false;
     if(item.heldBy&&item.heldBy!==record.actorId)return false;
+    if(record.kind==='buy')record.buyClearance=this._buyClearance(record,item,this.sim.actor(record.actorId));
     this._makeDynamic(item);
     const hand=new CANNON.Body({mass:0,type:CANNON.Body.KINEMATIC,collisionFilterGroup:0,collisionFilterMask:0});
     const initial=this._reportedHandPose(report);hand.position.set(...initial.position);hand.quaternion.copy(initial.quaternion);
@@ -424,10 +439,24 @@ export class ItemWorld {
   }
 
   _tickRecord(record,state,report,dt) {
-    record.age+=dt;if(record.emitted||record.failure||record.finished)return;
+    record.age+=dt;if(record.emitted||record.failure)return;
     const item=this.items.get(record.items[record.index]);if(!item){record.failure='执行中的实物已不存在';return;}
     if(!report||!finite(vec(report.palm)))return;
-    if(report.finite===false){record.failure='原生动作出现无效数值，物品已经安全释放';return;}
+    if(report.finite===false){record.failure='原生动作出现无效数值，物品已经安全释放';this._release(record);return;}
+    if(record.grasped&&report.poseValid===false){
+      record.failure='原生动作超出关节或支撑范围，物品已经安全释放';
+      record.poseFailure={poseValid:false,wristBendDegrees:report.wristBendDegrees??null,
+        boneLengthErrorM:report.boneLengthErrorM??null,at:this.clock};
+      this._release(record);return;
+    }
+    if(record.finished){
+      // A completed physical attempt can wait for the logical task boundary.
+      // Continue driving the actual hand through its last reported pose while
+      // it still holds the object; never leave a hidden driver at the prior
+      // progress sample as the displayed palm finishes moving.
+      if(record.grasped)record.handTarget=this._reportedHandPose(report);
+      return;
+    }
     if(record.stage==='reach') {
       // Resume an interrupted transaction from bottles really staged on this
       // counter, with their ownership still intact until final atomic commit.
@@ -635,7 +664,8 @@ export class ItemWorld {
         this._release(record);record.emitted=true;this.metrics.failedAttempts++;this.metrics.receipts++;
         receipts.push({id:state.id,token:record.token,success:false,reason:record.failure,evidence:{
           scope:'physical-executor-rejected',age:record.age,minimumSurfaceErrorM:record.minimumContactErrorM,
-          maximumConstraintErrorM:record.maximumConstraintErrorM,constraintFailure:record.constraintFailure||null,objectIds:record.items.slice()}});
+          maximumConstraintErrorM:record.maximumConstraintErrorM,constraintFailure:record.constraintFailure||null,
+          poseFailure:record.poseFailure||null,objectIds:record.items.slice()}});
       } else if(record.finished&&state.task?.progress>=.98) {
         record.emitted=true;this.metrics.receipts++;this.metrics.successes[record.kind]++;
         receipts.push({id:state.id,token:record.token,success:true,evidence:{
@@ -657,7 +687,7 @@ export class ItemWorld {
         age:r.age,objectIds:r.items.slice(),index:r.index,grasped:r.grasped,emitted:r.emitted,finished:r.finished,
         sourceTarget:r.sourceTarget,minimumContactErrorM:r.minimumContactErrorM,maximumLiftM:r.maximumLiftM,
         maximumConstraintErrorM:r.maximumConstraintErrorM,minimumMouthDistanceM:r.minimumMouthDistanceM,
-        failure:r.failure,constraintFailure:r.constraintFailure||null,deliveries:r.deliveries.slice()})),history:clone(this.history),
+        failure:r.failure,constraintFailure:r.constraintFailure||null,poseFailure:r.poseFailure||null,deliveries:r.deliveries.slice()})),history:clone(this.history),
       scope:{human:'complete native body; kinematic IK supplied by NativeMotion',
         grasp:'real palm-surface threshold, finite-force assisted rigid constraint; continuous linear/angular kinematic driving at substeps no larger than 1/120 s; no independent finger friction claim',
         bottles:'dynamic finite cylinders; contacts and actual transport measured',

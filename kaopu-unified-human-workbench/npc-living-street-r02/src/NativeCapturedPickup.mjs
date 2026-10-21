@@ -6,7 +6,7 @@
  */
 import {THREE} from './NativeBinding.mjs';
 import {math} from './NativeRig.mjs';
-import {PICKUP_REACH_RULES,verticalReach,minimumHingeForHeight,minimumBagTurn,hingeReach,limbMeasure} from './PickupReachGeometry.mjs';
+import {PICKUP_REACH_RULES,verticalReach,minimumHingeForHeight,minimumBagTurn,minimumVerticalPalmClearance} from './PickupReachGeometry.mjs';
 const {add,sub,scale,dot,cross,norm,unit,lerp,pos,rotation,mv,axisRotation,basisRotation,clamp,smooth,DEG}=math;
 const SIDES=['L','R'],ENTRY_SECONDS=.52,CONTACT_FRAME=99,LAST_FRAME=356,FPS=120;
 const transform=(m,p)=>[m[0]*p[0]+m[1]*p[1]+m[2]*p[2]+m[3],m[4]*p[0]+m[5]*p[1]+m[6]*p[2]+m[7],m[8]*p[0]+m[9]*p[1]+m[10]*p[2]+m[11]];
@@ -23,7 +23,7 @@ function restoreRig(r,s){for(let j=0;j<r.count;j++){r.skinMatrices[j].set(s.skin
 
 export class NativeCapturedPickup {
  constructor(motion){this.motion=motion;this.actor=motion.actor;this.rig=motion.rig;this.tools=motion.tools;this.library=motion.library;this.template=null;this.reset();}
- reset(){this.phase=null;this.elapsed=0;this.sourceFrame=0;this.attached=false;this.lastProgress=0;this.target=null;this.entry=null;this.lastHinge=0;this.lastReport=null;return this;}
+ reset(){this.phase=null;this.elapsed=0;this.sourceFrame=0;this.attached=false;this.lastProgress=0;this.target=null;this.entry=null;this.lastHinge=0;this.lastReport=null;this.lastTransportGoal=null;this.lastCarryClearance=0;return this;}
  _root(x,z,yaw){const m=this.motion;this.actor.root.position.set(x,m.floorOffset,z);this.actor.root.rotation.set(0,yaw,0);this.actor.root.updateMatrixWorld(true);}
  _syncTranslation(){const r=this.rig;this.rig.rootTranslation.splice(0,3,...sub(pos(r.posedMatrices[this.motion.rootIndex]),r.restP[this.motion.rootIndex]));}
  _source(frame){
@@ -143,7 +143,7 @@ export class NativeCapturedPickup {
   this._syncTranslation();const packed=clonePose(this.library.sampler.pack(r.posedMatrices)),feet={};
   for(const side of SIDES){const p=previousFeet?.[side]?.position||m._world(this.tools.sampleVertex(m.footDefs[side].id));feet[side]={position:p.slice(),planted:previousFeet?.[side]?.planted??true,sole:previousFeet?.[side]?.soleMinimumWorldYM??m._soleMinimum(side),rotation:rotation(r.skinMatrices[r.limbs['leg'+side].c])};}
   const first=this._groundedSource(0,yaw),destinationFeet={};for(const side of SIDES)destinationFeet[side]={position:first.feet[side].position.slice(),sole:first.feet[side].soleMinimumWorldYM,rotation:rotation(r.skinMatrices[r.limbs['leg'+side].c])};
-  this.entry={packed,feet,destinationFeet};this.phase='entry';this.elapsed=0;this.sourceFrame=0;this.attached=false;this.target=target.slice();this.lastProgress=progress;this.lastHinge=0;this._applyPacked(packed);
+  this.entry={packed,feet,destinationFeet};this.phase='entry';this.elapsed=0;this.sourceFrame=0;this.attached=false;this.target=target.slice();this.lastProgress=progress;this.lastHinge=0;this.lastTransportGoal=null;this.lastCarryClearance=0;this._applyPacked(packed);
  }
  update({dt,time,x,z,yaw,progress,target,grip,pickupAttached=false}){
   const m=this.motion,r=this.rig;
@@ -159,36 +159,41 @@ export class NativeCapturedPickup {
   if(this.phase==='entry'){const sourcePacked=clonePose(source.pose),q=smooth(this.elapsed/ENTRY_SECONDS);this._applyPacked(this.library.sampler.interpolate(this.entry.packed,sourcePacked,q));}
   const grounded=this._ground(source.contacts,yaw,this.phase==='entry'?this.entry:null),hips=this._hips(),limb=r.limbs.armR;
   const closure=Number.isFinite(grip)?clamp(grip,0,1):this.attached?1:0;this._fingers(closure);
-  const rawPalm=this.tools.samplePalm('R').slice(),rawShoulder=pos(r.posedMatrices[limb.a]),rawBag=m._native(m.bagAnchor()),localTarget=m._native(target),T=this.template;
+  const rawPalm=this.tools.samplePalm('R').slice(),localTarget=m._native(target),T=this.template;
   const down=clamp((T.startHip-hips.pivot[2])/Math.max(1e-8,T.startHip-T.contactHip),0,1),rise=clamp((hips.pivot[2]-T.contactHip)/Math.max(1e-8,T.endHip-T.contactHip),0,1),carry=this.attached?smooth(rise):0;
-  let hinge=0,turn=0,reach=0,goal=null,solution=null,reachBoundary=null;
+  let hinge=0,turn=0,reach=0,goal=null,solution=null,transportReach=null,carryClearanceM=0;
   if(this.phase==='entry'){goal=rawPalm;}
   else if(!this.attached){
    hinge=T.hinge*smooth(down);this._hinge(hinge);const natural=this.tools.samplePalm('R').slice();reach=this.phase==='contact-hold'?1:smooth(this.sourceFrame/CONTACT_FRAME);goal=lerp(natural,localTarget,reach);solution=this._reach(goal,0,reach);
   }else{
-   turn=T.turn*carry;
+   turn=T.turn*carry;hinge=T.hinge*(1-carry);
    // The original box capture supplies all body/leg frames and its hand-rise
    // displacement. As those actual hips rise, a small bottle continuously
    // gathers to the existing bag instead of following the box behind a bench.
-   const A=sub(scale(sub(localTarget,T.contactSourcePalm),1-carry),mv(this._handRotation(turn),sub(this.tools.palmRest('R'),r.restP[limb.c])));
-   const B=sub(lerp(rawPalm,rawBag,carry),rawShoulder),F=mv(axisRotation([0,0,1],turn),[-1,0,0]);
-   reachBoundary=hingeReach(A,B,hips.axis,F,limb.upper,limb.lower);
-   hinge=reachBoundary.angle??T.hinge*(1-carry);
    this._hinge(hinge);const raw=this.tools.samplePalm('R'),bag=m._native(m.bagAnchor());
-   goal=lerp(add(localTarget,sub(raw,T.contactSourcePalm)),bag,carry);reach=1;solution=this._reach(goal,turn,1);
+   goal=lerp(add(localTarget,sub(raw,T.contactSourcePalm)),bag,carry);
+   const shoulder=pos(r.posedMatrices[limb.a]),offset=mv(this._handRotation(turn),sub(this.tools.palmRest('R'),r.restP[limb.c])),F=mv(axisRotation([0,0,1],turn),[-1,0,0]);
+   // Source box-carry frames do not all admit the final bag's fixed cylinder
+   // yaw. Carry above that exact bag by the minimum analytically required
+   // vertical clearance, then return to its original point at source356.
+   // No arbitrary offset, angular sampling or permissive wrist fallback.
+   transportReach=minimumVerticalPalmClearance(sub(sub(goal,shoulder),offset),F,limb.upper,limb.lower);
+   carryClearanceM=transportReach.liftM??0;goal=add(goal,[0,0,carryClearanceM]);reach=1;solution=this._reach(goal,turn,1);
   }
   const checked=r.validate(),palm=m._world(this.tools.samplePalm('R')),handR=rotation(r.skinMatrices[limb.c]),palmNormal=m._direction(unit(mv(handR,r.hand.R.palm)),yaw),handForward=m._direction(unit(mv(handR,r.hand.R.forward)),yaw),handCylinderAxis=unit(cross(handForward,palmNormal));
   const bagTarget=m.bagAnchor(),worldGoal=m._world(goal),footErrorM=Math.max(...SIDES.map(s=>grounded.feet[s].surfaceErrorM)),contactErrorM=norm(sub(palm,target)),activeGoalErrorM=norm(sub(palm,worldGoal)),completionErrorM=norm(sub(palm,bagTarget));
   const wristGateActive=reach>.999&&closure>.999,feetValid=SIDES.every(s=>grounded.feet[s].soleMinimumWorldYM>=-.003&&(!grounded.feet[s].planted||Math.abs(grounded.feet[s].soleMinimumWorldYM)<=.003));
-  const poseValid=checked.finite&&checked.maxBoneLengthError<=.00001&&footErrorM<=.015&&feetValid&&(!reachBoundary||reachBoundary.angle!==null)&&(!wristGateActive||solution?.wristBendDegrees<65),contactPhase=this.phase==='contact-hold'&&!this.attached,contactReady=contactPhase&&poseValid&&contactErrorM<=.012;
+  const poseValid=checked.finite&&checked.maxBoneLengthError<=.00001&&footErrorM<=.015&&feetValid&&(!transportReach||transportReach.feasible)&&(!wristGateActive||solution?.wristBendDegrees<65),contactPhase=this.phase==='contact-hold'&&!this.attached,contactReady=contactPhase&&poseValid&&contactErrorM<=.012;
   const completed=this.phase==='at-bag'&&pickupAttached&&poseValid&&completionErrorM<=.014;
+  const carryClearanceSpeedMPS=this.attached&&dt>0?(carryClearanceM-this.lastCarryClearance)/dt:0,transportPalmGoalSpeedMPS=this.attached&&this.lastTransportGoal&&dt>0?norm(sub(worldGoal,this.lastTransportGoal))/dt:0;
+  if(this.attached){this.lastCarryClearance=carryClearanceM;this.lastTransportGoal=worldGoal.slice();}
   const report={mode:'pickup',progress,stage:this.phase,side:'R',palm,palmNormal,handForward,handCylinderAxis,
    gripCenter:add(palm,scale(palmNormal,.032)),sourceTarget:target.slice(),completionTarget:bagTarget,bagTarget,activeGoal:worldGoal,contactErrorM,activeGoalErrorM,completionErrorM,
    contactPhase,contactReady,endPoseReady:completed,completed,sourceContactOnly:contactReady,objectTransportVerified:false,
    feet:grounded.feet,footErrorM,boneLengthErrorM:checked.maxBoneLengthError,orthogonalityError:checked.maxOrthogonalityError,finite:checked.finite&&finite(palm),poseValid,reachClamped:!!solution?.clamped,grip01:closure,graspAdmissible:!!this.actor.graspReport?.sides?.R?.admissible,
    rootWorld:[x,m.floorOffset,z],rootTranslation:r.rootTranslation.slice(),pelvisWorld:m._world(pos(r.posedMatrices[m.rootIndex])),soleLiftM:m.soleLift,seatFactor:0,
    motionSource:{base:'R04 full CMU115_06,357frames/104nativebones',frame:this.sourceFrame,sourceFrames:source.report.sourceFrames,contactFrame:99,phase:this.phase,contacts:source.contacts,originalBodyAndLegsRetained:true,contact:'source R03/R04 coupled elbow/roll plus measured hip-axis/cylinder/shoe adapter'},
-   capturedPickup:{phase:this.phase,sourceFrame:this.sourceFrame,sourceTime:this.sourceFrame/FPS,acquisitionInput:!!pickupAttached,acquisitionLatched:this.attached,ownershipWritten:false,hingeDegrees:hinge/DEG,bagTurnDegrees:turn/DEG,sourceHipRise:rise,carryWeight:carry,pelvisSupportDropM:grounded.pelvisSupportDropM,wristDegrees:solution?.wristBendDegrees??null,wristGateActive,reachGeometryFeasible:reachBoundary?reachBoundary.angle!==null:true,fullSourceFrameRange:[0,356],sourceFrameCount:357},
+   capturedPickup:{phase:this.phase,sourceFrame:this.sourceFrame,sourceTime:this.sourceFrame/FPS,acquisitionInput:!!pickupAttached,acquisitionLatched:this.attached,ownershipWritten:false,hingeDegrees:hinge/DEG,bagTurnDegrees:turn/DEG,sourceHipRise:rise,carryWeight:carry,pelvisSupportDropM:grounded.pelvisSupportDropM,wristDegrees:solution?.wristBendDegrees??null,wristGateActive,reachGeometryFeasible:transportReach?transportReach.feasible:true,carryClearanceM,carryClearanceSpeedMPS,transportPalmGoalSpeedMPS,carryClearanceGeometry:transportReach,fullSourceFrameRange:[0,356],sourceFrameCount:357},
    contactAdaptation:{hipHingeDegrees:hinge/DEG,bagTurnDegrees:turn/DEG,wristBendDegrees:solution?.wristBendDegrees??null,originalCoupledElbowRoll:true},assistedGrip:true,distanceStepM:0,phase:0,
    limitations:['complete retained linear native skin,not self-collision-free muscles','original full shoe sole plus native palm geometric constraints','finite-force item transport and inventory independently owned by ItemWorld']};
   this.tools.commit({side:'R',grip:closure,target:worldGoal,solution});m.lastInput={x,z,yaw};m.lastMode='pickup';m.lastProgress=progress;m.lastFeet=grounded.feet;m.lastReport=report;m.lastActionPose=r.exportNativePose();m.library.finalPose();

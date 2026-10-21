@@ -19,7 +19,7 @@ for(const id of ids){const actor=await createMotionRecoveryFixture(id,{notify:co
 const defaults=new LifeSimulation(),sim=new LifeSimulation({seed:20261020,initialBottles:[],actors:defaults.actors.filter(a=>ids.includes(a.id))});
 for(const actor of actors){sim.actor(actor.id).capabilities={pickup:true,pickupStance:stances[actor.id],bread:false,window:false,water:false};}
 const scene=new THREE.Scene(),courtyard={colliders:STREET_LAYOUT.colliders,shop:{bread:[]},recycle:{top:.85}},items=new ItemWorld({THREE,scene,sim,courtyard,actors});
-const reports={},receipts=[],spawned=[],trace=[],poses=new Map(),ownershipChanges=[],collectedTokens=new Set(),perActor=Object.fromEntries(ids.map(id=>[id,{pickupFrames:0,heldFrames:0,invalidFrames:0,invalidHeldFrames:0,minimumHandSDFM:Infinity,maximumPalmSurfaceM:0,maximumPalmPenetrationM:0,maximumConstraintErrorM:0,minimumSoleM:Infinity,maximumPlantedSoleM:-Infinity,maximumFootErrorM:0,maximumWristDegrees:0,maximumBoneLengthErrorM:0,maximumRootXZErrorM:0,phaseFrames:{},sourcePairs:[],successfulReceipts:0}]));
+const reports={},receipts=[],spawned=[],trace=[],poses=new Map(),ownershipChanges=[],collectedTokens=new Set(),perActor=Object.fromEntries(ids.map(id=>[id,{pickupFrames:0,heldFrames:0,invalidFrames:0,invalidHeldFrames:0,minimumHandSDFM:Infinity,maximumPalmSurfaceM:0,maximumPalmPenetrationM:0,maximumConstraintErrorM:0,minimumSoleM:Infinity,maximumPlantedSoleM:-Infinity,maximumFootErrorM:0,maximumWristDegrees:0,maximumBoneLengthErrorM:0,maximumRootXZErrorM:0,maximumCarryClearanceM:0,maximumCarryClearanceSpeedMPS:0,maximumCarryClearanceStepM:0,maximumTransportPalmGoalSpeedMPS:0,maximumTransportPalmGoalStepM:0,finalCarryClearanceM:null,phaseFrames:{},sourcePairs:[],successfulReceipts:0}]));
 let failure=null,extraSpawned=0,sourceFrameSamples=0;
 const capture=(actor,state,report,frame)=>{
  const token=state.task?.token;if(!token||report.mode!=='pickup')return;
@@ -46,6 +46,8 @@ for(let frame=0;frame<maxSeconds/dt;frame++){
     p.maximumBoneLengthErrorM=Math.max(p.maximumBoneLengthErrorM,report.boneLengthErrorM);p.maximumRootXZErrorM=Math.max(p.maximumRootXZErrorM,Math.hypot(report.rootWorld[0]-state.x,report.rootWorld[2]-state.z));
     p.maximumFootErrorM=Math.max(p.maximumFootErrorM,report.footErrorM);for(const foot of Object.values(report.feet)){p.minimumSoleM=Math.min(p.minimumSoleM,foot.soleMinimumWorldYM);if(foot.planted)p.maximumPlantedSoleM=Math.max(p.maximumPlantedSoleM,foot.soleMinimumWorldYM);}
     if(report.capturedPickup.wristGateActive)p.maximumWristDegrees=Math.max(p.maximumWristDegrees,report.capturedPickup.wristDegrees||0);
+    p.maximumCarryClearanceM=Math.max(p.maximumCarryClearanceM,report.capturedPickup.carryClearanceM||0);p.maximumCarryClearanceSpeedMPS=Math.max(p.maximumCarryClearanceSpeedMPS,Math.abs(report.capturedPickup.carryClearanceSpeedMPS||0));p.maximumCarryClearanceStepM=Math.max(p.maximumCarryClearanceStepM,Math.abs(report.capturedPickup.carryClearanceSpeedMPS||0)*dt);
+    p.maximumTransportPalmGoalSpeedMPS=Math.max(p.maximumTransportPalmGoalSpeedMPS,report.capturedPickup.transportPalmGoalSpeedMPS||0);p.maximumTransportPalmGoalStepM=Math.max(p.maximumTransportPalmGoalStepM,(report.capturedPickup.transportPalmGoalSpeedMPS||0)*dt);if(report.stage==='at-bag')p.finalCarryClearanceM=report.capturedPickup.carryClearanceM;
     const phase=p.phaseFrames[report.stage]??={firstFrame:frame,lastFrame:frame,sourceFirst:report.capturedPickup.sourceFrame,sourceLast:report.capturedPickup.sourceFrame};phase.lastFrame=frame;phase.sourceLast=report.capturedPickup.sourceFrame;
     p.sourcePairs.push(report.motionSource.sourceFrames);sourceFrameSamples++;
     capture(actor,state,report,frame);
@@ -95,6 +97,8 @@ const gates={sixOrRequestedActors:ids.every(id=>perActor[id].successfulReceipts>
  strictOriginalWrist:ids.every(id=>perActor[id].maximumWristDegrees<65),heldPosesValid:ids.every(id=>perActor[id].invalidHeldFrames===0),
  completeSoleGate:ids.every(id=>perActor[id].minimumSoleM>=-.003&&perActor[id].maximumPlantedSoleM<=.003),
  originalForceAndGeometry:ITEM_PHYSICS.assistedMaximumForceN===16&&ITEM_PHYSICS.contactToleranceM===.012&&ITEM_PHYSICS.maximumAllowedPalmPenetrationM===.004&&ITEM_PHYSICS.transportToleranceM===.035&&ITEM_PHYSICS.bottleRadiusM===.032&&ITEM_PHYSICS.bottleHeightM===.14,
+ measuredFiniteForce:items.metrics.maximumConstraintForceN<=ITEM_PHYSICS.assistedMaximumForceN+1e-8&&items.metrics.maximumConstraintTorqueNm<=ITEM_PHYSICS.assistedMaximumTorqueNm+1e-8,
+ realPhysicalSubsteps:items.metrics.maximumSubstepSeconds<=ITEM_PHYSICS.fixedStepSeconds+1e-10,
  finitePhysicalContact:ids.every(id=>perActor[id].maximumConstraintErrorM<=.035&&perActor[id].maximumPalmSurfaceM<=.012&&perActor[id].maximumPalmPenetrationM<=.004),logicalInvariants:sim.checkInvariants().ok};
 const stem=path.join(root,'evidence','CAPTURE_RECOVERY_CHAIN_'+tag),traceBytes=Buffer.from(JSON.stringify(trace)),poseBytes=Buffer.from(JSON.stringify({schema:'actual-captured-pickup-phase-cache/1',actorIds:ids,sourceHashes,source:'read from actual new runtime immediately before real physics step; no mocked acquisition',samples:selected,shoes:Object.fromEntries(actors.map(a=>[a.id,a.footwear]))}));
 fs.writeFileSync(stem+'_TRACE.json',traceBytes);fs.writeFileSync(stem+'_POSES.json',poseBytes);
@@ -109,11 +113,28 @@ for(const actor of actors){const success=successful.find(r=>r.id===actor.id),row
 }
 const contactBytes=Buffer.from(JSON.stringify({schema:'actual-native-captured-contact-poses/1',bodyVertexCount:9253,faces:Array.from(actors[0].nativeSource.faces),sourceHashes,source:'actual successful transaction matrices, without re-evaluating or replacing the captured pose',headIncluded:false,states:contactStates}));
 fs.writeFileSync(stem+'_CONTACT_POSES.json',contactBytes);
+// Material continuity needs the actual preceding poses, not a cold jump or
+// interpolated copies of the sparse shoe measurements. Keep the requested D
+// segment from the same real transaction; full CSR can reconstruct its body.
+const denseActors=(process.env.DENSE_POSE_ACTOR_IDS||'D').split(',').filter(id=>ids.includes(id)),denseStates=[];
+for(const id of denseActors){const success=successful.find(r=>r.id===id),rows=success&&poses.get(success.token);if(!rows)continue;
+ for(const r of rows.filter(r=>['entry','down','contact-hold'].includes(r.phase)))denseStates.push({...r,id:id+'-actual-'+r.phase+'-'+r.frame,
+  skinMatrices:Array.from({length:104},(_,j)=>Array.from(r.skinMatrices.slice(j*16,j*16+16))),posedMatrices:Array.from({length:104},(_,j)=>Array.from(r.posedMatrices.slice(j*16,j*16+16))),rootMatrix:Array.from(r.rootMatrix)});
+}
+const denseBindingBytes=Buffer.from(JSON.stringify({schema:'native-actual-display-csr-set/1',actorIds:denseActors,sourceHashes,headIncluded:false,
+ source:'Exact full displayed-body CSR including both neutral residual corrections, Float32 packed values and all native influences; use the actual cached row-major skin matrices.',
+ bindings:Object.fromEntries(actors.filter(a=>denseActors.includes(a.id)).map(a=>[a.id,{bodyVertexCount:a.binding.N,faces:Array.from(a.nativeSource.faces),rigNames:a.rig.names,
+  displayRange:Array.from(a.binding.displayRange),displayPacked:Array.from(a.binding.displayPacked)}]))}));
+fs.writeFileSync(stem+'_DISPLAY_CSR.json',denseBindingBytes);
+const denseBindingEvidence={path:path.basename(stem+'_DISPLAY_CSR.json'),bytes:denseBindingBytes.length,sha256:sha(denseBindingBytes),actorIds:denseActors};
+const denseBytes=Buffer.from(JSON.stringify({schema:'actual-native-captured-entry-contact-poses/1',bodyVertexCount:9253,faces:Array.from(actors[0].nativeSource.faces),actorIds:denseActors,sourceHashes,
+ source:'Every real simulation pose from entry through first contact99 of the successful transaction. No pose synthesis, sparse interpolation or new acquisition input.',headIncluded:false,binding:denseBindingEvidence,states:denseStates}));
+fs.writeFileSync(stem+'_ENTRY_CONTACT_POSES.json',denseBytes);
 const report={schema:'captured-pickup-recovery-physical-chain/1',actorIds:ids,requestedBottleCount:goal,successfulBottleCount:successful.length,release:false,rendered:false,
  scope:'real production LifeSimulation/NativeMotion/ItemWorld/Cannon path on complete canonical native body/hand and original shoes; GNM head/cloth/hair/browser and food excluded',
  fixtureCapabilities:{pickup:'actual measured geometry',bread:false,window:false,water:false,reason:'bounded pickup-only numerical verification; no fake food/mouth fixture'},
  sourceHashes,constants:ITEM_PHYSICS,stances,spawned,initialInvariants,finalInvariants:sim.checkInvariants(),time:sim.time,perActor,physics:items.metrics,gates,passed:Object.values(gates).every(Boolean),failure,receipts,ownershipChanges,
- evidence:{trace:{path:path.basename(stem+'_TRACE.json'),bytes:traceBytes.length,sha256:sha(traceBytes)},poses:{path:path.basename(stem+'_POSES.json'),bytes:poseBytes.length,sha256:sha(poseBytes),samples:selected.length},contactPoses:{path:path.basename(stem+'_CONTACT_POSES.json'),bytes:contactBytes.length,sha256:sha(contactBytes),states:contactStates.length}},
+ evidence:{trace:{path:path.basename(stem+'_TRACE.json'),bytes:traceBytes.length,sha256:sha(traceBytes)},poses:{path:path.basename(stem+'_POSES.json'),bytes:poseBytes.length,sha256:sha(poseBytes),samples:selected.length},contactPoses:{path:path.basename(stem+'_CONTACT_POSES.json'),bytes:contactBytes.length,sha256:sha(contactBytes),states:contactStates.length},entryContactPoses:{path:path.basename(stem+'_ENTRY_CONTACT_POSES.json'),bytes:denseBytes.length,sha256:sha(denseBytes),states:denseStates.length,actorIds:denseActors},displayBindings:denseBindingEvidence},
  finalTasks:sim.actors.map(a=>({id:a.id,task:a.task,inventory:a.inventory,counters:a.counters})),finalBottles:sim.bottles};
 fs.writeFileSync(stem+'.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed,gates,failure,perActor:ids.map(id=>({actor:id,...perActor[id],coveredSourceFrames:perActor[id].coveredSourceFrames.length})),output:stem+'.json'}));
 if(!report.passed)process.exitCode=2;

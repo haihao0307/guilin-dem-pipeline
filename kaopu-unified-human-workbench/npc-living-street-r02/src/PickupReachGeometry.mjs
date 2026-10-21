@@ -77,3 +77,25 @@ export function minimumBagTurn(bagMinusShoulder,palmOffset,sign,upper,lower){
  const d2=[x*x+y*y+(z-c)*(z-c)+a*a+b*b,-2*(x*a+y*b),2*x*b-2*y*a],u=[-sign*a,sign*x,sign*y];
  return angularReachIntervals({d2,u,upper,lower,measure:t=>{const R=axisRotation([0,0,1],t),F=mv(R,[sign,0,0]);return limbMeasure(sub(bagMinusShoulder,mv(R,palmOffset)),F,upper,lower);}});
 }
+
+/** Minimum upward clearance for an already selected upright-cylinder hand
+ * frame. Horizontal palm coordinates, hand yaw, native bone lengths and the
+ * original wrist/extension gates are fixed. With horizontal F, u=V dot F is
+ * independent of height. Solving the wrist-cone boundary for D2 gives a
+ * quadratic; its upper root and the original extension bound determine the
+ * first reachable point while lifting a below-shoulder palm. This is a
+ * geometric small-object carrying path, not a write to the physical object.
+ */
+export function minimumVerticalPalmClearance(V,F,upper,lower){
+ const before=limbMeasure(V,F,upper,lower),beta=PICKUP_REACH_RULES.planningWristDegrees*DEG;
+ const admissible=m=>m.reachable&&m.wristDegrees<=PICKUP_REACH_RULES.planningWristDegrees+2e-7;
+ if(admissible(before))return{feasible:true,liftM:0,measure:before,method:'current palm already inside original reach/wrist cone'};
+ if(![...V,...F,upper,lower].every(Number.isFinite)||Math.abs(F[2])>1e-10||V[2]>0)return{feasible:false,liftM:null,measure:before,reason:'vertical clearance requires finite below-shoulder target and upright-cylinder horizontal forward'};
+ const cb=Math.cos(beta),sb=Math.sin(beta),u=dot(V,F),horizontal=V[0]*V[0]+V[1]*V[1],radicand=upper*upper-(u-lower*cb)**2;
+ if(radicand<0)return{feasible:false,liftM:null,measure:before,reason:'fixed horizontal palm lies outside the original wrist-cone envelope',radicand};
+ const boundaryD2=upper*upper-lower*lower+2*lower*cb*u+2*lower*lower*sb*sb+2*lower*sb*Math.sqrt(radicand);
+ const extensionD2=((upper+lower)*PICKUP_REACH_RULES.planningExtension)**2,maximumD2=Math.min(boundaryD2,extensionD2);
+ if(maximumD2<horizontal)return{feasible:false,liftM:null,measure:before,reason:'no vertical palm point satisfies fixed horizontal coordinates',boundaryD2,extensionD2,horizontal};
+ const targetZ=-Math.sqrt(Math.max(0,maximumD2-horizontal)),liftM=Math.max(0,targetZ-V[2]),measure=limbMeasure([V[0],V[1],V[2]+liftM],F,upper,lower);
+ return{feasible:admissible(measure),liftM,measure,boundaryD2,extensionD2,maximumD2,horizontal,radicand,method:'upper quadratic wrist-cone/length boundary; minimum nonnegative vertical palm clearance; unsquared original gate verified'};
+}

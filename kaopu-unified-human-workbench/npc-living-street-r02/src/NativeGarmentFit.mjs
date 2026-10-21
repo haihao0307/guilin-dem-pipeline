@@ -1,12 +1,14 @@
 /** New, explicitly local wearer adapter after recovery of the original source.
  * It is not a restoration of the lost a750 bytes. Source cloth vertices, UVs,
  * seams and paper metrics remain intact. Shape transport uses a continuous
- * positive displacement field; pose references use original ReducedCloth's
- * fixed body triangle + complete CSR rotated offset contract.
+ * positive displacement field. Pose references extend the original complete
+ * CSR rotated-offset rule to a positive continuous body-support field; fixed
+ * body faces retain contact-normal identities only.
  */
 import {MeshContact,closestTriangle} from '../vendor/appearance/cloth-r10/mesh-contact.mjs';
 import {createGarmentMetric,createGarmentSolverMetric,expandGarmentDisplay} from './NativeGarmentMetric.mjs';
 import {NativeGarmentContact,nativeFaceNormal} from './NativeGarmentContact.mjs';
+import {compileContinuousGarmentReference} from './NativeGarmentReference.mjs';
 
 const GROUND_SHIFT=.9858653545379639;
 const sourceCache=new WeakMap();
@@ -20,8 +22,12 @@ function sourceField(person){
     torso=new Float64Array(person.bodyCount),lower=new Float64Array(person.bodyCount);
   for(let i=0;i<person.bodyCount;i++)for(let k=W.ptr[i];k<W.ptr[i+1];k++){
     const name=names[W.joints[k]],w=W.values[k];
-    if(/^(root|spine|pelvis|clavicle|shoulder|neck)/.test(name))torso[i]+=w;
-    if(/^(root|spine05|pelvis|upperleg|lowerleg|foot|toe)/.test(name))lower[i]+=w;
+    // The original upper garment reaches the proximal upper arm at its
+    // armhole; the original waistband reaches spine02--04. These are its
+    // underlying body, not passing foreign limbs. Hands/lower arms remain
+    // excluded from the dynamic paired-contact domain.
+    if(/^(root|spine|pelvis|clavicle|shoulder|neck|upperarm)/.test(name))torso[i]+=w;
+    if(/^(root|spine|pelvis|upperleg|lowerleg|foot|toe)/.test(name))lower[i]+=w;
   }
   const vertices={},masks={};
   for(const region of ['torso','lower','left','right']){
@@ -41,7 +47,18 @@ function groupRegions(packet,map,count,role){
   }
   return tags.map(set=>set.size===1?[...set][0]:role==='top'?'torso':'lower');
 }
-function regionContact(positions,faces,mask){const out=[],offsets=[];for(let f=0;f<faces.length;f+=3)if(mask[f/3]){out.push(faces[f],faces[f+1],faces[f+2]);offsets.push(f);}return {mesh:new MeshContact(positions,Int32Array.from(out)),offsets};}
+function nearestBodyRegion(contact,mask,x,y,z){
+  // Query the intact BVH with a material-domain predicate. No body face or
+  // weight is removed. The original pant_*_l / pant_*_r identity prevents an
+  // 8 mm right-leg material edge from switching to the left thigh at x=0.
+  const stack=[0],q=new Float64Array(7);let best=Infinity,winner=-1;
+  while(stack.length){
+    const node=contact.nodes[stack.pop()],b=node.box,dx=Math.max(b[0]-x,0,x-b[3]),dy=Math.max(b[1]-y,0,y-b[4]),dz=Math.max(b[2]-z,0,z-b[5]);
+    if(dx*dx+dy*dy+dz*dz>best)continue;
+    if(node.left<0){for(let k=node.lo;k<node.hi;k++){const f=contact.tri[k];if(!mask[f/3])continue;closestTriangle(contact.p,contact.faces,f,x,y,z,q);if(q[0]<best){best=q[0];winner=f;}}}
+    else{const a=contact.nodes[node.left].box,c=contact.nodes[node.right].box,da=(a[0]+a[3]-2*x)**2+(a[1]+a[4]-2*y)**2+(a[2]+a[5]-2*z)**2,dc=(c[0]+c[3]-2*x)**2+(c[1]+c[4]-2*y)**2+(c[2]+c[5]-2*z)**2;if(da<dc)stack.push(node.right,node.left);else stack.push(node.left,node.right);}
+  }return winner;
+}
 
 /** Positive compact displacement field from the unchanged source-body vertex
  * correspondences. The 75 mm support scale is inherited from the source
@@ -64,14 +81,17 @@ function transferShape(source,targetPositions,donor,regions){
 }
 
 function poseReferences(metric,target,source){
-  const body=target.positions,faces=source.faces,regions=groupRegions(metric.packet,metric.map,metric.count,metric.role),contacts={};
-  for(const r of new Set(regions))contacts[r]=regionContact(body,faces,source.masks[r]);
+  // Source ReducedCloth.reference supplies the fixed triangle/bary/offset and
+  // complete-CSR transport. Its neutral query here keeps the original material
+  // pants-leg domain; upper-arm armholes and the full spine waistband remain
+  // included. A posed foreign hand must never replace this fixed identity.
+  const body=target.positions,faces=source.faces,regions=groupRegions(metric.packet,metric.map,metric.count,metric.role),contact=new MeshContact(body,faces);
   const W=target.packet?.weights??target.rig?.weights;if(!W)throw Error('MISSING_COMPLETE_NATIVE_CSR');
   const refs=[],q=new Float64Array(7);let maximumInfluences=0,roundoffBaryClamps=0,maximumBaryRoundoff=0;
   for(let i=0;i<metric.count;i++){
-    const k=i*3,P=metric.fittedNative,C=contacts[regions[i]],f=C.mesh.nearest(P[k],P[k+1],P[k+2]);
-    if(f<0)throw Error('MISSING_PAIRED_BODY_REFERENCE');closestTriangle(body,C.mesh.faces,f,P[k],P[k+1],P[k+2],q);
-    const ids=Array.from(C.mesh.faces.subarray(f,f+3)),bary=Array.from(q.subarray(4,7)),offset=[P[k]-q[1],P[k+1]-q[2],P[k+2]-q[3]],weights=new Map();
+    const k=i*3,P=metric.fittedNative,f=nearestBodyRegion(contact,source.masks[regions[i]],P[k],P[k+1],P[k+2]);
+    if(f<0)throw Error('MISSING_PAIRED_BODY_REFERENCE');closestTriangle(body,faces,f,P[k],P[k+1],P[k+2],q);
+    const ids=Array.from(faces.subarray(f,f+3)),bary=Array.from(q.subarray(4,7)),offset=[P[k]-q[1],P[k+1]-q[2],P[k+2]-q[3]],weights=new Map();
     // Source closestTriangle can return -5.55e-17 for 1-b-c at an edge.
     // Correct only floating roundoff in geometric barycentrics; native CSR
     // values and every nonzero contributing influence remain untouched.
@@ -85,15 +105,14 @@ function poseReferences(metric,target,source){
       weights.set(W.joints[n],(weights.get(W.joints[n])??0)+w);
     }
     const sum=[...weights.values()].reduce((a,b)=>a+b,0);if(Math.abs(sum-1)>1e-4)throw Error('INCOMPLETE_NATIVE_REFERENCE_CSR');
-    refs.push({ids,bary,offset,weights:[...weights].flat(),face:C.offsets[f/3],region:regions[i]});maximumInfluences=Math.max(maximumInfluences,weights.size);
+    refs.push({ids,bary,offset,weights:[...weights].flat(),face:f,region:regions[i]});maximumInfluences=Math.max(maximumInfluences,weights.size);
   }
-  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,
+  const field=compileContinuousGarmentReference(metric,target,source,regions);
+  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,field,
     sample(posedBody,skinMatrices,out=new Float64Array(metric.count*3),normals=new Float64Array(metric.count*3)){
+      field.sample(posedBody,skinMatrices,out);
       for(let i=0;i<refs.length;i++){
-        const r=refs[i],k=i*3;let x=0,y=0,z=0;
-        for(let j=0;j<3;j++){const a=r.ids[j]*3,w=r.bary[j];x+=w*posedBody[a];y+=w*posedBody[a+1];z+=w*posedBody[a+2];}
-        for(let j=0;j<r.weights.length;j+=2){const m=skinMatrices[r.weights[j]],w=r.weights[j+1],a=r.offset[0],b=r.offset[1],c=r.offset[2];x+=w*(m[0]*a+m[1]*b+m[2]*c);y+=w*(m[4]*a+m[5]*b+m[6]*c);z+=w*(m[8]*a+m[9]*b+m[10]*c);}
-        out[k]=x;out[k+1]=y;out[k+2]=z;const n=nativeFaceNormal(posedBody,faces,r.face);normals.set(n,k);
+        const r=refs[i],k=i*3,n=nativeFaceNormal(posedBody,faces,r.face);normals.set(n,k);
       }return {positions:out,normals};
     }
   };
@@ -105,10 +124,36 @@ export async function createWholeGarmentBinding({sourcePerson,targetBody,packet,
   const donor=originalGarmentNative(packet),donorMetric=createGarmentMetric(packet,donor,{role,family}),regions=groupRegions(packet,donorMetric.map,donorMetric.count,role),transfer=transferShape(source,target.positions,donorMetric.fittedNative,regions);
   const fittedDisplay=expandGarmentDisplay(donorMetric,transfer.positions),metric=await createGarmentSolverMetric(packet,fittedDisplay,{role,family,neutralEvidence}),reference=poseReferences(metric,target,source),contact=new NativeGarmentContact(target.positions,source.faces);
   return {metric,reference,source,target,contact,role,packet,neutralDisplay:expandGarmentDisplay(metric,metric.fittedNative),
-    report:{...transfer.report,method:transfer.report.method+'; original fixed triangle/full CSR offset transport',
+    report:{...transfer.report,method:transfer.report.method+'; continuous full CSR offset transport',referenceField:reference.field.report,
       sourceVertices:donor.length/3,sourceTriangles:packet.spec.panels.reduce((n,p)=>n+p.triangles.length,0),indexSequenceRetained:true,sourcePaperUVRetained:true,
-      weightsTruncated:false,maximumReferenceInfluences:reference.maximumInfluences,geometricBarycentricRoundoff:{count:reference.roundoffBaryClamps,maximum:reference.maximumBaryRoundoff},bodyGeometryChanged:false,internalRefinement:metric.internalRefinement,neutralAccepted:false,visualAccepted:false},
+      weightsTruncated:false,maximumReferenceInfluences:Math.max(reference.maximumInfluences,reference.field.report.maximumBones),geometricBarycentricRoundoff:{count:reference.roundoffBaryClamps,maximum:reference.maximumBaryRoundoff},bodyGeometryChanged:false,internalRefinement:metric.internalRefinement,neutralAccepted:false,visualAccepted:false},
     eligibleFaces:source.masks[role==='top'?'torso':'lower'],
+    sample(posedBody,skinMatrices){contact.refit(posedBody);return reference.sample(posedBody,skinMatrices);}
+  };
+}
+
+/** Freeze a separately evidenced, neutral wearer shape before any action.
+ * Reuse the already-refined source solver topology: refining again would
+ * re-average curved seam sites from linear display edges. Complete original
+ * display indices and the explicit display-to-solver map stay unchanged.
+ * Source flat-paper lengths remain immutable; only wearer rest is captured.
+ */
+export function captureNeutralWearerRest(binding,sewnNative,neutralEvidence){
+  const old=binding.metric;
+  if(sewnNative.length!==old.count*3||!Array.from(sewnNative).every(Number.isFinite))throw Error('INVALID_NEUTRAL_WEARER_REST');
+  for(let i=0;i<binding.target.positions.length;i++)if(binding.contact.mesh.p[i]!==binding.target.positions[i])throw Error('CANNOT_CAPTURE_POSED_BODY_AS_NEUTRAL_REST');
+  const contactAudit=auditGarmentBody(binding,sewnNative);
+  if(contactAudit.inside!==0)throw Error('NEUTRAL_WEARER_REST_INSIDE_BODY');
+  const internalNative=new Float64Array(old.map.length*3);
+  for(let i=0;i<old.map.length;i++)internalNative.set(sewnNative.subarray(old.map[i]*3,old.map[i]*3+3),i*3);
+  const metric=createGarmentMetric(old.packet,internalNative,{role:old.role,family:old.family,doubleLayer:old.doubleLayer,neutralEvidence});
+  for(let i=0;i<old.map.length;i++)if(old.map[i]!==metric.map[i])throw Error('FROZEN_REST_SEWN_MAP_CHANGED');
+  for(let i=0;i<old.sourceEdges.length;i++)if(old.sourceEdges[i].paperRest!==metric.sourceEdges[i].paperRest)throw Error('FROZEN_REST_CHANGED_SOURCE_PAPER');
+  for(const key of ['displayPacket','displayVertexCount','displayToSolver','displayToInternalVertex','internalRefinement'])metric[key]=old[key];
+  let maximumSeamReaverageM=0;for(let i=0;i<old.count;i++)maximumSeamReaverageM=Math.max(maximumSeamReaverageM,Math.hypot(...[0,1,2].map(k=>metric.fittedNative[i*3+k]-sewnNative[i*3+k])));
+  const reference=poseReferences(metric,binding.target,binding.source),contact=binding.contact;
+  return {...binding,metric,reference,neutralDisplay:expandGarmentDisplay(metric,metric.fittedNative),
+    report:{...binding.report,neutralRestCaptured:true,neutralContactAudit:contactAudit,neutralEvidence,maximumSeamReaverageM,referenceField:reference.field.report,sourcePaperMetricCertified:false,visualAccepted:false},
     sample(posedBody,skinMatrices){contact.refit(posedBody);return reference.sample(posedBody,skinMatrices);}
   };
 }

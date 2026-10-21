@@ -15,8 +15,10 @@ export function createSceneCamera({THREE,viewer,street,actors}) {
   function inspect(position,probes) {
     const hits=[];
     for(const probe of probes){
-      direction.copy(position).sub(probe);const distance=direction.length();
-      ray.set(probe,direction.multiplyScalar(1/distance));ray.near=.025;ray.far=Math.max(.025,distance-.08);
+      direction.copy(probe).sub(position);const distance=direction.length();
+      // Cast in the viewing direction so original FrontSide planes are
+      // tested with the same face orientation as the real camera.
+      ray.set(position,direction.multiplyScalar(1/distance));ray.near=.08;ray.far=Math.max(.08,distance-.025);
       const intersection=ray.intersectObjects(occluders,false).find(hit=>visible(hit.object));
       if(intersection)hits.push({object:intersection.object.name||intersection.object.type,distanceM:intersection.distance});
     }
@@ -50,15 +52,25 @@ export function createSceneCamera({THREE,viewer,street,actors}) {
       // comes from this actor, so short and tall residents occupy equal space.
       const distance=height/(2*tan*fraction)*1.035;
       const position=center.clone().add(new T.Vector3(Math.sin(yaw)*Math.cos(elevation),Math.sin(elevation),Math.cos(yaw)*Math.cos(elevation)).multiplyScalar(distance));
-      const hits=inspect(position,probes);
-      candidates.push({position,yaw,elevation,distance,hits,
-        score:hits.length*100+angleDistance(yaw,preferred)+elevation*.15});
+      candidates.push({position,yaw,elevation,distance,
+        preferenceScore:angleDistance(yaw,preferred)+elevation*.15});
     }
-    candidates.sort((a,b)=>a.score-b.score);const best=candidates[0];
+    // Candidate preference is less than pi+.1, while one blocked probe costs
+    // 100. Therefore the first clear view in this order is also the exact
+    // minimum of the full visibility score. Avoid 48 full mesh queries when
+    // an earlier candidate already proves that minimum.
+    candidates.sort((a,b)=>a.preferenceScore-b.preferenceScore);
+    let best=null,evaluatedCandidates=0;
+    for(const candidate of candidates){
+      candidate.hits=inspect(candidate.position,probes);evaluatedCandidates++;
+      candidate.score=candidate.hits.length*100+candidate.preferenceScore;
+      if(!best||candidate.score<best.score)best=candidate;
+      if(candidate.hits.length===0)break;
+    }
     orbit.target.copy(center);camera.position.copy(best.position);camera.zoom=1;orbit.update();camera.updateProjectionMatrix();
     last={id:state.id,mode,center:center.clone(),checkedX:state.x,checkedZ:state.z};
     report={actor:state.id,mode,heightM:height,targetHeightFraction:fraction,
-      candidates:candidates.length,probes:probes.length,occludedProbes:best.hits.length,
+      candidates:candidates.length,evaluatedCandidates,probes:probes.length,occludedProbes:best.hits.length,
       occluders:best.hits,position:camera.position.toArray(),target:center.toArray(),
       method:'visible native street mesh raycasts; no mesh hiding or replacement'};
     return report;

@@ -22,6 +22,8 @@ import {math} from './NativeRig.mjs';
 import {seatRootOffset} from './SeatMotionPath.mjs';
 import {NativeCapturedPickup} from './NativeCapturedPickup.mjs';
 import {breadTransportGoal} from './BreadTransportPath.mjs';
+import {breadApproachGoal} from './BreadApproachPath.mjs';
+import {solveNativeObjectReach} from './NativeObjectReach.mjs';
 
 const {clamp,smooth,add,sub,scale,dot,cross,norm,unit,lerp,pos,mv,rotation,axisRotation,basisRotation,mm3,tr,DEG}=math;
 const SIDES=['L','R'];
@@ -357,7 +359,8 @@ export class NativeMotion {
     const extra=best*clamp(weight,0,1);distance(extra);return {extraDegrees:extra,wristDistanceM:norm(sub(wrist,pos(rig.posedMatrices[limb.a]))),armLengthM:limb.upper+limb.lower,withinReach:score<=limit};
   }
 
-  _reach(world,side='R',turn=0,orientationWeight=1,objectContact=false) {
+  _reach(world,side='R',turn=0,orientationWeight=1,objectContact=false,allowObjectYaw=false) {
+    if(objectContact)return solveNativeObjectReach(this,world,{side,turn,orientationWeight,allowYaw:allowObjectYaw});
     const rig=this.rig,limb=rig.limbs['arm'+side],sign=side==='L'?1:-1;
     const local=this._native(world),handRotation=this._contactHandRotation(side,turn,orientationWeight,objectContact);
     let wrist=sub(local,mv(handRotation,sub(this.tools.palmRest(side),rig.restP[limb.c]))),solved;
@@ -372,8 +375,8 @@ export class NativeMotion {
     return solved;
   }
 
-  update({dt=0,time=0,x=0,z=0,yaw=0,mode='idle',progress=0,target=null,gripTarget=null,seatY=.46,grip=null,seatApproachOffset=.65,standStartFactor=null,mouthGripDepthM=.09,mouthClearanceM=.012,graspProfile=null,buyClearance=null,pickupAttached=false}={}) {
-    if(![dt,time,x,z,yaw,progress,seatY,seatApproachOffset,mouthGripDepthM,mouthClearanceM].every(Number.isFinite))throw Error('NativeMotion received non-finite frame parameters');
+  update({dt=0,time=0,x=0,z=0,yaw=0,mode='idle',progress=0,target=null,gripTarget=null,seatY=.46,grip=null,seatApproachOffset=.65,standStartFactor=null,mouthGripDepthM=.09,mouthClearanceM=.012,graspProfile=null,objectGripYaw=0,buyClearance=null,pickupAttached=false}={}) {
+    if(![dt,time,x,z,yaw,progress,seatY,seatApproachOffset,mouthGripDepthM,mouthClearanceM,objectGripYaw].every(Number.isFinite))throw Error('NativeMotion received non-finite frame parameters');
     if(!['idle','walk','sit','sitting','stand','pickup','trade','eat','window','water'].includes(mode))throw Error('Unknown native motion mode '+mode);
     if(standStartFactor!==null&&!Number.isFinite(standStartFactor))throw Error('Invalid native stand-start factor');
     dt=clamp(dt,0,.20);const p=clamp(progress,0,1),H=this.height,rig=this.rig;
@@ -520,7 +523,7 @@ export class NativeMotion {
     // For eating, turn the palm toward the face. The food fits between palm
     // and face; its far surface approaches the mouth while the hand stays
     // outside. ItemWorld supplies the real held-food depth and checks it.
-    const handTurn=mode==='eat'?Math.PI*smooth((p-.55)/.37):0;
+    const handTurn=mode==='eat'?mix(objectGripYaw,Math.PI,smooth((p-.55)/.37)):objectGripYaw;
     const mouth=add(mouthSurface,scale(forward,Math.max(0,mouthGripDepthM)+Math.max(0,mouthClearanceM)));
     let sourceTarget=null,completionTarget=null,goal=null,solution=null,stage=mode;
     if(environmentAction){
@@ -535,7 +538,10 @@ export class NativeMotion {
       sourceTarget=sourceGrip||worldTarget||(mode==='eat'?bagTarget:null);
       if(!sourceTarget)throw Error('Native '+mode+' needs a real source palm contact target');
       completionTarget=mode==='eat'?mouth:mode==='trade'&&sourceGrip?(worldTarget||bagTarget):bagTarget;
-      if(p<.30){const approach=mode==='pickup'?smooth((p-.20)/.10):smooth(p/.30);goal=lerp(relaxed,sourceTarget,approach);stage='approach-source';}
+      if(p<.30&&mode==='trade'&&!sourceGrip&&graspProfile==='bread'){
+        ({goal,stage}=breadApproachGoal(relaxed,sourceTarget,p,buyClearance));
+      }
+      else if(p<.30){const approach=mode==='pickup'?smooth((p-.20)/.10):smooth(p/.30);goal=lerp(relaxed,sourceTarget,approach);stage='approach-source';}
       else if(p<=.55){goal=sourceTarget.slice();stage='source-contact';}
       else if(mode==='pickup') {
         // Lift to the actual low waist while still crouched; then rise with
@@ -552,13 +558,16 @@ export class NativeMotion {
         goal[1]+=Math.sin(Math.PI*t)*H*.065;
         stage=p<.96?'transport':mode==='eat'?'at-mouth':mode==='trade'&&sourceGrip?'at-counter':'at-bag';
       }
-      solution=this._reach(goal,this.side,handTurn,smooth(p/.30),true);
+      const orientationWeight=mode==='trade'&&!sourceGrip&&graspProfile==='bread'?smooth(p/.15):smooth(p/.30);
+      solution=this._reach(goal,this.side,handTurn,orientationWeight,true,p>.55);
     }
     const checked=rig.validate(),palm=this._world(this.tools.samplePalm(this.side));
     const palmNormal=this._direction(unit(mv(rotation(rig.skinMatrices[rig.limbs['arm'+this.side].c]),rig.hand[this.side].palm)),yaw);
     const handForward=this._direction(unit(mv(rotation(rig.skinMatrices[rig.limbs['arm'+this.side].c]),rig.hand[this.side].forward)),yaw),handCylinderAxis=scale(unit(cross(handForward,palmNormal)),this.side==='L'?-1:1);
     const footErrorM=Math.max(...SIDES.map(s=>feet[s].surfaceErrorM));
-    const poseValid=checked.finite&&checked.maxBoneLengthError<=.00001&&footErrorM<=.015;
+    const wristGateActive=action&&p>=.30,wristBendDegrees=solution?.wristBendDegrees??null;
+    const poseValid=checked.finite&&checked.maxBoneLengthError<=.00001&&footErrorM<=.015&&
+      (!wristGateActive||solution?.wristWithinGate===true&&!solution.clamped);
     const contactErrorM=sourceTarget?norm(sub(palm,sourceTarget)):0;
     const activeGoalErrorM=goal?norm(sub(palm,goal)):0;
     const completionErrorM=completionTarget?norm(sub(palm,completionTarget)):null;
@@ -568,7 +577,10 @@ export class NativeMotion {
     // The only GPU submission in the execution path.
     this.tools.commit({side:this.side,grip:closure,target:goal,solution});
     const report={mode,progress:p,stage,side:this.side,palm,palmNormal,handForward,handCylinderAxis,
-      gripCenter:add(palm,scale(palmNormal,this.actor.graspReport?.shape?.radius||.032)),
+      wristBendDegrees,wristGateActive,objectReach:solution?.originalCoupledElbowRoll?{
+        wristBendDegrees,objectTurnRadians:solution.objectTurnRadians,palmErrorM:solution.actualPalmErrorM,
+        originalCoupledElbowRoll:true,clamped:!!solution.clamped}:null,
+      gripCenter:add(palm,scale(palmNormal,this.actor.graspReport?.shape?.halfExtentsM?.[2]||this.actor.graspReport?.shape?.radius||.032)),
       bagTarget,mouth,mouthSurface,mouthSupport:this.tools.mouthSupport||null,mouthApproachClearanceM:mouthGripDepthM+mouthClearanceM,mouthGripDepthM,mouthClearanceM,graspProfile,
       sourceTarget,completionTarget,contactErrorM,activeGoalErrorM,completionErrorM,
       contactPhase,contactReady,endPoseReady,completed:endPoseReady,

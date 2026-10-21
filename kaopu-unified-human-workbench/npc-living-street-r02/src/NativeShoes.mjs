@@ -10,7 +10,7 @@ import {buildStyle, STYLES} from '../vendor/appearance/shoe-native/r14/src/model
 import {StyleMaterials} from '../vendor/appearance/shoe-native/r14/src/materials.mjs';
 import {prepareSharedNativeShoe} from '../vendor/appearance/shoe-shared-original.mjs';
 import scanData from '../vendor/appearance/shoes-r14/scan-data.json';
-import {measureNativeFoot,createNativeShoeField,fitNativeShoeGeometry} from './NativeShoeFit.mjs';
+import {measureNativeFoot,createNativeShoeField,createNativeShoeApertureField,fitNativeShoeGeometry} from './NativeShoeFit.mjs';
 
 export const STYLE_BY_ACTOR = Object.freeze({A:'canvas',B:'canvas',C:'canvas',D:'canvas',E:'canvas',F:'canvas'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -51,7 +51,8 @@ export function fitNativeShoeSide(actor,side,{styleId=STYLE_BY_ACTOR[actor.id]||
   const width=clamp((foot.width+.009)/(style.width*scaleM),.88,1.15);
   const params={length:1,width,instep:4,thickness:1.35,bend:0},sourceModel=getModel(styleId,params);
   const centerF=foot.minF-.004+targetLength*.5,centerR=foot.centerR;
-  const field=createNativeShoeField(foot,sourceModel.last,{scaleM,centerF,centerR});
+  const baseField=createNativeShoeField(foot,sourceModel.last,{scaleM,centerF,centerR});
+  const field=createNativeShoeApertureField(actor,sourceModel,baseField,foot);
   const model=fitNativeShoeGeometry(sourceModel,field);
   const center=[foot.foot[0]+foot.forward[0]*centerF+foot.right[0]*centerR,
     foot.foot[1]+foot.forward[1]*centerF+foot.right[1]*centerR,field.baseZ];

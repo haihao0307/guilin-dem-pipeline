@@ -13,6 +13,21 @@ export {THREE};
 
 const {clamp, add, sub, scale, dot, cross, norm, unit, pos, mv, basisRotation} = math;
 const SIDES = ['L', 'R'];
+
+/** Keep physical prop dimensions separate from their axes in the palm frame.
+ * The original loaf is taken at its long-axis end with a quarter-turn wrist;
+ * its actual mesh and Cannon hull are not rotated or resized by this fit. */
+export function createNativeGraspShape({radius,height,gripHeight=0,profile='bottle',halfExtentsM=null}={}) {
+  if(profile==='bread') {
+    if(!Array.isArray(halfExtentsM)||halfExtentsM.length!==3||halfExtentsM.some(v=>!Number.isFinite(v)||v<=0))
+      throw Error('Native bread calibration requires three positive physical half extents');
+    return {kind:'ellipsoid',halfExtentsM:[halfExtentsM[2],halfExtentsM[1],halfExtentsM[0]],
+      physicalHalfExtentsM:halfExtentsM.slice(),contactYawRadians:Math.PI/2,gripHeight:0};
+  }
+  if(![radius,height,gripHeight].every(Number.isFinite)||radius<=0||height<=0||Math.abs(gripHeight)>=height*.5)
+    throw Error('Native grasp calibration requires a positive cylinder and an interior axial gripHeight');
+  return {kind:'upright-cylinder',radius,height,gripHeight,contactYawRadians:0};
+}
 const native = p => [p.x, -p.z, p.y];
 const display = p => new THREE.Vector3(p[0], p[2], -p[1]);
 const asVector = p => p?.isVector3 ? p.clone() : p && 'x' in p ? new THREE.Vector3(p.x,p.y,p.z) : new THREE.Vector3(...p);
@@ -462,11 +477,7 @@ function makeActor(model, viewer, spec, preset, measurements) {
       }
     },
     configureGrasp({radius,height,gripHeight=0,profile='bottle',halfExtentsM=null}={}){
-      const ellipsoid=profile==='bread';
-      if(ellipsoid?(!Array.isArray(halfExtentsM)||halfExtentsM.length!==3||halfExtentsM.some(v=>!Number.isFinite(v)||v<=0)):
-        (! [radius,height,gripHeight].every(Number.isFinite)||radius<=0||height<=0||Math.abs(gripHeight)>=height*.5))
-        throw Error('Native grasp calibration requires a positive cylinder and an interior axial gripHeight');
-      const shape=ellipsoid?{kind:'ellipsoid',halfExtentsM:halfExtentsM.slice(),gripHeight:0}:{kind:'upright-cylinder',radius,height,gripHeight},sides={};
+      const shape=createNativeGraspShape({radius,height,gripHeight,profile,halfExtentsM}),sides={};
       try {
         for(const side of SIDES) {
           const patch=findPalmSupport(geometry,binding,rig,side,handSurfaceVertices[side]);

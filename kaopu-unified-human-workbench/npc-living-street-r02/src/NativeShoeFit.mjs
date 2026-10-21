@@ -5,6 +5,7 @@
  * The same continuous map is applied to every original R14 construction part.
  * It changes geometry only; no pressure, comfort or dynamic cloth claim.
  */
+import {MeshContact} from '../vendor/appearance/cloth-adapted/mesh-contact.mjs';
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const sub=(a,b)=>a.map((x,k)=>x-b[k]);
@@ -12,6 +13,12 @@ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]
 const unit=a=>{const n=Math.hypot(...a);if(!(n>1e-12))throw Error('Degenerate shoe-fitting direction');return a.map(x=>x/n);};
 const xyz=(p,i)=>[p[i*3],p[i*3+1],p[i*3+2]];
 const copy=value=>ArrayBuffer.isView(value)?value.slice():Array.isArray(value)?value.map(copy):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,copy(v)])):value;
+const determinant=j=>j[0]*(j[4]*j[8]-j[5]*j[7])-j[1]*(j[3]*j[8]-j[5]*j[6])+j[2]*(j[3]*j[7]-j[4]*j[6]);
+const multiply=(a,b)=>Array.from({length:9},(_,i)=>{const r=Math.floor(i/3),c=i%3;return a[r*3]*b[c]+a[r*3+1]*b[c+3]+a[r*3+2]*b[c+6];});
+const transportedNormal=(n,j)=>{const d=determinant(j);return unit([
+ ((j[4]*j[8]-j[5]*j[7])*n[0]+(j[5]*j[6]-j[3]*j[8])*n[1]+(j[3]*j[7]-j[4]*j[6])*n[2])/d,
+ ((j[2]*j[7]-j[1]*j[8])*n[0]+(j[0]*j[8]-j[2]*j[6])*n[1]+(j[1]*j[6]-j[0]*j[7])*n[2])/d,
+ ((j[1]*j[5]-j[2]*j[4])*n[0]+(j[2]*j[3]-j[0]*j[5])*n[1]+(j[0]*j[4]-j[1]*j[3])*n[2])/d]);};
 
 export function measureNativeFoot(actor,side) {
   const {rig,binding}=actor,footId=rig.index.get('foot.'+side),foot=rig.restP[footId];
@@ -41,14 +48,20 @@ export function measureNativeFoot(actor,side) {
     length:maxF-minF,width:maxR-minR,centerF:(minF+maxF)/2,centerR:(minR+maxR)/2};
 }
 
-/** A fixed, low-frequency upper envelope. Depositing at both enclosing knots
- * retains the measured requirement between them; the neighbourhood maximum
- * removes isolated narrow bulges without dropping any original sample. */
-function envelope(rows,{minimum=0,knots=33,radius=2}={}) {
-  const raw=new Float64Array(knots).fill(minimum);
-  for(const [s,v]of rows){const x=clamp(s)*(knots-1),i=Math.min(knots-2,Math.floor(x));raw[i]=Math.max(raw[i],v);raw[i+1]=Math.max(raw[i+1],v);}
-  const values=raw.map((_,i)=>{let v=minimum;for(let k=Math.max(0,i-radius);k<=Math.min(knots-1,i+radius);k++)v=Math.max(v,raw[k]);return v;});
-  function sample(s){const x=clamp(s)*(knots-1),i=Math.min(knots-2,Math.floor(x)),u=x-i,a=values[i],b=values[i+1];return {value:a+(b-a)*u*u*(3-2*u),derivative:(b-a)*6*u*(1-u)*(knots-1)};}
+/** Positive cubic B-spline upper envelope. Every control point active at an
+ * actual measurement receives its full requirement. Their positive weights
+ * sum to one, so smoothing cannot lower that measurement's required margin.
+ * C2 continuity avoids the former per-cell smoothstep slope resets. */
+function envelope(rows,{minimum=0,knots=17}={}) {
+  const values=new Float64Array(knots).fill(minimum);
+  for(const [s,v]of rows){const i=Math.min(knots-2,Math.floor(clamp(s)*(knots-1)));for(let k=i-1;k<=i+2;k++){const q=clamp(k,0,knots-1);values[q]=Math.max(values[q],v);}}
+  function sample(s){
+    const x=clamp(s)*(knots-1),i=Math.min(knots-2,Math.floor(x)),u=x-i,v=1-u;
+    const weights=[v*v*v/6,(3*u*u*u-6*u*u+4)/6,(-3*u*u*u+3*u*u+3*u+1)/6,u*u*u/6];
+    const derivatives=[-v*v/2,(9*u*u-12*u)/6,(-9*u*u+6*u+3)/6,u*u/2];
+    let value=0,derivative=0;for(let k=0;k<4;k++){const a=values[clamp(i+k-1,0,knots-1)];value+=weights[k]*a;derivative+=derivatives[k]*a;}
+    return {value,derivative:s<0||s>1?0:derivative*(knots-1)};
+  }
   return {values:Array.from(values),sample};
 }
 
@@ -77,9 +90,14 @@ export function createNativeShoeField(foot,last,{scaleM,centerF,centerR,clearanc
     const t=clamp((s-.28)/(.65-.28)),asym=1+(x<c?.028:-.016)*t*t*(3-2*t);
     const xn=clamp((x-c)/(last.width(s)*asym),-1,1),theta=Math.asin(xn),collar=last.collarAngle(s);
     const roof=last.soleTop(s)+last.height(s)*Math.pow(Math.max(0,1-xn*xn),.36);
-    // The ankle above the authored open collar must not raise the shoe roof.
-    // Tongue coverage starts at the source's real .308 station.
-    if(s<.308&&collar>0&&Math.abs(theta)<collar&&q.y>last.soleTop(s)+last.height(s)*Math.pow(Math.cos(collar),.72)) {openAnkleSamples++;continue;}
+    // Before the source tongue starts, the quarter's highest point is its
+    // authored open collar. Skin above that whole edge does not belong to a
+    // closed roof, even if its X lies outside the opening's vertical shadow.
+    // The original full samples remain in the independent surface audit.
+    const throat=Math.max(collar,.235*((clamp((s-.24)/(.37-.24)))**2)*(3-2*clamp((s-.24)/(.37-.24))));
+    const tongueHalf=Math.min(1.20,throat+.21),tongueW=Math.abs(theta)/tongueHalf;
+    const beforeTongue=s<.308+.020*Math.min(1,tongueW*tongueW);
+    if(beforeTongue&&collar>0&&q.y>last.soleTop(s)+last.height(s)*Math.pow(Math.cos(collar),.72)) {openAnkleSamples++;continue;}
     const u=clamp((roof-last.soleTop(s))/rampMm),weight=u*u*(3-2*u);
     if(weight>1e-8)heightRequirements.push([s,Math.max(0,(q.y+margin+last.params.thickness-roof)/weight)]);
   }
@@ -97,10 +115,69 @@ export function createNativeShoeField(foot,last,{scaleM,centerF,centerR,clearanc
   }
   const normal=(n,j)=>{const x=n[0]/j[0],y=n[1]/j[4];return unit([x,y,n[2]-j[2]*x-j[5]*y]);};
   return {evaluate,normal,baseZ,scaleM,centerF,centerR,mirror,
-    report:{schema:'native-canvas-wearer-field/rebuilt-1',units:'original mm',knots:width.values.length,
+    report:{schema:'native-canvas-wearer-field/rebuilt-2',units:'original mm',knots:width.values.length,interpolation:'positive cubic B-spline C2 upper envelope',
       widthScale:width.values,roofRiseMm:height.values,clearanceTargetM:clearanceM,insoleTargetM:insoleClearanceM,
       minimumJacobianDeterminant:Math.min(...width.values),allFootSamples:foot.allSamples.length,sizingSamples:foot.samples.length,openAnkleSamples,
       restGeometryPreservedSeparately:true,originalSourceGeometryModified:false,validated:false}};
+}
+
+/** Expand the existing ankle aperture horizontally using actual complete-body
+ * exits. The foot/toe roof and the original closed construction remain intact.
+ * This is a frozen neutral wearer transform, never a per-frame collision push.
+ * A single radial field applies to all original parts and their attachments. */
+export function createNativeShoeApertureField(actor,source,base,foot) {
+  const body=new MeshContact(actor.nativeSource.positions,actor.nativeSource.faces),scaleM=base.scaleM;
+  const cx=-base.mirror*base.centerR/scaleM,cz=-base.centerF/scaleM,r0=.055/scaleM,r1=foot.length*.7/scaleM;
+  if(!(r1>r0))throw Error('Native ankle aperture radial support is degenerate');
+  const target=base.report.clearanceTargetM,query=new Float64Array(4),requirements=[],failures=[];
+  const native=p=>{const r=base.mirror*p[0]*scaleM+base.centerR,f=p[2]*scaleM+base.centerF;return[foot.foot[0]+foot.right[0]*r+foot.forward[0]*f,foot.foot[1]+foot.right[1]*r+foot.forward[1]*f,p[1]*scaleM+base.baseZ];};
+  const radial=r=>{const u=clamp(r<r0?r/r0:(r-r0)/(r1-r0)),s=u*u*u*(10+u*(-15+6*u)),d=30*u*u*(1-u)*(1-u);return r<r0?{g:s,dg:d/r0}:{g:1-s,dg:-d/(r1-r0)};};
+  // Exact ray exits through the same original body triangles as the nearest
+  // query. The original BVH is reused; no body subset or reduced skin is made.
+  function exitRay(origin,direction){
+    let best=Infinity,hit=null;const stack=[0],P=body.p,I=body.faces;
+    while(stack.length){const node=body.nodes[stack.pop()],box=node.box;let lo=0,hi=best;
+      for(let k=0;k<3;k++){if(Math.abs(direction[k])<1e-14){if(origin[k]<box[k]||origin[k]>box[k+3]){hi=-1;break;}}else{let a=(box[k]-origin[k])/direction[k],b=(box[k+3]-origin[k])/direction[k];if(a>b)[a,b]=[b,a];lo=Math.max(lo,a);hi=Math.min(hi,b);}}if(hi<lo)continue;
+      if(node.left>=0){stack.push(node.left,node.right);continue;}
+      for(let k=node.lo;k<node.hi;k++){const fi=body.tri[k],a=xyz(P,I[fi]),u=sub(xyz(P,I[fi+1]),a),v=sub(xyz(P,I[fi+2]),a),n=cross(u,v),normalLength=Math.hypot(...n),out=dot(n,direction);
+        if(out<=1e-14)continue;const h=cross(direction,v),den=dot(u,h);if(Math.abs(den)<1e-20)continue;
+        const s=sub(origin,a),b=dot(s,h)/den;if(b<0||b>1)continue;const q=cross(s,u),c=dot(direction,q)/den;if(c<0||b+c>1)continue;
+        const t=dot(v,q)/den;if(t>=0&&t<best){best=t;hit={distance:t,normalCosine:out/normalLength,triangle:fi/3};}
+      }
+    }return hit;
+  }
+  const samples=[],seen=new Set();let ymax=0,minimumBefore=Infinity,nearSamples=0;
+  for(const part of source.parts){if(!/^canvas-(quarter-|rounded-vamp|independent-tongue)/.test(part.id))continue;
+    const P=part.geometry.attributes.position.array,I=part.geometry.index.array;
+    for(const group of part.geometry.groups.filter(g=>g.materialIndex===1))for(let k=group.start;k<group.start+group.count;k+=3){
+      const vertices=[I[k],I[k+1],I[k+2]],points=vertices.map(id=>base.evaluate(xyz(P,id)).p);
+      for(let n=0;n<3;n++){const key=part.id+'/'+vertices[n];if(!seen.has(key)){seen.add(key);samples.push(points[n]);}}
+      samples.push([0,1,2].map(c=>(points[0][c]+points[1][c]+points[2][c])/3));
+    }
+  }
+  for(const p of samples)ymax=Math.max(ymax,p[1]);
+  for(const p of samples){const q=native(p);body.sample(...q,query);minimumBefore=Math.min(minimumBefore,query[0]);if(query[0]>=target)continue;nearSamples++;
+    const x=p[0]-cx,z=p[2]-cz,r=Math.hypot(x,z),rad=radial(r);
+    if(r<1e-7||rad.g<1e-6){failures.push({point:p,distanceM:query[0],reason:'outside supported ankle field'});continue;}
+    const direction=[(foot.right[0]*base.mirror*x+foot.forward[0]*z)/r,(foot.right[1]*base.mirror*x+foot.forward[1]*z)/r,0];
+    let move;
+    if(query[0]<0){const hit=exitRay(q,direction);if(!hit||hit.normalCosine<=.05){failures.push({point:p,distanceM:query[0],reason:'no well-directed complete-body exit'});continue;}move=hit.distance+target/hit.normalCosine;}
+    else{const cosine=dot(direction,Array.from(query.subarray(1)));if(cosine<=.05){failures.push({point:p,distanceM:query[0],reason:'near surface does not face radial direction'});continue;}move=(target-query[0])/cosine;}
+    requirements.push([p[1]/ymax,move/scaleM/rad.g]);
+  }
+  if(failures.length)throw Error('Measured ankle fitting could not preserve a radial exit: '+JSON.stringify(failures.slice(0,3)));
+  const displacement=envelope(requirements,{knots:17}),maximum=Math.max(...displacement.values),radialDerivativeLowerBound=1-maximum*1.875/(r1-r0);
+  if(!(radialDerivativeLowerBound>0))throw Error('Measured ankle fitting would fold its continuous radial map');
+  function evaluate(p){const q=base.evaluate(p),x=q.p[0]-cx,z=q.p[2]-cz,r=Math.hypot(x,z),rad=radial(r),h=displacement.sample(q.p[1]/ymax),d=h.value,dy=h.derivative/ymax;
+    if(r<1e-10)return q;
+    const f=1+d*rad.g/r,a=d*(rad.dg*r-rad.g)/(r*r*r),b=dy*rad.g/r;
+    const j=[f+a*x*x,b*x,a*x*z,0,1,0,a*x*z,b*z,f+a*z*z];
+    return {p:[cx+x*f,q.p[1],cz+z*f],j:multiply(j,q.j)};
+  }
+  return {...base,evaluate,normal:transportedNormal,report:{...base.report,schema:'native-canvas-wearer-field/rebuilt-3',
+    aperture:{schema:'complete-body-neutral-aperture/1',allBodyVertices:actor.nativeSource.bodyCount,allBodyTriangles:actor.nativeSource.faces.length/3,
+      measuredInnerSamples:samples.length,nearSamples,minimumSignedDistanceBeforeM:minimumBefore,axisMm:[cx,cz],radialSupportMm:[r0,r1],heightRangeMm:ymax,
+      displacementMm:displacement.values,maximumRadialDisplacementMm:maximum,radialDerivativeLowerBound,actualBodyExitMeasured:true,perFrameProjection:false}}};
 }
 
 function transformMetadata(part,field) {
@@ -109,7 +186,7 @@ function transformMetadata(part,field) {
   if(g.userData.supportPoints)g.userData.supportPoints=g.userData.supportPoints.map((p,i)=>{const q=field.evaluate(p);if(g.userData.supportNormals?.[i])g.userData.supportNormals[i]=field.normal(g.userData.supportNormals[i],q.j);return q.p;});
   const sourceFrame=part.attachment?.frame;
   if(sourceFrame){
-    const q=field.evaluate(sourceFrame.center),vector=v=>unit([q.j[0]*v[0]+q.j[2]*v[2],q.j[4]*v[1]+q.j[5]*v[2],v[2]]);
+    const q=field.evaluate(sourceFrame.center),vector=v=>unit([0,1,2].map(r=>dot(q.j.slice(r*3,r*3+3),v)));
     part.runtimeAttachmentFrame={center:q.p,across:vector(sourceFrame.across),along:vector(sourceFrame.along),normal:field.normal(sourceFrame.normal,q.j)};
     part.apertureCenter=q.p;part.apertureAxis=part.runtimeAttachmentFrame.normal;
   }
@@ -126,7 +203,7 @@ export function fitNativeShoeGeometry(source,field) {
       const p=[oldP.getX(i),oldP.getY(i),oldP.getZ(i)],q=field.evaluate(p);
       P.setXYZ(i,...q.p);N.setXYZ(i,...field.normal([oldN.getX(i),oldN.getY(i),oldN.getZ(i)],q.j));
       maximumDisplacementMm=Math.max(maximumDisplacementMm,Math.hypot(...sub(q.p,p)));
-      minimumJacobianDeterminant=Math.min(minimumJacobianDeterminant,q.j[0]*q.j[4]);
+      minimumJacobianDeterminant=Math.min(minimumJacobianDeterminant,determinant(q.j));
     }
     const idx=g.index.array,old=oldP.array,now=P.array;
     for(let k=0;k<idx.length;k+=3){
