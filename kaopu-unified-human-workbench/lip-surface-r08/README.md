@@ -1,6 +1,10 @@
 # 嘴唇细纹 R08：真人对照后的局部修正
 
-当前候选为 `candidate-02 / native-lip-surface@2`。本轮只保留细纹组织的小幅调整，整体蜡感、外唇过渡和口腔内缘仍未解决。正式视觉结论必须来自固定公开网页的实际原生图，技术测试不等于外观验收。
+当前版本为 `candidate-02 / native-lip-surface@2`。固定公开页面已完成 14 项实际运行检查；主审核逐张查看了 7 组原生对照与自然 UI。独立顺序盲评也只认可近景局部微小收益，整脸无可辨改善。当前决定是保留有限的细纹组织修正，整体真人质感不通过，`productionReady:false`。
+
+[打开固定公开交互工作台](https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/dcded3a1b471d32ce191296939b6266e6d41e62a/kaopu-unified-human-workbench/lip-surface-r08/preview.html) · [实际运行记录](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39544769008)
+
+源码 `70457c86c20e724235705ff45fd919ac822dba8e`；构建 `dcded3a1b471d32ce191296939b6266e6d41e62a`；原始公开证据 `ef970bc114be9470e082ced03f061ce9e346063b`。原生图来自该公开构建，无后期修图。
 
 ## 对照真人后，当前系统的主要问题
 
@@ -61,9 +65,9 @@
 
 模块仍追加到固定 R06，移除相同追加块后逐字还原。原材质对象、顶点 shader、uniform 对象、原生与绘制几何、人物参数和灯光须保持。新旧保存入口沿用同一个完整人物控制器。
 
-档案的 `schema` 更新为 `kaopu/lip-surface@2`，`implementation` 更新为 `native-lip-surface@2`。candidate-01 的 `@1` 档案在任何人物修改前拒绝，不能把失败的旧组合静默解释成新的细纹。没有 `lipSurface` 字段的真实旧 R06 与 R02 兼容档案仍走原有完整恢复链；带 `lipEdge` 的 R07 档案继续要求原工作台。
+档案的 `schema` 更新为 `kaopu/lip-surface@2`，`implementation` 更新为 `native-lip-surface@2`。candidate-01 的 `@1` 档案在任何人物修改前拒绝，不能把失败的旧组合静默解释成新的细纹。没有 `lipSurface` 字段的旧 R06 与 R02 兼容档案仍走原有完整恢复链；本次实际测试使用独立 R06 的真实存档和派生的 R02 兼容样例，后者不宣称是历史下载档案；带 `lipEdge` 的 R07 档案继续要求原工作台。
 
-公开验证计划包含 7 组同条件 A/B：自然状态正面、斜侧、整脸；张口正面、斜侧；说话正面；噘嘴斜侧。另测独立 R06 的精确关闭、真实保存入口、旧版本完整档案回载、坏档案无副作用、新页面半进度张口恢复及自然页面截图。14 项测试、17 张原生 PNG、21 次 GPU readback、1 张自然 UI 截图为当前计划，以最终 `evidence/candidate-02/qa.json` 的实际结果为准。
+公开验证已完成 7 组同条件 A/B：自然状态正面、斜侧、整脸；张口正面、斜侧；说话正面；噘嘴斜侧。另测独立 R06 的精确关闭、真实保存入口、真实 R06 档案及派生 R02 兼容样例回载、坏档案无副作用、新页面半进度张口恢复及自然页面截图。实际结果为 14 项测试全部通过、17 张原生 PNG、21 次 GPU readback、1 张自然 UI 截图；页面、控制台、网络和资源错误为零，浏览器已正确关闭。记录见 `evidence/candidate-02/qa.json`，SHA-256 为 `43b40dad41380ebacb8e4865558850e62410c1ab8b5ef5ec7734a28a6dfb874d`。
 
 只要求自然特写确有像素响应；远景可以被正确过滤为零。所有原生不变项与恢复精确门都必须通过。自动记录始终保留 `visualAcceptance:false` 和 `productionReady:false`。
 
@@ -76,5 +80,7 @@
 - `research/LOCAL_MATERIAL_RECIPES.json`：实际运行的完整可逆替换配方；失败试验不会混入默认。
 - `research/LOCAL_MATERIAL_BLIND_REVIEW.json`：独立盲评原文，评审后才公开映射。
 - `research/MATERIAL_RESPONSIBILITY_REVIEW.json`、`NATIVE_ATLAS_SOURCE_REPRODUCTION.json`：形体、几何沟纹、光照与表面场责任及计算限制。
+- `research/CANDIDATE_02_VISUAL_REVIEW.json`：公开原图的逐姿态主审核、技术证据与有限接受结论。
+- `research/CANDIDATE_02_BLIND_REVIEW.json`：独立图审原文与评审后公开的顺序映射。
 
-固定 source/build/evidence 与 candidate-02 最终人工意见将在公开实测结束后补入审核记录。PR 保持 Draft，不合并。
+噘嘴静态图仍有细刻线风险；本轮没有用静态原图代替连续运动测试。整脸 A/B 的实际像素完全相同，不能宣传整体人物质感提升。PR 保持 Draft，不合并。
