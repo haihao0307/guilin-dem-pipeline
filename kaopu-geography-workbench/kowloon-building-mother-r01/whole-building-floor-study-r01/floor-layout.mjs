@@ -94,11 +94,26 @@ function primitiveFits(p,ring){const plan=p.loops.flat().flatMap(q=>p.range.map(
 function studyArchetype(id,P,old){const a={...old,id,primitives:P,bounds:bounds(P),counts:{primitives:P.length,modelTriangles:0,modelVertexBuffers:0},sourceRecipe:'selected_floor_only_public_plan_A_trace_after_explicit_registration'};a.spec={schema:ASSEMBLY_SCHEMA,fieldKind:'evidence-assembly',primitives:P,bounds:a.bounds,counts:a.counts};return a;}
 function block(base,measured,floorId,registration,reason,extra={}) {return{schema:FLOOR_STUDY_SCHEMA,baseModel:base,model:base,measured,floorId,status:reason,enabled:false,metadata:{actualFloorLabel:null,sourcePlanFamily:PLAN_A_TOPOLOGY.planFamily,registration:registration?copy(registration):null,originalSourceUnchanged:true,noModelMesh:true,...extra},archetypes:[],instances:[],rooms:[],doors:[],apertures:[],apertureConfigs:[],sourceMasks:[],graph:{nodes:[],edges:[]},paths:[],validation:{valid:false,reason,...extra}};}
 
+/** Adjacent floor relation, not a roof or an as-built floor height. */
+export function upperFloorDesign(values={}){
+ const height=values.height??3.0,slabThickness=values.slabThickness??.18;
+ if(!Number.isFinite(height)||!Number.isFinite(slabThickness)||height<2.6||height>3.6||slabThickness<.12||slabThickness>.30||height-slabThickness<2.3)throw Error('Upper-floor design height/thickness outside bounded domain');
+ return{height,slabThickness,underside:height-slabThickness,allDimensionsDesign:true,elevationDatum:'current_structural_slab_top_local_zero_not_mPD',actualHeightKnown:false};
+}
+function coreUpperOpenings(T,root,slabId){
+ const records=[],h=.14/2;
+ const hole=(key,purpose,a,b,rel)=>{const A=T.point(a),B=T.point(b),polygon=rect(A[0]+h,A[1]+h,B[0]-h,B[1]-h);if(polygon[1][0]<=polygon[0][0]||polygon[2][1]<=polygon[1][1])throw Error('Core opening lost positive clear size');records.push({id:root+':upper-opening:'+key,hostSlabId:slabId,purpose,relatedCoreId:rel,polygon,sourcePlanRectangle:[a,b],insetFromWallCenterM:h,evidence:'design_reservation_inside_existing_plan_enclosure_not_measured_slab_opening'});};
+ for(let i=0;i<3;i++)hole('lift-'+i,'lift',[1263+i*563/3,950],[1263+(i+1)*563/3,1098],root+':lift:'+i);
+ hole('stairs','stairs',[1263,1203],[1936,1393],root+':stair-enclosure');
+ return records;
+}
+
 /** Standalone trace compiler, useful for unit tests without placing anything in
  * the mother. Callers may inspect the result; it does not authorize placement. */
-export function compilePlanATopology(registration,{wallHeight=2.55,wallThickness=.11,doorHeight=2.10,floorFinishThickness=.008}={}){
- const T=registrationTransform(registration);
- if(![wallHeight,wallThickness,doorHeight,floorFinishThickness].every(Number.isFinite)||wallHeight<2.3||wallHeight>2.7||wallThickness<.08||wallThickness>.20||doorHeight<1.95||doorHeight>wallHeight-.15||floorFinishThickness<.002||floorFinishThickness>.025)throw Error('Interior metric assumptions outside bounded study domain');
+export function compilePlanATopology(registration,{wallHeight=2.55,wallThickness=.11,doorHeight=2.10,floorFinishThickness=.008,upperFloor=null}={}){
+ const T=registrationTransform(registration),top=upperFloor?upperFloorDesign(upperFloor):null;
+ if(top&&Math.abs(wallHeight-top.underside)>EPS)throw Error('Wall top must derive from the adjacent slab underside');
+ if(![wallHeight,wallThickness,doorHeight,floorFinishThickness].every(Number.isFinite)||wallHeight<2.3||wallHeight>(top?3.48:2.7)||wallThickness<.08||wallThickness>.20||doorHeight<1.95||doorHeight>wallHeight-.15||floorFinishThickness<.002||floorFinishThickness>.025)throw Error('Interior metric assumptions outside bounded study domain');
  const P=[],doors=[],rooms=PLAN_A_TOPOLOGY.rooms.map(r=>({...copy(r),planPolygon:r.polygon.map(T.point),center:sourcePoint(T,r.center),geometryEvidence:'schematic_public_plan_trace_after_similarity_fit',actualDimensionsKnown:false}));
  for(const room of rooms)P.push(finitePrism('study-floor:'+room.key,[room.planPolygon],[0,floorFinishThickness],{materialRole:10,materialKey:room.materialKey,roomIds:[room.key]}));
  for(const wall of PLAN_A_TOPOLOGY.walls){const a=sourcePoint(T,wall.a),b=sourcePoint(T,wall.b),u=unit(sub(b,a)),w=[-u[2],0,u[0]],L=len(sub(b,a)),cuts=[0,L];
@@ -199,12 +214,13 @@ function wallField(id,a,b,{height=2.55,thickness=.14,openings=[],materialRole=12
  * Uses one inferred scale with original (3308 × 2339) image coordinates.
  * Two ambiguous fit candidates are metadata only, never applied to geometry.
  */
-export function deriveEvidenceFloorPlan(baseModel,measured,{registration=null,scaleMPerPixel=.013407147599905933,referenceFloorId='T04',dimensions={},windowOpenT=.32}={}){
+export function deriveEvidenceFloorPlan(baseModel,measured,{registration=null,scaleMPerPixel=.013407147599905933,referenceFloorId='T04',dimensions={},windowOpenT=.32,upperFloor=null}={}){
  if(baseModel?.schema!==WHOLE_BUILDING_SCHEMA||baseModel.caseId!=='kcc'||measured?.schema!==CASE_SCHEMA||measured.sourceModelId!==baseModel.sourceModelId)throw Error('Matching immutable KCC source and mother required');
  if(!Number.isFinite(scaleMPerPixel)||scaleMPerPixel<.012||scaleMPerPixel>.015)throw Error('Evidence scale must remain in the disclosed approximate plan-fit range');
  const reference=baseModel.levels.find(l=>l.id===referenceFloorId);if(!reference)throw Error('Existing design reference floor required');
  if(!Number.isFinite(windowOpenT)||windowOpenT<0||windowOpenT>1)throw Error('Window fraction must be0..1');
- const imageCenter=[1605,1170.5],planRegistration={pixelToSource:{matrix:[[scaleMPerPixel,0],[0,scaleMPerPixel]],translation:mul(imageCenter,-scaleMPerPixel)}},T=registrationTransform(planRegistration),compiled=compilePlanATopology(planRegistration,dimensions),outline=EVIDENCE_OUTLINE_PIXELS.map(T.point),root='KCC:evidence-plan-r01',levelId='evidence-plan',wallHeight=compiled.metricAssumptions.wallHeight;
+ const enclosure=upperFloor?upperFloorDesign(upperFloor):null;if(enclosure&&dimensions.wallHeight!==undefined&&Math.abs(dimensions.wallHeight-enclosure.underside)>EPS)throw Error('Do not supply an independent wall height with an upper-floor relation');
+ const imageCenter=[1605,1170.5],planRegistration={pixelToSource:{matrix:[[scaleMPerPixel,0],[0,scaleMPerPixel]],translation:mul(imageCenter,-scaleMPerPixel)}},T=registrationTransform(planRegistration),compiled=compilePlanATopology(planRegistration,enclosure?{...dimensions,wallHeight:enclosure.underside,upperFloor:enclosure}:dimensions),outline=EVIDENCE_OUTLINE_PIXELS.map(T.point),root='KCC:evidence-plan-r01',levelId='evidence-plan',wallHeight=compiled.metricAssumptions.wallHeight;
  const P=[finitePrism('floor:slab',[outline],[-.18,0],{materialRole:1,materialKey:'evidence_concrete_slab'}),...compiled.primitives];
  // Plan-observed core walls are separate from the immutable mother core. The
  // three lift cavities and public lobby form the same planar relationships.
@@ -244,7 +260,27 @@ export function deriveEvidenceFloorPlan(baseModel,measured,{registration=null,sc
  const renderArchetypes=[],renderInstances=[];for(let k=0;k<P.length;k+=90){const chunk=studyArchetype('evidence-floor-plan:'+Math.floor(k/90),P.slice(k,k+90),arch);renderArchetypes.push(chunk);renderInstances.push({...instance,id:instance.id+':'+Math.floor(k/90),archetypeId:chunk.id,bounds:copy(chunk.bounds)});}
  const planLevel={id:levelId,nodeId:root+':floor',label:'资料平面，不是实测层',componentId:'evidence',index:0,elevation:0,localY:0,elevationMpd:null,fflM:null,height:3.0,clearHeight:2.82,actualFloorLabel:null,archetypeId:renderArchetypes[0].id};
  const evidenceModel={schema:WHOLE_BUILDING_SCHEMA,caseId:'kcc',sourceModelId:measured.sourceModelId,coordinateSystem:'independent_evidence_plan_right_up_down_inferred_metres',sourceGeoreference:null,sourceTransformApplied:false,sourceViewUnchanged:true,placementMode:'UNREGISTERED_evidence_plan_NOT_part_of_measured_mother',config:{slabThickness:.18,wallHeight,minimumHeadroom:2.3},levels:[planLevel],archetypes:renderArchetypes,instances:renderInstances,archetype:renderArchetypes[0],graph:{nodes,edges,actualInteriorComplete:false,designWholeBuildingConnected:false},interfaces:{lifts:[],stairs:[]},rails:{templates:[],instances:[]},components:[{id:'evidence',nodeId:root,floorIds:[levelId]}],bounds:copy(arch.bounds),coreBounds:{min:pp(1240,920),max:add(pp(1960,1420),[0,wallHeight,0])},focus:{core:pp(1530,1151),entry:copy(compiled.doors.find(d=>d.key==='entry').center)},sourceBinding:{sourceBounds:copy(arch.bounds),sourceOutline:copy(outline),registrationApplied:false},counts:{archetypes:renderArchetypes.length,primitives:P.length,instances:renderInstances.length,expandedPrimitiveCount:P.length,modelTriangles:0,modelVertexBuffers:0},summary:{floorCount:1,unitCount:6,detailedUnitCount:1,liftInterfaceCount:3,actualInteriorComplete:false,designClosure:false}};
- evidenceModel.floorStudy={floorId:levelId,apertures,sourceMasks:[],frame:{X:[1,0,0],Z:[0,0,1]},rooms:compiled.rooms,doors:compiled.doors,paths,windowBinding:windowInfo,corePorts,registrationStatus:'orientation_ambiguous_not_as_built_registration',sourceRegistrationVerified:false};
+ // Add the owning upper reference and its slab once. Views only choose
+ // visible owner IDs; rooms, openings and graph objects are never duplicated.
+ if(enclosure){
+  const upperId='evidence-upper-reference',upperNode=root+':upper-floor',slabId=root+':upper-slab',openings=coreUpperOpenings(T,root,slabId);
+  const slab=finitePrism(slabId,[outline,...openings.map(o=>o.polygon)],[enclosure.underside,enclosure.height],{materialRole:1,materialKey:'design_upper_concrete_slab_underside'});slab.objectId=2900;
+  const upperArch=studyArchetype('evidence-upper-slab',[slab],{schema:ASSEMBLY_SCHEMA,fieldKind:'evidence-assembly',caseId:'kcc',sourceOutline:outline,holes:{stair:openings[3].polygon,lifts:openings.slice(0,3).map(o=>o.polygon)}});
+  renderArchetypes.push(upperArch);renderInstances.push({id:slabId+':instance',archetypeId:upperArch.id,floorId:upperId,translation:[0,0,0],bounds:copy(upperArch.bounds),kind:'floor',objectIdOffset:0});
+  Object.assign(planLevel,{height:enclosure.height,clearHeight:enclosure.underside,finishedClearHeight:enclosure.underside-compiled.metricAssumptions.floorFinishThickness,verticalDimensionsEvidence:'editable_design_not_measured'});
+  evidenceModel.levels.push({id:upperId,nodeId:upperNode,label:'上层楼板参考（设计，非另一实测户型）',componentId:'evidence',index:1,elevation:enclosure.height,localY:enclosure.height,elevationMpd:null,fflM:null,height:null,clearHeight:null,actualFloorLabel:null,archetypeId:upperArch.id,geometryScope:'slab_only_no_upper_rooms',verticalDimensionsEvidence:'editable_design_not_measured'});
+  node(upperNode,'design-adjacent-floor-reference','相邻上层，仅生成其楼板',root,{designLocalSlabTopM:enclosure.height,actualFloorLabel:null});node(slabId,'slab','上层所属楼板 / 本层顶面',upperNode,{primitiveObjectId:2900,designThicknessM:enclosure.slabThickness,topM:enclosure.height,bottomM:enclosure.underside,openingIds:openings.map(o=>o.id)});
+  node(root+':lower-slab','slab','现有本层楼板',root+':floor',{primitiveNodeId:'floor:slab'});node(root+':stair-enclosure','stair-plan-interface','图纸双向楼梯范围，非已生成竖向楼梯',root+':floor');
+  edges.push({type:'adjacentAbove',from:upperNode,to:root+':floor'});
+  for(const o of openings){node(o.id,'slab-opening',o.purpose+' 设计留洞',slabId,{hostSlabId:slabId,relatedCoreId:o.relatedCoreId,polygon:copy(o.polygon),evidence:o.evidence});edges.push({type:'reservesCorePassage',from:o.id,to:o.relatedCoreId});}
+  for(const room of compiled.rooms)edges.push({type:'upperBoundaryFor',from:slabId,to:room.id});
+  for(const e of edges)if(e.type==='ownedBy'&&e.to===root&&(e.from===root+':lobby'||e.from.startsWith(root+':unit-')||corePorts.some(p=>p.id===e.from)))e.to=root+':floor';
+  evidenceModel.components[0].floorIds.push(upperId);evidenceModel.bounds=bounds([...P,slab]);evidenceModel.coreBounds.max[1]=enclosure.height;evidenceModel.sourceBinding.sourceBounds=copy(evidenceModel.bounds);
+  Object.assign(evidenceModel.config,{upperFloorDesign:enclosure,wallHeight});Object.assign(evidenceModel.counts,{archetypes:renderArchetypes.length,primitives:P.length+1,instances:renderInstances.length,expandedPrimitiveCount:P.length+1});
+  Object.assign(evidenceModel.summary,{floorCount:2,currentDetailedFloorCount:1,upperSlabReferenceCount:1,designClosure:true,actualInteriorComplete:false});
+  evidenceModel.upperFloorRelation={...enclosure,currentFloorId:levelId,upperFloorId:upperId,slabId,slabObjectId:2900,openings,cutawayVisibleFloorIds:[levelId],interiorVisibleFloorIds:[levelId,upperId],lowerCoreVoidNotRetrofitted:true,physicalStairRiseGenerated:false};
+ }
+ evidenceModel.floorStudy={floorId:levelId,apertures,sourceMasks:[],frame:{X:[1,0,0],Z:[0,0,1]},rooms:compiled.rooms,doors:compiled.doors,paths,windowBinding:windowInfo,corePorts,upperFloorRelation:evidenceModel.upperFloorRelation??null,registrationStatus:'orientation_ambiguous_not_as_built_registration',sourceRegistrationVerified:false};
  const candidates=registration?.all20_candidates??registration?.candidates??[];
  return{schema:FLOOR_STUDY_SCHEMA,baseModel,model:baseModel,measured,evidenceModel,evidenceArchetype:arch,evidenceInstance:instance,floorId:referenceFloorId,evidenceFloorId:levelId,status:'unregistered_evidence_plan',enabled:false,evidenceEnabled:true,metadata:{registrationStatus:registration?.status??'orientation_ambiguous_not_as_built_registration',registrationAccepted:false,candidates:copy(candidates),actualFloorLabel:null,referenceFloorId,referenceFloorElevation:reference.elevation,referenceFloorIsNotClaimedRegistration:true,sourcePlanFamily:PLAN_A_TOPOLOGY.planFamily,scaleMPerPixel,scaleEvidence:'inferred_global_similarity_scale_not_drawn_scale_bar_or_survey',pixelDomain:[3308,2339],imageCenterPixel:imageCenter,planOrientation:'paper_right_down_only_no_north',sourcePatchBinding:false,originalSourceUnchanged:true,motherModelUnchanged:true,actualFinishKnown:false,actualWindowPositionKnown:false,metricAssumptions:compiled.metricAssumptions,dimensionsNotOneToOneSurvey:true,stairDepiction:'8_mm_plan_direction_bands_not_physical_rise',platformPolicy:'sixth_floor_platform_not_extruded_as_every_floor_balcony',noModelMesh:true,otherFiveUnitInteriorsNotInvented:true},archetypes:renderArchetypes,instances:renderInstances,rooms:compiled.rooms,doors:compiled.doors,apertures,apertureConfigs,sourceMasks:[],windowBinding:windowInfo,corePorts,graph:{nodes,edges},paths,validation:{valid:routeFailures.length===0,allRoomsConnectedToEvidenceLobby:routeFailures.length===0,routeFailures,originalSourceUnchanged:true,motherModelUnchanged:true,allPlanCoordinatesUseOriginalImagePixels:true,sourceRegistrationVerified:false,noModelMesh:true,structuralOrFireSafetyCertification:false}};
 }
