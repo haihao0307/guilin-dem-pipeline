@@ -123,3 +123,13 @@ export function compileRoad(spec){
   const frozen=structuredClone(spec);
   return Object.freeze({version:VERSION,sample:p=>sampleRoad(p,frozen),trace:(o,d,options)=>traceRoad(o,d,frozen,options),material:(p,options)=>materialAt(p,frozen,options),lane:p=>laneAt(p,frozen),anchors:options=>anchors(frozen,options),graph:()=>laneGraph(frozen),diagnostics:{visualSourceReady:false,geometry:'implicit-segment-extrusion',mesh:false}});
 }
+
+// Shared full-polyline GPU packet. No endpoint-chord reduction.
+export function segmentPacket(spec){
+  const segments=[],meta=[];
+  spec.roads.forEach((r,roadIndex)=>{let s=0;
+    for(let i=1;i<r.points.length;i++){const a=r.points[i-1],b=r.points[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(len<1e-8)continue;
+      segments.push([...a,...b]);meta.push([s,roadIndex,i===1?1:0,i===r.points.length-1?1:0]);s+=len;
+    }
+  });return {segments,meta,count:segments.length};
+}

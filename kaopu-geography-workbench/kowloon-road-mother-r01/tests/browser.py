@@ -1,10 +1,15 @@
-import asyncio,json,sys
+import asyncio,json,sys,argparse,hashlib,urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parent.parent
 OUT=ROOT/'evidence';OUT.mkdir(exist_ok=True)
+p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-road-mother-r01/');p.add_argument('--manifest');args=p.parse_args()
 async def main():
- result={'passed':False,'errors':[],'cases':{}}
+ result={'passed':False,'errors':[],'cases':{},'base':args.base}
+ if args.manifest:
+  manifest=json.loads(Path(args.manifest).read_text());result['publicCommit']=manifest['commit'];result['verifiedFiles']=[]
+  for item in manifest['files']:
+   response=urllib.request.urlopen(args.base+item['path'],timeout=30);body=response.read();actual=hashlib.sha256(body).hexdigest();assert response.status==200 and actual==item['sha256'],('public bytes mismatch',item['path']);result['verifiedFiles'].append(item['path'])
  async with async_playwright() as pw:
   browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
   try:
@@ -12,11 +17,15 @@ async def main():
     label='mobile' if mobile else 'desktop'
     page=await browser.new_page(viewport={'width':390,'height':844} if mobile else {'width':1440,'height':1100},device_scale_factor=3 if mobile else 1,is_mobile=mobile,has_touch=mobile)
     page.on('pageerror',lambda e:result['errors'].append(str(e)))
-    await page.goto('http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-road-mother-r01/')
+    await page.goto(args.base)
     await page.wait_for_function('window.__qa?.ready||!document.getElementById("error").hidden',timeout=60000)
     assert await page.locator('#error').is_hidden(),await page.locator('#error').text_content()
     assert await page.locator('#topology').text_content() and '片段边界' in await page.locator('#topology').text_content()
     await page.screenshot(path=str(OUT/(label+'-street.png')),full_page=True)
+    poly=await page.evaluate("""async()=>{const m=await import('./core.mjs');const road={id:'synthetic-test-not-site',points:[[0,0],[20,0],[20,20],[40,20]],halfWidth:2,height:0};const points=[[20,10],[10,10],[20,0],[30,20],[10,0],[10,5]];const gpu=roadTrial.gpuProbe(points,{roads:[road]});const cpu=points.map(p=>{const f=m.roadFrame(p,road);return [f.dist,f.s,f.t,0]});const footprint=roadTrial.gpuProbe(points,{roads:[road]},true).map(v=>v[0]<road.halfWidth);const cpuHits=points.map(p=>m.sampleRoad([p[0],0,p[1]],{roads:[road]}).field<=0);return {gpu,cpu,footprint,cpuHits,sourceSegments:roadTrial.segmentPacket().count,sourceVertices:roadTrial.spec.roads.map(r=>r.points.length)}}""")
+    for gpu,cpu in zip(poly['gpu'],poly['cpu']):assert all(abs(a-b)<.0001 for a,b in zip(gpu,cpu)),poly
+    assert poly['footprint']==poly['cpuHits'],poly
+    result['polylineParity']=poly
     q=await page.evaluate('window.__qa');assert q['width']>=350;q['renderMode']='analytic field + analytic primitives; screen triangle only'
     await page.locator('[data-n="3"]').click();assert await page.evaluate('roadTrial.state.lanes')==3
     assert await page.evaluate('roadTrial.spec.roads[0].lanes.length')==6
