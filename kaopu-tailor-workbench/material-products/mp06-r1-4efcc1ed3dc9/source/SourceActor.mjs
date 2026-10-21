@@ -1,7 +1,0 @@
-/** Deformation transport only. This module does NOT author any movement. */
-export class SourceActor{
- constructor(p){Object.assign(this,{rig:p.rig,base:Float64Array.from(p.positions),range:Float32Array.from(p.range),packed:Float64Array.from(p.packed)});this.positions=new Float32Array(p.positions.length);this.native=new Float64Array(p.positions.length);this.skin=p.rig.names.map(()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);this.world=p.rig.restMatrices.map(m=>Array.from(m));this.pending=null;this.evaluate();}
- evaluate(){for(let i=0;i<this.native.length/3;i++){let x=0,y=0,z=0;for(let n=0;n<this.range[i*2+1];n++){const k=(this.range[i*2]+n)*8,j=this.packed[k+3],w=this.packed[k+4],m=this.skin[j],a=this.packed[k],b=this.packed[k+1],c=this.packed[k+2];x+=w*(m[0]*a+m[1]*b+m[2]*c+m[3]);y+=w*(m[4]*a+m[5]*b+m[6]*c+m[7]);z+=w*(m[8]*a+m[9]*b+m[10]*c+m[11]);}this.native.set([x,y,z],i*3);this.positions.set([x,z,-y],i*3);}return this.positions;}
- at(){if(this.pending){this.skin=this.pending.skin;this.world=this.pending.world;this.pending=null;}return this.evaluate();}
- audit(){let max=0;for(let j=0;j<this.rig.names.length;j++){const p=this.rig.parents[j];if(p<0)continue;const a=this.world[j],b=this.world[p],c=this.rig.restMatrices[j],d=this.rig.restMatrices[p];max=Math.max(max,Math.abs(Math.hypot(a[3]-b[3],a[7]-b[7],a[11]-b[11])-Math.hypot(c[3]-d[3],c[7]-d[7],c[11]-d[11])));}return{source:'pinned original source sampler; no authored oscillations',maxBoneLengthErrorMM:max*1000,bones:this.rig.names.length,weightsTruncated:false};}
-}
