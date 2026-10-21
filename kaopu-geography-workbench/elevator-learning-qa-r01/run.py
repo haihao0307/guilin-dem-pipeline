@@ -16,9 +16,13 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  if hashlib.sha256(archive.read_bytes()).hexdigest()!=report['archiveSha256']: finish('integrity-blocked','Official archive hash mismatch')
  with tarfile.open(archive) as tf:tf.extractall(root,filter='data')
  app=root/'skyscraper';env=os.environ.copy();env['LD_LIBRARY_PATH']=str(app/'lib')+':'+env.get('LD_LIBRARY_PATH','');env['LIBGL_ALWAYS_SOFTWARE']='1'
- check=subprocess.run(['ldd',str(app/'bin/skyscraper')],env=env,capture_output=True,text=True)
- (OUT/'dependencies.txt').write_text(check.stdout+check.stderr)
- if 'not found' in check.stdout+check.stderr:finish('environment-blocked','Official executable has unavailable shared libraries; no installation attempted')
+ targets=[app/'bin/skyscraper']+sorted((app/'lib').glob('*.so*'))
+ dependency_text=''
+ for target in targets:
+  check=subprocess.run(['ldd',str(target)],env=env,capture_output=True,text=True)
+  dependency_text+='\\n'+target.name+'\\n'+check.stdout+check.stderr
+ (OUT/'dependencies.txt').write_text(dependency_text)
+ if 'not found' in dependency_text:finish('environment-blocked','Official executable has unavailable shared libraries; no installation attempted')
  # Configuration edits affect only the ephemeral official package, never the delivery project.
  ini=app/'skyscraper.ini';s=ini.read_text()
  for key,val in {'Skyscraper.Frontend.DisableSound':'true','Skyscraper.Frontend.ShowConsole':'false','Skyscraper.SBS.Verbose':'true','Skyscraper.Frontend.Menu.Show':'false'}.items():
@@ -31,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  actions={'QHall':'Floor 0:Call Station 1, up','QCar':'Elevator 1:Car 1, 3','QClose':'Elevator 1:Car 1, close','QSensor':'Elevator 1:Car 1, sensor','QReset':'Elevator 1:Car 1, sensorreset','QReturn':'Elevator 1:Car 1, 0','QStop':'Elevator 1:Car 1, stop'}
  extra='\nSet qa_stage = 0\n'+''.join('AddAction '+k+', '+v+'\n' for k,v in actions.items())
  extra+='<Function runloop>\n'
- for i,(at,act) in enumerate([(3,'QHall'),(12,'QCar'),(13,'QSensor'),(15,'QClose'),(22,'QReset'),(23,'QClose'),(60,'QReturn'),(90,'QStop')]):
+ for i,(at,act) in enumerate([(3,'QHall'),(7,'QSensor'),(8,'QCar'),(10,'QClose'),(22,'QReset'),(23,'QClose'),(60,'QReturn'),(62,'QStop')]):
   extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] Print QA_OBSERVE action={act} uptime=%uptime%\n'
   extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] RunAction {act}\n'
   extra+=f' if[%uptime% >= {at*1000} & %qa_stage% = {i}] Set qa_stage = {i+1}\n'
