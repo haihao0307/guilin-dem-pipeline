@@ -1,5 +1,7 @@
+import{readFileSync}from'node:fs';
+import{AXLES,DRIVERS}from'../train-datums.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';
-import{DIMENSIONS,DEFAULTS,makeParts,profileAt,field,wheelDatums,safetyBound,validateParameters,materialBase}from'../train-field.mjs';
+import{DIMENSIONS,DEFAULTS,makeParts,profileAt,field,wheelDatums,safetyBound,validateParameters,materialBase,coalTop}from'../train-field.mjs';
 test('official axle count, intervals and total',()=>{assert.equal(DIMENSIONS.axisX.length,10);const x=DIMENSIONS.axisX;for(const[a,b]of [[x[0]-x[5],10.8966],[x[6]-x[9],4.8768],[x[0]-x[9],18.557875],[x[5]-x[6],2.784475]])assert.ok(Math.abs(a-b)<1e-10)});
 test('gauge never fills wheel back or physical wheel profile',()=>{assert.equal(DIMENSIONS.wheelBackToBack,null);assert.equal(DIMENSIONS.wheelProfile,null);for(const w of wheelDatums())assert.equal(w.lateralWheelBack,null)});
 test('continuity at all loft stations',()=>{const p=makeParts()[0];for(const a of p.sections.slice(1,-1)){const l=profileAt(p,a[0]-1e-7),r=profileAt(p,a[0]+1e-7);for(let i=0;i<3;i++)assert.ok(Math.abs(l[i]-r[i])<1e-6)}});
@@ -21,3 +23,7 @@ test('new exterior grouping does not silently add mechanical wheel solids',()=>{
 test('footplate exterior arches follow nominal rolling clearance instead of disconnected scraps',()=>{const p=makeParts().find(p=>p.kind===6);for(const x of [0,-2.2098,-4.4196]){assert.ok(field(p,[x,1.3,2.176])<0);assert.ok(field(p,[x,1.3,2.032])>.06)}for(let x=-5.7;x<1.2;x+=.01){let minimum=Infinity;for(let z=1.11;z<=2.26;z+=.01)minimum=Math.min(minimum,field(p,[x,1.3,z]));assert.ok(minimum<0)}});
 
 test('own 88 mark is a material field, never alters the shape',()=>{const p=makeParts()[0],q=[-1.505,1.1,2.99],a=field(p,q);assert.deepEqual(materialBase(p,q),[.72,.53,.20]);assert.deepEqual(materialBase(p,[-1.62,1.1,2.99]),DEFAULTS.paint);materialBase(p,q,{...DEFAULTS,paint:[1,0,0]});assert.equal(field(p,q),a)});
+
+test('coal field is bounded and continuous across hash-cell borders',()=>{for(let x=-11.64;x<-9.65;x+=.012)for(let y=-.99;y<1;y+=.012){const a=coalTop([x,y,0]);assert.ok(a>=3.35&&a<=3.50);assert.ok(Math.abs(a-coalTop([x+1e-7,y,0]))<.000001)}});
+
+test('visual generator consumes exact existing mother identities and source axle contract',()=>{const m=JSON.parse(readFileSync(new URL('../axis-contract.json',import.meta.url)));assert.deepEqual(AXLES,[...m.locomotive,...m.tender_global]);assert.equal(DRIVERS.length,3);assert.deepEqual(wheelDatums().map(x=>x.id),AXLES.map(x=>x.instance_id));assert.deepEqual(DIMENSIONS.axisX,AXLES.map(x=>x.axle_origin_m[0]))});

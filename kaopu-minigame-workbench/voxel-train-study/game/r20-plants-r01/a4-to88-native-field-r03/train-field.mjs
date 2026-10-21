@@ -1,9 +1,10 @@
+import{AXLES,DRIVERS,AUTHORED_CLEARANCE}from'./train-datums.mjs';
 /* Own continuous field design. No mesh/assets/animation from the teacher.
  * Official baseline datums are separate from authored, editable surface choices.
  * These candidate skins do not certify hidden mechanical construction.
  */
 export const SOURCE='https://theengineer.markallengroup.com/production/2018/09/Gresley-Silver-Jubilee.pdf#page=3';
-export const DIMENSIONS=Object.freeze({driverDiameter:2.032,leadingDiameter:.9652,trailingDiameter:1.1176,tenderDiameter:1.27,overBuffers:21.421725,maxWidth:2.7432,maxHeight:3.9878,axisX:[3.5814,1.6764,0,-2.2098,-4.4196,-7.3152,-10.099675,-11.699875,-13.376275,-14.976475],railGaugeTarget:1.435,wheelBackToBack:null,wheelProfile:null});
+export const DIMENSIONS=Object.freeze({driverDiameter:2.032,leadingDiameter:.9652,trailingDiameter:1.1176,tenderDiameter:1.27,overBuffers:21.421725,maxWidth:2.7432,maxHeight:3.9878,axisX:AXLES.map(a=>a.axle_origin_m[0]),railGaugeTarget:1.435,wheelBackToBack:null,wheelProfile:null});
 export const MATERIALS=Object.freeze([
  {name:'authored green enamel',base:[.019,.12,.075],metallic:.12,roughness:.24,clearcoat:.6,basis:'specified; not measured teacher material'},
  {name:'authored graphite roof',base:[.035,.045,.046],metallic:.12,roughness:.36,clearcoat:.15,basis:'specified'},
@@ -58,20 +59,17 @@ export function field(part,p){
  const q=p.map((v,i)=>v-part.position[i]);let d;
  if(part.kind===5){const a=Math.hypot(q[0],q[2])-part.size[0],b=Math.abs(q[1])-part.size[1];return Math.min(Math.max(a,b),0)+Math.hypot(Math.max(a,0),Math.max(b,0));}
  if(part.kind===9){const a=(Math.hypot(q[1]/part.size[1],q[2]/part.size[2])-1)*part.size[2],b=(Math.hypot(q[1]/(part.size[1]-.05),q[2]/(part.size[2]-.05))-1)*(part.size[2]-.05);return Math.max(a,-b,Math.abs(q[0])-part.size[0],-q[2]);}
- if(part.kind===10){const top=3.50+.035*Math.cos(p[0]*18)*Math.sin(p[1]*17)+.025*Math.sin(p[0]*9+p[1]*13);return Math.max(Math.abs(q[0])-part.size[0],Math.abs(q[1])-part.size[1],3.15-p[2],p[2]-top);}
+ if(part.kind===10){const top=coalTop(p);return Math.max(Math.abs(q[0])-part.size[0],Math.abs(q[1])-part.size[1],3.15-p[2],p[2]-top);}
  if(part.kind===8){const a=(Math.hypot(q[0]/part.size[0],q[1]/part.size[1])-1)*Math.min(part.size[0],part.size[1]),b=Math.abs(q[2])-part.size[2],outer=Math.min(Math.max(a,b),0)+Math.hypot(Math.max(a,0),Math.max(b,0)),inner=(Math.hypot(q[0]/(part.size[0]-.07),q[1]/(part.size[1]-.07))-1)*Math.min(part.size[0]-.07,part.size[1]-.07);return Math.max(outer,-inner);}
- if(part.kind===1){const[w,c,h]=profileAt(part,p[0]);const radial=(Math.pow(Math.pow(Math.abs(p[1]/w),2.4)+Math.pow(Math.abs((p[2]-c)/h),2.4),1/2.4)-1)*Math.min(w,h);d=Math.max(radial,-6.2-p[0],p[0]-4.4);for(const x of [0,-2.2098,-4.4196])d=Math.max(d,1.085-Math.hypot(p[0]-x,p[2]-1.016));return d;}
+ if(part.kind===1){const[w,c,h]=profileAt(part,p[0]);const radial=(Math.pow(Math.pow(Math.abs(p[1]/w),2.4)+Math.pow(Math.abs((p[2]-c)/h),2.4),1/2.4)-1)*Math.min(w,h);d=Math.max(radial,-6.2-p[0],p[0]-4.4);for(const a of DRIVERS)d=Math.max(d,a.rolling_radius_m+AUTHORED_CLEARANCE-Math.hypot(p[0]-a.axle_origin_m[0],p[2]-a.axle_origin_m[2]));return d;}
  d=roundedBox(q,part.size,part.rounding);
- if(part.kind===6){d=Math.abs(p[2]-1.22)-.08;for(const x of [0,-2.2098,-4.4196])d=Math.min(d,Math.abs(Math.hypot(p[0]-x,p[2]-1.016)-1.16)-.075);for(const x of [0,-2.2098,-4.4196])d=Math.max(d,1.085-Math.hypot(p[0]-x,p[2]-1.016));d=Math.max(d,Math.abs(q[0])-part.size[0],Math.abs(q[1])-part.size[1],1.11-p[2]);}
+ if(part.kind===6){d=Math.abs(p[2]-1.22)-.08;for(const a of DRIVERS)d=Math.min(d,Math.abs(Math.hypot(p[0]-a.axle_origin_m[0],p[2]-a.axle_origin_m[2])-(a.rolling_radius_m+AUTHORED_CLEARANCE+.075))-.075);for(const a of DRIVERS)d=Math.max(d,a.rolling_radius_m+AUTHORED_CLEARANCE-Math.hypot(p[0]-a.axle_origin_m[0],p[2]-a.axle_origin_m[2]));d=Math.max(d,Math.abs(q[0])-part.size[0],Math.abs(q[1])-part.size[1],1.11-p[2]);}
  if(part.kind===2){const cavity=roundedBox(q,[1.15,1.17,1.02],Math.max(.03,part.rounding-.04));d=Math.max(d,-cavity);const win=roundedBox([p[0]+7.41,p[1],p[2]-3.155],[.60,2,.335],.12);d=Math.max(d,-win);}
  if(part.kind===3){const coal=roundedBox([p[0]+10.65,p[1],p[2]-3.8],[1.05,1.08,.65],.16);d=Math.max(d,-coal);}
  if(part.kind===4){d=Math.max(d,.0-(Math.abs(p[1])-1.245));}
  return d;
 }
-export function wheelDatums(phase=0){
- const r=[.4826,.4826,1.016,1.016,1.016,.5588,.635,.635,.635,.635];
- return DIMENSIONS.axisX.map((x,i)=>({id:i<6?'loco.axis.'+(i+1):'tender.axis.'+(i-5),center:[x,0,r[i]],radius:r[i],phase:phase*1.016/r[i],lateralWheelBack:null,profile:null,role:'analytic datum, not rendered wheel solid'}));
-}
+export function wheelDatums(phase=0){return AXLES.map(a=>({id:a.instance_id,center:[...a.axle_origin_m],radius:a.rolling_radius_m,phase:phase*DRIVERS[0].rolling_radius_m/a.rolling_radius_m,lateralWheelBack:a.left_wheel_back_y_m,profile:a.wheel_profile,role:'analytic datum, not rendered wheel solid'}));}
 export function safetyBound(part){
  if(part.kind===8)return 2;
  if(part.kind===9||part.kind===10)return 4;
@@ -85,3 +83,8 @@ export function safetyBound(part){
 function numberRing(q){return Math.abs(Math.hypot(q[0]/.115,q[1]/.12)-1)*.115-.018;}
 export function mark88Distance(p){let d=Infinity;for(const x of [-1.62,-2.02])for(const z of [2.99,3.23])d=Math.min(d,numberRing([p[0]-x,p[2]-z]));return d;}
 export function materialBase(part,p,options=DEFAULTS){const base=part.material===0?options.paint:MATERIALS[part.material].base;if(part.kind!==1||Math.abs(p[1])<.95)return [...base];const t=clamp((mark88Distance(p)+.002)/.008,0,1),mask=1-t*t*(3-2*t);return base.map((v,i)=>v*(1-mask)+[.72,.53,.20][i]*mask);}
+
+// Faceted height field for authored coal chunks. Nine local cones of planes,
+// not polygon meshes or copied rock assets; finite-support cells keep continuity.
+function cellHash(x,y){let h=(Math.imul(x,374761393)^Math.imul(y,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return ((h^(h>>>16))>>>0)/4294967296;}
+export function coalTop(p){const q=[p[0]+10.65,p[1]],scale=.24,ix=Math.floor(q[0]/scale),iy=Math.floor(q[1]/scale);let h=3.35;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const x=ix+i,y=iy+j,a=cellHash(x,y),b=cellHash(x+97,y-61),angle=b*6.28318530718,c=Math.cos(angle),s=Math.sin(angle),dx=q[0]-(x+.35+.3*a)*scale,dy=q[1]-(y+.35+.3*b)*scale,u=c*dx+s*dy,v=-s*dx+c*dy;h=Math.max(h,3.35+.07+.08*a-(.7+.5*b)*Math.max(Math.abs(u),Math.abs(v)));}return h;}
