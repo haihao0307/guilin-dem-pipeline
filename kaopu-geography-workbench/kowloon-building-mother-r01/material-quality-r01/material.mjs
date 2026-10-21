@@ -10,8 +10,8 @@ export const MATERIAL_MODES=Object.freeze({metal:0,wood:1,paintedWood:2});
 export const HOSTED_MATERIAL_DEFAULTS=Object.freeze({...R07_DEFAULTS,
  frameMaterialMode:2,doorMaterialMode:1,woodScale:5.8,woodReliefM:.00020,
  woodRoughness:.57,woodClearcoat:.25,woodClearcoatRoughness:.32,
- paintRoughness:.31,paintClearcoat:.45,paintClearcoatRoughness:.23,paintReliefM:.000018});
-const RANGES=Object.freeze({frameMaterialMode:[0,2],doorMaterialMode:[0,2],woodScale:[.25,12],woodReliefM:[0,.00042],woodRoughness:[.18,.98],woodClearcoat:[0,1],woodClearcoatRoughness:[.06,1],paintRoughness:[.08,.98],paintClearcoat:[0,1],paintClearcoatRoughness:[.06,1],paintReliefM:[0,.00006]});
+ paintRoughness:.31,paintClearcoat:.45,paintClearcoatRoughness:.23,paintReliefM:.000018,studyLighting:1,studyExposure:1,studyAreaStrength:1,studyEnvironmentStrength:1});
+const RANGES=Object.freeze({frameMaterialMode:[0,2],doorMaterialMode:[0,2],woodScale:[.25,12],woodReliefM:[0,.00042],woodRoughness:[.18,.98],woodClearcoat:[0,1],woodClearcoatRoughness:[.06,1],paintRoughness:[.08,.98],paintClearcoat:[0,1],paintClearcoatRoughness:[.06,1],paintReliefM:[0,.00006],studyLighting:[0,1],studyExposure:[.25,4],studyAreaStrength:[0,2],studyEnvironmentStrength:[0,2]});
 export function adaptHostedMaterialParameters(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input))throw TypeError('Material parameters must be an object');
  const out=adaptR07(input);
@@ -20,7 +20,7 @@ export function adaptHostedMaterialParameters(input={}){
 }
 export const MATERIAL_UNIFORM_BINDINGS=Object.freeze({
  uFrameColor:'frameColor',uDoorColor:'doorColor',uGlassColor:'glassColor',uFrameRoughness:'frameRoughness',uFrameMetallic:'frameMetallic',uGlassTransmission:'glassTransmission',uGlassIOR:'glassIOR',
- uFrameMaterialMode:'frameMaterialMode',uDoorMaterialMode:'doorMaterialMode',uWoodScale:'woodScale',u_microReliefM:'woodReliefM',uWoodRoughness:'woodRoughness',u_clearcoat:'woodClearcoat',uWoodClearcoatRoughness:'woodClearcoatRoughness',uPaintRoughness:'paintRoughness',uPaintClearcoat:'paintClearcoat',uPaintClearcoatRoughness:'paintClearcoatRoughness',uPaintReliefM:'paintReliefM'});
+ uFrameMaterialMode:'frameMaterialMode',uDoorMaterialMode:'doorMaterialMode',uWoodScale:'woodScale',u_microReliefM:'woodReliefM',uWoodRoughness:'woodRoughness',u_clearcoat:'woodClearcoat',uWoodClearcoatRoughness:'woodClearcoatRoughness',uPaintRoughness:'paintRoughness',uPaintClearcoat:'paintClearcoat',uPaintClearcoatRoughness:'paintClearcoatRoughness',uPaintReliefM:'paintReliefM',uStudyLighting:'studyLighting',uStudyExposure:'studyExposure',uStudyAreaStrength:'studyAreaStrength',uStudyEnvironmentStrength:'studyEnvironmentStrength'});
 /** Aperture coefficients are already on texture unit 7 in the hosted renderer.
  * This private sampler alias works in baseline mode too, without referring to
  * aperture GLSL functions that do not exist in the baseline shader.
@@ -46,6 +46,7 @@ uniform vec3 uFrameColor,uDoorColor,uGlassColor;
 uniform float uFrameRoughness,uFrameMetallic,uGlassTransmission,uGlassIOR;
 uniform float uFrameMaterialMode,uDoorMaterialMode,uWoodScale,u_microReliefM,uWoodRoughness,u_clearcoat,uWoodClearcoatRoughness;
 uniform float uPaintRoughness,uPaintClearcoat,uPaintClearcoatRoughness,uPaintReliefM;
+uniform float uStudyLighting,uStudyExposure,uStudyAreaStrength,uStudyEnvironmentStrength;
 ${capturedConstants}
 ${TIMBER_FIELD_GLSL}
 // One chart per rail/stile. Charts move rigidly with their actual aperture part.
@@ -138,6 +139,100 @@ vec3 materialAmbient(FieldSurface s,vec3 n,vec3 v,vec3 diffuseEnvironment){
  float entry=1.-s.clearcoat*.085714286; // cosine-weighted Schlick hemispheric mean
  return s.baseColor*(1.-s.metallic)*diffuseEnvironment*exit*entry;
 }
+// Fixed, authored material-inspection lighting. No photographed environment,
+// no camera-follow light, no scene mesh, and no per-finish exposure correction.
+struct MaterialLightFrame{vec3 origin;vec3 u;vec3 v;vec3 w;};
+MaterialLightFrame materialLightFrame(){
+ MaterialLightFrame f;f.origin=vec3(0.);f.u=vec3(1,0,0);f.v=vec3(0,1,0);f.w=vec3(0,0,1);
+ #if FIELD_HOSTED
+ if(materialApertureRecord(0).x>.5){f.origin=materialApertureRecord(1).xyz;f.u=materialApertureRecord(2).xyz;f.v=materialApertureRecord(3).xyz;f.w=materialApertureRecord(4).xyz;}
+ #endif
+ return f;
+}
+vec3 materialLightPoint(MaterialLightFrame f,vec3 q){return f.origin+q.x*f.u+q.y*f.v+q.z*f.w;}
+vec3 materialStudySkyInFrame(vec3 d,MaterialLightFrame f){
+ vec3 q=vec3(dot(d,f.u),dot(d,f.v),dot(d,f.w));
+ vec3 ground=vec3(.12,.105,.085),horizon=vec3(.62,.72,.83),zenith=vec3(.20,.39,.72);
+ vec3 sky=mix(horizon,zenith,smoothstep(0.,.9,q.y));
+ float broadCloud=pow(max(.5+.5*sin(q.x*4.5+sin(q.z*3.2)),0.),3.);
+ sky=mix(sky,vec3(.92,.94,.98),broadCloud*smoothstep(.06,.5,q.y)*.48);
+ return mix(ground,sky,smoothstep(-.18,.10,q.y));
+}
+vec3 materialStudySky(vec3 d){return materialStudySkyInFrame(d,materialLightFrame());}
+vec3 materialStudyEmitterRay(vec3 origin,vec3 direction,out float lightT){
+ MaterialLightFrame f=materialLightFrame();lightT=1e20;vec3 result=vec3(0.);
+ for(int light=0;light<2;light++){
+  vec3 offset=light==0?vec3(-.55,.20,1.40):vec3(.55,-.20,1.70);
+  vec2 halfSize=light==0?vec2(.35,.90):vec2(.25,.65);
+  vec3 Le=light==0?vec3(9.,8.2,7.4):vec3(2.3,3.0,4.4);
+  vec3 center=materialLightPoint(f,offset);float den=dot(direction,f.w);
+  if(den<=.000001)continue; // one-sided emitter faces the window
+  float t=dot(center-origin,f.w)/den;if(t<=.00001||t>=lightT)continue;
+  vec3 q=origin+direction*t-center;
+  if(abs(dot(q,f.u))<=halfSize.x&&abs(dot(q,f.v))<=halfSize.y){result=Le*uStudyAreaStrength;lightT=t;}
+ }
+ return result;
+}
+vec3 materialStudyEnvironment(vec3 origin,vec3 direction){float t;vec3 light=materialStudyEmitterRay(origin,direction,t);return t<1e19?light:materialStudySky(direction)*uStudyEnvironmentStrength;}
+float materialLightNode(int index){return index==0?-.7745966692:(index==1?0.:.7745966692);}
+float materialLightWeight(int index){return index==1?.8888888889:.5555555556;}
+vec3 materialStudyAreaLighting(vec3 p,FieldSurface surface,vec3 n,vec3 view){
+ MaterialLightFrame f=materialLightFrame();vec3 result=vec3(0.);
+ for(int light=0;light<2;light++){
+  vec3 center=materialLightPoint(f,light==0?vec3(-.55,.20,1.40):vec3(.55,-.20,1.70));
+  vec2 halfSize=light==0?vec2(.35,.90):vec2(.25,.65);
+  vec3 Le=light==0?vec3(9.,8.2,7.4):vec3(2.3,3.0,4.4);
+  for(int y=0;y<3;y++)for(int x=0;x<3;x++){
+   vec3 delta=center+f.u*(halfSize.x*materialLightNode(x))+f.v*(halfSize.y*materialLightNode(y))-p;
+   float distance2=max(dot(delta,delta),.01);vec3 l=delta*inversesqrt(distance2);
+   float emitterCos=max(dot(l,f.w),0.);
+   float solidAngle=emitterCos*halfSize.x*halfSize.y*materialLightWeight(x)*materialLightWeight(y)/distance2;
+   // Each Gauss node represents finite source area. A normalized GGX-width
+   // convolution approximates that sub-area, avoiding nine false pin highlights.
+   // This is a disclosed finite-source approximation, not material-color editing.
+   float sourceVariance=(halfSize.x*halfSize.x+halfSize.y*halfSize.y)/(81.*distance2);
+   FieldSurface s=surface;
+   s.roughness=min(pow(pow(surface.roughness,4.)+sourceVariance,.25),1.);
+   s.clearcoatRoughness=min(pow(pow(surface.clearcoatRoughness,4.)+sourceVariance,.25),1.);
+   result+=directBRDF(s,n,view,l,Le*(solidAngle*uStudyAreaStrength));
+  }
+ }
+ return result;
+}
+float materialSequence(int i){if(i==0)return 0.;if(i==1)return .5;if(i==2)return .25;if(i==3)return .75;if(i==4)return .125;if(i==5)return .625;if(i==6)return .375;return .875;}
+vec3 materialStudyEnvironmentSpecular(FieldSurface s,vec3 n,vec3 view){
+ MaterialLightFrame frame=materialLightFrame();
+ float nv=max(dot(n,view),.0001);vec3 tangent=normalize(cross(n,abs(n.y)<.9?vec3(0,1,0):vec3(1,0,0))),bitangent=cross(n,tangent),sum=vec3(0.);
+ // Eight deterministic GGX-NDF samples per lobe. No scene-ray recursion and no
+ // invented photo detail; low-order unoccluded environment lighting only.
+ for(int layer=0;layer<2;layer++){
+  if(layer==1&&s.clearcoat<=0.)continue;
+  float rough=layer==0?s.roughness:s.clearcoatRoughness;
+  float a=max(rough*rough,.0036),a2=a*a;
+  vec3 f0=layer==0?mix(vec3(.04),s.baseColor,s.metallic):vec3(.04);
+  for(int i=0;i<8;i++){
+   float xi=(float(i)+.5)/8.,phi=TAU*materialSequence(i),ct=sqrt((1.-xi)/(1.+(a2-1.)*xi)),st=sqrt(max(1.-ct*ct,0.));
+   vec3 h=tangent*(st*cos(phi))+bitangent*(st*sin(phi))+n*ct;
+   float vh=max(dot(view,h),0.);vec3 l=reflect(-view,h);float nl=dot(n,l);if(nl<=0.||vh<=0.)continue;
+   float G=mqSmithG1(nv,a2)*mqSmithG1(nl,a2),weight=G*vh/max(nv*ct,.000001);
+   float layerEnergy=layer==0?(1.-s.clearcoat*fresnelSchlick(nv,vec3(.04)).x)*(1.-s.clearcoat*fresnelSchlick(nl,vec3(.04)).x):s.clearcoat;
+   sum+=materialStudySkyInFrame(l,frame)*fresnelSchlick(vh,f0)*(weight*layerEnergy/8.);
+  }
+ }
+ return sum*uStudyEnvironmentStrength;
+}
+vec3 materialStudyLighting(vec3 p,FieldSurface s,vec3 n,vec3 view,float ao){
+ MaterialLightFrame frame=materialLightFrame();
+ vec3 diffuseEnvironment=mix(vec3(.13,.115,.095),vec3(.39,.46,.57),clamp(dot(n,frame.v)*.5+.5,0.,1.));
+ return materialStudyAreaLighting(p,s,n,view)+materialStudyEnvironmentSpecular(s,n,view)+materialAmbient(s,n,view,diffuseEnvironment)*uStudyEnvironmentStrength*ao;
+}
+// A finite difference must not bridge two independently oriented member charts.
+float materialMicroSlope(FieldHit hit,FieldSurface surface,vec3 materialNormal,vec3 localDirection,float footprint,float eps){
+ FieldHit shifted=hit;shifted.local+=localDirection*eps;
+ if(hit.materialRole>3.5&&hit.materialRole<5.5){vec3 a,an,b,bn;bool ad,bd;materialMemberChart(hit,materialNormal,a,an,ad);materialMemberChart(shifted,materialNormal,b,bn,bd);if(length(b-a)>eps*1.5)return 0.;}
+ return clamp((sampleFieldMaterial(shifted,materialNormal,footprint).height-surface.height)/eps,-.3,.3);
+}
+
 `;
 
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),norm=a=>{const l=Math.hypot(...a);return a.map(x=>x/l);};

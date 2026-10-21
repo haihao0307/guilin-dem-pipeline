@@ -16,7 +16,7 @@ const params=new URLSearchParams(location.search),qaWarmup=params.has('qa-warmup
 let renderer,gpu,spec,graph,config=defaultFieldConfig(),view='stairs',lastValidation=null,caseId='design';
 const caseCache=new Map(),assemblyConfigs=new Map(),sourceBoundConfigs=new Map(),hostedConfigs=new Map(),hostedMotionCache=new Map();let hostedBinding=null,activeComponent='';let officialFootprints=null,caseRequest=0;
 let booting=true,sizingPaused=qaWarmup,scheduler,explicitResolution=qaWarmup?{width:1,height:1}:null,lastRenderedOptions=null,qaBusy=false,drag=null,settleWait=null,healthPoll=null,restoreDeadline=null;
-let sceneRevision=0;let requestedQuality='conservative',lastCompletedQuality=null,lastCompletedGeneration=null,lastStop=null,resourceRebuilds=0;
+let sceneRevision=0;let requestedQuality='conservative',lastCompletedQuality=null,lastCompletedGeneration=null,lastCompletedSceneRevision=null,lastCompletedProgramKey=null,lastStop=null,resourceRebuilds=0,initializationCancelControl=null;
 const operations=new GenerationScope(),renderBudget=PIXEL_BUDGETS,injectedEvents=[],caseGates=new Map();let nextGateId=0,nextCaseGate=null,lossPhase=null,invalidFenceArmed=false,failRestoreArmed=false,lossExtension=null,activeLossInjection=false;
 function logInjection(kind){const event={kind,injected:true,at:performance.now(),generation:gpu?.generation??null};injectedEvents.push(event);if(injectedEvents.length>24)injectedEvents.shift();return event;}
 function viewportResolution(quality='conservative'){const box=$('view').getBoundingClientRect();return boundedResolution(Math.max(1,box.width),Math.max(1,box.height),renderBudget[quality]);}
@@ -29,29 +29,50 @@ function stopGpu(detail){
  if(gpu?.state==='lost')restoreDeadline=setTimeout(()=>{restoreDeadline=null;if(gpu.state==='lost')gpu.fail('context-restoration-timeout',{kind:'context-restoration-timeout',contextLost:renderer.gl.isContextLost(),injected:!!detail.injected});updateGpuUI();},15000);
  updateGpuUI();
 }
-function onGpuComplete(detail){if(detail.metadata?.sceneRevision!==sceneRevision){updateGpuUI();return;}lastCompletedQuality=detail.metadata?.samplingQuality??'conservative';lastCompletedGeneration=detail.generation;updateGpuUI();}
+function displayGpuState(){const state=gpu?.state??'starting';return ['active','recovering'].includes(state)&&(renderer?.needsInitialization()||gpu?.pending?.phase==='initialization')?'initializing':state;}
+function currentFrameReady(){return !!(gpu?.state==='active'&&!renderer?.needsInitialization()&&lastCompletedGeneration===gpu.generation&&lastCompletedSceneRevision===sceneRevision&&lastCompletedProgramKey===renderer.initializationKey());}
+function onGpuComplete(detail){
+ if(detail.metadata?.phase==='initialization'){if(detail.generation===gpu.generation)renderer.completeInitialization(detail.metadata.programKey);updateGpuUI();return;}
+ if(detail.metadata?.sceneRevision!==sceneRevision){updateGpuUI();return;}lastCompletedQuality=detail.metadata?.samplingQuality??'conservative';lastCompletedGeneration=detail.generation;lastCompletedSceneRevision=sceneRevision;lastCompletedProgramKey=detail.metadata.programKey;updateGpuUI();
+}
+function cancelInitialization(){if(displayGpuState()!=='initializing')throw Error('There is no active program initialization to cancel');gpu.fail('initialization-cancelled',{phase:'initialization',message:'User cancelled initialization scheduling; submitted GPU commands cannot be forcibly cancelled',injected:false});updateGpuUI();return recoverySnapshot();}
 function updateGpuUI(){
- const panel=$('gpu-state');if(!panel)return;const state=gpu?.state??'starting',status=gpu?.snapshot();
- const labels={starting:'正在初始化图形资源',active:'图形上下文可用',lost:'图形上下文已丢失，已暂停绘制',recovering:'已重建图形资源，正在验证低采样帧',failed:'图形绘制已停止，未改用网格'};
+ const panel=$('gpu-state');if(!panel)return;const state=displayGpuState(),status=gpu?.snapshot();
+ const labels={starting:'正在初始化图形资源',initializing:'正在初始化函数程序（1×1，最多 60 秒）',active:'图形上下文可用',lost:'图形上下文已丢失，已暂停绘制',recovering:'已重建图形资源，正在验证低采样帧',failed:'图形绘制已停止，未改用网格'};
  panel.textContent=labels[state]??state;$('gpu-detail').textContent=`采样：${requestedQuality}；当前 ${$('view').width}×${$('view').height}。恢复尝试 ${status?.recoveryAttempts??0}/${status?.maxRecoveryAttempts??1}。只保留本页诊断，不上传设备信息。`;
+ if(initializationCancelControl)initializationCancelControl.disabled=state!=='initializing';
  $('gpu-retry').disabled=!status?.manualRetryAllowed;$('gpu-medium').disabled=state!=='active'||lastCompletedGeneration!==gpu?.generation||lastCompletedQuality!=='conservative';$('gpu-high').disabled=state!=='active'||lastCompletedGeneration!==gpu?.generation||lastCompletedQuality!=='medium';
  $('gpu-diagnostics').textContent=JSON.stringify(recoverySnapshot(),null,2);
- if(state==='active'){$('failure').hidden=true;}else if(['lost','recovering','failed'].includes(state)){$('failure').hidden=false;$('failure').textContent=(labels[state]??state)+'。\n函数、洞口、材质与已应用参数未替换。'+(state==='lost'?'等待浏览器恢复，最多进行一次资源重建。':state==='failed'?(status?.manualRetryAllowed?'可在右侧手动重建一次。':'本次已停止重试，可重新载入页面。'):'低采样帧完成前不宣称恢复成功。')+'\n'+(status?.lastFailure?.reason??lastStop?.reason??'');}
+ if(state==='initializing'){$('failure').hidden=true;$('gpu-detail').textContent+=' 首次驱动工作独立等待；SwiftShader 样本约 30 秒，不代表本机耗时，也不计作整帧完成。可取消后停止后续调度。';}else if(state==='active'){$('failure').hidden=true;}else if(['lost','recovering','failed'].includes(state)){$('failure').hidden=false;$('failure').textContent=(labels[state]??state)+'。\n函数、洞口、材质与已应用参数未替换。'+(state==='lost'?'等待浏览器恢复，最多进行一次资源重建。':state==='failed'?(status?.manualRetryAllowed?'可在右侧手动重建一次。':'本次已停止重试，可重新载入页面。'):'低采样帧完成前不宣称恢复成功。')+'\n'+(status?.lastFailure?.reason??lastStop?.reason??'');}
 }
 function recoverySnapshot(){
- const state=gpu?.snapshot()??{state:'starting',generation:0};return {...state,resourceEpoch:renderer?.resourceEpoch??null,sceneRevision,browser:navigator.userAgent,gpu:renderer?.gpu??null,pendingFence:!!gpu?.pending,currentResolution:{width:$('view').width,height:$('view').height},budget:structuredClone(renderBudget[requestedQuality]),quality:requestedQuality,automaticQualityPromotion:false,lastCompletedQuality,lastCompletedGeneration,resources:renderer?.resourceSnapshot()??null,resourceRebuilds,retainedCaseId:caseId,retainedView:view,retainedOptions:renderer?structuredClone(renderer.options):null,operationGeneration:operations.generation,pendingAsyncOperations:operations.pending.size,pendingHealthPoll:healthPoll!==null,restoreDeadlinePending:restoreDeadline!==null,injectedEvents:structuredClone(injectedEvents),testHooksEnabled:testEnabled,userDeviceRootCause:'not reproduced or established by injected tests',telemetry:false};
+ const state=gpu?.snapshot()??{state:'starting',generation:0};return {...state,lifecycleState:state.state,state:displayGpuState(),ready:currentFrameReady(),initialization:{...renderer?.initializationSnapshot(),pending:gpu?.pending?.phase==='initialization',budgetMs:gpu?.maxInitializationMs??60000,ordinaryFrameBudgetMs:gpu?.maxWaitMs??15000,evidence:'SwiftShader independent 1x1 fence naturally signaled at 29.5404s without readback; not a hardware safety guarantee'},resourceEpoch:renderer?.resourceEpoch??null,sceneRevision,browser:navigator.userAgent,gpu:renderer?.gpu??null,pendingFence:!!gpu?.pending,currentResolution:{width:$('view').width,height:$('view').height},budget:structuredClone(renderBudget[requestedQuality]),quality:requestedQuality,automaticQualityPromotion:false,lastCompletedQuality,lastCompletedGeneration,resources:renderer?.resourceSnapshot()??null,resourceRebuilds,retainedCaseId:caseId,retainedView:view,retainedOptions:renderer?structuredClone(renderer.options):null,operationGeneration:operations.generation,pendingAsyncOperations:operations.pending.size,pendingHealthPoll:healthPoll!==null,restoreDeadlinePending:restoreDeadline!==null,injectedEvents:structuredClone(injectedEvents),testHooksEnabled:testEnabled,userDeviceRootCause:'not reproduced or established by injected tests',telemetry:false};
 }
 function scheduleHealthPoll(){
  if(healthPoll!==null||!gpu?.pending||!gpu.canRender())return;const generation=gpu.generation;
  healthPoll=setTimeout(()=>{healthPoll=null;if(generation!==gpu.generation)return;screenReady();if(gpu.pending&&gpu.canRender())scheduleHealthPoll();},24);
 }
-function screenReady(){if(!gpu)return false;const ready=gpu.poll();if(!ready&&gpu.pending)scheduleHealthPoll();return ready;}
+function screenReady(){
+ if(!gpu)return false;const ready=gpu.poll();if(!ready){if(gpu.pending)scheduleHealthPoll();return false;}
+ if(!booting&&renderer?.needsInitialization()){
+  try{
+   if(lossPhase==='before-draw'){lossPhase=null;injectLossNow('injected-loss-before-initialization');return false;}
+   const generation=gpu.generation,programKey=renderer.prepareInitialization(),canvas=$('view');canvas.width=1;canvas.height=1;renderer.draw();
+   if(diagnoseContextLoss('lost-during-initialization')||generation!==gpu.generation)return false;
+   if(!gpu.submit({phase:'initialization',programKey,width:1,height:1,sceneRevision,caseId,injected:invalidFenceArmed||lossPhase==='after-fence'}))return false;
+   if(invalidFenceArmed){invalidFenceArmed=false;logInjection('injected-invalid-initialization-fence');renderer.gl.deleteSync(gpu.pending.handle);}
+   if(lossPhase==='after-fence'){lossPhase=null;injectLossNow('injected-loss-after-initialization-fence');return false;}
+   scheduleHealthPoll();updateGpuUI();
+  }catch(error){handleRenderError(error);}return false;
+ }
+ return ready;
+}
 function releaseScreenFence(reason='explicit-work'){gpu?.release(reason);clearHealthPoll();}
 function newScheduler(){return new LatestFrameScheduler({render:drawScheduledFrame,isReady:screenReady,onError:handleRenderError});}
 function handleRenderError(error){if(diagnoseContextLoss('draw-or-scheduler-context-lost'))return;if(!gpu?.canRender())return;gpu.fail('field-dispatch-failed',{kind:'field-dispatch-failed',message:error.message,injected:false});}
 function injectLossNow(kind){activeLossInjection=true;logInjection(kind);if(!lossExtension)throw Error('WEBGL_lose_context unavailable');lossExtension.loseContext();gpu.contextLost(kind,{injected:true});}
 function drawScheduledFrame(ticket){
- if(!ticket.isCurrent()||!gpu.canRender())throw interruption('Refusing a stale or unavailable GPU field dispatch');
+ if(!ticket.isCurrent()||!gpu.canRender()||renderer.needsInitialization())throw interruption('Refusing a stale or unavailable GPU field dispatch');
  if(lossPhase==='before-draw'){lossPhase=null;injectLossNow('injected-loss-before-draw');throw interruption('Injected loss before field draw');}
  if(renderer.draw.constructor.name==='AsyncFunction')throw Error('Async field draws require an atomic revision-aware renderer');
  const samplingQuality=ticket.quality==='interaction'?'conservative':requestedQuality,resolution=sizingPaused?(explicitResolution??viewportResolution('conservative')):viewportResolution(samplingQuality);
@@ -60,13 +81,13 @@ function drawScheduledFrame(ticket){
  const result=renderer.draw();if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});throw Error('Async field draw is unsupported');}
  if(diagnoseContextLoss('lost-during-field-draw'))throw interruption('Context lost during field draw');
  if(!ticket.isCurrent()||spec!==frameSpec||generation!==gpu.generation)throw interruption('Field state changed during screen dispatch');
- if(!gpu.submit({...resolution,caseId,view,sceneRevision,revision:ticket.revision,quality:ticket.quality,samplingQuality,injected:invalidFenceArmed||lossPhase==='after-fence'}))throw interruption('Field GPU fence submission was interrupted');
+ if(!gpu.submit({...resolution,programKey:renderer.initializationKey(),caseId,view,sceneRevision,revision:ticket.revision,quality:ticket.quality,samplingQuality,injected:invalidFenceArmed||lossPhase==='after-fence'}))throw interruption('Field GPU fence submission was interrupted');
  if(invalidFenceArmed){invalidFenceArmed=false;logInjection('injected-invalid-fence');renderer.gl.deleteSync(gpu.pending.handle);}
  if(lossPhase==='after-fence'){lossPhase=null;injectLossNow('injected-loss-after-fence');throw interruption('Injected loss after pending fence');}
  lastRenderedOptions=frameOptions;updateLabels(frameOptions);updateRenderMetrics();scheduleHealthPoll();updateGpuUI();
  return {...resolution,caseId,view,fieldKind:spec.fieldKind??'signed-design',eye:frameOptions.eye,target:frameOptions.target,modelTriangles:0,geometryLod:false,resourceEpoch:generation,samplingQuality};
 }
-function paint(reason='scene-change'){if(booting||!gpu?.canRender())return;if(sizingPaused){try{scheduler.flush({quality:'manual',reason});}catch(error){handleRenderError(error);throw error;}}else scheduler.request({quality:'interaction',reason,settle:requestedQuality!=='conservative'});}
+function paint(reason='scene-change'){if(booting||!gpu?.canRender())return;if(sizingPaused){scheduler.request({quality:'manual',reason,settle:false});}else scheduler.request({quality:'interaction',reason,settle:requestedQuality!=='conservative'});}
 function paintInteraction(reason){if(booting||qaBusy||!gpu?.canRender())return;scheduler.request({quality:sizingPaused?'manual':'interaction',reason,settle:!sizingPaused&&requestedQuality!=='conservative'});}
 function schedulingSnapshot(){return {...scheduler?.snapshot(),resolutionMode:sizingPaused?'explicit-pinned':'bounded-viewport',budgets:structuredClone(renderBudget),requestedQuality,currentResolution:{width:$('view').width,height:$('view').height},settledViewportResolution:viewportResolution(requestedQuality),explicitResolution:explicitResolution?{...explicitResolution}:null,gpuBackpressure:{...gpu?.snapshot(),pendingScreenFrame:!!gpu?.pending,maxAutomaticInFlightFrames:1},qaBusy,geometryLod:false,authoritativeFieldUnchanged:true};}
 function rendererSnapshot(){return {...renderer.snapshot(),scheduling:schedulingSnapshot(),recovery:recoverySnapshot()};}
@@ -78,7 +99,7 @@ function installSpec(next){
  if(!sizingPaused){requestedQuality='conservative';lastCompletedQuality=null;lastCompletedGeneration=null;}
 }
 function freezeViewport(reason){
- assertMutable();requireGpu();scheduler.invalidate(reason);
+ assertMutable();requireGpu();if(renderer.needsInitialization()||gpu.pending?.phase==='initialization')throw Error('Wait for program initialization and awaitSettled before explicit QA');scheduler.invalidate(reason);
  // Explicit QA only: a readback confirms prior work before releasing its fence.
  if(gpu.pending&&!screenReady()){requireGpu();try{renderer.synchronizePixel();}catch(error){handleRenderError(error);throw error;}}
  requireGpu();releaseScreenFence('explicit-synchronized-work');sizingPaused=true;explicitResolution={width:$('view').width,height:$('view').height};drag=null;
@@ -92,10 +113,10 @@ function setResolution(width,height){assertMutable();const requested=validateExp
 function resumeViewport(){assertMutable();requireGpu();scheduler.invalidate('resume-viewport');sizingPaused=false;explicitResolution=null;resize();return snapshot();}
 function requestQuality(quality){
  assertMutable();requireGpu();if(!Object.hasOwn(renderBudget,quality))throw Error('Unknown sampling quality');
- if(quality!=='conservative'){const required=quality==='medium'?'conservative':'medium';if(gpu.state!=='active'||lastCompletedGeneration!==gpu.generation||lastCompletedQuality!==required)throw Error('Complete the preceding sampling level before requesting higher quality');}
+ if(quality!=='conservative'){const required=quality==='medium'?'conservative':'medium';if(!currentFrameReady()||lastCompletedQuality!==required)throw Error('Complete the preceding sampling level before requesting higher quality');}
  sizingPaused=false;explicitResolution=null;requestedQuality=quality;scheduler.request({quality:'settled',reason:'explicit-sampling-'+quality,settle:false});updateGpuUI();return recoverySnapshot();
 }
-function awaitSettled({timeoutMs=30000}={}){
+function awaitSettled({timeoutMs=90000}={}){
  if(settleWait)return settleWait;if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>120000)return Promise.reject(Error('Settle timeout must be positive and at most 120 seconds'));
  try{requireGpu();}catch(error){return Promise.reject(error);}const token=operations.token(),generation=gpu.generation,started=performance.now();let timer=null;
  const work=new Promise((resolve,reject)=>{const check=()=>{timer=null;try{operations.assert(token);if(generation!==gpu.generation)throw interruption();requireGpu();const ready=screenReady();requireGpu();const state=scheduler.snapshot();if(state.faulted||state.disposed)throw Error('Field scheduler unavailable');
@@ -112,7 +133,8 @@ function rebuildGpu({manual=false}={}){
 }
 function retryGpu(){const result=rebuildGpu({manual:true});return result;}
 function installRecoveryApi(){
- const api={snapshot:recoverySnapshot,retry:retryGpu,requestQuality};
+ const api={snapshot:recoverySnapshot,retry:retryGpu,requestQuality,cancelInitialization};
+ initializationCancelControl=document.createElement('button');initializationCancelControl.id='gpu-cancel-initialization';initializationCancelControl.textContent='取消初始化并停止';initializationCancelControl.disabled=true;initializationCancelControl.onclick=()=>cancelInitialization();$('gpu-health').append(initializationCancelControl);
  if(testEnabled)api.test={
  loseContext(phase='now'){if(!['now','before-draw','after-fence'].includes(phase))throw Error('Unknown injected loss phase');if(phase==='now')injectLossNow('injected-context-loss');else{lossPhase=phase;logInjection('armed-loss-'+phase);paint('injected-loss-dispatch');}return recoverySnapshot();},
  restoreContext(){if(!lossExtension)throw Error('WEBGL_lose_context unavailable');logInjection('injected-context-restore');lossExtension.restoreContext();return recoverySnapshot();},
@@ -265,7 +287,7 @@ function parity(points=probePoints()){const cpu=points.map(query),gpu=renderer.p
 function rayParity(){const lo=spec.bounds.min,hi=spec.bounds.max,c=lo.map((v,i)=>(v+hi[i])/2),r=Math.max(...hi.map((v,i)=>v-lo[i])),origins=[],directions=[];for(let i=0;i<24;i++){const a=i*2.399963,o=[c[0]+Math.cos(a)*r*1.3,c[1]+Math.sin(i*1.7)*r,c[2]+Math.sin(a)*r*1.3].map(Math.fround),target=[c[0]+Math.sin(i)*r*.13,c[1]+Math.cos(i*1.3)*r*.18,c[2]+Math.cos(i)*r*.13],d=target.map((v,j)=>v-o[j]),n=Math.hypot(...d);origins.push(o);directions.push(d.map(v=>Math.fround(v/n)));}const cpu=origins.map((o,i)=>isCase()?intersectRay(o,directions[i]):traceFieldHybrid(spec,o,directions[i])),gpu=renderer.probe(origins,4,directions),mismatches=[];let maxTError=0;for(let i=0;i<cpu.length;i++){const status=isCase()?(cpu[i].hit?1:2):cpu[i].status,e=cpu[i].hit?Math.abs(cpu[i].t-gpu[i][0]):0;maxTError=Math.max(maxTError,e);if(status!==Math.round(gpu[i][2])||e>.0005||(cpu[i].hit&&cpu[i].objectId!==Math.round(gpu[i][1])))mismatches.push({i,cpu:cpu[i],gpu:gpu[i]});}return {samples:cpu.length,queryScope:isContext()?'display_source_interval_and_full_design':'current_field',maxTErrorM:maxTError,mismatches,passed:!mismatches.length};}
 function resize(){if(!renderer?.spec||sizingPaused||qaBusy||!gpu?.canRender())return;scheduler.request({quality:'interaction',reason:'viewport-resize',settle:requestedQuality!=='conservative'});}
 try{$('view').width=1;$('view').height=1;renderer=new FieldRenderer($('view'),{resourceEpoch:1,profileFirstDraw:qaWarmup});gpu=new GpuLifecycle({gl:renderer.gl,onStop:stopGpu,onComplete:onGpuComplete,maxRecoveryAttempts:1,maxWaitMs:15000});lossExtension=renderer.gl.getExtension('WEBGL_lose_context');scheduler=newScheduler();graph=deriveHostGraphFromField(deriveField(config));apply();setView('stairs');installRecoveryApi();await setCase('lowrise-hosted');booting=false;if(!sizingPaused)resize();else paint('initial-warmup');$('loading').hidden=true;updateGpuUI();
- window.__IMPLICIT_BUILDING__={ready:true,snapshot,apply,applyAssembly,applyHosted,setHostedEnabled,resetHosted,focusHosted,selectHostedComponent:k=>{activeComponent=k;syncHostedControls();return focusHosted();},setCase,setView,setRenderOptions,query,normal,intersectRay,probe:(points,kind=0,directions=null)=>qaRead(()=>renderer.probe(points,kind,directions),'qa-probe'),opticalParity:()=>qaRead(opticalParity,'qa-optical-parity'),parity:points=>qaRead(()=>parity(points),'qa-parity'),rayParity:()=>qaRead(rayParity,'qa-ray-parity'),probePoints,diagnostics:()=>qaRead(()=>renderer.diagnostics(),'qa-diagnostics'),benchmark:n=>qaRead(()=>renderer.benchmark(n),'qa-benchmark'),benchmarkStages:n=>qaRead(()=>renderer.benchmarkStages(n),'qa-stage-benchmark'),scheduling:schedulingSnapshot,awaitSettled,renderNow:()=>{freezeViewport('qa-render-now');paint('qa-render-now');return snapshot();},spec:()=>structuredClone(spec),worldProbe:(points,frame=graph.host.designFrame,kind=0)=>qaRead(()=>renderer.probe(points.map(p=>transformHostToLocal(p,frame)),kind),'qa-world-probe'),localToWorld:points=>points.map(p=>transformLocalToHost(p,graph.host.designFrame)),assemblyToSource:points=>points.map(p=>assemblyLocalToSource(designSpec(),p)),assemblySourceProbe:(points,kind=0)=>qaRead(()=>renderer.probe(isContext()?points:points.map(p=>sourceToAssemblyLocal(spec,p)),kind),'qa-source-probe'),displayQuery:p=>isHosted()?queryHostedScene(spec,p,{display:true}):isContext()?queryContext(spec,p,{display:true}):query(p),materialDirection:(hit,direction)=>isHosted()?hostedMaterialDirection(spec,hit,direction):isContext()?contextMaterialDirection(spec,hit,direction):direction,resumeViewport,setResolution,setTraceVariant:v=>{freezeViewport('qa-trace-variant');renderer.setTraceVariant(v);return snapshot();},shaderSource:()=>renderer.fieldSource};
+ window.__IMPLICIT_BUILDING__={get ready(){return currentFrameReady();},apiAvailable:true,snapshot,apply,applyAssembly,applyHosted,setHostedEnabled,resetHosted,focusHosted,selectHostedComponent:k=>{activeComponent=k;syncHostedControls();return focusHosted();},setCase,setView,setRenderOptions,query,normal,intersectRay,probe:(points,kind=0,directions=null)=>qaRead(()=>renderer.probe(points,kind,directions),'qa-probe'),opticalParity:()=>qaRead(opticalParity,'qa-optical-parity'),parity:points=>qaRead(()=>parity(points),'qa-parity'),rayParity:()=>qaRead(rayParity,'qa-ray-parity'),probePoints,diagnostics:()=>qaRead(()=>renderer.diagnostics(),'qa-diagnostics'),benchmark:n=>qaRead(()=>renderer.benchmark(n),'qa-benchmark'),benchmarkStages:n=>qaRead(()=>renderer.benchmarkStages(n),'qa-stage-benchmark'),scheduling:schedulingSnapshot,awaitSettled,renderNow:()=>{freezeViewport('qa-render-now');paint('qa-render-now');return snapshot();},spec:()=>structuredClone(spec),worldProbe:(points,frame=graph.host.designFrame,kind=0)=>qaRead(()=>renderer.probe(points.map(p=>transformHostToLocal(p,frame)),kind),'qa-world-probe'),localToWorld:points=>points.map(p=>transformLocalToHost(p,graph.host.designFrame)),assemblyToSource:points=>points.map(p=>assemblyLocalToSource(designSpec(),p)),assemblySourceProbe:(points,kind=0)=>qaRead(()=>renderer.probe(isContext()?points:points.map(p=>sourceToAssemblyLocal(spec,p)),kind),'qa-source-probe'),displayQuery:p=>isHosted()?queryHostedScene(spec,p,{display:true}):isContext()?queryContext(spec,p,{display:true}):query(p),materialDirection:(hit,direction)=>isHosted()?hostedMaterialDirection(spec,hit,direction):isContext()?contextMaterialDirection(spec,hit,direction):direction,resumeViewport,setResolution,setTraceVariant:v=>{freezeViewport('qa-trace-variant');renderer.setTraceVariant(v);return snapshot();},shaderSource:()=>renderer.fieldSource};
 
  $('hosted-component').onchange=()=>{activeComponent=$('hosted-component').value;syncHostedControls();focusHosted();};
  $('hostedApply').onclick=()=>{try{const changes={};document.querySelectorAll('[data-hosted-key]').forEach(i=>changes[i.dataset.hostedKey]=Number(i.value));changes.hingeOrSlider=$('hosted-mode').value;changes.openT=Number($('hosted-open').value);applyHosted(activeComponent,changes);$('hosted-validation').textContent='宿主与洞口尺寸已验证；101 姿态抽样未见与设计实体重叠，不是连续碰撞证明或实楼净距认证。';}catch(e){$('hosted-validation').textContent='未更新：'+e.message;}};

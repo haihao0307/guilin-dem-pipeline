@@ -1,0 +1,1667 @@
+{
+  "schema_version": "0.1",
+  "record_id": "kowloon.lowrise.residentialWindow.0.recognition.r01",
+  "record_state": "evidence_reviewed",
+  "domain": "architecture.source_bound_design",
+  "evidence": [
+    {
+      "evidence_id": "source_geometry",
+      "kind": "scene_data",
+      "locator": "../../../hk-three-buildings-r01/geometry/B367642137201063C0.score.json",
+      "description": "现有不可变来源几何配方；p120 是 wallStrip。它支持模型表面，不包含本设计窗的实测开口。 SHA-256: e209fc1cb98ebcc9b7547df9c2031e732a0ebe66bb44d1c49e70b0af9894049d.",
+      "region_or_time": "reconstruction.operations[id=p120]"
+    },
+    {
+      "evidence_id": "source_field",
+      "kind": "scene_data",
+      "locator": "../../r07/cases.mjs#deriveMeasuredCase",
+      "description": "实际现有来源面场适配器：源操作 p120 对应查询 objectId1120，源表面为无符号域，材质角色不等于实测饰面。SHA-256: ff0c0de3a3b84fa3d0e3ce7987197488b9c72600d2bfd7e6d0602ace63632b01."
+    },
+    {
+      "evidence_id": "case_ledger",
+      "kind": "scene_data",
+      "locator": "../../r07/sources/33-lasalle-evidence.json",
+      "description": "复用 2026-10-21 已有来源台账：No.33 官方建筑身份与两层记录已交叉核对；31–33 照片只支持窗类及可见立面特征，不支持精确窗身份、尺寸、深度或机构。本记录未重新实地调查。 SHA-256: f977a47f7bcdb9786438033b6005e1210871a11cbae0cb7f7786d0b3d829bc19."
+    },
+    {
+      "evidence_id": "window_family_photo",
+      "kind": "image",
+      "locator": "https://n.oneday.com.hk/im/WqEbNBROgyq.jpg",
+      "description": "已有台账 actualPhotoReferences[1] 的参考链接，源页 https://www.oneday.com.hk/en_US/buildings/31-33-la-salle-road/ 。台账观察为矩形多分部窗及防护栏；覆盖合并标注的 31–33 外墙，并未定位到 No.33 的 p120。照片日期未知，本记录未重新图像核验；不下载或公开再分发该照片。",
+      "region_or_time": "Oblique partial facade behind boundary fence, combined 31–33 premises"
+    },
+    {
+      "evidence_id": "case_profile",
+      "kind": "scene_data",
+      "locator": "../../r07/profiles.mjs#deriveCaseRelations",
+      "description": "当前已有模型、G/F 与 1/F 稳定身份；低层 case 的 corePolicy 为 unknown_no_invented_lift。楼层标签有记录依据，标高并未实测。 SHA-256: f2d6ce9605fef18b078b49658d150cc5e3cb7d98c192415fd9f1711e865d81a2."
+    },
+    {
+      "evidence_id": "host_design",
+      "kind": "design_spec",
+      "locator": "../../r07/host-bindings.mjs#deriveHostedCase",
+      "description": "实际执行默认 lowrise 绑定，读取 residentialWindow / instanceId 0、p120 / sourceObjectId1120、真实 hostId 和 1/F 关系。尺寸、精确位置、厚度及机构均是设计假设。 SHA-256: 1d147f28fde9f62799c22bd3c5f5d4f7b17171dfc932678d7c839bf77e5e7d15."
+    },
+    {
+      "evidence_id": "aperture_design",
+      "kind": "design_spec",
+      "locator": "../../r07/apertures.mjs#deriveAperture",
+      "description": "当前已有可执行窗配方；部件 host/frame/leaf/glass 的 objectId 为 4000/4001/4002/4003。简化刚性轴不是已知历史五金、摩擦撑或实物机构。 SHA-256: 4b8697caa03ac6e4608685afb6525adade2f4c313beebba59a225e81c467abd4."
+    },
+    {
+      "evidence_id": "material_design",
+      "kind": "design_spec",
+      "locator": "../material.mjs#HOSTED_MATERIAL_DEFAULTS",
+      "description": "当前材质试验默认 frameMaterialMode=2；窗框与窗扇环使用不透明漆木模式，玻璃使用独立 role6。木材基底、油漆涂层及参数是可编辑设计，不是九龙实物饰面识别。 SHA-256: ea1bf0417d54bb63c62462c061456a38a78fb479e435b346eff06bb0c066e195."
+    },
+    {
+      "evidence_id": "material_provenance",
+      "kind": "design_spec",
+      "locator": "../MATERIAL-PROVENANCE.md",
+      "description": "现有材质接入说明：原木材函数和新增不透明漆层分开；底材微起伏与表面颜色分开，微高度只影响法线而不改变几何。 SHA-256: 18e0cf12309c610cdb1d1fc269895c12d64d3bd06328fbfd6da394ddc89a72d4."
+    },
+    {
+      "evidence_id": "glass_design",
+      "kind": "design_spec",
+      "locator": "../../r07/material.mjs#HOSTED_MATERIAL_DEFAULTS",
+      "description": "现有玻璃吸收色以 0.006 m 参考厚度定义，glassIOR=1.5 和 transmission=1 为设计参数；不是现场采样。 SHA-256: 18a61c44646f5ff1efb7ca6c79dbf829b8950a4ca69ad3707cd6e181f53d3c7c."
+    }
+  ],
+  "entities": [
+    {
+      "instance_id": "B367642137201063C0:aperture:0",
+      "category": {
+        "value": "住宅窗（当前 source-bound 设计实例）",
+        "basis": "specified",
+        "evidence_refs": [
+          "host_design",
+          "aperture_design"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "当前源码中的设计构件；不声称从实拍恢复此实例。"
+        }
+      },
+      "category_id": null,
+      "parts": [
+        {
+          "value": "B367642137201063C0:aperture:0:frame",
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计的固定窗框。"
+          }
+        },
+        {
+          "value": "B367642137201063C0:aperture:0:leaf",
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计的窗扇环；玻璃归属于该窗扇。"
+          }
+        }
+      ],
+      "materials": [
+        {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "窗口是多部件装配；不能把整个窗口统一认定为木、金属或玻璃。各部件设计材料与未知实物材料分别记录。"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "value": "候选采光用途",
+          "basis": "inferred",
+          "evidence_refs": [
+            "case_ledger",
+            "window_family_photo",
+            "glass_design"
+          ],
+          "uncertainty": {
+            "level": "medium",
+            "reason": "住宅窗类和透明填充设计支持用途推断，不证明该现场窗的实际采光性能。"
+          }
+        },
+        {
+          "value": "可通过 openT 驱动的简化向外左铰链运动",
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design",
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "只描述现有可编辑设计机构，不证明实物机构或通风/消防性能。"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "value": {
+            "predicate": "hosted_by",
+            "object_id": "B367642137201063C0:p120:proposed-residential-window-host",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计层绑定，不证明实物安装位置。"
+          }
+        },
+        {
+          "value": {
+            "predicate": "assigned_to_storey",
+            "object_id": "B367642137201063C0:storey:1/F",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计层绑定，不证明实物安装位置。"
+          }
+        },
+        {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger",
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "核心筒、楼梯与电梯归属无法证实；不存在可安全引用的低层 core ID，不伪造关系目标。"
+          }
+        }
+      ],
+      "attributes": {
+        "reference_family": {
+          "value": "住宅立面的矩形多分部窗家族",
+          "basis": "inferred",
+          "evidence_refs": [
+            "case_ledger",
+            "window_family_photo"
+          ],
+          "uncertainty": {
+            "level": "medium",
+            "reason": "现有照片台账支持广义窗家族，但照片合并标注 31–33、没有精确 p120 配准；本单扇设计并不等同于照片整组窗。"
+          }
+        },
+        "photo_to_current_instance_match": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "未证明照片中的哪一扇窗对应本设计 instanceId 0 或源 p120。"
+          }
+        },
+        "as_built_width": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "没有该实例的现场尺度。"
+          }
+        },
+        "as_built_height": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "没有该实例的现场尺度。"
+          }
+        },
+        "as_built_placement": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger",
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "未做照片到模型的精确实例配准。"
+          }
+        },
+        "as_built_frame_depth": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "实物窗框进深未测量。"
+          }
+        },
+        "as_built_opening_type": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "真实窗扇五金和开合过程未确认。"
+          }
+        },
+        "as_built_hinge_axis": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "不从当前设计轴反填真实铰链轴。"
+          }
+        },
+        "core_id": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger",
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "No.33 室内核心、楼梯与电梯未知；unknown 不等于无电梯。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "candidate",
+        "parameters": {
+          "width": {
+            "value": 0.7,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "height": {
+            "value": 1.2,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "frameDepth": {
+            "value": 0.12,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "wallThickness": {
+            "value": 0.24,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "frameWidth": {
+            "value": 0.065,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "roundRadius": {
+            "value": 0.045,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "hingeOrSlider": {
+            "value": "hinge-left",
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            }
+          },
+          "openT": {
+            "value": 0,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "clearance": {
+            "value": 0.004,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "sashWidth": {
+            "value": 0.045,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "leafThickness": {
+            "value": 0.035,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "glassThickness": {
+            "value": 0.006,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "glassSeat": {
+            "value": 0.006,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "mountGap": {
+            "value": 0.004,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "maxAngleRadians": {
+            "value": 1.5707963267948966,
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "rad"
+          },
+          "host_origin": {
+            "value": [
+              -0.7603403993783221,
+              4.581000442504883,
+              -9.158492926978516
+            ],
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前设计中心，source-local display 坐标 east/up/south；不是实测窗中心。"
+            },
+            "unit": "m"
+          },
+          "host_u": {
+            "value": [
+              -0.9985615251790345,
+              0,
+              -0.053617911486002374
+            ],
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "从现有源表面基底建立的设计局部轴；无量纲。"
+            },
+            "unit": "1"
+          },
+          "host_v": {
+            "value": [
+              0,
+              1,
+              0
+            ],
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "从现有源表面基底建立的设计局部轴；无量纲。"
+            },
+            "unit": "1"
+          },
+          "host_w": {
+            "value": [
+              0.05361791148600237,
+              0,
+              -0.9985615251790344
+            ],
+            "basis": "specified",
+            "evidence_refs": [
+              "host_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "从现有源表面基底建立的设计局部轴；无量纲。"
+            },
+            "unit": "1"
+          }
+        },
+        "unresolved": [
+          "独立母体目录编号尚未核对；只能确认已存在且实际调用的 deriveAperture 配方。",
+          "真实窗户身份、尺寸、材料、安装、深度与机构未知。",
+          "照片多分部窗与当前单扇设计不是已确认的一对一重建。"
+        ]
+      },
+      "domain_extensions": {
+        "record_scope": "one_current_default_lowrise_window_design_and_its_dependencies_not_a_generic_example",
+        "review_date": "2026-10-21",
+        "review_method": "manual_schema_mapping_of_existing_source_ledger_and_executed_default_field_functions",
+        "runtime_binding": {
+          "case_id": "lowrise",
+          "binding_key": "residentialWindow",
+          "instance_id": 0,
+          "host_node_id": "B367642137201063C0:p120:proposed-residential-window-host",
+          "source_model_id": "B367642137201063C0",
+          "source_patch_id": "p120",
+          "source_object_id": 1120,
+          "floor_id": "B367642137201063C0:storey:1/F",
+          "core_id": null,
+          "part_object_ids": {
+            "host": 4000,
+            "frame": 4001,
+            "leaf": 4002,
+            "glass": 4003
+          }
+        },
+        "identity_policy": "Recognition instance IDs namespace existing runtime instance 0 and its parts under the stable model ID; they are new record keys, not claimed pre-existing catalog IDs. Keep across paint, camera and pose changes.",
+        "generator_binding": {
+          "module": "../../r07/apertures.mjs",
+          "export": "deriveAperture",
+          "schema": "kaopu.hosted-aperture-function/0.1",
+          "kind": "window",
+          "existing_recipe_verified": true,
+          "catalog_template_id_verified": false
+        },
+        "snapshot_scope": "Persisted source-code defaults, not unsaved browser-session edits.",
+        "evidence_boundary": "evidence_reviewed means existing ledger and current field defaults were checked. It does not mean an as-built window was recognized automatically, a model was trained, or the window is photograph-registered.",
+        "runtime_changed": false,
+        "model_weights_changed": false,
+        "training_performed": false,
+        "external_reference_images_redistributed": false
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:aperture:0:frame",
+      "category": {
+        "value": "固定窗框",
+        "basis": "specified",
+        "evidence_refs": [
+          "aperture_design"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "当前源码中的设计构件；不声称从实拍恢复此实例。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [
+        {
+          "value": {
+            "layer": "substrate",
+            "material": "procedural_timber"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design",
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有可编辑木材基底设计；并未确认真实窗框是木材。"
+          }
+        },
+        {
+          "value": {
+            "layer": "surface_coating",
+            "material": "opaque_paint"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design",
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "新接收层的不透明油漆设计，不能冒称历史实物漆。"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "value": "固定框围住设计开口并作为窗扇的参考构件",
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "设计功能关系；隐藏连接、密封、防火或结构安全未确认。"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "value": {
+            "predicate": "part_of",
+            "object_id": "B367642137201063C0:aperture:0",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有设计部件层级；不声明已观察到实物连接。"
+          }
+        }
+      ],
+      "attributes": {
+        "as_built_material": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "照片和源外壳均未验证该实物部件的基材或构造。"
+          }
+        },
+        "as_built_surface_coating": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "现有漆木模式是设计，不是现场涂层检测结果。"
+          }
+        },
+        "design_surface_color": {
+          "value": [
+            0.17,
+            0.25,
+            0.27
+          ],
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "不透明涂层的线性 RGB 设计色；木材底色不会穿过该层。"
+          },
+          "unit": "linear RGB [0,1]"
+        },
+        "design_material_mode": {
+          "value": 2,
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "数值 2 对应 paintedWood，适用于固定框和窗扇环。"
+          },
+          "unit": "enum code"
+        },
+        "design_relief_is_geometry": {
+          "value": false,
+          "basis": "specified",
+          "evidence_refs": [
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "微高度仅用于法线；不改变窗轮廓、宿主开口与射线求交。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "candidate",
+        "parameters": {
+          "woodScale": {
+            "value": 5.8,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "woodReliefM": {
+            "value": 0.0002,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "paintReliefM": {
+            "value": 1.8e-05,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "paintRoughness": {
+            "value": 0.31,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "paintClearcoat": {
+            "value": 0.45,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "paintClearcoatRoughness": {
+            "value": 0.23,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "depth": {
+            "value": 0.12,
+            "basis": "specified",
+            "evidence_refs": [
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          }
+        },
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      },
+      "domain_extensions": {
+        "runtime_object_id": 4001,
+        "runtime_material_role": 4,
+        "runtime_instance_id": 0,
+        "runtime_part": "frame",
+        "host_node_id": "B367642137201063C0:p120:proposed-residential-window-host"
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:aperture:0:leaf",
+      "category": {
+        "value": "活动窗扇环",
+        "basis": "specified",
+        "evidence_refs": [
+          "aperture_design"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "当前源码中的设计构件；不声称从实拍恢复此实例。"
+        }
+      },
+      "category_id": null,
+      "parts": [
+        {
+          "value": "B367642137201063C0:aperture:0:glass",
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "玻璃与窗扇共享移动局部坐标。"
+          }
+        }
+      ],
+      "materials": [
+        {
+          "value": {
+            "layer": "substrate",
+            "material": "procedural_timber"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design",
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有可编辑木材基底设计；并未确认真实窗框是木材。"
+          }
+        },
+        {
+          "value": {
+            "layer": "surface_coating",
+            "material": "opaque_paint"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design",
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "新接收层的不透明油漆设计，不能冒称历史实物漆。"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "value": "窗扇环携带玻璃随同一刚性局部坐标运动",
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "设计功能关系；隐藏连接、密封、防火或结构安全未确认。"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "value": {
+            "predicate": "part_of",
+            "object_id": "B367642137201063C0:aperture:0",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有设计部件层级；不声明已观察到实物连接。"
+          }
+        }
+      ],
+      "attributes": {
+        "as_built_material": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "照片和源外壳均未验证该实物部件的基材或构造。"
+          }
+        },
+        "as_built_surface_coating": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "现有漆木模式是设计，不是现场涂层检测结果。"
+          }
+        },
+        "design_surface_color": {
+          "value": [
+            0.17,
+            0.25,
+            0.27
+          ],
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "不透明涂层的线性 RGB 设计色；木材底色不会穿过该层。"
+          },
+          "unit": "linear RGB [0,1]"
+        },
+        "design_material_mode": {
+          "value": 2,
+          "basis": "specified",
+          "evidence_refs": [
+            "material_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "数值 2 对应 paintedWood，适用于固定框和窗扇环。"
+          },
+          "unit": "enum code"
+        },
+        "design_relief_is_geometry": {
+          "value": false,
+          "basis": "specified",
+          "evidence_refs": [
+            "material_provenance"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "微高度仅用于法线；不改变窗轮廓、宿主开口与射线求交。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "candidate",
+        "parameters": {
+          "woodScale": {
+            "value": 5.8,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "woodReliefM": {
+            "value": 0.0002,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "paintReliefM": {
+            "value": 1.8e-05,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "paintRoughness": {
+            "value": 0.31,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "paintClearcoat": {
+            "value": 0.45,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "paintClearcoatRoughness": {
+            "value": 0.23,
+            "basis": "specified",
+            "evidence_refs": [
+              "material_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "depth": {
+            "value": 0.035,
+            "basis": "specified",
+            "evidence_refs": [
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          }
+        },
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      },
+      "domain_extensions": {
+        "runtime_object_id": 4002,
+        "runtime_material_role": 5,
+        "runtime_instance_id": 0,
+        "runtime_part": "leaf",
+        "host_node_id": "B367642137201063C0:p120:proposed-residential-window-host"
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:aperture:0:glass",
+      "category": {
+        "value": "玻璃填充片（设计）",
+        "basis": "specified",
+        "evidence_refs": [
+          "aperture_design"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "当前源码中的设计构件；不声称从实拍恢复此实例。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [
+        {
+          "value": {
+            "layer": "bulk",
+            "material": "glass"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "glass_design",
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有设计为有限厚度玻璃；不推定真实窗的玻璃品类。"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "value": "设计中的透光与有限厚度折射/吸收介质",
+          "basis": "specified",
+          "evidence_refs": [
+            "glass_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "仅为现有光学渲染契约，不证明实测玻璃性质或完整光传输。"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "value": {
+            "predicate": "part_of",
+            "object_id": "B367642137201063C0:aperture:0:leaf",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "aperture_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有设计部件层级；不声明已观察到实物连接。"
+          }
+        }
+      ],
+      "attributes": {
+        "as_built_material": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "照片和源外壳均未验证该实物部件的基材或构造。"
+          }
+        },
+        "as_built_surface_coating": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "现有漆木模式是设计，不是现场涂层检测结果。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "candidate",
+        "parameters": {
+          "thickness": {
+            "value": 0.006,
+            "basis": "specified",
+            "evidence_refs": [
+              "glass_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "m"
+          },
+          "ior": {
+            "value": 1.5,
+            "basis": "specified",
+            "evidence_refs": [
+              "glass_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "transmission": {
+            "value": 1,
+            "basis": "specified",
+            "evidence_refs": [
+              "glass_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          },
+          "absorption_transmittance_at_6mm": {
+            "value": [
+              0.82,
+              0.94,
+              0.92
+            ],
+            "basis": "specified",
+            "evidence_refs": [
+              "glass_design",
+              "aperture_design"
+            ],
+            "uncertainty": {
+              "level": "low",
+              "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+            },
+            "unit": "1"
+          }
+        },
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      },
+      "domain_extensions": {
+        "runtime_object_id": 4003,
+        "runtime_material_role": 6,
+        "runtime_instance_id": 0,
+        "runtime_part": "glass",
+        "host_node_id": "B367642137201063C0:p120:proposed-residential-window-host"
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:p120:proposed-residential-window-host",
+      "category": {
+        "value": "带窗洞的设计宿主墙区域",
+        "basis": "specified",
+        "evidence_refs": [
+          "host_design",
+          "aperture_design"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "当前源码中的设计构件；不声称从实拍恢复此实例。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [
+        {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "source_geometry",
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "源外壳无可靠的实物墙基层/表面饰面测量；role2 不是混凝土或灰泥实物证明。"
+          }
+        }
+      ],
+      "functions": [],
+      "relations": [
+        {
+          "value": {
+            "predicate": "authored_on_source_patch",
+            "object_id": "B367642137201063C0:p120",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计层绑定，不证明实物安装位置。"
+          }
+        },
+        {
+          "value": {
+            "predicate": "assigned_to_storey",
+            "object_id": "B367642137201063C0:storey:1/F",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前设计层绑定，不证明实物安装位置。"
+          }
+        }
+      ],
+      "attributes": {
+        "wall_thickness": {
+          "value": 0.24,
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+          },
+          "unit": "m"
+        },
+        "wall_width": {
+          "value": 3.2,
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+          },
+          "unit": "m"
+        },
+        "wall_height": {
+          "value": 2.6,
+          "basis": "specified",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "当前可编辑设计值；不是现场测量或照片配准结果。"
+          },
+          "unit": "m"
+        },
+        "structural_role": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "未核实承重、围护或加建构造；不得由墙类名称推定安全性能。"
+          }
+        },
+        "as_built_thickness": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "host_design"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "0.24 m 是设计墙厚，不是来源外壳厚度测量。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "unmatched",
+        "parameters": {},
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      },
+      "domain_extensions": {
+        "runtime_host_id": "B367642137201063C0:p120:proposed-residential-window-host",
+        "runtime_object_id": 4000,
+        "source_patch_id": "p120",
+        "source_object_id": 1120,
+        "source_region_check": {
+          "valid": true,
+          "minimumBoundaryMargin": 3.281000442504883,
+          "requiredMargin": 0.15,
+          "method": "whole_polygon_edges_and_hole_containment"
+        },
+        "source_region_check_scope": "Numerical containment of authored region in existing source patch only; not photograph registration or construction approval."
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:p120",
+      "category": {
+        "value": "来源模型竖直墙面片 wallStrip",
+        "basis": "observed",
+        "evidence_refs": [
+          "source_geometry",
+          "source_field"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "直接读取当前来源配方 p120，并执行现有 deriveMeasuredCase；这是模型面片分类，不是已验证墙体构造。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [
+        {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "source_geometry",
+            "source_field"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "sourceRole=2 是 authored material role，不是实测饰面或基层。"
+          }
+        }
+      ],
+      "functions": [],
+      "relations": [
+        {
+          "value": {
+            "predicate": "part_of",
+            "object_id": "B367642137201063C0",
+            "reference_frame": "source-local display axes: east, up, south"
+          },
+          "basis": "observed",
+          "evidence_refs": [
+            "source_geometry"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "该 p120 属于来源模型 B367642137201063C0。"
+          }
+        }
+      ],
+      "attributes": {
+        "source_patch_id": {
+          "value": "p120",
+          "basis": "observed",
+          "evidence_refs": [
+            "source_geometry"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有来源配方操作 ID。"
+          }
+        },
+        "source_field_object_id": {
+          "value": 1120,
+          "basis": "observed",
+          "evidence_refs": [
+            "source_geometry",
+            "source_field"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有 deriveMeasuredCase 中由 p120 派生的整数查询 ID；不是类别编号。"
+          },
+          "unit": "identifier"
+        },
+        "source_plane_normal": {
+          "value": [
+            0.05361791148600237,
+            0,
+            -0.9985615251790344
+          ],
+          "basis": "observed",
+          "evidence_refs": [
+            "source_geometry",
+            "source_field"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "现有模型的 source-local display 坐标面法线；不确定性受原始几何精度限制。"
+          },
+          "unit": "1"
+        },
+        "surface_inside_semantic": {
+          "value": "undefined_for_unsigned_surface",
+          "basis": "observed",
+          "evidence_refs": [
+            "source_geometry",
+            "source_field"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "来源仅为无符号表面，不虚构内部体积。"
+          }
+        },
+        "physical_wall_thickness": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "source_geometry"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "无符号表面不能提供实际墙厚。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "unmatched",
+        "parameters": {},
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      },
+      "domain_extensions": {
+        "identity_policy": "Record-scoped compound of existing source model ID and sourcePatchId p120; not a new runtime node."
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0:storey:1/F",
+      "category": {
+        "value": "1/F 楼层记录",
+        "basis": "observed",
+        "evidence_refs": [
+          "case_ledger",
+          "case_profile"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "既有资料与稳定关系图支持 1/F 标签；不支持精确成品地面标高。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [],
+      "functions": [],
+      "relations": [
+        {
+          "value": {
+            "predicate": "owned_by",
+            "object_id": "B367642137201063C0",
+            "reference_frame": null
+          },
+          "basis": "observed",
+          "evidence_refs": [
+            "case_ledger",
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "No.33 的 1/F 记录属于此建筑，不与 No.31 合并。"
+          }
+        }
+      ],
+      "attributes": {
+        "elevation": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "实际 1/F 完成面标高未核实；不把设计 floorHeight 反填为测量。"
+          }
+        },
+        "core_id": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger",
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "低层内部核心与竖向交通尚未知。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "unmatched",
+        "parameters": {},
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      }
+    },
+    {
+      "instance_id": "B367642137201063C0",
+      "category": {
+        "value": "No.33 La Salle Road 建筑来源对象",
+        "basis": "observed",
+        "evidence_refs": [
+          "case_ledger",
+          "case_profile",
+          "source_geometry"
+        ],
+        "uncertainty": {
+          "level": "low",
+          "reason": "复用已有官方对象与地址交叉核验台账，不把合并标注 31–33 照片变成两个建筑已合并的证据。"
+        }
+      },
+      "category_id": null,
+      "parts": [],
+      "materials": [],
+      "functions": [
+        {
+          "value": "private residential (existing property-service record)",
+          "basis": "observed",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "描述的是已核验资料中的用途，不是现场当前使用调查。"
+          }
+        }
+      ],
+      "relations": [],
+      "attributes": {
+        "recorded_storey_count": {
+          "value": 2,
+          "basis": "observed",
+          "evidence_refs": [
+            "case_ledger"
+          ],
+          "uncertainty": {
+            "level": "low",
+            "reason": "官方两层记录与 G/F、1/F 资料相互支持；不把屋顶围合算成第三层。"
+          },
+          "unit": "storeys"
+        },
+        "interior_core": {
+          "value": null,
+          "basis": "unknown",
+          "evidence_refs": [
+            "case_ledger",
+            "case_profile"
+          ],
+          "uncertainty": {
+            "level": "unassessed",
+            "reason": "室内楼梯、核心筒和电梯有无均未获得可靠资料。"
+          }
+        }
+      },
+      "mother_mapping": {
+        "template_id": null,
+        "state": "unmatched",
+        "parameters": {},
+        "unresolved": [
+          "未核对独立类别/母体目录 ID；不以函数名假造目录编号。"
+        ]
+      }
+    }
+  ]
+}

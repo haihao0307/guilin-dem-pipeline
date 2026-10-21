@@ -18,7 +18,7 @@ AUDIT="""window.__GL_AUDIT__={buffers:0,indexDraws:0,drawCounts:[],programs:0,te
 def compact_audit(p):
  x=p.evaluate('window.__GL_AUDIT__');x['drawCalls']=len(x['drawCounts']);x['drawCounts']=sorted(set(x['drawCounts']));return x
 def snap(p):return p.evaluate(G+'.snapshot()')
-def settled(p):return p.evaluate(A+'.awaitSettled({timeoutMs:45000})')
+def settled(p):return p.evaluate(A+'.awaitSettled({timeoutMs:90000})')
 def budget(s,max_pixels=17920):
  d=s['currentResolution'];check(d['width']*d['height']<=max_pixels,'total pixel budget',d);check(d['width']<=160 and d['height']<=160 if max_pixels==17920 else True,'two-axis cap',d);check(s['automaticQualityPromotion'] is False,'no silent quality promotion')
 def capture(p,name):
@@ -26,7 +26,7 @@ def capture(p,name):
 def stable_scene(p):return p.evaluate("""()=>{const a=window.__IMPLICIT_BUILDING__,s=a.snapshot();return {caseId:s.caseId,config:s.config,hosted:s.hosted?.edits,options:s.renderOptions,counts:s.counts,queries:[[0,0,0],[1,2,3],[-1,1,.5]].map(q=>a.query(q))};}""")
 def small_parity(p):return p.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))')
 def restore(p):
- p.wait_for_function(G+".snapshot().state==='lost'",timeout=10000);p.wait_for_timeout(100);p.evaluate(G+'.test.restoreContext()');p.wait_for_function(G+".snapshot().state==='active'&&"+G+'.snapshot().lastCompletedGeneration==='+G+'.snapshot().generation',timeout=45000);return settled(p)
+ p.wait_for_function(G+".snapshot().state==='lost'",timeout=10000);p.wait_for_timeout(100);p.evaluate(G+'.test.restoreContext()');p.wait_for_function(G+".snapshot().state==='active'&&"+G+'.snapshot().lastCompletedGeneration==='+G+'.snapshot().generation',timeout=90000);return settled(p)
 with sync_playwright() as pw:
  browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  def scenario(name,fn,viewport=None,test_hooks=True):
@@ -80,5 +80,9 @@ with sync_playwright() as pw:
   p.evaluate(G+'.requestQuality("medium")');settled(p);d['medium']=snap(p);budget(d['medium'],71680);check(d['medium']['currentResolution']['width']<=320 and d['medium']['currentResolution']['height']<=320,'medium two-axis cap');capture(p,'portrait-explicit-medium')
   p.evaluate(G+'.requestQuality("conservative")');settled(p);p.evaluate(G+'.test.loseContext("now")');restore(p);d['restored']=snap(p);budget(d['restored']);p.wait_for_timeout(700);budget(snap(p));d['layoutOnly']='desktop CSS portrait; not iOS hardware'
  scenario('portrait-and-staged-sampling',portrait,{'width':390,'height':844})
+ def cancel_initialization(p,d):
+  p.evaluate(A+'.setCase("kcc-hosted")');d['initializing']=snap(p);check(d['initializing']['state']=='initializing','new program has separate initialization state');check(d['initializing']['initialization']['budgetMs']==60000 and d['initializing']['initialization']['ordinaryFrameBudgetMs']==15000,'initialization and frame budgets separate');p.evaluate(G+'.cancelInitialization()');d['cancelled']=snap(p);check(d['cancelled']['state']=='failed' and d['cancelled']['lastFailure']['reason']=='initialization-cancelled','explicit initialization cancellation is terminal');check(p.evaluate(A+'.ready') is False,'cancelled initialization never reports ready');capture(p,'initialization-explicit-cancel')
+ scenario('new-program-initialization-cancellable',cancel_initialization)
+
  browser.close()
 r['status']='passed_bounded_controlled_gpu_lifecycle_checks' if not r['failures'] else 'failed';save();print(json.dumps({'status':r['status'],'scenarios':len(r['tests']),'failures':r['failures'],'screenshots':len(r['screenshots'])},ensure_ascii=False));raise SystemExit(0 if not r['failures'] else 1)

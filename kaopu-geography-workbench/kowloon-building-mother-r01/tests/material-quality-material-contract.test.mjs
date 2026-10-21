@@ -8,7 +8,7 @@ const sourceContract=Object.freeze({model:'bounded_single_pane_two_interface_ref
 const spec=Object.freeze({fieldKind:'hosted-context',mode:'design',opticalContract:sourceContract});
 test('current optical report describes actual display reflection without changing frozen source contract',()=>{
  const out=materialQualityOpticalContract(spec);assert.match(out.reflection,/one_actual_displayed_scene_reflection_ray/);assert.equal(out.absorption,sourceContract.absorption);assert.equal(out.caustics,false);
- assert.match(out.secondaryShading,/geometric_normal.*approximate.*no_microheight_normal/);assert.match(out.totalInternalReflection,/sky_only_approximation/);assert.match(out.reflectionWeight,/not_separate_internal_reflection_paths/);
+ assert.match(out.secondaryShading,/geometric_normal.*approximate.*no_microheight_normal/);assert.match(out.totalInternalReflection,/environment_only_approximation/);assert.match(out.reflectionWeight,/not_separate_internal_reflection_paths/);
  assert.equal(sourceContract.reflection,'sky_environment_approximation_not_scene_reflection');assert.notEqual(out,sourceContract);
  assert.equal(materialQualityOpticalContract(spec,{sceneReflection:0}).reflection,'authored_analytic_environment_only');
  assert.equal(materialQualityOpticalContract({fieldKind:'measured-surface'}),null);
@@ -20,10 +20,10 @@ test('diagnostics, renderer snapshot, primary snapshot and quality snapshot shar
  assert.doesNotMatch(app,/opticalModel:spec\.opticalContract\?\?/);
  assert.doesNotMatch(renderer,/Reflections and total-internal-reflection fallback sample only the sky/);
 });
-test('hosted primary miss and glass use the same analytic sky/output conversion; nonhosted sky is retained',()=>{
- assert.match(renderer,/#if FIELD_HOSTED\s+return vec4\(hostedDisplayColor\(hostedSky\(rd\)\),1\.\);\s+#else\s+return vec4\(sky,1\.\);\s+#endif/);
+test('hosted primary miss and glass use the same analytic environment and fixed exposure; nonhosted sky is retained',()=>{
+ assert.match(renderer,/#if FIELD_HOSTED\s+return vec4\(hostedDisplayColor\(hostedEnvironment\(uEye,rd\)\),1\.\);\s+#else\s+return vec4\(sky,1\.\);\s+#endif/);
  assert.match(renderer,/return vec4\(hostedDisplayColor\(hostedGlassRadiance\(uEye,rd,t,h,n\)\),1\.\);/);
- assert.match(renderer,/vec3 hostedDisplayColor\(vec3 radiance\)\{vec3 mapped=radiance\/\(1\.\+radiance\);return pow\(max\(mapped,vec3\(0\.\)\),vec3\(1\.\/2\.2\)\);\}/);
+ assert.match(renderer,/vec3 hostedDisplayColor\(vec3 radiance\)\{radiance\*=uStudyLighting>\.5\?uStudyExposure:1\.;vec3 mapped=radiance\/\(1\.\+radiance\);return pow\(max\(mapped,vec3\(0\.\)\),vec3\(1\.\/2\.2\)\);\}/);
 });
 test('material selector reports real ring-versus-solid-door modes without changing colors, pose or options',()=>{
  const begin=app.indexOf('function syncQualityFinishControl(){'),end=app.indexOf('function updateQualityUI(){',begin);assert.ok(begin>=0&&end>begin);

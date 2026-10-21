@@ -252,3 +252,13 @@ test('unknown context or sync query values fail closed without retry classificat
  const unknownSync=harness();unknownSync.gate.submit();unknownSync.gl.isSync=()=>undefined;unknownSync.statuses.push(unknownSync.gl.WAIT_FAILED);unknownSync.gate.poll();
  assert.equal(unknownSync.gate.snapshot().manualRetryAllowed,false);assert.equal(unknownSync.gate.snapshot().lastFailure.syncValid,null);
 });
+
+test('initialization has its own bounded budget and does not weaken the ordinary frame budget',()=>{
+ const h=harness();h.gate.submit({phase:'initialization',programKey:'p1'});h.tick(29540);assert.equal(h.gate.poll(),false);assert.equal(h.gate.state,'active');assert.equal(h.gate.snapshot().pending.waitBudgetMs,60000);h.statuses.push(h.gl.CONDITION_SATISFIED);assert.equal(h.gate.poll(),true);assert.equal(h.completed[0].reason,'initialization-completed');h.gate.submit({phase:'frame'});h.tick(15000);assert.equal(h.gate.poll(),false);assert.equal(h.gate.lastFailure.reason,'fence-timeout');assert.equal(h.gate.lastFailure.waitBudgetMs,15000);
+});
+test('initialization deadline fails distinctly at 60 seconds with no readback or retry',()=>{
+ const h=harness();h.gate.submit({phase:'initialization'});h.tick(60000);assert.equal(h.gate.poll(),false);assert.equal(h.gate.lastFailure.reason,'initialization-timeout');assert.equal(h.completed.length,0);assert.equal(h.gate.snapshot().manualRetryAllowed,false);assert.equal(h.count('deleteSync'),1);
+});
+test('restored initialization alone cannot claim recovery before its full frame fence signals',()=>{
+ const h=harness();h.gate.contextLost();const token=h.gate.beginRecovery();h.gate.attach(h.gl,token);h.gate.submit({phase:'initialization'});h.statuses.push(h.gl.ALREADY_SIGNALED);assert.equal(h.gate.poll(),true);assert.equal(h.gate.state,'recovering');assert.equal(h.gate.stats.recovered,0);h.gate.submit({phase:'frame'});h.statuses.push(h.gl.ALREADY_SIGNALED);assert.equal(h.gate.poll(),true);assert.equal(h.gate.state,'active');assert.equal(h.gate.stats.recovered,1);
+});

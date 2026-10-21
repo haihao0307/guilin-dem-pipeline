@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse,hashlib,json,pathlib,time,traceback
 from playwright.sync_api import sync_playwright
-p=argparse.ArgumentParser();p.add_argument('--url',required=True);p.add_argument('--output',required=True);a=p.parse_args();o=pathlib.Path(a.output);o.mkdir(parents=True,exist_ok=True);A='window.__IMPLICIT_BUILDING__';Q='window.__MATERIAL_QUALITY__';r={'status':'running','scope':'same hosted cases and unchanged field geometry; actual material and subpixel rendering','coldStartCoverage':'QA uses explicit 1px blocking warmup, NOT ordinary-start/recovery acceptance','screenshots':[],'cases':{},'errors':[],'failures':[]}
+p=argparse.ArgumentParser();p.add_argument('--url',required=True);p.add_argument('--output',required=True);a=p.parse_args();o=pathlib.Path(a.output);o.mkdir(parents=True,exist_ok=True);A='window.__IMPLICIT_BUILDING__';Q='window.__MATERIAL_QUALITY__';r={'status':'running','scope':'same hosted cases and unchanged field geometry; actual material and subpixel rendering','coldStartCoverage':'ordinary bounded initialization, no qa-warmup flag; material rendering is separate from user-device recovery claim','screenshots':[],'cases':{},'errors':[],'failures':[]}
 def save():(o/'results.json').write_text(json.dumps(r,indent=2,ensure_ascii=False))
 def check(ok,label):
  if not ok:raise AssertionError(label)
@@ -14,11 +14,25 @@ with sync_playwright() as w:
  def direct(width=640):
   started=time.monotonic();height=round(width*page.locator('#view').bounding_box()['height']/page.locator('#view').bounding_box()['width']);page.evaluate('([w,h])=>window.__IMPLICIT_BUILDING__.setResolution(w,h)',[width,height]);page.evaluate(A+'.awaitSettled()');return {'width':width,'height':height,'samplesPerPixel':1,'elapsedWallSeconds':time.monotonic()-started,'completion':'ordinary direct canvas frame fence signaled; no quality FBO or antialiasing claim'}
  try:
-  started=time.monotonic();page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=180000);page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=180000);check(page.evaluate(A+'?.ready'),'initial material shader ready: '+str(page.evaluate(A+'?.errors')));r['qaWarmupWallSeconds']=time.monotonic()-started;r['warmup']=page.evaluate(A+'.snapshot().renderer.compileProfile')
-  # Actual owned wood and paint shading on the SAME already-hosted lowrise window.
-  c=r['cases']['lowrise']={};page.evaluate(A+'.setResolution(64,48)');page.evaluate(Q+'.setMaterial({frameMaterialMode:1,doorMaterialMode:1})');page.evaluate(A+'.awaitSettled()');c['woodMaterial']=page.evaluate(Q+'.snapshot()');page.evaluate(A+'.setRenderOptions({sceneReflection:0})');c['woodFrame']=direct();capture('window-original-timber-direct')
-  c['woodField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');page.evaluate(Q+'.setMaterial({frameMaterialMode:2,doorMaterialMode:2})');c['paintFrame']=direct();capture('window-opaque-paint-direct');c['paintField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');check(c['woodField']==c['paintField'],'finish choices did not change field geometry')
-  page.evaluate(A+'.applyHosted("residentialWindow",{openT:.6})');page.evaluate(A+'.setRenderOptions({sceneReflection:1})');c['openFrame']=direct();capture('window-open-scene-reflection-direct');page.evaluate(A+'.setResolution(64,48)');c['finiteGlassParity']=page.evaluate(A+'.opticalParity()');check(c['finiteGlassParity']['passed'],'finite glass transport unchanged');c['fieldParity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(c['fieldParity']['passed'],'same field coordinates/identities')
+  started=time.monotonic();page.goto(a.url,wait_until='networkidle',timeout=180000);page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=180000);check(page.evaluate(A+'?.ready'),'initial material shader ready: '+str(page.evaluate(A+'?.errors')));r['coldStartWallSeconds']=time.monotonic()-started;r['warmup']=page.evaluate(A+'.snapshot().renderer.compileProfile')
+  # Fixed source-host coordinates and exposure for the SAME lowrise design window.
+  c=r['cases']['lowrise']={};page.evaluate(A+'.setResolution(32,25)');page.evaluate(A+'.awaitSettled()')
+  camera=page.evaluate("""()=>{const a=window.__IMPLICIT_BUILDING__,b=a.snapshot().hosted.bindings.find(x=>x.key==='residentialWindow'),f=b.apertureFrame??b.frame;const target=f.origin.map((x,i)=>x+f.w[i]*.12),eye=f.origin.map((x,i)=>x+f.w[i]*1.85+f.u[i]*.18+f.v[i]*.10);a.setRenderOptions({eye,target,fov:Math.PI/4,studyLighting:1,studyExposure:1,studyAreaStrength:1,studyEnvironmentStrength:1,sceneReflection:1});return {eye,target,fov:Math.PI/4,host:b.key};}""");c['fixedCamera']=camera
+  page.evaluate(Q+'.setMaterial({frameMaterialMode:1,doorMaterialMode:1})');page.evaluate(A+'.awaitSettled()');c['warmResolutionStages']=[]
+  for width in [32,160]:c['warmResolutionStages'].append(direct(width));save()
+  c['woodMaterial']=page.evaluate(Q+'.snapshot()');c['woodFrame']=direct();capture('window-original-timber-lit-direct')
+  c['woodField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))')
+  try:c['woodAA']=render(640);capture('window-original-timber-lit-aa')
+  except Exception as e:r['failures'].append({'stage':'wood-AA','error':str(e)});capture('wood-AA-failure')
+  # Identical camera/exposure. Only declared paint variables change.
+  page.evaluate(A+'.setResolution(160,127)');page.evaluate(A+'.awaitSettled()');page.evaluate(Q+'.setMaterial({frameMaterialMode:2,doorMaterialMode:2,paintRoughness:.16,paintClearcoat:0})');c['paintSmoothFrame']=direct(480);capture('window-paint-roughness-016')
+  page.evaluate(Q+'.setMaterial({paintRoughness:.75,paintClearcoat:0})');c['paintRoughFrame']=direct(480);capture('window-paint-roughness-075')
+  page.evaluate(Q+'.setMaterial({paintRoughness:.40,paintClearcoat:0,paintClearcoatRoughness:.14})');c['paintNoCoatFrame']=direct(480);capture('window-paint-coat-0')
+  page.evaluate(Q+'.setMaterial({paintRoughness:.40,paintClearcoat:1,paintClearcoatRoughness:.14})');c['paintCoatFrame']=direct(480);capture('window-paint-coat-1')
+  c['paintField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');check(c['woodField']==c['paintField'],'finish choices did not change field geometry')
+  try:c['paintAA']=render(640);capture('window-painted-timber-lit-aa')
+  except Exception as e:r['failures'].append({'stage':'paint-AA','error':str(e)});capture('paint-AA-failure')
+  page.evaluate(A+'.applyHosted("residentialWindow",{openT:.6})');c['openFrame']=direct();capture('window-open-scene-reflection-lit');page.evaluate(A+'.setResolution(64,48)');page.evaluate(A+'.awaitSettled()');c['finiteGlassParity']=page.evaluate(A+'.opticalParity()');check(c['finiteGlassParity']['passed'],'finite glass transport unchanged');c['fieldParity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(c['fieldParity']['passed'],'same field coordinates/identities')
   # Direct material evidence is deliberately collected before separate FBO/AA diagnosis.
   for case,key in [('kcc','unitDoor'),('warehouse','personnelDoor')]:
    print('CASE',case,flush=True)
