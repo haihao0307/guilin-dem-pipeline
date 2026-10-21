@@ -8,6 +8,7 @@ if not args.base:
  threading.Thread(target=server.serve_forever,daemon=True).start()
 base=args.base or f'http://127.0.0.1:{server.server_port}/kaopu-geography-workbench/kowloon-building-mother-r01/elevator-mother-r02/'
 source_hashes={}
+runtime_hashes={filename:hashlib.sha256(pathlib.Path(__file__).resolve().parents[1].joinpath(filename).read_bytes()).hexdigest() for filename in ['index.html','style.css','app.mjs','model.mjs','geometry.mjs','renderer.mjs','door-material.mjs','controls.mjs','../r07/material.mjs','../../../kaopu-material-workbench/material-master-r06/metal-surface.mjs']}
 if args.base:
  for filename in ['index.html','style.css','app.mjs','model.mjs','geometry.mjs','renderer.mjs','door-material.mjs','controls.mjs','../r07/material.mjs','../../../kaopu-material-workbench/material-master-r06/metal-surface.mjs']:
   expected=pathlib.Path(__file__).resolve().parents[1].joinpath(filename).read_bytes()
@@ -15,7 +16,7 @@ if args.base:
   with urllib.request.urlopen(urllib.parse.urljoin(base,filename)+'?sha='+digest,timeout=45) as response:actual=response.read()
   assert hashlib.sha256(actual).hexdigest()==digest,'Public source mismatch: '+filename
   source_hashes[filename]=digest
-errors=[];checks=[];result={'publicSourceSHA256':source_hashes,'passed':False,'base':base,'checks':checks,'errors':errors,'limits':'Chromium SwiftShader desktop and 390px viewport simulation; not iPhone hardware or certified elevator behavior.'}
+errors=[];checks=[];result={'runtimeSourceSHA256':runtime_hashes,'publicSourceSHA256':source_hashes,'passed':False,'base':base,'checks':checks,'errors':errors,'limits':'Chromium SwiftShader desktop and 390px viewport simulation; not iPhone hardware or certified elevator behavior.'}
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1)
@@ -76,6 +77,9 @@ with sync_playwright() as p:
   touch=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
   tp=touch.new_page();tp.on('pageerror',lambda e:errors.append(str(e)));tp.goto(base);tp.wait_for_function("document.body.dataset.ready==='true'",timeout=90000)
   tp.locator('#carPanelView').tap();tp.evaluate('kaopuLift.pause(true)');tp.evaluate('kaopuLift.advance(0)')
+  tp.screenshot(timeout=90000,path=str(out/'mobile-car-physical-panel.png'))
+  tp.locator('#hallPanelView').tap();tp.evaluate('kaopuLift.advance(0)');tp.screenshot(timeout=90000,path=str(out/'mobile-hall-physical-panel.png'))
+  tp.locator('#carPanelView').tap();tp.evaluate('kaopuLift.advance(0)')
   physical_touch=tp.evaluate("kaopuLift.physicalTargets().find(p=>p.id==='car-select-B2')");box=tp.locator('#scene').bounding_box()
   tp.touchscreen.tap(box['x']+physical_touch['screen'][0],box['y']+physical_touch['screen'][1]);assert any(q['id']=='B2' for q in tp.evaluate('kaopuLift.snapshot().queue'))
   tp.evaluate('kaopuLift.pause(false)');tp.wait_for_function('Math.abs(kaopuLift.snapshot().v)>.02',timeout=20000)
