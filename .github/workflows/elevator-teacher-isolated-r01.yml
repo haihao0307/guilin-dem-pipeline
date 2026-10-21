@@ -19,8 +19,10 @@ jobs:
       - name: Complete verified Ubuntu GUI and software-rendering dependencies
         run: |
           mkdir -p elevator-qa-text
-          apt-cache policy libnotify4 libegl1 libgles2 libgl1-mesa-dri | tee elevator-qa-text/apt-policy.txt
-          sudo apt-get install -y --no-install-recommends libnotify4 libegl1 libgles2 libgl1-mesa-dri 2>&1 | tee elevator-qa-text/apt-install.txt
+          JXR=libjxr0
+          if apt-cache show libjxr0t64 >/dev/null 2>&1; then JXR=libjxr0t64; fi
+          apt-cache policy libnotify4 libegl1 libgles2 libgl1-mesa-dri libopenexr-3-1-30 "$JXR" libpulse0 libsamplerate0 libdecor-0-0 | tee elevator-qa-text/apt-policy.txt
+          sudo apt-get install -y --no-install-recommends libnotify4 libegl1 libgles2 libgl1-mesa-dri libopenexr-3-1-30 "$JXR" libpulse0 libsamplerate0 libdecor-0-0 2>&1 | tee elevator-qa-text/apt-install.txt
       - name: Check existing display and libraries then observe official runtime
         env:
           QA_LOG_DIR: elevator-qa-text
