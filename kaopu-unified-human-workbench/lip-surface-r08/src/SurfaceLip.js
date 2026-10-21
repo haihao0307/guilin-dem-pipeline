@@ -6,7 +6,7 @@
  */
 (function () {
   'use strict';
-  const VERSION = 'LIP-SURFACE-R08', SCHEMA = 'kaopu/lip-surface@1';
+  const VERSION = 'LIP-SURFACE-R08', SCHEMA = 'kaopu/lip-surface@2';
   const status = window.__LIP_SURFACE__ = {
     version: VERSION, ready: false, errors: [], source: window.__LIP_SURFACE_SOURCE__ || null
   };
@@ -16,7 +16,7 @@
     const v = window.__IDENTITY_QA__?.viewer?.(), model = window.__IDENTITY_QA__?.model?.();
     const controller = window.__IDENTITY_QA__?.controller?.();
     if (!prior?.ready || !material || !v?.startupFinalFrame) return false;
-    if (prior.version !== 'LIP-CORNER-R06' || material.version !== 'native-lip-surface@1') throw Error('嘴唇 R08 需要配套的 R06 人物与表面实现');
+    if (prior.version !== 'LIP-CORNER-R06' || material.version !== 'native-lip-surface@2') throw Error('嘴唇 R08 需要配套的 R06 人物与表面实现');
     for (const name of ['install', 'setMode', 'report', 'shaderEvidence', 'uninstall']) {
       if (typeof material[name] !== 'function') throw Error('嘴唇表面接口缺失：' + name);
     }
@@ -122,14 +122,14 @@
     }
 
     const panel = document.createElement('section'); panel.id = 'ls-controls';
-    panel.innerHTML = '<h2>嘴唇质感 <small>R08 · 同一人物</small></h2>' +
-      '<p>观察唇色层次与唇缘过渡。切换版本时保持同一动作、镜头和灯光。</p>' +
-      '<div class="ls-row"><button data-ls-compare="r08">本轮质感 R08</button><button data-ls-compare="r06">原版 R06</button></div>' +
-      '<label class="ls-caption">动作</label><div class="ls-row"><button data-ls-pose="neutral">自然闭口</button><button data-ls-pose="jaw">张口检查</button><button data-ls-pose="speak">说话姿态</button><button data-ls-pose="pucker">噘嘴</button></div>' +
+    panel.innerHTML = '<h2>嘴唇细纹 <small>R08 · 局部调整</small></h2>' +
+      '<p>比较细纹的长短、走向和分支。切换版本时保持同一动作、镜头和灯光。</p>' +
+      '<div class="ls-row"><button data-ls-compare="r08">细纹调整 R08</button><button data-ls-compare="r06">原版 R06</button></div>' +
+      '<label class="ls-caption">动作</label><div class="ls-row"><button data-ls-pose="neutral">自然状态</button><button data-ls-pose="jaw">张口检查</button><button data-ls-pose="speak">说话姿态</button><button data-ls-pose="pucker">噘嘴</button></div>' +
       '<label class="ls-progress">动作进度 <output id="ls-progress-label">100%</output><input id="ls-progress" type="range" min="0" max="100" step="1" value="100"></label>' +
       '<label class="ls-caption">视角</label><div class="ls-row"><button data-ls-view="macro">嘴部正面</button><button data-ls-view="oblique">嘴部斜侧</button><button data-ls-view="front">整脸正面</button><button data-ls-view="bust">头颈同框</button></div>' +
       '<div class="ls-row"><button data-ls-action="save">保存完整人物</button><button data-ls-action="load">载入人物档案</button><input id="ls-file" type="file" accept="application/json,.json" hidden></div>' +
-      '<p id="ls-status" role="status"></p><details><summary>关于这次调整</summary><p>本轮调整外唇的颜色组织与唇缘过渡。选择不同动作与视角，可以比较它们在同一个人物上的表现。</p></details>';
+      '<p id="ls-status" role="status"></p><details><summary>关于这次调整</summary><p>细纹的长度和分支更有变化，局部收益较小。整片平滑感、唇缘与口腔内缘仍需继续改进。建议同时查看正面、斜侧和张口状态，整体真人质感尚未达标。</p></details>';
     const style = document.createElement('style');
     style.textContent = '#ls-controls{padding:18px;color:#eee9df;background:#16262b;font:13px/1.55 system-ui;flex-shrink:0}#ls-controls h2{font-size:21px;line-height:1.2;margin:0 0 10px}#ls-controls h2 small{display:inline-block;font-size:12px;font-weight:400;color:#bbd4ce}#ls-controls p{font-size:12px;color:#c0cdcc;margin:8px 0 12px}.ls-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:7px 0 12px}.ls-row button{min-height:36px;font-size:12px}.ls-row button[aria-pressed="true"]{border-color:#d6c293;background:#354943;color:#fff2d7}.ls-caption{display:block;font-size:11px;color:#b7c8c8;margin-top:12px}.ls-progress{display:block;font-size:12px;margin:12px 0}.ls-progress output{float:right;font-variant-numeric:tabular-nums}.ls-progress input{display:block;width:100%;margin:10px 0}#ls-status{border-top:1px solid #466064;padding-top:10px}#ls-controls details{font-size:12px}#lc-controls[hidden]{display:none!important}@media(max-width:900px){#ls-controls{padding:13px}#ls-controls h2{font-size:18px}}';
 
@@ -160,8 +160,8 @@
       const custom = r.poseName === 'custom', percent = Number.isFinite(r.progress) ? Math.round(r.progress * 100) : 0;
       panel.querySelector('#ls-progress').disabled = custom; panel.querySelector('#ls-progress').value = percent;
       panel.querySelector('#ls-progress-label').textContent = custom ? '自定义' : percent + '%';
-      const name = { neutral: '自然闭口', jaw: '张口检查', speak: '说话姿态', pucker: '噘嘴', custom: '自定义动作' }[r.poseName] || '当前动作';
-      panel.querySelector('#ls-status').textContent = ({ r08: '本轮质感 R08', r06: '原版 R06', inherited: '历史人物／自定义参数' })[comparison] + ' · ' + name + (custom ? '' : ' · ' + percent + '%');
+      const name = { neutral: '自然状态', jaw: '张口检查', speak: '说话姿态', pucker: '噘嘴', custom: '自定义动作' }[r.poseName] || '当前动作';
+      panel.querySelector('#ls-status').textContent = ({ r08: '细纹调整 R08', r06: '原版 R06', inherited: '历史人物／自定义参数' })[comparison] + ' · ' + name + (custom ? '' : ' · ' + percent + '%');
       return { r, s };
     }
     function describe({ r, s }) {
@@ -170,6 +170,7 @@
         cornerComparison: r.comparison, cornerSolver: r.solver, motionComparison: r.motionComparison, motionSolver: r.motionSolver,
         innerComparison: r.innerComparison, restoring, canonicalGeometryChanged: false, nativeEvaluatedGeometryChangedByModule: false,
         newMeshes: 0, newImageMaps: 0, lightingChangedByModule: false, visualAcceptance: false, productionReady: false,
+        scope: 'Bounded fine-relief organization; no claim of overall realistic lip texture',
         archiveIntegration: { fullPersonChain: true, newDownloadFilename: 'lip-surface-r08-person.json',
           inheritedHeadBodyDownloadFilename: 'lip-corner-r06-person.json', inheritedDownloadsUseCurrentArchive: true,
           competingWindowCaptureAdded: false } };
@@ -343,7 +344,7 @@
     shell.addEventListener('change', inheritedChange); shell.addEventListener('click', inheritedChange);
     window.surfaceLip = { version: VERSION, get ready() { return status.ready && materialValid(); }, compare, pose, view, report,
       archive: currentArchive, restore: currentRestore, save, shaderEvidence: () => material.shaderEvidence() };
-    document.title = 'KAOPU · 嘴唇质感 R08'; heading.textContent = '人物总台 · 嘴唇 R08';
+    document.title = 'KAOPU · 嘴唇细纹 R08'; heading.textContent = '人物总台 · 嘴唇 R08';
     document.documentElement.dataset.lipSurface = VERSION;
     document.documentElement.dataset.lipSurfaceSource = status.source?.sourceCommit || 'local';
     render(); status.ready = true; return true;
