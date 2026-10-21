@@ -24,12 +24,13 @@ function serializable(value,depth=0,seen=new WeakSet()){
 }
 
 export class GpuLifecycle {
- constructor({gl,now=()=>performance.now(),onStop=()=>{},onComplete=()=>{},maxWaitMs=15000,maxRecoveryAttempts=1}={}){
+ constructor({gl,now=()=>performance.now(),onStop=()=>{},onComplete=()=>{},maxWaitMs=15000,maxInitializationMs=60000,maxRecoveryAttempts=1}={}){
   if(!gl||typeof gl.isContextLost!=='function')throw new TypeError('GpuLifecycle requires a WebGL2 context');
   if(typeof now!=='function'||typeof onStop!=='function'||typeof onComplete!=='function')throw new TypeError('Lifecycle callbacks must be functions');
   if(!Number.isFinite(maxWaitMs)||maxWaitMs<=0)throw new RangeError('maxWaitMs must be finite and positive');
+  if(!Number.isFinite(maxInitializationMs)||maxInitializationMs<=0)throw new RangeError('maxInitializationMs must be finite and positive');
   if(!Number.isSafeInteger(maxRecoveryAttempts)||maxRecoveryAttempts<0)throw new RangeError('maxRecoveryAttempts must be a nonnegative integer');
-  Object.assign(this,{gl,now,onStop,onComplete,maxWaitMs,maxRecoveryAttempts});
+  Object.assign(this,{gl,now,onStop,onComplete,maxWaitMs,maxInitializationMs,maxRecoveryAttempts});
   this.state='active';this.generation=1;this.pending=null;this.highQualityDisabled=false;
   this.recoveryAttempts=0;this.lastFailure=null;this.lastCompletion=null;this.events=[];
   this.stats={submitted:0,completed:0,polls:0,waitTimeouts:0,released:0,staleDiscarded:0,failures:0,contextLosses:0,recovered:0};
@@ -121,7 +122,7 @@ export class GpuLifecycle {
   return this._stop({...serializable(details),reason,metadata});
  }
  _rejectPending(reason,pending,status,extra={}){
-  const detail={...this._diagnostics(pending,status),...extra,metadata:pending?.metadata??null,elapsedMs:pending?Math.max(0,this._time()-pending.submittedAt):0};
+  const detail={...this._diagnostics(pending,status),...extra,metadata:pending?.metadata??null,elapsedMs:pending?Math.max(0,this._time()-pending.submittedAt):0,waitBudgetMs:pending?.waitBudgetMs??null,phase:pending?.phase??null};
   if(!this._owns(pending)&&pending)return false;
   if(detail.contextLost)return this.contextLost(reason+'-context-lost',detail);
   if(reason==='wait-failed'&&detail.syncValid===false&&detail.contextLost===false&&detail.diagnosticErrors.length===0&&!detail.errors.includes(this.gl.CONTEXT_LOST_WEBGL))reason='wait-failed-invalid-sync';
@@ -139,7 +140,8 @@ export class GpuLifecycle {
    if(detail.contextLost)return this.contextLost('context-lost-during-fence-create',detail);
    return this.fail('fence-create-failed',detail);
   }
-  const pending=this.pending={handle,gl,generation,submittedAt,metadata:serializable(metadata)};
+  const phase=metadata.phase==='initialization'?'initialization':'frame',waitBudgetMs=phase==='initialization'?this.maxInitializationMs:this.maxWaitMs;
+  const pending=this.pending={handle,gl,generation,submittedAt,phase,waitBudgetMs,metadata:serializable(metadata)};
   try{gl.flush();}
   catch(error){return this._rejectPending('fence-flush-threw',pending,null,{error});}
   if(!this._owns(pending)||!this.canRender())return false;
@@ -157,7 +159,7 @@ export class GpuLifecycle {
   // onComplete, increment completed, or certify a recovered renderer.
   if(!pending)return true;
   if(!this._owns(pending)){this.release('stale-fence');return this.fail('stale-fence-generation');}
-  if(this._time()-pending.submittedAt>=this.maxWaitMs)return this._rejectPending('fence-timeout',pending,null);
+  if(this._time()-pending.submittedAt>=pending.waitBudgetMs)return this._rejectPending(pending.phase==='initialization'?'initialization-timeout':'fence-timeout',pending,null);
   const gl=pending.gl;let status;
   this.stats.polls++;
   try{status=gl.clientWaitSync(pending.handle,0,0);}
@@ -169,7 +171,7 @@ export class GpuLifecycle {
   if(!this._live())return false;
   if(status===gl.TIMEOUT_EXPIRED){
    this.stats.waitTimeouts++;
-   if(this._time()-pending.submittedAt>=this.maxWaitMs)return this._rejectPending('fence-timeout',pending,status);
+   if(this._time()-pending.submittedAt>=pending.waitBudgetMs)return this._rejectPending(pending.phase==='initialization'?'initialization-timeout':'fence-timeout',pending,status);
    return false;
   }
   if(status!==gl.ALREADY_SIGNALED&&status!==gl.CONDITION_SATISFIED)return this._rejectPending(status===gl.WAIT_FAILED?'wait-failed':'unknown-wait-status',pending,status);
@@ -177,8 +179,8 @@ export class GpuLifecycle {
   this.release('completed');
   if(pending.generation!==this.generation||!this.canRender())return false;
   this.stats.completed++;
-  if(this.state==='recovering'){this.state='active';this._recoveryToken=null;this.stats.recovered++;}
-  this.lastCompletion=this._event({reason:'fence-completed',status,generation:this.generation,elapsedMs,metadata:pending.metadata});
+  if(this.state==='recovering'&&pending.phase!=='initialization'){this.state='active';this._recoveryToken=null;this.stats.recovered++;}
+  this.lastCompletion=this._event({reason:pending.phase==='initialization'?'initialization-completed':'fence-completed',phase:pending.phase,status,generation:this.generation,elapsedMs,metadata:pending.metadata});
   this._notify(this.onComplete,this.lastCompletion);return true;
  }
  beginRecovery({manual=false}={}){
@@ -205,8 +207,8 @@ export class GpuLifecycle {
  }
  snapshot(){
   return serializable({state:this.state,generation:this.generation,highQualityDisabled:this.highQualityDisabled,recoveryAttempts:this.recoveryAttempts,maxRecoveryAttempts:this.maxRecoveryAttempts,
-   manualRetryAllowed:this.state==='failed'&&this._manualRetryAllowed&&this.recoveryAttempts<this.maxRecoveryAttempts,recoveryAttached:this._attached,maxWaitMs:this.maxWaitMs,
-   pendingFence:!!this.pending,pending:this.pending?{generation:this.pending.generation,submittedAt:this.pending.submittedAt,elapsedMs:Math.max(0,this._time()-this.pending.submittedAt),metadata:this.pending.metadata}:null,
+   manualRetryAllowed:this.state==='failed'&&this._manualRetryAllowed&&this.recoveryAttempts<this.maxRecoveryAttempts,recoveryAttached:this._attached,maxWaitMs:this.maxWaitMs,maxInitializationMs:this.maxInitializationMs,
+   pendingFence:!!this.pending,pending:this.pending?{phase:this.pending.phase,waitBudgetMs:this.pending.waitBudgetMs,generation:this.pending.generation,submittedAt:this.pending.submittedAt,elapsedMs:Math.max(0,this._time()-this.pending.submittedAt),metadata:this.pending.metadata}:null,
    stats:{...this.stats},lastFailure:this.lastFailure,lastCompletion:this.lastCompletion,events:this.events});
  }
 }
