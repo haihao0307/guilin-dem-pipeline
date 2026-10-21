@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure} from '../r06/field.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied} from '../r06/field.mjs';
 import {createHostRecord,transformLocalToHost,transformHostToLocal,validateHostDomain} from '../r06/host.mjs';
 const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,`${a} ≠ ${b}`);
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
@@ -156,4 +156,34 @@ test('under-stair view grid has no unresolved distant structural grazing pixels'
 test('emitted analytic trace contains only plane equations and bounded field queries',()=>{
  assert.ok(spec.structurePlanes.length>60&&spec.structurePlanes.length<100);const glsl=buildFieldGLSL(spec);assert.match(glsl,/bool fieldTraceRayClipped/);assert.match(glsl,/bool fieldTraceRay\(/);assert.match(glsl,/FieldHit mapStructure/);assert.match(glsl,/FIELD_BOUNDARY_EQUATIONS/);
  for(const p of spec.structurePlanes){near(Math.hypot(...p.normal),1);assert.ok(Number.isFinite(p.offset));}
+});
+
+// Boolean membership is a fast sign-only query, never a marching distance.
+test('fast structural occupancy equals the signed CSG across random interior/exterior points',()=>{
+ let seed=9341;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(const candidate of [spec,deriveField({wallEnabled:false}),deriveField({floorHeight:3.6,risersPerFlight:11,doorWidth:1.1})]){
+  for(let i=0;i<6000;i++){const p=i<3000?[(random()-.5)*4,random()*6-.3,random()*7-1]:[(random()-.5)*24,random()*6-.4,random()*36-27];
+   const d=queryStructure(candidate,p).distance;if(Math.abs(d)<1e-8)continue;assert.equal(structureOccupied(candidate,p),d<0,JSON.stringify({p,d}));
+   for(const cut of [-.2,1.25]){const cd=Math.max(d,cut-p[0]);if(Math.abs(cd)>1e-8)assert.equal(structureOccupied(candidate,p,cut),cd<0);}
+  }
+ }
+});
+test('accepted analytic surface normals point out of solids including explicit cut caps',()=>{
+ for(const [ro,rd,opts] of [[[2,4,0],[0,-1,0],{}],[[2,-.1,0],[0,1,0],{}],[[.8,4.2,-1],[0,0,1],{}],[[-2,3.1,.5],[1,0,0],{clipX:-.2}],[[-.7,1.2,2.4],[0,-1,0],{}]]){
+  const h=traceFieldAnalytic(spec,ro,rd,opts);assert.equal(h.status,1);near(Math.hypot(...h.normal),1);
+  assert.equal(structureOccupied(spec,plus(h.point,h.normal,.001),opts.clipX??-1e20),false);
+  assert.equal(structureOccupied(spec,plus(h.point,h.normal,-.001),opts.clipX??-1e20),true);
+  if(opts.clipX===undefined)assert.ok(dot(h.normal,fieldNormal(spec,h.point))>.999);
+ }
+ const q=railPointAt(spec.rail,spec.rail.length*.16),radial=unit(cross(q.tangent,[0,1,0])),h=traceFieldAnalytic(spec,plus(q.point,radial,.3),radial.map(v=>-v));
+ assert.equal(h.objectId,401);assert.ok(dot(h.normal,radial)>.99999);assert.ok(dot(h.normal,fieldNormal(spec,h.point))>.99999);
+ const glsl=buildFieldGLSL(spec);assert.match(glsl,/vec3 fieldRayNormal/);assert.match(glsl,/fieldRayNormal=dp\?-equation.xyz:equation.xyz/);assert.match(glsl,/fieldRailNormal/);
+});
+test('occupancy parity holds on both sides of stair nosings, aperture reveals and source edges',()=>{
+ const c=spec.config,d=spec.dimensions,centers=[[2,0,0],[2,c.floorHeight-c.slabThickness,0],[d.totalWidth/2,c.floorHeight-.1,2],[c.doorWidth/2,c.floorHeight+1,0],[0,c.floorHeight+c.doorHeight+.0001,0],[-.7,d.rise,d.z0+c.treadDepth],[.7,d.midHeight+d.rise,d.z1-c.treadDepth],[0,d.midHeight,d.z1+.5],[-.7,2*d.rise-c.plateThickness,d.z0+2*c.treadDepth]];
+ for(const ring of [c.footprint2D,c.serviceVoid2D])for(let i=0;i<ring.length;i++){const a=ring[i],b=ring[(i+1)%ring.length];centers.push([(a[0]+b[0])/2,-.1,(a[1]+b[1])/2]);}
+ let checked=0;for(const p of centers)for(const e of [1e-5,.0005])for(const dx of [-e,0,e])for(const dy of [-e,0,e])for(const dz of [-e,0,e]){
+  const q=plus(p,[dx,dy,dz]),sd=queryStructure(spec,q).distance;if(Math.abs(sd)<1e-8)continue;assert.equal(structureOccupied(spec,q),sd<0,JSON.stringify({q,sd}));checked++;
+ }
+ assert.ok(checked>1000);
 });

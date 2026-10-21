@@ -3,7 +3,7 @@
 import argparse, hashlib, json, pathlib, time, urllib.request
 from playwright.sync_api import sync_playwright
 P=pathlib.Path(__file__).resolve().parents[1]
-FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/evidence-ledger.json','r06/README.md']
+FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md']
 a=argparse.ArgumentParser();a.add_argument('--url',required=True);a.add_argument('--output',required=True);a=a.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True);report={'url':a.url,'hashes':{},'screenshots':[]}
 base=a.url.rsplit('/',1)[0]+'/'
 for f in FILES:
@@ -14,8 +14,14 @@ with sync_playwright() as p:
  page.add_init_script("""window.__GL_AUDIT__={buffers:0,indexDraws:0,drawCounts:[]};for(const [name,kind] of [['createBuffer','buffers'],['drawElements','indexDraws']]){const f=WebGL2RenderingContext.prototype[name];WebGL2RenderingContext.prototype[name]=function(...args){window.__GL_AUDIT__[kind]++;return f.apply(this,args);};}const draw=WebGL2RenderingContext.prototype.drawArrays;WebGL2RenderingContext.prototype.drawArrays=function(mode,first,count){window.__GL_AUDIT__.drawCounts.push(count);return draw.call(this,mode,first,count);};""")
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  try:
-  page.goto(a.url,wait_until='networkidle',timeout=90000);page.wait_for_function('window.__IMPLICIT_BUILDING__',timeout=90000);state=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot?.() ?? window.__IMPLICIT_BUILDING__');assert state['ready'],state
+  page.goto(a.url+('&' if '?' in a.url else '?')+'qa-warmup=1',wait_until='networkidle',timeout=90000);page.wait_for_function('window.__IMPLICIT_BUILDING__',timeout=90000);state=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot?.() ?? window.__IMPLICIT_BUILDING__');assert state['ready'],state
   report['initial']=state;print('STAGE ready',flush=True)
+  report['startupScaleTimings']=[]
+  for w,h in [(1,1),(32,32),(160,112)]:
+   print('STAGE startup '+str(w)+'x'+str(h),flush=True);page.evaluate('(s)=>window.__IMPLICIT_BUILDING__.setResolution(...s)',[w,h]);report['startupScaleTimings'].append(page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(1)'))
+  report['geometryOnlyTiming']=page.evaluate('window.__IMPLICIT_BUILDING__.setRenderOptions({renderMode:1});window.__IMPLICIT_BUILDING__.benchmark(3)');page.evaluate('window.__IMPLICIT_BUILDING__.setRenderOptions({renderMode:0})')
+  assert report['startupScaleTimings'][-1]['medianMs']<600,'160x112 exceeds600ms warmed frame budget; high-resolution run withheld rather than queued blindly'
+  page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()')
   def shot(name):
    page.screenshot(path=str(out/(name+'.png')),full_page=False);report['screenshots'].append(name+'.png');print('STAGE screenshot '+name,flush=True)
   shot('r06-field-stairs')
@@ -39,6 +45,14 @@ with sync_playwright() as p:
    c={'snapshot':page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()'),'parity':page.evaluate('window.__IMPLICIT_BUILDING__.parity()'),'rayParity':page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()'),'diagnostics':page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()')}
    assert c['parity']['passed'],c['parity'];assert c['rayParity']['passed'],c['rayParity'];assert c['diagnostics']['unresolved']==0;assert c['snapshot']['reconstruction']['allSourcePatchesRetained'];assert c['snapshot']['counts']['patches']=={'lowrise':176,'kcc':21,'warehouse':28}[case_id]
    page.evaluate("window.__IMPLICIT_BUILDING__.setView('corner')");shot('r06-source-'+case_id+'-roof');page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['cases'][case_id]=c
+  report['assemblies']={}
+  for case_id in ['lowrise','kcc','warehouse']:
+   print('STAGE relation assembly '+case_id,flush=True);page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(160,112)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id+"-assembly")',case_id)
+   c={'warmTiming':page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(2)'),'parity':page.evaluate('window.__IMPLICIT_BUILDING__.parity()'),'rayParity':page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()')};assert c['warmTiming']['medianMs']<600,c['warmTiming'];assert c['parity']['passed'],c['parity'];assert c['rayParity']['passed'],c['rayParity']
+   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(900,720)');shot('r06-relations-'+case_id);page.evaluate("window.__IMPLICIT_BUILDING__.setView('corner')");shot('r06-relations-'+case_id+'-plan');page.evaluate("window.__IMPLICIT_BUILDING__.setView('door')");shot('r06-relations-'+case_id+'-entry')
+   c['diagnostics']=page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()');assert c['diagnostics']['unresolved']==0;c['snapshot']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()');assert c['snapshot']['registrationStatus']=='unverified_editable_design';assert not c['snapshot']['actualInterior']
+   c['edit']=page.evaluate('''()=>{const a=window.__IMPLICIT_BUILDING__;a.applyAssembly({doorWidth:1.1,alignmentTransform:{translation:[2,.5,-1],yawRadians:.7}});const p=[[.3,1,-5],[2.4,.05,3]],q=a.assemblyToSource(p),x=a.probe(p,2),y=a.assemblySourceProbe(q,2),before=JSON.stringify(a.snapshot().config);let rejected=false;try{a.applyAssembly({doorWidth:5})}catch(e){rejected=true;}return {materialMaxError:Math.max(...x.flatMap((v,i)=>v.map((n,j)=>Math.abs(n-y[i][j])))),invalidRejected:rejected,unchanged:before===JSON.stringify(a.snapshot().config)};}''');assert c['edit']['invalidRejected'] and c['edit']['unchanged'];assert c['edit']['materialMaxError']<1e-5
+   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['assemblies'][case_id]=c
   page.evaluate("window.__IMPLICIT_BUILDING__.setCase('design')")
   page.set_viewport_size({'width':390,'height':844});page.evaluate("window.__IMPLICIT_BUILDING__.setView('stairs')");shot('r06-mobile');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   report['runtimeAudit']=page.evaluate('window.__GL_AUDIT__');assert report['runtimeAudit']['buffers']==0;assert report['runtimeAudit']['indexDraws']==0;assert set(report['runtimeAudit']['drawCounts'])=={3}
