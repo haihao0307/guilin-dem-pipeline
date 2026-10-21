@@ -1,0 +1,48 @@
+{
+  "revision": "material-master-r03-wood-glass-receiver",
+  "sources": [
+    {
+      "snapshot": "mothers/timber-original.mjs",
+      "source": "hong-kong-main-city-r08/train/source/source-audit/timber-original.mjs",
+      "sha256": "ce6a10b73516cb3fe64b389c167daab6625354e2ea9a67c08ca6ab94c8b5df9c",
+      "byteEqual": true,
+      "role": "Executable complete original timber source snapshot"
+    },
+    {
+      "snapshot": "sources/wood-adapter-original-snapshot.mjs",
+      "source": "hong-kong-main-city-r08/train/source/materials/wood-adapter.mjs",
+      "sha256": "31653f3a140e854c7e89bcb10bc1ebe485e1b631938386d59d2fd80dcb9e61e1",
+      "byteEqual": true,
+      "role": "Read-only adapter source snapshot; NOT imported because its walnut finish is a custom derivative"
+    },
+    {
+      "snapshot": "sources/train-matter-original-snapshot.mjs",
+      "source": "hong-kong-main-city-r08/train/source/materials/matter.mjs",
+      "sha256": "ddde6a46c197742abed03f5e98b6edcd5cf9ed1e51f3e876cd8b63a7273a674a",
+      "byteEqual": true,
+      "role": "Read-only train matter source snapshot; glass parameters transported explicitly"
+    }
+  ],
+  "rights": {
+    "userProjectSources": "User-owned/authorized project source. No uniform MIT license was supplied; this manifest does not grant or relicense rights. Retain source provenance and existing permissions.",
+    "three": "Three.js r170 remains independently MIT-licensed; receiver accepts caller-provided THREE and does not relicense it.",
+    "newReceiver": "Authored for the authorized user project. No third-party textures, reference images or restricted assets embedded."
+  },
+  "adaptations": [
+    "Four original timber presets and full original GLSL field retained",
+    "CPU transcription of original vertex macroField for real positions",
+    "Original local grain coordinates retained; 12 mm displacement seam taper added",
+    "Parallax explicitly disabled in this Three transport",
+    "Original walnut adapter preserved only for audit, not called an original wood preset",
+    "Opaque paint and bounded wear/deposit masks are new receivers, not original timber/glass mothers",
+    "14 mm glass recipe from existing train matter; comparison 60 mm geometry/optical thickness is a new specimen",
+    "Three screen-space transmission is limited; no architectural optics validation"
+  ],
+  "receiverScaleCorrection": {
+    "referenceScale": 1,
+    "smallMemberReceiverScale": 5.8,
+    "source": "FH88 wood-adapter.mjs WALNUT_PRESET.controls.textureScale",
+    "reason": "Original large-member preset covers too few fibre cycles on small window sections. Right-side receiver scale is an explicit adaptation, not an unchanged original preset.",
+    "verification": "qa/wood-scale-study.html compares exact original GLSL lighting and Three receiver on identical geometry at both scales; appearance acceptance remains pending."
+  }
+}
