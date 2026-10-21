@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';
-import{deriveMeasuredCase,queryCase,caseNormal,patchDistance,buildCaseGLSL,packCaseDescriptors,CASE_DESCRIPTOR_LAYOUT,intersectCaseRay,traceCase,CASE_PROFILES}from'../r06/cases.mjs';
+import{deriveMeasuredCase,queryCase,caseNormal,patchDistance,buildCaseGLSL,packCaseDescriptors,CASE_DESCRIPTOR_LAYOUT,CASE_POINT_IDENTITY_TOLERANCE,intersectCaseRay,traceCase,CASE_PROFILES}from'../r06/cases.mjs';
 const ids=['B367642137201063C0','B359971994401063C0','B369121858401063C0'];
 const scores=ids.map(id=>JSON.parse(readFileSync(new URL(`../../hk-three-buildings-r01/geometry/${id}.score.json`,import.meta.url))));
 const specs=scores.map(s=>deriveMeasuredCase(s));const close=(a,b,e=1e-7)=>assert.ok(Math.abs(a-b)<=e,`${a} != ${b}`);
@@ -138,8 +138,8 @@ test('Float32 descriptor round-trip retains distance queries within declared GPU
  for(const spec of specs){const decoded=unpackDescriptors(spec,packCaseDescriptors(spec));for(let i=0;i<120;i++){
   const p=randPoint(spec),reference=queryCase(spec,p),actual=queryCase(decoded,p,{accelerated:false});
   close(actual.distance,reference.distance,2e-5);
-  // GPU pruning retains a 1e-5 tolerance; the CPU exact-frame BVH has a
-  // different 1e-10 tolerance and is not a Float32 GPU-emulation oracle.
+  // Descriptor-frame arithmetic here is still CPU double precision, not an
+  // emulation of GPU floating operations. Check its conservative bound slack.
   for(const node of decoded.nodes)if(node.patchIndex>=0){const bound=Math.hypot(...p.map((v,a)=>Math.max(node.min[a]-v,0,v-node.max[a])));assert.ok(bound<=patchDistance(decoded.patches[node.patchIndex],p)+1e-5);}
   // ID metadata is exact; near-coincident source surfaces may swap numeric
   // winners after ordinary Float32 frame rounding, so compare their surfaces.
@@ -150,4 +150,47 @@ test('descriptor upload payloads remain bounded and reject invalid numeric IDs o
  assert.deepEqual(specs.map(s=>packCaseDescriptors(s).data.byteLength),[36864,5120,6144]);
  const invalid=structuredClone(specs[0]);invalid.patches[0].objectId=999;assert.throws(()=>packCaseDescriptors(invalid),/Stable/);
  const overflow=structuredClone(specs[0]);overflow.patches[0].origin[0]=1e100;assert.throws(()=>packCaseDescriptors(overflow),/Float32/);
+});
+
+test('point identity uses an absolute 10 micrometre window anchored to the exact final minimum',()=>{
+ assert.equal(CASE_POINT_IDENTITY_TOLERANCE,1e-5);
+ const spec=testCase([0,.000006,.000012].map((h,i)=>({id:`near-${i}`,kind:'roofPlane',heightPlane:[0,0,h],loops:[square]})));
+ spec.patches.forEach((p,i)=>p.materialRole=i+1);
+ const p=[0,1,0],minimum=Math.min(...spec.patches.map(patch=>patchDistance(patch,p)));
+ // A pairwise near-tie chain could retain ID 1000, 12 um from the minimum.
+ // The final-minimum window must instead retain ID 1001, only 6 um away.
+ for(const order of [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]]){
+  const permuted=structuredClone(spec);permuted.nodes=[{...structuredClone(spec.sourceBounds),patchIndex:-1,skip:4},...order.map((index,j)=>({...structuredClone(spec.patches[index].bounds),patchIndex:index,skip:j+2}))];
+  for(const accelerated of [false,true]){const h=queryCase(permuted,p,{accelerated});assert.equal(h.distance,minimum);assert.equal(h.objectId,1001);assert.equal(h.materialRole,2);assert.deepEqual(h.normal,spec.patches[1].n);}
+ }
+ const ray=intersectCaseRay(spec,[0,1,0],[0,-1,0]);assert.equal(ray.objectId,1002);assert.equal(ray.materialRole,3);assert.equal(ray.t,minimum);
+ assert.equal(spec.distanceContract.pointIdentity.toleranceMetres,1e-5);assert.equal(spec.distanceContract.pointIdentity.distanceUnaffected,true);
+});
+test('point identity preserves true unique nearest patches and exact distances even far from the source',()=>{
+ const spec=testCase([{id:'lower-id',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]},{id:'nearer',kind:'roofPlane',heightPlane:[0,0,.1],loops:[square]}]);
+ for(const y of [.1000001,1,1000,1000000])for(const accelerated of [false,true]){
+  const p=[0,y,0],h=queryCase(spec,p,{accelerated});assert.equal(h.objectId,1001);assert.equal(h.distance,Math.min(...spec.patches.map(patch=>patchDistance(patch,p))));
+ }
+});
+test('candidate12 nearest-surface witnesses now agree on ID, material and normal without changing minimum distance',()=>{
+ const spec=specs[0],decoded=unpackDescriptors(spec,packCaseDescriptors(spec));
+ const witnesses=[
+  {p:[-5.976264476776123,8.660116195678711,-7.8057732582092285],id:1148,role:1,distance:.29204330154706826},
+  {p:[.4263647496700287,9.843222618103027,-3.787937641143799],id:1040,role:1,distance:1.8352465759467647},
+  {p:[-3.497987985610962,7.830420970916748,3.12723708152771],id:1049,role:1,distance:1.2554052699636302},
+  {p:[-4.751881122589111,6.6427531242370605,6.238844871520996],id:1052,role:2,distance:1.2498325242081965}
+ ];
+ for(const w of witnesses){
+  for(const accelerated of [false,true]){const h=queryCase(spec,w.p,{accelerated});assert.equal(h.objectId,w.id);assert.equal(h.materialRole,w.role);assert.deepEqual(h.normal,spec.patches[w.id-1000].n);close(h.distance,w.distance,1e-12);}
+  const packed=queryCase(decoded,w.p,{accelerated:false});assert.equal(packed.objectId,w.id);assert.equal(packed.materialRole,w.role);
+ }
+});
+test('GPU point identity uses two final-minimum passes while analytic ray ordering stays strict',()=>{
+ const shader=buildCaseGLSL(specs[0]),pointShader=shader.slice(shader.indexOf('FieldHit mapField'),shader.indexOf('bool caseRayBounds')),rayShader=shader.slice(shader.indexOf('bool caseTraceRay'),shader.indexOf('float mapDistance'));
+ assert.match(pointShader,/for\(int pass=0;pass<2;pass\+\+\)/);
+ assert.match(pointShader,/if\(pass==0\)h\.distance=min\(h\.distance,d\)/);
+ assert.match(pointShader,/else if\(d<=h\.distance\+0\.00001\)/);
+ assert.match(pointShader,/pass==0\|\|best<0\|\|k<best/);
+ assert.match(rayShader,/candidate<t\|\|\(candidate==t&&\(best<0\|\|k<best\)\)/);
+ assert.doesNotMatch(rayShader,/candidate\s*[<>]=?\s*t\s*\+|abs\(candidate-t\)/);
 });

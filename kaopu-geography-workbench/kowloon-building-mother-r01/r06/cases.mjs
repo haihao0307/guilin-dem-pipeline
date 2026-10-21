@@ -6,6 +6,9 @@
  * Numerical boundary coordinates and BVH bounds are query data, not draw buffers.
  */
 export const CASE_SCHEMA='kaopu.measured-surface-field/0.1';
+// Point-query identity is a bounded numerical representative, not a change to
+// the exact minimum distance or to strict analytic ray ordering.
+export const CASE_POINT_IDENTITY_TOLERANCE=.00001;
 export const CASE_SOURCE_COMMIT='b74929fc9f1c81eaa7e4b529a6bd5361024b035b';
 export const CASE_PROFILES=Object.freeze({
  B367642137201063C0:{label:'喇沙利道33號',englishLabel:'33 La Salle Road',use:'low-rise residential',part:'existing low-rise model',storeys:{officialPart:2,wholeBuilding:2},sourceClassification:'complex-low-rise',interiorPlan:'not_acquired',sourceLedger:'sources/33-lasalle-evidence.json',knownRelations:['two_storeys','shared_31_33_front_gate_photo'],unresolved:['interior_stair','lift_presence','rear_or_service_entry','window_operation','frame_depth']},
@@ -63,7 +66,7 @@ export function deriveMeasuredCase(score,options={}){
   coordinateSystem:'source_local_east_up_south_metres',patches,nodes,bounds,sourceBounds:rawBounds,
   counts:{patches:patches.length,boundaryCoordinates:patches.reduce((n,p)=>n+p.sourceBoundaryCount,0),holes:patches.reduce((n,p)=>n+p.sourceHoleCount,0),bvhNodes:nodes.length,modelTriangles:0,modelVertexBuffers:0},
   sourceRoleCounts:patches.reduce((a,p)=>(a[p.sourceKind]=(a[p.sourceKind]??0)+1,a),{}),
-  distanceContract:{kind:'exact_unsigned_distance_to_finite_source_surface_union',lipschitzUpperBound:1,occupancy:'undefined_no_invented_closed_volume',raySafetyFactor:.85,minimumPositiveStep:0,hitRule:'field_distance_tolerance_measures_euclidean_distance_to_the_source_surface'},
+  distanceContract:{kind:'exact_unsigned_distance_to_finite_source_surface_union',lipschitzUpperBound:1,occupancy:'undefined_no_invented_closed_volume',raySafetyFactor:.85,minimumPositiveStep:0,hitRule:'field_distance_tolerance_measures_euclidean_distance_to_the_source_surface',pointIdentity:{policy:'lowest_global_patch_id_within_tolerance_of_exact_minimum',toleranceMetres:CASE_POINT_IDENTITY_TOLERANCE,distanceUnaffected:true,rayOrdering:'strict_nearest_t_then_global_patch_id_on_exact_tie'}},
   reconstruction:{allSourcePatchesRetained:true,interiorGenerated:false,wallThicknessAdded:false,groundClosureAdded:false,roofReclassifiedWithoutChangingShape:score.objectId==='B369121858401063C0',unsupportedPatches:[]}};
 }
 function closestSegment(p,a,b){const d=sub(b,a),den=dot(d,d);if(den<=1e-24)return len(sub(p,a));const t=Math.max(0,Math.min(1,dot(sub(p,a),d)/den));return len(sub(p,add(a,mul(d,t))));}
@@ -72,10 +75,15 @@ function insideLoop(p,loop){let inside=false;for(let i=0,j=loop.length-1;i<loop.
 export function patchDistance(patch,p){const q=sub(p,patch.origin),uv=[dot(q,patch.u),dot(q,patch.v)],plane=dot(q,patch.n);let edge=Infinity;for(const loop of patch.loops)for(let i=0,j=loop.length-1;i<loop.length;j=i++)edge=Math.min(edge,closestSegment(uv,loop[j],loop[i]));const inside=insideLoop(uv,patch.loops[0])&&!patch.loops.slice(1).some(l=>insideLoop(uv,l));return Math.hypot(plane,inside?0:edge);}
 const boundDistance=(p,b)=>Math.hypot(...p.map((v,i)=>Math.max(b.min[i]-v,0,v-b.max[i])));
 export function queryCase(spec,p,{accelerated=true}={}){
- if(spec?.schema!==CASE_SCHEMA||!finiteArray(p,3))throw Error('Measured case and finite point required');let best=Infinity,index=-1,patchEvaluations=0,nodeVisits=0;
- const take=i=>{patchEvaluations++;const d=patchDistance(spec.patches[i],p);if(d<best-1e-10||(Math.abs(d-best)<=1e-10&&(index<0||i<index)))index=i;best=Math.min(best,d);};
- if(accelerated){let i=0;while(i<spec.nodes.length){const n=spec.nodes[i];nodeVisits++;if(boundDistance(p,n)>best+1e-10){i=n.skip;continue;}if(n.patchIndex>=0)take(n.patchIndex);i++;}}
+ if(spec?.schema!==CASE_SCHEMA||!finiteArray(p,3))throw Error('Measured case and finite point required');
+ let best=Infinity,index=-1,patchEvaluations=0,nodeVisits=0;const distances=new Float64Array(spec.patches.length).fill(Infinity);
+ const take=i=>{patchEvaluations++;const d=patchDistance(spec.patches[i],p);distances[i]=d;best=Math.min(best,d);};
+ // Keep every possible final near-tie while finding the exact scalar minimum.
+ // Pairwise epsilon comparisons can chain and retain a patch outside the final
+ // tolerance, so identity is selected only after that minimum is established.
+ if(accelerated){let i=0;while(i<spec.nodes.length){const n=spec.nodes[i];nodeVisits++;if(boundDistance(p,n)>best+CASE_POINT_IDENTITY_TOLERANCE){i=n.skip;continue;}if(n.patchIndex>=0)take(n.patchIndex);i++;}}
  else for(let i=0;i<spec.patches.length;i++)take(i);
+ for(let i=0;i<distances.length;i++)if(distances[i]<=best+CASE_POINT_IDENTITY_TOLERANCE&&(index<0||spec.patches[i].objectId<spec.patches[index].objectId))index=i;
  const patch=spec.patches[index];return{distance:best,objectId:patch.objectId,materialRole:patch.materialRole,local:clone(p),inside:null,sourcePatchId:patch.sourcePatchId,sourceKind:patch.sourceKind,normal:clone(patch.n),patchEvaluations,nodeVisits};
 }
 export function caseNormal(spec,p){return queryCase(spec,p).normal;}
@@ -170,11 +178,20 @@ float casePatchDistance(int k,vec3 p){
 float caseBound(vec3 p,vec3 bmin,vec3 bmax){return length(max(max(bmin-p,p-bmax),0.0));}
 FieldHit mapField(vec3 p){
  FieldHit h;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=p;
- int nodeBase=int(caseRecord(0).w),nodeCount=int(caseRecord(1).w),i=0,best=-1;
- for(int visit=0;visit<nodeCount;visit++){
-  if(i>=nodeCount)break;vec4 low=caseRecord(nodeBase+i*2),high=caseRecord(nodeBase+i*2+1);
-  if(caseBound(p,low.xyz,high.xyz)>h.distance+0.00001){i=int(high.w);continue;}
-  int k=int(low.w);if(k>=0){float d=casePatchDistance(k,p);if(d<h.distance-0.00001||(abs(d-h.distance)<=0.00001&&(best<0||k<best))){best=k;h.objectId=casePatchRecord(k,3).w;h.materialRole=casePatchRecord(k,0).w;}h.distance=min(h.distance,d);}i++;
+ int nodeBase=int(caseRecord(0).w),nodeCount=int(caseRecord(1).w),best=-1;
+ // Pass zero finds the unchanged minimum. Pass one chooses identity against
+ // that FINAL minimum, never a traversal-order-dependent chain of near-ties.
+ for(int pass=0;pass<2;pass++){
+  int i=0;
+  for(int visit=0;visit<nodeCount;visit++){
+   if(i>=nodeCount)break;vec4 low=caseRecord(nodeBase+i*2),high=caseRecord(nodeBase+i*2+1);
+   if(caseBound(p,low.xyz,high.xyz)>h.distance+${f(CASE_POINT_IDENTITY_TOLERANCE)}){i=int(high.w);continue;}
+   int k=int(low.w);if(k>=0&&(pass==0||best<0||k<best)){
+    float d=casePatchDistance(k,p);
+    if(pass==0)h.distance=min(h.distance,d);
+    else if(d<=h.distance+${f(CASE_POINT_IDENTITY_TOLERANCE)}){best=k;h.objectId=casePatchRecord(k,3).w;h.materialRole=casePatchRecord(k,0).w;}
+   }i++;
+  }
  }return h;
 }
 bool caseRayBounds(vec3 ro,vec3 inv,bvec3 parallel,vec3 bmin,vec3 bmax,float best){
