@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KAOPU road-mother normalized input (not a scene)",
+  "type": "object",
+  "required": [
+    "source",
+    "roads"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "required": [
+        "dataset",
+        "url",
+        "crs",
+        "licenseStatus"
+      ],
+      "properties": {
+        "dataset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "crs": {
+          "const": "EPSG:2326"
+        },
+        "licenseStatus": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "review-required"
+          ]
+        },
+        "sourceSha256": {
+          "type": "string"
+        },
+        "sourceFeatureIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "localFrame": {
+      "type": "object",
+      "required": [
+        "originE",
+        "originN",
+        "x",
+        "z",
+        "units"
+      ],
+      "properties": {
+        "originE": {
+          "type": "number"
+        },
+        "originN": {
+          "type": "number"
+        },
+        "x": {
+          "const": "east"
+        },
+        "z": {
+          "const": "south"
+        },
+        "units": {
+          "const": "m"
+        }
+      },
+      "description": "X=E-originE, Z=originN-N. Origin must be recorded per dataset."
+    },
+    "roads": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "halfWidth",
+          "height",
+          "widthEvidence",
+          "heightEvidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "halfWidth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "description": "Metres. Never use ELEVATION layer codes directly."
+          },
+          "widthEvidence": {
+            "enum": [
+              "observed",
+              "inferred",
+              "design"
+            ]
+          },
+          "heightEvidence": {
+            "enum": [
+              "observed",
+              "inferred"
+            ]
+          },
+          "lanes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "direction",
+                "kind",
+                "tMin",
+                "tMax",
+                "evidence"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "direction": {
+                  "enum": [
+                    -1,
+                    1
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "driving",
+                    "walking",
+                    "shoulder"
+                  ]
+                },
+                "tMin": {
+                  "type": "number"
+                },
+                "tMax": {
+                  "type": "number"
+                },
+                "evidence": {
+                  "enum": [
+                    "observed",
+                    "inferred",
+                    "design"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "movements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "from",
+          "to",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "evidence": {
+            "enum": [
+              "observed",
+              "inferred",
+              "design"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
