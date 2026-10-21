@@ -22,6 +22,9 @@ async def main():
     assert await page.locator('#error').is_hidden(),await page.locator('#error').text_content()
     assert await page.locator('#topology').text_content() and '片段边界' in await page.locator('#topology').text_content()
     await page.screenshot(path=str(OUT/(label+'-street.png')),full_page=True)
+    poly=await page.evaluate("""async()=>{const m=await import('./core.mjs');const road={id:'synthetic-test-not-site',points:[[0,0],[20,0],[20,20],[40,20]],halfWidth:2,height:0};const points=[[20,10],[10,10],[20,0],[30,20],[10,0]];const gpu=roadTrial.gpuProbe(points,{roads:[road]});const cpu=points.map(p=>{const f=m.roadFrame(p,road);return [f.dist,f.s,f.t,0]});return {gpu,cpu,sourceSegments:roadTrial.segmentPacket().count,sourceVertices:roadTrial.spec.roads.map(r=>r.points.length)}}""")
+    for gpu,cpu in zip(poly['gpu'],poly['cpu']):assert all(abs(a-b)<.0001 for a,b in zip(gpu,cpu)),poly
+    result['polylineParity']=poly
     q=await page.evaluate('window.__qa');assert q['width']>=350;q['renderMode']='analytic field + analytic primitives; screen triangle only'
     await page.locator('[data-n="3"]').click();assert await page.evaluate('roadTrial.state.lanes')==3
     assert await page.evaluate('roadTrial.spec.roads[0].lanes.length')==6
