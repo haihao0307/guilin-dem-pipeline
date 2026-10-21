@@ -48,7 +48,14 @@ export function sampleRoad(p,spec){
   for(const r of spec.roads){
     const f=roadFrame([p[0],p[2]],r);if(!f)continue;
     // Capsule sweep: exact straight-segment field; min union at polyline joints.
-    const d=extrude(f.dist-r.halfWidth,p[1],r.height-0.18,r.height);
+    let horizontal=f.dist-r.halfWidth;
+    if(spec.junctions?.length){
+      const start=r.points[0],end=r.points.at(-1),axis=[end[0]-start[0],end[1]-start[1]],len=Math.hypot(...axis),raw=((p[0]-start[0])*axis[0]+(p[2]-start[1])*axis[1])/len;
+      const shared=q=>spec.junctions.some(j=>Math.hypot(q[0]-j.point[0],q[1]-j.point[1])<.01);
+      if(!shared(start))horizontal=Math.max(horizontal,-raw);
+      if(!shared(end))horizontal=Math.max(horizontal,raw-len);
+    }
+    const d=extrude(horizontal,p[1],r.height-0.18,r.height);
     if(d<value){value=d;id=r.id;}
   }
   return {field:value,roadId:id};
@@ -61,7 +68,7 @@ export function pointAt(road,s){
   }return null;
 }
 export function lengthOf(road){return road.points.slice(1).reduce((s,p,i)=>s+Math.hypot(p[0]-road.points[i][0],p[1]-road.points[i][1]),0);}
-export function anchors(spec,{spacing=24,clearance=1.1}={}){
+export function anchors(spec,{spacing=24,clearance=1.1,pavementHeight=.16}={}){
   if(!(spacing>0))throw Error('Positive spacing required');
   const out=[];
   for(const r of spec.roads)for(let s=spacing/2;s<lengthOf(r);s+=spacing){
@@ -70,7 +77,7 @@ export function anchors(spec,{spacing=24,clearance=1.1}={}){
       const t=(r.halfWidth+clearance)*side,x=f.point[0]+f.normal[0]*t,z=f.point[1]+f.normal[1]*t;
       // Suppress furniture where another road cuts the pavement.
       if(spec.roads.some(o=>o.id!==r.id&&roadFrame([x,z],o)?.dist<o.halfWidth+1))continue;
-      out.push({id:`${r.id}:lamp:${side}:${s}`,roadId:r.id,s,t,position:[x,r.height,z],height:6.5,evidence:'design'});
+      out.push({id:`${r.id}:lamp:${side}:${s}`,roadId:r.id,s,t,position:[x,r.height+pavementHeight,z],height:6.5,evidence:'design'});
     }
   }return out;
 }

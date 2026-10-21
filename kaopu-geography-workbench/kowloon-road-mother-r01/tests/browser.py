@@ -25,13 +25,20 @@ async def main():
     await page.locator('#pedestrian').check();assert await page.evaluate('roadTrial.spec.movements.length')==0
     await page.screenshot(path=str(OUT/(label+'-pedestrian.png')),full_page=True)
     await page.locator('#pedestrian').uncheck();await page.locator('[data-n="1"]').click();await page.locator('#orbit').click()
-    await page.locator('#wet').check();await page.locator('#wear').fill('0.8')
+    await page.locator('#wet').check();await page.locator('#wear').focus();await page.locator('#wear').press('End')
     await page.locator('#reset').click()
     before=await page.evaluate('roadTrial.state.yaw')
     await page.locator('#view').scroll_into_view_if_needed();box=await page.locator('#view').bounding_box();x=box['x']+box['width']*.5;y=box['y']+box['height']*.5
     await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+45,y+20,steps=3);await page.mouse.up()
     assert await page.evaluate('roadTrial.state.yaw')!=before
     assert await page.evaluate('__qa.width')==q['width'],'No blur switching after input'
+    if mobile:
+     session=await page.context.new_cdp_session(page);before_distance=await page.evaluate('roadTrial.state.distance')
+     await session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x-35,'y':y,'id':1},{'x':x+35,'y':y,'id':2}]})
+     await session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-60,'y':y,'id':1},{'x':x+60,'y':y,'id':2}]})
+     await session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+     assert await page.evaluate('roadTrial.state.distance')<before_distance*.8
+     q['touchPinchPassed']=True
     await page.screenshot(path=str(OUT/(label+'-after-input.png')),full_page=True)
     async with page.expect_download() as dl:await page.locator('#export').click()
     download=await dl.value;await download.save_as(str(OUT/(label+'-export.json')))
