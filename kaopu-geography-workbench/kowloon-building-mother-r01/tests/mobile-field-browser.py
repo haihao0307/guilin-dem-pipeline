@@ -9,9 +9,9 @@ async def main():
    for case in (['kcc'] if a.compile_only else ['kcc','lowrise','warehouse']):
     page=await browser.new_page();page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(a.base+'tests/mobile-renderer-probe.html');await page.wait_for_function('window.probe?.ready',timeout=30000);compile=await page.evaluate('id=>probe.setup(id)',case);r['cases'][case]={'compile':compile};print('COMPILE',case,json.dumps(compile),flush=True)
     if a.compile_only:await page.close();break
-    for which,width,cull in [('old',32,False),('optimized',32,True),('old',320,False),('optimized',320,False),('optimized',320,True)]:
+    for which,width,cull in [('old',32,False),('optimized',32,True),('pointUnbounded',32,True),('pointUnbounded',320,True),('old',320,False),('optimized',320,False),('optimized',320,True)]:
      print('DRAW',case,which,width,cull,flush=True);v=await page.evaluate('x=>probe.render(...x)',[which,width,cull]);key=f'{which}-{width}-{cull}';r['cases'][case][key]=v;print('RESULT',case,key,json.dumps(v),flush=True);assert v['glError']==0
-    c=r['cases'][case];assert c['old-320-False']['sha']==c['optimized-320-False']['sha']==c['optimized-320-True']['sha'],('pixel mismatch',case)
+    point=await page.evaluate('probe.pointParity()');r['cases'][case]['pointParity']=point;assert point['passed'],('point bounds mismatch',case,point);c=r['cases'][case];assert c['old-320-False']['sha']==c['optimized-320-False']['sha']==c['optimized-320-True']['sha']==c['pointUnbounded-320-True']['sha'],('pixel mismatch',case)
     await page.close();(out/'results.json').write_text(json.dumps(r,indent=2))
    if not a.compile_only:
     # Mobile viewport emulation is NOT an actual phone GPU/device test.

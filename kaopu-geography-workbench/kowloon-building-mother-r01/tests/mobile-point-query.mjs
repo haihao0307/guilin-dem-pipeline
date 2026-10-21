@@ -1,0 +1,18 @@
+import {buildBoundedAssemblyGLSL} from '../whole-building-mobile-r01/bounded-assembly.mjs';
+import {packAssemblyDescriptors} from '../r07/assemblies.mjs';
+const vertex=`#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`;
+export function comparePointBounds(model){
+ const canvas=document.createElement('canvas'),g=canvas.getContext('webgl2');if(!g||!g.getExtension('EXT_color_buffer_float'))throw Error('Point probe requires actual float WebGL2');
+ const makeProgram=(spec,bounds)=>{const p=g.createProgram();for(const [kind,src]of [[g.VERTEX_SHADER,vertex],[g.FRAGMENT_SHADER,'#version 300 es\nprecision highp float;precision highp int;'+buildBoundedAssemblyGLSL(spec,{pointBounds:bounds})+'uniform sampler2D points;out vec4 outputValue;void main(){vec3 p=texelFetch(points,ivec2(gl_FragCoord.x,0),0).xyz;FieldHit h=mapField(p);outputValue=vec4(h.distance,h.objectId,h.materialRole,h.distance<0.?1.:0.);}']]){const s=g.createShader(kind);g.shaderSource(s,src);g.compileShader(s);if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw Error(g.getShaderInfoLog(s));g.attachShader(p,s);}g.linkProgram(p);if(!g.getProgramParameter(p,g.LINK_STATUS))throw Error(g.getProgramInfoLog(p));return p;};
+ const texture=(w,h,data)=>{const t=g.createTexture();g.bindTexture(g.TEXTURE_2D,t);g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,w,h,0,g.RGBA,g.FLOAT,data);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MIN_FILTER,g.NEAREST);g.texParameteri(g.TEXTURE_2D,g.TEXTURE_MAG_FILTER,g.NEAREST);return t;};
+ g.bindVertexArray(g.createVertexArray());const programs=[false,true].map(v=>makeProgram(model.archetypes[0],v)),summary=[];
+ for(const spec of model.archetypes){
+  const points=[];for(const p of spec.primitives){const c=p.bounds.min.map((v,i)=>(v+p.bounds.max[i])/2);points.push(c);for(let a=0;a<3;a++)for(const v of [p.bounds.min[a],p.bounds.max[a]])for(const e of [-.00001,0,.00001]){const q=[...c];q[a]=v+e;points.push(q);}}
+  let seed=19;for(let i=0;i<32;i++)points.push(spec.bounds.min.map((v,a)=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return v+(spec.bounds.max[a]-v)*(seed/2**32);}));
+  const packed=packAssemblyDescriptors(spec),descriptor=texture(packed.width,packed.height,packed.data),data=new Float32Array(points.flatMap(p=>[...p,0])),pts=texture(points.length,1,data),target=texture(points.length,1,null),f=g.createFramebuffer();g.bindFramebuffer(g.FRAMEBUFFER,f);g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,target,0);if(g.checkFramebufferStatus(g.FRAMEBUFFER)!==g.FRAMEBUFFER_COMPLETE)throw Error('Point probe FBO incomplete');g.viewport(0,0,points.length,1);
+  const arrays=programs.map(program=>{g.useProgram(program);for(const [unit,name,t]of [[0,'assemblyDescriptors',descriptor],[1,'points',pts]]){g.activeTexture(g.TEXTURE0+unit);g.bindTexture(g.TEXTURE_2D,t);g.uniform1i(g.getUniformLocation(program,name),unit);}g.drawArrays(g.TRIANGLES,0,3);const out=new Float32Array(points.length*4);g.readPixels(0,0,points.length,1,g.RGBA,g.FLOAT,out);return out;});
+  const a=new Uint32Array(arrays[0].buffer),d=new Uint32Array(arrays[1].buffer),mismatches=[];for(let i=0;i<a.length;i++)if(a[i]!==d[i])mismatches.push({point:points[Math.floor(i/4)],channel:i%4,old:arrays[0][i],optimized:arrays[1][i]});summary.push({archetype:spec.id,points:points.length,negativePoints:arrays[0].filter((v,i)=>i%4===0&&v<0).length,mismatches});for(const t of [descriptor,pts,target])g.deleteTexture(t);g.deleteFramebuffer(f);
+ }
+ const error=g.getError();g.getExtension('WEBGL_lose_context')?.loseContext();return{summary,error,passed:error===0&&summary.every(s=>!s.mismatches.length)};
+}
