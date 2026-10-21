@@ -7,11 +7,12 @@ export function sceneFields(s){const out=[];const box=(id,c,h,role=4,tone=0)=>ou
  for(const x of [-1.2,1.2])box('guide-rail-'+x,[x,(lo+hi)/2,-.92],[.035,(hi-lo)/2,.035],4);
  for(const f of s.floors){const y=f.elevation;
   box(f.id+'-slab',[0,y-.12,1.8],[2.2,.12,.95],1);
-  for(const x of [-1.3,1.3])box(f.id+'-jamb-'+x,[x,y+1.2,1.05],[.33,1.2,.09],2);
-  box(f.id+'-lintel',[0,y+2.47,1.05],[1.62,.09,.12],4);
-  box(f.id+'-sill',[0,y+.025,1.05],[1.05,.025,.15],4);
+  for(const x of [-1.3,1.3])box(f.id+'-jamb-'+x,[x,y+1.2,1.05],[.33,1.2,.09],4,5);
+  box(f.id+'-lintel',[0,y+2.47,1.05],[1.62,.09,.12],4,5);
+  box(f.id+'-sill-base',[0,y+.006,1.05],[1.05,.006,.15],4,0);
+  for(const z of [.925,1.015,1.105,1.185])box(f.id+'-sill-rib-'+z,[0,y+.02,z],[1.05,.008,.035],4,2);
   const open=s.landingDoors[f.id];
-  for(const side of [-1,1])box(f.id+'-landing-'+side,[side*(.47+open*.87),y+1.18,1.08],[.46,1.14,.045],4,f.served?1:3);
+  for(const side of [-1,1])box(f.id+'-landing-'+side,[side*(.47+open*.87),y+1.18,1.08],[.467,1.14,.045],4,f.served?1:3);
  }
  const y=s.y;
  box('car-floor',[0,y+.03,-.05],[1.13,.03,.94],4,2);
@@ -23,6 +24,6 @@ export function sceneFields(s){const out=[];const box=(id,c,h,role=4,tone=0)=>ou
  for(const x of [-.7,0,.7])box('car-panel-seam-'+x,[x,y+1.21,-.875],[.008,1.12,.008],4,0);
  box('car-skirt',[0,y+.12,-.86],[1.04,.045,.02],4,0);
  box('car-handrail',[0,y+.93,-.83],[.85,.025,.025],4,2);
- for(const side of [-1,1])box('car-door-'+side,[side*(.47+s.carDoor*.87),y+1.18,.84],[.46,1.14,.035],4,2);
+ for(const side of [-1,1])box('car-door-'+side,[side*(.47+s.carDoor*.87),y+1.18,.84],[.467,1.14,.035],4,2);
  return out;
 }
