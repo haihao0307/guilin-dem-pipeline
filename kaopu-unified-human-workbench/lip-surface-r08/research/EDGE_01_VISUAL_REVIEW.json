@@ -1,0 +1,220 @@
+{
+  "candidate": "R08 diagnosis-01",
+  "productCandidateSource": "cd57623fc6a70fabc8481377aeaeccf372b56d3f",
+  "targetBuild": "8134500a3f5bf7a257ceef562061bb4c04416694",
+  "diagnosticSource": "1df106b030ab90710dd2d6e172f1aa99d19d39ba",
+  "evidenceCommit": "51144a085a601823dd50de0f8026bf7473cb1b2e",
+  "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39539658362",
+  "qaSHA256": "20cfe9600f3ee2583c9c80fe7597f93cbcfd97b0212ea40eae195974e1dde05f",
+  "nativeImplementation": "Inherited R01 lrFolds in R06; no R03 integration",
+  "visualAcceptance": false,
+  "productionReady": false,
+  "schema": "kaopu/lip-surface-visual-review@1",
+  "reviewedFactor": "edge-only; failed colour disabled",
+  "verdict": "reject edge@1 as the next default",
+  "rootDirectReview": {
+    "originalImagesViewed": 10,
+    "referenceImagesViewed": [
+      "srt13418-figure2-visia.jpg (standard polarization centre panel)",
+      "s41598-025-89264-figure1-full.png (low-desquamation examples)"
+    ],
+    "findings": [
+      "External boundary narrows and lip peak is clearer, especially in pucker.",
+      "Lower external rail becomes too uniformly sharp; several views read as a separate lip-colour shape.",
+      "Internal fine texture, broad highlights and hard inner rim do not show a comparable improvement.",
+      "Whole-face difference is small, with no convincing overall realism gain."
+    ],
+    "conclusion": "Sharper contour is insufficient evidence of better material quality; do not carry this factor into candidate-02 by default."
+  },
+  "independentBlindReview": {
+    "sha256": "c7b42fce30bd2acc89c33cc169b11d16ee55b8c29af769eaeaebf4133f6df7e1",
+    "report": {
+      "review_type": "独立盲图审",
+      "scope": "仅依据10张原始1280×900 PNG及指定的两张真人原始参考图；未读取产品代码、诊断代码、QA数值、其他审查结论或A/B映射。",
+      "reference_limits": {
+        "srt13418-figure2-visia.jpg": "以中间Standard图观察唇缘、唇纹与反光的空间分布；左右偏振图未当作相同高光目标。",
+        "s41598-025-89264-figure1-full.png": "只以Score 0、1观察健康唇面的不规则细纹；未以高脱屑等级作为目标。",
+        "comparison": "不同人、灯光、表情和拍摄尺度不支持数值颜色或高光强度拟合；参考只支持局部视觉特征比较。没有真人张口、噘嘴同条件照片，动态姿态的真实度判断更有限。"
+      },
+      "strength_scale": "弱：须直接对照才容易辨认；中：近景直接可辨；强：显著改变整体观感。该尺度为视觉判断，不是像素差分统计。",
+      "groups": [
+        {
+          "group": "neutral-macro",
+          "visibly_distinguishable": "是，集中在唇外缘",
+          "difference_strength": "弱至中",
+          "visible_facts": [
+            "A的上唇顶缘、唇峰和下唇底缘更清晰，唇红与皮肤之间转折较突然；B在这些位置的过渡带更宽、更软。",
+            "口裂形状、中央暗部、下唇大片亮区及内部纵向纹理未见足以改变整体观感的差异。"
+          ],
+          "aesthetic_judgment": {
+            "local_preference": "B的下唇外缘和上唇两侧略合理，减少贴上去的色块感；A的唇峰轮廓更清楚。",
+            "overall_preference": "微弱偏B",
+            "confidence": "中"
+          },
+          "regressions_or_residuals": [
+            "B的唇峰附近略显失焦，边缘柔化本身没有增加真实的微小不规则。",
+            "两版内部仍偏平滑、蜡质；细纹存在但较模糊，中央黑色折痕和口裂的建模感仍明显。"
+          ]
+        },
+        {
+          "group": "neutral-oblique",
+          "visibly_distinguishable": "是",
+          "difference_strength": "中，主要是外围",
+          "visible_facts": [
+            "A的上唇外缘及下唇左下缘渐变较宽；B的对应位置较锐利，尤其下唇底部像一条清楚的色区边界。",
+            "两版主要唇纹和反光位置非常接近，没有看到明确的新微纹理层次。"
+          ],
+          "aesthetic_judgment": {
+            "local_preference": "A的下唇左侧及底缘与皮肤衔接略自然；B保留更明确的唇体轮廓，但色区分割稍生硬。",
+            "overall_preference": "小幅偏A",
+            "confidence": "中高"
+          },
+          "regressions_or_residuals": [
+            "A的边缘软化较均一，仍有轻微喷涂或失焦感，未呈现真人边界清晰度的局部变化。",
+            "下唇亮区依然宽而光滑，嘴角夹缝和中央暗折痕未改善。"
+          ]
+        },
+        {
+          "group": "neutral-front",
+          "visibly_distinguishable": "勉强；需要对照关注嘴部",
+          "difference_strength": "弱",
+          "visible_facts": [
+            "A的唇色边界稍清楚，B稍软；在整头像构图中嘴部占比小，差异很难形成稳定的第一眼印象。",
+            "没有看到脸部整体质感因这处差异发生明显变化。"
+          ],
+          "aesthetic_judgment": {
+            "local_preference": "B边缘略柔和，但不足以可靠判定整头像更逼真。",
+            "overall_preference": "实质平手",
+            "confidence": "对“收益很小”的判断较高；对A/B优劣的判断低"
+          },
+          "regressions_or_residuals": [
+            "整体仍明显是程序化头像；唇部的光滑色块感仍在。",
+            "这是对“整体质感显著提升”的直接反证：近景能看到的边界变化在正常观看尺度下大幅减弱。"
+          ]
+        },
+        {
+          "group": "jaw-oblique",
+          "visibly_distinguishable": "是",
+          "difference_strength": "中，为本轮较明显的一组",
+          "visible_facts": [
+            "A上唇顶缘和下唇外缘较柔；B上唇顶缘截然分界，下唇底缘也更明确。",
+            "口内、牙齿、嘴角的细碎暗边，以及下唇宽亮区在两版中均可见，未见明确改善。"
+          ],
+          "aesthetic_judgment": {
+            "local_preference": "A降低了张口时上唇像硬色片的感觉，下唇底缘也略容易与面部连成一体。",
+            "overall_preference": "小幅偏A，只限唇外缘衔接",
+            "confidence": "中高"
+          },
+          "regressions_or_residuals": [
+            "A的外缘柔化不能修复张口轮廓、嘴角暗缝及口内形态带来的人工感。",
+            "下唇内侧仍像光滑的一整块表面。牙齿和口腔形态也是整体观感的干扰因素，但不应计作本次材质变化的成败。",
+            "缺少同条件真人张口参考，不能把偏好外推成动态解剖正确。"
+          ]
+        },
+        {
+          "group": "pucker-oblique",
+          "visibly_distinguishable": "是",
+          "difference_strength": "中",
+          "visible_facts": [
+            "A的唇峰及下唇外缘清楚；B这两处形成更宽的柔化带，唇峰尤其显得模糊。",
+            "噘嘴的总体轮廓、中央口裂、下唇纵纹和主要亮区没有可见的大变化。"
+          ],
+          "aesthetic_judgment": {
+            "local_preference": "B的下唇右侧少一点色块切边感；A的唇峰和噘嘴形体更清楚。B上唇边缘的宽软带在此姿态下不一定更真实。",
+            "overall_preference": "无稳定净胜者，接近平手",
+            "confidence": "中"
+          },
+          "regressions_or_residuals": [
+            "B的唇峰有被抹糊的感觉，可能牺牲形体清晰度。",
+            "两版的纵纹仍较长、浅且方向近似，缺少健康真人唇面可见的粗细与长度变化；内部蜡质感并未解决。"
+          ]
+        }
+      ],
+      "overall": {
+        "visible_facts": [
+          "五组的主要可见区别都是唇红与皮肤交界的锐度和过渡宽度；没有观察到同等量级的内部纹理、反光或局部色彩层次收益。",
+          "近景差异可辨，整头像差异弱。各组A/B分别判断，没有跨组假设字母代表同一版本。",
+          "真人Standard参考中可看到细纹和反光的局部不均一；低脱屑参考中的纵向沟纹粗细、间距、长度并不完全一致。当前两版唇面均更平滑、匀整。"
+        ],
+        "aesthetic_verdict": "作为减轻生硬唇缘的小幅修整，有局部收益；作为“嘴唇整体质感已明显接近真人”的证据，收益不够。较软版本并非每个姿态都净胜，噘嘴的唇峰就是反例。",
+        "counterevidence": [
+          "正常整头像尺度接近平手。",
+          "噘嘴时，较软边缘同时降低唇峰的形体清晰度。",
+          "主要亮区、内纹和口裂人工感仍在；不能把外缘柔化算成微结构已经改善。",
+          "健康真人唇缘也不必全周同样模糊；参考无法支持把均匀宽柔边当作普遍正确目标。"
+        ],
+        "next_visual_priority": "保留局部边缘柔化的潜在收益，同时让过渡宽度随部位变化；下一步应重点解决唇内的多尺度、非均匀细纹与反光层次，并单独处理口裂和嘴角。避免继续单纯加宽模糊带或增加均匀噪声。",
+        "limits": "这是单个审查者的静帧视觉判断，不是统计感知实验；未用差分数值代替图审，也未对真人照片做颜色拟合。"
+      }
+    },
+    "mappingRevealedAfterReview": {
+      "neutral-macro": {
+        "A": "edge-only",
+        "B": "r06"
+      },
+      "neutral-oblique": {
+        "A": "r06",
+        "B": "edge-only"
+      },
+      "neutral-front": {
+        "A": "edge-only",
+        "B": "r06"
+      },
+      "jaw-oblique": {
+        "A": "r06",
+        "B": "edge-only"
+      },
+      "pucker-oblique": {
+        "A": "edge-only",
+        "B": "r06"
+      }
+    }
+  },
+  "originalFrames": [
+    {
+      "file": "neutral-macro-r06.png",
+      "sha256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a"
+    },
+    {
+      "file": "neutral-macro-edge-only.png",
+      "sha256": "108b94fa7f41ec80fa65c32483a425dfc68355aa354bb4a13ccc17849c57354d"
+    },
+    {
+      "file": "neutral-oblique-r06.png",
+      "sha256": "47add0b6001c9d4014c477f6452b4ae5f4aba8b16cb60e13c59602b2343b3693"
+    },
+    {
+      "file": "neutral-oblique-edge-only.png",
+      "sha256": "08f6434f94e1e1a218e371aa2c187f7c3e51edef61d463f9eed553993604db63"
+    },
+    {
+      "file": "neutral-front-r06.png",
+      "sha256": "1a8d9af819e54cca731f3d5ac34bb12f1dc44e426a91f05985e2c3334cbdb7b7"
+    },
+    {
+      "file": "neutral-front-edge-only.png",
+      "sha256": "45cafafd29bf77b50f648a477e4b11ffae418dec515283e52c53ffe9880153aa"
+    },
+    {
+      "file": "jaw-oblique-r06.png",
+      "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59"
+    },
+    {
+      "file": "jaw-oblique-edge-only.png",
+      "sha256": "8178f3e9b1d35352b0fcf212a264ec529b94b37f1bdb6d72f62c4ca3965258f4"
+    },
+    {
+      "file": "pucker-oblique-r06.png",
+      "sha256": "0134f219be0074f821d8e9f3712b5214e7ad6e1bb0fd3490281a8be821e448a2"
+    },
+    {
+      "file": "pucker-oblique-edge-only.png",
+      "sha256": "00c1f055b98f7d37693be8c425b509dc38b2c169b7d57444bdc45e7aec803549"
+    }
+  ],
+  "limits": [
+    "Different real subjects, cameras and lighting do not support absolute colour or groove-depth fitting.",
+    "This is a visual judgment on five matched states, not a universal anatomical boundary rule.",
+    "Prior technical tests passed; rejection concerns the actual visual tradeoff."
+  ]
+}

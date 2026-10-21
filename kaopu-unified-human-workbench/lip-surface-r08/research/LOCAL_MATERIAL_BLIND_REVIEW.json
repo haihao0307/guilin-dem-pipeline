@@ -1,0 +1,474 @@
+{
+  "schema": "kaopu/lip-local-independent-blind-reviews@1",
+  "mappingReleasedAfterReview": {
+    "A": "r03-organization-main-4x",
+    "B": "legacy-primary-4x",
+    "C": "R06 baseline",
+    "D": "legacy-primary-6x",
+    "E": "legacy-primary-1p75x",
+    "F": "organized-width-100-180-main8",
+    "G": "r03-organization-main-8x",
+    "H": "organized-main4-rest-gradient",
+    "I": "organized-main6-rest-gradient",
+    "J": "organized-main4-positive-shoulders",
+    "K": "diagnostic-continuous-meso",
+    "L": "diagnostic-continuous-meso-upperbound"
+  },
+  "reviews": [
+    {
+      "file": "review.json",
+      "sha256": "dfd4be25a67a4381a9116a813e1c4e4e1ea1d0130bbc909a729a5d31a2f156e7",
+      "report": {
+        "review_type": "独立视觉盲审",
+        "language": "zh-CN",
+        "reviewer": "r08_fine_blind",
+        "scope": {
+          "method": "亲自用 view_image 查看五张未编辑原生 PNG，并再次按 A、C、E、B、D 的顺序复看；对照提供的两张真人图。只作视觉判断。",
+          "native_images": [
+            "A.png",
+            "B.png",
+            "C.png",
+            "D.png",
+            "E.png"
+          ],
+          "references": [
+            {
+              "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/srt13418-figure2-visia.jpg",
+              "used_region": "中间 Standard polarized image 的嘴唇区域"
+            },
+            {
+              "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/s41598-025-89264-figure1-full.png",
+              "used_region": "Score 0 与 Score 1 的低脱屑细节；严重干裂、起皮不是目标"
+            }
+          ],
+          "blind_integrity": "未读取父目录源码、日志、指标或实验映射，未推断哪个版本是原版。",
+          "comparison_limits": "真人与渲染的人物、光照、尺度及拍摄方式不同，不做数值色匹配，也不以细纹可见程度直接等同真实性。报告中的收益是候选之间的相对视觉判断；解盲前不能确认任何候选相对未知原版的收益。"
+        },
+        "main_verdict": {
+          "summary": "A 是最值得保留的候选，但优势很小且局部；C 与 E 无法稳定区分，可视为平手。B 与 D 的细纹更清楚，却更像竖直刷纹或刻痕，D 最明显。五张都还存在明显的整体蜡感，没有哪一张达到可宣称接近真人的质量跨越。",
+          "overall_naturalness_order": [
+            [
+              "A"
+            ],
+            [
+              "C",
+              "E"
+            ],
+            [
+              "B"
+            ],
+            [
+              "D"
+            ]
+          ],
+          "readability_only_order": [
+            [
+              "D"
+            ],
+            [
+              "B"
+            ],
+            [
+              "A"
+            ],
+            [
+              "C",
+              "E"
+            ]
+          ],
+          "ranking_confidence": {
+            "A_over_C_E": "偏低至中等；A 的细节更有变化，但正常观看时收益很小，不能夸大。",
+            "C_vs_E": "没有足够稳定的可见差异，拒绝强行分胜负。",
+            "A_C_E_over_B_D": "中等；后两者更规整的竖向条纹能够直接看见。",
+            "B_over_D": "中等；D 的条纹强度和刻痕感更突出。"
+          },
+          "real_gain_size": "至多是小幅、局部的表面细节收益。五张的主体体积、颜色层次、高光组织和边缘观感基本仍处于同一档，整体蜡感没有可靠且显著地减弱。",
+          "acceptance_gate": "不应把本组当作已完成的真人质感修复；应先解盲。如果 A 本身是原版，则本轮没有证实任何实验带来正收益；即使 A 是实验版，也只能主张有限的细节改善。"
+        },
+        "reference_observations": [
+          "真人 standard panel 中，唇面仍有平滑区域，但纹理、明暗和细小色差不是均匀铺满的；细沟与较宽的组织起伏共同参与观感。",
+          "低脱屑微距图里可见长短、深浅、方向及间隔并不一致的沟纹，沟纹之间仍有细微表面变化。关键是这种有层次的不均匀组织，而不是加密一组细竖线。",
+          "真人参考的局部微小亮点与组织起伏相互对应。五张渲染的下唇仍以大片柔和、连续的亮区为主，纹理容易像另加的一层线。",
+          "这些参考只用于判断组织与光的关系；不能要求当前人物复制参考人物的唇形或肤色，也不能用重度起皮来制造所谓真实感。"
+        ],
+        "versions": {
+          "A": {
+            "detail_readability": "低至中等。下唇左部及右侧亮区能读到短细纹，中心仍保留较软的起伏；上唇的细纹较轻。细节比 C、E 更容易看见，尚未像 B、D 那样成为画面主角。",
+            "natural_organization": "五张里略好。可见细节在长度、显隐与局部方向上相对更有变化，没有形成同等强度的连续竖条；但多数区域仍过于平滑，细纹与大尺度组织的联系不强。",
+            "brush_or_engraving_risk": "低至中等。下唇左侧仍有密集竖向纹理的刷痕倾向，只是较克制；不能说已经具备真人的组织层次。",
+            "waxiness": "局部平面感略有减轻，整体蜡感基本仍在。大面积粉色柔滑色块、宽而均匀的高光和柔糊边界仍比细纹更显眼。",
+            "benefit": "相对 C、E，有小幅、可见但不强的细节收益；相对 B、D，主要收益是避免过度规整的纹路。",
+            "counterevidence": "把注意力从细纹移回整张嘴，依然首先读成柔滑的程序化材质；局部纹理增加没有同步改善唇缘、组织层次和高光形态。",
+            "decision": "保留为下一轮验证候选，不能据此直接宣布质量达标。"
+          },
+          "B": {
+            "detail_readability": "中等偏高。上唇左中部和下唇两侧的细竖纹明显，比 A、C、E 更容易读到。",
+            "natural_organization": "偏弱。多处纹路的方向、粗细和间隔过于接近，部分线条像独立叠在平滑体积上，较少体现弯曲、分叉、合并及不同尺度的组织关系。",
+            "brush_or_engraving_risk": "中等偏高。上唇的竖向细槽和下唇亮区的平行条纹容易读成刷纹；纹理的可见性领先于可信度。",
+            "waxiness": "没有可靠减弱。宽泛的平滑高光与新增竖纹并存，更像在蜡质表面划线。",
+            "benefit": "能证明细节更容易看见，但未证明真实感更好。",
+            "counterevidence": "真人低脱屑参考不是这样均匀的细线排列；这里线的存在感增加，却缺少相应的表面组织变化。",
+            "decision": "不建议作为最终默认版本保留；如果这是修改方案，应拒绝以此方向完成本轮。"
+          },
+          "C": {
+            "detail_readability": "低。细纹隐约存在，但在原生尺寸下主要仍读到连续、柔软的色面。",
+            "natural_organization": "没有显著的新伪影，但细节层次不足。下唇的少量纹理没有建立清晰的组织变化，整体更接近被柔化过的表面。",
+            "brush_or_engraving_risk": "较低，主要因为纹理较弱，而不是已经呈现了更好的组织结构。",
+            "waxiness": "明显，未见实质减弱。下唇的均匀粉色和大块柔光仍占主导。",
+            "benefit": "较 B、D 更克制，没有明显刻线感；与 E 相比没有足够稳定的视觉优势。",
+            "counterevidence": "缺少刷纹不能自动等于真实。低脱屑真人仍有局部不均匀的沟纹与表面起伏，C 的这些信息较弱。",
+            "decision": "与 E 平手，可作保守候选；不足以声称修复了整体蜡感。"
+          },
+          "D": {
+            "detail_readability": "本组最高。上唇左中部、中央和下唇亮区都能清楚读到细直线。",
+            "natural_organization": "本组最弱。大量近乎同向的线条像被梳过的表面，尤其在上唇暗色块上显得机械；纹理更锐利并没有让组织更可信。",
+            "brush_or_engraving_risk": "高。存在明显的刷纹、刻线和表面加工感。",
+            "waxiness": "未减弱，局部反而更像带细刻痕的蜡或软质塑料。宽高光的组织方式仍然平滑。",
+            "benefit": "只有纹理可见性增加这一点，不构成质量收益。",
+            "counterevidence": "真人参考的沟纹并非等强、等向的刻线；D 把细纹当成主效果，而没有改变纹理与体积、亮暗之间的关系。",
+            "decision": "必须拒绝作为本轮完成版本。"
+          },
+          "E": {
+            "detail_readability": "低，与 C 非常接近。下唇两侧能看到很轻的细纹，但原生尺寸下不足以稳定区分于 C。",
+            "natural_organization": "整体克制，但组织变化仍薄弱。不能仅因没有明显刻痕就判定它比 A 更接近真人。",
+            "brush_or_engraving_risk": "较低，仍有轻微竖向纹理痕迹，没有 B、D 那样突出。",
+            "waxiness": "仍然明显。大片平滑色面和统一柔光没有形成足够的局部打断。",
+            "benefit": "相对 B、D，减少了人工条纹干扰；相对 C 无稳定差异。",
+            "counterevidence": "在整体嘴唇尺度观看时，表面仍缺乏真人参考那样由细沟、较宽组织起伏和不均匀微小亮暗共同形成的层次。",
+            "decision": "与 C 平手，可作保守候选；不足以宣称整体真实感有实质提高。"
+          }
+        },
+        "recommendation": {
+          "most_worth_retaining": "A，仅作为继续验证的候选；保留这一判断的低至中等置信度。",
+          "must_reject": [
+            "D 作为最终版本",
+            "B 作为以细纹增强为主要收益的完成方案"
+          ],
+          "ties": [
+            [
+              "C",
+              "E"
+            ]
+          ],
+          "what_would_count_as_real_progress": "在保持低脱屑目标的前提下，让少量主要沟纹、细小组织变化和高光中断共同服从唇面弯曲；细节应在局部强弱、长短、方向上有变化，正常观看时也能让平滑蜡感减轻。不是继续统一加深或加密细竖线。",
+          "product_changes_authorized_or_performed": "无；只生成本盲审 JSON 报告，未修改图片或产品。"
+        }
+      }
+    },
+    {
+      "file": "supplement.json",
+      "sha256": "b85e5f271a2c59649bd3fefaa0283d68283a810f13ae3ab566da1fa560b86e55",
+      "report": {
+        "review_type": "F/G 独立视觉盲审补充",
+        "language": "zh-CN",
+        "reviewer": "r08_fine_blind",
+        "scope": {
+          "new_images": [
+            "F.png",
+            "G.png"
+          ],
+          "method": "亲自使用 view_image 查看 F、G 原生图片；复看 A、B、D，并以此前亲自查看的 C、E 及两张真人参考作为比较。F、G 又以相反顺序复看。未编辑图片。",
+          "blind_integrity": "未读取源码、实验数值、日志、指标或版本映射；未推断基线身份。",
+          "reference_basis": "沿用真人图的中间 standard panel 与低脱屑 Score 0/1 图；不把严重起皮、干裂作为目标，不做跨人物和光照的数值色匹配。",
+          "prior_report": "review.json 保持原样，未修改。"
+        },
+        "main_verdict": {
+          "better_than_A": false,
+          "summary": "F、G 没有比 A 更可靠的质感收益。线条分布比 B、D 更稀疏、长短也更多变，但可见细节更像离散的短划痕或刻痕，未融入原有的柔软唇面组织。整体蜡感没有实质减弱。",
+          "F_vs_G": "两者同一档。G 看起来略克制，部分亮暗划线的存在感稍弱；这一差异不足以构成可信的真实感提升，不强行判定稳定胜者。",
+          "relation_to_previous_versions": {
+            "A": "A 仍是较值得继续验证的候选，细节虽然弱，但与底层唇面融合更好。F、G 增强的细节存在感没有转化为更好的自然度。",
+            "C_E": "C、E 仍偏平滑，但至少没有 F、G 这样突出的离散划痕；在本次目标下，不值得用此类划痕交换纹理可见性。",
+            "B_D": "B、D 的主要问题是近似平行的密集刷纹；F、G 减轻了均匀密排，却产生更突出的短段刻线。它们是不同的失败形态，不能把减少一种伪影直接等同总质量提高。"
+          },
+          "global_preference": "A 略优，C≈E 次之，B 仍有明显刷纹问题；D 与 F/G 都不建议进入完成版本。对 D、F、G 的内部顺序不作强行精排。",
+          "real_gain_size": "没有观察到稳定的整体正收益。只看到纹理稀疏度、长短和锐利程度发生变化；蜡感、大片平滑色面及柔光组织仍然存在。",
+          "decision": "拒绝 F、G 作为本轮质感修复完成版，继续保留 A 的有限优势判断。"
+        },
+        "continuity_of_dark_light_lines": {
+          "observed_regions": [
+            "上唇左中部和中央：许多细线是较短、较直的暗段或亮段，起止显得突兀。",
+            "下唇左侧：几个高对比细段集中在平滑色面上，局部出现亮线与旁边暗线的配对，但整体更像独立细划痕。",
+            "下唇中部至偏右：零散短亮线在宽而柔和的亮区中显出，未建立连贯的沟纹走向。"
+          ],
+          "interpretation": "问题不是黑白相邻本身。沟纹可以呈现明暗对，也不必每条都连续贯穿嘴唇。这里的问题是部分亮暗短段的结束过硬、细线过直，与较宽的柔性组织起伏衔接不足；视觉上更容易将它们分离为另加的一层刻线，而非同一唇面上的沟槽。",
+          "counterevidence": "并非所有线都明显断裂，也有局部连续的细沟和明暗对。F、G 的长度变化和稀疏分布确实比 B、D 更有变化。报告拒绝的是当前整体融合结果，并非一概反对短纹、明暗配对或不连续沟纹。",
+          "confidence": "对离散短划线的存在感偏强这一观察有中等至高置信度；对于具体线条为何形成的实现原因不作判断。"
+        },
+        "versions": {
+          "F": {
+            "detail_readability": "高于 A。上唇及下唇多处短细线很容易看见，但这种可见性主要来自细线与平滑底色的分离。",
+            "natural_organization": "长短和局部分布比均匀刷纹更有变化；不过多个细段仍过直、端点较硬，未与唇面弯曲和较宽的组织沟纹建立稳定关系。",
+            "brush_or_engraving_risk": "密集刷纹风险有所下降，离散刻痕风险明显增加。下唇左侧和上唇中部尤其容易读成划线。",
+            "waxiness": "没有实质减弱。平滑主体上叠加更锐利的细线，使材质更像有刻痕的蜡面。",
+            "actual_benefit": "可以确认线条排列没有 B、D 那么均匀密集，不能确认真实性提高。",
+            "counterevidence_to_acceptance": "正常观看整张嘴时，新增细线以独立痕迹吸引注意，而下唇大面积的柔滑色块和高光并未随之形成更多组织层次。",
+            "decision": "拒绝作为完成版本。"
+          },
+          "G": {
+            "detail_readability": "与 F 同一档，稍显克制。仍能清楚看见上唇及下唇的短亮线与暗线。",
+            "natural_organization": "局部显隐较 F 稍柔，但短直段的形态和与底层组织分离的问题仍在；没有出现足以超过 A 的自然沟纹组织。",
+            "brush_or_engraving_risk": "仍为中高。相较 F 略弱的存在感不能消除划痕观感。",
+            "waxiness": "未见可靠减弱；宽柔高光及平滑色面仍主导整体观感。",
+            "actual_benefit": "可把它看作同类效果中略克制的版本，不应把差异解释为可信的组织改善。",
+            "counterevidence_to_acceptance": "即使部分线段局部连续，整体仍缺少与较宽沟纹、局部曲率和表面起伏对应的层次。",
+            "decision": "拒绝作为完成版本。"
+          }
+        },
+        "reference_comparison": {
+          "standard_panel": "真人参考里，细节参与唇面整体明暗，较少以孤立高对比短划线的方式成为独立图形；F、G 的新增线条更容易从底色中分离出来。",
+          "low_desquamation_macro": "低脱屑参考包含不同尺度的沟纹与细微表面变化，不等同于在平滑底面上随机分布不同长度的细直线。F、G 的稀疏化改变了排列方式，但仍未补足这种尺度关系。",
+          "limits": "参考的分辨率和光照不同，以上只判断组织与明暗的关系，不据此要求逐条复刻或匹配强度。"
+        },
+        "authorized_actions_performed": "仅写入本 supplement.json；未改前报告、图片或产品，未执行外部动作。"
+      }
+    },
+    {
+      "file": "supplement-H.json",
+      "sha256": "bb10c8e3155948677cb8c4012bb43ed3276ae65988337970d01bd443082115e6",
+      "report": {
+        "review_type": "H/I 独立视觉盲审补充",
+        "language": "zh-CN",
+        "reviewer": "r08_fine_blind",
+        "scope": {
+          "new_images": [
+            "H.png",
+            "I.png"
+          ],
+          "method": "亲自用 view_image 查看 H、A、C；复核 F、H 时 I 已就绪，随后亲自查看 I。全部为提供的原生图，没有编辑图片、查看源码或读取指标。",
+          "I_availability": "首次尝试尚不存在，在复核 H 的自然间隔内已经就绪；没有等待长期任务。",
+          "blind_integrity": "未读取实验机制、数值、日志或映射，未推断基线身份。",
+          "references": "延用此前亲自查看的真人 standard panel 和低脱屑 Score 0/1 微距图，只比较组织与光的关系，不作数值色匹配。",
+          "previous_reports": "review.json 和 supplement.json 均未修改。"
+        },
+        "main_verdict": {
+          "H_summary": "H 相比 F/G 有真实但局部的改善：短亮暗碎段不再那么突兀，细线延续及收尾更顺，较少像一组离散划痕。与 A 相比，H 更容易读到细沟，但其细线形态也更明显；总体自然度接近，尚不足以认定稳定净收益。",
+          "I_summary": "I 延续了 H 较连贯的线条形态，但线条更醒目，也更接近尖锐刻线。没有看到它比 H 或 A 更可靠的真实感收益，倾向保留 H 的克制程度。",
+          "H_vs_A": "同一可保留候选档，无法稳定判定 H 全面胜过 A。H 的细节更清晰，A 的细节与柔软底面融合得更柔和。",
+          "H_vs_C": "H 的局部沟纹更可读，减少了 C 的部分过度平滑感；优势仍是小幅、局部的，不是整体材质档次变化。",
+          "H_vs_F_G": "H 的自然度较好，主要来自减少亮暗短段的离散感和突兀端点。这是本轮最明确的正向比较。",
+          "I_vs_H": "偏好 H；I 的清晰度增量伴随更明显的刻线感，不能视为净收益。",
+          "I_vs_F_G": "连贯性较好，但仍存在加工痕迹，不足以仅凭这一点接纳为完成版本。",
+          "stable_net_gain_over_A": false,
+          "overall_waxiness_reduced": "未见稳定且显著的整体减轻。宽柔高光、大片均匀粉色色面及柔糊唇缘仍主导观感。",
+          "decision": "H 可以与 A 一起保留为继续验证的候选；不据本组宣称质感修复完成。I 不值得因细线更明显而替代 H。"
+        },
+        "H_observations": {
+          "detail_readability": "中等。上唇左中部及下唇左侧、中央可读到细沟，比 C 更有细节，局部也比 A 更清楚。",
+          "continuity": "相比 F/G，原先高对比短段突然跳出的感觉减弱，多数可见细线沿一个方向延续后逐渐隐入底色，局部带有轻微弯曲。并非所有细线都成为了完整、可信的沟槽。",
+          "natural_organization": "长短和显隐有变化，细线与底面比 F/G 更融合；但仍主要是一层细窄线条，缺少更宽的沟纹和中等尺度组织变化共同参与。",
+          "brush_or_engraving_risk": "低于 F/G；仍有细刻线风险，尤其是上唇中部及下唇左侧的几条细长线。相比 A，它们更清楚也更容易被单独读成线。",
+          "waxiness": "局部平面感略被打断，但整体蜡感仍在。新增细沟没有使大面积亮区和色面获得相应层次。",
+          "actual_positive_evidence": [
+            "F/G 中突兀、零散的短黑白段存在感确实减弱。",
+            "部分细沟的延续和收尾更平顺，减少了明确的刮痕观感。",
+            "相较 C，局部细节不是完全被柔化掉，能看见轻微组织方向。"
+          ],
+          "counterevidence_to_stable_gain": [
+            "与 A 对照时，更清楚的细线也带来了更明显的线性刻画，无法证明净自然度提高。",
+            "细线没有充分关联到较宽的组织起伏，仍像贴在柔软底面上的微细层。",
+            "整张嘴的第一印象仍是宽泛、柔滑、均匀的材质，主要蜡感来源没有被解决。"
+          ],
+          "confidence": "对 H 优于 F/G 的局部融合有中等至高置信度；对 H 与 A 的总体胜负只有低置信度，因此判同档。"
+        },
+        "I_observations": {
+          "detail_readability": "比 H 更醒目。上唇的细长线和下唇左侧、中央的细沟更容易从平滑底色中分离。",
+          "continuity": "仍比 F/G 更连贯，没有恢复为同等程度的短碎段问题；主要风险已经从碎段转为较尖锐的细长刻线。",
+          "natural_organization": "纹理方向有局部变化，但细线与更宽组织之间的层次关系仍弱。",
+          "brush_or_engraving_risk": "高于 H。几条较亮或较暗的细线在平滑底面上显得独立，更容易联想到划痕。",
+          "waxiness": "整体未见可靠减轻，细节更清楚没有带动主体高光和色面组织改变。",
+          "actual_positive_evidence": "与 F/G 比较，线条形态更连贯，不是单纯增加碎段。",
+          "counterevidence_to_acceptance": "相较 H，新增的清晰度同时强化了刻线存在感；相较 A，没有观察到足以抵消这一风险的整体真实感收益。",
+          "decision": "不作为优于 H 或 A 的版本采纳。"
+        },
+        "remaining_obstacles": [
+          "只有细窄线条较容易看见，缺少较宽沟纹、细小起伏及局部表面变化构成的多尺度组织。",
+          "宽而柔和的下唇亮区仍较连续；细沟可见性没有同步形成可信的局部高光打断。",
+          "大面积粉色色面仍偏均匀，细纹与组织内部的微小明暗变化衔接不充分。",
+          "唇缘仍偏柔糊，整体体积与表面组织的过渡缺少可读层次。"
+        ],
+        "reference_comparison": "真人低脱屑参考中的纹路不要求每条都贯通，也不要求更多干裂；关键是沟纹、周围表面起伏及局部亮暗共同构成组织。H 比 F/G 更接近这一方向，但它与 A 一样，仍未形成足够丰富而协调的整体关系。",
+        "authorized_actions_performed": "只写入本 supplement-H.json；未改前报告、图片、产品或任何外部状态。"
+      }
+    },
+    {
+      "file": "supplement-J.json",
+      "sha256": "330efa80561132b916a2d64e680a266e64164b12e2c776eb20577719b75df406",
+      "report": {
+        "review_type": "J 独立视觉盲审补充",
+        "language": "zh-CN",
+        "reviewer": "r08_fine_blind",
+        "scope": {
+          "new_image": "J.png",
+          "direct_comparison_images": [
+            "A.png",
+            "H.png",
+            "C.png"
+          ],
+          "method": "亲自用 view_image 查看 J、A、H、C 的原生图片；随后重新查看两张真人参考与 J，依据实际观感判断。未使用像素差或其他指标。",
+          "references": [
+            {
+              "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/srt13418-figure2-visia.jpg",
+              "region": "中间 standard panel 的嘴唇区域"
+            },
+            {
+              "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/s41598-025-89264-figure1-full.png",
+              "region": "低脱屑 grade/score 0 与 1"
+            }
+          ],
+          "blind_integrity": "未读取源码、参数、日志、指标、路径映射或版本身份，未推断基线。",
+          "comparison_limits": "只比较表面组织与明暗的关系，不对不同人物、照明及尺度的图像进行数值色匹配。"
+        },
+        "main_verdict": {
+          "summary": "J 增加了细纹的存在感，但未使整体唇面更可信。相对 A、H，主要可见变化是细长亮暗线更突出，部分线条更像细刻痕；大面积柔光和平滑色面没有获得相应组织层次。没有观察到足以支持替换基线的必要净收益。",
+          "overall_lip_surface_improved": "未见稳定改善。局部纹理更清楚，不等于整体组织或材质更自然。",
+          "primarily_stronger_marks": "是，主要可见变化集中在细线存在感。不能说每一条都像划痕，但若干较亮、较暗的细长线明显独立于平滑底面，刻痕风险增加。",
+          "necessary_benefit_to_replace_baseline": false,
+          "replacement_recommendation": "不支持用 J 替换基线。盲态不知道基线身份；但 J 没有稳定胜过 A/H，相对 C 也主要是可读性变化，未证明达到更好的总体自然度。",
+          "preferred_candidates": [
+            "A",
+            "H"
+          ],
+          "gain_size": "细节可读性的局部增加可以确认；总体真实感的正向收益无法确认。",
+          "confidence": "对细线更突出及整体蜡感未见明显减弱，有中等至高置信度；不据此推断任何实现机制。"
+        },
+        "direct_comparisons": {
+          "J_vs_A": {
+            "visible_difference": "J 的上唇左中部与下唇左侧、中央有更醒目的细长亮暗线；A 的细节较柔和，较少从底面分离出来。",
+            "tradeoff": "J 提高了纹理可读性，也增加了线性刻画的存在感。A 虽然仍偏平滑，但细节融合更克制。",
+            "verdict": "没有稳定胜过 A；不支持替换。"
+          },
+          "J_vs_H": {
+            "visible_difference": "两者都能读到较连贯的细沟。J 的若干线条更锐、更亮或更暗，尤其是上唇中部和下唇左侧；H 的这些细节存在感较轻。",
+            "tradeoff": "J 的线条清晰度增加没有带来更丰富的周边组织，反而让细线更像单独刻上去的痕迹。",
+            "verdict": "偏好 H 的克制程度；未见 J 的净收益。"
+          },
+          "J_vs_C": {
+            "visible_difference": "J 确实比 C 更容易看见局部沟纹，C 的连续平滑色面更占主导。",
+            "tradeoff": "J 缓解了一部分细节不可读，但使用更醒目的细线来解决这一问题，也引入了刻痕感。",
+            "verdict": "不能仅凭更多可见纹理认定 J 更真实。两者是不同不足，不强行宣称 J 的总体质量更好。"
+          }
+        },
+        "J_observations": {
+          "detail_readability": "中等偏高。原生尺寸下，上下唇均有容易辨认的细长线，左中部尤其明显。",
+          "continuity": "细线整体比早先的短碎段形态连贯，局部也有轻微弯曲；连续性本身不是本轮主要问题。",
+          "natural_organization": "长度和显隐有变化，但纹理仍主要表现为细窄线条。沟纹两侧缺少相应的中等尺度组织变化，线条与主体表面层次联系不足。",
+          "brush_or_engraving_risk": "中等偏高。上唇左中部的一组细长亮线、下唇左侧及中部的窄线容易被读成划痕或刻痕。不是整面均匀刷纹，而是局部细线过于独立。",
+          "waxiness": "仍然明显。下唇的大块粉色柔滑色面和宽柔亮区继续占主导；细线增加没有可靠地打断这种整体蜡质观感。",
+          "actual_positive_evidence": [
+            "相对 C，局部细节信息更容易读到。",
+            "多条细线存在连贯走向，并非全是突兀碎段。",
+            "线条长短与局部强弱并不完全相同，不能把它概括为完全均匀的条纹。"
+          ],
+          "counterevidence_to_acceptance": [
+            "相对 A/H，更醒目的线条也更容易被读成另加的表面刻画。",
+            "较宽组织起伏、沟纹周围的细小变化与局部高光没有同步形成更多层次。",
+            "从局部纹理移回整张嘴，第一印象仍然是宽泛而平滑的唇面，没有显著更接近真人。"
+          ]
+        },
+        "reference_comparison": {
+          "standard_VISIA": "真人中间 standard panel 的沟纹与细小亮暗共同构成唇面，纹理较少作为独立细线跳出。J 的高可见性细线与平滑主体分离得更明显。",
+          "healthy_low_desquamation": "grade/score 0、1 中，即使没有重度起皮，仍可见深浅和尺度不一的沟纹及沟间表面变化。J 主要强化细窄线条，未充分呈现沟纹与周围表面的共同起伏。",
+          "what_not_to_infer": "不以参考中的颜色、某一根线的强弱或干燥程度作为数值目标，也不要求当前人物复制参考唇形。"
+        },
+        "remaining_obstacles": [
+          "细窄线条与较宽组织起伏之间缺少可读的尺度关系。",
+          "高光仍以宽而平滑的亮区为主，局部细沟没有建立足够可信的高光变化。",
+          "主体色面偏均匀，细纹增强尚未带动整体表面层次改善。",
+          "唇缘依然偏柔糊，细节变化局限在唇面内部。"
+        ],
+        "decision": "保留此前 A/H 的候选判断；J 不通过必要替换收益门槛。",
+        "authorized_actions_performed": "仅写入 supplement-J.json；未改其他报告、图片、产品或外部状态。"
+      }
+    },
+    {
+      "file": "supplement-KL.json",
+      "sha256": "e4bc16f07b24f80e499b8152f3d7f46693a5387ce2e9e028710765ec519923d2",
+      "report": {
+        "review_type": "K/L 独立视觉盲审补充",
+        "language": "zh-CN",
+        "reviewer": "r08_fine_blind",
+        "scope": {
+          "new_images": [
+            "K.png",
+            "L.png"
+          ],
+          "direct_comparison_images": [
+            "C.png",
+            "A.png",
+            "H.png"
+          ],
+          "method": "亲自使用 view_image 查看 K、C、A、H。L 首次尚未出现，复看真人参考及 K 时已就绪并亲自查看；最后再次以 C、K、H 顺序复核 K 的微小差异。全部只查看原生图片，没有处理图片或计算差值。",
+          "reference_images": [
+            "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/srt13418-figure2-visia.jpg",
+            "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/s41598-025-89264-figure1-full.png"
+          ],
+          "reference_regions": "VISIA 中间 standard panel，以及低脱屑 grade/score 0、1。",
+          "blind_integrity": "未读取源码、参数、日志、指标或路径映射。C 的基线标签仅来自本轮任务文字，其他版本身份和实验机制仍未知。",
+          "limits": "不同人物和照明只作组织关系比较，不作数值色匹配。"
+        },
+        "main_verdict": {
+          "K": "相对 C，有很小但可见的正向变化：部分原先过于平滑的区域多了克制的细微起伏，减少了一点连续光滑感，没有明显砂纸化，也没有引入醒目的细刻线。可认可为局部微小收益；整体真实感提升仍弱，不能宣称整体蜡感已经解决。",
+          "L": "平滑感确实明显减少，但整片唇面出现密集颗粒和压纹，尤其上唇及下唇亮区更像粗糙皮革或橡胶表面。减少光滑并没有转化为更像真人组织，净收益不成立。",
+          "K_vs_C": "微弱偏好 K。差异主要存在于纹路之间的底面，局部复核能够看见；整张嘴的观感仍处于同一档。",
+          "K_vs_A_H": "无稳定全面胜负。K 的底面起伏更克制，A/H 的沟纹方向更可读；三者都未把不同尺度的组织关系充分建立起来。",
+          "K_vs_L": "明确偏好 K。L 的粗糙表面已成为独立材料特征，超过本次健康低脱屑嘴唇的目标。",
+          "recognize_K_minor_net_gain": true,
+          "K_gain_scope": "仅认可局部、微小的表面去平滑收益，不把它扩大为整体质感修复完成，也不认为这一差异足以称为必须替换基线。",
+          "recognize_L_net_gain": false,
+          "decision": "保留 K 作为有微小正向证据的候选，拒绝 L。产品本轮不作修改。"
+        },
+        "K_observations": {
+          "interline_surface": "上唇的平滑色面与下唇部分区域有细微的不均匀起伏，较 C 少一些完全连续的柔滑感。变化不再主要依靠突出一组细线。",
+          "readability": "局部注意时可见，整体观看时较弱。没有形成新的显著视觉主角。",
+          "tissue_naturalness": "比单纯平滑底面略有组织感，方向正面；但还无法读到明确的沟间表面、较宽沟纹及细小起伏如何相互连接，所以改善有限。",
+          "grain_or_sandpaper": "原生尺寸下未见明显砂纸化，不能因题目提到颗粒就将 K 判作砂纸。其颗粒存在感较轻，尚未像 L 那样形成整片粗糙材料。",
+          "scratch_risk": "没有新增醒目的直线刻痕；相对 H，线性痕迹更不显眼。",
+          "plastic_wax_effect": "局部有很小的减轻，整体仍明显。宽柔高光、均匀粉色色面及柔糊唇缘仍占主导。",
+          "positive_evidence": [
+            "反复与 C 对照，上唇及下唇部分底面确实略少连续平滑感。",
+            "增加的细微起伏没有像前面的强细线版本那样跳出底面。",
+            "未见明显新增的粗粒、砂纸或起皮伪影。"
+          ],
+          "counterevidence": [
+            "整体嘴唇的第一印象变化很小，不能把局部微小差异说成材质档次跃升。",
+            "主要沟纹及其中间尺度的组织仍弱，表面起伏尚未形成清晰的自然结构。",
+            "低强度颗粒也可能只是更不均匀的表面；当前证据支持微小去平滑，不足以断言完整生物组织已经建立。"
+          ],
+          "confidence": "对局部存在微小正向差异有中等偏低置信度；对不存在明显砂纸化有中等置信度。",
+          "decision": "有限认可局部微小收益，继续保留；不作整体修复成功判定。"
+        },
+        "L_observations": {
+          "interline_surface": "纹路之间的区域被密集、近似铺满的颗粒和小凹凸占据。上唇有明显压纹感，下唇亮区的颗粒及横向细碎起伏尤其醒目。",
+          "readability": "很高，但可读到的主要是整片粗糙纹理，而非更可信的唇部组织层次。",
+          "tissue_naturalness": "不足。表面像以相近尺度的颗粒整体覆盖，缺少自然沟纹与沟间表面不同尺度的相互关系。",
+          "grain_or_sandpaper": "明显。上唇更像粗糙皮革或压纹橡胶，下唇像颗粒表面；具体材料比喻并非物理判断，用于描述其实际观感。",
+          "scratch_risk": "本轮主要风险已不是强细线，而是密集颗粒和压纹成为材料主特征。",
+          "plastic_wax_effect": "连续平滑感确实减少了，不能否认这一可见变化；但材料观感转向粗糙橡胶或皮革，不能算真人感提高。",
+          "positive_evidence": [
+            "大面积平滑色面被明显打断。",
+            "下唇亮区随小凹凸出现变化，不再只是完全连续的柔光。"
+          ],
+          "counterevidence": [
+            "整片密集颗粒过于醒目，替代了健康嘴唇应有的组织层次。",
+            "表面粗糙度变化很大，但没有形成更可信的较宽沟纹、细沟及周边微表面关系。",
+            "正常观看时首先读到压纹材料，真实性因此受损。"
+          ],
+          "confidence": "对颗粒和压纹伪影明显、缺少净收益有高置信度。",
+          "decision": "拒绝作为完成版本，也不建议以更强同类粗糙度继续追求去塑料感。"
+        },
+        "reference_comparison": {
+          "standard_VISIA": "真人标准图中的细小亮暗与较宽组织起伏共同形成唇面；不是所有区域以同一种颗粒尺度覆盖。K 只作了很轻的局部接近，L 的整片粗糙更像材料纹理。",
+          "low_desquamation": "grade/score 0、1 表面并非绝对光滑，存在细微不均匀和沟纹；这支持 K 的轻微起伏方向。但它们也不是整片密集凸点或压纹，不能用 L 的强粗糙作为健康组织替代。",
+          "target_limits": "不以重度脱屑或干裂补足细节，不要求复制参考人物的色彩与唇形。"
+        },
+        "remaining_obstacles": [
+          "纹间微表面与较宽沟纹尚未形成充分的尺度关系。",
+          "K 的整体高光和色面仍然平滑，L 则把表面起伏推成了独立的粗糙材料特征。",
+          "唇缘和主体体积的层次变化仍不足，局部纹理尚未带动整张嘴的观感升级。"
+        ],
+        "authorized_actions_performed": "仅写入 supplement-KL.json；未修改其他报告、图片、产品或外部状态。"
+      }
+    }
+  ]
+}

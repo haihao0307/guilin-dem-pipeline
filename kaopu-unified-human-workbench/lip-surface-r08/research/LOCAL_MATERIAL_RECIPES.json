@@ -1,0 +1,386 @@
+{
+  "schema": "kaopu/lip-local-exact-replacement-recipes@1",
+  "localOnly": true,
+  "productDefault": "Only organized-main4 subject to public review; all other recipes are excluded or diagnostic.",
+  "recipes": [
+    {
+      "id": "legacy-primary-1p75x",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "finite-main-branch-gain-1p75",
+            "from": "height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);",
+            "to": "height+=(primary+.32*branch)*(.000005+.000006*c)*1.75*(width/filterWidth);"
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy-primary-4x",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "finite-main-branch-gain-4",
+            "from": "height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);",
+            "to": "height+=(primary+.32*branch)*(.000005+.000006*c)*4.*(width/filterWidth);"
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy-primary-6x",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "finite-main-branch-gain-6",
+            "from": "height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);",
+            "to": "height+=(primary+.32*branch)*(.000005+.000006*c)*6.*(width/filterWidth);"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r03-organization-main-4x",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "replace-only-lrFolds-with-r03-organization",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float spanMM=max(1.,mix(lrInnerBottom(vFRest.x)-lrBottom(vFRest.x),lrTop(vFRest.x)-lrInnerTop(vFRest.x),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*4.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r03-organization-main-8x",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "r03-organized-main-8x-upper-bound",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float spanMM=max(1.,mix(lrInnerBottom(vFRest.x)-lrBottom(vFRest.x),lrTop(vFRest.x)-lrInnerTop(vFRest.x),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*8.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized-width-100-180-main8",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "organized-readable-width-main-8x",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float spanMM=max(1.,mix(lrInnerBottom(vFRest.x)-lrBottom(vFRest.x),lrTop(vFRest.x)-lrInnerTop(vFRest.x),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.75 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.100+.080*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*8.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized-main4-rest-gradient",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "organized-main-4x-sample-local-span",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float sampleX=0.000086468+mm.x*.001;\n float spanMM=max(1.,mix(lrInnerBottom(sampleX)-lrBottom(sampleX),lrTop(sampleX)-lrInnerTop(sampleX),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*4.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}\n// Diagnostic only: fixed-filter rest-mm central difference, not a proven defect.\nfloat lrdHeightAt(vec2 mm,float upper,float footprint){\n vec2 p=vec2(0.000086468,0.232229661)+mm*.001;\n float top=lrTop(p.x),bottom=lrBottom(p.x),it=lrInnerTop(p.x),ib=lrInnerBottom(p.x);\n float depth=mix((ib-p.y)/max(.001,ib-bottom),(p.y-it)/max(.001,top-it),upper);\n return lrFolds(mm,depth,upper,footprint);\n}\n"
+          },
+          {
+            "id": "fixed-rest-mm-central-difference-lip-intrinsic-gradient",
+            "from": "   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(dFdx(psH)*psR1+dFdy(psH)*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}",
+            "to": "   // Diagnostic hypothesis: replace only the lip field's intrinsic screen derivative.\n   // Every dFdx/dFdy below is outside non-uniform branches. Native skin and\n   // native ownership-product derivatives remain inside the original d(psH).\n   vec2 lrdMM=(vFRest.xy-vec2(0.000086468,0.232229661))*1000.;\n   vec2 lrdMMdx=dFdx(lrdMM),lrdMMdy=dFdy(lrdMM);\n   float lrdFootprint=max(length(lrdMMdx),length(lrdMMdy));\n   float lrdGain=lrFoldStrength/clamp(vL19State.y,.72,1.5)*(1.-lrWet*.16*lrWetness);\n   vec2 lrdGainD=vec2(dFdx(lrdGain),dFdy(lrdGain));\n   vec2 lrdOldLipD=vec2(dFdx(lrHeight),dFdy(lrHeight));\n   vec2 lrdNativeD=vec2(dFdx(psH),dFdy(psH));\n   float lrdH=0.;vec2 lrdGrad=vec2(0.);\n   if(lrEnabled>.5&&lrScope>0.){\n    float lrdE=.025;\n    lrdH=lrdHeightAt(lrdMM,lrUpper,lrdFootprint);\n    lrdGrad=vec2(\n     lrdHeightAt(lrdMM+vec2(lrdE,0.),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(lrdE,0.),lrUpper,lrdFootprint),\n     lrdHeightAt(lrdMM+vec2(0.,lrdE),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(0.,lrdE),lrUpper,lrdFootprint)\n    )/(2.*lrdE);\n   }\n   vec2 lrdFineD=lrdGain*vec2(dot(lrdGrad,lrdMMdx),dot(lrdGrad,lrdMMdy))+lrdH*lrdGainD;\n   float lrdOwner=(lrEnabled>.5?lrMask:0.)*(1.-liWeight);\n   vec2 lrdCorrectedD=lrdNativeD+lrdOwner*(lrdFineD-lrdOldLipD);\n   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(lrdCorrectedD.x*psR1+lrdCorrectedD.y*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized-main6-rest-gradient",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "organized-main-6x-sample-local-span",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float sampleX=0.000086468+mm.x*.001;\n float spanMM=max(1.,mix(lrInnerBottom(sampleX)-lrBottom(sampleX),lrTop(sampleX)-lrInnerTop(sampleX),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*6.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}\n// Diagnostic only: fixed-filter rest-mm central difference, not a proven defect.\nfloat lrdHeightAt(vec2 mm,float upper,float footprint){\n vec2 p=vec2(0.000086468,0.232229661)+mm*.001;\n float top=lrTop(p.x),bottom=lrBottom(p.x),it=lrInnerTop(p.x),ib=lrInnerBottom(p.x);\n float depth=mix((ib-p.y)/max(.001,ib-bottom),(p.y-it)/max(.001,top-it),upper);\n return lrFolds(mm,depth,upper,footprint);\n}\n"
+          },
+          {
+            "id": "fixed-rest-mm-central-difference-lip-intrinsic-gradient",
+            "from": "   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(dFdx(psH)*psR1+dFdy(psH)*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}",
+            "to": "   // Diagnostic hypothesis: replace only the lip field's intrinsic screen derivative.\n   // Every dFdx/dFdy below is outside non-uniform branches. Native skin and\n   // native ownership-product derivatives remain inside the original d(psH).\n   vec2 lrdMM=(vFRest.xy-vec2(0.000086468,0.232229661))*1000.;\n   vec2 lrdMMdx=dFdx(lrdMM),lrdMMdy=dFdy(lrdMM);\n   float lrdFootprint=max(length(lrdMMdx),length(lrdMMdy));\n   float lrdGain=lrFoldStrength/clamp(vL19State.y,.72,1.5)*(1.-lrWet*.16*lrWetness);\n   vec2 lrdGainD=vec2(dFdx(lrdGain),dFdy(lrdGain));\n   vec2 lrdOldLipD=vec2(dFdx(lrHeight),dFdy(lrHeight));\n   vec2 lrdNativeD=vec2(dFdx(psH),dFdy(psH));\n   float lrdH=0.;vec2 lrdGrad=vec2(0.);\n   if(lrEnabled>.5&&lrScope>0.){\n    float lrdE=.025;\n    lrdH=lrdHeightAt(lrdMM,lrUpper,lrdFootprint);\n    lrdGrad=vec2(\n     lrdHeightAt(lrdMM+vec2(lrdE,0.),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(lrdE,0.),lrUpper,lrdFootprint),\n     lrdHeightAt(lrdMM+vec2(0.,lrdE),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(0.,lrdE),lrUpper,lrdFootprint)\n    )/(2.*lrdE);\n   }\n   vec2 lrdFineD=lrdGain*vec2(dot(lrdGrad,lrdMMdx),dot(lrdGrad,lrdMMdy))+lrdH*lrdGainD;\n   float lrdOwner=(lrEnabled>.5?lrMask:0.)*(1.-liWeight);\n   vec2 lrdCorrectedD=lrdNativeD+lrdOwner*(lrdFineD-lrdOldLipD);\n   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(lrdCorrectedD.x*psR1+lrdCorrectedD.y*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "diagnostic-lip-specular-off",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "diagnostic-exterior-specular-off",
+            "from": "material.clearcoatRoughness=mix(material.clearcoatRoughness,.43-liWetGain*.24,liWeight);\n }\n #endif",
+            "to": "material.clearcoatRoughness=mix(material.clearcoatRoughness,.43-liWetGain*.24,liWeight);\n }\n #endif\n // Local diagnostic only: remove base and coat specular within exterior lip ownership.\n float lsNoSpecOwner=(lrEnabled>.5?lrMask:0.)*(1.-liWeight);\n material.specularColor*=1.-lsNoSpecOwner;\n material.specularF90*=1.-lsNoSpecOwner;\n material.clearcoat*=1.-lsNoSpecOwner;"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized-main4-positive-shoulders",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "organized-main4-with-resolvable-positive-shoulders",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float sampleX=0.000086468+mm.x*.001;\n float spanMM=max(1.,mix(lrInnerBottom(sampleX)-lrBottom(sampleX),lrTop(sampleX)-lrInnerTop(sampleX),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.62 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*4.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // Diagnostic engineering shoulder field: same finite groove organization.\n   // Positive banks are zero at the original groove centre and outside support.\n   // No physical tissue-depth calibration is asserted by these coefficients.\n   float bankWidth=.22+.10*d,bankFilter=sqrt(bankWidth*bankWidth+footprint*footprint*.30);\n   float bankProfile=lrGrooveR03((mm.x-center)/filterWidth)-lrGrooveR03((mm.x-center)/bankFilter);\n   height+=bankProfile*along*amplitude*.65*(bankWidth/bankFilter);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}\n// Diagnostic only: fixed-filter rest-mm central difference, not a proven defect.\nfloat lrdHeightAt(vec2 mm,float upper,float footprint){\n vec2 p=vec2(0.000086468,0.232229661)+mm*.001;\n float top=lrTop(p.x),bottom=lrBottom(p.x),it=lrInnerTop(p.x),ib=lrInnerBottom(p.x);\n float depth=mix((ib-p.y)/max(.001,ib-bottom),(p.y-it)/max(.001,top-it),upper);\n return lrFolds(mm,depth,upper,footprint);\n}\n"
+          },
+          {
+            "id": "fixed-rest-mm-central-difference-lip-intrinsic-gradient",
+            "from": "   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(dFdx(psH)*psR1+dFdy(psH)*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}",
+            "to": "   // Diagnostic hypothesis: replace only the lip field's intrinsic screen derivative.\n   // Every dFdx/dFdy below is outside non-uniform branches. Native skin and\n   // native ownership-product derivatives remain inside the original d(psH).\n   vec2 lrdMM=(vFRest.xy-vec2(0.000086468,0.232229661))*1000.;\n   vec2 lrdMMdx=dFdx(lrdMM),lrdMMdy=dFdy(lrdMM);\n   float lrdFootprint=max(length(lrdMMdx),length(lrdMMdy));\n   float lrdGain=lrFoldStrength/clamp(vL19State.y,.72,1.5)*(1.-lrWet*.16*lrWetness);\n   vec2 lrdGainD=vec2(dFdx(lrdGain),dFdy(lrdGain));\n   vec2 lrdOldLipD=vec2(dFdx(lrHeight),dFdy(lrHeight));\n   vec2 lrdNativeD=vec2(dFdx(psH),dFdy(psH));\n   float lrdH=0.;vec2 lrdGrad=vec2(0.);\n   if(lrEnabled>.5&&lrScope>0.){\n    float lrdE=.025;\n    lrdH=lrdHeightAt(lrdMM,lrUpper,lrdFootprint);\n    lrdGrad=vec2(\n     lrdHeightAt(lrdMM+vec2(lrdE,0.),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(lrdE,0.),lrUpper,lrdFootprint),\n     lrdHeightAt(lrdMM+vec2(0.,lrdE),lrUpper,lrdFootprint)-lrdHeightAt(lrdMM-vec2(0.,lrdE),lrUpper,lrdFootprint)\n    )/(2.*lrdE);\n   }\n   vec2 lrdFineD=lrdGain*vec2(dot(lrdGrad,lrdMMdx),dot(lrdGrad,lrdMMdy))+lrdH*lrdGainD;\n   float lrdOwner=(lrEnabled>.5?lrMask:0.)*(1.-liWeight);\n   vec2 lrdCorrectedD=lrdNativeD+lrdOwner*(lrdFineD-lrdOldLipD);\n   fbGeomN=normal;vec3 psDx=dFdx(-vViewPosition),psDy=dFdy(-vViewPosition),psR1=cross(psDy,normal),psR2=cross(normal,psDx);float psDet=dot(psDx,psR1);\n   if(abs(psDet)>1e-14){vec3 slope=sign(psDet)*(lrdCorrectedD.x*psR1+lrdCorrectedD.y*psR2)/abs(psDet);slope*=min(1.,.26/max(length(slope),.0001));normal=normalize(normal-slope);}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized4-oblique",
+      "pose": {
+        "pose": "neutral",
+        "view": "oblique",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "replace-only-lrFolds-with-r03-organization",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float spanMM=max(1.,mix(lrInnerBottom(vFRest.x)-lrBottom(vFRest.x),lrTop(vFRest.x)-lrInnerTop(vFRest.x),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*4.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "organized4-jaw-oblique",
+      "pose": {
+        "pose": "jaw",
+        "view": "oblique",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "replace-only-lrFolds-with-r03-organization",
+            "from": "float lrFolds(vec2 mm,float depth,float upper,float footprint){\n float spacing=1.05,cell=floor(mm.x/spacing),height=0.;\n for(int j=-1;j<=1;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*97.+23.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.13+.74*a)*spacing;\n  float start=.035+.18*b,end=.60+.36*c;\n  float tangent=(a-.5)*.34+(root/25.327685970)*.20;\n  float center=root+tangent*(depth-.40)+(b-.5)*.18*depth*(1.-depth)*4.;\n  float width=.035+.030*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n  float along=smoothstep(start,start+.13,depth)*(1.-smoothstep(end-.17,end,depth));\n  float delta=(mm.x-center)/filterWidth;\n  float primary=-exp(-delta*delta)*along;\n  float branchStart=.24+.20*c,branchEnd=min(.96,branchStart+.17+.18*a);\n  float t=clamp((depth-branchStart)/max(.04,branchEnd-branchStart),0.,1.);\n  float branchCenter=center+mix(-1.,1.,step(.5,d))*(.14+.26*b)*t*t*(3.-2.*t);\n  float branchDelta=(mm.x-branchCenter)/(filterWidth*.72);\n  float branch=-exp(-branchDelta*branchDelta)*smoothstep(0.,.2,t)*(1.-smoothstep(.72,1.,t));\n  height+=(primary+.32*branch)*(.000005+.000006*c)*(width/filterWidth);\n }\n float crossField=lrNoise(mm*vec2(.47,3.0)+upper*41.);\n float crossFold=-pow(clamp((crossField-.48)*2.,0.,1.),3.)*.0000024;\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+crossFold+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}",
+            "to": "float lrGrooveR03(float delta){return -exp(-delta*delta)*(1.-smoothstep(2.5,3.5,abs(delta)));}\nfloat lrFolds(vec2 mm,float depth,float upper,float footprint){\n if(footprint>=.34)return 0.;\n float spanMM=max(1.,mix(lrInnerBottom(vFRest.x)-lrBottom(vFRest.x),lrTop(vFRest.x)-lrInnerTop(vFRest.x),upper)*1000.);\n float spacing=1.10,cell=floor(mm.x/spacing),height=0.;\n // At the largest visible footprint each root has <1.32 mm horizontal\n // support. Five cells cover that support on both sides of every cell edge.\n for(int j=-2;j<=2;j++){\n  float id=cell+float(j);vec2 k=vec2(id,upper*113.+211.);\n  float a=lrHash(k),b=lrHash(k+17.7),c=lrHash(k+54.1),d=lrHash(k+91.3);\n  float root=(id+.12+.76*a)*spacing;\n  if(lrHash(k+121.6)>=.18){\n   float extent=mix(.12+.18*c,.30+.42*c,step(.42,lrHash(k+141.3)));\n   float start=.035+(.92-extent)*b;\n   float t=clamp((depth-start)/extent,0.,1.);\n   float drift=(lrHash(k+159.7)-.5)*.72,bend=(lrHash(k+177.9)-.5)*.28;\n   float center=root+drift*(t-.5)+bend*4.*t*(1.-t);\n   float width=.045+.035*d,filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float endSoft=min(.48,max(.16,footprint/max(.05,extent*spanMM)));\n   float along=smoothstep(0.,endSoft,t)*(1.-smoothstep(1.-endSoft,1.,t));\n   float amplitude=(.000006+.000004*lrHash(k+193.4))*4.;\n   height+=lrGrooveR03((mm.x-center)/filterWidth)*along*amplitude*(width/filterWidth);\n   // A branch is optional and remains shallower and shorter than its parent.\n   if(lrHash(k+219.8)<.35){\n    float branchStart=.24+.26*lrHash(k+237.1),branchExtent=.22+.24*lrHash(k+253.6);\n    float bt=clamp((t-branchStart)/branchExtent,0.,1.);\n    float offset=mix(-1.,1.,step(.5,lrHash(k+277.2)))*(.10+.18*lrHash(k+293.5));\n    float branchCenter=center+offset*bt*bt*(3.-2.*bt);\n    float branchWidth=width*.70,branchFilter=sqrt(branchWidth*branchWidth+footprint*footprint*.30);\n    float branchSoft=min(.48,max(.16,footprint/max(.05,extent*branchExtent*spanMM)));\n    float branchAlong=smoothstep(0.,branchSoft,bt)*(1.-smoothstep(1.-branchSoft,1.,bt));\n    height+=lrGrooveR03((mm.x-branchCenter)/branchFilter)*branchAlong*amplitude*.25*(branchWidth/branchFilter);\n   }\n  }\n  // Independent short transverse/oblique segments use actual rest mm, not\n  // normalized depth as a distance. Sample the rails at this segment's root.\n  if(lrHash(k+313.9)<.45){\n   float crossRoot=(id+.12+.76*lrHash(k+331.7))*spacing;\n   float restX=0.000086468+crossRoot*.001;\n   float inner=mix(lrInnerBottom(restX),lrInnerTop(restX),upper);\n   float outer=mix(lrBottom(restX),lrTop(restX),upper);\n   float crossY=(mix(inner,outer,.10+.78*lrHash(k+349.2))-0.232229661)*1000.;\n   float angle=(lrHash(k+367.4)-.5)*1.36;\n   vec2 direction=vec2(cos(angle),sin(angle)),q=mm-vec2(crossRoot,crossY);\n   float extent=.35+.50*lrHash(k+383.6),halfExtent=extent*.5;\n   float endSoft=min(halfExtent,max(extent*.20,footprint*.55));\n   float along=1.-smoothstep(halfExtent-endSoft,halfExtent,abs(dot(q,direction)));\n   float width=.018+.018*lrHash(k+401.3),filterWidth=sqrt(width*width+footprint*footprint*.30);\n   float delta=dot(q,vec2(-direction.y,direction.x))/filterWidth;\n   height+=lrGrooveR03(delta)*along*(.000002+.0000015*lrHash(k+419.8))*(width/filterWidth);\n  }\n }\n float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n float visibility=1.-smoothstep(.055,.34,footprint);\n return (height+micro)*visibility*smoothstep(-.08,.12,depth)*(1.-smoothstep(.86,1.08,depth));\n}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "diagnostic-continuous-meso",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "isolate-meso-relief-only",
+            "from": "float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;",
+            "to": "float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n // Local responsibility diagnostic: continuous shallow relief, not measured tissue.\n micro+=(lrNoise(mm*vec2(1.7,3.2)+vec2(43.,upper*71.+29.))-.5)*.000025;"
+          }
+        ]
+      }
+    },
+    {
+      "id": "diagnostic-continuous-meso-upperbound",
+      "pose": {
+        "pose": "neutral",
+        "view": "macro",
+        "progress": 1,
+        "base": "r06"
+      },
+      "guard": {
+        "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+        "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+      },
+      "replacements": {
+        "guard": {
+          "templateFragmentSHA256": "7421c72f32a7ae6184c3ef23854d411a6115215fe86863a550c1ddaafe297de6",
+          "expandedFragmentSHA256": "deba8631312db09d78a3fc84f86f7ff3f8494d221a245748fa195a8b572d0f5e"
+        },
+        "replacements": [
+          {
+            "id": "isolate-meso-relief-only",
+            "from": "float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;",
+            "to": "float micro=(lrNoise(mm*vec2(5.1,6.3)+upper*71.)-.5)*.0000016;\n // Local responsibility diagnostic: continuous shallow relief, not measured tissue.\n micro+=(lrNoise(mm*vec2(1.7,3.2)+vec2(43.,upper*71.+29.))-.5)*.000100;"
+          }
+        ]
+      }
+    }
+  ]
+}
