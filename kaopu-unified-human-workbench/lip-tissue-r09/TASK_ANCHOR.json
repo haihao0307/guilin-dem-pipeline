@@ -1,0 +1,87 @@
+{
+  "schema": "kaopu/lip-tissue-r09-task-anchor@1",
+  "taskId": "LIP-TISSUE-R09-20261021",
+  "userDirective": "继续下一步；沿用真人对照与自审，实际改善原生嘴唇质感。",
+  "anchoredAt": "2026-10-21T05:38:06Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/lip-tissue-r09-20261021",
+  "baseSha": "512c281a8a6259a4af32f7e60347754c1aae3cf5",
+  "evidencedParent": {
+    "version": "R08 candidate-02",
+    "source": "70457c86c20e724235705ff45fd919ac822dba8e",
+    "build": "dcded3a1b471d32ce191296939b6266e6d41e62a",
+    "sha256": "dcb126c2cca5671ccd541e938705816afb190af791c88c322504db1dd6d12222",
+    "acceptance": "Small close-up gain only; not overall realism or production accepted."
+  },
+  "targetObject": "Same native lip surface on the existing full procedural person",
+  "targetDefectOrChange": "Test whether continuous broader organization tied to existing finite grooves improves inter-groove appearance without stronger engraving.",
+  "referenceSet": [
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37632193/",
+      "use": "Standard-light original photo; qualitative appearance only"
+    },
+    {
+      "url": "https://www.nature.com/articles/s41598-025-89264-x",
+      "use": "Original figure1 score0/1, no scale/depth/BRDF inferred"
+    },
+    {
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/digital-humans?application_version=4.27",
+      "use": "Separation of structure and reflectance, not measured lip coefficients"
+    }
+  ],
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/lip-tissue-r09/**",
+    ".github/workflows/lip-tissue-r09.yml"
+  ],
+  "protectedInvariants": [
+    "Original person/geometry/authoring uniforms",
+    "Original R08 baseline bytes and public entry",
+    "Colour/wetness/roughness/light/camera in matched comparisons",
+    "Original full-person archive chain",
+    "No merge, force push or history rewrite"
+  ],
+  "forbiddenRoutes": [
+    "External mesh",
+    "Generated image or photograph as product texture/substitute",
+    "New independent random meso field",
+    "Depth/amplitude fishing",
+    "Technical test counts used as aesthetic acceptance"
+  ],
+  "candidates": [
+    {
+      "id": "cross-section-redistribution",
+      "rule": "Fixed isolated groove centre at the same footprint; redistribute .60 of primary groove into width .28*spacing, both terms use original narrow filter amplitude. Overlap may change total height."
+    },
+    {
+      "id": "intergroove-patch",
+      "rule": "Broader zero-slope patch bounded by adjacent existing primary centres, .5*min(primary amplitudes), independent conservative pixel-footprint gating; no extra random seed."
+    }
+  ],
+  "maxFailedVisualCandidates": 2,
+  "afterSecondVisualFailure": "ROOT_CAUSE_REVIEW; preserve evidence, do not ship rejected effect.",
+  "acceptanceGates": [
+    "Actual native shader patch uniqueness and exact restoration",
+    "Uniform/geometry/native state invariants",
+    "Visible positive qualitative result in matched close-up and nonfrontal views",
+    "No broad stripe/bead/engraving/mottling regression",
+    "Independent visual verifier",
+    "Verified immutable public HTTPS interactive workbench for any delivery"
+  ],
+  "unknowns": [
+    "Measured depth and width of this person's tissue",
+    "Current broad wax appearance causal decomposition",
+    "Temporal stability until separately observed",
+    "Other character presets"
+  ],
+  "deliveryChecklist": {
+    "generatedImageSubstitute": false,
+    "productionSourceModified": false,
+    "interactive3D": false,
+    "realtimeNativeRendererRequired": true,
+    "publicFixedLinkVerified": false,
+    "browserVerified": false,
+    "screenshotOnlyIsFailure": true
+  },
+  "visualAcceptance": false,
+  "productionReady": false
+}
