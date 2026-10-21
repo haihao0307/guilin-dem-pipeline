@@ -1,0 +1,44 @@
+name: Guilin storage-only adapter QA (no deploy)
+on:
+  push:
+    branches: [qa/guilin-storage-adapter-20261021]
+    paths:
+      - 'qa/guilin-storage-only-20261021/**'
+      - '.github/workflows/guilin-storage-only-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: guilin-storage-only-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Use existing fixed test dependencies
+        run: |
+          python -m pip install -r requirements-test.txt
+          python -m playwright install --with-deps chromium
+      - name: Read frozen canonical assets and verify protected baseline
+        run: python qa/guilin-storage-only-20261021/prepare_ci_fixture.py
+      - name: Full 54 virtual-tile SHA and failure-path regression
+        run: node qa/guilin-storage-only-20261021/test_canonical_tile_source.cjs
+      - name: Actual HTTP Range and rejection-path test
+        run: node qa/guilin-storage-only-20261021/test_http_transport.cjs
+      - name: Real Chromium baseline/candidate comparison, desktop and mobile
+        run: python qa/guilin-storage-only-20261021/ci_browser_qa.py
+      - name: Preserve actual QA evidence (not a production deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-storage-only-qa-${{ github.sha }}
+          path: qa/guilin-storage-only-20261021/reports
+          retention-days: 30

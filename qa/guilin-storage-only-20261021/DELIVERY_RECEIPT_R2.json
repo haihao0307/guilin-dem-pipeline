@@ -1,0 +1,40 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "guilin-storage-only-adapter-20261021",
+  "baseSha": "d0c6b02979829bb5876026967910eda012e4951f",
+  "headSha": "Bound by GITHUB_SHA in actual CI report",
+  "targetObject": "Existing Guilin online elevation reader",
+  "targetDefectOrChange": "Replace legacy tile file fetch with canonical 512-chunk Range reconstruction of byte-identical legacy virtual tiles.",
+  "productionFilesChanged": [
+    "guilin/app.js: two loader lines",
+    "guilin/index.html: one script include",
+    "guilin/canonical-tile-source.js: new storage-only adapter"
+  ],
+  "tests": [
+    "Local full-source and full-AOI comparison passed",
+    "Local JS all54 tile SHA passed",
+    "Local actual HTTP tests passed",
+    "CI independently reruns remote-asset verification, JS and HTTP tests; real browser pending"
+  ],
+  "browserDesktop": false,
+  "browser390x844": false,
+  "failedGates": [
+    "real_browser_pending",
+    "public_deployment_not_performed",
+    "independent_verifier_pending"
+  ],
+  "knownLimitations": [
+    "Browser total RSS/GC memory peak not measured",
+    "No published replacement or deletion",
+    "New archive is full source; existing runtime canonical store is AOI only",
+    "Local Chromium not launched because the current environment previously denied it"
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "VERIFYING",
+  "nextAction": "Run authorized Actions browser QA on this isolated branch; coordinate any later production switch with the sole gh-pages owner."
+}

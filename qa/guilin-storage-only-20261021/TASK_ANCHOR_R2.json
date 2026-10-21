@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu.mother-task-anchor/2.0",
+  "taskId": "guilin-storage-only-adapter-20261021",
+  "userDirective": "Preserve full Guilin source data losslessly, store in the corresponding project, verify replacement before removing old storage. This bounded task changes only the existing viewer storage reader.",
+  "dispatchTime": "2026-10-21T06:53:38Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "qa/guilin-storage-adapter-20261021",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "acceptedBaselineSha": "d0c6b02979829bb5876026967910eda012e4951f",
+  "targetObject": "Existing Guilin online elevation reader",
+  "targetDefectOrChange": "Replace legacy tile file fetch with canonical 512-chunk Range reconstruction of byte-identical legacy virtual tiles.",
+  "referenceSet": [
+    {
+      "kind": "online baseline",
+      "commit": "d0c6b02979829bb5876026967910eda012e4951f"
+    },
+    {
+      "kind": "frozen canonical AOI",
+      "release": "guilin-canonical-elevation-store-12p5m-v1",
+      "manifest_sha256": "1c20ea78351a7827a033c7a4eef6176f5939efdc16abf436ba95863e34c34e78"
+    }
+  ],
+  "expectedArtifact": "Isolated adapter candidate and head-bound real-browser QA; no production deployment",
+  "allowedPaths": [
+    "qa/guilin-storage-only-20261021/**",
+    ".github/workflows/guilin-storage-only-qa.yml"
+  ],
+  "protectedInvariants": [
+    "All raster values and all54 virtual-tile SHA values unchanged",
+    "Hydrology v4, rendering, shaders, camera and controls unchanged",
+    "Overview and hydrology assets byte-identical",
+    "No changes to main, gh-pages or other workbenches",
+    "Full-source preservation is a separate prerequisite; AOI archive is not the complete source"
+  ],
+  "forbiddenRoutes": [
+    "scope_expansion",
+    "water_v6_upgrade",
+    "source_elevation_change",
+    "source_deletion",
+    "production_deploy",
+    "local_browser_safety_bypass",
+    "static_image_substitute",
+    "stale_artifact_as_new"
+  ],
+  "acceptanceGates": [
+    "All840 chunks/7shards match frozen SHA",
+    "Full54 JS tile buffers match original SHA including padding/overlap",
+    "206 exact range/hash, reject200/416/corrupt/truncated responses",
+    "32chunk/16MiB cache logical limit and4 concurrent range reads",
+    "Desktop1440x900 and mobile390x844 baseline/candidate state and canvas match in authorized Actions browser"
+  ],
+  "taskMode": "STORAGE_ONLY_COMPATIBILITY_LOCKED",
+  "creativeAuthorization": false,
+  "productionReady": false,
+  "visualAcceptance": false,
+  "image_generation_used": false,
+  "interactive3D": "Existing unchanged runtime only; no new user-facing delivery yet",
+  "publicHttpsPassed": false,
+  "single_file_delivery": "Not claimed; this is an isolated storage maintenance candidate, not a new standalone-workbench delivery."
+}
