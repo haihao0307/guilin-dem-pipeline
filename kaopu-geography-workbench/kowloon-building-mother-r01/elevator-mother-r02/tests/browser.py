@@ -27,7 +27,9 @@ with sync_playwright() as p:
   page.evaluate('kaopuLift.pause(true)');page.screenshot(timeout=90000,path=str(out/'desktop-overview.png'),full_page=True)
   snap=lambda:page.evaluate('kaopuLift.snapshot()')
   tick=lambda t:page.evaluate('(t)=>kaopuLift.advance(t)',t)
-  page.locator('#doorDetail').click();tick(0);page.screenshot(timeout=90000,path=str(out/'stainless-door-close.png'))
+  frame_before=page.evaluate('kaopuLift.stats().frames');tick(0);tick(0);assert page.evaluate('kaopuLift.stats().frames')==frame_before
+  page.locator('#doorDetail').click();tick(0);assert page.evaluate('kaopuLift.stats().frames')>frame_before
+  page.screenshot(timeout=90000,path=str(out/'stainless-door-close.png'))
   page.locator('#lightShift').evaluate("e=>{e.value='1.5';e.dispatchEvent(new Event('input',{bubbles:true}))}");tick(0);page.screenshot(timeout=90000,path=str(out/'stainless-light-shift.png'))
   page.locator('#doorFinish').select_option('1');tick(0);page.screenshot(timeout=90000,path=str(out/'paint-door-close.png'))
   page.locator('#doorFinish').select_option('0');page.locator('#lightShift').evaluate("e=>{e.value='0';e.dispatchEvent(new Event('input',{bubbles:true}))}");page.locator('#overview').click();tick(0)
