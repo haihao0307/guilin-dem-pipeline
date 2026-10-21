@@ -311,8 +311,27 @@
     controller.archive = archive; controller.restore = restore;
     for (const api of archiveAPIs) { api.archive = currentArchive; api.restore = currentRestore; }
     shell.prepend(panel); oldPanel.hidden = true; document.head.append(style);
-    // No new capture handler: the earlier R06 saves/loads already forward to
+    // No competing save/load capture: the earlier R06 handlers forward to
     // controller.archive/restore dynamically, including their existing inputs.
+    // The inherited R02 button changes only the inner material. R05's own
+    // invalidation does not observe that switch, and disabling its solver
+    // afterwards leaves its lexical archive comparison at r05. Settle the
+    // existing R05 controller while R04 is still selected, then let the actual
+    // R02 handler run normally. Save/load events are not intercepted here.
+    shell.addEventListener('click', e => {
+      const button = e.target.closest?.('#li-controls [data-li-compare="r02"]');
+      if (!button) return;
+      try {
+        idle();
+        batch('prepare inherited R02 comparison', () => heldView(() => {
+          detach();
+          const cornerSolver = window.__LIP_CORNER_SOLVER__;
+          if (cornerSolver.report().installed) cornerSolver.setEnabled(false);
+          comparison = 'inherited';
+          window.motionLip.compare('r04');
+        }));
+      } catch (error) { visibleError(error); }
+    }, true);
     panel.addEventListener('click', e => {
       const b = e.target.closest?.('button'); if (!b) return;
       try {
