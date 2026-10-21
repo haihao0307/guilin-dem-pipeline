@@ -18,18 +18,29 @@ export function validateParameters(p){
 }
 export function makeParts(options={}){
  const p=validateParameters({...DEFAULTS,...options,paint:options.paint??[...DEFAULTS.paint]});
- const rows=[[-6.2,1.20,2.75,1.10],[-5.5,1.24,2.80,1.06],[-3,1.18,2.86,.98],[0,1.08,2.82,.96],[1.5,.94,2.63,.94],[2.8,.70,2.17+p.noseSweep,.80],[3.8,.34,1.64+p.noseSweep,.48],[4.4,.035,1.23,.08]].map(a=>[a[0],a[1]*p.shoulderWidth,a[2],a[3]]);
+ const rows=[[-6.2,1.20,2.75,1.10],[-5.5,1.24,2.80,1.06],[-3,1.18,2.86,.98],[0,1.12,2.82,.96],[1.5,1.01,2.53,1.10],[2.8,.81,2.25+p.noseSweep,1.02],[3.8,.47,1.94+p.noseSweep,.78],[4.4,.13,1.58,.46]].map(a=>[a[0],a[1]*p.shoulderWidth,a[2],a[3]]);
  return [
-  {id:'skin.main',label:'自有连续前罩/锅炉外罩',kind:1,material:0,bounds:[[-6.2,-1.31,1.0],[4.4,1.31,3.91]],sections:rows,position:[0,0,0],size:[0,0,0],rounding:0,subtractDriverClearance:true,basis:'specified exterior design within source envelope, NOT historical profile fit'},
+  {id:'skin.main',label:'自有连续前罩/锅炉外罩',kind:1,material:0,bounds:[[-6.2,-1.31,.85],[4.4,1.31,3.94]],sections:rows,slopes:monotoneSlopes(rows),position:[0,0,0],size:[0,0,0],rounding:0,subtractDriverClearance:true,basis:'specified exterior design within source envelope, NOT historical profile fit'},
   {id:'skin.cab',label:'自有驾驶室外壳',kind:2,material:0,bounds:[[-8.7,-1.28,1.70],[-6.18,1.28,3.9878]],sections:[],position:[-7.44,0,2.8439],size:[1.26,1.28,1.1439],rounding:p.cabRoofRoundness,basis:'specified cab shape, official maximum height; window cuts not surveyed'},
   {id:'skin.tender',label:'自有煤水车箱体',kind:3,material:0,bounds:[[-16.25,-1.28,1.28],[-9.2,1.28,3.75]],sections:[],position:[-12.725,0,2.515],size:[3.525,1.28,1.235],rounding:p.tenderShoulder,basis:'specified continuous tank exterior, official axle anchors remain independent'},
   {id:'cab.glass.design',label:'自有侧窗材质候选',kind:4,material:2,bounds:[[-8.01,-1.281,2.82],[-6.81,1.281,3.49]],sections:[],position:[-7.41,0,3.155],size:[.60,1.281,.335],rounding:.12,basis:'specified optical stand-in, window frame and transmission unresolved'}
  ];
 }
+// Shape-preserving C1 cubic Hermite profile. Flat-at-every-station smoothstep
+// caused repeated shoulder bulges; slopes are shared across adjacent segments.
+export function monotoneSlopes(rows){
+ const n=rows.length,m=rows.map(()=>[0,0,0]);
+ for(let j=1;j<4;j++){
+  const h=rows.slice(1).map((r,i)=>r[0]-rows[i][0]),d=rows.slice(1).map((r,i)=>(r[j]-rows[i][j])/h[i]);
+  const endpoint=(h0,h1,d0,d1)=>{let v=((2*h0+h1)*d0-h0*d1)/(h0+h1);if(v*d0<=0)return 0;if(d0*d1<0&&Math.abs(v)>3*Math.abs(d0))return 3*d0;return v;};
+  m[0][j-1]=endpoint(h[0],h[1],d[0],d[1]);m[n-1][j-1]=endpoint(h[n-2],h[n-3],d[n-2],d[n-3]);
+  for(let i=1;i<n-1;i++){if(d[i-1]*d[i]<=0)m[i][j-1]=0;else{const w1=2*h[i]+h[i-1],w2=h[i]+2*h[i-1];m[i][j-1]=(w1+w2)/(w1/d[i-1]+w2/d[i]);}}
+ }return m;
+}
 export function profileAt(part,x){
- const a=part.sections;let i=0;while(i<a.length-2&&x>a[i+1][0])i++;
- const t=clamp((x-a[i][0])/(a[i+1][0]-a[i][0]),0,1),u=t*t*(3-2*t);
- return [1,2,3].map(k=>a[i][k]*(1-u)+a[i+1][k]*u);
+ const a=part.sections,m=part.slopes??monotoneSlopes(a);let i=0;while(i<a.length-2&&x>a[i+1][0])i++;
+ const dx=a[i+1][0]-a[i][0],t=clamp((x-a[i][0])/dx,0,1),t2=t*t,t3=t2*t;
+ return [1,2,3].map(k=>(2*t3-3*t2+1)*a[i][k]+(t3-2*t2+t)*dx*m[i][k-1]+(-2*t3+3*t2)*a[i+1][k]+(t3-t2)*dx*m[i+1][k-1]);
 }
 export function roundedBox(q,b,r){const d=q.map((v,i)=>Math.abs(v)-(b[i]-r));return Math.hypot(...d.map(v=>Math.max(v,0)))+Math.min(Math.max(...d),0)-r;}
 export function field(part,p){

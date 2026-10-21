@@ -9,3 +9,5 @@ The 10 axle datums, wheel diameters and outer width/height constraints remain se
 This is an in-progress exterior/component field candidate, NOT a complete train or accepted design. Original A4, prior versions and production pages are untouched. All screenshots are internal QA evidence. No teacher/model or magazine images are in this folder.
 
 Run via HTTP and open index.html. CPU checks: node --test tests/*.test.mjs. GPU/browser checks: tests/browser.py with --url and --output. GPU checks include 32 CPU/GPU field-value probes, actual editable shape and material pixels, isolation and mobile controls. Renderer timings are measured on the test hardware, not promised production frame rates. The distance estimate is conservative and bounded in this implementation, not claimed an exact signed-distance formula.
+
+The main profile uses shape-preserving C1 cubic Hermite interpolation with shared slopes, rather than resetting the tangent at every station. CPU tests guard both derivative continuity and local envelope non-overshoot.

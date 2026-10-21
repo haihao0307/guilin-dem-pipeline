@@ -12,9 +12,10 @@ uniform float uRounding,uMetallic,uRoughness,uCoat,uSafety;
 uniform int uProbe;
 uniform vec3 uProbePoint;
 uniform vec4 uSections[8];
+uniform vec3 uSlopes[8];
 out vec4 color;
 float boxSDF(vec3 p,vec3 b,float r){vec3 q=abs(p)-(b-vec3(r));return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0)-r;}
-vec3 profile(float x){int k=0;for(int i=0;i<6;i++){if(i<uSectionCount-2&&x>uSections[i+1].x)k=i+1;}vec4 a=uSections[k],b=uSections[k+1];float t=clamp((x-a.x)/(b.x-a.x),0.0,1.0);return mix(a.yzw,b.yzw,t*t*(3.0-2.0*t));}
+vec3 profile(float x){int k=0;for(int i=0;i<6;i++){if(i<uSectionCount-2&&x>uSections[i+1].x)k=i+1;}vec4 a=uSections[k],b=uSections[k+1];float dx=b.x-a.x,t=clamp((x-a.x)/dx,0.0,1.0),t2=t*t,t3=t2*t;return (2.0*t3-3.0*t2+1.0)*a.yzw+(t3-2.0*t2+t)*dx*uSlopes[k]+(-2.0*t3+3.0*t2)*b.yzw+(t3-t2)*dx*uSlopes[k+1];}
 float field(vec3 p){
  if(uKind==1){vec3 a=profile(p.x);vec2 n=vec2(abs(p.y/a.x),abs((p.z-a.y)/a.z));float d=(pow(pow(n.x,2.4)+pow(n.y,2.4),1.0/2.4)-1.0)*min(a.x,a.z);d=max(d,max(-6.2-p.x,p.x-4.4));for(int i=0;i<3;i++)d=max(d,1.085-length(vec2(p.x+float(i)*2.2098,p.z-1.016)));return d;}
  vec3 q=p-uPos;float d=boxSDF(q,uSize,uRounding);
@@ -25,7 +26,7 @@ float field(vec3 p){
 }
 vec2 intersectBox(vec3 ro,vec3 rd){vec3 inv=1.0/rd;vec3 a=(uMin-ro)*inv,b=(uMax-ro)*inv;vec3 lo=min(a,b),hi=max(a,b);return vec2(max(lo.x,max(lo.y,lo.z)),min(hi.x,min(hi.y,hi.z)));}
 vec3 normal(vec3 p){const float e=.0015;vec2 k=vec2(1,-1);return normalize(k.xyy*field(p+k.xyy*e)+k.yyx*field(p+k.yyx*e)+k.yxy*field(p+k.yxy*e)+k.xxx*field(p+k.xxx*e));}
-vec3 environment(vec3 d,float rough){vec3 zen=vec3(.38,.53,.66),horizon=vec3(.81,.83,.80),floor=vec3(.22,.25,.25);vec3 c=mix(horizon,zen,smoothstep(0.0,1.0,d.z));c=mix(c,floor,smoothstep(0.0,-.5,d.z));float strip=exp(-pow((d.x+.32)/(.10+rough*.7),2.0))*exp(-pow((d.z-.65)/(.18+rough*.7),2.0));return c+vec3(.75)*strip;}
+vec3 environment(vec3 d,float rough){vec3 zen=vec3(.38,.53,.66),horizon=vec3(.81,.83,.80),floor=vec3(.22,.25,.25);vec3 c=mix(horizon,zen,smoothstep(0.0,1.0,d.z));c=mix(c,floor,(1.0-smoothstep(-.5,0.0,d.z)));float strip=exp(-pow((d.x+.32)/(.10+rough*.7),2.0))*exp(-pow((d.z-.65)/(.18+rough*.7),2.0));return c+vec3(.75)*strip;}
 vec3 shade(vec3 p,vec3 n,vec3 v){
  vec3 l=normalize(vec3(.5,-.45,1.0)),h=normalize(v+l);float nl=max(dot(n,l),0.0),nv=max(dot(n,v),.001),nh=max(dot(n,h),0.0),vh=max(dot(v,h),0.0);float r=max(.065,uRoughness),a=r*r,a2=a*a;float D=a2/(3.14159265*pow(nh*nh*(a2-1.0)+1.0,2.0));float k=pow(r+1.0,2.0)/8.0;float G=nl/(nl*(1.0-k)+k)*nv/(nv*(1.0-k)+k);vec3 F0=mix(vec3(.04),uColor,uMetallic),F=F0+(1.0-F0)*pow(1.0-vh,5.0);vec3 diffuse=(1.0-F)*(1.0-uMetallic)*uColor/3.14159265;vec3 spec=D*G*F/(4.0*nl*nv+.001);vec3 lit=(diffuse+spec)*nl*vec3(3.3,3.05,2.7);
  vec3 refl=reflect(-v,n);vec3 ambient=uColor*(1.0-uMetallic)*(.12+.18*max(n.z,0.0));vec3 fres=F0+(1.0-F0)*pow(1.0-nv,5.0);lit+=ambient+environment(refl,r)*fres*(1.0-r*.7);lit+=uCoat*environment(refl,.08)*(.025+.15*pow(1.0-nv,5.0));
