@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "reviewer": {
+    "type": "independent_ai_reviewer",
+    "agent": "/root/r09_blind_visual_review",
+    "blinding": "order-blind",
+    "blinding_scope": "只见匿名样本编号，不知版本、方案、新旧顺序或参数映射。",
+    "human_experiment": false,
+    "anonymous_review_map_read": false,
+    "recipe_source_or_qa_read": false,
+    "numeric_parameter_explanations_used": false
+  },
+  "method": {
+    "inspection": "使用 view_image、detail=original 实际查看原始图片；未修改像素。",
+    "sample_viewing_sequences": [
+      ["sample-01", "sample-02", "sample-03"],
+      ["sample-03", "sample-01", "sample-02"]
+    ],
+    "image_coordinates": "所有左、右均指画面方向。",
+    "judgment_scope": "仅判断当前图像中的可见外观，不反推生理深度或光学参数。",
+    "record_basis": "本记录整理自已完成的独立匿名视觉判断，未用后续数值解释替代原结论。"
+  },
+  "samples": [
+    {
+      "sample_id": "sample-01",
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/experiments/anonymous-review/sample-01.png",
+      "width_px": 640,
+      "height_px": 512,
+      "actually_viewed": true,
+      "observations": [
+        {
+          "region": "下唇中央偏右宽亮面",
+          "finding": "宽而连续的浅亮区域内部主要是柔和、均匀的粉色过渡，缺少能清楚打散亮面的细碎表面变化。"
+        },
+        {
+          "region": "下唇中央偏左及正中偏下细竖纹",
+          "finding": "偏左有一簇短而近乎平行的细竖线，正中及偏下有较孤立的细长竖线，与周围光滑表面的分离感明显。"
+        },
+        {
+          "region": "沟间表面",
+          "finding": "线间大面积区域相对均匀，仍像平滑底面上添加了细刻线，组织感不足。"
+        }
+      ],
+      "overall_appearance": "仍偏蜡。",
+      "clear_realism_improvement": false
+    },
+    {
+      "sample_id": "sample-02",
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/experiments/anonymous-review/sample-02.png",
+      "width_px": 640,
+      "height_px": 512,
+      "actually_viewed": true,
+      "observations": [
+        {
+          "region": "下唇中央偏右宽亮面",
+          "finding": "与 sample-01 基本相同，无法稳定确认亮面的完整、平滑外观有所改善。"
+        },
+        {
+          "region": "下唇中央偏左短竖纹簇及中部较长细线",
+          "finding": "与 sample-01 的总体关系基本相同，未见可稳定区分二者的纹路不规则性改善。"
+        },
+        {
+          "region": "沟间表面",
+          "finding": "无法稳定确认比 sample-01 多出更自然的细碎组织。"
+        }
+      ],
+      "overall_appearance": "仍偏蜡；与 sample-01 应视作同一档。",
+      "clear_realism_improvement": false
+    },
+    {
+      "sample_id": "sample-03",
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/experiments/anonymous-review/sample-03.png",
+      "width_px": 640,
+      "height_px": 512,
+      "actually_viewed": true,
+      "observations": [
+        {
+          "region": "上唇中部及下唇中央至偏下细竖纹",
+          "finding": "细竖纹显得稍淡、稍柔；部分细线的刻上去感略轻。"
+        },
+        {
+          "region": "下唇中央偏右宽亮面",
+          "finding": "宽亮面仍完整、平滑，未出现足够清楚的细碎表面变化。"
+        },
+        {
+          "region": "沟间表面",
+          "finding": "细线减弱的同时，沟间区域也显得更平滑，未形成更丰富的组织感。"
+        }
+      ],
+      "overall_appearance": "仍偏蜡；纹理显著程度改变不足以构成明确的真实性提升。",
+      "clear_realism_improvement": false
+    }
+  ],
+  "references": [
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/references/visia-figure2.jpg",
+      "width_px": 560,
+      "height_px": 393,
+      "actually_viewed": true,
+      "region_used": "仅中间标准光照嘴唇区域。"
+    },
+    {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/references/low-desquamation-figure1.png",
+      "width_px": 1654,
+      "height_px": 285,
+      "actually_viewed": true,
+      "region_used": "仅 score 0 和 score 1 图片区域。"
+    }
+  ],
+  "reference_comparison": {
+    "visible_pattern": "指定参考区域的自然外观不依赖明显脱屑；沟与沟之间仍有细小、不规则的表面变化，较显眼沟纹与周围更细纹理连在一起。",
+    "remaining_gap": "三张渲染仍更容易被读作均匀光滑唇体加上若干细线。sample-03 的细线减弱未补足沟间组织，sample-01 和 sample-02 的更多可见细线也未明显消除蜡感。"
+  },
+  "ranking": {
+    "reliable_realism_ranking_possible": false,
+    "ordered_sample_ids": null,
+    "sample_01_vs_02": "无可稳定辨认的实质性真实性差异，不能可靠排序。",
+    "sample_03_vs_01_02": "有细纹稍弱的视觉倾向，但平滑感同时增加，不能可靠判为更真实。"
+  },
+  "decision": {
+    "verdict": "no visual acceptance",
+    "visual_acceptance": false,
+    "conclusion": "三张图没有呈现足够明确、可稳定辨认、值得仅凭更真实而保留的提升；整体仍偏蜡。",
+    "retention_implication": "本次外观证据不支持因实质性真实性提升而优先保留其中任一样本。"
+  },
+  "limitations": [
+    "判断限于提供的原始图像尺寸、当前光照和固定视角。",
+    "参考人物、拍摄尺度和成像条件不同，只比较可见表面组织特征，不要求唇形或纹路位置一致。",
+    "无法稳定区分样本不等于证明其像素或内部实现相同。",
+    "不从外观推断生理深度、材质或光学参数，不给出数值真实性评分。",
+    "这是独立 AI reviewer 的 order-blind 外观审核，不是人类受试者实验或统计性盲测。"
+  ]
+}
