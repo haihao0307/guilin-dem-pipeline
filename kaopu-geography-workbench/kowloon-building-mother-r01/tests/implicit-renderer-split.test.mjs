@@ -6,7 +6,7 @@ import {FieldRenderer,buildRendererSources,nearestRankQuantile} from '../r06/ren
 import {deriveField} from '../r06/field.mjs';
 import {deriveMeasuredCase} from '../r06/cases.mjs';
 const spec=deriveField();
-function preprocessed(source){const r=spawnSync('cpp',['-P'],{input:source.replace(/^#version.*\n/,''),encoding:'utf8',maxBuffer:2**22});assert.equal(r.status,0,r.stderr);return r.stdout;}
+function preprocessed(source){const r=spawnSync('cpp',['-P','-Wundef','-Werror'],{input:source.replace(/^#version.*\n/,''),encoding:'utf8',maxBuffer:2**22});assert.equal(r.status,0,r.stderr);return r.stdout;}
 test('production primary and shade preprocess away the analytic rescue body, while rescue omits primary loop',()=>{
  const s=buildRendererSources(spec);assert.equal(s.split,true);
  for(const source of [s.primary,s.shade,s.rayPrimary]){const p=preprocessed(source);assert.doesNotMatch(p,/FIELD_BOUNDARY_EQUATIONS|fieldBoundaryDomain|fieldTraceRayAnalyticClipped|fieldTraceRescueFromClipped/);}

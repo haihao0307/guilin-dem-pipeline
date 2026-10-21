@@ -95,6 +95,9 @@ void main(){
 // Float32 MRT stores exact per-pixel query results, never drawable object geometry.
 // The rescue target is distinct from every sampled primary texture.
 const RAY_INPUT=String.raw`
+#ifndef FIELD_RAY_PROBE
+#define FIELD_RAY_PROBE 0
+#endif
 #if FIELD_RAY_PROBE
 uniform vec3 uPoints[128],uDirections[128];
 void inputRay(out vec3 ro,out vec3 rd){int i=int(gl_FragCoord.x);ro=uPoints[i];rd=normalize(uDirections[i]);}
