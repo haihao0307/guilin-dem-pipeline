@@ -25,7 +25,8 @@ export function sceneFields(s){const out=[];const box=(id,c,h,role=4,tone=0)=>ou
  box('car-light',[0,y+2.345,-.15],[.7,.012,.3],4,4);
  for(const x of [-.7,0,.7])box('car-panel-seam-'+x,[x,y+1.21,-.875],[.008,1.12,.008],4,0);
  box('car-skirt',[0,y+.12,-.86],[1.04,.045,.02],4,0);
- box('car-handrail',[-.35,y+.93,-.83],[.6,.025,.025],4,2);
+ box('car-handrail',[-.35,y+.93,-.81],[.6,.035,.03],4,0);
+ for(const x of [-.88,.18])box('car-handrail-mount-'+x,[x,y+.93,-.855],[.025,.04,.035],4,0);
  for(const side of [-1,1])box('car-door-'+side,[side*(.30+s.carDoor*.60),y+1.18,.76],[.297,1.17,.035],4,2);
  out.push(...panelFields(s));return out.map(f=>({...f,center:scalePoint(s,f.center),half:[f.half[0]*s.design.width/2.56,f.half[1],f.half[2]*s.design.depth/1.7]}));
 }
