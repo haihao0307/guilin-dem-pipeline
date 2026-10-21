@@ -1,0 +1,27 @@
+import asyncio,json,time,argparse,sys
+from pathlib import Path
+from playwright.async_api import async_playwright
+async def main():
+ p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',required=True);p.add_argument('--compile-only',action='store_true');a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'cases':{},'errors':[]}
+ async with async_playwright() as pw:
+  browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+  try:
+   for case in (['kcc'] if a.compile_only else ['kcc','lowrise','warehouse']):
+    page=await browser.new_page();page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(a.base+'tests/mobile-renderer-probe.html');await page.wait_for_function('window.probe?.ready',timeout=30000);compile=await page.evaluate('id=>probe.setup(id)',case);r['cases'][case]={'compile':compile};print('COMPILE',case,json.dumps(compile),flush=True)
+    if a.compile_only:await page.close();break
+    for which,width,cull in [('old',32,False),('optimized',32,True),('old',320,False),('optimized',320,False),('optimized',320,True)]:
+     print('DRAW',case,which,width,cull,flush=True);v=await page.evaluate('x=>probe.render(...x)',[which,width,cull]);key=f'{which}-{width}-{cull}';r['cases'][case][key]=v;print('RESULT',case,key,json.dumps(v),flush=True);assert v['glError']==0
+    c=r['cases'][case];assert c['old-320-False']['sha']==c['optimized-320-False']['sha']==c['optimized-320-True']['sha'],('pixel mismatch',case)
+    await page.close();(out/'results.json').write_text(json.dumps(r,indent=2))
+   if not a.compile_only:
+    # Mobile viewport emulation is NOT an actual phone GPU/device test.
+    page=await browser.new_page(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);page.on('pageerror',lambda e:r['errors'].append(str(e)));t=time.perf_counter();await page.goto(a.base+'whole-building-mobile-r01.html');await page.wait_for_function('window.wholeBuilding?.ready||window.wholeBuilding?.error',timeout=120000);assert not await page.evaluate('wholeBuilding.error');await page.evaluate('wholeBuilding.pause()');m={'firstReadySeconds':time.perf_counter()-t,'before':await page.evaluate('({sampling:wholeBuilding.sampling,stats:wholeBuilding.lastStats,css:document.getElementById("view").getBoundingClientRect().toJSON(),dpr:devicePixelRatio})')};print('MOBILE FIRST',json.dumps(m),flush=True);await page.screenshot(path=str(out/'mobile-before.png'))
+    width=m['before']['sampling']['width'];assert width>=390 and m['before']['sampling']['gestureWidth']==width==m['before']['sampling']['settledWidth'];before=await page.evaluate('wholeBuilding.presentedFrames');box=await page.locator('#view').bounding_box();x=box['x']+box['width']*.5;y=box['y']+box['height']*.5;start=await page.evaluate('performance.now()')
+    await page.evaluate('([x,y])=>document.getElementById("view").dispatchEvent(new PointerEvent("pointerdown",{pointerId:10,pointerType:"touch",button:0,clientX:x,clientY:y,bubbles:true}))',[x,y])
+    for i in range(12):
+     await page.evaluate('([x,y])=>window.dispatchEvent(new PointerEvent("pointermove",{pointerId:10,pointerType:"touch",button:0,clientX:x,clientY:y,bubbles:true}))',[x+3*(i+1),y+1*(i+1)]);await page.wait_for_timeout(65)
+    await page.evaluate('([x,y])=>window.dispatchEvent(new PointerEvent("pointerup",{pointerId:10,pointerType:"touch",button:0,clientX:x,clientY:y,bubbles:true}))',[x+36,y+12]);released=await page.evaluate('performance.now()');await page.wait_for_function('(n)=>wholeBuilding.presentedFrames>n&&!wholeBuilding.renderer.busy',arg=before,timeout=120000);m['interaction']=await page.evaluate('({frames:wholeBuilding.frames,final:wholeBuilding.lastStats,sampling:wholeBuilding.sampling,now:performance.now(),error:wholeBuilding.renderer.gl.getError()})');m['interaction']['inputStart']=start;m['interaction']['released']=released;m['interaction']['releaseToCompleteMs']=m['interaction']['now']-released;assert all(f['width']==width for f in m['interaction']['frames']);assert m['interaction']['error']==0;await page.screenshot(path=str(out/'mobile-after-drag.png'));r['mobile']=m;print('MOBILE COMPLETE',json.dumps({'width':width,'releaseToCompleteMs':m['interaction']['releaseToCompleteMs']}),flush=True);await page.close()
+   assert not r['errors'];r['passed']=True
+  except Exception as e:r['failure']=str(e);print('FAIL',e,flush=True)
+  finally:await browser.close();(out/('compile.json' if a.compile_only else 'results.json')).write_text(json.dumps(r,indent=2));sys.exit(0 if r['passed'] else 1)
+asyncio.run(main())

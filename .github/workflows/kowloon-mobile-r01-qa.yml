@@ -1,0 +1,36 @@
+name: Verify fixed-quality mobile field rendering
+on:
+  push:
+    branches: ['trial/kowloon-mobile-clarity-r01-20261021']
+permissions:
+  contents: read
+jobs:
+  mobile-field:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-geography-workbench/kowloon-building-mother-r01
+            kaopu-geography-workbench/hk-three-buildings-r01
+      - name: Sampling culling and frozen whole-building CPU regressions
+        run: node --test kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-*.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/whole-r02-*.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/whole-tower.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/whole-rails.test.mjs
+      - name: Install pinned browser
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Start local test server
+        run: python -m http.server 8765 >/tmp/mobile-field-http.log 2>&1 &
+      - name: Real GLSL compile and link before rendering
+        run: timeout 80s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-field-browser.py --compile-only --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
+      - name: Same-pixel A B and real mobile viewport gesture
+        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-field-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: mobile-field-r01-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
+          retention-days: 1
