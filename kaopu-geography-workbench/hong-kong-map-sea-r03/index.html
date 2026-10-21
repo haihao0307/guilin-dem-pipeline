@@ -57,7 +57,39 @@ const BACKGROUND_SKY=!new URLSearchParams(location.search).has('liveWeather');
 const qa={backgroundSkySnapshot:BACKGROUND_SKY,weatherClockMode:BACKGROUND_SKY?'parameter-updated-static-snapshot':'original-live-weather',version:'0.1.0',ready:false,frames:0,completedFrames:0,errors:[],storedImageAssets:0,baselineVerified:false,cloudAtlasFrames:0,visualAcceptance:false,aaaQualityApproved:false,productionReady:false};
 window.OceanMother={qa};function fail(e){const s=e?.stack||String(e);qa.errors.push(s);$('error').hidden=false;$('error').textContent='Ocean Mother 运行检查\n'+s;$('loading').style.display='none';console.error(s)}
 addEventListener('error',e=>fail(e.error||e.message));addEventListener('unhandledrejection',e=>fail(e.reason));
-const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,powerPreference:'high-performance'});if(!gl){fail('浏览器未提供 WebGL2');return;}
+function createWebGL2Context(canvas, qa) {
+  const attempts = [];
+  let activeAttempt = null;
+  const onCreationError = event => {
+    if (activeAttempt) activeAttempt.messages.push(event.statusMessage || 'WebGL2 context creation failed without browser details');
+  };
+  canvas.addEventListener('webglcontextcreationerror', onCreationError);
+  try {
+    for (const powerPreference of ['high-performance', 'default', 'low-power']) {
+      activeAttempt = { powerPreference, success: false, messages: [] };
+      attempts.push(activeAttempt);
+      let context = null;
+      try {
+        const attributes = { alpha: false, antialias: false };
+        if (powerPreference !== 'default') attributes.powerPreference = powerPreference;
+        context = canvas.getContext('webgl2', attributes);
+      } catch (error) {
+        activeAttempt.messages.push(error && error.message ? error.message : String(error));
+      }
+      if (context) {
+        activeAttempt.success = true;
+        qa.contextCreation = { ready: true, selectedPowerPreference: powerPreference, attempts };
+        return context;
+      }
+    }
+    qa.contextCreation = { ready: false, selectedPowerPreference: null, attempts };
+    return null;
+  } finally {
+    canvas.removeEventListener('webglcontextcreationerror', onCreationError);
+  }
+}
+
+const gl=createWebGL2Context(canvas,qa);if(!gl){const details=qa.contextCreation.attempts.map(a=>a.powerPreference+': '+(a.messages.join(' / ')||'浏览器未返回具体原因')).join('\n');fail('WebGL2 三维启动未成功。已依次尝试高性能、默认和低功耗模式。\n请先刷新本页；若仍失败，请保留下面的启动信息。\n\n'+details);return;}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fail('WebGL context lost. 请重新加载页面。')});
 const hdr=!!gl.getExtension('EXT_color_buffer_float'),timer=gl.getExtension('EXT_disjoint_timer_query_webgl2');qa.hdr=hdr;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),norm=v=>{const n=Math.hypot(...v)||1;return v.map(x=>x/n)},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
