@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  if 'not found' in dependency_text:finish('environment-blocked','Official executable has unavailable shared libraries; no installation attempted')
  # Configuration edits affect only the ephemeral official package, never the delivery project.
  ini=app/'skyscraper.ini';s=ini.read_text()
- for key,val in {'Skyscraper.Frontend.DisableSound':'true','Skyscraper.Frontend.ShowConsole':'false','Skyscraper.SBS.Verbose':'true','Skyscraper.Frontend.Menu.Show':'false'}.items():
+ for key,val in {'Skyscraper.Frontend.DisableSound':'true','Skyscraper.Frontend.ShowConsole':'true','Skyscraper.SBS.Verbose':'true','Skyscraper.Frontend.Menu.Show':'false'}.items():
   s=re.sub(r'(?m)^'+re.escape(key)+r'\s*=.*$',key+' = '+val,s)
  ini.write_text(s)
  (app/'ogre.cfg').write_text('Render System=OpenGL Rendering Subsystem\n\n[OpenGL Rendering Subsystem]\nFull Screen=No\nVideo Mode=800 x 600\nVSync=No\nFSAA=0\n')
@@ -43,8 +43,8 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  (app/'buildings/QA-Teacher-Temporary.bld').write_text(simple+extra)
  log=root/'execution.log'
  with log.open('w') as f:
-  proc=subprocess.Popen(['xvfb-run','-a','-s','-screen 0 1280x800x24',str(app/'bin/skyscraper'),'-m','-c','-p','-v','QA-Teacher-Temporary.bld'],cwd=app,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
-  try:proc.wait(timeout=120)
+  proc=subprocess.Popen(['xvfb-run','-a','-s','-screen 0 1280x800x24','sh','-c','"$1" -m -p -v Simple.bld & child=$!; sleep 20; echo QA_WINDOW_TREE; command -v xwininfo >/dev/null && xwininfo -root -tree; echo QA_PROCESS_STATE; ps -eo pid,stat,wchan:30,comm | grep -E "skyscraper|Xvfb"; wait $child','qa-wrapper',str(app/'bin/skyscraper')],cwd=app,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+  try:proc.wait(timeout=65)
   except subprocess.TimeoutExpired:
    import signal
    os.killpg(proc.pid,signal.SIGTERM)
