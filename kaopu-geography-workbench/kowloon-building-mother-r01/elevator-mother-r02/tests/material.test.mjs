@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {createHash} from 'node:crypto';
+import {MASTER_METAL_GLSL,FINISH_GLSL,FINISH_DESIGN} from '../door-material.mjs';
+import {METAL_FIELDS} from '../../../../kaopu-material-workbench/material-master-r06/metal-surface.mjs';
+const sha=s=>createHash('sha256').update(s).digest('hex');
+test('exact pre-existing material master source, no copied teacher source',()=>{const source=readFileSync(new URL('../../../../kaopu-material-workbench/material-master-r06/metal-surface.mjs',import.meta.url));assert.equal(sha(source),'eb41a40ac4960ec3e2b55bc4637ac4dba641f602d6c1f30909778160b1dc029f');});
+test('master function algebra preserved under symbol and interface adaptation',()=>{const original=METAL_FIELDS.slice(METAL_FIELDS.indexOf('float mt_kh'));const adapted=MASTER_METAL_GLSL.slice(MASTER_METAL_GLSL.indexOf('float elmt_kh')).replaceAll('elmt_','mt_').replaceAll('mtWet','uWet');assert.equal(adapted,original);});
+test('finish scales and range: micro relief not centimetre paint noise',()=>{const s=FINISH_DESIGN.stainless;assert.ok(s.microHeightM<.000001);assert.ok(s.acrossCorrelationM<.001);assert.ok(s.alongCorrelationM>.01);assert.ok(s.alphaAlong>0&&s.alphaAcross<1);assert.ok(s.f0.every(x=>x>0&&x<1));assert.equal(FINISH_DESIGN.bevelM,.002);assert.match(FINISH_GLSL,/elmt_resolved\(6250\.,fp\)/);assert.match(FINISH_GLSL,/liftFinish\(local,n,fp,paint\)/);});
