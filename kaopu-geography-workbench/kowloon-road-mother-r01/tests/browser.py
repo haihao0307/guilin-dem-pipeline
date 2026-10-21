@@ -15,6 +15,7 @@ async def main():
     await page.goto('http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-road-mother-r01/')
     await page.wait_for_function('window.__qa?.ready||!document.getElementById("error").hidden',timeout=60000)
     assert await page.locator('#error').is_hidden(),await page.locator('#error').text_content()
+    assert await page.locator('#topology').text_content() and '片段边界' in await page.locator('#topology').text_content()
     await page.screenshot(path=str(OUT/(label+'-street.png')),full_page=True)
     q=await page.evaluate('window.__qa');assert q['width']>=350;q['renderMode']='analytic field + analytic primitives; screen triangle only'
     await page.locator('[data-n="3"]').click();assert await page.evaluate('roadTrial.state.lanes')==3
