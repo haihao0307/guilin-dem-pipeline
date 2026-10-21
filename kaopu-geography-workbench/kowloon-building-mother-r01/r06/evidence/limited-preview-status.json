@@ -1,0 +1,225 @@
+{
+  "schema": "kaopu.r06.limited-learning-preview/1",
+  "candidateCommit": "2b6213d9ef34a6f55f5ac6e67fc75f7885d7e650",
+  "runUrl": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39543424493",
+  "overallQA": "FAILED",
+  "onlyFailedCriterion": [
+    {
+      "check": "underside unresolved must equal zero",
+      "actual": 1
+    }
+  ],
+  "limitedLearningPreview": true,
+  "formalProductRelease": false,
+  "fullThreeBuildingDeliveryComplete": false,
+  "cpuTestsPassed": 309,
+  "r06LocalTestsPassed": 191,
+  "runtimeAudit": {
+    "modelVertexBuffers": 0,
+    "indexDraws": 0,
+    "fullscreenDrawVertexCounts": [
+      3
+    ]
+  },
+  "sourceCases": {
+    "lowrise": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "boundaryStress": {
+        "samples": 1720,
+        "categories": {
+          "patch-front": 176,
+          "tilted-near-parallel": 176,
+          "outer-edge-offset": 1368
+        },
+        "maxTErrorM": 0.0004242304565340582,
+        "mismatches": 0,
+        "examples": [],
+        "passed": true,
+        "scope": "All source patches, each nondegenerate outer/hole edge offset by2mm, hole-through and1:50 tilted rays; sampled evidence, not a universal numerical bound",
+        "limits": {
+          "ordinaryDepthM": 0.0005,
+          "tiltedDepthM": 0.001,
+          "edgeOffsetM": 0.002,
+          "normalToTangentRatio": 0.02
+        }
+      },
+      "unresolved": 0
+    },
+    "kcc": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "boundaryStress": {
+        "samples": 242,
+        "categories": {
+          "patch-front": 21,
+          "tilted-near-parallel": 21,
+          "outer-edge-offset": 200
+        },
+        "maxTErrorM": 2.702971521806319e-05,
+        "mismatches": 0,
+        "examples": [],
+        "passed": true,
+        "scope": "All source patches, each nondegenerate outer/hole edge offset by2mm, hole-through and1:50 tilted rays; sampled evidence, not a universal numerical bound",
+        "limits": {
+          "ordinaryDepthM": 0.0005,
+          "tiltedDepthM": 0.001,
+          "edgeOffsetM": 0.002,
+          "normalToTangentRatio": 0.02
+        }
+      },
+      "unresolved": 0
+    },
+    "warehouse": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "boundaryStress": {
+        "samples": 297,
+        "categories": {
+          "patch-front": 28,
+          "tilted-near-parallel": 28,
+          "outer-edge-offset": 224,
+          "hole-edge-offset": 16,
+          "hole-through": 1
+        },
+        "maxTErrorM": 8.849186700488065e-05,
+        "mismatches": 0,
+        "examples": [],
+        "passed": true,
+        "scope": "All source patches, each nondegenerate outer/hole edge offset by2mm, hole-through and1:50 tilted rays; sampled evidence, not a universal numerical bound",
+        "limits": {
+          "ordinaryDepthM": 0.0005,
+          "tiltedDepthM": 0.001,
+          "edgeOffsetM": 0.002,
+          "normalToTangentRatio": 0.02
+        }
+      },
+      "unresolved": 0
+    }
+  },
+  "sourceBoundCases": {
+    "lowrise": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "unresolved": 0,
+      "sourceUnchanged": true,
+      "actualInterior": false,
+      "performance": {
+        "measurement": "wallclock draw plus gl.finish and pixel readback, not isolated GPU timer",
+        "quantileMethod": "nearest rank: ceil(q*n)-1",
+        "samples": [
+          2334.6999999999534,
+          2325.1999999999534,
+          2365.1999999999534,
+          2337.9000000000233
+        ],
+        "medianMs": 2334.6999999999534,
+        "p95Ms": 2365.1999999999534,
+        "width": 600,
+        "height": 420,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "timerExtensionAvailable": true,
+        "modelTriangles": 0,
+        "screenTrianglesPerPass": 1,
+        "screenPassesPerFrame": 1,
+        "screenTrianglesPerFrame": 1,
+        "vertexBuffers": 0,
+        "indexBuffers": 0
+      }
+    },
+    "kcc": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "unresolved": 0,
+      "sourceUnchanged": true,
+      "actualInterior": false,
+      "performance": {
+        "measurement": "wallclock draw plus gl.finish and pixel readback, not isolated GPU timer",
+        "quantileMethod": "nearest rank: ceil(q*n)-1",
+        "samples": [
+          5105.599999999977,
+          5004.5,
+          5085.400000000023,
+          5090.099999999977
+        ],
+        "medianMs": 5085.400000000023,
+        "p95Ms": 5105.599999999977,
+        "width": 600,
+        "height": 420,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "timerExtensionAvailable": true,
+        "modelTriangles": 0,
+        "screenTrianglesPerPass": 1,
+        "screenPassesPerFrame": 1,
+        "screenTrianglesPerFrame": 1,
+        "vertexBuffers": 0,
+        "indexBuffers": 0
+      }
+    },
+    "warehouse": {
+      "pointParityPassed": true,
+      "rayParityPassed": true,
+      "unresolved": 0,
+      "sourceUnchanged": true,
+      "actualInterior": false,
+      "performance": {
+        "measurement": "wallclock draw plus gl.finish and pixel readback, not isolated GPU timer",
+        "quantileMethod": "nearest rank: ceil(q*n)-1",
+        "samples": [
+          2189.5,
+          2164.5999999999767,
+          2166.0999999999767,
+          2186.70000000007
+        ],
+        "medianMs": 2166.0999999999767,
+        "p95Ms": 2189.5,
+        "width": 600,
+        "height": 420,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "timerExtensionAvailable": true,
+        "modelTriangles": 0,
+        "screenTrianglesPerPass": 1,
+        "screenPassesPerFrame": 1,
+        "screenTrianglesPerFrame": 1,
+        "vertexBuffers": 0,
+        "indexBuffers": 0
+      }
+    }
+  },
+  "interaction": {
+    "movingResolution": {
+      "width": 160,
+      "height": 127
+    },
+    "settledResolution": {
+      "width": 840,
+      "height": 667
+    },
+    "movingScreenshotWallSeconds": 0.6670082439999305,
+    "settledScreenshotWallSeconds": 6.188566261000005,
+    "method": "Playwright input, readiness wait and completed screenshot wall time; includes tool/capture overhead, not isolated GPU/presentation latency; desktop software Chromium, not iOS device",
+    "sameFieldAtBothResolutions": true
+  },
+  "oldVersions": "R03_R04_R05_hashes_and_actual_browser_passed",
+  "publicVerification": "separate_post_deployment_file_hash_and_actual_render_check_required",
+  "visualReview": {
+    "lowrise": "two flights, landing, upper void and slab thickness visible",
+    "kcc": "six wings, shared zone, three core interfaces, partition apertures and stair receiver visible; representative floor only",
+    "warehouse": "separate vehicle/person openings and freight interface visible from entrance; upper plate occludes ground circulation in plan view",
+    "knownCosmeticIssue": "warehouse entrance horizontal dither seam visible; recorded, not hidden or repaired in this frozen candidate"
+  },
+  "limitations": [
+    "one underside grazing ray unresolved at iteration512; no silent miss or raised budget",
+    "unknown actual interiors remain editable design",
+    "KCC only representative floor and receiver, not all24tower interiors",
+    "no full window/door hardware, lifts, foundations, structural/fire certification",
+    "software Chromium performance only, not iOS device or60fps",
+    "material closure provenance audit remains a future formal-release gate"
+  ],
+  "reports": [
+    "candidate13-browser-results.json",
+    "candidate13-microbench.json",
+    "candidate13-old-regression.json"
+  ],
+  "priorFailure": "candidate12-validation.json"
+}
