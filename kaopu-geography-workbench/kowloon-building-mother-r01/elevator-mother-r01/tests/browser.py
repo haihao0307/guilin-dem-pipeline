@@ -1,4 +1,4 @@
-import http.server, threading, pathlib, json, time, argparse, functools
+import http.server, threading, pathlib, json, time, argparse, functools, urllib.request, urllib.parse, hashlib
 from playwright.sync_api import sync_playwright
 parser=argparse.ArgumentParser();parser.add_argument('--base');args=parser.parse_args()
 root=pathlib.Path(__file__).resolve().parents[4];out=pathlib.Path('elevator-evidence');out.mkdir(exist_ok=True)
@@ -7,7 +7,15 @@ if not args.base:
  server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root)))
  threading.Thread(target=server.serve_forever,daemon=True).start()
 base=args.base or f'http://127.0.0.1:{server.server_port}/kaopu-geography-workbench/kowloon-building-mother-r01/elevator-mother-r01/'
-errors=[];checks=[];result={'passed':False,'base':base,'checks':checks,'errors':errors,'limits':'Chromium SwiftShader desktop and 390px viewport simulation; not iPhone hardware or certified elevator behavior.'}
+source_hashes={}
+if args.base:
+ for filename in ['index.html','style.css','app.mjs','model.mjs','geometry.mjs','renderer.mjs','door-material.mjs','../r07/material.mjs','../../../kaopu-material-workbench/material-master-r06/metal-surface.mjs']:
+  expected=pathlib.Path(__file__).resolve().parents[1].joinpath(filename).read_bytes()
+  digest=hashlib.sha256(expected).hexdigest()
+  with urllib.request.urlopen(urllib.parse.urljoin(base,filename)+'?sha='+digest,timeout=45) as response:actual=response.read()
+  assert hashlib.sha256(actual).hexdigest()==digest,'Public source mismatch: '+filename
+  source_hashes[filename]=digest
+errors=[];checks=[];result={'publicSourceSHA256':source_hashes,'passed':False,'base':base,'checks':checks,'errors':errors,'limits':'Chromium SwiftShader desktop and 390px viewport simulation; not iPhone hardware or certified elevator behavior.'}
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1)
