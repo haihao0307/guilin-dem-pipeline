@@ -1,0 +1,38 @@
+{
+  "schema": "kaopu/lip-r09-root-cause-probe-anchor@1",
+  "anchoredAt": "2026-10-21T06:09:28.125476+00:00",
+  "purpose": "Data-only diagnosis after both frozen visual candidates failed; no new appearance candidate.",
+  "frozenBeautyRecipeSHA256": "9836344e1e777bb6def7b11832b9266a7f0caf3a235b70cd3f47982e1a7f122e",
+  "baselineRawPixelsSHA256": "267bd5fa5d76b8ec4f60e889c0449cd730045d0df7337e15014ee6ee066ec190",
+  "preselectedWindowsTopLeftPixels": {
+    "whole_lip_window": {
+      "x": 100,
+      "y": 185,
+      "width": 440,
+      "height": 205
+    },
+    "lower_lip_broad_light_region": {
+      "x": 330,
+      "y": 302,
+      "width": 140,
+      "height": 48
+    }
+  },
+  "channels": {
+    "R": "Ownership multiplied by the final added-height threshold predicate BEFORE MSAA resolve. Thresholds: 0.001 and 1 shader micrometres in two readouts.",
+    "G": "Ownership multiplied by the capped-normal-angle threshold predicate BEFORE MSAA resolve. Thresholds: 0.01 and 0.1 degrees in the two readouts.",
+    "B": "Actual exterior lip ownership lrMask*(1-liWeight), with original lrEnabled/lrScope conditions; 8-bit quantized.",
+    "A": "0.75+0.20*(clamped display-transformed beauty luminance multiplied by original alpha). Data marker and live material/lighting/exposure/opacity dependency, not a metric. Pure native/background alpha255 is excluded; MSAA material boundaries remain uncertain."
+  },
+  "counterfactual": "Same original surface-gradient operator and 0.26 cap applied to psH and psH-finalAddedHeight in the same fragment; the difference is an in-shader numerical counterfactual.",
+  "limitations": [
+    "Engineering thresholds are not physiological measurements or human visibility thresholds.",
+    "One fixed native static view; no motion or multi-person conclusion.",
+    "Numerator and denominator are resolved separately AFTER per-fragment indicator*ownership. Quantization and MSAA material boundaries limit precision; do not multiply decoded categories by resolved ownership.",
+    "Coverage and normal response cannot grant aesthetic acceptance.",
+    "Only the frozen B branch is diagnosed. No amplitude or shape changes are authorized by the result."
+  ],
+  "visualCandidate": false,
+  "visualAcceptance": false,
+  "publicHttpsPassed": false
+}
