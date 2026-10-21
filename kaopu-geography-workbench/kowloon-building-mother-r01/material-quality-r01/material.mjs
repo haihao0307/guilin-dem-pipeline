@@ -101,7 +101,7 @@ FieldSurface sampleFieldMaterial(FieldHit hit,vec3 n,float footprint){
   vec3 color=door?uDoorColor:uFrameColor;float mode=door?uDoorMaterialMode:uFrameMaterialMode;
   if(mode<.5)return FieldSurface(color,uFrameRoughness,uFrameMetallic,0.,0.,1.);
   FieldSurface wood=evaluateTimberField(grain,gn,fp);
-  return mode>1.5?paintTimberField(wood,grain,color,fp):wood;
+  if(mode>1.5)return paintTimberField(wood,grain,color,fp);return wood;
  }
  if(hit.materialRole>2.5)return FieldSurface(vec3(.17,.39,.43),.3,.65,0.,0.,1.);
  if(uMaterialEnabled<.5)return FieldSurface(hit.materialRole>1.5?vec3(.66,.61,.51):vec3(.53,.55,.50),.82,0.,0.,0.,1.);

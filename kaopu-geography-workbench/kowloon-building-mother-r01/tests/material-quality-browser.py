@@ -12,7 +12,7 @@ with sync_playwright() as w:
  def render(width=640,samples=2):
   result=page.evaluate('([width,samplesPerAxis])=>window.__MATERIAL_QUALITY__.render({width,samplesPerAxis})',[width,samples]);check(result['status']=='complete','quality render completed');check(result['done']==result['total'],'all tiles completed');return result
  try:
-  started=time.monotonic();page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=180000);page.wait_for_function(A+'?.ready',timeout=180000);r['qaWarmupWallSeconds']=time.monotonic()-started;r['warmup']=page.evaluate(A+'.snapshot().renderer.compileProfile')
+  started=time.monotonic();page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=180000);page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=180000);check(page.evaluate(A+'?.ready'),'initial material shader ready: '+str(page.evaluate(A+'?.errors')));r['qaWarmupWallSeconds']=time.monotonic()-started;r['warmup']=page.evaluate(A+'.snapshot().renderer.compileProfile')
   # Actual owned wood and paint shading on the SAME already-hosted lowrise window.
   c=r['cases']['lowrise']={};page.evaluate(A+'.setResolution(64,48)');page.evaluate(Q+'.setMaterial({frameMaterialMode:1,doorMaterialMode:1})');c['woodMaterial']=page.evaluate(Q+'.snapshot()');c['woodFrame']=render();capture('window-original-timber-4spp')
   c['woodField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');page.evaluate(Q+'.setMaterial({frameMaterialMode:2,doorMaterialMode:2})');c['paintFrame']=render();capture('window-opaque-paint-4spp');c['paintField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');check(c['woodField']==c['paintField'],'finish choices did not change field geometry')

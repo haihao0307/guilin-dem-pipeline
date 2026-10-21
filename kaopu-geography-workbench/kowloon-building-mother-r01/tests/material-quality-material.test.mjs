@@ -100,3 +100,5 @@ test('finite oblique direct BRDF and metal/wood separation',()=>{
 test('glass absorption contract remains unchanged and metres-based',()=>{
  assert.deepEqual(glassAbsorptionTransmittance(.006),original.glassAbsorptionTransmittance(.006));const a=glassAbsorptionTransmittance(.006),b=glassAbsorptionTransmittance(.012);a.forEach((c,i)=>assert.ok(Math.abs(c*c-b[i])<1e-12));
 });
+
+test("portable GLSL avoids ternary struct return",()=>{assert.ok(!MATERIAL_GLSL.includes("?paintTimberField"));assert.ok(MATERIAL_GLSL.includes("if(mode>1.5)return paintTimberField"));});
