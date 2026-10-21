@@ -1,0 +1,328 @@
+{
+  "schema": "kaopu/lip-surface-reference-review@1",
+  "reviewDateUTC": "2026-10-21",
+  "reviewer": "independent r08_reference_research agent",
+  "status": "pre-render experiment review only",
+  "visualAcceptance": false,
+  "productionReady": false,
+  "productModificationByReviewer": false,
+  "remoteWriteByReviewer": false,
+  "reviewedSource": {
+    "path": "src/SurfaceMaterial.js",
+    "bytes": 11035,
+    "sha256": "7a6fd5235967b73eec7c87fda9059bb2eb599daeb890b9cf843e6ff24e857a49",
+    "implementation": "native-lip-surface@1",
+    "hashBindingRule": "Any source byte change requires this binding to be refreshed and any substantive shader change re-reviewed."
+  },
+  "base": {
+    "path": "kaopu-unified-human-workbench/lip-corner-r06/preview.html",
+    "bytes": 5593463,
+    "sha256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac",
+    "buildCommit": "1237284ea60f9c198b2b63543f098a7551a9af2f",
+    "sourceCommit": "1e1e216c2005f4c318da190e1b3b160cc4bd4a6d",
+    "expectedSHA256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac",
+    "r07FairingInherited": false,
+    "note": "This review read the local immutable R06 shader anchors. Build and GPU verification remain separate gates."
+  },
+  "sources": [
+    {
+      "doi": "10.1111/srt.13418",
+      "title": "Lip color measurement: A new hyperspectral imaging device",
+      "year": 2023,
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1111/srt.13418",
+      "archive": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10410235/",
+      "methods": "19名法国白人女性，21–67岁；裸唇，三种非接触仪器，两次访问，上下唇局部ROI。SpectraFace用交叉偏振去镜面并按D65/10°重建颜色。",
+      "supported": "该样本上下唇存在色差；不同光学采集条件改变看到的颜色与高光。",
+      "limits": "未给完整唇部贴图、粗糙度、沟深或组织厚度。不能推广为全人群固定色差。Figure 2中间普通光适合观察一般外观；交叉偏振图不能直接作高光目标。",
+      "licence": "CC BY-NC-ND 4.0; original figures unmodified, no figures copied into product or repository."
+    },
+    {
+      "doi": "10.1111/ics.70004",
+      "title": "Development of a lip colour chart across four ethnicities",
+      "onlinePublication": "2025-09-10",
+      "issuePublication": "2026;48(1):161–171",
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1111/ics.70004",
+      "archive": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12877972/",
+      "methods": "514名女性，19–68岁，四个人群；去除唇部产品后等待15分钟，测下唇局部ROI。交叉偏振高光谱、D65/10°重建。",
+      "supported": "个体色彩多样且组间有重叠；Figure 1示较均一和较异质的两例。",
+      "limits": "53色是样本人群色域，不是每张嘴的区域贴图；不能按人群身份决定个体颜色。图像去掉镜面，不支持粗糙度或湿润度标定；不存在针对本代码随机场系数的测量依据。"
+    },
+    {
+      "title": "Digital Humans, Unreal Engine 4.27",
+      "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/digital-humans?application_version=4.27",
+      "supported": "分开底色、粗糙度、镜面、散射、法线，区分中尺度/微尺度细节，并用人物参考照片校准三级位移强度。",
+      "limits": "不是本原生网格的数值规范；不提供标准唇沟深度。本研究不授权外部网格导入，其渲染示例也不等于真人照片。"
+    }
+  ],
+  "figures": [
+    {
+      "articleFigure": "srt.13418 Figure 2",
+      "sourceURL": "https://cdn.ncbi.nlm.nih.gov/pmc/blobs/c6aa/10410235/3028e72ac1b3/SRT-29-e13418-g010.jpg",
+      "originalDownload": "srt13418-figure2-visia.jpg",
+      "bytes": 75046,
+      "sha256": "bc89aac44cbd49efd11cf19025a149863c85cda9de3650f738c283826cf89344",
+      "personallyViewedUnmodified": true,
+      "notCopiedIntoRepository": true
+    },
+    {
+      "articleFigure": "srt.13418 Figure 10",
+      "sourceURL": "https://cdn.ncbi.nlm.nih.gov/pmc/blobs/c6aa/10410235/dc00f7008885/SRT-29-e13418-g008.jpg",
+      "originalDownload": "srt13418-figure10-spectraface.jpg",
+      "bytes": 22160,
+      "sha256": "3e720d737d9404529b6c4f488552458e7fdb96c9473310e35234a9c5fdb6ae12",
+      "personallyViewedUnmodified": true,
+      "notCopiedIntoRepository": true
+    },
+    {
+      "articleFigure": "srt.13418 Figure 7",
+      "sourceURL": "https://cdn.ncbi.nlm.nih.gov/pmc/blobs/c6aa/10410235/114e66d06931/SRT-29-e13418-g001.jpg",
+      "originalDownload": "srt13418-figure7-roi.jpg",
+      "bytes": 27476,
+      "sha256": "4887569ec91651ef9553fb15231aa02a0a03e1ee296ced5e028eadd538a041ba",
+      "personallyViewedUnmodified": true,
+      "notCopiedIntoRepository": true
+    },
+    {
+      "articleFigure": "ics.70004 Figure 1",
+      "sourceURL": "https://cdn.ncbi.nlm.nih.gov/pmc/blobs/0770/12877972/d1f7cad34eee/ICS-48-161-g007.jpg",
+      "originalDownload": "ics70004-figure1.jpg",
+      "bytes": 38137,
+      "sha256": "73a1f5e2bf7e3804b6bf984ca3c2813b50062f71a4c28b66db61fe2c13db1698",
+      "personallyViewedUnmodified": true,
+      "notCopiedIntoRepository": true
+    }
+  ],
+  "currentRenderEvidence": [
+    {
+      "file": "kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-03/neutral-macro-r07.png",
+      "bytes": 325879,
+      "sha256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a",
+      "personallyViewed": true
+    },
+    {
+      "file": "kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-03/jaw-macro-r07.png",
+      "bytes": 321484,
+      "sha256": "e6b8bb29e37af10dc6e4dc18f94bb1436757c61aab4e605b583719cc7d2460de",
+      "personallyViewed": true
+    },
+    {
+      "file": "kaopu-unified-human-workbench/lip-edge-r07/evidence/candidate-03/jaw-oblique-r07.png",
+      "bytes": 283256,
+      "sha256": "0141542e3f402daa6d5855e7f7187eb64c9df7d5d4736e09a4efb3ab7cf1520a",
+      "personallyViewed": true
+    }
+  ],
+  "qualitativeObservations": [
+    {
+      "id": "large-field-uniformity",
+      "observation": "当前上下唇已有色差，但大片唇面内部仍读作很均匀的软色团。真人参考有较均一与较明显分区两类个体。",
+      "implication": "可以试验连续的局部色差；不能把随机噪点本身称为生理结构，也不能给所有个体施加同一种梯度。"
+    },
+    {
+      "id": "detail-scale",
+      "observation": "当前下唇主要可见宽、弱的起伏；较清晰的普通光真人参考可见更细、不等长、断续纹理。",
+      "implication": "需要核查粗细层级。R08只改变共享mask和颜色场，没有直接修改纹路函数或深度，不能声称已修好唇纹。"
+    },
+    {
+      "id": "outer-boundary",
+      "observation": "当前外缘整体宽软，尤其下唇下缘近似均匀喷涂边。参考中的红唇/皮肤过渡清晰度沿边缘变化。",
+      "implication": "较窄且局部变化的过渡是可检验假设；画一圈硬边、颜色越界或令轮廓发亮都应拒绝。"
+    },
+    {
+      "id": "smooth-highlight",
+      "observation": "当前宽而平滑的高光强化了细节不足的观感。偏振参考直接显示同一嘴唇在不同反光条件下颜色与明亮程度变化很大。",
+      "implication": "不能用交叉偏振照片设定普通光湿润度；本轮也不能把edge带来的反光变化说成纯颜色收益。"
+    }
+  ],
+  "comparisonLimits": [
+    "当前人物与参考不是同一受试者、灯光、镜头或分辨率，禁止跨图直接拟合RGB或声称颜色误差下降。",
+    "参考照片主要为闭口；对张口、说话和噘嘴仅能查本系统一致性/伪影，不能声称获得这些姿态的真人匹配。",
+    "从照片中可见的边界和细纹不能反推出生理厚度、微米级沟深或组织浓度。"
+  ],
+  "designReview": {
+    "judgement": "Reasonable bounded engineering hypotheses to render and reject if necessary; not a visual approval.",
+    "factorMeaning": {
+      "edge": "Two coupled replacements: shared outer coverage width and the inherited outer skin-colour blending zone. It affects colour, shader fine-height coverage, roughness and wet-film coverage. It is not a colour-only mask experiment.",
+      "colour": "One replacement of the inherited local colour block. Adds signed rest-attached chroma and multiplicative channel variation, gated away from fully oral surfaces. It is an appearance model, not measured haemoglobin or melanin.",
+      "combined": "Combination may interact because edge changes which pixels receive the colour field. A factorial contrast cannot assume linear additivity."
+    },
+    "nativePropertiesIntendedPreserved": [
+      "Native geometry and DNA/authoring values",
+      "Inherited palette and upper/lower controls",
+      "Light and camera",
+      "Existing uniform object identities and vertex shader",
+      "Original wet-film control and roughness formula"
+    ],
+    "notClaimedPreserved": [
+      "Shared material coverage near the edge",
+      "Final roughness/wet-film contribution at newly reweighted edge pixels",
+      "Fine-height contribution at newly reweighted edge pixels",
+      "Exact mean image brightness or colour"
+    ],
+    "engineeringValues": {
+      "edgeWidthMetres": {
+        "old": "mix(0.00032,0.00105,lrEdgeSoftness)*(0.75+0.5*noise)",
+        "new": "mix(0.00011,0.00046,lrEdgeSoftness)*(0.55+0.90*noise)",
+        "defaultEdgeSoftness": 0.34,
+        "oldNominalBaseMM": 0.5682,
+        "newNominalBaseMM": 0.229,
+        "oldNominalHalfWidthRangeMM": [
+          0.42615,
+          0.71025
+        ],
+        "newNominalHalfWidthRangeMM": [
+          0.12595,
+          0.33205
+        ],
+        "meaning": "Rest-y half-width before max(fwidth(restY)*0.65,edgeWidth); not measured skin/lip boundary thickness or projected screen width. Shape smoothstep spans twice the chosen aa."
+      },
+      "outerBlendDepth": {
+        "oldSmoothstep": [
+          0.62,
+          1.02
+        ],
+        "newSmoothstep": [
+          0.78,
+          1.04
+        ],
+        "noiseMultiplierUnchanged": [
+          0.28,
+          0.52
+        ],
+        "meaning": "Normalized inherited lip depth, not metres or measured anatomical thickness."
+      },
+      "colour": {
+        "nominalFieldRange": [
+          -1,
+          1
+        ],
+        "broadSmallFineWeights": [
+          0.28,
+          0.54,
+          0.18
+        ],
+        "signedChromaRGB": [
+          0.115,
+          -0.06,
+          -0.035
+        ],
+        "signedExponentialRGBCoefficients": [
+          0.115,
+          0.18,
+          0.235
+        ],
+        "fineIntensityCoefficient": 0.035,
+        "fineNoiseFrequencyPerRestMM": [
+          1.15,
+          1.65
+        ],
+        "defaultVariation": 0.65,
+        "variationAllowedRange": [
+          0,
+          1
+        ],
+        "exteriorGate": "(1-clamp(vL19State.x,0,1))*smoothstep(-0.05,0.15,lrDepth)",
+        "fullGainExponentialFactorRanges": [
+          [
+            0.8913661439068313,
+            1.1218734375719384
+          ],
+          [
+            0.835270211411272,
+            1.1972173631218102
+          ],
+          [
+            0.7905708496287356,
+            1.2649087687328917
+          ]
+        ],
+        "meaning": "All coefficients, frequencies and masks are engineering choices; the cited studies do not measure or prescribe them. Signed pigment values below zero brighten channels, so this is not a nonnegative physical absorption concentration.",
+        "fineFieldFootprintAttenuation": {
+          "formula": "1-smoothstep(0.16,0.42,footprint)",
+          "startRestMMPerPixel": 0.16,
+          "zeroAtRestMMPerPixel": 0.42,
+          "footprintDefinition": "Inherited max(length(dFdx(mm)),length(dFdy(mm))), where mm is rest-space position in millimetres.",
+          "scope": "Only lsFine is attenuated. This also attenuates its 0.18 contribution to lsBlood and its 0.035 intensity modulation. Broad/small chroma and pigment fields are not renormalized or filtered by this new term.",
+          "calibration": "Engineering thresholds; not measured physiological values or a proof of band-limited sampling."
+        }
+      }
+    },
+    "wordingReview": {
+      "acceptable": [
+        "Neither factor is a measured physiological model.",
+        "Zero-centred construction does not assert exact mean colour or brightness.",
+        "No photograph/texture/mesh substitution.",
+        "visualAcceptance remains false."
+      ],
+      "clarify": [],
+      "forbiddenClaims": [
+        "Research-calibrated blood or melanin values",
+        "Statistically matched真人colour from these screenshots",
+        "Correct physiological groove depth",
+        "Demonstrated visible improvement before rendering",
+        "Colour-only edge experiment",
+        "Fine groove repair by this module alone"
+      ],
+      "resolvedDuringReview": [
+        "The opening comment now explicitly preserves saliva-film controls/formula while saying edge changes its shared exterior coverage. The updated source was re-read before completing this review."
+      ]
+    },
+    "samplingRiskHistory": [
+      {
+        "sourceSHA256": "2831f12b6efa4e4051dd1f65c6be13290002f02e03813376d889e01fba95136f",
+        "sourceBytes": 10923,
+        "finding": "The previously reviewed new fine-colour noise had no explicit pixel-footprint attenuation. Normal-distance and motion sampling could produce blotchiness or shimmer. This was a code/design risk, not an observed R08 rendering failure.",
+        "observedRenderFailure": false
+      },
+      {
+        "sourceSHA256": "7a6fd5235967b73eec7c87fda9059bb2eb599daeb890b9cf843e6ff24e857a49",
+        "sourceBytes": 11035,
+        "change": "The new fine field now fades from full gain to zero as the inherited rest-space pixel footprint grows from 0.16 to 0.42 mm/pixel.",
+        "independentDiffCheck": "Reversing precisely the comment plus this one lsFine-line change reproduces the previously reviewed source SHA-256 exactly.",
+        "reviewJudgement": "A bounded response to the identified sampling risk; does not establish that flicker or blotchiness is absent and does not establish visible improvement.",
+        "stillRequired": "Inspect actual full-size macro, oblique and normal-distance images plus pose progression. Previously registered noise, shimmer, pattern and regression rejection criteria remain in force."
+      }
+    ]
+  },
+  "preRegisteredAcceptance": {
+    "commonProtocol": [
+      "Use the immutable R06 baseline and four states r06/edge/colour/r08 at identical identity, original parameters, pose, camera, light, exposure, viewport and render settings.",
+      "Save original full frames before computing differences; inspect each single factor independently before inspecting the combination.",
+      "Cover neutral, jaw-open, speaking and pucker; include frontal and oblique mouth views, the inherited motion progression, and a normal viewing-distance face view.",
+      "Verify actual expanded GPU shaders and inherited vertex/uniform identities; verify disabled mode restores exact R06 pixels and state.",
+      "Image metrics can establish intervention and localisation, not realism or aesthetic acceptance."
+    ],
+    "edgePass": [
+      "At matched native display size, the isolated edge change visibly improves the overly broad red-lip/skin transition in an anatomically coherent region.",
+      "Local clarity varies smoothly; the border retains a transition with no drawn outline, bright rim, colour spill or doubled edge.",
+      "Any change to fine normal/roughness/wet-film coverage stays visually continuous during pose progression and from oblique views."
+    ],
+    "edgeReject": [
+      "Only measurable pixel changes without visible benefit.",
+      "A narrow hard lipstick-like border, jaggedness, halos, bright seam or visible shader-mask boundary.",
+      "Improvement restricted to one pose or camera while other required states deteriorate.",
+      "Claimed colour gain is actually unexplained reflection/normal change without attribution."
+    ],
+    "colourPass": [
+      "The isolated colour factor makes local variation visibly more credible at matched native size while retaining the original identity, broad palette and upper/lower relationship.",
+      "Colour modulation remains restrained and regionally legible, with no visually dominant random speckling or bruised/dirty patches.",
+      "Variation follows the surface during all required poses and oblique views; mouth cavity and unrelated skin retain intended ownership."
+    ],
+    "colourReject": [
+      "Unstructured noise is the principal visible change, or users would read the surface as stippled paint, mottled disease, bruising or dirt.",
+      "Saturated red spots, a systematic hue/brightness drift presented as realism, or newly clipped colour plateaus.",
+      "Texture swimming, temporal shimmer, patch seams, oral tint contamination or visible pattern repetition.",
+      "Only the combined mode is better while colour alone harms the image; do not credit colour independently."
+    ],
+    "combinedPass": [
+      "Both factors individually meet their own visible-benefit criteria, and their combination retains those benefits without new interaction artefacts.",
+      "The final judgement explicitly distinguishes successful local improvement from unresolved broad folds, inner-return geometry and whole-character realism."
+    ],
+    "decisionRule": "Keep only demonstrated beneficial factors; if either factor fails, reject or revise it instead of treating a combined pixel change or passing software tests as visual acceptance."
+  },
+  "pendingEvidence": [
+    "No R08 render has been reviewed by this reviewer.",
+    "No actual GPU link, factor screenshots, pose regression or perceptual before/after acceptance is claimed here.",
+    "Explicit fine-field footprint attenuation is reviewed in code only; actual frame and motion evidence is still required. No reduction in flicker or visual improvement has been demonstrated by this review."
+  ]
+}
