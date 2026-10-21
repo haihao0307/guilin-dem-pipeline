@@ -1,12 +1,17 @@
-import asyncio,json,argparse,time,sys
+import asyncio,json,argparse,time,sys,hashlib,urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 async def main():
- p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',required=True);p.add_argument('--compile-only',action='store_true');a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'errors':[],'cases':{}}
+ p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',required=True);p.add_argument('--compile-only',action='store_true');p.add_argument('--public',action='store_true');a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'errors':[],'cases':{}}
+ if a.public:
+  manifest=json.loads(Path(__file__).with_name('ground-public-manifest.json').read_text());r['publicCommit']=manifest['commit'];r['httpsFiles']=[]
+  for f in manifest['files']:
+   url=a.base+f['path'];response=urllib.request.urlopen(url,timeout=30);body=response.read();actual=hashlib.sha256(body).hexdigest();assert response.status==200 and actual==f['sha256'],('public SHA mismatch',f['path'],actual);r['httpsFiles'].append({'path':f['path'],'status':response.status,'sha256':actual,'bytes':len(body)})
+  print('PUBLIC EXACT FILES',len(r['httpsFiles']),flush=True)
  async with async_playwright() as pw:
   browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
   try:
-   for id in ['kcc','lowrise','warehouse']:
+   for id in ([] if a.public else ['kcc','lowrise','warehouse']):
     page=await browser.new_page(viewport={'width':1100,'height':850});page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(a.base+'tests/ground-renderer-probe.html');await page.wait_for_function('window.probe?.ready');c=await page.evaluate('id=>probe.setup(id)',id);r['cases'][id]={'compile':c};print('COMPILE',id,json.dumps(c),flush=True)
     if not a.compile_only:
      v=await page.evaluate('probe.sourceParity()');assert v['old']['sha']==v['ground']['sha'];assert v['old']['error']==v['ground']['error']==0;r['cases'][id]['sourceParity']=v;print('SOURCE UNCHANGED',id,flush=True)
@@ -17,6 +22,7 @@ async def main():
    if not a.compile_only:
     page=await browser.new_page(viewport={'width':1100,'height':850});page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(a.base+'whole-building-ground-r01.html');await page.wait_for_function('window.wholeBuilding?.ready||window.wholeBuilding?.error',timeout=120000);assert not await page.evaluate('wholeBuilding.error')
     for id,count in [('kcc',1),('lowrise',0),('warehouse',2)]:
+     r['cases'].setdefault(id,{})
      if id!='kcc':await page.evaluate('id=>wholeBuilding.chooseCase(id)',id)
      await page.evaluate('wholeBuilding.pause()');s=await page.evaluate('({metadata:wholeBuilding.groundMetadata,levels:wholeBuilding.model.levels,stats:wholeBuilding.lastStats,system:wholeBuilding.getGroundSystem().additions,error:wholeBuilding.error,glError:wholeBuilding.renderer.gl.getError()})');assert s['glError']==0 and not s['error'];assert len([l for l in s['levels'] if l['id'].startswith('B')])==count;await page.screenshot(path=str(out/(id+'-ground.png')));r['cases'][id]['ground']=s;print('GROUND FRAME',id,s['stats']['wallMs'],flush=True)
      if count:
@@ -25,6 +31,8 @@ async def main():
        await page.evaluate('wholeBuilding.setBasementDepth(3.3)');r['cases'][id]['edited']=await page.evaluate('({metadata:wholeBuilding.groundMetadata,levels:wholeBuilding.model.levels,stats:wholeBuilding.lastStats})');await page.screenshot(path=str(out/'warehouse-depth-edit.png'))
     await page.close()
     mobile=await browser.new_page(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);mobile.on('pageerror',lambda e:r['errors'].append(str(e)));await mobile.goto(a.base+'whole-building-ground-r01.html');await mobile.wait_for_function('window.wholeBuilding?.ready||window.wholeBuilding?.error',timeout=120000);assert not await mobile.evaluate('wholeBuilding.error');r['mobile']=await mobile.evaluate('({sampling:wholeBuilding.sampling,stats:wholeBuilding.lastStats,metadata:wholeBuilding.groundMetadata})');assert r['mobile']['sampling']['gestureWidth']==r['mobile']['sampling']['settledWidth'];await mobile.screenshot(path=str(out/'mobile-ground.png'));await mobile.close()
+   if a.public:
+    old=await browser.new_page(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);old.on('pageerror',lambda e:r['errors'].append(str(e)));await old.goto(a.base+'whole-building-mobile-r01.html');await old.wait_for_function('window.wholeBuilding?.ready||window.wholeBuilding?.error',timeout=120000);assert not await old.evaluate('wholeBuilding.error');await old.evaluate('wholeBuilding.pause()');r['frozenMobile']=await old.evaluate('({caseId:wholeBuilding.caseId,sourceHash:wholeBuilding.sourceHash,frame:wholeBuilding.frames.at(-1),errors:wholeBuilding.errors})');assert not r['frozenMobile']['errors'];await old.screenshot(path=str(out/'frozen-mobile.png'));await old.close()
    assert not r['errors'];r['passed']=True
   except Exception as e:r['failure']=str(e);print('FAIL',repr(e),flush=True)
   finally:await browser.close();(out/('compile.json' if a.compile_only else 'results.json')).write_text(json.dumps(r,indent=2));sys.exit(0 if r['passed'] else 1)
