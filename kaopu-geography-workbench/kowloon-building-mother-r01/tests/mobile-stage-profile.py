@@ -2,7 +2,7 @@ import asyncio,json,argparse,time,sys
 from pathlib import Path
 from playwright.async_api import async_playwright
 async def main():
- p=argparse.ArgumentParser();p.add_argument('--output',required=True);a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'label':'Per-stage wall time with gl.finish, not GPU timer query; synchronization changes scheduling','runs':[]}
+ p=argparse.ArgumentParser();p.add_argument('--output',required=True);a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'label':'Per-stage wall time with synchronous 1-pixel readback, not GPU timer query; synchronization changes scheduling','runs':[]}
  async with async_playwright() as pw:
   b=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=await b.new_page()
   try:

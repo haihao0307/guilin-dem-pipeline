@@ -1,11 +1,12 @@
 import {controllerFor} from '../whole-building-r02/mother-system.mjs';
 import {WholeRenderer} from './renderer.mjs';
 import {chooseSampling} from './sampling.mjs';
+import {shouldPreemptOnRelease} from './frame-request.mjs';
 import {attachCameraControls} from './camera-controls.mjs';
 import {deriveMeasuredCase} from '../r07/cases.mjs';
 import {profileFor} from '../r07/profiles.mjs';
 const $=id=>document.getElementById(id);let measured,official,model,renderer,liftState,view='whole',caseId='kcc',controller=controllerFor('kcc'),config={};const sourceCache=new Map();let switchingCase=false;
-let pending=null,drainPromise=null,activeWidth=0,settleTimer=null,playing=false,lastTick=0,requestCount=0;
+let pending=null,drainPromise=null,activeWidth=0,activeRequest=null,settleTimer=null,playing=false,lastTick=0,requestCount=0;
 const state={ready:false,errors:[],frames:[],cancellations:[],playing:false};window.wholeBuilding=state;
 const clone=x=>structuredClone(x);
 function status(text,error=false){$('status').textContent=text;$('status').className=error?'error':'';}
@@ -23,17 +24,17 @@ function showLift(){state.liftState=liftState;for(const id of ['lift','play','st
 function syncLift(){const v=controller.liftVisuals(model,liftState);renderer.setModel({...model,archetypes:[...model.archetypes,...v.archetypes],instances:[...model.instances,...v.instances]},measured);state.dynamicLiftVisuals=v;}
 function scheduleClear(){clearTimeout(settleTimer);if(!playing)settleTimer=setTimeout(()=>{if(drainPromise||pending)return;if(state.lastStats?.width===clearWidth()&&JSON.stringify(state.lastStats.camera)===JSON.stringify(renderer.options))return;requestFrame(clearWidth()).catch(()=>{});},50);}
 function cancelHigh(){clearTimeout(settleTimer);if(drainPromise)renderer.requestRevision++;}
+function finishGesture(){if(shouldPreemptOnRelease(activeRequest,pending)){renderer.requestRevision++;state.releasePreemptions=(state.releasePreemptions??0)+1;}scheduleClear();}
 function requestFrame(width=clearWidth()){
- pending={width,camera:clone(renderer.options),view,visible:visibleFloors(),number:++requestCount};
- if(drainPromise&&activeWidth>motionWidth()&&width<activeWidth)renderer.requestRevision++;
- if(!drainPromise)drainPromise=(async()=>{while(pending){const q=pending;pending=null;activeWidth=q.width;renderer.options=clone(q.camera);const revision=++renderer.requestRevision;status('正在按当前相机重算固定采样3D函数场，不切换模糊档…');
+ pending={width,camera:clone(renderer.options),view,visible:visibleFloors(),number:++requestCount,requestedAt:performance.now()};state.latestIntent=clone(pending);
+ if(!drainPromise)drainPromise=(async()=>{while(pending){const q=pending;pending=null;activeWidth=q.width;activeRequest=q;renderer.options=clone(q.camera);const revision=++renderer.requestRevision;status('正在按当前相机重算固定采样3D函数场，不切换模糊档…');
   const display=sampling();const stats=await renderer.render({width:q.width,height:Math.floor(q.width*.85),presentWidth:display.width,presentHeight:display.height,tileSize:96,visibleFloorIds:q.visible,source:!['circulation','lift'].includes(q.view),design:q.view!=='source',coreOnly:['circulation','lift'].includes(q.view),requestRevision:revision});
   if(stats.cancelled){state.cancellations.push(stats);if(state.cancellations.length>30)state.cancellations.shift();continue;}
-  state.lastStats=stats;state.frames.push({...stats,intent:q.number,liftState:clone(liftState)});if(state.frames.length>120)state.frames.shift();state.presentedFrames=(state.presentedFrames??0)+1;
+  state.lastStats=stats;state.frames.push({...stats,intent:q.number,requestedAt:q.requestedAt,presentedAt:performance.now(),inputToPresentMs:performance.now()-q.requestedAt,liftState:clone(liftState)});if(state.frames.length>120)state.frames.shift();state.presentedFrames=(state.presentedFrames??0)+1;
   $('performance').textContent=`实际求交 ${stats.width}×${stats.height}px · CSS ${display.cssWidth.toFixed(0)}×${display.cssHeight.toFixed(0)}px · 设备DPR${display.devicePixelRatio} / 有效${display.effectiveDpr.toFixed(2)}\n${stats.wallMs.toFixed(0)}ms / ${stats.tilesCompleted}块 / ${stats.passes}次射线派发\n最大块等待${stats.maxTileWallMs.toFixed(0)}ms · 完成帧${state.presentedFrames}\n${renderer.gpu}`;
   status('当前相机固定采样完整帧已完成；拖动不切糊档，不保证60fps。');graph();
   if(playing){const now=performance.now(),dt=Math.min(2,Math.max(.001,(now-lastTick)/1000));lastTick=now;liftState=controller.advanceLift(model,liftState,dt);if(liftState.arrived)playing=false;syncLift();showLift();pending={width:playing?motionWidth():clearWidth(),camera:clone(renderer.options),view,visible:visibleFloors(),number:++requestCount};}
- }})().catch(e=>{state.errors.push(String(e.stack??e));state.error=e.message;playing=false;status('函数场渲染未完成：'+e.message,true);showLift();throw e;}).finally(()=>{drainPromise=null;activeWidth=0;});
+ }})().catch(e=>{state.errors.push(String(e.stack??e));state.error=e.message;playing=false;status('函数场渲染未完成：'+e.message,true);showLift();throw e;}).finally(()=>{drainPromise=null;activeWidth=0;activeRequest=null;});
  return drainPromise;
 }
 async function idle(){clearTimeout(settleTimer);playing=false;state.playing=false;pending=null;if(drainPromise){renderer.requestRevision++;await drainPromise;}showLift();}
@@ -43,7 +44,7 @@ async function play(target=$('floor').value){if(!model.interfaces.lifts.length)t
 async function changeView(v,{clear=true}={}){await idle();view=v;setCamera();graph();await requestFrame(clear?clearWidth():motionWidth());if(!clear)scheduleClear();}
 async function loadSource(id){if(sourceCache.has(id))return sourceCache.get(id);const profile=profileFor(id),url=new URL(profile.scoreUrl,new URL('../r07/profiles.mjs',import.meta.url)),r=await fetch(url);if(!r.ok)throw Error('Original source unavailable');const text=await r.text(),hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(x=>x.toString(16).padStart(2,'0')).join('');if(hash!==profile.scoreSha256)throw Error('Original source hash mismatch');const result={measured:deriveMeasuredCase(JSON.parse(text)),profile,hash};sourceCache.set(id,result);return result;}
 async function chooseCase(id,{preview=false}={}){if(switchingCase)throw Error('Case switch already in progress');switchingCase=true;lockCaseUi(true);try{if(renderer&&model)await idle();const source=await loadSource(id);caseId=id;controller=controllerFor(id);measured=source.measured;state.measured=measured;state.sourceHash=source.hash;config={};view='whole';$('case').value=id;$('caseName').textContent=source.profile.name;const notes={kcc:'官方塔楼24、裙房4，业主另述全楼28。P/T为设计编号。六户与三梯来自公开代表平面，具体标高及交通尺寸是设计。',lowrise:'官方两层；G/F、1/F有资料，具体标高与内楼梯未知。31–33共用街门与本住宅门分开。默认不生成电梯，不套用六户住宅塔楼。',warehouse:'官方上部12、裙房2、地下2是不同原始记录，不能简单相加称已核实总层数。本设计只生成地上功能层，不生成地下；一套货运接口与独立人员/装卸路径均为明确设计。'};$('caseFacts').textContent=notes[id];$('designNote').textContent='学习中的可编辑设计。完整源外壳及屋顶保持原样；楼板、楼梯、平台、栏杆、门位和服务层是按官方部件边界约束的设计，不是实测室内。';await rebuild({}, {preview});state.ready=true;return model;}finally{switchingCase=false;$('case').value=caseId;lockCaseUi(false);}}
-async function boot(){official=await(await fetch(new URL('../r07/sources/official-footprints.json',import.meta.url))).json();renderer=new WholeRenderer($('view'));state.renderer=renderer;await chooseCase('kcc',{preview:true});state.controls=attachCameraControls($('view'),{getCamera:()=>clone(renderer.options),setCamera:c=>{if(!switchingCase)Object.assign(renderer.options,c);},onStart:()=>{if(!switchingCase)cancelHigh();},onChange:()=>{if(!switchingCase)requestFrame(motionWidth()).catch(()=>{});},onEnd:()=>{if(!switchingCase)scheduleClear();}});}
+async function boot(){official=await(await fetch(new URL('../r07/sources/official-footprints.json',import.meta.url))).json();renderer=new WholeRenderer($('view'));state.renderer=renderer;await chooseCase('kcc',{preview:true});state.controls=attachCameraControls($('view'),{getCamera:()=>clone(renderer.options),setCamera:c=>{if(!switchingCase)Object.assign(renderer.options,c);},onStart:()=>{if(!switchingCase)cancelHigh();},onChange:()=>{if(!switchingCase)requestFrame(motionWidth()).catch(()=>{});},onEnd:()=>{if(!switchingCase)finishGesture();}});}
 $('loading').onclick=()=>{const r=controller.loadingRoute(model);state.lastLoadingRoute=r;$('route').textContent='车辆口 → 裙房装卸区 → 独立 DESIGN 货运接口；人员入口与路线分开，货梯到站才允许接通。';};
 $('case').onchange=()=>chooseCase($('case').value,{preview:true}).catch(e=>status(e.message,true));
 $('regenerate').onclick=()=>rebuild(caseId==='lowrise'?{floorHeight:Number($('floorHeight').value)}:{towerFloorCount:Number($('floorCount').value),towerFloorHeight:Number($('floorHeight').value),...(caseId==='kcc'?{podiumFloorCount:4}:{})}).catch(e=>$('validation').textContent=e.message);
