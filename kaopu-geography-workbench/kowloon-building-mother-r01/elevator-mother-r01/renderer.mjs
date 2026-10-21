@@ -23,7 +23,7 @@ void main(){
  vec3 ro=uEye+rt*q.x*uScale+up*q.y*uScale,rd=fw;float best=1e5;int found=-1;vec3 normal=vec3(0);
  for(int i=0;i<128;i++){if(i>=uCount)break;vec3 c=uCenters[i].xyz,b=uHalves[i].xyz;
   vec3 inv=1./(rd+vec3(1e-8)),a=(c-b-ro)*inv,z=(c+b-ro)*inv,mn=min(a,z),mx=max(a,z);float near=max(mn.x,max(mn.y,mn.z)),far=min(mx.x,min(mx.y,mx.z));
-  if(far>=max(near,0.)&&near<best&&near>0.){float t=near;bool hit=true;vec3 nn=near==mn.x?vec3(-sign(rd.x),0,0):near==mn.y?vec3(0,-sign(rd.y),0):vec3(0,0,-sign(rd.z));if(uCenters[i].w>3.5){float radius=min(.002,min(b.x,min(b.y,b.z))*.4);hit=false;for(int j=0;j<16;j++){vec3 q=abs(ro+rd*t-c)-b+radius;float d=length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.)-radius;if(d<.000008){hit=true;vec3 local=ro+rd*t-c;nn=normalize(sign(local)*max(abs(local)-b+radius,vec3(.00000001)));break;}t+=max(d,.000008);if(t>far)break;}}if(hit&&t<best){best=t;found=i;normal=nn;}}
+  if(far>=max(near,0.)&&near<best&&near>0.){float t=near;bool hit=true;vec3 nn=near==mn.x?vec3(-sign(rd.x),0,0):near==mn.y?vec3(0,-sign(rd.y),0):vec3(0,0,-sign(rd.z));if(uCenters[i].w>3.5){float radius=min(.002,min(b.x,min(b.y,b.z))*.4);hit=false;for(int j=0;j<48;j++){vec3 q=abs(ro+rd*t-c)-b+radius;float d=length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.)-radius;if(d<.000008){hit=true;vec3 local=ro+rd*t-c;nn=normalize(sign(local)*max(abs(local)-b+radius,vec3(.00000001)));break;}t+=max(d,.000008);if(t>far)break;}}if(hit&&t<best){best=t;found=i;normal=nn;}}
  }
  vec3 col=mix(vec3(.025,.043,.06),vec3(.09,.13,.15),gl_FragCoord.y/uResolution.y);
  if(found>=0){vec3 p=ro+rd*best,local=p-uCenters[found].xyz;FieldHit hit=FieldHit(local,uCenters[found].w);FieldSurface s=sampleFieldMaterial(hit,normal,uScale/uResolution.y);float tone=uHalves[found].w;
