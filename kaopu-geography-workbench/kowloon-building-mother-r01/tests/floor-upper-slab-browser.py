@@ -11,7 +11,7 @@ async def main():
    report['runtimeHashes']={}
    for path,sha in expected.items():
     response=await page.request.get(base+path);assert response.status==200;actual=hashlib.sha256(await response.body()).hexdigest();assert actual==sha,path;report['runtimeHashes'][path]=actual
-   guards=await(await page.request.get(base+'evidence/floor-upper-slab-r01/guards.json')).json();await page.goto(base+'tests/floor-upper-probe.html');await page.wait_for_function('window.probe?.upperScene');report['setup']=await page.evaluate('probe.setup()');report['relation']=await page.evaluate('probe.upperScene()');report['gpu']=await page.evaluate('probe.renderer.gpu');print('REAL UPPER SLAB COMPILE/LINK PASSED',flush=True)
+   guards=await(await page.request.get(base+'evidence/floor-upper-slab-r01/guards.json')).json();await page.goto(base+'tests/floor-upper-probe.html');await page.wait_for_function("typeof window.probe?.upperScene==='function'");report['setup']=await page.evaluate('probe.setup()');report['relation']=await page.evaluate('probe.upperScene()');report['gpu']=await page.evaluate('probe.renderer.gpu');print('REAL UPPER SLAB COMPILE/LINK PASSED',flush=True)
    report['cold']=await asyncio.wait_for(page.evaluate('probe.upperDraw({width:32})'),90);save();print('COLD DRAW',report['cold']['stats']['wallMs'],flush=True)
    cameras=[('interior-door',{'eye':[-14.8,1.6,-2.65],'target':[-11.863706542414217,1,-.41303863936532004],'fov':60*3.141592653589793/180}),('interior-window',{'eye':[-14.8,1.6,-2.65],'target':[-15.5,1.05,-1.05],'fov':65*3.141592653589793/180})];report['views']={}
    for name,camera in cameras:
