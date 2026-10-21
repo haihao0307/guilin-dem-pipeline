@@ -106,20 +106,54 @@ export class LayerWorld {
   for(const key of ['p','v','old','w']){a[key]=this.alloc(Float64Array,s[key]);s[key]=a[key].view;}
   a.faces=this.alloc(Int32Array,s.faces);a.edges=this.alloc(Float64Array,s.edges.flatMap(e=>[e.a,e.b,e.rest,0]));a.bends=this.alloc(Float64Array,s.bends.flatMap(b=>[b.a,b.b,b.c,b.d,0,b.rest]));
   a.cache=this.alloc(Int32Array,new Int32Array(s.count+s.edges.length+s.faces.length/3).fill(-1));
-  a.saved=s.p.slice();a.backup={p:s.p.slice(),v:s.v.slice(),old:s.old.slice()};a.outputIndices=Uint32Array.from(oriented.packet.spec.panels.flatMap((p,idx,all)=>{const offset=all.slice(0,idx).reduce((n,q)=>n+q.uvMm.length,0);return p.triangles.flatMap(t=>t.map(i=>i+offset));}));
-  this.rows.push(a);this.contacts.reset();if(!this._collectingRows)this.initialize();return a;
+  // This independent seed is already seam-welded and pin-constrained. It is
+  // never overwritten by dressing or dynamics; display vertices have a
+  // different indexing and cannot be used to reset these solver particles.
+  a.preparedSeed=s.p.slice();a.saved=s.p.slice();a.backup={p:s.p.slice(),v:s.v.slice(),old:s.old.slice()};a.outputIndices=Uint32Array.from(oriented.packet.spec.panels.flatMap((p,idx,all)=>{const offset=all.slice(0,idx).reduce((n,q)=>n+q.uvMm.length,0);return p.triangles.flatMap(t=>t.map(i=>i+offset));}));
+  // Preserve the previous contact history until initialize has checkpointed
+  // it. An unsuccessful addition must restore the surviving outfit exactly.
+  this.rows.push(a);if(!this._collectingRows)this.initialize({fromPreparedSeeds:true});else this.contacts.reset();return a;
   }catch(error){this.rows=this.rows.filter(existing=>existing!==a);this.release(a.allocations);throw error;}finally{this.allocationOwner=null;}
  }
- initialize() {
-  const original=this.rows.map(a=>a.s.p.slice());
+ initialize({fromPreparedSeeds=false}={}) {
+  const original=this.rows.map(a=>({row:a,p:a.s.p.slice(),v:a.s.v.slice(),old:a.s.old.slice(),
+   saved:a.saved.slice(),initial:a.s.initial.slice(),time:a.s.time,steps:a.s.steps,
+   edges:a.edges.view.slice(),bends:a.bends.view.slice()}));
+  const contactCheckpoint=this.contacts.checkpoint(),previous=Object.fromEntries([
+   'time','steps','lastDT','timings','solveMS','totalCorrections','drag','initializationReport',
+   'lastContact','lastSettling','lastBodyEnvelope','lastWork'
+  ].map(key=>[key,this[key]]));
   try {
+   if(fromPreparedSeeds){
+    // Adding a garment is the documented whole-outfit restart. Reusing a
+    // survivor's already evolved shape made repeated dressing depend on how
+    // many steps completed before pause, and could fail on the next step.
+    // Only this explicit boundary resets shape; normal step() is unchanged.
+    for(const a of this.rows){
+     a.s.p.set(a.preparedSeed);a.s.old.set(a.preparedSeed);a.s.v.fill(0);
+     a.s.time=0;a.s.steps=0;a.cache.view.fill(-1);
+     this.e.reset_lambda(a.edges.ptr,a.s.edges.length,4,3);
+     this.e.reset_lambda(a.bends.ptr,a.s.bends.length,6,4);
+    }
+    this.contacts.reset();this.bodyEnvelope.setOptimizationEnabled(this.execution.contactDemand);
+   }
    const report=initializeLayers(this);
    for(const a of this.rows){a.saved.set(a.s.p);a.s.initial.set(a.s.p);a.s.old.set(a.s.p);a.s.v.fill(0);a.s.time=0;a.s.steps=0;a.cache.view.fill(-1);a.s.expand();}
    this.contacts.reset();this.lastContact=null;this.time=0;this.steps=0;this.lastDT=null;this.timings=null;this.solveMS=0;this.totalCorrections=0;this.drag=null;this.initializationReport=report;this.lastWork=null;
    return report;
-  }catch(error){this.rows.forEach((a,i)=>{a.s.p.set(original[i]);a.s.expand();a.cache.view.fill(-1);});this.contacts.reset();throw Error('初始叠穿放置失败：'+error.message);}
+  }catch(error){
+   for(const before of original){const a=before.row;
+    for(const key of ['p','v','old','initial'])a.s[key].set(before[key]);
+    a.saved.set(before.saved);a.s.time=before.time;a.s.steps=before.steps;
+    a.edges.view.set(before.edges);a.bends.view.set(before.bends);
+    a.s.expand();a.cache.view.fill(-1);
+   }
+   Object.assign(this,previous);this.contacts.restore(contactCheckpoint);
+   this.bodyEnvelope.setOptimizationEnabled(this.execution.contactDemand);
+   throw Error('初始叠穿放置失败：'+error.message);
+  }
  }
- remove(id) {const removed=this.rows.filter(r=>r.id===id);this.rows=this.rows.filter(r=>r.id!==id);for(const a of removed)this.release(a.allocations);if(this.drag?.id===id)this.drag=null;this.contacts.reset();this.lastContact=null;this.lastBodyEnvelope=null;}
+ remove(id) {const removed=this.rows.filter(r=>r.id===id);if(!removed.length)return;this.rows=this.rows.filter(r=>r.id!==id);for(const a of removed)this.release(a.allocations);if(this.drag?.id===id)this.drag=null;this.contacts.reset();this.lastContact=null;this.lastBodyEnvelope=null;}
  surfaces() {return this.rows.filter(r=>r.enabled).map(r=>({id:r.id,positions:r.s.p,previous:r.s.old,triangles:r.s.faces,inverseMass:r.s.w,thickness:r.thickness,enabled:true}));}
  projectBody(a,dense=false,refresh=false) {
   const m=this.bodyMesh,s=a.s,started=performance.now();

@@ -6,9 +6,9 @@
 
 - **衣物间局部几何界限**：缓存当前和前一位置的顶点、三角面、边界限；每次约束修正后，立即更新相关顶点与相邻特征。保持原候选顺序、原约束和接触历史，只有能保守排除的特征跳过精算。
 - **静态人体包络查询**：同一三角面的索引、全部坐标和查询半径完全不变时复用结果；其余查询按特征界限剔除。人体几何变动会使静态加速结构失效并显式报错，不能将本功能当作动态人体支持。
-- **可切换的执行路径**：页面“按需接触计算”开关只影响计算安排；关闭时走 R02 参考执行路径，不改变位置、速度、物理时间、材料参数或历史。
+- **可切换的执行路径**：页面“按需接触计算”开关只影响计算安排；关闭时使用 R02 的接触查询参考路径，切换不改变位置、速度、物理时间、材料参数或历史。R03 的显式重穿事务修复在开关两侧共用。
 - **可核对的诊断**：记录整个物理步的衣间候选入口精算、邻面测试、人体精算与缓存命中；测量调用的候选访问也计入总数。`layerBroadphaseMS` 已包含在 `layerContactMS` 内，不能重复相加。
-- **明确重穿语义**：重新加入衣物仍是 `GLOBAL_REDRESS_RESTART`，全部衣服重新初始化、物理时间归零。没有宣称保留状态的穿回。
+- **明确重穿语义**：重新加入衣物仍是 `GLOBAL_REDRESS_RESTART`，全部衣服从各自经过焊接与固定点处理的原始准备粒子重新初始化，速度及物理时间归零。该准备副本不会被后续穿着或模拟覆盖；正常物理步不重置衣形。没有宣称保留状态的穿回。添加失败会恢复原有衣物的物理数组、约束 lambda、报告、接触历史和时钟；随后界面对不存在对象的清理是空操作。
 
 原人物、T08 内搭 / knit-fine-0、T03 外层 / knit-soft-0、P02 裤子 / denim-raw、独立纸样、质量、连续实心纱线、缝线、灯光和原来的按需呈现机制保留。本轮没有渲染降质、距离 LOD、合并衣服、冻结被遮住的承载层或替换人物外观。
 
@@ -18,6 +18,8 @@
 
 每个离散状态继续执行独立的全部布料三角面交叉检查和人体半厚度包络审计。物理门槛不变：最大边拉伸 1.45，衣间剩余厚度穿透 0.5 mm，人体半厚度重叠 0.001 mm，缝线间隙 0.01 mm。失败的物理步回滚并报错，不虚增模拟时间。
 
+`tests/native-redress-regression.mjs` 只接受真实页面原始 typed-array 字节捕获。三轮真实形变、移除、继续模拟、重新加入后，完整物理与呈现状态必须严格等于同设置的 fresh World；每轮随后真实推进一步并完整审计。另在真实初始化已收敛之后仅对测试实例注入失败，验证原有状态、全部历史及界面重复清理的事务恢复。它不代替浏览器三轮重穿和长程回放。
+
 发布还必须通过原来的完整六任务 CI：display、demand、continuous、reentry 四项真实浏览器检查，以及 baseline、perturb 各 240 步原生数值回放。CI 重新从实际当前原生页面捕获输入；历史公开观测的数值重建只作为本地早期 A/B，不冒充本轮原始字节捕获。
 
 ```sh
@@ -26,6 +28,7 @@ LAYERING_SOURCE_SHA=<exact-40-character-source-commit> python tools/build.py
 node --test tests/contact.test.mjs tests/local-broadphase.test.mjs tests/body-envelope-demand.test.mjs tests/world.test.mjs
 # GitHub Actions captures the complete input first:
 node tests/native-demand-ab.mjs --input evidence/native-world-input.json --output evidence/native-demand-ab --steps 8
+node tests/native-redress-regression.mjs --source . --input evidence/native-world-input.json --output evidence/native-redress-regression --expected-source <exact-source-commit>
 node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode baseline --label r03 --stop-on-failure
 ```
 
@@ -46,7 +49,19 @@ node tests/native-replay.mjs --input evidence/native-world-input.json --output e
 - `src/local-broadphase.mjs`、`src/layer-contact.mjs`：衣间局部界限与原序接触。
 - `src/body-envelope.mjs`：人体精确查询复用与保守特征排除。
 - `tests/native-demand-ab.mjs`：冻结源码三路径对照。
+- `tests/native-redress-regression.mjs`：原始准备衣形重穿及失败添加恢复回归。
 - `tests/public-smoke.mjs`：固定公开地址的实际启动、单步、检查、开关和视角交互。
 - `ci/workflow.yml`：与仓库 `.github/workflows/tailor-layering-r03.yml` 相同的完整发布矩阵。
 
 源码与构建成功不等于发布验收；最终状态以同一来源 SHA 的 CI 记录、独立复核和公开页面证明为准。
+
+## 当前候选的三维与发布门禁
+
+- [x] 没有用生成图片代替真实三维实现。
+- [x] 已实际修改生产源码，继续使用原实时三维运行时。
+- [x] 预期交付本体是可交互三维工作台；仅有截图视为失败。
+- [ ] 当前新源码的完整六项 CI 全通过；首个 `74c20ec` 候选的重穿失败保留于 `verification/local-redress/first-ci-failure.json`，不能作为成功发布。
+- [ ] 新固定公网链接及真实桌面、手机视口浏览器已验证。
+- [ ] 独立 verifier 根据同一来源 SHA 的证据允许分享；人工 `visualAcceptance` 和 `productionReady` 不自动通过。
+
+准备衣形修复的本地证据与限制见 `verification/REDRESS_STAGE_REVIEW.md` 及 `verification/local-redress/`。早先的 `INDEPENDENT_STAGE_REVIEW.md` 和本地八步 A/B 保留为历史阶段证据，不代表修复后候选的最终发布结论。

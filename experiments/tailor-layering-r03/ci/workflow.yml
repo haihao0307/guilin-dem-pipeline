@@ -167,6 +167,9 @@ jobs:
           ln -s ../../tailor-layering-r03/reference/mp05-studio-r10 ../tailor-layering-r02/reference/mp05-studio-r10
           node tests/native-demand-ab.mjs --input evidence/native-world-input.json --output evidence/native-demand-ab --steps 8 | tee evidence/native-demand-ab.log
           python tools/summarize-native-demand-ab.py evidence/native-demand-ab | tee evidence/native-demand-ab-comparison.log
+      - name: Validate global redress and failed-add transaction on exact native input
+        if: matrix.replay == 'baseline' && (github.event_name == 'pull_request' || inputs.mode == 'full')
+        run: node tests/native-redress-regression.mjs --source . --input evidence/native-world-input.json --output evidence/native-redress-regression --expected-source '${{ github.event.pull_request.head.sha || github.sha }}' | tee evidence/native-redress-regression.log
       - name: Replay the exact captured native input for two physical seconds
         if: github.event_name == 'pull_request' || inputs.mode == 'full'
         run: node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode '${{ matrix.replay }}' --label r03 --stop-on-failure | tee evidence/native-replay.log
