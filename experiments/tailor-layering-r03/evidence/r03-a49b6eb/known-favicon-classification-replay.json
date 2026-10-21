@@ -1,0 +1,49 @@
+{
+  "schema": "r03-console-classifier-read-only-replay@1",
+  "basis": "Original diagnostic remains FAIL; this pure classification replay does not replace a new actual public test.",
+  "originalSummarySHA256": "d3ca20c8010f5024771e6037ba94e996bd386478c16c6780faa0c190364215fc",
+  "originalPassed": false,
+  "proposedClassification": {
+    "schema": "kaopu-r03-public-console-classification@1",
+    "policy": "PUBLIC_WEB_DELIVERY_GATE v1.2.0: no fatal console errors or critical resource failures",
+    "classificationChange": "The former zero-all-console-errors assertion is narrowed only for the independently observed optional origin-root favicon 404.",
+    "rawErrorsPreserved": true,
+    "totalConsoleErrors": 1,
+    "totalCDPLogErrors": 1,
+    "totalCDPLoadingFailures": 0,
+    "totalCDPHTTPFailures": 1,
+    "unclassifiedCDPHTTPFailures": [],
+    "unclassifiedCDPLoadingFailures": [],
+    "expectedOptionalFaviconURL": "https://haihao0307.github.io/favicon.ico",
+    "acceptedNoncriticalBrowserResourceErrors": [
+      {
+        "classification": "OPTIONAL_BROWSER_ORIGIN_FAVICON_404",
+        "url": "https://haihao0307.github.io/favicon.ico",
+        "status": 404,
+        "requestId": "3214.3",
+        "consoleObservedAtMS": 1126,
+        "cdpTimestamp": 1792560631378.516,
+        "criticalRuntimeResource": false
+      }
+    ],
+    "unclassifiedConsoleErrors": [],
+    "unclassifiedCDPLogErrors": [],
+    "passed": true,
+    "match": {
+      "consoleURL": true,
+      "console404Text": true,
+      "cdpNetworkError": true,
+      "cdpURL": true,
+      "cdp404Text": true,
+      "explicitRequestID": true,
+      "oneRequestAndResponse": true,
+      "soleFailedHTTPResponse": true,
+      "browserInitiatedRequest": true,
+      "exactRequestURL": true,
+      "getRequest": true,
+      "exactResponseURL": true,
+      "noncritical404Response": true,
+      "freshNetworkResponse": true
+    }
+  }
+}

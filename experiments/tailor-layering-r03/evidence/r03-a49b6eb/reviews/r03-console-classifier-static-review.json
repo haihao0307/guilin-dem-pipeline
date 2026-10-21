@@ -1,0 +1,66 @@
+{
+  "schema": "r03-classifier-independent-static-review@1",
+  "generatedUTC": "2026-10-21T05:46:47.915600+00:00",
+  "verdict": "PASS for this exact frozen verifier candidate; final live mobile CI still required",
+  "blockingFindings": [],
+  "reviewedFilesSHA256": {
+    "verification-request/.github/scripts/tailor-layering-r03-console-classifier.mjs": "0b3427e4c6f0be46f74331baa7e893464009c62ef58bcfbd78bf4a49b60900bc",
+    "verification-request/.github/scripts/tailor-layering-r03-console-classifier.test.mjs": "5a9f81eb149d84ce85806e580bc75cd01e03694be3ff7d1f8110e6b1e0daf183",
+    "verification-request/.github/scripts/tailor-layering-r03-mobile.mjs": "846be8e7a53e99ee843cb9a6bb5954cb2917aa06de81151f1dddd29a0289b0c4",
+    "verification-request/.github/scripts/tailor-layering-r03-public.json": "5917f837a04b43e3d6b0bb75a8cb36f112532ac68d4356ff2d121e54cd32693f",
+    "verification-request/.github/workflows/tailor-layering-r03-public.yml": "ae9eb87db687a94b1d1a6083dff7e8a91f72f5fdaf0820f778c8f1bbca76acfb"
+  },
+  "productionSourceUnchanged": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+  "runtimeTreeUnchanged": "114feff8d1b1c79a9a164fc8a99b181507d1cc89",
+  "scope": "Read-only source review, pure-function checks and direct Node unit-test execution. No browser, repository write, app change or raw-evidence edit.",
+  "classificationContract": {
+    "allowedCount": 1,
+    "allowedURL": "exact new URL(/favicon.ico, fixed publicURL), with the fixed workflow restricting the public origin",
+    "requiredConsole": "Exactly one error, exact resource404 text and exact favicon location URL",
+    "requiredCDPLog": "Exactly one network-level error, same exact text and URL, nonempty requestId",
+    "requiredRequestResponse": "Exactly one request and response for that same requestId; GET, Other, initiator.other, exact documentURL, exact favicon responseURL, status404, not disk cache and not service worker",
+    "allOtherFailures": "Any CDP loadingFailure rejects. Any other CDP HTTP>=400 rejects, including the no-console/no-log branch. Extra console or CDP Log errors reject.",
+    "pageNetwork": "The prior pathname suffix exception is replaced with exact already-classified URL + HTTP404 + no failure; unclassified favicon paths and all other failed resources reject.",
+    "rawPreservation": "Original console, CDP log, requests, responses and loadingFailures remain unchanged. Total raw counts are preserved independently of classification; accepted/unclassified lists are additional derived data."
+  },
+  "resolvedDuringReview": [
+    "CDP loadingFailures were originally ignored; latest source rejects any loadingFailure before either acceptance path.",
+    "CDP-only HTTP errors could originally pass, including the zero-console branch; latest source requires none there and exactly the bound favicon404 in the favicon branch.",
+    "Original page-network suffix exception was too broad; latest source accepts only a URL already fully classified and an exact404 response without failure."
+  ],
+  "preservationEvidence": "/workspace/scratch/f88f885c9eb3/scratch-review/r03-classifier-preservation-review.json",
+  "preservationConclusion": "After substituting only the explicitly reviewed classifier import/purpose/console-and-network block, the complete mobile helper is byte-identical to 349f. Physical, UI, camera, pixel thresholds, readiness, source and clock assertions are unchanged. Fixed URL, production source, runtime tree and all nine desktop fingerprints are unchanged. Workflow only adds classifier tests before mobile.",
+  "unitTests": {
+    "initial18ConfirmedExecuted": true,
+    "final22ConfirmedExecuted": true,
+    "finalPassed": 22,
+    "finalFailed": 0,
+    "finalSkipped": 0,
+    "finalCanceled": 0,
+    "command": "node verification-request/.github/scripts/tailor-layering-r03-console-classifier.test.mjs",
+    "localNodeVersion": "v24.19.0",
+    "output": "/workspace/scratch/f88f885c9eb3/scratch-review/r03-console-classifier-final-direct-output.txt",
+    "receipt": "/workspace/scratch/f88f885c9eb3/scratch-review/r03-console-classifier-final-direct-receipt.json",
+    "reporterCaveat": "Direct Node emitted named test results and totals, not TAP. The earlier node --test file-only summary is not used as 22-case coverage evidence. Final CI Node22 logs should independently show the 22 cases."
+  },
+  "additionalIndependentNegativeControl": {
+    "case": "No console/log errors, but an actual CDP response record reports app.mjs HTTP500",
+    "result": "Rejected by the frozen classifier",
+    "evidence": "/workspace/scratch/f88f885c9eb3/scratch-review/r03-classifier-cdp-http-negative-control.json"
+  },
+  "actualDiagnosticApplication": {
+    "result": "Only the observed origin-root favicon is classified; raw console1/CDPLog1/HTTP1/loadingFailures0 retained; input unchanged.",
+    "originalRunPassedRemainsFalse": true,
+    "evidence": "/workspace/scratch/f88f885c9eb3/scratch-review/r03-classifier-real-diagnostic-readonly.json"
+  },
+  "historicalFailures": "Both original raw mobile summaries remain passed:false with their original hashes. No retrospective pass, raw count deletion or claim of fixing the resource404 is made.",
+  "finalCIGatesToReview": [
+    "Checkout exact new verification commit and final helper hashes",
+    "22 individual Node22 unit cases executed, passed and unskipped",
+    "Same frozen production a49 and fixed URL; separate desktop nine fingerprints",
+    "Original mobile UI/physics/frame/pixel/control assertions",
+    "If icon404 occurs: raw count1, sole complete same-requestId chain, classified1, unclassified0, zero other CDP HTTP/loading failures",
+    "Retain all raw console/CDP/error observations and original PNGs, with ZIP digest/member receipts",
+    "Clearly distinguish classified optional404 from zero raw console errors and preserve both prior failed runs"
+  ]
+}

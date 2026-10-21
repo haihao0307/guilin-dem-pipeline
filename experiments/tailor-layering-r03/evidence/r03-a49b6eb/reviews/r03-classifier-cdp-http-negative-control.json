@@ -1,0 +1,49 @@
+{
+  "case": "Zero console/log errors but observed critical-resource HTTP 500",
+  "classifierSHA256": "0b3427e4c6f0be46f74331baa7e893464009c62ef58bcfbd78bf4a49b60900bc",
+  "input": {
+    "console": [],
+    "cdp": {
+      "log": [],
+      "requests": [],
+      "responses": [
+        {
+          "requestId": "critical-only-response",
+          "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/layering-r03-20261021-a49b6eb/app.mjs",
+          "status": 500,
+          "type": "Script",
+          "fromDiskCache": false,
+          "fromServiceWorker": false
+        }
+      ],
+      "loadingFailures": []
+    }
+  },
+  "result": {
+    "schema": "kaopu-r03-public-console-classification@1",
+    "policy": "PUBLIC_WEB_DELIVERY_GATE v1.2.0: no fatal console errors or critical resource failures",
+    "classificationChange": "The former zero-all-console-errors assertion is narrowed only for the independently observed optional origin-root favicon 404.",
+    "rawErrorsPreserved": true,
+    "totalConsoleErrors": 0,
+    "totalCDPLogErrors": 0,
+    "totalCDPLoadingFailures": 0,
+    "totalCDPHTTPFailures": 1,
+    "unclassifiedCDPHTTPFailures": [
+      {
+        "requestId": "critical-only-response",
+        "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/layering-r03-20261021-a49b6eb/app.mjs",
+        "status": 500,
+        "type": "Script",
+        "fromDiskCache": false,
+        "fromServiceWorker": false
+      }
+    ],
+    "unclassifiedCDPLoadingFailures": [],
+    "expectedOptionalFaviconURL": "https://haihao0307.github.io/favicon.ico",
+    "acceptedNoncriticalBrowserResourceErrors": [],
+    "unclassifiedConsoleErrors": [],
+    "unclassifiedCDPLogErrors": [],
+    "passed": false
+  },
+  "expectedPassed": false
+}
