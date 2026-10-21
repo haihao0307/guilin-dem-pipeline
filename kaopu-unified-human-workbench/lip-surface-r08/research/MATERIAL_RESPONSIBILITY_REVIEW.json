@@ -1,0 +1,128 @@
+{
+  "schema": "native-lip-material-responsibility-audit@1",
+  "scope": "Read-only native material/coarse-geometry responsibility review; no product changes or geometry recommendation accepted by this report.",
+  "actualBaseline": {
+    "file": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r08-local-experiment/runs/2026-10-21T03-57-28-169Z-43978/000-ready.json",
+    "previewSHA256": "cbd30636b0dd46f0cc6175b8ec1370c2a37d0521075b005dfddb6e3e3fb6db62",
+    "frameSHA256": "02e4664c5a863c052305e98ba69b7b7e601b16e148898bf594fe971d20638a67",
+    "passes": [
+      {
+        "nativeScene": true,
+        "nativeCamera": true,
+        "frameDelta": 1,
+        "drawCalls": 2,
+        "triangles": 531702
+      }
+    ]
+  },
+  "postDiffusion": {
+    "actualScreenSpaceDiffusionPassesObserved": false,
+    "evidence": "One native scene/camera render, two draw calls; no separable diffusion or quad compose passes. Expanded fragment has one psDirect wrapper calling RE_Direct_Physical once. Existing multi-pass faceDiffusion code is present in source but not active in the recorded baseline frame.",
+    "actualFragment": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r08-diagnosis01-artifact/evidence/diagnosis-01/neutral-macro-r06-fragment-expanded.glsl"
+  },
+  "rgbLightWrap": {
+    "source": "vec3 width=vec3(.22,.105,.055)*psScatter; directDiffuse+=(wrap-max(ndl,0))*...*.46*pcBlend",
+    "psScatter": 0.62,
+    "normalSensitivityReductionUpperBoundForPositiveUnclampedNDL": [
+      0.055212953185498057,
+      0.028115669890151157,
+      0.015168745769267961
+    ],
+    "limitations": "These bounds describe the positive-NdotL directional-light branch at pcBlend<=1. RectArea uses a separate physical path. This is not a measured per-pixel contribution distribution or volume SSS."
+  },
+  "coarseGeometry": {
+    "wrapper": "Only while mother.update runs: anatomy.settings.microGeometry = original * .35; restore original in finally.",
+    "displacement": "W=hw(atlasData,u,v,upper)*settings.furrows*anatomy.microGeometry*red*strainGain*(1-inner*.85); position+=computedVertexNormal*W; recomputeVertexNormals afterward.",
+    "hw": "Bilinear sample of red channel by default; (byte-128)/255*.00025 metres. Green is not sampled by this geometry path.",
+    "defaultFurrows": 0.65,
+    "coarseScale": 0.35,
+    "doesNotScale": [
+      "upperVolume",
+      "lowerVolume",
+      "cupid",
+      "tubercle",
+      "corners",
+      "tissueDepth",
+      "main roll geometry"
+    ],
+    "sourceReproduction": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r08-audit/native-atlas-source-reproduction.json",
+    "sourceReproductionIsRuntimeReadback": false,
+    "redByteRange": [
+      53,
+      132
+    ],
+    "redEncodedMicrons": [
+      -73.52941176470588,
+      3.9215686274509802
+    ],
+    "unitStrainFullMaskCurrentEnvelopeMicrons": [
+      -16.727941176470587,
+      0.8921568627450979
+    ],
+    "envelopeCaveat": "Atlas sample envelope only. Actual vertices depend on bilinear locations, red/inner masks and strain. Not an actual displaced-vertex extremum. stats.minHeightMM sums R+G and must not be quoted as red geometry depth.",
+    "primaryWidthParameterMM": [
+      0.072,
+      0.152
+    ],
+    "primaryNominalAmplitudeMM": [
+      0.036,
+      0.082
+    ],
+    "rootSpacingDefinitionMM": "(.52+1.25*random)/density",
+    "primaryCrossSection": "amplitude*sin(pi*along)^.58*(-exp(-1.7*(distance/width)^2)+.105*exp(-.22*(distance/width)^2)); negative overlaps use min, positive rims use max only where not already negative.",
+    "rootSpacingActualSeedMM": {
+      "min": 0.5310073736868794,
+      "max": 1.7669638610491525
+    },
+    "missingScaleInference": "Native so-called coarse relief and R01 fine field mostly encode narrow negative line grooves with overlapping horizontal width ranges. Neither supplies broad two-dimensional tissue facets between grooves. Scaling coarse .35 back up changes depth, not field coverage or width."
+  },
+  "additiveLargeShape": {
+    "source": "b=.001*lowerVolume*exp(-((depth-.4)/.56)^2)*(.4+.6*exp(-((abs(u)-.32)/.29)^2)); lower up-shift=-.00017*lowerVolume*sameDepthEnvelope*lateralFade; then native masks/structure/person-width scale.",
+    "lowerVolume": 0.7,
+    "upperVolume": 0.8,
+    "interpretation": "A broad extra native lip roll is added to the original person; .35 coarse scale leaves it unchanged. Changing lowerVolume changes original character lip thickness and is NOT accepted as a texture fix.",
+    "ablationOnly": {
+      "path": "lipStructure.lowerVolume",
+      "from": 0.7,
+      "to": 0.35,
+      "productCandidate": false,
+      "execution": "If ever needed, restore a copied complete native archive with this single field changed so R05/R06 calibration is rebuilt by its supported restore chain. Do not hide changed parameters from sourceKey validation.",
+      "rejectIf": "Only thinner lips, without improved material organization; any unwanted character change."
+    }
+  },
+  "microSelfOcclusion": {
+    "model": "Isolated negative Gaussian with peak depth A, filtered width W: tan(horizon from valley bottom)≈.63817*A/W. Uniform all-azimuth horizon loss sin(theta)^2 is an upper surrogate, not the finite groove actual AO.",
+    "assumptions": {
+      "footprintMM": 0.11685194820165634,
+      "visibility": 0.8791441917419434,
+      "foldStrength": 0.55,
+      "strain": 1,
+      "wetAttenuation": 1,
+      "alongEnvelope": 1
+    },
+    "baselineHorizonDegrees": [
+      0.5814,
+      1.5188
+    ],
+    "organizedMain4HorizonDegrees": [
+      3.1163,
+      5.3743
+    ],
+    "organizedMain4FullAzimuthLambertLossUpperSurrogate": 0.008773,
+    "limitations": "Isolated field model, not actual full-field shadow tracing. Local intersections, native folds and endpoint geometry can differ. Current evidence does not justify painting strong AO dark lines."
+  },
+  "newExperimentsConclusions": {
+    "restCentralDifference": "Actual root/independent image review found more continuous lines, still only local small benefit; not a wax fix.",
+    "positiveShoulders": "Root actual review: large smooth pink volume persists with fine marks; rejected as overall quality improvement.",
+    "specularOff": "Root actual review: reflection weakens but smooth volume remains; matte is not more real.",
+    "continuousMeso25MicronCoefficient": "Root actual review: small particle effect, max pixel delta 6DN; not accepted.",
+    "mesoFilteringCaveat": "1.7/3.2 value noise means .588/.3125mm lattice; about5.0/2.7 pixels at baseline median footprint. The coefficient25um multiplies[-.5,.5]; gain.55*visibility.879 yields±6.04um before other envelopes. No independent analytical footprint low-pass was added; main Gaussian w/W does not filter the new noise.",
+    "noFurtherAmplitudeFishing": true
+  },
+  "decision": "Final candidate selected by root is only original R03-organized-main4 fragment replacement with inherited screen derivatives. No derivative correction, shoulders, meso, colour/edge change, specular removal or geometry changes. Limited local benefit; overall wax-like appearance unresolved.",
+  "subsequentIndependentMesoReview": {
+    "weak25": "Blind reviewer gives a weak local positive signal, no necessity to replace baseline and no stable advantage over A/H; not selected.",
+    "strong100": "Root and blind reviewer reject dense granular/embossed surface despite less smoothness.",
+    "amplitudes": "Nominal height coefficients, not measured tissue depths."
+  }
+}
