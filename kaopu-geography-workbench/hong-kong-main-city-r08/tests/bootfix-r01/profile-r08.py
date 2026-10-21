@@ -64,6 +64,11 @@ async def main():
     await page.wait_for_timeout(1000);t=await game_state();await page.locator('#depart').click();await page.wait_for_function('(start)=>HKGameR08.state().physicsTimeS>=start+10',arg=t['game']['physicsTimeS'],timeout=150000);await page.locator('#drivePause').click();result['tunnelDriving']=await game_state();assert result['tunnelDriving']['game']['positionM']>t['game']['positionM'];assert result['tunnelDriving']['camera']['mode']=='front';assert result['tunnelDriving']['tunnel']['portals']['resolved'];await page.screenshot(path=str(OUT/'tunnel-driving.png'),timeout=30000)
     result['interactionsPassed']=True
    except Exception as e:result['interactionError']=str(e)
+  if CANDIDATE:
+   assert not result['failed'],result['failed']
+   assert not [e for e in result['events'] if e.get('error') or e.get('type')=='error'],'browser error'
+   assert not [r for r in result['responses'] if r['status']>=400],'HTTP error'
+   assert result.get('tunnelDriving',{}).get('qa',{}).get('lastGLerror')==0,'GL error'
   (OUT/'results.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2)[:20000],flush=True)
   await browser.close()
   if CANDIDATE:assert not result.get('coverError'),result.get('coverError')
