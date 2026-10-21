@@ -2,9 +2,16 @@ import asyncio,json,time,pathlib,sys,hashlib
 from playwright.async_api import async_playwright
 OUT=pathlib.Path('/tmp/r08-evidence');OUT.mkdir(exist_ok=True)
 CANDIDATE=pathlib.Path(sys.argv[1]) if len(sys.argv)>1 else None
+PUBLIC='--public' in sys.argv
 URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/hong-kong-main-city-r08/'
 async def main():
- result={'url':URL,'events':[],'responses':[],'failed':[]};start=time.monotonic()
+ result={'url':URL,'public':PUBLIC,'events':[],'responses':[],'failed':[]};start=time.monotonic()
+ if PUBLIC:
+  import urllib.request
+  for f in CANDIDATE.rglob('*'):
+   if f.is_file():
+    with urllib.request.urlopen(URL+str(f.relative_to(CANDIDATE)),timeout=30) as r:b=r.read()
+    assert b==f.read_bytes(),'public exact-byte mismatch: '+str(f.relative_to(CANDIDATE))
  async with async_playwright() as p:
   browser=await p.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader'])
   page=await browser.new_page(viewport={'width':1280,'height':900})
@@ -12,7 +19,7 @@ async def main():
   page.on('pageerror',lambda e:result['events'].append({'at':time.monotonic()-start,'error':str(e)}))
   page.on('requestfailed',lambda r:result['failed'].append({'url':r.url,'failure':r.failure}))
   page.on('response',lambda r:result['responses'].append({'at':time.monotonic()-start,'status':r.status,'url':r.url}))
-  if CANDIDATE:
+  if CANDIDATE and not PUBLIC:
    async def overlay(route):
     rel=route.request.url.split('?')[0].removeprefix(URL) or 'index.html'
     path=CANDIDATE/rel
@@ -25,11 +32,21 @@ async def main():
   await page.add_init_script('''window.__r08Long=[];new PerformanceObserver(l=>{for(const e of l.getEntries()){window.__r08Long.push({start:e.startTime,duration:e.duration});if(e.duration>1000)console.log('R08_LONG',e.startTime,e.duration)}}).observe({type:'longtask',buffered:true});setInterval(()=>console.log('R08_HEARTBEAT',performance.now(),document.getElementById('loadingText')?.textContent||document.getElementById('load-status')?.textContent,window.OceanMother?.qa?.ready),5000);''')
   cdp=await page.context.new_cdp_session(page);await cdp.send('Profiler.enable');await cdp.send('Profiler.setSamplingInterval',{'interval':5000});await cdp.send('Profiler.start')
   await page.goto(URL,wait_until='commit',timeout=30000)
+  if CANDIDATE:
+   try:
+    await page.wait_for_function("document.querySelector('.r08-plaque-wheel')?.complete && document.querySelector('.r08-plaque-wheel')?.naturalWidth>0",timeout=20000)
+    result['coverA']=await page.locator('.r08-plaque-wheel').evaluate("e=>({transform:getComputedStyle(e).transform,animation:getComputedStyle(e).animationName,rect:e.getBoundingClientRect().toJSON()})")
+    await page.screenshot(path=str(OUT/'cover-wheel-a.png'),timeout=15000);await asyncio.sleep(.35)
+    result['coverB']=await page.locator('.r08-plaque-wheel').evaluate("e=>({transform:getComputedStyle(e).transform,animation:getComputedStyle(e).animationName})")
+    assert result['coverA']['animation']=='r08-plaque-turn' and result['coverA']['transform']!=result['coverB']['transform']
+    assert await page.locator('progress').count()==0
+   except Exception as e:result['coverError']=str(e)
+
   ready=False
   try:
-   await page.wait_for_function("window.OceanMother?.qa?.ready && window.HKGameInterfaceR08 && getComputedStyle(document.getElementById('loading')).display==='none'",timeout=180000);ready=True
+   await page.wait_for_function("(window.HKNextFatal || window.OceanMother?.qa?.errors?.length || window.OceanMother?.qa?.ready && window.HKGameInterfaceR08 && getComputedStyle(document.getElementById('loading')).display==='none')",timeout=240000);ready=await page.evaluate('!!window.OceanMother?.qa?.ready && !window.HKNextFatal && !window.OceanMother?.qa?.errors?.length')
   except Exception as e:result['waitError']=str(e)
-  result['ready']=ready;result['elapsed']=time.monotonic()-start
+  result['ready']=ready;result['elapsed']=time.monotonic()-start;print('FIRST_FULL_FRAME',result['ready'],result['elapsed'],flush=True)
   try:
    profile=await asyncio.wait_for(cdp.send('Profiler.stop'),20);(OUT/'profile.json').write_text(json.dumps(profile));nodes=profile['profile']['nodes'];result['profileTop']=sorted([{'function':n['callFrame']['functionName'],'url':n['callFrame']['url'],'line':n['callFrame']['lineNumber'],'hits':n.get('hitCount',0)}for n in nodes],key=lambda x:x['hits'],reverse=True)[:35]
   except Exception as e:result['profileError']=str(e)
@@ -49,5 +66,6 @@ async def main():
    except Exception as e:result['interactionError']=str(e)
   (OUT/'results.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2)[:20000],flush=True)
   await browser.close()
+  if CANDIDATE:assert not result.get('coverError'),result.get('coverError')
   if CANDIDATE:assert result.get('interactionsPassed'),result.get('interactionError',result.get('waitError'))
 asyncio.run(main())
