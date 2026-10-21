@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {Script} from 'node:vm';
 import {gunzipSync,gzipSync} from 'node:zlib';
 import {build} from './build-tools/node_modules/esbuild/lib/main.js';
 import {measurePaper,LIMITS} from './src/length-operation.mjs';
@@ -43,6 +44,7 @@ const provenance={schema:'kaopu-clo-study-build/1',taskId:'CLO-LEARNING-PILOT-R0
 const worker=await build({entryPoints:[path.join(root,'src/worker-entry.mjs')],bundle:true,format:'iife',platform:'browser',target:'es2022',write:false,minify:true,legalComments:'inline',metafile:true});
 if(worker.warnings.length)throw Error('Worker bundle warnings: '+JSON.stringify(worker.warnings));
 const workerCode=worker.outputFiles[0].text;
+new Script(workerCode,{filename:'clo-study-worker.js'});
 const notices=[];
 for(const p of Object.keys(manifest.files).filter(p=>/LICENSE|NOTICE/i.test(p)))notices.push('ORIGINAL SOURCE NOTICE (this study does not load the Python runtime): '+p+'\n'+(await read('upstream/'+p)).toString());
 notices.push('Three.js r170\n'+(await read('vendor/THREE-LICENSE.txt')).toString());
@@ -57,11 +59,16 @@ if(app.warnings.length)throw Error('App bundle warnings: '+JSON.stringify(app.wa
 const js=app.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');
 let html=(await read('src/shell.html')).toString();
 for(const token of ['<!--STYLE-->','<!--RUNTIME-->'])if(html.split(token).length!==2)throw Error('HTML placeholder changed: '+token);
-html=html.replace('<!--STYLE-->','<style>'+(await read('src/style.css')).toString()+'</style>').replace('<!--RUNTIME-->','<script>'+js+'</script>');
+const css=(await read('src/style.css')).toString();
+// A replacement callback preserves literal $&, $`, $' and $$ in bundled code.
+html=html.replace('<!--STYLE-->',()=>'<style>'+css+'</style>').replace('<!--RUNTIME-->',()=>'<script>'+js+'</script>');
 html=html.replace('<html lang="zh-CN">','<html lang="zh-CN" data-artifact-build="'+buildId+'" data-source-head="'+sourceCommit+'">');
 if(/<script[^>]+src\s*=|<link[^>]+href\s*=|<img[^>]+src\s*=/i.test(html))throw Error('Unexpected required external resource');
+const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+if(inlineScripts.length!==1||inlineScripts[0][1]!==js)throw Error('Bundled runtime changed during HTML insertion');
+new Script(inlineScripts[0][1],{filename:'clo-study-inline.js'});
 await fs.mkdir(path.join(root,'dist'),{recursive:true});
 await fs.writeFile(path.join(root,'dist/index.html'),html);
-await fs.writeFile(path.join(root,'dist/manifest.json'),JSON.stringify({...provenance,htmlSHA256:sha(html),htmlBytes:Buffer.byteLength(html),workerSHA256:sha(workerCode),upstreamFileCount:Object.keys(manifest.files).length,checks:{sourceIntegrity:true,defaultStaticGate:true,standaloneResources:true,browserVerified:false,publicHttpsVerified:false}},null,2)+'\n');
+await fs.writeFile(path.join(root,'dist/manifest.json'),JSON.stringify({...provenance,htmlSHA256:sha(html),htmlBytes:Buffer.byteLength(html),workerSHA256:sha(workerCode),upstreamFileCount:Object.keys(manifest.files).length,checks:{sourceIntegrity:true,defaultStaticGate:true,standaloneResources:true,embeddedJavaScriptSyntax:true,browserVerified:false,publicHttpsVerified:false}},null,2)+'\n');
 await fs.writeFile(path.join(root,'evidence/BUNDLE_INPUTS.json'),JSON.stringify({worker:worker.metafile,app:app.metafile},null,2)+'\n');
 console.log(JSON.stringify({buildId,sourceCommit,htmlBytes:Buffer.byteLength(html),htmlSHA256:sha(html),defaultStaticGate:candidate.record.staticGate.passed,artifact:'dist/index.html'}));
