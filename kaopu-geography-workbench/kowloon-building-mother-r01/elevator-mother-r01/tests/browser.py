@@ -19,6 +19,7 @@ with sync_playwright() as p:
   snap=lambda:page.evaluate('kaopuLift.snapshot()')
   tick=lambda t:page.evaluate('(t)=>kaopuLift.advance(t)',t)
   page.locator('[data-floor="B2"] button').first.click();tick(4)
+  page.screenshot(path=str(out/'car-in-motion.png'),full_page=True)
   moving=snap();assert moving['v']<0 and moving['carLock'] and all(moving['locks'].values())
   page.locator('#openDoor').click();assert snap()['carDoor']==0
   tick(6);arrived=snap();assert arrived['current']=='B2' and arrived['v']==0 and arrived['carDoor']>0
