@@ -5,7 +5,7 @@
   "sourceBranch": "research/tailor-layering-r03-active-regions-20261021",
   "sourcePullRequest": 324,
   "rejectedEarlierSource": "74c20ec28e07cbd9e0082e03216d0231556efa0f",
-  "status": "FULL_CI_ACCEPTED_PUBLIC_HISTORY_RETAINED_CLASSIFIED_VERIFIER_RUNNING",
+  "status": "ALL_TECHNICAL_GATES_ACCEPTED_PENDING_FINAL_PROOF_READBACK",
   "shareAllowed": false,
   "visualAcceptance": false,
   "productionReady": false,
@@ -372,6 +372,68 @@
           "gitBlobSHA": "84545d7fbb292733c60b578491f9dad08b506b36"
         }
       ]
+    },
+    {
+      "file": "public-final-desktop-39551611943.tar.xz",
+      "bytes": 9805040,
+      "sha256": "8dfdc11a13091b27528b7b12edd836a23be7398e07de10578986e55da892ef97",
+      "originalRunConclusion": "success",
+      "originalZIPsIncluded": true,
+      "freshFinalRunReview": true,
+      "parts": [
+        {
+          "file": "archives/public-final-desktop-39551611943.tar.xz.part-000",
+          "offset": 0,
+          "bytes": 4194304,
+          "sha256": "53fa9d6876bb65a88de4170601ea249a731fa52b2a280a17aa74db65befccd4b",
+          "gitBlobSHA": "2c0bd3d6ba5822281d666585380b8b67ad0f6c71"
+        },
+        {
+          "file": "archives/public-final-desktop-39551611943.tar.xz.part-001",
+          "offset": 4194304,
+          "bytes": 4194304,
+          "sha256": "e4c1f7d7d8d1e4dded6175c5499c33e8678a21f50c6b1dd86760250e7c98f0dc",
+          "gitBlobSHA": "66e9df3cf98250705832367a6caa2fe98de421ad"
+        },
+        {
+          "file": "archives/public-final-desktop-39551611943.tar.xz.part-002",
+          "offset": 8388608,
+          "bytes": 1416432,
+          "sha256": "5d71c1478eed36ba3a3032d14034ee27e432941a79c4e1f9f866656ec37a512a",
+          "gitBlobSHA": "7f5e9a60cdc929ba36939aa66abce7a3082abbc2"
+        }
+      ]
+    },
+    {
+      "file": "public-final-mobile-39551611943.tar.xz",
+      "bytes": 8910980,
+      "sha256": "c99af12f574170cbbd98f6384c80053b34b796f9f0503c77d833a57abf9a3335",
+      "originalRunConclusion": "success",
+      "originalZIPsIncluded": true,
+      "freshFinalRunReview": true,
+      "parts": [
+        {
+          "file": "archives/public-final-mobile-39551611943.tar.xz.part-000",
+          "offset": 0,
+          "bytes": 4194304,
+          "sha256": "fd26be06eda8b48e5d2ce16edeff64636cb71086695499418e68db62ea43bec8",
+          "gitBlobSHA": "bc352f856bb74e83f8e8f3e1e13b0ae0e801461e"
+        },
+        {
+          "file": "archives/public-final-mobile-39551611943.tar.xz.part-001",
+          "offset": 4194304,
+          "bytes": 4194304,
+          "sha256": "f205c579697b1f055c0c57f530fdf5b918bc3cc6a618b6996337678ee9f25f2a",
+          "gitBlobSHA": "c2f2aca7c774fee008fa5d136693fd763268ff1f"
+        },
+        {
+          "file": "archives/public-final-mobile-39551611943.tar.xz.part-002",
+          "offset": 8388608,
+          "bytes": 522372,
+          "sha256": "bbbeddbd96536f51a0a721f67f08b1993b16719150824634f1bd64b215f69759",
+          "gitBlobSHA": "ff982b5c9a108d68b6ac0585db37f0c4252acdee"
+        }
+      ]
     }
   ],
   "preservation": "Each archive contains original evidence file bytes and an EVIDENCE_CONTENTS.json manifest. Archive wrapper metadata is normalized. Parts concatenate to the named archive; restore-evidence.py verifies every part and complete archive.",
@@ -383,17 +445,21 @@
     "hostingRefUpdated": true,
     "runtimeCommit": "94fdb6b9db548c77c596db4f59a9cbf4ae293b0a",
     "pagesRun": 39545195696,
-    "publicVerified": false,
+    "publicVerified": true,
     "pagesConclusion": "success",
     "latestHostingCommit": "d14c30552086b3339381958394305ab9ed89024e",
     "initialPagesRun": 39542790085,
     "initialPagesRunConclusion": "cancelled",
-    "preservedEarlierSuccessfulPagesRun": 39543741167
+    "preservedEarlierSuccessfulPagesRun": 39543741167,
+    "currentGitHead": "6f7a7d401209d74fc3dd58034173ca08ba42edba",
+    "currentHeadPagesRun": 39551452819,
+    "currentHeadPagesStatusAtFinalHTTP": "in_progress",
+    "lastObservedSuccessfulHostingCommit": "d14c30552086b3339381958394305ab9ed89024e",
+    "lastObservedSuccessfulPagesRun": 39545195696,
+    "currentAndSuccessfulR03TreesEqual": true
   },
   "requiredRemaining": [
-    "Final actual classified-verifier desktop and mobile results",
-    "Independent review of the new original public artifacts",
-    "Final publication proof and receipt committed and read back"
+    "Final independent publication proof and receipt committed and exact bytes read back"
   ],
   "fullCIRun": 39539509515,
   "reviewedJobs": {
@@ -406,7 +472,7 @@
   },
   "preparedPublicVerification": {
     "commit": "b6d0fef01a2d229ce09a6ff1e9bce11d44aafb1c",
-    "status": "STATIC_PASS_ACTUAL_RUN_IN_PROGRESS",
+    "status": "ACTUAL_DESKTOP_MOBILE_SUCCESS_INDEPENDENTLY_REVIEWED",
     "requiredJobs": [
       "public / desktop",
       "public / mobile"
@@ -414,7 +480,10 @@
     "productionSourceChanged": false,
     "acceptanceClassificationChanged": true,
     "rawErrorsRetained": true,
-    "independentReview": "reviews/r03-console-classifier-static-review.json"
+    "independentReview": "reviews/r03-console-classifier-static-review.json",
+    "run": 39551611943,
+    "unitTestsExecuted": 22,
+    "unitTestsPassed": 22
   },
   "publicHistory": [
     {
@@ -436,17 +505,55 @@
     {
       "run": 39551611943,
       "verifierCommit": "b6d0fef01a2d229ce09a6ff1e9bce11d44aafb1c",
-      "conclusion": null,
-      "status": "in_progress",
-      "scope": "New evidence-based classifier after exact independent root-cause/static review; total raw errors retained."
+      "conclusion": "success",
+      "status": "completed",
+      "scope": "New evidence-based classifier after exact independent root-cause/static review; total raw errors retained.",
+      "desktop": "success",
+      "mobile": "success",
+      "independentOriginalEvidenceReview": "PASS",
+      "mobileRawConsoleErrors": 1,
+      "mobileClassifiedOptionalOriginFavicon404": 1,
+      "unexpectedErrors": 0
     }
   ],
   "currentHTTPReadback": {
-    "file": "public-http-latest.json",
-    "sha256": "ecf3e6cb781ac00b8cb9d9d62b8c938e514066b20e8cd2cdf2d77bde91b889a1",
+    "file": "public-http-final.json",
+    "bytes": 24941,
+    "sha256": "1cae99af69bb0949d91394c3d9e4bd704a10600d63dc905c74f4d1c7e9d9ec63",
     "checkedResources": 34,
+    "totalResourceBytes": 6386277,
     "allExact": true,
-    "scope": "Actual HTTPS hashes and sizes of index/provenance/critical runtime resources; browser acceptance separate."
+    "startedUTC": "2026-10-21T05:54:32.657413+00:00",
+    "completedUTC": "2026-10-21T05:54:33.476681+00:00",
+    "scope": "Actual final HTTPS hashes/sizes. Desktop and mobile acceptance are separately reviewed."
   },
-  "historicalStateNotice": "Older retained reports and prepared-verifier snapshots retain their original capture-time statuses; this index and the separate final proof describe the current status. Failed runs are never relabeled."
+  "historicalStateNotice": "Older retained reports and prepared-verifier snapshots retain their original capture-time statuses; this index and the separate final proof describe the current status. Failed runs are never relabeled.",
+  "publicAcceptanceReviews": [
+    {
+      "file": "reviews/final-public-desktop.json",
+      "bytes": 91560,
+      "sha256": "28c1494e90a639c24c5e07cf3620e103df84f167fd89d4cc23985e7ce3df5a0a"
+    },
+    {
+      "file": "reviews/final-public-mobile.json",
+      "bytes": 27881,
+      "sha256": "36688491df7c8f2a45e688238ef06ef9b9d536a2d4484e93f6d7645222b0230f"
+    },
+    {
+      "file": "reviews/r03-final-public-secondary-readback.json",
+      "bytes": 18621,
+      "sha256": "25b00c42bb655d170ff6741235696e67eafe60c878354241f786e385016be5af"
+    },
+    {
+      "file": "reviews/r03-final-public-archive-readback.json",
+      "bytes": 6591,
+      "sha256": "ee9b901c9855aaf10c1a3274560be3c13a055835a9827539b5d0747a99e781bb"
+    }
+  ],
+  "finalHostingEvidence": {
+    "file": "pages-carrier-final.json",
+    "bytes": 57466,
+    "sha256": "f1f928cac86b917f46e247ee0cb3906ada697dee2e79a77914be667d42f83050"
+  },
+  "finalGateScope": "Technical acceptance of this fixed experimental R03 workbench; user visual acceptance and production readiness remain false. Proof/receipt final storage and independent readback are still required before sharing."
 }
