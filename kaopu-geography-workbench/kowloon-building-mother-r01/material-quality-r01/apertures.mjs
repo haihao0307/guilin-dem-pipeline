@@ -232,7 +232,7 @@ ApertureIntervals apertureEmptyIntervals(){return ApertureIntervals(apertureInva
 vec2 apertureSpan(ApertureIntervals iv,int k){return k==0?iv.a:(k==1?iv.b:iv.c);}
 void apertureAppend(inout ApertureIntervals iv,vec2 span){if(!apertureValid(span))return;if(!apertureValid(iv.a))iv.a=span;else if(!apertureValid(iv.b))iv.b=span;else iv.c=span;}
 vec2 apertureHalfspace(vec2 iv,float o,float d){if(!apertureValid(iv))return apertureInvalid();if(d==0.0)return o>=0.0?iv:apertureInvalid();float t=-o/d;return apertureIntersect(iv,d>0.0?vec2(t,apertureINF):vec2(-apertureINF,t));}
-vec2 apertureAffineBox(vec2 iv,vec2 q,vec2 d,vec2 h,float R,float Rd,int axis){for(int k=0;k<2;k++){bool varying=axis<0||axis==k;float r=varying?R:0.0,rd=varying?Rd:0.0;iv=apertureHalfspace(iv,h[k]+r-q[k],rd-d[k]);iv=apertureHalfspace(iv,h[k]+r+q[k],rd+d[k]);}return iv;}
+vec2 apertureAffineBox(vec2 iv,vec2 q,vec2 d,vec2 h,float R,float Rd,int axis){for(int k=0;k<2;k++){bool variesAlongAxis=axis<0||axis==k;float r=variesAlongAxis?R:0.0,rd=variesAlongAxis?Rd:0.0;iv=apertureHalfspace(iv,h[k]+r-q[k],rd-d[k]);iv=apertureHalfspace(iv,h[k]+r+q[k],rd+d[k]);}return iv;}
 vec2 apertureCone(vec2 q,vec2 d,float R,float Rd,vec2 domain){
  if(!apertureValid(domain))return apertureInvalid();float A=dot(d,d)-Rd*Rd,B=dot(q,d)-R*Rd,C=dot(q,q)-R*R;if(A==0.0)return apertureHalfspace(domain,-C,-2.0*B);
  float D=B*B-A*C;if(D<0.0)return A<0.0?domain:apertureInvalid();float root=sqrt(max(0.0,D)),v=-B-(B<0.0?-root:root),a,b;if(v==0.0){a=-B/A;b=a;}else{a=v/A;b=C/v;if(a>b){float t=a;a=b;b=t;}}

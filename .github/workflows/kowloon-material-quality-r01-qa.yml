@@ -38,6 +38,9 @@ jobs:
       - name: All old and new CPU tests
         id: cpu
         run: node --test kaopu-geography-workbench/kowloon-building-mother-r01/tests/*.test.mjs
+      - name: Real WebGL compile and link preflight without rendering
+        id: compile
+        run: timeout 150s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/material-quality-compile.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/material-quality-r01
       - name: Start same-window corner study with immediate evidence markers
         if: ${{ github.event_name == 'push' || inputs.suite == 'corner' }}
         run: |
@@ -58,7 +61,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
       - name: Finish the same browser session wood-paint and whole-window comparisons
-        if: ${{ !cancelled() && steps.cpu.outcome == 'success' && (github.event_name == 'push' || inputs.suite == 'corner') }}
+        if: ${{ !cancelled() && steps.cpu.outcome == 'success' && steps.compile.outcome == 'success' && (github.event_name == 'push' || inputs.suite == 'corner') }}
         run: python kaopu-geography-workbench/kowloon-building-mother-r01/tests/material-quality-wait.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/material-quality-r01/corner --marker done --seconds 850
       - name: Full material and subpixel rendering regression
         if: ${{ inputs.suite == 'full' }}
