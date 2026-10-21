@@ -2,7 +2,7 @@ name: Verify KAOPU elevator R02 physical controls
 # R02: preserve R01; verify 19 model/field contracts plus physical mobile taps.
 on:
   push:
-    branches: ['trial/kaopu-elevator-r02-20261021', 'qa/kaopu-elevator-r02-final-20261021']
+    branches: ['qa/kaopu-elevator-r02-final-20261021']
 permissions:
   contents: read
 jobs:
@@ -24,7 +24,7 @@ jobs:
           python -m playwright install --with-deps chromium
           sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
       - name: Browser actions and actual rendered screenshots
-        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/elevator-mother-r02/tests/browser.py
+        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/elevator-mother-r02/tests/browser.py --base https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/elevator-mother-r02/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
