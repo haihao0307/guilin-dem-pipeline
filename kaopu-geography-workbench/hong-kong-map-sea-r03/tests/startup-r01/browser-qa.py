@@ -1,11 +1,12 @@
 from pathlib import Path
-import hashlib, json, shutil, subprocess, sys, threading, functools, http.server
+import hashlib, json, shutil, subprocess, sys, threading, functools, http.server, urllib.request, time
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageChops, ImageStat
 
 ROOT=Path(sys.argv[1]).resolve()
 OUT=Path(sys.argv[2]).resolve();OUT.mkdir(parents=True,exist_ok=True)
 HERE=Path(__file__).resolve().parent
+PUBLIC_URL=sys.argv[3].rstrip('/')+'/' if len(sys.argv)>3 else None
 EXPECTED_HTML='54487b03d7314edb19ed3ed37aab47bb662c8633e05cf96fdef7d28ac10a4117'
 EXPECTED_STATION='10ed6185af864245d4f865499e58040f8b9e0971d8271e6ec1ce4ee7c8d02e41'
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
@@ -19,7 +20,17 @@ subprocess.run([sys.executable,str(HERE/'replace-bootstrap.py'),str(serve/'candi
 handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(serve))
 server=http.server.ThreadingHTTPServer(('127.0.0.1',8765),handler)
 threading.Thread(target=server.serve_forever,daemon=True).start()
-results={'kind':'Actual isolated GitHub Actions Chromium, not user device verification','sourceSha256':EXPECTED_HTML,'stationSha256':EXPECTED_STATION,'scenarios':[],'comparisons':[],'passed':False}
+results={'kind':('Actual public GitHub Pages Chromium, not user device verification' if PUBLIC_URL else 'Actual isolated GitHub Actions Chromium, not user device verification'),'sourceSha256':EXPECTED_HTML,'stationSha256':EXPECTED_STATION,'scenarios':[],'comparisons':[],'passed':False}
+
+if PUBLIC_URL:
+ expected_candidate=sha(serve/'candidate/index.html')
+ readbacks={}
+ for name,expected in [('index.html',expected_candidate),('station-data.js',EXPECTED_STATION),('index.preboot-20261021.html',EXPECTED_HTML)]:
+  content=urllib.request.urlopen(PUBLIC_URL+name+'?verify=c7d1593593ba',timeout=60).read()
+  actual=hashlib.sha256(content).hexdigest();assert actual==expected, (name,actual,expected)
+  readbacks[name]=actual
+ results['publicUrl']=PUBLIC_URL
+ results['publicReadbackSha256']=readbacks
 
 INJECT=r'''({failCount}) => {
  window.__bootProbe={calls:[],nativeSuccesses:0,draws:0,failCount};
@@ -67,7 +78,9 @@ try:
    entry={'label':label,'injectedNullCount':failCount,'source':source,'views':[]}
    results['scenarios'].append(entry)
    print('START',label,flush=True)
-   page.goto(f'http://127.0.0.1:8765/{source}/?still=1',wait_until='load',timeout=60000)
+   url=(PUBLIC_URL+'?still=1&verify=c7d1593593ba') if PUBLIC_URL and source=='candidate' else f'http://127.0.0.1:8765/{source}/?still=1'
+   entry['actualUrl']=url
+   page.goto(url,wait_until='load',timeout=60000)
    if failCount==99:
     page.wait_for_function('window.OceanMother?.qa.errors.length>0',timeout=15000)
     entry['state']=state(page);st=entry['state']

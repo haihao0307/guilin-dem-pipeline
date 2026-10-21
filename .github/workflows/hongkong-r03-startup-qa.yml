@@ -1,4 +1,4 @@
-name: Hong Kong R03 isolated startup compatibility QA
+name: Hong Kong R03 public startup compatibility QA
 on:
   push:
     branches: ['trial/hongkong-r03-startup-20261021']
@@ -28,7 +28,7 @@ jobs:
       - name: Bounded bootstrap mock tests
         run: node kaopu-geography-workbench/hong-kong-map-sea-r03/tests/startup-r01/create-webgl2.test.cjs
       - name: Frozen baseline, original scene interactions and real WebGL2 fallback
-        run: python -u kaopu-geography-workbench/hong-kong-map-sea-r03/tests/startup-r01/browser-qa.py kaopu-geography-workbench/hong-kong-map-sea-r03 /tmp/hongkong-startup-evidence
+        run: python -u kaopu-geography-workbench/hong-kong-map-sea-r03/tests/startup-r01/browser-qa.py kaopu-geography-workbench/hong-kong-map-sea-r03 /tmp/hongkong-startup-evidence https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/hong-kong-map-sea-r03/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
