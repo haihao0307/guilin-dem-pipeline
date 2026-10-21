@@ -1,0 +1,104 @@
+name: Tailor layering R03 — immutable public smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/tailor-layering-r03-public.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tailor-layering-r03-public-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  public-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+        working-directory: experiments/tailor-layering-r03
+    steps:
+      - name: Check out the exact verification request
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          sparse-checkout: |
+            experiments/tailor-layering-r03
+            .github/scripts/tailor-layering-r03*
+          sparse-checkout-cone-mode: false
+      - name: Use Node 22
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+      - name: Read the fixed public URL and source identity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, os, re
+          request=json.loads(Path('../../.github/scripts/tailor-layering-r03-public.json').read_text())
+          assert re.fullmatch(r'[0-9a-f]{40}', request['sourceCommit'])
+          assert re.fullmatch(r'https://haihao0307\.github\.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/layering-r03-[a-z0-9-]+/', request['url'])
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('LAYERING_PUBLIC_URL='+request['url']+'\n')
+              f.write('LAYERING_EXPECT_SOURCE_SHA='+request['sourceCommit']+'\n')
+          PY
+      - name: Install the pinned real Chromium
+        run: |
+          mkdir -p evidence
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+          node --check tests/public-smoke.mjs
+          node --check ../../.github/scripts/tailor-layering-r03-mobile.mjs
+      - name: Exercise the immutable public page
+        run: node tests/public-smoke.mjs | tee evidence/public-smoke.log
+      - name: Verify exact public address, zero errors and tested runtime fingerprints
+        run: |
+          python - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from urllib.parse import urljoin
+          import hashlib, json
+          request=json.loads(Path('../../.github/scripts/tailor-layering-r03-public.json').read_text())
+          directory=Path('evidence/public-smoke')
+          summary=json.loads((directory/'summary.json').read_text())
+          assert summary['passed'] is True
+          assert summary['targetURL']==summary['finalURL']==request['url']
+          assert summary['expectedSourceCommit']==request['sourceCommit']
+          assert summary['consoleErrorCount']==summary['pageErrorCount']==0
+          expected={row['path']:row for row in request['runtimeIdentity']['files']}
+          readbacks=summary['resourceReadbacks']
+          assert len(readbacks)==len(expected) and {row['path'] for row in readbacks}==set(expected)
+          for row in readbacks:
+              fingerprint=expected[row['path']]
+              assert row['status']==200
+              assert row['requestedURL']==row['finalURL']==urljoin(request['url'],row['path'])
+              assert row['bytes']==fingerprint['bytes'] and row['sha256']==fingerprint['sha256']
+          raw=(directory/'SOURCE_PROVENANCE.json').read_bytes()
+          assert hashlib.sha256(raw).hexdigest()==request['runtimeIdentity']['provenanceSHA256']
+          provenance=json.loads(raw)
+          assert provenance['sourceCommit']==request['sourceCommit']
+          assert provenance['hostHTML']['sha256']==request['runtimeIdentity']['indexSHA256']
+          result={'schema':'tailor-r03-public-fixed-source-acceptance@1','passed':True,
+                  'checkedUTC':datetime.now(timezone.utc).isoformat(),
+                  'sourceCommit':request['sourceCommit'],'url':request['url'],
+                  'runtimeTree':request['runtimeIdentity']['gitTree'],
+                  'criticalReadbacks':len(readbacks),'consoleErrorCount':0,'pageErrorCount':0,
+                  'exactFinalURL':True,'testedCapsuleFingerprintsMatch':True,
+                  'visualAcceptance':False,'productionReady':False}
+          (directory/'fixed-source-acceptance.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          PY
+      - name: Check the real mobile entrance and touch interaction
+        run: node ../../.github/scripts/tailor-layering-r03-mobile.mjs | tee evidence/public-mobile.log
+      - name: Preserve the actual public browser evidence
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r03-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r03/evidence/
+          retention-days: 30
+          compression-level: 6
