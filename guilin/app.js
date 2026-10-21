@@ -4,7 +4,7 @@
   const MANIFEST_URL = 'data/NATIVE_ELEVATION_MANIFEST.json';
   const OVERVIEW_MANIFEST_URL = 'data/overview-direct-samples-manifest.json';
   const HYDROLOGY_MANIFEST_URL = 'data/osm-waterways-manifest.json';
-  const NATIVE_TILE_RUNTIME_BASE_URL = '../guilin-truth-data/native/';
+  const canonicalTileSource = globalThis.createGuilinCanonicalTileSource({baseUrl: '../guilin-elevation-store-v1/'});
   const DISTILLED_KNOWLEDGE_RUNTIME = true;
 
   const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
@@ -1069,7 +1069,7 @@ void main(){
     if (state.tileLoadPromises.has(tile.id)) return state.tileLoadPromises.get(tile.id);
 
     const promise = (async () => {
-      const buffer = await fetchBinary(`${NATIVE_TILE_RUNTIME_BASE_URL}${tile.file}`);
+      const buffer = await canonicalTileSource.loadTile(tile);
       assert(buffer.byteLength === TILE_BYTES, `${tile.id} 字节数不正确`);
       const digest = await sha256Hex(buffer);
       assert(digest === tile.sha256, `${tile.id} SHA256 不正确`);
