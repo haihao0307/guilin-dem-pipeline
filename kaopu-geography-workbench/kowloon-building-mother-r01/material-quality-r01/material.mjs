@@ -10,8 +10,8 @@ export const MATERIAL_MODES=Object.freeze({metal:0,wood:1,paintedWood:2});
 export const HOSTED_MATERIAL_DEFAULTS=Object.freeze({...R07_DEFAULTS,
  frameMaterialMode:2,doorMaterialMode:1,woodScale:5.8,woodReliefM:.00020,
  woodRoughness:.57,woodClearcoat:.25,woodClearcoatRoughness:.32,
- paintRoughness:.31,paintClearcoat:.45,paintClearcoatRoughness:.23,paintReliefM:.000018,studyLighting:1,studyExposure:1,studyAreaStrength:1,studyEnvironmentStrength:1});
-const RANGES=Object.freeze({frameMaterialMode:[0,2],doorMaterialMode:[0,2],woodScale:[.25,12],woodReliefM:[0,.00042],woodRoughness:[.18,.98],woodClearcoat:[0,1],woodClearcoatRoughness:[.06,1],paintRoughness:[.08,.98],paintClearcoat:[0,1],paintClearcoatRoughness:[.06,1],paintReliefM:[0,.00006],studyLighting:[0,1],studyExposure:[.25,4],studyAreaStrength:[0,2],studyEnvironmentStrength:[0,2]});
+ paintRoughness:.31,paintClearcoat:.45,paintClearcoatRoughness:.23,paintReliefM:.000018,studyLighting:1,studyExposure:1,studyAreaStrength:1,studyEnvironmentStrength:1,localContactVisibility:1});
+const RANGES=Object.freeze({frameMaterialMode:[0,2],doorMaterialMode:[0,2],woodScale:[.25,12],woodReliefM:[0,.00042],woodRoughness:[.18,.98],woodClearcoat:[0,1],woodClearcoatRoughness:[.06,1],paintRoughness:[.08,.98],paintClearcoat:[0,1],paintClearcoatRoughness:[.06,1],paintReliefM:[0,.00006],studyLighting:[0,1],studyExposure:[.25,4],studyAreaStrength:[0,2],studyEnvironmentStrength:[0,2],localContactVisibility:[0,1]});
 export function adaptHostedMaterialParameters(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input))throw TypeError('Material parameters must be an object');
  const out=adaptR07(input);
@@ -20,7 +20,7 @@ export function adaptHostedMaterialParameters(input={}){
 }
 export const MATERIAL_UNIFORM_BINDINGS=Object.freeze({
  uFrameColor:'frameColor',uDoorColor:'doorColor',uGlassColor:'glassColor',uFrameRoughness:'frameRoughness',uFrameMetallic:'frameMetallic',uGlassTransmission:'glassTransmission',uGlassIOR:'glassIOR',
- uFrameMaterialMode:'frameMaterialMode',uDoorMaterialMode:'doorMaterialMode',uWoodScale:'woodScale',u_microReliefM:'woodReliefM',uWoodRoughness:'woodRoughness',u_clearcoat:'woodClearcoat',uWoodClearcoatRoughness:'woodClearcoatRoughness',uPaintRoughness:'paintRoughness',uPaintClearcoat:'paintClearcoat',uPaintClearcoatRoughness:'paintClearcoatRoughness',uPaintReliefM:'paintReliefM',uStudyLighting:'studyLighting',uStudyExposure:'studyExposure',uStudyAreaStrength:'studyAreaStrength',uStudyEnvironmentStrength:'studyEnvironmentStrength'});
+ uFrameMaterialMode:'frameMaterialMode',uDoorMaterialMode:'doorMaterialMode',uWoodScale:'woodScale',u_microReliefM:'woodReliefM',uWoodRoughness:'woodRoughness',u_clearcoat:'woodClearcoat',uWoodClearcoatRoughness:'woodClearcoatRoughness',uPaintRoughness:'paintRoughness',uPaintClearcoat:'paintClearcoat',uPaintClearcoatRoughness:'paintClearcoatRoughness',uPaintReliefM:'paintReliefM',uStudyLighting:'studyLighting',uStudyExposure:'studyExposure',uStudyAreaStrength:'studyAreaStrength',uStudyEnvironmentStrength:'studyEnvironmentStrength',uLocalContactVisibility:'localContactVisibility'});
 /** Aperture coefficients are already on texture unit 7 in the hosted renderer.
  * This private sampler alias works in baseline mode too, without referring to
  * aperture GLSL functions that do not exist in the baseline shader.
@@ -40,13 +40,13 @@ const capturedConstants=Object.entries(TIMBER_CAPTURED_PARAMETERS).filter(([k])=
 const evaluated=TIMBER_EVALUATION_GLSL.replace('    float distanceToCamera = length(u_cameraPosition - v_worldPosition);\n    float detailFade = 1.0 - smoothstep(u_distanceFadeStart, u_distanceFadeEnd, distanceToCamera);','    float detailFade = 1.0 - smoothstep(0.00035, 0.004, footprintM);');
 if(evaluated===TIMBER_EVALUATION_GLSL)throw Error('Original timber evaluation source drift');
 export const MATERIAL_GLSL=String.raw`
-struct FieldSurface {vec3 baseColor;float roughness;float metallic;float height;float clearcoat;float clearcoatRoughness;};
+struct FieldSurface {vec3 baseColor;float roughness;float metallic;float height;float clearcoat;float clearcoatRoughness;float cavity;};
 uniform float uAge,uWet,uMaterialEnabled;
 uniform vec3 uFrameColor,uDoorColor,uGlassColor;
 uniform float uFrameRoughness,uFrameMetallic,uGlassTransmission,uGlassIOR;
 uniform float uFrameMaterialMode,uDoorMaterialMode,uWoodScale,u_microReliefM,uWoodRoughness,u_clearcoat,uWoodClearcoatRoughness;
 uniform float uPaintRoughness,uPaintClearcoat,uPaintClearcoatRoughness,uPaintReliefM;
-uniform float uStudyLighting,uStudyExposure,uStudyAreaStrength,uStudyEnvironmentStrength;
+uniform float uStudyLighting,uStudyExposure,uStudyAreaStrength,uStudyEnvironmentStrength,uLocalContactVisibility;
 ${capturedConstants}
 ${TIMBER_FIELD_GLSL}
 // One chart per rail/stile. Charts move rigidly with their actual aperture part.
@@ -82,7 +82,7 @@ FieldSurface evaluateTimberField(vec3 grainMetres,vec3 grainNormal,float footpri
  float surfaceClass=step(.72,abs(localNormal.x));
  vec3 baseColor=u_agedSurfaceColor;float heightMeters=0.,roughness=uWoodRoughness,cavity=1.,ringCoordinateDebug=0.;
  ${evaluated}
- return FieldSurface(clamp(baseColor,0.,1.),roughness,0.,clamp(heightMeters,-.001,.001),u_clearcoat,uWoodClearcoatRoughness);
+ return FieldSurface(clamp(baseColor,0.,1.),roughness,0.,clamp(heightMeters,-.001,.001),u_clearcoat,uWoodClearcoatRoughness,cavity);
 }
 FieldSurface paintTimberField(FieldSurface wood,vec3 g,vec3 paintColor,float fp){
  // Opaque coating never leaks wood ALBEDO. Bounded wood relief can telegraph
@@ -91,27 +91,27 @@ FieldSurface paintTimberField(FieldSurface wood,vec3 g,vec3 paintColor,float fp)
  float orange=sin(g.x*TAU/.0017)*sin(g.y*TAU/.0011)*.5;
  float brush=sin(g.y*TAU/.0031+sin(g.x*TAU/.12)*.12)*.5;
  float h=wood.height*.12+(orange*.65+brush*.35)*uPaintReliefM*gate;
- return FieldSurface(clamp(paintColor,0.,1.),clamp(uPaintRoughness+orange*.035*gate,.08,.98),0.,h,uPaintClearcoat,uPaintClearcoatRoughness);
+ return FieldSurface(clamp(paintColor,0.,1.),clamp(uPaintRoughness+orange*.035*gate,.08,.98),0.,h,uPaintClearcoat,uPaintClearcoatRoughness,1.);
 }
 FieldSurface sampleFieldMaterial(FieldHit hit,vec3 n,float footprint){
  vec3 p=hit.local;float fp=max(footprint,.00012);
  vec2 uv=abs(n.y)>.6?p.xz:(abs(n.x)>abs(n.z)?vec2(p.z,p.y):p.xy);
- if(hit.materialRole>5.5)return FieldSurface(uGlassColor,.08,0.,0.,0.,1.);
+ if(hit.materialRole>5.5)return FieldSurface(uGlassColor,.08,0.,0.,0.,1.,1.);
  if(hit.materialRole>3.5){
   vec3 grain,gn;bool door;materialMemberChart(hit,n,grain,gn,door);
   vec3 color=door?uDoorColor:uFrameColor;float mode=door?uDoorMaterialMode:uFrameMaterialMode;
-  if(mode<.5)return FieldSurface(color,uFrameRoughness,uFrameMetallic,0.,0.,1.);
+  if(mode<.5)return FieldSurface(color,uFrameRoughness,uFrameMetallic,0.,0.,1.,1.);
   FieldSurface wood=evaluateTimberField(grain,gn,fp);
   if(mode>1.5)return paintTimberField(wood,grain,color,fp);return wood;
  }
- if(hit.materialRole>2.5)return FieldSurface(vec3(.17,.39,.43),.3,.65,0.,0.,1.);
- if(uMaterialEnabled<.5)return FieldSurface(hit.materialRole>1.5?vec3(.66,.61,.51):vec3(.53,.55,.50),.82,0.,0.,0.,1.);
+ if(hit.materialRole>2.5)return FieldSurface(vec3(.17,.39,.43),.3,.65,0.,0.,1.,1.);
+ if(uMaterialEnabled<.5)return FieldSurface(hit.materialRole>1.5?vec3(.66,.61,.51):vec3(.53,.55,.50),.82,0.,0.,0.,1.,1.);
  KpSurface s;
  if(hit.materialRole>1.5){
   KpPlasterParams a=KpPlasterParams(vec2(0.,1.35),vec2(2.,1.5),.0165,.0014,0.,.013,.02,.0001,vec3(.48,.44,.35),vec3(.82,.76,.64),.0008,.000008,.018);
   s=kpPlasterOriginalField(vec3(uv,0.),a,fp).surface;
  }else s=kpConcreteStation(vec3(uv,0.),uAge,uWet,.04,fp);
- return FieldSurface(s.albedo,clamp(s.roughness,.07,1.),0.,s.height,0.,1.);
+ return FieldSurface(s.albedo,clamp(s.roughness,.07,1.),0.,s.height,0.,1.,1.);
 }
 vec3 fresnelSchlick(float v,vec3 f0){return f0+(1.-f0)*pow(clamp(1.-v,0.,1.),5.);}
 float mqSmithG1(float n,float alpha2){return 2.*n/max(n+sqrt(alpha2+(1.-alpha2)*n*n),.000001);}
@@ -137,7 +137,7 @@ vec3 directBRDF(FieldSurface s,vec3 n,vec3 v,vec3 l,vec3 radiance){
 vec3 materialAmbient(FieldSurface s,vec3 n,vec3 v,vec3 diffuseEnvironment){
  float exit=1.-s.clearcoat*fresnelSchlick(max(dot(n,v),0.),vec3(.04)).x;
  float entry=1.-s.clearcoat*.085714286; // cosine-weighted Schlick hemispheric mean
- return s.baseColor*(1.-s.metallic)*diffuseEnvironment*exit*entry;
+ return s.baseColor*(1.-s.metallic)*diffuseEnvironment*exit*entry*clamp(s.cavity,0.,1.);
 }
 // Fixed, authored material-inspection lighting. No photographed environment,
 // no camera-follow light, no scene mesh, and no per-finish exposure correction.
@@ -176,12 +176,31 @@ vec3 materialStudyEmitterRay(vec3 origin,vec3 direction,out float lightT){
 vec3 materialStudyEnvironment(vec3 origin,vec3 direction){float t;vec3 light=materialStudyEmitterRay(origin,direction,t);return t<1e19?light:materialStudySky(direction)*uStudyEnvironmentStrength;}
 float materialLightNode(int index){return index==0?-.7745966692:(index==1?0.:.7745966692);}
 float materialLightWeight(int index){return index==1?.8888888889:.5555555556;}
-vec3 materialStudyAreaLighting(vec3 p,FieldSurface surface,vec3 n,vec3 view){
+// Bounded contact visibility is geometric, not a dark seam texture.
+// Two rays per shaded aperture point, one to each finite emitter centre.
+// Only opaque parts of this same aperture instance within 0.20 m are queried.
+// This is not full-building shadowing or a per-node soft-area visibility solve.
+float materialLocalContactVisibility(vec3 point,vec3 normal,vec3 lightPoint,float objectId){
+ #if FIELD_APERTURES
+ if(uLocalContactVisibility<.5||objectId<4000.)return 1.;
+ vec3 ro=point+normal*.000015,delta=lightPoint-ro;float lightDistance=length(delta);
+ if(lightDistance<=.00003)return 1.;vec3 rd=delta/lightDistance;float end=min(lightDistance,.20);
+ int ownInstance=int(floor((objectId-4000.)/8.)),count=int(apertureRecord(0).x);
+ for(int k=0;k<count;k++){
+  AperturePart part=apertureLoad(k);
+  if(part.role==6.||int(floor((part.objectId-4000.)/8.))!=ownInstance)continue;
+  if(apertureOccludesSegment(part,ro,rd,.000008,end))return 0.;
+ }
+ #endif
+ return 1.;
+}
+vec3 materialStudyAreaLighting(vec3 p,FieldSurface surface,vec3 n,vec3 view,float objectId){
  MaterialLightFrame f=materialLightFrame();vec3 result=vec3(0.);
  for(int light=0;light<2;light++){
   vec3 center=materialLightPoint(f,light==0?vec3(-.55,.20,1.40):vec3(.55,-.20,1.70));
   vec2 halfSize=light==0?vec2(.35,.90):vec2(.25,.65);
   vec3 Le=light==0?vec3(9.,8.2,7.4):vec3(2.3,3.0,4.4);
+  float visibility=materialLocalContactVisibility(p,n,center,objectId);
   for(int y=0;y<3;y++)for(int x=0;x<3;x++){
    vec3 delta=center+f.u*(halfSize.x*materialLightNode(x))+f.v*(halfSize.y*materialLightNode(y))-p;
    float distance2=max(dot(delta,delta),.01);vec3 l=delta*inversesqrt(distance2);
@@ -194,7 +213,7 @@ vec3 materialStudyAreaLighting(vec3 p,FieldSurface surface,vec3 n,vec3 view){
    FieldSurface s=surface;
    s.roughness=min(pow(pow(surface.roughness,4.)+sourceVariance,.25),1.);
    s.clearcoatRoughness=min(pow(pow(surface.clearcoatRoughness,4.)+sourceVariance,.25),1.);
-   result+=directBRDF(s,n,view,l,Le*(solidAngle*uStudyAreaStrength));
+   result+=directBRDF(s,n,view,l,Le*(solidAngle*uStudyAreaStrength*visibility));
   }
  }
  return result;
@@ -221,10 +240,10 @@ vec3 materialStudyEnvironmentSpecular(FieldSurface s,vec3 n,vec3 view){
  }
  return sum*uStudyEnvironmentStrength;
 }
-vec3 materialStudyLighting(vec3 p,FieldSurface s,vec3 n,vec3 view,float ao){
+vec3 materialStudyLighting(vec3 p,FieldSurface s,vec3 n,vec3 view,float ao,float objectId){
  MaterialLightFrame frame=materialLightFrame();
  vec3 diffuseEnvironment=mix(vec3(.13,.115,.095),vec3(.39,.46,.57),clamp(dot(n,frame.v)*.5+.5,0.,1.));
- return materialStudyAreaLighting(p,s,n,view)+materialStudyEnvironmentSpecular(s,n,view)+materialAmbient(s,n,view,diffuseEnvironment)*uStudyEnvironmentStrength*ao;
+ return materialStudyAreaLighting(p,s,n,view,objectId)+materialStudyEnvironmentSpecular(s,n,view)+materialAmbient(s,n,view,diffuseEnvironment)*uStudyEnvironmentStrength*ao;
 }
 // A finite difference must not bridge two independently oriented member charts.
 float materialMicroSlope(FieldHit hit,FieldSurface surface,vec3 materialNormal,vec3 localDirection,float footprint,float eps){

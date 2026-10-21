@@ -17,14 +17,14 @@ test('fixed exposure and authored emitter controls are explicitly bounded, not f
  assert.doesNotMatch(body('materialStudyLighting'),/frameMaterialMode|doorMaterialMode|Exposure/);
  assert.equal(materialQualityOpticalContract({fieldKind:'hosted-context'},{studyExposure:1}).exposure,1);
 });
-test('two finite authored rectangles use only the already evaluated BRDF, not new scene queries',()=>{
+test('two finite authored rectangles reuse the evaluated BRDF with bounded local contact visibility',()=>{
  const a=body('materialStudyAreaLighting'),e=body('materialStudyEnvironmentSpecular');
  assert.match(a,/light<2/);assert.match(a,/y<3/);assert.match(a,/x<3/);assert.match(a,/directBRDF\(s,n,view,l/);
  assert.match(e,/layer<2/);assert.match(e,/i<8/);assert.match(e,/materialStudySkyInFrame/);
  for(const code of [a,e])assert.doesNotMatch(code,/sampleFieldMaterial|evaluateTimberField|TraceRay|displayDistance|fieldDistance/);
  assert.match(a,/sourceVariance/);assert.match(body('materialStudyEmitterRay'),/lightT=t/);
  assert.match(MATERIAL_GLSL,/vec3\(-\.55,\.20,1\.40\)/);assert.match(MATERIAL_GLSL,/vec3\(9\.,8\.2,7\.4\)/);assert.equal(STUDY_LIGHTS.length,2);
- const report=materialQualityOpticalContract({fieldKind:'hosted-context'});assert.match(report.areaLightApproximation,/no_per_sample_shadows/);assert.match(report.environmentSpecular,/unoccluded_no_scene_rays/);
+ const report=materialQualityOpticalContract({fieldKind:'hosted-context'});assert.match(report.areaLightApproximation,/not_per_sample_shadows/);assert.match(report.environmentSpecular,/unoccluded_no_scene_rays/);
 });
 test('identical geometry/color/exposure yields measurable roughness and clearcoat differences under the actual finite rig',()=>{
  let roughDifference=0,coatDifference=0;

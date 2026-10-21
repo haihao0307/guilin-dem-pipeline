@@ -3,8 +3,8 @@ import {buildFieldGLSL,packFieldDescriptors} from '../r07/field.mjs';
 import {buildCaseGLSL,packCaseDescriptors} from '../r07/cases.mjs';
 import {buildAssemblyGLSL,packAssemblyDescriptors} from '../r07/assemblies.mjs';
 import {buildContextGLSL} from '../r07/context.mjs';
-import {buildHostedSceneGLSL} from '../r07/hosted-scene.mjs';
-import {packApertureDescriptors} from '../r07/apertures.mjs';
+import {buildHostedSceneGLSL} from './hosted-scene.mjs';
+import {packApertureDescriptors} from './apertures.mjs';
 import {MOTHER_GLSL,MATERIAL_GLSL,HOSTED_MATERIAL_DEFAULTS,adaptHostedMaterialParameters,bindHostedMaterialUniforms} from './material.mjs';
 const VERTEX=`#version 300 es
 precision highp float;
@@ -92,7 +92,7 @@ vec3 hostedDisplayColor(vec3 radiance){radiance*=uStudyLighting>.5?uStudyExposur
 vec3 hostedTerminalShade(FieldHit h,vec3 n,vec3 rd,float t,vec3 worldPoint){
  if(dot(n,rd)>0.)n=-n;
  FieldSurface s=sampleFieldMaterial(h,contextMaterialDirection(h,n),max(t*.0008,.001));
- if(uStudyLighting>.5)return materialStudyLighting(worldPoint,s,n,-rd,1.);
+ if(uStudyLighting>.5)return materialStudyLighting(worldPoint,s,n,-rd,1.,h.objectId);
  vec3 color=directBRDF(s,n,-rd,normalize(vec3(-.55,1.,-.45)),vec3(3.,2.85,2.65));
  color+=directBRDF(s,n,-rd,normalize(vec3(.5,.4,.7)),vec3(.5,.65,.8));
  return color+materialAmbient(s,n,-rd,mix(vec3(.12,.14,.13),vec3(.3,.36,.38),n.y*.5+.5));
@@ -154,7 +154,7 @@ vec4 shadeFieldHit(vec3 rd,float t,FieldHit h,int steps,int status,vec3 n){
  float ao=1.;if(uOcclusion>.5)for(int i=1;i<=3;i++){float r=float(i)*.14;ao-=max(r-max(displayDistance(p+n*r),0.),0.)/(r*9.);}
  vec3 color;
  #if FIELD_HOSTED
- if(uStudyLighting>.5)color=materialStudyLighting(p,surface,n,view,clamp(ao,.35,1.));else{
+ if(uStudyLighting>.5)color=materialStudyLighting(p,surface,n,view,clamp(ao,.35,1.),h.objectId);else{
  #endif
  color=directBRDF(surface,n,view,sun,vec3(3.0,2.85,2.65));
  color+=directBRDF(surface,n,view,normalize(vec3(.5,.4,.7)),vec3(.5,.65,.8));
@@ -291,7 +291,7 @@ export const nearestRankQuantile=(a,q)=>a.slice().sort((x,y)=>x-y)[Math.max(0,Ma
 /** Source construction is exported for CPU checks; compiling it is not GPU parity evidence. */
 export function buildRendererSources(spec,traceVariant=0){
  const code=spec.fieldKind==='measured-surface'?buildCaseGLSL(spec):spec.fieldKind==='evidence-assembly'?buildAssemblyGLSL(spec):spec.fieldKind==='case-context'?buildContextGLSL(spec):spec.fieldKind==='hosted-context'?buildHostedSceneGLSL(spec):buildFieldGLSL(spec),source=typeof code==='string'?code:code.source;
- const surface=['measured-surface','evidence-assembly','case-context','hosted-context'].includes(spec.fieldKind),head=HEAD+'#define FIELD_HOSTED '+(spec.fieldKind==='hosted-context'?'1':'0')+'\n#define FIELD_CONTEXT '+(['case-context','hosted-context'].includes(spec.fieldKind)?'1':'0')+'\n#define FIELD_TRACE_VARIANT '+traceVariant+'\n#define FIELD_SURFACE '+(surface?'1':'0')+'\n#define FIELD_MEASURED '+(spec.fieldKind==='measured-surface'?'1':'0')+'\n';
+ const surface=['measured-surface','evidence-assembly','case-context','hosted-context'].includes(spec.fieldKind),head=HEAD+'#define FIELD_APERTURES '+(spec.fieldKind==='hosted-context'&&spec.mode!=='baseline'?'1':'0')+'\n#define FIELD_HOSTED '+(spec.fieldKind==='hosted-context'?'1':'0')+'\n#define FIELD_CONTEXT '+(['case-context','hosted-context'].includes(spec.fieldKind)?'1':'0')+'\n#define FIELD_TRACE_VARIANT '+traceVariant+'\n#define FIELD_SURFACE '+(surface?'1':'0')+'\n#define FIELD_MEASURED '+(spec.fieldKind==='measured-surface'?'1':'0')+'\n';
  const stage=n=>head+'#define FIELD_KERNEL_STAGE '+n+'\n',renderHead=stage(0)+source+MOTHER_GLSL+MATERIAL_GLSL+CAMERA+HOSTED_OPTICS+SHADE+DIAGNOSTIC;
  return {source,head,split:!surface&&traceVariant===0,
   direct:renderHead+DIRECT,
@@ -310,7 +310,8 @@ export function materialQualityOpticalContract(spec,options={}){
   reflection:options.sceneReflection===0?'authored_analytic_environment_only':'one_actual_displayed_scene_reflection_ray_with_analytic_environment_miss',
   reflectionWeight:'combined_two_interface_Fresnel_weight_on_one_reflected_ray_not_separate_internal_reflection_paths',
   lightingEnvironment:options.studyLighting===0?'legacy_authored_analytic_daylight':'fixed_aperture_anchored_authored_two_rectangle_lights_and_analytic_sky_not_captured_Hong_Kong_illumination',
-  areaLightApproximation:options.studyLighting===0?'disabled_legacy_two_directional_lights':'two_3x3_Gauss_BRDF_integrals_with_finite_source_GGX_width_approximation_no_per_sample_shadows',
+  areaLightApproximation:options.studyLighting===0?'disabled_legacy_two_directional_lights':'two_3x3_Gauss_BRDF_integrals_with_finite_source_GGX_width_approximation_and_one_local_contact_visibility_ray_per_light_not_per_sample_shadows',
+  localContactVisibility:options.localContactVisibility===0?'disabled':'same_aperture_opaque_function_intervals_up_to_0.20m_two_emitter_center_rays_no_global_shadow_claim',
   environmentSpecular:options.studyLighting===0?'disabled_legacy_diffuse_ambient_only':'eight_GGX_NDF_samples_per_lobe_analytic_sky_only_unoccluded_no_scene_rays',
   exposure:options.studyLighting===0?1:(options.studyExposure??1),
   primaryBackground:'same_analytic_environment_and_fixed_exposure_display_conversion_as_glass_environment',
