@@ -114,6 +114,7 @@ FloorMaterialSample fmMetal(vec3 p,vec3 n,float fp){
 FloorMaterialSample fmDoor(vec3 localM,vec3 localNormal,float footprintM){
  float gate=1.-smoothstep(.0003,.0015,footprintM),orange=.5*sin(localM.x*3695.991)*sin(localM.y*5711.987),brush=.5*sin(localM.x*2026.834+sin(localM.y*52.36)*.12);
  return fmDielectric(${val(p.doorPaintColor)},clamp(.38+.035*orange*gate,.08,.98),(orange*.65+brush*.35)*.000018*gate,.25,.27);
+}
 
 // localMetres: role 10 uses X/Z floor chart; role 11/12/14 uses X/Y face chart;
 // role 13 uses rigid member-local XYZ. localNormal is in THAT same frame.

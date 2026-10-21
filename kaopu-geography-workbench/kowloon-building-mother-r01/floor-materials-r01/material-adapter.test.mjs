@@ -41,3 +41,9 @@ test('all material height is explicitly shading-only with bounded periodic profi
  for(let i=0;i<500;i++){const s=sampleTileCell(i%2?10:11,[Math.sin(i)*3,Math.cos(i)*2,i*.002],.0001);assert.equal(s.geometryDisplacementM,0);assert.ok(s.bevelHeightM>=-.0015-1e-12&&s.bevelHeightM<=1e-12);assert.ok(s.tileMask>=0&&s.tileMask<=1);}
 });
 test('bounded slice uses painted door and no unshipped timber dependency',()=>{assert.doesNotMatch(FLOOR_MATERIAL_GLSL,/fmW_woodSignals/);assert.throws(()=>buildFloorMaterialGLSL({doorFinish:'wood'}));assert.match(FLOOR_MATERIAL_GLSL,/if\(role<13.5\)return fmMetal/);assert.ok(FLOOR_MATERIAL_GLSL.length<30000);});
+
+test('generated GLSL function/block delimiters are balanced before browser compile gate',()=>{
+ const text=FLOOR_MATERIAL_GLSL.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'');let depth=0;
+ for(const c of text){if(c==='{')depth++;else if(c==='}')depth--;assert.ok(depth>=0);}
+ assert.equal(depth,0);assert.match(text,/FloorMaterialSample fmDoor[\s\S]*?return fmDielectric[^;]+;\s*}\s*FloorMaterialSample sampleFloorMaterial/);
+});
