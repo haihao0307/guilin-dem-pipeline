@@ -6,7 +6,7 @@ export const MASTER_METAL_GLSL=METAL_FIELDS
  .replace('varying vec3 vRestM;varying vec3 vSurfaceN;','vec3 vRestM;vec3 vSurfaceN;')
  .replace('uniform float uWear,uHistory,uWet,uRepair,uMode,uVariant,uRack;','const float uWear=0.,uHistory=0.,mtWet=0.,uRepair=0.,uMode=0.,uVariant=1.,uRack=0.;')
  .replaceAll('uWet','mtWet')
- .replace('uniform vec3 uJoints[16];uniform int uJointCount;','vec3 uJoints[16];const int uJointCount=0;');
+ .replace('uniform vec3 uJoints[16];uniform int uJointCount;','vec3 uJoints[16];const int uJointCount=0;').replaceAll('mt_','elmt_');
 export const FINISH_GLSL=String.raw`
 uniform float uDoorFinish,uLightShift;
 // Authored stainless finish; not an alloy measurement. Metric correlation
@@ -27,5 +27,5 @@ vec3 lightCards(vec3 p,vec3 r,float rough){vec3 color=mix(vec3(.025,.035,.05),ve
 vec3 shadeLiftFinish(vec3 p,vec3 local,vec3 n,vec3 v,float fp,bool paint,float visibility){LiftFinish s=liftFinish(local,n,fp,paint);vec3 r=reflect(-v,s.normal),F=fresnelSchlick(max(dot(s.normal,v),0.),s.f0);vec3 color=s.diffuse*.2+lightCards(p,r,sqrt(s.ax*s.ay))*F;
  for(int k=0;k<8;k++){float x=float(k%2)*.7-.35,y=float(k/2)*1.2-.4;vec3 light=vec3(-2.5+x+uLightShift,uCarY+y+1.5,5.)-p;color+=liftBRDF(s,v,normalize(light))*vec3(8.,7.3,6.2)/(1.+dot(light,light))*.5*visibility;}
  vec3 lamp=vec3(0,uCarY+2.32,-.15)-p;color+=liftBRDF(s,v,normalize(lamp))*vec3(3.,2.4,1.8)/(1.+dot(lamp,lamp));return color;}
-`;
+`.replaceAll('mt_','elmt_');
 export const FINISH_DESIGN=Object.freeze({stainless:{f0:[.56,.58,.59],acrossCorrelationM:.00016,alongCorrelationM:.025,microHeightM:.00000045,alphaAcross:.24,alphaAlong:.055},paint:{source:'material-master-r06/metal-surface.mjs',wear:0,history:0,wet:0,coatingM:.00014},bevelM:.002,classification:'illustrative candidate, not measured manufacturer finish'});
