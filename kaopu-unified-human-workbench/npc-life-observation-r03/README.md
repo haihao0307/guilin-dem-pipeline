@@ -55,8 +55,16 @@ node kaopu-unified-human-workbench/npc-life-observation-r03/qa/window-host-integ
 
 The workflow pins Playwright 1.58.2 and installs its Chromium. It runs the full suite using the final standalone file, then publishes only a new `npc-life-observation/r03-20261020/<source-head>/` directory and verifies the actual public page. The Pages carrier advances normally from its newest parent; no rebase, force push or historical path replacement is used. The branch remains a draft PR and is not merged.
 
+Publication also requires a completed Pages deployment for the carrier revision. GitHub documents that a push using the workflow's `GITHUB_TOKEN` does not itself trigger a Pages build ([publishing-source rules](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)). If no deployment starts after the verified candidate is appended, the release operator can use the existing authorized account connection to advance `gh-pages` with a normal same-tree successor commit, preserving every file and parent. The exact public-byte and final-browser gates must still pass before delivery.
+
 Local numerical/resource/fixture checks are not GPU or browser proof. Browser and publication evidence must be attached to the same immutable source/build before delivery. Workspace interruption occurred during development; lost unpublished results have not been reused as evidence.
 
 ## First browser candidate correction
 
 Run 39534051283 stopped before startup acceptance: the 66.6 MB file response was evicted from the inspector cache. File-mode verification now hashes the exact navigated real path, and HTTP capture buffers and reads the same actual navigation request in one CDP session. The failure screenshot also exposed an inherited `:not(#npc-app)` CSS rule hiding the recovery shell after Workbench mounted; the rule now explicitly excludes the boot shell, with real loading-stage visibility checks. See `qa/FIRST_FAILURE_REVIEW.json`. No R03 browser or public pass is claimed by this correction alone.
+
+## Second browser candidate correction
+
+Run 39534586116 (source `b508bc994733e8dec07c9ce385fe71890a44328d`) passed startup, three native pick/place checks and the built-in numerical suite, then failed the 180 s identity-task wait. Its 35 consecutive completed frames still advanced A from waiting to transfer: this was not a deadlock. The action retained the all-camera view, which obscured bottle contact behind the window frame. In the same captured unpaused observation trace, all-camera frames had a 5,184.3 ms median versus 1,380.1 ms for contact-camera frames; these samples span different tasks and are not an isolated scene benchmark.
+
+Identity/contend buttons now select the existing contact camera, window contention selects the existing window camera, and numerical cases select their corresponding operation camera. Camera coordinates, complete people, materials, physics, the 0.12 s observation limit and every timeout remain unchanged. See `qa/SECOND_FAILURE_REVIEW.json` for the pinned failed artifact and measurements. This targeted correction still requires new browser and final-public verification; the failed source was not published.

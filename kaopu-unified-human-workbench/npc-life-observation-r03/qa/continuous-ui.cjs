@@ -46,7 +46,8 @@ async function runContinuousUI({page,evaluate,waitFor,bounded,put,stage,maxWallM
         actionFinishedAtMS:after.capturedAtMS,usedPause:false,usedExternalTick:false}};
       report.operations.push(entry);save();
       entry.contract=assertContinuousRun(entry);save();
-      entry.nativeGeometry=await onCompleted(entry);entry.accepted=true;save();
+      entry.nativeGeometry=await bounded('completed native evidence: '+action.label,()=>onCompleted(entry),budget());
+      entry.accepted=true;save();
       if(action.operation==='close'){
         const opened=report.operations.find(op=>op.operation==='open');
         assert.equal(entry.contract.sceneEpoch,opened.contract.sceneEpoch,'Closing uses the same physical window; no station reset');
@@ -56,8 +57,10 @@ async function runContinuousUI({page,evaluate,waitFor,bounded,put,stage,maxWallM
       }
     }
     assert.equal(report.operations.length,3);assert(report.operations.every(op=>op.accepted===true));
+    report.elapsedMS=Date.now()-started;
+    assert(report.elapsedMS<=maxWallMS,'Continuous real-UI group exceeded its 10-minute wall deadline');
     report.completed=true;return report;
   }catch(error){report.failure={message:error.message,stack:String(error.stack)};throw error;}
-  finally{report.elapsedMS=Date.now()-started;save();}
+  finally{if(!report.completed)report.elapsedMS=Date.now()-started;save();}
 }
 module.exports={runContinuousUI};

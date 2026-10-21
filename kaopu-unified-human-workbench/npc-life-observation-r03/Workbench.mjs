@@ -119,12 +119,12 @@ async function main(){
   const ro=new ResizeObserver(resize);ro.observe(sourceStage);addEventListener('resize',resize);
   $('npc-pair').onclick=()=>station('pair');for(const b of document.querySelectorAll('[data-person]'))b.onclick=()=>{selected=+b.dataset.person;station(interactionMode==='window'?'window-single':'single');};
   $('npc-pick').onclick=()=>{enterMode('table',{paired:pair});camera('contact');world.request(actors[selected].id);};
-  $('npc-plan').onclick=()=>{enterMode('table',{paired:true});world.startIdentityPlan();};
-  $('npc-contend').onclick=()=>{enterMode('table',{paired:true});world.request(actors[0].id,'contention-test');world.request(actors[1].id,'contention-test');};
+  $('npc-plan').onclick=()=>{enterMode('table',{paired:true});camera('contact');world.startIdentityPlan();};
+  $('npc-contend').onclick=()=>{enterMode('table',{paired:true});camera('contact');world.request(actors[0].id,'contention-test');world.request(actors[1].id,'contention-test');};
   $('npc-window-open').onclick=()=>{enterMode('window',{paired:interactionMode==='window'?pair:false});camera('window');world.window.request(actors[selected].id,'open','manual');};
   $('npc-window-close').onclick=()=>{enterMode('window',{paired:interactionMode==='window'?pair:false});camera('window');world.window.request(actors[selected].id,'close','manual');};
   $('npc-window-block').onclick=()=>{enterMode('window',{paired:interactionMode==='window'?pair:false});world.window.setBlocked(!world.window.snapshot().object.blocked);};
-  $('npc-window-contend').onclick=()=>{station('window-pair');world.window.request('A','open','shared-window-test');world.window.request('B','open','shared-window-test');};
+  $('npc-window-contend').onclick=()=>{station('window-pair');camera('window');world.window.request('A','open','shared-window-test');world.window.request('B','open','shared-window-test');};
   $('npc-cancel').onclick=()=>{const id=interactionMode==='window'?(world.window.heldBy||world.window.reservedBy||actors[selected].id):(world.heldBy||world.reservedBy||actors[selected].id);world.cancel(id);};
   $('npc-pause').onclick=()=>{paused=!paused;acc=0;observation.reset();$('npc-pause').textContent=paused?'继续':'暂停';};$('npc-step').onclick=()=>{paused=true;observation.reset();$('npc-pause').textContent='继续';world.tick(1/120);props.sync(world,debug);viewer.render();updateUI();};
   $('npc-reset').onclick=()=>{sceneEpoch++;observation.reset();world.reset();probe=null;$('npc-run-qa').disabled=false;};$('npc-target').onclick=()=>world.moveTarget();$('npc-support').onclick=()=>{world.setSupport(!world.supportEnabled);$('npc-support').textContent=world.supportEnabled?'移开支撑面':'恢复支撑面';};
@@ -167,6 +167,7 @@ async function main(){
       const isWindow=test.kind.startsWith('window-');
       station(isWindow?(test.kind==='window-contention'?'window-pair':'window-single'):
         ['contention','cancel'].includes(test.kind)?'pair':'single');
+      camera(isWindow?'window':'contact');
       this.start=world.time;this.stage='run';this.started=true;this.action=false;
       this.opened=null;this.cancelState=null;this.contactStart=world.audit.contacts.length;
       if(isWindow){

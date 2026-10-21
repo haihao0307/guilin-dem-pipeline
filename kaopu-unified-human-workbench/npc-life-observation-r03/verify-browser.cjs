@@ -1418,13 +1418,29 @@ async function identityInteraction() {
   await check('identity-task UI, independent review invalidation and actual JSON export',async()=>{
     await pause(true);await page.click('#npc-reset');
     const geometryStart=await auditCursor('identity plan');
+    const planStartedWall=Date.now();
     await page.click('#npc-plan');await pause(false);
+    const taskStartFrame=await evaluate('read completed identity-task camera',async()=>{
+      const app=window.__NPC_OBSERVATION__;
+      await app.awaitFrame({fresh:true});
+      // Read in the completed-frame continuation before the world can advance.
+      return {frame:app.observation().lastCompleted,renderStatus:app.renderStatus(),capturedAtMS:performance.now()};
+    },undefined,Math.min(FRAME_MS,TASK_MS-(Date.now()-planStartedWall)));
+    put('identity-start-frame.json',taskStartFrame);
+    assert(taskStartFrame.frame,'Identity task has an actual completed native frame');
+    assert.equal(taskStartFrame.frame.serial,taskStartFrame.renderStatus.completed,'Identity camera belongs to the latest completed native draw');
+    assert.equal(taskStartFrame.renderStatus.inFlight,0,'Identity camera is read at the completed-frame barrier');
+    assert.equal(taskStartFrame.frame.metadata.camera,'contact','The actual identity-plan button selects the contact camera');
+    assert.equal(taskStartFrame.frame.metadata.mode,'observation');
+    assert.equal(taskStartFrame.frame.metadata.paused,false);
+    const planRemainingMS=TASK_MS-(Date.now()-planStartedWall);
+    assert(planRemainingMS>0,'Identity plan exceeded its original action deadline during completed-camera verification');
     await waitFor('A sorts, B observes ownership and C confirms the result',()=>{
       const app=window.__NPC_OBSERVATION__,s=app.snapshot();
       const a=s.agents.find(actor=>actor.id==='A'),b=s.agents.find(actor=>actor.id==='B');
       return app.errors.length || (a?.result?.result==='completed' && !a.recovery &&
         b?.result?.result==='already-sorted' && !b.recovery && s.review.checked);
-    },{},{timeout:TASK_MS,polling:100});
+    },{},{timeout:planRemainingMS,polling:100});
     await pause(true);
     const plan=await evidence('identity-plan');
     assert.equal(plan.errors.length,0);
@@ -1470,7 +1486,7 @@ async function identityInteraction() {
     assert(current.window,'R02 authoritative snapshot includes the physical window');
     assert.deepEqual(exported.window,current.window);
     assert.equal(exported.errors.length,0);
-    const result={actualUI:true,plan:{aResult:'completed',bResult:'already-sorted',cReviewChecked:true},
+    const result={actualUI:true,taskStartFrame,plan:{aResult:'completed',bResult:'already-sorted',cReviewChecked:true},
       invalidated:{cReviewChecked:false,targetRevisionBefore,targetRevisionAfter:current.targetRevision},
       geometry,feet,export:{file,suggestedFilename:download.suggestedFilename(),bytes:bytes.length,sha256:sha(bytes),
         authoritativeWorldMatched:true,eventCount:current.events.length,targetRevision:current.targetRevision}};
@@ -1680,13 +1696,6 @@ async function main() {
   await page.click('[data-camera="contact"]');await screenshot('02-hand-view');
   await evidence('hand-view');report.dom=await saveDOM();
   report.startupPassed=true;log('startup evidence complete');
-  if(PHASE==='contact' || PHASE==='suite')await contactTests();
-  if(PHASE==='suite') {
-    await fullSuite();
-    await identityInteraction();
-    await windowInteractionUI();
-    await windowExportUI();
-  }
   if(PHASE==='suite'||PHASE==='public')await check('three uninterrupted real-UI actions and completed-frame contracts',async()=>{
     report.continuousUI=await runContinuousUI({page,evaluate,waitFor,bounded,put,stage,maxWallMS:600000,frameMS:FRAME_MS,
       onCompleted:async entry=>{
@@ -1707,6 +1716,13 @@ async function main() {
     assert.equal(report.continuousUI.completed,true);
     return {completed:true,operations:report.continuousUI.operations.map(entry=>entry.contract),elapsedMS:report.continuousUI.elapsedMS};
   });
+  if(PHASE==='contact' || PHASE==='suite')await contactTests();
+  if(PHASE==='suite') {
+    await fullSuite();
+    await identityInteraction();
+    await windowInteractionUI();
+    await windowExportUI();
+  }
   if(PHASE==='suite' || PHASE==='public')await mobileViewport();
   const final=await evidence('final');
   await check('no page, resource, application or WebGL errors',async()=>{
