@@ -5,8 +5,8 @@
   "sourceBranch": "research/tailor-layering-r03-active-regions-20261021",
   "sourcePullRequest": 324,
   "rejectedEarlierSource": "74c20ec28e07cbd9e0082e03216d0231556efa0f",
-  "status": "ALL_TECHNICAL_GATES_ACCEPTED_PENDING_FINAL_PROOF_READBACK",
-  "shareAllowed": false,
+  "status": "PUBLIC_VERIFIED_INDEPENDENTLY_ACCEPTED_SCOPED_CANDIDATE",
+  "shareAllowed": true,
   "visualAcceptance": false,
   "productionReady": false,
   "archives": [
@@ -458,9 +458,7 @@
     "lastObservedSuccessfulPagesRun": 39545195696,
     "currentAndSuccessfulR03TreesEqual": true
   },
-  "requiredRemaining": [
-    "Final independent publication proof and receipt committed and exact bytes read back"
-  ],
+  "requiredRemaining": [],
   "fullCIRun": 39539509515,
   "reviewedJobs": {
     "display": 119023772191,
@@ -555,5 +553,35 @@
     "bytes": 57466,
     "sha256": "f1f928cac86b917f46e247ee0cb3906ada697dee2e79a77914be667d42f83050"
   },
-  "finalGateScope": "Technical acceptance of this fixed experimental R03 workbench; user visual acceptance and production readiness remain false. Proof/receipt final storage and independent readback are still required before sharing."
+  "finalGateScope": "Technical acceptance of this fixed experimental R03 workbench only. User visual acceptance and production readiness remain false. Sharing activates only after the exact final documents are saved and independently read back as stated in PUBLICATION_PROOF.",
+  "sharingActivation": {
+    "technicalAcceptance": "PASS",
+    "shareAllowedEffectiveOnlyAfter": "The exact proof and final receipt bytes have been committed to the dedicated evidence branch and their immutable Git readback has been independently confirmed. Until that confirmation, the coordinator must keep the user-facing URL on HOLD.",
+    "reviewedRuntimeChangesAllowed": false,
+    "proofReferencesRawEvidenceCommitInsteadOfOwnCommit": true,
+    "proofDoesNotContainItsOwnHash": true,
+    "receiptMayReferenceProofHash": true
+  },
+  "rawEvidenceSnapshot": {
+    "commit": "2a16f5c6d27888778e8e8d9ad8fc5c4609eb49da",
+    "folderTree": "f33b447d206151b9a15d2a5d9df8b20d37c6af27",
+    "indexSHA256": "0dc581065c525df5fc924a01453dbfe85a9ec88768fc39de55a32541fbbd0d9e"
+  },
+  "finalPublicationDocuments": [
+    {
+      "file": "PUBLICATION_PROOF.json",
+      "bytes": 27954,
+      "sha256": "e7fc3cc5c2067ec8543be6493182565fdbdb889e5a1cef67fca6b9f0db5ada8e"
+    },
+    {
+      "file": "r03-final-delivery-receipt.json",
+      "bytes": 66926,
+      "sha256": "471743f4968f8cac5aab95e6d8173c8d82d5a59327efb7b32758a9e6b8a297aa"
+    },
+    {
+      "file": "reviews/r03-final-eraw-readback.json",
+      "bytes": 5347,
+      "sha256": "34bb4574b5cdd27cc365bb48dff8e6aa42fc7b8d31f4e045ea8d2cae6ed4fad6"
+    }
+  ]
 }
