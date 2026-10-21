@@ -28,7 +28,7 @@ function nativeBootRuntime(){
     coalescedRequests:Math.max(0,state.requested-state.submitted),
     held:state.held,inFlight:state.inFlight,maxInFlight:state.maxInFlight,
     released:state.released,pending:!!state.pending,failure:state.failure?.message||null,
-    startupMS:now()-state.started,frames:state.frames.map(frame=>({...frame})),
+    startupMS:(state.finishedAtMS??now())-state.started,finishedAtMS:state.finishedAtMS,frames:state.frames.map(frame=>({...frame})),
     scope:'original complete R07 native render chain; completion requires an actual WebGL2 fence; skipped startup requests are not rendered frames'
   };}
   function wake(state){
@@ -72,7 +72,7 @@ function nativeBootRuntime(){
     if(state){if(draw)state.draw=draw;return state;}
     const gl=viewer.renderer.getContext();
     if(typeof gl.fenceSync!=='function'||typeof gl.clientWaitSync!=='function')throw Error('完整人物启动需要 WebGL2 帧同步');
-    state={viewer,draw,gl,started:now(),requested:0,submitted:0,completed:0,nativeRendererCalls:0,skippedDraws:0,dirty:false,held:0,released:false,raf:0,pending:null,failure:null,inFlight:0,maxInFlight:0,waiters:[],frames:[]};
+    state={viewer,draw,gl,started:now(),finishedAtMS:null,requested:0,submitted:0,completed:0,nativeRendererCalls:0,skippedDraws:0,dirty:false,held:0,released:false,raf:0,pending:null,failure:null,inFlight:0,maxInFlight:0,waiters:[],frames:[]};
     states.set(viewer,state);records.push(state);return state;
   }
   function awaitSerial(state,target){
@@ -103,7 +103,7 @@ function nativeBootRuntime(){
     async finish(viewer){
       const state=states.get(viewer);if(!state)throw Error('原生启动事务缺失');check(state);
       if(state.pending)await awaitSerial(state,state.pending.serial);check(state);
-      state.held=0;state.dirty=false;state.released=true;
+      state.held=0;state.dirty=false;state.released=true;state.finishedAtMS=now();
       if(state.raf){cancelAnimationFrame(state.raf);state.raf=0;}
       return statusOf(state);
     },
