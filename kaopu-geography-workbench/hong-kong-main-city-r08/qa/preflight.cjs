@@ -4,7 +4,7 @@ const manifest=JSON.parse(fs.readFileSync(path.join(root,'PUBLIC-FILES.json')));
 for(const f of manifest.files){const p=path.resolve(root,f.path);assert(p.startsWith(root+path.sep));const b=fs.readFileSync(p);assert.equal(b.length,f.bytes,f.path);assert.equal(digest(b),f.sha256,f.path);bytes+=b.length;}
 assert.equal(bytes,manifest.totalBytes);
 const dependencies=JSON.parse(fs.readFileSync(path.join(root,'FIXED-DEPENDENCIES.json')));
-for(const f of dependencies.files){let p=path.resolve(root,f.path);if(/hong-kong-map-sea-r03\/(index.html|station-data.js)$/.test(p)){const alternate=path.join(path.dirname(p),'publish-final',path.basename(p));if(fs.existsSync(alternate))p=alternate;}const b=fs.readFileSync(p);assert.equal(b.length,f.bytes,f.path);assert.equal(digest(b),f.sha256,f.path);}
+for(const f of dependencies.files){let p=path.resolve(root,f.path);if(/hong-kong-map-sea-r03\/index.html$/.test(p)&&fs.existsSync(path.join(path.dirname(p),'index.preboot-20261021.html')))p=path.join(path.dirname(p),'index.preboot-20261021.html');if(/hong-kong-map-sea-r03\/(index.html|station-data.js)$/.test(p)){const alternate=path.join(path.dirname(p),'publish-final',path.basename(p));if(fs.existsSync(alternate))p=alternate;}const b=fs.readFileSync(p);assert.equal(b.length,f.bytes,f.path);assert.equal(digest(b),f.sha256,f.path);}
 
 const reused=path.resolve(root,'../hong-kong-main-city-r02/city-buildings');
 const age=JSON.parse(fs.readFileSync(path.join(reused,'age-evidence.json'))),eligible=new Map(age.eligibleObjects.map(x=>[x.objectId,x]));

@@ -23,3 +23,10 @@
 本地固定步、原母体几何、相机眼位及补丁合同通过；真实浏览器记录另见 evidence。CPU通过不能代表视觉通过。使用同一只读GitHub Actions流程检查真实启动、暂停、排汽、起步、全部视角与隧道同行；软件GPU时间不能代表用户硬件性能。
 
 Steam visibility correction: the authored shader now applies the retained renderer output color space. Main opacity and paired-drain cloud opacity/radius are moderately strengthened; original outlets, timing, full train geometry, depth testing, 384-particle capacity and one draw are unchanged. Real station columns still occlude steam. Targeted close-view captures complement the default side-view evidence; this is not fluid/roof collision simulation.
+
+
+## 2026-10-21 启动恢复
+
+保留原封面、完整原列车、地形、狮子山曲线隧道和天气质量。加载标志仅分离原车轮路径并旋转，不重画。地形装配按行让出主线程；同场景材质异步预热；首次天空缓存烘焙期间不反复绘制被封面挡住的整场景。仍完成原分辨率/步数的天空缓存，并等待完整首帧 GPU 完成后才显示游戏。状态文字来自真实阶段，不是假百分比。
+
+真实 Chromium 启动、原物理驾驶及狮子山隧道驾驶验证见 tests/STARTUP-RECOVERY-20261021.json。软件 GPU 的性能不能代表用户硬件。旧 R08 可从该记录的 rollbackCommit 恢复，本次没有修改 R07 或其他项目。

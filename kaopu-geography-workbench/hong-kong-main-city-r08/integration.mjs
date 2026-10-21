@@ -18,6 +18,7 @@ export async function createIntegration(host){
  try{
  await installRailVerticalProfile();
  const baseURL=new URL('../hong-kong-main-city-r01/',import.meta.url),{createIntegration:base}=await loadSharedProjectionIntegration({bundleURL:new URL('integration-aligned.js',baseURL),assetBaseURL:baseURL});
+ window.HKBootR08?.mark('装配原88机车与完整站场…');await new Promise(r=>setTimeout(r,0));
  const game=await base(host),airport=createAirportRenderer(host,window.KaiTakSetup),ocean=await createOuterOcean(host),city=await createCityBuildings(host),outer=await createOuterTerrain(host),draw=game.draw;
  window.HKLionRockTunnelScene=installTunnelScene(game);
  await installTinhauYard(game);
@@ -34,9 +35,12 @@ export async function createIntegration(host){
  const routeUI=installNewRouteUI(host,game,{overview});
  installDiagnosticsUI(host,{city,toolbar});
  installR06Views(host,game,{overview});
+ window.HKBootR08?.mark('装配完整客车与原生材质…');await new Promise(r=>setTimeout(r,0));
  consist=await installCompleteConsist(host,game);game.completeConsist=consist;installGameControlBridge(host,game);const cameras=installCameraViews(host,game);window.HKTrainCamerasR08=cameras;const gameUI=installGameInterface(host,game,cameras);window.HKGameInterfaceR08=gameUI;document.querySelector('#mast h1').textContent='88号 · 陆港铁路';document.querySelector('#mast .brand div>span').textContent='FLYING HONGKONGER 88 · HONG KONG';document.title='88号陆港铁路 · 横版驾驶 R08';
  if(window.HKConsistSetup.config.coachCount>4){const option=document.querySelector('#reviewLocation option[value="kowloon"]');if(option){option.disabled=true;option.textContent+='（本编组不适配）';}}
  setTimeout(()=>{const view=new URLSearchParams(location.search).get('view');if(view==='city')window.HKMainCityNext.focusCity();else if(view==='overview')overview.focus();else if(view==='new-close')window.HKMainCityNext.focusNewGroundClose();else if(view==='yard')routeUI.focusYard();else if(view==='tunnel')routeUI.focusTunnel();else if(view==='bridge')routeUI.focusBridge();else if(view==='route')routeUI.focusRoute();else if(view==='steam')consist.focusSteam();else if(view==='consist'){cameras.release('map');consist.focusWhole();}else gameUI.select(new URLSearchParams(location.search).get('camera')||'side');},0);
+ window.HKBootR08?.mark('异步预热原列车与隧道材质…');await new Promise(r=>setTimeout(r,0));
+ await game.attachTrainScene(async({renderer,scene,camera})=>{const started=performance.now();await renderer.compileAsync(scene,camera);renderer.resetState();host.qa.startupShaderPrewarm={complete:true,ms:performance.now()-started,sameScene:true,sameMaterials:true};});
  return game;
  }catch(error){window.HKNextFatal=String(error.stack||error);const notice=document.getElementById('trainNotice');if(notice)notice.textContent='地图装配失败：'+error.message;throw error;}
 }
