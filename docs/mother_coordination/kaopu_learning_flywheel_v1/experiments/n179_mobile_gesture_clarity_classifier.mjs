@@ -9,12 +9,15 @@ export function classify(e) {
   const clarityEquivalent = visibleMotion && e.perFrameCameraBound &&
     e.sameCameraSettledReference && e.clarityEqualityPassed;
   const responsive = e.latencyBoundDefined && e.latencyBoundPassed;
+  const releaseSafe = e.releaseLatestIntentBound && e.noStalePresentationAfterRelease;
   if (clarityEquivalent && e.realDevice && responsive)
     return 'MOTION_CLARITY_AND_RESPONSIVENESS_VERIFIED_SCOPED';
   if (clarityEquivalent && !e.realDevice)
     return 'EMULATED_MOTION_CLARITY_VERIFIED_SCOPED__REAL_DEVICE_UNKNOWN';
   if (visibleMotion)
     return 'VISIBLE_MOTION_FRAMES_OBSERVED__CLARITY_EQUIVALENCE_UNPROVEN';
+  if (releaseSafe)
+    return 'STALE_RELEASE_PREEMPTION_VERIFIED__ZERO_MOTION_FRAMES_OBSERVED';
   return 'SAMPLING_POLICY_VERIFIED__VISIBLE_MOTION_CLARITY_UNPROVEN';
 }
 
@@ -31,6 +34,8 @@ const current336 = {
   clarityEqualityPassed: false,
   latencyBoundDefined: false,
   latencyBoundPassed: false,
+  releaseLatestIntentBound: false,
+  noStalePresentationAfterRelease: false,
   realDevice: false
 };
 
@@ -43,8 +48,17 @@ const emulatedComplete = {
   clarityEqualityPassed: true
 };
 
+const public336 = {
+  ...current336,
+  actualPresentedFramesObserved: true,
+  duringGesturePresentCount: 0,
+  releaseLatestIntentBound: true,
+  noStalePresentationAfterRelease: true
+};
+
 const cases = [
   [current336, 'SAMPLING_POLICY_VERIFIED__VISIBLE_MOTION_CLARITY_UNPROVEN'],
+  [public336, 'STALE_RELEASE_PREEMPTION_VERIFIED__ZERO_MOTION_FRAMES_OBSERVED'],
   [{...current336, actualPresentedFramesObserved: true, duringGesturePresentCount: 3}, 'VISIBLE_MOTION_FRAMES_OBSERVED__CLARITY_EQUIVALENCE_UNPROVEN'],
   [emulatedComplete, 'EMULATED_MOTION_CLARITY_VERIFIED_SCOPED__REAL_DEVICE_UNKNOWN'],
   [{...emulatedComplete, realDevice: true, latencyBoundDefined: true, latencyBoundPassed: true}, 'MOTION_CLARITY_AND_RESPONSIVENESS_VERIFIED_SCOPED'],
