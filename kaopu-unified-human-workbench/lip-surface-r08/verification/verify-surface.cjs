@@ -5,7 +5,9 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {chromium}=require('playwright');
 const {PNG}=require('pngjs');
-const VERSION='LIP-SURFACE-R08',IMPLEMENTATION='native-lip-surface@1';
+const VERSION='LIP-SURFACE-R08',IMPLEMENTATION='native-lip-surface@2',SURFACE_SCHEMA='kaopu/lip-surface@2';
+const PATCH_IDS=['organized-finite-grooves-main4'];
+const REJECTED_ARCHIVE={file:'evidence/candidate-01/archive-top.json',sha256:'f0947821ca3a5ed13e8ecc8bca4873b3ba601b70568f2d562bc256b4fb667d61'};
 const BASE_SOURCE='1e1e216c2005f4c318da190e1b3b160cc4bd4a6d',BASE_BUILD='1237284ea60f9c198b2b63543f098a7551a9af2f';
 const BASE_HASH='a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac';
 const MOTION_SOURCE='a8bba75322c12df151ecbcebc416087b5248aa5f',INNER_SOURCE='9d855c6051e76a20f052c95f0dda95103d946ef7',INHERITED_SOURCE='01cfde47476b7be6764e9c6a79d925462511539b';
@@ -28,7 +30,7 @@ const materialTransform=isolated.window.__LIP_SURFACE_MATERIAL__;
 assert.equal(typeof materialTransform?.transform,'function','Material must export its pure strict transform');
 assert.equal(typeof materialTransform?.patches,'function','Material must export reviewed literal patches');
 fs.mkdirSync(out,{recursive:true});
-const q={schema:'kaopu/lip-surface-public-qa@1',version:VERSION,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
+const q={schema:'kaopu/lip-surface-public-qa@2',version:VERSION,implementation:IMPLEMENTATION,archiveSchema:SURFACE_SCHEMA,mode:'public',sourceSHA:SOURCE,buildSHA:BUILD,publicURL:PUBLIC_URL,
  verifierSHA256:sha(fs.readFileSync(__filename)),startedAt:new Date().toISOString(),budgetMS,
  numericEncoding:{schema:'kaopu/qa-nonfinite@1',tagKey:'__qaNonFiniteNumber',values:['Infinity','-Infinity','NaN'],scope:'New verification JSON only; native archives remain unchanged.',inMemoryComparison:'Actual JavaScript numbers remain untouched for strict comparisons.'},
  framebuffer:{width,height,pixelRatio:1},browserViewport:{width:1280,height:900},tests:[],frames:[],pageErrors:[],consoleErrors:[],failedRequests:[],resourceErrors:[],transportObservations:[],transportObservationDrains:[],
@@ -38,7 +40,9 @@ const q={schema:'kaopu/lip-surface-public-qa@1',version:VERSION,mode:'public',so
   'All native and actual draw attribute arrays, indices, canonical geometry, original material object/properties, all person settings, calibration, camera and lighting must remain exact across surface variants.',
   'The stable procedural material wrapper has one mode-dependent cache-key VALUE. Across independent R06 only its two function-source hashes are excluded; the off cache-key value remains exact.',
   'Actual expanded GPU fragment changes must equal the reviewed finite literal patch sequence applied independently to the off program; vertex source and every active GPU uniform value remain exact.',
-  'Two single-factor comparisons freeze the already rendered neutral person and restore its original complete native state, solver reports/calls, actual GPU shader and pixels.',
+   'Only the selected fine-detail organization and exact original R06 are product modes. Rejected colour and edge variants are absent; no factor-only experiment remains in this suite.',
+   'A genuine independent-R06 full-person archive and a transparently derived older-R02 envelope fixture are restored in the same native hosts. Older files keep the new surface disabled; rejected surface@1 archives must fail before mutation.',
+   'Only neutral/macro requires a nonzero native image response. Every other view reports its actual response, including zero after inherited distance filtering; no pixel count is an aesthetic score.',
   'The fresh archive restores the actual half-progress jaw person. Camera and lighting are explicitly aligned; no claim that the archive owns them.',
   'Pixel response and successful rendering do not establish realistic texture. Native originals require direct visual comparison with sourced human photographs.',
   'Native GPU timings include the current software-rendered CI environment; no physical-phone performance claim.'
@@ -120,11 +124,12 @@ async function provenance(){
  assert.equal(text.replace(suffix,''),baselineBytes.toString('utf8'),'Removing the reviewed append must recover immutable R06 exactly');
  const scripts=s=>Array.from(s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g),m=>sha(m[1]));
  const inherited=scripts(baselineBytes.toString('utf8'));assert.deepEqual(manifest.originalScriptHashes,inherited);assert.deepEqual(scripts(text).slice(0,inherited.length),inherited);
- const patches={};for(const mode of['r06','edge','colour','r08']){patches[mode]=JSON.parse(JSON.stringify(materialTransform.patches(mode)));assert(Array.isArray(patches[mode]));for(const p of patches[mode])assert(typeof p.id==='string'&&typeof p.from==='string'&&p.from&&typeof p.to==='string'&&p.to&&p.to!==p.from);}
- assert.deepEqual(patches.r06,[]);assert.deepEqual(patches.edge.map(p=>p.id),['edge-width','edge-pigment-transition']);assert.deepEqual(patches.colour.map(p=>p.id),['tissue-colour']);assert.equal(patches.r08.length,patches.edge.length+patches.colour.length,'Combined mode must compose the two reviewed factors only');
- assert.deepEqual(patches.r08,[...patches.edge,...patches.colour],'Combined mode changed the reviewed factor order');
- assert.equal(new Set(patches.r08.map(p=>p.id)).size,patches.r08.length,'Patch IDs must be unique');
- q.previewSHA256=manifest.previewSHA256;q.previewBytes=preview.length;q.manifest=manifest;q.reviewedPatches=patches;
+ assert.equal(materialTransform.version,IMPLEMENTATION);assert.deepEqual(Array.from(materialTransform.modes),['r08','r06']);
+ assert.deepEqual(Array.from(materialTransform.patchIds),PATCH_IDS);assert.deepEqual(JSON.parse(JSON.stringify(materialTransform.patches('r06'))),[]);
+ assert.equal(manifest.surfaceImplementation,IMPLEMENTATION);assert.equal(manifest.archiveSchema,SURFACE_SCHEMA);assert.deepEqual(manifest.surfaceModes,['r08','r06']);assert.deepEqual(manifest.fragmentChanges,PATCH_IDS);
+ assert.equal(new Set(PATCH_IDS).size,PATCH_IDS.length,'Patch IDs must be unique');
+ q.previewSHA256=manifest.previewSHA256;q.previewBytes=preview.length;q.manifest=manifest;q.reviewedPatchIds={r06:[],r08:PATCH_IDS};q.reviewedPatches={r06:[],r08:null};
+ q.patchBinding={source:'Actual original expanded GPU fragment and original onBeforeCompile template, each independently supplied to the hash-bound pure patch generator.',literalValuesAvailableAtProvenance:false};
  q.byteProvenance={baseline:{url:BASE_RAW,status:baseline.status(),bytes:baselineBytes.length,sha256:sha(baselineBytes)},public:{url:RAW,status:publicResponse.status(),bytes:publicBytes.length,sha256:sha(publicBytes)},manifestSHA256:sha(fs.readFileSync(manifestPath)),materialSourceSHA256:sha(materialSource),reviewedAppendRemovedR06Exact:true,inheritedScriptHashesExact:true,isolatedTransformFromHashBoundSource:true};
  checkpoint();return q.byteProvenance;
 }
@@ -204,7 +209,7 @@ async function load(url,label,isR08,captureNaturalUI=false){
   assert.equal(startup.innerSource,INNER_SOURCE);assert.equal(startup.innerVersion,'LIP-INNER-R04');assert.equal(startup.innerReport.source.sourceCommit,INNER_SOURCE);assert.equal(startup.innerReport.baseComparison,'r02');assert.equal(startup.innerReport.comparison,'r04');assert.equal(startup.innerReport.diagnostic,0);
   assert.equal(startup.motionSource,MOTION_SOURCE);assert.equal(startup.motionVersion,'LIP-MOTION-R05');assert.equal(startup.motionReport.source.sourceCommit,MOTION_SOURCE);assert.equal(startup.motionReport.schema,'kaopu/lip-motion@1');assert.equal(startup.motionReport.comparison,'r05');assert(startup.motionReport.ready);assert(startup.motionReport.solver.installed&&startup.motionReport.solver.enabled&&startup.motionReport.solver.valid);
   assert.equal(startup.cornerSource,BASE_SOURCE);assert.equal(startup.cornerVersion,'LIP-CORNER-R06');assert.equal(startup.cornerReport.source.sourceCommit,BASE_SOURCE);assert.equal(startup.cornerReport.schema,'kaopu/lip-corner@1');assert.equal(startup.cornerReport.comparison,'r06');assert(startup.cornerReport.ready);assert(startup.cornerReport.solver.installed&&startup.cornerReport.solver.enabled&&startup.cornerReport.solver.valid);assert.equal(startup.cornerReport.implementation,'native-corner-pucker-vector@3');
-  if(isR08){assert.equal(startup.source,SOURCE);assert.equal(startup.version,VERSION);assert.equal(startup.report.source.sourceCommit,SOURCE);assert.equal(startup.report.schema,'kaopu/lip-surface@1');assert.equal(startup.report.comparison,'r08');assert(startup.report.ready);assert.deepEqual(startup.report.source.modules,q.manifest.modules);}
+  if(isR08){assert.equal(startup.source,SOURCE);assert.equal(startup.version,VERSION);assert.equal(startup.report.source.sourceCommit,SOURCE);assert.equal(startup.report.schema,SURFACE_SCHEMA);assert.equal(startup.report.implementation,IMPLEMENTATION);assert.equal(startup.report.comparison,'r08');assert(startup.report.ready);assert.deepEqual(startup.report.source.modules,q.manifest.modules);}
   for(const[k,v]of Object.entries(startup.errors))assert.equal(v?.length||0,0,label+' '+k);
   await stage(label+' drain original startup GPU queue',()=>p.evaluate(()=>{const gl=__IDENTITY_QA__.viewer().renderer.getContext();gl.finish();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));if(gl.getError()||gl.isContextLost())throw Error('Original startup GPU queue failed');}));
   if(captureNaturalUI){
@@ -400,7 +405,10 @@ async function controlState(){return page.evaluate(()=>{
 });}
 function shaderSources(raw){return Object.fromEntries(raw.expanded.map(x=>[x.type,x.source]));}
 function proveSurfaceShader(original,actual,mode){
- const a=shaderSources(original),b=shaderSources(actual),patches=JSON.parse(JSON.stringify(materialTransform.patches(mode)));
+ const a=shaderSources(original),b=shaderSources(actual),patches=JSON.parse(JSON.stringify(materialTransform.patches(mode,a.fragment)));
+ assert.deepEqual(patches.map(p=>p.id),mode==='r06'?[]:PATCH_IDS,'Actual source changed the reviewed patch set');
+ for(const p of patches)assert(typeof p.from==='string'&&p.from&&typeof p.to==='string'&&p.to&&p.to!==p.from,'Invalid actual-source literal '+p.id);
+ if(mode==='r08'){if(q.reviewedPatches.r08===null)q.reviewedPatches.r08=patches;else assert.deepEqual(patches,q.reviewedPatches.r08,'Fixed-person patch literals changed between poses/views');}
  assert.deepEqual(Object.keys(b).sort(),Object.keys(a).sort());assert.equal(b.vertex,a.vertex,'Surface mode changed actual expanded GPU vertex shader');
  let expected=a.fragment;
  for(const patch of patches){assert.equal(expected.split(patch.from).length,2,'Actual off shader lacks unique reviewed anchor '+patch.id);assert.equal(expected.includes(patch.to),false,'Patch already present '+patch.id);expected=expected.replace(patch.from,()=>patch.to);}
@@ -411,32 +419,10 @@ function proveSurfaceShader(original,actual,mode){
  assert.deepEqual(actual.templates,original.templates,'Inherited R04/R02 onBeforeCompile templates changed');
  const ev=actual.surfaceTemplates;if(mode!=='r06'){
   assert(ev?.compiledForCurrentMode,'No actual wrapper compilation evidence for current surface mode');assert.equal(ev.mode,mode);assert.equal(ev.originalVertex,ev.finalVertex);assert.deepEqual(ev.replacements,patches);
+  assert.deepEqual(JSON.parse(JSON.stringify(materialTransform.patches(mode,ev.originalFragment))),patches,'Original template and expanded GPU source derived different literal patches');
   assert.equal(ev.finalFragment,materialTransform.transform(ev.originalFragment,mode));assert.equal(ev.originalFragment,actual.templates.finalFragment,'Wrapper did not delegate to the exact original R04 template');
  }
  return{mode,patchIDs:patches.map(p=>p.id),actualExpandedVertexExact:true,actualExpandedFragmentOnlyDeclaredPatches:true,reverseActualGPUPatchesExact:true,originalNativeUniformObjectsAndValuesExact:true,allActiveGPUUniformsExact:true,inheritedTemplatesExact:true,wrapperCompiledForCurrentMode:ev?.compiledForCurrentMode===true};
-}
-async function singleFactorWindow(pair){
- await page.evaluate(()=>__LS_VERIFY__.compare('r08'));
- await page.evaluate(reference=>__LS_VERIFY__.align(reference),pair.onState);
- const before=await state(),solvers=()=>page.evaluate(()=>({corner:__LIP_CORNER_SOLVER__.report(),motion:__LIP_MOTION_SOLVER__.report()})),beforeSolvers=await solvers();
- assert.deepEqual(before,pair.onState,'Single-factor setup changed the actual neutral reference');
- const variants=[];
- try{
-  for(const mode of['edge','colour']){
-   // Stable product hook stays installed. Only the declared material mode is
-   // selected; no surface controller report, pose, update or setter is invoked.
-   await page.evaluate(mode=>__LIP_SURFACE_MATERIAL__.setMode(mode),mode);
-   const frame=await capture('neutral-macro-'+mode+'-only'),actual=await state(),raw=await page.evaluate(()=>__LS_VERIFY__.shaders()),shader=await shaderRecord('neutral-macro-'+mode+'-only',true);
-   assert.deepEqual(variantState(actual),variantState(before),'Single factor changed frozen native inputs');assert.deepEqual(await solvers(),beforeSolvers,'Single factor changed original solver reports/calls');
-   const proof=proveSurfaceShader(pair.offRaw,raw,mode),delta=difference(pair.off,frame);
-   assert(delta.changedPixels>0,'Single factor has no actual frame response');
-   variants.push({mode,frame:frame.name,sha256:frame.sha256,pngSHA256:frame.pngSHA256,differenceFromR06:delta,proof,shader});
-  }
- }finally{await page.evaluate(()=>__LIP_SURFACE_MATERIAL__.setMode('r08'));}
- const restored=await capture('neutral-macro-r08-factors-restored'),after=await state(),raw=await page.evaluate(()=>__LS_VERIFY__.shaders()),shader=await shaderRecord('neutral-macro-r08-factors-restored',true);
- assert.deepEqual(after,before,'Single-factor window failed to restore complete native state');assert.deepEqual(await solvers(),beforeSolvers,'Single-factor window changed original solver state');assert.equal(restored.sha256,pair.on.sha256,'Single-factor window failed to restore native pixels');assert.deepEqual(shaderFingerprint(shader),shaderFingerprint(pair.onShader),'Single-factor window failed to restore actual shader/uniforms');proveSurfaceShader(pair.offRaw,raw,'r08');
- checkSurface(await page.evaluate(()=>surfaceLip.report()),'r08');
- q.factorComparisons={referenceFrame:pair.on.name,referenceSHA256:pair.on.sha256,offFrame:pair.off.name,variants,restoredFrame:restored.name,restoredSHA256:restored.sha256,nativeStateExact:true,solverReportsAndCallsExact:true,pixelsRestoredExact:true,actualShaderRestoredExact:true};checkpoint();return q.factorComparisons;
 }
 async function openControl(selector){const locator=page.locator(selector);assert.equal(await locator.count(),1,'Expected one real control '+selector);await locator.evaluate(el=>{for(let p=el.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;});return locator;}
 async function actualDownload(selector,file){const promise=page.waitForEvent('download',{timeout:30000});await page.locator(selector).click();const download=await promise;await download.saveAs(path.join(out,file));const bytes=fs.readFileSync(path.join(out,file));return{archive:JSON.parse(bytes),file,suggestedFilename:download.suggestedFilename(),sha256:sha(bytes),bytes:bytes.length};}
@@ -476,7 +462,7 @@ async function publicChecks(){
  const primary=await load(PUBLIC_URL,'R08 public',true,true);page=primary.page;
  const pairs={},matrix=[['neutral','macro'],['neutral','oblique'],['neutral','front'],['jaw','macro'],['jaw','oblique'],['speak','macro'],['pucker','oblique']];
  q.geometryMutationScope={allowedAttributeLeaves:[],canonicalPositions:false,canonicalFaces:false,indices:false,groups:false,allNativeAttributes:false,allDrawAttributes:false,nativeBeforeLocalInput:false,finalContactPositions:false,materialProperties:false,materialObjects:false,hookFunctionIdentities:false,originalAuthoringSettings:false,camera:false,lighting:false,
- allowedShaderChange:'Only the hash-bound three literal fragment replacements; original vertex and all active uniforms remain exact',allowedStateDifference:'material[1].cacheKeyValueSHA256 only between different modes'};
+ allowedShaderChange:'Only the hash-bound organized-finite-grooves-main4 fragment replacement derived from the actual original person shader; original vertex, normal derivatives and all active uniforms remain exact',allowedStateDifference:'material[1].cacheKeyValueSHA256 only between different modes'};
  let programSources;
  for(const[pose,view]of matrix){
   await test('matched native '+pose+'/'+view+' R08 and immutable-material R06',async()=>{
@@ -489,15 +475,15 @@ async function publicChecks(){
    const off=await capture(tag+'-r06'),offState=await state(),offReport=await page.evaluate(()=>surfaceLip.report()),offRaw=await page.evaluate(()=>__LS_VERIFY__.shaders()),offShader=await shaderRecord(tag+'-r06',true);
    assertNativeState(offState);checkSurface(offReport,'r06');
    assert.deepEqual(variantState(offState),variantState(onState),'Material variant changed complete native/draw geometry, settings, material owners/properties, calibration, camera or lighting');
-   const proof=proveSurfaceShader(offRaw,onRaw,'r08'),delta=difference(off,on);assert(delta.changedPixels>0,'Declared material edit did not change the actual native image');
+   const proof=proveSurfaceShader(offRaw,onRaw,'r08'),delta=difference(off,on),responseRequired=pose==='neutral'&&view==='macro';if(responseRequired)assert(delta.changedPixels>0,'Selected fine detail has no actual neutral/macro image response');
    pairs[key]={on,off,onState,offState,onReport,offReport,onRaw,offRaw,onShader,offShader};q.comparisons||=[];
-   q.comparisons.push({pose,view,progress:1,onSHA256:on.sha256,offSHA256:off.sha256,onState,offState,onReport,offReport,difference:delta,shaderProof:proof,completeNativeAndDrawStateExact:true,onlyStateExclusion:'material[1].cacheKeyValueSHA256'});
-   q.shaders||={};q.shaders[tag]={r08:onShader,r06:offShader};checkpoint();return{completeNativeAndDrawStateExact:true,...proof,...delta};
+   q.comparisons.push({pose,view,progress:1,onSHA256:on.sha256,offSHA256:off.sha256,onState,offState,onReport,offReport,difference:delta,nativeImageResponseRequired:responseRequired,shaderProof:proof,completeNativeAndDrawStateExact:true,onlyStateExclusion:'material[1].cacheKeyValueSHA256'});
+   q.shaders||={};q.shaders[tag]={r08:onShader,r06:offShader};checkpoint();return{completeNativeAndDrawStateExact:true,nativeImageResponseRequired:responseRequired,...proof,...delta};
   });
-  if(pose==='neutral'&&view==='macro')await test('two frozen neutral single-factor modes restore exact native state and pixels',()=>singleFactorWindow(pairs['neutral/macro']));
  }
+ let baseline,legacyR06;
  await test('independently loaded immutable R06 equals R08-off in neutral and pucker',async()=>{
-  const baseline=await load(BASE_URL,'independent R06',false);page=baseline.page;q.independentR06=[];
+  baseline=await load(BASE_URL,'independent R06',false);page=baseline.page;q.independentR06=[];
   for(const[pose,view]of[['neutral','macro'],['pucker','oblique']]){
    const pair=pairs[pose+'/'+view];await page.evaluate(({pose,view})=>__LS_VERIFY__.poseView(pose,view),{pose,view});
    const before=await state();assertNativeState(before);assert.deepEqual(independentState(commonPerson(before)),independentState(commonPerson(pair.offState)),'Independent R06 native person/calibration/material differs before explicit alignment');
@@ -507,7 +493,33 @@ async function publicChecks(){
    assert.equal(actual.materials[1].cacheKeyValueSHA256,pair.offState.materials[1].cacheKeyValueSHA256,'R08-off did not recover original R06 cache-key value');
    q.independentR06.push({pose,view,alignment,state:actual,frameSHA256:frame.sha256,exactOffPixels:true,shader,exactActualOriginalShader:true,exactOriginalCacheKeyValue:true,excludedStateFields:['materials[1].compileHookSHA256','materials[1].cacheKeyFunctionSHA256'],excludedReason:'The two R08 stable wrapper function source strings are additional product code; all original material values, actual off source, cache-key value, live inputs and pixels remain checked.'});checkpoint();
   }
-  await closePage(page,'independent R06 complete');await baseline.context.close();page=primary.page;return{independentActualFrames:2,completeStateExactExceptTwoDeclaredWrapperFunctionHashes:true,pixelsExact:true,actualOriginalShaderAndAllActiveUniformsExact:true};
+  const text=await page.evaluate(()=>JSON.stringify(cornerLip.archive())),archive=JSON.parse(text),reference=q.independentR06.at(-1),file='archive-legacy-r06.json';
+  assert.equal(Object.prototype.hasOwnProperty.call(archive,'lipSurface'),false,'Independent original R06 unexpectedly contains a new surface envelope');assert.equal(archive.lipCorner?.comparison,'r06');assert.equal(archive.lipMotion?.comparison,'r05');assert.equal(archive.innerLip?.comparison,'r04');
+  assert.deepEqual(await state(),reference.state,'Reading the genuine R06 archive changed its native state');fs.writeFileSync(path.join(out,file),text);
+  legacyR06={archive,reference,receipt:{file,bytes:Buffer.byteLength(text),sha256:sha(text),sourceURL:BASE_URL,sourceCommit:BASE_SOURCE,buildCommit:BASE_BUILD,capture:'Actual independent cornerLip.archive() serialized by native JSON.stringify; this is not an additional DOM download.'}};
+  q.legacyR06Archive=legacyR06.receipt;page=primary.page;return{independentActualFrames:2,completeStateExactExceptTwoDeclaredWrapperFunctionHashes:true,pixelsExact:true,actualOriginalShaderAndAllActiveUniformsExact:true,genuineOriginalR06ArchiveCaptured:true};
+ });
+ await test('genuine R06 and schema-compatible older R02 full-person archives restore exactly with the new surface off',async()=>{
+  q.legacyRestore=[];
+  const reference=legacyR06.reference;
+  page=primary.page;await page.evaluate(archive=>__LS_VERIFY__.restore(archive),legacyR06.archive);await page.evaluate(({width,height})=>__LS_VERIFY__.size(width,height),{width,height});
+  const r06Alignment=await page.evaluate(reference=>__LS_VERIFY__.align(reference),reference.state),r06Frame=await capture('legacy-r06-archive-restored-readback',false),r06State=await state(),r06Report=await page.evaluate(()=>surfaceLip.report()),r06Shader=await shaderRecord('legacy-r06-archive-restored',true);
+  assertNativeState(r06State);checkSurface(r06Report,'r06');assert.deepEqual(independentState(r06State),independentState(reference.state),'Restored genuine R06 archive changed the full native person');assert.equal(r06Frame.sha256,reference.frameSHA256,'Restored genuine R06 archive changed actual pixels');assert.deepEqual(shaderFingerprint(r06Shader),shaderFingerprint(reference.shader),'Restored genuine R06 archive changed actual original shader/uniforms');
+  q.legacyRestore.push({kind:'r06',archive:legacyR06.receipt,referenceFrame:'independent-r06-pucker-oblique',referenceSHA256:reference.frameSHA256,alignment:r06Alignment,state:r06State,surfaceReport:r06Report,shader:r06Shader,frameSHA256:r06Frame.sha256,stateExact:true,frameExact:true,actualOriginalShaderAndAllActiveUniformsExact:true,surfaceOff:true,comparison:'r06',archiveOwnsCameraAndLighting:false,comparisonCameraAndLightingExplicitlyAligned:true});checkpoint();
+  const older=structuredClone(legacyR06.archive),removedEnvelopes=['lipCorner','lipMotion','innerLip'];for(const key of removedEnvelopes){assert(Object.prototype.hasOwnProperty.call(older,key),'Missing later envelope in R06 fixture '+key);delete older[key];}
+  assert.equal(Object.prototype.hasOwnProperty.call(older,'lipSurface'),false);assert.equal(older.lipRealism?.version,'LIP-REALISM-R02');
+  const text=JSON.stringify(older),file='archive-compatible-r02.json',fixture={file,bytes:Buffer.byteLength(text),sha256:sha(text),derivedFrom:legacyR06.receipt.file,derivedFromSHA256:legacyR06.receipt.sha256,removedEnvelopes,derivation:'Only the three later envelopes are removed from the genuine independent R06 complete archive. This is a schema-compatible fixture, not a claimed historical R02 download.'};fs.writeFileSync(path.join(out,file),text);
+  page=baseline.page;await page.evaluate(archive=>__LS_VERIFY__.restore(archive),older);await page.evaluate(({width,height})=>__LS_VERIFY__.size(width,height),{width,height});
+  const oldAlignment=await page.evaluate(reference=>__LS_VERIFY__.align(reference),reference.state),oldFrame=await capture('independent-r06-compatible-r02-archive-readback',false),oldState=await state(),oldShader=await shaderRecord('independent-r06-compatible-r02-archive',true);
+  assert.equal(oldState.innerLip.comparison,'r02');assert.equal(oldState.motionLip.comparison,'r04');assert.equal(oldState.motionLip.enabled,false);assert.equal(oldState.cornerLip.comparison,'inherited');assert.equal(oldState.cornerLip.enabled,false);assert(oldState.functionsOriginal);assert(oldState.materials.every(m=>m.sameOriginalObject&&m.sameOriginalCompileHook&&m.sameOriginalCacheKey));
+  page=primary.page;await page.evaluate(archive=>__LS_VERIFY__.restore(archive),older);await page.evaluate(({width,height})=>__LS_VERIFY__.size(width,height),{width,height});
+  const newAlignment=await page.evaluate(reference=>__LS_VERIFY__.align(reference),oldState),frame=await capture('surface-v2-compatible-r02-archive-readback',false),actual=await state(),report=await page.evaluate(()=>surfaceLip.report()),shader=await shaderRecord('surface-v2-compatible-r02-archive',true);
+  assert.equal(report.schema,SURFACE_SCHEMA);assert.equal(report.implementation,IMPLEMENTATION);assert.equal(report.comparison,'inherited');assert(report.ready);assert.equal(report.material.mode,'r06');assert(report.material.installed&&report.material.valid&&report.material.hooksStable&&report.material.materialSameObject);assert.equal(report.material.errors.length,0);
+  assert.deepEqual(independentState(actual),independentState(oldState),'Older R02 restore differs between immutable R06 and surface v2');assert.equal(frame.sha256,oldFrame.sha256,'Older R02 restored pixels differ from immutable R06');assert.deepEqual(shaderFingerprint(shader),shaderFingerprint(oldShader),'Older R02 restored actual shader/uniforms differ from immutable R06');
+  q.legacyRestore.push({kind:'compatible-r02',archive:fixture,reference:{state:oldState,shader:oldShader,frameSHA256:oldFrame.sha256,alignment:oldAlignment,sourceURL:BASE_URL},alignment:newAlignment,state:actual,surfaceReport:report,shader,frameSHA256:frame.sha256,stateExact:true,frameExact:true,actualOriginalShaderAndAllActiveUniformsExact:true,surfaceOff:true,comparison:'inherited',archiveOwnsCameraAndLighting:false,comparisonCameraAndLightingExplicitlyAligned:true});checkpoint();
+  const baselineReport=await baseline.page.evaluate(()=>__LS_VERIFY__.report());assert(baselineReport.functionsOriginal);q.independentInterventions=baselineReport;
+  await closePage(baseline.page,'independent R06 and legacy archive checks complete');await baseline.context.close();page=primary.page;
+  return{genuineR06Restore:true,explicitlyDerivedOlderR02Fixture:true,olderR02ComparedWithOriginalHost:true,actualReadbacks:3,savedNativeImages:0,completeNativeStateExactExceptTwoDeclaredWrapperFunctionHashes:true,actualOriginalShadersAndUniformsExact:true,pixelsExact:true,newSurfaceDisabledForBothArchives:true};
  });
  let savedArchive,savedPair;
  await test('real historical R02 button remains saveable and explicit R08 restores the same half-jaw person',async()=>{
@@ -541,7 +553,7 @@ async function publicChecks(){
   q.savePreFrameState=before;q.savePreFrameControl=beforeControl;q.savePreFrameScope={excluded:['drawGeometry'],cameraAndLightingIncluded:true,reference:'Actual R08 jaw/oblique progress .5 native frame; fresh post-render comparison includes every draw attribute.'};q.downloads=[];
   for(const[label,selector]of selectors){
    const download=await actualDownload(selector,'archive-'+label+'.json'),archive=download.archive;assert.equal(download.suggestedFilename,label==='top'?'lip-surface-r08-person.json':'lip-corner-r06-person.json');
-   assert.equal(archive.lipSurface?.schema,'kaopu/lip-surface@1');assert.equal(archive.lipSurface.version,VERSION);assert.equal(archive.lipSurface.implementation,IMPLEMENTATION);assert.equal(archive.lipSurface.comparison,'r08');assert.equal(Object.prototype.hasOwnProperty.call(archive,'lipEdge'),false,'Rejected R07 geometry must not enter R08 archives');
+   assert.equal(archive.lipSurface?.schema,SURFACE_SCHEMA);assert.equal(archive.lipSurface.version,VERSION);assert.equal(archive.lipSurface.implementation,IMPLEMENTATION);assert.equal(archive.lipSurface.comparison,'r08');assert.equal(Object.prototype.hasOwnProperty.call(archive,'lipEdge'),false,'Rejected R07 geometry must not enter R08 archives');
    assert.equal(archive.lipCorner?.schema,'kaopu/lip-corner@1');assert.equal(archive.lipCorner.version,'LIP-CORNER-R06');assert.equal(archive.lipCorner.comparison,'r06');
    assert.equal(archive.lipMotion?.schema,'kaopu/lip-motion@1');assert.equal(archive.lipMotion.version,'LIP-MOTION-R05');assert.equal(archive.lipMotion.comparison,'r05');assert.equal(archive.lipMotion.controlPose,'jaw');assert.equal(archive.lipMotion.progress,.5);
    assert.equal(archive.innerLip?.schema,'kaopu/lip-inner@1');assert.equal(archive.innerLip.version,'LIP-INNER-R04');assert.equal(archive.innerLip.comparison,'r04');assert.equal(archive.innerLip.diagnostic,0);
@@ -554,14 +566,17 @@ async function publicChecks(){
  });
  await test('invalid surface archives reject before native, control or render mutation',async()=>{
   q.malformed=[];
-  for(const kind of['unknown-schema','null','foreign-r07-geometry']){
-   const bad=structuredClone(savedArchive);if(kind==='unknown-schema')bad.lipSurface.schema='kaopu/lip-surface@999';else if(kind==='null')bad.lipSurface=null;else bad.lipEdge={schema:'kaopu/lip-edge@1',version:'LIP-EDGE-R07',implementation:'native-lower-return-fairing@2',comparison:'r07'};
+  const oldBytes=fs.readFileSync(path.join(scope,REJECTED_ARCHIVE.file));assert.equal(sha(oldBytes),REJECTED_ARCHIVE.sha256,'Historical failed archive fixture bytes changed');
+  const rejectedOriginal=JSON.parse(oldBytes);assert.equal(rejectedOriginal.lipSurface?.schema,'kaopu/lip-surface@1');assert.equal(rejectedOriginal.lipSurface.implementation,'native-lip-surface@1');assert.equal(rejectedOriginal.lipSurface.comparison,'r08');
+  for(const kind of['unknown-schema','null','foreign-r07-geometry','rejected-surface-v1','old-implementation-with-v2-schema']){
+   const bad=structuredClone(kind==='rejected-surface-v1'?rejectedOriginal:savedArchive);
+   if(kind==='unknown-schema')bad.lipSurface.schema='kaopu/lip-surface@999';else if(kind==='null')bad.lipSurface=null;else if(kind==='foreign-r07-geometry')bad.lipEdge={schema:'kaopu/lip-edge@1',version:'LIP-EDGE-R07',implementation:'native-lower-return-fairing@2',comparison:'r07'};else if(kind==='old-implementation-with-v2-schema')bad.lipSurface.implementation='native-lip-surface@1';
    const before=await state(),controlBefore=await controlState(),frameBefore=await page.evaluate(()=>__LS_VERIFY__.renderedFrame());
    const result=await page.evaluate(async bad=>{try{await surfaceLip.restore(bad);return{rejected:false};}catch(e){return{rejected:true,error:String(e)};}},bad);
-   assert(result.rejected,'Malformed/foreign archive accepted');assert.deepEqual(await state(),before,'Malformed archive changed complete native state');assert.deepEqual(await controlState(),controlBefore,'Malformed archive changed controls or solver state');assert.equal(await page.evaluate(()=>__LS_VERIFY__.renderedFrame()),frameBefore,'Malformed archive submitted a native render');
-   q.malformed.push({kind,...result,stateUnchanged:true,controlAndSolverUnchanged:true,nativeRenderCounterUnchanged:true});
+   assert(result.rejected,'Malformed/foreign/rejected-version archive accepted');assert.deepEqual(await state(),before,'Rejected archive changed complete native state');assert.deepEqual(await controlState(),controlBefore,'Rejected archive changed controls or solver state');assert.equal(await page.evaluate(()=>__LS_VERIFY__.renderedFrame()),frameBefore,'Rejected archive submitted a native render');
+   q.malformed.push({kind,...result,...(kind==='rejected-surface-v1'?{sourceFixture:{...REJECTED_ARCHIVE,bytes:oldBytes.length}}:{}),stateUnchanged:true,controlAndSolverUnchanged:true,nativeRenderCounterUnchanged:true});
   }
-  return{rejectedBeforeStateControlAndRenderMutation:3};
+  return{rejectedBeforeStateControlAndRenderMutation:q.malformed.length,rejectedOriginalFailedV1Archive:true};
  });
  q.primaryInterventions=await page.evaluate(()=>__LS_VERIFY__.report());assert(q.primaryInterventions.functionsOriginal);await closePage(page,'primary public checks complete');await primary.context.close();
  await test('fresh public context restores a downloaded half-jaw archive with exact state, shader, pixels and UI',async()=>{
@@ -574,9 +589,10 @@ async function publicChecks(){
   const shader=await shaderRecord('fresh-r08',true);assert.deepEqual(shaderFingerprint(shader),shaderFingerprint(savedPair.onShader),'Fresh archive changed actual GPU shader or uniforms');
   q.freshRestore={download:q.downloads[0].file,sourceSHA:report.source.sourceCommit,stateExact:true,frameExact:true,frameSHA256:frame.sha256,control,material:report.material,cornerSolver:report.cornerSolver,motionSolver:report.motionSolver,shader,archiveOwnsCameraAndLighting:false,comparisonCameraAndLightingExplicitlyAligned:true};q.freshInterventions=await page.evaluate(()=>__LS_VERIFY__.report());assert(q.freshInterventions.functionsOriginal);return q.freshRestore;
  });
- assert.equal(q.frames.filter(x=>x.saved).length,20);assert.equal(q.frames.length,21);assert.equal(q.tests.length,14);assert(q.workbenchUI?.actualBrowserScreenshot);
- assert.equal(q.factorComparisons.variants.length,2);for(const key of['nativeStateExact','solverReportsAndCallsExact','pixelsRestoredExact','actualShaderRestoredExact'])assert.equal(q.factorComparisons[key],true);
- assert.equal(q.independentR06.length,2);assert.equal(q.downloads.length,3);assert.equal(q.malformed.length,3);
+ assert.equal(q.frames.filter(x=>x.saved).length,17);assert.equal(q.frames.length,21);assert.equal(q.tests.length,14);assert(q.workbenchUI?.actualBrowserScreenshot);
+ assert.deepEqual(q.legacyRestore.map(x=>x.kind),['r06','compatible-r02']);for(const item of q.legacyRestore)for(const key of['stateExact','frameExact','actualOriginalShaderAndAllActiveUniformsExact','surfaceOff'])assert.equal(item[key],true,item.kind+' '+key);
+ assert.equal(q.independentR06.length,2);assert.equal(q.downloads.length,3);assert.equal(q.malformed.length,5);assert.deepEqual(q.reviewedPatches.r08.map(p=>p.id),PATCH_IDS);
+ q.actualCounts={testGroups:q.tests.length,savedNativePNGs:q.frames.filter(x=>x.saved).length,nativeImageReadbacks:q.frames.length,naturalUIScreenshots:q.workbenchUI?.actualBrowserScreenshot?1:0,actualDOMDownloads:q.downloads.length+(q.inheritedControlRegression.actualDOMDownload?1:0),rejectedArchiveCases:q.malformed.length,legacyArchiveCases:q.legacyRestore.length};
 }
 
 (async()=>{
@@ -598,7 +614,7 @@ async function publicChecks(){
     try{for(const key of['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[key].length,0,key+' after cleanup');}
     catch(e){q.finalErrorGateFailure=String(e);q.failure||=String(e);q.completed=false;q.publicHttpsPassed=false;q.browserPassed=false;q.shareAllowed=false;process.exitCode=1;}
     clearTimeout(fatalTimer);q.finishedAt=new Date().toISOString();json('qa.json',q);
-    json('PUBLICATION_PROOF.json',{schema:'kaopu/lip-surface-publication@1',version:VERSION,sourceSHA:SOURCE,buildSHA:BUILD,previewSHA256:q.previewSHA256,publicURL:PUBLIC_URL,
+    json('PUBLICATION_PROOF.json',{schema:'kaopu/lip-surface-publication@2',version:VERSION,sourceSHA:SOURCE,buildSHA:BUILD,previewSHA256:q.previewSHA256,publicURL:PUBLIC_URL,
       verifierSHA256:q.verifierSHA256,checkedAt:q.finishedAt,publicHttpsPassed:q.completed&&q.publicHttpsPassed,browserPassed:q.completed&&q.browserPassed,shareAllowed:q.completed&&q.shareAllowed,
       actualSavedImages:q.frames.filter(x=>x.saved).length,actualReadbacks:q.frames.length,naturalUIScreenshot:q.workbenchUI||null,visualAcceptance:false,productionReady:false,physicalPhone:false,generatedImageUsed:false,staticImageSubstitute:false,
       failure:q.failure||q.cleanupError||null,evidence:'qa.json'});
