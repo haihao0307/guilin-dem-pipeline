@@ -1,0 +1,143 @@
+name: NPC life observation R04 candidate
+on:
+  push:
+    branches: [feature/npc-life-observation-r04-20261021]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-life-observation-r04/**'
+      - '.github/workflows/npc-life-observation-r04.yml'
+permissions:
+  contents: write
+concurrency:
+  group: npc-life-observation-r04-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/human-integrated-r06
+            kaopu-unified-human-workbench/npc-life-observation-r04
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Build the exact standalone complete native candidate
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r04/prepare.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/build.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-assets.cjs
+      - name: Verify bounded boot and continuous-frame evidence contracts
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-boot-render-contract.mjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-continuous-contract-test.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-navigation-payload.cjs
+      - name: Verify retained rigid-body causality
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/runtime-commands.mjs > kaopu-unified-human-workbench/npc-life-observation-r04/qa/runtime-commands-report.json
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/state-boundary.mjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/r01-causal-regression.mjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/window-causal.mjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/window-host-integration.mjs
+      - name: Prepare the project's Chromium verification runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Verify startup and uninterrupted physical interactions in real Chromium
+        timeout-minutes: 35
+        env:
+          NPC_QA_PHASE: suite
+          NPC_QA_OUT: /tmp/npc-browser
+          NPC_QA_FILE_PROTOCOL: '1'
+          NPC_BOOT_TIMEOUT_MS: 200000
+        run: node kaopu-unified-human-workbench/npc-life-observation-r04/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-native-interaction-r04-${{ github.sha }}
+          path: |
+            /tmp/npc-browser
+            kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-*.json
+            kaopu-unified-human-workbench/npc-life-observation-r04/qa/*-report.json
+          retention-days: 14
+      - name: Stage byte-identical isolated public candidate
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),crypto=require('crypto'),assert=require('assert/strict');
+          const dir='kaopu-unified-human-workbench/npc-life-observation-r04';
+          const bytes=fs.readFileSync(dir+'/preview.html');
+          const m=JSON.parse(fs.readFileSync(dir+'/BUILD.json'));
+          assert.equal(m.version,'NPC-LIFE-OBSERVATION-R04');assert.equal(m.standalone,true);
+          assert.equal(bytes.length,m.previewBytes);
+          assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),m.previewSHA256);
+          assert.match(process.env.SOURCE_HEAD,/^[a-f0-9]{40}$/);
+          m.sourceHead=process.env.SOURCE_HEAD;
+          m.publicPath='npc-life-observation/r04-20261021/'+process.env.SOURCE_HEAD+'/';
+          m.publicURL='https://haihao0307.github.io/guilin-dem-pipeline/'+m.publicPath;
+          fs.writeFileSync(dir+'/BUILD.json',JSON.stringify(m,null,2)+'\n');
+          fs.mkdirSync('/tmp/npc-public',{recursive:true});
+          fs.copyFileSync(dir+'/preview.html','/tmp/npc-public/index.html');
+          fs.copyFileSync(dir+'/BUILD.json','/tmp/npc-public/BUILD.json');
+          console.log(m.publicURL);
+          JS
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public-pages
+          sparse-checkout: npc-life-observation
+      - name: Append only the new immutable version directory
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          cd public-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          out="npc-life-observation/r04-20261021/${SOURCE_HEAD}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            base=$(git rev-parse origin/gh-pages)
+            if git cat-file -e "$base:$out/index.html" 2>/dev/null; then
+              test "$(git rev-parse "$base:$out/index.html")" = "$(git hash-object /tmp/npc-public/index.html)"
+              test "$(git rev-parse "$base:$out/BUILD.json")" = "$(git hash-object /tmp/npc-public/BUILD.json)"
+              exit 0
+            fi
+            # Reset only this fresh CI index to the newest carrier tree. No
+            # published commit or branch is rebased, overwritten or force pushed.
+            git read-tree --reset "$base"
+            mkdir -p "$out"
+            cp /tmp/npc-public/index.html "$out/index.html"
+            cp /tmp/npc-public/BUILD.json "$out/BUILD.json"
+            git add -- "$out/index.html" "$out/BUILD.json"
+            OUT="$out" BASE="$base" node - <<'JS'
+          const cp=require('child_process'),assert=require('assert/strict');
+          const changed=cp.execFileSync('git',['diff','--cached','--name-status',process.env.BASE,'--'],{encoding:'utf8'}).trim().split('\n').sort();
+          assert.deepEqual(changed,['A\t'+process.env.OUT+'/BUILD.json','A\t'+process.env.OUT+'/index.html'].sort());
+          JS
+            tree=$(git write-tree)
+            candidate=$(git commit-tree "$tree" -p "$base" -m "Publish isolated NPC R04 observation candidate ${SOURCE_HEAD}")
+            if git push origin "$candidate:refs/heads/gh-pages"; then exit 0; fi
+          done
+          exit 1
+      - name: Wait for the exact public HTML bytes and source receipt
+        timeout-minutes: 22
+        run: node kaopu-unified-human-workbench/npc-life-observation-r04/wait-public.cjs
+      - name: Verify the final public URL and continuous real UI actions
+        timeout-minutes: 18
+        env:
+          NPC_QA_PHASE: public
+          NPC_QA_OUT: /tmp/npc-live-browser
+          NPC_BOOT_TIMEOUT_MS: 200000
+          PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/npc-life-observation/r04-20261021/${{ github.sha }}/
+        run: node kaopu-unified-human-workbench/npc-life-observation-r04/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-life-observation-r04-${{ github.sha }}
+          path: |
+            /tmp/npc-public
+            /tmp/npc-live-http
+            /tmp/npc-live-browser
+          retention-days: 14
