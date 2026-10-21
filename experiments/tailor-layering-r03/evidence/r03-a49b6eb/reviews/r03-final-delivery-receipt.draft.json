@@ -70,7 +70,7 @@
       "name": "New exact-source full release matrix",
       "runID": 39539509515,
       "expectedSourceSha": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
-      "status": "IN_PROGRESS",
+      "status": "PASS_6_OF_6_INDEPENDENTLY_REVIEWED",
       "requiredMembers": [
         "display",
         "demand",
@@ -98,29 +98,63 @@
         },
         "continuous": {
           "jobID": 119023772238,
-          "status": "IN_PROGRESS",
-          "artifactID": null,
-          "evidence": null
+          "status": "PASS_INDEPENDENTLY_REVIEWED",
+          "artifactID": 12320580176,
+          "evidence": "r03-final-ci/continuous/",
+          "metricsSHA256": "b973dfe7ba8ca93c075f086a0cb8bed7cd9bd43a2fb26a24edb5b37a91128986",
+          "artifactZIP_SHA256": "bb779c33b898dab9e181f915b9d70f27c372d266c936bc3739521d3c2cc9b1d8",
+          "artifactZIPBytes": 22764927,
+          "originalZIPMembers": 62,
+          "allOriginalMemberBytesPreserved": true,
+          "primaryIndependentReviewSHA256": "5a0a03dd842abf7a5ce0241b02ec4918eb49e7320be62a1afeaed8b9a21533a4",
+          "independentReview": "scratch-review/R03_FULL_CI_REVIEW.md"
         },
         "reentry": {
           "jobID": 119023772258,
-          "status": "IN_PROGRESS",
-          "artifactID": null,
-          "evidence": null
+          "status": "PASS_INDEPENDENTLY_REVIEWED",
+          "artifactID": 12320345688,
+          "evidence": "r03-final-ci/reentry/",
+          "metricsSHA256": "5fcd06c66247daf4b0e3402e54e0cebee5589c493523c5d867b8ab703a401281",
+          "artifactZIP_SHA256": "9162fe5494b62e4e388193c295832d15bc24198c5509d8f6611278c0fb17f34f",
+          "artifactZIPBytes": 33213634,
+          "originalZIPMembers": 121,
+          "allOriginalMemberBytesPreserved": true,
+          "primaryIndependentReviewSHA256": "e13bf1377d07ad0aff96d3604ffd967300b86a0a1960607d080ff0fe2bfb17af",
+          "independentReview": "scratch-review/R03_FULL_CI_REVIEW.md"
         },
         "native-baseline": {
           "jobID": 119023772243,
-          "status": "IN_PROGRESS",
-          "artifactID": null,
-          "evidence": null
+          "status": "PASS_INDEPENDENTLY_REVIEWED",
+          "artifactID": 12319164290,
+          "evidence": "r03-final-ci/native-baseline/",
+          "summarySHA256": "4b85507657bc45f0d43aed48ee82eb639841463535f1f4330360bff703cda23e",
+          "artifactZIP_SHA256": "ef19b5a7241461f8ef65c5df82f89bc1b96f657d5cf2aefc306aa9ea25a183a0",
+          "artifactZIPBytes": 12655251,
+          "downloadReceiptSHA256": "bf40e9a3adbf9d5bfd159622722adcfbda93eef974946b6bb034c0ca7d3796ac",
+          "independentReview": "scratch-review/R03_FINAL_NATIVE_REVIEW.md"
         },
         "native-perturb": {
           "jobID": 119023772084,
-          "status": "IN_PROGRESS",
-          "artifactID": null,
-          "evidence": null
+          "status": "PASS_INDEPENDENTLY_REVIEWED",
+          "artifactID": 12319027920,
+          "evidence": "r03-final-ci/native-perturb/",
+          "summarySHA256": "7c480bbdea0c7a4ced0728fc27c2453e4969099b7dd8ed2f443ebbab141e5f6e",
+          "artifactZIP_SHA256": "1148ea6545d9e64d8603c9db76c1f3c767cd3a40d8633f8c0598d47c7d2cd0f0",
+          "artifactZIPBytes": 4706077,
+          "downloadReceiptSHA256": "27e17fd95173ca38649efb0aff5f49e5d0a639f5917ecb8052ad1af83d508907",
+          "independentReview": "scratch-review/R03_FINAL_NATIVE_REVIEW.md"
         }
-      }
+      },
+      "reviewedPassCount": 6,
+      "remainingMembers": [],
+      "runStatus": "completed",
+      "runConclusion": "success",
+      "fullRunMetadata": {
+        "path": "publication-evidence/FULL_CI_RUN.json",
+        "bytes": 49628,
+        "sha256": "6a6b9f6b4fb55191a28e701c1ef3cce53df2b7b839d7eab71ba93a78b227dae0"
+      },
+      "independentReview": "scratch-review/R03_FULL_CI_REVIEW.md"
     },
     {
       "name": "Independent corrected-source display/render-demand artifact readback",
@@ -129,6 +163,333 @@
       "evidence": "scratch-review/r03-final-display-demand-readback.json",
       "sha256": "28eb90df93b24fb65179b43a2a2bb086109aa69fa9d87c6e29a3c7f4109cf36f",
       "scope": "Actual raw artifact/log/provenance/pixels and 26 hidden-state response audits; no new browser or World run"
+    },
+    {
+      "name": "Fresh exact-source native baseline and perturb",
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "sourceCommit": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "runID": 39539509515,
+      "scope": "Each lane has 240 accepted physical steps and 241 independent discrete audits; these are Node native replays from two fresh Chromium typed captures. No public/browser reentry claim.",
+      "lanes": {
+        "baseline": {
+          "records": 241,
+          "realSteps": 240,
+          "physicalSeconds": 1.9999999999999942,
+          "peaks": {
+            "dynamicEdgeStretch": 1.4498629135478847,
+            "contactResidualMM": 0.46967070395377736,
+            "seamGapMM": 0,
+            "bodyHalfThicknessOverlapMM": 0,
+            "independentBodyHalfThicknessOverlapMM": 0.0004752060016864103,
+            "bodyEnvelopeHalfThicknessOverlapMM": 0.0004752060016885787
+          },
+          "peakIndependentEnvelopeStep": 212,
+          "positiveIndependentEnvelopeStates": 4,
+          "hasHalfThicknessOverlapFlaggedStates": 4,
+          "nonzeroEnvelopePeaksPassUnchangedToleranceMM": 0.001,
+          "summarySHA256": "4b85507657bc45f0d43aed48ee82eb639841463535f1f4330360bff703cda23e",
+          "ndjsonSHA256": "76bf8c2bf9a1ce4c045865f419a0332af98b42db3b516d364264f3cfc2955ecb",
+          "perturbations": []
+        },
+        "perturb": {
+          "records": 241,
+          "realSteps": 240,
+          "physicalSeconds": 1.9999999999999942,
+          "peaks": {
+            "dynamicEdgeStretch": 1.4498629135478847,
+            "contactResidualMM": 0.46967070395377736,
+            "seamGapMM": 0,
+            "bodyHalfThicknessOverlapMM": 0,
+            "independentBodyHalfThicknessOverlapMM": 0.0008538310809352856,
+            "bodyEnvelopeHalfThicknessOverlapMM": 0.0008538310809352856
+          },
+          "peakIndependentEnvelopeStep": 216,
+          "positiveIndependentEnvelopeStates": 1,
+          "hasHalfThicknessOverlapFlaggedStates": 1,
+          "nonzeroEnvelopePeaksPassUnchangedToleranceMM": 0.001,
+          "summarySHA256": "7c480bbdea0c7a4ced0728fc27c2453e4969099b7dd8ed2f443ebbab141e5f6e",
+          "ndjsonSHA256": "f39f8a04baa3d2d703ca06850183d3bb0c48af34707ca35ddcd77161df2abb50",
+          "perturbations": [
+            {
+              "beforeStep": 61,
+              "garment": "outer",
+              "kind": "push"
+            },
+            {
+              "beforeStep": 121,
+              "garment": "inner",
+              "kind": "tug"
+            },
+            {
+              "beforeStep": 181,
+              "garment": "outer",
+              "kind": "push"
+            }
+          ]
+        }
+      },
+      "independentReview": "scratch-review/R03_FINAL_NATIVE_REVIEW.md",
+      "secondaryReadback": "scratch-review/r03-final-native-crosscheck.json",
+      "bodyReviewChecks": 9986,
+      "bodyReviewFailures": 0
+    },
+    {
+      "name": "Fresh exact-source complete World contact-demand A/B",
+      "status": "PASS_SCOPED_INDEPENDENTLY_REVIEWED",
+      "sourceCommit": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "runID": 39539509515,
+      "inputSHA256": "c79ac3ffa9afb527af77593db50c9ef5258e38ffd5b7af35a79c8a4217e19376",
+      "inputMode": "original-typed-array-byte-capture",
+      "lanes": [
+        "r02",
+        "r03-off",
+        "r03-on"
+      ],
+      "realStepsPerLane": 8,
+      "strictSharedStates": 9,
+      "physicalSeconds": 0.06666666666666667,
+      "rollbacksAllowedForPass": false,
+      "summarySHA256": "018796494eba32a66d756a70c8ee1ae750634ea50c5377e735be8f12cf5209ad",
+      "wallMS": {
+        "off": 47300.219576,
+        "on": 38128.68913000001
+      },
+      "processCPUMS": {
+        "off": 51195.444,
+        "on": 45716.925
+      },
+      "observedWallReductionPercent": 19.390037780403024,
+      "observedProcessCPUReductionPercent": 10.701184660103735,
+      "conservedClothCandidateVisitsPerLane": 221647151,
+      "conservedSolveCallsPerLane": 276,
+      "conservedMeasureCallsPerLane": 116,
+      "VFEECountingScope": "Nearest-feature operations at candidate entry; not all arithmetic inside swept tests, retargeting or sampling",
+      "nestedTimingRule": "layerBroadphaseMS is inside layerContactMS and excluded from a second addition",
+      "ONExclusiveListedStagesMS": 35907.340528000066,
+      "ONStepWallOutsideListedExclusiveStagesMS": 2221.3486019999473,
+      "timingScope": "Eight step() calls per lane from this fresh captured-input CI process. Independent audits occur after the wall/CPU timing. layerBroadphaseMS is nested within layerContactMS and is not added again. These are observed process timings, not user hardware or GPU timings.",
+      "memoryScope": "Static body arrays 8507352 bytes in both R03 modes; dynamic caches/bounds/JS allocator excluded; process memory is not per-world",
+      "physicalPeaks": {
+        "maxEdgeStretch": 1.4499261357924653,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.4817211992306034,
+        "bodyThicknessOverlapMM": 0,
+        "independentBodyHalfThicknessOverlapMM": 0
+      },
+      "evidence": "r03-final-ci/native-baseline/native-demand-ab/",
+      "independentReview": "scratch-review/R03_FINAL_NATIVE_REVIEW.md"
+    },
+    {
+      "name": "Fresh exact-source native redress and failed-add regression",
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "sourceCommit": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "runID": 39539509515,
+      "inputSHA256": "c79ac3ffa9afb527af77593db50c9ef5258e38ffd5b7af35a79c8a4217e19376",
+      "inputMode": "original-typed-array-byte-capture",
+      "summarySHA256": "a4bd879beab009be04d0a93c60d888e3c3087f6c2a74e0e028fce39109d89eb9",
+      "cycles": 3,
+      "realSteps": 14,
+      "auditedStates": 19,
+      "reentrySemantics": "GLOBAL_REDRESS_RESTART",
+      "freshInitialDigest": "d31bee1211dcb215b403f4ebe68afb8da85a2101344bb7dc019c92a2e4b3a125",
+      "failureInjection": "Test-only throw after actual initializing settle converged in four passes; no production fault switch",
+      "rollbackBeforeAndAfterUICleanupExactGzipBytes": true,
+      "rollbackEvidenceSHA256": "cc5135b5a56e10acae48f2ae05a0ca85cc4331b5fec2c01dc38194060b26ff4c",
+      "rollbackEvidenceBytes": 2616032,
+      "reportsIncludingRecordedTimingsRestored": true,
+      "constraintLambdasRestored": true,
+      "redundantAbsentRemovalNoOp": true,
+      "subsequentRealStepPassed": true,
+      "historyCoverage": {
+        "edgeReferences": 0,
+        "frameSides": 1,
+        "history": 2,
+        "pending": 0,
+        "sides": 0
+      },
+      "allocationBefore": {
+        "wasmReservedBytes": 6753168,
+        "wasmReusedBytes": 2365440,
+        "wasmFreeBlockBytes": 788480
+      },
+      "allocationAfter": {
+        "wasmReservedBytes": 6753168,
+        "wasmReusedBytes": 3153920,
+        "wasmFreeBlockBytes": 788480
+      },
+      "evidence": "r03-final-ci/native-baseline/native-redress-regression/",
+      "independentReview": "scratch-review/R03_FINAL_NATIVE_REVIEW.md",
+      "scope": "Three short native restart cycles; separate complete browser reentry gate remains required"
+    },
+    {
+      "name": "Fresh exact-source browser continuous",
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "sourceCommit": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "runID": 39539509515,
+      "realAcceptedSteps": 284,
+      "intervals": [
+        {
+          "name": "sustained",
+          "actualSteps": 243,
+          "actualSeconds": 2.0249999999999955,
+          "requestedSeconds": 2
+        },
+        {
+          "name": "push-recovery",
+          "actualSteps": 40,
+          "actualSeconds": 0.3333333333333499,
+          "requestedSeconds": 0.25
+        }
+      ],
+      "physicalPeaks": {
+        "maxEdgeStretch": 1.449862480496904,
+        "seamGapMM": 0,
+        "clothResidualMM": 0.4916631733980423,
+        "bodySurfaceHalfThicknessOverlapMM": 0.0008619287697408072
+      },
+      "finalPhysicalStep": 284,
+      "finalSimulationSeconds": 2.366666666666679,
+      "selectedIndependentTriangleAudits": 18,
+      "manualCompleteParticleAudits": [
+        {
+          "name": "initial-body-audit",
+          "completedSteps": 0,
+          "simulationSeconds": 0,
+          "particles": 9402
+        },
+        {
+          "name": "sustained-body-audit",
+          "completedSteps": 243,
+          "simulationSeconds": 2.0249999999999955,
+          "particles": 9402
+        },
+        {
+          "name": "push-recovery-body-audit",
+          "completedSteps": 284,
+          "simulationSeconds": 2.366666666666679,
+          "particles": 9402
+        }
+      ],
+      "initialAndFreshRestarts": [
+        {
+          "name": "initial",
+          "requestID": 1,
+          "completedSteps": 0,
+          "simulationSeconds": 0
+        }
+      ],
+      "scope": "Per-step surface half-thickness is the production envelope measurement. The independent browser snapshot checker certifies discrete triangle intersections, not thickness clearance.",
+      "evidence": "r03-final-ci/continuous/",
+      "independentReview": "scratch-review/R03_FULL_CI_REVIEW.md"
+    },
+    {
+      "name": "Fresh exact-source browser reentry",
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "sourceCommit": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "runID": 39539509515,
+      "realAcceptedSteps": 211,
+      "intervals": [
+        {
+          "name": "cycle-1-removed-sustained",
+          "actualSteps": 32,
+          "actualSeconds": 0.26666666666666694,
+          "requestedSeconds": 0.2
+        },
+        {
+          "name": "cycle-1-restored-sustained",
+          "actualSteps": 38,
+          "actualSeconds": 0.31666666666666676,
+          "requestedSeconds": 0.25
+        },
+        {
+          "name": "cycle-2-removed-sustained",
+          "actualSteps": 32,
+          "actualSeconds": 0.2666666666666657,
+          "requestedSeconds": 0.2
+        },
+        {
+          "name": "cycle-2-restored-sustained",
+          "actualSteps": 38,
+          "actualSeconds": 0.31666666666666676,
+          "requestedSeconds": 0.25
+        },
+        {
+          "name": "cycle-3-removed-sustained",
+          "actualSteps": 32,
+          "actualSeconds": 0.2666666666666657,
+          "requestedSeconds": 0.2
+        },
+        {
+          "name": "cycle-3-restored-sustained",
+          "actualSteps": 39,
+          "actualSeconds": 0.32500000000000007,
+          "requestedSeconds": 0.25
+        }
+      ],
+      "physicalPeaks": {
+        "maxEdgeStretch": 1.4498794120276757,
+        "seamGapMM": 0,
+        "clothResidualMM": 0.4916631733980423,
+        "bodySurfaceHalfThicknessOverlapMM": 0
+      },
+      "finalPhysicalStep": 39,
+      "finalSimulationSeconds": 0.32500000000000007,
+      "selectedIndependentTriangleAudits": 45,
+      "manualCompleteParticleAudits": [
+        {
+          "name": "initial-body-audit",
+          "completedSteps": 0,
+          "simulationSeconds": 0,
+          "particles": 9402
+        },
+        {
+          "name": "cycle-1-restored-body-audit",
+          "completedSteps": 38,
+          "simulationSeconds": 0.31666666666666676,
+          "particles": 9402
+        },
+        {
+          "name": "cycle-2-restored-body-audit",
+          "completedSteps": 38,
+          "simulationSeconds": 0.31666666666666676,
+          "particles": 9402
+        },
+        {
+          "name": "cycle-3-restored-body-audit",
+          "completedSteps": 39,
+          "simulationSeconds": 0.32500000000000007,
+          "particles": 9402
+        }
+      ],
+      "initialAndFreshRestarts": [
+        {
+          "name": "initial",
+          "requestID": 1,
+          "completedSteps": 0,
+          "simulationSeconds": 0
+        },
+        {
+          "name": "cycle-1-restored-initial",
+          "requestID": 36,
+          "completedSteps": 0,
+          "simulationSeconds": 0
+        },
+        {
+          "name": "cycle-2-restored-initial",
+          "requestID": 109,
+          "completedSteps": 0,
+          "simulationSeconds": 0
+        },
+        {
+          "name": "cycle-3-restored-initial",
+          "requestID": 182,
+          "completedSteps": 0,
+          "simulationSeconds": 0
+        }
+      ],
+      "scope": "Per-step surface half-thickness is the production envelope measurement. The independent browser snapshot checker certifies discrete triangle intersections, not thickness clearance.",
+      "evidence": "r03-final-ci/reentry/",
+      "independentReview": "scratch-review/R03_FULL_CI_REVIEW.md"
     }
   ],
   "browserDesktop": {
@@ -151,7 +512,22 @@
       "runID": null,
       "artifactID": null,
       "summarySHA256": null,
-      "evidence": null
+      "evidence": null,
+      "requiredJobName": "public / desktop"
+    },
+    "ciContinuous": {
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "evidence": "r03-final-ci/continuous/",
+      "artifactID": 12320580176,
+      "metricsSHA256": "b973dfe7ba8ca93c075f086a0cb8bed7cd9bd43a2fb26a24edb5b37a91128986",
+      "review": "scratch-review/R03_FULL_CI_REVIEW.md"
+    },
+    "ciReentry": {
+      "status": "PASS_INDEPENDENTLY_REVIEWED",
+      "evidence": "r03-final-ci/reentry/",
+      "artifactID": 12320345688,
+      "metricsSHA256": "5fcd06c66247daf4b0e3402e54e0cebee5589c493523c5d867b8ab703a401281",
+      "review": "scratch-review/R03_FULL_CI_REVIEW.md"
     }
   },
   "browser390x844": {
@@ -160,7 +536,12 @@
     "minimumScope": "Same new fixed public source, original WebGL scene, no critical failure, reachable controls without horizontal overflow, actual touch-triggered side view, and scrolled contact-demand control screenshots",
     "fullNumericalMatrixRepeated": false,
     "physicalPhoneOrGPUCertified": false,
-    "evidence": null
+    "evidence": null,
+    "requiredJobName": "public / mobile",
+    "runID": null,
+    "jobID": null,
+    "artifactID": null,
+    "summarySHA256": null
   },
   "referenceViews": [
     {
@@ -204,17 +585,43 @@
       "kind": "original-browser-screenshot",
       "path": "r03-final-ci/demand/restored-newest-hidden-geometry.png",
       "visuallyReviewed": true
+    },
+    {
+      "source": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "kind": "original-browser-screenshot",
+      "path": "r03-final-ci/continuous/evidence/sustained-view.png",
+      "visuallyReviewed": true,
+      "sha256": "97d00e09bc788fdeb90a1e19c61ca7a13a7548e359b695a6e0aafadceb7ca7ed"
+    },
+    {
+      "source": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "kind": "original-browser-screenshot",
+      "path": "r03-final-ci/continuous/evidence/push-recovery-view.png",
+      "visuallyReviewed": true,
+      "sha256": "d5394d580d6dd7226ed4c333e3792ad0a4aa25f111565b725e3d094061416ed1"
+    },
+    {
+      "source": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
+      "kind": "original-browser-screenshot",
+      "path": "r03-final-ci/reentry/evidence/cycle-3-restored-sustained-view.png",
+      "visuallyReviewed": true,
+      "sha256": "2d633cdc90c4f1ad3daa5e6f8b7ade671a1548b1d6efbf6153bb23274f7df67f"
     }
   ],
   "regressionCasesRun": [
     "Local short prepared-seed redress regression",
     "Local original operation-sequence replay on corrected R03 ON",
     "New-source real browser display",
-    "New-source real browser render-demand ABBA and 26-step hidden restoration"
+    "New-source real browser render-demand ABBA and 26-step hidden restoration",
+    "Fresh native baseline 240 accepted steps",
+    "Fresh native perturb 240 accepted steps",
+    "Fresh exact-source 8-step three-lane physical/render/history A/B",
+    "Fresh exact-source 14-step three-cycle redress and atomic failed-add recovery",
+    "New-source browser continuous: 243 sustained + 1 bounded push + 40 recovery accepted steps",
+    "New-source browser global redress: three cycles, 211 accepted steps, 45 selected geometry audits"
   ],
   "failedGates": [],
   "pendingGates": [
-    "All six new exact-source release matrix members and their retained artifacts",
     "Deploy a new immutable scoped runtime without overwriting old R01/R02",
     "Fresh public HTTPS 200, source identity and all critical resource readback",
     "Actual public desktop simulation, measurement-only inspection, OFF/ON and camera interaction",
@@ -253,19 +660,19 @@
   ],
   "fallbackActive": false,
   "freshArtifactProven": true,
-  "freshnessScope": "New-source display/demand actual checkout, metrics and generated capsule provenance independently agree; all 15 authored hashes match frozen a49 source. Public runtime remains pending.",
+  "freshnessScope": "All six new-source CI members, actual checkouts, browser/native evidence and generated display capsule independently agree with frozen a49. Public deployment and browser acceptance remain separate pending gates.",
   "creativeSubstituteDetected": false,
   "staleOrWrongTargetDetected": false,
   "visualAcceptance": false,
   "productionReady": false,
-  "status": "VERIFYING",
-  "independentDecision": "HOLD_NEW_SOURCE_RELEASE_AND_PUBLIC_EVIDENCE",
+  "status": "VERIFYING_PUBLIC_CANDIDATE",
+  "independentDecision": "FULL_CI_PASS_PUBLIC_CANDIDATE_ACCEPTANCE_ALLOWED_SHARE_HOLD",
   "reviewer": "Independent audit_handoff verifier, not production author",
-  "nextAction": "Complete and independently review the four remaining new-source matrix members, then deploy the verified runtime and collect fresh public desktop/mobile evidence before final decision.",
+  "nextAction": "Complete exact-runtime Pages deployment, fresh public HTTP readback, both actual desktop/mobile jobs and independent original-artifact review; retain final PUBLICATION_PROOF before shareAllowed.",
   "publication": {
     "publicURL": null,
     "targetURL": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/layering-r03-20261021-a49b6eb/",
-    "deploymentCommit": null,
+    "deploymentCommit": "94fdb6b9db548c77c596db4f59a9cbf4ae293b0a",
     "runtimeTree": "114feff8d1b1c79a9a164fc8a99b181507d1cc89",
     "runtimeBlobCount": 308,
     "runtimeCapsule": "r03-final-ci/display/runtime-capsule.json.gz",
@@ -273,7 +680,7 @@
     "interactive3D": true,
     "staticImageSubstitute": false,
     "buildPassed": true,
-    "releaseMatrixPassed": false,
+    "releaseMatrixPassed": true,
     "deployed": false,
     "httpPassed": false,
     "publicHttpsPassed": false,
@@ -282,24 +689,50 @@
     "visualAcceptancePending": true,
     "proofFile": null,
     "runtimeBytes": 106247499,
-    "runtimeTreeVerification": "Coordinator reports full recursive Git readback of all 308 blobs; independent reviewer checked generated provenance, original capsule source and all 15 authored local hashes. No deployment performed."
+    "runtimeTreeVerification": "Coordinator reports complete recursive readback of 308 runtime blobs and only a new scoped folder in deployment commit. Independent reviewer checked capsule source/provenance/authored hashes. Pages completion and actual public HTTP/browser acceptance are pending.",
+    "requiredPublicJobs": [
+      "public / desktop",
+      "public / mobile"
+    ],
+    "pagesRunID": 39542790085,
+    "deploymentStatus": "GH_PAGES_BRANCH_UPDATE_REPORTED_PAGES_RUN_PENDING",
+    "deploymentReportedByCoordinator": true,
+    "proofStoragePolicy": "PUBLIC_WEB_DELIVERY_GATE v1.2.0 at a49 requires saving the proof and evidence, not placing them in the runtime directory. Dedicated immutable evidence-branch storage is accepted, with exact deployment/HTTP/public-job/index bindings and final readback."
   },
   "publicVerifierPreparation": {
-    "verificationCommitReportedByCoordinator": "f0e195209fe61ce7255122c2ce06ecc9b4c3e7f7",
+    "verificationCommitReportedByCoordinator": "1996ff7ea75bb62cdf1a785588173c3be4a558b2",
     "parentSource": "a49b6eb9bdf9f3bb097a4470465bc463d97dfb7b",
     "scope": "Three .github verification files only; no app changes",
     "branchAndPRCreated": false,
     "workflowRunID": null,
     "configReadback": "New configuration independently matched to tested capsule: 9 exact file sizes/SHA-256, entry HTML hash, original provenance hash, source and fixed URL.",
     "runtimeStatus": "NOT_RUN",
-    "supersededUnreferencedPreparationCommit": "07194ebb679384f0eeb7e151cb411b9a614cebd4",
     "staticIndependentReview": "PASS_NOT_RUN",
     "staticReviewEvidence": "scratch-review/r03-public-verifier-preflight-review.md",
     "automatedGuardsAdded": [
       "Exact desktop targetURL and finalURL",
       "Zero ordinary desktop console errors and page errors",
       "Trusted capsule fingerprints for 9 public readbacks and saved original provenance"
-    ]
+    ],
+    "supersededUnreferencedPreparationCommits": [
+      "07194ebb679384f0eeb7e151cb411b9a614cebd4",
+      "f0e195209fe61ce7255122c2ce06ecc9b4c3e7f7"
+    ],
+    "preparedTreeReportedByCoordinator": "d5f7386c2ef43edcaf6c9137b0b4ae3ed7eee7ee",
+    "workflowGitBlob": "826c18464dcaf84ecf241b5b9f598d56f94ab284",
+    "workflowSHA256": "4b49d917019be3a4e403984620852f590ddfb90e19b4d06552e8ed0e97e81980",
+    "requiredJobs": [
+      "public / desktop",
+      "public / mobile"
+    ],
+    "matrixViewport": [
+      "desktop",
+      "mobile"
+    ],
+    "failFast": false,
+    "perJobTimeoutMinutes": 30,
+    "artifactIsolation": "Independent hosted job workspaces; artifact name includes viewport/run/attempt; upload always executes for each job",
+    "parallelDiffReview": "Compared parsed YAML to fetched f0e1952 workflow Git blob: only declared matrix/name/three conditions/artifact name/timeout differences. Original guards and scripts unchanged."
   },
   "real3DGate": {
     "noGeneratedImageSubstitute": true,
@@ -316,6 +749,41 @@
     "scope": "Intermediate original failure/local evidence/new display-demand checkpoint, not final public acceptance",
     "independentMetadataReview": "Root index/restore/readme and all 16 part paths/sizes/Git blob identities match GitHub API readback; no duplicate full archive download or restore performed",
     "indexSHA256": "e5e66fc205619781fcc2efe7a3306ddff7d1be35face977c5c5de47b5b154355",
+    "shareAllowed": false,
+    "newerCheckpointReportedByCoordinator": {
+      "commit": "fc59b8ffe17fe8f95b66ae825bc0f30a70ad2751",
+      "folderTree": "b18487e3ab1a07a4d84a4ef9f68621e8cf3c479a",
+      "blobs": 31,
+      "archiveParts": 17,
+      "scope": "Added native-perturb original evidence, prepared verifier and HTTP tool; final evidence append still pending",
+      "independentReviewScope": "The earlier 51211871 metadata review remains separately bound; final latest index/commit readback still required"
+    }
+  },
+  "nativeEvidenceIdentity": {
+    "displayCapsuleProvenanceExactByteMatch": true,
+    "provenanceSHA256": "eb32f4a3fcd70fb935e1511f854fefb2241b798f8b05d21e081ef077bbfcc4e3",
+    "baselineRawInputSHA256": "c79ac3ffa9afb527af77593db50c9ef5258e38ffd5b7af35a79c8a4217e19376",
+    "perturbRawInputSHA256": "1ea3fbec9ffbc2367f8ab07a6f72163f2886e15bd6194ae71af5fa3bf98db537",
+    "sevenTypedArrayRecordsEqualAcrossJobs": true,
+    "bodyRowsOptionsExecutionIdentityEqualAcrossJobs": true,
+    "entireRawCaptureJSONFilesEqual": false,
+    "rawJSONDifferenceScope": "Different capture observations/metadata; original captured arrays and physical input compared exactly",
+    "bodyReviewSHA256": "ba3a3290c3018ce1d2fc183703ba08771a2891df3dbcd259d22722cc0d217f9d",
+    "compactReviewSHA256": "dc0c59b48243985c7fb92d522c8c95269f19ed127c48c2774ecb81b3191210aa",
+    "secondaryReadbackSHA256": "a3c5b6e77fca6208dac8c31953621e0995a8817a847c3205b1eb5526d464048c",
+    "referencedEvidenceFilesRehashed": 85
+  },
+  "fullCIIndependentReview": {
+    "reviewedUTC": "2026-10-21T04:19:12.345556+00:00",
+    "report": "scratch-review/R03_FULL_CI_REVIEW.md",
+    "reportSHA256": "2e17943aff1f4eb3c0c5a6e4694e22ebca996d859b46d6d4a95ac0c3a9e25356",
+    "secondaryReadback": "scratch-review/r03-full-ci-secondary-readback.json",
+    "secondaryReadbackSHA256": "8ad1b858db84d655d8716608f87b4daeec4a19b769afc858d516b698e4a4f59b",
+    "secondaryChecks": 6294,
+    "secondaryFailures": 0,
+    "additionalWorldOrBrowserRuns": 0,
+    "allSixRequiredMembersPassed": true,
+    "allowedNextStage": "actual public candidate acceptance",
     "shareAllowed": false
   }
 }

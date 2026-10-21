@@ -14,8 +14,13 @@ concurrency:
 
 jobs:
   public-smoke:
+    name: 'public / ${{ matrix.viewport }}'
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
     defaults:
       run:
         shell: bash
@@ -54,8 +59,10 @@ jobs:
           node --check tests/public-smoke.mjs
           node --check ../../.github/scripts/tailor-layering-r03-mobile.mjs
       - name: Exercise the immutable public page
+        if: matrix.viewport == 'desktop'
         run: node tests/public-smoke.mjs | tee evidence/public-smoke.log
       - name: Verify exact public address, zero errors and tested runtime fingerprints
+        if: matrix.viewport == 'desktop'
         run: |
           python - <<'PY'
           from datetime import datetime, timezone
@@ -93,12 +100,13 @@ jobs:
           print(json.dumps(result))
           PY
       - name: Check the real mobile entrance and touch interaction
+        if: matrix.viewport == 'mobile'
         run: node ../../.github/scripts/tailor-layering-r03-mobile.mjs | tee evidence/public-mobile.log
       - name: Preserve the actual public browser evidence
         if: always()
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: tailor-layering-r03-public-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tailor-layering-r03-public-${{ matrix.viewport }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: experiments/tailor-layering-r03/evidence/
           retention-days: 30
           compression-level: 6
