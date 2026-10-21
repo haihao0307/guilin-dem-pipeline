@@ -1,0 +1,5927 @@
+{
+  "schema": "r03-failed-reentry-same-sequence-diagnostic@1",
+  "inputMode": "public-observation-numeric-reconstruction",
+  "inputSHA256": "093ab624688f1d5e1d63728f66654ad4e3c9037150d4d54acb28f56d4198e297",
+  "sourceSHA256": {
+    "r02": {
+      "app.mjs": "e1f9d8bc12e857d4b296071200c94b64ced90a5c495ca4e4f5aa54a5507093de",
+      "body-envelope.mjs": "dfb14222aa98cdce6ef7056f37fad63cfe3ff873423e53cdbaecaec9aed0259e",
+      "garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "layer-contact.mjs": "e0afb01cb64b53a5575b448d075780daec63f5e4952a4b9e5348b91ce21d239b",
+      "layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "layer-worker.mjs": "665ea8d22a5a25cd21a06dc5a8b1be1a3d8f477d660fc404b6b56d1fe4e69fdc",
+      "layer-world.mjs": "d186f4fbc7b6111edb9f4485bd19edcabce1f34b175e225bc1cb9411caf4fa5d",
+      "mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4"
+    },
+    "r03-off": {
+      "app.mjs": "865c0381f6c3bc7628062f9ed7cb5e8440ae70f6de2e745a9eb1e1b747c7a30c",
+      "body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "layer-worker.mjs": "473bdb985ea308ad4c5c862c95596537c19bde2eddc16a43d3541123a2dfe6a5",
+      "layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873",
+      "mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4"
+    },
+    "r03-on": {
+      "app.mjs": "865c0381f6c3bc7628062f9ed7cb5e8440ae70f6de2e745a9eb1e1b747c7a30c",
+      "body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "layer-worker.mjs": "473bdb985ea308ad4c5c862c95596537c19bde2eddc16a43d3541123a2dfe6a5",
+      "layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873",
+      "mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4"
+    }
+  },
+  "requests": [
+    {
+      "id": 1,
+      "type": "init",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4.907447999998112,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4.542618999999831,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4.953004000002693,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "snapshot",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 374.9671300000009,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 310.5014850000007,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 211.21103199999925,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.390690276176109,
+          "contactResidualMM": null
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "remove",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3.483678000000509,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3045604266855686,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 3.1446170000017446,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3045604266855686,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 2.7765740000031656,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3045604266855686,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "1233af8e72f2b2ffec4d1e6c19911cb8446a2a52e71e9c929ae20f8c11af866a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "1233af8e72f2b2ffec4d1e6c19911cb8446a2a52e71e9c929ae20f8c11af866a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1510.7134640000004,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.448076231724475,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1535.3077889999986,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.448076231724475,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1246.0226739999998,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.448076231724475,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3be4fc467bb6b9a38cddcb7e2cf9b978479a3e6f1760a2270343d3180a8cf255",
+          "snapshotSHA256": "ce67d5b0803fa5a69cd00a1bc1693fde7e0a9d3cc1abedde0c609c98b44c1cbd",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3be4fc467bb6b9a38cddcb7e2cf9b978479a3e6f1760a2270343d3180a8cf255",
+          "snapshotSHA256": "ce67d5b0803fa5a69cd00a1bc1693fde7e0a9d3cc1abedde0c609c98b44c1cbd",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1261.968019,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4498794120273761,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1314.4917270000005,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4498794120273761,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1161.5218320000022,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4498794120273761,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "65ce086aff02020c62777e3f75b0fa4eba4d6e3fca4b38f7ef445ddb0f264ac7",
+          "snapshotSHA256": "3a07e79c0fefbeac410c40ca60b20346b6bd993376257f8d7efbf766ad32c573",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "65ce086aff02020c62777e3f75b0fa4eba4d6e3fca4b38f7ef445ddb0f264ac7",
+          "snapshotSHA256": "3a07e79c0fefbeac410c40ca60b20346b6bd993376257f8d7efbf766ad32c573",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1328.9809810000006,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4496507313458882,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1476.05645,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4496507313458882,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1264.9782130000021,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4496507313458882,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "1fe78e8cf0a0d3ed8fc129f1034003eaf294c13e59f29b56bb89f3324b4f78d2",
+          "snapshotSHA256": "9d83e163350ca97b80dfc098aa869e285aee661251a821bd93670fcd35bc902d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "1fe78e8cf0a0d3ed8fc129f1034003eaf294c13e59f29b56bb89f3324b4f78d2",
+          "snapshotSHA256": "9d83e163350ca97b80dfc098aa869e285aee661251a821bd93670fcd35bc902d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1286.6490680000024,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4492509511445895,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1259.0532220000023,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4492509511445895,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1067.7627799999973,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4492509511445895,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "a24f3d0c43807f9678130282c51edbb32681da24854530bc85bffb6905635931",
+          "snapshotSHA256": "e4fdb2c54b2a734dbbe99e02f9f258485abb9fd694bf8316d47278ac3c1b15c8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "a24f3d0c43807f9678130282c51edbb32681da24854530bc85bffb6905635931",
+          "snapshotSHA256": "e4fdb2c54b2a734dbbe99e02f9f258485abb9fd694bf8316d47278ac3c1b15c8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1264.4333839999963,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4261504502751878,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1326.851115000005,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4261504502751878,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1047.4021460000004,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4261504502751878,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "80467fc41037c5dcb7ff2f141b432c329c1f1537001fd41a6370c4ed64905cfb",
+          "snapshotSHA256": "af6e2f56df9d244337218866a3c9b60ba6bc187187dddd75a1850ddcedd27ede",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "80467fc41037c5dcb7ff2f141b432c329c1f1537001fd41a6370c4ed64905cfb",
+          "snapshotSHA256": "af6e2f56df9d244337218866a3c9b60ba6bc187187dddd75a1850ddcedd27ede",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1023.0378439999986,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4434195022332588,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1016.593998999997,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4434195022332588,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 964.5855579999989,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4434195022332588,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2b717883b16a3826b8887c779e5d91e83d701d000efdba72688b259232c03ca2",
+          "snapshotSHA256": "0e17601bfadbe54f5f16056756b2a2006c7de64485814280ff8c129d283f45f3",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2b717883b16a3826b8887c779e5d91e83d701d000efdba72688b259232c03ca2",
+          "snapshotSHA256": "0e17601bfadbe54f5f16056756b2a2006c7de64485814280ff8c129d283f45f3",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1186.6502059999984,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4446681119941451,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1189.1141419999985,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4446681119941451,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1029.7926359999983,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4446681119941451,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f6a504c265925cc75f338decede94ff7c7a7f801205ba98facbca92d8117fd66",
+          "snapshotSHA256": "5d3a6d0a04bef3b9800bf8fbf9c89b98feccdf66455510402830d77d900ee32a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f6a504c265925cc75f338decede94ff7c7a7f801205ba98facbca92d8117fd66",
+          "snapshotSHA256": "5d3a6d0a04bef3b9800bf8fbf9c89b98feccdf66455510402830d77d900ee32a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1125.1226620000016,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4480422684978964,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1142.3469600000026,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4480422684978964,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 987.5848179999957,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4480422684978964,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "72c1c0491d1b36cdff8bd49ce080e5a5426442d73a4711ba9519e87b62d5ea36",
+          "snapshotSHA256": "468724751f446b71020b276ad513ecd0baff2fb7849bb59b19b3d5f145077301",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "72c1c0491d1b36cdff8bd49ce080e5a5426442d73a4711ba9519e87b62d5ea36",
+          "snapshotSHA256": "468724751f446b71020b276ad513ecd0baff2fb7849bb59b19b3d5f145077301",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1215.5584539999982,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4488127035717067,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1154.9045929999993,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4488127035717067,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 980.7313189999986,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4488127035717067,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e94cae1d7ffa6b8ca2d3006e00a37f5fad0cd8558dd384f3edddb2d607a2b950",
+          "snapshotSHA256": "aaab13eaa0f3584f2906826b4321e35c0aa4f61091b0b0aa656d9f01871339b7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e94cae1d7ffa6b8ca2d3006e00a37f5fad0cd8558dd384f3edddb2d607a2b950",
+          "snapshotSHA256": "aaab13eaa0f3584f2906826b4321e35c0aa4f61091b0b0aa656d9f01871339b7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1114.7471789999981,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.4451930977737606,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1085.390456000001,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.4451930977737606,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1046.2356629999995,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.4451930977737606,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8c940cc3140a5b46183a90da7aadb12f200f288833ff23831f92e0e17c7b64fe",
+          "snapshotSHA256": "26c382e04025a9c21f96de9abce0e9bf1ffa0176a6715d908e3bb3cda4d8e9f6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8c940cc3140a5b46183a90da7aadb12f200f288833ff23831f92e0e17c7b64fe",
+          "snapshotSHA256": "26c382e04025a9c21f96de9abce0e9bf1ffa0176a6715d908e3bb3cda4d8e9f6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1265.0946269999986,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.4430950435157104,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1356.7516350000005,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.4430950435157104,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1169.5076770000014,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.4430950435157104,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "c184c93cff5aa470f5a17b9c4bfc721c546397b2890591cdbf94790d573e7a3f",
+          "snapshotSHA256": "36dfc7b9d60392688ceb9c2f60ebb29722f152126a18f44e29324a0a00c7d153",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "c184c93cff5aa470f5a17b9c4bfc721c546397b2890591cdbf94790d573e7a3f",
+          "snapshotSHA256": "36dfc7b9d60392688ceb9c2f60ebb29722f152126a18f44e29324a0a00c7d153",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1292.8681149999975,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.3832841148208772,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1232.1926639999947,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.3832841148208772,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 991.2871430000014,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.3832841148208772,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "38315cb911f87bafc81d8178d06302fd498adcfc4ea77eff94c6dd7ffd404091",
+          "snapshotSHA256": "7f754c93ec83b3878edf83fe876ebf365ace25bfe801ba528a44c221b693225c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "38315cb911f87bafc81d8178d06302fd498adcfc4ea77eff94c6dd7ffd404091",
+          "snapshotSHA256": "7f754c93ec83b3878edf83fe876ebf365ace25bfe801ba528a44c221b693225c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1496.8794609999968,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.373226442673414,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1385.6775289999932,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.373226442673414,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1050.3329760000051,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.373226442673414,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "54e922e9dc6321cc21d056eed68543f3d3fa44f0839f8fb9d0a9188cc6e9b539",
+          "snapshotSHA256": "ce1cb0546ceef1e8d962664ee74d50fe16098f5a2b00d45ccefb96e89ed7a14e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "54e922e9dc6321cc21d056eed68543f3d3fa44f0839f8fb9d0a9188cc6e9b539",
+          "snapshotSHA256": "ce1cb0546ceef1e8d962664ee74d50fe16098f5a2b00d45ccefb96e89ed7a14e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1931.8158410000033,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.3695031685164067,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1693.979309000002,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.3695031685164067,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1168.3254140000063,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.3695031685164067,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "98f44bae8ce886d4fdb18839e117086bf35a36b86b1c3399a36a111d5133d17d",
+          "snapshotSHA256": "8c0a2d7fa8c870d53b890e6a8af8b5a32b6679599db37f637cdfe48494b350e5",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "98f44bae8ce886d4fdb18839e117086bf35a36b86b1c3399a36a111d5133d17d",
+          "snapshotSHA256": "8c0a2d7fa8c870d53b890e6a8af8b5a32b6679599db37f637cdfe48494b350e5",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1536.47413100001,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.3574975915516168,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1482.8182890000026,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.3574975915516168,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1117.3140180000046,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.3574975915516168,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "647ba36e78433362f81cd8aa1233bfdd3fe8d7064035b50a70793e5c7b666ba1",
+          "snapshotSHA256": "dcf55215207ec2581877dfc4474de8984f5ad51a140b862d43e22256217ab549",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "647ba36e78433362f81cd8aa1233bfdd3fe8d7064035b50a70793e5c7b666ba1",
+          "snapshotSHA256": "dcf55215207ec2581877dfc4474de8984f5ad51a140b862d43e22256217ab549",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1528.0558880000026,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.356360324725962,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1511.9300759999896,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.356360324725962,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1092.2314900000056,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.356360324725962,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "a5dd2fa6be57d34502d3bcb6da8fa19e9af06e1b23ff2d2a6673f309657039ff",
+          "snapshotSHA256": "dd692601ae8fa46ca089cdc0db7962da94050d5150340e7c49a8136ba1324f88",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "a5dd2fa6be57d34502d3bcb6da8fa19e9af06e1b23ff2d2a6673f309657039ff",
+          "snapshotSHA256": "dd692601ae8fa46ca089cdc0db7962da94050d5150340e7c49a8136ba1324f88",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1558.0126330000057,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3499737420112798,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1390.6716400000005,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3499737420112798,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1168.2835510000004,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3499737420112798,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "08f05eaae6aa8223f9e75ed32e72a5ce2e4a1bd48ca632632fe79fe3d860f4c7",
+          "snapshotSHA256": "d16b38c913092253f6c6644546e7ab2a21f671416d66465ab43d1c90c0f2bd22",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "08f05eaae6aa8223f9e75ed32e72a5ce2e4a1bd48ca632632fe79fe3d860f4c7",
+          "snapshotSHA256": "d16b38c913092253f6c6644546e7ab2a21f671416d66465ab43d1c90c0f2bd22",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1459.6333000000013,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.349730447485902,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1430.4138010000024,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.349730447485902,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1128.905912999995,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.349730447485902,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "b0e027eab4b0c13ad8fd80156dd5f1fe3f1186a249594191eb3d1bded954ec96",
+          "snapshotSHA256": "c1e6e8121164f86c8567fbbd28da1a3a9c546f68949b32319015fe6a232b47ae",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "b0e027eab4b0c13ad8fd80156dd5f1fe3f1186a249594191eb3d1bded954ec96",
+          "snapshotSHA256": "c1e6e8121164f86c8567fbbd28da1a3a9c546f68949b32319015fe6a232b47ae",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1559.9922789999982,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.3516978466654272,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1505.2622969999939,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.3516978466654272,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1177.3124319999915,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.3516978466654272,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "b1043348e67b51fb824001e6a8c610ba3300923b16759eef0ac4f35bdb068ad2",
+          "snapshotSHA256": "ef5c86628876a11e0072ee887e118b32dd7e19b6974861c1672bf1d365ed4bd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "b1043348e67b51fb824001e6a8c610ba3300923b16759eef0ac4f35bdb068ad2",
+          "snapshotSHA256": "ef5c86628876a11e0072ee887e118b32dd7e19b6974861c1672bf1d365ed4bd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1577.467593999987,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.3572920709337473,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1441.5750689999986,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.3572920709337473,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1109.007844000007,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.3572920709337473,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9b797c0687f32d9a8e0bf66b78c7fea7def39923121be1d1b11ba3631db04d23",
+          "snapshotSHA256": "7cc192fb114da0f74793e367a86aa1422618e3d69470dca3efbbbab76ce64553",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9b797c0687f32d9a8e0bf66b78c7fea7def39923121be1d1b11ba3631db04d23",
+          "snapshotSHA256": "7cc192fb114da0f74793e367a86aa1422618e3d69470dca3efbbbab76ce64553",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1685.1645109999954,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3627623538137839,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1405.8074320000014,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3627623538137839,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1113.082721999992,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3627623538137839,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f3849e3e9b38db84930240192fb0cee7cd409511c49e1aa7ead0a72b1d368cc8",
+          "snapshotSHA256": "5e6a6297fbf040e2e8569f5bf02498d375f07bfcd54c066ce72421a6db763b2c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f3849e3e9b38db84930240192fb0cee7cd409511c49e1aa7ead0a72b1d368cc8",
+          "snapshotSHA256": "5e6a6297fbf040e2e8569f5bf02498d375f07bfcd54c066ce72421a6db763b2c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 25,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1479.430886000002,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3674218184656524,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1403.4138099999982,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3674218184656524,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1122.5100800000073,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3674218184656524,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "b8c80b2516805da5c6a32dcd1edd0e30b549a6df3d594d74432c988d5cc5c93a",
+          "snapshotSHA256": "4a1109f8707fbb279d185e23e07085b71ff9a05027140bbfc1d113d2018fb7e2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "b8c80b2516805da5c6a32dcd1edd0e30b549a6df3d594d74432c988d5cc5c93a",
+          "snapshotSHA256": "4a1109f8707fbb279d185e23e07085b71ff9a05027140bbfc1d113d2018fb7e2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1450.9561959999992,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.3690553911573597,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1463.2430830000085,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.3690553911573597,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1055.5800639999943,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.3690553911573597,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "bac5d2b383477483f2692947a6859622e0e03cdf09a5f74113f063a80eeda2b7",
+          "snapshotSHA256": "ed4411c1de017214a5944f3205c009b90804235c899772ec15a477b30210573d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "bac5d2b383477483f2692947a6859622e0e03cdf09a5f74113f063a80eeda2b7",
+          "snapshotSHA256": "ed4411c1de017214a5944f3205c009b90804235c899772ec15a477b30210573d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 27,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1465.0678229999903,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.36512986120773,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1378.0859229999915,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.36512986120773,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1090.043696000008,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.36512986120773,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/normals",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "968a133771c6f0dcb3b4d6b88d98ab4636a356111da84765a57cde56f25118aa",
+          "snapshotSHA256": "9afc37f279a4807669c546c3c96efd237c97e06c54140aaa1b321745e50ffd72",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "968a133771c6f0dcb3b4d6b88d98ab4636a356111da84765a57cde56f25118aa",
+          "snapshotSHA256": "9afc37f279a4807669c546c3c96efd237c97e06c54140aaa1b321745e50ffd72",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 28,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1463.1730010000028,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.358852230340379,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1391.1799100000062,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.358852230340379,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1110.7210959999938,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.358852230340379,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "0644d07710362902cad0f39e9507c4b9bdb60d9a06e40d761c6c1d9c941273cc",
+          "snapshotSHA256": "7442e1592ac7fc475d77afc0639bde3369af53ff38b875f084c9bcc5fb5779e6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "0644d07710362902cad0f39e9507c4b9bdb60d9a06e40d761c6c1d9c941273cc",
+          "snapshotSHA256": "7442e1592ac7fc475d77afc0639bde3369af53ff38b875f084c9bcc5fb5779e6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 29,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1572.1027170000016,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.3515133245643713,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1590.0374520000041,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.3515133245643713,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1097.298987999995,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.3515133245643713,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "029f389e929a5704412367b283de50fed1242af1f3d4be7d3f77ee567a8c3480",
+          "snapshotSHA256": "ac2ac1a93f33d012b011f4bcb914ebe8196a95f519c7d6ad933963215fa8feb9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "029f389e929a5704412367b283de50fed1242af1f3d4be7d3f77ee567a8c3480",
+          "snapshotSHA256": "ac2ac1a93f33d012b011f4bcb914ebe8196a95f519c7d6ad933963215fa8feb9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 30,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1255.7234460000036,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3229321549284871,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1231.223753000013,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3229321549284871,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 948.347551999992,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3229321549284871,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "eb8a881390e378ba3f11f7272a5029a3d4fc06cf6efb88d296b441ab09a2ff44",
+          "snapshotSHA256": "1605ee3ba6a867638b03d95b5c1e383f2828aab23b1f74833a23e260b954e43a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "eb8a881390e378ba3f11f7272a5029a3d4fc06cf6efb88d296b441ab09a2ff44",
+          "snapshotSHA256": "1605ee3ba6a867638b03d95b5c1e383f2828aab23b1f74833a23e260b954e43a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 31,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1284.9698209999915,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.2749919507818392,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1232.2555900000007,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.2749919507818392,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1034.7037740000087,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.2749919507818392,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "b3687803f10dd75dd43b249d66d0d8128d81fc73291b0bd4ae372148a0e9d08c",
+          "snapshotSHA256": "40bf5e8d742fec191fce35397f6d5644c50ee8a3334ded8679cfdcccf472d3a1",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "b3687803f10dd75dd43b249d66d0d8128d81fc73291b0bd4ae372148a0e9d08c",
+          "snapshotSHA256": "40bf5e8d742fec191fce35397f6d5644c50ee8a3334ded8679cfdcccf472d3a1",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 32,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1237.6958610000001,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.2754826880774495,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1184.5628190000134,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.2754826880774495,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 980.1319769999827,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.2754826880774495,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "aba448c956a149d8c9e81e60a8fa3fd2c02125605b1a8e2afbb3901f0f940007",
+          "snapshotSHA256": "476db224fd8370347be2aefc41955a59c8813f6e37f2f6e5600b26f0182c7eda",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "aba448c956a149d8c9e81e60a8fa3fd2c02125605b1a8e2afbb3901f0f940007",
+          "snapshotSHA256": "476db224fd8370347be2aefc41955a59c8813f6e37f2f6e5600b26f0182c7eda",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 33,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1387.7991289999918,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.2749995298331578,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1399.8483340000093,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.2749995298331578,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1069.0086420000007,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.2749995298331578,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f78a74e3903ca67b02660bb421f76e1807cf66a487c9cbcedb5ef33be451b62c",
+          "snapshotSHA256": "beb21438e97edc9ea6c5619614a73b2fe54ba9ddbc44e6f9c8a8a5e1017c3465",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f78a74e3903ca67b02660bb421f76e1807cf66a487c9cbcedb5ef33be451b62c",
+          "snapshotSHA256": "beb21438e97edc9ea6c5619614a73b2fe54ba9ddbc44e6f9c8a8a5e1017c3465",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 34,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1452.5949820000096,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.273172945513592,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1417.8263279999956,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.273172945513592,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1103.3618150000111,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.273172945513592,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e54464789f175139e40b90cda38c1e7dc396c24d9ea7a17828224643c2347e88",
+          "snapshotSHA256": "cfaeb4d4a068a1807a9c4641f8906fe7353baba5133b0837496a67edd1866055",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e54464789f175139e40b90cda38c1e7dc396c24d9ea7a17828224643c2347e88",
+          "snapshotSHA256": "cfaeb4d4a068a1807a9c4641f8906fe7353baba5133b0837496a67edd1866055",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 35,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1441.746775000007,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.275874477270387,
+          "contactResidualMM": 0.0002755560860150108
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1365.5309940000006,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.275874477270387,
+          "contactResidualMM": 0.0002755560860150108
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1060.1417749999964,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.275874477270387,
+          "contactResidualMM": 0.0002755560860150108
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "285746abebf1827c1e3ab803916b892adc95980745c9ab9fb925d3b89212a40c",
+          "snapshotSHA256": "424cea4f1e149201bd757a6a586bca66d4a73f0a5bb43c4e6981f022202576ff",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "285746abebf1827c1e3ab803916b892adc95980745c9ab9fb925d3b89212a40c",
+          "snapshotSHA256": "424cea4f1e149201bd757a6a586bca66d4a73f0a5bb43c4e6981f022202576ff",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 36,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1465.6744429999962,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.2780587142015079,
+          "contactResidualMM": 0.00031024064921138933
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1744.1586580000003,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.2780587142015079,
+          "contactResidualMM": 0.00031024064921138933
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1199.1615590000001,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.2780587142015079,
+          "contactResidualMM": 0.00031024064921138933
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3e3968e8a2b006564c54b66fe5bad6a2ad144ec3ff08ef09508fc3a9b2ddde77",
+          "snapshotSHA256": "5a48f31385143d40179881ab252ba7fc8d7b0be5efcb06c6ff93ea4f33e47efa",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3e3968e8a2b006564c54b66fe5bad6a2ad144ec3ff08ef09508fc3a9b2ddde77",
+          "snapshotSHA256": "5a48f31385143d40179881ab252ba7fc8d7b0be5efcb06c6ff93ea4f33e47efa",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 37,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1542.1461889999919,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.2801308028549265,
+          "contactResidualMM": 0.0002653159009774128
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1446.4797589999798,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.2801308028549265,
+          "contactResidualMM": 0.0002653159009774128
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1146.598364000005,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.2801308028549265,
+          "contactResidualMM": 0.0002653159009774128
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "61619372d35edff65ea4c39e8b9bd172c37d178b91fe339b8d606f9427f67c30",
+          "snapshotSHA256": "3752df3a53610e1994632c4e9587340b8aa71456490c5752d6d37225eb26c0f0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "61619372d35edff65ea4c39e8b9bd172c37d178b91fe339b8d606f9427f67c30",
+          "snapshotSHA256": "3752df3a53610e1994632c4e9587340b8aa71456490c5752d6d37225eb26c0f0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 38,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1610.4412869999942,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.2803308966228404,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1409.9230899999966,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.2803308966228404,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1123.6723479999928,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.2803308966228404,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2f3a566ed4b445be180d334e79bdc89e81dc73b30834cd799e97baf8fc4ec56c",
+          "snapshotSHA256": "1a359699139f54530984b49625bce9e339a19e4caa28469244b348b128c3bcd8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2f3a566ed4b445be180d334e79bdc89e81dc73b30834cd799e97baf8fc4ec56c",
+          "snapshotSHA256": "1a359699139f54530984b49625bce9e339a19e4caa28469244b348b128c3bcd8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 39,
+      "type": "add",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4665.559107000008,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3887744649248717,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4362.248389000015,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3887744649248717,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3851.289181,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3887744649248717,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "eed810151371d4cd45bcd243ef901f8e65fbf1800ec00e94b911f7ef75847302",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "eed810151371d4cd45bcd243ef901f8e65fbf1800ec00e94b911f7ef75847302",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 40,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4952.363574999996,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4454229034559207,
+          "contactResidualMM": 0.34501062067606153,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5240.431343999982,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4454229034559207,
+          "contactResidualMM": 0.34501062067606153,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4283.347176999989,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4454229034559207,
+          "contactResidualMM": 0.34501062067606153,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "5bc5ff5c87bbe11bfed72f4c3e2c875f899e615b315321b1a93aa590d26c7213",
+          "snapshotSHA256": "7caa6ab7672b9af66816ec7496a0036cec75bf81aa9ce15467b506524498f921",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "5bc5ff5c87bbe11bfed72f4c3e2c875f899e615b315321b1a93aa590d26c7213",
+          "snapshotSHA256": "7caa6ab7672b9af66816ec7496a0036cec75bf81aa9ce15467b506524498f921",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 41,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4321.485277,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4359218510228433,
+          "contactResidualMM": 0.05539883166353395
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4387.001611999993,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4359218510228433,
+          "contactResidualMM": 0.05539883166353395
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3609.6250810000056,
+          "steps": 2,
+          "time": 0.016666666666666666,
+          "maxEdgeStretch": 1.4359218510228433,
+          "contactResidualMM": 0.05539883166353395
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ef59b7af65f0c35878832b473369e0cb3a8bcfb3be34631f35b9a55d02e87d69",
+          "snapshotSHA256": "00f22f834730853bc3515616c1f7896b19b622e837944797c2b4f7169abf17f7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ef59b7af65f0c35878832b473369e0cb3a8bcfb3be34631f35b9a55d02e87d69",
+          "snapshotSHA256": "00f22f834730853bc3515616c1f7896b19b622e837944797c2b4f7169abf17f7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 42,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4264.549025000015,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4288042714955957,
+          "contactResidualMM": 0.17446915399952756
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4275.339808999997,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4288042714955957,
+          "contactResidualMM": 0.17446915399952756
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3678.2347179999924,
+          "steps": 3,
+          "time": 0.024999999999999998,
+          "maxEdgeStretch": 1.4288042714955957,
+          "contactResidualMM": 0.17446915399952756
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ef2bf5366de706ab1debaa1cba8bdc9246897600c24d4e3b0abcd94bb80e0283",
+          "snapshotSHA256": "e9c80bf6c0f4f3140e236d6a3d670384147ae868813a35236486cf2c53956a99",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ef2bf5366de706ab1debaa1cba8bdc9246897600c24d4e3b0abcd94bb80e0283",
+          "snapshotSHA256": "e9c80bf6c0f4f3140e236d6a3d670384147ae868813a35236486cf2c53956a99",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 43,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4924.346848999994,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4477505541914895,
+          "contactResidualMM": 0.20672975429169085
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5006.112582000002,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4477505541914895,
+          "contactResidualMM": 0.20672975429169085
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4069.637673999998,
+          "steps": 4,
+          "time": 0.03333333333333333,
+          "maxEdgeStretch": 1.4477505541914895,
+          "contactResidualMM": 0.20672975429169085
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "755a9fd30dbb3b7339a69db81dd2b06bbcce919708574b1b754d6defee0941a2",
+          "snapshotSHA256": "de0db38294c47b0a2f1104943986afaf5ee472fdb7a91a04f44542137fa9311b",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "755a9fd30dbb3b7339a69db81dd2b06bbcce919708574b1b754d6defee0941a2",
+          "snapshotSHA256": "de0db38294c47b0a2f1104943986afaf5ee472fdb7a91a04f44542137fa9311b",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 44,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 5539.913742000004,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4221539737546565,
+          "contactResidualMM": 0.1615452969325349
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5179.663902999979,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4221539737546565,
+          "contactResidualMM": 0.1615452969325349
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4125.159166999976,
+          "steps": 5,
+          "time": 0.041666666666666664,
+          "maxEdgeStretch": 1.4221539737546565,
+          "contactResidualMM": 0.1615452969325349
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "580b574dde412e847049e0f559f0e0cc4900497e7f3f03ec9437cf5a15bf787f",
+          "snapshotSHA256": "78a5f792e030af5b7708f1556e234afb747e81ec19a5091ffbf67b5b817c47b8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "580b574dde412e847049e0f559f0e0cc4900497e7f3f03ec9437cf5a15bf787f",
+          "snapshotSHA256": "78a5f792e030af5b7708f1556e234afb747e81ec19a5091ffbf67b5b817c47b8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 45,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 6881.9835279999825,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4466230456815345,
+          "contactResidualMM": 0.3699598880122449,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 6211.506374999997,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4466230456815345,
+          "contactResidualMM": 0.3699598880122449,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4055.0884099999967,
+          "steps": 6,
+          "time": 0.049999999999999996,
+          "maxEdgeStretch": 1.4466230456815345,
+          "contactResidualMM": 0.3699598880122449,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f789e3ce7362e790178fb9639f1e98a40638d46c0957898ea113e7fd90abb1f9",
+          "snapshotSHA256": "4aeffa5a194a0341f7da199c9ef8281a7152112f0860e2c9b23777543f5d42f6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f789e3ce7362e790178fb9639f1e98a40638d46c0957898ea113e7fd90abb1f9",
+          "snapshotSHA256": "4aeffa5a194a0341f7da199c9ef8281a7152112f0860e2c9b23777543f5d42f6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 46,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 5969.00834499998,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4465027845260765,
+          "contactResidualMM": 0.37945486460343614
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5642.654089999996,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4465027845260765,
+          "contactResidualMM": 0.37945486460343614
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4301.173407000024,
+          "steps": 7,
+          "time": 0.05833333333333333,
+          "maxEdgeStretch": 1.4465027845260765,
+          "contactResidualMM": 0.37945486460343614
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "4166a8c3f74e7fe7599a7d031990d815a9eabbdd4279dbfde8aea728ba16177e",
+          "snapshotSHA256": "891ac5554eec5f7b95a95f788aac8a045844aea0c8a9edfbe04340ea9abbe30c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "4166a8c3f74e7fe7599a7d031990d815a9eabbdd4279dbfde8aea728ba16177e",
+          "snapshotSHA256": "891ac5554eec5f7b95a95f788aac8a045844aea0c8a9edfbe04340ea9abbe30c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 47,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 5374.867400999996,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4490295825764286,
+          "contactResidualMM": 0.20746396347157744
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5336.442454000004,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4490295825764286,
+          "contactResidualMM": 0.20746396347157744
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3901.3768140000175,
+          "steps": 8,
+          "time": 0.06666666666666667,
+          "maxEdgeStretch": 1.4490295825764286,
+          "contactResidualMM": 0.20746396347157744
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ec35009d96a4354ccaaa285f5a8c9e7fcb66cc843129e77d8f673f8bce7f90e9",
+          "snapshotSHA256": "3ce893beab6c0ec9b92216f15de2da800a6b1e84eea8a1711b7da4b488cb6bd2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ec35009d96a4354ccaaa285f5a8c9e7fcb66cc843129e77d8f673f8bce7f90e9",
+          "snapshotSHA256": "3ce893beab6c0ec9b92216f15de2da800a6b1e84eea8a1711b7da4b488cb6bd2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 48,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 6016.607398999971,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4480524670396093,
+          "contactResidualMM": 0.14387785457992738
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 6752.325720999972,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4480524670396093,
+          "contactResidualMM": 0.14387785457992738
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4727.441343000042,
+          "steps": 9,
+          "time": 0.075,
+          "maxEdgeStretch": 1.4480524670396093,
+          "contactResidualMM": 0.14387785457992738
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "438b16da9cfb857ea87e928e8991598749b01f8c1ad804f5e6b6afa9438da161",
+          "snapshotSHA256": "5b4ebe3e7cfc5e771fa7308480dcd484e0354c803a922a2b06590266f0afa6b4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "438b16da9cfb857ea87e928e8991598749b01f8c1ad804f5e6b6afa9438da161",
+          "snapshotSHA256": "5b4ebe3e7cfc5e771fa7308480dcd484e0354c803a922a2b06590266f0afa6b4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 49,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 6431.773359999992,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.446113495892386,
+          "contactResidualMM": 0.2622425591788085
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 6219.763502999966,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.446113495892386,
+          "contactResidualMM": 0.2622425591788085
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4873.236941999989,
+          "steps": 10,
+          "time": 0.08333333333333333,
+          "maxEdgeStretch": 1.446113495892386,
+          "contactResidualMM": 0.2622425591788085
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "030355daa9dd739cf1b0b0b15e515b618382efae15ca598af892d4413f1b1450",
+          "snapshotSHA256": "6790bd2c36f8b0d28367b578a1a2ea653af7d5aaf8862c6fd36cc961c5d61507",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "030355daa9dd739cf1b0b0b15e515b618382efae15ca598af892d4413f1b1450",
+          "snapshotSHA256": "6790bd2c36f8b0d28367b578a1a2ea653af7d5aaf8862c6fd36cc961c5d61507",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 50,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4664.127471999964,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.421902745400015,
+          "contactResidualMM": 0.3652538136419197
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4978.548788999964,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.421902745400015,
+          "contactResidualMM": 0.3652538136419197
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3861.4302219999954,
+          "steps": 11,
+          "time": 0.09166666666666666,
+          "maxEdgeStretch": 1.421902745400015,
+          "contactResidualMM": 0.3652538136419197
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "7509d5f7f71c28ae5e548230b64b8a480368462afedf2795d1322dd67c60dff5",
+          "snapshotSHA256": "61926111f46c3fa3be141c1b95717f80d2f705783945eba69cc6205cad7b439a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "7509d5f7f71c28ae5e548230b64b8a480368462afedf2795d1322dd67c60dff5",
+          "snapshotSHA256": "61926111f46c3fa3be141c1b95717f80d2f705783945eba69cc6205cad7b439a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 51,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4480.349856000044,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.4096565275713957,
+          "contactResidualMM": 0.293268963588421,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4449.374537000025,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.4096565275713957,
+          "contactResidualMM": 0.293268963588421,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3339.1246450000326,
+          "steps": 12,
+          "time": 0.09999999999999999,
+          "maxEdgeStretch": 1.4096565275713957,
+          "contactResidualMM": 0.293268963588421,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "fc8f9aec1a106cdd98276e200284fe4c5e33ef9e12eba23150926c53899be5e7",
+          "snapshotSHA256": "de0d4ea49ddc02a74fdee69b5d71358e16186939a146fa5331d4964db00345a9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "fc8f9aec1a106cdd98276e200284fe4c5e33ef9e12eba23150926c53899be5e7",
+          "snapshotSHA256": "de0d4ea49ddc02a74fdee69b5d71358e16186939a146fa5331d4964db00345a9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 52,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4162.900435000018,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.4270827776690795,
+          "contactResidualMM": 0.2704430464038092
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4417.75328600005,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.4270827776690795,
+          "contactResidualMM": 0.2704430464038092
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3327.425019999966,
+          "steps": 13,
+          "time": 0.10833333333333332,
+          "maxEdgeStretch": 1.4270827776690795,
+          "contactResidualMM": 0.2704430464038092
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "43ba999986136d9c6c407c2227fe3eac60955ec142377943f1f2750fcc101f40",
+          "snapshotSHA256": "85e9488707a5820340252e2c105471c13c4fc5154d4e1b4be9897f8e1b33848d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "43ba999986136d9c6c407c2227fe3eac60955ec142377943f1f2750fcc101f40",
+          "snapshotSHA256": "85e9488707a5820340252e2c105471c13c4fc5154d4e1b4be9897f8e1b33848d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 53,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4295.633167999971,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.4123516015164996,
+          "contactResidualMM": 0.3292948136376884
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4607.845751999994,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.4123516015164996,
+          "contactResidualMM": 0.3292948136376884
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3371.1851610000012,
+          "steps": 14,
+          "time": 0.11666666666666665,
+          "maxEdgeStretch": 1.4123516015164996,
+          "contactResidualMM": 0.3292948136376884
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8905a1b89f0febda5389e08eb26b7c940a43ab2879bcf11372bcc7706c0cf07e",
+          "snapshotSHA256": "3d111a4775e6a6af50638e2e4d6ef1990aa53539f5aa16e77d774d25e8b34994",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8905a1b89f0febda5389e08eb26b7c940a43ab2879bcf11372bcc7706c0cf07e",
+          "snapshotSHA256": "3d111a4775e6a6af50638e2e4d6ef1990aa53539f5aa16e77d774d25e8b34994",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 54,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3818.6017379999976,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.4137506659475978,
+          "contactResidualMM": 0.2611108326074354
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4133.5915510000195,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.4137506659475978,
+          "contactResidualMM": 0.2611108326074354
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 2965.6959829999832,
+          "steps": 15,
+          "time": 0.12499999999999999,
+          "maxEdgeStretch": 1.4137506659475978,
+          "contactResidualMM": 0.2611108326074354
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ce014af9f67aaec676e7820b50b249e57ac65252aa8ca0bff9561833be26904c",
+          "snapshotSHA256": "b19c655b3da660c8179bcfafa845403f696b919f459d2e50ffe3d86fbd4edac0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ce014af9f67aaec676e7820b50b249e57ac65252aa8ca0bff9561833be26904c",
+          "snapshotSHA256": "b19c655b3da660c8179bcfafa845403f696b919f459d2e50ffe3d86fbd4edac0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 55,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4484.752280000015,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.3842825706597535,
+          "contactResidualMM": 0.3356585384625861
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4163.093239000009,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.3842825706597535,
+          "contactResidualMM": 0.3356585384625861
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3637.4849390000454,
+          "steps": 16,
+          "time": 0.13333333333333333,
+          "maxEdgeStretch": 1.3842825706597535,
+          "contactResidualMM": 0.3356585384625861
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "5027e628afdf9369acbd757d2d3b1c41fc4c562141486c1c9a295f371e740d30",
+          "snapshotSHA256": "44fa835bf52fdd0071ff07c22a4bbc9fa2bba0f191244b8303799ec89d8c4f30",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "5027e628afdf9369acbd757d2d3b1c41fc4c562141486c1c9a295f371e740d30",
+          "snapshotSHA256": "44fa835bf52fdd0071ff07c22a4bbc9fa2bba0f191244b8303799ec89d8c4f30",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 56,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3602.87440900004,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3972048407434265,
+          "contactResidualMM": 0.31892478682299646
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 3545.4300840000506,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3972048407434265,
+          "contactResidualMM": 0.31892478682299646
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 2700.291328000021,
+          "steps": 17,
+          "time": 0.1416666666666667,
+          "maxEdgeStretch": 1.3972048407434265,
+          "contactResidualMM": 0.31892478682299646
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f418a1e9b4f17c5b10ddab5d55c8583b8c27467e4a3382f4d9b995d23e9cd9f6",
+          "snapshotSHA256": "748523276ffa912cc5f75ecc0f38f34629188c6b11c767faa47226064aa75d81",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f418a1e9b4f17c5b10ddab5d55c8583b8c27467e4a3382f4d9b995d23e9cd9f6",
+          "snapshotSHA256": "748523276ffa912cc5f75ecc0f38f34629188c6b11c767faa47226064aa75d81",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 57,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3810.3807490000036,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.392006556908747,
+          "contactResidualMM": 0.22878074162494336,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 3911.134530999989,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.392006556908747,
+          "contactResidualMM": 0.22878074162494336,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3212.6045489999815,
+          "steps": 18,
+          "time": 0.15000000000000005,
+          "maxEdgeStretch": 1.392006556908747,
+          "contactResidualMM": 0.22878074162494336,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "6becad5fd5c7778decd29dc8f7437a4e70760303684e0984523471c3b8b39bdc",
+          "snapshotSHA256": "d700164d285d215167f1079a0c855419008e7635d926dd09c989526c1de2a323",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "6becad5fd5c7778decd29dc8f7437a4e70760303684e0984523471c3b8b39bdc",
+          "snapshotSHA256": "d700164d285d215167f1079a0c855419008e7635d926dd09c989526c1de2a323",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 58,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3837.8942420000094,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.410557616641791,
+          "contactResidualMM": 0.18115573329882845
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 3669.9821759999613,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.410557616641791,
+          "contactResidualMM": 0.18115573329882845
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3210.43006600003,
+          "steps": 19,
+          "time": 0.1583333333333334,
+          "maxEdgeStretch": 1.410557616641791,
+          "contactResidualMM": 0.18115573329882845
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "45b711035c22bcf3f08a10eb02a7a88cf35465bb7b61113e20f576a5fddabe4b",
+          "snapshotSHA256": "43328a0f45a2dddb261083da0462f6dd63dba550a33380679fd77374b9436653",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "45b711035c22bcf3f08a10eb02a7a88cf35465bb7b61113e20f576a5fddabe4b",
+          "snapshotSHA256": "43328a0f45a2dddb261083da0462f6dd63dba550a33380679fd77374b9436653",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 59,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4061.112844999996,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.4100789870611747,
+          "contactResidualMM": 0.18472868097269088
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4230.4600400000345,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.4100789870611747,
+          "contactResidualMM": 0.18472868097269088
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3217.6580030000187,
+          "steps": 20,
+          "time": 0.16666666666666677,
+          "maxEdgeStretch": 1.4100789870611747,
+          "contactResidualMM": 0.18472868097269088
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "7c6a911675b1902bf5b33d11e9a20ddb7a972996e42ce58e83ece10407cea005",
+          "snapshotSHA256": "4a6c4b60125ca9ac6502ad5fa7656fd9c35f2862592839c032dbdd9f2cfb2f4a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "7c6a911675b1902bf5b33d11e9a20ddb7a972996e42ce58e83ece10407cea005",
+          "snapshotSHA256": "4a6c4b60125ca9ac6502ad5fa7656fd9c35f2862592839c032dbdd9f2cfb2f4a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 60,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3964.6553249999997,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3880729915887768,
+          "contactResidualMM": 0.18180149705073445
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4078.978254000016,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3880729915887768,
+          "contactResidualMM": 0.18180149705073445
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3674.206980000017,
+          "steps": 21,
+          "time": 0.17500000000000013,
+          "maxEdgeStretch": 1.3880729915887768,
+          "contactResidualMM": 0.18180149705073445
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "c9bfb7f7c4b59a37a71fa9f185a1a57f2eb0042e90aef4e7f40f58d07248e4af",
+          "snapshotSHA256": "9f66351e9b244e19d9dc989ad27c8eb63245759634cc7d0ebcaa49b23d0e7e9a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "c9bfb7f7c4b59a37a71fa9f185a1a57f2eb0042e90aef4e7f40f58d07248e4af",
+          "snapshotSHA256": "9f66351e9b244e19d9dc989ad27c8eb63245759634cc7d0ebcaa49b23d0e7e9a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 61,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4623.323367999983,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3973745385725838,
+          "contactResidualMM": 0.1828193448741161
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5034.697390000045,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3973745385725838,
+          "contactResidualMM": 0.1828193448741161
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3506.5552429999807,
+          "steps": 22,
+          "time": 0.1833333333333335,
+          "maxEdgeStretch": 1.3973745385725838,
+          "contactResidualMM": 0.1828193448741161
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3b7ba3c4a1ac64a670612e9942b70eae2d93a648bdd36881aa9a23defebd47df",
+          "snapshotSHA256": "ea212bb478db0f3b54992c2299c97b41ac99bd8309a6414789198d611bd61c90",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3b7ba3c4a1ac64a670612e9942b70eae2d93a648bdd36881aa9a23defebd47df",
+          "snapshotSHA256": "ea212bb478db0f3b54992c2299c97b41ac99bd8309a6414789198d611bd61c90",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 62,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4458.608327000053,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.4025204149556185,
+          "contactResidualMM": 0.13610903355569354
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4382.055322,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.4025204149556185,
+          "contactResidualMM": 0.13610903355569354
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3649.7888309999835,
+          "steps": 23,
+          "time": 0.19166666666666685,
+          "maxEdgeStretch": 1.4025204149556185,
+          "contactResidualMM": 0.13610903355569354
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8c674ad0266341e71177749b1557ab098afc3c5af08b04124ea122fb2f0b102a",
+          "snapshotSHA256": "ab932b078092cb14e4975a0c09f3d426654c5c5cfe624023be0a46511720ff18",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8c674ad0266341e71177749b1557ab098afc3c5af08b04124ea122fb2f0b102a",
+          "snapshotSHA256": "ab932b078092cb14e4975a0c09f3d426654c5c5cfe624023be0a46511720ff18",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 63,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 6007.4323759999825,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.3665717967495685,
+          "contactResidualMM": 0.1317657993927801,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5231.7488840000005,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.3665717967495685,
+          "contactResidualMM": 0.1317657993927801,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4328.663732999994,
+          "steps": 24,
+          "time": 0.2000000000000002,
+          "maxEdgeStretch": 1.3665717967495685,
+          "contactResidualMM": 0.1317657993927801,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "81a615dc5893f994054653eeeb62f5dd7e4c8e71d108f26227412bbfbb9f6e3a",
+          "snapshotSHA256": "e0d63ae7807123838c2ace7c016d36899f0d7d8c9862b03445f7dad59e8c276e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "81a615dc5893f994054653eeeb62f5dd7e4c8e71d108f26227412bbfbb9f6e3a",
+          "snapshotSHA256": "e0d63ae7807123838c2ace7c016d36899f0d7d8c9862b03445f7dad59e8c276e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 64,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 5408.533591000014,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.4163957172804544,
+          "contactResidualMM": 0.19113052918871484
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4788.355359000037,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.4163957172804544,
+          "contactResidualMM": 0.19113052918871484
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3276.0742910000263,
+          "steps": 25,
+          "time": 0.20833333333333356,
+          "maxEdgeStretch": 1.4163957172804544,
+          "contactResidualMM": 0.19113052918871484
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "62b8d7155f4cf9635e2ad4a0ad67242f084968975b2af01a09b2d096f98d3e25",
+          "snapshotSHA256": "ca7d6c48b6bae6ac999ce9ca38b179c7b5101ddd1e3379fd5f3f643e56b68b29",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "62b8d7155f4cf9635e2ad4a0ad67242f084968975b2af01a09b2d096f98d3e25",
+          "snapshotSHA256": "ca7d6c48b6bae6ac999ce9ca38b179c7b5101ddd1e3379fd5f3f643e56b68b29",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 65,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4501.908926000004,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.416766846574861,
+          "contactResidualMM": 0.19037959748185398
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4722.32616300002,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.416766846574861,
+          "contactResidualMM": 0.19037959748185398
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3743.7059780000127,
+          "steps": 26,
+          "time": 0.21666666666666692,
+          "maxEdgeStretch": 1.416766846574861,
+          "contactResidualMM": 0.19037959748185398
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2e3e6c089624b6b68aa87e368cd2b3bea56faebb68b8159e004e695f3349224a",
+          "snapshotSHA256": "5f3dbb3c6a524c2fdba5bca98c5f29615833c198866c179025a9ddd45250692a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2e3e6c089624b6b68aa87e368cd2b3bea56faebb68b8159e004e695f3349224a",
+          "snapshotSHA256": "5f3dbb3c6a524c2fdba5bca98c5f29615833c198866c179025a9ddd45250692a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 66,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4575.845648999966,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3863295911680094,
+          "contactResidualMM": 0.16638229463026166
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4555.526210999989,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3863295911680094,
+          "contactResidualMM": 0.16638229463026166
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3137.7093439999735,
+          "steps": 27,
+          "time": 0.22500000000000028,
+          "maxEdgeStretch": 1.3863295911680094,
+          "contactResidualMM": 0.16638229463026166
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e61ec64b5c1ac12bd24ea73d53e84e85114cd000629629ecde8e1f1de3efd827",
+          "snapshotSHA256": "7a3c6ca8a9356a9748773ae06f67233ea6586103c340d15e2c522a1bc7328b7c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e61ec64b5c1ac12bd24ea73d53e84e85114cd000629629ecde8e1f1de3efd827",
+          "snapshotSHA256": "7a3c6ca8a9356a9748773ae06f67233ea6586103c340d15e2c522a1bc7328b7c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 67,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3977.2849060000153,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.394943476728342,
+          "contactResidualMM": 0.14775733949635386
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4340.082714000018,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.394943476728342,
+          "contactResidualMM": 0.14775733949635386
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3346.9685879999306,
+          "steps": 28,
+          "time": 0.23333333333333364,
+          "maxEdgeStretch": 1.394943476728342,
+          "contactResidualMM": 0.14775733949635386
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "cc910a327bec4aa0fea3c28c5b1f13b8ef2d0fc44e8e14f9a5dc45cb3a66aa02",
+          "snapshotSHA256": "89c22578095145a867443d03e907aa67746014bac3393863019234af3ecf7c6b",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "cc910a327bec4aa0fea3c28c5b1f13b8ef2d0fc44e8e14f9a5dc45cb3a66aa02",
+          "snapshotSHA256": "89c22578095145a867443d03e907aa67746014bac3393863019234af3ecf7c6b",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 68,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 5010.980915999971,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.3716921535946802,
+          "contactResidualMM": 0.1285001913097078
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4343.481833000085,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.3716921535946802,
+          "contactResidualMM": 0.1285001913097078
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3296.859289999935,
+          "steps": 29,
+          "time": 0.241666666666667,
+          "maxEdgeStretch": 1.3716921535946802,
+          "contactResidualMM": 0.1285001913097078
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "87ec62b5c2ba30e54b1fc0acee2e142ab6744700c5c123ea973fd7fdf53ee550",
+          "snapshotSHA256": "bd3c8ca5e7ea2ff61913cb865d0627d2e5719fc000644fecc0d0266c5d6f95ae",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "87ec62b5c2ba30e54b1fc0acee2e142ab6744700c5c123ea973fd7fdf53ee550",
+          "snapshotSHA256": "bd3c8ca5e7ea2ff61913cb865d0627d2e5719fc000644fecc0d0266c5d6f95ae",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 69,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4296.7576849999605,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.4121048210747529,
+          "contactResidualMM": 0.15296943325236562,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 3995.1018890000414,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.4121048210747529,
+          "contactResidualMM": 0.15296943325236562,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3212.860210999963,
+          "steps": 30,
+          "time": 0.25000000000000033,
+          "maxEdgeStretch": 1.4121048210747529,
+          "contactResidualMM": 0.15296943325236562,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "4204f2515d1306a37a77b2dce6fdbca2af6bebe0a621ed6c54428c34851b4106",
+          "snapshotSHA256": "0a95fe3bdf96ed439ee22ab48dfde4e7ab3c459cb8a9cbd28f08049ac06eeda7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "4204f2515d1306a37a77b2dce6fdbca2af6bebe0a621ed6c54428c34851b4106",
+          "snapshotSHA256": "0a95fe3bdf96ed439ee22ab48dfde4e7ab3c459cb8a9cbd28f08049ac06eeda7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 70,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4408.286468000035,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.4149219555452046,
+          "contactResidualMM": 0.15797186678730754
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4620.618079000036,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.4149219555452046,
+          "contactResidualMM": 0.15797186678730754
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3258.751214000047,
+          "steps": 31,
+          "time": 0.25833333333333364,
+          "maxEdgeStretch": 1.4149219555452046,
+          "contactResidualMM": 0.15797186678730754
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3e2323f824ac0675b196a6a4d655459c39aaae7f8203998d0a02fec45da44e71",
+          "snapshotSHA256": "b6329641d348d03cd2cf4bfcb9b19e48ed3fd9c01d3b79c7c611744b99f1dc9d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3e2323f824ac0675b196a6a4d655459c39aaae7f8203998d0a02fec45da44e71",
+          "snapshotSHA256": "b6329641d348d03cd2cf4bfcb9b19e48ed3fd9c01d3b79c7c611744b99f1dc9d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 71,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4024.29475599993,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.4190673410939596,
+          "contactResidualMM": 0.157854669229596
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4253.840913000051,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.4190673410939596,
+          "contactResidualMM": 0.157854669229596
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 2979.586101000081,
+          "steps": 32,
+          "time": 0.26666666666666694,
+          "maxEdgeStretch": 1.4190673410939596,
+          "contactResidualMM": 0.157854669229596
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "c7ff977a1f60f3f6f4b96f939508e84f79d06d68fc3d24980feb86ebe20a9f43",
+          "snapshotSHA256": "2bf7a9522addc615f7341cd1c2722c55e26495ceb8d695fe24b4c6e172247588",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "c7ff977a1f60f3f6f4b96f939508e84f79d06d68fc3d24980feb86ebe20a9f43",
+          "snapshotSHA256": "2bf7a9522addc615f7341cd1c2722c55e26495ceb8d695fe24b4c6e172247588",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 72,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 3832.7132530000526,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.4064130312193852,
+          "contactResidualMM": 0.13813877300150254
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4338.544147999957,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.4064130312193852,
+          "contactResidualMM": 0.13813877300150254
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 2932.579720000038,
+          "steps": 33,
+          "time": 0.27500000000000024,
+          "maxEdgeStretch": 1.4064130312193852,
+          "contactResidualMM": 0.13813877300150254
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9c4b7495e46aae6fd6e8dd07daa4dbd9f770412faf6c0dcabca739967199d35f",
+          "snapshotSHA256": "c536d7635e9b2a329963e0e148221663679093628160e4bc95a1f34752227517",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9c4b7495e46aae6fd6e8dd07daa4dbd9f770412faf6c0dcabca739967199d35f",
+          "snapshotSHA256": "c536d7635e9b2a329963e0e148221663679093628160e4bc95a1f34752227517",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 73,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4134.541210000054,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.4157655702410188,
+          "contactResidualMM": 0.12859263968804413
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5245.770187000046,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.4157655702410188,
+          "contactResidualMM": 0.12859263968804413
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3908.6390609999653,
+          "steps": 34,
+          "time": 0.28333333333333355,
+          "maxEdgeStretch": 1.4157655702410188,
+          "contactResidualMM": 0.12859263968804413
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "150fc4f1ce16b7e0eaa9dcf15c4bca8a74649b63e946e9a98c50366b149e89a3",
+          "snapshotSHA256": "fa48852b8b4730fe08239da2a3a72f2547770157fce66f38fb4fefba647b3127",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "150fc4f1ce16b7e0eaa9dcf15c4bca8a74649b63e946e9a98c50366b149e89a3",
+          "snapshotSHA256": "fa48852b8b4730fe08239da2a3a72f2547770157fce66f38fb4fefba647b3127",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 74,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4810.311587000033,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.408264252565789,
+          "contactResidualMM": 0.15624877927384195
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4526.461368000018,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.408264252565789,
+          "contactResidualMM": 0.15624877927384195
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3418.75566600007,
+          "steps": 35,
+          "time": 0.29166666666666685,
+          "maxEdgeStretch": 1.408264252565789,
+          "contactResidualMM": 0.15624877927384195
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "1ed5d9c0393b5ae3fadfae279f63b32f5693fe6f11ad461d2896fb03d983c05b",
+          "snapshotSHA256": "17ba11970080e727ec3ce1c27ec9d1408a8416831643d6b06f1008227026e0f8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "1ed5d9c0393b5ae3fadfae279f63b32f5693fe6f11ad461d2896fb03d983c05b",
+          "snapshotSHA256": "17ba11970080e727ec3ce1c27ec9d1408a8416831643d6b06f1008227026e0f8",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 75,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4714.3128789999755,
+          "steps": 36,
+          "time": 0.30000000000000016,
+          "maxEdgeStretch": 1.436197045484426,
+          "contactResidualMM": 0.15595371541429326
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5144.05394100002,
+          "steps": 36,
+          "time": 0.30000000000000016,
+          "maxEdgeStretch": 1.436197045484426,
+          "contactResidualMM": 0.15595371541429326
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3470.9583529999945,
+          "steps": 36,
+          "time": 0.30000000000000016,
+          "maxEdgeStretch": 1.436197045484426,
+          "contactResidualMM": 0.15595371541429326
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "0c64fa6f311beb4b3f51d875c1f9520b0939b09d82fcd51e967cdaf4629ba28e",
+          "snapshotSHA256": "967fb1a8ec269b01df9765078913f0c2d1d7ef5c5ed4d45ff77c2fb8f31da183",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "0c64fa6f311beb4b3f51d875c1f9520b0939b09d82fcd51e967cdaf4629ba28e",
+          "snapshotSHA256": "967fb1a8ec269b01df9765078913f0c2d1d7ef5c5ed4d45ff77c2fb8f31da183",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 76,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4514.917041999986,
+          "steps": 37,
+          "time": 0.30833333333333346,
+          "maxEdgeStretch": 1.4185130415274683,
+          "contactResidualMM": 0.1508027519305979
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 5147.738307000021,
+          "steps": 37,
+          "time": 0.30833333333333346,
+          "maxEdgeStretch": 1.4185130415274683,
+          "contactResidualMM": 0.1508027519305979
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3422.8414270000067,
+          "steps": 37,
+          "time": 0.30833333333333346,
+          "maxEdgeStretch": 1.4185130415274683,
+          "contactResidualMM": 0.1508027519305979
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2366de41bb161f022422c9d8c1410c9590ced1e6238f968528512d496ea8e988",
+          "snapshotSHA256": "fd0efdf1779f71e12d958700964d844abe7e763f7ba64a2becf60cdca3168f16",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2366de41bb161f022422c9d8c1410c9590ced1e6238f968528512d496ea8e988",
+          "snapshotSHA256": "fd0efdf1779f71e12d958700964d844abe7e763f7ba64a2becf60cdca3168f16",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 77,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4422.770608000108,
+          "steps": 38,
+          "time": 0.31666666666666676,
+          "maxEdgeStretch": 1.3839140111305135,
+          "contactResidualMM": 0.12185177411023346
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4198.882761999965,
+          "steps": 38,
+          "time": 0.31666666666666676,
+          "maxEdgeStretch": 1.3839140111305135,
+          "contactResidualMM": 0.12185177411023346
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3482.5680050000083,
+          "steps": 38,
+          "time": 0.31666666666666676,
+          "maxEdgeStretch": 1.3839140111305135,
+          "contactResidualMM": 0.12185177411023346
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "c1be1fa995d4e82ee147be32129ad4a59edb62f50af7417b0500ce7151c28bea",
+          "snapshotSHA256": "acd700979ff096ee9dd050df95c475e8ebc219446ab9fbd47aea986b8b52fc2a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "c1be1fa995d4e82ee147be32129ad4a59edb62f50af7417b0500ce7151c28bea",
+          "snapshotSHA256": "acd700979ff096ee9dd050df95c475e8ebc219446ab9fbd47aea986b8b52fc2a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 78,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4457.308883000049,
+          "steps": 39,
+          "time": 0.32500000000000007,
+          "maxEdgeStretch": 1.3759950566621308,
+          "contactResidualMM": 0.11540986047037671
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4492.186004000017,
+          "steps": 39,
+          "time": 0.32500000000000007,
+          "maxEdgeStretch": 1.3759950566621308,
+          "contactResidualMM": 0.11540986047037671
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3366.740737999906,
+          "steps": 39,
+          "time": 0.32500000000000007,
+          "maxEdgeStretch": 1.3759950566621308,
+          "contactResidualMM": 0.11540986047037671
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "fd24050fd6bffe06893be5902e0d91a23cef27480d2ade97775504e6be88cbd6",
+          "snapshotSHA256": "8239981006c14a6b880200b7f038d8d64874d443aa9f9283b7ef3b44b528bbdd",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "fd24050fd6bffe06893be5902e0d91a23cef27480d2ade97775504e6be88cbd6",
+          "snapshotSHA256": "8239981006c14a6b880200b7f038d8d64874d443aa9f9283b7ef3b44b528bbdd",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 79,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4580.231273000012,
+          "steps": 40,
+          "time": 0.33333333333333337,
+          "maxEdgeStretch": 1.4111097499827712,
+          "contactResidualMM": 0.14745784504865012
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4554.961572000058,
+          "steps": 40,
+          "time": 0.33333333333333337,
+          "maxEdgeStretch": 1.4111097499827712,
+          "contactResidualMM": 0.14745784504865012
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3269.584843999939,
+          "steps": 40,
+          "time": 0.33333333333333337,
+          "maxEdgeStretch": 1.4111097499827712,
+          "contactResidualMM": 0.14745784504865012
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ab481efca57892ce5083211a1dfde6fab364d01f3518f54de316da90baa9d29c",
+          "snapshotSHA256": "e71d2a4ffb671e6ba39acae9b081bafc75f043f91778d9cabc16b96f28ae6e88",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ab481efca57892ce5083211a1dfde6fab364d01f3518f54de316da90baa9d29c",
+          "snapshotSHA256": "e71d2a4ffb671e6ba39acae9b081bafc75f043f91778d9cabc16b96f28ae6e88",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 80,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4769.143950999947,
+          "steps": 41,
+          "time": 0.3416666666666667,
+          "maxEdgeStretch": 1.3909928177985826,
+          "contactResidualMM": 0.11970699615877073
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4856.247800000012,
+          "steps": 41,
+          "time": 0.3416666666666667,
+          "maxEdgeStretch": 1.3909928177985826,
+          "contactResidualMM": 0.11970699615877073
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3286.593809999991,
+          "steps": 41,
+          "time": 0.3416666666666667,
+          "maxEdgeStretch": 1.3909928177985826,
+          "contactResidualMM": 0.11970699615877073
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "f373a0b4802f7cbc35c11c6e95fbda5d37a0b761429c7cb009a8b93bb3b9e35f",
+          "snapshotSHA256": "defce83af67fb465a407bb7e59f02138082f42f9267f3376f250bdad0df2a36a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "f373a0b4802f7cbc35c11c6e95fbda5d37a0b761429c7cb009a8b93bb3b9e35f",
+          "snapshotSHA256": "defce83af67fb465a407bb7e59f02138082f42f9267f3376f250bdad0df2a36a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 81,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4763.071556000039,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4926.318473000079,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3337.9422920000507,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "378b42c38b6f75eec398c0b4b099a2468e9fcca185c2dfb5fbacc5f77b74c459",
+          "snapshotSHA256": "a4cf0042e4d19b5fecaef0f4e8793c7f42a78c8ed2ac8445659b2bb87b602fd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "378b42c38b6f75eec398c0b4b099a2468e9fcca185c2dfb5fbacc5f77b74c459",
+          "snapshotSHA256": "a4cf0042e4d19b5fecaef0f4e8793c7f42a78c8ed2ac8445659b2bb87b602fd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 82,
+      "type": "snapshot",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 213.78522100008558,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 210.8388659999473,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 118.53963000001386,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.407364125579489,
+          "contactResidualMM": 0.13654301894874388
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "378b42c38b6f75eec398c0b4b099a2468e9fcca185c2dfb5fbacc5f77b74c459",
+          "snapshotSHA256": "a4cf0042e4d19b5fecaef0f4e8793c7f42a78c8ed2ac8445659b2bb87b602fd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "378b42c38b6f75eec398c0b4b099a2468e9fcca185c2dfb5fbacc5f77b74c459",
+          "snapshotSHA256": "a4cf0042e4d19b5fecaef0f4e8793c7f42a78c8ed2ac8445659b2bb87b602fd4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 83,
+      "type": "remove",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1.3421259999740869,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.261460977557097,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1.1618510000407696,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.261460977557097,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1.156343000009656,
+          "steps": 42,
+          "time": 0.35,
+          "maxEdgeStretch": 1.261460977557097,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "4edefe2fff4209fe9130375914924eda6148c47206705341ab82e6d453267f4d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "4edefe2fff4209fe9130375914924eda6148c47206705341ab82e6d453267f4d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 84,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1684.6859129999066,
+          "steps": 43,
+          "time": 0.3583333333333333,
+          "maxEdgeStretch": 1.248443684972057,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1464.7887500000652,
+          "steps": 43,
+          "time": 0.3583333333333333,
+          "maxEdgeStretch": 1.248443684972057,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1287.2101590000093,
+          "steps": 43,
+          "time": 0.3583333333333333,
+          "maxEdgeStretch": 1.248443684972057,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "1dec7d0e0088dae7d0975a66c9fbb6faa8fda2cf8262ab0765d8e03ac63b4c8e",
+          "snapshotSHA256": "02498767ae45ab80debc051e348b8000d839134a40ed53f6381c85f36995d70d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "1dec7d0e0088dae7d0975a66c9fbb6faa8fda2cf8262ab0765d8e03ac63b4c8e",
+          "snapshotSHA256": "02498767ae45ab80debc051e348b8000d839134a40ed53f6381c85f36995d70d",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 85,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1879.4967849999666,
+          "steps": 44,
+          "time": 0.3666666666666666,
+          "maxEdgeStretch": 1.2530498661742655,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1722.8176799999783,
+          "steps": 44,
+          "time": 0.3666666666666666,
+          "maxEdgeStretch": 1.2530498661742655,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1277.9058180000866,
+          "steps": 44,
+          "time": 0.3666666666666666,
+          "maxEdgeStretch": 1.2530498661742655,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "fe36af08fa7c21f1fd56fc28fa99dc358a96bff3240a215efbc252bdaacb9daf",
+          "snapshotSHA256": "84cf82defee73ce1ae301011922b55f5c3dfdf698cef9fb84d58030eb0035743",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "fe36af08fa7c21f1fd56fc28fa99dc358a96bff3240a215efbc252bdaacb9daf",
+          "snapshotSHA256": "84cf82defee73ce1ae301011922b55f5c3dfdf698cef9fb84d58030eb0035743",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 86,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1760.3484820000594,
+          "steps": 45,
+          "time": 0.3749999999999999,
+          "maxEdgeStretch": 1.2583719577019343,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1719.8554139999906,
+          "steps": 45,
+          "time": 0.3749999999999999,
+          "maxEdgeStretch": 1.2583719577019343,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1198.871242000023,
+          "steps": 45,
+          "time": 0.3749999999999999,
+          "maxEdgeStretch": 1.2583719577019343,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "93763176e9d848690989b5b23a1a45a198dc7500addd0f423c13c6fdbc2d1465",
+          "snapshotSHA256": "a92960631a46efa08740e9cd9a04f17ea674fc09bdf7a0884a43f51d42ff1e72",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "93763176e9d848690989b5b23a1a45a198dc7500addd0f423c13c6fdbc2d1465",
+          "snapshotSHA256": "a92960631a46efa08740e9cd9a04f17ea674fc09bdf7a0884a43f51d42ff1e72",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 87,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1760.5833799999673,
+          "steps": 46,
+          "time": 0.3833333333333332,
+          "maxEdgeStretch": 1.2588778301694583,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1784.5848009999609,
+          "steps": 46,
+          "time": 0.3833333333333332,
+          "maxEdgeStretch": 1.2588778301694583,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1290.1749289999716,
+          "steps": 46,
+          "time": 0.3833333333333332,
+          "maxEdgeStretch": 1.2588778301694583,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8cadd004f2fe5f20005c76d3b3a8ed483b650c9d0eff15c276ad84ce5f646efa",
+          "snapshotSHA256": "69c99f15130bda4ca4501d3478e31bebcb9a720eec3decde4df784804deb881f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8cadd004f2fe5f20005c76d3b3a8ed483b650c9d0eff15c276ad84ce5f646efa",
+          "snapshotSHA256": "69c99f15130bda4ca4501d3478e31bebcb9a720eec3decde4df784804deb881f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 88,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1853.881827000063,
+          "steps": 47,
+          "time": 0.3916666666666665,
+          "maxEdgeStretch": 1.2607081014028707,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1573.4146619999083,
+          "steps": 47,
+          "time": 0.3916666666666665,
+          "maxEdgeStretch": 1.2607081014028707,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1128.318420000025,
+          "steps": 47,
+          "time": 0.3916666666666665,
+          "maxEdgeStretch": 1.2607081014028707,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "b6f72e0f410b089a9762c1d615a496e41127f9816d6bbb9a7f20847b6c1cd91a",
+          "snapshotSHA256": "e9380e97dcbc7bfaa7515888ca049b3b1ad41ae123c6eadb545636cdee6443d3",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "b6f72e0f410b089a9762c1d615a496e41127f9816d6bbb9a7f20847b6c1cd91a",
+          "snapshotSHA256": "e9380e97dcbc7bfaa7515888ca049b3b1ad41ae123c6eadb545636cdee6443d3",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 89,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1503.211329999962,
+          "steps": 48,
+          "time": 0.3999999999999998,
+          "maxEdgeStretch": 1.2619663484873844,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1395.954553999938,
+          "steps": 48,
+          "time": 0.3999999999999998,
+          "maxEdgeStretch": 1.2619663484873844,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1220.966717000003,
+          "steps": 48,
+          "time": 0.3999999999999998,
+          "maxEdgeStretch": 1.2619663484873844,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "cf4e41dba40af063634bbeb669d9796c08cad406bc4f7d1f2180f3ca3061288b",
+          "snapshotSHA256": "b2d124a536a6e1fb6514f7fcbccf16b26e43bd34467397b3cd2db36372c861d7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "cf4e41dba40af063634bbeb669d9796c08cad406bc4f7d1f2180f3ca3061288b",
+          "snapshotSHA256": "b2d124a536a6e1fb6514f7fcbccf16b26e43bd34467397b3cd2db36372c861d7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 90,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1747.42662500008,
+          "steps": 49,
+          "time": 0.4083333333333331,
+          "maxEdgeStretch": 1.2590918380297198,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1536.6615290000336,
+          "steps": 49,
+          "time": 0.4083333333333331,
+          "maxEdgeStretch": 1.2590918380297198,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1138.4071969999932,
+          "steps": 49,
+          "time": 0.4083333333333331,
+          "maxEdgeStretch": 1.2590918380297198,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "bca0c39cd6cf9ab7bb6e6a0da4f73046a6149b19a364d6d96ed8b41ed1571bd8",
+          "snapshotSHA256": "1fc8b998c628280d4d14c7e0d17cd8cf8a223f5333b567c93d745b4d4faefe8a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "bca0c39cd6cf9ab7bb6e6a0da4f73046a6149b19a364d6d96ed8b41ed1571bd8",
+          "snapshotSHA256": "1fc8b998c628280d4d14c7e0d17cd8cf8a223f5333b567c93d745b4d4faefe8a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 91,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1637.465188000002,
+          "steps": 50,
+          "time": 0.4166666666666664,
+          "maxEdgeStretch": 1.2609987664158282,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1407.729779999936,
+          "steps": 50,
+          "time": 0.4166666666666664,
+          "maxEdgeStretch": 1.2609987664158282,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1073.1952949999832,
+          "steps": 50,
+          "time": 0.4166666666666664,
+          "maxEdgeStretch": 1.2609987664158282,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "103f7c3d113d07c71d28165139f9c0a02d177bbcb4781219b5f45ca91026442b",
+          "snapshotSHA256": "f2ea4d6c32cefc2c613bae8b64caece714a145d80467c345847a4113a931850e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "103f7c3d113d07c71d28165139f9c0a02d177bbcb4781219b5f45ca91026442b",
+          "snapshotSHA256": "f2ea4d6c32cefc2c613bae8b64caece714a145d80467c345847a4113a931850e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 92,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1524.6608209999977,
+          "steps": 51,
+          "time": 0.4249999999999997,
+          "maxEdgeStretch": 1.2620572036160393,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1415.6990829999559,
+          "steps": 51,
+          "time": 0.4249999999999997,
+          "maxEdgeStretch": 1.2620572036160393,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1033.9540109999944,
+          "steps": 51,
+          "time": 0.4249999999999997,
+          "maxEdgeStretch": 1.2620572036160393,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "12ebc0ee1119dafe0cc9bd2cb35a0d0edba23b7e0fa1c876aa5ff45cdefa4291",
+          "snapshotSHA256": "644bea2e30243fed04d6537e095aff6408004800f0aff6bc10e2f8b44107f511",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "12ebc0ee1119dafe0cc9bd2cb35a0d0edba23b7e0fa1c876aa5ff45cdefa4291",
+          "snapshotSHA256": "644bea2e30243fed04d6537e095aff6408004800f0aff6bc10e2f8b44107f511",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 93,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1461.1218719999306,
+          "steps": 52,
+          "time": 0.433333333333333,
+          "maxEdgeStretch": 1.2626294610775488,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1414.7831490000244,
+          "steps": 52,
+          "time": 0.433333333333333,
+          "maxEdgeStretch": 1.2626294610775488,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1049.0864919999149,
+          "steps": 52,
+          "time": 0.433333333333333,
+          "maxEdgeStretch": 1.2626294610775488,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8e2bdd3da7db22c80f6ed2392e2e6226666b57acdf44351868c9fd7e90a3837a",
+          "snapshotSHA256": "f0e16fbe14881c1582e929b675ed9d2058f6241483ceae2229695eafe4f0b0c0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8e2bdd3da7db22c80f6ed2392e2e6226666b57acdf44351868c9fd7e90a3837a",
+          "snapshotSHA256": "f0e16fbe14881c1582e929b675ed9d2058f6241483ceae2229695eafe4f0b0c0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 94,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1602.918575999909,
+          "steps": 53,
+          "time": 0.4416666666666663,
+          "maxEdgeStretch": 1.2630691804031715,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1355.566197999986,
+          "steps": 53,
+          "time": 0.4416666666666663,
+          "maxEdgeStretch": 1.2630691804031715,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1010.6419660000829,
+          "steps": 53,
+          "time": 0.4416666666666663,
+          "maxEdgeStretch": 1.2630691804031715,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "701c20ad2e9a62dbf7fd2cf662840c4b891e056cf5dab16a72bbb23d0862cff8",
+          "snapshotSHA256": "e364bd812528b3aa1b90961e867d1c08831ddde78491c4890c7b595b7366c38e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "701c20ad2e9a62dbf7fd2cf662840c4b891e056cf5dab16a72bbb23d0862cff8",
+          "snapshotSHA256": "e364bd812528b3aa1b90961e867d1c08831ddde78491c4890c7b595b7366c38e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 95,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1370.6290809999919,
+          "steps": 54,
+          "time": 0.4499999999999996,
+          "maxEdgeStretch": 1.2630813023415874,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1336.8692120000487,
+          "steps": 54,
+          "time": 0.4499999999999996,
+          "maxEdgeStretch": 1.2630813023415874,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1065.6623010000912,
+          "steps": 54,
+          "time": 0.4499999999999996,
+          "maxEdgeStretch": 1.2630813023415874,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "a0c4b1507fa0c989452783813b147e5a9f3f09788ad06863f977b8e415e0c0cc",
+          "snapshotSHA256": "275227ffadd50c6d31915516749709b070a7499e22d23da7bfc4e20e23efdee9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "a0c4b1507fa0c989452783813b147e5a9f3f09788ad06863f977b8e415e0c0cc",
+          "snapshotSHA256": "275227ffadd50c6d31915516749709b070a7499e22d23da7bfc4e20e23efdee9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 96,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1614.5045260000043,
+          "steps": 55,
+          "time": 0.4583333333333329,
+          "maxEdgeStretch": 1.262239039581905,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1587.722749000066,
+          "steps": 55,
+          "time": 0.4583333333333329,
+          "maxEdgeStretch": 1.262239039581905,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1181.8681530000176,
+          "steps": 55,
+          "time": 0.4583333333333329,
+          "maxEdgeStretch": 1.262239039581905,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "ccc0ccf9392531791a485cd1f272a70dbd8b2c9a6ba644be7ce6b08fd90af713",
+          "snapshotSHA256": "055ff0587f5b1f2e363422012f702b58ec9d6c9620d34dabf4a4680cdc305e42",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "ccc0ccf9392531791a485cd1f272a70dbd8b2c9a6ba644be7ce6b08fd90af713",
+          "snapshotSHA256": "055ff0587f5b1f2e363422012f702b58ec9d6c9620d34dabf4a4680cdc305e42",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 97,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1554.3863809999311,
+          "steps": 56,
+          "time": 0.46666666666666623,
+          "maxEdgeStretch": 1.2625597544694256,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1392.244808999938,
+          "steps": 56,
+          "time": 0.46666666666666623,
+          "maxEdgeStretch": 1.2625597544694256,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1063.5009230000433,
+          "steps": 56,
+          "time": 0.46666666666666623,
+          "maxEdgeStretch": 1.2625597544694256,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "334a82f6db707e8f306fc167f6b0346ebdc8282dda13431a0fdddf6c6a3f1270",
+          "snapshotSHA256": "b5214c26e8320f3da1ad7c0327a300452c2482100a9d5c99fed00f86dc4c1b23",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "334a82f6db707e8f306fc167f6b0346ebdc8282dda13431a0fdddf6c6a3f1270",
+          "snapshotSHA256": "b5214c26e8320f3da1ad7c0327a300452c2482100a9d5c99fed00f86dc4c1b23",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 98,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1416.6100199999055,
+          "steps": 57,
+          "time": 0.47499999999999953,
+          "maxEdgeStretch": 1.2620511858695855,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1335.1777339999098,
+          "steps": 57,
+          "time": 0.47499999999999953,
+          "maxEdgeStretch": 1.2620511858695855,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1034.1656610000646,
+          "steps": 57,
+          "time": 0.47499999999999953,
+          "maxEdgeStretch": 1.2620511858695855,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9c90315b3b55282f75e12988c9b94451ef9c9bb67cac2ce08727cd93d0d92c9d",
+          "snapshotSHA256": "1ad8157af2276ac9e6c58690e9faf7f2f2297341946d1638eb6078203154ab1f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9c90315b3b55282f75e12988c9b94451ef9c9bb67cac2ce08727cd93d0d92c9d",
+          "snapshotSHA256": "1ad8157af2276ac9e6c58690e9faf7f2f2297341946d1638eb6078203154ab1f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 99,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1463.2969339999836,
+          "steps": 58,
+          "time": 0.48333333333333284,
+          "maxEdgeStretch": 1.2619421966394875,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1394.3116150000133,
+          "steps": 58,
+          "time": 0.48333333333333284,
+          "maxEdgeStretch": 1.2619421966394875,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 985.3532229999546,
+          "steps": 58,
+          "time": 0.48333333333333284,
+          "maxEdgeStretch": 1.2619421966394875,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2925da2dcfbcb41f3e677e8cebf44916d7c57155b0ddd6c4f93864725f4628b3",
+          "snapshotSHA256": "650caa5b1f603620be94d7f4d83e74a428a041ad7af1a3824d54d1d608d07145",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2925da2dcfbcb41f3e677e8cebf44916d7c57155b0ddd6c4f93864725f4628b3",
+          "snapshotSHA256": "650caa5b1f603620be94d7f4d83e74a428a041ad7af1a3824d54d1d608d07145",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 100,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1391.4936160000507,
+          "steps": 59,
+          "time": 0.49166666666666614,
+          "maxEdgeStretch": 1.2621417762743414,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1441.5667589999503,
+          "steps": 59,
+          "time": 0.49166666666666614,
+          "maxEdgeStretch": 1.2621417762743414,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1081.853548000101,
+          "steps": 59,
+          "time": 0.49166666666666614,
+          "maxEdgeStretch": 1.2621417762743414,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "7e662035ab0207654d860e7894c93e2cdedb9d920765e0ba6d127820c622e38a",
+          "snapshotSHA256": "a654d7e43794d13add1a97e68f8822b97c6bdcb0612105ac0af890d0a78c1f10",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "7e662035ab0207654d860e7894c93e2cdedb9d920765e0ba6d127820c622e38a",
+          "snapshotSHA256": "a654d7e43794d13add1a97e68f8822b97c6bdcb0612105ac0af890d0a78c1f10",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 101,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1514.3030189999845,
+          "steps": 60,
+          "time": 0.49999999999999944,
+          "maxEdgeStretch": 1.2616802419664215,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1307.7773349999916,
+          "steps": 60,
+          "time": 0.49999999999999944,
+          "maxEdgeStretch": 1.2616802419664215,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1212.736724999966,
+          "steps": 60,
+          "time": 0.49999999999999944,
+          "maxEdgeStretch": 1.2616802419664215,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "77cf0c6c9e8951c69a1a368ddd93cbe04a16898f8ebb0967226c87ce36fade51",
+          "snapshotSHA256": "c8b1afe7fef4b80a6f4786292b973ea2a2af38d87dbbd93fd79aeda1445a4ee7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "77cf0c6c9e8951c69a1a368ddd93cbe04a16898f8ebb0967226c87ce36fade51",
+          "snapshotSHA256": "c8b1afe7fef4b80a6f4786292b973ea2a2af38d87dbbd93fd79aeda1445a4ee7",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 102,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1701.2542899999535,
+          "steps": 61,
+          "time": 0.5083333333333327,
+          "maxEdgeStretch": 1.2620316328837424,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1602.0293339999625,
+          "steps": 61,
+          "time": 0.5083333333333327,
+          "maxEdgeStretch": 1.2620316328837424,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1084.617210000055,
+          "steps": 61,
+          "time": 0.5083333333333327,
+          "maxEdgeStretch": 1.2620316328837424,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "54748e9ac05fef2897f691061c2ae2b62e23aef6f4fc4a72c2b72e37cdb4b278",
+          "snapshotSHA256": "e2a559a466b7dafed32dd016cff1cbe3744a80bf5da62495bace49716d052840",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "54748e9ac05fef2897f691061c2ae2b62e23aef6f4fc4a72c2b72e37cdb4b278",
+          "snapshotSHA256": "e2a559a466b7dafed32dd016cff1cbe3744a80bf5da62495bace49716d052840",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 103,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1459.7390100000193,
+          "steps": 62,
+          "time": 0.516666666666666,
+          "maxEdgeStretch": 1.2619539382345641,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1416.9437129999278,
+          "steps": 62,
+          "time": 0.516666666666666,
+          "maxEdgeStretch": 1.2619539382345641,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1033.6275969999842,
+          "steps": 62,
+          "time": 0.516666666666666,
+          "maxEdgeStretch": 1.2619539382345641,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "4230fac30f4fbd9e914891644c6e980f6bc566f81985b61d42b7b49d852b2cf5",
+          "snapshotSHA256": "09efca305d6cc9c285e23788cc0faf26c4e78baeba437a2ab66363a76118c64f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "4230fac30f4fbd9e914891644c6e980f6bc566f81985b61d42b7b49d852b2cf5",
+          "snapshotSHA256": "09efca305d6cc9c285e23788cc0faf26c4e78baeba437a2ab66363a76118c64f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 104,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1429.0838109999895,
+          "steps": 63,
+          "time": 0.5249999999999994,
+          "maxEdgeStretch": 1.2620499018220286,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1390.3841590000084,
+          "steps": 63,
+          "time": 0.5249999999999994,
+          "maxEdgeStretch": 1.2620499018220286,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1072.35901200003,
+          "steps": 63,
+          "time": 0.5249999999999994,
+          "maxEdgeStretch": 1.2620499018220286,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "d4c2084cb6e6e2072c2209affcc3eced12437c1065ec31c979da4d3d1968b7f0",
+          "snapshotSHA256": "c28d4e24f4a21033deeb02ee2228750fd9e0890324fe1784a6bbf4f91ec5a32e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "d4c2084cb6e6e2072c2209affcc3eced12437c1065ec31c979da4d3d1968b7f0",
+          "snapshotSHA256": "c28d4e24f4a21033deeb02ee2228750fd9e0890324fe1784a6bbf4f91ec5a32e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 105,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1477.2434290000238,
+          "steps": 64,
+          "time": 0.5333333333333327,
+          "maxEdgeStretch": 1.2621833773134326,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1332.2196329999715,
+          "steps": 64,
+          "time": 0.5333333333333327,
+          "maxEdgeStretch": 1.2621833773134326,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1029.919441999984,
+          "steps": 64,
+          "time": 0.5333333333333327,
+          "maxEdgeStretch": 1.2621833773134326,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3047bbebc9c459ef9bc77e4bf99016593d79998d622c63739084ae4fdadb1332",
+          "snapshotSHA256": "d72683b5249a1456f35df744d0eb2228f0f7ff72a4bda13083c8fbc34d3b66c9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3047bbebc9c459ef9bc77e4bf99016593d79998d622c63739084ae4fdadb1332",
+          "snapshotSHA256": "d72683b5249a1456f35df744d0eb2228f0f7ff72a4bda13083c8fbc34d3b66c9",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 106,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1499.742403000011,
+          "steps": 65,
+          "time": 0.541666666666666,
+          "maxEdgeStretch": 1.2624007934198063,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1424.6229680000106,
+          "steps": 65,
+          "time": 0.541666666666666,
+          "maxEdgeStretch": 1.2624007934198063,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1213.5402989999857,
+          "steps": 65,
+          "time": 0.541666666666666,
+          "maxEdgeStretch": 1.2624007934198063,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "82c94d848008faa74c06e3bd2464a0c80e469af71a7743b1921ebece8559e142",
+          "snapshotSHA256": "a9e2dd8f1f1a83106932f6ee5ce9aa0a63dacf2b430977bab9da1b1111242116",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "82c94d848008faa74c06e3bd2464a0c80e469af71a7743b1921ebece8559e142",
+          "snapshotSHA256": "a9e2dd8f1f1a83106932f6ee5ce9aa0a63dacf2b430977bab9da1b1111242116",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 107,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1717.5924569999333,
+          "steps": 66,
+          "time": 0.5499999999999993,
+          "maxEdgeStretch": 1.262638146656457,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1631.7546319999965,
+          "steps": 66,
+          "time": 0.5499999999999993,
+          "maxEdgeStretch": 1.262638146656457,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1179.938954000012,
+          "steps": 66,
+          "time": 0.5499999999999993,
+          "maxEdgeStretch": 1.262638146656457,
+          "contactResidualMM": 0,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "86660e3e35abfeb68ac0556014f85db9cf08ae2e5ec13fb54ca73bec8d6cc6ee",
+          "snapshotSHA256": "6fed37386814fc80fad1bbca0b79b41f2736caa07736769a7d206b4a748ab062",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "86660e3e35abfeb68ac0556014f85db9cf08ae2e5ec13fb54ca73bec8d6cc6ee",
+          "snapshotSHA256": "6fed37386814fc80fad1bbca0b79b41f2736caa07736769a7d206b4a748ab062",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 108,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1574.332723999978,
+          "steps": 67,
+          "time": 0.5583333333333326,
+          "maxEdgeStretch": 1.2625006914382138,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1378.5082519999705,
+          "steps": 67,
+          "time": 0.5583333333333326,
+          "maxEdgeStretch": 1.2625006914382138,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1116.0811469999608,
+          "steps": 67,
+          "time": 0.5583333333333326,
+          "maxEdgeStretch": 1.2625006914382138,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "c0c0807dfab05cf697633da7ff9b801062a874bdcc0837f36796957c632df29c",
+          "snapshotSHA256": "6fd9658aa7e30d53892899f699c6a065879ef1c67b4cb4a5f3bf25193476dff0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "c0c0807dfab05cf697633da7ff9b801062a874bdcc0837f36796957c632df29c",
+          "snapshotSHA256": "6fd9658aa7e30d53892899f699c6a065879ef1c67b4cb4a5f3bf25193476dff0",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 109,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1543.569822999998,
+          "steps": 68,
+          "time": 0.5666666666666659,
+          "maxEdgeStretch": 1.2628635022560488,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1364.2712080000201,
+          "steps": 68,
+          "time": 0.5666666666666659,
+          "maxEdgeStretch": 1.2628635022560488,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1061.1674500000663,
+          "steps": 68,
+          "time": 0.5666666666666659,
+          "maxEdgeStretch": 1.2628635022560488,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9bce811803ad550aeb318b26151e1d82a0cb1a397ce7b4d2401f3984cf11d0c1",
+          "snapshotSHA256": "bc62402ddee6a7ddf452a4e06f2dc0683477a2c7958c6a7bf104c17f76913c41",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9bce811803ad550aeb318b26151e1d82a0cb1a397ce7b4d2401f3984cf11d0c1",
+          "snapshotSHA256": "bc62402ddee6a7ddf452a4e06f2dc0683477a2c7958c6a7bf104c17f76913c41",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 110,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1465.2472529999213,
+          "steps": 69,
+          "time": 0.5749999999999992,
+          "maxEdgeStretch": 1.262666656240385,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1376.6341239999747,
+          "steps": 69,
+          "time": 0.5749999999999992,
+          "maxEdgeStretch": 1.262666656240385,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1033.308045999962,
+          "steps": 69,
+          "time": 0.5749999999999992,
+          "maxEdgeStretch": 1.262666656240385,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "96313f461a5c1b9330e7c0ef9d28e663c2de5765c8f8baf1e4e70a9dfc334378",
+          "snapshotSHA256": "8d22457767b3238f5413e6f5584c86f102360122dae877cfefc22ca89419c7be",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "96313f461a5c1b9330e7c0ef9d28e663c2de5765c8f8baf1e4e70a9dfc334378",
+          "snapshotSHA256": "8d22457767b3238f5413e6f5584c86f102360122dae877cfefc22ca89419c7be",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 111,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1412.6242170000914,
+          "steps": 70,
+          "time": 0.5833333333333325,
+          "maxEdgeStretch": 1.2625243046153964,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1336.2722659999272,
+          "steps": 70,
+          "time": 0.5833333333333325,
+          "maxEdgeStretch": 1.2625243046153964,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1011.692744,
+          "steps": 70,
+          "time": 0.5833333333333325,
+          "maxEdgeStretch": 1.2625243046153964,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "6c9f5644b9d360b6827e0ab9eb27a7cb37cd257bf3c52eb1298af25fbaa6e964",
+          "snapshotSHA256": "1462deb3b513a3b13373a3bfeed720ea29bcf310342a7d6b2075511e37043890",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "6c9f5644b9d360b6827e0ab9eb27a7cb37cd257bf3c52eb1298af25fbaa6e964",
+          "snapshotSHA256": "1462deb3b513a3b13373a3bfeed720ea29bcf310342a7d6b2075511e37043890",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 112,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1415.5144520000322,
+          "steps": 71,
+          "time": 0.5916666666666658,
+          "maxEdgeStretch": 1.2622572943261596,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1323.4389039999805,
+          "steps": 71,
+          "time": 0.5916666666666658,
+          "maxEdgeStretch": 1.2622572943261596,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 997.6723269999493,
+          "steps": 71,
+          "time": 0.5916666666666658,
+          "maxEdgeStretch": 1.2622572943261596,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "034b86de55aad861589661487219f3fd8a3d4435f86e5238605ecfa56e4d5d0b",
+          "snapshotSHA256": "883c80cba4975b66f06f30273f8c1ece6266cbf7b7a2d64ed72543e55ad2bfdf",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "034b86de55aad861589661487219f3fd8a3d4435f86e5238605ecfa56e4d5d0b",
+          "snapshotSHA256": "883c80cba4975b66f06f30273f8c1ece6266cbf7b7a2d64ed72543e55ad2bfdf",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 113,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1408.4358510000166,
+          "steps": 72,
+          "time": 0.5999999999999991,
+          "maxEdgeStretch": 1.2619469946551898,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1276.6536390000256,
+          "steps": 72,
+          "time": 0.5999999999999991,
+          "maxEdgeStretch": 1.2619469946551898,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1000.4318300000159,
+          "steps": 72,
+          "time": 0.5999999999999991,
+          "maxEdgeStretch": 1.2619469946551898,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "a942caafdec8adcc394f067290f7f6ff7fd41ad4805a0e654b3a3ae96fc82de2",
+          "snapshotSHA256": "dea61584ac91fd07431b816768bb9470cae38187f212ab25a5921e738a98b9d6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "a942caafdec8adcc394f067290f7f6ff7fd41ad4805a0e654b3a3ae96fc82de2",
+          "snapshotSHA256": "dea61584ac91fd07431b816768bb9470cae38187f212ab25a5921e738a98b9d6",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 114,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1457.7029389999807,
+          "steps": 73,
+          "time": 0.6083333333333324,
+          "maxEdgeStretch": 1.2616450157817862,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1420.9460940000135,
+          "steps": 73,
+          "time": 0.6083333333333324,
+          "maxEdgeStretch": 1.2616450157817862,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1047.3669879999943,
+          "steps": 73,
+          "time": 0.6083333333333324,
+          "maxEdgeStretch": 1.2616450157817862,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e0d244716b0915c6c4307d1208c12fd8f6beda308635b834756bc5e551a558ac",
+          "snapshotSHA256": "1385872995514a0d848a2674f47f6a16f014d748bf41930bb87b8fb67b27005f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e0d244716b0915c6c4307d1208c12fd8f6beda308635b834756bc5e551a558ac",
+          "snapshotSHA256": "1385872995514a0d848a2674f47f6a16f014d748bf41930bb87b8fb67b27005f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 115,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1391.8551419998985,
+          "steps": 74,
+          "time": 0.6166666666666657,
+          "maxEdgeStretch": 1.261366128971486,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1386.1684729999397,
+          "steps": 74,
+          "time": 0.6166666666666657,
+          "maxEdgeStretch": 1.261366128971486,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 972.0575160000008,
+          "steps": 74,
+          "time": 0.6166666666666657,
+          "maxEdgeStretch": 1.261366128971486,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "8e4131f23ff449884498b1c8d2f6e2ccf7b7fd42e10cf63287d47da9b8410597",
+          "snapshotSHA256": "c9b09b513cc5d5f8b590274428fb1242c5b4868ca0c18c55a3e7843e8ff10a9a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "8e4131f23ff449884498b1c8d2f6e2ccf7b7fd42e10cf63287d47da9b8410597",
+          "snapshotSHA256": "c9b09b513cc5d5f8b590274428fb1242c5b4868ca0c18c55a3e7843e8ff10a9a",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 116,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1347.4776819999097,
+          "steps": 75,
+          "time": 0.624999999999999,
+          "maxEdgeStretch": 1.2613870770087812,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1309.5195209999802,
+          "steps": 75,
+          "time": 0.624999999999999,
+          "maxEdgeStretch": 1.2613870770087812,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1083.8117870000424,
+          "steps": 75,
+          "time": 0.624999999999999,
+          "maxEdgeStretch": 1.2613870770087812,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2c194bd8c09a4d66db1cad897e2fe06e90b36e3d1e9d44a79afffcdf263d1989",
+          "snapshotSHA256": "7241358d02edc5c218e8c676b16863939d876e1105f3ae6903d411c4456a3c90",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2c194bd8c09a4d66db1cad897e2fe06e90b36e3d1e9d44a79afffcdf263d1989",
+          "snapshotSHA256": "7241358d02edc5c218e8c676b16863939d876e1105f3ae6903d411c4456a3c90",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 117,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1426.0086190000875,
+          "steps": 76,
+          "time": 0.6333333333333323,
+          "maxEdgeStretch": 1.2613092162406654,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1332.752504000091,
+          "steps": 76,
+          "time": 0.6333333333333323,
+          "maxEdgeStretch": 1.2613092162406654,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 987.1246150000952,
+          "steps": 76,
+          "time": 0.6333333333333323,
+          "maxEdgeStretch": 1.2613092162406654,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "a8ead1f3f7d4fc640cfc5b571f71f9315a93e6e73a96058dfbb2b7a7e2d076da",
+          "snapshotSHA256": "c14ba940a6e122329902fec72f29139a1496a9e5e8b791f67a4b46849aa5bcc4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "a8ead1f3f7d4fc640cfc5b571f71f9315a93e6e73a96058dfbb2b7a7e2d076da",
+          "snapshotSHA256": "c14ba940a6e122329902fec72f29139a1496a9e5e8b791f67a4b46849aa5bcc4",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 118,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 1343.1081700000213,
+          "steps": 77,
+          "time": 0.6416666666666656,
+          "maxEdgeStretch": 1.2613351628020975,
+          "contactResidualMM": 0
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 1302.3466440000338,
+          "steps": 77,
+          "time": 0.6416666666666656,
+          "maxEdgeStretch": 1.2613351628020975,
+          "contactResidualMM": 0
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 1038.4612759999,
+          "steps": 77,
+          "time": 0.6416666666666656,
+          "maxEdgeStretch": 1.2613351628020975,
+          "contactResidualMM": 0
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9f1bf991ae93f55c89880e1a98a9114cf90758a949061e9dcd1ab2db4d835ec8",
+          "snapshotSHA256": "e5f82773e645f42ec7d5600e43a6b75404e0207360df3f50c67dc7ba5554740f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9f1bf991ae93f55c89880e1a98a9114cf90758a949061e9dcd1ab2db4d835ec8",
+          "snapshotSHA256": "e5f82773e645f42ec7d5600e43a6b75404e0207360df3f50c67dc7ba5554740f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 119,
+      "type": "add",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4317.465413999977,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3999083172008213,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4339.096878999961,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3999083172008213,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 3738.115097000031,
+          "steps": 0,
+          "time": 0,
+          "maxEdgeStretch": 1.3999083172008213,
+          "contactResidualMM": null,
+          "observedBrowserCheckpoint": {
+            "matched": false,
+            "mismatches": [
+              "pants/positions",
+              "pants/normals",
+              "inner/positions",
+              "inner/normals",
+              "outer/positions",
+              "outer/normals"
+            ]
+          }
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "c4cc43ea6b53a80ddf2a4605cd60dd8a7a87c2bd87365208a3609d139f47d400",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "c4cc43ea6b53a80ddf2a4605cd60dd8a7a87c2bd87365208a3609d139f47d400",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    },
+    {
+      "id": 120,
+      "type": "step",
+      "lanes": {
+        "r02": {
+          "error": null,
+          "elapsedMS": 4297.390459999908,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4484556934603636,
+          "contactResidualMM": 0.035858767010431454
+        },
+        "r03-off": {
+          "error": null,
+          "elapsedMS": 4555.066202000016,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4484556934603636,
+          "contactResidualMM": 0.035858767010431454
+        },
+        "r03-on": {
+          "error": null,
+          "elapsedMS": 4033.3816170000937,
+          "steps": 1,
+          "time": 0.008333333333333333,
+          "maxEdgeStretch": 1.4484556934603636,
+          "contactResidualMM": 0.035858767010431454
+        }
+      },
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "1cfed837bf264606d99520a4238a38221623e3d7486f8dec5dfd5927ecc78c8b",
+          "snapshotSHA256": "9b705edb2672c1a406a34d88c0cd511a5cac27234de9b5cfa43d111b2071b036",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "1cfed837bf264606d99520a4238a38221623e3d7486f8dec5dfd5927ecc78c8b",
+          "snapshotSHA256": "9b705edb2672c1a406a34d88c0cd511a5cac27234de9b5cfa43d111b2071b036",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      }
+    }
+  ],
+  "firstDivergence": null,
+  "scope": "Diagnostic replay of the actual failed browser action sequence; numeric reconstructed init, no substituted geometry.",
+  "complete": false
+}

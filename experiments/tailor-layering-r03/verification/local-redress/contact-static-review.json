@@ -1,0 +1,30 @@
+{
+  "schema": "r03-contact-author-redress-review@1",
+  "reviewedFile": "/workspace/scratch/f88f885c9eb3/scratch-redress-candidate/src/layer-world.mjs",
+  "reviewedSHA256": "a4da64a62d08602a2a3cbf000b4d2fac8db1bb2bd4b8d4eb9ef1dcf5cb97255a",
+  "productionSourceChangedByReviewer": false,
+  "scope": "Read-only review of candidate diff and actual app/worker failure cleanup path; no generalized tests or additional replay launched.",
+  "findings": [
+    {
+      "severity": "blocking-before-fix",
+      "issue": "Application add catch sends remove for the just-failed new row, but World.add already removed it. Unconditional remove resets restored survivor contact history and reports.",
+      "resolution": "Candidate remove now returns immediately when removed.length is zero; verified in reviewed source.",
+      "status": "fixed-in-candidate"
+    }
+  ],
+  "reviewConclusions": [
+    "Constructor collection and default initialize path retain original physical arithmetic/order; preparedSeed adds an independent copy only.",
+    "Prepared seed is taken after ClothSolver seam welding and pin selection, with solver particle indexing rather than display vertex indexing.",
+    "Only explicit successful add enters fromPreparedSeeds restart; no normal step path, material/rest/mass/thickness or acceptance limit was modified.",
+    "Initialize checkpoints p/v/old/initial/saved, garment clocks, edge/bend kernel arrays and physical World reports before contact reset.",
+    "On initialization failure, old arrays and reports are restored before contact checkpoint restore; outer add catch removes/releases only the new row.",
+    "Contact pending references remain valid because surviving row position arrays retain their identity and are restored in place.",
+    "Body query cache invalidation is an execution change; static body geometry and acceleration data are retained.",
+    "Nonexistent remove is now a physical no-op, preserving rollback through the actual UI cleanup sequence."
+  ],
+  "limits": [
+    "Awaiting original same-sequence three-lane final result and targeted candidate rollback/redress regression.",
+    "Allocator high-water/reuse/free-byte accounting can change after a failed allocation/add attempt and is not asserted to roll back.",
+    "Node versus Chrome observed rendered checkpoints are not all byte-identical; direct Chrome binding remains separate from strict same-runtime lane comparison."
+  ]
+}

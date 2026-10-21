@@ -1,0 +1,84 @@
+{
+  "schema": "r03-candidate-sequence-independent-review@1",
+  "reviewType": "Read-only inspection of saved script, source hashes and finished evidence; no duplicate simulation launched",
+  "originalFrozenSourceCommit": "74c20ec28e07cbd9e0082e03216d0231556efa0f",
+  "originalSourceBinding": "sourceSHA256 in original/summary.json, created from copied temp modules before candidate promotion; current repo file content is not used to relabel the original run",
+  "reviewedSummary": "/workspace/scratch/f88f885c9eb3/scratch-reentry-repro/fixed/summary.json",
+  "reviewedSummarySHA256": "1390a2e8ba905cb88d05960c6940d794cba0a3a8e006add2228a2c21aaf95690",
+  "candidateWorldSHA256": "a4da64a62d08602a2a3cbf000b4d2fac8db1bb2bd4b8d4eb9ef1dcf5cb97255a",
+  "originalWorldSHA256": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+  "changedProductionModulesVersusOriginal": [
+    "layer-world.mjs"
+  ],
+  "typedInput": {
+    "file": "/workspace/scratch/f88f885c9eb3/scratch-ci-monitor/native-baseline/native-world-input.json",
+    "inputMode": "original-typed-array-byte-capture",
+    "SHA256": "0021e7e18a5dbf898a3148daa6b80fac9c564e0f4f14a7d6e4b7cf474c66c945",
+    "fileHashVerified": true,
+    "restoreImplementation": "restoreInput decodes recorded typedArrays base64 to each original array constructor; this input takes hasTyped=true branch"
+  },
+  "sourceHashVerified": true,
+  "finished": true,
+  "passed": true,
+  "requests": 120,
+  "successfulStepRequests": 113,
+  "errorRequests": [],
+  "maxDynamicEdgeStretch": 1.4498794120273761,
+  "maxDynamicClothResidualMM": 0.46967070395377736,
+  "independentAudits": [
+    {
+      "requestID": 1,
+      "maxEdgeStretch": 1.390690276176109,
+      "seamGapMM": 0,
+      "bodyVertexOverlapMM": 0,
+      "independentWholeTriangleBodyOverlapMM": 0,
+      "reportedIntersections": false,
+      "degenerateTriangles": 0,
+      "clothResidualMM": 0.02775592416762087
+    },
+    {
+      "requestID": 39,
+      "maxEdgeStretch": 1.390690276176109,
+      "seamGapMM": 0,
+      "bodyVertexOverlapMM": 0,
+      "independentWholeTriangleBodyOverlapMM": 0,
+      "reportedIntersections": false,
+      "degenerateTriangles": 0,
+      "clothResidualMM": 0.02775592416762087
+    },
+    {
+      "requestID": 119,
+      "maxEdgeStretch": 1.390690276176109,
+      "seamGapMM": 0,
+      "bodyVertexOverlapMM": 0,
+      "independentWholeTriangleBodyOverlapMM": 0,
+      "reportedIntersections": false,
+      "degenerateTriangles": 0,
+      "clothResidualMM": 0.02775592416762087
+    },
+    {
+      "requestID": 120,
+      "maxEdgeStretch": 1.4467900189850715,
+      "seamGapMM": 0,
+      "bodyVertexOverlapMM": 0,
+      "independentWholeTriangleBodyOverlapMM": 0,
+      "reportedIntersections": false,
+      "degenerateTriangles": 0,
+      "clothResidualMM": 0.33871281921500285
+    }
+  ],
+  "scopeCorrections": [
+    "The inherited summary.scope string says numeric reconstructed init. That sentence is incorrect for this candidate run: inputMode, exact file SHA and restoreInput prove original typed-array capture. Raw result was preserved without rewriting.",
+    "This candidate run executes R03 ON only. firstDivergence=null and empty comparisons do not establish a three-lane comparison.",
+    "The 120 observed application operations are retained in order, including two manual snapshot audits. The harness additionally calls measureContacts for independent acceptance at requests 1,39,119,120. These queries change execution/broadphase caches but do not move particles or advance retained physical histories.",
+    "Independent complete triangle intersection and body half-thickness audits cover requests 1,39,119,120, not every request.",
+    "This local candidate regression is not a replacement for renewed actual-browser reentry acceptance or a byte-identical Chrome-state reproduction."
+  ],
+  "physicalGatesUnchanged": {
+    "dynamicEdgeStretch": 1.45,
+    "clothResidualMM": 0.5,
+    "bodyHalfThicknessOverlapMM": 0.001,
+    "seamGapMM": 0.01
+  },
+  "reviewConclusion": "Evidence supports successful candidate execution of all application operations and the formerly rejected final step, with the listed independent geometric checkpoints. The inherited scope sentence needs an explicit erratum; no raw evidence was altered."
+}

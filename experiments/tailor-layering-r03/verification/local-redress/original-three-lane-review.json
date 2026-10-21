@@ -1,0 +1,121 @@
+{
+  "schema": "r03-original-three-lane-reentry-independent-review@1",
+  "sourceCommit": "74c20ec28e07cbd9e0082e03216d0231556efa0f",
+  "sourceBinding": "original/summary.json sourceSHA256 from per-lane temp module copies made before candidate promotion; not current repository source",
+  "summaryFile": "/workspace/scratch/f88f885c9eb3/scratch-reentry-repro/original/summary.json",
+  "summarySHA256": "ad00bd08ba4935d4d54d6e71a6d5db7fbe9fc8e22c727ade6d7a134c4e58d454",
+  "sourceSHA256": {
+    "r02": {
+      "body-envelope.mjs": "dfb14222aa98cdce6ef7056f37fad63cfe3ff873423e53cdbaecaec9aed0259e",
+      "layer-contact.mjs": "e0afb01cb64b53a5575b448d075780daec63f5e4952a4b9e5348b91ce21d239b",
+      "layer-world.mjs": "d186f4fbc7b6111edb9f4485bd19edcabce1f34b175e225bc1cb9411caf4fa5d"
+    },
+    "r03-off": {
+      "body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873"
+    },
+    "r03-on": {
+      "body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873"
+    }
+  },
+  "inputMode": "public-observation-numeric-reconstruction",
+  "inputSHA256": "093ab624688f1d5e1d63728f66654ad4e3c9037150d4d54acb28f56d4198e297",
+  "inputCrossCaptureProof": "/workspace/scratch/f88f885c9eb3/r03-ci/reentry/input-cross-capture-comparison.json",
+  "expectedApplicationRequests": 120,
+  "recordedApplicationRequests": 120,
+  "exactObservedRequestIDsAndTypes": true,
+  "requestTypes": {
+    "init": 1,
+    "snapshot": 2,
+    "remove": 2,
+    "step": 113,
+    "add": 2
+  },
+  "laneCounts": {
+    "r02": 120,
+    "r03-off": 120,
+    "r03-on": 120
+  },
+  "errorRequests": [],
+  "harnessError": null,
+  "firstDivergence": null,
+  "comparisonCount": 240,
+  "strictComparisonFailures": [],
+  "comparisonImplementation": "compare checks p/v/old/w/faces/initial/mass/saved/edge-state/bend-state bytewise, complete contact histories and physical snapshots with deepStrictEqual, plus rendered positions/normals/indices bytewise; excludes explicitly listed timing/execution/report-only explanation fields",
+  "finalRequest": {
+    "id": 120,
+    "type": "step",
+    "lanes": {
+      "r02": {
+        "error": null,
+        "elapsedMS": 4297.390459999908,
+        "steps": 1,
+        "time": 0.008333333333333333,
+        "maxEdgeStretch": 1.4484556934603636,
+        "contactResidualMM": 0.035858767010431454
+      },
+      "r03-off": {
+        "error": null,
+        "elapsedMS": 4555.066202000016,
+        "steps": 1,
+        "time": 0.008333333333333333,
+        "maxEdgeStretch": 1.4484556934603636,
+        "contactResidualMM": 0.035858767010431454
+      },
+      "r03-on": {
+        "error": null,
+        "elapsedMS": 4033.3816170000937,
+        "steps": 1,
+        "time": 0.008333333333333333,
+        "maxEdgeStretch": 1.4484556934603636,
+        "contactResidualMM": 0.035858767010431454
+      }
+    },
+    "comparisons": {
+      "r03-off": {
+        "historySHA256": "1cfed837bf264606d99520a4238a38221623e3d7486f8dec5dfd5927ecc78c8b",
+        "snapshotSHA256": "9b705edb2672c1a406a34d88c0cd511a5cac27234de9b5cfa43d111b2071b036",
+        "exactParticleArrays": true,
+        "exactRenderedArrays": true
+      },
+      "r03-on": {
+        "historySHA256": "1cfed837bf264606d99520a4238a38221623e3d7486f8dec5dfd5927ecc78c8b",
+        "snapshotSHA256": "9b705edb2672c1a406a34d88c0cd511a5cac27234de9b5cfa43d111b2071b036",
+        "exactParticleArrays": true,
+        "exactRenderedArrays": true
+      }
+    }
+  },
+  "rejectedStateFiles": [],
+  "terminalLogLine": "{\"complete\":false,\"firstDivergence\":null,\"finalRequest\":120}",
+  "scope": {
+    "originalBrowserFailureReproduced": false,
+    "runtime": "Same local Node runtime for all three lanes. Browser and Node retained rendered checkpoints are not byte-identical.",
+    "independentGeometryAudit": "The original diagnostic compares lane states; it does not run complete independent triangle/body-envelope audits per request.",
+    "rejectedStateComparison": "No lane rejected any request, so the instrumentation generated no rejected-state files. There is no failed-state comparison to perform.",
+    "physicalAcceptance": "All 113 local step requests were accepted by unchanged production gates in all three lanes; the actual Chrome run accepted 112 and rejected request120.",
+    "causalLimit": "This verifies optimization equivalence for this local input/action replay. It does not reproduce the real Chrome failure or prove that failure is unrelated to optimization."
+  },
+  "browserCheckpointComparisons": {
+    "perLane": {
+      "r02": 21,
+      "r03-off": 21,
+      "r03-on": 21
+    },
+    "matched": 0,
+    "mismatched": 63,
+    "mismatchMagnitudes": "Not recorded by this script; mismatched array names are retained in raw summary."
+  },
+  "metadataErratum": {
+    "recordedComplete": false,
+    "independentlyObservedAllRequestsExecuted": true,
+    "reason": "summary.complete starts false; after an error-free full loop, summary.complete ??= true leaves false unchanged. This is a metadata bug, not an early stop.",
+    "rawEvidenceChanged": false
+  },
+  "conclusion": "All 120 operations and 240 strict pairwise lane comparisons completed without errors or divergence. Request120 succeeded in all lanes. Original Chrome failure remains unreplicated by this local diagnostic; retain that failure and require actual-browser revalidation of the candidate."
+}

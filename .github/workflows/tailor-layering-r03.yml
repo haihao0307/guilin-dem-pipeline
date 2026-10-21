@@ -1,0 +1,193 @@
+# Install as .github/workflows/tailor-layering-r03.yml in the parent repository.
+# PR pushes run the complete release matrix: all four browser scenarios AND
+# the exact current-native capture/replay job. Manual preflight/capture modes
+# remain available and are explicitly labelled; they are not release QA.
+name: Tailor layering R03 — retained native acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/tailor-layering-r03/**'
+      - '.github/workflows/tailor-layering-r03.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Preflight is display/demand only; full is the complete release matrix.'
+        required: true
+        default: full
+        type: choice
+        options:
+          - preflight
+          - full
+          - capture
+
+permissions:
+  contents: read
+
+env:
+  LAYERING_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+concurrency:
+  group: tailor-layering-r03-${{ github.event.pull_request.number || github.ref }}-${{ inputs.mode || 'full' }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    if: github.event_name != 'workflow_dispatch' || inputs.mode != 'capture'
+    name: '${{ inputs.mode || ''full'' }} / real browser / ${{ matrix.scenario }}'
+    runs-on: ubuntu-24.04
+    # Physics scenarios retain their full steps and quality. Allow the
+    # 120-minute browser watchdog plus setup, final evidence and upload;
+    # display-only execution retains its original job budget.
+    timeout-minutes: ${{ matrix.scenario == 'display' && 30 || 150 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: ${{ fromJSON((inputs.mode || 'full') == 'full' && '["display","demand","continuous","reentry"]' || '["display","demand"]') }}
+    env:
+      LAYERING_CI_SCENARIO: ${{ matrix.scenario }}
+      LAYERING_CI_SCOPE: ${{ inputs.mode || 'full' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: experiments/tailor-layering-r03
+    steps:
+      - name: Check out the exact R03 source
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: |
+            experiments/tailor-layering-r03
+            experiments/tailor-layering-r02/src
+          sparse-checkout-cone-mode: true
+      - name: Use Node 22
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+      - name: Use Python 3
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Prepare evidence and the pinned real Chromium
+        run: |
+          mkdir -p evidence
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+      - name: Download and verify the retained public native runtime
+        run: python tools/download-reference.py
+      - name: Build and validate focused observers and render-demand logic
+        run: |
+          python tools/build.py | tee evidence/build.log
+          node --check tests/browser-ci.mjs
+          node --check tests/scenarios-r02.mjs
+          node --check tests/observed-geometry.mjs
+          node --test tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/simulation-clock.test.mjs tests/reference-body.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+      - name: Export exact built runtime identity for immutable publication
+        if: matrix.scenario == 'display'
+        run: python tools/export-runtime.py
+      - name: Exercise the actual page and save real browser evidence
+        env:
+          CI: 'true'
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory dist > evidence/http-server.log 2>&1 &
+          layer_server_pid=$!
+          trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
+          node tests/browser-ci.mjs | tee evidence/browser-run.log
+      - name: Retain observed geometry and unchanged real screenshots, even on failure
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r03-${{ inputs.mode || 'full' }}-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r03/evidence/
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+  native-replay:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (inputs.mode == 'full' || inputs.mode == 'capture'))
+    name: '${{ inputs.mode || ''full'' }} / actual native replay / ${{ matrix.replay }}'
+    runs-on: ubuntu-24.04
+    # Each 240-step native replay also audits every complete triangle surface.
+    # The old 45-minute job can expire before that unchanged work completes.
+    # Input capture alone retains its original budget.
+    timeout-minutes: ${{ inputs.mode == 'capture' && 45 || 150 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        replay: ${{ fromJSON(inputs.mode == 'capture' && '["baseline"]' || '["baseline","perturb"]') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: experiments/tailor-layering-r03
+    steps:
+      - name: Check out the exact R03 source
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: |
+            experiments/tailor-layering-r03
+            experiments/tailor-layering-r02/src
+          sparse-checkout-cone-mode: true
+      - name: Use Node 22
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+      - name: Use Python 3
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Prepare evidence and the pinned real Chromium
+        run: |
+          mkdir -p evidence
+          npm install --prefix .ci-runtime --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.0
+          .ci-runtime/node_modules/.bin/playwright install --with-deps chromium
+      - name: Download, verify and build the retained runtime
+        run: |
+          python tools/download-reference.py
+          python tools/build.py | tee evidence/build.log
+          node --check tests/capture-native-ci.mjs
+          node --check tests/native-replay.mjs
+      - name: Observe original init input from the real current native page
+        env:
+          CI: 'true'
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory dist > evidence/http-server.log 2>&1 &
+          layer_server_pid=$!
+          trap 'kill "$layer_server_pid" 2>/dev/null || true' EXIT
+          node tests/capture-native-ci.mjs | tee evidence/native-capture.log
+      - name: Validate contact, integration and read-only geometry checks
+        if: github.event_name == 'pull_request' || inputs.mode == 'full'
+        run: node --test tests/contact.test.mjs tests/local-broadphase.test.mjs tests/body-envelope-demand.test.mjs tests/body-envelope.test.mjs tests/body-envelope-audit.test.mjs tests/world.test.mjs tests/render-demand.test.mjs tests/mid-surface-solid.test.mjs tests/simulation-clock.test.mjs tests/reference-body.test.mjs tests/mesh-intersections.test.mjs tests/cloth-observer.test.mjs | tee evidence/numerical.tap
+      - name: Compare frozen R02, R03 reference and R03 optimized on identical native input
+        if: matrix.replay == 'baseline' && (github.event_name == 'pull_request' || inputs.mode == 'full')
+        run: |
+          mkdir -p ../tailor-layering-r02/reference
+          ln -s ../../tailor-layering-r03/reference/mp05-studio-r10 ../tailor-layering-r02/reference/mp05-studio-r10
+          node tests/native-demand-ab.mjs --input evidence/native-world-input.json --output evidence/native-demand-ab --steps 8 | tee evidence/native-demand-ab.log
+          python tools/summarize-native-demand-ab.py evidence/native-demand-ab | tee evidence/native-demand-ab-comparison.log
+      - name: Validate global redress and failed-add transaction on exact native input
+        if: matrix.replay == 'baseline' && (github.event_name == 'pull_request' || inputs.mode == 'full')
+        run: node tests/native-redress-regression.mjs --source . --input evidence/native-world-input.json --output evidence/native-redress-regression --expected-source '${{ github.event.pull_request.head.sha || github.sha }}' | tee evidence/native-redress-regression.log
+      - name: Replay the exact captured native input for two physical seconds
+        if: github.event_name == 'pull_request' || inputs.mode == 'full'
+        run: node tests/native-replay.mjs --input evidence/native-world-input.json --output evidence/native-replay --steps 240 --mode '${{ matrix.replay }}' --label r03 --stop-on-failure | tee evidence/native-replay.log
+      - name: Retain exact current-native input and full replay evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: tailor-layering-r03-${{ inputs.mode || 'full' }}-native-${{ matrix.replay }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/tailor-layering-r03/evidence/
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
+# Retained pinned tool releases:
+# https://github.com/actions/checkout/releases/tag/v6.0.2
+# https://github.com/actions/setup-node/releases/tag/v6.4.0
+# https://github.com/actions/setup-python/releases/tag/v6.3.0
+# https://github.com/actions/upload-artifact/releases/tag/v6.0.0
+# https://github.com/microsoft/playwright/releases/tag/v1.64.0
+# https://playwright.dev/docs/ci
+# https://playwright.dev/docs/browsers

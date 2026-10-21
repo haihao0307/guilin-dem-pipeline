@@ -1,0 +1,3521 @@
+{
+  "schema": "kaopu-native-contact-demand-ab@1",
+  "passed": true,
+  "inputPath": "/workspace/scratch/f88f885c9eb3/baseline-evidence/native-input-plain.json",
+  "inputSHA256": "3acc346b1768c1d0ccdf9423ee5de91083c6be9b785d91ed15967c9de2cf5fa6",
+  "inputMode": "public-observation-numeric-reconstruction",
+  "inputBoundary": "Float32/Uint32 reconstructed from complete numeric R02 public Worker init. This is a historical input A/B, not fresh current-browser input capture.",
+  "sourceAnnotation": null,
+  "baselineSource": "/workspace/scratch/f88f885c9eb3/repo/experiments/tailor-layering-r02",
+  "candidateSource": "/workspace/scratch/f88f885c9eb3/repo/experiments/tailor-layering-r03",
+  "excludedInstrumentationAndSchemaFields": [
+    "timings",
+    "solverMS",
+    "stageTimingsMS",
+    "settlingMS",
+    "measurementMS",
+    "elapsedMS",
+    "creationMS",
+    "initializationMS",
+    "work",
+    "execution",
+    "timingRelationships",
+    "stageTimingContract",
+    "reentrySemantics"
+  ],
+  "comparisonNormalization": "Only listed instrumentation fields and R03-only explanatory strings are excluded. New strings are separately recorded per lane. Typed physical/render arrays use byte comparison; normalized scalars and full histories additionally use deep strict equality, preserving signed zero.",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "logicalCPUs": 9
+  },
+  "requestedSteps": 8,
+  "completedSteps": 8,
+  "perturbations": [
+    {
+      "beforeStep": 3,
+      "garment": "outer",
+      "kind": "push"
+    },
+    {
+      "beforeStep": 6,
+      "garment": "inner",
+      "kind": "tug"
+    }
+  ],
+  "limits": {
+    "maxDynamicEdgeStretch": 1.45,
+    "maxSeamGapMM": 0.01,
+    "maxClothResidualMM": 0.5,
+    "maxBodyHalfThicknessGapMM": 0.001,
+    "fixedDriftMM": 0.001
+  },
+  "scope": "One shared, independently audited geometry at every accepted state after all three complete worlds prove byte-identical p/v/old and render snapshots. Static original body; no full CCD, self collision or per-yarn collision guarantee.",
+  "sourceSHA256": {
+    "r02": {
+      "src/app.mjs": "e1f9d8bc12e857d4b296071200c94b64ced90a5c495ca4e4f5aa54a5507093de",
+      "src/body-envelope.mjs": "dfb14222aa98cdce6ef7056f37fad63cfe3ff873423e53cdbaecaec9aed0259e",
+      "src/garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "src/layer-contact.mjs": "e0afb01cb64b53a5575b448d075780daec63f5e4952a4b9e5348b91ce21d239b",
+      "src/layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "src/layer-worker.mjs": "665ea8d22a5a25cd21a06dc5a8b1be1a3d8f477d660fc404b6b56d1fe4e69fdc",
+      "src/layer-world.mjs": "d186f4fbc7b6111edb9f4485bd19edcabce1f34b175e225bc1cb9411caf4fa5d",
+      "src/mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "src/native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "src/reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "src/render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "src/simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4",
+      "upstream/cloth-kernel.wasm": "772ffe81b9c49b17e81c99dc0f5323ff2006cf3d46e5532de8bf2ebe631d9416",
+      "upstream/cloth-physics.mjs": "ffe3fee9a82f75b28703273800dec2542a966b7003672bfdf58b8ef667643298",
+      "upstream/material-physics.mjs": "5b040b89a14808f904ce4488e2e9d74835e8afaa0ba53836db4a64bf67cbd099",
+      "upstream/mesh-contact.mjs": "0fe9b8e0840c7b35c4ee3fce9b7d648c220043783ad6166314812472ddde8ff3",
+      "upstream/source-contract.mjs": "1d3c69652a76c9b3d6c752c0f05552c7c1ea5453142d2f5058d87e12e826e446",
+      "upstream/seam-refinement.mjs": "24dfd080b2e54c63b9c613d922807856065137ebdc083e9f0137d4222fb7bbbf"
+    },
+    "r03-off": {
+      "src/app.mjs": "865c0381f6c3bc7628062f9ed7cb5e8440ae70f6de2e745a9eb1e1b747c7a30c",
+      "src/body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "src/garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "src/layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "src/layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "src/layer-worker.mjs": "473bdb985ea308ad4c5c862c95596537c19bde2eddc16a43d3541123a2dfe6a5",
+      "src/layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "src/local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873",
+      "src/mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "src/native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "src/reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "src/render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "src/simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4",
+      "upstream/cloth-kernel.wasm": "772ffe81b9c49b17e81c99dc0f5323ff2006cf3d46e5532de8bf2ebe631d9416",
+      "upstream/cloth-physics.mjs": "ffe3fee9a82f75b28703273800dec2542a966b7003672bfdf58b8ef667643298",
+      "upstream/material-physics.mjs": "5b040b89a14808f904ce4488e2e9d74835e8afaa0ba53836db4a64bf67cbd099",
+      "upstream/mesh-contact.mjs": "0fe9b8e0840c7b35c4ee3fce9b7d648c220043783ad6166314812472ddde8ff3",
+      "upstream/source-contract.mjs": "1d3c69652a76c9b3d6c752c0f05552c7c1ea5453142d2f5058d87e12e826e446",
+      "upstream/seam-refinement.mjs": "24dfd080b2e54c63b9c613d922807856065137ebdc083e9f0137d4222fb7bbbf"
+    },
+    "r03-on": {
+      "src/app.mjs": "865c0381f6c3bc7628062f9ed7cb5e8440ae70f6de2e745a9eb1e1b747c7a30c",
+      "src/body-envelope.mjs": "44cc9e2546cac51ad069dd5c14aec4d96aef657963ccc7174a52c7d01b2d76a6",
+      "src/garment-prep.mjs": "92c226184f456dbf0abd64e334e86b49bc09c80d0bf1c76abc367fd84e38caed",
+      "src/layer-contact.mjs": "c12db0bdee0ce28a00f27d21046838deffb530db872b4103bec80de4b01d94a0",
+      "src/layer-initialization.mjs": "338cb9e10c458f27612df586a3fdeb916b25f30271010ebee78a384e3ff081c2",
+      "src/layer-worker.mjs": "473bdb985ea308ad4c5c862c95596537c19bde2eddc16a43d3541123a2dfe6a5",
+      "src/layer-world.mjs": "2d4208ca6d710dcaa4d2f5ad44228d79ff9a58f5f3d6446c3baa2f91bd3eca62",
+      "src/local-broadphase.mjs": "bc4823765ccba90e24dd544d428c69c64a74a6fb55fcc96e07d3a383e23a1873",
+      "src/mid-surface-solid.mjs": "719cf666d3e031157dce9b053cfea2ec36a234a296bc1639a1c4212962559745",
+      "src/native-host.mjs": "096030e90d8f3eae954f28e58c85cf6425564666b0c1b6a977e9552877a2f69d",
+      "src/reference-body.mjs": "258232a0fac723748f48c9c84b8d10e793505f78a736d44ddb97e5e4c27aaae1",
+      "src/render-demand.mjs": "c63331c5e7ea25c99b234b7338e907f4b6e3270573ffd2756ded1b87a2fe6ea0",
+      "src/simulation-clock.mjs": "31dc0afa4afd2f2c144fcdbe93d253a37cc4433695c9e5011346959ae880e0e4",
+      "upstream/cloth-kernel.wasm": "772ffe81b9c49b17e81c99dc0f5323ff2006cf3d46e5532de8bf2ebe631d9416",
+      "upstream/cloth-physics.mjs": "ffe3fee9a82f75b28703273800dec2542a966b7003672bfdf58b8ef667643298",
+      "upstream/material-physics.mjs": "5b040b89a14808f904ce4488e2e9d74835e8afaa0ba53836db4a64bf67cbd099",
+      "upstream/mesh-contact.mjs": "0fe9b8e0840c7b35c4ee3fce9b7d648c220043783ad6166314812472ddde8ff3",
+      "upstream/source-contract.mjs": "1d3c69652a76c9b3d6c752c0f05552c7c1ea5453142d2f5058d87e12e826e446",
+      "upstream/seam-refinement.mjs": "24dfd080b2e54c63b9c613d922807856065137ebdc083e9f0137d4222fb7bbbf"
+    }
+  },
+  "testSHA256": {
+    "native-demand-ab.mjs": "b07e2cb9dfaa7741d7ac6c8238cf690f14790d64749334e7ab2b4e5585c431f7",
+    "mesh-intersections.mjs": "a630618af157911e3bc91c82bdef5778ca2c85d0d33b870431b4b8915aa0ba58",
+    "body-envelope-audit.mjs": "4772256f287ccf169db55d7fb827e6e99593718be5f2c7da61621c9b5af170ab"
+  },
+  "lanes": {
+    "r02": {
+      "creationMS": 6023.71684,
+      "creationCPUms": {
+        "user": 7399.401,
+        "system": 280.483,
+        "total": 7679.884
+      },
+      "creationMemory": {
+        "rss": 472776704,
+        "heapTotal": 350916608,
+        "heapUsed": 222379696,
+        "external": 172970126,
+        "arrayBuffers": 36595066
+      },
+      "wasmMemoryBytes": 134217728,
+      "wasmReservedBytes": 6753168,
+      "execution": null,
+      "explanatorySchema": {
+        "stageTimingContract": null,
+        "reentrySemantics": null
+      },
+      "maximumPerStepParticleCoordinateChangeM": [
+        {
+          "id": "pants",
+          "value": 0.01443460775190783
+        },
+        {
+          "id": "inner",
+          "value": 0.019689470604966064
+        },
+        {
+          "id": "outer",
+          "value": 0.024125339194306754
+        }
+      ],
+      "stepTiming": {
+        "samples": 8,
+        "medianMS": 5410.590863500001,
+        "p95MS": 7334.016813000009,
+        "quantileMethod": "arithmetic median; p95 nearest rank",
+        "totalMS": 44362.38262300001
+      }
+    },
+    "r03-off": {
+      "creationMS": 5839.619405,
+      "creationCPUms": {
+        "user": 7207.308,
+        "system": 53.833,
+        "total": 7261.141
+      },
+      "creationMemory": {
+        "rss": 520130560,
+        "heapTotal": 305942528,
+        "heapUsed": 180592880,
+        "external": 326085488,
+        "arrayBuffers": 55492660
+      },
+      "wasmMemoryBytes": 134217728,
+      "wasmReservedBytes": 6753168,
+      "execution": {
+        "contactDemand": false,
+        "lastStepWork": null,
+        "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+        "staticBodyAccelerationArrayBytes": 8507352,
+        "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+      },
+      "explanatorySchema": {
+        "stageTimingContract": "layerBroadphaseMS is included within layerContactMS; do not sum both",
+        "reentrySemantics": "GLOBAL_REDRESS_RESTART"
+      },
+      "maximumPerStepParticleCoordinateChangeM": [
+        {
+          "id": "pants",
+          "value": 0.01443460775190783
+        },
+        {
+          "id": "inner",
+          "value": 0.019689470604966064
+        },
+        {
+          "id": "outer",
+          "value": 0.024125339194306754
+        }
+      ],
+      "stepTiming": {
+        "samples": 8,
+        "medianMS": 5421.291308500004,
+        "p95MS": 6802.60975399999,
+        "quantileMethod": "arithmetic median; p95 nearest rank",
+        "totalMS": 43845.620769999994
+      }
+    },
+    "r03-on": {
+      "creationMS": 4822.564959999998,
+      "creationCPUms": {
+        "user": 6268.186,
+        "system": 43.351,
+        "total": 6311.537
+      },
+      "creationMemory": {
+        "rss": 584613888,
+        "heapTotal": 308629504,
+        "heapUsed": 139842160,
+        "external": 462393730,
+        "arrayBuffers": 57583174
+      },
+      "wasmMemoryBytes": 134217728,
+      "wasmReservedBytes": 6753168,
+      "execution": {
+        "contactDemand": true,
+        "lastStepWork": null,
+        "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+        "staticBodyAccelerationArrayBytes": 8507352,
+        "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+      },
+      "explanatorySchema": {
+        "stageTimingContract": "layerBroadphaseMS is included within layerContactMS; do not sum both",
+        "reentrySemantics": "GLOBAL_REDRESS_RESTART"
+      },
+      "maximumPerStepParticleCoordinateChangeM": [
+        {
+          "id": "pants",
+          "value": 0.01443460775190783
+        },
+        {
+          "id": "inner",
+          "value": 0.019689470604966064
+        },
+        {
+          "id": "outer",
+          "value": 0.024125339194306754
+        }
+      ],
+      "stepTiming": {
+        "samples": 8,
+        "medianMS": 4350.4215939999995,
+        "p95MS": 5198.088659000001,
+        "quantileMethod": "arithmetic median; p95 nearest rank",
+        "totalMS": 35896.889771999995
+      }
+    }
+  },
+  "states": [
+    {
+      "step": 0,
+      "physicalSeconds": 0,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "e60a03567b5f0bac98f5705b38586d4cd48cfb466c59cd83bc401650e8557554",
+          "snapshotSHA256": "ecb0716e45cfd8f0c5fa19c5ca59669aa82a772f057cf03414b1cee378664c15",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.390690276176109,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.02775592416762087,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 28376,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1187,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 7,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 8878,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 5071,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 12625,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 608,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 469.89516000000003,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 10031,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 25357,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 1949,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 37337,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 172.32803099999728,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 642.8972239999966,
+      "timings": {
+        "r02": null,
+        "r03-off": null,
+        "r03-on": null
+      }
+    },
+    {
+      "step": 1,
+      "physicalSeconds": 0.008333333333333333,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "2afc6966c4014a15f8d45a1d03796cd89a2e94933411a60a4fe3f82f5d137aea",
+          "snapshotSHA256": "a5eab7956b5a9431436f7db856846c6f02b436d1683f0d00734fb98683da800f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "2afc6966c4014a15f8d45a1d03796cd89a2e94933411a60a4fe3f82f5d137aea",
+          "snapshotSHA256": "a5eab7956b5a9431436f7db856846c6f02b436d1683f0d00734fb98683da800f",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4467900189850715,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.33871281921500285,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 31529,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1288,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 56,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 7813,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 6138,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 15182,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1052,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 499.5791769999996,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 8913,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 29192,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 2908,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 41013,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 179.2612310000004,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 678.9880559999983,
+      "timings": {
+        "r02": {
+          "step": 1,
+          "wallMS": 4595.714204,
+          "processCPUms": {
+            "user": 5152.277,
+            "system": 12.999,
+            "total": 5165.276
+          },
+          "solverMS": 4595.302134999998,
+          "stageTimingsMS": {
+            "membraneMS": 73.1349920000066,
+            "bodyProjectionMS": 882.6969680000038,
+            "bodyVelocityMS": 64.3376340000068,
+            "bodyEnvelopeMS": 674.1308470000004,
+            "activeStrainMS": 26.43695599999046,
+            "layerContactMS": 2218.578679999995,
+            "layerBroadphaseMS": 594.4764230000037,
+            "layerAuditMS": 362.0000130000044
+          },
+          "execution": null,
+          "memory": {
+            "rss": 834334720,
+            "heapTotal": 554692608,
+            "heapUsed": 471628224,
+            "external": 527615893,
+            "arrayBuffers": 122472034
+          }
+        },
+        "r03-off": {
+          "step": 1,
+          "wallMS": 4580.069104000002,
+          "processCPUms": {
+            "user": 5064.632,
+            "system": 62.696,
+            "total": 5127.328
+          },
+          "solverMS": 4579.606380999998,
+          "stageTimingsMS": {
+            "membraneMS": 66.15202499999214,
+            "bodyProjectionMS": 876.785999999971,
+            "bodyVelocityMS": 65.507282999999,
+            "bodyEnvelopeMS": 631.4225629999928,
+            "activeStrainMS": 26.86253399999987,
+            "layerContactMS": 2224.1859930000064,
+            "layerBroadphaseMS": 561.3621199999834,
+            "layerAuditMS": 382.5085990000043
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 29,
+                "measureCalls": 9,
+                "candidateVisits": 21428241,
+                "vertexFaceTests": 1300173,
+                "edgeEdgeTests": 3934332,
+                "sweptVertexFaceTests": 74832,
+                "sweptEdgeEdgeTests": 200431,
+                "localBoundsRejectedVF": 4597693,
+                "localBoundsRejectedEE": 11610984,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 472026,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 182800,
+                "cacheHits": 0,
+                "bvhNodeVisits": 3024680,
+                "bodyTriangleTests": 463883,
+                "vertexFaceCandidates": 2783298,
+                "vertexFaceTests": 2783298,
+                "edgeEdgeCandidates": 4174947,
+                "edgeEdgeTests": 4174947
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 777166848,
+            "heapTotal": 548966400,
+            "heapUsed": 417849720,
+            "external": 489197857,
+            "arrayBuffers": 84054886
+          }
+        },
+        "r03-on": {
+          "step": 1,
+          "wallMS": 4051.7768819999983,
+          "processCPUms": {
+            "user": 4803.188,
+            "system": 33.754,
+            "total": 4836.942
+          },
+          "solverMS": 4051.3396379999976,
+          "stageTimingsMS": {
+            "membraneMS": 68.9030880000173,
+            "bodyProjectionMS": 892.5032309999879,
+            "bodyVelocityMS": 60.443319999998494,
+            "bodyEnvelopeMS": 229.6912530000045,
+            "activeStrainMS": 27.991578999997728,
+            "layerContactMS": 2133.8948869999986,
+            "layerBroadphaseMS": 579.7707560000017,
+            "layerAuditMS": 359.29534299999796
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 29,
+                "measureCalls": 9,
+                "candidateVisits": 21428241,
+                "vertexFaceTests": 1283334,
+                "edgeEdgeTests": 3888387,
+                "sweptVertexFaceTests": 74748,
+                "sweptEdgeEdgeTests": 200310,
+                "localBoundsRejectedVF": 4614532,
+                "localBoundsRejectedEE": 11656929,
+                "ordinaryDistanceRejectedVF": 284168,
+                "ordinaryDistanceRejectedEE": 816978,
+                "adjacentFaceTests": 8596,
+                "localBoundsBuildMS": 109.49309300000823,
+                "localBoundsRefitVertices": 54668,
+                "localBoundsRefitFaces": 243706,
+                "localBoundsRefitEdges": 278165
+              },
+              "body": {
+                "triangleQueries": 182800,
+                "cacheHits": 134200,
+                "bvhNodeVisits": 882372,
+                "bodyTriangleTests": 161657,
+                "vertexFaceCandidates": 969942,
+                "vertexFaceTests": 202839,
+                "edgeEdgeCandidates": 1454913,
+                "edgeEdgeTests": 529223
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 833073152,
+            "heapTotal": 430841856,
+            "heapUsed": 293018056,
+            "external": 505947689,
+            "arrayBuffers": 101106926
+          }
+        }
+      }
+    },
+    {
+      "step": 2,
+      "physicalSeconds": 0.016666666666666666,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "3b3c9b81d1a213d6b17141d65630933363ca8543f17931a641327308a0ea8f0a",
+          "snapshotSHA256": "19d80119e4707007e1109b34f9bf4a94b415303a5ca9af07d698249159c648b2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "3b3c9b81d1a213d6b17141d65630933363ca8543f17931a641327308a0ea8f0a",
+          "snapshotSHA256": "19d80119e4707007e1109b34f9bf4a94b415303a5ca9af07d698249159c648b2",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4467559626558228,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.15014366771188592,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 32508,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1196,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 129,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 6307,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 6831,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 16606,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1439,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 467.8989370000054,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 7038,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 31482,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 3784,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 42304,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 170.7467869999964,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 638.8519470000028,
+      "timings": {
+        "r02": {
+          "step": 2,
+          "wallMS": 4384.924423999997,
+          "processCPUms": {
+            "user": 4962.715,
+            "system": 31.516,
+            "total": 4994.231
+          },
+          "solverMS": 4384.910352999999,
+          "stageTimingsMS": {
+            "membraneMS": 67.73069799999939,
+            "bodyProjectionMS": 746.6822549999779,
+            "bodyVelocityMS": 60.42375300001004,
+            "bodyEnvelopeMS": 666.4006109999609,
+            "activeStrainMS": 15.332648999996309,
+            "layerContactMS": 2132.6337389999826,
+            "layerBroadphaseMS": 505.9026140000278,
+            "layerAuditMS": 358.0201979999838
+          },
+          "execution": null,
+          "memory": {
+            "rss": 946823168,
+            "heapTotal": 454696960,
+            "heapUsed": 301461864,
+            "external": 476104847,
+            "arrayBuffers": 70963922
+          }
+        },
+        "r03-off": {
+          "step": 2,
+          "wallMS": 4226.247347000004,
+          "processCPUms": {
+            "user": 4465.451,
+            "system": 14.625,
+            "total": 4480.076
+          },
+          "solverMS": 4226.224203000005,
+          "stageTimingsMS": {
+            "membraneMS": 63.22568299998238,
+            "bodyProjectionMS": 718.1994170000326,
+            "bodyVelocityMS": 67.5965389999983,
+            "bodyEnvelopeMS": 597.2052290000065,
+            "activeStrainMS": 13.786227000011422,
+            "layerContactMS": 2039.5933390000064,
+            "layerBroadphaseMS": 450.9405599999809,
+            "layerAuditMS": 382.22603199999867
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 28,
+                "measureCalls": 8,
+                "candidateVisits": 20757922,
+                "vertexFaceTests": 1308751,
+                "edgeEdgeTests": 3893420,
+                "sweptVertexFaceTests": 48469,
+                "sweptEdgeEdgeTests": 126087,
+                "localBoundsRejectedVF": 4414705,
+                "localBoundsRejectedEE": 11159461,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 545718,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 182800,
+                "cacheHits": 0,
+                "bvhNodeVisits": 3030514,
+                "bodyTriangleTests": 482397,
+                "vertexFaceCandidates": 2894382,
+                "vertexFaceTests": 2894382,
+                "edgeEdgeCandidates": 4341573,
+                "edgeEdgeTests": 4341573
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 948256768,
+            "heapTotal": 460058624,
+            "heapUsed": 370074544,
+            "external": 496902983,
+            "arrayBuffers": 92064818
+          }
+        },
+        "r03-on": {
+          "step": 2,
+          "wallMS": 3702.2364929999967,
+          "processCPUms": {
+            "user": 4146.878,
+            "system": 22.39,
+            "total": 4169.268
+          },
+          "solverMS": 3702.2264179999984,
+          "stageTimingsMS": {
+            "membraneMS": 66.64881199997762,
+            "bodyProjectionMS": 748.3099660000007,
+            "bodyVelocityMS": 60.008538999994926,
+            "bodyEnvelopeMS": 228.6367900000041,
+            "activeStrainMS": 12.95812900000601,
+            "layerContactMS": 1939.3643560000237,
+            "layerBroadphaseMS": 486.4931899999938,
+            "layerAuditMS": 305.5686820000119
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 28,
+                "measureCalls": 8,
+                "candidateVisits": 20757922,
+                "vertexFaceTests": 1308751,
+                "edgeEdgeTests": 3893420,
+                "sweptVertexFaceTests": 48469,
+                "sweptEdgeEdgeTests": 126087,
+                "localBoundsRejectedVF": 4414705,
+                "localBoundsRejectedEE": 11159461,
+                "ordinaryDistanceRejectedVF": 322935,
+                "ordinaryDistanceRejectedEE": 925911,
+                "adjacentFaceTests": 10388,
+                "localBoundsBuildMS": 86.34502300000895,
+                "localBoundsRefitVertices": 67024,
+                "localBoundsRefitFaces": 302874,
+                "localBoundsRefitEdges": 343965
+              },
+              "body": {
+                "triangleQueries": 182800,
+                "cacheHits": 133940,
+                "bvhNodeVisits": 886889,
+                "bodyTriangleTests": 167316,
+                "vertexFaceCandidates": 1003896,
+                "vertexFaceTests": 215210,
+                "edgeEdgeCandidates": 1505844,
+                "edgeEdgeTests": 557281
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 943955968,
+            "heapTotal": 460115968,
+            "heapUsed": 304284288,
+            "external": 528536307,
+            "arrayBuffers": 123698142
+          }
+        }
+      }
+    },
+    {
+      "step": 3,
+      "physicalSeconds": 0.024999999999999998,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "483c5872fa6efdc3e1280b29accc7459ff5f28dc6dc59906f6c034d4856b1463",
+          "snapshotSHA256": "77317e45c8bf57ec858682631db1ddc418e416d2806d4f645ec9d3392400b280",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "483c5872fa6efdc3e1280b29accc7459ff5f28dc6dc59906f6c034d4856b1463",
+          "snapshotSHA256": "77317e45c8bf57ec858682631db1ddc418e416d2806d4f645ec9d3392400b280",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4499261357924653,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.3822414877616186,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 32327,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1135,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 89,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 4934,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 7905,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 16640,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1624,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 458.0998200000031,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 5689,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 31413,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4255,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 41357,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 174.63337599999795,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 632.8135150000016,
+      "timings": {
+        "r02": {
+          "step": 3,
+          "wallMS": 4030.346445000003,
+          "processCPUms": {
+            "user": 4154.361,
+            "system": 50.069,
+            "total": 4204.43
+          },
+          "solverMS": 4030.325254999996,
+          "stageTimingsMS": {
+            "membraneMS": 66.2238290000605,
+            "bodyProjectionMS": 760.7285740001025,
+            "bodyVelocityMS": 58.83028999999806,
+            "bodyEnvelopeMS": 511.10660199996346,
+            "activeStrainMS": 14.997434000004432,
+            "layerContactMS": 2073.0170980000184,
+            "layerBroadphaseMS": 462.5734220000377,
+            "layerAuditMS": 326.70797999999195
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1007202304,
+            "heapTotal": 737005568,
+            "heapUsed": 607477648,
+            "external": 516988575,
+            "arrayBuffers": 111849066
+          }
+        },
+        "r03-off": {
+          "step": 3,
+          "wallMS": 4758.420652000001,
+          "processCPUms": {
+            "user": 4787.917,
+            "system": 71.032,
+            "total": 4858.949
+          },
+          "solverMS": 4758.371879999999,
+          "stageTimingsMS": {
+            "membraneMS": 71.99662199997692,
+            "bodyProjectionMS": 832.7786880000567,
+            "bodyVelocityMS": 63.361774000004516,
+            "bodyEnvelopeMS": 506.2526830000061,
+            "activeStrainMS": 14.514813000008871,
+            "layerContactMS": 2600.3810169999924,
+            "layerBroadphaseMS": 543.3684620000058,
+            "layerAuditMS": 402.06428500001493
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 28,
+                "measureCalls": 8,
+                "candidateVisits": 20786423,
+                "vertexFaceTests": 1388019,
+                "edgeEdgeTests": 4080764,
+                "sweptVertexFaceTests": 49296,
+                "sweptEdgeEdgeTests": 141594,
+                "localBoundsRejectedVF": 4351599,
+                "localBoundsRejectedEE": 10985784,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 646251,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 146240,
+                "cacheHits": 0,
+                "bvhNodeVisits": 2401867,
+                "bodyTriangleTests": 376381,
+                "vertexFaceCandidates": 2258286,
+                "vertexFaceTests": 2258286,
+                "edgeEdgeCandidates": 3387429,
+                "edgeEdgeTests": 3387429
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1049714688,
+            "heapTotal": 779386880,
+            "heapUsed": 689745608,
+            "external": 534815223,
+            "arrayBuffers": 129977058
+          }
+        },
+        "r03-on": {
+          "step": 3,
+          "wallMS": 4299.888751999999,
+          "processCPUms": {
+            "user": 4689.722,
+            "system": 20.751,
+            "total": 4710.473
+          },
+          "solverMS": 4299.853559999996,
+          "stageTimingsMS": {
+            "membraneMS": 82.06026600000769,
+            "bodyProjectionMS": 802.2104710000349,
+            "bodyVelocityMS": 77.14418899999873,
+            "bodyEnvelopeMS": 285.2366699999984,
+            "activeStrainMS": 18.027066000002378,
+            "layerContactMS": 2398.853783999977,
+            "layerBroadphaseMS": 600.8895789999879,
+            "layerAuditMS": 369.8456900000019
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 28,
+                "measureCalls": 8,
+                "candidateVisits": 20786423,
+                "vertexFaceTests": 1349651,
+                "edgeEdgeTests": 4027652,
+                "sweptVertexFaceTests": 49125,
+                "sweptEdgeEdgeTests": 141411,
+                "localBoundsRejectedVF": 4389967,
+                "localBoundsRejectedEE": 11038896,
+                "ordinaryDistanceRejectedVF": 379361,
+                "ordinaryDistanceRejectedEE": 1090409,
+                "adjacentFaceTests": 9510,
+                "localBoundsBuildMS": 95.38695000007283,
+                "localBoundsRefitVertices": 71324,
+                "localBoundsRefitFaces": 324444,
+                "localBoundsRefitEdges": 367648
+              },
+              "body": {
+                "triangleQueries": 146240,
+                "cacheHits": 96319,
+                "bvhNodeVisits": 903622,
+                "bodyTriangleTests": 169189,
+                "vertexFaceCandidates": 1015134,
+                "vertexFaceTests": 216923,
+                "edgeEdgeCandidates": 1522701,
+                "edgeEdgeTests": 562901
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1043677184,
+            "heapTotal": 493969408,
+            "heapUsed": 259120784,
+            "external": 515114324,
+            "arrayBuffers": 106796667
+          }
+        }
+      }
+    },
+    {
+      "step": 4,
+      "physicalSeconds": 0.03333333333333333,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "9acde415f1683b28e2834ccb15bf7a967909614f6e8383301601e315d6fff1a0",
+          "snapshotSHA256": "c3e2486bf68866f8ff259a40cadeafdabf76bd1549866c9bd96aff515ec8f3bc",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "9acde415f1683b28e2834ccb15bf7a967909614f6e8383301601e315d6fff1a0",
+          "snapshotSHA256": "c3e2486bf68866f8ff259a40cadeafdabf76bd1549866c9bd96aff515ec8f3bc",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4415833253522472,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.4268184080496824,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 31734,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1255,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 78,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 3964,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 8598,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 16303,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1536,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 422.5579090000101,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 4498,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 30503,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4302,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 39303,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 159.68641199999547,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 582.3080550000013,
+      "timings": {
+        "r02": {
+          "step": 4,
+          "wallMS": 5137.971352000008,
+          "processCPUms": {
+            "user": 5656.82,
+            "system": 16.775,
+            "total": 5673.595
+          },
+          "solverMS": 5137.958742999996,
+          "stageTimingsMS": {
+            "membraneMS": 69.66236600006232,
+            "bodyProjectionMS": 834.8367299999809,
+            "bodyVelocityMS": 61.53112300002249,
+            "bodyEnvelopeMS": 777.8621659999917,
+            "activeStrainMS": 17.45433499997307,
+            "layerContactMS": 2521.088413999998,
+            "layerBroadphaseMS": 510.42815700007486,
+            "layerAuditMS": 607.9393059999711
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1043865600,
+            "heapTotal": 474046464,
+            "heapUsed": 382434960,
+            "external": 490291784,
+            "arrayBuffers": 85151171
+          }
+        },
+        "r03-off": {
+          "step": 4,
+          "wallMS": 5203.782481000002,
+          "processCPUms": {
+            "user": 5556.167,
+            "system": 24.913,
+            "total": 5581.08
+          },
+          "solverMS": 5203.771915999998,
+          "stageTimingsMS": {
+            "membraneMS": 66.32338999996136,
+            "bodyProjectionMS": 843.707210999899,
+            "bodyVelocityMS": 62.912234999996144,
+            "bodyEnvelopeMS": 708.2783300000374,
+            "activeStrainMS": 21.11682300001121,
+            "layerContactMS": 2592.1874849999876,
+            "layerBroadphaseMS": 475.4784999999829,
+            "layerAuditMS": 649.8636929999993
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 32,
+                "measureCalls": 12,
+                "candidateVisits": 25625212,
+                "vertexFaceTests": 1773166,
+                "edgeEdgeTests": 5192239,
+                "sweptVertexFaceTests": 64068,
+                "sweptEdgeEdgeTests": 185173,
+                "localBoundsRejectedVF": 5305743,
+                "localBoundsRejectedEE": 13377392,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 871511,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 219360,
+                "cacheHits": 0,
+                "bvhNodeVisits": 3527847,
+                "bodyTriangleTests": 539210,
+                "vertexFaceCandidates": 3235260,
+                "vertexFaceTests": 3235260,
+                "edgeEdgeCandidates": 4852890,
+                "edgeEdgeTests": 4852890
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1042812928,
+            "heapTotal": 475938816,
+            "heapUsed": 261140640,
+            "external": 492083101,
+            "arrayBuffers": 86942488
+          }
+        },
+        "r03-on": {
+          "step": 4,
+          "wallMS": 4851.127836,
+          "processCPUms": {
+            "user": 5204.854,
+            "system": 47.567,
+            "total": 5252.421
+          },
+          "solverMS": 4851.120595,
+          "stageTimingsMS": {
+            "membraneMS": 64.58655100002215,
+            "bodyProjectionMS": 810.4871710001025,
+            "bodyVelocityMS": 71.36072299997613,
+            "bodyEnvelopeMS": 343.19275799996103,
+            "activeStrainMS": 21.454648999977508,
+            "layerContactMS": 2602.334104999958,
+            "layerBroadphaseMS": 520.6040689999645,
+            "layerAuditMS": 622.5254570000106
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 32,
+                "measureCalls": 12,
+                "candidateVisits": 25625212,
+                "vertexFaceTests": 1683399,
+                "edgeEdgeTests": 5000841,
+                "sweptVertexFaceTests": 63799,
+                "sweptEdgeEdgeTests": 184731,
+                "localBoundsRejectedVF": 5395510,
+                "localBoundsRejectedEE": 13568790,
+                "ordinaryDistanceRejectedVF": 517418,
+                "ordinaryDistanceRejectedEE": 1489298,
+                "adjacentFaceTests": 10761,
+                "localBoundsBuildMS": 105.83312299998215,
+                "localBoundsRefitVertices": 82236,
+                "localBoundsRefitFaces": 376304,
+                "localBoundsRefitEdges": 425927
+              },
+              "body": {
+                "triangleQueries": 219360,
+                "cacheHits": 160396,
+                "bvhNodeVisits": 1098790,
+                "bodyTriangleTests": 215860,
+                "vertexFaceCandidates": 1295160,
+                "vertexFaceTests": 283373,
+                "edgeEdgeCandidates": 1942740,
+                "edgeEdgeTests": 726533
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1043378176,
+            "heapTotal": 408829952,
+            "heapUsed": 281184704,
+            "external": 507839256,
+            "arrayBuffers": 103001091
+          }
+        }
+      }
+    },
+    {
+      "step": 5,
+      "physicalSeconds": 0.041666666666666664,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "26e6a6e8d2e208761de07efa8a050eda13ab838a190323bb59b1df72de4e7c67",
+          "snapshotSHA256": "2fd14ca05541e5a3ab2301d2b50c5a71b6967dc53872cf4ec2fd91f24610e446",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "26e6a6e8d2e208761de07efa8a050eda13ab838a190323bb59b1df72de4e7c67",
+          "snapshotSHA256": "2fd14ca05541e5a3ab2301d2b50c5a71b6967dc53872cf4ec2fd91f24610e446",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4493960674902127,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.4360330286567772,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 30481,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 1173,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 89,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 3402,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 8680,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 15555,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1582,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 497.58137899999565,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 3833,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 30195,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4274,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 38302,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 171.83620999999403,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 669.4583089999942,
+      "timings": {
+        "r02": {
+          "step": 5,
+          "wallMS": 5683.210374999995,
+          "processCPUms": {
+            "user": 5906.155,
+            "system": 27.835,
+            "total": 5933.99
+          },
+          "solverMS": 5683.165429000001,
+          "stageTimingsMS": {
+            "membraneMS": 62.648952999996254,
+            "bodyProjectionMS": 861.8428350000031,
+            "bodyVelocityMS": 61.0138830000069,
+            "bodyEnvelopeMS": 995.5010510000429,
+            "activeStrainMS": 30.134941999989678,
+            "layerContactMS": 2599.7052130000084,
+            "layerBroadphaseMS": 419.8421559999988,
+            "layerAuditMS": 817.579190999968
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1045405696,
+            "heapTotal": 494174208,
+            "heapUsed": 399206672,
+            "external": 514213328,
+            "arrayBuffers": 109072907
+          }
+        },
+        "r03-off": {
+          "step": 5,
+          "wallMS": 5638.800136000005,
+          "processCPUms": {
+            "user": 5757.998,
+            "system": 11.116,
+            "total": 5769.114
+          },
+          "solverMS": 5638.7902109999995,
+          "stageTimingsMS": {
+            "membraneMS": 62.73996599990642,
+            "bodyProjectionMS": 867.9421859998401,
+            "bodyVelocityMS": 65.07832500002405,
+            "bodyEnvelopeMS": 894.6706629999971,
+            "activeStrainMS": 32.495309000019915,
+            "layerContactMS": 2617.71407300001,
+            "layerBroadphaseMS": 390.65865900002245,
+            "layerAuditMS": 841.4374910000333
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 36,
+                "measureCalls": 16,
+                "candidateVisits": 30051929,
+                "vertexFaceTests": 2108534,
+                "edgeEdgeTests": 6187914,
+                "sweptVertexFaceTests": 53326,
+                "sweptEdgeEdgeTests": 155466,
+                "localBoundsRejectedVF": 6193178,
+                "localBoundsRejectedEE": 15588251,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 1055633,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 292480,
+                "cacheHits": 0,
+                "bvhNodeVisits": 4634026,
+                "bodyTriangleTests": 690105,
+                "vertexFaceCandidates": 4140630,
+                "vertexFaceTests": 4140630,
+                "edgeEdgeCandidates": 6210945,
+                "edgeEdgeTests": 6210945
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1046036480,
+            "heapTotal": 542875648,
+            "heapUsed": 471228496,
+            "external": 536743184,
+            "arrayBuffers": 131905019
+          }
+        },
+        "r03-on": {
+          "step": 5,
+          "wallMS": 4263.190046999996,
+          "processCPUms": {
+            "user": 4656.022,
+            "system": 24.484,
+            "total": 4680.506
+          },
+          "solverMS": 4263.181144999995,
+          "stageTimingsMS": {
+            "membraneMS": 61.90021199999319,
+            "bodyProjectionMS": 837.7672090000269,
+            "bodyVelocityMS": 60.209181000012904,
+            "bodyEnvelopeMS": 367.47097599998233,
+            "activeStrainMS": 32.83656299998984,
+            "layerContactMS": 2117.230440999978,
+            "layerBroadphaseMS": 404.0239399999846,
+            "layerAuditMS": 568.0731099999684
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 36,
+                "measureCalls": 16,
+                "candidateVisits": 30051929,
+                "vertexFaceTests": 1124680,
+                "edgeEdgeTests": 3627082,
+                "sweptVertexFaceTests": 52191,
+                "sweptEdgeEdgeTests": 153496,
+                "localBoundsRejectedVF": 7177032,
+                "localBoundsRejectedEE": 18149083,
+                "ordinaryDistanceRejectedVF": 565003,
+                "ordinaryDistanceRejectedEE": 1664305,
+                "adjacentFaceTests": 10224,
+                "localBoundsBuildMS": 106.07825700007379,
+                "localBoundsRefitVertices": 89984,
+                "localBoundsRefitFaces": 412895,
+                "localBoundsRefitEdges": 467213
+              },
+              "body": {
+                "triangleQueries": 292480,
+                "cacheHits": 221431,
+                "bvhNodeVisits": 1358129,
+                "bodyTriangleTests": 272586,
+                "vertexFaceCandidates": 1635516,
+                "vertexFaceTests": 360786,
+                "edgeEdgeCandidates": 2453274,
+                "edgeEdgeTests": 921773
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1043173376,
+            "heapTotal": 461025280,
+            "heapUsed": 268853656,
+            "external": 495862600,
+            "arrayBuffers": 91024435
+          }
+        }
+      }
+    },
+    {
+      "step": 6,
+      "physicalSeconds": 0.049999999999999996,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "200f2b819f94c88b30a411aff83fa45b902f95360b636d8b39704a62c7078e8a",
+          "snapshotSHA256": "2183f2689f16eb9c40fafd7749e213c8447db5d21cbd9906016814efcfe2c70e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "200f2b819f94c88b30a411aff83fa45b902f95360b636d8b39704a62c7078e8a",
+          "snapshotSHA256": "2183f2689f16eb9c40fafd7749e213c8447db5d21cbd9906016814efcfe2c70e",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.448841796001788,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.29308746940868036,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 28607,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 890,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 43,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 2942,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 8414,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 14848,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1470,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 425.77430200000526,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 3363,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 29058,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4217,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 36638,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 176.13421600000584,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 602.1113800000021,
+      "timings": {
+        "r02": {
+          "step": 6,
+          "wallMS": 7334.016813000009,
+          "processCPUms": {
+            "user": 7768.555,
+            "system": 19.477,
+            "total": 7788.032
+          },
+          "solverMS": 7334.011114999987,
+          "stageTimingsMS": {
+            "membraneMS": 64.38589100002719,
+            "bodyProjectionMS": 931.8564570000453,
+            "bodyVelocityMS": 64.35927600000286,
+            "bodyEnvelopeMS": 1502.1575369999482,
+            "activeStrainMS": 56.02422999999544,
+            "layerContactMS": 3192.6002410000365,
+            "layerBroadphaseMS": 538.7713830000575,
+            "layerAuditMS": 1253.6991380000254
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1045364736,
+            "heapTotal": 489512960,
+            "heapUsed": 365755144,
+            "external": 496064888,
+            "arrayBuffers": 90925571
+          }
+        },
+        "r03-off": {
+          "step": 6,
+          "wallMS": 6802.60975399999,
+          "processCPUms": {
+            "user": 6930.617,
+            "system": 15.979,
+            "total": 6946.596
+          },
+          "solverMS": 6802.6004609999945,
+          "stageTimingsMS": {
+            "membraneMS": 65.25382700003684,
+            "bodyProjectionMS": 929.7093890000979,
+            "bodyVelocityMS": 61.08288500002527,
+            "bodyEnvelopeMS": 1210.868801999939,
+            "activeStrainMS": 50.89705099999264,
+            "layerContactMS": 3025.2714570000826,
+            "layerBroadphaseMS": 463.0411090000416,
+            "layerAuditMS": 1202.5515710000327
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 43,
+                "measureCalls": 23,
+                "candidateVisits": 37361616,
+                "vertexFaceTests": 2645560,
+                "edgeEdgeTests": 7773190,
+                "sweptVertexFaceTests": 32097,
+                "sweptEdgeEdgeTests": 89813,
+                "localBoundsRejectedVF": 7668830,
+                "localBoundsRejectedEE": 19302078,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 1363809,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 420440,
+                "cacheHits": 0,
+                "bvhNodeVisits": 6591434,
+                "bodyTriangleTests": 954594,
+                "vertexFaceCandidates": 5727564,
+                "vertexFaceTests": 5727564,
+                "edgeEdgeCandidates": 8591346,
+                "edgeEdgeTests": 8591346
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1046794240,
+            "heapTotal": 553041920,
+            "heapUsed": 455281200,
+            "external": 521467880,
+            "arrayBuffers": 116085779
+          }
+        },
+        "r03-on": {
+          "step": 6,
+          "wallMS": 5129.626667000004,
+          "processCPUms": {
+            "user": 5951.24,
+            "system": 27.751,
+            "total": 5978.991
+          },
+          "solverMS": 5129.575341999996,
+          "stageTimingsMS": {
+            "membraneMS": 62.04004199994961,
+            "bodyProjectionMS": 897.717033999972,
+            "bodyVelocityMS": 63.18832599998859,
+            "bodyEnvelopeMS": 522.1155869999493,
+            "activeStrainMS": 50.90893400000641,
+            "layerContactMS": 2400.6632710000413,
+            "layerBroadphaseMS": 415.17189100001997,
+            "layerAuditMS": 902.9119359999895
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 43,
+                "measureCalls": 23,
+                "candidateVisits": 37361616,
+                "vertexFaceTests": 1410423,
+                "edgeEdgeTests": 4498549,
+                "sweptVertexFaceTests": 31417,
+                "sweptEdgeEdgeTests": 88776,
+                "localBoundsRejectedVF": 8903967,
+                "localBoundsRejectedEE": 22576719,
+                "ordinaryDistanceRejectedVF": 733459,
+                "ordinaryDistanceRejectedEE": 2154348,
+                "adjacentFaceTests": 10194,
+                "localBoundsBuildMS": 137.84599700001127,
+                "localBoundsRefitVertices": 97504,
+                "localBoundsRefitFaces": 449724,
+                "localBoundsRefitEdges": 508140
+              },
+              "body": {
+                "triangleQueries": 420440,
+                "cacheHits": 329284,
+                "bvhNodeVisits": 1798069,
+                "bodyTriangleTests": 387790,
+                "vertexFaceCandidates": 2326740,
+                "vertexFaceTests": 529339,
+                "edgeEdgeCandidates": 3490110,
+                "edgeEdgeTests": 1328560
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1051430912,
+            "heapTotal": 364847104,
+            "heapUsed": 217339288,
+            "external": 525120198,
+            "arrayBuffers": 119686187
+          }
+        }
+      }
+    },
+    {
+      "step": 7,
+      "physicalSeconds": 0.05833333333333333,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "61f0f4e5d690235a432a557511e0ff42ed12980322ffa95936ead6550e921f95",
+          "snapshotSHA256": "60c118c583f520761fb415ea269533a82be0c7a243ba9b6e764907e682d1a717",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "61f0f4e5d690235a432a557511e0ff42ed12980322ffa95936ead6550e921f95",
+          "snapshotSHA256": "60c118c583f520761fb415ea269533a82be0c7a243ba9b6e764907e682d1a717",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4419064688713934,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.4817211992306034,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 27723,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 625,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 15,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 2811,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 8128,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 14687,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1457,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 470.3016349999816,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 3280,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 28766,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4267,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 36313,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 176.17651999997906,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 646.5929849999957,
+      "timings": {
+        "r02": {
+          "step": 7,
+          "wallMS": 7018.559143000006,
+          "processCPUms": {
+            "user": 7472.883,
+            "system": 17.775,
+            "total": 7490.658
+          },
+          "solverMS": 7018.55288399999,
+          "stageTimingsMS": {
+            "membraneMS": 61.71577800004161,
+            "bodyProjectionMS": 924.2734760000894,
+            "bodyVelocityMS": 67.78816000001098,
+            "bodyEnvelopeMS": 1416.322825999916,
+            "activeStrainMS": 118.96202100001392,
+            "layerContactMS": 3018.38255699999,
+            "layerBroadphaseMS": 550.8077129999729,
+            "layerAuditMS": 1163.6005810000206
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1052315648,
+            "heapTotal": 434200576,
+            "heapUsed": 337373056,
+            "external": 487471552,
+            "arrayBuffers": 82240075
+          }
+        },
+        "r03-off": {
+          "step": 7,
+          "wallMS": 6732.352476999993,
+          "processCPUms": {
+            "user": 7095.338,
+            "system": 8.434,
+            "total": 7103.772
+          },
+          "solverMS": 6732.344484999994,
+          "stageTimingsMS": {
+            "membraneMS": 61.5599310000689,
+            "bodyProjectionMS": 916.8756140000478,
+            "bodyVelocityMS": 62.2457750000176,
+            "bodyEnvelopeMS": 1187.2870709999552,
+            "activeStrainMS": 55.93488699996669,
+            "layerContactMS": 3060.7684129999398,
+            "layerBroadphaseMS": 525.6683190000185,
+            "layerAuditMS": 1132.49365400002
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 43,
+                "measureCalls": 23,
+                "candidateVisits": 36492305,
+                "vertexFaceTests": 2578060,
+                "edgeEdgeTests": 7584139,
+                "sweptVertexFaceTests": 20035,
+                "sweptEdgeEdgeTests": 46777,
+                "localBoundsRejectedVF": 7496595,
+                "localBoundsRejectedEE": 18860657,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 1441640,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 420440,
+                "cacheHits": 0,
+                "bvhNodeVisits": 6563586,
+                "bodyTriangleTests": 944158,
+                "vertexFaceCandidates": 5664948,
+                "vertexFaceTests": 5664948,
+                "edgeEdgeCandidates": 8497422,
+                "edgeEdgeTests": 8497422
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1052573696,
+            "heapTotal": 383344640,
+            "heapUsed": 253884408,
+            "external": 479147444,
+            "arrayBuffers": 73915967
+          }
+        },
+        "r03-on": {
+          "step": 7,
+          "wallMS": 5198.088659000001,
+          "processCPUms": {
+            "user": 5996.776,
+            "system": 12.049,
+            "total": 6008.825
+          },
+          "solverMS": 5198.084073000005,
+          "stageTimingsMS": {
+            "membraneMS": 66.02352000000246,
+            "bodyProjectionMS": 908.2374940000882,
+            "bodyVelocityMS": 70.43698199998471,
+            "bodyEnvelopeMS": 516.5683540000755,
+            "activeStrainMS": 57.95496399998956,
+            "layerContactMS": 2534.8260449999652,
+            "layerBroadphaseMS": 572.2879770000291,
+            "layerAuditMS": 830.0039889999898
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 43,
+                "measureCalls": 23,
+                "candidateVisits": 36492305,
+                "vertexFaceTests": 1415909,
+                "edgeEdgeTests": 4498980,
+                "sweptVertexFaceTests": 19030,
+                "sweptEdgeEdgeTests": 45234,
+                "localBoundsRejectedVF": 8658746,
+                "localBoundsRejectedEE": 21945816,
+                "ordinaryDistanceRejectedVF": 752576,
+                "ordinaryDistanceRejectedEE": 2207936,
+                "adjacentFaceTests": 9832,
+                "localBoundsBuildMS": 135.3828719999874,
+                "localBoundsRefitVertices": 94600,
+                "localBoundsRefitFaces": 434882,
+                "localBoundsRefitEdges": 491706
+              },
+              "body": {
+                "triangleQueries": 420440,
+                "cacheHits": 328036,
+                "bvhNodeVisits": 1810948,
+                "bodyTriangleTests": 387525,
+                "vertexFaceCandidates": 2325150,
+                "vertexFaceTests": 517880,
+                "edgeEdgeCandidates": 3487725,
+                "edgeEdgeTests": 1313735
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1051361280,
+            "heapTotal": 353050624,
+            "heapUsed": 224529648,
+            "external": 543045342,
+            "arrayBuffers": 67036371
+          }
+        }
+      }
+    },
+    {
+      "step": 8,
+      "physicalSeconds": 0.06666666666666667,
+      "comparisons": {
+        "r03-off": {
+          "historySHA256": "d13d5761bdf19394dc1d31052869fab17d683ba7c5551a03ceb9d3be3bdf49e5",
+          "snapshotSHA256": "f1ca7cd47d1201b42d04e69d3c1b55d3c0987d9a1836f77bf046b07ab65a6d5c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        },
+        "r03-on": {
+          "historySHA256": "d13d5761bdf19394dc1d31052869fab17d683ba7c5551a03ceb9d3be3bdf49e5",
+          "snapshotSHA256": "f1ca7cd47d1201b42d04e69d3c1b55d3c0987d9a1836f77bf046b07ab65a6d5c",
+          "exactParticleArrays": true,
+          "exactRenderedArrays": true
+        }
+      },
+      "metrics": {
+        "maxEdgeStretch": 1.4476260141047355,
+        "seamGapMM": 0,
+        "contactResidualMM": 0.47544651869013427,
+        "bodyThicknessOverlapMM": 0
+      },
+      "geometry": {
+        "schema": "kaopu-independent-mesh-intersections@1",
+        "epsilonM": 1e-7,
+        "hasReportedIntersections": false,
+        "intersectingOrTouchingTrianglePairs": 0,
+        "properCrossingTrianglePairs": 0,
+        "boundaryCurveTrianglePairs": 0,
+        "coplanarOverlapTrianglePairs": 0,
+        "touchingTrianglePairs": 0,
+        "candidateTrianglePairs": 27852,
+        "degenerateTriangles": 0,
+        "pairs": [
+          {
+            "a": "pants",
+            "b": "inner",
+            "candidateTrianglePairs": 363,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "outer",
+            "candidateTrianglePairs": 12,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "pants",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 2848,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "outer",
+            "candidateTrianglePairs": 8185,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "inner",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 14876,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          },
+          {
+            "a": "outer",
+            "b": "__actual_native_body__",
+            "candidateTrianglePairs": 1568,
+            "properCrossingTrianglePairs": 0,
+            "boundaryCurveTrianglePairs": 0,
+            "coplanarOverlapTrianglePairs": 0,
+            "touchingTrianglePairs": 0
+          }
+        ],
+        "samples": [],
+        "sampleLimit": 8,
+        "meshes": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          },
+          {
+            "id": "__actual_native_body__",
+            "vertices": 25417,
+            "triangles": 50624,
+            "testedTriangles": 50624,
+            "degenerateTriangles": 0,
+            "degenerateTriangleSamples": []
+          }
+        ],
+        "elapsedMS": 498.4645029999956,
+        "scope": {
+          "independentOfContactSolver": true,
+          "checksBothEdgeDirections": true,
+          "countsAreTrianglePairsNotUniquePhysicalRegions": true,
+          "coplanarPositiveAreaOverlapIncluded": true,
+          "boundaryTouchesReportedSeparately": true,
+          "noncoplanarBoundaryCurvesIncluded": true,
+          "degenerateTrianglesExcluded": true,
+          "allNondegenerateInputTrianglePairsCovered": true,
+          "completeForInputTriangles": true,
+          "selfIntersectionsChecked": false,
+          "continuousCollisionChecked": false,
+          "thicknessClearanceChecked": false,
+          "individualYarnGeometryChecked": false,
+          "note": "Discrete middle-surface geometry only. Near-coplanar means within epsilonM; zero crossings does not certify thickness clearance."
+        }
+      },
+      "independentBodyEnvelope": {
+        "schema": "kaopu-independent-body-envelope@1",
+        "epsilonM": 1e-9,
+        "body": {
+          "vertices": 25417,
+          "triangles": 50624,
+          "testedTriangles": 50624,
+          "degenerateTriangles": 0
+        },
+        "garments": [
+          {
+            "id": "pants",
+            "vertices": 2862,
+            "triangles": 5594,
+            "testedTriangles": 5594,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 0.525,
+            "candidateTrianglePairs": 3265,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "inner",
+            "vertices": 4314,
+            "triangles": 8466,
+            "testedTriangles": 8466,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.239816968304051,
+            "candidateTrianglePairs": 29164,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          },
+          {
+            "id": "outer",
+            "vertices": 2226,
+            "triangles": 4220,
+            "testedTriangles": 4220,
+            "degenerateTriangles": 0,
+            "halfThicknessMM": 3.7470564170866396,
+            "candidateTrianglePairs": 4327,
+            "violatingClothTriangles": 0,
+            "minimumDistanceWithinEnvelopeMM": null,
+            "maxHalfThicknessOverlapMM": 0,
+            "closestFeatureCounts": {}
+          }
+        ],
+        "hasHalfThicknessOverlap": false,
+        "maxHalfThicknessOverlapMM": 0,
+        "violatingClothTriangles": 0,
+        "candidateTrianglePairs": 36756,
+        "degenerateTriangles": 0,
+        "samples": [],
+        "sampleLimit": 8,
+        "elapsedMS": 149.8151689999795,
+        "scope": {
+          "independentOfContactSolver": true,
+          "staticBodyCopiedOnce": true,
+          "allNondegenerateClothTrianglesAgainstFullBody": true,
+          "nearestTriangleDistanceWithinHalfThickness": true,
+          "bothVertexFaceDirectionsAndNineFiniteEdgePairs": true,
+          "triangleIntersectionsIncluded": true,
+          "completeForInputTriangles": true,
+          "isotropicEnvelope": true,
+          "signedInsideCertificate": false,
+          "continuousTimeChecked": false,
+          "selfCollisionChecked": false,
+          "individualYarnGeometryChecked": false,
+          "minimumOutsideSearchRadiusCertified": false,
+          "countsAreClothTrianglesNotTrianglePairs": true
+        }
+      },
+      "independentAuditMS": 648.3182990000059,
+      "timings": {
+        "r02": {
+          "step": 8,
+          "wallMS": 6177.639866999991,
+          "processCPUms": {
+            "user": 6416.626,
+            "system": 12.765,
+            "total": 6429.391
+          },
+          "solverMS": 6177.633457000018,
+          "stageTimingsMS": {
+            "membraneMS": 62.823610000137705,
+            "bodyProjectionMS": 974.9240380000556,
+            "bodyVelocityMS": 76.615104000055,
+            "bodyEnvelopeMS": 1125.355110000004,
+            "activeStrainMS": 42.10784100001911,
+            "layerContactMS": 2775.3934620000073,
+            "layerBroadphaseMS": 559.8804010000313,
+            "layerAuditMS": 869.9780310000642
+          },
+          "execution": null,
+          "memory": {
+            "rss": 1053376512,
+            "heapTotal": 529797120,
+            "heapUsed": 429399288,
+            "external": 535988468,
+            "arrayBuffers": 130757567
+          }
+        },
+        "r03-off": {
+          "step": 8,
+          "wallMS": 5903.338818999997,
+          "processCPUms": {
+            "user": 6207.749,
+            "system": 27.316,
+            "total": 6235.065
+          },
+          "solverMS": 5903.32829200002,
+          "stageTimingsMS": {
+            "membraneMS": 64.3331350000808,
+            "bodyProjectionMS": 922.5272809999005,
+            "bodyVelocityMS": 62.24298700000509,
+            "bodyEnvelopeMS": 909.7124209999456,
+            "activeStrainMS": 42.654741000093054,
+            "layerContactMS": 2796.8923389999836,
+            "layerBroadphaseMS": 493.2907950000372,
+            "layerAuditMS": 854.9924989999854
+          },
+          "execution": {
+            "contactDemand": false,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 37,
+                "measureCalls": 17,
+                "candidateVisits": 29143503,
+                "vertexFaceTests": 2070428,
+                "edgeEdgeTests": 6085155,
+                "sweptVertexFaceTests": 14347,
+                "sweptEdgeEdgeTests": 29613,
+                "localBoundsRejectedVF": 5974181,
+                "localBoundsRejectedEE": 15037642,
+                "ordinaryDistanceRejectedVF": 0,
+                "ordinaryDistanceRejectedEE": 0,
+                "adjacentFaceTests": 1171075,
+                "localBoundsBuildMS": 0,
+                "localBoundsRefitVertices": 0,
+                "localBoundsRefitFaces": 0,
+                "localBoundsRefitEdges": 0
+              },
+              "body": {
+                "triangleQueries": 310760,
+                "cacheHits": 0,
+                "bvhNodeVisits": 4831445,
+                "bodyTriangleTests": 702748,
+                "vertexFaceCandidates": 4216488,
+                "vertexFaceTests": 4216488,
+                "edgeEdgeCandidates": 6324732,
+                "edgeEdgeTests": 6324732
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1052696576,
+            "heapTotal": 403529728,
+            "heapUsed": 317469448,
+            "external": 490320366,
+            "arrayBuffers": 84630903
+          }
+        },
+        "r03-on": {
+          "step": 8,
+          "wallMS": 4400.954436,
+          "processCPUms": {
+            "user": 4985.561,
+            "system": 12.21,
+            "total": 4997.771
+          },
+          "solverMS": 4400.949640000006,
+          "stageTimingsMS": {
+            "membraneMS": 63.00070999984746,
+            "bodyProjectionMS": 869.3160779999453,
+            "bodyVelocityMS": 61.878716000006534,
+            "bodyEnvelopeMS": 389.92277400012244,
+            "activeStrainMS": 39.883831000042846,
+            "layerContactMS": 2119.432955000055,
+            "layerBroadphaseMS": 490.74946900000214,
+            "layerAuditMS": 643.1784769999504
+          },
+          "execution": {
+            "contactDemand": true,
+            "lastStepWork": {
+              "layer": {
+                "solveCalls": 37,
+                "measureCalls": 17,
+                "candidateVisits": 29143503,
+                "vertexFaceTests": 1168673,
+                "edgeEdgeTests": 3682734,
+                "sweptVertexFaceTests": 13101,
+                "sweptEdgeEdgeTests": 27804,
+                "localBoundsRejectedVF": 6875936,
+                "localBoundsRejectedEE": 17440063,
+                "ordinaryDistanceRejectedVF": 619076,
+                "ordinaryDistanceRejectedEE": 1814541,
+                "adjacentFaceTests": 9015,
+                "localBoundsBuildMS": 116.1258909998287,
+                "localBoundsRefitVertices": 83992,
+                "localBoundsRefitFaces": 384560,
+                "localBoundsRefitEdges": 435343
+              },
+              "body": {
+                "triangleQueries": 310760,
+                "cacheHits": 235619,
+                "bvhNodeVisits": 1432468,
+                "bodyTriangleTests": 297729,
+                "vertexFaceCandidates": 1786374,
+                "vertexFaceTests": 392391,
+                "edgeEdgeCandidates": 2679561,
+                "edgeEdgeTests": 1005598
+              }
+            },
+            "scope": "Conservative local feature rejection and exact unchanged-query reuse; no physical sleep or automatic occlusion culling",
+            "staticBodyAccelerationArrayBytes": 8507352,
+            "memoryScope": "Extra static typed arrays only; excludes cached cloth triangles and JavaScript objects"
+          },
+          "memory": {
+            "rss": 1052164096,
+            "heapTotal": 362168320,
+            "heapUsed": 269080696,
+            "external": 508553492,
+            "arrayBuffers": 103715327
+          }
+        }
+      }
+    }
+  ],
+  "physicalProgressRequired": true,
+  "rollbacksAllowedForPass": false,
+  "independentlyAuditedDiscreteStates": 9,
+  "finalMemory": {
+    "rss": 1052008448,
+    "heapTotal": 466456576,
+    "heapUsed": 365678728,
+    "external": 466003473,
+    "arrayBuffers": 61165308
+  }
+}
