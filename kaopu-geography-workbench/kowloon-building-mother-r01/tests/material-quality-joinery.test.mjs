@@ -97,3 +97,5 @@ test('local light visibility checks occupancy spans, including starts inside and
 test('exported probes use current poses and give direct five-face verification',()=>{const s=create({roundRadius:.12,openT:.4}),probes=joinery.apertureBevelProbeRays(s);assert.equal(probes.length,10);for(const q of probes){const p=s.primitives.find(p=>p.objectId===q.objectId),h=joinery.intersectAperturesRay(isolated(s,p),q.origin,q.direction);assert.ok(h.hit);near(h.t,q.expectedT);vnear(h.normal,q.expectedNormal);vnear(h.point,q.expectedPoint);}});
 
 test("GLSL interval locals never use reserved interpolation keywords",()=>{const glsl=joinery.buildAperturesGLSL(create());assert.doesNotMatch(glsl,/\b(?:bool|float|int|vec[234])\s+(?:varying|attribute|uniform|input|output)\b/);});
+
+test("GLSL complete interval results use explicit branching, never struct ternaries",()=>{assert.doesNotMatch(joinery.buildAperturesGLSL(create()),/return[^;]*\?apertureSubtract/);});
