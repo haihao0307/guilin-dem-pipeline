@@ -64,6 +64,15 @@ jobs:
           assert.equal(q.cleanup.completed,true);
           for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
           assert(!q.failure&&!q.cleanupError&&!q.restorationError);
+          assert.equal(q.tests.length,8);assert(q.tests.every(t=>t.passed));
+          assert.equal(q.startups.length,1);
+          assert.equal(q.frames.filter(f=>f.saved).length,10);
+          assert.equal(q.frames.length,19);
+          assert.equal(q.floatFrames.length,12);
+          assert.equal(q.detailWindows.length,2);
+          assert(q.detailWindows.every(w=>w.completed&&w.restoration.originalPixelsExact&&w.restoration.originalProgramExact&&w.restoration.completeNativeStateExact));
+          assert.equal(q.runnerSourceSHA,process.env.GITHUB_SHA);
+          assert.equal(q.buildSHA,'8134500a3f5bf7a257ceef562061bb4c04416694');
           assert.equal(q.visualAcceptance,false);
           assert.equal(q.productionReady,false);
           console.log('Native diagnostic run completed; no aesthetic approval inferred.');
