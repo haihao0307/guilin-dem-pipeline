@@ -9,7 +9,7 @@ def save():(out/'results.json').write_text(json.dumps(r,ensure_ascii=False,inden
 def check(ok,label,data):
  if not ok:r['validationFailures'].append({'label':label,'data':data});print('CHECK FAILED',label,flush=True)
  save()
-paths=[P/'r07.html']+sorted((P/'r07').rglob('*.mjs'))+[P/'r07/style.css']
+paths=[P/'r07.html']+sorted((P/'r07').rglob('*.mjs'))+[P/'r07/style.css',P/'r07/evidence-ledger.json']+sorted((P/'r07/sources').glob('*.json'))
 for p in paths:
  rel=str(p.relative_to(P));b=urllib.request.urlopen(base+rel+'?r07qa='+str(time.time_ns()),timeout=60).read();got=hashlib.sha256(b).hexdigest();expected=hashlib.sha256(p.read_bytes()).hexdigest();assert got==expected,(rel,got,expected);r['hashes'][rel]=got
 locked=json.loads((P/'r06/evidence/candidate13-browser-results.json').read_text());r['frozenR06Hashes']={}
