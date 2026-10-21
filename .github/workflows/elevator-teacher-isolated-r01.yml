@@ -16,11 +16,11 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: kaopu-geography-workbench/elevator-learning-qa-r01
-      - name: Complete the one verified Ubuntu runtime dependency
+      - name: Complete verified Ubuntu GUI and software-rendering dependencies
         run: |
           mkdir -p elevator-qa-text
-          apt-cache policy libnotify4 | tee elevator-qa-text/apt-policy.txt
-          sudo apt-get install -y --no-install-recommends libnotify4 2>&1 | tee elevator-qa-text/apt-install.txt
+          apt-cache policy libnotify4 libegl1 libgles2 libgl1-mesa-dri | tee elevator-qa-text/apt-policy.txt
+          sudo apt-get install -y --no-install-recommends libnotify4 libegl1 libgles2 libgl1-mesa-dri 2>&1 | tee elevator-qa-text/apt-install.txt
       - name: Check existing display and libraries then observe official runtime
         env:
           QA_LOG_DIR: elevator-qa-text
