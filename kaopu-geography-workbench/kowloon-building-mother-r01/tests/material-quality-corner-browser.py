@@ -10,10 +10,11 @@ def check(v,m):
  if not v:raise AssertionError(m)
 def stage(name):r['stages'].append({'name':name,'atSeconds':time.monotonic()-start});save();log(name)
 with sync_playwright() as pw:
- browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']);page=browser.new_page(viewport={'width':1060,'height':830},device_scale_factor=1);page.set_default_timeout(120000);page.on('pageerror',lambda e:r['errors'].append(str(e)))
+ browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']);page=browser.new_page(viewport={'width':1060,'height':830},device_scale_factor=1);page.set_default_timeout(120000);page.on('pageerror',lambda e:r['errors'].append(str(e)));page.on('console',lambda m:log(m.text) if m.text.startswith('GPU_PHASE ') else None)
+ page.add_init_script("""for(const name of ['compileShader','linkProgram','drawArrays']){const original=WebGL2RenderingContext.prototype[name];WebGL2RenderingContext.prototype[name]=function(...args){const at=performance.now();if(name!=='drawArrays'||!window.__firstDrawLogged)console.log('GPU_PHASE '+name+' start '+at.toFixed(1));const result=original.apply(this,args);if(name!=='drawArrays'||!window.__firstDrawLogged)console.log('GPU_PHASE '+name+' return '+(performance.now()-at).toFixed(1));if(name==='drawArrays')window.__firstDrawLogged=true;return result;};}""")
  def settle():return page.evaluate(A+'.awaitSettled({timeoutMs:90000})')
  def capture(name):
-  page.screenshot(path=str(out/(name+'.png')));page.locator('#view').screenshot(path=str(out/(name+'-canvas.png')));r['screenshots'] += [name+'.png',name+'-canvas.png'];save();log('CAPTURE '+name)
+  page.screenshot(path=str(out/(name+'.png')),timeout=10000);page.locator('#view').screenshot(path=str(out/(name+'-canvas.png')),timeout=10000);r['screenshots'] += [name+'.png',name+'-canvas.png'];save();log('CAPTURE '+name)
  def sample(name,width=640):
   stage('SAMPLING '+name);page.evaluate('w=>{window.__cornerPromise=window.__MATERIAL_QUALITY__.render({width:w,height:508,samplesPerAxis:2,tileSide:64}).then(v=>({ok:true,v}),e=>({ok:false,message:e.message,name:e.name}));}',width)
   last=-1;deadline=time.monotonic()+360
@@ -25,7 +26,7 @@ with sync_playwright() as pw:
    page.wait_for_timeout(1000)
   value=page.evaluate('window.__cornerPromise');check(value['ok'],'quality result '+str(value));settle();state=page.evaluate(Q+'.snapshot()');scale=state['samplingScale'];check(abs(scale['sourcePixelsPerCSSPixel'][0]-1)<.005 and abs(scale['sourcePixelsPerCSSPixel'][1]-1)<.005,'native 1:1 CSS/output ratio');r[name]=value['v'];r[name]['samplingScale']=scale;capture(name)
  try:
-  stage('ordinary cold initialization');page.goto(a.url,wait_until='networkidle');page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=120000);check(page.evaluate(A+'?.ready'),'normal cold initialization failed');settle();r['cold']=page.evaluate('window.__GPU_RECOVERY__.snapshot()')
+  stage('ordinary cold initialization');page.goto(a.url,wait_until='networkidle');page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=120000);check(page.evaluate(A+'?.ready'),'normal cold initialization failed');settle();r['cold']=page.evaluate('window.__GPU_RECOVERY__.snapshot()');r['coldWallSeconds']=time.monotonic()-start;log('COLD_READY '+str(r['coldWallSeconds']))
   # No postprocessing enlargement: 640x508 drawing buffer is shown at exactly 640x508 CSS px.
   page.add_style_tag(content='main{grid-template-columns:642px 350px!important}.viewport{width:642px!important;height:510px!important;min-height:0!important;position:relative!important;top:0!important}.canvas-note,.viewbar,.render-label{display:none!important}')
   page.evaluate(A+'.setResolution(32,25)');settle()

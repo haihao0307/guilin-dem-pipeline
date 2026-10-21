@@ -42,3 +42,5 @@ test('explicit-resolution repaint is queued behind GPU readiness rather than for
  const paint=app.slice(app.indexOf('function paint(reason='),app.indexOf('function paintInteraction('));
  assert.match(paint,/scheduler\.request\(\{quality:'manual',reason,settle:false\}\)/);assert.doesNotMatch(paint,/scheduler\.flush/);
 });
+
+test("material receiver boots directly into selected case without compiling the unused kernel",()=>{const boot=app.slice(app.indexOf("try{$('view').width=1;"),app.indexOf("window.__IMPLICIT_BUILDING__={"));assert.doesNotMatch(boot,/apply\(\);setView\('stairs'\)/);assert.match(boot,/await setCase\('lowrise-hosted'\);installQualityApi\(\)/);});
