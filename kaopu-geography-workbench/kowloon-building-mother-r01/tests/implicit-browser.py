@@ -23,6 +23,7 @@ with sync_playwright() as p:
   assert report['startupScaleTimings'][-1]['medianMs']<600,'160x112 exceeds600ms warmed frame budget; high-resolution run withheld rather than queued blindly'
   page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()')
   def shot(name):
+   page.evaluate('window.__IMPLICIT_BUILDING__.resumeViewport()')
    page.screenshot(path=str(out/(name+'.png')),full_page=False);report['screenshots'].append(name+'.png');print('STAGE screenshot '+name,flush=True)
   shot('r06-field-stairs')
   print('STAGE parity',flush=True);report['parity']=page.evaluate('window.__IMPLICIT_BUILDING__.parity()');assert report['parity']['passed'],report['parity'];report['rayParity']=page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()');assert report['rayParity']['passed'],report['rayParity']

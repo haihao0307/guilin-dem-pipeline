@@ -100,10 +100,10 @@ vec3 contextDesignLocal(vec3 p){return contextInverseRotate(p-contextTranslation
 vec3 contextMaterialDirection(FieldHit h,vec3 worldDirection){return h.objectId>=2000.0?contextInverseRotate(worldDirection):worldDirection;}
 float contextDisplayDomain(vec3 p){return max(max(${f(d.heightRange[0])}-p.y,p.y-(${f(d.heightRange[1])})),${f(d.cutPlane.offset)}-dot(${vec(d.cutPlane.normal)},p));}
 // Authoritative DATA query: unsigned measured shell + signed authored solids.
-FieldHit mapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));return a.distance<=b.distance?a:b;}
+FieldHit mapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));if(a.distance<=b.distance)return a;return b;}
 float mapDistance(vec3 p){return min(contextSource_mapDistance(p),contextDesign_mapDistance(contextDesignLocal(p)));}
 // DISPLAY ONLY lower bound. No new zero set, cap, volume, or model geometry.
-FieldHit displayMapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));a.distance=max(a.distance,contextDisplayDomain(p));return a.distance<=b.distance?a:b;}
+FieldHit displayMapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));a.distance=max(a.distance,contextDisplayDomain(p));if(a.distance<=b.distance)return a;return b;}
 float displayMapDistance(vec3 p){return min(max(contextSource_mapDistance(p),contextDisplayDomain(p)),contextDesign_mapDistance(contextDesignLocal(p)));}
 vec3 fieldNormal(vec3 p){FieldHit h=mapField(p);return h.objectId<2000.0?contextSource_caseNormalForId(h.objectId):contextRotate(contextDesign_fieldNormal(h.local));}
 vec3 fieldRayNormal=vec3(0,1,0);
@@ -115,7 +115,7 @@ bool contextSourceInterval(vec3 ro,vec3 rd,bool display,out float lo,out float h
 bool contextTraceRay(vec3 ro,vec3 rd,bool display,out float t,out FieldHit h,out int visits){float sourceT=1e20,designT=1e20,lo,hi;FieldHit sourceHit,designHit;int sourceVisits=0,designVisits=0;bool sourceFound=false;
  if(contextSourceInterval(ro,rd,display,lo,hi)){sourceFound=contextSource_caseTraceRay(ro+rd*lo,rd,sourceT,sourceHit,sourceVisits);sourceT+=lo;if(sourceFound&&sourceT>hi)sourceFound=false;if(sourceFound&&contextDesign_assemblyUnionInside(contextDesignLocal(ro+rd*sourceT)))sourceFound=false;}
  bool designFound=contextDesign_caseTraceRay(contextDesignLocal(ro),contextInverseRotate(rd),designT,designHit,designVisits);visits=sourceVisits+designVisits;t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;
- if(!sourceFound&&!designFound)return false;bool sourceWins=sourceFound&&(!designFound||sourceT<=designT);t=sourceWins?sourceT:designT;h=sourceWins?sourceHit:designHit;
+ if(!sourceFound&&!designFound)return false;bool sourceWins=sourceFound&&(!designFound||sourceT<=designT);t=sourceWins?sourceT:designT;if(sourceWins)h=sourceHit;else h=designHit;
  // Stable coincidence policy: source wins an exactly equal ray parameter.
  fieldRayNormal=sourceWins?contextSource_caseNormalForId(h.objectId):contextRotate(contextDesign_fieldRayNormal);return true;}
 // Renderer trace is explicitly the DISPLAY query; full DATA ray stays available.

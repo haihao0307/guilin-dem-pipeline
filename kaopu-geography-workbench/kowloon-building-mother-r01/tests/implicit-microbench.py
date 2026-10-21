@@ -18,6 +18,7 @@ with sync_playwright() as pw:
   page.evaluate(f'{api}.setResolution(32,32)');r['32x32']=page.evaluate(f'{api}.benchmark(3)')
   if r['32x32']['medianMs']<75:
    page.evaluate(f'{api}.setResolution(160,112)');r['160x112']=page.evaluate(f'{api}.benchmark(3)')
+  r['compile']=page.evaluate(f'{api}.snapshot().renderer.compileProfile')
   return r
  try:
   page,state=boot();report['initial']=state
@@ -25,7 +26,8 @@ with sync_playwright() as pw:
    print('MICRO '+name,flush=True)
    try:
     page.evaluate(f'{api}.setResolution(1,1);{api}.setTraceVariant({mode});{api}.setRenderOptions({{renderMode:1,traceMode:0}})');r=measure(page)
-    if name=='combined':r['diagnostics']=page.evaluate(f'{api}.diagnostics()')
+    if name=='combined':
+     r['diagnostics']=page.evaluate(f'{api}.diagnostics()');r['stageTimings']=page.evaluate(f'{api}.benchmarkStages(3)')
    except Exception as e:
     r={'error':str(e)};page.close();page,_=boot()
    report['paths'][name]=r;save();print(json.dumps({'path':name,'timings':{k:round(v['medianMs'],2) for k,v in r.items() if isinstance(v,dict) and 'medianMs' in v},'error':r.get('error')}),flush=True)
