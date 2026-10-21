@@ -73,6 +73,8 @@ The full browser suite retains 180 s cold readiness and identity-task gates, the
 
 New browser gates cover three rapid UI steps with individual real GPU completions on file/public runs; paused review invalidation with zero physical ticks; observer edits unable to alter an active native window task; numerical ownership rejection; explicit suite abort; and separate compact/full real UI downloads. Existing asynchronous screenshot endpoint semantics remain; PNGs are not exact-frame proofs.
 
+The browser driver's frequent progress checkpoints contain compact run/case/operation summaries and checked byte/SHA references to the complete `suite.json`, `full-evidence-export.json` and `continuous-ui.json` files. All original physical assertions still run against the full measurements before their summaries are recorded. The third candidate completed 14 browser groups but reached the 35-minute workflow limit during mobile checks; its ~69.5 MB progress report had repeatedly re-embedded already-saved full numerical and continuous evidence. Removing that duplicate serialization preserves every original evidence file, action, sample, mobile/error gate and timeout. The incomplete run is diagnostic evidence only; a fresh complete exact-source run is still required.
+
 ## Delivery checklist
 
 - [x] No generated image substitutes for 3D.

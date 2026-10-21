@@ -31,6 +31,7 @@ jobs:
       - name: Verify bounded boot and continuous-frame evidence contracts
         run: |
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r04-release-contract.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/r04-evidence-references-test.cjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-boot-render-contract.mjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-continuous-contract-test.cjs
           node kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-navigation-payload.cjs
@@ -61,6 +62,7 @@ jobs:
             /tmp/npc-browser
             kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r03-*.json
             kaopu-unified-human-workbench/npc-life-observation-r04/qa/audit-r04-release-contract.json
+            kaopu-unified-human-workbench/npc-life-observation-r04/qa/r04-evidence-references-test.json
             kaopu-unified-human-workbench/npc-life-observation-r04/qa/*-report.json
           retention-days: 14
       - name: Stage byte-identical isolated public candidate

@@ -24,6 +24,7 @@ const {pathToFileURL,fileURLToPath} = require('node:url');
 const {chromium} = require('playwright');
 const {runContinuousUI}=require('./qa/continuous-ui.cjs');
 const authorityQA=require('./qa/authority-browser.cjs');
+const evidenceRefs=require('./qa/r04-evidence-references.cjs');
 
 const VERSION = 'NPC-LIFE-OBSERVATION-R04';
 const PHASE = process.env.NPC_QA_PHASE || 'suite';
@@ -1360,7 +1361,10 @@ async function fullSuite() {
     report.windowBuiltInAudit=auditBuiltinWindows(result.verification.tests);
     assert.equal(result.verification.passed,true);
     assert(result.verification.tests.every(test=>test.pass===true),'Every built-in case must report its measured pass result');
-    return result.verification;
+    // Full assertions and original evidence files remain above. Checkpoints
+    // retain their exact byte/SHA references instead of re-embedding the run.
+    return evidenceRefs.summarizeSuite({verification:result.verification,summary,
+      suiteBytes:fs.readFileSync(path.join(out,'suite.json')),fullBytes});
   });
 }
 
@@ -1818,7 +1822,7 @@ async function main() {
   if(PHASE==='suite'||PHASE==='public')await check('R04 three actual single steps each wait for completed native frames',async()=>{report.singleStepAuthority=await authorityQA.queuedSingleSteps({page,evaluate,waitFor,put,pause,frameMS:FRAME_MS});return report.singleStepAuthority;});
   if(PHASE==='suite')await identityInteraction();
   if(PHASE==='suite'||PHASE==='public')await check('three uninterrupted real-UI actions and completed-frame contracts',async()=>{
-    report.continuousUI=await runContinuousUI({page,clickCommand,evaluate,waitFor,bounded,put,stage,maxWallMS:600000,frameMS:FRAME_MS,
+    const continuous=await runContinuousUI({page,clickCommand,evaluate,waitFor,bounded,put,stage,maxWallMS:600000,frameMS:FRAME_MS,
       onCompleted:async entry=>{
         const capture=await evidence(entry.label+'-native');
         assert.equal(capture.errors.length,0);
@@ -1839,7 +1843,8 @@ async function main() {
           contractCompletedSerial:entry.after.renderStatus.completed}});
         return {feet,resourceExclusion,geometry};
       }});
-    assert.equal(report.continuousUI.completed,true);
+    assert.equal(continuous.completed,true);
+    report.continuousUI=evidenceRefs.summarizeContinuous({continuous,bytes:fs.readFileSync(path.join(out,'continuous-ui.json'))});
     return {completed:true,operations:report.continuousUI.operations.map(entry=>entry.contract),elapsedMS:report.continuousUI.elapsedMS};
   });
   if(PHASE==='contact' || PHASE==='suite')await contactTests();
