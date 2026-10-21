@@ -1,0 +1,141 @@
+name: Lip surface R08 public candidate
+on:
+  push:
+    branches: [feature/lip-surface-r08-20261021]
+    paths:
+      - kaopu-unified-human-workbench/lip-surface-r08/**
+      - .github/workflows/lip-surface-r08.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-surface-r08-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github/workflows
+            kaopu-unified-human-workbench/lip-surface-r08
+            kaopu-unified-human-workbench/lip-corner-r06
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify reviewed source and immutable accepted R06
+        run: |
+          python - <<'PYVERIFY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-surface-r08')
+          a=json.loads((p/'CANDIDATE_ANCHOR.json').read_text())
+          for name,expected in a['reviewedFiles'].items():
+              actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          assert hashlib.sha256((p.parent/'lip-corner-r06/preview.html').read_bytes()).hexdigest()==a['baseline']['previewSHA256']
+          assert a['baseline']['buildCommit']=='1237284ea60f9c198b2b63543f098a7551a9af2f'
+          assert a['visualAcceptance'] is False and a['productionReady'] is False
+          print('Reviewed native surface source and immutable R06 verified; no aesthetic acceptance inferred.')
+          PYVERIFY
+      - name: Build exact inherited R06 plus native R08 appearance
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: node kaopu-unified-human-workbench/lip-surface-r08/build.cjs
+      - name: Publish immutable candidate build to isolated draft branch
+        id: build
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+          TASK_BRANCH: feature/lip-surface-r08-20261021
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$EXPECTED_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -f -- kaopu-unified-human-workbench/lip-surface-r08/preview.html kaopu-unified-human-workbench/lip-surface-r08/BUILD_MANIFEST.json
+          git commit -m "Build immutable native lip-surface R08 candidate [skip ci]"
+          git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          R08_BUILD_SHA=$(git rev-parse HEAD)
+          echo "BUILD_SHA=$R08_BUILD_SHA" >> "$GITHUB_ENV"
+          echo "BUILD_SHA=$R08_BUILD_SHA" >> "$GITHUB_OUTPUT"
+          python - <<'PYRECEIPT'
+          import json,os,subprocess
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-surface-r08')
+          build=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          m=json.loads((p/'BUILD_MANIFEST.json').read_text())
+          r={'schema':'kaopu/lip-surface-candidate-build@1','sourceCommit':os.environ['GITHUB_SHA'],'buildCommit':build,'previewSHA256':m['previewSHA256'],'publicURL':'https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+build+'/kaopu-unified-human-workbench/lip-surface-r08/preview.html','workflowRun':int(os.environ['GITHUB_RUN_ID']),'technicalVerification':'pending','visualAcceptance':False,'productionReady':False}
+          (p/'CANDIDATE_BUILD.json').write_text(json.dumps(r,indent=2)+'\n')
+          PYRECEIPT
+      - name: Install fixed browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Verify actual immutable public workbench
+        env:
+          MODE: public
+          SOURCE_SHA: ${{ github.sha }}
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.build.outputs.BUILD_SHA }}/kaopu-unified-human-workbench/lip-surface-r08/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+          QA_BUDGET_MS: 900000
+        run: timeout --signal=TERM --kill-after=20s 16m node kaopu-unified-human-workbench/lip-surface-r08/verification/verify-surface.cjs
+      - name: Verify candidate completion without aesthetic promotion
+        run: |
+          node - <<'JSVERIFY'
+          const fs=require('fs'),assert=require('assert/strict');
+          const p='kaopu-unified-human-workbench/lip-surface-r08/';
+          const q=JSON.parse(fs.readFileSync(p+'evidence/candidate-01/qa.json'));
+          const a=JSON.parse(fs.readFileSync(p+'CANDIDATE_ANCHOR.json'));
+          const m=JSON.parse(fs.readFileSync(p+'BUILD_MANIFEST.json'));
+          assert.equal(q.completed,true);assert.equal(q.cleanup.completed,true);
+          for(const k of ['failure','restorationError','cleanupError'])assert(!q[k],k);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert.equal(q.tests.length,a.requiredChecks.tests);assert(q.tests.every(t=>t.passed));
+          for(const k of ['publicHttpsPassed','browserPassed','shareAllowed'])assert.equal(q[k],true,k);
+          assert.equal(q.cleanup.browserDisconnected,true);
+          assert.equal(q.frames.filter(f=>f.saved).length,a.requiredChecks.savedNativeFrames);assert.equal(q.frames.length,a.requiredChecks.nativeReadbacks);
+          assert.equal(q.sourceSHA,process.env.GITHUB_SHA);assert.equal(q.buildSHA,process.env.BUILD_SHA);
+          assert.equal(q.previewSHA256,m.previewSHA256);assert.equal(q.verifierSHA256,a.reviewedFiles['verification/verify-surface.cjs']);
+          assert.equal(q.independentR06.length,2);assert.equal(q.downloads.length,3);
+          assert.equal(q.factorComparisons.variants.length,2);
+          for(const k of ['nativeStateExact','solverReportsAndCallsExact','pixelsRestoredExact','actualShaderRestoredExact'])assert.equal(q.factorComparisons[k],true,k);
+          assert(q.inheritedControlRegression.actualDOMDownload&&q.inheritedControlRegression.historicalArchiveRetainsCorrectComparisons);
+          assert(q.freshRestore.stateExact&&q.freshRestore.frameExact);
+          assert.equal(q.visualAcceptance,false);assert.equal(q.productionReady,false);
+          console.log('Actual public R08 checks completed; aesthetic acceptance remains separate.');
+          JSVERIFY
+      - name: Preserve actual completed or failed candidate evidence
+        if: always() && steps.build.outcome == 'success'
+        env:
+          TASK_BRANCH: feature/lip-surface-r08-20261021
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_HEAD" = "$BUILD_SHA"
+          git add -f -- kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_BUILD.json
+          if test -d kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01; then
+            git add -f -- kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Record actual public R08 candidate evidence [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-surface-r08-public-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-01
+            kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_BUILD.json
+            kaopu-unified-human-workbench/lip-surface-r08/CANDIDATE_ANCHOR.json
+            kaopu-unified-human-workbench/lip-surface-r08/BUILD_MANIFEST.json
+            kaopu-unified-human-workbench/lip-surface-r08/src/SurfaceMaterial.js
+            kaopu-unified-human-workbench/lip-surface-r08/src/SurfaceLip.js
+            kaopu-unified-human-workbench/lip-surface-r08/verification/verify-surface.cjs
+          if-no-files-found: error
+          retention-days: 30
