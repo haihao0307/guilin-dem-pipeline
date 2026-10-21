@@ -20,6 +20,45 @@ uniform float uFov,uCutaway,uOcclusion;
 uniform int uRenderMode,uDiagnostic,uTraceMode;
 vec3 cameraRay(){vec2 uv=(2.*gl_FragCoord.xy-uResolution)/uResolution.y;vec3 f=normalize(uTarget-uEye),right=normalize(cross(f,vec3(0,1,0))),up=cross(right,f);return normalize(f+tan(uFov*.5)*(uv.x*right+uv.y*up));}
 `;
+// Both production glass shading and Float32 optical probes call this SAME path.
+// Status: 1 transmission, 2 total internal reflection (sky approximation),
+// 3 unresolved finite exit. Primary miss/non-glass is handled by each caller.
+const HOSTED_OPTICS=String.raw`
+#if FIELD_HOSTED
+struct HostedGlassTrace{int status;float pathLength;float entryF;float exitF;float energy;bool startsInside;vec3 exitPoint;vec3 exitNormal;vec3 transmitted;vec3 transmittance;bool behindFound;float behindT;FieldHit behind;vec3 behindNormal;int behindVisits;};
+float hostedFresnel(float c){float f=(uGlassIOR-1.)/(uGlassIOR+1.);f*=f;return f+(1.-f)*pow(clamp(1.-c,0.,1.),5.);}
+HostedGlassTrace hostedTraceGlassHit(vec3 ro,vec3 rd,float t,FieldHit h,vec3 outward){
+ HostedGlassTrace g;g.status=3;g.pathLength=0.;g.entryF=0.;g.exitF=0.;g.energy=0.;g.startsInside=dot(rd,outward)>0.;g.exitPoint=ro+rd*t;g.exitNormal=outward;g.transmitted=vec3(0.);g.transmittance=vec3(0.);g.behindFound=false;g.behindT=-1.;g.behind=FieldHit(1e20,0.,0.,g.exitPoint);g.behindNormal=vec3(0,1,0);g.behindVisits=0;
+ vec3 facing=g.startsInside?-outward:outward;
+ g.entryF=g.startsInside?0.:hostedFresnel(max(dot(-rd,facing),0.));
+ vec3 internalDirection=g.startsInside?rd:refract(rd,facing,1./uGlassIOR);
+ g.pathLength=g.startsInside?t:0.;
+ if(!g.startsInside){if(dot(internalDirection,internalDirection)<.5){g.status=2;return g;}vec3 paneEntry=g.exitPoint;if(!apertureGlassExit(h.objectId,paneEntry,internalDirection,g.pathLength,g.exitNormal,g.exitPoint))return g;}
+ // The finite exit can be a pane edge, not merely the parallel back plane.
+ g.exitF=hostedFresnel(max(dot(internalDirection,g.exitNormal),0.));
+ g.transmitted=refract(internalDirection,-g.exitNormal,uGlassIOR);
+ if(dot(g.transmitted,g.transmitted)<.5){g.status=2;return g;}
+ g.energy=(1.-g.entryF)*(1.-g.exitF);
+ g.transmittance=exp(log(max(uGlassColor,vec3(.02)))*(max(g.pathLength,0.)/.006))*uGlassTransmission*g.energy;
+ g.behindFound=hostedTraceRayFiltered(g.exitPoint+g.transmitted*.00003,g.transmitted,h.objectId,g.behindT,g.behind,g.behindVisits);g.behindNormal=fieldRayNormal;
+ if(!g.behindFound){g.behindT=-1.;g.behind.objectId=0.;}
+ g.status=1;return g;
+}
+#endif
+`;
+const OPTICS_PROBE=String.raw`
+uniform vec3 uPoints[128],uDirections[128];
+layout(location=0)out vec4 outPath;
+layout(location=1)out vec4 outExit;
+layout(location=2)out vec4 outDirection;
+layout(location=3)out vec4 outTransmission;
+void main(){int i=int(gl_FragCoord.x);vec3 ro=uPoints[i],rd=normalize(uDirections[i]);float t;FieldHit h;int visits;bool found=caseTraceRay(ro,rd,t,h,visits);
+ outPath=vec4(found?0.:-1.,0.,0.,0.);outExit=vec4(0.);outDirection=vec4(0.);outTransmission=vec4(0.,0.,0.,-1.);
+ if(!found||h.materialRole!=6.)return;
+ HostedGlassTrace g=hostedTraceGlassHit(ro,rd,t,h,fieldRayNormal);
+ outPath=vec4(float(g.status),g.pathLength,g.entryF,g.exitF);outExit=vec4(g.exitPoint,g.startsInside?1.:0.);outDirection=vec4(g.transmitted,g.behindFound?g.behind.objectId:0.);outTransmission=vec4(g.transmittance,g.behindT);
+}`;
+
 const SHADE=String.raw`
 float displayDistance(vec3 p){
  #if FIELD_HOSTED
@@ -35,7 +74,6 @@ vec3 colorId(float id){return .35+.6*cos(vec3(0.,2.,4.)+id*1.37);}
 // A second pane terminates as a tinted surface; no recursive transport/caustics.
 #if FIELD_HOSTED
 vec3 hostedSky(vec3 d){return mix(vec3(.82,.87,.86),vec3(.48,.62,.67),clamp(d.y*.6+.4,0.,1.));}
-float hostedFresnel(float c){float f=(uGlassIOR-1.)/(uGlassIOR+1.);f*=f;return f+(1.-f)*pow(clamp(1.-c,0.,1.),5.);}
 vec3 hostedTerminalShade(FieldHit h,vec3 n,vec3 rd,float t){
  if(dot(n,rd)>0.)n=-n;
  FieldSurface s=sampleFieldMaterial(h,contextMaterialDirection(h,n),max(t*.0008,.001));
@@ -44,20 +82,11 @@ vec3 hostedTerminalShade(FieldHit h,vec3 n,vec3 rd,float t){
  return color+s.baseColor*(1.-s.metallic)*mix(vec3(.12,.14,.13),vec3(.3,.36,.38),n.y*.5+.5)+s.baseColor*s.metallic*.14;
 }
 vec3 hostedGlassRadiance(vec3 ro,vec3 rd,float t,FieldHit h,vec3 outward){
- vec3 p=ro+rd*t;bool startsInside=dot(rd,outward)>0.;vec3 facing=startsInside?-outward:outward;
- float entryF=startsInside?0.:hostedFresnel(max(dot(-rd,facing),0.));
- vec3 internalDirection=startsInside?rd:refract(rd,facing,1./uGlassIOR),exitNormal=outward,exitPoint=p;
- float pathLength=startsInside?t:0.;
- if(!startsInside){if(dot(internalDirection,internalDirection)<.5)return hostedSky(reflect(rd,facing));if(!apertureGlassExit(h.objectId,p,internalDirection,pathLength,exitNormal,exitPoint))return vec3(.95,.05,.5);}
- // The finite exit can be a pane edge, not merely the parallel back plane.
- float exitF=hostedFresnel(max(dot(internalDirection,exitNormal),0.));
- vec3 transmitted=refract(internalDirection,-exitNormal,uGlassIOR);
- if(dot(transmitted,transmitted)<.5)return hostedSky(reflect(rd,facing));
- float behindT;FieldHit behind;int visits;bool found=hostedTraceRayFiltered(exitPoint+transmitted*.00003,transmitted,h.objectId,behindT,behind,visits);
- vec3 through=found?hostedTerminalShade(behind,fieldRayNormal,transmitted,behindT):hostedSky(transmitted);
- vec3 absorption=exp(log(max(uGlassColor,vec3(.02)))*(max(pathLength,0.)/.006));
- float energy=(1.-entryF)*(1.-exitF);
- return through*absorption*uGlassTransmission*energy+hostedSky(reflect(rd,facing))*(1.-energy);
+ HostedGlassTrace g=hostedTraceGlassHit(ro,rd,t,h,outward);vec3 facing=g.startsInside?-outward:outward;
+ if(g.status==2)return hostedSky(reflect(rd,facing));
+ if(g.status!=1)return vec3(.95,.05,.5);
+ vec3 through=g.behindFound?hostedTerminalShade(g.behind,g.behindNormal,g.transmitted,g.behindT):hostedSky(g.transmitted);
+ return through*g.transmittance+hostedSky(reflect(rd,facing))*(1.-g.energy);
 }
 #endif
 
@@ -222,15 +251,16 @@ export const nearestRankQuantile=(a,q)=>a.slice().sort((x,y)=>x-y)[Math.max(0,Ma
 export function buildRendererSources(spec,traceVariant=0){
  const code=spec.fieldKind==='measured-surface'?buildCaseGLSL(spec):spec.fieldKind==='evidence-assembly'?buildAssemblyGLSL(spec):spec.fieldKind==='case-context'?buildContextGLSL(spec):spec.fieldKind==='hosted-context'?buildHostedSceneGLSL(spec):buildFieldGLSL(spec),source=typeof code==='string'?code:code.source;
  const surface=['measured-surface','evidence-assembly','case-context','hosted-context'].includes(spec.fieldKind),head=HEAD+'#define FIELD_HOSTED '+(spec.fieldKind==='hosted-context'?'1':'0')+'\n#define FIELD_CONTEXT '+(['case-context','hosted-context'].includes(spec.fieldKind)?'1':'0')+'\n#define FIELD_TRACE_VARIANT '+traceVariant+'\n#define FIELD_SURFACE '+(surface?'1':'0')+'\n#define FIELD_MEASURED '+(spec.fieldKind==='measured-surface'?'1':'0')+'\n';
- const stage=n=>head+'#define FIELD_KERNEL_STAGE '+n+'\n',renderHead=stage(0)+source+MOTHER_GLSL+MATERIAL_GLSL+CAMERA+SHADE+DIAGNOSTIC;
+ const stage=n=>head+'#define FIELD_KERNEL_STAGE '+n+'\n',renderHead=stage(0)+source+MOTHER_GLSL+MATERIAL_GLSL+CAMERA+HOSTED_OPTICS+SHADE+DIAGNOSTIC;
  return {source,head,split:!surface&&traceVariant===0,
   direct:renderHead+DIRECT,
   primary:stage(1)+source+CAMERA+RAY_INPUT+MRT+PRIMARY,
   rescue:stage(2)+source+CAMERA+RAY_INPUT+MRT+INPUT_MRT+RESCUE,
-  shade:stage(1)+source+MOTHER_GLSL+MATERIAL_GLSL+CAMERA+SHADE+DIAGNOSTIC+INPUT_MRT+SPLIT_SHADE,
+  shade:stage(1)+source+MOTHER_GLSL+MATERIAL_GLSL+CAMERA+HOSTED_OPTICS+SHADE+DIAGNOSTIC+INPUT_MRT+SPLIT_SHADE,
   rayPrimary:stage(1)+'#define FIELD_RAY_PROBE 1\n'+source+CAMERA+RAY_INPUT+MRT+PRIMARY,
   rayRescue:stage(2)+'#define FIELD_RAY_PROBE 1\n'+source+CAMERA+RAY_INPUT+MRT+INPUT_MRT+RESCUE,
-  rayResult:HEAD+INPUT_MRT+SPLIT_PROBE};
+  rayResult:HEAD+INPUT_MRT+SPLIT_PROBE,
+  opticsProbe:spec.fieldKind==='hosted-context'?stage(0)+source+'uniform vec3 uGlassColor; uniform float uGlassTransmission,uGlassIOR;\n'+HOSTED_OPTICS+OPTICS_PROBE:null};
 }
 /** Describes the actual rendering query; finite test counts are not march budgets. */
 export function rendererDiagnosticContract(spec,traceVariant=0,traceMode=0){
@@ -245,6 +275,8 @@ export function rendererDiagnosticContract(spec,traceVariant=0,traceMode=0){
  if(analytic)return {rayMethod:'analytic diagnostic isolation',metric:'rail march iterations; excludes structural plane, normal and attribute query costs',stepCap:analytic===1?0:512,stepCapKind:'rail march iteration budget',iterationBudget:analytic===1?0:512,unresolvedExpected:analytic!==1,hitEpsilon:analytic===1?'exact finite structural candidate predicates':'rail abs(distance) < max(0.00015m,local ray t*0.000025)',stepRule:analytic===1?'finite structural boundaries only; rail tracing disabled':analytic===2?'rail-only conservative tracing with 512-iteration cap; structural candidates disabled':'finite structural candidates plus rail-only conservative tracing with 512-iteration cap',missCondition:'enabled finite candidates rejected all hits and any enabled rail interval exhausted geometrically; rail budget exhaustion remains unresolved'};
  return {rayMethod:'conservative primary with finite-boundary and rail rescue',metric:'primary + rescue rail march iterations; excludes normal and attribute field queries',stepCap:512,stepCapKind:'shared primary and rescue march iteration budget',iterationBudget:512,unresolvedExpected:true,hitEpsilon:'kernel primary/rescue 0.00001m; grazing or non-boundary candidates require analytic recovery',stepRule:'conservative primary with shared512 march-iteration budget; unresolved/grazing recovery uses exact finite structural boundaries and rail-only conservative tracing; no unsafe minimum step',missCondition:'finite boundary tests rejected all candidates and rail interval exhausted geometrically; budget exhaustion remains unresolved'};
 }
+/** One active source suite only. No hash collisions or multi-version cache. */
+export function rendererSourcesEqual(a,b){if(!a||!b)return false;const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&a[k]===b[k]);}
 export class FieldRenderer{
  constructor(canvas){
   this.canvas=canvas;const gl=this.gl=canvas.getContext('webgl2',{antialias:false,alpha:false,preserveDrawingBuffer:true});if(!gl)throw Error('WebGL2 is unavailable. No mesh fallback is used.');
@@ -252,18 +284,19 @@ export class FieldRenderer{
   this.vertexBufferCount=0;this.indexBufferCount=0;this.modelTriangles=0;this.screenTrianglesPerPass=1;this.options={eye:[7,7,-7],target:[0,1.8,2.5],fov:45*Math.PI/180,cutaway:0,renderMode:0,age:.18,wet:.08,materialEnabled:1,occlusion:0,traceMode:0,...structuredClone(HOSTED_MATERIAL_DEFAULTS)};
  }
  setSpec(spec){
-  const start=performance.now(),gl=this.gl,sources=buildRendererSources(spec,this.traceVariant??0),programs={},compileMs={};let descriptors=null,assemblyDescriptors=null,fieldDescriptors=null,apertureDescriptors=null;
+  const start=performance.now(),gl=this.gl,sources=buildRendererSources(spec,this.traceVariant??0),reusedPrograms=!!this.programs&&rendererSourcesEqual(this.sources,sources),programs=reusedPrograms?this.programs:{},compileMs={};let descriptors=null,assemblyDescriptors=null,fieldDescriptors=null,apertureDescriptors=null;
   try{
    if(sources.split&&(!this.floatExtension||gl.getParameter(gl.MAX_DRAW_BUFFERS)<3||gl.getParameter(gl.MAX_COLOR_ATTACHMENTS)<3))throw Error('Direct split-field rendering requires three Float32 color attachments. No mesh fallback is used.');
-   for(const name of sources.split?['primary','rescue','shade']:['direct']){const at=performance.now();programs[name]=program(gl,sources[name]);compileMs[name]=performance.now()-at;}
+   for(const name of reusedPrograms?[]:sources.split?['primary','rescue','shade']:['direct']){const at=performance.now();programs[name]=program(gl,sources[name]);compileMs[name]=performance.now()-at;}
    if(['measured-surface','case-context','hosted-context'].includes(spec.fieldKind))descriptors=this.createDescriptors(['case-context','hosted-context'].includes(spec.fieldKind)?spec.measured:spec);
    if(['evidence-assembly','case-context','hosted-context'].includes(spec.fieldKind))assemblyDescriptors=this.uploadDescriptors(packAssemblyDescriptors(['case-context','hosted-context'].includes(spec.fieldKind)?spec.assembly:spec));
    if(spec.fieldKind==='hosted-context')apertureDescriptors=this.uploadDescriptors(packApertureDescriptors(spec.apertures));
    if(!spec.fieldKind){const packed=packFieldDescriptors(spec);fieldDescriptors={...this.uploadDescriptors(packed),schema:packed.schema,planeCount:packed.planeCount,domainCount:packed.domainCount};}
-  }catch(e){for(const p of Object.values(programs))gl.deleteProgram(p);if(descriptors)gl.deleteTexture(descriptors.texture);if(assemblyDescriptors)gl.deleteTexture(assemblyDescriptors.texture);if(fieldDescriptors)gl.deleteTexture(fieldDescriptors.texture);if(apertureDescriptors)gl.deleteTexture(apertureDescriptors.texture);throw e;}
-  for(const p of Object.values(this.programs??{}))gl.deleteProgram(p);for(const p of this.probePrograms?.values()??[])gl.deleteProgram(p);for(const p of Object.values(this.rayProbePrograms??{}))gl.deleteProgram(p);if(this.descriptors)gl.deleteTexture(this.descriptors.texture);if(this.assemblyDescriptors)gl.deleteTexture(this.assemblyDescriptors.texture);if(this.fieldDescriptors)gl.deleteTexture(this.fieldDescriptors.texture);if(this.apertureDescriptors)gl.deleteTexture(this.apertureDescriptors.texture);
-  this.programs=programs;this.probePrograms=new Map();this.rayProbePrograms=null;this.descriptors=descriptors;this.assemblyDescriptors=assemblyDescriptors;this.fieldDescriptors=fieldDescriptors;this.apertureDescriptors=apertureDescriptors;this.sources=sources;this.renderProgram=programs.shade??programs.direct;this.spec=spec;this.fieldSource=sources.source;this.probeHead=sources.head;this.compileCount=(this.compileCount??0)+1;
-  this.firstDrawPending=true;this.compileProfile={firstDrawSyncWallMs:null,firstDrawResolution:null,firstDrawMeasurement:'first full-frame draw plus gl.finish and one-pixel default-framebuffer readback; includes deferred driver work and target allocation, excludes prior queued work; not isolated GPU time',traceVariant:this.traceVariant??0,sourceCharacters:sources.source.length,renderCompileLinkWallMs:performance.now()-start,renderPassCompileMs:compileMs,splitFieldStages:sources.split,descriptorTexture:descriptors?{width:descriptors.width,height:descriptors.height,bytes:descriptors.bytes,kind:'finite source plane and boundary query records',textureUnit:0}:null,assemblyDescriptorTexture:assemblyDescriptors?{width:assemblyDescriptors.width,height:assemblyDescriptors.height,bytes:assemblyDescriptors.bytes,kind:'finite authored prism, plane, boundary and adjacency query records',textureUnit:5}:null,fieldDescriptorTexture:fieldDescriptors?{width:fieldDescriptors.width,height:fieldDescriptors.height,bytes:fieldDescriptors.bytes,schema:fieldDescriptors.schema,planeCount:fieldDescriptors.planeCount,domainCount:fieldDescriptors.domainCount,kind:'analytic structural plane and finite-domain query records',textureUnit:6}:null,apertureDescriptorTexture:apertureDescriptors?{width:apertureDescriptors.width,height:apertureDescriptors.height,bytes:apertureDescriptors.bytes,kind:'finite hosted aperture analytic coefficients, not sampled geometry',textureUnit:7}:null,probesCompiledLazily:true,probeCompileMs:{},rayProbeInterface:sources.split?'same primary/rescue interfaces and Float32 MRT transport as production render':'single-pass source or diagnostic interface'};
+  }catch(e){if(!reusedPrograms)for(const p of Object.values(programs))gl.deleteProgram(p);if(descriptors)gl.deleteTexture(descriptors.texture);if(assemblyDescriptors)gl.deleteTexture(assemblyDescriptors.texture);if(fieldDescriptors)gl.deleteTexture(fieldDescriptors.texture);if(apertureDescriptors)gl.deleteTexture(apertureDescriptors.texture);throw e;}
+  if(!reusedPrograms){for(const p of Object.values(this.programs??{}))gl.deleteProgram(p);for(const p of this.probePrograms?.values()??[])gl.deleteProgram(p);if(this.opticsProbeProgram)gl.deleteProgram(this.opticsProbeProgram);for(const p of Object.values(this.rayProbePrograms??{}))gl.deleteProgram(p);}if(this.descriptors)gl.deleteTexture(this.descriptors.texture);if(this.assemblyDescriptors)gl.deleteTexture(this.assemblyDescriptors.texture);if(this.fieldDescriptors)gl.deleteTexture(this.fieldDescriptors.texture);if(this.apertureDescriptors)gl.deleteTexture(this.apertureDescriptors.texture);
+  this.programs=programs;if(!reusedPrograms){this.probePrograms=new Map();this.rayProbePrograms=null;this.opticsProbeProgram=null;}this.descriptors=descriptors;this.assemblyDescriptors=assemblyDescriptors;this.fieldDescriptors=fieldDescriptors;this.apertureDescriptors=apertureDescriptors;this.sources=sources;this.renderProgram=programs.shade??programs.direct;this.spec=spec;this.fieldSource=sources.source;this.probeHead=sources.head;this.compileCount=(this.compileCount??0)+(reusedPrograms?0:1);this.specUpdateCount=(this.specUpdateCount??0)+1;this.programReuseCount=(this.programReuseCount??0)+(reusedPrograms?1:0);this.lastSpecUpdate={reusedPrograms,descriptorTexturesReplaced:true,wallMs:performance.now()-start};
+  if(!reusedPrograms)this.firstDrawPending=true;const nextCompileProfile={firstDrawSyncWallMs:null,firstDrawResolution:null,firstDrawMeasurement:'first full-frame draw plus gl.finish and one-pixel default-framebuffer readback; includes deferred driver work and target allocation, excludes prior queued work; not isolated GPU time',traceVariant:this.traceVariant??0,sourceCharacters:sources.source.length,renderCompileLinkWallMs:performance.now()-start,renderPassCompileMs:compileMs,splitFieldStages:sources.split,descriptorTexture:descriptors?{width:descriptors.width,height:descriptors.height,bytes:descriptors.bytes,kind:'finite source plane and boundary query records',textureUnit:0}:null,assemblyDescriptorTexture:assemblyDescriptors?{width:assemblyDescriptors.width,height:assemblyDescriptors.height,bytes:assemblyDescriptors.bytes,kind:'finite authored prism, plane, boundary and adjacency query records',textureUnit:5}:null,fieldDescriptorTexture:fieldDescriptors?{width:fieldDescriptors.width,height:fieldDescriptors.height,bytes:fieldDescriptors.bytes,schema:fieldDescriptors.schema,planeCount:fieldDescriptors.planeCount,domainCount:fieldDescriptors.domainCount,kind:'analytic structural plane and finite-domain query records',textureUnit:6}:null,apertureDescriptorTexture:apertureDescriptors?{width:apertureDescriptors.width,height:apertureDescriptors.height,bytes:apertureDescriptors.bytes,kind:'finite hosted aperture analytic coefficients, not sampled geometry',textureUnit:7}:null,probesCompiledLazily:true,probeCompileMs:{},rayProbeInterface:sources.split?'same primary/rescue interfaces and Float32 MRT transport as production render':'single-pass source or diagnostic interface'};
+  this.compileProfile=reusedPrograms?{...this.compileProfile,descriptorTexture:nextCompileProfile.descriptorTexture,assemblyDescriptorTexture:nextCompileProfile.assemblyDescriptorTexture,fieldDescriptorTexture:nextCompileProfile.fieldDescriptorTexture,apertureDescriptorTexture:nextCompileProfile.apertureDescriptorTexture,reusedPrograms:true,descriptorUpdateWallMs:this.lastSpecUpdate.wallMs}:{...nextCompileProfile,reusedPrograms:false,descriptorUpdateWallMs:null};
  }
  createDescriptors(spec){return this.uploadDescriptors(packCaseDescriptors(spec));}
  uploadDescriptors(packed){const gl=this.gl,texture=gl.createTexture();try{gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,packed.width,packed.height,0,gl.RGBA,gl.FLOAT,packed.data);this.textureParameters();return {texture,width:packed.width,height:packed.height,bytes:packed.data.byteLength};}catch(e){gl.deleteTexture(texture);throw e;}}
@@ -273,6 +306,13 @@ export class FieldRenderer{
  ensureTargets(){const {width,height}=this.canvas;if(this.targets?.[0].width===width&&this.targets[0].height===height)return this.targets;for(const t of this.targets??[])this.deleteTarget(t);this.targets=[];try{this.targets.push(this.createTarget(width,height));this.targets.push(this.createTarget(width,height));}catch(e){for(const t of this.targets)this.deleteTarget(t);this.targets=null;throw e;}return this.targets;}
  setTraceVariant(variant){if(![0,1,2,3,4].includes(variant))throw Error('Invalid diagnostic trace variant');this.traceVariant=variant;this.setSpec(this.spec);}
  ensureProbe(kind){if(!this.probePrograms.has(kind)){const start=performance.now(),stage=this.sources.split?1:0,p=program(this.gl,this.probeHead+'#define FIELD_KERNEL_STAGE '+stage+'\n#define PROBE_KIND '+kind+'\n'+this.fieldSource+(kind===2?MOTHER_GLSL+MATERIAL_GLSL:'')+PROBE);this.probePrograms.set(kind,p);this.compileProfile.probeCompileMs[kind]=performance.now()-start;}return this.probePrograms.get(kind);}
+ ensureOpticsProbe(){if(this.spec?.fieldKind!=='hosted-context')throw Error('Optical probes require a hosted scene');if(!this.floatExtension||this.gl.getParameter(this.gl.MAX_DRAW_BUFFERS)<4)throw Error('Optical parity requires four Float32 attachments; not verified');if(!this.opticsProbeProgram){const start=performance.now();this.opticsProbeProgram=program(this.gl,this.sources.opticsProbe);this.compileProfile.opticsProbeCompileMs=performance.now()-start;}return this.opticsProbeProgram;}
+ /** The production glass transport function, not a second test implementation.
+  * The four attachments are numeric query results, never drawable geometry. */
+ probeOptics(origins,directions){
+  if(!Array.isArray(origins)||!origins.length||origins.length>128||!Array.isArray(directions)||directions.length!==origins.length||origins.some(p=>!Array.isArray(p)||p.length!==3||p.some(x=>!Number.isFinite(x)))||directions.some(p=>!Array.isArray(p)||p.length!==3||p.some(x=>!Number.isFinite(x))||Math.hypot(...p)<1e-12))throw Error('Optical probe requires 1..128 finite nonzero rays');
+  const p=this.ensureOpticsProbe(),target=this.createTarget(origins.length,1,4);try{this.pass(p,target,origins.length,1,{points:origins,directions});const a=[0,1,2,3].map(i=>this.readTarget(target,i)),names={'-1':'primary_miss',0:'non_glass',1:'transmitted',2:'total_internal_reflection',3:'optical_path_unresolved'};return origins.map((_,i)=>{const k=i*4;return {status:names[Math.round(a[0][k])]??'invalid',statusCode:a[0][k],pathLength:a[0][k+1],entryFresnel:a[0][k+2],exitFresnel:a[0][k+3],exitPoint:Array.from(a[1].slice(k,k+3)),startsInside:a[1][k+3]>.5,transmittedDirection:Array.from(a[2].slice(k,k+3)),transmittance:Array.from(a[3].slice(k,k+3)),nextObjectId:a[2][k+3],nextT:a[3][k+3]};});}finally{this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,null);this.deleteTarget(target);this.gl.viewport(0,0,this.canvas.width,this.canvas.height);}
+ }
  ensureRayProbes(){if(!this.rayProbePrograms){const start=performance.now(),p={};try{for(const [name,key] of [['primary','rayPrimary'],['rescue','rayRescue'],['result','rayResult']])p[name]=program(this.gl,this.sources[key]);}catch(e){for(const v of Object.values(p))this.gl.deleteProgram(v);throw e;}this.rayProbePrograms=p;this.compileProfile.probeCompileMs[4]=performance.now()-start;}return this.rayProbePrograms;}
  uniforms(p){const g=this.gl,o=this.options,L=n=>g.getUniformLocation(p,n);g.uniform1f(L('uAge'),o.age);g.uniform1f(L('uWet'),o.wet);g.uniform1f(L('uMaterialEnabled'),o.materialEnabled);const material=adaptHostedMaterialParameters(o);for(const [name,key] of [['uFrameColor','frameColor'],['uDoorColor','doorColor'],['uGlassColor','glassColor']])g.uniform3fv(L(name),material[key]);for(const [name,key] of [['uFrameRoughness','frameRoughness'],['uFrameMetallic','frameMetallic'],['uGlassTransmission','glassTransmission'],['uGlassIOR','glassIOR']])g.uniform1f(L(name),material[key]);if(this.apertureDescriptors){g.activeTexture(g.TEXTURE0+7);g.bindTexture(g.TEXTURE_2D,this.apertureDescriptors.texture);g.uniform1i(L('uApertureDescriptors'),7);}if(this.descriptors){g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.descriptors.texture);g.uniform1i(L(['case-context','hosted-context'].includes(this.spec.fieldKind)?'contextSource_caseDescriptors':'caseDescriptors'),0);}if(this.assemblyDescriptors){g.activeTexture(g.TEXTURE0+5);g.bindTexture(g.TEXTURE_2D,this.assemblyDescriptors.texture);g.uniform1i(L(['case-context','hosted-context'].includes(this.spec.fieldKind)?'contextDesign_assemblyDescriptors':'assemblyDescriptors'),5);}if(this.fieldDescriptors){g.activeTexture(g.TEXTURE0+6);g.bindTexture(g.TEXTURE_2D,this.fieldDescriptors.texture);g.uniform1i(L('fieldBoundaryDescriptors'),6);}return L;}
  setCamera(p,width,height,diagnostic=0){const g=this.gl,o=this.options,L=this.uniforms(p);g.uniform2f(L('uResolution'),width,height);for(const[n,v]of [['uEye',o.eye],['uTarget',o.target],['uBoundsMin',this.spec.bounds.min],['uBoundsMax',this.spec.bounds.max]])g.uniform3fv(L(n),v);g.uniform1f(L('uFov'),o.fov);g.uniform1f(L('uCutaway'),o.cutaway);g.uniform1f(L('uOcclusion'),o.occlusion);g.uniform1i(L('uRenderMode'),o.renderMode);g.uniform1i(L('uTraceMode'),o.traceMode??0);g.uniform1i(L('uDiagnostic'),diagnostic);return L;}
@@ -331,5 +371,5 @@ export class FieldRenderer{
   return {measurement:'per-pass wallclock state setup and draw plus gl.finish and one-pixel readback from that pass target; not isolated GPU timer',interpretation:'Each pass is synchronized by its own blocking one-pixel readback. Prior finish-only near-zero stage measurements are invalid and superseded. Stage times do not equal or replace the unsplit full-frame benchmark. Rescue runs only for primary status 3; other pixels use passthrough.',quantileMethod:'nearest rank: ceil(q*n)-1',width,height,pixels:width*height,warmupFrames,sampleFrames:frames,initializationFrames,gpu:this.gpu,options:JSON.parse(options),stages,statusCounts:{primary:primaryCounts,final:finalCounts},rescuePixelCount:primaryCounts.unresolved,synchronizationReadback:'one pixel per pass inside timing: RGBA/FLOAT from primary and rescue COLOR_ATTACHMENT0; RGBA/UNSIGNED_BYTE from default framebuffer for shade',readback:'Full Float32 primary and final state attachments for status counts after the final measured frame; outside timing',stepCap:512,modelTriangles:0,screenTrianglesPerPass:1,screenPassesPerFrame:3,screenTrianglesPerFrame:3,vertexBuffers:0,indexBuffers:0};
  }
  async benchmark(frames=12){const timings=[];for(let i=0;i<frames+2;i++){await new Promise(r=>requestAnimationFrame(r));const start=performance.now();this.draw();this.gl.finish();this.gl.readPixels(0,0,1,1,this.gl.RGBA,this.gl.UNSIGNED_BYTE,new Uint8Array(4));if(i>=2)timings.push(performance.now()-start);}return {measurement:'wallclock draw plus gl.finish and pixel readback, not isolated GPU timer',quantileMethod:'nearest rank: ceil(q*n)-1',samples:timings,medianMs:nearestRankQuantile(timings,.5),p95Ms:nearestRankQuantile(timings,.95),width:this.canvas.width,height:this.canvas.height,gpu:this.gpu,timerExtensionAvailable:!!this.timerExtension,modelTriangles:0,screenTrianglesPerPass:1,screenPassesPerFrame:this.lastScreenPasses,screenTrianglesPerFrame:this.lastScreenPasses,vertexBuffers:0,indexBuffers:0};}
- snapshot(){return {gpu:this.gpu,width:this.canvas.width,height:this.canvas.height,drawCount:this.drawCount,compileCount:this.compileCount,compileProfile:this.compileProfile,modelTriangles:0,vertexBuffers:0,indexBuffers:0,screenTrianglesPerPass:1,screenPassesPerFrame:this.isSplitActive()?3:1,screenTrianglesPerFrame:this.isSplitActive()?3:1,floatQueryReadback:!!this.floatExtension,renderer:this.isSplitActive()?'WebGL2 direct analytic field: primary Float32 MRT, unresolved-only rescue, shared shade':'WebGL2 direct analytic field ray evaluation',noMeshFallback:true,opticalModel:this.spec?.opticalContract??null};}
+ snapshot(){return {gpu:this.gpu,width:this.canvas.width,height:this.canvas.height,drawCount:this.drawCount,compileCount:this.compileCount,specUpdateCount:this.specUpdateCount,programReuseCount:this.programReuseCount,lastSpecUpdate:this.lastSpecUpdate,compileProfile:this.compileProfile,modelTriangles:0,vertexBuffers:0,indexBuffers:0,screenTrianglesPerPass:1,screenPassesPerFrame:this.isSplitActive()?3:1,screenTrianglesPerFrame:this.isSplitActive()?3:1,floatQueryReadback:!!this.floatExtension,renderer:this.isSplitActive()?'WebGL2 direct analytic field: primary Float32 MRT, unresolved-only rescue, shared shade':'WebGL2 direct analytic field ray evaluation',noMeshFallback:true,opticalModel:this.spec?.opticalContract??null};}
 }

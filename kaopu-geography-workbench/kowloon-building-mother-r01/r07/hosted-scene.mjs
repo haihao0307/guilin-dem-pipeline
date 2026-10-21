@@ -36,14 +36,26 @@ export function deriveHostedScene(context,aperturesOrBinding=[],options={}){
  const masks=mode==='design'?(options.sourceMasks??binding?.sourceMasks??[]).filter(m=>m.enabled!==false).map(m=>maskSpec(m,context,active)):[];
  if(masks.length>32)throw Error('Finite source mask budget exceeded');
  let bounds=clone(selected.bounds),fullBounds=clone(selected.fullBounds);for(const c of active){if(!c.bounds||!finite(c.bounds.min,3)||!finite(c.bounds.max,3))throw Error('Derived aperture finite bounds required');bounds=union(bounds,c.bounds);fullBounds=union(fullBounds,c.bounds);}
- return {...selected,schema:HOSTED_SCENE_SCHEMA,fieldKind:'hosted-context',context:selected,baselineContext,mode,apertures:active,components:active,sourceMasks:masks,bounds,fullBounds,sourceBinding:selected.assembly.sourceBinding??selected.sourceBinding,fitReport:selected.assembly.fitReport??selected.fitReport,sourceViewUnchanged:true,sourceGeometryChanged:false,sourceTransformApplied:false,designSourceMaskApplied:mode==='design'&&masks.length>0,counts:{...selected.counts,apertures:active.length,sourceMasks:masks.length,modelTriangles:0,modelVertexBuffers:0},distanceContract:{...selected.distanceContract,kind:'union_of_masked_unsigned_source_and_authored_finite_fields',sourceMaskField:'conservative_lower_bound_correct_restricted_zero_set_not_exact_clipped_distance',sourceMaskScope:'selected_source_patch_identity_and_finite_rounded_rectangle_extrusion_only',certifiedSDF:false,lipschitzUpperBound:1,rayMethod:'finite_source_BVH_candidates_plus_hosted_analytic_domains',stepBudgetRequired:false},opticalContract:{model:'bounded_single_pane_two_interface_refraction',interfaces:'finite_analytic_pane_entry_and_exit',absorption:'Beer_Lambert_from_actual_internal_path_metres',reflection:'sky_environment_approximation_not_scene_reflection',secondary:'one_actual_scene_ray_then_opaque_terminal_shading',multiplePanes:'second_pane_is_terminal_tinted_surface_not_recursive_transmission',totalInternalReflection:'sky_only_reflection_approximation_no_internal_bounce',failure:'explicit_optical_failure_color_not_fabricated_transmission',caustics:false}};
+ return {...selected,schema:HOSTED_SCENE_SCHEMA,fieldKind:'hosted-context',context:selected,baselineContext,mode,apertures:active,components:active,sourceMasks:masks,bounds,fullBounds,sourceBinding:selected.assembly.sourceBinding??selected.sourceBinding,fitReport:selected.assembly.fitReport??selected.fitReport,sourceViewUnchanged:true,sourceGeometryChanged:false,sourceTransformApplied:false,designSourceMaskApplied:mode==='design'&&masks.length>0,counts:{...selected.counts,apertures:active.length,sourceMasks:masks.length,modelTriangles:0,modelVertexBuffers:0},distanceContract:{...selected.distanceContract,kind:'union_of_masked_unsigned_source_and_authored_finite_fields',sourceMaskField:'conservative_lower_bound_correct_restricted_zero_set_not_exact_clipped_distance',sourceMaskScope:'selected_source_patch_identity_and_finite_rounded_rectangle_extrusion_only',boundaryIdentity:{toleranceMetres:HOSTED_IDENTITY_TIE_METRES,policy:'lowest_stable_ID_within_tolerance_of_final_minimum_never_chained',scalarDistanceUnchanged:true,nearestRayParameterUnchanged:true,sourceBurial:'both_source_normal_neighbours_inside_authored_union'},certifiedSDF:false,lipschitzUpperBound:1,rayMethod:'finite_source_BVH_candidates_plus_hosted_analytic_domains',stepBudgetRequired:false},opticalContract:{model:'bounded_single_pane_two_interface_refraction',interfaces:'finite_analytic_pane_entry_and_exit',absorption:'Beer_Lambert_from_actual_internal_path_metres',reflection:'sky_environment_approximation_not_scene_reflection',secondary:'one_actual_scene_ray_then_opaque_terminal_shading',multiplePanes:'second_pane_is_terminal_tinted_surface_not_recursive_transmission',totalInternalReflection:'sky_only_reflection_approximation_no_internal_bounce',failure:'explicit_optical_failure_color_not_fabricated_transmission',caustics:false}};
 }
 /** SDF of an exact finite rounded-rectangle extrusion, in source metres. */
 export function hostedMaskDistance(mask,p){const q=sub(p,mask.frame.origin),x=dot(q,mask.frame.u),y=dot(q,mask.frame.v),z=dot(q,mask.frame.w),r=mask.roundRadius,a=Math.abs(x)-mask.width/2+r,b=Math.abs(y)-mask.height/2+r,d=Math.hypot(Math.max(a,0),Math.max(b,0))+Math.min(Math.max(a,b),0)-r,e=Math.abs(z)-mask.halfDepth;return Math.hypot(Math.max(d,0),Math.max(e,0))+Math.min(Math.max(d,e),0);}
 export function hostedSourceMaskContains(spec,patch,p){valid(spec,p);const id=typeof patch==='object'?patch.objectId:patch;return spec.sourceMasks.some(m=>m.sourceObjectId===id&&hostedMaskDistance(m,p)<0);}
 function sourceDistance(s,patch,p,d){for(const m of s.sourceMasks)if(m.sourceObjectId===patch.objectId)d=Math.max(d,-hostedMaskDistance(m,p));return d;}
 function domain(s,p){const d=s.sourceDisplay;return Math.max(d.heightRange[0]-p[1],p[1]-d.heightRange[1],d.cutPlane.offset-dot(d.cutPlane.normal,p));}
-function choose(hits){const distance=Math.min(...hits.map(h=>h.distance));let eligible=hits.filter(h=>distance<0?h.distance===distance:h.distance<=distance+HOSTED_IDENTITY_TIE_METRES);eligible.sort((a,b)=>a.objectId-b.objectId);return {...eligible[0],distance};}
+/** Central identity arbitration. Every candidate is compared with the FINAL
+ * scalar minimum, never the previous winner (which permits epsilon chains).
+ * Identity tolerance NEVER changes scalar distance, sign or nearest ray t.
+ */
+export function selectHostedIdentity(candidates,metric='distance'){
+ if(!['distance','t'].includes(metric)||!Array.isArray(candidates)||!candidates.length)throw Error('Nonempty hosted candidates and distance/t metric required');
+ const minimum=Math.min(...candidates.map(h=>h[metric]));let identity=null;
+ for(const h of candidates)if(h[metric]<=minimum+HOSTED_IDENTITY_TIE_METRES&&h.objectId>0&&(!identity||h.objectId<identity.objectId))identity=h;
+ if(!identity||!Number.isFinite(minimum))throw Error('Finite hosted candidate values and stable positive IDs required');
+ return{minimum,identity};
+}
+function choose(hits){const{minimum,identity}=selectHostedIdentity(hits);return {...identity,distance:minimum,inside:minimum<0?true:identity.inside};}
+
 export function queryHostedScene(spec,p,{display=false}={}){
  valid(spec,p);if(typeof display!=='boolean')throw Error('display must be boolean');if(spec.mode==='baseline')return queryContext(spec.context,p,{display});
  const a=queryCase(spec.measured,p,{distanceModifier:(patch,q,d)=>sourceDistance(spec,patch,q,d)}),b=queryAssembly(spec.assembly,sourceToAssemblyLocal(spec.assembly,p));if(display)a.distance=Math.max(a.distance,domain(spec,p));
@@ -52,13 +64,20 @@ export function queryHostedScene(spec,p,{display=false}={}){
 }
 export function hostedNormal(spec,p,options={}){valid(spec,p);if(spec.mode==='baseline')return contextNormal(spec.context,p,options);const h=queryHostedScene(spec,p,options);if(h.component==='source')return clone(h.normal);if(h.component==='assembly')return rotate(spec,assemblyNormal(spec.assembly,h.local));if(h.normal)return clone(h.normal);const e=1e-6,g=[0,1,2].map(i=>{const a=[...p],b=[...p];a[i]+=e;b[i]-=e;return queryApertures(spec.apertures,a).distance-queryApertures(spec.apertures,b).distance;});return len(g)>1e-12?unit(g):[0,1,0];}
 export function hostedMaterialDirection(spec,hit,direction){valid(spec);if(!finite(direction,3))throw Error('Finite material direction required');if(hit.objectId<4000)return contextMaterialDirection(spec.context,hit,direction);const component=spec.apertures.find(a=>Math.floor((hit.objectId-4000)/8)===a.instanceId);if(!component)throw Error('Unknown hosted aperture identity');return apertureMaterialDirection(component,hit.objectId,direction);}
+/** A source face is buried only when BOTH normal-side neighbours are inside.
+ * Exact coincident boundary points can be +/- a few ulps from an authored side.
+ * This uses cheap occupancy, not a full material/distance query per source face.
+ */
+function sourceBuried(spec,patch,p){const q=sourceToAssemblyLocal(spec.assembly,p),n=rotate(spec,patch.normal??patch.n,true),offset=mul(n,HOSTED_IDENTITY_TIE_METRES);return queryAssemblyInside(spec.assembly,add(q,offset))&&queryAssemblyInside(spec.assembly,sub(q,offset));}
 export function intersectHostedSceneRay(spec,origin,direction,{maxDistance=10000,display=true,accelerated=true,skipGlass=false,skipObjectId=0,minDistance=0}={}){
  valid(spec,origin);if(!finite(direction,3)||len(direction)<1e-12||!Number.isFinite(maxDistance)||maxDistance<=0||typeof display!=='boolean'||!Number.isFinite(minDistance)||minDistance<0)throw Error('Valid hosted ray and finite positive range required');
  if(spec.mode==='baseline')return intersectContextRay(spec.context,origin,direction,{maxDistance,display,accelerated});
- const rd=unit(direction),source=intersectCaseRay(spec.measured,origin,rd,{maxDistance,accelerated,acceptCandidate:(patch,p,t)=>t>=minDistance&&(!display||domain(spec,p)<=1e-9)&&!hostedSourceMaskContains(spec,patch,p)&&!queryAssemblyInside(spec.assembly,sourceToAssemblyLocal(spec.assembly,p))}),design=intersectAssemblyRay(spec.assembly,sourceToAssemblyLocal(spec.assembly,origin),rotate(spec,rd,true),{maxDistance}),aperture=spec.apertures.length?intersectAperturesRay(spec.apertures,origin,rd,{maxDistance,skipGlass,skipObjectId,minDistance}):{hit:false};
+ const rd=unit(direction),source=intersectCaseRay(spec.measured,origin,rd,{maxDistance,accelerated,acceptCandidate:(patch,p,t)=>t>=minDistance&&(!display||domain(spec,p)<=1e-9)&&!hostedSourceMaskContains(spec,patch,p)&&!sourceBuried(spec,patch,p)}),design=intersectAssemblyRay(spec.assembly,sourceToAssemblyLocal(spec.assembly,origin),rotate(spec,rd,true),{maxDistance}),aperture=spec.apertures.length?intersectAperturesRay(spec.apertures,origin,rd,{maxDistance,skipGlass,skipObjectId,minDistance}):{hit:false};
  const candidates=[];if(source.hit)candidates.push({...source,component:'source',coordinateFrame:'source-local'});if(design.hit&&design.t>=minDistance)candidates.push({...design,normal:rotate(spec,design.normal),point:add(origin,mul(rd,design.t)),component:'assembly',coordinateFrame:'diagram-local'});if(aperture.hit)candidates.push({...aperture,component:'aperture',coordinateFrame:'aperture-material-local'});
- candidates.sort((a,b)=>a.t-b.t||a.objectId-b.objectId);const stats={patchTests:source.patchTests??0,nodeVisits:source.nodeVisits??0,planeTests:design.planeTests??0,apertureTests:aperture.primitiveTests??aperture.candidateTests??0,method:'finite_source_candidate_filter_and_analytic_hosted_domains'};
- return candidates.length?{...candidates[0],hit:true,status:'hit',sourceModelId:spec.sourceModelId,...stats}:{hit:false,status:'miss',...stats};
+ const selection=candidates.length?selectHostedIdentity(candidates,'t'):null,nearestT=selection?.minimum??Infinity,representative=selection?.identity;
+ if(representative){const point=add(origin,mul(rd,nearestT)),delta=sub(point,representative.point);representative.local=representative.component==='source'?clone(point):representative.component==='assembly'?sourceToAssemblyLocal(spec.assembly,point):add(representative.local,hostedMaterialDirection(spec,representative,delta));representative.point=point;representative.t=nearestT;representative.distance=0;}
+ const stats={patchTests:source.patchTests??0,nodeVisits:source.nodeVisits??0,planeTests:design.planeTests??0,apertureTests:aperture.primitiveTests??aperture.candidateTests??0,method:'finite_source_candidate_filter_and_analytic_hosted_domains'};
+ return representative?{...representative,hit:true,status:representative.status??'hit',sourceModelId:spec.sourceModelId,...stats}:{hit:false,status:'miss',...stats};
 }
 const f=n=>{if(!Number.isFinite(n))throw Error('Finite hosted GLSL number required');return Number(n).toFixed(12).replace(/0+$/,'').replace(/\.$/,'.0');},v=a=>`vec${a.length}(${a.map(f).join(',')})`;
 const STRUCT='struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};';
@@ -77,11 +96,13 @@ vec3 contextMaterialDirection(FieldHit h,vec3 d){return h.objectId>=4000.0?apert
 vec3 hostedMaterialDirection(FieldHit h,vec3 d){return contextMaterialDirection(h,d);}
 float contextDisplayDomain(vec3 p){return max(max(${f(d.heightRange[0])}-p.y,p.y-(${f(d.heightRange[1])})),${f(d.cutPlane.offset)}-dot(${v(d.cutPlane.normal)},p));}
 ${masks}
+vec3 contextSource_caseNormalForId(float objectId);
 float hostedMaskSourceDistance(int k,vec3 p,float distance){${spec.sourceMasks.map((m,i)=>`if(k==${m.sourceObjectId-1000})distance=max(distance,-hostedMask${i}(p));`).join('')}return distance;}
-bool hostedAcceptSourceCandidate(int k,vec3 p){${spec.sourceMasks.map((m,i)=>`if(k==${m.sourceObjectId-1000}&&hostedMask${i}(p)<0.0)return false;`).join('')}return !contextDesign_assemblyUnionInside(contextDesignLocal(p));}
+bool hostedAcceptSourceCandidate(int k,vec3 p){${spec.sourceMasks.map((m,i)=>`if(k==${m.sourceObjectId-1000}&&hostedMask${i}(p)<0.0)return false;`).join('')}vec3 q=contextDesignLocal(p),offset=contextInverseRotate(contextSource_caseNormalForId(float(k+1000)))*${f(HOSTED_IDENTITY_TIE_METRES)};return !(contextDesign_assemblyUnionInside(q+offset)&&contextDesign_assemblyUnionInside(q-offset));}
 ${namespace(buildCaseGLSL(spec.measured,{distanceHook:'hostedMaskSourceDistance',candidateHook:'hostedAcceptSourceCandidate'}),'contextSource_')}
-FieldHit hostedChoose(FieldHit a,FieldHit b){float d=min(a.distance,b.distance);bool takeA=d<0.0?(a.distance<b.distance||(a.distance==b.distance&&a.objectId<b.objectId)):(a.distance<=d+${f(HOSTED_IDENTITY_TIE_METRES)}&&(b.distance>d+${f(HOSTED_IDENTITY_TIE_METRES)}||a.objectId<b.objectId));FieldHit h;if(takeA)h=a;else h=b;h.distance=d;return h;}
-FieldHit hostedMap(vec3 p,bool display){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p)),c=hostedAperture_mapField(p);if(display)a.distance=max(a.distance,contextDisplayDomain(p));float d=min(a.distance,min(b.distance,c.distance));FieldHit h=a;bool found=false;if((d<0.0?a.distance==d:a.distance<=d+0.00001)){h=a;found=true;}if((d<0.0?b.distance==d:b.distance<=d+0.00001)&&(!found||b.objectId<h.objectId)){h=b;found=true;}if(c.objectId>0.0&&(d<0.0?c.distance==d:c.distance<=d+0.00001)&&(!found||c.objectId<h.objectId))h=c;h.distance=d;return h;}
+const float hostedIdentityTolerance=${f(HOSTED_IDENTITY_TIE_METRES)};
+bool hostedIdentityCandidate(float value,float minimum,float identity,float owner){return value<=minimum+hostedIdentityTolerance&&identity>0.0&&(owner==0.0||identity<owner);}
+FieldHit hostedMap(vec3 p,bool display){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p)),c=hostedAperture_mapField(p);if(display)a.distance=max(a.distance,contextDisplayDomain(p));float d=min(a.distance,min(b.distance,c.distance));FieldHit h=FieldHit(d,0.0,0.0,p);if(hostedIdentityCandidate(a.distance,d,a.objectId,h.objectId))h=a;if(hostedIdentityCandidate(b.distance,d,b.objectId,h.objectId))h=b;if(hostedIdentityCandidate(c.distance,d,c.objectId,h.objectId))h=c;h.distance=d;return h;}
 FieldHit mapField(vec3 p){return hostedMap(p,false);}float mapDistance(vec3 p){return mapField(p).distance;}
 FieldHit displayMapField(vec3 p){return hostedMap(p,true);}float displayMapDistance(vec3 p){return displayMapField(p).distance;}
 vec3 fieldNormal(vec3 p){FieldHit h=mapField(p);return h.objectId<2000.0?contextSource_caseNormalForId(h.objectId):(h.objectId<4000.0?contextRotate(contextDesign_fieldNormal(h.local)):hostedAperture_fieldNormal(p));}
@@ -91,8 +112,11 @@ bool hostedTraceRay(vec3 ro,vec3 rd,bool display,float skipObjectId,out float t,
  if(hostedSourceInterval(ro,rd,display,lo,hi)){fs=contextSource_caseTraceRay(ro+rd*lo,rd,sourceT,hs,vs);sourceT+=lo;if(sourceT>hi)fs=false;}
  bool fd=contextDesign_caseTraceRay(contextDesignLocal(ro),contextInverseRotate(rd),designT,hd,vd);nd=contextRotate(contextDesign_fieldRayNormal);
  bool fa=apertureTraceRayFiltered(ro,rd,false,skipObjectId,apertureT,ha,va);na=hostedAperture_fieldRayNormal;
- visits=vs+vd+va;t=1e20;h=FieldHit(1e20,0.0,0.0,ro);fieldRayNormal=vec3(0,1,0);
- if(fs){t=sourceT;h=hs;fieldRayNormal=contextSource_caseNormalForId(hs.objectId);}if(fd&&(designT<t||(designT==t&&hd.objectId<h.objectId))){t=designT;h=hd;fieldRayNormal=nd;}if(fa&&(apertureT<t||(apertureT==t&&ha.objectId<h.objectId))){t=apertureT;h=ha;fieldRayNormal=na;}return fs||fd||fa;}
+ visits=vs+vd+va;t=min(fs?sourceT:1e20,min(fd?designT:1e20,fa?apertureT:1e20));h=FieldHit(1e20,0.0,0.0,ro);fieldRayNormal=vec3(0,1,0);
+ // Preserve the nearest geometric t. Only the boundary identity is stabilized.
+ if(fs&&hostedIdentityCandidate(sourceT,t,hs.objectId,h.objectId)){h=hs;h.local=ro+rd*t;fieldRayNormal=contextSource_caseNormalForId(hs.objectId);}
+ if(fd&&hostedIdentityCandidate(designT,t,hd.objectId,h.objectId)){h=hd;h.local=contextDesignLocal(ro+rd*t);fieldRayNormal=nd;}
+ if(fa&&hostedIdentityCandidate(apertureT,t,ha.objectId,h.objectId)){h=ha;h.local+=apertureMaterialDirection(h.objectId,rd*(t-apertureT));fieldRayNormal=na;}h.distance=0.0;return fs||fd||fa;}
 bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int visits){return hostedTraceRay(ro,rd,true,0.0,t,h,visits);}
 bool hostedTraceRayFiltered(vec3 ro,vec3 rd,float skipObjectId,out float t,out FieldHit h,out int visits){return hostedTraceRay(ro,rd,true,skipObjectId,t,h,visits);}
 bool contextTraceRayFull(vec3 ro,vec3 rd,out float t,out FieldHit h,out int visits){return hostedTraceRay(ro,rd,false,0.0,t,h,visits);}
@@ -112,7 +136,21 @@ export function traceHostedTransmission(spec,origin,direction,parameters={}){
  const interval=startsInside?{hit:true,pathLength:hit.t,exitPoint:hit.point,exitNormal:hit.normal}:apertureGlassInterval(spec.apertures,hit.objectId,hit.point,internalDirection);
  if(!interval.hit)return{status:'optical_path_unresolved',hit,reason:interval.status,transmissionFabricated:false};
  const exitF=dielectricFresnel(dot(internalDirection,interval.exitNormal),material.glassIOR),transmitted=refract(internalDirection,mul(interval.exitNormal,-1),material.glassIOR);
- if(!transmitted)return{status:'total_internal_reflection',hit,pathLength:interval.pathLength,reflection:'sky_only_approximation'};
+ if(!transmitted)return{status:'total_internal_reflection',hit,startsInside,entryFresnel:entryF,exitFresnel:exitF,pathLength:interval.pathLength,exitPoint:interval.exitPoint,exitNormal:interval.exitNormal,transmittedDirection:[0,0,0],transmittance:[0,0,0],nextHit:{hit:false},reflection:'sky_only_approximation'};
  const originAfter=add(interval.exitPoint,mul(transmitted,.00003)),nextHit=intersectHostedSceneRay(spec,originAfter,transmitted,{skipObjectId:hit.objectId}),energy=(1-entryF)*(1-exitF);
  return{status:'transmitted',hit,startsInside,entryFresnel:entryF,exitFresnel:exitF,pathLength:interval.pathLength,exitPoint:interval.exitPoint,exitNormal:interval.exitNormal,transmittedDirection:transmitted,transmittance:glassAbsorptionTransmittance(interval.pathLength,material).map(x=>x*energy),nextHit,reflection:'sky_environment_approximation',additionalPanes:'terminal_surface_not_recursively_transmitted'};
+}
+
+/** Four deterministic rays for the REAL first pane, in its current moving frame.
+ * Origins/directions are Float32-rounded before both CPU and GPU evaluation.
+ * These probe normal entry, oblique entry, an inside camera and the visible glass edge next to the opaque sash.
+ * They do not manufacture a background object or alter the source-bound scene.
+ */
+export function hostedOpticalProbeRays(spec,{glassObjectId=null}={}){
+ valid(spec);const pane=spec.apertures.flatMap(a=>a.primitives).find(p=>p.materialRole===6&&(glassObjectId===null||p.objectId===glassObjectId));if(!pane)return[];
+ const toWorld=q=>add(pane.origin,add(mul(pane.u,q[0]),add(mul(pane.v,q[1]),mul(pane.w,q[2])))),toDirection=q=>unit(add(mul(pane.u,q[0]),add(mul(pane.v,q[1]),mul(pane.w,q[2]))));
+ const sash=spec.apertures.flatMap(a=>a.primitives).find(p=>p.instanceId===pane.instanceId&&p.materialRole===5&&p.inner);
+ const cx=pane.outer.center[0],cy=pane.outer.center[1],front=pane.halfDepth,margin=Math.min(pane.halfDepth*.2,pane.outer.half[0]*.01),edge=(sash?sash.inner.half[0]:pane.outer.half[0])-margin;
+ const fixed=[{name:'normal_6mm_or_current_thickness',target:[cx,cy,front],direction:[0,0,-1],approach:.12},{name:'oblique_6mm_or_current_thickness',target:[cx+.013,cy+.017,front],direction:unit([.32,.08,-1]),approach:.12},{name:'inside_pane_camera',origin:[cx,cy,0],direction:unit([.1,0,-1])},{name:'visible_glass_edge_to_sash',target:[cx+edge,cy,front],direction:unit([.6,0,-1]),approach:.03}];
+ return fixed.map(x=>{const origin=x.origin??sub(x.target,mul(x.direction,x.approach));return{name:x.name,glassObjectId:pane.objectId,glassThickness:2*pane.halfDepth,origin:toWorld(origin).map(Math.fround),direction:toDirection(x.direction).map(Math.fround)};});
 }
