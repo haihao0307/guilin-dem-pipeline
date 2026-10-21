@@ -1,0 +1,32 @@
+const {readFileSync,writeFileSync}=require('node:fs');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const helper=readFileSync(__dirname+'/create-webgl2-candidate.js','utf8');
+const create=vm.runInNewContext(helper+'\ncreateWebGL2Context');
+const results=[];
+function check(name,behavior,expectedIndex){
+ const listeners=new Map(),calls=[],qa={ready:false,errors:[]},context={identity:'single-context'};
+ const canvas={addEventListener:(n,fn)=>listeners.set(n,fn),removeEventListener:(n,fn)=>{assert.equal(listeners.get(n),fn);listeners.delete(n)},getContext(type,attrs){calls.push([type,JSON.parse(JSON.stringify(attrs))]);const n=calls.length-1; if(behavior[n]==='throw')throw new Error('test exception');if(behavior[n]==='event')listeners.get('webglcontextcreationerror')({statusMessage:'test creation failure'});return behavior[n]==='success'?context:null}};
+ const actual=create(canvas,qa);
+ assert.equal(actual,expectedIndex===null?null:context);
+ assert.equal(calls.length,expectedIndex===null?3:expectedIndex+1);
+ assert.equal(listeners.size,0);
+ assert.equal(qa.contextCreation.ready,expectedIndex!==null);
+ assert.equal(qa.ready,false);assert.deepEqual(qa.errors,[]);
+ assert.equal(calls.every(([type,a])=>type==='webgl2'&&a.alpha===false&&a.antialias===false),true);
+ assert.deepEqual(calls.map(x=>x[1].powerPreference||'default'),['high-performance','default','low-power'].slice(0,calls.length));
+ assert.equal(qa.contextCreation.attempts.filter(x=>x.success).length,expectedIndex===null?0:1);
+ if(behavior.includes('event'))assert.equal(qa.contextCreation.attempts[behavior.indexOf('event')].messages[0],'test creation failure');
+ if(behavior.includes('throw'))assert.equal(qa.contextCreation.attempts[behavior.indexOf('throw')].messages[0],'test exception');
+ results.push({test:name,passed:true,calls:calls.length});
+}
+check('original high-performance succeeds, no extra allocation',['success'],0);
+check('default succeeds after high-performance null',[null,'success'],1);
+check('low-power succeeds after earlier nulls',[null,null,'success'],2);
+check('all fail remains honest failure',[null,null,null],null);
+check('creationerror details kept per attempt',['event','success'],1);
+check('throw captured then default recovers',['throw','success'],1);
+check('all creationerror events retained',['event','event','event'],null);
+check('all thrown errors bounded to three',['throw','throw','throw'],null);
+writeFileSync(__dirname+'/mock-results.json',JSON.stringify({kind:'Node mock only; not browser or visual acceptance',results},null,2)+'\n');
+console.log(JSON.stringify(results,null,2));
