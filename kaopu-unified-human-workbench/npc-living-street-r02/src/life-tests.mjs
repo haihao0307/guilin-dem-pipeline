@@ -171,5 +171,26 @@ test('an open valve wakes one eligible sheltered resident instead of waiting for
   assert.equal(s.actors.filter(a=>a.task?.kind==='water').length,1);until(s,()=>a.task?.phase==='interact',100,{acknowledge:false});advance(s,5.6,{acknowledge:false});assert.equal(ack(s,a).committed,true);assert.equal(s.environment.watering,0);
 });
 
+test('a measured unsupported bread grasp excludes food and rejects a pending purchase without charging',()=>{
+  const s=make({one:true,bottles:false}),a=s.actors[0];a.money=10;a.needs.hunger=1;
+  Object.assign(a,s.locations.bakery.stand);
+  const candidate=s.getCandidates(a.id).find(c=>c.kind==='buy');assert.ok(candidate);
+  assert.equal(s._start(a,candidate),true);assert.equal(a.task.phase,'interact');
+  const before={money:a.money,stock:s.shop.stock,sales:s.shop.sales};a.capabilities.bread=false;
+  assert.equal(s.getCandidates(a.id).some(c=>c.kind==='buy'||c.kind==='eat'),false);
+  a.task.progress=1;const result=ack(s,a);assert.equal(result.committed,false);
+  assert.deepEqual({money:a.money,stock:s.shop.stock,sales:s.shop.sales},before);
+  assert.equal(a.inventory.bread,0);
+});
+test('bottle navigation preserves the calibrated palm-side offset and interaction yaw',()=>{
+  const s=make({one:true,bottles:false}),a=s.actors[0];
+  a.capabilities.pickupStance={passed:true,rootOffsetXZ:[.12,.65],yaw:Math.PI};
+  const b=s.spawnBottle(0,3);assert.ok(b);const candidate=s._bottleCandidate(a,b);
+  Object.assign(a,candidate.target);a.yaw=0;assert.equal(s._start(a,candidate),true);
+  assert.equal(a.task.phase,'interact');assert.equal(a.x,.12);assert.equal(a.z,3.65);
+  assert.equal(a.yaw,Math.PI);assert.notEqual(a.yaw,Math.atan2(b.x-a.x,b.z-a.z));
+  assert.equal(a.inventory.bottles.length,0);assert.equal(b.state,'ground');
+});
+
 const report={suite:'KAOPU-LIVING-STREET-R02 semantic regression',scope:'TEST_FIXTURE_ONLY; mocked receipts, no native contact / visual / browser acceptance',passed:results.filter(r=>r.passed).length,total:results.length,results};
 console.log(JSON.stringify(report,null,2));if(report.passed!==report.total)process.exitCode=1;

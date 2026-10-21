@@ -186,14 +186,30 @@ export class LifeSimulation {
   _blocked(a,kind,id){return (a.cooldowns[kind]||0)>this.time||(a.memory.failedTargets[id]||0)>this.time;}
   _recent(a,kind){return a.memory.lastActions.filter(x=>x.kind===kind&&this.time-x.time<40).length;}
   _foodPlan(a){
+    if(a.capabilities?.bread===false)return [];
     if(a.inventory.bread>0)return ['eat'];
     if(a.money>=this.shop.price)return ['buy','eat'];
     if(a.inventory.bottles.length>0)return ['recycle','buy','eat'];
     return ['collect','recycle','buy','eat'];
   }
   _bottleCandidate(a,b){
-    return {kind:'collect',targetId:b.id,target:point(b.x,b.z+.43),score:200,
+    const placement=this._pickupPlacement(a,b);
+    return {kind:'collect',targetId:b.id,target:placement.target,interactionYaw:placement.yaw,score:200,
       reason:'看见可回收的瓶子，先把它捡起来',contact:{x:b.x,y:b.y??.072,z:b.z}};
+  }
+  _pickupPlacement(a,b){
+    const stance=a.capabilities?.pickupStance;
+    if(stance){
+      if(!stance.passed||!Array.isArray(stance.rootOffsetXZ)||stance.rootOffsetXZ.length!==2||
+        !stance.rootOffsetXZ.every(Number.isFinite)||!Number.isFinite(stance.yaw))
+        throw Error(a.id+' has no validated native pickup stance');
+      return {target:point(b.x+stance.rootOffsetXZ[0],b.z+stance.rootOffsetXZ[1]),yaw:stance.yaw};
+    }
+    // Renderer-independent rule fixtures have no native human geometry.
+    return {target:point(b.x,b.z+.43),yaw:Math.PI};
+  }
+  _bottleHasStandingSpace(b){
+    return this.actors.some(a=>a.capabilities?.pickup!==false&&this._canStand(this._pickupPlacement(a,b).target,a.radius));
   }
   _beginPendingBottle(a){
     if(!a.pendingBottle||a.task)return false;
@@ -214,12 +230,12 @@ export class LifeSimulation {
     for(const b of opportunities){
       const candidates=[];
       for(const a of this.actors){
-        if(a.task?.executionBlocked||a.pendingBottle||a.task?.kind==='collect'||a.inventory.bottles.length>=3||(a.memory.failedTargets[b.id]||0)>this.time)continue;
+        if(a.capabilities?.pickup===false||a.task?.executionBlocked||a.pendingBottle||a.task?.kind==='collect'||a.inventory.bottles.length>=3||(a.memory.failedTargets[b.id]||0)>this.time)continue;
         const t=a.task,seated=t?.kind==='rest'&&t.phase!=='approach';
         // A seated pelvis is intentionally inside the bench footprint. Plan
         // from the future safe standing endpoint, never weaken the bench sweep.
         const start=seated?this.locations[t.targetId].stand:a;
-        const target=point(b.x,b.z+.43),route=this._route(start,target,a.radius);if(!route)continue;
+        const target=this._pickupPlacement(a,b).target,route=this._route(start,target,a.radius);if(!route)continue;
         let length=0,last=start;for(const p of route){length+=distance(last,p);last=p;}
         const wait=t?.waitForAcknowledgement?Math.max(1,t.duration-t.elapsed)+5:seated?2:0;
         candidates.push({actor:a,cost:length/a.walkSpeed+wait+a.needs.fatigue*.8-a.traits.industry*.2});
@@ -260,22 +276,22 @@ export class LifeSimulation {
       candidates.push({kind,targetId,target:target&&copy(target),score:Math.max(.1,score),reason,...extra});
     };
     const hungry=h>.38,foodBudget=a.money<this.shop.price;
-    if(a.inventory.bread>0&&h>.04)add('eat',`meal-${a.id}`,point(a.x,a.z),40+h*100,'手里有面包，先填饱肚子');
+    if(a.capabilities?.bread!==false&&a.inventory.bread>0&&h>.04)add('eat',`meal-${a.id}`,point(a.x,a.z),40+h*100,'手里有面包，先填饱肚子');
     if(this.raining){
       const shelter=this.locations['shelter'+a.id]||this.locations.shelterA;
       if(!this._reservedByOther('shelter'+a.id,a.id))add('shelter','shelter'+a.id,shelter,110-distance(a,shelter)*2,'下雨了，先到熟悉的屋檐下');
     }
-    if(a.inventory.bread===0&&hungry&&a.money>=this.shop.price&&this.shop.open&&this.shop.stock>0&&!this._reservedByOther('bakery',a.id)){
+    if(a.capabilities?.bread!==false&&a.inventory.bread===0&&hungry&&a.money>=this.shop.price&&this.shop.open&&this.shop.stock>0&&!this._reservedByOther('bakery',a.id)){
       add('buy','bakery',this.locations.bakery.stand,35+h*85-distance(a,this.locations.bakery.stand)*2.2,'饿了，钱也够，去买一份面包');
     }
     if(a.inventory.bottles.length>0&&!this._reservedByOther('recycle',a.id)){
       const enough=a.money+a.inventory.bottles.length*this.recycling.unitValue>=this.shop.price;
       add('recycle','recycle',this.locations.recycle.stand,20+a.inventory.bottles.length*12+(a.inventory.bottles.length>=3?100:0)+(hungry&&foodBudget?(enough?65:30):0)-distance(a,this.locations.recycle.stand)*2,'袋里已有瓶子，可以换成买食物的钱');
     }
-    if(a.inventory.bottles.length<3){
+    if(a.capabilities?.pickup!==false&&a.inventory.bottles.length<3){
       for(const b of this.bottles)if(this._availableBottle(b,a)){
         const c=this._bottleCandidate(a,b);
-        add(c.kind,c.targetId,c.target,c.score-distance(a,c.target),c.reason,{contact:c.contact});
+        add(c.kind,c.targetId,c.target,c.score-distance(a,c.target),c.reason,{contact:c.contact,interactionYaw:c.interactionYaw});
       }
     }
     const desiredWindowOpen=!this.raining&&this.environment.windStrength<.45;
@@ -328,12 +344,13 @@ export class LifeSimulation {
     if(!route){a.memory.failedTargets[c.targetId]=this.time+12;return false;}
     if(!this._reserve(a,c))return false;
     const id=`run-${this.runSequence}-activity-${++this.taskSequence}`;
-    a.goal=['collect','recycle','buy','eat'].includes(c.kind)&&a.needs.hunger>.38?'吃到一份面包':c.kind==='rest'?'恢复体力':c.kind==='shelter'?'找一个干燥的地方':'照顾眼前的小事';
+    a.goal=a.capabilities?.bread!==false&&['collect','recycle','buy','eat'].includes(c.kind)&&a.needs.hunger>.38?'吃到一份面包':c.kind==='rest'?'恢复体力':c.kind==='shelter'?'找一个干燥的地方':'照顾眼前的小事';
     a.plan=a.goal==='吃到一份面包'?this._foodPlan(a):[c.kind];
     a.task={id,token:id+':0',epoch:0,kind:c.kind,label:LABELS[c.kind],targetId:c.targetId,
       phase:'approach',elapsed:0,duration:0,progress:0,from:point(a.x,a.z),to:copy(c.target||a),
       reason:c.reason,score:c.score,route,routeIndex:0,travelled:0,totalDistance:0,targetOpen:c.targetOpen,
       motion:'walk',contact:c.contact||this.locations[c.targetId]?.contact||null,closeOnly:!!c.closeOnly,
+      interactionYaw:c.interactionYaw,
       waitForAcknowledgement:false,blockedFor:0,startedAt:this.time};
     let prev=a;for(const p of route){a.task.totalDistance+=distance(prev,p);prev=p;}
     a.task.duration=a.task.totalDistance/a.walkSpeed;
@@ -367,7 +384,7 @@ export class LifeSimulation {
     }
     if(t.kind==='collect'){
       const b=this.bottle(t.targetId);if(!b||!this._availableBottle(b,a)){this._fail(a,'目标瓶子已不在原处');return;}
-      a.yaw=Math.atan2(b.x-a.x,b.z-a.z);
+      a.yaw=Number.isFinite(t.interactionYaw)?t.interactionYaw:Math.atan2(b.x-a.x,b.z-a.z);
     }else if(t.kind!=='eat')a.yaw=this.locations[t.targetId]?.yaw??a.yaw;
     const durations={collect:3.2,recycle:2.4,buy:2.4,eat:4.2,window:3.2,water:5.5};
     this._newPhase(a,'interact',durations[t.kind]||2,t.kind);
@@ -414,11 +431,11 @@ export class LifeSimulation {
   _validatePending(a){
     const t=a.task;if(!t)return false;
     if(t.kind==='collect'){
-      const b=this.bottle(t.targetId);return !!b&&this._availableBottle(b,a)&&b.reservedBy===a.id;
+      const b=this.bottle(t.targetId);return a.capabilities?.pickup!==false&&!!b&&this._availableBottle(b,a)&&b.reservedBy===a.id;
     }
-    if(t.kind==='buy')return this.shop.open&&this.shop.stock>0&&a.money>=this.shop.price&&this.resources.bakery===a.id;
+    if(t.kind==='buy')return a.capabilities?.bread!==false&&this.shop.open&&this.shop.stock>0&&a.money>=this.shop.price&&this.resources.bakery===a.id;
     if(t.kind==='recycle')return a.inventory.bottles.length>0&&this.resources.recycle===a.id;
-    if(t.kind==='eat')return a.inventory.bread>0;
+    if(t.kind==='eat')return a.capabilities?.bread!==false&&a.inventory.bread>0;
     if(t.kind==='rest')return this.resources[t.targetId]===a.id;
     if(t.kind==='window')return this.resources.windowA===a.id&&t.targetOpen===(!this.raining&&this.environment.windStrength<.45);
     if(t.kind==='water')return this.resources.planterA===a.id&&(t.closeOnly||!this.raining&&this.environment.plantMoisture<.8);
@@ -597,18 +614,18 @@ export class LifeSimulation {
     const a=this.actor(actorId);if(!a)return this.spawnBottle();
     for(const r of [1.1,1.6,2.1])for(const offset of [0,.8,-.8,1.6,-1.6,Math.PI]){
       const angle=a.yaw+offset,x=a.x+Math.sin(angle)*r,z=a.z+Math.cos(angle)*r;
-      if(this._canStand(point(x,z+.43),.34)&&this.actors.every(other=>distance(other,point(x,z))>.70)&&this.bottles.every(b=>b.state!=='ground'||distance(b,point(x,z))>.25))return this.spawnBottle(x,z);
+      if(this._bottleHasStandingSpace(point(x,z))&&this.actors.every(other=>distance(other,point(x,z))>.70)&&this.bottles.every(b=>b.state!=='ground'||distance(b,point(x,z))>.25))return this.spawnBottle(x,z);
     }
     return this.spawnBottle();
   }
   spawnBottle(x,z,{silent=false}={}){
     if(x===undefined||z===undefined){
       const box=STREET_LAYOUT.bottleDropBounds;
-      let p=null;for(let i=0;i<60;i++){const q=point(this.rng.range(box.minX,box.maxX),this.rng.range(box.minZ,box.maxZ));if(this._canStand(point(q.x,q.z+.43),.34)&&this.actors.every(a=>distance(a,q)>.70)){p=q;break;}}
+      let p=null;for(let i=0;i<60;i++){const q=point(this.rng.range(box.minX,box.maxX),this.rng.range(box.minZ,box.maxZ));if(this._bottleHasStandingSpace(q)&&this.actors.every(a=>distance(a,q)>.70)){p=q;break;}}
       if(!p)return null;x=p.x;z=p.z;
     }
     finite(x,'bottle.x');finite(z,'bottle.z');
-    if(!this._canStand(point(x,z+.43)))return null;
+    if(!this._bottleHasStandingSpace(point(x,z)))return null;
     const b={id:`bottle-${++this.bottleSequence}`,x,z,y:.072,state:'ground',owner:null,reservedBy:null,spawnedAt:this.time};
     this.bottles.push(b);this.nextOpportunityScan=this.time;
     if(!silent)this._event('bottle-spawned',null,'街上多了一只可回收的瓶子',{bottleId:b.id,x,z});return b;

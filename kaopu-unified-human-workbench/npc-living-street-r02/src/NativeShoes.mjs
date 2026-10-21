@@ -10,8 +10,9 @@ import {buildStyle, STYLES} from '../vendor/appearance/shoe-native/r14/src/model
 import {StyleMaterials} from '../vendor/appearance/shoe-native/r14/src/materials.mjs';
 import {prepareSharedNativeShoe} from '../vendor/appearance/shoe-shared-original.mjs';
 import scanData from '../vendor/appearance/shoes-r14/scan-data.json';
+import {measureNativeFoot,createNativeShoeField,fitNativeShoeGeometry} from './NativeShoeFit.mjs';
 
-const STYLE_BY_ACTOR = {A:'canvas',B:'penny',C:'chelsea',D:'canvas',E:'monk',F:'penny'};
+export const STYLE_BY_ACTOR = Object.freeze({A:'canvas',B:'canvas',C:'canvas',D:'canvas',E:'canvas',F:'canvas'});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const sub=(a,b)=>a.map((x,k)=>x-b[k]);
@@ -46,13 +47,14 @@ function measureFoot(actor,side) {
  * Does not initialize materials, a renderer, a DOM or a substitute body. */
 export function fitNativeShoeSide(actor,side,{styleId=STYLE_BY_ACTOR[actor.id]||'canvas',getModel=buildStyle}={}) {
   const style=STYLES.find(s=>s.id===styleId);if(!style)throw Error('Unknown native shoe style '+styleId);
-  const foot=measureFoot(actor,side),targetLength=foot.length+.024,scaleM=targetLength/style.length;
+  const foot=measureNativeFoot(actor,side),targetLength=foot.length+.028,scaleM=targetLength/style.length;
   const width=clamp((foot.width+.009)/(style.width*scaleM),.88,1.15);
-  const params={length:1,width,instep:4,thickness:1.35,bend:0},model=getModel(styleId,params);
-  const ankleStation=clamp((0-foot.minF)/foot.length,0,1),soleAtAnkle=model.last.soleTop(ankleStation)*scaleM;
-  const baseZ=foot.minZ-soleAtAnkle-.0015;
-  const center=[foot.foot[0]+foot.forward[0]*foot.centerF+foot.right[0]*foot.centerR,
-    foot.foot[1]+foot.forward[1]*foot.centerF+foot.right[1]*foot.centerR,baseZ];
+  const params={length:1,width,instep:4,thickness:1.35,bend:0},sourceModel=getModel(styleId,params);
+  const centerF=foot.minF-.004+targetLength*.5,centerR=foot.centerR;
+  const field=createNativeShoeField(foot,sourceModel.last,{scaleM,centerF,centerR});
+  const model=fitNativeShoeGeometry(sourceModel,field);
+  const center=[foot.foot[0]+foot.forward[0]*centerF+foot.right[0]*centerR,
+    foot.foot[1]+foot.forward[1]*centerF+foot.right[1]*centerR,field.baseZ];
   const restNative=new T.Matrix4().set(foot.right[0],0,foot.forward[0],center[0],
     foot.right[1],0,foot.forward[1],center[1],0,1,0,center[2],0,0,0,1);
   const solePointsNative=[];let minSole=Infinity;
@@ -68,8 +70,9 @@ export function fitNativeShoeSide(actor,side,{styleId=STYLE_BY_ACTOR[actor.id]||
   const record={attachmentBone:'foot.'+side,boneId:foot.footId,solePointsNative,
     soleLiftM:foot.minZ-minSole,minRestSoleNativeZ:minSole,restFootMinNativeZ:foot.minZ,
     footLengthM:foot.length,footWidthM:foot.width,wearerScaleMPerMm:scaleM,styleId,params,
-    sourceTriangles:model.report.triangles,sourceParts:model.parts.length,restNative:restNative.toArray(),fitValidated:false};
-  return {model,foot,scaleM,params,restNative,record};
+    sourceTriangles:sourceModel.report.triangles,sourceParts:sourceModel.parts.length,restNative:restNative.toArray(),fitValidated:false,
+    wearerFit:model.report.wearerFit};
+  return {model,sourceModel,field,foot,scaleM,params,restNative,record};
 }
 
 export async function createNativeShoeSystem({renderer}={}) {
@@ -79,8 +82,8 @@ export async function createNativeShoeSystem({renderer}={}) {
   function resource(styleId,params) {
     const key=JSON.stringify([styleId,params]);
     if(!resources.has(key)) {
-      const model=buildStyle(styleId,params),shared=prepareSharedNativeShoe(model,materials);
-      resources.set(key,{model,shared,key});
+      const model=buildStyle(styleId,params);
+      resources.set(key,{model,key});
     }
     return resources.get(key);
   }
@@ -89,8 +92,9 @@ export async function createNativeShoeSystem({renderer}={}) {
     const perSide={},attachments=[];
     for(const side of ['L','R']) {
       const fit=fitNativeShoeSide(actor,side,{styleId,getModel:(id,p)=>resource(id,p).model});
-      const {foot,scaleM,params,restNative,record}=fit,res=resource(styleId,params);
-      const shoe=res.shared.create({name:`${actor.id}/${side}/${styleId}`,mirror:side==='L'});
+      const {foot,scaleM,params,restNative,record}=fit;
+      const shared=prepareSharedNativeShoe(fit.model,materials),res={shared,model:fit.model};
+      const shoe=shared.create({name:`${actor.id}/${side}/${styleId}`,mirror:side==='L'});
       const attach=new T.Group();attach.name=`native-foot-${actor.id}-${side}`;
       attach.matrixAutoUpdate=false;actor.root.add(attach);attach.add(shoe);
       shoe.scale.multiplyScalar(scaleM/.001);
@@ -106,12 +110,12 @@ export async function createNativeShoeSystem({renderer}={}) {
         sourceConstructionRetained:true,materials:'native R14 StyleMaterials + original scan channels',
         perSide:Object.fromEntries(Object.entries(perSide).map(([side,s])=>[side,{...s,solePointsNative:undefined,soleVertexCount:s.solePointsNative.length}])),
         wearerFitValidated:this.wearerFitValidated,pressureComfortSolved:false};},
-      dispose(){for(const a of attachments){a.res.shared.release(a.shoe);a.attach.removeFromParent();}wearers.delete(footwear);}};
+      dispose(){for(const a of attachments){a.res.shared.release(a.shoe);a.res.shared.disposeGeometry();a.attach.removeFromParent();}wearers.delete(footwear);}};
     actor.footwear=footwear;wearers.add(footwear);footwear.update();return footwear;
   }
   return {attach,update(){for(const f of wearers)f.update();},
     report(){return [...wearers].map(f=>f.report());},
-    dispose(){for(const f of [...wearers])f.dispose();for(const r of resources.values())r.shared.disposeGeometry();materials.dispose();}};
+    dispose(){for(const f of [...wearers])f.dispose();for(const r of resources.values())for(const p of r.model.parts)p.geometry.dispose();materials.dispose();}};
 }
 
 export async function attachNativeShoes(actor,{renderer,...options}={}) {

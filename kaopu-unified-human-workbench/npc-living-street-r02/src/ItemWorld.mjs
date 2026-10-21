@@ -19,7 +19,7 @@ import {STREET_LAYOUT} from './WorldLayout.mjs';
 
 export const ITEM_PHYSICS = Object.freeze({
   version:'native-courtyard-items/1', bottleRadiusM:.032, bottleHeightM:.14,
-  bottleMassKg:.035, breadHalfExtentsM:[.16,.07,.082], breadMassKg:.11,
+  bottleMassKg:.035, breadHalfExtentsM:[.075,.035,.045], breadMassKg:.11,
   contactToleranceM:.012, maximumAllowedPalmPenetrationM:.004,
   transportToleranceM:.035, mouthSurfaceToleranceM:.025,
   minimumBottleLiftM:.24, assistedMaximumForceN:16,
@@ -134,8 +134,10 @@ export class ItemWorld {
     const T=this.THREE,g=new T.Group();g.name='physical-'+id;
     const loaf=this._mesh(new T.SphereGeometry(1,24,14),this.materials.crust,g);
     loaf.scale.set(...ITEM_PHYSICS.breadHalfExtentsM);
-    for(const x of [-.075,0,.075]) {
-      const cut=this._mesh(new T.BoxGeometry(.009,.002,.061),this.materials.cut,g,x,.065,0);
+    const h=ITEM_PHYSICS.breadHalfExtentsM;
+    for(const x of [-h[0]*.45,0,h[0]*.45]) {
+      const y=h[1]*Math.sqrt(1-(x/h[0])**2);
+      const cut=this._mesh(new T.BoxGeometry(.004,.001,h[2]*.70),this.materials.cut,g,x,y-.0005,0);
       cut.rotation.y=-.30;
     }
     return g;
@@ -165,7 +167,7 @@ export class ItemWorld {
     const points=[[3.4,-.49],[3.75,-.49],[4.10,-.49],[3.40,-.79],[3.76,-.79],[2.98,-.79],[2.64,-.89],[4.16,-.89]];
     for(let i=0;i<count;i++) {
       const p=points[i%points.length],tray=p[1]<=-.56&&p[0]>=2.59&&p[0]<=4.03;
-      this._newItem({id:'bread-stock-'+(++this.serial),kind:'bread',at:[p[0],(i<3?1:tray?.988:.95)+.072,p[1]],mode:'shop'});
+      this._newItem({id:'bread-stock-'+(++this.serial),kind:'bread',at:[p[0],(i<3?1:tray?.988:.95)+ITEM_PHYSICS.breadHalfExtentsM[1]+.002,p[1]],mode:'shop'});
     }
   }
 
@@ -195,7 +197,7 @@ export class ItemWorld {
     const bag=this._bagPalm(state),f=forward(state),right=[-Math.cos(state.yaw),0,Math.sin(state.yaw)];
     const ids=item.kind==='bottle'?state.inventory.bottles:[];
     const index=Math.max(0,ids.indexOf(item.logicalId)),slot=item.kind==='bottle'?(index-1)*.070:0;
-    return add(add(bag,scale(f,item.kind==='bottle'?.032:.082)),add(scale(right,slot),[0,item.kind==='bottle'?.025:.032,0]));
+    return add(add(bag,scale(f,item.kind==='bottle'?.032:ITEM_PHYSICS.breadHalfExtentsM[2])),add(scale(right,slot),[0,item.kind==='bottle'?.025:.032,0]));
   }
 
   _makeKinematic(item) {
@@ -259,7 +261,7 @@ export class ItemWorld {
     const local=item.body.vectorToLocalFrame(asCannon(d));
     let t;
     if(item.kind==='bottle')t=Math.min(.032/Math.max(1e-12,Math.hypot(local.x,local.z)),.07/Math.max(1e-12,Math.abs(local.y)));
-    else t=1/Math.hypot(local.x/.16,local.y/.07,local.z/.082);
+    else {const h=ITEM_PHYSICS.breadHalfExtentsM;t=1/Math.hypot(local.x/h[0],local.y/h[1],local.z/h[2]);}
     return item.body.pointToWorldFrame(local.scale(t)).toArray();
   }
 
@@ -297,6 +299,33 @@ export class ItemWorld {
     if(item)record.sourceTarget=this._surfaceTowardActor(item,state);
   }
 
+  _buyClearance(record,item,state) {
+    const half=ITEM_PHYSICS.breadHalfExtentsM,source=item?.stockOrigin||position(item),
+      hand=this.actors.get(state.id)?.graspProfiles?.bread?.sides?.R,
+      radius=Math.max(Math.hypot(half[0],half[2]),hand?.horizontalReachM||0),
+      outward=scale(forward(state),-1),fixtures=[];
+    let top=-Infinity,exit=-Infinity;
+    for(const body of this.world.bodies){
+      if(!/^bakery-(counter|tray|serving-board)$/.test(body._itemFixture||''))continue;
+      body.updateAABB();const lo=body.aabb.lowerBound,hi=body.aabb.upperBound;
+      // The actual loaf and complete native hand must clear each nearby
+      // authored surface before moving towards the person's bag.
+      if(source[0]+radius<lo.x||source[0]-radius>hi.x)continue;
+      fixtures.push({id:body._itemFixture,min:lo.toArray(),max:hi.toArray()});
+      top=Math.max(top,hi.y);
+      for(const x of [lo.x,hi.x])for(const z of [lo.z,hi.z])exit=Math.max(exit,x*outward[0]+z*outward[2]);
+    }
+    if(!fixtures.length)throw Error('Bread has no measured bakery collision surface');
+    const minHandY=Number.isFinite(hand?.minimumYMFromBottleCenter)?hand.minimumYMFromBottleCenter:0,
+      liftMarginM=.012,palmY=top+Math.max(half[1],-minHandY)+liftMarginM,
+      travel=Math.max(0,exit+radius+liftMarginM-source[0]*outward[0]-source[2]*outward[2]);
+    return {counterTopY:top,palmClearanceY:palmY,
+      exitPoint:[record.sourceTarget[0]+outward[0]*travel,palmY,record.sourceTarget[2]+outward[2]*travel],
+      breadHalfExtentsM:half.slice(),minimumHandYMFromPalm:minHandY,
+      horizontalHandRadiusM:radius,liftMarginM,fixtures,
+      source:'current Cannon fixture AABBs and this native hand\'s complete weighted grasp envelope'};
+  }
+
   /** Inputs intentionally override task.progress: failed contact holds the pose. */
   motionInput(state) {
     this._ensureReset();this._syncLogical();
@@ -313,14 +342,26 @@ export class ItemWorld {
     } else if(record.kind==='eat')gripTarget=source;
     return {mode:modes[record.kind],target:plain(target),gripTarget:gripTarget&&plain(gripTarget),
       progress:record.progress,grip:record.grasped?1:clamp((record.progress-.30)/.16),
-      ...(record.kind==='eat'?{mouthGripDepthM:.164,mouthClearanceM:.012}:{})};
+      graspProfile:item?.kind||'bottle',
+      ...(record.kind==='collect'?{pickupAttached:record.grasped&&!!record.constraint}:{}),
+      ...(record.kind==='buy'&&item?{buyClearance:this._buyClearance(record,item,state)}:{}),
+      ...(record.kind==='eat'?{mouthGripDepthM:ITEM_PHYSICS.breadHalfExtentsM[2]*2,mouthClearanceM:.012}:{})};
   }
 
   contactTarget(state) {return this.motionInput(state).target||null;}
 
   _handPose(hand,report) {
     const p=vec(report.palm),n=vec(report.palmNormal)||[0,0,1];
-    hand.position.set(...p);hand.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.atan2(n[0],n[2]));
+    hand.position.set(...p);
+    const axis=vec(report.handCylinderAxis),forwardHand=vec(report.handForward);
+    if(finite(axis)&&finite(forwardHand)){
+      const T=this.THREE,z=new T.Vector3(...n).normalize(),y=new T.Vector3(...axis);
+      y.addScaledVector(z,-y.dot(z)).normalize();
+      const x=new T.Vector3().crossVectors(y,z).normalize();
+      if(!Number.isFinite(x.x)||x.lengthSq()<.99||y.lengthSq()<.99)throw Error('Degenerate native hand frame');
+      const matrix=new T.Matrix4().makeBasis(x,y,z),q=new T.Quaternion().setFromRotationMatrix(matrix).normalize();
+      hand.quaternion.set(q.x,q.y,q.z,q.w);
+    }else hand.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0),Math.atan2(n[0],n[2]));
     // This is an externally driven kinematic target. Dynamic object transforms
     // are never overwritten during transport, and forces are finite.
     hand.velocity.setZero();hand.angularVelocity.setZero();hand.aabbNeedsUpdate=true;

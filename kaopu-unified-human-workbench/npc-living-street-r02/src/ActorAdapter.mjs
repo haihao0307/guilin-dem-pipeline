@@ -183,18 +183,25 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
     rig.fk();binding.animate(rig.skinMatrices);
   }
   function evaluate(values,open,details=false) {
-    pose(values,open);const anchor=samplePatch();let minimum=Infinity,minY=Infinity,deepest=null;
+    pose(values,open);const anchor=samplePatch();let minimum=Infinity,minY=Infinity,deepest=null,horizontalReachM=0;
     const distances=details?new Map():null;
     for(const id of handVertices) {
       const delta=sub(binding.sampleVertex(id,true),anchor);
       const x=sign*dot(delta,frame.forward),y=-sign*dot(delta,across)+shape.gripHeight,
-        z=dot(delta,frame.palm)-shape.radius;
-      const radial=Math.hypot(x,z)-shape.radius,axial=Math.abs(y)-shape.height*.5;
-      const distance=Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0);
+        z=dot(delta,frame.palm)-(shape.kind==='ellipsoid'?shape.halfExtentsM[2]:shape.radius);
+      let distance;
+      if(shape.kind==='ellipsoid'){
+        const h=shape.halfExtentsM,k0=Math.hypot(x/h[0],y/h[1],z/h[2]),k1=Math.hypot(x/(h[0]*h[0]),y/(h[1]*h[1]),z/(h[2]*h[2]));
+        distance=k1<1e-12?-Math.min(...h):k0*(k0-1)/k1;
+      }else{
+        const radial=Math.hypot(x,z)-shape.radius,axial=Math.abs(y)-shape.height*.5;
+        distance=Math.hypot(Math.max(radial,0),Math.max(axial,0))+Math.min(Math.max(radial,axial),0);
+      }
       if(distance<minimum){minimum=distance;deepest=id;}minY=Math.min(minY,y);
+      horizontalReachM=Math.max(horizontalReachM,Math.hypot(x,dot(delta,frame.palm)));
       if(details)distances.set(id,distance);
     }
-    return {minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:minY,deepestVertex:deepest,
+    return {minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:minY,horizontalReachM,deepestVertex:deepest,
       ...(details?{fingerSurfaceMinimumSignedDistanceM:digitVertices.map(ids=>Math.min(...ids.map(i=>distances.get(i)))),
         fingerNearVertexCounts:digitVertices.map(ids=>ids.filter(i=>Math.abs(distances.get(i))<=.003).length)}:{})};
   }
@@ -235,8 +242,31 @@ export function fitCylinderGrasp({rig,binding,fingers,patch,handVertices,side,sh
   return {admissible,reason:admissible?null:'Native open-to-close envelope lacks clearance or sufficient finger surface contacts',
     side,shape,open,closure,openCheck,closed,trajectorySamples:trajectory.length,
     minimumSignedDistanceM:minimum,minimumYMFromBottleCenter:Math.min(...trajectory.map(x=>x.minimumYMFromBottleCenter)),
+    horizontalReachM:Math.max(...trajectory.map(x=>x.horizontalReachM)),
     touchingNonThumbFingers:touchingFingers,boneLengthErrorM:rig.validate().maxBoneLengthError,
     scope:'complete weighted hand vertex samples; first-contact per-finger bisection; no force/friction or continuous-triangle guarantee'};
+}
+
+/** The native L5 rails classify the actual frozen display geometry. Selecting
+ * from the body-prefix or a guessed head offset misses the refined lips. */
+export function findNativeMouthSupport(geometry,model){
+  const rails=model.lipStructure?.rails,R=geometry.attributes.fRest,T=geometry.attributes.csType;
+  if(!rails?.sample||!R||!T)throw Error('The original native lip rails are unavailable');
+  const selected={upper:null,lower:null};let candidates=0;
+  for(let id=0;id<R.count;id++){
+    if(T.getX(id)>=.5)continue;
+    const q=rails.sample([R.getX(id),R.getY(id),R.getZ(id)],T.getX(id));
+    if(!q.roi||q.front<.8||Math.abs(q.u)>.20||q.v<.12||q.v>.78)continue;
+    candidates++;const p=restVertex(geometry,id),key=q.upper?'upper':'lower';
+    const score=p[1]+Math.abs(q.u)*.002;
+    if(!selected[key]||score<selected[key].score)selected[key]={id,rest:p,score,region:{u:q.u,v:q.v,upper:q.upper,front:q.front}};
+  }
+  if(!selected.upper||!selected.lower)throw Error('The actual native central vermilion support is incomplete');
+  const chosen=selected.upper.rest[1]<=selected.lower.rest[1]?selected.upper:selected.lower;
+  return {vertex:chosen.id,rest:chosen.rest.slice(),region:chosen.region,
+    upperVertex:selected.upper.id,lowerVertex:selected.lower.id,candidates,
+    source:'original R07 L5 rails.sample on actual fRest/csType display attributes',
+    originalDisplayVertices:R.count,selection:'actual central vermilion surface support; complete display CSR retained'};
 }
 
 function makeActor(model, viewer, spec, preset, measurements) {
@@ -302,7 +332,9 @@ function makeActor(model, viewer, spec, preset, measurements) {
       if(/^(foot|toe)/.test(name)&&name.endsWith('.'+side))weight+=binding.packed[slot+4];
     }if(weight>.5)soleSurfaceIds[side].push(i);}
   }
-  const active={side:spec.side,grip:0};let last={},lastGoal=null,lastSolution=null,graspReport=null;
+  const mouthSupport=findNativeMouthSupport(geometry,model);
+  const graspProfiles={};
+  const active={side:spec.side,grip:0,profile:'bottle'};let last={},lastGoal=null,lastSolution=null,graspReport=null;
   const toLocal = target => {root.updateWorldMatrix(true,false);return native(root.worldToLocal(asVector(target)));};
   const toWorld = target => {root.updateWorldMatrix(true,false);return root.localToWorld(display(target));};
   const directionNative = direction => {
@@ -395,8 +427,9 @@ function makeActor(model, viewer, spec, preset, measurements) {
     materialReport:frozen.map(f=>f.report),
     contactReport:{kind:'display skin triangle barycentric anchors',palms:Object.fromEntries(SIDES.map(s=>[s,patches[s].palm])),
       fingers:Object.fromEntries(SIDES.map(s=>[s,patches[s].fingers])),
+      mouth:mouthSupport,
       forceOrFrictionMeasured:false,closure:'requires per-native-shape finite-cylinder contact calibration'},
-    graspReport:null,
+    graspReport:null,graspProfiles,
     // Body/legs/arms are composed by NativeMotion. clear() intentionally does
     // not run FK, reset the arms, or submit matrices. commit() is the single
     // renderer submission after all native limb constraints have been solved.
@@ -406,7 +439,10 @@ function makeActor(model, viewer, spec, preset, measurements) {
       restVertex:id=>restVertex(geometry,id),
       sampleVertex:sampleLiveVertex,
       samplePalm:(side='R')=>sampleLivePatch(patches[side].palm),
+      sampleMouth:()=>sampleLiveVertex(mouthSupport.vertex),
+      mouthSupport,
       palmRest:(side='R')=>patches[side].palm.rest.slice(),
+      selectGrasp:profile=>actor.selectGrasp(profile),
       clear({side='R',grip=0,handActive=false}={}){
         for(const v of rig.rotationDeltas)v.fill(0);rig.rootTranslation.fill(0);
         active.side=side;active.grip=clamp(grip,0,1);
@@ -419,17 +455,20 @@ function makeActor(model, viewer, spec, preset, measurements) {
         binding.animate(rig.skinMatrices);
       }
     },
-    configureGrasp({radius,height,gripHeight=0}={}){
-      if(![radius,height,gripHeight].every(Number.isFinite)||radius<=0||height<=0||Math.abs(gripHeight)>=height*.5)
+    configureGrasp({radius,height,gripHeight=0,profile='bottle',halfExtentsM=null}={}){
+      const ellipsoid=profile==='bread';
+      if(ellipsoid?(!Array.isArray(halfExtentsM)||halfExtentsM.length!==3||halfExtentsM.some(v=>!Number.isFinite(v)||v<=0)):
+        (! [radius,height,gripHeight].every(Number.isFinite)||radius<=0||height<=0||Math.abs(gripHeight)>=height*.5))
         throw Error('Native grasp calibration requires a positive cylinder and an interior axial gripHeight');
-      const shape={kind:'upright-cylinder',radius,height,gripHeight},sides={};
+      const shape=ellipsoid?{kind:'ellipsoid',halfExtentsM:halfExtentsM.slice(),gripHeight:0}:{kind:'upright-cylinder',radius,height,gripHeight},sides={};
       try {
         for(const side of SIDES) {
           const patch=findPalmSupport(geometry,binding,rig,side,handSurfaceVertices[side]);
           patches[side].palm=patch;
           sides[side]=fitCylinderGrasp({rig,binding,fingers,patch,handVertices:handSurfaceVertices[side],side,shape});
         }
-        graspReport={shape,sides,admissible:SIDES.every(s=>sides[s].admissible)};
+        graspReport={profile,shape,sides,admissible:SIDES.every(s=>sides[s].admissible)};
+        graspProfiles[profile]=graspReport;active.profile=profile;
         this.graspReport=graspReport;
         if(!graspReport.admissible){
           // Capture the exact rendered hand ancestry on failure. This is a
@@ -455,6 +494,11 @@ function makeActor(model, viewer, spec, preset, measurements) {
         this.contactReport.closure='shape-specific weighted hand surface fit with first-contact bisection';
         return graspReport;
       } finally {this.rest();}
+    },
+    selectGrasp(profile='bottle'){
+      const selected=graspProfiles[profile];
+      if(!selected?.admissible)throw Error(`NPC ${spec.id} has no admissible native ${profile} grasp`);
+      graspReport=selected;this.graspReport=selected;active.profile=profile;return selected;
     },
     setSide(side){if(!SIDES.includes(side))throw Error('Native reach side must be L or R');active.side=side;this.side=side;return this;},
     handAnchor(side=active.side){return toWorld(sample(patches[side].palm));},

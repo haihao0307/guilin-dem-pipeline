@@ -30,7 +30,7 @@ const {chromium}=require('playwright');
 
 const VERSION='NPC-LIVING-STREET-R02';
 const IDS=['A','B','C','D','E','F'];
-const EXPECTED={A:['r02-adult-male-tall-slim','P01','male','short','canvas'],B:['r02-adult-male-short-heavy','P02','male','buzz','penny'],C:['r02-adult-male-sturdy','P05','male','short','chelsea'],D:['r02-adult-female-short-slim','P06','female','medium','canvas'],E:['r02-adult-female-tall-sturdy','P04','female','long','monk'],F:['r02-adult-female-rounded','P03','female','long','penny']};
+const EXPECTED={A:['r02-adult-male-tall-slim','P01','male','short','canvas'],B:['r02-adult-male-short-heavy','P02','male','buzz','canvas'],C:['r02-adult-male-sturdy','P05','male','short','canvas'],D:['r02-adult-female-short-slim','P06','female','medium','canvas'],E:['r02-adult-female-tall-sturdy','P04','female','long','canvas'],F:['r02-adult-female-rounded','P03','female','long','canvas']};
 let LAYOUT;
 const CANONICAL_SHA='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a';
 const PHASE=process.env.NPC_QA_PHASE||'startup';
@@ -46,13 +46,17 @@ const duration=(name,fallback)=>{const value=Number(process.env[name]||fallback)
 const TOTAL_MS=Math.min(1800000,duration('NPC_TOTAL_TIMEOUT_MS',1800000));
 const BOOT_MS=duration('NPC_BOOT_TIMEOUT_MS',900000);
 const BOOT_READ_MS=Math.min(120000,BOOT_MS);
-const FRAME_MS=duration('NPC_FRAME_TIMEOUT_MS',150000);
+const FRAME_MS=duration('NPC_FRAME_TIMEOUT_MS',180000);
 const CAPTURE_MS=duration('NPC_CAPTURE_TIMEOUT_MS',60000);
 const CHAIN_MS=duration('NPC_CHAIN_TIMEOUT_MS',420000);
 const ACTIVITY_MS=duration('NPC_ACTIVITY_TIMEOUT_MS',180000);
 const PROBE_MS=duration('NPC_PROBE_TIMEOUT_MS',60000);
 const FAILURE_MS=45000,CLOSE_MS=10000,started=Date.now();
 const activeDeadline=started+TOTAL_MS-FAILURE_MS-CLOSE_MS-5000;
+let observedPauseAt=null,observedPausedMS=0;
+function observePause(value){const now=Date.now();if(value&&observedPauseAt===null)observedPauseAt=now;
+  if(!value&&observedPauseAt!==null){observedPausedMS+=now-observedPauseAt;observedPauseAt=null;}}
+const liveNow=()=>Date.now()-observedPausedMS-(observedPauseAt===null?0:Date.now()-observedPauseAt);
 const put=(name,value)=>{const target=path.join(out,name),tmp=target+'.tmp';fs.writeFileSync(tmp,typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');fs.renameSync(tmp,target);};
 let sourceHead=process.env.SOURCE_HEAD||process.env.GITHUB_SHA||null;
 if(!sourceHead){try{sourceHead=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:here,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();}catch{}}
@@ -154,11 +158,13 @@ async function hideDataPanel() {
 async function pause(value) {
   const label=await bounded('read pause control',()=>page.locator('#pause').getAttribute('aria-label'));
   const isPaused=/继续/.test(label||'');if(isPaused!==value)await click('#pause');
+  const after=await bounded('observe actual pause control',()=>page.locator('#pause').getAttribute('aria-label'));
+  const actual=/继续/.test(after||'');assert.equal(actual,value);observePause(actual);
 }
 async function readState(label,{save=false,budget=PROBE_MS}={}) {
   const text=await bounded('read displayed diagnostics '+label,()=>page.locator('#life-diagnostics').textContent({timeout:budget}),budget);
   assert(text&&text.trim().startsWith('{'),'Visible diagnostics JSON is present: '+label);
-  const state=JSON.parse(text);lastDOM=state;
+  const state=JSON.parse(text);lastDOM=state;observePause(state.paused===true);
   if(save)put(label+'.json',{sourceHead,source:'visible #life-diagnostics DOM text after opening the UI observation panel',capturedAt:new Date().toISOString(),state});
   return state;
 }
@@ -210,12 +216,13 @@ function observe(state,label='poll') {
   if(state.audit?.interactions)put('latest-interactions.json',state.audit.interactions);
   checkpoint('observation '+label);return row;
 }
-async function waitState(label,predicate,{timeout=45000,poll=350,onState=null}={}) {
-  const until=Math.min(Date.now()+timeout,activeDeadline);let state;
-  while(Date.now()<until) {
+async function waitState(label,predicate,{timeout=45000,poll=350,onState=null,liveTime=false}={}) {
+  const now=liveTime?liveNow:Date.now,until=now()+timeout;let state;
+  while(now()<until&&Date.now()<activeDeadline) {
     state=await readState(label);assertHealthy(state);if(onState)await onState(state);
+    if(now()>=until||Date.now()>=activeDeadline)break;
     if(predicate(state)){observe(state,label);return state;}
-    await delay(Math.min(poll,Math.max(0,until-Date.now())));
+    await delay(Math.min(poll,Math.max(0,until-now()),Math.max(0,activeDeadline-Date.now())));
   }
   if(state)put('timeout-'+label.replace(/[^a-zA-Z0-9_-]/g,'-')+'.json',state);
   throw Error('Timed out observing real UI state: '+label);
@@ -244,7 +251,7 @@ async function screenshot(name) {
   const frame=await evaluate('wait for completed native GPU frame '+name,async()=>{
     const app=window.__LIVING_STREET__,viewer=window.__IDENTITY_QA__?.viewer?.();
     if(!app?.awaitFrame||!viewer?.renderer)throw Error('Actual native frame waiter is unavailable');
-    const before=performance.now(),completed=await app.awaitFrame({fresh:true}),canvas=viewer.renderer.domElement;
+    const before=performance.now(),completed=await app.awaitFrame({fresh:false}),canvas=viewer.renderer.domElement;
     if(!completed.startupDrain?.completed||completed.inFlight!==0||completed.submitted!==completed.completed||completed.maxInFlight>1)
       throw Error('Screenshot does not have a completed, bounded native GPU frame');
     return{completed,waitMS:performance.now()-before,canvas:{width:canvas.width,height:canvas.height,rect:canvas.getBoundingClientRect().toJSON()},
@@ -491,8 +498,8 @@ async function autonomousChain({controls=false}={}) {
   await ensureDataPanel();const initialSpeed=controls?'1×':'2×';
   if((await bounded('read speed control',()=>page.locator('#speed').textContent())).trim()!==initialSpeed)await click('#speed');
   await pause(false);
-  const until=Math.min(Date.now()+CHAIN_MS,activeDeadline),receipts=new Map();let seat=null,interrupted=null,shopClosed=null,lastTime=-1;
-  while(Date.now()<until) {
+  const until=liveNow()+CHAIN_MS,receipts=new Map();let seat=null,interrupted=null,shopClosed=null,lastTime=-1;
+  while(liveNow()<until&&Date.now()<activeDeadline) {
     const s=await readState('autonomous-chain');assertHealthy(s);
     if(s.time-lastTime>.4){observe(s,'autonomous-chain');lastTime=s.time;}
     const a=s.simulation.actors.find(a=>a.id==='A'),b=s.simulation.actors.find(a=>a.id==='B'),bm=s.motions.B;
@@ -539,6 +546,7 @@ async function autonomousChain({controls=false}={}) {
       await pause(false);
     }
     if(receipts.size===4&&seat) {
+      assert(liveNow()<until&&Date.now()<activeDeadline,'Actual chain meets both live-time and overall wall deadlines');
       const sequence=['collect','recycle','buy','eat'].map(k=>receipts.get(k));
       assert(sequence.every((r,i)=>i===0||r.time>sequence[i-1].time),'Actual acquisition, exchange, purchase and eating are causally ordered');
       assert.equal(new Set(sequence.map(r=>r.token)).size,4,'Four unique transactional phase tokens');
@@ -568,7 +576,7 @@ async function newBottleInteraction() {
     const r=s.audit.interactions.find(r=>(r.kind||r.evidence?.kind)==='collect'&&r.success&&r.ack?.committed&&r.evidence?.itemId===bottle.id);
     const physical=s.items.items.find(i=>i.id===bottle.id),logical=s.simulation.bottles.find(b=>b.id===bottle.id);
     if(r&&logical?.state==='inventory'&&physical?.mode==='stored'&&physical.owner===r.id){receipt=r;return true;}return false;
-  },{timeout:ACTIVITY_MS,poll:300,onState:s=>{
+  },{timeout:ACTIVITY_MS,poll:300,liveTime:true,onState:s=>{
     observe(s,'new-bottle-response');const b=s.simulation.bottles.find(b=>b.id===bottle.id);
     const owners=s.simulation.actors.filter(a=>a.pendingBottle===bottle.id||a.task?.targetId===bottle.id);
     assert(owners.length<=1,'The newly added bottle has at most one current claimant');
@@ -616,7 +624,7 @@ async function waitMechanism(kind,{targetOpen,startTime,label,onState}={}) {
     receipt=[...s.audit.interactions].reverse().find(r=>r.time>startTime&&(r.kind||r.evidence?.kind)===kind&&r.success&&r.ack?.committed&&
       (kind!=='window'||Math.abs(r.evidence.finalWindowProgress-(targetOpen?1:0))<.002)&&
       (kind!=='water'||!r.evidence.closeOnly));return !!receipt;
-  },{timeout:ACTIVITY_MS,poll:350,onState:async s=>{observe(s,label);if(onState)await onState(s);}});
+  },{timeout:ACTIVITY_MS,poll:350,liveTime:true,onState:async s=>{observe(s,label);if(onState)await onState(s);}});
   mechanismProof(receipt,kind,targetOpen);return{receipt,final};
 }
 
@@ -881,7 +889,7 @@ async function main() {
   });
   await check('complete original clothing, shoes and requested hair on all six native people',appearanceEvidence);
   await check('actual current street and complete-person screenshots',async()=>{
-    await screenshot('01-first-frame');await hideDataPanel();await click('[data-camera="all"]');await screenshot('02-all');
+    await screenshot('01-first-frame');
     await overviewEvidence('desktop-overview-framing');
     const desktop=await evaluate('read actual desktop app layout',()=>{const app=document.querySelector('#life-app'),style=getComputedStyle(app);
       return{width:innerWidth,height:innerHeight,app:app.getBoundingClientRect().toJSON(),

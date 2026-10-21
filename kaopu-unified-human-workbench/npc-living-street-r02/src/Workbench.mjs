@@ -5,10 +5,11 @@ import {NativeMotion} from './NativeMotion.mjs';
 import {createNativeShoeSystem} from './NativeShoes.mjs';
 import {createNativeWardrobe} from './NativeWardrobe.mjs';
 import {createNativeHairSystem} from './NativeHair.mjs';
-import {ItemWorld} from './ItemWorld.mjs';
+import {ItemWorld,ITEM_PHYSICS} from './ItemWorld.mjs';
 import {EnvironmentWorld} from './EnvironmentWorld.mjs';
 import {STREET_LAYOUT} from './WorldLayout.mjs';
 import {manageRendering} from './RenderQueue.mjs';
+import {createSceneCamera} from './SceneCamera.mjs';
 
 const $=id=>document.getElementById(id),clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const escape=s=>String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -68,13 +69,18 @@ async function main(){
   const graspStartup=[];
   for(const actor of actors){
     $('load-progress').textContent=`按 ${actor.id} 的真实手形校准抓取`;
-    const fit=actor.configureGrasp({radius:.032,height:.14,gripHeight:0});graspStartup.push({actor:actor.id,fit});
+    const fit=actor.configureGrasp({radius:ITEM_PHYSICS.bottleRadiusM,height:ITEM_PHYSICS.bottleHeightM,gripHeight:0});
+    graspStartup.push({actor:actor.id,bottle:fit});
     if(!fit.admissible){
       $('life-diagnostics').textContent=JSON.stringify({phase:'native-grasp-calibration',sourceHead:window.__NPC_BUILD__.sourceHead,graspStartup,failedHandFixture:actor.graspFailureFixture},null,2);
       console.error('Native grasp calibration details',JSON.stringify(graspStartup));
       throw Error(actor.id+' 原生手形未通过抓取标定');
     }
+    const bread=actor.configureGrasp({profile:'bread',halfExtentsM:ITEM_PHYSICS.breadHalfExtentsM});
+    graspStartup[graspStartup.length-1].bread=bread;
+    actor.selectGrasp('bottle');
   }
+  if(window.__NPC_STARTUP__)window.__NPC_STARTUP__.graspCalibration=graspStartup;
   const keep=new Set(actors.map(a=>a.root));for(const child of [...viewer.scene.children])if(!keep.has(child))viewer.scene.remove(child);
   const courtyard=createCourtyard(THREE);viewer.scene.add(courtyard.group);
   viewer.scene.background=new THREE.Color('#e8e1d3');
@@ -110,6 +116,7 @@ async function main(){
     shoes.attach(actor);await wardrobe.attach(actor);await hair.attach(actor);
     $('load-progress').textContent=`${actor.profile.name} · 检查穿鞋后的落脚与把手可达范围`;
     const executor=new NativeMotion(actor);executor.assessCapabilities({spots:courtyard.spots,getInteractionTarget:courtyard.getInteractionTarget});
+    actor.motionCapabilities.bread=actor.graspProfiles.bread?.admissible===true;
     sim.actor(actor.id).capabilities={...actor.motionCapabilities};motion.set(actor.id,executor);
     const shadow=softShadow();viewer.scene.add(shadow);shadows.set(actor.id,shadow);
   }
@@ -118,6 +125,7 @@ async function main(){
   const rain=makeRain(viewer.scene);let selected='A',cameraMode='all',paused=false,speed=1,ready=false,last=performance.now(),lastUI=0,lastRender=0,frameCount=0;
   const reports={},audit={interactions:[],motionFailures:[],minActorDistance:Infinity,minPairClearanceM:Infinity,maxRootXZErrorM:0,maxBoneLengthErrorM:0,maxFootPenetrationM:0,frames:0,appearanceUpdateMS:0};
   const labelElements=new Map();
+  const sceneCamera=createSceneCamera({THREE,viewer,street:courtyard.group,actors});
   for(const a of sim.actors){const el=document.createElement('button');el.className='person-label '+a.id.toLowerCase();el.innerHTML=`<i></i>${a.name}<span>…</span>`;el.setAttribute('aria-label','观察'+a.name);el.onclick=()=>select(a.id,true);$('person-labels').append(el);labelElements.set(a.id,el);}
 
   function select(id,follow=false){selected=id;if(follow)camera('follow');updateUI();}
@@ -131,11 +139,10 @@ async function main(){
     viewer.orbit.target.copy(target);viewer.camera.position.copy(target).addScaledVector(direction,distance);
   }
   function camera(mode){
-    cameraMode=mode;const actor=sim.actor(selected);let target,p;
-    if(mode==='all')fitOverview();
-    else if(mode==='near'){target=[actor.x,.82,actor.z];p=[actor.x+5.2,5.3,actor.z+7.6];}
-    else{target=[actor.x,.95,actor.z];p=[actor.x+2.5,2.25,actor.z+4.0];}
-    if(mode!=='all'){viewer.orbit.target.set(...target);viewer.camera.position.set(...p);}viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();
+    cameraMode=mode;const actor=sim.actor(selected);
+    if(mode==='all'){sceneCamera.reset();fitOverview();}
+    else sceneCamera.place(actor,{mode,force:true});
+    viewer.camera.zoom=1;viewer.orbit.update();viewer.camera.updateProjectionMatrix();
     for(const b of app.querySelectorAll('[data-camera]'))b.setAttribute('aria-pressed',String(b.dataset.camera===mode));viewer.render();
   }
   function resize(){const r=stage.getBoundingClientRect();if(r.width<1||r.height<1)return;viewer.renderer.setSize(r.width,r.height,false);viewer.camera.aspect=r.width/r.height;if(cameraMode==='all'){fitOverview();viewer.orbit.update();}viewer.camera.updateProjectionMatrix();viewer.render();}
@@ -154,7 +161,8 @@ async function main(){
 
   function currentReport(){return {version:window.__NPC_BUILD__,ready,paused,speed,time:sim.time,selected,cameraMode,
     startup:window.__NPC_STARTUP__||null,
-    source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,profile:a.profile,measurements:a.measurements,binding:a.binding.report,capabilities:a.motionCapabilityReport}))},
+    source:{canonicalVersion:'HUMAN-INTEGRATED-R07',canonicalSHA256:window.__NPC_BUILD__.canonicalSHA256,identities:actors.map(a=>({id:a.id,identity:a.identity,profile:a.profile,measurements:a.measurements,binding:a.binding.report,capabilities:a.motionCapabilityReport,graspProfiles:a.graspProfiles,mouthSupport:a.poseTools.mouthSupport}))},
+    camera:sceneCamera.report(),
     simulation:sim.snapshot(),motions:reports,items:items.snapshot(),environment:environment.snapshot(),audit,render:renderQueue.status(),garments:wardrobe.report(),footwear:shoes.report(),hair:hair.report(),scene:courtyard.metrics,lighting:lightingReport(),
     assets:{mode:window.__NPC_ASSETS__?.mode,servedCount:window.__NPC_ASSETS__?.served?.length,served:window.__NPC_ASSETS__?.served||[],missing:window.__NPC_ASSETS__?.missing||[],
       completed:window.__NPC_ASSETS__?.completed||[],failed:window.__NPC_ASSETS__?.failed||[],nativeTransport:window.__R05_STREAM__?.report?.()?.transport||null},errors,visualAcceptance:false,productionReady:false};}
@@ -225,7 +233,7 @@ async function main(){
     const elapsed=Math.max(0,(now-last)/1000);last=now;
     try{
       if(ready&&!paused){let dt=Math.min(elapsed,.12)*speed;while(dt>.00001){const step=Math.min(dt,1/30);execute(step);dt-=step;}}
-      if(cameraMode==='follow'&&ready){const a=sim.actor(selected),target=new THREE.Vector3(a.x,.95,a.z),delta=target.clone().sub(viewer.orbit.target);viewer.orbit.target.add(delta);viewer.camera.position.add(delta);viewer.orbit.update();}
+      if(cameraMode==='follow'&&ready)sceneCamera.place(sim.actor(selected));
       if(ready&&appearanceCamera!==viewer.camera.matrixWorld.elements.join(',')+'|'+viewer.camera.projectionMatrix.elements.join(','))viewer.render();
       if(ready&&!paused&&now-lastRender>32){viewer.render();lastRender=now;}
       renderQueue.pump();labels();

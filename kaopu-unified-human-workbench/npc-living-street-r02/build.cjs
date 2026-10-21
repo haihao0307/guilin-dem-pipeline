@@ -99,7 +99,24 @@ function verifyMotionSources(){
       assert.equal(blob,item.sourceGitBlobSha,'Unchanged original motion Git object '+item.path);
     }
   }
-  return {sourceLockSHA256:hash(raw),verifiedFiles:lock.files.length,sameNativeRuntime:true,nativeBoneCount:104};
+  const capture=lock.pickupCapture;
+  assert(capture?.output?.path,'Complete pickup source has a locked derived output');
+  const capturePath=path.resolve(here,capture.output.path);
+  assert(capturePath.startsWith(path.join(here,'vendor/motion')+path.sep),'Pickup source stays in native motion assets');
+  const captureBytes=fs.readFileSync(capturePath),captureData=JSON.parse(captureBytes);
+  assert.equal(captureBytes.length,capture.output.bytes);assert.equal(hash(captureBytes),capture.output.sha256);
+  assert.equal(captureData.points.length,357);assert.equal(captureData.fps,120);assert.equal(captureData.names.length,31);
+  const hand=captureData.names.indexOf('rhand');assert(hand>=0);
+  const contactFrame=captureData.points.reduce((best,row,i)=>row[hand][1]<captureData.points[best][hand][1]?i:best,0);
+  assert.equal(contactFrame,99,'Pickup contact event comes from the complete original capture');
+  for(const source of capture.sourceFiles){
+    const sourcePath=path.resolve(here,source.path);
+    assert(sourcePath.startsWith(path.join(here,'evidence/capture-recovery-source')+path.sep));
+    const bytes=fs.readFileSync(sourcePath);assert.equal(bytes.length,source.bytes);assert.equal(hash(bytes),source.sha256);
+    assert.equal(crypto.createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex'),source.gitBlob);
+  }
+  return {sourceLockSHA256:hash(raw),verifiedFiles:lock.files.length,sameNativeRuntime:true,nativeBoneCount:104,
+    completePickup:{frames:357,fps:120,joints:31,contactFrame,sha256:hash(captureBytes),originalSourcesVerified:capture.sourceFiles.length}};
 }
 
 function exposeNativeThree(html) {
