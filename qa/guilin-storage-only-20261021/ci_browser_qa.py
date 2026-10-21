@@ -2,7 +2,7 @@
 import hashlib,json,os,threading
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from range_fixture_server import make_server
+from range_fixture_server import make_server,LOCK
 
 ROOT=Path(__file__).resolve().parent
 VERSIONS=json.loads((ROOT/'candidate/ASSET_VERSIONS.json').read_text())
@@ -29,6 +29,11 @@ def cached_transition(browser,server,viewport):
  cdp=context.new_cdp_session(page);cdp.send('Network.enable');cache_hits=[];request_urls={}
  cdp.on('Network.requestWillBeSent',lambda e:request_urls.__setitem__(e['requestId'],e['request']['url']))
  cdp.on('Network.requestServedFromCache',lambda e:cache_hits.append(e['requestId']))
+ cdp.on('Network.responseReceived',lambda e:cache_hits.append(e['requestId']) if e['response'].get('fromDiskCache') else None)
+ def old_app_server_count():
+  with LOCK:
+   rows=[json.loads(line) for line in (ROOT/'reports/HTTP_FIXTURE_ACCESS.jsonl').read_text().splitlines()]
+  return sum(r['path']=='/transition/guilin/app.js' for r in rows)
  page.on('request',lambda r:requests.append(r.url))
  page.on('pageerror',lambda e:errors.append(str(e)))
  page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
@@ -39,11 +44,14 @@ def cached_transition(browser,server,viewport):
   assert page.locator('script[src]').evaluate_all('(n)=>n.map(x=>x.getAttribute("src"))')==['app.js']
   assert page.evaluate('typeof globalThis.createGuilinCanonicalTileSource')=='undefined'
   # Verify the browser actually retained old app bytes before changing fixtures.
+  server_app_reads_before=old_app_server_count();assert server_app_reads_before>=1
   old_app_sha=page.evaluate("""async()=>{const b=await(await fetch('app.js',{cache:'force-cache'})).arrayBuffer();return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b)),x=>x.toString(16).padStart(2,'0')).join('');}""")
   page.wait_for_timeout(100)
   assert old_app_sha=='79d0e2cef6407dddb2c6d9896f44377666e78e5711973720934adb2dcddfa777'
   old_cached_urls=[request_urls.get(i) for i in cache_hits if request_urls.get(i,'').endswith('/app.js')]
-  assert old_cached_urls,'Expected a real browser cache hit for frozen old app.js'
+  server_app_reads_after=old_app_server_count()
+  assert server_app_reads_after==server_app_reads_before,'force-cache fetched app.js from server again'
+  # Response hash + no second server request proves reuse even if Chromium omits a CDP cache event.
   server.transition_phase='candidate'
   # An already open old page does NOT acquire the new loader by itself.
   assert page.evaluate('typeof globalThis.createGuilinCanonicalTileSource')=='undefined'
@@ -56,7 +64,7 @@ def cached_transition(browser,server,viewport):
    assert page.evaluate('()=>window.__GUILIN_FULL_MAP_TEST_API.getState().passed')
    assert not errors,errors
    checks.append({'phase':phase,'scripts':scripts,'canonical_request_count':len(canonical),'no_legacy_or_tiff_request':True})
-  return {'passed':True,'cache_disabled':False,'old_app_cache_hit_verified':True,'old_cached_urls':old_cached_urls,'old_app_sha256':old_app_sha,'same_url':url,'old_open_page_requires_reload':True,'checks':checks}
+  return {'passed':True,'cache_disabled':False,'old_app_cache_hit_verified':True,'cache_hit_evidence':'force-cache returned exact old app SHA with zero additional server request','server_app_reads_before':server_app_reads_before,'server_app_reads_after':server_app_reads_after,'cdp_cached_urls':old_cached_urls,'old_app_sha256':old_app_sha,'same_url':url,'old_open_page_requires_reload':True,'checks':checks}
  finally:context.close()
 
 def main():
@@ -125,8 +133,8 @@ def main():
      for before,after in zip(variants['baseline']['views'],variants['candidate']['views']):
       assert before['state']==after['state'],f'{label} {before["anchor"]}: runtime state changed'
       assert before['canvas_sha256']==after['canvas_sha256'],f'{label} {before["anchor"]}: canvas pixels differ'
-     report['cache_transition'].append({'viewport':viewport,'result':cached_transition(browser,server,viewport)})
      report['views'].append({'viewport':viewport,'baseline_candidate_states_identical':True,'all_five_canvas_hashes_identical':True,'variants':variants})
+     report['cache_transition'].append({'viewport':viewport,'result':cached_transition(browser,server,viewport)})
     report['passed']=True
    finally:browser.close()
  except Exception as e:

@@ -13,6 +13,12 @@
       "desktop_completed_evidence": "reports/ci-d90d61e/browser/BROWSER_STORAGE_ONLY_REPORT.json",
       "desktop_5_canvas_and_runtime_state_pairs_equal": true,
       "desktop_candidate_range_count": 151
+    },
+    {
+      "run": 39562088569,
+      "root_cause": "Cache verifier only listened to Network.requestServedFromCache and omitted responseReceived.fromDiskCache; exact old app SHA passed and saved server access log had only one old app GET, so cache reuse occurred but narrow instrumentation did not record it.",
+      "evidence": "reports/ci-78f9b0e/HTTP_FIXTURE_ACCESS.jsonl; old app path occurs exactly once, preceding SHA assertion passed",
+      "fix": "Record both CDP cache signals; require force-cache old app SHA AND before/after server request count identical. Keep cache gate, not a skip. Preserve completed viewport report before running cache stage."
     }
   ],
   "next_run_reason": "Root causes established, preserves all original equality gates and adds parent-required cache-versioning and same-URL ordinary-reload transition tests.",
@@ -26,5 +32,13 @@
       "Added CDP requestServedFromCache old-app proof and SHA",
       "Added actual cameraScale change assertion after wheel"
     ]
+  },
+  "parent_review_after_third_failure": {
+    "reviewed_utc": "2026-10-21T07:31:22Z",
+    "read_files": [
+      "ci_browser_qa.py lines 1-110",
+      "reports/QA_FAILURE_ROOT_CAUSE_REVIEW.json"
+    ],
+    "decision": "Allow one root-caused fixture-correction rerun. Server request count unchanged + exact hash is appropriate cache evidence; CDP auxiliary only. Preserve all version/no-legacy/full-SHA gates; no nonessential tests after success."
   }
 }
