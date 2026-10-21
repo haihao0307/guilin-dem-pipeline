@@ -1,0 +1,366 @@
+import {qualityTiles,samplingScale} from './quality-tiles.mjs';
+import {adaptHostedMaterialParameters as qualityMaterialParameters} from './material.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,railPointAt,traceFieldHybrid} from '../r07/field.mjs';
+import {deriveHostGraphFromField,transformLocalToHost,transformHostToLocal} from '../r07/host.mjs';
+import {deriveMeasuredCase,queryCase,caseNormal,patchDistance,intersectCaseRay} from '../r07/cases.mjs';
+import {deriveEvidenceAssembly,queryAssembly,assemblyNormal,intersectAssemblyRay,assemblyLocalToSource,sourceToAssemblyLocal,deriveSourceBoundAssembly,defaultSourceBoundVariables} from '../r07/assemblies.mjs';
+import {profileFor,deriveCaseRelations} from '../r07/profiles.mjs';
+import {deriveCaseContext,queryContext,contextNormal,intersectContextRay,contextMaterialDirection} from '../r07/context.mjs';
+import {deriveHostedCase,defaultHostedCaseEdits,sampleHostedClearance} from './host-bindings.mjs';
+import {deriveHostedScene,queryHostedScene,hostedNormal,intersectHostedSceneRay,hostedMaterialDirection,hostedOpticalProbeRays,traceHostedTransmission} from './hosted-scene.mjs';
+import {FieldRenderer} from './renderer.mjs';
+import {LatestFrameScheduler} from '../gpu-recovery-r01/frame-scheduler.mjs';
+import {GpuLifecycle} from '../gpu-recovery-r01/gpu-lifecycle.mjs';
+import {PIXEL_BUDGETS,boundedResolution,validateExplicitResolution} from '../gpu-recovery-r01/pixel-budget.mjs';
+import {GenerationScope,interruption} from '../gpu-recovery-r01/async-scope.mjs';
+const $=id=>document.getElementById(id),errors=[];
+const params=new URLSearchParams(location.search),qaWarmup=params.has('qa-warmup'),testEnabled=params.get('gpu-test')==='1';
+let renderer,gpu,spec,graph,config=defaultFieldConfig(),view='stairs',lastValidation=null,caseId='design';
+const caseCache=new Map(),assemblyConfigs=new Map(),sourceBoundConfigs=new Map(),hostedConfigs=new Map(),hostedMotionCache=new Map();let hostedBinding=null,activeComponent='';let officialFootprints=null,caseRequest=0;
+let booting=true,sizingPaused=qaWarmup,scheduler,explicitResolution=qaWarmup?{width:1,height:1}:null,lastRenderedOptions=null,qaBusy=false,drag=null,settleWait=null,healthPoll=null,restoreDeadline=null;
+let sceneRevision=0;let qualityJob=null,pendingQualityPresentation=null,qualityJobId=0;
+let requestedQuality='conservative',lastCompletedQuality=null,lastCompletedGeneration=null,lastCompletedSceneRevision=null,lastCompletedProgramKey=null,lastStop=null,resourceRebuilds=0,initializationCancelControl=null;
+const operations=new GenerationScope(),renderBudget=PIXEL_BUDGETS,injectedEvents=[],caseGates=new Map();let nextGateId=0,nextCaseGate=null,lossPhase=null,invalidFenceArmed=false,failRestoreArmed=false,lossExtension=null,activeLossInjection=false;
+function logInjection(kind){const event={kind,injected:true,at:performance.now(),generation:gpu?.generation??null};injectedEvents.push(event);if(injectedEvents.length>24)injectedEvents.shift();return event;}
+function viewportResolution(quality='conservative'){const box=$('view').getBoundingClientRect();return boundedResolution(Math.max(1,box.width),Math.max(1,box.height),renderBudget[quality]);}
+function clearHealthPoll(){if(healthPoll!==null)clearTimeout(healthPoll);healthPoll=null;}
+function clearRestoreDeadline(){if(restoreDeadline!==null)clearTimeout(restoreDeadline);restoreDeadline=null;}
+function diagnoseContextLoss(phase){if(renderer?.gl.isContextLost()){gpu?.contextLost(phase,{injected:activeLossInjection});return true;}return false;}
+function stopGpu(detail){
+ lastStop=structuredClone(detail);clearHealthPoll();clearRestoreDeadline();operations.invalidate('GPU rendering interrupted: '+(detail.reason??detail.kind??'unavailable'));caseRequest++;
+ renderer?.invalidate(!!detail.contextLost);scheduler?.dispose();drag=null;qaBusy=false;requestedQuality='conservative';lastCompletedQuality=null;lastCompletedGeneration=null;sizingPaused=false;explicitResolution=null;$('loading').hidden=true;
+ if(gpu?.state==='lost')restoreDeadline=setTimeout(()=>{restoreDeadline=null;if(gpu.state==='lost')gpu.fail('context-restoration-timeout',{kind:'context-restoration-timeout',contextLost:renderer.gl.isContextLost(),injected:!!detail.injected});updateGpuUI();},15000);
+ updateGpuUI();
+}
+function displayGpuState(){const state=gpu?.state??'starting';return ['active','recovering'].includes(state)&&(renderer?.needsInitialization()||gpu?.pending?.phase==='initialization')?'initializing':state;}
+function currentFrameReady(){return !!(gpu?.state==='active'&&!renderer?.needsInitialization()&&lastCompletedGeneration===gpu.generation&&lastCompletedSceneRevision===sceneRevision&&lastCompletedProgramKey===renderer.initializationKey());}
+function onGpuComplete(detail){
+ if(detail.metadata?.phase==='initialization'){if(detail.generation===gpu.generation)renderer.completeInitialization(detail.metadata.programKey,detail.metadata.initializationDomain??'screen');updateGpuUI();return;}
+ if(detail.metadata?.sceneRevision!==sceneRevision){updateGpuUI();return;}lastCompletedQuality=detail.metadata?.samplingQuality??'conservative';lastCompletedGeneration=detail.generation;lastCompletedSceneRevision=sceneRevision;lastCompletedProgramKey=detail.metadata.programKey;updateGpuUI();
+}
+function cancelInitialization(){if(displayGpuState()!=='initializing')throw Error('There is no active program initialization to cancel');gpu.fail('initialization-cancelled',{phase:'initialization',message:'User cancelled initialization scheduling; submitted GPU commands cannot be forcibly cancelled',injected:false});updateGpuUI();return recoverySnapshot();}
+function updateGpuUI(){updateSamplingScale();
+ const panel=$('gpu-state');if(!panel)return;const state=displayGpuState(),status=gpu?.snapshot();
+ const labels={starting:'正在初始化图形资源',initializing:'正在初始化函数程序（1×1，最多 60 秒）',active:'图形上下文可用',lost:'图形上下文已丢失，已暂停绘制',recovering:'已重建图形资源，正在验证低采样帧',failed:'图形绘制已停止，未改用网格'};
+ panel.textContent=labels[state]??state;$('gpu-detail').textContent=`采样：${requestedQuality}；当前 ${$('view').width}×${$('view').height}。恢复尝试 ${status?.recoveryAttempts??0}/${status?.maxRecoveryAttempts??1}。只保留本页诊断，不上传设备信息。`;
+ if(initializationCancelControl)initializationCancelControl.disabled=state!=='initializing';
+ $('gpu-retry').disabled=!status?.manualRetryAllowed;$('gpu-medium').disabled=state!=='active'||lastCompletedGeneration!==gpu?.generation||lastCompletedQuality!=='conservative';$('gpu-high').disabled=state!=='active'||lastCompletedGeneration!==gpu?.generation||lastCompletedQuality!=='medium';
+ $('gpu-diagnostics').textContent=JSON.stringify(recoverySnapshot(),null,2);
+ if(state==='initializing'){$('failure').hidden=true;$('gpu-detail').textContent+=' 首次驱动工作独立等待；SwiftShader 样本约 30 秒，不代表本机耗时，也不计作整帧完成。可取消后停止后续调度。';}else if(state==='active'){$('failure').hidden=true;}else if(['lost','recovering','failed'].includes(state)){$('failure').hidden=false;$('failure').textContent=(labels[state]??state)+'。\n函数、洞口、材质与已应用参数未替换。'+(state==='lost'?'等待浏览器恢复，最多进行一次资源重建。':state==='failed'?(status?.manualRetryAllowed?'可在右侧手动重建一次。':'本次已停止重试，可重新载入页面。'):'低采样帧完成前不宣称恢复成功。')+'\n'+(status?.lastFailure?.reason??lastStop?.reason??'');}
+}
+function recoverySnapshot(){
+ const state=gpu?.snapshot()??{state:'starting',generation:0};return {...state,lifecycleState:state.state,state:displayGpuState(),ready:currentFrameReady(),initialization:{...renderer?.initializationSnapshot(),pending:gpu?.pending?.phase==='initialization',budgetMs:gpu?.maxInitializationMs??60000,ordinaryFrameBudgetMs:gpu?.maxWaitMs??15000,evidence:'SwiftShader independent 1x1 fence naturally signaled at 29.5404s without readback; not a hardware safety guarantee'},resourceEpoch:renderer?.resourceEpoch??null,sceneRevision,browser:navigator.userAgent,gpu:renderer?.gpu??null,pendingFence:!!gpu?.pending,currentResolution:{width:$('view').width,height:$('view').height},budget:structuredClone(renderBudget[requestedQuality]),quality:requestedQuality,automaticQualityPromotion:false,lastCompletedQuality,lastCompletedGeneration,resources:renderer?.resourceSnapshot()??null,resourceRebuilds,retainedCaseId:caseId,retainedView:view,retainedOptions:renderer?structuredClone(renderer.options):null,operationGeneration:operations.generation,pendingAsyncOperations:operations.pending.size,pendingHealthPoll:healthPoll!==null,restoreDeadlinePending:restoreDeadline!==null,injectedEvents:structuredClone(injectedEvents),testHooksEnabled:testEnabled,userDeviceRootCause:'not reproduced or established by injected tests',telemetry:false};
+}
+function scheduleHealthPoll(){
+ if(healthPoll!==null||!gpu?.pending||!gpu.canRender())return;const generation=gpu.generation;
+ healthPoll=setTimeout(()=>{healthPoll=null;if(generation!==gpu.generation)return;screenReady();if(gpu.pending&&gpu.canRender())scheduleHealthPoll();},24);
+}
+function screenReady(){
+ if(!gpu)return false;const ready=gpu.poll();if(!ready){if(gpu.pending)scheduleHealthPoll();return false;}
+ if(!booting&&renderer?.needsInitialization()){
+  try{
+   if(lossPhase==='before-draw'){lossPhase=null;injectLossNow('injected-loss-before-initialization');return false;}
+   const generation=gpu.generation,programKey=renderer.prepareInitialization(),canvas=$('view');canvas.width=1;canvas.height=1;renderer.draw();
+   if(diagnoseContextLoss('lost-during-initialization')||generation!==gpu.generation)return false;
+   if(!gpu.submit({phase:'initialization',programKey,width:1,height:1,sceneRevision,caseId,injected:invalidFenceArmed||lossPhase==='after-fence'}))return false;
+   if(invalidFenceArmed){invalidFenceArmed=false;logInjection('injected-invalid-initialization-fence');renderer.gl.deleteSync(gpu.pending.handle);}
+   if(lossPhase==='after-fence'){lossPhase=null;injectLossNow('injected-loss-after-initialization-fence');return false;}
+   scheduleHealthPoll();updateGpuUI();
+  }catch(error){handleRenderError(error);}return false;
+ }
+ return ready;
+}
+function releaseScreenFence(reason='explicit-work'){gpu?.release(reason);clearHealthPoll();}
+function newScheduler(){return new LatestFrameScheduler({render:drawScheduledFrame,isReady:screenReady,onError:handleRenderError});}
+function handleRenderError(error){if(diagnoseContextLoss('draw-or-scheduler-context-lost'))return;if(!gpu?.canRender())return;gpu.fail('field-dispatch-failed',{kind:'field-dispatch-failed',message:error.message,injected:false});}
+function injectLossNow(kind){activeLossInjection=true;logInjection(kind);if(!lossExtension)throw Error('WEBGL_lose_context unavailable');lossExtension.loseContext();gpu.contextLost(kind,{injected:true});}
+function drawScheduledFrame(ticket){
+ if(!ticket.isCurrent()||!gpu.canRender()||renderer.needsInitialization())throw interruption('Refusing a stale or unavailable GPU field dispatch');
+ if(lossPhase==='before-draw'){lossPhase=null;injectLossNow('injected-loss-before-draw');throw interruption('Injected loss before field draw');}
+ if(renderer.draw.constructor.name==='AsyncFunction')throw Error('Async field draws require an atomic revision-aware renderer');
+ const samplingQuality=ticket.quality==='interaction'?'conservative':requestedQuality,resolution=sizingPaused?(explicitResolution??viewportResolution('conservative')):viewportResolution(samplingQuality);
+ validateExplicitResolution(resolution.width,resolution.height);const canvas=$('view'),frameOptions=structuredClone(renderer.options),frameSpec=spec,generation=gpu.generation;
+ if(canvas.width!==resolution.width)canvas.width=resolution.width;if(canvas.height!==resolution.height)canvas.height=resolution.height;
+ const result=pendingQualityPresentation?renderer.presentQualityTarget(pendingQualityPresentation):renderer.draw();if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});throw Error('Async field draw is unsupported');}
+ if(diagnoseContextLoss('lost-during-field-draw'))throw interruption('Context lost during field draw');
+ if(!ticket.isCurrent()||spec!==frameSpec||generation!==gpu.generation)throw interruption('Field state changed during screen dispatch');
+ if(!gpu.submit({...resolution,programKey:renderer.initializationKey(),caseId,view,sceneRevision,revision:ticket.revision,quality:ticket.quality,samplingQuality,injected:invalidFenceArmed||lossPhase==='after-fence'}))throw interruption('Field GPU fence submission was interrupted');
+ if(invalidFenceArmed){invalidFenceArmed=false;logInjection('injected-invalid-fence');renderer.gl.deleteSync(gpu.pending.handle);}
+ if(lossPhase==='after-fence'){lossPhase=null;injectLossNow('injected-loss-after-fence');throw interruption('Injected loss after pending fence');}
+ lastRenderedOptions=frameOptions;updateLabels(frameOptions);updateRenderMetrics();scheduleHealthPoll();updateGpuUI();
+ return {...resolution,caseId,view,fieldKind:spec.fieldKind??'signed-design',eye:frameOptions.eye,target:frameOptions.target,modelTriangles:0,geometryLod:false,resourceEpoch:generation,samplingQuality};
+}
+function paint(reason='scene-change'){if(booting||!gpu?.canRender())return;if(sizingPaused){scheduler.request({quality:'manual',reason,settle:false});}else scheduler.request({quality:'interaction',reason,settle:requestedQuality!=='conservative'});}
+function paintInteraction(reason){if(booting||qaBusy||!gpu?.canRender())return;scheduler.request({quality:sizingPaused?'manual':'interaction',reason,settle:!sizingPaused&&requestedQuality!=='conservative'});}
+function schedulingSnapshot(){return {...scheduler?.snapshot(),resolutionMode:sizingPaused?'explicit-pinned':'bounded-viewport',budgets:structuredClone(renderBudget),requestedQuality,currentResolution:{width:$('view').width,height:$('view').height},settledViewportResolution:viewportResolution(requestedQuality),explicitResolution:explicitResolution?{...explicitResolution}:null,gpuBackpressure:{...gpu?.snapshot(),pendingScreenFrame:!!gpu?.pending,maxAutomaticInFlightFrames:1},qaBusy,geometryLod:false,authoritativeFieldUnchanged:true};}
+function rendererSnapshot(){return {...renderer.snapshot(),scheduling:schedulingSnapshot(),recovery:recoverySnapshot()};}
+function assertMutable(){if(qaBusy)throw Error('A deterministic field measurement is in progress');}
+function requireGpu(){if(!gpu?.canRender())throw interruption('GPU unavailable; retained CPU scene has not been discarded');}
+function installSpec(next){
+ sceneRevision++;
+ if(gpu?.canRender()){try{renderer.setSpec(next);}catch(error){if(diagnoseContextLoss('lost-during-spec-upload'))return;throw error;}}
+ if(!sizingPaused){requestedQuality='conservative';lastCompletedQuality=null;lastCompletedGeneration=null;}
+}
+function freezeViewport(reason){
+ assertMutable();requireGpu();if(renderer.needsInitialization()||gpu.pending?.phase==='initialization')throw Error('Wait for program initialization and awaitSettled before explicit QA');scheduler.invalidate(reason);
+ // Explicit QA only: a readback confirms prior work before releasing its fence.
+ if(gpu.pending&&!screenReady()){requireGpu();try{renderer.synchronizePixel();}catch(error){handleRenderError(error);throw error;}}
+ requireGpu();releaseScreenFence('explicit-synchronized-work');sizingPaused=true;explicitResolution={width:$('view').width,height:$('view').height};drag=null;
+}
+function qaRead(fn,reason){
+ freezeViewport(reason);const token=operations.token(),owner=renderer;let result;
+ try{result=fn();}catch(error){if(owner.gl.isContextLost())gpu.contextLost('lost-during-qa',{injected:activeLossInjection});throw error;}
+ if(result&&typeof result.then==='function'){qaBusy=true;return operations.wrap(result,token).finally(()=>{if(token===operations.token())qaBusy=false;});}operations.assert(token);return result;
+}
+function setResolution(width,height){assertMutable();const requested=validateExplicitResolution(width,height);freezeViewport('explicit-resolution');explicitResolution=requested;paint('explicit-resolution');sync();return snapshot();}
+function resumeViewport(){assertMutable();requireGpu();scheduler.invalidate('resume-viewport');sizingPaused=false;explicitResolution=null;resize();return snapshot();}
+function requestQuality(quality){
+ assertMutable();requireGpu();if(!Object.hasOwn(renderBudget,quality))throw Error('Unknown sampling quality');
+ if(quality!=='conservative'){const required=quality==='medium'?'conservative':'medium';if(!currentFrameReady()||lastCompletedQuality!==required)throw Error('Complete the preceding sampling level before requesting higher quality');}
+ sizingPaused=false;explicitResolution=null;requestedQuality=quality;scheduler.request({quality:'settled',reason:'explicit-sampling-'+quality,settle:false});updateGpuUI();return recoverySnapshot();
+}
+function awaitSettled({timeoutMs=90000}={}){
+ if(settleWait)return settleWait;if(!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>120000)return Promise.reject(Error('Settle timeout must be positive and at most 120 seconds'));
+ try{requireGpu();}catch(error){return Promise.reject(error);}const token=operations.token(),generation=gpu.generation,started=performance.now();let timer=null;
+ const work=new Promise((resolve,reject)=>{const check=()=>{timer=null;try{operations.assert(token);if(generation!==gpu.generation)throw interruption();requireGpu();const ready=screenReady();requireGpu();const state=scheduler.snapshot();if(state.faulted||state.disposed)throw Error('Field scheduler unavailable');
+ if(!state.pendingCallbacks&&!state.interacting&&state.lastDispatch?.revision===state.revision&&ready){resolve({build:'2026-10-21-material-quality-r01',generation,revision:state.revision,caseId,view,fieldKind:spec.fieldKind??'signed-design',renderOptions:structuredClone(lastRenderedOptions),resolution:{width:$('view').width,height:$('view').height},scheduling:schedulingSnapshot(),completion:'latest atomic field frame fence signaled; not visible presentation latency'});return;}
+ if(performance.now()-started>=timeoutMs)throw Error('Timed out waiting for the latest field frame');timer=setTimeout(check,24);}catch(error){reject(error);}};check();});
+ const pending=operations.wrap(work,token).finally(()=>{if(timer!==null)clearTimeout(timer);if(settleWait===pending)settleWait=null;});settleWait=pending;return pending;
+}
+function rebuildGpu({manual=false}={}){
+ clearRestoreDeadline();const token=gpu.beginRecovery({manual}),options=structuredClone(renderer.options),traceVariant=renderer.traceVariant??0,old=renderer;
+ try{if(failRestoreArmed){failRestoreArmed=false;logInjection('injected-rebuild-failure');throw Error('Injected resource rebuild failure');}
+ old.dispose();const fresh=new FieldRenderer($('view'),{resourceEpoch:token,profileFirstDraw:false});renderer=fresh;fresh.options=options;fresh.traceVariant=traceVariant;fresh.setSpec(spec);gpu.assertCurrent(token);gpu.attach(fresh.gl,token);lossExtension=fresh.gl.getExtension('WEBGL_lose_context');resourceRebuilds++;
+ requestedQuality='conservative';lastCompletedQuality=null;lastCompletedGeneration=null;sizingPaused=false;explicitResolution=null;scheduler=newScheduler();booting=false;scheduler.request({quality:'interaction',reason:'recovery-low-pixel-verification',settle:false});updateGpuUI();return recoverySnapshot();
+ }catch(error){renderer.invalidate();if(renderer.gl.isContextLost())gpu.contextLost('context-lost-during-rebuild',{message:error.message,injected:error.message==='Injected resource rebuild failure'});else gpu.fail('resource-rebuild-failed',{kind:'resource-rebuild-failed',message:error.message,injected:error.message==='Injected resource rebuild failure'});updateGpuUI();throw error;}
+}
+function retryGpu(){const result=rebuildGpu({manual:true});return result;}
+function syncQualityFinishControl(){
+ const select=$('quality-finish');if(!select||!renderer)return;
+ const frame=renderer.options.frameMaterialMode,door=renderer.options.doorMaterialMode;
+ const labels={0:'金属',1:'木材',2:'涂漆木底'},combined=$('quality-finish-combined');
+ if(combined)combined.textContent=`窗框扇${labels[frame]??frame}／实体门${labels[door]??door}（设计）`;
+ select.value=frame===door?String(frame):'-1';
+}
+const QUALITY_ACTIVE=new Set(['draining','initializing','rendering','presenting']),QUALITY_CANCELABLE=new Set(['draining','initializing','rendering']);
+function currentSamplingScale(){const c=$('view'),b=c.getBoundingClientRect();return samplingScale(c.width,c.height,Math.max(1,b.width),Math.max(1,b.height),globalThis.devicePixelRatio||1);}
+function updateSamplingScale(){const e=$('quality-sampling-scale');if(!e)return;const s=currentSamplingScale();e.textContent=`实际输出 ${s.bufferWidth}×${s.bufferHeight} px；显示 ${Math.round(s.displayWidth)}×${Math.round(s.displayHeight)} CSS px，DPR ${s.dpr}；每设备像素 ${s.sourcePixelsPerDevicePixel.map(x=>x.toFixed(2)).join('×')} 个输出像素。${s.upscaled?'当前存在显示放大，不称原生清晰。':'没有显示放大。'}`;}
+function updateQualityUI(){updateSamplingScale();syncQualityFinishControl();const q=$('quality-progress');if(!q)return;const j=qualityJob;q.textContent=j?`${j.status} · ${j.done}/${j.total} 块；输出 ${j.plan.width}×${j.plan.height}，每像素 ${j.plan.samplesPerAxis**2} 条真实射线。${j.message??''}`:'交互低采样只是预览。点击清晰采样后按小块求完整函数场，全部完成才替换画面。';$('quality-cancel').disabled=!j||!QUALITY_CANCELABLE.has(j.status);$('quality-render').disabled=!!j&&QUALITY_ACTIVE.has(j.status);$('quality-finish').disabled=!!j&&QUALITY_ACTIVE.has(j.status);}
+function waitQualityFence(generation,token,job,owner){
+ let timer=null;const work=new Promise((resolve,reject)=>{const check=()=>{timer=null;try{operations.assert(token);requireGpu();if(generation!==gpu.generation||owner!==renderer)throw interruption('Quality frame context changed');if(job.cancelled)throw interruption('Clear sampling cancelled; submitted GPU work may still be pending');if(gpu.pending)gpu.poll();requireGpu();if(gpu.pending)timer=setTimeout(check,24);else resolve({completion:'GPU command queue drained, not a visible frame claim',generation,lastCompletion:gpu.lastCompletion});}catch(e){reject(e);}};check();});
+ return operations.wrap(work,token).finally(()=>{if(timer!==null)clearTimeout(timer);});
+}
+async function renderQuality({width=640,height=null,samplesPerAxis=2,tileSide=64}={}){
+ assertMutable();requireGpu();if(renderer.needsInitialization()||gpu.pending?.phase==='initialization')throw Object.assign(new Error('请等待当前程序初始化完成，再请求清晰采样。'),{name:'InvalidStateError'});
+ const box=$('view').getBoundingClientRect();height??=Math.max(1,Math.round(width*box.height/box.width));const plan=qualityTiles(width,height,{samplesPerAxis,tileSide});
+ const token=operations.token(),generation=gpu.generation,owner=renderer,originalSpec=spec,options=JSON.stringify(renderer.options),started=performance.now();let target=null;
+ // Acquire the owner synchronously, before the first await: repeated clicks
+ // cannot start two jobs sharing the same fence or presentation target.
+ qaBusy=true;scheduler.invalidate('quality-drain-only');drag=null;
+ const job=qualityJob={id:++qualityJobId,status:'draining',done:0,total:plan.tiles.length,plan:{...plan,tiles:undefined},cancelled:false,startedAt:started,initialization:null,firstTileFenceMs:null,maxTileFenceMs:0};updateQualityUI();
+ const current=()=>{operations.assert(token);requireGpu();if(job.cancelled)throw interruption('Clear sampling cancelled; previous complete image retained');if(qualityJob!==job||owner!==renderer||spec!==originalSpec||options!==JSON.stringify(renderer.options)||generation!==gpu.generation)throw interruption('Quality scene revision changed');};
+ try{
+  // A QA read may have deliberately invalidated the display revision. Drain
+  // pending commands only; do not pretend that this revision was displayed.
+  await waitQualityFence(generation,token,job,owner);current();
+  target=owner.createQualityTarget(plan);const domain='quality-rgba8',programKey=owner.prepareInitialization(domain);
+  job.initialization={domain,programKey,reused:!owner.needsInitialization(domain),budgetMs:gpu.maxInitializationMs,ordinaryTileBudgetMs:gpu.maxWaitMs,targetWidth:target.width,targetHeight:target.height,pixelCount:1,fenceElapsedMs:null};
+  if(owner.needsInitialization(domain)){
+   job.status='initializing';job.message='独立初始化 RGBA8 离屏目标：同一程序、中心 1 像素，最多 60 秒；不计作完成图块。';updateQualityUI();
+   owner.drawQualityTile(target,{x:Math.floor(target.width/2),y:Math.floor(target.height/2),width:1,height:1});
+   if(!gpu.submit({phase:'initialization',initializationDomain:domain,programKey,width:1,height:1,caseId,qualityJobId:job.id,injected:false}))throw interruption('Quality initialization fence could not be submitted');
+   scheduleHealthPoll();await waitQualityFence(generation,token,job,owner);current();
+   if(owner.needsInitialization(domain))throw Error('Quality initialization fence did not certify its current program');job.initialization.fenceElapsedMs=gpu.lastCompletion.elapsedMs;
+  }
+  job.status='rendering';job.message='逐块计算完整函数，每块仍执行 15 秒普通帧等待上限。';updateQualityUI();
+  for(const tile of plan.tiles){current();
+   owner.drawQualityTile(target,tile);if(!gpu.submit({kind:'quality-tile',samplingQuality:'conservative',width:tile.width,height:tile.height,caseId,qualityJobId:job.id}))throw interruption('Quality tile fence could not be submitted');await waitQualityFence(generation,token,job,owner);current();const elapsed=gpu.lastCompletion.elapsedMs;if(job.firstTileFenceMs===null)job.firstTileFenceMs=elapsed;job.maxTileFenceMs=Math.max(job.maxTileFenceMs,elapsed);job.done++;updateQualityUI();await new Promise(r=>setTimeout(r,0));
+  }
+  current();explicitResolution={width:plan.width,height:plan.height};sizingPaused=true;requestedQuality='high';pendingQualityPresentation=target;job.status='presenting';job.message='全部图块完成，等待完整画面 fence 确认。';updateQualityUI();scheduler.request({quality:'manual',reason:'complete-subpixel-quality-presentation',settle:false});await awaitSettled();current();job.status='complete';job.elapsedWallMs=performance.now()-started;job.message='完整新画面已显示。计时含JS调度与同步等待，不是纯GPU时间。';job.frame={caseId,generation,options:JSON.parse(options),modelTriangles:0,geometryLod:false};updateQualityUI();return structuredClone(job);
+ }catch(e){job.status=e.name==='AbortError'?'cancelled':'failed';job.message=e.message;job.elapsedWallMs=performance.now()-started;updateQualityUI();throw e;}
+ finally{if(qualityJob===job)pendingQualityPresentation=null;if(target&&!owner.invalidated&&!owner.gl.isContextLost())owner.deleteTarget(target);if(token===operations.token()&&qualityJob===job){qaBusy=false;if(job.status!=='complete'){requestedQuality='conservative';sizingPaused=false;explicitResolution=null;if(gpu.canRender()){scheduler.request({quality:'interaction',reason:'quality-cancelled-retained-scene',settle:false});scheduleHealthPoll();}}}updateQualityUI();}
+}
+function installQualityApi(){
+ const snapshot=()=>({samplingScale:currentSamplingScale(),job:qualityJob?structuredClone(qualityJob):null,material:qualityMaterialParameters(renderer.options),optics:renderer.snapshot().opticalModel,sampling:'bounded scissored full function evaluation; 2×2 subpixel rays; no geometry LOD'});
+ window.__MATERIAL_QUALITY__={render:renderQuality,snapshot,cancel:()=>{if(qualityJob&&QUALITY_CANCELABLE.has(qualityJob.status))qualityJob.cancelled=true;else if(qualityJob?.status==='presenting')qualityJob.message='完整画面已提交，无法撤回；正在等待呈现 fence。';updateQualityUI();return snapshot();},setMaterial:changes=>{assertMutable();const next=qualityMaterialParameters({...renderer.options,...changes});setRenderOptions(next);return snapshot();}};
+ $('quality-render').onclick=()=>renderQuality().catch(e=>{$('quality-progress').textContent=e.message;});$('quality-cancel').onclick=()=>window.__MATERIAL_QUALITY__.cancel();$('quality-finish').onchange=()=>{try{window.__MATERIAL_QUALITY__.setMaterial({frameMaterialMode:Number($('quality-finish').value),doorMaterialMode:Number($('quality-finish').value)});}catch(e){$('quality-progress').textContent=e.message;}};updateQualityUI();
+}
+function installRecoveryApi(){
+ const api={snapshot:recoverySnapshot,retry:retryGpu,requestQuality,cancelInitialization};
+ initializationCancelControl=document.createElement('button');initializationCancelControl.id='gpu-cancel-initialization';initializationCancelControl.textContent='取消初始化并停止';initializationCancelControl.disabled=true;initializationCancelControl.onclick=()=>cancelInitialization();$('gpu-health').append(initializationCancelControl);
+ if(testEnabled)api.test={
+ loseContext(phase='now'){if(!['now','before-draw','after-fence'].includes(phase))throw Error('Unknown injected loss phase');if(phase==='now')injectLossNow('injected-context-loss');else{lossPhase=phase;logInjection('armed-loss-'+phase);paint('injected-loss-dispatch');}return recoverySnapshot();},
+ restoreContext(){if(!lossExtension)throw Error('WEBGL_lose_context unavailable');logInjection('injected-context-restore');lossExtension.restoreContext();return recoverySnapshot();},
+ invalidateNextFence(){requireGpu();invalidFenceArmed=true;logInjection('armed-invalid-fence');paint('injected-fence-dispatch');return recoverySnapshot();},
+ failNextRestore(){failRestoreArmed=true;logInjection('armed-rebuild-failure');return recoverySnapshot();},
+ pauseNextCaseLoad(){const id=++nextGateId;let release;const promise=new Promise(resolve=>{release=resolve;});caseGates.set(id,{promise,release});nextCaseGate=id;logInjection('armed-case-load-pause');return id;},
+ releaseCaseLoad(id){const gate=caseGates.get(id);if(!gate)throw Error('Unknown case-load gate');gate.release();caseGates.delete(id);logInjection('released-case-load-pause');return recoverySnapshot();}
+ };window.__GPU_RECOVERY__=api;
+ $('gpu-retry').onclick=()=>{try{retryGpu();}catch(error){$('gpu-detail').textContent=error.message;}};$('gpu-medium').onclick=()=>requestQuality('medium');$('gpu-high').onclick=()=>requestQuality('high');$('gpu-low').onclick=()=>requestQuality('conservative');
+}
+// These listeners exist before context acquisition, shader compilation or draw.
+$('view').addEventListener('webglcontextlost',event=>{event.preventDefault();gpu?.contextLost('webglcontextlost',{statusMessage:event.statusMessage,injected:activeLossInjection});updateGpuUI();});
+$('view').addEventListener('webglcontextrestored',()=>{clearRestoreDeadline();const restorationInjected=activeLossInjection;activeLossInjection=false;if(!gpu)return;try{if(gpu.state!=='lost')return;rebuildGpu();}catch(error){if(gpu.state==='lost')gpu.fail('recovery-limit-or-start-failed',{message:error.message,injected:restorationInjected});updateGpuUI();}});
+
+const isMeasured=()=>spec?.fieldKind==='measured-surface';
+const isAssembly=()=>spec?.fieldKind==='evidence-assembly';
+const isHosted=()=>spec?.fieldKind==='hosted-context';
+const isContext=()=>spec?.fieldKind==='case-context'||isHosted();
+const isCase=()=>isMeasured()||isAssembly()||isContext();
+const profileId=()=>caseId.replace(/-(?:assembly|assembled|hosted)$/,'');
+const designSpec=()=>isContext()?spec.assembly:spec;
+const query=p=>isHosted()?queryHostedScene(spec,p):isMeasured()?queryCase(spec,p):isAssembly()?queryAssembly(spec,p):isContext()?queryContext(spec,p):queryField(spec,p);
+const normal=p=>isHosted()?hostedNormal(spec,p):isMeasured()?caseNormal(spec,p):isAssembly()?assemblyNormal(spec,p,.0001):isContext()?contextNormal(spec,p):fieldNormal(spec,p,.0001);
+const intersectRay=(ro,rd,options={})=>isHosted()?intersectHostedSceneRay(spec,ro,rd,{display:true,...options}):isMeasured()?intersectCaseRay(spec,ro,rd,options):isAssembly()?intersectAssemblyRay(spec,ro,rd,options):isContext()?intersectContextRay(spec,ro,rd,{display:true,...options}):null;
+const numeric=['floorHeight','flightWidth','slabThickness','railBendRadius','doorWidth','doorHeight'];
+function recordError(e){if(e?.name==='AbortError'){updateGpuUI();return;}errors.push(e.message??String(e));$('loading').hidden=true;$('failure').hidden=false;$('failure').textContent='未能完成函数场渲染。没有改用网格替代。\n'+(e.message??e);}
+window.addEventListener('error',e=>recordError(e.error??Error(e.message)));window.addEventListener('unhandledrejection',e=>recordError(e.reason));
+function sync(){
+ syncQualityFinishControl();
+ $('hosted-controls').hidden=!isHosted();if(isHosted())syncHostedControls();
+ for(const k of numeric)$(k).value=config[k];$('railCornerMode').value=config.railCornerMode;
+ const measured=isMeasured(),context=isContext(),assembly=isAssembly(),design=designSpec(),profile=isCase()?profileFor(profileId()):profileFor('kcc');
+ $('case').value=caseId;$('case-title').textContent=profile.name+(isHosted()?' · 宿主门窗函数设计':context?' · 源轮廓约束近似装配':measured?' · 实测表面场':assembly?' · 独立关系设计':' · 两层设计');$('model-id').textContent=profile.modelId;
+ $('case-description').textContent=context?'原始表面函数与同源轮廓约束的设计函数一起求值。轮廓投影和有限域检查已通过；楼板标高、门位、分隔与核心位置仍是可编辑假设，不是实际室内配准。':assembly?'同一案例的独立可编辑功能关系装配。尺寸与位置是设计，不是实际室内；原形视图完整保留，尚未核实与实楼配准。':measured?profile.subtitle+'。保留全部原始边界函数；不补底、不猜测墙厚或实际室内。':'继承 R05 的实测外轮廓和局部设计坐标。楼层、楼梯及墙洞口是可编辑设计，不能当作实际楼内测量。';
+ const sourceBoundDescriptions={lowrise:'官方轮廓内2层设计板与双跑梯；共用街门仍是独立场地的假设位置，不计入33號室内适配。',kcc:'仅一张代表层设计：原20点六翼轮廓内 A–F关系、3个共享电梯接口、双跑梯与有厚度的上接平台；不是全24层室内。翼位字母、标高与核心位置均为假设。',warehouse:'独立官方裙房轮廓/高度推定的空心外壳与2层设计板；车辆、人员及货运接口位于裙房，不冒充上部原模型的街面入口。'};
+ $('source-floors').textContent=context?sourceBoundDescriptions[profileId()]:assembly?({lowrise:'2层关系 · 1组设计双跑梯 · 共用街门与住宅入口分开',kcc:'A–F六户 → 公共通路 → 三梯共享核心筒；仅代表层关系',warehouse:'车辆入口 / 人员入口分流 → 开放仓储 → 货运接口；位置仍待核实'}[profileId()]):measured?profile.known.join('；'):`设计 FFL ${graph.floors[0].fflM.toFixed(4)} → ${graph.floors[1].fflM.toFixed(4)} m · ${spec.config.risersPerFlight} + ${spec.config.risersPerFlight} 级`;
+ $('case-unknown').textContent='未核实：'+profile.unknown.join('；');
+ const links=[...profile.sourceUrls];if(context&&/^https?:/.test(design.sourceBinding?.sourceUrl??''))links.push(design.sourceBinding.sourceUrl);
+ $('case-sources').replaceChildren(...links.map((url,i)=>{const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=i<profile.sourceUrls.length?'来源 '+(i+1)+' ':'本次官方轮廓 ';return a;}));
+ $('design-controls').hidden=isCase();$('assembly-controls').hidden=!(assembly||context);$('context-controls').hidden=!context;$('case-mode-buttons').hidden=!isCase();$('open-assembled').hidden=context;$('open-source').hidden=measured;$('cutaway').disabled=isCase();
+ if(assembly||context)syncAssemblyControls();$('assembly-controls').hidden=isHosted()||!(assembly||context);
+ if(context){const band=spec.sourceDisplay.heightRange,fit=design.fitReport;$('context-display-note').textContent=`仅显示剖切：原始外壳保留源局部 Y ${band[0].toFixed(2)} 至 ${band[1].toFixed(2)} m 及所选检查半空间内的表面，不生成切口封面；设计函数保留完整。完整原楼可随时单独查看。`;$('context-fit').textContent=`${fit.checkedPrimitives} 个实体投影域检查通过${Number.isFinite(fit.coreToSharedBoundaryMinimumClearance)?'；核心到共享边界最小净距 '+fit.coreToSharedBoundaryMinimumClearance.toFixed(2)+' m':''}。这不是实测室内或结构/消防认证。`;$('context-floor').textContent=`设计板源局部标高 ${design.sourceBinding.designedFloorLocalY.toFixed(3)} m，不是实测 FFL。`;$('source-attribution').textContent=design.sourceBinding.attribution??'外轮廓来自保留的原始测量表面函数。';}
+ updateRenderMetrics();
+ $('graph').textContent=JSON.stringify(context?{sourceModelId:spec.sourceModelId,sourceBinding:design.sourceBinding,fitReport:design.fitReport,displayOnly:spec.sourceDisplay,graph:design.graph}:assembly?spec.graph:measured?deriveCaseRelations(profileId()):{modelId:graph.host.modelId,floors:graph.floors,fieldObjectBindings:graph.fieldObjectBindings,interiorEvidence:graph.interiorEvidence},null,2);
+ document.querySelectorAll('[data-view]').forEach(b=>{b.textContent=(context?{stairs:'设计楼梯',corner:'俯视轮廓',door:'设计入口',whole:'源形同场检查',underside:'设计板底'}:assembly?{stairs:'关系剖面',corner:'俯视通路',door:'入口接口',whole:'整体关系',underside:'板与梯底'}:measured?{stairs:'完整源形体',corner:'屋面边界',door:'外墙近看',whole:'整体',underside:'底部边界'}:{stairs:'楼梯与楼板',corner:'连续转角',door:'墙与洞口',whole:'真实外轮廓',underside:'梯底'})[b.dataset.view];b.classList.toggle('active',b.dataset.view===view);});
+}
+function updateRenderMetrics(){if(!renderer?.spec)return;
+ const context=isContext(),assembly=isAssembly(),measured=isMeasured(),r=renderer.snapshot();$('metrics').innerHTML=`直接场渲染 · ${r.width} × ${r.height}<br>对象顶点缓冲 0 / 索引缓冲 0<br>模型三角形 0 / 每次全屏派发1个三角形<br>每帧 ${r.screenPassesPerFrame??1} 次全屏派发<br>${context?`${spec.counts.patches} 个不变源面 + ${spec.counts.primitives} 个设计实体函数`:assembly?`${spec.counts.primitives} 个解析实体函数 / ${spec.counts.analyticBoundaryPlanes} 个有限面域`:measured?`${spec.counts.patches} 个源面 / ${spec.counts.boundaryCoordinates} 个边界控制坐标 / 丢失 0`:`扶手 ${spec.rail.pieces.length} 个解析线/弧函数项`}<br>${sizingPaused?'QA 固定分辨率，无后台高清重绘':'默认低采样：宽高 ≤ 160、总像素 ≤ 17,920；中/高采样需显式逐级请求'}<br><span class="muted">${r.gpu}</span>`;
+}
+function updateLabels(renderOptions=lastRenderedOptions??renderer?.options){
+ const overlay=$('function-labels');if(!overlay||!renderer)return;overlay.replaceChildren();if((isHosted()&&view==='aperture')||(!isAssembly()&&!isContext()))return;
+ const design=designSpec(),o=renderOptions,sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);},f=norm(sub(o.target,o.eye)),right=norm(cross(f,[0,1,0])),up=cross(right,f),box=$('view').getBoundingClientRect(),marks=[];
+ if(profileId()==='kcc')for(const node of design.graph.nodes.filter(n=>n.type==='unit')){const owners=new Set([node.id,...design.graph.edges.filter(e=>e.type==='ownedBy'&&e.to===node.id).map(e=>e.from)]),ps=design.primitives.filter(p=>owners.has(p.nodeId));if(ps.length){const lo=[0,1,2].map(i=>Math.min(...ps.map(p=>p.bounds.min[i]))),hi=[0,1,2].map(i=>Math.max(...ps.map(p=>p.bounds.max[i])));marks.push({label:node.label,p:[(lo[0]+hi[0])/2,hi[1]+.2,(lo[2]+hi[2])/2]});}}
+ for(const port of design.ports.filter(p=>profileId()!=='kcc'||p.nodeId.includes('lift-door-'))){const node=design.graph.nodes.find(n=>n.id===port.nodeId);marks.push({label:node?.label??'接口',p:[port.center[0],port.center[1]+port.height/2+.22,port.center[2]]});}
+ for(const m of marks){const point=isContext()?assemblyLocalToSource(design,m.p):m.p,v=sub(point,o.eye),z=dot(v,f);if(z<=0)continue;const d=Math.tan(o.fov/2)*z,x=box.width/2+dot(v,right)/d*box.height/2,y=box.height/2-dot(v,up)/d*box.height/2;if(x<10||x>box.width-10||y<40||y>box.height-80)continue;const label=document.createElement('span');label.textContent=m.label;label.style.left=x+'px';label.style.top=y+'px';overlay.append(label);}
+}
+function syncAssemblyControls(){
+ const design=designSpec(),context=isContext(),names=Object.keys(design.config).filter(k=>!['alignmentTransform','interiorTranslationXZ','interiorYawRadians','designFloorLocalY'].includes(k)&&Number.isFinite(design.config[k])&&!(context&&profileId()==='warehouse'&&k==='wallHeight'));
+ const labels={slabThickness:'设计板厚',wallThickness:'设计墙厚',wallHeight:'设计墙高',doorWidth:'设计人门宽',floorHeight:'设计层高',gateWidth:'共用街门宽',corridorWidth:'公共通路宽',liftDoorWidth:'电梯接口宽',vehicleWidth:'车辆入口宽',freightDoorWidth:'货运接口宽',coreWidth:'共享核心宽',minimumCoreClearance:'要求核心周边最小净距',stairFloorHeight:'设计上接平台高差'};
+ const ranges={slabThickness:[.08,.45],wallThickness:[.06,.3],wallHeight:[2.3,5],doorWidth:[.65,1.5],floorHeight:[2.7,4.5],gateWidth:[2.4,6],corridorWidth:[7.6,10],liftDoorWidth:[.7,1.45],vehicleWidth:[3,6],freightDoorWidth:[1.8,3.5],coreWidth:[3.3,5],minimumCoreClearance:[.5,2],stairFloorHeight:[2.6,4.2]};
+ $('assembly-inputs').replaceChildren(...names.map(k=>{const label=document.createElement('label');label.textContent=labels[k]??k;const input=document.createElement('input');input.type='number';input.step='.05';input.value=design.config[k];if(ranges[k]){input.min=ranges[k][0];input.max=ranges[k][1];}input.dataset.assemblyKey=k;label.append(input);return label;}));
+ $('assembly-title').textContent=context?'源轮廓内的可编辑设计':'独立关系设计';$('assembly-description').textContent=context?'尺寸和内部刚性位置可编辑。每次重新检查轮廓包含、洞口与共享通路；无效值会拒绝，不缩放或挤压原楼。':'数量、用途与归属来自资料；以下尺寸、相对位置是设计，不是实测。原始外壳保持独立。';
+ $('alignment-title').textContent=context?'编辑内部设计位置（非配准）':'待配准的刚性坐标接口';$('alignment-description').textContent=context?'只移动内部设计，不移动源外壳或官方轮廓。源局部 Y 显示当前假设板标高，本面板不修改它。':'保存设计局部坐标到原模型的映射；此独立视图不表示已经放入实楼。';
+ const a=design.alignmentTransform;$('align-x').value=context?design.config.interiorTranslationXZ[0]:a.translation[0];$('align-z').value=context?design.config.interiorTranslationXZ[1]:a.translation[2];$('align-y').value=context?design.sourceBinding.designedFloorLocalY:a.translation[1];$('align-y').readOnly=context;$('align-yaw').value=(context?design.config.interiorYawRadians:a.yawRadians)*180/Math.PI;$('assemblyApply').textContent=context?'验证并更新近似装配':'验证关系参数';
+}
+async function loadMeasured(baseId){let measured=caseCache.get(baseId);if(!measured){const profile=profileFor(baseId),response=await fetch(new URL(profile.scoreUrl,import.meta.url));if(!response.ok)throw Error('Source recipe could not be loaded: '+response.status);const text=await response.text(),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),v=>v.toString(16).padStart(2,'0')).join('');if(hash!==profile.scoreSha256)throw Error('Source recipe hash changed; refusing to silently alter the frozen case');measured=deriveMeasuredCase(JSON.parse(text));measured.loadedScoreSha256=hash;caseCache.set(baseId,measured);}return measured;}
+async function loadOfficialFootprints(){if(!officialFootprints){const response=await fetch(new URL('../r07/sources/official-footprints.json',import.meta.url));if(!response.ok)throw Error('Official footprint evidence could not be loaded: '+response.status);const data=await response.json();if(data.schemaVersion!==1||!Array.isArray(data.parts))throw Error('Unsupported official footprint evidence');officialFootprints=data;}return officialFootprints;}
+function composeSourceBound(baseId,measured,variables){
+ const design=deriveSourceBoundAssembly(baseId,measured,officialFootprints,variables);
+ if(design.fitReport?.status!=='source_bound_design_checks_passed'||design.sourceBinding?.sourceModelId!==measured.sourceModelId||design.sourceBinding.originalMeasuredSourceUnchanged!==true)throw Error('Source-bound placement requires an explicit passing fit report and unchanged source identity');
+ // The warehouse's independently evidenced podium is BELOW the upper model.
+ // Its inspection band must still include the first metres of the upper source.
+ const heightRange=[Math.min(design.bounds.min[1]-.35,measured.sourceBounds.max[1]-.1),Math.max(design.bounds.max[1]+.7,measured.sourceBounds.min[1]+3.5)];
+ const context=deriveCaseContext(measured,design,{inspectionContext:true,sourceDisplay:{heightRange}});
+ context.sourceBinding=structuredClone(design.sourceBinding);context.fitReport=structuredClone(design.fitReport);return context;
+}
+
+const HOSTED_NUMBERS={width:'洞口宽 m',height:'洞口高 m',frameDepth:'窗框进深 m',frontBevel:'设计前缘45°倒角 m',wallThickness:'假设墙厚 m',frameWidth:'框截面宽 m',roundRadius:'圆角半径 m',glassThickness:'玻璃厚度 m'};
+const GLASS_PRESETS={clear:[.96,.98,.98],green:[.72,.94,.84],bronze:[.72,.51,.30],grey:[.62,.65,.68]};
+function composeHosted(baseId,measured,variables,edits){
+ const baseline=composeSourceBound(baseId,measured,variables),defaults=defaultHostedCaseEdits(baseId,baseline.assembly),merged={...defaults,...edits,components:{...defaults.components,...edits.components}};
+ const bound=deriveHostedCase(baseId,measured,baseline.assembly,merged);
+ // Bounded sampled sweep checks are cached per case/geometry, not per open pose.
+ // They do not prove continuous clearance or invent measured-shell occupancy.
+ const signature=JSON.stringify({assembly:bound.assembly.config,components:bound.components.map(c=>{const {openT,...shape}=c.config;return shape;})}),cached=hostedMotionCache.get(baseId),motion=cached?.signature===signature?cached.motion:sampleHostedClearance(bound);
+ if(motion.reports.some(r=>r.status==='sampled_overlap_detected'))throw Error('101 姿态抽样检测到门扇与既有设计实体重叠；保留上一组参数');
+ if(cached?.signature!==signature)hostedMotionCache.set(baseId,{signature,motion});
+ bound.validation.motion=motion;hostedBinding=bound;hostedConfigs.set(baseId,structuredClone(merged));
+ const options={inspectionContext:true,sourceDisplay:{heightRange:baseline.sourceDisplay.heightRange,cutPlane:baseline.sourceDisplay.cutPlane}};
+ // A facade host must remain inside the display domain; this only changes inspection clipping.
+ if(baseId==='lowrise'&&bound.bindings?.[0]?.frame){const f=bound.bindings[0].frame;options.sourceDisplay.cutPlane={normal:f.w,offset:f.w.reduce((a,v,i)=>a+v*f.origin[i],0)-.7};if(bound.components.length)options.sourceDisplay.heightRange=[Math.min(baseline.sourceDisplay.heightRange[0],...bound.components.map(c=>c.bounds.min[1]-.35)),Math.max(baseline.sourceDisplay.heightRange[1],...bound.components.map(c=>c.bounds.max[1]+.35))];}
+ const context=deriveCaseContext(measured,bound.assembly,options);context.sourceBinding=structuredClone(bound.assembly.sourceBinding);context.fitReport=structuredClone(bound.assembly.fitReport);
+ const next=deriveHostedScene(context,bound.components,{mode:merged.enabled===false?'baseline':'design',sourceMasks:bound.sourceMasks,baselineContext:baseline});
+ if(!bound.bindings.some(b=>b.key===activeComponent))activeComponent=bound.bindings[0]?.key??'';return next;
+}
+function currentHostedConfig(){const edits=hostedConfigs.get(profileId())??{},defaults=defaultHostedCaseEdits(profileId(),designSpec());return {...defaults.components?.[activeComponent],...edits.components?.[activeComponent]};}
+function syncHostedControls(){if(!isHosted()||!hostedBinding)return;const select=$('hosted-component');select.replaceChildren(...hostedBinding.bindings.map(b=>{const o=document.createElement('option');o.value=b.key;o.textContent=b.label??b.key;return o;}));select.value=activeComponent;
+ const c=currentHostedConfig(),b=hostedBinding.bindings.find(b=>b.key===activeComponent);$('hosted-inputs').replaceChildren(...Object.entries(HOSTED_NUMBERS).filter(([key])=>Number.isFinite(c[key])).map(([key,labelText])=>{const label=document.createElement('label');label.textContent=labelText;const input=document.createElement('input');input.type='number';input.step=['glassThickness','frontBevel'].includes(key)?'.0005':'.01';input.value=c[key];input.dataset.hostedKey=key;label.append(input);return label;}));
+ $('hosted-mode').value=c.hingeOrSlider??'fixed';$('hosted-open').value=c.openT??0;$('hosted-open').disabled=b?.config.leafEnabled===false;$('hosted-mode').disabled=b?.config.leafEnabled===false;$('hosted-enabled').checked=hostedConfigs.get(profileId())?.enabled!==false;
+ $('hosted-evidence').textContent=(b?.label??activeComponent)+'。宿主来自本案例；位置、尺寸、框深和开启五金为可编辑设计，不是实测。'+(b?.config.leafEnabled===false?'只保留真实贯通框口，未假造门扇机制。':'简化转轴/轨道，不是实际摩擦铰链仿真。');
+}
+function applyHosted(key=activeComponent,changes={}){assertMutable();if(!isHosted())throw Error('Select a hosted case first');const id=profileId(),edits=structuredClone(hostedConfigs.get(id)??{});edits.components??={};edits.components[key]={...edits.components[key],...changes};const previousBinding=hostedBinding,previousEdits=structuredClone(hostedConfigs.get(id));try{const next=composeHosted(id,caseCache.get(id),sourceBoundConfigs.get(id)??defaultSourceBoundVariables(id),edits);installSpec(next);spec=next;activeComponent=key;lastValidation={valid:true,scope:'hosted_design_not_as_built'};sync();paint();return snapshot();}catch(e){hostedBinding=previousBinding;hostedConfigs.set(id,previousEdits);lastValidation={valid:false,message:e.message};throw e;}}
+function setHostedEnabled(enabled){assertMutable();if(!isHosted())throw Error('Select a hosted case first');const id=profileId(),edits=structuredClone(hostedConfigs.get(id)??{});edits.enabled=!!enabled;const next=composeHosted(id,caseCache.get(id),sourceBoundConfigs.get(id)??defaultSourceBoundVariables(id),edits);installSpec(next);spec=next;sync();paint();return snapshot();}
+function resetHosted(){if(!isHosted())throw Error('Select a hosted case first');const id=profileId(),next=composeHosted(id,caseCache.get(id),sourceBoundConfigs.get(id)??defaultSourceBoundVariables(id),{});installSpec(next);spec=next;sync();return focusHosted();}
+function focusHosted(){if(!isHosted())throw Error('Select a hosted case first');const b=hostedBinding.bindings.find(b=>b.key===activeComponent)??hostedBinding.bindings[0],f=b.apertureFrame??b.frame,c=currentHostedConfig(),r=Math.max(c.width??1,c.height??2)*2.0;view='aperture';renderer.options.target=[...f.origin];renderer.options.eye=f.origin.map((x,i)=>x+f.w[i]*r+f.u[i]*r*.28+f.v[i]*r*.16);renderer.options.fov=45*Math.PI/180;paint();$('view-title').textContent=profileFor(profileId()).name+' · '+(b.label??b.key)+' / 尺寸与位置为设计';return snapshot();}
+
+async function setCase(id){
+ assertMutable();scheduler?.invalidate('case-change');const request=++caseRequest,operationToken=operations.token(),gate=nextCaseGate;nextCaseGate=null;if(id==='design'){caseId='design';apply();setView('stairs');$('loading').hidden=true;return snapshot();}
+ const hosted=id.endsWith('-hosted'),context=hosted||id.endsWith('-assembled'),assembly=id.endsWith('-assembly'),baseId=id.replace(/-(?:assembly|assembled|hosted)$/,'');profileFor(baseId);$('loading').hidden=false;
+ try{if(gate!==null)await operations.wrap(caseGates.get(gate).promise,operationToken);const measured=await operations.wrap(loadMeasured(baseId),operationToken);if(context&&baseId!=='kcc')await operations.wrap(loadOfficialFootprints(),operationToken);operations.assert(operationToken);if(request!==caseRequest)return snapshot();assertMutable();
+  const next=hosted?composeHosted(baseId,measured,sourceBoundConfigs.get(baseId)??defaultSourceBoundVariables(baseId),hostedConfigs.get(baseId)??{}):context?composeSourceBound(baseId,measured,sourceBoundConfigs.get(baseId)??defaultSourceBoundVariables(baseId)):assembly?deriveEvidenceAssembly(baseId,measured,assemblyConfigs.get(baseId)??{}):measured;
+  installSpec(next);spec=next;caseId=id;renderer.options.cutaway=0;Object.assign(renderer.options,baseId==='warehouse'?{frameMaterialMode:0,doorMaterialMode:0}:{frameMaterialMode:2,doorMaterialMode:1});if(context)sourceBoundConfigs.set(baseId,structuredClone(next.assembly.config));if(gpu.canRender())$('failure').hidden=true;sync();setView(hosted?'aperture':'whole');return snapshot();
+ }finally{if(request===caseRequest)$('loading').hidden=true;}
+}
+function applyAssembly(changes={}){
+ assertMutable();if(!isAssembly()&&!isContext())throw Error('Select a case relation or source-bound assembly first');
+ const baseId=profileId(),context=isContext(),current=designSpec(),variables={...current.config,...changes},next=context?composeSourceBound(baseId,caseCache.get(baseId),variables):deriveEvidenceAssembly(baseId,caseCache.get(baseId),variables);
+ installSpec(next);spec=next;(context?sourceBoundConfigs:assemblyConfigs).set(baseId,structuredClone(context?next.assembly.config:next.config));lastValidation={valid:true,at:new Date().toISOString(),scope:context?'source_bound_design_not_as_built':'separate_relation_diagram'};sync();paint();return snapshot();
+}
+function apply(changes={}){assertMutable();const candidate={...config,...changes},next=deriveField(candidate),nextGraph=deriveHostGraphFromField(next);installSpec(next);config=next.config;spec=next;graph=nextGraph;caseId='design';paint();lastValidation={valid:true,at:new Date().toISOString()};$('validation').className='validation';$('validation').textContent='函数、宿主域与洞口验证通过；当前设计已更新。';sync();return snapshot();}
+function setView(name){assertMutable();view=name;if(isHosted()&&name==='aperture')return focusHosted();if(isContext()){
+ const design=designSpec(),lo=spec.bounds.min,hi=spec.bounds.max,c=lo.map((v,i)=>(v+hi[i])/2),r=Math.max(...hi.map((v,i)=>v-lo[i]));let eye=[c[0]+r*.8,c[1]+r*.85,c[2]-r*1.05],target=c;
+ if(name==='corner'){eye=[c[0]+.1,hi[1]+r*1.2,c[2]-.1];target=c;}
+ if(name==='door'){const port=design.ports.find(p=>p.nodeId.includes(profileId()==='warehouse'?'vehicle-entry':profileId()==='lowrise'?'house-entry':'lift-door-'))??design.ports[0];if(port){target=assemblyLocalToSource(design,port.center);const away=port.normal.reduce((sum,v,i)=>sum+v*(target[i]-c[i]),0)>=0?1:-1,range=Math.max(7,r*.3);eye=target.map((v,i)=>v+port.normal[i]*away*range+(i===1?range*.25:0));}}
+ if(name==='stairs'){const ids=new Set(design.graph.nodes.filter(n=>n.type==='stair-connector').map(n=>n.id)),parts=design.primitives.filter(p=>ids.has(p.nodeId));if(parts.length){const low=[0,1,2].map(i=>Math.min(...parts.map(p=>p.bounds.min[i]))),high=[0,1,2].map(i=>Math.max(...parts.map(p=>p.bounds.max[i]))),radius=Math.max(...high.map((v,i)=>v-low[i]));target=assemblyLocalToSource(design,low.map((v,i)=>(v+high[i])/2));eye=[target[0]+radius*1.2,target[1]+radius*1.4,target[2]-radius*1.6];}}
+ if(name==='door'&&profileId()==='warehouse'){
+  const ports=design.ports.filter(p=>/vehicle-entry|personnel-entry/.test(p.nodeId));if(ports.length===2){const n=ports[0].normal,tangent=[-n[2],0,n[0]],dot=(a,b)=>a.reduce((sum,v,i)=>sum+v*b[i],0),along=ports.map(p=>dot(p.center,tangent)),left=Math.min(...ports.map((p,i)=>along[i]-p.width/2)),right=Math.max(...ports.map((p,i)=>along[i]+p.width/2)),bottom=Math.min(...ports.map(p=>p.center[1]-p.height/2)),top=Math.max(...ports.map(p=>p.center[1]+p.height/2)),localTarget=ports[0].center.map((v,i)=>i===1?(bottom+top)/2:v+tangent[i]*((left+right)/2-along[0])),center=design.bounds.min.map((v,i)=>(v+design.bounds.max[i])/2),away=dot(n,localTarget.map((v,i)=>v-center[i]))>=0?1:-1,range=Math.max(8,(right-left)*.62/Math.tan(22*Math.PI/180));target=assemblyLocalToSource(design,localTarget);eye=assemblyLocalToSource(design,localTarget.map((v,i)=>v+n[i]*away*range+(i===1?(top-bottom)*.12:0)));}
+ }
+ if(name==='stairs'&&profileId()==='lowrise'){
+  const ids=new Set(design.graph.nodes.filter(n=>n.type==='stair-connector').map(n=>n.id)),parts=design.primitives.filter(p=>ids.has(p.nodeId));if(parts.length){const low=[0,1,2].map(i=>Math.min(...parts.map(p=>p.bounds.min[i]))),high=[0,1,2].map(i=>Math.max(...parts.map(p=>p.bounds.max[i]))),radius=Math.max(...high.map((v,i)=>v-low[i])),localTarget=low.map((v,i)=>(v+high[i])/2);target=assemblyLocalToSource(design,localTarget);eye=assemblyLocalToSource(design,[localTarget[0]+radius*.9,low[1]+(high[1]-low[1])*.62,low[2]-radius*1.25]);}
+ }
+ if(name==='underside')eye=[c[0]+r*.7,lo[1]-r*.5,c[2]-r*.7];renderer.options.eye=eye;renderer.options.target=target;renderer.options.fov=44*Math.PI/180;paint();$('view-title').textContent=profileFor(profileId()).name+' · 源轮廓约束近似设计 / 原外壳仅显示剖切';return snapshot();
+ }if(isAssembly()){const lo=spec.bounds.min,hi=spec.bounds.max,c=lo.map((v,i)=>(v+hi[i])/2),r=Math.max(...hi.map((v,i)=>v-lo[i]));let eye=[c[0]+r*.85,c[1]+r*.95,c[2]-r*1.1],target=c;if(name==='corner'){eye=[c[0]+.1,c[1]+r*1.4,c[2]-.1];target=[c[0],0,c[2]];}if(name==='door'){eye=[c[0]+r*.25,c[1]+r*.22,lo[2]-r*.75];target=[c[0],1,lo[2]+r*.1];}if(name==='underside'){eye=[c[0]+r*.7,lo[1]-r*.5,c[2]-r*.7];}renderer.options.eye=eye;renderer.options.target=target;renderer.options.fov=44*Math.PI/180;paint();$('view-title').textContent=profileFor(profileId()).name+' · 对照/设计剖面，尚未配准';return snapshot();}if(isMeasured()){const lo=spec.bounds.min,hi=spec.bounds.max,c=lo.map((v,i)=>(v+hi[i])/2),span=hi.map((v,i)=>v-lo[i]),r=Math.max(...span);let eye=[c[0]+r*1.1,c[1]+r*.65,c[2]+r*1.3],target=c;if(name==='corner'){eye=[c[0]+r*.55,hi[1]+r*.85,c[2]+r*.6];target=[c[0],hi[1]-span[1]*.12,c[2]];}if(name==='door'){eye=[c[0]+r*.85,c[1]+r*.05,c[2]+r*.85];}if(name==='underside'){eye=[c[0]+r*.7,lo[1]-r*.7,c[2]+r*.8];target=[c[0],lo[1]+span[1]*.2,c[2]];}renderer.options.eye=eye;renderer.options.target=target;renderer.options.fov=42*Math.PI/180;paint();$('view-title').textContent=profileFor(profileId()).name+' · '+(name==='corner'?'全部原屋面':name==='underside'?'原始底部，不伪造封口':'实测表面函数');return snapshot();}const d=spec.dimensions,H=config.floorHeight;let eye,target,title;switch(name){case'corner':eye=[0,2.95,2.2];target=[0,d.midHeight+config.railHeight,4.6];title='同一母线 · 梯段到平台转角';break;case'door':eye=[3.4,H+2.4,-4.3];target=[0,H+1.05,0];title='墙体减洞口 · 不是贴上一个门';break;case'whole':eye=[30,32,-22];target=[-1,1.6,-6];title='同一实测20点外轮廓 · 两层设计';break;case'underside':eye=[5,.35,6.5];target=[0,1.3,2.8];title='阶梯底部 · 连续距离场';break;case'inside':eye=[-.7,-.1,.5];target=[-.7,.6,2.5];title='实体内部观察 · 出界求交';break;default:eye=[.35,7.0,3.9];target=[0,1.2,2.7];title='两层设计关系';view='stairs';}
+ renderer.options.eye=eye;renderer.options.target=target;renderer.options.fov=(name==='whole'?45:name==='corner'?70:45)*Math.PI/180;paint();$('view-title').textContent=title;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));return snapshot();}
+function setRenderOptions(o={}){assertMutable();Object.assign(renderer.options,o);syncQualityFinishControl();$('cutaway').checked=!!renderer.options.cutaway;$('material').checked=!!renderer.options.materialEnabled;$('occlusion').checked=!!renderer.options.occlusion;$('renderMode').value=String(renderer.options.renderMode);paint();return snapshot();}
+function snapshot(){if(isHosted())return {...contextSnapshot(),hosted:structuredClone({edits:hostedConfigs.get(profileId()),bindings:hostedBinding?.bindings,validation:hostedBinding?.validation,sourceMasks:hostedBinding?.sourceMasks,mode:spec.mode,components:hostedBinding?.components}),opticalModel:renderer.snapshot().opticalModel};return contextSnapshot();}
+function contextSnapshot(){if(isContext()){const design=designSpec();return {build:'2026-10-21-material-quality-r01',ready:currentFrameReady(),modelReady:true,caseId,fieldKind:spec.fieldKind,profile:profileFor(profileId()),config:structuredClone(design.config),counts:structuredClone(spec.counts),summary:structuredClone(design.summary),bounds:structuredClone(spec.bounds),fullBounds:structuredClone(spec.fullBounds),sourceDisplay:structuredClone(spec.sourceDisplay),sourceBinding:structuredClone(design.sourceBinding),fitReport:structuredClone(design.fitReport),registrationStatus:design.registrationStatus,contextRegistrationStatus:spec.registrationStatus,host:structuredClone(design.graph),distanceContract:structuredClone(spec.distanceContract),renderer:rendererSnapshot(),view,renderOptions:structuredClone(renderer.options),lastValidation,errors:[...errors],actualInterior:false};}if(isAssembly())return {build:'2026-10-21-material-quality-r01',ready:currentFrameReady(),modelReady:true,caseId,fieldKind:spec.fieldKind,profile:profileFor(profileId()),config:structuredClone(spec.config),counts:structuredClone(spec.counts),summary:spec.summary,registrationStatus:spec.registrationStatus,host:spec.graph,distanceContract:spec.distanceContract,renderer:rendererSnapshot(),view,renderOptions:structuredClone(renderer.options),errors:[...errors],actualInterior:false};if(isMeasured())return {build:'2026-10-21-material-quality-r01',ready:currentFrameReady(),modelReady:true,caseId,fieldKind:spec.fieldKind,profile:profileFor(profileId()),counts:structuredClone(spec.counts),reconstruction:spec.reconstruction,host:deriveCaseRelations(profileId()),distanceContract:spec.distanceContract,renderer:rendererSnapshot(),view,renderOptions:structuredClone(renderer.options),lastValidation,errors:[...errors],actualInterior:false};return {caseId,fieldKind:'signed-design',build:'2026-10-21-material-quality-r01',ready:currentFrameReady(),modelReady:true,config:structuredClone(config),dimensions:structuredClone(spec.dimensions),rail:{length:spec.rail.length,pieceCount:spec.rail.pieces.length,arcCount:spec.rail.pieces.filter(x=>x.kind==='arc').length,tangentContinuous:spec.rail.tangentContinuous,mode:spec.rail.mode},host:structuredClone(graph),distanceContract:spec.distanceContract,renderer:rendererSnapshot(),view,renderOptions:structuredClone(renderer.options),lastValidation,errors:[...errors],certified:false,actualInterior:false};}
+function probePoints(){let seed=137;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};const p=[];if(isCase()){for(let i=0;i<100;i++){const bounds=isContext()?(i%2?spec.fullBounds:spec.assemblyBounds):spec.bounds;p.push(bounds.min.map((v,j)=>v+(bounds.max[j]-v)*rnd()));}return p.map(q=>q.map(Math.fround));}for(let i=0;i<70;i++)p.push([(rnd()-.5)*5,rnd()*6-.3,rnd()*6-.5]);for(let i=0;i<=12;i++){const r=railPointAt(spec.rail,spec.rail.length*i/12);p.push(r.point.map((n,j)=>n+(j===1?config.railRadius+.003:0)));}p.push([-.7,.16,1.35],[.7,config.floorHeight-.16,1.35],[0,config.floorHeight+1,0],[0,config.floorHeight-.1,2],[2,config.floorHeight,.5]);return p.map(q=>q.map(Math.fround));}
+function opticalParity(){
+ if(!isHosted())throw Error('Hosted optical query requires an actual case');const rays=hostedOpticalProbeRays(spec);if(!rays.length)return{samples:0,status:'not_applicable_no_glass_pane',passed:true};
+ const cpu=rays.map(r=>traceHostedTransmission(spec,r.origin,r.direction,renderer.options)),gpu=renderer.probeOptics(rays.map(r=>r.origin),rays.map(r=>r.direction)),mismatches=[];
+ const maxima={pathM:0,exitPointM:0,direction:0,transmittance:0,fresnel:0,nextTM:0},limits={pathM:.000005,exitPointM:.00003,direction:.0001,transmittance:.0002,fresnel:.0002,nextTM:.0005};
+ const norm=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));for(let i=0;i<rays.length;i++){const c=cpu[i],g=gpu[i],status=c.status==='not_glass'?(c.hit.hit?'non_glass':'primary_miss'):c.status;let bad=status!==g.status;
+ if(c.status==='transmitted'){const errors={pathM:Math.abs(c.pathLength-g.pathLength),exitPointM:norm(c.exitPoint,g.exitPoint),direction:norm(c.transmittedDirection,g.transmittedDirection),transmittance:norm(c.transmittance,g.transmittance),fresnel:Math.max(Math.abs(c.entryFresnel-g.entryFresnel),Math.abs(c.exitFresnel-g.exitFresnel)),nextTM:c.nextHit.hit?Math.abs(c.nextHit.t-g.nextT):0};for(const[k,v]of Object.entries(errors)){maxima[k]=Math.max(maxima[k],v);if(v>limits[k])bad=true;}if((c.nextHit.hit?c.nextHit.objectId:0)!==g.nextObjectId||!!c.startsInside!==g.startsInside)bad=true;}
+ if(bad)mismatches.push({i,name:rays[i].name,cpu:c,gpu:g});}
+ return{samples:rays.length,rays,cpu,gpu,maxima,limits,mismatches,passed:!mismatches.length,scope:'actual_current_finite_pane_same_render_optical_function_four_sampled_rays_not_full_optics_validation'};
+}
+function parity(points=probePoints()){const cpu=points.map(query),gpu=renderer.probe(points),normalGPU=renderer.probe(points,1),localGPU=renderer.probe(points,3);let distanceError=0,normalError=0,localError=0;const mismatches=[],acceptedTies=[];for(let i=0;i<points.length;i++){const e=Math.abs(cpu[i].distance-gpu[i][0]);distanceError=Math.max(distanceError,e);let expectedNormal=normal(points[i]),idOkay=Math.abs(cpu[i].objectId-gpu[i][1])<.1;
+ if((isMeasured()||isContext())&&!idOkay&&cpu[i].objectId<2000&&gpu[i][1]<2000){const patch=(isContext()?spec.measured:spec).patches[Math.round(gpu[i][1])-1000];if(patch&&Math.abs(patchDistance(patch,points[i])-cpu[i].distance)<.00003){idOkay=true;expectedNormal=patch.n;acceptedTies.push(i);}}
+ normalError=Math.max(normalError,Math.hypot(...expectedNormal.map((v,j)=>v-normalGPU[i][j])));localError=Math.max(localError,Math.hypot(...cpu[i].local.map((v,j)=>v-localGPU[i][j])));if(!idOkay||Math.abs(cpu[i].materialRole-gpu[i][2])>.1)mismatches.push({index:i,point:points[i],cpu:cpu[i],gpu:gpu[i]});}return {samples:points.length,maxDistanceErrorM:distanceError,maxNormalVectorError:normalError,maxLocalCoordinateErrorM:localError,idMismatches:mismatches,acceptedEqualDistancePatchTies:acceptedTies,limits:{distanceM:.00003,normalVector:.04,localM:.000002},passed:distanceError<.00003&&normalError<.04&&localError<.000002&&!mismatches.length};}
+function rayParity(){const lo=spec.bounds.min,hi=spec.bounds.max,c=lo.map((v,i)=>(v+hi[i])/2),r=Math.max(...hi.map((v,i)=>v-lo[i])),origins=[],directions=[];for(let i=0;i<24;i++){const a=i*2.399963,o=[c[0]+Math.cos(a)*r*1.3,c[1]+Math.sin(i*1.7)*r,c[2]+Math.sin(a)*r*1.3].map(Math.fround),target=[c[0]+Math.sin(i)*r*.13,c[1]+Math.cos(i*1.3)*r*.18,c[2]+Math.cos(i)*r*.13],d=target.map((v,j)=>v-o[j]),n=Math.hypot(...d);origins.push(o);directions.push(d.map(v=>Math.fround(v/n)));}const cpu=origins.map((o,i)=>isCase()?intersectRay(o,directions[i]):traceFieldHybrid(spec,o,directions[i])),gpu=renderer.probe(origins,4,directions),mismatches=[];let maxTError=0;for(let i=0;i<cpu.length;i++){const status=isCase()?(cpu[i].hit?1:2):cpu[i].status,e=cpu[i].hit?Math.abs(cpu[i].t-gpu[i][0]):0;maxTError=Math.max(maxTError,e);if(status!==Math.round(gpu[i][2])||e>.0005||(cpu[i].hit&&cpu[i].objectId!==Math.round(gpu[i][1])))mismatches.push({i,cpu:cpu[i],gpu:gpu[i]});}return {samples:cpu.length,queryScope:isContext()?'display_source_interval_and_full_design':'current_field',maxTErrorM:maxTError,mismatches,passed:!mismatches.length};}
+function resize(){if(!renderer?.spec||sizingPaused||qaBusy||!gpu?.canRender())return;scheduler.request({quality:'interaction',reason:'viewport-resize',settle:requestedQuality!=='conservative'});}
+try{$('view').width=1;$('view').height=1;renderer=new FieldRenderer($('view'),{resourceEpoch:1,profileFirstDraw:qaWarmup});gpu=new GpuLifecycle({gl:renderer.gl,onStop:stopGpu,onComplete:onGpuComplete,maxRecoveryAttempts:1,maxWaitMs:15000});lossExtension=renderer.gl.getExtension('WEBGL_lose_context');scheduler=newScheduler();graph=deriveHostGraphFromField(deriveField(config));installRecoveryApi();await setCase('lowrise-hosted');installQualityApi();booting=false;if(!sizingPaused)resize();else paint('initial-warmup');$('loading').hidden=true;updateGpuUI();
+ window.__IMPLICIT_BUILDING__={get ready(){return currentFrameReady();},apiAvailable:true,snapshot,apply,applyAssembly,applyHosted,setHostedEnabled,resetHosted,focusHosted,selectHostedComponent:k=>{activeComponent=k;syncHostedControls();return focusHosted();},setCase,setView,setRenderOptions,query,normal,intersectRay,probe:(points,kind=0,directions=null)=>qaRead(()=>renderer.probe(points,kind,directions),'qa-probe'),opticalParity:()=>qaRead(opticalParity,'qa-optical-parity'),parity:points=>qaRead(()=>parity(points),'qa-parity'),rayParity:()=>qaRead(rayParity,'qa-ray-parity'),probePoints,diagnostics:()=>qaRead(()=>renderer.diagnostics(),'qa-diagnostics'),benchmark:n=>qaRead(()=>renderer.benchmark(n),'qa-benchmark'),benchmarkStages:n=>qaRead(()=>renderer.benchmarkStages(n),'qa-stage-benchmark'),scheduling:schedulingSnapshot,awaitSettled,renderNow:()=>{freezeViewport('qa-render-now');paint('qa-render-now');return snapshot();},spec:()=>structuredClone(spec),worldProbe:(points,frame=graph.host.designFrame,kind=0)=>qaRead(()=>renderer.probe(points.map(p=>transformHostToLocal(p,frame)),kind),'qa-world-probe'),localToWorld:points=>points.map(p=>transformLocalToHost(p,graph.host.designFrame)),assemblyToSource:points=>points.map(p=>assemblyLocalToSource(designSpec(),p)),assemblySourceProbe:(points,kind=0)=>qaRead(()=>renderer.probe(isContext()?points:points.map(p=>sourceToAssemblyLocal(spec,p)),kind),'qa-source-probe'),displayQuery:p=>isHosted()?queryHostedScene(spec,p,{display:true}):isContext()?queryContext(spec,p,{display:true}):query(p),materialDirection:(hit,direction)=>isHosted()?hostedMaterialDirection(spec,hit,direction):isContext()?contextMaterialDirection(spec,hit,direction):direction,resumeViewport,setResolution,setTraceVariant:v=>{freezeViewport('qa-trace-variant');renderer.setTraceVariant(v);return snapshot();},shaderSource:()=>renderer.fieldSource};
+
+ $('hosted-component').onchange=()=>{activeComponent=$('hosted-component').value;syncHostedControls();focusHosted();};
+ $('hostedApply').onclick=()=>{try{const changes={};document.querySelectorAll('[data-hosted-key]').forEach(i=>changes[i.dataset.hostedKey]=Number(i.value));changes.hingeOrSlider=$('hosted-mode').value;changes.openT=Number($('hosted-open').value);applyHosted(activeComponent,changes);$('hosted-validation').textContent='宿主与洞口尺寸已验证；101 姿态抽样未见与设计实体重叠，不是连续碰撞证明或实楼净距认证。';}catch(e){$('hosted-validation').textContent='未更新：'+e.message;}};
+ $('hosted-open').onchange=()=>{try{applyHosted(activeComponent,{openT:Number($('hosted-open').value)});}catch(e){$('hosted-validation').textContent='未更新：'+e.message;}};
+ $('hosted-enabled').onchange=()=>{try{setHostedEnabled($('hosted-enabled').checked);}catch(e){$('hosted-validation').textContent='未更新：'+e.message;}};
+ $('hostedReset').onclick=()=>{try{resetHosted();}catch(e){$('hosted-validation').textContent=e.message;}};$('hostedFocus').onclick=()=>focusHosted();
+ $('hosted-glass').onchange=()=>setRenderOptions({glassColor:GLASS_PRESETS[$('hosted-glass').value]});
+
+ $('assemblyApply').onclick=()=>{try{const c={};document.querySelectorAll('[data-assembly-key]').forEach(i=>c[i.dataset.assemblyKey]=Number(i.value));if(isContext()){c.interiorTranslationXZ=[Number($('align-x').value),Number($('align-z').value)];c.interiorYawRadians=Number($('align-yaw').value)*Math.PI/180;}else c.alignmentTransform={translation:['x','y','z'].map(k=>Number($('align-'+k).value)),yawRadians:Number($('align-yaw').value)*Math.PI/180};applyAssembly(c);$('assembly-validation').textContent=isContext()?'轮廓、洞口与通路检查通过；近似设计已更新，实测源形未改。':'已验证并更新设计关系；原外壳未变。';}catch(e){$('assembly-validation').textContent='未更新：'+e.message;}};
+ $('case').onchange=()=>setCase($('case').value).catch(recordError);$('open-source').onclick=()=>setCase(profileId()).catch(recordError);$('open-assembled').onclick=()=>setCase(profileId()+'-assembled').catch(recordError);
+ $('apply').onclick=()=>{try{const c={};for(const k of numeric)c[k]=Number($(k).value);c.railCornerMode=$('railCornerMode').value;apply(c);}catch(e){lastValidation={valid:false,message:e.message};$('validation').className='validation error';$('validation').textContent='未更新：'+e.message;}};
+ $('reset').onclick=()=>{apply(defaultFieldConfig());setRenderOptions({cutaway:0,materialEnabled:1,age:.18,wet:.08,renderMode:0});setView('stairs');};
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));$('occlusion').onchange=()=>setRenderOptions({occlusion:$('occlusion').checked?1:0});$('material').onchange=()=>setRenderOptions({materialEnabled:$('material').checked?1:0});$('cutaway').onchange=()=>setRenderOptions({cutaway:$('cutaway').checked?1:0});$('renderMode').onchange=()=>setRenderOptions({renderMode:Number($('renderMode').value)});$('age').oninput=()=>setRenderOptions({age:Number($('age').value)});
+ $('measure').onclick=async()=>{const b=$('measure');b.disabled=true;b.textContent='正在测量';try{const d=window.__IMPLICIT_BUILDING__.diagnostics(),t=await window.__IMPLICIT_BUILDING__.benchmark(8);$('benchmark').textContent=`${t.width}×${t.height}，绘制+同步等待中位 ${t.medianMs.toFixed(1)}ms，P95 ${t.p95Ms.toFixed(1)}ms。非单独GPU计时。${d.metric} 平均${d.meanSteps.toFixed(1)}，${d.unresolved}个未决像素。`;window.__IMPLICIT_BUILDING__.lastMeasurement={diagnostics:d,timing:t};}finally{b.disabled=false;b.textContent='测量当前画面';}};
+ $('view').onpointerdown=e=>{if(qaBusy)return;drag={x:e.clientX,y:e.clientY,pointerId:e.pointerId};scheduler.beginInteraction();$('view').setPointerCapture(e.pointerId);};
+ const endDrag=e=>{if(!drag||e.pointerId!==drag.pointerId)return;drag=null;scheduler.endInteraction();};
+ $('view').onpointerup=endDrag;$('view').onpointercancel=endDrag;$('view').onlostpointercapture=endDrag;
+ $('view').onpointermove=e=>{if(!drag||qaBusy||e.pointerId!==drag.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;const t=renderer.options.target,v=renderer.options.eye.map((n,i)=>n-t[i]),r=Math.hypot(...v),yaw=Math.atan2(v[0],v[2])-dx*.008,pitch=Math.max(-1.25,Math.min(1.45,Math.asin(v[1]/r)+dy*.006));renderer.options.eye=[t[0]+r*Math.cos(pitch)*Math.sin(yaw),t[1]+r*Math.sin(pitch),t[2]+r*Math.cos(pitch)*Math.cos(yaw)];paintInteraction('pointermove');};
+ $('view').onwheel=e=>{e.preventDefault();if(qaBusy)return;const t=renderer.options.target,scale=Math.exp(Math.max(-.25,Math.min(.25,e.deltaY*.001)));renderer.options.eye=renderer.options.eye.map((n,i)=>t[i]+(n-t[i])*scale);paintInteraction('wheel');};
+ window.addEventListener('blur',()=>{if(drag){drag=null;scheduler.endInteraction();}});
+ new ResizeObserver(resize).observe($('view'));
+}catch(e){recordError(e);if(gpu&&renderer?.gl.isContextLost())gpu.contextLost('boot-context-lost',{message:e.message});window.__IMPLICIT_BUILDING__={ready:false,errors,recovery:recoverySnapshot};}
