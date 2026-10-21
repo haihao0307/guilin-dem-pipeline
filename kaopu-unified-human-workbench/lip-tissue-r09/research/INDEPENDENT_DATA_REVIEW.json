@@ -1,0 +1,232 @@
+{
+  "schema": "kaopu/lip-r09-independent-data-review@1",
+  "recordedDateUTC": "2026-10-21",
+  "reviewer": "/root/r09_native_structure_audit",
+  "status": "ROOT_CAUSE_REVIEW",
+  "scope": "保存已完成的独立原始 RGBA、实际 GPU 源码与状态审核，以及最后结论挑战；保存本报告时未重新运行实验。",
+  "writeScope": "Only this INDEPENDENT_DATA_REVIEW.json file; no product, runner, recipe or remote changes.",
+  "sourceEvidence": {
+    "runDirectory": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/experiments/runs/frozen-b-root-cause-data",
+    "qaFile": "qa.json",
+    "startedAtUTC": "2026-10-21T06:12:54.910Z",
+    "finishedAtUTC": "2026-10-21T06:14:23.665Z",
+    "recipeSHA256": "33c727974806b9b0702a3fae13215829fcf9858fc4c2e38529f61085a2f9b48c",
+    "runnerSHA256": "52066b583858229a80db670f386d5d5c295a1dd4ffd5206e0106fd16e0dd8c3e",
+    "sourceVerifierSHA256": "cf3dd4372f682a71721a1fcaf798c311d2673cb01f47101ebd6bf023bba682ce",
+    "frozenBeautyRecipeSHA256": "9836344e1e777bb6def7b11832b9266a7f0caf3a235b70cd3f47982e1a7f122e",
+    "preselectedROIAnchor": "/workspace/scratch/c1f8c7fc7cfa/lip-r09/experiments/root-cause-probe-anchor.json",
+    "preselectedROIAnchoredAtUTC": "2026-10-21T06:09:28.125476+00:00",
+    "pose": "neutral",
+    "view": "macro",
+    "progress": 1,
+    "widthPixels": 640,
+    "heightPixels": 512
+  },
+  "method": {
+    "rawPixels": "Decoded saved PNGs as raw RGBA without display compositing, tone mapping or alpha unpremultiplication. Reversed the row order to reconstruct bottom-up readPixels bytes and independently checked their SHA256.",
+    "addedHeight": "r09AddedRaw = frozen B tissueHeight * original depthFade; r09AddedFinal = r09AddedRaw * lrFoldStrength / clamp(vL19State.y,.72,1.5) * (1-lrWet*.16*lrWetness) * lrMask * (1-liWeight), subject to original lrEnabled/lrScope conditions.",
+    "normalCounterfactual": "The same original surface-gradient operator and individual 0.26 slope cap are applied to psH and psH-r09AddedFinal in the same fragment. The angle is 2*asin(clamp(length(nWithB-nWithoutB)/2,0,1)) in degrees.",
+    "counterfactualLimit": "This is an in-shader numerical counterfactual. It is not an independent measurement of physical tissue relief, and subtraction is subject to floating-point precision.",
+    "encoding": {
+      "R": "step(heightThreshold,abs(r09AddedFinal))*owner, multiplied in the fragment BEFORE MSAA resolve",
+      "G": "step(angleThreshold,r09NormalDegrees)*owner, multiplied in the fragment BEFORE MSAA resolve",
+      "B": "owner=clamp(lrMask*(1-liWeight),0,1), subject to original lrEnabled/lrScope conditions",
+      "A": "0.75+0.20*beautyY; beautyY retains display-transformed original lighting/material/exposure/opacity dependencies",
+      "rgbDisplayTransforms": "Early return bypasses tone mapping and output conversion for data RGB; those transforms are retained only in the beauty dependency used by A.",
+      "readout1": {"heightThresholdShaderMicrometres": 0.001, "normalThresholdDegrees": 0.01},
+      "readout2": {"heightThresholdShaderMicrometres": 1, "normalThresholdDegrees": 0.1}
+    },
+    "statistic": "sum(R)/sum(B) and sum(G)/sum(B) within each preselected ROI. These are ownership-weighted resolved-sample response proportions, subject to MSAA and 8-bit quantization; not geometric area or visible quality improvement.",
+    "dataMarkerBytesInclusive": [191, 242],
+    "markerLimit": "The marker excludes pure native/background alpha255; it alone cannot prove that every MSAA sample at a material boundary belongs to the procedural slot.",
+    "boundaryCheck": "Also evaluated the B=255 subset of the same preselected broad-light ROI as a sensitivity check. The ROI was not moved or chosen from the diagnostic response."
+  },
+  "gpuAndExecution": {
+    "browserVersion": "145.0.7632.6",
+    "contextAttributes": {
+      "alpha": true,
+      "antialias": true,
+      "depth": true,
+      "premultipliedAlpha": true,
+      "preserveDrawingBuffer": false,
+      "stencil": false,
+      "powerPreference": "low-power"
+    },
+    "samples": 4,
+    "sampleBuffers": 1,
+    "alphaBits": 8,
+    "recordedReadbacks": 5,
+    "recordedDrawCallsPerFrame": 2,
+    "recordedTrianglesPerFrame": 531702,
+    "allFramesNativeSceneAndCamera": true,
+    "allFramesDefaultFramebuffer": true,
+    "allFramesErrorBeforeZero": true,
+    "allFramesErrorAfterZero": true,
+    "anyContextLost": false,
+    "allRecordedProgramsLinked": true,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "resourceErrors": [],
+    "completed": true,
+    "cleanup": {
+      "completed": true,
+      "gpuDrainCompleted": true,
+      "hooksRestored": true,
+      "browserDisconnected": true,
+      "apiTransportDisposed": true,
+      "errors": []
+    }
+  },
+  "independentPNGIntegrityChecks": [
+    {
+      "name": "neutral-macro-r08-baseline",
+      "pngSHA256": "9ad34cc78328516110b955c628dd378ed643715b279d373c8c250319f3e0bb1e",
+      "reconstructedBottomUpRawRGBA_SHA256": "267bd5fa5d76b8ec4f60e889c0449cd730045d0df7337e15014ee6ee066ec190",
+      "fileHashMatchesQA": true,
+      "rawHashMatchesQA": true
+    },
+    {
+      "name": "neutral-macro-data-only-frozen-b-support",
+      "pngSHA256": "3c0745b6e0b2ee0b1aed9cb445d6082cae93daf5b808d0633bee0072e30a791d",
+      "reconstructedBottomUpRawRGBA_SHA256": "af89e379fec9258004b8ea98c6f0b78aecff2cb7dbf9055e707f8df7d2b382f3",
+      "fileHashMatchesQA": true,
+      "rawHashMatchesQA": true
+    },
+    {
+      "name": "neutral-macro-data-only-frozen-b-larger-response",
+      "pngSHA256": "e0e39eca60997d3bed3e64e981dc1346725066e6bc324983859d2dfa3363327d",
+      "reconstructedBottomUpRawRGBA_SHA256": "9bb3949878c04d18eeac8b185263066beac3972dff0d4b940bbcbb153f4a5556",
+      "fileHashMatchesQA": true,
+      "rawHashMatchesQA": true
+    }
+  ],
+  "shaderStateAndRestorationChecks": {
+    "cases": ["data-only-frozen-b-support", "data-only-frozen-b-larger-response"],
+    "independentlyCheckedForBothCases": {
+      "eachPatchFromUniqueInActualBaselineFragment": true,
+      "actualFragmentEqualsOnlyDeclaredPatches": true,
+      "actualVertexExact": true,
+      "completeNativeStateSnapshotExact": true,
+      "activeUniformSnapshotExact": true,
+      "nativeUniformSnapshotExact": true,
+      "restoredCompleteStateSnapshotExact": true,
+      "restoredActiveUniformSnapshotExact": true,
+      "restoredActualFragmentExact": true,
+      "restoredActualVertexExact": true
+    },
+    "qaReportedForBothCases": {
+      "completed": true,
+      "reverseActualGPUPatchesExact": true,
+      "nativeUniformIdentityAndValuesExact": true,
+      "inheritedTemplatesExact": true,
+      "restorationCompleteNativeStateExact": true,
+      "restorationActualShaderAndUniformsExact": true,
+      "restorationPixelsExact": true,
+      "restorationHooksExact": true
+    },
+    "recordedRawRGBA_SHA256ForBothRestorations": "267bd5fa5d76b8ec4f60e889c0449cd730045d0df7337e15014ee6ee066ec190",
+    "restorationEvidenceLimit": "Restoration pixel equality was checked against the recorded readPixels hashes in QA; restored PNGs were not saved. Independent file comparisons covered the restored actual shader and state/uniform snapshots. No new restoration run was performed."
+  },
+  "independentROIReadouts": {
+    "coordinateOrigin": "top-left of the saved 640x512 PNG",
+    "wholeLipWindow": {
+      "rectangle": {"x": 100, "y": 185, "width": 440, "height": 205},
+      "pixelCount": 90200,
+      "dataMarkerPixelCountBothReadouts": 90200,
+      "alphaByteRangeBothReadouts": [191, 230],
+      "ownerByteRangeBothReadouts": [0, 255],
+      "fullOwnerByte255PixelCount": 44736,
+      "zeroOwnerBytePixelCount": 37901,
+      "sumOwnerBytes": 12368096,
+      "sumOwnerBytesDividedBy255": 48502.33725490196,
+      "responses": [
+        {"quantity": "addedHeight", "thresholdShaderMicrometres": 0.001, "sumResponseBytes": 1100005, "ratioPercent": 8.893891185838143},
+        {"quantity": "addedHeight", "thresholdShaderMicrometres": 1, "sumResponseBytes": 767235, "ratioPercent": 6.203339624789458},
+        {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.01, "sumResponseBytes": 1226414, "ratioPercent": 9.915948259133822},
+        {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.1, "sumResponseBytes": 1111993, "ratioPercent": 8.990817988476156}
+      ]
+    },
+    "lowerLipBroadLightRegion": {
+      "rectangle": {"x": 330, "y": 302, "width": 140, "height": 48},
+      "pixelCount": 6720,
+      "dataMarkerPixelCountBothReadouts": 6720,
+      "alphaByteRangeBothReadouts": [216, 227],
+      "pureNativeAlpha255PixelCount": 0,
+      "ownerByteRangeBothReadouts": [0, 255],
+      "fullOwnerByte255PixelCount": 6634,
+      "zeroOwnerBytePixelCount": 10,
+      "sumOwnerBytes": 1703698,
+      "sumOwnerBytesDividedBy255": 6681.16862745098,
+      "responses": [
+        {"quantity": "addedHeight", "thresholdShaderMicrometres": 0.001, "sumResponseBytes": 227780, "ratioPercent": 13.36974041173964},
+        {"quantity": "addedHeight", "thresholdShaderMicrometres": 1, "sumResponseBytes": 164858, "ratioPercent": 9.67648022125987},
+        {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.01, "sumResponseBytes": 251940, "ratioPercent": 14.787832115785779},
+        {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.1, "sumResponseBytes": 235749, "ratioPercent": 13.83748762984989}
+      ],
+      "fullOwnerSensitivityCheck": {
+        "selection": "B byte equals 255 inside the same preselected ROI",
+        "pixelCount": 6634,
+        "sumOwnerBytes": 1691670,
+        "responses": [
+          {"quantity": "addedHeight", "thresholdShaderMicrometres": 0.001, "ratioPercent": 13.464801054579204},
+          {"quantity": "addedHeight", "thresholdShaderMicrometres": 1, "ratioPercent": 9.745281290086127},
+          {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.01, "ratioPercent": 14.892975580343684},
+          {"quantity": "cappedNormalCounterfactualAngle", "thresholdDegrees": 0.1, "ratioPercent": 13.93587401798223}
+        ],
+        "remainingPixelCount": 86,
+        "remainingSumOwnerBytes": 12028,
+        "remainingSumHeightResponseBytesBothReadouts": 0,
+        "remainingSumNormalResponseBytesBothReadouts": 0,
+        "interpretation": "The sparse-response conclusion is stable when restricting to full decoded ownership; it does not depend on interpreting the 86 remaining pixels as fully procedural samples."
+      }
+    },
+    "pairedReadoutConsistencyForBothROIs": {
+      "ownerChannelByteExact": true,
+      "alphaChannelByteExact": true,
+      "responseGreaterThanOwnerPixelCount": 0,
+      "higherHeightThresholdGreaterThanLowerThresholdPixelCount": 0,
+      "higherAngleThresholdGreaterThanLowerThresholdPixelCount": 0
+    },
+    "precision": "Full decimal values are reproducibility arithmetic on saved byte sums, not a claim of equivalent physical or statistical precision. Engineering thresholds are neither tissue measurements nor human visibility thresholds."
+  },
+  "supportedConclusions": [
+    "本轮两项冻结外观实现 A/B 没有提供值得替换默认版的收益；技术门禁通过不构成视觉成功。拒绝 A/B、保留现有默认符合本轮证据。",
+    "冻结 B 在预选下唇宽亮区的新增高度与最终法线响应仅覆盖一小部分 ownership 加权 resolved 样本。这是已定位的候选方案限制。",
+    "该 ROI 的大多数像素有完整解码 ownership；将低响应主要归因为整个目标区域被 ownership 排除，缺乏支持。",
+    "局部响应确实进入最终法线。0.1 度响应约 13.84%，因此不能声称 B 完全没有进入扰动法线链。",
+    "不能用现有结果把外观失败解释成一个已经广泛覆盖目标区的新增结构被照明全部盖住；当前证据首先显示候选没有充分覆盖所要改善的区域。",
+    "源码中的连续既存主沟、共同有限 along 包络及独立 resolution 门构成受限支持；实测稀疏响应与此结构限制一致，但尚未分配各门的独立责任。"
+  ],
+  "unsupportedConclusions": [
+    "13.37% 或 14.79% 是几何面积、真实组织覆盖率、真实感得分或可见改善幅度。",
+    "低于 0.001 shader micrometre 阈值等于严格数学零。",
+    "整个嘴唇蜡感的唯一原因已经确定，或颜色、BRDF、照明与整体形体责任已经排除。",
+    "pair 缺根、共同 along 包络或 resolution 门中的某一个已被单独证明是首要原因。",
+    "A/B 的失败证明所有宽缓组织思路普遍无效。",
+    "提高幅度能自动修复当前没有得到充分作用的区域。",
+    "诊断叠色、像素差或数据门禁通过构成新外观候选的批准。"
+  ],
+  "finalConclusionChallenge": [
+    "拒绝 A/B 的范围限定于本轮冻结实现及已经观察的视角；定位方案限制不得改写为质感已经改善。",
+    "支持稀疏必须带固定阈值、ownership 加权、MSAA resolve 与量化的定义。高度和法线比例不同可来自导数邻域，不是自动的探针错误。",
+    "下一项若获分派，应分别记录同一冻结 B 的 pair 存在、共同 along 与 resolution 门的支持/衰减，不以放大幅度代替因果检查。",
+    "本 receipt 不含第三项 beauty 候选；诊断结果不自动授权或批准下一种外观修改。",
+    "未发现新的阻断性门禁漏洞；但单人物、单静态视角与材质边界限制仍然成立，不能推出连续动作、多人物适用性或公开发布验证通过。"
+  ],
+  "explicitNonClaimsAndDecision": {
+    "visualCandidate": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "publicHttpsPassed": false,
+    "shareAllowed": false,
+    "temporalStabilityTested": false,
+    "multiPersonValidated": false,
+    "physiologicalCalibration": false,
+    "uniqueWaxAppearanceRootCauseEstablished": false,
+    "newBeautyCandidateWithinThisReceipt": false,
+    "productDecision": "Reject frozen A/B; retain the existing default. Preserve this diagnostic as internal audit evidence.",
+    "newProductArtifact": "NO_NEW_ARTIFACT",
+    "reviewerDoesNotGrantProductionPromotion": true
+  }
+}

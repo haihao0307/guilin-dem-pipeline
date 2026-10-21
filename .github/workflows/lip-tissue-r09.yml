@@ -1,0 +1,190 @@
+name: Lip tissue R09 frozen native experiments
+on:
+  push:
+    branches: [feature/lip-tissue-r09-20261021]
+    paths:
+      - kaopu-unified-human-workbench/lip-tissue-r09/research/recipes-initial.json
+      - kaopu-unified-human-workbench/lip-tissue-r09/research/recipes-root-cause-support.json
+      - kaopu-unified-human-workbench/lip-tissue-r09/verification/**
+      - .github/workflows/lip-tissue-r09.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: lip-tissue-r09-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  reproduce-frozen-evidence:
+    if: github.ref == 'refs/heads/feature/lip-tissue-r09-20261021'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TASK_BRANCH: feature/lip-tissue-r09-20261021
+      BASE_COMMIT: 512c281a8a6259a4af32f7e60347754c1aae3cf5
+      EXPECTED_HEAD: ${{ github.sha }}
+      R09_DIR: kaopu-unified-human-workbench/lip-tissue-r09
+      BASELINE_PREVIEW_PATH: kaopu-unified-human-workbench/lip-surface-r08/preview.html
+      BASELINE_QA_PATH: kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02/qa.json
+      QA_BUDGET_MS: 900000
+    steps:
+      - uses: actions/checkout@v4
+        id: checkout
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/lip-tissue-r09.yml
+            /kaopu-unified-human-workbench/lip-tissue-r09/
+            /kaopu-unified-human-workbench/lip-surface-r08/preview.html
+            /kaopu-unified-human-workbench/lip-surface-r08/evidence/candidate-02/qa.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Set isolated runtime paths after runner initialization
+        run: |
+          echo "NODE_PATH=$RUNNER_TEMP/lip-r09-runtime/node_modules" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/lip-r09-browsers" >> "$GITHUB_ENV"
+      - name: Verify isolated scope, expected head and frozen inputs
+        id: scope
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/$TASK_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git fetch --no-tags --depth=1 origin "$BASE_COMMIT"
+          git fetch --no-tags --depth=1 origin "refs/heads/$TASK_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_HEAD"
+          node - <<'JS'
+          const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');
+          const prefix=process.env.R09_DIR+'/',workflow='.github/workflows/lip-tissue-r09.yml';
+          const changed=cp.execFileSync('git',['diff','--name-only','--no-renames','-z',process.env.BASE_COMMIT,'HEAD']).toString().split('\0').filter(Boolean);
+          assert(changed.every(p=>p.startsWith(prefix)||p===workflow),'Branch changes escape the frozen R09 scope');
+          const a=JSON.parse(fs.readFileSync(prefix+'TASK_ANCHOR.json'));
+          assert.equal(a.branch,process.env.TASK_BRANCH);assert.equal(a.baseSha,process.env.BASE_COMMIT);assert.equal(a.visualAcceptance,false);assert.equal(a.productionReady,false);
+          console.log(JSON.stringify({scopeVerified:true,base:process.env.BASE_COMMIT,head:process.env.EXPECTED_HEAD,changedPaths:changed}));
+          JS
+          node "$R09_DIR/verification/check-evidence.cjs" --inputs-only
+      - name: Prepare fresh evidence directories with an explicit file removal record
+        id: prepare
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+          const root=path.resolve(process.env.R09_DIR),removedFiles=[];
+          function clear(dir){if(!fs.existsSync(dir))return;for(const name of fs.readdirSync(dir)){const p=path.join(dir,name),s=fs.lstatSync(p);assert(!s.isSymbolicLink(),'Evidence cleanup refuses symlinks');if(s.isDirectory()){clear(p);fs.rmdirSync(p);}else{removedFiles.push(path.relative(root,p));fs.unlinkSync(p);}}}
+          for(const name of ['ci-beauty','ci-root-cause']){const dir=path.join(root,'evidence',name);clear(dir);fs.mkdirSync(dir,{recursive:true});}
+          for(const name of ['CI_VERIFICATION.json','CI_EXECUTION.json','CI_RUN_CONTEXT.json']){const p=path.join(root,'evidence',name);if(fs.existsSync(p)){assert(!fs.lstatSync(p).isSymbolicLink());removedFiles.push(path.relative(root,p));fs.unlinkSync(p);}}
+          const context={schema:'kaopu/lip-r09-ci-run-context@1',startedAt:new Date().toISOString(),sourceSHA:process.env.GITHUB_SHA,workflowRun:process.env.GITHUB_RUN_ID,workflowAttempt:process.env.GITHUB_RUN_ATTEMPT,branch:process.env.TASK_BRANCH,baseSha:process.env.BASE_COMMIT,removedFiles,visualAcceptance:false,productionReady:false,publicHttpsPassed:false,shareAllowed:false};
+          fs.writeFileSync(path.join(root,'evidence/CI_RUN_CONTEXT.json'),JSON.stringify(context,null,2)+'\n');
+          JS
+      - name: Install fixed native browser runtime
+        id: runtime
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/lip-r09-runtime" --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          "$RUNNER_TEMP/lip-r09-runtime/node_modules/.bin/playwright" install --with-deps chromium
+          node --check "$R09_DIR/verification/run-native-experiments.cjs"
+          node --check "$R09_DIR/verification/check-evidence.cjs"
+      - name: Reproduce both frozen rejected appearance experiments
+        id: beauty
+        if: ${{ !cancelled() && steps.scope.outcome == 'success' && steps.prepare.outcome == 'success' && steps.runtime.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=20s 16m node "$R09_DIR/verification/run-native-experiments.cjs" "$R09_DIR/research/recipes-initial.json" "$R09_DIR/evidence/ci-beauty" 2>&1 | tee "$R09_DIR/evidence/ci-beauty/runner.log"
+      - name: Reproduce frozen B data-only diagnosis
+        id: data
+        if: ${{ !cancelled() && steps.scope.outcome == 'success' && steps.prepare.outcome == 'success' && steps.runtime.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=20s 16m node "$R09_DIR/verification/run-native-experiments.cjs" "$R09_DIR/research/recipes-root-cause-support.json" "$R09_DIR/evidence/ci-root-cause" 2>&1 | tee "$R09_DIR/evidence/ci-root-cause/runner.log"
+      - name: Check real native evidence without aesthetic promotion
+        id: check
+        if: ${{ !cancelled() && steps.scope.outcome == 'success' && steps.prepare.outcome == 'success' && steps.runtime.outcome == 'success' }}
+        continue-on-error: true
+        run: node "$R09_DIR/verification/check-evidence.cjs"
+      - name: Analyze frozen B support from verified CI data
+        id: analysis
+        if: ${{ !cancelled() && steps.check.outcome == 'success' }}
+        continue-on-error: true
+        run: node "$R09_DIR/verification/analyze-support.cjs" "$R09_DIR/evidence/ci-root-cause"
+      - name: Record completed or failed execution outcomes
+        id: receipt
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        env:
+          SCOPE_OUTCOME: ${{ steps.scope.outcome }}
+          PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime.outcome }}
+          BEAUTY_OUTCOME: ${{ steps.beauty.outcome }}
+          DATA_OUTCOME: ${{ steps.data.outcome }}
+          CHECK_OUTCOME: ${{ steps.check.outcome }}
+          ANALYSIS_OUTCOME: ${{ steps.analysis.outcome }}
+        run: |
+          node - <<'JS'
+          const fs=require('node:fs'),path=require('node:path');
+          const stages=Object.fromEntries(['SCOPE','PREPARE','RUNTIME','BEAUTY','DATA','CHECK','ANALYSIS'].map(k=>[k.toLowerCase(),process.env[k+'_OUTCOME']||'not-run']));
+          const receipt={schema:'kaopu/lip-r09-ci-execution@1',recordedAt:new Date().toISOString(),sourceSHA:process.env.GITHUB_SHA,workflowRun:process.env.GITHUB_RUN_ID,workflowAttempt:process.env.GITHUB_RUN_ATTEMPT,branch:process.env.TASK_BRANCH,baseSha:process.env.BASE_COMMIT,stages,technicalExecutionCompleted:Object.values(stages).every(v=>v==='success'),appearanceDecision:'Both appearance candidates remain rejected. Data-only diagnosis is not a replacement candidate.',visualAcceptance:false,productionReady:false,publicHttpsPassed:false,shareAllowed:false};
+          const dir=path.join(process.env.R09_DIR,'evidence');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'CI_EXECUTION.json'),JSON.stringify(receipt,null,2)+'\n');
+          JS
+      - name: Preserve completed or failed evidence with expected-head CAS and a normal FF push
+        id: persist
+        if: ${{ always() && steps.scope.outcome == 'success' && steps.prepare.outcome == 'success' && steps.receipt.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git fetch --no-tags --depth=1 origin "refs/heads/$TASK_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_HEAD"
+          node - <<'JS'
+          const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_process'),assert=require('node:assert/strict');
+          const root=process.env.R09_DIR+'/evidence/',exact=new Set(['CI_RUN_CONTEXT.json','CI_EXECUTION.json','CI_VERIFICATION.json'].map(p=>root+p));
+          function hasFiles(p){if(!fs.existsSync(p))return false;const s=fs.lstatSync(p);assert(!s.isSymbolicLink(),'Evidence staging refuses symlinks');return s.isDirectory()?fs.readdirSync(p).some(n=>hasFiles(path.join(p,n))):true;}
+          const candidates=[root+'ci-beauty',root+'ci-root-cause',...exact];
+          const paths=candidates.filter(p=>hasFiles(p)||cp.execFileSync('git',['ls-files','-z','--',p]).length>0);
+          assert(paths.length>0);cp.execFileSync('git',['add','-A','-f','--',...paths]);
+          const changed=cp.execFileSync('git',['diff','--cached','--name-only','--no-renames','-z']).toString().split('\0').filter(Boolean);
+          assert(changed.length>0);assert(changed.every(p=>exact.has(p)||p.startsWith(root+'ci-beauty/')||p.startsWith(root+'ci-root-cause/')),'Evidence commit escaped its explicit path list');
+          JS
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m "Record frozen R09 native experiment evidence [skip ci]"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
+          git fetch --no-tags --depth=1 origin "refs/heads/$TASK_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_HEAD"
+          git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          echo "evidence_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-tissue-r09-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            kaopu-unified-human-workbench/lip-tissue-r09/evidence/ci-beauty
+            kaopu-unified-human-workbench/lip-tissue-r09/evidence/ci-root-cause
+            kaopu-unified-human-workbench/lip-tissue-r09/evidence/CI_RUN_CONTEXT.json
+            kaopu-unified-human-workbench/lip-tissue-r09/evidence/CI_EXECUTION.json
+            kaopu-unified-human-workbench/lip-tissue-r09/evidence/CI_VERIFICATION.json
+            kaopu-unified-human-workbench/lip-tissue-r09/research/recipes-initial.json
+            kaopu-unified-human-workbench/lip-tissue-r09/research/recipes-root-cause-support.json
+            kaopu-unified-human-workbench/lip-tissue-r09/verification
+            kaopu-unified-human-workbench/lip-tissue-r09/TASK_ANCHOR.json
+            .github/workflows/lip-tissue-r09.yml
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Report technical outcome without promoting rejected appearances
+        if: always()
+        env:
+          SCOPE_OUTCOME: ${{ steps.scope.outcome }}
+          PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime.outcome }}
+          BEAUTY_OUTCOME: ${{ steps.beauty.outcome }}
+          DATA_OUTCOME: ${{ steps.data.outcome }}
+          CHECK_OUTCOME: ${{ steps.check.outcome }}
+          ANALYSIS_OUTCOME: ${{ steps.analysis.outcome }}
+          RECEIPT_OUTCOME: ${{ steps.receipt.outcome }}
+          PERSIST_OUTCOME: ${{ steps.persist.outcome }}
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          for(const name of ['SCOPE','PREPARE','RUNTIME','BEAUTY','DATA','CHECK','ANALYSIS','RECEIPT','PERSIST'])assert.equal(process.env[name+'_OUTCOME'],'success',name+' did not complete; inspect preserved failure evidence/artifact');
+          console.log('Frozen native experiments reproduced and preserved. Appearance rejection, publicHttpsPassed=false, and shareAllowed=false remain unchanged.');
+          JS
