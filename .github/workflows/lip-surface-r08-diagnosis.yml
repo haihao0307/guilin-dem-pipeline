@@ -1,0 +1,127 @@
+name: Lip R08 native surface diagnosis
+on:
+  push:
+    branches: [feature/lip-surface-r08-diagnostics-20261021]
+    paths:
+      - kaopu-unified-human-workbench/lip-surface-r08/verification/diagnose-surface.cjs
+      - kaopu-unified-human-workbench/lip-surface-r08/verification/SurfaceDetailProbe.js
+      - kaopu-unified-human-workbench/lip-surface-r08/DIAGNOSTIC_ANCHOR.json
+      - .github/workflows/lip-surface-r08-diagnosis.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-surface-r08-diagnosis-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github/workflows
+            kaopu-unified-human-workbench/lip-surface-r08
+            kaopu-unified-human-workbench/lip-corner-r06
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify frozen diagnostic source
+        run: |
+          python - <<'PYCHECK'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('kaopu-unified-human-workbench/lip-surface-r08')
+          a=json.loads((p/'DIAGNOSTIC_ANCHOR.json').read_text())
+          for name,expected in a['reviewedFiles'].items():
+              actual=hashlib.sha256((p/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          assert a['targetBuild']=='8134500a3f5bf7a257ceef562061bb4c04416694'
+          assert a['productModification'] is False and a['visualAcceptance'] is False
+          print('Frozen independent diagnostic runner verified; product remains unchanged.')
+          PYCHECK
+      - name: Install matched browser runtime
+        id: runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium --only-shell
+      - name: Diagnose actual native public surface
+        env:
+          RUNNER_SOURCE_SHA: ${{ github.sha }}
+          PUBLIC_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/8134500a3f5bf7a257ceef562061bb4c04416694/kaopu-unified-human-workbench/lip-surface-r08/preview.html
+          QA_OUT: kaopu-unified-human-workbench/lip-surface-r08/evidence/diagnosis-01
+          QA_BUDGET_MS: 600000
+        run: timeout --signal=TERM --kill-after=20s 11m node kaopu-unified-human-workbench/lip-surface-r08/verification/diagnose-surface.cjs
+      - name: Verify diagnostic completion
+        run: |
+          node - <<'JSCHECK'
+          const fs=require('fs'),assert=require('assert/strict');
+          const q=JSON.parse(fs.readFileSync('kaopu-unified-human-workbench/lip-surface-r08/evidence/diagnosis-01/qa.json'));
+          assert.equal(q.completed,true);
+          assert.equal(q.cleanup.completed,true);
+          for(const k of ['pageErrors','consoleErrors','failedRequests','resourceErrors'])assert.equal(q[k].length,0,k);
+          assert(!q.failure&&!q.cleanupError&&!q.restorationError);
+          assert.equal(q.visualAcceptance,false);
+          assert.equal(q.productionReady,false);
+          console.log('Native diagnostic run completed; no aesthetic approval inferred.');
+          JSCHECK
+      - name: Preserve completed or failed diagnostic evidence
+        if: always()
+        env:
+          TASK_BRANCH: feature/lip-surface-r08-diagnostics-20261021
+          EXPECTED_RUNNER_HEAD: ${{ github.sha }}
+        run: |
+          git fetch origin "$TASK_BRANCH"
+          CURRENT_DIAGNOSTIC_HEAD=$(git rev-parse FETCH_HEAD)
+          test "$CURRENT_DIAGNOSTIC_HEAD" = "$EXPECTED_RUNNER_HEAD"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if test -d kaopu-unified-human-workbench/lip-surface-r08/evidence/diagnosis-01; then
+            git add -f -- kaopu-unified-human-workbench/lip-surface-r08/evidence/diagnosis-01
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Preserve actual native surface diagnosis [skip ci]"
+            git push origin "HEAD:refs/heads/$TASK_BRANCH"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lip-surface-r08-diagnosis-${{ github.sha }}
+          path: |
+            kaopu-unified-human-workbench/lip-surface-r08/evidence/diagnosis-01
+            kaopu-unified-human-workbench/lip-surface-r08/DIAGNOSTIC_ANCHOR.json
+            kaopu-unified-human-workbench/lip-surface-r08/verification/diagnose-surface.cjs
+            kaopu-unified-human-workbench/lip-surface-r08/verification/SurfaceDetailProbe.js
+          if-no-files-found: error
+          retention-days: 30
+      - name: Package matched runtime for local native verification
+        if: always() && steps.runtime.outcome == 'success'
+        run: |
+          python - <<'PYRUNTIME'
+          import hashlib,json,os,pathlib,tarfile
+          cache=pathlib.Path.home()/'.cache/ms-playwright'
+          shells=sorted(cache.glob('chromium_headless_shell-*'))
+          assert len(shells)==1,[str(p) for p in shells]
+          target=pathlib.Path('/tmp/r08-matched-native-runtime.tar.gz')
+          with tarfile.open(target,'w:gz',compresslevel=3) as archive:
+              archive.add(shells[0],arcname='browser/'+shells[0].name)
+              for name in ['playwright','playwright-core','pngjs']:
+                  archive.add(pathlib.Path('node_modules')/name,arcname='node_modules/'+name)
+          data=target.read_bytes()
+          record={'runnerSourceSHA':os.environ['GITHUB_SHA'],'playwrightVersion':'1.58.2','platform':'ubuntu-latest','bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'provenance':'Official Playwright install in this GitHub Actions job; runtime only, not a model or product asset.'}
+          pathlib.Path('/tmp/r08-matched-native-runtime.json').write_text(json.dumps(record,indent=2)+'\n')
+          print(json.dumps(record))
+          PYRUNTIME
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.runtime.outcome == 'success'
+        with:
+          name: lip-surface-r08-matched-runtime-${{ github.sha }}
+          path: |
+            /tmp/r08-matched-native-runtime.tar.gz
+            /tmp/r08-matched-native-runtime.json
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
