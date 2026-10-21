@@ -1,0 +1,249 @@
+{
+  "schema": "clo-pilot-independent-stage-numeric-review/1",
+  "status": "PASS_NUMERIC_GEOMETRY_ONLY",
+  "createdAt": "2026-10-21T08:44:21.114Z",
+  "sourceSHA256": "bf6b7c61c30f425bc143fc143254d9aeec2faa9c0c2a1811173a4d8349ea69ad",
+  "scope": "Pure geometry, coordinate mapping, principal strain and diagnostic expansion only. No WebGL, visual aesthetics, interaction, browser performance or complete UI approval.",
+  "findings": [
+    "Candidate request, person and material binding acceptance must be enforced by the calling application before setCandidate; stage validates numeric geometry only.",
+    "Display color is the signed principal engineering strain with greatest absolute magnitude, saturated at 15%; it is not pressure or fabric-calibrated stress."
+  ],
+  "analyticalCases": [
+    {
+      "name": "identity",
+      "p": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          0,
+          10,
+          0
+        ]
+      ],
+      "major": 0,
+      "minor": 0,
+      "result": {
+        "major": 0,
+        "minor": 0,
+        "majorStretch": 1,
+        "minorStretch": 1,
+        "signedMax": 0
+      }
+    },
+    {
+      "name": "rigid-rotation-and-translation",
+      "p": [
+        [
+          7,
+          11,
+          13
+        ],
+        [
+          7,
+          21,
+          13
+        ],
+        [
+          7,
+          11,
+          23
+        ]
+      ],
+      "major": 0,
+      "minor": 0,
+      "result": {
+        "major": 0,
+        "minor": 0,
+        "majorStretch": 1,
+        "minorStretch": 1,
+        "signedMax": 0
+      }
+    },
+    {
+      "name": "ten-percent-isotropic-tension",
+      "p": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          11,
+          0,
+          0
+        ],
+        [
+          0,
+          11,
+          0
+        ]
+      ],
+      "major": 0.1,
+      "minor": 0.1,
+      "result": {
+        "major": 0.10000000000000009,
+        "minor": 0.10000000000000009,
+        "majorStretch": 1.1,
+        "minorStretch": 1.1,
+        "signedMax": 0.10000000000000009
+      }
+    },
+    {
+      "name": "ten-percent-isotropic-compression",
+      "p": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          0
+        ],
+        [
+          0,
+          9,
+          0
+        ]
+      ],
+      "major": -0.1,
+      "minor": -0.1,
+      "result": {
+        "major": -0.09999999999999998,
+        "minor": -0.09999999999999998,
+        "majorStretch": 0.9,
+        "minorStretch": 0.9,
+        "signedMax": -0.09999999999999998
+      }
+    },
+    {
+      "name": "mixed-principal-strain",
+      "p": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          11,
+          0,
+          0
+        ],
+        [
+          0,
+          8,
+          0
+        ]
+      ],
+      "major": 0.1,
+      "minor": -0.2,
+      "result": {
+        "major": 0.10000000000000009,
+        "minor": -0.19999999999999996,
+        "majorStretch": 1.1,
+        "minorStretch": 0.8,
+        "signedMax": -0.19999999999999996
+      }
+    }
+  ],
+  "degenerateRestTriangleRejected": true,
+  "rows": [
+    {
+      "input": "./baseline_run.json.gz",
+      "deltaMm": 0,
+      "vertices": 3476,
+      "triangles": 6160,
+      "maxFloat32CoordinateErrorMm": 0.00005956839504506206,
+      "maximumTensionPercent": 12.003257305274072,
+      "maximumCompressionPercent": 5.587008414599781,
+      "normalAudit": {
+        "joined": 136,
+        "smoothedVertices": 266,
+        "rejectedGap": 0,
+        "rejectedFold": 100,
+        "positionsChanged": false,
+        "indicesChanged": false,
+        "maxGapMm": 0.001,
+        "maximumNormalAngleDeg": 60
+      },
+      "inputUnchanged": true,
+      "indicesPreserved": true,
+      "diagnosticExpandedCornersExactlyEqual": true
+    },
+    {
+      "input": "../clo-pilot/evidence/solve--40.json.gz",
+      "deltaMm": -40,
+      "vertices": 3286,
+      "triangles": 5788,
+      "maxFloat32CoordinateErrorMm": 0.000059592492107185535,
+      "maximumTensionPercent": 12.074203982745857,
+      "maximumCompressionPercent": 5.309997337504003,
+      "normalAudit": {
+        "joined": 136,
+        "smoothedVertices": 266,
+        "rejectedGap": 0,
+        "rejectedFold": 96,
+        "positionsChanged": false,
+        "indicesChanged": false,
+        "maxGapMm": 0.001,
+        "maximumNormalAngleDeg": 60
+      },
+      "inputUnchanged": true,
+      "indicesPreserved": true,
+      "diagnosticExpandedCornersExactlyEqual": true
+    },
+    {
+      "input": "../clo-pilot/evidence/solve-60.json.gz",
+      "deltaMm": 60,
+      "vertices": 3742,
+      "triangles": 6676,
+      "maxFloat32CoordinateErrorMm": 0.000059330989643058274,
+      "maximumTensionPercent": 12.04629233610568,
+      "maximumCompressionPercent": 5.914174679863726,
+      "normalAudit": {
+        "joined": 136,
+        "smoothedVertices": 266,
+        "rejectedGap": 0,
+        "rejectedFold": 108,
+        "positionsChanged": false,
+        "indicesChanged": false,
+        "maxGapMm": 0.001,
+        "maximumNormalAngleDeg": 60
+      },
+      "inputUnchanged": true,
+      "indicesPreserved": true,
+      "diagnosticExpandedCornersExactlyEqual": true
+    },
+    {
+      "input": "../clo-pilot/evidence/solve-100.json.gz",
+      "deltaMm": 100,
+      "vertices": 3929,
+      "triangles": 7038,
+      "maxFloat32CoordinateErrorMm": 0.000059570627854554914,
+      "maximumTensionPercent": 12.167062028742958,
+      "maximumCompressionPercent": 6.6743095892978115,
+      "normalAudit": {
+        "joined": 136,
+        "smoothedVertices": 266,
+        "rejectedGap": 0,
+        "rejectedFold": 114,
+        "positionsChanged": false,
+        "indicesChanged": false,
+        "maxGapMm": 0.001,
+        "maximumNormalAngleDeg": 60
+      },
+      "inputUnchanged": true,
+      "indicesPreserved": true,
+      "diagnosticExpandedCornersExactlyEqual": true
+    }
+  ]
+}
