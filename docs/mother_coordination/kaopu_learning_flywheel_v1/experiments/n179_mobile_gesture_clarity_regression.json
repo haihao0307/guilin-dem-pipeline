@@ -1,0 +1,44 @@
+{
+  "id": "MOBILE-GESTURE-CLARITY-TRANSITION-001",
+  "status": "CANDIDATE_NOT_ACTIVE",
+  "origin": {
+    "type": "USER_CORRECTION",
+    "problem": "On a phone, rotating the building makes the image become conspicuously blurry or low resolution, producing an uncomfortable visual transition."
+  },
+  "deduplication": {
+    "queries": [
+      "mobile gesture blur sampling regression",
+      "gesture motion clarity",
+      "presentedFrames mobile",
+      "releaseToCompleteMs",
+      "same camera settled reference"
+    ],
+    "defaultBranchMatch": false
+  },
+  "candidateGate": {
+    "bind": [
+      "sourceCommit",
+      "viewportCssSize",
+      "devicePixelRatio",
+      "deviceOrEmulation",
+      "pointerTrace",
+      "presentTimestamp",
+      "cameraAtPresent",
+      "samplingGridAtPresent"
+    ],
+    "requiredObservations": [
+      "At least one actually presented frame during the gesture",
+      "For each sampled motion camera, a settled replay at the identical camera and sampling grid",
+      "A declared equality or image-difference rule between each motion frame and its same-camera settled replay",
+      "Inter-present gaps and release-to-complete latency reported without silently inventing an acceptance threshold",
+      "Physical-device evidence kept distinct from browser mobile emulation"
+    ],
+    "failIf": [
+      "Only gesture/rest configuration widths are compared",
+      "Only before/after screenshots are captured",
+      "No frame is proven to have been presented while the pointer was moving",
+      "A measured latency is reported without a declared acceptance bound and called responsive"
+    ]
+  },
+  "activation": "Requires targeted Mother acknowledgement plus a successful minimal replay; this file alone does not change any production gate."
+}
