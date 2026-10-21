@@ -40,11 +40,13 @@ jobs:
           else
             python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-microbench.py --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
           fi
-          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-browser.py --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
+          SCRIPT=implicit-browser.py
+          if [[ "$QA_PUBLIC" == "true" ]]; then SCRIPT=implicit-public-verify.py; fi
+          python "kaopu-geography-workbench/kowloon-building-mother-r01/tests/$SCRIPT" --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
       - name: Independent three-case review captures if main QA stopped early
         if: ${{ !cancelled() }}
         run: |
-          if [[ ! -f kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/r06-assembled-warehouse-circulation.png ]]; then
+          if [[ "$QA_PUBLIC" != "true" && ! -f kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/r06-assembled-warehouse-circulation.png ]]; then
             BASE=http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01
             if [[ "$QA_PUBLIC" == "true" ]]; then BASE=https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01; fi
             python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-case-preview.py --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/case-review
