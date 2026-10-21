@@ -8,6 +8,11 @@ async function main(){
  try {
   const origin=`http://127.0.0.1:${port}`,base=origin+'/candidate/guilin-elevation-store-v1/';
   const url=base+'shards/elevation-shard-000.i16pack', checks=[];
+  for(const variant of ['baseline','candidate']){
+   const html=await fetch(origin+`/${variant}/guilin/`);
+   assert.equal(html.status,200);assert.match(html.headers.get('Content-Type'),/^text\/html/);
+   assert.match(await html.text(),/terrainCanvas/);
+  }
   const head=await fetch(url,{method:'HEAD'});assert.equal(head.status,200);assert.equal(+head.headers.get('Content-Length'),66595840);
   for(const [start,end] of [[0,15],[524288,524303],[66595824,66595839]]){
    const response=await fetch(url,{headers:{Range:`bytes=${start}-${end}`}});
@@ -32,7 +37,7 @@ async function main(){
   assert.equal(cancelled,true);assert.equal(consumed,false);
   const result={passed:true,transport:'actual localhost HTTP, no browser',range_checks:checks,no_range_head_status:head.status,out_of_bounds_status:oob.status,
    first_and_southeast_legacy_tile_sha_exact:true,range_requests:requestCount,maximum_range_bytes:maxRange,
-   forced_http_200_cancelled_before_arrayBuffer:true,browser_qa_completed:false,public_deployment_completed:false};
+   forced_http_200_cancelled_before_arrayBuffer:true,html_directory_index_mime_verified:true,browser_qa_completed:false,public_deployment_completed:false};
   fs.writeFileSync(path.join(root,'reports/REAL_HTTP_TRANSPORT_VERIFY.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));
  } finally {child.kill('SIGTERM');}
 }

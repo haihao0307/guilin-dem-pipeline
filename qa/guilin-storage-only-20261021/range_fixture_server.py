@@ -37,6 +37,8 @@ class Handler(BaseHTTPRequestHandler):
  def do_GET(self):self.serve(True)
  def serve(self,body):
   route=unquote(urlsplit(self.path).path);forced=route.startswith('/force200/')
+  if route=='/favicon.ico':
+   self.send_response(204);self.send_header('Content-Length','0');self.end_headers();return
   if forced:route='/candidate/'+route[len('/force200/'):]
   raw=None;file=None
   if route.startswith('/baseline/guilin-truth-data/native/'):
@@ -60,7 +62,7 @@ class Handler(BaseHTTPRequestHandler):
     self.send_response(416);self.send_header('Content-Range',f'bytes */{size}');self.send_header('Content-Length','0');self.end_headers();return
    start,end,status=int(match[1]),int(match[2]),206
   self.send_response(status)
-  self.send_header('Content-Type',mimetypes.guess_type(route)[0] or 'application/octet-stream')
+  self.send_header('Content-Type',mimetypes.guess_type(str(file) if file is not None else route)[0] or 'application/octet-stream')
   self.send_header('Content-Length',str(end-start+1));self.send_header('Accept-Ranges','bytes')
   self.send_header('Cache-Control','no-store')
   if status==206:self.send_header('Content-Range',f'bytes {start}-{end}/{size}')
