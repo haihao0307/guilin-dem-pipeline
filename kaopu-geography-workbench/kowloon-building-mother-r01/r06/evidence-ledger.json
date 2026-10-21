@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.r06.function-field-evidence-ledger/1",
   "documentedAt": "2026-10-21",
-  "status": "three_source_field_captures_complete_case_assembly_GPU_acceptance_pending_kernel_performance_unaccepted",
+  "status": "candidate11_CPU_and_small_frame_performance_pass_one_underside_unresolved_full_case_and_interaction_QA_pending",
   "readme": "README.md",
   "scope": {
     "workbench": "kowloon-building-mother-r01",
@@ -20,7 +20,7 @@
     "sourceBoundCaseAssembliesImplemented": true,
     "sourceBoundCaseAssembliesStatus": "implemented_source_and_official_footprint_constrained_designs_not_as_built",
     "sourceBoundCaseAssemblyCount": 3,
-    "currentCandidate": 10,
+    "currentCandidate": 12,
     "formalProductRelease": false
   },
   "architecture": {
@@ -984,7 +984,7 @@
     }
   },
   "validation": {
-    "status": "candidate10_CPU_pass_kernel_performance_failed_cases_rendered_small_resolution_not_full_acceptance",
+    "status": "candidate11_CPU_and_small_frame_performance_pass_one_underside_unresolved_full_case_and_interaction_QA_pending",
     "countsInLedger": "derived from local frozen score recipes and current adapter; not browser QA results",
     "cpuTestCommand": "node --test tests/*.test.mjs",
     "cpuTests": [
@@ -1025,22 +1025,22 @@
     ],
     "performanceMethod": "wallclock draw plus gl.finish and one-pixel readPixels, not isolated GPU timer",
     "performanceCaution": "160x112 diagnostic timings are not interactive usability or iOS device performance. Candidate10 finish-only per-pass timing was invalid due to asynchronous browser GPU execution; those zero readings are not a speedup.",
-    "cpuStatus": "candidate10_remote_287_pass",
+    "cpuStatus": "candidate11_remote_305_pass",
     "finalCpuPassCount": null,
-    "currentGpuStatus": "candidate10_all_case_shaders_rendered_small_resolution_kernel609ms_exceeded600ms_gate",
+    "currentGpuStatus": "candidate11_840x667_kernel_initial_parity_pass_underside_one_unresolved_full_suite_failed",
     "legacyRegressionScript": "../tests/implicit-regression.py",
     "legacyRegressionCaution": "R03/R04/R05 use their retained mesh renderer; do not apply R06 zero-model-buffer assertion to them. Script existence is not pass evidence.",
     "diagnosticCaution": "BVH node visits, finite assembly-plane tests, structural domain/plane tests and rail-only march steps are different metrics. 8-bit diagnostic counts saturate at 255.",
     "candidateCpuResult": {
-      "testsPassed": 287,
-      "scope": "Remote candidate10 full CPU suite only",
-      "commit": "f60d2c7e55dda095c14ed148801b4c8bd0360ae3",
-      "githubActionsRunId": "39539923046",
+      "testsPassed": 305,
+      "scope": "Remote candidate11 full CPU suite only",
+      "commit": "841edaddff623fb460b03f6302d71ae11718bcb9",
+      "githubActionsRunId": "39541312282",
       "completeBrowserSuiteClaimed": false
     },
     "productionPublished": false,
     "microbenchmarkScript": "../tests/implicit-microbench.py",
-    "performanceGatePassed": false,
+    "performanceGatePassed": true,
     "candidateCheckpoints": [
       {
         "candidate": 3,
@@ -1157,6 +1157,31 @@
         },
         "stageTimingAccepted": false,
         "stageTimingReason": "finish-only timings0–0.1ms did not synchronize Chromium work; replacement requires one-pixel readback within each interval"
+      },
+      {
+        "candidate": 11,
+        "commit": "841edaddff623fb460b03f6302d71ae11718bcb9",
+        "githubActionsRunId": "39541312282",
+        "cpuPassed": 305,
+        "microPerformanceGatePassed": true,
+        "warmed160x112MedianMs": {
+          "kernel": 153.5,
+          "sourceKcc": 23.3,
+          "sourceLowrise": 33.1,
+          "sourceWarehouse": 31.7,
+          "contextLowrise": 66.1,
+          "contextKcc": 131.0,
+          "contextWarehouse": 114.3
+        },
+        "underside": {
+          "pixels": 560280,
+          "unresolved": 1,
+          "rescuePixelCount": 44872,
+          "status": "failed_zero_unresolved_criterion"
+        },
+        "fullBrowserSuitePassed": false,
+        "oldVersionBrowserRegression": "not_run_due_to_prior_failure",
+        "notIosOrRealtimePerformance": true
       }
     ],
     "contextCandidateStatus": {
@@ -1200,6 +1225,12 @@
           "sha256": "fef0903857c4e682d72c7508a1ae754eb9775484937e244dcc5cebccc085aea1"
         }
       ]
+    },
+    "nextCandidatePolicy": {
+      "preserveZeroUndersideUnresolvedCriterion": true,
+      "deferKnownFailureUntilOtherChecksComplete": true,
+      "limitedLearningPreviewIsNotFullPass": true,
+      "exhaustionNeverConvertedToMiss": true
     }
   },
   "knownLimitations": [

@@ -15,6 +15,8 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[capture-only]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      QA_PUBLIC: ${{ contains(github.event.head_commit.message, '[public-verify]') }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -32,10 +34,19 @@ jobs:
       - name: Candidate direct field WebGL parity and visual QA
         run: |
           python -m http.server 8765 >/tmp/r06-http.log 2>&1 &
-          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-microbench.py --url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/r06.html --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
-          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-browser.py --url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/r06.html --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
+          BASE=http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01
+          if [[ "$QA_PUBLIC" == "true" ]]; then
+            BASE=https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01
+          else
+            python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-microbench.py --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
+          fi
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-browser.py --url "$BASE/r06.html" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser
       - name: Immutable R03 R04 R05 actual browser regression
-        run: python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-regression.py --base-url http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/ --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/old-regression
+        if: ${{ !cancelled() }}
+        run: |
+          BASE=http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01
+          if [[ "$QA_PUBLIC" == "true" ]]; then BASE=https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01; fi
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/implicit-regression.py --base-url "$BASE/" --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/r06-browser/old-regression
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:

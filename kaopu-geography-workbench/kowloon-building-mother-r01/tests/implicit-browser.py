@@ -4,7 +4,7 @@ import argparse, hashlib, json, pathlib, time, urllib.request
 from playwright.sync_api import sync_playwright
 P=pathlib.Path(__file__).resolve().parents[1]
 FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md','r06/context.mjs','r06/sources/official-footprints.json','r06/frame-scheduler.mjs']
-a=argparse.ArgumentParser();a.add_argument('--url',required=True);a.add_argument('--output',required=True);a=a.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True);report={'url':a.url,'hashes':{},'screenshots':[]}
+a=argparse.ArgumentParser();a.add_argument('--url',required=True);a.add_argument('--output',required=True);a=a.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True);report={'url':a.url,'hashes':{},'screenshots':[],'validationFailures':[]}
 base=a.url.rsplit('/',1)[0]+'/'
 for f in FILES:
  data=urllib.request.urlopen(base+f+'?r06-qa='+str(time.time_ns()),timeout=60).read();expected=(P/f).read_bytes();assert data==expected,'Served file differs: '+f;report['hashes'][f]=hashlib.sha256(data).hexdigest()
@@ -31,7 +31,8 @@ with sync_playwright() as p:
   for view,name in [('corner','r06-continuous-rail'),('door','r06-through-opening'),('whole','r06-measured-footprint'),('underside','r06-stair-underside')]:
    page.evaluate('(v)=>window.__IMPLICIT_BUILDING__.setView(v)',view);shot(name)
    if view=='underside':
-    report['undersideDiagnostics']=page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()');assert report['undersideDiagnostics']['unresolved']==0,report['undersideDiagnostics']
+    report['undersideDiagnostics']=page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()')
+    if report['undersideDiagnostics']['unresolved']!=0:report['validationFailures'].append({'check':'underside unresolved must equal zero','actual':report['undersideDiagnostics']['unresolved']})
   page.evaluate("window.__IMPLICIT_BUILDING__.setView('corner');window.__IMPLICIT_BUILDING__.apply({railCornerMode:'angular'})");shot('r06-angular-rule');assert page.evaluate('window.__IMPLICIT_BUILDING__.snapshot().rail.tangentContinuous') is False
   page.evaluate("window.__IMPLICIT_BUILDING__.apply({railCornerMode:'rounded',floorHeight:3.4,slabThickness:.24,doorWidth:1.0,railBendRadius:.28})");report['editedParity']=page.evaluate('window.__IMPLICIT_BUILDING__.parity()');assert report['editedParity']['passed'],report['editedParity'];page.evaluate("window.__IMPLICIT_BUILDING__.setView('stairs')");shot('r06-parameter-propagation')
   report['invalid']=page.evaluate("""()=>{const a=window.__IMPLICIT_BUILDING__,before=JSON.stringify(a.snapshot().config);let rejected=false;try{a.apply({doorWidth:3})}catch(e){rejected=true;}return {rejected,unchanged:before===JSON.stringify(a.snapshot().config)}}""");assert all(report['invalid'].values())
@@ -77,7 +78,7 @@ with sync_playwright() as p:
   page.evaluate("window.__IMPLICIT_BUILDING__.setCase('design')")
   page.set_viewport_size({'width':390,'height':844});page.evaluate("window.__IMPLICIT_BUILDING__.setView('stairs')");shot('r06-mobile');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   report['runtimeAudit']=page.evaluate('window.__GL_AUDIT__');assert report['runtimeAudit']['buffers']==0;assert report['runtimeAudit']['indexDraws']==0;assert set(report['runtimeAudit']['drawCounts'])=={3}
-  report['final']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()');report['errors']=errors;assert not errors and not report['final']['errors'];report['status']='passed'
+  report['final']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()');report['errors']=errors;assert not errors and not report['final']['errors'];assert not report['validationFailures'],report['validationFailures'];report['status']='passed'
  except Exception as e:
   report['status']='failed';report['error']=str(e);report['pageErrors']=errors;page.screenshot(path=str(out/'failure.png'),full_page=True);raise
  finally:
