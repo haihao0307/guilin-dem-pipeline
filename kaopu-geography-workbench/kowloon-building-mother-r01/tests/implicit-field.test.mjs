@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded,traceFieldHybrid} from '../r06/field.mjs';
+import {defaultFieldConfig,deriveField,queryField,fieldNormal,buildFieldGLSL,railPointAt,railDistance,filletPath,closestOnArc,stairProfileDistance,traceField,traceFieldAnalytic,queryStructure,structureOccupied,closestOnArcTrigFree,railPieceBounds,railDistanceBounded,traceFieldHybrid,traceFieldPrimaryOnly,traceFieldRescueFrom} from '../r06/field.mjs';
 import {createHostRecord,transformLocalToHost,transformHostToLocal,validateHostDomain} from '../r06/host.mjs';
 const near=(a,b,e=1e-8)=>assert.ok(Math.abs(a-b)<=e,`${a} ≠ ${b}`);
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
@@ -231,4 +231,15 @@ test('generated GLSL does not declare reserved identifiers',()=>{
 });
 test('CPU tracers reject an empty clipped distance interval before any query',()=>{
  for(const trace of [traceFieldAnalytic,traceFieldHybrid]){const h=trace(spec,[0,30,0],[0,-1,0],{maxDistance:1});assert.equal(h.status,2);assert.equal(h.hit,false);assert.equal(h.steps,0);assert.equal(h.reason,'empty_ray_interval');}
+});
+
+test('split primary/rescue with Float32 handoff matches the combined CPU oracle',()=>{
+ const rays=[[[2,2.99999,-2],[0,.000002,1],{}],[[2,2.99999,-2],[0,0,1],{}],[[-.7,1.42,3.71],[0,0,1],{}],[[-2,3.1,.5],[1,0,0],{clipX:-.2}]];
+ const views=[[[.35,7,3.9],[0,1.2,2.7]],[[5,.35,6.5],[0,1.3,2.8]],[[-.7,-.1,.5],[-.7,.6,2.5]]];
+ for(const [eye,target]of views){const f=unit(target.map((v,i)=>v-eye[i])),r=unit(cross(f,[0,1,0])),u=cross(r,f);for(let y=0;y<16;y++)for(let x=0;x<24;x++){const rd=unit(plus(plus(f,r,((x+.5)/24*2-1)*1.5*.41421356),u,(1-(y+.5)/16*2)*.41421356));rays.push([eye,rd,{}]);}}
+ let rescues=0;for(const [ro,rd,options]of rays){const primary=traceFieldPrimaryOnly(spec,ro,rd,options),combined=traceFieldHybrid(spec,ro,rd,options),out=primary.status===3?traceFieldRescueFrom(spec,ro,rd,Math.fround(primary.t),primary.steps,options):primary;
+  if(primary.status===3){rescues++;assert.equal(primary.hit,false);assert.equal(primary.rescueRequired,true);assert.ok(primary.t>=0);}assert.equal(out.status,combined.status);assert.ok(out.steps<=512);if(out.hit){assert.equal(out.objectId,combined.objectId);near(out.t,combined.t,.0003);}
+ }assert.ok(rescues>30);
+ assert.throws(()=>traceFieldRescueFrom(spec,[0,0,0],[0,1,0],-1,128));
+ const glsl=buildFieldGLSL(spec);assert.match(glsl,/#ifndef FIELD_KERNEL_STAGE/);assert.match(glsl,/#if FIELD_KERNEL_STAGE != 1/);assert.match(glsl,/bool fieldTracePrimaryOnlyClipped/);assert.match(glsl,/bool fieldTraceRescueFromClipped/);
 });

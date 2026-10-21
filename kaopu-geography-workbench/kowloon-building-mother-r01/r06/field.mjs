@@ -194,6 +194,9 @@ export function buildFieldGLSL(spec){
 #ifndef FIELD_TRACE_VARIANT
 #define FIELD_TRACE_VARIANT 0
 #endif
+#ifndef FIELD_KERNEL_STAGE
+#define FIELD_KERNEL_STAGE 0
+#endif
 struct FieldHit { float distance; float objectId; float materialRole; vec3 local; };
 float segment2Squared(vec2 p,vec2 a,vec2 b){vec2 ab=b-a,q=p-(a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0));return dot(q,q);}
 float fieldBoundsSquared(vec3 p,vec3 lo,vec3 hi){vec3 q=max(max(lo-p,p-hi),0.0);return dot(q,q);}
@@ -332,6 +335,27 @@ export function traceFieldHybrid(spec,origin,direction,{maxSteps=512,primaryBudg
  const result=traceFieldAnalytic(spec,add(origin,mul(rd,t)),rd,{clipX,maxDistance:Math.max(0,maxDistance-t),maxSteps:Math.max(0,maxSteps-steps),epsilon:1e-5,epsilonScale:0});
  return {...result,t:result.t===undefined?undefined:t+result.t,steps:steps+result.steps,primarySteps:steps,rescueUsed:true,rescueReason,reason:'analytic_rescue_'+result.reason};
 }
+export function traceFieldPrimaryOnly(spec,origin,direction,{maxSteps=512,primaryBudget=128,maxDistance=100,clipX=null}={}){
+ const rd=norm(direction),span=rayInterval(origin,rd,spec.bounds),cut=clipX??-1e20;
+ if(!span||span[1]<0)return {hit:false,status:2,reason:'outside_bounds',steps:0,primarySteps:0,rescueUsed:false};
+ let t=Math.max(0,span[0]),end=Math.min(span[1],maxDistance),steps=0,rescueReason='primary_budget';
+ if(end<t)return {hit:false,status:2,reason:'empty_ray_interval',steps:0,primarySteps:0,rescueUsed:false};
+ for(;steps<Math.min(primaryBudget,maxSteps);steps++){
+  const p=add(origin,mul(rd,t)),h=queryField(spec,p),d=Math.max(h.distance,cut-p[0]);
+  if(Math.abs(d)<1e-5){const normal=cut-p[0]>=h.distance?[-1,0,0]:fieldNormal(spec,p),cosine=Math.abs(dot(normal,rd));
+   const boundaryCrossing=h.objectId===401||structureOccupied(spec,plusVector(p,normal,.0004),cut)!==structureOccupied(spec,plusVector(p,normal,-.0004),cut);
+   if(cosine>=.08&&boundaryCrossing)return {hit:true,status:1,reason:'primary_field',t,point:p,normal,...h,steps:steps+1,primarySteps:steps+1,rescueUsed:false};
+   steps++;rescueReason='grazing_candidate';break;
+  }
+  t+=Math.abs(d)*.85;if(t>end)return {hit:false,status:2,reason:'primary_bounds_exit',t,steps:steps+1,primarySteps:steps+1,rescueUsed:false};
+ }
+ return {hit:false,status:3,reason:rescueReason,t:Math.max(0,t-Math.max(1e-5,Math.abs(t)*2e-6)),steps,primarySteps:steps,rescueUsed:false,rescueRequired:true};
+}
+export function traceFieldRescueFrom(spec,origin,direction,startT,usedPrimarySteps,{maxSteps=512,maxDistance=100,clipX=null}={}){
+ if(!Number.isFinite(startT)||startT<0||!Number.isInteger(usedPrimarySteps)||usedPrimarySteps<0||usedPrimarySteps>maxSteps)throw Error('A valid safe handoff distance and primary step count are required');
+ const rd=norm(direction),result=traceFieldAnalytic(spec,add(origin,mul(rd,startT)),rd,{clipX,maxDistance:Math.max(0,maxDistance-startT),maxSteps:Math.max(0,maxSteps-usedPrimarySteps),epsilon:1e-5,epsilonScale:0});
+ return {...result,t:result.t===undefined?undefined:startT+result.t,steps:usedPrimarySteps+result.steps,primarySteps:usedPrimarySteps,rescueUsed:true,reason:'analytic_rescue_'+result.reason};
+}
 const plusVector=(p,n,s)=>p.map((v,i)=>v+n[i]*s);
 function buildTraceGLSL(spec){const planes=spec.structurePlanes.map(p=>v([...p.normal,p.offset])).join(',\n'),c=spec.config,d=spec.dimensions;
  const domainCode=q=>q.kind==='bounds'?`(fieldDomainBounds(p,${v(q.min)},${v(q.max)})${q.excludeOpening?`&&!(abs(p.x)<${f(c.doorWidth/2)}&&p.y>${f(c.floorHeight-.0001)}&&p.y<${f(c.floorHeight+c.doorHeight+.0001)})`:''})`:q.kind==='profile'?`(fieldProfileInside(vec2(${f(q.dir)}*(p.z-${f(q.start)}),p.y-${f(q.base)})))`:`(fieldFootprintInside(p.xz)&&!fieldServiceInside(p.xz)${q.floor?`&&!(abs(p.x)<${f(d.totalWidth/2)}&&p.z>${f(d.z0)}&&p.z<${f(d.totalLength)})`:''})`;
@@ -344,6 +368,8 @@ float fieldRailTolerance=.00015;
 float fieldRailToleranceScale=.000025;
 int fieldPrimarySteps=0;
 bool fieldRayUsedRescue=false;
+bool fieldRayInterval(vec3 ro,vec3 rd,vec3 bmin,vec3 bmax,out vec2 span){float lo=-1e20,hi=1e20;for(int i=0;i<3;i++){if(abs(rd[i])<1e-12){if(ro[i]<bmin[i]||ro[i]>bmax[i])return false;}else{float a=(bmin[i]-ro[i])/rd[i],b=(bmax[i]-ro[i])/rd[i];lo=max(lo,min(a,b));hi=min(hi,max(a,b));if(lo>hi)return false;}}span=vec2(lo,hi);return true;}
+#if FIELD_KERNEL_STAGE != 1
 vec3 fieldLineClosest(vec3 p,vec3 a,vec3 b){vec3 ab=b-a;return a+ab*clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0);}
 vec3 fieldArcClosest(vec3 p,vec3 center,vec3 u,vec3 v,float r,float sinSweep,float cosSweep,vec3 start,vec3 end){vec3 q=p-center;float x=dot(q,u),y=dot(q,v),rho2=x*x+y*y;if(rho2>1e-18&&y>=0.0&&x*sinSweep-y*cosSweep>=0.0)return center+r*(u*x+v*y)*inversesqrt(rho2);return dot(p-start,p-start)<=dot(p-end,p-end)?start:end;}
 vec3 fieldRailNormal(vec3 p,float clipX){float best=1e20,d;vec3 closest=p,q;${railClosest}if(clipX-p.x>=sqrt(best)-${f(c.railRadius)})return vec3(-1,0,0);return normalize(p-closest);}
@@ -351,7 +377,7 @@ const int FIELD_STRUCTURE_PLANE_COUNT=${spec.structurePlanes.length};
 const vec4 FIELD_BOUNDARY_EQUATIONS[${spec.structurePlanes.length}]=vec4[](${planes});
 const vec3 FIELD_DOMAIN_MIN[${spec.structurePlanes.length}]=vec3[](${boundMin});
 const vec3 FIELD_DOMAIN_MAX[${spec.structurePlanes.length}]=vec3[](${boundMax});
-bool fieldRayInterval(vec3 ro,vec3 rd,vec3 bmin,vec3 bmax,out vec2 span){float lo=-1e20,hi=1e20;for(int i=0;i<3;i++){if(abs(rd[i])<1e-12){if(ro[i]<bmin[i]||ro[i]>bmax[i])return false;}else{float a=(bmin[i]-ro[i])/rd[i],b=(bmax[i]-ro[i])/rd[i];lo=max(lo,min(a,b));hi=min(hi,max(a,b));if(lo>hi)return false;}}span=vec2(lo,hi);return true;}
+
 bool fieldDomainBounds(vec3 p,vec3 lo,vec3 hi){for(int i=0;i<3;i++){float tol=hi[i]-lo[i]<1e-9?.00003:0.0;if(p[i]<lo[i]-tol||p[i]>hi[i]+tol)return false;}return true;}
 bool fieldBoundaryDomain(int index,vec3 p){switch(index){${domains}}return false;}
 float fieldClippedStructure(vec3 p,float clipX){return max(mapStructure(p).distance,clipX-p.x);}
@@ -377,7 +403,9 @@ bool fieldTraceRayAnalyticClipped(vec3 ro,vec3 rd,float clipX,int diagnosticMode
  #endif
  if(found){t=nearest;hit=mapField(ro+rd*t);status=1;return true;}return false;
 }
-bool fieldTraceRayHybridClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){
+#endif
+#if FIELD_KERNEL_STAGE != 2
+bool fieldTracePrimaryOnlyClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){
  fieldRayNormal=vec3(0,1,0);fieldPrimarySteps=0;fieldRayUsedRescue=false;fieldRailStepBudget=512;fieldRailTolerance=.00015;fieldRailToleranceScale=.000025;steps=0;status=2;t=0.0;hit.distance=1e20;hit.objectId=0.0;hit.materialRole=0.0;hit.local=ro;vec2 span;
  if(!fieldRayInterval(ro,rd,${v(spec.bounds.min)},${v(spec.bounds.max)},span)||span.y<0.0)return false;
  t=max(0.0,span.x);float finish=span.y;
@@ -389,15 +417,34 @@ bool fieldTraceRayHybridClipped(vec3 ro,vec3 rd,float clipX,out float t,out Fiel
   }
   t+=abs(d)*.85;if(t>finish){status=2;return false;}
  }
- fieldRayUsedRescue=true;fieldRailStepBudget=512-fieldPrimarySteps;fieldRailTolerance=.00001;fieldRailToleranceScale=0.0;float offset=t,rest;int rescueSteps;bool found=fieldTraceRayAnalyticClipped(ro+rd*offset,rd,clipX,0,rest,hit,rescueSteps,status);t=offset+rest;steps=fieldPrimarySteps+rescueSteps;fieldRailStepBudget=512;return found;
+ t=max(0.0,t-max(.00001,abs(t)*.000002));status=3;return false;
 }
+#endif
+#if FIELD_KERNEL_STAGE != 1
+bool fieldTraceRescueFromClipped(vec3 ro,vec3 rd,float clipX,float startT,int usedPrimarySteps,out float t,out FieldHit hit,out int steps,out int status){
+ fieldPrimarySteps=usedPrimarySteps;fieldRayUsedRescue=true;fieldRailStepBudget=max(0,512-usedPrimarySteps);fieldRailTolerance=.00001;fieldRailToleranceScale=0.0;
+ float rest;int rescueSteps;bool found=fieldTraceRayAnalyticClipped(ro+rd*startT,rd,clipX,0,rest,hit,rescueSteps,status);t=startT+rest;steps=usedPrimarySteps+rescueSteps;fieldRailStepBudget=512;return found;
+}
+#endif
+#if FIELD_KERNEL_STAGE == 0
+bool fieldTraceRayHybridClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){
+ bool found=fieldTracePrimaryOnlyClipped(ro,rd,clipX,t,hit,steps,status);if(status!=3)return found;
+ float safeStart=t;int used=steps;return fieldTraceRescueFromClipped(ro,rd,clipX,safeStart,used,t,hit,steps,status);
+}
+#endif
 bool fieldTraceRayModeClipped(vec3 ro,vec3 rd,float clipX,int diagnosticMode,out float t,out FieldHit hit,out int steps,out int status){
  fieldRailStepBudget=512;fieldRailTolerance=.00015;fieldRailToleranceScale=.000025;fieldPrimarySteps=0;fieldRayUsedRescue=false;
+ #if FIELD_KERNEL_STAGE == 1
+ return fieldTracePrimaryOnlyClipped(ro,rd,clipX,t,hit,steps,status);
+ #elif FIELD_KERNEL_STAGE == 2
+ return fieldTraceRayAnalyticClipped(ro,rd,clipX,diagnosticMode,t,hit,steps,status);
+ #else
  #if FIELD_TRACE_VARIANT == 1 || FIELD_TRACE_VARIANT == 2
  return fieldTraceRayAnalyticClipped(ro,rd,clipX,diagnosticMode,t,hit,steps,status);
  #else
  if(diagnosticMode!=0)return fieldTraceRayAnalyticClipped(ro,rd,clipX,diagnosticMode,t,hit,steps,status);
  return fieldTraceRayHybridClipped(ro,rd,clipX,t,hit,steps,status);
+ #endif
  #endif
 }
 bool fieldTraceRayClipped(vec3 ro,vec3 rd,float clipX,out float t,out FieldHit hit,out int steps,out int status){return fieldTraceRayModeClipped(ro,rd,clipX,0,t,hit,steps,status);}

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';
-import{deriveMeasuredCase,queryCase,caseNormal,patchDistance,buildCaseGLSL,intersectCaseRay,traceCase,CASE_PROFILES}from'../r06/cases.mjs';
+import{deriveMeasuredCase,queryCase,caseNormal,patchDistance,buildCaseGLSL,packCaseDescriptors,CASE_DESCRIPTOR_LAYOUT,intersectCaseRay,traceCase,CASE_PROFILES}from'../r06/cases.mjs';
 const ids=['B367642137201063C0','B359971994401063C0','B369121858401063C0'];
 const scores=ids.map(id=>JSON.parse(readFileSync(new URL(`../../hk-three-buildings-r01/geometry/${id}.score.json`,import.meta.url))));
 const specs=scores.map(s=>deriveMeasuredCase(s));const close=(a,b,e=1e-7)=>assert.ok(Math.abs(a-b)<=e,`${a} != ${b}`);
@@ -23,7 +23,7 @@ test('analytic normals remain available exactly on unsigned zero set',()=>{for(c
 test('surface distance reference marcher reaches real tower wall but does not classify interior',()=>{const h=traceCase(specs[1],[40,20,0],[-1,0,0],{maxDistance:100});assert.equal(h.hit,true);assert.equal(h.inside,null);assert.ok(h.sourceKind.startsWith('wall'));});
 test('source-aware case facts are separate and floor numbers are not summed or copied',()=>{assert.equal(CASE_PROFILES[ids[0]].storeys.officialPart,2);assert.equal(CASE_PROFILES[ids[1]].storeys.officialPart,24);assert.equal(CASE_PROFILES[ids[1]].storeys.ownerWholeBuilding,28);assert.equal(CASE_PROFILES[ids[2]].storeys.officialPart,12);assert.equal(CASE_PROFILES[ids[2]].storeys.additionPermitted,false);assert.notEqual(CASE_PROFILES[ids[0]].part,CASE_PROFILES[ids[2]].part);});
 test('unknown cases, unsupported operations and source-scale changes reject explicitly',()=>{const s=structuredClone(scores[0]);s.objectId='arbitrary-box';assert.throws(()=>deriveMeasuredCase(s));const t=structuredClone(scores[0]);t.edits.scaleEast=2;assert.throws(()=>deriveMeasuredCase(t),/preserves/);const u=structuredClone(scores[0]);u.reconstruction.operations[0].kind='mesh';assert.throws(()=>deriveMeasuredCase(u),/Unsupported/);assert.throws(()=>deriveMeasuredCase(scores[0],{floorCount:99}),/Unknown/);});
-test('same source produces deterministicfield without renderobject construction',()=>{for(const s of specs){const glsl=buildCaseGLSL(s);assert.equal(glsl,buildCaseGLSL(s));assert.ok(glsl.includes('caseTraceRay'));assert.ok(glsl.includes('caseBVHLinks'));assert.ok(!/attribute|layout\s*\(location|sampler3D|texture\(/.test(glsl));assert.ok(!/new\s+THREE|BufferGeometry|triangulateShape|drawElements|createBuffer|MarchingCubes/.test(glsl));}const source=readFileSync(new URL('../r06/cases.mjs',import.meta.url),'utf8');assert.ok(!/import.*three|new\s+THREE|BufferGeometry|triangulateShape|createBuffer|drawElements/.test(source));});
+test('same source produces deterministicfield without renderobject construction',()=>{for(const s of specs){const glsl=buildCaseGLSL(s);assert.equal(glsl,buildCaseGLSL(s));assert.ok(glsl.includes('caseTraceRay'));assert.ok(glsl.includes('caseDescriptors'));assert.ok(glsl.includes('texelFetch'));assert.ok(glsl.includes('caseNormalForId'));assert.ok(!/attribute|layout\s*\(location|sampler3D|texture\(/.test(glsl));assert.ok(!/new\s+THREE|BufferGeometry|triangulateShape|drawElements|createBuffer|MarchingCubes/.test(glsl));}const source=readFileSync(new URL('../r06/cases.mjs',import.meta.url),'utf8');assert.ok(!/import.*three|new\s+THREE|BufferGeometry|triangulateShape|createBuffer|drawElements/.test(source));});
 // An independent finite-polygon ray oracle. It does not call queryCase,
 // patchDistance, patchContains, or the BVH traversal being tested.
 function oracleRay(spec,origin,direction,maxDistance=10000){
@@ -74,21 +74,16 @@ test('exact coincident source patches retain stable lowest-index material and ID
  const spec=testCase([{id:'first',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]},{id:'second',kind:'roofPlane',heightPlane:[0,0,0],loops:[square]}]);spec.patches[1].materialRole=3;
  for(const y of [-1,1]){const h=compareOracle(spec,[0,y,0],[0,-y,0]);assert.equal(h.objectId,1000);assert.equal(h.sourcePatchId,'first');assert.equal(h.materialRole,1);}
 });
-test('generated hot source ray path is bounded and constant, without full-field re-query',()=>{
- for(const spec of specs){const source=buildCaseGLSL(spec),start=source.indexOf('// Exact polygon crossing'),end=source.indexOf('float mapDistance',start),ray=source.slice(start,end);
-  assert.equal((ray.match(/void caseRayPatch\d+\(/g)||[]).length,spec.patches.length);
-  assert.equal((ray.match(/caseRayPatch\d+\(ro,rd,t,h,best\)/g)||[]).length,spec.patches.length);
-  assert.doesNotMatch(ray,/caseOrigins\[|caseRanges\[|caseEdges\[|caseBVHLinks\[|mapField\(|casePatchDistance\(/);
-  assert.match(ray,/caseRayBoundsStatic/);assert.match(ray,/bvec3 parallel/);
-  // A float ray-plane root is not guaranteed to have zero plane residual.
-  // Preserve the original Euclidean patch-distance acceptance, not a looser
-  // projected polygon test, even on tilted or near-parallel source planes.
-  assert.equal((ray.match(/if\(planeSquared>=0\.0000000004\)return false/g)||[]).length,spec.patches.length);
-  assert.equal((ray.match(/caseRayDomain\d+\(uv,plane\*plane\)/g)||[]).length,spec.patches.length);
-  assert.match(ray,/caseRayEdgeSquared\([^;]+\)\+planeSquared<0\.0000000004/);
-  assert.ok((ray.match(/nodeVisits\+\+/g)||[]).length<spec.nodes.length);
-  assert.ok(source.length<spec.counts.boundaryCoordinates*550+12000,'Bound generated shader size per source boundary');
- }
+test('generic source shader has bounded descriptor loops, residual guards and no per-patch expansion',()=>{
+ const source=buildCaseGLSL(specs[0]);for(const spec of specs)assert.equal(buildCaseGLSL(spec),source);
+ assert.ok(source.length<6000,'Source shader must remain independent of source patch count');
+ assert.match(source,/uniform highp sampler2D caseDescriptors/);assert.match(source,/texelFetch/);assert.match(source,/caseNormalForId/);
+ assert.doesNotMatch(source,/const (?:vec[234]|float|int|ivec[234]) \w+\[|caseRayPatch\d+|caseRayCluster\d+|sampler3D/);
+ const ray=source.slice(source.indexOf('bool caseTraceRay'),source.indexOf('float mapDistance'));
+ assert.doesNotMatch(ray,/mapField\(|casePatchDistance\(/);
+ assert.match(ray,/visit<nodeCount/);assert.match(ray,/caseRayBounds/);assert.match(ray,/bvec3 parallel/);
+ assert.match(ray,/planeSquared<0\.0000000004/);assert.match(ray,/edgeSquared\+planeSquared<0\.0000000004/);
+ assert.match(ray,/candidate==t&&\(best<0\|\|k<best\)/);
 });
 test('source boundary and edge-midpoint rays preserve accelerated/exhaustive hit parity',()=>{
  for(const spec of specs)for(const patch of spec.patches)for(const loop of patch.loops)for(let i=0;i<loop.length;i++){
@@ -98,4 +93,61 @@ test('source boundary and edge-midpoint rays preserve accelerated/exhaustive hit
    assert.equal(actual.hit,expected.hit,patch.sourcePatchId);if(actual.hit){close(actual.t,expected.t,1e-8);assert.equal(actual.objectId,expected.objectId,patch.sourcePatchId);}
   }
  }
+});
+
+const descriptorRecord=(packed,k)=>Array.from(packed.data.slice(k*4,k*4+4));
+function unpackDescriptors(spec,packed){
+ const result=structuredClone(spec),[patchBase,loopBase,edgeBase,nodeBase]=descriptorRecord(packed,0);
+ for(let k=0;k<result.patches.length;k++){
+  const p=result.patches[k],origin=descriptorRecord(packed,patchBase+4*k),u=descriptorRecord(packed,patchBase+4*k+1),v=descriptorRecord(packed,patchBase+4*k+2),n=descriptorRecord(packed,patchBase+4*k+3);
+  p.origin=origin.slice(0,3);p.materialRole=origin[3];p.u=u.slice(0,3);p.v=v.slice(0,3);p.n=n.slice(0,3);p.objectId=n[3];p.loops=[];
+  for(let l=0;l<v[3];l++){const [first,count]=descriptorRecord(packed,loopBase+u[3]+l);p.loops.push(Array.from({length:count},(_,j)=>descriptorRecord(packed,edgeBase+first+j).slice(2)));}
+ }
+ for(let i=0;i<result.nodes.length;i++){const a=descriptorRecord(packed,nodeBase+2*i),b=descriptorRecord(packed,nodeBase+2*i+1);result.nodes[i]={min:a.slice(0,3),max:b.slice(0,3),patchIndex:a[3],skip:b[3]};}
+ return result;
+}
+test('packed descriptor records preserve every plane, finite edge, loop, role and global ID',()=>{
+ assert.equal(CASE_DESCRIPTOR_LAYOUT.patchTexels,4);let patches=0,loops=0,edges=0;
+ for(const spec of specs){
+  const before=JSON.stringify(spec),packed=packCaseDescriptors(spec),again=packCaseDescriptors(spec);
+  assert.ok(packed.data instanceof Float32Array);assert.equal(packed.data.length,packed.width*packed.height*4);assert.deepEqual(packed,again);assert.equal(JSON.stringify(spec),before);
+  const [patchBase,loopBase,edgeBase,nodeBase]=descriptorRecord(packed,0),counts=descriptorRecord(packed,1),decoded=unpackDescriptors(spec,packed);
+  assert.equal(patchBase,2);assert.equal(loopBase,patchBase+spec.patches.length*4);assert.equal(counts[0],spec.patches.length);assert.equal(counts[2],spec.counts.boundaryCoordinates);assert.equal(counts[3],spec.nodes.length);
+  let loopIndex=0,edgeIndex=0;
+  for(let k=0;k<spec.patches.length;k++){
+   const original=spec.patches[k],actual=decoded.patches[k];patches++;
+   for(const key of ['origin','u','v','n'])assert.deepEqual(actual[key],original[key].map(Math.fround));
+   assert.equal(actual.objectId,original.objectId);assert.equal(actual.materialRole,original.materialRole);assert.equal(actual.loops.length,original.loops.length);
+   assert.equal(descriptorRecord(packed,patchBase+k*4+1)[3],loopIndex);
+   for(let l=0;l<original.loops.length;l++){
+    const ring=original.loops[l];assert.deepEqual(descriptorRecord(packed,loopBase+loopIndex),[edgeIndex,ring.length,0,0]);loopIndex++;loops++;
+    assert.deepEqual(actual.loops[l],ring.map(q=>q.map(Math.fround)));
+    for(let j=0;j<ring.length;j++){assert.deepEqual(descriptorRecord(packed,edgeBase+edgeIndex),[...ring[(j+ring.length-1)%ring.length],...ring[j]].map(Math.fround));edgeIndex++;edges++;}
+   }
+  }
+  assert.equal(loopIndex,counts[1]);assert.equal(edgeIndex,counts[2]);assert.equal(nodeBase,edgeBase+edgeIndex);
+  for(let i=0;i<spec.nodes.length;i++){
+   const original=spec.nodes[i],actual=decoded.nodes[i];assert.equal(actual.patchIndex,original.patchIndex);assert.equal(actual.skip,original.skip);
+   for(let axis=0;axis<3;axis++){assert.ok(actual.min[axis]<=original.min[axis]);assert.ok(actual.max[axis]>=original.max[axis]);assert.ok(original.min[axis]-actual.min[axis]<1e-5);assert.ok(actual.max[axis]-original.max[axis]<1e-5);}
+  }
+  assert.ok(packed.data.slice((nodeBase+spec.nodes.length*2)*4).every(v=>v===0));
+ }
+ assert.equal(patches,225);assert.equal(loops,226);assert.equal(edges,904);
+});
+test('Float32 descriptor round-trip retains distance queries within declared GPU precision',()=>{
+ for(const spec of specs){const decoded=unpackDescriptors(spec,packCaseDescriptors(spec));for(let i=0;i<120;i++){
+  const p=randPoint(spec),reference=queryCase(spec,p),actual=queryCase(decoded,p,{accelerated:false});
+  close(actual.distance,reference.distance,2e-5);
+  // GPU pruning retains a 1e-5 tolerance; the CPU exact-frame BVH has a
+  // different 1e-10 tolerance and is not a Float32 GPU-emulation oracle.
+  for(const node of decoded.nodes)if(node.patchIndex>=0){const bound=Math.hypot(...p.map((v,a)=>Math.max(node.min[a]-v,0,v-node.max[a])));assert.ok(bound<=patchDistance(decoded.patches[node.patchIndex],p)+1e-5);}
+  // ID metadata is exact; near-coincident source surfaces may swap numeric
+  // winners after ordinary Float32 frame rounding, so compare their surfaces.
+  if(actual.objectId!==reference.objectId)close(patchDistance(spec.patches[actual.objectId-1000],p),reference.distance,2e-5);
+ }}
+});
+test('descriptor upload payloads remain bounded and reject invalid numeric IDs or Float32 overflow',()=>{
+ assert.deepEqual(specs.map(s=>packCaseDescriptors(s).data.byteLength),[36864,5120,6144]);
+ const invalid=structuredClone(specs[0]);invalid.patches[0].objectId=999;assert.throws(()=>packCaseDescriptors(invalid),/Stable/);
+ const overflow=structuredClone(specs[0]);overflow.patches[0].origin[0]=1e100;assert.throws(()=>packCaseDescriptors(overflow),/Float32/);
 });

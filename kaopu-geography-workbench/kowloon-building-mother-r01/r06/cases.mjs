@@ -103,81 +103,110 @@ export function intersectCaseRay(spec,origin,direction,{maxDistance=10000,accele
 const f=n=>{if(!Number.isFinite(n))throw Error('Non-finite field constant');return Number(n).toFixed(12).replace(/0+$/,'').replace(/\.$/,'.0');};
 const vec=(a,n=a.length)=>`vec${n}(${a.map(f).join(',')})`;
 const array=(type,name,items)=>`const ${type} ${name}[${items.length}]=${type}[${items.length}](${items.join(',')});`;
-/** Emit a compact branch tree with literal plane/domain constants. Dynamic
- * indexing of large const arrays is very expensive on some WebGL2 drivers.
- * These are the SAME source plane equations and finite boundary predicates:
- * neither object geometry nor a surrogate closed-volume approximation.
- * Small bounded groups avoid duplicating all single-patch BVH bounds in GLSL. */
-function buildStaticCaseRayGLSL(patches,nodes){
- const domainEpsilon=.00002;
- const loopEdges=loop=>loop.map((b,i)=>({a:loop[(i+loop.length-1)%loop.length],b}));
- const convexSign=loop=>{
-  const edges=loopEdges(loop),area=edges.reduce((s,{a,b})=>s+a[0]*b[1]-b[0]*a[1],0),sign=Math.sign(area);
-  // Check every boundary coordinate, not only adjacent turns. No simplification.
-  return sign&&edges.every(({a,b})=>loop.every(p=>sign*((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]))>=0))?sign:0;
- };
- const domains=patches.map((patch,k)=>{
-  const edges=patch.loops.map(loopEdges),predicates=patch.loops.map((loop,j)=>{
-   const sign=convexSign(loop);
-   if(sign)return `bool in${j}=${edges[j].map(({a,b})=>`(dot(uv-${vec(a)},${vec([sign*(a[1]-b[1]),sign*(b[0]-a[0])])})>=0.0)`).join('&&')};`;
-   return `bool in${j}=false;`+edges[j].map(({a,b})=>`in${j}=in${j}!=caseRayCross(uv,${vec([...a,...b])});`).join('');
-  }).join('\n');
-  const inside=patch.loops.map((_,j)=>j?`!in${j}`:'in0').join('&&');
-  return `bool caseRayDomain${k}(vec2 uv,float planeSquared){if(planeSquared>=${f(domainEpsilon**2)})return false;${predicates}\nif(${inside})return true;\nreturn ${edges.flat().map(({a,b})=>`caseRayEdgeSquared(uv,${vec([...a,...b])})+planeSquared<${f(domainEpsilon**2)}`).join('||')};}\n`+
-   `void caseRayPatch${k}(vec3 ro,vec3 rd,inout float t,inout FieldHit h,inout int best){\nvec3 n=${vec(patch.n)},origin=${vec(patch.origin)};float den=dot(rd,n);if(abs(den)<1e-12)return;float candidate=dot(origin-ro,n)/den;if(candidate<0.0||candidate>t)return;\nvec3 p=ro+rd*candidate,q=p-origin;vec2 uv=vec2(dot(q,${vec(patch.u)}),dot(q,${vec(patch.v)}));float plane=dot(q,n);\nif(caseRayDomain${k}(uv,plane*plane)&&(candidate<t||(candidate==t&&(best<0||${k}<best)))){best=${k};t=candidate;h.distance=0.0;h.objectId=${f(1000+k)};h.materialRole=${f(patch.materialRole)};h.local=p;}}`;
- }).join('\n');
- const emit=i=>{
-  const node=nodes[i],leaves=nodes.slice(i,node.skip).filter(n=>n.patchIndex>=0);
-  const body=leaves.length<=4?leaves.map(n=>`caseRayPatch${n.patchIndex}(ro,rd,t,h,best);`).join('\n'):emit(i+1)+emit(nodes[i+1].skip);
-  return `nodeVisits++;if(caseRayBoundsStatic(ro,inv,parallel,${vec(node.min)},${vec(node.max)},t)){\n${body}}\n`;
- };
+/** Exact numerical descriptors, not render vertices or sampled occupancy.
+ * Header: [patchBase, loopBase, edgeBase, nodeBase], then four record counts.
+ * Patch (four texels): origin/role, U/firstLoop, V/loopCount, N/objectId.
+ * Loop: firstEdge/edgeCount. Edge: original finite 2D segment endpoints.
+ * BVH node (two texels): min/patchIndex, max/skip. Integer metadata is exact.
+ * Floating coordinates use the same Float32 precision as WebGL highp inputs;
+ * all original double-precision boundaries remain unchanged in the CPU spec. */
+export const CASE_DESCRIPTOR_LAYOUT=Object.freeze({version:1,headerTexels:2,patchTexels:4,loopTexels:1,edgeTexels:1,nodeTexels:2,maxPatches:512});
+const f32Scratch=new DataView(new ArrayBuffer(4));
+function outwardFloat32(value,upper){
+ let rounded=Math.fround(value);if(!Number.isFinite(rounded))throw Error('Source descriptor exceeds Float32 range');
+ if(upper?rounded>=value:rounded<=value)return rounded;
+ if(rounded===0)return upper?2**-149:-(2**-149);
+ f32Scratch.setFloat32(0,rounded);let bits=f32Scratch.getUint32(0);
+ bits+=(rounded>0)===upper?1:-1;f32Scratch.setUint32(0,bits);return f32Scratch.getFloat32(0);
+}
+export function packCaseDescriptors(spec){
+ if(spec?.schema!==CASE_SCHEMA||!spec.patches.length||spec.patches.length>512)throw Error('Bounded deriveMeasuredCase result required');
+ const patchCount=spec.patches.length,loopCount=spec.patches.reduce((n,p)=>n+p.loops.length,0),edgeCount=spec.patches.reduce((n,p)=>n+p.loops.reduce((s,l)=>s+l.length,0),0),nodeCount=spec.nodes.length;
+ const patchBase=2,loopBase=patchBase+4*patchCount,edgeBase=loopBase+loopCount,nodeBase=edgeBase+edgeCount,total=nodeBase+2*nodeCount;
+ if(total>=2**24||nodeCount>1023)throw Error('Measured descriptor budget exceeded');
+ const width=Math.min(256,2**Math.ceil(Math.log2(Math.sqrt(total)))),height=Math.ceil(total/width),data=new Float32Array(width*height*4);
+ const put=(record,values)=>{if(values.some(x=>!Number.isFinite(x)||!Number.isFinite(Math.fround(x))))throw Error('Finite Float32 source descriptors required');data.set(values,record*4);};
+ put(0,[patchBase,loopBase,edgeBase,nodeBase]);put(1,[patchCount,loopCount,edgeCount,nodeCount]);
+ let loopIndex=0,edgeIndex=0;
+ for(let k=0;k<patchCount;k++){
+  const p=spec.patches[k],base=patchBase+4*k;if(p.objectId!==1000+k)throw Error('Stable source object ID required');
+  put(base,[...p.origin,p.materialRole]);put(base+1,[...p.u,loopIndex]);put(base+2,[...p.v,p.loops.length]);put(base+3,[...p.n,p.objectId]);
+  for(const loop of p.loops){put(loopBase+loopIndex,[edgeIndex,loop.length,0,0]);for(let j=0;j<loop.length;j++)put(edgeBase+edgeIndex++,[...loop[(j+loop.length-1)%loop.length],...loop[j]]);loopIndex++;}
+ }
+ for(let i=0;i<nodeCount;i++){
+  const n=spec.nodes[i];put(nodeBase+i*2,[...n.min.map(v=>outwardFloat32(v,false)),n.patchIndex]);put(nodeBase+i*2+1,[...n.max.map(v=>outwardFloat32(v,true)),n.skip]);
+ }
+ return {data,width,height};
+}
+/** One generic bounded shader for every source case. texelFetch reads exact
+ * plane, polygon and BVH descriptors; this is NOT a voxel/occupancy texture.
+ * No per-patch function expansion, global constant-array indexing or draw data.
+ * The renderer uploads packCaseDescriptors(spec) to caseDescriptors as RGBA32F,
+ * uses NEAREST filtering, and binds it for both render and probe programs. */
+export function buildCaseGLSL(spec){
+ if(spec?.schema!==CASE_SCHEMA)throw Error('deriveMeasuredCase result required');
  return `
-// Exact polygon crossing and finite-edge distance; no sampled occupancy.
-bool caseRayCross(vec2 p,vec4 ab){vec2 a=ab.xy,b=ab.zw;return ((a.y>p.y)!=(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x);}
-float caseRayEdgeSquared(vec2 p,vec4 ab){vec2 a=ab.xy,d=ab.zw-a;float den=dot(d,d),s=den>1e-24?clamp(dot(p-a,d)/den,0.0,1.0):0.0;vec2 q=p-(a+d*s);return dot(q,q);}
-bool caseRayBoundsStatic(vec3 ro,vec3 inv,bvec3 parallel,vec3 bmin,vec3 bmax,float best){
- // Padding is conservative query tolerance only, never a surface change.
+struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};
+uniform highp sampler2D caseDescriptors;
+vec4 caseRecord(int record){int width=textureSize(caseDescriptors,0).x;return texelFetch(caseDescriptors,ivec2(record%width,record/width),0);}
+vec4 casePatchRecord(int k,int part){return caseRecord(int(caseRecord(0).x)+k*4+part);}
+vec3 caseNormalForId(float objectId){int k=int(objectId)-1000,count=int(caseRecord(1).x);return k>=0&&k<count?casePatchRecord(k,3).xyz:vec3(0,1,0);}
+float caseDomainSquared(vec2 uv,int firstLoop,int loopCount){
+ ivec4 base=ivec4(caseRecord(0));float edgeSquared=1e20;bool outer=false,hole=false;
+ for(int loop=0;loop<loopCount;loop++){
+  ivec2 range=ivec2(caseRecord(base.y+firstLoop+loop).xy);bool inside=false;
+  for(int j=0;j<range.y;j++){
+   vec4 ab=caseRecord(base.z+range.x+j);vec2 a=ab.xy,b=ab.zw,d=b-a;float den=dot(d,d),t=den>1e-24?clamp(dot(uv-a,d)/den,0.0,1.0):0.0;vec2 q=uv-(a+d*t);edgeSquared=min(edgeSquared,dot(q,q));
+   if((a.y>uv.y)!=(b.y>uv.y)){if(uv.x<(b.x-a.x)*(uv.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}
+  }
+  if(loop==0)outer=inside;else hole=hole||inside;
+ }
+ return outer&&!hole?0.0:edgeSquared;
+}
+float casePatchDistance(int k,vec3 p){
+ vec4 origin=casePatchRecord(k,0),u=casePatchRecord(k,1),v=casePatchRecord(k,2),n=casePatchRecord(k,3);vec3 q=p-origin.xyz;
+ vec2 uv=vec2(dot(q,u.xyz),dot(q,v.xyz));float plane=dot(q,n.xyz);return sqrt(plane*plane+caseDomainSquared(uv,int(u.w),int(v.w)));
+}
+float caseBound(vec3 p,vec3 bmin,vec3 bmax){return length(max(max(bmin-p,p-bmax),0.0));}
+FieldHit mapField(vec3 p){
+ FieldHit h;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=p;
+ int nodeBase=int(caseRecord(0).w),nodeCount=int(caseRecord(1).w),i=0,best=-1;
+ for(int visit=0;visit<nodeCount;visit++){
+  if(i>=nodeCount)break;vec4 low=caseRecord(nodeBase+i*2),high=caseRecord(nodeBase+i*2+1);
+  if(caseBound(p,low.xyz,high.xyz)>h.distance+0.00001){i=int(high.w);continue;}
+  int k=int(low.w);if(k>=0){float d=casePatchDistance(k,p);if(d<h.distance-0.00001||(abs(d-h.distance)<=0.00001&&(best<0||k<best))){best=k;h.objectId=casePatchRecord(k,3).w;h.materialRole=casePatchRecord(k,0).w;}h.distance=min(h.distance,d);}i++;
+ }return h;
+}
+bool caseRayBounds(vec3 ro,vec3 inv,bvec3 parallel,vec3 bmin,vec3 bmax,float best){
+ // Conservative query padding only; no added finite surface or volume.
  bmin-=vec3(0.00002);bmax+=vec3(0.00002);vec3 a=(bmin-ro)*inv,b=(bmax-ro)*inv,lo=min(a,b),hi=max(a,b);
  if(parallel.x){if(ro.x<bmin.x||ro.x>bmax.x)return false;lo.x=0.0;hi.x=1e20;}
  if(parallel.y){if(ro.y<bmin.y||ro.y>bmax.y)return false;lo.y=0.0;hi.y=1e20;}
  if(parallel.z){if(ro.z<bmin.z||ro.z>bmax.z)return false;lo.z=0.0;hi.z=1e20;}
- return max(0.0,max(lo.x,max(lo.y,lo.z)))<=min(best,min(hi.x,min(hi.y,hi.z)));}
-${domains}
-bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int nodeVisits){
- t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;nodeVisits=0;int best=-1;
- bvec3 parallel=lessThan(abs(rd),vec3(1e-12));vec3 inv=1.0/vec3(parallel.x?1.0:rd.x,parallel.y?1.0:rd.y,parallel.z?1.0:rd.z);
- ${emit(0)}return best>=0;}
-`;
+ return max(0.0,max(lo.x,max(lo.y,lo.z)))<=min(best,min(hi.x,min(hi.y,hi.z)));
 }
-/** One stackless BVH of analytic scalar bounds; no recursion, draw geometry,
- * triangle reconstruction, texture voxel storage or model vertex attributes. */
-export function buildCaseGLSL(spec){
- if(spec?.schema!==CASE_SCHEMA)throw Error('deriveMeasuredCase result required');const patches=spec.patches,nodes=spec.nodes,segments=[],ranges=[];
- for(const p of patches){const start=segments.length;for(let loopId=0;loopId<p.loops.length;loopId++){const l=p.loops[loopId];for(let i=0,j=l.length-1;i<l.length;j=i++)segments.push({ab:[...l[j],...l[i]],hole:loopId>0?1:0});}ranges.push([start,segments.length-start]);}
- const maxEdges=Math.max(...ranges.map(r=>r[1]));
- return `
-struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};
-${array('vec3','caseOrigins',patches.map(p=>vec(p.origin)))}
-${array('vec3','caseU',patches.map(p=>vec(p.u)))}
-${array('vec3','caseV',patches.map(p=>vec(p.v)))}
-${array('vec3','caseN',patches.map(p=>vec(p.n)))}
-${array('ivec2','caseRanges',ranges.map(r=>`ivec2(${r.join(',')})`))}
-${array('float','caseRoles',patches.map(p=>f(p.materialRole)))}
-${array('vec4','caseEdges',segments.map(s=>vec(s.ab)))}
-${array('int','caseHole',segments.map(s=>String(s.hole)))}
-${array('vec3','caseBVHMin',nodes.map(n=>vec(n.min)))}
-${array('vec3','caseBVHMax',nodes.map(n=>vec(n.max)))}
-${array('ivec2','caseBVHLinks',nodes.map(n=>`ivec2(${n.patchIndex},${n.skip})`))}
-float casePatchDistance(int k,vec3 p){vec3 q=p-caseOrigins[k];vec2 uv=vec2(dot(q,caseU[k]),dot(q,caseV[k]));float plane=dot(q,caseN[k]),edge=1e20;bool outer=false,hole=false;
- for(int j=0;j<${maxEdges};j++){if(j>=caseRanges[k].y)break;int e=caseRanges[k].x+j;vec2 a=caseEdges[e].xy,b=caseEdges[e].zw,ab=b-a;float den=dot(ab,ab);float t=den>1e-24?clamp(dot(uv-a,ab)/den,0.0,1.0):0.0;edge=min(edge,length(uv-(a+ab*t)));
- if((a.y>uv.y)!=(b.y>uv.y)){if(uv.x<(b.x-a.x)*(uv.y-a.y)/(b.y-a.y)+a.x){if(caseHole[e]==0)outer=!outer;else hole=!hole;}}}
- return length(vec2(plane,outer&&!hole?0.0:edge));}
-float caseBound(vec3 p,int i){return length(max(max(caseBVHMin[i]-p,p-caseBVHMax[i]),0.0));}
-FieldHit mapField(vec3 p){FieldHit h;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=p;int i=0,best=-1;
- for(int visit=0;visit<${nodes.length};visit++){if(i>=${nodes.length})break;if(caseBound(p,i)>h.distance+0.00001){i=caseBVHLinks[i].y;continue;}int k=caseBVHLinks[i].x;
- if(k>=0){float d=casePatchDistance(k,p);if(d<h.distance-0.00001||(abs(d-h.distance)<=0.00001&&(best<0||k<best))){best=k;h.objectId=float(k+1000);h.materialRole=caseRoles[k];}h.distance=min(h.distance,d);}i++;}return h;}
-${buildStaticCaseRayGLSL(patches,nodes)}
+bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int nodeVisits){
+ t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;nodeVisits=0;
+ int nodeBase=int(caseRecord(0).w),nodeCount=int(caseRecord(1).w),i=0,best=-1;
+ bvec3 parallel=lessThan(abs(rd),vec3(1e-12));vec3 inv=1.0/vec3(parallel.x?1.0:rd.x,parallel.y?1.0:rd.y,parallel.z?1.0:rd.z);
+ for(int visit=0;visit<nodeCount;visit++){
+  if(i>=nodeCount)break;nodeVisits++;vec4 low=caseRecord(nodeBase+i*2),high=caseRecord(nodeBase+i*2+1);
+  if(!caseRayBounds(ro,inv,parallel,low.xyz,high.xyz,t)){i=int(high.w);continue;}
+  int k=int(low.w);if(k>=0){
+   vec4 origin=casePatchRecord(k,0),n=casePatchRecord(k,3);float den=dot(rd,n.xyz);
+   if(abs(den)>=1e-12){float candidate=dot(origin.xyz-ro,n.xyz)/den;
+    if(candidate>=0.0&&candidate<=t){
+     vec3 p=ro+rd*candidate,q=p-origin.xyz;float plane=dot(q,n.xyz),planeSquared=plane*plane;
+     if(planeSquared<0.0000000004){
+      vec4 u=casePatchRecord(k,1),v=casePatchRecord(k,2);vec2 uv=vec2(dot(q,u.xyz),dot(q,v.xyz));float edgeSquared=caseDomainSquared(uv,int(u.w),int(v.w));
+      if(edgeSquared+planeSquared<0.0000000004&&(candidate<t||(candidate==t&&(best<0||k<best)))){best=k;t=candidate;h.distance=0.0;h.objectId=n.w;h.materialRole=origin.w;h.local=p;}
+     }
+    }
+   }
+  }i++;
+ }return best>=0;
+}
 float mapDistance(vec3 p){return mapField(p).distance;}
-vec3 fieldNormal(vec3 p){int k=int(mapField(p).objectId)-1000;return k>=0&&k<${patches.length}?caseN[k]:vec3(0,1,0);}
+vec3 fieldNormal(vec3 p){return caseNormalForId(mapField(p).objectId);}
 `;
 }

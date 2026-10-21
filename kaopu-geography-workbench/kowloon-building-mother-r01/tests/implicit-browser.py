@@ -43,7 +43,7 @@ with sync_playwright() as p:
   for case_id in ['lowrise','kcc','warehouse']:
    print('STAGE measured case '+case_id,flush=True);page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id)',case_id);page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(900,720)');shot('r06-source-'+case_id)
    c={'snapshot':page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()'),'parity':page.evaluate('window.__IMPLICIT_BUILDING__.parity()'),'rayParity':page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()'),'diagnostics':page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()')}
-   assert c['parity']['passed'],c['parity'];assert c['rayParity']['passed'],c['rayParity'];assert c['diagnostics']['unresolved']==0;assert c['snapshot']['reconstruction']['allSourcePatchesRetained'];assert c['snapshot']['counts']['patches']=={'lowrise':176,'kcc':21,'warehouse':28}[case_id]
+   c['boundaryRayStress']=page.evaluate((P/'tests/implicit-source-ray-stress.js').read_text());assert c['boundaryRayStress']['passed'],c['boundaryRayStress'];assert c['parity']['passed'],c['parity'];assert c['rayParity']['passed'],c['rayParity'];assert c['diagnostics']['unresolved']==0;assert c['snapshot']['reconstruction']['allSourcePatchesRetained'];assert c['snapshot']['counts']['patches']=={'lowrise':176,'kcc':21,'warehouse':28}[case_id]
    page.evaluate("window.__IMPLICIT_BUILDING__.setView('corner')");shot('r06-source-'+case_id+'-roof');page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['cases'][case_id]=c
   report['assemblies']={}
   for case_id in ['lowrise','kcc','warehouse']:
