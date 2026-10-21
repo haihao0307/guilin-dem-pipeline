@@ -37,6 +37,11 @@ class Handler(BaseHTTPRequestHandler):
  def do_GET(self):self.serve(True)
  def serve(self,body):
   route=unquote(urlsplit(self.path).path);forced=route.startswith('/force200/')
+  original_route=route
+  if route.startswith('/transition/'):
+   if '/guilin-elevation-store-v1/' in route:route=route.replace('/transition/','/candidate/',1)
+   elif '/guilin-truth-data/' in route:route=route.replace('/transition/','/baseline/',1)
+   else:route=route.replace('/transition/','/'+getattr(self.server,'transition_phase','baseline')+'/',1)
   if route=='/favicon.ico':
    self.send_response(204);self.send_header('Content-Length','0');self.end_headers();return
   if forced:route='/candidate/'+route[len('/force200/'):]
@@ -64,7 +69,7 @@ class Handler(BaseHTTPRequestHandler):
   self.send_response(status)
   self.send_header('Content-Type',mimetypes.guess_type(str(file) if file is not None else route)[0] or 'application/octet-stream')
   self.send_header('Content-Length',str(end-start+1));self.send_header('Accept-Ranges','bytes')
-  self.send_header('Cache-Control','no-store')
+  self.send_header('Cache-Control','public, max-age=3600' if route.endswith('.js') else 'no-store')
   if status==206:self.send_header('Content-Range',f'bytes {start}-{end}/{size}')
   self.end_headers();written=0
   try:
@@ -76,7 +81,7 @@ class Handler(BaseHTTPRequestHandler):
       data=f.read(min(65536,remaining));self.wfile.write(data);written+=len(data);remaining-=len(data)
   except (BrokenPipeError,ConnectionResetError):pass
   finally:
-   record={'path':route,'request_range':requested,'status':status,'declared_bytes':end-start+1,'written_bytes':written,'forced_200':forced}
+   record={'path':original_route,'resolved_fixture_path':route,'request_range':requested,'status':status,'declared_bytes':end-start+1,'written_bytes':written,'forced_200':forced}
    with LOCK:
     with (ROOT/'reports/HTTP_FIXTURE_ACCESS.jsonl').open('a') as log:log.write(json.dumps(record)+'\n')
 

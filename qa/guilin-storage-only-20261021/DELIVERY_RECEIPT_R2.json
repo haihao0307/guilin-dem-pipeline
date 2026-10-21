@@ -7,8 +7,8 @@
   "targetDefectOrChange": "Replace legacy tile file fetch with canonical 512-chunk Range reconstruction of byte-identical legacy virtual tiles.",
   "productionFilesChanged": [
     "guilin/app.js: two loader lines",
-    "guilin/index.html: one script include",
-    "guilin/canonical-tile-source.js: new storage-only adapter"
+    "guilin/index.html: versioned app URL and adapter include",
+    "guilin/canonical-tile-source.c9a4085724ba.js: content-addressed storage-only adapter"
   ],
   "tests": [
     "Local full-source and full-AOI comparison passed",
@@ -27,7 +27,8 @@
     "Browser total RSS/GC memory peak not measured",
     "No published replacement or deletion",
     "New archive is full source; existing runtime canonical store is AOI only",
-    "Local Chromium not launched because the current environment previously denied it"
+    "Local Chromium not launched because the current environment previously denied it",
+    "Already open old tabs do not auto-migrate; ordinary reload with new index is required."
   ],
   "fallbackActive": false,
   "freshArtifactProven": true,

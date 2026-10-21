@@ -1,0 +1,30 @@
+{
+  "root_cause_review": true,
+  "production_changes_from_fixes": false,
+  "browser_or_equality_gates_relaxed": false,
+  "failures": [
+    {
+      "run": 39560387585,
+      "root_cause": "QA fixture directory index wrongly served application/octet-stream, browser treated navigation as download. Fixed exact MIME and added actual HTTP assertion."
+    },
+    {
+      "run": 39560721481,
+      "root_cause": "Baseline mobile canvas center is legitimately covered by existing control panel. Default hover center failed hit-testing before candidate mobile execution. Use existing panel toggle and elementFromPoint-verified exposed canvas for wheel; no force action and no UI change.",
+      "desktop_completed_evidence": "reports/ci-d90d61e/browser/BROWSER_STORAGE_ONLY_REPORT.json",
+      "desktop_5_canvas_and_runtime_state_pairs_equal": true,
+      "desktop_candidate_range_count": 151
+    }
+  ],
+  "next_run_reason": "Root causes established, preserves all original equality gates and adds parent-required cache-versioning and same-URL ordinary-reload transition tests.",
+  "independent_static_reviewer": {
+    "reviewer": "check_guilin_aoi_cutover",
+    "conclusion": "May continue isolated Actions after root-cause fixes; no production acceptance",
+    "reviewed_utc": "2026-10-21T07:25:46Z",
+    "reviewer_findings_addressed": [
+      "Verified #togglePanel actual ID",
+      "Renamed second same-page reload truthfully",
+      "Added CDP requestServedFromCache old-app proof and SHA",
+      "Added actual cameraScale change assertion after wheel"
+    ]
+  }
+}

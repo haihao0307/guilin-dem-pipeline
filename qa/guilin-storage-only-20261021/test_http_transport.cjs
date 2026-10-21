@@ -1,7 +1,8 @@
 const fs=require('node:fs'), path=require('node:path'), assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'), {createHash,webcrypto}=require('node:crypto');
-require('./candidate/guilin/canonical-tile-source.js');
 const root=__dirname;
+const assetVersions = JSON.parse(fs.readFileSync(path.join(root, 'candidate/ASSET_VERSIONS.json')));
+require(path.join(root, 'candidate/guilin', assetVersions.adapter_file));
 async function main(){
  const child=spawn('python3',[path.join(root,'range_fixture_server.py'),'--port','0'],{stdio:['ignore','pipe','inherit']});
  const port=await new Promise((resolve,reject)=>{child.stdout.once('data',b=>resolve(JSON.parse(b.toString()).port));child.once('error',reject);});

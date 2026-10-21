@@ -53,8 +53,16 @@ def main():
  expected=original.replace("  const NATIVE_TILE_RUNTIME_BASE_URL = '../guilin-truth-data/native/';", "  const canonicalTileSource = globalThis.createGuilinCanonicalTileSource({baseUrl: '../guilin-elevation-store-v1/'});")
  expected=expected.replace('      const buffer = await fetchBinary(`${NATIVE_TILE_RUNTIME_BASE_URL}${tile.file}`);','      const buffer = await canonicalTileSource.loadTile(tile);')
  assert (candidate/'app.js').read_text()==expected,'App changed beyond two loader lines'
- old_index=(baseline/'index.html').read_text();expected=old_index.replace('  <script src="app.js" defer></script>','  <script src="canonical-tile-source.js" defer></script>\n  <script src="app.js" defer></script>')
- assert (candidate/'index.html').read_text()==expected,'Index changed beyond adapter script'
+ versions=json.loads((ROOT/'candidate/ASSET_VERSIONS.json').read_text())
+ assert versions['canonical_manifest_sha256']==MANIFEST_SHA
+ assert hashlib.sha256((candidate/versions['adapter_file']).read_bytes()).hexdigest()==versions['adapter_sha256']
+ assert hashlib.sha256((candidate/'app.js').read_bytes()).hexdigest()==versions['app_sha256']
+ assert versions['adapter_file']==f"canonical-tile-source.{versions['adapter_sha256'][:12]}.js"
+ assert versions['app_query']=='storage='+versions['app_sha256'][:12]
+ old_index=(baseline/'index.html').read_text()
+ scripts=f"  <script src=\"{versions['adapter_file']}\" defer></script>\n  <script src=\"app.js?{versions['app_query']}\" defer></script>"
+ expected=old_index.replace('  <script src="app.js" defer></script>',scripts)
+ assert (candidate/'index.html').read_text()==expected,'Index changed beyond versioned adapter/app scripts'
  result={'passed':True,'baseline_commit':BASE,'canonical_7_shard_and_840_chunk_sha_verified':True,'protected_runtime_assets_byte_identical':True,
          'candidate_app_diff_exactly_two_loader_lines':True,'no_tiff_downloaded':True,'records':records}
  (ROOT/'reports/CI_FIXTURE_VERIFY.json').write_text(json.dumps(result,indent=2)+'\n')
