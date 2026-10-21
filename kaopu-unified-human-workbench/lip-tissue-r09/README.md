@@ -48,6 +48,8 @@
 
 `verification/run-native-experiments.cjs` 只替换实际编译时的声明片段，随后同步恢复。每组运行有 5 次 GPU 原生读回：基线、第一项、恢复、第二项、恢复；保存其中 3 张 PNG。门禁验证实际 shader、完整人物状态、active uniform 值与对象身份、原始顶点程序和恢复像素。数据分析器不修改图像或产品。
 
+独立 CI 运行 `39555542130` 已完成，证据提交为 `89be06a2cdc0c99a7f1597e24e15a7ae38a7296d`。两组共 10 次原生读回和 6 张保存的 PNG 与本地逐字节一致，预选区域的加权统计也完全一致。完整原生证据位于 `evidence/ci-beauty/` 和 `evidence/ci-root-cause/`，跨环境核对记录见 `research/CI_REPRODUCTION.json`。这项复现确认了实验和失败诊断的可重复性，没有改变两项外观均被拒绝的结论。
+
 CI 使用固定 Playwright 1.58.2、正常 TLS 的 Chromium，通过原始 HTMLPreview wrapper 加载页面，只对原始 R08 RAW 文件路由精确锁定的已有字节。**这仍是隔离实验，不是新产品的公网验收。** `publicHttpsPassed`、`shareAllowed`、`visualAcceptance`、`productionReady` 始终为 false。完成或失败的执行证据均保存到当前研究分支；没有合并或强制推送。
 
 本地初次启动曾遇到证书错误。自动审批拒绝了向全局 Chromium NSS 信任库写入证书的动作，该动作没有执行。后续本地读取使用已有环境代理和 CA，在有限公开静态 URL 范围内验证 TLS；未改变全局信任设置。CI 不使用该本地代理方案。
