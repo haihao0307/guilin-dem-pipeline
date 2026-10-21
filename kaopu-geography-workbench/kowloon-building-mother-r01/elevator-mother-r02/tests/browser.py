@@ -72,11 +72,14 @@ with sync_playwright() as p:
   checks.append('390px viewport layout, no horizontal overflow; not iPhone hardware')
   touch=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
   tp=touch.new_page();tp.on('pageerror',lambda e:errors.append(str(e)));tp.goto(base);tp.wait_for_function("document.body.dataset.ready==='true'",timeout=90000)
-  tp.locator('[data-floor="B2"] button').first.tap();tp.wait_for_function('Math.abs(kaopuLift.snapshot().v)>.02',timeout=20000)
+  tp.locator('#carPanelView').tap();tp.evaluate('kaopuLift.pause(true)');tp.evaluate('kaopuLift.advance(0)')
+  physical_touch=tp.evaluate("kaopuLift.physicalTargets().find(p=>p.id==='car-select-B2')");box=tp.locator('#scene').bounding_box()
+  tp.touchscreen.tap(box['x']+physical_touch['screen'][0],box['y']+physical_touch['screen'][1]);assert any(q['id']=='B2' for q in tp.evaluate('kaopuLift.snapshot().queue'))
+  tp.evaluate('kaopuLift.pause(false)');tp.wait_for_function('Math.abs(kaopuLift.snapshot().v)>.02',timeout=20000)
   real_before=tp.evaluate('kaopuLift.snapshot()');wall=time.monotonic();tp.wait_for_timeout(1500);real_after=tp.evaluate('kaopuLift.snapshot()')
   assert real_after['y']<real_before['y'];assert real_after['carLock'] and all(real_after['locks'].values())
   result['animationObservation']={'wallSeconds':time.monotonic()-wall,'simulationDeltaSeconds':real_after['time']-real_before['time'],'positionDeltaM':real_after['y']-real_before['y'],'renderer':'Chromium SwiftShader; not hardware FPS'}
-  touch.close();checks.append('mobile touch hall call advances through actual requestAnimationFrame while locked')
+  touch.close();checks.append('mobile physical car-button touch advances through actual requestAnimationFrame while locked')
   assert not errors,errors
   result.update(passed=True,stats=page.evaluate('kaopuLift.stats()'),lastSnapshot=snap())
  except Exception as e:
