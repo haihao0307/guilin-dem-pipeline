@@ -8,7 +8,8 @@ export const MATERIALS=Object.freeze([
  {name:'authored green enamel',base:[.019,.12,.075],metallic:.12,roughness:.24,clearcoat:.6,basis:'specified; not measured teacher material'},
  {name:'authored graphite roof',base:[.035,.045,.046],metallic:.12,roughness:.36,clearcoat:.15,basis:'specified'},
  {name:'authored dark glass candidate',base:[.027,.047,.054],metallic:0,roughness:.095,clearcoat:1,basis:'specified opaque optical stand-in; no transmission simulation'},
- {name:'datum brass',base:[.72,.42,.12],metallic:.7,roughness:.32,clearcoat:0,basis:'diagnostic only, not physical part'}]);
+ {name:'datum brass',base:[.72,.42,.12],metallic:.7,roughness:.32,clearcoat:0,basis:'diagnostic only, not physical part'},
+ {name:'authored machined steel',base:[.45,.48,.50],metallic:.94,roughness:.23,clearcoat:0,basis:'specified generic material, not measured historical finish'}]);
 export const DEFAULTS=Object.freeze({noseSweep:0,shoulderWidth:1,paint:[.019,.12,.075],roughness:.24,cabRoofRoundness:.22,tenderShoulder:.18});
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export function validateParameters(p){
@@ -45,6 +46,7 @@ export function profileAt(part,x){
 export function roundedBox(q,b,r){const d=q.map((v,i)=>Math.abs(v)-(b[i]-r));return Math.hypot(...d.map(v=>Math.max(v,0)))+Math.min(Math.max(...d),0)-r;}
 export function field(part,p){
  const q=p.map((v,i)=>v-part.position[i]);let d;
+ if(part.kind===5){const a=Math.hypot(q[0],q[2])-part.size[0],b=Math.abs(q[1])-part.size[1];return Math.min(Math.max(a,b),0)+Math.hypot(Math.max(a,0),Math.max(b,0));}
  if(part.kind===1){const[w,c,h]=profileAt(part,p[0]);const radial=(Math.pow(Math.pow(Math.abs(p[1]/w),2.4)+Math.pow(Math.abs((p[2]-c)/h),2.4),1/2.4)-1)*Math.min(w,h);d=Math.max(radial,-6.2-p[0],p[0]-4.4);for(const x of [0,-2.2098,-4.4196])d=Math.max(d,1.085-Math.hypot(p[0]-x,p[2]-1.016));return d;}
  d=roundedBox(q,part.size,part.rounding);
  if(part.kind===2){const cavity=roundedBox(q,[1.15,1.17,1.02],Math.max(.03,part.rounding-.04));d=Math.max(d,-cavity);const win=roundedBox([p[0]+7.41,p[1],p[2]-3.155],[.60,2,.335],.12);d=Math.max(d,-win);}
