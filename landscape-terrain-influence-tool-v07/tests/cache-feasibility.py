@@ -1,4 +1,4 @@
-import hashlib, json, pathlib, subprocess, threading, time, urllib.request
+import hashlib, json, os, pathlib, subprocess, threading, time, urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.sync_api import sync_playwright
 
@@ -27,8 +27,9 @@ assert source.count(original_boot) == 1
 source = source.replace(original_boot, "(Number(new URLSearchParams(location.search).get('preset')||0)>0 ? applyPalauPreset(Number(new URLSearchParams(location.search).get('preset'))) : build(recipe)).catch(fail)}catch(e){fail(e)}", 1)
 (ROOT / 'index.html').write_text(source)
 
-subprocess.run(['node', 'test-generator.cjs'], check=True)
-(OUT / 'generator-results.json').write_bytes((ROOT / 'generator-results.json').read_bytes())
+if os.environ.get('QA_SKIP_CPU') != '1':
+    subprocess.run(['node', 'test-generator.cjs'], check=True)
+    (OUT / 'generator-results.json').write_bytes((ROOT / 'generator-results.json').read_bytes())
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -39,8 +40,10 @@ threading.Thread(target=server.serve_forever, daemon=True).start()
 results = []
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True, args=['--use-angle=swiftshader', '--enable-webgl', '--enable-unsafe-swiftshader', '--js-flags=--expose-gc'])
+    browser = p.chromium.launch(headless=True, args=['--use-angle=swiftshader', '--enable-webgl', '--enable-unsafe-swiftshader', '--js-flags=--expose-gc', '--enable-precise-memory-info'])
     for i, entry in enumerate(manifest['entries']):
+        if os.environ.get('QA_PRESETS') and str(i) not in os.environ['QA_PRESETS'].split(','):
+            continue
         cache_path = download(entry['file'])
         assert cache_path.stat().st_size == entry['bytes']
         assert hashlib.sha256(cache_path.read_bytes()).hexdigest() == entry['sha256']
@@ -53,10 +56,13 @@ with sync_playwright() as p:
             start = time.monotonic()
             page.goto(f'http://127.0.0.1:8765/index.html?preset={i}' + ('&regenerate=1' if regenerate else ''), wait_until='domcontentloaded')
             max_js_heap = 0
+            max_browser_rss = 0
             last_status = None
             while time.monotonic() - start < 900:
                 state = page.evaluate("""() => ({ready:window.__LM_READY__, error:window.__LM_ERROR__, status:document.querySelector('#ltiStatus')?.textContent, heap:performance.memory?.usedJSHeapSize||0})""")
                 max_js_heap = max(max_js_heap, state['heap'])
+                rss = sum(int(line.split()[-1])*1024 for line in subprocess.check_output(['ps','-eo','comm=,rss='],text=True).splitlines() if line.split()[0].startswith(('chrome','chromium')))
+                max_browser_rss = max(max_browser_rss, rss)
                 if state['status'] != last_status:
                     print(entry['id'], 'generated' if regenerate else 'cached', state['status'], flush=True)
                     last_status = state['status']
@@ -68,7 +74,7 @@ with sync_playwright() as p:
             assert state['ready'], 'Timed out before completed frame'
             elapsed = time.monotonic() - start
             metrics = page.evaluate("""() => {const a=window.__LM__,d=a.auditData(),gl=a.auditGl();return {triangles:d.report.parts.reduce((s,p)=>s+p.triangles,0),signatures:d.report.parts.map(p=>p.signature),strides:[...new Set(d.parts.map(p=>p.stride))],allFinite:d.parts.every(p=>p.vertices.every(Number.isFinite)),renderBytes:d.parts.reduce((s,p)=>s+p.vertices.byteLength+p.indices.byteLength,0),frame:a.auditFrame(),performance:a.performance,errors:a.errors,material:d.report.materialPreview,renderer:gl.getParameter(gl.RENDERER),resources:performance.getEntriesByType('resource').map(r=>({name:r.name,bytes:r.transferSize})),heap:performance.memory?.usedJSHeapSize||0}}""")
-            metrics.update({'generated': regenerate, 'wallSeconds': elapsed, 'maxObservedJSHeapBytes': max_js_heap, 'pageErrors': errors})
+            metrics.update({'generated': regenerate, 'wallSeconds': elapsed, 'maxObservedJSHeapBytes': max_js_heap, 'maxObservedSummedBrowserProcessRSSBytes':max_browser_rss, 'memorySamplingSeconds':2, 'rssCaveat':'Sum of browser process RSS; shared pages may be counted more than once; not unique memory or GPU-memory total', 'pageErrors': errors})
             assert metrics['triangles'] == entry['triangles']
             assert metrics['signatures'] == entry['originalSignatures']
             assert metrics['strides'] == [30] and metrics['allFinite']
@@ -94,6 +100,7 @@ with sync_playwright() as p:
             case['runs'].append(metrics)
             (OUT / 'results.json').write_text(json.dumps(results + [case], indent=2))
             print('RESULT', json.dumps({'id': entry['id'], **metrics}), flush=True)
+            print('COMPACT_RESULT',json.dumps({'id':entry['id'],'generated':regenerate,'wallSeconds':elapsed,'maxObservedJSHeapBytes':max_js_heap,'maxObservedSummedBrowserProcessRSSBytes':max_browser_rss,'comparisonMaxAbs':{k:v['maxAbs'] for k,v in metrics.get('comparison',{}).get('stats',{}).items()}}),flush=True)
             context.close()
         results.append(case)
         cache_path.unlink()
