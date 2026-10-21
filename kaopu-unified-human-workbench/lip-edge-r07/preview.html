@@ -6594,7 +6594,7 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
 </script>
 
 <!-- LIP-EDGE-R07 APPEND-ONLY NATIVE RETURN -->
-<script>window.__LIP_EDGE_SOURCE__={"version":"LIP-EDGE-R07","sourceCommit":"334476334e01c8aa028fae65842c2c977038ccd9","baselineSource":"1e1e216c2005f4c318da190e1b3b160cc4bd4a6d","baselineBuild":"1237284ea60f9c198b2b63543f098a7551a9af2f","baselineSHA256":"a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac","modules":{"src/EdgeContinuity.js":"6459d6c6f8b023962b2dac904105aef80f4c1a385d7522865aa44f084b5b4d52","src/EdgeLip.js":"80386185745bf1362a0826bf0559cfdc9a463fe5b61a6edba3ac97f59f726237"}};
+<script>window.__LIP_EDGE_SOURCE__={"version":"LIP-EDGE-R07","sourceCommit":"f50eb3012bbe15fbfb4d1a915cfbac3fdba60f04","baselineSource":"1e1e216c2005f4c318da190e1b3b160cc4bd4a6d","baselineBuild":"1237284ea60f9c198b2b63543f098a7551a9af2f","baselineSHA256":"a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac","modules":{"src/EdgeContinuity.js":"6459d6c6f8b023962b2dac904105aef80f4c1a385d7522865aa44f084b5b4d52","src/EdgeLip.js":"8fb2f39efedac4526963d277973d2e4650057219691961f953f47e7a9b9e4396"}};
 /* R07 candidate 01: bounded, screened fairing of the original lower return.
  * No replacement surface. Existing body/contact one-ring is fixed. Binding
  * uses original rest/index and graph distance, never the erroneous upper tag.
@@ -7104,8 +7104,27 @@ addEventListener('pagehide',()=>clearInterval(timer),{once:true});
     controller.archive = archive; controller.restore = restore;
     for (const api of archiveAPIs) { api.archive = currentArchive; api.restore = currentRestore; }
     shell.prepend(panel); oldPanel.hidden = true; document.head.append(style);
-    // No new capture handler: the earlier R06 saves/loads already forward to
+    // No competing save/load capture: the earlier R06 handlers forward to
     // controller.archive/restore dynamically, including their existing inputs.
+    // The inherited R02 button changes only the inner material. R05's own
+    // invalidation does not observe that switch, and disabling its solver
+    // afterwards leaves its lexical archive comparison at r05. Settle the
+    // existing R05 controller while R04 is still selected, then let the actual
+    // R02 handler run normally. Save/load events are not intercepted here.
+    shell.addEventListener('click', e => {
+      const button = e.target.closest?.('#li-controls [data-li-compare="r02"]');
+      if (!button) return;
+      try {
+        idle();
+        batch('prepare inherited R02 comparison', () => heldView(() => {
+          detach();
+          const cornerSolver = window.__LIP_CORNER_SOLVER__;
+          if (cornerSolver.report().installed) cornerSolver.setEnabled(false);
+          comparison = 'inherited';
+          window.motionLip.compare('r04');
+        }));
+      } catch (error) { visibleError(error); }
+    }, true);
     panel.addEventListener('click', e => {
       const b = e.target.closest?.('button'); if (!b) return;
       try {
