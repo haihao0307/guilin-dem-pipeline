@@ -26,9 +26,9 @@ with sync_playwright() as p:
   page.evaluate('kaopuLift.pause(true)');page.screenshot(path=str(out/'desktop-overview.png'),full_page=True)
   snap=lambda:page.evaluate('kaopuLift.snapshot()')
   tick=lambda t:page.evaluate('(t)=>kaopuLift.advance(t)',t)
-  page.locator('#doorDetail').click();tick(0);page.locator('.stage').screenshot(path=str(out/'stainless-door-close.png'))
-  page.locator('#lightShift').evaluate("e=>{e.value='1.5';e.dispatchEvent(new Event('input',{bubbles:true}))}");tick(0);page.locator('.stage').screenshot(path=str(out/'stainless-light-shift.png'))
-  page.locator('#doorFinish').select_option('1');tick(0);page.locator('.stage').screenshot(path=str(out/'paint-door-close.png'))
+  page.locator('#doorDetail').click();tick(0);page.screenshot(path=str(out/'stainless-door-close.png'))
+  page.locator('#lightShift').evaluate("e=>{e.value='1.5';e.dispatchEvent(new Event('input',{bubbles:true}))}");tick(0);page.screenshot(path=str(out/'stainless-light-shift.png'))
+  page.locator('#doorFinish').select_option('1');tick(0);page.screenshot(path=str(out/'paint-door-close.png'))
   page.locator('#doorFinish').select_option('0');page.locator('#lightShift').evaluate("e=>{e.value='0';e.dispatchEvent(new Event('input',{bubbles:true}))}");page.locator('#overview').click();tick(0)
   checks.append('actual close stainless / master R06 paint / translated rectangular illumination screenshots, visual acceptance separate')
   def physical(part):
@@ -36,15 +36,16 @@ with sync_playwright() as p:
    assert target,part
    rect=page.locator('#scene').bounding_box();page.mouse.click(rect['x']+target['screen'][0],rect['y']+target['screen'][1])
   physical('ground-call-1');assert snap()['state']=='OPENING'
-  tick(2);page.locator('#interiorView').click();tick(0);page.locator('.stage').screenshot(path=str(out/'interior-panel-new.png'))
+  tick(2);page.locator('#interiorView').click();tick(0);page.screenshot(path=str(out/'interior-panel-new.png'))
   physical('car-select-B2');assert any(q['id']=='B2' for q in snap()['queue'])
   physical('car-command-close');tick(.5);assert snap()['state']=='CLOSING'
   page.locator('#obstruction').click();tick(2);assert snap()['state']=='OBSTRUCTION_HOLD'
   page.locator('#obstruction').click();tick(20);assert snap()['current']=='B2'
   page.evaluate('kaopuLift.reset()');page.locator('#doorDetail').click();tick(0)
+  page.locator('#hallPanelView').click();tick(0);page.screenshot(path=str(out/'hall-physical-panel.png'))
   page.locator('#width').fill('3');page.locator('#depth').fill('2.1');page.locator('#speed').fill('.7');page.locator('#ageYears').fill('28');page.locator('#interiorFinish').select_option('1');page.locator('#applyInstance').click()
   assert snap()['design']['speed']==.7 and snap()['design']['width']==3
-  page.locator('#interiorView').click();tick(0);page.locator('.stage').screenshot(path=str(out/'interior-panel-aged-paint.png'))
+  page.locator('#interiorView').click();tick(0);page.screenshot(path=str(out/'interior-panel-aged-paint.png'))
   page.locator('#width').fill('2.56');page.locator('#depth').fill('1.7');page.locator('#speed').fill('1.5');page.locator('#ageYears').fill('0');page.locator('#interiorFinish').select_option('0');page.locator('#applyInstance').click();page.locator('#overview').click();tick(0)
   checks.append('physical hall and car buttons picked by nearest 3D field, same command state, close/obstruction, instance dimensions/speed/age/finish')
   page.locator('[data-floor="B2"] button').first.click();tick(4)
