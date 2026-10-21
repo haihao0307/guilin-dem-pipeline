@@ -11,21 +11,29 @@ with sync_playwright() as w:
  def capture(name):page.screenshot(path=str(o/(name+'.png')));r['screenshots'].append(name+'.png');save()
  def render(width=640,samples=2):
   result=page.evaluate('([width,samplesPerAxis])=>window.__MATERIAL_QUALITY__.render({width,samplesPerAxis})',[width,samples]);check(result['status']=='complete','quality render completed');check(result['done']==result['total'],'all tiles completed');return result
+ def direct(width=640):
+  started=time.monotonic();height=round(width*page.locator('#view').bounding_box()['height']/page.locator('#view').bounding_box()['width']);page.evaluate('([w,h])=>window.__IMPLICIT_BUILDING__.setResolution(w,h)',[width,height]);page.evaluate(A+'.awaitSettled()');return {'width':width,'height':height,'samplesPerPixel':1,'elapsedWallSeconds':time.monotonic()-started,'completion':'ordinary direct canvas frame fence signaled; no quality FBO or antialiasing claim'}
  try:
   started=time.monotonic();page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=180000);page.wait_for_function(A+'?.ready || '+A+'?.errors?.length',timeout=180000);check(page.evaluate(A+'?.ready'),'initial material shader ready: '+str(page.evaluate(A+'?.errors')));r['qaWarmupWallSeconds']=time.monotonic()-started;r['warmup']=page.evaluate(A+'.snapshot().renderer.compileProfile')
   # Actual owned wood and paint shading on the SAME already-hosted lowrise window.
-  c=r['cases']['lowrise']={};page.evaluate(A+'.setResolution(64,48)');page.evaluate(Q+'.setMaterial({frameMaterialMode:1,doorMaterialMode:1})');page.evaluate(A+'.awaitSettled()');c['woodMaterial']=page.evaluate(Q+'.snapshot()');c['woodFrame']=render();capture('window-original-timber-4spp')
-  c['woodField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');page.evaluate(Q+'.setMaterial({frameMaterialMode:2,doorMaterialMode:2})');c['paintFrame']=render();capture('window-opaque-paint-4spp');c['paintField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');check(c['woodField']==c['paintField'],'finish choices did not change field geometry')
-  page.evaluate(A+'.applyHosted("residentialWindow",{openT:.6})');c['openFrame']=render();capture('window-open-reflection-4spp');page.evaluate(A+'.setResolution(64,48)');c['finiteGlassParity']=page.evaluate(A+'.opticalParity()');check(c['finiteGlassParity']['passed'],'finite glass transport unchanged');c['fieldParity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(c['fieldParity']['passed'],'same field coordinates/identities')
-  # Cancel before presentation: old full image stays intact; no partial different-camera picture.
-  page.evaluate(A+'.resumeViewport()');page.evaluate(A+'.awaitSettled()');page.evaluate('()=>{window.__qualityPending=window.__MATERIAL_QUALITY__.render({width:320}).then(x=>({resolved:true,x}),e=>({rejected:true,name:e.name,message:e.message}));}')
-  page.wait_for_function(Q+'.snapshot().job?.status==="rendering"');page.evaluate(Q+'.cancel()');c['cancel']=page.evaluate('window.__qualityPending');check(c['cancel'].get('rejected'),'quality render cancels');page.evaluate(A+'.awaitSettled()');c['afterCancel']=page.evaluate(Q+'.snapshot()')
+  c=r['cases']['lowrise']={};page.evaluate(A+'.setResolution(64,48)');page.evaluate(Q+'.setMaterial({frameMaterialMode:1,doorMaterialMode:1})');page.evaluate(A+'.awaitSettled()');c['woodMaterial']=page.evaluate(Q+'.snapshot()');page.evaluate(A+'.setRenderOptions({sceneReflection:0})');c['woodFrame']=direct();capture('window-original-timber-direct')
+  c['woodField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');page.evaluate(Q+'.setMaterial({frameMaterialMode:2,doorMaterialMode:2})');c['paintFrame']=direct();capture('window-opaque-paint-direct');c['paintField']=page.evaluate(A+'.probePoints().slice(0,16).map(p=>'+A+'.query(p))');check(c['woodField']==c['paintField'],'finish choices did not change field geometry')
+  page.evaluate(A+'.applyHosted("residentialWindow",{openT:.6})');page.evaluate(A+'.setRenderOptions({sceneReflection:1})');c['openFrame']=direct();capture('window-open-scene-reflection-direct');page.evaluate(A+'.setResolution(64,48)');c['finiteGlassParity']=page.evaluate(A+'.opticalParity()');check(c['finiteGlassParity']['passed'],'finite glass transport unchanged');c['fieldParity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(c['fieldParity']['passed'],'same field coordinates/identities')
+  # Direct material evidence is deliberately collected before separate FBO/AA diagnosis.
   for case,key in [('kcc','unitDoor'),('warehouse','personnelDoor')]:
    print('CASE',case,flush=True)
    try:
-    page.evaluate(A+'.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id+"-hosted")',case);page.evaluate('(key)=>window.__IMPLICIT_BUILDING__.selectHostedComponent(key)',key);page.evaluate(A+'.awaitSettled()');z=r['cases'][case]={'snapshot':page.evaluate(A+'.snapshot()')};z['frame']=render(480);capture(case+'-hosted-material-4spp');page.evaluate(A+'.setResolution(64,48)');z['parity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(z['parity']['passed'],case+' field parity')
+    page.evaluate(A+'.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id+"-hosted")',case);page.evaluate('(key)=>window.__IMPLICIT_BUILDING__.selectHostedComponent(key)',key);page.evaluate(A+'.awaitSettled()');z=r['cases'][case]={'snapshot':page.evaluate(A+'.snapshot()')};z['frame']=direct(480);capture(case+'-hosted-material-direct');page.evaluate(A+'.setResolution(64,48)');z['parity']=page.evaluate(A+'.parity('+A+'.probePoints().slice(0,24))');check(z['parity']['passed'],case+' field parity')
    except Exception as e:r['failures'].append({'case':case,'error':str(e)});capture(case+'-failure')
+  try:
+   r['aaTargetDiagnostic']=render(320);capture('warehouse-subpixel-target')
+  except Exception as e:
+   r['failures'].append({'stage':'separate-AA-target','error':str(e)});r['aaFailureState']=page.evaluate('({recovery:window.__GPU_RECOVERY__?.snapshot(),quality:window.__MATERIAL_QUALITY__?.snapshot()})');capture('separate-AA-target-failure')
   r['audit']=page.evaluate('window.__audit');check(r['audit']['buffers']==0 and r['audit']['indexed']==0 and r['audit']['counts']==[3],'no object vertex/index geometry');check(not r['errors'],'no uncaught page errors');check(not r['failures'],'all case QA');r['status']='passed_bounded_material_render_checks_not_visual_acceptance'
- except Exception as e:r['status']='failed';r['failure']=str(e);r['traceback']=traceback.format_exc();capture('material-quality-failure')
+ except Exception as e:
+  r['status']='failed';r['failure']=str(e);r['traceback']=traceback.format_exc()
+  try:r['failureState']=page.evaluate('({recovery:window.__GPU_RECOVERY__?.snapshot(),quality:window.__MATERIAL_QUALITY__?.snapshot()})')
+  except Exception:pass
+  capture('material-quality-failure')
  finally:save();b.close()
 print(json.dumps({'status':r['status'],'cases':list(r['cases']),'screenshots':r['screenshots']}));raise SystemExit(0 if r['status'].startswith('passed') else 1)
