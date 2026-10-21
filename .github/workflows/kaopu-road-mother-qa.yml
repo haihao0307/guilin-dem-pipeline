@@ -1,0 +1,35 @@
+name: Verify KAOPU road mother independent function field
+on:
+  push:
+    branches: ['trial/kaopu-road-mother-r01-20261021']
+    paths:
+      - 'kaopu-geography-workbench/kowloon-road-mother-r01/**'
+      - '.github/workflows/kaopu-road-mother-qa.yml'
+permissions:
+  contents: read
+jobs:
+  source-and-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/kowloon-road-mother-r01
+      - name: Pure function and source evidence tests
+        run: node --test kaopu-geography-workbench/kowloon-road-mother-r01/tests/*.test.mjs
+      - name: Install pinned official browser tooling
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Chromium desktop and mobile controls
+        run: |
+          python -m http.server 8765 >/tmp/road-http.log 2>&1 &
+          timeout 420s python -u kaopu-geography-workbench/kowloon-road-mother-r01/tests/browser.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: road-mother-qa-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-road-mother-r01/evidence
+          retention-days: 2
