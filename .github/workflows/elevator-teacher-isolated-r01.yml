@@ -1,0 +1,32 @@
+name: Isolated official elevator teacher observation
+on:
+  push:
+    branches: ['trial/elevator-teacher-isolated-r01-20261021']
+    paths:
+      - 'kaopu-geography-workbench/elevator-learning-qa-r01/**'
+      - '.github/workflows/elevator-teacher-isolated-r01.yml'
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: kaopu-geography-workbench/elevator-learning-qa-r01
+      - name: Check existing display and libraries then observe official runtime
+        env:
+          QA_LOG_DIR: elevator-qa-text
+        run: python3 -u kaopu-geography-workbench/elevator-learning-qa-r01/run.py
+      - name: Retain selected plain text only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: elevator-teacher-text-${{ github.sha }}
+          path: |
+            elevator-qa-text/result.json
+            elevator-qa-text/dependencies.txt
+            elevator-qa-text/execution.txt
+          retention-days: 1
