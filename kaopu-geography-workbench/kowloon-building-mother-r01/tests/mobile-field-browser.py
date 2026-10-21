@@ -1,12 +1,17 @@
-import asyncio,json,time,argparse,sys
+import asyncio,json,time,argparse,sys,hashlib,urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 async def main():
- p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',required=True);p.add_argument('--compile-only',action='store_true');a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'cases':{},'errors':[]}
+ p=argparse.ArgumentParser();p.add_argument('--base',default='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/');p.add_argument('--output',required=True);p.add_argument('--compile-only',action='store_true');p.add_argument('--public',action='store_true');a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'cases':{},'errors':[]}
+ if a.public:
+  manifest=json.loads((Path(__file__).with_name('mobile-public-manifest.json')).read_text());r['publicCommit']=manifest['commit'];r['httpsFiles']=[]
+  for f in manifest['files']:
+   url=a.base+f['path'];response=urllib.request.urlopen(url,timeout=30);body=response.read();actual=hashlib.sha256(body).hexdigest();assert response.status==200 and actual==f['sha256'],('public SHA mismatch',f['path'],actual);r['httpsFiles'].append({'path':f['path'],'status':response.status,'sha256':actual,'bytes':len(body)})
+  print('PUBLIC EXACT FILES',len(r['httpsFiles']),flush=True)
  async with async_playwright() as pw:
   browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
   try:
-   for case in (['kcc'] if a.compile_only else ['kcc','lowrise','warehouse']):
+   for case in ([] if a.public else (['kcc'] if a.compile_only else ['kcc','lowrise','warehouse'])):
     page=await browser.new_page();page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(a.base+'tests/mobile-renderer-probe.html');await page.wait_for_function('window.probe?.ready',timeout=30000);compile=await page.evaluate('id=>probe.setup(id)',case);r['cases'][case]={'compile':compile};print('COMPILE',case,json.dumps(compile),flush=True)
     if a.compile_only:await page.close();break
     for which,width,cull in [('old',32,False),('optimized',32,True),('old',320,False),('optimized',320,False),('optimized',320,True)]:
@@ -29,6 +34,8 @@ async def main():
     # Interrupt an actual active KCC frame and switch source/model only after it retires.
     await page.evaluate('()=>{const c=wholeBuilding.getCamera();c.eye[0]+=4;window.interruptedRender=wholeBuilding.setCamera(c).catch(e=>String(e));}');await page.wait_for_function('wholeBuilding.renderer.busy');await page.evaluate("wholeBuilding.chooseCase('lowrise')");assert await page.evaluate('wholeBuilding.caseId')=='lowrise';assert await page.evaluate('wholeBuilding.getModel().interfaces.lifts.length')==0;assert await page.evaluate('wholeBuilding.frames.at(-1).caseId')=='lowrise';await page.screenshot(path=str(out/'mobile-lowrise.png'));m['switchInterrupted']=await page.evaluate('({last:wholeBuilding.frames.at(-1),cancellations:wholeBuilding.cancellations.length,sourceHash:wholeBuilding.sourceHash})')
     await page.evaluate("wholeBuilding.chooseCase('warehouse')");assert await page.evaluate('wholeBuilding.frames.at(-1).caseId')=='warehouse';assert await page.evaluate('wholeBuilding.frames.at(-1).width')==width;await page.screenshot(path=str(out/'mobile-warehouse.png'));m['warehouse']=await page.evaluate('({last:wholeBuilding.frames.at(-1),sourceHash:wholeBuilding.sourceHash,errors:wholeBuilding.errors})');assert not m['warehouse']['errors'];r['mobile']=m;print('MOBILE TOUCH AND CASE SWITCH PASS',flush=True);await page.close()
+   if a.public:
+    old=await browser.new_page(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);old.on('pageerror',lambda e:r['errors'].append(str(e)));await old.goto(a.base+'whole-building-r02.html');await old.wait_for_function('window.wholeBuilding?.ready||window.wholeBuilding?.error',timeout=120000);assert not await old.evaluate('wholeBuilding.error');await old.evaluate('wholeBuilding.pause()');r['frozenR02']=await old.evaluate('({caseId:wholeBuilding.caseId,sourceHash:wholeBuilding.sourceHash,frame:wholeBuilding.frames.at(-1),errors:wholeBuilding.errors})');assert not r['frozenR02']['errors'];await old.screenshot(path=str(out/'frozen-r02.png'));await old.close()
    assert not r['errors'];r['passed']=True
   except Exception as e:r['failure']=str(e);print('FAIL',e,flush=True)
   finally:await browser.close();(out/('compile.json' if a.compile_only else 'results.json')).write_text(json.dumps(r,indent=2));sys.exit(0 if r['passed'] else 1)
