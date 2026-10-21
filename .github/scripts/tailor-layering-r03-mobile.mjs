@@ -21,7 +21,10 @@ const summary = {schema: 'kaopu-r03-public-mobile@1', passed: false,
   execution: 'GitHub Actions Chromium / SwiftShader / mobile viewport and touch emulation',
   scope: 'Real native scene entrance, actual touch view change, scrollable controls and layout; not a mobile hardware or performance certification.',
   visualAcceptance: false, productionReady: false, screenshotsAreOriginalBrowserCaptures: true,
-  pageErrors: [], console: [], network: [], captures: [], controls: []};
+  pageErrors: [], console: [], network: [], captures: [], controls: [],
+  observationSupplement: {purpose: 'Locate the unlocated console 404 in public run 39544000653; preserve every original acceptance assertion',
+    mode: 'Passive console location and CDP Log/Network observations; no routing, filtering, cache override or application changes'},
+  cdp: {log: [], requests: [], responses: [], loadingFailures: []}};
 let browser, context, page, failure, watchdog, heartbeat;
 const began = Date.now();
 const writeJSON = (name, data) => fs.writeFile(path.join(OUTPUT, name), JSON.stringify(data, null, 2) + '\n');
@@ -129,9 +132,25 @@ try {
   await installClothObserver(context, {checkpointSteps: [], checkpointLimit: 1});
   page = await context.newPage(); page.setDefaultTimeout(120_000);
   page.on('pageerror', e => summary.pageErrors.push(String(e)));
-  page.on('console', m => summary.console.push({type: m.type(), text: m.text()}));
+  page.on('console', m => summary.console.push({type: m.type(), text: m.text(), location: m.location(), observedAtMS: Date.now() - began}));
   page.on('response', r => summary.network.push({url: r.url(), status: r.status(), type: r.request().resourceType()}));
   page.on('requestfailed', r => summary.network.push({url: r.url(), failure: r.failure()?.errorText}));
+  const protocol = await context.newCDPSession(page);
+  protocol.on('Log.entryAdded', ({entry}) => summary.cdp.log.push(entry));
+  protocol.on('Network.requestWillBeSent', event => summary.cdp.requests.push({
+    requestId: event.requestId, frameId: event.frameId, loaderId: event.loaderId,
+    timestamp: event.timestamp, wallTime: event.wallTime, type: event.type,
+    documentURL: event.documentURL, url: event.request.url, method: event.request.method,
+    initiator: event.initiator}));
+  protocol.on('Network.responseReceived', event => summary.cdp.responses.push({
+    requestId: event.requestId, timestamp: event.timestamp, type: event.type,
+    url: event.response.url, status: event.response.status, mimeType: event.response.mimeType,
+    fromDiskCache: event.response.fromDiskCache, fromServiceWorker: event.response.fromServiceWorker}));
+  protocol.on('Network.loadingFailed', event => summary.cdp.loadingFailures.push({
+    requestId: event.requestId, timestamp: event.timestamp, type: event.type,
+    errorText: event.errorText, canceled: event.canceled, blockedReason: event.blockedReason,
+    corsErrorStatus: event.corsErrorStatus}));
+  await Promise.all([protocol.send('Log.enable'), protocol.send('Network.enable')]);
   progress('mobile-native-entrance');
   const navigation = await page.goto(BASE, {waitUntil: 'domcontentloaded', timeout: 60_000});
   assert.equal(navigation?.status(), 200);
