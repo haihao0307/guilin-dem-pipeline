@@ -13,3 +13,5 @@ Run via HTTP and open index.html. CPU checks: node --test tests/*.test.mjs. GPU/
 The main profile uses shape-preserving C1 cubic Hermite interpolation with shared slopes, rather than resetting the tangent at every station. CPU tests guard both derivative continuity and local envelope non-overshoot.
 
 Five additional primary-table measurement segments are available for independent part inspection: leading/coupled/trailing axle journals and outside/inside crank pins. Their diameter and length are sourced, their local axis is Y, and their assembly transform, shoulder geometry, fits and corner radius remain null. They are nominal circular segments, not complete certified shafts or pins. They do not appear assembled in the locomotive.
+
+The 88 side marking is an authored analytic material mask (elliptical ring distance functions), not a teacher decal or bitmap. Six additional CPU/WebGL material probes check that its base-color field agrees across implementations and does not modify geometry.

@@ -32,14 +32,17 @@ float field(vec3 p){
 vec2 intersectBox(vec3 ro,vec3 rd){vec3 inv=1.0/rd;vec3 a=(uMin-ro)*inv,b=(uMax-ro)*inv;vec3 lo=min(a,b),hi=max(a,b);return vec2(max(lo.x,max(lo.y,lo.z)),min(hi.x,min(hi.y,hi.z)));}
 vec3 normal(vec3 p){float e=uEpsilon*1.25;vec2 k=vec2(1,-1);return normalize(k.xyy*field(p+k.xyy*e)+k.yyx*field(p+k.yyx*e)+k.yxy*field(p+k.yxy*e)+k.xxx*field(p+k.xxx*e));}
 vec3 environment(vec3 d,float rough){vec3 zen=vec3(.38,.53,.66),horizon=vec3(.81,.83,.80),floor=vec3(.22,.25,.25);vec3 c=mix(horizon,zen,smoothstep(0.0,1.0,d.z));c=mix(c,floor,(1.0-smoothstep(-.5,0.0,d.z)));float strip=exp(-pow((d.x+.32)/(.10+rough*.7),2.0))*exp(-pow((d.z-.65)/(.18+rough*.7),2.0));return c+vec3(.75)*strip;}
+vec3 baseColor(vec3 p){if(uKind!=1||abs(p.y)<.95)return uColor;float d=1e6;for(int i=0;i<2;i++)for(int j=0;j<2;j++){vec2 q=vec2((p.x-(-1.62-float(i)*.4))/.115,(p.z-(2.99+float(j)*.24))/.12);d=min(d,abs(length(q)-1.0)*.115-.018);}return mix(uColor,vec3(.72,.53,.20),1.0-smoothstep(-.002,.006,d));}
 vec3 shade(vec3 p,vec3 n,vec3 v){
- vec3 l=normalize(vec3(.5,-.45,1.0)),h=normalize(v+l);float nl=max(dot(n,l),0.0),nv=max(dot(n,v),.001),nh=max(dot(n,h),0.0),vh=max(dot(v,h),0.0);float r=max(.065,uRoughness),a=r*r,a2=a*a;float D=a2/(3.14159265*pow(nh*nh*(a2-1.0)+1.0,2.0));float k=pow(r+1.0,2.0)/8.0;float G=nl/(nl*(1.0-k)+k)*nv/(nv*(1.0-k)+k);vec3 F0=mix(vec3(.04),uColor,uMetallic),F=F0+(1.0-F0)*pow(1.0-vh,5.0);vec3 diffuse=(1.0-F)*(1.0-uMetallic)*uColor/3.14159265;vec3 spec=D*G*F/(4.0*nl*nv+.001);vec3 lit=(diffuse+spec)*nl*vec3(3.3,3.05,2.7);
- vec3 refl=reflect(-v,n);vec3 ambient=uColor*(1.0-uMetallic)*(.12+.18*max(n.z,0.0));vec3 fres=F0+(1.0-F0)*pow(1.0-nv,5.0);lit+=ambient+environment(refl,r)*fres*(1.0-r*.7);lit+=uCoat*environment(refl,.08)*(.025+.15*pow(1.0-nv,5.0));
+ vec3 base=baseColor(p);
+ vec3 l=normalize(vec3(.5,-.45,1.0)),h=normalize(v+l);float nl=max(dot(n,l),0.0),nv=max(dot(n,v),.001),nh=max(dot(n,h),0.0),vh=max(dot(v,h),0.0);float r=max(.065,uRoughness),a=r*r,a2=a*a;float D=a2/(3.14159265*pow(nh*nh*(a2-1.0)+1.0,2.0));float k=pow(r+1.0,2.0)/8.0;float G=nl/(nl*(1.0-k)+k)*nv/(nv*(1.0-k)+k);vec3 F0=mix(vec3(.04),base,uMetallic),F=F0+(1.0-F0)*pow(1.0-vh,5.0);vec3 diffuse=(1.0-F)*(1.0-uMetallic)*base/3.14159265;vec3 spec=D*G*F/(4.0*nl*nv+.001);vec3 lit=(diffuse+spec)*nl*vec3(3.3,3.05,2.7);
+ vec3 refl=reflect(-v,n);vec3 ambient=base*(1.0-uMetallic)*(.12+.18*max(n.z,0.0));vec3 fres=F0+(1.0-F0)*pow(1.0-nv,5.0);lit+=ambient+environment(refl,r)*fres*(1.0-r*.7);lit+=uCoat*environment(refl,.08)*(.025+.15*pow(1.0-nv,5.0));
  return lit;
 }
 void depthAt(vec3 p){float z=dot(p-uCamera,uForward);float n=(uFar+uNear)/(uFar-uNear)-2.0*uFar*uNear/((uFar-uNear)*z);gl_FragDepth=clamp(n*.5+.5,0.0,1.0);}
 vec3 display(vec3 c){c=c/(1.0+c);return pow(max(c,0.0),vec3(1.0/2.2));}
 void main(){
+ if(uProbe==2){color=vec4(baseColor(uProbePoint),1);gl_FragDepth=0.0;return;}
  if(uProbe==1){uint n=uint(round(clamp((field(uProbePoint)+8.0)/16.0,0.0,1.0)*16777215.0));color=vec4(float(n&255u),float((n>>8)&255u),float((n>>16)&255u),255.0)/255.0;gl_FragDepth=0.0;return;}
  vec2 uv=gl_FragCoord.xy/uResolution*2.0-1.0;vec3 rd=normalize(uForward+uv.x*(uResolution.x/uResolution.y)*uTanFov*uRight+uv.y*uTanFov*uUp);
  if(uKind==0){float t=(uGroundZ-uCamera.z)/rd.z;if(t>0.0&&t<150.0){vec3 p=uCamera+rd*t;float stripe=1.0-smoothstep(.008,.025,abs(fract(p.x+.5)-.5));float stripe2=1.0-smoothstep(.008,.025,abs(fract(p.y+.5)-.5));float grid=max(stripe,stripe2)*exp(-t*.035);vec3 c=mix(vec3(.37,.40,.39),vec3(.30,.34,.34),grid*.32);float blob=exp(-pow((p.x+5.6)/11.5,4.0)-pow(p.y/1.7,4.0));c*=1.0-.17*blob;color=vec4(display(c),1);depthAt(p);}else{color=vec4(display(environment(rd,.8)),1);gl_FragDepth=1.0;}return;}

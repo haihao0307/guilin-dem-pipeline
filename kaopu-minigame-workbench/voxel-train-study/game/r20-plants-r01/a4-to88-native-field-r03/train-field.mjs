@@ -80,3 +80,8 @@ export function safetyBound(part){
  // Conservative practical distance estimate, NOT a certified exact signed distance.
  return 4+4*slope;
 }
+
+// Own procedural paint mark: two analytic figure-eight rings, no image/texture.
+function numberRing(q){return Math.abs(Math.hypot(q[0]/.115,q[1]/.12)-1)*.115-.018;}
+export function mark88Distance(p){let d=Infinity;for(const x of [-1.62,-2.02])for(const z of [2.99,3.23])d=Math.min(d,numberRing([p[0]-x,p[2]-z]));return d;}
+export function materialBase(part,p,options=DEFAULTS){const base=part.material===0?options.paint:MATERIALS[part.material].base;if(part.kind!==1||Math.abs(p[1])<.95)return [...base];const t=clamp((mark88Distance(p)+.002)/.008,0,1),mask=1-t*t*(3-2*t);return base.map((v,i)=>v*(1-mask)+[.72,.53,.20][i]*mask);}
