@@ -1,6 +1,6 @@
 {
   "schema": "kaopu/lip-surface-r08-candidate-anchor@1",
-  "candidate": "candidate-01",
+  "candidate": "candidate-02",
   "sourceCommit": "Actual GITHUB_SHA recorded in build and QA",
   "baseline": {
     "branchHead": "aa4a4efeb96e80e737a6c7ee129085f7f83df69c",
@@ -9,17 +9,24 @@
     "previewSHA256": "a6f50aa8e1f7898da5e40b73fb7ab8476db7ca4a14505a6ffad2e8aca1f63cac"
   },
   "reviewedFiles": {
-    "src/SurfaceMaterial.js": "7a6fd5235967b73eec7c87fda9059bb2eb599daeb890b9cf843e6ff24e857a49",
-    "src/SurfaceLip.js": "17f7682492a70a86f975bcacff2cf696fd98ad3c9bd6806e6249d4df51ef005e",
-    "build.cjs": "df084051b3a88fa50e1d3b057c0225a1b6706ba7d67006da4d93598f461ee786",
-    "verification/verify-surface.cjs": "a6f4dcfb53ea90d8333d02670db5260c7bcfbdfd905acf5dbf5329107e48de07",
+    "src/SurfaceMaterial.js": "5e45f9cbd198f61a28981d2b0cf5b09e312ba82b9c483e017289b50b90ea24f7",
+    "src/SurfaceLip.js": "3ac8625ff6508f8acdd591889dec76b13e2fd1168b37797fa245aa0be0e64304",
+    "build.cjs": "56b0bd7d078bb36a3c149555f1bff3449099f6981e7e7915f4917ff622d47fd8",
+    "verification/verify-surface.cjs": "cf3dd4372f682a71721a1fcaf798c311d2673cb01f47101ebd6bf023bba682ce",
+    "README.md": "67fbe38f436bac4ed9d56177599368b49db61346e92b3b247e19e86bfd46b566",
+    "../../.github/workflows/lip-surface-r08.yml": "ec7469b24d1d970dc47c51c31624ab051ea277d33f52c46ff59056cbf3224122",
     "research/reference-review.json": "3353b38c3fb27cc074211f77f1ffb9c9f460a5f5b996c76324fe80bfb00c9bc6",
-    "README.md": "c71ab55f2d4e4f0338abcfc71ff6fd865a2476591e1b3dc58c372f9ad26aa1b9",
-    "../../.github/workflows/lip-surface-r08.yml": "d3f6610f345df019468ce37d26e458304c5570187ffa9a7c44d831305b3edca5"
+    "research/LOCAL_MATERIAL_REVIEW.json": "67306b91d95e5056af4e5ae61e8780848e5bc48ffdeed34ac880fae6bc709bc7",
+    "research/LOCAL_MATERIAL_RECIPES.json": "87784d22f0b3bf5b0337b863743bf4c2669582508601bb7574a9de27b6be14ae",
+    "research/LOCAL_MATERIAL_BLIND_REVIEW.json": "1a4e887a67027901ed29d9794ab61f2cad13a19a15c12cfc99d723e2abb2cee4",
+    "research/MATERIAL_RESPONSIBILITY_REVIEW.json": "8914a88603dae50c5e80c22dca0c9539059ff303fd995907a7fad258f1e5ec7f",
+    "research/NATIVE_ATLAS_SOURCE_REPRODUCTION.json": "edae68be5ec30e7ecd47a4c9e89dd452d66ef49bc145c904ff2ebbe521c9b14c",
+    "research/SURFACE_MATERIAL_V2_SOURCE_PROOF.json": "2f636d547d39bd52c0141205529a8f9c2e1fc71689707ead5aabaf3905613162",
+    "evidence/candidate-01/archive-top.json": "f0947821ca3a5ed13e8ecc8bca4873b3ba601b70568f2d562bc256b4fb667d61"
   },
   "requiredChecks": {
     "tests": 14,
-    "savedNativeFrames": 20,
+    "savedNativeFrames": 17,
     "nativeReadbacks": 21,
     "naturalUIScreenshots": 1,
     "pageErrors": 0,
@@ -28,18 +35,43 @@
     "resourceErrors": 0,
     "allNativeAndDrawAttributesExact": true,
     "offIndependentR06StateShaderUniformsAndPixelsExact": true,
-    "singleFactors": 2,
     "fullPersonArchiveEntryPoints": 3,
     "historicalR02DOMAndDownload": true,
     "freshHalfJawArchiveRestoreExact": true,
     "cleanupCompleted": true,
-    "browserDisconnected": true
+    "browserDisconnected": true,
+    "legacyArchiveCases": 2,
+    "rejectedArchiveCases": 5,
+    "actualDOMDownloads": 4,
+    "declaredSurfaceReplacements": 1,
+    "originalFailedSurfaceArchiveRejectedBeforeMutation": true,
+    "legacyR06AndCompatibleR02ActuallyRestored": true
   },
   "notInherited": {
     "r07Candidate03Source": "f50eb3012bbe15fbfb4d1a915cfbac3fdba60f04",
-    "reason": "Lower-return fairing did not pass visual review; leave its branch and originals intact and isolate this appearance experiment on accepted R06."
+    "reason": "Lower-return fairing did not pass visual review; leave its branch and originals intact and isolate this appearance experiment on accepted R06.",
+    "rejectedSurfaceCandidate01": {
+      "source": "cd57623fc6a70fabc8481377aeaeccf372b56d3f",
+      "build": "8134500a3f5bf7a257ceef562061bb4c04416694",
+      "implementation": "native-lip-surface@1",
+      "colour": "Rejected broad red-grey mottling.",
+      "edge": "Rejected cross-pose uniform hardening without a convincing net gain.",
+      "evidencePreserved": true
+    }
   },
   "physicalClaims": false,
   "visualAcceptance": false,
-  "productionReady": false
+  "productionReady": false,
+  "implementation": "native-lip-surface@2",
+  "archiveSchema": "kaopu/lip-surface@2",
+  "selectedLocalExperiment": {
+    "id": "r03-organization-main-4x",
+    "sourceOfSelection": "14 native local patch transactions and independent blind image review; only a bounded local fine-detail gain is claimed.",
+    "actualReviewedTemplateSHA256": "0e4f413378580734798a41588c09fdb31014685bf2191a19b3b26ce0a2208a1a",
+    "actualReviewedExpandedFragmentSHA256": "0063e1d4ae2dbfbb0083135b43191e05c5aa907846071b73ca618406bdda0cfc",
+    "productTransformMatchesActualReviewedDefaultShader": true,
+    "overallRealismApproved": false,
+    "publicAllPoseReviewPending": true
+  },
+  "decisionLimit": "A small fine-organization candidate; colour, shared outer coverage, geometry, wetness and inherited normal derivative unchanged. Whole-face gain may be negligible after correct distance filtering. Overall wax-like appearance remains unresolved."
 }
