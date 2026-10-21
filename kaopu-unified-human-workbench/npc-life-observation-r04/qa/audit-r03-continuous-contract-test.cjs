@@ -5,9 +5,9 @@ const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 function fixture(kind='bottle',operation='open'){
   const phases=kind==='bottle'?['waiting','approach','close','lift','transfer','lower','verify','done:rest','done:restored']:
     ['waiting','approach','close-grip','swing','verify','done:withdraw','done:rest','done:restored'];
-  const time=2,token='A:window:1',epoch=3;
+  const time=2,token='A:'+kind+':1',epoch=3;
   const frames=phases.map((p,i)=>{
-    const [phase,rest]=p.split(':'),a={id:'A',phase,recovery:rest&&rest!=='restored'?rest:null,taskStarted:time,...(kind==='window'?{taskToken:token}:{})};
+    const [phase,rest]=p.split(':'),a={id:'A',phase,recovery:rest&&rest!=='restored'?rest:null,taskStarted:time,taskToken:token};
     const held=kind==='bottle'?['lift','transfer','lower'].includes(phase):phase==='swing';
     return {serial:11+i,request:22+i,submittedAtMS:100+i*20,completedAtMS:110+i*20,durationMS:10,
       metadata:{sceneEpoch:epoch,phaseKey:epoch+':'+p,simulationTime:time+i/120,mode:'observation',paused:false,
@@ -43,6 +43,9 @@ reject('reject physics advancing too far before displayed image','bottle',f=>f.a
 reject('reject changed physics step','bottle',f=>f.after.observation.completedFrameTrace[3].metadata.simulationTime+=.001,/fixed 1\/120/);
 reject('reject hidden station reset','window',f=>f.after.observation.completedFrameTrace[3].metadata.sceneEpoch++,/station reset/);
 reject('reject substituted window task','window',f=>f.after.observation.completedFrameTrace[3].metadata.windowAgents[0].taskToken='A:window:2',/same window task token/);
+reject('reject bottle action with missing task token','bottle',f=>delete f.after.observation.completedFrameTrace[0].metadata.agents[0].taskToken,/Bottle task has a distinct task token/);
+reject('reject substituted bottle task despite identical start time','bottle',f=>f.after.observation.completedFrameTrace[3].metadata.agents[0].taskToken='A:bottle:2',/same bottle task token/);
+reject('reject mismatched authoritative bottle result token','bottle',f=>f.after.snapshot.agents[0].result.taskToken='A:bottle:2',/Authoritative result must identify the same bottle task token/);
 reject('reject early unrendered waiting','bottle',f=>f.after.observation.completedFrameTrace[0].metadata.simulationTime+=1/120,/before physics/);
 reject('reject stale final bottle image','bottle',f=>f.after.snapshot.object.position[2]+=.1,/framebuffer\/world pose/);
 reject('reject stale final window image','window',f=>f.after.snapshot.window.object.angleDeg+=.1,/framebuffer\/world pose/);

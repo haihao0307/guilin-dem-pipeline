@@ -37,6 +37,8 @@ This remains a single browser document. SharedWorker, network multiplayer, durab
 
 Bottle tasks now have monotonic IDs/tokens and actor generation, like existing window tasks. Tokens follow request, contact, release, result and recovery evidence. Old cancellation tokens cannot cancel a newer task for the same actor. This fixes a local protocol ambiguity; no existing network failure is claimed.
 
+Single-task native geometry evidence is selected by its authoritative task token. Adjacent tasks may share the exact end/start timestamp, so time alone cannot identify an action. Every completed GPU task frame, the final physical result and its geometry audit must agree on the same token. Multi-task numerical checks retain their complete task counts and all existing contact/recovery thresholds.
+
 Target/support changes immediately invalidate current review, including while paused. Confirmation records targetRevision, supportRevision and the actual released-task token. Historical successful receipts remain historical; a new valid review requires new stable physical measurements.
 
 ### Read state and explicit evidence

@@ -613,18 +613,23 @@ async function auditCursor(label) {
 }
 
 function checkAuditGeometry(snapshot,label,{
-  afterTime=-1,id=null,requiredActors=[],requireRecovery=false,expectedTaskCounts=null
+  afterTime=-1,id=null,taskToken=null,requiredActors=[],requireRecovery=false,expectedTaskCounts=null
 }={}) {
   const samples=snapshot.audit?.poses;
   assert(Array.isArray(samples),'Actual driven-pose audit is exported: '+label);
+  assert(taskToken===null||(typeof taskToken==='string'&&taskToken.length>0),'Explicit geometry task token must be valid: '+label);
   // Include every recorded phase, including approach and recovery. The old
   // contact-only filter hid collisions with a neighbouring window handle.
-  const rows=samples.filter(sample=>(!Number.isFinite(sample.time) || sample.time>afterTime) &&
+  // Adjacent tasks can share the exact boundary time. A single-task audit uses
+  // its real token, including all its samples, never a timestamp epsilon.
+  const rows=samples.filter(sample=>(taskToken!==null?sample.taskToken===taskToken:
+    (!Number.isFinite(sample.time) || sample.time>afterTime)) &&
     (!id || sample.id===id));
   const violations=[];
   if(!rows.length)violations.push({id,reason:'no actual contact-phase samples were exported'});
   const requireValue=(pass,sample,reason)=>{if(!pass)violations.push({id:sample.id,stage:sample.stage,time:sample.time,reason});};
   for(const sample of rows) {
+    requireValue(typeof sample.taskToken==='string'&&sample.taskToken.startsWith(sample.id+':bottle:'),sample,'the actual bottle task token is missing from the driven pose');
     requireValue(Number.isFinite(sample.taskStartedTime),sample,'the actual task identity is missing from the driven pose');
     requireValue(Number.isFinite(sample.time) && sample.time>=sample.taskStartedTime,
       sample,'the driven pose precedes its actual task or has no finite time');
@@ -648,13 +653,14 @@ function checkAuditGeometry(snapshot,label,{
   if(requireRecovery) {
     const tasks=new Map();
     for(const sample of rows) {
-      const key=sample.id+':'+sample.taskStartedTime;
+      const key=sample.id+':'+sample.taskToken;
       if(!tasks.has(key))tasks.set(key,[]);
       tasks.get(key).push(sample);
     }
     for(const taskRows of tasks.values()) {
       const first=taskRows[0];
       taskCounts[first.id]=(taskCounts[first.id]||0)+1;
+      for(const sample of taskRows)requireValue(sample.taskStartedTime===first.taskStartedTime,sample,'the same bottle task token has inconsistent start times');
       for(let index=1;index<taskRows.length;index++) {
         if(taskRows[index].time<taskRows[index-1].time)violations.push({
           id:first.id,taskStartedTime:first.taskStartedTime,
@@ -665,7 +671,7 @@ function checkAuditGeometry(snapshot,label,{
         if(!taskRows.some(sample=>sample.stage===stage))
           violations.push({id:first.id,taskStartedTime:first.taskStartedTime,stage,reason:'required actual bottle exit sample is missing'});
       }
-      const summary={id:first.id,taskStartedTime:first.taskStartedTime};
+      const summary={id:first.id,taskToken:first.taskToken,taskStartedTime:first.taskStartedTime};
       for(const [name,stages] of [
         ['withdrawal',['withdraw-start','withdraw','withdraw-end']],
         ['rest',['rest-start','rest','rest-end']]
@@ -691,7 +697,7 @@ function checkAuditGeometry(snapshot,label,{
       });
     }
   }
-  const result={label,afterTime,accepted:violations.length===0,scope:'Measured rendered hand vertices at actual driven phases; no continuous triangle collision or finger force claim',
+  const result={label,afterTime,taskToken,accepted:violations.length===0,scope:'Measured rendered hand vertices at actual driven phases; no continuous triangle collision or finger force claim',
     thresholds:{boneLengthErrorM:1e-8,footSurfaceErrorM:.00002,footWorldAbsoluteYM:.003,existingTablePenetrationM:.003,bottlePenetrationM:.005,otherSolidPenetrationM:OTHER_SOLID_PENETRATION_M},
     tableGate:'Only supportEnabled and hand vertices inside the tabletop XZ projection',
     bottleGate:'Actual finite-cylinder SDF in close, lift, transfer, lower, lower-end and verify samples',
@@ -701,7 +707,7 @@ function checkAuditGeometry(snapshot,label,{
   put('phase-geometry-'+label+'.json',result);
   assert(rows.length>0,'At least one actual contact-phase sample is required: '+label);
   assert.equal(violations.length,0,'Actual phase geometry failed: '+JSON.stringify(violations));
-  return {sampleCount:rows.length,accepted:true,requiredActors,taskCounts,recovery};
+  return {sampleCount:rows.length,accepted:true,taskToken,requiredActors,taskCounts,recovery};
 }
 
 const WINDOW_TARGET_DEG={open:-35,close:0};
@@ -1820,7 +1826,10 @@ async function main() {
         const resourceExclusion=checkActorResourceExclusion(capture.snapshot,entry.label);
         let geometry;
         if(entry.kind==='bottle'){
-          geometry=checkAuditGeometry(capture.snapshot,entry.label,{afterTime:entry.contract.taskStarted-1e-8,id:'A',requiredActors:['A'],requireRecovery:true,expectedTaskCounts:{A:1}});
+          const resultToken=capture.snapshot.agents.find(actor=>actor.id===entry.actorId)?.result?.taskToken;
+          assert(typeof resultToken==='string'&&resultToken.length>0,'The completed bottle task has an authoritative token');
+          assert.equal(resultToken,entry.contract.taskToken,'Native geometry belongs to the same task as the uninterrupted GPU frames');
+          geometry=checkAuditGeometry(capture.snapshot,entry.label,{taskToken:resultToken,id:entry.actorId,requiredActors:[entry.actorId],requireRecovery:true,expectedTaskCounts:{[entry.actorId]:1}});
         }else{
           geometry={receipt:checkWindowReceipt(capture.snapshot.window,'A',entry.operation,entry.label),
             rest:checkWindowRest(capture.actorDiagnostics,entry.label),rendered:checkWindowRender(capture,entry.label)};

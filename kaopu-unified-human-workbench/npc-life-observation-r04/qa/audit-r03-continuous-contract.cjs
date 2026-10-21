@@ -47,10 +47,11 @@ function assertContinuousRun({label,kind,actorId='A',operation,before,after,ui})
   const startFrame=frames[waitingIndex],startActor=actor(startFrame),epoch=startFrame.metadata.sceneEpoch;
   finite(startActor.taskStarted,'Actual actor task start');
   assert(Math.abs(startActor.taskStarted-startFrame.metadata.simulationTime)<1e-8,'Waiting is displayed before physics can advance the task');
-  const token=kind==='window'?startActor.taskToken:null;
-  if(kind==='window')assert(typeof token==='string'&&token.startsWith(actorId+':window:'),'Window task has a distinct task token');
+  const token=startActor.taskToken;
+  assert(typeof token==='string'&&token.startsWith(actorId+':'+kind+':'),
+    (kind==='bottle'?'Bottle':'Window')+' task has a distinct task token');
   const endIndex=frames.findIndex((f,i)=>i>waitingIndex&&actor(f)?.phase==='done'&&actor(f)?.recovery===null&&
-    actor(f)?.taskStarted===startActor.taskStarted&&(kind!=='window'||actor(f)?.taskToken===token));
+    actor(f)?.taskStarted===startActor.taskStarted&&actor(f)?.taskToken===token);
   assert(endIndex>=0,'Actual done/restored state must be completed by the GPU');
   const taskFrames=frames.slice(waitingIndex,endIndex+1),expected=kind==='bottle'?
     ['waiting','approach','close','lift','transfer','lower','verify','done:rest','done:restored']:
@@ -64,7 +65,7 @@ function assertContinuousRun({label,kind,actorId='A',operation,before,after,ui})
     assert.equal(m.paused,false,'No paused frame may occur during the task');
     assert.equal(m.sceneEpoch,epoch,'A station reset cannot stand in for an action');
     assert.equal(a.taskStarted,startActor.taskStarted,'A different task cannot stand in for this action');
-    if(kind==='window')assert.equal(a.taskToken,token,'The same window task token must survive through recovery');
+    assert.equal(a.taskToken,token,'The same '+kind+' task token must survive through recovery');
     const state=a.phase==='done'?'done:'+(a.recovery||'restored'):a.phase;
     assert(expected.includes(state),'Unexpected success/recovery phase '+state);
     if(sequence.at(-1)!==state)sequence.push(state);
@@ -82,12 +83,14 @@ function assertContinuousRun({label,kind,actorId='A',operation,before,after,ui})
   const final=after.snapshot,finalActor=(kind==='bottle'?final?.agents:final?.window?.agents)?.find(a=>a.id===actorId);
   assert.equal(finalActor?.phase,'done');assert.equal(finalActor.recovery,null);
   assert.equal(finalActor.result?.result,'completed','A real successful result is required');
+  assert.equal(finalActor.result.taskToken,token,'Authoritative result must identify the same '+kind+' task token');
   assert(Array.isArray(finalActor.result.phases),'Authoritative result includes actual phase history');
   const requiredPhases=kind==='bottle'?['waiting','approach','close','lift','transfer','lower','verify']:['waiting','approach','close-grip','swing','verify'];
   assert.deepEqual(finalActor.result.phases,requiredPhases,'Authoritative task phases agree with the visible sequence');
   const lastFrame=frames.at(-1),lastActor=actor(lastFrame);
   assert.equal(lastActor?.phase,'done');assert.equal(lastActor.recovery,null);
   assert.equal(lastFrame.metadata.sceneEpoch,epoch);assert.equal(lastActor.taskStarted,startActor.taskStarted);
+  assert.equal(lastActor.taskToken,token,'Final completed frame must identify the same '+kind+' task token');
   assert.equal(lastFrame.metadata.mode,'observation');assert.equal(lastFrame.metadata.paused,false);
   assert(Math.abs(lastFrame.metadata.simulationTime-final.time)<=.0005001,'Authoritative state and completed framebuffer refer to the same physics time');
   if(kind==='bottle'){
@@ -98,7 +101,7 @@ function assertContinuousRun({label,kind,actorId='A',operation,before,after,ui})
     assert(taskFrames.some(f=>f.metadata.bottle.heldBy===null&&actor(f)?.phase==='verify'),'Visible verify includes an actually released bottle');
   }else{
     assert(['open','close'].includes(operation));
-    assert.equal(finalActor.result.operation,operation);assert.equal(finalActor.result.taskToken,token);assert.equal(lastActor.taskToken,token);
+    assert.equal(finalActor.result.operation,operation);
     const object=final.window.object;assert.equal(object.heldBy,null);assert.equal(object.reservedBy,null);assert.equal(object.gripConstraintCount,0);assert.equal(object.hingeConstraintCount,1);
     assert.equal(object[operation==='open'?'goalOpen':'goalClosed'],true);assert.equal(object.settled,true);
     assert(Math.abs(object.angleDeg-(operation==='open'?-35:0))<2,'Physical window reaches the requested angle');
