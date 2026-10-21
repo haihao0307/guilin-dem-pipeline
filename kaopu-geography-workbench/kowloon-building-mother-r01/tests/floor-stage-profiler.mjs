@@ -1,7 +1,7 @@
 /** QA only. Optional real GPU queries; never relabel JS submission time as GPU time. */
 export function installStageProfiler(renderer){
  const gl=renderer.gl,ext=gl.getExtension('EXT_disjoint_timer_query_webgl2'),original={useProgram:gl.useProgram,getUniformLocation:gl.getUniformLocation,uniform1i:gl.uniform1i,drawArrays:gl.drawArrays};
- const names=new Map([['source',renderer.sourceProgram],['assembly',renderer.assemblyProgram],['aperture',renderer.apertureProgram],['rail',renderer.railProgram],['shade',renderer.shadeProgram],['optical-ray',renderer.opticalRayProgram],['present',renderer.presentProgram],['empty',renderer.emptyProgram]].filter(x=>x[1]).map(([n,p])=>[p,n])),locations=new Map(),modes=new Map();let program=null,records=[],enabled=false;
+ const names=new Map([['validation',renderer.tileValidationProgram],['source',renderer.sourceProgram],['assembly',renderer.assemblyProgram],['aperture',renderer.apertureProgram],['rail',renderer.railProgram],['shade',renderer.shadeProgram],['optical-ray',renderer.opticalRayProgram],['present',renderer.presentProgram],['empty',renderer.emptyProgram]].filter(x=>x[1]).map(([n,p])=>[p,n])),locations=new Map(),modes=new Map();let program=null,records=[],enabled=false;
  gl.useProgram=function(p){program=p;return original.useProgram.call(gl,p);};
  gl.getUniformLocation=function(p,n){const l=original.getUniformLocation.call(gl,p,n);if(l)locations.set(l,{p,n});return l;};
  gl.uniform1i=function(l,v){const d=locations.get(l);if(d?.n==='uRayMode')modes.set(d.p,v);return original.uniform1i.call(gl,l,v);};

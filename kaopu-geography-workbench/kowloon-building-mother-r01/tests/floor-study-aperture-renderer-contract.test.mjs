@@ -12,7 +12,7 @@ test('secondary optics, materials, assembly solver and ping-pong paths unchanged
 });
 test('shader and renderer both gate primary-only aperture candidates',()=>{
  assert.ok(candidate.includes('floorPrimaryApertureRay=uRayMode==0'));
- assert.ok(candidate.includes("g.uniform1i(L('uPrimaryApertureIndexEnabled'),rayMode===0&&primaryApertureIndex?1:0)"));
+ assert.ok(candidate.includes("g.uniform1i(L('uPrimaryApertureIndexEnabled'),rayMode===0&&primaryApertureIndex&&apertureValidation?1:0)"));
  assert.ok(candidate.includes("g.uniform1i(L('uPrimaryApertureIndexRow'),rayMode===0?apertureTileRow("));
  assert.ok(candidate.includes('o.apertureTileIndex!==false'));
  assert.ok(candidate.includes("this.model.placementMode==='UNREGISTERED_evidence_plan_NOT_part_of_measured_mother'"));
