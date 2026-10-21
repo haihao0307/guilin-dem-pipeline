@@ -1,13 +1,13 @@
 {
   "schema": "guilin-public-acceptance-target/v1",
-  "expected_published_commit": "b573bf1e93fa5fcf2bea3690d2aacf31a0716907",
-  "stage": "stage1_new_reader_and_canonical_payload_old55_retained",
+  "expected_published_commit": "8014ec795e02e084937f0c94961d64a181e36790",
+  "stage": "stage2_same_reader_and_canonical_payload_old55_removed",
   "public_url": "https://haihao0307.github.io/guilin-dem-pipeline/guilin/",
   "prior_isolated_qa_head": "fec5876906494128f07a9a3e0e142eb2e709a810",
   "prior_isolated_qa_run": 39562987179,
   "source_data_changes": false,
   "production_writes_from_this_qa": false,
-  "trigger_condition": "Wait for the sole publisher to confirm stage1 Pages deployment terminal success.",
+  "trigger_condition": "Wait for sole publisher confirmation that stage2 Pages deployment reached terminal success.",
   "gates": [
     "Published manifest and all7 full shard SHA256 match frozen Release",
     "Published source files and original protected runtime data SHA256 match candidate/baseline",
@@ -20,5 +20,6 @@
     "Existing missing origin favicon404, if any, reported separately and not concealed as success; JS/data/other console failures remain hard gates",
     "No automatic migration of already-open old tabs; reload required",
     "No source Release deletion or Git history rewrite"
-  ]
+  ],
+  "previous_public_acceptance_run": 39567608201
 }
