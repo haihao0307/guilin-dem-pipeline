@@ -44,6 +44,20 @@ await test('no WebGL2 constructor gives a visible recoverable failure shell',()=
 await test('retry reloads a fresh document and diagnostic fallback is usable',async()=>{const f=monitorFixture();f.events.error({error:Error('script fixture')});f.nodes.get('npc-boot-retry').onclick();assert.equal(f.location.reloadCount,1);await f.nodes.get('npc-boot-copy').onclick();const area=f.nodes.get('npc-boot-diagnostic');assert.equal(area.hidden,false);assert.equal(JSON.parse(area.value).boot.status,'failed');});
 await test('required image rejection fails while decorative images do not',()=>{const f=monitorFixture();f.events.error({target:{tagName:'IMG',dataset:{}}});assert.equal(f.window.__NPC_BOOT__.snapshot().status,'loading');f.events.error({target:{tagName:'IMG',dataset:{npcRequired:'true'}}});assert.equal(f.window.__NPC_BOOT__.snapshot().failure.code,'REQUIRED_IMAGE_FAILED');});
 await test('context loss and native rejection are captured by the recovery shell',()=>{const f=monitorFixture();let prevented=false;f.docEvents.webglcontextlost({preventDefault(){prevented=true;}});assert(prevented);assert.equal(f.window.__NPC_BOOT__.snapshot().failure.code,'WEBGL_CONTEXT_LOST');const g=monitorFixture();g.events.unhandledrejection({reason:'native fixture'});assert.equal(g.window.__NPC_BOOT__.snapshot().failure.code,'UNHANDLED_NATIVE_ERROR');});
+await test('real workbench hiding selectors explicitly protect the startup and failure shell',()=>{
+  const css=fs.readFileSync(path.join(base,'styles.css'),'utf8');
+  const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selector,body])=>selector.includes('body.npc-observe')&&/display\s*:\s*none\s*!important/.test(body));
+  assert(rules.length>0,'The actual native-UI hiding rule must be inspected');
+  for(const [,selector]of rules)for(const part of selector.split(',')){
+    if(!part.includes('body.npc-observe'))continue;
+    assert(part.includes(':not(#npc-boot-shell)'), 'A high-specificity body hiding rule must exclude the boot/error shell: '+part);
+  }
+  const verifier=fs.readFileSync(path.join(base,'verify-browser.cjs'),'utf8');
+  assert(verifier.includes("const enteringStartup=await bootState()"));
+  assert(verifier.includes("assert.notEqual(report.lastBootState.bootShellContractViolation,true"));
+  assert(verifier.includes("shell?.getBoundingClientRect()")&&verifier.includes("getComputedStyle(shell)"),
+    'Real browser verification must evaluate composed shell visibility after app mounting');
+});
 await test('unchanged native geometry and original physical algorithms are still pinned',()=>{
   const expected={'NativeBinding.mjs':'3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878','NativeRig.mjs':'cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1',
     'LifeWorld.mjs':'4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a','WindowInteraction.mjs':'27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b'};
@@ -51,7 +65,7 @@ await test('unchanged native geometry and original physical algorithms are still
   const actor=fs.readFileSync(path.join(base,'ActorAdapter.mjs'));assert.equal(sha(actor.subarray(0,42629)),'1a16716aa4e6103f06fb6b93b9dcdad7aabf1ac21719c872ad1e9f3683430a0f','All native geometry/material/rig code before createActors is unchanged');
 });
 assert(tests.length>=20,'No zero-test false pass');
-const sourceFiles=['BootLifecycle.mjs','BootMonitor.mjs','ObservationClock.mjs','RenderQueue.mjs','Workbench.mjs','ActorAdapter.mjs'];
+const sourceFiles=['BootLifecycle.mjs','BootMonitor.mjs','ObservationClock.mjs','RenderQueue.mjs','Workbench.mjs','ActorAdapter.mjs','styles.css'];
 const report={schema:'kaopu/r03-boot-render-contract-tests@1',scope:'Deterministic CPU/fake-clock/fake-fence/DOM fixtures; no real browser, GPU, WebGL availability, or visual acceptance claim',
   testedSourceSHA256:Object.fromEntries(sourceFiles.map(file=>[file,sha(fs.readFileSync(path.join(base,file)))])),tests,total:tests.length,passed:tests.every(t=>t.passed)};
 fs.writeFileSync(path.join(here,'audit-r03-boot-render-contract.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));if(!report.passed)process.exitCode=1;

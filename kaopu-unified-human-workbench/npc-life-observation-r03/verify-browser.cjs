@@ -20,7 +20,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const cp = require('node:child_process');
 const assert = require('node:assert/strict');
-const {pathToFileURL} = require('node:url');
+const {pathToFileURL,fileURLToPath} = require('node:url');
 const {chromium} = require('playwright');
 const {runContinuousUI}=require('./qa/continuous-ui.cjs');
 
@@ -80,7 +80,7 @@ const report = {
   currentStage:'created',activeOperations:{},driverOperations:[],progressLog:[],evidenceWriteErrors:[],
   deadlines:{bootMS:BOOT_MS,taskMS:TASK_MS,suiteMS:SUITE_MS,windowGroupMS:WINDOW_GROUP_MS,probeMS:PROBE_MS,gpuMS:GPU_MS,frameMS:FRAME_MS,captureMS:CAPTURE_MS,
     failureTotalMS:FAILURE_TOTAL_MS,failureStepMS:FAILURE_STEP_MS,browserCloseMS:CLOSE_MS},
-  startupPassed:false,contactTestsRun:false,fullSuiteRun:false,windowTestsRun:false,completed:false,
+  bootShellChecks:[],startupPassed:false,contactTestsRun:false,fullSuiteRun:false,windowTestsRun:false,completed:false,
   visualAcceptance:false,productionReady:false,publicURLVerified:false
 };
 let server,browser,context,page,cdp,heartbeat,checkpointTimer,heartbeatBusy=false,collecting=true,operationSequence=0;
@@ -148,6 +148,53 @@ const evaluate=(label,fn,arg,budgetMS=PROBE_MS)=>bounded(label,()=>page.evaluate
 const sendCDP=(label,method,args,budgetMS=PROBE_MS)=>bounded(label,()=>cdp.send(method,args),budgetMS);
 const waitFor=(label,fn,arg,options)=>bounded(label,()=>page.waitForFunction(fn,arg,options),options.timeout+5000);
 
+// BEGIN navigation payload receipt (also exercised by the isolated regression).
+// CDP buffers are session-scoped: configure and read on this same session.
+// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-enable
+// https://playwright.dev/docs/api/class-cdpsession
+const NAVIGATION_NETWORK_BUFFERS=Object.freeze({maxResourceBufferSize:128*1024*1024,maxTotalBufferSize:256*1024*1024});
+async function prepareNavigationCapture(session){
+  const documents=[];
+  session.on('Network.responseReceived',event=>{
+    if(event.type==='Document')documents.push({requestId:event.requestId,loaderId:event.loaderId,frameId:event.frameId,
+      url:event.response.url,status:event.response.status,mimeType:event.response.mimeType});
+  });
+  await session.send('Network.enable',NAVIGATION_NETWORK_BUFFERS);
+  return documents;
+}
+async function readNavigationBytes({deliveryMode,requestedURL,finalURL,input,response,documents,sendCDP,bounded}){
+  assert.equal(new URL(finalURL).href,new URL(requestedURL).href,'Navigation must stay at the exact candidate URL');
+  if(deliveryMode==='file-protocol'){
+    const actual=new URL(finalURL);
+    assert.equal(actual.protocol,'file:','File verification must navigate to a file URL');
+    assert.equal(actual.search,'');assert.equal(actual.hash,'');
+    const actualPath=fileURLToPath(actual),resolved=fs.realpathSync(actualPath);
+    assert.equal(resolved,fs.realpathSync(input),'The browser must navigate to the exact built file being hashed');
+    // A file:// navigation can still return a Playwright Response. Its body()
+    // uses Chromium inspector cache and is not required to read this exact file.
+    const bytes=fs.readFileSync(actualPath);
+    return {bytes,receipt:{method:'exact-navigated-file-bytes',url:actual.href,path:resolved,bytes:bytes.length,
+      responseObjectPresent:!!response,inspectorBodyRead:false}};
+  }
+  assert(response,'HTTP candidate must have a real navigation response');
+  assert.equal(response.status(),200,'Candidate HTML must respond HTTP 200');
+  assert.equal(response.url(),finalURL,'Navigation response URL must match the actual final page URL');
+  assert.equal(await bounded('wait for actual navigation response completion',()=>response.finished()),null,'Navigation response must finish successfully');
+  const {frameTree}=await sendCDP('identify actual candidate main document','Page.getFrameTree');
+  const frame=frameTree?.frame;
+  assert(frame&&frame.id&&frame.loaderId,'Actual main-frame and loader identifiers are required');
+  assert.equal(frame.url,finalURL,'Main frame must display the requested candidate');
+  const matching=documents.filter(d=>d.frameId===frame.id&&d.loaderId===frame.loaderId&&d.url===finalURL);
+  assert.equal(matching.length,1,'Exactly one captured main-document response must match this navigation');
+  const document=matching[0];assert.equal(document.status,200);
+  const payload=await sendCDP('read the actual buffered navigation HTML bytes','Network.getResponseBody',{requestId:document.requestId});
+  assert.equal(typeof payload.body,'string');assert.equal(typeof payload.base64Encoded,'boolean');
+  const bytes=Buffer.from(payload.body,payload.base64Encoded?'base64':'utf8');
+  return {bytes,receipt:{method:'same-navigation-CDP-response-body',...document,base64Encoded:payload.base64Encoded,bytes:bytes.length,
+    bufferBudgets:NAVIGATION_NETWORK_BUFFERS,separateHTTPFetch:false}};
+}
+// END navigation payload receipt.
+
 async function check(name,fn) {
   const started=Date.now();stage(name);
   try {const result=await fn();assert.notEqual(result,false);report.tests.push({name,passed:true,elapsedMS:Date.now()-started,result});log('PASS '+name);return result;}
@@ -155,7 +202,7 @@ async function check(name,fn) {
 }
 
 async function bootState(budgetMS=PROBE_MS) {
-  return evaluate('read native boot state',() => ({
+  const state=await evaluate('read native boot state',() => ({
     ready:!!window.__NPC_OBSERVATION__?.ready,
     state:document.documentElement.dataset.npcReady || null,
     progress:document.querySelector('#npc-progress')?.textContent || null,
@@ -169,8 +216,17 @@ async function bootState(budgetMS=PROBE_MS) {
     browserFatal:window.__NPC_BROWSER_FATAL__ || [],
     boot:window.__NPC_BOOT__?.snapshot?.(),nativeBoot:window.__NPC_NATIVE_BOOT__?.status?.(),
     shellPaint:window.__NPC_SHELL_PAINT__ || null,characterSet:document.characterSet,
+    bootShell:(()=>{const element=document.querySelector('#npc-boot-shell'),rect=element?.getBoundingClientRect(),style=element?getComputedStyle(element):null;
+      return {appMounted:!!document.querySelector('#npc-app'),exists:!!element,hidden:element?.hidden??null,
+        display:style?.display??null,visibility:style?.visibility??null,width:rect?.width??0,height:rect?.height??0,
+        visible:!!element&&!element.hidden&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0&&rect.width>0&&rect.height>0};})(),
     paints:performance.getEntriesByType('paint').map(p=>({name:p.name,startTime:p.startTime,duration:p.duration}))
   }),undefined,budgetMS);
+  if(['loading','failed'].includes(state.boot?.status)&&state.bootShell.appMounted){
+    report.bootShellChecks.push({status:state.boot.status,stage:state.boot.code,elapsedMS:state.boot.elapsedMS,...state.bootShell});
+    state.bootShellContractViolation=!state.bootShell.visible;
+  }
+  return state;
 }
 
 async function pause(value) {
@@ -1460,6 +1516,7 @@ async function main() {
   }));
   page=await bounded('create candidate page',()=>context.newPage());page.setDefaultTimeout(30000);
   cdp=await bounded('open screenshot CDP session',()=>context.newCDPSession(page));
+  const navigationDocuments=report.deliveryMode==='file-protocol'?[]:await bounded('preserve complete candidate response in this CDP session',()=>prepareNavigationCapture(cdp));
   page.on('pageerror',error=>{
     if(collecting){const value={at:new Date().toISOString(),error:clip(error.stack||error)};report.pageErrors.push(value);log('page error',value);}
   });
@@ -1482,17 +1539,31 @@ async function main() {
   await check('candidate response and freshness',async()=>{
     const response=await bounded('navigate to exact candidate',()=>page.goto(report.url,{waitUntil:'domcontentloaded',timeout:120000}),125000);
     report.finalURL=page.url();report.navigationStatus=response?.status() || null;
-    if(report.deliveryMode!=='file-protocol')assert.equal(response?.status(),200,'Candidate HTML must respond HTTP 200');
-    if(response)report.observedPreviewSHA256=sha(await bounded('read actual navigation HTML bytes',()=>response.body()));
-    else if(report.deliveryMode==='file-protocol')report.observedPreviewSHA256=sha(fs.readFileSync(input));
+    const actual=await readNavigationBytes({deliveryMode:report.deliveryMode,requestedURL:report.url,finalURL:report.finalURL,
+      input,response,documents:navigationDocuments,sendCDP,bounded});
+    report.observedPreviewSHA256=sha(actual.bytes);report.navigationPayloadReceipt=actual.receipt;
     assert(expectedSHA,'Expected preview SHA is required for current-source verification');
     assert.equal(report.observedPreviewSHA256,expectedSHA,'Browser loaded the exact current build');
-    return {url:report.finalURL,status:report.navigationStatus,sha256:report.observedPreviewSHA256};
+    if(Number.isFinite(build?.previewBytes))assert.equal(actual.bytes.length,build.previewBytes,'The actual candidate has the exact built byte count');
+    if(report.deliveryMode!=='file-protocol')await sendCDP('release completed navigation inspection buffer','Network.disable');
+    return {url:report.finalURL,status:report.navigationStatus,sha256:report.observedPreviewSHA256,receipt:actual.receipt};
   });
   await check('complete original R07 and all three actors ready',async()=>{
     assert.equal(report.pageErrors.length,0,'Page failed before native startup: '+JSON.stringify(report.pageErrors));
-    await waitFor('wait for original R07 and all native actors',()=>!!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length || !!window.__NPC_BROWSER_FATAL__?.length,{},{timeout:BOOT_MS,polling:250});
+    const enteringStartup=await bootState();
+    assert.notEqual(enteringStartup.bootShellContractViolation,true,'The loading shell must remain visible after the workbench styles mount');
+    await waitFor('wait for original R07 and all native actors',()=>{
+      // Check the composed real CSS after app mounting, not just the earlier
+      // shell-first RAFs. A hidden loading/error shell is a startup failure.
+      if(window.__NPC_BOOT__?.snapshot?.().status==='loading'&&document.querySelector('#npc-app')){
+        const shell=document.querySelector('#npc-boot-shell'),rect=shell?.getBoundingClientRect(),style=shell?getComputedStyle(shell):null;
+        if(!shell||shell.hidden||style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||!rect.width||!rect.height)return true;
+      }
+      return !!window.__NPC_OBSERVATION__?.ready || document.documentElement.dataset.npcReady==='failed' || !!window.__HEAD_PROC__?.errors?.length || !!window.__NPC_BROWSER_FATAL__?.length;
+    },{},{timeout:BOOT_MS,polling:250});
     report.coldReadyMS=Date.now()-start;report.lastBootState=await bootState();
+    assert.notEqual(report.lastBootState.bootShellContractViolation,true,'The actual loading/failure shell was hidden by composed styles');
+    assert(report.bootShellChecks.every(check=>check.visible),'Every observed mounted loading/failure shell must be visible');
     assert.equal(report.lastBootState.browserFatal.length,0,'Browser failed during native startup: '+JSON.stringify(report.lastBootState.browserFatal));
     assert.equal(report.lastBootState.state,'true',JSON.stringify(report.lastBootState));
     assert.equal(report.lastBootState.ready,true);assert.equal(report.lastBootState.gpuVerified,true);
@@ -1515,7 +1586,7 @@ async function main() {
     const paint=report.lastBootState.paints.find(p=>p.name==='first-contentful-paint');
     assert(paint&&Number.isFinite(paint.startTime),'A real browser contentful-paint entry is required');
     report.startupTiming={coldReadyMS:report.coldReadyMS,firstContentfulPaintMS:paint.startTime,
-      shellRAF:shell,boot:report.lastBootState.boot,nativeBoot,coldGateMS:COLD_BOOT_GATE_MS,nativeRenderCallGate:NATIVE_RENDER_CALL_GATE};
+      shellRAF:shell,mountedShellChecks:report.bootShellChecks,boot:report.lastBootState.boot,nativeBoot,coldGateMS:COLD_BOOT_GATE_MS,nativeRenderCallGate:NATIVE_RENDER_CALL_GATE};
     put('startup-timing.json',report.startupTiming);
     await pause(true);
     const initial=await evidence('initial',{nativeRigs:true});

@@ -47,6 +47,7 @@ node kaopu-unified-human-workbench/npc-life-observation-r03/build.cjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/audit-r03-assets.cjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/audit-r03-boot-render-contract.mjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/audit-r03-continuous-contract-test.cjs
+node kaopu-unified-human-workbench/npc-life-observation-r03/qa/audit-r03-navigation-payload.cjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/r01-causal-regression.mjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/window-causal.mjs
 node kaopu-unified-human-workbench/npc-life-observation-r03/qa/window-host-integration.mjs
@@ -55,3 +56,7 @@ node kaopu-unified-human-workbench/npc-life-observation-r03/qa/window-host-integ
 The workflow pins Playwright 1.58.2 and installs its Chromium. It runs the full suite using the final standalone file, then publishes only a new `npc-life-observation/r03-20261020/<source-head>/` directory and verifies the actual public page. The Pages carrier advances normally from its newest parent; no rebase, force push or historical path replacement is used. The branch remains a draft PR and is not merged.
 
 Local numerical/resource/fixture checks are not GPU or browser proof. Browser and publication evidence must be attached to the same immutable source/build before delivery. Workspace interruption occurred during development; lost unpublished results have not been reused as evidence.
+
+## First browser candidate correction
+
+Run 39534051283 stopped before startup acceptance: the 66.6 MB file response was evicted from the inspector cache. File-mode verification now hashes the exact navigated real path, and HTTP capture buffers and reads the same actual navigation request in one CDP session. The failure screenshot also exposed an inherited `:not(#npc-app)` CSS rule hiding the recovery shell after Workbench mounted; the rule now explicitly excludes the boot shell, with real loading-stage visibility checks. See `qa/FIRST_FAILURE_REVIEW.json`. No R03 browser or public pass is claimed by this correction alone.
