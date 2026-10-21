@@ -18,6 +18,8 @@ Glass uses a finite closed pane field, analytic entry and exit, two-interface Sn
 
 ## Verification contract
 
+[Actual candidate acceptance, performance and retained limits](evidence/ACCEPTANCE.md).
+
 CPU/GPU point, normal, identity, thin-edge and ray parity; parameter/host rotation/reset/disable checks; sampled motion clearance labelled as sampled, not continuous proof; actual open/closed/edge views in all three cases; small-resolution cost gate before large renders; unchanged old versions and exact public hashes after any authorized publication.
 
 Default motion checks sample 101 poses and bounded leaf-volume points against authored design solids. Valid edits are rechecked and sampled overlaps are rejected; the measured shell has no invented volume/occupancy. This is not a continuous swept-collision proof or real-building clearance certification. The window glass is 6 mm by design default; exact frame/wall/glass depths remain unmeasured. Vehicle and freight openings have fixed frames only, without fabricated moving machinery. No security grille has been added.
