@@ -1,0 +1,18 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const ROOT=path.dirname(fileURLToPath(import.meta.url));
+const src=path.join(ROOT,'upstream/kaopu-tailor-workbench/pattern-batch/r02/backend/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs');
+const out=path.join(ROOT,'generated/native-adapter.mjs');
+let text=await fs.readFile(src,'utf8');
+text=text.replace(/(from\s*['"])(\.{1,2}\/[^'"\r\n]+)(['"])/g,(_,a,p,b)=>a+path.relative(path.dirname(out),path.resolve(path.dirname(src),p)).replaceAll('\\','/')+b);
+text=text.replaceAll('import.meta.url',JSON.stringify('https://kaopu-embedded.invalid/backend/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs'));
+const command='} else if(data.type === "generate-native-variant") {';
+if(text.split(command).length!==2)throw Error('Upstream command dispatch changed');
+text=text.replace(command,'} else if(data.type === "load-length-variant") {\n      await loadLengthVariant(data);\n    '+command);
+const done="emit('done',{record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});";
+if(!text.includes(done))throw Error('Upstream done packet changed');
+text=text.replace(done,"emit('done',{spec,analytic,record,regions,intersections,profile,activeWallMs:wallMs+profile.auditMs});");
+text="import {changeHemLength} from '../src/length-operation.mjs';\n"+text+await fs.readFile(path.join(ROOT,'src/worker-extension.txt'),'utf8');
+await fs.mkdir(path.dirname(out),{recursive:true});await fs.writeFile(out,text);
+console.log('Prepared inherited worker: bounded command and in-memory transport only.');

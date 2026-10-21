@@ -1,0 +1,28 @@
+
+// CLO learning R01: the only new command. All original source checks, physical
+// stages, iteration counts and static gates remain in the inherited kernel.
+async function loadLengthVariant(data){
+ stop();const token=epoch;requestId=data.requestId;nativeBinding=null;spec=analytic=lab=null;resetContinuation();
+ requirePerson(data.person,R04_LOCK.person);
+ const row=R04_ROWS.S03;
+ const sourceHash=await sha(data.paperText);
+ if(token!==epoch)return;
+ if(data.presetId!=='S03'||sourceHash!==row.decodedSHA256)throw Error('裙长操作只能从冻结的 S03 原纸样派生。');
+ const original=JSON.parse(data.paperText);
+ for(const key in profile)profile[key]=0;
+ const started=performance.now();
+ const edited=await changeHemLength(original,data.deltaMm,{requestId:data.requestId,expectedRevision:data.expectedRevision});
+ if(token!==epoch)return;
+ const nextAnalytic=prepareNativeSource(edited.paper);
+ const nextConfig={kind:'analytic',variant43:true,recipe:{bodyCm:structuredClone(original.bodyCm),design:{style:'PencilSkirt',...structuredClone(original.design)}}};
+ const nextSpec=compileWithinNativeBudget(nextAnalytic,{allowUnsupportedSeams:true,numericalStitchSpacingMm:12,measurementSnapshot:{bodyId:'common-native-default-r04',sizingOrigin:'bounded-S03-material-hem-edit'}});
+ validate2(nextSpec);
+ const nextBinding={person:structuredClone(R04_LOCK.person),presetId:'S03',basePresetId:'S03',recipeHash:nextAnalytic.recipeHash,paperSHA256:await sha(JSON.stringify(nextAnalytic)),basePaperSHA256:row.decodedSHA256,materialSHA256:await materialHash(nextSpec),nativeAnchor:R04_LOCK.nativeAnchor,patternSizingOrigin:'EXPLICIT_HEM_EDIT_NOT_CHANGED_PERSON',operation:edited.operation,operationSHA256:edited.requestHash};
+ if(token!==epoch)return;
+ analytic=nextAnalytic;spec=nextSpec;config=nextConfig;nativeBinding=nextBinding;profile.meshMs=performance.now()-started;
+ spec.source.nativeBinding=structuredClone(nativeBinding);spec.source.bodyId='common-native-default-r04';spec.source.patternSizingOrigin=nativeBinding.patternSizingOrigin;
+ const fit=preflightSizing(analytic),positionsM=initialPositions(spec);
+ emit('paper',{spec,analytic,positionsM,measurements:edited.measurements,geometryChanged:data.deltaMm!==0,protectedGeometryPassed:edited.protectedGeometryPassed,fitPreflight:fit,canSew:!fit.blocking,physicalStatus:'新纸样已重新网格化；必须由本次求解取得新的诊断。'},[positionsM.buffer]);
+}
+
+export function inspectStudyState(){return{spec,analytic,lab,nativeBinding,profile,stages,stageIndex};}
