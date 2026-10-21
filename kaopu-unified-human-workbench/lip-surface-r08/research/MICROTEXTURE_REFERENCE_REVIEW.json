@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu/lip-microtexture-reference-review@1",
+  "dateUTC": "2026-10-21",
+  "scope": "Focused search for original human lip surface photographs; no product source changes, external meshes or imported photo textures.",
+  "primaryUsableSource": {
+    "title": "Image based quantification method reveals differential patterns of lip desquamation associated with age and sex",
+    "doi": "10.1038/s41598-025-89264-x",
+    "year": 2025,
+    "url": "https://www.nature.com/articles/s41598-025-89264-x",
+    "archive": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11977245/",
+    "methodBoundary": "Original study of 55 participants aged 25-43. Participants withheld topical lip-care products for 12 hours, wiped lips and rested 10 minutes. Normal-light Canon 200D/Janus-III photographs preceded tape stripping. The paper separately reused 1,000 images; those are not 1,000 independently published close-ups.",
+    "usefulRegion": "Figure 1 score 0/1 lower-lip crops give relatively clear unflaked/minimally flaked surface examples. Figure 2b is a clearer lower-central-lip colour crop but includes obvious flakes.",
+    "limits": "The study measures image-derived desquamation, not groove width, depth, BRDF or a 3D surface profile. No usable physical scale bar is present in these figures. Severe flaking panels are not a default healthy-lip target. Product abstention is stated as topical lip-care products; lipstick is not named separately in the reported protocol."
+  },
+  "figures": [
+    {
+      "file": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/s41598-025-89264-figure1-full.png",
+      "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41598-025-89264-x/MediaObjects/41598_2025_89264_Fig1_HTML.png",
+      "sha256": "16ebc6dfc1d647d17baac6a42c23547aa5ea772eb8a81879ba0d726a910b4c2c",
+      "bytes": 241150,
+      "dimensions": [
+        1654,
+        285
+      ],
+      "personallyViewed": true,
+      "modifiedByReviewer": false
+    },
+    {
+      "file": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/s41598-025-89264-figure2-full.png",
+      "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41598-025-89264-x/MediaObjects/41598_2025_89264_Fig2_HTML.png",
+      "sha256": "ab682b44e60e9436cd7a8ba6be0149d81256456d23d0d1b2c8997370fd1b7ba1",
+      "bytes": 509326,
+      "dimensions": [
+        1654,
+        644
+      ],
+      "personallyViewed": true,
+      "modifiedByReviewer": false
+    }
+  ],
+  "personallyObservedQualitativeFeatures": [
+    "In Figure 1 score 0/1, lower-central-lip furrows are predominantly near vertical, but their spacing, visible width, strength and length are unequal.",
+    "Strong longer grooves coexist with finer short marks and relatively smooth inter-groove regions. The pattern is not an array of identical straight bars.",
+    "Figure 2b separates dark linear furrows from irregular bright lifted/flaking material. The latter should not be confused with a desired network of highlights or painted lip noise.",
+    "These crops do not document the entire outer edge or upper lip; they do not establish a universal directional pattern for every lip region."
+  ],
+  "secondarySourceInspected": {
+    "title": "Image-based investigation of lip aging features in a large number of Korean women",
+    "doi": "10.1111/srt.13563",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10776892/",
+    "figureURL": "https://cdn.ncbi.nlm.nih.gov/pmc/blobs/70b5/10776892/cf37bec04e02/SRT-30-e13563-g003.jpg",
+    "localFile": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/reference-research/microtexture/srt13563-figure2.jpg",
+    "sha256": "5bcfa56e3604e30b5e72b346f7e69b0aa3e4f42fbfd279a0d60a41587c35ed23",
+    "decision": "Only the top panel is an original colour photograph. The remaining prominent wrinkle maps are algorithmically processed with Hessian/FFT/Sobel stages and must not be treated as observed surface depth or an unretouched target. Original photograph panel is too small to improve physical-scale evidence."
+  },
+  "supportForMaterialAudit": {
+    "supported": "The photographed appearance supports separately retaining readable coarse and finer structural variation when the image resolution resolves them. It motivates examining the existing footprint filtering rather than assuming all missing texture is insufficient wetness.",
+    "notSupported": [
+      "No measured micrometre groove depth or millimetre groove spacing was obtained in this focused search.",
+      "Photos alone cannot prove the current Gaussian broadening plus global visibility factor is numerically incorrect.",
+      "Removing the visibility term, increasing groove depth, or accepting a new implementation still requires isolated actual GPU images, matched camera/light/identity and normal-distance/motion checks.",
+      "No claim that the R08 colour experiment or edge factor repairs the normal/clearcoat filtering chain."
+    ]
+  },
+  "communication": "Shared full original image paths, study protocol, limitations and these observations with /root and /root/r08_native_material_audit.",
+  "productionFilesChanged": false,
+  "visualAcceptanceOfNewCode": false
+}
