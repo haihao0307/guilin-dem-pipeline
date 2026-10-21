@@ -144,7 +144,7 @@ async function main(){
   const showData=value=>{$('data-panel').hidden=!value;$('data-toggle').setAttribute('aria-expanded',String(value));updateUI();};
   $('data-toggle').onclick=()=>showData($('data-panel').hidden);$('data-close').onclick=()=>showData(false);
   for(const b of app.querySelectorAll('[data-camera]'))b.onclick=()=>camera(b.dataset.camera);
-  $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?icons.play:icons.pause;$('pause').setAttribute('aria-label',paused?'继续生活':'暂停生活');updateUI();};
+  $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?icons.play:icons.pause;$('pause').setAttribute('aria-label',paused?'继续生活':'暂停生活');viewer.render();updateUI();};
   $('speed').onclick=()=>{speed=speed===1?2:1;$('speed').textContent=speed+'×';updateUI();};
   $('reset').onclick=()=>{sim.reset();for(const actor of actors){motion.get(actor.id).reset();sim.actor(actor.id).capabilities={...actor.motionCapabilities};}items.reset();environment.reset();audit.interactions=[];audit.motionFailures=[];audit.minActorDistance=Infinity;audit.minPairClearanceM=Infinity;audit.maxBoneLengthErrorM=0;audit.maxFootPenetrationM=0;paused=false;$('pause').textContent=icons.pause;$('pause').setAttribute('aria-label','暂停生活');execute(0);viewer.render();updateUI();};
   const reflectEnvironment=()=>{courtyard.update(sim,0);rain.update(sim.time,sim.raining,sim.environment.windStrength);updateLighting();viewer.render();updateUI();};

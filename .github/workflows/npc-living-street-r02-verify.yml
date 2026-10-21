@@ -1,5 +1,12 @@
 name: NPC living street R02 candidate
 on:
+  workflow_dispatch:
+    inputs:
+      compare_original_cloth:
+        description: 'Run the unchanged original GPU cloth source comparison'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [feature/npc-living-street-r02-20261020]
     paths:
@@ -13,6 +20,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   original_gpu_cloth_fit:
+    if: github.event_name == 'workflow_dispatch' && inputs.compare_original_cloth == true
     name: Original GPU cloth D48 source comparison
     runs-on: ubuntu-latest
     timeout-minutes: 30

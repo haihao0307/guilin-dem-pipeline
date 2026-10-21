@@ -7,10 +7,13 @@ export function manageRendering(viewer){
   if(typeof gl.fenceSync!=='function')throw Error('完整人物观察需要 WebGL2 帧同步');
   let requested=0,submitted=0,completed=0,completedRequest=0,dirty=false,pending=null,failure=null,managedInFlight=0,maxManagedInFlight=0,outsideBatchRenderPasses=0;
   const waiters=[],beforeListeners=new Set(),listeners=new Set(),durations=[];
+  let pumpCount=0,lastPumpAtMS=null;
   const appearancePreparation={batches:0,lastCPUms:0,maxCPUms:0,lastRenderPasses:0,totalRenderPasses:0,
     measurement:'actual renderer.info.render.frame increments during synchronous before-render hooks'};
   const managedSince=new Date().toISOString(),startupDrain={completed:false,durationMS:null,priorNativeFrame:viewer.renderer.info.render.frame};
-  const status=()=>({requested,submitted,completed,inFlight:managedInFlight,maxInFlight:maxManagedInFlight,maxManagedInFlight,
+  const status=()=>({requested,submitted,completed,completedRequest,inFlight:managedInFlight,maxInFlight:maxManagedInFlight,maxManagedInFlight,
+    pendingRequest:pending?.request??null,pendingAgeMS:pending?performance.now()-pending.started:null,
+    waiterTargets:waiters.map(w=>w.target),pumpCount,lastPumpAtMS,
     managedSince,startupDrain:{...startupDrain},scope:'one submission batch includes synchronous appearance preparation and native beauty; earlier startup GPU commands are drained before the first managed draw',
     dirty,lastGPUFrameMS:durations.at(-1)??null,gpuFrameDurationsMS:durations.slice(),
     appearancePreparation:{...appearancePreparation},outsideBatchRenderPasses,
@@ -23,6 +26,7 @@ export function manageRendering(viewer){
   pending={fence:initialFence,started:performance.now(),serial:0,request:0,startup:true};gl.flush();
   function reject(error){failure=error;for(const w of waiters.splice(0))w.reject(error);throw error;}
   function pump(){
+    pumpCount++;lastPumpAtMS=performance.now();
     if(failure)return;
     if(pending){
       if(!pending.startup){const nowFrame=viewer.renderer.info.render.frame;

@@ -131,7 +131,7 @@ export function createNativeHairSystem({renderer,onProgress=()=>{}}={}) {
       for(let i=0;i<radii.length;i++)radii[i]=engine.material.uniforms.radius.value*(.72+.55*random.array[i])*(1-.87*Math.pow(along.array[i],4));
       mesh.geometry.setAttribute('strandRadius',new T.BufferAttribute(radii,1));
       fiber=attachFiberMaterial(mesh,{renderer,color:engine.options.color,roughness:engine.options.roughness,
-        specular:.095,coverageResolve:'auto'});old.dispose();reportSource=SHORT_SOURCE;
+        specular:.095,coverageResolve:'blend'});old.dispose();reportSource=SHORT_SOURCE;
     }
     mesh.name=`${actor.id}/original-${style}-hair`;mesh.frustumCulled=false;actor.root.add(mesh);
     const skin=attachRootSkin(actor,mesh,binding,head,segments);let updates=0;
