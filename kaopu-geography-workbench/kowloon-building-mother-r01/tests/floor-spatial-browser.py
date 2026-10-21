@@ -17,7 +17,7 @@ async def main():
    await checker.close()
    for name in ['frozen','candidate']:
     page=await browser.new_page(viewport={'width':800,'height':650});pages[name]=page;page.on('pageerror',lambda e:result['errors'].append(str(e)))
-    await page.goto(base+'tests/floor-spatial-probe.html?variant='+name);await page.wait_for_function('probe?.ready');result[name+'Setup']=await page.evaluate('probe.setup()');print('COMPILED',name,json.dumps(result[name+'Setup']['compile']),flush=True)
+    await page.goto(base+'tests/floor-spatial-probe.html?variant='+name);await page.wait_for_function('window.probe?.ready');result[name+'Setup']=await page.evaluate('probe.setup()');print('COMPILED',name,json.dumps(result[name+'Setup']['compile']),flush=True)
     if name=='frozen':
      response=await page.request.get(base+'whole-building-floor-study-r01/renderer.baseline-3d251360.mjs');assert hashlib.sha256(await response.body()).hexdigest()==result['baselineRendererSha256']
     result[name+'Warmup']=await asyncio.wait_for(page.evaluate('probe.measure({width:32,indexed:false})'),90);assert result[name+'Warmup']['error']==0;print('WARMUP',name,result[name+'Warmup']['stats']['wallMs'],flush=True)
