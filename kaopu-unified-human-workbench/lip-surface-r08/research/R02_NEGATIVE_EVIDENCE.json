@@ -1,0 +1,126 @@
+{
+  "schema": "kaopu/r08-historical-counterevidence@1",
+  "dateUTC": "2026-10-21",
+  "status": "independent source/history review; no R08 images reviewed",
+  "repositoryFilesModified": false,
+  "remoteWrites": false,
+  "inputs": [
+    {
+      "localFile": "ITERATION_01_REVIEW.json",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/9684ffdda08cbec6afc01c69c2cebc37c9f76c9b/kaopu-unified-human-workbench/lip-realism-r02/ITERATION_01_REVIEW.json",
+      "bytes": 7225,
+      "sha256": "3b8d0b36a2e36cea722bbed22e77ecae887cd7c068c77f0be578db4894177fb4",
+      "gitBlobSHA1": "ca809c5ecd8afccf2905258965631f4665a3765b"
+    },
+    {
+      "localFile": "ITERATION_02_REVIEW.json",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/9684ffdda08cbec6afc01c69c2cebc37c9f76c9b/kaopu-unified-human-workbench/lip-realism-r02/ITERATION_02_REVIEW.json",
+      "bytes": 1232,
+      "sha256": "670d2be40e74b008c965e41710bfcc81501fe2b86155b362f2e5e392a845a4a8",
+      "gitBlobSHA1": "e2f9b64e93622b2f73a09b6a8c851e5d46104b3a"
+    },
+    {
+      "localFile": "AUDIT_FINDINGS.md",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/9684ffdda08cbec6afc01c69c2cebc37c9f76c9b/kaopu-unified-human-workbench/lip-realism-r02/AUDIT_FINDINGS.md",
+      "bytes": 9175,
+      "sha256": "d0aa2cb318432c22ce5e093bbeb17868eb88288d877c877357147d51d92b41da",
+      "gitBlobSHA1": "b01ea9a5affb6215493a2a9d7ef058beb7ca56cd"
+    },
+    {
+      "localFile": "LipSurface-iteration01.js",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/bf235cbb741de1eb21f469c9e020b95a65f24040/kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+      "bytes": 31687,
+      "sha256": "b4c4348e5e09eaf78cd636d23702ba3af8e86f0279a7a9553b449b347d8cad14",
+      "gitBlobSHA1": "2f5ac7886fbb12f6b0ab03ce0acfd7df7acb6fac"
+    },
+    {
+      "localFile": "LipSurface-iteration02.js",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/331b5c469ce822d989a10193d2292c17b94e346a/kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+      "bytes": 31312,
+      "sha256": "8f3efd5fe101f45a9efa40eba752dd660e83b9654deba57d10d4c0efc6c06f7a",
+      "gitBlobSHA1": "1232bc10b7c84a743ced9e1df33aa08f7e6c23f8"
+    }
+  ],
+  "currentSource": {
+    "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-surface-r08/src/SurfaceMaterial.js",
+    "bytes": 11035,
+    "sha256": "7a6fd5235967b73eec7c87fda9059bb2eb599daeb890b9cf843e6ff24e857a49",
+    "gitBlobSHA1": "cd79f67aa4b27e1ac8cc4ab49bad2806e9c65757"
+  },
+  "scopeCorrection": "The prior reference/design review did not incorporate these R02 rejected iterations. That omission matters: the historical evidence weakens the rationale for retaining the new colour factor and must accompany its eventual image decision.",
+  "history": [
+    {
+      "iteration": 1,
+      "visualDecision": "REJECT_ADDED_PIGMENT_FIELD",
+      "reportedObservation": "Actual macro and oblique beauty showed broad mottled lower-lip red/grey patches; an albedo toggle attributed them to the added field. Upper-lip clouds had no clear relation to folds/contact shape. Whole-face benefit was unproved.",
+      "reviewEvidenceKind": "Read original fixed reports and source; this review has not re-viewed the historical PNGs.",
+      "sourceMechanism": {
+        "lowFrequencyField": "(noise(u*2.9+47,depth*2.1+upper*17)-0.5)*2",
+        "localField": "(noise(mm*0.48+(11,upper*37))-0.5)*2",
+        "weights": [
+          0.7,
+          0.3
+        ],
+        "multiplicativeCoefficients": [
+          0.12,
+          0.28,
+          0.23
+        ],
+        "innerDarkeningCoefficients": [
+          0.025,
+          0.085,
+          0.065
+        ],
+        "innerDepthSmoothstep": [
+          0.025,
+          0.46
+        ],
+        "attachment": "Already native rest coordinates, upper/lower and inner/outer rails; surface attachment is not a new R08 distinction."
+      }
+    },
+    {
+      "iteration": 2,
+      "visualDecision": "Remove added outer-edge transition entirely",
+      "reportedObservation": "The additional skin transition washed out the edge and slightly narrowed the red lip, without a clear whole-face appearance benefit. Rejection did not require a severe new halo.",
+      "sourceMechanism": "outerBlend = clamp(originalOuter + variation*exposure*(0.20+corners*0.10),0,0.68), with exposure=smoothstep(0.30,0.96,depth). Original shared coverage mask remained unchanged."
+    }
+  ],
+  "colourComparison": {
+    "verdict": "Same failed method family, not a byte-identical repetition. No demonstrated mechanism presently resolves the historical random-mottling failure.",
+    "sharedMechanisms": [
+      "Rest-attached continuous pseudorandom colour fields.",
+      "Anatomical rail coordinates control location, but there is no measured local pigmentation map or evidence that a random realization represents this person.",
+      "Exponential channel modulation used to turn signed noise into visible pigmentation-like variation.",
+      "Multiple spatial scales and retained original identity/light/geometry."
+    ],
+    "realDifferences": [
+      "R08 replaces the original weak local-colour block rather than stacking the old R02 extra block on it.",
+      "R08 adds signed chroma with broad/small/fine weights 0.28/0.54/0.18. Its small field uses the same inherited 0.48/mm scale and offset as the historical local field.",
+      "R08 exponential field is now the recentered inherited pigmentField, a low-frequency noise in u*2.6 and depth*1.7; coefficients are 0.115/0.180/0.235 rather than 0.12/0.28/0.23.",
+      "R08 removes the separate extra inner-darkening term and gates new modulation away from fully oral surfaces.",
+      "R08 fades only its new fine field with footprint."
+    ],
+    "whyDifferencesAreInsufficient": [
+      "A lower green exponential coefficient does not establish that the composite field looks less mottled; red/blue amplitudes and additive chroma also matter.",
+      "The pure low-frequency lsPigment field remains active when the fine term fades. Fine-field filtering therefore does not solve broad red/grey colour patches.",
+      "Different frequencies, offsets and seed realization can change the stain pattern without establishing more realistic tissue organisation.",
+      "The studies support variation existing, not these random-field coefficients or this spatial arrangement."
+    ],
+    "requiredNewEvidence": "Colour-only full-material images must show a concrete perceptual gain over exact R06 without broad patches, dirty/bruise-like mottling, saturated spots, shimmer or a worse normal-distance face. A single visibly different albedo image is not sufficient."
+  },
+  "edgeComparison": {
+    "verdict": "Directionally different from the rejected R02 washing-out operation; it is a legitimate separate hypothesis, not an established improvement.",
+    "oldDirection": "Added positive skin mixing over exposed outer tissue, reducing lip-tissue contribution and washing/narrowing its red appearance.",
+    "newDirection": "Moves the outer skin blend start from depth 0.62 to 0.78 and end 1.02 to 1.04, generally preserving more tissue colour near the rail, while narrowing the shared mask transition. It reduces outside feathering and increases inside coverage around the same inherited contour; it is not simply a uniform change in lip shape.",
+    "newScopeRisk": "Unlike the old colour-only blend, the new shared mask also changes the coverage of shader fine-height, roughness and wet-film contributions. It can reveal a hard outline, aliasing or bright seam even if colour becomes clearer.",
+    "requiredNewEvidence": "Edge-only images must reduce the overly broad transition while avoiding a drawn line, lip-shape distortion, halo, bright rim or worse motion/oblique/normal-distance appearance. Like R02, lack of useful visual benefit alone is sufficient reason to reject."
+  },
+  "recommendation": {
+    "runningCI": "Let the already-running frozen-source run collect its images and technical evidence. Do not mutate the frozen source or anchored review during this run.",
+    "colourRetention": "Do not presume retention. If actual colour-only images repeat the known broad-mottling failure, reject the factor rather than defending it as tissue understanding or raising contrast again.",
+    "edgeRetention": "Judge independently. Retain only if the isolated edge factor provides a visible benefit and passes its own regressions.",
+    "combinedRetention": "Do not let an edge gain conceal a harmful colour factor. A useful combined image does not validate each ingredient.",
+    "furtherBlindTuning": "Historical evidence does not justify another unobserved stronger-noise round if this one fails.",
+    "visualAcceptance": false
+  }
+}
