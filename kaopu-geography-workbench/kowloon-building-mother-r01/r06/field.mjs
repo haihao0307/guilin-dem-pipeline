@@ -292,7 +292,7 @@ export function traceFieldAnalytic(spec,origin,direction,{maxSteps=512,maxDistan
  const rd=norm(direction),span=rayInterval(origin,rd,spec.bounds),cut=clipX??-1e20;
  if(!span||span[1]<0)return {hit:false,status:2,reason:'outside_bounds',steps:0,structuralPlaneTests:0};
  const planeCount=diagnosticMode===2?0:spec.structurePlanes.length;
- const start=Math.max(0,span[0]),end=Math.min(span[1],maxDistance);let nearest=end+1,structural=null,candidates=0;
+ const start=Math.max(0,span[0]),end=Math.min(span[1],maxDistance);if(end<start)return {hit:false,status:2,reason:'empty_ray_interval',steps:0,structuralPlaneTests:0};let nearest=end+1,structural=null,candidates=0;
  const accept=(t,n,domains=null)=>{if(t<start-1e-6||t>end||t>=nearest)return;const p=add(origin,mul(rd,t));if(domains&&!domains.some(q=>planeDomainContains(spec,q,p)))return;candidates++;const e=.0004,dp=structureOccupied(spec,plusVector(p,n,e),cut),dm=structureOccupied(spec,plusVector(p,n,-e),cut);
   // Reject internal touching faces: a true union boundary has exterior on at
   // least one normal side. This is a domain check, never a new polygon surface.
@@ -319,11 +319,12 @@ export function traceFieldHybrid(spec,origin,direction,{maxSteps=512,primaryBudg
  const rd=norm(direction),span=rayInterval(origin,rd,spec.bounds),cut=clipX??-1e20;
  if(!span||span[1]<0)return {hit:false,status:2,reason:'outside_bounds',steps:0,primarySteps:0,rescueUsed:false};
  let t=Math.max(0,span[0]),end=Math.min(span[1],maxDistance),steps=0,rescueReason='primary_budget';
+ if(end<t)return {hit:false,status:2,reason:'empty_ray_interval',steps:0,primarySteps:0,rescueUsed:false};
  for(;steps<Math.min(primaryBudget,maxSteps);steps++){
   const p=add(origin,mul(rd,t)),h=queryField(spec,p),d=Math.max(h.distance,cut-p[0]);
   if(Math.abs(d)<1e-5){const normal=cut-p[0]>=h.distance?[-1,0,0]:fieldNormal(spec,p),cosine=Math.abs(dot(normal,rd));
-   const external=h.objectId===401||structureOccupied(spec,plusVector(p,normal,.0004),cut)!==structureOccupied(spec,plusVector(p,normal,-.0004),cut);
-   if(cosine>=.08&&external)return {hit:true,status:1,reason:'primary_field',t,point:p,normal,...h,steps:steps+1,primarySteps:steps+1,rescueUsed:false};
+   const boundaryCrossing=h.objectId===401||structureOccupied(spec,plusVector(p,normal,.0004),cut)!==structureOccupied(spec,plusVector(p,normal,-.0004),cut);
+   if(cosine>=.08&&boundaryCrossing)return {hit:true,status:1,reason:'primary_field',t,point:p,normal,...h,steps:steps+1,primarySteps:steps+1,rescueUsed:false};
    steps++;rescueReason='grazing_candidate';break;
   }
   t+=Math.abs(d)*.85;if(t>end)return {hit:false,status:2,reason:'primary_bounds_exit',t,steps:steps+1,primarySteps:steps+1,rescueUsed:false};
@@ -383,8 +384,8 @@ bool fieldTraceRayHybridClipped(vec3 ro,vec3 rd,float clipX,out float t,out Fiel
  for(int i=0;i<128;i++){
   fieldPrimarySteps=i+1;steps=i+1;vec3 p=ro+rd*t;hit=mapField(p);float d=max(hit.distance,clipX-p.x);
   if(abs(d)<.00001){vec3 n=clipX-p.x>=hit.distance?vec3(-1,0,0):fieldNormal(p);
-   bool external=hit.objectId==401.0||fieldStructureOccupied(p+n*.0004,clipX)!=fieldStructureOccupied(p-n*.0004,clipX);
-   if(abs(dot(n,rd))>=.08&&external){fieldRayNormal=n;status=1;return true;}break;
+   bool boundaryCrossing=hit.objectId==401.0||fieldStructureOccupied(p+n*.0004,clipX)!=fieldStructureOccupied(p-n*.0004,clipX);
+   if(abs(dot(n,rd))>=.08&&boundaryCrossing){fieldRayNormal=n;status=1;return true;}break;
   }
   t+=abs(d)*.85;if(t>finish){status=2;return false;}
  }

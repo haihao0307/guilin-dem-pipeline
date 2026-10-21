@@ -6,7 +6,7 @@
  * and does not change the authoritative full query or either input recipe.
  */
 import {CASE_SCHEMA,queryCase,intersectCaseRay,buildCaseGLSL} from './cases.mjs';
-import {ASSEMBLY_SCHEMA,queryAssembly,assemblyNormal,intersectAssemblyRay,buildAssemblyGLSL,assemblyLocalToSource,sourceToAssemblyLocal} from './assemblies.mjs';
+import {ASSEMBLY_SCHEMA,queryAssembly,queryAssemblyInside,assemblyNormal,intersectAssemblyRay,buildAssemblyGLSL,assemblyLocalToSource,sourceToAssemblyLocal} from './assemblies.mjs';
 
 export const CONTEXT_SCHEMA='kaopu.case-function-context/0.1';
 const copy=x=>structuredClone(x),finite=(p,n)=>Array.isArray(p)&&p.length===n&&p.every(Number.isFinite);
@@ -33,7 +33,7 @@ function displayDomain(measured,assembly,a,input){
  for(let i=0;i<4;i++){const p=plan[i],q=plan[(i+1)%4],dp=dot(plane.normal,p)-plane.offset,dq=dot(plane.normal,q)-plane.offset;if(dp>=0)kept.push(p);if((dp<0)!==(dq<0))kept.push(add(p,mul(sub(q,p),dp/(dp-dq))));}
  if(kept.length<3)throw Error('Display cut removes the entire bounded source domain');
  const displayBounds=bound(kept.flatMap(p=>[[p[0],lo,p[2]],[p[0],hi,p[2]]]));
- return {heightRange,cutPlane:plane,bounds:displayBounds,enabled:true,scope:'DISPLAY_ONLY_SOURCE_SHELL',retains:'heightRange[0] <= y <= heightRange[1] and dot(cutPlane.normal,p) >= cutPlane.offset',capsGenerated:false,groundClosureGenerated:false,label:'仅显示剖切：原楼外壳保留高度带及后半部；不增补切口封面，不改原始源数据。',distanceQuery:'conservative_lower_bound_with_correct_restricted_zero_set_not_exact_clipped_distance'};
+ return {heightRange,cutPlane:plane,bounds:displayBounds,enabled:true,scope:'DISPLAY_ONLY_SOURCE_SHELL',retains:'heightRange[0] <= y <= heightRange[1] and dot(cutPlane.normal,p) >= cutPlane.offset',capsGenerated:false,groundClosureGenerated:false,label:'仅显示剖切：原楼外壳保留指定高度带及切平面一侧；不增补切口封面，不改原始源数据。',distanceQuery:'conservative_lower_bound_with_correct_restricted_zero_set_not_exact_clipped_distance'};
 }
 /** Explicit inspection consent is required. Fit validation belongs to the main
  * caller; this module never infers a metric fit, registration, or actual floor. */
@@ -58,6 +58,8 @@ export function queryContext(spec,p,{display=false}={}){
  return {...h,component,coordinateFrame:component==='source'?'source-local':'diagram-local',sourceModelId:spec.sourceModelId,queryScope:display?'display_clipped_lower_bound':'authoritative_full_data',sourceOccupancy:null,designInside:design.inside,inside:component==='source'?null:design.inside};
 }
 export function contextNormal(spec,p,options={}){const h=queryContext(spec,p,options);return h.component==='source'?copy(h.normal):rotate(spec.alignmentTransform,assemblyNormal(spec.assembly,h.local));}
+/** Material coordinates and their directional derivatives use the same frame. */
+export function contextMaterialDirection(spec,hit,worldDirection){validateSpec(spec);if(!finite(worldDirection,3)||!Number.isFinite(hit?.objectId)||hit.objectId<1000)throw Error('Context material hit and finite direction required');return hit.objectId>=2000?rotate(spec.alignmentTransform,worldDirection,true):copy(worldDirection);}
 /** Intersect a convex restriction interval BEFORE the unchanged source tracer.
  * Rejecting only the first removed source face would incorrectly miss a later
  * retained back face. Restarting at interval entry avoids that failure. */
@@ -70,12 +72,14 @@ export function intersectContextRay(spec,origin,direction,{maxDistance=10000,dis
  validatePoint(spec,origin);if(!finite(direction,3)||length(direction)<1e-12||!Number.isFinite(maxDistance)||maxDistance<=0||typeof display!=='boolean')throw Error('Finite nonzero ray, positive range and boolean display required');
  const rd=unit(direction),a=spec.alignmentTransform,localOrigin=sourceToAssemblyLocal(spec.assembly,origin),localDirection=rotate(a,rd,true),design=intersectAssemblyRay(spec.assembly,localOrigin,localDirection,{maxDistance}),interval=sourceInterval(spec,origin,rd,maxDistance,display);
  let source={hit:false,patchTests:0,nodeVisits:0};
- if(interval){const [lo,hi]=interval,h=intersectCaseRay(spec.measured,add(origin,mul(rd,lo)),rd,{maxDistance:hi-lo,accelerated});source={...h};if(h.hit){source.t=h.t+lo;source.point=add(origin,mul(rd,source.t));source.local=copy(source.point);if(source.t>hi||queryAssembly(spec.assembly,sourceToAssemblyLocal(spec.assembly,source.point)).distance<0)source.hit=false;}}
+ if(interval){const [lo,hi]=interval,h=intersectCaseRay(spec.measured,add(origin,mul(rd,lo)),rd,{maxDistance:hi-lo,accelerated});source={...h};if(h.hit){source.t=h.t+lo;source.point=add(origin,mul(rd,source.t));source.local=copy(source.point);if(source.t>hi||queryAssemblyInside(spec.assembly,sourceToAssemblyLocal(spec.assembly,source.point)))source.hit=false;}}
  const component=source.hit&&(!design.hit||source.t<=design.t)?'source':design.hit?'assembly':null;
  const stats={patchTests:source.patchTests,nodeVisits:source.nodeVisits,planeTests:design.planeTests,primitiveTests:design.primitiveTests,visits:source.nodeVisits+design.planeTests,sourceInterval:interval,method:'analytic_source_interval_and_rigid_prism_domains',displayOnlyClip:display};
  if(component===null)return {hit:false,status:'miss',...stats};
- const hit=component==='source'?source:design,point=add(origin,mul(rd,hit.t)),h=queryContext(spec,point,{display}),normal=h.component==='source'?copy(h.normal):component==='assembly'?rotate(a,design.normal):rotate(a,assemblyNormal(spec.assembly,h.local));
- return {...h,hit:true,status:'hit',t:hit.t,point,normal,...stats};
+ const hit=component==='source'?source:design,point=add(origin,mul(rd,hit.t)),normal=component==='source'?copy(source.normal):rotate(a,design.normal);
+ // The winning finite boundary already carries its authoritative identity and
+ // material-local coordinates. Do not re-evaluate every source patch here.
+ return {...hit,component,coordinateFrame:component==='source'?'source-local':'diagram-local',sourceModelId:spec.sourceModelId,queryScope:display?'analytic_display_boundary':'analytic_full_boundary',sourceOccupancy:null,designInside:false,inside:component==='source'?null:false,hit:true,status:'hit',t:hit.t,point,normal,...stats};
 }
 const f=n=>{if(!Number.isFinite(n))throw Error('Non-finite context GLSL constant');return Number(n).toFixed(12).replace(/0+$/,'').replace(/\.$/,'.0');},vec=a=>`vec${a.length}(${a.map(f).join(',')})`;
 const STRUCT='struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};';
@@ -93,6 +97,7 @@ const vec3 contextTranslation=${vec(a.translation)};
 vec3 contextRotate(vec3 p){return vec3(${f(c)}*p.x+(${f(s)})*p.z,p.y,-(${f(s)})*p.x+${f(c)}*p.z);}
 vec3 contextInverseRotate(vec3 p){return vec3(${f(c)}*p.x-(${f(s)})*p.z,p.y,${f(s)}*p.x+${f(c)}*p.z);}
 vec3 contextDesignLocal(vec3 p){return contextInverseRotate(p-contextTranslation);}
+vec3 contextMaterialDirection(FieldHit h,vec3 worldDirection){return h.objectId>=2000.0?contextInverseRotate(worldDirection):worldDirection;}
 float contextDisplayDomain(vec3 p){return max(max(${f(d.heightRange[0])}-p.y,p.y-(${f(d.heightRange[1])})),${f(d.cutPlane.offset)}-dot(${vec(d.cutPlane.normal)},p));}
 // Authoritative DATA query: unsigned measured shell + signed authored solids.
 FieldHit mapField(vec3 p){FieldHit a=contextSource_mapField(p),b=contextDesign_mapField(contextDesignLocal(p));return a.distance<=b.distance?a:b;}
@@ -108,10 +113,11 @@ bool contextSourceInterval(vec3 ro,vec3 rd,bool display,out float lo,out float h
  if(display){float q=dot(${vec(d.cutPlane.normal)},ro)-(${f(d.cutPlane.offset)}),v=dot(${vec(d.cutPlane.normal)},rd);if(abs(v)<1e-10){if(q<0.0)return false;}else{float t=-q/v;if(v>0.0)lo=max(lo,t);else hi=min(hi,t);}}
  return hi>=lo;}
 bool contextTraceRay(vec3 ro,vec3 rd,bool display,out float t,out FieldHit h,out int visits){float sourceT=1e20,designT=1e20,lo,hi;FieldHit sourceHit,designHit;int sourceVisits=0,designVisits=0;bool sourceFound=false;
- if(contextSourceInterval(ro,rd,display,lo,hi)){sourceFound=contextSource_caseTraceRay(ro+rd*lo,rd,sourceT,sourceHit,sourceVisits);sourceT+=lo;if(sourceFound&&sourceT>hi)sourceFound=false;if(sourceFound&&contextDesign_mapDistance(contextDesignLocal(ro+rd*sourceT))<0.0)sourceFound=false;}
+ if(contextSourceInterval(ro,rd,display,lo,hi)){sourceFound=contextSource_caseTraceRay(ro+rd*lo,rd,sourceT,sourceHit,sourceVisits);sourceT+=lo;if(sourceFound&&sourceT>hi)sourceFound=false;if(sourceFound&&contextDesign_assemblyUnionInside(contextDesignLocal(ro+rd*sourceT)))sourceFound=false;}
  bool designFound=contextDesign_caseTraceRay(contextDesignLocal(ro),contextInverseRotate(rd),designT,designHit,designVisits);visits=sourceVisits+designVisits;t=1e20;h.distance=1e20;h.objectId=0.0;h.materialRole=0.0;h.local=ro;
- if(!sourceFound&&!designFound)return false;t=sourceFound&&(!designFound||sourceT<=designT)?sourceT:designT;vec3 p=ro+rd*t;h=display?displayMapField(p):mapField(p);
- fieldRayNormal=h.objectId<2000.0?contextSource_caseN[int(h.objectId)-1000]:contextRotate(designFound&&designT<=sourceT?contextDesign_fieldRayNormal:contextDesign_fieldNormal(h.local));return true;}
+ if(!sourceFound&&!designFound)return false;bool sourceWins=sourceFound&&(!designFound||sourceT<=designT);t=sourceWins?sourceT:designT;h=sourceWins?sourceHit:designHit;
+ // Stable coincidence policy: source wins an exactly equal ray parameter.
+ fieldRayNormal=sourceWins?contextSource_caseN[int(h.objectId)-1000]:contextRotate(contextDesign_fieldRayNormal);return true;}
 // Renderer trace is explicitly the DISPLAY query; full DATA ray stays available.
 bool caseTraceRay(vec3 ro,vec3 rd,out float t,out FieldHit h,out int visits){return contextTraceRay(ro,rd,true,t,h,visits);}
 bool contextTraceRayFull(vec3 ro,vec3 rd,out float t,out FieldHit h,out int visits){return contextTraceRay(ro,rd,false,t,h,visits);}

@@ -225,3 +225,10 @@ test('hybrid masks, semantic IDs and depths agree with the high-precision analyt
   }
  }assert.ok(rescued>10);assert.ok(primary>rescued*5);
 });
+
+test('generated GLSL does not declare reserved identifiers',()=>{
+ const glsl=buildFieldGLSL(spec);assert.doesNotMatch(glsl,/\b(?:bool|float|int|vec[234])\s+(?:external|extern|static|class|input|output|interface|namespace|template|union|enum|typedef|packed|public|superp)\b/);assert.match(glsl,/bool boundaryCrossing=/);
+});
+test('CPU tracers reject an empty clipped distance interval before any query',()=>{
+ for(const trace of [traceFieldAnalytic,traceFieldHybrid]){const h=trace(spec,[0,30,0],[0,-1,0],{maxDistance:1});assert.equal(h.status,2);assert.equal(h.hit,false);assert.equal(h.steps,0);assert.equal(h.reason,'empty_ray_interval');}
+});

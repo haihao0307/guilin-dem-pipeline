@@ -7,8 +7,8 @@ with sync_playwright() as pw:
  browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
  page=browser.new_page(viewport={'width':1200,'height':900});page.on('pageerror',lambda e:report['errors'].append(str(e)))
  try:
-  page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=90000);page.wait_for_function('window.__IMPLICIT_BUILDING__?.ready',timeout=90000)
-  report['initial']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot().renderer');api='window.__IMPLICIT_BUILDING__'
+  page.goto(a.url+'?qa-warmup=1',wait_until='networkidle',timeout=90000);page.wait_for_function('window.__IMPLICIT_BUILDING__',timeout=90000)
+  report['initial']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot?.() ?? window.__IMPLICIT_BUILDING__');assert report['initial']['ready'],report['initial'];api='window.__IMPLICIT_BUILDING__'
   for mode,name in [(4,'empty'),(1,'structure'),(2,'rail'),(3,'conservative-march'),(0,'combined')]:
    print('MICRO '+name,flush=True);page.evaluate(f'{api}.setResolution(1,1);{api}.setTraceVariant({mode});{api}.setRenderOptions({{renderMode:1,traceMode:0}})')
    r={'compile':page.evaluate(f'{api}.snapshot().renderer.compileProfile'),'1x1':page.evaluate(f'{api}.benchmark(1)')};page.evaluate(f'{api}.setResolution(32,32)');r['32x32']=page.evaluate(f'{api}.benchmark(3)')
@@ -18,7 +18,7 @@ with sync_playwright() as pw:
    if name=='combined':r['diagnostics']=page.evaluate(f'{api}.diagnostics()')
    report['paths'][name]=r;(out/'microbench.json').write_text(json.dumps(report,indent=2));print(json.dumps({'path':name,'timings':{k:round(v['medianMs'],2) for k,v in r.items() if 'medianMs' in v}}),flush=True)
   report['cases']={}
-  for case in ['kcc','lowrise','warehouse','lowrise-assembly','kcc-assembly','warehouse-assembly']:
+  for case in ['kcc','lowrise','warehouse','lowrise-assembly','kcc-assembly','warehouse-assembly','lowrise-assembled','kcc-assembled','warehouse-assembled']:
    print('MICRO source '+case,flush=True);page.evaluate(f'{api}.setResolution(1,1)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id)',case);page.evaluate(f'{api}.setRenderOptions({{renderMode:1,traceMode:0}})')
    r={'compile':page.evaluate(f'{api}.snapshot().renderer.compileProfile'),'1x1':page.evaluate(f'{api}.benchmark(1)')};page.evaluate(f'{api}.setResolution(32,32)');r['32x32']=page.evaluate(f'{api}.benchmark(3)')
    if r['32x32']['medianMs']<75:

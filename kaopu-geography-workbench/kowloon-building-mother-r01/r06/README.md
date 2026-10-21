@@ -2,7 +2,7 @@
 
 入口：[r06.html](../r06.html)。这是独立于旧版网格链路的直接函数求值实现，不是把 Three.js 的 Mesh 改名为“函数场”，也不是完整 BIM、建筑实测复原或安全认证模型。R01–R05 与相邻三个原案例应保留不动。
 
-**当前状态：候选实现，待最终同版本 CPU、真实浏览器和发布后复验。** 三个完整实测外形场、三案可见关系装配，以及 KCC 两层连续扶手设计已接入不同视图；它们不是“三栋已经完整装配、配准的真实建筑”。真实浏览器 GPU 验证仍未完成：候选 2 的 Actions 运行 39532110914 在截图阶段超时，没有已接受的新截图；当前渲染调整后仍待复验。内核/装配修正冻结后，98 项新增 CPU 测试在本地通过，但这不是全套测试或浏览器的最终通过结论。不能把先前版本、历史工作流或局部结果当作本候选的完成证据。精确数据与证据级别见 [evidence-ledger.json](./evidence-ledger.json)。
+**当前状态：性能门槛未通过，继续内核诊断，未生产发布。** 三个原始外形场、三案独立关系装配和 KCC 两层设计不能称为三栋完整实楼复原。当前本地 R06 测试 120 项通过；全套旧版本地测试因缺少 Three.js vendor 文件受阻，不能据此声明全部本地测试通过。当前候选 5 正在微性能剖析，尚无提速结论或已接受的高分辨率新截图。详细检查点见第 6 节及 [evidence-ledger.json](./evidence-ledger.json)。
 
 ## 1. 三种表示，不能混成同一个事实
 
@@ -47,6 +47,12 @@
 
 模块还可在选定高度对原始有限源面作水平截交，保留来源面 ID；开放、分支、退化或与水平源面重合的截线会拒绝，不以外包矩形补成楼板。选定截面不证明实际楼层，当前也不替代独立关系装配的设计轮廓。
 
+### 尚未完成界面 / GPU 验收的扩展
+
+[context.mjs](./context.mjs) 及 14 项配套 CPU 测试已进入远端候选：它把未改动的无符号源外壳与刚性放置的有符号关系装配放在同一坐标域，供明确标记为假设的检查。显示剖切仅筛选源命中，不补封口；完整数据查询仍独立保留。这不是经过核实的实楼配准，组合查询也不宣称是完整建筑的精确 SDF。目前没有界面 / GPU 验收，不能把这个模块的存在写成已交付的同场视图。
+
+与源轮廓绑定的案例装配仍在准备中，尚不记为已实现。前述三案独立关系图仍是当前已记录的装配范围。
+
 ## 2. 求交与显示路径
 
 [renderer.mjs](./renderer.mjs) 使用 WebGL2 片元程序直接查询函数。每次绘制的一个全屏三角形只负责触发屏幕像素，是光栅化基础设施，不是建筑三角面。空 VAO 不承载模型顶点；探针用浮点纹理回读数值，不是体素模型。没有 WebGL2 时明确报错，不偷偷切回对象网格。
@@ -82,6 +88,12 @@
 - 仓库：16 wallStrip、8 wallProfile、3 roofPlane、1 undersidePlane。三个屋面都是水平面，原来的 broad-sloped-roof 只是已纠正的旧分类，不能继续描述成斜屋顶。女儿墙环的洞及较高窄条保留；窄条用途仍未知。
 
 源配方里历史 buildingName / floorCount 的 unknown 不被静默改写；新查到的名称、层数及用途放在独立研究层 [profiles.mjs](./profiles.mjs) 和来源账本。证据新增不等于改变冻结源几何。
+
+### 新增官方二维轮廓资料，仍与原始 3D 外壳分开
+
+[official-footprints.json](./sources/official-footprints.json) 保存地政总署五个组件的官方属性、EPSG:2326 环、来源 URL、归属与 CSDI TNC：No.33 的 3676421372T20050430；KCC 塔楼 3599719944T20050430 / 裙房 3600619942P20060311；仓库上部 3691218584T20050430 / 裙房 3690318597P20060311。
+
+这些是二维轮廓及已公布的高度属性，不是恢复出来的实测 3D 裙房或室内。可以据此另建明确标为 inferred 的裙房挤出或 design 的楼板，但不得改写原始三案外壳、伪称实测封底，或把组件层数直接相加。当前仅确认资料与候选模块存在，相关新装配、界面和 GPU 验收仍未完成。
 
 ## 4. 层数、公开平面与未知量
 
@@ -121,28 +133,20 @@
 
 照片与公开平面只保留来源 URL、文字观察与证据范围，**不把原照片、图纸或私下研究副本打包到公开仓库**。公开可看不等于获准转载；本试验未取得这些图片的再发布许可。可查看 [31–33 街门/外观来源页](https://www.oneday.com.hk/en_US/buildings/31-33-la-salle-road/)、[KCC 物业来源页](https://hk.centanet.com/estate/en/Kowloon-Chamber-Of-Commerce-Building/2-MDZSTHZAHN)、[仓库实际外观来源页](https://property.jll.com.hk/en/industrial-lease/hong-kong/hung-hom/china-travel-hip-kee-godown-hk-ltd-godown-no2-hk-p-3408)。
 
-## 6. 验证工作流与证据要求
+## 6. 当前验证检查点
 
-运行 CPU 测试：在本建筑目录执行 `node --test tests/*.test.mjs`。R06 专项包括 [实测面](../tests/implicit-cases.test.mjs)、[设计场](../tests/implicit-field.test.mjs)、[三案关系装配](../tests/implicit-assemblies.test.mjs)、[宿主关系](../tests/implicit-host.test.mjs)、[身份资料](../tests/implicit-profiles.test.mjs)、[渲染与材质来源](../tests/implicit-renderer.test.mjs)。内核/装配修正冻结后的本地候选检查已报告 98 项新增 CPU 测试通过；这是新增测试范围，不是包括旧版回归、浏览器和发布后检查的完整通过数量。测试文件存在、静态计数或某次局部通过都不能替代冻结同版本的最终整套报告。
+- 候选 3：提交 `284f673`，Actions 运行 `39533626946`，远端 216 项 CPU 测试通过，但 WebGL 门槛失败。远端测试环境带有基线 vendor；这不消除当前本地旧版测试缺少 Three.js 文件的阻碍。
+- 该次预热后的 SwiftShader 同步绘制读数为：1 × 1 为 24.7 ms；32 × 32 为 672 ms；160 × 112 为 11750.2 ms。相同 160 × 112 的 geometry-only 路径为 11896.3 ms。场源码 40614 字符，编译 / 链接记录 56.8 ms。它们是失败候选的诊断数，不是最终性能、独立 GPU timer 或高分辨率可用性证明；没有已接受的高分辨率新截图。
+- 候选 4：提交 `9688a1d`，运行 `39534760240`，被一项过时的源码函数名自省断言挡在 CPU 阶段；断言已在 `670d9d75` 修正，不把这一修正当作 GPU 通过。
+- 当前候选 5：运行 `39534938722` 正在微性能剖析。当前本地 R06 测试 120 项通过；最终 GPU、可接受新截图、完整旧版回归与性能改善均未确立，未生产发布。
 
-真实浏览器 GPU 验证尚未取得完整结论。候选 2 的 Actions 运行 39532110914 在截图阶段超时，无已接受的新截图；不能将其计为浏览器通过，也不能把超时归结为已经证实的 GPU 不支持或具体渲染错误。延迟探针编译、解析显示法线和默认关闭 AO 后，实际 GPU 对照、视觉检查与最终计时仍待重跑。
+CPU 入口为 `node --test tests/*.test.mjs`；R06 专项为 `node --test tests/implicit-*.test.mjs`。本地全套运行需补齐已授权的原基线 vendor，不得把缺少依赖的旧版测试当作通过。主要检查覆盖 [实测面](../tests/implicit-cases.test.mjs)、[设计场](../tests/implicit-field.test.mjs)、[三案装配](../tests/implicit-assemblies.test.mjs)、[同场候选模块](../tests/implicit-context.test.mjs)、[宿主](../tests/implicit-host.test.mjs)、[资料](../tests/implicit-profiles.test.mjs) 和 [渲染 / 材质](../tests/implicit-renderer.test.mjs)。
 
-浏览器入口是 [tests/implicit-browser.py](../tests/implicit-browser.py)。从包含相邻源案例的仓库根目录启动 HTTP 服务后，向脚本传入本候选的 r06.html URL 和输出目录；不使用截图合成图冒充实际 WebGL。现有 [候选 QA 工作流](../../../.github/workflows/kowloon-building-mother-r01-qa.yml) 预期输出 `evidence/r06-browser/results.json` 与实际截图，artifact 只短期保留。该路径是预期工作流产物，不表示本候选已通过或产物已经存在。
+[微性能脚本](../tests/implicit-microbench.py) 隔离 empty、structure、rail、保守步进和 combined 路径，也检查原始三案；诊断开关不替代正式几何，超时不算高分辨率验收。[实际浏览器 QA](../tests/implicit-browser.py) 与 [旧版独立回归](../tests/implicit-regression.py) 分开。旧版本来使用网格，不套用 R06 零模型缓冲断言。所有阶段必须绑定实际测试的源码和服务文件哈希，脚本存在不等于通过。
 
-最终证据至少应记录：
+[候选 QA 工作流](../../../.github/workflows/kowloon-building-mother-r01-qa.yml) 的结果与截图应保留真实运行范围、浏览器 / GPU、分辨率、错误及计时口径。CPU / GPU 距离和身份对照、真实开口、扶手转角、内部视角、参数更新、源形状保留、刚性坐标往返，以及 hit / miss / unresolved 仍须按最终同版本验收。源 BVH 访问、关系图有限面测试和扶手步数必须分别解释；8-bit 诊断计数会饱和。
 
-- 同一份已测试源码/提交及服务文件哈希；三个完整源形状与洞的保留；BVH 与穷举结果一致。
-- 三案关系装配中空室内、真实开口、功能路径与拥有关系；刚性源/测量坐标往返、材质局部尺度，以及原外形未被变形或替换。
-- 同时保留“尚未实楼配准”的标记；来源截面不是实际楼层，不能用设计可见性代替实测证明。
-- CPU / GPU 距离、身份、材质角色、局部坐标与法线对照；普通视角、实体内部、剖切、扶手转角、楼梯底部和墙洞口。
-- 参数联动、非法参数拒绝且原状态不变、刚性放置后材质尺度不变。
-- WebGL 审计的模型缓冲和 indexed draw 数；全屏 drawArrays 的 3 顶点；没有隐藏网格回退。
-- hit / miss / unresolved 分开；结构平面测试量与扶手步数分开，预算耗尽不掩盖。
-- 浏览器与实际 GPU 名称、分辨率、计时方法、样本、median / P95、错误与截图；本地成功与 HTTPS 发布后成功分别留证。
-
-旧版独立回归入口为 [tests/implicit-regression.py](../tests/implicit-regression.py)，与 R06 零模型缓冲检查分开；旧版本来采用网格，不应套用 R06 的零三角形断言。脚本存在不代表回归已完成。
-
-`benchmark()` 的测量口径为 draw 加 gl.finish 及单像素 readPixels 的 wall-clock 同步等待，不是独立 GPU timer。SwiftShader 等软件 GPU 可能很慢；“模型三角形 0”不是速度证明。此候选尚不报告最终耗时、帧率、浏览器通过数或“比网格更快”。
+当前 `benchmark()` 记录 draw + gl.finish + 单像素 readPixels 的 wall-clock 同步等待。SwiftShader 是软件 GPU；零模型三角形不能证明更快。后续只有通过内核性能门槛，才能继续完整浏览器 / 视觉验收及独立发布后复验。
 
 ## 7. 已知缺口与止步线
 
@@ -152,5 +156,5 @@
 - 无符号源外皮不保证水密、闭合占用或真实墙厚；设计有符号场的接触关系也不证明承重、耐火或疏散能力。
 - 尚无结构、消防、无障碍或法规认证；不是施工、审批、逃生导航或安全判断依据。
 - 没有基础、完整建筑内装、门扇五金、电梯机械或全楼可行走碰撞系统。
-- 混合追踪仍须验证掠射、薄壁、边界、域判断及未决像素；有限精度与预算不能被“解析”二字抹去。
+- 混合追踪仍须验证掠射、薄壁、边界、域判断及未决像素；有限精度与预算不能被“解析”二字抹去。当前性能门槛未过，不作实时可用或优于网格的承诺。
 - 仅此 R06 候选的架构与来源文档，不授权额外发布、采购、扩大权限或传播受限图片；旧案例与其他项目保持不变。

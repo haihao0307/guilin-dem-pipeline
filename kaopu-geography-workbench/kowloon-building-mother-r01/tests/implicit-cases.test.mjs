@@ -80,6 +80,12 @@ test('generated hot source ray path is bounded and constant, without full-field 
   assert.equal((ray.match(/caseRayPatch\d+\(ro,rd,t,h,best\)/g)||[]).length,spec.patches.length);
   assert.doesNotMatch(ray,/caseOrigins\[|caseRanges\[|caseEdges\[|caseBVHLinks\[|mapField\(|casePatchDistance\(/);
   assert.match(ray,/caseRayBoundsStatic/);assert.match(ray,/bvec3 parallel/);
+  // A float ray-plane root is not guaranteed to have zero plane residual.
+  // Preserve the original Euclidean patch-distance acceptance, not a looser
+  // projected polygon test, even on tilted or near-parallel source planes.
+  assert.equal((ray.match(/if\(planeSquared>=0\.0000000004\)return false/g)||[]).length,spec.patches.length);
+  assert.equal((ray.match(/caseRayDomain\d+\(uv,plane\*plane\)/g)||[]).length,spec.patches.length);
+  assert.match(ray,/caseRayEdgeSquared\([^;]+\)\+planeSquared<0\.0000000004/);
   assert.ok((ray.match(/nodeVisits\+\+/g)||[]).length<spec.nodes.length);
   assert.ok(source.length<spec.counts.boundaryCoordinates*550+12000,'Bound generated shader size per source boundary');
  }

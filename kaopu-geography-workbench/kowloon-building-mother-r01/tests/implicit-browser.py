@@ -3,7 +3,7 @@
 import argparse, hashlib, json, pathlib, time, urllib.request
 from playwright.sync_api import sync_playwright
 P=pathlib.Path(__file__).resolve().parents[1]
-FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md']
+FILES=['r06.html','r06/app.mjs','r06/renderer.mjs','r06/field.mjs','r06/host.mjs','r06/material.mjs','r06/style.css','r06/cases.mjs','r06/profiles.mjs','r06/assemblies.mjs','r06/evidence-ledger.json','r06/README.md','r06/context.mjs','r06/sources/official-footprints.json']
 a=argparse.ArgumentParser();a.add_argument('--url',required=True);a.add_argument('--output',required=True);a=a.parse_args();out=pathlib.Path(a.output);out.mkdir(parents=True,exist_ok=True);report={'url':a.url,'hashes':{},'screenshots':[]}
 base=a.url.rsplit('/',1)[0]+'/'
 for f in FILES:
@@ -53,6 +53,18 @@ with sync_playwright() as p:
    c['diagnostics']=page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()');assert c['diagnostics']['unresolved']==0;c['snapshot']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()');assert c['snapshot']['registrationStatus']=='unverified_editable_design';assert not c['snapshot']['actualInterior']
    c['edit']=page.evaluate('''()=>{const a=window.__IMPLICIT_BUILDING__;a.applyAssembly({doorWidth:1.1,alignmentTransform:{translation:[2,.5,-1],yawRadians:.7}});const p=[[.3,1,-5],[2.4,.05,3]],q=a.assemblyToSource(p),x=a.probe(p,2),y=a.assemblySourceProbe(q,2),before=JSON.stringify(a.snapshot().config);let rejected=false;try{a.applyAssembly({doorWidth:5})}catch(e){rejected=true;}return {materialMaxError:Math.max(...x.flatMap((v,i)=>v.map((n,j)=>Math.abs(n-y[i][j])))),invalidRejected:rejected,unchanged:before===JSON.stringify(a.snapshot().config)};}''');assert c['edit']['invalidRejected'] and c['edit']['unchanged'];assert c['edit']['materialMaxError']<1e-5
    page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['assemblies'][case_id]=c
+  report['sourceBoundContexts']={}
+  for case_id in ['lowrise','kcc','warehouse']:
+   print('STAGE source-bound context '+case_id,flush=True);page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(160,112)');page.evaluate('(id)=>window.__IMPLICIT_BUILDING__.setCase(id+"-assembled")',case_id)
+   c={'warmTiming':page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(3)'),'parity':page.evaluate('window.__IMPLICIT_BUILDING__.parity()'),'rayParity':page.evaluate('window.__IMPLICIT_BUILDING__.rayParity()')};assert c['warmTiming']['medianMs']<600,c['warmTiming'];assert c['parity']['passed'],c['parity'];assert c['rayParity']['passed'],c['rayParity']
+   c['snapshot']=page.evaluate('window.__IMPLICIT_BUILDING__.snapshot()');assert c['snapshot']['fitReport']['status']=='source_bound_design_checks_passed';assert c['snapshot']['sourceBinding']['originalMeasuredSourceUnchanged'];assert not c['snapshot']['actualInterior'];assert c['snapshot']['sourceDisplay']['capsGenerated'] is False
+   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(900,720)');shot('r06-assembled-'+case_id)
+   for view,suffix in [('corner','plan'),('door','entry'),('stairs','circulation')]:
+    page.evaluate('(v)=>window.__IMPLICIT_BUILDING__.setView(v)',view);shot('r06-assembled-'+case_id+'-'+suffix)
+   c['diagnostics']=page.evaluate('window.__IMPLICIT_BUILDING__.diagnostics()');assert c['diagnostics']['unresolved']==0
+   c['invalid']=page.evaluate("""()=>{const a=window.__IMPLICIT_BUILDING__,before=JSON.stringify(a.snapshot().config);let rejected=false;try{a.applyAssembly({interiorTranslationXZ:[95,95]})}catch(e){rejected=true;}return {rejected,unchanged:before===JSON.stringify(a.snapshot().config)}}""");assert all(c['invalid'].values())
+   page.evaluate('window.__IMPLICIT_BUILDING__.setResolution(600,420)');c['performance']=page.evaluate('window.__IMPLICIT_BUILDING__.benchmark(4)');report['sourceBoundContexts'][case_id]=c
+   page.click('#open-source');page.wait_for_function('(id)=>window.__IMPLICIT_BUILDING__.snapshot().caseId===id',arg=case_id);assert page.evaluate('window.__IMPLICIT_BUILDING__.snapshot().reconstruction.allSourcePatchesRetained')
   page.evaluate("window.__IMPLICIT_BUILDING__.setCase('design')")
   page.set_viewport_size({'width':390,'height':844});page.evaluate("window.__IMPLICIT_BUILDING__.setView('stairs')");shot('r06-mobile');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   report['runtimeAudit']=page.evaluate('window.__GL_AUDIT__');assert report['runtimeAudit']['buffers']==0;assert report['runtimeAudit']['indexDraws']==0;assert set(report['runtimeAudit']['drawCounts'])=={3}

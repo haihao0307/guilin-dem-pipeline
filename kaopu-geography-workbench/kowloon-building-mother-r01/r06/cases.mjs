@@ -123,8 +123,8 @@ function buildStaticCaseRayGLSL(patches,nodes){
    return `bool in${j}=false;`+edges[j].map(({a,b})=>`in${j}=in${j}!=caseRayCross(uv,${vec([...a,...b])});`).join('');
   }).join('\n');
   const inside=patch.loops.map((_,j)=>j?`!in${j}`:'in0').join('&&');
-  return `bool caseRayDomain${k}(vec2 uv){${predicates}\nif(${inside})return true;\nreturn ${edges.flat().map(({a,b})=>`caseRayEdgeSquared(uv,${vec([...a,...b])})<=${f(domainEpsilon**2)}`).join('||')};}\n`+
-   `void caseRayPatch${k}(vec3 ro,vec3 rd,inout float t,inout FieldHit h,inout int best){\nfloat den=dot(rd,${vec(patch.n)});if(abs(den)<1e-12)return;float candidate=dot(${vec(patch.origin)}-ro,${vec(patch.n)})/den;if(candidate<0.0||candidate>t)return;\nvec3 p=ro+rd*candidate,q=p-${vec(patch.origin)};vec2 uv=vec2(dot(q,${vec(patch.u)}),dot(q,${vec(patch.v)}));\nif(caseRayDomain${k}(uv)&&(candidate<t||(candidate==t&&(best<0||${k}<best)))){best=${k};t=candidate;h.distance=0.0;h.objectId=${f(1000+k)};h.materialRole=${f(patch.materialRole)};h.local=p;}}`;
+  return `bool caseRayDomain${k}(vec2 uv,float planeSquared){if(planeSquared>=${f(domainEpsilon**2)})return false;${predicates}\nif(${inside})return true;\nreturn ${edges.flat().map(({a,b})=>`caseRayEdgeSquared(uv,${vec([...a,...b])})+planeSquared<${f(domainEpsilon**2)}`).join('||')};}\n`+
+   `void caseRayPatch${k}(vec3 ro,vec3 rd,inout float t,inout FieldHit h,inout int best){\nvec3 n=${vec(patch.n)},origin=${vec(patch.origin)};float den=dot(rd,n);if(abs(den)<1e-12)return;float candidate=dot(origin-ro,n)/den;if(candidate<0.0||candidate>t)return;\nvec3 p=ro+rd*candidate,q=p-origin;vec2 uv=vec2(dot(q,${vec(patch.u)}),dot(q,${vec(patch.v)}));float plane=dot(q,n);\nif(caseRayDomain${k}(uv,plane*plane)&&(candidate<t||(candidate==t&&(best<0||${k}<best)))){best=${k};t=candidate;h.distance=0.0;h.objectId=${f(1000+k)};h.materialRole=${f(patch.materialRole)};h.local=p;}}`;
  }).join('\n');
  const emit=i=>{
   const node=nodes[i],leaves=nodes.slice(i,node.skip).filter(n=>n.patchIndex>=0);

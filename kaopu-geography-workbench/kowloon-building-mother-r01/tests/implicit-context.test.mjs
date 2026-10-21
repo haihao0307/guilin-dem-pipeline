@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {deriveMeasuredCase,queryCase,patchDistance,intersectCaseRay,buildCaseGLSL} from '../r06/cases.mjs';
 import {deriveEvidenceAssembly,queryAssembly,assemblyNormal,assemblyLocalToSource,sourceToAssemblyLocal,intersectAssemblyRay,buildAssemblyGLSL} from '../r06/assemblies.mjs';
-import {CONTEXT_SCHEMA,deriveCaseContext,queryContext,contextNormal,intersectContextRay,buildContextGLSL} from '../r06/context.mjs';
+import {CONTEXT_SCHEMA,deriveCaseContext,queryContext,contextNormal,contextMaterialDirection,intersectContextRay,buildContextGLSL} from '../r06/context.mjs';
 
 const models={lowrise:'B367642137201063C0',kcc:'B359971994401063C0',warehouse:'B369121858401063C0'},measured={},assemblies={},contexts={};
 for(const [id,model] of Object.entries(models)){
@@ -98,10 +98,18 @@ test('GLSL retains namespaced source and design bodies, exactly one FieldHit, da
   const namespace=(code,prefix)=>code.replace(struct,'').replace(/\b(?:case[A-Za-z0-9_]+|assembly[A-Za-z0-9_]+|mapField|mapDistance|fieldNormal|fieldRayNormal)\b/g,name=>prefix+name);
   assert.ok(shader.includes(namespace(buildCaseGLSL(s.measured),'contextSource_')));assert.ok(shader.includes(namespace(buildAssemblyGLSL(s.assembly),'contextDesign_')));
   for(const name of ['mapField','mapDistance','fieldNormal','displayMapField','displayMapDistance','contextSourceInterval','contextTraceRayFull','caseTraceRay','fieldRayNormal'])assert.ok(shader.includes(name));
-  assert.ok(shader.includes('contextSource_caseTraceRay(ro+rd*lo,rd,sourceT'));assert.ok(shader.includes('sourceT>hi'));assert.ok(shader.includes('h=display?displayMapField(p):mapField(p)'));assert.ok(shader.includes('contextInverseRotate(rd)'));assert.ok(!/sampleFieldMaterial|directBRDF|sampler3D|texture\(|BufferGeometry|triangulate|createBuffer|drawElements|new\s+THREE/.test(shader));assert.equal((shader.match(/bool caseTraceRay\(/g)??[]).length,1);
+  assert.ok(shader.includes('contextSource_caseTraceRay(ro+rd*lo,rd,sourceT'));assert.ok(shader.includes('sourceT>hi'));assert.ok(shader.includes('h=sourceWins?sourceHit:designHit'));assert.ok(!shader.includes('h=display?displayMapField(p):mapField(p)'));assert.ok(shader.includes('contextInverseRotate(rd)'));assert.ok(!/sampleFieldMaterial|directBRDF|sampler3D|texture\(|BufferGeometry|triangulate|createBuffer|drawElements|new\s+THREE/.test(shader));assert.equal((shader.match(/bool caseTraceRay\(/g)??[]).length,1);
  }
  const source=readFileSync(new URL('../r06/context.mjs',import.meta.url),'utf8');assert.ok(!/import.*three|BufferGeometry|triangulateShape|createBuffer|drawElements|MarchingCubes/.test(source));
 });
 test('negative yaw and offsets generate valid parenthesized GLSL arithmetic rather than accidental decrement tokens',()=>{
  const m=measured.lowrise,a=deriveEvidenceAssembly('lowrise',m,{alignmentTransform:{translation:[1,1,-2],yawRadians:-.9}}),s=deriveCaseContext(m,a,{inspectionContext:true}),shader=buildContextGLSL(s);assert.ok(shader.includes('p.y-('));assert.ok(shader.includes('p.x-('));assert.ok(!/--\d/.test(shader));
+});
+
+test('material directional derivatives share the winning local coordinate frame',()=>{
+ for(const s of Object.values(contexts)){const local=[3,-.11,2],p=assemblyLocalToSource(s.assembly,local),h=queryContext(s,p),direction=unit([.3,.7,-.5]),world=rotate(s,direction);assert.equal(h.component,'assembly');vecClose(contextMaterialDirection(s,h,world),direction);const epsilon=.001,shifted=sourceToAssemblyLocal(s.assembly,add(p,mul(world,epsilon)));vecClose(add(h.local,mul(contextMaterialDirection(s,h,world),epsilon)),shifted);const sourceHit={objectId:1000};vecClose(contextMaterialDirection(s,sourceHit,world),world,0);assert.ok(buildContextGLSL(s).includes('vec3 contextMaterialDirection(FieldHit h,vec3 worldDirection)'));}
+});
+
+test('exact source/design ray coincidence keeps source identity without a full field re-query',()=>{
+ const m=synthetic([{id:'coincident-slab-top',kind:'roofPlane',heightPlane:[0,0,0],loops:[[[-5,-5.5],[5,-5.5],[5,5.5],[-5,5.5]]]},{id:'context-height-bound',kind:'wallStrip',edge:[[100,0],[101,0]],bottom:0,top:5}]),a=deriveEvidenceAssembly('lowrise',m),s=deriveCaseContext(m,a,{inspectionContext:true}),h=intersectContextRay(s,[3,2,2],[0,-1,0],{display:false});assert.equal(h.hit,true);assert.equal(h.component,'source');assert.equal(h.objectId,1000);close(h.t,2);vecClose(h.local,[3,0,2]);const shader=buildContextGLSL(s);assert.ok(shader.includes('sourceT<=designT'));assert.ok(shader.includes('h=sourceWins?sourceHit:designHit'));
 });

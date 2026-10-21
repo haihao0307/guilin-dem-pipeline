@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.r06.function-field-evidence-ledger/1",
   "documentedAt": "2026-10-21",
-  "status": "candidate_cpu_stage_gpu_revalidation_pending_after_initial_timeout",
+  "status": "candidate_kernel_performance_gate_failed_microprofiling_pending_no_production_publish",
   "readme": "README.md",
   "scope": {
     "workbench": "kowloon-building-mother-r01",
@@ -15,7 +15,10 @@
     "visibleRelationAssemblyCases": 3,
     "relationAssembliesRegisteredToActualBuildings": false,
     "fullyAssembledAsBuiltBuildings": 0,
-    "originalSurfaceViewsRemainSeparate": true
+    "originalSurfaceViewsRemainSeparate": true,
+    "productionPublished": false,
+    "sourceBoundCaseAssembliesImplemented": false,
+    "sourceBoundCaseAssembliesStatus": "pending_not_yet_confirmed"
   },
   "architecture": {
     "originalImplementation": true,
@@ -122,6 +125,20 @@
         "display": "Current renderer still shows separate diagram; no verified source-shell overlay",
         "actualBuildingRegistrationVerified": false
       }
+    },
+    "inspectionContextCandidate": {
+      "module": "context.mjs",
+      "schema": "kaopu.case-function-context/0.1",
+      "status": "landed_remote_with_14_CPU_tests_not_UI_or_GPU_accepted",
+      "cpuTestCount": 14,
+      "uiAccepted": false,
+      "gpuAccepted": false,
+      "composition": "Unchanged unsigned measured source plus rigidly placed signed design field, with explicit unverified inspection-context flag",
+      "sourceClosureAdded": false,
+      "displayClip": "Restricts source hits only; generates no caps; authoritative full-data query remains separate",
+      "certifiedFullBuildingSDF": false,
+      "actualBuildingRegistrationVerified": false,
+      "sourceBoundCaseAssemblyStatus": "pending_not_implemented_in_this_checkpoint"
     }
   },
   "totals": {
@@ -931,7 +948,7 @@
     }
   },
   "validation": {
-    "status": "candidate_cpu_stage_gpu_revalidation_pending_after_initial_timeout",
+    "status": "kernel_performance_gate_not_passed_candidate_5_microprofiling_running",
     "countsInLedger": "derived from local frozen score recipes and current adapter; not browser QA results",
     "cpuTestCommand": "node --test tests/*.test.mjs",
     "cpuTests": [
@@ -940,7 +957,8 @@
       "../tests/implicit-host.test.mjs",
       "../tests/implicit-profiles.test.mjs",
       "../tests/implicit-renderer.test.mjs",
-      "../tests/implicit-assemblies.test.mjs"
+      "../tests/implicit-assemblies.test.mjs",
+      "../tests/implicit-context.test.mjs"
     ],
     "browserScript": "../tests/implicit-browser.py",
     "workflow": "../../../.github/workflows/kowloon-building-mother-r01-qa.yml",
@@ -967,36 +985,88 @@
       "Independent old-version browser regression without applying R06 model-buffer rules to old mesh renderers"
     ],
     "performanceMethod": "wallclock draw plus gl.finish and one-pixel readPixels, not isolated GPU timer",
-    "performanceCaution": "Software GPU such as SwiftShader can be slow. Zero model triangles proves neither superior speed nor low cost.",
-    "cpuStatus": "98_new_CPU_tests_passed_locally_after_kernel_and_assembly_fixes_frozen_candidate_scope_only",
+    "performanceCaution": "Candidate 3 warmed SwiftShader diagnostics failed the WebGL performance gate. Current microprofiling is pending; zero model triangles and changes to compile, normals or AO establish no speedup.",
+    "cpuStatus": "current_local_R06_120_pass_full_local_legacy_blocked_by_missing_Three_vendor",
     "finalCpuPassCount": null,
-    "previousGpuAttempt": {
-      "outcome": "timeout_without_complete_validation_result",
-      "basis": "Candidate GPU run status recorded during implementation",
-      "completePass": false,
-      "completedProbeCount": null,
-      "gpuIdentity": null,
-      "elapsedMs": null,
-      "cause": "not_established_here"
-    },
-    "currentGpuStatus": "pending_next_candidate_after_candidate_2_screenshot_timeout",
+    "currentGpuStatus": "candidate_5_run_39534938722_microprofiling_running_no_improvement_claim",
     "legacyRegressionScript": "../tests/implicit-regression.py",
     "legacyRegressionCaution": "R03/R04/R05 use their retained mesh renderer; do not apply R06 zero-model-buffer assertion to them. Script existence is not pass evidence.",
     "diagnosticCaution": "BVH node visits, finite assembly-plane tests, structural domain/plane tests and rail-only march steps are different metrics. 8-bit diagnostic counts saturate at 255.",
     "candidateCpuResult": {
-      "newTestsPassed": 98,
-      "scope": "New CPU tests only, after current kernel and assembly fixes were frozen",
+      "testsPassed": 120,
+      "scope": "Current local R06 CPU tests only",
       "environment": "local",
+      "fullLegacyLocalSuite": "blocked_missing_baseline_Three_vendor_file",
       "completeLegacyAndBrowserSuiteClaimed": false,
       "finalTestedCommit": null
     },
-    "latestGpuAttempt": {
-      "candidate": 2,
-      "githubActionsRunId": "39532110914",
-      "outcome": "failed_screenshot_timeout",
-      "acceptedNewScreenshot": false,
-      "completeBrowserPass": false,
-      "performanceResult": null
+    "productionPublished": false,
+    "microbenchmarkScript": "../tests/implicit-microbench.py",
+    "performanceGatePassed": false,
+    "candidateCheckpoints": [
+      {
+        "candidate": 3,
+        "commit": "284f673",
+        "githubActionsRunId": "39533626946",
+        "cpu": {
+          "passed": 216,
+          "environment": "remote_with_baseline_vendor",
+          "scope": "that_candidate_only"
+        },
+        "webglGate": "failed",
+        "acceptedHighResolutionCapture": false,
+        "diagnostics": {
+          "renderer": "SwiftShader",
+          "warmedTimingsMs": [
+            {
+              "width": 1,
+              "height": 1,
+              "timeMs": 24.7
+            },
+            {
+              "width": 32,
+              "height": 32,
+              "timeMs": 672
+            },
+            {
+              "width": 160,
+              "height": 112,
+              "timeMs": 11750.2
+            }
+          ],
+          "geometryOnlyTimingMs": {
+            "width": 160,
+            "height": 112,
+            "timeMs": 11896.3
+          },
+          "fieldSourceCharacters": 40614,
+          "compileLinkWallMs": 56.8,
+          "measurement": "synchronized wall-clock render diagnostics, not isolated GPU timer",
+          "finalPerformanceClaimed": false
+        }
+      },
+      {
+        "candidate": 4,
+        "commit": "9688a1d",
+        "githubActionsRunId": "39534760240",
+        "cpuGate": "failed_one_outdated_source_introspection_function_name_assertion",
+        "assertionFixCommit": "670d9d75",
+        "gpuAcceptanceClaimed": false
+      },
+      {
+        "candidate": 5,
+        "githubActionsRunId": "39534938722",
+        "status": "microprofiling_in_progress",
+        "performanceImprovementEstablished": false,
+        "acceptedHighResolutionCapture": false
+      }
+    ],
+    "contextCandidateStatus": {
+      "module": "context.mjs",
+      "tests": 14,
+      "landedRemote": true,
+      "uiAccepted": false,
+      "gpuAccepted": false
     }
   },
   "knownLimitations": [
@@ -1007,9 +1077,10 @@
     "No structural, fire, accessibility or building-safety certification; not for construction, approval or escape navigation.",
     "No complete doors/hardware, lifts, foundations, whole-building collision or navigation system.",
     "Hybrid ray solver remains a candidate until same-revision numerical and real browser checks, including grazing/thin/boundary cases.",
-    "No final browser pass count, timing, FPS or speed superiority claim.",
     "Three relation assemblies are separate, unregistered design views, not three fully assembled as-built buildings. Editable rigid alignment does not establish real core placement, containment or floor-label mapping.",
-    "First actual browser/GPU attempt timed out before a complete validation result. Current lazy-probe, analytic-normal and optional-AO changes have no final browser, performance or speedup result in this ledger."
+    "Kernel performance gate is not passed. Candidate 3 failed with slow warmed SwiftShader diagnostics; candidate 5 microprofiling does not yet establish a speed improvement or accepted high-resolution image.",
+    "Current local R06 tests pass, but full local legacy tests are blocked by the missing baseline Three vendor file; remote candidate 3 CPU coverage is a separate revision and environment.",
+    "Official footprint data and the remote context module do not establish implemented source-bound case assemblies or accepted UI/GPU output. Such assemblies remain pending at this checkpoint."
   ],
   "relationDesigns": [
     {
@@ -1180,5 +1251,151 @@
       "actualPortPositionsKnown": false,
       "certified": false
     }
-  ]
+  ],
+  "officialFootprintEvidence": {
+    "path": "sources/official-footprints.json",
+    "sha256": "97eebb40d8cb7e480e0614857076d03599ccaafadafb99041cb951fa51294f9e",
+    "sourceDataset": "Lands Department CSDI Building",
+    "retrievedUTC": "2026-10-21",
+    "coordinateReferenceSystem": "EPSG:2326; heights mPD",
+    "attribution": "© The Government of the Hong Kong Special Administrative Region. Lands Department / Common Spatial Data Infrastructure.",
+    "termsUrl": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC",
+    "evidenceKind": "official_2D_footprint_rings_and_published_attributes_not_recovered_measured_3D",
+    "usageBoundary": "Official 2D footprint rings and published height attributes. Any vertical extrusion, interior plate, doorway or core is a separate inferred/design field, not recovered measured 3D or as-built interior. DateStamp is the feature timestamp, not a verified survey date. Storey counts are per source component and must not be blindly summed.",
+    "partCount": 5,
+    "parts": [
+      {
+        "caseId": "lowrise",
+        "componentId": "3676421372T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D47805&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 47805,
+          "Shape__Length": 77.27322178988389,
+          "Shape__Area": 202.47031488576536,
+          "GeoRefNo": "3676421372",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3676421372T20050430",
+          "BuildingID": 1108226247,
+          "Status": "Active",
+          "BuildingNameEN": null,
+          "BuildingNameTC": null,
+          "BaseHeight": 26,
+          "TopHeight": 33.7,
+          "Storeys": 2,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 16
+      },
+      {
+        "caseId": "kcc",
+        "componentId": "3600619942P20060311",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D229126&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 229126,
+          "Shape__Length": 150.0424815866263,
+          "Shape__Area": 1114.0892625182385,
+          "GeoRefNo": "3600619942",
+          "DateCreate": 1142006400000,
+          "BuildingBlockType": "Podium",
+          "BuildingCSUID": "3600619942P20060311",
+          "BuildingID": 1108246367,
+          "Status": "Active",
+          "BuildingNameEN": "KOWLOON CHAMBER OF COMMERCE BUILDING",
+          "BuildingNameTC": "九龍總商會大廈",
+          "BaseHeight": 8,
+          "TopHeight": 22.4,
+          "Storeys": 4,
+          "StoreysInBasement": 1,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 21
+      },
+      {
+        "caseId": "kcc",
+        "componentId": "3599719944T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D235909&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 235909,
+          "Shape__Length": 132.45097399494753,
+          "Shape__Area": 392.15994703904505,
+          "GeoRefNo": "3599719944",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3599719944T20050430",
+          "BuildingID": 1108235473,
+          "Status": "Active",
+          "BuildingNameEN": "K.C.C. Building",
+          "BuildingNameTC": "龍總大廈",
+          "BaseHeight": 22.4,
+          "TopHeight": 90.9,
+          "Storeys": 24,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 29
+      },
+      {
+        "caseId": "warehouse",
+        "componentId": "3691218584T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D158577&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 158577,
+          "Shape__Length": 189.52659539820874,
+          "Shape__Area": 2329.776236010047,
+          "GeoRefNo": "3691218584",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3691218584T20050430",
+          "BuildingID": 1108241445,
+          "Status": "Active",
+          "BuildingNameEN": "China Travel Hip Kee Godown Co. (H.K.) Ltd. Godown No.2",
+          "BuildingNameTC": "香港中旅協記貨倉有限公司第二倉",
+          "BaseHeight": 17.5,
+          "TopHeight": 51.7,
+          "Storeys": 12,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 10
+      },
+      {
+        "caseId": "warehouse",
+        "componentId": "3690318597P20060311",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D237016&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 237016,
+          "Shape__Length": 218.8727605828767,
+          "Shape__Area": 3115.6254814995486,
+          "GeoRefNo": "3690318597",
+          "DateCreate": 1142006400000,
+          "BuildingBlockType": "Podium",
+          "BuildingCSUID": "3690318597P20060311",
+          "BuildingID": 1108247084,
+          "Status": "Active",
+          "BuildingNameEN": "CHINA TRAVEL HIP KEE GODOWN HONG KONG LIMITED (GODOWN NO 2)",
+          "BuildingNameTC": "香港中旅協記貨倉有限公司(第二倉)",
+          "BaseHeight": 4,
+          "TopHeight": 17.5,
+          "Storeys": 2,
+          "StoreysInBasement": 2,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 15
+      }
+    ],
+    "possibleDerivedUses": [
+      "separately_labelled_inferred_podium_extrusion",
+      "separately_labelled_design_slab"
+    ],
+    "sourceMeasuredShellClosureAllowed": false,
+    "newSourceBoundAssemblyImplemented": false,
+    "uiOrGPUAcceptanceClaimed": false
+  }
 }
