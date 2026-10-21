@@ -11,12 +11,17 @@ import {originalContactSamples,auditGarmentBody} from './NativeGarmentFit.mjs';
 // micrometres before waist anchors are frozen, and during later contact.
 // It is deliberately reported separately, not claimed as a source parameter.
 const H=1/240,MARGIN=.004,PLANNING_GUARD=.00001,LIMIT=.08,SOURCE_CONTACT_STEP=.008;
+// Unchanged cloth-physics::projectContacts interior-sample planning margins.
+// They compensate for interpolation/neighbor constraints; the final audit
+// remains the same strict 4 mm for every material sample.
+const SOURCE_INTERIOR_MARGIN=Object.freeze({vertex:0,edge:.0006,triangle:.0008});
 export class NativeGarmentCorrective{
   constructor(binding){
     this.binding=binding;this.metric=binding.metric;this.solver=createWearerRestSolver(this.metric);
     this.solver.p.set(this.metric.fittedNative);this.solver.initial.set(this.metric.fittedNative);
     this.attachments=createPositiveReferenceAttachments(this.metric);this.referenceLambda=new Float64Array(this.solver.p.length);
     this.samples=originalContactSamples(this.metric);this.vertexSamples=this.samples.filter(s=>s.kind==='vertex');
+    this.denseSamples=[...this.vertexSamples,...this.samples.filter(s=>s.kind==='edge'),...this.samples.filter(s=>s.kind==='triangle')];
     this.previousReference=null;this.lastReport=null;
   }
   initializeNeutral(reference,normals){
@@ -47,7 +52,7 @@ export class NativeGarmentCorrective{
     }
   }
   projectContacts(reference,normals,dense,metrics){
-    const p=this.solver.p,w=this.solver.w,samples=dense?this.samples:this.vertexSamples;
+    const p=this.solver.p,w=this.solver.w,samples=dense?this.denseSamples:this.vertexSamples;
     for(const sample of samples){
       const point=[0,0,0],origin=[0,0,0],normal=[0,0,0];let inverse=0;
       for(let j=0;j<sample.ids.length;j++){
@@ -56,7 +61,7 @@ export class NativeGarmentCorrective{
       }
       if(inverse===0){metrics.fixedSamples++;continue;}
       const nl=Math.hypot(...normal);if(nl>0)for(let k=0;k<3;k++)normal[k]/=nl;
-      const result=this.binding.contact.project(point,{eligibleFaces:this.binding.eligibleFaces,preferredNormal:nl?normal:null,referenceOrigin:origin,margin:MARGIN+PLANNING_GUARD,limit:LIMIT});
+      const result=this.binding.contact.project(point,{eligibleFaces:this.binding.eligibleFaces,preferredNormal:nl?normal:null,referenceOrigin:origin,margin:MARGIN+SOURCE_INTERIOR_MARGIN[sample.kind]+PLANNING_GUARD,limit:LIMIT});
       this.onContact?.({phase:this.phase,sample,point,origin,normal,result});
       if(!result.delta){if(!result.resolved)metrics.unresolvedQueries++;continue;}
       // Original cloth-physics.contact caps one sample correction at 8 mm
@@ -101,6 +106,8 @@ export class NativeGarmentCorrective{
     const report={schema:'native-wearer-rest-pose-corrective/1',model:'original full sewn source distance and wrapped dihedral + positive reference attachment + actual-body contact',
       sourceFreeClothIntegrator:false,sourcePaperMetricCertified:false,hSeconds:H,materialIterations:16,guardIterations:12,
       marginM:MARGIN,sourceAuditMarginM:MARGIN,localPlanningGuardM:PLANNING_GUARD,planningContactMarginM:MARGIN+PLANNING_GUARD,
+      sourceInteriorSampleMarginsM:SOURCE_INTERIOR_MARGIN,sourceDenseSampleOrder:['vertex','edge','triangle'],
+      planningContactMarginsM:Object.fromEntries(Object.entries(SOURCE_INTERIOR_MARGIN).map(([kind,extra])=>[kind,MARGIN+extra+PLANNING_GUARD])),
       sourcePerSampleContactStepM:SOURCE_CONTACT_STEP,totalMaterialDisplacementLimitM:LIMIT,originalDisplayTopologyRetained:true,
       before,after,contact,metrics,queryDelta,elapsedMS:performance.now()-t,numericallyEligible,visualAccepted:false,productionReady:false,
       activeFeaturePolicy:'current material sample only; no historical exterior tangent planes or contact multipliers are accumulated'};

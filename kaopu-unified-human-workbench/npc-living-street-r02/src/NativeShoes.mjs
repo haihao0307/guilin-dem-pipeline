@@ -20,6 +20,13 @@ const unit=a=>{const n=Math.hypot(...a);if(n<1e-8)throw Error('Degenerate native
 const xyz=(p,i)=>[p[i*3],p[i*3+1],p[i*3+2]];
 const C=new T.Matrix4().set(1,0,0,0,0,0,1,0,0,-1,0,0,0,0,0,1),CI=C.clone().invert();
 const rowMatrix=m=>new T.Matrix4().fromArray(m).transpose();
+function convexHullRF(points) {
+  const sorted=points.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),unique=sorted.filter((p,i)=>i===0||p[0]!==sorted[i-1][0]||p[1]!==sorted[i-1][1]);
+  const turn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]),lower=[],upper=[];
+  for(const p of unique){while(lower.length>=2&&turn(lower.at(-2),lower.at(-1),p)<=0)lower.pop();lower.push(p);}
+  for(let i=unique.length-1;i>=0;i--){const p=unique[i];while(upper.length>=2&&turn(upper.at(-2),upper.at(-1),p)<=0)upper.pop();upper.push(p);}
+  return lower.slice(0,-1).concat(upper.slice(0,-1));
+}
 
 function measureFoot(actor,side) {
   const {rig,binding}=actor,footId=rig.index.get('foot.'+side),foot=rig.restP[footId];
@@ -58,13 +65,17 @@ export function fitNativeShoeSide(actor,side,{styleId=STYLE_BY_ACTOR[actor.id]||
     foot.foot[1]+foot.forward[1]*centerF+foot.right[1]*centerR,field.baseZ];
   const restNative=new T.Matrix4().set(foot.right[0],0,foot.forward[0],center[0],
     foot.right[1],0,foot.forward[1],center[1],0,1,0,center[2],0,0,0,1);
-  const solePointsNative=[];let minSole=Infinity;
+  const solePointsNative=[],fullNativeBounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},projected=[];
+  let minSole=Infinity,fullVertexCount=0,minRelativeHeight=Infinity,maxRelativeHeight=-Infinity;
   for(const part of model.parts) {
-    if(!/sole|heel|rubber|welt/.test(part.id+' '+part.role))continue;
+    const isSole=/sole|heel|rubber|welt/.test(part.id+' '+part.role);
     const p=part.geometry.attributes.position;
     for(let i=0;i<p.count;i++) {
       const q=new T.Vector3(p.getX(i)*(side==='L'?-scaleM:scaleM),p.getY(i)*scaleM,p.getZ(i)*scaleM).applyMatrix4(restNative);
-      solePointsNative.push([q.x,q.y,q.z]);minSole=Math.min(minSole,q.z);
+      const point=[q.x,q.y,q.z],relative=sub(point,foot.foot);fullVertexCount++;
+      for(let k=0;k<3;k++){fullNativeBounds.min[k]=Math.min(fullNativeBounds.min[k],point[k]);fullNativeBounds.max[k]=Math.max(fullNativeBounds.max[k],point[k]);}
+      projected.push([dot(relative,foot.right),dot(relative,foot.forward)]);minRelativeHeight=Math.min(minRelativeHeight,relative[2]);maxRelativeHeight=Math.max(maxRelativeHeight,relative[2]);
+      if(isSole){solePointsNative.push(point);minSole=Math.min(minSole,q.z);}
     }
   }
   if(!solePointsNative.length)throw Error('Original shoe has no measurable sole');
@@ -72,6 +83,10 @@ export function fitNativeShoeSide(actor,side,{styleId=STYLE_BY_ACTOR[actor.id]||
     soleLiftM:foot.minZ-minSole,minRestSoleNativeZ:minSole,restFootMinNativeZ:foot.minZ,
     footLengthM:foot.length,footWidthM:foot.width,wearerScaleMPerMm:scaleM,styleId,params,
     sourceTriangles:sourceModel.report.triangles,sourceParts:sourceModel.parts.length,restNative:restNative.toArray(),fitValidated:false,
+    fullNativeBounds,footLocalEnvelope:{schema:'complete-original-shoe-convex-prism/1',units:'m',originNative:foot.foot.slice(),rightNative:foot.right.slice(),forwardNative:foot.forward.slice(),
+      hullRF:convexHullRF(projected),heightRangeM:[minRelativeHeight,maxRelativeHeight],vertices:fullVertexCount,parts:model.parts.length,
+      transform:'origin + right*r + forward*f + nativeZ*height; actual foot skin matrix; native-to-display [x,z,-y]; actor root',
+      poseScope:'current frozen neutral wearer geometry; no dynamic-upper envelope claim'},
     wearerFit:model.report.wearerFit};
   return {model,sourceModel,field,foot,scaleM,params,restNative,record};
 }

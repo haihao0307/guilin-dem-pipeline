@@ -19,8 +19,10 @@ const knownPath='evidence/CAPTURE_RECOVERY_CHAIN_D_CLEARANCE_CONTACT_POSES.json'
 const inputBytes=fs.readFileSync(new URL(inputPath,base)),csrBytes=fs.readFileSync(new URL(csrPath,base));
 const input=JSON.parse(inputBytes),csr=JSON.parse(csrBytes),known=JSON.parse(fs.readFileSync(new URL(knownPath,base)));
 const fullInitialHistory=input.states[0].phase==='initial-idle';
-const reportName=fullInitialHistory?'D_FULL_INITIAL_HISTORY_GARMENT.json':'D_CONTINUOUS_CAPTURE_GARMENT.json';
-const geometryPrefix=fullInitialHistory?'D-full-initial-history':'D-continuous';
+const reportName=process.env.GARMENT_REPORT_NAME??(fullInitialHistory?'D_FULL_INITIAL_HISTORY_GARMENT.json':'D_CONTINUOUS_CAPTURE_GARMENT.json');
+const geometryPrefix=process.env.GARMENT_GEOMETRY_PREFIX??(fullInitialHistory?'D-full-initial-history':'D-continuous');
+const lastObservedFrame=process.env.LAST_OBSERVED_FRAME===undefined?Infinity:Number(process.env.LAST_OBSERVED_FRAME);
+if(Number.isNaN(lastObservedFrame))throw Error('INVALID_OBSERVED_FRAME_LIMIT');
 const instrument=process.env.TRACE_T03_WORST==='1',trace=[];
 const neutralOnly=process.env.NEUTRAL_ONLY==='1',frozenNeutralURL=new URL('D_CONTINUOUS_NEUTRAL_STATE.json',folder);
 const frozenNeutral=process.env.USE_FROZEN_NEUTRAL==='1'?JSON.parse(fs.readFileSync(frozenNeutralURL)):null,neutralRows=[];
@@ -76,7 +78,7 @@ const report={schema:'actual-sequential-capture-wearer-rest-garment/1',releaseCa
   sequence:{availableFrames:input.states.length,firstGlobalFrame:input.states[0].frame,lastGlobalFrame:input.states.at(-1).frame,actualObservedFramesOnly:true,syntheticInterpolation:false,
     initialState:fullInitialHistory?'accepted exact displayed-body neutral wearer rest followed by the original observed runtime idle(dt=0), then every real walk/entry/contact frame':'accepted exact displayed-body neutral wearer rest; earlier walking garment state was not in the provided cache',
     includesOriginalIdleAndEveryEarlierWalkingFrame:fullInitialHistory,initialRuntimePosePresumedEqualToCanonicalNeutral:false,firstNeutralToEntryGapRecorded:!fullInitialHistory},
-  constraints:{hSeconds:1/240,materialIterations:16,guardIterations:12,sourceAuditMarginM:.004,localPlanningGuardM:.00001,planningContactMarginM:.00401,perSampleContactStepM:.008,totalMaterialDisplacementLimitM:.08},
+  constraints:{hSeconds:1/240,materialIterations:16,guardIterations:12,sourceAuditMarginM:.004,localPlanningGuardM:.00001,planningContactMarginM:.00401,sourceInteriorSampleMarginsM:{vertex:0,edge:.0006,triangle:.0008},sourceDenseSampleOrder:['vertex','edge','triangle'],perSampleContactStepM:.008,totalMaterialDisplacementLimitM:.08},
   poseCache:'Compare all 104 skin matrices exactly; unchanged local pose reuses the already accepted material geometry and audit. No tolerance or pose-distance threshold.',
   neutral:[],frames:[],completed:false,firstFailure:null};
 const write=()=>{if(!neutralOnly)fs.writeFileSync(new URL(reportName,folder),JSON.stringify(report,null,2)+'\n');};
@@ -99,23 +101,24 @@ for(const id of ['T03','P01']){
 if(!frozenNeutral)fs.writeFileSync(frozenNeutralURL,JSON.stringify({schema:'frozen-exact-runtime-neutral-material-state/1',csrSHA256:hash(csrBytes),bodyPositions:Array.from(target.positions),sourceHashes:report.sourceHashes,rows:neutralRows}));
 if(neutralOnly){console.log(JSON.stringify({event:'neutral-state-frozen',rows:neutralRows.map(r=>r.id)}));process.exit(0);}
 let previousBody=neutralBody,previousMatrices=null,previousAcceptedFrame=null;
-for(let index=0;index<input.states.length;index++){
+report.sequence.requestedLastObservedFrame=Number.isFinite(lastObservedFrame)?lastObservedFrame:input.states.at(-1).frame;
+for(let index=0;index<input.states.length&&input.states[index].frame<=lastObservedFrame;index++){
   const t=performance.now(),state=input.states[index],unchangedPose=previousMatrices&&state.skinMatrices.every((m,i)=>m.every((v,k)=>v===previousMatrices[i][k]));
   const body=unchangedPose?previousBody:sampleBody(state.skinMatrices),bodyRebuildMS=performance.now()-t;
   let maxBodyStepM=0;for(let i=0;i<body.length;i+=3)maxBodyStepM=Math.max(maxBodyStepM,Math.hypot(body[i]-previousBody[i],body[i+1]-previousBody[i+1],body[i+2]-previousBody[i+2]));
   const row={sequenceIndex:index,id:state.id,frame:state.frame,time:state.time,mode:state.mode??(state.phase==='entry'?'pickup':null),phase:state.phase,sourceFrame:state.sourceFrame,maximumBodyStepM:maxBodyStepM,bodyRebuildMS,exactUnchangedPose:Boolean(unchangedPose),fromAcceptedNeutral:index===0,garments:[]};
-  const referenceGeometry={actor:'D',pose:state.id,nativeAxis:'Z-up',viewBasis:actualViewBasis(state),body:{positions:Array.from(body),faces:input.faces},headIncluded:false,rootWorld:state.rootWorld,actualMotionMatrices:true,motionRegenerated:false,stage:'actual observed frame continuous reference',garments:[]};
+  const referenceGeometry={actor:'D',pose:state.id,nativeAxis:'Z-up',viewBasis:actualViewBasis(state),body:{positions:Array.from(body),faces:input.faces},headIncluded:false,rootWorld:state.rootWorld,actualMotionMatrices:true,motionRegenerated:false,stage:'actual observed frame garment reference; transport method recorded per garment',garments:[]};
   const finalGeometry={...referenceGeometry,stage:'same frame full material/contact final candidate',garments:[]};
   for(const g of garments){
     const refStart=performance.now(),reference=unchangedPose?g.lastReference:g.binding.sample(body,state.skinMatrices),referenceAndBodyBVHRefitMS=performance.now()-refStart;
     const onContact=instrument&&g.id==='T03'?event=>{if(event.sample.ids.some(i=>i===2090||i===1142))trace.push(JSON.parse(JSON.stringify(event)));}:null;
     const result=unchangedPose?g.lastResult:g.corrective.solve(reference.positions,reference.normals,{warmStart:true,onContact});
     const frameReport=unchangedPose?{...result.report,elapsedMS:0,metrics:{...result.report.metrics,materialMS:0,contactMS:0},queryDelta:Object.fromEntries(Object.keys(result.report.queryDelta).map(k=>[k,0])),exactPoseAuditReusedFromFrame:previousAcceptedFrame}:result.report;
-    row.garments.push({id:g.id,referenceAndBodyBVHRefitMS,referenceField:g.binding.reference.field.report,waistAttachment:g.binding.reference.waistAttachment,...frameReport});
+    row.garments.push({id:g.id,referenceAndBodyBVHRefitMS,referenceField:g.binding.reference.transportReport,waistAttachment:g.binding.reference.waistAttachment,...frameReport});
     g.lastReference=reference;g.lastResult=result;
     const displayReference=new Float64Array(g.binding.metric.displayToSolver.length*3);
     for(let i=0;i<g.binding.metric.displayToSolver.length;i++)displayReference.set(reference.positions.subarray(g.binding.metric.displayToSolver[i]*3,g.binding.metric.displayToSolver[i]*3+3),i*3);
-    referenceGeometry.garments.push({id:g.id,positions:Array.from(displayReference),faces:g.faces});
+    referenceGeometry.garments.push({id:g.id,referenceTransport:g.binding.reference.transportReport,positions:Array.from(displayReference),faces:g.faces});
     finalGeometry.garments.push({id:g.id,positions:Array.from(result.display),faces:g.faces});
     console.log(JSON.stringify({event:'frame',index,frame:state.frame,phase:state.phase,sourceFrame:state.sourceFrame,id:g.id,exactPoseCached:Boolean(unchangedPose),eligible:result.report.numericallyEligible,elapsedMS:frameReport.elapsedMS,inside:result.report.contact.inside,positiveBelow4MM:result.report.contact.clearanceDeficits,edge:result.report.after.maxWearerEdgeRatio,moveMM:result.report.after.maxReferenceMoveM*1000,unresolved:result.report.metrics.unresolvedQueries}));
   }
@@ -145,6 +148,11 @@ for(let index=0;index<input.states.length;index++){
   }
   previousBody=body;previousMatrices=state.skinMatrices;previousAcceptedFrame=state.frame;
   if(index===input.states.length-1){report.completed=true;fs.writeFileSync(new URL(geometryPrefix+'-contact99-corrective-geometry.json',folder),JSON.stringify(finalGeometry));}
+  if(state.frame===lastObservedFrame){
+    fs.writeFileSync(new URL(geometryPrefix+'-bounded-end-reference-geometry.json',folder),JSON.stringify(referenceGeometry));
+    fs.writeFileSync(new URL(geometryPrefix+'-bounded-end-corrective-geometry.json',folder),JSON.stringify(finalGeometry));
+  }
   write();
 }
-console.log(JSON.stringify({event:'complete',processedFrames:report.frames.length,availableFrames:input.states.length,completed:report.completed,firstFailure:report.firstFailure}));
+report.boundedEndReached=!report.firstFailure&&report.frames.at(-1)?.frame===report.sequence.requestedLastObservedFrame;write();
+console.log(JSON.stringify({event:'complete',processedFrames:report.frames.length,availableFrames:input.states.length,completed:report.completed,boundedEndReached:report.boundedEndReached,firstFailure:report.firstFailure}));

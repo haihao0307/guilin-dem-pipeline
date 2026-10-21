@@ -567,7 +567,9 @@ function makeActor(model, viewer, spec, preset, measurements) {
       return {schema:'native-refined-mouth-support-fixture/1',actor:spec.id,identity:structuredClone(this.identity),
         sourceDisplayVertices:geometry.attributes.position.count,nativeVertices:binding.N,
         heightM:binding.height,floorOffsetM:binding.floorOffset,weightsTruncated:false,mutation:false,
-        mouthSupport:structuredClone(mouthSupport),rig:structuredClone(binding.rig),
+        mouthSupport:structuredClone(mouthSupport),rig:{names:Array.from(binding.rig.names),parents:Array.from(binding.rig.parents),
+          restMatrices:binding.rig.restMatrices.map(m=>Array.from(m))},
+        rigScope:'Complete original 104-bone rest skeleton; each selected lip retains all of its original CSR entries below',
         vertices:ids.map(id=>{const start=binding.displayRange[id*4],count=binding.displayRange[id*4+1];
           return {id,rest:restVertex(geometry,id),entries:Array.from(binding.displayPacked.subarray(start*8,(start+count)*8)),
             currentNative:sampleLiveVertex(id),currentWorld:toWorld(sampleLiveVertex(id)).toArray()};}),

@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..'),sha=b=>crypto.createHash('sha256').updat
 function builder(){for(const x of ['esbuild',path.join(root,'vendor/build-tools/node_modules/esbuild'),'/tmp/npc-life-build-tools/node_modules/esbuild',process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES&&path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'esbuild')].filter(Boolean))try{return require(x);}catch{}throw Error('Pinned esbuild missing; run prepare.cjs');}
 (async()=>{
  const THREE=await require(path.join(root,'build.cjs')).loadNativeThreeForQA();globalThis.__NPC_QA_THREE__=THREE;globalThis.__CAPTURE_QA_ROOT__=root;
- const kind=process.argv[2]||'stance';if(!['stance','chain','wrist-rca','bread-side','bread-bag','bread-bag-tilt','bread-a-curl','bread-a-contact-retention','unheld-wrist'].includes(kind))throw Error('Unknown bounded recovery probe '+kind);
+ const kind=process.argv[2]||'stance';if(!['stance','chain','wrist-rca','bread-side','bread-bag','bread-bag-tilt','bread-a-curl','bread-a-contact-retention','unheld-wrist','entry-route','approach-route'].includes(kind))throw Error('Unknown bounded recovery probe '+kind);
  const entry=path.join(__dirname,'check-capture-recovery-'+kind+'.mjs');
  const result=await builder().build({entryPoints:[entry],bundle:true,write:false,platform:'node',format:'esm',target:'node22',metafile:true,logLevel:'error',plugins:[{name:'same-original-r07-three',setup(b){
   b.onResolve({filter:/three\.module\.js$|^three$/},()=>({path:'original-r07-three',namespace:'retained-three'}));

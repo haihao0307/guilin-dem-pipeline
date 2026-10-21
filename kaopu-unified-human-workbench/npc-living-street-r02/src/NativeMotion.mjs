@@ -531,7 +531,12 @@ export class NativeMotion {
       sourceTarget=worldTarget;completionTarget=worldTarget;
       const relaxed=this._world(this.tools.samplePalm(this.side));
       goal=lerp(relaxed,worldTarget,smooth(p/.30));stage=p<.30?'approach-handle':p<.96?'follow-handle':'at-handle';
-      solution=this._reach(goal,this.side,0,smooth(p/.30));
+      // A fixed visible handle constrains the palm point and normal. It does
+      // not require the wrist to fold past its native reach cone. Keep the
+      // existing mechanism hand frame, with the same coupled elbow/roll solve
+      // used by real props and the smallest feasible free roll about its normal.
+      solution=solveNativeObjectReach(this,goal,{side:this.side,orientationWeight:smooth(p/.30),
+        contactFrame:'mechanism',allowFreeRoll:true});
     }
     if(action) {
       const relaxed=this._world(this.tools.samplePalm(this.side));
@@ -568,7 +573,7 @@ export class NativeMotion {
     const palmNormal=this._direction(unit(mv(rotation(rig.skinMatrices[rig.limbs['arm'+this.side].c]),rig.hand[this.side].palm)),yaw);
     const handForward=this._direction(unit(mv(rotation(rig.skinMatrices[rig.limbs['arm'+this.side].c]),rig.hand[this.side].forward)),yaw),handCylinderAxis=scale(unit(cross(handForward,palmNormal)),this.side==='L'?-1:1);
     const footErrorM=Math.max(...SIDES.map(s=>feet[s].surfaceErrorM));
-    const wristGateActive=action&&p>=.30,wristBendDegrees=solution?.wristBendDegrees??null;
+    const wristGateActive=(action||environmentAction)&&p>=.30,wristBendDegrees=solution?.wristBendDegrees??null;
     const poseValid=checked.finite&&checked.maxBoneLengthError<=.00001&&footErrorM<=.015&&
       (!wristGateActive||solution?.wristWithinGate===true&&!solution.clamped);
     const contactErrorM=sourceTarget?norm(sub(palm,sourceTarget)):0;

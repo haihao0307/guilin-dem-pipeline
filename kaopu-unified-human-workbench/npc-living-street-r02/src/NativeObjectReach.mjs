@@ -22,19 +22,20 @@ export function minimumFreePalmRoll(A,B,F,axis,upper,lower){
     measure:t=>{const R=axisRotation(axis,t);return limbMeasure(sub(A,mv(R,B)),mv(R,F),upper,lower);}});
 }
 
-export function solveNativeObjectReach(motion,world,{side='R',turn=0,palmRoll=0,orientationWeight=1,allowYaw=false,allowFreeRoll=false}={}){
+export function solveNativeObjectReach(motion,world,{side='R',turn=0,palmRoll=0,orientationWeight=1,allowYaw=false,allowFreeRoll=false,contactFrame='object'}={}){
+  if(!['object','mechanism'].includes(contactFrame))throw Error('Unknown native contact hand frame');
   const rig=motion.rig,tools=motion.tools,limb=rig.limbs['arm'+side],sign=side==='L'?1:-1,
     local=motion._native(world),shoulder=pos(rig.posedMatrices[limb.a]),
-    restOffset=sub(tools.palmRest(side),rig.restP[limb.c]),upright=motion._contactHandRotation(side,0,1,true);
+    restOffset=sub(tools.palmRest(side),rig.restP[limb.c]),objectFrame=contactFrame==='object',upright=motion._contactHandRotation(side,0,1,objectFrame);
   let actualTurn=turn,yawBoundary=null;
-  if(allowYaw&&orientationWeight>=.999&&Math.abs(palmRoll)<1e-12){
+  if(allowYaw&&objectFrame&&orientationWeight>=.999&&Math.abs(palmRoll)<1e-12){
     // Rotate the actual shoulder-to-palm relation into the desired object
     // frame; the existing quartic returns the nearest feasible yaw delta.
     const relative=mv(axisRotation([0,0,1],-turn),sub(local,shoulder));
     yawBoundary=minimumBagTurn(relative,mv(upright,restOffset),sign,limb.upper,limb.lower);
     if(yawBoundary.angle!==null)actualTurn+=yawBoundary.angle;
   }
-  const uprightDesired=motion._contactHandRotation(side,actualTurn,1,true),
+  const uprightDesired=motion._contactHandRotation(side,actualTurn,1,objectFrame),
     // A held prop is free to rotate with the complete native hand. Roll the
     // fingers toward their natural downward carry direction after clearing
     // the counter, instead of forcing a horizontal wrist at a low bag.
@@ -67,6 +68,6 @@ export function solveNativeObjectReach(motion,world,{side='R',turn=0,palmRoll=0,
     wristBendDegrees=Math.acos(clamp(dot(forearm,handForward),-1,1))/DEG;
   return {...solution,wristBendDegrees,forearmDirection:forearm,handForwardNative:handForward,
     actualPalmErrorM:norm(sub(local,tools.samplePalm(side))),rollRadians:roll,objectTurnRadians:actualTurn,objectPalmRollRadians:palmRoll,
-    yawBoundary,freeRollBoundary,freeApproachRollRadians:freeRollBoundary?.angle??null,originalCoupledElbowRoll:true,wristGateDegrees:PICKUP_REACH_RULES.wristGateDegrees,
+    yawBoundary,freeRollBoundary,freeApproachRollRadians:freeRollBoundary?.angle??null,contactFrame,originalCoupledElbowRoll:true,wristGateDegrees:PICKUP_REACH_RULES.wristGateDegrees,
     wristWithinGate:wristBendDegrees<PICKUP_REACH_RULES.wristGateDegrees};
 }

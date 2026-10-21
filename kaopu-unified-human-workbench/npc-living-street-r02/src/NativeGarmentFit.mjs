@@ -1,9 +1,11 @@
 /** New, explicitly local wearer adapter after recovery of the original source.
  * It is not a restoration of the lost a750 bytes. Source cloth vertices, UVs,
  * seams and paper metrics remain intact. Shape transport uses a continuous
- * positive displacement field. Pose references extend the original complete
- * CSR rotated-offset rule to a positive continuous body-support field; fixed
- * body faces retain contact-normal identities only.
+ * positive displacement field. Upper pose references use the source fixed
+ * body triangle/barycentric point plus complete-CSR rotated offset. Lower
+ * pose references retain the positive continuous body-support field and the
+ * original fixed waistband attachment. Contact uses the same fixed body's
+ * current geometric face normal; it still verifies the actual exterior.
  */
 import {MeshContact,closestTriangle} from '../vendor/appearance/cloth-r10/mesh-contact.mjs';
 import {createGarmentMetric,createGarmentSolverMetric,expandGarmentDisplay} from './NativeGarmentMetric.mjs';
@@ -108,7 +110,20 @@ function poseReferences(metric,target,source){
     const sum=[...weights.values()].reduce((a,b)=>a+b,0);if(Math.abs(sum-1)>1e-4)throw Error('INCOMPLETE_NATIVE_REFERENCE_CSR');
     refs.push({ids,bary,offset,weights:[...weights].flat(),face:f,region:regions[i]});maximumInfluences=Math.max(maximumInfluences,weights.size);
   }
+  // Keep the continuous field available for diagnostic comparison, but do not
+  // average the upper garment's surface attachment across nearby body sites.
+  // That averaging eroded an accepted armhole's clearance during real walking.
+  // The top position expression below is the original ReducedCloth
+  // sampleReference/deformVector, written in native Z-up coordinates. Every
+  // contributing CSR weight and the fixed reference offset are retained.
   const field=compileContinuousGarmentReference(metric,target,source,regions);
+  const transportReport=metric.role==='top'?{
+    method:'original ReducedCloth fixed body triangle barycentric point + complete CSR rotated offset',
+    sourceSHA256:'a851fdee4a269c05e6cd0d8efd3479d9985a557247659235b67d6646940cf4e2',
+    sourceFunctions:['sampleReference','deformVector'],nativeAxisAdaptation:'Y-up source to native Z-up',
+    references:refs.length,maximumBones:maximumInfluences,weightsTruncated:false,
+    nearbyBodySupportAveraging:false,contactNormal:'unchanged current geometric cross of the same fixed body reference face'
+  }:{...field.report,contactNormal:'unchanged current geometric cross of the same fixed body reference face'};
   // Restore the source's separate contract for the declared fixed waistband
   // sites. Their original triangle/bary/local-frame offset is carried by the
   // actual posed body. The continuous field still transports all other sites;
@@ -119,9 +134,22 @@ function poseReferences(metric,target,source){
   }:null;
   const waist=waistWorld?new WaistAttachments(waistWorld):null;
   const waistAttachment=waist?{method:'unchanged original WaistAttachments fixed body triangle + barycentric point + local basis offset',sourceSHA256:'bf63216f946e834ace38ccd2118f822de52bab3045d757d49b79a140e9269bd6',originalPins:waist.rows.length,additionalPins:0}:null;
-  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,field,waistAttachment,
+  return {refs,regions,maximumInfluences,roundoffBaryClamps,maximumBaryRoundoff,field,transportReport,waistAttachment,
     sample(posedBody,skinMatrices,out=new Float64Array(metric.count*3),normals=new Float64Array(metric.count*3)){
-      field.sample(posedBody,skinMatrices,out);
+      if(metric.role==='top'){
+        for(let i=0;i<refs.length;i++){
+          const r=refs[i],k=i*3;let x=0,y=0,z=0;
+          for(let j=0;j<3;j++){const a=r.ids[j]*3,w=r.bary[j];x+=posedBody[a]*w;y+=posedBody[a+1]*w;z+=posedBody[a+2]*w;}
+          const [dx,dy,dz]=r.offset;let rx=0,ry=0,rz=0;
+          for(let j=0;j<r.weights.length;j+=2){
+            const M=skinMatrices[r.weights[j]],w=r.weights[j+1];
+            rx+=w*(M[0]*dx+M[1]*dy+M[2]*dz);
+            ry+=w*(M[4]*dx+M[5]*dy+M[6]*dz);
+            rz+=w*(M[8]*dx+M[9]*dy+M[10]*dz);
+          }
+          out[k]=x+rx;out[k+1]=y+ry;out[k+2]=z+rz;
+        }
+      }else field.sample(posedBody,skinMatrices,out);
       if(waist){waistWorld.actor.positions=posedBody;waistWorld.solvers[1].p=out;waist.begin();waist.apply(1);}
       for(let i=0;i<refs.length;i++){
         const r=refs[i],k=i*3,n=nativeFaceNormal(posedBody,faces,r.face);normals.set(n,k);
@@ -136,9 +164,9 @@ export async function createWholeGarmentBinding({sourcePerson,targetBody,packet,
   const donor=originalGarmentNative(packet),donorMetric=createGarmentMetric(packet,donor,{role,family}),regions=groupRegions(packet,donorMetric.map,donorMetric.count,role),transfer=transferShape(source,target.positions,donorMetric.fittedNative,regions);
   const fittedDisplay=expandGarmentDisplay(donorMetric,transfer.positions),metric=await createGarmentSolverMetric(packet,fittedDisplay,{role,family,neutralEvidence}),reference=poseReferences(metric,target,source),contact=new NativeGarmentContact(target.positions,source.faces);
   return {metric,reference,source,target,contact,role,packet,neutralDisplay:expandGarmentDisplay(metric,metric.fittedNative),
-    report:{...transfer.report,method:transfer.report.method+'; continuous full CSR offset transport',referenceField:reference.field.report,
+    report:{...transfer.report,method:transfer.report.method+'; '+reference.transportReport.method,referenceField:reference.transportReport,
       sourceVertices:donor.length/3,sourceTriangles:packet.spec.panels.reduce((n,p)=>n+p.triangles.length,0),indexSequenceRetained:true,sourcePaperUVRetained:true,
-      weightsTruncated:false,maximumReferenceInfluences:Math.max(reference.maximumInfluences,reference.field.report.maximumBones),geometricBarycentricRoundoff:{count:reference.roundoffBaryClamps,maximum:reference.maximumBaryRoundoff},bodyGeometryChanged:false,internalRefinement:metric.internalRefinement,neutralAccepted:false,visualAccepted:false},
+      weightsTruncated:false,maximumReferenceInfluences:Math.max(reference.maximumInfluences,reference.transportReport.maximumBones),geometricBarycentricRoundoff:{count:reference.roundoffBaryClamps,maximum:reference.maximumBaryRoundoff},bodyGeometryChanged:false,internalRefinement:metric.internalRefinement,neutralAccepted:false,visualAccepted:false},
     eligibleFaces:source.masks[role==='top'?'torso':'lower'],
     sample(posedBody,skinMatrices){contact.refit(posedBody);return reference.sample(posedBody,skinMatrices);}
   };
@@ -165,7 +193,7 @@ export function captureNeutralWearerRest(binding,sewnNative,neutralEvidence){
   let maximumSeamReaverageM=0;for(let i=0;i<old.count;i++)maximumSeamReaverageM=Math.max(maximumSeamReaverageM,Math.hypot(...[0,1,2].map(k=>metric.fittedNative[i*3+k]-sewnNative[i*3+k])));
   const reference=poseReferences(metric,binding.target,binding.source),contact=binding.contact;
   return {...binding,metric,reference,neutralDisplay:expandGarmentDisplay(metric,metric.fittedNative),
-    report:{...binding.report,neutralRestCaptured:true,neutralContactAudit:contactAudit,neutralEvidence,maximumSeamReaverageM,referenceField:reference.field.report,sourcePaperMetricCertified:false,visualAccepted:false},
+    report:{...binding.report,neutralRestCaptured:true,neutralContactAudit:contactAudit,neutralEvidence,maximumSeamReaverageM,referenceField:reference.transportReport,sourcePaperMetricCertified:false,visualAccepted:false},
     sample(posedBody,skinMatrices){contact.refit(posedBody);return reference.sample(posedBody,skinMatrices);}
   };
 }
