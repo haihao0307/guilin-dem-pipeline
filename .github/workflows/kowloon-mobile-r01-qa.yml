@@ -26,8 +26,8 @@ jobs:
         run: python -m http.server 8765 >/tmp/mobile-field-http.log 2>&1 &
       - name: Real GLSL compile and link before rendering
         run: timeout 80s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-field-browser.py --compile-only --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
-      - name: Same-pixel A B and real mobile viewport gesture
-        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-field-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
+      - name: Bounded stage cost measurement at identical quality
+        run: timeout 180s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/mobile-stage-profile.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/mobile-field-r01
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
