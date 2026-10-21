@@ -43,8 +43,8 @@ with tempfile.TemporaryDirectory(prefix='teacher-study-',dir=os.environ.get('RUN
  (app/'buildings/QA-Teacher-Temporary.bld').write_text(simple+extra)
  log=root/'execution.log'
  with log.open('w') as f:
-  proc=subprocess.Popen(['xvfb-run','-a','-s','-screen 0 1280x800x24','sh','-c','"$1" -m -p -v Simple.bld & child=$!; sleep 20; echo QA_WINDOW_TREE; command -v xwininfo >/dev/null && xwininfo -root -tree; echo QA_PROCESS_STATE; ps -eo pid,stat,wchan:30,comm | grep -E "skyscraper|Xvfb"; wait $child','qa-wrapper',str(app/'bin/skyscraper')],cwd=app,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
-  try:proc.wait(timeout=65)
+  proc=subprocess.Popen(['xvfb-run','-a','-s','-screen 0 1280x800x24','sh','-c','"$1" -m -p -v QA-Teacher-Temporary.bld & child=$!; sleep 20; echo QA_WINDOW_TREE; command -v xwininfo >/dev/null && xwininfo -root -tree; echo QA_PROCESS_STATE; ps -eo pid,stat,wchan:30,comm | grep -E "skyscraper|Xvfb"; wait $child','qa-wrapper',str(app/'bin/skyscraper')],cwd=app,env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+  try:proc.wait(timeout=105)
   except subprocess.TimeoutExpired:
    import signal
    os.killpg(proc.pid,signal.SIGTERM)
