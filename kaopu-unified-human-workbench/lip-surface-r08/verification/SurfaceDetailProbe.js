@@ -1,4 +1,4 @@
-/* R03 fine-detail diagnostic proposal, not installed in a product or CI.
+/* Inherited lip fine-detail diagnostic proposal, not installed in a product or CI.
  *
  * Pure fragment patch + float-readback statistics. No DOM, renderer, settings,
  * geometry, material hook, network or CI side effects. Calling patch() does not
@@ -37,8 +37,8 @@
  */
 (function (root) {
   'use strict';
-  const VERSION = 'r03-fine-detail-gpu-probe-proposal@1';
-  const MARKER = '// R03_FINE_DETAIL_GPU_DIAGNOSTIC_ONLY';
+  const VERSION = 'inherited-lip-fine-detail-gpu-probe@1';
+  const MARKER = '// INHERITED_LIP_FINE_DETAIL_GPU_DIAGNOSTIC_ONLY';
   const UNIFORM = 'rfdProbePlane';
   const SENTINEL = -937.125;
   const PLANES = Object.freeze([
@@ -58,7 +58,7 @@
 
   function patch(fragment) {
     if (typeof fragment !== 'string' || fragment.includes(MARKER) || fragment.includes(UNIFORM))
-      throw Error('Expected uninstrumented inherited R04/R03 fragment source');
+      throw Error('Expected uninstrumented inherited R04 lip fine-detail fragment source');
     if (!fragment.includes('// LIP-INNER-R04 continuous native oral responsibility') ||
         !fragment.includes('clearcoatNormal=normal;')) throw Error('Inherited shader ownership contract changed');
     const replacements = [];
@@ -192,5 +192,5 @@
 
   const api = Object.freeze({ VERSION, UNIFORM, SENTINEL, PLANES, patch, summarize });
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else Object.defineProperty(root, '__R03_FINE_DETAIL_GPU_PROBE__', { value: api, configurable: true });
+  else Object.defineProperty(root, '__LIP_FINE_DETAIL_GPU_PROBE__', { value: api, configurable: true });
 })(typeof globalThis === 'object' ? globalThis : this);
