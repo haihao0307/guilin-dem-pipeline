@@ -1,0 +1,64 @@
+--- frozen-c5/tests/browser-smoke.mjs
++++ verification/public-browser-smoke.mjs
+@@ -16,9 +16,10 @@
+ import {fileURLToPath, pathToFileURL} from 'node:url';
+ import {createHash} from 'node:crypto';
+ import {gzipSync, gunzipSync} from 'node:zlib';
+-import {verifyPacketIntegrity} from './packet-integrity.mjs';
+-
+-const PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
++
++// Verification-only copy: target the frozen application checkout explicitly.
++const PROJECT = path.resolve(process.env.CLO_PROJECT_DIR || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'));
++const {verifyPacketIntegrity} = await import(pathToFileURL(path.join(PROJECT, 'tests/packet-integrity.mjs')).href);
+ const TOTAL_TIMEOUT_MS = 600_000;
+ const SOLVE_TIMEOUT_MS = 180_000;
+ const DESKTOP = {width: 1440, height: 1000};
+@@ -96,7 +97,8 @@
+   const report = {
+     schema: 'kaopu-clo-browser-smoke/3', startedAt: timestamp(), completedAt: null,
+     mode, target: args.file ? path.resolve(args.file) : args.url,
+-    sourceHead: null, expectedSourceHead: process.env.GITHUB_SHA || null,
++    sourceHead: null, expectedSourceHead: process.env.CLO_EXPECTED_SOURCE_HEAD || null,
++    verifierSourceHead: process.env.GITHUB_SHA || null,
+     passed: false, desktopPassed: false, mobileViewportPassed: false,
+     standaloneCoreNetworkRequests: 0, visualAcceptance: false,
+     browser: {engine: 'Chromium', headless: true, graphics: 'ANGLE SwiftShader explicitly requested'},
+@@ -276,10 +278,10 @@
+       const input = path.resolve(args.file);
+       htmlBytes = await fs.readFile(input);
+       try { localManifest = JSON.parse(await fs.readFile(path.join(path.dirname(input), 'manifest.json'), 'utf8')); }
+-      catch (error) { if (!process.env.GITHUB_SHA || error.code !== 'ENOENT') throw error; }
++      catch (error) { if (!process.env.CLO_EXPECTED_SOURCE_HEAD || error.code !== 'ENOENT') throw error; }
+       manifest = localManifest;
+       report.expectedSourceHead ||= manifest?.sourceHead || manifest?.sourceCommit || null;
+-      if (!report.expectedSourceHead) throw Error('No expected source head: set GITHUB_SHA or supply dist/manifest.json.');
++      if (!report.expectedSourceHead) throw Error('No expected source head: set CLO_EXPECTED_SOURCE_HEAD or supply dist/manifest.json.');
+     }
+     const {chromium} = await playwright();
+     browser = await chromium.launch({headless: true, timeout: 60_000, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-dev-shm-usage']});
+@@ -336,14 +338,22 @@
+     finalURL = page.url(); report.evidence.finalURL = finalURL;
+     if (mode === 'https') {
+       check('https-document', new URL(finalURL).protocol === 'https:' && response?.ok(), {status: response?.status(), finalURL});
+-      htmlBytes = await response.body();
++      // APIRequestContext reads the large immutable HTML independently of
++      // Chromium's DevTools response cache. Navigation and all real page
++      // interactions remain on the original public URL; no route is fulfilled.
++      const htmlReadback = await context.request.get(finalURL, {timeout: 60_000, headers: {'Cache-Control': 'no-cache', Pragma: 'no-cache'}});
++      report.network.bootstrap.push({url: htmlReadback.url(), resourceType: 'document-byte-verification', method: 'GET', status: htmlReadback.status(), initiatedBy: 'acceptance script APIRequestContext'});
++      check('public-html-readback', htmlReadback.ok() && htmlReadback.url() === finalURL, {status: htmlReadback.status(), url: htmlReadback.url(), browserDocumentURL: finalURL});
++      htmlBytes = await htmlReadback.body();
++      report.evidence.htmlByteReadback = {method: 'APIRequestContext', url: finalURL, bytes: htmlBytes.length, sha256: hash(htmlBytes), browserDocumentStatus: response.status()};
++      await htmlReadback.dispose();
+       manifestURL = new URL('manifest.json', finalURL).href;
+       const fetched = await context.request.get(manifestURL, {timeout: 30_000, headers: {'Cache-Control': 'no-cache'}});
+       report.network.bootstrap.push({url: manifestURL, resourceType: 'manifest', method: 'GET', status: fetched.status(), initiatedBy: 'acceptance script'});
+       check('public-manifest', fetched.ok(), {status: fetched.status()});
+       manifest = await fetched.json();
+       report.expectedSourceHead ||= manifest.sourceHead || manifest.sourceCommit || null;
+-      if (!report.expectedSourceHead) throw Error('Public manifest has no source head and GITHUB_SHA is unset.');
++      if (!report.expectedSourceHead) throw Error('Public manifest has no source head and CLO_EXPECTED_SOURCE_HEAD is unset.');
+     }
+     if (manifest) {
+       check('manifest-source-head', (manifest.sourceHead || manifest.sourceCommit) === report.expectedSourceHead && (!manifest.sourceCommit || manifest.sourceCommit === report.expectedSourceHead), {sourceHead: manifest.sourceHead, sourceCommit: manifest.sourceCommit});

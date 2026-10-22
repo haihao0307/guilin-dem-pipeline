@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-public-verifier-patch-review/1",
+  "recordedAt": "2026-10-22T03:33:28.724766+00:00",
+  "frozenApplicationSourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+  "frozenApplicationHTMLSHA256": "182b8d581cf027704c109daea30e2f988b124d90933b6c7133c89007cee2a8ac",
+  "sourceScriptSHA256": "2dbf08918397d999502f253b0b17657b8900cd1220156298d43ffdea19813684",
+  "verificationScriptSHA256": "17d601994aac058deb4cfe6ff6ffdf76824a955e53d9f80c86db5cec9ee1111d",
+  "dependencyProjectVariable": "CLO_PROJECT_DIR",
+  "expectedApplicationSourceVariable": "CLO_EXPECTED_SOURCE_HEAD",
+  "verifierCommitVariable": "GITHUB_SHA (recorded separately as verifierSourceHead)",
+  "dependencies": [
+    {
+      "path": "${CLO_PROJECT_DIR}/tests/packet-integrity.mjs",
+      "sha256": "d28290720b525d23524ac9800775d21999df224e422d1891c91741dc626dd4a9"
+    },
+    {
+      "path": "${CLO_PROJECT_DIR}/upstream/kaopu-tailor-workbench/presets/r04/assets/papers/S03.json.gz",
+      "decodedSHA256": "3e54c6322a46ea7232644f341a4f5ea300d0b20a24a1d45765138b707d753baa"
+    },
+    {
+      "path": "${CLO_PLAYWRIGHT_MODULE}",
+      "package": "playwright@1.57.0"
+    }
+  ],
+  "changes": [
+    "Resolve helper and frozen paper from explicit source checkout outside the handoff/docs directory.",
+    "Separate expected application commit from the commit of the verification-only workflow.",
+    "Replace only DevTools response.body access with independent APIRequestContext GET of the exact final browser URL; record this extra bootstrap read and require HTTP success plus URL identity.",
+    "Preserve original page navigation, all UI/geometry/source/worker/physics/negative/cancel/reset/network/layout/error assertions."
+  ],
+  "sourceFilesModified": false,
+  "buildOrPublishIncluded": false,
+  "servedAppContentReplaced": false,
+  "appStateFunctionMutationAdded": false,
+  "physicsThresholdsChanged": false,
+  "localBrowserExecuted": false,
+  "expectedCheckCountForPublicMode": 84,
+  "historicalFailedPublicReportOverwritten": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "pending": "Run this limited verifier in the separate evidence workflow against the already-published immutable c5 page; accept only its actual complete results."
+}

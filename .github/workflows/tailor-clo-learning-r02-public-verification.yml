@@ -1,0 +1,72 @@
+name: Tailor CLO R02 immutable public verification
+on:
+  push:
+    branches:
+      - research/tailor-clo-learning-r02-evidence-20261022
+    paths:
+      - .github/workflows/tailor-clo-learning-r02-public-verification.yml
+      - docs/handoffs/clo-learning-r02-20261022/verification/**
+permissions:
+  contents: read
+concurrency:
+  group: tailor-clo-r02-public-verification-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  verify-existing-public-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLO_EXPECTED_SOURCE_HEAD: c5c99dd6e7fb2124435653843c618bc6a4e4c47b
+      CLO_PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/clo-learning/r02-c5c99dd6e7fb/
+      npm_config_fetch_timeout: '45000'
+      npm_config_fetch_retries: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench/clo-learning-r02
+            docs/handoffs/clo-learning-r02-20261022/verification
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Confirm unchanged frozen application and verification scope
+        run: |
+          test "$GITHUB_REPOSITORY" = "haihao0307/guilin-dem-pipeline"
+          test "$GITHUB_REF_NAME" = "research/tailor-clo-learning-r02-evidence-20261022"
+          git fetch origin "$CLO_EXPECTED_SOURCE_HEAD" --depth=1
+          git diff --exit-code "$CLO_EXPECTED_SOURCE_HEAD" "$GITHUB_SHA" -- kaopu-tailor-workbench/clo-learning-r02
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('docs/handoffs/clo-learning-r02-20261022/verification')
+          review=json.loads((root/'PUBLIC_VERIFIER_PATCH_REVIEW.json').read_text())
+          assert hashlib.sha256((root/'public-browser-smoke.mjs').read_bytes()).hexdigest()==review['verificationScriptSHA256']
+          assert hashlib.sha256(Path('kaopu-tailor-workbench/clo-learning-r02/tests/packet-integrity.mjs').read_bytes()).hexdigest()=='d28290720b525d23524ac9800775d21999df224e422d1891c91741dc626dd4a9'
+          PY
+      - name: Retrieve original inputs only without building or publishing
+        working-directory: kaopu-tailor-workbench/clo-learning-r02
+        run: python download-sources.py
+      - name: Prepare pinned acceptance browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/clo-browser-tools" --no-save --no-package-lock --ignore-scripts playwright@1.57.0
+          sudo apt-get install -y --no-install-recommends fonts-wqy-zenhei
+          node "$RUNNER_TEMP/clo-browser-tools/node_modules/playwright/cli.js" install chromium
+      - name: Verify the actual immutable public page and preserve all original assertions
+        env:
+          CLO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/clo-browser-tools/node_modules/playwright/index.mjs
+          CLO_PROJECT_DIR: ${{ github.workspace }}/kaopu-tailor-workbench/clo-learning-r02
+        run: node docs/handoffs/clo-learning-r02-20261022/verification/public-browser-smoke.mjs --url "$CLO_PUBLIC_URL" --report public-verification-results/public-browser-smoke.json
+      - name: Record final gate separately from the historical cache failure
+        run: python docs/handoffs/clo-learning-r02-20261022/verification/record-public-proof.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-clo-r02-public-verification-${{ github.sha }}
+          path: public-verification-results/
+          if-no-files-found: error
+          retention-days: 14
