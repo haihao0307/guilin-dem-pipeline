@@ -1,0 +1,167 @@
+{
+  "schema": "kaopu.clo-r02-independent-source-review/1",
+  "recordedAt": "2026-10-22T02:32:26.053205+00:00",
+  "reviewer": "source_audit",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "baseSha": "245f70211cb5103d8e951bd485c6f20d2f06879d",
+  "upstreamSha": "c84b16a0ae022dda9fe22c09df758fcb8095bc07",
+  "reviewedFileSHA256": {
+    "src/design-operation.mjs": "026ddfa130d945c9b029f8280479bf1b465f9373701e468489076977b1dd7428",
+    "src/worker-extension.txt": "82de56d8105dacee8f2a0f2cf2de4cf37ad0c116222bc0c82edbfb456e5ca5b6",
+    "src/worker-entry.mjs": "9fec50fe1eea8b2fa866226302cba4db51fc2e926bb562a25978060ab861192a",
+    "prepare-worker.mjs": "01c26416903b14be66f8250b3797ba0a4b91da5506a00c86967e4cbbdbc52bc3",
+    "src/app.mjs": "279371de93bfd6bb658b2666a219b03e64a7845ead21ae9804fb1c6cc91fcba2",
+    "src/stage.mjs": "0cacb12bdd246d1c34290ee4683a7467ac8debe8dd1fda5a2107dd65a631a100",
+    "src/shell.html": "ae778e15cd3f83a229437a0f31dfb49c0859cd468fb0be50a5fe2ce961faaa2a",
+    "src/style.css": "79ad4939c27e83db3c06d9dc4bbdc98ac94fec995335690a8ac93c4f826b2f33",
+    "build.mjs": "1f5a5774253dae0d804a26af8d868958b467fbe22db92b623124d3cc32a90fa5",
+    "publish.sh": "6b0299ef04472d2e1fb2fb2826212dccd727f4748f6d2c92e1f9f3df433c6459",
+    "workflow.yml": "4a34db659490b1b609d314e3699196cd79d11a75e25c8a56396632c342711562",
+    "tests/design-invariants.mjs": "9d475a450a275841d678536e7b1fd0f097c1a93f35c671f606f808636db3926c",
+    "tests/browser-smoke.mjs": "b0d84abe8f412d786c789958143f8a99c99c648863aeacf49d7275dc9f93807c"
+  },
+  "sourceReviewPassed": true,
+  "blockingFindings": [],
+  "operation": {
+    "schema": "kaopu-s03-length-and-opening/2",
+    "lengthDeltaMm": [
+      -40,
+      100
+    ],
+    "openingDeltaMm": [
+      -40,
+      80
+    ],
+    "stepMm": 10,
+    "default": [
+      60,
+      40
+    ],
+    "scope": "Translate protected lower hem vertices and independently raise the existing triangular-opening tip. All x coordinates, waist, hip, dart geometry, placements, original panel/seam order and seam identities remain protected. Opening mouth remains 20 mm; its two free edges remain unsewn.",
+    "notAConstructionClaim": "No new centre-back seam, overlap vent, seam allowance or manufacturing method is introduced.",
+    "independentEvidence": "DESIGN_INVARIANTS.json",
+    "caseCount": 10,
+    "crossCaseCheckCount": 6,
+    "invalidRequestCount": 28
+  },
+  "worker": {
+    "originalKernelStagesAndThresholdsChanged": false,
+    "epochCapturedBeforeFirstAwait": true,
+    "epochCheckedAfterSourceHashAndBeforeCommit": true,
+    "buildAndBindingRemainLocalUntilFinalEpochCheck": true,
+    "bothParametersInOperationAndRequestDigest": true,
+    "requestIdentityEvidence": "REQUEST_IDENTITY_REVIEW.json",
+    "metadataChangesDoNotChangeMaterialGeometry": true
+  },
+  "physicalEvidence": {
+    "developmentCases": 6,
+    "passedCases": 3,
+    "failedCases": 3,
+    "defaultGatePassed": true,
+    "knownNegative": [
+      60,
+      60
+    ],
+    "knownNegativeRetainedAsFailure": true,
+    "failureLocalizationEvidence": "FAILURE_60_60_INDEPENDENT_REVIEW.json",
+    "parameterDomainCertified": false,
+    "newSolverRunsByThisFinalReview": 0
+  },
+  "browserAcceptanceScript": {
+    "file": "tests/browser-smoke.mjs",
+    "syntaxPassed": true,
+    "executedLocally": false,
+    "mutations": "Real UI keyboard, clicks and sliders only; app snapshot is read-only.",
+    "requiredSequence": [
+      [
+        60,
+        40
+      ],
+      [
+        20,
+        0
+      ],
+      [
+        60,
+        60
+      ],
+      [
+        30,
+        30
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "completeSolves": [
+      {
+        "parameters": [
+          20,
+          0
+        ],
+        "expectedGatePassed": true
+      },
+      {
+        "parameters": [
+          60,
+          60
+        ],
+        "expectedGatePassed": false,
+        "requiredReason": "cloth-intersections"
+      }
+    ],
+    "cancelledCase": [
+      30,
+      30
+    ],
+    "cancellationMustRetainFailedCandidateAndFailureReason": true,
+    "dirtyIsolationForBothDimensions": true,
+    "desktopAnd390Px": true,
+    "sourceAndMaterialHashesBound": true,
+    "fileModeAllHttpBlockedAndCounted": true,
+    "perSolveTimeoutMs": 180000,
+    "totalTimeoutMs": 600000,
+    "visualAcceptance": false
+  },
+  "packaging": {
+    "htmlSHA256": "50dcf996e02ce16fda3c523b73233746ef72157ceca0703fdb1f6bfc7e2bbe5b",
+    "htmlBytes": 15919213,
+    "inlineJavaScriptSyntax": true,
+    "workerJavaScriptSyntax": true,
+    "manifestSource": "local-7ec8cbc47540ed09babe4b8803332a3701f3d5f3440589c5925d9900c84a8eb8",
+    "replacementCallbackRetained": true,
+    "finalInlineRuntimeByteIdentityAndSyntaxGateRetained": true,
+    "externalRequiredResourcesProhibited": true,
+    "R01TaskPathResidualFound": false,
+    "inheritedR01UpstreamAndPredecessorReferencesAreIntentional": true
+  },
+  "publication": {
+    "researchBranch": "research/tailor-clo-learning-r02-20261022",
+    "sourceDirectory": "kaopu-tailor-workbench/clo-learning-r02",
+    "workflowPath": ".github/workflows/tailor-clo-learning-r02.yml",
+    "immutableSnapshotPrefix": "kaopu-tailor-workbench/clo-learning/r02-",
+    "onlyTwoNewSnapshotFilesAllowed": true,
+    "existingSnapshotsCannotBeOverwritten": true,
+    "PagesSourceConfigUnchanged": true,
+    "testedBytesRequiredForPublicReadback": true,
+    "publicWaitBudgetSeconds": 1200,
+    "jobBudgetMinutes": 45,
+    "localEvidenceArchivedBeforePublish": true,
+    "fullArtifactUploadedEvenOnFailure": true,
+    "browserAndPublicByteGatesStillPending": true
+  },
+  "handoff": {
+    "sourceAndTestsCanFreeze": true,
+    "shareAllowed": false,
+    "userVisualAcceptance": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "pending": "CI real file and public browser checks, exact final source/HTML identity, independent artifact review and root actual browser visual inspection."
+  },
+  "limits": [
+    "The source review does not substitute for the pending actual CI or browser outcome.",
+    "Six development cases do not certify the full two-dimensional parameter range.",
+    "Final-pose static checks do not certify dynamic wear, calibrated physical material behavior or production readiness."
+  ]
+}

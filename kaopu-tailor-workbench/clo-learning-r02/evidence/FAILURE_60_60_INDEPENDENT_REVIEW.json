@@ -1,0 +1,249 @@
+{
+  "schema": "kaopu.clo-r02-failure-localization/1",
+  "recordedAt": "2026-10-22T02:31:31.806388+00:00",
+  "reviewer": "source_audit",
+  "fixture": "evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+  "fixtureSHA256": "41b0e87b0574a76d0a3577eaab5975a0132c8b4f0a657d344a2cc3fbc76d326d",
+  "parameters": {
+    "deltaMm": 60,
+    "slitDeltaMm": 60
+  },
+  "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb",
+  "originalGatePassed": false,
+  "originalFailures": [
+    "cloth-intersections"
+  ],
+  "originalIntersections": {
+    "bodyIntersectingFaceCount": 0,
+    "bodyIntersectingFaces": [],
+    "selfStrictTriangleIntersectionCount": 1,
+    "selfPairs": [
+      [
+        278,
+        6347
+      ]
+    ],
+    "coplanarOverlapChecked": true,
+    "continuousCollisionChecked": false,
+    "stitchedAdjacencyMapUsed": false,
+    "sharedPointPairExclusions": false,
+    "method": "independent final BVH + proper segment/triangle and positive-area coplanar overlap; no shared-point blanket exclusions"
+  },
+  "triangles": [
+    {
+      "globalTriangle": 278,
+      "panelId": "skirt_back",
+      "localTriangle": 278,
+      "localVertices": [
+        151,
+        1685,
+        152
+      ],
+      "globalVertices": [
+        151,
+        1685,
+        152
+      ],
+      "uvMm": [
+        [
+          214.18687474567605,
+          640.5166597450476
+        ],
+        [
+          224,
+          625.8921197972754
+        ],
+        [
+          225.68659507378058,
+          640.5166597450477
+        ]
+      ],
+      "boundaryEdgeMembership": {
+        "151": [
+          "e8"
+        ],
+        "1685": [],
+        "152": [
+          "e8"
+        ]
+      },
+      "solverGroups": [
+        151,
+        1685,
+        152
+      ],
+      "positionsMm": [
+        [
+          -37.72760574035635,
+          1123.2560013994885,
+          -66.14199398625975
+        ],
+        [
+          -27.488088922431196,
+          1109.197565603435,
+          -72.27670735976886
+        ],
+        [
+          -25.433149801933094,
+          1123.1488491284892,
+          -66.94260127784193
+        ]
+      ]
+    },
+    {
+      "globalTriangle": 6347,
+      "panelId": "wb_back",
+      "localTriangle": 109,
+      "localVertices": [
+        72,
+        113,
+        73
+      ],
+      "globalVertices": [
+        3464,
+        3505,
+        3465
+      ],
+      "uvMm": [
+        [
+          116.70631802674939,
+          -70.10064559924785
+        ],
+        [
+          118.60838102954301,
+          -49.95809357047369
+        ],
+        [
+          112.47672494324134,
+          -69.84391430677448
+        ]
+      ],
+      "boundaryEdgeMembership": {
+        "72": [
+          "e4"
+        ],
+        "113": [],
+        "73": [
+          "e4"
+        ]
+      },
+      "solverGroups": [
+        3464,
+        3505,
+        3465
+      ],
+      "positionsMm": [
+        [
+          -29.513902827701546,
+          1123.18450985942,
+          -66.68523384410307
+        ],
+        [
+          -28.13808607886311,
+          1143.5976560970337,
+          -63.5468620378394
+        ],
+        [
+          -33.61146616421619,
+          1123.2170095091678,
+          -66.40627947549525
+        ]
+      ]
+    }
+  ],
+  "connectingSourceSeam": {
+    "id": "s17",
+    "a": {
+      "panelId": "wb_back",
+      "edge": "e4",
+      "reverse": false
+    },
+    "b": {
+      "panelId": "skirt_back",
+      "edge": "e8",
+      "reverse": true
+    },
+    "sourceStitchIndex": 17,
+    "seamModel": "separate sparse numerical stitch samples; intervening material remains free"
+  },
+  "independentMethod": {
+    "arithmetic": "numpy.longdouble",
+    "mantissaBits": 63,
+    "algorithm": "Signed point/triangle-plane distances followed by segment-plane intersection and strictly positive triangle barycentric coordinates. Recomputed directly from stored final positions; no original intersection predicate reused.",
+    "notASolverRun": true
+  },
+  "signedVertexDistancesMm": {
+    "backToWaistbandPlane": [
+      -0.016693080212631786,
+      -3.195909795237581,
+      0.020661237527657098
+    ],
+    "waistbandToBackPlane": [
+      -0.007814641237926695,
+      -4.439544277837898,
+      0.004625388904310973
+    ]
+  },
+  "properIntersections": [
+    {
+      "edgeFromTriangle": 278,
+      "edgeLocalVertices": [
+        2,
+        0
+      ],
+      "edgeGlobalVertices": [
+        152,
+        151
+      ],
+      "interiorOfTriangle": 6347,
+      "segmentParameter": 0.5531151089763502,
+      "intersectionMm": [
+        -32.23339913811901,
+        1123.20811666854,
+        -66.4997732885112
+      ],
+      "targetBarycentric": [
+        0.33618054425691796,
+        9.974704697671931e-05,
+        0.6637197086961053
+      ]
+    },
+    {
+      "edgeFromTriangle": 6347,
+      "edgeLocalVertices": [
+        2,
+        0
+      ],
+      "edgeGlobalVertices": [
+        3465,
+        3464
+      ],
+      "interiorOfTriangle": 278,
+      "segmentParameter": 0.3718149274097317,
+      "intersectionMm": [
+        -32.08793094969322,
+        1123.204925654256,
+        -66.50999887380979
+      ],
+      "targetBarycentric": [
+        0.5412600826370555,
+        0.00013767344671906863,
+        0.45860224391622545
+      ]
+    }
+  ],
+  "intersectionSegmentLengthMm": 0.14586205473234903,
+  "sharedMaterialVertices": false,
+  "sharedSolverGroups": false,
+  "finding": "A short transverse crossing occurs between skirt_back and wb_back near gathered waist seam s17. Neither triangle is near the edited back-opening tip. This is not same-panel self-overlap and is not solely a 1e-8 predicate tolerance artifact.",
+  "decision": "Retain the original cloth-intersections failure. The other passed scalar thresholds do not override it.",
+  "limits": [
+    "Localizes one observed final-pose failure only.",
+    "Does not prove a root cause in meshing, solver or seam construction.",
+    "Does not certify any untested parameter combination, dynamic self-contact or production fit."
+  ],
+  "independentProperIntersectionConfirmed": true,
+  "gateModified": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

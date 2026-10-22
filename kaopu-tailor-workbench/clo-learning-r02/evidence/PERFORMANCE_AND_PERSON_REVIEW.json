@@ -1,0 +1,276 @@
+{
+  "schema": "kaopu.performance-and-person-review/1",
+  "task": "CLO-LEARNING-PILOT-R02",
+  "recordedAt": "2026-10-22T02:18:25.119295+00:00",
+  "reviewer": "asset_reuse",
+  "scope": {
+    "readOnlySourceAudit": true,
+    "reviewedImplementation": "Existing local clo-pilot R01",
+    "r02ScopeDecision": "Dual-parameter genuine paper edits and publication reliability; defer scheduling and resource-loading changes.",
+    "sourceFilesModified": false,
+    "workerFilesModified": false,
+    "loadingStrategyChanged": false,
+    "newLongSolveRun": false,
+    "newBrowserBenchmarkRun": false,
+    "schedulingOptimizationImplemented": false,
+    "newSpeedObtained": false,
+    "onlyWrittenArtifact": "clo-pilot-r02/evidence/PERFORMANCE_AND_PERSON_REVIEW.json"
+  },
+  "evidenceFiles": [
+    {
+      "path": "clo-pilot/src/app.mjs",
+      "sha256": "ce2757deb5ef703903a9c580eb3efc92bf9642d9edbc71774faab15c9f8da47b"
+    },
+    {
+      "path": "clo-pilot/src/worker-entry.mjs",
+      "sha256": "a7a2eae9c4e9539dab1d5c4d2b71c2282b10458a0decbba42e904045f65dee91"
+    },
+    {
+      "path": "clo-pilot/src/worker-extension.txt",
+      "sha256": "db52f484941d2b467b3a888ee82c0c5a04551ebfcd7ef7c8d1b75c7ac40ccbd7"
+    },
+    {
+      "path": "clo-pilot/src/render-support.mjs",
+      "sha256": "a931161449388d3870f79e69eeb7bffffbefdc117ad14fab6cdd20b502d353d8"
+    },
+    {
+      "path": "clo-pilot/src/stage.mjs",
+      "sha256": "bf6b7c61c30f425bc143fc143254d9aeec2faa9c0c2a1811173a4d8349ea69ad"
+    },
+    {
+      "path": "clo-pilot/generated/native-adapter.mjs",
+      "sha256": "1c2df8c4b57608186f10a0019f9a854580d9146babc9e94b0fcb3dbe7829a57c"
+    },
+    {
+      "path": "clo-pilot/build.mjs",
+      "sha256": "932e11ffcd04c15f9aef4227a66ffe907300eb3ed990eb960f3b056f1707f23d"
+    },
+    {
+      "path": "clo-pilot/vendor/CommonSkinLayer.mjs",
+      "sha256": "5acfc418b239f2cd2fb22377a7ed851cf1cc769142a970e43cfa71fa695a8d67"
+    },
+    {
+      "path": "clo-study-delivery/AUTOMATED_STANDALONE_BROWSER.json",
+      "sha256": "0bf78a349102db045a774046857d20d4512e91159b07ac5e7fdd557635a9a4cf"
+    },
+    {
+      "path": "clo-study-delivery/PUBLIC_BROWSER_MANUAL_REVIEW.json",
+      "sha256": "dc32c769e1ef75e98fab3c6e56ed396b248191244a16042797a47cb181a53f8e"
+    },
+    {
+      "path": "project_sources/01-Humanoid_Rig_Lab_Next_-_v3_-.md",
+      "sha256": "64fac2f121b505bf48ba03d602192e4fa3dd753e45e77abb1b2c7cbd247c3fc8"
+    },
+    {
+      "path": "project_sources/02-GPT_PERSON_PROJECT_MASTER_CONTEXT_Humanoid_Rig_Lab_Next-2-.md",
+      "sha256": "cd814601ba1c7ecb5b140d0c0ebf11c1c1574ce52c7629249846b8b4d1c3c23c"
+    },
+    {
+      "path": "project_sources/03-GITHUB_HUMANOID_PROJECT_SYNC_RULES.md.txt",
+      "sha256": "3e279a58e9efed1d0c70c6ea01b893ea105c13df09b8de67635609d83c55906e"
+    },
+    {
+      "path": "project_sources/04-HUMANOID_RIG_LAB_NEXT_WORLD_HUMAN_SYSTEM_DIRECTION.md.txt",
+      "sha256": "c06cc15b08a400b25e104253c695aca6d85726c746254b29863bd30192f3204f"
+    }
+  ],
+  "performance": {
+    "observedBrowserBaseline": {
+      "source": "clo-study-delivery/AUTOMATED_STANDALONE_BROWSER.json",
+      "sourceHead": "245f70211cb5103d8e951bd485c6f20d2f06879d",
+      "parameterDeltaMm": 20,
+      "wallMs": 61278,
+      "completeLiveSolves": 1,
+      "browser": {
+        "engine": "Chromium",
+        "headless": true,
+        "graphics": "ANGLE SwiftShader explicitly requested",
+        "version": "143.0.7499.4"
+      },
+      "standaloneCoreNetworkRequests": 0,
+      "observedPhaseIntervalsMs": {
+        "preparingToSolving": 2710,
+        "solvingToAuditing": 57957,
+        "auditingToComplete": 531
+      },
+      "phaseTimingCaveat": "Intervals are sampled UI state transitions, not isolated CPU profiles. The body/SDF/WASM initialization in startLegacySolve occurs after the paper event and can therefore be inside the displayed solving phase. The +20 browser record does not expose the worker profile object.",
+      "deviceClaimLimit": "This is one Chromium CI run using SwiftShader; it is not a physical-phone performance guarantee."
+    },
+    "existingNodeTrials": [
+      {
+        "deltaMm": -40,
+        "path": "clo-pilot/evidence/solve--40.json.gz",
+        "wallSeconds": 43.540877634000005,
+        "profileMs": {
+          "pythonMs": 0,
+          "meshMs": 1007.1467180000002,
+          "bodyMs": 826.9746100000002,
+          "solveMs": 37465.78518299983,
+          "auditMs": 292.54531799999677,
+          "packetMs": 52.029002999971
+        },
+        "unattributedWallSeconds": 3.896396802000204,
+        "environment": "Existing Node build/verification trial; not the same device or parameter as the browser +20 mm observation."
+      },
+      {
+        "deltaMm": 60,
+        "path": "clo-pilot/evidence/solve-60.json.gz",
+        "wallSeconds": 49.880291019,
+        "profileMs": {
+          "pythonMs": 0,
+          "meshMs": 1132.452304,
+          "bodyMs": 728.941061,
+          "solveMs": 43275.10408099981,
+          "auditMs": 385.2957749999987,
+          "packetMs": 67.7649129999254
+        },
+        "unattributedWallSeconds": 4.290732885000267,
+        "environment": "Existing Node build/verification trial; not the same device or parameter as the browser +20 mm observation."
+      },
+      {
+        "deltaMm": 100,
+        "path": "clo-pilot/evidence/solve-100.json.gz",
+        "wallSeconds": 53.795868848,
+        "profileMs": {
+          "pythonMs": 0,
+          "meshMs": 1124.220387,
+          "bodyMs": 784.834417,
+          "solveMs": 46734.14446299993,
+          "auditMs": 401.99493699999584,
+          "packetMs": 88.83106199995427
+        },
+        "unattributedWallSeconds": 4.661843582000117,
+        "environment": "Existing Node build/verification trial; not the same device or parameter as the browser +20 mm observation."
+      }
+    ],
+    "profilingCaveat": {
+      "packetMsIsIncomplete": true,
+      "source": "clo-pilot/generated/native-adapter.mjs:3361 packet",
+      "reason": "packetMs is incremented after allocating/copying positions but before lab.metrics() and postMessage(). Therefore un-attributed wall time cannot be assigned entirely to timers or garbage collection. The final app snapshot omits currentResult.profile and measuredWallSeconds."
+    },
+    "resourceLoadingFindings": [
+      {
+        "status": "observed-code",
+        "source": "clo-pilot/src/app.mjs:128 apply; 103 closeJob; 169 start",
+        "finding": "The main embedded payload is decoded/inflated at page start. Each requested solve creates a new Worker, sends embedded compressed assets, then terminates that worker on completion, cancel or failure. This maintains strong job isolation; it also repeats initialization."
+      },
+      {
+        "status": "observed-code",
+        "source": "clo-pilot/src/worker-entry.mjs:17 init-study; clo-pilot/generated/native-adapter.mjs:3367 startLegacySolve",
+        "finding": "Each fresh worker inflates body JSON, decodes the SDF transport and WASM, then verifies original body/SDF hashes, builds the body audit and SDF, and configures WASM before the solve. Original collision assets and hashes are preserved."
+      },
+      {
+        "status": "inference",
+        "finding": "Existing profiles make resource initialization a smaller optimization target than physical computation plus batch scheduling. There is no measured evidence that eliminating network access can improve this baseline: standalone testing already recorded zero required network requests. No persistent worker, cache or loading change is proposed for R02."
+      }
+    ],
+    "deferredOpportunity": {
+      "name": "Overlap the existing next-batch timer with current synchronous computation",
+      "status": "Code-backed hypothesis, not implemented or benchmarked",
+      "source": "clo-pilot/generated/native-adapter.mjs:3415 r043Frames, 3416 tick, 3468 tail scheduling; generated through clo-pilot/prepare-worker.mjs",
+      "currentBehavior": "tick executes at most eight numerical steps or 22 ms of work, then schedules setTimeout(() => tick(token), 0) at the end. The S03 sequence contains 6280 steps, so it requires at least 785 batches; the 22 ms cap may require more.",
+      "standardsEvidence": {
+        "url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers",
+        "checkedAt": "2026-10-22",
+        "fact": "The HTML timer algorithm imposes a minimum 4 ms timeout after sufficient timer nesting, including WorkerGlobalScope. The same standard gives pre-scheduling the next timeout before doing work as a way to overlap timer delay with computation."
+      },
+      "proposedFutureChange": "Schedule the next timer at the beginning of an eligible batch, run the identical bounded numerical work, and clear the pending timer when complete, paused, cancelled, stale or failed. Keep the token/running guards and single pending continuation. Implement as an explicit audited adapter change, never by editing the frozen upstream source asset.",
+      "invariantRequirements": [
+        "Same 6280 S03 stage steps and same per-step numerical iteration counts.",
+        "Same eight-step/22-ms yielding boundary and no unbounded blocking loop or recursive microtask loop.",
+        "Same simulation timesteps, inputs, materials, collider hashes, constraints, diagnostic gates and exact final audit.",
+        "Same stale-request, pause/resume, budget-checkpoint, cancellation and failure semantics.",
+        "No warm-started cloth result, precomputed motion/geometry cache, LOD, proxy body or scaled finished garment."
+      ],
+      "expectedBenefit": "Potential removal of avoidable idle gaps between compute batches; no numerical speedup is asserted. At least 785 batches explains why timer scheduling merits measurement, but no claimed seconds saved or percent improvement is defensible from existing evidence alone.",
+      "verificationPlanIfSeparatelyAuthorized": [
+        "Add observation-only counters for batch count, scheduling wait, numerical CPU time, telemetry/metrics time and asset setup; preserve the existing baseline.",
+        "Compare the same input, source hashes, browser/device and fresh-worker state before and after the isolated scheduler change.",
+        "Require equal stage/iteration counts, identical paper and material identity, equal topology, and compare full final coordinates/constraint diagnostics; any numerical difference must be explained, not hidden by only checking passed=true.",
+        "Exercise cancel, reset, stale messages and the 180-second resume checkpoint, then retain independent static and browser verification.",
+        "Report actual measured timing with device and run count, and keep the optimization out if benefit is negligible or responsiveness regresses."
+      ],
+      "r02Disposition": "Deferred by parent scope decision; no scheduling or resource-loading changes in this round."
+    }
+  },
+  "personProtocol": {
+    "documentsRead": [
+      "project_sources/02-GPT_PERSON_PROJECT_MASTER_CONTEXT_Humanoid_Rig_Lab_Next-2-.md",
+      "project_sources/03-GITHUB_HUMANOID_PROJECT_SYNC_RULES.md.txt",
+      "project_sources/01-Humanoid_Rig_Lab_Next_-_v3_-.md (architecture, coordinate, version, message, skin and animation sections)",
+      "project_sources/04-HUMANOID_RIG_LAB_NEXT_WORLD_HUMAN_SYSTEM_DIRECTION.md.txt"
+    ],
+    "currentFrozenSource": {
+      "vertices": 25417,
+      "triangles": 50624,
+      "boneOrderCount": 104,
+      "rigSource": "anny",
+      "matrixConvention": "row-major matrices acting on column vectors; metre Z-up",
+      "identity": {
+        "geometrySHA256": "fbc056553c1731b790769124bee121554f0800400271eaf564a0ad5e6f458571",
+        "topologySHA256": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+        "stateSHA256": "f6a60588040d2967ac619c5352c52355cbd02b12890f88cc976d0c2fbe50c0b7",
+        "adapterFingerprint": "4ac1f6b9ffac5ab45d1a427a1eb5e9578af0e7f105d58bff4d48555e4e2027a5"
+      },
+      "presentationFields": [
+        "vertexCount",
+        "bodyCount",
+        "positions",
+        "faces",
+        "state",
+        "skinFields"
+      ],
+      "renderObject": "THREE.Mesh; frozen resolved surface, not an animated SkinnedMesh",
+      "skinMeaning": "CommonSkinLayer supplies appearance and frozen semantic fields; it does not supply rig deformation.",
+      "status": "A verified old frozen source shared by S03 display and collision; not asserted to be the current Humanoid Rig Lab Next person or schema."
+    },
+    "adaptationFindings": [
+      {
+        "topic": "Authoritative project baseline",
+        "ruleSource": "project_sources/03-GITHUB_HUMANOID_PROJECT_SYNC_RULES.md.txt",
+        "conclusion": "The project rules require the current GitHub branch, README, BUILD_MANIFEST and relevant module source before person development. This local read-only audit did not independently verify the latest Humanoid project branch or manifest, so it does not certify integration readiness."
+      },
+      {
+        "topic": "Rig identity and field sufficiency",
+        "ruleSource": "Master context Rig and Skin layers; architecture section 25",
+        "codeSource": "clo-pilot/build.mjs:29; clo-pilot/src/render-support.mjs:42",
+        "conclusion": "The frozen Anny asset has 104 bone-order entries; this is not automatically the project SMPL24 mapping with 28 controls. Never equate indices or invent a mapping. Six presentation fields intentionally omit rig, canonical data, weights and inverse bind matrices. Full rigged source plus an explicit validated joint/bind adapter is required for future pose support."
+      },
+      {
+        "topic": "Coordinates and ground reference",
+        "ruleSource": "Architecture section 4.5 and proportion schema",
+        "codeSource": "clo-pilot/src/render-support.mjs:24-29; clo-pilot/src/stage.mjs original garment display adapter",
+        "conclusion": "Native source is right-handed metre Z-up with row-major matrices acting on column vectors. Display is [x,z,-y]. Solver coordinates are [x,z+0.9858653545379639,-y] metres; cloth rendering subtracts this ground shift after mm-to-m conversion. Declare axes, units, matrix convention and frame explicitly in an adapter; do not apply ground shift twice or use body and cloth in different frames. Full matrix conversion must be validated separately for any future rig integration."
+      },
+      {
+        "topic": "Proportion, pose and final body ownership",
+        "ruleSource": "Master context permanent rules; architecture sections 5, 25.19-25.23",
+        "conclusion": "Garment edits must not scale bones, rewrite proportion or mutate pose. Bind and pose revisions need separate references. If a future character pose/proportion changes, invalidate the old cloth/collider result and re-evaluate against the exact final simulationRig state; do not retain the frozen SDF behind a newly posed skin."
+      },
+      {
+        "topic": "Single final skin",
+        "ruleSource": "Master context Skin layer",
+        "conclusion": "The current comparison has one original final skin in each of two separate scenes, which is a two-view presentation. Future integration into an existing character scene should consume the character-owned final skin/collider instead of calling createNativeBody again and overlaying a second human."
+      },
+      {
+        "topic": "Project revision and multiwindow commands",
+        "ruleSource": "Architecture sections 8.1, 8.5, 8.6 and 8.8",
+        "codeSource": "clo-pilot/src/app.mjs:117 verifyResult and local revision state",
+        "conclusion": "The local requestId/expectedRevision and hash gates are useful but are not the SharedWorker ProjectState protocol. Future integration should carry project_id, subject_id, window_id, request_id, base_revision and actual proportion/pose references, commit paper/spec/positions/diagnostics atomically, and reject stale body or garment revisions. Do not reinterpret an existing hash as a project revision without a real mapping."
+      },
+      {
+        "topic": "Window state, storage and capability labels",
+        "ruleSource": "Architecture sections 8.6, 8.9 and 25",
+        "conclusion": "Camera, display mode and transient edit previews remain window/runtime state. Persistent accepted operations belong to the authoritative project history. Larger source/results belong in asset storage with references; normal messages should carry identity and summaries. Current R01 uses Three WebGL2 and CPU/WASM physics; it must not be labeled WebGPU, animated native skin, dynamic contact or fully integrated humanoid capability."
+      }
+    ],
+    "r02Recommendation": "Keep the exact frozen person and collider identity for the independent dual-parameter static study; extend garment operation/binding identity only. Defer rig replacement, pose integration and multiwindow state integration until current authoritative project source and explicit schema adapters have been verified."
+  },
+  "limits": [
+    "No source, worker, skin, material or loading strategy was changed.",
+    "No new performance result or faster timing was obtained.",
+    "Browser baseline is one known source head, not a new R02 acceptance result.",
+    "No latest-Humanoid-project GitHub compatibility claim.",
+    "No material calibration, dynamic collision, multilayer, physical-phone or production certification."
+  ]
+}

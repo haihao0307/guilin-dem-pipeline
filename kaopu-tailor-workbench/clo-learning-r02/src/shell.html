@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f1eb">
+  <meta name="description" content="一件裙装的纸样与成衣研究。分别调整裙长与后开口深度，对照原款，观察重新裁剪与试穿后的变化。">
+  <title>形与裁 — 纸样与成衣研究 · 02</title>
+  <!--STYLE-->
+</head>
+<body>
+  <header class="masthead">
+    <div class="identity">
+      <p class="eyebrow">KAOPU · GARMENT STUDIES</p>
+      <h1>形与裁<span class="title-stop" aria-hidden="true">。</span></h1>
+      <p class="subtitle">纸样与成衣研究 <span aria-hidden="true">·</span> 02</p>
+    </div>
+    <div class="opening-note">
+      <p class="study-title">从下摆，看到开衩</p>
+      <p>两个独立的纸样尺寸，<br>一次完整的重新试穿。</p>
+    </div>
+  </header>
+
+  <main class="workbench">
+    <section class="stage-section" aria-label="原款与本次修改的三维对照">
+      <div class="stage-toolbar">
+        <div class="view-controls" role="group" aria-label="观察角度">
+          <button type="button" class="view-button is-active" data-view="back-detail" aria-pressed="true">开衩细节</button>
+          <button type="button" class="view-button" data-view="front" aria-pressed="false">正面</button>
+          <button type="button" class="view-button" data-view="side" aria-pressed="false">侧面</button>
+          <button type="button" class="view-button" data-view="back" aria-pressed="false">背面</button>
+          <button type="button" class="view-button" data-view="detail" aria-pressed="false">裙装全貌</button>
+        </div>
+        <div class="display-controls" role="group" aria-label="显示方式">
+          <button type="button" class="display-button is-active" data-display="fabric" aria-pressed="true">面料</button>
+          <button type="button" class="display-button" data-display="strain" aria-pressed="false">应变</button>
+          <label class="seams-control"><input id="seamsToggle" type="checkbox"><span>缝线</span></label>
+        </div>
+      </div>
+
+      <div class="compare-stage">
+        <canvas id="stageCanvas" aria-label="可旋转、缩放的原款与修改后服装三维对照" tabindex="0"></canvas>
+        <div class="stage-divider" aria-hidden="true"></div>
+        <div class="view-headings" aria-hidden="true">
+          <div class="view-heading"><span class="view-index">01</span><div><h2>原款</h2><p>保留，作为对照</p></div></div>
+          <div class="view-heading"><span class="view-index">02</span><div><h2>本次修改</h2><p id="candidateState">等待首次改版</p></div></div>
+        </div>
+        <div class="view-footnotes">
+          <div class="view-measurements"><p><span>纸样裙长</span><strong id="baselineLength">—</strong></p><p><span>开衩深度</span><strong id="baselineSlitDepth">—</strong></p></div>
+          <div class="view-measurements"><p><span>纸样裙长</span><strong id="candidateLength">—</strong></p><p><span>开衩深度</span><strong id="candidateSlitDepth">—</strong></p></div>
+        </div>
+      </div>
+      <div class="stage-caption"><span class="interaction-cue" aria-hidden="true">↔</span><p>拖动旋转 · 滚轮或双指缩放</p><span class="caption-rule" aria-hidden="true"></span><p>同一人物 · 同步观察</p></div>
+      <div id="strainLegend" class="strain-legend" hidden><span>压缩 −15%</span><span class="strain-gradient" aria-hidden="true"></span><span>拉伸 +15%</span><span>主工程应变 · 色彩饱和范围</span></div>
+      <div id="errorBanner" class="error-banner" role="alert" hidden></div>
+      <section id="reviewBanner" class="review-banner" role="status" hidden><h3>本次检查未通过</h3><ul id="reviewReasons"></ul><p id="reviewDetail"></p></section>
+    </section>
+
+    <aside class="control-panel" aria-label="修改与试穿">
+      <div class="panel-heading"><p class="eyebrow">THE EDIT</p><h2>改一条裙子</h2><p>裙长与开衩分别调整，<br>观察纸样如何成为衣物。</p></div>
+
+      <section class="edit-section" aria-label="两个独立纸样参数">
+        <div class="parameter-field">
+          <div class="input-heading"><label id="lengthLabel" for="lengthInput">裙长</label><output id="lengthValue" for="lengthInput">—</output></div>
+          <input id="lengthInput" class="length-range" type="range" aria-describedby="lengthNote" disabled>
+          <p id="lengthNote" class="input-note">前片垂直纸样长度，不含腰头。<br>相对原款 −4 至 +10 cm。</p>
+        </div>
+        <div class="parameter-field">
+          <div class="input-heading"><label id="slitLabel" for="slitInput">开衩深度</label><output id="slitValue" for="slitInput">—</output></div>
+          <input id="slitInput" class="length-range" type="range" aria-describedby="slitNote" disabled>
+          <p id="slitNote" class="input-note">从下摆到三角开口顶点的纸样深度。<br>相对原款 −4 至 +8 cm，口宽保持 2 cm。</p>
+        </div>
+        <p class="edit-boundary">范围限定可操作尺寸；每次组合仍需计算与检查。</p>
+        <button id="applyButton" class="primary-button" type="button" disabled><span>重新裁剪与试穿</span><span aria-hidden="true">↗</span></button>
+        <div class="secondary-actions"><button id="resetButton" class="text-button" type="button" disabled>还原原款</button><button id="cancelButton" class="text-button" type="button" hidden>取消本次计算</button></div>
+      </section>
+
+      <section class="status-section" aria-label="本次试穿状态" aria-live="polite" aria-atomic="false">
+        <div class="status-heading"><span class="status-marker" aria-hidden="true"></span><h3 id="phaseStatus">正在准备</h3></div>
+        <progress id="solveProgress" max="1" value="0" aria-label="本次求解进度" hidden></progress>
+        <p id="statusDetail">载入人物、纸样与原款。</p>
+      </section>
+
+      <section class="diagnostics-section" aria-labelledby="diagnosticsHeading">
+        <div class="section-heading"><h3 id="diagnosticsHeading">试穿观察</h3><span>当前显示结果</span></div>
+        <dl class="diagnostics">
+          <div><dt>完整接缝分离</dt><dd id="seamValue">—</dd></div>
+          <div><dt>最大拉伸应变</dt><dd id="strainValue">—</dd></div>
+          <div><dt>布面至身体最小距离</dt><dd id="penetrationValue">—</dd></div>
+        </dl>
+        <p class="diagnostic-note">数值属于当前三维结果。<br>接缝检查不包含开口自由边；应变不等同于压力。</p>
+      </section>
+
+      <details id="evidenceDetails" class="evidence-details">
+        <summary>研究方法与来源<span aria-hidden="true">＋</span></summary>
+        <div id="evidenceContent"><p>使用既有纸样、人物与服装求解流程。本次研究关注裙长与开衩的独立修改如何传递到纸样、成衣和检查结果。</p></div>
+      </details>
+    </aside>
+
+    <section class="paper-section" aria-labelledby="paperHeading">
+      <div class="paper-heading"><div><p class="eyebrow">FROM PATTERN TO FORM</p><h2 id="paperHeading">纸样里的变化</h2></div><p>点选裁片，在成衣上找到它。</p></div>
+      <p id="patternState" class="pattern-state" data-mode="loading">纸样载入中</p>
+      <div class="pattern-surface"><svg id="patternSvg" viewBox="0 0 1000 320" role="img" aria-label="本次纸样，可选择裁片以对应三维位置"><text class="pattern-loading" x="500" y="160" text-anchor="middle">纸样载入中</text></svg></div>
+      <div class="paper-measures"><p>开衩深度 <strong id="paperSlitDepth">—</strong></p><p>固定口宽 <strong id="paperSlitMouthWidth">—</strong></p><span>纸样尺寸，非缝口长度或成衣实测。</span></div>
+      <div id="patternLegend" class="pattern-legend" role="list" aria-label="裁片说明"></div>
+    </section>
+  </main>
+
+  <footer class="page-footer"><span class="footer-mark">形与裁 · 02</span><p>仅验证静态改版与试穿。沿用三角开口，搭门工艺、动态与多层叠穿不在本轮范围。</p></footer>
+  <!--RUNTIME-->
+</body>
+</html>

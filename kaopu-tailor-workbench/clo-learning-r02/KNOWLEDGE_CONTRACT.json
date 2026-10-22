@@ -1,0 +1,145 @@
+{
+  "schema": "kaopu.clo-learning-contract/2",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "status": "isolated functional candidate; acceptance follows exact build evidence",
+  "scope": {
+    "sourcePreset": "S03",
+    "body": "same frozen native person and collider as R01",
+    "inputUnits": "mm",
+    "operation": "kaopu-s03-length-and-opening/2",
+    "naturalLanguageModelConnected": false,
+    "authorPrivateBackendReproduced": false
+  },
+  "operation": {
+    "command": "load-design-variant",
+    "parameters": {
+      "deltaMm": {
+        "minimum": -40,
+        "maximum": 100,
+        "multipleOf": 10,
+        "meaning": "front and back vertical paper length change relative to original"
+      },
+      "slitDeltaMm": {
+        "minimum": -40,
+        "maximum": 80,
+        "multipleOf": 10,
+        "meaning": "existing triangular opening depth change relative to original"
+      }
+    },
+    "defaults": {
+      "deltaMm": 60,
+      "slitDeltaMm": 40
+    },
+    "preconditions": [
+      "exact source bytes and recipe/geometry identity",
+      "finite parameter values on declared grid",
+      "same person geometry/topology/state/adapter identity",
+      "positive safe requestId and nonnegative safe expectedRevision"
+    ],
+    "protected": [
+      "waistband",
+      "darts",
+      "hip curves",
+      "all horizontal coordinates",
+      "panel placements",
+      "source seam IDs and endpoints",
+      "20 mm opening mouth",
+      "original body geometry"
+    ],
+    "resultBindings": [
+      "operationSHA256",
+      "materialSHA256",
+      "paperSHA256",
+      "person",
+      "requestId",
+      "expectedRevision"
+    ],
+    "independence": {
+      "lengthToOpeningDepth": 0,
+      "openingDepthToLength": 0,
+      "openingDepthToMouthWidth": 0
+    },
+    "dimensionalOracle": {
+      "totalAreaDeltaMm2": "(509.6023051049791 + 485.87235144796693) * deltaMm - 10 * slitDeltaMm",
+      "openingDepthMm": "86.10410305727925 + slitDeltaMm",
+      "frontPaperLengthMm": "630.5168433422547 + deltaMm"
+    }
+  },
+  "knowledge": [
+    {
+      "id": "K-R02-01",
+      "title": "把设计意图拆成相互独立的可验证尺寸",
+      "lesson": "裙长和开口深度采用独立参数；参数未提交时不修改已完成成衣。",
+      "implementation": [
+        "src/design-operation.mjs",
+        "src/app.mjs"
+      ],
+      "futureUse": "自然语言输入若接入，应先产生符合此类契约的明确操作，再执行真实几何和物理检查。"
+    },
+    {
+      "id": "K-R02-02",
+      "title": "局部编辑需要整体试穿复核",
+      "lesson": "新开口改变材料网格和整体缝合状态，即使不改腰部顶点，也可能在腰部产生新相交。",
+      "observedCounterexample": {
+        "deltaMm": 60,
+        "slitDeltaMm": 60,
+        "staticPassed": false,
+        "reason": "cloth-intersections",
+        "strictTrianglePairs": 1,
+        "pair": [
+          278,
+          6347
+        ],
+        "location": "skirt_back and wb_back near gathered seam s17",
+        "source": "evidence/solve-60-60.json.gz"
+      },
+      "notEstablished": "并未证明相交完全由某一个三角划分或某一个约束单独导致。"
+    },
+    {
+      "id": "K-R02-03",
+      "title": "操作合法域与合格结果集合分开",
+      "lesson": "滑块允许提交不代表任意组合已获物理通过；失败候选保留供观察并明确拒绝晋级。",
+      "gates": [
+        "source and geometry invariants",
+        "complete original solver",
+        "original strain/body/seam thresholds",
+        "independent final triangle intersections"
+      ]
+    },
+    {
+      "id": "K-R02-04",
+      "title": "把证据绑到结果版本",
+      "lesson": "纸样、材料网格、人体、参数与request/revision一起核对；过期或取消的作业不得覆盖当前结果。",
+      "cancelPolicy": "terminate dedicated Worker, revoke URL, advance request identity, retain last complete result"
+    },
+    {
+      "id": "K-R02-05",
+      "title": "统一人物系统需要真实协议适配",
+      "lesson": "冻结人体显示包保证此案例同源，但不等于已接入SMPL24/28控制节点、动画蒙皮或SharedWorker权威状态。",
+      "futureDependencies": [
+        "canonical Human GitHub source and BUILD_MANIFEST",
+        "proportion revision",
+        "pose revision",
+        "body and collision identity mapping",
+        "coordinate and rig schema adapters"
+      ]
+    }
+  ],
+  "boundaries": [
+    "original 20 mm triangular cutout, not a newly constructed production vent",
+    "no calibrated textile properties",
+    "no dynamic/continuous collision certification",
+    "no multibody or multilayer certification",
+    "S03 sizing preflight is not an assessed waist/hip fitting guarantee",
+    "recompute performance not optimized in R02",
+    "browser viewport checks do not establish real mobile-device performance",
+    "user visual acceptance remains pending"
+  ],
+  "sources": [
+    "https://x.com/irinatoxi/status/2112109267788423379",
+    "https://x.com/irinatoxi/status/2112265445193486494",
+    "https://developer.clo3d.com/scenario.html",
+    "https://github.com/haihao0307/guilin-dem-pipeline/tree/245f70211cb5103d8e951bd485c6f20d2f06879d/kaopu-tailor-workbench/clo-learning-r01"
+  ],
+  "integrationDecision": "Keep isolated until the user reviews the actual webpage; no merge into active branches."
+}
