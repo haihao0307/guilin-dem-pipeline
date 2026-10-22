@@ -1,0 +1,48 @@
+{
+  "regressionId": "CAMERA-VERTICAL-DRAG-DIRECTION-001",
+  "status": "CANDIDATE_INACTIVE",
+  "scope": "Human / NPC R04 successor camera interaction only",
+  "userCorrection": "移动上下镜头方向与操作反了，调整一下",
+  "currentObservation": {
+    "sourceHead": "b386dd9780ddc5b01676fe46117d56d973725ac7",
+    "workbenchBlob": "e88f3625092ac55e50fd44f0315544b31191ba52",
+    "nativePreviewBlob": "e20d7ba9a778c3d8ccafd869b91e2ab9a564dfe6",
+    "browserVerifierBlob": "c2d276ba1e9da2202619a6fcfff6736560630e44",
+    "classification": "USER_REPORTED_DIRECTION_FAILURE__REGRESSION_MISSING",
+    "runtimeReproductionThisRound": "BLOCKED_BY_PUBLIC_STARTUP_TIMEOUT"
+  },
+  "acceptance": "Starting from a non-clamped identical camera pose, mouse and one-finger touch vertical responses must both reverse relative to the user-rejected baseline. Horizontal drag, camera presets, target and zoom semantics must remain unchanged. A real browser trace and independent verifier are required.",
+  "requiredReceipt": [
+    "sourceHead",
+    "pointerType",
+    "startAndEndCoordinates",
+    "startAndEndCameraPosition",
+    "startAndEndCameraQuaternion",
+    "orbitTarget",
+    "azimuthAndPolarAngles",
+    "fixedLandmarkScreenProjection",
+    "horizontalInvariant",
+    "presetInvariant",
+    "independentVerifier"
+  ],
+  "negativeControls": [
+    "unchanged inherited OrbitControls baseline",
+    "mouse-only inversion",
+    "touch-only inversion",
+    "polar-clamped zero-response start pose"
+  ],
+  "boundaries": [
+    "Does not identify the visual root cause from minified source alone.",
+    "Does not treat an internal phi sign change as browser acceptance.",
+    "Does not authorize changes to horizontal orbit, presets, target or zoom.",
+    "Does not claim production repair while the public page cannot complete startup."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
