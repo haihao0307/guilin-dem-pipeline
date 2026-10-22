@@ -1,0 +1,103 @@
+{
+  "cases": [
+    {
+      "id": "current-baseline-unchanged",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "BASELINE",
+      "touchVerticalResponse": "BASELINE",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "REJECT_VERTICAL_DIRECTION_NOT_REVERSED"
+    },
+    {
+      "id": "source-sign-only",
+      "browserTrace": false,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "HOLD_BROWSER_TRACE_MISSING"
+    },
+    {
+      "id": "mouse-only-inverted",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "BASELINE",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "REJECT_INPUT_MODALITY_MISMATCH"
+    },
+    {
+      "id": "touch-only-inverted",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "BASELINE",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "REJECT_INPUT_MODALITY_MISMATCH"
+    },
+    {
+      "id": "vertical-and-horizontal-both-inverted",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": false,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "REJECT_HORIZONTAL_COLLATERAL_CHANGE"
+    },
+    {
+      "id": "preset-target-regressed",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": true,
+      "presetInvariant": false,
+      "independentVerifier": true,
+      "expected": "REJECT_CAMERA_PRESET_REGRESSION"
+    },
+    {
+      "id": "polar-clamp-zero-response",
+      "browserTrace": true,
+      "diagnosticStartPose": false,
+      "mouseVerticalResponse": "UNOBSERVABLE",
+      "touchVerticalResponse": "UNOBSERVABLE",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "HOLD_NON_DIAGNOSTIC_START_POSE"
+    },
+    {
+      "id": "producer-self-verified",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": false,
+      "expected": "HOLD_INDEPENDENT_VERIFIER_MISSING"
+    },
+    {
+      "id": "scoped-positive-control",
+      "browserTrace": true,
+      "diagnosticStartPose": true,
+      "mouseVerticalResponse": "INVERTED",
+      "touchVerticalResponse": "INVERTED",
+      "horizontalInvariant": true,
+      "presetInvariant": true,
+      "independentVerifier": true,
+      "expected": "CAMERA_VERTICAL_DIRECTION_PROBE_PASSED"
+    }
+  ]
+}
