@@ -1,3 +1,4 @@
+import {withBoundedGlassEndpointVerification} from './glass-endpoint-roundoff.mjs';
 import {buildObservedFacadeMaterialGLSL,OBSERVED_FRAME_COAT_LINEAR} from './finish-instance.mjs';
 import {validateMasks} from './host-integration.mjs';
 import {StaticPrimaryHitCache,staticPrimaryCacheKey} from '../whole-building-floor-study-r01/static-primary-hit-cache.mjs';
@@ -56,7 +57,7 @@ uniform int uInstanceCount;uniform vec4 uInstances[32];uniform vec3 uArchetypeMi
 void main(){previous();if(!rayActive())return;vec3 rd=rayDirection();for(int i=0;i<uInstanceCount;i++){floorPrimaryCandidateInstance=uRayMode==0?i:-1;vec3 origin=uInstances[i].xyz,ro=uEye-origin;float boundsLo,boundsHi,clipLo=0.,clipHi=outHit.x;if(!interval(uArchetypeMin,uArchetypeMax,ro,rd,outHit.x,boundsLo,boundsHi)||!clipInterval(uEye,rd,clipLo,clipHi))continue;float hi=min(boundsHi,clipHi);if(hi<max(boundsLo,clipLo))continue;float start=assemblyEntryStart(uArchetypeMin,uArchetypeMax,ro,rd,uEye,origin,boundsLo,clipLo);float t;FieldHit h;int visits;if(caseTraceRayBounded(ro+rd*start,rd,hi-start+8.*1.1920929e-7*(1.+abs(hi)+abs(start)),t,h,visits)&&t+start>=clipLo&&t+start<=hi){t+=start;h.objectId+=uInstances[i].w;accept(t,h,fieldRayNormal,uInstances[i].w);}}}
 `;}
 
-function apertureShader(apertures){return HEAD+buildPrimaryTileAperturesGLSL(apertures)+CAMERA+REDUCE+`
+function apertureShader(apertures){return HEAD+withBoundedGlassEndpointVerification(buildPrimaryTileAperturesGLSL(apertures))+CAMERA+REDUCE+`
 void main(){floorPrimaryApertureRay=uRayMode==0;previous();if(!rayActive())return;vec3 rd=rayDirection();float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;float skipId=uRayMode>0?texelFetch(uRayDirection,ivec2(gl_FragCoord.xy),0).w:0.;if(apertureTraceRayFiltered(uEye+rd*lo,rd,false,skipId,t,h,visits)&&t+lo<=hi)accept(t+lo,h,fieldRayNormal,-2.);}
 `;}
 
