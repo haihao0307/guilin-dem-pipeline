@@ -4,18 +4,19 @@ ROOT=pathlib.Path(__file__).resolve().parent;OUT=ROOT/'evidence';OUT.mkdir(exist
 BASE='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/a4-mark3-rule-conversion-r01/'
 ENTRY=BASE+'a4-student-compatible-r02/'
 EXPECTED='829caf7934c5d58d59a35f0e2125ae1ccc1c551447a62fed22bf4bd2170673b2'
+LIVE=(ROOT/'PUBLIC_SMOKE').exists()
 async def run():
- report={'engine':'Chromium SwiftShader software GPU, not user device verification','cases':[],'production_modified':False}
+ report={'engine':'Chromium SwiftShader software GPU, not user device verification','cases':[],'production_modified':False,'public_without_overrides':LIVE}
  async with async_playwright() as p:
   browser=await p.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-  for mode in ['normal','reject-aa','reject-all']:
+  for mode in (['normal'] if LIVE else ['normal','reject-aa','reject-all']):
    context=await browser.new_context(viewport={'width':1280,'height':800},device_scale_factor=1)
    await context.add_init_script("""(mode=>{const original=HTMLCanvasElement.prototype.getContext;window.CONTEXT_PROBES=[];HTMLCanvasElement.prototype.getContext=function(type,options){if(type==='webgl2'){CONTEXT_PROBES.push({type,options});if(mode==='reject-all'||(mode==='reject-aa'&&options?.antialias))return null;}return original.call(this,type,options);};})("""+json.dumps(mode)+');')
    async def serve(route):
     name=route.request.url.split('?',1)[0].removeprefix(ENTRY) or 'index.html'
-    if name not in ['index.html','view.mjs','webgl-compat.mjs']:await route.continue_();return
-    await route.fulfill(status=200,body=(ROOT/name).read_bytes(),content_type='text/html' if name.endswith('.html') else 'text/javascript')
-   await context.route(ENTRY+'**',serve)
+    if name not in ['index.html','view.mjs','webgl-compat.mjs','student-verified-dc02fca7.png']:await route.continue_();return
+    await route.fulfill(status=200,body=(ROOT/name).read_bytes(),content_type='image/png' if name.endswith('.png') else ('text/html' if name.endswith('.html') else 'text/javascript'))
+   if not LIVE:await context.route(ENTRY+'**',serve)
    page=await context.new_page();requests=[];errors=[]
    page.on('request',lambda req:requests.append(req.url));page.on('pageerror',lambda err:errors.append(str(err)))
    case={'mode':mode,'started':time.time()}
@@ -26,6 +27,10 @@ async def run():
      result=await page.evaluate("({ready:CONVERSION_QA.ready,code:CONVERSION_QA.failureCode,diagnostics:CONVERSION_QA.contextDiagnostics,status:document.querySelector('#status').textContent,disabled:[...document.querySelectorAll('[data-view-control]')].every(b=>b.disabled),canvases:document.querySelectorAll('canvas').length})")
      assert result['ready'] is False and result['disabled'] and result['canvases']==0
      assert len(result['diagnostics']['attempts'])==2
+     await page.wait_for_function('CONVERSION_QA.staticFallback?.ready',timeout=30000)
+     assert await page.locator('#static-image').evaluate('(image)=>image.naturalWidth>0')
+     assert await page.evaluate('CONVERSION_QA.ready') is False
+     case['static_fallback']=await page.evaluate('CONVERSION_QA.staticFallback')
      assert not any('/generated/a4/' in u for u in requests), 'model fetched after context failure'
      case['result']=result
     else:
@@ -48,13 +53,17 @@ async def run():
      await page.click('#side');await page.evaluate('CONVERSION_QA.render()')
      renderer=await page.evaluate("(()=>{const gl=CONVERSION_QA.renderer.getContext();const ext=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(gl.VENDOR),renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),pixelRatio:CONVERSION_QA.renderer.getPixelRatio(),triangles:CONVERSION_QA.renderer.info.render.triangles};})()")
      assert renderer['triangles']>0
-     case.update(result=state,changed_animation_nodes=changed,renderer=renderer)
-    await page.screenshot(path=str(OUT/(mode+'.png')),full_page=True)
+     health=await page.evaluate('({ready:CONVERSION_QA.ready,fatal:!!CONVERSION_QA.fatal,errors:CONVERSION_QA.errors})')
+     assert health['ready'] and not health['fatal'] and not health['errors'],health
+     assert not errors,errors
+     case.update(result=state,changed_animation_nodes=changed,renderer=renderer,final_health=health)
+    await page.screenshot(path=str(OUT/(mode+'.png')),full_page=True,timeout=120000)
+    if mode!='reject-all':await page.locator('#stage').screenshot(path=str(OUT/(mode+'-model.png')),timeout=120000)
     case['passed']=True
    except Exception as error:
     case['passed']=False;case['error']=str(error)
     case['status']=await page.locator('#status').inner_text() if await page.locator('#status').count() else ''
-    await page.screenshot(path=str(OUT/(mode+'-failure.png')),full_page=True)
+    await page.screenshot(path=str(OUT/(mode+'-failure.png')),full_page=True,timeout=120000)
    finally:
     case.update(seconds=time.time()-case['started'],page_errors=errors,requests=requests)
     report['cases'].append(case);(OUT/'REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))

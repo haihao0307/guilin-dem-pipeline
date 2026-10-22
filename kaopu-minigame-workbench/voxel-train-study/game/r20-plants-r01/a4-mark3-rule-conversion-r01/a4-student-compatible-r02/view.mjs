@@ -10,7 +10,7 @@ import {getBytes,unpack} from '../a4-student-complete-r01/transport.mjs';
 import {loadResidualParts} from '../a4-student-complete-r01/storage.mjs';
 const ruleTextures=new URL(location.href).searchParams.get('ruleTextures')!=='0';
 const qa=window.CONVERSION_QA,stage=document.querySelector('#stage'),status=document.querySelector('#status'),panels=[],sources=[];
-function progress(id,phase,e={}){qa.progress[id]={phase,...e};status.textContent=Object.entries(qa.progress).map(([k,p])=>k+': '+p.phase+(p.loaded!==undefined?' '+(p.loaded/1048576).toFixed(1)+' MB':'')+(p.attempt?' (第'+p.attempt+'次)':'')).join('\n');}
+function progress(id,phase,e={}){if(qa.fatal)return;qa.progress[id]={phase,...e};status.textContent=Object.entries(qa.progress).map(([k,p])=>k+': '+p.phase+(p.loaded!==undefined?' '+(p.loaded/1048576).toFixed(1)+' MB':'')+(p.attempt?' (第'+p.attempt+'次)':'')).join('\n');}
 let contextResult;try{contextResult=createCompatibleRenderer(T,{onAttempt:a=>{status.textContent='正在初始化图形显示：'+a.profile;}});}catch(e){qa.contextDiagnostics=e.diagnostics;throw e;}
 const {renderer,diagnostics}=contextResult;qa.contextDiagnostics=diagnostics;renderer.setPixelRatio(Math.min(devicePixelRatio,diagnostics.selected==='reduced-context'?1:1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.debug.onShaderError=(gl,p)=>fail(Error('SHADER '+gl.getProgramInfoLog(p)));stage.append(renderer.domElement);
 const studio=new RoomEnvironment(),pmrem=new T.PMREMGenerator(renderer),environment=pmrem.fromScene(studio,.04).texture;studio.dispose();pmrem.dispose();
@@ -36,6 +36,7 @@ async function converted(key){const id=key+'-converted',base=new URL('../generat
 for(const name of ['side','front','top'])document.getElementById(name).onclick=()=>{free=false;if(controls)controls.enabled=false;view=name;panels[0]?.camera.zoom&&(panels[0].camera.zoom=1);render();};document.getElementById('free').onclick=()=>{if(!panels.length)return;free=true;controls.enabled=true;controls.target.copy(panels[0].bounds.getCenter(new T.Vector3()));controls.update();render();};document.getElementById('play').onclick=()=>{playing=!playing;qa.playing=playing;last=performance.now();renderer.setAnimationLoop(playing?animate:null);document.getElementById('play').textContent=playing?'暂停原动画':'播放原动画';};document.getElementById('rest').onclick=()=>{playing=false;qa.playing=false;renderer.setAnimationLoop(null);document.getElementById('play').textContent='播放原动画';time=0;sources.forEach(s=>{s.mixer.stopAllAction();s.nodes.forEach((n,i)=>{n.position.copy(s.rest[i].position);n.quaternion.copy(s.rest[i].quaternion);n.scale.copy(s.rest[i].scale);n.matrix.copy(s.rest[i].matrix);});s.root.updateMatrixWorld(true);});render();};addEventListener('resize',render);
 function animate(now){if(playing){qa.animationFrames++;time+=Math.min(.1,(now-last)/1000);for(const s of sources)if(s.model.animations[0])s.setTime(time%s.model.animations[0].duration);render();}last=now;}
 
+if(qa.fatal)throw new Error('图形初始化发生错误，模型尚未开始下载。');
 qa.contextDiagnostics.modelDownloadStarted=true;
 const source=await converted('a4');addPanel('a4','converted',source);
 controls=new OrbitControls(panels[0].camera,renderer.domElement);controls.enabled=false;controls.enableDamping=false;controls.addEventListener('change',()=>{if(free)render();});
