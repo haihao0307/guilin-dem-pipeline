@@ -24,8 +24,8 @@ const DESKTOP = {width: 1440, height: 1000};
 const MOBILE = {width: 390, height: 844};
 const LIVE_DELTA = 20;
 const LIVE_SLIT_DELTA = 0;
-const REVIEW_DELTA = 60;
-const REVIEW_SLIT_DELTA = 60;
+const REVIEW_DELTA = 100;
+const REVIEW_SLIT_DELTA = -40;
 const CANCEL_DELTA = 30;
 const CANCEL_SLIT_DELTA = 30;
 // Source identities are locked to the frozen upstream commit. Study mesh
@@ -39,7 +39,7 @@ const LOCK = Object.freeze({
   baseMaterial: '9560f8c32c476636596e489be45cdc3bb19ba3356c2fb11445011a6fcdeb6208',
   initialMaterial: '8a39364094ae4bfac0ea4f434cc579fc67bcd37cc87857455e8995d77d31b3a3',
   liveMaterial: '688ad092df170586209614197d5f6f455530bc02dbdb3b391c2f609150a8df6e',
-  reviewMaterial: '5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb',
+  reviewMaterial: 'ff12bc0ac83a024121e5de39db6e04d16fc09f227ec7f2c70c41d74acad75e63',
   panelIds: ['skirt_back', 'skirt_front', 'wb_back', 'wb_front'],
   baseFrontLengthMm: 630.5168433422547,
   baseSlitDepthMm: 86.10410305727925,
@@ -106,7 +106,7 @@ async function main() {
     consoleErrors: [], consoleWarnings: [], pageErrors: [], contextLossObserved: false,
     workers: [], phaseTimeline: [],
     packetAudit: {enabled:true, purpose:'Diagnose Node versus Chromium material identity without changing source, geometry or solver.', mode:'Passive observation of paper/done packets produced by actual UI operations; typed arrays serialized as arrays for the diagnostic artifact.', sourceOfMaterialGoldens:'Reviewed Node development solves retained unchanged; a mismatch is recorded as a failed check and deferred only until the UI sequence finishes.', packets:[], captureErrors:[], deferredMaterialGoldenFailures:[]},
-    limits: ['Automated functional and viewport checks only; screenshots require separate visual review.', '390 px is a responsive viewport check, not a mobile-device performance or touch certification.', 'Two complete real solves: 20/0 mm expected pass and 60/60 mm expected cloth-intersection review. This does not certify the parameter domain.']
+    limits: ['Automated functional and viewport checks only; screenshots require separate visual review.', '390 px is a responsive viewport check, not a mobile-device performance or touch certification.', 'Two complete real solves: 20/0 mm expected pass and 100/-40 mm Node-observed cloth-intersection candidate. Browser failure must be observed, never assumed. This does not certify the parameter domain.']
   };
   let browser, context, page, suiteTimer;
   let localManifest = null, manifest = null, htmlBytes = null, finalURL = null;
@@ -427,8 +427,9 @@ async function main() {
     check('passing-candidate-hides-review', !solvedDOM.reviewVisible && solvedDOM.reviewState === 'passed' && solvedDOM.patternStateMode === 'complete');
     report.evidence.liveSolve = {deltaMm: LIVE_DELTA, slitDeltaMm: LIVE_SLIT_DELTA, wallMs: Date.now() - liveStarted, expectedGatePassed: true, state: solved};
 
-    // A previously observed failing geometry is a required negative case. It
-    // must finish and stay visible as review; passing must never be forced.
+    // This candidate failed in the retained Node development solve. The browser
+    // must independently finish and expose a real failure; otherwise this test
+    // blocks publication. No result or solver threshold is substituted.
     const beforeReview = await snapshot(), positiveCommitted = await committedState();
     await setSlider(REVIEW_DELTA); await setSlider(REVIEW_SLIT_DELTA, 'slit');
     check('review-request-keeps-previous-completed-candidate', equal(positiveCommitted, await committedState()));
@@ -437,7 +438,7 @@ async function main() {
     await waitState('Known-negative paper reaches sewing', state => state.busy && ['solving', 'auditing'].includes(state.phase), 45_000);
     await flushPacketEvidence();
     check('review-worker-created', report.workers.length === workersBeforeReview + 1);
-    const failed = await waitState('Complete real 60/60 mm negative case', state => !state.busy && state.liveSolveCount === beforeReview.liveSolveCount + 1 && state.currentDelta === REVIEW_DELTA && state.currentSlitDelta === REVIEW_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - reviewStarted)));
+    const failed = await waitState('Complete real 100/-40 mm candidate', state => !state.busy && state.liveSolveCount === beforeReview.liveSolveCount + 1 && state.currentDelta === REVIEW_DELTA && state.currentSlitDelta === REVIEW_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - reviewStarted)));
     await flushPacketEvidence();
     assertBodyAndGeometry(failed, 'review');
     assertFreshBinding(failed, beforeReview, REVIEW_DELTA, REVIEW_SLIT_DELTA, LOCK.reviewMaterial, 'review');
@@ -472,7 +473,7 @@ async function main() {
     check('reset-original-paper-and-two-labels', resetDOM.candidateLength === resetDOM.baselineLength && resetDOM.candidateLength === cm(0) && resetDOM.candidateSlitDepth === resetDOM.baselineSlitDepth && resetDOM.candidateSlitDepth === slitCm(0) && resetDOM.paperSlitDepth === slitCm(0) && resetDOM.paperSlitMouthWidth === '2.0 cm' && resetDOM.paper.length === 4 && resetDOM.paper.every(panel => panel.current === panel.original) && Number(await page.locator('#lengthInput').inputValue()) === 0 && Number(await page.locator('#slitInput').inputValue()) === 0 && await page.locator('#applyButton').isDisabled() && !resetDOM.reviewVisible);
     report.evidence.reset = reset;
     await layout('desktopFinal', DESKTOP);
-    check('exactly-two-complete-live-solves', reset.liveSolveCount === 2 && report.workers.length === workersBeforeLive + 3, {liveSolveCount: reset.liveSolveCount, workers: report.workers.length, positive: [20, 0], expectedReview: [60, 60], cancelled: [30, 30]});
+    check('exactly-two-complete-live-solves', reset.liveSolveCount === 2 && report.workers.length === workersBeforeLive + 3, {liveSolveCount: reset.liveSolveCount, workers: report.workers.length, positive: [20, 0], expectedReview: [100, -40], cancelled: [30, 30]});
     check('no-runtime-errors', report.consoleErrors.length === 0 && report.pageErrors.length === 0 && !report.contextLossObserved && !reset.lastError, {consoleErrors: report.consoleErrors, pageErrors: report.pageErrors});
     check('standalone-core-network', report.standaloneCoreNetworkRequests === 0 && (mode !== 'file' || report.network.blockedHttpRequests === 0), {count: report.standaloneCoreNetworkRequests, blockedHttpRequests: report.network.blockedHttpRequests, bootstrapExcluded: report.network.bootstrap.length, optionalBrowserIconsExcluded: report.network.optionalBrowserIcons.length});
     report.desktopPassed = true;
