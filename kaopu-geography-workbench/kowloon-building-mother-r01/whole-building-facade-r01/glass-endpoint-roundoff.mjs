@@ -23,6 +23,14 @@ export function glassEndpointError(p,ro,rd,t){
  const e=axes.map((a,j)=>Math.max(GAMMA24*dot(a.map(Math.abs),S),Bq[j]+(Math.abs(d[j])+Bd[j])*Et));
  return {axes:e,radius:Math.hypot(...e),tError:Et};
 }
+export function glassRecoveryIsolationBand(p,point,ownBudget){
+ const q=[p.u,p.v,p.w].map(a=>dot(a,point.map((x,i)=>x-p.origin[i])));
+ const r=point.map((x,i)=>Math.abs(x)+Math.abs(p.origin[i]));
+ const transform=[p.u,p.v,p.w].map(a=>gamma(8)*dot(a.map(Math.abs),r));
+ const sum=a=>a.reduce((s,x)=>s+Math.abs(x),0),rectScale=x=>x?sum(x.center)+sum(x.half)+2*x.radius:0;
+ const evaluation=gamma(64)*(sum(q)+rectScale(p.outer)+rectScale(p.inner)+p.halfDepth);
+ return (4*ownBudget+Math.hypot(...transform)+evaluation)*(1+gamma(8));
+}
 export const GLASS_ENDPOINT_GLSL=`
 // This is a candidate-local roundoff budget, never apertureEPS or ray advancement.
 float apertureGlassEndpointBudget(AperturePart p,vec3 ro,vec3 rd,float t){
@@ -39,7 +47,23 @@ float apertureGlassEndpointBudget(AperturePart p,vec3 ro,vec3 rd,float t){
  vec3 error=max(g24*vec3(dot(au,s),dot(av,s),dot(aw,s)),bq+(abs(d)+bd)*et);
  return length(error);
 }
-bool apertureOwnEndpointVerified(AperturePart p,vec3 ro,vec3 rd,float t,vec3 point,vec3 q,vec3 normal){
+bool apertureGlassRecoveryIsolated(int own,vec3 point,float error,float skipObjectId){
+ const float u=0.000000059604644775390625,g8=(8.0*u)/(1.0-8.0*u),g64=(64.0*u)/(1.0-64.0*u);
+ int count=int(apertureRecord(0).x);
+ for(int k=0;k<count;k++){
+  if(k==own)continue;AperturePart other=apertureLoad(k);if(other.objectId==skipObjectId)continue;
+  vec3 q=aperturePartLocal(other,point),r=abs(point)+abs(other.origin);
+  vec3 e=g8*vec3(dot(abs(other.u),r),dot(abs(other.v),r),dot(abs(other.w),r));
+  float shapeScale=dot(abs(other.outer),vec4(1.0))+2.0*other.radii.x+other.halfDepth;
+  if(other.hasInner)shapeScale+=dot(abs(other.inner),vec4(1.0))+2.0*other.radii.y;
+  float band=(4.0*error+length(e)+g64*(dot(abs(q),vec3(1.0))+shapeScale))*(1.0+g8);
+  // Only positively separated candidates can recover. Inside or uncertain
+  // neighbours retain the original path; never expand the union coverage EPS.
+  if(!(aperturePartLocalDistance(other,q)>band))return false;
+ }
+ return true;
+}
+bool apertureOwnEndpointVerified(AperturePart p,int own,vec3 ro,vec3 rd,float t,vec3 point,vec3 q,vec3 normal,float skipObjectId){
  if(aperturePositiveNeighbour(apertureIntervals(p,point,-normal)))return true;
  // Convex finite panes only. Frames, leaves, inner holes and corners are unchanged.
  if(p.role!=6.0||p.hasInner)return false;
@@ -54,11 +78,12 @@ bool apertureOwnEndpointVerified(AperturePart p,vec3 ro,vec3 rd,float t,vec3 poi
  if(apertureRectDistance(q.xy,p.outer,p.radii.x)>=-4.0*error)return false;
  float outwardSign=(entry?-1.0:1.0)*(d.z<0.0?-1.0:1.0);
  if(dot(normal,normalize(p.w)*outwardSign)<0.9999)return false;
+ if(!apertureGlassRecoveryIsolated(own,point,error,skipObjectId))return false;
  return true;
 }
 `;
 export const ORIGINAL_OWN_CHECK='!aperturePositiveNeighbour(apertureIntervals(p,point,-n))';
-export const BOUNDED_OWN_CHECK='!apertureOwnEndpointVerified(p,ro,rd,candidate,point,q,n)';
+export const BOUNDED_OWN_CHECK='!apertureOwnEndpointVerified(p,k,ro,rd,candidate,point,q,n,skipObjectId)';
 export function withBoundedGlassEndpointVerification(glsl){
  if(glsl.split(ORIGINAL_OWN_CHECK).length!==2)throw Error('Frozen own-endpoint shader changed; refusing broad replacement');
  const anchor='bool apertureTraceRayFiltered(';
