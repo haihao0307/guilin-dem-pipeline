@@ -1,0 +1,43 @@
+{
+  "regressionId": "MOTION-ENVIRONMENT-CONDITIONED-GENERATION-001",
+  "status": "CANDIDATE_INACTIVE",
+  "question": "Does the evidence prove environment-conditioned motion generation rather than behavior selection, clip playback, retargeting, or fixed-scene adaptation?",
+  "cases": [
+    {
+      "id": "pr334-official-clip-retarget",
+      "evidence": {"behaviorSelector": false, "fixedMotionSource": true, "retarget": true, "sceneAdaptation": false, "generationClaim": false},
+      "expected": "REFERENCE_PLAYBACK_ONLY__HOLD"
+    },
+    {
+      "id": "pr319-captured-pickup-authored-paths",
+      "evidence": {"behaviorSelector": true, "fixedMotionSource": true, "retarget": true, "sceneAdaptation": true, "authoredPath": true, "generationClaim": false},
+      "expected": "SCENE_ADAPTED_EXECUTION_ONLY__HOLD"
+    },
+    {
+      "id": "utility-selects-existing-clip",
+      "evidence": {"behaviorSelector": true, "fixedMotionSource": true, "retarget": false, "sceneAdaptation": false, "generationClaim": true},
+      "expected": "BEHAVIOR_SELECTION_ONLY__HOLD"
+    },
+    {
+      "id": "single-scene-end-effector-ik",
+      "evidence": {"behaviorSelector": true, "fixedMotionSource": true, "retarget": true, "sceneAdaptation": true, "heldOutVariations": 0, "generationClaim": true},
+      "expected": "SCENE_ADAPTED_EXECUTION_ONLY__HOLD"
+    },
+    {
+      "id": "generation-falls-back-to-clip",
+      "evidence": {"generationClaim": true, "controllerArtifactSha": "ctrl-a", "humanArtifactSha": "human-a", "sceneFamilySha": "room-a", "heldOutVariations": 4, "sameController": true, "trajectoryGenerated": true, "fallbackTriggered": true, "fallbackDisclosed": false, "independentVerifier": true},
+      "expected": "SILENT_FALLBACK__REJECT"
+    },
+    {
+      "id": "held-out-rollout-no-independent-recompute",
+      "evidence": {"generationClaim": true, "controllerArtifactSha": "ctrl-a", "humanArtifactSha": "human-a", "sceneFamilySha": "room-a", "heldOutVariations": 4, "sameController": true, "trajectoryGenerated": true, "fallbackTriggered": false, "independentVerifier": false},
+      "expected": "GENERATION_EVIDENCE_INCOMPLETE__HOLD"
+    },
+    {
+      "id": "held-out-room-variation-verified",
+      "evidence": {"generationClaim": true, "controllerArtifactSha": "ctrl-a", "humanArtifactSha": "human-a", "sceneFamilySha": "room-a", "heldOutVariations": 5, "sameController": true, "trajectoryGenerated": true, "fallbackTriggered": false, "independentVerifier": true, "metrics": {"taskCompletion": true, "collisionPass": true, "footSlipPass": true, "contactPass": true, "custodyPass": true}},
+      "expected": "GENERATION_CANDIDATE_VERIFIED_SCOPED"
+    }
+  ]
+}
+
