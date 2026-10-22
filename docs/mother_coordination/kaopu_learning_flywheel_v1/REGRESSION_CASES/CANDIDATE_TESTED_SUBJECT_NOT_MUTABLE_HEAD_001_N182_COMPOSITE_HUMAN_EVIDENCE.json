@@ -1,0 +1,55 @@
+{
+  "caseId": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001",
+  "status": "CANDIDATE_REAL_RUN_EVIDENCE_UPDATE_NOT_ADOPTED",
+  "active": false,
+  "decision": "NO_NEW_CASE_EXTEND_EXISTING_TESTED_SUBJECT_AND_FRESHNESS_CASE",
+  "evidenceUpdate": {
+    "cycle": "N182",
+    "date": "2026-10-22",
+    "mother": "Human / NPC life observation R04",
+    "runtimeHead": "b386dd9780ddc5b01676fe46117d56d973725ac7",
+    "taskAnchorSha": "265ef823c5cb5c33bea9d9b3db4b250a556e0ea6",
+    "declaredSubject": "Complete original R07 people/rig/materials/weights",
+    "componentManifestPresent": false,
+    "userCorrectionObserved": true,
+    "expectedState": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED"
+  },
+  "boundedQuestion": "Can a fresh page, exact head and passing browser run prove the requested latest total-platform human when the subject is composite but only one aggregate R07 label is frozen?",
+  "answer": "No. Artifact freshness and route identity prove which page ran; they do not prove that body, skin, head, hair, eyebrows, eyes, mouth, rig and motion equal the dispatch-time intended component set.",
+  "requiredTaskAnchorIncrement": [
+    "subjectSelectionPolicy: CURRENT_CANONICAL | FROZEN_ACCEPTED",
+    "subjectResolvedAtDispatch",
+    "expectedSubjectComponents.body",
+    "expectedSubjectComponents.skin",
+    "expectedSubjectComponents.head",
+    "expectedSubjectComponents.hair",
+    "expectedSubjectComponents.eyebrows",
+    "expectedSubjectComponents.eyes",
+    "expectedSubjectComponents.mouth",
+    "expectedSubjectComponents.rig",
+    "expectedSubjectComponents.motion"
+  ],
+  "requiredDeliveryReceiptIncrement": [
+    "actualRuntimeSubjectComponents with immutable source identity per component",
+    "componentSetExactMatch",
+    "mismatchedComponents",
+    "missingExpectedComponents",
+    "missingActualComponents"
+  ],
+  "states": [
+    "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED",
+    "HOLD_EXPECTED_COMPONENT_SET_INCOMPLETE",
+    "HOLD_ACTUAL_COMPONENT_INVENTORY_INCOMPLETE",
+    "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+    "COMPOSITE_SUBJECT_VERIFIED"
+  ],
+  "mustNever": [
+    "A monolithic version label is expanded into proof that every visible and behavioral component is current.",
+    "A fresh commit or browser run is expanded into proof that the runtime loaded the user-requested composite subject.",
+    "Latest specialist branches are silently promoted when the Human owner has not resolved a canonical component set.",
+    "An explicitly user-frozen older subject is rejected merely because a newer specialist candidate exists.",
+    "Machine component matching is expanded into visual acceptance or production readiness."
+  ],
+  "activationGate": "Run once on the next relevant Human candidate after the Human owner resolves the dispatch-time expected component set. Independent verifier must compare the runtime component inventory. Coordinator review is required before any global field change.",
+  "rollback": "Remove this evidence extension and fields only. Do not modify NPC R04, current Human assets, production branches, or any user-frozen baseline."
+}

@@ -1,0 +1,139 @@
+{
+  "schema": "kaopu/composite-subject-freshness-fixture@1",
+  "requiredComponents": [
+    "body",
+    "skin",
+    "head",
+    "hair",
+    "eyebrows",
+    "eyes",
+    "mouth",
+    "rig",
+    "motion"
+  ],
+  "observedProductionEvent": {
+    "mother": "Human / NPC life observation R04",
+    "taskAnchorSha": "265ef823c5cb5c33bea9d9b3db4b250a556e0ea6",
+    "runtimeHead": "b386dd9780ddc5b01676fe46117d56d973725ac7",
+    "declaredSubject": "Complete original R07 people/rig/materials/weights",
+    "nativePacketBase": "475ead2759159b83927a1aa8ae6879595e1d18bc",
+    "faceAssetBase": "02f596def9d07ebfc187e1eb18ad345a57c8a6b6",
+    "componentManifestPresent": false,
+    "userCorrection": "The current page used the wrong/old person; the intended latest total-platform person includes upgraded appearance, hair, eyebrows, eyes and mouth."
+  },
+  "cases": [
+    {
+      "name": "current R04 has a fresh page but no dispatch-resolved current composite subject",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": false,
+        "components": {}
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "R07",
+          "skin": "R07",
+          "head": "R07",
+          "rig": "R07"
+        }
+      },
+      "expect": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED"
+    },
+    {
+      "name": "one aggregate R07 label cannot replace the component vector",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": true,
+        "components": {
+          "aggregate": "R07"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "aggregate": "R07"
+        }
+      },
+      "expect": "HOLD_EXPECTED_COMPONENT_SET_INCOMPLETE"
+    },
+    {
+      "name": "actual runtime omits the eyebrow identity",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": true,
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "expect": "HOLD_ACTUAL_COMPONENT_INVENTORY_INCOMPLETE"
+    },
+    {
+      "name": "fresh head and browser run still use stale hair",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": true,
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F06", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "expect": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH"
+    },
+    {
+      "name": "fresh head and browser run still use stale mouth and motion",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": true,
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M1", "rig": "R1", "motion": "MO1"
+        }
+      },
+      "expect": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH"
+    },
+    {
+      "name": "resolved current component vector matches runtime exactly",
+      "expectedResolution": {
+        "policy": "CURRENT_CANONICAL",
+        "resolvedAtDispatch": true,
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "B1", "skin": "S1", "head": "H1", "hair": "F13", "eyebrows": "EB2", "eyes": "E2", "mouth": "M2", "rig": "R1", "motion": "MO2"
+        }
+      },
+      "expect": "COMPOSITE_SUBJECT_VERIFIED"
+    },
+    {
+      "name": "user-frozen older composite remains legal when explicitly selected",
+      "expectedResolution": {
+        "policy": "FROZEN_ACCEPTED",
+        "resolvedAtDispatch": true,
+        "components": {
+          "body": "B0", "skin": "S0", "head": "H0", "hair": "F06", "eyebrows": "EB1", "eyes": "E1", "mouth": "M1", "rig": "R0", "motion": "MO1"
+        }
+      },
+      "actualRuntime": {
+        "components": {
+          "body": "B0", "skin": "S0", "head": "H0", "hair": "F06", "eyebrows": "EB1", "eyes": "E1", "mouth": "M1", "rig": "R0", "motion": "MO1"
+        }
+      },
+      "expect": "COMPOSITE_SUBJECT_VERIFIED"
+    }
+  ]
+}

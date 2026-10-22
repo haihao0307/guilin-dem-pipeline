@@ -1,0 +1,106 @@
+{
+  "schema": "kaopu/composite-subject-freshness-result@1",
+  "fixture": "composite_human_freshness_fixture_n182.json",
+  "passed": 7,
+  "total": 7,
+  "currentProductionEventState": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED",
+  "results": [
+    {
+      "name": "current R04 has a fresh page but no dispatch-resolved current composite subject",
+      "expected": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED",
+      "actual": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED",
+      "detail": {
+        "state": "HOLD_EXPECTED_COMPONENT_SET_UNRESOLVED",
+        "missing": [
+          "body",
+          "skin",
+          "head",
+          "hair",
+          "eyebrows",
+          "eyes",
+          "mouth",
+          "rig",
+          "motion"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "one aggregate R07 label cannot replace the component vector",
+      "expected": "HOLD_EXPECTED_COMPONENT_SET_INCOMPLETE",
+      "actual": "HOLD_EXPECTED_COMPONENT_SET_INCOMPLETE",
+      "detail": {
+        "state": "HOLD_EXPECTED_COMPONENT_SET_INCOMPLETE",
+        "missing": [
+          "body",
+          "skin",
+          "head",
+          "hair",
+          "eyebrows",
+          "eyes",
+          "mouth",
+          "rig",
+          "motion"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "actual runtime omits the eyebrow identity",
+      "expected": "HOLD_ACTUAL_COMPONENT_INVENTORY_INCOMPLETE",
+      "actual": "HOLD_ACTUAL_COMPONENT_INVENTORY_INCOMPLETE",
+      "detail": {
+        "state": "HOLD_ACTUAL_COMPONENT_INVENTORY_INCOMPLETE",
+        "missing": [
+          "eyebrows"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "fresh head and browser run still use stale hair",
+      "expected": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+      "actual": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+      "detail": {
+        "state": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+        "mismatched": [
+          "hair"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "fresh head and browser run still use stale mouth and motion",
+      "expected": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+      "actual": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+      "detail": {
+        "state": "HOLD_COMPOSITE_SUBJECT_COMPONENT_MISMATCH",
+        "mismatched": [
+          "mouth",
+          "motion"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "resolved current component vector matches runtime exactly",
+      "expected": "COMPOSITE_SUBJECT_VERIFIED",
+      "actual": "COMPOSITE_SUBJECT_VERIFIED",
+      "detail": {
+        "state": "COMPOSITE_SUBJECT_VERIFIED",
+        "mismatched": []
+      },
+      "pass": true
+    },
+    {
+      "name": "user-frozen older composite remains legal when explicitly selected",
+      "expected": "COMPOSITE_SUBJECT_VERIFIED",
+      "actual": "COMPOSITE_SUBJECT_VERIFIED",
+      "detail": {
+        "state": "COMPOSITE_SUBJECT_VERIFIED",
+        "mismatched": []
+      },
+      "pass": true
+    }
+  ]
+}
