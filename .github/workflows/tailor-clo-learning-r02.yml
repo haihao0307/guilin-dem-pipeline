@@ -76,7 +76,8 @@ jobs:
       - name: Prepare real acceptance browser
         run: |
           npm install --prefix "$RUNNER_TEMP/clo-browser-tools" --no-save --no-package-lock --ignore-scripts playwright@1.57.0
-          node "$RUNNER_TEMP/clo-browser-tools/node_modules/playwright/cli.js" install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends fonts-wqy-zenhei
+          node "$RUNNER_TEMP/clo-browser-tools/node_modules/playwright/cli.js" install chromium
       - name: Verify standalone desktop and mobile viewport interactions
         env:
           CLO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/clo-browser-tools/node_modules/playwright/index.mjs
