@@ -15,6 +15,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
+import {gzipSync} from 'node:zlib';
 
 const PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TOTAL_TIMEOUT_MS = 600_000;
@@ -104,16 +105,23 @@ async function main() {
     network: {bootstrap: [], core: [], optionalBrowserIcons: [], failures: [], blockedHttpRequests: 0},
     consoleErrors: [], consoleWarnings: [], pageErrors: [], contextLossObserved: false,
     workers: [], phaseTimeline: [],
+    packetAudit: {enabled:true, purpose:'Diagnose Node versus Chromium material identity without changing source, geometry or solver.', mode:'Passive observation of paper/done packets produced by actual UI operations; typed arrays serialized as arrays for the diagnostic artifact.', sourceOfMaterialGoldens:'Reviewed Node development solves retained unchanged; a mismatch is recorded as a failed check and deferred only until the UI sequence finishes.', packets:[], captureErrors:[], deferredMaterialGoldenFailures:[]},
     limits: ['Automated functional and viewport checks only; screenshots require separate visual review.', '390 px is a responsive viewport check, not a mobile-device performance or touch certification.', 'Two complete real solves: 20/0 mm expected pass and 60/60 mm expected cloth-intersection review. This does not certify the parameter domain.']
   };
   let browser, context, page, suiteTimer;
   let localManifest = null, manifest = null, htmlBytes = null, finalURL = null;
   let manifestURL = mode === 'https' ? new URL('manifest.json', args.url).href : null;
   let lastPhaseKey = null;
+  let lastPacketSequence = 0;
   const check = (id, condition, detail = {}) => {
     const item = {id, passed: !!condition, ...detail};
     report.checks.push(item);
     if (!condition) throw Error('Check failed: ' + id + (detail.reason ? ' — ' + detail.reason : ''));
+  };
+  const checkMaterialGolden = (id, actual, expected) => {
+    const item={id,passed:actual===expected,actual,expected,source:'Existing Node development solve material golden',failureDeferredForPacketDiagnosis:true};
+    report.checks.push(item);
+    if(!item.passed)report.packetAudit.deferredMaterialGoldenFailures.push(item);
   };
   const recordState = state => {
     if (!state) return;
@@ -146,6 +154,22 @@ async function main() {
     await page.screenshot({path: path.join(reportDirectory, filename), fullPage: true, animations: 'disabled', timeout: 30_000});
     report.screenshots[name] = filename;
   };
+  async function flushPacketEvidence() {
+    if(!page || page.isClosed())return;
+    const captured=await page.evaluate(sequence=>window.__CLO_STUDY_PACKET_AUDIT__?.readAfter(sequence)??null,lastPacketSequence);
+    if(!captured)throw Error('Passive Worker packet observer is missing.');
+    report.packetAudit.captureErrors=captured.errors;
+    if(captured.errors.length)throw Error('Worker packet capture failed: '+captured.errors.join('; '));
+    for(const row of captured.packets){
+      const packet=JSON.parse(row.packetJSON);
+      const record={schema:'kaopu.clo-worker-packet-audit/1',sourceHead:report.sourceHead,mode,sequence:row.sequence,workerIndex:row.workerIndex,capturedAt:row.capturedAt,packet};
+      const bytes=Buffer.from(JSON.stringify(record)),compressed=gzipSync(bytes,{level:9});
+      const filename=screenshotPrefix+'.packet-'+row.sequence+'-'+packet.type+'-request-'+packet.requestId+'.json.gz';
+      await fs.writeFile(path.join(reportDirectory,filename),compressed);
+      report.packetAudit.packets.push({sequence:row.sequence,workerIndex:row.workerIndex,type:packet.type,requestId:packet.requestId,file:filename,bytes:compressed.length,sha256:hash(compressed),decodedSHA256:hash(bytes),paperSHA256:packet.binding?.paperSHA256,materialSHA256:packet.binding?.materialSHA256,operationSHA256:packet.binding?.operationSHA256,staticGatePassed:packet.record?.staticGate?.passed});
+      lastPacketSequence=row.sequence;
+    }
+  }
   const readDOM = () => page.evaluate(() => ({
     sourceCommit: document.documentElement.dataset.sourceCommit,
     buildId: document.documentElement.dataset.buildId,
@@ -230,7 +254,8 @@ async function main() {
   }
   function assertFreshBinding(state, before, delta, slitDelta, material, id) {
     const binding = state.binding, operation = binding.operation;
-    check(id + '-two-parameter-binding', operation?.schema === LOCK.operationSchema && operation.requestId === state.requestId && operation.expectedRevision === before.revision && operation.deltaMm === delta && operation.slitDeltaMm === slitDelta && state.currentDelta === delta && state.currentSlitDelta === slitDelta && binding.materialSHA256 === material && binding.paperSHA256 !== before.binding.paperSHA256 && binding.materialSHA256 !== before.binding.materialSHA256 && binding.basePaperSHA256 === LOCK.basePaper && binding.operationSHA256 === digest(operation) && equal(binding.person, before.binding.person), {binding});
+    check(id + '-two-parameter-binding', operation?.schema === LOCK.operationSchema && operation.requestId === state.requestId && operation.expectedRevision === before.revision && operation.deltaMm === delta && operation.slitDeltaMm === slitDelta && state.currentDelta === delta && state.currentSlitDelta === slitDelta && binding.paperSHA256 !== before.binding.paperSHA256 && binding.materialSHA256 !== before.binding.materialSHA256 && binding.basePaperSHA256 === LOCK.basePaper && binding.operationSHA256 === digest(operation) && equal(binding.person, before.binding.person), {binding});
+    checkMaterialGolden(id + '-material-golden',binding.materialSHA256,material);
     check(id + '-fresh-mesh-and-revision', state.revision === before.revision + 1 && state.geometry.candidateRevision === before.geometry.candidateRevision + 1 && equal(state.geometry.original, before.geometry.original));
   }
   async function assertVisibleNumbers(state, delta, slitDelta, id) {
@@ -253,6 +278,23 @@ async function main() {
     browser = await chromium.launch({headless: true, timeout: 60_000, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-dev-shm-usage']});
     report.browser.version = browser.version();
     context = await browser.newContext({viewport: DESKTOP, deviceScaleFactor: 1, locale: 'zh-CN', serviceWorkers: 'block', reducedMotion: 'reduce', extraHTTPHeaders: {'Cache-Control': 'no-cache', Pragma: 'no-cache'}});
+    // The original Worker still receives the original URL and messages. This
+    // observer only copies its outgoing evidence, before app event handlers run.
+    // It does not call app state functions, send commands or substitute results.
+    await context.addInitScript(()=>{
+      const packets=[],errors=[];let sequence=0,workerIndex=0;
+      const NativeWorker=window.Worker;
+      window.Worker=new Proxy(NativeWorker,{construct(target,args,newTarget){
+        const worker=Reflect.construct(target,args,newTarget),index=++workerIndex;
+        worker.addEventListener('message',event=>{
+          const packet=event.data;if(!packet||!['paper','done'].includes(packet.type))return;
+          try{packets.push({sequence:++sequence,workerIndex:index,capturedAt:new Date().toISOString(),packetJSON:JSON.stringify(packet,(_key,value)=>ArrayBuffer.isView(value)?Array.from(value):value)});}
+          catch(error){errors.push(String(error?.message||error));}
+        });
+        return worker;
+      }});
+      Object.defineProperty(window,'__CLO_STUDY_PACKET_AUDIT__',{value:Object.freeze({readAfter:after=>({packets:packets.filter(row=>row.sequence>after),errors:[...errors]})}),writable:false,configurable:false});
+    });
     // A file run cannot accidentally borrow a CDN asset or remote solver. Any
     // attempted HTTP(S) request counts as a failure, even though it is blocked.
     if (mode === 'file') await context.route(/^https?:\/\//, async route => { report.network.blockedHttpRequests++; await route.abort('blockedbyclient'); });
@@ -371,10 +413,12 @@ async function main() {
     const liveStarted = Date.now(), workersBeforeLive = report.workers.length;
     await page.locator('#applyButton').click();
     const sewing = await waitState('Fresh two-parameter paper reaches sewing', state => state.busy && ['solving', 'auditing'].includes(state.phase), 45_000);
+    await flushPacketEvidence();
     const pendingDOM = await readDOM();
     check('live-paper-before-new-garment', sewing.currentDelta === beforeLive.currentDelta && sewing.currentSlitDelta === beforeLive.currentSlitDelta && sewing.binding.materialSHA256 === beforeLive.binding.materialSHA256 && sewing.geometry.candidateRevision === beforeLive.geometry.candidateRevision && !equal(pendingDOM.paper, beforeDirty.paper) && pendingDOM.patternStateMode === 'pending' && pendingDOM.paperSlitDepth === slitCm(LIVE_SLIT_DELTA) && pendingDOM.candidateSlitDepth === slitCm(40), {pendingPaperDigest: digest(pendingDOM.paper), previousPaperDigest: digest(beforeDirty.paper)});
     check('busy-controls-and-worker', report.workers.length === workersBeforeLive + 1 && report.workers.at(-1).url.startsWith('blob:') && await page.locator('#lengthInput').isDisabled() && await page.locator('#slitInput').isDisabled() && await page.locator('#applyButton').isDisabled() && await page.locator('#resetButton').isDisabled() && await page.locator('#cancelButton').isVisible(), {worker: report.workers.at(-1)});
     const solved = await waitState('Complete live 20/0 mm positive case', state => !state.busy && state.liveSolveCount === beforeLive.liveSolveCount + 1 && state.currentDelta === LIVE_DELTA && state.currentSlitDelta === LIVE_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - liveStarted)));
+    await flushPacketEvidence();
     assertBodyAndGeometry(solved, 'live');
     assertFreshBinding(solved, beforeLive, LIVE_DELTA, LIVE_SLIT_DELTA, LOCK.liveMaterial, 'live');
     check('fresh-live-mesh', solved.geometry.candidate.vertices === 3548 && solved.geometry.candidate.triangles === 6296 && equal(solved.geometry.original, initial.geometry.original));
@@ -391,8 +435,10 @@ async function main() {
     const reviewStarted = Date.now(), workersBeforeReview = report.workers.length;
     await page.locator('#applyButton').click();
     await waitState('Known-negative paper reaches sewing', state => state.busy && ['solving', 'auditing'].includes(state.phase), 45_000);
+    await flushPacketEvidence();
     check('review-worker-created', report.workers.length === workersBeforeReview + 1);
     const failed = await waitState('Complete real 60/60 mm negative case', state => !state.busy && state.liveSolveCount === beforeReview.liveSolveCount + 1 && state.currentDelta === REVIEW_DELTA && state.currentSlitDelta === REVIEW_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - reviewStarted)));
+    await flushPacketEvidence();
     assertBodyAndGeometry(failed, 'review');
     assertFreshBinding(failed, beforeReview, REVIEW_DELTA, REVIEW_SLIT_DELTA, LOCK.reviewMaterial, 'review');
     check('known-negative-retains-actual-failure', failed.phase === 'review' && failed.staticGate.passed === false && equal(failed.staticGate.failures, ['cloth-intersections']) && equal(failed.staticGate.thresholds, THRESHOLDS) && failed.intersections.selfStrictTriangleIntersectionCount > 0 && failed.intersections.bodyIntersectingFaceCount === 0 && failed.staticGate.wholeSeamAudit.measuredSeams === 20 && failed.staticGate.wholeSeamAudit.maxSpanUpperBoundMm <= .25 && failed.staticGate.dynamicWearCertified === false && !failed.lastError, {failures: failed.staticGate.failures, intersections: failed.intersections});
@@ -407,6 +453,7 @@ async function main() {
     const workersBeforeCancel = report.workers.length;
     await page.locator('#applyButton').click();
     await waitState('Cancellable job has new paper', state => state.busy && ['solving', 'auditing'].includes(state.phase), 45_000);
+    await flushPacketEvidence();
     check('cancel-job-started', report.workers.length === workersBeforeCancel + 1);
     const cancelledWorker = report.workers.at(-1);
     await page.locator('#cancelButton').click();
@@ -429,6 +476,7 @@ async function main() {
     check('no-runtime-errors', report.consoleErrors.length === 0 && report.pageErrors.length === 0 && !report.contextLossObserved && !reset.lastError, {consoleErrors: report.consoleErrors, pageErrors: report.pageErrors});
     check('standalone-core-network', report.standaloneCoreNetworkRequests === 0 && (mode !== 'file' || report.network.blockedHttpRequests === 0), {count: report.standaloneCoreNetworkRequests, blockedHttpRequests: report.network.blockedHttpRequests, bootstrapExcluded: report.network.bootstrap.length, optionalBrowserIconsExcluded: report.network.optionalBrowserIcons.length});
     report.desktopPassed = true;
+    if(report.packetAudit.deferredMaterialGoldenFailures.length)throw Error('Deferred material golden mismatch after UI sequence; diagnostic evidence retained and publication blocked.');
     report.passed = report.desktopPassed && report.mobileViewportPassed && report.checks.every(item => item.passed);
   }
   try {
@@ -438,6 +486,7 @@ async function main() {
     report.passed = false;
     report.failure = {message: error.message, stack: error.stack?.slice(0, 5000)};
     if (page && !page.isClosed()) {
+      try { await flushPacketEvidence(); } catch (captureError) { report.packetAudit.flushError=captureError.message; }
       try { report.evidence.failureState = await snapshot(); } catch { /* Preserve original failure. */ }
       try { await saveScreenshot('failure'); } catch { /* A crashed page may not support screenshots. */ }
     }

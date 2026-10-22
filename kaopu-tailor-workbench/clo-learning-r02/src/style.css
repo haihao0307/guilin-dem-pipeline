@@ -58,9 +58,10 @@ button { border: 0; }
 .stage-divider { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; pointer-events: none; background: rgb(91 101 83 / 12%); }
 .view-headings { position: absolute; inset: 0 0 auto; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; }
 .view-heading { display: flex; gap: 12px; align-items: flex-start; padding: 24px 26px; min-width: 0; }
+.view-heading > div { min-width: 0; padding: 8px 10px; background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
 .view-index { padding-top: 2px; color: var(--faint); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .1em; }
 .view-heading h2 { font-family: var(--serif); font-size: 18px; font-weight: 500; letter-spacing: .05em; }
-.view-heading p { margin-top: 7px; font-size: 10px; line-height: 1.6; color: var(--muted); max-width: 24em; }
+.view-heading p { margin-top: 7px; font-size: 10px; line-height: 1.6; color: var(--sage-dark); max-width: 24em; }
 .view-footnotes { position: absolute; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; }
 .view-footnotes p { margin: 0 26px 23px; display: flex; gap: 12px; align-items: baseline; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .view-footnotes strong { font-size: 13px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -151,6 +152,7 @@ body[data-phase="review"] .status-marker, body[data-phase="error"] .status-marke
 .view-footnotes .view-measurements strong { display: block; margin-top: 4px; }
 @media (max-width: 1100px) { .view-measurements { padding-inline: 18px; gap: 9px 14px; } }
 @media (max-width: 520px) {
+  .opening-note { display: none; }
   .view-controls { flex-wrap: wrap; }
   .view-measurements { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 18px 12px 17px; }
   .view-footnotes .view-measurements p { font-size: 8px; }
