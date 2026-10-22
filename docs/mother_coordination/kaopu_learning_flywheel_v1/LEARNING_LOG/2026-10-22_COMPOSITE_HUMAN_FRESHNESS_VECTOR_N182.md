@@ -47,6 +47,6 @@ Delivery Receipt 从实际 runtime 导出同名 `actualRuntimeSubjectComponents`
 
 - 仅作为 Human 单 Mother Candidate；不修改 R2 OS，不修改生产 Mother 分支，不自动选定任何专项分支。
 - component match 不能代替视觉质量、动作自然度、物理、设备、公网页面或用户验收。
-- POSTED：待定向路由至 PR #329。
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/329#issuecomment-6339930566
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：均为 false / unknown。
 - KPI：分类回放 7/7；当前真实用户纠错事件 1；其余指标 unknown。
