@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "kaopu.public-fresh-session-startup.result.v1",
+  "regressionId": "PUBLIC-FRESH-SESSION-STARTUP-001",
+  "status": "PASS",
+  "passed": 8,
+  "total": 8,
+  "cases": [
+    {
+      "id": "historical-single-success-only",
+      "expected": "HOLD_FRESH_SESSION_SAMPLE_INCOMPLETE",
+      "actual": "HOLD_FRESH_SESSION_SAMPLE_INCOMPLETE",
+      "pass": true
+    },
+    {
+      "id": "same-context-reloads-only",
+      "expected": "HOLD_CONTEXT_ISOLATION_MISSING",
+      "actual": "HOLD_CONTEXT_ISOLATION_MISSING",
+      "pass": true
+    },
+    {
+      "id": "http-200-but-fresh-start-times-out",
+      "expected": "REJECT_CURRENT_PUBLIC_STARTUP",
+      "actual": "REJECT_CURRENT_PUBLIC_STARTUP",
+      "pass": true
+    },
+    {
+      "id": "cold-first-open-fails-warm-retry-passes",
+      "expected": "REJECT_FIRST_OPEN_UNRELIABLE",
+      "actual": "REJECT_FIRST_OPEN_UNRELIABLE",
+      "pass": true
+    },
+    {
+      "id": "wrong-source-head",
+      "expected": "REJECT_PUBLIC_ENDPOINT_IDENTITY",
+      "actual": "REJECT_PUBLIC_ENDPOINT_IDENTITY",
+      "pass": true
+    },
+    {
+      "id": "fresh-starts-without-stage-receipts",
+      "expected": "HOLD_BOOT_STAGE_RECEIPT_MISSING",
+      "actual": "HOLD_BOOT_STAGE_RECEIPT_MISSING",
+      "pass": true
+    },
+    {
+      "id": "native-frame-but-no-interaction",
+      "expected": "REJECT_PUBLIC_INTERACTION_NOT_REACHED",
+      "actual": "REJECT_PUBLIC_INTERACTION_NOT_REACHED",
+      "pass": true
+    },
+    {
+      "id": "declared-fresh-session-probe-passes",
+      "expected": "FRESH_SESSION_STARTUP_PROBE_PASSED",
+      "actual": "FRESH_SESSION_STARTUP_PROBE_PASSED",
+      "pass": true
+    }
+  ]
+}

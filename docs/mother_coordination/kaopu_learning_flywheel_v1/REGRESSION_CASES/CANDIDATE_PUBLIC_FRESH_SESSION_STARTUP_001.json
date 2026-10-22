@@ -1,0 +1,45 @@
+{
+  "regressionId": "PUBLIC-FRESH-SESSION-STARTUP-001",
+  "status": "CANDIDATE",
+  "scope": "Human / NPC public workbench only",
+  "userCorrection": "公开网页无法打开",
+  "failureMechanism": "A historical successful publication/browser run is treated as a durable property of the URL even though a later independent browser session cannot reach the native first frame or any interaction.",
+  "currentObservation": {
+    "sourceHead": "b386dd9780ddc5b01676fe46117d56d973725ac7",
+    "historicalSuccessfulRun": 39753300159,
+    "observedAt": "2026-10-23",
+    "freshContextAttempts": 1,
+    "freshContextFailures": 1,
+    "sameContextRetries": 1,
+    "sameContextRetryFailures": 1,
+    "failureCode": "BOOT_STAGE_TIMEOUT",
+    "stageLimitMS": 60000,
+    "classification": "REJECT_CURRENT_PUBLIC_STARTUP"
+  },
+  "requiredReceipt": [
+    "exactPublicURL",
+    "sourceHead",
+    "independentContextId",
+    "browserAndViewport",
+    "cacheAndStoragePolicy",
+    "bootStageTimeline",
+    "firstNativeFrameReceipt",
+    "interactionReceipt",
+    "failureCode"
+  ],
+  "gate": "A fresh-session failure withdraws the current shareable claim for that tested environment. Historical success remains an Observation, not a current pass. Same-context reloads do not count as independent fresh-session samples.",
+  "boundaries": [
+    "Does not infer a global outage or a population availability rate from one environment.",
+    "Does not replace physical-phone verification.",
+    "Does not prescribe a global sample count; the Mother declares the sample plan before the trial.",
+    "Does not accept a longer timeout, cache warm-up, or user retry as proof of a product fix."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

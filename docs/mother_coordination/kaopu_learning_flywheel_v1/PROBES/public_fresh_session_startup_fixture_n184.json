@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "kaopu.public-fresh-session-startup.fixture.v1",
+  "cases": [
+    {
+      "id": "historical-single-success-only",
+      "endpointIdentityMatches": true,
+      "freshContextAttempts": 0,
+      "declaredMinFreshContexts": 2,
+      "sameContextReloadOnly": false,
+      "freshContextFailures": 0,
+      "expected": "HOLD_FRESH_SESSION_SAMPLE_INCOMPLETE"
+    },
+    {
+      "id": "same-context-reloads-only",
+      "endpointIdentityMatches": true,
+      "freshContextAttempts": 0,
+      "declaredMinFreshContexts": 2,
+      "sameContextReloadOnly": true,
+      "freshContextFailures": 0,
+      "expected": "HOLD_CONTEXT_ISOLATION_MISSING"
+    },
+    {
+      "id": "http-200-but-fresh-start-times-out",
+      "endpointIdentityMatches": true,
+      "http200": true,
+      "freshContextAttempts": 1,
+      "declaredMinFreshContexts": 1,
+      "freshContextFailures": 1,
+      "firstOpenFailures": 1,
+      "expected": "REJECT_CURRENT_PUBLIC_STARTUP"
+    },
+    {
+      "id": "cold-first-open-fails-warm-retry-passes",
+      "endpointIdentityMatches": true,
+      "http200": true,
+      "freshContextAttempts": 1,
+      "declaredMinFreshContexts": 1,
+      "freshContextFailures": 0,
+      "firstOpenFailures": 1,
+      "sameContextRetryPasses": 1,
+      "expected": "REJECT_FIRST_OPEN_UNRELIABLE"
+    },
+    {
+      "id": "wrong-source-head",
+      "endpointIdentityMatches": false,
+      "freshContextAttempts": 3,
+      "declaredMinFreshContexts": 3,
+      "freshContextFailures": 0,
+      "expected": "REJECT_PUBLIC_ENDPOINT_IDENTITY"
+    },
+    {
+      "id": "fresh-starts-without-stage-receipts",
+      "endpointIdentityMatches": true,
+      "http200": true,
+      "freshContextAttempts": 3,
+      "declaredMinFreshContexts": 3,
+      "freshContextFailures": 0,
+      "firstOpenFailures": 0,
+      "bootStageReceiptsComplete": false,
+      "interactionReached": true,
+      "expected": "HOLD_BOOT_STAGE_RECEIPT_MISSING"
+    },
+    {
+      "id": "native-frame-but-no-interaction",
+      "endpointIdentityMatches": true,
+      "http200": true,
+      "freshContextAttempts": 3,
+      "declaredMinFreshContexts": 3,
+      "freshContextFailures": 0,
+      "firstOpenFailures": 0,
+      "bootStageReceiptsComplete": true,
+      "interactionReached": false,
+      "expected": "REJECT_PUBLIC_INTERACTION_NOT_REACHED"
+    },
+    {
+      "id": "declared-fresh-session-probe-passes",
+      "endpointIdentityMatches": true,
+      "http200": true,
+      "freshContextAttempts": 3,
+      "declaredMinFreshContexts": 3,
+      "freshContextFailures": 0,
+      "firstOpenFailures": 0,
+      "bootStageReceiptsComplete": true,
+      "interactionReached": true,
+      "expected": "FRESH_SESSION_STARTUP_PROBE_PASSED"
+    }
+  ]
+}
+
