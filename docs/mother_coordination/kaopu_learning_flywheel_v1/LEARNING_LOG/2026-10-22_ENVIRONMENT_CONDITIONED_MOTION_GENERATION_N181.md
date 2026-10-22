@@ -81,5 +81,5 @@ Delivery Receipt / verifier 候选字段：
 - 只阻止跨层升级表述；若任务只要求可靠播放或固定场景执行，前两层可以独立验收。
 - 本轮分类器历史回放 7/7 命中预期；这只证明状态语义可执行，不证明生产动作生成已经实现。
 - Teacher Candidate：`NO_NOVELTY`（本轮没有引入外部老师；新增来自用户纠正与当前生产代码对照）。
-- 路由状态：待定向 POST 至 #334；未有 Mother 回执前保持 `POSTED`，不得写 `ACKNOWLEDGED/IMPLEMENTED/GATE-RUN/ADOPTED/USER-ACCEPTED`。
+- 路由状态：已定向 POST 至 #334（comment `6332119497`）；未有 Mother 回执前保持 `POSTED`，不得写 `ACKNOWLEDGED/IMPLEMENTED/GATE-RUN/ADOPTED/USER-ACCEPTED`。
 
