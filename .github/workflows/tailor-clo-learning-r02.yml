@@ -1,0 +1,130 @@
+name: Tailor CLO learning R02 independent study
+on:
+  push:
+    branches:
+      - research/tailor-clo-learning-r02-20261022
+    paths:
+      - kaopu-tailor-workbench/clo-learning-r02/**
+      - .github/workflows/tailor-clo-learning-r02.yml
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: tailor-clo-learning-r02-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      npm_config_fetch_timeout: '45000'
+      npm_config_fetch_retries: '1'
+    defaults:
+      run:
+        shell: bash
+        working-directory: kaopu-tailor-workbench/clo-learning-r02
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench/clo-learning-r02
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Confirm frozen task and base identity
+        run: |
+          test "$GITHUB_REPOSITORY" = "haihao0307/guilin-dem-pipeline"
+          test "$GITHUB_REF_NAME" = "research/tailor-clo-learning-r02-20261022"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch origin 245f70211cb5103d8e951bd485c6f20d2f06879d --depth=1
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          anchor=json.loads(Path("TASK_ANCHOR.json").read_text())
+          assert anchor["taskId"]=="CLO-LEARNING-PILOT-R02-20261022"
+          assert anchor["baseSha"]=="245f70211cb5103d8e951bd485c6f20d2f06879d"
+          assert anchor["branch"]==os.environ["GITHUB_REF_NAME"]
+          PY
+      - name: Install pinned build dependencies
+        timeout-minutes: 4
+        run: npm ci --prefix build-tools --loglevel=http
+      - name: Retrieve and verify original sources and native person
+        run: python download-sources.py
+      - name: Prepare bounded operation around inherited solver
+        run: node prepare-worker.mjs
+      - name: Verify independent dimensions and protected source geometry
+        run: node tests/design-invariants.mjs
+      - name: Fresh solve of the initial length and opening edits
+        run: |
+          node run-solve.mjs 60 40
+          python - <<'PY'
+          import gzip,json
+          from pathlib import Path
+          result=json.loads(gzip.decompress(Path("evidence/solve-60-40.json.gz").read_bytes()))
+          assert result["taskId"]=="CLO-LEARNING-PILOT-R02-20261022"
+          assert result["deltaMm"]==60 and result["slitDeltaMm"]==40
+          assert result["solverThresholdsUnchanged"] is True
+          assert result["record"]["staticGate"]["passed"] is True,result["record"]["staticGate"].get("failures")
+          PY
+      - name: Build standalone HTML from this source revision
+        run: node build.mjs
+      - name: Prepare real acceptance browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/clo-browser-tools" --no-save --no-package-lock --ignore-scripts playwright@1.57.0
+          sudo apt-get install -y --no-install-recommends fonts-wqy-zenhei
+          node "$RUNNER_TEMP/clo-browser-tools/node_modules/playwright/cli.js" install chromium
+      - name: Verify standalone desktop and mobile viewport interactions
+        env:
+          CLO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/clo-browser-tools/node_modules/playwright/index.mjs
+        run: |
+          test -f tests/browser-smoke.mjs
+          node tests/browser-smoke.mjs --file dist/index.html --report evidence/local-browser-smoke.json
+      - name: Preserve standalone browser evidence before publication
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailor-clo-learning-r02-preview-${{ github.sha }}
+          path: kaopu-tailor-workbench/clo-learning-r02/evidence/local-browser-smoke*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Append immutable Pages snapshot and verify public bytes
+        id: publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash publish.sh
+      - name: Verify final public desktop and mobile viewport interactions
+        env:
+          CLO_PLAYWRIGHT_MODULE: ${{ runner.temp }}/clo-browser-tools/node_modules/playwright/index.mjs
+          CLO_PUBLIC_URL: ${{ steps.publish.outputs.public_url }}
+        run: node tests/browser-smoke.mjs --url "$CLO_PUBLIC_URL" --report evidence/public-browser-smoke.json
+      - name: Record publication gate without asserting user visual acceptance
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          report=json.loads(Path("evidence/public-browser-smoke.json").read_text())
+          p=Path("evidence/PUBLICATION_PROOF.json")
+          proof=json.loads(p.read_text())
+          assert report["sourceHead"]==os.environ["GITHUB_SHA"]
+          assert all(report.get(k) is True for k in ("passed","desktopPassed","mobileViewportPassed"))
+          assert proof["sourceHead"]==os.environ["GITHUB_SHA"]
+          assert proof["sourceModified"] and proof["interactive3D"] and proof["publicHttpsPassed"]
+          proof.update(browserPassed=True,shareAllowed=True,publicBrowserReport=report,visualAcceptance=False,productionReady=False)
+          p.write_text(json.dumps(proof,ensure_ascii=False,indent=2)+"\n")
+          print("PUBLICATION_READY "+proof["fixedURL"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-clo-learning-r02-${{ github.sha }}
+          path: |
+            kaopu-tailor-workbench/clo-learning-r02/evidence/
+            kaopu-tailor-workbench/clo-learning-r02/dist/index.html
+            kaopu-tailor-workbench/clo-learning-r02/dist/manifest.json
+          if-no-files-found: warn
+          retention-days: 14
+

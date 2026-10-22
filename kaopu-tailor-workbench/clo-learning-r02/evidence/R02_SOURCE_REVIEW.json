@@ -1,0 +1,323 @@
+{
+  "schema": "kaopu.clo-r02-independent-source-review/2",
+  "recordedAt": "2026-10-22T03:18:28.574739+00:00",
+  "reviewer": "source_audit",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "baseSha": "245f70211cb5103d8e951bd485c6f20d2f06879d",
+  "upstreamSha": "c84b16a0ae022dda9fe22c09df758fcb8095bc07",
+  "reviewedFileSHA256": {
+    "src/design-operation.mjs": "026ddfa130d945c9b029f8280479bf1b465f9373701e468489076977b1dd7428",
+    "src/worker-extension.txt": "82de56d8105dacee8f2a0f2cf2de4cf37ad0c116222bc0c82edbfb456e5ca5b6",
+    "src/worker-entry.mjs": "9fec50fe1eea8b2fa866226302cba4db51fc2e926bb562a25978060ab861192a",
+    "prepare-worker.mjs": "01c26416903b14be66f8250b3797ba0a4b91da5506a00c86967e4cbbdbc52bc3",
+    "src/app.mjs": "87a143b4b1821a4a2bf3791f2c6948e7a3fa9747b05a16444d057a82f30ad411",
+    "src/stage.mjs": "0cacb12bdd246d1c34290ee4683a7467ac8debe8dd1fda5a2107dd65a631a100",
+    "src/shell.html": "acd2d1f8b6564d35ccd08d1dc460e7b0ff019dd5f5a111ab5567e47b68236b1f",
+    "src/style.css": "dfb31d6807464ebaf5634bb1eeb34b2ffe5613d1f5c50acc7b221f1342962be7",
+    "build.mjs": "1f5a5774253dae0d804a26af8d868958b467fbe22db92b623124d3cc32a90fa5",
+    "publish.sh": "6b0299ef04472d2e1fb2fb2826212dccd727f4748f6d2c92e1f9f3df433c6459",
+    "workflow.yml": "a96776ea922bcc0fd20f4854adc168746d6ef8fdc14db09bab88962780ae9818",
+    "tests/design-invariants.mjs": "9d475a450a275841d678536e7b1fd0f097c1a93f35c671f606f808636db3926c",
+    "tests/browser-smoke.mjs": "2dbf08918397d999502f253b0b17657b8900cd1220156298d43ffdea19813684",
+    "tests/packet-integrity.mjs": "d28290720b525d23524ac9800775d21999df224e422d1891c91741dc626dd4a9",
+    "SOURCE_MANIFEST.json": "adcfca3a8f5dc4da20a702aa6a1e735dc3a216aecd1160ffbc1b29f9f8824ce1",
+    "vendor/SOURCE_PROVENANCE.json": "382d71386b64c822ef65e4dbf220bd34f754dfc574694fc825904747cb376368",
+    "TASK_ANCHOR.json": "e1dabccb0bf842cb7b101e12a668bb61a3403ac219c7c579b3cb3c718c8c3c5d",
+    "KNOWLEDGE_CONTRACT.json": "9480ff0607870b171b7ef37e773f4d64ee3053e642b5a097f792546087dbbb1a",
+    "README.zh-CN.md": "72bf60d4ed08ff203b03f15bab305628dd7156274bf85d7e1734c8985878d990",
+    "evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz": "41b0e87b0574a76d0a3577eaab5975a0132c8b4f0a657d344a2cc3fbc76d326d",
+    "evidence/fixtures/BROWSER_FAILED_LENGTH100_OPENINGM40.json.gz": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5",
+    "evidence/DEVELOPMENT_SOLVE_SUMMARY.json": "96861a9ca31535f6eb32f5a3bc53ccc6d74747555844a9764704ee7d99de6ec7",
+    "run-solve.mjs": "a6a7e60a52e5ea4cd5ee4d674f478fa883fe5547eb1b4ab6e9a395264ae1ee1b"
+  },
+  "sourceReviewPassed": true,
+  "blockingFindings": [],
+  "operation": {
+    "schema": "kaopu-s03-length-and-opening/2",
+    "lengthDeltaMm": [
+      -40,
+      100
+    ],
+    "openingDeltaMm": [
+      -40,
+      80
+    ],
+    "stepMm": 10,
+    "default": [
+      60,
+      40
+    ],
+    "scope": "Translate protected lower hem vertices and independently raise the existing triangular-opening tip. All x coordinates, waist, hip, dart geometry, placements, original panel/seam order and seam identities remain protected. Opening mouth remains 20 mm; its two free edges remain unsewn.",
+    "notAConstructionClaim": "No new centre-back seam, overlap vent, seam allowance or manufacturing method is introduced.",
+    "independentEvidence": "DESIGN_INVARIANTS.json",
+    "caseCount": 10,
+    "crossCaseCheckCount": 6,
+    "invalidRequestCount": 28
+  },
+  "worker": {
+    "originalKernelStagesAndThresholdsChanged": false,
+    "epochCapturedBeforeFirstAwait": true,
+    "epochCheckedAfterSourceHashAndBeforeCommit": true,
+    "buildAndBindingRemainLocalUntilFinalEpochCheck": true,
+    "bothParametersInOperationAndRequestDigest": true,
+    "requestIdentityEvidence": "REQUEST_IDENTITY_REVIEW.json",
+    "metadataChangesDoNotChangeMaterialGeometry": {
+      "observed": true,
+      "scope": "Same Node runtime and fixed input; request/revision metadata does not change material geometry. No cross-runtime byte or physical equivalence is claimed.",
+      "evidence": "REQUEST_IDENTITY_REVIEW.json"
+    }
+  },
+  "physicalEvidence": {
+    "nodeDevelopmentCases": 6,
+    "nodePassedCases": 3,
+    "nodeFailedCases": 3,
+    "default60_40NodeGatePassed": true,
+    "node60_60": {
+      "passed": false,
+      "clothIntersectionPairs": 1,
+      "fixture": "fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+      "sha256": "41b0e87b0574a76d0a3577eaab5975a0132c8b4f0a657d344a2cc3fbc76d326d",
+      "localizationEvidence": "FAILURE_60_60_INDEPENDENT_REVIEW.json"
+    },
+    "chromium143Captured": {
+      "sourceHead": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+      "runId": 39714823932,
+      "positive20_0Passed": true,
+      "negative100_m40Passed": false,
+      "negative100_m40Failures": [
+        "cloth-intersections"
+      ],
+      "negative100_m40ClothIntersectionPairs": 14,
+      "negative100_m40BodyIntersectingFaces": 0,
+      "negativeFixture": "fixtures/BROWSER_FAILED_LENGTH100_OPENINGM40.json.gz",
+      "negativeFixtureSHA256": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5"
+    },
+    "earlierChromium60_60": {
+      "sourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+      "runId": 39714177679,
+      "passed": true,
+      "clothIntersectionPairs": 0,
+      "meaning": "The Node failure is not a universal expected outcome for every JavaScript engine. Each actual material mesh and result retains its own binding and gate."
+    },
+    "parameterDomainCertified": false,
+    "crossRuntimePhysicalEquivalenceCertified": false,
+    "newSolverRunsByThisFinalReview": 0
+  },
+  "browserAcceptanceScript": {
+    "file": "tests/browser-smoke.mjs",
+    "syntaxPassed": true,
+    "executedLocally": false,
+    "mutations": "Real UI keyboard, clicks and sliders only; app snapshot is read-only.",
+    "requiredSequence": [
+      [
+        60,
+        40
+      ],
+      [
+        20,
+        0
+      ],
+      [
+        100,
+        -40
+      ],
+      [
+        30,
+        30
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "completeSolves": [
+      {
+        "parameters": [
+          20,
+          0
+        ],
+        "expectedGatePassed": true
+      },
+      {
+        "parameters": [
+          100,
+          -40
+        ],
+        "expectedGatePassed": false,
+        "requiredReason": "cloth-intersections"
+      }
+    ],
+    "cancelledCase": [
+      30,
+      30
+    ],
+    "cancellationMustRetainFailedCandidateAndFailureReason": true,
+    "dirtyIsolationForBothDimensions": true,
+    "desktopAnd390Px": true,
+    "sourceAndMaterialHashesBound": true,
+    "fileModeAllHttpBlockedAndCounted": true,
+    "perSolveTimeoutMs": 180000,
+    "totalTimeoutMs": 600000,
+    "visualAcceptance": false,
+    "latestDiagnosticRunOutcome": "Captured real positive and negative results; run6 then correctly failed the maximum-tension display assertion. Corrected display and packet-integrity test are pending the final full CI. Cancellation/reset/mobile/public sequence is not claimed passed for this source.",
+    "passiveWorkerObservation": true,
+    "allUIInteractionsRemainReal": true,
+    "universalLiveMaterialGolden": false
+  },
+  "packaging": {
+    "currentBuildBytesVerified": false,
+    "reason": "Final source build and exact HTML SHA will be supplied by the next CI; historical local HTML bytes are not carried forward as current proof.",
+    "replacementCallbackRetained": true,
+    "finalInlineRuntimeByteIdentityAndSyntaxGateRetained": true,
+    "workerSyntaxGateRetained": true,
+    "externalRequiredResourcesProhibited": true,
+    "R01TaskPathResidualFound": false,
+    "inheritedR01UpstreamAndPredecessorReferencesAreIntentional": true
+  },
+  "publication": {
+    "researchBranch": "research/tailor-clo-learning-r02-20261022",
+    "sourceDirectory": "kaopu-tailor-workbench/clo-learning-r02",
+    "workflowPath": ".github/workflows/tailor-clo-learning-r02.yml",
+    "immutableSnapshotPrefix": "kaopu-tailor-workbench/clo-learning/r02-",
+    "onlyTwoNewSnapshotFilesAllowed": true,
+    "existingSnapshotsCannotBeOverwritten": true,
+    "PagesSourceConfigUnchanged": true,
+    "testedBytesRequiredForPublicReadback": true,
+    "publicWaitBudgetSeconds": 1200,
+    "jobBudgetMinutes": 45,
+    "localEvidenceArchivedBeforePublish": true,
+    "fullArtifactUploadedEvenOnFailure": true,
+    "browserAndPublicByteGatesStillPending": true,
+    "concurrency": "tailor-clo-learning-r02-${{ github.sha }}",
+    "cancelInProgress": false,
+    "dependencyInstallTimeoutMinutes": 4,
+    "fixedPlaywrightVersion": "1.57.0",
+    "runnerExistingSharedLibraries": true,
+    "fontPackage": "fonts-wqy-zenhei",
+    "aptRepositoryUpdateNotRequired": true
+  },
+  "handoff": {
+    "sourceAndTestsCanFreeze": true,
+    "shareAllowed": false,
+    "userVisualAcceptance": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "pending": "Final source-bound file and public CI browser sequences, exact HTML identity, independent artifact review and root actual public-browser visual/interaction inspection."
+  },
+  "limits": [
+    "Source review and offline captured-packet checks do not replace the pending full CI or public browser acceptance.",
+    "Node development samples and Chromium samples are observed instances, not certification of the two-dimensional parameter domain.",
+    "Sub-picometre rest-coordinate differences and identical topology do not establish equivalence of nonlinear solver trajectories.",
+    "Final-pose static checks do not certify dynamic wear, calibrated physical material behavior or production readiness."
+  ],
+  "reviewedWorkingTreeBasedOn": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+  "finalSourceIdentity": "Pending normal source commit; CI must bind these reviewed file hashes to its exact GITHUB_SHA. This pre-commit review is not a publication proof.",
+  "history": {
+    "supersedes": {
+      "sourceSha": "5d6df47bf392677ee21541d56c0f2983684340a7",
+      "path": "kaopu-tailor-workbench/clo-learning-r02/evidence/R02_SOURCE_REVIEW.json",
+      "sha256": "61e39bc2fa20d01cb410364f6f16e7ca91dcd2de7bba09d7b78d91bac0f30726",
+      "status": "Historical initial review; old hashes, 60/60 browser-negative assumption and initial build bytes are superseded by this review."
+    }
+  },
+  "packetIntegrity": {
+    "helper": "tests/packet-integrity.mjs",
+    "helperSHA256": "d28290720b525d23524ac9800775d21999df224e422d1891c91741dc626dd4a9",
+    "sourceAndActualHashChecks": "Independently recomputes frozen source bytes, actual analytic JSON, canonical operation, recipe, inherited geometry projection and actual material mesh. Validates source controls, independent dimensions, six binding locations, frozen person, ordered seams, source-conforming mesh boundaries and valid oriented triangle incidence. Imports no production operation/compiler/hash functions.",
+    "liveNodeMaterialGoldenRemoved": true,
+    "arbitraryMaterialHashStringsAccepted": false,
+    "protectedPaperVerticesExact": true,
+    "curveMembershipToleranceMm": 1e-07,
+    "physicalThresholdsRelaxed": false,
+    "sourceCoordinatesQuantized": false,
+    "capturedPacketPairsChecked": 4,
+    "originalInputsUnchanged": true,
+    "tamperCases": [
+      {
+        "id": "stale-request",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY frozen-source-and-request: stale request packet",
+        "failedCheck": "frozen-source-and-request"
+      },
+      {
+        "id": "wrong-person-consistent-bindings",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY actual-packet-record-binding-chain-and-person: frozen native person",
+        "failedCheck": "actual-packet-record-binding-chain-and-person"
+      },
+      {
+        "id": "invented-material-hash-consistent-bindings",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY independently-recomputed-actual-hashes: recomputed materialSHA256 differs from binding",
+        "failedCheck": "independently-recomputed-actual-hashes"
+      },
+      {
+        "id": "protected-waist-point",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY protected-source-geometry-and-independent-dimensions: unexpected source material point wb_back:0",
+        "failedCheck": "protected-source-geometry-and-independent-dimensions"
+      },
+      {
+        "id": "rest-boundary-moved-with-recomputed-material-hash",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY source-conforming-material-triangulation-and-seams: line boundary point moved: -0.2 versus 0",
+        "failedCheck": "source-conforming-material-triangulation-and-seams"
+      },
+      {
+        "id": "duplicate-triangle-with-recomputed-material-hash",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY source-conforming-material-triangulation-and-seams: duplicate material triangle",
+        "failedCheck": "source-conforming-material-triangulation-and-seams"
+      },
+      {
+        "id": "stale-record-only-binding",
+        "rejected": true,
+        "error": "PACKET_INTEGRITY actual-packet-record-binding-chain-and-person: packet/record binding location 3",
+        "failedCheck": "actual-packet-record-binding-chain-and-person"
+      }
+    ],
+    "tamperPassed": true,
+    "physicalAcceptanceSeparate": true,
+    "scopeLimit": "Validates the actual source/material/result identity chain; does not certify equivalence of different physical trajectories or recalibrate fabric."
+  },
+  "runtimeDifferenceReview": {
+    "geometryHashesEqual": true,
+    "originalAnalyticVerticesArcsControlsPlacementsEqual": true,
+    "observedChangedMaterialPoints": 17,
+    "maxAbsObservedUVDeltaMm": 7.958078640513122e-13,
+    "changedPanels": [
+      "wb_back",
+      "wb_front"
+    ],
+    "orderedTrianglesBoundaryEdgesAndStitchPairsEqual": true,
+    "physicalResultsCanDiffer": true,
+    "minificationCauseProved": false,
+    "transcendentalRootCauseProved": false,
+    "decision": "Require exact actual byte hashes and source geometric relations, not a universal Node material byte golden. Preserve all observed runtime-specific PASS/FAIL results."
+  },
+  "displayFix": {
+    "problem": "Record field maxPrincipalStrain is the maximum absolute principal strain and may represent compression; a label for maximum tension must use the largest signed principal value.",
+    "currentImplementation": "100 * Math.max(0, stage.snapshot().candidate.strain.maximumPrincipal)",
+    "independent100_m40MaximumTensionPercent": 12.177961291895834,
+    "independent100_m40MaximumCompressionPercent": 12.326825526934716,
+    "independentMethod": "SVD of each actual UV-to-3D deformation gradient for all 7042 triangles in the captured Chromium result. No new solver run.",
+    "displayExpected": "12.18%",
+    "gateAndSolvedPositionsChanged": false,
+    "developmentSummaryCorrection": {
+      "file": "evidence/DEVELOPMENT_SOLVE_SUMMARY.json",
+      "oldField": "tensionPercent",
+      "newField": "maximumAbsolutePrincipalStrainPercent",
+      "meaningDocumented": true,
+      "sixOriginalValuesUnchanged": true,
+      "scope": "Field name and metricMeaning only; preserves original signed/absolute metric provenance and all six physical conclusions."
+    },
+    "nodeConsoleNamingCorrection": {
+      "file": "run-solve.mjs",
+      "changes": {
+        "tension": "maximumAbsolutePrincipalStrain",
+        "compression": "compressionPercent"
+      },
+      "scope": "Only final console RESULT field names; solver, recorded result fields and values unchanged."
+    }
+  }
+}

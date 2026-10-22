@@ -1,0 +1,194 @@
+{
+  "schema": "kaopu.clo-learning-contract/2",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "status": "isolated functional candidate; acceptance follows exact build evidence",
+  "scope": {
+    "sourcePreset": "S03",
+    "body": "same frozen native person and collider as R01",
+    "inputUnits": "mm",
+    "operation": "kaopu-s03-length-and-opening/2",
+    "naturalLanguageModelConnected": false,
+    "authorPrivateBackendReproduced": false
+  },
+  "operation": {
+    "command": "load-design-variant",
+    "parameters": {
+      "deltaMm": {
+        "minimum": -40,
+        "maximum": 100,
+        "multipleOf": 10,
+        "meaning": "front and back vertical paper length change relative to original"
+      },
+      "slitDeltaMm": {
+        "minimum": -40,
+        "maximum": 80,
+        "multipleOf": 10,
+        "meaning": "existing triangular opening depth change relative to original"
+      }
+    },
+    "defaults": {
+      "deltaMm": 60,
+      "slitDeltaMm": 40
+    },
+    "preconditions": [
+      "exact source bytes and recipe/geometry identity",
+      "finite parameter values on declared grid",
+      "same person geometry/topology/state/adapter identity",
+      "positive safe requestId and nonnegative safe expectedRevision"
+    ],
+    "protected": [
+      "waistband",
+      "darts",
+      "hip curves",
+      "all horizontal coordinates",
+      "panel placements",
+      "source seam IDs and endpoints",
+      "20 mm opening mouth",
+      "original body geometry"
+    ],
+    "resultBindings": [
+      "operationSHA256",
+      "materialSHA256",
+      "paperSHA256",
+      "person",
+      "requestId",
+      "expectedRevision"
+    ],
+    "independence": {
+      "lengthToOpeningDepth": 0,
+      "openingDepthToLength": 0,
+      "openingDepthToMouthWidth": 0
+    },
+    "dimensionalOracle": {
+      "totalAreaDeltaMm2": "(509.6023051049791 + 485.87235144796693) * deltaMm - 10 * slitDeltaMm",
+      "openingDepthMm": "86.10410305727925 + slitDeltaMm",
+      "frontPaperLengthMm": "630.5168433422547 + deltaMm"
+    }
+  },
+  "knowledge": [
+    {
+      "id": "K-R02-01",
+      "title": "把设计意图拆成相互独立的可验证尺寸",
+      "lesson": "裙长和开口深度采用独立参数；参数未提交时不修改已完成成衣。",
+      "implementation": [
+        "src/design-operation.mjs",
+        "src/app.mjs"
+      ],
+      "futureUse": "自然语言输入若接入，应先产生符合此类契约的明确操作，再执行真实几何和物理检查。"
+    },
+    {
+      "id": "K-R02-02",
+      "title": "局部编辑需要整体试穿复核",
+      "lesson": "局部纸样改版后，整体验证仍可能在未直接编辑的部位发现相交；保留腰部原始纸样控制点不能替代最终复核。",
+      "observedCounterexample": {
+        "deltaMm": 60,
+        "slitDeltaMm": 60,
+        "staticPassed": false,
+        "reason": "cloth-intersections",
+        "strictTrianglePairs": 1,
+        "pair": [
+          278,
+          6347
+        ],
+        "location": "skirt_back and wb_back near gathered seam s17",
+        "source": "evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+        "runtime": "Node 24 local development solve",
+        "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb"
+      },
+      "notEstablished": "并未证明相交完全由某一个三角划分或约束单独导致；该Node结果不代表相同参数在其他运行时的实际网格和通过状态。"
+    },
+    {
+      "id": "K-R02-03",
+      "title": "操作合法域与合格结果集合分开",
+      "lesson": "滑块允许提交不代表任意组合已获物理通过；失败候选保留供观察并明确拒绝晋级。",
+      "gates": [
+        "source and geometry invariants",
+        "complete original solver",
+        "original strain/body/seam thresholds",
+        "independent final triangle intersections"
+      ],
+      "browserObservedCounterexample": {
+        "sourceHead": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+        "runId": 39714823932,
+        "runtime": "Chromium 143.0.7499.4 in Ubuntu CI",
+        "deltaMm": 100,
+        "slitDeltaMm": -40,
+        "materialSHA256": "1124cf77ef30a248af7b2858d66859df7d8cc59042a482390d2b0c6e6c67c005",
+        "staticPassed": false,
+        "selfStrictTriangleIntersectionCount": 14,
+        "bodyIntersectingFaceCount": 0,
+        "reason": "cloth-intersections",
+        "notUniversal": "This is an observed complete result; future runs must perform their own unchanged checks.",
+        "source": "evidence/fixtures/BROWSER_FAILED_LENGTH100_OPENINGM40.json.gz",
+        "sourceSHA256": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5"
+      }
+    },
+    {
+      "id": "K-R02-04",
+      "title": "把证据绑到结果版本",
+      "lesson": "纸样、材料网格、人体、参数与request/revision一起核对；过期或取消的作业不得覆盖当前结果。",
+      "cancelPolicy": "terminate dedicated Worker, revoke URL, advance request identity, retain last complete result"
+    },
+    {
+      "id": "K-R02-05",
+      "title": "统一人物系统需要真实协议适配",
+      "lesson": "冻结人体显示包保证此案例同源，但不等于已接入SMPL24/28控制节点、动画蒙皮或SharedWorker权威状态。",
+      "futureDependencies": [
+        "canonical Human GitHub source and BUILD_MANIFEST",
+        "proportion revision",
+        "pose revision",
+        "body and collision identity mapping",
+        "coordinate and rig schema adapters"
+      ]
+    },
+    {
+      "id": "K-R02-06",
+      "title": "检查属于具体结果，不能只按参数复用",
+      "lesson": "相同尺寸可产生不同完整纸样和材料哈希。保存实际运行环境、原始纸样/网格与结果绑定；每份新网格必须独立执行相同检查。",
+      "observedEvidence": {
+        "sourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+        "browserRun": 39714177679,
+        "parameters": {
+          "deltaMm": 60,
+          "slitDeltaMm": 60
+        },
+        "node": {
+          "environment": "Node 24 local development container",
+          "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb",
+          "staticPassed": false,
+          "selfStrictTriangleIntersectionCount": 1
+        },
+        "browser": {
+          "environment": "Chromium 143.0.7499.4 in Ubuntu CI",
+          "materialSHA256": "0323bc3c6bf1a0b72a1a7c07a610badd8d6dae26bb9219fd8e993f29fe1085e3",
+          "staticPassed": true,
+          "selfStrictTriangleIntersectionCount": 0
+        }
+      },
+      "policy": [
+        "Do not reuse PASS or FAIL by parameter tuple alone.",
+        "Hash actual paper and actual material mesh; retain operation/person/request/revision bindings.",
+        "Retain runtime provenance in the acceptance record.",
+        "Do not change geometry precision or physical thresholds to make environments agree."
+      ],
+      "notEstablished": "同一拓扑及极小材料坐标差不证明最终物理状态等价；这里不认证跨浏览器数值一致性。"
+    }
+  ],
+  "boundaries": [
+    "original 20 mm triangular cutout, not a newly constructed production vent",
+    "no calibrated textile properties",
+    "no dynamic/continuous collision certification",
+    "no multibody or multilayer certification",
+    "S03 sizing preflight is not an assessed waist/hip fitting guarantee",
+    "recompute performance not optimized in R02",
+    "browser viewport checks do not establish real mobile-device performance",
+    "user visual acceptance remains pending"
+  ],
+  "sources": [
+    "https://x.com/irinatoxi/status/2112109267788423379",
+    "https://x.com/irinatoxi/status/2112265445193486494",
+    "https://developer.clo3d.com/scenario.html",
+    "https://github.com/haihao0307/guilin-dem-pipeline/tree/245f70211cb5103d8e951bd485c6f20d2f06879d/kaopu-tailor-workbench/clo-learning-r01"
+  ],
+  "integrationDecision": "Keep isolated until the user reviews the actual webpage; no merge into active branches."
+}

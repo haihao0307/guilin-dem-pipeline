@@ -1,0 +1,263 @@
+{
+  "schema": "clo-study-strain-display-review/1",
+  "reviewedAt": "2026-10-22T03:13:16.704872+00:00",
+  "reviewer": "asset_reuse independent read-only audit",
+  "scope": {
+    "solverExecuted": false,
+    "sourceModified": false,
+    "reviewMethod": "Recompute all 7042 principal engineering strains from actual packet UVmm and positionsMm using independent NumPy linear solve and SVD; compare exported stage function and recorded Chromium stage snapshot; inspect app display call order and gate use.",
+    "newBrowserRunPerformed": false
+  },
+  "inputs": {
+    "packet": "audit_clo_ci_r02/run6/evidence/local-browser-smoke.packet-4-done-request-2.json.gz",
+    "browserReport": "audit_clo_ci_r02/run6/evidence/local-browser-smoke.json",
+    "sourceHead": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+    "browser": {
+      "engine": "Chromium",
+      "headless": true,
+      "graphics": "ANGLE SwiftShader explicitly requested",
+      "version": "143.0.7499.4"
+    },
+    "parameters": {
+      "deltaMm": 100,
+      "slitDeltaMm": -40
+    },
+    "requestId": 2,
+    "binding": {
+      "paperSHA256": "fe641592f893527d04bfe69d830cb4b0b7133ea5409b00c9369baa9403b38e51",
+      "materialSHA256": "1124cf77ef30a248af7b2858d66859df7d8cc59042a482390d2b0c6e6c67c005",
+      "operationSHA256": "2ceb2aae09cdd0f2bcffefba68f764ea5bfe9a1c63443efa635c7ceb8ab9d1df",
+      "requestId": null,
+      "expectedRevision": null
+    },
+    "fileSHA256": {
+      "audit_clo_ci_r02/run6/evidence/local-browser-smoke.packet-4-done-request-2.json.gz": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5",
+      "audit_clo_ci_r02/run6/evidence/local-browser-smoke.json": "a9a5bb45f954b61f4d894df924ff74f97734335fdb27eb2ca3d027095d0cb9df",
+      "clo-pilot-r02/src/stage.mjs": "0cacb12bdd246d1c34290ee4683a7467ac8debe8dd1fda5a2107dd65a631a100",
+      "clo-pilot-r02/src/app.mjs": "87a143b4b1821a4a2bf3791f2c6948e7a3fa9747b05a16444d057a82f30ad411",
+      "clo-pilot-r02/src/worker-extension.txt": "82de56d8105dacee8f2a0f2cf2de4cf37ad0c116222bc0c82edbfb456e5ca5b6"
+    }
+  },
+  "independentMethod": {
+    "numpyVersion": "2.3.5",
+    "steps": [
+      "Dm columns are rest edge vectors (uv1-uv0, uv2-uv0), dimensions 2x2 in mm.",
+      "Ds columns are solved edge vectors (p1-p0, p2-p0), dimensions 3x2 in mm.",
+      "Solve Dm.T * F.T = Ds.T with numpy.linalg.solve.",
+      "Take singular values of F with numpy.linalg.svd, sorted descending.",
+      "Engineering principal strains = singular values minus 1; maximum positive tension = max(0,max major); compression magnitude=max(0,-min minor)."
+    ],
+    "independence": "Does not call stage analytic eigenvalue formula to produce the independent values. The exported stage routine is called separately solely for comparison. No transformed Float32 display positions are used.",
+    "dimensionalUnits": "dimensionless engineering strain; UV and solved positions are both mm",
+    "pressureOrStressComputed": false
+  },
+  "computed": {
+    "vertices": 3928,
+    "triangles": 7042,
+    "nonFiniteValues": 0,
+    "minimumAbsoluteRestDeterminantMm2": 26.48632188574849,
+    "maximumPrincipal": 0.12177961291895834,
+    "minimumPrincipal": -0.12326825526934715,
+    "maximumPositiveTensionPercent": 12.177961291895834,
+    "maximumCompressionPercent": 12.326825526934716,
+    "signedMaximumAbsolute": -0.12326825526934715,
+    "maximumTensionLocation": {
+      "panelId": "wb_front",
+      "localTriangle": 85,
+      "globalTriangle": 6868,
+      "vertices": [
+        68,
+        161,
+        160
+      ],
+      "globalVertices": [
+        3786,
+        3879,
+        3878
+      ],
+      "uvMm": [
+        [
+          231.95883798589605,
+          -56.267757415633014
+        ],
+        [
+          238.07930719456255,
+          -49.339554189895885
+        ],
+        [
+          222.07930719456255,
+          -49.339554189895885
+        ]
+      ],
+      "positionsMm": [
+        [
+          8.421742987582046,
+          1146.112598580517,
+          143.75324648816306
+        ],
+        [
+          13.467242610605892,
+          1152.7350714367956,
+          139.00092611053486
+        ],
+        [
+          -0.6813852514968487,
+          1151.8877764596741,
+          149.9189507609006
+        ]
+      ],
+      "major": 0.12177961291895834,
+      "minor": -0.08995881441377007
+    },
+    "maximumCompressionLocation": {
+      "panelId": "wb_front",
+      "localTriangle": 218,
+      "globalTriangle": 7001,
+      "vertices": [
+        160,
+        161,
+        176
+      ],
+      "globalVertices": [
+        3878,
+        3879,
+        3894
+      ],
+      "uvMm": [
+        [
+          222.07930719456255,
+          -49.339554189895885
+        ],
+        [
+          238.07930719456255,
+          -49.339554189895885
+        ],
+        [
+          230.07930719456255,
+          -35.483147729344864
+        ]
+      ],
+      "positionsMm": [
+        [
+          -0.6813852514968487,
+          1151.8877764596741,
+          149.9189507609006
+        ],
+        [
+          13.467242610605892,
+          1152.7350714367956,
+          139.00092611053486
+        ],
+        [
+          8.495137193115685,
+          1140.3614560012707,
+          145.4529282874918
+        ]
+      ],
+      "major": 0.11967078600915482,
+      "minor": -0.12326825526934715
+    },
+    "panels": [
+      {
+        "panelId": "skirt_back",
+        "vertices": 1781,
+        "triangles": 3235,
+        "maximumPrincipal": 0.12063163978383029,
+        "minimumPrincipal": -0.07750320315266612,
+        "maximumTensionPercent": 12.06316397838303,
+        "maximumCompressionPercent": 7.750320315266612
+      },
+      {
+        "panelId": "skirt_front",
+        "vertices": 1795,
+        "triangles": 3373,
+        "maximumPrincipal": 0.12084714830172683,
+        "minimumPrincipal": -0.12041437908757491,
+        "maximumTensionPercent": 12.084714830172683,
+        "maximumCompressionPercent": 12.04143790875749
+      },
+      {
+        "panelId": "wb_back",
+        "vertices": 142,
+        "triangles": 175,
+        "maximumPrincipal": 0.08052688271897357,
+        "minimumPrincipal": -0.03935321918248591,
+        "maximumTensionPercent": 8.052688271897356,
+        "maximumCompressionPercent": 3.935321918248591
+      },
+      {
+        "panelId": "wb_front",
+        "vertices": 210,
+        "triangles": 259,
+        "maximumPrincipal": 0.12177961291895834,
+        "minimumPrincipal": -0.12326825526934715,
+        "maximumTensionPercent": 12.177961291895834,
+        "maximumCompressionPercent": 12.326825526934716
+      }
+    ]
+  },
+  "stageComparison": {
+    "node": "v24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "maximumAbsoluteDifferenceAllTriangles": {
+      "major": 6.661338147750939e-16,
+      "minor": 6.661338147750939e-16,
+      "signedMax": 6.661338147750939e-16
+    },
+    "recordedChromiumSnapshot": {
+      "minimumPrincipal": -0.12326825526934715,
+      "maximumPrincipal": 0.12177961291895834,
+      "signedMaximumAbsolute": -0.12326825526934715,
+      "p95Absolute": 0.09031690183405172,
+      "trianglesMeasured": 7042,
+      "units": "engineering strain; dimensionless",
+      "pressure": false
+    },
+    "independentMinusRecordedSnapshot": {
+      "maximumPrincipal": 0.0,
+      "minimumPrincipal": 0.0,
+      "signedMaximumAbsolute": 0.0
+    },
+    "interpretation": "Independent SVD and stage agree to floating-point evaluation precision on this actual mesh; identical two-decimal percent display. This is not a cross-runtime solver equivalence claim."
+  },
+  "displayReview": {
+    "oldInheritedMetricName": "record.metrics.maxPrincipalStrain",
+    "oldInheritedMetricValue": 0.12326825526934415,
+    "oldMetricEqualsMaximumAbsoluteCompressionToNumericalPrecision": true,
+    "oldDisplayedTensionLabel": "12.33%",
+    "newFormula": "(100*Math.max(0,stage.snapshot().candidate.strain.maximumPrincipal)).toFixed(2)+'%'",
+    "expectedTensionDisplay": "12.18%",
+    "compressionTooltipDisplay": "12.33%",
+    "labelMeaning": "Largest nonnegative principal engineering strain, not largest absolute principal strain and not pressure.",
+    "callOrderVerified": "showResult sets candidate geometry before metrics(result) reads candidate strain; dirty inputs retain the completed candidate; display does not read pending worker geometry.",
+    "zeroClampMeaning": "If every principal strain is negative, positive tension is displayed as 0.00%; negative principal values remain available for compression diagnostics."
+  },
+  "unchangedGateAndResult": {
+    "reviewedDisplayFunctionWrites": "DOM textContent and title only; no assignment to result, spec, positionsMm, record.metrics, staticGate, or solver.",
+    "gateOutcomeSource": "UI review/outcome continues to use result.record.staticGate; corrected tension number does not decide PASS.",
+    "recordedStaticGatePassed": false,
+    "recordedFailures": [
+      "cloth-intersections"
+    ],
+    "recordedStrictSelfIntersectionPairs": 14,
+    "recordedBodyIntersectingFaceCount": 0,
+    "recordedThresholds": {
+      "maximumTensionPercent": 15,
+      "maximumCompressionPercent": 15,
+      "maximumNeedleGapMm": 0.25,
+      "minimumBodyDistanceMm": -0.05,
+      "maximumWholeSeamSeparationMm": 0.25
+    },
+    "recordedMaximumCompressionPercent": 12.326825526933094,
+    "passPromoted": false,
+    "sourceScopeLimit": "This review verifies the exact present display formula and its use of the immutable captured evidence, not an independent byte-for-byte audit of all prior builds. No physical check or solver rerun was performed."
+  },
+  "conclusion": {
+    "displayFixCorrectForActualFailurePacket": true,
+    "expectedMaximumTensionDisplay": "12.18%",
+    "maximumCompressionDisplay": "12.33%",
+    "stillFailedFor": "14 actual strict cloth intersection pairs",
+    "remainingValidation": "The updated compiled web build still requires its normal browser smoke run; this report validates mathematics and current source but does not claim that a new browser run already passed."
+  },
+  "inputFilesUnchangedDuringReview": true
+}
