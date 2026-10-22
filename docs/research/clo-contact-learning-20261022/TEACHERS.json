@@ -1,0 +1,112 @@
+{
+  "schema": "kaopu.cloth-contact-teachers/1",
+  "accessDate": "2026-10-22",
+  "scope": "Read-only method research. No solver replacement, response activation, garment repair, or deployment is established by this file.",
+  "sourcePolicy": "English primary papers, official author projects and official code. No Chinese website used as evidence.",
+  "localCodeBinding": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "revision": "c84b16a0ae022dda9fe22c09df758fcb8095bc07",
+    "path": "kaopu-tailor-workbench/pattern-batch/r02/backend/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs",
+    "sha256": "087794f143455f4f0419e9c74cdb25f3ec13eb3ca6eeeb4dfe755e94e19c61a2",
+    "bytes": 221223,
+    "localBytesMatchManifest": true,
+    "observedFacts": [
+      "startLegacySolve creates GarmentLab2 and explicitly sets lab.selfCollisionEnabled = false.",
+      "SelfContact class existence does not establish active self-contact response in this path.",
+      "seam-relax/refine, seam-finish/joint, release and final seam closure also modify coordinates.",
+      "Completion runs strictIntersectionAudit and records continuousCollision:false and runtimeSelfContact:false."
+    ],
+    "publicSourceURL": "https://github.com/haihao0307/guilin-dem-pipeline/blob/c84b16a0ae022dda9fe22c09df758fcb8095bc07/kaopu-tailor-workbench/pattern-batch/r02/backend/native/kaopu-tailor-workbench/catalogue/native-adapter.mjs"
+  },
+  "teachers": [
+    {
+      "id": "bridson-2002-contact",
+      "title": "Robust Treatment of Collisions, Contact and Friction for Cloth Animation",
+      "authors": ["Robert Bridson", "Ronald Fedkiw", "John Anderson"],
+      "publicationYear": 2002,
+      "primaryURL": "https://graphics.stanford.edu/papers/cloth-sig02/cloth.pdf",
+      "projectURL": "https://graphics.stanford.edu/papers/cloth-sig02/",
+      "facts": [
+        "把材料运动候选与碰撞处理分开，结合近接触响应和严格残余碰撞处理。",
+        "接触覆盖顶点—面及边—边；直接位置修正也可能产生相交。"
+      ],
+      "preconditions": ["防相交推导从无相交旧状态开始，约束旧状态到候选的运动。"],
+      "costsAndLimits": [
+        "需要运动状态、空间检索、响应与重检；不是末帧检测器。",
+        "此次未核验可直接用于网页的作者软件包或其许可；论文不等于软件授权。"
+      ],
+      "inferenceForR02": "可借模块分工；接缝和整理阶段的位移同样需要保护。尚未证明R02初态满足前提。",
+      "relevantSections": ["1 Introduction", "4 Limiting the Strain and Strain Rate", "7 Contact and Collision Response"],
+      "access": {"method": "web search and open", "projectRead": true, "paperRead": true}
+    },
+    {
+      "id": "pixar-dynamic-deformables-2022",
+      "title": "Dynamic Deformables: Implementation and Production Practicalities (Now With Code!)",
+      "authors": ["Theodore Kim", "David Eberle"],
+      "publicationYear": 2022,
+      "documentBuildDate": "2024-04-25",
+      "primaryURL": "https://research.pixar.com/docs/2022.SiggraphCourses.KE.pdf",
+      "facts": [
+        "CCD响应可能引入新碰撞；课程说明增量重检及GIA辅助恢复。",
+        "GIA利用交线和网格连通性；较小区域假设有例外，非流形不支持。"
+      ],
+      "preconditions": ["交线不一定闭合；恢复方向需要额外信息，不能只看最近距离。"],
+      "costsAndLimits": [
+        "预防与恢复需要协调；其制作目标优先稳定、速度和艺术控制，不是制衣物理精度认证。",
+        "未复制课程代码；未进行其代码或依赖许可审查。"
+      ],
+      "inferenceForR02": "先区分初态纠缠与后来穿越；开口、裁片边界和缝合等价组需要单独验证。",
+      "relevantPages": [171, 172, 173, 174, 175, 176, 177, 178],
+      "access": {
+        "webSearchIndexedRelevantPage": 176,
+        "webOpen": "Failed: tool rejected 18,722,118-byte document as too large.",
+        "verifiedRead": "An auto-review-approved, read-only HTTPS request downloaded the official PDF into memory; PyMuPDF extracted pages 1–4 and 171–179. No repository file was changed by this read.",
+        "pdfPageCount": 259,
+        "old2003SourceAttempts": [
+          {"url": "https://graphics.pixar.com/library/UntanglingCloth/", "result": "Redirected to https://www.pixar.com/technology-libraries"},
+          {"url": "https://graphics.pixar.com/library/UntanglingCloth/paper.pdf", "result": "Redirected to https://www.pixar.com/technology-libraries"}
+        ],
+        "old2003FullPaperRead": false
+      }
+    },
+    {
+      "id": "codimensional-ipc-2021",
+      "title": "Codimensional Incremental Potential Contact",
+      "authors": ["Minchen Li", "Danny M. Kaufman", "Chenfanfu Jiang"],
+      "publicationYear": 2021,
+      "primaryURL": "https://ipc-sim.github.io/C-IPC/file/paper_small.pdf",
+      "projectURL": "https://ipc-sim.github.io/C-IPC/",
+      "codeURL": "https://github.com/ipc-sim/Codim-IPC",
+      "facts": [
+        "接触、厚度与应变限制联合求解，Newton迭代中以CCD过滤位移。"
+      ],
+      "preconditions": ["要求无穿插初态；强制的不可行边界轨迹会阻止求解推进。"],
+      "costsAndLimits": [
+        "官方代码声明Apache-2.0；本地构建涉及Python/C++、pybind11、Boost、Eigen、GMP等，未完成依赖许可审查或网页移植。",
+        "模拟时间步长不等于计算速度；论文算例性能不能外推为本网页的实时性能。"
+      ],
+      "inferenceForR02": "作为质量参考和后续离线对照；不把整套替换视为当前最小修复，也不承诺修好已纠缠结果。",
+      "relevantSections": ["3", "5 Modeling Thickness", "7 Conclusion"],
+      "access": {
+        "method": "web search and open",
+        "projectRead": true,
+        "smallPaperRead": true,
+        "repositoryReadmeAndDeclaredLicenseRead": true,
+        "fullSizePaperAttempt": {"url": "https://ipc-sim.github.io/C-IPC/file/paper.pdf", "result": "Failed: tool rejected 39,269,642-byte document as too large; used official paper_small.pdf instead."},
+        "codeExecutionPerformed": false
+      }
+    }
+  ],
+  "recommendedExperiment": {
+    "status": "Proposal from literature and code audit; not an experiment result.",
+    "question": "At which observed assembly or correction stage do intersections first appear?",
+    "method": "Replay exact retained material data; take read-only snapshots after initial placement and each sewing/refinement/closure stage; audit coordinates using that stage's actual seam-group mapping.",
+    "record": ["positions SHA256", "actual material identity", "stage identity", "seam-group identity", "intersecting face pairs", "panel IDs", "strain", "whole-seam gaps", "body intersections"],
+    "limits": [
+      "The earliest failing sample is not an exact time of impact.",
+      "The same parameters in a different runtime do not establish identical material data.",
+      "Keep original physical gates and independent final audit; a corrective method cannot certify itself.",
+      "No-intersection alone establishes neither calibrated fabric, fit, dynamic wear, nor production readiness."
+    ]
+  }
+}

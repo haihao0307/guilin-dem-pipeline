@@ -1,0 +1,73 @@
+name: Tailor contact learning R01 evidence
+on:
+  push:
+    branches:
+      - research/tailor-contact-learning-r01-20261022
+    paths:
+      - docs/research/clo-contact-learning-20261022/scripts/**
+      - .github/workflows/tailor-contact-learning-r01.yml
+permissions:
+  contents: read
+concurrency:
+  group: tailor-contact-learning-r01-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  frozen-material-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-tailor-workbench/clo-learning-r02
+            docs/handoffs/clo-learning-r02-20261022/acceptance/public
+            docs/research/clo-contact-learning-20261022
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify isolated task and frozen source identity
+        run: |
+          test "$GITHUB_REPOSITORY" = haihao0307/guilin-dem-pipeline
+          test "$GITHUB_REF_NAME" = research/tailor-contact-learning-r01-20261022
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          a=json.loads(Path('docs/research/clo-contact-learning-20261022/TASK_ANCHOR.json').read_text())
+          assert a['sourceAppSha']=='c5c99dd6e7fb2124435653843c618bc6a4e4c47b'
+          assert a['branch']==os.environ['GITHUB_REF_NAME']
+          PY
+      - name: Install fixed independent audit dependency
+        run: python -m pip install -r docs/research/clo-contact-learning-20261022/scripts/requirements.txt
+      - name: Retrieve exact original assets and prepare unchanged worker
+        run: |
+          python kaopu-tailor-workbench/clo-learning-r02/download-sources.py
+          node kaopu-tailor-workbench/clo-learning-r02/prepare-worker.mjs
+      - name: Replay one frozen browser material with read-only checkpoints
+        run: node docs/research/clo-contact-learning-20261022/scripts/trace_frozen_material.mjs
+      - name: Re-audit saved checkpoints without another solve
+        run: node docs/research/clo-contact-learning-20261022/scripts/verify_checkpoints.mjs
+      - name: Independently verify original final intersections
+        run: python docs/research/clo-contact-learning-20261022/scripts/audit_contacts.py
+      - name: Build evidence-bound diagnostic incidents
+        run: python docs/research/clo-contact-learning-20261022/scripts/build_diagnosis.py
+      - name: Preserve original application source
+        run: git diff --exit-code -- kaopu-tailor-workbench/clo-learning-r02
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tailor-contact-learning-r01-${{ github.sha }}
+          path: |
+            contact-learning-output/clo-contact-learning-20261022/TRACE_REVIEW.json
+            contact-learning-output/clo-contact-learning-20261022/CHECKPOINT_READBACK_REVIEW.json
+            contact-learning-output/clo-contact-learning-20261022/CHECKPOINTS.json.gz
+            contact-learning-output/clo-contact-learning-20261022/REPLAY_DONE.json.gz
+            contact-learning-output/clo-contact-learning-20261022/CONTACT_AUDIT.json
+            contact-learning-output/clo-contact-learning-20261022/DIAGNOSIS.json
+            contact-learning-output/clo-contact-learning-20261022/TRACE_FAILURE.json
+          if-no-files-found: error
+          retention-days: 14
