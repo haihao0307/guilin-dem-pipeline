@@ -1,0 +1,12 @@
+{
+  "schema": "kaopu.trace-startup-check-review/1",
+  "originalFailureFile": "TRACE_FAILURE.json",
+  "originalFailureSHA256": "65c9d63edd3fdf5ba5a9b020912981826ea8b7c6733f480e6458690c585d9c50",
+  "failure": "FROZEN_OPERATION_HASH",
+  "phase": "input identity validation before run command and before lab creation",
+  "completedPhysicalSolvesBeforeFailure": 0,
+  "explanation": "The first research loader incorrectly hashed insertion-order JSON for the operation. Production design-operation.mjs uses stablePatternJSON, which recursively sorts object keys. The research loader was corrected to apply that same canonical ordering. Source data, solver and gates were unchanged.",
+  "subsequentCompletedPhysicalSolves": 1,
+  "preservedOriginalFailure": true,
+  "successfulReport": "TRACE_REVIEW.json"
+}

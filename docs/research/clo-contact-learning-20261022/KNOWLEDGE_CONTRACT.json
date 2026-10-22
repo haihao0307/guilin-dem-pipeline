@@ -1,0 +1,137 @@
+{
+  "schema": "kaopu.cloth-contact-learning-contract/1",
+  "taskId": "CLO-CONTACT-LEARNING-R01-20261022",
+  "status": "research knowledge and executable offline diagnosis; not integrated into product runtime",
+  "implemented": [
+    "pinned-input stage recorder in isolated worker copy",
+    "read-only snapshot re-audit",
+    "independent longdouble witnesses for historical final intersections",
+    "evidence-bound incident extractor"
+  ],
+  "notImplemented": [
+    "new cloth self-contact response",
+    "continuous collision prevention",
+    "automatic untangling",
+    "human runtime protocol adapter",
+    "new webpage"
+  ],
+  "observedExecution": {
+    "applicationCommit": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+    "upstreamCommit": "c84b16a0ae022dda9fe22c09df758fcb8095bc07",
+    "materialSHA256": "1124cf77ef30a248af7b2858d66859df7d8cc59042a482390d2b0c6e6c67c005",
+    "capabilities": {
+      "bodyContact": "sampled body SDF and surface projections",
+      "finalDiscreteTriangleAudit": true,
+      "runtimeSelfContact": false,
+      "continuousCollisionCertified": false,
+      "untanglingCertified": false
+    },
+    "currentFinalDecision": "FAIL: cloth-intersections",
+    "referenceFinalPairs": 14,
+    "stageSampleCount": 11,
+    "firstRecordedNonzeroStage": "after-waist",
+    "allSavedStatesReauditPassed": true,
+    "localReplayEqualsOriginalPublicPositions": true,
+    "equalityScope": "One Node replay of the same actual material mesh only; future CI records its own result.",
+    "sourceEvidence": [
+      "evidence/local/TRACE_REVIEW.json",
+      "evidence/local/CONTACT_AUDIT.json",
+      "evidence/local/CHECKPOINT_READBACK_REVIEW.json",
+      "evidence/CI_REVIEW.json",
+      "evidence/ci/DIAGNOSIS.json"
+    ],
+    "ciRun": 39748404415,
+    "ciCompletedSuccessfully": true,
+    "ciRuntime": {
+      "node": "v24.22.0",
+      "v8": "13.6.233.17-node.57",
+      "platform": "linux",
+      "arch": "x64",
+      "osRelease": "7.0.0-1017-azure"
+    },
+    "ciReplayEqualsOriginalPublicPositions": true,
+    "finalReferencePairFirstObservedStages": {
+      "after-joint": 7,
+      "after-release": 4,
+      "after-refine": 3
+    }
+  },
+  "knowledge": [
+    {
+      "id": "CONTACT-K01",
+      "rule": "Declare detection, response, continuous checks and recovery separately.",
+      "reason": "Existing SelfContact class is disabled in the executed R02 path; terminal audit still runs.",
+      "adoption": "Capability fields in the research diagnosis; product capability API remains proposed."
+    },
+    {
+      "id": "CONTACT-K02",
+      "rule": "Associate every candidate displacement stage with its contact coverage.",
+      "reason": "Sewing/global refinement bypass ordinary step; selfCollisionEnabled changes the step path and does not protect all stages.",
+      "adoption": "Save 11 sampled assembly checkpoints; any future response must declare its stage coverage."
+    },
+    {
+      "id": "CONTACT-K03",
+      "rule": "Freeze actual material and person inputs before algorithm comparisons.",
+      "reason": "Same dimension parameters previously produced different material hashes; this experiment reuses actual Chromium paper packet.",
+      "adoption": "Exact byte digests plus paper/material/operation/person/request checks in loader."
+    },
+    {
+      "id": "CONTACT-K04",
+      "rule": "Do not exclude a whole triangle pair merely for shared material or seam vertices.",
+      "reason": "Four original final pairs share solver groups but intersect beyond the shared point.",
+      "adoption": "Preserve original strict audit and save independent geometric witnesses."
+    },
+    {
+      "id": "CONTACT-K05",
+      "rule": "Keep stage and seam association separate from a verified cause.",
+      "reason": "First sampled positive state and nearest seam cannot identify exact event or unique cause.",
+      "adoption": "Incidents expose observations and rootCause.status=not-established."
+    },
+    {
+      "id": "CONTACT-K06",
+      "rule": "Separate feasible-start prevention from recovery of pre-existing intersections.",
+      "reason": "Bridson and C-IPC methods have feasible-start assumptions; Pixar recovery uses additional topology/contour information.",
+      "adoption": "Prioritize bounded transition experiment; no automatic repair claim."
+    },
+    {
+      "id": "CONTACT-K07",
+      "rule": "A new repair must pass all original gates on its own complete result.",
+      "reason": "Reducing intersection count can conflict with material strain, body or full-seam constraints.",
+      "adoption": "CI checks truthful result/gate agreement and unchanged thresholds, not a forced expected PASS."
+    },
+    {
+      "id": "CONTACT-K08",
+      "rule": "Clothing consumes a versioned final human surface, not arbitrary rig indices.",
+      "reason": "Mother-context design, inspected human main, and frozen R02 person have different concrete rig representations.",
+      "adoption": "Proposed immutable surface snapshot and invalidation rules in HUMAN_INTERFACE_REVIEW.json; not a runtime connection."
+    }
+  ],
+  "nextBoundedExperiment": {
+    "subject": "frozen waist-sewing transition",
+    "inputs": "same exact material, person, previous and candidate positions",
+    "investigate": [
+      "vertex-face and edge-edge swept contact",
+      "candidate displacement restriction and recheck",
+      "constraint compatibility at original gates"
+    ],
+    "report": [
+      "unresolved contacts",
+      "seam/strain/body changes",
+      "coverage of coordinate-changing stages",
+      "runtime and actual wall costs"
+    ],
+    "limits": [
+      "Stage boundary samples are insufficient to locate exact first impact.",
+      "Existing tangled states require a separately evaluated recovery strategy.",
+      "A point-face-only or nearest-surface-push implementation must not claim universal cloth safety."
+    ]
+  },
+  "promotion": {
+    "integrated": false,
+    "visualAccepted": false,
+    "physicalRepairValidated": false,
+    "dynamicWearValidated": false,
+    "productionReady": false
+  },
+  "externalSources": "TEACHERS.json"
+}
