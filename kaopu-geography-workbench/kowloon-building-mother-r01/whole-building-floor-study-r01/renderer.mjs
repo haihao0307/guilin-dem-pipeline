@@ -1,3 +1,5 @@
+import {buildEvidenceStairRailGLSL} from './stair-ray-rescue.mjs';
+import {ASSEMBLY_ENTRY_GUARD_GLSL} from './ray-entry-guard.mjs';
 import {packStructuralShadow,BOUNDED_SHADOW_GLSL,COLOR_CONTROL_GLSL} from './bounded-structural-shadow.mjs';
 /** Original whole-building field compositor. A fullscreen triangle launches rays;
  * source patches and repeated floor functions never become object meshes.
@@ -45,9 +47,9 @@ function sourceShader(s){return HEAD+buildCaseGLSL(s,{candidateHook:'floorAccept
 uniform vec3 uSourceMin,uSourceMax;
 void main(){previous();if(!rayActive())return;vec3 rd=rayDirection();float lo,hi;if(!interval(uSourceMin,uSourceMax,uEye,rd,outHit.x,lo,hi)||!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;if(caseTraceRay(uEye+rd*lo,rd,t,h,visits)&&t+lo<=hi){t+=lo;h.local=uEye+rd*t;accept(t,h,caseNormalForId(h.objectId),-1.);}}
 `;}
-function assemblyShader(s){return HEAD+applyFloorFinishDispatch(buildBoundedAssemblyGLSL(s))+CAMERA+REDUCE+`
+function assemblyShader(s){return HEAD+applyFloorFinishDispatch(buildBoundedAssemblyGLSL(s))+CAMERA+REDUCE+ASSEMBLY_ENTRY_GUARD_GLSL+`
 uniform int uInstanceCount;uniform vec4 uInstances[32];uniform vec3 uArchetypeMin,uArchetypeMax;
-void main(){previous();if(!rayActive())return;vec3 rd=rayDirection();for(int i=0;i<uInstanceCount;i++){floorPrimaryCandidateInstance=uRayMode==0?i:-1;vec3 origin=uInstances[i].xyz,ro=uEye-origin;float lo,hi;if(!interval(uArchetypeMin,uArchetypeMax,ro,rd,outHit.x,lo,hi)||!clipInterval(uEye,rd,lo,hi))continue;float t;FieldHit h;int visits;if(caseTraceRayBounded(ro+rd*lo,rd,hi-lo+8.*1.1920929e-7*(1.+abs(hi)+abs(lo)),t,h,visits)&&t+lo<=hi){t+=lo;h.objectId+=uInstances[i].w;accept(t,h,fieldRayNormal,uInstances[i].w);}}}
+void main(){previous();if(!rayActive())return;vec3 rd=rayDirection();for(int i=0;i<uInstanceCount;i++){floorPrimaryCandidateInstance=uRayMode==0?i:-1;vec3 origin=uInstances[i].xyz,ro=uEye-origin;float boundsLo,boundsHi,clipLo=0.,clipHi=outHit.x;if(!interval(uArchetypeMin,uArchetypeMax,ro,rd,outHit.x,boundsLo,boundsHi)||!clipInterval(uEye,rd,clipLo,clipHi))continue;float hi=min(boundsHi,clipHi);if(hi<max(boundsLo,clipLo))continue;float start=assemblyEntryStart(uArchetypeMin,uArchetypeMax,ro,rd,uEye,origin,boundsLo,clipLo);float t;FieldHit h;int visits;if(caseTraceRayBounded(ro+rd*start,rd,hi-start+8.*1.1920929e-7*(1.+abs(hi)+abs(start)),t,h,visits)&&t+start>=clipLo&&t+start<=hi){t+=start;h.objectId+=uInstances[i].w;accept(t,h,fieldRayNormal,uInstances[i].w);}}}
 `;}
 
 function apertureShader(apertures){return HEAD+buildPrimaryTileAperturesGLSL(apertures)+CAMERA+REDUCE+`
@@ -71,7 +73,7 @@ void main(){ivec2 px=ivec2(gl_FragCoord.xy);vec4 hit=texelFetch(uHit,px,0);outOr
 }
 `;}
 
-const RAIL=HEAD+`struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};\n`+buildStairRailGLSL()+CAMERA+REDUCE+`
+const RAIL=HEAD+`struct FieldHit{float distance;float objectId;float materialRole;vec3 local;};\n`+buildEvidenceStairRailGLSL()+CAMERA+REDUCE+`
 uniform int uInstanceCount;uniform vec4 uInstances[32];uniform vec3 uRailX,uRailZ;
 vec3 railDirectionLocal(vec3 p){return vec3(dot(p,uRailX),p.y,dot(p,uRailZ));}
 void main(){previous();if(!rayActive())return;vec3 rd=rayDirection(),d=railDirectionLocal(rd);for(int i=0;i<uInstanceCount;i++){vec3 ro=railDirectionLocal(uEye-uInstances[i].xyz);float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))continue;float t;vec3 p;int result=wholeRailTrace(ro+d*lo,d,hi-lo,t,p);t+=lo;if(result==1){vec3 n=wholeRailNormal(p);FieldHit h=FieldHit(0.,30000.+uInstances[i].w,3.,p);accept(t,h,uRailX*n.x+vec3(0,n.y,0)+uRailZ*n.z,uInstances[i].w);}else if(result<0&&t<outHit.x){outHit=vec4(t,0.,0.,3.);}}}

@@ -14,6 +14,8 @@ async def main():
     response=await page.request.get(base+path);assert response.status==200;actual=hashlib.sha256(await response.body()).hexdigest();assert actual==sha,path;report['runtimeHashes'][path]=actual
    controls=await(await page.request.get(base+'evidence/floor-stair-connection-r01/guards.json')).json();await page.goto(base+'tests/floor-stair-probe.html');await page.wait_for_function('typeof probe?.setup==="function"');report['setup']=await page.evaluate('probe.setup()');print('STAIR REAL COMPILE/LINK',flush=True);report['cold']=await asyncio.wait_for(page.evaluate('probe.draw({width:32})'),90);save();print('COLD',report['cold']['stats']['wallMs'],flush=True)
    await page.evaluate('Object.assign(probe.renderer.options,{cut:true,clipNormal:[0,0,-1],clipOffset:-2.85})');v=await capture('stairs-two-level-cutaway',clip=True);assert all(v['ids'].get(str(i),0)>15 for i in [2950,2951,2952,2900,30000]),'Both flights, landing, rail and upper plate must be visible'
+   for witness in v['witnesses']:
+    assert witness['hit']['objectId']==2900 and witness['hit']['normal']==[0,1,0],witness
    for name,mode,shadow in [('diagnostic-identity',1,False),('diagnostic-normal',2,False),('diagnostic-no-shadow',0,False)]:await capture(name,clip=True,diagnostic=mode,shadow=shadow)
    report['walk']={}
    for t,name in[(.30,'lower-first-flight'),(.54,'midlanding-turn'),(.94,'upper-receiver')]:
