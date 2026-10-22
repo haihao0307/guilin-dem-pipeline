@@ -4,7 +4,7 @@ const add=(a,b)=>a.map((x,i)=>x+b[i]),mul=(a,s)=>a.map(x=>x*s),unit=a=>mul(a,1/M
 export async function runGlassEndpointProbe(s){
  await s.pause();const r=s.renderer,g=r.gl,original=s.getIntegration().facade.components.find(c=>c.primitives.some(p=>p.objectId===5611));
  const p=structuredClone(original.primitives.find(p=>p.objectId===5611)),spec={...structuredClone(original),primitives:[p]};
- const head='#version 300 es\nprecision highp float;precision highp int;\nstruct FieldHit{float distance;float objectId;float materialRole;vec3 local;};\n';
+ const head='#version 300 es\nprecision highp float;precision highp int;\n';
  const tail='\nuniform vec3 qaOrigin;uniform vec3 qaDirection;layout(location=0) out vec4 result;layout(location=1) out vec4 normal;void main(){float t;FieldHit h;int visits;bool found=apertureTraceRayFiltered(qaOrigin,normalize(qaDirection),false,0.0,t,h,visits);result=vec4(t,h.objectId,h.materialRole,found?1.:0.);normal=vec4(fieldRayNormal,0.);}\n';
  const base=buildAperturesGLSL([spec]),programs=[r.compile('qa-original-cap',head+base+tail),r.compile('qa-bounded-cap',head+withBoundedGlassEndpointVerification(base)+tail)];
  const fbo=g.createFramebuffer(),textures=[];g.bindFramebuffer(g.FRAMEBUFFER,fbo);
@@ -25,6 +25,7 @@ export async function runGlassEndpointProbe(s){
   const duplicate=structuredClone(spec);duplicate.primitives[0].objectId+=8;duplicate.primitives[0].instanceId+=1;await run('coplanar-same-shape-lowest-id',add(p.origin,mul(p.w,17)),mul(p.w,-1),[duplicate,spec]);
   const joined=structuredClone(spec),jp=joined.primitives[0],shift=mul(p.w,p.halfDepth*2);jp.objectId+=16;jp.instanceId+=2;jp.origin=add(jp.origin,shift);jp.bounds.min=add(jp.bounds.min,shift);jp.bounds.max=add(jp.bounds.max,shift);
   for(const sign of [-1,1])await run('touching-neighbour-'+sign,add(p.origin,mul(p.w,sign*.5)),mul(p.w,-sign),[spec,joined]);
+  for(const sign of [-1,1])await run('inside-touching-seam-'+sign,add(p.origin,mul(p.w,p.halfDepth)),mul(p.w,sign),[spec,joined]);
   await run('near-parallel-fallback',add(p.origin,mul(p.w,.006)),unit(add(p.u,mul(p.w,-.000001))),[spec],false);
   if(g.getError()!==0)throw Error('Probe WebGL error');return{passed:true,rows,limitations:'Synthetic exact-interval probe, not a complete renderer proof. One near-parallel case checks unchanged fallback only; all others check CPU event/normal/ID.'};
  }finally{g.bindFramebuffer(g.FRAMEBUFFER,null);textures.forEach(t=>g.deleteTexture(t));g.deleteFramebuffer(fbo);if(descriptor){g.deleteTexture(descriptor);r.textures=r.textures.filter(t=>t!==descriptor);}programs.forEach(p=>{g.deleteProgram(p);r.programs=r.programs.filter(q=>q!==p);});}
