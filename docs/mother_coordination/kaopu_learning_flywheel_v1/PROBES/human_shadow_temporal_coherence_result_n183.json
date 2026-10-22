@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "kaopu.human-shadow-temporal-coherence.result.v1",
+  "regressionId": "HUMAN_SHADOW_TEMPORAL_COHERENCE_001",
+  "status": "PASS",
+  "passed": 8,
+  "total": 8,
+  "cases": [
+    {
+      "id": "cast-flags-only",
+      "expected": "HOLD_SHADOW_OBSERVATION_MISSING",
+      "actual": "HOLD_SHADOW_OBSERVATION_MISSING",
+      "pass": true
+    },
+    {
+      "id": "screenshot-no-receiver-shadow",
+      "expected": "HOLD_SHADOW_OBSERVATION_MISSING",
+      "actual": "HOLD_SHADOW_OBSERVATION_MISSING",
+      "pass": true
+    },
+    {
+      "id": "different-completed-frames",
+      "expected": "HOLD_FRAME_BINDING_MISSING",
+      "actual": "HOLD_FRAME_BINDING_MISSING",
+      "pass": true
+    },
+    {
+      "id": "camera-or-light-changed",
+      "expected": "HOLD_PROJECTION_CONTROL_MISSING",
+      "actual": "HOLD_PROJECTION_CONTROL_MISSING",
+      "pass": true
+    },
+    {
+      "id": "actor-moved-shadow-static",
+      "expected": "REJECT_STALE_SHADOW",
+      "actual": "REJECT_STALE_SHADOW",
+      "pass": true
+    },
+    {
+      "id": "wrong-caster-old-host",
+      "expected": "REJECT_CASTER_IDENTITY_MISMATCH",
+      "actual": "REJECT_CASTER_IDENTITY_MISMATCH",
+      "pass": true
+    },
+    {
+      "id": "static-blob-substitute",
+      "expected": "REJECT_STATIC_SHADOW_SUBSTITUTE",
+      "actual": "REJECT_STATIC_SHADOW_SUBSTITUTE",
+      "pass": true
+    },
+    {
+      "id": "same-frame-controlled-causal-pair",
+      "expected": "SHADOW_TEMPORAL_COHERENCE_VERIFIED",
+      "actual": "SHADOW_TEMPORAL_COHERENCE_VERIFIED",
+      "pass": true
+    }
+  ]
+}

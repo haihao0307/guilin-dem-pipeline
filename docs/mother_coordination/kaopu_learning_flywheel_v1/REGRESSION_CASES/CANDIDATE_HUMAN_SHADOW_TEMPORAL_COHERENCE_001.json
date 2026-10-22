@@ -1,0 +1,41 @@
+{
+  "regressionId": "HUMAN_SHADOW_TEMPORAL_COHERENCE_001",
+  "status": "CANDIDATE",
+  "scope": "Human Mother only",
+  "userCorrection": "人物移动后，影子仍停留在旧位置",
+  "failureMechanism": "A successful render and castShadow configuration can be delivered without evidence that the visible shadow belongs to the selected actor pose in the same completed frame.",
+  "requiredControls": [
+    "camera identity unchanged",
+    "light identity and transform unchanged",
+    "receiver identity and transform unchanged",
+    "one selected caster subject",
+    "two completed GPU frames",
+    "known non-zero actor displacement",
+    "negative control that freezes the shadow map or substitutes a static proxy"
+  ],
+  "requiredReceipt": [
+    "actorPoseRevision",
+    "actorScreenAnchor",
+    "casterIdentity",
+    "shadowMaskOrCentroid",
+    "shadowObservationFrame",
+    "completedFrameId",
+    "projectedDeltaErrorPx",
+    "tolerancePx"
+  ],
+  "gate": "HOLD when shadow evidence, same-frame binding, or controlled projection is missing; REJECT stale/static/wrong-caster shadows; verify only when causal displacement is observed within tolerance.",
+  "boundaries": [
+    "Does not score shadow softness or artistic quality.",
+    "Does not replace N144 shadow-terminator geometry checks.",
+    "Does not prove motion naturalness or user acceptance.",
+    "Must not infer root cause from a missing or stale shadow alone."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

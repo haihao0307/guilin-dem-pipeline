@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "kaopu.human-shadow-temporal-coherence.fixture.v1",
+  "cases": [
+    {
+      "id": "cast-flags-only",
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowObservable": false,
+      "expected": "HOLD_SHADOW_OBSERVATION_MISSING"
+    },
+    {
+      "id": "screenshot-no-receiver-shadow",
+      "castShadow": true,
+      "receiveShadow": true,
+      "shadowObservable": false,
+      "completedFrameSame": true,
+      "expected": "HOLD_SHADOW_OBSERVATION_MISSING"
+    },
+    {
+      "id": "different-completed-frames",
+      "shadowObservable": true,
+      "completedFrameSame": false,
+      "projectionControlsStable": true,
+      "expected": "HOLD_FRAME_BINDING_MISSING"
+    },
+    {
+      "id": "camera-or-light-changed",
+      "shadowObservable": true,
+      "completedFrameSame": true,
+      "projectionControlsStable": false,
+      "expected": "HOLD_PROJECTION_CONTROL_MISSING"
+    },
+    {
+      "id": "actor-moved-shadow-static",
+      "shadowObservable": true,
+      "completedFrameSame": true,
+      "projectionControlsStable": true,
+      "casterIdentityMatches": true,
+      "staticProxy": false,
+      "actorDeltaPx": 84,
+      "shadowDeltaPx": 0,
+      "projectedDeltaErrorPx": 84,
+      "tolerancePx": 8,
+      "expected": "REJECT_STALE_SHADOW"
+    },
+    {
+      "id": "wrong-caster-old-host",
+      "shadowObservable": true,
+      "completedFrameSame": true,
+      "projectionControlsStable": true,
+      "casterIdentityMatches": false,
+      "staticProxy": false,
+      "actorDeltaPx": 84,
+      "shadowDeltaPx": 83,
+      "projectedDeltaErrorPx": 1,
+      "tolerancePx": 8,
+      "expected": "REJECT_CASTER_IDENTITY_MISMATCH"
+    },
+    {
+      "id": "static-blob-substitute",
+      "shadowObservable": true,
+      "completedFrameSame": true,
+      "projectionControlsStable": true,
+      "casterIdentityMatches": true,
+      "staticProxy": true,
+      "actorDeltaPx": 84,
+      "shadowDeltaPx": 84,
+      "projectedDeltaErrorPx": 0,
+      "tolerancePx": 8,
+      "expected": "REJECT_STATIC_SHADOW_SUBSTITUTE"
+    },
+    {
+      "id": "same-frame-controlled-causal-pair",
+      "shadowObservable": true,
+      "completedFrameSame": true,
+      "projectionControlsStable": true,
+      "casterIdentityMatches": true,
+      "staticProxy": false,
+      "actorDeltaPx": 84,
+      "shadowDeltaPx": 80,
+      "projectedDeltaErrorPx": 4,
+      "tolerancePx": 8,
+      "expected": "SHADOW_TEMPORAL_COHERENCE_VERIFIED"
+    }
+  ]
+}
+
