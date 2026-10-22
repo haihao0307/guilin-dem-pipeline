@@ -1,4 +1,4 @@
-name: Bounded glass cap verification and frozen facade regression
+name: Guard warm A-B and complete isolated inspection package
 on:
   push:
     branches: ['trial/lowrise-glass-fix-20261022']
@@ -7,7 +7,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 24
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -15,25 +15,22 @@ jobs:
           sparse-checkout: |
             kaopu-geography-workbench/kowloon-building-mother-r01
             kaopu-geography-workbench/hk-three-buildings-r01
-      - name: CPU host, source, opening, FFL and sampled clearance invariants
-        run: node --test kaopu-geography-workbench/kowloon-building-mother-r01/tests/whole-integration.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/observed-facade.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/glass-endpoint-roundoff.test.mjs
+      - name: Freeze runtime and build full dependency closure
+        run: |
+          python kaopu-geography-workbench/kowloon-building-mother-r01/tests/build-glass-inspection.py kaopu-geography-workbench inspection-c69a5f19
       - name: Install pinned supported browser
         run: |
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
       - name: Start isolated server
         run: python -m http.server 8765 >/tmp/server.log 2>&1 &
-      - name: Actual cap probes and optical pixel readback
-        id: probes
-        run: timeout 360s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/observed-glass-fixed-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/glass-endpoint-fix
-      - name: Render real three cases and mobile viewport
-        if: ${{ always() && steps.probes.outcome != 'skipped' }}
-        run: timeout 720s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/observed-facade-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/observed-facade-r01
+      - name: Same-process warm guard A-B and exact-package desktop/mobile first frame
+        run: timeout 780s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/glass-inspection-browser.py --output inspection-evidence
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: bounded-glass-fix-${{ github.sha }}
+          name: inspection-guard-ab-${{ github.sha }}
           path: |
-            kaopu-geography-workbench/kowloon-building-mother-r01/evidence/observed-facade-r01
-            kaopu-geography-workbench/kowloon-building-mother-r01/evidence/glass-endpoint-fix
+            inspection-evidence
+            PUBLISH_PLAN.json
           retention-days: 1
