@@ -1,4 +1,4 @@
-name: Guard warm A-B and complete isolated inspection package
+name: Verify published c69 inspection entry and exact dependency closure
 on:
   push:
     branches: ['trial/lowrise-glass-fix-20261022']
@@ -22,15 +22,13 @@ jobs:
         run: |
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
-      - name: Start isolated server
-        run: python -m http.server 8765 >/tmp/server.log 2>&1 &
-      - name: Same-process warm guard A-B and exact-package desktop/mobile first frame
-        run: timeout 780s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/glass-inspection-browser.py --output inspection-evidence
+      - name: Public exact82 hashes and desktop/mobile UI case switching
+        run: timeout 780s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/glass-public-browser.py --output public-inspection-evidence --skip-ab --url https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/inspection-c69a5f19/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: inspection-guard-ab-${{ github.sha }}
+          name: inspection-public-${{ github.sha }}
           path: |
-            inspection-evidence
+            public-inspection-evidence
             PUBLISH_PLAN.json
           retention-days: 1
