@@ -1,0 +1,31 @@
+name: Attribute frozen KCC renderer pass cost
+on:
+  push:
+    branches: ['trial/kcc-render-cost-r01-20261022']
+permissions:
+  contents: read
+jobs:
+  fixed-runtime-profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-geography-workbench/kowloon-building-mother-r01
+            kaopu-geography-workbench/hk-three-buildings-r01
+      - name: Install pinned supported browser
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Start isolated server
+        run: python -m http.server 8765 >/tmp/server.log 2>&1 &
+      - name: Same process cold and warmed pass timings, raw hit and RGBA guards
+        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-pass-cost-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/render-cost-r01
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: kcc-render-cost-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/render-cost-r01
+          retention-days: 1
