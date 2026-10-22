@@ -1,0 +1,1405 @@
+{
+  "schema": "kaopu.chromium-mesh-difference-review/1",
+  "recordedAt": "2026-10-22T03:07:18.083984+00:00",
+  "reviewer": "asset_reuse",
+  "method": "Read existing gzip JSON only. Compare parsed finite binary64 coordinate values without rounding or tolerances. Compare triangle arrays exactly, then canonical unordered triangle multisets including multiplicity. Compare seam ids, endpoint references and stitchVertexPairs separately from numeric ease fields. No solver executed.",
+  "sources": {
+    "clo-study-delivery-r02/runtime-hash-audit/module-paper.json.gz": {
+      "sha256": "92b44225fb8163e1bab88732a44a1d95c05944acb98e69350978d90457e0e675",
+      "bytes": 139297
+    },
+    "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-1-paper-request-1.json.gz": {
+      "sha256": "3f67f2b120c6f35442e7773c516fb03783b8a9718ce119f7c2b9c0ffd7852445",
+      "bytes": 140088
+    },
+    "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-2-done-request-1.json.gz": {
+      "sha256": "7aa1540a463da4fa631a85bb7891519bc4642dbf104cfaf4bb115cddda5f4b15",
+      "bytes": 372917
+    },
+    "clo-pilot-r02/evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz": {
+      "sha256": "41b0e87b0574a76d0a3577eaab5975a0132c8b4f0a657d344a2cc3fbc76d326d",
+      "bytes": 388463
+    },
+    "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-3-paper-request-2.json.gz": {
+      "sha256": "a132987048e0cf4f825f191339042a533cb19ff61d6a91457baaf9ddf43d07d5",
+      "bytes": 145002
+    },
+    "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-4-done-request-2.json.gz": {
+      "sha256": "6aa22266f0bad16ac4e06b811abecad8471221c10fe619f9c09e693fb6474c85",
+      "bytes": 389273
+    }
+  },
+  "cases": [
+    {
+      "case": "length20_opening0",
+      "files": {
+        "node": "clo-study-delivery-r02/runtime-hash-audit/module-paper.json.gz",
+        "chromiumPaper": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-1-paper-request-1.json.gz",
+        "chromiumDone": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-2-done-request-1.json.gz"
+      },
+      "chromiumSourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+      "requestContext": {
+        "nodeOperation": {
+          "deltaMm": 20,
+          "slitDeltaMm": 0,
+          "requestId": 1,
+          "expectedRevision": 0
+        },
+        "chromiumOperation": {
+          "deltaMm": 20,
+          "slitDeltaMm": 0,
+          "requestId": 1,
+          "expectedRevision": 0
+        },
+        "note": "For 60/60 the fixture and browser have different requestId/expectedRevision; comparison is of the same explicit dimensions and physical material fields, not whole request-bound recipe identity."
+      },
+      "hashes": {
+        "nodeGeometryHash": "08dfe7c2e851c7ce7158057a67785a40b62deb6af5ae2c86964ee1b0ec32c457",
+        "chromiumGeometryHash": "08dfe7c2e851c7ce7158057a67785a40b62deb6af5ae2c86964ee1b0ec32c457",
+        "nodeMaterialSHA256": "688ad092df170586209614197d5f6f455530bc02dbdb3b391c2f609150a8df6e",
+        "chromiumMaterialSHA256": "20d61042f9d9b64d4cdffff4cf063ac683c927f9b982d2b07a3b7db254567d9c",
+        "nodePaperSHA256": "21800f0e952eb15a35b384ea2c9796147587bf794f8da80799e38663a8d878f0",
+        "chromiumPaperSHA256": "604f78daa6b29d393cacb84f8b32f1fd9d308e04364c382e25e7659c7fd5ada4"
+      },
+      "geometryHashEqual": true,
+      "meshPanels": [
+        {
+          "panelId": "skirt_back",
+          "nodeVertexCount": 1597,
+          "chromiumVertexCount": 1597,
+          "changedUVPointCount": 0,
+          "changedUVComponentCount": 0,
+          "maxAbsUVComponentDifferenceMm": 0,
+          "maxUVEuclideanDifferenceMm": 0.0,
+          "nodeTriangleCount": 2871,
+          "chromiumTriangleCount": 2871,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [],
+          "changedUVRegionMm": null,
+          "incidentTriangleCount": 0,
+          "incidentTriangleIndices": []
+        },
+        {
+          "panelId": "skirt_front",
+          "nodeVertexCount": 1599,
+          "chromiumVertexCount": 1599,
+          "changedUVPointCount": 0,
+          "changedUVComponentCount": 0,
+          "maxAbsUVComponentDifferenceMm": 0,
+          "maxUVEuclideanDifferenceMm": 0.0,
+          "nodeTriangleCount": 2991,
+          "chromiumTriangleCount": 2991,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [],
+          "changedUVRegionMm": null,
+          "incidentTriangleCount": 0,
+          "incidentTriangleIndices": []
+        },
+        {
+          "panelId": "wb_back",
+          "nodeVertexCount": 142,
+          "chromiumVertexCount": 142,
+          "changedUVPointCount": 9,
+          "changedUVComponentCount": 14,
+          "maxAbsUVComponentDifferenceMm": 1.7053025658242404e-13,
+          "maxUVEuclideanDifferenceMm": 2.0495186137532011e-13,
+          "nodeTriangleCount": 175,
+          "chromiumTriangleCount": 175,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [
+            {
+              "index": 8,
+              "nodeMm": [
+                4.635160807323047,
+                -5.777215816113085
+              ],
+              "chromiumMm": [
+                4.635160807322961,
+                -5.777215816113028
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 12,
+              "nodeMm": [
+                63.628064068303374,
+                -22.982090995502233
+              ],
+              "chromiumMm": [
+                63.62806406830329,
+                -22.982090995502233
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 16,
+              "nodeMm": [
+                124.62472979244258,
+                -30.43709841571234
+              ],
+              "chromiumMm": [
+                124.6247297924425,
+                -30.43709841571234
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 18,
+              "nodeMm": [
+                155.37527020755755,
+                -30.437098415712285
+              ],
+              "chromiumMm": [
+                155.37527020755746,
+                -30.43709841571234
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 22,
+              "nodeMm": [
+                216.37193593169667,
+                -22.982090995502233
+              ],
+              "chromiumMm": [
+                216.3719359316966,
+                -22.982090995502233
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 23,
+              "nodeMm": [
+                231.3696924503478,
+                -19.581593282081826
+              ],
+              "chromiumMm": [
+                231.36969245034763,
+                -19.581593282081883
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -1.7053025658242404e-13,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 24,
+              "nodeMm": [
+                246.21731223064342,
+                -15.576063086029308
+              ],
+              "chromiumMm": [
+                246.21731223064336,
+                -15.576063086029365
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 25,
+              "nodeMm": [
+                260.89039797905724,
+                -10.972082209503526
+              ],
+              "chromiumMm": [
+                260.8903979790572,
+                -10.972082209503526
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 26,
+              "nodeMm": [
+                275.36483919267715,
+                -5.777215816112971
+              ],
+              "chromiumMm": [
+                275.364839192677,
+                -5.777215816113085
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -1.7053025658242404e-13,
+                -1.1368683772161603e-13
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            }
+          ],
+          "changedUVRegionMm": {
+            "min": [
+              4.635160807323047,
+              -30.43709841571234
+            ],
+            "max": [
+              275.36483919267715,
+              -5.777215816112971
+            ]
+          },
+          "incidentTriangleCount": 26,
+          "incidentTriangleIndices": [
+            0,
+            1,
+            13,
+            14,
+            15,
+            21,
+            22,
+            23,
+            29,
+            31,
+            32,
+            34,
+            35,
+            36,
+            37,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52
+          ]
+        },
+        {
+          "panelId": "wb_front",
+          "nodeVertexCount": 210,
+          "chromiumVertexCount": 210,
+          "changedUVPointCount": 8,
+          "changedUVComponentCount": 8,
+          "maxAbsUVComponentDifferenceMm": 7.958078640513122e-13,
+          "maxUVEuclideanDifferenceMm": 7.958078640513122e-13,
+          "nodeTriangleCount": 259,
+          "chromiumTriangleCount": 259,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [
+            {
+              "index": 98,
+              "nodeMm": [
+                353.23265648781404,
+                -51.890883472793575
+              ],
+              "chromiumMm": [
+                353.23265648781364,
+                -51.890883472793575
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -3.979039320256561e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 102,
+              "nodeMm": [
+                368.8352283019829,
+                -50.71021348917134
+              ],
+              "chromiumMm": [
+                368.8352283019825,
+                -50.71021348917134
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -3.979039320256561e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 120,
+              "nodeMm": [
+                438.88905167502924,
+                -43.65973136471007
+              ],
+              "chromiumMm": [
+                438.88905167503,
+                -43.65973136471007
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.389644451905042e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 136,
+              "nodeMm": [
+                355.2973733990749,
+                -11.636495022894906
+              ],
+              "chromiumMm": [
+                355.2973733990757,
+                -11.636495022894906
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.958078640513122e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 147,
+              "nodeMm": [
+                182.9766899589982,
+                -15.617811651783086
+              ],
+              "chromiumMm": [
+                182.97668995899858,
+                -15.617811651783086
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                3.694822225952521e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 150,
+              "nodeMm": [
+                135.98951025253174,
+                -13.662957685803804
+              ],
+              "chromiumMm": [
+                135.9895102525325,
+                -13.662957685803804
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.673861546209082e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 152,
+              "nodeMm": [
+                104.70262660092564,
+                -11.636495022895133
+              ],
+              "chromiumMm": [
+                104.70262660092601,
+                -11.636495022895133
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                3.694822225952521e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 154,
+              "nodeMm": [
+                73.45853210183279,
+                -9.032229582285936
+              ],
+              "chromiumMm": [
+                73.45853210183355,
+                -9.032229582285936
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.673861546209082e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            }
+          ],
+          "changedUVRegionMm": {
+            "min": [
+              73.45853210183279,
+              -51.890883472793575
+            ],
+            "max": [
+              438.88905167502924,
+              -9.032229582285936
+            ]
+          },
+          "incidentTriangleCount": 21,
+          "incidentTriangleIndices": [
+            120,
+            122,
+            125,
+            127,
+            148,
+            149,
+            169,
+            171,
+            172,
+            191,
+            193,
+            194,
+            198,
+            200,
+            201,
+            202,
+            204,
+            205,
+            206,
+            208,
+            209
+          ]
+        }
+      ],
+      "totalChangedUVPoints": 17,
+      "totalChangedUVComponents": 22,
+      "maxAbsUVComponentDifferenceMm": 7.958078640513122e-13,
+      "allOrderedTrianglesEqual": true,
+      "allUnorderedTriangleMultisetsEqual": true,
+      "allSeamReferencesAndStitchPairsEqual": true,
+      "analyticPanels": [
+        {
+          "panelId": "skirt_back",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "skirt_front",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "wb_back",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "wb_front",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": [
+            {
+              "edge": 1,
+              "kind": "circle",
+              "differentFields": [
+                "sampledPointsMm"
+              ],
+              "lengthEqual": true,
+              "nodeSampleCount": 33,
+              "chromiumSampleCount": 33,
+              "changedSamples": [
+                {
+                  "index": 6,
+                  "nodeMm": [
+                    20.62553174227358,
+                    -43.60084549101998
+                  ],
+                  "chromiumMm": [
+                    20.62553174227361,
+                    -43.60084549101998
+                  ],
+                  "deltaMm": [
+                    2.842170943040401e-14,
+                    0.0
+                  ]
+                }
+              ],
+              "maxAbsSampleDifferenceMm": 2.842170943040401e-14
+            }
+          ]
+        }
+      ],
+      "analyticSeamsIncludingGatheringEqual": true,
+      "differentSpecSeams": [
+        {
+          "seamId": "s14",
+          "differentFields": [
+            "easeMm"
+          ],
+          "easeMm": {
+            "node": -3.7842437873703716,
+            "chromium": -3.784243787370343,
+            "delta": 2.842170943040401e-14
+          },
+          "referencesEqual": true,
+          "stitchVertexPairsEqual": true
+        }
+      ],
+      "chromiumPaperToDoneMaterialFieldsEqual": true,
+      "nodeSolvedResult": null,
+      "chromiumSolvedResult": {
+        "staticGatePassed": true,
+        "failures": [],
+        "bodyIntersectingFaceCount": 0,
+        "selfStrictTriangleIntersectionCount": 0,
+        "selfPairs": [],
+        "materialSHA256": "20d61042f9d9b64d4cdffff4cf063ac683c927f9b982d2b07a3b7db254567d9c"
+      }
+    },
+    {
+      "case": "length60_opening60",
+      "files": {
+        "node": "clo-pilot-r02/evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+        "chromiumPaper": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-3-paper-request-2.json.gz",
+        "chromiumDone": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-4-done-request-2.json.gz"
+      },
+      "chromiumSourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+      "requestContext": {
+        "nodeOperation": {
+          "deltaMm": 60,
+          "slitDeltaMm": 60,
+          "requestId": 1,
+          "expectedRevision": 0
+        },
+        "chromiumOperation": {
+          "deltaMm": 60,
+          "slitDeltaMm": 60,
+          "requestId": 2,
+          "expectedRevision": 1
+        },
+        "note": "For 60/60 the fixture and browser have different requestId/expectedRevision; comparison is of the same explicit dimensions and physical material fields, not whole request-bound recipe identity."
+      },
+      "hashes": {
+        "nodeGeometryHash": "52b484bb583e7eb2104c999b30a15566a48b3eb60b973a5cffd5143104cc223b",
+        "chromiumGeometryHash": "52b484bb583e7eb2104c999b30a15566a48b3eb60b973a5cffd5143104cc223b",
+        "nodeMaterialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb",
+        "chromiumMaterialSHA256": "0323bc3c6bf1a0b72a1a7c07a610badd8d6dae26bb9219fd8e993f29fe1085e3",
+        "nodePaperSHA256": "e09eb559d4f51b9362b5b161dfd6cb514f3fecd718b737fa8eb22006eaa94b63",
+        "chromiumPaperSHA256": "f2d6cfed38db5a9ddc70433b15047cb748ddd694d2293ab6448eb1f84e58ec72"
+      },
+      "geometryHashEqual": true,
+      "meshPanels": [
+        {
+          "panelId": "skirt_back",
+          "nodeVertexCount": 1695,
+          "chromiumVertexCount": 1695,
+          "changedUVPointCount": 0,
+          "changedUVComponentCount": 0,
+          "maxAbsUVComponentDifferenceMm": 0,
+          "maxUVEuclideanDifferenceMm": 0.0,
+          "nodeTriangleCount": 3055,
+          "chromiumTriangleCount": 3055,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [],
+          "changedUVRegionMm": null,
+          "incidentTriangleCount": 0,
+          "incidentTriangleIndices": []
+        },
+        {
+          "panelId": "skirt_front",
+          "nodeVertexCount": 1697,
+          "chromiumVertexCount": 1697,
+          "changedUVPointCount": 0,
+          "changedUVComponentCount": 0,
+          "maxAbsUVComponentDifferenceMm": 0,
+          "maxUVEuclideanDifferenceMm": 0.0,
+          "nodeTriangleCount": 3183,
+          "chromiumTriangleCount": 3183,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [],
+          "changedUVRegionMm": null,
+          "incidentTriangleCount": 0,
+          "incidentTriangleIndices": []
+        },
+        {
+          "panelId": "wb_back",
+          "nodeVertexCount": 142,
+          "chromiumVertexCount": 142,
+          "changedUVPointCount": 9,
+          "changedUVComponentCount": 14,
+          "maxAbsUVComponentDifferenceMm": 1.7053025658242404e-13,
+          "maxUVEuclideanDifferenceMm": 2.0495186137532011e-13,
+          "nodeTriangleCount": 175,
+          "chromiumTriangleCount": 175,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [
+            {
+              "index": 8,
+              "nodeMm": [
+                4.635160807323047,
+                -5.777215816113085
+              ],
+              "chromiumMm": [
+                4.635160807322961,
+                -5.777215816113028
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 12,
+              "nodeMm": [
+                63.628064068303374,
+                -22.982090995502233
+              ],
+              "chromiumMm": [
+                63.62806406830329,
+                -22.982090995502233
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 16,
+              "nodeMm": [
+                124.62472979244258,
+                -30.43709841571234
+              ],
+              "chromiumMm": [
+                124.6247297924425,
+                -30.43709841571234
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 18,
+              "nodeMm": [
+                155.37527020755755,
+                -30.437098415712285
+              ],
+              "chromiumMm": [
+                155.37527020755746,
+                -30.43709841571234
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -8.526512829121202e-14,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 22,
+              "nodeMm": [
+                216.37193593169667,
+                -22.982090995502233
+              ],
+              "chromiumMm": [
+                216.3719359316966,
+                -22.982090995502233
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 23,
+              "nodeMm": [
+                231.3696924503478,
+                -19.581593282081826
+              ],
+              "chromiumMm": [
+                231.36969245034763,
+                -19.581593282081883
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -1.7053025658242404e-13,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 24,
+              "nodeMm": [
+                246.21731223064342,
+                -15.576063086029308
+              ],
+              "chromiumMm": [
+                246.21731223064336,
+                -15.576063086029365
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                -5.684341886080802e-14
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 25,
+              "nodeMm": [
+                260.89039797905724,
+                -10.972082209503526
+              ],
+              "chromiumMm": [
+                260.8903979790572,
+                -10.972082209503526
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -5.684341886080802e-14,
+                0.0
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 26,
+              "nodeMm": [
+                275.36483919267715,
+                -5.777215816112971
+              ],
+              "chromiumMm": [
+                275.364839192677,
+                -5.777215816113085
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -1.7053025658242404e-13,
+                -1.1368683772161603e-13
+              ],
+              "edges": [
+                "e0"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            }
+          ],
+          "changedUVRegionMm": {
+            "min": [
+              4.635160807323047,
+              -30.43709841571234
+            ],
+            "max": [
+              275.36483919267715,
+              -5.777215816112971
+            ]
+          },
+          "incidentTriangleCount": 26,
+          "incidentTriangleIndices": [
+            0,
+            1,
+            13,
+            14,
+            15,
+            21,
+            22,
+            23,
+            29,
+            31,
+            32,
+            34,
+            35,
+            36,
+            37,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52
+          ]
+        },
+        {
+          "panelId": "wb_front",
+          "nodeVertexCount": 210,
+          "chromiumVertexCount": 210,
+          "changedUVPointCount": 8,
+          "changedUVComponentCount": 8,
+          "maxAbsUVComponentDifferenceMm": 7.958078640513122e-13,
+          "maxUVEuclideanDifferenceMm": 7.958078640513122e-13,
+          "nodeTriangleCount": 259,
+          "chromiumTriangleCount": 259,
+          "orderedTriangleArrayEqual": true,
+          "triangleIndexRowsChanged": 0,
+          "removedUnorderedTriangles": [],
+          "addedUnorderedTriangles": [],
+          "boundaryIdsEqual": true,
+          "edgeVertexListsEqual": true,
+          "changedUVs": [
+            {
+              "index": 98,
+              "nodeMm": [
+                353.23265648781404,
+                -51.890883472793575
+              ],
+              "chromiumMm": [
+                353.23265648781364,
+                -51.890883472793575
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -3.979039320256561e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 102,
+              "nodeMm": [
+                368.8352283019829,
+                -50.71021348917134
+              ],
+              "chromiumMm": [
+                368.8352283019825,
+                -50.71021348917134
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                -3.979039320256561e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 120,
+              "nodeMm": [
+                438.88905167502924,
+                -43.65973136471007
+              ],
+              "chromiumMm": [
+                438.88905167503,
+                -43.65973136471007
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.389644451905042e-13,
+                0.0
+              ],
+              "edges": [
+                "e3"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 136,
+              "nodeMm": [
+                355.2973733990749,
+                -11.636495022894906
+              ],
+              "chromiumMm": [
+                355.2973733990757,
+                -11.636495022894906
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.958078640513122e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 147,
+              "nodeMm": [
+                182.9766899589982,
+                -15.617811651783086
+              ],
+              "chromiumMm": [
+                182.97668995899858,
+                -15.617811651783086
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                3.694822225952521e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 150,
+              "nodeMm": [
+                135.98951025253174,
+                -13.662957685803804
+              ],
+              "chromiumMm": [
+                135.9895102525325,
+                -13.662957685803804
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.673861546209082e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 152,
+              "nodeMm": [
+                104.70262660092564,
+                -11.636495022895133
+              ],
+              "chromiumMm": [
+                104.70262660092601,
+                -11.636495022895133
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                3.694822225952521e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            },
+            {
+              "index": 154,
+              "nodeMm": [
+                73.45853210183279,
+                -9.032229582285936
+              ],
+              "chromiumMm": [
+                73.45853210183355,
+                -9.032229582285936
+              ],
+              "componentDeltaChromiumMinusNodeMm": [
+                7.673861546209082e-13,
+                0.0
+              ],
+              "edges": [
+                "e5"
+              ],
+              "onBoundary": true,
+              "originalAnalyticVertex": false
+            }
+          ],
+          "changedUVRegionMm": {
+            "min": [
+              73.45853210183279,
+              -51.890883472793575
+            ],
+            "max": [
+              438.88905167502924,
+              -9.032229582285936
+            ]
+          },
+          "incidentTriangleCount": 21,
+          "incidentTriangleIndices": [
+            120,
+            122,
+            125,
+            127,
+            148,
+            149,
+            169,
+            171,
+            172,
+            191,
+            193,
+            194,
+            198,
+            200,
+            201,
+            202,
+            204,
+            205,
+            206,
+            208,
+            209
+          ]
+        }
+      ],
+      "totalChangedUVPoints": 17,
+      "totalChangedUVComponents": 22,
+      "maxAbsUVComponentDifferenceMm": 7.958078640513122e-13,
+      "allOrderedTrianglesEqual": true,
+      "allUnorderedTriangleMultisetsEqual": true,
+      "allSeamReferencesAndStitchPairsEqual": true,
+      "analyticPanels": [
+        {
+          "panelId": "skirt_back",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "skirt_front",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "wb_back",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": []
+        },
+        {
+          "panelId": "wb_front",
+          "originalVerticesEqual": true,
+          "placementEqual": true,
+          "boundaryEqual": true,
+          "signedAreaEqual": true,
+          "allArcParametersEqual": true,
+          "allControlPointsEqual": true,
+          "differentEdges": [
+            {
+              "edge": 1,
+              "kind": "circle",
+              "differentFields": [
+                "sampledPointsMm"
+              ],
+              "lengthEqual": true,
+              "nodeSampleCount": 33,
+              "chromiumSampleCount": 33,
+              "changedSamples": [
+                {
+                  "index": 6,
+                  "nodeMm": [
+                    20.62553174227358,
+                    -43.60084549101998
+                  ],
+                  "chromiumMm": [
+                    20.62553174227361,
+                    -43.60084549101998
+                  ],
+                  "deltaMm": [
+                    2.842170943040401e-14,
+                    0.0
+                  ]
+                }
+              ],
+              "maxAbsSampleDifferenceMm": 2.842170943040401e-14
+            }
+          ]
+        }
+      ],
+      "analyticSeamsIncludingGatheringEqual": true,
+      "differentSpecSeams": [
+        {
+          "seamId": "s10",
+          "differentFields": [
+            "stageId"
+          ],
+          "easeMm": {
+            "node": -1.4210854715202004e-14,
+            "chromium": -1.4210854715202004e-14,
+            "delta": 0.0
+          },
+          "referencesEqual": true,
+          "stitchVertexPairsEqual": true
+        },
+        {
+          "seamId": "s11",
+          "differentFields": [
+            "stageId"
+          ],
+          "easeMm": {
+            "node": 7.105427357601002e-15,
+            "chromium": 7.105427357601002e-15,
+            "delta": 0.0
+          },
+          "referencesEqual": true,
+          "stitchVertexPairsEqual": true
+        },
+        {
+          "seamId": "s14",
+          "differentFields": [
+            "easeMm"
+          ],
+          "easeMm": {
+            "node": -3.7842437873703716,
+            "chromium": -3.784243787370343,
+            "delta": 2.842170943040401e-14
+          },
+          "referencesEqual": true,
+          "stitchVertexPairsEqual": true
+        }
+      ],
+      "chromiumPaperToDoneMaterialFieldsEqual": true,
+      "nodeSolvedResult": {
+        "staticGatePassed": false,
+        "failures": [
+          "cloth-intersections"
+        ],
+        "bodyIntersectingFaceCount": 0,
+        "selfStrictTriangleIntersectionCount": 1,
+        "selfPairs": [
+          [
+            278,
+            6347
+          ]
+        ],
+        "resolvedSelfPairs": [
+          [
+            {
+              "globalFace": 278,
+              "panel": "skirt_back",
+              "localTriangleIndex": 278,
+              "vertexIds": [
+                151,
+                1685,
+                152
+              ]
+            },
+            {
+              "globalFace": 6347,
+              "panel": "wb_back",
+              "localTriangleIndex": 109,
+              "vertexIds": [
+                72,
+                113,
+                73
+              ]
+            }
+          ]
+        ],
+        "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb"
+      },
+      "chromiumSolvedResult": {
+        "staticGatePassed": true,
+        "failures": [],
+        "bodyIntersectingFaceCount": 0,
+        "selfStrictTriangleIntersectionCount": 0,
+        "selfPairs": [],
+        "materialSHA256": "0323bc3c6bf1a0b72a1a7c07a610badd8d6dae26bb9219fd8e993f29fe1085e3"
+      }
+    }
+  ],
+  "regionInterpretation": [
+    {
+      "panel": "wb_back",
+      "edge": "e0",
+      "role": "Retained top interface; unsewn in the S03 seam graph",
+      "changedUVPointCountPerCase": 9
+    },
+    {
+      "panel": "wb_front",
+      "edge": "e3",
+      "role": "Waistband arc used by source seam s14",
+      "changedUVPointCountPerCase": 3
+    },
+    {
+      "panel": "wb_front",
+      "edge": "e5",
+      "role": "Retained top interface; unsewn in the S03 seam graph",
+      "changedUVPointCountPerCase": 5
+    }
+  ],
+  "summary": {
+    "sameChangedUVValuesAndLocationsAcrossBothCases": true,
+    "authoritativeAnalyticVerticesArcsControlsPlacementsEqual": true,
+    "actualTriangleTopologyDifference": false,
+    "orderedTriangleArrayDifference": false,
+    "seamReferenceOrPairingDifference": false,
+    "materialCoordinatesExactlyEqual": false,
+    "materialHashesEqual": false,
+    "allUVChangesOnWaistbandBoundary": true,
+    "allOriginalAnalyticVerticesUnchanged": true,
+    "maximumObservedUVComponentDifferenceMm": 7.958078640513122e-13,
+    "paperGeometryHashEqualForBothCases": true,
+    "physicalOutcomeEquivalenceEstablished": false,
+    "rootCauseEstablished": false
+  },
+  "conclusion": "Both cases have exactly identical ordered material triangle arrays, boundary/edge ids, seam references and stitch pairs. Their exact material UV values and material SHA differ at 17 derived waistband boundary samples. This resolves the mesh/topology question for these captured packets but does not establish cross-runtime physical outcome equivalence. The existing Node 60/60 record fails with one skirt_back/wb_back intersection pair, while the captured Chromium 60/60 record passes with zero body/self intersections. Each actual material/result identity must retain its own audit result. No parameter-wide PASS/FAIL conclusion or gate exemption follows.",
+  "limits": {
+    "sourceModified": false,
+    "precisionOrRoundingChanged": false,
+    "thresholdsChanged": false,
+    "goldensChanged": false,
+    "newSolverRun": false,
+    "rootCauseClaimed": false,
+    "releaseApproved": false
+  }
+}

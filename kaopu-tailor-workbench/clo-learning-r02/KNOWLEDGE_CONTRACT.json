@@ -79,7 +79,7 @@
     {
       "id": "K-R02-02",
       "title": "局部编辑需要整体试穿复核",
-      "lesson": "新开口改变材料网格和整体缝合状态，即使不改腰部顶点，也可能在腰部产生新相交。",
+      "lesson": "局部纸样改版后，整体验证仍可能在未直接编辑的部位发现相交；保留腰部原始纸样控制点不能替代最终复核。",
       "observedCounterexample": {
         "deltaMm": 60,
         "slitDeltaMm": 60,
@@ -91,9 +91,11 @@
           6347
         ],
         "location": "skirt_back and wb_back near gathered seam s17",
-        "source": "evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz"
+        "source": "evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+        "runtime": "Node 24 local development solve",
+        "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb"
       },
-      "notEstablished": "并未证明相交完全由某一个三角划分或某一个约束单独导致。"
+      "notEstablished": "并未证明相交完全由某一个三角划分或约束单独导致；该Node结果不代表相同参数在其他运行时的实际网格和通过状态。"
     },
     {
       "id": "K-R02-03",
@@ -104,7 +106,22 @@
         "complete original solver",
         "original strain/body/seam thresholds",
         "independent final triangle intersections"
-      ]
+      ],
+      "browserObservedCounterexample": {
+        "sourceHead": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+        "runId": 39714823932,
+        "runtime": "Chromium 143.0.7499.4 in Ubuntu CI",
+        "deltaMm": 100,
+        "slitDeltaMm": -40,
+        "materialSHA256": "1124cf77ef30a248af7b2858d66859df7d8cc59042a482390d2b0c6e6c67c005",
+        "staticPassed": false,
+        "selfStrictTriangleIntersectionCount": 14,
+        "bodyIntersectingFaceCount": 0,
+        "reason": "cloth-intersections",
+        "notUniversal": "This is an observed complete result; future runs must perform their own unchanged checks.",
+        "source": "evidence/fixtures/BROWSER_FAILED_LENGTH100_OPENINGM40.json.gz",
+        "sourceSHA256": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5"
+      }
     },
     {
       "id": "K-R02-04",
@@ -123,6 +140,38 @@
         "body and collision identity mapping",
         "coordinate and rig schema adapters"
       ]
+    },
+    {
+      "id": "K-R02-06",
+      "title": "检查属于具体结果，不能只按参数复用",
+      "lesson": "相同尺寸可产生不同完整纸样和材料哈希。保存实际运行环境、原始纸样/网格与结果绑定；每份新网格必须独立执行相同检查。",
+      "observedEvidence": {
+        "sourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+        "browserRun": 39714177679,
+        "parameters": {
+          "deltaMm": 60,
+          "slitDeltaMm": 60
+        },
+        "node": {
+          "environment": "Node 24 local development container",
+          "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb",
+          "staticPassed": false,
+          "selfStrictTriangleIntersectionCount": 1
+        },
+        "browser": {
+          "environment": "Chromium 143.0.7499.4 in Ubuntu CI",
+          "materialSHA256": "0323bc3c6bf1a0b72a1a7c07a610badd8d6dae26bb9219fd8e993f29fe1085e3",
+          "staticPassed": true,
+          "selfStrictTriangleIntersectionCount": 0
+        }
+      },
+      "policy": [
+        "Do not reuse PASS or FAIL by parameter tuple alone.",
+        "Hash actual paper and actual material mesh; retain operation/person/request/revision bindings.",
+        "Retain runtime provenance in the acceptance record.",
+        "Do not change geometry precision or physical thresholds to make environments agree."
+      ],
+      "notEstablished": "同一拓扑及极小材料坐标差不证明最终物理状态等价；这里不认证跨浏览器数值一致性。"
     }
   ],
   "boundaries": [

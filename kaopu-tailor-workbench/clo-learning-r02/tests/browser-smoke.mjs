@@ -15,7 +15,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
-import {gzipSync} from 'node:zlib';
+import {gzipSync, gunzipSync} from 'node:zlib';
+import {verifyPacketIntegrity} from './packet-integrity.mjs';
 
 const PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TOTAL_TIMEOUT_MS = 600_000;
@@ -28,9 +29,9 @@ const REVIEW_DELTA = 100;
 const REVIEW_SLIT_DELTA = -40;
 const CANCEL_DELTA = 30;
 const CANCEL_SLIT_DELTA = 30;
-// Source identities are locked to the frozen upstream commit. Study mesh
-// identities come from the reviewed R02 development solves. A deliberate
-// fixture change needs fresh review.
+// Source and baked initial identities are locked to reviewed fixtures. Live
+// results are independently verified from actual paper/mesh packets; a Node
+// byte-level material golden is not assumed universal across JS engines.
 const LOCK = Object.freeze({
   upstream: 'c84b16a0ae022dda9fe22c09df758fcb8095bc07',
   personGeometry: 'fbc056553c1731b790769124bee121554f0800400271eaf564a0ad5e6f458571',
@@ -38,8 +39,6 @@ const LOCK = Object.freeze({
   basePaper: '3e54c6322a46ea7232644f341a4f5ea300d0b20a24a1d45765138b707d753baa',
   baseMaterial: '9560f8c32c476636596e489be45cdc3bb19ba3356c2fb11445011a6fcdeb6208',
   initialMaterial: '8a39364094ae4bfac0ea4f434cc579fc67bcd37cc87857455e8995d77d31b3a3',
-  liveMaterial: '688ad092df170586209614197d5f6f455530bc02dbdb3b391c2f609150a8df6e',
-  reviewMaterial: 'ff12bc0ac83a024121e5de39db6e04d16fc09f227ec7f2c70c41d74acad75e63',
   panelIds: ['skirt_back', 'skirt_front', 'wb_back', 'wb_front'],
   baseFrontLengthMm: 630.5168433422547,
   baseSlitDepthMm: 86.10410305727925,
@@ -89,12 +88,13 @@ async function playwright() {
 async function main() {
   const args = options();
   const mode = args.file ? 'file' : 'https';
+  const basePaperText = gunzipSync(await fs.readFile(path.join(PROJECT, 'upstream/kaopu-tailor-workbench/presets/r04/assets/papers/S03.json.gz'))).toString('utf8');
   const reportPath = path.resolve(args.report);
   const reportDirectory = path.dirname(reportPath);
   const screenshotPrefix = path.basename(reportPath, path.extname(reportPath));
   await fs.mkdir(reportDirectory, {recursive: true});
   const report = {
-    schema: 'kaopu-clo-browser-smoke/2', startedAt: timestamp(), completedAt: null,
+    schema: 'kaopu-clo-browser-smoke/3', startedAt: timestamp(), completedAt: null,
     mode, target: args.file ? path.resolve(args.file) : args.url,
     sourceHead: null, expectedSourceHead: process.env.GITHUB_SHA || null,
     passed: false, desktopPassed: false, mobileViewportPassed: false,
@@ -105,23 +105,19 @@ async function main() {
     network: {bootstrap: [], core: [], optionalBrowserIcons: [], failures: [], blockedHttpRequests: 0},
     consoleErrors: [], consoleWarnings: [], pageErrors: [], contextLossObserved: false,
     workers: [], phaseTimeline: [],
-    packetAudit: {enabled:true, purpose:'Diagnose Node versus Chromium material identity without changing source, geometry or solver.', mode:'Passive observation of paper/done packets produced by actual UI operations; typed arrays serialized as arrays for the diagnostic artifact.', sourceOfMaterialGoldens:'Reviewed Node development solves retained unchanged; a mismatch is recorded as a failed check and deferred only until the UI sequence finishes.', packets:[], captureErrors:[], deferredMaterialGoldenFailures:[]},
-    limits: ['Automated functional and viewport checks only; screenshots require separate visual review.', '390 px is a responsive viewport check, not a mobile-device performance or touch certification.', 'Two complete real solves: 20/0 mm expected pass and 100/-40 mm Node-observed cloth-intersection candidate. Browser failure must be observed, never assumed. This does not certify the parameter domain.']
+    packetAudit: {enabled:true, purpose:'Independently verify actual paper, material geometry and result bindings without changing source, geometry or solver.', mode:'Passive observation of paper/done packets produced by actual UI operations; typed arrays serialized as arrays in the evidence.', materialIdentityPolicy:'Source and baked initial fixtures remain pinned. Every live result uses independently recomputed actual hashes, protected geometry and mesh checks; no universal Node material byte golden is assumed.', packets:[], captureErrors:[], integrityReports:[]},
+    limits: ['Automated functional and viewport checks only; screenshots require separate visual review.', '390 px is a responsive viewport check, not a mobile-device performance or touch certification.', 'Two complete real solves: 20/0 mm expected pass and 100/-40 mm browser-observed cloth-intersection candidate. Every run must observe its own actual failure, never assume it. This does not certify the parameter domain.']
   };
   let browser, context, page, suiteTimer;
   let localManifest = null, manifest = null, htmlBytes = null, finalURL = null;
   let manifestURL = mode === 'https' ? new URL('manifest.json', args.url).href : null;
   let lastPhaseKey = null;
   let lastPacketSequence = 0;
+  const capturedPackets = new Map();
   const check = (id, condition, detail = {}) => {
     const item = {id, passed: !!condition, ...detail};
     report.checks.push(item);
     if (!condition) throw Error('Check failed: ' + id + (detail.reason ? ' — ' + detail.reason : ''));
-  };
-  const checkMaterialGolden = (id, actual, expected) => {
-    const item={id,passed:actual===expected,actual,expected,source:'Existing Node development solve material golden',failureDeferredForPacketDiagnosis:true};
-    report.checks.push(item);
-    if(!item.passed)report.packetAudit.deferredMaterialGoldenFailures.push(item);
   };
   const recordState = state => {
     if (!state) return;
@@ -162,6 +158,7 @@ async function main() {
     if(captured.errors.length)throw Error('Worker packet capture failed: '+captured.errors.join('; '));
     for(const row of captured.packets){
       const packet=JSON.parse(row.packetJSON);
+      capturedPackets.set(packet.type + ':' + packet.requestId, packet);
       const record={schema:'kaopu.clo-worker-packet-audit/1',sourceHead:report.sourceHead,mode,sequence:row.sequence,workerIndex:row.workerIndex,capturedAt:row.capturedAt,packet};
       const bytes=Buffer.from(JSON.stringify(record)),compressed=gzipSync(bytes,{level:9});
       const filename=screenshotPrefix+'.packet-'+row.sequence+'-'+packet.type+'-request-'+packet.requestId+'.json.gz';
@@ -252,15 +249,25 @@ async function main() {
     check(id + '-source-binding', state.binding.presetId === 'S03' && state.binding.person.geometrySHA256 === geometry.body.geometrySHA256 && state.binding.person.topologySHA256 === geometry.body.topologySHA256 && ['recipeHash', 'paperSHA256', 'materialSHA256'].every(key => isSHA256(state.binding[key])), {binding: state.binding});
     check(id + '-renderer-contract', geometry.noProxy && !geometry.bodyScaling && !geometry.garmentScaling && geometry.singleRenderer && geometry.sharedCamera && !geometry.candidate.movedSolvedVertices && !geometry.candidate.physicalTopologyChanged && geometry.candidate.strain.pressure === false);
   }
-  function assertFreshBinding(state, before, delta, slitDelta, material, id) {
+  function assertFreshBinding(state, before, delta, slitDelta, id) {
     const binding = state.binding, operation = binding.operation;
     check(id + '-two-parameter-binding', operation?.schema === LOCK.operationSchema && operation.requestId === state.requestId && operation.expectedRevision === before.revision && operation.deltaMm === delta && operation.slitDeltaMm === slitDelta && state.currentDelta === delta && state.currentSlitDelta === slitDelta && binding.paperSHA256 !== before.binding.paperSHA256 && binding.materialSHA256 !== before.binding.materialSHA256 && binding.basePaperSHA256 === LOCK.basePaper && binding.operationSHA256 === digest(operation) && equal(binding.person, before.binding.person), {binding});
-    checkMaterialGolden(id + '-material-golden',binding.materialSHA256,material);
+    const paperPacket = capturedPackets.get('paper:' + state.requestId), donePacket = capturedPackets.get('done:' + state.requestId);
+    let integrity;
+    try {
+      integrity = verifyPacketIntegrity({paperPacket, donePacket, basePaperText, expected: {deltaMm: delta, slitDeltaMm: slitDelta, requestId: state.requestId, expectedRevision: before.revision}, previousBinding: before.binding});
+    } catch (error) {
+      report.packetAudit.integrityReports.push({id, passed: false, evidence: error.evidence || null, message: error.message});
+      throw error;
+    }
+    report.packetAudit.integrityReports.push({id, ...integrity});
+    check(id + '-independent-packet-integrity', integrity.passed, {hashes: integrity.hashes, measurements: integrity.measurements, mesh: integrity.mesh});
+    check(id + '-committed-result-matches-actual-worker', equal(binding, donePacket.binding) && equal(state.staticGate, donePacket.record.staticGate) && equal(state.intersections, donePacket.intersections), {requestId: state.requestId});
     check(id + '-fresh-mesh-and-revision', state.revision === before.revision + 1 && state.geometry.candidateRevision === before.geometry.candidateRevision + 1 && equal(state.geometry.original, before.geometry.original));
   }
   async function assertVisibleNumbers(state, delta, slitDelta, id) {
     const dom = await readDOM();
-    check(id + '-visible-numbers-match-result', dom.candidateLength === cm(delta) && dom.lengthValue === cm(delta) && dom.candidateSlitDepth === slitCm(slitDelta) && dom.slitValue === slitCm(slitDelta) && dom.paperSlitDepth === slitCm(slitDelta) && dom.paperSlitMouthWidth === '2.0 cm' && dom.seamValue === state.staticGate.wholeSeamAudit.maxSpanUpperBoundMm.toFixed(3) + ' mm' && dom.strainValue === (state.geometry.candidate.strain.maximumPrincipal * 100).toFixed(2) + '%' && dom.penetrationValue === state.staticGate.minimumBodyVertexDistanceMm.toFixed(2) + ' mm', {dom});
+    check(id + '-visible-numbers-match-result', dom.candidateLength === cm(delta) && dom.lengthValue === cm(delta) && dom.candidateSlitDepth === slitCm(slitDelta) && dom.slitValue === slitCm(slitDelta) && dom.paperSlitDepth === slitCm(slitDelta) && dom.paperSlitMouthWidth === '2.0 cm' && dom.seamValue === state.staticGate.wholeSeamAudit.maxSpanUpperBoundMm.toFixed(3) + ' mm' && dom.strainValue === (Math.max(0, state.geometry.candidate.strain.maximumPrincipal) * 100).toFixed(2) + '%' && dom.penetrationValue === state.staticGate.minimumBodyVertexDistanceMm.toFixed(2) + ' mm', {dom});
     check(id + '-dimension-measurements', Math.abs(state.measurements.committed.frontLengthMm - LOCK.baseFrontLengthMm - delta) < 1e-7 && Math.abs(state.measurements.committed.slitDepthMm - LOCK.baseSlitDepthMm - slitDelta) < 1e-7 && state.measurements.committed.slitMouthWidthMm === 20, {measurements: state.measurements});
     return dom;
   }
@@ -420,16 +427,17 @@ async function main() {
     const solved = await waitState('Complete live 20/0 mm positive case', state => !state.busy && state.liveSolveCount === beforeLive.liveSolveCount + 1 && state.currentDelta === LIVE_DELTA && state.currentSlitDelta === LIVE_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - liveStarted)));
     await flushPacketEvidence();
     assertBodyAndGeometry(solved, 'live');
-    assertFreshBinding(solved, beforeLive, LIVE_DELTA, LIVE_SLIT_DELTA, LOCK.liveMaterial, 'live');
+    assertFreshBinding(solved, beforeLive, LIVE_DELTA, LIVE_SLIT_DELTA, 'live');
     check('fresh-live-mesh', solved.geometry.candidate.vertices === 3548 && solved.geometry.candidate.triangles === 6296 && equal(solved.geometry.original, initial.geometry.original));
     check('fresh-live-static-check', solved.phase === 'complete' && solved.staticGate.passed === true && solved.staticGate.failures.length === 0 && equal(solved.staticGate.thresholds, THRESHOLDS) && solved.staticGate.wholeSeamAudit.measuredSeams === 20 && solved.staticGate.wholeSeamAudit.maxSpanUpperBoundMm <= .25 && solved.staticGate.minimumBodyVertexDistanceMm >= -.05 && solved.staticGate.dynamicWearCertified === false && solved.intersections.bodyIntersectingFaceCount === 0 && solved.intersections.selfStrictTriangleIntersectionCount === 0);
     const solvedDOM = await assertVisibleNumbers(solved, LIVE_DELTA, LIVE_SLIT_DELTA, 'live');
     check('passing-candidate-hides-review', !solvedDOM.reviewVisible && solvedDOM.reviewState === 'passed' && solvedDOM.patternStateMode === 'complete');
     report.evidence.liveSolve = {deltaMm: LIVE_DELTA, slitDeltaMm: LIVE_SLIT_DELTA, wallMs: Date.now() - liveStarted, expectedGatePassed: true, state: solved};
 
-    // This candidate failed in the retained Node development solve. The browser
-    // must independently finish and expose a real failure; otherwise this test
-    // blocks publication. No result or solver threshold is substituted.
+    // This candidate produced 14 actual cloth intersection pairs in Chromium
+    // run39714823932. Every new run must independently finish and expose its
+    // own real failure; otherwise publication is blocked. No result or solver
+    // threshold is substituted.
     const beforeReview = await snapshot(), positiveCommitted = await committedState();
     await setSlider(REVIEW_DELTA); await setSlider(REVIEW_SLIT_DELTA, 'slit');
     check('review-request-keeps-previous-completed-candidate', equal(positiveCommitted, await committedState()));
@@ -441,7 +449,7 @@ async function main() {
     const failed = await waitState('Complete real 100/-40 mm candidate', state => !state.busy && state.liveSolveCount === beforeReview.liveSolveCount + 1 && state.currentDelta === REVIEW_DELTA && state.currentSlitDelta === REVIEW_SLIT_DELTA, Math.max(1, SOLVE_TIMEOUT_MS - (Date.now() - reviewStarted)));
     await flushPacketEvidence();
     assertBodyAndGeometry(failed, 'review');
-    assertFreshBinding(failed, beforeReview, REVIEW_DELTA, REVIEW_SLIT_DELTA, LOCK.reviewMaterial, 'review');
+    assertFreshBinding(failed, beforeReview, REVIEW_DELTA, REVIEW_SLIT_DELTA, 'review');
     check('known-negative-retains-actual-failure', failed.phase === 'review' && failed.staticGate.passed === false && equal(failed.staticGate.failures, ['cloth-intersections']) && equal(failed.staticGate.thresholds, THRESHOLDS) && failed.intersections.selfStrictTriangleIntersectionCount > 0 && failed.intersections.bodyIntersectingFaceCount === 0 && failed.staticGate.wholeSeamAudit.measuredSeams === 20 && failed.staticGate.wholeSeamAudit.maxSpanUpperBoundMm <= .25 && failed.staticGate.dynamicWearCertified === false && !failed.lastError, {failures: failed.staticGate.failures, intersections: failed.intersections});
     const failedDOM = await assertVisibleNumbers(failed, REVIEW_DELTA, REVIEW_SLIT_DELTA, 'review');
     check('negative-shown-as-review-with-specific-reason', failedDOM.reviewVisible && failedDOM.reviewState === 'failed' && failedDOM.reviewReasons.some(r => r.code === 'cloth-intersections' && r.text.length > 0) && await page.locator('#reviewBanner').isVisible() && await page.locator('#reviewReasons [data-failure="cloth-intersections"]').isVisible() && failedDOM.phaseStatus === '本次检查未通过' && failedDOM.candidateState.includes('未通过') && !failedDOM.candidateState.includes('静态检查通过'));
@@ -477,7 +485,6 @@ async function main() {
     check('no-runtime-errors', report.consoleErrors.length === 0 && report.pageErrors.length === 0 && !report.contextLossObserved && !reset.lastError, {consoleErrors: report.consoleErrors, pageErrors: report.pageErrors});
     check('standalone-core-network', report.standaloneCoreNetworkRequests === 0 && (mode !== 'file' || report.network.blockedHttpRequests === 0), {count: report.standaloneCoreNetworkRequests, blockedHttpRequests: report.network.blockedHttpRequests, bootstrapExcluded: report.network.bootstrap.length, optionalBrowserIconsExcluded: report.network.optionalBrowserIcons.length});
     report.desktopPassed = true;
-    if(report.packetAudit.deferredMaterialGoldenFailures.length)throw Error('Deferred material golden mismatch after UI sequence; diagnostic evidence retained and publication blocked.');
     report.passed = report.desktopPassed && report.mobileViewportPassed && report.checks.every(item => item.passed);
   }
   try {

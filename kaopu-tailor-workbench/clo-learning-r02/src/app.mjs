@@ -132,7 +132,9 @@ function drawPaper(paper,mode='complete') {
 function metrics(result) {
   const gate=result.record.staticGate;
   $('seamValue').textContent=gate.wholeSeamAudit.maxSpanUpperBoundMm.toFixed(3)+' mm';
-  $('strainValue').textContent=(100*result.record.metrics.maxPrincipalStrain).toFixed(2)+'%';
+  // The inherited metric named maxPrincipalStrain is a maximum absolute
+  // strain; use the measured positive principal strain for this tension label.
+  $('strainValue').textContent=(100*Math.max(0,stage.snapshot().candidate.strain.maximumPrincipal)).toFixed(2)+'%';
   $('penetrationValue').textContent=gate.minimumBodyVertexDistanceMm.toFixed(2)+' mm';
   $('seamValue').title='20 条完整接缝的最大分离上界；检查阈值 0.25 mm。后片开口的两条自由边不属于接缝。';
   $('strainValue').title='最大主拉伸应变；压缩最大 '+gate.maximumCompressionPercent.toFixed(2)+'%；这是几何变形，不是应力或压力。';
@@ -158,6 +160,7 @@ function evidence(result) {
   paragraph('当前三维：'+designSummary(state.currentDelta,state.currentSlitDelta)+'。'+result.record.positionsMm.length.toLocaleString('zh-CN')+' 个材料顶点，'+result.spec.panels.reduce((n,p)=>n+p.triangles.length,0).toLocaleString('zh-CN')+' 个三角形，4 个裁片、20 条接缝。');
   paragraph('裙长是前片垂直纸样长度，不含腰头；开衩深度是从纸样下摆到三角顶点的垂直长度，不是缝口长度或成衣实测。本轮沿用原三角开口，不包含搭门、缝份、折边或真实开衩工艺。');
   paragraph('滑块范围只限定本轮允许的操作，不代表所有参数组合都通过试穿。每次使用同一检查阈值；失败候选保留显示并明确标记，不晋级为合格结果。');
+  paragraph('检查结论属于本次实际生成的纸样与网格。相同尺寸在不同运行环境中仍可能产生不同结果，因此不按尺寸组合复用旧的通过或失败结论。');
   paragraph('沿用原 digital-muslin 数字胚布：200 g/m²，尚未做真实面料标定。静态检查阈值为拉伸/压缩 ≤15%、完整接缝分离 ≤0.25 mm、最小身体顶点距离 ≥−0.05 mm。数值通过不等于真实面料合体或可生产。');
   const is=result.intersections;
   paragraph('本次最大压缩 '+result.record.staticGate.maximumCompressionPercent.toFixed(2)+'%。'+(is?'最终姿态的身体相交面数 '+is.bodyIntersectingFaceCount+'，布面严格三角相交对数 '+is.selfStrictTriangleIntersectionCount+'。':'原档案未附独立三角相交报告。')+'动态、自接触响应和连续碰撞尚未认证。');
