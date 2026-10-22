@@ -63,6 +63,6 @@ Three.js 官方 OrbitControls 文档只说明左键/单指用于 orbit、控件�
 - 不声称本轮已修复生产相机。
 - 不把源码公式替代为用户可见 browser proof。
 - N184 当前公网启动失败继续独立存在；修相机前必须先恢复可达运行态。
-- POSTED：false，待定向路由 PR #329。
+- POSTED：true。已定向路由至 PR #329：https://github.com/haihao0307/guilin-dem-pipeline/pull/329#issuecomment-6353852986
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：false / unknown。
 
