@@ -28,6 +28,7 @@ async def main():
    optics=[e for e in report['readback']['events'] if e['label']=='optical-ray' and e['mode']==0]
    assert optics and all(min(v['values'][2][:3])>.5 for e in optics for v in e['values']), 'Absorption still uses camera distance'
    report['syntheticRays']=await page.evaluate("async()=>{const m=await import('./tests/glass-roundoff-gpu-probe.mjs');return m.runGlassEndpointProbe(wholeBuilding)}")
+   assert report['syntheticRays']['passed'],('Synthetic ray failures',[r['name'] for r in report['syntheticRays']['rows'] if not r['passed']])
    report['diagnosticCompleted']=True;save();print(json.dumps({'samples':len(SAMPLES),'events':len(report['readback']['events']),'gpu':report['readback']['gpu']}),flush=True)
   except Exception as e:report['failure']=str(e);save();raise
   finally:await b.close()
