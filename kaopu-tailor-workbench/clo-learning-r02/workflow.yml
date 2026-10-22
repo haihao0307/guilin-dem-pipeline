@@ -16,6 +16,9 @@ jobs:
   build-verify-publish:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      npm_config_fetch_timeout: '45000'
+      npm_config_fetch_retries: '1'
     defaults:
       run:
         shell: bash
@@ -49,7 +52,7 @@ jobs:
           PY
       - name: Install pinned build dependencies
         timeout-minutes: 4
-        run: npm ci --prefix build-tools
+        run: npm ci --prefix build-tools --loglevel=http
       - name: Retrieve and verify original sources and native person
         run: python download-sources.py
       - name: Prepare bounded operation around inherited solver
