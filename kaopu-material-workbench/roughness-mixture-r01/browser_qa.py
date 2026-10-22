@@ -11,8 +11,9 @@ async def run():
   for name,width,height,dpr in [('desktop',1440,1050,1),('mobile',390,844,2),('desktop-hidpi',1440,1050,2)]:
    ctx=await browser.new_context(viewport={'width':width,'height':height},device_scale_factor=dpr,is_mobile=name=='mobile',has_touch=name=='mobile')
    await ctx.add_init_script("window.CONTEXT_REQUESTS=[];const saved=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){CONTEXT_REQUESTS.push(type);if(type.startsWith('webgl'))throw Error('WebGL explicitly prohibited in QA');return saved.call(this,type,...args)}")
-   page=await ctx.new_page();errors=[];requests=[];failed=[]
+   page=await ctx.new_page();errors=[];console_errors=[];requests=[];failed=[]
    page.on('pageerror',lambda e:errors.append(str(e)))
+   page.on('console',lambda m:console_errors.append(m.text) if m.type=='error' else None)
    page.on('request',lambda r:requests.append(r.url))
    page.on('requestfailed',lambda r:failed.append(r.url))
    await page.goto(BASE,wait_until='load');await page.wait_for_function('window.MIXTURE_QA?.ready')
@@ -20,9 +21,9 @@ async def run():
    async def snap(label):
     scales=await page.evaluate("[...document.querySelectorAll('canvas')].filter(c=>!c.closest('[hidden]')).map(c=>{const b=c.getBoundingClientRect();return (b.width/c.width)/(b.height/c.height)})")
     assert all(abs(x-1)<.02 for x in scales), ('distorted projection',scales)
-    await page.screenshot(path=str(OUT/f'{name}-{label}.png'),full_page=True)
+    await page.screenshot(path=str(OUT/f'{name}-{label}.png'),full_page=True,animations='disabled')
     return await page.evaluate('({state:{...MIXTURE_QA.state},measurement:MIXTURE_QA.measurement,pixels:MIXTURE_QA.pixels,renderMs:MIXTURE_QA.renderMs})')
-   result={'viewport':name,'errors':errors,'requests':requests,'failed_requests':failed}
+   result={'viewport':name,'errors':errors,'console_errors':console_errors,'requests':requests,'failed_requests':failed}
    result['initial']=await snap('initial');m=result['initial']['measurement'];assert abs(m['mixture']-.12141888865308904)<1e-12;assert abs(m['errorPercent']+82.81918329812503)<1e-7,m
    for part in result['initial']['pixels'].values(): assert part['hits']>5000 and part['max']-part['min']>25 and part['nonBackground']>1000,part
    assert result['initial']['pixels']['mixture']['centerRGB'][0]>result['initial']['pixels']['average']['centerRGB'][0]+20
@@ -39,7 +40,7 @@ async def run():
    await page.click('#sweep');start=await page.evaluate('MIXTURE_QA.frame');await page.wait_for_timeout(500);assert await page.evaluate('MIXTURE_QA.frame')>start;await page.click('#sweep');assert not await page.evaluate('MIXTURE_QA.state.sweep')
    await page.click('[data-shading="material"]');await page.click('#half');await page.click('#front');await page.wait_for_function('MIXTURE_QA.measurement.angle===0');
    assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'horizontal overflow'
-   assert not errors and not failed,(errors,failed)
+   assert not errors and not failed and not console_errors,(errors,failed,console_errors)
    assert all(t=='2d' for t in await page.evaluate('CONTEXT_REQUESTS'))
    assert all(u==BASE for u in requests),requests
    result['final']=await snap('final');result['core_network_requests']=len([u for u in requests if u!=BASE]);result['passed']=True;report['cases'].append(result)
@@ -53,7 +54,7 @@ async def run():
   await ctx.close()
   # Failure injection is local test only, must be visibly failed, not a false success.
   ctx=await browser.new_context();await ctx.add_init_script("HTMLCanvasElement.prototype.getContext=function(){return null}")
-  page=await ctx.new_page();await page.goto(BASE);await page.wait_for_function('window.MIXTURE_QA?.state.error');assert not await page.evaluate('MIXTURE_QA.ready');assert await page.locator('#error').is_visible();assert await page.locator('#angle').is_disabled();await page.screenshot(path=str(OUT/'explicit-failure.png'),full_page=True);report['failure_injection']='passed: visible error, ready false, controls disabled'
+  page=await ctx.new_page();await page.goto(BASE);await page.wait_for_function('window.MIXTURE_QA?.state.error');assert not await page.evaluate('MIXTURE_QA.ready');assert await page.locator('#error').is_visible();assert await page.locator('#angle').is_disabled();await page.screenshot(path=str(OUT/'explicit-failure.png'),full_page=True,animations='disabled');report['failure_injection']='passed: visible error, ready false, controls disabled'
   await browser.close()
  report['passed']=True;(OUT/'REPORT.json').write_text(json.dumps(report,indent=2,ensure_ascii=False));print(json.dumps(report,indent=2,ensure_ascii=False))
 asyncio.run(run())
