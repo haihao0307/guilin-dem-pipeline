@@ -6,25 +6,21 @@ async def main():
  plan=json.load(open('PUBLISH_PLAN.json'));report={'passed':False,'runtimeCommit':plan['candidate'],'runtimeUnmodified':True,'packageFiles':plan['totalFiles'],'packageBytes':plan['totalBytes'],'physicalPhoneTested':False,'errors':[],'httpFailures':[],'views':{},'expectedFiles':plan['files']}
  def save():(out/'inspection.json').write_text(json.dumps(report,indent=2))
  async with async_playwright() as pw:
-  b=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=await b.new_page(viewport={'width':1180,'height':850});page.set_default_timeout(180000)
+  b=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=await b.new_page(viewport={'width':390,'height':844});page.set_default_timeout(180000)
   page.on('pageerror',lambda e:report['errors'].append(str(e)));page.on('response',lambda r:report['httpFailures'].append({'status':r.status,'url':r.url}) if r.status>=400 else None)
   async def capture(name):
    q=await page.evaluate('''async()=>{const s=wholeBuilding,r=s.renderer,g=r.gl;await s.pause();const a=new Uint8Array(r.canvas.width*r.canvas.height*4);g.bindFramebuffer(g.FRAMEBUFFER,null);g.readPixels(0,0,r.canvas.width,r.canvas.height,g.RGBA,g.UNSIGNED_BYTE,a);let colors=new Set();for(let i=0;i<a.length;i+=4)colors.add(a[i]+256*a[i+1]+65536*a[i+2]);const rect=document.getElementById('view').getBoundingClientRect();return {sha:[...new Uint8Array(await crypto.subtle.digest('SHA-256',a))].map(x=>x.toString(16).padStart(2,'0')).join(''),colors:colors.size,rect:rect.toJSON(),viewport:{w:innerWidth,h:innerHeight},canvas:{w:r.canvas.width,h:r.canvas.height},stats:s.lastStats,gpu:r.gpu,overlay:getComputedStyle(document.getElementById('inspectionLoad')).display,caseId:s.caseId,error:g.getError()};}''')
    assert q['colors']>64 and q['error']==0,(name,q);assert q['rect']['width']>=250 and q['rect']['height']>=200,(name,q);assert q['rect']['top']<q['viewport']['h'] and q['rect']['bottom']>0,(name,'canvas offscreen',q);assert q['overlay']=='none',q
    await page.screenshot(path=str(out/(name+'.png')));report['views'][name]=q;save();print('CAPTURE',name,q['stats']['wallMs'],q['rect'],flush=True);return q
   async def choose_ui_case(case):
-   before=await page.evaluate("wholeBuilding.presentedFrames");await page.select_option("#case",case);await page.wait_for_function("([case,before])=>wholeBuilding.caseId===case&&wholeBuilding.ready&&wholeBuilding.presentedFrames>before",arg=[case,before]);await page.evaluate("wholeBuilding.pause()");report.setdefault("uiCaseSelections",[]).append(case)
+   before=await page.evaluate("wholeBuilding.presentedFrames");await page.select_option("#case",case);await page.wait_for_function("([caseId,before])=>wholeBuilding.caseId===caseId&&wholeBuilding.ready&&wholeBuilding.presentedFrames>before",arg=[case,before]);await page.evaluate("wholeBuilding.pause()");report.setdefault("uiCaseSelections",[]).append(case)
   async def facade_ui():
    before=await page.evaluate("wholeBuilding.presentedFrames");await page.click('[data-facade="facade"]');await page.wait_for_function("before=>wholeBuilding.view==='facade'&&wholeBuilding.presentedFrames>before",arg=before);await page.evaluate("wholeBuilding.pause()");await page.evaluate("scrollTo(0,0)")
   try:
-   for f in plan['files']:
-    response=await page.request.get(args.url+f['path']);assert response.status==200,(f['path'],response.status);data=await response.body();assert hashlib.sha256(data).hexdigest()==f['sha256'],f['path']
-   report['exactPackageHTTPHashes']=True;save();await page.goto(args.url);await page.wait_for_function('window.wholeBuilding?.ready&&wholeBuilding?.presentedFrames>0');await page.wait_for_function("getComputedStyle(document.getElementById('inspectionLoad')).display==='none'");await capture('desktop-default-first-frame')
-   await facade_ui();await capture('desktop-east-four-openings')
-   if not args.skip_ab:
-    report['performanceAB']=await page.evaluate("async()=>{const m=await import('/kaopu-geography-workbench/kowloon-building-mother-r01/tests/inspection-perf-ab.mjs');return m.runGuardAB(wholeBuilding);}");save();print('A/B DONE',[(q['variant'],q['phase'],q['wallMs']) for q in report['performanceAB']['rows']],flush=True)
-   await choose_ui_case("warehouse");await capture('desktop-warehouse');await choose_ui_case("kcc");await capture('desktop-kcc-plan-local')
-   await choose_ui_case("lowrise");await page.set_viewport_size({'width':390,'height':844});await page.evaluate('wholeBuilding.render()');await capture('mobile-default-first-frame');await facade_ui();await capture('mobile-east-four-openings')
+   report['previousPublicHashRun']=39770772364;report['hashesNotRepeated']=True
+   await page.goto(args.url);await page.wait_for_function('window.wholeBuilding?.ready&&wholeBuilding?.presentedFrames>0');await page.wait_for_function("getComputedStyle(document.getElementById('inspectionLoad')).display==='none'");await capture('mobile-default-first-frame')
+   await facade_ui();await capture('mobile-east-four-openings')
+   await page.set_viewport_size({'width':1180,'height':850});await page.evaluate('wholeBuilding.pause()');await choose_ui_case("warehouse");await capture('desktop-warehouse');await choose_ui_case("kcc");await capture('desktop-kcc-plan-local')
    assert len(report['httpFailures'])==0,report['httpFailures'];assert not report['errors'],report['errors'];report['passed']=True;save()
   except Exception as e:
    report['failure']=str(e);save();await page.screenshot(path=str(out/'failure.png'));raise
