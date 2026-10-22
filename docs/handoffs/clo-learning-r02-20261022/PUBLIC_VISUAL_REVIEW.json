@@ -1,0 +1,262 @@
+{
+  "schema": "kaopu.screenshot-visual-review/1",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "sourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+  "reviewedAt": "2026-10-22T03:41:53.604196+00:00",
+  "reviewer": "learning_pilot_design",
+  "scope": "主代理实际本地 Chrome 的固定公网默认/失败候选两张截图，加同一固定 URL 的 verification-only CI 390px 浏览器视口截图。本复核逐图观察并引用已保存的实际视口检查；未新跑测试或修改应用。",
+  "publicURL": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/clo-learning/r02-c5c99dd6e7fb/",
+  "applicationHTMLSHA256": "182b8d581cf027704c109daea30e2f988b124d90933b6c7133c89007cee2a8ac",
+  "identityEvidence": {
+    "path": "clo-study-delivery-r02/FINAL_PUBLIC_HTTP_READBACK.json",
+    "sha256": "4011719f0f67e3b321f405d80edd573d25e2133f4ac39e6dcc2e3b401e444a5e",
+    "meaning": "采用已保存的独立 HTTPS 字节回读记录绑定固定 URL、源码和 HTML；本截图复核未重复网络下载。"
+  },
+  "captureContext": {
+    "reportedBy": "root",
+    "browser": "恢复连接后的本地 Chrome",
+    "origin": "固定 HTTPS 公网页面，非 file://",
+    "reportedInteraction": "主代理实际操作 100/-40 得到失败候选，随后 reload 恢复默认。截图只直接证明所保存的默认和失败状态外观，不单独证明完整交互序列。"
+  },
+  "verdict": "指定真实公网桌面与390px浏览器视口截图复核通过；原款/候选对照、参数、失败提示及纵向响应布局清楚，未发现新增必须修改的视觉阻断。",
+  "blockingFindings": [],
+  "findings": [
+    {
+      "id": "comparison-and-labels",
+      "verified": true,
+      "evidence": [
+        "public-desktop.jpg",
+        "public-failed-candidate.jpg"
+      ],
+      "observation": "原款与本次修改保持并排对照，两块说明以浅色实底承载深色文字，未被布面遮蔽；后开口与下摆均可比较。既定开衩细节近景仍不包含完整腰部，此为现有视角范围，无新增观察阻断。"
+    },
+    {
+      "id": "default-measurements",
+      "verified": true,
+      "evidence": [
+        "public-desktop.jpg"
+      ],
+      "observation": "原款裙长63.1cm、开衩深度8.6cm，默认候选69.1cm、12.6cm；右侧双参数与三维底部标注一致。纸样下方开衩深度12.6cm、固定口宽2.0cm清楚可读。默认状态明确为静态检查通过。"
+    },
+    {
+      "id": "failed-candidate-measurements",
+      "verified": true,
+      "evidence": [
+        "public-failed-candidate.jpg"
+      ],
+      "observation": "失败候选仍显示73.1cm裙长及4.6cm开衩深度，原款63.1cm/8.6cm继续保留。纸样4.6cm深度与2.0cm固定口宽同步显示，两个滑块分别位于本次端点位置。"
+    },
+    {
+      "id": "failure-warning-before-details",
+      "verified": true,
+      "evidence": [
+        "public-failed-candidate.jpg"
+      ],
+      "observation": "三维候选标题、右侧状态和画布下方浅红告警均明确本次检查未通过。研究方法详情保持折叠时，用户已能看到布面相交需复核、14对布面相交、0个身体相交面、保留真实结果供观察及不能作为合格试样的说明。告警没有被纸样或控制区遮挡。"
+    },
+    {
+      "id": "correct-tension-label",
+      "verified": true,
+      "evidence": [
+        "public-failed-candidate.jpg"
+      ],
+      "observation": "失败候选的“最大拉伸应变”实际显示12.18%，未再把12.33%的压缩绝对幅度标成拉伸。"
+    },
+    {
+      "id": "desktop-layout",
+      "verified": true,
+      "evidence": [
+        "public-desktop.jpg",
+        "public-failed-candidate.jpg"
+      ],
+      "observation": "双参数控制、求解状态、诊断和纸样正常排列；失败条加入后下方纸样顺延，无明显内容重叠、裁字或横向溢出。"
+    },
+    {
+      "id": "public-mobile390-layout",
+      "verified": true,
+      "evidence": [
+        "public-browser-smoke.mobile390.png"
+      ],
+      "observation": "390px截图顶部装饰语保持隐藏，标题、视角与显示按钮正常换行；画布、双参数控制、状态、诊断和纸样依次纵向排列。未见控件互相遮挡或文字堆叠；截图观察与实际documentWidth/bodyWidth均为390、overflowing为空的检查一致。"
+    },
+    {
+      "id": "public-mobile390-comparison",
+      "verified": true,
+      "evidence": [
+        "public-browser-smoke.mobile390.png"
+      ],
+      "observation": "手机视口的原款和本次修改仍并排显示，浅色标题底板可读，两个后开口和下摆均在观察范围内；原款63.1cm/8.6cm与候选69.1cm/12.6cm可比较。两项滑块、数值和操作入口可见。纸样图内文字较小，下方独立的12.6cm深度与2.0cm口宽读数提供清楚补充。"
+    }
+  ],
+  "visibleDefault": {
+    "lengthCm": 69.1,
+    "slitDepthCm": 12.6,
+    "slitMouthWidthCm": 2.0,
+    "status": "静态检查通过"
+  },
+  "visibleFailedCandidate": {
+    "lengthCm": 73.1,
+    "slitDepthCm": 4.6,
+    "slitMouthWidthCm": 2.0,
+    "status": "本次检查未通过",
+    "clothIntersectionPairs": 14,
+    "bodyIntersectingFaces": 0,
+    "maximumTensileStrainPercent": 12.18
+  },
+  "images": [
+    {
+      "name": "public-desktop.jpg",
+      "path": "clo-study-delivery-r02/public-desktop.jpg",
+      "sha256": "4a79ed92fbe1d54eea51968728f9a2e4ac035acc124121d8ccbb8f7c899bb156",
+      "bytes": 99679,
+      "width": 1160,
+      "height": 1454,
+      "capturedState": "default",
+      "visuallyInspected": true
+    },
+    {
+      "name": "public-failed-candidate.jpg",
+      "path": "clo-study-delivery-r02/public-failed-candidate.jpg",
+      "sha256": "16f43ec82c89a27c53f379be8bcb6dae24f85aa6034e9a36f2ffd92510b83d07",
+      "bytes": 106811,
+      "width": 1160,
+      "height": 1598,
+      "capturedState": "review",
+      "visuallyInspected": true
+    },
+    {
+      "name": "public-browser-smoke.mobile390.png",
+      "path": "audit_clo_ci_r02/public-verification-final/public-browser-smoke.mobile390.png",
+      "sha256": "9d419ba11efb954543f5081f314fc2df78612ddc4f5246d3b8a25c39880edeb6",
+      "bytes": 199240,
+      "width": 390,
+      "height": 2133,
+      "capturedState": "default",
+      "origin": "fixed HTTPS URL, verification-only CI",
+      "sourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+      "verifierSourceHead": "3f174406b027ff27672e59301e16f31e419c4e12",
+      "visuallyInspected": true
+    }
+  ],
+  "environmentLimitations": [
+    {
+      "environment": "cloud browser",
+      "observationSource": "主代理报告",
+      "limitation": "此前该环境无可用 WebGL2，页面诚实显示 Error creating WebGL context；不能据此认定应用在所有浏览器中均失败。此限制继续保留，不以本地 Chrome 成功抹去。"
+    },
+    {
+      "environment": "本地 Chrome",
+      "observationSource": "主代理实际交互报告及本轮两张截图",
+      "observation": "已得到真实公网默认与失败候选画面，本次逐图复核只覆盖其桌面视觉状态。"
+    },
+    {
+      "environment": "public verification-only CI",
+      "runId": 39717879646,
+      "statusAtDesktopReview": "主代理报告运行中；本记录不预判自动检查结论，也不将旧 file-browser 通过结果替代公网自动检查。",
+      "statusAtReview": "原始完整公网报告现已passed=true、84/84检查通过；手机视口WebGL2可用且无context loss。截图视觉结果仅覆盖已指定图。",
+      "browser": {
+        "engine": "Chromium",
+        "headless": true,
+        "graphics": "ANGLE SwiftShader explicitly requested",
+        "version": "143.0.7499.4"
+      },
+      "physicalMobileDeviceCertified": false
+    }
+  ],
+  "pendingVisualEvidence": [],
+  "screenshotVisualReviewPassed": true,
+  "publicScreenshotsVisuallyReviewed": true,
+  "publicURLDirectlyOpenedByThisReviewer": false,
+  "publicMobileVisualReviewComplete": true,
+  "sourceOrStyleModified": false,
+  "independentReleaseApproval": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "reviewerDisclosure": "本检查者此前实现过界面和 CSS 修正；本记录为指定真实公网截图的回归观察，不代替独立发布批准或用户视觉验收。",
+  "desktopReviewedAt": "2026-10-22T03:39:24.703058+00:00",
+  "mobileReviewedAt": "2026-10-22T03:41:53.604196+00:00",
+  "verifierSourceHead": "3f174406b027ff27672e59301e16f31e419c4e12",
+  "publicMobileViewportEvidence": {
+    "path": "audit_clo_ci_r02/public-verification-final/public-browser-smoke.json",
+    "sha256": "3f9991f45528cc905ccfb32e989fe85931b3c92604fa2e4d903ca1b0ceafd0f8",
+    "runId": 39717879646,
+    "verificationRunURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39717879646",
+    "sourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+    "verifierSourceHead": "3f174406b027ff27672e59301e16f31e419c4e12",
+    "mode": "https",
+    "target": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/clo-learning/r02-c5c99dd6e7fb/",
+    "completedAt": "2026-10-22T03:39:47.403Z",
+    "reportedPublicSuitePassed": true,
+    "reportedPublicChecksTotal": 84,
+    "reportedPublicChecksPassed": 84,
+    "reportedMobileViewportPassed": true,
+    "actualLayout": {
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "overflowing": [],
+      "canvas": {
+        "cssWidth": 356,
+        "cssHeight": 518,
+        "pixelWidth": 358,
+        "pixelHeight": 520,
+        "webgl2": true,
+        "contextLost": false,
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+        "renderer": "WebKit WebGL"
+      }
+    },
+    "actualChecks": [
+      {
+        "id": "mobile390-no-horizontal-overflow",
+        "passed": true,
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "overflowing": [],
+        "canvas": {
+          "cssWidth": 356,
+          "cssHeight": 518,
+          "pixelWidth": 358,
+          "pixelHeight": 520,
+          "webgl2": true,
+          "contextLost": false,
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "WebKit WebGL"
+        }
+      },
+      {
+        "id": "mobile390-live-webgl",
+        "passed": true,
+        "canvas": {
+          "cssWidth": 356,
+          "cssHeight": 518,
+          "pixelWidth": 358,
+          "pixelHeight": 520,
+          "webgl2": true,
+          "contextLost": false,
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "renderer": "WebKit WebGL"
+        },
+        "renders": 16
+      },
+      {
+        "id": "mobile-no-errors",
+        "passed": true
+      }
+    ],
+    "browser": {
+      "engine": "Chromium",
+      "headless": true,
+      "graphics": "ANGLE SwiftShader explicitly requested",
+      "version": "143.0.7499.4"
+    },
+    "responsiveViewportOnly": true,
+    "physicalMobileDeviceCertified": false,
+    "newTestRunByThisReviewer": false,
+    "meaning": "引用同一固定公网版本原始自动报告的实际视口检查；84项通过为原报告事实，本次仅补查手机截图和这些报告字段，不重复测试。"
+  },
+  "publicMobileHardwareCertification": false
+}

@@ -1,0 +1,240 @@
+{
+  "schema": "kaopu-r02-runtime-identity-diagnosis/2",
+  "recordedAt": "2026-10-22T03:20:24.422136+00:00",
+  "reviewer": "source_audit",
+  "conclusion": "The original CI material golden was too strong as a cross-runtime byte identity assertion. Actual Chromium results are source-correct and internally bound, but their real rest-coordinate bytes differ from Node. The physical outcomes must remain runtime-specific. Replaced the universal live material golden with independent actual-packet source/geometry/hash validation; retained strict per-result physical gates and added an observed actual Chromium failure sample.",
+  "observations": [
+    {
+      "parameters": {
+        "deltaMm": 20,
+        "slitDeltaMm": 0
+      },
+      "node": {
+        "runtime": "Node 24 development container",
+        "evidence": "clo-pilot-r02/evidence/solve-20-0.json.gz",
+        "gzipSHA256": "65d8f280b25283c781479959fa0837685b00a15c9e0e6a88dc1bb7d396e621c5",
+        "requestId": 1,
+        "expectedRevision": 0,
+        "paperSHA256": "21800f0e952eb15a35b384ea2c9796147587bf794f8da80799e38663a8d878f0",
+        "operationSHA256": "1eabc3a84f74dfc605cd0dc6332712ff52a5fc501ff2d750b88475e3018edefd",
+        "recipeHash": "6beef3f1f1af4618f39da837697b1a8089b4157c986ead39848ec34f806c63cb",
+        "geometryHash": "08dfe7c2e851c7ce7158057a67785a40b62deb6af5ae2c86964ee1b0ec32c457",
+        "materialSHA256": "688ad092df170586209614197d5f6f455530bc02dbdb3b391c2f609150a8df6e",
+        "vertices": 3548,
+        "triangles": 6296,
+        "actualStaticPassed": true,
+        "actualStaticFailures": [],
+        "actualStrictClothIntersectionPairs": 0,
+        "bodyIntersectingFaces": 0
+      },
+      "chromium": {
+        "runtime": "Chromium 143 via pinned Playwright 1.57.0",
+        "sourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+        "evidence": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-2-done-request-1.json.gz",
+        "gzipSHA256": "7aa1540a463da4fa631a85bb7891519bc4642dbf104cfaf4bb115cddda5f4b15",
+        "requestId": 1,
+        "expectedRevision": 0,
+        "paperSHA256": "604f78daa6b29d393cacb84f8b32f1fd9d308e04364c382e25e7659c7fd5ada4",
+        "operationSHA256": "1eabc3a84f74dfc605cd0dc6332712ff52a5fc501ff2d750b88475e3018edefd",
+        "recipeHash": "6beef3f1f1af4618f39da837697b1a8089b4157c986ead39848ec34f806c63cb",
+        "geometryHash": "08dfe7c2e851c7ce7158057a67785a40b62deb6af5ae2c86964ee1b0ec32c457",
+        "materialSHA256": "20d61042f9d9b64d4cdffff4cf063ac683c927f9b982d2b07a3b7db254567d9c",
+        "vertices": 3548,
+        "triangles": 6296,
+        "actualStaticPassed": true,
+        "actualStaticFailures": [],
+        "actualStrictClothIntersectionPairs": 0,
+        "bodyIntersectingFaces": 0
+      },
+      "meaning": "Each physical result applies to its own actual rest mesh and runtime. Request/revision differences may also change metadata hashes; they do not establish or refute material equivalence."
+    },
+    {
+      "parameters": {
+        "deltaMm": 60,
+        "slitDeltaMm": 60
+      },
+      "node": {
+        "runtime": "Node 24 development container",
+        "evidence": "clo-pilot-r02/evidence/fixtures/FAILED_LENGTH60_OPENING60.json.gz",
+        "gzipSHA256": "41b0e87b0574a76d0a3577eaab5975a0132c8b4f0a657d344a2cc3fbc76d326d",
+        "requestId": 1,
+        "expectedRevision": 0,
+        "paperSHA256": "e09eb559d4f51b9362b5b161dfd6cb514f3fecd718b737fa8eb22006eaa94b63",
+        "operationSHA256": "46bd03b09aea48d8620d39f00a0b1c122bfc56299264e88320d0d30f4d6ee6f2",
+        "recipeHash": "0e8e15b373f51e75ed99eee29f1f465719e33fba0712d7f7ccb4f1b4e468738a",
+        "geometryHash": "52b484bb583e7eb2104c999b30a15566a48b3eb60b973a5cffd5143104cc223b",
+        "materialSHA256": "5aabb9fe8db98e1eceee22c79a157725b04cb73d50834e9460e1917ce6286eeb",
+        "vertices": 3744,
+        "triangles": 6672,
+        "actualStaticPassed": false,
+        "actualStaticFailures": [
+          "cloth-intersections"
+        ],
+        "actualStrictClothIntersectionPairs": 1,
+        "bodyIntersectingFaces": 0
+      },
+      "chromium": {
+        "runtime": "Chromium 143 via pinned Playwright 1.57.0",
+        "sourceHead": "b917fab6c7d5f27590aa22aa61febf203b2e3b31",
+        "evidence": "audit_clo_ci_r02/run5/evidence/local-browser-smoke.packet-4-done-request-2.json.gz",
+        "gzipSHA256": "6aa22266f0bad16ac4e06b811abecad8471221c10fe619f9c09e693fb6474c85",
+        "requestId": 2,
+        "expectedRevision": 1,
+        "paperSHA256": "f2d6cfed38db5a9ddc70433b15047cb748ddd694d2293ab6448eb1f84e58ec72",
+        "operationSHA256": "7000bc414de40c74b78724fa2c3fc1f1e57360eb1bcf0d34769ffd983c07e6f1",
+        "recipeHash": "24fdccd3c74eec68b6b70d8a9a4902ee152f17b6a8a7d9d9cb2008305eec4c8e",
+        "geometryHash": "52b484bb583e7eb2104c999b30a15566a48b3eb60b973a5cffd5143104cc223b",
+        "materialSHA256": "0323bc3c6bf1a0b72a1a7c07a610badd8d6dae26bb9219fd8e993f29fe1085e3",
+        "vertices": 3744,
+        "triangles": 6672,
+        "actualStaticPassed": true,
+        "actualStaticFailures": [],
+        "actualStrictClothIntersectionPairs": 0,
+        "bodyIntersectingFaces": 0
+      },
+      "meaning": "Each physical result applies to its own actual rest mesh and runtime. Request/revision differences may also change metadata hashes; they do not establish or refute material equivalence."
+    },
+    {
+      "parameters": {
+        "deltaMm": 100,
+        "slitDeltaMm": -40
+      },
+      "node": {
+        "runtime": "Node 24 development container",
+        "evidence": "clo-pilot-r02/evidence/solve-100--40.json.gz",
+        "gzipSHA256": "04f896ef3830ad40c6b3b7cdc7f7f5bb50435631ef8b20aff24fe37211ffbbec",
+        "requestId": 1,
+        "expectedRevision": 0,
+        "paperSHA256": "32d514090603995c2f9598dfc65ed52ea8c00a75b2dde214bf08e21888e098b7",
+        "operationSHA256": "a5d8bb5548cabc5fa8f78a2f59cd2ed8a2c0844fbecbc1b96b6c645e4345945b",
+        "recipeHash": "89665d29c31226c8dcaea97ab2dca5274ac1746f329735f078cfe9ec37c56b62",
+        "geometryHash": "2eba9ad499b6cf7fd3f390b2793faa8c513a3523bc0df951cb8c51046b7a2791",
+        "materialSHA256": "ff12bc0ac83a024121e5de39db6e04d16fc09f227ec7f2c70c41d74acad75e63",
+        "vertices": 3928,
+        "triangles": 7042,
+        "actualStaticPassed": false,
+        "actualStaticFailures": [
+          "cloth-intersections"
+        ],
+        "actualStrictClothIntersectionPairs": 24,
+        "bodyIntersectingFaces": 0
+      },
+      "chromium": {
+        "runtime": "Chromium 143 via pinned Playwright 1.57.0",
+        "sourceHead": "84e51141b6a2559ac132ba23bf8d9268a865a1ca",
+        "evidence": "audit_clo_ci_r02/run6/evidence/local-browser-smoke.packet-4-done-request-2.json.gz",
+        "gzipSHA256": "941bbdac106567e182173ed43241bc07a1261998954ae4c27cc642d2cef1e2c5",
+        "requestId": 2,
+        "expectedRevision": 1,
+        "paperSHA256": "fe641592f893527d04bfe69d830cb4b0b7133ea5409b00c9369baa9403b38e51",
+        "operationSHA256": "2ceb2aae09cdd0f2bcffefba68f764ea5bfe9a1c63443efa635c7ceb8ab9d1df",
+        "recipeHash": "93a74c8892c49ecc8a42d243f3b910d1b279a557aba259523cde174b4aa9654c",
+        "geometryHash": "2eba9ad499b6cf7fd3f390b2793faa8c513a3523bc0df951cb8c51046b7a2791",
+        "materialSHA256": "1124cf77ef30a248af7b2858d66859df7d8cc59042a482390d2b0c6e6c67c005",
+        "vertices": 3928,
+        "triangles": 7042,
+        "actualStaticPassed": false,
+        "actualStaticFailures": [
+          "cloth-intersections"
+        ],
+        "actualStrictClothIntersectionPairs": 14,
+        "bodyIntersectingFaces": 0
+      },
+      "meaning": "Each physical result applies to its own actual rest mesh and runtime. Request/revision differences may also change metadata hashes; they do not establish or refute material equivalence."
+    }
+  ],
+  "firstDifference20_0": {
+    "path": "analytic.panels[3].edges[1].sampledPointsMm[6][0]",
+    "panel": "wb_front",
+    "edge": 1,
+    "kind": "circle",
+    "node": 20.62553174227358,
+    "chromium": 20.62553174227361,
+    "absoluteDifferenceMm": 2.842170943040401e-14,
+    "completeAnalyticOtherFieldsEqual": true,
+    "sourceCircleIsUnedited": true,
+    "originalVerticesArcsControlsPlacementsAndSeamGatheringEqual": true
+  },
+  "materialComparisonFor20_0And60_60": {
+    "restUVPointsChanged": 17,
+    "byPanel": {
+      "wb_back": {
+        "points": 9,
+        "maxAbsDeltaMm": 1.7053025658242404e-13,
+        "edges": {
+          "e0": 9
+        }
+      },
+      "wb_front": {
+        "points": 8,
+        "maxAbsDeltaMm": 7.958078640513122e-13,
+        "edges": {
+          "e3": 3,
+          "e5": 5
+        }
+      }
+    },
+    "skirtFrontAndBackRestUVExact": true,
+    "orderedTriangleArraysExact": true,
+    "unorderedTriangleMultisetsExact": true,
+    "boundaryIndicesAndEdgeVertexListsExact": true,
+    "seamReferencesAndStitchPairsExact": true,
+    "specSeamEaseOnlyObservedDifference": {
+      "seam": "s14",
+      "absoluteDifferenceMm": 2.842170943040401e-14
+    },
+    "paperToDoneMaterialProjectionExact": true,
+    "physicalEquivalenceAsserted": false,
+    "detailedEvidence": "CHROMIUM_MESH_DIFFERENCE_REVIEW.json",
+    "detailedEvidenceSHA256": "750df7afc1e5dcbde542fcf78475701a2cd138640a4b2c8369bf1ac61035a646"
+  },
+  "excludedExplanationsAndLimits": {
+    "minifiedVersusModuleSameNodeProbe": "Complete paper, spec, binding, initial positions and measurements were exactly equal when run in the same Node runtime. No minification mismatch was reproduced.",
+    "Node22VersusNode24InitialDefault": "The captured initial 60/40 Node result was exactly equal across the two observed Node environments. This is an instance, not a general determinism guarantee.",
+    "transcendentalRoutineRootCause": "Not proved. Observed differences are in sampled circle geometry; isolated Math.hypot substitutions did not reproduce the Chromium hash. No app or vendor numerical function was changed.",
+    "physicalOutcomeCausality": "Near-identical rest UV and identical topology do not prove that those UV differences alone caused the different nonlinear trajectories. No equivalence or causal certification is asserted.",
+    "noSourceQuantization": true,
+    "noPhysicsThresholdChange": true,
+    "noNewPhysicsRunByThisReview": true
+  },
+  "actualPipelineIntegrity": {
+    "helper": "kaopu-tailor-workbench/clo-learning-r02/tests/packet-integrity.mjs",
+    "helperSHA256": "d28290720b525d23524ac9800775d21999df224e422d1891c91741dc626dd4a9",
+    "api": "verifyPacketIntegrity({paperPacket,donePacket,basePaperText,expected:{deltaMm,slitDeltaMm,requestId,expectedRevision},previousBinding})",
+    "independence": "Node built-in crypto and independent geometric checks only; imports no production operation, compiler or hash helper.",
+    "checks": [
+      "Frozen base paper byte hash; request/revision and bounded expected dimensions.",
+      "Exact protected source points, original curve controls/arcs, body, panel order, all 20 source seam identities, independent skirt length and triangular-opening depth; 20 mm mouth remains free.",
+      "Exact expected operation/history and no inherited physical PASS/oracle.",
+      "Actual analytic JSON SHA, canonical operation SHA, source recipe/geometry SHA and actual material projection SHA recomputed independently.",
+      "Six full binding copies through paper, done, spec and record snapshot; frozen native person.",
+      "Every actual material boundary follows the source analytic edge; valid oriented triangulation, complete incidence, Euler/area checks, correct directed seam endpoints and monotone material stitch identities.",
+      "Finite complete result coordinates, all source seams active, temporary pins released and original physical thresholds retained."
+    ],
+    "assemblyPlacementDistinction": "The unmodified R07 assembly step changes only world-Z placement using the original body envelope. Its actual preparation logs are checked separately; analytic source placement and rest material remain protected.",
+    "positiveExistingPacketPairs": 4,
+    "meaningfulTamperCasesRejected": 7,
+    "tamperIncludesCoordinatedResigning": true,
+    "evidence": "PACKET_INTEGRITY_REVIEW.json",
+    "evidenceSHA256": "6c5236bddb6a7bfa4ffa8be384c166e2f039472f6eed041db02c7f3ffbdb14df"
+  },
+  "strainDisplayCorrection": {
+    "oldLabelIssue": "Record maxPrincipalStrain stores maximum absolute principal strain; it can represent compression.",
+    "independentMaximumTensionPercent100_m40": 12.177961291895834,
+    "independentMaximumCompressionPercent100_m40": 12.326825526934716,
+    "correctDisplayedMaximumTension": "12.18%",
+    "gateResultUnchanged": "Actual 100/-40 cloth-intersection failure remains a failure.",
+    "sourceReview": "STRAIN_DISPLAY_REVIEW.json",
+    "sourceReviewSHA256": "dd6f2ad63bf25e299b84ae3c50a676668308241cbfd6b85fe744e5f13f262fef",
+    "developmentSummaryAndConsole": "Only misleading field names were corrected; original values and all physical conclusions retained."
+  },
+  "handoff": {
+    "sourceReviewSHA256": "76067e82c0d5680a73c37f14b1def76ba952ab1f5a5219e18e5490d01313cc10",
+    "sourceFilesFrozen": true,
+    "sourceReviewPassed": true,
+    "shareAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "pending": "Normal final source commit, complete file/public CI acceptance, immutable HTML source/byte proof, independent artifact audit and root public Browser visual review."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-r02-verification-only-workflow-review/1",
+  "recordedAt": "2026-10-22T03:37:03.518093+00:00",
+  "reviewer": "source_audit",
+  "passed": true,
+  "files": {
+    "public-browser-smoke.mjs": "17d601994aac058deb4cfe6ff6ffdf76824a955e53d9f80c86db5cec9ee1111d",
+    "public-browser-smoke.patch": "7b34e34789ce9096cb2362dbf7fd5118dbd645d5e33abea273c2550c628433c2",
+    "PUBLIC_VERIFIER_PATCH_REVIEW.json": "2f965c02d2c7f0f26f8c8af2b691c2a264318dc373dd06d04239213822169f7d",
+    "public-verification-workflow.yml": "6d70117ce9fd037a58aef852c7f36b858800a19983fe5d22156808921a977a0c",
+    "record-public-proof.py": "0b0d6be058c31aed6423e226782674d39d22944dbabb16445fd2b09cb6d76702"
+  },
+  "applicationSourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+  "applicationHTMLSHA256": "182b8d581cf027704c109daea30e2f988b124d90933b6c7133c89007cee2a8ac",
+  "checks": [
+    "Workflow is limited to a new evidence branch and has contents:read only.",
+    "Git diff rejects any frozen application-directory change relative to c5; helper byte hash is locked.",
+    "Source input retrieval uses the existing locked downloader and needs only Python standard library. It does not build or publish.",
+    "CLO_PROJECT_DIR resolves the unchanged helper and frozen paper; fixed Playwright path is explicit.",
+    "Expected application source uses CLO_EXPECTED_SOURCE_HEAD; verifier commit uses GITHUB_SHA, recorded separately.",
+    "APIRequestContext readback records and checks the same navigated final URL; original HTML hash/manifest/source checks remain required.",
+    "All browser UI, source, packet, physics, real negative outcome, cancel/reset, network, error and viewport assertions remain intact.",
+    "Public mode should add three checks to the 81 common file-mode checks, agreeing with proof requirement >=84.",
+    "Proof assertions reference fields actually produced by the verifier and require complete actual public success.",
+    "Original failure proof remains untouched and new final proof is a separate file.",
+    "Workflow/report/result working directories and source paths are consistent.",
+    "No local Playwright or additional solver runs were performed for this review."
+  ],
+  "independentSecondReviewer": {
+    "agent": "asset_reuse",
+    "finding": "No blocker. Actual diff matches recorded patch. Full suffix from Initial real 3D through final exit is byte-identical; only one additional public-html-readback check. No page content, Worker result or state injection added.",
+    "verificationScriptSHA256": "17d601994aac058deb4cfe6ff6ffdf76824a955e53d9f80c86db5cec9ee1111d"
+  },
+  "pythonProofSyntaxParsed": true,
+  "sourceModified": false,
+  "workflowExecutedYet": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "pending": "Actual verification-only CI outcome and root public Browser visual review."
+}

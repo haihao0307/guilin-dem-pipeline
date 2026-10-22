@@ -1,0 +1,106 @@
+{
+  "schema": "kaopu-r02-independent-final-ci-artifact-review/1",
+  "recordedAt": "2026-10-22T03:35:08.602858+00:00",
+  "sourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+  "sourceCIrun": 39716223368,
+  "jobId": 119618867119,
+  "artifactId": 12399212947,
+  "artifactDirectory": "/workspace/scratch/e35bb4711602/audit_clo_ci_r02/final",
+  "artifactSHA256": "3ffd8ee156ff2a1dee4ceb37c7f9cc7a2ea575f4e14086d4c74394e561fc1c76",
+  "artifactIntegrityPassed": true,
+  "sourceAndPublicHTTPIdentityPassed": true,
+  "sourceReviewPassed": true,
+  "localBrowserPassed": true,
+  "localBrowserCheckCount": 81,
+  "publicBrowserPassed": false,
+  "deliveryGatePassed": false,
+  "checks": [
+    {
+      "id": "verified-zip",
+      "passed": true
+    },
+    {
+      "id": "index.html-exact-manifest-proof-public-readback",
+      "passed": true,
+      "sha256": "182b8d581cf027704c109daea30e2f988b124d90933b6c7133c89007cee2a8ac",
+      "bytes": 15919775
+    },
+    {
+      "id": "manifest.json-exact-manifest-proof-public-readback",
+      "passed": true,
+      "sha256": "0701539402727cdcd115741a874ded1b71e24d7a5706dcff47086ed0e055a168",
+      "bytes": 3810
+    },
+    {
+      "id": "frozen-source-head",
+      "passed": true
+    },
+    {
+      "id": "html-sha-and-length",
+      "passed": true
+    },
+    {
+      "id": "all-early-preview-evidence-preserved",
+      "passed": true
+    },
+    {
+      "id": "frozen-source-evidence-R02_SOURCE_REVIEW.json",
+      "passed": true
+    },
+    {
+      "id": "frozen-source-evidence-PACKET_INTEGRITY_REVIEW.json",
+      "passed": true
+    },
+    {
+      "id": "frozen-source-evidence-STRAIN_DISPLAY_REVIEW.json",
+      "passed": true
+    },
+    {
+      "id": "frozen-source-evidence-CHROMIUM_MESH_DIFFERENCE_REVIEW.json",
+      "passed": true
+    },
+    {
+      "id": "frozen-source-evidence-DEVELOPMENT_SOLVE_SUMMARY.json",
+      "passed": true
+    },
+    {
+      "id": "fresh-default-record-matches-manifest",
+      "passed": true
+    },
+    {
+      "id": "publication-proof-is-honest",
+      "passed": true
+    },
+    {
+      "id": "public-failure-is-cache-read-before-ui",
+      "passed": true
+    },
+    {
+      "id": "publication-only-adds-two-immutable-files",
+      "passed": true
+    }
+  ],
+  "HTMLSHA256": "182b8d581cf027704c109daea30e2f988b124d90933b6c7133c89007cee2a8ac",
+  "htmlBytes": 15919775,
+  "fixedURL": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/clo-learning/r02-c5c99dd6e7fb/",
+  "publicationCommit": "0185ddebd9742449e394cb42a9a3b6f8fea0bda4",
+  "publicFailure": {
+    "durationMs": 3957,
+    "message": "response.body: Protocol error (Network.getResponseBody): Request content was evicted from inspector cache",
+    "location": "tests/browser-smoke.mjs:339 response.body()",
+    "observed": "Navigation returned HTTP 200. Chromium DevTools evicted the large response body before Playwright could read it. The public suite aborted before initial-state, worker, physics and interaction assertions. No console/page error was observed before the abort.",
+    "notClaimed": "This is not a public interaction PASS and does not establish an application defect.",
+    "minimalRecovery": "Use a separate verification-only workflow with the same c5 immutable URL/HTML and preserved assertions. Retrieve HTML bytes through APIRequestContext rather than CDP Network.getResponseBody; retain the original failed report."
+  },
+  "preparedVerifier": {
+    "file": "public-browser-smoke.mjs",
+    "sha256": "17d601994aac058deb4cfe6ff6ffdf76824a955e53d9f80c86db5cec9ee1111d",
+    "requiresAppSourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+    "rebuildOrRepublish": false,
+    "runYet": false
+  },
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "pending": "Independent verification-only full public browser sequence plus root actual public-browser visual/interaction review; exact original HTML must remain unchanged."
+}

@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu.r02-runtime-numeric-source-review/1",
+  "recordedAt": "2026-10-22T02:50:09.641911+00:00",
+  "reviewer": "asset_reuse",
+  "scope": "Read-only review of the real R02 analytic rebuild and material compilation paths. Only this report is written; no kernel, precision, threshold, rounding, source asset or golden changed; no additional physics solve run.",
+  "sourceFiles": {
+    "operation": {
+      "path": "clo-pilot-r02/src/design-operation.mjs",
+      "sha256": "026ddfa130d945c9b029f8280479bf1b465f9373701e468489076977b1dd7428"
+    },
+    "workerExtension": {
+      "path": "clo-pilot-r02/src/worker-extension.txt",
+      "sha256": "82de56d8105dacee8f2a0f2cf2de4cf37ad0c116222bc0c82edbfb456e5ca5b6"
+    },
+    "editKernel": {
+      "path": "clo-pilot-r02/upstream/kaopu-tailor-workbench/pattern-batch/r02/backend/native/kaopu-tailor-workbench/learning/patterngsl-r01/pattern-edit-kernel.mjs",
+      "sha256": "44b23906d0d71b8ab444fe3aac9e2a5b19cac22a267ee8c492615f5ddae092f8"
+    },
+    "editBridge": {
+      "path": "clo-pilot-r02/upstream/kaopu-tailor-workbench/pattern-batch/r02/backend/native/kaopu-tailor-workbench/r07/continuation/native-edit-bridge.mjs",
+      "sha256": "351958e8cc0e16541edc6446da7ea9313bef603810fd45d3b0c5cc5ef20eb4c6"
+    },
+    "adapter": {
+      "path": "clo-pilot-r02/generated/native-adapter.mjs",
+      "sha256": "84f3d41aa9bfc34f0eb317a755972d49f90f8349a2225e80f2214356176fae0d"
+    },
+    "sourceRepair": {
+      "path": "clo-pilot-r02/upstream/kaopu-tailor-workbench/pattern-batch/r02/backend/source-repair-r043.mjs",
+      "sha256": "f8ba900efd2832ccd3fe71f5139d3f007da94278501082c2578f8a18fae8ce44"
+    },
+    "hashContract": {
+      "path": "clo-pilot-r02/upstream/kaopu-tailor-workbench/pattern-batch/r02/backend/source-contract.mjs",
+      "sha256": "3da9754780c4201f9e06a9d39641100ce2e03f56b8f1f87c29ab2c539eb6536f"
+    },
+    "priorIndependentDiagnosis": {
+      "path": "clo-study-delivery-r02/RUNTIME_HASH_DIAGNOSIS_INITIAL.json",
+      "sha256": "4774d38ed0cb148180f572e86b6fd82cc163dba23be197a03a6cf65c4bf9ced5"
+    }
+  },
+  "status": {
+    "firstDivergentBrowserNumberIdentified": false,
+    "specificMathFunctionConfirmedAsRootCause": false,
+    "topologyDifferenceConfirmed": false,
+    "fullBrowserPacketComparisonPending": true,
+    "sourceModified": false,
+    "solverRun": false,
+    "thresholdsModified": false,
+    "goldensChanged": false,
+    "shareAllowed": false
+  },
+  "inheritedEvidence": {
+    "source": "priorIndependentDiagnosis",
+    "summary": "source_audit found exact module/minified-worker analytic, spec, binding, initial positions and measurements equality within one Node runtime. Chromium paper and material SHA differ while operation, recipe and person match. Its isolated naive/scaled Math.hypot probes did not reproduce Chromium. These results are reused as evidence, not rerun or reinterpreted as an established hypot cause."
+  },
+  "actualCallChain": [
+    "workerExtension loadLengthVariant",
+    "operation changeSkirtDesign",
+    "editKernel fromNativeAnalytic / validateEditablePattern",
+    "editBridge rebuildEditedAnalytic",
+    "sourceRepair prepareNativeSource",
+    "adapter compileWithinNativeBudget -> compileAnalytic -> curveTable / curvePoint -> cdt2d",
+    "hashContract materialHash and workerExtension paper SHA"
+  ],
+  "s03Reachability": {
+    "panelEdges": {
+      "skirt_back": {
+        "line": 19,
+        "quadratic": 2
+      },
+      "skirt_front": {
+        "line": 10,
+        "quadratic": 2
+      },
+      "wb_back": {
+        "circle": 6,
+        "line": 2
+      },
+      "wb_front": {
+        "circle": 4,
+        "line": 2
+      }
+    },
+    "circleEdges": 10,
+    "quadraticEdges": 4,
+    "allSeamsHaveGathering": true,
+    "quadraticGatheringSeams": [
+      "s7",
+      "s8"
+    ],
+    "unchangedWaistbandsStillRecomputed": true
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "observed code plus unconfirmed mechanism",
+      "source": "editKernel samplePatternEdge, lines 14-23; editBridge sampled, lines 10-17 and rebuildEditedAnalytic lines 47-61",
+      "observed": "Circle points call Math.cos and Math.sin, including t=0 and t=1. Every edge of every panel is rebuilt, including the protected waistbands. Adaptive quarter/midpoint sampling branches on deviation >0.1 mm and chord distance >8 mm. Signed area and complete paper diagnostics derive from these samples.",
+      "inference": "Different last bits from an implementation-approximated trig function can change sampledPointsMm and area, hence complete paperSHA256, even when the edit operation and source circle parameters are identical. A branch-count difference is only possible near a threshold and is not demonstrated."
+    },
+    {
+      "id": "F2",
+      "kind": "observed code plus unconfirmed mechanism",
+      "source": "editBridge distance, bezierDerivative and curveLength, lines 5 and 19-30; gathering rebuild lines 65-66",
+      "observed": "Line lengths use Math.hypot. Quadratic/cubic speeds use Math.hypot inside adaptive Simpson integration with eps=1e-7, depth=20 and a 15*eps split criterion. Circle length uses radius*abs(sweepDegrees)*Math.PI/180, without sin/cos. All 20 S03 gathering rows recompute projectedLengthAMm/BMm from these lengths.",
+      "inference": "Length last-bit differences can enter full paper fields and geometryHash through gathering. This is a candidate, not a diagnosis; source_audit hypot substitutions did not reproduce Chromium."
+    },
+    {
+      "id": "F3",
+      "kind": "observed code plus unconfirmed mechanism",
+      "source": "adapter curvePoint and curveTable, lines 3140-3180; compileAnalytic lines 3205-3248",
+      "observed": "Mesher circlePoint calls sin/cos for interior samples but pins t=0/1 to the exact source vertices. Dense curve tables use ceil(length/0.4), cumulative hypot distances, binary searches on accumulated lengths and arc-length interpolation. Boundary count uses ceil(total/16), doubles when chord error exceeds 0.25 mm, and pairs seam counts. Interior points use a regular sqrt(3) grid, strict inside tests and boundary clearance >0.42*step.",
+      "inference": "Tiny curve/length differences can directly change boundary UV values before any physics. Near branch boundaries they can also change sample/interior-point counts. Existing counts alone cannot establish equality. No such branch crossing has been demonstrated; sqrt(3) is a fixed grid constant and is not specifically implicated."
+    },
+    {
+      "id": "F4",
+      "kind": "observed code plus unconfirmed downstream amplification",
+      "source": "adapter embedded cdt2d monotone compareEvent lines 787-798 and 885-915; delaunayRefine/testFlip lines 1231-1304; compileAnalytic lines 3250-3253",
+      "observed": "CDT sorts events using coordinate differences, orientation and index tie breaks. It uses robust-orientation and robust-in-sphere predicates; nonconstrained diagonals flip on inCircle<0 and remain on inCircle>=0. Final triangle winding is corrected by a signed area comparison.",
+      "inference": "Different input UV values near a co-circular or collinear configuration can choose a different event order/diagonal, even with robust predicates. The predicates are evaluating their actual inputs; this is not evidence of random or faulty triangulation. Compare exact UV, ordered triangles and unordered triangle sets separately. No topology difference has yet been confirmed."
+    },
+    {
+      "id": "F5",
+      "kind": "observed exclusions",
+      "source": "operation changeSkirtDesign; sourceRepair prepareNativeSource lines 11-47; adapter gradePaper3 lines 2202-2238 and physical strain/kernel code lines 2616/2784",
+      "observed": "The requested source vertex edits are arithmetic deltas with cloned placements and curves. No random/time input was found in this pre-solve geometry chain. Math.acos belongs to a legacy short-sleeve grading function not used for this S03 operation; atan2 occurs in later physics/projection code, not in the pre-solve paper rebuild. S03 is PencilSkirt, not SkirtLevels, and its edited local coordinate extent is below the 2000 mm rebase trigger.",
+      "implication": "Do not attribute the observed pre-solve paper SHA mismatch to inverse trigonometry in unrelated legacy/physics code, solver iteration variability or the inactive source-repair branches."
+    }
+  ],
+  "hashSemantics": {
+    "recipeHash": {
+      "source": "editBridge line 70",
+      "input": "bodyCm, design, baseRecipeHash, operations and editHistory; excludes rebuilt curve samples and material mesh.",
+      "implication": "Matching recipe/operation is compatible with different derived floating-point samples."
+    },
+    "geometryHash": {
+      "source": "editBridge line 71",
+      "input": "Panel ids, verticesMm, edge endpoints/kinds/controlPointsMm/arc, placement and seam ids/references/gathering. It excludes sampledPointsMm, signedAreaMm2 and triangulation.",
+      "implication": "If this hash also differs, compare its actual fields first, especially recomputed gathering projected lengths. CDT cannot directly cause this upstream hash difference."
+    },
+    "paperSHA256": {
+      "source": "workerExtension nextBinding; adapter line 3658",
+      "input": "JSON.stringify(nextAnalytic), including derived samples, lengths, area, diagnostics and metadata.",
+      "implication": "A different SHA does not by itself identify geometry magnitude, topology, key-order or the first differing field. Compare parsed data and exact serialized order, without rounding."
+    },
+    "materialSHA256": {
+      "source": "hashContract materialHash",
+      "input": "Stable-key JSON of optional elasticStays, panel ids/uvMm/ordered triangles, and seam ids/references/stitchVertexPairs.",
+      "implication": "One UV last-bit difference suffices; reordered but geometrically equivalent triangle rows also change the digest. Material hash excludes most analytic diagnostic metadata, so a metadata-only paper difference cannot alone explain material hash drift."
+    }
+  },
+  "standardsContext": {
+    "urls": [
+      "https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-math.cos",
+      "https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-math.sin",
+      "https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-math.hypot"
+    ],
+    "checkedAt": "2026-10-22",
+    "summary": "ECMAScript specifies general finite cosine, sine and hypot results as implementation-approximated. Identical JS source therefore does not by itself prove cross-runtime bit identity for these results. This establishes plausibility, not which function caused the present failure."
+  },
+  "nextReadOnlyComparison": [
+    "Use the real complete Chromium paper packet and the same-request Node packet already being collected; do not infer from hashes alone.",
+    "Compare operation, authoritative endpoints/control points/arc/placement and gathering first; then edge length/sample counts and the first differing sampled point.",
+    "Compare full geometryHash inputs separately from the complete paper serialization.",
+    "Compare per-panel UV counts and exact first differing UV, boundary ids and stitch pairs; only then exact and unordered triangle sets.",
+    "Retain original failing golden and gates while locating the first divergence. No numerical normalization, rounding, threshold relaxation or blanket runtime exemption is justified by this review."
+  ],
+  "conclusion": "There are real, reachable trig and hypot paths before paper/material hashing, plus downstream discretization and CDT sign branches that can amplify changed inputs. The exact cause and magnitude remain unconfirmed until the real browser packet comparison; this source review does not establish geometric equivalence or authorize publication."
+}

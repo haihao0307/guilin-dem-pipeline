@@ -1,0 +1,140 @@
+{
+  "schema": "kaopu.screenshot-visual-review/1",
+  "taskId": "CLO-LEARNING-PILOT-R02-20261022",
+  "sourceHead": "c5c99dd6e7fb2124435653843c618bc6a4e4c47b",
+  "reviewedAt": "2026-10-22T03:25:32.490158+00:00",
+  "reviewer": "learning_pilot_design",
+  "scope": "最终固定源码的四张 file-browser 真实截图；核对失败候选拉伸读数、已修可读性、桌面/手机布局。",
+  "verdict": "本次指定视觉复核通过：旧拉伸读数错误已在实际 review 图修正，两处可读性修正保留，未见新增必须修改的版面缺陷。",
+  "blockingFindings": [],
+  "findings": [
+    {
+      "id": "correct-tension-reading",
+      "verified": true,
+      "evidence": [
+        "local-browser-smoke.review.png"
+      ],
+      "observation": "真实100/-40失败候选的“最大拉伸应变”现显示12.18%，与记录 maximumPrincipal=0.12177961291895834 四舍五入一致。旧12.33%为最大压缩幅度，不再误标成拉伸。"
+    },
+    {
+      "id": "honest-failed-candidate",
+      "verified": true,
+      "evidence": [
+        "local-browser-smoke.review.png"
+      ],
+      "observation": "三维底板、右侧状态和浅红告警均明确“本次检查未通过”；详情折叠时可见布面相交14对、身体相交0面、保留真实结果供观察及不作为合格试样。"
+    },
+    {
+      "id": "heading-readability",
+      "verified": true,
+      "evidence": [
+        "local-browser-smoke.desktop.png",
+        "local-browser-smoke.detail.png",
+        "local-browser-smoke.review.png"
+      ],
+      "observation": "原款与本次修改的深色文字始终在稳定浅色小底板上，面料/应变背景均不遮蔽状态；底板未遮住开口。"
+    },
+    {
+      "id": "mobile-layout",
+      "verified": true,
+      "evidence": [
+        "local-browser-smoke.mobile390.png"
+      ],
+      "observation": "390px手机装饰语已隐藏，顶部不再挤叠。两侧三维、双参数控制、诊断与纸样保持正常纵向排列，未见横向溢出或控件重叠；纸样图内小字由下方可读数值补充。"
+    },
+    {
+      "id": "comparison-retained",
+      "verified": true,
+      "evidence": [
+        "local-browser-smoke.desktop.png",
+        "local-browser-smoke.detail.png",
+        "local-browser-smoke.review.png"
+      ],
+      "observation": "同尺度并排对照保留，下摆及三角开口可比较。初始63.1/69.1cm裙长、8.6/12.6cm深度与纸样一致；失败候选73.1cm裙长和4.6cm深度也保持可见。近景仍裁去腰部及部分侧轮廓，此为既定细节视角，无新增观察阻断。"
+    }
+  ],
+  "metricCorrection": {
+    "capturedLabel": "最大拉伸应变",
+    "capturedValue": "12.18%",
+    "recordedMaximumPrincipalStrain": 0.12177961291895834,
+    "recordedSignedMaximumAbsoluteStrain": -0.12326825526934715,
+    "oldIncorrectLabelValue": "12.33%",
+    "fixedScreenshotVerified": true
+  },
+  "reviewCandidate": {
+    "deltaMm": 100,
+    "slitDeltaMm": -40,
+    "staticGatePassed": false,
+    "failureCodes": [
+      "cloth-intersections"
+    ],
+    "clothIntersectionPairs": 14,
+    "bodyIntersectingFaces": 0
+  },
+  "supportingFileBrowserReport": {
+    "path": "audit_clo_ci_r02/final-preview/local-browser-smoke.json",
+    "sha256": "a308c3dd969e8686fd45f8caed1e0204f9b6966d93e7bc131639bca24310fd7f",
+    "passed": true,
+    "checks": 81,
+    "desktopPassed": true,
+    "mobileViewportPassed": true,
+    "completedAt": "2026-10-22T03:23:11.872Z",
+    "cancelRecordedPhase": "cancelled",
+    "cancelRetainedFailedCandidate": true,
+    "resetRecordedPhase": "restored",
+    "resetParameters": [
+      0,
+      0
+    ]
+  },
+  "images": [
+    {
+      "name": "local-browser-smoke.desktop.png",
+      "path": "audit_clo_ci_r02/final-preview/local-browser-smoke.desktop.png",
+      "sha256": "9bfa587159b9584a5f381674cf1033cf6aec2da8d5fdb14210c95c1bf1f6a51c",
+      "bytes": 357200,
+      "width": 1440,
+      "height": 1626,
+      "visuallyInspected": true
+    },
+    {
+      "name": "local-browser-smoke.detail.png",
+      "path": "audit_clo_ci_r02/final-preview/local-browser-smoke.detail.png",
+      "sha256": "fdc244c10ee5138201d16709fe6f53c0aa718856fa8d6d841d82c12a40895bfc",
+      "bytes": 364824,
+      "width": 1440,
+      "height": 1655,
+      "visuallyInspected": true
+    },
+    {
+      "name": "local-browser-smoke.mobile390.png",
+      "path": "audit_clo_ci_r02/final-preview/local-browser-smoke.mobile390.png",
+      "sha256": "9d419ba11efb954543f5081f314fc2df78612ddc4f5246d3b8a25c39880edeb6",
+      "bytes": 199240,
+      "width": 390,
+      "height": 2133,
+      "visuallyInspected": true
+    },
+    {
+      "name": "local-browser-smoke.review.png",
+      "path": "audit_clo_ci_r02/final-preview/local-browser-smoke.review.png",
+      "sha256": "baaad611de63bb889c6cfb76dc6ff156b9b0e19e8e38f600411a775f6f8bf098",
+      "bytes": 385231,
+      "width": 1440,
+      "height": 1769,
+      "visuallyInspected": true
+    }
+  ],
+  "sourceOrStyleModified": false,
+  "screenshotVisualReviewPassed": true,
+  "publicURLInspectedByThisReview": false,
+  "independentReleaseApproval": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "limits": [
+    "记录中的81项通过来自同一源码的原始file-browser报告，本检查未重跑交互。",
+    "本记录不覆盖待完成的公网部署、HTTPS回读和实际公网浏览器体验。",
+    "390px为浏览器手机视口，不是实体手机认证。"
+  ],
+  "reviewerDisclosure": "本检查者此前实现过界面和CSS修正；本记录是逐图回归观察，不代替独立发布批准或用户视觉验收。"
+}
