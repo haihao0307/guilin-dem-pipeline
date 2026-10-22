@@ -1,13 +1,13 @@
-name: Attribute frozen KCC renderer pass cost
+name: Verify exact static primary hit cache
 on:
   push:
     branches: ['trial/kcc-render-cost-r01-20261022']
 permissions:
   contents: read
 jobs:
-  fixed-runtime-profile:
+  static-hit-cache:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -21,11 +21,62 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Start isolated server
         run: python -m http.server 8765 >/tmp/server.log 2>&1 &
-      - name: Same process cold and warmed pass timings, raw hit and RGBA guards
-        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-pass-cost-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/render-cost-r01
+      - name: Exact cache ABBA, cold GPU attribution, invalidation and memory guards
+        run: timeout 720s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-static-cache-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/static-hit-cache-r01
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: kcc-render-cost-${{ github.sha }}
-          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/render-cost-r01
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/static-hit-cache-r01
+          retention-days: 1
+
+  full-regression:
+    needs: static-hit-cache
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-geography-workbench/kowloon-building-mother-r01
+            kaopu-geography-workbench/hk-three-buildings-r01
+      - name: Datum, field joins, holes and immutable source tests
+        run: |
+          # The rejected validation-pass experiment remains archived, not in this runtime.
+          mapfile -t tests < <(find kaopu-geography-workbench/kowloon-building-mother-r01/tests -maxdepth 1 -name 'floor-study*.test.mjs' ! -name 'floor-study-validation-pass.test.mjs' | sort)
+          node --test kaopu-geography-workbench/kowloon-building-mother-r01/floor-materials-r01/*.test.mjs "${tests[@]}" kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-upper-slab.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-stair-connection.test.mjs kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-lift-*.test.mjs
+      - name: Install pinned browser
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Start isolated local server
+        run: python -m http.server 8765 >/tmp/server.log 2>&1 &
+      - name: Real GLSL compile/link gate
+        run: timeout 90s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-study-browser.py --stage compile --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-study-r01
+      - name: Bound original R02 controller, two-floor loop, immutable shader and mobile touch
+        run: timeout 600s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-lift-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-lift-host-r01
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: floor-lift-host-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-lift-host-r01
+          retention-days: 1
+      - name: Solid stairs, supported route, continuous handrails, exact rays and mobile touch
+        run: timeout 480s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-stair-browser.py --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-stair-connection-r01
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: floor-stair-connection-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-stair-connection-r01
+          retention-days: 1
+      - name: Full unchanged-source, window and mobile interaction regression
+        if: ${{ !cancelled() }}
+        run: timeout 360s python -u kaopu-geography-workbench/kowloon-building-mother-r01/tests/floor-study-browser.py --stage app --output kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-study-r01
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: floor-regression-${{ github.sha }}
+          path: kaopu-geography-workbench/kowloon-building-mother-r01/evidence/floor-study-r01
           retention-days: 1
