@@ -1,0 +1,30 @@
+import asyncio,json,hashlib,argparse,sys
+from pathlib import Path
+from playwright.async_api import async_playwright
+ROOT='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/kowloon-building-mother-r01/inspection-ed015e34/'
+async def main():
+ p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--manifest',required=True);a=p.parse_args();out=Path(a.output);out.mkdir(parents=True,exist_ok=True);r={'passed':False,'productionCommit':'f909adb8df7c1f4ee5a7defbba310b338e8e70e6','runtime':'ed015e34af0e967c3535f01b062da2de7c5bd6f2','url':ROOT,'errors':[],'physicalPhoneTested':False};save=lambda:(out/'public-inspection.json').write_text(json.dumps(r,indent=2))
+ async with async_playwright() as pw:
+  browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=await browser.new_page(viewport={'width':1280,'height':900});page.on('pageerror',lambda e:r['errors'].append(str(e)))
+  try:
+   r['publicHashes']={}
+   for item in json.loads(Path(a.manifest).read_text()):
+    x=await page.request.get(ROOT+item['path']);assert x.status==200,item['path'];data=await x.body();h=hashlib.sha256(data).hexdigest()
+    assert h==item['sha256'],item['path']
+    r['publicHashes'][item['path']]={'sha256':h,'bytes':len(data),'status':x.status}
+   print('PUBLIC HASHES',len(r['publicHashes']),flush=True);save()
+   await page.goto(ROOT);await page.wait_for_function('wholeBuilding?.ready||wholeBuilding?.error',timeout=180000);assert not await page.evaluate('wholeBuilding.error');assert '当前未完成检查版' in await page.title();r['loaded']=await page.evaluate('({stats:wholeBuilding.lastStats,hash:wholeBuilding.sourceHash})');assert not r['loaded']['stats'].get('staticPrimaryCache');await page.screenshot(path=str(out/'public-current-floor.png'));print('APP LOADED',flush=True)
+   r['views']={}
+   for view in ['whole','source','ground','study']:
+    await page.evaluate('v=>wholeBuilding.setView(v)',view);r['views'][view]=await page.evaluate('({view:wholeBuilding.view,stats:wholeBuilding.lastStats,sourceHash:wholeBuilding.sourceHash})');assert r['views'][view]['view']==view;assert r['views'][view]['sourceHash']==r['loaded']['hash'];await page.screenshot(path=str(out/('public-view-'+view+'.png')))
+   print('WHOLE AND PLAN VIEWS PASS',flush=True)
+   await page.locator('#stairView').click();await page.wait_for_function('!wholeBuilding.renderer.busy&&wholeBuilding.frames.at(-1)?.intent===wholeBuilding.latestIntent.number',timeout=120000);await page.screenshot(path=str(out/'public-solid-stair.png'))
+   await page.evaluate('wholeBuilding.enableStudyLift()');r['closed']=await page.evaluate('wholeBuilding.getBoundLift()');await page.evaluate("wholeBuilding.boundCommand({kind:'hall',floor:'evidence-plan',direction:1},{seconds:2})");await page.evaluate('wholeBuilding.enterBound()');await page.screenshot(path=str(out/'public-board-lower.png'));print('BOARDED',flush=True)
+   r['moving']=await page.evaluate("wholeBuilding.boundCommand({kind:'car',floor:'evidence-upper-reference'},{seconds:6})");assert r['moving']['state']['motion'];r['openDenied']=await page.evaluate("wholeBuilding.boundCommand({kind:'door',value:'open'})");assert not r['openDenied']['accepted'];save()
+   r['playback']=await asyncio.wait_for(page.evaluate('async()=>{const n=wholeBuilding.frames.length;await wholeBuilding.playBound();return wholeBuilding.frames.slice(n).map(f=>({state:f.boundLift,wallMs:f.wallMs,width:f.width,height:f.height}));}'),180);assert len(r['playback'])>=3;assert any(x['state']['motion'] for x in r['playback']);r['arrived']=await page.evaluate('wholeBuilding.getBoundLift()');assert r['arrived']['current']=='evidence-upper-reference' and r['arrived']['carDoor']==1;await page.evaluate('wholeBuilding.exitBound()');await page.screenshot(path=str(out/'public-exit-upper.png'));await page.evaluate('wholeBuilding.returnBound(.5)');await page.screenshot(path=str(out/'public-return-stair.png'));await page.evaluate('wholeBuilding.returnBound(1)');r['loop']=await page.evaluate('({passenger:wholeBuilding.studyPassenger,foot:wholeBuilding.stairPose.foot,sourceHash:wholeBuilding.sourceHash,stats:wholeBuilding.lastStats})');assert r['loop']['passenger']=='lower' and abs(r['loop']['foot'][1])<1e-8;assert r['loop']['sourceHash']==r['loaded']['hash'];print('PUBLIC LOOP PASS',flush=True);save()
+   for id in ['lowrise','warehouse']:
+    await page.evaluate('id=>wholeBuilding.chooseCase(id)',id);assert await page.evaluate('wholeBuilding.caseId')==id
+   await page.close();context=await browser.new_context(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);page=await context.new_page();page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(ROOT);await page.wait_for_function('wholeBuilding?.ready||wholeBuilding?.error',timeout=180000);assert not await page.evaluate('wholeBuilding.error');await page.locator('#boundLiftEnable').tap();await page.wait_for_function('wholeBuilding.studyLiftEnabled&&!wholeBuilding.renderer.busy&&wholeBuilding.frames.at(-1)?.intent===wholeBuilding.latestIntent.number',timeout=120000);await page.locator('#boundLiftLower').tap();await page.wait_for_function('wholeBuilding.getBoundLift()?.carDoor===1&&!wholeBuilding.renderer.busy',timeout=120000);await page.locator('#boundLiftEnter').tap();await page.wait_for_function('wholeBuilding.studyPassenger==="car"&&!wholeBuilding.renderer.busy',timeout=120000);await page.locator('#view').scroll_into_view_if_needed();r['mobile']=await page.evaluate('({stats:wholeBuilding.lastStats,sampling:wholeBuilding.sampling,passenger:wholeBuilding.studyPassenger})');assert r['mobile']['stats']['dynamicLiftFields']==40 and r['mobile']['stats']['width']>=390;await page.screenshot(path=str(out/'public-mobile-car.png'));assert not r['errors'];r['passed']=True;print('PUBLIC MOBILE PASS',flush=True)
+  except Exception as e:r['failure']=str(e);print('FAIL',repr(e),flush=True)
+  finally:save();await browser.close();sys.exit(0 if r['passed'] else 1)
+asyncio.run(main())
