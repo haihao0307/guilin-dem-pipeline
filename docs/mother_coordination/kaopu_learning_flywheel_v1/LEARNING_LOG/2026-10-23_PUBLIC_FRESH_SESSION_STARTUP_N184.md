@@ -92,7 +92,7 @@ Google SRE 的 black-box monitoring 只作为制度对照：从用户可见症�
 - 不修改 R2 OS、全局 Public Web Gate、main 或 R04 生产分支。
 - 不把本轮浏览器环境冒充物理手机或所有用户网络。
 - 不把增加 timeout、要求用户重试或预热 cache 自动视为修复。
-- POSTED：待定向路由至 PR #329。
-- ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：均为 false / unknown。
+- POSTED：true。已定向路由至 PR #329：https://github.com/haihao0307/guilin-dem-pipeline/pull/329#issuecomment-6349810677
+- ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：均为 false / unknown；没有 Mother 回执，不升级状态。
 - KPI：classifier 8/8；当前复查 fresh context 1 次失败、同 context retry 1 次失败；可靠成功率与其余 KPI unknown。
 
