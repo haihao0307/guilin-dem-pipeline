@@ -8,8 +8,8 @@ async def run():
  report={'source':BASE,'utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'html_sha256':hashlib.sha256((ROOT/'index.html').read_bytes()).hexdigest(),'cases':[],'browser':'Chromium headless, CPU analytical rendering; viewport emulation is not physical device testing','route_overrides':False}
  async with async_playwright() as p:
   browser=await p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or None,headless=True,args=['--no-sandbox','--disable-gpu'])
-  for name,width,height in [('desktop',1440,1050),('mobile',390,844)]:
-   ctx=await browser.new_context(viewport={'width':width,'height':height},device_scale_factor=1,is_mobile=name=='mobile',has_touch=name=='mobile')
+  for name,width,height,dpr in [('desktop',1440,1050,1),('mobile',390,844,2),('desktop-hidpi',1440,1050,2)]:
+   ctx=await browser.new_context(viewport={'width':width,'height':height},device_scale_factor=dpr,is_mobile=name=='mobile',has_touch=name=='mobile')
    await ctx.add_init_script("window.CONTEXT_REQUESTS=[];const saved=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){CONTEXT_REQUESTS.push(type);if(type.startsWith('webgl'))throw Error('WebGL explicitly prohibited in QA');return saved.call(this,type,...args)}")
    page=await ctx.new_page();errors=[];requests=[];failed=[]
    page.on('pageerror',lambda e:errors.append(str(e)))
@@ -18,6 +18,8 @@ async def run():
    await page.goto(BASE,wait_until='load');await page.wait_for_function('window.MIXTURE_QA?.ready')
    await page.wait_for_timeout(100)
    async def snap(label):
+    scales=await page.evaluate("[...document.querySelectorAll('canvas')].filter(c=>!c.closest('[hidden]')).map(c=>{const b=c.getBoundingClientRect();return (b.width/c.width)/(b.height/c.height)})")
+    assert all(abs(x-1)<.02 for x in scales), ('distorted projection',scales)
     await page.screenshot(path=str(OUT/f'{name}-{label}.png'),full_page=True)
     return await page.evaluate('({state:{...MIXTURE_QA.state},measurement:MIXTURE_QA.measurement,pixels:MIXTURE_QA.pixels,renderMs:MIXTURE_QA.renderMs})')
    result={'viewport':name,'errors':errors,'requests':requests,'failed_requests':failed}
@@ -26,8 +28,8 @@ async def run():
    assert result['initial']['pixels']['mixture']['centerRGB'][0]>result['initial']['pixels']['average']['centerRGB'][0]+20
    await page.click('#offpeak');await page.wait_for_function('MIXTURE_QA.measurement.angle===30');result['offpeak']=await snap('offpeak');assert result['offpeak']['measurement']['errorPercent']>100
    await page.click('#actual');await page.click('#front');await page.wait_for_function('MIXTURE_QA.measurement.angle===0 && MIXTURE_QA.measurement.weight>.98');result['actual']=await snap('actual');assert abs(result['actual']['measurement']['errorPercent']+10.524303167018855)<1e-7
-   await page.click('[data-layout="average"]');await page.wait_for_function('MIXTURE_QA.state.layout==="average"');assert await page.locator('#mixPanel').is_hidden();assert not await page.locator('#avgPanel').is_hidden()
-   await page.click('[data-layout="mixture"]');await page.wait_for_function('MIXTURE_QA.state.layout==="mixture"');assert await page.locator('#avgPanel').is_hidden();assert not await page.locator('#mixPanel').is_hidden()
+   await page.click('[data-layout="average"]');await page.wait_for_function('MIXTURE_QA.state.layout==="average"');assert await page.locator('#mixPanel').is_hidden();assert not await page.locator('#avgPanel').is_hidden();await page.wait_for_function('MIXTURE_QA.pixels.mixture===null');result['single_average']=await snap('single-average')
+   await page.click('[data-layout="mixture"]');await page.wait_for_function('MIXTURE_QA.state.layout==="mixture"');assert await page.locator('#avgPanel').is_hidden();assert not await page.locator('#mixPanel').is_hidden();await page.wait_for_function('MIXTURE_QA.pixels.average===null');result['single_mixture']=await snap('single-mixture')
    await page.click('[data-layout="split"]');await page.click('#half');await page.click('[data-shading="specular"]');await page.wait_for_function('MIXTURE_QA.state.shading==="specular" && MIXTURE_QA.measurement.weight===.5');result['specular']=await snap('specular')
    await page.locator('#weight').focus();await page.locator('#weight').press('Home');await page.wait_for_function('MIXTURE_QA.measurement.weight===0');assert abs(await page.evaluate('MIXTURE_QA.measurement.errorPercent'))<1e-12
    same=await page.evaluate("(()=>{let a=document.querySelector('#average').getContext('2d').getImageData(0,0,average.width,average.height).data,b=document.querySelector('#mixture').getContext('2d').getImageData(0,0,mixture.width,mixture.height).data;return a.length===b.length&&a.every((x,i)=>x===b[i])})()")
