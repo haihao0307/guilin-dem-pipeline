@@ -28,7 +28,7 @@ with sync_playwright() as pw:
    context=browser.new_context(viewport={'width':1280,'height':900},device_scale_factor=1)
    if variant=='candidate':
     for rel,local in cfg['candidateFiles'].items():
-     body=(root/local).read_bytes();context.route(url+rel,lambda route,body=body:route.fulfill(status=200,body=body,content_type='text/javascript'))
+     body=(root/local).read_bytes();context.route(url+rel,lambda route,request,body=body:route.fulfill(status=200,body=body,content_type='text/javascript'))
    page=context.new_page();page.set_default_timeout(240000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    observations={'cases':{},'pageErrors':errors};r['variants'][variant]=observations;start=time.monotonic();page.goto(url,wait_until='domcontentloaded');stable(page,'lowrise');observations['initialPageToCompleteMs']=(time.monotonic()-start)*1000;instrument(page)
    for id in ['lowrise','kcc','warehouse']:
