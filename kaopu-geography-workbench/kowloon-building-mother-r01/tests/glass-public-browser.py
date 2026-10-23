@@ -1,8 +1,8 @@
-# Isolated C/D exact-output QA using the unchanged existing workflow.
-from pathlib import Path as _PerfR06Path
-if _PerfR06Path(__file__).with_name('unified-perf-config.json').is_file():
-    import runpy as _perf_r06_runpy
-    _perf_r06_runpy.run_path(str(_PerfR06Path(__file__).with_name('unified-perf-qa.py')), run_name='__main__')
+# Frozen R07 browser QA through the existing, unchanged workflow.
+from pathlib import Path as _PerfR07Path
+if _PerfR07Path(__file__).with_name('unified-perf-config.json').is_file():
+    import runpy as _perf_r07_runpy
+    _perf_r07_runpy.run_path(str(_PerfR07Path(__file__).with_name('unified-perf-qa.py')), run_name='__main__')
     raise SystemExit(0)
 
 # Bounded unified-scene candidate/public QA, reusing the existing read-only workflow.

@@ -356,7 +356,7 @@ const otherLimits = {
   stairTreadDepth: number(.25, .32), maximumRiserHeight: number(.16, .19), doorWidth: number(.9, 1.2),
 };
 lowrise.defaultParameters = { ...otherDefaults, floorCount: 2, floorHeight: 3.2, gateWidth: 4.6 };
-lowrise.parameterLimits = { ...clone(otherLimits), floorCount: integer(2, 2), floorHeight: number(2.7, 4), gateWidth: number(3.5, 5) };
+lowrise.parameterLimits = { ...clone(otherLimits), floorCount: integer(2, 2), floorHeight: number(2.7, 4.5), floorHeights: { type: 'number-array', min: 2.7, max: 4.5, lengthFrom: 'floorCount', evidence: 'design' }, gateWidth: number(3.5, 5) };
 lowrise.parameterAliases = {};
 warehouse.defaultParameters = {
   ...otherDefaults, towerFloorCount: 12, podiumFloorCount: 2,
@@ -395,6 +395,7 @@ export function resolveCaseParameters(id, input = {}) {
     normalized[target] = clone(value);
   }
   const result = { ...config.defaultParameters, ...normalized };
+  if(id==='lowrise'&&normalized.floorHeights){if(Object.hasOwn(normalized,'floorHeight'))throw Error('Choose scalar or explicit lowrise floor heights');result.floorHeight=normalized.floorHeights[0];}
   for (const kind of ['tower', 'podium']) {
     const scalarKey = kind + 'FloorHeight', arrayKey = kind + 'FloorHeights';
     if (Object.hasOwn(normalized, arrayKey)) {
@@ -422,7 +423,7 @@ function validateOtherHeights(id, parameters) {
     if (mustFill && Math.abs(sum - total) > 1e-6) throw new Error('Podium heights must join the fixed tower datum');
   }
   if (id === 'lowrise') {
-    validate(Array(parameters.floorCount).fill(parameters.floorHeight), 33.7 - 26 - parameters.slabThickness);
+    validate(parameters.floorHeights??Array(parameters.floorCount).fill(parameters.floorHeight), 33.7 - 26 - parameters.slabThickness);
   } else {
     validate(parameters.towerFloorHeights ?? Array(parameters.towerFloorCount).fill(parameters.towerFloorHeight), warehouse.dimensions.mainRoofMpd - 17.5 - parameters.slabThickness);
     validate(parameters.podiumFloorHeights ?? Array(parameters.podiumFloorCount).fill(parameters.podiumFloorHeight), 17.5 - 4, true);
