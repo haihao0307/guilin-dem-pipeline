@@ -1,0 +1,123 @@
+{
+  "schema": "kaopu/composite-human-binding-compatibility-result@1",
+  "fixture": "composite_human_binding_compatibility_fixture_n186.json",
+  "passed": 11,
+  "total": 11,
+  "currentProductionEventState": "HOLD_COMPONENT_IDENTITY_UNRESOLVED",
+  "results": [
+    {
+      "name": "current user correction cannot advance before the N182 component vector is resolved",
+      "expected": "HOLD_COMPONENT_IDENTITY_UNRESOLVED",
+      "actual": "HOLD_COMPONENT_IDENTITY_UNRESOLVED",
+      "detail": {
+        "state": "HOLD_COMPONENT_IDENTITY_UNRESOLVED"
+      },
+      "pass": true
+    },
+    {
+      "name": "exact latest component refs alone omit their binding relation",
+      "expected": "HOLD_BINDING_MANIFEST_INCOMPLETE",
+      "actual": "HOLD_BINDING_MANIFEST_INCOMPLETE",
+      "detail": {
+        "state": "HOLD_BINDING_MANIFEST_INCOMPLETE",
+        "missing": [
+          "skinVertexCount",
+          "jointCount",
+          "maxJointIndex",
+          "jointOrderDigest",
+          "inverseBindOrderDigest",
+          "skeletonParentDigest",
+          "bindPoseDigest",
+          "skinBindPoseDigest",
+          "motionTargetDigest",
+          "skeletonTargetDigest",
+          "coordinateFrame",
+          "motionCoordinateFrame"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "skin refers to a joint outside the latest skeleton",
+      "expected": "REJECT_SKIN_INFLUENCE_INVALID",
+      "actual": "REJECT_SKIN_INFLUENCE_INVALID",
+      "detail": {
+        "state": "REJECT_SKIN_INFLUENCE_INVALID"
+      },
+      "pass": true
+    },
+    {
+      "name": "latest mesh and skeleton use a different inverse-bind joint order",
+      "expected": "REJECT_JOINT_MAP_INCOMPATIBLE",
+      "actual": "REJECT_JOINT_MAP_INCOMPATIBLE",
+      "detail": {
+        "state": "REJECT_JOINT_MAP_INCOMPATIBLE"
+      },
+      "pass": true
+    },
+    {
+      "name": "latest skin carries inverse binds from an older rest pose",
+      "expected": "REJECT_BIND_SPACE_INCOMPATIBLE",
+      "actual": "REJECT_BIND_SPACE_INCOMPATIBLE",
+      "detail": {
+        "state": "REJECT_BIND_SPACE_INCOMPATIBLE"
+      },
+      "pass": true
+    },
+    {
+      "name": "latest motion targets a different joint set",
+      "expected": "REJECT_MOTION_TARGET_INCOMPATIBLE",
+      "actual": "REJECT_MOTION_TARGET_INCOMPATIBLE",
+      "detail": {
+        "state": "REJECT_MOTION_TARGET_INCOMPATIBLE"
+      },
+      "pass": true
+    },
+    {
+      "name": "structural compatibility without an actual coupled action trace",
+      "expected": "HOLD_RUNTIME_COUPLING_UNPROVEN",
+      "actual": "HOLD_RUNTIME_COUPLING_UNPROVEN",
+      "detail": {
+        "state": "HOLD_RUNTIME_COUPLING_UNPROVEN"
+      },
+      "pass": true
+    },
+    {
+      "name": "actual actions run but whole-body self-penetration is not measured",
+      "expected": "HOLD_SELF_PENETRATION_OBSERVATION_MISSING",
+      "actual": "HOLD_SELF_PENETRATION_OBSERVATION_MISSING",
+      "detail": {
+        "state": "HOLD_SELF_PENETRATION_OBSERVATION_MISSING"
+      },
+      "pass": true
+    },
+    {
+      "name": "fixed action suite reproduces material body self-penetration",
+      "expected": "REJECT_SELF_PENETRATION",
+      "actual": "REJECT_SELF_PENETRATION",
+      "detail": {
+        "state": "REJECT_SELF_PENETRATION",
+        "observedM": 0.018
+      },
+      "pass": true
+    },
+    {
+      "name": "producer cannot certify its own binding and penetration evidence",
+      "expected": "HOLD_INDEPENDENT_VERIFIER_MISSING",
+      "actual": "HOLD_INDEPENDENT_VERIFIER_MISSING",
+      "detail": {
+        "state": "HOLD_INDEPENDENT_VERIFIER_MISSING"
+      },
+      "pass": true
+    },
+    {
+      "name": "compatible tuple and scoped runtime self-collision evidence pass with negative controls",
+      "expected": "COMPOSITE_BINDING_VERIFIED_SCOPED",
+      "actual": "COMPOSITE_BINDING_VERIFIED_SCOPED",
+      "detail": {
+        "state": "COMPOSITE_BINDING_VERIFIED_SCOPED"
+      },
+      "pass": true
+    }
+  ]
+}
