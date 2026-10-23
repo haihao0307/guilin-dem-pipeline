@@ -1,3 +1,10 @@
+# This isolated trial opts into the pinned performance A/B only when its config is present.
+from pathlib import Path as _PerformancePath
+if _PerformancePath(__file__).with_name('semantic-performance-config.json').is_file():
+    import runpy as _performance_runpy
+    _performance_runpy.run_path(str(_PerformancePath(__file__).with_name('semantic-performance-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # This trial branch explicitly opts into the isolated semantic page QA when its bounded configuration is present.
 from pathlib import Path as _SemanticPath
 if _SemanticPath(__file__).with_name('semantic-qa-config.json').is_file():
