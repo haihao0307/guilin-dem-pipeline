@@ -1,0 +1,91 @@
+{
+  "schema": "kaopu/composite-human-binding-compatibility-fixture@1",
+  "maximumSelfInterpenetrationM": 0.003,
+  "minimumFixedActions": 3,
+  "minimumSelfCollisionSamples": 30,
+  "requiredNegativeControls": [
+    "SHUFFLED_JOINT_ORDER",
+    "STALE_BIND_POSE",
+    "MISSING_MOTION_TARGET",
+    "DISABLED_SELF_COLLISION_GATE"
+  ],
+  "observedProductionEvent": {
+    "mother": "Human / NPC life observation R04",
+    "runtimeHead": "b386dd9780ddc5b01676fe46117d56d973725ac7",
+    "userCorrection": "The latest person includes the latest body, actions, and body-binding information; the current motion also has body self-penetration.",
+    "existingCoverage": "Exact R07 packet/appearance bytes, native 104-bone rig, weight sums, neutral reconstruction error, bone length, and hand/forearm penetration against selected environment solids.",
+    "missingCoverage": "Dispatch-resolved latest body-binding relation plus whole-body self-interpenetration on fixed runtime actions."
+  },
+  "cases": [
+    {
+      "name": "current user correction cannot advance before the N182 component vector is resolved",
+      "componentIdentity": "UNRESOLVED",
+      "expect": "HOLD_COMPONENT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "name": "exact latest component refs alone omit their binding relation",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount": 1000},
+      "expect": "HOLD_BINDING_MANIFEST_INCOMPLETE"
+    },
+    {
+      "name": "skin refers to a joint outside the latest skeleton",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":104,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "expect": "REJECT_SKIN_INFLUENCE_INVALID"
+    },
+    {
+      "name": "latest mesh and skeleton use a different inverse-bind joint order",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J2","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "expect": "REJECT_JOINT_MAP_INCOMPATIBLE"
+    },
+    {
+      "name": "latest skin carries inverse binds from an older rest pose",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B2","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "expect": "REJECT_BIND_SPACE_INCOMPATIBLE"
+    },
+    {
+      "name": "latest motion targets a different joint set",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T2","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "expect": "REJECT_MOTION_TARGET_INCOMPATIBLE"
+    },
+    {
+      "name": "structural compatibility without an actual coupled action trace",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "runtimeEvidence": {"fixedActions":[]},
+      "expect": "HOLD_RUNTIME_COUPLING_UNPROVEN"
+    },
+    {
+      "name": "actual actions run but whole-body self-penetration is not measured",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "runtimeEvidence": {"actionTraceDigest":"A1","fixedActions":["arm-cross","torso-bend","leg-lift"],"selfCollisionSampleCount":0},
+      "expect": "HOLD_SELF_PENETRATION_OBSERVATION_MISSING"
+    },
+    {
+      "name": "fixed action suite reproduces material body self-penetration",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "runtimeEvidence": {"actionTraceDigest":"A1","fixedActions":["arm-cross","torso-bend","leg-lift"],"selfCollisionSampleCount":90,"maxSelfInterpenetrationM":0.018},
+      "expect": "REJECT_SELF_PENETRATION"
+    },
+    {
+      "name": "producer cannot certify its own binding and penetration evidence",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "runtimeEvidence": {"actionTraceDigest":"A1","fixedActions":["arm-cross","torso-bend","leg-lift"],"selfCollisionSampleCount":90,"maxSelfInterpenetrationM":0.001,"producerId":"MOTHER-HUMAN","verifierId":"MOTHER-HUMAN","verifierRole":"PRODUCER"},
+      "expect": "HOLD_INDEPENDENT_VERIFIER_MISSING"
+    },
+    {
+      "name": "compatible tuple and scoped runtime self-collision evidence pass with negative controls",
+      "componentIdentity": "VERIFIED",
+      "bindingManifest": {"meshVertexCount":1000,"skinVertexCount":1000,"jointCount":104,"maxJointIndex":103,"weightsValid":true,"jointOrderDigest":"J1","inverseBindOrderDigest":"J1","skeletonParentDigest":"P1","expectedSkeletonParentDigest":"P1","bindPoseDigest":"B1","skinBindPoseDigest":"B1","motionTargetDigest":"T1","skeletonTargetDigest":"T1","coordinateFrame":"Y_UP_M","motionCoordinateFrame":"Y_UP_M"},
+      "runtimeEvidence": {"actionTraceDigest":"A1","fixedActions":["arm-cross","torso-bend","leg-lift"],"selfCollisionSampleCount":90,"maxSelfInterpenetrationM":0.001,"producerId":"MOTHER-HUMAN","verifierId":"VERIFIER-N186","verifierRole":"INDEPENDENT_VERIFIER","negativeControlsRejected":["SHUFFLED_JOINT_ORDER","STALE_BIND_POSE","MISSING_MOTION_TARGET","DISABLED_SELF_COLLISION_GATE"]},
+      "expect": "COMPOSITE_BINDING_VERIFIED_SCOPED"
+    }
+  ]
+}
