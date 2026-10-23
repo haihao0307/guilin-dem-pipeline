@@ -1,3 +1,10 @@
+# Run bounded desktop R04 exact-byte checks when explicitly configured.
+from pathlib import Path as _DesktopR04Path
+if _DesktopR04Path(__file__).with_name('semantic-desktop-config.json').is_file():
+    import runpy as _desktop_r04_runpy
+    _desktop_r04_runpy.run_path(str(_DesktopR04Path(__file__).with_name('semantic-desktop-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Run bounded exact public R03 verification when explicitly configured.
 from pathlib import Path as _PublicR03Path
 if _PublicR03Path(__file__).with_name('semantic-public-smoke-config.json').is_file():
@@ -55,3 +62,4 @@ async def main():
    report['failure']=str(e);save();await page.screenshot(path=str(out/'failure.png'));raise
   finally:await b.close()
 asyncio.run(main())
+
