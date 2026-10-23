@@ -48,14 +48,16 @@ try:
   assert page.evaluate('JSON.stringify(semanticInspection.model.levels)')==frozen
   page.locator('[data-building=warehouse]').click();assert not panel.is_visible();assert not page.evaluate('semanticInspection.candidateViewer.snapshot().active')
   assert not report['errors'],report['errors']
-  report['checks']=['actual WebGL displayed nonblank analytic geometry','same-page KCC only visibility','native CSS pixel resolution','entry door state changes screenshot','three independent elevator door controls','cut/full wall state','6F platforms and 18F separate family','R180 explicitly unregistered','original levels unchanged','switching other building pauses candidate'];report['passed']=True;save()
+  report['checks']=['actual WebGL displayed nonblank analytic geometry','same-page KCC only visibility','native CSS pixel resolution','entry door state changes screenshot','three independent elevator door controls','cut/full wall state','6F platforms and 18F separate family','R180 explicitly unregistered','original levels unchanged','switching other building pauses candidate'];report['passed']=True;save();browser.close();browser=None
 except Exception:
  report['errors'].append(traceback.format_exc());save()
  if page:
   try:page.screenshot(path=str(out/'candidate-failure.png'),full_page=True)
   except Exception:pass
 finally:
- if browser:browser.close()
+ if browser:
+  try:browser.close()
+  except Exception:pass
  server.shutdown();save()
 if not report['passed']:print(report['errors'],flush=True);raise SystemExit(1)
 print('Actual KCC candidate browser gate passed',flush=True)
