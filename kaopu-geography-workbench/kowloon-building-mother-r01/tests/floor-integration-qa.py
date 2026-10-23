@@ -16,6 +16,23 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
 
     try:
         page.evaluate("semanticInspection.selectBuilding('lowrise')")
+        page.evaluate("window.__qaSavedDoorClose=document.querySelector('#completeFloorPanel [data-room-door=close]').onclick")
+        for other in ['warehouse','kcc']:
+            page.evaluate('c=>semanticInspection.selectBuilding(c)',other)
+            guard=page.evaluate("""()=>{const s=semanticInspection,p=document.querySelector('#completeFloorPanel'),buttons=[...p.querySelectorAll('button,select,input')],snapshot=()=>JSON.stringify({door:s.roomDoors.snapshot(),apertures:s.model.hostedComponents.apertures,registry:s.registry,camera:s.renderer.options,renderRequests:s.renderRequests,frames:s.presentedFrames,view:s.view,selected:s.selected}),before=snapshot(),attempts=[];for(const [name,fn]of [['stale-close-handler',()=>window.__qaSavedDoorClose?.call(p.querySelector('[data-room-door=close]'))],['bookmark',()=>s.floorPanel.bookmark('door')],['walk',()=>s.floorPanel.walk(1)],['selectFloor',()=>s.floorPanel.selectFloor('L02')],['selectRoom',()=>s.floorPanel.selectRoom('living')]]){try{attempts.push({name,result:fn()});}catch(e){attempts.push({name,rejected:String(e)});}}return{case:s.caseId,controls:buttons.map(b=>({tag:b.tagName,text:b.textContent,disabled:b.disabled,visible:b.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})})),noMutation:before===snapshot(),attempts};}""")
+            assert guard['case']==other and guard['noMutation'] and guard['controls'] and all(x['disabled'] and not x['visible'] for x in guard['controls']),('Cross-building floor controls leaked',guard)
+            report['checks'].append({'crossBuildingFloorControls':guard});save()
+        page.evaluate("semanticInspection.selectBuilding('lowrise')")
+        restored=page.locator('#completeFloorPanel').evaluate("p=>[...p.querySelectorAll('button,select,input')].every(b=>!b.disabled&&b.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}))")
+        assert restored,'Returning to lowrise did not restore valid controls'
+        # Queue a real door command during a real native GPU frame, switch away
+        # before the next-frame mutation boundary, and prove it is cancelled.
+        cancel=page.evaluate("""()=>{const s=semanticInspection,doors=JSON.stringify(s.roomDoors.snapshot().doors),apertures=JSON.stringify(s.model.hostedComponents.apertures),registry=JSON.stringify(s.registry);s.render();const busy=s.renderer.busy;document.querySelector('#completeFloorPanel [data-room-door=close]').click();const queued=s.roomDoors.snapshot().pending.length;s.selectBuilding('warehouse');return{busy,queued,pendingAfterSwitch:s.roomDoors.snapshot().pending.length,doorsUnchanged:doors===JSON.stringify(s.roomDoors.snapshot().doors),aperturesUnchanged:apertures===JSON.stringify(s.model.hostedComponents.apertures),registryUnchanged:registry===JSON.stringify(s.registry),beforeDoors:doors};}""")
+        assert cancel['busy'] and cancel['queued']>0 and cancel['pendingAfterSwitch']==0 and cancel['doorsUnchanged'] and cancel['aperturesUnchanged'] and cancel['registryUnchanged'],cancel
+        settled(page)
+        assert page.evaluate('JSON.stringify(semanticInspection.roomDoors.snapshot().doors)')==cancel['beforeDoors'],'Cancelled cross-building door command executed later'
+        report['checks'].append({'queuedDoorCancelledOnBuildingSwitch':cancel});save()
+        page.evaluate("semanticInspection.selectBuilding('lowrise')")
         panel=page.locator('#completeFloorPanel');assert panel.is_visible()
         assert panel.get_by_label('楼层实例',exact=True).locator('option').count()==2
         assert panel.get_by_label('房间 / 门',exact=True).locator('option').count()==7

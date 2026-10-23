@@ -51,9 +51,17 @@ def _run_lift_integration_qa(page, output_dir, timeout_ms=300000, verify_gpu_equ
         page.evaluate("o=>Object.assign(semanticInspection.renderer.options,{primitiveTileIndex:o.primitive,apertureTileIndex:o.aperture})",original)
     initial_source=page.evaluate("JSON.stringify(semanticInspection.source.patches)")
     page.evaluate("semanticInspection.selectBuilding('kcc')")
+    page.evaluate("""()=>{const p=document.querySelector('[data-lift-panel=building-owned]');window.__qaStaleLiftButtons=[...p.querySelectorAll('button')];window.__qaStaleLiftHall=p.querySelector('[data-lift-hall-floor]');}""")
+    for other in ['lowrise','warehouse']:
+        page.evaluate('c=>semanticInspection.selectBuilding(c)',other)
+        guard=page.evaluate("""()=>{const s=semanticInspection,p=document.querySelector('[data-lift-panel=building-owned]'),snapshot=()=>JSON.stringify({lift:s.lifts.snapshot('kcc'),paused:s.liftPanel.paused,camera:s.renderer.options,renderRequests:s.renderRequests,frames:s.presentedFrames,view:s.view}),before=snapshot(),attempts=[];for(const b of window.__qaStaleLiftButtons){try{attempts.push({text:b.textContent,result:b.onclick?.()});}catch(e){attempts.push({text:b.textContent,rejected:String(e)});}}const hall=window.__qaStaleLiftHall;hall.value='T24';try{attempts.push({hall:hall.onchange?.()});}catch(e){attempts.push({hallRejected:String(e)});}try{attempts.push({api:s.liftPanel.send({kind:'car',floor:'T24'})});}catch(e){attempts.push({apiRejected:String(e)});}return{case:s.caseId,controlsParentDisplay:getComputedStyle(hall.parentElement).display,controls:[...p.querySelectorAll('button,select')].map(e=>({disabled:e.disabled,visible:e.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})})),noMutation:before===snapshot(),attempts};}""")
+        assert guard['case']==other and guard['controlsParentDisplay']=='none' and guard['noMutation'] and guard['controls'] and all(x['disabled'] and not x['visible'] for x in guard['controls']),('Cross-building lift controls leaked',guard)
+        checkpoint('cross-building-lift-controls-'+other,guard=guard)
+    page.evaluate("semanticInspection.selectBuilding('kcc')")
     panel=page.locator('[data-lift-panel="building-owned"]')
     assert panel.is_visible(), 'Integrated lift panel must be visible, not a report-only artifact'
     assert panel.locator('[data-lift-car-floor]').count()==28
+    assert panel.locator('[data-lift-car-floor=\"T01\"]').is_enabled() and panel.locator('[data-lift-hall-floor]').is_enabled(),'Return to KCC did not restore valid lift controls'
     # Disable automatic time so every visual pose has an exact reproducible state.
     if not page.evaluate('semanticInspection.liftPanel.paused'):
         panel.get_by_role('button',name='暂停演示',exact=True).click()
@@ -152,6 +160,7 @@ def _run_lift_integration_qa(page, output_dir, timeout_ms=300000, verify_gpu_equ
     assert '未绑定交互控制器' in panel.inner_text()
     page.evaluate("semanticInspection.selectBuilding('kcc')")
     assert panel.locator('[data-lift-car-floor]').count()==28
+    assert panel.locator('[data-lift-car-floor=\"T01\"]').is_enabled() and panel.locator('[data-lift-hall-floor]').is_enabled(),'Return to KCC did not restore valid lift controls'
     assert page.evaluate('JSON.stringify(semanticInspection.source.patches)')==initial_source
     checkpoint('all-actions-completed',crossBuildingRejected=cross)
     report={'interiorInspectionSourceHidden':True,'sourceOnlyPhysicalEntryClaim':False,'sourceShellScope':progress['scope'],'stages':progress['stages'],'passed':True,'realBrowser':True,'exactMovingGpuEquivalence':equivalence,'exactMovingGpuEquivalenceRun':verify_gpu_equivalence,'allConservativeIndicesCompared':verify_gpu_equivalence,'d2PerformanceIsolationClaim':False,'passengerEnterRideExitPassed':True,'boardingCamera':boarding_camera,'rideCamera':ride_camera,'arrivedCamera':arrived_camera,'sharedThreeBuildingScene':True,'sourceUnchanged':True,'servedOriginalFloors':28,'physicalButtonCommandRouteCount':page.evaluate("semanticInspection.lifts.getBinding('kcc').actions.length"),'uiActionCoverage':['P01 up hall call','enter car with door-zone interlock','ride first-person camera','exit at arrived floor','repeat T01 car selection','close car door','obstruction on','obstruction off','reject open while moving','repeat arrived T01 selection','car focus open/moving/arrived','switch lowrise/warehouse/kcc'],'enteringGpu':entering,'insideGpu':inside,'exitingGpu':exiting,'exitedGpu':exited,'openedGpu':opened,'movingGpu':moving,'arrivedGpu':arrived,'sameFrameIsolation':isolation,'staleBoundsRecomputedBeforeTrace':stale,'crossBuildingRejected':cross,'finalState':snap(),'performanceClaim':'Frame times recorded; state correctness does not certify smooth animation.'}
