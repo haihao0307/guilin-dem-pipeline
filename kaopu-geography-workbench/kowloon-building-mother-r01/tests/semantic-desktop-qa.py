@@ -69,6 +69,13 @@ with sync_playwright() as pw:
  try:
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);r['browserVersion']=browser.version
   verify=browser.new_context()
+  if cfg.get('publicSmoke'):
+   deadline=time.monotonic()+180
+   while True:
+    response=verify.request.get(url+'index.html',timeout=30000)
+    if response.status==200 and hashlib.sha256(response.body()).hexdigest()==cfg['files']['index.html']:break
+    if time.monotonic()>=deadline:raise AssertionError('Exact public R04 index not available within bounded deployment verification window')
+    time.sleep(5)
   for rel,wanted in cfg['files'].items():
    override=cfg.get('overrides',{}).get(rel)
    if override:
