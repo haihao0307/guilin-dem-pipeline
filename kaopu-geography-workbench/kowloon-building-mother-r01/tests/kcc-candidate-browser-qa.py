@@ -18,6 +18,7 @@ try:
   page.goto(url,wait_until='domcontentloaded');page.wait_for_function('window.semanticInspection?.ready&&!semanticInspection.busy')
   report['browserVersion']=browser.version
   frozen=page.evaluate('JSON.stringify(semanticInspection.model.levels)')
+  page.screenshot(path=str(out/'same-page-three-buildings-before-candidate.png'))
   page.locator('[data-building=kcc]').click();page.wait_for_function('!semanticInspection.busy')
   assert page.locator('#candidateStructurePanel').is_visible()
   assert not page.locator('#kccCandidateCanvas').is_visible()
@@ -34,6 +35,8 @@ try:
    image=page.locator('#kccCandidateCanvas').screenshot(path=str(out/(name+'.png')))
    q['screenshotSHA256']=hashlib.sha256(image).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,q['snapshot']['frames'][-1]['wallMs'],flush=True);return q
   first=capture('candidate-floor5-lowwall')
+  page.screenshot(path=str(out/'same-page-three-buildings-and-layout.png'),full_page=True)
+  report['fullPageReview']='same-page-three-buildings-and-layout.png';save()
   def action(fn):
    n=page.evaluate('semanticInspection.candidateViewer.state.frames.length');fn();settle(n)
   action(lambda:panel.get_by_role('button',name='打开入户门 / 梯门',exact=True).click())
@@ -45,6 +48,8 @@ try:
   action(lambda:panel.locator('[data-candidate-floor]').select_option('6'));six=capture('candidate-floor6-platforms');assert six['snapshot']['modelPrimitiveCount']==123
   action(lambda:panel.locator('[data-candidate-floor]').select_option('18'));eighteen=capture('candidate-floor18-family');assert eighteen['snapshot']['modelPrimitiveCount']==104
   action(lambda:panel.locator('select').nth(1).select_option('R180'));capture('candidate-floor18-R180-unregistered')
+  before=page.evaluate('semanticInspection.candidateViewer.state.frames.length')
+  box=page.locator('#kccCandidateCanvas').bounding_box();page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+60,box['y']+box['height']/2+20,steps=3);page.mouse.up();settle(before);capture('candidate-actual-drag')
   assert page.evaluate('JSON.stringify(semanticInspection.model.levels)')==frozen
   page.locator('[data-building=warehouse]').click();assert not panel.is_visible();assert not page.evaluate('semanticInspection.candidateViewer.snapshot().active')
   assert not report['errors'],report['errors']
