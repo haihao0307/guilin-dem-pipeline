@@ -1,3 +1,4 @@
+import {OFFICIAL_FACE_TEXTURES} from "./official-face-textures.mjs";
 /* Actual-photo evidence, not model-render substitutes. Generated from reviewed source ledgers. */
 export const PHOTO_EVIDENCE = {
   "schema": "kaopu.building-photo-evidence/1",
@@ -468,7 +469,7 @@ function patchId(hit) {
  if(Number.isInteger(hit.sourceObjectId)&&hit.sourceObjectId>=1000&&hit.sourceObjectId<2000)return 'p'+String(hit.sourceObjectId-1000).padStart(3,'0');
  return null;
 }
-export function resolvePhotoEvidence(caseId, hit={}) {
+function resolveLegacyPhotoEvidence(caseId, hit={}) {
  const key=resolveCase(caseId), b=PHOTO_EVIDENCE.buildings[key];
  if(!b)return {caseId:null,buildingLabel:'未知建筑',faceId:null,faceLabel:'未知面',status:'no_photo',orientationConfidence:'unverified',photos:[],otherBuildingPhotos:[],missingReason:'没有这栋建筑的核验记录。',notice:'不得用其他建筑照片替代。'};
  const pid=patchId(hit), f=b.faces.find(face=>face.sourcePatchIds.includes(pid)), context=f?.id==='east-frontage-assembly';
@@ -482,3 +483,14 @@ export function resolvePhotoEvidence(caseId, hit={}) {
   notice:'只把实际核验的照片归给对应面。其他视角仅作本楼参考；链接不等于已在侧栏显示照片。'};
 }
 export default PHOTO_EVIDENCE;
+
+export function resolvePhotoEvidence(caseId,hit={}) {
+ const key=resolveCase(caseId),legacy=resolveLegacyPhotoEvidence(caseId,hit),official=OFFICIAL_FACE_TEXTURES.cases[key];
+ if(!official)return legacy;
+ const pid=patchId(hit),overview=Object.keys(hit).length===0;
+ const found=overview?official.overviewIds.map(id=>official.faces.find(p=>p.id===id)):official.faces.filter(p=>p.sourcePatchId===pid);
+ if(!found.length){return {...legacy,officialTextureMissingReason:official.excluded.find(e=>e.sourcePatchId===pid)?.reason??'no_explicit_source_face_binding'};}
+ return {...legacy,faceId:overview?'building-overview':pid,faceLabel:overview?'本栋多面外观参考（官方贴图）':found[0].faceLabel,status:'image_available',orientationConfidence:'exact_source_plane_uv_binding',photos:clone(found),otherBuildingPhotos:getBuildingPhotos(key),contextPhotos:[],missingReason:null,photoDisplayNature:'official_appearance_texture_not_camera_photo',notice:'这里显示与源面精确配准的政府模型外观贴图，不是原始相机照片，也不代表2026现状。缺乏纹理或未通过配准的面仍留空。'};
+}
+export {createOfficialTextureView} from './official-texture-view.mjs';
+PHOTO_EVIDENCE.officialAppearanceDisplay={source:'separately acquired official 3A textured models',kind:'official_model_appearance_texture_not_camera_photo',faceCounts:{lowrise:128,kcc:21,warehouse:26},sourceGeometryUnchanged:true,captureDate:null};
