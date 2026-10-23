@@ -1,4 +1,4 @@
-# Bounded R06 exact-output A/B, using the existing workflow without modification.
+# Isolated C/D exact-output QA using the unchanged existing workflow.
 from pathlib import Path as _PerfR06Path
 if _PerfR06Path(__file__).with_name('unified-perf-config.json').is_file():
     import runpy as _perf_r06_runpy
