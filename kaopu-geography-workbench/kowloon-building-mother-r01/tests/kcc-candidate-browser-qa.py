@@ -1,5 +1,6 @@
 """Actual isolated R09 candidate browser gate. Reuses unchanged authorized workflow."""
-import functools,http.server,json,threading,traceback,hashlib
+import functools,http.server,json,threading,traceback,hashlib,concurrent.futures
+from urllib.request import urlopen
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parent
@@ -9,13 +10,24 @@ def save():(out/'kcc-candidate-browser.json').write_text(json.dumps(report,ensur
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root.parent)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{server.server_port}/kcc-layout-candidate-r09/index.html'
+publicConfig=root/'kcc-public-manifest.json'
+if publicConfig.is_file():
+ cfg=json.loads(publicConfig.read_text());url=cfg['url'];report['scope']='Actual public R09 candidate and exact content hashes; no request routing or overrides'
+ def verify(item):
+  name,sha=item;raw=urlopen(url+name,timeout=60).read();actual=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest();assert actual==sha,('Public hash mismatch',name);return name
+ with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:report['verifiedPublicFiles']=list(pool.map(verify,cfg['files'].items()))
+ browserEntry=url+'entry.html'
+else:browserEntry=None
 browser=None;page=None
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
   page=browser.new_page(viewport={'width':1366,'height':900},device_scale_factor=1);page.set_default_timeout(180000)
   page.on('pageerror',lambda e:report['errors'].append(str(e)))
-  page.goto(url,wait_until='domcontentloaded');page.wait_for_function('window.semanticInspection?.ready&&!semanticInspection.busy')
+  if browserEntry:
+   page.goto(browserEntry,wait_until='domcontentloaded');assert '未完成交付' in page.locator('body').inner_text();page.screenshot(path=str(out/'public-r09-entry.png'));page.locator('#enterCandidate').click()
+  else:page.goto(url,wait_until='domcontentloaded')
+  page.wait_for_function('window.semanticInspection?.ready&&!semanticInspection.busy')
   report['browserVersion']=browser.version
   frozen=page.evaluate('JSON.stringify(semanticInspection.model.levels)')
   page.screenshot(path=str(out/'same-page-three-buildings-before-candidate.png'))
