@@ -1,3 +1,10 @@
+# Bounded R06 exact-output A/B, using the existing workflow without modification.
+from pathlib import Path as _PerfR06Path
+if _PerfR06Path(__file__).with_name('unified-perf-config.json').is_file():
+    import runpy as _perf_r06_runpy
+    _perf_r06_runpy.run_path(str(_PerfR06Path(__file__).with_name('unified-perf-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Bounded unified-scene candidate/public QA, reusing the existing read-only workflow.
 from pathlib import Path as _UnifiedPath
 if _UnifiedPath(__file__).with_name('unified-config.json').is_file():
