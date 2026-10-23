@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """R05 exact-byte shared-scene acceptance. Software GPU, not hardware FPS."""
-import argparse,hashlib,json,mimetypes,time,traceback
+import argparse,base64,hashlib,json,mimetypes,time,traceback
 from pathlib import Path
 from urllib.parse import urlsplit
 from playwright.sync_api import sync_playwright,TimeoutError as PlaywrightTimeoutError
@@ -95,6 +95,22 @@ with sync_playwright() as pw:
   q=capture('all-three-initial-native');shot('all-three-initial-native')
   for case,hit in q['picks'].items():
    click_pick(hit,q);after=capture('clicked-'+case);assert after['registryCount']==q['registryCount'] and after['sourceCount']==q['sourceCount'];shot('clicked-'+case)
+  if cfg.get('testLocalPhotos'):
+   page.evaluate("semanticInspection.selectFace('lowrise','p112')");page.wait_for_function("semanticInspection.localPhotoState?.key==='lowrise|source-face:p112'&&semanticInspection.localPhotoState?.count===0")
+   local_requests=[]
+   listener=lambda request:local_requests.append({'method':request.method,'url':request.url}) if request.url.startswith(('https:','http:')) else None
+   page.on('request',listener);n=frames()
+   fixture=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=')
+   page.locator('#localPhotoInput').set_input_files([{'name':'qa-local-face-a.png','mimeType':'image/png','buffer':fixture},{'name':'qa-local-face-b.png','mimeType':'image/png','buffer':fixture}])
+   page.wait_for_function("semanticInspection.localPhotoState?.count===2&&document.querySelector('.local-reference-image')?.naturalWidth>0");assert page.locator('.local-photo-tabs button').count()==2;page.locator('.local-photo-tabs button').nth(1).click();assert page.evaluate('semanticInspection.localPhotos.state.activeIndex')==1
+   saved=page.evaluate('semanticInspection.localPhotoState');assert saved['persisted'] and saved['storage']=='indexeddb' and saved['networkUploads']==0 and frames()==n;assert page.locator('.local-reference-image').get_attribute('src').startswith('blob:');shot('local-user-photo-preview-synthetic-fixture')
+   page.evaluate("semanticInspection.selectFace('kcc','p001')");page.wait_for_function("semanticInspection.localPhotoState?.key==='kcc|source-face:p001'&&semanticInspection.localPhotoState?.count===0");assert page.locator('.local-reference-image').count()==0
+   page.evaluate("semanticInspection.selectFace('lowrise','p097')");page.wait_for_function("semanticInspection.localPhotoState?.key==='lowrise|source-face:p097'&&semanticInspection.localPhotoState?.count===0")
+   page.evaluate("semanticInspection.selectFace('lowrise','p112')");page.wait_for_function("semanticInspection.localPhotoState?.count===2&&document.querySelector('.local-reference-image')?.naturalWidth>0");assert not local_requests,('local photos caused network traffic',local_requests);assert frames()==n,'local reference flow retraced geometry';page.remove_listener('request',listener)
+   page.reload(wait_until='domcontentloaded');stable();page.evaluate("semanticInspection.selectFace('lowrise','p112')");page.wait_for_function("semanticInspection.localPhotoState?.key==='lowrise|source-face:p112'&&semanticInspection.localPhotoState?.count===2&&document.querySelector('.local-reference-image')?.naturalWidth>0");assert page.evaluate('semanticInspection.localPhotoState.persisted')
+   page.locator('#clearLocalPhotos').click();page.wait_for_function("semanticInspection.localPhotoState?.count===0");assert page.locator('.local-reference-image').count()==0
+   disk_count=page.evaluate("""()=>new Promise((resolve,reject)=>{const r=indexedDB.open('building-r05-local-references',1);r.onsuccess=()=>{const db=r.result,q=db.transaction('references').objectStore('references').get('lowrise|source-face:p112');q.onsuccess=()=>{resolve(q.result?.photos?.length??0);db.close()};q.onerror=()=>reject(q.error)};r.onerror=()=>reject(r.error)})""");assert disk_count==0
+   r['checks'].append({'label':'Local user photos persist by exact building/facade, multi-photo tabs, no upload, no geometry retrace, reload recovery and true stored deletion','passed':True,'fixture':'two synthetic 1-pixel PNGs only, not user photos','saved':saved,'networkRequestsDuringImportAndSwitch':local_requests,'reloadPersisted':True,'deletedFromIndexedDB':True});save()
   if not cfg.get('publicSmoke'):
    action(lambda:page.locator('[data-view="source"]').click());source_q=capture('all-three-source-only');shot('all-three-source-only')
    gpu_rays=page.evaluate('''async()=>{const {intersectCaseRay}=await import('./kowloon-building-mother-r01/r07/cases.mjs'),s=semanticInspection,g=s.renderer,c=s.presentedCamera,f=s.lastStats,norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n)},sub=(a,b)=>a.map((v,k)=>v-b[k]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],forward=norm(sub(c.target,c.eye)),right=norm(cross(forward,[0,1,0])),up=cross(right,forward),tan=Math.tan(c.fov/2),counts={},failures=[];let checked=0;for(let y=9;y<f.height-9;y+=Math.floor(f.height/29))for(let x=9;x<f.width-9;x+=Math.floor(f.width/51)){const hit=g.readHit(x,y);if(hit.status<.5)continue;const u=(2*(x+.5)-f.width)/f.height,v=(2*(y+.5)-f.height)/f.height,rd=norm(forward.map((w,k)=>w+tan*(u*right[k]+v*up[k]))),expected=intersectCaseRay(s.source,c.eye,rd),record=s.registry.find(q=>q.objectId===hit.objectId);checked++;counts[record?.caseId]=(counts[record?.caseId]??0)+1;if(!expected.hit||Math.abs(expected.t-hit.t)>.01||expected.objectId!==hit.objectId)failures.push({x,y,hit,expected});}return{checked,counts,failures};}''')
