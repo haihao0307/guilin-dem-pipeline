@@ -1,6 +1,6 @@
 # KCC observed layout integration R09 candidate
 
-Status: local candidate only. Not published, browser visual QA not run, actual interior registration not complete.
+Status: independent candidate preview. Actual browser and full-page gates passed; actual interior registration is not complete. Earlier notes below preserve the sequence and limits of prior checkpoints.
 
 Restored the published R07 viewer's 111 files and verified each Git blob SHA against commit 3039d579912f346841897d90e29411bb767f3e5b. Original source shapes, heights, floor elevations, elevator runtime, and renderer are unchanged.
 
