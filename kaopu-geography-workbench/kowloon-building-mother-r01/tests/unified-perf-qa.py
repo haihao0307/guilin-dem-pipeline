@@ -11,6 +11,9 @@ url=cfg['targetUrl'].rstrip('/')+'/'
 prior=None
 if cfg.get('resumeRenderEvidence'):
  spec=cfg['resumeRenderEvidence'];raw=(root/spec['file']).read_bytes();assert hashlib.sha256(raw).hexdigest()==spec['sha256'];prior=json.loads(raw);current=cfg['variants']['candidate']['files'];assert set(current)==set(prior['files']);diff=[p for p in current if current[p]['sha256']!=prior['files'][p]];assert set(diff)<=set(prior['allowedUiChanges']),('Changed geometry invalidates render evidence reuse',diff)
+large_prior=None
+if cfg.get('resumeLargeDesktopEvidence'):
+ spec=cfg['resumeLargeDesktopEvidence'];raw=(root/spec['file']).read_bytes();assert hashlib.sha256(raw).hexdigest()==spec['sha256'];large_prior=json.loads(raw);assert {p:q['sha256'] for p,q in cfg['variants']['candidate']['files'].items()}==large_prior['files'],'Changed candidate invalidates previous large desktop stage';assert large_prior['largeDesktopStage']['passed']
 r={'passed':False,'scope':'R07 complete self-designed floors and retained-controller lift end-to-end gate on actual Chromium SwiftShader. Full native dimensions, no reduced movement resolution/LOD/mesh. Exact all-pixel Float32+RGBA conservative-index tests. This does not certify actual building plans, structural fitness, or smooth hardware animation.','variants':{'candidate':{'frames':{}}},'checks':[],'errors':[],'startedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
 def save():(out/'r07-browser-report.json').write_text(json.dumps(r,ensure_ascii=False,indent=2))
 def stable(page,n=-1):
@@ -138,20 +141,24 @@ with sync_playwright() as pw:
   for variant,v in cfg['variants'].items():
    for rel,spec in v['files'].items():assert hashlib.sha256((root/spec['file']).read_bytes()).hexdigest()==spec['sha256'],('frozen closure changed',variant,rel)
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);r['browserVersion']=browser.version
-  r['layoutMatrix']=runpy.run_path(str(root/'layout-qa.py'))['run_layout_matrix'](browser,root/'layout-baseline',root/'perf-candidate',r,out);save();assert r['layoutMatrix']['passed'],'R07 DOM layout gate failed'
-  context=browser.new_context(viewport={'width':1920,'height':1080},device_scale_factor=1);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.add_init_script("window.addEventListener('error',e=>window.__qaError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaError=String(e.reason));")
-  errors=[];requests=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda req:requests.append(req.url));page.goto(url,wait_until='domcontentloaded');stable(page)
-  action(page,lambda:page.evaluate('semanticInspection.render()'));whole=capture(page,'candidate','warm-whole',whole=True);layout_live(page,'1920x1080-dpr1');click_source(page,whole);photo_checks(page);diagnostics_check(page,requests)
-  if prior:
-   old=prior['frames']['warm-whole'];assert whole['camera']==old['camera'] and whole['canvas']['width']==old['canvas']['width'] and whole['canvas']['height']==old['canvas']['height'] and whole['rgbaHash']==old['rgbaHash'] and whole['fieldHashes']==old['fieldHashes'],'New frozen whole scene differs from reused render evidence'
-   r['reusedRenderEvidence']={'run':prior['run'],'head':prior['head'],'reportSha256':prior['reportSha256'],'changedFiles':diff,'scope':prior['scope'],'newWholeMatchesAllNativeFields':True,'frames':{k:v for k,v in prior['frames'].items() if k!='warm-whole'},'checks':prior['checks']};save()
+  errors=[]
+  if large_prior:
+   r['reusedLargeDesktopEvidence']=large_prior;r['largeDesktopStage']={**large_prior['largeDesktopStage'],'reusedFromRun':large_prior['run']};save()
   else:
-   for view in ['source','cut','design']:
-    action(page,lambda view=view:page.evaluate('v=>semanticInspection.setView(v)',view));capture_native(page,'mode-'+view)
-    if view!='source':exact_pair(page,'mode-'+view)
-  window_proposals_check(page)
-  action(page,lambda:page.evaluate('semanticInspection.showComplete()'));capture(page,'candidate','restored-large-whole',whole=True);drag_check(page);assert not errors,errors
-  r['largeDesktopStage']={'passed':True,'viewport':{'width':1920,'height':1080,'dpr':1},'scope':'Native output, all three buildings, 175 photo bindings, three north-window proposals and continuous-drag latency. No viewport change during movement.'};save();context.close()
+   r['layoutMatrix']=runpy.run_path(str(root/'layout-qa.py'))['run_layout_matrix'](browser,root/'layout-baseline',root/'perf-candidate',r,out);save();assert r['layoutMatrix']['passed'],'R07 DOM layout gate failed'
+   context=browser.new_context(viewport={'width':1920,'height':1080},device_scale_factor=1);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.add_init_script("window.addEventListener('error',e=>window.__qaError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaError=String(e.reason));")
+   errors=[];requests=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda req:requests.append(req.url));page.goto(url,wait_until='domcontentloaded');stable(page)
+   action(page,lambda:page.evaluate('semanticInspection.render()'));whole=capture(page,'candidate','warm-whole',whole=True);layout_live(page,'1920x1080-dpr1');click_source(page,whole);photo_checks(page);diagnostics_check(page,requests)
+   if prior:
+    old=prior['frames']['warm-whole'];assert whole['camera']==old['camera'] and whole['canvas']['width']==old['canvas']['width'] and whole['canvas']['height']==old['canvas']['height'] and whole['rgbaHash']==old['rgbaHash'] and whole['fieldHashes']==old['fieldHashes'],'New frozen whole scene differs from reused render evidence'
+    r['reusedRenderEvidence']={'run':prior['run'],'head':prior['head'],'reportSha256':prior['reportSha256'],'changedFiles':diff,'scope':prior['scope'],'newWholeMatchesAllNativeFields':True,'frames':{k:v for k,v in prior['frames'].items() if k!='warm-whole'},'checks':prior['checks']};save()
+   else:
+    for view in ['source','cut','design']:
+     action(page,lambda view=view:page.evaluate('v=>semanticInspection.setView(v)',view));capture_native(page,'mode-'+view)
+     if view!='source':exact_pair(page,'mode-'+view)
+   window_proposals_check(page)
+   action(page,lambda:page.evaluate('semanticInspection.showComplete()'));capture(page,'candidate','restored-large-whole',whole=True);drag_check(page);assert not errors,errors
+   r['largeDesktopStage']={'passed':True,'viewport':{'width':1920,'height':1080,'dpr':1},'scope':'Native output, all three buildings, 175 photo bindings, three north-window proposals and continuous-drag latency. No viewport change during movement.'};save();context.close()
   # A separate fixed native desktop context, not a movement-time quality reduction.
   # Functional frame timings here must never be compared with the larger viewport.
   context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.add_init_script("window.addEventListener('error',e=>window.__qaError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaError=String(e.reason));")
@@ -166,7 +173,9 @@ with sync_playwright() as pw:
  except Exception:
   r['errors'].append(traceback.format_exc())
   if page:
-   try:page.screenshot(path=str(out/'r07-failure.png'),timeout=10000)
+   try:
+    (out/'r07-failure-dom.html').write_text(page.locator('body').inner_html())
+    page.screenshot(path=str(out/'r07-failure.png'),timeout=10000)
    except Exception:pass
  finally:
   r['finishedAt']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime());save()

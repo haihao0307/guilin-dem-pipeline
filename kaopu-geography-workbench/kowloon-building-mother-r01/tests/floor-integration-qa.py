@@ -16,6 +16,20 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
 
     try:
         page.evaluate("semanticInspection.selectBuilding('lowrise')")
+        panel=page.locator('#completeFloorPanel')
+        floor_select=panel.locator("xpath=./label[normalize-space(text())='楼层实例']/select")
+        room_select=panel.locator("xpath=./label[normalize-space(text())='房间 / 门']/select")
+        # Verify native implicit-label ownership, not the aggregate option text.
+        dom=panel.evaluate("""p=>({html:p.outerHTML,labels:[...p.querySelectorAll(':scope > label')].map(l=>({ownText:[...l.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim(),fullText:l.textContent,controlTag:l.control?.tagName,associated:l.control?.labels.length===1&&l.control.labels[0]===l,options:[...l.querySelectorAll('option')].map(o=>({value:o.value,text:o.textContent}))})),controls:[...p.querySelectorAll('button,select,input')].map(e=>({tag:e.tagName,text:e.textContent,id:e.id,dataset:{...e.dataset},aria:e.getAttribute('aria-label'),disabled:e.disabled}))})""")
+        dom['oldExactLabelCounts']={'floor':panel.get_by_label('楼层实例',exact=True).count(),'room':panel.get_by_label('房间 / 门',exact=True).count()}
+        dom['associatedLocatorCounts']={'floor':floor_select.count(),'room':room_select.count()}
+        (out/'floor-panel-dom-contract.json').write_text(json.dumps(dom,ensure_ascii=False,indent=2))
+        assert len(dom['labels'])==2 and [l['ownText'] for l in dom['labels']]==['楼层实例','房间 / 门'] and all(l['associated'] and l['controlTag']=='SELECT' for l in dom['labels']),dom
+        assert dom['associatedLocatorCounts']=={'floor':1,'room':1},dom
+        assert [o['value'] for o in dom['labels'][0]['options']]==['L01','L02'] and len(dom['labels'][1]['options'])==7,dom
+        for selector in ['[data-floor-bookmark=slice]','[data-floor-bookmark=entry]','[data-floor-bookmark=stair]','[data-floor-bookmark=door]','[data-room-door=open]','[data-room-door=close]','input[type=range][aria-label="从入口经过楼梯走到房间的路线进度"]']:
+            assert panel.locator(selector).count()==1,('nonunique floor control',selector)
+        report['checks'].append({'locatorContract':{'passed':True,'oldExactLabelCounts':dom['oldExactLabelCounts'],'associatedLocatorCounts':dom['associatedLocatorCounts'],'evidence':'floor-panel-dom-contract.json'}});save()
         page.evaluate("window.__qaSavedDoorClose=document.querySelector('#completeFloorPanel [data-room-door=close]').onclick")
         for other in ['warehouse','kcc']:
             page.evaluate('c=>semanticInspection.selectBuilding(c)',other)
@@ -34,20 +48,20 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
         report['checks'].append({'queuedDoorCancelledOnBuildingSwitch':cancel});save()
         page.evaluate("semanticInspection.selectBuilding('lowrise')")
         panel=page.locator('#completeFloorPanel');assert panel.is_visible()
-        assert panel.get_by_label('楼层实例',exact=True).locator('option').count()==2
-        assert panel.get_by_label('房间 / 门',exact=True).locator('option').count()==7
+        assert floor_select.locator('option').count()==2
+        assert room_select.locator('option').count()==7
         source=page.evaluate('JSON.stringify(semanticInspection.source.patches)')
         ids=page.evaluate('semanticInspection.registry.map(r=>r.objectId).sort((a,b)=>a-b)')
         for floor in ['L01','L02']:
-            panel.get_by_label('楼层实例',exact=True).select_option(floor);q=capture('floor-'+floor)
+            floor_select.select_option(floor);q=capture('floor-'+floor)
             classes=page.evaluate("""hits=>{const s=semanticInspection,rows=s.registry.filter(r=>Number(hits[r.objectId]??0)>0&&r.caseId==='lowrise');return{classKeys:[...new Set(rows.map(r=>r.classKey))],floors:[...new Set(rows.map(r=>r.localFloorId).filter(Boolean))],inspection:s.floorInspection};}""",q['hitObjectPixels'])
             assert classes['inspection']['sameScene'] and classes['inspection']['sourceHidden'] and floor in classes['floors'],('wrong floor or hidden geometry',floor,classes)
             assert 'floor' in classes['classKeys'] and ('wall' in classes['classKeys'] or 'door' in classes['classKeys']),('not a physical complete floor view',classes)
             report['checks'].append({'floor':floor,'visible':classes})
-            choices=panel.get_by_label('房间 / 门',exact=True).locator('option').evaluate_all("opts=>opts.map(o=>o.value)")
+            choices=room_select.locator('option').evaluate_all("opts=>opts.map(o=>o.value)")
             for room in choices:
                 calls=page.evaluate('semanticInspection.renderRequests')
-                panel.get_by_label('房间 / 门',exact=True).select_option(room)
+                room_select.select_option(room)
                 selected=page.evaluate('semanticInspection.selected')
                 assert selected and selected['caseId']=='lowrise' and selected['localFloorId']==floor and selected['classKey']=='door',('room door ownership/select failure',floor,room,selected)
                 assert page.evaluate('semanticInspection.renderRequests')==calls,'Room identity selection retraced geometry'
@@ -56,7 +70,7 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
             visible=page.evaluate("hits=>semanticInspection.registry.filter(r=>r.caseId==='lowrise'&&r.classKey==='stair'&&Number(hits[r.objectId]??0)>0).map(r=>({id:r.objectId,pixels:hits[r.objectId]}))",stair['hitObjectPixels'])
             assert visible,('Each floor stair bookmark must expose real stair hit IDs',floor)
             report['checks'].append({'floor':floor,'stairVisibleIds':visible})
-        panel.get_by_label('房间 / 门',exact=True).select_option('living')
+        room_select.select_option('living')
         click('#completeFloorPanel [data-floor-bookmark="door"]');before=door_state();assert before['openT']==1 and before['descriptorExact'] and before['glError']==0 and before['runtime']['revision']==before['runtime']['presentedRevision']
         # A real in-flight frame exists before the close command. Queued edits
         # must not mutate its descriptors, and walking must be blocked immediately.
@@ -80,12 +94,16 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
         report['checks'].append({'queuedDoorSameFrameIsolation':isolation,'closedWalkBlocked':block,'closed':state,'opened':opened_state})
         # Real panel slider drives the same continuous floor/stair/door route.
         for progress in [0,.25,.5,1]:
-            panel.get_by_role('slider').evaluate("(e,v)=>{e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}",round(progress*1000));q=capture('route-'+str(progress))
+            panel.locator('input[type=range][aria-label="从入口经过楼梯走到房间的路线进度"]').evaluate("(e,v)=>{e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}",round(progress*1000));q=capture('route-'+str(progress))
             pose=page.evaluate('semanticInspection.routePose');assert pose and abs(pose['progress']-progress)<1e-9,('route did not advance',progress,pose)
             assert all(isinstance(v,(int,float)) for v in pose['foot'])
             report['checks'].append({'routeProgress':progress,'pose':pose,'wallMs':q['stats']['wallMs']})
         assert page.evaluate('JSON.stringify(semanticInspection.source.patches)')==source,'source geometry changed during route/door interaction'
         assert page.evaluate('semanticInspection.registry.map(r=>r.objectId).sort((a,b)=>a-b)')==ids,'object identity changed during door operations'
         report['passed']=True
-    finally:save()
+    finally:
+        try:
+            (out/'floor-panel-final-dom.html').write_text(page.locator('#completeFloorPanel').inner_html())
+        except Exception:pass
+        save()
     return report

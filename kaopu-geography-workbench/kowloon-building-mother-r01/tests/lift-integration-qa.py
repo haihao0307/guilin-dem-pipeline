@@ -60,6 +60,14 @@ def _run_lift_integration_qa(page, output_dir, timeout_ms=300000, verify_gpu_equ
     page.evaluate("semanticInspection.selectBuilding('kcc')")
     panel=page.locator('[data-lift-panel="building-owned"]')
     assert panel.is_visible(), 'Integrated lift panel must be visible, not a report-only artifact'
+    dom=panel.evaluate("""p=>({html:p.outerHTML,controls:[...p.querySelectorAll('button,select')].map(e=>({tag:e.tagName,text:e.textContent,dataset:{...e.dataset},aria:e.getAttribute('aria-label'),disabled:e.disabled}))})""")
+    dom['pauseLabelCount']=panel.get_by_role('button',name='继续演示' if page.evaluate('semanticInspection.liftPanel.paused') else '暂停演示',exact=True).count()
+    (out/'lift-panel-dom-contract.json').write_text(json.dumps(dom,ensure_ascii=False,indent=2))
+    assert dom['pauseLabelCount']==1,dom
+    for selector in ['[data-lift-hall-floor]','[data-lift-call=up]','[data-lift-call=down]','[data-lift-door=open]','[data-lift-door=close]','[data-lift-obstruction]','[data-lift-focus=car]','[data-lift-focus=landing]','[data-lift-passenger=board]','[data-lift-passenger=ride]','[data-lift-passenger=exit]','[data-lift-advance="1"]']:
+        assert panel.locator(selector).count()==1,('nonunique lift control',selector)
+    assert panel.locator('[data-lift-hall-floor] option').count()==28
+
     assert panel.locator('[data-lift-car-floor]').count()==28
     assert panel.locator('[data-lift-car-floor=\"T01\"]').is_enabled() and panel.locator('[data-lift-hall-floor]').is_enabled(),'Return to KCC did not restore valid lift controls'
     # Disable automatic time so every visual pose has an exact reproducible state.
