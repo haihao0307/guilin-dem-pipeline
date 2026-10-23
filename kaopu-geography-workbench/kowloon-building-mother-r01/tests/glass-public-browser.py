@@ -1,3 +1,10 @@
+# Run bounded exact public R03 verification when explicitly configured.
+from pathlib import Path as _PublicR03Path
+if _PublicR03Path(__file__).with_name('semantic-public-smoke-config.json').is_file():
+    import runpy as _public_r03_runpy
+    _public_r03_runpy.run_path(str(_PublicR03Path(__file__).with_name('semantic-public-smoke.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Run separately reported candidate-only index and floor-inspection checks when explicitly configured.
 from pathlib import Path as _CombinedPath
 if _CombinedPath(__file__).with_name('semantic-combined-qa-config.json').is_file():
