@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exact-byte R04 native desktop framebuffer, full-frame camera and picking gate."""
 import argparse, hashlib, json, mimetypes, time, traceback
+from urllib.parse import urlsplit
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parent
@@ -12,15 +13,27 @@ def save():(out/'desktop-report.json').write_text(json.dumps(r,ensure_ascii=Fals
 def handler(body,typ):
  def fulfill(route,request):route.fulfill(status=200,body=body,content_type=typ)
  return fulfill
+def matcher(target):
+ expected=urlsplit(target);paths={expected.path}
+ if expected.path.endswith('/index.html'):paths.add(expected.path[:-10])
+ def match(actual):
+  actual=urlsplit(actual);return (actual.scheme,actual.netloc)==(expected.scheme,expected.netloc) and actual.path in paths
+ return match
 class Mock:
  def fulfill(self,**kw):self.kw=kw
 for body in [b'candidate bytes',b'\x00test']:
  mock=Mock();handler(body,'text/plain')(mock,object());assert mock.kw['body'] is body
+for target,accepted,rejected in [
+ ('https://example.invalid/candidate/index.html',['https://example.invalid/candidate/','https://example.invalid/candidate/index.html','https://example.invalid/candidate/?v=1','https://example.invalid/candidate/index.html?v=1'],['https://example.invalid/other/','https://other.invalid/candidate/']),
+ ('https://example.invalid/candidate/semantic-app.mjs',['https://example.invalid/candidate/semantic-app.mjs','https://example.invalid/candidate/semantic-app.mjs?v=1'],['https://example.invalid/candidate/other.mjs'])]:
+ check=matcher(target)
+ for value in accepted:assert check(value),('missed expected route',target,value)
+ for value in rejected:assert not check(value),('overbroad route',target,value)
 r['routeCallbackTwoArgumentsVerified']=True
+r['routeDirectoryIndexModuleQueryMatchVerified']=True
 
 def stable(case=None,n=-1):
- page.wait_for_function("a=>{const s=window.semanticInspection;if(s?.errors?.length)throw Error(String(s.errors));return s?.ready&&!s.renderer.busy&&(!a.case||s.caseId===a.case)&&s.frames.length>a.n}",arg={'case':case,'n':n},timeout=240000)
- page.wait_for_timeout(80)
+ page.wait_for_function("""a=>{const s=window.semanticInspection;if(window.__qaPageError)throw Error(window.__qaPageError);if(s?.errors?.length)throw Error(String(s.errors));const ok=s?.ready&&s.phase==='ready'&&!s.busy&&!s.renderer.busy&&!document.querySelector('#case').disabled&&(!a.case||s.caseId===a.case)&&s.frames.length>a.n;if(!ok){window.__qaSettled=null;return false;}const box=s.renderer.canvas.getBoundingClientRect(),key=JSON.stringify([a,s.presentedFrames,s.presentedDisplay,box.width,box.height,devicePixelRatio]);if(window.__qaSettled?.key!==key){window.__qaSettled={key,since:performance.now()};return false;}return performance.now()-window.__qaSettled.since>=160;}""",arg={'case':case,'n':n},timeout=240000)
 
 def frames():return page.evaluate('window.semanticInspection.frames.length')
 def action(fn,case=None):
@@ -35,6 +48,7 @@ CAPTURE='''()=>{const s=window.semanticInspection,g=s.renderer,f=s.lastStats,rec
  const gl=g.gl;return{caseId:s.caseId,view:s.view,canvas:{width:g.canvas.width,height:g.canvas.height,cssWidth:rect.width,cssHeight:rect.height,x:rect.x,y:rect.y,right:rect.right,bottom:rect.bottom},viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio,rect:vp.toJSON()},stats:f,display:s.display,fit:s.fit,camera,bounds,baseBounds,projected,counts,ids,picks,bad,selected:s.selected,gpu:g.gpu,glError:gl.getError(),maxTextureSize:gl.getParameter(gl.MAX_TEXTURE_SIZE),modelTriangles:g.stats.modelTriangles,modelVertexBuffers:g.stats.modelVertexBuffers,imageRendering:getComputedStyle(g.canvas).imageRendering,frames:s.frames.map(q=>({width:q.width,height:q.height}))};}'''
 def capture(label,whole=False,native=True):
  q=page.evaluate(CAPTURE);r['frames'][label]=q;save();c=q['canvas'];f=q['stats'];assert c['width']==f['width'] and c['height']==f['height'],('backing/render mismatch',label)
+ assert f['tilesCompleted']==f['tilesPlanned'] and f['tilesSubmitted']==f['tilesPlanned'],('incomplete GPU tile frame',label)
  assert abs(c['width']/c['height']-c['cssWidth']/c['cssHeight'])<.004,('aspect stretched',label,c)
  assert q['bad']==0 and q['glError']==0 and q['modelTriangles']==q['modelVertexBuffers']==0 and q['counts'],('invalid/empty scene',label,q['counts'])
  if native:
@@ -65,8 +79,8 @@ with sync_playwright() as pw:
   verify.close();save()
   for dpr in ([1] if cfg.get('publicSmoke') else [1,2]):
    context=browser.new_context(viewport={'width':1920,'height':1080},device_scale_factor=dpr)
-   for rel,asset in cfg.get('overrides',{}).items():context.route(url+rel,handler((root/asset).read_bytes(),'text/javascript' if rel.endswith(('.mjs','.js')) else mimetypes.guess_type(rel)[0] or 'text/plain'))
-   page=context.new_page();page.set_default_timeout(240000);page.on('pageerror',lambda e:r['pageErrors'].append(str(e)));page.on('requestfailed',lambda q:r['failedRequests'].append({'url':q.url,'failure':q.failure}));page.goto(url,wait_until='domcontentloaded');stable('lowrise')
+   for rel,asset in cfg.get('overrides',{}).items():context.route(matcher(url+rel),handler((root/asset).read_bytes(),'text/javascript' if rel.endswith(('.mjs','.js')) else mimetypes.guess_type(rel)[0] or 'text/plain'))
+   page=context.new_page();page.add_init_script("window.addEventListener('error',e=>window.__qaPageError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaPageError=String(e.reason));");page.set_default_timeout(240000);page.on('pageerror',lambda e:r['pageErrors'].append(str(e)));page.on('requestfailed',lambda q:r['failedRequests'].append({'url':q.url,'failure':q.failure}));navigation=page.goto(url,wait_until='domcontentloaded');assert hashlib.sha256(navigation.body()).hexdigest()==cfg['files']['index.html'],'directory navigation did not serve exact candidate index';assert page.title()=='三栋建筑 · 桌面原生像素检查';assert all(page.locator('#'+id).count()==1 for id in ['fitView','fullscreen','displayInfo','resolutionWarning']),'candidate toolbar missing';stable('lowrise')
    if dpr==2:
     q=capture('desktop-DPR2-native',whole=True);assert q['canvas']['width']>2500;shot('desktop-DPR2-native')
     action(lambda:page.locator('#reset').click());capture('desktop-DPR2-reset',whole=True);context.close();continue
