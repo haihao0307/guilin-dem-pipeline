@@ -1,3 +1,10 @@
+# Bounded unified-scene candidate/public QA, reusing the existing read-only workflow.
+from pathlib import Path as _UnifiedPath
+if _UnifiedPath(__file__).with_name('unified-config.json').is_file():
+    import runpy as _unified_runpy
+    _unified_runpy.run_path(str(_UnifiedPath(__file__).with_name('unified-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Run bounded desktop R04 exact-byte checks when explicitly configured.
 from pathlib import Path as _DesktopR04Path
 if _DesktopR04Path(__file__).with_name('semantic-desktop-config.json').is_file():
