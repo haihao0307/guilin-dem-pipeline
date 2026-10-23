@@ -12,7 +12,8 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
         settled(page);q=capture_native(page,label);report['frames'][label]=q;save();return q
     def click(selector):
         page.locator(selector).click();settled(page)
-    def door_state():return page.evaluate("""()=>{const s=semanticInspection,b=s.buildings.find(b=>b.caseId==='lowrise'),route=s.floorPanel.route(),a=b.localModel.hostedComponents.apertures.find(a=>a.host.nodeId===route.doorGate.doorId),world=s.model.hostedComponents.apertures.find(q=>q.caseId==='lowrise'&&q.instanceId===a.instanceId),g=s.renderer;return{routeGate:route.doorGate,doorId:a.host.nodeId,openT:a.config.openT,ids:world.primitives.map(p=>p.objectId),leafId:world.primitives.find(p=>p.part==='leaf')?.objectId,token:g.apertureNeighborToken,tablePrimitiveCount:g.apertureNeighbors?.data?.[2],currentPrimitiveCount:g.apertures.reduce((n,a)=>n+a.primitives.length,0),runtime:s.roomDoors.snapshot()};}""")
+    def door_state():return page.evaluate("""async()=>{const s=semanticInspection,b=s.buildings.find(b=>b.caseId==='lowrise'),route=s.floorPanel.route(),a=b.localModel.hostedComponents.apertures.find(a=>a.host.nodeId===route.doorGate.doorId),world=s.model.hostedComponents.apertures.find(q=>q.caseId==='lowrise'&&q.instanceId===a.instanceId),r=s.renderer,g=r.gl,{packApertureDescriptors}=await import('./kowloon-building-mother-r01/r07/apertures.mjs'),packed=packApertureDescriptors(r.apertures);if(s.busy||r.busy)throw Error('Descriptor read requires completed frame');const previousDraw=g.getParameter(g.DRAW_FRAMEBUFFER_BINDING),previousRead=g.getParameter(g.READ_FRAMEBUFFER_BINDING),fb=g.createFramebuffer(),pixels=new Float32Array(packed.data.length);let status;try{g.bindFramebuffer(g.FRAMEBUFFER,fb);g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0,g.TEXTURE_2D,r.apertureTexture,0);status=g.checkFramebufferStatus(g.FRAMEBUFFER);if(status!==g.FRAMEBUFFER_COMPLETE)throw Error('Descriptor texture framebuffer incomplete '+status);g.readBuffer(g.COLOR_ATTACHMENT0);g.readPixels(0,0,packed.width,packed.height,g.RGBA,g.FLOAT,pixels);}finally{g.bindFramebuffer(g.DRAW_FRAMEBUFFER,previousDraw);g.bindFramebuffer(g.READ_FRAMEBUFFER,previousRead);g.deleteFramebuffer(fb);}const hash=async a=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',a.buffer))].map(v=>v.toString(16).padStart(2,'0')).join(''),cpuHash=await hash(packed.data),gpuHash=await hash(pixels),old=window.__qaDoorTexture;if(!old||old.texture!==r.apertureTexture)window.__qaDoorTexture={texture:r.apertureTexture,serial:(old?.serial??0)+1};return{routeGate:route.doorGate,doorId:a.host.nodeId,openT:a.config.openT,ids:world.primitives.map(p=>p.objectId),leafId:world.primitives.find(p=>p.part==='leaf')?.objectId,textureSerial:window.__qaDoorTexture.serial,descriptorCpuHash:cpuHash,descriptorGpuHash:gpuHash,descriptorExact:cpuHash===gpuHash,descriptorDimensions:[packed.width,packed.height],gpuPrimitiveCount:pixels[0],currentPrimitiveCount:r.apertures.reduce((n,a)=>n+a.primitives.length,0),glError:g.getError(),runtime:s.roomDoors.snapshot()};}""")
+
     try:
         page.evaluate("semanticInspection.selectBuilding('lowrise')")
         panel=page.locator('#completeFloorPanel');assert panel.is_visible()
@@ -39,20 +40,24 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
             assert visible,('Each floor stair bookmark must expose real stair hit IDs',floor)
             report['checks'].append({'floor':floor,'stairVisibleIds':visible})
         panel.get_by_label('房间 / 门',exact=True).select_option('living')
-        click('#completeFloorPanel [data-floor-bookmark="door"]');before=door_state();assert before['openT']==1
+        click('#completeFloorPanel [data-floor-bookmark="door"]');before=door_state();assert before['openT']==1 and before['descriptorExact'] and before['glError']==0 and before['runtime']['revision']==before['runtime']['presentedRevision']
         # A real in-flight frame exists before the close command. Queued edits
         # must not mutate its descriptors, and walking must be blocked immediately.
         isolation=page.evaluate("""()=>{const s=semanticInspection;s.render();const busy=s.renderer.busy,a=JSON.stringify(s.model.hostedComponents.apertures),registry=JSON.stringify(s.registry),camera=JSON.stringify(s.renderer.options);document.querySelector('#completeFloorPanel [data-room-door="close"]').click();const blocked=s.floorPanel.walk(1);return{busy,aperturesUnchanged:a===JSON.stringify(s.model.hostedComponents.apertures),registryUnchanged:registry===JSON.stringify(s.registry),cameraUnchanged:camera===JSON.stringify(s.renderer.options),blocked};}""")
         assert isolation['busy'] and isolation['aperturesUnchanged'] and isolation['registryUnchanged'] and isolation['cameraUnchanged'] and isolation['blocked']['blocked'],isolation
         closed=capture('room-door-closed');state=door_state()
-        assert state['openT']==0 and not state['routeGate']['allowed'] and state['token']>before['token'],state
-        assert state['tablePrimitiveCount']==state['currentPrimitiveCount']>0,state
+        assert state['openT']==0 and not state['routeGate']['allowed'] and state['textureSerial']>before['textureSerial'] and state['runtime']['revision']>before['runtime']['revision'],state
+        assert state['runtime']['revision']==state['runtime']['presentedRevision'] and not state['runtime']['pending'],state
+        assert state['descriptorExact'] and state['glError']==0 and state['gpuPrimitiveCount']==state['currentPrimitiveCount']>0,state
         assert closed['hitObjectPixels'].get(str(state['leafId']),0)>0,('closed door leaf not visible',state)
         block=page.evaluate("""()=>{const s=semanticInspection,c=JSON.stringify(s.renderer.options),n=s.renderRequests,r=s.floorPanel.walk(1);return{r,cameraUnchanged:c===JSON.stringify(s.renderer.options),noRender:n===s.renderRequests};}""")
         assert block['r']['blocked'] and block['cameraUnchanged'] and block['noRender'],block
         exact_pair(page,'room-door-closed')
         click('#completeFloorPanel [data-room-door="open"]');opened=capture('room-door-open');opened_state=door_state()
-        assert opened_state['openT']==1 and opened_state['routeGate']['allowed'] and opened_state['token']>state['token'],opened_state
+        assert opened_state['openT']==1 and opened_state['routeGate']['allowed'] and opened_state['textureSerial']>state['textureSerial'] and opened_state['runtime']['revision']>state['runtime']['revision'],opened_state
+        assert opened_state['runtime']['revision']==opened_state['runtime']['presentedRevision'] and not opened_state['runtime']['pending'],opened_state
+        assert opened_state['descriptorExact'] and opened_state['glError']==0 and opened_state['gpuPrimitiveCount']==opened_state['currentPrimitiveCount']>0,opened_state
+        assert opened_state['descriptorGpuHash']!=state['descriptorGpuHash'],'Door GPU descriptor texture did not change'
         assert closed['fieldHashes']!=opened['fieldHashes'], 'Door operation must change authoritative geometry, not only a label'
         exact_pair(page,'room-door-open')
         report['checks'].append({'queuedDoorSameFrameIsolation':isolation,'closedWalkBlocked':block,'closed':state,'opened':opened_state})

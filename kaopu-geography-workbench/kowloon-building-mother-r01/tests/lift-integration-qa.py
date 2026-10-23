@@ -37,18 +37,18 @@ def _run_lift_integration_qa(page, output_dir, timeout_ms=300000, verify_gpu_equ
         # targets, plus presented RGBA. Hashing occurs in the browser, not from
         # screenshots or approximate sampled rays.
         capture="""async()=>{const s=semanticInspection,r=s.renderer,g=r.gl,w=s.lastStats.width,h=s.lastStats.height,planes=[0,1,2].map(()=>new Float32Array(w*h*4));for(const t of r.hitTiles){g.bindFramebuffer(g.FRAMEBUFFER,t.target.fbo);for(let k=0;k<3;k++){g.readBuffer(g.COLOR_ATTACHMENT0+k);const data=new Float32Array(t.width*t.height*4);g.readPixels(t.x,t.y,t.width,t.height,g.RGBA,g.FLOAT,data);for(let row=0;row<t.height;row++)planes[k].set(data.subarray(row*t.width*4,(row+1)*t.width*4),((t.y+row)*w+t.x)*4);}}g.bindFramebuffer(g.FRAMEBUFFER,null);const rgba=r.readPixels();const hash=async a=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',a.buffer))].map(v=>v.toString(16).padStart(2,'0')).join('');return{width:w,height:h,hashes:await Promise.all([...planes,rgba].map(hash)),wallMs:s.lastStats.wallMs,revision:s.lifts.snapshot().presentedRevision,glError:g.getError()};}"""
-        original=page.evaluate("({primitive:semanticInspection.renderer.options.primitiveTileIndex??true,aperture:semanticInspection.renderer.options.apertureTileIndex??true,neighborAabb:semanticInspection.renderer.options.apertureNeighborAabbFirst??true,neighborIndex:semanticInspection.renderer.options.apertureNeighborIndex??true})")
-        page.evaluate("async()=>{const s=semanticInspection;Object.assign(s.renderer.options,{primitiveTileIndex:false,apertureTileIndex:false,apertureNeighborAabbFirst:false,apertureNeighborIndex:false});await s.render();}")
+        original=page.evaluate("({primitive:semanticInspection.renderer.options.primitiveTileIndex??true,aperture:semanticInspection.renderer.options.apertureTileIndex??true})")
+        page.evaluate("async()=>{const s=semanticInspection;Object.assign(s.renderer.options,{primitiveTileIndex:false,apertureTileIndex:false});await s.render();}")
         settled(); baseline=page.evaluate(capture)
         checkpoint(label+'-indices-off',baseline=baseline)
-        page.evaluate("async()=>{const s=semanticInspection;Object.assign(s.renderer.options,{primitiveTileIndex:true,apertureTileIndex:true,apertureNeighborAabbFirst:true,apertureNeighborIndex:true});await s.render();}")
+        page.evaluate("async()=>{const s=semanticInspection;Object.assign(s.renderer.options,{primitiveTileIndex:true,apertureTileIndex:true});await s.render();}")
         settled(); indexed=page.evaluate(capture)
         checkpoint(label+'-indices-on',indexed=indexed)
         assert baseline['hashes']==indexed['hashes'],{'pose':label,'baseline':baseline,'indexed':indexed}
         assert baseline['revision']==indexed['revision'] and baseline['glError']==0 and indexed['glError']==0
         equivalence.append({'pose':label,'passed':True,'baseline':baseline,'indexed':indexed})
         checkpoint(label+'-exact-pair',exactPairs=equivalence)
-        page.evaluate("o=>Object.assign(semanticInspection.renderer.options,{primitiveTileIndex:o.primitive,apertureTileIndex:o.aperture,apertureNeighborAabbFirst:o.neighborAabb,apertureNeighborIndex:o.neighborIndex})",original)
+        page.evaluate("o=>Object.assign(semanticInspection.renderer.options,{primitiveTileIndex:o.primitive,apertureTileIndex:o.aperture})",original)
     initial_source=page.evaluate("JSON.stringify(semanticInspection.source.patches)")
     page.evaluate("semanticInspection.selectBuilding('kcc')")
     panel=page.locator('[data-lift-panel="building-owned"]')
