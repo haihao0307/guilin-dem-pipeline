@@ -33,8 +33,12 @@ with sync_playwright() as pw:
   page.on('pageerror',lambda e:r['pageErrors'].append(str(e)));page.on('requestfailed',lambda q:r['failedRequests'].append({'url':q.url,'failure':q.failure}))
   deadline=time.monotonic()+180
   while True:
-   a=context.request.get(url+'semantic-app.mjs',timeout=30000);sha=hashlib.sha256(a.body()).hexdigest();r['publishObservations'].append({'at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'status':a.status,'sha256':sha});save()
-   if a.status==200 and sha==config['expectedAppSha256']:break
+   a=context.request.get(url+'semantic-app.mjs',timeout=30000);sha=hashlib.sha256(a.body()).hexdigest();dependencyHashes={};dependenciesReady=True
+   for key,relative in [('expectedRegistrySha256','kowloon-building-mother-r01/whole-building-facade-r01/semantic-registry.mjs'),('expectedRendererSha256','kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs')]:
+    if key in config:
+     response=context.request.get(url+relative,timeout=30000);digest=hashlib.sha256(response.body()).hexdigest();dependencyHashes[relative]={'status':response.status,'sha256':digest};dependenciesReady=dependenciesReady and response.status==200 and digest==config[key]
+   r['dependencyHashes']=dependencyHashes;r['productionCommitExpected']=config.get('productionCommit');r['publishObservations'].append({'at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'status':a.status,'sha256':sha});save()
+   if a.status==200 and sha==config['expectedAppSha256'] and dependenciesReady:break
    if time.monotonic()>=deadline:raise AssertionError('Expected public app version did not become available during 180-second observation window')
    time.sleep(10)
   r['appSha256']=sha;page.goto(url,wait_until='domcontentloaded',timeout=timeout);stable('lowrise',view='whole')
