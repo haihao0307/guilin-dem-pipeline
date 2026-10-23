@@ -1,0 +1,91 @@
+{
+  "version": "building-complete-floor-r07-20261023",
+  "status": "inspection_candidate_not_finished_delivery",
+  "smoothnessAccepted": false,
+  "unchangedViewerFiles": 111,
+  "candidateManifestSha256": "3bcbcec075339ec265deb0e8dcccaa8c38341876ba1a35dca235d5c670fdf0b2",
+  "counts": {
+    "buildings": 3,
+    "preservedSourcePatches": 225,
+    "photoBindings": 175,
+    "objectIdentities": 1787,
+    "authoredResidentialFloors": 2,
+    "authoredRoomsPerFloor": 7,
+    "liftServedDesignFloors": 28
+  },
+  "actualBrowser": "Chromium143 on hosted SwiftShader software GPU, not physical-device FPS",
+  "evidence": [
+    {
+      "run": 39943702618,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39943702618",
+      "scope": "Completed 1920x1080 DPR1 native three-building scene,175 photo bindings,three actual north-glass clicks to matching photos,13 layout cases,full-native drag; same111-file site. Overall run stopped later on a QA select locator, not claimed as a full pass."
+    },
+    {
+      "run": 39946018050,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39946018050",
+      "scope": "1366x768 DPR1 full floor/stair/door/route and lift P01-to-T01 entering/riding/arrival/exiting; all pixel Float32+RGBA index comparisons; separate1366x768 DPR1.25 native smoke. Passed. Original queue cancellation subtest superseded by the next run."
+    },
+    {
+      "run": 39948270036,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39948270036",
+      "scope": "True open-to-closed pending command during an actual native frame, switch-building cancellation, unchanged geometry/revision, then valid same-door command after returning. Passed."
+    },
+    {
+      "run": 39941523200,
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39941523200",
+      "scope": "Source/cut/design exact full-field rendering proof before UI-only guard fixes; later native whole output matched all fields. Overall run had a corrected QA local/global-ID assertion, not a complete pass."
+    }
+  ],
+  "keyCoverage": {
+    "requiredRideStagesSkipped": false,
+    "liftExactPoses": [
+      "mid-door",
+      "moving",
+      "arrived-double-door-open"
+    ],
+    "liftExactFields": "RGBA and all12 Float32 values at every native pixel",
+    "actualRide": "P01 to T01 only",
+    "all28FloorsIndividuallyRidden": false,
+    "physicalCommandMappings84AreNot84ActualClicks": true,
+    "roomDoorActualCloseOpen": "L02 living door; full native descriptor texture CPU/GPU byte equality, closed leaf hit, closed route blocked, open route allowed",
+    "all14RoomDoorsSelectedWithExactIdentity": true,
+    "sourceGeometryUnchanged": true
+  },
+  "latencySeconds": {
+    "native1920Dpr1Whole": 8.064,
+    "native1920Dpr1NearWindows": [
+      27.803,
+      25.535,
+      32.723
+    ],
+    "native1366Dpr1Floor": [
+      2.709,
+      2.78
+    ],
+    "native1366Dpr1Stair": [
+      10.884,
+      10.433
+    ],
+    "native1366Dpr1Door": [
+      8.472,
+      7.068
+    ],
+    "native1366Dpr1RideStages": [
+      9.377,
+      9.248,
+      9.079,
+      10.799,
+      7.044,
+      5.848
+    ],
+    "caveat": "Different fixed viewport timings are not compared. No movement-time resolution change; correctness is not a smoothness claim."
+  },
+  "knownUnfinished": [
+    "Severe latency remains on software GPU.",
+    "Authored internal design is not a measured building plan or safety certification.",
+    "Lift walking/ride uses source-hidden interior inspection, not a proved real exterior entrance.",
+    "Warehouse freight lift remains static and unbound; no residential lift invented.",
+    "North-window interior mullions and divisions visible in photographs are missing.",
+    "Original measurements, older anchors and R05 remain unchanged."
+  ]
+}
