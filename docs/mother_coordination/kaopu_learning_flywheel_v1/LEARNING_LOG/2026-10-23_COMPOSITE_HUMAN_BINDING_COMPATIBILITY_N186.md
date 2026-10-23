@@ -69,7 +69,7 @@
 
 - Candidate regression：`COMPOSITE-HUMAN-BINDING-COMPATIBILITY-001`
 - 历史回放：11/11
-- POSTED：pending
+- POSTED：true — https://github.com/haihao0307/guilin-dem-pipeline/pull/329#issuecomment-6356837805
 - ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED：false / unknown
 - 生产 Mother 分支修改：无
 - KPI：当前用户纠错事件 1；首次候选通过率、同错复发率、rejected lineage 继承、stale delivery、accepted delta 内部迭代均 unknown。
