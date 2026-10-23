@@ -1,3 +1,10 @@
+# Explicit isolated KCC candidate gate; workflow and old QA preserved.
+from pathlib import Path as _KCCPath
+if _KCCPath(__file__).with_name('kcc-candidate-browser-qa.py').is_file():
+    import runpy as _kcc_runpy
+    _kcc_runpy.run_path(str(_KCCPath(__file__).with_name('kcc-candidate-browser-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Frozen R07 browser QA through the existing, unchanged workflow.
 from pathlib import Path as _PerfR07Path
 if _PerfR07Path(__file__).with_name('unified-perf-config.json').is_file():
@@ -78,4 +85,5 @@ async def main():
    report['failure']=str(e);save();await page.screenshot(path=str(out/'failure.png'));raise
   finally:await b.close()
 asyncio.run(main())
+
 

@@ -1,0 +1,35 @@
+import{WholeRenderer}from'./kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs';
+import{buildCandidateStructure,INSPECTION_ASSUMPTIONS}from'./kcc-candidate-structure.mjs';
+import{fitBoundsCamera,nativeDisplaySize}from'./desktop-display.mjs';
+import{attachCameraControls}from'./kowloon-building-mother-r01/whole-building-ground-r01/camera-controls.mjs';
+/** Separate field view; never replaces or mutates the actual 3-building model. */
+export function createCandidateViewer({element,getSource}){
+ let renderer=null,active=false,busy=false,queued=false,needsModel=true,fit=true,candidate=null,controls=null;
+ const values={actualFloor:5,assumptions:{...INSPECTION_ASSUMPTIONS},doorOpen:0,liftOpen:[0,0,0],rotationCandidate:'plan-local'};
+ const state={ready:false,published:false,registered:false,errors:[],frames:[],sourceGeometryChanged:false};
+ const el=(t,s)=>{const n=document.createElement(t);if(s)n.textContent=s;return n;};
+ const title=el('h3','龍總標準層 · 待定位三維剖視'),warning=el('p','布局候选，非一比一验收。平面关系来自原图；下列厚度、高度、比例和楼梯级数仅为可修改检查假设。它没有被塞进真实外壳，原三栋高度不变。');warning.className='warning';
+ const toolbar=el('div'),start=el('button','打开三维结构候选'),status=el('p','尚未启动额外3D视图；不占用绘制。'),canvas=el('canvas');canvas.id='kccCandidateCanvas';canvas.style.cssText='display:none;width:100%;height:480px;touch-action:none;background:#e9edf0;';canvas.hidden=true;
+ const details=el('pre');details.style.cssText='white-space:pre-wrap;max-height:180px;overflow:auto';
+ element.append(title,warning,start,toolbar,canvas,status,details);
+ const floor=el('select');floor.dataset.candidateFloor='true';for(let f=5;f<=26;f++){const o=el('option',f+'/F');o.value=f;floor.append(o);}floor.onchange=()=>{values.actualFloor=Number(floor.value);needsModel=true;fit=true;request();};toolbar.append(floor);
+ const orientation=el('select');for(const [v,t]of[['plan-local','源平面朝向（未定位）'],['R0','R0 候选（未核准）'],['R180','R180 候选（未核准）']]){const o=el('option',t);o.value=v;orientation.append(o);}orientation.onchange=()=>{values.rotationCandidate=orientation.value;needsModel=true;fit=true;request();};toolbar.append(orientation);
+ const param=(key,label,min,max,step)=>{const wrap=el('label',label+'（假设） '),input=el('input');input.type='number';input.min=min;input.max=max;input.step=step;input.value=values.assumptions[key];input.dataset.candidateParam=key;input.onchange=()=>{const n=Number(input.value);if(!Number.isFinite(n)||n<min||n>max){input.value=values.assumptions[key];status.textContent='参数超出检查范围，未修改。';return;}values.assumptions[key]=n;needsModel=true;request();};wrap.append(input);toolbar.append(wrap);};
+ param('metresPerViewPixel','每图像像素米数',.005,.1,.0001);param('wallHeight','墙高 m',2.2,4,.1);param('wallThickness','墙厚 m',.05,.5,.01);param('doorWidth','门净宽 m',.6,1.4,.05);param('stairHalfRise','半层梯高 m',.7,2,.05);
+ const doors=el('button','打开入户门 / 梯门'),liftButtons=[];doors.onclick=()=>{values.doorOpen=1-values.doorOpen;doors.textContent=values.doorOpen?'关闭入户门 / 梯门':'打开入户门 / 梯门';needsModel=true;request();};toolbar.append(doors);
+ for(let i=0;i<3;i++){const b=el('button',`开/关电梯${i+1}门`);b.onclick=()=>{values.liftOpen[i]=1-values.liftOpen[i];needsModel=true;request();};liftButtons.push(b);toolbar.append(b);}
+ const cut=el('button','低墙剖视 / 完整墙高');let sliced=true;cut.onclick=()=>{sliced=!sliced;request();};toolbar.append(cut);
+ const reset=el('button','完整显示本层');reset.onclick=()=>{fit=true;request();};toolbar.append(reset);
+ function report(e){state.errors.push(String(e.message??e));status.textContent='候选视图未完成：'+e.message;state.ready=false;}
+ async function render(){if(!active)return;if(busy){queued=true;return;}busy=true;state.busy=true;try{do{queued=false;const source=getSource();if(!source)throw Error('KCC source not loaded');if(!renderer){renderer=new WholeRenderer(canvas);renderer.options.boundedShadow=false;controls=attachCameraControls(canvas,{getCamera:()=>structuredClone(renderer.options),setCamera:q=>{Object.assign(renderer.options,q);fit=false;},onChange:()=>request(),onEnd:()=>{}});}
+ if(needsModel){candidate=buildCandidateStructure(values);renderer.setModel(candidate.model,source);needsModel=false;state.modelPrimitiveCount=candidate.model.archetypes.reduce((n,a)=>n+a.primitives.length,0);state.assumptions={...values.assumptions};state.actualFloor=values.actualFloor;state.orientation=values.rotationCandidate;}
+ const r=canvas.getBoundingClientRect(),size=nativeDisplaySize({cssWidth:r.width,cssHeight:r.height,dpr:devicePixelRatio||1,limits:renderer.displayLimits});if(size.hidden)break;
+ if(fit){const c=fitBoundsCamera(candidate.bounds,{aspect:size.aspect,direction:[.5,.9,-1],margin:.85});Object.assign(renderer.options,{eye:c.eye,target:c.target,fov:c.fov});fit=false;}
+ renderer.options.cut=false;renderer.options.sliceY=sliced?[-2,.9]:null;status.textContent='正在绘制真实函数实体候选…';
+ const stats=await renderer.render({width:size.width,height:size.height,presentWidth:size.width,presentHeight:size.height,tileSize:96,gpuBatchTiles:8,source:false,design:true,requestRevision:++renderer.requestRevision});state.frames.push(stats);if(!stats.cancelled){state.ready=true;status.textContent=`${values.actualFloor}/F 布局候选 · ${state.modelPrimitiveCount} 个解析实体 · ${Math.round(stats.wallMs)} ms · 未配准 / 非实测厚度`;details.textContent=JSON.stringify({actualFloor:values.actualFloor,sourceUrl:candidate.layout.sourceUrl,inspectionAssumptions:values.assumptions,registration:false,stairInterlockVerified:false,sourceModelUnchanged:true},null,2);}
+ }while(queued);}catch(e){report(e);}finally{busy=false;state.busy=false;}}
+ function request(){render().catch(report);}
+ start.onclick=()=>{active=!active;canvas.hidden=!active;canvas.style.display=active?'block':'none';start.textContent=active?'暂停候选3D视图':'打开三维结构候选';if(active)request();else{queued=false;status.textContent='候选视图已暂停。';}};
+ window.addEventListener('resize',()=>{if(active){fit=true;request();}});
+ return{state,render,selectCase(id){element.hidden=id!=='kcc';if(id!=='kcc'){active=false;canvas.hidden=true;canvas.style.display='none';queued=false;start.textContent='打开三维结构候选';}},snapshot(){return{...state,active,values:structuredClone(values)};},get model(){return candidate;},get renderer(){return renderer;},dispose(){active=false;controls?.dispose?.();renderer?.dispose?.();}};
+}
