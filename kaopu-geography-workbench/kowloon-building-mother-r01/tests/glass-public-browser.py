@@ -1,3 +1,10 @@
+# Run separately reported candidate-only index and floor-inspection checks when explicitly configured.
+from pathlib import Path as _CombinedPath
+if _CombinedPath(__file__).with_name('semantic-combined-qa-config.json').is_file():
+    import runpy as _combined_runpy
+    _combined_runpy.run_path(str(_CombinedPath(__file__).with_name('semantic-combined-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # This isolated trial opts into the pinned performance A/B only when its config is present.
 from pathlib import Path as _PerformancePath
 if _PerformancePath(__file__).with_name('semantic-performance-config.json').is_file():
