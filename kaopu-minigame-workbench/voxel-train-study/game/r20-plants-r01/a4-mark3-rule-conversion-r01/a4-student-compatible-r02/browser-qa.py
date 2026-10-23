@@ -3,10 +3,10 @@ import asyncio,json,pathlib,time,mimetypes,hashlib,os
 from playwright.async_api import async_playwright
 ROOT=pathlib.Path(__file__).resolve().parent
 # In the existing workflow this file is placed at the old QA entry point.
-CANDIDATE=ROOT/'train-a4-stage1-workbench-r09-20261023'
+CANDIDATE=ROOT/'train-a4-stage1-no-coal-r10-20261023'
 if not CANDIDATE.exists(): CANDIDATE=ROOT.parent
 OUT=ROOT/'evidence';OUT.mkdir(exist_ok=True)
-ENTRY='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/train-a4-stage1-workbench-r09-20261023/'
+ENTRY='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-minigame-workbench/voxel-train-study/game/r20-plants-r01/train-a4-stage1-no-coal-r10-20261023/'
 LIVE=(CANDIDATE/'PUBLIC_VERIFY.json').exists()
 async def main():
  report={'engine':'Chromium SwiftShader, not the user device','public_without_overrides':LIVE,'candidate_source_hash':hashlib.sha256((CANDIDATE/'workbench.mjs').read_bytes()).hexdigest(),'checks':[],'passed':False}
@@ -31,14 +31,27 @@ async def main():
   async def shot(name):
    await page.evaluate('A4_ANATOMY.render()');await page.wait_for_timeout(250)
    await page.screenshot(path=str(OUT/(name+'.png')),full_page=True,timeout=120000)
+  async def no_coal(label,keep_tender=False):
+   checked('coal excluded / '+label,await page.evaluate('A4_ANATOMY.source.primitives.filter(p=>[312,313,314,315,316].includes(p.sourceNode)).length===5 && A4_ANATOMY.source.primitives.filter(p=>[312,313,314,315,316].includes(p.sourceNode)).every(p=>!p.object.visible)'))
+   if keep_tender:checked('tender body 113-115 retained / '+label,await page.evaluate('A4_ANATOMY.source.primitives.filter(p=>[192,193,194].includes(p.sourceNode)).every(p=>p.object.visible && [113,114,115].includes(A4_ANATOMY.source.g.nodes[p.sourceNode].mesh))'))
   try:
    await page.goto(ENTRY+'index.html',wait_until='domcontentloaded',timeout=120000)
-   await page.wait_for_function('A4_ANATOMY.ready || A4_ANATOMY.errors.length',timeout=600000)
+   await page.wait_for_function('window.A4_ANATOMY && (A4_ANATOMY.ready || A4_ANATOMY.errors.length)',timeout=600000)
    state=await page.evaluate('({ready:A4_ANATOMY.ready,errors:A4_ANATOMY.errors,nodes:A4_ANATOMY.allSourceNodes,meshes:A4_ANATOMY.allSourceMeshes,triangles:A4_ANATOMY.sourceTriangles,hash:A4_ANATOMY.sourceHash,referenceMesh:A4_ANATOMY.referenceMesh,native:A4_ANATOMY.nativeFunctionStudent,channels:A4_ANATOMY.source.g.animations[0].channels.length,materials:A4_ANATOMY.source.g.materials.length,images:A4_ANATOMY.source.g.images.length})')
    checked('complete original source and identity',state['ready'] and state['nodes']==331 and state['meshes']==200 and state['triangles']==1004013 and state['channels']==71 and state['materials']==22 and state['images']==2 and state['hash']=='749efd6d1b1a19aa97d9d024baa33f4f5df382eb19a2be88c10ef7ba6e1a5fe4' and state['referenceMesh'] and not state['native'])
    report['source']=state;report['load_seconds']=time.time()-started
-   checked('all 200 source primitives visible',await page.evaluate('A4_ANATOMY.visibleCount()===200'))
-   await shot('01-complete-original')
+   checked('all 195 non-coal source primitives visible',await page.evaluate('A4_ANATOMY.visibleCount()===195'))
+   await no_coal('initial',True)
+   checked('only the five coal nodes excluded initially',await page.evaluate('A4_ANATOMY.source.primitives.filter(p=>!p.object.visible).map(p=>p.sourceNode).join()==="312,313,314,315,316"'))
+   await page.evaluate('A4_ANATOMY.render()');checked('195 draws and 821919 visible original triangles',await page.evaluate('A4_ANATOMY.renderer.info.render.calls===195 && A4_ANATOMY.renderer.info.render.triangles===821919'))
+   await shot('01-no-coal-full-train')
+   await page.click('#tender');await page.click('[data-camera=top]');await no_coal('tender top',True);await shot('09-tender-original-structure-without-coal')
+   await page.click('#reset');await no_coal('reset from tender',True)
+   await page.evaluate('A4_ANATOMY.source.showAll()');await no_coal('source showAll',True)
+   await page.evaluate('A4_ANATOMY.visibleGroups([311],"coal exclusion regression")');await no_coal('coal group filter');checked('coal group cannot be made visible',await page.evaluate('A4_ANATOMY.visibleCount()===0'))
+   await page.evaluate('A4_ANATOMY.select(311)');await page.click('#isolate');await no_coal('coal group isolate');checked('isolate cannot restore coal',await page.evaluate('A4_ANATOMY.visibleCount()===0'))
+   await page.evaluate('A4_ANATOMY.select(311,312)');await page.click('#isolate');await no_coal('coal single mesh isolate')
+   await page.click('#reset');await no_coal('reset after coal isolate',True)
    await page.click('[data-camera=side]');await page.evaluate('A4_ANATOMY.render()')
    point=await page.evaluate("""(()=>{const q=A4_ANATOMY,p=q.source.primitives.find(p=>p.sourceNode===31),v=p.object.geometry.boundingBox.getCenter(p.object.position.clone()).applyMatrix4(p.object.matrixWorld).project(q.camera),r=q.renderer.domElement.getBoundingClientRect();return {x:r.left+(v.x+1)*r.width/2,y:r.top+(1-v.y)*r.height/2};})()""")
    report['pick_probe']=await page.evaluate('(p)=>({point:p,element:document.elementFromPoint(p.x,p.y)?.tagName,hit:A4_ANATOMY.probeHit(p.x,p.y)})',point)
@@ -49,15 +62,19 @@ async def main():
    await shot('02-picked-source-group')
    await page.check('input[name=pickmode][value=object]');await page.mouse.click(point['x'],point['y'])
    checked('source mesh picking',await page.evaluate('A4_ANATOMY.selection.kind==="object" && A4_ANATOMY.selection.node>=0'))
-   await page.click('#hide');checked('hide exactly one mesh',await page.evaluate('A4_ANATOMY.visibleCount()===199'))
-   await page.click('#reset');checked('reset restores complete source',await page.evaluate('A4_ANATOMY.visibleCount()===200 && A4_ANATOMY.pose==="first"'))
+   await page.click('#hide');checked('hide exactly one mesh',await page.evaluate('A4_ANATOMY.visibleCount()===194'))
+   await page.click('#reset');checked('reset restores complete source',await page.evaluate('A4_ANATOMY.visibleCount()===195 && A4_ANATOMY.pose==="first"'))
+   await no_coal('hide and reset',True)
    await page.click('#uncover');checked('main covering hidden but source retained',await page.evaluate('A4_ANATOMY.source.primitives.filter(p=>[31,32,33,34,35,36,192,193,194].includes(p.sourceNode)).every(p=>!p.object.visible) && A4_ANATOMY.visibleCount()>150 && A4_ANATOMY.source.primitives.length===200'))
+   await no_coal('cover peel')
    await page.click('[data-camera=side]');await shot('03-original-without-main-coverings')
    for button in ['wheels','rods','tender']:
-    await page.click('#'+button);checked(button+' subset has original geometry',await page.evaluate('A4_ANATOMY.visibleCount()>0 && A4_ANATOMY.visibleCount()<200'));await shot('04-'+button)
+    await page.click('#'+button);checked(button+' subset has original geometry',await page.evaluate('A4_ANATOMY.visibleCount()>0 && A4_ANATOMY.visibleCount()<200'));await no_coal(button,button=='tender');await shot('04-'+button)
    for system in await page.evaluate('A4_ANATOMY.data.systems.map(s=>s.id)'):
     await page.select_option('#system',system)
-    checked('nine systems / '+system,await page.evaluate("""(()=>{const q=A4_ANATOMY,id=document.querySelector('#system').value,s=q.data.systems.find(s=>s.id===id);return q.visibleCount()===q.data.groups.filter(g=>s.source_groups.includes(g.source_group)).reduce((n,g)=>n+g.mesh_nodes.length,0);})()"""))
+    checked('nine systems / '+system,await page.evaluate("""(()=>{const q=A4_ANATOMY,id=document.querySelector('#system').value,s=q.data.systems.find(s=>s.id===id);return q.visibleCount()===q.data.groups.filter(g=>s.source_groups.includes(g.source_group)).reduce((n,g)=>n+g.mesh_nodes.filter(n=>n<312||n>316).length,0);})()"""))
+    await no_coal('system '+system,system=='tender')
+   await page.select_option('#system','all');await no_coal('all systems',True)
    await page.click('#reset');await page.evaluate('A4_ANATOMY.select(94)');await page.click('#isolate')
    checked('isolated N94 exact source mesh closure',await page.evaluate('A4_ANATOMY.visibleCount()===A4_ANATOMY.data.groups.find(g=>g.source_group===94).mesh_nodes.length'))
    measurement=await page.evaluate('({actual:A4_ANATOMY.measurements,reference:A4_ANATOMY.data.groups.find(g=>g.source_group===94)})')
@@ -71,18 +88,25 @@ async def main():
    await page.click('#play');await page.wait_for_timeout(500);await page.click('#play');checked('timeline playback advances',await page.evaluate('Math.abs(A4_ANATOMY.time-1.25)>.05'))
    await page.click('#rest');checked('static source pose distinct',await page.evaluate('A4_ANATOMY.pose==="rest"'))
    await page.click('#first');checked('first key restored exactly',await page.evaluate('(first)=>A4_ANATOMY.source.nodes.every((n,i)=>n.matrixWorld.elements.every((v,j)=>Math.abs(v-first[i][j])<1e-7))',first))
+   await no_coal('scrub play rest first')
    await shot('05-axle-original-animation-inspection')
    await page.click('#reset');await page.evaluate('A4_ANATOMY.loadSections()');checked('all source cross-section evidence loaded',await page.evaluate('A4_ANATOMY.sectionCount===27 && A4_ANATOMY.sectionSegmentCount===10113'))
    section=await page.locator('#section option').nth(5).get_attribute('value');await page.evaluate('(id)=>A4_ANATOMY.showSection(id,true)',section);checked('actual source section line rendering',await page.evaluate('A4_ANATOMY.section.count>0 && A4_ANATOMY.visibleCount()===0'));await shot('06-true-source-cross-section')
-   await page.click('#reset');checked('reset also restores from section-only',await page.evaluate('A4_ANATOMY.visibleCount()===200 && A4_ANATOMY.section===null'))
+   await page.click('#reset');checked('reset also restores from section-only',await page.evaluate('A4_ANATOMY.visibleCount()===195 && A4_ANATOMY.section===null'))
+   await no_coal('section reset',True)
+   await page.evaluate('(id)=>A4_ANATOMY.showSection(id,false)',section);await no_coal('section with surfaces')
+   await page.evaluate('A4_ANATOMY.showSection("",false)');await no_coal('section off showAll',True)
    await page.fill('#search','N191');await page.locator('#search-results button').first.click();checked('source ID search picks tender body',await page.evaluate('A4_ANATOMY.selection.group===191'))
+   await page.click('#isolate');await no_coal('tender body isolation',True);checked('exact tender body retained',await page.evaluate('A4_ANATOMY.visibleCount()===3'))
    await page.click('#reset');await page.click('[data-camera=front]');await page.click('[data-camera=top]');await page.click('[data-camera=side]');await shot('07-orthographic-side')
    await page.set_viewport_size({'width':390,'height':844});await page.click('#reset')
    if await page.locator('#inspector-body').is_visible():await page.click('#collapse')
    await shot('08-mobile-complete-original');checked('mobile controls do not cause document overflow',await page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+   await no_coal('mobile reset',True)
    checked('no browser errors',not errors and not await page.evaluate('A4_ANATOMY.errors'))
    checked('no unrelated source or third-party model request',not any('/source-assets/mark3/' in u or 'unpkg.com' in u or 'jsdelivr.net' in u or '/a6-native' in u for u in requests))
    report['renderer']=await page.evaluate('({triangles:A4_ANATOMY.renderer.info.render.triangles,calls:A4_ANATOMY.renderer.info.render.calls,context:A4_ANATOMY.contextDiagnostics})')
+   checked('final 195 draws and 821919 triangles',report['renderer']['calls']==195 and report['renderer']['triangles']==821919)
    report['passed']=True
   except Exception as e:
    report['error']=str(e);report['errors']=errors
