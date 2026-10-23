@@ -47,9 +47,10 @@ with sync_playwright() as pw:
      page.locator('[data-class="'+key+'"]').click()
      page.wait_for_function("k=>{const s=window.semanticInspection;return s.selected?.classKey===k&&s.focusedId===s.selected.objectId&&!s.renderer.busy}",arg=key,timeout=timeout)
      visible=page.evaluate("""()=>{const s=window.semanticInspection,r=s.renderer,f=s.lastStats,id=s.selected.objectId;let hits=0;for(let y=Math.floor(f.height*.15);y<f.height*.85;y+=Math.max(1,Math.floor(f.height/28)))for(let x=Math.floor(f.width*.15);x<f.width*.85;x+=Math.max(1,Math.floor(f.width/28))){const h=r.readHit(x,y);if(h.status>.5&&h.status<1.5&&h.objectId===id)hits++;}return {hits,id,selected:s.selected,view:s.view,camera:r.options};}""")
-     assert visible['hits']>0,(key,'Quick focus target is occluded or offscreen',visible)
+     targetVisible=visible['hits']>0
+     if not targetVisible:r.setdefault('checkFailures',[]).append({'label':key+' quick focus','reason':'Selected original hit is occluded or offscreen','details':visible})
      assert visible['view']=='whole' and visible['camera']['cut']==False and visible['camera']['sliceY'] is None
-     r['checks'].append({'label':'lowrise '+key+' quick focus visible original hit','passed':True,**visible});shot('lowrise-'+key+'-focus');save()
+     r['checks'].append({'label':'lowrise '+key+' quick focus visible original hit','passed':targetVisible,**visible});shot('lowrise-'+key+'-focus');save()
   n=frames();page.locator('#case').select_option('kcc');stable('kcc',n,'whole')
   n=frames();page.locator('#plan').click();stable('kcc',n,'plan');x=check('kcc plan');assert x['modelFrame']=='UNREGISTERED_evidence_plan_NOT_part_of_measured_mother';shot('kcc-plan-desktop')
   # Exact authored wall thickness is shown, while actual thickness remains unknown.
@@ -59,7 +60,7 @@ with sync_playwright() as pw:
   n=frames();page.locator('#cutPosition').focus();page.keyboard.press('ArrowRight');page.keyboard.press('Tab');stable('kcc',n,'cut');x=check('kcc plan to cut');assert x['modelFrame']!='UNREGISTERED_evidence_plan_NOT_part_of_measured_mother';shot('kcc-frame-transitions')
   n=frames();page.locator('#case').select_option('lowrise');stable('lowrise',n,'whole');page.set_viewport_size({'width':390,'height':844});n=frames();page.locator('#reset').click();stable('lowrise',n,'whole');check('lowrise phone viewport');shot('lowrise-phone-viewport')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Phone horizontal overflow'
-  assert not r['pageErrors'],r['pageErrors'];assert not r['failedRequests'],r['failedRequests'];r['passed']=True
+  assert not r['pageErrors'],r['pageErrors'];assert not r['failedRequests'],r['failedRequests'];r['passed']=not r.get('checkFailures')
  except Exception as e:
   r['error']=traceback.format_exc()
   if page:
