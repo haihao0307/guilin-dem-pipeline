@@ -2,7 +2,9 @@
 from pathlib import Path as _PerfR07Path
 if _PerfR07Path(__file__).with_name('unified-perf-config.json').is_file():
     import runpy as _perf_r07_runpy
-    _perf_r07_runpy.run_path(str(_PerfR07Path(__file__).with_name('unified-perf-qa.py')), run_name='__main__')
+    import json as _perf_r07_json
+    _perf_r07_cfg=_perf_r07_json.loads(_PerfR07Path(__file__).with_name('unified-perf-config.json').read_text())
+    _perf_r07_runpy.run_path(str(_PerfR07Path(__file__).with_name('public-r07-core-qa.py' if _perf_r07_cfg.get('publicCoreSmoke') else 'unified-perf-qa.py')), run_name='__main__')
     raise SystemExit(0)
 
 # Bounded unified-scene candidate/public QA, reusing the existing read-only workflow.
