@@ -4,7 +4,7 @@ Imported by hosted QA only; does not launch a browser.
 from pathlib import Path
 import json
 
-def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
+def run_floor_qa(page, output_dir, settled, capture_native, exact_pair, guard_only=False):
     out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
     report={'passed':False,'scope':'Self-designed floor system only, not an assertion of actual measured room plan or structural certification. Real DOM actions and GPU geometry, not dropdown-only.','frames':{},'checks':[]}
     def save():(out/'floor-integration-browser-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
@@ -30,7 +30,7 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
         for selector in ['[data-floor-bookmark=slice]','[data-floor-bookmark=entry]','[data-floor-bookmark=stair]','[data-floor-bookmark=door]','[data-room-door=open]','[data-room-door=close]','input[type=range][aria-label="从入口经过楼梯走到房间的路线进度"]']:
             assert panel.locator(selector).count()==1,('nonunique floor control',selector)
         report['checks'].append({'locatorContract':{'passed':True,'oldExactLabelCounts':dom['oldExactLabelCounts'],'associatedLocatorCounts':dom['associatedLocatorCounts'],'evidence':'floor-panel-dom-contract.json'}});save()
-        page.evaluate("window.__qaSavedDoorClose=document.querySelector('#completeFloorPanel [data-room-door=close]').onclick")
+        page.evaluate("()=>{window.__qaSavedDoorClose=document.querySelector('#completeFloorPanel [data-room-door=close]').onclick;return null;}")
         for other in ['warehouse','kcc']:
             page.evaluate('c=>semanticInspection.selectBuilding(c)',other)
             guard=page.evaluate("""()=>{const s=semanticInspection,p=document.querySelector('#completeFloorPanel'),buttons=[...p.querySelectorAll('button,select,input')],snapshot=()=>JSON.stringify({door:s.roomDoors.snapshot(),apertures:s.model.hostedComponents.apertures,registry:s.registry,camera:s.renderer.options,renderRequests:s.renderRequests,frames:s.presentedFrames,view:s.view,selected:s.selected}),before=snapshot(),attempts=[];for(const [name,fn]of [['stale-close-handler',()=>window.__qaSavedDoorClose?.call(p.querySelector('[data-room-door=close]'))],['bookmark',()=>s.floorPanel.bookmark('door')],['walk',()=>s.floorPanel.walk(1)],['selectFloor',()=>s.floorPanel.selectFloor('L02')],['selectRoom',()=>s.floorPanel.selectRoom('living')]]){try{attempts.push({name,result:fn()});}catch(e){attempts.push({name,rejected:String(e)});}}return{case:s.caseId,controls:buttons.map(b=>({tag:b.tagName,text:b.textContent,disabled:b.disabled,visible:b.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})})),noMutation:before===snapshot(),attempts};}""")
@@ -41,12 +41,23 @@ def run_floor_qa(page, output_dir, settled, capture_native, exact_pair):
         assert restored,'Returning to lowrise did not restore valid controls'
         # Queue a real door command during a real native GPU frame, switch away
         # before the next-frame mutation boundary, and prove it is cancelled.
-        cancel=page.evaluate("""()=>{const s=semanticInspection,doors=JSON.stringify(s.roomDoors.snapshot().doors),apertures=JSON.stringify(s.model.hostedComponents.apertures),registry=JSON.stringify(s.registry);s.render();const busy=s.renderer.busy;document.querySelector('#completeFloorPanel [data-room-door=close]').click();const queued=s.roomDoors.snapshot().pending.length;s.selectBuilding('warehouse');return{busy,queued,pendingAfterSwitch:s.roomDoors.snapshot().pending.length,doorsUnchanged:doors===JSON.stringify(s.roomDoors.snapshot().doors),aperturesUnchanged:apertures===JSON.stringify(s.model.hostedComponents.apertures),registryUnchanged:registry===JSON.stringify(s.registry),beforeDoors:doors};}""")
-        assert cancel['busy'] and cancel['queued']>0 and cancel['pendingAfterSwitch']==0 and cancel['doorsUnchanged'] and cancel['aperturesUnchanged'] and cancel['registryUnchanged'],cancel
+        cancel=page.evaluate("""()=>{const s=semanticInspection,before=s.roomDoors.snapshot(),door=before.doors.find(d=>d.floorId==='L01'&&d.key==='door-living'),targetOpenT=door.openT===1?0:1,doors=JSON.stringify(before.doors),apertures=JSON.stringify(s.model.hostedComponents.apertures),registry=JSON.stringify(s.registry);s.render();const busy=s.renderer.busy;document.querySelector('#completeFloorPanel [data-room-door='+ (targetOpenT?'open':'close') +']').click();const queued=s.roomDoors.snapshot().pending.length;s.selectBuilding('warehouse');return{busy,queued,initialOpenT:door.openT,targetOpenT,targetWouldChange:targetOpenT!==door.openT,revisionBefore:before.revision,cancelledBefore:before.cancelledCommands,cancelledAfter:s.roomDoors.snapshot().cancelledCommands,pendingAfterSwitch:s.roomDoors.snapshot().pending.length,doorsUnchanged:doors===JSON.stringify(s.roomDoors.snapshot().doors),aperturesUnchanged:apertures===JSON.stringify(s.model.hostedComponents.apertures),registryUnchanged:registry===JSON.stringify(s.registry),beforeDoors:doors};}""")
+        assert cancel['targetWouldChange'] and cancel['cancelledAfter']==cancel['cancelledBefore']+1 and cancel['busy'] and cancel['queued']>0 and cancel['pendingAfterSwitch']==0 and cancel['doorsUnchanged'] and cancel['aperturesUnchanged'] and cancel['registryUnchanged'],cancel
         settled(page)
         assert page.evaluate('JSON.stringify(semanticInspection.roomDoors.snapshot().doors)')==cancel['beforeDoors'],'Cancelled cross-building door command executed later'
         report['checks'].append({'queuedDoorCancelledOnBuildingSwitch':cancel});save()
         page.evaluate("semanticInspection.selectBuilding('lowrise')")
+        after_cancel=page.evaluate('semanticInspection.roomDoors.snapshot()')
+        assert after_cancel['revision']==after_cancel['presentedRevision']==cancel['revisionBefore'] and not after_cancel['pending'],after_cancel
+        if guard_only:
+            selector='#completeFloorPanel [data-room-door='+('open' if cancel['targetOpenT'] else 'close')+']'
+            click(selector)
+            committed=page.evaluate('semanticInspection.roomDoors.snapshot()')
+            d=next(d for d in committed['doors'] if d['floorId']=='L01' and d['key']=='door-living')
+            assert d['openT']==cancel['targetOpenT'] and committed['revision']==committed['presentedRevision']==cancel['revisionBefore']+1 and not committed['pending'],committed
+            report['checks'].append({'cancelWasRealStateChange':True,'subsequentValidSameDoorCommandCommitted':True,'initialOpenT':cancel['initialOpenT'],'cancelledTargetOpenT':cancel['targetOpenT'],'committedRevision':committed['revision']})
+            report['passed']=True;report['scope']='Supplemental actual native1366 cross-building guards and real changed-target busy queue cancellation only. Full floor/lift proof is separately from run39946018050, unchanged111-file site.';save();return report
+
         panel=page.locator('#completeFloorPanel');assert panel.is_visible()
         assert floor_select.locator('option').count()==2
         assert room_select.locator('option').count()==7

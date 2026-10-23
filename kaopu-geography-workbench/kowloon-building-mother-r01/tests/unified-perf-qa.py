@@ -163,12 +163,15 @@ with sync_playwright() as pw:
   # Functional frame timings here must never be compared with the larger viewport.
   context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.add_init_script("window.addEventListener('error',e=>window.__qaError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaError=String(e.reason));")
   page.on('pageerror',lambda e:errors.append(str(e)));page.goto(url,wait_until='domcontentloaded');stable(page);capture_native(page,'functional-native-start');layout_live(page,'1366x768-dpr1-functional')
-  r['floor']=runpy.run_path(str(root/'floor-integration-qa.py'))['run_floor_qa'](page,out,stable,capture_native,exact_pair);save()
-  r['lift']=runpy.run_path(str(root/'lift-integration-qa.py'))['run_lift_integration_qa'](page,out);save()
-  action(page,lambda:page.evaluate('semanticInspection.showComplete()'));capture(page,'candidate','functional-restored-whole',whole=True);assert not errors,errors
-  r['functionalDesktopStage']={'passed':True,'viewport':{'width':1366,'height':768,'dpr':1},'scope':'Full floor, room-door, stair and elevator state/route tests at this fixed desktop native size only.'};save();context.close()
-  context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1.25);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.goto(url,wait_until='domcontentloaded');stable(page);capture(page,'candidate','native-high-dpr',whole=True);layout_live(page,'1366x768-dpr1.25');context.close()
-  r['highDprStage']={'passed':True,'viewport':{'width':1366,'height':768,'dpr':1.25},'scope':'Separate fixed native high-DPR desktop context; not a physical-device or browser UI zoom test.'};save()
+  r['floor']=runpy.run_path(str(root/'floor-integration-qa.py'))['run_floor_qa'](page,out,stable,capture_native,exact_pair,guard_only=cfg.get('supplementalDoorQueueGuard',False));save()
+  if cfg.get('supplementalDoorQueueGuard'):
+   r['scope']='Supplemental real changed-target busy room-door queue cancellation. Not another full E2E run.';r['supplementalOnly']=True;r['priorFunctionalEvidence']={'run':39946018050,'head':'cd3caa1ae51f04072e81962c53e3e1e7feb09824','sameFrozen111Files':True};assert not errors,errors;context.close()
+  else:
+   r['lift']=runpy.run_path(str(root/'lift-integration-qa.py'))['run_lift_integration_qa'](page,out);save()
+   action(page,lambda:page.evaluate('semanticInspection.showComplete()'));capture(page,'candidate','functional-restored-whole',whole=True);assert not errors,errors
+   r['functionalDesktopStage']={'passed':True,'viewport':{'width':1366,'height':768,'dpr':1},'scope':'Full floor, room-door, stair and elevator state/route tests at this fixed desktop native size only.'};save();context.close()
+   context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1.25);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(300000);page.goto(url,wait_until='domcontentloaded');stable(page);capture(page,'candidate','native-high-dpr',whole=True);layout_live(page,'1366x768-dpr1.25');context.close()
+   r['highDprStage']={'passed':True,'viewport':{'width':1366,'height':768,'dpr':1.25},'scope':'Separate fixed native high-DPR desktop context; not a physical-device or browser UI zoom test.'};save()
   r['passed']=True
  except Exception:
   r['errors'].append(traceback.format_exc())
