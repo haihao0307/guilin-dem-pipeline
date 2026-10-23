@@ -1,0 +1,67 @@
+{
+  "id": "COMPOSITE-HUMAN-BINDING-COMPATIBILITY-001",
+  "status": "CANDIDATE",
+  "ownerScope": "Human / NPC life observation only",
+  "trigger": "A delivery claims the latest body, rig, binding information, and actions are assembled, or any action shows body self-penetration.",
+  "prerequisite": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001 has resolved and verified the exact component vector.",
+  "requiredTaskAnchorFields": [
+    "expectedBodyMeshRef",
+    "expectedSkinBindingRef",
+    "expectedSkeletonRef",
+    "expectedBindPoseRef",
+    "expectedMotionRef",
+    "expectedCoordinateFrame",
+    "fixedActionSuite",
+    "selfInterpenetrationThresholdM"
+  ],
+  "requiredDeliveryReceiptFields": [
+    "actualBodyMeshRef",
+    "actualSkinBindingRef",
+    "actualSkeletonRef",
+    "actualBindPoseRef",
+    "actualMotionRef",
+    "jointOrderDigest",
+    "inverseBindOrderDigest",
+    "skeletonParentDigest",
+    "bindPoseDigest",
+    "motionTargetDigest",
+    "actionTraceDigest",
+    "selfCollisionSampleCount",
+    "maxSelfInterpenetrationM",
+    "negativeControlsRejected",
+    "independentVerifierId"
+  ],
+  "failClosedStates": [
+    "HOLD_COMPONENT_IDENTITY_UNRESOLVED",
+    "HOLD_BINDING_MANIFEST_INCOMPLETE",
+    "REJECT_SKIN_INFLUENCE_INVALID",
+    "REJECT_JOINT_MAP_INCOMPATIBLE",
+    "REJECT_BIND_SPACE_INCOMPATIBLE",
+    "REJECT_MOTION_TARGET_INCOMPATIBLE",
+    "HOLD_RUNTIME_COUPLING_UNPROVEN",
+    "HOLD_SELF_PENETRATION_OBSERVATION_MISSING",
+    "REJECT_SELF_PENETRATION",
+    "HOLD_INDEPENDENT_VERIFIER_MISSING",
+    "HOLD_NEGATIVE_CONTROLS_UNPROVEN"
+  ],
+  "passState": "COMPOSITE_BINDING_VERIFIED_SCOPED",
+  "minimumNegativeControls": [
+    "SHUFFLED_JOINT_ORDER",
+    "STALE_BIND_POSE",
+    "MISSING_MOTION_TARGET",
+    "DISABLED_SELF_COLLISION_GATE"
+  ],
+  "boundaries": [
+    "Does not select which component is canonical; N182 remains authoritative for identity/freshness.",
+    "Structural compatibility does not prove visual quality or collision-free motion.",
+    "A self-penetration threshold is scoped to named actions, sampled body regions, runtime, camera-independent geometry, and verifier implementation.",
+    "The Khronos glTF specification/validator is evidence for relation semantics only; R04 is not required to adopt glTF or the validator.",
+    "No global OS change and no production Mother code change are authorized by this Candidate."
+  ],
+  "evidence": {
+    "fixture": "composite_human_binding_compatibility_fixture_n186.json",
+    "result": "composite_human_binding_compatibility_result_n186.json",
+    "historyReplay": "11/11",
+    "currentProductionState": "HOLD_COMPONENT_IDENTITY_UNRESOLVED"
+  }
+}
