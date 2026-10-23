@@ -8,7 +8,7 @@ import {profileFor} from './kowloon-building-mother-r01/r07/profiles.mjs';
 import {controllerFor} from './kowloon-building-mother-r01/whole-building-ground-r01/controller.mjs';
 import {deriveCaseIntegration} from './kowloon-building-mother-r01/whole-building-facade-r01/host-integration.mjs';
 import {attachCameraControls} from './kowloon-building-mother-r01/whole-building-ground-r01/camera-controls.mjs';
-const $=id=>document.getElementById(id),state=window.semanticInspection={ready:false,errors:[],frames:[],version:'building-unified-r06-20261023',modelTriangles:0,sceneMode:'shared-camera-three-buildings',geographicPlacement:false};
+const $=id=>document.getElementById(id),state=window.semanticInspection={ready:false,errors:[],frames:[],version:'building-unified-r06b-20261023',modelTriangles:0,sceneMode:'shared-camera-three-buildings',geographicPlacement:false};
 let renderer,scene,caseId='lowrise',view='whole',busy=false,pending=false,photoModule=null,selectionPending=false,localPhotos=null;
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
 function fail(error){state.errors.push(String(error.stack??error));state.phase='error';state.ready=false;$('loading').hidden=true;$('status').textContent='未完成：'+error.message;console.error(error);}

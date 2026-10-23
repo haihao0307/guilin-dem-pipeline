@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Frozen published R05 versus R06; real Chromium SwiftShader, not hardware FPS."""
+"""Frozen R06A versus R06B scissor experiment; real Chromium SwiftShader, not hardware FPS."""
 import argparse,hashlib,json,math,mimetypes,time,traceback
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -8,7 +8,7 @@ root=Path(__file__).resolve().parent
 cfg=json.loads((root/'unified-perf-config.json').read_text())
 pa=argparse.ArgumentParser();pa.add_argument('--output',default='public-inspection-evidence');args,_=pa.parse_known_args();out=Path(args.output);out.mkdir(parents=True,exist_ok=True)
 url=cfg['targetUrl'].rstrip('/')+'/'
-r={'passed':False,'scope':'Actual Chromium/SwiftShader software-GPU A/B; no physical device or hardware FPS claim. R05 render baseline uses same final CSS as R06 for equal native dimensions. Separate layout matrix tests original R05 CSS.','baselineProductionCommit':cfg['baselineProductionCommit'],'variants':{},'comparisons':[],'checks':[],'errors':[],'startedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
+r={'passed':False,'scope':'Actual Chromium/SwiftShader software-GPU A/B, frozen R06A vs isolated R06B scissor experiment; no physical-device or hardware-FPS claim. Same final CSS ensures equal native dimensions. Diagnostic omitted subsets are private cost probes, never candidate output.','baselineProductionCommit':cfg['baselineProductionCommit'],'baselineDescription':cfg.get('baselineDescription'),'variants':{},'comparisons':[],'checks':[],'errors':[],'startedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
 def save():(out/'unified-perf-report.json').write_text(json.dumps(r,ensure_ascii=False,indent=2))
 def stable(page,n=-1):
  page.wait_for_function("""n=>{const s=window.semanticInspection;if(window.__qaError)throw Error(window.__qaError);if(s?.errors?.length)throw Error(String(s.errors));const ok=s?.ready&&s.phase==='ready'&&!s.busy&&!s.renderer.busy&&s.frames.length>n;if(!ok){window.__qaStable=null;return false}const b=s.renderer.canvas.getBoundingClientRect(),key=JSON.stringify([s.presentedFrames,b.width,b.height,devicePixelRatio]);if(window.__qaStable?.key!==key){window.__qaStable={key,t:performance.now()};return false}return performance.now()-window.__qaStable.t>150}""",arg=n,timeout=180000)
@@ -29,7 +29,7 @@ def route_site(context,variant,common_css=True):
   typ='text/javascript' if rel.endswith(('.mjs','.js')) else mimetypes.guess_type(rel)[0] or 'application/octet-stream'
   route.fulfill(status=200,body=data[rel],content_type=typ)
  context.route('**/*',fulfill)
-CAPTURE="""async()=>{const s=semanticInspection,g=s.renderer,f=s.lastStats,gl=g.gl,hex=b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join(''),digest=async b=>hex(await crypto.subtle.digest('SHA-256',b));const rgba=g.readPixels(),rgbaHash=await digest(rgba),tileHashes=[[],[],[]];let covered=0,bad=0;for(const tile of g.hitTiles){gl.bindFramebuffer(gl.FRAMEBUFFER,tile.target.fbo);covered+=tile.width*tile.height;for(let i=0;i<3;i++){gl.readBuffer(gl.COLOR_ATTACHMENT0+i);const a=new Float32Array(tile.width*tile.height*4);gl.readPixels(tile.x,tile.y,tile.width,tile.height,gl.RGBA,gl.FLOAT,a);tileHashes[i].push([tile.x,tile.y,tile.width,tile.height,await digest(a)]);if(i===0)for(let k=3;k<a.length;k+=4)if(a[k]>2.5||!Number.isFinite(a[k]))bad++;}}gl.bindFramebuffer(gl.FRAMEBUFFER,null);const fieldHashes=await Promise.all(tileHashes.map(a=>digest(new TextEncoder().encode(JSON.stringify(a))))),counts={},picks={},byId=new Map(s.registry.map(q=>[q.objectId,q]));for(let y=7;y<f.height-7;y+=Math.max(1,Math.floor(f.height/27)))for(let x=7;x<f.width-7;x+=Math.max(1,Math.floor(f.width/49))){const hit=g.readHit(x,y);if(hit.status>.5&&hit.status<1.5){const record=byId.get(hit.objectId);if(!record){bad++;continue}counts[record.caseId]=(counts[record.caseId]??0)+1;if(record.sourcePatchId&&!picks[record.caseId])picks[record.caseId]={x,y,hit,record};}}const b=g.canvas.getBoundingClientRect(),panel=document.querySelector('#evidencePanel').getBoundingClientRect(),camera=Object.fromEntries(['eye','target','fov','cut','sliceY','clipNormal','clipOffset'].map(k=>[k,f.camera[k]??null]));return{stats:f,camera,rgbaHash,fieldHashes,fieldHashMeaning:['all pixels: t,objectId,materialRole,status','all pixels: normal and auxiliary normal channel','all pixels: local coordinates and auxiliary local channel'],coveredPixels:covered,bad,counts,picks,gpu:g.gpu,glError:gl.getError(),modelTriangles:g.stats.modelTriangles,modelVertexBuffers:g.stats.modelVertexBuffers,buildings:s.buildings.map(b=>({caseId:b.caseId,patches:b.localSource.patches.length})),sourceCount:g.measured.patches.length,registryCount:s.registry.length,uniqueIds:new Set(s.registry.map(q=>q.objectId)).size,canvasCount:document.querySelectorAll('canvas').length,canvas:{width:g.canvas.width,height:g.canvas.height,rect:b.toJSON()},panel:panel.toJSON(),viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},display:s.display,doc:{scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight},imageRendering:getComputedStyle(g.canvas).imageRendering,projected:s.projectedBounds};}"""
+CAPTURE="""async()=>{const s=semanticInspection,g=s.renderer,f=s.lastStats,gl=g.gl,hex=b=>[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join(''),digest=async b=>hex(await crypto.subtle.digest('SHA-256',b));const rgba=g.readPixels(),rgbaHash=await digest(rgba),tileHashes=[[],[],[]],hitObjectPixels={};let covered=0,bad=0;for(const tile of g.hitTiles){gl.bindFramebuffer(gl.FRAMEBUFFER,tile.target.fbo);covered+=tile.width*tile.height;for(let i=0;i<3;i++){gl.readBuffer(gl.COLOR_ATTACHMENT0+i);const a=new Float32Array(tile.width*tile.height*4);gl.readPixels(tile.x,tile.y,tile.width,tile.height,gl.RGBA,gl.FLOAT,a);tileHashes[i].push([tile.x,tile.y,tile.width,tile.height,await digest(a)]);if(i===0)for(let k=3;k<a.length;k+=4){if(a[k]>2.5||!Number.isFinite(a[k]))bad++;if(a[k]>.5&&a[k]<1.5){const id=a[k-2];hitObjectPixels[id]=(hitObjectPixels[id]??0)+1;}}}}gl.bindFramebuffer(gl.FRAMEBUFFER,null);const fieldHashes=await Promise.all(tileHashes.map(a=>digest(new TextEncoder().encode(JSON.stringify(a))))),counts={},picks={},byId=new Map(s.registry.map(q=>[q.objectId,q]));for(let y=7;y<f.height-7;y+=Math.max(1,Math.floor(f.height/27)))for(let x=7;x<f.width-7;x+=Math.max(1,Math.floor(f.width/49))){const hit=g.readHit(x,y);if(hit.status>.5&&hit.status<1.5){const record=byId.get(hit.objectId);if(!record){bad++;continue}counts[record.caseId]=(counts[record.caseId]??0)+1;if(record.sourcePatchId&&!picks[record.caseId])picks[record.caseId]={x,y,hit,record};}}const b=g.canvas.getBoundingClientRect(),panel=document.querySelector('#evidencePanel').getBoundingClientRect(),camera=Object.fromEntries(['eye','target','fov','cut','sliceY','clipNormal','clipOffset'].map(k=>[k,f.camera[k]??null]));return{stats:f,camera,rgbaHash,fieldHashes,fieldHashMeaning:['all pixels: t,objectId,materialRole,status','all pixels: normal and auxiliary normal channel','all pixels: local coordinates and auxiliary local channel'],coveredPixels:covered,bad,counts,picks,hitObjectPixels,gpu:g.gpu,glError:gl.getError(),modelTriangles:g.stats.modelTriangles,modelVertexBuffers:g.stats.modelVertexBuffers,buildings:s.buildings.map(b=>({caseId:b.caseId,patches:b.localSource.patches.length})),sourceCount:g.measured.patches.length,registryCount:s.registry.length,uniqueIds:new Set(s.registry.map(q=>q.objectId)).size,canvasCount:document.querySelectorAll('canvas').length,canvas:{width:g.canvas.width,height:g.canvas.height,rect:b.toJSON()},panel:panel.toJSON(),viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio},display:s.display,doc:{scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight},imageRendering:getComputedStyle(g.canvas).imageRendering,projected:s.projectedBounds};}"""
 def capture(page,variant,label,whole=False,shot=True):
  q=page.evaluate(CAPTURE);r['variants'][variant]['frames'][label]=q;save();f=q['stats'];b=q['canvas'];rect=b['rect'];vp=q['viewport']
  assert q['canvasCount']==1 and len(q['buildings'])==3 and q['sourceCount']==225 and q['registryCount']==q['uniqueIds']==1292,('scene loss',variant,label)
@@ -41,6 +41,8 @@ def capture(page,variant,label,whole=False,shot=True):
   assert len(q['counts'])==len(q['picks'])==3 and not q['camera']['cut'] and q['camera']['sliceY'] is None,('all three not visible',label,q['counts'])
   p=q['projected'];assert p['minDepth']>0 and max(abs(p[k]) for k in ['minX','maxX','minY','maxY'])<.98,('whole bounds clipped',label,p)
  if shot:page.screenshot(path=str(out/(variant+'-'+label+'.png')))
+ if variant=='candidate' and label in r['variants'].get('baseline',{}).get('frames',{}):
+  old=r['variants']['baseline']['frames'][label];assert old['camera']==q['camera'] and old['rgbaHash']==q['rgbaHash'] and old['fieldHashes']==q['fieldHashes'] and (old['stats']['width'],old['stats']['height'])==(f['width'],f['height']),('immediate exact-output gate failure',label)
  print('FRAME',variant,label,b['width'],b['height'],round(f['wallMs']),q['counts'],flush=True);return q
 
 def layout_live(page,label):
@@ -51,7 +53,7 @@ def layout_live(page,label):
  for b in q['buttons']:assert b['left']>=0 and b['right']<=vp['width']+1 and b['top']>=0 and b['bottom']<=vp['height']+1,('live toolbar clipped',label,b)
  r['checks'].append({'label':'Actual native runtime layout '+label,'passed':True,'measurements':q});save();return q
 
-NEAR="""async key=>{const s=semanticInspection,g=s.renderer;await s.setView('whole');const q=s.registry.find(q=>q.caseId==='lowrise'&&q.classKey===key&&q.bounds&&(key!=='window'||q.part==='glass'));if(!q)throw Error('Missing '+key);const b=q.bounds,c=b.min.map((v,k)=>(v+b.max[k])/2),d=Math.max(1.6,...b.max.map((v,k)=>v-b.min[k])),n=q.focusNormal,eye=n?c.map((v,k)=>v+n[k]*d*1.8+(k===1?d*.12:0)):[c[0]+d*.85,c[1]+d*.55,c[2]-d*1.05];s.cameraFraming='manual';s.fit=null;Object.assign(g.options,{eye,target:c,cut:false,sliceY:null,selectedId:-1});await s.render();return{objectId:q.objectId,id:q.id,bounds:q.bounds};}"""
+NEAR="""async key=>{const s=semanticInspection,g=s.renderer;const mode=key==='stair'&&window.__qaKeyGate?'design':'whole';if(s.view!==mode)await s.setView(mode);const q=s.registry.find(q=>q.caseId==='lowrise'&&q.classKey===key&&q.bounds&&(key!=='window'||q.part==='glass'));if(!q)throw Error('Missing '+key);const b=q.bounds,c=b.min.map((v,k)=>(v+b.max[k])/2),d=Math.max(1.6,...b.max.map((v,k)=>v-b.min[k])),n=q.focusNormal,eye=n?c.map((v,k)=>v+n[k]*d*1.8+(k===1?d*.12:0)):[c[0]+d*.85,c[1]+d*.55,c[2]-d*1.05];s.cameraFraming='manual';s.fit=null;Object.assign(g.options,{eye,target:c,cut:false,sliceY:null,selectedId:-1});await s.render();return{objectId:q.objectId,id:q.id,bounds:q.bounds};}"""
 
 def photo_checks(page):
  data=page.evaluate("""async()=>{const {OFFICIAL_FACE_TEXTURES:d}=await import('./official-face-textures.mjs'),{resolvePhotoEvidence}=await import('./photo-evidence.mjs');const rows=[];for(const [id,c] of Object.entries(d.cases))for(const p of c.faces){const e=resolvePhotoEvidence(id,{sourcePatchId:p.sourcePatchId});rows.push({caseId:id,patch:p.sourcePatchId,matched:e.photos.some(q=>q.id===p.id&&q.caseId===id&&q.sourcePatchId===p.sourcePatchId),attribution:!!p.attribution,license:p.licenseUrl});}return{rows,count:rows.length,cases:Object.fromEntries(Object.entries(d.cases).map(([id,c])=>[id,c.faces.length]))};}""")
@@ -86,6 +88,18 @@ def drag_check(page):
  assert all(not q.get('cancelled') for q in result['renderCalls']),'input cancelled coherent frames'
  assert not result['errors'];r['checks'].append({'label':'Continuous drag presents coherent full-native frames and settles on latest pose without starvation','passed':True,'result':result});save();page.screenshot(path=str(out/'candidate-drag-final.png'));print('DRAG',duration,'s, frames',during['frames']-result['before'],'settle',round(settle),flush=True)
 
+def diagnostic_subsets(page):
+ """Private cost isolation only. Subset images are NOT candidate render output."""
+ rows=[]
+ for pose in ['whole','near-window']:
+  if pose=='whole':action(page,lambda:page.evaluate('semanticInspection.showComplete()'))
+  else:page.evaluate(NEAR,'window');stable(page)
+  reference=page.evaluate(CAPTURE)
+  for part,field in [('rails','railGroups'),('apertures','apertures'),('assemblies','archetypes')]:
+   result=page.evaluate("""async field=>{const s=semanticInspection,g=s.renderer,original=g[field];try{g[field]=[];await s.render();return{stats:s.lastStats,omitted:field,diagnosticOnly:true};}finally{g[field]=original;}}""",field);stable(page);rows.append({'pose':pose,'without':part,**result});print('PRIVATE_COST_PROBE',pose,part,round(result['stats']['wallMs']),flush=True)
+  action(page,lambda:page.evaluate('semanticInspection.render()'));restored=page.evaluate(CAPTURE);assert reference['rgbaHash']==restored['rgbaHash'] and reference['fieldHashes']==restored['fieldHashes'],('diagnostic restore changed output',pose)
+ r['diagnosticSubsets']={'scope':'Private cost isolation with exact restoration. Omitted components are NEVER candidate/public output and not a quality tradeoff.','rows':rows};save()
+
 with sync_playwright() as pw:
  browser=None;page=None
  try:
@@ -94,28 +108,35 @@ with sync_playwright() as pw:
   r['frozenClosure']={v:len(s['files']) for v,s in cfg['variants'].items()};save()
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);r['browserVersion']=browser.version
   layout_script=root/'layout-qa.py'
-  if layout_script.exists():
+  if layout_script.exists() and not cfg.get('keyGate'):
    import runpy
    r['layoutMatrix']=runpy.run_path(str(layout_script))['run_layout_matrix'](browser,root/'perf-baseline',root/'perf-candidate',r,out);save();assert r['layoutMatrix']['passed'],'DOM layout matrix failed'
   for variant in ['baseline','candidate']:
    context=browser.new_context(viewport={'width':1920,'height':1080},device_scale_factor=1);route_site(context,variant);page=context.new_page();page.set_default_timeout(180000);page.add_init_script("window.addEventListener('error',e=>window.__qaError=e.message);window.addEventListener('unhandledrejection',e=>window.__qaError=String(e.reason));")
    errors=[];page.on('pageerror',lambda e:errors.append(str(e)));r['variants'][variant]={'frames':{},'pageErrors':errors};start=time.monotonic();page.goto(url,wait_until='domcontentloaded');stable(page);r['variants'][variant]['initialPageToCompleteMs']=(time.monotonic()-start)*1000
-   capture(page,variant,'cold-whole',whole=True,shot=False)
+   if not cfg.get('keyGate'):capture(page,variant,'first-context-whole',whole=True,shot=False)
    action(page,lambda:page.evaluate('semanticInspection.render()'));whole=capture(page,variant,'warm-whole',whole=True)
-   for view in ['cut','design','source']:
+   for view in ([] if cfg.get('keyGate') else ['cut','design','source']):
     action(page,lambda view=view:page.evaluate('v=>semanticInspection.setView(v)',view));capture(page,variant,view,whole=view=='source')
+   page.evaluate('v=>window.__qaKeyGate=v',bool(cfg.get('keyGate')))
    for key in ['stair','window']:
-    target=page.evaluate(NEAR,key);stable(page);q=capture(page,variant,'near-'+key);q['focusRecord']=target;save()
-   if variant=='candidate':
+    target=page.evaluate(NEAR,key);stable(page);label='near-stair-interior' if key=='stair' and cfg.get('keyGate') else 'near-'+key;q=capture(page,variant,label);q['focusRecord']=target;save()
+    if key=='stair' and not cfg.get('keyGate'):
+     action(page,lambda:page.evaluate("semanticInspection.setView('design')"));q=capture(page,variant,'near-stair-interior');q['focusRecord']=target;q['targetHitPixels']=q['hitObjectPixels'].get(str(target['objectId']),0);save();assert q['targetHitPixels']>0,('stair fixture never actually visible',variant,target,q['hitObjectPixels'])
+    else:
+     q['targetHitPixels']=q['hitObjectPixels'].get(str(target['objectId']),0);save();assert q['targetHitPixels']>0,('focused fixture never actually visible',variant,key,target,q['hitObjectPixels'])
+   if variant=='candidate' and not cfg.get('keyGate'):
     action(page,lambda:page.evaluate('semanticInspection.showComplete()'));q=capture(page,variant,'restored-whole',whole=True);layout_live(page,'1920x1080-dpr1');click_source(page,q);photo_checks(page);drag_check(page)
+   if variant=='candidate' and cfg.get('diagnosticSubsets'):diagnostic_subsets(page)
    assert not errors;context.close()
   a=r['variants']['baseline'];b=r['variants']['candidate']
   for label,x in a['frames'].items():
    y=b['frames'][label];cmp={'label':label,'sameCamera':x['camera']==y['camera'],'sameResolution':(x['stats']['width'],x['stats']['height'])==(y['stats']['width'],y['stats']['height']),'sameRGBA':x['rgbaHash']==y['rgbaHash'],'sameFullFloatHitNormalLocal':x['fieldHashes']==y['fieldHashes'],'beforeMs':x['stats']['wallMs'],'afterMs':y['stats']['wallMs'],'speedup':x['stats']['wallMs']/y['stats']['wallMs']};r['comparisons'].append(cmp);save();assert all(cmp[k] for k in ['sameCamera','sameResolution','sameRGBA','sameFullFloatHitNormalLocal']),('A/B changed authoritative result',cmp)
   assert b['frames']['warm-whole']['stats']['primaryTileIndex']['enabled'],'candidate index inactive'
-  assert not a['frames']['warm-whole']['stats']['primaryTileIndex']['enabled'],'baseline is not original R05'
-  assert b['frames']['warm-whole']['stats']['wallMs']<a['frames']['warm-whole']['stats']['wallMs']*.8,'no meaningful whole-scene improvement'
-  context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1.25);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(180000);page.goto(url,wait_until='domcontentloaded');stable(page);r['variants']['candidate-high-dpr']={'frames':{}};capture(page,'candidate-high-dpr','native-whole',whole=True);layout_live(page,'1366x768-dpr1.25');context.close()
+  assert bool(a['frames']['warm-whole']['stats']['primaryTileIndex']['enabled'])==bool(cfg.get('expectedBaselineIndex',False)),'baseline index mode differs from frozen intended variant'
+  r['performanceSummary']={'wholeWarmReductionFraction':1-b['frames']['warm-whole']['stats']['wallMs']/a['frames']['warm-whole']['stats']['wallMs'],'interpretation':'Measured latency only, not a user acceptance threshold or physical GPU FPS. Parent reviews whether this is a useful gain.'};save()
+  if not cfg.get('keyGate'):
+   context=browser.new_context(viewport={'width':1366,'height':768},device_scale_factor=1.25);route_site(context,'candidate');page=context.new_page();page.set_default_timeout(180000);page.goto(url,wait_until='domcontentloaded');stable(page);r['variants']['candidate-high-dpr']={'frames':{}};capture(page,'candidate-high-dpr','native-whole',whole=True);layout_live(page,'1366x768-dpr1.25');context.close()
   r['passed']=True
  except Exception:
   r['errors'].append(traceback.format_exc())
@@ -126,4 +147,4 @@ with sync_playwright() as pw:
   r['finishedAt']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime());save()
   if browser:browser.close()
 if not r['passed']:print(json.dumps(r,ensure_ascii=False));raise SystemExit(1)
-print('R06 exact-output A/B, full-native interaction, identity/photo and layout gates passed.',flush=True)
+print('R06 key exact-output gate passed; performance remains measured, not accepted.' if cfg.get('keyGate') else 'R06 complete exact-output, native interaction, identity/photo and layout gates passed.',flush=True)
