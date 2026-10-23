@@ -3,13 +3,34 @@
 import argparse, hashlib, json, mimetypes, time, traceback
 from urllib.parse import urlsplit
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from email.utils import parsedate_to_datetime
 root=Path(__file__).resolve().parent
 cfg=json.loads((root/'semantic-desktop-config.json').read_text())
 pa=argparse.ArgumentParser();pa.add_argument('--output',default='public-inspection-evidence');args,_=pa.parse_known_args()
 out=Path(args.output);out.mkdir(parents=True,exist_ok=True);url=cfg['targetUrl'].rstrip('/')+'/'
 r={'passed':False,'candidateRouting':bool(cfg.get('overrides')),'url':url,'scope':'Actual Chromium SwiftShader native desktop framebuffer, whole-frame bounds and exact-ID picking. Not a physical-device performance claim.','startedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'files':{},'checks':[],'frames':{},'screenshots':[],'pageErrors':[],'failedRequests':[]}
 def save():(out/'desktop-report.json').write_text(json.dumps(r,ensure_ascii=False,indent=2))
+def fetch_public(context,target,sleep=time.sleep):
+ attempts=r.setdefault('httpAttempts',{}).setdefault(target,[])
+ for number in range(1,4):
+  try:
+   response=context.request.get(target,timeout=30000)
+   status=response.status;item={'attempt':number,'status':status};attempts.append(item);save()
+   if status not in (429,502,503,504) or number==3:return response
+   raw=response.headers.get('retry-after');delay=2**number
+   if raw:
+    try:retry_after=float(raw)
+    except ValueError:retry_after=max(0,parsedate_to_datetime(raw).timestamp()-time.time())
+    delay=max(delay,retry_after);item['retryAfter']=raw
+   if delay>120:raise AssertionError('Retry-After exceeds bounded retry window: '+str(raw))
+   item['retrySleepSeconds']=delay;save();sleep(delay)
+  except PlaywrightTimeoutError as error:
+   attempts.append({'attempt':number,'readTimeout':str(error)});save()
+   if number==3:raise
+   sleep(2**number)
+ raise AssertionError('Unreachable bounded fetch')
+
 def handler(body,typ):
  def fulfill(route,request):route.fulfill(status=200,body=body,content_type=typ)
  return fulfill
@@ -72,7 +93,7 @@ with sync_playwright() as pw:
   if cfg.get('publicSmoke'):
    deadline=time.monotonic()+180
    while True:
-    response=verify.request.get(url+'index.html',timeout=30000)
+    response=fetch_public(verify,url+'index.html')
     if response.status==200 and hashlib.sha256(response.body()).hexdigest()==cfg['files']['index.html']:break
     if time.monotonic()>=deadline:raise AssertionError('Exact public R04 index not available within bounded deployment verification window')
     time.sleep(5)
@@ -81,7 +102,7 @@ with sync_playwright() as pw:
    if override:
     p=(root/override).resolve();assert p.is_relative_to(root);body=p.read_bytes();status=200;origin='frozen-candidate'
    else:
-    response=verify.request.get(url+rel,timeout=30000);body=response.body();status=response.status;origin='exact-public'
+    response=fetch_public(verify,url+rel);body=response.body();status=response.status;origin='exact-public'
    digest=hashlib.sha256(body).hexdigest();r['files'][rel]={'status':status,'sha256':digest,'origin':origin,'passed':status==200 and digest==wanted};assert r['files'][rel]['passed'],('closure mismatch',rel)
   verify.close();save()
   for dpr in ([1] if cfg.get('publicSmoke') else [1,2]):
