@@ -1,3 +1,11 @@
+# This trial branch explicitly opts into the isolated semantic page QA when its bounded configuration is present.
+from pathlib import Path as _SemanticPath
+if _SemanticPath(__file__).with_name('semantic-qa-config.json').is_file():
+    import runpy as _semantic_runpy
+    _semantic_runpy.run_path(str(_SemanticPath(__file__).with_name('semantic-browser-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
+# Original c69 public inspection test follows unchanged.
 import asyncio,json,argparse,hashlib
 from pathlib import Path
 from playwright.async_api import async_playwright
