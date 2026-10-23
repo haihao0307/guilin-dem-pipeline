@@ -39,9 +39,11 @@ async def main():
    report['source']=state;report['load_seconds']=time.time()-started
    checked('all 200 source primitives visible',await page.evaluate('A4_ANATOMY.visibleCount()===200'))
    await shot('01-complete-original')
-   await page.click('[data-camera=side]')
+   await page.click('[data-camera=side]');await page.evaluate('A4_ANATOMY.render()')
    point=await page.evaluate("""(()=>{const q=A4_ANATOMY,p=q.source.primitives.find(p=>p.sourceNode===31),v=p.object.geometry.boundingBox.getCenter(p.object.position.clone()).applyMatrix4(p.object.matrixWorld).project(q.camera),r=q.renderer.domElement.getBoundingClientRect();return {x:r.left+(v.x+1)*r.width/2,y:r.top+(1-v.y)*r.height/2};})()""")
-   await page.mouse.click(point['x'],point['y']);await page.wait_for_timeout(100)
+   report['pick_probe']=await page.evaluate('(p)=>({point:p,element:document.elementFromPoint(p.x,p.y)?.tagName,hit:A4_ANATOMY.probeHit(p.x,p.y)})',point)
+   await page.mouse.click(point['x'],point['y']);await page.wait_for_timeout(200)
+   report['pointer_events']=await page.evaluate('({down:A4_ANATOMY.pointerDown,up:A4_ANATOMY.pointerUp,count:A4_ANATOMY.pickCount})')
    checked('real canvas ray picking',await page.evaluate('A4_ANATOMY.pickCount>0 && A4_ANATOMY.lastHit.triangle>=0'))
    report['picked']=await page.evaluate('({selection:A4_ANATOMY.selection,hit:A4_ANATOMY.lastHit,measurements:A4_ANATOMY.measurements})')
    await shot('02-picked-source-group')
