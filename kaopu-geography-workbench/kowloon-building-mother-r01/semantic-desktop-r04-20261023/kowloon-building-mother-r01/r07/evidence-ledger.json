@@ -1,0 +1,1858 @@
+{
+  "schema": "kaopu.r06.function-field-evidence-ledger/1",
+  "documentedAt": "2026-10-21",
+  "status": "candidate12_CPU_and_old_browser_pass_source_point_identity_ties_and_one_kernel_unresolved_remaining",
+  "readme": "README.md",
+  "scope": {
+    "workbench": "kowloon-building-mother-r01",
+    "version": "r06",
+    "sourceCases": 3,
+    "authoredInteriorHost": "B359971994401063C0",
+    "authoredDesignFloors": 2,
+    "actualInteriorReconstructed": false,
+    "oldVersionsPreserved": true,
+    "publicationAuthorizationAddedByThisLedger": false,
+    "visibleRelationAssemblyCases": 3,
+    "relationAssembliesRegisteredToActualBuildings": false,
+    "fullyAssembledAsBuiltBuildings": 0,
+    "originalSurfaceViewsRemainSeparate": true,
+    "productionPublished": false,
+    "sourceBoundCaseAssembliesImplemented": true,
+    "sourceBoundCaseAssembliesStatus": "implemented_source_and_official_footprint_constrained_designs_not_as_built",
+    "sourceBoundCaseAssemblyCount": 3,
+    "currentCandidate": 13,
+    "formalProductRelease": false
+  },
+  "architecture": {
+    "originalImplementation": true,
+    "objectMeshes": false,
+    "objectVertexBuffers": 0,
+    "objectIndexBuffers": 0,
+    "modelTriangles": 0,
+    "screenTrianglesPerPass": 1,
+    "screenTrianglePurpose": "WebGL2 raster plumbing only; gl_VertexID triggers fragment queries, not object geometry",
+    "measuredSurface": {
+      "module": "cases.mjs",
+      "schema": "kaopu.measured-surface-field/0.1",
+      "distance": "Exact unsigned Euclidean distance to union of finite source planar polygons including holes, subject to floating-point error",
+      "occupancy": null,
+      "distanceAcceleration": "BVH conservative point-to-AABB lower-bound pruning",
+      "rayIntersection": "Analytic ray/plane candidates with outer-ring and hole predicates, BVH ray/AABB pruning",
+      "numericalBoundaries": "source profile coordinates and BVH query data, not render vertex/index buffers",
+      "lipschitzUpperBound": 1
+    },
+    "authoredDesign": {
+      "module": "field.mjs",
+      "schema": "kaopu.analytic-building-field/0.1",
+      "distance": "signed 1-Lipschitz conservative CSG field; not universally exact interior Euclidean distance",
+      "structure": "analytic polygon extrusions, closed stepped flight profiles, landing, slab and wall CSG with actual voids",
+      "rail": "distance to exact finite line/circular-arc centerline minus tube radius",
+      "roundedContinuity": "G1 tangent-continuous, not G2 curvature-continuous",
+      "angularContinuity": "C0 hard centerline joins",
+      "hybridTrace": {
+        "status": "candidate_integrated_renderer_path_not_final_browser_verified",
+        "structural": "analytic boundary-plane candidates accepted only by clipped structure CSG domain and exterior-side checks",
+        "rail": "conservative 0.85 × abs(bound) marching inside rail bounds and before nearest structural hit",
+        "minimumPositiveStep": 0,
+        "budgetExhaustion": "unresolved, never ordinary miss",
+        "metricCaution": "Rail evaluations and structural plane/domain tests are separate work counts"
+      }
+    },
+    "rendering": {
+      "module": "renderer.mjs",
+      "backend": "WebGL2 direct fragment field evaluation",
+      "meshFallback": false,
+      "probeReadback": "floating-point render target, not sampled occupancy volume",
+      "materialMicroheight": "shading normal only; no hidden silhouette displacement",
+      "surfaceNormals": {
+        "measured": "Source plane normal",
+        "relationAssembly": "Analytic winning finite-face normal",
+        "twoFloorStructure": "Analytic accepted boundary-plane normal",
+        "rail": "Direction from closest analytic centerline point to hit point, with clip face handled separately",
+        "probeCaution": "Off-surface query-normal probes may still use finite differences"
+      },
+      "probeCompilation": {
+        "mode": "lazy_per_probe_kind",
+        "materialClosureIncludedOnlyForMaterialProbe": true,
+        "compileAndLinkTimingRecorded": true,
+        "provenSpeedup": false
+      },
+      "ambientOcclusion": {
+        "optional": true,
+        "defaultEnabled": false,
+        "extraLocalQueriesOnlyWhenEnabled": true
+      }
+    },
+    "relationAssemblies": {
+      "module": "assemblies.mjs",
+      "schema": "kaopu.evidence-function-assembly/0.1",
+      "fieldKind": "evidence-assembly",
+      "representation": "Signed union of exact finite polygon-prism fields; empty room and portal domains, not solid room boxes or painted openings",
+      "rayIntersection": "Analytic cap/edge plane candidates with own finite-face membership and buried union-face rejection",
+      "queryBindings": "Every primitive links node ID, function object ID, material role and diagram-local frame",
+      "unknownCoordinates": "Generated only as authored editable relation-diagram coordinates; actual positions and elevations remain unknown",
+      "sourceGeometryMutated": false,
+      "placementMode": "separate_relation_diagram",
+      "registrationStatus": "unverified_editable_design",
+      "sourceTransformApplied": false,
+      "sourceSection": {
+        "method": "Analytic horizontal intersection of exact finite source surfaces at a chosen height",
+        "rejectionPolicy": "Reject open, branching, coplanar or degenerate cuts; no bounding-rectangle closure fallback",
+        "actualFloorEstablished": false,
+        "usedAsDiagramFootprint": false
+      },
+      "alignment": {
+        "kind": "rigid_editable_design_interface_not_measured_registration",
+        "allowed": [
+          "translation_in_metres",
+          "yaw_about_vertical_axis"
+        ],
+        "disallowed": [
+          "scale",
+          "shear"
+        ],
+        "graphChain": [
+          "diagram-local-frame",
+          "measured_source_local_east_up_south",
+          "EPSG:2326_E_N_and_Hong_Kong_Principal_Datum_height"
+        ],
+        "functions": [
+          "assemblyLocalToSource",
+          "sourceToAssemblyLocal",
+          "assemblyLocalToSurvey",
+          "surveyToAssemblyLocal",
+          "queryAssemblySource",
+          "queryAssemblySurvey"
+        ],
+        "distanceAndMaterialScale": "Rigid transformations preserve metre distances and diagram-local material coordinates",
+        "display": "Current renderer still shows separate diagram; no verified source-shell overlay",
+        "actualBuildingRegistrationVerified": false
+      },
+      "scope": "Retained original separate relation diagrams; source-bound designs are a distinct additional layer"
+    },
+    "inspectionContextCandidate": {
+      "module": "context.mjs",
+      "schema": "kaopu.case-function-context/0.1",
+      "status": "implemented_and_app_wired_source_bound_inspection_GPU_and_visual_acceptance_pending",
+      "uiIntegrationImplemented": true,
+      "uiAccepted": false,
+      "gpuAccepted": false,
+      "composition": "Original unsigned measured shell plus signed source-bound authored prisms in source metres",
+      "sourceClosureAdded": false,
+      "displayClip": "Display-only source hit restriction with no caps; authoritative full-data query remains separate",
+      "certifiedFullBuildingSDF": false,
+      "actualBuildingRegistrationVerified": false,
+      "sourceBoundCaseAssemblyStatus": "implemented_as_authored_design_not_actual_interior"
+    },
+    "candidate8Pipeline": {
+      "status": "preparation_tests_and_GPU_pending",
+      "passes": [
+        "primary",
+        "rescue",
+        "shade"
+      ],
+      "perPassScreenTriangles": 1,
+      "oneTrianglePerFrameClaimed": false,
+      "intermediateStorage": "Float32 per-pixel state, normal/ID and material-local coordinates in distinct read/write render targets",
+      "sameTextureReadWriteFeedbackAllowed": false,
+      "measuredDescriptors": {
+        "storage": "2D floating-point texture read with texelFetch",
+        "contents": [
+          "source plane frame",
+          "finite polygon boundaries and holes",
+          "object/material roles",
+          "BVH bounds and traversal links"
+        ],
+        "notVoxelGrid": true,
+        "notSampledOccupancyOrSDF": true,
+        "notObjectRenderMesh": true,
+        "precision": "Float32 descriptors preserve analytic representation; not bit-exact Float64 coordinates. BVH bounds use conservative outward rounding.",
+        "validationPending": true
+      },
+      "performanceImprovementEstablished": false
+    }
+  },
+  "totals": {
+    "patches": 225,
+    "boundaryCoordinateRecords": 904,
+    "holes": 1,
+    "bvhNodes": 447,
+    "uniqueVertexCountClaimed": false
+  },
+  "cases": [
+    {
+      "sourceModelId": "B367642137201063C0",
+      "caseKey": "lowrise",
+      "name": "喇沙利道33號 / 33 La Salle Road",
+      "scope": "No.33 source building, not combined No.31–33 premises",
+      "ledger": "sources/33-lasalle-evidence.json",
+      "officialIdentity": {
+        "objectId": 47805,
+        "geoRefNo": "3676421372",
+        "buildingCSUID": "3676421372T20050430",
+        "buildingID": 1108226247
+      },
+      "floorRecords": [
+        {
+          "value": 2,
+          "field": "Storeys",
+          "scope": "single official source feature",
+          "source": "sources/33-lasalle-evidence.json#/verified/1"
+        },
+        {
+          "value": [
+            "G/F",
+            "1/F"
+          ],
+          "scope": "No.33 published property unit grid",
+          "source": "https://hk.centanet.com/estate/en/33-La-Salle-Road/2-UJFDFRSSRO"
+        }
+      ],
+      "floorCountPolicy": "No extra roof enclosure storey inferred. Shared 31–33 gate does not change No.33 scope.",
+      "officialHeightAttributesM": {
+        "base": 26,
+        "top": 33.7,
+        "difference": 7.7,
+        "relationshipToSourceExtent": "different source quantity; do not rescale geometry to match"
+      },
+      "unknown": [
+        "Interior plan and room allocation",
+        "Stair position, dimensions and count",
+        "Presence or absence of lift",
+        "No.33-specific building entrance, rear/service doors",
+        "Window opening mechanisms and measured frame/reveal depths"
+      ],
+      "sourceGeometry": {
+        "path": "../../hk-three-buildings-r01/geometry/B367642137201063C0.score.json",
+        "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/b74929fc9f1c81eaa7e4b529a6bd5361024b035b/kaopu-geography-workbench/hk-three-buildings-r01/geometry/B367642137201063C0.score.json",
+        "commit": "b74929fc9f1c81eaa7e4b529a6bd5361024b035b",
+        "sha256": "e209fc1cb98ebcc9b7547df9c2031e732a0ebe66bb44d1c49e70b0af9894049d",
+        "evidence": "observed_derived_existing_source_not_new_survey",
+        "georeference": {
+          "horizontalCrs": "EPSG:2326",
+          "verticalDatum": "Hong Kong Principal Datum",
+          "originEastingNorthingHeight": [
+            836766.125,
+            821374,
+            26.288999557495117
+          ],
+          "originalGltfWorldAxes": [
+            "Easting",
+            "Height",
+            "-Northing"
+          ],
+          "localRecipeAxes": [
+            "east",
+            "north",
+            "up"
+          ],
+          "displayAxes": [
+            "east",
+            "up",
+            "south"
+          ]
+        },
+        "localBoundsEastUpSouthM": {
+          "min": [
+            -7.394531250093678,
+            0,
+            -9.550781292995996
+          ],
+          "max": [
+            7.39453125,
+            10.913000123085938,
+            9.55078128446363
+          ]
+        },
+        "counts": {
+          "patches": 176,
+          "boundaryCoordinates": 684,
+          "holes": 0,
+          "bvhNodes": 351,
+          "modelTriangles": 0,
+          "modelVertexBuffers": 0
+        },
+        "patchRoleCounts": {
+          "roofPlane": 27,
+          "wallProfile": 78,
+          "wallStrip": 55,
+          "undersidePlane": 16
+        },
+        "patchIds": [
+          "p000",
+          "p001",
+          "p002",
+          "p003",
+          "p004",
+          "p005",
+          "p006",
+          "p007",
+          "p008",
+          "p009",
+          "p010",
+          "p011",
+          "p012",
+          "p013",
+          "p014",
+          "p015",
+          "p016",
+          "p017",
+          "p018",
+          "p019",
+          "p020",
+          "p021",
+          "p022",
+          "p023",
+          "p024",
+          "p025",
+          "p026",
+          "p027",
+          "p028",
+          "p029",
+          "p030",
+          "p031",
+          "p032",
+          "p033",
+          "p034",
+          "p035",
+          "p036",
+          "p037",
+          "p038",
+          "p039",
+          "p040",
+          "p041",
+          "p042",
+          "p043",
+          "p044",
+          "p045",
+          "p046",
+          "p047",
+          "p048",
+          "p049",
+          "p050",
+          "p051",
+          "p052",
+          "p053",
+          "p054",
+          "p055",
+          "p056",
+          "p057",
+          "p058",
+          "p059",
+          "p060",
+          "p061",
+          "p062",
+          "p063",
+          "p064",
+          "p065",
+          "p066",
+          "p067",
+          "p068",
+          "p069",
+          "p070",
+          "p071",
+          "p072",
+          "p073",
+          "p074",
+          "p075",
+          "p076",
+          "p077",
+          "p078",
+          "p079",
+          "p080",
+          "p081",
+          "p082",
+          "p083",
+          "p084",
+          "p085",
+          "p086",
+          "p087",
+          "p088",
+          "p089",
+          "p090",
+          "p091",
+          "p092",
+          "p093",
+          "p094",
+          "p095",
+          "p096",
+          "p097",
+          "p098",
+          "p099",
+          "p100",
+          "p101",
+          "p102",
+          "p103",
+          "p104",
+          "p105",
+          "p106",
+          "p107",
+          "p108",
+          "p109",
+          "p110",
+          "p111",
+          "p112",
+          "p113",
+          "p114",
+          "p115",
+          "p116",
+          "p117",
+          "p118",
+          "p119",
+          "p120",
+          "p121",
+          "p122",
+          "p123",
+          "p124",
+          "p125",
+          "p126",
+          "p127",
+          "p128",
+          "p129",
+          "p130",
+          "p131",
+          "p132",
+          "p133",
+          "p134",
+          "p135",
+          "p136",
+          "p137",
+          "p138",
+          "p139",
+          "p140",
+          "p141",
+          "p142",
+          "p143",
+          "p144",
+          "p145",
+          "p146",
+          "p147",
+          "p148",
+          "p149",
+          "p150",
+          "p151",
+          "p152",
+          "p153",
+          "p154",
+          "p155",
+          "p156",
+          "p157",
+          "p158",
+          "p159",
+          "p160",
+          "p161",
+          "p162",
+          "p163",
+          "p164",
+          "p165",
+          "p166",
+          "p167",
+          "p168",
+          "p169",
+          "p170",
+          "p171",
+          "p172",
+          "p173",
+          "p174",
+          "p175"
+        ],
+        "allSourcePatchesRetained": true,
+        "scaleEditsAllowed": false,
+        "interiorGenerated": false,
+        "groundClosureAdded": false,
+        "wallThicknessAdded": false
+      },
+      "sourceRecordDate": "2020-09-09 CSDI DateStamp, not per-feature survey date",
+      "researchCheckedDate": "2026-10-21"
+    },
+    {
+      "sourceModelId": "B359971994401063C0",
+      "caseKey": "kcc",
+      "name": "龍總大廈 / K.C.C. Building",
+      "scope": "Upper tower component; separate podium is not included in measured source model",
+      "ledger": "sources/kcc-evidence.json",
+      "officialIdentity": {
+        "geoRefNo": "3599719944",
+        "buildingCSUID": "3599719944T20050430",
+        "buildingID": 1108235473,
+        "structureID": 1102060
+      },
+      "separatePodium": {
+        "geoRefNo": "3600619942",
+        "buildingCSUID": "3600619942P20060311",
+        "buildingID": 1108246367,
+        "structureID": 1102033
+      },
+      "floorRecords": [
+        {
+          "value": 24,
+          "field": "Storeys",
+          "scope": "official tower component",
+          "source": "sources/kcc-evidence.json#S04"
+        },
+        {
+          "value": 4,
+          "field": "Storeys",
+          "scope": "separate official podium component",
+          "source": "sources/kcc-evidence.json#S04"
+        },
+        {
+          "value": 1,
+          "field": "StoreysInBasement",
+          "scope": "separate official podium component",
+          "source": "sources/kcc-evidence.json#S04"
+        },
+        {
+          "value": 28,
+          "scope": "independent owner statement about whole above-ground building",
+          "source": "https://hkkcc.org.hk/about-kcc/introduction?lang=zh"
+        }
+      ],
+      "floorCountPolicy": "Keep official component counts, owner whole-building statement, basement and floor labels separate. Do not infer total from model height or assign design FFL to named real floors.",
+      "officialHeightAttributesM": {
+        "tower": {
+          "base": 22.4,
+          "top": 90.9,
+          "difference": 68.5
+        },
+        "podium": {
+          "base": 8,
+          "top": 22.4
+        },
+        "relationshipToSourceExtent": "different source quantity; do not force tower source span to 68.5 m"
+      },
+      "publicPlanObservations": {
+        "scope": [
+          "5/F–17/F",
+          "18/F–26/F"
+        ],
+        "unitLabels": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "liftSymbols": 3,
+        "liftOwnership": "core; floors are related by stops, not exclusive ownership",
+        "centralStair": "Opposed routes observed in drawing; exact 3D interlock and separation unknown",
+        "scaleKnown": false,
+        "drawingDateKnown": false,
+        "metricCoordinatesGenerated": false,
+        "sourceUrls": [
+          "https://hkfloorplan.centanet.com/img/img.aspx?dir=202203&name=22cpal00152441SSHJHSQR.jpg",
+          "https://hkfloorplan.centanet.com/img/img.aspx?dir=202203&name=22cpal00152442GYWTOAVC.jpg"
+        ],
+        "reuse": "reference links only, no copied plan images"
+      },
+      "unknown": [
+        "Exact core and stair dimensions",
+        "Calibrated plan coordinates and real floor-to-floor heights",
+        "Lift stopping schedule and current operation",
+        "Residential main lobby versus signed chamber entrance",
+        "Rear/service door mapping",
+        "Window mechanism and measured frame depth"
+      ],
+      "sourceGeometry": {
+        "path": "../../hk-three-buildings-r01/geometry/B359971994401063C0.score.json",
+        "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/b74929fc9f1c81eaa7e4b529a6bd5361024b035b/kaopu-geography-workbench/hk-three-buildings-r01/geometry/B359971994401063C0.score.json",
+        "commit": "b74929fc9f1c81eaa7e4b529a6bd5361024b035b",
+        "sha256": "5b4129d62103487a1821fcf69a8a7fa0d4903b390bb0dac771466e7acf9b2ce7",
+        "evidence": "observed_derived_existing_source_not_new_survey",
+        "georeference": {
+          "horizontalCrs": "EPSG:2326",
+          "verticalDatum": "Hong Kong Principal Datum",
+          "originEastingNorthingHeight": [
+            836004.8125,
+            819943.3125,
+            20.641998291015625
+          ],
+          "originalGltfWorldAxes": [
+            "Easting",
+            "Height",
+            "-Northing"
+          ],
+          "localRecipeAxes": [
+            "east",
+            "north",
+            "up"
+          ],
+          "displayAxes": [
+            "east",
+            "up",
+            "south"
+          ]
+        },
+        "localBoundsEastUpSouthM": {
+          "min": [
+            -12.23828125,
+            1.91e-06,
+            -15.96484375
+          ],
+          "max": [
+            12.23828125,
+            70.20300293,
+            15.96484375
+          ]
+        },
+        "counts": {
+          "patches": 21,
+          "boundaryCoordinates": 100,
+          "holes": 0,
+          "bvhNodes": 41,
+          "modelTriangles": 0,
+          "modelVertexBuffers": 0
+        },
+        "patchRoleCounts": {
+          "roofPlane": 1,
+          "wallStrip": 20
+        },
+        "patchIds": [
+          "p000",
+          "p001",
+          "p002",
+          "p003",
+          "p004",
+          "p005",
+          "p006",
+          "p007",
+          "p008",
+          "p009",
+          "p010",
+          "p011",
+          "p012",
+          "p013",
+          "p014",
+          "p015",
+          "p016",
+          "p017",
+          "p018",
+          "p019",
+          "p020"
+        ],
+        "allSourcePatchesRetained": true,
+        "scaleEditsAllowed": false,
+        "interiorGenerated": false,
+        "groundClosureAdded": false,
+        "wallThicknessAdded": false
+      },
+      "sourceRecordDate": "2020-09-09 CSDI DateStamp, not per-feature survey date",
+      "researchCheckedDate": "2026-10-21"
+    },
+    {
+      "sourceModelId": "B369121858401063C0",
+      "caseKey": "warehouse",
+      "name": "香港中旅協記貨倉有限公司第二倉 / China Travel Hip Kee Godown No.2",
+      "scope": "Upper warehouse component, not complete street-to-roof building",
+      "ledger": "sources/warehouse-evidence.json",
+      "officialIdentity": {
+        "objectId": 158577,
+        "geoRefNo": "3691218584",
+        "buildingCSUID": "3691218584T20050430",
+        "buildingID": 1108241445
+      },
+      "separatePodium": {
+        "objectId": 237016,
+        "geoRefNo": "3690318597",
+        "buildingCSUID": "3690318597P20060311",
+        "buildingID": 1108247084
+      },
+      "floorRecords": [
+        {
+          "value": 12,
+          "field": "Storeys",
+          "scope": "official upper component",
+          "source": "sources/warehouse-evidence.json#S1"
+        },
+        {
+          "value": 2,
+          "field": "Storeys",
+          "scope": "separate official podium",
+          "source": "sources/warehouse-evidence.json#S1"
+        },
+        {
+          "value": 2,
+          "field": "StoreysInBasement",
+          "scope": "separate official podium",
+          "source": "sources/warehouse-evidence.json#S1"
+        },
+        {
+          "value": "G/F plus 1/F–12/F, two basements, local cocklofts",
+          "scope": "Historical 2021–2022 court text via mirror, not measured current whole-building schedule",
+          "source": [
+            "sources/warehouse-evidence.json#S6",
+            "sources/warehouse-evidence.json#S7"
+          ]
+        }
+      ],
+      "floorCountPolicy": "Do not assert 12+2+2=16 storeys. Historical labels, local cocklofts, component records and full-floor plates are distinct.",
+      "officialHeightAttributesM": {
+        "upper": {
+          "base": 17.5,
+          "top": 51.7
+        },
+        "podium": {
+          "base": 4,
+          "top": 17.5
+        },
+        "relationshipToSourceExtent": "do not equate source component vertical span with full street-to-roof height"
+      },
+      "roofCorrection": {
+        "obsoleteClassification": "broad-sloped-roof",
+        "observed": "All three roofPlane operations are horizontal. Preserve parapet ring hole and high strip.",
+        "localHeightsM": {
+          "mainRoof": 33.82499695,
+          "parapet": 34.07299805,
+          "highestStrip": 37.70700073
+        },
+        "highestStripUse": "unknown; billboard/support is only a plausible interpretation"
+      },
+      "freightLifts": {
+        "reportedCount": 9,
+        "status": "broker_reported_not_official_not_geometry",
+        "source": "https://www.youtube.com/watch?v=oFs9zSVMEco"
+      },
+      "unknown": [
+        "Complete internal plan and actual core locations",
+        "Verified freight lift count and stop/shaft geometry",
+        "Exact stair layout and dimensions",
+        "Exact whole-building floor schedule and cockloft extents",
+        "Entrance coordinates and current service/rear roles",
+        "Window/vent mechanisms and frame/reveal depth"
+      ],
+      "sourceGeometry": {
+        "path": "../../hk-three-buildings-r01/geometry/B369121858401063C0.score.json",
+        "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/b74929fc9f1c81eaa7e4b529a6bd5361024b035b/kaopu-geography-workbench/hk-three-buildings-r01/geometry/B369121858401063C0.score.json",
+        "commit": "b74929fc9f1c81eaa7e4b529a6bd5361024b035b",
+        "sha256": "8d5e687a67243b0f2c132acee8f0abc837f9a7972d56a9b1f60d0f53cd013165",
+        "evidence": "observed_derived_existing_source_not_new_survey",
+        "georeference": {
+          "horizontalCrs": "EPSG:2326",
+          "verticalDatum": "Hong Kong Principal Datum",
+          "originEastingNorthingHeight": [
+            836896.75,
+            818601.75,
+            17.523000717163086
+          ],
+          "originalGltfWorldAxes": [
+            "Easting",
+            "Height",
+            "-Northing"
+          ],
+          "localRecipeAxes": [
+            "east",
+            "north",
+            "up"
+          ],
+          "displayAxes": [
+            "east",
+            "up",
+            "south"
+          ]
+        },
+        "localBoundsEastUpSouthM": {
+          "min": [
+            -33.046875,
+            0,
+            -32.560546880966264
+          ],
+          "max": [
+            33.04687501051261,
+            37.70700073,
+            32.5625
+          ]
+        },
+        "counts": {
+          "patches": 28,
+          "boundaryCoordinates": 120,
+          "holes": 1,
+          "bvhNodes": 55,
+          "modelTriangles": 0,
+          "modelVertexBuffers": 0
+        },
+        "patchRoleCounts": {
+          "roofPlane": 3,
+          "wallStrip": 16,
+          "wallProfile": 8,
+          "undersidePlane": 1
+        },
+        "patchIds": [
+          "p000",
+          "p001",
+          "p002",
+          "p003",
+          "p004",
+          "p005",
+          "p006",
+          "p007",
+          "p008",
+          "p009",
+          "p010",
+          "p011",
+          "p012",
+          "p013",
+          "p014",
+          "p015",
+          "p016",
+          "p017",
+          "p018",
+          "p019",
+          "p020",
+          "p021",
+          "p022",
+          "p023",
+          "p024",
+          "p025",
+          "p026",
+          "p027"
+        ],
+        "allSourcePatchesRetained": true,
+        "scaleEditsAllowed": false,
+        "interiorGenerated": false,
+        "groundClosureAdded": false,
+        "wallThicknessAdded": false
+      },
+      "sourceRecordDate": "2020-09-09 CSDI DateStamp, not per-feature survey date",
+      "researchCheckedDate": "2026-10-21"
+    }
+  ],
+  "designProposal": {
+    "evidence": "authored_editable_design_not_actual_KCC_interior",
+    "hostSourceModelId": "B359971994401063C0",
+    "sourceFootprintPatchId": "p000",
+    "sourceFootprintBoundaryPoints": 20,
+    "floorIds": [
+      "floor-001",
+      "floor-002"
+    ],
+    "floorLabelMappingToActualBuilding": null,
+    "defaultConfig": {
+      "floorHeight": 3.2,
+      "flightWidth": 1.2,
+      "centerGap": 0.2,
+      "landingDepth": 1.2,
+      "treadDepth": 0.28,
+      "risersPerFlight": 10,
+      "slabThickness": 0.2,
+      "plateThickness": 0.2,
+      "railHeight": 0.9,
+      "railRadius": 0.035,
+      "railBendRadius": 0.22,
+      "railCornerMode": "rounded",
+      "railsEnabled": true,
+      "wallEnabled": true,
+      "wallWidth": 2.6,
+      "wallHeight": 2.5,
+      "wallThickness": 0.12,
+      "doorWidth": 0.9,
+      "doorHeight": 2.1,
+      "footprintEvidence": "exact_observed_derived_p000_footprint_projected_in_R05_design_frame"
+    },
+    "designFrame": {
+      "schema": "kaopu.rigid-host-frame/0.1",
+      "units": "metre",
+      "fieldAxes": [
+        "lateral",
+        "up-from-floor-001",
+        "run"
+      ],
+      "hostAxes": [
+        "east",
+        "up",
+        "south"
+      ],
+      "origin": [
+        3,
+        3.4000019100000003,
+        8
+      ],
+      "xAxis": [
+        0.9331673378981138,
+        0,
+        -0.35944223385705126
+      ],
+      "yAxis": [
+        0,
+        1,
+        0
+      ],
+      "zAxis": [
+        0.35944223385705126,
+        0,
+        0.9331673378981138
+      ],
+      "matrixColumnMajor": [
+        0.9331673378981138,
+        0,
+        -0.35944223385705126,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0.35944223385705126,
+        0,
+        0.9331673378981138,
+        0,
+        3,
+        3.4000019100000003,
+        8,
+        1
+      ],
+      "scale": 1,
+      "sourceBasis": "R05 authored origin; direction parallel to observed-derived wall p002",
+      "locationEvidence": "authored_interior_location_not_measured"
+    },
+    "serviceReserve": {
+      "sizeM": [
+        2,
+        2
+      ],
+      "evidence": "R03/R05 authored reserve, not observed shaft or lift",
+      "sourceRecord": {
+        "id": "reserved-core-volume-001",
+        "footprintEastNorth": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            -1,
+            1
+          ]
+        ],
+        "evidence": "R03/R05 authored reserve; not an observed core or lift"
+      }
+    },
+    "relations": {
+      "stair": "owned by proposed circulation core; connects two design floors",
+      "rail": "owned by stair; references both design floors",
+      "wall": "owned by upper design floor",
+      "doorOpening": "voids proposed wall",
+      "stairOpening": "voids upper slab",
+      "publicPlanCore": "separate research topology, not measured design coordinates"
+    },
+    "certification": false
+  },
+  "attribution": {
+    "geometry": {
+      "holder": "Hong Kong Special Administrative Region Government, Lands Department / CSDI and relevant organisations",
+      "terms": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC",
+      "licenseScope": "../../hk-three-buildings-r01/LICENSE_SCOPE.md",
+      "notCC0": true,
+      "governmentEndorsementClaimed": false,
+      "sourceBoundDerivedLayer": "Official footprint and height attribution retained; inferred hollow podium / design slabs are not newly measured 3D or a closure of the original source shell."
+    },
+    "material": {
+      "holder": "Existing KAOPU material closure; complete derivative provenance audit unresolved",
+      "module": "material.mjs",
+      "sourcePath": "../../hk-three-buildings-r01/viewer/mothers/kaopu-original.glsl",
+      "sourceProvenance": "../../hk-three-buildings-r01/viewer/provenance/material-sources.json",
+      "inheritedMaterialLeafCommit": "1f46ba78170752a07086caa3e66c87f2fa4c7fcf",
+      "motherGLSLSha256": "9529e503f97be77a9f24fa00489e702f792417be07f60add7ee917d20c451ed8",
+      "byteExactSourceClosure": true,
+      "usedOriginalFunctions": [
+        "kpConcreteStation",
+        "kpPlasterOriginalField"
+      ],
+      "metalRole": "authored parameter surface",
+      "actualBuildingFinishVerified": false,
+      "cleanRoomClaimed": false,
+      "provenanceClosureAuditComplete": false,
+      "inheritedStoneNotice": "../../hk-three-buildings-r01/viewer/provenance/STONE_NOTICE.md",
+      "noticeSummary": "Existing STONE_STUDY notice credits LuthBird1 / Stone Brick / CC BY4.0. Exact inclusion of derived branches in the full embedded closure remains to be traced; absence of a receiver call is not absence of inclusion.",
+      "formalReleaseGate": "Complete closure dependency and rights audit or remove/replace any unapproved dependent implementation; never erase required notices while retaining content."
+    },
+    "externalPhotosAndPlans": {
+      "publication": "reference URLs and factual observations only",
+      "copiedImageAssetsPublished": false,
+      "republicationLicenseEstablished": false,
+      "sourceLedgers": [
+        "sources/33-lasalle-evidence.json",
+        "sources/kcc-evidence.json",
+        "sources/warehouse-evidence.json"
+      ]
+    }
+  },
+  "validation": {
+    "status": "candidate12_CPU_and_old_browser_pass_source_point_identity_ties_and_one_kernel_unresolved_remaining",
+    "countsInLedger": "derived from local frozen score recipes and current adapter; not browser QA results",
+    "cpuTestCommand": "node --test tests/*.test.mjs",
+    "cpuTests": [
+      "../tests/implicit-cases.test.mjs",
+      "../tests/implicit-field.test.mjs",
+      "../tests/implicit-host.test.mjs",
+      "../tests/implicit-profiles.test.mjs",
+      "../tests/implicit-renderer.test.mjs",
+      "../tests/implicit-assemblies.test.mjs",
+      "../tests/implicit-context.test.mjs"
+    ],
+    "browserScript": "../tests/implicit-browser.py",
+    "workflow": "../../../.github/workflows/kowloon-building-mother-r01-qa.yml",
+    "expectedResults": "../evidence/r06-browser/results.json",
+    "expectedResultsExistenceOrPassClaimed": false,
+    "finalCommit": null,
+    "browserResult": null,
+    "publishedHttpsResult": null,
+    "performance": null,
+    "requiredEvidence": [
+      "Exact tested commit and served source hashes",
+      "All three source cases, finite domains and hole preservation",
+      "BVH versus exhaustive CPU query/ray parity",
+      "CPU versus actual GPU distance, identity, role, local-coordinate and normal parity",
+      "Visual checks for stair, rail joins, wall opening, underside, source cases, inside view and cutaway",
+      "Parameter propagation, invalid-edit rollback and rigid-transform material invariance",
+      "Runtime no-model-buffer/no-index-draw/fullscreen-3-vertex audit",
+      "Separate hit, miss, unresolved, structural tests and rail evaluation metrics",
+      "Actual browser/GPU/resolution, screenshots, errors and measurement method",
+      "Distinct local candidate and published HTTPS verification",
+      "Three visible authored relation assemblies: open interiors, true apertures, functional routes and distinct ownership",
+      "Rigid diagram/source/survey round trips and invariant material-local metres, without asserting verified actual-building registration",
+      "Lazy probe compile timings and actual surface-normal/AO settings for the tested candidate",
+      "Independent old-version browser regression without applying R06 model-buffer rules to old mesh renderers",
+      "Candidate 8 float descriptor CPU/GPU values, outward-rounded BVH bounds and finite source-domain parity",
+      "Candidate 8 separate primary/rescue/shade state, shared budget and no render-target feedback",
+      "All three source-bound design contexts and original sources produce accepted real browser images without context loss"
+    ],
+    "performanceMethod": "wallclock draw plus gl.finish and one-pixel readPixels, not isolated GPU timer",
+    "performanceCaution": "160x112 diagnostic timings are not interactive usability or iOS device performance. Candidate10 finish-only per-pass timing was invalid due to asynchronous browser GPU execution; those zero readings are not a speedup.",
+    "cpuStatus": "candidate11_remote_305_pass",
+    "finalCpuPassCount": null,
+    "currentGpuStatus": "candidate11_840x667_kernel_initial_parity_pass_underside_one_unresolved_full_suite_failed",
+    "legacyRegressionScript": "../tests/implicit-regression.py",
+    "legacyRegressionCaution": "R03/R04/R05 use their retained mesh renderer; do not apply R06 zero-model-buffer assertion to them. Script existence is not pass evidence.",
+    "diagnosticCaution": "BVH node visits, finite assembly-plane tests, structural domain/plane tests and rail-only march steps are different metrics. 8-bit diagnostic counts saturate at 255.",
+    "candidateCpuResult": {
+      "testsPassed": 305,
+      "scope": "Remote candidate11 full CPU suite only",
+      "commit": "841edaddff623fb460b03f6302d71ae11718bcb9",
+      "githubActionsRunId": "39541312282",
+      "completeBrowserSuiteClaimed": false
+    },
+    "productionPublished": false,
+    "microbenchmarkScript": "../tests/implicit-microbench.py",
+    "performanceGatePassed": true,
+    "candidateCheckpoints": [
+      {
+        "candidate": 3,
+        "commit": "284f673",
+        "githubActionsRunId": "39533626946",
+        "cpu": {
+          "passed": 216,
+          "environment": "remote_with_baseline_vendor",
+          "scope": "that_candidate_only"
+        },
+        "webglGate": "failed",
+        "acceptedHighResolutionCapture": false,
+        "diagnostics": {
+          "renderer": "SwiftShader",
+          "warmedTimingsMs": [
+            {
+              "width": 1,
+              "height": 1,
+              "timeMs": 24.7
+            },
+            {
+              "width": 32,
+              "height": 32,
+              "timeMs": 672
+            },
+            {
+              "width": 160,
+              "height": 112,
+              "timeMs": 11750.2
+            }
+          ],
+          "geometryOnlyTimingMs": {
+            "width": 160,
+            "height": 112,
+            "timeMs": 11896.3
+          },
+          "fieldSourceCharacters": 40614,
+          "compileLinkWallMs": 56.8,
+          "measurement": "synchronized wall-clock render diagnostics, not isolated GPU timer",
+          "finalPerformanceClaimed": false
+        }
+      },
+      {
+        "candidate": 4,
+        "commit": "9688a1d",
+        "githubActionsRunId": "39534760240",
+        "cpuGate": "failed_one_outdated_source_introspection_function_name_assertion",
+        "assertionFixCommit": "670d9d75",
+        "gpuAcceptanceClaimed": false
+      },
+      {
+        "candidate": 5,
+        "githubActionsRunId": "39534938722",
+        "status": "superseded_checkpoint_no_final_result_recorded_here",
+        "performanceImprovementEstablished": false,
+        "acceptedHighResolutionCapture": false
+      },
+      {
+        "candidate": 7,
+        "commit": "dfa922d",
+        "githubActionsRunId": "39536788531",
+        "cpu": {
+          "passed": 265,
+          "environment": "remote_with_baseline_vendor",
+          "scope": "that_candidate_only"
+        },
+        "artifact": {
+          "filename": "microbench.json",
+          "sha256": "4d25d880defc7374137fe1dd5242cc86b2b9f898095ebc694f2445217484114b",
+          "inspected": true
+        },
+        "browserOutcome": "failed",
+        "errorCode": 37442,
+        "failureStage": "Lowrise original source, first tiny-frame benchmark; context lost",
+        "acceptedNewImage": false,
+        "acceptedHighResolutionCapture": false,
+        "diagnostics": {
+          "renderer": "SwiftShader",
+          "combined": {
+            "width": 32,
+            "height": 32,
+            "medianMs": 79.60000000000582,
+            "rescuePixelCount": 0,
+            "unresolved": 0
+          },
+          "kccOriginalSource": {
+            "width": 160,
+            "height": 112,
+            "medianMs": 64
+          },
+          "measurement": "wallclock draw plus gl.finish and pixel readback, not isolated GPU timer",
+          "scope": "Small diagnostic views only; not complete three-case acceptance or cross-version speedup proof"
+        }
+      },
+      {
+        "candidate": 8,
+        "status": "three_pass_and_float_descriptor_preparation_tests_GPU_pending",
+        "performanceImprovementEstablished": false,
+        "acceptedNewImage": false,
+        "productionPublished": false
+      },
+      {
+        "candidate": 10,
+        "commit": "f60d2c7e55dda095c14ed148801b4c8bd0360ae3",
+        "githubActionsRunId": "39539923046",
+        "cpuPassed": 287,
+        "fullBrowserAccepted": false,
+        "kernel160x112MedianMs": 609,
+        "kernelGateMs": 600,
+        "sourceBound160x112MedianMs": {
+          "lowrise": 105.3,
+          "kcc": 196.2,
+          "warehouse": 172.2
+        },
+        "stageTimingAccepted": false,
+        "stageTimingReason": "finish-only timings0–0.1ms did not synchronize Chromium work; replacement requires one-pixel readback within each interval"
+      },
+      {
+        "candidate": 11,
+        "commit": "841edaddff623fb460b03f6302d71ae11718bcb9",
+        "githubActionsRunId": "39541312282",
+        "cpuPassed": 305,
+        "microPerformanceGatePassed": true,
+        "warmed160x112MedianMs": {
+          "kernel": 153.5,
+          "sourceKcc": 23.3,
+          "sourceLowrise": 33.1,
+          "sourceWarehouse": 31.7,
+          "contextLowrise": 66.1,
+          "contextKcc": 131.0,
+          "contextWarehouse": 114.3
+        },
+        "underside": {
+          "pixels": 560280,
+          "unresolved": 1,
+          "rescuePixelCount": 44872,
+          "status": "failed_zero_unresolved_criterion"
+        },
+        "fullBrowserSuitePassed": false,
+        "oldVersionBrowserRegression": "not_run_due_to_prior_failure",
+        "notIosOrRealtimePerformance": true
+      },
+      {
+        "candidate": 12,
+        "commit": "74ebb24b0b12e5447fb8c76ae80fdbda8d7437ac",
+        "githubActionsRunId": "39542272290",
+        "cpuPassed": 305,
+        "legacyBrowserRegression": "R03_R04_R05_passed_unchanged",
+        "underside": {
+          "pixels": 560280,
+          "unresolved": 1,
+          "witness": {
+            "x": 161,
+            "y": 525,
+            "origin": "bottom-left",
+            "steps": 512
+          }
+        },
+        "lowrisePointParity": {
+          "samples": 100,
+          "maxDistanceErrorM": 5.804008291754315e-07,
+          "maxNormalVectorError": 2.9590048766478514e-08,
+          "identityMaterialMismatches": 4,
+          "status": "failed_numerical_identity_contract_not_shape_loss"
+        },
+        "fullBrowserSuitePassed": false,
+        "allCaseVisualAndInteractionChecksCompleted": false
+      }
+    ],
+    "contextCandidateStatus": {
+      "module": "context.mjs",
+      "sourceBoundDesignImplemented": true,
+      "appIntegrated": true,
+      "gpuAccepted": false,
+      "visualAccepted": false
+    },
+    "sourceCaptureCheckpoint": {
+      "commit": "afefe7b1ecdbcad4aaf805222026e7a07474102e",
+      "runtimeEquivalentToCandidate": 9,
+      "githubActionsRunId": "39539769941",
+      "resolution": [
+        840,
+        667
+      ],
+      "sourceCases": [
+        "lowrise",
+        "kcc",
+        "warehouse"
+      ],
+      "allSourcePatchesRetained": true,
+      "unresolvedPixelsEach": 0,
+      "fullGpuParityAccepted": false,
+      "actualInteriorsAccepted": false,
+      "images": [
+        {
+          "case": "lowrise",
+          "filename": "r06-source-lowrise-candidate.png",
+          "sha256": "11d4d74bce09b2947041d1c54c06ba561c637a3321de2c167dd7f6ff1223b911"
+        },
+        {
+          "case": "kcc",
+          "filename": "r06-source-kcc-candidate.png",
+          "sha256": "dedcd63194cfdc1f53d0728d6820efeec9640041e7be4391c889733d8ee94e15"
+        },
+        {
+          "case": "warehouse",
+          "filename": "r06-source-warehouse-candidate.png",
+          "sha256": "fef0903857c4e682d72c7508a1ae754eb9775484937e244dcc5cebccc085aea1"
+        }
+      ]
+    },
+    "nextCandidatePolicy": {
+      "preserveZeroUndersideUnresolvedCriterion": true,
+      "deferKnownFailureUntilOtherChecksComplete": true,
+      "limitedLearningPreviewIsNotFullPass": true,
+      "exhaustionNeverConvertedToMiss": true
+    }
+  },
+  "knownLimitations": [
+    "Continuous rail lacks anchors, support posts, fixings and full guards around exposed slab/stair openings.",
+    "No calibrated real core dimensions, stair geometry, actual FFL, complete floor plans or per-opening construction details.",
+    "Unsigned source shell does not define watertight occupancy, wall thickness or a closed base.",
+    "Signed authored CSG field is not an as-built interior, structural system or universally exact interior distance.",
+    "No structural, fire, accessibility or building-safety certification; not for construction, approval or escape navigation.",
+    "No complete doors/hardware, lifts, foundations, whole-building collision or navigation system.",
+    "Hybrid ray solver remains a candidate until same-revision numerical and real browser checks, including grazing/thin/boundary cases.",
+    "Original separate diagrams remain available. New source-bound designs perform selected numeric-domain containment checks, but neither establish actual interiors, complete buildings, surveyed floor labels nor safety compliance.",
+    "Full current GPU acceptance and public HTTPS verification remain pending; source exterior captures do not prove assembled interiors, fine construction detail or interactive performance."
+  ],
+  "relationDesigns": [
+    {
+      "caseId": "lowrise",
+      "sourceModelId": "B367642137201063C0",
+      "representation": "Two thick design slabs, upper stair void, one designed double-flight connector, separate shared 31–33 gate and No.33 house entry with diagram approach",
+      "evidenceBoundary": "Recorded G/F and 1/F labels do not verify design FFL, stair, aperture dimensions or placement. No lift generated is not proof no lift exists.",
+      "ownership": "Shared site serves the No.33 source building but is not assigned as exclusive No.33 property",
+      "summary": {
+        "floorCount": 2,
+        "unitCount": null,
+        "liftInterfaceCount": 0,
+        "stairConnectorCount": 1,
+        "entryKinds": [
+          "shared-site-gate",
+          "house-entry"
+        ]
+      },
+      "defaultVariables": {
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "wallHeight": 2.55,
+        "doorWidth": 1,
+        "floorHeight": 3.2,
+        "gateWidth": 4.6
+      },
+      "metricEvidence": "authored_relation_diagram_only_not_actual_interior",
+      "actualInteriorComplete": false,
+      "registrationStatus": "unverified_editable_design",
+      "placementMode": "separate_relation_diagram",
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "graphLocalFrame": {
+        "id": "B367642137201063C0:diagram-local-frame",
+        "parentFrame": "measured_source_local_east_up_south",
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "registrationStatus": "unverified_editable_design"
+      },
+      "actualPortPositionsKnown": false,
+      "certified": false
+    },
+    {
+      "caseId": "kcc",
+      "sourceModelId": "B359971994401063C0",
+      "representation": "Representative plan with six open A–F units and actual partition door cuts, common circulation/lobby, three core-owned lift interfaces and opposed stair relations",
+      "evidenceBoundary": "Six unit labels and three lift symbols are drawing observations only within the published plan families. All room shapes, corridor widths, aperture positions and core dimensions are authored.",
+      "ownership": "Lift interfaces owned by one shared core, linked to representative plan through service relations; no verified stop schedule or generated podium",
+      "summary": {
+        "floorCount": 1,
+        "representativePlanOnly": true,
+        "unitCount": 6,
+        "liftInterfaceCount": 3,
+        "stairConnectorCount": 1,
+        "entryKinds": [
+          "unit-doors",
+          "shared-lift-lobby"
+        ],
+        "podiumGeometryGenerated": false
+      },
+      "defaultVariables": {
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "wallHeight": 2.55,
+        "doorWidth": 1,
+        "corridorWidth": 8,
+        "liftDoorWidth": 1.1
+      },
+      "metricEvidence": "authored_relation_diagram_only_not_actual_interior",
+      "actualInteriorComplete": false,
+      "registrationStatus": "unverified_editable_design",
+      "placementMode": "separate_relation_diagram",
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "graphLocalFrame": {
+        "id": "B359971994401063C0:diagram-local-frame",
+        "parentFrame": "measured_source_local_east_up_south",
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "registrationStatus": "unverified_editable_design"
+      },
+      "actualPortPositionsKnown": false,
+      "certified": false
+    },
+    {
+      "caseId": "warehouse",
+      "sourceModelId": "B369121858401063C0",
+      "representation": "Open storage with distinct wide vehicle and narrow personnel entrances, separate approach paths, loading work zone and one freight-function symbol",
+      "evidenceBoundary": "Historical entry-function distinction does not locate current doors. The one freight symbol is not a real lift count and does not validate the broker-reported nine.",
+      "ownership": "Function-specific vehicle, personnel and freight interfaces remain distinct; no inferred residential units or column grid",
+      "summary": {
+        "floorCount": 1,
+        "representativePlanOnly": true,
+        "unitCount": 0,
+        "liftInterfaceCount": null,
+        "freightInterfaceSymbols": 1,
+        "actualFreightLiftCount": null,
+        "entryKinds": [
+          "vehicle-entry",
+          "personnel-entry",
+          "freight-interface"
+        ],
+        "podiumGeometryGenerated": false
+      },
+      "defaultVariables": {
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "wallHeight": 4.2,
+        "doorWidth": 1,
+        "vehicleWidth": 4.6,
+        "freightDoorWidth": 2.6
+      },
+      "metricEvidence": "authored_relation_diagram_only_not_actual_interior",
+      "actualInteriorComplete": false,
+      "registrationStatus": "unverified_editable_design",
+      "placementMode": "separate_relation_diagram",
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "graphLocalFrame": {
+        "id": "B369121858401063C0:diagram-local-frame",
+        "parentFrame": "measured_source_local_east_up_south",
+        "alignmentTransform": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawRadians": 0
+        },
+        "registrationStatus": "unverified_editable_design"
+      },
+      "actualPortPositionsKnown": false,
+      "certified": false
+    }
+  ],
+  "officialFootprintEvidence": {
+    "path": "sources/official-footprints.json",
+    "sha256": "97eebb40d8cb7e480e0614857076d03599ccaafadafb99041cb951fa51294f9e",
+    "sourceDataset": "Lands Department CSDI Building",
+    "retrievedUTC": "2026-10-21",
+    "coordinateReferenceSystem": "EPSG:2326; heights mPD",
+    "attribution": "© The Government of the Hong Kong Special Administrative Region. Lands Department / Common Spatial Data Infrastructure.",
+    "termsUrl": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC",
+    "evidenceKind": "official_2D_footprint_rings_and_published_attributes_not_recovered_measured_3D",
+    "usageBoundary": "Official 2D footprint rings and published height attributes. Any vertical extrusion, interior plate, doorway or core is a separate inferred/design field, not recovered measured 3D or as-built interior. DateStamp is the feature timestamp, not a verified survey date. Storey counts are per source component and must not be blindly summed.",
+    "partCount": 5,
+    "parts": [
+      {
+        "caseId": "lowrise",
+        "componentId": "3676421372T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D47805&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 47805,
+          "Shape__Length": 77.27322178988389,
+          "Shape__Area": 202.47031488576536,
+          "GeoRefNo": "3676421372",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3676421372T20050430",
+          "BuildingID": 1108226247,
+          "Status": "Active",
+          "BuildingNameEN": null,
+          "BuildingNameTC": null,
+          "BaseHeight": 26,
+          "TopHeight": 33.7,
+          "Storeys": 2,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 16
+      },
+      {
+        "caseId": "kcc",
+        "componentId": "3600619942P20060311",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D229126&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 229126,
+          "Shape__Length": 150.0424815866263,
+          "Shape__Area": 1114.0892625182385,
+          "GeoRefNo": "3600619942",
+          "DateCreate": 1142006400000,
+          "BuildingBlockType": "Podium",
+          "BuildingCSUID": "3600619942P20060311",
+          "BuildingID": 1108246367,
+          "Status": "Active",
+          "BuildingNameEN": "KOWLOON CHAMBER OF COMMERCE BUILDING",
+          "BuildingNameTC": "九龍總商會大廈",
+          "BaseHeight": 8,
+          "TopHeight": 22.4,
+          "Storeys": 4,
+          "StoreysInBasement": 1,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 21
+      },
+      {
+        "caseId": "kcc",
+        "componentId": "3599719944T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D235909&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 235909,
+          "Shape__Length": 132.45097399494753,
+          "Shape__Area": 392.15994703904505,
+          "GeoRefNo": "3599719944",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3599719944T20050430",
+          "BuildingID": 1108235473,
+          "Status": "Active",
+          "BuildingNameEN": "K.C.C. Building",
+          "BuildingNameTC": "龍總大廈",
+          "BaseHeight": 22.4,
+          "TopHeight": 90.9,
+          "Storeys": 24,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 29
+      },
+      {
+        "caseId": "warehouse",
+        "componentId": "3691218584T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D158577&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 158577,
+          "Shape__Length": 189.52659539820874,
+          "Shape__Area": 2329.776236010047,
+          "GeoRefNo": "3691218584",
+          "DateCreate": 1114790400000,
+          "BuildingBlockType": "Tower",
+          "BuildingCSUID": "3691218584T20050430",
+          "BuildingID": 1108241445,
+          "Status": "Active",
+          "BuildingNameEN": "China Travel Hip Kee Godown Co. (H.K.) Ltd. Godown No.2",
+          "BuildingNameTC": "香港中旅協記貨倉有限公司第二倉",
+          "BaseHeight": 17.5,
+          "TopHeight": 51.7,
+          "Storeys": 12,
+          "StoreysInBasement": null,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 10
+      },
+      {
+        "caseId": "warehouse",
+        "componentId": "3690318597P20060311",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D237016&outFields=%2A&returnGeometry=true&f=json",
+        "attributes": {
+          "OBJECTID": 237016,
+          "Shape__Length": 218.8727605828767,
+          "Shape__Area": 3115.6254814995486,
+          "GeoRefNo": "3690318597",
+          "DateCreate": 1142006400000,
+          "BuildingBlockType": "Podium",
+          "BuildingCSUID": "3690318597P20060311",
+          "BuildingID": 1108247084,
+          "Status": "Active",
+          "BuildingNameEN": "CHINA TRAVEL HIP KEE GODOWN HONG KONG LIMITED (GODOWN NO 2)",
+          "BuildingNameTC": "香港中旅協記貨倉有限公司(第二倉)",
+          "BaseHeight": 4,
+          "TopHeight": 17.5,
+          "Storeys": 2,
+          "StoreysInBasement": 2,
+          "DateStamp": 1599580800000
+        },
+        "ringCount": 1,
+        "closedRingCoordinateRecords": 15
+      }
+    ],
+    "possibleDerivedUses": [
+      "separately_labelled_inferred_podium_extrusion",
+      "separately_labelled_design_slab"
+    ],
+    "sourceMeasuredShellClosureAllowed": false,
+    "newSourceBoundAssemblyImplemented": true,
+    "uiOrGPUAcceptanceClaimed": false,
+    "implementedUses": [
+      "No.33 OBJECTID 47805 authored two-floor layer",
+      "Warehouse separate podium OBJECTID 237016 inferred hollow perimeter and authored slabs"
+    ],
+    "uiIntegrationImplemented": true
+  },
+  "sourceBoundDesigns": [
+    {
+      "caseId": "lowrise",
+      "sourceModelId": "B367642137201063C0",
+      "counts": {
+        "primitives": 11,
+        "analyticBoundaryPlanes": 122,
+        "modelTriangles": 0,
+        "modelVertexBuffers": 0
+      },
+      "summary": {
+        "floorCount": 2,
+        "unitCount": null,
+        "liftInterfaceCount": 0,
+        "stairConnectorCount": 1,
+        "entryKinds": [
+          "shared-site-gate",
+          "house-entry"
+        ]
+      },
+      "placementMode": "source_bound_design_layer",
+      "registrationStatus": "source_footprint_anchored_interiors_assumed",
+      "sourceBinding": {
+        "kind": "official_2d_footprint_and_height_for_authored_3d",
+        "sourceModelId": "B367642137201063C0",
+        "officialObjectId": 47805,
+        "componentId": "3676421372T20050430",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D47805&outFields=%2A&returnGeometry=true&f=json",
+        "heightAttributes": {
+          "baseMpd": 26,
+          "topMpd": 33.7
+        },
+        "designedFloorLocalY": -0.06899955749511719,
+        "floorElevationEvidence": "authored_design_not_measured_FFL",
+        "assumedPortalEdges": [
+          {
+            "role": "house-entry",
+            "edge": 11
+          }
+        ],
+        "originalMeasuredSourceUnchanged": true,
+        "interiorPlacement": "editable_and_assumed",
+        "attribution": "© The Government of the Hong Kong Special Administrative Region. Lands Department / Common Spatial Data Infrastructure.",
+        "termsUrl": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC"
+      },
+      "defaultVariables": {
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "wallHeight": 2.55,
+        "doorWidth": 1,
+        "floorHeight": 3.2,
+        "gateWidth": 4.6,
+        "interiorTranslationXZ": [
+          0,
+          0
+        ],
+        "interiorYawRadians": 0
+      },
+      "fitChecks": {
+        "status": "source_bound_design_checks_passed",
+        "allPhysicalProjectedBoundariesChecked": true,
+        "checkedPrimitives": 8,
+        "coreToSharedBoundaryMinimumClearance": null,
+        "externalSiteObjectsExcluded": [
+          "B367642137201063C0:source-shared-gate"
+        ],
+        "exclusionReason": "shared_site_boundary_unknown_not_part_of_no33_footprint",
+        "actualAsBuiltPlacementVerified": false,
+        "structuralOrFireSafetyCertification": false
+      },
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "actualInteriorComplete": false,
+      "gpuAndVisualAccepted": false
+    },
+    {
+      "caseId": "kcc",
+      "sourceModelId": "B359971994401063C0",
+      "counts": {
+        "primitives": 36,
+        "analyticBoundaryPlanes": 278,
+        "modelTriangles": 0,
+        "modelVertexBuffers": 0
+      },
+      "summary": {
+        "floorCount": 1,
+        "receivingLandingCount": 1,
+        "receivingLandingRise": 3,
+        "representativePlanOnly": true,
+        "unitCount": 6,
+        "liftInterfaceCount": 3,
+        "stairConnectorCount": 1,
+        "podiumGeometryGenerated": false,
+        "unitWingAssignment": "editable_assumption_not_registered_to_plan"
+      },
+      "placementMode": "source_bound_design_layer",
+      "registrationStatus": "source_footprint_anchored_interiors_assumed",
+      "sourceBinding": {
+        "kind": "exact_measured_surface_section_for_authored_floor",
+        "sourceModelId": "B359971994401063C0",
+        "officialObjectId": null,
+        "componentId": null,
+        "sourceUrl": "kaopu-geography-workbench/hk-three-buildings-r01/geometry/B359971994401063C0.score.json",
+        "heightAttributes": null,
+        "designedFloorLocalY": 16.146692144600003,
+        "floorElevationEvidence": "authored_design_not_measured_FFL",
+        "assumedPortalEdges": [
+          {
+            "role": "unit-A",
+            "innerChord": [
+              19,
+              2
+            ]
+          },
+          {
+            "role": "unit-B",
+            "innerChord": [
+              2,
+              5
+            ]
+          },
+          {
+            "role": "unit-C",
+            "innerChord": [
+              5,
+              8
+            ]
+          },
+          {
+            "role": "unit-D",
+            "innerChord": [
+              9,
+              12
+            ]
+          },
+          {
+            "role": "unit-E",
+            "innerChord": [
+              12,
+              15
+            ]
+          },
+          {
+            "role": "unit-F",
+            "innerChord": [
+              15,
+              18
+            ]
+          }
+        ],
+        "originalMeasuredSourceUnchanged": true,
+        "interiorPlacement": "editable_and_assumed",
+        "attribution": null,
+        "termsUrl": null
+      },
+      "defaultVariables": {
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "wallHeight": 2.55,
+        "doorWidth": 1,
+        "liftDoorWidth": 1,
+        "coreWidth": 3.6,
+        "minimumCoreClearance": 0.85,
+        "stairFloorHeight": 3,
+        "interiorTranslationXZ": [
+          0,
+          0
+        ],
+        "interiorYawRadians": 0.375
+      },
+      "fitChecks": {
+        "status": "source_bound_design_checks_passed",
+        "allPhysicalProjectedBoundariesChecked": true,
+        "checkedPrimitives": 36,
+        "coreToSharedBoundaryMinimumClearance": 1.0550673155520105,
+        "externalSiteObjectsExcluded": [],
+        "exclusionReason": null,
+        "actualAsBuiltPlacementVerified": false,
+        "structuralOrFireSafetyCertification": false
+      },
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "actualInteriorComplete": false,
+      "gpuAndVisualAccepted": false
+    },
+    {
+      "caseId": "warehouse",
+      "sourceModelId": "B369121858401063C0",
+      "counts": {
+        "primitives": 25,
+        "analyticBoundaryPlanes": 178,
+        "modelTriangles": 0,
+        "modelVertexBuffers": 0
+      },
+      "summary": {
+        "floorCount": 2,
+        "officialComponentStoreys": 2,
+        "floorSpacing": "editable_inference_not_measured_FFL",
+        "unitCount": 0,
+        "liftInterfaceCount": null,
+        "actualFreightLiftCount": null,
+        "freightInterfaceSymbols": 1,
+        "podiumGeometryGenerated": true,
+        "podiumGeometryEvidence": "official_2d_and_height_inferred_not_measured_3d",
+        "entryKinds": [
+          "vehicle-entry",
+          "personnel-entry",
+          "freight-interface"
+        ]
+      },
+      "placementMode": "source_bound_design_layer",
+      "registrationStatus": "source_footprint_anchored_interiors_assumed",
+      "sourceBinding": {
+        "kind": "official_2d_footprint_and_height_for_authored_3d",
+        "sourceModelId": "B369121858401063C0",
+        "officialObjectId": 237016,
+        "componentId": "3690318597P20060311",
+        "sourceUrl": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=OBJECTID%3D237016&outFields=%2A&returnGeometry=true&f=json",
+        "heightAttributes": {
+          "baseMpd": 4,
+          "topMpd": 17.5
+        },
+        "designedFloorLocalY": -13.303000717163085,
+        "floorElevationEvidence": "authored_design_not_measured_FFL",
+        "assumedPortalEdges": [
+          {
+            "role": "vehicle-and-people-entry",
+            "edge": 0,
+            "positionEvidence": "assumed"
+          }
+        ],
+        "originalMeasuredSourceUnchanged": true,
+        "interiorPlacement": "editable_and_assumed",
+        "attribution": "© The Government of the Hong Kong Special Administrative Region. Lands Department / Common Spatial Data Infrastructure.",
+        "termsUrl": "https://portal.csdi.gov.hk/csdi-webpage/doc/TNC"
+      },
+      "defaultVariables": {
+        "slabThickness": 0.22,
+        "wallThickness": 0.14,
+        "doorWidth": 1,
+        "vehicleWidth": 4.6,
+        "freightDoorWidth": 2.6,
+        "interiorTranslationXZ": [
+          0,
+          0
+        ],
+        "interiorYawRadians": 0
+      },
+      "fitChecks": {
+        "status": "source_bound_design_checks_passed",
+        "allPhysicalProjectedBoundariesChecked": true,
+        "checkedPrimitives": 25,
+        "coreToSharedBoundaryMinimumClearance": null,
+        "externalSiteObjectsExcluded": [],
+        "exclusionReason": null,
+        "actualAsBuiltPlacementVerified": false,
+        "structuralOrFireSafetyCertification": false
+      },
+      "sourceViewUnchanged": true,
+      "sourceTransformApplied": false,
+      "actualInteriorComplete": false,
+      "gpuAndVisualAccepted": false
+    }
+  ]
+}
