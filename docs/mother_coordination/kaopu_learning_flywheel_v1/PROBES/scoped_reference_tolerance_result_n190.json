@@ -1,0 +1,21 @@
+{
+  "allExpectedOutcomesMatched": true,
+  "caseCount": 10,
+  "fixtureDigest": "956297c6d9115b529d23f551fa37ab0b7bcbc8ff775eda48df29242ac4fec30e",
+  "interpretation": "A user relaxation applies only to named fields. Provisional color may coexist with strict identity, current-source, geometry/openings, and material-class requirements; it cannot be promoted to final acceptance or expanded globally.",
+  "passed": 10,
+  "probeKind": "synthetic_field_scoped_tolerance_contract_not_asset_validation",
+  "results": [
+    {"actual": true, "expected": true, "failures": [], "name": "strict facts verified, color explicitly provisional", "pass": true},
+    {"actual": false, "expected": false, "failures": ["STRICT_FIELD_FAILED:materialClass"], "name": "wrong material hidden by acceptable color", "pass": true},
+    {"actual": false, "expected": false, "failures": ["STRICT_FIELD_FAILED:referenceRecency"], "name": "old photo used instead of requested latest state", "pass": true},
+    {"actual": false, "expected": false, "failures": ["STRICT_FIELD_FAILED:buildingIdentity"], "name": "wrong building identity", "pass": true},
+    {"actual": false, "expected": false, "failures": ["STRICT_FIELD_FAILED:facadeGeometryAndOpenings"], "name": "generic facade and openings", "pass": true},
+    {"actual": false, "expected": false, "failures": ["GLOBAL_RELAXATION_FORBIDDEN"], "name": "single relaxed phrase expanded globally", "pass": true},
+    {"actual": false, "expected": false, "failures": ["USER_INSTRUCTION_NOT_BOUND"], "name": "unbound user instruction", "pass": true},
+    {"actual": false, "expected": false, "failures": ["PROVISIONAL_CLAIMED_FINAL:colorTone"], "name": "provisional color claimed final", "pass": true},
+    {"actual": false, "expected": false, "failures": ["STRICT_FIELD_FAILED:materialClass"], "name": "material class incorrectly downgraded to provisional", "pass": true},
+    {"actual": true, "expected": true, "failures": [], "name": "all strict facts and exact color verified", "pass": true}
+  ],
+  "schemaVersion": "n190-v1"
+}
