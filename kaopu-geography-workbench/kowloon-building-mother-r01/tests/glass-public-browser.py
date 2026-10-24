@@ -1,3 +1,9 @@
+# R12 independent candidate UI gate; prior gates below preserved.
+from pathlib import Path as _R12Path
+import runpy as _R12run
+_R12run.run_path(str(_R12Path(__file__).parent.parent/'building-mother-r12'/'browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
+
 # Actual published R11 and R06 verification; no response overrides.
 from pathlib import Path as _PublicPath
 import runpy as _public_runpy

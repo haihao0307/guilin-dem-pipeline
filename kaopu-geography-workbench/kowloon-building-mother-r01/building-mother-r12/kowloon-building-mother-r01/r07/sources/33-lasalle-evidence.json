@@ -1,0 +1,107 @@
+{
+  "caseId": "B367642137201063C0",
+  "researchedAt": "2026-10-21",
+  "displayName": "喇沙利道33號 / 33 La Salle Road",
+  "identityStatus": "Address identity cross-checked; no separate proper building name verified.",
+  "verified": [
+    {
+      "field": "model_to_official_feature",
+      "value": "The model anchor EPSG:2326 (836766.125, 821374) intersects official Building feature OBJECTID 47805, GeoRefNo 3676421372, BuildingCSUID 3676421372T20050430, BuildingID 1108226247.",
+      "source": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?geometry=836766.125%2C821374&geometryType=esriGeometryPoint&inSR=2326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=true&f=json",
+      "sourceType": "Official Lands Department CSDI data",
+      "coverage": "One building feature, not the entire combined 31–33 premises."
+    },
+    {
+      "field": "storeys",
+      "value": 2,
+      "labels": [
+        "G/F",
+        "1/F"
+      ],
+      "sources": [
+        "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?where=GeoRefNo%3D%273676421372%27&outFields=%2A&returnGeometry=true&f=json",
+        "https://hk.centanet.com/centaestimate/en/estate-33-La-Salle-Road_1-UJFDFRSSRO",
+        "https://hk.centanet.com/estate/en/33-La-Salle-Road/2-UJFDFRSSRO"
+      ],
+      "sourceDate": "CSDI DateStamp 2020-09-09 Hong Kong time; Centaline checked 2026-10-21",
+      "caveat": "Official Storeys=2, corroborated by property-service 2-floor description and unit grid. Do not count a rooftop enclosure as an independently verified third occupied storey."
+    },
+    {
+      "field": "address_and_use",
+      "value": "33 La Salle Road, Kowloon Tong, Kowloon City District; private residential; 2 units.",
+      "source": "https://hk.centanet.com/estate/en/33-La-Salle-Road/2-UJFDFRSSRO",
+      "mapCheck": "Publisher map point 22.331397, 114.181594 is approximately 12 m from the supplied model anchor; Centamap pointer is EPSG:2326 836759, 821371.",
+      "coverage": "No. 33. OneDay separately groups photographs as 31–33."
+    },
+    {
+      "field": "occupation_date",
+      "value": "1957-08",
+      "source": "https://hk.centanet.com/estate/en/33-La-Salle-Road/2-UJFDFRSSRO",
+      "confidence": "Property-service record, not independently checked against the actual occupation permit.",
+      "caveat": "CSDI DateCreate 2005-04-30 is a record-creation date, not building completion."
+    },
+    {
+      "field": "official_geometry_attributes",
+      "value": {
+        "BuildingNameEN": null,
+        "BuildingNameTC": null,
+        "BuildingBlockType": "Tower",
+        "Status": "Active",
+        "BaseHeight": 26,
+        "TopHeight": 33.7,
+        "StoreysInBasement": null
+      },
+      "source": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/47805?f=pjson",
+      "caveat": "Tower is the dataset's feature class, not a claim of a high-rise. Basement null means unknown, not zero. Attribute elevation difference 7.7 m is distinct from the existing glTF vertical bounding extent 10.913 m; retain both provenance labels."
+    }
+  ],
+  "actualPhotoReferences": [
+    {
+      "url": "https://n.oneday.com.hk/im/SDAZTHwMTRG.jpg",
+      "sourcePage": "https://www.oneday.com.hk/en_US/buildings/31-33-la-salle-road/",
+      "coverage": "31–33 street boundary and gate; No.33 interior door not separately identifiable.",
+      "observed": "A large metal vehicular gate, brick gateposts/beam, small side utility boxes, boundary railings; the address marking 31–33 is visible on the left pillar. Upper façade has windows, external air-conditioning equipment and a projecting horizontal edge.",
+      "date": "Photograph date not stated on the inspected source.",
+      "reuse": "Reference link only. Public asset republication permission not established."
+    },
+    {
+      "url": "https://n.oneday.com.hk/im/WqEbNBROgyq.jpg",
+      "sourcePage": "https://www.oneday.com.hk/en_US/buildings/31-33-la-salle-road/",
+      "coverage": "Oblique partial façade behind boundary fence, labeled as combined 31–33 premises.",
+      "observed": "Rectangular multi-part windows with security bars, pale external walls, horizontal projecting roof or balcony edges, roof perimeter balustrade, tall boundary metal fence above masonry.",
+      "date": "Unknown",
+      "reuse": "Reference link only. Public asset republication permission not established."
+    },
+    {
+      "url": "https://n.oneday.com.hk/im/NkRmXyWXotL.jpg",
+      "sourcePage": "https://www.oneday.com.hk/en_US/buildings/31-33-la-salle-road/",
+      "coverage": "Wider low-rise frontage with substantial tree and shadow occlusion, grouped 31–33.",
+      "observed": "Low-rise massing, boundary fence, rooftop balustrade and planted front setback.",
+      "date": "Unknown",
+      "reuse": "Reference link only. Public asset republication permission not established."
+    }
+  ],
+  "inferredNotSurveyed": [
+    "The 31–33 gate is a vehicular entrance based on its width, construction and road-facing placement; its exact operating mechanism and whether it is the sole pedestrian access are unverified.",
+    "Some upper window elements in the gate photograph appear to project outward, but the exact sash mechanism, the particular No.33 window allocation and opening angles are not secure enough to assert as measured facts."
+  ],
+  "unknown": [
+    "No.33-specific main building door location and dimensions, distinct from the verified shared boundary gate.",
+    "Rear or service doors, their count and positions.",
+    "Stair count, location, direction, flight width and riser count.",
+    "Lift presence or absence.",
+    "Room layout, interior partitions and circulation.",
+    "Per-window opening mechanism, exact frame profile, frame setback or reveal depth.",
+    "Rooftop enclosure function, internal accessibility and any basement.",
+    "Current as-built changes after the source records or undated photographs."
+  ],
+  "plansSearch": {
+    "result": "No free, publicly downloadable No.33 interior plan verified in this research pass.",
+    "scope": "Exact-address English/Chinese searches, Centaline page and its embedded floorPlans/siteFloorPlans arrays (empty), OneDay, targeted plan and architecture searches.",
+    "officialPotentialRoute": "https://www.bd.gov.hk/en/resources/online-tools/BRAVO-online-building-records/index.html",
+    "feesReference": "https://bravo.bd.gov.hk/charges",
+    "restriction": "BRAVO requires account registration and paid inspection. No account creation, private-record request, purchase or plan acquisition performed. Building-specific plan availability therefore remains unverified."
+  },
+  "modelingGuidance": "Enough evidence to describe a two-storey 1950s private low-rise and build its measured exterior shell with source-linked reference façade features. Any added interior stair, rear door, lift decision, sash behavior or numerical frame depth must be a replaceable design assumption, visibly separate from observed geometry. Preserve the exact source feature rather than merging No.31 into No.33.",
+  "publication": "Facts, attribution and reference links only. External reference photographs/plans are not redistributed; no reuse license is claimed."
+}
