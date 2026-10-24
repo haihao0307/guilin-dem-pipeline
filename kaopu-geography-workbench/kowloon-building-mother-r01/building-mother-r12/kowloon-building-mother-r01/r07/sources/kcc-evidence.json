@@ -1,0 +1,275 @@
+{
+  "title": "龍總大廈 / 九龍總商會大廈 evidence ledger",
+  "checked_at_utc": "2026-10-21T01:53:00Z",
+  "purpose": "Describe the identified building for a game/worldbuilding workbench; distinguish facts, drawing observations, inference and unknowns. Do not substitute this for building/fire-safety documentation.",
+  "identity": {
+    "status": "verified_coordinate_match",
+    "source_model_id": "B359971994401063C0",
+    "anchor_hk1980_epsg2326": [
+      836004.8125,
+      819943.3125
+    ],
+    "approx_wgs84": [
+      114.174319887,
+      22.31849081
+    ],
+    "tower": {
+      "name_en": "K.C.C. Building",
+      "name_zh": "龍總大廈",
+      "alias_zh": "九龍總商會大廈",
+      "georef": "3599719944",
+      "building_csuid": "3599719944T20050430",
+      "building_id": 1108235473,
+      "structure_id": 1102060
+    },
+    "podium": {
+      "name_zh": "九龍總商會大廈",
+      "georef": "3600619942",
+      "building_csuid": "3600619942P20060311",
+      "building_id": 1108246367,
+      "structure_id": 1102033
+    },
+    "address": "2 Liberty Avenue, Ho Man Tin, Kowloon / 九龍何文田自由道2號",
+    "lot": "KIL 1333 (RP)",
+    "occupation_permit": "K42/84",
+    "occupation_permit_date_hong_kong": "1984-08-31",
+    "match_method": "The exact anchor intersects the official tower footprint and its separately represented podium. Source model ID contains the same GeoRefNo. This is not assignment by nearest POI. The original 3D-ID crosswalk itself has not been re-downloaded."
+  },
+  "sources": [
+    {
+      "id": "S01",
+      "kind": "primary_government",
+      "title": "LandsD Building exact-point query",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?f=pjson&returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=836004.8125%2C819943.3125&geometryType=esriGeometryPoint&inSR=2326&outSR=2326&outFields=%2A",
+      "local_reference": "building_point.json",
+      "coverage": "Intersecting footprint polygons and attributes; tower versus podium; not interior."
+    },
+    {
+      "id": "S02",
+      "kind": "primary_government",
+      "title": "LandsD Building names",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/1001/query?f=pjson&where=BuildingCSUID+IN+%28%273599719944T20050430%27%2C%273600619942P20060311%27%29&outFields=%2A&returnGeometry=false",
+      "local_reference": "table_1001_result.json",
+      "coverage": "Tower alias and RVD/LandsD names."
+    },
+    {
+      "id": "S03",
+      "kind": "primary_government",
+      "title": "LandsD Building to OP structure",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/1002/query?f=pjson&where=BuildingCSUID+IN+%28%273599719944T20050430%27%2C%273600619942P20060311%27%29&outFields=%2A&returnGeometry=false",
+      "local_reference": "table_1002_result.json"
+    },
+    {
+      "id": "S04",
+      "kind": "primary_government",
+      "title": "LandsD OPStructure",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/1003/query?f=pjson&where=BuildingStructureID+IN+%281102060%2C1102033%29&outFields=%2A&returnGeometry=false",
+      "local_reference": "table_1003_result.json",
+      "coverage": "Both parts share occupation permit K42/84. Tower: 24 storeys. Podium: 4 storeys and 1 basement."
+    },
+    {
+      "id": "S05",
+      "kind": "primary_government",
+      "title": "LandsD occupation permit",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/1004/query?f=pjson&where=OPNo%3D%27K42%2F84%27&outFields=%2A&returnGeometry=false",
+      "local_reference": "table_1004_result.json",
+      "coverage": "OPDate 462729600000 represents 1984-08-31 in Hong Kong. GFA = 0 must not be treated as the actual floor area."
+    },
+    {
+      "id": "S06",
+      "kind": "primary_government",
+      "title": "LandsD BuildingLotNoInfo",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/1005/query?f=pjson&where=BuildingStructureID+IN+%281102060%2C1102033%29&outFields=%2A&returnGeometry=false",
+      "local_reference": "table_1005_result.json",
+      "coverage": "Both structures are recorded on KIL 1333 (RP)."
+    },
+    {
+      "id": "S07",
+      "kind": "primary_building_institution",
+      "title": "Kowloon Chamber of Commerce official history",
+      "url": "https://hkkcc.org.hk/about-kcc/introduction?lang=zh",
+      "date": "Undated live history page, checked 2026-10-21",
+      "coverage": "Address: 2 Liberty Avenue. Redeveloped as a 28-storey building, completed September 1984. Chamber address: 3/F."
+    },
+    {
+      "id": "S08",
+      "kind": "primary_government",
+      "title": "Land Registry Owners Corporation Index, printed page329",
+      "url": "https://www.landreg.gov.hk/pdf/tc/oi_hkkl.pdf#page=329",
+      "coverage": "龍總大廈 at九龍自由道2號; corporation5244."
+    },
+    {
+      "id": "S09",
+      "kind": "published_property_plan",
+      "title": "龍總大廈5/F至17/F平面圖",
+      "url": "https://hkfloorplan.centanet.com/img/img.aspx?dir=202203&name=22cpal00152441SSHJHSQR.jpg",
+      "local_reference": "plan2.jpg",
+      "drawing_date": "Not printed. The 202203 directory is a hosting path, not a drawing date.",
+      "coverage": "5/F–17/F only. No scale, north arrow, certification or dimension schedule. Recesses are labelled 六樓平台.",
+      "publication_caution": "Centaline-hosted property information drawing, not proven original architect/approved plan. Read for indicative topology; do not republish full image without permission."
+    },
+    {
+      "id": "S10",
+      "kind": "published_property_plan",
+      "title": "龍總大廈18/F至26/F平面圖",
+      "url": "https://hkfloorplan.centanet.com/img/img.aspx?dir=202203&name=22cpal00152442GYWTOAVC.jpg",
+      "local_reference": "plan3.jpg",
+      "drawing_date": "Not printed. The 202203 directory is a hosting path, not a drawing date.",
+      "coverage": "18/F–26/F only. No scale, north arrow, certification or dimension schedule.",
+      "publication_caution": "Centaline-hosted property information drawing; read for indicative topology, do not republish full image without permission."
+    },
+    {
+      "id": "S11",
+      "kind": "publisher_original_photo",
+      "title": "Centaline exterior photo: signed chamber entrance",
+      "url": "https://hkais.centanet.com/PostImages/F8/9D/ECFA97C34C3C890391C121D6D94E-1.jpg?d=1",
+      "local_reference": "outlook0.jpg",
+      "date": "Undated",
+      "coverage": "Signed KCC glazed entrance at the podium. Not proof of its relationship to the residential main lobby or its compass orientation.",
+      "publication_caution": "Reference/link only; no reuse license established."
+    },
+    {
+      "id": "S12",
+      "kind": "publisher_original_photo",
+      "title": "Centaline exterior photo: tower and podium",
+      "url": "https://hkais.centanet.com/PostImages/7F/FC/94470344494C8509C6B7AFEBDC90-1.jpg?d=1",
+      "local_reference": "outlook1.jpg",
+      "date": "Undated",
+      "coverage": "Tower on larger podium; visible framed rectangular windows and external AC units; not calibrated dimensions.",
+      "publication_caution": "Reference/link only; no reuse license established."
+    },
+    {
+      "id": "S13",
+      "kind": "primary_government",
+      "title": "2021 Legislative Council polling station G0802 map",
+      "url": "https://www.elections.gov.hk/legco2021/pdf/G0802.pdf",
+      "local_reference": "election_2021_G0802.pdf",
+      "date": "2021, REO/P_M1/2021LC",
+      "coverage": "The same distinctive winged tower footprint and address: 2/F, KCC Building, 2 Liberty Avenue. No entrance position is marked."
+    },
+    {
+      "id": "S14",
+      "kind": "primary_manufacturer",
+      "title": "OPTIMIX RM700 Window Frame Grout selected project reference",
+      "url": "https://www.optimix.com.hk/Product_Photo/files/OPTIMIX_RM700_Job%20Reference.pdf",
+      "date": "2022-06",
+      "coverage": "Page 2, item 33 lists the exact building and address. Does not establish installation scope, opening type, material, window manufacturer or depth."
+    },
+    {
+      "id": "S15",
+      "kind": "primary_government",
+      "title": "LandsD Building dataset metadata",
+      "url": "https://portal.csdi.gov.hk/csdi-webpage/metadata/landsd_rcd_1637211194312_35158/html",
+      "date": "Dataset revision: 2026-09-21. Metadata stamp: 2026-09-22.",
+      "coverage": "EPSG:2326; monthly updates; stated position accuracy 0.015–1.500 m. This is not a per-feature survey date."
+    },
+    {
+      "id": "S16",
+      "kind": "primary_government",
+      "title": "EDB quality review of HKVNS Alumni Association Kindergarten (KCC)",
+      "url": "https://www.edb.gov.hk/attachment/tc/edu-system/preprimary-kindergarten/quality-assurance-framework/qr/qr-report/HKVNS_KCC.pdf",
+      "date": "Review visits: 2022-10-25, 2022-10-26 and 2022-10-28.",
+      "coverage": "Kindergarten occupies part of G/F and 1/F. Use context only; no private pupil data collected."
+    }
+  ],
+  "verified_facts": [
+    {
+      "claim": "The whole building has 28 above-ground storeys: a 24-storey tower component over a 4-storey podium. One basement is recorded separately.",
+      "sources": [
+        "S01",
+        "S04",
+        "S07"
+      ],
+      "note": "The 28-storey count is independently stated by KCC, not inferred from height. Floor labels and individual floor heights are separate questions."
+    },
+    {
+      "claim": "Both parts share lot KIL 1333 (RP) and occupation permit K42/84.",
+      "sources": [
+        "S03",
+        "S04",
+        "S06"
+      ]
+    },
+    {
+      "claim": "The occupation permit date is 1984-08-31 in Hong Kong. KCC states completion in September 1984.",
+      "sources": [
+        "S05",
+        "S07"
+      ],
+      "note": "These are distinct milestones, not necessarily a contradiction."
+    },
+    {
+      "claim": "Tower attributes: BaseHeight = 22.4, TopHeight = 90.9. Podium: BaseHeight = 8, TopHeight = 22.4.",
+      "sources": [
+        "S01"
+      ],
+      "note": "Preserve the source fields. The tower attribute difference is 68.5 m, whereas the supplied local mesh span is 70.20 m. Do not force them to match or infer floor heights."
+    }
+  ],
+  "drawing_observations": [
+    {
+      "claim": "Both floor-plan ranges show six units, A–F, around the central circulation core.",
+      "sources": [
+        "S09",
+        "S10"
+      ],
+      "confidence": "High as drawn.",
+      "limit": "Not proof of every present-day floor. Does not cover 4/F, 27/F, ground floor, podium or roof."
+    },
+    {
+      "claim": "Three labelled lifts sit in one row with an adjacent electrical meter room. A lift lobby separates the lifts from the stair core.",
+      "sources": [
+        "S09",
+        "S10"
+      ],
+      "confidence": "High as drawn.",
+      "limit": "No lift capacity, maker, speed, stopping schedule or current operational status."
+    },
+    {
+      "claim": "The central stair zone depicts two routes entered at opposite ends, with opposed up/down flights.",
+      "sources": [
+        "S09",
+        "S10"
+      ],
+      "confidence": "High for drawn topology.",
+      "interpretation": "Consistent with paired, scissor-style stairs. Exact three-dimensional interlock and fire separation are not documented."
+    },
+    {
+      "claim": "Recesses between B/C and E/F in the lower-range plan are labelled 六樓平台.",
+      "sources": [
+        "S09"
+      ],
+      "confidence": "High as drawn.",
+      "limit": "Do not clone these as balconies at every floor."
+    },
+    {
+      "claim": "The photographed chamber entrance has glazed doors, gold-colour metal framing and a broad canopy/signboard.",
+      "sources": [
+        "S11"
+      ],
+      "confidence": "High visual observation.",
+      "limit": "Its relationship to the residential lobby is unknown. Ground-floor layout and compass orientation are unverified."
+    }
+  ],
+  "unknowns": [
+    "Relationship between the residential main entrance and the chamber entrance.",
+    "Rear/service entrance count, position and purpose.",
+    "Ground-floor and podium circulation plans.",
+    "Exact staircase geometry, landing heights and fire compartments.",
+    "4/F, 27/F and roof plans.",
+    "Individual floor-to-floor heights.",
+    "Window hinge/opening arrangement across facades and units.",
+    "Window frame and wall-reveal depth in millimetres.",
+    "Variation caused by later window replacements.",
+    "Calibrated plan-to-HK1980 orientation and scale."
+  ],
+  "modeling_rules": [
+    "Keep original source geometry and its ID anchored.",
+    "Keep real-world evidence separate from design assumptions.",
+    "Use 24 only for the tower component and 28 for the whole above-ground building; record the basement separately.",
+    "Use plans for topology before metric reconstruction; do not infer equally spaced floors from Storeys alone.",
+    "Use parametric window depth/opening defaults only as explicitly labelled design assumptions.",
+    "Link to Centaline plans and photos; do not republish them without reuse permission."
+  ],
+  "publication": "Facts, attribution and reference links only. External reference photographs/plans are not redistributed; no reuse license is claimed."
+}
