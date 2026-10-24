@@ -13,10 +13,11 @@ export const CLASSES=[
  {key:'window',label:'窗',color:'#adc2da'},
  // Append only: inspection colors are not material or geometry identities.
  {key:'handrail',label:'扶手 / 接头 / 立柱',color:'#536477'},
- {key:'grille',label:'观察格栅 / 分格',color:'#a66e70'},
- {key:'equipment',label:'设备可见前壳',color:'#d2d6d4'},
+ {key:'grille',label:'观察格栅 / 分格',color:'#855558'},
+ {key:'equipment',label:'设备可见前壳',color:'#deded5'},
  {key:'equipment_recess',label:'格栅背衬 / 设备风扇区',color:'#61686c'}
 ];
+export const SEMANTIC_COLORS=['#96959c','#bf9a92','#ceaf65','#e3c991','#83b995','#9aa6d6','#b69bc9','#d69bba','#d3b381','#79b9cc','#53688e','#b38396','#98b9aa','#647675'];
 export const classIndex=key=>Math.max(0,CLASSES.findIndex(c=>c.key===key));
 export const HANDRAIL_PART_ROLES=Object.freeze(['continuous_handrail_segment','handrail_node_join','handrail_support_post']);
 export function classifyPrimitive(p,instance={},node=null){
@@ -50,17 +51,20 @@ export function buildRegistry(model,measured){
  for(const [k,s]of model.interfaces.stairs.entries())push({objectId:30000+k,id:s.id+':rail',nodeId:s.id,ownerId:s.id,buildingId:model.sourceModelId??measured.sourceModelId,classKey:'handrail',geometryEvidence:'design 自有中心线扶手',classEvidence:'design 明确扶手函数角色',evidence:'原渲染器将整套扶手写入一个 hit ID；单根子件不能从当前 hit ID 单独区分',frame,floorId:s.fromFloorId,sourceRef:'whole-building-ground-r01/rails.mjs'});
  records.sort((a,b)=>a.objectId-b.objectId);return records;
 }
-export function packRegistry(records){const width=Math.max(1,records.length),data=new Float32Array(width*4);records.forEach((r,i)=>{const c=r.color.slice(1).match(/../g).map(x=>parseInt(x,16)/255);data.set([r.objectId,...c],i*4);});return{width,height:1,data};}
+export function packRegistry(records){const width=Math.max(1,records.length),data=new Float32Array(width*12);records.forEach((r,i)=>{const c=r.color.slice(1).match(/../g).map(x=>parseInt(x,16)/255);data.set([r.objectId,...c],i*4);data.set([r.classIndex,0,0,0],(width+i)*4);const sc=SEMANTIC_COLORS[r.classIndex].slice(1).match(/../g).map(x=>parseInt(x,16)/255);data.set([...sc,1],(2*width+i)*4);});return{width,height:3,data};}
 /** Neutral technical form cue, not a physical material/light model. All source fields stay unchanged. */
 export const SEMANTIC_SHADE=`#version 300 es
 precision highp float;precision highp int;
-uniform sampler2D uHit,uNormal,uSemantic;uniform int uSemanticCount;uniform float uSelectedId;
+uniform sampler2D uHit,uNormal,uSemantic;uniform int uSemanticCount,uSemanticMode;uniform float uSelectedId;
 uniform vec3 uCameraEye,uTarget;uniform float uFov;uniform vec2 uResolution;uniform ivec4 uTile;
 out vec4 outColor;
 vec3 ray(){vec2 uv=(2.*gl_FragCoord.xy-uResolution)/uResolution.y;vec3 f=normalize(uTarget-uCameraEye),r=normalize(cross(f,abs(f.y)>.999?vec3(0,0,1):vec3(0,1,0)));return normalize(f+tan(uFov*.5)*(uv.x*r+uv.y*cross(r,f)));}
 void main(){ivec2 px=ivec2(gl_FragCoord.xy);vec4 h=texelFetch(uHit,px,0);if(h.w<.5){outColor=vec4(233./255.,237./255.,240./255.,1.);return;}if(h.w>2.5){outColor=vec4(.8,.05,.4,1.);return;}
-int lo=0,hi=uSemanticCount-1;vec3 c=vec3(.72,.71,.74);for(int k=0;k<20;k++){if(lo>hi)break;int m=(lo+hi)/2;vec4 r=texelFetch(uSemantic,ivec2(m,0),0);if(abs(r.x-h.y)<.1){c=r.yzw;break;}if(r.x<h.y)lo=m+1;else hi=m-1;}
+int kind=0;int lo=0,hi=uSemanticCount-1;vec3 c=vec3(.72,.71,.74);for(int k=0;k<20;k++){if(lo>hi)break;int m=(lo+hi)/2;vec4 r=texelFetch(uSemantic,ivec2(m,0),0);if(abs(r.x-h.y)<.1){c=uSemanticMode>0?texelFetch(uSemantic,ivec2(m,2),0).xyz:r.yzw;kind=int(texelFetch(uSemantic,ivec2(m,1),0).x);break;}if(r.x<h.y)lo=m+1;else hi=m-1;}
 vec3 n=normalize(texelFetch(uNormal,px,0).xyz),rd=ray();if(dot(n,rd)>0.)n=-n;
+// New warehouse equipment only: fixed world-space low-amplitude authored variation.
+// Not a scan of historic dirt, not PBR, and not applied to other building materials.
+if(uSemanticMode==0&&(kind==11||kind==12)){vec3 wp=uCameraEye+rd*h.x;float grain=sin(dot(wp,vec3(13.1,19.7,11.3)))*sin(dot(wp,vec3(7.7,3.1,17.9)));c*=1.0+.025*grain;}
 // Fixed neutral normal-based shape cue only: no PBR, surface texture, shadow ray, or roughness.
 float form=.66+.24*max(dot(n,normalize(vec3(-.45,.82,-.55))),0.)+.10*max(dot(n,normalize(vec3(.7,.3,.6))),0.);c*=form;
 bool edge=false,selection=false;for(int a=0;a<4;a++){ivec2 d=a==0?ivec2(1,0):a==1?ivec2(-1,0):a==2?ivec2(0,1):ivec2(0,-1);ivec2 q=px+d;if(any(lessThan(q,uTile.xy))||any(greaterThanEqual(q,uTile.xy+uTile.zw)))continue;vec4 nh=texelFetch(uHit,q,0);bool boundary=abs(nh.y-h.y)>.1;if(boundary&&(abs(h.y-uSelectedId)<.1||abs(nh.y-uSelectedId)<.1))selection=true;if(nh.w<.5)edge=true;else{vec3 nn=normalize(texelFetch(uNormal,q,0).xyz);if(dot(nn,rd)>0.)nn=-nn;if(dot(n,nn)<.78)edge=true;}}

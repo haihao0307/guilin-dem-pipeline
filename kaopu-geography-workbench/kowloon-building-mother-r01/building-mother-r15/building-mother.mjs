@@ -1,3 +1,6 @@
+import {attachWarehouseMainFacade} from './warehouse-main-facade.mjs';
+import {attachKccMainFacade} from './kcc-main-facade.mjs';
+import {deriveKccFacadeRegistration} from './kcc-facade-registration.mjs';
 import {attachWarehouseCandidates} from './warehouse-observed-candidates.mjs';
 import {attachUsageRelations} from './building-use-contract.mjs';
 import {auditRetainedRelations} from './retained-relations.mjs';
@@ -82,5 +85,23 @@ export function growBuilding(seed,parameters={}){
  else model=attachObservedLayouts(clone(seed.model));
  if(supportProgram){const present=new Set(model.graph.nodes.map(n=>n.id));for(const n of supportProgram.nodes)if(!present.has(n.id)){model.graph.nodes.push({...n,evidence:n.evidence??'authored_growth_dependency_not_surveyed'});present.add(n.id);}for(const e of supportProgram.edges)if(!model.graph.edges.some(x=>x.from===e.from&&x.to===e.to&&x.type===e.type))model.graph.edges.push({...e,evidence:'generative_support_relation_not_engineered'});}
  if(!inspection){model.comparisonAnchorBounds=clone(seed.model.bounds);recipe.retainedRelations=auditRetainedRelations(model);if(!recipe.retainedRelations.passed)throw Error('Retained interface relations: '+JSON.stringify(recipe.retainedRelations.failures));}
- model=attachUsageRelations(model.caseId?model:{...model,caseId});model=attachWarehouseCandidates(model);model.buildingMother=recipe;if(candidate)candidate.model=model;return{model,recipe,candidate,validation:recipe.validation};
+ model=attachUsageRelations(model.caseId?model:{...model,caseId});model=attachWarehouseCandidates(model);
+ // Source-hosted facade is an actual Mother output, no longer a scene-only post-pass.
+ // The retained input controller is still explicitly reported, not passed off as newly generated structure.
+ if(!inspection&&source){
+  if(caseId==='kcc')model=attachKccMainFacade(model,source,deriveKccFacadeRegistration(source),parameters.facade??{});
+  if(caseId==='warehouse')model=attachWarehouseMainFacade(model,source,parameters.facade??{});
+ }
+ recipe.execution={
+  datum:'retained coordinate reference; surveyed site datum unknown',
+  belowGround:'not emitted; foundation and basement facts separately unknown',
+  horizontal:prepared?'deriveFloorMother -> compileSupportProgram -> integrateCompleteFloorSystem':'retained controller structural recipe, not rewritten or surveyed',
+  vertical:prepared?'existing actual-height constraints -> level table -> repeated authored floor system':'retained controller level table, actual indoor FFL unknown',
+  circulation:prepared?'generated authored rooms, corridors and stair links':caseId==='kcc'?'observed per-floor topology + retained live lift controller; global route not surveyed':'retained freight/stair design, real stops and loading path unverified',
+  envelope:caseId==='kcc'?'observed plan windows -> registration candidate -> source-hosted aperture emitter':caseId==='warehouse'?'observed p012 pixel traces -> candidate projection -> grille and clipped unit fields':'source-hosted windows + authored interior openings linked to shared floor variables',
+  roof:'retained source roof, lowrise authored closure; no universal parapet invented',
+  externalRuntime:'lift motion, time state, camera and semantic color remain separate runtime consumers; no age/history evolution implemented'
+ };
+ recipe.outputCounts={sourceFaces:source?.patches?.length??0,levels:model.levels.length,instances:model.instances.length,hostedOpenings:model.hostedComponents?.apertures?.length??0,warehouseVisibleUnits:model.facadePanelProjection?.unitRecords?.length??0};
+ model.buildingMother=recipe;if(candidate)candidate.model=model;return{model,recipe,candidate,validation:recipe.validation};
 }
