@@ -1,0 +1,69 @@
+{
+  "decision": "REJECT_DIRECT_HALF_SUBSTITUTION__AUDITION_HYBRID_HALF_PLUS_PACKED_IDENTITY",
+  "directRgba16fSubstitutionSafe": false,
+  "halfDistanceCollisions": [
+    [10.0, 10.001, 10.002],
+    [100.0, 100.01, 100.03]
+  ],
+  "halfDistanceRows": [
+    {"half": 10.0, "input": 10.0},
+    {"half": 10.0, "input": 10.001},
+    {"half": 10.0, "input": 10.002},
+    {"half": 100.0, "input": 100.0},
+    {"half": 100.0, "input": 100.01},
+    {"half": 100.0, "input": 100.03},
+    {"half": 100.0625, "input": 100.04}
+  ],
+  "halfObjectIdCollisions": [
+    [2048, 2049],
+    [30000, 30001, 30002],
+    [30008, 30016]
+  ],
+  "halfObjectIdRows": [
+    {"half": 2047.0, "input": 2047},
+    {"half": 2048.0, "input": 2048},
+    {"half": 2048.0, "input": 2049},
+    {"half": 30000.0, "input": 30000},
+    {"half": 30000.0, "input": 30001},
+    {"half": 30000.0, "input": 30002},
+    {"half": 30016.0, "input": 30008},
+    {"half": 30016.0, "input": 30016}
+  ],
+  "halfSentinel": "Infinity",
+  "hybridCandidate": {
+    "attachmentCount": 4,
+    "identity": "RGBA8: objectId16 + instanceId8 + materialRole4 + flags4",
+    "identityExactForDeclaredBounds": true,
+    "metricNormalLocal": "RGBA16F",
+    "requiresExtension": "EXT_color_buffer_half_float",
+    "requiresFramebufferCompletenessProbe": true,
+    "requiresVisualAndInteractionEquivalence": true
+  },
+  "packedIdentityRoundtrips": [
+    {
+      "exact": true,
+      "input": {"flags": 1, "instanceId": 0, "materialRole": 3, "objectId": 30000},
+      "output": {"flags": 1, "instanceId": 0, "materialRole": 3, "objectId": 30000},
+      "rgba8": [48, 117, 0, 49]
+    },
+    {
+      "exact": true,
+      "input": {"flags": 1, "instanceId": 31, "materialRole": 6, "objectId": 30001},
+      "output": {"flags": 1, "instanceId": 31, "materialRole": 6, "objectId": 30001},
+      "rgba8": [49, 117, 31, 97]
+    },
+    {
+      "exact": true,
+      "input": {"flags": 15, "instanceId": 255, "materialRole": 15, "objectId": 65535},
+      "output": {"flags": 15, "instanceId": 255, "materialRole": 15, "objectId": 65535},
+      "rgba8": [255, 255, 255, 255]
+    }
+  ],
+  "probeKind": "numeric_storage_audition_not_production_render_validation",
+  "productionFacts": {
+    "currentHitSentinel": 1e20,
+    "currentRailObjectIdBase": 30000,
+    "currentTargets": "three RGBA32F MRT ping-pong attachments"
+  },
+  "schemaVersion": "n191-v1"
+}
