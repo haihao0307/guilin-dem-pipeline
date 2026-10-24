@@ -1,7 +1,7 @@
 import{WholeRenderer}from'./kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs';
 import{INSPECTION_ASSUMPTIONS}from'./kcc-candidate-structure.mjs';
 import{growBuilding}from'./building-mother.mjs';
-import{fitBoundsCamera,nativeDisplaySize}from'./desktop-display.mjs';
+import{fitBoundsCamera,nativeDisplaySize,boundsCorners,cameraBasis}from'./desktop-display.mjs';
 import{attachCameraControls}from'./kowloon-building-mother-r01/whole-building-ground-r01/camera-controls.mjs';
 /** Separate field view; never replaces or mutates the actual 3-building model. */
 export function createCandidateViewer({element,getSource}){
@@ -25,7 +25,7 @@ export function createCandidateViewer({element,getSource}){
  async function render(){if(!active)return;if(busy){queued=true;return;}busy=true;state.busy=true;try{do{queued=false;const source=getSource();if(!source)throw Error('KCC source not loaded');if(!renderer){renderer=new WholeRenderer(canvas);renderer.options.boundedShadow=false;controls=attachCameraControls(canvas,{getCamera:()=>structuredClone(renderer.options),setCamera:q=>{Object.assign(renderer.options,q);fit=false;},onChange:()=>request(),onEnd:()=>{}});}
  if(needsModel){candidate=growBuilding({caseId:'kcc',source},{...values,inspectionFloor:values.actualFloor}).candidate;state.generationStages=candidate.model.buildingMother.stages;state.relationValidation=candidate.model.buildingMother.validation;renderer.setModel(candidate.model,source);needsModel=false;state.modelPrimitiveCount=candidate.model.archetypes.reduce((n,a)=>n+a.primitives.length,0);state.assumptions={...values.assumptions};state.actualFloor=values.actualFloor;state.orientation=values.rotationCandidate;}
  const r=canvas.getBoundingClientRect(),size=nativeDisplaySize({cssWidth:r.width,cssHeight:r.height,dpr:devicePixelRatio||1,limits:renderer.displayLimits});if(size.hidden)break;
- if(fit){const c=fitBoundsCamera(candidate.bounds,{aspect:size.aspect,direction:[.5,.9,-1],margin:.85});Object.assign(renderer.options,{eye:c.eye,target:c.target,fov:c.fov});fit=false;}
+ if(fit){const c=fitCandidateCamera(candidate,size.aspect);Object.assign(renderer.options,{eye:c.eye,target:c.target,fov:c.fov});fit=false;}
  renderer.options.cut=false;renderer.options.sliceY=sliced?[-2,.9]:null;status.textContent='正在绘制真实函数实体候选…';
  const stats=await renderer.render({width:size.width,height:size.height,presentWidth:size.width,presentHeight:size.height,tileSize:96,gpuBatchTiles:8,source:false,design:true,requestRevision:++renderer.requestRevision});state.frames.push(stats);if(!stats.cancelled){state.ready=true;status.textContent=`${values.actualFloor}/F 布局候选 · ${state.modelPrimitiveCount} 个解析实体 · ${Math.round(stats.wallMs)} ms · 未配准 / 非实测厚度`;details.textContent=JSON.stringify({actualFloor:values.actualFloor,sourceUrl:candidate.layout.sourceUrl,inspectionAssumptions:values.assumptions,registration:false,stairInterlockVerified:false,sourceModelUnchanged:true,doorThresholdCount:candidate.doorThresholds?.length??0,wholeFloorCertified:false,unresolved:['6F平台入口未知','电梯后浅缝用途及人体可达待核']},null,2);}
  }while(queued);}catch(e){report(e);}finally{busy=false;state.busy=false;}}
@@ -33,4 +33,12 @@ export function createCandidateViewer({element,getSource}){
  start.onclick=()=>{active=!active;element.classList.toggle('candidate-active',active);fit=true;canvas.hidden=!active;canvas.style.display=active?'block':'none';start.textContent=active?'收起候选，返回三栋建筑':'打开三维结构候选';if(active)request();else{queued=false;status.textContent='候选视图已暂停。';}};
  window.addEventListener('resize',()=>{if(active){fit=true;request();}});
  return{state,render,selectCase(id){element.hidden=id!=='kcc';if(id!=='kcc'){active=false;element.classList.remove('candidate-active');canvas.hidden=true;canvas.style.display='none';queued=false;start.textContent='打开三维结构候选';}},snapshot(){return{...state,active,values:structuredClone(values)};},get model(){return candidate;},get renderer(){return renderer;},dispose(){active=false;controls?.dispose?.();renderer?.dispose?.();}};
+}
+
+// Fit actual component bounds, not empty corners of the six-wing overall AABB.
+function fitCandidateCamera(candidate,aspect){
+ const c=fitBoundsCamera(candidate.bounds,{aspect,direction:[.5,.9,-1],margin:.92}),basis=cameraBasis(c),dot=(a,b)=>a.reduce((s,v,k)=>s+v*b[k],0),tan=Math.tan(c.fov/2);
+ const boxes=candidate.model.archetypes.flatMap(a=>a.primitives.map(p=>p.bounds));for(const a of candidate.model.hostedComponents?.apertures??[])boxes.push(a.bounds);
+ let distance=.1;for(const box of boxes)for(const p of boundsCorners(box)){const q=p.map((v,k)=>v-c.target[k]),z=dot(q,basis.forward);distance=Math.max(distance,Math.abs(dot(q,basis.right))/(tan*aspect*.92)-z,Math.abs(dot(q,basis.up))/(tan*.92)-z,-z+.1);}
+ c.eye=c.target.map((v,k)=>v-basis.forward[k]*distance);return c;
 }
