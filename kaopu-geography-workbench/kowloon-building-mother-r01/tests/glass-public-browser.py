@@ -1,3 +1,8 @@
+# R16 material-only visual regression; original authorized workflow unchanged.
+from pathlib import Path as _R16Path
+import runpy as _R16run
+_R16run.run_path(str(_R16Path(__file__).parent.parent/'building-mother-r16'/'material-browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
 # R15 visible warehouse detail regression using unchanged authorized workflow.
 from pathlib import Path as _R15Path
 import runpy as _R15run

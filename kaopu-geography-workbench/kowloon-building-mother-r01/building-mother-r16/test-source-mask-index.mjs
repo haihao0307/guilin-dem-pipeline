@@ -1,0 +1,4 @@
+import assert from'node:assert/strict';import{packSourceMaskIndex}from'./source-mask-index.mjs';
+const source={patches:Array.from({length:4},(_,k)=>({sourcePatchId:'p'+k,objectId:1000+k}))};const masks=Array.from({length:176},(_,i)=>({enabled:true,sourcePatchId:'p'+i%4,sourceObjectId:1000+i%4,frame:{origin:[i,2,0],u:[1,0,0],v:[0,1,0],w:[0,0,1]},width:1,height:1.2,depth:.08}));
+const p=packSourceMaskIndex(masks,source);assert.equal(p.count,176);for(let k=0;k<4;k++){const [start,count,id]=p.data.slice(k*4,k*4+3);assert.equal(count,44);assert.equal(id,1000+k);for(let i=0;i<count;i++)assert.equal(p.data[(start+4*i)*4]%4,k);}
+assert.equal(packSourceMaskIndex(masks.filter(m=>m.frame.origin[0]<8),source).count,8);assert.equal(packSourceMaskIndex([],source).count,0);assert.throws(()=>packSourceMaskIndex([{...masks[0],sourceObjectId:55}],source),/identity/);console.log('176 masks indexed by actual source face, filtering and wrong host rejected');
