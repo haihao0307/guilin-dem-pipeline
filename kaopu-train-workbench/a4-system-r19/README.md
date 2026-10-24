@@ -1,0 +1,2 @@
+# R19 working integration
+An active own-function unified-coordinate inspection, not a complete A4 replica. Public-test content must contain only independently implemented functions and factual documentary teacher dimensions. Source-model profiles/meshes remain in internal R17/R18 comparison and are not published. No coal shapes. This version is still being implemented and has no browser verification yet.
