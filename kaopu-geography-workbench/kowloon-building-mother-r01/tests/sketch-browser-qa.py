@@ -9,8 +9,8 @@ report={'passed':False,'scope':'Independent function-only building rule sketches
 def save():(out/'sketch-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root.parent)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-url=f'http://127.0.0.1:{server.server_port}/building-mother-r10/sketches.html'
-config=root/'sketch-public-url.json'
+url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r02/sketches.html'
+config=root/'sketch-r02-public-url.json'
 if config.exists():
  cfg=json.loads(config.read_text());url=cfg['url'];report['scope']='Actual public independent sketches, no route overrides'
  def verify(item):
@@ -38,16 +38,44 @@ try:
    for stage in ['1','4','7']:
     action(lambda stage=stage:page.locator('#stage').select_option(stage));capture(case+'-stage'+stage)
   action(lambda:page.locator('#roof').click());capture('connected-roof-off')
+  action(lambda:page.locator('[data-case=vertical]').click());action(lambda:page.locator('#stage').select_option('4'))
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[7,4,-8],target:[2,3.6,2.5],fov:.5})'));capture('column-joints-close')
+  action(lambda:page.locator('[data-case=connected]').click());action(lambda:page.locator('#stage').select_option('6'))
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[-7,2.4,2.8],target:[1.55,2.2,2.8],fov:.65})'));capture('thin-stair-underflight')
+  # Back-to-back changes must settle on the final requested model, not a stale frame.
+  n=page.evaluate('sketchInspection.frames.length')
+  page.evaluate("""()=>{for(const value of ['3','5','4']){const e=document.querySelector('#stage');e.value=value;e.dispatchEvent(new Event('change'));}for(const key of ['cell','vertical','connected'])document.querySelector('[data-case='+key+']').click();}""")
+  settle(n);page.wait_for_function('sketchInspection.renderedValues.caseId==="connected"&&sketchInspection.renderedValues.stage===4&&!sketchInspection.busy');capture('rapid-final-connected-frame')
+  action(lambda:page.locator('#stage').select_option('7'))
+  action(lambda:page.locator('#top').click());capture('lift-corridor-top')
+  action(lambda:page.locator('#fit').click())
   # Preserve baseline geometry and exact restore across a single propagated input.
   sig=page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')
   baseline=capture('connected-height36')
   def height(v):page.locator('#groundHeight').fill(v);page.locator('#groundHeight').press('Tab')
   action(lambda:height('4'));changed=capture('connected-height40');assert changed['sha256']!=baseline['sha256']
   action(lambda:height('3.6'));restored=capture('connected-height-restored');assert page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')==sig
+  action(lambda:page.locator('#storeys').select_option('4'));capture('connected-four-storeys')
+  multi=page.evaluate('({levels:sketchInspection.result.levels.length,connections:sketchInspection.result.stair.connections.length,lift:sketchInspection.result.lift})')
+  assert multi['levels']==4 and multi['connections']==3 and len(multi['lift']['stops'])==4
+  assert multi['lift']['shaftBottom']<0 and multi['lift']['shaftAxis']==[0,1,0]
+  for i in range(3):action(lambda:page.locator('#lift').click())
+  capture('connected-four-storeys-lift-top')
+  assert page.evaluate('sketchInspection.result.lift.level')==3
+  action(lambda:page.locator('#storeys').select_option('2'))
+  action(lambda:page.locator('#lift').click())
+  capture('connected-two-storeys-restored')
+  assert page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')==sig
   action(lambda:page.locator('#door').click());capture('connected-doors-open')
   action(lambda:page.locator('#lift').click());capture('connected-lift-upper')
   action(lambda:page.locator('#liftDoor').click());capture('connected-lift-doors-open')
   action(lambda:page.locator('#cut').click());cut=capture('connected-cutaway')
+  # Display-only ghosting must expose inner structures without changing the model.
+  physical=page.evaluate('JSON.stringify(sketchInspection.model)')
+  action(lambda:page.locator('#ghost').click());ghost=capture('transparent-inspection');assert page.evaluate('JSON.stringify(sketchInspection.model)')==physical
+  assert ghost['sha256']!=cut['sha256'];assert ghost['frame'].get('ghostInspection')
+  action(lambda:page.locator('#ghost').click());opaque=capture('opaque-restored');assert page.evaluate('JSON.stringify(sketchInspection.model)')==physical
+  assert opaque['sha256']==cut['sha256']
   # A real canvas hit must surface typed ownership/dependency information.
   hit=cut['hits'][len(cut['hits'])//2];box=page.locator('#sketch').bounding_box()
   page.mouse.click(box['x']+hit['x'],box['y']+cut['canvas']['h']-hit['y']);settle()
