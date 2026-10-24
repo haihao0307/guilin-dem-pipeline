@@ -31,8 +31,8 @@ try:
    const camera=b=>{const c=fitBoundsCamera(b,{aspect,direction:[.12,.35,-1],margin:.88});return {eye:c.eye,target:c.target,fov:c.fov,cut:false,sliceY:null,clipNormal:[0,0,1],clipOffset:0}};
    const scenarios=s.buildings.map(b=>({name:b.caseId+'-whole',options:camera(b.bounds),source:true,design:true}));
    scenarios.push({name:'complete-comparison',options:camera(s.getBounds()),source:true,design:true});
-   const pane=r.apertures.find(a=>a.caseId==='kcc'&&a.primitives.some(p=>p.materialRole===6))?.primitives.find(p=>p.materialRole===6);
-   if(pane)scenarios.push({name:'kcc-pane-oblique',options:{...camera(s.getBounds()),eye:pane.origin.map((v,k)=>v+pane.w[k]*6+pane.u[k]*2+pane.v[k]*.5),target:[...pane.origin],fov:.7},source:true,design:true});
+   const paneOwner=r.apertures.find(a=>a.caseId==='kcc'&&a.primitives.some(p=>p.materialRole===6)),pane=paneOwner?.primitives.find(p=>p.materialRole===6),outside=paneOwner?.focusNormal??pane?.w;
+   if(pane)scenarios.push({name:'kcc-pane-oblique',options:{...camera(s.getBounds()),eye:pane.origin.map((v,k)=>v+outside[k]*6+pane.u[k]*2+pane.v[k]*.5),target:[...pane.origin],fov:.7},source:true,design:true});
    const low=s.buildings.find(b=>b.caseId==='lowrise'),bounds=low.sourceBounds,level=s.model.levels.find(l=>l.caseId==='lowrise'),y=level.elevation+1.6;
    const eye=[(bounds.min[0]+bounds.max[0])/2,y,(bounds.min[2]+bounds.max[2])/2];
    scenarios.push({name:'lowrise-interior',options:{...camera(bounds),eye,target:[eye[0]+3,y,eye[2]+7],fov:.9},source:false,design:true});

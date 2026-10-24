@@ -10,7 +10,7 @@ export const KCC_JOURNEY_DISCLOSURE = Object.freeze({
   actualEntranceVerified: false,
   actualRoomReachabilityVerified: false,
   sourceShellEntryTraversed: false,
-  sourceHiddenForInteriorInspection: true,
+  sourceHiddenForInteriorInspection: false,
   basementLiftServiceAdded: false,
   geometryGenerated: false,
 });
@@ -93,7 +93,7 @@ export function createKccJourney({building, liftRuntime, onPose = () => {}, onCh
     if (matchesOwner(read()) && phase !== 'blocked') {
       const pose = liftRuntime.ridePose('kcc');
       if (pose) onPose({...copy(pose), journeyPhase: phase, designInspectionOnly: true,
-        actualFloorRegistrationVerified: false, sourceHiddenForInteriorInspection: true});
+        actualFloorRegistrationVerified: false, sourceHiddenForInteriorInspection: false});
     }
     onChange(s);
     return s;
