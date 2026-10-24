@@ -2,7 +2,7 @@
 
 - 记录 ID：KAOPU-MOTHER-20261025-BUILDING-SKETCH-PUBLIC-RUNTIME-R1
 - 实际开始：2026-10-25 02:31:23 +08:00
-- 实际结束：待完成后回填
+- 实际结束：2026-10-25 02:34:26 +08:00（3分03秒；完成即结束）
 - 唯一主问题：新发布的建筑规则草图虽然有成功 QA，当前固定公网入口却无法产生三维画面，应该如何分类与接续？
 - 责任端：Kowloon Building Mother / `trial/lowrise-glass-fix-20261022`
 - 协议：R2 Production OS；涉及参考复刻时继续 `REPLICATION_LOCKED / CREATIVE_AUTHORIZATION=false`
