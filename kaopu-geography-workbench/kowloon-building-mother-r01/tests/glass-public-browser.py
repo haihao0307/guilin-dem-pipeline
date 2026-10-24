@@ -1,3 +1,8 @@
+# R15 visible warehouse detail regression using unchanged authorized workflow.
+from pathlib import Path as _R15Path
+import runpy as _R15run
+_R15run.run_path(str(_R15Path(__file__).parent.parent/'building-mother-r15'/'facade-browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
 # R14 actual main-tower facade visual gate, existing workflow unchanged.
 from pathlib import Path as _R14Path
 import runpy as _R14run

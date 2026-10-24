@@ -1,0 +1,13 @@
+import fs from'node:fs';import assert from'node:assert/strict';import{deriveMeasuredCase,patchDistance}from'./kowloon-building-mother-r01/r07/cases.mjs';import{controllerFor}from'./kowloon-building-mother-r01/whole-building-ground-r01/controller.mjs';import{attachWarehouseCandidates}from'./warehouse-observed-candidates.mjs';import{attachWarehouseMainFacade}from'./warehouse-main-facade.mjs';import{buildRegistry}from'./kowloon-building-mother-r01/whole-building-facade-r01/semantic-registry.mjs';
+const read=p=>JSON.parse(fs.readFileSync(new URL(p,import.meta.url))),s=deriveMeasuredCase(read('hk-three-buildings-r01/geometry/B369121858401063C0.score.json')),base=attachWarehouseCandidates(controllerFor('warehouse').derive(s,read('kowloon-building-mother-r01/r07/sources/official-footprints.json'))),snap=JSON.stringify(s),levels=JSON.stringify(base.levels),p=s.patches.find(p=>p.sourcePatchId==='p012');let checks=0;
+for(const mirror of[false,true]){const m=attachWarehouseMainFacade(base,s,{mirror});assert.equal(m.facadePanelProjection.records.length,3);assert.equal(m.facadePanelProjection.glass,0);assert.equal(m.facadePanelProjection.wallCuts,0);assert.equal(JSON.stringify(m.levels),levels);for(const r of m.facadePanelProjection.records){for(const x of[r.u0,r.u1])for(const y of[r.v0,r.v1]){const q=p.origin.map((v,k)=>v+x*p.u[k]+y*p.v[k]);assert(patchDistance(p,q)<1e-7);checks++;}assert.equal(r.actualDimensionsM,null);}buildRegistry(m,s);}
+assert.equal(JSON.stringify(s),snap);assert.equal(attachWarehouseMainFacade(base,s,{enabled:false}).instances.length,base.instances.length);console.log(JSON.stringify({passed:true,sourceUnchanged:true,candidateMappings:2,finiteCornerChecks:checks,wallCuts:0,glass:0}));
+for(const mirror of [false,true]){
+ const m=attachWarehouseMainFacade(base,s,{mirror}),a=m.archetypes.at(-1),owners=new Map(m.graph.edges.filter(e=>e.type==='ownedBy').map(e=>[e.from,e.to]));
+ assert.equal(m.facadePanelProjection.unitRecords.length,12);assert.equal(a.primitives.length,30);
+ assert.equal(a.primitives.filter(p=>p.semanticClass==='grille').length,3);
+ for(const q of a.primitives){assert(owners.has(q.nodeId));for(const l of q.loops)for(const [u,v] of l){assert(u>=-1e-7&&u<=41.22713);assert(v>=-1e-7&&v<=34.07301);}assert(q.range[0]>0);}
+ for(const u of m.facadePanelProjection.unitRecords){assert(u.bottomClipped);assert.equal(u.actualDepth,null);assert.equal(u.geometryScope,'visible_cropped_front_only');}
+ const old=attachWarehouseMainFacade(base,s,{mirror,detail:false});assert.equal(old.archetypes.at(-1).primitives.length,3);
+}
+console.log(JSON.stringify({detailPassed:true,gridGroups:3,croppedUnitFronts:12,analyticParts:30,sourceUnchanged:true}));
