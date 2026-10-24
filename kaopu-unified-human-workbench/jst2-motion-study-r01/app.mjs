@@ -1,0 +1,72 @@
+import {loadMotion,parseGLB,decodePossibleGzip,createMotion} from './motion-data/glb-motion.mjs';
+import {createNativeRetargeter} from './motion-data/retarget-native.mjs';
+import {NativeRig} from './NativeRig.mjs';
+
+const $=id=>document.getElementById(id);
+const asset='https://assets.viggle.ai/pub/www/jst2-assets/';
+const samples=[
+ {id:'dodge',title:'闪避与下蹲',en:'Dodge and duck',file:'mq-m08-glb-51250dc7.gz',category:'全身协调',prompt:'向左快速闪避，再低头下蹲，躲过想象中的障碍。',observe:'观察下蹲时髋、膝、躯干和手臂是否一起参与。'},
+ {id:'kick',title:'向前踢腿',en:'Front kick',file:'mq-m11-glb-4b35db9c.gz',category:'单腿支撑',prompt:'向前踢腿。',observe:'观察支撑腿、骨盆旋转，以及踢出和收回的节奏。'},
+ {id:'pirouette',title:'原地旋转',en:'Pirouette',file:'mq-m13-glb-e96e6f8a.gz',category:'转向与平衡',prompt:'完成芭蕾式旋转。',observe:'观察转体、收臂、头部朝向和脚部接触。'},
+ {id:'walk',title:'边走边观察',en:'Scanning walk',file:'mq-m01-glb-a227311e.gz',category:'行走与注视',prompt:'一边行走，一边观察周围。',observe:'观察步态与上身、头部的叠加。原地观察模式会移除水平轨迹。'},
+ {id:'teeth',title:'刷牙',en:'Brushing teeth',file:'mq-t09-glb-5c0c69b0.gz',category:'日常精细动作',prompt:'做出刷牙动作。',observe:'观察手靠近脸部时的腕、肘和头部配合；本页没有牙刷接触约束。'},
+ {id:'typing',title:'快速打字',en:'Fast typing',file:'mq-t15-glb-ab947fb7.gz',category:'手指与手腕',prompt:'快速打字。',observe:'观察双手与手指的连续运动；本页没有桌椅、键盘或坐姿支撑。'}
+];
+const cache=new Map();
+let motion=null,pose=null,selected=samples[0],retarget=null,nativeAPI=null,nativeRig=null,nativeDescriptor=null;
+let playing=false,time=0,speed=1,lastClock=0,loadSequence=0,lastMetric=0,poseErrors=0,frameCount=0;
+let sourceRoot0=[0,0,0];
+let sourceYaw=-.4,sourcePitch=.08,sourceZoom=1,drag=null,horizontalMotion=false;
+const canvas=$('sourceCanvas'),ctx=canvas.getContext('2d');
+const diagnostic=document.createElement('details');diagnostic.className='data-inspector';diagnostic.innerHTML='<summary>查看真实数据与映射记录</summary><pre id="diagnosticText">等待动作数据</pre>';$('metrics').parentElement.append(diagnostic);
+const switches=document.createElement('div');switches.className='study-switches';switches.innerHTML='<label><input id="skeletonToggle" type="checkbox"> 叠加自有骨架</label><label><input id="rootToggle" type="checkbox"> 保留水平位移</label><span>左侧拖动旋转 · 滚轮缩放</span>';
+document.querySelector('.playback-panel').after(switches);
+
+function status(text,error=false){$('statusText').textContent=text;$('readinessBadge').textContent=error?'需要检查':nativeAPI&&retarget&&motion?'对照实验已运行':motion?'官方样本已载入':'载入中';$('readinessBadge').dataset.state=error?'error':nativeAPI&&retarget&&motion?'ready':'';}
+function updatePlaying(){const b=$('playButton');b.querySelector('span').textContent=playing?'暂停':'播放';b.setAttribute('aria-label',playing?'暂停动作':'播放动作');b.querySelector('svg').innerHTML=playing?'<path d="M6 4h3v12H6zm5 0h3v12h-3z"/>':'<path d="m6 4 10 6-10 6z"/>';}
+function enablePlayback(enabled){for(const id of ['playButton','prevFrame','nextFrame','speedSelect','timeline'])$(id).disabled=!enabled;}
+function cards(){ $('sampleList').replaceChildren();for(const [i,s]of samples.entries()){const b=document.createElement('button');b.type='button';b.className='sample-card';b.dataset.sample=s.id;b.setAttribute('aria-pressed',String(selected.id===s.id));b.innerHTML=`<span class="sample-number">${String(i+1).padStart(2,'0')}</span><span><strong class="sample-title">${s.title}</strong><span class="sample-meta">${s.category}</span></span><span class="sample-arrow">↗</span>`;b.onclick=()=>selectSample(s);$('sampleList').append(b);} $('sampleCount').textContent=`${samples.length} 个公开样本`;}
+function metadata(){if(!motion)return;const d=motion.diagnostics;const info={版本:'MOTION-STUDY-R01 / 2026-10-21',来源:selected.local?'本地导入文件，来源由使用者确认':'Viggle JST-2 官方网页公开样本',官方名称:selected.en,资源:selected.local?'本地文件，不上传':asset+selected.file,文件SHA256:d.sha256||'当前浏览器未提供摘要接口',解压字节:d.byteLength,源节点数:d.nodeCount,源动画节点数:d.animatedNodeCount,轨道数:motion.animations[0]?.channels.length,时长秒:motion.duration,自有人物:nativeDescriptor?{骨骼:nativeDescriptor.names.length,显示顶点:nativeDescriptor.binding?.displayVertices,版本:nativeDescriptor.bindRevision}:null,映射:retarget?.diagnostics||null,映射列表:retarget?.mapping||null,明确边界:['公开样本回放，不是在线模型生成','未加入物体接触、脚锁定或物理碰撞','循环边界直接跳回起点，未做动作衔接','保留自有人物完整网格与原始蒙皮']};$('diagnosticText').textContent=JSON.stringify(info,null,2);}
+function configureRetarget(){if(!motion||!nativeRig)return;try{retarget=createNativeRetargeter(motion,nativeRig,{rootMotion:horizontalMotion});poseErrors=0;status('官方动作与自有人物同步回放；请重点观察肩、髋与脚部。');metadata();return true;}catch(e){retarget=null;status('官方样本可播放；人物适配需要检查：'+e.message,true);$('nativeStatus').textContent='映射失败：'+e.message;return false;}}
+async function selectSample(s){const sequence=++loadSequence;selected=s;playing=false;time=0;motion=null;pose=null;retarget=null;enablePlayback(false);updatePlaying();cards();$('clipTitle').textContent=s.title;$('clipPrompt').textContent=s.prompt+' '+s.observe;$('sourceStatus').textContent='正在读取官方动作…';$('sourcePlaceholder').hidden=false;status('正在载入 '+s.title+' 的官方公开 3D 数据。');
+ try{const m=cache.get(s.id)||await loadMotion(asset+s.file);if(sequence!==loadSequence)return;cache.set(s.id,m);activate(m);}
+ catch(e){if(sequence!==loadSequence)return;$('sourceStatus').textContent='样本载入失败';$('sourcePlaceholder').querySelector('strong').textContent='动作暂时无法载入';$('sourcePlaceholder').querySelector('span').textContent='可点击其他样本或稍后重试';status(e.message,true);}
+}
+function activate(m){if(!m.animations.length||m.duration<=0)throw Error('此文件没有可播放的骨骼动画');motion=m;pose=m.createPoseBuffer();const pelvisIndex=m.nodes.findIndex(n=>/^(pelvis|hips|mixamorig:?hips)$/i.test(n.name));sourceRoot0=pelvisIndex>=0?m.poseAt(0).worldPositions[pelvisIndex].slice():[0,0,0];sourceYaw=-.4;sourcePitch=.08;sourceZoom=1;time=0;frameCount=0;$('sourcePlaceholder').hidden=true;$('timeline').max=String(m.duration);$('timeline').step='0.001';$('sourceStatus').textContent=`${m.diagnostics.animatedNodeCount} 个动画节点 · ${m.duration.toFixed(2)} 秒`;$('sourceLink').href=selected.local?'https://docs.viggle.ai/v1/api-reference/motions/export':'https://viggle.ai/jst2#motion';enablePlayback(true);playing=true;updatePlaying();const mapped=configureRetarget();metadata();if(!nativeAPI||mapped)status(nativeAPI?'同步回放已开始。左侧为真实源骨架，右侧为自有人物的实验映射。':'官方样本已开始播放，正在装配自有人物。');}
+
+function metrics(){if(!motion)return;const checks=nativeRig&&retarget?nativeRig.validate():null;const entries=[['动作时长',motion.duration.toFixed(2)+' 秒'],['源动画节点',String(motion.diagnostics.animatedNodeCount)],['自有骨架',nativeDescriptor?nativeDescriptor.names.length+' 骨':'载入中'],['骨长误差',checks?(checks.maxBoneLengthError*1000).toFixed(4)+' mm':'待测'],['有效矩阵',checks?(checks.finite?'全部有限':'存在异常'):'待测']];$('metrics').replaceChildren(...entries.map(([label,value])=>{const d=document.createElement('div');const t=document.createElement('dt');t.textContent=label;const v=document.createElement('dd');v.textContent=value;d.append(t,v);return d;}));}
+function formatTime(t){return `${Math.floor(t/60)}:${(t%60).toFixed(2).padStart(5,'0')}`;}
+function applyPose(){if(!motion||!pose)return;motion.sampleInto(time,pose,{loop:false});if(retarget&&nativeAPI){try{retarget.apply(time,{loop:false,rootMotion:horizontalMotion});nativeAPI.setSkinMatrices(nativeRig.skinMatrices);$('nativeStatus').textContent='104 骨映射 · 原始完整蒙皮';}catch(e){if(++poseErrors===1){playing=false;updatePlaying();status('人物姿态校验未通过：'+e.message,true);$('nativeStatus').textContent='姿态已停止，避免显示无效变形';}}}}
+
+function draw(){const rect=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);if(!rect.width||!rect.height)return;const w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle='#141c20';ctx.fillRect(0,0,w,h);if(!motion||!pose)return;
+ const nodes=motion.nodes,ps=pose.worldPositions,rest=motion.rest.worldPositions;const pelvis=nodes.findIndex(n=>/^(pelvis|hips|mixamorig:?hips)$/i.test(n.name));const head=nodes.findIndex(n=>/^head$/i.test(n.name));
+ const footIds=nodes.filter(n=>/^(foot_[lr]|(?:mixamorig:?)?(?:Left|Right)Foot)$/i.test(n.name)).map(n=>n.index);const floor=footIds.length?Math.min(...footIds.map(i=>rest[i][1]))-.07:0;const top=head>=0?rest[head][1]+.18:1.8;const height=Math.max(.8,top-floor);const root0=sourceRoot0;const center=pelvis>=0&&!horizontalMotion?[ps[pelvis][0],floor,ps[pelvis][2]]:[root0[0],floor,root0[2]];
+ const cs=Math.cos(sourceYaw),sn=Math.sin(sourceYaw),cp=Math.cos(sourcePitch),sp=Math.sin(sourcePitch);const scale=Math.min(w*.72,h*.82)/height*sourceZoom;
+ const project=v=>{const x=v[0]-center[0],y=v[1]-floor-height*.48,z=v[2]-center[2];const rx=cs*x-sn*z,rz=sn*x+cs*z,ry=cp*y-sp*rz,depth=sp*y+cp*rz;return [w*.5+rx*scale,h*.51-ry*scale,depth];};
+ ctx.lineWidth=1;for(let k=-6;k<=6;k++){const a=project([center[0]+k*.25,floor,center[2]-1.5]),b=project([center[0]+k*.25,floor,center[2]+1.5]),c=project([center[0]-1.5,floor,center[2]+k*.25]),d=project([center[0]+1.5,floor,center[2]+k*.25]);ctx.strokeStyle=k===0?'#38504d':'#243333';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.moveTo(c[0],c[1]);ctx.lineTo(d[0],d[1]);ctx.stroke();}
+ const primary=/^(pelvis|spine_\d+|neck_\d+|head|clavicle_[lr]|upperarm_[lr]|lowerarm_[lr]|hand_[lr]|thigh_[lr]|calf_[lr]|foot_[lr]|ball_[lr]|(?:thumb|index|middle|ring|pinky)_(?:0[123]|metacarpal)_[lr])$/;
+ const active=new Set(nodes.filter(n=>primary.test(n.name)).map(n=>n.index));if(active.size<10)motion.animatedNodeIndices.forEach(i=>active.add(i));
+ const segments=[];for(const j of active){let p=motion.parents[j];while(p>=0&&!active.has(p))p=motion.parents[p];if(p<0)continue;const a=project(ps[p]),b=project(ps[j]);segments.push({a,b,j,p,z:(a[2]+b[2])/2});}segments.sort((a,b)=>a.z-b.z);
+ for(const {a,b,j}of segments){const n=nodes[j].name,finger=/thumb|index|middle|ring|pinky/.test(n);ctx.lineCap='round';ctx.strokeStyle=/_r$|Right/.test(n)?'#85cbb9':'#d9eda7';ctx.lineWidth=finger?Math.max(1,scale*.008):Math.max(3,scale*.032);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.fillStyle=finger?'#d8e9db':'#e6f1df';ctx.beginPath();ctx.arc(b[0],b[1],finger?1.4:3.3,0,Math.PI*2);ctx.fill();}
+ if(head>=0){const v=ps[head].slice();v[1]+=.075;const p=project(v);ctx.strokeStyle='#ddeac4';ctx.fillStyle='#233d3d';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p[0],p[1],scale*.072,scale*.095,0,0,Math.PI*2);ctx.fill();ctx.stroke();const nose=project([v[0],v[1],v[2]+.09]);ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(nose[0],nose[1]);ctx.stroke();}
+ ctx.font='11px system-ui';ctx.fillStyle='#819991';ctx.fillText('真实 3D 轨道 · 骨架观察',16,h-18);
+}
+function tick(clock){const dt=lastClock?Math.min((clock-lastClock)/1000,.1):0;lastClock=clock;if(motion&&playing){time+=dt*speed;if(time>motion.duration)time%=motion.duration;}if(motion){applyPose();draw();frameCount++;$('timeline').value=String(time);$('timeLabel').textContent=`${formatTime(time)} / ${formatTime(motion.duration)}`;if(clock-lastMetric>600){metrics();lastMetric=clock;}}else draw();requestAnimationFrame(tick);}
+
+$('playButton').onclick=()=>{playing=!playing;updatePlaying();};
+$('prevFrame').onclick=()=>{playing=false;time=Math.max(0,time-1/30);updatePlaying();};
+$('nextFrame').onclick=()=>{playing=false;time=Math.min(motion.duration,time+1/30);updatePlaying();};
+$('timeline').oninput=()=>{playing=false;time=Number($('timeline').value);updatePlaying();};
+$('speedSelect').onchange=()=>{speed=Number($('speedSelect').value);};
+$('viewMode').onchange=()=>{$('workspace').dataset.view=$('viewMode').value;setTimeout(()=>{$('nativeFrame').contentWindow.dispatchEvent(new Event('resize'));},50);};
+for(const [id,view,yaw]of [['cameraFront','front',0],['cameraSide','side',Math.PI/2],['cameraReset','three',-.4]])$(id).onclick=()=>{nativeAPI?.setView(view);sourceYaw=yaw;sourcePitch=.08;sourceZoom=1;};
+$('skeletonToggle').onchange=()=>nativeAPI?.setSkeleton($('skeletonToggle').checked);
+$('rootToggle').onchange=()=>{horizontalMotion=$('rootToggle').checked;configureRetarget();};
+canvas.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY,sourceYaw,sourcePitch];canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;sourceYaw=drag[2]+(e.clientX-drag[0])*.008;sourcePitch=Math.max(-.7,Math.min(.7,drag[3]+(e.clientY-drag[1])*.004));});
+canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('wheel',e=>{e.preventDefault();sourceZoom=Math.max(.5,Math.min(2.5,sourceZoom*Math.exp(-e.deltaY*.001)));},{passive:false});
+$('motionFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>50*1024*1024)throw Error('请先导入小于 50 MB 的动作 GLB');const {buffer,gzipLayers}=await decodePossibleGzip(await f.arrayBuffer());const {gltf,binary}=parseGLB(buffer);if(gltf.buffers?.some(b=>b.uri))throw Error('仅支持内嵌二进制数据的 GLB，不会读取外部资源');const m=createMotion(gltf,[binary],{sourceUrl:'local:'+f.name,byteLength:buffer.byteLength,gzipLayers});loadSequence++;selected={id:'local',title:f.name,en:f.name,local:true};cards();$('clipTitle').textContent=f.name;$('clipPrompt').textContent='本地 GLB 动作，文件未上传。仅支持具有可识别人形骨架的动画；来源和授权由使用者确认。';activate(m);}catch(error){status('本地导入失败：'+error.message,true);}};
+addEventListener('keydown',e=>{if(e.code==='Space'&&motion&&!/INPUT|SELECT|BUTTON/.test(document.activeElement.tagName)){e.preventDefault();playing=!playing;updatePlaying();}});
+addEventListener('message',event=>{if(event.source!==$('nativeFrame').contentWindow||event.data?.protocol!=='kaopu-motion-native@1')return;const d=event.data;if(d.type==='native-progress')$('nativePlaceholder').querySelector('span').textContent=d.detail||d.stage;if(d.type==='native-error'){$('nativePlaceholder').querySelector('strong').textContent='人物载入需要检查';$('nativePlaceholder').querySelector('span').textContent=d.message;$('nativeStatus').textContent='人物载入失败';status(d.message,true);}if(d.type==='native-ready')connectNative();});
+async function connectNative(){try{const api=$('nativeFrame').contentWindow.NativeMotionViewer;if(!api)return;const d=await api.ready;if(nativeAPI)return;nativeAPI=api;nativeDescriptor=d;nativeRig=new NativeRig({...d,stature:d.heightM});$('nativePlaceholder').hidden=true;$('nativeStatus').textContent='原生完整人物已就绪';for(const id of ['cameraFront','cameraSide','cameraReset'])$(id).disabled=false;configureRetarget();metadata();}catch(e){status('原生人物初始化失败：'+e.message,true);}}
+$('nativeFrame').addEventListener('load',connectNative);cards();selectSample(samples[0]);requestAnimationFrame(tick);
