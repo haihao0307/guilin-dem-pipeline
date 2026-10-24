@@ -1,8 +1,8 @@
-# R11 and R06 isolated visual regression; previous gates retained.
-from pathlib import Path as _RevisionPath
-import runpy as _revision_runpy
-for _name in ['building-mother-r11','building-rule-sketch-r06']:
-    _revision_runpy.run_path(str(_RevisionPath(__file__).parent.parent/_name/'browser-qa.py'),run_name='__main__')
+# Actual published R11 and R06 verification; no response overrides.
+from pathlib import Path as _PublicPath
+import runpy as _public_runpy
+for _name,_script in [('building-mother-r11','browser-public-qa.py'),('building-rule-sketch-r06','browser-qa.py')]:
+    _public_runpy.run_path(str(_PublicPath(__file__).parent.parent/_name/_script),run_name='__main__')
 raise SystemExit(0)
 
 # Independent rule-sketch browser gate; prior candidate gates preserved.
