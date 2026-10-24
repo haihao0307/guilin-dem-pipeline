@@ -1,0 +1,105 @@
+{
+  "schema": "npc-r02-native-grasp-rca-receipt/1",
+  "taskId": "NPC-LIVING-STREET-R02-20261020/F-grasp-calibration",
+  "createdAt": "2026-10-20T09:06:45.711Z",
+  "status": "NUMERIC_GATE_PASSED_AWAITING_INDEPENDENT_REVIEW_AND_REAL_STARTUP",
+  "productionSource": "src/ActorAdapter.mjs",
+  "baselineSHA256": "e64506d967c8b79f3ad163b5323771ed42ae51fd1c9b0ed03e4d66f8d1638fbc",
+  "testedSHA256": "6ddfdd4b3d4080f846fa944f1dc72086a2af1904f2e59b3abdaaa511e205303a",
+  "currentSourceUnchangedSinceTest": true,
+  "productionFilesChangedByThisAgent": [],
+  "fixture": {
+    "canonicalVertices": 9253,
+    "nativeBones": 104,
+    "handVerticesPerSide": 1685,
+    "completeCSR": true,
+    "maxInfluences": 9,
+    "bodyTriangles": 18416,
+    "displayEquivalenceScope": "hand subset only; retained vertex IDs and triangle triples; see HAND_DISPLAY_EQUIVALENCE.md"
+  },
+  "result": {
+    "allTwelveHandsAdmissible": true,
+    "previouslyPassingHandsExactlyUnchanged": true,
+    "unchangedSideCount": 10,
+    "runtimeParitySamples": 252,
+    "maxRuntimeFitSignedDistanceDifferenceM": 0,
+    "maxBoneLengthErrorM": 2.1510571102112408e-16,
+    "allRuntimeTrajectoriesPassed": true
+  },
+  "fallback": {
+    "onlyAfterOriginalFiveOpenPosesFail": true,
+    "originalThumbAngleDegrees": -45,
+    "originalThumbOppositionDegrees": -45,
+    "metacarpalOppositionDegrees": -11.6,
+    "explicitRCAOutwardLimitDegrees": 14,
+    "derivedFromMeasuredDegrees": [
+      -8,
+      -10
+    ],
+    "defaultForPreviouslyPassingHands": 0,
+    "sharedFormula": "sign * (open.metacarpalOpposition ?? 0) * (1 - thumbT); thumbT = closure[0] * amount"
+  },
+  "F": [
+    {
+      "side": "L",
+      "openMinimumM": -0.0003956517404283405,
+      "openMarginBeyondExistingHalfMillimeterGateM": 0.0001043482595716595,
+      "trajectoryMinimumM": -0.0009999283631017299,
+      "closure": [
+        0.08278808593749998,
+        0.600811767578125,
+        0.6439575195312501,
+        0.587158203125,
+        0.44903564453125
+      ],
+      "touchingNonThumbFingers": 4,
+      "closedFingerNearVertexCounts": [
+        6,
+        13,
+        7,
+        13,
+        14
+      ]
+    },
+    {
+      "side": "R",
+      "openMinimumM": -0.0003956517404283405,
+      "openMarginBeyondExistingHalfMillimeterGateM": 0.0001043482595716595,
+      "trajectoryMinimumM": -0.0009999969627795986,
+      "closure": [
+        0.08279418945312497,
+        0.600811767578125,
+        0.6439575195312501,
+        0.587158203125,
+        0.44903564453125
+      ],
+      "touchingNonThumbFingers": 4,
+      "closedFingerNearVertexCounts": [
+        6,
+        13,
+        7,
+        13,
+        14
+      ]
+    }
+  ],
+  "evidence": [
+    "evidence/NATIVE_GRASP_F_CALIBRATION.json",
+    "evidence/NATIVE_GRASP_CURRENT_VALIDATION.json",
+    "evidence/ActorAdapter-native-grasp-baseline.mjs",
+    "evidence/check-native-grasp.mjs",
+    "evidence/run-native-grasp.cjs",
+    "evidence/HAND_DISPLAY_EQUIVALENCE.md"
+  ],
+  "commands": {
+    "before": "GRASP_BASELINE=1 GRASP_SEARCH=1 GRASP_METACARPAL=1 GRASP_META_RCA=1 node evidence/run-native-grasp.cjs",
+    "current": "GRASP_VALIDATE_CURRENT=1 node evidence/run-native-grasp.cjs"
+  },
+  "limitations": [
+    "No current candidate real-browser startup has yet run.",
+    "No byte-for-byte comparison against a live displayed F hand dump has yet run.",
+    "Existing finite-cylinder vertex-sampling gate retained; not a continuous-triangle collision or force/friction guarantee."
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}

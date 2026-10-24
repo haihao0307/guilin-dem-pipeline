@@ -1,0 +1,205 @@
+{
+  "schema": "courtyard-independent-r02-source-review/2",
+  "reviewedAt": "2026-10-20T08:39:00.655296+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "project": "/workspace/scratch/8e6a7fffcc90/npc-life-r02",
+  "scope": "Independent read-only review of six-actor navigation, seated transition synchronization, environment contact/cancellation and open-valve dispatch. Only evidence and temporary diagnostic fixtures written by reviewer.",
+  "sourceHead": null,
+  "sourceHeadNote": "This is a local source-stage review, before a current R02 browser/public candidate is supplied. Exact module hashes are the binding.",
+  "status": "NO_REMAINING_SOURCE_CONTRACT_BLOCKER_WITHIN_ASSIGNED_SCOPE",
+  "currentSourceSHA256": {
+    "src/LifeSimulation.mjs": "d191fdf0f249290d602cf75554b185f3a8bfd3cd08338843e0c55482735692b1",
+    "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a",
+    "src/NativeMotion.mjs": "e7cfec23b0f088fa62fdfc7a4360d9a1dffcbbb2451ded4f129910f688c30990",
+    "src/EnvironmentWorld.mjs": "218ad1aee3d3eea912596b7598fb23a6351db2e464234ca922aefdcf3453479c",
+    "src/Workbench.mjs": "7b09eae5f714782510491694720021db526148f6f48a5362557c687f786bb745",
+    "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+    "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6"
+  },
+  "findings": [
+    {
+      "id": "R02-SEAT-SWEEP",
+      "severity": "blocker",
+      "status": "fixed_and_bounded_logic_regression_passed",
+      "failureSource": "815471c1dfe56aec9a813445f84f247126e5de73daf6e90f59f1da4f9e73e30a",
+      "firstInternalFailure": {
+        "timeSeconds": 302.5500000000345,
+        "movingActor": "D",
+        "otherActor": "F",
+        "movingTask": "rest/depart/benchB",
+        "otherTask": "rest/approach/benchA",
+        "distanceM": 0.5345602256954616,
+        "radiiSumM": 0.54,
+        "clearanceM": -0.005439774304538458
+      },
+      "firstPostFrameFailure": {
+        "timeSeconds": 302.6000000000345,
+        "clearanceM": -0.01795287731319728
+      },
+      "rootCause": "Seat interpolation advanced root position outside the walking whole-segment actor separation check. F moved later in the same frame and temporarily masked the first overlap.",
+      "fixReviewed": "Seat interact/depart proposes the next shared-curve root and progress, checks the entire segment with the unchanged 15 mm gap, and commits root/pose time together only if clear. Block retains seat ownership and pose; prolonged blocked departure uses existing safe failure state.",
+      "regression": {
+        "scope": "Logic only, mocked native receipts; checked after each actor tick",
+        "sourceSHA256": {
+          "src/LifeSimulation.mjs": "b9bc3d4f01edaec9c07e6c3de68e043a62c40098f2c93290884afdabb6cb4abd",
+          "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+          "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+          "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a"
+        },
+        "seed": 520,
+        "simulatedSeconds": 360.0000000000476,
+        "minimumPairClearanceM": 0.015040698196911395,
+        "firstSafetyGapViolation": null,
+        "firstHardDiscOverlap": null,
+        "invariants": {
+          "ok": true,
+          "errors": []
+        }
+      },
+      "historicalReplayCaveat": "The old report localReplay injects a root coordinate belonging to the previous curve into the new curve. Its progressFrozen=false is not a valid new-curve blocker fixture and is not counted as a pass. A separate current-curve fixture in INDEPENDENT_R02_SEAT_CONTRACT.json starts at 24.2737 mm clearance, rejects a proposed 10 mm clearance, and keeps root, elapsed, progress and seat ownership unchanged."
+    },
+    {
+      "id": "R02-SHARED-SEAT-FACTOR",
+      "severity": "blocker",
+      "status": "fixed_and_contract_regression_passed",
+      "rootCause": "New identical root curve alone did not identify every same-mode stand retry. If the new first rendered progress exceeded the previous very small progress, NativeMotion retained the old standStart factor.",
+      "failure": {
+        "oldSitFactor": 0.5,
+        "oldStandProgress": 0.01,
+        "currentSeatFactor": 0.495,
+        "retryDurationSeconds": 1.65,
+        "firstStepSeconds": 0.03333333333333333,
+        "newProgress": 0.020202020202020204,
+        "rootErrorM": 0.0025120162148666303,
+        "wouldTriggerWorkbenchOneMillimetreGuard": true
+      },
+      "fixReviewed": "Workbench passes the task standStartFactor every depart frame. NativeMotion validates and uses it before the compatibility inference path. Simulation, native root prefix and full swept navigation share SeatMotionPath.seatRootOffset.",
+      "regression": {
+        "scope": "SOURCE_CONTRACT_FIXTURE_ONLY: actual LifeSimulation and actual unchanged prefix of NativeMotion.update; no native rig execution, images, browser or public pass.",
+        "allThreeChecksPassed": true,
+        "halfSitRootErrorM": 0,
+        "earlyRetryRootErrorM": 0,
+        "sourceSHA256": {
+          "src/LifeSimulation.mjs": "f65db05ad18e31266e768bfb24373f14338b35e9a50636ac971f1bf25490e705",
+          "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+          "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+          "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a",
+          "src/NativeMotion.mjs": "e7cfec23b0f088fa62fdfc7a4360d9a1dffcbbb2451ded4f129910f688c30990",
+          "src/NativeRig.mjs": "de5b7b2bac4ea0ff98ab6ec31fc38defc012d863b821696ef61d11bac596e7ad",
+          "src/Workbench.mjs": "7b09eae5f714782510491694720021db526148f6f48a5362557c687f786bb745"
+        }
+      },
+      "nativeBodyOrFootValidationPerformed": false
+    },
+    {
+      "id": "R02-VALVE-CANCELLATION-CONTINUITY",
+      "severity": "blocker",
+      "status": "current_continuity_contract_passed",
+      "fixReviewed": "EnvironmentWorld archives cancelled records without changing the actual valve angle or flow. Next closeOnly action captures current opening and requires ongoing native-palm contact to close continuously. It increments valvesClosed separately from normal watering.",
+      "regression": {
+        "scope": "SOURCE_LOGIC_FIXTURE_ONLY: actual unchanged LifeSimulation and EnvironmentWorld, but synthetic palm reports and a stub mechanism. No actual native palm/scene, visual, browser or public pass.",
+        "environmentSHA256": "218ad1aee3d3eea912596b7598fb23a6351db2e464234ca922aefdcf3453479c",
+        "passedChecks": [
+          "no palm contact holds actual mechanism",
+          "lost palm contact freezes partial valve angle",
+          "cancel keeps actual and simulated valve opening; it does not snap closed",
+          "close-only candidate remains valid in rain",
+          "close-only operates continuously from current angle and only counts valve closure"
+        ],
+        "cancelledOpening": 0.8311688311688314,
+        "wateredAfterCloseOnly": 0,
+        "valvesClosedAfterCloseOnly": 1
+      },
+      "actualNativePalmOrRenderedMechanismVerified": false
+    },
+    {
+      "id": "R02-RAIN-VALVE-DISPATCH",
+      "severity": "blocker",
+      "status": "fixed_and_exact_scheduling_regression_passed",
+      "failureSource": "f65db05ad18e31266e768bfb24373f14338b35e9a50636ac971f1bf25490e705",
+      "failure": "During persistent rain, five residents already sheltered and E cancelled normal watering. Its 12-second water cooldown led E to choose shelter at 0.6 s. By 60 s every resident was indefinitely shelter/rest, the valve remained 65% open, resource owner was null, and all six had a reachable closeOnly candidate. Idle-only scoring did not wake any resident.",
+      "fixReviewed": "After bottle dispatch, a bounded 0.35-second maintenance scan can assign one idle or shelter/rest resident with a valid reachable closeOnly candidate. It respects cooldowns, pending bottle reservations and execution-blocked states; it does not interrupt active contact tasks. Planter reservation remains exclusive.",
+      "regression": {
+        "scope": "SOURCE_LOGIC_FIXTURE_ONLY: actual unchanged LifeSimulation dispatch under persistent rain; stub mechanism used only to preserve initial cancelled-valve state. No palm, close-completion, native scene, visual, browser or public claim.",
+        "sourceSHA256": {
+          "src/LifeSimulation.mjs": "d191fdf0f249290d602cf75554b185f3a8bfd3cd08338843e0c55482735692b1",
+          "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+          "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+          "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a",
+          "src/EnvironmentWorld.mjs": "218ad1aee3d3eea912596b7598fb23a6351db2e464234ca922aefdcf3453479c"
+        },
+        "allChecksPassed": true,
+        "claimedAtSeconds": 0.05,
+        "claimant": "C",
+        "angleAtClaim": 0.65,
+        "taskKind": "water",
+        "closeOnly": true,
+        "taskPhase": "approach",
+        "initialCancellingActorWaterCooldownUntil": 12
+      },
+      "closingCompletionProvenByDispatchFixture": false
+    }
+  ],
+  "productionCallReview": {
+    "windowAndValve": "Workbench obtains current visible mechanism target, executes native motion, then EnvironmentWorld consumes actual reports. Opening/closing advances only under finite, poseValid, contactReady and actual handle-distance gate. Success also needs completed, current task progress and token; elapsed time alone cannot commit.",
+    "nativeRoot": "Workbench compares report.rootWorld X/Z with navigation state and throws above 1 mm. Shared curve and explicit standStartFactor now close the identified source mismatch.",
+    "reset": "Environment reset is an explicit reset boundary; it is distinct from task cancellation.",
+    "weatherAndLighting": "Source hook reads environment.windStrength; dusk/rain update actual light intensity/color and lantern emissive material. Rendered effect not independently reviewed in this report.",
+    "geometryScope": "Window/valve are assisted authored kinematic transforms. Water visual and moisture accumulator are not a fluid simulation. Navigation disc separation is not a guarantee of all limb/cloth collision avoidance."
+  },
+  "evidenceLayers": {
+    "source": {
+      "result": "assigned defects closed",
+      "limits": "Exact source review and targeted production-method prefix/logic contracts only."
+    },
+    "numeric": {
+      "result": "bounded logic regressions passed",
+      "limits": "No new complete native-bone/body run in this reviewer turn. Separate source-agent native measurements must remain separately identified; synthetic palm reports are not physical or rendered contact evidence."
+    },
+    "browser": {
+      "result": "R02 pending",
+      "required": "Current-candidate real browser screenshots/frames for six complete native characters, clothing/shoes/hair, sit and stand transitions, grasp/transport, mechanism interaction, environment changes and controls. R01 evidence cannot substitute."
+    },
+    "public": {
+      "result": "R02 pending",
+      "required": "Current-candidate actual navigation-body/resource/head evidence and applicable file/offline/public gates before sharing."
+    }
+  },
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "nextAction": "May proceed with the planned current-source startup diagnostic and actual visual review. This report does not authorize sharing or claim R02 visual acceptance.",
+  "evidence": [
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_NAVIGATION_FIRST_OVERLAP.json",
+      "sha256": "24d4c55850ab01a0ad6be21c5ec8519ec093d597ce56eeb4e1fe398ccb2b9707"
+    },
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_NAVIGATION_SWEEP_REGRESSION.json",
+      "sha256": "fde3a72cf720cb842a50fb4da5953489a94ebf34bf12bd29cb0ff6de1c6e43b1"
+    },
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_SEAT_CONTRACT_BEFORE_EXPLICIT_FACTOR.json",
+      "sha256": "1fdb263e70d8060b06a6798925cb5efa339e96eaff5198fe530003d34f68e7a4"
+    },
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_SEAT_CONTRACT.json",
+      "sha256": "eb6a4894a8e635fc8ac107780a060d4f187374948937ae5fd8b1fffa33a9cd54"
+    },
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_WATER_CONTRACT_BEFORE_DISPATCH_FIX.json",
+      "sha256": "3f13f24414beae7e858165be8ec4d77474c14e692cd3689fef67f36a04d4c601"
+    },
+    {
+      "path": "/workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/INDEPENDENT_R02_OPEN_VALVE_DISPATCH.json",
+      "sha256": "2d874bd78c1a01fdf2d5bf64aa7e91bc8f20b6f4d7466c9ac6a5d9aff0084504"
+    }
+  ],
+  "reproducers": [
+    "/tmp/review-r02-navigation.mjs",
+    "/tmp/review-r02-navigation-fixed.mjs",
+    "/tmp/review-r02-seat-contract.mjs",
+    "/tmp/review-r02-water-contract.mjs"
+  ]
+}

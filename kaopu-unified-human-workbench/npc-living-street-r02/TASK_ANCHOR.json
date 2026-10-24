@@ -1,0 +1,52 @@
+{
+  "taskId": "NPC-LIVING-STREET-R02-20261020",
+  "dispatchTime": "2026-10-20T07:58:52.611955+00:00",
+  "userDirectiveVerbatimOrLosslessSummary": "复用自己的GitHub现成服装、鞋子、动作与头发系统；修正动作错误；只要有可达未认领瓶子即安排人物捡拾；增加天气环境活动、扩大街道并增加至六人；男短发/寸头，女长发/中长发。分阶段自审通过后继续。",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/npc-living-street-r02-20261020",
+  "baseSha": "975d8295605ecb3dd703c3d87d92d40223d9206a",
+  "targetObject": "六个完整原生人物的自主街区",
+  "targetDefectOrChange": "用户拒绝R01衣物鞋子和动作；接入已有实现并修复真实执行，同时新增可靠瓶子响应和更多环境互动",
+  "referenceSet": [
+    "CURRENT_HUMAN R07@5543f756ca3af1428323696324303fa70b8de850",
+    "MP05 R10 whole garments@c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49",
+    "R14 shoes@02671d8595e410aca4f81047133f984d6f7950da",
+    "R14 L03 short hair@c89ebc4da8d24ef3decfad85336c5dffb2c471c8",
+    "LongHairLayer@d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15",
+    "Motion R04@4de5f1d420a43355014bc1e6e572dd9c25058eb8",
+    "Motion R05@8d0860881f34cd6d459b1099028f56dfc7b70a2c"
+  ],
+  "acceptedBaseline": "CURRENT_HUMAN R07 原生人物；R01仅工程外壳与已验证的纹理打包，不作为衣服、鞋子、动作的验收基线",
+  "expectedArtifact": "新版本固定HTTPS网页及内部完整单文件standalone",
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/npc-living-street-r02",
+    "docs/handoffs/npc-living-street-r02-20261020",
+    ".github/workflows/npc-living-street-r02-verify.yml"
+  ],
+  "protectedInvariants": [
+    "R01和PR310保持不变",
+    "完整原生网格、104骨骼、全部CSR权重和原有皮肤纹理",
+    "不以简单替身、LOD降网格或动作播放列表冒充目标",
+    "用户视觉验收和生产就绪保持待定",
+    "3男3女，男短发/寸头，女长发/中长发"
+  ],
+  "forbiddenRoutes": [
+    "重新用通用外观代替已有衣鞋发型",
+    "未检查接触的运动代码冒充动作质量",
+    "静态截图代替三维",
+    "隐藏外链数据的伪单文件",
+    "未核验固定公网URL",
+    "覆盖其它分支或Pages目录"
+  ],
+  "acceptanceGates": [
+    "源码版本与来源证明",
+    "六人全部完成生成且衣鞋头发来源可追溯",
+    "多个瓶子互斥认领且有因果捡拾",
+    "走路/弯腰/坐下/转身可见审查",
+    "六人天气与设施活动无资源死锁",
+    "真实浏览器桌面/手机视口",
+    "真实file离线运行",
+    "独立审查与当前head固定公网校验"
+  ],
+  "sourceAcceptanceNote": "现成源与R02装配的视觉验收分别记录；用户拒绝P03针织不进入默认六套；女性长发源未声称已被用户接受。"
+}

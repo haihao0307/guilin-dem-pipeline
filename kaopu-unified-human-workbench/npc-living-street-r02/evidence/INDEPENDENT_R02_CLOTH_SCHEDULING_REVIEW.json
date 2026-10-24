@@ -1,0 +1,207 @@
+{
+  "schema": "npc-r02-independent-cloth-scheduling-review/1",
+  "createdAt": "2026-10-20T09:29:43.163569+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "scope": "Read-only review of actual d69 startup failure evidence and the original continuous cloth scheduling contract. Four bounded calls to unchanged stableSampling were evaluated; no browser, GPU benchmark, production edit or large suite.",
+  "status": "ORIGINAL_FAR_MINIMUM_CONFIRMED_INPUT_INVALIDATION_SOURCE_FIX_SUPPORTED_PENDING_RUNTIME",
+  "artifactHead": "d69d2574ca3972cd68eeb557e9771c650519c95a",
+  "artifactSourceSHA256": {
+    "src/NativeWardrobe.mjs": "72b4668c4b3845b5b36ef3f00e62ef24f71ae266c2a33bb031136e99f03002f3",
+    "src/Workbench.mjs": "a82991d68fbdee369f02c736bc70f040747e774f8583614ac97c7a0f7f4996a3",
+    "src/RenderQueue.mjs": "01d4694cabe836af6b15b1f915fc4992358756e5e702e5d0caf782d5416c6c4c"
+  },
+  "supportingFileSHA256": {
+    "vendor/appearance/cloth-adapted/continuous-solid.mjs": "067e1e35560b7ef2b2213212cb59413b80b8d7d418cfdb8588e61cc1976a252c",
+    "vendor/appearance/cloth-adapted/sampling-stability.mjs": "ba2615f5ccecb84300274618a2b9280626190f55c5cacf76ee7d68068cf597e7",
+    "vendor/appearance/cloth-adapted/solid-helpers.mjs": "e109f4c72830d56c5298569384f3e08a4f8c2a9f790523fa3fae46a1b260593b",
+    "vendor/appearance/cloth-r10/app.mjs": "958ce88eaec470c472204dd4b348d67d94230820b084f668f21799fcbb30f63b",
+    "vendor/appearance/cloth-r10/sampling-stability.mjs": "ba2615f5ccecb84300274618a2b9280626190f55c5cacf76ee7d68068cf597e7",
+    "evidence/ci-startup-d69/failure-dom-state.json": "629b1f47bdf0677bd9b47d7eaffcf39b6571b8d6fc2a4aa58a823feb3257cb78",
+    "evidence/ci-startup-d69/qa.json": "651cd484a4a1a253846398ec13cd4b6e4a9455a82fc114ac6f8008bf4648b2af"
+  },
+  "actualBrowserEvidence": {
+    "ready": true,
+    "paused": true,
+    "cameraMode": "all",
+    "simulationTime": 1.4543999999999664,
+    "managedRequested": 19,
+    "managedSubmitted": 2,
+    "managedCompleted": 1,
+    "initialNativeFenceObservedMS": 149980.09999999998,
+    "firstManagedBatchObservedMS": 87879,
+    "lastAppearanceCPUWallMS": 450.9000000000233,
+    "wardrobeUpdatesByActor": {
+      "A": 15,
+      "B": 15,
+      "C": 15,
+      "D": 15,
+      "E": 15,
+      "F": 15
+    },
+    "denimGarments": 10,
+    "leatherGarments": 2,
+    "denimYarnSpans": 123780,
+    "denimReportedYarnTriangles": 13368240,
+    "denimFrameAtlasBytes": 89728000,
+    "denimSeamSubmissionsTotal": 140,
+    "hairReportedTriangles": 8960316,
+    "allDenimResamplesZero": true,
+    "allDenimQueuedZero": true,
+    "allDenimCached": true,
+    "allDenimDisplayMovingTrue": true,
+    "qaStatus": "FAILED_CLEANUP",
+    "screenshots": [],
+    "failure": "Data details summary click exhausted the unchanged 15 second visible/enabled/stable wait; later screenshot was not obtained and independent browser cleanup timed out.",
+    "boundary": "Ready plus one completed frame is not a successful startup suite, responsive UI or visual acceptance. Reported yarn triangles exclude seams/leather/native/hair and are not total GPU pass workload. One snapshot does not prove repeated updates used identical poses."
+  },
+  "initialSamplingFinding": {
+    "hypothesis": "motion(true) permanently prevents initial far-view sampling from reducing an oversized default.",
+    "supportedByThisRun": false,
+    "sourceEvidence": [
+      "continuous-solid constructs denim initialSegments=8 and initial sides=6.",
+      "desired() retains an eight-segment minimum and an even side count of at least six for denim.",
+      "stableSampling returns target immediately on its first invocation, before checking moving.",
+      "A camera change marks cameraSamplingDirty. After more than 280 ms quiet time, coarsening is allowed even while moving when this dirty flag is true.",
+      "tube(8,6,1) builds 2*8*6 side triangles plus 2*6 cap triangles = 108 triangles per original yarn span."
+    ],
+    "actualInference": "Every denim garment reports resamples=0 and exactly 108 triangles per yarn span. This matches the original 8x6 initial/minimum geometry. There is no evidence that an oversized near-view topology was retained during this first overview.",
+    "consequence": "Changing moving alone cannot remove these 13,368,240 source-minimum yarn triangles, and cannot be claimed to resolve the 87.879 second first-batch observation."
+  },
+  "adapterFindings": [
+    {
+      "id": "unconditional_deformation_invalidation",
+      "confirmedInSource": true,
+      "evidence": "NativeWardrobe.update always calls deformControl. Even when its measured body movement is zero, it runs skinBound/projectGarment, rewrites control positions/normals, then solid.deform. The original solid increments revision and marks seams dirty; YarnFrameAtlas is re-rendered for the new revision.",
+      "originalContract": "Donor app updatePhysics invokes deform after new physics rows. Its ordinary viewer.render invokes solid.update(camera) without itself calling deform.",
+      "impact": "Identical-pose inspection redraws can redo CPU contact/normals and GPU atlas/seams. Current snapshot shows many updates relative to beauty submissions but does not by itself establish identical-pose duplication.",
+      "sourceResolution": "Addressed by reviewed NativeWardrobe exact-pose/root update at SHA 3f2fabb58a00ba6ee1de229375780a6fc8ce0019c0c866ba4361ff3c98aa1282; runtime effectiveness is not yet verified."
+    },
+    {
+      "id": "permanent_moving_flag",
+      "confirmedInSource": true,
+      "evidence": "NativeWardrobe unconditionally calls solid.motion(true); actual failed snapshot is paused yet all ten denim records say displayMoving=true.",
+      "originalContract": "Donor render and physics update call motion(!!physics.running).",
+      "impact": "Paused/stationary conditions are not faithfully reported. With quiet camera and cameraSamplingDirty=false, the original hysteresis blocks coarsening when moving=true. Leather branch also uses moving to bypass its usual visibility decision. This is not proof of a first-overview sampling defect.",
+      "sourceResolution": "Addressed by reviewed NativeWardrobe exact-pose/root update at SHA 3f2fabb58a00ba6ee1de229375780a6fc8ce0019c0c866ba4361ff3c98aa1282; runtime effectiveness is not yet verified."
+    },
+    {
+      "id": "missing_sampling_wake_callback_in_d69",
+      "confirmedInArtifactSource": true,
+      "evidence": "Donor buildSolid receives requestRender:()=>viewer.render(); d69 NativeWardrobe omitted it.",
+      "impact": "The original timer/rAF is needed to finish the 100 ms refine delay, 280 ms camera settle, remaining bounded resample queue and 180 ms transition when the user is paused and stops moving the camera. Without future requests, a paused inspection can remain partially converged.",
+      "subsequentObservedRootPatch": {
+        "src/NativeWardrobe.mjs": "bef0599410a093bdbae8c45d16487603e66ecbc6f5ad6a04bc17ff2149e354f1",
+        "src/Workbench.mjs": "1b2543f504c8a04ba8cb9fde132d62bcb425da8127aeb46cdcb972946f6b886d",
+        "review": "Root now forwards requestRender through NativeWardrobe and supplies ()=>viewer.render(). This requests managed work only and preserves the original source wake behavior; no runtime/visual pass is inferred."
+      }
+    }
+  ],
+  "boundedOriginalFunctionProbe": {
+    "scope": "CPU-only evaluation of unchanged stableSampling; not a GPU or actual scene test.",
+    "cases": [
+      {
+        "case": "first call with moving true and 8x6 target",
+        "result": {
+          "segments": 8,
+          "sides": 6
+        }
+      },
+      {
+        "case": "64x12 current, cameraSamplingDirty true, moving true, quiet 300ms",
+        "result": {
+          "segments": 8,
+          "sides": 6
+        }
+      },
+      {
+        "case": "64x12 current, cameraSamplingDirty false, moving true, quiet 300ms",
+        "result": null
+      },
+      {
+        "case": "same stationary view with moving false",
+        "result": {
+          "segments": 8,
+          "sides": 6
+        }
+      }
+    ]
+  },
+  "singleFidelityPreservingRecommendation": {
+    "name": "Restore input-driven cloth invalidation and truthful motion state.",
+    "implementationBoundary": "Keep solid.update(camera) on each accepted draw so the original screen-error scheduler can operate. Advance control deformation/revision only when every relevant native pose/control/material/topology input actually changes; compare exact values or use a trustworthy source revision, without epsilon suppression or timed throttling. Report real movement/paused state to solid.motion. Preserve the now-restored source requestRender callback to finish original sampling wake-ups through the managed queue.",
+    "mustPreserve": [
+      "Every original yarn interval and ply.",
+      "Original materials, hair density and mesh indices.",
+      "Original minimum sampling and screen-error/hysteresis thresholds.",
+      "Existing interaction, image and timeout gates."
+    ],
+    "boundedVerification": "For identical input state, an extra display request should preserve geometry output and control/atlas/seam revisions. A real pose change must still update them; a camera-only change must still run the original sampling update and can legitimately rebuild the atlas if crimp/sampling changes. Confirm paused near/far wake-ups complete. Do not equate this static/CPU check with measured browser speed.",
+    "honestLimit": "This removes redundant work and repairs the donor integration contract. It does not reduce the original minimum geometry and does not establish the cause or cure of all cold-start/interaction delay.",
+    "implementationStatus": "Root implemented exact pose invalidation, truthful root/pose movement and the request-only source wake callback. Current source review supports inclusion in the next diagnostic; actual rendering/performance remains pending."
+  },
+  "releaseCandidate": false,
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "performanceAcceptance": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "updatedAt": "2026-10-20T09:32:05.322339+00:00",
+  "previousReviewSHA256": "8a9a2f12ce243a16bdfc5df383d8d14ef4b69e131e9e1aacb84f91413f927840",
+  "cachePatchReview": {
+    "sourceSHA256": {
+      "src/NativeWardrobe.mjs": "3f2fabb58a00ba6ee1de229375780a6fc8ce0019c0c866ba4361ff3c98aa1282",
+      "src/Workbench.mjs": "1b2543f504c8a04ba8cb9fde132d62bcb425da8127aeb46cdcb972946f6b886d",
+      "src/RenderQueue.mjs": "bcf4d4181bfb07be57f1b940569b9cffb8ab157ad280035f145c3449d8fc8bfe",
+      "src/NativeBinding.mjs": "7d1165ca2f565fbb69f71f84e20420e1ced71c9010cfa7a52a6b53a143df4bc6",
+      "src/NativeMotion.mjs": "a85cd8dfddc85f25762c721d2ac060d97c82e3469e5bb39dc76aae75f29caa22"
+    },
+    "sourceBlockers": [],
+    "mayEnterNextDiagnosticCandidate": true,
+    "unchangedAlgorithmCheck": {
+      "baselinePath": "/tmp/npc-r02-submit-2/src/NativeWardrobe.mjs",
+      "baselineSHA256": "72b4668c4b3845b5b36ef3f00e62ef24f71ae266c2a33bb031136e99f03002f3",
+      "exactSourcePrefixEqual": true,
+      "scope": "All source before createNativeWardrobe, including bindGarment, skinBound, projectGarment, deformControl and the pure numeric control adapter."
+    },
+    "cacheKey": "Every coefficient of every current native rig skin matrix, compared with strict !==. Matrix lengths are also compared. There is no time throttle, epsilon, quantization or suppression of small representable changes.",
+    "snapshotOwnership": "lastPose uses matrices.map(m=>Float64Array.from(m)); lastWorld also copies into Float64Array. Neither is an alias to a subsequently mutated rig/root array.",
+    "currentInputs": [
+      {
+        "input": "Garment bound rest points/weights, paper, seams, topology and materials",
+        "finding": "Constructed once per attachment. No current Workbench runtime path modifies them."
+      },
+      {
+        "input": "Local garment skinning",
+        "finding": "skinBound reads the complete rig.skinMatrices already included in the key."
+      },
+      {
+        "input": "Posed body used by contact",
+        "finding": "binding.sampleVertex reads immutable packed/range data and Float32 boneData. Current runtime commits boneData from the same completed rig.skinMatrices before appearance preparation; no independent current deform input was found."
+      },
+      {
+        "input": "Contact caches and normal/bounds output",
+        "finding": "Derived from the same local posed body and fixed control inputs; no independently advancing cloth physics or time input exists in this adapter."
+      },
+      {
+        "input": "Actor world transform",
+        "finding": "updateWorldMatrix(true,false) precedes exact copied world-matrix comparison. Root motion updates solid.motion and localCamera, while local control points remain valid if skin matrices are unchanged."
+      },
+      {
+        "input": "Camera and source sampling state",
+        "finding": "Every accepted draw still calls solid.update(localCamera). Camera-relative projection, crimp, hysteresis, demand tasks and morph timing therefore still run independently of deformation cache hits."
+      }
+    ],
+    "initialPath": "lastPose and lastWorld start null. The attachment update without a camera performs the first control deformation and records it. The first camera-bearing managed frame still updates source materials/sampling, and recomputes controls if NativeMotion has changed the pose.",
+    "resetPath": "Workbench reset synchronously resets the executors, calls execute(0), commits the resulting bindings, and then requests a frame. No render hook can interleave mid-handler. A different reset pose is detected; an exactly identical reset pose can validly retain the same local control surface. The cache need not be erased merely because simulation time resets, since there is no free cloth state here.",
+    "movementFlag": "solid.motion(poseChanged||rootMoved) overwrites the former unconditional true before material update. A subsequent unchanged pose/root draw reports false. This reflects movement since the last accepted appearance preparation rather than an unrelated global running flag.",
+    "wakeCallback": "requestRender remains forwarded to the original source. Its current caller is managed viewer.render, so asynchronous source wakes mark dirty and do not update or draw directly.",
+    "diagnostics": "updates, deformations and unchangedPoseUpdates distinguish redraws from actual control work. lastContact remains the result of the last real deformation; on a cache hit it is not a newly run contact certificate.",
+    "limits": [
+      "Fixed 104-bone topology is an existing actor invariant; this is not a generic cache for runtime skeleton replacement.",
+      "Future mutable body binding, garment topology/material grading or independent cloth dynamics would require explicit invalidation; none is currently present.",
+      "No new numeric geometry-equivalence suite or GPU/browser performance test was executed for this cache.",
+      "Known garment/body intersections and motion visual issues remain outside this scheduling fix."
+    ],
+    "productionFilesEditedByReviewer": []
+  }
+}

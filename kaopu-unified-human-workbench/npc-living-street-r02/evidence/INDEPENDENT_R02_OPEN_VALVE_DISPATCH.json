@@ -1,0 +1,198 @@
+{
+  "schema": "courtyard-independent-r02-water-contract/1",
+  "reviewedAt": "2026-10-20T08:38:00.214Z",
+  "scope": "SOURCE_LOGIC_FIXTURE_ONLY: actual unchanged LifeSimulation dispatch under persistent rain; stub mechanism used only to preserve initial cancelled-valve state. No palm, close-completion, native scene, visual, browser or public claim.",
+  "sourceSHA256": {
+    "src/LifeSimulation.mjs": "d191fdf0f249290d602cf75554b185f3a8bfd3cd08338843e0c55482735692b1",
+    "src/WorldLayout.mjs": "c3d3b8edc43dcf7640723bef0bb5906c2e91771d20e0ef3eeaec9fcd68b77e36",
+    "src/ActorProfiles.mjs": "34c73aa312b7b19fcc335486dbad64733910817440cfb0a64146233cd30b87d6",
+    "src/SeatMotionPath.mjs": "25ac3c3b6a23c8bf7ed8ee309a148ecd19fee62cbbff86cd331b18c49a54a89a",
+    "src/EnvironmentWorld.mjs": "218ad1aee3d3eea912596b7598fb23a6351db2e464234ca922aefdcf3453479c"
+  },
+  "snapshotDirectory": "/tmp/r02-water-contract-1792485480145",
+  "checks": [
+    {
+      "name": "cancelled valve is eventually claimed while all residents shelter from persistent rain",
+      "pass": true,
+      "initial": {
+        "water": 0.65,
+        "cooldown": 12,
+        "others": [
+          {
+            "id": "A",
+            "kind": "shelter",
+            "phase": "rest"
+          },
+          {
+            "id": "B",
+            "kind": "shelter",
+            "phase": "rest"
+          },
+          {
+            "id": "C",
+            "kind": "shelter",
+            "phase": "rest"
+          },
+          {
+            "id": "D",
+            "kind": "shelter",
+            "phase": "rest"
+          },
+          {
+            "id": "F",
+            "kind": "shelter",
+            "phase": "rest"
+          }
+        ],
+        "actor": {
+          "id": "E",
+          "name": "夏岚",
+          "sex": "female",
+          "gender": 1,
+          "stage": "adult",
+          "build": "tall-sturdy",
+          "presetId": "r02-adult-female-tall-sturdy",
+          "faceId": "P04",
+          "hair": "long",
+          "description": "高挑 · 利落，喜欢散步",
+          "x": 9.7,
+          "z": 3.3,
+          "yaw": 3.141592653589793,
+          "identity": "高挑 · 利落，喜欢散步",
+          "walkSpeed": 0.8,
+          "radius": 0.27,
+          "needs": {
+            "hunger": 0.05,
+            "fatigue": 0.1
+          },
+          "money": 0,
+          "traits": {
+            "industry": 0.8,
+            "restfulness": 0.3,
+            "curiosity": 0.82
+          },
+          "preferredSeat": "benchE",
+          "index": 4,
+          "speed": 0,
+          "velocity": {
+            "x": 0,
+            "z": 0
+          },
+          "moving": false,
+          "distanceTravelled": 0,
+          "inventory": {
+            "bottles": [],
+            "bread": 0
+          },
+          "task": null,
+          "pose": "standing",
+          "reason": "受到打扰，重新看看眼前的情况",
+          "goal": "照顾眼前的小事",
+          "plan": [
+            "water"
+          ],
+          "waitUntil": 0.6,
+          "pendingBottle": null,
+          "cooldowns": {
+            "water": 12
+          },
+          "memory": {
+            "failedTargets": {},
+            "lastActions": [
+              {
+                "kind": "water",
+                "time": 0,
+                "success": false
+              }
+            ],
+            "visited": []
+          },
+          "counters": {
+            "collected": 0,
+            "recycled": 0,
+            "bought": 0,
+            "eaten": 0,
+            "rests": 0,
+            "windows": 0,
+            "watered": 0,
+            "valvesClosed": 0
+          },
+          "candidates": [],
+          "lastInteraction": null,
+          "interruption": "受到打扰，重新看看眼前的情况",
+          "capabilities": {
+            "window": true,
+            "water": true
+          }
+        }
+      },
+      "end": {
+        "time": 0.05,
+        "water": 0.65,
+        "moisture": 0.380785,
+        "resourceOwner": "C",
+        "actors": [
+          {
+            "id": "A",
+            "kind": "shelter",
+            "phase": "rest",
+            "closeOnly": false,
+            "hasReachableCloseCandidate": false
+          },
+          {
+            "id": "B",
+            "kind": "shelter",
+            "phase": "rest",
+            "closeOnly": false,
+            "hasReachableCloseCandidate": false
+          },
+          {
+            "id": "C",
+            "kind": "water",
+            "phase": "approach",
+            "closeOnly": true,
+            "hasReachableCloseCandidate": true
+          },
+          {
+            "id": "D",
+            "kind": "shelter",
+            "phase": "rest",
+            "closeOnly": false,
+            "hasReachableCloseCandidate": false
+          },
+          {
+            "id": "E",
+            "hasReachableCloseCandidate": false
+          },
+          {
+            "id": "F",
+            "kind": "shelter",
+            "phase": "rest",
+            "closeOnly": false,
+            "hasReachableCloseCandidate": false
+          }
+        ]
+      },
+      "decisions": [
+        {
+          "sequence": 15,
+          "time": 0.05,
+          "type": "decision",
+          "actorId": "C",
+          "message": "许宁：水阀还开着，过去把它关好",
+          "kind": "water",
+          "targetId": "planterA",
+          "score": 150.62467391674193,
+          "plan": [
+            "water"
+          ]
+        }
+      ],
+      "diagnosis": null
+    }
+  ],
+  "allChecksPassed": true,
+  "candidateApproved": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}
