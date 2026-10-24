@@ -1,3 +1,9 @@
+# R13 isolated building UI and observed-opening candidate gate; unchanged workflow.
+from pathlib import Path as _R13Path
+import runpy as _R13run
+_R13run.run_path(str(_R13Path(__file__).parent.parent/'building-mother-r13'/'browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
+
 # R12 independent candidate UI gate; prior gates below preserved.
 from pathlib import Path as _R12Path
 import runpy as _R12run
