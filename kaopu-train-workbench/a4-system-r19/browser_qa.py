@@ -13,6 +13,10 @@ async def main():
   await page.click('#reset');await page.uncheck('#cut');await page.screenshot(path='closed-boiler-browser.png',full_page=True);await page.check('#cut')
   await page.locator('#phase').fill('2300');await page.locator('#phase').dispatch_event('input');assert abs((await page.evaluate('testAPI.getState()'))['t']-2.3)<1e-9
   await page.uncheck('#steam');await page.screenshot(path='drive-browser.png',full_page=True);await page.check('#steam')
+  for sample in json.loads(Path('expected.json').read_text()):
+   actual=await page.evaluate('(t)=>testAPI.pose(t)',sample['t'])
+   for a,e in zip(actual,sample['pose']):
+    for k in ['big','small']:assert max(abs(x-y) for x,y in zip(a[k],e[k]))<1e-12
   assert not errors,errors
   Path('BROWSER_QA.json').write_text(json.dumps({'pass':True,'page_errors':errors,'first_page_and_screenshot_seconds':first,'controls':['drag','reset','cutaway','angle','layer'],'animation_perf_not_verified':True,'scope':'documentary teacher plus inferred registration, not exact 60009','renderer':'WebGL2 raymarched analytic fields, no train triangle meshes','source_assets_published':False},indent=2))
   await b.close()

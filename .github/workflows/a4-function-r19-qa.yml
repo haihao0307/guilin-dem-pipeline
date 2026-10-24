@@ -21,6 +21,7 @@ jobs:
       - name: Numerical and real browser verification
         working-directory: kaopu-train-workbench/a4-system-r19
         run: |
+          python validate.py
           timeout 480s python browser_qa.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
