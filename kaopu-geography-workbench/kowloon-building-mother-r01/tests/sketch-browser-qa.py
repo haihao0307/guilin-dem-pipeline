@@ -9,8 +9,8 @@ report={'passed':False,'scope':'Independent function-only building rule sketches
 def save():(out/'sketch-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root.parent)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r02/sketches.html'
-config=root/'sketch-r02-public-url.json'
+url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r03/sketches.html'
+config=root/'sketch-r03-public-url.json'
 if config.exists():
  cfg=json.loads(config.read_text());url=cfg['url'];report['scope']='Actual public independent sketches, no route overrides'
  def verify(item):
@@ -28,16 +28,16 @@ try:
    assert not page.evaluate('sketchInspection.errors'),page.evaluate('sketchInspection.errors')
   def capture(name):
    settle();q=page.evaluate('''()=>{const s=sketchInspection,r=s.renderer,p=r.readPixels(),colors=new Set(),hits=[];for(let i=0;i<p.length;i+=4)colors.add(p[i]+256*p[i+1]+65536*p[i+2]);for(let y=16;y<r.canvas.height;y+=24)for(let x=16;x<r.canvas.width;x+=24){const h=r.readHit(x,y);if(h.objectId>=10000)hits.push({x,y,id:h.objectId});}return{values:s.values,checks:s.result.checks,counts:s.result.counts,frame:s.frames.at(-1),colors:colors.size,hits,gpu:r.gpu,glError:r.gl.getError(),canvas:{w:r.canvas.width,h:r.canvas.height},sourcePatches:r.measured.patches.length};}''')
-   assert q['colors']>=4,(name,q['colors']);assert len({h['id'] for h in q['hits']})>=2,name;assert q['glError']==0;assert q['sourcePatches']==0
+   assert not q['frame'].get('cancelled');assert q['colors']>=4,(name,q['colors']);assert len({h['id'] for h in q['hits']})>=2,name;assert q['glError']==0;assert q['sourcePatches']==0
    raw=page.locator('#sketch').screenshot(path=str(out/(name+'.png')));q['sha256']=hashlib.sha256(raw).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,round(q['frame']['wallMs']),flush=True);return q
   def action(fn):
    n=page.evaluate('sketchInspection.frames.length');fn();settle(n)
-  first=capture('cell-frame');page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  first=capture('connected-default');page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
   for case in ['cell','vertical','connected']:
    action(lambda case=case:page.locator(f'[data-case={case}]').click())
    for stage in ['1','4','7']:
     action(lambda stage=stage:page.locator('#stage').select_option(stage));capture(case+'-stage'+stage)
-  action(lambda:page.locator('#roof').click());capture('connected-roof-off')
+  capture('connected-roof-off')
   action(lambda:page.locator('[data-case=vertical]').click());action(lambda:page.locator('#stage').select_option('4'))
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[7,4,-8],target:[2,3.6,2.5],fov:.5})'));capture('column-joints-close')
   action(lambda:page.locator('[data-case=connected]').click());action(lambda:page.locator('#stage').select_option('6'))
@@ -49,26 +49,35 @@ try:
   action(lambda:page.locator('#stage').select_option('7'))
   action(lambda:page.locator('#top').click());capture('lift-corridor-top')
   action(lambda:page.locator('#fit').click())
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[12,4,12],target:[6,2.1,5],fov:.7})'));capture('window-door-openings-close')
+  action(lambda:page.locator('#fit').click())
   # Preserve baseline geometry and exact restore across a single propagated input.
   sig=page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')
   baseline=capture('connected-height36')
   def height(v):page.locator('#groundHeight').fill(v);page.locator('#groundHeight').press('Tab')
   action(lambda:height('4'));changed=capture('connected-height40');assert changed['sha256']!=baseline['sha256']
   action(lambda:height('3.6'));restored=capture('connected-height-restored');assert page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')==sig
-  action(lambda:page.locator('#storeys').select_option('4'));capture('connected-four-storeys')
-  multi=page.evaluate('({levels:sketchInspection.result.levels.length,connections:sketchInspection.result.stair.connections.length,lift:sketchInspection.result.lift})')
-  assert multi['levels']==4 and multi['connections']==3 and len(multi['lift']['stops'])==4
-  assert multi['lift']['shaftBottom']<0 and multi['lift']['shaftAxis']==[0,1,0]
-  for i in range(3):action(lambda:page.locator('#lift').click())
-  capture('connected-four-storeys-lift-top')
-  assert page.evaluate('sketchInspection.result.lift.level')==3
-  action(lambda:page.locator('#storeys').select_option('2'))
-  action(lambda:page.locator('#lift').click())
-  capture('connected-two-storeys-restored')
+  # Actual visible +/- controls and true 2 -> 3 -> 5 -> 8 -> 2 regeneration.
+  action(lambda:page.locator('#addFloor').click());capture('connected-three-storeys')
+  assert page.evaluate('sketchInspection.result.levels.length')==3
+  for count in ['5','8']:
+   action(lambda count=count:page.locator('#storeys').select_option(count));capture('connected-'+count+'-storeys')
+   multi=page.evaluate('({levels:sketchInspection.result.levels.length,connections:sketchInspection.result.stair.connections.length,lift:sketchInspection.result.lift})')
+   assert multi['levels']==int(count) and multi['connections']==int(count)-1 and len(multi['lift']['stops'])==int(count)
+   assert multi['lift']['shaftBottom']<0 and multi['lift']['directAttachment']
+  action(lambda:page.locator('#removeFloor').click());assert page.evaluate('sketchInspection.result.levels.length')==7
+  action(lambda:page.locator('#storeys').select_option('2'));capture('connected-two-storeys-restored')
   assert page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')==sig
-  action(lambda:page.locator('#door').click());capture('connected-doors-open')
+  semantic=page.evaluate("({portals:sketchInspection.result.portals,primitives:sketchInspection.model.archetypes.flatMap(a=>a.primitives)})")
+  assert any(p.get('openingType')=='window' and p.get('sill',0)>0 for p in semantic['portals'])
+  assert any(p.get('role')=='empty_doorway' and not p['leafIds'] for p in semantic['portals'])
+  assert not any(':bridge' in p['nodeId'] for p in semantic['primitives'])
+  action(lambda:page.locator('#focus').click());capture('desktop-expanded-workspace');page.screenshot(path=str(out/'desktop-expanded-full-page.png'),full_page=True)
+  action(lambda:page.locator('#focus').click())
   action(lambda:page.locator('#lift').click());capture('connected-lift-upper')
   action(lambda:page.locator('#liftDoor').click());capture('connected-lift-doors-open')
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[10,5,-5],target:[8.2,4.5,.8],fov:.65})'));capture('lift-direct-threshold-close')
+  action(lambda:page.locator('#fit').click())
   action(lambda:page.locator('#cut').click());cut=capture('connected-cutaway')
   # Display-only ghosting must expose inner structures without changing the model.
   physical=page.evaluate('JSON.stringify(sketchInspection.model)')
@@ -82,9 +91,9 @@ try:
   assert page.evaluate('Boolean(sketchInspection.selected)');assert len(page.locator('#selection').inner_text())>20
   page.screenshot(path=str(out/'sketch-selected-full-page.png'),full_page=True)
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
-  n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
+  action(lambda:page.locator('#cut').click());n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');assert page.locator('#sketch').bounding_box()['width']>=360;page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
   assert not report['errors'];assert not any(u.endswith(('.jpg','.png','.gltf','.glb')) for u in requests)
-  report['checks']=['three real WebGL sketches','three growth stages each','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','door and lift illustrative controls','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
+  report['checks']=['three real WebGL sketches','three growth stages each','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc());save();raise
 finally:server.shutdown()
