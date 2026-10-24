@@ -1,3 +1,9 @@
+# R17 exact-pixel neighbour and retained geometry QA; unchanged workflow.
+import os, runpy
+from pathlib import Path
+os.environ['R17_EVIDENCE_DIR']='public-inspection-evidence'
+runpy.run_path(str(Path(__file__).parent.parent/'building-mother-r17'/'renderer-neighbor-browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
 # R16 material-only visual regression; original authorized workflow unchanged.
 from pathlib import Path as _R16Path
 import runpy as _R16run

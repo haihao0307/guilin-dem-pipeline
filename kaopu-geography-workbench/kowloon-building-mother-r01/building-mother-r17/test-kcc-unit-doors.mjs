@@ -1,0 +1,7 @@
+import fs from'node:fs';import assert from'node:assert/strict';import{deriveMeasuredCase}from'./kowloon-building-mother-r01/r07/cases.mjs';import{controllerFor}from'./kowloon-building-mother-r01/whole-building-ground-r01/controller.mjs';import{attachKccUnitDoors,deriveKccUnitRoute}from'./kcc-unit-doors.mjs';import{updateAperture,queryApertures}from'./kowloon-building-mother-r01/r07/apertures.mjs';
+const r=p=>JSON.parse(fs.readFileSync(new URL(p,import.meta.url))),s=deriveMeasuredCase(r('hk-three-buildings-r01/geometry/B359971994401063C0.score.json')),base=controllerFor('kcc').derive(s,r('kowloon-building-mother-r01/r07/sources/official-footprints.json')),m=attachKccUnitDoors(base);assert.equal(m.kccUnitAccess.doorCount,144);assert.deepEqual(m.levels,base.levels);const results=[];
+for(const key of'ABCDEF'){
+ const route=deriveKccUnitRoute(m,key);assert(route.passed);const a=m.hostedComponents.apertures.find(a=>a.roomKey===key),opened=updateAperture(a,{openT:1});let closedHit=false;
+ for(const p of route.path){for(let k=0;k<8;k++){const q=[p[0]+.23*Math.cos(k*Math.PI/4),a.host.origin[1]-.1,p[2]+.23*Math.sin(k*Math.PI/4)];closedHit ||=queryApertures(a,q).inside;assert(!queryApertures(opened,q).inside,`Opened door ${key} blocks declared path ${q}`);}}assert(closedHit,`Closed door ${key} must block route`);results.push({key,pathSamples:route.path.length,gridChecks:route.checks});
+}
+console.log(JSON.stringify({passed:true,designDoors:144,levelsRetained:true,roomRoutes:results,actualLayoutInstalled:false}));
