@@ -22,6 +22,11 @@ try:
    camera=p.evaluate('structuredClone(semanticInspection.renderer.options)');p.locator('#materialMode').click();p.wait_for_function('semanticInspection.materialMode===false&&!semanticInspection.busy');p.screenshot(path=str(out/f'{name}-r15-colors.png'),full_page=True)
    assert p.evaluate('semanticInspection.renderer.options.eye')==camera['eye'];assert p.evaluate('semanticInspection.registry.map(r=>r.objectId)')==ids
    p.locator('#materialMode').click();p.wait_for_function('semanticInspection.materialMode===true&&!semanticInspection.busy')
+  p.locator('[data-building=kcc]').click();p.wait_for_function('semanticInspection.caseId==="kcc"&&!semanticInspection.busy')
+  w=p.evaluate('semanticInspection.registry.find(r=>r.caseId==="kcc"&&r.classKey==="window"&&r.localFloorId==="T20"&&r.part!=="glass")');assert w
+  p.locator('#objects').select_option(str(w['objectId']));p.locator('#focus').click();p.wait_for_function('!semanticInspection.busy');p.screenshot(path=str(out/'kcc-filtered-joints-close.png'),full_page=True)
+  report['closeFrame']=p.evaluate('semanticInspection.lastStats')
+  p.locator('[data-building=lowrise]').click();p.wait_for_function('semanticInspection.caseId==="lowrise"&&!semanticInspection.busy')
   p.locator('#semanticMode').click();p.wait_for_function('semanticInspection.semanticMode&&!semanticInspection.busy');p.screenshot(path=str(out/'semantic-colors.png'),full_page=True)
   p.locator('#semanticMode').click();p.wait_for_function('!semanticInspection.semanticMode&&!semanticInspection.busy')
   p.locator('#materialColor').evaluate("e=>e.value='#cddcea'");p.locator('#materialColor').dispatch_event('change');p.wait_for_function('!semanticInspection.busy');p.screenshot(path=str(out/'lowrise-edited-color.png'),full_page=True)
