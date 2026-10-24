@@ -47,6 +47,9 @@ try:
   assert p.evaluate('semanticInspection.registry.map(r=>r.objectId)')==baseline['ids']
   assert p.evaluate('semanticInspection.renderer.options.eye')==baseline['camera']['eye']
   p.locator('#semanticMode').click();p.wait_for_function('!semanticInspection.semanticMode&&!semanticInspection.busy')
+  p.locator('#showMother').click();assert p.locator('#motherDetails').get_attribute('open') is not None
+  assert '排水' in p.locator('#motherRelations').inner_text();p.screenshot(path=str(out/'mother-function-parameters.png'),full_page=True)
+  assert p.evaluate('semanticInspection.buildings.every(b=>b.localModel.buildingMother.services.sitePorts.length===3)')
   assert not report['errors'];report['passed']=True;report['scope']='R15 warehouse source-hosted visible lattice and clipped unit fronts; same camera before/after; three building switches';b.close()
 except Exception:report['errors'].append(traceback.format_exc());raise
 finally:(out/'r15-facade-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));server.shutdown()

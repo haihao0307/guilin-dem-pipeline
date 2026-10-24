@@ -1,3 +1,4 @@
+import {attachLifeServiceContract} from './life-service-contract.mjs';
 import {attachWarehouseMainFacade} from './warehouse-main-facade.mjs';
 import {attachKccMainFacade} from './kcc-main-facade.mjs';
 import {deriveKccFacadeRegistration} from './kcc-facade-registration.mjs';
@@ -103,5 +104,5 @@ export function growBuilding(seed,parameters={}){
   externalRuntime:'lift motion, time state, camera and semantic color remain separate runtime consumers; no age/history evolution implemented'
  };
  recipe.outputCounts={sourceFaces:source?.patches?.length??0,levels:model.levels.length,instances:model.instances.length,hostedOpenings:model.hostedComponents?.apertures?.length??0,warehouseVisibleUnits:model.facadePanelProjection?.unitRecords?.length??0};
- model.buildingMother=recipe;if(candidate)candidate.model=model;return{model,recipe,candidate,validation:recipe.validation};
+ attachLifeServiceContract(recipe,source);model.buildingMother=recipe;if(candidate)candidate.model=model;return{model,recipe,candidate,validation:recipe.validation};
 }

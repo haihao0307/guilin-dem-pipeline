@@ -40,3 +40,9 @@ assert.equal(warehouseMother.recipe.outputCounts.warehouseVisibleUnits,12);asser
 assert.equal(warehouseMother.model.archetypes.at(-1).primitives.length,30);assert.equal(warehouseBefore.model.archetypes.at(-1).primitives.length,3);
 assert.deepEqual(warehouseBefore.model.levels,warehouseMother.model.levels);assert.deepEqual(growBuilding(seeds[2],{facade:{detail:true}}).model,warehouseMother.model);
 console.log({motherFacadeExecutionPassed:true,kccWindows:176,warehouseVisibleFronts:12,realHeightsPreserved:true});
+
+for(const seed of seeds){const r=growBuilding(seed).recipe;assert.equal(r.services.sitePorts.length,3);assert.equal(r.services.levels.length,r.circulation.floors.length);assert.equal(r.services.pipeGeometryGenerated,false);assert.equal(r.occupancy.actualOccupants,null);for(const e of r.graph.edges.filter(e=>e.type==='requiresServiceConnection')){assert.equal(e.enabled,false);assert.equal(e.network,'services');}assert.equal(routeInMother(r,r.services.sitePorts[0].id,r.services.sitePorts[1].id).found,false);}
+console.log({lifeServicePortsPassed:true,actualPipeGeometry:false,actualSupplyVerified:false});
+
+for(const seed of seeds){const r=growBuilding(seed).recipe;assert.equal(r.identity.objectId,seed.source.sourceModelId);assert.equal(r.identity.validFrom,null);assert.equal(r.identity.observedAt,null);assert.equal(r.location.georeference.horizontalCrs,'EPSG:2326');assert.equal(r.location.displayTranslationIsGeographic,false);assert.equal(r.neighbourhood.eastNeighbour,null);assert.equal(r.sharedComponents.actualCases,3);assert.equal(r.sharedComponents.buildingBatchTarget,7000);}
+console.log({timeLocationOwnershipPassed:true,unknownDatesAndNeighboursPreserved:true});
