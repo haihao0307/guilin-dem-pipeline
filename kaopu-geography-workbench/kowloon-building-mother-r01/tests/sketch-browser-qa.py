@@ -27,7 +27,7 @@ try:
    page.wait_for_function('n=>window.sketchInspection&&(sketchInspection.errors.length||sketchInspection.ready&&!sketchInspection.busy&&sketchInspection.frames.length>n)',arg=before)
    assert not page.evaluate('sketchInspection.errors'),page.evaluate('sketchInspection.errors')
   def capture(name):
-   settle();q=page.evaluate('''()=>{const s=sketchInspection,r=s.renderer,p=r.readPixels(),colors=new Set(),hits=[];for(let i=0;i<p.length;i+=4)colors.add(p[i]+256*p[i+1]+65536*p[i+2]);for(let y=16;y<r.canvas.height;y+=24)for(let x=16;x<r.canvas.width;x+=24){const h=r.readHit(x,y);if(h.objectId>=10000)hits.push({x,y,id:h.objectId});}return{values:s.values,checks:s.result.checks,counts:s.result.counts,frame:s.frames.at(-1),colors:colors.size,hits,gpu:r.gpu,glError:r.gl.getError(),canvas:{w:r.canvas.width,h:r.canvas.height},sourcePatches:r.measured.patches.length};}''')
+   settle();q=page.evaluate('''()=>{const s=sketchInspection,r=s.renderer,p=r.readPixels(),colors=new Set(),hits=[];for(let i=0;i<p.length;i+=4)colors.add(p[i]+256*p[i+1]+65536*p[i+2]);for(let y=16;y<r.canvas.height;y+=24)for(let x=16;x<r.canvas.width;x+=24){const h=r.readHit(x,y);if(h.objectId>=10000)hits.push({x,y,id:h.objectId});}return{values:s.values,lift:s.lift,checks:s.result.checks,counts:s.result.counts,frame:s.frames.at(-1),colors:colors.size,hits,gpu:r.gpu,glError:r.gl.getError(),canvas:{w:r.canvas.width,h:r.canvas.height},sourcePatches:r.measured.patches.length};}''')
    assert not q['frame'].get('cancelled');assert q['colors']>=4,(name,q['colors']);assert len({h['id'] for h in q['hits']})>=2,name;assert q['glError']==0;assert q['sourcePatches']==0
    raw=page.locator('#sketch').screenshot(path=str(out/(name+'.png')));q['sha256']=hashlib.sha256(raw).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,round(q['frame']['wallMs']),flush=True);return q
   def action(fn):
@@ -81,7 +81,7 @@ try:
   # Use the retained elevator state machine, with inspectable paused checkpoints.
   action(lambda:page.locator('#liftPause').click())
   assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==2
-  action(lambda:page.locator('#retainedLiftPanel [data-lift-car-floor]').nth(1).click())
+  action(lambda:page.locator('#retainedLiftPanel [data-lift-car-floor="teaching-sketch:connected:L1"]').click())
   action(lambda:page.evaluate('sketchInspection.advanceLift(2)'));capture('retained-lift-in-motion')
   moving=page.evaluate('sketchInspection.lift');assert moving['y']>0 and moving['y']<3.6 and moving['carDoor']==0
   assert all(v==0 for v in moving['landingDoors'].values())

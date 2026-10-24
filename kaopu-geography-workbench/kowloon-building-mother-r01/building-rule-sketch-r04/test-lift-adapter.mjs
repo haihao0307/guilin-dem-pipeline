@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {growSketch} from './sketch-model.mjs';
-import {createSketchLift,assertSketchLiftInvariant,RETAINED_LIFT_SOURCES,SKETCH_LIFT_DISCLOSURE} from './lift-adapter.mjs';
+import {createSketchLift,assertSketchLiftInvariant,retainedSketchPanelFields,mountRetainedPanel,RETAINED_LIFT_SOURCES,SKETCH_LIFT_DISCLOSURE} from './lift-adapter.mjs';
 import {createLift,step} from './kowloon-building-mother-r01/elevator-mother-r02/model.mjs';
-import {command as originalCommand} from './kowloon-building-mother-r01/elevator-mother-r02/controls.mjs';
+import {command as originalCommand,panelFields} from './kowloon-building-mother-r01/elevator-mother-r02/controls.mjs';
 
 let checks=0,simulationSteps=0;
 const ok=(value,message)=>{assert(value,message);checks++;};
@@ -47,6 +47,10 @@ const lift=createSketchLift(host);
 equal(lift.snapshot().floors.map(f=>[f.id,f.elevation]),floors.map(f=>[f.id,f.elevation]),'adapter uses every host floor without renaming or respacing');
 equal(lift.snapshot().current,floors[0].id,'starts at owned ground stop');
 equal(lift.hasActive(),false,'idle adapter does not request useless redraws');
+equal(retainedSketchPanelFields(lift.snapshot()),panelFields(lift.snapshot()),'visible panel descriptors are produced by the actual unchanged R02 function');
+equal(retainedSketchPanelFields(lift.snapshot()).filter(f=>f.action?.kind==='car').map(f=>f.label),['4F','3F','2F','1F'],'original visible car buttons retain owned floor labels');
+equal(retainedSketchPanelFields(lift.snapshot()).filter(f=>f.action?.kind==='hall').length,6,'original panel generates two directions only on intermediate floors');
+equal(retainedSketchPanelFields({available:false}),[],'unbound case has no actionable retained panel fields');
 ok(!lift.command({kind:'car',floor:'another-building:L0'}).accepted,'cross-building floor requests rejected');
 ok(!lift.command({kind:'car',floor:floors[1].id,buildingId:'another-building'}).accepted,'explicit other building rejected');
 ok(!lift.command({kind:'car',floor:floors[1].id,liftId:'another-lift'}).accepted,'explicit other lift rejected');
@@ -124,6 +128,30 @@ ok(!!fault.motion,'fault test starts actual retained motion');
 fault.locks[fault.floors[0].id]=false;step(fault,.05);
 equal(fault.state,'FAULT','original controller detects independently broken landing interlock');
 equal([fault.motion,fault.v,fault.carDoor],[null,0,0],'interlock fault stops motion without opening');
+
+// Lightweight DOM contract harness. This verifies handler wiring and lifecycle,
+// not browser pixels, CSS, pointer targeting, or a physical device.
+const dom={createElement(tag){return {tag,ownerDocument:dom,children:[],dataset:{},style:{},attributes:{},hidden:false,
+ classList:{toggle(){}},append(...nodes){this.children.push(...nodes);},replaceChildren(...nodes){this.children=nodes;},setAttribute(key,value){this.attributes[key]=value;}};}};
+const container=dom.createElement('div'),panelLift=createSketchLift(host);let panelChanges=0;
+const panel=mountRetainedPanel(container,panelLift,()=>panelChanges++);
+const descendants=e=>e.children.flatMap(c=>[c,...descendants(c)]),controls=()=>descendants(container);
+equal(controls().filter(e=>'liftCarFloor' in e.dataset).length,4,'DOM adapter exposes all four original car controls');
+controls().find(e=>e.dataset.liftCarFloor===floors[3].id).onclick();
+equal(panelLift.snapshot().queue[0].id,floors[3].id,'panel car handler dispatches actual retained floor action');
+panelLift.advance(4);panel.refresh();
+ok(!controls().find(e=>e.dataset.liftDoor==='open').onclick().accepted,'panel open handler respects retained travel guard');
+panelLift.advance(30);panel.refresh();controls().find(e=>e.dataset.liftDoor==='open').onclick();panelLift.advance(2);panel.refresh();
+equal(panelLift.snapshot().carDoor,1,'panel open handler opens at leveled arrival');
+const selector=controls().find(e=>e.tag==='select');selector.value=floors[3].id;selector.onchange();
+equal(controls().filter(e=>'liftCall' in e.dataset).map(e=>e.dataset.liftCall),['down'],'panel reuses top-floor direction suppression');
+controls().find(e=>'liftObstruction' in e.dataset).onclick();ok(panelLift.snapshot().obstruction,'adapted light curtain control uses retained obstruction action');
+const panelTime=panelLift.snapshot().time;panel.refresh();panel.refresh();equal(panelLift.snapshot().time,panelTime,'refresh never advances simulation');
+const replacement=createSketchLift(growSketch({...initial,storeys:2}));panel.refresh(replacement);
+equal(controls().filter(e=>'liftCarFloor' in e.dataset).length,2,'refresh replaces controller and visible owned floors');
+const staleButton=controls().find(e=>'liftCarFloor' in e.dataset);panel.dispose();
+ok(!staleButton.onclick().accepted,'disposed panel rejects stale handlers');equal(replacement.snapshot().queue,[],'disposed handler cannot mutate replacement controller');
+equal(panelChanges,4,'only requested panel commands notify viewer');
 
 // Geometry integration checks are enabled by default; --controller-only is
 // only for focused adapter work while the separate model change is in flight.
