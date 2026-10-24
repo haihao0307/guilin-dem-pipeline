@@ -1,3 +1,4 @@
+import {attachOpeningOwnership,validateOpeningOwnership} from './opening-ownership.mjs';
 import {hostOpening} from './building-rules.mjs';
 import {observedFloor,KCC_ID} from './kcc-observed-layout.mjs';
 import {finitePrism,PLAN_A_TOPOLOGY} from './kowloon-building-mother-r01/whole-building-floor-study-r01/floor-layout.mjs';
@@ -15,14 +16,14 @@ export function buildCandidateStructure({actualFloor,assumptions,doorOpen=0,lift
  if(!['plan-local','R0','R180'].includes(rotationCandidate))throw Error('Unknown comparison orientation');
  const angle=rotationCandidate==='R0'?-1.9471871519880037:rotationCandidate==='R180'?1.1945189628408697:0;
  const map=p=>{const x=(p[0]-680)*c.metresPerViewPixel,z=(p[1]-515)*c.metresPerViewPixel;return[x*Math.cos(angle)-z*Math.sin(angle),x*Math.sin(angle)+z*Math.cos(angle)];};
- const ps=[],nodes=[{id:'candidate',type:'inspection_candidate',buildingId:KCC_ID,evidence:'NOT_AS_BUILT_NOT_REGISTERED'}],edges=[],portals=[];
+ const ps=[],nodes=[{id:'candidate',type:'inspection_candidate',buildingId:KCC_ID,evidence:'NOT_AS_BUILT_NOT_REGISTERED'}],edges=[],portals=[],openingSeeds=[];
  const add=(id,cls,loops,range,options={})=>{const p=finitePrism(id,loops,range,options);p.objectId=2000+ps.length;p.semanticClass=cls;p.geometryEvidence='plan-topology-plus-explicit-inspection-assumptions';ps.push(p);nodes.push({id,type:cls,evidence:'candidate_geometry_not_surveyed',actualFloor,ownerBuildingId:KCC_ID});edges.push({from:id,to:'candidate',type:'ownedBy'});return p;};
  const wall=(id,a,b,{opening=null,cls='wall',open=0,width=c.doorWidth}={})=>{const x=map(a),z=map(b),dx=z[0]-x[0],dz=z[1]-x[1],L=Math.hypot(dx,dz);if(L<1e-5)return;const u=[dx/L,0,dz/L],v=[0,1,0],w=[-dz/L,0,dx/L],origin=[x[0],0,x[1]];
- let loop=rect(0,0,L,c.wallHeight);
+ const actualLeaves=[];let loop=rect(0,0,L,c.wallHeight);
  if(opening){const q=map(opening),openingRule=hostOpening({a:x,b:z,center:q,width,height:c.doorHeight,wallThickness:c.wallThickness,clampForInspection:true}),at=openingRule.at,lo=openingRule.left,hi=openingRule.right;loop=[[0,0],[lo,0],[lo,c.doorHeight],[hi,c.doorHeight],[hi,0],[L,0],[L,c.wallHeight],[0,c.wallHeight]];
  portals.push({id,origin,u,v,w,lo,hi,height:c.doorHeight,width,semanticClass:cls});
- if(cls==='elevator'){for(const side of[-1,1]){const start=at+(side<0?-width/2:0)+side*open*width/2;const o=[origin[0]+u[0]*start+w[0]*(c.wallThickness/2+.03),0,origin[2]+u[2]*start+w[2]*(c.wallThickness/2+.03)];add(id+':leaf-'+side,'elevator',[rect(0,0,width/2,c.doorHeight)],[-.015,.015],{u,v,w,origin:o});}}else{const theta=open*Math.PI/2,du=[u[0]*Math.cos(theta)+w[0]*Math.sin(theta),0,u[2]*Math.cos(theta)+w[2]*Math.sin(theta)],dw=[-du[2],0,du[0]],o=[origin[0]+u[0]*lo,0,origin[2]+u[2]*lo];add(id+':leaf',cls==='elevator'?'elevator':'door',[rect(0,0,width,c.doorHeight)],[-c.doorLeafThickness/2,c.doorLeafThickness/2],{u:du,v,w:dw,origin:o});}}
- add(id,cls,[loop],[-c.wallThickness/2,c.wallThickness/2],{u,v,w,origin});};
+ if(cls==='elevator'){for(const side of[-1,1]){const start=at+(side<0?-width/2:0)+side*open*width/2;const o=[origin[0]+u[0]*start+w[0]*(c.wallThickness/2+.03),0,origin[2]+u[2]*start+w[2]*(c.wallThickness/2+.03)];actualLeaves.push(add(id+':leaf-'+side,'elevator',[rect(0,0,width/2,c.doorHeight)],[-.015,.015],{u,v,w,origin:o}));}}else{const theta=open*Math.PI/2,du=[u[0]*Math.cos(theta)+w[0]*Math.sin(theta),0,u[2]*Math.cos(theta)+w[2]*Math.sin(theta)],dw=[-du[2],0,du[0]],o=[origin[0]+u[0]*lo,0,origin[2]+u[2]*lo];actualLeaves.push(add(id+':leaf',cls==='elevator'?'elevator':'door',[rect(0,0,width,c.doorHeight)],[-c.doorLeafThickness/2,c.doorLeafThickness/2],{u:du,v,w:dw,origin:o}));}}
+ add(id,cls,[loop],[-c.wallThickness/2,c.wallThickness/2],{u,v,w,origin});nodes.find(n=>n.id===id).hostRole='wall';if(opening)openingSeeds.push({wallId:id,actualLeaves});};
  const closest=(polygon,point)=>{let best=null;polygon.forEach((a,i)=>{const b=polygon[(i+1)%polygon.length],ab=b.map((v,k)=>v-a[k]),L=ab[0]**2+ab[1]**2,t=Math.max(0,Math.min(1,((point[0]-a[0])*ab[0]+(point[1]-a[1])*ab[1])/L)),q=mix(a,b,t),d=Math.hypot(q[0]-point[0],q[1]-point[1]);if(!best||d<best.d)best={i,q,d};});return best;};
  const polygonWalls=(id,polygon,entry,cls='wall',open=0)=>{const hit=entry?closest(polygon,entry):null;polygon.forEach((a,i)=>wall(id+':edge-'+i,a,polygon[(i+1)%polygon.length],{opening:hit?.i===i?hit.q:null,cls,open}));};
  const units=layout.nodes.filter(n=>n.type==='dwelling');
@@ -42,7 +43,13 @@ export function buildCandidateStructure({actualFloor,assumptions,doorOpen=0,lift
  for(const [i,entry]of stairEntries.entries()){const hit=closest(stair,entry.point),old='stair:enclosure:edge-'+hit.i;const ix=ps.findIndex(p=>p.nodeId===old);if(ix>=0)ps.splice(ix,1);const ni=nodes.findIndex(n=>n.id===old);if(ni>=0)nodes.splice(ni,1);const ei=edges.findIndex(e=>e.from===old);if(ei>=0)edges.splice(ei,1);wall(old,stair[hit.i],stair[(hit.i+1)%stair.length],{opening:hit.q,cls:'stair',open:doorOpen});}
  for(const n of layout.nodes.filter(n=>n.type==='sixth_floor_platform'))add(n.id,'floor',[n.polygon.map(map)],[-c.slabThickness,0]);
  ps.forEach((p,i)=>p.objectId=2000+i);
+ const openingChains=openingSeeds.map(({wallId,actualLeaves})=>{
+  const parts=actualLeaves.map(p=>{p.semanticPartNodeId=p.nodeId;return{id:p.nodeId,type:'leaf',objectId:p.objectId};});
+  const chain=attachOpeningOwnership({nodes,edges},{buildingId:KCC_ID,wallId,openingId:wallId+':opening',infillId:wallId+':door-assembly',infillType:'door',parts});
+  for(const id of[chain.openingId,chain.infillId])nodes.find(n=>n.id===id).evidence='candidate_geometry_not_surveyed';return chain;
+ });
+ const openingValidation=validateOpeningOwnership({nodes,edges},openingChains);if(!openingValidation.passed)throw Error('Candidate opening ownership: '+JSON.stringify(openingValidation.errors));
  const bounds=bound(ps),archetypes=[];for(let i=0;i<ps.length;i+=64){const primitives=ps.slice(i,i+64),a={schema:ASSEMBLY_SCHEMA,id:'observed-candidate-'+i,primitives,bounds:bound(primitives),counts:{primitives:primitives.length,modelTriangles:0,modelVertexBuffers:0}};packAssemblyDescriptors(a);archetypes.push(a);}
- const model={sourceModelId:KCC_ID,placementMode:'UNREGISTERED_evidence_plan_NOT_part_of_measured_mother',graph:{nodes,edges},levels:[{id:'observed-'+actualFloor+'F',nodeId:'candidate',label:actualFloor+'/F 待定位候选',elevation:0,actualElevation:null}],archetypes,instances:archetypes.map(a=>({id:a.id+':floor',archetypeId:a.id,translation:[0,0,0],floorId:'observed-'+actualFloor+'F',objectIdOffset:10000,bounds:a.bounds})),interfaces:{stairs:[]},bounds};
+ const model={sourceModelId:KCC_ID,openingOwnership:{chains:openingChains,validation:openingValidation},placementMode:'UNREGISTERED_evidence_plan_NOT_part_of_measured_mother',graph:{nodes,edges},levels:[{id:'observed-'+actualFloor+'F',nodeId:'candidate',label:actualFloor+'/F 待定位候选',elevation:0,actualElevation:null}],archetypes,instances:archetypes.map(a=>({id:a.id+':floor',archetypeId:a.id,translation:[0,0,0],floorId:'observed-'+actualFloor+'F',objectIdOffset:10000,bounds:a.bounds})),interfaces:{stairs:[]},bounds};
  return{model,layout,portals,assumptions:c,rotationCandidate,claims:{registered:false,actualHeights:false,actualThickness:false,stairInterlockVerified:false,sourceGeometryChanged:false,modelTriangles:0},bounds};
 }

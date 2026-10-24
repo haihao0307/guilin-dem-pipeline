@@ -1,5 +1,6 @@
 """Actual WebGL functional-sketch regression, authorized unchanged QA workflow."""
-import functools,http.server,json,threading,traceback,hashlib
+import functools,http.server,json,threading,traceback,hashlib,concurrent.futures
+from urllib.request import urlopen
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parent
@@ -10,7 +11,11 @@ server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.se
 threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{server.server_port}/building-mother-r10/sketches.html'
 config=root/'sketch-public-url.json'
-if config.exists():url=json.loads(config.read_text())['url'];report['scope']='Actual public independent sketches, no route overrides'
+if config.exists():
+ cfg=json.loads(config.read_text());url=cfg['url'];report['scope']='Actual public independent sketches, no route overrides'
+ def verify(item):
+  raw=urlopen(url.rsplit('/',1)[0]+'/'+item['path'],timeout=60).read();actual=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest();assert actual==item['sha'],item['path'];return item['path']
+ with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:report['verifiedPublicFiles']=list(pool.map(verify,cfg['files']))
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
