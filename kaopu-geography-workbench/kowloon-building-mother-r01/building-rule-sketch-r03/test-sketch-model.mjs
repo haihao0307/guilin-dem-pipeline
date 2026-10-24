@@ -93,7 +93,7 @@ const noLift=growSketch({caseId:'connected',liftAttached:false});equal(noLift.li
 const frame=q=>all(q).filter(p=>p.stage<=5).map(p=>({id:p.nodeId,loops:p.loops,range:p.range,origin:p.origin,u:p.u,v:p.v,w:p.w}));
 equal(frame(noLift),frame(growSketch({caseId:'connected'})),'detaching lift leaves original frame and slabs untouched');
 const cabin0=growSketch({liftLevel:0}),cabin1=growSketch({liftLevel:1});equal(cabin1.lift.elevation-cabin0.lift.elevation,3.6,'lift has two verified discrete stop states');
-const closed=growSketch({caseId:'connected',doorOpen:0}),opened=growSketch({caseId:'connected',doorOpen:1}),door=closed.portals.find(p=>p.from.includes('corridor')&&p.to.includes(':room:'));
+const closed=growSketch({caseId:'connected',doorOpen:0}),opened=growSketch({caseId:'connected',doorOpen:1}),door=closed.portals.find(p=>p.from?.includes('corridor')&&p.to?.includes(':room:'));
 equal(door.leafIds,[],'ordinary doorway is empty by default');equal(all(closed),all(opened),'legacy ordinary door control cannot create or move a leaf');ok(closed.routes.filter(r=>r.type==='entry_to_room').every(r=>r.traversable),'ordinary routes remain open without a door state toggle');
 const hits=connected.model.archetypes.map(a=>intersectAssemblyRay(a,[5.1,12,3],[0,-1,0])).filter(h=>h.hit);ok(hits.length>0,'analytic ray hits the assembled sketch');
 for(const bad of [{caseId:'real-building'},{stage:0},{stage:8},{stage:1.5},{groundHeight:NaN},{typicalHeight:2},{doorOpen:2},{liftOpen:-1},{liftLevel:2},{roofVisible:'yes'},{waistThickness:.04},{waistThickness:.5}]){assert.throws(()=>growSketch(bad));checks++;}

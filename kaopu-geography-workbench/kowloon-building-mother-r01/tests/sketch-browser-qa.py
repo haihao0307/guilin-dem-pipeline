@@ -49,7 +49,7 @@ try:
   action(lambda:page.locator('#stage').select_option('7'))
   action(lambda:page.locator('#top').click());capture('lift-corridor-top')
   action(lambda:page.locator('#fit').click())
-  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[12,4,12],target:[6,2.1,5],fov:.7})'));capture('window-door-openings-close')
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[7,1.5,11],target:[7,1.5,5],fov:.7})'));capture('window-door-openings-close')
   action(lambda:page.locator('#fit').click())
   # Preserve baseline geometry and exact restore across a single propagated input.
   sig=page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')
@@ -91,7 +91,7 @@ try:
   assert page.evaluate('Boolean(sketchInspection.selected)');assert len(page.locator('#selection').inner_text())>20
   page.screenshot(path=str(out/'sketch-selected-full-page.png'),full_page=True)
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
-  action(lambda:page.locator('#cut').click());n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');assert page.locator('#sketch').bounding_box()['width']>=360;page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
+  action(lambda:page.locator('#cut').click());n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');assert page.locator('#sketch').bounding_box()['width']>=360;assert page.locator('#sketch').bounding_box()['y']<300;page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
   assert not report['errors'];assert not any(u.endswith(('.jpg','.png','.gltf','.glb')) for u in requests)
   report['checks']=['three real WebGL sketches','three growth stages each','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
 except Exception:
