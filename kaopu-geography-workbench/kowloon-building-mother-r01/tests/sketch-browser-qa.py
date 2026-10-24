@@ -54,6 +54,7 @@ try:
   assert page.evaluate('Boolean(sketchInspection.selected)');assert len(page.locator('#selection').inner_text())>20
   page.screenshot(path=str(out/'sketch-selected-full-page.png'),full_page=True)
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
+  n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
   assert not report['errors'];assert not any(u.endswith(('.jpg','.png','.gltf','.glb')) for u in requests)
   report['checks']=['three real WebGL sketches','three growth stages each','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','door and lift illustrative controls','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
 except Exception:
