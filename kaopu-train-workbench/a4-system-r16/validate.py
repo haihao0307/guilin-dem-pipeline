@@ -41,6 +41,15 @@ class T(unittest.TestCase):
   for a,b in [(.1,.2),(-.2,.4),(0,0)]:self.assertAlmostEqual(conjugate(a,b)+a+b,0,places=12)
  def test_explicit_phases(self):
   with self.assertRaises(TypeError):system_pose(0)
+ def test_reused_joint_frame(self):
+  from r15_joint import joint_fields
+  local=np.array([[0,.06,0],[.07,.04,0],[.147,0,0],[0,.049,0]])
+  for phases,inc in fixtures:
+   for t in np.linspace(0,2*np.pi,73):
+    q=system_pose(t,phases,inc)
+    for i,side in enumerate(['left','middle','right']):
+     c=math.cos(inc[i]);s=math.sin(inc[i]);world=np.stack([local[:,0],local[:,1]*c+local[:,2]*s,-local[:,1]*s+local[:,2]*c],-1)+q[side]['small']
+     self.assertTrue(np.allclose(joint_fields_world(world,t,side,phases,inc),joint_fields(local),atol=1e-12))
  def test_periodic(self):
   for phases,inc in fixtures:
    a=system_pose(0,phases,inc);b=system_pose(2*np.pi,phases,inc)

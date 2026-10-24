@@ -49,3 +49,15 @@ def reachable(graph,start,end,kind=None):
             if e['from']==n and (kind is None or e['kind']==kind) and e['to'] not in seen:
                 seen.add(e['to']);todo.append(e['to'])
     return False
+
+def joint_fields_world(points,theta,side,phases,inclinations):
+    """Reuse the R15 local analytic small-end field in each new cylinder frame.
+    Three instances are FUNCTIONAL placeholders, not proof all A4 joints are identical.
+    This evaluates solid fields; the inspection page renders axis curves only.
+    """
+    from r15_joint import joint_fields
+    i=('left','middle','right').index(side)
+    center=system_pose(theta,phases,inclinations)[side]['small']
+    v=np.asarray(points)-center;c=math.cos(inclinations[i]);s=math.sin(inclinations[i])
+    local=np.stack([v[:,0],v[:,1]*c-v[:,2]*s,v[:,1]*s+v[:,2]*c],-1)
+    return joint_fields(local)
