@@ -1,3 +1,10 @@
+# Explicit unified Mother candidate gate; previous QA and workflow retained.
+from pathlib import Path as _MotherPath
+if _MotherPath(__file__).with_name('mother-browser-qa.py').is_file():
+    import runpy as _mother_runpy
+    _mother_runpy.run_path(str(_MotherPath(__file__).with_name('mother-browser-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Explicit isolated KCC candidate gate; workflow and old QA preserved.
 from pathlib import Path as _KCCPath
 if _KCCPath(__file__).with_name('kcc-candidate-browser-qa.py').is_file():
@@ -85,5 +92,6 @@ async def main():
    report['failure']=str(e);save();await page.screenshot(path=str(out/'failure.png'));raise
   finally:await b.close()
 asyncio.run(main())
+
 
 
