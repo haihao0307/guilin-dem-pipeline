@@ -9,8 +9,8 @@ report={'passed':False,'scope':'Independent function-only building rule sketches
 def save():(out/'sketch-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root.parent)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r04/sketches.html'
-config=root/'sketch-r04-public-url.json'
+url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r05/sketches.html'
+config=root/'sketch-r05-public-url.json'
 if config.exists():
  cfg=json.loads(config.read_text());url=cfg['url'];report['scope']='Actual public independent sketches, no route overrides'
  def verify(item):
@@ -32,24 +32,29 @@ try:
    raw=page.locator('#sketch').screenshot(path=str(out/(name+'.png')));q['sha256']=hashlib.sha256(raw).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,round(q['frame']['wallMs']),flush=True);return q
   def action(fn):
    n=page.evaluate('sketchInspection.frames.length');fn();settle(n)
-  first=capture('connected-default-four');assert page.evaluate('sketchInspection.result.levels.length')==4;assert all(first['checks'][k] for k in ['foundationJointsContinuous','landingRearContact','landingFrameSupport','handrailsContinuous','handrailRouteClearance','wallSlabBeamContacts']);assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==4;page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  first=capture('connected-default-four');assert page.evaluate('sketchInspection.result.levels.length')==4;assert all(first['checks'][k] for k in ['foundationJointsContinuous','landingRearContact','landingFrameSupport','handrailsContinuous','handrailRouteClearance','wallSlabBeamContacts','centeredPlatformJunction']);assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==4;page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
   assert '当前剖视' in page.locator('#roof').inner_text()
   action(lambda:page.locator('#roof').click());roof=capture('four-storey-roof-shown');assert roof['values']['roofVisible'] and roof['sha256']!=first['sha256']
   action(lambda:page.locator('#roof').click());roofback=capture('four-storey-roof-cut-restored');assert not roofback['values']['roofVisible'] and roofback['sha256']==first['sha256']
+  assert page.locator('[data-legacy]').count()==2
+  action(lambda:page.locator('#joint').click());capture('r05-platform-column-junction')
+  action(lambda:page.locator('#ghost').click());capture('r05-junction-transparent')
+  action(lambda:page.locator('#ghost').click())
+  action(lambda:page.locator('#fit').click())
   action(lambda:page.locator('#storeys').select_option('2'))
-  for case in ['cell','vertical','connected']:
+  for case in ['connected']:
    action(lambda case=case:page.locator(f'[data-case={case}]').click())
    if case!='connected':assert page.locator('#retainedLiftPanel [data-lift-car-floor]:visible').count()==0
    for stage in ['1','4','7']:
     action(lambda stage=stage:page.locator('#stage').select_option(stage));capture(case+'-stage'+stage)
   capture('connected-roof-off')
-  action(lambda:page.locator('[data-case=vertical]').click());action(lambda:page.locator('#stage').select_option('4'))
+  action(lambda:page.locator('[data-case=connected]').click());action(lambda:page.locator('#stage').select_option('4'))
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[7,4,-8],target:[2,3.6,2.5],fov:.5})'));capture('column-joints-close')
   action(lambda:page.locator('[data-case=connected]').click());action(lambda:page.locator('#stage').select_option('6'))
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[-7,2.4,2.8],target:[1.55,2.2,2.8],fov:.65})'));capture('thin-stair-underflight')
   # Back-to-back changes must settle on the final requested model, not a stale frame.
   n=page.evaluate('sketchInspection.frames.length')
-  page.evaluate("""()=>{for(const value of ['3','5','4']){const e=document.querySelector('#stage');e.value=value;e.dispatchEvent(new Event('change'));}for(const key of ['cell','vertical','connected'])document.querySelector('[data-case='+key+']').click();}""")
+  page.evaluate("""()=>{for(const value of ['3','5','4']){const e=document.querySelector('#stage');e.value=value;e.dispatchEvent(new Event('change'));}for(const key of ['connected'])document.querySelector('[data-case='+key+']').click();}""")
   settle(n);page.wait_for_function('sketchInspection.renderedValues.caseId==="connected"&&sketchInspection.renderedValues.stage===4&&!sketchInspection.busy');capture('rapid-final-connected-frame')
   action(lambda:page.locator('#stage').select_option('7'))
   action(lambda:page.locator('#top').click());capture('lift-corridor-top')
@@ -123,7 +128,8 @@ try:
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
   action(lambda:page.locator('#cut').click());n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');assert page.locator('#sketch').bounding_box()['width']>=360;assert page.locator('#sketch').bounding_box()['y']<300;page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
   assert not report['errors'];assert not any(u.endswith(('.jpg','.png','.gltf','.glb')) for u in requests)
-  report['checks']=['four-storey default plus three real WebGL sketch rules','three growth stages each','footing-column and landing frame support interfaces','retained original lift panel commands, closed-door travel and aligned arrival','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
+  report['checks']=['R05 connected-only joint repair, original prototypes linked unchanged','three growth stages each','footing-column and landing frame support interfaces','retained original lift panel commands, closed-door travel and aligned arrival','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc());save();raise
 finally:server.shutdown()
+
