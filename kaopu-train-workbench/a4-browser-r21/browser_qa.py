@@ -2,12 +2,19 @@ from playwright.sync_api import sync_playwright
 from pathlib import Path
 import json,time,subprocess,sys,base64
 P=Path(__file__).parent
-server=subprocess.Popen([sys.executable,"-m","http.server","8121","--directory",str(P)])
+server=subprocess.Popen([sys.executable,'-m','http.server','8121','--directory',str(P)])
 time.sleep(1)
-with sync_playwright() as p:
- b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
- page=b.new_page(viewport={'width':1000,'height':720});page.on('console',lambda m:print(m.type,m.text,flush=True));page.goto('http://127.0.0.1:8121');
- try:page.wait_for_function('window.QA && (QA.done || QA.errors.length)',timeout=300000)
- except Exception as e:print(e,flush=True)
- q=page.evaluate('QA');print(json.dumps(q),flush=True);(P/'BROWSER_QA.json').write_text(json.dumps(q,indent=2));raw=page.evaluate('c.toDataURL("image/png")');(P/'whole-private.png').write_bytes(base64.b64decode(raw.split(',')[1]));b.close();server.terminate()
- assert q.get('done') and not q['errors'] and q['draws']==513 and q.get('glError')==0, q
+try:
+ with sync_playwright() as p:
+  b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+  page=b.new_page(viewport={'width':1000,'height':720});page.on('console',lambda m:print(m.type,m.text,flush=True));page.goto('http://127.0.0.1:8121')
+  page.wait_for_function('window.QA && (QA.done || QA.errors.length)',timeout=300000)
+  first=page.evaluate('QA');assert first.get('done')and not first['errors'],first
+  views=[]
+  for name,eye,cut in [('side',[16,5,-4],100),('opposite',[-16,5,-4],100),('quarter',[14,8,8],100),('cut',[16,5,-4],0)]:
+   start=time.monotonic();page.evaluate('async v=>{await render(v.eye,[0,1.8,-4],v.cut)}',{'eye':eye,'cut':cut})
+   raw=page.evaluate('c.toDataURL("image/png")');(P/(name+'-whole.png')).write_bytes(base64.b64decode(raw.split(',')[1]))
+   q=page.evaluate('QA');q['pixel_readback_wall_s']=time.monotonic()-start;q['view']=name;views.append(q);print(json.dumps(q),flush=True)
+   assert q.get('done')and not q['errors']and q['draws']==513 and q.get('glError')==0,q
+  (P/'BROWSER_QA.json').write_text(json.dumps({'views':views,'scope':'four static whole-assembly views with actual canvas pixel readback; not dynamic or historical-exact validation'},indent=2));b.close()
+finally:server.terminate()
