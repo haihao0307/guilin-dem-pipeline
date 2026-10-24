@@ -73,7 +73,7 @@ if(uSemanticMode==0&&uMaterialMode>0&&materialType>0){
  if(materialType==2&&(wp.y<4.782377||wp.y>67.178628)){materialType=1;}
  if((materialType==2&&uMaterialBands>0)||materialType==3){int count=int(texelFetch(uSemantic,ivec2(recordIndex,4),0).w),l=0,r=count-1,last=-1;for(int k=0;k<6;k++){if(l>r)break;int mid=(l+r)/2;vec4 band=texelFetch(uSemantic,ivec2(recordIndex,6+mid),0);if(band.z<=wp.y){last=mid;l=mid+1;}else r=mid-1;}vec4 frame=texelFetch(uSemantic,ivec2(recordIndex,5),0);float u=dot(wp.xz-frame.xy,frame.zw);for(int k=0;k<2;k++){int j=last-k;if(j<0)break;vec4 band=texelFetch(uSemantic,ivec2(recordIndex,6+j),0);if(u>=band.x&&u<=band.y&&wp.y>=band.z&&wp.y<=band.w)c=accent;}}
  if(materialType==1)c*=1.;
- else{vec2 pitch=materialType==2?vec2(.19,.055):vec2(.10,.045);vec2 q=uv/pitch;float row=floor(q.y);q.x+=mod(row,2.)*.5;vec2 d=min(fract(q),1.-fract(q));vec2 aa=max(fwidth(q),vec2(.0001));vec2 joint=vec2(.0015)/pitch;
+ else{vec2 pitch=materialType==2?vec2(.19,.055):vec2(.10,.045);vec2 q=uv/pitch;float row=floor(q.y);q.x+=(materialType==2?0.:mod(row,2.)*.5);vec2 d=min(fract(q),1.-fract(q));vec2 aa=max(fwidth(q),vec2(.0001));vec2 joint=vec2(.0015)/pitch;
  vec2 coverage=1.-smoothstep(joint-aa*.5,joint+aa*.5,d);float visible=1.-smoothstep(.3,1.2,max(aa.x,aa.y));float joints=mix(.045,max(coverage.x,coverage.y),visible);c*=1.-.16*joints;c*=1.+.008*grain*(1.-smoothstep(.1,.7,length(fwidth(wp))));
  // Existing source folds provide real ribs; coloring is a replaceable visual hypothesis.
  if(materialType==3&&abs(n.y)>.28)c=accent*(1.-.08*joints);
