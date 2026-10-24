@@ -1,0 +1,40 @@
+{
+  "caseId": "CANDIDATE_NATURAL_WHOLE_BODY_COORDINATION_001",
+  "status": "CANDIDATE",
+  "sourceCorrection": "动作很僵硬、没有全身协调/关节限制；至少有好的效果再给我看。",
+  "failureMechanism": "A motion can complete the nominal task and pass component/binding checks while still containing foot skating, floating or penetration, jerk spikes, joint-limit violations, mistimed contacts, or a frozen torso/limb response. Playback success is therefore not evidence of coordinated natural motion.",
+  "preconditions": [
+    "environment/task generation gate passes",
+    "exact component identity gate passes",
+    "binding and self-penetration compatibility gate passes"
+  ],
+  "taskAnchorRequired": [
+    "actionId and phaseManifest",
+    "exact skeleton/body/controller identity",
+    "jointLimitSetRef",
+    "contactScheduleRef",
+    "frozen action-specific accepted reference envelope",
+    "required observer views and held-out environment perturbations"
+  ],
+  "deliveryReceiptRequired": [
+    "per-frame root/joint/contact/collision trace",
+    "phase-local foot-skate, ground-penetration, floating, jerk and joint-limit reports",
+    "contact timing and whole-body participation reports",
+    "independent verifier identity",
+    "negative-control results and exact artifact/runtime provenance"
+  ],
+  "candidatePassRule": "All prerequisites pass; every phase-local metric remains within a frozen action-specific envelope derived from a legitimate reference on the same skeleton/body class; all negative controls are rejected; an independent verifier accepts a multi-view rollout and small held-out environment perturbations.",
+  "hardReject": [
+    "producer self-approval",
+    "generic third-party thresholds used as KAOPU acceptance criteria",
+    "task-complete clip with any critical contact, joint-limit, penetration or coordination violation",
+    "single beauty view without per-frame traces",
+    "smooth but low-participation root-only or frozen-upper-body motion"
+  ],
+  "boundaries": [
+    "Metric pass is not USER-ACCEPTED and does not prove perceptual naturalness.",
+    "Whole-body participation is action-specific; low motion can be correct for some phases.",
+    "Thresholds must be calibrated per action and skeleton/body class, not copied from research defaults.",
+    "This candidate does not replace task/environment, component identity, binding, self-collision, or user acceptance gates."
+  ]
+}
