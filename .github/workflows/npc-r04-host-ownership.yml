@@ -1,0 +1,45 @@
+name: NPC R04 host ownership regression
+on:
+  push:
+    branches: [feature/npc-life-observation-r04-20261021]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-life-observation-r04/**'
+      - '.github/workflows/npc-r04-host-ownership.yml'
+permissions:
+  contents: read
+concurrency:
+  group: npc-r04-host-ownership-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  ownership:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/human-integrated-r06
+            kaopu-unified-human-workbench/npc-life-observation-r04
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Build complete native artifact and verify strict composition boundary
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r04/prepare.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/build.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r04/qa/r04-host-ownership-test.cjs
+      - name: Install pinned Chromium verification runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Verify native ownership in actual desktop and mobile-view Chromium
+        run: node kaopu-unified-human-workbench/npc-life-observation-r04/qa/r04-host-ownership-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-r04-host-ownership-${{ github.sha }}
+          path: |
+            /tmp/npc-host-ownership
+            kaopu-unified-human-workbench/npc-life-observation-r04/qa/r04-host-ownership-report.json
+            kaopu-unified-human-workbench/npc-life-observation-r04/BUILD.json
+          retention-days: 14

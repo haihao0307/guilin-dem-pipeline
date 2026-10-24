@@ -1,0 +1,140 @@
+{
+  "schema": "kaopu/root-r02-partial-suite-review@1",
+  "createdAt": "2026-10-20T08:31:28.102977+00:00",
+  "reviewer": "root",
+  "sourceHead": "1bac098583b04a415ecdd6e94db6a80b29e337de",
+  "verifierSourceSHA256": "95a31e78656d4a05d70c0b38767395175247f485fe34f49359d043e65323e628",
+  "previewSHA256": "c8bdda75958fd5a770b26fe2abfb8c6dac59e6c45ea390c267ed134880133416",
+  "workflowRun": 39391126228,
+  "artifact": {
+    "id": 12250122937,
+    "bytes": 34633446,
+    "sha256": "c622425832dd4a2d50e3a9cb57e211d62768d26d618965ad2041a57537b0753c",
+    "downloadDigestVerified": true
+  },
+  "runStatus": "FAILED",
+  "publishStagesSkipped": true,
+  "overallAcceptance": false,
+  "manualViews": [
+    {
+      "file": "contact-A.png",
+      "sha256": "d20d0ba8b08b4c5ddeca9aefdf50cc5f93f9869d943c490d871b6eed63721a54",
+      "actuallyViewed": true,
+      "visibilityAccepted": true,
+      "notes": "Bottle cylinder, palm, thumb and visible bent finger edges clearly observable; table and right-side window frame no longer block the contact region. Bottle naturally occludes far-side fingers."
+    },
+    {
+      "file": "contact-B.png",
+      "sha256": "6a0dfe59463127776cfb3967c6e45d36c3510688627f4a15c657206334fce006",
+      "actuallyViewed": true,
+      "visibilityAccepted": true,
+      "notes": "Bottle cylinder, palm, thumb and visible bent finger edges clearly observable; table and right-side window frame no longer block the contact region. Bottle naturally occludes far-side fingers."
+    },
+    {
+      "file": "contact-C.png",
+      "sha256": "898f232f6b36397546ce8797d130dfcd4e2f09a2a44a8c86b506f3606ed64f4e",
+      "actuallyViewed": true,
+      "visibilityAccepted": true,
+      "notes": "Bottle cylinder, palm, thumb and visible bent finger edges clearly observable; table and right-side window frame no longer block the contact region. Bottle naturally occludes far-side fingers."
+    },
+    {
+      "file": "01-panorama.png",
+      "sha256": "e33c60efdcbe6adde6c30e84f32f472173cf61d0d58d4ce3322d5ceff04843ce",
+      "actuallyViewed": true,
+      "visibilityAccepted": true,
+      "notes": "All three full native actors and utility table/window present; complete heads, limbs and material appearance visible; observation station proportions coherent."
+    }
+  ],
+  "programmaticEvidence": {
+    "startupPassed": true,
+    "contactTestsRun": true,
+    "fullSuiteRun": true,
+    "windowTestsRun": false,
+    "builtinCases": [
+      {
+        "name": "A 原生体型拿放",
+        "pass": true,
+        "kind": "pick"
+      },
+      {
+        "name": "B 原生体型拿放",
+        "pass": true,
+        "kind": "pick"
+      },
+      {
+        "name": "C 原生体型拿放",
+        "pass": true,
+        "kind": "pick"
+      },
+      {
+        "name": "双人同时申请与等待",
+        "pass": true,
+        "kind": "contention"
+      },
+      {
+        "name": "持有途中中断与重新申请",
+        "pass": true,
+        "kind": "cancel"
+      },
+      {
+        "name": "移走支撑后不得报告放置成功",
+        "pass": true,
+        "kind": "support"
+      },
+      {
+        "name": "A 实际开关窗与回位",
+        "pass": true,
+        "kind": "window-cycle"
+      },
+      {
+        "name": "B 实际开关窗与回位",
+        "pass": true,
+        "kind": "window-cycle"
+      },
+      {
+        "name": "C 实际开关窗与回位",
+        "pass": true,
+        "kind": "window-cycle"
+      },
+      {
+        "name": "实体挡块阻止开窗完成",
+        "pass": true,
+        "kind": "window-block"
+      },
+      {
+        "name": "半开途中取消与自然回位",
+        "pass": true,
+        "kind": "window-cancel"
+      },
+      {
+        "name": "两人排队使用同一扇窗",
+        "pass": true,
+        "kind": "window-contention"
+      }
+    ],
+    "independentWindowBuiltInAudit": true,
+    "errorCounts": {
+      "pageErrors": 0,
+      "consoleErrors": 0,
+      "failedRequests": 0,
+      "httpErrors": 0,
+      "evidenceWriteErrors": 0
+    }
+  },
+  "failure": {
+    "test": "identity-task UI, independent review invalidation and actual JSON export",
+    "reason": "Strict deep equality distinguishes in-memory negative zero from JSON serialized positive zero in window audit approach-start angleDeg. This failed run is not relabeled as passed.",
+    "assertionExcerpt": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    agents: [\n      {\n        approach: null,\n        contactErrorM: null,\n...\n        {\n+         angleDeg: 0,\n-         angleDeg: -0,\n          approach: {\n            contactEntrySeconds: 0.65,\n            elapsed: 0,\n            entryFrom: null,\n            entryStart: null,\n...\n        {\n+         angleDeg: 0,\n-         angleDeg: -0,\n          approach: {\n            contactEntrySeconds: 0.65,\n            elapsed: 0,\n            entryFrom: null,\n            entryStart: null,\n...\n        {\n+         angleDeg: 0,\n-         angleDeg: -0,\n          approach: {\n            contactEntrySeconds: 0.65,\n            elapsed: 0,\n            entryFrom: null,\n            entryStart: null,\n...\n        {\n+         angleDeg: 0,\n-         angleDeg: -0,\n          approach: {\n            contactEntrySeconds: 0.65,\n            elapsed: 0,\n            entryFrom: null,\n            entryStart: null,\n\n    at /home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/npc-life-observation-r02/verify-browser.cjs:1387:12\n    at async check (/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/npc-life-observation-r02/verify-browser.cjs:148:21)\n    at async identityInteraction (/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/npc-life-observation-r02/verify-browser.cjs:1335:3)\n    at async main (/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/npc-life-observation-r02/verify-browser.cjs:1520:5)"
+  },
+  "remainingEvidence": [
+    "complete actual window UI after identity export",
+    "390x844 actual responsive UI",
+    "complete successful current-source suite",
+    "public HTTP byte/build identity",
+    "actual public-browser run"
+  ],
+  "limitations": [
+    "Screenshots can judge visibility and visible anatomy but do not independently prove all back-side finger geometry.",
+    "Builtin/state checks alone do not constitute full browser, public, or user acceptance."
+  ]
+}
