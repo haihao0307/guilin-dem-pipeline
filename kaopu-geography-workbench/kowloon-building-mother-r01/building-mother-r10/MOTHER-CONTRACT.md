@@ -22,3 +22,11 @@ Evidence boundaries:
 - Roof/parapet/equipment use evidence or explicit unknown status; no generic tank or parapet is fabricated. Actual original roof surfaces are preserved.
 
 Checks include immutable seed/level/source preservation; room routes through corridors/stairs; host→hole→infill; deterministic thickness rollback; frame-grid effect on members; and same-page browser thickness0.18→0.28→0.18 visual/geometry rollback. Node tests are not browser proof. R10 is QA-only until its actual browser result is reviewed; public R09 is preserved.
+
+## Support/order increment, user clarification2026-10-24
+
+compileSupportProgram now provides a typed dependency DAG before geometry emission. Lowrise's actual existing generator consumes its generated floor table and shared grid, not a second independent layer list. Existing emitted columns/beams/slabs are linked by their real semantic IDs. Foundation/ground-bearing interfaces remain unknown non-geometric dependencies; no concrete real foundation is invented. Explicit frame prototypes may choose a ring beam; actual cases do not inherit this without evidence.
+
+mergeBays deduplicates shared grid points and beam spans. Two adjacent four-corner bays generate6 columns and7 perimeter spans, not8+8. The sequence is foundation -> ground support -> floor slab/columns -> beams -> next slab -> roof closure. ownedBy, supportedBy and dependsOn are separate edge types. Cycles, unsupported columns, duplicate shared beams and disconnected upper usable rooms have negative tests.
+
+The first R10 browser gate65a1cd97 / run40048241948 passed: changing wall thickness0.18→0.28 changed actual screenshot and geometry; restoring0.18 reproduced both exactly, with no instance accumulation. This result is retained separately from the later support-DAG increment.

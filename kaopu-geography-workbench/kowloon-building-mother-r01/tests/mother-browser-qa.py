@@ -30,7 +30,7 @@ try:
   page.wait_for_function('window.semanticInspection?.ready&&!semanticInspection.busy')
   report['browserVersion']=browser.version
   frozen=page.evaluate('JSON.stringify(semanticInspection.model.levels)')
-  mothers=page.evaluate('semanticInspection.buildings.map(b=>({caseId:b.caseId,stages:b.localModel.buildingMother.stages,validation:b.localModel.buildingMother.validation}))');assert len(mothers)==3;assert all(len(m['stages'])==7 and m['validation']['passed'] for m in mothers);report['motherContracts']=mothers
+  mothers=page.evaluate('semanticInspection.buildings.map(b=>({caseId:b.caseId,stages:b.localModel.buildingMother.stages,validation:b.localModel.buildingMother.validation,support:b.localModel.buildingMother.supportProgram?.validation??null}))');assert len(mothers)==3;assert all(len(m['stages'])==7 and m['validation']['passed'] for m in mothers);report['motherContracts']=mothers;assert mothers[0]['support']['passed'];assert not mothers[0]['support']['actualSupportArrangementVerified']
   assert '统一生成' in page.locator('#motherRelations').inner_text()
   page.screenshot(path=str(out/'same-page-three-buildings-before-candidate.png'))
   page.locator('[data-building=kcc]').click();page.wait_for_function('!semanticInspection.busy')
