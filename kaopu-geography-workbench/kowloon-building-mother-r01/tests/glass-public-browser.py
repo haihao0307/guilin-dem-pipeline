@@ -1,3 +1,9 @@
+# R11 source-building linkage gate, older gates retained below.
+from pathlib import Path as _R11Path
+import runpy as _r11_runpy
+_r11_runpy.run_path(str(_R11Path(__file__).parent.parent/'building-mother-r11'/'browser-qa.py'), run_name='__main__')
+raise SystemExit(0)
+
 # Independent rule-sketch browser gate; prior candidate gates preserved.
 from pathlib import Path as _SketchPath
 if _SketchPath(__file__).with_name('sketch-browser-qa.py').is_file():

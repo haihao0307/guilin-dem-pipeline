@@ -1,0 +1,242 @@
+{
+  "schema": "kowloon-building-evidence-ledger/1",
+  "caseId": "B369121858401063C0",
+  "checkedAt": "2026-10-21",
+  "identity": {
+    "status": "verified",
+    "nameTC": "香港中旅協記貨倉有限公司第二倉",
+    "nameEN": "China Travel Hip Kee Godown Co. (H.K.) Ltd. Godown No.2",
+    "address": "1 Cheong Hang Road, Hung Hom, Kowloon / 九龍紅磡暢行道1號",
+    "completionYear": 1984,
+    "sources": [
+      "S1",
+      "S2"
+    ],
+    "identityMethod": "The exact supplied EPSG:2326 anchor intersects the official Tower feature, whose GeoRefNo3691218584 matches the 3D object ID. Underlying podium is separately identified. Government site plan independently confirms footprint/street location. Not a nearest-POI guess."
+  },
+  "georeference": {
+    "crs": "EPSG:2326",
+    "origin": [
+      836896.75,
+      818601.75,
+      17.523000717
+    ],
+    "verticalDatum": "Hong Kong Principal Datum"
+  },
+  "components": [
+    {
+      "attributes": {
+        "OBJECTID": 158577,
+        "Shape__Length": 189.52659539820874,
+        "Shape__Area": 2329.776236010047,
+        "GeoRefNo": "3691218584",
+        "DateCreate": 1114790400000,
+        "BuildingBlockType": "Tower",
+        "BuildingCSUID": "3691218584T20050430",
+        "BuildingID": 1108241445,
+        "Status": "Active",
+        "BuildingNameEN": "China Travel Hip Kee Godown Co. (H.K.) Ltd. Godown No.2",
+        "BuildingNameTC": "香港中旅協記貨倉有限公司第二倉",
+        "BaseHeight": 17.5,
+        "TopHeight": 51.7,
+        "Storeys": 12,
+        "StoreysInBasement": null,
+        "DateStamp": 1599580800000
+      },
+      "sources": [
+        "S1"
+      ]
+    },
+    {
+      "attributes": {
+        "OBJECTID": 237016,
+        "Shape__Length": 218.8727605828767,
+        "Shape__Area": 3115.6254814995486,
+        "GeoRefNo": "3690318597",
+        "DateCreate": 1142006400000,
+        "BuildingBlockType": "Podium",
+        "BuildingCSUID": "3690318597P20060311",
+        "BuildingID": 1108247084,
+        "Status": "Active",
+        "BuildingNameEN": "CHINA TRAVEL HIP KEE GODOWN HONG KONG LIMITED (GODOWN NO 2)",
+        "BuildingNameTC": "香港中旅協記貨倉有限公司(第二倉)",
+        "BaseHeight": 4,
+        "TopHeight": 17.5,
+        "Storeys": 2,
+        "StoreysInBasement": 2,
+        "DateStamp": 1599580800000
+      },
+      "sources": [
+        "S1"
+      ]
+    }
+  ],
+  "floorEvidence": {
+    "officialRawFields": {
+      "towerStoreys": 12,
+      "podiumStoreys": 2,
+      "podiumBasements": 2
+    },
+    "historicalFloorLabels": "G/F plus1/F through12/F,2 basement floors, and local east/south cocklofts are documented in2021–2022 court text. These labels provide a usable basic description but do not prove every floor is an identical full floor plate.",
+    "status": "verified official raw fields + historical documentary evidence via mirror",
+    "sumPolicy": "Do not add12+2+2 or assert16 storeys. Do not equate 37.707m component height with total street-to-roof height. OSM15 and malformed broker0-storey/2014 fields are not authoritative.",
+    "sources": [
+      "S1",
+      "S6",
+      "S7"
+    ]
+  },
+  "roof": {
+    "status": "observed_derived",
+    "type": "flat roof with parapet and narrow higher strip",
+    "sourceMainRoofLocalHeight": 33.82499695,
+    "sourceParapetLocalHeight": 34.07299805,
+    "sourceHighestStripLocalHeight": 37.70700073,
+    "absoluteModelMainRoof": 51.347997667,
+    "absoluteModelParapet": 51.595998767,
+    "absoluteModelHighestStrip": 55.230001447,
+    "higherStripUse": "billboard/support is plausible but not positively matched; keep inferred",
+    "correction": "Replace broad-sloped-roof label. Geometry recipe contains no sloping roof plane.",
+    "sources": [
+      "S8"
+    ]
+  },
+  "entrances": {
+    "status": "historically documented + visible photograph",
+    "known": "A wide vehicular entrance and a separate narrow pedestrian entrance were described in2021; the exterior photo shows lower pedestrian-scale doors and large shutter/loading openings.",
+    "unknown": "Exact entrance coordinates/widths, current main versus rear roles, number/position of secondary emergency/service doors.",
+    "sources": [
+      "S4",
+      "S6"
+    ]
+  },
+  "circulation": {
+    "freightLifts": {
+      "reportedCount": 9,
+      "status": "broker_reported_not_official",
+      "source": "S5"
+    },
+    "loading": "Container access and loading platforms stated by2023 brokerage video description.",
+    "stairs": "No public verified staircase footprint, exact stair count, landing geometry or lift-shaft positions acquired. Do not fabricate as as-built."
+  },
+  "facade": {
+    "status": "photo_observed",
+    "known": [
+      "Red-brown external finish; small brick/tile-like grid visible on corner pier and podium. Do not assert load-bearing brick construction.",
+      "Repeated pale horizontal ledges/bands span one elevation, with darker recessed strips between.",
+      "Paired vertical rows of round recessed/hooded openings visible on side elevation.",
+      "Lower rectangular framed glazing, small vents/grilles, pedestrian-scale door openings and large shutter/loading openings."
+    ],
+    "uncertain": [
+      "Round openings may serve ventilation rather than conventional openable windows.",
+      "Whether dark bands contain glazing/louvres and exact operability cannot be fixed from this image."
+    ],
+    "unknown": [
+      "Measured frame/reveal depths and profiles",
+      "Opening mechanism and hardware",
+      "Exact per-floor opening schedule",
+      "Hidden/rear elevation details"
+    ],
+    "modelingPolicy": "Use these as building-specific observed feature families with explicit approximated dimensions. Do not reuse a generic residential-window grid, assign opening hinges, or call estimated reveal depth measured.",
+    "sources": [
+      "S4"
+    ]
+  },
+  "plans": {
+    "acquired": "Official exterior site/footprint plan and component polygons.",
+    "notAcquired": "No accessible internal architectural floor-plan drawing or staircase/lift core plan found in bounded public search of government, owner procurement, JLL, Centaline and public web. This is not proof none exists.",
+    "nextInputIfNeeded": "Owner/agent historic plan, evacuation plan supplied by user, or authorized approved-building-plan retrieval. No purchase, private-record retrieval or outreach performed.",
+    "sources": [
+      "S1",
+      "S3"
+    ]
+  },
+  "photos": {
+    "inspected": [
+      {
+        "file": "jll-exterior-reference.jpg",
+        "source": "S4",
+        "publicationRights": "not established; link only; do not bundle in public repo",
+        "sourceImageUrl": "https://jll-global-gdim-res.cloudinary.com/image/upload/v1727800452/HK/OLM/EDP/PROD/ytr3gvg2y3gs6yljxa7v.jpg"
+      }
+    ],
+    "reusableVerified": [],
+    "candidateNotInspected": "Commons category has Hip Kee contextual photos, but direct retrieval failed403 and filename does not establish No.2 coverage; do not adopt unseen photos."
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "title": "Lands Department Building FeatureServer exact-anchor result",
+      "url": "https://portal.csdi.gov.hk/server/rest/services/common/landsd_rcd_1637211194312_35158/FeatureServer/0/query?f=pjson&where=GeoRefNo%20IN%20(%273691218584%27,%273690318597%27)&outFields=*&returnGeometry=true&outSR=2326",
+      "publicationOrRecordDate": "2020-09-09 (DateStamp for both components)",
+      "retrieved": "2026-10-21",
+      "authority": "Hong Kong Lands Department / CSDI",
+      "coverage": "Tower and underlying podium names, persistent identifiers, official footprint, height and storey fields. Does not provide internal layout or full-building storey definition."
+    },
+    {
+      "id": "S2",
+      "title": "RVD Names of Buildings, April 2015, printed page161",
+      "url": "https://www.rvd.gov.hk/doc/en/urban_201504.pdf",
+      "publicationOrRecordDate": "2015-04",
+      "retrieved": "2026-10-21",
+      "authority": "Hong Kong Rating and Valuation Department",
+      "coverage": "Godown No.2 at1 Cheong Hang Road, completion year1984; not a floor plan."
+    },
+    {
+      "id": "S3",
+      "title": "Town Planning Board Y/K9/15 site plan, PDF page5",
+      "url": "https://www.tpb.gov.hk/tc/plan_application/Attachment/20210806/s12afi_Y_K9_15_1_gist.pdf",
+      "publicationOrRecordDate": "2021-08-02 (map preparation)",
+      "retrieved": "2026-10-21",
+      "authority": "Hong Kong Town Planning Board",
+      "coverage": "Named surrounding street block and warehouse/podium outline, 17.5mPD podium annotation. The application highlighted in red is NOT this warehouse. SITE PLAN ONLY, not internal floor plan."
+    },
+    {
+      "id": "S4",
+      "title": "JLL exact Godown No.2 industrial listing and actual exterior photo",
+      "url": "https://property.jll.com.hk/en/industrial-lease/hong-kong/hung-hom/china-travel-hip-kee-godown-hk-ltd-godown-no2-hk-p-3408",
+      "publicationOrRecordDate": "Photo date not stated; image version path is not proof of capture date",
+      "retrieved": "2026-10-21",
+      "authority": "JLL property agent, first-party listing/photo publication",
+      "coverage": "Two external elevations and lower-level openings. Photo directly inspected. Copyright not established for republication; link only, private research copy retained."
+    },
+    {
+      "id": "S5",
+      "title": "Centaline on-site walkthrough video for Godown No.2",
+      "url": "https://www.youtube.com/watch?v=oFs9zSVMEco",
+      "publicationOrRecordDate": "2023-10-18 (published); description advertising date2023-10-19",
+      "retrieved": "2026-10-21",
+      "authority": "CENTAOIR Channel / Centaline brokerage",
+      "coverage": "Publisher description states9 freight lifts, container access/loading platforms and one tenant per floor. Video player not inspected; claims remain brokerage reported, not official verified dimensions."
+    },
+    {
+      "id": "S6",
+      "title": "[2021] HKCFI1427, HCA693/2021, 20 May2021",
+      "url": "https://babelcite.com/case/135859",
+      "publicationOrRecordDate": "2021-05-20",
+      "retrieved": "2026-10-21",
+      "authority": "Hong Kong High Court judgment as reproduced by BabelCite; mirror text inspected",
+      "coverage": "Para8 records2 basement floors, ground-floor office and numbered warehouse floors. Para13(4) distinguishes broad vehicle entrance and narrow pedestrian entrance. Historical evidence, not a current access/security guide."
+    },
+    {
+      "id": "S7",
+      "title": "[2022] HKCFI2510, HCA693/2021, 19 August2022",
+      "url": "https://babelcite.com/case/146636",
+      "publicationOrRecordDate": "2022-08-19; referenced site inspection2022-04-08",
+      "retrieved": "2026-10-21",
+      "authority": "Hong Kong High Court judgment as reproduced by BabelCite; mirror text inspected",
+      "coverage": "Para9.2 records floor labels through12/F; para33.3.1 describes south-side/east cocklofts, east G/F, basement2. Supports historical basic level organization; does not include a usable floor-plan drawing."
+    },
+    {
+      "id": "S8",
+      "title": "Existing measured plane boundary recipe at source commit",
+      "url": "https://github.com/haihao0307/guilin-dem-pipeline/blob/b74929fc9f1c81eaa7e4b529a6bd5361024b035b/kaopu-geography-workbench/hk-three-buildings-r01/geometry/B369121858401063C0.score.json",
+      "publicationOrRecordDate": "commit b74929fc9f1c81eaa7e4b529a6bd5361024b035b",
+      "retrieved": "2026-10-21",
+      "authority": "Project measured geometry derived from LandsD/CSDI model",
+      "coverage": "All3 roofPlane normals are horizontal; no broad pitched/sloped roof. Main roof33.825m local, parapet34.073m, thin highest strip37.707m. No door/window/room evidence."
+    }
+  ],
+  "stoppingCondition": "Identity, basic level evidence, real exterior source and circulation/plan boundaries established. No unbounded plan search; unresolved details remain explicit.",
+  "publication": "Facts, attribution and reference links only. External reference photographs/plans are not redistributed; no reuse license is claimed."
+}
