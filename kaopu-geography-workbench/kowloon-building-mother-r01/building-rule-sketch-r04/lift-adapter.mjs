@@ -213,7 +213,9 @@ export function mountRetainedPanel(element,initialController,onChange=()=>{}){
  function refresh(nextController=controller){
   if(disposed)return null;
   controller=nextController;const s=controller?.snapshot()??{available:false};
-  for(const e of[hallLabel,hallButtons,carLabel,carButtons,doorButtons])e.hidden=!s.available;
+  for(const e of[hallLabel,hallButtons,carLabel,carButtons,doorButtons]){
+   e.hidden=!s.available;e.style.display=s.available?([hallButtons,carButtons,doorButtons].includes(e)?'flex':''):'none';
+  }
   if(!s.available){status.textContent='此原型没有已接搭电梯';message.textContent='';return s;}
   const fields=retainedSketchPanelFields(s);
   selectedFloor=s.floors.some(f=>f.id===selectedFloor)?selectedFloor:s.current;

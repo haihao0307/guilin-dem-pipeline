@@ -39,6 +39,7 @@ try:
   action(lambda:page.locator('#storeys').select_option('2'))
   for case in ['cell','vertical','connected']:
    action(lambda case=case:page.locator(f'[data-case={case}]').click())
+   if case!='connected':assert page.locator('#retainedLiftPanel [data-lift-car-floor]:visible').count()==0
    for stage in ['1','4','7']:
     action(lambda stage=stage:page.locator('#stage').select_option(stage));capture(case+'-stage'+stage)
   capture('connected-roof-off')
