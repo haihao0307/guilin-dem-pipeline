@@ -24,6 +24,20 @@ const rect=(x0,z0,x1,z1)=>[[x0,z0],[x1,z0],[x1,z1],[x0,z1]];
 const boundsOf=ps=>({min:[0,1,2].map(k=>Math.min(...ps.map(p=>p.bounds.min[k]))),max:[0,1,2].map(k=>Math.max(...ps.map(p=>p.bounds.max[k])))});
 const between=(x,a,b)=>Number.isFinite(x)&&x>=a&&x<=b;
 const copy=x=>structuredClone(x);
+// Exact 2D segment-to-rectangle distance. A prism's projected AABB contains
+// its entire analytic field, so clearance from this rectangle is a proof for
+// every point of the swept walk segment, not a collection of sampled pixels.
+export function segmentPlanBoundsDistance(a3,b3,bounds){
+ const a=[a3[0],a3[2]],b=[b3[0],b3[2]],lo=[bounds.min[0],bounds.min[2]],hi=[bounds.max[0],bounds.max[2]];
+ const sub=(a,b)=>a.map((v,k)=>v-b[k]),dot=(a,b)=>a[0]*b[0]+a[1]*b[1],cross=(a,b)=>a[0]*b[1]-a[1]*b[0];
+ const pointDistance=(p,a,b)=>{const d=sub(b,a),den=dot(d,d),t=den?Math.max(0,Math.min(1,dot(sub(p,a),d)/den)):0;return Math.hypot(p[0]-a[0]-t*d[0],p[1]-a[1]-t*d[1]);};
+ const inside=p=>p.every((v,k)=>v>=lo[k]&&v<=hi[k]);if(inside(a)||inside(b))return 0;
+ const corners=rect(lo[0],lo[1],hi[0],hi[1]);let best=Infinity;
+ for(let k=0;k<4;k++){const c=corners[k],d=corners[(k+1)%4],ab=sub(b,a),cd=sub(d,c),ca=sub(c,a),den=cross(ab,cd);
+  if(Math.abs(den)>1e-12){const t=cross(ca,cd)/den,u=cross(ca,ab)/den;if(t>=0&&t<=1&&u>=0&&u<=1)return 0;}
+  best=Math.min(best,pointDistance(a,c,d),pointDistance(b,c,d),pointDistance(c,a,b),pointDistance(d,a,b));
+ }return best;
+}
 
 export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalHeight=3,
  doorOpen=0,liftOpen=0,liftLevel=0,liftRuntime=null,liftAttached=true,roofVisible=true,waistThickness=.14,storeys,pitDepth=1.2,overhead=1,windowSill=.9,windowHeight=1.2,windowWidth=1.2}={}) {
@@ -142,6 +156,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
   const baseElevation=lowerLevel.elevation,height=upperLevel.elevation-baseElevation,half=height/2,stepsPerFlight=Math.ceil(half/r.stairTargetRise),rise=half/stepsPerFlight,tread=r.stairRun/stepsPerFlight;
   const waypoints=[[.95,baseElevation,.8],[.95,baseElevation,1.4]],treadIds=[],landingId=connectionId+':mid-landing',flights=[];
   const slope=half/r.stairRun,waistVerticalDepth=waistThickness*Math.hypot(1,slope);
+  const railHeight=.95,railWidth=.05,postWidth=.035,embedDepth=.03,inset=.08,innerRailBack=4.00,outerRailBack=D-r.wallThickness/2-inset,landingRouteZ=(innerRailBack+outerRailBack)/2;
   // Both flights share this exact section rule. A thin inclined waist carries
   // triangular step wedges. The space below is genuinely empty, not masked.
   const flight=({key,x0,z0,direction,base,floorId,supports})=>{
@@ -166,7 +181,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
   Object.assign(nodeMap.get(landingBeamId),{partRole:'midlanding_support_beam',supportRule:'rear_edge_beam_bears_on_two_frame_columns',wallLoadBearing:false});
   box(landingId,'stair',.45,3.8,2.65,rearWallInnerFace,baseElevation+half-r.slabThickness,baseElevation+half,{owner:connectionId,stage:6,floorId:lowerLevel.id,moduleId:stairModule,supports:[lower.waistId,landingBeamId]});
   edge(landingId,rearWallId,'meetsBoundary');
-  waypoints.push([.95,baseElevation+half,4.2],[2.15,baseElevation+half,4.2],[2.15,baseElevation+half,3.8]);
+  waypoints.push([.95,baseElevation+half,landingRouteZ],[2.15,baseElevation+half,landingRouteZ],[2.15,baseElevation+half,3.8]);
   const upper=flight({key:'upper',x0:1.65,z0:3.8,direction:-1,base:baseElevation+half,floorId:upperLevel.id,supports:[landingId,upperLevel.nodeId+':slab']});
   waypoints.push([2.15,upperLevel.elevation,.8]);
   // A rail is an ordered, continuous analytic square-section sweep. Its
@@ -174,7 +189,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
   // analytic joint nodes. No mesh, line decoration, or isolated bars are used.
   // Both runs turn on the half-landing; their floor ports remain open so the
   // handrail never becomes a barrier across the corridor or next flight.
-  const handrails=[],railHeight=.95,railWidth=.05,postWidth=.035,embedDepth=.03,inset=.08;
+  const handrails=[];
   const railMember=(id,a,b,width,opts)=>{
    const delta=b.map((v,k)=>v-a[k]),length=Math.hypot(...delta),w=delta.map(v=>v/length),reference=Math.abs(w[1])>.98?[1,0,0]:[0,1,0];
    const cross=(u,v)=>[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],raw=cross(reference,w),n=Math.hypot(...raw),u=raw.map(v=>v/n),v=cross(w,u);
@@ -183,7 +198,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
   for(const side of ['outer','inner']){
    const id=node(connectionId+':handrail:'+side,'continuous_handrail',connectionId,{stage:6,floorId:lowerLevel.id,moduleId:stairModule,label:side==='outer'?'外侧连续扶手':'内侧连续扶手'});
    const left=side==='outer'?lower.x0+inset:lower.x0+lower.width-inset,right=side==='outer'?upper.x0+upper.width-inset:upper.x0+inset;
-   const back=side==='outer'?4.53:4.00,front=1.10,mid=baseElevation+half+railHeight;
+   const back=side==='outer'?outerRailBack:innerRailBack,front=1.10,mid=baseElevation+half+railHeight;
    const path=[[left,baseElevation+railHeight,front],[left,baseElevation+railHeight,1.4],[left,mid,3.8],[left,mid,back],[right,mid,back],[right,mid,3.8],[right,upperLevel.elevation+railHeight,1.4],[right,upperLevel.elevation+railHeight,front]];
    const pieceIds=[],jointIds=[],posts=[],opts={owner:id,stage:6,floorId:lowerLevel.id,moduleId:stairModule};
    for(let k=1;k<path.length;k++){const pieceId=id+':piece:'+(k-1);railMember(pieceId,path[k-1],path[k],railWidth,opts);Object.assign(nodeMap.get(pieceId),{partRole:'continuous_handrail_segment',pathIndex:k-1});pieceIds.push(pieceId);}
@@ -197,7 +212,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
    handrails.push({id,side,path,pieceIds,jointIds,posts,railHeight,railWidth,postWidth,continuous:true,representation:'bounded_analytic_prism_sweep_with_shared_node_joins',floorPortsOpen:true});
   }
   const routeId=node(connectionId+':route','walk_route',connectionId,{stage:6,from:corridors[connectionIndex],to:corridors[connectionIndex+1]});edge(routeId,corridors[connectionIndex],'startsAt');edge(routeId,corridors[connectionIndex+1],'endsAt');for(const id of [...treadIds,landingId])edge(routeId,id,'walksOn');
-  connections.push({id:connectionId,routeId,fromFloorId:lowerLevel.id,toFloorId:upperLevel.id,baseElevation,height,stepsPerFlight,totalRisers:stepsPerFlight*2,rise,tread,clearWidth:r.stairWidth,railClearWidth:r.stairWidth-2*inset-railWidth,waistThickness,waistVerticalDepth,flights,handrails,underFlightsHollow:true,landingId,landingSupport:{beamId:landingBeamId,columnIds:landingBeamColumns,edge:[[.45,baseElevation+half-r.slabThickness,rearWallInnerFace],[2.65,baseElevation+half-r.slabThickness,rearWallInnerFace]],wallLoadBearing:false},landingRearContact:{wallId:rearWallId,plane:rearWallInnerFace,gap:0,rule:'landing_end_equals_wall_inner_face',loadBearingWallClaim:false},treadIds,upperSlabId:upperLevel.nodeId+':slab',upperHole:copy(stairHole),headroomCertified:false});
+  connections.push({id:connectionId,routeId,fromFloorId:lowerLevel.id,toFloorId:upperLevel.id,baseElevation,height,stepsPerFlight,totalRisers:stepsPerFlight*2,rise,tread,clearWidth:r.stairWidth,railClearWidth:r.stairWidth-2*inset-railWidth,landingRailClearDepth:outerRailBack-innerRailBack-railWidth,landingRouteZ,waistThickness,waistVerticalDepth,flights,handrails,underFlightsHollow:true,landingId,landingSupport:{beamId:landingBeamId,columnIds:landingBeamColumns,edge:[[.45,baseElevation+half-r.slabThickness,rearWallInnerFace],[2.65,baseElevation+half-r.slabThickness,rearWallInnerFace]],wallLoadBearing:false},landingRearContact:{wallId:rearWallId,plane:rearWallInnerFace,gap:0,rule:'landing_end_equals_wall_inner_face',loadBearingWallClaim:false},treadIds,upperSlabId:upperLevel.nodeId+':slab',upperHole:copy(stairHole),headroomCertified:false});
   routes.push({id:routeId,type:'stair',from:corridors[connectionIndex],to:corridors[connectionIndex+1],fromFloorId:lowerLevel.id,toFloorId:upperLevel.id,stage:6,waypoints,treadIds,continuous:true,accessibleRoute:false});
   }
   stair={...connections[0],id:stairModule,connections,flights:connections.flatMap(c=>c.flights),handrails:connections.flatMap(c=>c.handrails),treadIds:connections.flatMap(c=>c.treadIds),totalRisers:connections.reduce((n,c)=>n+c.totalRisers,0)};
@@ -360,6 +375,17 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
    for(let k=1;k<rail.path.length;k++)for(const t of[0,.2,.5,.8,1]){const q=rail.path[k-1].map((v,i)=>v+(rail.path[k][i]-v)*t);if(!queryAssemblyInside(railSpec,q))failures.push('Handrail continuity gap: '+rail.id);}
    for(const post of rail.posts){const q=[post.anchor[0],post.anchor[1]-.015,post.anchor[2]];if(!queryAssemblyInside(only(byId(post.surfaceId)),q)||!queryAssemblyInside(only(byId(post.id)),q)||!queryAssemblyInside(railSpec,post.end))failures.push('Handrail post contact gap: '+post.id);}
   }
+  const innerRail=c.handrails.find(r=>r.side==='inner'),outerRail=c.handrails.find(r=>r.side==='outer'),front=byId(innerRail.pieceIds[3]).bounds.max[2],back=byId(outerRail.pieceIds[3]).bounds.min[2],bodyRadius=.20;
+  // A turn must not bottleneck the usable flight, and the actual walk line
+  // must admit a 0.20 m horizontal body radius. This is a geometric teaching
+  // check, not an accessibility or building-code certification.
+  if(back-front<c.railClearWidth-1e-8||c.landingRouteZ-front<bodyRadius||back-c.landingRouteZ<bodyRadius||c.landingRouteZ+bodyRadius>4.75)failures.push('Handrail landing circulation blocked: '+c.id);
+  for(const rail of c.handrails)if(byId(rail.jointIds[0]).bounds.min[2]-.8<bodyRadius)failures.push('Handrail corridor port blocked: '+rail.id);
+  const walkingY=c.baseElevation+c.height/2,turnRoute=[[.95,walkingY,3.8],[.95,walkingY,c.landingRouteZ],[2.15,walkingY,c.landingRouteZ],[2.15,walkingY,3.8]],bodyHeight=[.05,1.95];
+  const railFields=c.handrails.flatMap(r=>[...r.pieceIds,...r.jointIds,...r.posts.map(p=>p.id)]).map(byId).filter(p=>p.bounds.max[1]>walkingY+bodyHeight[0]&&p.bounds.min[1]<walkingY+bodyHeight[1]);
+  let minimumPlanDistance=Infinity;for(let k=1;k<turnRoute.length;k++)for(const p of railFields)minimumPlanDistance=Math.min(minimumPlanDistance,segmentPlanBoundsDistance(turnRoute[k-1],turnRoute[k],p.bounds));
+  c.handrailCirculationProof={bodyRadius,bodyHeight,turnRoute,minimumPlanDistance,remainingMargin:minimumPlanDistance-bodyRadius,method:'continuous_segment_distance_to_conservative_analytic_prism_AABB_projection',samplingRequired:false,codeComplianceCertified:false};
+  if(minimumPlanDistance<bodyRadius-1e-9)failures.push('Handrail continuous turn envelope blocked: '+c.id);
  }
  if(stair){const stairSpec={schema:ASSEMBLY_SCHEMA,primitives:primitives.filter(p=>p.moduleId===stairModule)};for(const f of stair.flights)for(const t of[.5,.7,.9])if(queryAssemblyInside(stairSpec,[f.x0+f.width/2,f.base+f.rise*t-f.waistVerticalDepth-.08,f.z0+f.direction*f.run*t]))failures.push('Solid fill remains below flight: '+f.id);}
  if(lift){
@@ -371,7 +397,7 @@ export function growSketch({caseId='connected',stage=7,groundHeight=3.6,typicalH
    if(liftOpen>.99)for(const dy of [.05,.9,1.95])if(queryAssemblyInside({schema:ASSEMBLY_SCHEMA,primitives},[q[0],q[1]+dy,q[2]]))failures.push('Direct lift threshold blocked');
   }
  }
- const checks={passed:failures.length===0,failures,supportDAG:supportValidation.passed,openingOwnership:openingValidation.passed,sharedMembersDeduplicated:true,doorHostsCut:!failures.some(f=>f.startsWith('Blocked opening')),windowHostsCut:!failures.some(f=>f.startsWith('Blocked opening')),emptyOrdinaryDoorways:true,upperStairOpening:!failures.includes('Stair hole blocked'),frameJointsContinuous:!failures.some(f=>f.startsWith('Column joint gap')),foundationJointsContinuous:!failures.some(f=>/^(Foundation column|Ground beam)/.test(f)),wallSlabBeamContacts:!failures.some(f=>f.startsWith('Wall ')),landingRearContact:!failures.some(f=>f.startsWith('Landing rear')),landingFrameSupport:!failures.some(f=>/^(Landing beam|Landing supported)/.test(f)),handrailsContinuous:!failures.some(f=>f.startsWith('Handrail')),underFlightsHollow:!failures.some(f=>f.startsWith('Solid fill')),liftDirectThreshold:!failures.some(f=>f.startsWith('Lift threshold')||f.startsWith('Direct lift')||f.startsWith('Lift shaft')),separateLiftDoorOwnership:true,modelTriangles:0,modelVertexBuffers:0,sourceUnchanged:true,structuralCertification:false};
+ const checks={passed:failures.length===0,failures,supportDAG:supportValidation.passed,openingOwnership:openingValidation.passed,sharedMembersDeduplicated:true,doorHostsCut:!failures.some(f=>f.startsWith('Blocked opening')),windowHostsCut:!failures.some(f=>f.startsWith('Blocked opening')),emptyOrdinaryDoorways:true,upperStairOpening:!failures.includes('Stair hole blocked'),frameJointsContinuous:!failures.some(f=>f.startsWith('Column joint gap')),foundationJointsContinuous:!failures.some(f=>/^(Foundation column|Ground beam)/.test(f)),wallSlabBeamContacts:!failures.some(f=>f.startsWith('Wall ')),landingRearContact:!failures.some(f=>f.startsWith('Landing rear')),landingFrameSupport:!failures.some(f=>/^(Landing beam|Landing supported)/.test(f)),handrailsContinuous:!failures.some(f=>f.startsWith('Handrail')),handrailRouteClearance:!failures.some(f=>/^Handrail (landing circulation|corridor port|continuous turn)/.test(f)),underFlightsHollow:!failures.some(f=>f.startsWith('Solid fill')),liftDirectThreshold:!failures.some(f=>f.startsWith('Lift threshold')||f.startsWith('Direct lift')||f.startsWith('Lift shaft')),separateLiftDoorOwnership:true,modelTriangles:0,modelVertexBuffers:0,sourceUnchanged:true,structuralCertification:false};
  if(!checks.passed)throw Error(failures.join('; '));program.validation=supportValidation;
  return {model,source,graph,checks,validation:checks,parameters,stages:copy(SKETCH_STAGES),caseLabel:def.label,grid,bays,levels,counts,bounds,roofElevation,
   portals,rooms,routes,stair,lift,columnJoints,foundationJoints,supportProgram:{...program,nodes,edges},

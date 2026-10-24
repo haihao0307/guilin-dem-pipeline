@@ -32,7 +32,10 @@ try:
    raw=page.locator('#sketch').screenshot(path=str(out/(name+'.png')));q['sha256']=hashlib.sha256(raw).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,round(q['frame']['wallMs']),flush=True);return q
   def action(fn):
    n=page.evaluate('sketchInspection.frames.length');fn();settle(n)
-  first=capture('connected-default-four');assert page.evaluate('sketchInspection.result.levels.length')==4;assert all(first['checks'][k] for k in ['foundationJointsContinuous','landingRearContact','landingFrameSupport','handrailsContinuous','wallSlabBeamContacts']);assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==4;page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  first=capture('connected-default-four');assert page.evaluate('sketchInspection.result.levels.length')==4;assert all(first['checks'][k] for k in ['foundationJointsContinuous','landingRearContact','landingFrameSupport','handrailsContinuous','handrailRouteClearance','wallSlabBeamContacts']);assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==4;page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  assert '当前剖视' in page.locator('#roof').inner_text()
+  action(lambda:page.locator('#roof').click());roof=capture('four-storey-roof-shown');assert roof['values']['roofVisible'] and roof['sha256']!=first['sha256']
+  action(lambda:page.locator('#roof').click());roofback=capture('four-storey-roof-cut-restored');assert not roofback['values']['roofVisible'] and roofback['sha256']==first['sha256']
   action(lambda:page.locator('#storeys').select_option('2'))
   for case in ['cell','vertical','connected']:
    action(lambda case=case:page.locator(f'[data-case={case}]').click())
@@ -94,6 +97,16 @@ try:
   arrival=page.evaluate('sketchInspection.lift');assert arrival['y']==3.6 and arrival['carDoor']>0
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[10,5,-5],target:[8.2,4.5,.8],fov:.65})'));capture('lift-direct-threshold-close')
   action(lambda:page.locator('#fit').click())
+  # Four-storey full-shaft trip uses original car-panel command and substep dynamics.
+  action(lambda:page.locator('#storeys').select_option('4'))
+  action(lambda:page.locator('#retainedLiftPanel [data-lift-car-floor="teaching-sketch:connected:L3"]').click())
+  action(lambda:page.evaluate('sketchInspection.advanceLift(4)'));fourmoving=capture('four-storey-lift-travel')
+  assert 0<fourmoving['lift']['y']<9.6 and fourmoving['lift']['carDoor']==0
+  assert all(v==0 for v in fourmoving['lift']['landingDoors'].values())
+  action(lambda:page.evaluate('''()=>{const s=sketchInspection;for(let i=0;i<200;i++){s.advanceLift(.2);const q=s.liftController.snapshot();if(q.y===9.6&&q.carDoor>0)break;}}'''))
+  top=capture('four-storey-lift-top-arrival');assert top['lift']['y']==9.6 and top['lift']['carDoor']>0
+  assert all(v==0 for k,v in top['lift']['landingDoors'].items() if not k.endswith(':L3'))
+  action(lambda:page.locator('#storeys').select_option('2'))
   action(lambda:page.locator('#cut').click());cut=capture('connected-cutaway')
   # Display-only ghosting must expose inner structures without changing the model.
   physical=page.evaluate('JSON.stringify(sketchInspection.model)')
@@ -109,7 +122,7 @@ try:
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
   action(lambda:page.locator('#cut').click());n=page.evaluate('sketchInspection.frames.length');page.set_viewport_size({'width':390,'height':844});settle(n);capture('mobile-viewport-connected');assert page.locator('#sketch').bounding_box()['width']>=360;assert page.locator('#sketch').bounding_box()['y']<300;page.screenshot(path=str(out/'mobile-viewport-full-page.png'),full_page=True)
   assert not report['errors'];assert not any(u.endswith(('.jpg','.png','.gltf','.glb')) for u in requests)
-  report['checks']=['three real WebGL sketches','three growth stages each','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
+  report['checks']=['four-storey default plus three real WebGL sketch rules','three growth stages each','footing-column and landing frame support interfaces','retained original lift panel commands, closed-door travel and aligned arrival','no source image/model asset requests','single height regeneration changed actual image and exact geometry rollback','empty door/window holes and direct lift doors','canvas picking ownership','actual camera drag'];report['requests']=requests;report['passed']=True;save();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc());save();raise
 finally:server.shutdown()

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
-import {growSketch,SKETCH_STAGES} from './sketch-model.mjs';
+import {growSketch,SKETCH_STAGES,segmentPlanBoundsDistance} from './sketch-model.mjs';
 import {validateSupportProgram} from './frame-growth.mjs';
 import {validateOpeningOwnership} from './opening-ownership.mjs';
 import {ASSEMBLY_SCHEMA,queryAssemblyInside,packAssemblyDescriptors,intersectAssemblyRay} from './kowloon-building-mother-r01/r07/assemblies.mjs';
@@ -274,7 +274,7 @@ const overlap=(a,b)=>[0,1,2].every(k=>Math.min(a.bounds.max[k],b.bounds.max[k])-
 const rectangle=(a,b,c,d)=>[[a,b],[c,b],[c,d],[a,d]];
 for(const caseId of ['vertical','connected'])for(let storeys=2;storeys<=8;storeys++){
  const q=growSketch({caseId,storeys,liftLevel:storeys-1,liftOpen:1}),p=all(q),byId=id=>p.find(v=>v.nodeId===id),root=q.model.sourceModelId;
- for(const key of ['foundationJointsContinuous','wallSlabBeamContacts','landingRearContact','landingFrameSupport','handrailsContinuous'])ok(q.checks[key],'R04 verified analytic relationship: '+key);
+ for(const key of ['foundationJointsContinuous','wallSlabBeamContacts','landingRearContact','landingFrameSupport','handrailsContinuous','handrailRouteClearance'])ok(q.checks[key],'R04 verified analytic relationship: '+key);
  equal(q.foundationJoints.length,q.grid.points.length,'one foundation-column joint per deduplicated grid point');
  for(const j of q.foundationJoints){
   const col=byId(j.columnId),pad=byId(j.padId),[x,,z]=j.position;
@@ -310,7 +310,9 @@ for(const caseId of ['vertical','connected'])for(let storeys=2;storeys<=8;storey
    const fields=[...rail.pieceIds,...rail.jointIds].map(byId);equal(rail.pieceIds.length,rail.path.length-1,'every consecutive path pair emits one bounded analytic sweep');
    equal(rail.jointIds.length,rail.path.length,'every turn and end has an analytic shared node join');
    for(let k=1;k<rail.path.length;k++)for(const t of[0,.01,.25,.5,.75,.99,1])ok(inside(fields,rail.path[k-1].map((v,j)=>v+(rail.path[k][j]-v)*t)),'rail centreline is solid without any break at flight, turn or landing');
+   for(let k=0;k<rail.path.length;k++)for(const [next,pieceIndex]of[[k-1,k-1],[k+1,k]]){if(next<0||next>=rail.path.length)continue;const v=rail.path[k],delta=rail.path[next].map((x,j)=>x-v[j]),length=Math.hypot(...delta),probe=v.map((x,j)=>x+delta[j]/length*.005);ok(inside([byId(rail.jointIds[k])],probe)&&inside([byId(rail.pieceIds[pieceIndex])],probe),'node join and each adjacent sweep share real positive-volume interior, not just same-colour caps');}
    for(const post of rail.posts){const anchor=[post.anchor[0],post.anchor[1]-.015,post.anchor[2]];ok(inside([byId(post.surfaceId)],anchor)&&inside([byId(post.id)],anchor),'every post embeds in its actual owned tread, landing or floor');ok(inside(fields,post.end),'every post reaches the continuous rail, not an isolated bar');ok(q.graph.edges.some(e=>e.from===post.id&&e.to===post.surfaceId&&e.type==='supportedBy'),'post support graph agrees with physical surface');}
+   for(const post of rail.posts){const probe=[post.end[0],post.end[1]-.01,post.end[2]];ok(inside([byId(post.id)],probe)&&inside(fields,probe),'rail and post have a physical solid overlap below the centreline');}
    ok(fields.every(v=>v.kind==='finite_polygon_prism'),'handrails remain function solids, not triangle meshes');
   }
   inspectRoute(q,q.routes.find(r=>r.id===c.routeId));
@@ -318,6 +320,43 @@ for(const caseId of ['vertical','connected'])for(let storeys=2;storeys<=8;storey
  for(const portal of q.portals.filter(v=>v.openingType==='window'))for(const dx of[-.2,0,.2])for(const dy of[.2,.6,1])ok(!inside(p,[portal.center[0]+dx,portal.bottomElevation+dy,portal.center[2]]),'platform and rail additions preserve the real complete window void');
  equal(q.stair.handrails.length,2*(storeys-1),'both rail systems grow on every new storey');
 }
+function inspectRailCirculation(q,{dense=false}={}){
+ const p=all(q),byId=id=>p.find(v=>v.nodeId===id),radius=.20;
+ const railFields=q.stair.handrails.flatMap(r=>[...r.pieceIds,...r.jointIds,...r.posts.map(s=>s.id)]).map(byId);
+ const clear=(near,far,z,width)=>far-near>=width-1e-8&&z-near>=radius&&far-z>=radius;
+ for(const c of q.stair.connections){
+  const inner=c.handrails.find(r=>r.side==='inner'),outer=c.handrails.find(r=>r.side==='outer'),front=byId(inner.pieceIds[3]).bounds.max[2],back=byId(outer.pieceIds[3]).bounds.min[2];
+  ok(Math.abs(back-front-.81)<1e-9,'platform turn has an actual 0.81 m rail-to-rail clear depth');
+  ok(clear(front,back,c.landingRouteZ,c.railClearWidth),'turn is at least as wide as the 0.79 m flight and admits the 0.20 m body envelope');
+  ok(Math.abs(c.landingRouteZ-4.43)<1e-9,'actual landing route is centred between physical rail faces');
+  ok(c.landingRouteZ+radius<4.75,'body envelope remains inside unchanged upper stair hole');
+  equal(c.handrailCirculationProof.samplingRequired,false,'turn proof is continuous analytic segment distance, not sparse sampling');
+  ok(Math.abs(c.handrailCirculationProof.minimumPlanDistance-.395)<1e-9,'whole turn maintains at least 0.395 m between its centreline and conservative rail footprint');
+  ok(Math.abs(c.handrailCirculationProof.remainingMargin-.195)<1e-9,'entire swept 0.20 m radius envelope has at least 0.195 m conservative margin');
+  equal(c.handrailCirculationProof.codeComplianceCertified,false,'geometric clearance is not a code-compliance claim');
+  for(const rail of c.handrails)ok(byId(rail.jointIds[0]).bounds.min[2]-.8>=radius,'floor-level handrail ends do not cross the corridor envelope');
+  // This is the previous layout as a negative fixture. Its 0.48 m turn is a
+  // bottleneck versus the 0.79 m flight; at z=4.20 the inner rail also enters
+  // the 0.20 m body envelope. The physical offending inner bar is unchanged.
+  ok(!clear(front,4.505,4.20,c.railClearWidth),'reject the original narrow-turn/offset-walkline fixture');
+  ok(inside([byId(inner.pieceIds[3])],[1.6,c.baseElevation+c.height/2+.95,4.02]),'negative fixture proves an actual rail/body collision, not a visual inference');
+  const oldCrossDistance=segmentPlanBoundsDistance([.95,0,4.2],[2.15,0,4.2],byId(inner.pieceIds[3]).bounds);ok(Math.abs(oldCrossDistance-.175)<1e-9&&oldCrossDistance<radius,'continuous analytic distance rejects the entire former turn envelope');
+  const base=c.baseElevation+c.height/2;
+  for(const x of[.95,1.2,1.6,2,2.15])for(let k=0;k<16;k++)for(const h of[.5,.95,1.4]){const angle=k*Math.PI/8;ok(!inside(railFields,[x+radius*Math.cos(angle),base+h,c.landingRouteZ+radius*Math.sin(angle)]),'0.20 m turn envelope clears all physical handrails and posts');}
+ }
+ if(dense)for(const route of q.routes.filter(r=>r.type==='stair'||r.type==='stair_to_lift'||r.type==='entry'))for(let k=1;k<route.waypoints.length;k++){
+  const a=route.waypoints[k-1],b=route.waypoints[k];
+  for(const t of[0,.25,.5,.75,1]){const center=a.map((v,j)=>v+(b[j]-v)*t);for(let j=0;j<16;j++)for(const h of[.05,.5,.9,.95,1.1,1.95]){const angle=j*Math.PI/8;ok(!inside(railFields,[center[0]+radius*Math.cos(angle),center[1]+h,center[2]+radius*Math.sin(angle)]),'dense four-floor stair, turn, entrance and lift-approach body envelope never crosses a rail');}}
+ }
+}
+const distanceBox={min:[0,0,0],max:[1,1,1]};
+for(const [a,b,expected]of[[[-1,0,.5],[2,0,.5],0],[[0,0,2],[1,0,2],1],[[2,0,2],[3,0,3],Math.SQRT2],[[-1,0,0],[0,0,0],0],[[2,0,.5],[2,0,.5],1]])ok(Math.abs(segmentPlanBoundsDistance(a,b,distanceBox)-expected)<1e-9,'continuous segment/box distance handles crossings, parallels, corners, tangencies and zero-length segments');
+for(let storeys=2;storeys<=8;storeys++){
+ const initial=JSON.stringify(growSketch({storeys,groundHeight:3.6,typicalHeight:3}));
+ for(const [groundHeight,typicalHeight]of[[3.6,3],[4,3.4],[2.6,2.6],[5,5],[3.6,3]])inspectRailCirculation(growSketch({storeys,groundHeight,typicalHeight}));
+ equal(JSON.stringify(growSketch({storeys,groundHeight:3.6,typicalHeight:3})),initial,'height edit and rollback restores every rail, route, joint and support exactly');
+}
+inspectRailCirculation(growSketch({storeys:4,liftLevel:3,liftOpen:1}),{dense:true});
 // Runtime inputs cannot forge an open door while the car is absent or moving.
 const runtimeBase={y:1,current:'teaching-sketch:connected:L0',carDoor:0,landingDoors:Object.fromEntries(Array.from({length:4},(_,i)=>['teaching-sketch:connected:L'+i,0])),motion:true,state:'CRUISING'};
 for(const patch of[{carDoor:1},{landingDoors:{...runtimeBase.landingDoors,'teaching-sketch:connected:L0':1}},{current:'other-building:L0'},{y:99},{motion:'true'}]){assert.throws(()=>growSketch({storeys:4,liftRuntime:{...runtimeBase,...patch}}));checks++;}
