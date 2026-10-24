@@ -77,7 +77,7 @@ void main(){
 }
 `;}
 
-function apertureShader(apertures){return HEAD+withBoundedGlassEndpointVerification(withApertureNeighborIndex(buildPrimaryTileAperturesGLSL(apertures)))+CAMERA+REDUCE+`
+function apertureShader(apertures){return HEAD+withBoundedGlassEndpointVerification(buildPrimaryTileAperturesGLSL(apertures))+CAMERA+REDUCE+`
 void main(){floorPrimaryApertureRay=uRayMode==0;previous();if(!rayActive())return;vec3 rd=rayDirection();float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;float skipId=uRayMode>0?texelFetch(uRayDirection,ivec2(gl_FragCoord.xy),0).w:0.;if(apertureTraceRayFiltered(uEye+rd*lo,rd,false,skipId,t,h,visits)&&t+lo<=hi)accept(t+lo,h,fieldRayNormal,-2.);}
 `;}
 
@@ -154,6 +154,7 @@ export class WholeRenderer{
  async render({width=640,height=544,presentWidth=640,presentHeight=544,tileSize=128,gpuBatchTiles=this.options.gpuBatchTiles??8,cullTiles=true,visibleFloorIds=null,source=this.options.source,design=this.options.design,clipDesign=false,coreOnly=false,dynamicFields=[],requestRevision=this.requestRevision}={}){
   if(this.busy)throw Error('GPU frame already in progress');if(!Number.isInteger(gpuBatchTiles)||gpuBatchTiles<1||gpuBatchTiles>8)throw Error('GPU batch must contain 1..8 fixed-resolution tiles');this.updateHostedVisibility(visibleFloorIds);const allocation=nativeDisplaySize({cssWidth:width,cssHeight:height,dpr:1,limits:this.displayLimits});if(!Number.isInteger(width)||!Number.isInteger(height)||allocation.hidden||!allocation.native||presentWidth!==width||presentHeight!==height||tileSize<32||tileSize>256)throw Error('Native inspection framebuffer exceeds the explicit device/memory budget or presentation size differs');
   this.busy=true;this.hitDataComplete=false;this.hitTiles=[];const start=performance.now(),uniformLookupStart=this.uniformLocationLookups,revision=this.revision,o=structuredClone(this.options),g=this.gl,stats={passes:0,tilesCompleted:0,tilesPlanned:Math.ceil(width/tileSize)*Math.ceil(height/tileSize),width,height,presentWidth,presentHeight,visibleFloorIds,cancelled:false,maxTileWallMs:0,gpuBatchTiles,fenceCount:0,fencePolls:0,fenceWallMs:0,pollSleepCount:0,pollSleepWallMs:0,cpuSubmitWallMs:0,tilesSubmitted:0};
+  this.currentFrameStats=stats;
   try{
    if(this.canvas.width!==presentWidth||this.canvas.height!==presentHeight){this.canvas.width=presentWidth;this.canvas.height=presentHeight;}
    const masks=validateMasks(this.study?.sourceMasks??[],this.measured),maskKey=JSON.stringify(masks);if(maskKey!==this.sourceMaskKey){const packed=packSourceMaskIndex(masks,this.measured);if(this.sourceMaskTexture){g.deleteTexture(this.sourceMaskTexture);this.textures=this.textures.filter(t=>t!==this.sourceMaskTexture);}this.sourceMaskTexture=this.texture(packed);this.sourceMaskKey=maskKey;}this.targets(width,height);if(g.getError()!==g.NO_ERROR)throw Error('原生帧缓冲分配失败；设备内存不足，未静默降低分辨率。');g.viewport(0,0,width,height);g.bindVertexArray(this.vao);g.enable(g.SCISSOR_TEST);

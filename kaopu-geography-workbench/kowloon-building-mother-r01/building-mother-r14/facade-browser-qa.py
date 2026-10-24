@@ -8,7 +8,7 @@ try:
  with sync_playwright() as pw:
   b=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);p=b.new_page(viewport={'width':1366,'height':900});p.set_default_timeout(240000);p.on('pageerror',lambda e:report['errors'].append(str(e)))
   for mode in ['off','R0','R180']:
-   p.goto(url+'?facade='+mode);p.wait_for_function('window.semanticInspection&&(semanticInspection.errors.length||semanticInspection.ready&&!semanticInspection.busy)');assert not p.evaluate('semanticInspection.errors'),p.evaluate('semanticInspection.errors')
+   p.goto(url+'?facade='+mode);p.wait_for_function('window.semanticInspection&&(semanticInspection.errors.length||semanticInspection.ready&&!semanticInspection.busy)');report['diagnostic-'+mode]=p.evaluate('({errors:semanticInspection.errors,compiles:semanticInspection.renderer.compileStats,frame:semanticInspection.renderer.currentFrameStats})');assert not p.evaluate('semanticInspection.errors'),p.evaluate('semanticInspection.errors')
    assert p.evaluate('semanticInspection.caseId')=='kcc';n=p.evaluate('semanticInspection.model.hostedComponents.apertures.filter(a=>a.caseId==="kcc").length');assert n==(0 if mode=='off' else 176),n
    assert p.locator('[data-opening-observation]').count()==0
    p.locator('#view').screenshot(path=str(out/f'kcc-main-{mode}.png'));p.screenshot(path=str(out/f'kcc-main-{mode}-page.png'),full_page=True)

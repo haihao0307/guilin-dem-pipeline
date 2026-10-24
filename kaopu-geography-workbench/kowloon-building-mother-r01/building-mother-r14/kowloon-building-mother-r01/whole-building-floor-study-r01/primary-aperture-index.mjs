@@ -101,5 +101,7 @@ ivec2 floorApertureCandidateRange(int primitiveCount){
 const TRACE_PREFIX='h.local=ro;int count=int(apertureRecord(0).x);for(int k=0;k<count;k++){AperturePart p=apertureLoad(k);';
 export function buildPrimaryTileAperturesGLSL(input){
  const source=buildAperturesGLSL(input);if(source.split(TRACE_PREFIX).length!==2)throw Error('Frozen aperture primary trace candidate contract changed');
- return PRIMARY_APERTURE_INDEX_GLSL+source.replace(TRACE_PREFIX,'h.local=ro;int count=int(apertureRecord(0).x);ivec2 primaryRange=floorApertureCandidateRange(count);int candidateCount=primaryRange.x<0?count:primaryRange.y;for(int candidateIndex=0;candidateIndex<candidateCount;candidateIndex++){int k=primaryRange.x<0?candidateIndex:int(floorApertureIndexRecord(primaryRange.x+candidateIndex).x)-1;AperturePart p=apertureLoad(k);');
+ const cover='if(k==own)continue;AperturePart p=apertureLoad(k);';if(source.split(cover).length!==2)throw Error('Own coverage contract changed');
+ const bounded=source.replace(cover,'if(k==own)continue;int bb=1+9*k;vec3 low=apertureRecord(bb+7).xyz,high=apertureRecord(bb+8).xyz;if(any(lessThan(point,low-vec3(apertureEPS)))||any(greaterThan(point,high+vec3(apertureEPS))))continue;AperturePart p=apertureLoad(k);');
+ return PRIMARY_APERTURE_INDEX_GLSL+bounded.replace(TRACE_PREFIX,'h.local=ro;int count=int(apertureRecord(0).x);ivec2 primaryRange=floorApertureCandidateRange(count);int candidateCount=primaryRange.x<0?count:primaryRange.y;for(int candidateIndex=0;candidateIndex<candidateCount;candidateIndex++){int k=primaryRange.x<0?candidateIndex:int(floorApertureIndexRecord(primaryRange.x+candidateIndex).x)-1;AperturePart p=apertureLoad(k);');
 }
