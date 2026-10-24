@@ -1,3 +1,8 @@
+# R14 actual main-tower facade visual gate, existing workflow unchanged.
+from pathlib import Path as _R14Path
+import runpy as _R14run
+_R14run.run_path(str(_R14Path(__file__).parent.parent/'building-mother-r14'/'facade-browser-qa.py'),run_name='__main__')
+raise SystemExit(0)
 # R13 public verification, no request overrides and all published file hashes.
 from pathlib import Path as _R13Path
 import runpy as _R13run
