@@ -1,13 +1,13 @@
-# 三维规则草图 R01
+# 三维规则草图 R02
 
 这是独立的生成规则教学页，不是香港三栋建筑的缩小或改层数版本。尺寸均为示意参数，不能作为施工、结构安全或消防合规资料。
 
 ## 主调用
 
-`growSketch({ caseId, stage, groundHeight, typicalHeight, doorOpen, liftOpen, liftLevel, roofVisible })`
+`growSketch({ caseId, stage, storeys, pitDepth, overhead, waistThickness, groundHeight, typicalHeight, doorOpen, liftOpen, liftLevel, roofVisible })`
 
 - `cell`：一个框架开间，逐步显示基础、基础梁、柱、梁、楼板与顶。
-- `vertical`：向上重复两层；底层与上层层高分开。
+- `vertical`：向上生成2–5层；底层与上层层高分开。
 - `connected`：横向相邻开间共享柱梁；楼梯、走廊、房间与电梯接口形成关联。
 - `stage` 控制检查可见性，不是逐件手工复制。
 - `roofVisible` 仅供剖视检查，不等于删除屋顶规则。
@@ -25,4 +25,6 @@
 
 ## 回退
 
-独立目录与入口，原 R09、三栋真实建筑入口不改。此前 R10 QA 提交 `20cf5cc30de1cdaeb9377cdc767fc966de31d3ce` 保留。
+独立目录与入口，原 R01草图、R09、三栋真实建筑入口不改。此前 R10 QA 提交 `20cf5cc30de1cdaeb9377cdc767fc966de31d3ce` 保留。
+
+R02柱跨楼板连续；梯段由薄斜板与踏步组成；井道垂直且底坑在±0以下。所有层数变化重新生成楼梯连接、房间路线与电梯停层，不靠缩放外壳。

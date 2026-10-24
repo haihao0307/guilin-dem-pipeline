@@ -78,7 +78,7 @@ try:
   assert opaque['sha256']==cut['sha256']
   # A real canvas hit must surface typed ownership/dependency information.
   hit=cut['hits'][len(cut['hits'])//2];box=page.locator('#sketch').bounding_box()
-  page.mouse.click(box['x']+hit['x'],box['y']+cut['canvas']['h']-hit['y']);settle()
+  action(lambda:page.mouse.click(box['x']+hit['x'],box['y']+cut['canvas']['h']-hit['y']))
   assert page.evaluate('Boolean(sketchInspection.selected)');assert len(page.locator('#selection').inner_text())>20
   page.screenshot(path=str(out/'sketch-selected-full-page.png'),full_page=True)
   n=page.evaluate('sketchInspection.frames.length');page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+box['width']/2+55,box['y']+box['height']/2+15,steps=2);page.mouse.up();settle(n);capture('connected-drag')
