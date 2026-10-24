@@ -4,8 +4,8 @@
 import {buildAperturesGLSL} from '../r07/apertures.mjs';
 import {prepareTileFrustum,aabbIntersectsTile} from '../whole-building-ground-r01/tile-visibility.mjs';
 export const APERTURE_INDEX_MAGIC=6721351;
-export const MAX_APERTURE_INDEX_RECORDS=65536;
-export const MAX_APERTURE_INDEX_PARTS=256;
+export const MAX_APERTURE_INDEX_RECORDS=1048576;
+export const MAX_APERTURE_INDEX_PARTS=4096;
 const APERTURE_EPS=0.000002,FLOAT_EPS=2**-23;
 const integer=(v,lo,hi)=>Number.isInteger(v)&&v>=lo&&v<=hi;
 const finite3=v=>v?.length===3&&Array.from(v).every(Number.isFinite);

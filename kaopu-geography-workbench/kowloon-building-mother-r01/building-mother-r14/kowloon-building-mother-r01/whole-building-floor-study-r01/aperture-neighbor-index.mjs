@@ -14,7 +14,7 @@ const scratch=new Float32Array(1),bits=new Uint32Array(scratch.buffer);
 function outward(v,up){scratch[0]=Math.fround(v);if(!Number.isFinite(scratch[0]))return NaN;if(scratch[0]===0){bits[0]=up?1:0x80000001;return scratch[0]}bits[0]+=((scratch[0]>0)===up)?1:-1;return scratch[0]}
 export function packApertureNeighbors(packed,token){
  if(!(packed?.data instanceof Float32Array)||!integer(token,1,16777215)||packed.data.length!==packed.width*packed.height*4)return null;
- const count=packed.data[0];if(!integer(count,1,256)||4*(1+9*count)>packed.data.length)return null;
+ const count=packed.data[0];if(!integer(count,1,4096)||4*(1+9*count)>packed.data.length)return null;
  const domains=aperturePackedBounds(packed,count);if(!domains||domains.length!==count)return null;
  const guards=Array.from({length:count},(_,k)=>{const base=4*(1+9*k);return{min:Array.from(packed.data.slice(base+28,base+31),v=>outward(Math.fround(v-EPS),false)),max:Array.from(packed.data.slice(base+32,base+35),v=>outward(Math.fround(v+EPS),true))}});
  const lists=domains.map((domain,own)=>valid(domain)?guards.flatMap((b,k)=>k!==own&&overlap(domain,b)?[k]:[]):null),base=1+3*count,records=base+lists.reduce((n,list)=>n+(list?.length??0),0);
