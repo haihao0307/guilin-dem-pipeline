@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "n187-v1",
+  "boundedQuestion": "Can an independently verifiable gate reject task-complete but stiff or uncoordinated motion before user review?",
+  "policy": {
+    "requireActionSpecificEnvelope": true,
+    "requireIndependentVerifier": true,
+    "maxFootSkateRatio": 0.03,
+    "maxGroundPenetrationCm": 0.5,
+    "maxFloatingFrames": 2,
+    "maxPeakNormalizedJerk": 1.25,
+    "maxJointLimitViolationFrames": 0,
+    "maxContactTimingOffsetFrames": 2,
+    "minWholeBodyParticipation": 0.65
+  },
+  "cases": [
+    {
+      "id": "accepted_reference_envelope",
+      "expected": "CANDIDATE_PASS",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.88, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.81}
+    },
+    {
+      "id": "task_complete_but_foot_skating",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.14, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.9, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.79}
+    },
+    {
+      "id": "task_complete_but_ground_penetration",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 3.4, "floatingFrames": 0, "peakNormalizedJerk": 0.91, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.76}
+    },
+    {
+      "id": "smooth_root_motion_but_frozen_torso_and_arms",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.72, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.31}
+    },
+    {
+      "id": "phase_transition_jerk_spike",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 2.7, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.78}
+    },
+    {
+      "id": "joint_limit_violation",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.94, "jointLimitViolationFrames": 5, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.77}
+    },
+    {
+      "id": "hand_contact_timing_mismatch",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.96, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 8, "wholeBodyParticipation": 0.8}
+    },
+    {
+      "id": "producer_self_approval_only",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": true, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": false,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.89, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.82}
+    },
+    {
+      "id": "natural_looking_clip_but_wrong_environment_task",
+      "expected": "REJECT",
+      "prerequisites": {"taskEnvironment": false, "componentIdentity": true, "bindingCompatibility": true},
+      "actionSpecificEnvelope": true,
+      "independentVerifier": true,
+      "metrics": {"footSkateRatio": 0.01, "groundPenetrationCm": 0.1, "floatingFrames": 0, "peakNormalizedJerk": 0.86, "jointLimitViolationFrames": 0, "contactTimingOffsetFrames": 1, "wholeBodyParticipation": 0.84}
+    }
+  ]
+}
