@@ -1,0 +1,681 @@
+{
+  "schema": "kaopu/window-causal-qa@1",
+  "createdAt": "2026-10-20T07:59:12.034Z",
+  "sourceHash": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+  "sourceAtStart": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+  "sourceUnchangedDuringTest": true,
+  "cannonSHA256": "f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c",
+  "scope": "TEST_FIXTURE_ONLY actors; actual production WindowInteraction and Cannon bodies/constraints, dimensioned R01 table and source bottle",
+  "doesNotProve": [
+    "native IK and full hand/skin geometry",
+    "foot or body collisions",
+    "native pose recovery correctness",
+    "browser performance/visual acceptance",
+    "public publication"
+  ],
+  "passed": true,
+  "counts": {
+    "passed": 8,
+    "total": 8
+  },
+  "tests": [
+    {
+      "name": "one actual hinge supports a resting rigid leaf without an interaction",
+      "pass": true,
+      "measurements": {
+        "object": {
+          "id": "window-01",
+          "angleDeg": -9.40533021399895e-15,
+          "angleRad": -1.6415397947158454e-16,
+          "angularVelocityRadS": -2.5222791462307273e-15,
+          "position": [
+            0.36999996138007,
+            1.4274942689683876,
+            0.55
+          ],
+          "quaternion": [
+            -3.061620196953869e-17,
+            -8.207699221457186e-17,
+            8.096302651144494e-8,
+            0.9999999999999969
+          ],
+          "reservedBy": null,
+          "heldBy": null,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 14,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": true,
+          "targetAngleDeg": null,
+          "settled": true,
+          "handleCentre": [
+            0.18999999821824937,
+            1.199994239821701,
+            0.43999999999999995
+          ],
+          "handleAnchor": [
+            0.18999999821824937,
+            1.199994239821701,
+            0.4079999999999999
+          ],
+          "forcePerAxisN": [
+            0,
+            0,
+            0
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "bottlePosition": [
+          0.0003631728151070559,
+          1.0900001275582947,
+          0.36994485063083377
+        ],
+        "leafParts": 8
+      }
+    },
+    {
+      "name": "the same leaf physically opens and closes after contact, then settles without a hand constraint",
+      "pass": true,
+      "measurements": {
+        "opening": {
+          "elapsed": 9.208333333333451,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 4.271722715062587,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -35.216479805939485,
+          "maxAngle": 0.00001549799967691065
+        },
+        "openResult": {
+          "result": "completed",
+          "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+          "operation": "open",
+          "taskId": "window-task-1",
+          "taskToken": "A:window:1",
+          "targetAngleDeg": -35,
+          "actualAngleDeg": -35.07573090894124,
+          "angularVelocityRadS": 0.0046889349623212935,
+          "settleSeconds": 0.6000000000000003,
+          "duration": 7.658333333333504,
+          "firstContactErrorM": 0,
+          "maxContactErrorM": 0.0005929468346717354,
+          "sourcePhase": "verify",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach",
+            "close-grip",
+            "swing",
+            "verify"
+          ],
+          "windowRevision": 9
+        },
+        "openAngle": -34.78832405511237,
+        "closing": {
+          "elapsed": 9.17499999999948,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 4.406647529370578,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -34.787311688148634,
+          "maxAngle": 0.22488108366957368
+        },
+        "closeResult": {
+          "result": "completed",
+          "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+          "operation": "close",
+          "taskId": "window-task-2",
+          "taskToken": "A:window:2",
+          "targetAngleDeg": 0,
+          "actualAngleDeg": -0.10363561730548798,
+          "angularVelocityRadS": -0.01144742087626718,
+          "settleSeconds": 0.6000000000000003,
+          "duration": 7.624999999999568,
+          "firstContactErrorM": 0,
+          "maxContactErrorM": 0.000589848550267999,
+          "sourcePhase": "verify",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach",
+            "close-grip",
+            "swing",
+            "verify"
+          ],
+          "windowRevision": 19
+        },
+        "closeAngle": -0.8059937386597502,
+        "contacts": [
+          {
+            "id": "A",
+            "taskToken": "A:window:1",
+            "operation": "open",
+            "time": 2.4583333333333273,
+            "palm": [
+              0.18999999821824948,
+              1.199994239821701,
+              0.408
+            ],
+            "handleAnchor": [
+              0.18999999821824948,
+              1.199994239821701,
+              0.408
+            ],
+            "errorM": 0,
+            "angleDeg": -1.0293538804605029e-14,
+            "nativeGeometryMeasured": false
+          },
+          {
+            "id": "A",
+            "taskToken": "A:window:2",
+            "operation": "close",
+            "time": 11.666666666666645,
+            "palm": [
+              0.35034086745764237,
+              1.199993837852325,
+              0.17749252128862852
+            ],
+            "handleAnchor": [
+              0.35034086745764237,
+              1.199993837852325,
+              0.17749252128862852
+            ],
+            "errorM": 0,
+            "angleDeg": -34.618266959303426,
+            "nativeGeometryMeasured": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "a palm missing by five centimetres cannot attach or open the window",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 5.566666666666733,
+          "timeout": false,
+          "maxGrip": 0,
+          "maxForce": 0,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -3.3309694681098174e-14,
+          "maxAngle": 1.528768480851371e-15
+        },
+        "result": {
+          "result": "contact-failed",
+          "detail": "真实掌面未到达把手接触门槛",
+          "operation": "open",
+          "taskId": "window-task-1",
+          "taskToken": "A:window:1",
+          "targetAngleDeg": -35,
+          "actualAngleDeg": -2.0662729913213368e-14,
+          "angularVelocityRadS": -6.155709815281772e-16,
+          "settleSeconds": 0,
+          "duration": 4.016666666666656,
+          "firstContactErrorM": null,
+          "maxContactErrorM": 0,
+          "sourcePhase": "approach",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach"
+          ],
+          "windowRevision": 4
+        },
+        "angleDeg": -3.2297784988794067e-14
+      }
+    },
+    {
+      "name": "an independent rigid blocker physically prevents opening and removing it permits the same task",
+      "pass": true,
+      "measurements": {
+        "blocked": {
+          "elapsed": 6.6750000000001215,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 24,
+          "maxContacts": 2,
+          "maxBlockForce": 36.0372830452284,
+          "minAngle": -13.266834507918178,
+          "maxAngle": 0.00001549799967691065
+        },
+        "blockedResult": {
+          "result": "blocked",
+          "detail": "真实挡块接触持续阻止窗扇转到目标角度",
+          "operation": "open",
+          "taskId": "window-task-1",
+          "taskToken": "A:window:1",
+          "targetAngleDeg": -35,
+          "actualAngleDeg": -13.266834507918178,
+          "angularVelocityRadS": -0.000013811251548114443,
+          "settleSeconds": 0,
+          "duration": 5.125000000000044,
+          "firstContactErrorM": 0,
+          "maxContactErrorM": 0.001782007953778145,
+          "sourcePhase": "swing",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach",
+            "close-grip",
+            "swing"
+          ],
+          "windowRevision": 9
+        },
+        "obstruction": {
+          "id": "A",
+          "time": 5.125000000000044,
+          "taskToken": "A:window:1",
+          "angleDeg": -13.266834507918178,
+          "targetAngleDeg": -35,
+          "stuckSeconds": 0.6500000000000001,
+          "contactSeconds": 0.6500000000000001,
+          "contactCount": 2,
+          "forceN": 30.98420423731749,
+          "bodyId": 59,
+          "blockerId": "window-blocker",
+          "forcePerAxisN": [
+            24,
+            4.564107601947343,
+            -24
+          ]
+        },
+        "retry": {
+          "elapsed": 7.799999999999697,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 4.270616365877031,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -35.21482557478948,
+          "maxAngle": -13.189804010341536
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+          "operation": "open",
+          "taskId": "window-task-2",
+          "taskToken": "A:window:2",
+          "targetAngleDeg": -35,
+          "actualAngleDeg": -35.11086210795369,
+          "angularVelocityRadS": 0.003433749194059765,
+          "settleSeconds": 0.6000000000000003,
+          "duration": 6.249999999999785,
+          "firstContactErrorM": 0,
+          "maxContactErrorM": 0.0005909343776186032,
+          "sourcePhase": "verify",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach",
+            "close-grip",
+            "swing",
+            "verify"
+          ],
+          "windowRevision": 20
+        }
+      }
+    },
+    {
+      "name": "cancel during actual rotation removes only the grip and preserves angular motion before withdrawal and rest",
+      "pass": true,
+      "measurements": {
+        "before": {
+          "id": "window-01",
+          "angleDeg": -8.039275292275342,
+          "angleRad": -0.14031182332443418,
+          "angularVelocityRadS": -0.1476768092442133,
+          "position": [
+            0.3726617751590822,
+            1.4274998045227334,
+            0.5122120521519296
+          ],
+          "quaternion": [
+            -2.66091423689485e-7,
+            -0.07009837632046079,
+            0.000004499434244940635,
+            0.9975400832131606
+          ],
+          "reservedBy": "A",
+          "heldBy": "A",
+          "gripConstraintCount": 1,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 74,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2098164773693622,
+            1.1999981929978436,
+            0.37812001010112184
+          ],
+          "handleAnchor": [
+            0.21429173753889924,
+            1.1999981961956787,
+            0.34643449217234334
+          ],
+          "forcePerAxisN": [
+            -0.2077166573266822,
+            3.7202467606967153,
+            -0.11996828540628338
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "immediate": {
+          "id": "window-01",
+          "angleDeg": -8.039275292275342,
+          "angleRad": -0.14031182332443418,
+          "angularVelocityRadS": -0.1476768092442133,
+          "position": [
+            0.3726617751590822,
+            1.4274998045227334,
+            0.5122120521519296
+          ],
+          "quaternion": [
+            -2.66091423689485e-7,
+            -0.07009837632046079,
+            0.000004499434244940635,
+            0.9975400832131606
+          ],
+          "reservedBy": null,
+          "heldBy": null,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 74,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2098164773693622,
+            1.1999981929978436,
+            0.37812001010112184
+          ],
+          "handleAnchor": [
+            0.21429173753889924,
+            1.1999981961956787,
+            0.34643449217234334
+          ],
+          "forcePerAxisN": [
+            0,
+            0,
+            0
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "recovery": {
+          "elapsed": 1.5500000000000695,
+          "timeout": false,
+          "maxGrip": 0,
+          "maxForce": 0,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -17.101967346735506,
+          "maxAngle": -8.109367260546794
+        },
+        "after": {
+          "id": "window-01",
+          "angleDeg": -17.101967346735506,
+          "angleRad": -0.2984856387690933,
+          "angularVelocityRadS": -0.06726677910737425,
+          "position": [
+            0.38194300929664854,
+            1.427494216363309,
+            0.4705840717788123
+          ],
+          "quaternion": [
+            -2.7947753015643617e-8,
+            -0.14868941141368616,
+            8.814648910233797e-8,
+            0.9888839461400123
+          ],
+          "reservedBy": null,
+          "heldBy": null,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 74,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2422501676704262,
+            1.1999941802905876,
+            0.31251480346488125
+          ],
+          "handleAnchor": [
+            0.2516605082725385,
+            1.1999941793606268,
+            0.2819297500931405
+          ],
+          "forcePerAxisN": [
+            0,
+            0,
+            0
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "restBegins": [
+          {
+            "at": 4.7583333333333595,
+            "palm": [
+              0.24363067658516782,
+              1.1000000207806555,
+              0.13999999999999985
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "two actors requesting the same angle use one grip and the helper observes the released goal",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 9.208333333333451,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 4.271722715062587,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -35.216479805939485,
+          "maxAngle": 0.00001549799967691065
+        },
+        "results": [
+          {
+            "result": "completed",
+            "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+            "operation": "open",
+            "taskId": "window-task-1",
+            "taskToken": "A:window:1",
+            "targetAngleDeg": -35,
+            "actualAngleDeg": -35.07573090894124,
+            "angularVelocityRadS": 0.0046889349623212935,
+            "settleSeconds": 0.6000000000000003,
+            "duration": 7.658333333333504,
+            "firstContactErrorM": 0,
+            "maxContactErrorM": 0.0005929468346717354,
+            "sourcePhase": "verify",
+            "released": true,
+            "gripConstraintCount": 0,
+            "hingeConstraintCount": 1,
+            "phases": [
+              "waiting",
+              "approach",
+              "close-grip",
+              "swing",
+              "verify"
+            ],
+            "windowRevision": 10
+          },
+          {
+            "result": "already-at-target",
+            "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+            "operation": "open",
+            "taskId": "window-task-2",
+            "taskToken": "B:window:2",
+            "targetAngleDeg": -35,
+            "actualAngleDeg": -34.93710697403918,
+            "angularVelocityRadS": 0.00345530158724291,
+            "settleSeconds": 0.6000000000000003,
+            "duration": 8.258333333333505,
+            "firstContactErrorM": null,
+            "maxContactErrorM": 0,
+            "sourcePhase": "verify",
+            "released": true,
+            "gripConstraintCount": 0,
+            "hingeConstraintCount": 1,
+            "phases": [
+              "waiting",
+              "verify"
+            ],
+            "windowRevision": 14
+          }
+        ],
+        "contacts": 1,
+        "reservationOrder": {
+          "aResult": 15,
+          "bReserve": 16,
+          "bVerify": 17
+        },
+        "helperTaskToken": "B:window:2"
+      }
+    },
+    {
+      "name": "a waiting helper can take over a cancelled moving leaf while the previous actor withdraws",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 11.275,
+          "timeout": false,
+          "maxGrip": 1,
+          "maxForce": 4.230866181285293,
+          "maxContacts": 0,
+          "maxBlockForce": 0,
+          "minAngle": -35.222944360221035,
+          "maxAngle": 0.00001549799967691065
+        },
+        "immediate": {
+          "id": "window-01",
+          "angleDeg": -8.039275292275342,
+          "angleRad": -0.14031182332443418,
+          "angularVelocityRadS": -0.1476768092442133,
+          "position": [
+            0.3726617751590822,
+            1.4274998045227334,
+            0.5122120521519296
+          ],
+          "quaternion": [
+            -2.66091423689485e-7,
+            -0.07009837632046079,
+            0.000004499434244940635,
+            0.9975400832131606
+          ],
+          "reservedBy": null,
+          "heldBy": null,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 104,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2098164773693622,
+            1.1999981929978436,
+            0.37812001010112184
+          ],
+          "handleAnchor": [
+            0.21429173753889924,
+            1.1999981961956787,
+            0.34643449217234334
+          ],
+          "forcePerAxisN": [
+            0,
+            0,
+            0
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已移除手部约束；实际目标角度与低角速度连续通过验证",
+          "operation": "open",
+          "taskId": "window-task-2",
+          "taskToken": "B:window:2",
+          "targetAngleDeg": -35,
+          "actualAngleDeg": -35.06282469446221,
+          "angularVelocityRadS": 0.010113154349077913,
+          "settleSeconds": 0.6000000000000003,
+          "duration": 9.725000000000088,
+          "firstContactErrorM": 0,
+          "maxContactErrorM": 0.0005813791406579118,
+          "sourcePhase": "verify",
+          "released": true,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "phases": [
+            "waiting",
+            "approach",
+            "close-grip",
+            "swing",
+            "verify"
+          ],
+          "windowRevision": 18
+        }
+      }
+    },
+    {
+      "name": "host bottle ownership refuses a window task without falsely claiming unrelated actor recovery",
+      "pass": true,
+      "measurements": {
+        "windowPhase": "cancelled",
+        "temporaryGrips": 0,
+        "permanentHinges": 1
+      }
+    }
+  ]
+}

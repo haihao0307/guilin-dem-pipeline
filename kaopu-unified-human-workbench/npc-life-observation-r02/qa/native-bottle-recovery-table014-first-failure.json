@@ -1,0 +1,1066 @@
+{
+  "schema": "npc-native-bottle-recovery/1",
+  "rigBaselineHead": "85718686d88585a449c3add050a089c45eee1207",
+  "sourceUnderTest": {
+    "sourceHashes": {
+      "ActorAdapter.mjs": "f7c1604782811d7742c85820c42dcb383b21bb8dea215f7d289b24a9e10ea39d",
+      "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+      "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1"
+    },
+    "geometrySourceHashes": {
+      "WindowInteraction.mjs": "0f437d90b7304d79b2e3d8dafce27e1c31f80741b62ee235e975ca0aac9049fa",
+      "LifeWorld.mjs": "a5c4c98b962c9d5afcc92a326d83e0fb9fcdfe25bf987ff55136bfecefc4aef0"
+    },
+    "startedAt": "2026-10-20T06:16:45.224Z",
+    "completedAt": "2026-10-20T06:17:05.332Z"
+  },
+  "source": "Production LifeWorld/Cannon simulation and actual native 104-bone body/CSR surface; full-head/material/GPU acceptance remains Chromium.",
+  "passed": false,
+  "currentProductionPassed": false,
+  "candidatePassed": false,
+  "candidate": {
+    "verticalOffsetM": 0.03,
+    "rearwardMinimumM": 0.14,
+    "tableRearMarginM": 0.15
+  },
+  "results": [
+    {
+      "capture": {
+        "scenario": {
+          "id": "A",
+          "side": "L",
+          "pair": false
+        },
+        "event": "release",
+        "phase": "verify",
+        "time": 6.591666666666784,
+        "palm": [
+          0.100000002660456,
+          1.0947999705981604,
+          0.4079999035341507
+        ],
+        "bottlePosition": [
+          0.09974162363100737,
+          1.0945467020078183,
+          0.43999893371987053
+        ],
+        "bottleQuaternion": [
+          0.000007801127863056974,
+          -0.004037298572343655,
+          0.00000431122815301839,
+          0.9999918500371859
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": "A",
+        "sourceRetreat": [
+          0.100000002660456,
+          1.1247999705981604,
+          0.2679999035341507
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.100000002660456,
+            1.1247999705981604,
+            0.2679999035341507
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.400058012914542e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0.03499333769579491,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.1552244604764358,
+          "minForearmTableClearanceM": 0.131165523018268,
+          "minTableSignedDistanceM": -0.03499333769579491,
+          "maxPalmErrorM": 6.9405087582145e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.2166666666666668,
+            "penetrationM": 0.03499333769579491,
+            "pointWorld": [
+              0.1959761736834943,
+              0.9850066623042051,
+              0.35551989720341637
+            ],
+            "vertex": 5223,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.11797868388396626,
+              0.985161146004164,
+              0.23833974524423737
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.100000002660456,
+            1.1247999705981604,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.95516952522712e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.0357573739900634,
+          "minForearmTableClearanceM": 0.131165523018268,
+          "minTableSignedDistanceM": 0.013048080367477594,
+          "maxPalmErrorM": 6.521461300118279e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "A",
+          "side": "L",
+          "pair": false
+        },
+        "event": "cancel",
+        "phase": "cancelled",
+        "time": 2.8249999999999926,
+        "palm": [
+          0.0006304633305925234,
+          1.1614576021942244,
+          0.3379446582249058
+        ],
+        "bottlePosition": [
+          0.00037208430161663337,
+          1.151472659520476,
+          0.3699436963903285
+        ],
+        "bottleQuaternion": [
+          0.000007801120874891095,
+          -0.004037298577338478,
+          0.000004311228601430018,
+          0.9999918500371658
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": null,
+        "sourceRetreat": [
+          0.0006304633305925234,
+          1.1914576021942245,
+          0.1979446582249058
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.0006304633305925234,
+            1.1914576021942245,
+            0.1979446582249058
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.677613769070831e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0.03474122196540677,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.13434336231139143,
+          "minForearmTableClearanceM": 0.18686357797789177,
+          "minTableSignedDistanceM": -0.03474122196540677,
+          "maxPalmErrorM": 6.83751781210684e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.2333333333333334,
+            "penetrationM": 0.03474122196540677,
+            "pointWorld": [
+              0.09334488452997258,
+              0.9847508229323707,
+              0.3247412219654068
+            ],
+            "vertex": 5317,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.043326620790245685,
+              0.9919238903188501,
+              0.2033453854096665
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.0006304633305925234,
+            1.1914576021942245,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.469446951953614e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0.0035410527857501484,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.06528118067596833,
+          "minForearmTableClearanceM": 0.18686356721897468,
+          "minTableSignedDistanceM": -0.0035410527857501484,
+          "maxPalmErrorM": 6.871210536317294e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.225,
+            "penetrationM": 0.0035410527857501484,
+            "pointWorld": [
+              0.0982785067371893,
+              0.9937812717431767,
+              0.29354105278575016
+            ],
+            "vertex": 5329,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.03310279074081596,
+              0.997956675732602,
+              0.16775788458866542
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "B",
+          "side": "L",
+          "pair": false
+        },
+        "event": "release",
+        "phase": "verify",
+        "time": 6.591666666666784,
+        "palm": [
+          0.10000001593528915,
+          1.0948000074231778,
+          0.40799998138482546
+        ],
+        "bottlePosition": [
+          0.09974161618042685,
+          1.0945467020294992,
+          0.43999893371987053
+        ],
+        "bottleQuaternion": [
+          0.000007801127863187464,
+          -0.004037298572343655,
+          0.000004311228153389566,
+          0.9999918500371859
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": "B",
+        "sourceRetreat": [
+          0.10000001593528915,
+          1.1248000074231779,
+          0.26799998138482545
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.10000001593528915,
+            1.1248000074231779,
+            0.26799998138482545
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.677613769070831e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0.03499686202299143,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.2669196627556337,
+          "minForearmTableClearanceM": 0.07478994035803077,
+          "minTableSignedDistanceM": -0.03499686202299143,
+          "maxPalmErrorM": 4.784043375201859e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.1416666666666666,
+            "penetrationM": 0.03499686202299143,
+            "pointWorld": [
+              0.16937406898925195,
+              0.9850031379770086,
+              0.3327667632156973
+            ],
+            "vertex": 5763,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.10058821531938128,
+              0.9950814601619985,
+              0.29510189530966563
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.10000001593528915,
+            1.1248000074231779,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.5388358909926865e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.04135501704027833,
+          "minForearmTableClearanceM": 0.07463024357496595,
+          "minTableSignedDistanceM": 0.012951847799007972,
+          "maxPalmErrorM": 4.467326493766042e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "B",
+          "side": "L",
+          "pair": false
+        },
+        "event": "cancel",
+        "phase": "cancelled",
+        "time": 2.8249999999999926,
+        "palm": [
+          0.0006304766054257005,
+          1.16145760921692,
+          0.33794479568022445
+        ],
+        "bottlePosition": [
+          0.000372084301616638,
+          1.1514726531443742,
+          0.3699437480152211
+        ],
+        "bottleQuaternion": [
+          0.000007801120874075692,
+          -0.0040372985773384764,
+          0.000004311228601641835,
+          0.9999918500371658
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": null,
+        "sourceRetreat": [
+          0.0006304766054257005,
+          1.19145760921692,
+          0.19794479568022444
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.0006304766054257005,
+            1.19145760921692,
+            0.19794479568022444
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.2959746043559335e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.10801261982729615,
+          "minForearmTableClearanceM": 0.1264833554157352,
+          "minTableSignedDistanceM": 0.035961848603084184,
+          "maxPalmErrorM": 4.535980576487666e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.0006304766054257005,
+            1.19145760921692,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.400058012914542e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.10801261982729615,
+          "minForearmTableClearanceM": 0.12647385246378895,
+          "minTableSignedDistanceM": 0.08896719146715529,
+          "maxPalmErrorM": 4.479678624252164e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "C",
+          "side": "L",
+          "pair": false
+        },
+        "event": "release",
+        "phase": "verify",
+        "time": 6.591666666666784,
+        "palm": [
+          0.10000000430317924,
+          1.0947999412686222,
+          0.40799996604482763
+        ],
+        "bottlePosition": [
+          0.09974160872984639,
+          1.0945467005724594,
+          0.43999893371987053
+        ],
+        "bottleQuaternion": [
+          0.00000780112786305544,
+          -0.004037298572343655,
+          0.000004311228153475886,
+          0.9999918500371859
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": "C",
+        "sourceRetreat": [
+          0.10000000430317924,
+          1.1247999412686223,
+          0.2679999660448276
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.10000000430317924,
+            1.1247999412686223,
+            0.2679999660448276
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.400058012914542e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 8.818549820805973e-9,
+          "maxSolidPenetrationM": 0.034997664763284225,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.22391398837439846,
+          "minForearmTableClearanceM": 0.10590449621531839,
+          "minTableSignedDistanceM": -0.034997664763284225,
+          "maxPalmErrorM": 4.778378055897961e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.1916666666666667,
+            "penetrationM": 0.034997664763284225,
+            "pointWorld": [
+              0.16398086203707657,
+              0.9849976647632842,
+              0.3503013678042057
+            ],
+            "vertex": 5342,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.10426669095478872,
+              0.9629922021012163,
+              0.2668255177538909
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.10000000430317924,
+            1.1247999412686223,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.226585665316861e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 8.818549820805973e-9,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.0377622658707244,
+          "minForearmTableClearanceM": 0.10590449621531839,
+          "minTableSignedDistanceM": 0.012066045532820664,
+          "maxPalmErrorM": 4.8130211300204497e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "C",
+          "side": "L",
+          "pair": false
+        },
+        "event": "cancel",
+        "phase": "cancelled",
+        "time": 2.8249999999999926,
+        "palm": [
+          0.0006304798744767304,
+          1.1614575728646863,
+          0.3379447803402266
+        ],
+        "bottlePosition": [
+          0.00037208430161663034,
+          1.1514726519015583,
+          0.3699437480152212
+        ],
+        "bottleQuaternion": [
+          0.000007801120874987417,
+          -0.0040372985773384764,
+          0.000004311228601884288,
+          0.9999918500371658
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": null,
+        "sourceRetreat": [
+          0.0006304798744767304,
+          1.1914575728646863,
+          0.1979447803402266
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.0006304798744767304,
+            1.1914575728646863,
+            0.1979447803402266
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 2.983724378680108e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 8.818549820805973e-9,
+          "maxSolidPenetrationM": 0.034982095143309716,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.2054668185345525,
+          "minForearmTableClearanceM": 0.16092733324266728,
+          "minTableSignedDistanceM": -0.034982095143309716,
+          "maxPalmErrorM": 4.778378055897961e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.1916666666666667,
+            "penetrationM": 0.034982095143309716,
+            "pointWorld": [
+              0.07497197517385357,
+              0.9850179048566903,
+              0.3326951755699271
+            ],
+            "vertex": 5415,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              -0.0029545769611372397,
+              0.9964988226309591,
+              0.23418995489883243
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.0006304798744767304,
+            1.1914575728646863,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.0184188481996443e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 8.818549820805973e-9,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.10441989846006461,
+          "minForearmTableClearanceM": 0.16092733324266728,
+          "minTableSignedDistanceM": 0.10441989846006464,
+          "maxPalmErrorM": 4.880243223662709e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "A",
+          "side": "L",
+          "pair": true
+        },
+        "event": "release",
+        "phase": "verify",
+        "time": 6.591666666666784,
+        "palm": [
+          0.10000000117033986,
+          1.0947999705981604,
+          0.4079998841626415
+        ],
+        "bottlePosition": [
+          0.09974161245513664,
+          1.0945467020078183,
+          0.43999893371987053
+        ],
+        "bottleQuaternion": [
+          0.000007801127863593,
+          -0.004037298572343655,
+          0.000004311228153283704,
+          0.9999918500371858
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": "A",
+        "sourceRetreat": [
+          0.10000000117033986,
+          1.1247999705981604,
+          0.2679998841626415
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.10000000117033986,
+            1.1247999705981604,
+            0.2679998841626415
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.8163916471489756e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0.03483074875199718,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.11934428575452438,
+          "minForearmTableClearanceM": 0.1333907434220516,
+          "minTableSignedDistanceM": -0.03483074875199718,
+          "maxPalmErrorM": 6.9405087582145e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.2083333333333335,
+            "penetrationM": 0.03483074875199718,
+            "pointWorld": [
+              0.14493465983413106,
+              0.9851692512480028,
+              0.32484581591416245
+            ],
+            "vertex": 5360,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.05105513819545349,
+              0.9944338020821752,
+              0.22004212083595287
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.10000000117033986,
+            1.1247999705981604,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 4.0939474033052647e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.0357573739900634,
+          "minForearmTableClearanceM": 0.1333907434220516,
+          "minTableSignedDistanceM": 0.03575737399006343,
+          "maxPalmErrorM": 6.688967313094244e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "A",
+          "side": "L",
+          "pair": true
+        },
+        "event": "cancel",
+        "phase": "cancelled",
+        "time": 2.8249999999999926,
+        "palm": [
+          0.0006304767416373536,
+          1.1614576021942244,
+          0.3379446984580405
+        ],
+        "bottlePosition": [
+          0.0003720843016166334,
+          1.1514726595204763,
+          0.3699437480152211
+        ],
+        "bottleQuaternion": [
+          0.000007801120875422795,
+          -0.0040372985773384764,
+          0.000004311228601693157,
+          0.9999918500371658
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": null,
+        "sourceRetreat": [
+          0.0006304767416373536,
+          1.1914576021942245,
+          0.19794469845804047
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.0006304767416373536,
+            1.1914576021942245,
+            0.19794469845804047
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.7470027081099033e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0.016498147430558746,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.07963168220441963,
+          "minForearmTableClearanceM": null,
+          "minTableSignedDistanceM": -0.016498147430558746,
+          "maxPalmErrorM": 6.87441806944974e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.225,
+            "penetrationM": 0.016498147430558746,
+            "pointWorld": [
+              0.052730908998483594,
+              0.9946339711819796,
+              0.30649814743055875
+            ],
+            "vertex": 5329,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              -0.021933751586287964,
+              1.0061120693143484,
+              0.18658085844195688
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.0006304767416373536,
+            1.1914576021942245,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.469446951953614e-16,
+          "maxFootJointErrorM": 5.551115123125783e-17,
+          "maxFootSurfaceErrorM": 2.4390864690315397e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.10241500657940361,
+          "minForearmTableClearanceM": null,
+          "minTableSignedDistanceM": 0.021623101849816556,
+          "maxPalmErrorM": 6.825720989536063e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "B",
+          "side": "R",
+          "pair": true
+        },
+        "event": "release",
+        "phase": "verify",
+        "time": 6.591666666666784,
+        "palm": [
+          0.09999999002517523,
+          1.0948000074231778,
+          0.40799998138482546
+        ],
+        "bottlePosition": [
+          0.09974161431778178,
+          1.0945467020294992,
+          0.43999893371987053
+        ],
+        "bottleQuaternion": [
+          0.000007801127863186238,
+          -0.004037298572343655,
+          0.000004311228153085552,
+          0.9999918500371858
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": "B",
+        "sourceRetreat": [
+          0.09999999002517523,
+          1.1248000074231779,
+          0.26799998138482545
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.09999999002517523,
+            1.1248000074231779,
+            0.26799998138482545
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 4.0245584642661925e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0.03497681044094511,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.25714527512367225,
+          "minForearmTableClearanceM": 0.07522057721466124,
+          "minTableSignedDistanceM": -0.03497681044094511,
+          "maxPalmErrorM": 4.758593251509519e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.15,
+            "penetrationM": 0.03497681044094511,
+            "pointWorld": [
+              0.0018151089780183982,
+              0.9849768104409451,
+              0.3461510171861519
+            ],
+            "vertex": 970,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.1011849740467326,
+              0.9807728626858395,
+              0.28735513250881756
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.09999999002517523,
+            1.1248000074231779,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.885780586188048e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": 0.04135501704027833,
+          "minForearmTableClearanceM": 0.07522057721466124,
+          "minTableSignedDistanceM": 0.03028486947861894,
+          "maxPalmErrorM": 4.440061341851388e-8,
+          "reachClamped": false,
+          "worstSolid": null,
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "capture": {
+        "scenario": {
+          "id": "B",
+          "side": "R",
+          "pair": true
+        },
+        "event": "cancel",
+        "phase": "cancelled",
+        "time": 2.8249999999999926,
+        "palm": [
+          0.000630465596472729,
+          1.16145760921692,
+          0.33794479568022445
+        ],
+        "bottlePosition": [
+          0.000372084301616638,
+          1.1514726531443742,
+          0.3699437480152211
+        ],
+        "bottleQuaternion": [
+          0.000007801120874074503,
+          -0.0040372985773384764,
+          0.000004311228601340249,
+          0.9999918500371658
+        ],
+        "actualHeldBy": null,
+        "actualReservedBy": null,
+        "sourceRetreat": [
+          0.000630465596472729,
+          1.19145760921692,
+          0.19794479568022444
+        ]
+      },
+      "paths": [
+        {
+          "method": "current-production",
+          "to": [
+            0.000630465596472729,
+            1.19145760921692,
+            0.19794479568022444
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 4.0939474033052647e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0.03466362396710296,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.22643221812017522,
+          "minForearmTableClearanceM": null,
+          "minTableSignedDistanceM": -0.03466362396710296,
+          "maxPalmErrorM": 4.535980576487666e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.1833333333333333,
+            "penetrationM": 0.03466362396710296,
+            "pointWorld": [
+              -0.06824160883882036,
+              0.985336376032897,
+              0.3308339062475188
+            ],
+            "vertex": 769,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.014571092365601168,
+              0.9633574373037375,
+              0.24318626264352577
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        },
+        {
+          "method": "candidate-table-clearance",
+          "to": [
+            0.000630465596472729,
+            1.19145760921692,
+            0.14000000000000004
+          ],
+          "samples": 187,
+          "maxBoneErrorM": 3.95516952522712e-16,
+          "maxFootJointErrorM": 1.3877787807814457e-17,
+          "maxFootSurfaceErrorM": 2.6586991880867813e-8,
+          "maxSolidPenetrationM": 0.005892341878534574,
+          "maxCylinderPenetrationM": 0,
+          "minHandTableClearanceM": -0.168858574251882,
+          "minForearmTableClearanceM": null,
+          "minTableSignedDistanceM": -0.005892341878534574,
+          "maxPalmErrorM": 4.479678624252164e-8,
+          "reachClamped": false,
+          "worstSolid": {
+            "stage": "rest",
+            "time": 1.1833333333333333,
+            "penetrationM": 0.005892341878534574,
+            "pointWorld": [
+              -0.04320734985705277,
+              0.9670402836595522,
+              0.2958923418785346
+            ],
+            "vertex": 737,
+            "part": "hand",
+            "objectId": "table-top",
+            "palm": [
+              0.03675472733238522,
+              0.9521572612091245,
+              0.2025407629225217
+            ]
+          },
+          "worstCylinder": null,
+          "complete": true,
+          "finalRestPoseErrorRad": 0,
+          "passed": false
+        }
+      ]
+    }
+  ],
+  "limits": "Captured real production release and mid-lift cancel poses. Subsequent pose-path comparison checks the physical table surface; browser suite still verifies the full continuing rigid world and rendering."
+}
