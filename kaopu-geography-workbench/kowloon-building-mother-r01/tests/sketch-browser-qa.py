@@ -38,6 +38,7 @@ try:
   action(lambda:page.locator('#roof').click());roofback=capture('four-storey-roof-cut-restored');assert not roofback['values']['roofVisible'] and roofback['sha256']==first['sha256']
   assert page.locator('[data-legacy]').count()==2
   action(lambda:page.locator('#joint').click());capture('r05-platform-column-junction')
+  jointVisible=page.evaluate('''()=>{const s=sketchInspection,r=s.renderer,id=s.result.stair.connections[1].landingSupport.beamId,record=r.semanticRegistry.find(n=>n.nodeId===id);if(!record)return false;for(let y=0;y<r.canvas.height;y+=3)for(let x=0;x<r.canvas.width;x+=3)if(Math.abs(r.readHit(x,y).objectId-record.objectId)<.1)return true;return false;}''');assert jointVisible,'The actual second-floor platform beam must be visible in its named inspection view'
   action(lambda:page.locator('#ghost').click());capture('r05-junction-transparent')
   action(lambda:page.locator('#ghost').click())
   action(lambda:page.locator('#fit').click())
