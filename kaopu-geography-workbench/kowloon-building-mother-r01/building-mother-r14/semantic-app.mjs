@@ -55,7 +55,7 @@ function updateLabels(){
  if(!scene||!state.presentedCamera)return;
  const o=state.presentedCamera,sz=state.presentedDisplay,b=cameraBasis(o),dot=(a,b)=>a.reduce((n,v,k)=>n+v*b[k],0),tan=Math.tan(o.fov/2);
  const project=p=>{const q=p.map((v,k)=>v-o.eye[k]),depth=dot(q,b.forward),x=dot(q,b.right)/(depth*tan*sz.aspect),y=dot(q,b.up)/(depth*tan);return{x,y,visible:depth>0&&Math.abs(x)<=.98&&Math.abs(y)<=.98};};
- const labels=scene.buildings.map(building=>{const p=building.bounds.min.map((v,k)=>k===1?v:(v+building.bounds.max[k])/2),q=project(p),el=text('div',building.name,'building-label'+(building.caseId===caseId?' active':''));el.style.left=`${(q.x+1)*50}%`;el.style.top=`${(1-q.y)*50}%`;el.hidden=!q.visible;return el;});
+ const labels=scene.buildings.map(building=>{const p=building.bounds.min.map((v,k)=>k===1?v:(v+building.bounds.max[k])/2),q=project(p),el=text('div',building.name,'building-label'+(building.caseId===caseId?' active':''));el.style.left=`${(q.x+1)*50}%`;el.style.top=`${(1-q.y)*50}%`;el.hidden=!q.visible||(state.cameraFraming==='component'&&building.caseId!==caseId);return el;});
  const openings=state.showOpeningLabels&&caseId==='lowrise'?observedOpeningLabels(scene.buildings.find(b=>b.caseId===caseId)):[],placed=[],w=sz.cssWidth,h=sz.cssHeight;
  state.openingLabels=openings.map(opening=>{
   const p=opening.worldCenter,q=project(p),facing=!opening.normal||dot(opening.normal,o.eye.map((v,k)=>v-p[k]))>0,inSlice=!o.sliceY||(p[1]>=o.sliceY[0]&&p[1]<=o.sliceY[1]),visible=q.visible&&facing&&inSlice;

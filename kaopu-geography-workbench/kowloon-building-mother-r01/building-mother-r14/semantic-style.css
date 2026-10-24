@@ -53,3 +53,5 @@ article>p{flex:none;overflow-wrap:anywhere}
 @media(max-width:820px){#candidateStructurePanel.candidate-active{inset:8px;padding:8px}#candidateStructurePanel.candidate-active>canvas{min-height:300px;height:55dvh!important}}
 
 .facade-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 0}.facade-controls small{color:#cdb781}.facade-controls button.active{outline:2px solid #94b6c9}
+/* KCC registration is not a warehouse-window control. */
+body:has([data-building="warehouse"].active) .facade-controls,body:has([data-building="lowrise"].active) .facade-controls{display:none}

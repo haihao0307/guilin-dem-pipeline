@@ -24,7 +24,7 @@ try:
   rec=p.evaluate('semanticInspection.registry.find(r=>r.caseId==="kcc"&&r.classKey==="window"&&r.part==="glass")');assert rec
   p.locator('#objects').select_option(str(rec['objectId']));p.get_by_role('button',name='拉近所选构件',exact=True).click();p.wait_for_function('!semanticInspection.busy');p.locator('#view').screenshot(path=str(out/'kcc-main-window-close.png'));p.screenshot(path=str(out/'kcc-main-window-source-page.png'),full_page=True)
   for name in ['lowrise','warehouse','kcc']:
-   p.locator('[data-building='+name+']').click();p.wait_for_function('id=>semanticInspection.caseId===id&&!semanticInspection.busy',arg=name);assert p.locator('#view').bounding_box()['height']>=350;p.screenshot(path=str(out/f'switch-{name}-page.png'),full_page=True)
+   p.locator('[data-building='+name+']').click();p.wait_for_function('id=>semanticInspection.caseId===id&&!semanticInspection.busy',arg=name);assert p.locator('#view').bounding_box()['height']>=350;assert p.locator('.facade-controls').is_visible()==(name=='kcc');p.screenshot(path=str(out/f'switch-{name}-page.png'),full_page=True)
   p.locator('[data-building=warehouse]').click();p.wait_for_function('semanticInspection.caseId==="warehouse"&&!semanticInspection.busy')
   panel=p.evaluate('semanticInspection.registry.find(r=>r.caseId==="warehouse"&&r.archetypeId==="warehouse-observed-facade-panels")');assert panel
   p.locator('#objects').select_option(str(panel['objectId']));p.get_by_role('button',name='拉近所选构件',exact=True).click();p.wait_for_function('!semanticInspection.busy');p.screenshot(path=str(out/'warehouse-main-panel-source-page.png'),full_page=True)
