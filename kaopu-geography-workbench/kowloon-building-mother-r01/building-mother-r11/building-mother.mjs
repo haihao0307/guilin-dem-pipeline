@@ -79,6 +79,6 @@ export function growBuilding(seed,parameters={}){
  else if(prepared)model=integrateCompleteFloorSystem(seed.model,source,{openingEvidence:seed.openingEvidence,preparedMother:prepared});
  else model=attachObservedLayouts(clone(seed.model));
  if(supportProgram){const present=new Set(model.graph.nodes.map(n=>n.id));for(const n of supportProgram.nodes)if(!present.has(n.id)){model.graph.nodes.push({...n,evidence:n.evidence??'authored_growth_dependency_not_surveyed'});present.add(n.id);}for(const e of supportProgram.edges)if(!model.graph.edges.some(x=>x.from===e.from&&x.to===e.to&&x.type===e.type))model.graph.edges.push({...e,evidence:'generative_support_relation_not_engineered'});}
- if(!inspection){recipe.retainedRelations=auditRetainedRelations(model);if(!recipe.retainedRelations.passed)throw Error('Retained interface relations: '+JSON.stringify(recipe.retainedRelations.failures));}
+ if(!inspection){model.comparisonAnchorBounds=clone(seed.model.bounds);recipe.retainedRelations=auditRetainedRelations(model);if(!recipe.retainedRelations.passed)throw Error('Retained interface relations: '+JSON.stringify(recipe.retainedRelations.failures));}
  model.buildingMother=recipe;if(candidate)candidate.model=model;return{model,recipe,candidate,validation:recipe.validation};
 }

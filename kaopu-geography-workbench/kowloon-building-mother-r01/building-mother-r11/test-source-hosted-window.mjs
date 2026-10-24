@@ -24,7 +24,7 @@ const model=deriveCaseIntegration('lowrise',whole,source,official,{doorOpenT:1})
 const north=mother.walls.filter(w=>w.exterior&&w.a[1]<-8&&w.b[1]<-8),level=model.levels.at(-1),floor={...level,clearHeight:model.sourceBinding.mainRoofLocal-.18-level.elevation};
 const sourcePatch={...source.patches.find(p=>p.sourcePatchId==='p120'),sourceModelId:source.sourceModelId};
 const frozen={source:JSON.stringify(source),levels:JSON.stringify(model.levels),bundle:JSON.stringify(bundle),mother:JSON.stringify(mother)};
-const input=(i=0,thickness=.14,placement=undefined)=>({observation:bundle.fields[i],sourcePatch,designFloor:floor,hostBoundary:{...north[0],segments:north,id:rootId+':source-envelope:p120',modelRootId:rootId,sourceModelId:source.sourceModelId,instanceId:460+i,placement},dimensions:{...SOURCE_HOSTED_WINDOW_DEFAULTS,wallThickness:thickness}});
+const input=(i=0,thickness=.14,placement=undefined)=>({observation:bundle.fields[i],sourcePatch,designFloor:floor,hostBoundary:{...north[0],segments:north,id:rootId+':source-envelope:p120',modelRootId:rootId,sourceModelId:source.sourceModelId,sourcePatchId:sourcePatch.sourcePatchId,instanceId:460+i,placement},dimensions:{...SOURCE_HOSTED_WINDOW_DEFAULTS,wallThickness:thickness}});
 const all=bundle.fields.map((_,i)=>deriveSourceHostedWindow(input(i)));
 eq(new Set(all.map(x=>x.ownershipSpec.infillId)).size,3,'same-wall windows have independent semantic IDs');
 eq(new Set(all.flatMap(x=>x.aperture.primitives.map(p=>p.objectId))).size,9,'frame/leaf/glass IDs are unique');
@@ -70,6 +70,8 @@ reject(()=>deriveSourceHostedWindow({...input(),observation:null}),/observation/
 reject(()=>deriveSourceHostedWindow({...input(),sourcePatch:null}),/observation/);
 reject(()=>deriveSourceHostedWindow({...input(),sourcePatch:{...sourcePatch,sourceModelId:'another-building'}}),/identity mismatch/);
 reject(()=>deriveSourceHostedWindow({...input(),observation:{...bundle.fields[0],sourcePatchId:'p121'}}),/identity mismatch/);
+const wrongHostFace=input();wrongHostFace.hostBoundary.sourcePatchId='p121';reject(()=>deriveSourceHostedWindow(wrongHostFace),/identity mismatch/);
+const remoteHost=input();remoteHost.hostBoundary.segments=remoteHost.hostBoundary.segments.map(w=>({...w,a:[w.a[0],w.a[1]+10],b:[w.b[0],w.b[1]+10]}));reject(()=>deriveSourceHostedWindow(remoteHost),/nearby design host/);
 const noDimensions=input();delete noDimensions.dimensions.windowGlassThickness;reject(()=>deriveSourceHostedWindow(noDimensions),/windowGlassThickness/);
 const noWall=input();delete noWall.dimensions.wallThickness;reject(()=>deriveSourceHostedWindow(noWall),/wallThickness/);
 const missingFrame=input();missingFrame.observation={...bundle.fields[0],sourceFrame:null};reject(()=>deriveSourceHostedWindow(missingFrame),/frame/);
@@ -104,6 +106,7 @@ for(const result of[generatedA,generatedB]){
  }
  ok(validateCompleteFloorSystem(result.model,{physical:false}).passed,'existing relation/door-ray validator passes with integration');
 }
+const actualPhysical=validateCompleteFloorSystem(generatedB.model,{physical:true});ok(actualPhysical.passed,'actual thicker-wall lowrise sampled circulation/support check passes');ok(actualPhysical.routeSamples>0,'physical check samples actual retained routes');
 const integratedCustom=growBuilding(seed,{dimensions:{wallThickness:.18,windowFrameDepth:.2,windowGlassThickness:.009}});
 for(const a of integratedCustom.model.hostedComponents.apertures.filter(a=>a.observationId)){eq(a.primitives.find(p=>p.part==='frame').halfDepth,.1,'actual frame geometry follows UI-ready Mother parameter');eq(a.primitives.find(p=>p.part==='glass').halfDepth,.0045,'actual glass geometry follows UI-ready Mother parameter');}
 reject(()=>growBuilding(seed,{dimensions:{windowGlassThickness:.2}}),/design domain/);

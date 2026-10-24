@@ -70,7 +70,7 @@ export function integrateCompleteFloorSystem(input,source,{openingEvidence=null,
  if(windowFields.length&&(windowFields.length!==3||new Set(windowFields.map(f=>f.id)).size!==3||windowFields.some(f=>reviewedWindowIds[f.id]===undefined||f.sourcePatchId!=='p120')))throw Error('Only the three reviewed lowrise p120 observations may be emitted');
  const windowFloor=levels.at(-1),northWalls=mother.walls.filter(w=>w.exterior&&w.a[1]<-8&&w.b[1]<-8);
  const windowProposals=windowFields.map(f=>{const patch=source.patches.find(p=>p.sourcePatchId===f.sourcePatchId);if(!patch)throw Error('Missing original source window face');
-  const emission=deriveSourceHostedWindow({observation:f,sourcePatch:{...patch,sourceModelId:source.sourceModelId},designFloor:{...windowFloor,clearHeight:model.sourceBinding.mainRoofLocal-c.roofInset-windowFloor.elevation},hostBoundary:{...northWalls[0],segments:northWalls,id:root+':source-envelope:'+f.sourcePatchId,modelRootId:root,sourceModelId:source.sourceModelId,instanceId:reviewedWindowIds[f.id]},dimensions:c});
+  const emission=deriveSourceHostedWindow({observation:f,sourcePatch:{...patch,sourceModelId:source.sourceModelId},designFloor:{...windowFloor,clearHeight:model.sourceBinding.mainRoofLocal-c.roofInset-windowFloor.elevation},hostBoundary:{...northWalls[0],segments:northWalls,id:root+':source-envelope:'+f.sourcePatchId,modelRootId:root,sourceModelId:source.sourceModelId,sourcePatchId:f.sourcePatchId,instanceId:reviewedWindowIds[f.id]},dimensions:c});
   return{field:f,...emission.sourceLocal,emission,semantic:'source_supported_inscribed_design_rectangle_not_actual_frame'};});
  const addedFloorRecords=[];
  for(const [floorIndex,l]of levels.entries()){

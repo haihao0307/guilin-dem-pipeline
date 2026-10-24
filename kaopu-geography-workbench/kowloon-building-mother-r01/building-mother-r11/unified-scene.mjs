@@ -13,8 +13,9 @@ export function composeBuildingScene(entries,{gap=14}={}){
  let cursor=0;
  for(const [index,e] of entries.entries()){
   const {caseId,source,model}=e,localBounds=visibleSceneBounds({model,source});
-  const t=[cursor-localBounds.min[0],0,-(localBounds.min[2]+localBounds.max[2])/2],worldBounds=translateBounds(localBounds,t),offset=(index+1)*1000000,patchStart=patches.length,nodeStart=nodes.length,railStart=stairs.length;
-  cursor=worldBounds.max[0]+gap;
+  const anchor=model.comparisonAnchorBounds?unionBounds([source.bounds,model.comparisonAnchorBounds]):localBounds;
+  const t=[cursor-anchor.min[0],0,-(anchor.min[2]+anchor.max[2])/2],worldBounds=translateBounds(localBounds,t),offset=(index+1)*1000000,patchStart=patches.length,nodeStart=nodes.length,railStart=stairs.length;
+  cursor=anchor.max[0]+t[0]+gap;
   const sourceIds=new Map(source.patches.map((p,k)=>[p.objectId,1000+patchStart+k]));
   const floorIds=new Map(model.levels.map(l=>[l.id,ns(caseId,l.id)]));
   const localRegistry=buildRegistry(model,source);

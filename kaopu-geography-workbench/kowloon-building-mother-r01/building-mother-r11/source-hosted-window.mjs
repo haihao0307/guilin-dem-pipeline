@@ -38,7 +38,7 @@ export function validateSourceHostedWindowDimensions(d){
 /** One host-local recipe drives hole, emitted frame/leaf/glass, reveal and mask.
  * sourcePatch.sourceModelId and hostBoundary.sourceModelId must be supplied by
  * the containing source model, without mutating the frozen source object.
- * hostBoundary: {id,modelRootId,sourceModelId,instanceId,a,b,segments?,placement?}
+ * hostBoundary: {id,modelRootId,sourceModelId,sourcePatchId,instanceId,a,b,segments?,placement?}
  * a/b/segments are the existing design-wall source-local X/Z boundaries.
  * placement is optional rigid inspection placement ONLY; it never changes source
  * evidence, real floor levels, model scale or actual building registration.
@@ -46,7 +46,7 @@ export function validateSourceHostedWindowDimensions(d){
 export function deriveSourceHostedWindow({observation,sourcePatch,designFloor,hostBoundary,dimensions}={}){
  const f=observation,h=hostBoundary,d=validateSourceHostedWindowDimensions(dimensions);
  if(f?.schema!=='kaopu.observed-opening-field/1'||typeof f.id!=='string'||!f.id||!f.sourceModelId||!f.sourcePatchId||!sourcePatch||!h)throw Error('Source-backed opening observation and host required');
- if(f.sourceModelId!==sourcePatch.sourceModelId||f.sourceModelId!==h.sourceModelId||f.sourcePatchId!==sourcePatch.sourcePatchId||f.sourceObjectId!==sourcePatch.objectId)throw Error('Observation/source/host identity mismatch');
+ if(f.sourceModelId!==sourcePatch.sourceModelId||f.sourceModelId!==h.sourceModelId||f.sourcePatchId!==sourcePatch.sourcePatchId||f.sourcePatchId!==h.sourcePatchId||f.sourceObjectId!==sourcePatch.objectId)throw Error('Observation/source/host identity mismatch');
  if(!h.id||!h.modelRootId||!Number.isInteger(h.instanceId)||h.instanceId<0||h.instanceId>511)throw Error('Explicit stable host identity and aperture instanceId required');
  if(!designFloor?.id||!designFloor.nodeId||!Number.isFinite(designFloor.elevation))throw Error('Existing design floor required; actual floor assignment remains unknown');
  if(!Array.isArray(f.localRing)||f.localRing.length!==4||f.localRing.some(p=>!finite(p,2)))throw Error('Reviewed finite four-corner observation required');
@@ -72,6 +72,8 @@ export function deriveSourceHostedWindow({observation,sourcePatch,designFloor,ho
  const segments=h.segments??[h];if(!segments.length||segments.some(w=>!finite(w.a,2)||!finite(w.b,2)))throw Error('Existing design host boundary segments required');
  const wallCuts=[];for(const w of segments){const delta=sub(w.b,w.a),span=length(delta);if(span<1e-7)throw Error('Zero-length design host');const axis=mul(delta,1/span),at=dot(sub([sourceCenter[0],sourceCenter[2]],w.a),axis),projectedWidth=width*Math.abs(dot(axis,[frame.u[0],frame.u[2]])),lo=Math.max(0,at-projectedWidth/2),hi=Math.min(span,at+projectedWidth/2);if(hi-lo<=1e-7)continue;
   const center=add(w.a,mul(axis,(lo+hi)/2)),local={center,width:hi-lo,sill,height,observationId:f.id};
+  const segmentDepth=dot(sub([center[0],sourceCenter[1],center[1]],sourceCenter),frame.n)+d.wallThickness/2;
+  if(Math.abs(segmentDepth)>1)throw Error('Projected segment is not the named nearby design host');
   wallCuts.push({boundaryKey:w.key??w.id,sourceLocal:local,worldCenter:world([center[0],sourceCenter[1],center[1]]),wallThickness:d.wallThickness});
  }
  if(!wallCuts.length)throw Error('Observed opening does not project onto the named design host');

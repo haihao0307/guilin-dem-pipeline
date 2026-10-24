@@ -39,7 +39,7 @@ try:
    assert len(page.locator('#coverageReport').inner_text())>100
    action(lambda:page.locator('[data-view=whole]').click())
   assert page.evaluate('JSON.stringify(semanticInspection.source)')==source and page.evaluate('JSON.stringify(semanticInspection.model.levels)')==levels
-  page.locator('[data-building=lowrise]').click();action(lambda:page.locator('#inspect-source-windows').click());capture('lowrise-three-observed-windows')
+  page.locator('[data-building=lowrise]').click();action(lambda:page.locator('[data-floor-bookmark=slice]').click());capture('lowrise-whole-floor-relations');action(lambda:page.locator('[data-floor-bookmark=stair]').click());capture('lowrise-stair-rail-colors');action(lambda:page.locator('[data-view=whole]').click());action(lambda:page.locator('#inspect-source-windows').click());capture('lowrise-three-observed-windows')
   def lowSignature():return page.evaluate('JSON.stringify(semanticInspection.buildings.find(b=>b.caseId==="lowrise").localModel.archetypes)')
   page.locator('#inspection-wall').select_option('0.12');page.wait_for_url('**wall=0.12**');settle();first=capture('lowrise-wall012');signature=lowSignature()
   page.locator('#inspection-wall').select_option('0.18');page.wait_for_url('**wall=0.18**');settle();second=capture('lowrise-wall018');assert signature!=lowSignature()

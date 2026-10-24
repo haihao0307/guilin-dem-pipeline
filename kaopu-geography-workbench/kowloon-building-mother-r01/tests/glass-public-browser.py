@@ -1,7 +1,8 @@
-# R11 source-building linkage gate, older gates retained below.
-from pathlib import Path as _R11Path
-import runpy as _r11_runpy
-_r11_runpy.run_path(str(_R11Path(__file__).parent.parent/'building-mother-r11'/'browser-qa.py'), run_name='__main__')
+# R11 and R06 isolated visual regression; previous gates retained.
+from pathlib import Path as _RevisionPath
+import runpy as _revision_runpy
+for _name in ['building-mother-r11','building-rule-sketch-r06']:
+    _revision_runpy.run_path(str(_RevisionPath(__file__).parent.parent/_name/'browser-qa.py'),run_name='__main__')
 raise SystemExit(0)
 
 # Independent rule-sketch browser gate; prior candidate gates preserved.
