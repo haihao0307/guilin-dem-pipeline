@@ -1,3 +1,10 @@
+# Independent rule-sketch browser gate; prior candidate gates preserved.
+from pathlib import Path as _SketchPath
+if _SketchPath(__file__).with_name('sketch-browser-qa.py').is_file():
+    import runpy as _sketch_runpy
+    _sketch_runpy.run_path(str(_SketchPath(__file__).with_name('sketch-browser-qa.py')), run_name='__main__')
+    raise SystemExit(0)
+
 # Explicit unified Mother candidate gate; previous QA and workflow retained.
 from pathlib import Path as _MotherPath
 if _MotherPath(__file__).with_name('mother-browser-qa.py').is_file():
