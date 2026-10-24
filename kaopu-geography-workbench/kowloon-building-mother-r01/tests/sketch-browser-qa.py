@@ -9,8 +9,8 @@ report={'passed':False,'scope':'Independent function-only building rule sketches
 def save():(out/'sketch-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(root.parent)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r03/sketches.html'
-config=root/'sketch-r03-public-url.json'
+url=f'http://127.0.0.1:{server.server_port}/building-rule-sketch-r04/sketches.html'
+config=root/'sketch-r04-public-url.json'
 if config.exists():
  cfg=json.loads(config.read_text());url=cfg['url'];report['scope']='Actual public independent sketches, no route overrides'
  def verify(item):
@@ -32,7 +32,8 @@ try:
    raw=page.locator('#sketch').screenshot(path=str(out/(name+'.png')));q['sha256']=hashlib.sha256(raw).hexdigest();report['frames'][name]=q;save();print('CAPTURE',name,round(q['frame']['wallMs']),flush=True);return q
   def action(fn):
    n=page.evaluate('sketchInspection.frames.length');fn();settle(n)
-  first=capture('connected-default');page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  first=capture('connected-default-four');assert page.evaluate('sketchInspection.result.levels.length')==4;assert all(first['checks'][k] for k in ['foundationJointsContinuous','landingRearContact','landingFrameSupport','handrailsContinuous','wallSlabBeamContacts']);assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==4;page.screenshot(path=str(out/'sketch-full-page.png'),full_page=True)
+  action(lambda:page.locator('#storeys').select_option('2'))
   for case in ['cell','vertical','connected']:
    action(lambda case=case:page.locator(f'[data-case={case}]').click())
    for stage in ['1','4','7']:
@@ -50,6 +51,9 @@ try:
   action(lambda:page.locator('#top').click());capture('lift-corridor-top')
   action(lambda:page.locator('#fit').click())
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[7,1.5,11],target:[7,1.5,5],fov:.7})'));capture('window-door-openings-close')
+  action(lambda:page.locator('#fit').click())
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[-2,-.1,-2],target:[0,-.3,0],fov:.6})'));capture('foundation-column-core-close')
+  action(lambda:page.evaluate('sketchInspection.setCamera({eye:[3.5,2.8,3],target:[1.6,1.9,4.8],fov:.75})'));capture('landing-wall-support-rails-close')
   action(lambda:page.locator('#fit').click())
   # Preserve baseline geometry and exact restore across a single propagated input.
   sig=page.evaluate('JSON.stringify(sketchInspection.model.archetypes)')
@@ -74,8 +78,20 @@ try:
   assert not any(':bridge' in p['nodeId'] for p in semantic['primitives'])
   action(lambda:page.locator('#focus').click());capture('desktop-expanded-workspace');page.screenshot(path=str(out/'desktop-expanded-full-page.png'),full_page=True)
   action(lambda:page.locator('#focus').click())
-  action(lambda:page.locator('#lift').click());capture('connected-lift-upper')
-  action(lambda:page.locator('#liftDoor').click());capture('connected-lift-doors-open')
+  # Use the retained elevator state machine, with inspectable paused checkpoints.
+  action(lambda:page.locator('#liftPause').click())
+  assert page.locator('#retainedLiftPanel [data-lift-car-floor]').count()==2
+  action(lambda:page.locator('#retainedLiftPanel [data-lift-car-floor]').nth(1).click())
+  action(lambda:page.evaluate('sketchInspection.advanceLift(2)'));capture('retained-lift-in-motion')
+  moving=page.evaluate('sketchInspection.lift');assert moving['y']>0 and moving['y']<3.6 and moving['carDoor']==0
+  assert all(v==0 for v in moving['landingDoors'].values())
+  # Real timer-driven continuation is tested, not just direct output assignment.
+  action(lambda:page.locator('#liftPause').click())
+  page.wait_for_function('sketchInspection.lift.y===3.6 && sketchInspection.lift.carDoor>0')
+  action(lambda:page.locator('#liftPause').click());capture('retained-lift-arrived')
+  action(lambda:page.locator('#retainedLiftPanel [data-lift-door=open]').click())
+  action(lambda:page.evaluate('sketchInspection.advanceLift(1.8)'));capture('connected-lift-doors-open')
+  arrival=page.evaluate('sketchInspection.lift');assert arrival['y']==3.6 and arrival['carDoor']>0
   action(lambda:page.evaluate('sketchInspection.setCamera({eye:[10,5,-5],target:[8.2,4.5,.8],fov:.65})'));capture('lift-direct-threshold-close')
   action(lambda:page.locator('#fit').click())
   action(lambda:page.locator('#cut').click());cut=capture('connected-cutaway')
