@@ -13,7 +13,7 @@ let fs=`#version 300 es
 precision highp float;precision highp int;
 out vec4 outColor;uniform int id;uniform vec3 bmin,bmax,color;uniform float lip;uniform vec3 eye,target;uniform float cutX;
 ${code}
-${source==='pressure'?SCENE.serviceSource:''}
+${source==='pressure'?SCENE.sources.service:''}
 float field(vec3 p){${dispatch}return 1e20;}
 vec2 ranges(vec3 lo,vec3 hi){${ranges}return vec2(-1e20,1e20);}
 void main(){vec3 fw=normalize(target-eye),rt=normalize(cross(fw,vec3(0,1,0))),up=cross(rt,fw);vec2 uv=(gl_FragCoord.xy-vec2(360,200))/400.;vec3 rd=normalize(fw+rt*uv.x*1.2+up*uv.y*1.2);vec3 inv=1./rd;vec3 aa=(bmin-eye)*inv,bb=(bmax-eye)*inv;vec3 nearv=min(aa,bb),farv=max(aa,bb);float t=max(0.,max(nearv.x,max(nearv.y,nearv.z))),end=min(farv.x,min(farv.y,farv.z));if(t>end)discard;
