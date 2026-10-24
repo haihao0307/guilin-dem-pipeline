@@ -24,7 +24,7 @@ try:
    p.locator('#materialMode').click();p.wait_for_function('semanticInspection.materialMode===true&&!semanticInspection.busy')
   p.locator('#semanticMode').click();p.wait_for_function('semanticInspection.semanticMode&&!semanticInspection.busy');p.screenshot(path=str(out/'semantic-colors.png'),full_page=True)
   p.locator('#semanticMode').click();p.wait_for_function('!semanticInspection.semanticMode&&!semanticInspection.busy')
-  p.locator('#materialColor').fill('#cddcea');p.locator('#materialColor').dispatch_event('change');p.wait_for_function('!semanticInspection.busy');p.screenshot(path=str(out/'lowrise-edited-color.png'),full_page=True)
+  p.locator('#materialColor').evaluate("e=>e.value='#cddcea'");p.locator('#materialColor').dispatch_event('change');p.wait_for_function('!semanticInspection.busy');p.screenshot(path=str(out/'lowrise-edited-color.png'),full_page=True)
   p.locator('#resetMaterial').click();p.wait_for_function('!semanticInspection.busy');assert p.locator('#materialColor').input_value()=='#e4dfcb';assert p.evaluate('semanticInspection.registry.map(r=>r.objectId)')==ids
   assert not report['errors'];report['passed']=True;b.close()
 except Exception:report['errors'].append(traceback.format_exc());raise
