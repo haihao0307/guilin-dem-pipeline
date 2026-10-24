@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "REFERENCE-OBSERVED-NOT-INCORPORATED-001",
+  "domain": "reference-locked architecture and visible openings",
+  "source": "user_correction",
+  "createdAt": "2026-10-24",
+  "failureClass": "REFERENCE_OBSERVED_BUT_NOT_INCORPORATED",
+  "failureDescription": "The task required inspecting a supplied photograph and reproducing the building windows and visible details, but the delivered candidate repeated the same generic structure instead of incorporating reference-specific visible facts.",
+  "rejectedArtifact": "unknown; exact artifact and producing Mother were not identified in this run",
+  "mustNeverRepeat": [
+    "claiming the reference was inspected without mapping its visible facts to candidate elements",
+    "resubmitting the same rejected geometry with a new screenshot, camera, lighting, material, branch, or timestamp",
+    "using a generic window distribution where the reference supplies a specific bay rhythm and blank-wall regions",
+    "inventing openings or details in reference-observed blank regions",
+    "letting the Producer self-approve visual fidelity"
+  ],
+  "requiredEvidence": [
+    "frozen reference-set digest and exact view/crop identifier",
+    "reference feature ledger with source-region annotations and explicit UNKNOWN entries",
+    "per-feature mapping to candidate object/component identifiers and measurements",
+    "candidate geometry digest and rejected-parent geometry digest",
+    "matched-camera side-by-side evidence showing the required visible delta",
+    "independent verifier result with unauthorized visible feature count"
+  ],
+  "gateLogic": [
+    "every must-match reference feature has a source region, candidate element, measurement, and verifier verdict",
+    "candidate geometry digest differs from the rejected-parent geometry digest",
+    "camera-only, lighting-only, material-only, screenshot-only, or metadata-only changes fail closed",
+    "reference-observed blank regions remain blank unless the user authorizes a change",
+    "unauthorizedVisibleFeatures=0",
+    "Producer cannot be the independent verifier"
+  ],
+  "appliesTo": [
+    "Architecture Mother",
+    "Openings/Windows Mother",
+    "reference-locked visible-structure tasks"
+  ],
+  "active": true
+}
