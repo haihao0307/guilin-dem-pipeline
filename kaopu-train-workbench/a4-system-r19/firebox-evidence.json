@@ -1,0 +1,399 @@
+{
+  "schema_version": "a4-firebox-topology-1",
+  "purpose": "整体关系和可自建的教学函数几何，不是可制造锅炉图纸或操作规程。",
+  "identity_scope": "1935 Silver Link尺寸与结构文字，加60007保存期官方拆修关系；不标为60009某年份的精确内部形体。",
+  "primary_result": "应建立外承压壳、独立内铜火箱、连通水套、周缘底圈、向前的燃烧室、穿孔后管板六类关系；不能把流线外罩填实或把火箱做成一根封口大圆管。",
+  "sources": [
+    {
+      "id": "E1935",
+      "url": "https://theengineer.markallengroup.com/production/2018/09/Gresley-Silver-Jubilee.pdf",
+      "date": "1935-09-27",
+      "printed_pages": [
+        319,
+        320
+      ],
+      "verification": "已下载原PDF并放大实际查看，未把原图放入工作台。",
+      "observed": "正文分别谈铜火箱含燃烧室、内外喉板、锅筒两段；表分别给外火箱总长、底部长宽、内顶部长度、锅炉中心处内部宽度。"
+    },
+    {
+      "id": "NRM12",
+      "url": "https://blog.railwaymuseum.org.uk/sir-nigel-gresley-restoration-update-12/",
+      "date": "2017-01-20",
+      "verification": "正文已读；关联照片由已在云浏览器实际查看。",
+      "observed": "官方说明外包侧板拆除后暴露底圈与铜侧壁；火箱管板拆除必须保护燃烧室铜板。"
+    },
+    {
+      "id": "NRM12_IMAGE",
+      "url": "https://blog.railwaymuseum.org.uk/wp-content/uploads/sites/9/2017/01/DSCF5884.jpg",
+      "verification": "browser_visual_verified",
+      "observed": "铜色内侧板有多排圆孔；底缘可见厚实周缘底圈；近右侧内铜面与外侧截边有间隔。",
+      "limits": "无尺寸标定；不由孔痕重建全部stays；不据透视图确定水套厚度。",
+      "downloaded_or_published": false
+    },
+    {
+      "id": "NRM3",
+      "url": "https://blog.railwaymuseum.org.uk/gresley-overhaul-3/",
+      "date": "2016-04-08",
+      "verification": "正文已读；关联照片由已在云浏览器实际查看。",
+      "observed": "从火箱内部看空铜管板；拆除的是小烟管在铜火箱管板中的残端。"
+    },
+    {
+      "id": "NRM3_IMAGE",
+      "url": "https://blog.railwaymuseum.org.uk/wp-content/uploads/sites/9/2016/04/update3-tubeplate.jpg",
+      "verification": "browser_visual_verified",
+      "observed": "中上部大孔多行，底部及周边小孔；板缘圆角，外围有内铜壁及stays端头/孔痕。",
+      "limits": "不是均匀全域网格；没有逐孔独立标记，因此不把照片视觉行数当最终计数核验；冠板曲率仍未知。",
+      "downloaded_or_published": false
+    },
+    {
+      "id": "SNG107",
+      "url": "https://sirnigelgresley.org.uk/chime-archive/abofb-09.shtml",
+      "verification": "官方教育文章正文已读。",
+      "observed": "A4 Diagram107通过将火箱管板向锅筒内前移形成燃烧室。文章中的设计比较位移不是本模型已校准的安装插入量。"
+    },
+    {
+      "id": "SNG_STEEL",
+      "url": "https://sirnigelgresley.org.uk/overhaul-1522/overhaul-05.shtml",
+      "verification": "官方拆修正文已读。",
+      "observed": "外火箱钢包板修理与内铜火箱分开记述。"
+    },
+    {
+      "id": "DIDCOT_BOILER",
+      "url": "https://didcotrailwaycentre.org.uk/article.php/398/going-loco-june-2020",
+      "verification": "铁路运营方原理正文已读。",
+      "observed": "火箱内壁、外壁之间是水域；烟管内为热气、外为水，热量穿过金属壁。"
+    }
+  ],
+  "topology": [
+    {
+      "id": "T1",
+      "relation": "outer_firebox_pressure_shell <-> outer_throat_transition <-> boiler_barrel_pressure_shell",
+      "rule": "三者属于同一外承压包络；连接不是在锅筒后端用完整实心圆盖切断水域。",
+      "confidence": "high",
+      "sources": [
+        "E1935",
+        "NRM12"
+      ]
+    },
+    {
+      "id": "T2",
+      "relation": "inner_copper_firebox_hot_space -> combustion_chamber_hot_space -> rear_firebox_tubeplate_ports -> fire_tube_gas_spaces",
+      "rule": "内铜火箱向前延伸成燃烧室；其前端穿孔铜板是火箱端/锅炉后管板。燃烧室与锅筒在轴向上可重叠，而不是三个互不相交盒子串接。",
+      "confidence": "high",
+      "sources": [
+        "E1935",
+        "NRM3",
+        "SNG107"
+      ]
+    },
+    {
+      "id": "T3",
+      "relation": "firebox_water_legs + water_over_crown <-> boiler_water_around_tubes",
+      "rule": "内铜壁外、外承压壳内保留连通空隙作为水/汽域；不得填成铜或钢实心体。",
+      "confidence": "high",
+      "sources": [
+        "NRM12_IMAGE",
+        "DIDCOT_BOILER"
+      ]
+    },
+    {
+      "id": "T4",
+      "relation": "inner_copper_lower_perimeter <-> foundation_ring <-> outer_shell_lower_perimeter",
+      "rule": "底圈只沿底部周缘连接双层壳，中央保留炉排/燃烧空间开口；不是整块封底圆盘。",
+      "confidence": "high_for_relation_medium_for_exact_profile",
+      "sources": [
+        "NRM12",
+        "NRM12_IMAGE"
+      ]
+    },
+    {
+      "id": "T5",
+      "relation": "rear_tubeplate <-> combustion_chamber_shell; rear_tubeplate_ports <-> tube_ends",
+      "rule": "管板外缘接燃烧室铜板，孔接烟管；大烟管与小烟管分区而不是统一棋盘网格。",
+      "confidence": "high",
+      "sources": [
+        "NRM12",
+        "NRM3_IMAGE"
+      ]
+    },
+    {
+      "id": "T6",
+      "relation": "outer_round_top != inner_copper_crown_profile != streamline_cladding",
+      "rule": "round-top不能自动变成内铜顶板的半圆参数；内冠板曲率独立未知。外罩/保温层另设对象，不承担锅炉水域边界。",
+      "confidence": "high_as_modelling_guardrail_inner_crown_shape_unknown",
+      "sources": [
+        "E1935",
+        "NRM12_IMAGE"
+      ]
+    },
+    {
+      "id": "T7",
+      "relation": "grate_at_lower_hot_opening -> ashpan_below",
+      "rule": "炉排、灰箱与底圈分开；灰箱不是锅炉承压水套的底盖。",
+      "confidence": "high",
+      "sources": [
+        "E1935",
+        "NRM3"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "makeOuterFireboxShell",
+      "representation": "由若干横截面轮廓放样的薄壳；圆顶包络与下伸侧壁分开控制，向前接喉板/锅筒。",
+      "parameters": [
+        "outerOverallLengthM",
+        "outerBottomLengthM",
+        "outerBottomWidthM",
+        "crownProfile",
+        "sideWallProfiles",
+        "throatTransitionStations",
+        "steelThicknessM"
+      ],
+      "unknown_parameters": [
+        "crownProfile",
+        "sideWallProfiles",
+        "throatTransitionStations",
+        "steelThicknessM"
+      ],
+      "avoid": "不用流线外罩的包围盒作为锅炉实心体。"
+    },
+    {
+      "name": "makeInnerCopperFirebox",
+      "representation": "独立铜薄壳，含侧壁、后门板与冠板；热空间保持中空。",
+      "parameters": [
+        "innerTopLengthM",
+        "innerWidthAtBoilerCentreM",
+        "innerBottomProfile",
+        "innerCrownCamber",
+        "waterGapProfile",
+        "copperThicknessM"
+      ],
+      "unknown_parameters": [
+        "innerBottomProfile",
+        "innerCrownCamber",
+        "waterGapProfile",
+        "copperThicknessM"
+      ],
+      "avoid": "不按外壳统一缩放得到内铜形，也不强制内顶为半圆。"
+    },
+    {
+      "name": "makeCombustionChamber",
+      "representation": "从内铜火箱前上部热空间开口向前放样到圆角管板轮廓，周围仍是锅炉水域。",
+      "parameters": [
+        "inletProfile",
+        "tubeplateProfile",
+        "chamberStartZ",
+        "rearTubeplateZ",
+        "chamberFloorRise",
+        "cornerRadii"
+      ],
+      "unknown_parameters": [
+        "inletProfile",
+        "tubeplateProfile",
+        "chamberStartZ",
+        "chamberFloorRise",
+        "cornerRadii",
+        "rearTubeplateZ"
+      ],
+      "avoid": "不在火箱与燃烧室接口加封堵盖；不由外火箱总长减内顶部长直接生成燃烧室长度。"
+    },
+    {
+      "name": "makeFoundationRing",
+      "representation": "沿底部双壳周缘的闭合环带；中央开孔，局部过渡另设参数。",
+      "parameters": [
+        "innerBottomLoop",
+        "outerBottomLoop",
+        "ringDepthM",
+        "cornerProfile"
+      ],
+      "unknown_parameters": [
+        "innerBottomLoop",
+        "outerBottomLoop",
+        "ringDepthM",
+        "cornerProfile"
+      ],
+      "avoid": "不封满中央，也不假定它是圆环。"
+    },
+    {
+      "name": "makeRearTubeplate",
+      "representation": "独立圆角板面与周缘连接；孔分大烟管区和小烟管区，再与相应烟管连通。",
+      "parameters": [
+        "outlineProfile",
+        "plateThicknessM",
+        "largeTubeRegion",
+        "smallTubeRegion",
+        "tubeHoleLayout"
+      ],
+      "unknown_parameters": [
+        "outlineProfile",
+        "plateThicknessM",
+        "largeTubeRegion",
+        "smallTubeRegion",
+        "tubeHoleLayout"
+      ],
+      "avoid": "照片未经逐孔标记，不用目测行数生成历史真实孔位；不把整个前端做成单一大洞。"
+    },
+    {
+      "name": "makeBoilerFireboxJoint",
+      "representation": "外喉板与锅筒壳有自己的连接轮廓；内燃烧室/后管板有另一套轮廓及轴向参考，水域绕其连通。",
+      "parameters": [
+        "outerThroatBoundary",
+        "barrelRearBoundary",
+        "combustionChamberBoundary",
+        "rearTubeplateZ"
+      ],
+      "unknown_parameters": [
+        "outerThroatBoundary",
+        "barrelRearBoundary",
+        "combustionChamberBoundary",
+        "rearTubeplateZ"
+      ],
+      "avoid": "不自动令外壳接缝平面=后管板平面；1935两个长度字段相同不证明这些实体面重合。"
+    },
+    {
+      "name": "makeCladdingAndInsulation",
+      "representation": "与承压壳分开的外层薄片/保温区域，可隐藏以学习内部关系。",
+      "parameters": [
+        "claddingProfile",
+        "insulationClearanceM"
+      ],
+      "unknown_parameters": [
+        "claddingProfile",
+        "insulationClearanceM"
+      ],
+      "avoid": "不将蒙皮与铜内火箱合并，不填实中间全部空间。"
+    }
+  ],
+  "macro_dimensions": [
+    {
+      "id": "outerOverallLengthM",
+      "raw_field": "Outside length of fire-box overall",
+      "raw": "10ft. 5¾in.",
+      "m": 3.19405,
+      "source": "E1935",
+      "printed_page": 320,
+      "status": "read_from_original"
+    },
+    {
+      "id": "outerBottomLengthM",
+      "raw_field": "Outside length of fire-box at bottom",
+      "raw": "6ft. 8in.",
+      "m": 2.032,
+      "source": "E1935",
+      "printed_page": 320,
+      "status": "read_from_original"
+    },
+    {
+      "id": "outerBottomWidthM",
+      "raw_field": "Outside width of fire-box at bottom",
+      "raw": "7ft. 9in.",
+      "m": 2.3622,
+      "source": "E1935",
+      "printed_page": 320,
+      "status": "read_from_original"
+    },
+    {
+      "id": "innerTopLengthM",
+      "raw_field": "Interior length at top",
+      "raw": "8ft. 11¾in.",
+      "m": 2.73685,
+      "source": "E1935",
+      "printed_page": 320,
+      "status": "read_from_original"
+    },
+    {
+      "id": "innerWidthAtBoilerCentreM",
+      "raw_field": "Interior width at boiler centre",
+      "raw": "5ft. 4½in.",
+      "m": 1.6383,
+      "source": "E1935",
+      "printed_page": 320,
+      "status": "read_from_original"
+    },
+    {
+      "id": "copperFireboxIncludingChamberM",
+      "raw_field": "正文：铜火箱，包括燃烧室",
+      "raw": "10ft. 1¾in.",
+      "m": 3.09245,
+      "source": "E1935",
+      "printed_page": 319,
+      "status": "read_from_original_not_a_standalone_chamber_length"
+    }
+  ],
+  "canonical_unknowns": {
+    "innerCrownCamber": null,
+    "waterGapProfile": null,
+    "innerBottomProfile": null,
+    "outerThroatBoundary": null,
+    "barrelRearBoundary": null,
+    "chamberInsertionM": null,
+    "foundationRingDepthM": null,
+    "tubeHoleCoordinates": null,
+    "preciseRearTubeplatePlacementM": null,
+    "zOuterFireboxFrontReference": null,
+    "zCopperRearReference": null,
+    "zChamberFrontTubeplate": null
+  },
+  "parameter_policy": "实现若必须填值，应把值放在独立inferred教学配置中，并记录可替换状态；不得把默认弧度、间隙、插入量、孔布局标成原图尺寸。",
+  "validation_rules": [
+    "热空间能从火箱连续走到燃烧室、烟管和烟箱；接口不得被演示封盖堵死。",
+    "水套能从侧水腿/冠板外连到锅筒管外区域；不得跨过铜壁与热空间直接连通。",
+    "基础环中央仍开口，炉排和灰箱是独立对象。",
+    "外承压壳、铜内壳、保温、流线蒙皮有独立身份，可分别显隐。",
+    "燃烧室可伸入锅筒包络；检查不是物理相交错误而是双域套合关系。",
+    "外火箱总长、内顶部长度、铜火箱含燃烧室长保持原字段，不以一个缩放因子混同。",
+    "不为修补1935图上约3.7%定位冲突拉伸已知锅筒长度；沿用placement-study的inferred平移范围。",
+    "不生成未经证实的精确孔阵、stays数量或铜顶板弧度。",
+    "不把外火箱overall与燃烧室长度串接相加；独立显示外前参考、铜后壁、燃烧室前管板，并检验各原字段的实际基准。"
+  ],
+  "retrieval_limit": {
+    "action": "本线程临时HTTP读取官方页面/图源",
+    "status": "blocked_403",
+    "target_domains": [
+      "blog.railwaymuseum.org.uk",
+      "www.sirnigelgresley.org.uk"
+    ],
+    "resolution": "官方文本经web工具可读；两张关键照片由父线程通过正常云浏览器实际查看并报告，未下载/发布原图。"
+  },
+  "artifacts_policy": "此文件仅含自写关系/函数规则、事实尺寸和官方链接；无原刊图、官方照片或受限素材。",
+  "axial_interface_constraints": {
+    "critical_rule": "外火箱overall不是“燃烧室之外的后部块长”。不得先接满3.19405m，再在它前方无条件追加燃烧室。",
+    "what_the_source_establishes": "1935原刊分别给外火箱总包络长3.19405m与含燃烧室铜火箱总长3.09245m；正文还区分内铜喉板和外喉板。",
+    "what_remains_unknown": "外总长前端参考相对外喉板具体连接面、铜后壁基准、燃烧室前管板的精确轴向对应；不能从总布置外形或单张拆修图确定。",
+    "outer_extent_interpretation": "把overall理解为外火箱整体轴向包络，包含其自身前部过渡，而不是仅后部直壁箱体；其与燃烧室所在锅筒包络如何分界仍未知。",
+    "interfaces": {
+      "zOuterFireboxFrontReference": {
+        "value_m": null,
+        "status": "independent_unknown_dimension_reference_not_automatically_a_physical_joint"
+      },
+      "zCopperRearReference": {
+        "value_m": null,
+        "status": "independent_unknown"
+      },
+      "zChamberFrontTubeplate": {
+        "value_m": null,
+        "status": "independent_unknown"
+      },
+      "zOuterFireboxRearReference": {
+        "value_m": null,
+        "status": "derived_only_after_correct_outer_front_reference_is_chosen"
+      }
+    },
+    "nominal_length_constraints": [
+      {
+        "expression": "zOuterFireboxFrontReference - zOuterFireboxRearReference = 3.19405",
+        "apply_when": "两个变量确已代表原刊外火箱overall基准，且同一轴向。"
+      },
+      {
+        "expression": "zChamberFrontTubeplate - zCopperRearReference = 3.09245",
+        "apply_when": "两个变量确已对应正文铜火箱含燃烧室总长的前后基准；否则仅保留总包络约束，不能强行套进未核实的截面站位。"
+      }
+    ],
+    "arithmetic_difference_m": 0.1016,
+    "difference_warning": "0.1016m仅是两个不同长度字段之差。不得等同单侧水套厚度、两个端部间隙之和或燃烧室插入量，除非基准面另有证据。",
+    "historical_design_comparison": "SNG107说的管板相对早先设计前移1ft是设计比较，不自动成为本1935模型的燃烧室长度或插入量；没有0.5m的来源。",
+    "placement_study_use": "Z约-2.35m的1935尺寸后端仍仅为可替换图上注册参考，不据此同时钉死所有上述物理接口。",
+    "closure_strategy": "先以同轴剖面拓扑保持热域/水域连通，三接口可调并显示unknown/inferred。原长度不拉伸，未核基准不强制闭合。"
+  }
+}

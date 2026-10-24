@@ -1,0 +1,142 @@
+{
+  "schema_version": "a4-motion-placement-1",
+  "source": {
+    "url": "https://theengineer.markallengroup.com/production/2018/09/Gresley-Silver-Jubilee.pdf",
+    "printed_page": 320,
+    "pdf_page": 3,
+    "subject": "1935 Silver Link",
+    "viewed": "本线程从原PDF渲染并实际查看原图局部、取点网格；未在交付目录保存原图。"
+  },
+  "coordinate_system": {
+    "page_px": [
+      1777,
+      2664
+    ],
+    "pixel_x_positive": "向右/向前",
+    "model_z_zero": "D2中间驱动轴",
+    "model_z_positive": "向前",
+    "d2_x_px": 967.5,
+    "m_per_px": 0.017331764705882352
+  },
+  "hard_axle_references_m": {
+    "D3": -2.2098,
+    "D2": 0,
+    "D1": 2.2098,
+    "bogie_rear": 3.8862,
+    "bogie_front": 5.7912
+  },
+  "observations": [
+    {
+      "id": "outside_cylinder_group",
+      "pixel_x_interval": [
+        1210,
+        1267
+      ],
+      "endpoint_uncertainty_px": 5,
+      "image_z_interval_m": [
+        4.202952941176471,
+        5.190863529411764
+      ],
+      "centre_z_from_midpoint_m": 4.696908235294117,
+      "recommended_centre_z_working_range_m": [
+        4.5,
+        4.95
+      ],
+      "confidence": "high_relative_axles_medium_for_exact_edges",
+      "meaning": "图中外缸组/缸体轮廓在前转向架后轴和前轴之间。此区间是外缸组轴向包络，不是缸内工作长度或活塞行程。"
+    },
+    {
+      "id": "crosshead_small_end_pin",
+      "pixel_x_nominal": 1167,
+      "pixel_y_nominal": 707,
+      "uncertainty_px": 5,
+      "z_from_pixel_m": 3.457687058823529,
+      "recommended_z_working_range_m": [
+        3.3,
+        3.65
+      ],
+      "confidence": "medium_high",
+      "meaning": "主连杆前端可辨圆形销/十字头区在最前驱动轴前方、前转向架后轴稍后。仅是图示运动相位的可见位置，不是全过程位置中心或行程限位。"
+    },
+    {
+      "id": "piston_rod_and_guide_corridor",
+      "pixel_x_interval": [
+        1162,
+        1215
+      ],
+      "image_z_interval_m": [
+        3.3710282352941174,
+        4.2896117647058825
+      ],
+      "recommended_z_working_range_m": [
+        3.35,
+        4.3
+      ],
+      "confidence": "medium",
+      "meaning": "十字头至汽缸后部之间的往复杆/导向线束区域，跨越前转向架后轴附近。未把每条薄线独立识别为活塞杆、导板或配汽杆，不能据此锁定其高度。"
+    },
+    {
+      "id": "main_connecting_rod",
+      "from": "D2附近可见曲柄销",
+      "to": "crosshead_small_end_pin",
+      "projected_z_span_approx_m": [
+        3.3,
+        3.6
+      ],
+      "confidence": "medium",
+      "meaning": "图上主连杆从D2跨过D1，延至靠近前转向架后轴的十字头；不是仅D2到D1之间的2.2m短杆。此范围是当前图示投影，不是工程连杆中心距。"
+    }
+  ],
+  "ordered_layout": "D2 0 -> D1 2.2098 -> 十字头约3.45 -> bogie后轴3.8862 -> 外缸组约4.2至5.2 -> bogie前轴5.7912（m，向前）。",
+  "registration_recommendation": {
+    "status": "replaceable_inferred_registration",
+    "outside_cylinder_group_centre_nominal_m": 4.7,
+    "crosshead_visible_pose_nominal_m": 3.45,
+    "reason_to_replace_old_synthetic": "缸中心Z=3.35m < 前bogie后轴3.8862m，位于其负Z侧，不符图中两bogie轴之间的缸体组；2.2m仅近似相邻驱动轴距，不能解释D2至前bogie附近十字头的图示跨度。",
+    "do_not": "不得直接把3.45m当最终连杆中心距；需在统一相位、D2曲柄半径和活塞杆轴线约束下重新闭链。"
+  },
+  "uncertainty_policy": "像素区间含模糊线条、外缸组轮廓身份及原刊图形比例误差；是教学注册工作范围，不是历史制造公差或60009测量。",
+  "validation": [
+    "外缸组主体在两根前bogie轴之间。",
+    "十字头在最前驱动轴前方、前bogie后轴稍后。",
+    "主连杆接D2而非把相邻驱动轴距误用为主连杆长度。",
+    "保留原杆件局部形状/绑定方向，整体位置与闭链参数分开。"
+  ],
+  "not_established": [
+    "精确连杆中心距。",
+    "精确汽缸轴线高度和倾斜角。",
+    "活塞杆/导板每一条线的唯一身份。",
+    "60009特定年份的精确运动系统安装值。"
+  ],
+  "image_assets_in_output": false,
+  "qa_fixture_registration": {
+    "status": "parent_supplied_inferred_model_settings_not_source_measurements",
+    "cylinder_centre_z_m": 4.75,
+    "connecting_rod_length_m": 3.5,
+    "crosshead_travel_z_m": [
+      3.17,
+      3.83
+    ],
+    "piston_rod_offset_m": 1.25,
+    "guide_z_m": [
+      3.0,
+      4.0
+    ],
+    "cylinder_interior_z_m": [
+      4.35,
+      5.15
+    ],
+    "source_consistency_checks": [
+      "4.75m落在1935图上外缸组中心的inferred区间[4.5,4.95]内。",
+      "图示十字头区间[3.3,3.65]落在新夹具往复范围[3.17,3.83]内；这不是原图证实了行程两端。",
+      "3.5m杆长与图示主杆投影量级相符，但原图没有据此给出工程杆长。",
+      "导轨、缸内空间和活塞杆offset是模型闭链选择，未升级为1935或60009实测尺寸。"
+    ],
+    "legacy_failed_fixture": {
+      "connecting_rod_length_m": 2.2,
+      "cylinder_centre_z_m": 3.35,
+      "reason": "3.35 < 前bogie后轴3.8862，与图上外缸组在bogie两轴之间不符；2.2m不足以解释D2至前bogie附近十字头的投影跨度。",
+      "preserve_for_regression_test": true
+    }
+  }
+}
