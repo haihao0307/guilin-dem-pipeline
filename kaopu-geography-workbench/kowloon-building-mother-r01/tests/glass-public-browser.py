@@ -1,7 +1,7 @@
-# R13 default large candidate focused visual gate; existing workflow unchanged.
+# R13 public verification, no request overrides and all published file hashes.
 from pathlib import Path as _R13Path
 import runpy as _R13run
-_R13run.run_path(str(_R13Path(__file__).parent.parent/'building-mother-r13'/'supplement-qa.py'),run_name='__main__')
+_R13run.run_path(str(_R13Path(__file__).parent.parent/'building-mother-r13'/'browser-qa.py'),run_name='__main__')
 raise SystemExit(0)
 # R12 independent candidate UI gate; prior gates below preserved.
 from pathlib import Path as _R12Path
