@@ -50,6 +50,7 @@ try:
   rail=page.evaluate('''()=>{const a=semanticInspection.registry;return{rails:a.filter(r=>r.classKey==='handrail').length,stairs:a.filter(r=>r.classKey==='stair').length};}''');assert rail['rails'] and rail['stairs'];report['railClassification']=rail
   page.screenshot(path=str(out/'lowrise-relations-full-page.png'),full_page=True)
   action(lambda:page.set_viewport_size({'width':390,'height':844}));capture('mobile-lowrise');assert page.locator('#view').bounding_box()['width']>=360;page.screenshot(path=str(out/'mobile-full-page.png'),full_page=True)
+  page.locator('#learningSketchLink').click();page.wait_for_function('window.sketchInspection?.ready&&!sketchInspection.busy');assert page.evaluate('sketchInspection.result.counts.windows')==8;page.screenshot(path=str(out/'r11-learning-link-r06.png'));page.locator('#backToBuildings').click();settle();assert page.evaluate('semanticInspection.buildings.length')==3;report['singleEntryRoundTrip']=True
   assert not report['errors'] and not report['httpFailures'],report;report['passed']=True;save();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc());save();raise
