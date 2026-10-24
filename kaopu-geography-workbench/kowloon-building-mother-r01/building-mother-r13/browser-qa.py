@@ -91,7 +91,7 @@ try:
   report['kccObservedWindows']=[]
   for actualFloor in ['5','18']:
    page.locator('[data-candidate-floor]').select_option(actualFloor);page.wait_for_function('f=>semanticInspection.candidateViewer.state.actualFloor===Number(f)&&semanticInspection.candidateViewer.state.ready&&!semanticInspection.candidateViewer.state.busy',arg=actualFloor)
-   w=page.evaluate('semanticInspection.candidateViewer.model.observedWindows');assert len(w)>=4 and all(x['actualDimensions'] is None for x in w),w;report['kccObservedWindows'].append({'floor':actualFloor,'windows':w})
+   w=page.evaluate('semanticInspection.candidateViewer.model.observedWindows');assert len(w)==8 and all(x['actualDimensions'] is None for x in w),w;report['kccObservedWindows'].append({'floor':actualFloor,'windows':w})
    page.locator('#kccCandidateCanvas').screenshot(path=str(out/('kcc-floor'+actualFloor+'-observed-windows.png')))
   assert not page.evaluate('semanticInspection.candidateViewer.state.errors');page.locator('[data-building=lowrise]').click();
   action(lambda:page.set_viewport_size({'width':390,'height':844}));capture('mobile-lowrise');assert page.locator('#view').bounding_box()['width']>=360;page.screenshot(path=str(out/'mobile-full-page.png'),full_page=True)

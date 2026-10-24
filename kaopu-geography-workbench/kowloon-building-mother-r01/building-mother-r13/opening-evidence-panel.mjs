@@ -12,7 +12,7 @@ export function openingFaceInventory(building){
   rows.push({face:'北侧源面 p120',sourcePatchId:'p120',status:'observed',count:north.length,label:`${north.length} 组观察窗：已接设计墙洞与框玻璃；真实净尺寸、开启方式和室内层位未核。`});
   rows.push({face:'东侧源面 p112 / p113 / p114',sourcePatchId:'p112',status:'observed_glazed_group',count:east.length,label:`${east.length} 组已观察玻璃开口：保留原静态分格；窗或门类型、下边界及室内墙洞关系未完全核准。`});
   rows.push({face:'其他立面 / 底层 / 遮挡区域',sourcePatchId:null,status:'unknown',count:null,label:'逐窗位置与洞口类型未完成核对；未生成不等于没有窗，不用重复窗补满。'});
- } else rows.push({face:caseId==='kcc'?'龍總各外立面':'仓库各外立面',sourcePatchId:null,status:'unknown',count:null,label:caseId==='kcc'?'源标准层平面已接入每类4处明确侧窗，见下方独立三维候选；真实楼壳尚未配准，全栋外窗总数未知，未把设备和暗带认成窗。':'人员门、货物门、装卸口与窗分别待证；不把每个矩形构件当窗或货车入口。'});
+ } else rows.push({face:caseId==='kcc'?'龍總各外立面':'仓库各外立面',sourcePatchId:null,status:'unknown',count:null,label:caseId==='kcc'?'源标准层平面已接入每类8处已核窗区间（覆盖六户，非全窗统计），见下方独立三维候选；真实楼壳尚未配准，全栋外窗总数未知，未把设备和暗带认成窗。':'人员门、货物门、装卸口与窗分别待证；不把每个矩形构件当窗或货车入口。'});
  return{caseId,rows,absenceInferred:false,actualDimensionsVerified:false};
 }
 export function showOpeningEvidence(element,building,onSelectFace){
