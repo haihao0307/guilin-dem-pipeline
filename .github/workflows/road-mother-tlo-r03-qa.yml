@@ -25,7 +25,7 @@ jobs:
         run: |
           node kaopu-geography-workbench/road-mother-tlo-r03/test-model.mjs
           python3 -m http.server 8080 --directory kaopu-geography-workbench/road-mother-tlo-r03 >/tmp/road-http.log 2>&1 &
-          node kaopu-geography-workbench/road-mother-tlo-r03/browser-qa.mjs
+          node kaopu-geography-workbench/road-mother-tlo-r03/drain-qa.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
