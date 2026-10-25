@@ -20,3 +20,9 @@ Official topology and unresolved dimensions: steam-evidence/OFFICIAL_STEAM_CHAIN
 Inherited R30 browser and saved-point results remain scoped to the R30 code. The old baseline negative-control regression proves its known failures can still be reproduced; it is not a failure measured in every new candidate. R31 must earn its own interface, finite-solid neighbor and whole-browser results. Until those are recorded, this revision is local implementation, not a verified complete steam network or exact 60009 model.
 
 Official images are not included. Earlier analytic-source provenance and required research attribution remain unchanged. No final public release is claimed.
+
+## Actual GPU numerical failure and bounded correction
+
+Commit 229f6c4 rendered the 12 whole states, UI controls, legacy720 equivalence and both 1440 views, but failed 58 of 1,068 steam scalar comparisons (maximum 0.970127 mm). Diagnostic commit 75708031 independently measured inaccurate native sine/cosine on the software GPU. Neither run is a complete acceptance.
+
+The current correction changes candidate-only GLSL evaluation, not geometry, dimensions, source CPU formulas or the 4 micrometre gate: bounded beta polynomials, equivalent algebraic circular fillets, and consistent candidate host/slider beta helpers. Original dynamic.js and baseline native branches remain. precision-study preserves original failure, complete samples and runnable equivalence/CPU locks. Actual post-correction GPU and whole-browser verification is pending. The early GPU gate also checks original same-Time crank/slider coordinates so a newly fixed port cannot hide a drifting host.

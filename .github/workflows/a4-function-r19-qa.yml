@@ -39,6 +39,9 @@ jobs:
           node test-steam-inspection.js
           node build-steam-gpu-samples.js
           node test-steam-audit-lock.js
+          node precision-study/run.js
+          node precision-study/verify-installed.js .
+          node test-steam-numeric-integration.js
           python steam-neighbor-audit/replay_compact.py | tee STEAM_NEIGHBOR_REPLAY_QA.json
           python steam-neighbor-audit/replay_hardware.py | tee STEAM_HARDWARE_REPLAY_QA.json
           python outer-joint-audit/reconstruct_inputs.py

@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert'),crypto=require('crypto'),load=require('./load-whole-scene'),R=__dirname,old=require('./precision-study/steam-path.original'),now=require('./steam-path'),A=old.create(),B=now.create(),live=load();
+assert.deepStrictEqual(now.parameters,old.parameters);
+for(const name of ['point','scalar','pathDistance','fillet'])if(old[name])assert.strictEqual(String(now[name]),String(old[name]),'CPU formula changed '+name);
+for(const name of ['parts','hostCuts','domains','routes','portDefinitions','connections'])if(A[name])assert.deepStrictEqual(B[name],A[name],'Geometry data changed '+name);
+assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(R,'dynamic.js'))).digest('hex'),'d85798e4c0cc86b38e003876d71149642f6e7b909cfc856d2c1d9461d8d45497');
+const D=live.dynamic;assert(D.glsl.includes('installationCandidate==1?dynCandidateBetaSinCos(inc):vec2(sin(inc),cos(inc))'));assert(D.glsl.includes('vec2 dynRotate(vec2 v,float a){float c=cos(a),s=sin(a);'));
+assert(D.glsl.includes('installationCandidate==1?dynCandidateBetaRotate(relative,angle):dynRotate(relative,angle)'));
+const executable=B.commonSource.replace(/\/\/[^\n]*/g,'');assert(!executable.includes('acos(')&&!executable.includes('atan(')&&!executable.includes('tan('));
+const result={status:'PASS_CPU_GEOMETRY_AND_ACTUAL_ADAPTER_LOCK',parametersAndASTUnchanged:true,retainedDynamicFileUnchanged:true,baselineNativeBranchesPreserved:true,genericThetaRotationUnchanged:true,steamSourceFileSHA256:crypto.createHash('sha256').update(fs.readFileSync(path.join(R,'steam-path.js'))).digest('hex'),adapterSHA256:crypto.createHash('sha256').update(fs.readFileSync(path.join(R,'steam-path-adapter.js'))).digest('hex'),gpuProof:false,tolerance_m:4e-6};fs.writeFileSync(path.join(R,'STEAM_NUMERIC_INTEGRATION_QA.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
