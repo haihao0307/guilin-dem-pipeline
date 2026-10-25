@@ -30,9 +30,23 @@ jobs:
         run: |
           python3 -m http.server 8080 > /tmp/road-server.log 2>&1 &
           node kaopu-geography-workbench/road-mother-tlo-r01/browser-qa.mjs
+      - name: Verify published bytes and public interactions
+        env:
+          QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/road-mother-tlo-r01/
+          QA_OUT: public-qa-output
+        run: |
+          for attempt in $(seq 1 60); do
+            curl -fsSL "$QA_URL/renderer.mjs?verify=$GITHUB_SHA" -o /tmp/live-road-renderer.mjs && cmp -s /tmp/live-road-renderer.mjs kaopu-geography-workbench/road-mother-tlo-r01/renderer.mjs && break
+            sleep 10
+          done
+          cmp /tmp/live-road-renderer.mjs kaopu-geography-workbench/road-mother-tlo-r01/renderer.mjs
+          node kaopu-geography-workbench/road-mother-tlo-r01/browser-qa.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: road-mother-tlo-r01-browser-proof
-          path: qa-output
+          path: |
+            qa-output
+            public-qa-output
           retention-days: 14
+
