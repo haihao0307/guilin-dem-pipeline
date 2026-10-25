@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('p
 const C={};C.window=C;vm.createContext(C);
 for(const f of ['scene.js','dynamic.js','outside_valve_solver.js','valve-dynamic.js','gresley_solver.js','topology-parameters.js','side_offset_solver.js','gresley-dynamic.js','stack-fields.js','stack-dynamic.js','middle-chest-fields.js','middle-chest-dynamic.js','frame-support-fields.js','frame-support-dynamic.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,f),'utf8'),C,{filename:f});
 const D=C.DYNAMIC,G=D.gresleySolver,P=C.TOPOLOGY_PARAMETERS,H=P.chest;
-assert.deepStrictEqual(fs.readFileSync(path.join(__dirname,'scene.js')),fs.readFileSync(path.join(__dirname,'../r28/scene.js')));
+assert.strictEqual(require('crypto').createHash('sha256').update(fs.readFileSync(path.join(__dirname,'scene.js'))).digest('hex'),'8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da','Original R28 scene bytes must remain unchanged');
 let minEyeGuide=Infinity,minRearCoverage=Infinity,minHeadEnd=Infinity,maxResidual=0,maxRigidError=0;
 for(let k=0;k<=1440;k++){
  const theta=2*Math.PI*k/1440,g=G.pose(theta);maxResidual=Math.max(maxResidual,g.diagnostics.maxLengthError);
