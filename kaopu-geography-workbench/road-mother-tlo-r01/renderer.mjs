@@ -11,17 +11,17 @@ float roadY(float x){return .24-.025*abs(x);}
 vec3 local(vec3 p){p.x-=bend*(p.z*p.z/324.-.33);return p;}
 float damage(vec2 p){vec2 q=(p-vec2(-dim.x*dim.y*.25,2.))/vec2(.85,1.3);return phase==1?.16*exp(-dot(q,q)*2.):0.;}
 vec2 hitmin(vec2 a,vec2 b){return a.x<b.x?a:b;}
-vec2 scene(vec3 world){vec3 p=local(world);float w=dim.x*dim.y*.5;float s=dim.z;float c=dim.w;float ry=roadY(p.x)-damage(p.xz)+.0012*wave(p.xz);vec2 h=vec2(box(p-vec3(0.,ry-.16,0.),vec3(w,.16,18.)),1.);
+vec2 scene(vec3 world){vec3 p=local(world);float w=dim.x*dim.y*.5;float s=dim.z;float c=dim.w;float ry=roadY(p.x)-damage(p.xz)+.00025*wave(p.xz);vec2 h=vec2(box(p-vec3(0.,ry-.16,0.),vec3(w,.16,18.)),1.);
 float sy=roadY(w)+.14;
-h=hitmin(h,vec2(box(p-vec3(-w-.2-s*.5,sy-.12,0.),vec3(s*.5,.12,18.))-.001*wave(p.xz),2.));
-h=hitmin(h,vec2(box(p-vec3(w+.45+c+.2+s*.5,sy-.12,0.),vec3(s*.5,.12,18.))-.001*wave(p.xz),2.));
-h=hitmin(h,vec2(box(p-vec3(w+.35+c*.5,roadY(w)-.03,0.),vec3(c*.5,.12,18.))-.001*wave(p.xz),3.));
+h=hitmin(h,vec2(box(p-vec3(-w-.2-s*.5,sy-.12,0.),vec3(s*.5,.12,18.))-.0002*wave(p.xz),2.));
+h=hitmin(h,vec2(box(p-vec3(w+.45+c+.2+s*.5,sy-.12,0.),vec3(s*.5,.12,18.))-.0002*wave(p.xz),2.));
+h=hitmin(h,vec2(box(p-vec3(w+.35+c*.5,roadY(w)-.03,0.),vec3(c*.5,.12,18.))-.0002*wave(p.xz),3.));
 h=hitmin(h,vec2(box(vec3(abs(p.x)-w-.1,p.y-sy+.1,p.z),vec3(.1,.1,18.)),4.));
 h=hitmin(h,vec2(box(p-vec3(w+.45+c+.1,sy-.1,0.),vec3(.1,.1,18.)),4.));
 // Spatial repetition evaluates only the nearest lamp cell, never an object loop.
 float z=clamp(round(p.z/12.),-1.,1.)*12.;vec3 l=p-vec3(-w-.25-s*.75,sy,z);float pole=max(length(l.xz)-.052,abs(l.y-2.6)-2.6);h=hitmin(h,vec2(pole,6.));
 h=hitmin(h,vec2(box(l-vec3(.6,5.15,0.),vec3(.65,.055,.055)),6.));h=hitmin(h,vec2(box(l-vec3(1.15,5.08,0.),vec3(.29,.055,.13)),6.));
-if(phase==2){vec3 q=p-vec3(-w*.5,roadY(-w*.5),3.);float trench=box(q-vec3(0.,-.025,0.),vec3(w*.38,.035,4.));h=hitmin(h,vec2(trench,8.));float zz=clamp(round(q.z/2.),-2.,2.)*2.;vec3 co=q-vec3(w*.42,.34,zz);float cone=max(length(co.xz)-(.21-.20*clamp(co.y+.34,0.,.68)/.68),abs(co.y)-.34);h=hitmin(h,vec2(cone,7.));h=hitmin(h,vec2(box(co-vec3(0.,-.32,0.),vec3(.25,.035,.25)),7.));}
+if(phase==2){vec3 q=p-vec3(-w+dim.y*.5,roadY(-w+dim.y*.5),3.);float trench=box(q-vec3(0.,-.025,0.),vec3(dim.y*.38,.035,4.));h=hitmin(h,vec2(trench,8.));float zz=clamp(round(q.z/2.),-2.,2.)*2.;vec3 co=q-vec3(dim.y*.42,.34,zz);float cone=max(length(co.xz)-(.21-.20*clamp(co.y+.34,0.,.68)/.68),abs(co.y)-.34);h=hitmin(h,vec2(cone,7.));h=hitmin(h,vec2(box(co-vec3(0.,-.32,0.),vec3(.25,.035,.25)),7.));}
 return vec2(h.x*.72,h.y);}
 vec3 normalAt(vec3 p){vec2 e=vec2(.002,0.);return normalize(vec3(scene(p+e.xyy).x-scene(p-e.xyy).x,scene(p+e.yxy).x-scene(p-e.yxy).x,scene(p+e.yyx).x-scene(p-e.yyx).x));}
 vec3 palette(float id){if(id<1.5)return vec3(.27,.46,.62);if(id<2.5)return vec3(.82,.61,.36);if(id<3.5)return vec3(.32,.61,.52);if(id<4.5)return vec3(.70,.72,.74);if(id<5.5)return vec3(.98,.92,.62);if(id<6.5)return vec3(.37,.41,.48);if(id<7.5)return vec3(.91,.40,.21);if(id<8.5)return vec3(.47,.31,.25);return vec3(.25);}
@@ -32,7 +32,7 @@ if(id==4.){base=vec3(.67,.66,.61)+m*.015;if(fract(q.z)<.025)base*=.75;}
 if(id==6.)base=vec3(.39,.42,.44)+.008*wave(q.yz);
 if(id==7.){base=mod(q.y*5.,2.)>.9?vec3(.84,.83,.77):vec3(.85,.31,.12);}
 if(id==8.)base=vec3(.29,.23,.18)+m*.025;
-if(mode==1)base=palette(id);float lit=.48+.52*max(dot(n,normalize(vec3(-.6,1.,.4))),0.);float ao=clamp(scene(p+n*.17).x/.12,.55,1.);color=base*lit*ao;float spec=pow(max(dot(reflect(-normalize(vec3(-.6,1.,.4)),n),-rd),0.),32.);color+=spec*(id==6.?.24:.025);if(int(id)==selected)color=mix(color,vec3(.96,.79,.36),.32);color=mix(color,vec3(.87,.88,.88),1.-exp(-t*.0015));}
+if(mode==1)base=palette(id);float lit=.48+.52*max(dot(n,normalize(vec3(-.6,1.,.4))),0.);float ao=clamp(scene(p+n*.17).x/.12,.55,1.);color=base*lit*ao;float spec=pow(max(dot(reflect(-normalize(vec3(-.6,1.,.4)),n),-rd),0.),32.);color+=spec*(id==6.?.24:.025);if(int(id)==selected)color*=1.055;color=mix(color,vec3(.87,.88,.88),1.-exp(-t*.0015));}
 else if(rd.y<-.001){float g=(-.28-eye.y)/rd.y;vec3 p=eye+rd*g;float grid=1.-smoothstep(.015,.04,min(abs(fract(p.x*.2)-.5),abs(fract(p.z*.2)-.5)));color-=.024*grid;float d=length(vec2(max(abs(local(p).x)-dim.x*dim.y*.5-dim.z-2.,0.),max(abs(p.z)-18.,0.)));color*=.91+.09*smoothstep(0.,3.,d);}
 if(pick==1){frag=vec4(id/255.,0.,0.,1.);return;}frag=vec4(pow(color,vec3(.92)),1.);}`;
 export function createRenderer(canvas,{onPick=()=>{}}={}){
@@ -50,5 +50,5 @@ export function createRenderer(canvas,{onPick=()=>{}}={}){
  canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const old=pointers.get(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);moved+=Math.abs(e.clientX-old[0])+Math.abs(e.clientY-old[1]);if(pointers.size===2){const a=[...pointers.values()],n=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);distance=Math.max(13,Math.min(85,distance*pinch/Math.max(n,1)));pinch=n;}else{yaw-=(e.clientX-old[0])*.008;pitch=Math.max(.16,Math.min(1.5,pitch+(e.clientY-old[1])*.006));}invalidate();});
  canvas.addEventListener('pointerup',e=>{if(pointers.size===1&&moved<5)selectAt(e.clientX,e.clientY);pointers.delete(e.pointerId);});canvas.addEventListener('pointercancel',e=>pointers.delete(e.pointerId));canvas.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(13,Math.min(85,distance*Math.exp(e.deltaY*.001)));invalidate();},{passive:false});
  new ResizeObserver(resize).observe(canvas);resize();
- return {setParameters(p){Object.assign(params,p);invalidate();},setSelected(id){selected=id;invalidate();},resize,resetView(){yaw=.70;pitch=.66;distance=canvas.clientWidth<600?52:44;invalidate();},setView(v){yaw=v==='section'?1.57:.0;pitch=v==='plan'?1.49:v==='section'?.23:.66;distance=v==='section'?33:46;invalidate();},getDiagnostics(){return {ready:true,frames,lastSubmissionMs:lastMs,width:canvas.width,height:canvas.height,glError:gl.getError(),objectTriangles:0,screenCarrierTriangles:1,geometry:'analytic function fields',waveRequired:true,parameters:{...params},camera:{yaw,pitch,distance}};},readPixels(){draw();const p=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,p);return p;}};
+ return {setParameters(p){const changed=['lanes','laneWidth','sidewalkWidth','cycleWidth'].some(k=>p[k]!==undefined&&p[k]!==params[k]);Object.assign(params,p);if(changed){const total=params.lanes*params.laneWidth+params.sidewalkWidth*2+params.cycleWidth+1;distance=Math.max(distance,canvas.clientWidth<600?64+Math.max(0,total-16)*2.3:54+Math.max(0,total-16)*.9);}invalidate();},setSelected(id){selected=id;invalidate();},resize,resetView(){yaw=canvas.clientWidth<600?.30:.70;pitch=.66;distance=canvas.clientWidth<600?64:54;invalidate();},setView(v){yaw=v==='section'?1.57:.0;pitch=v==='plan'?1.49:v==='section'?.23:.66;distance=v==='section'?33:46;invalidate();},getDiagnostics(){return {ready:true,frames,lastSubmissionMs:lastMs,width:canvas.width,height:canvas.height,glError:gl.getError(),objectTriangles:0,screenCarrierTriangles:1,geometry:'analytic function fields',waveRequired:true,parameters:{...params},camera:{yaw,pitch,distance}};},readPixels(){draw();const p=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,p);return p;}};
 }
