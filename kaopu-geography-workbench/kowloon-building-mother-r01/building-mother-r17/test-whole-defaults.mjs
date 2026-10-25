@@ -8,3 +8,5 @@ for(let i=1;i<=20;i++){const m=materialForRecord({caseId:'kcc',geometryKind:'uns
 assert.equal(materialForRecord({caseId:'warehouse',geometryKind:'unsigned-shell-surface',classKey:'wall',sourcePatchId:'p012'}).type,3);
 assert.equal(materialForRecord({caseId:'lowrise',geometryKind:'unsigned-shell-surface',classKey:'wall',sourcePatchId:'p001'}).type,1);
 console.log(JSON.stringify({passed:true,defaultSixHosts:true,semanticAndLegacyColorButtonsHidden:true,kccFacadeMaterials:20,scope:'static wiring; browser whole-scene verification pending'}));
+
+for(const cls of ['roof','floor','stair','column','beam','elevator','handrail','UNKNOWN']){const m=materialForRecord({caseId:'kcc',classKey:cls,color:'#ff00ff'});assert.notEqual(m.color,'#ff00ff');assert.equal(m.type,1);}

@@ -8,7 +8,11 @@ export const materialOverrides={};
 export function setMaterialBase(id,value){if(!MATERIAL_PRESETS[id]||!/^#[0-9a-f]{6}$/i.test(value))throw Error('Invalid material color');materialOverrides[id]=value;}
 export function materialForRecord(r){const id=r.caseId??({'B367642137201063C0':'lowrise','B359971994401063C0':'kcc','B369121858401063C0':'warehouse'}[r.buildingId]),p=MATERIAL_PRESETS[id];
  if(!p)return{color:r.color,type:0,accent:r.color};
- let color=r.color,type=0,accent=p.accent;
+ let color='#b9b8b3',type=1,accent=p.accent;
+ // Neutral material candidates replace legacy diagnostic colors. These are
+ // not claims that the real building's hidden structure was surveyed.
+ const candidates={UNKNOWN:'#b9b8b3',wall:'#d6d4cb',column:'#bdbcb5',beam:'#bdbcb5',stair:'#bbb9b1',floor:'#b5b4ad',roof:'#777a76',elevator:'#9ca39f',handrail:'#737c79'};
+ if(candidates[r.classKey])color=candidates[r.classKey];
  const outer=r.geometryKind==='unsigned-shell-surface'&&r.classKey==='wall';
  if(outer||(id==='lowrise'&&r.classKey==='wall')||(id==='warehouse'&&r.classKey==='wall')){color=materialOverrides[id]??p.base;type=p.type;}
  if(r.classKey==='door'){color=r.part==='leaf'?'#8e6b4e':'#726b60';type=r.part==='leaf'?4:1;}

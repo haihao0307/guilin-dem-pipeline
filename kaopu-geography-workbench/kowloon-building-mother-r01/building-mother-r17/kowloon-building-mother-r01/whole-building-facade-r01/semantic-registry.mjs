@@ -57,7 +57,7 @@ export function packRegistry(records){const width=Math.max(1,records.length),dat
 export const SEMANTIC_SHADE=`#version 300 es
 precision highp float;precision highp int;
 uniform sampler2D uHit,uNormal,uSemantic;uniform int uSemanticCount,uSemanticMode,uMaterialMode,uMaterialBands;uniform float uSelectedId;
-uniform vec3 uCameraEye,uTarget;uniform float uFov;uniform vec2 uResolution;uniform ivec4 uTile;
+uniform vec2 uInspectionLights;uniform vec3 uCameraEye,uTarget;uniform float uFov;uniform vec2 uResolution;uniform ivec4 uTile;
 out vec4 outColor;
 vec3 ray(){vec2 uv=(2.*gl_FragCoord.xy-uResolution)/uResolution.y;vec3 f=normalize(uTarget-uCameraEye),r=normalize(cross(f,abs(f.y)>.999?vec3(0,0,1):vec3(0,1,0)));return normalize(f+tan(uFov*.5)*(uv.x*r+uv.y*cross(r,f)));}
 void main(){ivec2 px=ivec2(gl_FragCoord.xy);vec4 h=texelFetch(uHit,px,0);if(h.w<.5){outColor=vec4(.43,.44,.45,1.);return;}if(h.w>2.5){outColor=vec4(.8,.05,.4,1.);return;}
@@ -81,7 +81,7 @@ if(uSemanticMode==0&&uMaterialMode>0&&materialType>0){
  }
 }
 // Fixed neutral normal-based shape cue only: no PBR, surface texture, shadow ray, or roughness.
-vec3 rawRight=cross(normalize(uTarget-uCameraEye),vec3(0.,1.,0.));vec3 right=length(rawRight)>.0001?normalize(rawRight):vec3(1.,0.,0.);vec3 front=normalize(uCameraEye-uTarget);vec3 cool=normalize(-right*.75+vec3(0.,1.15,0.)+front*.55),warm=normalize(right*.85+vec3(0.,.32,0.)+front*.6);vec3 illumination=vec3(.48)+.29*max(dot(n,cool),0.)*vec3(.82,.91,1.)+.21*max(dot(n,warm),0.)*vec3(1.,.88,.73);c*=illumination;
+vec3 rawRight=cross(normalize(uTarget-uCameraEye),vec3(0.,1.,0.));vec3 right=length(rawRight)>.0001?normalize(rawRight):vec3(1.,0.,0.);vec3 front=normalize(uCameraEye-uTarget);vec3 cool=normalize(-right*.75+vec3(0.,1.15,0.)+front*.55),warm=normalize(right*.85+vec3(0.,.32,0.)+front*.6);vec3 illumination=vec3(.48)+uInspectionLights.x*.29*max(dot(n,cool),0.)*vec3(.82,.91,1.)+uInspectionLights.y*.21*max(dot(n,warm),0.)*vec3(1.,.88,.73);c*=illumination;
 bool edge=false,selection=false;for(int a=0;a<4;a++){ivec2 d=a==0?ivec2(1,0):a==1?ivec2(-1,0):a==2?ivec2(0,1):ivec2(0,-1);ivec2 q=px+d;if(any(lessThan(q,uTile.xy))||any(greaterThanEqual(q,uTile.xy+uTile.zw)))continue;vec4 nh=texelFetch(uHit,q,0);bool boundary=abs(nh.y-h.y)>.1;if(boundary&&(abs(h.y-uSelectedId)<.1||abs(nh.y-uSelectedId)<.1))selection=true;if(nh.w<.5)edge=true;else{vec3 nn=normalize(texelFetch(uNormal,q,0).xyz);if(dot(nn,rd)>0.)nn=-nn;if(dot(n,nn)<.78)edge=true;}}
 if(edge)c*=.80;if(abs(h.y-uSelectedId)<.1)c=mix(c,vec3(.98,.91,.60),.12);if(selection)c=vec3(.16,.24,.32);
 outColor=vec4(c,1.);}

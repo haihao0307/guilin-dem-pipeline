@@ -38,6 +38,11 @@ try:
    mark(page,'whole-six-faces-warm')
    report['whole']=page.evaluate('''async()=>{const s=semanticInspection,r=s.renderer;r.options.onlyHostField=false;s.selectBuilding('kcc');await s.focusBuilding();return{stats:s.lastStats,hosts:r.integratedHosts.map(h=>({source:h.sourcePatchId,windows:h.windows.length})),excludedLegacy:r.hostExcludedIds.size,errors:s.errors,display:s.presentedDisplay}}''')
    snapshot(page,'wholeDiagnostic');page.screenshot(path=str(OUT/'host-wall-six-faces-main.png'));assert report['whole']['excludedLegacy']==176;assert not report['whole']['errors'];assert len(report['whole']['hosts'])==6
+   report['lighting']=[]
+   for light_mode in ['cool-only','warm-only','both']:
+    lighting=page.evaluate("""async(mode)=>{const s=semanticInspection,r=s.renderer;r.options.coolLight=mode!=='warm-only';r.options.warmLight=mode!=='cool-only';await s.render();const pixels=r.readPixels();window.__lightPixels??={};window.__lightPixels[mode]=new Uint8Array(pixels);const sum=[0,0,0];for(let i=0;i<pixels.length;i+=4)for(let c=0;c<3;c++)sum[c]+=pixels[i+c];return{mode,mean:sum.map(v=>v/(pixels.length/4)),stats:s.lastStats,camera:s.presentedCamera}}""",light_mode)
+    report['lighting'].append(lighting);save();page.screenshot(path=str(OUT/('whole-light-'+light_mode+'.png')))
+   report['lightingPixelDifferences']=page.evaluate("""()=>{const p=window.__lightPixels;return[['cool-only','warm-only'],['cool-only','both'],['warm-only','both']].map(([a,b])=>({a,b,differences:p[a].reduce((n,v,i)=>n+(v!==p[b][i]),0)}))}""");assert all(x['differences']>1000 for x in report['lightingPixelDifferences']);save()
    report['passed']=True
    report['finalDiagnostic']=page.evaluate('()=>window.hostQaDispatchDiagnostics.stop()');save()
   except Exception:
