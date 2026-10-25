@@ -8,10 +8,10 @@ export function attachLifeServiceContract(recipe,source=null){
   kcc:{street:'Liberty Avenue',number:'2',address:'香港九龍自由道2號',source:'https://hkkcc.org.hk/about-kcc/introduction?lang=zh'},
   warehouse:{street:'Cheong Hang Road',number:'1',address:'香港紅磡暢行道1號',source:'https://sourcing.hktdc.com/en/Supplier-Store-Directory/China-Travel-Hip-Kee-Godown-Hong-Kong-Ltd/1X02QI7B'}
  };
- recipe.identity={objectId:recipe.buildingId,type:'building',recipeRevision:'R15',validFrom:null,validTo:null,observedAt:null,observationTimePolicy:'photo time separate from model validity; unknown remains null'};
+ recipe.identity={objectId:recipe.buildingId,type:'building',recipeRevision:'R17',validFrom:null,validTo:null,observedAt:null,observationTimePolicy:'photo time separate from model validity; unknown remains null'};
  recipe.location={earth:'Earth',city:'Hong Kong',region:'Kowloon',...locations[recipe.caseId],georeference:source?.sourceGeoreference??null,longitudeLatitude:null,addressPointVerified:false,displayTranslationIsGeographic:false};
  recipe.neighbourhood={belongsTo:{city:'Hong Kong',region:'Kowloon',siteId:null},adjacentTo:[],eastNeighbour:null,validFrom:null,validTo:null,status:'unknown; side-by-side display is not a real neighbour relation'};
- recipe.sharedComponents={policy:'component type + parameters + host transform; one implementation reused, not one program per building',windowEmitter:'r07/apertures.mjs:deriveAperture and source-hosted-window.mjs',doorSystem:'deferred interface, no ordinary door leaf',buildingBatchTarget:7000,batchTargetEvidence:'user planning goal, not collected or generated buildings',actualCases:3};
+ recipe.sharedComponents={policy:'component type + parameters + host transform; one implementation reused, not one program per building',windowEmitter:'r07/apertures.mjs:deriveAperture and source-hosted-window.mjs',doorSystem:recipe.parameters?.dimensions?.ordinaryDoorSystem==='shared-function'?'existing r07 shared-function doors activated; dimensions remain design assumptions':'deferred interface, no ordinary door leaf',buildingBatchTarget:7000,batchTargetEvidence:'user planning goal, not collected or generated buildings',actualCases:3};
  const g=recipe.graph,root=recipe.buildingId,ids=new Set(g.nodes.map(n=>n.id));
  const node=(id,type,props={})=>{if(ids.has(id))throw Error('Duplicate service port '+id);ids.add(id);g.nodes.push({id,type,...props});return id;};
  const own=(id,to)=>g.edges.push({from:id,to,type:'ownedBy',network:'ownership'});

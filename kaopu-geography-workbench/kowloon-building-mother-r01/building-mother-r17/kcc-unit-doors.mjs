@@ -24,7 +24,7 @@ export function attachKccUnitDoors(input,{openT=0,reservedInstanceIds=[]}={}){
    generated.push({...r,doorId:id,floorId:l.id,elevation:l.elevation,apertureId:instanceId});
   }levels.push({id:l.id,elevation:l.elevation,rooms:generated});
  }
- m.kccUnitAccess={status:'retained_design_partitions_equipped',actualLayoutInstalled:false,levels,templateRooms:rooms,doorCount:serial,unknown:'Real A-F unit placement and internal room subdivisions remain unverified'};return m;
+ if(m.buildingMother?.sharedComponents)m.buildingMother.sharedComponents.doorSystem='existing r07 shared-function doors attached to retained design partitions; actual unit registration unverified';m.kccUnitAccess={status:'retained_design_partitions_equipped',actualLayoutInstalled:false,levels,templateRooms:rooms,doorCount:serial,unknown:'Real A-F unit placement and internal room subdivisions remain unverified'};return m;
 }
 /** Conservative sampled body envelope, not fire/structural certification.
  * startPoint is FLOOR-LOCAL [x, 0, z], not comparison-world coordinates.

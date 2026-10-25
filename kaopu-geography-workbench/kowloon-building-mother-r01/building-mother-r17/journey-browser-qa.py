@@ -3,7 +3,7 @@ import functools,http.server,json,os,threading,traceback,time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parent;OUT=Path('public-inspection-evidence');OUT.mkdir(exist_ok=True)
-report={'passed':False,'errors':[],'views':{},'simulation':'accelerated state progression; captures are actual rendered frames, not real-time smoothness evidence','realFloorRegistration':False}
+report={'passed':False,'errors':[],'views':{},'simulation':'accelerated state progression; captures are actual rendered frames, not real-time smoothness evidence','realFloorRegistration':False,'simulationStepSeconds':10,'controllerSubstepSeconds':0.05}
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -14,7 +14,7 @@ try:
   page.goto(os.environ.get('R17_URL',f'http://127.0.0.1:{server.server_port}/index.html'))
   try:page.wait_for_function('window.semanticInspection&&(semanticInspection.ready||semanticInspection.errors.length)',timeout=20000)
   except Exception:pass
-  report['startup20s']=page.evaluate('({errors:semanticInspection.errors,stats:semanticInspection.renderer?.currentFrameStats,compile:semanticInspection.renderer?.compileStats,options:semanticInspection.renderer?.options,display:semanticInspection.getDisplaySize(),phase:semanticInspection.phase,view:semanticInspection.view,renderRequests:semanticInspection.renderRequests,presentedFrames:semanticInspection.presentedFrames})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+  report['startup20s']=page.evaluate('({errors:semanticInspection.errors,stats:semanticInspection.renderer?.currentFrameStats,compile:semanticInspection.renderer?.compileStats,options:semanticInspection.renderer?.options,display:semanticInspection.getDisplaySize(),phase:semanticInspection.phase,view:semanticInspection.view,renderRequests:semanticInspection.renderRequests,deferredBootRequests:semanticInspection.deferredBootRequests,bootDisplay:semanticInspection.bootDisplay,presentedFrames:semanticInspection.presentedFrames})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   def settled():
    page.wait_for_function('semanticInspection.errors.length||semanticInspection.ready&&!semanticInspection.busy&&!semanticInspection.renderer.busy')
    errors=page.evaluate('semanticInspection.errors')
@@ -31,14 +31,14 @@ try:
    result=page.evaluate('(f)=>semanticInspection.kccJourney.journey.goToFloor(f)',floor);assert result['accepted'],result
    states=[]
    for n in range(120):
-    q=page.evaluate('(()=>{const j=semanticInspection.kccJourney.journey;j.tick(2);return j.snapshot()})()');settled()
-    states.append({'phase':q['phase'],'floor':q['currentFloorId'],'passenger':q['passenger'],'liftState':q['liftState']})
+    q=page.evaluate('(()=>{const j=semanticInspection.kccJourney.journey;j.tick(10);return j.snapshot()})()');settled()
+    states.append({'phase':q['phase'],'floor':q['currentFloorId'],'passenger':q['passenger'],'liftState':q['liftState']});report['activeLeg']={'to':floor,'samples':states};(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     if q['phase']=='blocked':raise AssertionError(q)
     if not q['active']:break
    else:raise AssertionError('Lift did not complete original state journey')
    report.setdefault('legs',[]).append({'to':floor,'samples':states});assert q['currentFloor']['designOrdinal']==floor if 'designOrdinal' in q['currentFloor'] else q['currentFloorId']==('P04' if floor==4 else 'T24')
    capture('r17-arrived-'+name)
-   report['profiles'].append(page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-design-arrival-native'})}'''))
+   report['profiles'].append(page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-design-arrival-native'})}'''));(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   for room in 'ABCDEF':
    page.locator('#kccJourneyPanel select').nth(1).select_option(room)
    page.get_by_role('button',name='开本房门',exact=True).click();settled()
