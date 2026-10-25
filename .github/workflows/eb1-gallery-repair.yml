@@ -1,0 +1,131 @@
+name: EB1 gallery restoration and public decode verification
+on:
+  push:
+    branches: [feature/eb1-public-20261013]
+    paths: [.github/workflows/eb1-gallery-repair.yml]
+permissions:
+  contents: read
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: kaopu-lighting/eb1-v1-2a17b4ae0113
+          fetch-depth: 1
+      - name: Add only missing original images and supplemental receipt
+        run: |
+          python - <<'PY'
+          import pathlib,json,urllib.request,hashlib,subprocess,time
+          root=pathlib.Path('kaopu-lighting/eb1-v1-2a17b4ae0113');m=json.loads((root/'EB1_MANIFEST.json').read_text());expected=m['workbenches']['tailor']['preservedFiles'];files={};new=[]
+          baseline={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file()}
+          source='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d00fc2de66dcf57367443d7ecfdc60977bc2b6ee/kaopu-tailor-workbench/material-products/r04-4-1/'
+          for prefix in ['K','L','D']:
+            for i in range(1,5):
+              rel=f'thumbs/{prefix}{i:02d}.png';data=urllib.request.urlopen(source+rel,timeout=60).read();digest=hashlib.sha256(data).hexdigest()
+              assert digest==expected[rel] and data.startswith(bytes.fromhex('89504e470d0a1a0a')),rel
+              p=root/'tailor'/rel
+              if p.exists():assert p.read_bytes()==data
+              else:p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data);new.append(str(p))
+              files['tailor/'+rel]={'bytes':len(data),'sha256':digest}
+          assert all(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest()==h for n,h in baseline.items()),'Frozen existing bytes changed'
+          receipt={'runtimeCandidate':'2a17b4ae0113b087b940adddedd1476fd5ce8003','nativeSource':'d00fc2de66dcf57367443d7ecfdc60977bc2b6ee','reason':'Restore omitted original PNGs; prior image requests returned 404.','runtimeCodeChanged':False,'existingFrozenFilesChanged':False,'originalImagesRegenerated':False,'publicDecodeVerified':False,'files':files}
+          p=root/'GALLERY_REPAIR.json';assert not p.exists();p.write_text(json.dumps(receipt,indent=2));new.append(str(p))
+          subprocess.run(['git','config','user.name','github-actions[bot]'],check=True);subprocess.run(['git','config','user.email','41898282+github-actions[bot]@users.noreply.github.com'],check=True)
+          subprocess.run(['git','add','-f',*new],check=True)
+          subprocess.run(['git','commit','-m','fix(eb1): restore twelve unchanged original garment thumbnails, no runtime replacement'],check=True)
+          for i in range(5):
+            r=subprocess.run(['git','push','origin','HEAD:gh-pages'])
+            if r.returncode==0:break
+            subprocess.run(['git','fetch','--filter=blob:none','--depth=1','origin','gh-pages'],check=True)
+            base=subprocess.check_output(['git','rev-parse','FETCH_HEAD'],text=True).strip()
+            subprocess.run(['git','rebase',base],check=True)
+            time.sleep(2)
+          else:raise RuntimeError('Normal fast-forward publication failed; no force push')
+          print(subprocess.check_output(['git','rev-parse','HEAD'],text=True));pathlib.Path('/tmp/GALLERY_STAGE.json').write_text(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eb1-gallery-restoration-stage
+          path: /tmp/GALLERY_STAGE.json
+          retention-days: 30
+  verify:
+    needs: restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/eb1-public-20261013
+          sparse-checkout: kaopu-lighting/eb1
+      - uses: actions/download-artifact@v4
+        with:
+          name: eb1-gallery-restoration-stage
+          path: /tmp/stage
+      - name: Install actual browser
+        run: |
+          python -m pip install playwright==1.56.0 pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Check repaired actual public image bytes and decode before browser review
+        run: |
+          mkdir -p gallery-evidence
+          cat > /tmp/gallery-verify.py <<'PY'
+          import pathlib,json,time,urllib.request,hashlib,traceback
+          from playwright.sync_api import sync_playwright
+          root=pathlib.Path('gallery-evidence');base='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-lighting/eb1-v1-2a17b4ae0113/';stage=json.loads(pathlib.Path('/tmp/stage/GALLERY_STAGE.json').read_text())
+          def get(path):
+            with urllib.request.urlopen(base+path,timeout=60) as r:return r.read()
+          for i in range(80):
+            try:
+              data=get('GALLERY_REPAIR.json')
+              assert json.loads(data)['files']==stage['files'];break
+            except Exception:
+              if i==79:raise
+              time.sleep(10)
+          for path,meta in stage['files'].items():
+            data=get(path);assert len(data)==meta['bytes'] and hashlib.sha256(data).hexdigest()==meta['sha256'],path
+          r={'fixedURL':base+'tailor/index.html','passed':False,'publicByteHashesPassed':True,'originalImagesPreserved':True,'runtimeCodeChanged':False,'errors':[],'badResponses':[],'consoleErrors':[],'priorBrokenGalleryRecorded':True,'workflowRun':__import__('os').environ['GITHUB_RUN_ID']}
+          with sync_playwright() as p:
+            b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=b.new_page(viewport={'width':1360,'height':900},device_scale_factor=1)
+            page.on('pageerror',lambda e:r['errors'].append(str(e)))
+            page.on('console',lambda e:r['consoleErrors'].append(e.text) if e.type=='error' else None)
+            page.on('response',lambda e:r['badResponses'].append({'url':e.url,'status':e.status}) if e.status>=400 else None)
+            try:
+              page.goto(r['fixedURL'],wait_until='domcontentloaded',timeout=120000)
+              page.wait_for_function('window.__MP04__?.audit().ready&&!__MP04__.audit().pending&&__MP04__.audit().rows.length===2',timeout=180000)
+              page.evaluate('for(const image of document.images)image.loading="eager"')
+              page.wait_for_function('document.images.length===12&&Array.from(document.images).every(i=>i.complete&&i.naturalWidth>0)',timeout=90000)
+              r['images']=page.evaluate('Array.from(document.images).map(i=>({src:i.src,width:i.naturalWidth,height:i.naturalHeight}))')
+              r['decode']=page.evaluate('async()=>await Promise.all(Array.from(document.images).map(async i=>{await i.decode();return i.src;}))')
+              r['lighting']=page.evaluate('__EB1__.audit()');r['nativeReady']=page.evaluate('__MP04__.audit().ready')
+              page.screenshot(path=str(root/'tailor-gallery-restored.png'),timeout=120000)
+              assert not r['errors'] and not r['badResponses'] and not r['consoleErrors'],r
+              r['passed']=True
+            except Exception as e:r['error']=str(e);r['trace']=traceback.format_exc()
+            finally:
+              (root/'GALLERY_PUBLIC_VALIDATION.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));b.close()
+          print(json.dumps(r,ensure_ascii=False,indent=2),flush=True)
+          raise SystemExit(0 if r['passed'] else 1)
+          PY
+          python /tmp/gallery-verify.py
+      - name: Persist verified additional gallery result without rewriting earlier history
+        if: success()
+        run: |
+          cp gallery-evidence/GALLERY_PUBLIC_VALIDATION.json kaopu-lighting/eb1/GALLERY_PUBLIC_VALIDATION.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add kaopu-lighting/eb1/GALLERY_PUBLIC_VALIDATION.json
+          git commit -m 'test(eb1): real HTTPS twelve-gallery-image decode passed, original PNG hashes match'
+          git push origin HEAD:feature/eb1-public-20261013
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eb1-gallery-public-validation
+          path: gallery-evidence
+          retention-days: 30
