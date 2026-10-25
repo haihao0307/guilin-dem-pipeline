@@ -1,0 +1,73 @@
+{
+  "project": "KAOPU LACE ATELIER",
+  "version": "R05",
+  "date": "2026-10-25",
+  "runtime": "Three.js 0.180.0, WebGL2",
+  "construction": "original procedural yarn paths; elliptical swept display geometry",
+  "units": "centimetres for material coordinates; millimetres for diameter controls",
+  "networkRequiredForCore": false,
+  "physics": false,
+  "productionReady": false,
+  "projection": "perspective",
+  "verticalFovDegrees": 38,
+  "sampling": {
+    "space": "linear HDR",
+    "movingSamples": 4,
+    "settledSamples": 32,
+    "requestedMSAA": 4,
+    "targetPixelRatio": 2,
+    "maxPixels": 4500000,
+    "historyAcrossDifferentPoses": false
+  },
+  "material": {
+    "interlacedNet": true,
+    "bundleRelief": true,
+    "shortFuzzLayers": [
+      "net",
+      "fill",
+      "outline",
+      "trim"
+    ],
+    "shortFuzzDensityPerCm": {
+      "net": 2.5,
+      "fill": 5,
+      "outline": 18,
+      "trim": 14
+    },
+    "shortFuzzModes": [
+      "off",
+      "soft",
+      "directional"
+    ],
+    "backlightTransmissionApproximation": true,
+    "sceneLightDrivenFuzz": true,
+    "curvedFillStitches": true,
+    "referenceParityAccepted": false
+  },
+  "verification": {
+    "sourceAndGeometryTests": "R05.5 short-fibre mode and four-layer coverage tests passed in CI",
+    "nativeGLSLCompile": "yarn material A/B passed in native EGL; short-fibre shader still requires live WebGL compilation",
+    "browserWebGL": "not verified in this environment; target browser/device QA pending",
+    "visualAcceptance": "incomplete"
+  },
+  "reference": {
+    "post": "https://x.com/nyanneco9/status/2111680100362006784",
+    "manual": "https://note.com/nyanneco/n/n90de128aa178",
+    "referenceImageUse": "comparison only; no reference motif imported into generated geometry"
+  },
+  "sha256": {
+    "vendor/three.core.js": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+    "vendor/three.module.js": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+    "lace-core.js": "e9a454c7f9d86408e0e98b514ed2f6f3f717cdbad8c5efada29f4a4c45c26f04",
+    "lace-adapter.js": "fd8f68de13f6e74770d843a284aca625b3642fa87213a6ddeeeafa5cd2513286",
+    "lace-display.js": "1fa13d9b579dc0f7e1fcafcd0d4638f7344e08e68e7a90285d79a0d8708d3112",
+    "lace-fiber.js": "aa655c84df1d357d958258aa1e8f4df7a54652c0d92dc2d960d7008160ecc158",
+    "lace-sampling.js": "2fb8c87574f94558816623557ba7458183df5acfaada39c035d03d61d434975d",
+    "lace-observation.js": "0e52d71dec2c0615a822087a1e028527dd928107a532e899eb1ed50487e57def",
+    "app.js": "2b8a5b666fc9828e71b0a1f4a6e6d08facf31eb630852fe4e877a3a478250953",
+    "vendor/THREE-LICENSE.txt": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+    "style.css": "60262bbcfbd011329f71fe60ae56acb6c28e3ed1318c1aa488bc1826cfd7bc18",
+    "index.html": "5487d464f2b4cc4a90671c5a9f3147a3fc3d3799aa594d51d05f3b8d92147728"
+  },
+  "standaloneBytes": 3090864
+}
