@@ -1,0 +1,268 @@
+{
+  "schema": "KAOPU.TLO.RoadMother.r01",
+  "Time": {
+    "target": "2026 · 教学情景",
+    "stage": 0,
+    "label": "完好",
+    "isObservedEvent": false,
+    "Location": {
+      "name": "香港规则教学样段",
+      "siteType": "设计示例，非任何街道的实测复原",
+      "environment": {
+        "light": "冷暖检查光",
+        "weather": "干燥",
+        "ground": "中性灰检查环境"
+      },
+      "Object": {
+        "Road": {
+          "id": "road-demo-01",
+          "mother": "RoadMother.r01",
+          "parameters": {
+            "lanes": 2,
+            "laneWidth": 3.65,
+            "sidewalkWidth": 2.4,
+            "cycleWidth": 2.5,
+            "state": 0,
+            "mode": "material",
+            "preset": "urban",
+            "length": 36,
+            "crossfall": 0.025
+          },
+          "axes": {
+            "functionClass": "未指定工程等级",
+            "users": [
+              "机动车",
+              "行人",
+              "单车"
+            ],
+            "surface": "铺装",
+            "structure": "地面",
+            "condition": "完好"
+          },
+          "geometry": {
+            "representation": "analytic-functions",
+            "objectMesh": false,
+            "pointCloud": false,
+            "screenTriangle": "仅显示载体，不构造对象",
+            "wave": "required"
+          },
+          "components": [
+            {
+              "id": 1,
+              "key": "Carriageway",
+              "name": "车行组件",
+              "color": "#456f91",
+              "material": "沥青 · 毫米级多频造波",
+              "fn": "y = 0.24 − 0.025 |x| − damage(x,s,time) + wave(x,s)",
+              "users": [
+                "机动车"
+              ],
+              "source": "HK-TPDM2-202608",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "完好",
+              "access": {
+                "users": [
+                  "机动车"
+                ],
+                "open": true,
+                "restrictions": [],
+                "advisory": null
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 2,
+              "key": "Footway",
+              "name": "行人组件",
+              "color": "#d19c5c",
+              "material": "混凝土铺块 · 接缝函数 + 细颗粒造波",
+              "fn": "横向区间 + raisedSurface(x,s) + tileWave(x,s)",
+              "users": [
+                "行人"
+              ],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "随所属道路情景",
+              "access": {
+                "users": [
+                  "行人"
+                ]
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 3,
+              "key": "CycleTrack",
+              "name": "独立单车组件",
+              "color": "#529c85",
+              "material": "彩色铺装 · 高频细波",
+              "fn": "独立横向区间 + surfaceWave(x,s)",
+              "users": [
+                "单车"
+              ],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "随所属道路情景",
+              "access": {
+                "users": [
+                  "单车"
+                ]
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 4,
+              "key": "Kerb",
+              "name": "路缘组件",
+              "color": "#b3b8bd",
+              "material": "预制混凝土 · 分段接缝 + 细波",
+              "fn": "boundedProfile(x,y,s) + jointWave(s)",
+              "users": [],
+              "source": "HK-HYD-detail",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 5,
+              "key": "Marking",
+              "name": "标线组件",
+              "color": "#faeb9e",
+              "material": "道路涂料 · 周期线段场 + 细波",
+              "fn": "laneBoundary(x) × dash(s); attachedTo = Carriageway / CycleTrack",
+              "users": [],
+              "source": "HK-TPDM-index",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "attachments": [
+                "Carriageway",
+                "CycleTrack"
+              ],
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 6,
+              "key": "Lighting",
+              "name": "灯杆组件",
+              "color": "#5e697a",
+              "material": "金属 · 圆柱函数 + 微表面波",
+              "fn": "nearestRepeatCell(s,12) → cylinder + arm",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 7,
+              "key": "WorkProtection",
+              "name": "施工围护组件",
+              "color": "#e86636",
+              "material": "聚合物锥桶 · 锥函数 + 色带波",
+              "fn": "time = 2 → boundedConeField(s)",
+              "users": [],
+              "source": "HK-HYD-work",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 8,
+              "key": "WorkSurface",
+              "name": "施工表面组件",
+              "color": "#785043",
+              "material": "基层材料 · 颗粒造波",
+              "fn": "time = 2 → boundedWorkPatch(x,s)",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            },
+            {
+              "id": 9,
+              "key": "Drainage",
+              "name": "排水组件",
+              "color": "#404b4b",
+              "material": "沟槽 / 格栅 · 周期槽纹造波",
+              "fn": "roadEdge(x) × slotWave(s)",
+              "users": [],
+              "source": "HK-HYD-detail",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "state": "随所属道路情景",
+              "access": {
+                "users": []
+              },
+              "waveRequired": true
+            }
+          ],
+          "relations": {
+            "connections": [],
+            "note": "关系为Road节点属性，本例没有完整路网或路口。"
+          }
+        }
+      }
+    }
+  },
+  "sources": [
+    {
+      "id": "HK-TPDM2-202608",
+      "title": "香港运输署 TPDM Volume 2 · August 2026",
+      "url": "https://www.td.gov.hk/filemanager/en/content_5055/V2_08_2026.pdf#page=47",
+      "section": "3.4.1.1 · PDF 第47页",
+      "fact": "一般车行道从路拱或中央分隔带向道路两侧采用 2.5% 横坡；超高或消除反向横坡的曲线除外。",
+      "scope": "本例直线路段的横断面规则。缓弯例仅展示函数变化，不作曲线超高设计验证。"
+    },
+    {
+      "id": "HK-TPDM-index",
+      "title": "香港运输署 TPDM 目录",
+      "url": "https://www.td.gov.hk/en/publications_and_press_releases/publications/tpdm/index.html",
+      "section": "Volume 3 / 4",
+      "fact": "标志、标线与信号须分别参考相应手册。",
+      "scope": "本例标线仅教学语义示意，非交通工程施工图。"
+    },
+    {
+      "id": "HK-HYD-detail",
+      "title": "香港路政署标准图 · Section 1",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/section1.html",
+      "scope": "路缘、排水等后续细化资料入口；本例未复制标准图。"
+    },
+    {
+      "id": "HK-HYD-work",
+      "title": "香港路政署道路工程照明、标志及防护工作守则",
+      "url": "https://www.hyd.gov.hk/en/technical_references/technical_document/code_of_practice/index.html",
+      "scope": "施工防护资料入口。本例锥桶和封闭范围仅教学，不是核准的临时交通安排。"
+    }
+  ],
+  "limitations": [
+    "非工程合规认证",
+    "未实现交叉口、高架、隧道、土路或小径",
+    "分色和材质共用同一函数形体",
+    "没有真实事件时间线或实测街景",
+    "单车组件为独立设计示例，不暗示九龙钟楼现场存在单车道"
+  ]
+}
