@@ -1,4 +1,4 @@
-name: A4 whole three-cylinder ring motion research QA
+name: A4 whole finite outside valve and pressure motion research QA
 on:
   push:
     branches: ['trial/a4-function-assembly-r19-20261024']
@@ -13,30 +13,36 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-train-workbench/a4-pressure-motion-r24
+            kaopu-train-workbench/a4-outside-valve-r25
             kaopu-train-workbench/a4-dynamic-r22
       - name: Install pinned test dependencies
         run: |
-          python -m pip install playwright==1.57.0 numpy==2.3.3
+          python -m pip install playwright==1.57.0 numpy==2.3.5 scipy==1.17.0
           python -m playwright install --with-deps chromium
       - name: Whole analytic browser compilation and render
-        working-directory: kaopu-train-workbench/a4-pressure-motion-r24
+        working-directory: kaopu-train-workbench/a4-outside-valve-r25
         run: |
           python test_dynamic.py
           node test_dynamic_js.js
           node test_installation_adapter.js
           node test_controls.js
+          python valve-reconstruction/extract_reference.py --model .
+          python valve-reconstruction/solve_outside.py
+          node valve-reconstruction/test_outside_solver.js --model .
+          python valve-reconstruction/test_jacobian.py
+          node test_valve_dynamic.js
           python test_installation_fields.py
           python test_crankpin_support.py
           timeout 600s python browser_qa.py
       - name: Whole-chain mechanical clearance acceptance (known failure retained)
-        working-directory: kaopu-train-workbench/a4-pressure-motion-r24
+        working-directory: kaopu-train-workbench/a4-outside-valve-r25
         run: python test_swept_collision.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: a4-pressure-motion-r24-${{ github.sha }}
+          name: a4-outside-valve-r25-${{ github.sha }}
           path: |
-            kaopu-train-workbench/a4-pressure-motion-r24/*QA.json
-            kaopu-train-workbench/a4-pressure-motion-r24/*-whole.png
+            kaopu-train-workbench/a4-outside-valve-r25/*QA.json
+            kaopu-train-workbench/a4-outside-valve-r25/valve-reconstruction/*QA.json
+            kaopu-train-workbench/a4-outside-valve-r25/*-whole.png
           retention-days: 30

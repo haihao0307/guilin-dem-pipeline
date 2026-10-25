@@ -1,0 +1,22 @@
+# Reconstructed common-phase whole-train diagnostic R22
+
+Research only. Not a completed A4, not an exact60009 reconstruction, not a final public release. R21 static whole render remains untouched at its retained path.
+
+Time -> Location/environment -> Object: Time controls theta=initialTheta+angularSpeed*Time. Location is the verified rail-local environment (Y=0, middle driving axle Z=0, +Z forward). Object is the whole train with frame/boiler/wheel/drive/actuation semantic children. Noncoupled wheels use angular displacement equal to the same vehicle-local travel divided by their documentary radius; this is rolling kinematics in a vehicle-local rig, not tested world-space train translation.
+
+Nonzero environment translation is explicitly rejected until validated. Variables and analytic functions determine structure; no object meshes or point/voxel geometry are introduced. Surface-wave material work is separate from mechanical phase and must never hide a kinematic error.
+
+This adapter is newly RECONSTRUCTED, not the recovered original generator. The 53 wheel fields retain genuine theta functions. The drive and actuation were expanded at theta=.4 in recovered R21; we derive explicit rigid inverse coordinate transforms from preserved R20 Python crank-slider formulas, preserving all scalar part shapes and returning matching transformed AABBs. 23 drive and30 actuation parts move; static shafts, cylinder walls and guides remain fixed. The remaining407 part fields remain fixed. This is not recovery of full Walschaerts/Gresley valve dynamics.
+
+Validation includes independent retained R20 scalar parity across phases, main-rod constant-length and slider-line closure, then whole-browser phase views with actual pixel readback. Do not equate algebraic closure with physical acceptance.
+
+BLOCKING PHYSICAL FAILURES FOUND: middle main rod intersects the leading driven straight axle during the cycle (theta approximately3.3545228223); wheel-to-crankpin attachment also lacks a7.5mm axial bridge at the current inferred geometry. Do not cut material out of the axle, change documentary axle stations or shift phase merely to hide these failures. Middle-cylinder installation, crank geometry and official archival constraints are being researched. Current phases [0,1.7,4.3], inner inclination .11rad and rod length3.5m remain inferred, not calibrated historical values.
+
+Other missing work: middle valve placement, saddle supports, complete steam/feed network, brakes, cab controls, finite valve mechanisms, full swept collisions and interactive performance. No coal geometry.
+
+Original anatomical reference: “Train Class A4 Union of South Africa” /60009 by timblewee, CC BY4.0, https://sketchfab.com/3d-models/train-class-a4-union-of-south-africa-636ed4890b72429da4a10abec0551373 . No source vertex/index/animation buffers are redistributed. Documentary dimensions reference The Engineer27September1935 Silver Link pp319–320, not60009; mechanism relationships use official National Railway Museum/Sir Nigel Gresley Locomotive Trust reports. Original photographs/drawings are not redistributed. Source/model-derived, documentary and inferred dimensions must be distinguished before any final release.
+
+
+## Inferred crankpin attachment repair
+
+Six new analytic wheel-hub-to-pin support webs bridge the absent load path for both sides of all three driven axles. The original513 fields are retained unchanged; total is519. Each support has an open shaft clearance and coaxial pin bore. Existing hub overlap and pin-bore contact pass438 phase checks each; main-rod axial separation is8mm and coupling-rod minimum separation90mm in this candidate. These are own design variables, not measured A4 casting dimensions or a manufacturing specification. Original7.5mm pairwise axial gap remains as baseline evidence, but the added hollow support provides a continuous load path around it. Whole-chain acceptance still fails for the middle rod/leading axle. Full support stress/keying and all-pairs collisions are not established.
