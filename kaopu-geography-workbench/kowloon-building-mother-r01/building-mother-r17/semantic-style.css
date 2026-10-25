@@ -55,3 +55,6 @@ article>p{flex:none;overflow-wrap:anywhere}
 .facade-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 0}.facade-controls small{color:#cdb781}.facade-controls button.active{outline:2px solid #94b6c9}
 /* KCC registration is not a warehouse-window control. */
 body:has([data-building="warehouse"].active) .facade-controls,body:has([data-building="lowrise"].active) .facade-controls{display:none}
+
+/* Reserve one status line before first draw; status updates must not resize the framebuffer. */
+#status{min-height:18px}
