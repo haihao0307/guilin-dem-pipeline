@@ -1,0 +1,55 @@
+name: A4 whole side-valve topology research QA
+on:
+  push:
+    branches: ['trial/a4-function-assembly-r19-20261024']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-train-workbench/a4-whole-topology-r29
+            kaopu-train-workbench/a4-dynamic-r22
+      - name: Install pinned test dependencies
+        run: |
+          python -m pip install playwright==1.57.0 numpy==2.3.5 scipy==1.17.0
+          python -m playwright install --with-deps chromium
+      - name: Whole analytic browser compilation and render
+        working-directory: kaopu-train-workbench/a4-whole-topology-r29
+        run: |
+          node build_middle_chest.js
+          python test_dynamic.py
+          node test_dynamic_js.js
+          node test_installation_adapter.js
+          node test_controls.js
+          node material-wave-study/test-material-waves.js
+          node test_cover_export.js
+          node test_topology_integration.js
+          node test_topology_materials.js
+          node installation-topology-study/test_solver.js --model .
+          node installation-topology-study/test_actual_casting.js --model .
+          node frame-support-study/test_support_export.js --model .
+          for snapshot in profile_beta011 profile_beta0126 profile_beta016; do python whole-profile-audit/profile_portable_audit/replay_compact_witnesses.py whole-profile-audit/profile_portable_audit/$snapshot; done
+          timeout 900s python browser_qa.py
+      - name: Whole-chain mechanical clearance acceptance (known failures retained)
+        working-directory: kaopu-train-workbench/a4-whole-topology-r29
+        run: |
+          python test_swept_collision.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: a4-whole-topology-r29-${{ github.sha }}
+          path: |
+            kaopu-train-workbench/a4-whole-topology-r29/*QA.json
+            kaopu-train-workbench/a4-whole-topology-r29/valve-reconstruction/*QA.json
+            kaopu-train-workbench/a4-whole-topology-r29/gresley-reconstruction/*QA.json
+            kaopu-train-workbench/a4-whole-topology-r29/*-whole.png
+            kaopu-train-workbench/a4-whole-topology-r29/material-wave-study/*QA.json
+            kaopu-train-workbench/a4-whole-topology-r29/whole-neighbors/*QA.json
+            kaopu-train-workbench/a4-whole-topology-r29/r29-whole-interface.png
+          retention-days: 30

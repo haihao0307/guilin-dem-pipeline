@@ -1,0 +1,1236 @@
+{
+  "installation": {
+    "mode": "candidate",
+    "beta": 0.126
+  },
+  "sourceFragments": {
+    "pressure": "",
+    "support": "float support_node_0(vec3 p){vec2 q=p.yz;float d=1e30;bool inside=false;{vec2 a=vec2(0.57999999999999996,(-3.3999999999999999)),b=vec2(0.57999999999999996,3.3500000000000001),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(0.57999999999999996,3.3500000000000001),b=vec2(0.72999999999999998,3.6499999999999999),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(0.72999999999999998,3.6499999999999999),b=vec2(0.72999999999999998,6.0999999999999996),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(0.72999999999999998,6.0999999999999996),b=vec2(1.6799999999999999,6.0999999999999996),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(1.6799999999999999,6.0999999999999996),b=vec2(1.6799999999999999,(-2.7999999999999998)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(1.6799999999999999,(-2.7999999999999998)),b=vec2(1.25,(-3.5499999999999998)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(1.25,(-3.5499999999999998)),b=vec2(1.25,(-5.6500000000000004)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(1.25,(-5.6500000000000004)),b=vec2(0.84999999999999998,(-5.6500000000000004)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(0.84999999999999998,(-5.6500000000000004)),b=vec2(0.84999999999999998,(-3.3999999999999999)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}{vec2 a=vec2(0.84999999999999998,(-3.3999999999999999)),b=vec2(0.57999999999999996,(-3.3999999999999999)),e=b-a;float t=clamp(dot(q-a,e)/dot(e,e),0.0,1.0);d=min(d,length(q-a-t*e));bool hit=(a.y>q.y)!=(b.y>q.y);float crossing=(b.x-a.x)*(q.y-a.y)/(b.y-a.y+1e-30)+a.x;if(hit&&(q.x<crossing))inside=!inside;}d=inside?-d:d;return max(d,abs(p[0]-(-0.54000000000000004))-0.014999999999999999);}",
+    "motion": "float motion_valve_right_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.48,4.1533979012824593),0,0.012,0.055); }\nfloat motion_valve_left_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.48,4.1231273253069523),0,0.012,0.055); }\nfloat motion_valve_right_combination_lever(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,0.9024359824285868,4.1002960594427611),vec3(0.97999999999999998,1.5596640024236432,4.1607222932603491),0,vec3(0.97999999999999998,1.48,4.1533979012824593),true,0.024,0.033000000000000002,0.0135,0.012); }\nfloat motion_valve_left_combination_lever(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,0.97973942089391741,4.416622389988536),vec3(-0.97999999999999998,1.5490014591870458,4.0826452474198369),0,vec3(-0.97999999999999998,1.48,4.1231273253069523),true,0.024,0.033000000000000002,0.0135,0.012); }\nfloat motion_valve_chest_right_rear_valve_head_core(vec3 p) { return mPV(p-vec3(0.97999999999999998,1.48,4.6799999999999997),0.053397901282459692,-0.52660209871754038,0.62339790128245909,6); }\nfloat motion_actuation_middle_cylinder_wall(vec3 p) { return mAnnulusZ(mLocal(p-vec3(0.0,1.5374469289765804,4.7212914652943097),0.10977830083717481,0.99395609795669682),0.23494999999999999,0.26000000000000001,-0.40000000000000002,0.40000000000000002); }\nfloat motion_valve_chest_left_rear_valve_head_core(vec3 p) { return mPV(p-vec3(-0.97999999999999998,1.48,4.6799999999999997),0.023127325306952606,-0.55687267469304746,0.593127325306952,6); }\nfloat motion_valve_chest_right_front_valve_head_core(vec3 p) { return mPV(p-vec3(0.97999999999999998,1.48,4.6799999999999997),0.053397901282459692,-0.52660209871754038,0.62339790128245909,7); }\nfloat motion_valve_chest_left_front_valve_head_core(vec3 p) { return mPV(p-vec3(-0.97999999999999998,1.48,4.6799999999999997),0.023127325306952606,-0.55687267469304746,0.593127325306952,7); }",
+    "service": "",
+    "attachment": "",
+    "stack": "float candidate_stack_70(vec3 p) { return max(mCapsule(p,vec3(0.97999999999999998,1.4800000000000000,4.1533979012824602),vec3(0.97999999999999998,1.4800000000000000,5.3033979012824597),0.016000000000000000),0.013500000000000000-length(p.xz-vec2(0.97999999999999998,5.3033979012824597))); }\nfloat candidate_stack_11(vec3 p) { return stackRingY(p,vec2(0.97999999999999998,5.3033979012824597),1.4640000000000000,1.4960000000000000,0.013500000000000000,0.033000000000000002); }\nfloat topology_head_core_0(vec3 p){return mDisc(p,vec3(0.38000000000000000,1.4800000000000000,4.4334932155795643),2,0.10000000000000001,0.040000000000000036);}\nfloat candidate_stack_72(vec3 p) { return max(mCapsule(p,vec3(0.38000000000000000,1.4800000000000000,4.0434932155795646),vec3(0.38000000000000000,1.4800000000000000,5.2234932155795644),0.016000000000000000),0.013500000000000000-length(p.xz-vec2(0.38000000000000000,5.2234932155795644))); }\nfloat candidate_stack_20(vec3 p) { return stackRingY(p,vec2(-0.97999999999999998,5.2731273253069526),1.4640000000000000,1.4960000000000000,0.013500000000000000,0.033000000000000002); }\nfloat candidate_stack_71(vec3 p) { return max(mCapsule(p,vec3(-0.97999999999999998,1.4800000000000000,4.1231273253069531),vec3(-0.97999999999999998,1.4800000000000000,5.2731273253069526),0.016000000000000000),0.013500000000000000-length(p.xz-vec2(-0.97999999999999998,5.2731273253069526))); }\nfloat candidate_stack_61(vec3 p) { return stackRingY(p,vec2(0.38000000000000000,5.2234932155795644),1.4640000000000000,1.4960000000000000,0.013500000000000000,0.033000000000000002); }\nfloat topology_head_core_1(vec3 p){return mDisc(p,vec3(0.38000000000000000,1.4800000000000000,4.7934932155795646),2,0.10000000000000001,0.040000000000000036);}",
+    "installation": "float topologyWebOuter(vec3 p){vec2 a=vec2(0.,1.016+tan(middleInclination)*p.z),b=vec2(0.38000000000000000,1.4800000000000000),d=b-a;float t=clamp(dot(p.xy-a,d)/dot(d,d),0.,1.);float axisZ=sin(middleInclination)*(p.y-1.016)+cos(middleInclination)*p.z;return max(max(length(p.xy-a-t*d)-.045,max(4.3819999999999997-p.z,p.z-5.0)),max(4.37-axisZ,axisZ-5.13));}\nfloat topology_chest_wall(vec3 p){return max(max(max(max(max(max(max(max(max(max(max(max(max(mDisc(p,vec3(0.38000000000000000,1.4800000000000000,4.6950000000000003),2,0.14000000000000001,0.31499999999999995),-(mDisc(p,vec3(0.38000000000000000,1.4800000000000000,4.6950000000000003),2,0.11430000000000000,0.31600000000000028))),-(mDisc(p,vec3(0.48738715006927041,1.5420000000000000,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.6040000000000001,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072965,1.5420000000000000,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072959,1.4179999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.3559999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.4179999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.5420000000000000,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.6040000000000001,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072965,1.5420000000000000,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072959,1.4179999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.3559999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.4179999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770)));}\nfloat topology_common_casting_web(vec3 p){return max(max(max(max(max(max(max(max(max(max(max(max(max(max(topologyWebOuter(p),-(mCylZ(mLocal(p-vec3(0.0000000000000000,1.0160000000000000,0.0000000000000000),sin(middleInclination),cos(middleInclination)),0.23494999999999999,4.2000000000000002,5.2999999999999998))),-(mDisc(p,vec3(0.38000000000000000,1.4800000000000000,4.7500000000000000),2,0.11430000000000000,0.54999999999999982))),-(mDisc(p,vec3(0.48738715006927041,1.5420000000000000,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.6040000000000001,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072965,1.5420000000000000,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072959,1.4179999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.3559999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.4179999999999999,4.3879994999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.5420000000000000,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.6040000000000001,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072965,1.5420000000000000,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.27261284993072959,1.4179999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.38000000000000000,1.3559999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770))),-(mDisc(p,vec3(0.48738715006927041,1.4179999999999999,5.0020004999999994),2,0.0040000000000000001,0.0080005000000000770)));}"
+  },
+  "parts": [
+    {
+      "id": "actuation/middle_cylinder_wall",
+      "source": "motion",
+      "glsl_function": "motion_actuation_middle_cylinder_wall"
+    },
+    {
+      "id": "middle_topology/chest_wall",
+      "source": "installation",
+      "glsl_function": "topology_chest_wall"
+    },
+    {
+      "id": "middle_topology/common_casting_web",
+      "source": "installation",
+      "glsl_function": "topology_common_casting_web"
+    },
+    {
+      "id": "middle_topology/head_core_0",
+      "source": "stack",
+      "glsl_function": "topology_head_core_0"
+    },
+    {
+      "id": "middle_topology/head_core_1",
+      "source": "stack",
+      "glsl_function": "topology_head_core_1"
+    },
+    {
+      "id": "stack_candidate/spindle/L",
+      "source": "stack",
+      "glsl_function": "candidate_stack_71"
+    },
+    {
+      "id": "stack_candidate/spindle/M",
+      "source": "stack",
+      "glsl_function": "candidate_stack_72"
+    },
+    {
+      "id": "stack_candidate/spindle/R",
+      "source": "stack",
+      "glsl_function": "candidate_stack_70"
+    },
+    {
+      "id": "stack_candidate/terminal_eye/L",
+      "source": "stack",
+      "glsl_function": "candidate_stack_20"
+    },
+    {
+      "id": "stack_candidate/terminal_eye/M",
+      "source": "stack",
+      "glsl_function": "candidate_stack_61"
+    },
+    {
+      "id": "stack_candidate/terminal_eye/R",
+      "source": "stack",
+      "glsl_function": "candidate_stack_11"
+    },
+    {
+      "id": "valve/left_combination_lever",
+      "source": "motion",
+      "glsl_function": "motion_valve_left_combination_lever"
+    },
+    {
+      "id": "valve/left_valve_crosshead_pin",
+      "source": "motion",
+      "glsl_function": "motion_valve_left_valve_crosshead_pin"
+    },
+    {
+      "id": "valve/right_combination_lever",
+      "source": "motion",
+      "glsl_function": "motion_valve_right_combination_lever"
+    },
+    {
+      "id": "valve/right_valve_crosshead_pin",
+      "source": "motion",
+      "glsl_function": "motion_valve_right_valve_crosshead_pin"
+    },
+    {
+      "id": "valve_chest/left_front_valve_head_core",
+      "source": "motion",
+      "glsl_function": "motion_valve_chest_left_front_valve_head_core"
+    },
+    {
+      "id": "valve_chest/left_rear_valve_head_core",
+      "source": "motion",
+      "glsl_function": "motion_valve_chest_left_rear_valve_head_core"
+    },
+    {
+      "id": "valve_chest/right_front_valve_head_core",
+      "source": "motion",
+      "glsl_function": "motion_valve_chest_right_front_valve_head_core"
+    },
+    {
+      "id": "valve_chest/right_rear_valve_head_core",
+      "source": "motion",
+      "glsl_function": "motion_valve_chest_right_rear_valve_head_core"
+    }
+  ],
+  "hostCuts": {},
+  "witnesses": [
+    {
+      "pair": [
+        "middle_topology/chest_wall",
+        "actuation/middle_cylinder_wall"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.24831548252683566,
+        1.5113466447737829,
+        4.3846359564869655
+      ],
+      "fieldValues": [
+        -0.004635956470287694,
+        -0.0046359564711447865
+      ],
+      "maximumFieldValue": -0.004635956470287694,
+      "optimizerSuccess": false,
+      "frames": {
+        "middle_topology/chest_wall": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "actuation/middle_cylinder_wall": {
+          "inverseOffset": [
+            0,
+            0.0001300452256662865,
+            -0.01625530641954456
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0.9998720027306434,
+              -0.015999317342071415
+            ],
+            [
+              0,
+              0.015999317342071415,
+              0.9998720027306434
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "middle_topology/common_casting_web",
+        "actuation/middle_cylinder_wall"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.22988848428966274,
+        1.4872878928622724,
+        4.449676122722526
+      ],
+      "fieldValues": [
+        -0.012524999999879799,
+        -0.012524999999879854
+      ],
+      "maximumFieldValue": -0.012524999999879799,
+      "optimizerSuccess": true,
+      "frames": {
+        "middle_topology/common_casting_web": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "actuation/middle_cylinder_wall": {
+          "inverseOffset": [
+            0,
+            0.0001300452256662865,
+            -0.01625530641954456
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0.9998720027306434,
+              -0.015999317342071415
+            ],
+            [
+              0,
+              0.015999317342071415,
+              0.9998720027306434
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "middle_topology/chest_wall",
+        "middle_topology/common_casting_web"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.2788429545783672,
+        1.5570348924921835,
+        4.924458683568325
+      ],
+      "fieldValues": [
+        -0.012849999998885406,
+        -0.012849999998885406
+      ],
+      "maximumFieldValue": -0.012849999998885406,
+      "optimizerSuccess": true,
+      "frames": {
+        "middle_topology/chest_wall": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "middle_topology/common_casting_web": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "middle_topology/head_core_0",
+        "stack_candidate/spindle/M"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.38,
+        1.48,
+        4.433493215579564
+      ],
+      "fieldValues": [
+        -0.040000000000000036,
+        -0.016
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "middle_topology/head_core_0": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "stack_candidate/spindle/M": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "middle_topology/head_core_1",
+        "stack_candidate/spindle/M"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.38,
+        1.48,
+        4.793492677635733
+      ],
+      "fieldValues": [
+        -0.03999946205616833,
+        -0.016
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "middle_topology/head_core_1": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "stack_candidate/spindle/M": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/R",
+        "valve/right_combination_lever"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.9783405541610078,
+        1.475965112557971,
+        4.176295110355717
+      ],
+      "fieldValues": [
+        -0.011637193888975562,
+        -0.009749999999691974
+      ],
+      "maximumFieldValue": -0.009749999999691974,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve/right_combination_lever": {
+          "inverseOffset": [
+            0,
+            -1.6792534112468008e-16,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1.3877787807814457e-17
+            ],
+            [
+              0,
+              -1.3877787807814457e-17,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/R",
+        "valve/right_valve_crosshead_pin"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.98,
+        1.48,
+        4.153397901282459
+      ],
+      "fieldValues": [
+        -0.015999999999999112,
+        -0.012
+      ],
+      "maximumFieldValue": -0.012,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve/right_valve_crosshead_pin": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/R",
+        "valve_chest/right_rear_valve_head_core"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.98,
+        1.48,
+        4.533398242272603
+      ],
+      "fieldValues": [
+        -0.016,
+        -0.0399996590098565
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve_chest/right_rear_valve_head_core": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/R",
+        "valve_chest/right_front_valve_head_core"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.98,
+        1.48,
+        4.93339790128246
+      ],
+      "fieldValues": [
+        -0.016,
+        -0.039999999999999813
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve_chest/right_front_valve_head_core": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/L",
+        "valve/left_combination_lever"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        -0.9821967267050687,
+        1.475071826713995,
+        4.145849024359
+      ],
+      "fieldValues": [
+        -0.010604399926453517,
+        -0.009749999994596489
+      ],
+      "maximumFieldValue": -0.009749999994596489,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve/left_combination_lever": {
+          "inverseOffset": [
+            0,
+            7.586425687630207e-16,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0.9999999999999999,
+              -2.220446049250313e-16
+            ],
+            [
+              0,
+              2.220446049250313e-16,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/L",
+        "valve/left_valve_crosshead_pin"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        -0.98,
+        1.48,
+        4.123127325306952
+      ],
+      "fieldValues": [
+        -0.015999999999999112,
+        -0.012
+      ],
+      "maximumFieldValue": -0.012,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve/left_valve_crosshead_pin": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/L",
+        "valve_chest/left_rear_valve_head_core"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        -0.98,
+        1.48,
+        4.503127666297096
+      ],
+      "fieldValues": [
+        -0.016,
+        -0.0399996590098565
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve_chest/left_rear_valve_head_core": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/L",
+        "valve_chest/left_front_valve_head_core"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        -0.98,
+        1.48,
+        4.9031273253069525
+      ],
+      "fieldValues": [
+        -0.016,
+        -0.039999999999999813
+      ],
+      "maximumFieldValue": -0.016,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "valve_chest/left_front_valve_head_core": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/R",
+        "stack_candidate/terminal_eye/R"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.9743724744390463,
+        1.4773753438632222,
+        5.280839234307832
+      ],
+      "fieldValues": [
+        -0.009749999991641752,
+        -0.009749999991641752
+      ],
+      "maximumFieldValue": -0.009749999991641752,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "stack_candidate/terminal_eye/R": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/L",
+        "stack_candidate/terminal_eye/L"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        -0.9856275255609537,
+        1.4773753438632222,
+        5.250568658332325
+      ],
+      "fieldValues": [
+        -0.009749999991641752,
+        -0.009749999991641752
+      ],
+      "maximumFieldValue": -0.009749999991641752,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "stack_candidate/terminal_eye/L": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "pair": [
+        "stack_candidate/spindle/M",
+        "stack_candidate/terminal_eye/M"
+      ],
+      "phaseIndex": 0,
+      "Time": 0,
+      "theta": 0.4,
+      "xyz": [
+        0.38452837303861054,
+        1.4759597041055716,
+        5.200688471832494
+      ],
+      "fieldValues": [
+        -0.009749999994544989,
+        -0.009749999994544989
+      ],
+      "maximumFieldValue": -0.009749999994544989,
+      "optimizerSuccess": true,
+      "frames": {
+        "stack_candidate/spindle/M": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "stack_candidate/terminal_eye/M": {
+          "inverseOffset": [
+            0,
+            0,
+            0
+          ],
+          "inverseRows": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "retainedPrimitiveReference": "// Exact analytic occupancy formulas retained from own R20. Not all are exact SDFs.\n// Use manifest-certified |field|/L, clipped to analytic AABB, never raw occupancy steps.\nfloat mMax3(float a,float b,float c) { return max(max(a,b),c); }\nfloat mMax4(float a,float b,float c,float d) { return max(max(a,b),max(c,d)); }\nfloat mExtrude(float d,float x,float h) {\n    vec2 q=vec2(d,abs(x)-h);\n    return length(max(q,vec2(0.0)))+min(max(q.x,q.y),0.0);\n}\nfloat mCylX(vec3 p,vec2 yz,float x,float h,float r) {\n    return max(length(vec2(p.y,p.z)-yz)-r,abs(p.x-x)-h);\n}\nfloat mFlat(vec3 p,vec2 a,vec2 b,float x,float h,float r) {\n    vec2 w=vec2(p.y,p.z)-a; vec2 d=b-a;\n    float t=clamp(dot(w,d)/dot(d,d),0.0,1.0);\n    return max(length(w-d*t)-r,abs(p.x-x)-h);\n}\nfloat mCapsule(vec3 p,vec3 a,vec3 b,float r) {\n    vec3 d=b-a; float den=dot(d,d);\n    if(den<=1e-20) return length(p-a)-r;\n    float t=clamp(dot(p-a,d)/den,0.0,1.0);\n    return length(p-a-d*t)-r;\n}\nfloat mBox(vec3 p,vec3 c,vec3 h) {\n    vec3 d=abs(p-c)-h;\n    return length(max(d,vec3(0.0)))+min(max(max(d.x,d.y),d.z),0.0);\n}\nfloat mBoxInf(vec3 p,vec3 c,vec3 h) {\n    vec3 d=abs(p-c)-h;return max(max(d.x,d.y),d.z);\n}\nvec3 mLocal(vec3 p,float s,float c) { return vec3(p.x,c*p.y-s*p.z,s*p.y+c*p.z); }\nvec3 mScaleX(vec3 p,float s) { return vec3(p.x/s,p.y,p.z); }\nfloat mInterval(float z,float lo,float hi) {\n    if(hi<=lo)return 1e6;\n    return max(lo-z,z-hi);\n}\nfloat mCylZ(vec3 p,float r,float lo,float hi) { return max(length(vec2(p.x,p.y))-r,mInterval(p.z,lo,hi)); }\nfloat mAnnulusZ(vec3 p,float ri,float ro,float lo,float hi) {\n    float rr=length(vec2(p.x,p.y));return mMax3(ri-rr,rr-ro,mInterval(p.z,lo,hi));\n}\nfloat mCylY(vec3 p,float r,float lo,float hi,float z) {\n    return max(length(vec2(p.x,p.z-z))-r,mInterval(p.y,lo,hi));\n}\nfloat mJointCyl(vec3 p,float lo,float hi,float r) {\n    return mExtrude(length(vec2(p.y,p.z))-r,p.x-(lo+hi)*.5,(hi-lo)*.5);\n}\nfloat mOil(vec3 p) {\n    return min(min(mCapsule(p,vec3(.07,.15,0.0),vec3(.07,0.0,0.0),.004),mCapsule(p,vec3(.07,0.0,0.0),vec3(0.0),.004)),mCapsule(p,vec3(0.0),vec3(0.0,.049,0.0),.004));\n}\nfloat mNut(vec3 p) {\n    float radial=-1e20;\n    for(int i=0;i<6;i++){\n        float a=float(i)*3.14159265358979323846/3.0;\n        radial=max(radial,p.y*cos(a)+p.z*sin(a));\n    }\n    radial-=.066;\n    float d=max(mExtrude(radial,p.x-.129,.025),-mJointCyl(p,.09,.17,.0355));\n    float slot=1e20;\n    for(int i=0;i<3;i++){\n        float a=3.14159265358979323846*.5+float(i)*3.14159265358979323846/3.0;\n        float u=p.y*cos(a)+p.z*sin(a);\n        slot=min(slot,max(abs(u)-.005,max(.139-p.x,p.x-.17)));\n    }\n    return max(d,-slot);\n}\nfloat mJoint(vec3 p,int part) {\n    float rad=length(vec2(p.y,p.z));\n    float cone=max(rad-(.046+clamp((p.x-.045)/.05,0.0,1.0)*.014),max(.045-p.x,p.x-.095));\n    float oil=mOil(p);\n    if(part==1){\n        float pin=min(min(mJointCyl(p,-.115,.095,.046),mJointCyl(p,.095,.174,.035)),cone);\n        float hole=mCapsule(p,vec3(.147,-.09,0.0),vec3(.147,.09,0.0),.004);\n        return max(max(pin,-hole),-oil);\n    }\n    if(part==2){\n        float cheek=min(mJointCyl(p,-.095,-.045,.105),mJointCyl(p,.045,.095,.105));\n        cheek=max(cheek,-min(mJointCyl(p,-.13,.13,.046),cone));\n        return max(min(cheek,mBox(p,vec3(0.0,.15,0.0),vec3(.095,.030,.045))),-oil);\n    }\n    if(part==3)return max(mJointCyl(p,.095,.104,.071),-mJointCyl(p,.09,.12,.036));\n    if(part==4)return mNut(p);\n    if(part==5){\n        float a=mCapsule(p,vec3(.147,-.078,0.0),vec3(.147,.078,0.0),.003);\n        float b=mCapsule(p,vec3(.147,.074,0.0),vec3(.160,.088,.009),.002);\n        float c=mCapsule(p,vec3(.147,.074,0.0),vec3(.134,.088,-.009),.002);\n        return min(a,min(b,c));\n    }\n    float cup=max(mBox(p,vec3(.07,.15,0.0),vec3(.025,.018,.025)),-mBox(p,vec3(.07,.16,0.0),vec3(.018,.026,.018)));\n    return max(cup,-oil);\n}\nfloat mDisc(vec3 p,vec3 c,int axis,float r,float h) {\n    vec3 q=p-c;\n    if(axis==0)return max(length(vec2(q.y,q.z))-r,abs(q.x)-h);\n    if(axis==1)return max(length(vec2(q.x,q.z))-r,abs(q.y)-h);\n    return max(length(vec2(q.x,q.y))-r,abs(q.z)-h);\n}\nfloat mFlatRod(vec3 p,vec3 a,vec3 b,int axis,vec3 extra,bool hasExtra,float width,float eye,float bore,float halfThickness) {\n    vec3 q=p;float axial;\n    if(axis==0){q.x=a.x;axial=abs(p.x-a.x)-halfThickness;}\n    else {q.y=a.y;axial=abs(p.y-a.y)-halfThickness;}\n    float body=mCapsule(q,a,b,width);\n    body=min(body,min(length(q-a)-eye,length(q-b)-eye));\n    float holes=min(length(q-a)-bore,length(q-b)-bore);\n    if(hasExtra){body=min(body,length(q-extra)-eye);holes=min(holes,length(q-extra)-bore);}\n    return mMax3(body,-holes,axial);\n}\nfloat mArcPlate(vec3 p,vec3 T,vec4 Q,float R,float halfAngle,float outer,float inner,float x) {\n    vec2 d=vec2(p.y-T.y,p.z-T.z);\n    vec2 q=vec2(d.x*Q.x+d.y*Q.y,d.x*Q.z+d.y*Q.w);\n    float angle=0.0;\n    if(abs(q.x)+abs(R-q.y)>0.0) angle=atan(q.x,R-q.y);\n    float a=clamp(angle,-halfAngle,halfAngle);\n    vec2 nearest=vec2(R*sin(a),R*(1.0-cos(a)));\n    float arc=length(q-nearest);\n    return max(max(arc-outer,inner-arc),abs(p.x-x)-.009);\n}\nfloat mPVWindow(vec3 p,float z) {\n    // Angular discontinuity at rho=0 is inactive behind the annular lower bound.\n    float r=.1143;float period=2.0*3.14159265358979323846/8.0;\n    float ann=mAnnulusZ(p,.1133,.1273,z-.020,z+.020);\n    if(length(vec2(p.x,p.y))<.09) return ann; // Proven inactive angle, exact field value.\n    float angle=atan(p.y,p.x);\n    float err=mod(angle+period*.5,period)-period*.5;\n    return max(ann,(abs(err)-.21)*r);\n}\nfloat mPV(vec3 p,float q,float rearSpindle,float frontSpindle,int part) {\n    float r=.1143;float rl=.1263;float rg=.1513;float ro=.1693;float H=.43;\n    float wr=mPVWindow(p,-.22);float wf=mPVWindow(p,.22);\n    float cr=mAnnulusZ(p,rl-.001,rg,-.252,-.188);float cf=mAnnulusZ(p,rl-.001,rg,.188,.252);\n    float lr=mCylY(p,.018,-.215,-rl,-.22);float lf=mCylY(p,.018,-.215,-rl,.22);\n    float supply=mCylY(p,.026,0.0,.215,0.0);\n    float er=mCylY(p,.020,0.0,.215,-.385);float ef=mCylY(p,.020,0.0,.215,.385);\n    float workr=min(min(wr,cr),lr);float workf=min(min(wf,cf),lf);\n    float holes=min(min(min(supply,er),ef),min(workr,workf));\n    float mainholes=min(min(min(supply,er),ef),min(wr,wf));\n    if(part==0)return max(mAnnulusZ(p,rl,ro,-H,H),-holes);\n    if(part==1)return max(mAnnulusZ(p,r,rl,-H,H),-mainholes);\n    if(part==2)return mAnnulusZ(p,.026,ro,-.452,-.43);\n    if(part==3)return mAnnulusZ(p,.026,ro,.43,.452);\n    if(part==4)return mAnnulusZ(p,.016,.026,-.452,-.43);\n    if(part==5)return mAnnulusZ(p,.016,.026,.43,.452);\n    if(part==6)return mCylZ(p,.100,-.24+q,-.16+q);\n    if(part==7)return mCylZ(p,.100,.16+q,.24+q);\n    if(part==8)return mAnnulusZ(p,.100,r,-.24+q,-.16+q);\n    if(part==9)return mAnnulusZ(p,.100,r,.16+q,.24+q);\n    if(part==10)return mCylZ(p,.016,rearSpindle,frontSpindle);\n    float allvoid=min(mCylZ(p,r,-H,H),holes);\n    if(part==11)return max(mCylY(p,.038,0.0,.215,0.0),-allvoid);\n    if(part==12)return max(mCylY(p,.032,0.0,.215,-.385),-allvoid);\n    if(part==13)return max(mCylY(p,.032,0.0,.215,.385),-allvoid);\n    if(part==14)return max(mCylY(p,.030,-.215,-rl,-.22),-allvoid);\n    return max(mCylY(p,.030,-.215,-rl,.22),-allvoid);\n}\n\n\n// Named original whole-system solids. Fixed inspection pose.\n"
+}

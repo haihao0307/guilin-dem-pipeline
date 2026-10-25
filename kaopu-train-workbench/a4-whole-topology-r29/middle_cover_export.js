@@ -1,0 +1,51 @@
+/* Source-grounded external-flange topology, explicit inferred local profiles.
+ * No pressure-vessel claim; no hidden overlap exemption for removable covers.
+ * o1332 guide identity is ambiguous in perspective: caption says RIGHT guide.
+ */
+'use strict';
+const E=require('./cover_geometry');
+const {box,cylinder,plane,union,intersect,difference,annulus,hexZ}=E;
+function pack(P,{qRef,pinMRef,guide=false}={}){
+ const C=P.chest,x=P.middleX,y=P.planeY,center=[x,y,0];
+ if(!Number.isFinite(qRef))throw Error('Same-Time reference displacement required');
+ const choices={frontFlatMinX:.262,rearMatingFlatMinX:.262,studCount:6,studPitchRadius:.124,studPatternOffset:Math.PI/6,studRadius:.004,coverHoleRadius:.0043,studEmbed:.016,washerRadius:.009,washerThickness:.002,nutApothem:.0075,nutLength:.007,studEndReserve:.003,webRearGap:.002,glandLength:.018,glandRadius:.035,rearBossLength:.045,rearBossRadius:.043};
+ const evidence={leading:{url:'https://sirnigelgresley.org.uk/overhaul-1522/pics/o1332.jpg',report:'https://sirnigelgresley.org.uk/overhaul-1522/overhaul-19.shtml',date:'2021-07-03',observed:'External white locally shaped cover, peripheral fasteners and central gland/rod passage beside black power-cylinder cover.',inferred:'Flattened inboard edge X=.262, all dimensions, axis placement and six-fastener pattern. Perspective photo is not a calibrated drawing.',guideIdentity:'Caption identifies right valve guide; projecting assembly is NOT asserted to be the middle guide.'},trailing:{url:'https://sirnigelgresley.org.uk/eng-reports/pics/e1857.jpg',report:'https://sirnigelgresley.org.uk/eng-reports/eng-24-a.shtml',date:'2024-01-24',observed:'Removed circular external flange with peripheral holes; chest-side projecting studs. Five clear chest studs are a visibility lower bound, not a total.',inferred:'A separate local mating-edge flat is introduced for this GAME candidate; this flat is NOT claimed to be visible or recovered from e1857. Six-fastener pattern and all dimensions are inferred.'},licensing:'Images were inspected only. No photographs are included or republished.'};
+ const parts=[],interfaces=[],housingVoids=[],throughHoles=[];
+ const emit=(id,shape,role,extra={})=>{const b=E.bounds(shape),fn='topology_'+id.replace(/\W/g,'_');if(b.flat().some(v=>!Number.isFinite(v)))throw Error('Finite bounds required '+id);parts.push({id:'middle_topology/'+id,source:'installation',group:'middle_topology',glsl_function:fn,glsl:`float ${fn}(vec3 p){return ${E.glsl(shape)};}`,aabb_min:b[0],aabb_max:b[1],lipschitz:1.000002,shape,role,motionBinding:'fixed train frame',materialDescriptor:{preset:'neutral',basis:'inferred mechanical role',finish:'unverified, not a material identification'},status:'GAME candidate; source topology with inferred dimensions',strength:'unknown; no structural certification claimed',...extra});};
+ for(const [end,a,b,sign,flat]of[['rear',C.rear-C.coverThickness,C.rear,-1,choices.rearMatingFlatMinX],['front',C.front,C.front+C.coverThickness,1,choices.frontFlatMinX]]){
+  const inner=sign>0?a:b,outer=sign>0?b:a,orient=(u,v)=>[Math.min(u,v),Math.max(u,v)],coverVoid=[];
+  for(let i=0;i<choices.studCount;i++){
+   const angle=choices.studPatternOffset+i*2*Math.PI/choices.studCount,c=[x+choices.studPitchRadius*Math.cos(angle),y+choices.studPitchRadius*Math.sin(angle),0],tag=end+'_'+i;
+   const root=inner-sign*choices.studEmbed,wEnd=outer+sign*choices.washerThickness,nEnd=wEnd+sign*choices.nutLength,sEnd=nEnd+sign*choices.studEndReserve;
+   const hole=cylinder(2,c,choices.coverHoleRadius,[a-.000001,b+.000001]);coverVoid.push(hole);throughHoles.push({tag,center:c.slice(),shape:hole,explicitThroughHole:true});
+   // A blind nominal cylindrical thread envelope in fixed housing. The stud is
+   // a separate body; neither cover nor housing contains hidden solid shanks.
+   const blind=cylinder(2,c,choices.studRadius,orient(root,inner+sign*.000001));housingVoids.push(blind);
+   emit('stud/'+tag,cylinder(2,c,choices.studRadius,orient(root,sEnd)),'fixed peripheral stud with finite embedded length',{materialDescriptor:{preset:'steel',basis:'inferred fastener role',finish:'unverified steel-like study'},threadRepresentation:'nominal cylindrical interface only; no thread/locking claim'});
+   emit('washer/'+tag,difference(cylinder(2,c,choices.washerRadius,orient(outer,wEnd)),cylinder(2,c,choices.coverHoleRadius,orient(outer-sign*.000001,wEnd+sign*.000001))),'separate finite annular washer',{materialDescriptor:{preset:'steel',basis:'inferred fastener role'}});
+   emit('nut/'+tag,difference(hexZ(c,choices.nutApothem,orient(wEnd,nEnd)),cylinder(2,c,choices.studRadius,orient(wEnd-sign*.000001,nEnd+sign*.000001))),'separate finite six-plane nut with nominal shaft bore',{materialDescriptor:{preset:'steel',basis:'inferred fastener role'},threadRepresentation:'nominal cylindrical interface only; no thread/locking claim'});
+   interfaces.push({tag,studId:'middle_topology/stud/'+tag,coverId:'middle_topology/'+end+'_cover',centerXY:c.slice(0,2),radialCoverClearance:choices.coverHoleRadius-choices.studRadius,studEmbed:choices.studEmbed,pattern:'six at 60 degree intervals, 30 degree offset; inferred, not photo-counted',nominalContacts:['housing blind bore / stud cylindrical boundary','cover outer face / washer','washer / nut','nut bore / stud boundary'],positiveVolumeOverlapPermitted:false,rootZ:root,innerZ:inner,outerZ:outer,washerEndZ:wEnd,nutEndZ:nEnd,studEndZ:sEnd});
+  }
+  const profile=intersect(annulus(center,C.packingRadius,C.outerRadius,[a,b]),plane([-1,0,0],flat));
+  emit(end+'_cover',difference(profile,...coverVoid),'removable external flange cover',{profileEvidence:end==='front'?'source-backed shaped leading cover; flat coordinates inferred':'source-backed external circular flange; local mating-edge flat independently inferred',profileFlatMinX:flat,materialDescriptor:{preset:'lightPaint',basis:'photo appearance, not composition',finish:'light paint appearance reference',albedo:[.78,.80,.75]},removable:true,overlapExemption:false});
+  emit(end+'_packing',annulus(center,C.shaftRadius+.00015,C.packingRadius,[a,b]),'separate rod packing annulus',{materialDescriptor:{preset:'neutral',basis:'packing composition unknown'}});
+ }
+ const housing=annulus(center,C.boreRadius,C.outerRadius,[C.rear,C.front]);
+ emit('chest_wall',difference(housing,...housingVoids),'fixed valve housing with explicit stud sockets',{sameCastingWith:'common_casting_web',materialDescriptor:{preset:'neutral',basis:'fixed cast housing composition unverified'}});
+ const webOuter={kind:'webOuter',axisY:1.016,x,y,radius:.045,range:[C.rear+choices.webRearGap,5],axialRange:[4.37,5.13],bounds:[[-.045,1.35,C.rear+choices.webRearGap],[x+.045,1.9,5]]};
+ const powerBore={kind:'tiltedCylinder',axisY:1.016,radius:.23495,range:[4.2,5.3]},valveBore=cylinder(2,center,C.boreRadius,[4.2,5.3]);
+ emit('common_casting_web',difference(webOuter,powerBore,valveBore,...housingVoids),'new common casting web outside both bores',{lipschitz:1.5,sameCastingWith:'chest_wall',nominalRearCoverGap:choices.webRearGap});
+ // This short central gland is not misrepresented as the complete guide.
+ const glandStart=C.front+C.coverThickness,glandEnd=glandStart+choices.glandLength;
+ const rearFace=C.rear-C.coverThickness;
+ emit('rear_gland',annulus(center,C.shaftRadius+.0002,choices.rearBossRadius,[rearFace-choices.rearBossLength,rearFace]),'separate fixed projecting rear central housing with open rod passage',{topologyEvidence:'Projecting central housing visible on removed trailing cover e1857; all dimensions inferred. Not the subsequently fitted tailrod cover/oiler.',materialDescriptor:{preset:'lightPaint',basis:'photo appearance, not composition'}});
+ emit('front_gland',annulus(center,C.shaftRadius+.0002,choices.glandRadius,[glandStart,glandEnd]),'fixed central gland body with open rod passage',{topologyEvidence:'central passage/gland is visible; exact housing dimensions inferred'});
+ emit('front_guide',annulus(center,C.shaftRadius+.0002,choices.glandRadius,[glandEnd,C.guideEnd]),'retained annular guide envelope; complete middle-guide topology unverified',{topologyEvidence:'Retained R29 inferred envelope only. The projecting right guide in o1332 is not assigned to the middle valve.'});
+ for(let i=0;i<C.headCentres.length;i++){
+  const z=C.headCentres[i]+qRef,range=[z-C.headHalfLength,z+C.headHalfLength];
+  for(const [tag,shape]of[['head_core',cylinder(2,center,C.headCoreRadius,range)],['seal_band',annulus(center,C.headCoreRadius,C.sealRadius,range)]])emit(tag+'_'+i,shape,'moving middle piston-valve '+tag,{source:'stack',frameSourceId:'valve/gresley_middle_valve_crosshead_pin',motionBinding:'same-Time middle spindle translation',materialDescriptor:{preset:tag==='head_core'?'steel':'neutral',basis:'inferred role; seal composition unknown'}});
+ }
+ const helper=`float topologyWebOuter(vec3 p){vec2 a=vec2(0.,1.016+tan(middleInclination)*p.z),b=vec2(${E.num(x)},${E.num(y)}),d=b-a;float t=clamp(dot(p.xy-a,d)/dot(d,d),0.,1.);float axisZ=sin(middleInclination)*(p.y-1.016)+cos(middleInclination)*p.z;return max(max(length(p.xy-a-t*d)-.045,max(${E.num(C.rear+choices.webRearGap)}-p.z,p.z-5.0)),max(4.37-axisZ,axisZ-5.13));}\n`;
+ return {version:'R29 cover profile candidate v1',parts,helper,source:helper+parts.filter(p=>p.source==='installation').map(p=>p.glsl).join('\n'),movingSource:parts.filter(p=>p.source==='stack').map(p=>p.glsl).join('\n'),choices,evidence,interfaces,throughHoles,parameters:P,guide:{status:'short central gland separated from retained annular guide envelope; complete middle guide remains inferred and deferred',rightGuideNotClaimedAsMiddle:true},assertions:{gameShapeHierarchyMotionCandidate:true,wholeMechanicalAcceptance:false,officialNumericalDimensions:false,originalGeometryChanged:false,castingWebBoresSubtracted:true,steamPortsAndPassagesComplete:false,strength:'unknown',pressureVesselCertification:'not requested or claimed',noCoverOverlapExemption:true,photographsIncluded:false},minimumAnalyticMargins:{coverToPowerWallX:.262-.26,coverBoreBearingLand:x-C.boreRadius-.262,studHoleToBore:choices.studPitchRadius-choices.coverHoleRadius-C.boreRadius,minimumStudWasherToFlat:x-choices.studPitchRadius*Math.cos(Math.PI/6)-choices.washerRadius-.262}};
+}
+module.exports={pack,...E};

@@ -1,0 +1,135 @@
+{
+  "parameters": {
+    "version": "R29 candidate",
+    "middleX": 0.38,
+    "planeY": 1.48,
+    "pivotZ": 5.55,
+    "middleLinkLength": 0.25,
+    "middleSpindleLength": 1.18,
+    "chest": {
+      "boreRadius": 0.1143,
+      "outerRadius": 0.14,
+      "rear": 4.38,
+      "front": 5.01,
+      "coverThickness": 0.022,
+      "shaftRadius": 0.016,
+      "packingRadius": 0.026,
+      "guideEnd": 5.17,
+      "headHalfLength": 0.04,
+      "headCentres": [
+        4.51,
+        4.87
+      ],
+      "headCoreRadius": 0.1,
+      "sealRadius": 0.1143
+    },
+    "evidence": {
+      "topology": "SNGLT 2016-12-23 photo o240: middle valve chest is beside independent middle power-cylinder bore; real conjugated levers use frame slots; a dedicated lever stretcher is documented",
+      "numbers": "ALL middle placement, casting wall, guide, support and opening dimensions are inferred. Bore radius reuses class-sized outside valve research value; not verified middle drawing. No historical or strength acceptance.",
+      "sideSign": "positive X is a candidate convention, not established by photograph",
+      "baseline": "R28 and original centre-horizontal failed installation retained unchanged"
+    }
+  },
+  "sourceFile": "r29/build_middle_chest.js",
+  "boreQueries": 17952,
+  "ligamentQueries": 12155,
+  "minimumSampledLigamentLengthM": 0.03141140266697713,
+  "largestContactFieldM": -0.012524999999999842,
+  "webFrameClearanceByExactXEnvelope": 0.10000000000000003,
+  "witnesses": [
+    {
+      "beta": 0.11,
+      "z": 4.695,
+      "powerContact": [
+        0.24499426546480882,
+        1.4993779935402747,
+        4.695
+      ],
+      "powerFields": [
+        -0.012525000000000036,
+        -0.01252499999999998
+      ],
+      "chestContact": [
+        0.25413988661891956,
+        1.4980652805043706,
+        4.695
+      ],
+      "chestFields": [
+        -0.012850000000000042,
+        -0.012849999999999973
+      ]
+    },
+    {
+      "beta": 0.135,
+      "z": 4.695,
+      "powerContact": [
+        0.2254277242310439,
+        1.5506573324943942,
+        4.695
+      ],
+      "powerFields": [
+        -0.012525000000000064,
+        -0.012524999999999953
+      ],
+      "chestContact": [
+        0.2643591099058402,
+        1.532861205417872,
+        4.695
+      ],
+      "chestFields": [
+        -0.01285000000000007,
+        -0.012849999999999945
+      ]
+    },
+    {
+      "beta": 0.16,
+      "z": 4.695,
+      "powerContact": [
+        0.1967491558823786,
+        1.6216223131878589,
+        4.695
+      ],
+      "powerFields": [
+        -0.012525000000000008,
+        -0.012525000000000008
+      ],
+      "chestContact": [
+        0.2793932623314574,
+        1.5577522143459146,
+        4.695
+      ],
+      "chestFields": [
+        -0.012850000000000014,
+        -0.01285
+      ]
+    }
+  ],
+  "continuousConnection": {
+    "betaRange": [
+      0.11,
+      0.16
+    ],
+    "worldZ": 4.7,
+    "taUpper": 0.6446794206453784,
+    "tbLower": 0.6688571895029233,
+    "minimumFractionGap": 0.024177768857544857,
+    "powerAxialBounds": [
+      4.690905363453895,
+      4.760808457328374
+    ],
+    "method": "Monotonic trig bounds enclose all beta and line parameters. All t between radius-midwall contacts remain outside both bores, inside web and axial caps; contacts lie inside existing power and candidate chest walls.",
+    "numericalBoundarySlack": 1e-10,
+    "structuralAcceptance": false
+  },
+  "removableCoverMargins": {
+    "rear": 0.005748615670703394,
+    "front": 0.010797775664775487,
+    "webToChestFrontCover": 0.009999999999999787
+  },
+  "coverEnvelopeMethod": "Power rear-cover maximum at beta.11 and front-cover minimum at beta.16 by monotonic endpoint formulas over [.11,.16]; new covers are horizontal. Bounds cover full discs, not just chosen witnesses.",
+  "boreExclusion": "Exact boolean max(newWebOuter, -powerBore, -valveBore) excludes both defined bore volumes. Tested source retains both subtractions; this does not cut original solids.",
+  "connectivity": "7497 z/beta slices have a continuous sampled interior ligament from overlapping existing power wall to overlapping new chest wall; direct line inequalities underlie witnesses. This is topology, not load capacity.",
+  "continuousFullInstallationProof": false,
+  "structuralAcceptance": false,
+  "wholeAcceptance": false
+}
