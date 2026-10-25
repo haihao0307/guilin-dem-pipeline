@@ -25,7 +25,7 @@ try:
    settled();print('CAPTURE',name,flush=True);page.screenshot(path=str(OUT/(name+'.png')));report['views'][name]=page.evaluate('({frame:semanticInspection.lastStats, journey:semanticInspection.kccJourney.snapshot(),display:semanticInspection.presentedDisplay,camera:semanticInspection.presentedCamera})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   settled();assert page.locator('#semanticMode').is_hidden();capture('r17-default-grey')
   page.click('[data-building="kcc"]');settled();capture('r17-kcc-six-face-recessed')
-  report['profiles']=[page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-whole-native'})}''')]
+  report['profiles']=[page.evaluate('''async()=>{const {profileAssemblyArchetypes}=await import('./qa-assembly-archetype-profiler.mjs');return await profileAssemblyArchetypes(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-whole-native'})}''')]
   page.evaluate('semanticInspection.liftPanel.setExternalClock(true); semanticInspection.kccJourney.journey.goToFloor(1)');capture('r17-entry-design-landing')
   for floor,name in [(4,'fourth'),(28,'top')]:
    result=page.evaluate('(f)=>semanticInspection.kccJourney.journey.goToFloor(f)',floor);assert result['accepted'],result;settled()
@@ -33,16 +33,22 @@ try:
    states=batch['states'];q=batch['final'];report.setdefault('legs',[]).append({'to':floor,'samples':states,'rendering':'intermediate simulation states recorded, not rendered or presented as video'});assert q['currentFloorId']==('P04' if floor==4 else 'T24')
    page.evaluate('semanticInspection.render()');settled()
    capture('r17-arrived-'+name)
-   report['profiles'].append(page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-design-arrival-native'})}'''));(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+   report['profiles'].append(page.evaluate('''async()=>{const {profileAssemblyArchetypes}=await import('./qa-assembly-archetype-profiler.mjs');return await profileAssemblyArchetypes(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-design-arrival-native'})}'''));(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   for room in 'ABCDEF':
    page.locator('#kccJourneyPanel select').nth(1).select_option(room)
    page.get_by_role('button',name='开本房门',exact=True).click();settled()
-   page.get_by_role('button',name='层走廊书签',exact=True).click();settled()
+   if room=='A':page.get_by_role('button',name='层走廊书签',exact=True).click();settled()
    progression=page.evaluate("""()=>{const s=semanticInspection,was=s.bootLayoutReady,states=[];s.bootLayoutReady=false;try{const b=[...document.querySelectorAll('#kccJourneyPanel button')].find(b=>b.textContent==='前进一段');for(let n=0;n<20;n++){b.click();states.push(document.querySelector('#kccJourneyPanel').innerText);}return states;}finally{s.bootLayoutReady=was;}}""")
    page.evaluate('semanticInspection.render()');settled()
    status=page.locator('#kccJourneyPanel').inner_text();assert '100%' in status,status
    report.setdefault('roomTraversal',[]).append({'room':room,'increments':20,'usedInteriorBookmark':False,'status':status,'pathProgress':progression})
    capture('r17-top-design-room-'+room)
+   returned=page.evaluate("""()=>{const s=semanticInspection,was=s.bootLayoutReady,states=[];s.bootLayoutReady=false;try{const b=[...document.querySelectorAll('#kccJourneyPanel button')].find(b=>b.textContent==='退回一段');for(let n=0;n<20;n++){b.click();states.push(document.querySelector('#kccJourneyPanel').innerText);}return states;}finally{s.bootLayoutReady=was;}}""")
+   assert ' 0%' in returned[-1],returned[-1]
+   report['roomTraversal'][-1]['returnPathProgress']=returned
+   page.evaluate('semanticInspection.render()');settled()
+   if room in 'AF':capture('r17-returned-corridor-from-'+room)
+
   assert not report['errors'];report['passed']=True;context.close();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc())
