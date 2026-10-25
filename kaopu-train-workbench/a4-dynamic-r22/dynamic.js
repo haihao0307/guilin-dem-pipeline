@@ -36,3 +36,6 @@ D.argument=function(part){let m=D.classify(part);if(!m||m.type==='wheel')return'
 // Evaluation order: Time -> Location/environment -> Object state.
 D.state=function(Time,Location={},ObjectState={}){if(!Number.isFinite(Time))throw Error('finite Time required');const origin=Location.origin||[0,0,0];if(origin.some(v=>v!==0))throw Error('This diagnostic uses rail-local origin [0,0,0]; translated environments are not yet validated');return {theta:(ObjectState.initialTheta??.4)+(ObjectState.angularSpeed??1)*Time,eye:Location.eye||[16,5,-4],cut:ObjectState.cut??100,object:'train',hierarchy:['frame','boiler','wheel','drive','actuation'],frozen:['valve','valve_chest','cylinder_pressure','trucks','connections'],location:'rail-local Y=0, middle driving axle Z=0, forward +Z'};};
 window.renderAt=async function(Time,Location,ObjectState){let s=D.state(Time,Location,ObjectState);return render(s.eye,[0,1.8,-4],s.cut,s.theta);};
+D.wheelRadii=[.4826,.4826,1.016,1.016,1.016,.5588];
+D.wheelTheta=function(theta,axle){return .4+(theta-.4)*1.016/D.wheelRadii[axle];};
+D.scalar=function(part){if(part.group==='wheel'){let axle=Number(part.id.match(/axle(\d+)/)[1]);return `${part.glsl_function}_parameterized(p,.4+(timeTheta-.4)*${(1.016/D.wheelRadii[axle]).toPrecision(17)})`;}return `${part.glsl_function}(${D.argument(part)})`;};

@@ -2,7 +2,9 @@
 
 Research only. Not a completed A4, not an exact60009 reconstruction, not a final public release. R21 static whole render remains untouched at its retained path.
 
-Time -> Location/environment -> Object: Time controls theta=initialTheta+angularSpeed*Time. Location is the verified rail-local environment (Y=0, middle driving axle Z=0, +Z forward). Object is the whole train with frame/boiler/wheel/drive/actuation semantic children. Nonzero environment translation is explicitly rejected until validated. Variables and analytic functions determine structure; no object meshes or point/voxel geometry are introduced. Surface-wave material work is separate from mechanical phase and must never hide a kinematic error.
+Time -> Location/environment -> Object: Time controls theta=initialTheta+angularSpeed*Time. Location is the verified rail-local environment (Y=0, middle driving axle Z=0, +Z forward). Object is the whole train with frame/boiler/wheel/drive/actuation semantic children. Noncoupled wheels use angular displacement equal to the same vehicle-local travel divided by their documentary radius; this is rolling kinematics in a vehicle-local rig, not tested world-space train translation.
+
+Nonzero environment translation is explicitly rejected until validated. Variables and analytic functions determine structure; no object meshes or point/voxel geometry are introduced. Surface-wave material work is separate from mechanical phase and must never hide a kinematic error.
 
 This adapter is newly RECONSTRUCTED, not the recovered original generator. The 53 wheel fields retain genuine theta functions. The drive and actuation were expanded at theta=.4 in recovered R21; we derive explicit rigid inverse coordinate transforms from preserved R20 Python crank-slider formulas, preserving all scalar part shapes and returning matching transformed AABBs. 23 drive and30 actuation parts move; static shafts, cylinder walls and guides remain fixed. The remaining407 part fields remain fixed. This is not recovery of full Walschaerts/Gresley valve dynamics.
 

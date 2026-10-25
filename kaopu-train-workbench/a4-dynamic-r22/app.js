@@ -14,8 +14,8 @@ function scissorBox(lo,hi,eye,target){
 (async()=>{try{
 for(const [source,code] of Object.entries(SCENE.sources)){
 let ps=SCENE.parts.filter(p=>p.source===source);
-let dispatch=ps.map((p,i)=>`if(id==${i})return ${SCENE.hostCuts[p.id]?`max(${p.glsl_function}(p),-${SCENE.hostCuts[p.id]}(p))`:`${p.glsl_function}(${DYNAMIC.argument(p)})`};`).join('\n');
-dispatch=dispatch.replace(/(support_wheel_\w+)\(p\)/g,'$1_parameterized(p,timeTheta)');
+let dispatch=ps.map((p,i)=>`if(id==${i})return ${SCENE.hostCuts[p.id]?`max(${p.glsl_function}(p),-${SCENE.hostCuts[p.id]}(p))`:DYNAMIC.scalar(p)};`).join('\n');
+
 let ranges=ps.map((p,i)=>p.interval_function?`if(id==${i})return ${p.interval_function}(lo,hi);`:'').join('\n');
 let fs=`#version 300 es
 precision highp float;precision highp int;

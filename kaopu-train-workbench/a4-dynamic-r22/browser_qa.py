@@ -11,8 +11,8 @@ try:
   page.wait_for_function('window.QA && (QA.done || QA.errors.length)',timeout=300000)
   first=page.evaluate('QA');assert first.get('done')and not first['errors'],first
   views=[]
-  for name,eye,cut,theta in [('phase0',[16,5,-4],100,.4),('phase1',[16,5,-4],100,1.4),('phase_collision',[16,5,-4],0,3.3545228223),('phase_loop',[16,5,-4],100,.4+6.283185307179586)]:
-   start=time.monotonic();page.evaluate('async v=>{await render(v.eye,[0,1.8,-4],v.cut,v.theta)}',{'eye':eye,'cut':cut,'theta':theta})
+  for name,eye,cut,theta in [('phase0',[16,5,-4],100,.4),('phase1',[16,5,-4],100,1.4),('phase_collision',[16,5,-4],0,3.3545228223),('phase_return',[16,5,-4],100,.4)]:
+   start=time.monotonic();page.evaluate('async v=>{await renderAt(v.theta-.4,{eye:v.eye},{cut:v.cut,initialTheta:.4,angularSpeed:1})}',{'eye':eye,'cut':cut,'theta':theta})
    raw=page.evaluate('c.toDataURL("image/png")');(P/(name+'-whole.png')).write_bytes(base64.b64decode(raw.split(',')[1]))
    q=page.evaluate('QA');q['pixel_readback_wall_s']=time.monotonic()-start;q['view']=name;views.append(q);print(json.dumps(q),flush=True)
    assert q.get('done')and not q['errors']and q['draws']==513 and q.get('glError')==0,q

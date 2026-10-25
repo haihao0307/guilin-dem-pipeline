@@ -1,0 +1,154 @@
+{
+  "schema_version": "a4-r22-sampled-chain-failure-1",
+  "status": "FAIL_WHOLE_CHAIN_ACCEPTANCE",
+  "pass": false,
+  "source_geometry_modified": false,
+  "source_sha256": {
+    "reference/driving_crank_assembly.py": "a525dfc3301b428195e3141f37cade1aadc11e46e4e1e6eb4c131f18d4dab30b",
+    "reference/wheelset_assembly.py": "0dbb0901d595ec65fb2ba6c2bf88094ce9eff9f0f2cc3af5525ecb28b96417c9",
+    "reference/cylinder_actuation_assembly.py": "96d2955607dc516ba3cce3ea647ddea01dfb8eb5f579291872fa04e8ce53a4f6",
+    "scene.js": "42e4b7631d3f4eb60f164d3576b2589bbc9251565e8927d3c6437757ee428edd"
+  },
+  "method": "Read-only retained R20 analytic pose/occupancy fields. R22 scene metadata retains the named target solids. No geometry adjustment, mesh, voxel or point cache.",
+  "middle_rod_leading_axle": {
+    "pass": false,
+    "target_pair": [
+      "drive/middle_main_rod_with_open_eyes",
+      "wheel/axle2_straight_axle"
+    ],
+    "phase_samples": 3601,
+    "range_rad": [
+      0.0,
+      6.283185307179586
+    ],
+    "includes_duplicate_periodic_endpoint": true,
+    "geometric_candidate_samples": 745,
+    "field_confirmed_intersection_samples": 745,
+    "max_rod_length_closure_error_m": 8.881784197001252e-16,
+    "worst_sample": {
+      "theta_rad": 3.3545228223331014,
+      "theta_deg": 192.20000000000002,
+      "centerline_distance_m": 0.11626374348481201,
+      "combined_radii_m": 0.14500000000000002,
+      "surface_margin_m": -0.028736256515188005,
+      "rod_segment_fraction": 0.605358462945844,
+      "rod_centerline_point_yz_m": [
+        1.1299011415545865,
+        2.1864807375403035
+      ],
+      "witness_xyz_m": [
+        0.0,
+        1.0998917417637608,
+        2.192624636191616
+      ],
+      "rod_occupancy_value": -0.014368128257593853,
+      "axle_occupancy_value": -0.014368128257594023,
+      "intersection_confirmed": true
+    },
+    "interpretation": "Negative occupancy in both named solids is a concrete collision witness. A closed rod and one shared theta do not prove clearance.",
+    "phase_cannot_fix": "Changing only the middle phase shifts the collision in time; a full 2pi cycle covers the same positions."
+  },
+  "outside_crankpin_attachment": {
+    "pass": false,
+    "pin_inner_abs_x_m": 0.76,
+    "spoke_outer_abs_x_m": 0.7525000000000001,
+    "axial_gap_m": 0.007499999999999951,
+    "hub_radius_m": 0.17272,
+    "pin_radial_interval_m": [
+      0.26034999999999997,
+      0.40005
+    ],
+    "tyre_inner_radius_m": 0.9510000000000001,
+    "whole_cycle_separation_by_envelopes": true,
+    "witnesses": [
+      {
+        "side": "left",
+        "theta_rad": 0.4,
+        "witness_xyz_m": [
+          -0.7562500000000001,
+          1.1445859366303164,
+          0.30413434021975266
+        ],
+        "pin_occupancy_value": 0.0037499999999998646,
+        "wheel_min_occupancy_value": 0.003750000000000059,
+        "air_gap_confirmed": true
+      },
+      {
+        "side": "right",
+        "theta_rad": 0.4,
+        "witness_xyz_m": [
+          0.7562500000000001,
+          0.685825340352334,
+          -0.004090736675446463
+        ],
+        "pin_occupancy_value": 0.0037499999999998646,
+        "wheel_min_occupancy_value": 0.003750000000000059,
+        "air_gap_confirmed": true
+      }
+    ],
+    "interpretation": "The retained wheel fields have no separate crank boss bridging this gap. Synchronized animation is not a physical pin attachment."
+  },
+  "phase_evidence": {
+    "phase_rad_inferred": [
+      0,
+      1.7,
+      4.3
+    ],
+    "inclination_rad_inferred": [
+      0,
+      0.11,
+      0
+    ],
+    "rod_length_m_inferred": 3.5,
+    "effective_phase_rad": [
+      0.0,
+      1.5899999999999999,
+      4.3
+    ],
+    "effective_phase_degrees": [
+      0.0,
+      91.10028942580088,
+      246.37185190625397
+    ],
+    "historical_60009_phase_verified": false
+  },
+  "official_topology_constraints": [
+    {
+      "source": "https://blog.railwaymuseum.org.uk/gresley-overhaul-3/",
+      "scope": "NRM report by the 60007 locomotive engineer, April 2016",
+      "finding": "The A4 centre cylinder is behind and above the two outside cylinders; this is a relational constraint, not a numerical installation angle."
+    },
+    {
+      "source": "https://www.sirnigelgresley.org.uk/eng-reports/eng-23-a.shtml",
+      "scope": "60007 maintenance, 30 April 2023",
+      "finding": "The report explicitly identifies the middle coupled/driver bearing arrangement and the middle crank axle webs, distinguishing that crank axle from the leading and trailing coupled locations."
+    },
+    {
+      "source": "https://www.sirnigelgresley.org.uk/overhaul-1522/overhaul-12.shtml",
+      "scope": "60007 preservation overhaul, late 2018; not exact 60009 dimensions",
+      "finding": "Cylinder/slidebar alignment is referenced to the driving axle centre; the middle slidebar is aligned parallel to the cylinder centreline."
+    },
+    {
+      "source": "https://sirnigelgresley.org.uk/eng-reports/mob-eng-23-b.shtml",
+      "scope": "60007 maintenance report, 2023; dismantled position is not normal running contact",
+      "finding": "After the middle rod was disconnected from the crosshead, its little end was lowered onto the leading axle to gain access. This supports auditing that exact neighbour pair, not allowing running interference."
+    },
+    {
+      "source": "https://www.sirnigelgresley.org.uk/overhaul-1522/overhaul-17.shtml",
+      "scope": "60007 preservation overhaul, 2020",
+      "finding": "Coupling-rod installation required rotating individual wheelsets until their crankpins aligned. Same-side driver phasing is a shared-chain constraint."
+    }
+  ],
+  "not_verified": [
+    "No complete all-pairs solid collision or continuous swept-volume certificate.",
+    "No exact 60009 crank phase, cylinder inclination, rod length or minimum running clearance found in the checked official pages.",
+    "No manufacturing, stress, load, suspension, valve-event or steam-flow validation.",
+    "No claim that every one of the 513 R22 fields matches the retained R20 Python modules."
+  ],
+  "diagnostic_attribution": {
+    "not_the_prior_D2_error": "The current failure is at the leading driver Z=2.2098 m, not at the D2 middle crank axle Z=0. The middle axle already has two journals, crank webs and an offset crankpin; its continuous central shaft is omitted.",
+    "current_inference_risk": "The collision exposes an inconsistent combination of inferred middle-cylinder/rod installation, rod envelope and leading axle envelope. The checked official evidence supports the topology and alignment constraints, but cannot identify a single exact dimensional correction.",
+    "unresolved_values": "Inner cylinder inclination, inside/outside rod lengths, cylinder longitudinal offset and detailed axle diameters/profiles must remain unverified until drawing or measured evidence is available."
+  },
+  "guardrail": "Keep axle stations and original geometry intact. Do not carve a collision out of the axle or silently choose new installation dimensions to produce a pass."
+}
