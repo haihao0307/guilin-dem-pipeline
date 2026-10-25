@@ -1,0 +1,109 @@
+{
+  "claimClassification": {
+    "metrics": [
+      {
+        "maxMs": 1629.7999999999884,
+        "medianMs": 1623,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "desktop-urban-whole-1"
+      },
+      {
+        "maxMs": 3509.2999999999884,
+        "medianMs": 3421.9000000000233,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "desktop-urban-material-1"
+      },
+      {
+        "maxMs": 1601.100000000035,
+        "medianMs": 1600.7999999999884,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "desktop-highway-whole-1"
+      },
+      {
+        "maxMs": 3719.4000000000233,
+        "medianMs": 3686.399999999965,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "desktop-highway-material-1"
+      },
+      {
+        "maxMs": 1075.5,
+        "medianMs": 1071.9000000000233,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "mobile-urban-whole-1"
+      },
+      {
+        "maxMs": 1794.9000000000233,
+        "medianMs": 1793.3000000000466,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "mobile-urban-material-1"
+      },
+      {
+        "maxMs": 1113.2999999999302,
+        "medianMs": 1079.7000000000698,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "mobile-highway-whole-1"
+      },
+      {
+        "maxMs": 1956.7999999999302,
+        "medianMs": 1930,
+        "method": "wall clock draw plus synchronous full-frame readPixels completion, includes readback overhead; not pure GPU timer or CPU submission",
+        "name": "mobile-highway-material-1"
+      }
+    ],
+    "observedEnvironment": "software_renderer",
+    "performanceClaim": "HOLD_PERFORMANCE_BUDGET_MISSING",
+    "performanceMetricCount": 8,
+    "runtimeFunctional": "CLAIM_VERIFIED"
+  },
+  "decision": {
+    "PHYSICAL_DEVICE_PERFORMANCE": "HOLD_PHYSICAL_DEVICE_NOT_TESTED",
+    "RUNTIME_FUNCTIONAL": "CLAIM_VERIFIED",
+    "SOFTWARE_RENDERER_PERFORMANCE": "HOLD_PERFORMANCE_BUDGET_MISSING",
+    "overall": "HOLD_PERFORMANCE_ACCEPTANCE_UNSCOPED"
+  },
+  "historyReplay": [
+    {
+      "expected": "HOLD_PERFORMANCE_BUDGET_MISSING",
+      "name": "actual_report_no_budget",
+      "result": "HOLD_PERFORMANCE_BUDGET_MISSING"
+    },
+    {
+      "expected": "CLAIM_VERIFIED",
+      "name": "software_budget_pass",
+      "result": "CLAIM_VERIFIED"
+    },
+    {
+      "expected": "HOLD_PERFORMANCE_BUDGET_EXCEEDED",
+      "name": "software_budget_fail",
+      "result": "HOLD_PERFORMANCE_BUDGET_EXCEEDED"
+    },
+    {
+      "expected": "HOLD_MEASUREMENT_ENVIRONMENT_MISMATCH",
+      "name": "software_evidence_cannot_verify_physical_device",
+      "result": "HOLD_MEASUREMENT_ENVIRONMENT_MISMATCH"
+    },
+    {
+      "expected": "HOLD_METRIC_METHOD_MISMATCH",
+      "name": "different_metric_method_cannot_reuse_budget",
+      "result": "HOLD_METRIC_METHOD_MISMATCH"
+    }
+  ],
+  "historyReplayPassed": true,
+  "productionObservation": {
+    "budgetPresent": false,
+    "medianMsMax": 3686.399999999965,
+    "medianMsMin": 1071.9000000000233,
+    "performanceMetricCount": 8,
+    "physicalDeviceTested": false,
+    "reportPassed": true,
+    "scope": "Chromium SwiftShader, not physical phone/hardware GPU"
+  },
+  "regressionReuse": "CI-GREEN-SKIPPED-CLAIM-001 / N26 claim-scope logic",
+  "schemaVersion": "n192-v1",
+  "subject": {
+    "artifactId": 12583322837,
+    "mainCommit": "23a5efbe517d6e629c2104c3411d428c9a65b3c6",
+    "report": "artifact:public/report.json",
+    "workflowRun": 40153232777
+  }
+}
