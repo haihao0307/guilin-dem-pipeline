@@ -18,7 +18,7 @@ for(const caseId of ['lowrise','kcc','warehouse']){const p=profileFor(caseId),so
 import {attachKccUnitDoors} from './kcc-unit-doors.mjs';
 import {createRoomDoorRuntime} from './room-door-runtime.mjs';
 import {packApertureDescriptors} from './kowloon-building-mother-r01/r07/apertures.mjs';
-const generated=seeds.map(s=>({...s,model:growBuilding(s,s.caseId==='kcc'?{facade:{candidateId:'R0'}}:{}).model}));
+const generated=seeds.map(s=>({...s,model:growBuilding(s,s.caseId==='kcc'?{facade:{candidateId:'R0'}}:s.caseId==='lowrise'?{dimensions:{ordinaryDoorSystem:'shared-function'}}:{}).model}));
 const reservedInstanceIds=generated.flatMap(e=>(e.model.hostedComponents?.apertures??[]).map(a=>a.instanceId));generated[1].model=attachKccUnitDoors(generated[1].model,{reservedInstanceIds});
 const scene=composeBuildingScene(prepareBuildingLifts(generated).entries),b=scene.buildings.find(b=>b.caseId==='kcc'),ids=scene.registry.map(r=>r.objectId);
 assert.equal(new Set(ids).size,ids.length);assert(scene.model.hostedComponents.apertures.length<=512);packApertureDescriptors(scene.model.hostedComponents.apertures);

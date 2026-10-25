@@ -16,3 +16,9 @@ R16 remains unchanged. This is not a claim of a surveyed whole-building interior
 ## Performance boundary
 
 A conservative aperture-neighbor index replaces a per-hit all-aperture coverage scan only inside a verified query domain; otherwise it falls back to the original scan. Native resolution, Float32 attachments and all geometry remain. Node equivalence is not browser performance evidence. Actual browser native-pixel comparison and timed frames are required before describing responsiveness.
+
+## World context and internal compilation
+
+The canonical organizing rule is Time → Location/environment → Object → Building → owned floor/wall/opening/joinery/material elements. Component, material, brick and tile are not independent world roots. Ownership is the hierarchy; support, adjacency and reachability remain node references. Existing flat arrays and graph edges are renderer/compiler representations, not an alternative world ontology. R17 has not migrated every legacy graph into this canonical serialized tree, and unknown observation dates remain distinct from valid-time intervals.
+
+Structure functions and variables are complemented by a required surface/material variation-field contract. Current wall candidates and painted doors have procedural variation; inherited plain inspection-color parts are not falsely declared completed materials. No object mesh is introduced.
