@@ -1,0 +1,2 @@
+# Source and permission notes
+Original implementation and prose created for this workbench. No external engine, texture images, scanned geometry, meshes or asset packs are distributed. Fonts use the device system stack. Official documents are linked as factual shape/rule references, not republished. No source implies official approval of this teaching model. The sibling R01 remains available unchanged.
