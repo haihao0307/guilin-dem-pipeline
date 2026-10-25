@@ -27,6 +27,12 @@ try:
         assert page.locator('#appearance').input_value() == 'waves'
         assert page.locator('#installation option').count() == 2
         report['backend_observed'] = page.evaluate("""()=>{let e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(e?e.UNMASKED_VENDOR_WEBGL:gl.VENDOR),renderer:gl.getParameter(e?e.UNMASKED_RENDERER_WEBGL:gl.RENDERER),version:gl.getParameter(gl.VERSION)};}""")
+        report['stage'] = 'early installed-whole-scene steam GPU scalar gate'
+        page.add_script_tag(path=str(P/'steam-gpu-probe.js'))
+        steam_packet=json.loads((P/'STEAM_GPU_SAMPLES.json').read_text())
+        report['steam_gpu_parity']=page.evaluate('async packet=>await runSteamGPUParity(packet)',steam_packet)
+        (P/'STEAM_GPU_QA.json').write_text(json.dumps(report['steam_gpu_parity'],indent=2)+'\n')
+        assert report['steam_gpu_parity']['status']=='PASS', report['steam_gpu_parity']
         samples = [
             ('baseline_diagnostic', [12,3.5,-4], 100, .4, 'baseline', 'diagnostic', 1),
             ('baseline_waves', [12,3.5,-4], 100, .4, 'baseline', 'waves', 1),
@@ -142,11 +148,6 @@ try:
         report['outside_joint_gpu_parity']=high.evaluate('async packet=>await runOuterCrossheadGPUParity({scene:SCENE,dynamic:DYNAMIC,packet})',packet)
         (P/'OUTER_GPU_PARITY_QA.json').write_text(json.dumps(report['outside_joint_gpu_parity'],indent=2)+'\n')
         assert report['outside_joint_gpu_parity']['status'] in ['PASS','NOT_RUN'], report['outside_joint_gpu_parity']
-        high.add_script_tag(path=str(P/'steam-gpu-probe.js'))
-        steam_packet=json.loads((P/'STEAM_GPU_SAMPLES.json').read_text())
-        report['steam_gpu_parity']=high.evaluate('async packet=>await runSteamGPUParity(packet)',steam_packet)
-        (P/'STEAM_GPU_QA.json').write_text(json.dumps(report['steam_gpu_parity'],indent=2)+'\n')
-        assert report['steam_gpu_parity']['status']=='PASS', report['steam_gpu_parity']
         report['steam_current_scope']={'candidate_fields':EXPECTED['candidateFields'],'new_fields':EXPECTED['steamFields'],'host_cuts_subtract_only':True,'complete_steam_network':False,'upstream_element_loop_exhaust_breaks_explicit':True,'historical_valve_events_verified':False}
         high.close()
         assert not report['console_errors'], report['console_errors']
