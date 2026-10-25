@@ -23,6 +23,7 @@ jobs:
         run: |
           python test_dynamic.py
           node test_dynamic_js.js
+          python test_crankpin_support.py
           timeout 600s python browser_qa.py
       - name: Whole-chain mechanical clearance acceptance (known failure retained)
         working-directory: kaopu-train-workbench/a4-dynamic-r22

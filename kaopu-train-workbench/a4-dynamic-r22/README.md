@@ -15,3 +15,8 @@ BLOCKING PHYSICAL FAILURES FOUND: middle main rod intersects the leading driven 
 Other missing work: middle valve placement, saddle supports, complete steam/feed network, brakes, cab controls, finite valve mechanisms, full swept collisions and interactive performance. No coal geometry.
 
 Original anatomical reference: “Train Class A4 Union of South Africa” /60009 by timblewee, CC BY4.0, https://sketchfab.com/3d-models/train-class-a4-union-of-south-africa-636ed4890b72429da4a10abec0551373 . No source vertex/index/animation buffers are redistributed. Documentary dimensions reference The Engineer27September1935 Silver Link pp319–320, not60009; mechanism relationships use official National Railway Museum/Sir Nigel Gresley Locomotive Trust reports. Original photographs/drawings are not redistributed. Source/model-derived, documentary and inferred dimensions must be distinguished before any final release.
+
+
+## Inferred crankpin attachment repair
+
+Six new analytic wheel-hub-to-pin support webs bridge the absent load path for both sides of all three driven axles. The original513 fields are retained unchanged; total is519. Each support has an open shaft clearance and coaxial pin bore. Existing hub overlap and pin-bore contact pass438 phase checks each; main-rod axial separation is8mm and coupling-rod minimum separation90mm in this candidate. These are own design variables, not measured A4 casting dimensions or a manufacturing specification. Original7.5mm pairwise axial gap remains as baseline evidence, but the added hollow support provides a continuous load path around it. Whole-chain acceptance still fails for the middle rod/leading axle. Full support stress/keying and all-pairs collisions are not established.

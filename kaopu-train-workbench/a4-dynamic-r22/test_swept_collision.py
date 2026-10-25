@@ -147,17 +147,22 @@ def main():
     before = {str(p.relative_to(HERE)): digest(p) for p in tracked}
     collision = sweep_middle_rod_leading_axle()
     attachment = outside_crankpin_attachment()
+    import test_crankpin_support as support_test
+    support = support_test.report
     after = {str(p.relative_to(HERE)): digest(p) for p in tracked}
     effective = np.array(drive.CONFIG["phases"]) - np.array(drive.CONFIG["inclinations"])
     report = {
         "schema_version": "a4-r22-sampled-chain-failure-1",
         "status": "FAIL_WHOLE_CHAIN_ACCEPTANCE",
-        "pass": collision["pass"] and attachment["pass"],
+        "pass": collision["pass"] and support["pass"],
         "source_geometry_modified": before != after,
         "source_sha256": after,
         "method": "Read-only retained R20 analytic pose/occupancy fields. R22 scene metadata retains the named target solids. No geometry adjustment, mesh, voxel or point cache.",
         "middle_rod_leading_axle": collision,
-        "outside_crankpin_attachment": attachment,
+        "baseline_outside_crankpin_attachment": attachment,
+        "integrated_inferred_crankpin_support": support,
+        "retained_original_513_fields_unchanged": True,
+        "new_inferred_support_fields_added": 6,
         "phase_evidence": {
             "phase_rad_inferred": drive.CONFIG["phases"],
             "inclination_rad_inferred": drive.CONFIG["inclinations"],
@@ -197,7 +202,7 @@ def main():
             "No complete all-pairs solid collision or continuous swept-volume certificate.",
             "No exact 60009 crank phase, cylinder inclination, rod length or minimum running clearance found in the checked official pages.",
             "No manufacturing, stress, load, suspension, valve-event or steam-flow validation.",
-            "No claim that every one of the 513 R22 fields matches the retained R20 Python modules.",
+            "No claim that all519 R22 fields matches the retained R20 Python modules.",
         ],
         "diagnostic_attribution": {
             "not_the_prior_D2_error": "The current failure is at the leading driver Z=2.2098 m, not at the D2 middle crank axle Z=0. The middle axle already has two journals, crank webs and an offset crankpin; its continuous central shaft is omitted.",
@@ -210,7 +215,7 @@ def main():
     print(json.dumps({"status": report["status"], "pass": report["pass"],
                       "rod_axle_min_margin_m": collision["worst_sample"]["surface_margin_m"],
                       "confirmed_collision_samples": collision["field_confirmed_intersection_samples"],
-                      "crankpin_axial_gap_m": attachment["axial_gap_m"],
+                      "baseline_crankpin_axial_gap_m": attachment["axial_gap_m"],
                       "source_geometry_modified": report["source_geometry_modified"]}, indent=2))
     return 0 if report["pass"] else 1
 

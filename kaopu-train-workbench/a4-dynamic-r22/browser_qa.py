@@ -15,6 +15,6 @@ try:
    start=time.monotonic();page.evaluate('async v=>{await renderAt(v.theta-.4,{eye:v.eye},{cut:v.cut,initialTheta:.4,angularSpeed:1})}',{'eye':eye,'cut':cut,'theta':theta})
    raw=page.evaluate('c.toDataURL("image/png")');(P/(name+'-whole.png')).write_bytes(base64.b64decode(raw.split(',')[1]))
    q=page.evaluate('QA');q['pixel_readback_wall_s']=time.monotonic()-start;q['view']=name;views.append(q);print(json.dumps(q),flush=True)
-   assert q.get('done')and not q['errors']and q['draws']==513 and q.get('glError')==0,q
+   assert q.get('done')and not q['errors']and q['draws']==519 and q.get('glError')==0,q
   (P/'BROWSER_QA.json').write_text(json.dumps({'views':views,'scope':'reconstructed drive/actuation theta poses in whole assembly; valve gear frozen; known swept collision failure; no historical-exact or full mechanical acceptance'},indent=2));b.close()
 finally:server.terminate()

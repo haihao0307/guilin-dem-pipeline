@@ -7,7 +7,7 @@
     "reference/driving_crank_assembly.py": "a525dfc3301b428195e3141f37cade1aadc11e46e4e1e6eb4c131f18d4dab30b",
     "reference/wheelset_assembly.py": "0dbb0901d595ec65fb2ba6c2bf88094ce9eff9f0f2cc3af5525ecb28b96417c9",
     "reference/cylinder_actuation_assembly.py": "96d2955607dc516ba3cce3ea647ddea01dfb8eb5f579291872fa04e8ce53a4f6",
-    "scene.js": "42e4b7631d3f4eb60f164d3576b2589bbc9251565e8927d3c6437757ee428edd"
+    "scene.js": "8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da"
   },
   "method": "Read-only retained R20 analytic pose/occupancy fields. R22 scene metadata retains the named target solids. No geometry adjustment, mesh, voxel or point cache.",
   "middle_rod_leading_axle": {
@@ -48,7 +48,7 @@
     "interpretation": "Negative occupancy in both named solids is a concrete collision witness. A closed rod and one shared theta do not prove clearance.",
     "phase_cannot_fix": "Changing only the middle phase shifts the collision in time; a full 2pi cycle covers the same positions."
   },
-  "outside_crankpin_attachment": {
+  "baseline_outside_crankpin_attachment": {
     "pass": false,
     "pin_inner_abs_x_m": 0.76,
     "spoke_outer_abs_x_m": 0.7525000000000001,
@@ -88,6 +88,23 @@
     ],
     "interpretation": "The retained wheel fields have no separate crank boss bridging this gap. Synchronized animation is not a physical pin attachment."
   },
+  "integrated_inferred_crankpin_support": {
+    "candidate": "six inferred load-bearing wheel hub/crankpin support webs; not historical casting dimensions",
+    "hub_overlap_checks": 438,
+    "pin_bore_contact_checks": 438,
+    "maximum_contact_residual_m": 2.1510571102112408e-16,
+    "main_rod_axial_clearance_m": 0.008000000000000007,
+    "coupling_rod_min_axial_clearance_m": 0.08999999999999997,
+    "shaft_radius_m": 0.1,
+    "support_shaft_clearance_radius_m": 0.102,
+    "baseline_wheel_to_pin_axial_interval_gap_m": 0.0075,
+    "explanation": "baseline pair gap remains but explicit hollow boss supplies hub-to-pin contact load path; no pin extension or axle carve",
+    "failures": [],
+    "pass": true,
+    "not_proven": "full all-pairs swept collision, stress, keys/interference fit, actual A4 profile; middle rod collision remains"
+  },
+  "retained_original_513_fields_unchanged": true,
+  "new_inferred_support_fields_added": 6,
   "phase_evidence": {
     "phase_rad_inferred": [
       0,
@@ -143,7 +160,7 @@
     "No complete all-pairs solid collision or continuous swept-volume certificate.",
     "No exact 60009 crank phase, cylinder inclination, rod length or minimum running clearance found in the checked official pages.",
     "No manufacturing, stress, load, suspension, valve-event or steam-flow validation.",
-    "No claim that every one of the 513 R22 fields matches the retained R20 Python modules."
+    "No claim that all519 R22 fields matches the retained R20 Python modules."
   ],
   "diagnostic_attribution": {
     "not_the_prior_D2_error": "The current failure is at the leading driver Z=2.2098 m, not at the D2 middle crank axle Z=0. The middle axle already has two journals, crank webs and an offset crankpin; its continuous central shaft is omitted.",
