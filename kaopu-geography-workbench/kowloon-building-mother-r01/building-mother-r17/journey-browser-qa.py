@@ -9,7 +9,7 @@ threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
-  context=browser.new_context(viewport={'width':1366,'height':900},device_scale_factor=1,record_video_dir=str(OUT/'video'),record_video_size={'width':1366,'height':900})
+  context=browser.new_context(viewport={'width':1366,'height':900},device_scale_factor=1)
   page=context.new_page();page.set_default_timeout(180000);page.on('pageerror',lambda e:report['errors'].append(str(e)))
   page.goto(os.environ.get('R17_URL',f'http://127.0.0.1:{server.server_port}/index.html'))
   def settled():
@@ -41,6 +41,10 @@ try:
    page.get_by_role('button',name='房区内书签',exact=True).click();capture('r17-top-design-room-'+room)
   assert not report['errors'];report['passed']=True;context.close();browser.close()
 except Exception:
- report['errors'].append(traceback.format_exc());raise
+ report['errors'].append(traceback.format_exc())
+ try:
+  report['failureState']=page.evaluate('({errors:semanticInspection.errors,stats:semanticInspection.renderer?.stats,compile:semanticInspection.renderer?.compileStats,display:semanticInspection.getDisplaySize(),phase:semanticInspection.phase})');page.screenshot(path=str(OUT/'journey-failure.png'))
+ except Exception as e:report['diagnosticError']=str(e)
+ raise
 finally:
  (OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));server.shutdown()
