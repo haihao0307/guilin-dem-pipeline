@@ -1,6 +1,6 @@
 import runpy
 from pathlib import Path
-runpy.run_path(str(Path(__file__).parent.parent/'building-mother-r17'/'host-wall-browser-qa.py'),run_name='__main__')
+runpy.run_path(str(Path(__file__).parent.parent/'building-mother-r17'/'journey-browser-qa.py'),run_name='__main__')
 raise SystemExit(0)
 # R16 material-only visual regression; original authorized workflow unchanged.
 from pathlib import Path as _R16Path

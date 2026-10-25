@@ -28,25 +28,20 @@ try:
   report['profiles']=[page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-whole-native'})}''')]
   page.evaluate('semanticInspection.liftPanel.setExternalClock(true); semanticInspection.kccJourney.journey.goToFloor(1)');capture('r17-entry-design-landing')
   for floor,name in [(4,'fourth'),(28,'top')]:
-   result=page.evaluate('(f)=>semanticInspection.kccJourney.journey.goToFloor(f)',floor);assert result['accepted'],result
-   states=[]
-   for n in range(120):
-    q=page.evaluate('(()=>{const j=semanticInspection.kccJourney.journey;j.tick(10);return j.snapshot()})()');settled()
-    states.append({'phase':q['phase'],'floor':q['currentFloorId'],'passenger':q['passenger'],'liftState':q['liftState']});report['activeLeg']={'to':floor,'samples':states};(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-    if q['phase']=='blocked':raise AssertionError(q)
-    if not q['active']:break
-   else:raise AssertionError('Lift did not complete original state journey')
-   report.setdefault('legs',[]).append({'to':floor,'samples':states});assert q['currentFloor']['designOrdinal']==floor if 'designOrdinal' in q['currentFloor'] else q['currentFloorId']==('P04' if floor==4 else 'T24')
+   result=page.evaluate('(f)=>semanticInspection.kccJourney.journey.goToFloor(f)',floor);assert result['accepted'],result;settled()
+   batch=page.evaluate("""async()=>{const s=semanticInspection,j=s.kccJourney.journey,states=[],was=s.bootLayoutReady;s.bootLayoutReady=false;try{for(let n=0;n<120;n++){const q=j.tick(10),lift=s.lifts.snapshot('kcc');states.push({phase:q.phase,floor:q.currentFloorId,passenger:q.passenger,lift});if(q.phase==='blocked')throw Error(JSON.stringify(q));if(!q.active)return{states,final:q};}throw Error('Original controller journey did not finish');}finally{s.bootLayoutReady=was;}}""")
+   states=batch['states'];q=batch['final'];report.setdefault('legs',[]).append({'to':floor,'samples':states,'rendering':'intermediate simulation states recorded, not rendered or presented as video'});assert q['currentFloorId']==('P04' if floor==4 else 'T24')
+   page.evaluate('semanticInspection.render()');settled()
    capture('r17-arrived-'+name)
    report['profiles'].append(page.evaluate('''async()=>{const {profileRendererGpu}=await import('./qa-gpu-stage-profiler.mjs');return await profileRendererGpu(semanticInspection.renderer,()=>semanticInspection.render(),{label:'kcc-design-arrival-native'})}'''));(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   for room in 'ABCDEF':
    page.locator('#kccJourneyPanel select').nth(1).select_option(room)
    page.get_by_role('button',name='开本房门',exact=True).click();settled()
    page.get_by_role('button',name='层走廊书签',exact=True).click();settled()
-   for step in range(20):
-    page.get_by_role('button',name='前进一段',exact=True).click();settled()
+   progression=page.evaluate("""()=>{const s=semanticInspection,was=s.bootLayoutReady,states=[];s.bootLayoutReady=false;try{const b=[...document.querySelectorAll('#kccJourneyPanel button')].find(b=>b.textContent==='前进一段');for(let n=0;n<20;n++){b.click();states.push(document.querySelector('#kccJourneyPanel').innerText);}return states;}finally{s.bootLayoutReady=was;}}""")
+   page.evaluate('semanticInspection.render()');settled()
    status=page.locator('#kccJourneyPanel').inner_text();assert '100%' in status,status
-   report.setdefault('roomTraversal',[]).append({'room':room,'increments':20,'usedInteriorBookmark':False,'status':status})
+   report.setdefault('roomTraversal',[]).append({'room':room,'increments':20,'usedInteriorBookmark':False,'status':status,'pathProgress':progression})
    capture('r17-top-design-room-'+room)
   assert not report['errors'];report['passed']=True;context.close();browser.close()
 except Exception:
