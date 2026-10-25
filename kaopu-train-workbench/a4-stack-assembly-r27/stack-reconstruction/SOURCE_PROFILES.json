@@ -1,0 +1,432 @@
+{
+  "baseline": "../r26/scene.js",
+  "sourceHashes": {
+    "scene.js": "8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da",
+    "dynamic.js": "d85798e4c0cc86b38e003876d71149642f6e7b909cfc856d2c1d9461d8d45497",
+    "outside_valve_solver.js": "1478673dcbf632b475ec068b64d546410abf4026928131eec1c8e6dc3c818388",
+    "gresley_solver.js": "993af643e1b6a4ba964bd61ed3ae355635c5c02bbdef47067f79df7ee837f2c6",
+    "gresley-dynamic.js": "d5c57d9e123d06b889d24b8c1397248e9499fb7cb99b4ebe8a83cad404fa7806",
+    "app.js": "10dab4cb4f4a9d981ea1f67d09b0a41910d045f8f9dd978ee80cdf383371ee6f"
+  },
+  "reference": {
+    "planeY": 1.48,
+    "pins": {
+      "O": [
+        0,
+        1.48,
+        5.55
+      ],
+      "R": [
+        0.98,
+        1.48,
+        5.303397901282459
+      ],
+      "L": [
+        -0.98,
+        1.48,
+        5.273127325306952
+      ],
+      "A": [
+        0.97854434814255,
+        1.48,
+        5.603394369724456
+      ],
+      "C": [
+        -0.489272174071275,
+        1.48,
+        5.523302815137772
+      ],
+      "B": [
+        -0.9767342640735802,
+        1.48,
+        5.573109549728431
+      ],
+      "E": [
+        -0.001810084068969764,
+        1.48,
+        5.473496080547112
+      ],
+      "M": [
+        0,
+        1.48,
+        5.1735015412707055
+      ]
+    },
+    "P": {
+      "O": [
+        0,
+        5.55
+      ],
+      "R": [
+        0.98,
+        5.303397901282459
+      ],
+      "L": [
+        -0.98,
+        5.273127325306952
+      ],
+      "A": [
+        0.97854434814255,
+        5.603394369724456
+      ],
+      "C": [
+        -0.489272174071275,
+        5.523302815137772
+      ],
+      "B": [
+        -0.9767342640735802,
+        5.573109549728431
+      ],
+      "E": [
+        -0.001810084068969764,
+        5.473496080547112
+      ],
+      "M": [
+        0,
+        5.1735015412707055
+      ]
+    },
+    "lengths": {
+      "long": 0.98,
+      "short": 0.49,
+      "equalLeft": 0.49,
+      "equalMiddle": 0.49,
+      "rightLink": 0.3000000000000007,
+      "leftLink": 0.3000000000000001,
+      "middleLink": 0.3000000000000002,
+      "middleSpindle": 1.1499999999999995
+    },
+    "ratio": 0.5,
+    "equalRatio": 1,
+    "spindle": {
+      "rear": [
+        0,
+        1.48,
+        4.023501541270706
+      ],
+      "front": [
+        0,
+        1.48,
+        5.1735015412707055
+      ]
+    },
+    "source": {
+      "O": "float motion_valve_gresley_fixed_pivot_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.5499999999999998),1,0.012,0.035000000000000003); }",
+      "R": "float motion_valve_gresley_right_input_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.48,5.3033979012824588),1,0.012,0.035000000000000003); }",
+      "L": "float motion_valve_gresley_left_input_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),1,0.012,0.035000000000000003); }",
+      "A": "float motion_valve_gresley_long_end_pin(vec3 p) { return mDisc(p,vec3(0.97854434814254998,1.48,5.6033943697244561),1,0.012,0.035000000000000003); }",
+      "C": "float motion_valve_gresley_equal_centre_pin(vec3 p) { return mDisc(p,vec3(-0.48927217407127499,1.48,5.5233028151377717),1,0.012,0.035000000000000003); }",
+      "B": "float motion_valve_gresley_equal_left_end_pin(vec3 p) { return mDisc(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),1,0.012,0.035000000000000003); }",
+      "E": "float motion_valve_gresley_equal_middle_end_pin(vec3 p) { return mDisc(p,vec3(-0.0018100840689697639,1.48,5.473496080547112),1,0.012,0.035000000000000003); }",
+      "M": "float motion_valve_gresley_middle_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.1735015412707055),1,0.012,0.035000000000000003); }",
+      "two_to_one_lever": "float motion_valve_gresley_two_to_one_lever(vec3 p) { return mFlatRod(p,vec3(0.97854434814254998,1.48,5.6033943697244561),vec3(-0.48927217407127499,1.48,5.5233028151377717),1,vec3(0.0,1.48,5.5499999999999998),true,0.024,0.033000000000000002,0.0135,0.012); }",
+      "equal_lever": "float motion_valve_gresley_equal_lever(vec3 p) { return mFlatRod(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(-0.48927217407127499,1.48,5.5233028151377717),true,0.024,0.033000000000000002,0.0135,0.012); }",
+      "right_short_link": "float motion_valve_gresley_right_short_link(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,1.48,5.3033979012824588),vec3(0.97854434814254998,1.48,5.6033943697244561),1,vec3(0.97999999999999998,1.48,5.3033979012824588),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "left_short_link": "float motion_valve_gresley_left_short_link(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),vec3(-0.97673426407358022,1.48,5.5731095497284313),1,vec3(-0.97999999999999998,1.48,5.2731273253069517),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "middle_short_link": "float motion_valve_gresley_middle_short_link(vec3 p) { return mFlatRod(p,vec3(0.0,1.48,5.1735015412707055),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(0.0,1.48,5.1735015412707055),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "spindle": "float motion_valve_middle_valve_spindle_inferred_horizontal(vec3 p) { return mCapsule(p,vec3(0.0,1.48,4.023501541270706),vec3(0.0,1.48,5.1735015412707055),0.016); }"
+    },
+    "rightBranch": 1,
+    "leftBranch": -1,
+    "middleBranch": -1
+  },
+  "profiles": {
+    "rods": {
+      "two_to_one_lever": {
+        "width": 0.024,
+        "eye": 0.033,
+        "bore": 0.0135,
+        "halfThickness": 0.012,
+        "thickness": 0.024,
+        "axis": 1,
+        "joints": [
+          "A",
+          "C",
+          "O"
+        ],
+        "source": "float motion_valve_gresley_two_to_one_lever(vec3 p) { return mFlatRod(p,vec3(0.97854434814254998,1.48,5.6033943697244561),vec3(-0.48927217407127499,1.48,5.5233028151377717),1,vec3(0.0,1.48,5.5499999999999998),true,0.024,0.033000000000000002,0.0135,0.012); }"
+      },
+      "equal_lever": {
+        "width": 0.024,
+        "eye": 0.033,
+        "bore": 0.0135,
+        "halfThickness": 0.012,
+        "thickness": 0.024,
+        "axis": 1,
+        "joints": [
+          "B",
+          "E",
+          "C"
+        ],
+        "source": "float motion_valve_gresley_equal_lever(vec3 p) { return mFlatRod(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(-0.48927217407127499,1.48,5.5233028151377717),true,0.024,0.033000000000000002,0.0135,0.012); }"
+      },
+      "right_short_link": {
+        "width": 0.024,
+        "eye": 0.033,
+        "bore": 0.0135,
+        "halfThickness": 0.012,
+        "thickness": 0.024,
+        "axis": 1,
+        "joints": [
+          "R",
+          "A"
+        ],
+        "source": "float motion_valve_gresley_right_short_link(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,1.48,5.3033979012824588),vec3(0.97854434814254998,1.48,5.6033943697244561),1,vec3(0.97999999999999998,1.48,5.3033979012824588),false,0.024,0.033000000000000002,0.0135,0.012); }"
+      },
+      "left_short_link": {
+        "width": 0.024,
+        "eye": 0.033,
+        "bore": 0.0135,
+        "halfThickness": 0.012,
+        "thickness": 0.024,
+        "axis": 1,
+        "joints": [
+          "L",
+          "B"
+        ],
+        "source": "float motion_valve_gresley_left_short_link(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),vec3(-0.97673426407358022,1.48,5.5731095497284313),1,vec3(-0.97999999999999998,1.48,5.2731273253069517),false,0.024,0.033000000000000002,0.0135,0.012); }"
+      },
+      "middle_short_link": {
+        "width": 0.024,
+        "eye": 0.033,
+        "bore": 0.0135,
+        "halfThickness": 0.012,
+        "thickness": 0.024,
+        "axis": 1,
+        "joints": [
+          "M",
+          "E"
+        ],
+        "source": "float motion_valve_gresley_middle_short_link(vec3 p) { return mFlatRod(p,vec3(0.0,1.48,5.1735015412707055),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(0.0,1.48,5.1735015412707055),false,0.024,0.033000000000000002,0.0135,0.012); }"
+      }
+    },
+    "pins": {
+      "O": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          0,
+          1.48,
+          5.55
+        ],
+        "source": "float motion_valve_gresley_fixed_pivot_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.5499999999999998),1,0.012,0.035000000000000003); }"
+      },
+      "R": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          0.98,
+          1.48,
+          5.303397901282459
+        ],
+        "source": "float motion_valve_gresley_right_input_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.48,5.3033979012824588),1,0.012,0.035000000000000003); }"
+      },
+      "L": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          -0.98,
+          1.48,
+          5.273127325306952
+        ],
+        "source": "float motion_valve_gresley_left_input_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),1,0.012,0.035000000000000003); }"
+      },
+      "A": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          0.97854434814255,
+          1.48,
+          5.603394369724456
+        ],
+        "source": "float motion_valve_gresley_long_end_pin(vec3 p) { return mDisc(p,vec3(0.97854434814254998,1.48,5.6033943697244561),1,0.012,0.035000000000000003); }"
+      },
+      "C": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          -0.489272174071275,
+          1.48,
+          5.523302815137772
+        ],
+        "source": "float motion_valve_gresley_equal_centre_pin(vec3 p) { return mDisc(p,vec3(-0.48927217407127499,1.48,5.5233028151377717),1,0.012,0.035000000000000003); }"
+      },
+      "B": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          -0.9767342640735802,
+          1.48,
+          5.573109549728431
+        ],
+        "source": "float motion_valve_gresley_equal_left_end_pin(vec3 p) { return mDisc(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),1,0.012,0.035000000000000003); }"
+      },
+      "E": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          -0.001810084068969764,
+          1.48,
+          5.473496080547112
+        ],
+        "source": "float motion_valve_gresley_equal_middle_end_pin(vec3 p) { return mDisc(p,vec3(-0.0018100840689697639,1.48,5.473496080547112),1,0.012,0.035000000000000003); }"
+      },
+      "M": {
+        "radius": 0.012,
+        "halfLength": 0.035,
+        "length": 0.07,
+        "axis": 1,
+        "center": [
+          0,
+          1.48,
+          5.1735015412707055
+        ],
+        "source": "float motion_valve_gresley_middle_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.1735015412707055),1,0.012,0.035000000000000003); }"
+      }
+    },
+    "spindles": {
+      "R": {
+        "endpoints": [
+          [
+            0.98,
+            1.48,
+            4.153397901282459
+          ],
+          [
+            0.98,
+            1.48,
+            5.303397901282459
+          ]
+        ],
+        "radius": 0.016,
+        "length": 1.1499999999999995,
+        "source": "float motion_valve_right_valve_spindle(vec3 p) { return mCapsule(p,vec3(0.97999999999999998,1.48,4.1533979012824593),vec3(0.97999999999999998,1.48,5.3033979012824588),0.016); }"
+      },
+      "L": {
+        "endpoints": [
+          [
+            -0.98,
+            1.48,
+            4.123127325306952
+          ],
+          [
+            -0.98,
+            1.48,
+            5.273127325306952
+          ]
+        ],
+        "radius": 0.016,
+        "length": 1.1499999999999995,
+        "source": "float motion_valve_left_valve_spindle(vec3 p) { return mCapsule(p,vec3(-0.97999999999999998,1.48,4.1231273253069523),vec3(-0.97999999999999998,1.48,5.2731273253069517),0.016); }"
+      },
+      "M": {
+        "endpoints": [
+          [
+            0,
+            1.48,
+            4.023501541270706
+          ],
+          [
+            0,
+            1.48,
+            5.1735015412707055
+          ]
+        ],
+        "radius": 0.016,
+        "length": 1.1499999999999995,
+        "source": "float motion_valve_middle_valve_spindle_inferred_horizontal(vec3 p) { return mCapsule(p,vec3(0.0,1.48,4.023501541270706),vec3(0.0,1.48,5.1735015412707055),0.016); }"
+      }
+    },
+    "sharedSpindleAliases": {
+      "R": {
+        "id": "valve_chest/right_shared_valve_spindle",
+        "source": "float motion_valve_chest_right_shared_valve_spindle(vec3 p) { return mPV(p-vec3(0.97999999999999998,1.48,4.6799999999999997),0.053397901282459692,-0.52660209871754038,0.62339790128245909,10); }",
+        "radius": 0.016,
+        "endpoints": [
+          [
+            0.98,
+            1.48,
+            4.153397901282459
+          ],
+          [
+            0.98,
+            1.48,
+            5.303397901282459
+          ]
+        ],
+        "maxEndpointError": 0,
+        "solidCylinderContainedInCapsule": true,
+        "throughYBorePresent": false
+      },
+      "L": {
+        "id": "valve_chest/left_shared_valve_spindle",
+        "source": "float motion_valve_chest_left_shared_valve_spindle(vec3 p) { return mPV(p-vec3(-0.97999999999999998,1.48,4.6799999999999997),0.023127325306952606,-0.55687267469304746,0.593127325306952,10); }",
+        "radius": 0.016,
+        "endpoints": [
+          [
+            -0.98,
+            1.48,
+            4.123127325306952
+          ],
+          [
+            -0.98,
+            1.48,
+            5.273127325306952
+          ]
+        ],
+        "maxEndpointError": 0,
+        "solidCylinderContainedInCapsule": true,
+        "throughYBorePresent": false
+      }
+    },
+    "primitiveSources": {
+      "mDisc": "float mDisc(vec3 p,vec3 c,int axis,float r,float h) {\n    vec3 q=p-c;\n    if(axis==0)return max(length(vec2(q.y,q.z))-r,abs(q.x)-h);\n    if(axis==1)return max(length(vec2(q.x,q.z))-r,abs(q.y)-h);\n    return max(length(vec2(q.x,q.y))-r,abs(q.z)-h);\n}",
+      "mFlatRod": "float mFlatRod(vec3 p,vec3 a,vec3 b,int axis,vec3 extra,bool hasExtra,float width,float eye,float bore,float halfThickness) {\n    vec3 q=p;float axial;\n    if(axis==0){q.x=a.x;axial=abs(p.x-a.x)-halfThickness;}\n    else {q.y=a.y;axial=abs(p.y-a.y)-halfThickness;}\n    float body=mCapsule(q,a,b,width);\n    body=min(body,min(length(q-a)-eye,length(q-b)-eye));\n    float holes=min(length(q-a)-bore,length(q-b)-bore);\n    if(hasExtra){body=min(body,length(q-extra)-eye);holes=min(holes,length(q-extra)-bore);}\n    return mMax3(body,-holes,axial);\n}",
+      "mCapsule": "float mCapsule(vec3 p,vec3 a,vec3 b,float r) {\n    vec3 d=b-a; float den=dot(d,d);\n    if(den<=1e-20) return length(p-a)-r;\n    float t=clamp(dot(p-a,d)/den,0.0,1.0);\n    return length(p-a-d*t)-r;\n}"
+    }
+  },
+  "jointGraph": {
+    "O": [
+      "two_to_one_lever"
+    ],
+    "R": [
+      "right_short_link"
+    ],
+    "L": [
+      "left_short_link"
+    ],
+    "A": [
+      "two_to_one_lever",
+      "right_short_link"
+    ],
+    "C": [
+      "two_to_one_lever",
+      "equal_lever"
+    ],
+    "B": [
+      "equal_lever",
+      "left_short_link"
+    ],
+    "E": [
+      "equal_lever",
+      "middle_short_link"
+    ],
+    "M": [
+      "middle_short_link"
+    ]
+  }
+}

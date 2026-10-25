@@ -1,0 +1,292 @@
+{
+  "pass": true,
+  "totalWhitelistedFields": 14,
+  "movingFields": 13,
+  "fixedFields": 1,
+  "plane": "XZ",
+  "unchangedAxis": "Y",
+  "testedPhases": 361,
+  "aabbCornerChecks": 40432,
+  "maxJointErrorM": 1.7798229048217483e-15,
+  "maxInverseErrorM": 1.8452761694870047e-15,
+  "maxReferenceIdentityErrorM": 9.155133597044475e-16,
+  "maxUnchangedYErrorM": 0,
+  "unsupportedFieldsReturnNull": true,
+  "sourceFieldsMutated": false,
+  "autoAttachedToRenderer": false,
+  "knownExistingLeverOverlap": true,
+  "wholeMechanicalAcceptance": false,
+  "mappings": [
+    {
+      "id": "valve/gresley_two_to_one_lever",
+      "glslFunction": "motion_valve_gresley_two_to_one_lever",
+      "sourceLine": "float motion_valve_gresley_two_to_one_lever(vec3 p) { return mFlatRod(p,vec3(0.97854434814254998,1.48,5.6033943697244561),vec3(-0.48927217407127499,1.48,5.5233028151377717),1,vec3(0.0,1.48,5.5499999999999998),true,0.024,0.033000000000000002,0.0135,0.012); }",
+      "type": "rigid",
+      "anchor": "O",
+      "direction": "A",
+      "sourceAabb": [
+        [
+          -0.522273174071275,
+          1.467999,
+          5.490301815137771
+        ],
+        [
+          1.0115453481425498,
+          1.492001,
+          5.636395369724457
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_equal_lever",
+      "glslFunction": "motion_valve_gresley_equal_lever",
+      "sourceLine": "float motion_valve_gresley_equal_lever(vec3 p) { return mFlatRod(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(-0.48927217407127499,1.48,5.5233028151377717),true,0.024,0.033000000000000002,0.0135,0.012); }",
+      "type": "rigid",
+      "anchor": "C",
+      "direction": "B",
+      "sourceAabb": [
+        [
+          -1.0097352640735802,
+          1.467999,
+          5.4404950805471115
+        ],
+        [
+          0.03119091593103024,
+          1.492001,
+          5.606110549728432
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_right_short_link",
+      "glslFunction": "motion_valve_gresley_right_short_link",
+      "sourceLine": "float motion_valve_gresley_right_short_link(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,1.48,5.3033979012824588),vec3(0.97854434814254998,1.48,5.6033943697244561),1,vec3(0.97999999999999998,1.48,5.3033979012824588),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "type": "rigid",
+      "anchor": "R",
+      "direction": "A",
+      "sourceAabb": [
+        [
+          0.9455433481425499,
+          1.467999,
+          5.270396901282458
+        ],
+        [
+          1.0130009999999998,
+          1.492001,
+          5.636395369724457
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_left_short_link",
+      "glslFunction": "motion_valve_gresley_left_short_link",
+      "sourceLine": "float motion_valve_gresley_left_short_link(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),vec3(-0.97673426407358022,1.48,5.5731095497284313),1,vec3(-0.97999999999999998,1.48,5.2731273253069517),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "type": "rigid",
+      "anchor": "L",
+      "direction": "B",
+      "sourceAabb": [
+        [
+          -1.0130009999999998,
+          1.467999,
+          5.240126325306951
+        ],
+        [
+          -0.9437332640735802,
+          1.492001,
+          5.606110549728432
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_middle_short_link",
+      "glslFunction": "motion_valve_gresley_middle_short_link",
+      "sourceLine": "float motion_valve_gresley_middle_short_link(vec3 p) { return mFlatRod(p,vec3(0.0,1.48,5.1735015412707055),vec3(-0.0018100840689697639,1.48,5.473496080547112),1,vec3(0.0,1.48,5.1735015412707055),false,0.024,0.033000000000000002,0.0135,0.012); }",
+      "type": "rigid",
+      "anchor": "M",
+      "direction": "E",
+      "sourceAabb": [
+        [
+          -0.034811084068969766,
+          1.467999,
+          5.140500541270705
+        ],
+        [
+          0.033001,
+          1.492001,
+          5.5064970805471125
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_fixed_pivot_pin",
+      "glslFunction": "motion_valve_gresley_fixed_pivot_pin",
+      "sourceLine": "float motion_valve_gresley_fixed_pivot_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.5499999999999998),1,0.012,0.035000000000000003); }",
+      "type": "fixed",
+      "anchor": "O",
+      "sourceAabb": [
+        [
+          -0.012001,
+          1.4449990000000001,
+          5.537999
+        ],
+        [
+          0.012001,
+          1.5150009999999998,
+          5.5620009999999995
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_right_input_pin",
+      "glslFunction": "motion_valve_gresley_right_input_pin",
+      "sourceLine": "float motion_valve_gresley_right_input_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.48,5.3033979012824588),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "R",
+      "sourceAabb": [
+        [
+          0.9679989999999999,
+          1.4449990000000001,
+          5.291396901282459
+        ],
+        [
+          0.992001,
+          1.5150009999999998,
+          5.3153989012824585
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_left_input_pin",
+      "glslFunction": "motion_valve_gresley_left_input_pin",
+      "sourceLine": "float motion_valve_gresley_left_input_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.48,5.2731273253069517),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "L",
+      "sourceAabb": [
+        [
+          -0.992001,
+          1.4449990000000001,
+          5.261126325306952
+        ],
+        [
+          -0.9679989999999999,
+          1.5150009999999998,
+          5.285128325306951
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_long_end_pin",
+      "glslFunction": "motion_valve_gresley_long_end_pin",
+      "sourceLine": "float motion_valve_gresley_long_end_pin(vec3 p) { return mDisc(p,vec3(0.97854434814254998,1.48,5.6033943697244561),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "A",
+      "sourceAabb": [
+        [
+          0.9665433481425499,
+          1.4449990000000001,
+          5.591393369724456
+        ],
+        [
+          0.99054534814255,
+          1.5150009999999998,
+          5.615395369724456
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_equal_centre_pin",
+      "glslFunction": "motion_valve_gresley_equal_centre_pin",
+      "sourceLine": "float motion_valve_gresley_equal_centre_pin(vec3 p) { return mDisc(p,vec3(-0.48927217407127499,1.48,5.5233028151377717),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "C",
+      "sourceAabb": [
+        [
+          -0.501273174071275,
+          1.4449990000000001,
+          5.511301815137772
+        ],
+        [
+          -0.477271174071275,
+          1.5150009999999998,
+          5.535303815137771
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_equal_left_end_pin",
+      "glslFunction": "motion_valve_gresley_equal_left_end_pin",
+      "sourceLine": "float motion_valve_gresley_equal_left_end_pin(vec3 p) { return mDisc(p,vec3(-0.97673426407358022,1.48,5.5731095497284313),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "B",
+      "sourceAabb": [
+        [
+          -0.9887352640735803,
+          1.4449990000000001,
+          5.561108549728432
+        ],
+        [
+          -0.9647332640735802,
+          1.5150009999999998,
+          5.585110549728431
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_equal_middle_end_pin",
+      "glslFunction": "motion_valve_gresley_equal_middle_end_pin",
+      "sourceLine": "float motion_valve_gresley_equal_middle_end_pin(vec3 p) { return mDisc(p,vec3(-0.0018100840689697639,1.48,5.473496080547112),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "E",
+      "sourceAabb": [
+        [
+          -0.013811084068969763,
+          1.4449990000000001,
+          5.461495080547112
+        ],
+        [
+          0.010190915931030236,
+          1.5150009999999998,
+          5.485497080547112
+        ]
+      ]
+    },
+    {
+      "id": "valve/gresley_middle_valve_crosshead_pin",
+      "glslFunction": "motion_valve_gresley_middle_valve_crosshead_pin",
+      "sourceLine": "float motion_valve_gresley_middle_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(0.0,1.48,5.1735015412707055),1,0.012,0.035000000000000003); }",
+      "type": "translation",
+      "anchor": "M",
+      "sourceAabb": [
+        [
+          -0.012001,
+          1.4449990000000001,
+          5.161500541270706
+        ],
+        [
+          0.012001,
+          1.5150009999999998,
+          5.185502541270705
+        ]
+      ]
+    },
+    {
+      "id": "valve/middle_valve_spindle_inferred_horizontal",
+      "glslFunction": "motion_valve_middle_valve_spindle_inferred_horizontal",
+      "sourceLine": "float motion_valve_middle_valve_spindle_inferred_horizontal(vec3 p) { return mCapsule(p,vec3(0.0,1.48,4.023501541270706),vec3(0.0,1.48,5.1735015412707055),0.016); }",
+      "type": "translation",
+      "anchor": "M",
+      "sourceAabb": [
+        [
+          -0.016001,
+          1.463999,
+          4.007500541270706
+        ],
+        [
+          0.016001,
+          1.496001,
+          5.189502541270706
+        ]
+      ]
+    }
+  ]
+}

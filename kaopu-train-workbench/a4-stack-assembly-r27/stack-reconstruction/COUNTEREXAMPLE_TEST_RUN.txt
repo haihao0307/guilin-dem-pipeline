@@ -1,0 +1,114 @@
+{
+  "pass": true,
+  "rejectedSimplification": {
+    "description": "Replace the derived upper face gap 12.5 mm with the lower spacer-only gap 3 mm. O shaft then overlaps E shaft during the cycle; plate separation alone is not sufficient.",
+    "theta": 1.692416311101801,
+    "O_E_projectedCenterDistanceM": 7.149623495115412e-7,
+    "badOPinY": [
+      1.5199999999999998,
+      1.5559999999999998
+    ],
+    "EPinY": [
+      1.466,
+      1.529
+    ],
+    "witness": [
+      2.2392155407668923e-8,
+      1.5244999999999997,
+      5.549999643220822
+    ],
+    "scalarValues": [
+      -0.0044999999999999485,
+      -0.0045000000000001705
+    ],
+    "commonInteriorBallRadiusM": 0.001,
+    "correctCandidateAxialGapM": 0.0004999999999999449
+  },
+  "localInputConnections": [
+    {
+      "joint": "R",
+      "eyeToDrilledStemMaterialContinuity": {
+        "witness": [
+          0.98,
+          1.48,
+          5.283397901282459
+        ],
+        "scalarValues": [
+          -0.006499999999999574,
+          -0.006499999999999574
+        ],
+        "commonInteriorBallRadiusM": 0.006
+      },
+      "pinCenterAfterExplicitCut": {
+        "stemScalar": 0.0135,
+        "pinScalar": -0.012,
+        "pinNoLongerInsideStem": true
+      },
+      "strengthOrManufactureProved": false
+    },
+    {
+      "joint": "L",
+      "eyeToDrilledStemMaterialContinuity": {
+        "witness": [
+          -0.98,
+          1.48,
+          5.253127325306952
+        ],
+        "scalarValues": [
+          -0.006499999999999574,
+          -0.006499999999999574
+        ],
+        "commonInteriorBallRadiusM": 0.006
+      },
+      "pinCenterAfterExplicitCut": {
+        "stemScalar": 0.0135,
+        "pinScalar": -0.012,
+        "pinNoLongerInsideStem": true
+      },
+      "strengthOrManufactureProved": false
+    },
+    {
+      "joint": "M",
+      "eyeToDrilledStemMaterialContinuity": {
+        "witness": [
+          0,
+          1.48,
+          5.153501541270706
+        ],
+        "scalarValues": [
+          -0.006499999999999574,
+          -0.006499999999999574
+        ],
+        "commonInteriorBallRadiusM": 0.006
+      },
+      "pinCenterAfterExplicitCut": {
+        "stemScalar": 0.0135,
+        "pinScalar": -0.012,
+        "pinNoLongerInsideStem": true
+      },
+      "strengthOrManufactureProved": false
+    }
+  ],
+  "loadPathAudit": {
+    "fixedO": {
+      "kinematicallyFixed": true,
+      "modeledPinAndBushing": true,
+      "frameConnectionKnown": false,
+      "supportBearingSeatKnown": false,
+      "forceReactionsOrStressesComputed": false,
+      "status": "UNRESOLVED: pin center fixation is a kinematic condition, not physical frame support"
+    },
+    "RLM": {
+      "explicitTerminalEyeAndBoreRequired": true,
+      "nominalLocalMaterialContinuity": true,
+      "actualManufacturingDetailKnown": false
+    },
+    "middleSlider": {
+      "YRetained": 1.48,
+      "translationAlongZ": true,
+      "guideOrChestModeled": false,
+      "status": "UNRESOLVED: prescribed straight spindle path is not a physical prismatic support"
+    }
+  },
+  "wholeMechanicalAcceptance": false
+}

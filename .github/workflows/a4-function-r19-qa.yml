@@ -13,14 +13,14 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-train-workbench/a4-control-chain-r26
+            kaopu-train-workbench/a4-stack-assembly-r27
             kaopu-train-workbench/a4-dynamic-r22
       - name: Install pinned test dependencies
         run: |
           python -m pip install playwright==1.57.0 numpy==2.3.5 scipy==1.17.0
           python -m playwright install --with-deps chromium
       - name: Whole analytic browser compilation and render
-        working-directory: kaopu-train-workbench/a4-control-chain-r26
+        working-directory: kaopu-train-workbench/a4-stack-assembly-r27
         run: |
           python test_dynamic.py
           node test_dynamic_js.js
@@ -36,19 +36,24 @@ jobs:
           python gresley-reconstruction/certify_input_domain.py
           python gresley-reconstruction/physical_packaging_check.py
           node test_control_chain.js
+          node stack-reconstruction/test_stack.js
+          node stack-reconstruction/test_integration_frames.js
+          node stack-reconstruction/test_counterexamples.js
+          python stack-reconstruction/certify_stack_domain.py
+          node test_stack_adapter.js
           python test_installation_fields.py
           python test_crankpin_support.py
           timeout 600s python browser_qa.py
       - name: Whole-chain mechanical clearance acceptance (known failure retained)
-        working-directory: kaopu-train-workbench/a4-control-chain-r26
+        working-directory: kaopu-train-workbench/a4-stack-assembly-r27
         run: python test_swept_collision.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: a4-control-chain-r26-${{ github.sha }}
+          name: a4-stack-assembly-r27-${{ github.sha }}
           path: |
-            kaopu-train-workbench/a4-control-chain-r26/*QA.json
-            kaopu-train-workbench/a4-control-chain-r26/valve-reconstruction/*QA.json
-            kaopu-train-workbench/a4-control-chain-r26/gresley-reconstruction/*QA.json
-            kaopu-train-workbench/a4-control-chain-r26/*-whole.png
+            kaopu-train-workbench/a4-stack-assembly-r27/*QA.json
+            kaopu-train-workbench/a4-stack-assembly-r27/valve-reconstruction/*QA.json
+            kaopu-train-workbench/a4-stack-assembly-r27/gresley-reconstruction/*QA.json
+            kaopu-train-workbench/a4-stack-assembly-r27/*-whole.png
           retention-days: 30
