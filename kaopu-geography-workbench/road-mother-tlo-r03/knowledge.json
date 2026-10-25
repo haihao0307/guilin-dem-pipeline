@@ -1,0 +1,584 @@
+{
+  "schema": "KAOPU.TLO.RoadMother.r03",
+  "Time": {
+    "target": "2026 · 设计时间序列",
+    "stage": 3,
+    "label": "修补完成",
+    "isObservedEvent": false,
+    "Location": {
+      "name": "香港规则教学样段",
+      "isRealStreet": false,
+      "environment": {
+        "light": "冷环境光 + 暖方向光",
+        "weather": "干燥",
+        "physicalDeviceClaim": false
+      },
+      "Object": {
+        "Road": {
+          "id": "ordinary-road-demo-01",
+          "mother": "RoadMother.r03",
+          "parameters": {
+            "lanes": 2,
+            "laneWidth": 3.65,
+            "sidewalkWidth": 2.4,
+            "cycleWidth": 2.5,
+            "state": 3,
+            "mode": "material",
+            "preset": "urban",
+            "grainSize": 0.012,
+            "roughness": 0.82,
+            "damageDepth": 0.018,
+            "legacyRail": 0,
+            "shoulderWidth": 2,
+            "length": 36,
+            "crossfall": 0.025
+          },
+          "axes": {
+            "trafficSide": "left",
+            "functionClass": "普通道路组件教学样段",
+            "structure": "地面",
+            "users": [
+              "机动车",
+              "行人",
+              "单车"
+            ]
+          },
+          "geometry": {
+            "representation": "analytic-fields",
+            "objectMesh": false,
+            "pointCloud": false,
+            "wave": "required",
+            "screenCarrierTriangles": 1
+          },
+          "surfaceContract": {
+            "geometric": [
+              "不规则片状表层缺失与分层深度场",
+              "有限裂缝网络最多5mm下凹",
+              "路缘局部崩边",
+              "纵向浅排水沟、斜栅雨水口与55mm凹槽、独立路缘开口",
+              "修补抬升2mm",
+              "钢梁双波截面和护栏轮廓"
+            ],
+            "shadingOnly": [
+              "骨料微法线与粗糙度",
+              "沥青颜色尺度差异",
+              "标线磨耗覆盖率",
+              "混凝土孔隙和污痕",
+              "镀锌微表面"
+            ],
+            "note": "微骨料不宣称具有可碰撞的独立几何。"
+          },
+          "maintenance": {
+            "closedLocalLane": false,
+            "closurePolicy": "教学保守规则：高速损伤状态或最大深度≥50mm均局部封闭；非真实道路法定处置阈值",
+            "restored": true
+          },
+          "components": [
+            {
+              "id": 1,
+              "key": "Carriageway",
+              "name": "车行铺装",
+              "color": "#3b73ab",
+              "material": "沥青胶结料 + 非周期骨料场 + 微表面粗糙度",
+              "fn": "crown(x) − localDamage(x,s,time) + repairedLift(x,s,time)",
+              "users": [
+                "机动车"
+              ],
+              "source": "HK-TPDM2-202608",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [
+                  "机动车"
+                ],
+                "open": true,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 2,
+              "key": "Footway",
+              "name": "行人铺块",
+              "color": "#bf8a4a",
+              "material": "错缝铺块 + 骨料微法线 + 局部脏污",
+              "fn": "boundedSection + staggeredJointField + materialWaves",
+              "users": [
+                "行人"
+              ],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [
+                  "行人"
+                ],
+                "open": true,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 3,
+              "key": "CycleTrack",
+              "name": "独立单车铺装",
+              "color": "#338f6b",
+              "material": "彩色胶结铺装 + 细骨料",
+              "fn": "independentSection(x,s) + aggregateSurface",
+              "users": [
+                "单车"
+              ],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [
+                  "单车"
+                ],
+                "open": true,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 4,
+              "key": "Kerb",
+              "name": "路缘与局部崩边",
+              "color": "#9ca3a3",
+              "material": "混凝土孔隙、接缝；损伤段局部崩边高度",
+              "fn": "boundedKerb − localChip(s,time) + jointField",
+              "users": [],
+              "source": "HK-HYD-detail",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 5,
+              "key": "Marking",
+              "name": "标线与磨耗",
+              "color": "#e6d480",
+              "material": "道路涂料；覆盖率磨耗仅表面",
+              "fn": "laneBoundary × dash × paintCoverage",
+              "users": [],
+              "source": "HK-TPDM-index",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 6,
+              "key": "Lighting",
+              "name": "照明灯杆",
+              "color": "#667681",
+              "material": "金属微表面",
+              "fn": "nearestCell(s,12) → cylinder + arm",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 7,
+              "key": "WorkProtection",
+              "name": "施工围护",
+              "color": "#bc5929",
+              "material": "聚合物锥桶 + 色带与微表面",
+              "fn": "time=2 → cones supported on road",
+              "users": [],
+              "source": "HK-HYD-work",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 8,
+              "key": "WorkSurface",
+              "name": "施工基层",
+              "color": "#765138",
+              "material": "粗骨料基层；非已核准开挖工法",
+              "fn": "time=2 → boundedWorkSurface",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 9,
+              "key": "Drainage",
+              "name": "排水口与格栅",
+              "color": "#46565a",
+              "material": "金属格栅 + 实际凹槽",
+              "fn": "recess(55mm); horizontalGrate(edgeLevel-26mm, thickness24mm); frameTop=edgeLevel-8mm",
+              "users": [],
+              "source": "HYD-DRAIN-R03",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 10,
+              "key": "Shoulder",
+              "name": "高速硬路肩",
+              "color": "#886647",
+              "material": "低磨耗沥青骨料铺装",
+              "fn": "outerRoadSection(shoulderWidth)",
+              "users": [
+                "应急/维护用途，非普通车道"
+              ],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 11,
+              "key": "SteelBeam",
+              "name": "连续波形钢护栏",
+              "color": "#63a3ba",
+              "material": "镀锌金属微表面 + 真实双波截面",
+              "fn": "boundedWaveProfile(y) swept along s; flare at ends",
+              "users": [],
+              "source": "HYD-H2112C",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 12,
+              "key": "BarrierSupport",
+              "name": "立柱、基础与连接",
+              "color": "#7d73a6",
+              "material": "钢支柱 / 紧固件；混凝土基础",
+              "fn": "nearestCell(s,4) → post + footing + fastener",
+              "users": [],
+              "source": "HYD-H2117D",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 13,
+              "key": "ConcreteBarrier",
+              "name": "中央混凝土护栏",
+              "color": "#b3ad96",
+              "material": "分段轮廓、混凝土孔隙与近地污痕",
+              "fn": "piecewiseHalfWidth(y) × longitudinalBound(s)",
+              "users": [],
+              "source": "HYD-H2101D",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 14,
+              "key": "RepairPatch",
+              "name": "修补层与封边",
+              "color": "#596e6e",
+              "material": "新沥青骨料 / 封边；表面抬升2 mm",
+              "fn": "time=3 → boundedPatch + 2mm lift + edgeSeal",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road.Carriageway",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 15,
+              "key": "Damage",
+              "name": "表层剥落、局部缺损",
+              "color": "#75402b",
+              "material": "不规则分层缺失 / 露集料 / 有限裂缝网络",
+              "fn": "localPitDepth + boundedCrackDepth(5mm); no global cracking",
+              "users": [],
+              "source": "design-example",
+              "parent": "Time.Location.Object.Road.Carriageway",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 17,
+              "key": "Gutter",
+              "name": "纵向浅排水沟",
+              "color": "#526e7a",
+              "material": "低于铺装面的连续浅槽；非地下排水管",
+              "fn": "longitudinalChannelDepth(x,12mm)",
+              "users": [],
+              "source": "HYD-DRAIN-R03",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 18,
+              "key": "KerbWeir",
+              "name": "路缘溢流开口",
+              "color": "#648082",
+              "material": "路缘实际开孔与横杆；区别于平面雨水口",
+              "fn": "subtractOpeningFromKerb + crossBar",
+              "users": [],
+              "source": "HYD-H3121A",
+              "parent": "Time.Location.Object.Road",
+              "active": true,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 19,
+              "key": "PedestrianRail",
+              "name": "既有管式行人栏杆",
+              "color": "#826ea6",
+              "material": "DN50镀锌管；既有同型小修研究，不是新建或车辆防撞栏",
+              "fn": "nearestPost(1.8m) + twoTubeLevels",
+              "users": [],
+              "source": "HYD-H4103B",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            },
+            {
+              "id": 16,
+              "key": "BarrierTerminal",
+              "name": "外展锚固端头",
+              "color": "#bfa175",
+              "material": "梁外展、下落与混凝土锚块",
+              "fn": "endFlare(s) + downwardTransition(s) + anchorBlock",
+              "users": [],
+              "source": "HYD-GN040",
+              "parent": "Time.Location.Object.Road",
+              "active": false,
+              "waveRequired": true,
+              "state": "修补完成",
+              "access": {
+                "users": [],
+                "open": false,
+                "restrictions": [],
+                "advisory": null
+              }
+            }
+          ],
+          "relations": {
+            "support": [
+              "SteelBeam→BarrierSupport→foundation",
+              "SteelBeam→BarrierTerminal→anchor",
+              "ConcreteBarrier→road base"
+            ],
+            "note": "关系是Road属性，不另建顶层世界。"
+          }
+        }
+      }
+    }
+  },
+  "sources": [
+    {
+      "id": "HK-TPDM2-202608",
+      "title": "香港运输署 TPDM Volume 2 · August 2026",
+      "url": "https://www.td.gov.hk/filemanager/en/content_5055/V2_08_2026.pdf#page=47",
+      "section": "3.4.1.1 · PDF 第47页",
+      "fact": "一般车行道从路拱或中央分隔带向道路两侧采用 2.5% 横坡；超高或消除反向横坡的曲线除外。",
+      "scope": "本例直线路段的横断面规则；不作曲线超高设计验证。"
+    },
+    {
+      "id": "HK-TPDM-index",
+      "title": "香港运输署 TPDM 目录",
+      "url": "https://www.td.gov.hk/en/publications_and_press_releases/publications/tpdm/index.html",
+      "section": "Volume 3 / 4",
+      "fact": "标志、标线与信号须分别参考相应手册。",
+      "scope": "本例标线仅教学语义示意，非交通工程施工图。"
+    },
+    {
+      "id": "HK-HYD-detail",
+      "title": "香港路政署标准图 · Section 1",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/section1.html",
+      "scope": "路缘、排水等后续细化资料入口；本例未复制标准图。"
+    },
+    {
+      "id": "HK-HYD-work",
+      "title": "香港路政署道路工程照明、标志及防护工作守则",
+      "url": "https://www.hyd.gov.hk/en/technical_references/technical_document/code_of_practice/index.html",
+      "scope": "施工防护资料入口。本例锥桶和封闭范围仅教学，不是核准的临时交通安排。"
+    },
+    {
+      "id": "HYD-H2112C",
+      "title": "路政署 H2112C · 波形梁",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_2/pdf/h2112c.pdf",
+      "section": "横断面及拼接",
+      "fact": "标准图展示双波截面、约310–314 mm梁高及热浸镀锌要求。",
+      "scope": "本例学习截面及材料，正弦轮廓为自主近似，不是制造模板。"
+    },
+    {
+      "id": "HYD-H2117D",
+      "title": "路政署 H2117D · 护栏支撑与基础",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_2/pdf/h2117d.pdf",
+      "section": "4000 mm立柱间距示例",
+      "fact": "图中包括梁、立柱、混凝土基础、锚块与外展端头。",
+      "scope": "本例支撑链完整可见，未进行受力或碰撞安全验证。"
+    },
+    {
+      "id": "HYD-H2101D",
+      "title": "路政署 H2101D · 混凝土轮廓护栏",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_2/pdf/h2101d.pdf",
+      "section": "同高车行道横断面",
+      "fact": "图示基宽725 mm、最低顶宽200 mm、地面以上基本高度800 mm的轮廓及分段斜面。",
+      "scope": "本例学习形体比例，未完整重建圆角、钢筋、基础与工程设计。"
+    },
+    {
+      "id": "HYD-GN040",
+      "title": "路政署 · W梁与混凝土护栏端头补充指引",
+      "url": "https://www.hyd.gov.hk/en/technical_references/technical_document/guidance_notes/pdf/gn040_supp.pdf",
+      "section": "端头及安全净区",
+      "fact": "端头需适当外展、连接或缓冲等处理；不能形成危险钝端。",
+      "scope": "外展与锚固仅形体教学；净区、外展率及防撞性能未核验，不能当作高速公路施工方案。"
+    },
+    {
+      "id": "FHWA-DIM-PHOTO",
+      "title": "FHWA HRT-13-092 · 沥青病害实照",
+      "url": "https://www.fhwa.dot.gov/publications/research/infrastructure/pavements/ltpp/13092/001.cfm",
+      "section": "Figures 23–24,27–29,39–42",
+      "scope": "实际观察补丁、浅损伤、棱角集料与松散剥落；仅形态参考，不将美国分类作为香港法规。照片不打包。"
+    },
+    {
+      "id": "WSDOT-REPAIR",
+      "title": "WSDOT I-5 修补封边实照",
+      "url": "https://www.flickr.com/photos/wsdot/54055352301/",
+      "scope": "观察修补封边工序；照片底面有混凝土板，不拿它冒充沥青表面纹理。"
+    },
+    {
+      "id": "HYD-DRAIN-R03",
+      "title": "HyD H3118C · 双三角雨水口格栅",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_3/pdf/h3118c.pdf",
+      "scope": "斜栅和框架、517×432mm尺度关系；非厂家加工图复刻。"
+    },
+    {
+      "id": "HYD-H3121A",
+      "title": "HyD H3121A · 路缘溢流口",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_3/pdf/h3121a.pdf",
+      "scope": "路缘开口与横杆的用途形态，非水力校核。"
+    },
+    {
+      "id": "HYD-H4103B",
+      "title": "HyD H4103B · 既有管式栏杆",
+      "url": "https://www.hyd.gov.hk/en/technical_references/standard_drawings/hyd_standard_drawings/doc/section_4/pdf/h4103b.pdf",
+      "scope": "图注限制：只用于同型既有栏杆小修。本例可选研究，不作为新建选型或防撞认证。"
+    }
+  ],
+  "limitations": [
+    "非工程施工图、法规合规或碰撞安全认证",
+    "高速端头外展与锚固仅教学；净区及外展率未核验",
+    "中央护栏贯穿样段，样段截面不是道路真实终端",
+    "无路口、高架、隧道、土路、小径、交通仿真",
+    "没有真实街道或真实损坏事件记录"
+  ]
+}
