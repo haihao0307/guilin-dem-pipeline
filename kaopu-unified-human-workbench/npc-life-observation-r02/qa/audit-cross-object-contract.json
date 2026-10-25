@@ -1,0 +1,825 @@
+{
+  "schema": "kaopu/npc-r02-cross-object-verifier-contract@1",
+  "createdAt": "2026-10-20T07:36:58.715Z",
+  "scope": "Isolated pure verifier functions, static current-producer contract review and arithmetic on existing real Chromium anchors; synthetic fixtures are TEST_FIXTURE_ONLY, never scene acceptance.",
+  "previousVerifierSHA256": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b",
+  "verifierSHA256": "21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111",
+  "sourceHashes": {
+    "verify-browser.cjs": "21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111",
+    "ActorAdapter.mjs": "cb25c68c4ad5bf4c12859b2a70a57bfeb6dd75c56571ba54a5c2c0bc89b82b9f",
+    "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+    "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1",
+    "LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+    "WindowInteraction.mjs": "7382c1b5af96bd017ceec9bbae2eb1f41473145437bca459d47b668109c53354",
+    "Workbench.mjs": "b12c6c317c69e1f7e60bba88855f17195040ca8cd91c5f17c33294785f60e022"
+  },
+  "scriptSHA256": "c851633576965856d54bc57061fe8b3612144ec2b4600aca73b66fc50b2e9386",
+  "originalFailure": {
+    "path": "/workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r02/qa/bottle-window-handle-first-failure.json",
+    "sha256": "a9db1342b9ad2360a6dc9c7d77ae0b1d3f67181b1e6098177f173220cbbeb7f2",
+    "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e"
+  },
+  "preservedHistoricalAuditSHA256": "41e36591a2f1bcd3e8e1baec3f8a8f7a1dd4d7460a06d07e86766ec50acf9cb0",
+  "thresholds": {
+    "operatedCylinderM": 0.005,
+    "otherSolidM": 0.003,
+    "recoveryMaxSampleGapSeconds": 0.15
+  },
+  "stageNames": {
+    "bottle": [
+      "withdraw-start",
+      "withdraw",
+      "withdraw-end",
+      "rest-start",
+      "rest",
+      "rest-end"
+    ],
+    "window": [
+      "withdraw-start",
+      "withdraw-transition",
+      "withdraw-end",
+      "rest-start",
+      "rest-transition",
+      "rest"
+    ]
+  },
+  "expectedBottleTaskCountsInUnchangedSixCases": {
+    "A": 4,
+    "B": 2,
+    "C": 1
+  },
+  "syntaxCheck": {
+    "exitCode": 0,
+    "stderr": ""
+  },
+  "staticFindings": [
+    {
+      "name": "bottle task provenance and bounded ring retain complete new diagnostics",
+      "source": "LifeWorld.mjs",
+      "lines": [
+        {
+          "line": 40,
+          "text": "a.started=this.time"
+        },
+        {
+          "line": 142,
+          "text": "const solidCylinders=[this.window.handleCylinder()]"
+        },
+        {
+          "line": 148,
+          "text": "operatedObjectId:'bottle-01',taskStartedTime:a.started,phase:a.phase,stage,time:this.time"
+        },
+        {
+          "line": 147,
+          "text": "'solidByCylinder'"
+        },
+        {
+          "line": 151,
+          "text": "if(this.audit.poses.length>512)"
+        }
+      ],
+      "conclusion": "Actual request time persists through result and recovery; no pose ring reset at station reset."
+    },
+    {
+      "name": "bottle actual exit records occur after drive or native update with short stage names",
+      "source": "LifeWorld.mjs",
+      "lines": [
+        {
+          "line": 88,
+          "text": "this.drive(a,mix(r.from,r.to,r.time/.9),0)"
+        },
+        {
+          "line": 90,
+          "text": "r.time>=.9?'withdraw-end':'withdraw'"
+        },
+        {
+          "line": 97,
+          "text": "const complete=a.actor.updateRecovery?.(dt)"
+        },
+        {
+          "line": 99,
+          "text": "complete?'rest-end':'rest'"
+        },
+        {
+          "line": 74,
+          "text": "this.samplePose(a,'withdraw-start')"
+        },
+        {
+          "line": 78,
+          "text": "this.samplePose(a,'rest-start')"
+        },
+        {
+          "line": 197,
+          "text": "this.samplePose(a,'withdraw');a.withdrawNextPoseAt=t+.1"
+        }
+      ],
+      "conclusion": "Actual samples cover normal release, cancellation, failure and native rest; waiting-only tasks do not move or synthesize recovery."
+    },
+    {
+      "name": "window other cylinder reads actual bottle body and collider pose",
+      "source": "WindowInteraction.mjs",
+      "lines": [
+        {
+          "line": 125,
+          "text": "body.pointToWorldFrame(body.shapeOffsets[i])"
+        },
+        {
+          "line": 126,
+          "text": "body.quaternion.mult(body.shapeOrientations[i]).toArray()"
+        },
+        {
+          "line": 126,
+          "text": "radius:s.radiusTop,height:s.height"
+        },
+        {
+          "line": 176,
+          "text": "const operated=this.handleCylinder(),solidCylinders=this.otherCylinders()"
+        },
+        {
+          "line": 178,
+          "text": "operatedObjectId:operated.id,solidCylinders"
+        },
+        {
+          "line": 183,
+          "text": "solidByCylinder:d.solidByCylinder"
+        }
+      ],
+      "conclusion": "The operated handle remains the separate assisted-contact cylinder; the real bottle is the other cylinder."
+    },
+    {
+      "name": "native diagnostics sample the same weighted hand plus forearm against every box and cylinder",
+      "source": "ActorAdapter.mjs",
+      "lines": [
+        {
+          "line": 537,
+          "text": "if(solidCount)for(const id of armSurfaceVertices[active.side])"
+        },
+        {
+          "line": 511,
+          "text": "display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld)"
+        },
+        {
+          "line": 551,
+          "text": "const d=cylinderDistance(p,shape).distance"
+        },
+        {
+          "line": 553,
+          "text": "solidByCylinder[shape.id].sampleCount++"
+        },
+        {
+          "line": 532,
+          "text": "geometry:{kind:'finite-local-Y-cylinder'"
+        },
+        {
+          "line": 576,
+          "text": "solidSampleCount:solid.sampleCount"
+        }
+      ],
+      "conclusion": "Finite-cylinder SDF including caps is shared with existing operated-cylinder diagnostics; source descriptor and per-object report come from the same read."
+    },
+    {
+      "name": "both public diagnostic views pass actual non-operated cylinders",
+      "source": "Workbench.mjs",
+      "lines": [
+        {
+          "line": 257,
+          "text": "solidCylinders:[world.window.handleCylinder()]"
+        },
+        {
+          "line": 257,
+          "text": "solidCylinders:world.window.otherCylinders()"
+        },
+        {
+          "line": 229,
+          "text": "if(test.kind==='pick'&&['done','failed'].includes(a.phase)&&!a.retraction)"
+        },
+        {
+          "line": 233,
+          "text": "if(test.kind==='contention'&&['done','failed'].includes(a.phase)&&['done','failed'].includes(b.phase)&&!a.retraction&&!b.retraction)"
+        },
+        {
+          "line": 237,
+          "text": "if(test.kind==='cancel'&&this.action&&['done','failed'].includes(b.phase)&&!a.retraction&&!b.retraction)"
+        },
+        {
+          "line": 242,
+          "text": "if(test.kind==='support'&&a.phase==='failed'&&!a.retraction)"
+        }
+      ],
+      "conclusion": "The unchanged six bottle cases wait for completed withdrawal/rest before advancing, so the verifier can demand all seven distinct driven tasks."
+    }
+  ],
+  "realWitnesses": [
+    {
+      "actor": "A",
+      "exactSDFM": -0.01274399260100913,
+      "penetrationM": 0.01274399260100913,
+      "anchorOnly": true,
+      "wholeSurfaceMaximumClaimed": false,
+      "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+      "sourceArtifactsHashVerified": true,
+      "differenceFromUprightWitnessM": -4.2643733336178435e-9,
+      "rejectedByStrengthenedVerifier": true
+    },
+    {
+      "actor": "B",
+      "exactSDFM": -0.015164397825827652,
+      "penetrationM": 0.015164397825827652,
+      "anchorOnly": true,
+      "wholeSurfaceMaximumClaimed": false,
+      "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+      "sourceArtifactsHashVerified": true,
+      "differenceFromUprightWitnessM": -9.210950509264126e-10,
+      "rejectedByStrengthenedVerifier": true
+    },
+    {
+      "actor": "C",
+      "exactSDFM": -0.015042940198895818,
+      "penetrationM": 0.015042940198895818,
+      "anchorOnly": true,
+      "wholeSurfaceMaximumClaimed": false,
+      "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+      "sourceArtifactsHashVerified": true,
+      "differenceFromUprightWitnessM": -3.5247932038406926e-9,
+      "rejectedByStrengthenedVerifier": true
+    }
+  ],
+  "testCount": 29,
+  "passedCount": 29,
+  "tests": [
+    {
+      "name": "complete other-solid descriptor and hand plus forearm samples accepted",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "existing 3 mm other-solid boundary retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "missing neighbouring cylinder rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "Expected non-operated cylinder lacks actual surface samples: window-handle-01",
+          "The expected other cylinder must retain its actual pose and dimensions: window-handle-01"
+        ]
+      }
+    },
+    {
+      "name": "hand-only diagnostics rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "Other-solid diagnostics require both hand and forearm surface vertices",
+          "Other-solid sample count must include the complete declared hand and forearm"
+        ]
+      }
+    },
+    {
+      "name": "partial cylinder sample count cannot masquerade as full arm",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "Other cylinder must sample the same complete hand and forearm surface: window-handle-01"
+        ]
+      }
+    },
+    {
+      "name": "other-cylinder pose and actual report must agree",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "Other-cylinder measurement and source world position disagree: window-handle-01"
+        ]
+      }
+    },
+    {
+      "name": "operated cylinder cannot silently move to 3 mm class",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "The operated cylinder must not be silently tightened to the other-solid 3 mm tolerance"
+        ]
+      }
+    },
+    {
+      "name": "zero aggregate does not hide nonzero individual penetration",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "Native hand/forearm penetrates other cylinder by more than 3 mm: window-handle-01"
+        ]
+      }
+    },
+    {
+      "name": "missing source cylinder descriptor rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "The expected other cylinder must retain its actual pose and dimensions: window-handle-01"
+        ]
+      }
+    },
+    {
+      "name": "null cylinder descriptor rejected without uncaught access error",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          "An actual other-cylinder descriptor is missing"
+        ]
+      }
+    },
+    {
+      "name": "complete bottle task and recovery preserve operated 4.5 mm assisted contact",
+      "passed": true,
+      "detail": {
+        "sampleCount": 25,
+        "accepted": true,
+        "requiredActors": [
+          "A"
+        ],
+        "taskCounts": {
+          "A": 1
+        },
+        "recovery": [
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "withdrawal": {
+              "transitionCount": 8,
+              "maxSampleGapSeconds": 0.10000000000000053
+            },
+            "rest": {
+              "transitionCount": 6,
+              "maxSampleGapSeconds": 0.10000000000000053
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing withdrawal intermediate samples rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "withdraw",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "withdrawal",
+            "reason": "actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps",
+            "transitionCount": 0,
+            "maxSampleGapSeconds": 0.9000000000000004
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing real recovery interval rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "rest",
+            "reason": "actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps",
+            "transitionCount": 3,
+            "maxSampleGapSeconds": 0.40000000000000036
+          }
+        ]
+      }
+    },
+    {
+      "name": "another task cannot supply missing rest samples",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "rest-start",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "rest",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "rest-end",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "rest",
+            "reason": "actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps",
+            "transitionCount": 0,
+            "maxSampleGapSeconds": 0
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 2,
+            "stage": "withdraw-start",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 2,
+            "stage": "withdraw",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 2,
+            "stage": "withdraw-end",
+            "reason": "required actual bottle exit sample is missing"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 2,
+            "stage": "withdrawal",
+            "reason": "actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps",
+            "transitionCount": 0,
+            "maxSampleGapSeconds": 0
+          },
+          {
+            "id": "A",
+            "reason": "an entire expected bottle task is missing from the phase audit or duplicated",
+            "expectedTaskCount": 1,
+            "actualTaskCount": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "final rest deviation rejected while intermediate rotation is permitted",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "rest-end",
+            "time": 7.55,
+            "reason": "completed native bottle recovery did not reach the original rest pose"
+          }
+        ]
+      }
+    },
+    {
+      "name": "out-of-order task samples rejected",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "reason": "actual bottle task samples are not in chronological order"
+          },
+          {
+            "id": "A",
+            "taskStartedTime": 1,
+            "stage": "withdrawal",
+            "reason": "actual bottle exit lacks intermediate surface samples at at most 0.15 second gaps",
+            "transitionCount": 8,
+            "maxSampleGapSeconds": 0.20000000000000018
+          }
+        ]
+      }
+    },
+    {
+      "name": "nonfinite timestamp cannot disappear through the audit cursor",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "withdraw",
+            "time": null,
+            "reason": "the driven pose precedes its actual task or has no finite time"
+          }
+        ]
+      }
+    },
+    {
+      "name": "all seven driven tasks from the six unchanged bottle cases remain independently covered",
+      "passed": true,
+      "detail": {
+        "fixtureSampleCount": 175,
+        "taskCounts": {
+          "A": 4,
+          "B": 2,
+          "C": 1
+        }
+      }
+    },
+    {
+      "name": "one whole missing A task cannot be replaced by other A tasks",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "retainedMeasurements": true,
+        "violations": [
+          {
+            "id": "A",
+            "reason": "an entire expected bottle task is missing from the phase audit or duplicated",
+            "expectedTaskCount": 4,
+            "actualTaskCount": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "window arc and differently named recovery retain operated 4.5 mm contact",
+      "passed": true,
+      "detail": {
+        "file": "window-poses-synthetic-contract-only-window.json",
+        "taskToken": "synthetic-contract-only-window",
+        "accepted": true,
+        "sampleCount": 26,
+        "swingCount": 6,
+        "maxSampleAngleGapDeg": 5,
+        "withdrawalTransitionCount": 8,
+        "maxWithdrawalSampleGapSeconds": 0.10000000000000009,
+        "recoveryTransitionCount": 6,
+        "maxRecoverySampleGapSeconds": 0.10000000000000009
+      }
+    },
+    {
+      "name": "window rest-transition detects non-operated bottle collision",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "rest-transition",
+            "time": 2.7,
+            "angleDeg": -35,
+            "reason": "Native hand/forearm penetrates another physical solid by more than 3 mm"
+          },
+          {
+            "id": "A",
+            "stage": "rest-transition",
+            "time": 2.7,
+            "angleDeg": -35,
+            "reason": "Native hand/forearm penetrates other cylinder by more than 3 mm: bottle-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "old Chromium A real surface anchor still fails the unchanged other-solid gate",
+      "passed": true,
+      "detail": {
+        "actor": "A",
+        "exactSDFM": -0.01274399260100913,
+        "penetrationM": 0.01274399260100913,
+        "anchorOnly": true,
+        "wholeSurfaceMaximumClaimed": false,
+        "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "sourceArtifactsHashVerified": true,
+        "differenceFromUprightWitnessM": -4.2643733336178435e-9,
+        "rejectedByStrengthenedVerifier": true
+      }
+    },
+    {
+      "name": "old Chromium B real surface anchor still fails the unchanged other-solid gate",
+      "passed": true,
+      "detail": {
+        "actor": "B",
+        "exactSDFM": -0.015164397825827652,
+        "penetrationM": 0.015164397825827652,
+        "anchorOnly": true,
+        "wholeSurfaceMaximumClaimed": false,
+        "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "sourceArtifactsHashVerified": true,
+        "differenceFromUprightWitnessM": -9.210950509264126e-10,
+        "rejectedByStrengthenedVerifier": true
+      }
+    },
+    {
+      "name": "old Chromium C real surface anchor still fails the unchanged other-solid gate",
+      "passed": true,
+      "detail": {
+        "actor": "C",
+        "exactSDFM": -0.015042940198895818,
+        "penetrationM": 0.015042940198895818,
+        "anchorOnly": true,
+        "wholeSurfaceMaximumClaimed": false,
+        "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+        "sourceArtifactsHashVerified": true,
+        "differenceFromUprightWitnessM": -3.5247932038406926e-9,
+        "rejectedByStrengthenedVerifier": true
+      }
+    },
+    {
+      "name": "bottle task provenance and bounded ring retain complete new diagnostics",
+      "passed": true,
+      "detail": {
+        "source": "LifeWorld.mjs",
+        "lines": [
+          {
+            "line": 40,
+            "text": "a.started=this.time"
+          },
+          {
+            "line": 142,
+            "text": "const solidCylinders=[this.window.handleCylinder()]"
+          },
+          {
+            "line": 148,
+            "text": "operatedObjectId:'bottle-01',taskStartedTime:a.started,phase:a.phase,stage,time:this.time"
+          },
+          {
+            "line": 147,
+            "text": "'solidByCylinder'"
+          },
+          {
+            "line": 151,
+            "text": "if(this.audit.poses.length>512)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "bottle actual exit records occur after drive or native update with short stage names",
+      "passed": true,
+      "detail": {
+        "source": "LifeWorld.mjs",
+        "lines": [
+          {
+            "line": 88,
+            "text": "this.drive(a,mix(r.from,r.to,r.time/.9),0)"
+          },
+          {
+            "line": 90,
+            "text": "r.time>=.9?'withdraw-end':'withdraw'"
+          },
+          {
+            "line": 97,
+            "text": "const complete=a.actor.updateRecovery?.(dt)"
+          },
+          {
+            "line": 99,
+            "text": "complete?'rest-end':'rest'"
+          },
+          {
+            "line": 74,
+            "text": "this.samplePose(a,'withdraw-start')"
+          },
+          {
+            "line": 78,
+            "text": "this.samplePose(a,'rest-start')"
+          },
+          {
+            "line": 197,
+            "text": "this.samplePose(a,'withdraw');a.withdrawNextPoseAt=t+.1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "window other cylinder reads actual bottle body and collider pose",
+      "passed": true,
+      "detail": {
+        "source": "WindowInteraction.mjs",
+        "lines": [
+          {
+            "line": 125,
+            "text": "body.pointToWorldFrame(body.shapeOffsets[i])"
+          },
+          {
+            "line": 126,
+            "text": "body.quaternion.mult(body.shapeOrientations[i]).toArray()"
+          },
+          {
+            "line": 126,
+            "text": "radius:s.radiusTop,height:s.height"
+          },
+          {
+            "line": 176,
+            "text": "const operated=this.handleCylinder(),solidCylinders=this.otherCylinders()"
+          },
+          {
+            "line": 178,
+            "text": "operatedObjectId:operated.id,solidCylinders"
+          },
+          {
+            "line": 183,
+            "text": "solidByCylinder:d.solidByCylinder"
+          }
+        ]
+      }
+    },
+    {
+      "name": "native diagnostics sample the same weighted hand plus forearm against every box and cylinder",
+      "passed": true,
+      "detail": {
+        "source": "ActorAdapter.mjs",
+        "lines": [
+          {
+            "line": 537,
+            "text": "if(solidCount)for(const id of armSurfaceVertices[active.side])"
+          },
+          {
+            "line": 511,
+            "text": "display(binding.sampleVertex(id,true)).applyMatrix4(root.matrixWorld)"
+          },
+          {
+            "line": 551,
+            "text": "const d=cylinderDistance(p,shape).distance"
+          },
+          {
+            "line": 553,
+            "text": "solidByCylinder[shape.id].sampleCount++"
+          },
+          {
+            "line": 532,
+            "text": "geometry:{kind:'finite-local-Y-cylinder'"
+          },
+          {
+            "line": 576,
+            "text": "solidSampleCount:solid.sampleCount"
+          }
+        ]
+      }
+    },
+    {
+      "name": "both public diagnostic views pass actual non-operated cylinders",
+      "passed": true,
+      "detail": {
+        "source": "Workbench.mjs",
+        "lines": [
+          {
+            "line": 257,
+            "text": "solidCylinders:[world.window.handleCylinder()]"
+          },
+          {
+            "line": 257,
+            "text": "solidCylinders:world.window.otherCylinders()"
+          },
+          {
+            "line": 229,
+            "text": "if(test.kind==='pick'&&['done','failed'].includes(a.phase)&&!a.retraction)"
+          },
+          {
+            "line": 233,
+            "text": "if(test.kind==='contention'&&['done','failed'].includes(a.phase)&&['done','failed'].includes(b.phase)&&!a.retraction&&!b.retraction)"
+          },
+          {
+            "line": 237,
+            "text": "if(test.kind==='cancel'&&this.action&&['done','failed'].includes(b.phase)&&!a.retraction&&!b.retraction)"
+          },
+          {
+            "line": 242,
+            "text": "if(test.kind==='support'&&a.phase==='failed'&&!a.retraction)"
+          }
+        ]
+      }
+    }
+  ],
+  "passed": true,
+  "dynamicBrowserExecuted": false,
+  "productionSourceChangedByThisAudit": false,
+  "browserAcceptance": false,
+  "publicURLVerified": false,
+  "visualAcceptance": false,
+  "limits": [
+    "This proves the verifier recognizes missing or intersecting other-cylinder evidence; it does not certify the corrected candidate runtime.",
+    "Existing real witnesses are skin anchors, not the full hand maximum.",
+    "Along-path geometry remains measured vertex SDF at actual recorded phases and roughly 0.1-second recovery intervals, not continuous triangle collision.",
+    "Corrected complete native R07 rendering, screenshots, all twelve cases and final public URL still require actual browser evidence."
+  ]
+}

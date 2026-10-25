@@ -1,0 +1,81 @@
+name: NPC R04 frozen public closure
+on:
+  push:
+    branches: [feature/npc-life-observation-r04-20261021]
+    paths: ['.github/workflows/npc-r04-public-closure.yml']
+permissions:
+  contents: read
+concurrency:
+  group: npc-r04-public-closure-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  public-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Install pinned browser verification tools
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Check frozen public bytes and actual browser controls
+        timeout-minutes: 8
+        run: |
+          cat > /tmp/npc-r04-public-closure.cjs <<'JS'
+          'use strict';
+          const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+          const {chromium}=require(process.cwd()+'/node_modules/playwright');
+          const target='b386dd9780ddc5b01676fe46117d56d973725ac7';
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/npc-life-observation/r04-20261021/'+target+'/';
+          const sha='5d19979f9f320efb8627e8326fdb913aa3f966c9f314425ed85b39848e7d5b0e';
+          const out='/tmp/npc-r04-public-closure';fs.mkdirSync(out,{recursive:true});
+          const r={schema:'kaopu/npc-r04-public-closure@1',runtimeSourceHead:target,verificationWorkflowHead:process.env.GITHUB_SHA,url,expectedSHA256:sha,startedAt:new Date().toISOString(),checks:[],completed:false,passed:false,pageErrors:[],consoleErrors:[],failedRequests:[],httpErrors:[],scope:'Supplement to the complete b386dd file/public regression and ownership regression; not their replacement. Public HTTP payload hash and live UI are checked separately; no claim that DevTools captured the navigated 66MB response bytes.',physicalPhone:false,visualAcceptance:false,productionReady:false};
+          const save=()=>fs.writeFileSync(out+'/receipt.json',JSON.stringify(r,null,2)+'\n');
+          const good=(name,detail)=>{r.checks.push({name,passed:true,detail});save();console.log('PASS '+name);};
+          let browser;
+          async function main(){
+            const response=await fetch(url,{signal:AbortSignal.timeout(60000)});assert.equal(response.status,200);
+            const bytes=Buffer.from(await response.arrayBuffer());assert.equal(bytes.length,66621065);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),sha);
+            const mr=await fetch(url+'BUILD.json',{signal:AbortSignal.timeout(30000)});assert.equal(mr.status,200);const m=await mr.json();
+            assert.equal(m.sourceHead,target);assert.equal(m.previewSHA256,sha);assert.equal(m.previewBytes,bytes.length);assert.equal(m.publicURL,url);
+            fs.writeFileSync(out+'/BUILD.json',JSON.stringify(m,null,2)+'\n');
+            good('Current public HTML and metadata match frozen runtime',{http:response.status,bytes:bytes.length,sha256:sha});
+            browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            const context=await browser.newContext({viewport:{width:1200,height:900},deviceScaleFactor:1,acceptDownloads:true});const page=await context.newPage();
+            page.on('pageerror',e=>r.pageErrors.push(String(e)));page.on('console',m=>{if(m.type()==='error')r.consoleErrors.push(m.text());});
+            page.on('requestfailed',q=>r.failedRequests.push({url:q.url(),error:q.failure()?.errorText}));page.on('response',q=>{if(q.status()>=400&&!q.url().endsWith('/favicon.ico'))r.httpErrors.push({url:q.url(),status:q.status()});});
+            const started=Date.now();const nav=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});assert.equal(nav.status(),200);assert.equal(page.url(),url);
+            await page.waitForFunction(()=>window.__NPC_OBSERVATION__?.ready||window.__NPC_BOOT__?.snapshot().status==='failed',null,{timeout:200000});
+            r.boot=await page.evaluate(()=>window.__NPC_BOOT__.snapshot());assert.equal(r.boot.status,'ready');assert(Date.now()-started<200000);
+            const first=await page.evaluate(()=>window.__NPC_OBSERVATION__.state());assert.equal(first.version,'NPC-LIFE-OBSERVATION-R04');assert.equal(first.agents.length,3);
+            good('Public page boots all three complete native people',{readyMS:Date.now()-started,actors:first.agents.map(a=>({id:a.id,vertices:a.binding.displayVertices,bones:a.binding.nativeBones}))});
+            async function click(id){await page.locator('#'+id).click();await page.waitForFunction(()=>window.__NPC_OBSERVATION__.authority().pendingCount===0,null,{timeout:45000});}
+            async function frame(){return page.evaluate(()=>window.__NPC_OBSERVATION__.awaitFrame({fresh:true}));}
+            async function ownership(){return page.evaluate(()=>({receipt:window.__NPC_HOST_AUTHORITY__,controllerAbsent:window.fullCommonWorkbench.motion()===null,panelCount:document.querySelectorAll('.motion-studio').length,controlCount:document.querySelectorAll('[id^="motion-"]').length,legacyRootAbsent:!window.__IDENTITY_QA__.viewer().scene.getObjectByName('existing-human-motion-modes'),retainedOriginalHidden:window.__IDENTITY_QA__.viewer().mesh.visible===false,errors:window.__NPC_OBSERVATION__.errors}));}
+            function checkOwner(o){assert.equal(o.receipt.owner,'npc-life-observation');assert.equal(o.receipt.legacyMotionController,'not-created');assert(o.controllerAbsent&&o.legacyRootAbsent&&o.retainedOriginalHidden);assert.equal(o.panelCount,0);assert.equal(o.controlCount,0);assert.deepEqual(o.errors,[]);}
+            await click('npc-pause');await frame();const owner=await ownership();checkOwner(owner);good('No inherited controller or controls in public desktop scene',owner);
+            await page.screenshot({path:out+'/desktop.png'});
+            await page.locator('[data-person="1"]').click();await page.waitForFunction(()=>document.getElementById('npc-pick').textContent==='B 拿放',null,{timeout:45000});await frame();checkOwner(await ownership());
+            good('Actual public actor selection preserves ownership',{selected:'B'});
+            await page.locator('summary').filter({hasText:'实时数据与事件'}).click();
+            const before=await page.evaluate(()=>window.__NPC_OBSERVATION__.state());const downloadPromise=page.waitForEvent('download');await page.locator('#npc-export').click();const download=await downloadPromise;const exportPath=out+'/current-state-export.json';await download.saveAs(exportPath);
+            const content=fs.readFileSync(exportPath),data=JSON.parse(content);assert(content.length<1048576);
+            for(const key of ['time','object','target','targetRevision','supportRevision','agents','review'])assert.deepEqual(data[key],before[key],key);
+            good('Actual compact JSON download matches paused scene',{bytes:content.length,matchedKeys:['time','object','target','targetRevision','supportRevision','agents','review']});
+            await page.locator('summary').filter({hasText:'实时数据与事件'}).click();
+            await page.setViewportSize({width:390,height:844});await frame();const mobile=await ownership();checkOwner(mobile);
+            const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth}));assert(layout.scrollWidth<=layout.width+1);
+            await page.screenshot({path:out+'/mobile-viewport.png'});good('390x844 viewport preserves sole controller and fits width',layout);
+            assert.deepEqual(r.pageErrors,[]);assert.deepEqual(r.consoleErrors,[]);assert.deepEqual(r.failedRequests,[]);assert.deepEqual(r.httpErrors,[]);
+            good('No application, console, network or HTTP errors');r.completed=true;r.passed=true;r.finishedAt=new Date().toISOString();save();
+          }
+          main().catch(e=>{r.error=e.stack;save();console.error(e);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();});
+          JS
+          node /tmp/npc-r04-public-closure.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-r04-public-closure-${{ github.sha }}
+          path: /tmp/npc-r04-public-closure
+          retention-days: 14

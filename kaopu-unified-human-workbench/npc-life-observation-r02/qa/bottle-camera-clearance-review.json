@@ -1,0 +1,128 @@
+{
+  "schema": "npc-bottle-camera-clearance-review/1",
+  "reviewedAt": "2026-10-20T07:19:28.874647+00:00",
+  "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+  "camera": {
+    "position": [
+      -1.05,
+      1.6,
+      0.9
+    ],
+    "target": [
+      0.045,
+      1.12,
+      0.4
+    ],
+    "verticalFovDeg": 31,
+    "zoom": 1,
+    "canvas": [
+      900,
+      832
+    ],
+    "targetDistanceM": 1.2959263096333835
+  },
+  "frameLineOfSightPassed": true,
+  "completeInteractionUnoccluded": false,
+  "phases": [
+    "close",
+    "lift",
+    "transfer",
+    "lower",
+    "lower-end",
+    "verify"
+  ],
+  "perPhaseSamples": "Actual palm and five actual weighted finger anchors; 360 azimuth samples on each upper/lower edge of the 32mm-radius,140mm-high cylinder at its actual phase center. This ray/projection estimate treats the cylinder as upright; it is not a rasterized frame or triangle visibility test.",
+  "closedWindowFrame": {
+    "nearZ": 0.526,
+    "leftmostX": 0.06
+  },
+  "actors": [
+    {
+      "actor": "A",
+      "samples": 4356,
+      "maximumXAtZ526": -0.040310624626100244,
+      "limitingSample": [
+        "verify",
+        "bottle-circle",
+        [
+          0.11068626821742879,
+          1.1645467020078184,
+          0.47006909758501986
+        ]
+      ],
+      "leftPostClearanceAtPlaneM": 0.10031062462610024,
+      "projectionNDC": {
+        "x": [
+          -0.30241948945223246,
+          0.24070389534206676
+        ],
+        "y": [
+          -0.32527095464823824,
+          0.758529455619616
+        ]
+      },
+      "sourceFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-A.json",
+      "sourceSHA256": "c07ee3c279331f0244feb62a74076d517c7b4829a9925ffb8830b64e3eac8f9a"
+    },
+    {
+      "actor": "B",
+      "samples": 4356,
+      "maximumXAtZ526": -0.040310631107414174,
+      "limitingSample": [
+        "verify",
+        "bottle-circle",
+        [
+          0.11068626076684826,
+          1.1645467020294993,
+          0.47006909758501986
+        ]
+      ],
+      "leftPostClearanceAtPlaneM": 0.10031063110741417,
+      "projectionNDC": {
+        "x": [
+          -0.2927700072665936,
+          0.24070389614837429
+        ],
+        "y": [
+          -0.32527095464823824,
+          0.7005454506540442
+        ]
+      },
+      "sourceFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-B.json",
+      "sourceSHA256": "d13905645d71b7d79d48d9440a33971f50dbc07666a1d5f4442435d8077f9ad6"
+    },
+    {
+      "actor": "C",
+      "samples": 4356,
+      "maximumXAtZ526": -0.04031063758872788,
+      "limitingSample": [
+        "verify",
+        "bottle-circle",
+        [
+          0.1106862533162678,
+          1.1645467005724595,
+          0.47006909758501986
+        ]
+      ],
+      "leftPostClearanceAtPlaneM": 0.10031063758872788,
+      "projectionNDC": {
+        "x": [
+          -0.296977624448843,
+          0.24070395627218688
+        ],
+        "y": [
+          -0.32527095464823824,
+          0.7377659990946008
+        ]
+      },
+      "sourceFile": "/workspace/scratch/e6ae91f16d9c/npc-observation/ci/r02-29b3-suite/tmp/npc-browser/phase-geometry-placed-C.json",
+      "sourceSHA256": "6a573a43a1d6ac72ed956e74b0c1d519b325ee380ddf8521c629305a32c3a7c5"
+    }
+  ],
+  "foundSeparateDefect": "verify index-finger surface is inside the actual window handle; see bottle-window-handle-first-failure.json. Frame clearance does not imply complete scene clearance.",
+  "limits": [
+    "Real native arm/hand self-occlusion, shading and final full R07 readability must be checked in a new completed GPU frame.",
+    "Bottle bottom at physical table contact is naturally hidden by the support boundary.",
+    "No production model, pose, physics or verifier changed by this review."
+  ]
+}
