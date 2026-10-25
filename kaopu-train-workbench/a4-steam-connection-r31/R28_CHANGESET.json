@@ -1,0 +1,96 @@
+{
+  "revision": "R28",
+  "scope": "Appearance-only integration and retained failure evidence; no mechanical/source geometry changes; no Git/Library/browser/publication actions.",
+  "changedRuntimeFiles": [
+    "app.js",
+    "controls.js",
+    "index.html"
+  ],
+  "newRuntimeFiles": [
+    "material-renderer.js",
+    "material-wave-study/material-waves.js",
+    "material-wave-study/rigid-coordinates.js",
+    "material-wave-study/material-waves.glsl"
+  ],
+  "protectedSourceHashes": {
+    "scene.js": "8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da",
+    "dynamic.js": "d85798e4c0cc86b38e003876d71149642f6e7b909cfc856d2c1d9461d8d45497",
+    "outside_valve_solver.js": "1478673dcbf632b475ec068b64d546410abf4026928131eec1c8e6dc3c818388",
+    "valve-dynamic.js": "99b42173d27a5350cce5e33e557766c683128ec3365e3169a731d926aae54ff4",
+    "gresley_solver.js": "993af643e1b6a4ba964bd61ed3ae355635c5c02bbdef47067f79df7ee837f2c6",
+    "gresley-dynamic.js": "d5c57d9e123d06b889d24b8c1397248e9499fb7cb99b4ebe8a83cad404fa7806",
+    "stack-fields.js": "d79906e78d75637cc9103af5c3347360c9254c12e2ceb34d0589a577454f55cb",
+    "stack-dynamic.js": "5a385398cc8fd24016d9b5643d76ff544ffeff34815921cb0652186d0425c71b",
+    "PROVENANCE_REVIEW.md": "78a43352babedda3f7b405fb2defb097f41133c4f3108e380647d976d13de0c2"
+  },
+  "modifiedRelativeToCurrentR27": [
+    "CONTROLS_QA.json",
+    "README.md",
+    "VERIFICATION_STATE.json",
+    "app.js",
+    "browser_qa.py",
+    "controls.js",
+    "index.html",
+    "test_controls.js",
+    "workflow.yml"
+  ],
+  "addedRelativeToCurrentR27": [
+    "GRESLEY_INSTALLATION_EVIDENCE.md",
+    "MATERIAL_GEOMETRY_LOCK.json",
+    "MATERIAL_INTEGRATION_QA.json",
+    "MATERIAL_INTEGRATION_RUN.txt",
+    "R27_BROWSER_QA_HISTORICAL.json",
+    "R27_FIRST_BROWSER_FAILURE_HISTORICAL.json",
+    "R27_VERIFICATION_STATE_HISTORICAL.json",
+    "R28_CPU_REGRESSION_RUN.txt",
+    "RENDER_GEOMETRY_LOCK.json",
+    "WHOLE_NEIGHBOR_REPLAY_RUN.txt",
+    "material-renderer.js",
+    "material-wave-study/MATERIAL_ASSIGNMENTS.json",
+    "material-wave-study/MATERIAL_WAVE_QA.json",
+    "material-wave-study/README.md",
+    "material-wave-study/TEST_RUN.txt",
+    "material-wave-study/WHOLE_VIEW_FILTER_QA.json",
+    "material-wave-study/material-waves.glsl",
+    "material-wave-study/material-waves.js",
+    "material-wave-study/rigid-coordinates.js",
+    "material-wave-study/test-material-waves.js",
+    "test_material_renderer.js"
+  ],
+  "excludedRegenerableFiles": [
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "whole-neighbors/FRAMES.json",
+    "whole-neighbors/sources.json",
+    "whole-neighbors/parts.json"
+  ],
+  "contracts": {
+    "timeLocationObject": "DYNAMIC.state once per request; appearance sampled after unchanged whole-object hit",
+    "geometryDisplacement": 0,
+    "defined": 592,
+    "baselineDraws": 519,
+    "candidateDraws": 574,
+    "stackMap": "reference frameSourceId through DYNAMIC.gresleyFrame exactly once; no extra Y rebase or rotation",
+    "appearanceModes": [
+      "waves",
+      "diagnostic"
+    ],
+    "unknownMaterial": "source diagnostic color + declared neutral signal; no historic identity",
+    "lighting": "self-written roughness-dependent GGX/Schlick study, no measured BRDF/shadows/transmission",
+    "footprint": "per-wave tangent-plane ray-cone estimate; high frequencies suppressed; no derivatives in divergent flow",
+    "currentWholeTrainStatus": "FAIL; analytic frame/middle-cylinder intersections remain; real openings and installation unverified"
+  },
+  "passedLocalTests": [
+    "node test_dynamic_js.js",
+    "node test_installation_adapter.js",
+    "node test_valve_dynamic.js",
+    "node test_control_chain.js",
+    "node test_stack_adapter.js",
+    "node test_controls.js",
+    "node material-wave-study/test-material-waves.js",
+    "node test_material_renderer.js",
+    "node whole-neighbors/broadphase.js && node whole-neighbors/export_frames.js && python whole-neighbors/verify_witnesses.py --verify-only"
+  ],
+  "pending": "Remote browser/GLSL/pixel QA. Local browser was denied and never retried.",
+  "workflowSuggestedDirectory": "kaopu-train-workbench/a4-surface-waves-r28"
+}

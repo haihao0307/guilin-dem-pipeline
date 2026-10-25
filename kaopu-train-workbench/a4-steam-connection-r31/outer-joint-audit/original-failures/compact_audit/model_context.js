@@ -1,0 +1,4 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),crypto=require('crypto');
+function load(){const root=path.resolve(__dirname,'../r29'),expected=require('./INPUT_SHA256.json');for(const [name,h]of Object.entries(expected)){const actual=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,name))).digest('hex');if(actual!==h)throw Error('R29 source changed since joint snapshot: '+name+'. Capture a new revision explicitly; do not mix frames and fields.');}
+ const c={};c.window=c;vm.createContext(c);for(const f of ['scene.js','dynamic.js','outside_valve_solver.js','valve-dynamic.js','gresley_solver.js','topology-parameters.js','side_offset_solver.js','gresley-dynamic.js','stack-fields.js','stack-dynamic.js','middle-chest-fields.js','middle-chest-dynamic.js','frame-support-fields.js','frame-support-dynamic.js'])vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c,{filename:f});return c;}
+module.exports={load};

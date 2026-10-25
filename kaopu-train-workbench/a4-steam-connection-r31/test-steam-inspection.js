@@ -1,0 +1,8 @@
+'use strict';const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const element={textContent:''},D={steamPathCandidate:{status:[{label:'三路主汽候选',state:'unverified',reason:'尚未实测'}],inspection:(theta,installation)=>({knownBreaks:['上游取汽未接','过热元件未接','排汽汇合未接'],theta,installation})}};
+const context={DYNAMIC:D,document:{getElementById:id=>id==='steam-path-state'?element:null},RESEARCH_UI:{showRendered(){}}};context.globalThis=context;vm.createContext(context);vm.runInContext(fs.readFileSync(__dirname+'/steam-inspection.js','utf8'),context);
+context.RESEARCH_UI.showRendered(.4,{mode:'baseline',beta:.11});assert(element.textContent.includes('不增加'));assert(!element.textContent.includes('已连接'));
+context.RESEARCH_UI.showRendered(1.7,{mode:'candidate',beta:.126});assert(element.textContent.includes('尚未实测'));assert(element.textContent.includes('上游取汽未接'));assert.strictEqual(context.STEAM_INSPECTION.last.theta,1.7);assert.strictEqual(context.STEAM_INSPECTION.last.wholeSteamNetworkComplete,false);assert.strictEqual(context.STEAM_INSPECTION.last.physicalPressureSimulation,false);
+D.steamPathCandidate.status[0].state='connected_candidate';context.RESEARCH_UI.showRendered(4.3,{mode:'candidate',beta:.16});assert(element.textContent.includes('候选实体已连接'));assert(element.textContent.includes('排汽汇合未接'));assert.strictEqual(context.STEAM_INSPECTION.last.theta,4.3);
+D.steamPathCandidate=null;context.RESEARCH_UI.showRendered(.4,{mode:'candidate',beta:.126});assert(element.textContent.includes('不报告连通'));
+console.log('PASS whole-steam inspection state labels and same-theta hook; no geometry claim');

@@ -1,0 +1,322 @@
+{
+  "label": "INFERRED_three_level_UNCUT_terminal_failure_v1",
+  "options": {
+    "terminalEyes": false
+  },
+  "units": "m",
+  "selectedClearances": {
+    "surfaceClearance": 0.0005,
+    "axialRunningClearance": 0.0005,
+    "minimumSpacerThickness": 0.002,
+    "washerThickness": 0.002,
+    "retainerEnvelopeThickness": 0.003,
+    "shaftEndReserve": 0.0005,
+    "pinBearingRadialClearance": 0.00015,
+    "looseHardwareRadialClearance": 0.0003,
+    "hardwareLandBeyondBore": 0.0045
+  },
+  "retained": {
+    "planeY": 1.48,
+    "plateThickness": 0.024,
+    "halfThickness": 0.012,
+    "width": 0.024,
+    "eye": 0.033,
+    "bore": 0.0135,
+    "pinRadius": 0.012,
+    "spindleRadius": 0.016
+  },
+  "formulas": {
+    "shortY": "Y0 + max(spindleRadius) + plateThickness/2 + inputFaceGap",
+    "equalY": "shortY - plateThickness - lowerFaceGap",
+    "mainY": "shortY + plateThickness + upperFaceGap",
+    "lowerFaceGap": "minimumSpacerThickness + 2*axialRunningClearance",
+    "endEnvelope": "axialRunningClearance + washerThickness + retainerEnvelopeThickness + shaftEndReserve",
+    "upperFaceGap": "max(lowerFaceGap, 2*endEnvelope + surfaceClearance)",
+    "spacerLength": "adjacent plate face gap - 2*axialRunningClearance",
+    "shaftExtent": "outer plate faces +/- endEnvelope; input lower endpoint = Y0 - original spindle radius"
+  },
+  "derived": {
+    "inputFaceGap": 0.0005,
+    "endEnvelope": 0.006,
+    "lowerFaceGap": 0.003,
+    "upperFaceGap": 0.0125,
+    "levels": {
+      "short": 1.5085,
+      "equal": 1.4815,
+      "main": 1.545
+    },
+    "layer": {
+      "two_to_one_lever": 1.545,
+      "equal_lever": 1.4815,
+      "right_short_link": 1.5085,
+      "left_short_link": 1.5085,
+      "middle_short_link": 1.5085
+    },
+    "hardwareOuter": 0.018,
+    "bushingInner": 0.012150000000000001,
+    "bushingOuter": 0.0135,
+    "bushingWall": 0.0013499999999999996,
+    "looseHardwareInner": 0.0123
+  },
+  "joints": {
+    "O": {
+      "partners": [
+        "two_to_one_lever"
+      ],
+      "plates": [
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.545,
+          "lower": 1.533,
+          "upper": 1.557
+        }
+      ],
+      "shaftY": [
+        1.527,
+        1.563
+      ],
+      "shaftLength": 0.03600000000000003,
+      "shaftCenterY": 1.545,
+      "radius": 0.012,
+      "spacerY": null,
+      "spacerLength": null,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Fixed pivot requires a frame-connected mount; no such mount or historical bracket is supplied"
+    },
+    "R": {
+      "partners": [
+        "right_short_link"
+      ],
+      "plates": [
+        {
+          "name": "right_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        }
+      ],
+      "shaftY": [
+        1.464,
+        1.5265
+      ],
+      "shaftLength": 0.0625,
+      "shaftCenterY": 1.49525,
+      "radius": 0.012,
+      "spacerY": null,
+      "spacerLength": null,
+      "lowerRetention": false,
+      "upperRetention": true,
+      "attachment": "FAIL: retained solid spindle has no Y bore; pin/spindle volumetric intersection is NOT a bearing or support"
+    },
+    "L": {
+      "partners": [
+        "left_short_link"
+      ],
+      "plates": [
+        {
+          "name": "left_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        }
+      ],
+      "shaftY": [
+        1.464,
+        1.5265
+      ],
+      "shaftLength": 0.0625,
+      "shaftCenterY": 1.49525,
+      "radius": 0.012,
+      "spacerY": null,
+      "spacerLength": null,
+      "lowerRetention": false,
+      "upperRetention": true,
+      "attachment": "FAIL: retained solid spindle has no Y bore; pin/spindle volumetric intersection is NOT a bearing or support"
+    },
+    "A": {
+      "partners": [
+        "two_to_one_lever",
+        "right_short_link"
+      ],
+      "plates": [
+        {
+          "name": "right_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        },
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.545,
+          "lower": 1.533,
+          "upper": 1.557
+        }
+      ],
+      "shaftY": [
+        1.4905,
+        1.563
+      ],
+      "shaftLength": 0.07250000000000001,
+      "shaftCenterY": 1.5267499999999998,
+      "radius": 0.012,
+      "spacerY": [
+        1.521,
+        1.5325
+      ],
+      "spacerLength": 0.011500000000000066,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "C": {
+      "partners": [
+        "two_to_one_lever",
+        "equal_lever"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.4815,
+          "lower": 1.4695,
+          "upper": 1.4935
+        },
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.545,
+          "lower": 1.533,
+          "upper": 1.557
+        }
+      ],
+      "shaftY": [
+        1.4635,
+        1.563
+      ],
+      "shaftLength": 0.09949999999999992,
+      "shaftCenterY": 1.51325,
+      "radius": 0.012,
+      "spacerY": [
+        1.494,
+        1.5325
+      ],
+      "spacerLength": 0.03849999999999998,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "B": {
+      "partners": [
+        "equal_lever",
+        "left_short_link"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.4815,
+          "lower": 1.4695,
+          "upper": 1.4935
+        },
+        {
+          "name": "left_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        }
+      ],
+      "shaftY": [
+        1.4635,
+        1.5265
+      ],
+      "shaftLength": 0.06299999999999994,
+      "shaftCenterY": 1.495,
+      "radius": 0.012,
+      "spacerY": [
+        1.494,
+        1.496
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "E": {
+      "partners": [
+        "equal_lever",
+        "middle_short_link"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.4815,
+          "lower": 1.4695,
+          "upper": 1.4935
+        },
+        {
+          "name": "middle_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        }
+      ],
+      "shaftY": [
+        1.4635,
+        1.5265
+      ],
+      "shaftLength": 0.06299999999999994,
+      "shaftCenterY": 1.495,
+      "radius": 0.012,
+      "spacerY": [
+        1.494,
+        1.496
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "M": {
+      "partners": [
+        "middle_short_link"
+      ],
+      "plates": [
+        {
+          "name": "middle_short_link",
+          "Y": 1.5085,
+          "lower": 1.4965,
+          "upper": 1.5205
+        }
+      ],
+      "shaftY": [
+        1.464,
+        1.5265
+      ],
+      "shaftLength": 0.0625,
+      "shaftCenterY": 1.49525,
+      "radius": 0.012,
+      "spacerY": null,
+      "spacerLength": null,
+      "lowerRetention": false,
+      "upperRetention": true,
+      "attachment": "FAIL: retained solid spindle has no Y bore; pin/spindle volumetric intersection is NOT a bearing or support"
+    }
+  },
+  "unchanged": {
+    "XZPinPaths": true,
+    "spindleY": true,
+    "plateThickness": true,
+    "plateWidthsEyesAndBores": true,
+    "originalSpindleMaterial": true,
+    "officialAxleStations": true,
+    "originalBaseline": true
+  },
+  "limitations": {
+    "historicalDimensions": false,
+    "frameMountKnown": false,
+    "endLockDetailModeled": false,
+    "inputTerminalFasteningVerified": false,
+    "inputBoreAbsent": true,
+    "middlePrismaticGuideKnown": false,
+    "structuralProof": false,
+    "wholeTrainAcceptance": false
+  }
+}
