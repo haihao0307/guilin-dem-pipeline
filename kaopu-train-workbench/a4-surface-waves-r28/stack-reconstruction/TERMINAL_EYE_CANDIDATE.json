@@ -1,0 +1,349 @@
+{
+  "label": "INFERRED_three_level_with_EXPLICIT_terminal_eyes_v1",
+  "options": {
+    "terminalEyes": true
+  },
+  "units": "m",
+  "selectedClearances": {
+    "surfaceClearance": 0.0005,
+    "axialRunningClearance": 0.0005,
+    "minimumSpacerThickness": 0.002,
+    "washerThickness": 0.002,
+    "retainerEnvelopeThickness": 0.003,
+    "shaftEndReserve": 0.0005,
+    "pinBearingRadialClearance": 0.00015,
+    "looseHardwareRadialClearance": 0.0003,
+    "hardwareLandBeyondBore": 0.0045
+  },
+  "retained": {
+    "planeY": 1.48,
+    "plateThickness": 0.024,
+    "halfThickness": 0.012,
+    "width": 0.024,
+    "eye": 0.033,
+    "bore": 0.0135,
+    "pinRadius": 0.012,
+    "spindleRadius": 0.016
+  },
+  "formulas": {
+    "shortY": "Y0 + max(spindleRadius) + plateThickness/2 + inputFaceGap",
+    "equalY": "shortY - plateThickness - lowerFaceGap",
+    "mainY": "shortY + plateThickness + upperFaceGap",
+    "lowerFaceGap": "minimumSpacerThickness + 2*axialRunningClearance",
+    "endEnvelope": "axialRunningClearance + washerThickness + retainerEnvelopeThickness + shaftEndReserve",
+    "upperFaceGap": "max(lowerFaceGap, 2*endEnvelope + surfaceClearance)",
+    "spacerLength": "adjacent plate face gap - 2*axialRunningClearance",
+    "shaftExtent": "outer plate faces +/- endEnvelope; input lower endpoint = Y0 - original spindle radius"
+  },
+  "derived": {
+    "inputFaceGap": 0.003,
+    "endEnvelope": 0.006,
+    "lowerFaceGap": 0.003,
+    "upperFaceGap": 0.0125,
+    "levels": {
+      "short": 1.511,
+      "equal": 1.484,
+      "main": 1.5474999999999999
+    },
+    "layer": {
+      "two_to_one_lever": 1.5474999999999999,
+      "equal_lever": 1.484,
+      "right_short_link": 1.511,
+      "left_short_link": 1.511,
+      "middle_short_link": 1.511
+    },
+    "hardwareOuter": 0.018,
+    "bushingInner": 0.012150000000000001,
+    "bushingOuter": 0.0135,
+    "bushingWall": 0.0013499999999999996,
+    "looseHardwareInner": 0.0123
+  },
+  "joints": {
+    "O": {
+      "partners": [
+        "two_to_one_lever"
+      ],
+      "plates": [
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.5474999999999999,
+          "lower": 1.5354999999999999,
+          "upper": 1.5594999999999999
+        }
+      ],
+      "shaftY": [
+        1.5294999999999999,
+        1.5655
+      ],
+      "shaftLength": 0.03600000000000003,
+      "shaftCenterY": 1.5474999999999999,
+      "radius": 0.012,
+      "spacerY": null,
+      "spacerLength": null,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Fixed pivot requires a frame-connected mount; no such mount or historical bracket is supplied"
+    },
+    "R": {
+      "partners": [
+        "right_short_link"
+      ],
+      "plates": [
+        {
+          "name": "input_terminal_eye_R",
+          "Y": 1.48,
+          "lower": 1.464,
+          "upper": 1.496
+        },
+        {
+          "name": "right_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        }
+      ],
+      "shaftY": [
+        1.458,
+        1.529
+      ],
+      "shaftLength": 0.07099999999999995,
+      "shaftCenterY": 1.4935,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.4985
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "PROPOSED added terminal eye + explicit through-Y subtraction in original capsule AND every duplicate source field; separate bushing; manufacture/strength UNVERIFIED"
+    },
+    "L": {
+      "partners": [
+        "left_short_link"
+      ],
+      "plates": [
+        {
+          "name": "input_terminal_eye_L",
+          "Y": 1.48,
+          "lower": 1.464,
+          "upper": 1.496
+        },
+        {
+          "name": "left_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        }
+      ],
+      "shaftY": [
+        1.458,
+        1.529
+      ],
+      "shaftLength": 0.07099999999999995,
+      "shaftCenterY": 1.4935,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.4985
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "PROPOSED added terminal eye + explicit through-Y subtraction in original capsule AND every duplicate source field; separate bushing; manufacture/strength UNVERIFIED"
+    },
+    "A": {
+      "partners": [
+        "two_to_one_lever",
+        "right_short_link"
+      ],
+      "plates": [
+        {
+          "name": "right_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        },
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.5474999999999999,
+          "lower": 1.5354999999999999,
+          "upper": 1.5594999999999999
+        }
+      ],
+      "shaftY": [
+        1.4929999999999999,
+        1.5655
+      ],
+      "shaftLength": 0.07250000000000001,
+      "shaftCenterY": 1.5292499999999998,
+      "radius": 0.012,
+      "spacerY": [
+        1.5234999999999999,
+        1.535
+      ],
+      "spacerLength": 0.011500000000000066,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "C": {
+      "partners": [
+        "two_to_one_lever",
+        "equal_lever"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.484,
+          "lower": 1.472,
+          "upper": 1.496
+        },
+        {
+          "name": "two_to_one_lever",
+          "Y": 1.5474999999999999,
+          "lower": 1.5354999999999999,
+          "upper": 1.5594999999999999
+        }
+      ],
+      "shaftY": [
+        1.466,
+        1.5655
+      ],
+      "shaftLength": 0.09949999999999992,
+      "shaftCenterY": 1.51575,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.535
+      ],
+      "spacerLength": 0.03849999999999998,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "B": {
+      "partners": [
+        "equal_lever",
+        "left_short_link"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.484,
+          "lower": 1.472,
+          "upper": 1.496
+        },
+        {
+          "name": "left_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        }
+      ],
+      "shaftY": [
+        1.466,
+        1.529
+      ],
+      "shaftLength": 0.06299999999999994,
+      "shaftCenterY": 1.4975,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.4985
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "E": {
+      "partners": [
+        "equal_lever",
+        "middle_short_link"
+      ],
+      "plates": [
+        {
+          "name": "equal_lever",
+          "Y": 1.484,
+          "lower": 1.472,
+          "upper": 1.496
+        },
+        {
+          "name": "middle_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        }
+      ],
+      "shaftY": [
+        1.466,
+        1.529
+      ],
+      "shaftLength": 0.06299999999999994,
+      "shaftCenterY": 1.4975,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.4985
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "Free coaxial pin with two independent rod bushings; end-retention envelopes supplied, locking details UNVERIFIED"
+    },
+    "M": {
+      "partners": [
+        "middle_short_link"
+      ],
+      "plates": [
+        {
+          "name": "input_terminal_eye_M",
+          "Y": 1.48,
+          "lower": 1.464,
+          "upper": 1.496
+        },
+        {
+          "name": "middle_short_link",
+          "Y": 1.511,
+          "lower": 1.4989999999999999,
+          "upper": 1.523
+        }
+      ],
+      "shaftY": [
+        1.458,
+        1.529
+      ],
+      "shaftLength": 0.07099999999999995,
+      "shaftCenterY": 1.4935,
+      "radius": 0.012,
+      "spacerY": [
+        1.4965,
+        1.4985
+      ],
+      "spacerLength": 0.0020000000000000018,
+      "lowerRetention": true,
+      "upperRetention": true,
+      "attachment": "PROPOSED added terminal eye + explicit through-Y subtraction in original capsule AND every duplicate source field; separate bushing; manufacture/strength UNVERIFIED"
+    }
+  },
+  "unchanged": {
+    "XZPinPaths": true,
+    "spindleY": true,
+    "plateThickness": true,
+    "plateWidthsEyesAndBores": true,
+    "originalSpindleMaterial": false,
+    "officialAxleStations": true,
+    "originalBaseline": true
+  },
+  "limitations": {
+    "historicalDimensions": false,
+    "frameMountKnown": false,
+    "endLockDetailModeled": false,
+    "inputTerminalFasteningVerified": false,
+    "inputBoreAbsent": false,
+    "middlePrismaticGuideKnown": false,
+    "structuralProof": false,
+    "wholeTrainAcceptance": false
+  }
+}

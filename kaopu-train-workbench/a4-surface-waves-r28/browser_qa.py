@@ -1,0 +1,107 @@
+"""Whole-train remote QA contract. DO NOT run in the denied local browser sandbox.
+Requires the authorized CI/browser environment, Playwright 1.57.0 and Chromium.
+This checks whole locomotive+tender frames, never isolated part demonstrations.
+"""
+from playwright.sync_api import sync_playwright
+from pathlib import Path
+import json, time, subprocess, sys, base64, os
+P = Path(__file__).parent
+report = {'status': 'RUNNING', 'revision': 'R28 surface waves research', 'tested_commit': os.getenv('GITHUB_SHA'),
+          'backend_requested': 'Chromium ANGLE SwiftShader software WebGL', 'hardware_gpu_benchmark': False,
+          'mechanical_acceptance': False, 'geometry_displacement': 0, 'views': [], 'console_errors': []}
+server = subprocess.Popen([sys.executable, '-m', 'http.server', '8121', '--directory', str(P)])
+time.sleep(1)
+try:
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(headless=True, args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
+        page = browser.new_page(viewport={'width': 1240, 'height': 1100})
+        page.on('console', lambda m: print(m.type, m.text, flush=True))
+        page.on('pageerror', lambda e: report['console_errors'].append(str(e)))
+        report['stage'] = 'compile and initial whole frame'
+        page.goto('http://127.0.0.1:8121')
+        page.wait_for_function('window.QA && (QA.done || QA.errors.length)', timeout=300000)
+        first = page.evaluate('QA'); report['first'] = first
+        assert first.get('done') and not first['errors'], first
+        assert page.locator('#installation').input_value() == 'baseline'
+        assert page.locator('#appearance').input_value() == 'waves'
+        assert page.locator('#installation option').count() == 2
+        report['backend_observed'] = page.evaluate("""()=>{let e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(e?e.UNMASKED_VENDOR_WEBGL:gl.VENDOR),renderer:gl.getParameter(e?e.UNMASKED_RENDERER_WEBGL:gl.RENDERER),version:gl.getParameter(gl.VERSION)};}""")
+        samples = [
+            ('baseline_diagnostic', [12,3.5,-4], 100, .4, 'baseline', 'diagnostic', 1),
+            ('baseline_waves', [12,3.5,-4], 100, .4, 'baseline', 'waves', 1),
+            ('candidate_diagnostic', [12,3.5,-4], 100, .4, 'candidate', 'diagnostic', 1),
+            ('candidate_waves', [12,3.5,-4], 100, .4, 'candidate', 'waves', 1),
+            ('candidate_flat_reference', [12,3.5,-4], 100, .4, 'candidate', 'waves', 0),
+            ('candidate_motion', [12,3.5,-4], 100, 1.4, 'candidate', 'waves', 1),
+            ('candidate_opposite', [-12,3.5,-4], 100, 1.4, 'candidate', 'waves', 1),
+            ('baseline_collision', [12,3.5,-4], 0, 3.3545228223, 'baseline', 'diagnostic', 1),
+            ('candidate_collision', [12,3.5,-4], 0, 3.3545228223, 'candidate', 'waves', 1),
+            ('candidate_waves_return', [12,3.5,-4], 100, .4, 'candidate', 'waves', 1),
+            ('baseline_waves_return', [12,3.5,-4], 100, .4, 'baseline', 'waves', 1),
+            ('baseline_diagnostic_return', [12,3.5,-4], 100, .4, 'baseline', 'diagnostic', 1),
+        ]
+        by_name = {}
+        for name, eye, cut, theta, mode, appearance, detail in samples:
+            report['stage'] = name
+            start = time.monotonic()
+            page.evaluate('async v=>{await renderAt(v.theta-.4,{eye:v.eye},{cut:v.cut,initialTheta:.4,angularSpeed:1,installation:{mode:v.mode,beta:.126},appearance:{mode:v.appearance,detailScale:v.detail}})}',
+                          dict(eye=eye,cut=cut,theta=theta,mode=mode,appearance=appearance,detail=detail))
+            raw = page.evaluate('c.toDataURL("image/png")')
+            (P/(name+'-whole.png')).write_bytes(base64.b64decode(raw.split(',')[1]))
+            q = page.evaluate('QA')
+            q['pixels'] = page.evaluate("""async name=>{
+              const a=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,a);
+              const mask=new Uint8Array(c.width*c.height);let x0=c.width,y0=c.height,x1=-1,y1=-1,n=0;
+              for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){let i=4*(y*c.width+x);
+                if(a[i]!=a[0]||a[i+1]!=a[1]||a[i+2]!=a[2]){mask[y*c.width+x]=1;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);n++;}}
+              window.__wholePixels=window.__wholePixels||{};__wholePixels[name]=a;
+              const h=await crypto.subtle.digest('SHA-256',mask);
+              return {x0,y0,x1,y1,foregroundPixels:n,silhouetteMaskSha256:Array.from(new Uint8Array(h),x=>x.toString(16).padStart(2,'0')).join(''),glErrorAfterReadback:gl.getError()};
+            }""", name)
+            q['pixel_readback_wall_s'] = time.monotonic()-start
+            q['surface']['pixelReadbackVerified'] = True
+            q['view'] = name; report['views'].append(q); by_name[name] = q
+            print(json.dumps(q), flush=True)
+            assert q.get('done') and not q['errors'] and q['draws'] == (574 if mode=='candidate' else 519) and q.get('glError') == 0, q
+            assert q['installation']['mode'] == mode and q['appearance']['mode'] == appearance, q
+            assert q['surface']['visible'] == q['draws'] and q['surface']['assignedWaveFields'] == q['draws'], q
+            assert q['surface']['geometryDisplacement'] == 0 and not q['mechanicalAcceptance'], q
+            bnd = q['pixels']
+            assert bnd['glErrorAfterReadback'] == 0 and bnd['x0']>2 and bnd['x1']<717 and bnd['y0']>2 and bnd['y1']<397 and bnd['foregroundPixels']>10000, bnd
+            if mode=='candidate':
+                assert q['outsideValves']['reconstructed'] and not q['outsideValves']['middleFrozen'], q
+                assert q['centralControl']['baselinePlateOverlapKnown'] and q['centralControl']['candidateFiniteStack'], q
+                assert not q['centralControl']['verifiedFrameMount'] and not q['centralControl']['verifiedEndLocks'], q
+        for a,b in [('baseline_diagnostic','baseline_diagnostic_return'),('baseline_waves','baseline_waves_return'),('candidate_waves','candidate_waves_return')]:
+            assert (P/(a+'-whole.png')).read_bytes() == (P/(b+'-whole.png')).read_bytes(), 'Non-reversible whole-frame appearance/state '+a
+        for a,b in [('baseline_diagnostic','baseline_waves'),('candidate_diagnostic','candidate_waves'),('candidate_flat_reference','candidate_waves')]:
+            assert by_name[a]['pixels']['silhouetteMaskSha256'] == by_name[b]['pixels']['silhouetteMaskSha256'], 'Appearance changed coverage/silhouette '+a
+        report['wave_pixel_difference'] = page.evaluate("""()=>{let a=__wholePixels.candidate_waves,b=__wholePixels.candidate_flat_reference,n=0,max=0;for(let i=0;i<a.length;i+=4){let d=Math.max(Math.abs(a[i]-b[i]),Math.abs(a[i+1]-b[i+1]),Math.abs(a[i+2]-b[i+2]));if(d){n++;max=Math.max(max,d);}}return {changedPixels:n,maximumChannelDifference:max};}""")
+        assert report['wave_pixel_difference']['changedPixels'] > 0, 'No resolved whole-surface wave signal; do not claim visible waves'
+        report['stage'] = 'whole UI state, appearance, repeated controls'
+        page.locator('#example').click()
+        page.wait_for_function('!RESEARCH_UI.busy && QA.installation.mode==="candidate"', timeout=300000)
+        assert '推断' in page.locator('#rendered').inner_text()
+        page.locator('#appearance').select_option('diagnostic')
+        page.wait_for_function('!RESEARCH_UI.busy && QA.appearance.mode==="diagnostic"', timeout=300000)
+        assert page.evaluate('QA.installation.mode') == 'candidate'
+        # Rapid appearance/time input must coalesce without changing mechanics.
+        page.evaluate("""()=>{for(const [id,value]of [['time','1'],['appearance','waves'],['time','2'],['time','1']]){let e=document.getElementById(id);e.value=value;e.dispatchEvent(new Event('input',{bubbles:true}));}}""")
+        page.wait_for_function('!RESEARCH_UI.busy && QA.appearance.mode==="waves" && Math.abs(QA.theta-1.4)<1e-8', timeout=300000)
+        page.locator('#baseline').click()
+        page.wait_for_function('!RESEARCH_UI.busy && QA.installation.mode==="baseline"', timeout=300000)
+        assert 'FAIL' in page.locator('.lede .badge').inner_text()
+        assert page.locator('#whole-failures').is_visible()
+        assert '主车架' in page.locator('#whole-failures').inner_text()
+        page.screenshot(path=str(P/'r28-whole-interface.png'), full_page=True)
+        assert not report['console_errors'], report['console_errors']
+        report.update(status='PASS_BROWSER_ONLY',stage='complete',baseline_and_candidate_return_exact_png=True,
+                      appearance_preserves_silhouette=True,ui_repeated_controls_pass=True,
+                      scope='Whole analytic locomotive/tender research; driver/pixel/UI checks only. Known whole-train penetrations and overall mechanical FAIL remain.')
+        browser.close()
+except Exception as exc:
+    report.update(status='FAIL',error=str(exc))
+    raise
+finally:
+    (P/'BROWSER_QA.json').write_text(json.dumps(report,indent=2)+'\n')
+    server.terminate()

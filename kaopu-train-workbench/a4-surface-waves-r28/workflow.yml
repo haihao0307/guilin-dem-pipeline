@@ -1,0 +1,67 @@
+name: A4 whole advected surface-wave research QA
+on:
+  push:
+    branches: ['trial/a4-function-assembly-r19-20261024']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-train-workbench/a4-surface-waves-r28
+            kaopu-train-workbench/a4-dynamic-r22
+      - name: Install pinned test dependencies
+        run: |
+          python -m pip install playwright==1.57.0 numpy==2.3.5 scipy==1.17.0
+          python -m playwright install --with-deps chromium
+      - name: Whole analytic browser compilation and render
+        working-directory: kaopu-train-workbench/a4-surface-waves-r28
+        run: |
+          python test_dynamic.py
+          node test_dynamic_js.js
+          node test_installation_adapter.js
+          node test_controls.js
+          node material-wave-study/test-material-waves.js
+          node test_material_renderer.js
+          python valve-reconstruction/extract_reference.py --model .
+          python valve-reconstruction/solve_outside.py
+          node valve-reconstruction/test_outside_solver.js --model .
+          python valve-reconstruction/test_jacobian.py
+          node test_valve_dynamic.js
+          node gresley-reconstruction/test_gresley.js --model .
+          node gresley-reconstruction/test_field_mapping.js --model .
+          python gresley-reconstruction/certify_input_domain.py
+          python gresley-reconstruction/physical_packaging_check.py
+          node test_control_chain.js
+          node stack-reconstruction/test_stack.js
+          node stack-reconstruction/test_integration_frames.js
+          node stack-reconstruction/test_counterexamples.js
+          python stack-reconstruction/certify_stack_domain.py
+          node test_stack_adapter.js
+          node whole-neighbors/broadphase.js
+          node whole-neighbors/export_frames.js
+          python whole-neighbors/verify_witnesses.py --verify-only
+          python test_installation_fields.py
+          python test_crankpin_support.py
+          timeout 900s python browser_qa.py
+      - name: Whole-chain mechanical clearance acceptance (known failure retained)
+        working-directory: kaopu-train-workbench/a4-surface-waves-r28
+        run: python test_swept_collision.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: a4-surface-waves-r28-${{ github.sha }}
+          path: |
+            kaopu-train-workbench/a4-surface-waves-r28/*QA.json
+            kaopu-train-workbench/a4-surface-waves-r28/valve-reconstruction/*QA.json
+            kaopu-train-workbench/a4-surface-waves-r28/gresley-reconstruction/*QA.json
+            kaopu-train-workbench/a4-surface-waves-r28/*-whole.png
+            kaopu-train-workbench/a4-surface-waves-r28/material-wave-study/*QA.json
+            kaopu-train-workbench/a4-surface-waves-r28/whole-neighbors/*QA.json
+            kaopu-train-workbench/a4-surface-waves-r28/r28-whole-interface.png
+          retention-days: 30
