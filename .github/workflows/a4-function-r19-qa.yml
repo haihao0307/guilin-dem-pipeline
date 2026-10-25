@@ -1,4 +1,4 @@
-name: A4 reconstructed common-phase whole-assembly research QA
+name: A4 whole installation baseline and inferred candidate research QA
 on:
   push:
     branches: ['trial/a4-function-assembly-r19-20261024']
@@ -13,26 +13,29 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            kaopu-train-workbench/a4-dynamic-r22
+            kaopu-train-workbench/a4-installation-r23
       - name: Install pinned test dependencies
         run: |
           python -m pip install playwright==1.57.0 numpy==2.3.3
           python -m playwright install --with-deps chromium
       - name: Whole analytic browser compilation and render
-        working-directory: kaopu-train-workbench/a4-dynamic-r22
+        working-directory: kaopu-train-workbench/a4-installation-r23
         run: |
           python test_dynamic.py
           node test_dynamic_js.js
+          node test_installation_adapter.js
+          node test_controls.js
+          python test_installation_fields.py
           python test_crankpin_support.py
           timeout 600s python browser_qa.py
       - name: Whole-chain mechanical clearance acceptance (known failure retained)
-        working-directory: kaopu-train-workbench/a4-dynamic-r22
+        working-directory: kaopu-train-workbench/a4-installation-r23
         run: python test_swept_collision.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
-          name: a4-dynamic-r22-${{ github.sha }}
+          name: a4-installation-r23-${{ github.sha }}
           path: |
-            kaopu-train-workbench/a4-dynamic-r22/*QA.json
-            kaopu-train-workbench/a4-dynamic-r22/*-whole.png
-          retention-days: 1
+            kaopu-train-workbench/a4-installation-r23/*QA.json
+            kaopu-train-workbench/a4-installation-r23/*-whole.png
+          retention-days: 30
