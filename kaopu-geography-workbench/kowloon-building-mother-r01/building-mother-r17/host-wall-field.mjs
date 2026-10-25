@@ -1,7 +1,9 @@
 /** One host-owned wall solid and its opening table. No post-render whole-scene
  * hole subtraction. Outer source surface is evidence; inward depth is a design
  * parameter. Existing window identities and emitter recipes stay attached. */
-import {intersectAperturesRay,queryApertures} from './kowloon-building-mother-r01/r07/apertures.mjs';
+import {intersectAperturesRay,queryApertures,apertureUnionPositiveNeighbour,packApertureDescriptors} from './kowloon-building-mother-r01/r07/apertures.mjs';
+import {aperturePackedBounds} from './kowloon-building-mother-r01/whole-building-floor-study-r01/primary-aperture-index.mjs';
+import {hostWallBounds} from './host-aperture-index.mjs';
 const dot=(a,b)=>a.reduce((s,v,k)=>s+v*b[k],0),sub=(a,b)=>a.map((v,k)=>v-b[k]),add=(a,b)=>a.map((v,k)=>v+b[k]),mul=(a,t)=>a.map(v=>v*t);
 export const hostLocal=(h,p)=>{const q=sub(p,h.origin);return [dot(q,h.u),dot(q,h.v),dot(q,h.n)]};
 export const hostWorld=(h,q)=>add(h.origin,add(mul(h.u,q[0]),add(mul(h.v,q[1]),mul(h.n,q[2]))));
@@ -20,31 +22,34 @@ export function deriveHostWallField({patch,apertures,masks,thickness=.26}){
   h.windows.push({instanceId:a.instanceId,openingId:a.recessedConstruction?.revealId,sourcePatchId:patch.sourcePatchId,floorId:a.floorId,hole,maskRect,revealObjectId:reveal.objectId,infill,original:a,depth:structuredClone(h.depth)});
  }
  h.windows.sort((a,b)=>a.hole[1]-b.hole[1]||a.instanceId-b.instanceId);
- const corners=rect.slice(0,2).flatMap(()=>[]);for(const x of[rect[0],rect[2]])for(const y of[rect[1],rect[3]])for(const z of h.depth)corners.push(hostWorld(h,[x,y,z]));for(const w of h.windows)for(const p of w.infill.primitives)for(const x of[p.bounds.min[0],p.bounds.max[0]])for(const y of[p.bounds.min[1],p.bounds.max[1]])for(const z of[p.bounds.min[2],p.bounds.max[2]])corners.push([x,y,z]);
- h.bounds={min:[0,1,2].map(k=>Math.min(...corners.map(p=>p[k]))),max:[0,1,2].map(k=>Math.max(...corners.map(p=>p[k])))};
+ const packed=packApertureDescriptors(h.windows.map(w=>w.infill)),partBounds=aperturePackedBounds(packed,packed.primitiveCount),supports=[hostWallBounds(patch,h.depth),...(partBounds??[null])];
+ // Bounds cover the uploaded F32 dot-frame field, not only the original double
+ // corner construction. Unknown support disables culling instead of omission.
+ h.bounds=supports.some(b=>!b)?null:{min:[0,1,2].map(k=>Math.min(...supports.map(b=>b.min[k]))),max:[0,1,2].map(k=>Math.max(...supports.map(b=>b.max[k])))};
  h.dependencies={sourceBoundary:patch.sourcePatchId,openingTable:h.windows.map(w=>w.instanceId),infillDerivedFromSameOpenings:true,postSceneSourceMaskRequired:false};return h;
 }
 export function hostWallInsideLocal(h,q){return q[2]>h.depth[0]&&q[2]<h.depth[1]&&insideRect(q,h.rect,true)&&!h.windows.some(w=>insideRect(q,w.hole));}
 export function hostWallInside(h,p){return hostWallInsideLocal(h,hostLocal(h,p));}
-const slab=(o,d,a,b)=>Math.abs(d)<1e-14?(o<a||o>b?[1,-1]:[-Infinity,Infinity]):[Math.min((a-o)/d,(b-o)/d),Math.max((a-o)/d,(b-o)/d)];
+const slab=(o,d,a,b)=>d===0?(o<a||o>b?[1,-1]:[-Infinity,Infinity]):[Math.min((a-o)/d,(b-o)/d),Math.max((a-o)/d,(b-o)/d)];
 const boxInterval=(o,d,lo,hi)=>{const q=lo.map((v,k)=>slab(o[k],d[k],v,hi[k]));return[Math.max(...q.map(v=>v[0])),Math.min(...q.map(v=>v[1]))]};
 export function hostWallPositiveNeighbour(h,point,normal){const q=hostLocal(h,point),d=[dot(normal,h.u),dot(normal,h.v),dot(normal,h.n)],e=.000002,iv=boxInterval(q,d,[h.rect[0],h.rect[1],h.depth[0]],[h.rect[2],h.rect[3],h.depth[1]]);if(iv[0]>e||iv[1]<=e)return false;for(const w of h.windows){const a=boxInterval(q,d,[w.hole[0],w.hole[1],h.depth[0]],[w.hole[2],w.hole[3],h.depth[1]]);if(a[0]<=e&&a[1]>e)return false;}return true;}
+export function hostInfillPositiveNeighbour(h,point,normal){return h.windows.some(w=>apertureUnionPositiveNeighbour(w.infill,point,normal,{epsilon:.000002}));}
 const nextUp=x=>{const b=new DataView(new ArrayBuffer(8));b.setFloat64(0,x);let v=b.getBigUint64(0);b.setBigUint64(0,v+(x>=0?1n:-1n));return b.getFloat64(0)};
-export function traceHostWallSolid(h,origin,direction,{maxDistance=10000}={}){
+export function traceHostWallSolid(h,origin,direction,{maxDistance=10000,filterInfill=false}={}){
  const len=Math.hypot(...direction);if(!(len>0))throw Error('Nonzero ray');const rd=mul(direction,1/len),o=hostLocal(h,origin),d=[dot(rd,h.u),dot(rd,h.v),dot(rd,h.n)];let best=null,tests=0;
- const emit=(axis,value,normal,domain,id)=>{tests++;if(Math.abs(d[axis])<1e-14)return;const t=(value-o[axis])/d[axis];if(t<0||t>maxDistance||best&&t>best.t)return;const q=add(o,mul(d,t));if(!domain(q))return;const n=add(mul(h.u,normal[0]),add(mul(h.v,normal[1]),mul(h.n,normal[2])));if(best&&Math.abs(t-best.t)<1e-10&&id>best.objectId)return;best={hit:true,t,point:add(origin,mul(rd,t)),local:q,normal:n,objectId:id,materialRole:2,kind:'host-wall-solid'};};
+ const emit=(axis,value,normal,domain,id)=>{tests++;if(d[axis]===0)return;const t=(value-o[axis])/d[axis];if(t<0||t>maxDistance||best&&t>best.t)return;const q=add(o,mul(d,t));if(!domain(q))return;const n=add(mul(h.u,normal[0]),add(mul(h.v,normal[1]),mul(h.n,normal[2]))),point=add(origin,mul(rd,t));if(filterInfill&&hostInfillPositiveNeighbour(h,point,n))return;if(best&&t===best.t&&id>best.objectId)return;best={hit:true,t,point,local:q,normal:n,objectId:id,materialRole:2,kind:'host-wall-solid'};};
  const cap=q=>insideRect(q,h.rect)&&!h.windows.some(w=>insideRect(q,w.hole,true));
  // Existing reveal front rings preserve their former hit identity. Newly
  // generated rear wall outside those rings keeps the source wall identity.
- for(const [z,n]of[[h.depth[0],-1],[h.depth[1],1]]){let id=h.objectId;if(Math.abs(d[2])>1e-14){const q=add(o,mul(d,(z-o[2])/d[2])),w=h.windows.find(w=>insideRect(q,w.maskRect));if(w)id=w.revealObjectId;}emit(2,z,[0,0,n],cap,id);}
+ for(const [z,n]of[[h.depth[0],-1],[h.depth[1],1]]){let id=h.objectId;if(d[2]!==0){const q=add(o,mul(d,(z-o[2])/d[2])),w=h.windows.find(w=>insideRect(q,w.maskRect));if(w)id=w.revealObjectId;}emit(2,z,[0,0,n],cap,id);}
  const depth=q=>q[2]>=h.depth[0]&&q[2]<=h.depth[1];
  for(const [axis,value,sign]of[[0,h.rect[0],-1],[0,h.rect[2],1],[1,h.rect[1],-1],[1,h.rect[3],1]])emit(axis,value,axis===0?[sign,0,0]:[0,sign,0],q=>depth(q)&&insideRect(q,h.rect),h.objectId);
  for(const w of h.windows)for(const [axis,value,sign]of[[0,w.hole[0],1],[0,w.hole[2],-1],[1,w.hole[1],1],[1,w.hole[3],-1]])emit(axis,value,axis===0?[sign,0,0]:[0,sign,0],q=>depth(q)&&insideRect(q,w.hole),w.revealObjectId);
  return best?{...best,planeTests:tests}:{hit:false,planeTests:tests};
 }
 export function traceHostWall(h,origin,direction,{maxDistance=10000}={}){
- let best=traceHostWallSolid(h,origin,direction,{maxDistance}),windowTests=0;const rd=mul(direction,1/Math.hypot(...direction));
- for(const w of h.windows){let minDistance=0;for(let k=0;k<20;k++){const q=intersectAperturesRay(w.infill,origin,rd,{minDistance,maxDistance:best.hit?Math.min(maxDistance,best.t+1e-8):maxDistance});windowTests++;if(!q.hit)break;if(hostWallPositiveNeighbour(h,q.point,q.normal)){minDistance=nextUp(q.t);continue;}if(!best.hit||q.t<best.t-1e-8||Math.abs(q.t-best.t)<1e-8&&q.objectId<best.objectId)best={...q,kind:'host-window-infill'};break;}}
+ let best=traceHostWallSolid(h,origin,direction,{maxDistance,filterInfill:true}),windowTests=0;const rd=mul(direction,1/Math.hypot(...direction));
+ for(const w of h.windows){let minDistance=0;for(let k=0;k<20;k++){const limit=best.hit?Math.min(maxDistance,best.t):maxDistance;if(minDistance>limit)break;const q=intersectAperturesRay(w.infill,origin,rd,{minDistance,maxDistance:Math.max(Number.MIN_VALUE,limit)});windowTests++;if(!q.hit)break;if(hostWallPositiveNeighbour(h,q.point,q.normal)){minDistance=nextUp(q.t);continue;}if(!best.hit||q.t<best.t||q.t===best.t&&q.objectId<best.objectId)best={...q,kind:'host-window-infill'};break;}}
  return{...best,windowTests,hostPatchId:h.sourcePatchId};
 }
 export function queryHostWall(h,p){if(hostWallInside(h,p))return{inside:true,kind:'host-wall-solid',objectId:h.objectId};for(const w of h.windows){const q=queryApertures(w.infill,p);if(q.inside)return{...q,kind:'host-window-infill'};}return{inside:false,kind:'empty'};}

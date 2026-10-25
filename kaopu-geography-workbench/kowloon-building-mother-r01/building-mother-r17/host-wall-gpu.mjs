@@ -1,7 +1,7 @@
 import {buildAperturesGLSL,packApertureDescriptors} from './kowloon-building-mother-r01/r07/apertures.mjs';
 import {withBoundedGlassEndpointVerification} from './kowloon-building-mother-r01/whole-building-facade-r01/glass-endpoint-roundoff.mjs';
-const outward=(v,upper)=>{const d=new DataView(new ArrayBuffer(4));let f=Math.fround(v);if(upper?f>=v:f<=v)return f;if(f===0)return upper?2**-149:-(2**-149);d.setFloat32(0,f);let b=d.getUint32(0);b+=(f>0)===upper?1:-1;d.setUint32(0,b);return d.getFloat32(0)};
-export function packHostWall(h){const count=h.windows.length,stride=5,width=32,height=Math.max(1,Math.ceil(count*stride/width)),data=new Float32Array(width*height*4);let start=0;h.windows.forEach((w,i)=>{const ps=w.infill.primitives,lo=[0,1,2].map(k=>Math.min(...ps.map(p=>p.bounds.min[k]))),hi=[0,1,2].map(k=>Math.max(...ps.map(p=>p.bounds.max[k])));data.set(w.hole,i*20);data.set(w.maskRect,i*20+4);data.set([start,start+ps.length,w.revealObjectId,0],i*20+8);data.set([...lo.map(v=>outward(v,false)),0],i*20+12);data.set([...hi.map(v=>outward(v,true)),0],i*20+16);start+=ps.length;});return{width,height,data,count,apertures:packApertureDescriptors(h.windows.map(w=>w.infill))};}
+import {aperturePackedBounds} from './kowloon-building-mother-r01/whole-building-floor-study-r01/primary-aperture-index.mjs';
+export function packHostWall(h){const count=h.windows.length,stride=5,width=32,height=Math.max(1,Math.ceil(count*stride/width)),data=new Float32Array(width*height*4),apertures=packApertureDescriptors(h.windows.map(w=>w.infill)),supports=aperturePackedBounds(apertures,apertures.primitiveCount);let start=0;h.windows.forEach((w,i)=>{const ps=w.infill.primitives,boxes=ps.map((_,k)=>supports?.[start+k]),unknown=boxes.some(b=>!b),lo=unknown?[-1e30,-1e30,-1e30]:[0,1,2].map(k=>Math.min(...boxes.map(b=>b.min[k]))),hi=unknown?[1e30,1e30,1e30]:[0,1,2].map(k=>Math.max(...boxes.map(b=>b.max[k])));data.set(w.hole,i*20);data.set(w.maskRect,i*20+4);data.set([start,start+ps.length,w.revealObjectId,0],i*20+8);data.set([...lo,0],i*20+12);data.set([...hi,0],i*20+16);start+=ps.length;});return{width,height,data,count,apertures};}
 const DOMAIN=`
 uniform sampler2D uHostWindows,uHostRecoveryDescriptors;uniform int uHostWindowCount;uniform vec3 uHostOrigin,uHostU,uHostV,uHostN;uniform vec4 uHostRect;uniform vec2 uHostDepth;uniform float uHostObjectId;
 int hostPrimitiveStart=0,hostPrimitiveEnd=0;
@@ -28,22 +28,26 @@ export function buildHostWallGLSL(h){
  return DOMAIN+lib+`
 vec2 hostBoxInterval(vec3 o,vec3 d,vec3 lo,vec3 hi){return apertureIntersect(apertureIntersect(apertureSlab(o.x,d.x,lo.x,hi.x),apertureSlab(o.y,d.y,lo.y,hi.y)),apertureSlab(o.z,d.z,lo.z,hi.z));}
 bool hostWallCovers(vec3 point,vec3 normal){vec3 q=hostLocal(point),d=vec3(dot(normal,uHostU),dot(normal,uHostV),dot(normal,uHostN));vec2 a=hostBoxInterval(q,d,vec3(uHostRect.xy,uHostDepth.x),vec3(uHostRect.zw,uHostDepth.y));if(!apertureValid(a)||a.x>apertureEPS||a.y<=apertureEPS)return false;for(int i=0;i<uHostWindowCount;i++){vec4 h=hostRecord(i*5);vec2 v=hostBoxInterval(q,d,vec3(h.xy,uHostDepth.x),vec3(h.zw,uHostDepth.y));if(apertureValid(v)&&v.x<=apertureEPS&&v.y>apertureEPS)return false;}return true;}
+// Reverse union coverage is required too: a wall plane inside a frame/sill is
+// not an exposed boundary. Closed window supports are merely an early guard;
+// the same exact part intervals and apertureEPS decide positive occupancy.
+bool hostInfillCovers(vec3 point,vec3 normal){for(int i=0;i<uHostWindowCount;i++){vec3 low=hostRecord(i*5+3).xyz,high=hostRecord(i*5+4).xyz;if(any(lessThan(point,low-vec3(apertureEPS)))||any(greaterThan(point,high+vec3(apertureEPS))))continue;vec4 range=hostRecord(i*5+2);for(int k=int(range.x);k<int(range.y);k++){if(aperturePositiveNeighbour(apertureIntervals(apertureLoad(k),point,normal)))return true;}}return false;}
 `;
 }
 export const HOST_WALL_MAIN=`
 void hostPlane(vec3 ro,vec3 rd,vec3 o,vec3 d,int axis,float value,vec3 normal,vec4 domain,bool cap,float id){
- if(abs(d[axis])<1e-12)return;float t=(value-o[axis])/d[axis];if(t<0.||t>outHit.x)return;vec3 q=o+d*t;
+ if(d[axis]==0.)return;float t=(value-o[axis])/d[axis];if(t<0.||t>outHit.x)return;vec3 q=o+d*t;
  if(cap){if(!hostRectContains(q.xy,uHostRect)||hostHoleStrict(q.xy))return;for(int i=0;i<uHostWindowCount;i++)if(hostRectContains(q.xy,hostRecord(i*5+1))){id=hostRecord(i*5+2).z;break;}}
  else if(q.z<uHostDepth.x||q.z>uHostDepth.y||!hostRectContains(q.xy,domain))return;
  vec3 p=ro+rd*t;if(uSlice&&(p.y<uSliceY.x||p.y>uSliceY.y))return;if(uClip&&dot(uClipNormal,p)<uClipOffset)return;
- FieldHit hit;hit.distance=0.;hit.objectId=id;hit.materialRole=2.;hit.local=p;accept(t,hit,normalize(uHostU*normal.x+uHostV*normal.y+uHostN*normal.z),-3.);
+ vec3 n=normalize(uHostU*normal.x+uHostV*normal.y+uHostN*normal.z);if(hostInfillCovers(p,n))return;FieldHit hit;hit.distance=0.;hit.objectId=id;hit.materialRole=2.;hit.local=p;accept(t,hit,n,-3.);
 }
 void main(){previous();if(!rayActive())return;vec3 ro=uEye,rd=rayDirection(),o=hostLocal(ro),d=vec3(dot(rd,uHostU),dot(rd,uHostV),dot(rd,uHostN));
  hostPlane(ro,rd,o,d,2,uHostDepth.x,vec3(0,0,-1),uHostRect,true,uHostObjectId);hostPlane(ro,rd,o,d,2,uHostDepth.y,vec3(0,0,1),uHostRect,true,uHostObjectId);
  hostPlane(ro,rd,o,d,0,uHostRect.x,vec3(-1,0,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,0,uHostRect.z,vec3(1,0,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,1,uHostRect.y,vec3(0,-1,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,1,uHostRect.w,vec3(0,1,0),uHostRect,false,uHostObjectId);
  for(int i=0;i<uHostWindowCount;i++){vec4 r=hostRecord(i*5),identity=hostRecord(i*5+2);hostPlane(ro,rd,o,d,0,r.x,vec3(1,0,0),r,false,identity.z);hostPlane(ro,rd,o,d,0,r.z,vec3(-1,0,0),r,false,identity.z);hostPlane(ro,rd,o,d,1,r.y,vec3(0,1,0),r,false,identity.z);hostPlane(ro,rd,o,d,1,r.w,vec3(0,-1,0),r,false,identity.z);}
  float clipLo=0.,clipHi=outHit.x;if(!clipInterval(ro,rd,clipLo,clipHi))return;
- for(int i=0;i<uHostWindowCount;i++){float lo,hi;if(!interval(hostRecord(i*5+3).xyz,hostRecord(i*5+4).xyz,ro,rd,outHit.x,lo,hi))continue;vec4 identity=hostRecord(i*5+2);hostPrimitiveStart=int(identity.x);hostPrimitiveEnd=int(identity.y);float t;FieldHit h;int visits;
+ for(int i=0;i<uHostWindowCount;i++){vec2 support=hostBoxInterval(ro,rd,hostRecord(i*5+3).xyz,hostRecord(i*5+4).xyz);if(!apertureValid(support)||support.y<0.||support.x>outHit.x)continue;vec4 identity=hostRecord(i*5+2);hostPrimitiveStart=int(identity.x);hostPrimitiveEnd=int(identity.y);float t;FieldHit h;int visits;
  if(apertureTraceRayFiltered(ro+rd*clipLo,rd,false,0.,t,h,visits)&&t+clipLo<=clipHi)accept(t+clipLo,h,fieldRayNormal,-3.);}
 }
 `;

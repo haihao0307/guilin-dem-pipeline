@@ -126,6 +126,12 @@ function pointBounds(p,b,e=EPS){return p.every((x,i)=>x>=b.min[i]-e&&x<=b.max[i]
  */
 function outwardCovered(pp,r,p,n){for(const other of pp){if(other===r||!pointBounds(p,other.bounds))continue;for(const iv of partIntervals(other,p,n))if(iv[0]<=EPS&&iv[1]>EPS)return true;}return false;}
 function intervalNormal(r,worldPoint){return axesDirection(r,partLocalNormal(r,inversePoint(r,worldPoint)));}
+/** Reuse the unchanged analytic part intervals for a consumer's explicit
+ * positive-neighbour test. This helper does not alter R07 ray/union behavior. */
+export function apertureUnionPositiveNeighbour(input,point,normal,{epsilon=EPS}={}){
+ if(!finite(point,3)||!finite(normal,3)||length(normal)<1e-14||!Number.isFinite(epsilon)||epsilon<0)throw Error('Finite positive-neighbour query required');
+ return parts(input).some(p=>partIntervals(p,point,normal).some(iv=>iv[0]<=epsilon&&iv[1]>epsilon));
+}
 export function intersectAperturesRay(input,origin,direction,{maxDistance=10000,minDistance=0,skipGlass=false,skipObjectId=0}={}){
  if(!finite(origin,3)||!finite(direction,3)||length(direction)<1e-14||!Number.isFinite(maxDistance)||maxDistance<=0||!Number.isFinite(minDistance)||minDistance<0||minDistance>maxDistance||typeof skipGlass!=='boolean'||!Number.isInteger(skipObjectId)||skipObjectId<0)throw Error('Valid aperture ray and range required');
  const rd=unit(direction),pp=parts(input).filter(p=>(!skipGlass||p.part!=='glass')&&p.objectId!==skipObjectId);let t=maxDistance,win=null,normal=null,grazing=false,visits=0;
