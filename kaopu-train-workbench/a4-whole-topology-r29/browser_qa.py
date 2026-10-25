@@ -94,7 +94,11 @@ try:
         assert 'FAIL' in page.locator('.lede .badge').inner_text()
         assert page.locator('#whole-failures').is_visible()
         assert '中阀胸' in page.locator('#whole-failures').inner_text()
-        page.screenshot(path=str(P/'r29-whole-interface.png'), full_page=True)
+        report.update(render_views_pass=True, baseline_and_candidate_return_exact_png=True, appearance_preserves_silhouette=True, ui_repeated_controls_pass=True)
+        report['stage'] = 'full research interface screenshot'
+        screenshot_start = time.monotonic()
+        page.screenshot(path=str(P/'r29-whole-interface.png'), full_page=True, timeout=120000)
+        report['interface_screenshot_wall_s'] = time.monotonic() - screenshot_start
         assert not report['console_errors'], report['console_errors']
         report.update(status='PASS_BROWSER_ONLY',stage='complete',baseline_and_candidate_return_exact_png=True,
                       appearance_preserves_silhouette=True,ui_repeated_controls_pass=True,
