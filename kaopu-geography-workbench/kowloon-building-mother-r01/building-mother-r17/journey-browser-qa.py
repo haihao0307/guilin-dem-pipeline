@@ -12,9 +12,15 @@ try:
   context=browser.new_context(viewport={'width':1366,'height':900},device_scale_factor=1)
   page=context.new_page();page.set_default_timeout(180000);page.on('pageerror',lambda e:report['errors'].append(str(e)))
   page.goto(os.environ.get('R17_URL',f'http://127.0.0.1:{server.server_port}/index.html'))
+  try:page.wait_for_function('window.semanticInspection&&(semanticInspection.ready||semanticInspection.errors.length)',timeout=20000)
+  except Exception:pass
+  report['startup20s']=page.evaluate('({errors:semanticInspection.errors,stats:semanticInspection.renderer?.currentFrameStats,compile:semanticInspection.renderer?.compileStats,options:semanticInspection.renderer?.options,display:semanticInspection.getDisplaySize(),phase:semanticInspection.phase,view:semanticInspection.view,renderRequests:semanticInspection.renderRequests,presentedFrames:semanticInspection.presentedFrames})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   def settled():
    page.wait_for_function('semanticInspection.errors.length||semanticInspection.ready&&!semanticInspection.busy&&!semanticInspection.renderer.busy')
-   assert not page.evaluate('semanticInspection.errors'),page.evaluate('semanticInspection.errors')
+   errors=page.evaluate('semanticInspection.errors')
+   if errors:
+    report['failureState']=page.evaluate('({errors:semanticInspection.errors,stats:semanticInspection.renderer?.currentFrameStats,compile:semanticInspection.renderer?.compileStats,display:semanticInspection.getDisplaySize(),phase:semanticInspection.phase})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+   assert not errors,errors
   def capture(name):
    settled();print('CAPTURE',name,flush=True);page.screenshot(path=str(OUT/(name+'.png')));report['views'][name]=page.evaluate('({frame:semanticInspection.lastStats, journey:semanticInspection.kccJourney.snapshot(),display:semanticInspection.presentedDisplay,camera:semanticInspection.presentedCamera})');(OUT/'journey-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
   settled();assert page.locator('#semanticMode').is_hidden();capture('r17-default-grey')
