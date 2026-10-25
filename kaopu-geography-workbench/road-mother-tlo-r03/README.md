@@ -1,24 +1,28 @@
-# KAOPU Road Mother TLO R03
+# 靠谱道路 Mother · R03 收尾版
 
-Hong Kong road-rule teaching workbench. Not a surveyed location, engineering design, collision certificate or historical road event. R01 is preserved separately.
+这是用户要求的最后一轮道路教学工作台完善，保留 R01/R02，不自动启动下一轮。地点为香港规则教学样段，不是真实街道、历史事件或工程设计。
 
-## Representation
-Time → Location (with environment) → Object.Road. Materials, components, damage, repair and access restrictions belong to Road. One Mother generates ordinary road and highway examples from parameters. Highway has a central concrete barrier and hard shoulders, and does not inherit pedestrian or cycle facilities.
+## 本轮先看实照，再改函数
+实际观看 FHWA HRT-13-092 的沥青补丁（图23/24）、浅损伤（图27/29）、棱角集料与松散剥落（图39/41/42）。改掉 R02 的规则椭圆坑、整圈深黑边、均匀圆点“集料”。R03 使用多个不规则片区与分层深度、有限碎裂边，不把所有表面损伤做成大坑。颗粒采用多尺度角状胞元及随机级配，粒面方向、粗糙度和颜色协同变化，而不是只铺黑白噪点。
 
-All visible shapes are evaluated by original analytic GPU functions. No road/object triangle mesh, no point cloud, no imported assets. A single full-screen triangle is solely the display carrier. Spatial wave/noise functions generate local surface variation; these are not image textures.
+WSDOT I-5 照片用于观察修补封边工序，该照片底面可见混凝土板，不拿它冒充沥青纹理。所有研究照片仅阅读，不发布、贴图或打包。
 
-## Real geometry versus shading
-- Geometry: regional ragged pothole with adjustable depth; 9 mm finite crack depressions; localized kerb chipping; 55 mm drain recess and grate bars; 5 mm raised repair layer; W-beam double corrugation, supports and outward/downward end anchor; concrete barrier profile.
-- Shading only: fine aggregate micro-normal and roughness, paint wear, concrete pores, galvanizing. These are not separately collidable stones or deep physical pores.
-- Damage is bounded to a small patch. No global cracked-noise overlay.
-- Construction closes a segment of the left outer lane in the model. Repair restores passage. These are teaching semantics, not a judgment that a damaged real road is safe.
+## 运行方式
+Time → Location（含环境）→ Object.Road。几何、材质、部件、损伤、修补和通行条件都属于道路。普通道路/高速道路共用 Mother。全屏显示载体只有一个三角形，道路及设施为自主解析场函数，0 对象三角网格、0 点云、0 外部资产。
 
-## Sources and limits
-Source facts and precise links are in knowledge.json. Crossfall: TPDM Volume 2, August 2026, 3.4.1.1. Steel and concrete profiles: HyD H2112C / H2101D. Support arrangements: H2117D. End-treatment caution: GN040 supplement. No official PDF artwork is bundled.
+- 细集料和锌花是材质微法线/反射，不声称独立可碰撞石块。
+- 表层缺失、最多5mm有限裂缝、12mm纵向浅沟、55mm雨水口凹槽、独立路缘溢流开口、2mm修补厚度、护栏轮廓改变实际函数形体。
+- 初始为已修补。选择高速时也默认修补完成；高速损伤阶段自动局部警戒封闭。普通路损伤深度上限≥50mm也封闭。该规则是教学保守策略，不是香港法定处置阈值或真实通车安全判定。
+- 修补用新的铺装微表面和封边，不只更改颜色。
+- 排水沟、平面斜栅雨水口、路缘开口分属三个组件，不把所有排水设施统称一个黑洞；没有地下管网或水力计算。
+- 保留双波钢护栏、连接板/螺栓/立柱与中央混凝土护栏。可选 H4103B 管栏仅研究既有同型小修，明确不是新建选型、也不是车辆防撞栏。
 
-The guardrail terminal is a simplified shape-study with unverified clear-zone, flare, anchorage and impact performance. Central barrier extends across the full teaching segment; its cut face is a sample boundary, not a proposed exposed road terminus. All editable sizes are teaching parameters, not compliance validation.
+## 证据与边界
+knowledge.json 中列出香港 TPDM、HyD H3118C、H3121A、H4103B 与原有护栏资料的链接和范围。没有转载官方图纸。
 
-## Use and test
-Drag to orbit, wheel/two fingers to zoom, click to inspect. View buttons give whole-road, material, drainage and highway barrier details. Four time phases and two rendering modes share the same model. JSON edits regenerate the scene and semantics.
+未实现路口、高架、隧道、土路、交通仿真。护栏碰撞性能、净区、端头、承载、施工工法、排水能力均未核验，不作工程合规承诺。画面仍是函数教学示范，不是照片级现场数字孪生。
 
-`node test-model.mjs` checks two families/four phases and access. `browser-qa.mjs` uses official Playwright Chromium, desktop 1440×1000 and mobile viewport 390×844. Render DPR capped at 1.5 and does not drop while rotating. Benchmarks explicitly use synchronous full-frame readPixels after each draw; wall time includes rendering completion and CPU readback overhead (not a pure hardware GPU timer). GitHub Actions SwiftShader is software rendering, not a physical phone or hardware-GPU smoothness claim. Performance reports distinguish submission time from completed-frame/readback measurements. gl.finish alone returned near-zero in Chromium and was rejected as an invalid timing method.
+## QA
+`node test-model.mjs` 检验两类道路 × 两种损伤深度 × 四阶段，以及封闭与围护同步。官方 Playwright Chromium 测试桌面1440×1000/手机视口390×844、近远景、点选、JSON、材质与分色。渲染DPR最高1.5，不在拖动时降低清晰度。
+
+计时采用 draw 后同步全帧 readPixels，包含完成渲染与读回开销；不是纯硬件 GPU timer。Actions 使用 SwiftShader 软件 GPU，不代表真实手机或硬件 GPU 帧率，不宣称实机流畅。
