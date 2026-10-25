@@ -10,9 +10,9 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
   page=browser.new_page(viewport={'width':1366,'height':900},device_scale_factor=1);page.set_default_timeout(180000)
-  page.goto(f'http://127.0.0.1:{server.server_port}/index.html?startupProbe=1')
+  page.goto(f'http://127.0.0.1:{server.server_port}/index.html?startupProbe=1&hostWall=all')
   page.wait_for_function('window.semanticInspection?.phase==="startup-probe-ready"')
-  report['probe']=page.evaluate('''async()=>{const r=semanticInspection.renderer;try{return {result:await r.render({width:1,height:1,presentWidth:1,presentHeight:1,tileSize:32,gpuBatchTiles:1,source:true,design:true})}}catch(e){return{error:String(e),stats:r.currentFrameStats}}}''')
-  report['passed']='error' not in report['probe'];browser.close()
+  report['probe']=page.evaluate('''async()=>{const r=semanticInspection.renderer,h=r.integratedHost,w=h.windows[10],{hostWorld}=await import('./host-wall-field.mjs'),c=[(w.hole[0]+w.hole[2])/2,(w.hole[1]+w.hole[3])/2,0];Object.assign(r.options,{onlyHostField:true,eye:hostWorld(h,[c[0],c[1],2.8]),target:hostWorld(h,c)});try{return {result:await r.render({width:1,height:1,presentWidth:1,presentHeight:1,tileSize:32,gpuBatchTiles:1,source:true,design:true})}}catch(e){return{error:String(e),stats:r.currentFrameStats}}}''')
+  report['passed']='error' not in report['probe'];report['recovery']=page.evaluate('semanticInspection.renderer.hostRecoveryBuild');browser.close()
 finally:
  (OUT/'startup-probe.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));server.shutdown()
