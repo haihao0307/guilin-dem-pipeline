@@ -1,0 +1,78 @@
+{
+  "stage": "R08",
+  "status": "research-candidate-draft",
+  "date": "2026-10-25",
+  "sourceBase": "Human-Fabric-Workbench@9d3701b594468d63f985878e0b85365d6816d0d8",
+  "publicationBase": "guilin-dem-pipeline@0df6843e5d124ff4574c531613310b79dfc96651",
+  "steps": [
+    {
+      "id": "R05.1",
+      "implemented": true,
+      "effect": "Startup selector and recipe-version repairs; original geometry and material retained."
+    },
+    {
+      "id": "R06",
+      "implemented": true,
+      "effect": "Four independent material layers, yarn section, scattering and short fuzz controls."
+    },
+    {
+      "id": "R07",
+      "implemented": true,
+      "effect": "Independent stitch pitch, relief, Z grouping and shared net relaxation; anchored fill endpoints."
+    },
+    {
+      "id": "R08",
+      "implemented": true,
+      "effect": "Three material profiles, camera-preserving A/B, validated full recipe persistence and visible progress."
+    }
+  ],
+  "verification": {
+    "tests": 33,
+    "passed": 33,
+    "failed": 0,
+    "browser": "Chromium IAB, HTTP localhost, 1280x720 screenshots",
+    "renderer": "ANGLE NVIDIA GeForce RTX 4070 Ti SUPER Direct3D11",
+    "patterns": [
+      "botanical",
+      "rosette",
+      "ribbon"
+    ],
+    "views": [
+      "overall",
+      "macro",
+      "fiber",
+      "edge",
+      "back"
+    ],
+    "stationarySamples": 32,
+    "rotationSamples": 4,
+    "budgetFailure": "0.08 mm pitch rejected; last successful geometry and 0.18 mm pitch restored",
+    "saveRestore": "Custom fill roughness 0.71 and macro camera restored from actual JSON download",
+    "browserErrorsFinal": 0,
+    "fileProtocol": "blocked by browser URL policy; NOT VERIFIED",
+    "coreNetworkDependenciesStatic": 0,
+    "standaloneEmbedded": true
+  },
+  "visualAssessment": {
+    "realReferenceParity": false,
+    "improvements": [
+      "Layer-specific tuning and controlled stitch separation are inspectable.",
+      "Close yarn view now reaches useful scale.",
+      "Opaque yarn cores and open holes remain separate."
+    ],
+    "remaining": [
+      "Threads still look too hard and regular.",
+      "Cotton/silk differences remain subtle under broad illumination.",
+      "Ground is a regular crossing grid, not validated lace craft.",
+      "Backlighting still needs measured, same-scale reference comparison."
+    ]
+  },
+  "notCompleted": [
+    "R09 same-camera real-reference calibration: softness, highlight width, fuzz silhouette and backlighting",
+    "R10 named lace technique: ground, joints, thread continuity and back-side carrying yarn",
+    "R11 motion shimmer, actual GPU timing, mobile/device matrix and file:// runtime gate",
+    "R12 garment gravity, contact, collision and stretch after material acceptance"
+  ],
+  "physics": "Only display curvature and endpoint attachment; no collision or garment dynamics solver.",
+  "delivery": "Draft branches and PRs only. Existing public R05 URL remains unchanged."
+}
