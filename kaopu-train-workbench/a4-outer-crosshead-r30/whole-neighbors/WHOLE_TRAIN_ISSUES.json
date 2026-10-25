@@ -1,0 +1,296 @@
+{
+  "scope": "read-only r27 candidate, full train visible set at common Time, no geometry/installation changes",
+  "initialSearch": {
+    "negativeWitnessPairs": 21,
+    "unresolvedPairs": 34
+  },
+  "finalSamePoseThinBushingReview": {
+    "negativeWitnessPairs": 23,
+    "unresolvedPairs": 32,
+    "newPairs": [
+      [
+        "stack_candidate/bushing/M/input_terminal_eye_M",
+        "cylinder_pressure/middle_front_cover"
+      ],
+      [
+        "stack_candidate/bushing/M/middle_short_link",
+        "cylinder_pressure/middle_front_cover"
+      ]
+    ],
+    "note": "Two annular mid-wall seeds checked before stop instruction; no added phases or grid."
+  },
+  "broadphase": {
+    "phases": 72,
+    "stackFields": 73,
+    "otherVisibleFields": 501,
+    "visibleTotal": 574,
+    "AABBPossiblePairs": 55
+  },
+  "installation": {
+    "mode": "candidate",
+    "beta": 0.126
+  },
+  "wholeTrainAcceptance": false,
+  "blockingWitnessPairs": 15,
+  "possibleIntendedConnectionOverlapPairs": 8,
+  "issues": [
+    {
+      "kind": "main-frame collision",
+      "pairs": [
+        [
+          "stack_candidate/plate/two_to_one_lever",
+          "frame/frame_plate_right"
+        ],
+        [
+          "stack_candidate/plate/equal_lever",
+          "frame/frame_plate_left"
+        ]
+      ],
+      "consequence": "The central levers cross the current solid frame fields. SNGLT documents actual frame slots for both 2:1 and 1:1 levers. Therefore missing authentic frame openings may explain the model failure; this is not proof of real A4 structural interference or a requirement to relocate the linkage."
+    },
+    {
+      "kind": "middle-cylinder and piston interference",
+      "pairs": [
+        [
+          "stack_candidate/plate/middle_short_link",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/terminal_eye/M",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/pin/M",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/bushing/M/input_terminal_eye_M",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/bushing/M/middle_short_link",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/spacer/M",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/washer/M/lower",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/retainer/M/lower",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/washer/M/upper",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/retainer/M/upper",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "actuation/middle_piston"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "cylinder_pressure/middle_front_cover"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "cylinder_pressure/middle_rear_cover_with_rod_hole"
+        ]
+      ],
+      "consequence": "The inferred horizontal middle spindle path crosses the piston and pressure covers; terminal eye/stack also intersects front cover."
+    },
+    {
+      "kind": "connection overlaps need interpretation",
+      "pairs": [
+        [
+          "stack_candidate/spindle/R",
+          "valve/right_combination_lever"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve/right_valve_crosshead_pin"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_rear_valve_head_core"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_front_valve_head_core"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve/left_combination_lever"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve/left_valve_crosshead_pin"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_rear_valve_head_core"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_front_valve_head_core"
+        ]
+      ],
+      "consequence": "Solid unions at spindle/pin/head may be intentional representation, not automatically unintended collision. No physical attachment proof is supplied."
+    },
+    {
+      "kind": "unresolved broadphase",
+      "pairs": [
+        [
+          "stack_candidate/plate/middle_short_link",
+          "actuation/middle_cylinder_wall"
+        ],
+        [
+          "stack_candidate/terminal_eye/M",
+          "actuation/middle_cylinder_wall"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve/right_radius_rod"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve/right_fixed_valve_guide"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_chest_pressure_shell"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_ported_liner"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_rear_end_cover"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_front_end_cover"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_rear_gland_packing"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_front_gland_packing"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_rear_effective_seal_band"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_front_effective_seal_band"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_supply_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_rear_exhaust_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/R",
+          "valve_chest/right_front_exhaust_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve/left_radius_rod"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve/left_fixed_valve_guide"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_chest_pressure_shell"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_ported_liner"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_rear_end_cover"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_front_end_cover"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_rear_gland_packing"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_front_gland_packing"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_rear_effective_seal_band"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_front_effective_seal_band"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_supply_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_rear_exhaust_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/L",
+          "valve_chest/left_front_exhaust_stub_wall"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "actuation/middle_cylinder_wall"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "actuation/middle_piston_rod"
+        ],
+        [
+          "stack_candidate/spindle/M",
+          "cylinder_pressure/middle_piston_ring_packs"
+        ],
+        [
+          "stack_candidate/plate/two_to_one_lever",
+          "frame/frame_plate_left"
+        ]
+      ],
+      "consequence": "Positive local-search result is not a clearance result."
+    }
+  ],
+  "historicalQualification": {
+    "verifiedPrimarySource": "https://sirnigelgresley.org.uk/overhaul-1522/overhaul-19.shtml",
+    "finding": "The 2021 report states both 2:1 and 1:1 levers pass through frame slots, which were lengthened during WWII for increased valve travel. Alignment work required removing a local protrusion to avoid a slot edge.",
+    "inference": "Current frame-field overlap may reflect omitted authentic openings, not an impossible real installation. Dimensions and placement of the real slots are not established here. This does not erase the separate middle spindle/piston/cover witnesses."
+  },
+  "decision": "Stop central geometric expansion. Do not carve the frame or relocate/resize components to fit this inferred layout. Obtain reliable central installation drawings and whole-system constraints first.",
+  "limits": [
+    "True central installation drawing, frame mount, middle guide/chest and retainer locking construction remain unverified.",
+    "72 phases are a sampled broadphase only; not continuous all-phase coverage.",
+    "Only stack-versus-other was tested, not every original-versus-original pair.",
+    "Analytic existence witnesses use retained scalar fields under r27 rigid transforms, double precision, not mesh/raster geometry.",
+    "Outside potential connection unions require mechanical interpretation; remaining 32 pairs unresolved.",
+    "No change to r27, r28, Git, layer thickness or installed geometry."
+  ]
+}

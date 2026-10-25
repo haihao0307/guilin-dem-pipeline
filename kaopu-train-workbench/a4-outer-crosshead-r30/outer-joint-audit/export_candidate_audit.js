@@ -1,0 +1,22 @@
+/* Independent read-only capture, pinned to an explicitly supplied candidate SHA. */
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const expected=process.argv[2],out=path.resolve(process.argv[3]||path.join(__dirname,'candidate_audit_01'));
+if(!expected)throw Error('Pass the builder-confirmed outer-crosshead.js SHA256');
+const candidateRoot=path.resolve(__dirname,'../outer-crosshead-study'),hash=f=>crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+if(hash(path.join(candidateRoot,'outer-crosshead.js'))!==expected)throw Error('Candidate differs from the approved stable audit input');
+const c=require('./model_context').load(),api=require(path.join(candidateRoot,'outer-crosshead')),install=require(path.join(candidateRoot,'outer-crosshead-adapter')),D=c.DYNAMIC,G=D.gresleySolver,inst=D.snapshot({mode:'candidate',beta:.126}),baseline=D.snapshot({mode:'baseline'}),oldBaseline=c.SCENE.parts.filter(p=>D.visible(p,baseline)).map(p=>p.id),C=install(c.SCENE,D,api);
+const all=c.SCENE.parts.filter(p=>D.visible(p,inst)),added=C.parts,ids=new Set(added.map(p=>p.id)),pairs=new Map(),n=72;
+function inverse(p,theta,v){const g=D.gresleyFrame(p,theta,inst);if(g)return G.transformPoint(v,g,true);const f=D.valveFrame(p,theta,inst);if(f)return D.valvePoint(v,f,true);return D.transform(v,theta,D.classify(p),true,inst);}
+function motionKey(p){if(p.source==='outsideJoint')return p.frameKind==='static'?'fixed':p.frameKind==='translate'?'V:'+p.side:'combo:'+p.side;const m=D.outsideValveSolver.classify(p.id);if(m.type==='chestSlider'||m.name==='valve_spindle'||m.name==='valve_crosshead_pin')return 'V:'+m.side;if(m.name==='combination_lever')return'combo:'+m.side;const g=G.classify(p.frameSourceId||p.id);if(p.source==='stack'&&g.type==='translation'&&['L','R'].includes(g.anchor))return 'V:'+(g.anchor==='L'?'left':'right');if(m.status==='fixed')return 'fixed';if(m.status!=='moving'&&g.status!=='moving'&&!D.classify(p))return 'fixed';return 'dynamic:'+p.id;}
+const overlap=(a,b)=>[0,1,2].every(j=>Math.min(a[1][j],b[1][j])-Math.max(a[0][j],b[0][j])>0);
+const frames=[];
+for(let k=0;k<n;k++){const theta=.4+k*2*Math.PI/n,partFrames=Object.fromEntries(all.map(p=>{const off=inverse(p,theta,[0,0,0]),cols=[[1,0,0],[0,1,0],[0,0,1]].map(v=>inverse(p,theta,v).map((x,j)=>x-off[j]));return[p.id,{bounds:D.bounds(p,theta,inst),inverseOffset:off,inverseRows:[0,1,2].map(j=>cols.map(v=>v[j]))}];}));frames.push({theta,Time:theta-.4,parts:partFrames});
+ for(const p of added)for(const q of all){if(p.id===q.id||(ids.has(q.id)&&p.id>q.id)||!overlap(partFrames[p.id].bounds,partFrames[q.id].bounds))continue;const id=p.id+' | '+q.id;let row=pairs.get(id);if(!row){row={stack:p.id,other:q.id,source:q.source,group:q.group,samples:[],sameRigidFrame:motionKey(p)===motionKey(q),motionKeys:[motionKey(p),motionKey(q)]};pairs.set(id,row);}row.samples.push(k);}
+}
+const needed=new Set([...pairs.values()].flatMap(p=>[p.stack,p.other]));for(const fr of frames)fr.parts=Object.fromEntries(Object.entries(fr.parts).filter(([id])=>needed.has(id)));
+fs.mkdirSync(out,{recursive:true});const write=(n,x)=>fs.writeFileSync(path.join(out,n),JSON.stringify(x,null,2));
+const baselineAfter=c.SCENE.parts.filter(p=>D.visible(p,baseline)).map(p=>p.id);if(JSON.stringify(baselineAfter)!==JSON.stringify(oldBaseline))throw Error('Baseline visibility changed');
+const hashes=Object.fromEntries(['outer-crosshead.js','outer-crosshead-adapter.js'].map(n=>[n,hash(path.join(candidateRoot,n))]));if(hashes['outer-crosshead.js']!==expected)throw Error('Candidate changed during capture');
+const data={version:C.version,parameters:C.parameters,parts:C.parts,suppress:C.suppress,mountInterface:C.mountInterface,limitations:C.limitations};
+write('CANDIDATE.json',data);write('INPUT_SHA256.json',{candidate:hashes,r29:require('./INPUT_SHA256.json')});write('sources.json',c.SCENE.sources);write('parts.json',c.SCENE.parts);write('HOST_CUTS.json',c.SCENE.hostCuts);write('FRAMES.json',frames);write('BROADPHASE.json',{installation:inst,baselineVisible:baselineAfter.length,candidateVisible:all.length,newBodies:added.length,phaseSamples:n,pairCount:pairs.size,pairs:[...pairs.values()],description:'New outer-joint parts versus every actually visible train part, including new/new pairs. Same-frame pairs searched once; all no-witness outcomes unresolved.'});
+console.log(JSON.stringify({out,baselineVisible:baselineAfter.length,candidateVisible:all.length,newBodies:added.length,pairCount:pairs.size,hashes},null,2));

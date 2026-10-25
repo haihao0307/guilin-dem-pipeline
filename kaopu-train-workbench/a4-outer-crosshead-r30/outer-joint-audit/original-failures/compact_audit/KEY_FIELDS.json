@@ -1,0 +1,626 @@
+[
+  {
+    "id": "valve/left_radius_rod",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_radius_rod",
+    "aabb_min": [
+      -0.992001,
+      1.3127198553597625,
+      1.4816775427860693
+    ],
+    "aabb_max": [
+      -0.9679989999999999,
+      1.5820024591870456,
+      4.115646247419837
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_radius_rod(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,1.3457208553597624,1.5146785427860692),vec3(-0.97999999999999998,1.5490014591870458,4.0826452474198369),0,vec3(-0.97999999999999998,1.3675009200555428,1.7898178325682585),true,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "radius_rod"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_combination_lever",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_combination_lever",
+    "aabb_min": [
+      -0.992001,
+      0.9467384208939174,
+      4.049644247419836
+    ],
+    "aabb_max": [
+      -0.9679989999999999,
+      1.5820024591870456,
+      4.4496233899885365
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_combination_lever(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,0.97973942089391741,4.416622389988536),vec3(-0.97999999999999998,1.5490014591870458,4.0826452474198369),0,vec3(-0.97999999999999998,1.48,4.1231273253069523),true,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "combination_lever"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_combination_upper_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_combination_upper_pin",
+    "aabb_min": [
+      -1.0350009999999998,
+      1.5370004591870459,
+      4.070644247419837
+    ],
+    "aabb_max": [
+      -0.9249989999999999,
+      1.5610024591870457,
+      4.094646247419837
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_combination_upper_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.5490014591870458,4.0826452474198369),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "combination_upper_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_valve_crosshead_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_valve_crosshead_pin",
+    "aabb_min": [
+      -1.0350009999999998,
+      1.467999,
+      4.1111263253069525
+    ],
+    "aabb_max": [
+      -0.9249989999999999,
+      1.492001,
+      4.135128325306952
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,1.48,4.1231273253069523),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "valve_crosshead_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_fixed_valve_guide",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_fixed_valve_guide",
+    "aabb_min": [
+      -1.0350009999999998,
+      1.4349990000000001,
+      3.9299989999999996
+    ],
+    "aabb_max": [
+      -0.9249989999999999,
+      1.5250009999999998,
+      4.270001
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_fixed_valve_guide(vec3 p) { return max(mBoxInf(p,vec3(-0.97999999999999998,1.48,4.0999999999999996),vec3(.055,.045,.17)),-mBoxInf(p,vec3(-0.97999999999999998,1.48,4.0999999999999996),vec3(.024,.024,.19))); }",
+    "dynamicArgument": "p",
+    "outsideClassification": {
+      "status": "fixed",
+      "side": "left",
+      "type": "fixed",
+      "name": "fixed_valve_guide"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "stack_candidate/spindle/L",
+    "source": "stack",
+    "group": "stack",
+    "glsl_function": "candidate_stack_71",
+    "aabb_min": [
+      -0.996,
+      1.464,
+      4.107127325306953
+    ],
+    "aabb_max": [
+      -0.964,
+      1.496,
+      5.289127325306953
+    ],
+    "lipschitz": 1.000002,
+    "frameSourceId": "valve/gresley_left_input_pin",
+    "status": "inferred_finite_thickness_candidate_only",
+    "visible": true,
+    "scalarFunction": "float candidate_stack_71(vec3 p) { return max(mCapsule(p,vec3(-0.97999999999999998,1.4800000000000000,4.1231273253069531),vec3(-0.97999999999999998,1.4800000000000000,5.2731273253069526),0.016000000000000000),0.013500000000000000-length(p.xz-vec2(-0.97999999999999998,5.2731273253069526))); }",
+    "dynamicArgument": "dynGresley(p)",
+    "outsideClassification": {
+      "status": "unsupported",
+      "reason": "Not an outside-valve/chest field; middle and conjugated mechanism deliberately excluded"
+    },
+    "gresleyClassification": {
+      "type": "translation",
+      "anchor": "L",
+      "status": "moving",
+      "historicalDimensions": false,
+      "physicalAcceptance": false
+    }
+  },
+  {
+    "id": "valve/right_radius_rod",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_radius_rod",
+    "aabb_min": [
+      0.9679989999999999,
+      1.3253019895115832,
+      1.559603355454721
+    ],
+    "aabb_max": [
+      0.992001,
+      1.592665002423643,
+      4.19372329326035
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_radius_rod(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,1.358302989511583,1.5926043554547209),vec3(0.97999999999999998,1.5596640024236432,4.1607222932603491),0,vec3(0.97999999999999998,1.379877383752161,1.8677598487910383),true,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "radius_rod"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_combination_lever",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_combination_lever",
+    "aabb_min": [
+      0.9679989999999999,
+      0.8694349824285867,
+      4.067295059442761
+    ],
+    "aabb_max": [
+      0.992001,
+      1.592665002423643,
+      4.19372329326035
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_combination_lever(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,0.9024359824285868,4.1002960594427611),vec3(0.97999999999999998,1.5596640024236432,4.1607222932603491),0,vec3(0.97999999999999998,1.48,4.1533979012824593),true,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "combination_lever"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_combination_upper_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_combination_upper_pin",
+    "aabb_min": [
+      0.9249989999999999,
+      1.5476630024236433,
+      4.148721293260349
+    ],
+    "aabb_max": [
+      1.0350009999999998,
+      1.5716650024236432,
+      4.172723293260349
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_combination_upper_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.5596640024236432,4.1607222932603491),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "combination_upper_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_valve_crosshead_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_valve_crosshead_pin",
+    "aabb_min": [
+      0.9249989999999999,
+      1.467999,
+      4.14139690128246
+    ],
+    "aabb_max": [
+      1.0350009999999998,
+      1.492001,
+      4.165398901282459
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_valve_crosshead_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,1.48,4.1533979012824593),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "valve_crosshead_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_fixed_valve_guide",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_fixed_valve_guide",
+    "aabb_min": [
+      0.9249989999999999,
+      1.4349990000000001,
+      3.9299989999999996
+    ],
+    "aabb_max": [
+      1.0350009999999998,
+      1.5250009999999998,
+      4.270001
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_fixed_valve_guide(vec3 p) { return max(mBoxInf(p,vec3(0.97999999999999998,1.48,4.0999999999999996),vec3(.055,.045,.17)),-mBoxInf(p,vec3(0.97999999999999998,1.48,4.0999999999999996),vec3(.024,.024,.19))); }",
+    "dynamicArgument": "p",
+    "outsideClassification": {
+      "status": "fixed",
+      "side": "right",
+      "type": "fixed",
+      "name": "fixed_valve_guide"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "stack_candidate/spindle/R",
+    "source": "stack",
+    "group": "stack",
+    "glsl_function": "candidate_stack_70",
+    "aabb_min": [
+      0.964,
+      1.464,
+      4.13739790128246
+    ],
+    "aabb_max": [
+      0.996,
+      1.496,
+      5.31939790128246
+    ],
+    "lipschitz": 1.000002,
+    "frameSourceId": "valve/gresley_right_input_pin",
+    "status": "inferred_finite_thickness_candidate_only",
+    "visible": true,
+    "scalarFunction": "float candidate_stack_70(vec3 p) { return max(mCapsule(p,vec3(0.97999999999999998,1.4800000000000000,4.1533979012824602),vec3(0.97999999999999998,1.4800000000000000,5.3033979012824597),0.016000000000000000),0.013500000000000000-length(p.xz-vec2(0.97999999999999998,5.3033979012824597))); }",
+    "dynamicArgument": "dynGresley(p)",
+    "outsideClassification": {
+      "status": "unsupported",
+      "reason": "Not an outside-valve/chest field; middle and conjugated mechanism deliberately excluded"
+    },
+    "gresleyClassification": {
+      "type": "translation",
+      "anchor": "R",
+      "status": "moving",
+      "historicalDimensions": false,
+      "physicalAcceptance": false
+    }
+  },
+  {
+    "id": "valve/left_union_link",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_union_link",
+    "aabb_min": [
+      -0.992001,
+      0.866999,
+      3.7687704936278794
+    ],
+    "aabb_max": [
+      -0.9679989999999999,
+      1.0127404208939172,
+      4.4496233899885365
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_union_link(vec3 p) { return mFlatRod(p,vec3(-0.97999999999999998,0.90000000000000002,3.8017714936278795),vec3(-0.97999999999999998,0.97973942089391741,4.416622389988536),0,vec3(-0.97999999999999998,0.90000000000000002,3.8017714936278795),false,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "union_link"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_valve_spindle",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_valve_spindle",
+    "aabb_min": [
+      -0.996001,
+      1.463999,
+      4.107126325306952
+    ],
+    "aabb_max": [
+      -0.9639989999999999,
+      1.496001,
+      5.289128325306952
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": false,
+    "scalarFunction": "float motion_valve_left_valve_spindle(vec3 p) { return mCapsule(p,vec3(-0.97999999999999998,1.48,4.1231273253069523),vec3(-0.97999999999999998,1.48,5.2731273253069517),0.016); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "valve_spindle"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/left_combination_lower_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_left_combination_lower_pin",
+    "aabb_min": [
+      -1.0350009999999998,
+      0.9677384208939174,
+      4.404621389988536
+    ],
+    "aabb_max": [
+      -0.9249989999999999,
+      0.9917404208939175,
+      4.428623389988536
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_left_combination_lower_pin(vec3 p) { return mDisc(p,vec3(-0.97999999999999998,0.97973942089391741,4.416622389988536),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "outsideField",
+      "name": "combination_lower_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve_chest/left_shared_valve_spindle",
+    "group": "valve_chest",
+    "glsl_function": "motion_valve_chest_left_shared_valve_spindle",
+    "aabb_min": [
+      -0.996001,
+      1.463999,
+      4.123126325306952
+    ],
+    "aabb_max": [
+      -0.9639989999999999,
+      1.496001,
+      5.273128325306952
+    ],
+    "lipschitz": 2,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "masked_periodic_angle_bound_below_1.24",
+    "source": "motion",
+    "visible": false,
+    "scalarFunction": "float motion_valve_chest_left_shared_valve_spindle(vec3 p) { return mPV(p-vec3(-0.97999999999999998,1.48,4.6799999999999997),0.023127325306952606,-0.55687267469304746,0.593127325306952,10); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "left",
+      "type": "chestSlider",
+      "name": "shared_valve_spindle"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_union_link",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_union_link",
+    "aabb_min": [
+      0.9679989999999999,
+      0.866999,
+      3.447299844953482
+    ],
+    "aabb_max": [
+      0.992001,
+      0.9354369824285869,
+      4.133297059442762
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_union_link(vec3 p) { return mFlatRod(p,vec3(0.97999999999999998,0.90000000000000002,3.480300844953482),vec3(0.97999999999999998,0.9024359824285868,4.1002960594427611),0,vec3(0.97999999999999998,0.90000000000000002,3.480300844953482),false,0.024,0.033000000000000002,0.0135,0.012); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "union_link"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_valve_spindle",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_valve_spindle",
+    "aabb_min": [
+      0.9639989999999999,
+      1.463999,
+      4.137396901282459
+    ],
+    "aabb_max": [
+      0.996001,
+      1.496001,
+      5.319398901282459
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": false,
+    "scalarFunction": "float motion_valve_right_valve_spindle(vec3 p) { return mCapsule(p,vec3(0.97999999999999998,1.48,4.1533979012824593),vec3(0.97999999999999998,1.48,5.3033979012824588),0.016); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "valve_spindle"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve/right_combination_lower_pin",
+    "group": "valve",
+    "glsl_function": "motion_valve_right_combination_lower_pin",
+    "aabb_min": [
+      0.9249989999999999,
+      0.8904349824285868,
+      4.088295059442761
+    ],
+    "aabb_max": [
+      1.0350009999999998,
+      0.9144369824285868,
+      4.112297059442761
+    ],
+    "lipschitz": 1,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "unit_distance_and_CSG",
+    "source": "motion",
+    "visible": true,
+    "scalarFunction": "float motion_valve_right_combination_lower_pin(vec3 p) { return mDisc(p,vec3(0.97999999999999998,0.9024359824285868,4.1002960594427611),0,0.012,0.055); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "outsideField",
+      "name": "combination_lower_pin"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  },
+  {
+    "id": "valve_chest/right_shared_valve_spindle",
+    "group": "valve_chest",
+    "glsl_function": "motion_valve_chest_right_shared_valve_spindle",
+    "aabb_min": [
+      0.9639989999999999,
+      1.463999,
+      4.153396901282459
+    ],
+    "aabb_max": [
+      0.996001,
+      1.496001,
+      5.303398901282459
+    ],
+    "lipschitz": 2,
+    "status": "fixed_theta_0.4_inferred_R20_geometry_not_historical_calibration",
+    "proof": "masked_periodic_angle_bound_below_1.24",
+    "source": "motion",
+    "visible": false,
+    "scalarFunction": "float motion_valve_chest_right_shared_valve_spindle(vec3 p) { return mPV(p-vec3(0.97999999999999998,1.48,4.6799999999999997),0.053397901282459692,-0.52660209871754038,0.62339790128245909,10); }",
+    "dynamicArgument": "dynOutsideValve(p)",
+    "outsideClassification": {
+      "status": "moving",
+      "side": "right",
+      "type": "chestSlider",
+      "name": "shared_valve_spindle"
+    },
+    "gresleyClassification": {
+      "status": "unsupported"
+    }
+  }
+]

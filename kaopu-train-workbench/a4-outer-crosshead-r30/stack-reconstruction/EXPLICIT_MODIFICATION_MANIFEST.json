@@ -1,0 +1,106 @@
+{
+  "applied": false,
+  "baselineFilesChanged": false,
+  "candidateOnly": true,
+  "changes": [
+    {
+      "kind": "axial relocation",
+      "targets": [
+        "two_to_one_lever",
+        "equal_lever",
+        "right_short_link",
+        "left_short_link",
+        "middle_short_link"
+      ],
+      "preserved": "all original XZ profiles, thickness 24 mm, eye 33 mm, bore 13.5 mm",
+      "newY": {
+        "two_to_one_lever": 1.5474999999999999,
+        "equal_lever": 1.484,
+        "right_short_link": 1.511,
+        "left_short_link": 1.511,
+        "middle_short_link": 1.511
+      }
+    },
+    {
+      "kind": "new finite pin extents",
+      "targets": [
+        "O",
+        "R",
+        "L",
+        "A",
+        "C",
+        "B",
+        "E",
+        "M"
+      ],
+      "pinRadiusPreserved": 0.012,
+      "sourcePinLength": 0.07,
+      "newExtents": {
+        "O": [
+          1.5294999999999999,
+          1.5655
+        ],
+        "R": [
+          1.458,
+          1.529
+        ],
+        "L": [
+          1.458,
+          1.529
+        ],
+        "A": [
+          1.4929999999999999,
+          1.5655
+        ],
+        "C": [
+          1.466,
+          1.5655
+        ],
+        "B": [
+          1.466,
+          1.529
+        ],
+        "E": [
+          1.466,
+          1.529
+        ],
+        "M": [
+          1.458,
+          1.529
+        ]
+      }
+    },
+    {
+      "kind": "explicit addition",
+      "targets": [
+        "R",
+        "L",
+        "M"
+      ],
+      "geometry": "union an eye cylinder centered on retained spindle front XZ and Y=1.48; outer radius retained eye radius 0.033, half-thickness retained spindle radius 0.016"
+    },
+    {
+      "kind": "explicit subtraction, NOT secretly applied",
+      "targets": [
+        "valve/right_valve_spindle",
+        "valve/left_valve_spindle",
+        "valve/middle_valve_spindle_inferred_horizontal",
+        "valve_chest/right_shared_valve_spindle",
+        "valve_chest/left_shared_valve_spindle"
+      ],
+      "geometry": "through-Y cylindrical bore of radius 0.0135 at each corresponding retained moving front XZ pin; difference applied to both source representations wherever duplicated",
+      "localExtentXZ": "within 13.5 mm of the original spindle front pin",
+      "doesNotChange": "spindle centerline/length, cylinder bore, chest bore, official axle stations, other train objects"
+    },
+    {
+      "kind": "new hardware",
+      "geometry": "15 explicitly sized bushings, 7 axial spacers, end washers and end-retainer envelopes; see candidate JSON",
+      "lockingAndStrength": "unverified"
+    }
+  ],
+  "requiredBeforeImplementation": [
+    "Retain unchanged baseline and failing uncut candidate labels.",
+    "Apply the same terminal subtraction to every duplicate spindle field or the hole stays filled.",
+    "Do not claim the missing fixed-pivot frame mount or middle prismatic guide exists."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "version": "outer-crosshead-candidate-02",
+  "status": "PASS emitted-expression parser parity and analytic bound checks; GPU still separate",
+  "sourceSHA256": "fc51954fcd5db972527029923a5ded69f762a06fdd066dd38e20178bceb42bb1",
+  "fields": 32,
+  "samples": 19808,
+  "maxCPUvsEmittedDoubleError_m": 8.881784197001252e-16,
+  "maxCPUvsEmulatedFloat32Error_m": 4.580035581902564e-7,
+  "nearBoundarySignDifferences": 24,
+  "unsafeSignDifferences": 0,
+  "maxRandomPairLipschitzRatio": 0.9998836454078669,
+  "outsideSupportNegativeSamples": 0,
+  "certifiedScalarLipschitz": 1,
+  "manifestLipschitz": 1.000002,
+  "boundProof": [
+    "Every scalar primitive is 1-Lipschitz in Euclidean XYZ.",
+    "Finite min/max and negation retain a 1-Lipschitz bound; holes are the identical subtracted expression in CPU and GLSL.",
+    "Rigid outside-valve inverse matrices preserve Euclidean norm.",
+    "The support AABB is composed from analytic primitive supports; subtraction cannot enlarge a solid; intersection takes intersected supports.",
+    "Manifest 1.000002 adds a numerical guard, not an additional physical clearance."
+  ],
+  "notClaimed": [
+    "Float32 emulation is not execution of a GPU shader.",
+    "Random-pair checks are supplementary checks, not the analytic Lipschitz proof.",
+    "Actual compiled WebGL output must be checked in the integrated whole scene."
+  ]
+}

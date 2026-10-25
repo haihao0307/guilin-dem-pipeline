@@ -1,0 +1,1281 @@
+{
+  "version": "R29_proposed_frame_support_v1",
+  "parts": [
+    {
+      "id": "frame_support/fixed_O_pin",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_0",
+      "glsl": "float frame_mount_0(vec3 p){return min(min(mDisc(p,vec3(0.12666666666666662,1.5794999999999999,5.5499999999999998),1,0.012000000000000000,0.050000000000000044),mDisc(p,vec3(0.12666666666666662,1.6265000000000001,5.5499999999999998),1,0.017999999999999999,0.0030000000000000027)),mDisc(p,vec3(0.12666666666666662,1.5680000000000001,5.5499999999999998),1,0.017999999999999999,0.0014999999999999458));}",
+      "aabb_min": [
+        0.10866666666666662,
+        1.5294999999999999,
+        5.532
+      ],
+      "aabb_max": [
+        0.1446666666666666,
+        1.6295,
+        5.568
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "union",
+        "children": [
+          {
+            "kind": "cylinder",
+            "axis": 1,
+            "center": [
+              0.12666666666666662,
+              1.48,
+              5.55
+            ],
+            "radius": 0.012,
+            "range": [
+              1.5294999999999999,
+              1.6295
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 1,
+            "center": [
+              0.12666666666666662,
+              1.48,
+              5.55
+            ],
+            "radius": 0.018,
+            "range": [
+              1.6235,
+              1.6295
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 1,
+            "center": [
+              0.12666666666666662,
+              1.48,
+              5.55
+            ],
+            "radius": 0.018,
+            "range": [
+              1.5665,
+              1.5695
+            ]
+          }
+        ]
+      },
+      "role": "extended fixed pin with integral head/lower-retention envelopes",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "replacesId": "stack_candidate/pin/O",
+      "replacesStackDescriptorId": "pin/O",
+      "sourcePartId": "valve/gresley_fixed_pivot_pin",
+      "oneBodyUnion": true,
+      "lockingDetailVerified": false
+    },
+    {
+      "id": "frame_support/bolt/left_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_1",
+      "glsl": "float frame_mount_1(vec3 p){return min(mDisc(p,vec3(-0.52500000000000002,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(-0.55900000000000005,1.5964999999999998,5.4950000000000001),0,0.010999999999999999,0.0040000000000000036));}",
+      "aabb_min": [
+        -0.5630000000000001,
+        1.5855,
+        5.484
+      ],
+      "aabb_max": [
+        -0.495,
+        1.6074999999999997,
+        5.506
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "union",
+        "children": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.006,
+            "range": [
+              -0.555,
+              -0.495
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.011,
+            "range": [
+              -0.5630000000000001,
+              -0.555
+            ]
+          }
+        ]
+      },
+      "role": "fixed side fastener shank and external head envelope",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "oneBodyUnion": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/washer/left_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_2",
+      "glsl": "float frame_mount_2(vec3 p){return max(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.0010010000000000296)));}",
+      "aabb_min": [
+        -0.511,
+        1.5844999999999998,
+        5.4830000000000005
+      ],
+      "aabb_max": [
+        -0.509,
+        1.6084999999999998,
+        5.507
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.495
+          ],
+          "radius": 0.012,
+          "range": [
+            -0.511,
+            -0.509
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.511001,
+              -0.508999
+            ]
+          }
+        ]
+      },
+      "role": "inside tab washer with explicit radial clearance",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false
+    },
+    {
+      "id": "frame_support/nut/left_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_3",
+      "glsl": "float frame_mount_3(vec3 p){return max(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.0040010000000000323)));}",
+      "aabb_min": [
+        -0.509,
+        1.5859999999999999,
+        5.4845
+      ],
+      "aabb_max": [
+        -0.501,
+        1.6069999999999998,
+        5.5055000000000005
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.495
+          ],
+          "radius": 0.0105,
+          "range": [
+            -0.509,
+            -0.501
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.006,
+            "range": [
+              -0.509001,
+              -0.500999
+            ]
+          }
+        ]
+      },
+      "role": "finite annular nut/retention envelope, not a resolved thread",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "nominalShaftBoundary": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/bolt/left_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_4",
+      "glsl": "float frame_mount_4(vec3 p){return min(mDisc(p,vec3(-0.52500000000000002,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(-0.55900000000000005,1.5964999999999998,5.6049999999999995),0,0.010999999999999999,0.0040000000000000036));}",
+      "aabb_min": [
+        -0.5630000000000001,
+        1.5855,
+        5.593999999999999
+      ],
+      "aabb_max": [
+        -0.495,
+        1.6074999999999997,
+        5.616
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "union",
+        "children": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.006,
+            "range": [
+              -0.555,
+              -0.495
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.011,
+            "range": [
+              -0.5630000000000001,
+              -0.555
+            ]
+          }
+        ]
+      },
+      "role": "fixed side fastener shank and external head envelope",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "oneBodyUnion": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/washer/left_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_5",
+      "glsl": "float frame_mount_5(vec3 p){return max(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.0010010000000000296)));}",
+      "aabb_min": [
+        -0.511,
+        1.5844999999999998,
+        5.593
+      ],
+      "aabb_max": [
+        -0.509,
+        1.6084999999999998,
+        5.616999999999999
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.6049999999999995
+          ],
+          "radius": 0.012,
+          "range": [
+            -0.511,
+            -0.509
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.511001,
+              -0.508999
+            ]
+          }
+        ]
+      },
+      "role": "inside tab washer with explicit radial clearance",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false
+    },
+    {
+      "id": "frame_support/nut/left_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_6",
+      "glsl": "float frame_mount_6(vec3 p){return max(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.0040010000000000323)));}",
+      "aabb_min": [
+        -0.509,
+        1.5859999999999999,
+        5.594499999999999
+      ],
+      "aabb_max": [
+        -0.501,
+        1.6069999999999998,
+        5.6155
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.6049999999999995
+          ],
+          "radius": 0.0105,
+          "range": [
+            -0.509,
+            -0.501
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.006,
+            "range": [
+              -0.509001,
+              -0.500999
+            ]
+          }
+        ]
+      },
+      "role": "finite annular nut/retention envelope, not a resolved thread",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "nominalShaftBoundary": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/bolt/right_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_7",
+      "glsl": "float frame_mount_7(vec3 p){return min(mDisc(p,vec3(0.52500000000000002,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(0.55900000000000005,1.5964999999999998,5.4950000000000001),0,0.010999999999999999,0.0040000000000000036));}",
+      "aabb_min": [
+        0.495,
+        1.5855,
+        5.484
+      ],
+      "aabb_max": [
+        0.5630000000000001,
+        1.6074999999999997,
+        5.506
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "union",
+        "children": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.006,
+            "range": [
+              0.495,
+              0.555
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.011,
+            "range": [
+              0.555,
+              0.5630000000000001
+            ]
+          }
+        ]
+      },
+      "role": "fixed side fastener shank and external head envelope",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "oneBodyUnion": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/washer/right_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_8",
+      "glsl": "float frame_mount_8(vec3 p){return max(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.0010010000000000296)));}",
+      "aabb_min": [
+        0.509,
+        1.5844999999999998,
+        5.4830000000000005
+      ],
+      "aabb_max": [
+        0.511,
+        1.6084999999999998,
+        5.507
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.495
+          ],
+          "radius": 0.012,
+          "range": [
+            0.509,
+            0.511
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.508999,
+              0.511001
+            ]
+          }
+        ]
+      },
+      "role": "inside tab washer with explicit radial clearance",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false
+    },
+    {
+      "id": "frame_support/nut/right_rear",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_9",
+      "glsl": "float frame_mount_9(vec3 p){return max(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.0040010000000000323)));}",
+      "aabb_min": [
+        0.501,
+        1.5859999999999999,
+        5.4845
+      ],
+      "aabb_max": [
+        0.509,
+        1.6069999999999998,
+        5.5055000000000005
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.495
+          ],
+          "radius": 0.0105,
+          "range": [
+            0.501,
+            0.509
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.006,
+            "range": [
+              0.500999,
+              0.509001
+            ]
+          }
+        ]
+      },
+      "role": "finite annular nut/retention envelope, not a resolved thread",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "nominalShaftBoundary": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/bolt/right_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_10",
+      "glsl": "float frame_mount_10(vec3 p){return min(mDisc(p,vec3(0.52500000000000002,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(0.55900000000000005,1.5964999999999998,5.6049999999999995),0,0.010999999999999999,0.0040000000000000036));}",
+      "aabb_min": [
+        0.495,
+        1.5855,
+        5.593999999999999
+      ],
+      "aabb_max": [
+        0.5630000000000001,
+        1.6074999999999997,
+        5.616
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "union",
+        "children": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.006,
+            "range": [
+              0.495,
+              0.555
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.011,
+            "range": [
+              0.555,
+              0.5630000000000001
+            ]
+          }
+        ]
+      },
+      "role": "fixed side fastener shank and external head envelope",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "oneBodyUnion": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/washer/right_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_11",
+      "glsl": "float frame_mount_11(vec3 p){return max(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.0010010000000000296)));}",
+      "aabb_min": [
+        0.509,
+        1.5844999999999998,
+        5.593
+      ],
+      "aabb_max": [
+        0.511,
+        1.6084999999999998,
+        5.616999999999999
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.6049999999999995
+          ],
+          "radius": 0.012,
+          "range": [
+            0.509,
+            0.511
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.508999,
+              0.511001
+            ]
+          }
+        ]
+      },
+      "role": "inside tab washer with explicit radial clearance",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false
+    },
+    {
+      "id": "frame_support/nut/right_front",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_12",
+      "glsl": "float frame_mount_12(vec3 p){return max(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.0040010000000000323)));}",
+      "aabb_min": [
+        0.501,
+        1.5859999999999999,
+        5.594499999999999
+      ],
+      "aabb_max": [
+        0.509,
+        1.6069999999999998,
+        5.6155
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "cylinder",
+          "axis": 0,
+          "center": [
+            0,
+            1.5964999999999998,
+            5.6049999999999995
+          ],
+          "radius": 0.0105,
+          "range": [
+            0.501,
+            0.509
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.006,
+            "range": [
+              0.500999,
+              0.509001
+            ]
+          }
+        ]
+      },
+      "role": "finite annular nut/retention envelope, not a resolved thread",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "nominalShaftBoundary": true,
+      "threadDetailVerified": false
+    },
+    {
+      "id": "frame_support/front_stretcher",
+      "source": "installation",
+      "group": "installation",
+      "glsl_function": "frame_mount_13",
+      "glsl": "float frame_mount_13(vec3 p){return max(max(max(max(max(min(min(mBoxInf(p,vec3(0.0000000000000000,1.5964999999999998,5.5499999999999998),vec3(0.52500000000000002,0.027000000000000024,0.030000000000000249)),mBoxInf(p,vec3(-0.51800000000000002,1.5964999999999998,5.5499999999999998),vec3(0.0070000000000000062,0.027000000000000024,0.081999999999999851))),mBoxInf(p,vec3(0.51800000000000002,1.5964999999999998,5.5499999999999998),vec3(0.0070000000000000062,0.027000000000000024,0.081999999999999851))),-(mDisc(p,vec3(0.12666666666666662,1.5964999999999998,5.5499999999999998),1,0.012000000000000000,0.027000999999999942))),-(mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048)));}",
+      "aabb_min": [
+        -0.525,
+        1.5695,
+        5.468
+      ],
+      "aabb_max": [
+        0.525,
+        1.6235,
+        5.632
+      ],
+      "lipschitz": 1.000002,
+      "shape": {
+        "kind": "difference",
+        "base": {
+          "kind": "union",
+          "children": [
+            {
+              "kind": "box",
+              "lo": [
+                -0.525,
+                1.5695,
+                5.52
+              ],
+              "hi": [
+                0.525,
+                1.6235,
+                5.58
+              ]
+            },
+            {
+              "kind": "box",
+              "lo": [
+                -0.525,
+                1.5695,
+                5.468
+              ],
+              "hi": [
+                -0.511,
+                1.6235,
+                5.632
+              ]
+            },
+            {
+              "kind": "box",
+              "lo": [
+                0.511,
+                1.5695,
+                5.468
+              ],
+              "hi": [
+                0.525,
+                1.6235,
+                5.632
+              ]
+            }
+          ]
+        },
+        "voids": [
+          {
+            "kind": "cylinder",
+            "axis": 1,
+            "center": [
+              0.12666666666666662,
+              1.48,
+              5.55
+            ],
+            "radius": 0.012,
+            "range": [
+              1.569499,
+              1.6235009999999999
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.5550010000000001,
+              -0.510999
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.5550010000000001,
+              -0.510999
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.510999,
+              0.5550010000000001
+            ]
+          },
+          {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.510999,
+              0.5550010000000001
+            ]
+          }
+        ]
+      },
+      "role": "one-piece inferred bridge with side tabs and explicit Y socket plus four X bolt bores",
+      "motion": "fixed in train frame",
+      "historicalDimensions": false,
+      "structuralAcceptance": false,
+      "oneBodyUnion": true
+    }
+  ],
+  "source": "float frame_mount_0(vec3 p){return min(min(mDisc(p,vec3(0.12666666666666662,1.5794999999999999,5.5499999999999998),1,0.012000000000000000,0.050000000000000044),mDisc(p,vec3(0.12666666666666662,1.6265000000000001,5.5499999999999998),1,0.017999999999999999,0.0030000000000000027)),mDisc(p,vec3(0.12666666666666662,1.5680000000000001,5.5499999999999998),1,0.017999999999999999,0.0014999999999999458));}\nfloat frame_mount_1(vec3 p){return min(mDisc(p,vec3(-0.52500000000000002,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(-0.55900000000000005,1.5964999999999998,5.4950000000000001),0,0.010999999999999999,0.0040000000000000036));}\nfloat frame_mount_2(vec3 p){return max(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.0010010000000000296)));}\nfloat frame_mount_3(vec3 p){return max(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.0040010000000000323)));}\nfloat frame_mount_4(vec3 p){return min(mDisc(p,vec3(-0.52500000000000002,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(-0.55900000000000005,1.5964999999999998,5.6049999999999995),0,0.010999999999999999,0.0040000000000000036));}\nfloat frame_mount_5(vec3 p){return max(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(-0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.0010010000000000296)));}\nfloat frame_mount_6(vec3 p){return max(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(-0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.0040010000000000323)));}\nfloat frame_mount_7(vec3 p){return min(mDisc(p,vec3(0.52500000000000002,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(0.55900000000000005,1.5964999999999998,5.4950000000000001),0,0.010999999999999999,0.0040000000000000036));}\nfloat frame_mount_8(vec3 p){return max(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.0010010000000000296)));}\nfloat frame_mount_9(vec3 p){return max(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.4950000000000001),0,0.0060000000000000001,0.0040010000000000323)));}\nfloat frame_mount_10(vec3 p){return min(mDisc(p,vec3(0.52500000000000002,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.030000000000000027),mDisc(p,vec3(0.55900000000000005,1.5964999999999998,5.6049999999999995),0,0.010999999999999999,0.0040000000000000036));}\nfloat frame_mount_11(vec3 p){return max(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.012000000000000000,0.0010000000000000009),-(mDisc(p,vec3(0.51000000000000001,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.0010010000000000296)));}\nfloat frame_mount_12(vec3 p){return max(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.010500000000000001,0.0040000000000000036),-(mDisc(p,vec3(0.50500000000000000,1.5964999999999998,5.6049999999999995),0,0.0060000000000000001,0.0040010000000000323)));}\nfloat frame_mount_13(vec3 p){return max(max(max(max(max(min(min(mBoxInf(p,vec3(0.0000000000000000,1.5964999999999998,5.5499999999999998),vec3(0.52500000000000002,0.027000000000000024,0.030000000000000249)),mBoxInf(p,vec3(-0.51800000000000002,1.5964999999999998,5.5499999999999998),vec3(0.0070000000000000062,0.027000000000000024,0.081999999999999851))),mBoxInf(p,vec3(0.51800000000000002,1.5964999999999998,5.5499999999999998),vec3(0.0070000000000000062,0.027000000000000024,0.081999999999999851))),-(mDisc(p,vec3(0.12666666666666662,1.5964999999999998,5.5499999999999998),1,0.012000000000000000,0.027000999999999942))),-(mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048))),-(mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048)));}",
+  "frameHostCuts": [
+    {
+      "sourcePartId": "frame/frame_plate_left",
+      "fieldFunction": "frame_mount_host_cut_0",
+      "glsl": "float frame_mount_slot_0_0(vec3 p){return max(max(1.4689989999999997-p.y,p.y-1.4990010000000002),max(5.4430330802372353-p.z,p.z-5.6636736348607588));}\nfloat frame_mount_host_cut_0(vec3 p){return min(min(frame_mount_slot_0_0(p),mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048)),mDisc(p,vec3(-0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048));}",
+      "candidateOnly": true,
+      "baselinePolicy": "Caller applies cut only while installationCandidate==1; never mutate retained frame constructors",
+      "bores": [
+        {
+          "hostId": "frame/frame_plate_left",
+          "tag": "left_rear",
+          "shape": {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.5550010000000001,
+              -0.510999
+            ]
+          },
+          "radius": 0.0063,
+          "explicit": true
+        },
+        {
+          "hostId": "frame/frame_plate_left",
+          "tag": "left_front",
+          "shape": {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              -0.5550010000000001,
+              -0.510999
+            ]
+          },
+          "radius": 0.0063,
+          "explicit": true
+        }
+      ],
+      "slots": [
+        {
+          "hostId": "frame/frame_plate_left",
+          "partId": "plate/equal_lever",
+          "frameSlab": [
+            -0.555,
+            -0.525
+          ],
+          "required": true,
+          "minimumRectangularEnvelope": null,
+          "conservativeDomainEnvelope": {
+            "y": [
+              1.472,
+              1.496
+            ],
+            "z": [
+              5.446034080237236,
+              5.660672634860759
+            ]
+          },
+          "opening": {
+            "y": [
+              1.4689989999999997,
+              1.4990010000000002
+            ],
+            "z": [
+              5.443033080237235,
+              5.663673634860759
+            ]
+          },
+          "exactDecimalZEnvelope": [
+            "5.44603408023723657661351145169892217488721811785994387030930",
+            "5.66067263486075799058282677665610631301736651998375606218073"
+          ],
+          "inferredClearanceM": 0.003,
+          "numericalPadM": 0.000001,
+          "continuousCoverage": true,
+          "coverageCondition": "independent outside spindle inputs in [4.02,4.18]^2; exact-real finite solver with config below",
+          "phaseContinuumProved": false,
+          "projectionMethod": "directed interval enclosure of actual capsule strip over full X slab; every eye disk and finite end cap excluded by strict X bounds",
+          "minWitnessCell": [
+            63,
+            0
+          ],
+          "maxWitnessCell": [
+            0,
+            63
+          ],
+          "cellsCrossing": 4096,
+          "ligaments": {
+            "below": 0.7389989999999997,
+            "above": 0.1809989999999997,
+            "behind": 1.7930330802372354,
+            "ahead": 0.43632636513924083
+          },
+          "historicalDimensions": false,
+          "structuralAcceptance": false
+        }
+      ]
+    },
+    {
+      "sourcePartId": "frame/frame_plate_right",
+      "fieldFunction": "frame_mount_host_cut_1",
+      "glsl": "float frame_mount_slot_1_0(vec3 p){return max(max(1.5324989999999996-p.y,p.y-1.5625010000000001),max(5.4762123127008477-p.z,p.z-5.6216602553059971));}\nfloat frame_mount_host_cut_1(vec3 p){return min(min(frame_mount_slot_1_0(p),mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.4950000000000001),0,0.0063000000000000000,0.022001000000000048)),mDisc(p,vec3(0.53300000000000003,1.5964999999999998,5.6049999999999995),0,0.0063000000000000000,0.022001000000000048));}",
+      "candidateOnly": true,
+      "baselinePolicy": "Caller applies cut only while installationCandidate==1; never mutate retained frame constructors",
+      "bores": [
+        {
+          "hostId": "frame/frame_plate_right",
+          "tag": "right_rear",
+          "shape": {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.495
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.510999,
+              0.5550010000000001
+            ]
+          },
+          "radius": 0.0063,
+          "explicit": true
+        },
+        {
+          "hostId": "frame/frame_plate_right",
+          "tag": "right_front",
+          "shape": {
+            "kind": "cylinder",
+            "axis": 0,
+            "center": [
+              0,
+              1.5964999999999998,
+              5.6049999999999995
+            ],
+            "radius": 0.0063,
+            "range": [
+              0.510999,
+              0.5550010000000001
+            ]
+          },
+          "radius": 0.0063,
+          "explicit": true
+        }
+      ],
+      "slots": [
+        {
+          "hostId": "frame/frame_plate_right",
+          "partId": "plate/two_to_one_lever",
+          "frameSlab": [
+            0.525,
+            0.555
+          ],
+          "required": true,
+          "minimumRectangularEnvelope": null,
+          "conservativeDomainEnvelope": {
+            "y": [
+              1.5354999999999999,
+              1.5594999999999999
+            ],
+            "z": [
+              5.479213312700847,
+              5.618659255305997
+            ]
+          },
+          "opening": {
+            "y": [
+              1.5324989999999996,
+              1.5625010000000001
+            ],
+            "z": [
+              5.476212312700848,
+              5.621660255305997
+            ]
+          },
+          "exactDecimalZEnvelope": [
+            "5.47921331270084822480250199933951498035812953719953218616720",
+            "5.61865925530599621683065814319969489511531510103591548008786"
+          ],
+          "inferredClearanceM": 0.003,
+          "numericalPadM": 0.000001,
+          "continuousCoverage": true,
+          "coverageCondition": "independent outside spindle inputs in [4.02,4.18]^2; exact-real finite solver with config below",
+          "phaseContinuumProved": false,
+          "projectionMethod": "directed interval enclosure of actual capsule strip over full X slab; every eye disk and finite end cap excluded by strict X bounds",
+          "minWitnessCell": [
+            0,
+            0
+          ],
+          "maxWitnessCell": [
+            63,
+            0
+          ],
+          "cellsCrossing": 4096,
+          "ligaments": {
+            "below": 0.8024989999999996,
+            "above": 0.1174989999999998,
+            "behind": 1.8262123127008478,
+            "ahead": 0.47833974469400253
+          },
+          "historicalDimensions": false,
+          "structuralAcceptance": false
+        }
+      ]
+    }
+  ],
+  "replaceStackIds": [
+    "stack_candidate/pin/O"
+  ],
+  "suppressAdditionalSourceIds": [],
+  "choices": {
+    "runningGap": 0.004,
+    "minimumEdgeLigament": 0.015,
+    "coreDepth": 0.06,
+    "tabThickness": 0.014,
+    "boltOffsetZ": 0.055,
+    "boltRadius": 0.006,
+    "boltHoleClearance": 0.0003,
+    "boltHeadRadius": 0.011,
+    "boltHeadLength": 0.008,
+    "washerRadius": 0.012,
+    "washerThickness": 0.002,
+    "nutRadius": 0.0105,
+    "nutLength": 0.008,
+    "boltEndReserve": 0.006,
+    "pinHeadRadius": 0.018,
+    "pinHeadLength": 0.006,
+    "pinLowerShoulderLength": 0.003
+  },
+  "derived": {
+    "bridgeY": [
+      1.5695,
+      1.6235
+    ],
+    "coreDepth": 0.06,
+    "tabHalfDepth": 0.082,
+    "tabThickness": 0.014
+  },
+  "interfaces": [
+    {
+      "tag": "left_rear",
+      "hostId": "frame/frame_plate_left",
+      "axis": "X",
+      "center": [
+        -0.54,
+        1.5964999999999998,
+        5.495
+      ],
+      "holeRadius": 0.0063,
+      "shaftRadius": 0.006,
+      "radialClearance": 0.0003,
+      "headFaceX": -0.555,
+      "frameToTabFaceX": -0.525,
+      "tabToWasherFaceX": -0.511,
+      "washerToNutFaceX": -0.509,
+      "declaredNominalContacts": [
+        "head/frame outside face",
+        "frame inside face/tab outside face",
+        "tab inside face/washer",
+        "washer/nut",
+        "nut inside cylinder/bolt shank"
+      ],
+      "assemblyAccess": "nut lies inward of end tab and outside core beam in Z",
+      "lockingDetailVerified": false
+    },
+    {
+      "tag": "left_front",
+      "hostId": "frame/frame_plate_left",
+      "axis": "X",
+      "center": [
+        -0.54,
+        1.5964999999999998,
+        5.6049999999999995
+      ],
+      "holeRadius": 0.0063,
+      "shaftRadius": 0.006,
+      "radialClearance": 0.0003,
+      "headFaceX": -0.555,
+      "frameToTabFaceX": -0.525,
+      "tabToWasherFaceX": -0.511,
+      "washerToNutFaceX": -0.509,
+      "declaredNominalContacts": [
+        "head/frame outside face",
+        "frame inside face/tab outside face",
+        "tab inside face/washer",
+        "washer/nut",
+        "nut inside cylinder/bolt shank"
+      ],
+      "assemblyAccess": "nut lies inward of end tab and outside core beam in Z",
+      "lockingDetailVerified": false
+    },
+    {
+      "tag": "right_rear",
+      "hostId": "frame/frame_plate_right",
+      "axis": "X",
+      "center": [
+        0.54,
+        1.5964999999999998,
+        5.495
+      ],
+      "holeRadius": 0.0063,
+      "shaftRadius": 0.006,
+      "radialClearance": 0.0003,
+      "headFaceX": 0.555,
+      "frameToTabFaceX": 0.525,
+      "tabToWasherFaceX": 0.511,
+      "washerToNutFaceX": 0.509,
+      "declaredNominalContacts": [
+        "head/frame outside face",
+        "frame inside face/tab outside face",
+        "tab inside face/washer",
+        "washer/nut",
+        "nut inside cylinder/bolt shank"
+      ],
+      "assemblyAccess": "nut lies inward of end tab and outside core beam in Z",
+      "lockingDetailVerified": false
+    },
+    {
+      "tag": "right_front",
+      "hostId": "frame/frame_plate_right",
+      "axis": "X",
+      "center": [
+        0.54,
+        1.5964999999999998,
+        5.6049999999999995
+      ],
+      "holeRadius": 0.0063,
+      "shaftRadius": 0.006,
+      "radialClearance": 0.0003,
+      "headFaceX": 0.555,
+      "frameToTabFaceX": 0.525,
+      "tabToWasherFaceX": 0.511,
+      "washerToNutFaceX": 0.509,
+      "declaredNominalContacts": [
+        "head/frame outside face",
+        "frame inside face/tab outside face",
+        "tab inside face/washer",
+        "washer/nut",
+        "nut inside cylinder/bolt shank"
+      ],
+      "assemblyAccess": "nut lies inward of end tab and outside core beam in Z",
+      "lockingDetailVerified": false
+    }
+  ],
+  "socket": {
+    "center": [
+      0.12666666666666662,
+      1.48,
+      5.55
+    ],
+    "radius": 0.012,
+    "y": [
+      1.5695,
+      1.6235
+    ]
+  },
+  "checks": {
+    "allHardwareAboveMovingAssembly": true,
+    "minMovingAxialGapM": 0.001000000000000112,
+    "bridgeInsideFrame": true,
+    "nutToCoreGapM": 0.014499999999999999,
+    "washerToCoreGapM": 0.012999999999999998,
+    "frameTopLigamentM": 0.056499999999999995,
+    "pivotSocketCoreEdgeLigamentM": 0.018,
+    "throughBores": true
+  },
+  "coordinateContract": "All fields fixed in train world coordinates; no Gresley rotation applied. Main lever rotates about this same O.",
+  "historicalDimensions": false,
+  "structuralAcceptance": false,
+  "lockingDetailVerified": false,
+  "wholeTrainAcceptance": false
+}

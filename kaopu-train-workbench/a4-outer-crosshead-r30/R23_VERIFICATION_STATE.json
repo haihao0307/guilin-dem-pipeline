@@ -1,0 +1,51 @@
+{
+  "revision": "R23 local installation comparison",
+  "source_fields": 519,
+  "unchanged_scene_sha256": "8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da",
+  "default": "failed_R22_baseline",
+  "candidate": {
+    "inclination_range_rad": [
+      0.11,
+      0.16
+    ],
+    "example_rad": 0.126,
+    "rod_length_m": 3.5,
+    "historical_truth": false,
+    "joint_solver_optimum": false
+  },
+  "local_numeric_tests": {
+    "adapter": "INSTALLATION_ADAPTER_QA.json",
+    "independent_fields": "INSTALLATION_FIELDS_QA.json",
+    "mock_controls": "CONTROLS_QA.json",
+    "baseline_js": "DYNAMIC_JS_QA.json",
+    "baseline_numpy": "DYNAMIC_CPU_QA.json"
+  },
+  "browser_gpu": "passed compilation, six whole renders, candidate and restore buttons",
+  "baseline_collision": "still failing; retained SWEEP_COLLISION_QA.json",
+  "whole_mechanical_acceptance": false,
+  "public_final_release": false,
+  "missing": [
+    "cylinder saddle and mounting load paths",
+    "finite valve/spindle and valve-chest dynamics",
+    "outside piston ring dynamics",
+    "complete steam/feed network",
+    "brakes",
+    "cab controls",
+    "finished analytic surface/material waves",
+    "all-pairs continuous swept collisions",
+    "historical calibration"
+  ],
+  "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/40147151363",
+  "previous_run_failure": {
+    "commit": "3b7e6a4ca082a7c7cd62f3961e25deb8d2cc1854",
+    "run": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/40146990990",
+    "reason": "Local ../r22 baseline test path not available in Git sparse checkout. Failed before browser. Corrected repository layout resolution and retained baseline sparse checkout.",
+    "fixed_local_layout_test": true
+  },
+  "tested_commit": "196b33f56724f4b6216df8334049094bb58e9d32",
+  "artifact_id": 12580933660,
+  "artifact_expires_utc": "2026-11-24T00:35:30Z",
+  "baseline_png_return_exact": true,
+  "candidate_cut_changed": true,
+  "workflow_conclusion": "failure only in retained baseline physical acceptance test"
+}
