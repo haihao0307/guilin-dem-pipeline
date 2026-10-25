@@ -1,7 +1,7 @@
 /** Exact candidate scheduling only. Bounds and uncertainty guards can admit
  * extra windows; they never alter wall/window domains or stored pixel size. */
 export function prepareHostWindowRows(packed){const out={...packed,data:packed.data.slice(),rowIndexVersion:1},d=out.data;let low=Infinity;for(let i=out.count-1;i>=0;i--){low=Math.min(low,d[i*20+13]);d[i*20+15]=low;}let high=-Infinity;for(let i=0;i<out.count;i++){high=Math.max(high,d[i*20+17]);d[i*20+19]=high;}return out;}
-export function hostRowsSorted(packed){if(packed.rowIndexVersion!==1)return false;const d=packed.data;for(let i=0;i<packed.count;i++){const lo=d[i*20+15],hi=d[i*20+19];if(!Number.isFinite(lo)||!Number.isFinite(hi)||lo>hi)return false;if(i&&(lo<d[(i-1)*20+15]||hi<d[(i-1)*20+19]))return false;}return true;}
+export function hostRowsSorted(packed){if(packed?.rowIndexVersion!==1||!Number.isInteger(packed.count)||packed.count<1||packed.count>4096||!packed.data||packed.data.length<packed.count*20)return false;const d=packed.data;for(let i=0;i<packed.count;i++){const lo=d[i*20+15],hi=d[i*20+19];if(!Number.isFinite(lo)||!Number.isFinite(hi)||lo>hi||!Number.isFinite(d[i*20+13])||!Number.isFinite(d[i*20+17])||lo>d[i*20+13]||hi<d[i*20+17])return false;if(i&&(lo<d[(i-1)*20+15]||hi<d[(i-1)*20+19]))return false;}return true;}
 const ROWS=`
 uniform bool uHostRowsEnabled;uniform vec3 uHostBoundsMin,uHostBoundsMax;
 void hostSelectWindowRows(vec3 ro,vec3 rd,float nearest){
