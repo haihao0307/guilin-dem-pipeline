@@ -43,8 +43,11 @@ try:
    page.locator('#kccJourneyPanel select').nth(1).select_option(room)
    page.get_by_role('button',name='开本房门',exact=True).click();settled()
    page.get_by_role('button',name='层走廊书签',exact=True).click();settled()
-   page.get_by_role('button',name='前进一段',exact=True).click();settled()
-   page.get_by_role('button',name='房区内书签',exact=True).click();capture('r17-top-design-room-'+room)
+   for step in range(20):
+    page.get_by_role('button',name='前进一段',exact=True).click();settled()
+   status=page.locator('#kccJourneyPanel').inner_text();assert '100%' in status,status
+   report.setdefault('roomTraversal',[]).append({'room':room,'increments':20,'usedInteriorBookmark':False,'status':status})
+   capture('r17-top-design-room-'+room)
   assert not report['errors'];report['passed']=True;context.close();browser.close()
 except Exception:
  report['errors'].append(traceback.format_exc())
