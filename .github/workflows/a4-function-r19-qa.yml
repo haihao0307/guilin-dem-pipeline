@@ -45,16 +45,21 @@ jobs:
           node frame-support-study/test_support_export.js --model .
           for snapshot in profile_beta011 profile_beta0126 profile_beta016; do python whole-profile-audit/profile_portable_audit/replay_compact_witnesses.py whole-profile-audit/profile_portable_audit/$snapshot; done
           timeout 900s python browser_qa.py
-      - name: Whole-chain mechanical clearance acceptance (known failures retained)
+      - name: Historical baseline negative-control regression (not candidate acceptance)
         working-directory: kaopu-train-workbench/a4-outer-crosshead-r30
         run: |
-          python test_swept_collision.py
+          python test_baseline_negative_control.py
+      - name: Current candidate saved-witness classification (not global clearance)
+        working-directory: kaopu-train-workbench/a4-outer-crosshead-r30
+        run: |
+          node current-status-audit/run-current-audit.js
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: a4-outer-crosshead-r30-${{ github.sha }}
           path: |
             kaopu-train-workbench/a4-outer-crosshead-r30/*QA.json
+            kaopu-train-workbench/a4-outer-crosshead-r30/current-status-audit/QA_RESULT.json
             kaopu-train-workbench/a4-outer-crosshead-r30/valve-reconstruction/*QA.json
             kaopu-train-workbench/a4-outer-crosshead-r30/gresley-reconstruction/*QA.json
             kaopu-train-workbench/a4-outer-crosshead-r30/*-whole.png

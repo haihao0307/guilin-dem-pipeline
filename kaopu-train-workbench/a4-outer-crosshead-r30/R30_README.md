@@ -25,3 +25,9 @@ Default 720x400 retains the exact prior shader text. The optional resolution=144
 ## Still incomplete
 
 Whole mechanical acceptance remains false. Baseline rod/axle interference is intentionally still a failed test. Conditional middle frame-slot bounds do not certify all-phase input containment. Current middle installation dimensions, global continuous clearance, complete steam/feed/exhaust network, braking, cab controls, suspension and final casing remain incomplete. Local connector corrections and rendered motion are not a finished locomotive.
+
+## Verified whole-browser result
+
+Commit ffe78ced5d67a73a529e1f3c9566610e75936295, Actions run 40162931387: the complete CPU/browser step passed. Twelve 720x400 whole-state views and two native 1440x800 full/cut views passed, with exact same-mechanics legacy-720 PNG reproduction. Actual installed outsideJoint shader scalar readback passed all 704 samples (max CPU discrepancy 6.9174e-7 m, no unsafe sign differences). This was ANGLE Vulkan SwiftShader software, not hardware realtime performance: native full/cut readback took 51.692/22.757 s; interface screenshot 28.359 s.
+
+The separate workflow failure is specifically the unchanged R20/R22 baseline negative-control collision test. It does not establish a new R30 candidate collision. Current-candidate contact categories are audited separately; incomplete whole acceptance must not erase passed candidate scopes or mislabel untested dimensions as a measured collision. The earlier R30 run failed before browser because of missing test-module exports; its artifact and exact later CPU preflight are retained.
