@@ -25,7 +25,14 @@ jobs:
         run: |
           node kaopu-geography-workbench/road-mother-tlo-r03/test-model.mjs
           python3 -m http.server 8080 --directory kaopu-geography-workbench/road-mother-tlo-r03 >/tmp/road-http.log 2>&1 &
-          node kaopu-geography-workbench/road-mother-tlo-r03/drain-qa.mjs
+          node kaopu-geography-workbench/road-mother-tlo-r03/browser-qa.mjs
+      - name: Wait for matching published road files
+        run: python3 kaopu-geography-workbench/road-mother-tlo-r03/verify-public.py
+      - name: Verify public interaction and completed frames
+        env:
+          QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-geography-workbench/road-mother-tlo-r03/
+          QA_OUT: road-r03-proof/public
+        run: node kaopu-geography-workbench/road-mother-tlo-r03/browser-qa.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

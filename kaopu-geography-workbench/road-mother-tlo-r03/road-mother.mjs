@@ -12,7 +12,7 @@ export const COMPONENTS=[
 {id:6,key:'Lighting',name:'照明灯杆',color:'#667681',material:'金属微表面',fn:'nearestCell(s,12) → cylinder + arm',users:[],source:'design-example'},
 {id:7,key:'WorkProtection',name:'施工围护',color:'#bc5929',material:'聚合物锥桶 + 色带与微表面',fn:'time=2 → cones supported on road',users:[],source:'HK-HYD-work'},
 {id:8,key:'WorkSurface',name:'施工基层',color:'#765138',material:'粗骨料基层；非已核准开挖工法',fn:'time=2 → boundedWorkSurface',users:[],source:'design-example'},
-{id:9,key:'Drainage',name:'排水口与格栅',color:'#46565a',material:'金属格栅 + 实际凹槽',fn:'recessRoadSurface(55mm) + repeatedBarField',users:[],source:'HYD-DRAIN-R03'},
+{id:9,key:'Drainage',name:'排水口与格栅',color:'#46565a',material:'金属格栅 + 实际凹槽',fn:'recess(55mm); horizontalGrate(edgeLevel-26mm, thickness24mm); frameTop=edgeLevel-8mm',users:[],source:'HYD-DRAIN-R03'},
 {id:10,key:'Shoulder',name:'高速硬路肩',color:'#886647',material:'低磨耗沥青骨料铺装',fn:'outerRoadSection(shoulderWidth)',users:['应急/维护用途，非普通车道'],source:'design-example'},
 {id:11,key:'SteelBeam',name:'连续波形钢护栏',color:'#63a3ba',material:'镀锌金属微表面 + 真实双波截面',fn:'boundedWaveProfile(y) swept along s; flare at ends',users:[],source:'HYD-H2112C'},
 {id:12,key:'BarrierSupport',name:'立柱、基础与连接',color:'#7d73a6',material:'钢支柱 / 紧固件；混凝土基础',fn:'nearestCell(s,4) → post + footing + fastener',users:[],source:'HYD-H2117D'},
