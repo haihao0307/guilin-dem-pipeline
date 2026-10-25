@@ -1,3 +1,4 @@
+import {packApertureLocalEndpointDescriptors,withApertureLocalEndpointTrace} from '../../aperture-local-endpoint-trace.mjs';
 import {sharpHostWallCoverageContract,withSharpHostWallCoverage} from '../../host-wall-coverage-specialization.mjs';
 import {hostRowsSorted,prepareHostWindowRows,withHostWindowRows} from '../../host-window-rows.mjs';
 import {withHostLocalEndpointTrace,hostLocalEndpointContract} from '../../host-local-endpoint-trace.mjs';
@@ -83,7 +84,7 @@ void main(){
 `;}
 
 function integratedHostShader(hosts){const host=hosts.find(h=>h.sourcePatchId==='kcc::p013')??hosts[0];for(const h of hosts)if(!hostLocalEndpointContract(h).eligible)throw Error('Host local endpoint template is not valid for every shared field');const library=withSharpHostWallCoverage(withHostLocalEndpointTrace(buildHostWallGLSL(host),host),hosts);return withHostWindowRows(HEAD+library+CAMERA+REDUCE+HOST_WALL_MAIN);}
-function apertureShader(apertures){return HEAD+withBoundedGlassEndpointVerification(withApertureNeighborIndex(buildPrimaryTileAperturesGLSL(apertures)))+CAMERA+REDUCE+`
+function apertureShader(apertures,contract){return HEAD+withApertureLocalEndpointTrace(withBoundedGlassEndpointVerification(withApertureNeighborIndex(buildPrimaryTileAperturesGLSL(apertures))),contract)+CAMERA+REDUCE+`
 void main(){floorPrimaryApertureRay=uRayMode==0;previous();if(!rayActive())return;vec3 rd=rayDirection();float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;float skipId=uRayMode>0?texelFetch(uRayDirection,ivec2(gl_FragCoord.xy),0).w:0.;if(apertureTraceRayFiltered(uEye+rd*lo,rd,false,skipId,t,h,visits)&&t+lo<=hi)accept(t+lo,h,fieldRayNormal,-2.);}
 `;}
 
@@ -168,7 +169,11 @@ export class WholeRenderer{
   this.apertureTexture=null;this.apertureNeighborTexture=null;this.primaryApertureBounds=null;this.apertureNeighborIndex=null;
   this.apertureNeighborToken=(this.apertureNeighborToken??0)%16777215+1;
   if(this.apertures.length){
-   const packed=packApertureDescriptors(this.apertures);this.apertureTexture=this.texture(packed);
+   const packed=packApertureLocalEndpointDescriptors(this.apertures);this.apertureTexture=this.texture(packed);
+   this.apertureLocalEndpointContract=packed.localEndpointContract;
+   this.apertureVariantPrograms??=new Map();const variant=packed.localEndpointContract.variantKey;
+   if(!this.apertureVariantPrograms.has(variant))this.apertureVariantPrograms.set(variant,this.compile('hosted-aperture:'+variant,apertureShader(this.apertures,packed.localEndpointContract)));
+   this.apertureProgram=this.apertureVariantPrograms.get(variant);
    this.primaryApertureBounds=aperturePackedBounds(packed,packed.primitiveCount);
    this.apertureNeighborIndex=packApertureNeighbors(packed,this.apertureNeighborToken);
    if(this.apertureNeighborIndex)this.apertureNeighborTexture=this.texture(this.apertureNeighborIndex);
