@@ -43,9 +43,15 @@ void hostPlane(vec3 ro,vec3 rd,vec3 o,vec3 d,int axis,float value,vec3 normal,ve
  vec3 n=normalize(uHostU*normal.x+uHostV*normal.y+uHostN*normal.z);if(hostInfillCovers(p,n))return;FieldHit hit;hit.distance=0.;hit.objectId=id;hit.materialRole=2.;hit.local=p;accept(t,hit,n,-3.);
 }
 void main(){previous();if(!rayActive())return;vec3 ro=uEye,rd=rayDirection(),o=hostLocal(ro),d=vec3(dot(rd,uHostU),dot(rd,uHostV),dot(rd,uHostN));
- hostPlane(ro,rd,o,d,2,uHostDepth.x,vec3(0,0,-1),uHostRect,true,uHostObjectId);hostPlane(ro,rd,o,d,2,uHostDepth.y,vec3(0,0,1),uHostRect,true,uHostObjectId);
- hostPlane(ro,rd,o,d,0,uHostRect.x,vec3(-1,0,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,0,uHostRect.z,vec3(1,0,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,1,uHostRect.y,vec3(0,-1,0),uHostRect,false,uHostObjectId);hostPlane(ro,rd,o,d,1,uHostRect.w,vec3(0,1,0),uHostRect,false,uHostObjectId);
- for(int i=0;i<uHostWindowCount;i++){vec4 r=hostRecord(i*5),identity=hostRecord(i*5+2);hostPlane(ro,rd,o,d,0,r.x,vec3(1,0,0),r,false,identity.z);hostPlane(ro,rd,o,d,0,r.z,vec3(-1,0,0),r,false,identity.z);hostPlane(ro,rd,o,d,1,r.y,vec3(0,1,0),r,false,identity.z);hostPlane(ro,rd,o,d,1,r.w,vec3(0,-1,0),r,false,identity.z);}
+ // One dynamic boundary dispatch avoids duplicating the infill-union program
+ // at ten lexical call sites. All original analytic planes remain candidates.
+ for(int face=0;face<6+4*uHostWindowCount;face++){
+  int axis;float value,id=uHostObjectId;vec3 normal=vec3(0);vec4 domain=uHostRect;bool cap=face<2;
+  if(face<2){axis=2;value=face==0?uHostDepth.x:uHostDepth.y;normal.z=face==0?-1.:1.;}
+  else if(face<6){int j=face-2;axis=j<2?0:1;value=j==0?uHostRect.x:j==1?uHostRect.z:j==2?uHostRect.y:uHostRect.w;normal[axis]=(j==0||j==2)?-1.:1.;}
+  else{int i=(face-6)/4,j=(face-6)%4;domain=hostRecord(i*5);id=hostRecord(i*5+2).z;axis=j<2?0:1;value=j==0?domain.x:j==1?domain.z:j==2?domain.y:domain.w;normal[axis]=(j==0||j==2)?1.:-1.;}
+  hostPlane(ro,rd,o,d,axis,value,normal,domain,cap,id);
+ }
  float clipLo=0.,clipHi=outHit.x;if(!clipInterval(ro,rd,clipLo,clipHi))return;
  for(int i=0;i<uHostWindowCount;i++){vec2 support=hostBoxInterval(ro,rd,hostRecord(i*5+3).xyz,hostRecord(i*5+4).xyz);if(!apertureValid(support)||support.y<0.||support.x>outHit.x)continue;vec4 identity=hostRecord(i*5+2);hostPrimitiveStart=int(identity.x);hostPrimitiveEnd=int(identity.y);float t;FieldHit h;int visits;
  if(apertureTraceRayFiltered(ro+rd*clipLo,rd,false,0.,t,h,visits)&&t+clipLo<=clipHi)accept(t+clipLo,h,fieldRayNormal,-3.);}
