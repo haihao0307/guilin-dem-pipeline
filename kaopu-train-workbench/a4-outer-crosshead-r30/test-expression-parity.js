@@ -36,6 +36,7 @@ function evaluator(float32){
  }
  return{run,referencePoint:(world,origin)=>world.map((v,i)=>S(R(v),R(origin[i])))};
 }
+function runTests(){
 const double=evaluator(false),float=evaluator(true),compiled=new Map();
 for(const part of C.parts){const pattern=new RegExp('float '+part.glsl_function+'\\(vec3 p\\)\\{vec3 q=p-vec3\\(([^;]+)\\);return (.+);\\}');const m=C.source.match(pattern);assert(m);const origin=m[1].split(',').map(Number);assert.deepStrictEqual(origin,part.origin);compiled.set(part.id,{tree:compileExpression(m[2]),origin});}
 let seed=46171211;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
@@ -64,3 +65,7 @@ for(const part of C.parts){
 assert(maxDoubleError<2e-13);assert(maxFloat32Error<4e-6);assert.strictEqual(unsafeSignDifferences,0);assert(maxLipschitzRatio<=1+2e-10);assert.strictEqual(boundsViolations,0);
 const report={version:C.version,status:'PASS emitted-expression parser parity and analytic bound checks; GPU still separate',sourceSHA256:crypto.createHash('sha256').update(C.source).digest('hex'),fields:C.parts.length,samples,maxCPUvsEmittedDoubleError_m:maxDoubleError,maxCPUvsEmulatedFloat32Error_m:maxFloat32Error,nearBoundarySignDifferences,unsafeSignDifferences,maxRandomPairLipschitzRatio:maxLipschitzRatio,outsideSupportNegativeSamples:boundsViolations,certifiedScalarLipschitz:1,manifestLipschitz:1.000002,boundProof:['Every scalar primitive is 1-Lipschitz in Euclidean XYZ.','Finite min/max and negation retain a 1-Lipschitz bound; holes are the identical subtracted expression in CPU and GLSL.','Rigid outside-valve inverse matrices preserve Euclidean norm.','The support AABB is composed from analytic primitive supports; subtraction cannot enlarge a solid; intersection takes intersected supports.','Manifest 1.000002 adds a numerical guard, not an additional physical clearance.'],notClaimed:['Float32 emulation is not execution of a GPU shader.','Random-pair checks are supplementary checks, not the analytic Lipschitz proof.','Actual compiled WebGL output must be checked in the integrated whole scene.']};
 fs.writeFileSync(path.join(__dirname,'EXPRESSION_PARITY_QA.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+return report;
+}
+module.exports={compileExpression,evaluator,runTests};
+if(require.main===module)runTests();
