@@ -1,9 +1,10 @@
 // Node-only numeric tests; no browser, WebGL or GPU validation is claimed.
 const fs=require('fs'),vm=require('vm'),path=require('path'),crypto=require('crypto'),assert=require('assert');
 function context(dir){const c={console};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(dir,'scene.js'),'utf8'),c);vm.runInContext(fs.readFileSync(path.join(dir,'dynamic.js'),'utf8'),c);return c;}
-const current=context(__dirname),baseline=context(path.join(__dirname,'../r22')),D=current.DYNAMIC,S=current.SCENE;
+const baselineDir=fs.existsSync(path.join(__dirname,'../a4-dynamic-r22/scene.js'))?path.join(__dirname,'../a4-dynamic-r22'):path.join(__dirname,'../r22');
+const current=context(__dirname),baseline=context(baselineDir),D=current.DYNAMIC,S=current.SCENE;
 const hash=f=>crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
-assert.equal(hash(path.join(__dirname,'scene.js')),hash(path.join(__dirname,'../r22/scene.js')),'All 519 source fields and metadata must be byte-identical');
+assert.equal(hash(path.join(__dirname,'scene.js')),hash(path.join(baselineDir,'scene.js')),'All 519 source fields and metadata must be byte-identical');
 let maxRoundTrip=0,maxInverseParity=0,maxBoundsError=0,maxBaselineDifference=0,maxOutsideDifference=0,closure=0,axis=0,rodEyeError=0,installationAxisError=0,checks=0;
 const maxError=(a,b)=>Math.max(...a.map((v,i)=>Math.abs(v-b[i])));
 const rot=(p,a)=>[Math.cos(a)*p[0]-Math.sin(a)*p[1],Math.sin(a)*p[0]+Math.cos(a)*p[1]];
@@ -27,7 +28,7 @@ for(const settings of modes){D.selectInstallation(settings.mode,settings.beta);f
 D.selectInstallation('candidate',.16);D.selectInstallation('candidate',.126);D.selectInstallation('baseline');assert.equal(D.snapshot().beta,.11);assert.equal(D.referenceInclinations[1],.11);assert.equal(D.rodLength,3.5);assert.equal(D.referenceTheta,.4);
 assert.throws(()=>D.selectInstallation('candidate',.17));assert.throws(()=>D.selectInstallation('candidate',NaN));assert.throws(()=>D.state(0,{origin:[1,0,0]}));
 const reference=D.referencePose(1);D.selectInstallation('candidate',.16);assert.deepEqual(D.referencePose(1),reference);D.selectInstallation('baseline');
-const fieldChanged=hash(path.join(__dirname,'scene.js'))!==hash(path.join(__dirname,'../r22/scene.js'));assert(!fieldChanged);
+const fieldChanged=hash(path.join(__dirname,'scene.js'))!==hash(path.join(baselineDir,'scene.js'));assert(!fieldChanged);
 // Existing host cuts share the exact scalar coordinate argument. They are static.
 for(const part of S.parts.filter(p=>S.hostCuts[p.id]))assert.equal(D.scalar(part),`max(${part.glsl_function}(p),-${S.hostCuts[part.id]}(p))`);
 const sweepBaseline=D.installationSweep(.11,3601),sweepCandidate=D.installationSweep(.126,3601),sweepEnd=D.installationSweep(.16,3601);
