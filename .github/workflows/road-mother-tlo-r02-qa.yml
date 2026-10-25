@@ -21,11 +21,13 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Inspect R01 close material baseline
-        run: node kaopu-geography-workbench/road-mother-tlo-r02/baseline-qa.mjs
+      - name: Test R02 functions and browser
+        run: |
+          python3 -m http.server 8080 --directory kaopu-geography-workbench/road-mother-tlo-r02 >/tmp/road-http.log 2>&1 &
+          node kaopu-geography-workbench/road-mother-tlo-r02/browser-qa.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: road-r02-material-proof
-          path: road-r02-baseline
+          path: road-r02-proof
           retention-days: 14

@@ -1,0 +1,33 @@
+name: Road Mother TLO R02 material QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kaopu-geography-workbench/road-mother-tlo-r02/**'
+      - '.github/workflows/road-mother-tlo-r02-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare official browser test tool
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Test R02 functions and browser
+        run: |
+          python3 -m http.server 8080 --directory kaopu-geography-workbench/road-mother-tlo-r02 >/tmp/road-http.log 2>&1 &
+          node kaopu-geography-workbench/road-mother-tlo-r02/browser-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: road-r02-material-proof
+          path: road-r02-proof
+          retention-days: 14
