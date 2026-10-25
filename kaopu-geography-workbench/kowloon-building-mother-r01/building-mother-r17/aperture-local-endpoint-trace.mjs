@@ -10,10 +10,10 @@ import {classifyHostLocalGlassCap} from './host-local-endpoint-trace.mjs';
 
 export const APERTURE_LOCAL_CAP_MAGIC=6721373,APERTURE_LOCAL_CAP_VERSION=1;
 const F=Math.fround,integer=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
-const same=(a,b)=>a?.length===3&&b?.length===3&&a.every((v,k)=>Number.isFinite(v)&&F(v)===F(b[k]));
+const same=(a,b)=>a?.length===3&&b?.length===3&&a.every((v,k)=>Number.isFinite(F(v))&&Number.isFinite(F(b[k]))&&F(v)===F(b[k]));
 const frameEqual=(a,b)=>['origin','u','v','w'].every(k=>same(a[k],b[k]));
 const allowedSashRole=role=>role===5||role===13;
-const finiteRect=r=>r?.center?.length===2&&r?.half?.length===2&&[...r.center,...r.half,r.radius].every(Number.isFinite)&&r.half.every(x=>F(x)>0)&&r.radius>=0&&r.radius<=Math.min(...r.half);
+const finiteRect=r=>r?.center?.length===2&&r?.half?.length===2&&[...r.center,...r.half,r.radius].every(x=>Number.isFinite(x)&&Number.isFinite(F(x)))&&r.half.every(x=>F(x)>0)&&r.radius>=0&&r.radius<=Math.min(...r.half);
 const fail=reason=>({eligible:false,reason,variantKey:'generic-bounded-glass-recovery-v1'});
 
 /** Inspect semantic part ownership, never infer sash identity from material
@@ -33,9 +33,9 @@ export function apertureLocalEndpointContract(input){
   }
   const leaves=aperture.primitives.map((p,i)=>({p,i})).filter(({p})=>p.part==='leaf');
   for(const [i,p]of aperture.primitives.entries())if(p.materialRole===6){
-   if(p.inner||!finiteRect(p.outer)||!(F(p.halfDepth)>0)||leaves.length!==1)return fail('Expected one explicit sash for each convex glass');
+   if(p.inner||!finiteRect(p.outer)||!Number.isFinite(F(p.halfDepth))||!(F(p.halfDepth)>0)||leaves.length!==1)return fail('Expected one explicit sash for each convex glass');
    const {p:sash,i:sashIndex}=leaves[0];
-   if(!allowedSashRole(sash.materialRole)||!finiteRect(sash.inner)||!finiteRect(sash.outer)||!(F(sash.halfDepth)>=F(p.halfDepth))||!frameEqual(p,sash))return fail('Glass/sash packed frame or finite solid contract failed');
+   if(!allowedSashRole(sash.materialRole)||!finiteRect(sash.inner)||!finiteRect(sash.outer)||!Number.isFinite(F(sash.halfDepth))||!(F(sash.halfDepth)>=F(p.halfDepth))||!frameEqual(p,sash))return fail('Glass/sash packed frame or finite solid contract failed');
    mappings.push({glassIndex:offset+i,sashIndex:offset+sashIndex,glassObjectId:p.objectId,sashObjectId:sash.objectId,instanceId:aperture.instanceId,sashRole:sash.materialRole,glassRadius:F(p.outer.radius)});
   }
   offset+=aperture.primitives.length;
@@ -123,7 +123,7 @@ export function withApertureLocalEndpointTrace(source,contract){
 
 export function classifyApertureLocalGlassCap(args){
  const {part,sash}=args??{};
- if(part?.part!=='glass'||sash?.part!=='leaf'||part.instanceId!==sash.instanceId||!allowedSashRole(sash?.materialRole)||!frameEqual(part,sash))return{direct:false,reason:'unverified-sash-ownership'};
+ if(part?.part!=='glass'||sash?.part!=='leaf'||!integer(part.instanceId,0,511)||part.instanceId!==sash.instanceId||!allowedSashRole(sash?.materialRole)||!(F(sash.halfDepth)>=F(part.halfDepth))||!frameEqual(part,sash))return{direct:false,reason:'unverified-sash-ownership'};
  // Material 13 is wood joinery, not a different interval geometry. Reuse the
  // already-tested host CPU certificate without altering the actual descriptor.
  return classifyHostLocalGlassCap({...args,sash:{...sash,materialRole:5}});
