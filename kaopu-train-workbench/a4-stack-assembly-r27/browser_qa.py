@@ -20,7 +20,7 @@ try:
    assert q.get('done')and not q['errors']and q['draws']==(574 if mode=='candidate' else 519) and q.get('glError')==0,q
    assert q['installation']['mode']==mode,q
    bnd=q['canvas_object_bounds'];assert bnd['x0']>2 and bnd['x1']<717 and bnd['y0']>2 and bnd['y1']<397 and bnd['foregroundPixels']>10000,bnd
-   if mode=='candidate': assert q['outsideValves']['reconstructed'] and not q['outsideValves']['middleFrozen'] and q['centralControl']['plateOverlapKnown'],q
+   if mode=='candidate': assert q['outsideValves']['reconstructed'] and not q['outsideValves']['middleFrozen'] and q['centralControl']['baselinePlateOverlapKnown'] and q['centralControl']['candidateFiniteStack'] and not q['centralControl']['verifiedFrameMount'],q
   assert (P/'baseline-whole.png').read_bytes()==(P/'baseline_return-whole.png').read_bytes(),'same baseline failed exact PNG return'
   assert (P/'baseline_collision-whole.png').read_bytes()!=(P/'candidate_collision-whole.png').read_bytes(),'candidate produced no changed whole image'
   page.locator('#example').click();page.wait_for_function('!RESEARCH_UI.busy && QA.installation.mode==="candidate"',timeout=300000)

@@ -1,6 +1,6 @@
 // Whole-object controls. Changes are queued; a frame uses one immutable setting.
 window.RESEARCH_UI={
- views:{oblique:[24,13,15],left:[16,5,-4],right:[-16,5,-4],front:[10,6,22]},
+ views:{oblique:[24,13,15],left:[12,3.5,-4],right:[-12,3.5,-4],front:[10,6,22]},
  playing:false,dirty:false,busy:false,ready:false,sweepCache:new Map(),
  settings(){let mode=document.getElementById('installation').value,beta=Number(document.getElementById('inclination').value);return {installation:DYNAMIC.snapshot({mode,beta}),time:Number(document.getElementById('time').value),eye:this.views[document.getElementById('view').value],cut:document.getElementById('cutaway').checked?Number(document.getElementById('cut').value):100};},
  describe(s){const b=s.installation.beta,theta=.4+s.time,key=b.toFixed(6);if(!this.sweepCache.has(key))this.sweepCache.set(key,DYNAMIC.installationSweep(b));const sweep=this.sweepCache.get(key),current=DYNAMIC.localClearance(b,theta),mm=v=>(v*1000).toFixed(2),state=sweep.localStatus==='COLLISION'?'FAIL · 局部碰撞':sweep.localStatus==='BELOW_ASSUMED_5MM'?'FAIL · 低于假设 5 mm':'仅该采样局部阈值通过';

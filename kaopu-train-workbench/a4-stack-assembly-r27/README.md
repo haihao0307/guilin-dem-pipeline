@@ -29,3 +29,5 @@ Keep PROVENANCE_REVIEW.md and the original source acknowledgement. No original m
 
 
 Rendering backend clarification: the browser QA launches Chromium with --use-angle=swiftshader. Reported complete pixel-readback wall times are from this software WebGL path, not a dedicated hardware-GPU benchmark or a prediction of user-device frame rate. Earlier uses of “GPU” in checkpoint labels mean browser graphics execution only.
+
+Rendering limit: 0.5 mm ray-hit threshold is coarser than the proposed 0.15 mm pin/bushing radial clearance. The whole view cannot certify those gaps; scalar/interval assembly tests supply that local evidence.
