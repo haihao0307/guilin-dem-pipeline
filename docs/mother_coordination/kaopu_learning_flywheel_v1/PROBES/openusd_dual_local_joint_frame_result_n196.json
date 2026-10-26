@@ -1,0 +1,64 @@
+{
+  "schema": "kaopu.dual_local_joint_frame_probe.v1",
+  "run": "N196",
+  "date": "2026-10-27",
+  "source_teacher": {
+    "name": "OpenUSD Physics",
+    "repository": "PixarAnimationStudios/OpenUSD",
+    "release": "v26.11.1",
+    "release_date": "2026-10-21",
+    "license": "Tomorrow Open Source Technology License 1.0"
+  },
+  "screening_status": "TEACHER_CANDIDATE",
+  "lifecycle": "RADAR_FOUND -> TEACHER_CANDIDATE",
+  "samples_degrees": [
+    0,
+    15,
+    35,
+    65
+  ],
+  "cases": [
+    {
+      "name": "dual_local_frames_edge_hinge",
+      "max_joint_frame_closure_error": 0,
+      "max_child_relative_transform_error": 0,
+      "expected": "PASS",
+      "observed": "PASS"
+    },
+    {
+      "name": "center_pivot_labeled_hinge",
+      "max_joint_frame_closure_error": 0.752219452,
+      "max_child_relative_transform_error": 0,
+      "expected": "REJECT",
+      "observed": "REJECT"
+    },
+    {
+      "name": "edge_hinge_detached_child",
+      "max_joint_frame_closure_error": 0,
+      "max_child_relative_transform_error": 0.735138971,
+      "expected": "REJECT",
+      "observed": "REJECT"
+    }
+  ],
+  "observed_consistent": true,
+  "novelty": {
+    "current_best_view": "One hingeLocal plus fixed-point and child-relative checks.",
+    "added_knowledge": "Two body-local joint poses whose world frames must close, with explicit body relations, axis and limits."
+  },
+  "adoption": {
+    "registry": false,
+    "production_dependency": false,
+    "motor_trial": "CANDIDATE",
+    "motor_acknowledged": false,
+    "aircraft": "NOT_QUERIED/UNKNOWN",
+    "building": "NOT_QUERIED/UNKNOWN"
+  },
+  "evidence_level": "SYNTHETIC_METHOD_REPLAY",
+  "not_claimed": [
+    "production implementation",
+    "browser acceptance",
+    "GPU acceptance",
+    "visual acceptance",
+    "user acceptance"
+  ]
+}
