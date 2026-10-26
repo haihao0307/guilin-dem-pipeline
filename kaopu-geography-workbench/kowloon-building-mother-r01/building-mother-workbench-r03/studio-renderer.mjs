@@ -1,0 +1,10 @@
+import{WholeRenderer}from'../building-rule-sketch-r06/kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs';
+import{STUDIO_SHADE as BASE_SHADE,withSolidSectionCaps}from'../building-mother-workbench-r02/studio-renderer.mjs';
+import{packShadowPrisms,SHADOW_GLSL}from'./analytic-shadows.mjs';
+const from=BASE_SHADE.indexOf('float visibility('),to=BASE_SHADE.indexOf('float hash(');if(from<0||to<from)throw Error('Review inherited lighting contract');
+export const STUDIO_SHADE=BASE_SHADE.slice(0,from)+SHADOW_GLSL+BASE_SHADE.slice(to);
+export class StudioRenderer extends WholeRenderer{
+ compile(name,source){return super.compile(name,name==='assembly'?withSolidSectionCaps(source):source);}
+ setModel(model,source){super.setModel(model,source);const packed=packShadowPrisms(model);this.shadowPrismTexture=this.texture(packed);this.shadowPrismCount=packed.count;for(const r of this.semanticRegistry)r.floorId=model.graph.nodes.find(n=>n.id===r.nodeId)?.floorId??null;for(const r of this.semanticRegistry)r.color=({wall:'#ada89e',column:'#92918b',beam:'#92918b',floor:'#a6a298',roof:'#92918b',stair:'#92918b',handrail:'#707879'}[r.classKey]??'#92918b');const data=new Float32Array(Math.max(1,this.semanticRegistry.length)*4);this.semanticRegistry.forEach((r,i)=>data.set([r.objectId,...r.color.slice(1).match(/../g).map(v=>parseInt(v,16)/255)],i*4));this.semanticTexture=this.texture({width:Math.max(1,this.semanticRegistry.length),height:1,data});if(!this.studioShadeProgram)this.studioShadeProgram=this.compile('two-lights-exact-prism-shadow',STUDIO_SHADE);this.shadeProgram=this.studioShadeProgram;}
+ camera(program,w,h,options){const L=super.camera(program,w,h,options);if(program===this.studioShadeProgram&&this.shadowPrismTexture){this.bindTexture(program,'uShadowPrisms',7,this.shadowPrismTexture);this.gl.uniform1i(L('uShadowClip'),options.cut?1:0);this.gl.uniform3fv(L('uShadowClipNormal'),options.clipNormal);this.gl.uniform1f(L('uShadowClipOffset'),options.clipOffset);}return L;}
+}

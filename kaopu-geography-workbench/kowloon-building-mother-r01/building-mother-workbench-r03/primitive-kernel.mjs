@@ -1,0 +1,14 @@
+// Small extracted analytic-prism kernel. R06 finitePrism math, no renderer/cases.
+export const rect=(x0,z0,x1,z1)=>[[x0,z0],[x1,z0],[x1,z1],[x0,z1]];
+export const boundsOf=ps=>({min:[0,1,2].map(k=>Math.min(...ps.map(p=>p.bounds.min[k]))),max:[0,1,2].map(k=>Math.max(...ps.map(p=>p.bounds.max[k])))});
+const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>a.map(v=>v/Math.hypot(...a));
+export function prism(id,loops,range,{origin=[0,0,0],u=[1,0,0],v=[0,0,1],w=[0,1,0]}={}){
+ if(!loops.length||range[1]<=range[0])throw Error('Finite prism required');
+ const points=loops.flat().flatMap(q=>range.map(h=>origin.map((x,i)=>x+u[i]*q[0]+v[i]*q[1]+w[i]*h)));
+ const planes=[{normal:[0,0,1],offset:range[0],domain:'cap'},{normal:[0,0,1],offset:range[1],domain:'cap'}];
+ for(const loop of loops)for(let i=0,j=loop.length-1;i<loop.length;j=i++){const a=loop[j],b=loop[i],n=[b[1]-a[1],a[0]-b[0],0],L=Math.hypot(...n);if(!L)throw Error('Zero edge');planes.push({normal:n.map(x=>x/L),offset:dot(n,[...a,0])/L,domain:'side',edge:[a,b]});}
+ return{kind:'finite_polygon_prism',nodeId:id,origin,u,v,w,loops,range,planes,materialRole:2,bounds:{min:[0,1,2].map(i=>Math.min(...points.map(p=>p[i]))),max:[0,1,2].map(i=>Math.max(...points.map(p=>p[i])))}};
+}
+export function context(root){const nodes=[],edges=[],primitives=[],ids=new Set(),objectIds=new Set();const stableId=id=>{let h=2166136261;for(const c of id)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;const value=2000+h%8000000;if(objectIds.has(value))throw Error('Numeric identity collision');objectIds.add(value);return value;};const edge=(from,to,type)=>edges.push({from,to,type});
+ const node=(id,type,label,owner=root,props={})=>{if(ids.has(id))throw Error('Duplicate identity '+id);ids.add(id);nodes.push({id,type,label,...props});if(owner)edge(id,owner,'ownedBy');return id;};node(root,'building','共享建筑母体',null);
+ const emit={nodes,edges,primitives,node,edge,prism(id,type,loops,range,opts={}){const{owner=root,label=type,floorId=null,stage=5,supports=[]}=opts;node(id,type,label,owner,{floorId,stage,...(opts.partRole?{partRole:opts.partRole}:{})});supports.forEach(s=>{edge(id,s,'supportedBy');edge(id,s,'dependsOn');});const p=prism(id,loops,range,opts);Object.assign(p,{semanticClass:type,floorId,stage,componentLabel:label,objectId:stableId(id)});primitives.push(p);return p;},box(id,type,low,high,opts={}){return emit.prism(id,type,[rect(low[0],low[2],high[0],high[2])],[low[1],high[1]],opts);},member(id,type,a,b,width,opts={}){const delta=b.map((x,i)=>x-a[i]),L=Math.hypot(...delta),w=unit(delta),u=unit(cross(Math.abs(w[1])>.98?[1,0,0]:[0,1,0],w)),v=cross(w,u);return emit.prism(id,type,[rect(-width/2,-width/2,width/2,width/2)],[0,L],{...opts,origin:a,u,v,w});}};return emit;}
