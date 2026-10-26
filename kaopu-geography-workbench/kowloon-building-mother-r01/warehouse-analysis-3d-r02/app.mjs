@@ -31,6 +31,6 @@ export async function mount({signal:outerSignal}={}){const controller=new AbortC
  const action=(id,fn)=>$(id).addEventListener('click',()=>{if(stopped)return;fn();request();},{signal});
  action('reset',()=>{const c=createCamera(spec.bounds);Object.assign(camera,c);});action('left',()=>orbit(camera,-30,0));action('right',()=>orbit(camera,30,0));action('up',()=>orbit(camera,0,20));action('down',()=>orbit(camera,0,-20));action('in',()=>zoom(camera,.85));action('out',()=>zoom(camera,1/.85));
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fail(new Error('图形上下文丢失'))},{signal});
- observer=new ResizeObserver(request);observer.observe(canvas);showClaims();request();return cleanup;
+ observer=new ResizeObserver(request);observer.observe(canvas);select('');return cleanup;
  }catch(e){cleanup();throw e;}
 }
