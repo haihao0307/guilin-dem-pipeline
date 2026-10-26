@@ -1,0 +1,6 @@
+export function validateStudy(d){
+ if(!d||!Array.isArray(d.claims)||!Array.isArray(d.evidence)||typeof d.title!=='string')throw Error('分析记录格式无效');
+ const ids=new Set,refs=new Set;for(const e of d.evidence){if(!/^[A-Za-z0-9_-]+$/.test(e.id)||refs.has(e.id))throw Error('来源身份无效');refs.add(e.id);if(!/^https:\/\//.test(e.url)||!e.scope||!e.limitations||!e.locator)throw Error('来源缺少定位或局限');if(e.date!==null&&!/^\d{4}-\d{2}-\d{2}$/.test(e.date))throw Error('来源日期不能推测');}
+ for(const c of d.claims){if(ids.has(c.id)||!c.id||!c.subject||!c.note)throw Error('判断身份或边界缺失');ids.add(c.id);if(!['observed','documented','hypothesis','unknown','design_intent'].includes(c.status))throw Error('未知判断状态');if(!Array.isArray(c.evidenceRefs)||c.evidenceRefs.some(r=>!refs.has(r)))throw Error('来源引用无法解析');if(c.status!=='unknown'&&(c.value==null||!c.evidenceRefs.length))throw Error('非未知判断须有值和来源');if(c.status==='unknown'&&!c.neededEvidence?.length)throw Error('未知项须列补证');if(c.status==='unknown'&&c.value!==null)throw Error('unknown必须为null');if(['observed','documented','design_intent'].includes(c.status)&&!c.evidenceRefs.length)throw Error('判断缺少依据');if(c.status==='hypothesis'&&(!c.alternatives?.length||!c.neededEvidence?.length))throw Error('候选必须保留替代解释与补证');}
+ return d;
+}
