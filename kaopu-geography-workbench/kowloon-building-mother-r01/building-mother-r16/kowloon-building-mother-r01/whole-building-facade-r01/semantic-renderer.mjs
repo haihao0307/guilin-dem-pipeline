@@ -1,5 +1,5 @@
 import{withStudio}from'../../../building-mother-workbench/shared-studio/studio-wrapper.mjs';
-import{complexAdapter,releaseComplexTargets,ensureComplexTargets,savePrimary,restorePrimary,launchShadowRays,saveShadowHit}from'../../../building-mother-workbench/shared-studio/complex-shadow-pass.mjs';
+import{complexAdapter,releaseComplexTargets,ensureComplexTargets,savePrimary,restorePrimary,launchShadowRays,saveShadowHit}from'../../../building-mother-workbench/shared-studio/complex-shadow-pass.mjs?v=r16-quick-20261026';
 import {packSourceMaskIndex,SOURCE_MASK_GLSL} from '../../source-mask-index.mjs';
 import {displayLimits,nativeDisplaySize} from '../../desktop-display.mjs';
 import {buildRegistry,packRegistry,SEMANTIC_SHADE,SEMANTIC_PRESENT} from './semantic-registry.mjs';
