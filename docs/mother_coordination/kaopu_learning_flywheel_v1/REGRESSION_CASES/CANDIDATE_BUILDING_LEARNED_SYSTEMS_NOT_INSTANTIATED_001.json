@@ -1,0 +1,83 @@
+{
+  "caseId": "BUILDING-LEARNED-SYSTEMS-NOT-INSTANTIATED-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-27",
+  "appliesTo": [
+    "Building",
+    "Architecture"
+  ],
+  "complements": [
+    "REFERENCE-OBSERVED-NOT-INCORPORATED-001"
+  ],
+  "failure": {
+    "observation": "A candidate presented a building envelope while learned columns, beams, doors, and basement relations were not instantiated as inspectable objects and relations.",
+    "mustNeverRepeat": [
+      "shell or facade presented as evidence of complete learned-building transfer",
+      "documentation or labels substituted for candidate objects",
+      "parts without required typed relations",
+      "producer self-approval",
+      "invented basement or structure used to eliminate UNKNOWN"
+    ]
+  },
+  "scope": {
+    "includes": "representation and coverage completeness",
+    "excludes": [
+      "structural safety certification",
+      "building-code compliance",
+      "construction readiness"
+    ]
+  },
+  "taskAnchorAdditions": {
+    "systemRequirementLedger": {
+      "fields": [
+        "systemId",
+        "requirementState",
+        "requirementSource",
+        "expectedRelations"
+      ],
+      "requirementState": [
+        "REQUIRED",
+        "NOT_APPLICABLE",
+        "UNKNOWN"
+      ]
+    },
+    "systemCoverageScope": "bounded to current user directive and reference evidence",
+    "creativeAuthorization": false
+  },
+  "deliveryReceiptAdditions": [
+    "systemNodes",
+    "systemRelations",
+    "coverageEvidence",
+    "systemVerdict",
+    "independentVerifier"
+  ],
+  "gate": {
+    "requiredSystem": "REQUIRED requires VERIFIED status, at least one candidate object id, and evidence.",
+    "requiredRelation": "Each required relation requires at least one typed edge and evidence.",
+    "notApplicable": "Requires explicit source evidence.",
+    "unknown": "HOLD_REQUIREMENT_UNKNOWN; do not fabricate.",
+    "independence": "producerId must differ from verifierId."
+  },
+  "expectedOutcomes": {
+    "shellOnly": "REJECT_SHELL_ONLY",
+    "requiredSystemMissing": "REJECT_REQUIRED_SYSTEM_MISSING",
+    "relationMissing": "REJECT_RELATION_MISSING",
+    "requirementUnknown": "HOLD_REQUIREMENT_UNKNOWN",
+    "producerSelfApproval": "REJECT_PRODUCER_SELF_APPROVAL",
+    "completeIndependentEvidence": "CANDIDATE_READY"
+  },
+  "proof": {
+    "probe": "PROBES/building_system_coverage_probe_n197.js",
+    "result": "PROBES/building_system_coverage_result_n197.json",
+    "fixtureReplay": "8/8",
+    "evidenceLayer": "SYNTHETIC_SCHEMA_GATE_ONLY"
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implementedProduction": false,
+    "gateRunSynthetic": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
