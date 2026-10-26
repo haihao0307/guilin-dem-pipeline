@@ -1,5 +1,5 @@
 import{withStudio}from'../../../building-mother-workbench/shared-studio/studio-wrapper.mjs';
-import{complexAdapter,ensureComplexTargets,savePrimary,restorePrimary,launchShadowRays,saveShadowHit}from'../../../building-mother-workbench/shared-studio/complex-shadow-pass.mjs';
+import{complexAdapter,releaseComplexTargets,ensureComplexTargets,savePrimary,restorePrimary,launchShadowRays,saveShadowHit}from'../../../building-mother-workbench/shared-studio/complex-shadow-pass.mjs';
 import {packSourceMaskIndex,SOURCE_MASK_GLSL} from '../../source-mask-index.mjs';
 import {displayLimits,nativeDisplaySize} from '../../desktop-display.mjs';
 import {buildRegistry,packRegistry,SEMANTIC_SHADE,SEMANTIC_PRESENT} from './semantic-registry.mjs';
@@ -159,7 +159,7 @@ export class WholeRenderer{
   this.currentFrameStats=stats;
   try{
    if(this.canvas.width!==presentWidth||this.canvas.height!==presentHeight){this.canvas.width=presentWidth;this.canvas.height=presentHeight;}
-   const masks=validateMasks(this.study?.sourceMasks??[],this.measured),maskKey=JSON.stringify(masks);if(maskKey!==this.sourceMaskKey){const packed=packSourceMaskIndex(masks,this.measured);if(this.sourceMaskTexture){g.deleteTexture(this.sourceMaskTexture);this.textures=this.textures.filter(t=>t!==this.sourceMaskTexture);}this.sourceMaskTexture=this.texture(packed);this.sourceMaskKey=maskKey;}this.targets(width,height);if(this.sharedStudioProgram)ensureComplexTargets(this,width,height);if(g.getError()!==g.NO_ERROR)throw Error('原生帧缓冲分配失败；设备内存不足，未静默降低分辨率。');g.viewport(0,0,width,height);g.bindVertexArray(this.vao);g.enable(g.SCISSOR_TEST);
+   const masks=validateMasks(this.study?.sourceMasks??[],this.measured),maskKey=JSON.stringify(masks);if(maskKey!==this.sourceMaskKey){const packed=packSourceMaskIndex(masks,this.measured);if(this.sourceMaskTexture){g.deleteTexture(this.sourceMaskTexture);this.textures=this.textures.filter(t=>t!==this.sourceMaskTexture);}this.sourceMaskTexture=this.texture(packed);this.sourceMaskKey=maskKey;}this.targets(width,height);if(this.sharedStudioProgram&&this.studioShadows)ensureComplexTargets(this,width,height);if(g.getError()!==g.NO_ERROR)throw Error('原生帧缓冲分配失败；设备内存不足，未静默降低分辨率。');g.viewport(0,0,width,height);g.bindVertexArray(this.vao);g.enable(g.SCISSOR_TEST);
    const frame=prepareTileFrame({...o,width,height});
    const dynamic=design&&dynamicFields.length?packLiftFields(dynamicFields):null;
    if(dynamic){this.compileLift();if(!this.dynamicLiftTexture)this.dynamicLiftTexture=this.texture(dynamic);else{g.bindTexture(g.TEXTURE_2D,this.dynamicLiftTexture);g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,dynamic.width,dynamic.height,0,g.RGBA,g.FLOAT,dynamic.data);}}
@@ -215,7 +215,7 @@ export class WholeRenderer{
     const primary=trace();
     // Reuse every authoritative visible-scene trace for both light rays.
     const shadowTile={x,y,width:Math.min(tileSize,width-x),height:Math.min(tileSize,height-y)};
-    if(this.sharedStudioProgram){savePrimary(this,primary,shadowTile);rayMode=2;
+    if(this.sharedStudioProgram&&this.studioShadows){savePrimary(this,primary,shadowTile);rayMode=2;
     for(let lightIndex=0;lightIndex<2;lightIndex++){launchShadowRays(this,lightIndex,shadowTile,width,height,o);const shadowHit=trace();saveShadowHit(this,shadowHit,lightIndex,shadowTile);}
     rayMode=0;restorePrimary(this,primary,shadowTile);stats.studioShadowRays=(stats.studioShadowRays??0)+2;}
 
@@ -253,4 +253,5 @@ export class WholeRenderer{
 /** Primary-ray tile proof only; never cull the secondary ray scene with this frustum. */
 export function glassMayIntersectTile(glassBounds,tile){return glassBounds.some(bounds=>aabbIntersectsTile(tile,bounds));}
 
-export class StudioWholeRenderer extends withStudio(WholeRenderer,SEMANTIC_SHADE,complexAdapter){constructor(canvas){super(canvas);this.displayLimits.bytesPerPixel=176;}}
+export class StudioWholeRenderer extends withStudio(WholeRenderer,SEMANTIC_SHADE,complexAdapter){constructor(canvas){super(canvas);this.studioShadows=false;this.displayLimits.bytesPerPixel=112;}
+ setStudioShadows(enabled){if(this.busy)throw Error('Shadow mode change requires completed GPU frame');if(typeof enabled!=='boolean')throw Error('Shadow mode must be boolean');if(enabled===this.studioShadows)return enabled;this.studioShadows=enabled;this.displayLimits.bytesPerPixel=enabled?176:112;if(!enabled)releaseComplexTargets(this);this.revision++;this.hitDataComplete=false;return enabled;}}
