@@ -1,0 +1,75 @@
+{
+  "id": "MOTOR-ARTICULATED-CHILD-TRANSFORM-001",
+  "status": "CANDIDATE",
+  "title": "Edge-hinge fixed point and child-part transform inheritance",
+  "source_incident": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "01907c4676df0160f85282229f9bfa965a944e09",
+    "path": "kaopu-motor-mother/r05/index.html",
+    "observation": "Door uses a centered pivot while claiming hinge rotation; window remains world-static while claiming door assembly inheritance."
+  },
+  "contract": {
+    "hinge_point_world_drift_lte_epsilon": true,
+    "child_relative_transform_invariant": true,
+    "producer_cannot_self_attest_visual_equivalence": true
+  },
+  "fixtures": [
+    {
+      "name": "center_pivot_labeled_edge_hinge",
+      "setup": "Centered mesh uses T(center)*R(angle)*S and no offset hinge.",
+      "expected": "REJECT"
+    },
+    {
+      "name": "edge_pivot_with_inherited_window",
+      "setup": "Declared hinge is fixed and window inherits the door assembly transform.",
+      "expected": "PASS"
+    },
+    {
+      "name": "edge_pivot_static_window",
+      "setup": "Door hinge is fixed but window world transform is independent of door angle.",
+      "expected": "REJECT"
+    },
+    {
+      "name": "child_follows_but_hinge_drifts",
+      "setup": "Window follows door but the declared hinge world point moves across sampled angles.",
+      "expected": "REJECT"
+    }
+  ],
+  "verifier": {
+    "samples_degrees": [
+      0,
+      15,
+      35,
+      65
+    ],
+    "measures": [
+      "declared hinge world-position drift",
+      "child transform relative to parent door"
+    ],
+    "fail_closed": true,
+    "evidence_required": [
+      "source transform lineage",
+      "machine-readable numeric results"
+    ]
+  },
+  "applicability": [
+    "vehicle doors and windows",
+    "hood assemblies",
+    "hatch assemblies"
+  ],
+  "exclusions": [
+    "static-body proportions",
+    "visual styling",
+    "browser and GPU acceptance"
+  ],
+  "rollout": "Single-Mother candidate only; no global gate change until replayed on a conforming implementation.",
+  "rollback": "Remove candidate from Motor Mother task anchor if replay shows the contract is inapplicable.",
+  "state_semantics": {
+    "gate_run": true,
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "adopted": false,
+    "user_accepted": false
+  }
+}
