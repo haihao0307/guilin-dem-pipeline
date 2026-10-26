@@ -1,0 +1,44 @@
+{
+  "schema": "kaopu.learning_probe.motor_door_assembly.v1",
+  "run": "N194",
+  "date": "2026-10-26",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "01907c4676df0160f85282229f9bfa965a944e09",
+    "path": "kaopu-motor-mother/r05/index.html"
+  },
+  "bounded_question": "Does the door rotate around a fixed edge hinge and does its side window inherit the door transform?",
+  "inputs": {
+    "door_scaled_half_width": 0.7,
+    "sampled_angle_degrees": 65
+  },
+  "observations": {
+    "door_transform_form": "T(center) * RY(angle) * S",
+    "window_transform_depends_on_door_angle": false,
+    "door_center_displacement": 0,
+    "candidate_edge_displacement_model_units": 0.752219452,
+    "expected_fixed_hinge_displacement": 0,
+    "window_transform_delta": 0
+  },
+  "verdict": {
+    "hinge_fixed_point": "FAIL",
+    "window_child_attachment": "FAIL",
+    "interaction_status": "HOLD_CONTRACT_MISMATCH"
+  },
+  "evidence_level": "SOURCE_PLUS_NUMERIC_REPLAY",
+  "not_evaluated": [
+    "browser",
+    "GPU",
+    "visual acceptance",
+    "user acceptance"
+  ],
+  "external_teacher": "NO_NOVELTY",
+  "lifecycle": {
+    "saved": "CANDIDATE",
+    "probe": "GATE-RUN",
+    "acknowledged": false,
+    "implemented": false,
+    "adopted": false,
+    "user_accepted": false
+  }
+}
