@@ -1,0 +1,6 @@
+let teardown=null,busy=false,moduleFailed=false,attempt=0,abort=null;
+const retry=document.getElementById('retry'),status=document.getElementById('status');
+function blocked(message){status.textContent=message+'。没有静态图替代或自动刷新。';retry.hidden=false;retry.textContent=moduleFailed?'手动重新载入页面':'手动重新启动';}
+async function start(){if(busy)return;if(moduleFailed){location.reload();return;}const id=++attempt;let moduleLoaded=false;busy=true;abort=new AbortController;retry.hidden=true;teardown?.();teardown=null;status.textContent='正在读取解析三维模块…';const timer=setTimeout(()=>{if(id!==attempt)return;attempt++;busy=false;abort.abort();moduleFailed=true;blocked('模块载入超过 20 秒');},20000);
+ try{const {mount}=await import('./app.mjs?v=relationship-r01-20261026');moduleLoaded=true;clearTimeout(timer);if(id!==attempt)return;const cleanup=await mount({signal:abort.signal});if(id!==attempt){cleanup?.();return;}teardown=cleanup;}catch(e){clearTimeout(timer);if(id!==attempt)return;moduleFailed=!moduleLoaded;blocked('未能启动：'+e.message);}finally{if(id===attempt)busy=false;}}
+retry.addEventListener('click',start);document.getElementById('stop').addEventListener('click',()=>{if(!busy)return;attempt++;busy=false;abort?.abort();moduleFailed=true;blocked('已取消启动；可手动重新载入');});start();
