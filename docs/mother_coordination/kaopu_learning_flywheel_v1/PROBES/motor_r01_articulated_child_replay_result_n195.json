@@ -1,0 +1,63 @@
+{
+  "schema": "kaopu.learning_probe.motor_articulated_child_replay.v1",
+  "run": "N195",
+  "date": "2026-10-26",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "base_commit": "01907c4676df0160f85282229f9bfa965a944e09",
+    "head_commit": "47d416556dc6bcb4bac4078a9c81bd64faa8f70a",
+    "path": "kaopu-motor-mother/experiments/motor-mother-four-vehicles-animated-r01/index.html"
+  },
+  "regression_reused": "MOTOR-ARTICULATED-CHILD-TRANSFORM-001",
+  "inputs": {
+    "sampled_angle_degrees": 65,
+    "door_scaled_half_width": 0.7,
+    "window_closed_world_center": [
+      -0.32,
+      1.39,
+      0.82
+    ],
+    "window_open_world_center": [
+      -0.460040132,
+      1.39,
+      0.960181024
+    ]
+  },
+  "observations": {
+    "door_transform_form": "T(center) * RY(angle) * S",
+    "window_transform_form": "T(center) * RY(angle) * T(windowLocal) * S",
+    "door_center_displacement": 0,
+    "candidate_edge_hinge_drift_model_units": 0.752219452,
+    "window_world_center_displacement_model_units": 0.198146305,
+    "window_relative_transform_invariant": true,
+    "commit_bound_workflow_runs": 0,
+    "combined_commit_statuses": 0
+  },
+  "verdict": {
+    "hinge_fixed_point": "FAIL",
+    "window_child_attachment": "PASS",
+    "overall": "HOLD_PARTIAL_FIX"
+  },
+  "evidence_level": "SOURCE_PLUS_NUMERIC_REPLAY",
+  "not_evaluated": [
+    "browser",
+    "physical GPU/device",
+    "visual acceptance",
+    "unrelated controls",
+    "vehicle dynamics",
+    "user acceptance"
+  ],
+  "novelty": {
+    "new_regression_created": false,
+    "reason": "N194 Candidate regression already covers both checks.",
+    "external_teacher": "NO_NOVELTY"
+  },
+  "lifecycle": {
+    "saved": "CANDIDATE_REPLAY",
+    "gate_run": true,
+    "acknowledged": false,
+    "implemented": false,
+    "adopted": false,
+    "user_accepted": false
+  }
+}
