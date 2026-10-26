@@ -13,7 +13,7 @@ import {createLiftPanel} from './lift-panel.mjs';
 import {nativeDisplaySize,displayStatus,fitBoundsCamera,projectBounds,observeDisplay,cameraBasis} from './desktop-display.mjs';
 import {createLocalPhotoPanel} from './local-photo-panel.mjs';
 import {composeBuildingScene,BUILDING_ORDER,BUILDING_NAMES,localPoint} from './unified-scene.mjs';
-import {WholeRenderer} from './kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs';
+import {StudioWholeRenderer as WholeRenderer} from './kowloon-building-mother-r01/whole-building-facade-r01/semantic-renderer.mjs';
 import {CLASSES,SEMANTIC_COLORS} from './kowloon-building-mother-r01/whole-building-facade-r01/semantic-registry.mjs';
 import {deriveMeasuredCase} from './kowloon-building-mother-r01/r07/cases.mjs';
 import {profileFor} from './kowloon-building-mother-r01/r07/profiles.mjs';

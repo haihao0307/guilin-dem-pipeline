@@ -1,0 +1,25 @@
+// Display-only full-scene shadow rays. Uses the original renderer's trace,
+// including source masks, exact apertures, curved rails and dynamic lift fields.
+import{STUDIO_UNIFORMS,STUDIO_LIGHT_GLSL}from'./studio-shade.mjs';
+const RAYS=`#version 300 es
+precision highp float;precision highp int;
+uniform sampler2D uStudioPrimaryHit,uStudioPrimaryNormal;
+uniform vec2 uResolution,uStudioTileOrigin;uniform vec3 uCameraEye,uTarget;uniform float uFov;uniform int uStudioLightIndex;
+${STUDIO_UNIFORMS}
+${STUDIO_LIGHT_GLSL}
+layout(location=0)out vec4 rayOriginOut;layout(location=1)out vec4 rayDirectionOut;
+vec3 studioCameraRay(){vec2 uv=(gl_FragCoord.xy/uResolution*2.-1.)*vec2(uResolution.x/uResolution.y,1.);vec3 f=normalize(uTarget-uCameraEye),r=normalize(cross(f,abs(f.y)>.999?vec3(0,0,1):vec3(0,1,0))),u=cross(r,f);return normalize(f+(r*uv.x+u*uv.y)*tan(uFov*.5));}
+void main(){ivec2 q=ivec2(gl_FragCoord.xy-uStudioTileOrigin);vec4 hit=texelFetch(uStudioPrimaryHit,q,0);vec3 n=texelFetch(uStudioPrimaryNormal,q,0).xyz,rd=studioCameraRay(),p;rayOriginOut=vec4(0);rayDirectionOut=vec4(0);if(hit.w>2.5)return;if(hit.w==1.){p=uCameraEye+rd*hit.x;n=normalize(n);if(dot(n,rd)>0.)n=-n;}else{float t=(uStudioMin.y-.02*studioScale()-uCameraEye.y)/rd.y;if(rd.y>=-.001||t<=0.)return;p=uCameraEye+rd*t;n=vec3(0,1,0);}vec3 light=uStudioLightIndex==0?studioKeyLight():studioFillLight(),origin=p+n*.003,v=light-origin;rayOriginOut=vec4(origin,1.);rayDirectionOut=vec4(normalize(v),length(v));}
+`;
+export const complexAdapter={glsl:`float studioScale();vec3 studioKeyLight();vec3 studioFillLight();
+uniform sampler2D uStudioKeyHit,uStudioFillHit;
+float studioVisibility(vec3 p,vec3 n,vec3 light){bool key=distance(light,studioKeyLight())<distance(light,studioFillLight());vec4 h=key?texelFetch(uStudioKeyHit,ivec2(gl_FragCoord.xy),0):texelFetch(uStudioFillHit,ivec2(gl_FragCoord.xy),0);float limit=length(light-(p+n*.003));if(h.w==3.&&h.x<limit)return 0.;return h.w==1.&&h.x<limit-.001?0.:1.;}
+`,prepare(r){r.displayLimits.bytesPerPixel=176;},bind(r,p){r.bindTexture(p,'uStudioKeyHit',7,r.studioShadow.key.textures[0]);r.bindTexture(p,'uStudioFillHit',8,r.studioShadow.fill.textures[0]);}};
+function target(r,w,h,count){const g=r.gl,b={width:w,height:h,fbo:g.createFramebuffer(),textures:[]};g.bindFramebuffer(g.FRAMEBUFFER,b.fbo);for(let i=0;i<count;i++){const t=g.createTexture();g.bindTexture(g.TEXTURE_2D,t);g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,w,h,0,g.RGBA,g.FLOAT,null);for(const [a,v]of[[g.TEXTURE_MIN_FILTER,g.NEAREST],[g.TEXTURE_MAG_FILTER,g.NEAREST],[g.TEXTURE_WRAP_S,g.CLAMP_TO_EDGE],[g.TEXTURE_WRAP_T,g.CLAMP_TO_EDGE]])g.texParameteri(g.TEXTURE_2D,a,v);g.framebufferTexture2D(g.FRAMEBUFFER,g.COLOR_ATTACHMENT0+i,g.TEXTURE_2D,t,0);b.textures.push(t);}g.drawBuffers(b.textures.map((_,i)=>g.COLOR_ATTACHMENT0+i));if(g.checkFramebufferStatus(g.FRAMEBUFFER)!==g.FRAMEBUFFER_COMPLETE)throw Error('Studio shadow Float32 target unavailable');return b;}
+export function ensureComplexTargets(r,w,h){if(r.studioShadow?.width===w&&r.studioShadow?.height===h&&r.rayTarget)return;const g=r.gl;for(const b of r.studioShadow?[r.studioShadow.saved,r.studioShadow.key,r.studioShadow.fill]:[]){b.textures.forEach(t=>g.deleteTexture(t));g.deleteFramebuffer(b.fbo);}r.studioShadow={width:w,height:h,saved:target(r,256,256,3),key:target(r,w,h,1),fill:target(r,w,h,1)};r.rayTarget=target(r,w,h,2);if(!r.studioRayProgram)r.studioRayProgram=r.compile('two-light-full-scene-rays',RAYS);}
+function blit(r,src,dst,from,to,count){const g=r.gl;g.disable(g.SCISSOR_TEST);g.bindFramebuffer(g.READ_FRAMEBUFFER,src.fbo);g.bindFramebuffer(g.DRAW_FRAMEBUFFER,dst.fbo);for(let i=0;i<count;i++){g.readBuffer(g.COLOR_ATTACHMENT0+i);g.drawBuffers(Array.from({length:count},(_,k)=>k===i?g.COLOR_ATTACHMENT0+i:g.NONE));g.blitFramebuffer(...from,...to,g.COLOR_BUFFER_BIT,g.NEAREST);}g.drawBuffers(Array.from({length:dst.textures.length},(_,i)=>g.COLOR_ATTACHMENT0+i));g.enable(g.SCISSOR_TEST);}
+export function savePrimary(r,primary,tile){const{x,y,width:w,height:h}=tile;blit(r,primary,r.studioShadow.saved,[x,y,x+w,y+h],[0,0,w,h],3);}
+export function restorePrimary(r,primary,tile){const{x,y,width:w,height:h}=tile;blit(r,r.studioShadow.saved,primary,[0,0,w,h],[x,y,x+w,y+h],3);}
+export function launchShadowRays(r,index,tile,width,height,camera){const g=r.gl,p=r.studioRayProgram;g.bindFramebuffer(g.FRAMEBUFFER,r.rayTarget.fbo);g.useProgram(p);const L=r.camera(p,width,height,camera);g.uniform3fv(L('uStudioMin'),r.model.bounds.min);g.uniform3fv(L('uStudioMax'),r.model.bounds.max);g.uniform2f(L('uStudioTileOrigin'),tile.x,tile.y);g.uniform1i(L('uStudioLightIndex'),index);r.bindTexture(p,'uStudioPrimaryHit',0,r.studioShadow.saved.textures[0]);r.bindTexture(p,'uStudioPrimaryNormal',1,r.studioShadow.saved.textures[1]);g.drawArrays(g.TRIANGLES,0,3);}
+export function saveShadowHit(r,hit,index,tile){const{x,y,width:w,height:h}=tile;blit(r,hit,index===0?r.studioShadow.key:r.studioShadow.fill,[x,y,x+w,y+h],[x,y,x+w,y+h],1);}
+export{RAYS as COMPLEX_RAYS_GLSL};

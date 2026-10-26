@@ -1,3 +1,5 @@
+import{withStudio}from'../../../building-mother-workbench/shared-studio/studio-wrapper.mjs';
+import{complexAdapter,ensureComplexTargets,savePrimary,restorePrimary,launchShadowRays,saveShadowHit}from'../../../building-mother-workbench/shared-studio/complex-shadow-pass.mjs';
 import {packSourceMaskIndex,SOURCE_MASK_GLSL} from '../../source-mask-index.mjs';
 import {displayLimits,nativeDisplaySize} from '../../desktop-display.mjs';
 import {buildRegistry,packRegistry,SEMANTIC_SHADE,SEMANTIC_PRESENT} from './semantic-registry.mjs';
@@ -77,7 +79,7 @@ void main(){
 `;}
 
 function apertureShader(apertures){return HEAD+withBoundedGlassEndpointVerification(buildPrimaryTileAperturesGLSL(apertures))+CAMERA+REDUCE+`
-void main(){floorPrimaryApertureRay=uRayMode==0;previous();if(!rayActive())return;vec3 rd=rayDirection();float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;float skipId=uRayMode>0?texelFetch(uRayDirection,ivec2(gl_FragCoord.xy),0).w:0.;if(apertureTraceRayFiltered(uEye+rd*lo,rd,false,skipId,t,h,visits)&&t+lo<=hi)accept(t+lo,h,fieldRayNormal,-2.);}
+void main(){floorPrimaryApertureRay=uRayMode==0;previous();if(!rayActive())return;vec3 rd=rayDirection();float lo=0.,hi=outHit.x;if(!clipInterval(uEye,rd,lo,hi))return;float t;FieldHit h;int visits;float skipId=uRayMode==1?texelFetch(uRayDirection,ivec2(gl_FragCoord.xy),0).w:0.;if(apertureTraceRayFiltered(uEye+rd*lo,rd,uRayMode==2,skipId,t,h,visits)&&t+lo<=hi)accept(t+lo,h,fieldRayNormal,-2.);}
 `;}
 
 
@@ -157,7 +159,7 @@ export class WholeRenderer{
   this.currentFrameStats=stats;
   try{
    if(this.canvas.width!==presentWidth||this.canvas.height!==presentHeight){this.canvas.width=presentWidth;this.canvas.height=presentHeight;}
-   const masks=validateMasks(this.study?.sourceMasks??[],this.measured),maskKey=JSON.stringify(masks);if(maskKey!==this.sourceMaskKey){const packed=packSourceMaskIndex(masks,this.measured);if(this.sourceMaskTexture){g.deleteTexture(this.sourceMaskTexture);this.textures=this.textures.filter(t=>t!==this.sourceMaskTexture);}this.sourceMaskTexture=this.texture(packed);this.sourceMaskKey=maskKey;}this.targets(width,height);if(g.getError()!==g.NO_ERROR)throw Error('原生帧缓冲分配失败；设备内存不足，未静默降低分辨率。');g.viewport(0,0,width,height);g.bindVertexArray(this.vao);g.enable(g.SCISSOR_TEST);
+   const masks=validateMasks(this.study?.sourceMasks??[],this.measured),maskKey=JSON.stringify(masks);if(maskKey!==this.sourceMaskKey){const packed=packSourceMaskIndex(masks,this.measured);if(this.sourceMaskTexture){g.deleteTexture(this.sourceMaskTexture);this.textures=this.textures.filter(t=>t!==this.sourceMaskTexture);}this.sourceMaskTexture=this.texture(packed);this.sourceMaskKey=maskKey;}this.targets(width,height);if(this.sharedStudioProgram)ensureComplexTargets(this,width,height);if(g.getError()!==g.NO_ERROR)throw Error('原生帧缓冲分配失败；设备内存不足，未静默降低分辨率。');g.viewport(0,0,width,height);g.bindVertexArray(this.vao);g.enable(g.SCISSOR_TEST);
    const frame=prepareTileFrame({...o,width,height});
    const dynamic=design&&dynamicFields.length?packLiftFields(dynamicFields):null;
    if(dynamic){this.compileLift();if(!this.dynamicLiftTexture)this.dynamicLiftTexture=this.texture(dynamic);else{g.bindTexture(g.TEXTURE_2D,this.dynamicLiftTexture);g.texImage2D(g.TEXTURE_2D,0,g.RGBA32F,dynamic.width,dynamic.height,0,g.RGBA,g.FLOAT,dynamic.data);}}
@@ -211,6 +213,12 @@ export class WholeRenderer{
     if(dynamic){const slots=dynamic.fields.map((f,k)=>({f,k})).filter(({f})=>rayMode!==0||!cullTiles||aabbIntersectsTile(tile,f.bounds)).map(({k})=>k);stats.dynamicLiftPairsBefore+=dynamic.fields.length;stats.dynamicLiftPairsAfter+=slots.length;if(slots.length){pass(this.dynamicLiftProgram,L=>{this.bindTexture(this.dynamicLiftProgram,'uLiftDescriptors',0,this.dynamicLiftTexture);g.uniform1i(L('uLiftCount'),slots.length);g.uniform1iv(L('uLiftIndices[0]'),new Int32Array(slots));g.uniform1i(L('uClip'),clipDesign?1:0);});stats.dynamicLiftPasses++;}}
     if(!previous){pass(this.emptyProgram,()=>{});stats.emptyTiles++;}return previous;};
     const primary=trace();
+    // Reuse every authoritative visible-scene trace for both light rays.
+    const shadowTile={x,y,width:Math.min(tileSize,width-x),height:Math.min(tileSize,height-y)};
+    if(this.sharedStudioProgram){savePrimary(this,primary,shadowTile);rayMode=2;
+    for(let lightIndex=0;lightIndex<2;lightIndex++){launchShadowRays(this,lightIndex,shadowTile,width,height,o);const shadowHit=trace();saveShadowHit(this,shadowHit,lightIndex,shadowTile);}
+    rayMode=0;restorePrimary(this,primary,shadowTile);stats.studioShadowRays=(stats.studioShadowRays??0)+2;}
+
     const shade=(hitTarget,target)=>{g.bindFramebuffer(g.FRAMEBUFFER,target.fbo);g.useProgram(this.shadeProgram);this.camera(this.shadeProgram,width,height,o);g.uniform4i(this.uniform(this.shadeProgram,'uTile'),x,y,Math.min(tileSize,width-x),Math.min(tileSize,height-y));g.uniform1f(this.uniform(this.shadeProgram,'uSelectedId'),o.selectedId??-1);this.bindTexture(this.shadeProgram,'uNormal',2,hitTarget.textures[1]);this.bindTexture(this.shadeProgram,'uHit',1,hitTarget.textures[0]);this.bindTexture(this.shadeProgram,'uSemantic',0,this.semanticTexture);g.uniform1i(this.uniform(this.shadeProgram,'uSemanticCount'),this.semanticRegistry.length);g.uniform1i(this.uniform(this.shadeProgram,'uSemanticMode'),this.options.semanticMode?1:0);g.uniform1i(this.uniform(this.shadeProgram,'uMaterialMode'),this.options.materialMode===false?0:1);g.uniform1i(this.uniform(this.shadeProgram,'uMaterialBands'),this.options.materialBands===false?0:1);g.drawArrays(g.TRIANGLES,0,3);stats.passes++;stats.passCounts.shade++;};
     const opticalEligible=false&&design&&glassBounds.length>0&&(!visibleFloorIds||this.study.floorId===null||visibleFloorIds.includes(this.study.floorId))&&!(o.diagnostic>0);
     const optical=opticalEligible&&(o.opticalTileCull===false||glassMayIntersectTile(glassBounds,tile));if(optical)stats.opticalTiles++;else if(opticalEligible)stats.opticalTilesRejected++;
@@ -244,3 +252,5 @@ export class WholeRenderer{
 
 /** Primary-ray tile proof only; never cull the secondary ray scene with this frustum. */
 export function glassMayIntersectTile(glassBounds,tile){return glassBounds.some(bounds=>aabbIntersectsTile(tile,bounds));}
+
+export class StudioWholeRenderer extends withStudio(WholeRenderer,SEMANTIC_SHADE,complexAdapter){constructor(canvas){super(canvas);this.displayLimits.bytesPerPixel=176;}}
