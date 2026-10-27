@@ -1,0 +1,8 @@
+'use strict';const assert=require('assert'),fs=require('fs'),path=require('path'),crypto=require('crypto');const {glsl,legacy,stackless}=require('./interval-stackless.cjs');
+let seed=123456789;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296};let cases=0,nodes=0,maxDepth=0;
+for(let k=0;k<180;k++){const start=Math.fround(random()*65),end=Math.fround(start+random()*25+.01),target=start+(end-start)*random(),pattern=k%6;
+ const inspect=(a,b)=>{if(pattern===0&&Math.floor((a+b)*319)%5===0)return'skip';if(pattern===1&&(target<a||target>b))return'skip';if(pattern===2&&b<target)return'skip';if(pattern===3&&a>target)return'skip';if(b-a<.0005)return pattern===4?'skip':(a<=target&&target<=b?'hit':'skip');return'split'};
+ const a=legacy(start,end,inspect),b=stackless(start,end,inspect);assert.deepStrictEqual(b.trace,a.trace,'node/midpoint/order case '+k);assert.equal(b.hit,a.hit);cases++;nodes+=a.trace.length;maxDepth=Math.max(maxDepth,b.maxDepth);
+}
+assert(maxDepth<30);assert(glsl.includes('i<4096'));assert(!/lefts\[|rights\[/.test(glsl));assert(glsl.includes('b-a<0.0005'));assert(glsl.includes('field(pm)<=0.0005'));
+const r={checked:new Date().toISOString(),status:'PASS',scope:'CPU Float32 midpoint traversal identity; not GLSL execution or whole-frame acceptance',cases,nodes,maxDepth,bitExactOrderedNodeBounds:true,unchangedNodeBudget:4096,leafTolerance:.0005,sourceSHA:crypto.createHash('sha256').update(fs.readFileSync(require.resolve('./interval-stackless.cjs'))).digest('hex')};fs.writeFileSync(path.join(__dirname,'STACKLESS_TRAVERSAL_RESULT.json'),JSON.stringify(r,null,2));console.log(JSON.stringify(r));

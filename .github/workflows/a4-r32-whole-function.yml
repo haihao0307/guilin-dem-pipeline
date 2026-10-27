@@ -43,8 +43,9 @@ jobs:
           test -r /etc/apparmor.d/chrome
           cat /etc/apparmor.d/chrome
           ls -l /opt/google/chrome/chrome-sandbox
-      - name: Diagnostic only - basic RGBA, actual boiler field/range, interval loop
+      - name: Diagnostic only - basic RGBA, actual field/range, stackless interval
         run: |
+          node r32-tests/check-interval-stackless.cjs
           node r32-tests/boiler-probe-capture.cjs
           set +e
           timeout 180s python r32-tests/boiler-isolated-probes.py
