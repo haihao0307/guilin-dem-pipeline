@@ -8,7 +8,7 @@ import threading, json, time, os, traceback
 from playwright.sync_api import sync_playwright
 P=Path(__file__).resolve().parent; ROOT=P.parent
 report={'status':'RUNNING','tested_commit':os.getenv('GITHUB_SHA'),'frames':[],'errors':[],
- 'phone_verified':False,'whole_mechanical_acceptance':False,'fixed_render_buffer':[720,400]}
+ 'diagnostic_run':'trace first-frame context loss without changing renderer/model/resolution','trace':[],'phone_verified':False,'whole_mechanical_acceptance':False,'fixed_render_buffer':[720,400]}
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -21,11 +21,18 @@ try:
   assert not any(a.split('=')[0] in forbidden for a in command),'Unsafe browser flag'
   page=browser.new_page(viewport={'width':1100,'height':1100})
   page.on('pageerror',lambda e:report['errors'].append(str(e)))
+  page.on('console',lambda m:print('BROWSER_CONSOLE',m.type,m.text,flush=True))
+  def trace(data):
+   report['trace'].append(data)
+   print('A4_RENDER_TRACE',json.dumps(data,ensure_ascii=False),flush=True)
+  page.expose_function('reportA4Trace',trace)
+  page.add_init_script(path=str(P/'browser-trace.js'))
   page.goto('http://127.0.0.1:'+str(server.server_port),wait_until='load')
   page.wait_for_function('window.QA && (QA.done || QA.errors.length)',timeout=480000)
-  q=page.evaluate('QA');assert q['done'] and not q['errors'],q
+  q=page.evaluate('QA');report['first']=q;report['firstStartup']=page.evaluate('A4_STARTUP.state');assert q['done'] and not q['errors'],q
   report['backend']=page.evaluate("""()=>{const e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(e?e.UNMASKED_VENDOR_WEBGL:gl.VENDOR),renderer:gl.getParameter(e?e.UNMASKED_RENDERER_WEBGL:gl.RENDERER),version:gl.getParameter(gl.VERSION)};}""")
   report['hardware_gpu_claim']=False
+  print('A4_FIRST_FRAME',json.dumps(q,ensure_ascii=False),flush=True)
   for name,mode,revision,open_,theta,eye,cut in [
    ('r32-whole','candidate','r32',1,.4,[24,13,15],100),
    ('r32-cut-closed','candidate','r32',0,1.7,[12,3.5,-4],0),
@@ -49,6 +56,10 @@ try:
   report['post_success_context_loss']=page.evaluate('({done:QA.done,frameValid:QA.frameValid,rendered:document.getElementById("rendered").textContent,errors:A4_STARTUP.state.errors})')
   browser.close();report['status']='PASS'
 except Exception as e:
+ try:
+  report['failureSnapshot']=page.evaluate('({qa:window.QA,startup:window.A4_STARTUP?.state,trace:window.__A4_TRACE,status:document.getElementById("status")?.textContent,rendered:document.getElementById("rendered")?.textContent})')
+  page.screenshot(path=str(P/'failure-diagnostic-page.png'),full_page=True,timeout=10000)
+ except Exception as snapshot_error:report['snapshot_error']=repr(snapshot_error)
  report['status']='FAIL_OR_ENVIRONMENT_BLOCKED';report['failure']=repr(e);report['traceback']=traceback.format_exc()
  raise
 finally:
