@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu.function_instancing_boundary_probe.v1",
+  "purpose": "Oracle replay only; this does not prescribe a ray-based production renderer.",
+  "correctness": {
+    "same_local_surface_different_shadow": [
+      {
+        "id": "lower",
+        "same_function_class": "unitCube",
+        "same_local_surface_sample": [0, 1, 0],
+        "n_dot_l_without_visibility": 1,
+        "visible_to_sun": false
+      },
+      {
+        "id": "upper",
+        "same_function_class": "unitCube",
+        "same_local_surface_sample": [0, 1, 0],
+        "n_dot_l_without_visibility": 1,
+        "visible_to_sun": true
+      }
+    ],
+    "same_projected_function_different_camera_depth": {
+      "ordered_hits": [
+        { "id": "front", "tNear": 7 },
+        { "id": "rear", "tNear": 11 }
+      ],
+      "visible_instance": "front",
+      "occluded_instance": "rear"
+    },
+    "same_function_different_instance_orientation": [
+      { "rotation_x_degrees": 0, "n_dot_l": 1 },
+      { "rotation_x_degrees": 60, "n_dot_l": 0.5 }
+    ],
+    "assertions": {
+      "shared_unoccluded_local_response": true,
+      "final_shadow_visibility_must_differ": true,
+      "camera_visibility_must_choose_one_instance": true,
+      "orientation_requires_per_instance_direction_transform": true
+    }
+  },
+  "cost_model": {
+    "formula_naive": "N * (F + T + R)",
+    "formula_shared": "K * F + N * T + M * R",
+    "variables": {
+      "N": "instance count",
+      "K": "function-class count",
+      "M": "visible/evaluated instance count after culling",
+      "F": "shareable function compile/setup/data cost",
+      "T": "per-instance transform/bounds cost",
+      "R": "per-visible-instance/sample visibility and shading cost"
+    },
+    "cases": [
+      {
+        "name": "all_visible_balanced_cost",
+        "instances": 100,
+        "visible_instances": 100,
+        "units_naive": 20100,
+        "units_shared_function_class": 10200,
+        "remaining_fraction": 0.507463,
+        "speedup": 1.970588
+      },
+      {
+        "name": "all_visible_setup_dominated",
+        "instances": 100,
+        "visible_instances": 100,
+        "units_naive": 10010100,
+        "units_shared_function_class": 110100,
+        "remaining_fraction": 0.010999,
+        "speedup": 90.918256
+      },
+      {
+        "name": "ten_visible_after_culling",
+        "instances": 100,
+        "visible_instances": 10,
+        "units_naive": 20100,
+        "units_shared_function_class": 1200,
+        "remaining_fraction": 0.059701,
+        "speedup": 16.75
+      }
+    ],
+    "amdahl_100_instances": [
+      { "shareable_fraction": 0.5, "speedup_at_100_instances": 1.980198 },
+      { "shareable_fraction": 0.9, "speedup_at_100_instances": 9.174312 },
+      { "shareable_fraction": 0.99, "speedup_at_100_instances": 50.251256 },
+      { "shareable_fraction": 0.999898, "speedup_at_100_instances": 99.000295 },
+      { "shareable_fraction": 1, "speedup_at_100_instances": 100 }
+    ]
+  },
+  "decision": "PARTIAL_FEASIBLE_REJECT_UNCONDITIONAL_ONE_PERCENT_CLAIM"
+}
