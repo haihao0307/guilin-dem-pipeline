@@ -1,0 +1,96 @@
+{
+  "caseId": "FUNCTION-SHAPE-REUSE-NOT-VISIBILITY-REUSE-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-27",
+  "appliesTo": [
+    "Rendering",
+    "ProceduralGeometry",
+    "analytic or implicit function surfaces"
+  ],
+  "failure": {
+    "observation": "Identical function classes were assumed to permit one final camera/light visibility result to be reused for every spatial instance.",
+    "mustNeverRepeat": [
+      "shared shape function presented as proof of shared final visibility",
+      "shared unoccluded nDotL presented as proof of shared shadowed lighting",
+      "instance transforms or orientation omitted from the evaluation contract",
+      "one-percent compute claim without measured cost partition and correctness oracle",
+      "culling benefit attributed to function reuse"
+    ]
+  },
+  "scope": {
+    "includes": "correctness boundary and performance-claim evidence for analytic/function instancing",
+    "excludes": [
+      "mandating a ray-based production renderer",
+      "choosing a final GPU API",
+      "visual or user acceptance"
+    ]
+  },
+  "taskAnchorAdditions": {
+    "functionClass": [
+      "functionClassId",
+      "functionRevision",
+      "canonicalDomain",
+      "canonicalBounds",
+      "sharedParameters",
+      "sharedPrecompute"
+    ],
+    "instance": [
+      "instanceId",
+      "instanceTransform",
+      "parameterOverrides",
+      "worldBounds",
+      "visibilityMask"
+    ],
+    "evaluation": [
+      "cameraVisibilityMethod",
+      "lightVisibilityMethod",
+      "shadowMethod",
+      "cullingMethod",
+      "correctnessOracle",
+      "benchmarkScenes"
+    ],
+    "creativeAuthorization": false
+  },
+  "deliveryReceiptAdditions": [
+    "sharedSetupTime",
+    "perInstanceTransformTime",
+    "visibilityAndShadowTime",
+    "visibleInstanceCount",
+    "evaluatedSampleCount",
+    "cacheHitCount",
+    "referenceImageOrOracleDiff",
+    "hardwareAndRuntime",
+    "verifierIdentity"
+  ],
+  "gate": {
+    "shared": "Function code/data and canonical-space precompute may be shared only when class revision and shared parameters match.",
+    "perInstance": "Transforms, world bounds, orientation-dependent directions, camera visibility, occlusion and shadow visibility remain per spatial instance unless an explicit invariance proof covers the scene.",
+    "negativeControls": [
+      "same function class at two depths with one occluded",
+      "same function class stacked along the light direction with different shadow visibility",
+      "same function class with different instance orientation"
+    ],
+    "performanceClaim": "Reject an unconditional one-percent or 100x claim unless measured end-to-end remaining cost is <= 0.01 on the declared hardware and all correctness controls pass.",
+    "independence": "producerId must differ from verifierId."
+  },
+  "expectedOutcomes": {
+    "sharedFunctionClassAndPerInstanceVisibility": "CANDIDATE_READY",
+    "sharedFinalVisibilityAcrossOccludedInstances": "REJECT_INCORRECT_VISIBILITY_REUSE",
+    "unmeasuredOnePercentClaim": "REJECT_UNVERIFIED_PERFORMANCE_CLAIM",
+    "oracleMismatch": "HOLD_CORRECTNESS_FAIL"
+  },
+  "proof": {
+    "probe": "PROBES/function_instancing_boundary_probe_n199.js",
+    "result": "PROBES/function_instancing_boundary_result_n199.json",
+    "fixtureReplay": "4/4 correctness assertions plus cost-model sweep",
+    "evidenceLayer": "SYNTHETIC_ORACLE_AND_ANALYTIC_COST_MODEL_ONLY"
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implementedProduction": false,
+    "gateRunSynthetic": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
