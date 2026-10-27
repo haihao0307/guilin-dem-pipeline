@@ -1,7 +1,7 @@
 name: A4 R32 whole functional research QA
 on:
   push:
-    branches: ['trial/a4-function-assembly-r19-20261024']
+    branches: ['trial/a4-r32-normal-chrome-20261027']
     paths:
       - 'kaopu-train-workbench/a4-steam-function-r32/**'
       - '.github/workflows/a4-r32-whole-function.yml'
@@ -36,8 +36,12 @@ jobs:
       - name: Install pinned browser test dependency
         run: |
           python -m pip install playwright==1.57.0
-          python -m playwright install --with-deps chromium
-      - name: Normal sandbox whole-train browser and RGBA8 scalar readback
+          google-chrome --version
+          test -x /opt/google/chrome/chrome
+          test -r /etc/apparmor.d/chrome
+          cat /etc/apparmor.d/chrome
+          ls -l /opt/google/chrome/chrome-sandbox
+      - name: Installed stable Chrome normal sandbox and RGBA8 scalar readback
         run: timeout 1100s python r32-tests/browser-qa.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()

@@ -13,11 +13,11 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,dire
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with sync_playwright() as pw:
-  browser=pw.chromium.launch(headless=True,chromium_sandbox=True,
-   ignore_default_args=['--enable-unsafe-swiftshader','--no-sandbox'])
+  browser=pw.chromium.launch(headless=True,channel="chrome",chromium_sandbox=True,
+   ignore_default_args=['--enable-unsafe-swiftshader','--no-sandbox','--unsafely-disable-devtools-self-xss-warnings','--disable-ipc-flooding-protection','--disable-client-side-phishing-detection'])
   command=browser.new_browser_cdp_session().send('Browser.getBrowserCommandLine')['arguments']
   report['browser_command']=command
-  forbidden=['--no-sandbox','--disable-setuid-sandbox','--disable-web-security','--ignore-certificate-errors','--enable-unsafe-swiftshader']
+  forbidden=['--no-sandbox','--disable-setuid-sandbox','--disable-web-security','--ignore-certificate-errors','--enable-unsafe-swiftshader','--unsafely-disable-devtools-self-xss-warnings','--disable-ipc-flooding-protection','--disable-client-side-phishing-detection']
   assert not any(a.split('=')[0] in forbidden for a in command),'Unsafe browser flag'
   page=browser.new_page(viewport={'width':1100,'height':1100})
   page.on('pageerror',lambda e:report['errors'].append(str(e)))
