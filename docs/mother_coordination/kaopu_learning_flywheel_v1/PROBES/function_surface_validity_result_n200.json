@@ -1,0 +1,97 @@
+{
+  "schema": "kaopu.function_surface_validity_probe.v1",
+  "subject": "synthetic f32 oracle; production source unavailable",
+  "point_samples": {
+    "fixed_epsilon": {
+      "position": [10001, 0, 0],
+      "epsilon": 0.00001,
+      "residual": 0,
+      "gradient": [0, 0, 0],
+      "gradient_norm": 0,
+      "unsafe_normal": ["NaN", "NaN", "NaN"],
+      "status": "INVALID_GRADIENT",
+      "silent_black_if_nonfinite_is_zeroed": [0, 0, 0]
+    },
+    "scale_aware_epsilon": {
+      "position": [10001, 0, 0],
+      "epsilon": 0.0078125,
+      "residual": 0,
+      "gradient": [2, 0, 0],
+      "gradient_norm": 2,
+      "normal": [1, 0, 0],
+      "status": "HIT_CONVERGED"
+    },
+    "unconverged": {
+      "position": [10001.01, 0, 0],
+      "epsilon_surface": 0.001,
+      "residual": 0.019626617431640625,
+      "gradient": [2.01953125, 0, 0],
+      "status": "UNCONVERGED_RESIDUAL"
+    },
+    "nonfinite_domain": {
+      "residual": "NaN",
+      "status": "INVALID_NONFINITE"
+    }
+  },
+  "cell_states": {
+    "outside": {
+      "interval": [3, 5.27],
+      "maybe_nan": false,
+      "state": "EMPTY"
+    },
+    "inside": {
+      "interval": [-1, -0.88],
+      "maybe_nan": false,
+      "state": "FILLED"
+    },
+    "crosses_surface": {
+      "interval": [-0.18999999999999995, 0.2100000000000002],
+      "maybe_nan": false,
+      "state": "AMBIGUOUS"
+    },
+    "unsafe_domain": {
+      "interval": [-0.18999999999999995, 0.2100000000000002],
+      "maybe_nan": true,
+      "state": "AMBIGUOUS"
+    }
+  },
+  "frozen_input_repeat": {
+    "frame_count": 8,
+    "residuals": [
+      0.00011,
+      0.00007000000000000001,
+      0.00011,
+      0.00007000000000000001,
+      0.00011,
+      0.00007000000000000001,
+      0.00011,
+      0.00007000000000000001
+    ],
+    "statuses": [
+      "UNCONVERGED_RESIDUAL",
+      "HIT_CONVERGED",
+      "UNCONVERGED_RESIDUAL",
+      "HIT_CONVERGED",
+      "UNCONVERGED_RESIDUAL",
+      "HIT_CONVERGED",
+      "UNCONVERGED_RESIDUAL",
+      "HIT_CONVERGED"
+    ],
+    "stable": false,
+    "expected_gate": "REJECT_HIDDEN_TEMPORAL_DEPENDENCY"
+  },
+  "assertions": {
+    "fixed_epsilon_exposes_invalid_gradient": true,
+    "scale_aware_epsilon_recovers_finite_normal": true,
+    "unconverged_point_is_not_shaded": true,
+    "nonfinite_domain_is_not_shaded": true,
+    "outside_cell_is_empty": true,
+    "inside_cell_is_filled": true,
+    "crossing_cell_is_ambiguous": true,
+    "maybe_nan_cell_is_ambiguous": true,
+    "hidden_frame_dependency_is_detected": true
+  },
+  "passed": 9,
+  "total": 9,
+  "decision": "CANDIDATE_GATE_VALIDATES_BOUNDARY_ROOT_CAUSE_UNKNOWN"
+}
