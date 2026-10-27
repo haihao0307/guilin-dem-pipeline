@@ -21,16 +21,17 @@
 - [Art Institute of Chicago：Medallion Insert](https://www.artic.edu/artworks/24842/medallion-insert) 的密绣、叶脉透空和连续底网；[The Met：Lace sampler](https://www.metmuseum.org/art/collection/search/213485) 用于比较网眼和针向。
 - [The Met：Duchesse lace](https://www.metmuseum.org/art/collection/search/214535) 和 [棉质针制蕾丝花边](https://www.metmuseum.org/art/collection/search/229982) 用于观察花叶、连接与边缘；[Cleveland Museum of Art：丝质蕾丝](https://www.clevelandart.org/art/1919.769) 用于观察另一种线材和花边层次。
 - [Royal School of Needlework：point de reprise](https://rsnstitchbank.org/stitch/point-de-reprise) 介绍沿平行线交替穿织的填充方式；本版只借鉴视觉关系，并不声称复刻此针法。[Cornell：织物反射研究](https://www.cs.cornell.edu/~srm/publications/TOG12-cloth.html) 用于理解纱线方向与受光关系；本版未使用实测参数。
+- [3DTextures：Fabric Lace 050](https://3dtextures.me/2026/05/04/fabric-lace-050-free-seamless-pbr-texture/) 是可复用的 CC0 材质来源，页面介绍免费 1K 的颜色、法线、粗糙度和透明度等贴图。该套贴图尚未下载或接入；应先核对透明孔隙和尺寸，再与当前实体线材做同机位比较。
 
 馆藏照片的工艺、尺度与布光各不相同，不能用作严格的同尺度材质验收。来源、授权、文件哈希和观察范围见 `qa/reference/ATLAS-SOURCES.json`。
 
 ## 后续路线
 
 1. **花叶组织**：解决交织横线的边缘连接，设计不同的密区、透空和花瓣针法，避免整片重复的篮织感；先对照真实工艺局部，再推广到裁切花片。
-2. **柔棉、丝光和细网标定**：获取同尺度、同光照的实物近景，分别调整线径、纤维细节、受光与背光；现有对照仍是视觉方向，不是测量材质。
+2. **柔棉、丝光和细网标定**：获取同尺度、同光照的实物近景，并评估可复用 PBR 贴图，分别调整线径、纤维细节、受光与背光；现有对照仍是视觉方向，不是测量材质。
 3. **网结与显示成本**：改进六角网交点和扭结，减少交织的几何开销，并检查远近变化、旋转时的细线闪烁以及较低配置设备。
 4. **背面与物理**：在视觉结构稳定后处理真实背面载纱、压实接触、垂坠和成衣碰撞。现有弯曲仅用于观察。
 
 可复现的测试、截图和未采用的试验见 `qa/README.md`；当前记录见 `STATUS.json`。
 
-完整源码、测试与试验工具见 [固定源码版本](https://github.com/haihao0307/Human-Fabric-Workbench/tree/1c984dc0825388aed4d1ceb5d0751ee8132bc9fc/experiments/lace-visual-r14-20261027)。本目录是预览打包，未合并至发布分支。
+完整源码、测试与试验工具见 [固定源码版本](https://github.com/haihao0307/Human-Fabric-Workbench/tree/a18329b2fc1f86124c2be6356bdca378e7578c13/experiments/lace-visual-r14-20261027)。本目录是预览打包，未合并至发布分支。
