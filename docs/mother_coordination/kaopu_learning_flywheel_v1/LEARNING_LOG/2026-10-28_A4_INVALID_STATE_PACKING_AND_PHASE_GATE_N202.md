@@ -123,7 +123,7 @@ libfive 继续保持 `TEACHER_CANDIDATE`，未获 Mother ACK，不进入 AUDITIO
 
 - SOURCE-INSPECTED：是
 - synthetic GATE-RUN：是，9/9 PASS
-- POSTED：待 #91 定向路由
+- POSTED：是，#91 comment `6451985431`
 - ACKNOWLEDGED：否
 - IMPLEMENTED：否
 - browser/device GATE-RUN：否
