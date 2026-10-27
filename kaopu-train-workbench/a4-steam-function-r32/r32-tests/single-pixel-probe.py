@@ -23,7 +23,10 @@ try:
   page.goto('http://127.0.0.1:'+str(server.server_port),wait_until='load')
   page.wait_for_function('window.__A4_NATIVE_PIXEL_RESULT',timeout=480000)
   report['result']=page.evaluate('__A4_NATIVE_PIXEL_RESULT');report['compiled']=page.evaluate('QA.compiled')
-  report['status']='DIAGNOSTIC_SINGLE_PIXEL_RETURNED' if report['result']['glError']==0 and not report['result']['contextLost'] else 'DIAGNOSTIC_GPU_FAILURE'
+  # Synchronous GL return can precede the queued contextlost event. Never accept zeros.
+  page.wait_for_timeout(500)
+  report['post_event_turn']=page.evaluate('({contextLost:document.getElementById("c").getContext("webgl2").isContextLost(),startup:window.A4_STARTUP?.state,qa:window.QA})')
+  report['status']='DIAGNOSTIC_SINGLE_PIXEL_RETURNED' if report['result']['glError']==0 and not report['result']['contextLost'] and not report['post_event_turn']['contextLost'] and report['result']['rgba'][3]==255 else 'DIAGNOSTIC_GPU_FAILURE'
   print(json.dumps(report),flush=True);browser.close()
 except Exception as e:
  report['status']='DIAGNOSTIC_FAILED_OR_TIMED_OUT';report['failure']=repr(e);raise
