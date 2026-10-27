@@ -1,0 +1,2692 @@
+{
+  "parameters": {
+    "revision": "R32-upstream-superheater-functional-schematic-01",
+    "units": "m",
+    "dimensions": "functional schematic; NOT measured historical dimensions",
+    "regulator": {
+      "center": [
+        0,
+        3.3,
+        -1.65
+      ],
+      "rear": -1.8,
+      "front": -1.5,
+      "seatFront": -1.72,
+      "discThickness": 0.016,
+      "discRadius": 0.04,
+      "lift": 0.06,
+      "bodyRadius": 0.09,
+      "chamberRadius": 0.07,
+      "bore": 0.026
+    },
+    "main": {
+      "points": [
+        [
+          0,
+          3.3,
+          -1.5
+        ],
+        [
+          0,
+          3.3,
+          3.31
+        ]
+      ],
+      "inner": 0.026,
+      "outer": 0.038,
+      "bend": 0.015
+    },
+    "element": {
+      "points": [
+        [
+          -0.25,
+          3.3,
+          3.3
+        ],
+        [
+          -0.25,
+          3.3,
+          3.19
+        ],
+        [
+          0,
+          3.045,
+          3.19
+        ],
+        [
+          0,
+          3.045,
+          -1.85
+        ],
+        [
+          0,
+          3.115,
+          -1.85
+        ],
+        [
+          0,
+          3.115,
+          3.19
+        ],
+        [
+          0.25,
+          3.05,
+          3.52
+        ],
+        [
+          0.25,
+          3.3,
+          3.52
+        ],
+        [
+          0.25,
+          3.3,
+          3.385
+        ]
+      ],
+      "inner": 0.012,
+      "outer": 0.018,
+      "bend": 0.03,
+      "count": 1,
+      "countVerified": false
+    },
+    "interface": {
+      "tubeplateRear": 3.09505,
+      "tubeplateFront": 3.13005,
+      "headerRear": 3.26,
+      "neckEnd": 3.257,
+      "flangeOuter": 0.065
+    },
+    "evidence": [
+      "https://www.sirnigelgresley.org.uk/eng-reports/eng-22.shtml",
+      "https://blog.railwaymuseum.org.uk/sir-nigel-gresley-overhaul-update-43/",
+      "https://kesr-mic.org.uk/resources/Superheaters.pdf"
+    ]
+  },
+  "parts": [
+    {
+      "id": "upstream_steam/regulator_body_and_seat",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_regulator_body_and_seat",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.8
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.5
+          ],
+          "r": 0.09
+        },
+        "b": {
+          "op": "union",
+          "nodes": [
+            {
+              "op": "cylinder",
+              "a": [
+                0,
+                3.3,
+                -1.802
+              ],
+              "b": [
+                0,
+                3.3,
+                -1.498
+              ],
+              "r": 0.026
+            },
+            {
+              "op": "cylinder",
+              "a": [
+                0,
+                3.3,
+                -1.72
+              ],
+              "b": [
+                0,
+                3.3,
+                -1.516
+              ],
+              "r": 0.07
+            }
+          ]
+        }
+      },
+      "role": "Simplified regulator pressure body and seat; actual A4 main/pilot valve arrangement NOT reconstructed",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.090001,
+        3.209999,
+        -1.890001
+      ],
+      "aabb_max": [
+        0.090001,
+        3.390001,
+        -1.409999
+      ],
+      "materialDescriptor": {
+        "preset": "neutral",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/regulator_valve_disc",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_regulator_valve_disc",
+      "ast": {
+        "op": "cylinder",
+        "a": [
+          0,
+          3.3,
+          -1.72
+        ],
+        "b": [
+          0,
+          3.3,
+          -1.704
+        ],
+        "r": 0.04
+      },
+      "role": "Functional lift-disc schematic: closed seat blocks inlet; lift permits annular passage, not an A4 valve-event model",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.040001,
+        3.2599989999999996,
+        -1.760001
+      ],
+      "aabb_max": [
+        0.040001,
+        3.340001,
+        -1.663999
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      },
+      "upstreamMotion": "regulatorLift"
+    },
+    {
+      "id": "upstream_steam/main_steam_pipe",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_main_steam_pipe",
+      "ast": {
+        "op": "tube",
+        "points": [
+          [
+            0,
+            3.3,
+            -1.5
+          ],
+          [
+            0,
+            3.3,
+            3.31
+          ]
+        ],
+        "ri": 0.026,
+        "ro": 0.038,
+        "bend": 0.015
+      },
+      "role": "Boiler internal hollow main steam pipe",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.038001,
+        3.261999,
+        -1.538001
+      ],
+      "aabb_max": [
+        0.038001,
+        3.3380009999999998,
+        3.348001
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/superheater_element",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_superheater_element",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.3
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.385
+            ]
+          ],
+          "r": 0.018,
+          "bend": 0.03
+        },
+        "b": {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.336
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.3489999999999998
+            ]
+          ],
+          "r": 0.012,
+          "bend": 0.03
+        }
+      },
+      "role": "Independent hollow superheater out-and-return element inside retained large flue; one simplified element",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.268001,
+        3.026999,
+        -1.868001
+      ],
+      "aabb_max": [
+        0.268001,
+        3.3180009999999998,
+        3.538001
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/tubeplate_flange_neck",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_tubeplate_flange_neck",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            3.13005
+          ],
+          "b": [
+            0,
+            3.3,
+            3.257
+          ],
+          "r": 0.065
+        },
+        "b": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            3.1280500000000004
+          ],
+          "b": [
+            0,
+            3.3,
+            3.259
+          ],
+          "r": 0.038
+        }
+      },
+      "role": "Schematic finite tubeplate flange/neck, physically meets retained tubeplate and header gasket",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.065001,
+        3.2349989999999997,
+        3.065049
+      ],
+      "aabb_max": [
+        0.065001,
+        3.365001,
+        3.322001
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/header_joint_gasket",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_header_joint_gasket",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            3.257
+          ],
+          "b": [
+            0,
+            3.3,
+            3.26
+          ],
+          "r": 0.065
+        },
+        "b": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            3.2550000000000003
+          ],
+          "b": [
+            0,
+            3.3,
+            3.2619999999999996
+          ],
+          "r": 0.038
+        }
+      },
+      "role": "Documented copper-gasket relationship, inferred dimensions",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.065001,
+        3.2349989999999997,
+        3.191999
+      ],
+      "aabb_max": [
+        0.065001,
+        3.365001,
+        3.325001
+      ],
+      "materialDescriptor": {
+        "preset": "copper",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/regulator_suspension_clamp",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_regulator_suspension_clamp",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.675
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.625
+          ],
+          "r": 0.1
+        },
+        "b": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.677
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.623
+          ],
+          "r": 0.09
+        }
+      },
+      "role": "Schematic regulator suspension contact; not drawing-derived hardware",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.100001,
+        3.1999989999999996,
+        -1.775001
+      ],
+      "aabb_max": [
+        0.100001,
+        3.400001,
+        -1.524999
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/regulator_suspension_beam",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_regulator_suspension_beam",
+      "ast": {
+        "op": "cylinder",
+        "a": [
+          -0.76,
+          3.41,
+          -1.65
+        ],
+        "b": [
+          0.76,
+          3.41,
+          -1.65
+        ],
+        "r": 0.012
+      },
+      "role": "Schematic suspension beam engaging retained boiler wall; support relation documented, placement and strength unknown",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.772001,
+        3.397999,
+        -1.6620009999999998
+      ],
+      "aabb_max": [
+        0.772001,
+        3.4220010000000003,
+        -1.637999
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/main_pipe_support_clamp",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_main_pipe_support_clamp",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            0.775
+          ],
+          "b": [
+            0,
+            3.3,
+            0.825
+          ],
+          "r": 0.05
+        },
+        "b": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            0.773
+          ],
+          "b": [
+            0,
+            3.3,
+            0.827
+          ],
+          "r": 0.038
+        }
+      },
+      "role": "Documented intermediate support relationship; ring form and location schematic",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.050001000000000004,
+        3.249999,
+        0.724999
+      ],
+      "aabb_max": [
+        0.050001000000000004,
+        3.350001,
+        0.875001
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    },
+    {
+      "id": "upstream_steam/main_pipe_support_hanger",
+      "source": "upstreamSteam",
+      "group": "upstream_steam",
+      "glsl_function": "up_main_pipe_support_hanger",
+      "ast": {
+        "op": "box",
+        "c": [
+          0,
+          3.5376624999999997,
+          0.8
+        ],
+        "h": [
+          0.01,
+          0.19066249999999996,
+          0.018
+        ]
+      },
+      "role": "Schematic hanger to retained boiler shell, not a verified real bracket",
+      "status": "functional schematic; added dimensions and exact arrangement unverified",
+      "lipschitz": 1.000002,
+      "aabb_min": [
+        -0.010001,
+        3.3469989999999994,
+        0.781999
+      ],
+      "aabb_max": [
+        0.010001,
+        3.728326,
+        0.8180010000000001
+      ],
+      "materialDescriptor": {
+        "preset": "steel",
+        "basis": "explicit schematic role; not historic material determination",
+        "finish": "retained analytic material; no displacement"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "id": "main_steam_pipe",
+      "partId": "upstream_steam/main_steam_pipe",
+      "points": [
+        [
+          0,
+          3.3,
+          -1.5
+        ],
+        [
+          0,
+          3.3,
+          3.31
+        ]
+      ],
+      "innerRadius": 0.026,
+      "outerRadius": 0.038,
+      "bend": 0.015,
+      "lumenDomain": "lumen/main_steam_pipe",
+      "ast": {
+        "op": "tube",
+        "points": [
+          [
+            0,
+            3.3,
+            -1.5
+          ],
+          [
+            0,
+            3.3,
+            3.31
+          ]
+        ],
+        "ri": 0.026,
+        "ro": 0.038,
+        "bend": 0.015
+      },
+      "envelope": {
+        "op": "path",
+        "points": [
+          [
+            0,
+            3.3,
+            -1.5
+          ],
+          [
+            0,
+            3.3,
+            3.31
+          ]
+        ],
+        "r": 0.038,
+        "bend": 0.015
+      },
+      "openEndConstruction": "straight planar mouths"
+    },
+    {
+      "id": "superheater_element",
+      "partId": "upstream_steam/superheater_element",
+      "points": [
+        [
+          -0.25,
+          3.3,
+          3.3
+        ],
+        [
+          -0.25,
+          3.3,
+          3.19
+        ],
+        [
+          0,
+          3.045,
+          3.19
+        ],
+        [
+          0,
+          3.045,
+          -1.85
+        ],
+        [
+          0,
+          3.115,
+          -1.85
+        ],
+        [
+          0,
+          3.115,
+          3.19
+        ],
+        [
+          0.25,
+          3.05,
+          3.52
+        ],
+        [
+          0.25,
+          3.3,
+          3.52
+        ],
+        [
+          0.25,
+          3.3,
+          3.385
+        ]
+      ],
+      "innerRadius": 0.012,
+      "outerRadius": 0.018,
+      "bend": 0.03,
+      "lumenDomain": "lumen/superheater_element",
+      "ast": {
+        "op": "subtract",
+        "a": {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.3
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.385
+            ]
+          ],
+          "r": 0.018,
+          "bend": 0.03
+        },
+        "b": {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.336
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.3489999999999998
+            ]
+          ],
+          "r": 0.012,
+          "bend": 0.03
+        }
+      },
+      "envelope": {
+        "op": "path",
+        "points": [
+          [
+            -0.25,
+            3.3,
+            3.3
+          ],
+          [
+            -0.25,
+            3.3,
+            3.19
+          ],
+          [
+            0,
+            3.045,
+            3.19
+          ],
+          [
+            0,
+            3.045,
+            -1.85
+          ],
+          [
+            0,
+            3.115,
+            -1.85
+          ],
+          [
+            0,
+            3.115,
+            3.19
+          ],
+          [
+            0.25,
+            3.05,
+            3.52
+          ],
+          [
+            0.25,
+            3.3,
+            3.52
+          ],
+          [
+            0.25,
+            3.3,
+            3.385
+          ]
+        ],
+        "r": 0.018,
+        "bend": 0.03
+      },
+      "openEndConstruction": "rounded envelope minus extended bore"
+    }
+  ],
+  "hostCuts": {
+    "boiler/outer_steel_shell": {
+      "ast": {
+        "op": "cylinder",
+        "a": [
+          0,
+          3.3,
+          3.09205
+        ],
+        "b": [
+          0,
+          3.3,
+          3.1330500000000003
+        ],
+        "r": 0.038
+      },
+      "glsl_function": "up_cut_boiler_front_tubeplate",
+      "reason": "Main-pipe aperture in actual visible front-tubeplate host; never modify fire tubes/frame/axles"
+    },
+    "smokebox/superheater_header": {
+      "ast": {
+        "op": "union",
+        "nodes": [
+          {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.255
+            ],
+            "b": [
+              0,
+              3.3,
+              3.315
+            ],
+            "r": 0.038
+          },
+          {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.3
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.385
+              ]
+            ],
+            "r": 0.018,
+            "bend": 0.03
+          }
+        ]
+      },
+      "glsl_function": "up_cut_header_interfaces",
+      "reason": "Finite main inlet and independent element out/return sockets; separator untouched"
+    }
+  },
+  "ports": [
+    {
+      "id": "boiler/upper_takeoff",
+      "position": [
+        0,
+        3.3,
+        -1.804
+      ],
+      "direction": [
+        0,
+        0,
+        -1
+      ],
+      "radius": 0.026,
+      "host": "boiler/outer_steel_shell",
+      "kind": "upper boiler common water-or-steam domain; no verified phase boundary"
+    },
+    {
+      "id": "regulator/outlet",
+      "position": [
+        0,
+        3.3,
+        -1.5
+      ],
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "radius": 0.026,
+      "host": "upstream_steam/regulator_body_and_seat"
+    },
+    {
+      "id": "tubeplate/main_pipe",
+      "position": [
+        0,
+        3.3,
+        3.11255
+      ],
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "radius": 0.026,
+      "host": "boiler/outer_steel_shell"
+    },
+    {
+      "id": "header/main_inlet",
+      "position": [
+        0,
+        3.3,
+        3.31
+      ],
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "radius": 0.026,
+      "host": "smokebox/superheater_header",
+      "domain": "header/pre_superheat"
+    },
+    {
+      "id": "header/element_out",
+      "position": [
+        -0.25,
+        3.3,
+        3.3
+      ],
+      "direction": [
+        0,
+        0,
+        -1
+      ],
+      "radius": 0.012,
+      "host": "smokebox/superheater_header",
+      "domain": "header/pre_superheat"
+    },
+    {
+      "id": "header/element_return",
+      "position": [
+        0.25,
+        3.3,
+        3.385
+      ],
+      "direction": [
+        0,
+        0,
+        -1
+      ],
+      "radius": 0.012,
+      "host": "smokebox/superheater_header",
+      "domain": "header/post_superheat"
+    }
+  ],
+  "expectedContacts": [
+    [
+      "upstream_steam/regulator_body_and_seat",
+      "upstream_steam/main_steam_pipe"
+    ],
+    [
+      "upstream_steam/regulator_valve_disc",
+      "upstream_steam/regulator_body_and_seat"
+    ],
+    [
+      "upstream_steam/tubeplate_flange_neck",
+      "boiler/outer_steel_shell"
+    ],
+    [
+      "upstream_steam/tubeplate_flange_neck",
+      "upstream_steam/header_joint_gasket"
+    ],
+    [
+      "upstream_steam/header_joint_gasket",
+      "smokebox/superheater_header"
+    ],
+    [
+      "upstream_steam/regulator_suspension_clamp",
+      "upstream_steam/regulator_body_and_seat"
+    ],
+    [
+      "upstream_steam/regulator_suspension_clamp",
+      "upstream_steam/regulator_suspension_beam"
+    ],
+    [
+      "upstream_steam/regulator_suspension_beam",
+      "boiler/outer_steel_shell"
+    ],
+    [
+      "upstream_steam/main_pipe_support_clamp",
+      "upstream_steam/main_steam_pipe"
+    ],
+    [
+      "upstream_steam/main_pipe_support_clamp",
+      "upstream_steam/main_pipe_support_hanger"
+    ],
+    [
+      "upstream_steam/main_pipe_support_hanger",
+      "boiler/outer_steel_shell"
+    ]
+  ],
+  "environmentExclusions": {
+    "pr_boiler_water_or_steam_space": {
+      "op": "union",
+      "nodes": [
+        {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.8
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.5
+          ],
+          "r": 0.09
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "r": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.3
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.385
+            ]
+          ],
+          "r": 0.018,
+          "bend": 0.03
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.8
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.5
+            ],
+            "r": 0.09
+          },
+          "b": {
+            "op": "union",
+            "nodes": [
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.802
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.498
+                ],
+                "r": 0.026
+              },
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.72
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.516
+                ],
+                "r": 0.07
+              }
+            ]
+          }
+        },
+        {
+          "op": "tube",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "ri": 0.026,
+          "ro": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.3
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.385
+              ]
+            ],
+            "r": 0.018,
+            "bend": 0.03
+          },
+          "b": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.336
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.3489999999999998
+              ]
+            ],
+            "r": 0.012,
+            "bend": 0.03
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.13005
+            ],
+            "b": [
+              0,
+              3.3,
+              3.257
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.1280500000000004
+            ],
+            "b": [
+              0,
+              3.3,
+              3.259
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.257
+            ],
+            "b": [
+              0,
+              3.3,
+              3.26
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.2550000000000003
+            ],
+            "b": [
+              0,
+              3.3,
+              3.2619999999999996
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.675
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.625
+            ],
+            "r": 0.1
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.677
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.623
+            ],
+            "r": 0.09
+          }
+        },
+        {
+          "op": "cylinder",
+          "a": [
+            -0.76,
+            3.41,
+            -1.65
+          ],
+          "b": [
+            0.76,
+            3.41,
+            -1.65
+          ],
+          "r": 0.012
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.775
+            ],
+            "b": [
+              0,
+              3.3,
+              0.825
+            ],
+            "r": 0.05
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.773
+            ],
+            "b": [
+              0,
+              3.3,
+              0.827
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "box",
+          "c": [
+            0,
+            3.5376624999999997,
+            0.8
+          ],
+          "h": [
+            0.01,
+            0.19066249999999996,
+            0.018
+          ]
+        }
+      ]
+    },
+    "pr_boiler_tube_hot": {
+      "op": "union",
+      "nodes": [
+        {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.8
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.5
+          ],
+          "r": 0.09
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "r": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.3
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.385
+            ]
+          ],
+          "r": 0.018,
+          "bend": 0.03
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.8
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.5
+            ],
+            "r": 0.09
+          },
+          "b": {
+            "op": "union",
+            "nodes": [
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.802
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.498
+                ],
+                "r": 0.026
+              },
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.72
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.516
+                ],
+                "r": 0.07
+              }
+            ]
+          }
+        },
+        {
+          "op": "tube",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "ri": 0.026,
+          "ro": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.3
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.385
+              ]
+            ],
+            "r": 0.018,
+            "bend": 0.03
+          },
+          "b": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.336
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.3489999999999998
+              ]
+            ],
+            "r": 0.012,
+            "bend": 0.03
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.13005
+            ],
+            "b": [
+              0,
+              3.3,
+              3.257
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.1280500000000004
+            ],
+            "b": [
+              0,
+              3.3,
+              3.259
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.257
+            ],
+            "b": [
+              0,
+              3.3,
+              3.26
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.2550000000000003
+            ],
+            "b": [
+              0,
+              3.3,
+              3.2619999999999996
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.675
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.625
+            ],
+            "r": 0.1
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.677
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.623
+            ],
+            "r": 0.09
+          }
+        },
+        {
+          "op": "cylinder",
+          "a": [
+            -0.76,
+            3.41,
+            -1.65
+          ],
+          "b": [
+            0.76,
+            3.41,
+            -1.65
+          ],
+          "r": 0.012
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.775
+            ],
+            "b": [
+              0,
+              3.3,
+              0.825
+            ],
+            "r": 0.05
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.773
+            ],
+            "b": [
+              0,
+              3.3,
+              0.827
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "box",
+          "c": [
+            0,
+            3.5376624999999997,
+            0.8
+          ],
+          "h": [
+            0.01,
+            0.19066249999999996,
+            0.018
+          ]
+        }
+      ]
+    },
+    "pr_smokebox_combustion_gas_domain": {
+      "op": "union",
+      "nodes": [
+        {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            -1.8
+          ],
+          "b": [
+            0,
+            3.3,
+            -1.5
+          ],
+          "r": 0.09
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "r": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "path",
+          "points": [
+            [
+              -0.25,
+              3.3,
+              3.3
+            ],
+            [
+              -0.25,
+              3.3,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              3.19
+            ],
+            [
+              0,
+              3.045,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              -1.85
+            ],
+            [
+              0,
+              3.115,
+              3.19
+            ],
+            [
+              0.25,
+              3.05,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.52
+            ],
+            [
+              0.25,
+              3.3,
+              3.385
+            ]
+          ],
+          "r": 0.018,
+          "bend": 0.03
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.8
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.5
+            ],
+            "r": 0.09
+          },
+          "b": {
+            "op": "union",
+            "nodes": [
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.802
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.498
+                ],
+                "r": 0.026
+              },
+              {
+                "op": "cylinder",
+                "a": [
+                  0,
+                  3.3,
+                  -1.72
+                ],
+                "b": [
+                  0,
+                  3.3,
+                  -1.516
+                ],
+                "r": 0.07
+              }
+            ]
+          }
+        },
+        {
+          "op": "tube",
+          "points": [
+            [
+              0,
+              3.3,
+              -1.5
+            ],
+            [
+              0,
+              3.3,
+              3.31
+            ]
+          ],
+          "ri": 0.026,
+          "ro": 0.038,
+          "bend": 0.015
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.3
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.385
+              ]
+            ],
+            "r": 0.018,
+            "bend": 0.03
+          },
+          "b": {
+            "op": "path",
+            "points": [
+              [
+                -0.25,
+                3.3,
+                3.336
+              ],
+              [
+                -0.25,
+                3.3,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                3.19
+              ],
+              [
+                0,
+                3.045,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                -1.85
+              ],
+              [
+                0,
+                3.115,
+                3.19
+              ],
+              [
+                0.25,
+                3.05,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.52
+              ],
+              [
+                0.25,
+                3.3,
+                3.3489999999999998
+              ]
+            ],
+            "r": 0.012,
+            "bend": 0.03
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.13005
+            ],
+            "b": [
+              0,
+              3.3,
+              3.257
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.1280500000000004
+            ],
+            "b": [
+              0,
+              3.3,
+              3.259
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.257
+            ],
+            "b": [
+              0,
+              3.3,
+              3.26
+            ],
+            "r": 0.065
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              3.2550000000000003
+            ],
+            "b": [
+              0,
+              3.3,
+              3.2619999999999996
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.675
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.625
+            ],
+            "r": 0.1
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              -1.677
+            ],
+            "b": [
+              0,
+              3.3,
+              -1.623
+            ],
+            "r": 0.09
+          }
+        },
+        {
+          "op": "cylinder",
+          "a": [
+            -0.76,
+            3.41,
+            -1.65
+          ],
+          "b": [
+            0.76,
+            3.41,
+            -1.65
+          ],
+          "r": 0.012
+        },
+        {
+          "op": "subtract",
+          "a": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.775
+            ],
+            "b": [
+              0,
+              3.3,
+              0.825
+            ],
+            "r": 0.05
+          },
+          "b": {
+            "op": "cylinder",
+            "a": [
+              0,
+              3.3,
+              0.773
+            ],
+            "b": [
+              0,
+              3.3,
+              0.827
+            ],
+            "r": 0.038
+          }
+        },
+        {
+          "op": "box",
+          "c": [
+            0,
+            3.5376624999999997,
+            0.8
+          ],
+          "h": [
+            0.01,
+            0.19066249999999996,
+            0.018
+          ]
+        }
+      ]
+    }
+  },
+  "network": {
+    "theta": 0.4,
+    "installation": {
+      "mode": "candidate",
+      "beta": 0.126,
+      "steamRevision": "r32",
+      "regulatorOpen": 1
+    },
+    "enabled": true,
+    "regulatorOpen": 1,
+    "upstreamGeometricallyBuilt": true,
+    "superheaterElementGeometricallyBuilt": true,
+    "supplyReachability": "geometric candidate path to three supply branches; valve events unverified",
+    "connections": [
+      {
+        "from": "header/post_superheat",
+        "to": "left/supply",
+        "via": [
+          "steam_path/left_steel_branch",
+          "steam_path/left_lens_ring",
+          "steam_path/left_cast_top_pipe"
+        ],
+        "state": "connected_candidate",
+        "label": "left 分段供汽候选",
+        "reason": "Constructed open bores and finite flange/lens contact; endpoint tests pass, whole-neighbor and loaded seal verification not implied"
+      },
+      {
+        "from": "left/rear_working",
+        "to": "chamber/left/rear",
+        "via": [
+          "steam_path/left_rear_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "left rear 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "from": "left/front_working",
+        "to": "chamber/left/front",
+        "via": [
+          "steam_path/left_front_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "left front 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "from": "header/post_superheat",
+        "to": "middle/supply",
+        "via": [
+          "steam_path/middle_steel_branch",
+          "steam_path/middle_lens_ring",
+          "steam_path/middle_cast_top_pipe"
+        ],
+        "state": "connected_candidate",
+        "label": "middle 分段供汽候选",
+        "reason": "Constructed open bores and finite flange/lens contact; endpoint tests pass, whole-neighbor and loaded seal verification not implied"
+      },
+      {
+        "from": "middle/rear_working",
+        "to": "chamber/middle/rear",
+        "via": [
+          "steam_path/middle_rear_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "middle rear 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "from": "middle/front_working",
+        "to": "chamber/middle/front",
+        "via": [
+          "steam_path/middle_front_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "middle front 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "from": "header/post_superheat",
+        "to": "right/supply",
+        "via": [
+          "steam_path/right_steel_branch",
+          "steam_path/right_lens_ring",
+          "steam_path/right_cast_top_pipe"
+        ],
+        "state": "connected_candidate",
+        "label": "right 分段供汽候选",
+        "reason": "Constructed open bores and finite flange/lens contact; endpoint tests pass, whole-neighbor and loaded seal verification not implied"
+      },
+      {
+        "from": "right/rear_working",
+        "to": "chamber/right/rear",
+        "via": [
+          "steam_path/right_rear_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "right rear 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "from": "right/front_working",
+        "to": "chamber/right/front",
+        "via": [
+          "steam_path/right_front_working_passage"
+        ],
+        "state": "connected_candidate",
+        "label": "right front 工作腔候选连接",
+        "reason": "Constructed subtract-only wall port at end station; endpoint test passes; full-route clearance, pressure and valve events remain separate checks"
+      },
+      {
+        "state": "connected_schematic",
+        "dimensions": "inferred functional schematic",
+        "from": "boiler_water_or_steam",
+        "to": "regulator",
+        "via": [
+          "upstream_steam/regulator_body_and_seat"
+        ]
+      },
+      {
+        "state": "connected_schematic",
+        "dimensions": "inferred functional schematic",
+        "from": "regulator",
+        "to": "main_steam_pipe",
+        "via": [
+          "upstream_steam/regulator_valve_disc",
+          "upstream_steam/main_steam_pipe"
+        ]
+      },
+      {
+        "state": "connected_schematic",
+        "dimensions": "inferred functional schematic",
+        "from": "main_steam_pipe",
+        "to": "header/pre_superheat",
+        "via": [
+          "upstream_steam/main_steam_pipe",
+          "upstream_steam/tubeplate_flange_neck",
+          "upstream_steam/header_joint_gasket"
+        ]
+      },
+      {
+        "state": "connected_schematic",
+        "dimensions": "inferred functional schematic",
+        "from": "header/pre_superheat",
+        "to": "superheater_elements",
+        "via": [
+          "upstream_steam/superheater_element"
+        ]
+      },
+      {
+        "state": "connected_schematic",
+        "dimensions": "inferred functional schematic",
+        "from": "superheater_elements",
+        "to": "header/post_superheat",
+        "via": [
+          "upstream_steam/superheater_element"
+        ]
+      }
+    ],
+    "missingEdges": [
+      {
+        "from": "left/exhaust",
+        "to": "exhaust_collector",
+        "reason": "Real exhaust convergence unknown; no invented crossover",
+        "state": "open_break",
+        "label": "left/exhaust → exhaust_collector"
+      },
+      {
+        "from": "middle/exhaust",
+        "to": "exhaust_collector",
+        "reason": "Real exhaust convergence unknown; no invented crossover",
+        "state": "open_break",
+        "label": "middle/exhaust → exhaust_collector"
+      },
+      {
+        "from": "right/exhaust",
+        "to": "exhaust_collector",
+        "reason": "Real exhaust convergence unknown; no invented crossover",
+        "state": "open_break",
+        "label": "right/exhaust → exhaust_collector"
+      },
+      {
+        "from": "exhaust_collector",
+        "to": "existing_two_nozzles",
+        "reason": "Collector / two-nozzle distribution unknown",
+        "state": "open_break",
+        "label": "exhaust_collector → existing_two_nozzles"
+      }
+    ],
+    "conditionalEdges": [
+      {
+        "from": "left/supply",
+        "to": "left/rear_working",
+        "state": "unverified",
+        "label": "left rear 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      },
+      {
+        "from": "left/supply",
+        "to": "left/front_working",
+        "state": "unverified",
+        "label": "left front 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      },
+      {
+        "from": "middle/supply",
+        "to": "middle/rear_working",
+        "state": "unverified",
+        "label": "middle rear 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      },
+      {
+        "from": "middle/supply",
+        "to": "middle/front_working",
+        "state": "unverified",
+        "label": "middle front 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      },
+      {
+        "from": "right/supply",
+        "to": "right/rear_working",
+        "state": "unverified",
+        "label": "right rear 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      },
+      {
+        "from": "right/supply",
+        "to": "right/front_working",
+        "state": "unverified",
+        "label": "right front 配汽事件",
+        "reason": "Existing moving valve solid controls geometric occlusion; real A4 timing and admission mapping unverified"
+      }
+    ],
+    "forbiddenEdges": [
+      [
+        "header/pre_superheat",
+        "header/post_superheat"
+      ],
+      [
+        "header/post_superheat",
+        "smokebox_combustion_gas"
+      ]
+    ],
+    "completeSteamCycle": false,
+    "historicalValveEventsVerified": false,
+    "actualElementCountVerified": false,
+    "dimensionsVerified": false,
+    "CFD": false
+  }
+}

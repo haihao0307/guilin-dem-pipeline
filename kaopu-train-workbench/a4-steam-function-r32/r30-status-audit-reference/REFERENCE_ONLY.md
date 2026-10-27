@@ -1,0 +1,1 @@
+This frozen saved-witness audit belongs to R30. R31 changes declared host apertures and adds pipes. CI runs the actual retained R30 directory for this regression; it does not claim this reference package certifies the R31 additions. New steam-neighbor results are separate.

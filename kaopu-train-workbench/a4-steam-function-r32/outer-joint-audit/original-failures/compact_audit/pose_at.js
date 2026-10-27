@@ -1,0 +1,5 @@
+/* Reusable arbitrary phase adapter. No path interpolation or state mutation. */
+const {load}=require('./model_context'),c=load(),D=c.DYNAMIC,G=D.gresleySolver,theta=Number(process.argv[2]||.4),inst=D.snapshot({mode:'candidate',beta:.126}),ids=new Set(require('./SOURCE_FIELDS.json').map(p=>p.id));
+if(!Number.isFinite(theta))throw Error('Finite absolute theta required; Time = theta - .4');
+function inv(p,v){const g=D.gresleyFrame(p,theta,inst);if(g)return G.transformPoint(v,g,true);const f=D.valveFrame(p,theta,inst);if(f)return D.valvePoint(v,f,true);return D.transform(v,theta,D.classify(p),true,inst);}
+const frame={theta,Time:theta-.4,parts:Object.fromEntries(c.SCENE.parts.filter(p=>ids.has(p.id)).map(p=>{const off=inv(p,[0,0,0]),cols=[[1,0,0],[0,1,0],[0,0,1]].map(v=>inv(p,v).map((x,j)=>x-off[j]));return[p.id,{bounds:D.bounds(p,theta,inst),inverseOffset:off,inverseRows:[0,1,2].map(j=>cols.map(v=>v[j]))}];})),sides:Object.fromEntries(['left','right'].map(s=>[s,D.outsideValveSolver.pose(theta,s)]))};console.log(JSON.stringify(frame));

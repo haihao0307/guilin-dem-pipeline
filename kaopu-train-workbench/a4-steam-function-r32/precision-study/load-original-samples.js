@@ -1,0 +1,3 @@
+'use strict';
+const crypto=require('crypto'),assert=require('assert'),manifest=require('./ORIGINAL_SAMPLE_MANIFEST.json');
+module.exports=function(){const m=manifest.packetMetadata,samples=manifest.sampleChunks.flatMap(file=>require('./'+file)),packet={version:m.version,sourceSHA256:m.sourceSHA256,commonSHA256:m.commonSHA256,tolerance_m:m.tolerance_m,samples,scope:m.scope};assert.strictEqual(samples.length,manifest.samples);const bytes=JSON.stringify(packet);assert.strictEqual(Buffer.byteLength(bytes),manifest.originalPacketBytes);assert.strictEqual(crypto.createHash('sha256').update(bytes).digest('hex'),manifest.originalPacketSHA256,'Original exact packet reconstruction drift');return packet;};

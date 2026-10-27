@@ -1,0 +1,83 @@
+name: A4 whole steam connection research QA
+on:
+  push:
+    branches: ['trial/a4-function-assembly-r19-20261024']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            kaopu-train-workbench/a4-steam-connection-r31
+            kaopu-train-workbench/a4-outer-crosshead-r30
+            kaopu-train-workbench/a4-dynamic-r22
+      - name: Install pinned test dependencies
+        run: |
+          python -m pip install playwright==1.57.0 numpy==2.3.5 scipy==1.17.0
+          python -m playwright install --with-deps chromium
+      - name: Whole analytic browser compilation and render
+        working-directory: kaopu-train-workbench/a4-steam-connection-r31
+        run: |
+          node build_middle_chest.js
+          python test_dynamic.py
+          node test_dynamic_js.js
+          node test_installation_adapter.js
+          node test_controls.js
+          node test-candidate.js .
+          node test-expression-parity.js
+          node test-assembly.js .
+          node build-gpu-samples.js .
+          node test-steam-path.js .
+          node test-steam-joint-hardware.js
+          node test-steam-lumen-stations.js
+          node test-steam-whole-integration.js
+          node test-steam-inspection.js
+          node build-steam-gpu-samples.js
+          node test-steam-audit-lock.js
+          node precision-study/run.js
+          node precision-study/verify-installed.js .
+          node test-steam-numeric-integration.js
+          node test-steam-probe-oracle.js
+          python steam-neighbor-audit/replay_compact.py | tee STEAM_NEIGHBOR_REPLAY_QA.json
+          python steam-neighbor-audit/replay_hardware.py | tee STEAM_HARDWARE_REPLAY_QA.json
+          python outer-joint-audit/reconstruct_inputs.py
+          python outer-joint-audit/replay_current.py
+          python outer-joint-audit/original-failures/compact_audit/replay_witnesses.py
+          node test_resolution.js
+          node test_material_renderer.js
+          node material-wave-study/test-material-waves.js
+          node test_cover_export.js
+          node test_topology_integration.js
+          node test_topology_materials.js
+          node installation-topology-study/test_solver.js --model .
+          node installation-topology-study/test_actual_casting.js --model .
+          node frame-support-study/test_support_export.js --model .
+          for snapshot in profile_beta011 profile_beta0126 profile_beta016; do python whole-profile-audit/profile_portable_audit/replay_compact_witnesses.py whole-profile-audit/profile_portable_audit/$snapshot; done
+          timeout 900s python browser_qa.py
+      - name: Historical baseline negative-control regression (not candidate acceptance)
+        working-directory: kaopu-train-workbench/a4-steam-connection-r31
+        run: |
+          python test_baseline_negative_control.py
+      - name: Retained R30 saved-witness classification (new steam neighbors separate)
+        working-directory: kaopu-train-workbench/a4-steam-connection-r31
+        run: |
+          node ../a4-outer-crosshead-r30/current-status-audit/run-current-audit.js ../a4-outer-crosshead-r30 | tee R30_INHERITED_CURRENT_STATUS_QA.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: a4-steam-connection-r31-${{ github.sha }}
+          path: |
+            kaopu-train-workbench/a4-steam-connection-r31/*QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/R30_INHERITED_CURRENT_STATUS_QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/valve-reconstruction/*QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/gresley-reconstruction/*QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/*-whole.png
+            kaopu-train-workbench/a4-steam-connection-r31/material-wave-study/*QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/whole-neighbors/*QA.json
+            kaopu-train-workbench/a4-steam-connection-r31/r31-whole-interface.png
+          retention-days: 30

@@ -1,0 +1,7 @@
+'use strict';
+const cp=require('child_process'),assert=require('assert'),fs=require('fs'),path=require('path');
+for(const f of ['verify-locks.js','model.js','validate-equivalence.js','verify-host-locks.js','model-phase.js'])cp.execFileSync(process.execPath,[path.join(__dirname,f)],{cwd:__dirname,stdio:'pipe'});
+const read=n=>JSON.parse(fs.readFileSync(path.join(__dirname,n),'utf8')),lock=read('SOURCE_CPU_LOCK_QA.json'),model=read('FLOAT32_MODEL_QA.json'),eq=read('PRECISION_EQUIVALENCE_QA.json');
+assert.strictEqual(lock.status,'PASS');for(const r of model.reports){assert.strictEqual(r.samples,1068);assert.strictEqual(r.over4micron,0);assert.strictEqual(r.nonfinite,0);assert.ok(r.maxError<=4e-6);}
+assert.strictEqual(eq.cpuAndASTUnchanged,true);assert.strictEqual(eq.parametersUnchanged,true);assert.strictEqual(eq.originalGPUFailures.count,58);assert.strictEqual(eq.originalGPUFailures.proposedOver4micron,0);assert.ok(eq.continuousBetaSweep.maxDoubleDifference<1e-12);assert.ok(eq.continuousBetaSweep.maxFloat32Difference<=4e-6);
+const result={status:'PASS_CPU_ONLY',originalGPUStatus:'FAIL_RETAINED_UNCHANGED',newGPUExecution:false,originalPacketSamples:1068,originalFailuresRetained:58,tolerance_m:4e-6,proposedPacketMaxError_m:model.reports[1].maxError,routeSweepSamples:eq.continuousBetaSweep.samples,routeSweepMaxError_m:eq.continuousBetaSweep.maxFloat32Difference,cpuGeometryChanged:false,hostChangesApplied:false};fs.writeFileSync(path.join(__dirname,'STUDY_QA.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

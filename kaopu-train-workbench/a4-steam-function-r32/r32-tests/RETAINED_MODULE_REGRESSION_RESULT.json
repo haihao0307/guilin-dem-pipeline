@@ -1,0 +1,67 @@
+{
+  "checked": "2026-10-27T00:08:46.802213+00:00",
+  "scope": "Unchanged retained component modules tested, not whole R32 browser acceptance",
+  "tests": [
+    {
+      "command": [
+        "node",
+        "test-steam-path.js",
+        "."
+      ],
+      "exit": 0,
+      "seconds": 0.3136298656463623,
+      "stdout": "{\n  \"status\": \"PASS scoped CPU gates; independent whole-neighbor and browser verification still required\",\n  \"parts\": 31,\n  \"baselineVisible\": 519,\n  \"candidateVisible\": 693,\n  \"modifiedHostIDs\": [\n    \"smokebox/superheater_header\",\n    \"smokebox/smokebox_wrapper\",\n    \"actuation/left_cylinder_wall\",\n    \"valve_chest/left_rear_working_stub_wall\",\n    \"valve_chest/left_front_working_stub_wall\",\n    \"middle_topology/chest_wall\",\n    \"middle_topology/common_casting_web\",\n    \"actuation/middle_cylinder_wall\",\n    \"actuation/right_cylinder_wall\",\n    \"valve_chest/right_rear_working_stub_wall\",\n    \"valve_chest/right_front_working_stub_wall\"\n  ],\n  \"originalSourcesAndPartsUnchanged\": true,\n  \"originalHostCutTableUnchanged\": true,\n  \"arcBacksideDenseReferenceMaxError\": 0.000006211672473457051,\n  \"arcBranchLipschitzExcess\": 2.875570976809943e-18,\n  \"finiteSamples\": 13485,\n  \"boundsMisses\": 0,\n  \"samePoseMaxError\": 0,\n  \"minimumEndPortPistonAxialMargin\": 0.004800000000000155,\n  \"graphBreaks\": 9,\n  \"physicalAcceptance\": false,\n  \"CFD\": false,\n  \"pressureCertified\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "test-steam-joint-hardware.js"
+      ],
+      "exit": 0,
+      "seconds": 0.07311868667602539,
+      "stdout": "{\n  \"status\": \"PASS scoped finite joint hardware regression\",\n  \"previousParts\": 22,\n  \"currentParts\": 31,\n  \"addedIDs\": [\n    \"steam_path/left_joint_studs\",\n    \"steam_path/left_joint_nuts\",\n    \"steam_path/left_joint_washers\",\n    \"steam_path/middle_joint_studs\",\n    \"steam_path/middle_joint_nuts\",\n    \"steam_path/middle_joint_washers\",\n    \"steam_path/right_joint_studs\",\n    \"steam_path/right_joint_nuts\",\n    \"steam_path/right_joint_washers\"\n  ],\n  \"modifiedNewFlangeIDs\": [\n    \"steam_path/left_steel_joint_flange\",\n    \"steam_path/left_cast_joint_flange\",\n    \"steam_path/middle_steel_joint_flange\",\n    \"steam_path/middle_cast_joint_flange\",\n    \"steam_path/right_steel_joint_flange\",\n    \"steam_path/right_cast_joint_flange\"\n  ],\n  \"unchangedOldCandidateGeometry\": [\n    \"steam_path/header_separator\",\n    \"steam_path/left_steel_branch\",\n    \"steam_path/left_cast_top_pipe\",\n    \"steam_path/left_lens_ring\",\n    \"steam_path/left_rear_working_passage\",\n    \"steam_path/left_front_working_passage\",\n    \"steam_path/middle_steel_branch\",\n    \"steam_path/middle_cast_top_pipe\",\n    \"steam_path/middle_lens_ring\",\n    \"steam_path/middle_rear_working_passage\",\n    \"steam_path/middle_front_working_passage\",\n    \"steam_path/right_steel_branch\",\n    \"steam_path/right_cast_top_pipe\",\n    \"steam_path/right_lens_ring\",\n    \"steam_path/right_rear_working_passage\",\n    \"steam_path/right_front_working_passage\"\n  ],\n  \"all11HostCutsUnchanged\": true,\n  \"allPassageDomainsAndRoutesUnchanged\": true,\n  \"newFlangeHoleCentersVerified\": 24,\n  \"hardwareInteriorWitnesses\": 60,\n  \"minimumWitnessDepth\": 0.0009999999999998899,\n  \"studHoleRadialClearance\": 0.0005,\n  \"washerToLensEnvelopeRadialGap\": 0.000999999999999994,\n  \"clampCountPerJoint\": 4,\n  \"countAndDimensionsInferred\": true,\n  \"threadResolved\": false,\n  \"preloadVerified\": false,\n  \"loadedSealVerified\": false,\n  \"wholeMechanicalAcceptance\": false,\n  \"sourceSHA256\": \"c2bfae8d821e81d3c567e38e1e18814e9d0929606dc6435a7922d0d285921e62\",\n  \"commonSourceSHA256\": \"387740d13e3c07cc8f48358712d0f57562f8b6bdc9159ae1d249f2e229ebbad4\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "test-steam-lumen-stations.js"
+      ],
+      "exit": 0,
+      "seconds": 2.509453535079956,
+      "stdout": "{\n  \"status\": \"PASS sampled end-zone lumen regression only\",\n  \"checked\": 312480,\n  \"boreInteriorSamples\": 22482,\n  \"betaSamples\": 21,\n  \"minimumSampledPistonSweepMargin\": 0.006240000000000023,\n  \"sampledBoreEntryAxialRanges\": {\n    \"left_rear_working_passage\": [\n      4.35544,\n      4.38856\n    ],\n    \"left_front_working_passage\": [\n      5.11144,\n      5.14456\n    ],\n    \"middle_rear_working_passage\": [\n      4.359197845458317,\n      4.384802154541682\n    ],\n    \"middle_front_working_passage\": [\n      5.115197845458317,\n      5.140802154541682\n    ],\n    \"right_rear_working_passage\": [\n      4.35544,\n      4.38856\n    ],\n    \"right_front_working_passage\": [\n      5.11144,\n      5.14456\n    ]\n  },\n  \"misses\": [],\n  \"exhaustiveContinuousProof\": false,\n  \"wholeMechanicalAcceptance\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "test_dynamic_js.js"
+      ],
+      "exit": 0,
+      "seconds": 0.09679603576660156,
+      "stdout": "{\n  closure_m: 1.3322676295501878e-15,\n  slider_axis_m: 1.6653345369377348e-16,\n  inverse_error_m: 8.881784197001252e-16,\n  transformed_corner_checks: 2720,\n  bounds_error: 0,\n  pass: true,\n  not_mechanical_acceptance: 'Known middle rod collision remains; inferred crankpin support webs tested separately.'\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "test-expression-parity.js"
+      ],
+      "exit": 0,
+      "seconds": 0.3436405658721924,
+      "stdout": "{\n  \"version\": \"outer-crosshead-candidate-02\",\n  \"status\": \"PASS emitted-expression parser parity and analytic bound checks; GPU still separate\",\n  \"sourceSHA256\": \"fc51954fcd5db972527029923a5ded69f762a06fdd066dd38e20178bceb42bb1\",\n  \"fields\": 32,\n  \"samples\": 19808,\n  \"maxCPUvsEmittedDoubleError_m\": 8.881784197001252e-16,\n  \"maxCPUvsEmulatedFloat32Error_m\": 4.580035581902564e-7,\n  \"nearBoundarySignDifferences\": 24,\n  \"unsafeSignDifferences\": 0,\n  \"maxRandomPairLipschitzRatio\": 0.9998836454078669,\n  \"outsideSupportNegativeSamples\": 0,\n  \"certifiedScalarLipschitz\": 1,\n  \"manifestLipschitz\": 1.000002,\n  \"boundProof\": [\n    \"Every scalar primitive is 1-Lipschitz in Euclidean XYZ.\",\n    \"Finite min/max and negation retain a 1-Lipschitz bound; holes are the identical subtracted expression in CPU and GLSL.\",\n    \"Rigid outside-valve inverse matrices preserve Euclidean norm.\",\n    \"The support AABB is composed from analytic primitive supports; subtraction cannot enlarge a solid; intersection takes intersected supports.\",\n    \"Manifest 1.000002 adds a numerical guard, not an additional physical clearance.\"\n  ],\n  \"notClaimed\": [\n    \"Float32 emulation is not execution of a GPU shader.\",\n    \"Random-pair checks are supplementary checks, not the analytic Lipschitz proof.\",\n    \"Actual compiled WebGL output must be checked in the integrated whole scene.\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "material-wave-study/test-material-waves.js"
+      ],
+      "exit": 0,
+      "seconds": 0.32303667068481445,
+      "stdout": "{\n  \"status\": \"PASS\",\n  \"scope\": \"R29 integrated appearance CPU mathematics and local coordinates; browser compilation/rendering still NOT RUN here.\",\n  \"shaderCompile\": {\n    \"status\": \"NOT_RUN\",\n    \"reason\": \"No shader compiler or browser used; GLSL generation identity is tested, not driver acceptance.\"\n  },\n  \"geometryDisplacement\": 0,\n  \"mechanicalAcceptance\": false,\n  \"independentMaterialTime\": false,\n  \"gradient\": {\n    \"samples\": 3600,\n    \"maximumAbsoluteError\": 4.667657926837876e-11\n  },\n  \"bounds\": {\n    \"samples\": 3600,\n    \"maximumNormalAngleRadians\": 0.009228157724864381,\n    \"maximumNormalBoundExcess\": 0,\n    \"maximumAdversarialLimiterAngleRadians\": 0.024994793618920274\n  },\n  \"coordinates\": {\n    \"samples\": 6870,\n    \"maximumReferenceRecoveryError\": 3.6637359812630166e-15,\n    \"maximumAdvectionHeightError\": 1.0469327228063152e-18,\n    \"maximumWorldGradientError\": 4.305424072814645e-12,\n    \"kinds\": {\n      \"field-static\": 4100,\n      \"parameterized-wheel\": 530,\n      \"field-crank\": 10,\n      \"field-crankTranslate\": 160,\n      \"field-rod\": 30,\n      \"field-slider\": 330,\n      \"field-installation\": 60,\n      \"field-pistonRing\": 30,\n      \"frozen-baseline\": 395,\n      \"field-crankAt\": 60,\n      \"stack-gresley-inverse-XZ-once\": 770,\n      \"outside-valve-inverse-YZ\": 330,\n      \"gresley-inverse-XZ\": 65\n    },\n    \"wheelAxles\": [\n      0,\n      1,\n      2,\n      3,\n      4,\n      5\n    ],\n    \"wheelAngularAgreementError\": 6.933342788784103e-14\n  },\n  \"assignment\": {\n    \"counts\": {\n      \"steel\": 386,\n      \"copper\": 1,\n      \"neutral\": 296,\n      \"wood\": 1,\n      \"lightPaint\": 3\n    },\n    \"basisCounts\": {\n      \"explicit-part-label\": 6,\n      \"unclassified-default\": 282,\n      \"declared-role-assumption\": 260,\n      \"declared-stack-role-assumption\": 58,\n      \"inferred fastener role\": 36,\n      \"photo appearance, not composition\": 3,\n      \"packing composition unknown\": 2,\n      \"fixed cast housing composition unverified\": 1,\n      \"inferred mechanical role\": 3,\n      \"inferred role; seal composition unknown\": 4,\n      \"explicit candidate role\": 32\n    },\n    \"unassignedPresets\": [\n      \"brass\",\n      \"water\",\n      \"glass\"\n    ]\n  },\n  \"materials\": {\n    \"neutral\": {\n      \"height\": 0.000019,\n      \"gradient\": 0.0003585206185768761,\n      \"normalAngleRadians\": 0.007999829339886634,\n      \"relativeAlbedoVariation\": 0.025,\n      \"absoluteRoughnessVariation\": 0.014\n    },\n    \"steel\": {\n      \"height\": 0.000025,\n      \"gradient\": 0.0022394032115593946,\n      \"normalAngleRadians\": 0.011999424049761282,\n      \"relativeAlbedoVariation\": 0.018,\n      \"absoluteRoughnessVariation\": 0.012\n    },\n    \"copper\": {\n      \"height\": 0.000027000000000000002,\n      \"gradient\": 0.002242224412128844,\n      \"normalAngleRadians\": 0.011999424049761282,\n      \"relativeAlbedoVariation\": 0.02,\n      \"absoluteRoughnessVariation\": 0.012\n    },\n    \"brass\": {\n      \"height\": 0.000007,\n      \"gradient\": 0.0018563422374852493,\n      \"normalAngleRadians\": 0.009999666686665238,\n      \"relativeAlbedoVariation\": 0.018,\n      \"absoluteRoughnessVariation\": 0.01\n    },\n    \"wood\": {\n      \"height\": 0.000057,\n      \"gradient\": 0.009718791457079745,\n      \"normalAngleRadians\": 0.02499479361892016,\n      \"relativeAlbedoVariation\": 0.035,\n      \"absoluteRoughnessVariation\": 0.018\n    },\n    \"water\": {\n      \"height\": 0.00014000000000000001,\n      \"gradient\": 0.004330945115326558,\n      \"normalAngleRadians\": 0.019997333973150535,\n      \"relativeAlbedoVariation\": 0.01,\n      \"absoluteRoughnessVariation\": 0.008\n    },\n    \"glass\": {\n      \"height\": 0.000001,\n      \"gradient\": 0.00006212242860959297,\n      \"normalAngleRadians\": 0.0049999583339583225,\n      \"relativeAlbedoVariation\": 0.004,\n      \"absoluteRoughnessVariation\": 0.004\n    },\n    \"lightPaint\": {\n      \"height\": 0.000019,\n      \"gradient\": 0.0003585206185768761,\n      \"normalAngleRadians\": 0.007999829339886634,\n      \"relativeAlbedoVariation\": 0.018,\n      \"absoluteRoughnessVariation\": 0.012\n    }\n  },\n  \"protectedSourceSha256\": {\n    \"scene.js\": \"8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da\",\n    \"dynamic.js\": \"d85798e4c0cc86b38e003876d71149642f6e7b909cfc856d2c1d9461d8d45497\",\n    \"outside_valve_solver.js\": \"1478673dcbf632b475ec068b64d546410abf4026928131eec1c8e6dc3c818388\",\n    \"valve-dynamic.js\": \"99b42173d27a5350cce5e33e557766c683128ec3365e3169a731d926aae54ff4\",\n    \"gresley_solver.js\": \"993af643e1b6a4ba964bd61ed3ae355635c5c02bbdef47067f79df7ee837f2c6\",\n    \"gresley-dynamic.js\": \"1c1005d8c588f8311780d70789946db125e5a2e33b1c8f4d3011880a9d666615\",\n    \"stack-fields.js\": \"5b44303b47d6cad34fe4e8fe01f79940e14b2de20a55c7de0f0374dc7bc1d200\",\n    \"stack-dynamic.js\": \"5a385398cc8fd24016d9b5643d76ff544ffeff34815921cb0652186d0425c71b\",\n    \"app.js\": \"4e0776732e373233de20286b6f014eab6922a124ee3f61715620e2ae795a019e\",\n    \"controls.js\": \"ca7165bd5fccf49660acb076284a851b1b343ccbb49dd8d433801943e36e4886\",\n    \"index.html\": \"38732120d56c6a0c837c10d75afba939c7e361cafc80c12197d7180f6f3ca23d\"\n  },\n  \"protectedSourcesUnchanged\": true\n}\n",
+      "stderr": ""
+    }
+  ]
+}

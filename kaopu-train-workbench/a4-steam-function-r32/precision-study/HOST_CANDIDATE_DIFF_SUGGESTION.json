@@ -1,0 +1,37 @@
+{
+  "status": "CONDITIONAL_CODE_PROPOSAL_NOT_APPLIED_TO_MAIN",
+  "condition": "Original GPU diagnostic now confirms host inverse-rotation and slider beta-axis drift. Candidate-only code is supplied separately; full GPU acceptance remains required.",
+  "baselinePreserved": true,
+  "domain": "inclination is 0 or [.11,.16]; installation/slider delta is [0,.05]. Do not pass theta/phase to bounded helpers.",
+  "dependencyWarning": "dynSmallAt still depends on dynBig(t,side), whose arbitrary-phase native sin/cos may drift independently. Read back dynBig as well as dynSmallAt. Correct beta does not establish moving piston parity. Generic dynRotate must not be replaced by a bounded-beta polynomial.",
+  "interfaceImpact": [
+    "No new uniforms; existing installationCandidate and middleInclination gate the change.",
+    "dynSmallAt changes all candidate callers, including middle slider, piston ring, and connecting-rod orientation; outside axes are exact zero.",
+    "Candidate reference pose at theta=.4, inclination=.11 also uses precise beta axis, consistent with unchanged CPU D.pose.",
+    "Baseline installationCandidate=0 retains the original builtin axis and generic rotation path.",
+    "dynInstallation only runs for candidate middle fixed host parts, based on current D.classify.",
+    "Rerun existing R30 baseline controls and dynamic CPU/GPU parity, plus post-patch candidate host/port and piston tests."
+  ],
+  "changes": [
+    {
+      "target": "Insert immediately before GLSL dynRotate. No JavaScript CPU functions change.",
+      "old": "",
+      "new": "vec2 dynCandidateBetaSinCos(float a){float a2=a*a;return vec2(a*(1.+a2*(-1./6.+a2*(1./120.-a2/5040.))),1.+a2*(-.5+a2*(1./24.-a2/720.)));}\nvec2 dynCandidateBetaRotate(vec2 v,float a){vec2 sc=dynCandidateBetaSinCos(a);return vec2(sc.y*v.x-sc.x*v.y,sc.x*v.x+sc.y*v.y);}"
+    },
+    {
+      "target": "dynSmallAt GLSL axis only; keep original dynBig and sqrt expressions.",
+      "old": "vec2 u=vec2(sin(inc),cos(inc)),b=dynBig(t,side)-vec2(1.016,0);",
+      "new": "vec2 u=installationCandidate==1?dynCandidateBetaSinCos(inc):vec2(sin(inc),cos(inc)),b=dynBig(t,side)-vec2(1.016,0);"
+    },
+    {
+      "target": "dynInstallation GLSL candidate-only branch. Existing baseline early return remains.",
+      "old": "p.yz=vec2(1.016,0)+dynRotate(p.yz-vec2(1.016,0),middleInclination-.11);",
+      "new": "p.yz=vec2(1.016,0)+dynCandidateBetaRotate(p.yz-vec2(1.016,0),middleInclination-.11);"
+    },
+    {
+      "target": "dynSlider GLSL rotation only; baseline takes original dynRotate branch.",
+      "old": "p.yz=dynSmallAt(.4,side,.11)+dynRotate(p.yz-dynSmall(timeTheta,side),angle);",
+      "new": "vec2 relative=p.yz-dynSmall(timeTheta,side);p.yz=dynSmallAt(.4,side,.11)+(installationCandidate==1?dynCandidateBetaRotate(relative,angle):dynRotate(relative,angle));"
+    }
+  ]
+}

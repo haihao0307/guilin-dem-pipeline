@@ -1,0 +1,20 @@
+--- a/dynamic.js
++++ b/dynamic.js
+@@ -39,12 +39,14 @@
+ D.glsl=`
+ uniform float timeTheta,middleInclination;
+ uniform int installationCandidate;
++vec2 dynCandidateBetaSinCos(float a){float a2=a*a;return vec2(a*(1.+a2*(-1./6.+a2*(1./120.-a2/5040.))),1.+a2*(-.5+a2*(1./24.-a2/720.)));}
++vec2 dynCandidateBetaRotate(vec2 v,float a){vec2 sc=dynCandidateBetaSinCos(a);return vec2(sc.y*v.x-sc.x*v.y,sc.x*v.x+sc.y*v.y);}
+ vec2 dynRotate(vec2 v,float a){float c=cos(a),s=sin(a);return vec2(c*v.x-s*v.y,s*v.x+c*v.y);}
+ vec2 dynBig(float t,int side){float phase=side==0?0.0:(side==1?1.7:4.3);return vec2(1.016,0)+.3302*vec2(sin(t+phase),cos(t+phase));}
+-vec2 dynSmallAt(float t,int side,float inclination){float inc=side==1?inclination:0.;vec2 u=vec2(sin(inc),cos(inc)),b=dynBig(t,side)-vec2(1.016,0);float h=dot(b,u),perp=b.x*u.y-b.y*u.x;return vec2(1.016,0)+u*(h+sqrt(3.5*3.5-perp*perp));}
++vec2 dynSmallAt(float t,int side,float inclination){float inc=side==1?inclination:0.;vec2 u=installationCandidate==1?dynCandidateBetaSinCos(inc):vec2(sin(inc),cos(inc)),b=dynBig(t,side)-vec2(1.016,0);float h=dot(b,u),perp=b.x*u.y-b.y*u.x;return vec2(1.016,0)+u*(h+sqrt(3.5*3.5-perp*perp));}
+ vec2 dynSmall(float t,int side){return dynSmallAt(t,side,middleInclination);}
+-vec3 dynInstallation(vec3 p,int side){if(installationCandidate==0)return p;p.yz=vec2(1.016,0)+dynRotate(p.yz-vec2(1.016,0),middleInclination-.11);return p;}
+-vec3 dynSlider(vec3 p,int side){if(side!=1||middleInclination==.11){p.yz+=dynSmallAt(.4,side,.11)-dynSmall(timeTheta,side);return p;}float angle=side==1?middleInclination-.11:0.;p.yz=dynSmallAt(.4,side,.11)+dynRotate(p.yz-dynSmall(timeTheta,side),angle);return p;}
++vec3 dynInstallation(vec3 p,int side){if(installationCandidate==0)return p;p.yz=vec2(1.016,0)+dynCandidateBetaRotate(p.yz-vec2(1.016,0),middleInclination-.11);return p;}
++vec3 dynSlider(vec3 p,int side){if(side!=1||middleInclination==.11){p.yz+=dynSmallAt(.4,side,.11)-dynSmall(timeTheta,side);return p;}float angle=side==1?middleInclination-.11:0.;vec2 relative=p.yz-dynSmall(timeTheta,side);p.yz=dynSmallAt(.4,side,.11)+(installationCandidate==1?dynCandidateBetaRotate(relative,angle):dynRotate(relative,angle));return p;}
+ vec3 dynPistonRing(vec3 p,int side){return installationCandidate==1?dynSlider(p,side):p;}
+ vec3 dynCrankTranslate(vec3 p,int side){p.yz+=dynBig(.4,side)-dynBig(timeTheta,side);return p;}
+ vec3 dynCrank(vec3 p){p.yz=dynRotate(p.yz-vec2(1.016,0),timeTheta-.4)+vec2(1.016,0);return p;}

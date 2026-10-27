@@ -1,0 +1,103 @@
+{
+  "routeCrossSections": {
+    "main_steam_pipe": {
+      "stations": 483,
+      "wallChecks": 5796,
+      "lumenChecks": 483,
+      "minimumWall": -0.005999999999999998,
+      "maximumWall": 4.440892098500626e-16
+    },
+    "superheater_element": {
+      "stations": 1265,
+      "wallChecks": 15180,
+      "lumenChecks": 1265,
+      "minimumWall": -0.002999999999999999,
+      "maximumWall": -0.002999999999999574
+    }
+  },
+  "routeCrossSectionFailures": [],
+  "missingSolidWitnesses": [],
+  "checked": "2026-10-27T00:08:56.331Z",
+  "sources": {
+    "upstream-steam.js": "c3afadce59dc2220cefce7a33806b007bd3c154c2de4b2968530c2bef55c92b0",
+    "upstream-steam-adapter.js": "5462dd9ab5286a2e4d167584ae2d6f93952c8f431ccf149982965f9880ddd5e1",
+    "steam-path.js": "8b7ca48bbbdf5c89fd876e3e5ede067681f364896524a1cac78172ba4e6028cb",
+    "scene.js": "8053c0c615d7ff045f267d217ae2576d3a8d1d4a4ec958e06540a0133473b8da"
+  },
+  "scope": "Deterministic sampled interior witnesses: 3500 AABB random points per added field plus <=10mm route stations x 12 mid-wall angles and 20 intervals per circular fillet; exact candidate AST and retained pressure scalar expressions. Expected touching/fastened pairs explicit. No global continuous guarantee.",
+  "acceptedInteriorSamples": {
+    "upstream_steam/regulator_body_and_seat": 975,
+    "upstream_steam/regulator_valve_disc": 474,
+    "upstream_steam/main_steam_pipe": 7209,
+    "upstream_steam/superheater_element": 15203,
+    "upstream_steam/tubeplate_flange_neck": 870,
+    "upstream_steam/header_joint_gasket": 40,
+    "upstream_steam/regulator_suspension_clamp": 104,
+    "upstream_steam/regulator_suspension_beam": 2723,
+    "upstream_steam/main_pipe_support_clamp": 373,
+    "upstream_steam/main_pipe_support_hanger": 3500
+  },
+  "negativePairs": [
+    {
+      "pair": [
+        "upstream_steam/regulator_suspension_beam",
+        "boiler/outer_steel_shell"
+      ],
+      "expected": true,
+      "point": [
+        0.7480889667958409,
+        3.4137771585865573,
+        -1.6493256076866998
+      ],
+      "ownField": -0.00816310907371077,
+      "targetField": -0.008489184846604325,
+      "intersectionField": -0.00816310907371077
+    },
+    {
+      "pair": [
+        "upstream_steam/regulator_suspension_beam",
+        "upstream_steam/regulator_suspension_clamp"
+      ],
+      "expected": true,
+      "point": [
+        -0.0024049633768913337,
+        3.399056229246375,
+        -1.6504595739176044
+      ],
+      "ownField": -0.0010465837980271273,
+      "targetField": -0.000914580278657387,
+      "intersectionField": -0.000914580278657387
+    },
+    {
+      "pair": [
+        "upstream_steam/main_pipe_support_hanger",
+        "upstream_steam/main_pipe_support_clamp"
+      ],
+      "expected": true,
+      "point": [
+        0.007006810666377657,
+        3.3481673427081,
+        0.787471642807033
+      ],
+      "ownField": -0.0011673427081000387,
+      "targetField": -0.0013256915891554297,
+      "intersectionField": -0.0011673427081000387
+    },
+    {
+      "pair": [
+        "upstream_steam/main_pipe_support_hanger",
+        "boiler/outer_steel_shell"
+      ],
+      "expected": true,
+      "point": [
+        -0.00469426188350888,
+        3.723620589820219,
+        0.8078415255287965
+      ],
+      "ownField": -0.004704410179780849,
+      "targetField": -0.005295589820218716,
+      "intersectionField": -0.004704410179780849
+    }
+  ],
+  "unexpectedNegativePairs": []
+}

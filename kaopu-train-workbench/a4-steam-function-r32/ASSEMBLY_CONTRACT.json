@@ -1,0 +1,92 @@
+{
+  "version": "outer-crosshead-candidate-02",
+  "status": "PASS declared finite interface and sampled motion constraints; not an all-pair proof",
+  "units": "metres",
+  "phasesPerSide": 1441,
+  "sampledRanges": {
+    "gamma": [
+      -0.5460235388310087,
+      0.48742417131875404
+    ],
+    "VZ": [
+      4.026581426518511,
+      4.172604689900067
+    ]
+  },
+  "sampledMinima": {
+    "bridgeToLeverInfinityStrip": 0.002177786118255802,
+    "socketToLeverInfinityStrip": 0.001582836433749988,
+    "flatSpindleToLeverInfinityStrip": 0.005720842677906603,
+    "shoeRearGuideCoverage": 0.015581426518511243,
+    "shoeFrontGuideCoverage": 0.022395310099932786,
+    "wideBodyToCover": 0.002395310099933212,
+    "upperEyeToBridgeVertical": 0.013367697751811791,
+    "upperPinToCheekVertical": 0.030367697751811695
+  },
+  "conditionalLeverEnvelope": {
+    "gammaAbsBound": 0.547,
+    "source": "Conservative envelope around 1441 sampled phases; not a continuously certified solver range.",
+    "bridgeClearance": 0.0021371040251946943,
+    "socketClearance": 0.0015430789337129922,
+    "flatSpindleClearance": 0.005684912240373506
+  },
+  "assembly": {
+    "leverToCheekSide": 0.002,
+    "pinToBushRadial": 0.0001499999999999991,
+    "spindleToSocketRadial": 0.0001999999999999988,
+    "socketEngagement": 0.0085,
+    "slotFrontLigament": 0.0022999999999999965,
+    "slotRearLigament": 0.002800000000000004,
+    "guideLowerClearance": 0.0010000000000000009,
+    "guideUpperClearance": 0.0010000000000000009,
+    "guideLateralClearance": 0.0010000000000000009,
+    "cheekToCapLateral": 0.0010000000000000009,
+    "pinHeadWasherToCapVertical": 0.0010000000000000009,
+    "retainerToCapVertical": 0.0030000000000000027,
+    "boltHeadToPinHeadLateral": 0.005500000000000005,
+    "cheekToWasherAxial": 0.0005000000000000004,
+    "leftWasherToPinHeadAxial": 0,
+    "rightWasherToRetainerAxial": 0.0007499999999999937,
+    "guideStripScrewToHoleRadial": 0.0002000000000000001
+  },
+  "contactInterfaces": [
+    {
+      "pair": "cheek / sleeve outer radius",
+      "kind": "exact shared cylindrical boundary",
+      "radius": 0.0145
+    },
+    {
+      "pair": "original combination lever / new sleeve outer radius",
+      "kind": "exact shared cylindrical boundary at original V bore",
+      "radius": 0.0135
+    },
+    {
+      "pair": "shaft / sleeve",
+      "kind": "0.15 mm radial running gap; bearing contact only after clearance take-up"
+    },
+    {
+      "pair": "left spacer / integral pin head",
+      "kind": "shared axial boundary at local X=-.055"
+    },
+    {
+      "pair": "split end stop / shaft groove",
+      "kind": "shared cylindrical boundary at radius .0105; finite split-envelope candidate"
+    },
+    {
+      "pair": "spindle end / socket bottom",
+      "kind": "shared axial boundary at local Z=.0445, not a force solution"
+    },
+    {
+      "pair": "guide strip / support web",
+      "kind": "shared horizontal boundary at local Y=-.026, own matching screw holes"
+    },
+    {
+      "pair": "guide roots / original rear cover",
+      "kind": "shared fixed parent at world Z=4.228 within original cover annulus; no cover cuts"
+    }
+  ],
+  "firstIterationKnownFailure": "Candidate 01 R20 head/washers entered cap top -18 mm. Candidate 02 lowers the complete shoe/rail/full-thickness 5 mm cap/fastener subsystem 3 mm and extends cheek lower support 3 mm. Original axis/lever/shaft/cover are unchanged.",
+  "loadTransfer": "Geometric bearing and stop interfaces only. Cotter taper, spacing button, tightening/force solution and exact historical end locks remain unresolved candidates.",
+  "wholeNeighborAcceptance": false,
+  "continuousCollisionProof": false
+}
