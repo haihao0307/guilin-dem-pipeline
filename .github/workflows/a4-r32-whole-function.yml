@@ -43,10 +43,11 @@ jobs:
           test -r /etc/apparmor.d/chrome
           cat /etc/apparmor.d/chrome
           ls -l /opt/google/chrome/chrome-sandbox
-      - name: Diagnostic only - same native ray with viewport1 and actual full fragment
+      - name: Diagnostic only - reachable function closure and known-box search control
         run: |
           node r32-tests/check-interval-stackless.cjs
           node r32-tests/boiler-probe-capture.cjs
+          node r32-tests/check-glsl-closure.cjs
           set +e
           timeout 180s python r32-tests/boiler-isolated-probes.py
           result=$?
