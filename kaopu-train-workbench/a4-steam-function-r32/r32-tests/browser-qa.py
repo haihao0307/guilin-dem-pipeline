@@ -8,7 +8,7 @@ import threading, json, time, os, traceback
 from playwright.sync_api import sync_playwright
 P=Path(__file__).resolve().parent; ROOT=P.parent
 report={'status':'RUNNING','tested_commit':os.getenv('GITHUB_SHA'),'frames':[],'errors':[],
- 'diagnostic_run':'trace first-frame context loss without changing renderer/model/resolution','trace':[],'phone_verified':False,'whole_mechanical_acceptance':False,'fixed_render_buffer':[720,400]}
+ 'diagnostic_run':'whole R32 GPU interval-state integration; unchanged fields and native resolution','trace':[],'phone_verified':False,'whole_mechanical_acceptance':False,'fixed_render_buffer':[720,400]}
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -24,11 +24,13 @@ try:
   page.on('console',lambda m:print('BROWSER_CONSOLE',m.type,m.text,flush=True))
   def trace(data):
    report['trace'].append(data)
+   report['trace']=report['trace'][-1500:]
+   if data.get('phase') in ['source-start','interval-batch']:(P/'BROWSER_R32_RESULT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
    print('A4_RENDER_TRACE',json.dumps(data,ensure_ascii=False),flush=True)
   page.expose_function('reportA4Trace',trace)
-  page.add_init_script(path=str(P/'browser-trace.js'))
+  # Actual app emits run-guarded part/stage progress; no legacy draw-wrapper mapping.
   page.goto('http://127.0.0.1:'+str(server.server_port),wait_until='load')
-  page.wait_for_function('window.QA && (QA.done || QA.errors.length || window.A4_STARTUP?.state.errors.length)' ,timeout=480000)
+  page.wait_for_function('window.QA && (QA.done || QA.errors.length || window.A4_STARTUP?.state.errors.length)' ,timeout=180000)
   q=page.evaluate('QA');report['first']=q;report['firstStartup']=page.evaluate('A4_STARTUP.state')
   if not q['done'] or q['errors']:
    report['failureSnapshot']=page.evaluate('({qa:window.QA,startup:window.A4_STARTUP?.state,trace:window.__A4_TRACE,status:document.getElementById("status")?.textContent,rendered:document.getElementById("rendered")?.textContent})')
@@ -55,6 +57,22 @@ try:
   page.add_script_tag(path=str(P/'gpu-scalar-probe.js'))
   report['new_geometry_gpu']=page.evaluate('async()=>await runR32ScalarProbe()')
   assert report['new_geometry_gpu']['status']=='PASS',report['new_geometry_gpu']
+  # Real page input events: camera-only drag and rapid zoom coalescing.
+  page.select_option('#installation','candidate')
+  page.wait_for_function('RESEARCH_UI.ready && !RESEARCH_UI.busy && QA.done',timeout=180000)
+  before_eye=page.evaluate('RESEARCH_UI.cameraEye()')
+  box=page.locator('#c').bounding_box()
+  page.mouse.move(box['x']+box['width']*.5,box['y']+box['height']*.5)
+  page.mouse.down();page.mouse.move(box['x']+box['width']*.5+28,box['y']+box['height']*.5+9);page.mouse.up()
+  page.wait_for_function('!RESEARCH_UI.busy && QA.done',timeout=180000)
+  after_eye=page.evaluate('RESEARCH_UI.cameraEye()')
+  assert after_eye!=before_eye,'Drag did not change camera'
+  page.evaluate("""()=>{const e=document.getElementById('camera-distance');for(const v of ['1.1','1.2','1.05']){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));}}""")
+  page.wait_for_function('!RESEARCH_UI.busy && QA.done',timeout=180000)
+  ui=page.evaluate("({qa:QA,zoom:document.getElementById('camera-distance').value,eye:RESEARCH_UI.cameraEye(),playing:RESEARCH_UI.playing})")
+  assert ui['zoom']=='1.05' and ui['qa']['done'] and ui['qa']['frameValid'] and ui['qa']['draws']==703,ui
+  report['interaction']={'pointer_drag':True,'before_eye':before_eye,'after_eye':after_eye,'rapid_zoom_final':ui,'mobile_hardware_verified':False}
+  page.locator('#c').screenshot(path=str(P/'r32-interaction-final.png'))
   # Actual context loss after a successful frame must invalidate QA and UI.
   page.evaluate("gl.getExtension('WEBGL_lose_context').loseContext()")
   page.wait_for_function('!QA.done && !QA.frameValid && A4_STARTUP.state.errors.length>0',timeout=10000)

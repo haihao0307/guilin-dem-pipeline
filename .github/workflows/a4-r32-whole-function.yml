@@ -43,20 +43,21 @@ jobs:
           test -r /etc/apparmor.d/chrome
           cat /etc/apparmor.d/chrome
           ls -l /opt/google/chrome/chrome-sandbox
-      - name: Diagnostic only - complete original boiler bbox GPU state cost and pixels
+      - name: Whole native R32, retained modes, input interactions and failure invalidation
         run: |
           node r32-tests/check-interval-stackless.cjs
-          node r32-tests/boiler-probe-capture.cjs
+          node r32-tests/boiler-probe-capture.cjs --retained-renderer
           node r32-tests/check-glsl-closure.cjs
           node r32-tests/boiler-state-probe.cjs
           node r32-tests/check-boiler-state.cjs
           node r32-tests/boiler-bbox-probe.cjs
+          node r32-tests/test-gpu-interval-runtime.cjs
           set +e
-          timeout 180s python r32-tests/boiler-bbox-probes.py
+          timeout 900s python r32-tests/browser-qa.py
           result=$?
           set -e
           if [ "$result" -eq 124 ]; then
-            python -c "import json,pathlib;p=pathlib.Path('r32-tests/BOILER_BBOX_RESULT.json');r=json.loads(p.read_text()) if p.exists() else {};r.update(status='DIAGNOSTIC_180S_TIMEOUT',whole_frame_accepted=False);p.write_text(json.dumps(r,indent=2))"
+            python -c "import json,pathlib;p=pathlib.Path('r32-tests/BROWSER_R32_RESULT.json');r=json.loads(p.read_text()) if p.exists() else {};r.update(status='WHOLE_BROWSER_900S_TIMEOUT',whole_frame_accepted=False);p.write_text(json.dumps(r,indent=2))"
           fi
           exit "$result"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
