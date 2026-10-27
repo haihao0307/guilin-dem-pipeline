@@ -1,0 +1,11 @@
+# 135-field candidate entry and evidence contract
+
+This isolated candidate changes the source dependency contract: `scene.js` is no longer a standalone expanded data file. It consumes the shared Mother generators and their instance parameters listed, in order, by the actual `index.html` script manifest. Load the complete HTML entry for the application; Node model checks must load that same dependency prefix (excluding DOM startup code), or use `r32-tests/legacy-test-bootstrap.cjs` with an explicit historical stage. Do not copy `scene.js` alone and assume it contains every definition.
+
+Missing a required Mother is an error, not a fallback to stale geometry. The original v5 full entry and historical expanded fixtures remain preserved; the 58 historical fixtures are byte-locked and are not rewritten to imitate old inputs. New source locks cover all generated inputs, including the one shared `A4_AXLE_SPEC` consumed by both wheel Mothers and `DYNAMIC.wheelRadii`.
+
+Actual consumer coverage is 135 of 728 defined fields (15 joints, 80 suspension members, 4 frame members, 36 tyre/flange/hub members). The other 593 fields remain legacy definitions. R32 visibility remains 703 logical fields. Generated whole-scene expressions, order, Time/material transforms and original rendering runtime are unchanged. This is a bounded migration, not completion of all 728 descriptions or exact real-locomotive dimensions.
+
+Run `node r32-tests/language135/run.cjs` for the actual input/consumer map, complete measured runtime-source byte partition and bounded parameter/negative controls. `LANGUAGE135_RESULT.json` is explicitly a source/VM result, not a GPU or device acceptance result. Browser evidence must identify this candidate commit and include the default first frame, retained modes, interactions, actual context restoration and visible post-restore status. Production Site v5 is not changed by this candidate CI.
+
+Runtime JavaScript, HTML, tests, historical fixtures, generated shader strings, archive compression and screenshots are separate costs. The byte ledger counts the active 35-script closure, including all Mother/instance/AxleSpec dependencies; it does not subtract old definitions that remain active or call test/ZIP bytes shape parameters.

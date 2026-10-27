@@ -39,6 +39,14 @@ try:
    raise AssertionError(q)
   report['backend']=page.evaluate("""()=>{const e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(e?e.UNMASKED_VENDOR_WEBGL:gl.VENDOR),renderer:gl.getParameter(e?e.UNMASKED_RENDERER_WEBGL:gl.RENDERER),version:gl.getParameter(gl.VERSION)};}""")
   report['hardware_gpu_claim']=False
+  first_pixels=page.evaluate("""()=>{const a=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,a);let n=0;const colors=new Set();for(let i=0;i<a.length;i+=4){if(Math.max(Math.abs(a[i]-a[0]),Math.abs(a[i+1]-a[1]),Math.abs(a[i+2]-a[2]))>4)n++;colors.add((a[i]<<16)|(a[i+1]<<8)|a[i+2]);}return {nonBackgroundPixels:n,colors:colors.size,glError:gl.getError()};}""")
+  assert first_pixels['nonBackgroundPixels']>1000 and first_pixels['colors']>20 and first_pixels['glError']==0,first_pixels
+  report['firstPixelReadback']=first_pixels
+  page.locator('#c').screenshot(path=str(P/'r32-first-frame.png'))
+  report['language135']=page.evaluate("""()=>{const ms=[A4_BOGIE_MOTHER,A4_FRAME_MOTHER,A4_WHEEL_RING_MOTHER],ids=ms.flatMap(m=>Object.keys(m.parts)),joint=DYNAMIC.steamPathCandidate.kaopu.instances.flatMap(i=>Object.values(i.Object.members)),all=[...ids,...joint];return {defined:SCENE.parts.length,explicit:new Set(all).size,legacy:SCENE.parts.length-new Set(all).size,supportObjectsLive:ms.every(m=>Object.entries(m.parts).every(([id,p])=>SCENE.parts.find(q=>q.id===id)===p)),sharedAxleSpec:A4_WHEEL_RING_MOTHER.axleSpec===A4_AXLE_SPEC&&DYNAMIC.wheelRadii===A4_AXLE_SPEC.radii,frozenRadii:Object.isFrozen(DYNAMIC.wheelRadii),scriptCount:document.querySelectorAll('script[src]').length,visibleText:document.getElementById('shape-language').textContent};}""")
+  lang=report['language135']
+  assert lang['defined']==728 and lang['explicit']==135 and lang['legacy']==593 and lang['supportObjectsLive'] and lang['sharedAxleSpec'] and lang['frozenRadii'] and lang['scriptCount']==35,lang
+  assert '135 / 728' in lang['visibleText'] and '593' in lang['visibleText'] and '1,170,835 B' in lang['visibleText'],lang
   print('A4_FIRST_FRAME',json.dumps(q,ensure_ascii=False),flush=True)
   for name,mode,revision,open_,theta,eye,cut in [
    ('r32-whole','candidate','r32',1,.4,[24,13,15],100),

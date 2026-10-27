@@ -1,0 +1,5 @@
+/* Official topology, explicitly inferred dimensions. Never changes R28/baseline. */
+(function(root){const P={version:'R29 candidate',middleX:.38,planeY:1.48,pivotZ:5.55,middleLinkLength:.25,middleSpindleLength:1.18,
+ chest:{boreRadius:.1143,outerRadius:.14,rear:4.38,front:5.01,coverThickness:.022,shaftRadius:.016,packingRadius:.026,guideEnd:5.17,headHalfLength:.04,headCentres:[4.51,4.87],headCoreRadius:.100,sealRadius:.1143},
+ evidence:{topology:'SNGLT 2016-12-23 photo o240: middle valve chest is beside independent middle power-cylinder bore; real conjugated levers use frame slots; a dedicated lever stretcher is documented',numbers:'ALL middle placement, casting wall, guide, support and opening dimensions are inferred. Bore radius reuses class-sized outside valve research value; not verified middle drawing. No historical or strength acceptance.',sideSign:'positive X is a candidate convention, not established by photograph',baseline:'R28 and original centre-horizontal failed installation retained unchanged'}};
+if(typeof module!=='undefined'&&module.exports)module.exports=P;else root.TOPOLOGY_PARAMETERS=P;})(typeof window!=='undefined'?window:globalThis);

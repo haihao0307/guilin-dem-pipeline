@@ -4,6 +4,6 @@ const files=['scene.js','dynamic.js','outside_valve_solver.js','valve-dynamic.js
 module.exports=function(baseDirectory){
  const root=path.resolve(baseDirectory||process.env.A4_BASE_SCENE||process.argv[2]||process.cwd());
  if(!fs.existsSync(path.join(root,'scene.js')))throw Error('Pass the scene directory: node test-candidate.js /path/to/scene, or set A4_BASE_SCENE. No workspace-specific path is assumed.');
- const c={};c.window=c;vm.createContext(c);for(const f of files)vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c,{filename:f});return c;
+ const c={};require('./r32-tests/legacy-test-bootstrap.cjs').loadModel(root,{until:'scene.js',context:c});for(const f of files.slice(1))vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c,{filename:f});return c;
 };
 module.exports.files=files;

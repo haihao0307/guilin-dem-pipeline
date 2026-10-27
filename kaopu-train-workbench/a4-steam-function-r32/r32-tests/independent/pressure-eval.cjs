@@ -1,8 +1,19 @@
 // Independent source-derived evaluation of retained scalar pressure GLSL only.
 // No intervals, GPU or GLSL parser generality claimed. Unsupported syntax fails.
-const fs=require('fs'),vm=require('vm');
+const fs=require('fs'),vm=require('vm'),path=require('path');
 module.exports=function(root){
- const c={};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync(root+'/scene.js','utf8'),c);const source=c.SCENE.sources.pressure, functions=[];
+ const c={};c.window=c;vm.createContext(c);
+ // Load the actual local model prelude: generated SCENE now consumes Mothers.
+ // The DOM-only startup diagnostic is not a shape dependency. Legacy scene-only
+ // fixtures remain supported; their original scalar interpreter below is unchanged.
+ const directory=path.resolve(root),html=path.join(directory,'index.html');let inputs=['scene.js'];
+ if(fs.existsSync(html)){
+  const scripts=[...fs.readFileSync(html,'utf8').matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(m=>m[1]),stop=scripts.indexOf('scene.js');
+  if(stop<0||scripts.filter(s=>s==='scene.js').length!==1)throw Error('One actual scene.js entry required');
+  inputs=scripts.slice(0,stop+1).filter(s=>s!=='startup-diagnostics.js');
+ }
+ for(const src of inputs){const file=path.resolve(directory,src);if(/^[a-z]+:|^\/\//i.test(src)||!file.startsWith(directory+path.sep))throw Error('Local pressure model dependency required');vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:src});}
+ const source=c.SCENE.sources.pressure, functions=[];
  const regex=/\bfloat\s+(\w+)\s*\(([^)]*)\)\s*\{/g;let m;
  while((m=regex.exec(source))){let depth=1,end=regex.lastIndex;for(;depth;end++){if(source[end]==='{')depth++;if(source[end]==='}')depth--;}const body=source.slice(regex.lastIndex,end-1).replace(/\bfloat\s+/g,'let ');const args=m[2].split(',').map(v=>v.trim().replace(/^(?:float|vec[234])\s+/,''));functions.push('function '+m[1]+'('+args.join(',')+'){'+body+'}');regex.lastIndex=end;}
  const fnames=functions.map(v=>v.match(/function (\w+)/)[1]);const code=functions.join('\n')+'\n({'+fnames.join(',')+'})';

@@ -52,7 +52,7 @@ vec3 dynRod(vec3 p,int side){vec2 b0=dynBig(.4,side),bn=dynBig(timeTheta,side),u
 vec3 dynCrankAt(vec3 p,float z){p.z-=z;p=dynCrank(p);p.z+=z;return p;}
 `;
 D.argument=function(part,p='p'){let m=D.classify(part);if(!m||m.type==='wheel')return p;return m.type==='crankAt'?`dynCrankAt(${p},${Number(m.z).toFixed(8)})`:m.type==='crank'?`dynCrank(${p})`:`dyn${m.type[0].toUpperCase()+m.type.slice(1)}(${p},${m.side})`;};
-D.wheelRadii=[.4826,.4826,1.016,1.016,1.016,.5588];
+D.wheelRadii=A4_AXLE_SPEC.radii;
 D.wheelTheta=function(theta,axle){return .4+(theta-.4)*1.016/D.wheelRadii[axle];};
 D.scalar=function(part){const q=D.argument(part);let field=part.group==='wheel'?`${part.glsl_function}_parameterized(p,.4+(timeTheta-.4)*${(1.016/D.wheelRadii[Number(part.id.match(/axle(\d+)/)[1])]).toPrecision(17)})`:`${part.glsl_function}(${q})`;const cut=SCENE.hostCuts[part.id];return cut?`max(${field},-${cut}(${q}))`:field;};
 // Conservative inverse-transformed boxes for any future interval-only part.
