@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "conclusion": "SOURCE-PATH-CONFIRMED_STATE_COLLAPSE",
+  "scope": "Exact predicate semantic replay only; not browser/GPU pixel evidence and not user-device root-cause proof.",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "branch": "trial/a4-r32-normal-chrome-20261027",
+    "commit": "580acd1c8b851d0c843826e2b49c7079411473bd",
+    "runtimeBlob": "9a3e04b76f2e6281d1feb8cb6b4f2bb9160cc101",
+    "appBlob": "0139cc195c164574bd94a9a8cb0bce444076c686"
+  },
+  "checks": [
+    { "name": "status vocabulary has no invalid-nonfinite or invalid-gradient state", "status": "PASS" },
+    { "name": "NaN interval lower bound descends instead of becoming invalid", "status": "PASS" },
+    { "name": "NaN leaf field cannot become hit", "status": "PASS" },
+    { "name": "finite positive interval lower bound remains miss", "status": "PASS" },
+    { "name": "finite valid leaf remains hit", "status": "PASS" },
+    { "name": "zero finite-difference gradient normalizes to non-finite components", "status": "PASS" },
+    { "name": "non-finite gradient normalizes to non-finite components", "status": "PASS" },
+    { "name": "budget exhaustion is distinguishable and therefore a positive control", "status": "PASS" }
+  ],
+  "counts": { "passed": 8, "failed": 0 },
+  "boundary": {
+    "sourceConfirmed": "Non-finite interval/leaf samples have no invalid state; a NaN leaf can terminate as miss. Zero/non-finite gradients reach normalization without a finite/magnitude guard.",
+    "preservedPositiveControl": "Interval-node budget exhaustion has an explicit exhausted state and is rejected at frame level.",
+    "stillUnknown": "Whether these paths caused the observed black-point/flicker symptom on a real browser/device."
+  }
+}
