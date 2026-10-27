@@ -1,0 +1,122 @@
+{
+  "caseId": "FUNCTION-SURFACE-INVALID-SAMPLE-FLICKER-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-27",
+  "appliesTo": [
+    "FunctionRendering",
+    "WebGPU",
+    "ProceduralGeometry",
+    "implicit or analytic surfaces"
+  ],
+  "trigger": {
+    "observation": "The user reported many black points flickering in the first function-engine visual candidate.",
+    "productionSource": "UNKNOWN_NOT_AVAILABLE_IN_CURRENT_MAIN",
+    "rootCause": "UNKNOWN"
+  },
+  "deduplication": {
+    "related": "FUNCTION-SHAPE-REUSE-NOT-VISIBILITY-REUSE-001",
+    "novelLayer": "N199 covers class/instance/visibility reuse. This case covers numerical sample validity and frozen-input temporal stability."
+  },
+  "failure": {
+    "mustNeverRepeat": [
+      "non-finite residual, position, depth, gradient, normal or color silently converted into a black surface sample",
+      "unconverged function sample shaded as a valid hit",
+      "zero or near-zero gradient normalized without an explicit validity check",
+      "one global finite-difference epsilon used without function and coordinate scale evidence",
+      "frame index or time entering a nominally frozen evaluation without declaration",
+      "WGSL derivative operations executed in non-uniform control flow or their diagnostics suppressed"
+    ]
+  },
+  "scope": {
+    "includes": "sample-state semantics and a diagnostic gate that can distinguish numerical invalidity from legitimate visibility",
+    "excludes": [
+      "claiming the observed production flicker is already diagnosed",
+      "choosing the final surface-evaluation algorithm",
+      "mandating rays or triangle meshes",
+      "production WebGPU, browser, device, visual or user acceptance"
+    ]
+  },
+  "taskAnchorAdditions": {
+    "functionIdentity": [
+      "functionClassId",
+      "functionRevision",
+      "parameterDigest"
+    ],
+    "numericContract": [
+      "coordinateScale",
+      "epsilonSurfacePolicy",
+      "epsilonGradientPolicy",
+      "finiteDifferencePolicy",
+      "iterationBudget",
+      "timeAndNoiseFreeze",
+      "derivativeUniformityPolicy"
+    ],
+    "cellStates": [
+      "EMPTY",
+      "FILLED",
+      "AMBIGUOUS",
+      "UNKNOWN"
+    ],
+    "sampleStates": [
+      "MISS",
+      "HIT_CONVERGED",
+      "INVALID_NONFINITE",
+      "INVALID_GRADIENT",
+      "UNCONVERGED_RESIDUAL",
+      "BUDGET_EXHAUSTED"
+    ]
+  },
+  "deliveryReceiptAdditions": [
+    "surfaceResidualMax",
+    "gradientNormMin",
+    "nonFiniteSampleCount",
+    "invalidGradientCount",
+    "unconvergedSampleCount",
+    "budgetExhaustedCount",
+    "ambiguousCellCount",
+    "frozenFrameStateHashes",
+    "frozenFrameDepthHashes",
+    "frozenFrameNormalHashes",
+    "wgslCompilationDiagnostics",
+    "debugStateBuffer",
+    "hardwareBrowserAndRuntime",
+    "verifierIdentity"
+  ],
+  "gate": {
+    "validHit": "Require finite point/depth/residual/gradient/normal/color, abs(residual) <= declared scale-aware surface epsilon, gradient norm above threshold, valid depth and unexhausted iteration budget.",
+    "invalidSample": "Do not shade as a black hit. Preserve the explicit failure state, count it and expose it in a debug state buffer.",
+    "cellAmbiguity": "A region that may include NaN or crosses the function surface remains AMBIGUOUS; do not promote it directly to HIT.",
+    "temporalRepeat": "With camera, parameters, time and noise seed frozen, eight repeated frames must have identical state/depth/normal hashes.",
+    "derivatives": "Reject derivative calls in non-uniform WGSL control flow and reject suppression of derivative_uniformity diagnostics.",
+    "independence": "producerId must differ from verifierId."
+  },
+  "negativeControls": [
+    "large-coordinate f32 sphere with a fixed epsilon that collapses the finite-difference gradient to zero",
+    "same point with a scale-aware epsilon that recovers a finite normal",
+    "finite but unconverged residual",
+    "function-domain NaN",
+    "EMPTY, FILLED, surface-crossing AMBIGUOUS and maybe-NaN AMBIGUOUS cells",
+    "hidden frame-dependent perturbation under nominally frozen inputs"
+  ],
+  "expectedOutcomes": {
+    "allValidityAndRepeatChecksPass": "CANDIDATE_READY",
+    "nonFiniteOrInvalidGradient": "REJECT_NUMERIC_SAMPLE_INVALID",
+    "unconvergedOrBudgetExhausted": "REJECT_UNCONVERGED_SAMPLE",
+    "frozenFrameHashesDiffer": "REJECT_HIDDEN_TEMPORAL_DEPENDENCY",
+    "productionSourceUnavailable": "ROOT_CAUSE_UNKNOWN"
+  },
+  "proof": {
+    "probe": "PROBES/function_surface_validity_probe_n200.js",
+    "result": "PROBES/function_surface_validity_result_n200.json",
+    "fixtureReplay": "9/9",
+    "evidenceLayer": "SYNTHETIC_F32_ORACLE_ONLY"
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implementedProduction": false,
+    "gateRunSynthetic": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
