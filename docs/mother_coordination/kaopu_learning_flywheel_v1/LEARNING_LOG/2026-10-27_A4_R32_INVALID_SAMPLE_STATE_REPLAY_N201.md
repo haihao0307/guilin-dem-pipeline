@@ -70,7 +70,7 @@ Teacher status：
 
 - libfive：保持 `TEACHER_CANDIDATE`，未获 Mother ACK，不晋级；
 - Khronos GLSL spec：`NO_NOVELTY`（确认 N200 已提出的边界，不构成新的 teacher method）；
-- Mother contact：本轮定向路由后才是 `POSTED`；当前文件创建时仍为 `NOT_QUERIED/UNKNOWN`。
+- Mother contact：已向 #91 定向 `POSTED`（comment `6446508182`）；尚无 `ACKNOWLEDGED`。
 
 相对 Current Best View 的真正新增不是新规则，而是：N200 的“可能实现失败机制”已经在 A4 R32 真实源码中找到可执行路径；但用户黑点/闪烁的因果归属仍是 UNKNOWN。
 
@@ -88,7 +88,7 @@ Teacher status：
 
 - SOURCE-INSPECTED：是
 - synthetic GATE-RUN：是，8/8 PASS
-- POSTED：待 #91 定向评论
+- POSTED：是，#91 comment `6446508182`
 - ACKNOWLEDGED：否
 - IMPLEMENTED：否
 - browser/device GATE-RUN：否
