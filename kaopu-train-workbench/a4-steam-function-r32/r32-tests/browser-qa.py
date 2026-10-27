@@ -83,13 +83,20 @@ try:
   page.wait_for_function('(old)=>A4_STARTUP.state.runId>old && QA.done && QA.frameValid',arg=old_run,timeout=180000)
   report['restored_frame']=page.evaluate('({qa:QA,startup:A4_STARTUP.state,rendererRun:A4_RENDERER.runId})')
   assert report['restored_frame']['qa']['draws']==703 and report['restored_frame']['qa']['glError']==0
+  restored_pixels=page.evaluate("""()=>{const a=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,a);let n=0;const colors=new Set();for(let i=0;i<a.length;i+=4){if(Math.max(Math.abs(a[i]-a[0]),Math.abs(a[i+1]-a[1]),Math.abs(a[i+2]-a[2]))>4)n++;colors.add((a[i]<<16)|(a[i+1]<<8)|a[i+2]);}return {nonBackgroundPixels:n,colors:colors.size,glError:gl.getError()};}""")
+  assert restored_pixels['nonBackgroundPixels']>1000 and restored_pixels['colors']>20 and restored_pixels['glError']==0,restored_pixels
+  report['restored_frame']['pixelReadback']=restored_pixels
   page.locator('#c').screenshot(path=str(P/'r32-restored-generation.png'))
+  report['restored_page_state']=page.evaluate("({startup:document.getElementById('startup-state').textContent,rendered:document.getElementById('rendered').textContent,status:document.getElementById('status').textContent,errors:A4_STARTUP.state.errors})")
+  assert not report['restored_page_state']['errors'] and report['restored_page_state']['rendered'].startswith('已显示')
+  assert 'GL 0' in report['restored_page_state']['status'] and '首帧已提交' in report['restored_page_state']['startup']
+  page.screenshot(path=str(P/'r32-restored-full-page.png'),full_page=True)
   # Repeated loss is not allowed to create an automatic refresh/restart loop.
   restored_run=page.evaluate('A4_STARTUP.state.runId')
   page.evaluate("window.__testContextLoss=gl.getExtension('WEBGL_lose_context');if(!window.__testContextLoss)throw Error('Test extension unavailable before loss');window.__testContextLoss.loseContext()")
   page.wait_for_function('!QA.done && A4_STARTUP.state.errors.length>0',timeout=10000)
   page.evaluate("window.__testContextLoss.restoreContext()")
-  page.wait_for_timeout(1000)
+  page.wait_for_function("A4_STARTUP.state.errors.some(x=>x.includes('已停止自动重试'))",timeout=10000)
   report['second_restore_stopped']=page.evaluate('({runId:A4_STARTUP.state.runId,done:QA.done,errors:A4_STARTUP.state.errors})')
   assert report['second_restore_stopped']['runId']==restored_run and not report['second_restore_stopped']['done']
   browser.close();report['status']='PASS' 
