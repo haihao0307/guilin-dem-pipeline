@@ -74,21 +74,21 @@ try:
   report['interaction']={'pointer_drag':True,'before_eye':before_eye,'after_eye':after_eye,'rapid_zoom_final':ui,'mobile_hardware_verified':False}
   page.locator('#c').screenshot(path=str(P/'r32-interaction-final.png'))
   # Actual context loss after a successful frame must invalidate QA and UI.
-  page.evaluate("gl.getExtension('WEBGL_lose_context').loseContext()")
+  page.evaluate("window.__testContextLoss=gl.getExtension('WEBGL_lose_context');if(!window.__testContextLoss)throw Error('Test extension unavailable before loss');window.__testContextLoss.loseContext()")
   page.wait_for_function('!QA.done && !QA.frameValid && A4_STARTUP.state.errors.length>0',timeout=10000)
   report['post_success_context_loss']=page.evaluate('({done:QA.done,frameValid:QA.frameValid,rendered:document.getElementById("rendered").textContent,errors:A4_STARTUP.state.errors})')
   # One supported restoration must create a new generation and rebuild actual GPU resources.
   old_run=page.evaluate('A4_STARTUP.state.runId')
-  page.evaluate("gl.getExtension('WEBGL_lose_context').restoreContext()")
+  page.evaluate("window.__testContextLoss.restoreContext()")
   page.wait_for_function('(old)=>A4_STARTUP.state.runId>old && QA.done && QA.frameValid',arg=old_run,timeout=180000)
   report['restored_frame']=page.evaluate('({qa:QA,startup:A4_STARTUP.state,rendererRun:A4_RENDERER.runId})')
   assert report['restored_frame']['qa']['draws']==703 and report['restored_frame']['qa']['glError']==0
   page.locator('#c').screenshot(path=str(P/'r32-restored-generation.png'))
   # Repeated loss is not allowed to create an automatic refresh/restart loop.
   restored_run=page.evaluate('A4_STARTUP.state.runId')
-  page.evaluate("gl.getExtension('WEBGL_lose_context').loseContext()")
+  page.evaluate("window.__testContextLoss=gl.getExtension('WEBGL_lose_context');if(!window.__testContextLoss)throw Error('Test extension unavailable before loss');window.__testContextLoss.loseContext()")
   page.wait_for_function('!QA.done && A4_STARTUP.state.errors.length>0',timeout=10000)
-  page.evaluate("gl.getExtension('WEBGL_lose_context').restoreContext()")
+  page.evaluate("window.__testContextLoss.restoreContext()")
   page.wait_for_timeout(1000)
   report['second_restore_stopped']=page.evaluate('({runId:A4_STARTUP.state.runId,done:QA.done,errors:A4_STARTUP.state.errors})')
   assert report['second_restore_stopped']['runId']==restored_run and not report['second_restore_stopped']['done']
