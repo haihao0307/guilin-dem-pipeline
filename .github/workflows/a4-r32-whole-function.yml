@@ -43,8 +43,17 @@ jobs:
           test -r /etc/apparmor.d/chrome
           cat /etc/apparmor.d/chrome
           ls -l /opt/google/chrome/chrome-sandbox
-      - name: Diagnostic only - first pressure shader one native pixel
-        run: timeout 600s python r32-tests/single-pixel-probe.py
+      - name: Diagnostic only - basic RGBA, actual boiler field/range, interval loop
+        run: |
+          node r32-tests/boiler-probe-capture.cjs
+          set +e
+          timeout 180s python r32-tests/boiler-isolated-probes.py
+          result=$?
+          set -e
+          if [ "$result" -eq 124 ]; then
+            python -c "import json,pathlib;p=pathlib.Path('r32-tests/BOILER_ISOLATED_RESULT.json');r=json.loads(p.read_text()) if p.exists() else {};r.update(status='DIAGNOSTIC_180S_TIMEOUT',whole_frame_accepted=False);p.write_text(json.dumps(r,indent=2))"
+          fi
+          exit "$result"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
