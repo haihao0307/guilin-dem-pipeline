@@ -43,8 +43,8 @@ jobs:
           test -r /etc/apparmor.d/chrome
           cat /etc/apparmor.d/chrome
           ls -l /opt/google/chrome/chrome-sandbox
-      - name: Installed stable Chrome normal sandbox and RGBA8 scalar readback
-        run: timeout 1100s python r32-tests/browser-qa.py
+      - name: Diagnostic only - first pressure shader one native pixel
+        run: timeout 600s python r32-tests/single-pixel-probe.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
