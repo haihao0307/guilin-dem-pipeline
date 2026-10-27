@@ -23,6 +23,7 @@ jobs:
             kaopu-train-workbench/a4-steam-function-r32
       - name: Actual analytic fields and retained modules
         run: |
+          node r32-tests/check-kaopu-mother.cjs ../a4-steam-connection-r31/steam-path.js
           node r32-tests/check-upstream-geometry.cjs
           node r32-tests/check-whole-source-integration.cjs
           node r32-tests/independent/audit-actual-r32.cjs . ../a4-steam-connection-r31

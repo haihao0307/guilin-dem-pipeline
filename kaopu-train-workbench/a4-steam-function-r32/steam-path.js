@@ -1,7 +1,8 @@
 /* Own R31 analytic GAME candidate. No meshes, point clouds, new clock, fluid solve,
  * history-calibrated valve events, or pressure certification. All new dimensions
  * and routes are inferred. One CSG AST drives CPU, GLSL, ports and bounds. */
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.STEAM_PATH=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){'use strict';
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./kaopu-shape-language'):root.KAOPU_SHAPE_LANGUAGE);if(typeof module==='object'&&module.exports)module.exports=api;else root.STEAM_PATH=api;})(typeof globalThis!=='undefined'?globalThis:this,function(KAOPU){'use strict';
+if(!KAOPU?.createJointMother)throw Error('Load KAOPU shape-language Mother before steam-path');
 const parameters=Object.freeze({revision:'R31-steam-candidate-02',units:'m',inferred:true,
  header:{center:[0,3.3,3.35],innerHalf:[.55,.07,.07],partitionHalf:.006,outletInnerY:3.25,outletBendY:3.16,outletFaceY:3.21,cutY:[3.18,3.26],outletX:[-.40,0,.40],outletZ:3.395},
  branch:{inner:.026,outer:.038,bend:.18,jointY:1.90,lensHalf:.003,lensMajor:.035,lensRadial:.009,flangeRadius:.069,flangeThickness:.014,bendY:2.60,bendZ:3.72,approachY:2.15,supplyY:1.695,supplyZ:4.68},
@@ -74,6 +75,7 @@ for(let n=3;n<=5;n++){let s=`float spPath${n}(vec3 p,${Array.from({length:n},(_,
 function create(options={}){
  const P=parameters,B=P.branch,J=P.jointFastener,W=P.work,C=P.cylinder,H=P.header,D=options.dynamic||null,T=options.topology||{middleX:.38,planeY:1.48,chest:{rear:4.38,front:5.01,boreRadius:.1143}};
  const parts=[],byId={},domains={},cuts={},routes=[],portDefs=[],connections=[],jointFasteners=[];
+ const jointMother=KAOPU.createJointMother({lensHalf:B.lensHalf,flangeRadius:B.flangeRadius,flangeThickness:B.flangeThickness,pipeOuter:B.outer,fastener:J}),jointMotherInstances=[];
  function addPart(name,ast,preset='steel',role='inferred solid',extra={}){const id='steam_path/'+name,b=bounds(ast),p={id,group:'steam_path',source:'steamPath',glsl_function:'sp_part_'+name.replace(/\W/g,'_'),aabb_min:b[0].map(v=>v-1e-6),aabb_max:b[1].map(v=>v+1e-6),lipschitz:1.000002,status:'inferred candidate; no historical/pressure certification',proof:'Exact distance to filleted centreline, planes and primitives; min/max preserve 1-Lipschitz; beta held per snapshot',role,materialDescriptor:{preset,basis:'explicit candidate role',finish:'Existing analytic wave preset; no displacement or independent clock'},ast,...extra};parts.push(p);byId[id]=p;return id;}
  function cut(id,ast){(cuts[id]||(cuts[id]=[])).push(ast);}
  function port(id,position,direction,r,kind,host,extra={}){portDefs.push({id,label:id,position,direction,radius:r,kind,host,state:'connected_candidate',...extra});}
@@ -89,21 +91,11 @@ function create(options={}){
   const castEnd=side===1?[x,T.planeY,z]:[x,B.supplyY,z],castPoints=[[x,B.jointY-B.lensHalf,z],castEnd],cast=route(name+'_cast_top_pipe',castPoints,B.inner,B.outer,'neutral',side===1?[chestBore]:[],{materialRole:'cast-iron cylinder-top pipe; neutral existing preset'});
   cut('smokebox/superheater_header',cyl([H.outletX[side],H.cutY[0],H.outletZ],[H.outletX[side],H.cutY[1],H.outletZ],B.inner));
   cut('smokebox/smokebox_wrapper',{op:'path',points:steelPoints,r:B.outer,bend:B.bend});
-  const centers=Array.from({length:J.count},(_,k)=>[x+J.pitchRadius*Math.cos(J.angleOffset+k*2*Math.PI/J.count),0,z+J.pitchRadius*Math.sin(J.angleOffset+k*2*Math.PI/J.count)]),lower=B.jointY-B.lensHalf-B.flangeThickness,upper=B.jointY+B.lensHalf+B.flangeThickness;
-  for(const[label,y0,y1,mat]of [['steel',B.jointY+B.lensHalf,upper,'steel'],['cast',lower,B.jointY-B.lensHalf,'neutral']]){
-   const holes=centers.map(q=>cyl([q[0],y0-.001,q[2]],[q[0],y1+.001,q[2]],J.holeRadius));
-   addPart(name+'_'+label+'_joint_flange',diff(cyl([x,y0,z],[x,y1,z],B.flangeRadius),uni(cyl([x,y0-.001,z],[x,y1+.001,z],B.outer),...holes)),mat,'Finite annular flange with four candidate through holes; count and dimensions inferred');
-  }
-  const studs=[],nuts=[],washers=[],studWitnesses=[],nutWitnesses=[],washerWitnesses=[];
-  for(const q of centers){const lo=lower-J.washerThickness-J.nutThickness-J.endReserve,hi=upper+J.washerThickness+J.nutThickness+J.endReserve;
-   studs.push(cyl([q[0],lo,q[2]],[q[0],hi,q[2]],J.rodRadius));studWitnesses.push([q[0],B.jointY,q[2]]);
-   for(const[wlo,whi,nlo,nhi]of [[lower-J.washerThickness,lower,lower-J.washerThickness-J.nutThickness,lower-J.washerThickness],[upper,upper+J.washerThickness,upper+J.washerThickness,upper+J.washerThickness+J.nutThickness]]){
-    washers.push(diff(cyl([q[0],wlo,q[2]],[q[0],whi,q[2]],J.washerRadius),cyl([q[0],wlo-.001,q[2]],[q[0],whi+.001,q[2]],J.holeRadius)));
-    nuts.push(diff({op:'hexY',c:q,apothem:J.nutApothem,lo:nlo,hi:nhi},cyl([q[0],nlo-.001,q[2]],[q[0],nhi+.001,q[2]],J.rodRadius)));
-    washerWitnesses.push([q[0]+.5*(J.holeRadius+J.washerRadius),.5*(wlo+whi),q[2]]);nutWitnesses.push([q[0]+.5*(J.rodRadius+J.nutApothem),.5*(nlo+nhi),q[2]]);
-   }
-  }
-  const hardware=[addPart(name+'_joint_studs',uni(...studs),'steel','Four finite candidate studs; count/size inferred, nominal thread envelope only',{diagnosticWitnesses:studWitnesses,componentCount:J.count}),addPart(name+'_joint_nuts',uni(...nuts),'steel','Eight finite hexagonal nuts; nominal contact bore, no thread or preload certification',{diagnosticWitnesses:nutWitnesses,componentCount:2*J.count}),addPart(name+'_joint_washers',uni(...washers),'steel','Eight finite annular washers bearing on flange outer faces',{diagnosticWitnesses:washerWitnesses,componentCount:2*J.count})];
+  const memberIDs={steelFlange:'steam_path/'+name+'_steel_joint_flange',castFlange:'steam_path/'+name+'_cast_joint_flange',studs:'steam_path/'+name+'_joint_studs',nuts:'steam_path/'+name+'_joint_nuts',washers:'steam_path/'+name+'_joint_washers'};
+  const jointInstance=jointMother.instantiate({id:'steam_path/'+name+'_joint',origin:joint,parent:'A4/model_local_frame',timeReference:'A4/shared_mechanical_theta',port:name+'/lens_joint',memberIDs});jointMotherInstances.push(jointInstance);
+  const built=jointMother.expand(jointInstance),{centers,studWitnesses,nutWitnesses,washerWitnesses}=built;
+  for(const f of built.flanges)addPart(name+'_'+f.label+'_joint_flange',f.ast,f.mat,'Finite annular flange with four candidate through holes; count and dimensions inferred');
+  const hardware=[addPart(name+'_joint_studs',built.studs,'steel','Four finite candidate studs; count/size inferred, nominal thread envelope only',{diagnosticWitnesses:studWitnesses,componentCount:J.count}),addPart(name+'_joint_nuts',built.nuts,'steel','Eight finite hexagonal nuts; nominal contact bore, no thread or preload certification',{diagnosticWitnesses:nutWitnesses,componentCount:2*J.count}),addPart(name+'_joint_washers',built.washers,'steel','Eight finite annular washers bearing on flange outer faces',{diagnosticWitnesses:washerWitnesses,componentCount:2*J.count})];
   jointFasteners.push({branch:name,centers:centers.map(q=>[q[0],B.jointY,q[2]]),parts:hardware,countPerJoint:J.count,quantityAndDimensionsInferred:true,threadResolved:false,preloadVerified:false,loadedSealVerified:false});
   addPart(name+'_lens_ring',{op:'lens',c:joint,major:B.lensMajor,radial:B.lensRadial,half:B.lensHalf},'neutral','Finite convex lens ring; composition and loaded sealing state unverified');
   port(name+'/header_outlet',[H.outletX[side],H.outletFaceY,H.outletZ],[0,-1,0],B.inner,'post_superheat_outlet','smokebox/superheater_header');
@@ -136,7 +128,7 @@ function create(options={}){
  function ports(theta,installation){valid(theta,installation);return portDefs.map(p=>({...p,position:point(p.position,installation.beta),direction:Array.isArray(p.direction)?p.direction.slice():unit(sub(point(p.direction.to,installation.beta),point(p.direction.from,installation.beta))),theta,installation:{...installation}}));}
  function clipExistingDomain(id,existingScalar,p,theta,installation){valid(theta,installation);if(!Number.isFinite(existingScalar))throw Error('Supply the existing host-domain scalar at this same point');return domainExclusions[id]?Math.max(existingScalar,-scalar(domainExclusions[id],p,installation.beta)):existingScalar;}
  function inspection(theta,installation){valid(theta,installation);return{theta,installation:{...installation},endpoints:ports(theta,installation),workingChambers:[0,1,2].map(s=>chamberInfo(s,theta,installation)),knownBreaks:missingEdges,status};}
- return{version:P.revision,parameters:P,source,commonSource,parts,byId,hostCuts,domainIds:[...Object.keys(domains),...['left','middle','right'].flatMap(s=>['chamber/'+s+'/rear','chamber/'+s+'/front'])],domains,domainExclusions,clipExistingDomain,jointFasteners,routes,ports,inspection,graph,status,worldScalar,referenceScalar:(id,p,beta=.126)=>scalar(byId[id].ast,p,beta),hostCutScalar,domainScalar,bounds:id=>bounds(byId[id].ast),point,scalar};
+ return{kaopu:{language:'KAOPU-V6',consumerVersion:KAOPU.version,frame:{id:'A4/model_local_frame',basis:'retained SCENE assembly coordinates, not a geographic placement',worldPlacement:null},mothers:[jointMother.mother],parameterGroups:[jointMother.parameters],instances:jointMotherInstances,coverage:{jointAssemblies:3,renderedFieldMembers:15,totalSteamPathFields:parts.length,wholeTrainUnified:false},cacheContract:'Mother+shared parameter group+instance origin generate retained model-frame AST; AST/GLSL are derived caches, never mesh truth'},version:P.revision,parameters:P,source,commonSource,parts,byId,hostCuts,domainIds:[...Object.keys(domains),...['left','middle','right'].flatMap(s=>['chamber/'+s+'/rear','chamber/'+s+'/front'])],domains,domainExclusions,clipExistingDomain,jointFasteners,routes,ports,inspection,graph,status,worldScalar,referenceScalar:(id,p,beta=.126)=>scalar(byId[id].ast,p,beta),hostCutScalar,domainScalar,bounds:id=>bounds(byId[id].ast),point,scalar};
 }
 return{parameters,create,scalar,bounds,point,fillet,pathDistance};
 });

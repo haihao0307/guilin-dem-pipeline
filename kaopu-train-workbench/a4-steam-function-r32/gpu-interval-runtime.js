@@ -60,6 +60,34 @@ void main(){
  const tailSource=prefix+'uniform highp sampler2D hitStateA,hitStateB;'+unpack+'void main(){'+camera+textureHit+tail+'}';
  return Object.freeze({stepFragment:prune(stepPrefix+step),tailFragment:prune(tailSource),nodeBudget:4096,leafTolerance:.0005});
 }
+// Ordinary WebGL2 synchronization. Never disable a watchdog or block on finish().
+async function waitForGPU(gl,guard,phase='gpu-completion'){
+ guard();invariant(!gl.isContextLost(),'context lost');
+ const sync=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);invariant(sync,'GPU fence unavailable');
+ const started=performance.now();gl.flush();
+ try{for(;;){guard();invariant(!gl.isContextLost(),'context lost');const status=gl.clientWaitSync(sync,0,0);
+  if(status===gl.ALREADY_SIGNALED||status===gl.CONDITION_SATISFIED)return{phase,ms:performance.now()-started};
+  invariant(status!==gl.WAIT_FAILED,'GPU fence wait failed');invariant(performance.now()-started<120000,'GPU completion timeout: '+phase);
+  await new Promise(resolve=>setTimeout(resolve,0));
+ }}finally{let current=false;try{guard();current=!gl.isContextLost();}catch(_){}if(current)gl.deleteSync(sync);}
+}
+function tiles(box,edge=32){const[x,y,w,h]=box;invariant(box.length===4&&box.every(Number.isInteger)&&w>=0&&h>=0,'tile bounds');const result=[];for(let yy=y;yy<y+h;yy+=edge)for(let xx=x;xx<x+w;xx+=edge)result.push([xx,yy,Math.min(edge,x+w-xx),Math.min(edge,y+h-yy)]);return result;}
+async function linkProgramAsync(gl,vertex,fragment,guard,progress=()=>{}){
+ const started=performance.now(),extension=gl.getExtension?.('KHR_parallel_shader_compile'),p=gl.createProgram(),shaders=[];let linked=false;
+ const check=()=>{guard();invariant(!gl.isContextLost(),'context lost during compile/link');};
+ const note=(phase,detail={})=>{check();progress({phase,ms:performance.now()-started,...detail});};
+ try{
+  for(const [type,source,label]of [[gl.VERTEX_SHADER,vertex,'vertex-compile'],[gl.FRAGMENT_SHADER,fragment,'fragment-compile']]){
+   note(label,{sourceBytes:new TextEncoder().encode(source).length,reachableDefinitions:(source.match(/\b(?:void|float|int|uint|bool|[biu]?vec[234]|mat[234])\s+\w+\s*\([^;{}]*\)\s*\{/g)||[]).length});
+   const shader=gl.createShader(type);shaders.push(shader);gl.shaderSource(shader,source);gl.compileShader(shader);gl.attachShader(p,shader);
+   await new Promise(resolve=>setTimeout(resolve,0));check();
+  }
+  note('program-link',{parallelExtension:!!extension});gl.linkProgram(p);
+  if(extension){while(!gl.getProgramParameter(p,extension.COMPLETION_STATUS_KHR)){check();invariant(performance.now()-started<120000,'shader compile completion timeout');await new Promise(resolve=>setTimeout(resolve,0));}}
+  check();for(const sh of shaders)invariant(gl.getShaderParameter(sh,gl.COMPILE_STATUS),gl.getShaderInfoLog(sh)||'Shader compile failed (empty driver log)');
+  invariant(gl.getProgramParameter(p,gl.LINK_STATUS),gl.getProgramInfoLog(p)||'Program link failed (empty driver log)');note('program-ready',{parallelExtension:!!extension});linked=true;return p;
+ }finally{let current=false;try{guard();current=!gl.isContextLost();}catch(_){}if(current){for(const sh of shaders){gl.detachShader(p,sh);gl.deleteShader(sh);}if(!linked)gl.deleteProgram(p);}}
+}
 function create(gl,vertex,width,height){
  invariant(gl&&typeof vertex==='string','GL/vertex required');invariant(Number.isInteger(width)&&width>0&&Number.isInteger(height)&&height>0,'native dimensions');
  let active=null,disposed=false;const pairs=new Set(),buffers=[];
@@ -67,8 +95,11 @@ function create(gl,vertex,width,height){
  function restoreDefault(){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.drawBuffers([gl.BACK]);gl.readBuffer(gl.BACK);gl.viewport(0,0,width,height);gl.disable(gl.SCISSOR_TEST);gl.enable(gl.DITHER);gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LESS);gl.depthMask(true);}
  function makeBuffer(){const fb=gl.createFramebuffer(),textures=[];gl.bindFramebuffer(gl.FRAMEBUFFER,fb);for(let i=0;i<2;i++){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,width,height,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0+i,gl.TEXTURE_2D,tex,0);textures.push(tex);}gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);invariant(gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE,'RGBA8 framebuffer incomplete');return{fb,textures};}
  healthy();try{buffers.push(makeBuffer(),makeBuffer());}finally{if(!gl.isContextLost())restoreDefault();}
- function program(fragment){const p=gl.createProgram(),shaders=[];try{for(const [type,source]of [[gl.VERTEX_SHADER,vertex],[gl.FRAGMENT_SHADER,fragment]]){const s=gl.createShader(type);shaders.push(s);gl.shaderSource(s,source.replace(/\b[A-Za-z_]\w*__\w*\b/g,n=>n.replace(/__/g,'_neg_')));gl.compileShader(s);invariant(gl.getShaderParameter(s,gl.COMPILE_STATUS),gl.getShaderInfoLog(s)||'compile failed');gl.attachShader(p,s);}gl.linkProgram(p);invariant(gl.getProgramParameter(p,gl.LINK_STATUS),gl.getProgramInfoLog(p)||'link failed');return p;}catch(e){gl.deleteProgram(p);throw e;}finally{for(const s of shaders)gl.deleteShader(s);}}
+ function program(fragment){const p=gl.createProgram(),shaders=[];let linked=false;try{for(const [type,source]of [[gl.VERTEX_SHADER,vertex],[gl.FRAGMENT_SHADER,fragment]]){const s=gl.createShader(type);shaders.push(s);gl.shaderSource(s,source.replace(/\b[A-Za-z_]\w*__\w*\b/g,n=>n.replace(/__/g,'_neg_')));gl.compileShader(s);invariant(gl.getShaderParameter(s,gl.COMPILE_STATUS),gl.getShaderInfoLog(s)||'compile failed');gl.attachShader(p,s);}gl.linkProgram(p);invariant(gl.getProgramParameter(p,gl.LINK_STATUS),gl.getProgramInfoLog(p)||'link failed');linked=true;return p;}finally{for(const s of shaders){gl.detachShader(p,s);gl.deleteShader(s);}if(!linked)gl.deleteProgram(p);}}
  function compile(fragment){healthy();invariant(!active,'compile during active render');const built=build(fragment);let step;try{step=program(built.stepFragment);const pair={step,tail:program(built.tailFragment),built};pairs.add(pair);return pair;}catch(e){if(step)gl.deleteProgram(step);throw e;}}
+ async function compileAsync(fragment,guard,progress){healthy();invariant(!active,'compile during active render');const built=build(fragment);let step;
+ try{step=await linkProgramAsync(gl,vertex,built.stepFragment,guard,d=>progress({...d,pass:'interval-step'}));const tail=await linkProgramAsync(gl,vertex,built.tailFragment,guard,d=>progress({...d,pass:'interval-tail'}));guard();const pair={step,tail,built};pairs.add(pair);return pair;}catch(e){let current=false;try{guard();current=!gl.isContextLost();}catch(_){}if(step&&current)gl.deleteProgram(step);throw e;}
+ }
  async function render(pair,box,bindUniforms,guard,onProgress){
  invariant(typeof guard==='function'&&typeof bindUniforms==='function','guard/uniform binder required');guard();healthy();invariant(pairs.has(pair),'foreign program pair');invariant(!active,'concurrent interval render');
  invariant(Array.isArray(box)&&box.length===4&&box.every(Number.isInteger),'integer bbox required');const[x,y,w,h]=box;invariant(w>=0&&h>=0,'negative bbox');
@@ -78,20 +109,20 @@ function create(gl,vertex,width,height){
  const bind=p=>{valid();gl.useProgram(p);const value=bindUniforms(p);invariant(!value||typeof value.then!=='function','uniform binder must be synchronous');valid();};
  const checkpoint=async phase=>{valid();if(onProgress){await onProgress({phase,...result});valid();}await new Promise(resolve=>setTimeout(resolve,0));valid();};
  let src=0,dst=1;const bytes=new Uint8Array(w*h*4),view=new DataView(bytes.buffer);
- const summary=()=>{valid();gl.bindFramebuffer(gl.FRAMEBUFFER,buffers[src].fb);gl.readBuffer(gl.COLOR_ATTACHMENT1);gl.finish();gl.readPixels(x,y,w,h,gl.RGBA,gl.UNSIGNED_BYTE,bytes);valid();const s={active:0,hit:0,miss:0,exhausted:0,totalNodes:0,maxNodes:0};for(let i=0;i<w*h;i++){const m=view.getUint32(i*4,true),n=m>>>8,status=(m>>>6)&3;invariant(n<=4096&&(m&63)<=30,'invalid per-ray state');s[['active','hit','miss','exhausted'][status]]++;s.totalNodes+=n;s.maxNodes=Math.max(s.maxNodes,n);}return s;};
+ const summary=async()=>{valid();await waitForGPU(gl,valid,'interval-state');valid();gl.bindFramebuffer(gl.FRAMEBUFFER,buffers[src].fb);gl.readBuffer(gl.COLOR_ATTACHMENT1);gl.readPixels(x,y,w,h,gl.RGBA,gl.UNSIGNED_BYTE,bytes);valid();const s={active:0,hit:0,miss:0,exhausted:0,totalNodes:0,maxNodes:0};for(let i=0;i<w*h;i++){const m=view.getUint32(i*4,true),n=m>>>8,status=(m>>>6)&3;invariant(n<=4096&&(m&63)<=30,'invalid per-ray state');s[['active','hit','miss','exhausted'][status]]++;s.totalNodes+=n;s.maxNodes=Math.max(s.maxNodes,n);}return s;};
  const step=initialize=>{valid();invariant(src!==dst,'state attachment feedback');gl.bindFramebuffer(gl.FRAMEBUFFER,buffers[dst].fb);gl.useProgram(pair.step);for(let i=0;i<2;i++){gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,buffers[src].textures[i]);}gl.uniform1i(gl.getUniformLocation(pair.step,'initializeState'),initialize?1:0);gl.drawArrays(gl.TRIANGLES,0,3);result.physicalStateDraws++;[src,dst]=[dst,src];};
  try{
   bind(pair.step);const budget=gl.getUniformLocation(pair.step,'intervalNodeBudget');invariant(budget!==null,'missing node budget');gl.uniform1i(budget,4096);invariant(gl.getUniform(pair.step,budget)===4096,'node budget binding');gl.uniform1i(gl.getUniformLocation(pair.step,'previousA'),0);gl.uniform1i(gl.getUniformLocation(pair.step,'previousB'),1);
-  gl.disable(gl.DITHER);gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);gl.disable(gl.SCISSOR_TEST);gl.bindVertexArray(null);gl.viewport(x,y,w,h);step(true);result.final=summary();invariant(!result.final.hit&&!result.final.exhausted&&!result.final.totalNodes,'initial state');
-  while(result.final.active&&result.passes<4096){const count=Math.min(8,4096-result.passes);for(let i=0;i<count;i++){step(false);result.passes++;}result.final=summary();invariant(!result.final.exhausted,'4096-node budget exhausted; frame incomplete');await checkpoint('interval-batch');}
+  gl.disable(gl.DITHER);gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);gl.disable(gl.SCISSOR_TEST);gl.bindVertexArray(null);gl.viewport(x,y,w,h);step(true);result.final=await summary();invariant(!result.final.hit&&!result.final.exhausted&&!result.final.totalNodes,'initial state');
+  while(result.final.active&&result.passes<4096){const count=Math.min(8,4096-result.passes);for(let i=0;i<count;i++){step(false);result.passes++;}result.final=await summary();invariant(!result.final.exhausted,'4096-node budget exhausted; frame incomplete');await checkpoint('interval-batch');}
   invariant(!result.final.active&&!result.final.exhausted,'unfinished interval rays');result.searchMs=performance.now()-started;result.searchComplete=true;valid();restoreDefault();gl.viewport(x,y,w,h);gl.enable(gl.SCISSOR_TEST);gl.scissor(x,y,w,h);bind(pair.tail);for(let i=0;i<2;i++){gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,buffers[src].textures[i]);gl.uniform1i(gl.getUniformLocation(pair.tail,i===0?'hitStateA':'hitStateB'),i);}valid();gl.drawArrays(gl.TRIANGLES,0,3);result.tailDraws=1;valid();result.tailSubmitted=true;result.ms=performance.now()-started;return result;
  }finally{
   // Never let a stale finally restore GL state after a newer initialization.
   if(active===owner){let current=false;try{guard();current=!gl.isContextLost();}catch(_){}if(current)restoreDefault();active=null;}
  }
  }
- function dispose(){invariant(!active,'dispose during render');if(disposed)return;for(const p of pairs){gl.deleteProgram(p.step);gl.deleteProgram(p.tail);}for(const b of buffers){gl.deleteFramebuffer(b.fb);for(const t of b.textures)gl.deleteTexture(t);}pairs.clear();disposed=true;}
- return Object.freeze({compile,render,dispose});
+ function dispose(contextInvalidated=false){invariant(!active,'dispose during render');if(disposed)return;if(!contextInvalidated){for(const p of pairs){gl.deleteProgram(p.step);gl.deleteProgram(p.tail);}for(const b of buffers){gl.deleteFramebuffer(b.fb);for(const t of b.textures)gl.deleteTexture(t);}}pairs.clear();disposed=true;}
+ return Object.freeze({compile,compileAsync,render,dispose});
 }
-root.A4_INTERVAL_GPU=Object.freeze({build,create,prune});
+root.A4_INTERVAL_GPU=Object.freeze({build,create,prune,waitForGPU,tiles,linkProgramAsync});
 })(typeof globalThis!=='undefined'?globalThis:this);

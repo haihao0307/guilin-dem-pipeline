@@ -1,5 +1,3 @@
-const A4_STARTUP_RUN=window.A4_STARTUP?.state.runId;
-window.A4_STARTUP?.step('脚本已加载，正在初始化整车 WebGL2…',A4_STARTUP_RUN);
 const c=document.getElementById('c');
 // Fixed at page initialization: no runtime resize, DPR multiplier, or image resampling.
 const RENDER_RESOLUTION=(()=>{
@@ -10,13 +8,12 @@ const RENDER_RESOLUTION=(()=>{
  return Object.freeze({width,height,legacy:width===720&&height===400,rayEpsilon:1.2/height*Math.SQRT2});
 })();
 const gl=c.getContext('webgl2',{preserveDrawingBuffer:true});window.QA={compiled:[],errors:[],draws:0,done:false};
-if(!gl){window.A4_STARTUP?.fail('无法创建 WebGL2 上下文；整车渲染尚未开始。',A4_STARTUP_RUN);throw Error('WebGL2 context unavailable');}
+if(!gl){window.A4_STARTUP?.fail('无法创建 WebGL2 上下文；整车渲染尚未开始。');throw Error('WebGL2 context unavailable');}
 const vs=`#version 300 es
 void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}`;
-function shader(type,s){let x=gl.createShader(type);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(x));return x}
 const vec=a=>'vec3('+a.map(x=>Number(x).toFixed(8)).join(',')+')';
-const programs={};
-const intervalGPU=A4_INTERVAL_GPU.create(gl,vs,RENDER_RESOLUTION.width,RENDER_RESOLUTION.height);
+let programs={},intervalGPU;
+let initPromise=null,automaticRestarts=0;
 function distanceOnly(source){
  const marker='if(lip>0.){',start=source.indexOf(marker);if(start<0)throw Error('Distance branch contract missing');let depth=1,end=start+marker.length;for(;depth;end++){if(source[end]==='{')depth++;if(source[end]==='}')depth--;}
  if(source.slice(end,end+5)!=='else{')throw Error('Interval branch contract missing');let finish=end+5;depth=1;for(;depth;finish++){if(source[finish]==='{')depth++;if(source[finish]==='}')depth--;}
@@ -31,15 +28,25 @@ function scissorBox(lo,hi,eye,target,resolution=RENDER_RESOLUTION){
  let x=Math.max(0,Math.floor(Math.min(...xs))-2),y=Math.max(0,Math.floor(Math.min(...ys))-2),xx=Math.min(width,Math.ceil(Math.max(...xs))+2),yy=Math.min(height,Math.ceil(Math.max(...ys))+2);return [x,y,Math.max(0,xx-x),Math.max(0,yy-y)];
 }
 
-(async()=>{try{
-window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);
+async function initializeA4Renderer(){
+ const A4_STARTUP_RUN=window.A4_STARTUP?.state.runId;
+ const programs={};window.A4_CURRENT_PROGRAMS=programs;
+ const intervalGPU=A4_INTERVAL_GPU.create(gl,vs,RENDER_RESOLUTION.width,RENDER_RESOLUTION.height);
+ let renderTail=Promise.resolve();
+ const renderer={runId:A4_STARTUP_RUN,contextWasLost:false,disposed:false,drain:()=>renderTail,dispose(){if(this.disposed)return;this.disposed=true;intervalGPU.dispose(this.contextWasLost);if(!this.contextWasLost)for(const q of Object.values(programs))if(!q.pair)gl.deleteProgram(q.p);}};window.A4_RENDERER=renderer;
+ window.QA={compiled:[],errors:[],draws:0,done:false,frameValid:false,runId:A4_STARTUP_RUN};
+ try{
+ window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);
+ const extension=gl.getExtension?.('WEBGL_debug_renderer_info');
+ QA.device={renderer:gl.getParameter?.(extension?.UNMASKED_RENDERER_WEBGL||gl.RENDERER),vendor:gl.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL||gl.VENDOR),version:gl.getParameter?.(gl.VERSION),buffer:[RENDER_RESOLUTION.width,RENDER_RESOLUTION.height],stateTextureBytes:4*4*RENDER_RESOLUTION.width*RENDER_RESOLUTION.height};
+ window.A4_STARTUP?.step('脚本已加载，正在初始化整车 WebGL2…',A4_STARTUP_RUN);
 window.SURFACE=createSurfaceAppearance(SCENE,DYNAMIC,ANALYTIC_MATERIAL_WAVES,createMaterialCoordinates,RENDER_RESOLUTION.height);
 for(const [source,code] of Object.entries(SCENE.sources)){
 const sourceParts=SCENE.parts.filter(p=>p.source===source),batches=[];
-for(let start=0;start<sourceParts.length;){let n=1;const distance=!!sourceParts[start].lipschitz;if(distance){const max=source==='pressure'?4:sourceParts.length;while(n<max&&start+n<sourceParts.length&&sourceParts[start+n].lipschitz)n++;}batches.push({ps:sourceParts.slice(start,start+n),programKey:source+'/'+start,traceKind:distance?'distance':'interval'});start+=n;}
+for(let start=0;start<sourceParts.length;){let n=1;const distance=!!sourceParts[start].lipschitz;if(distance){const max=source==='pressure'?4:16;while(n<max&&start+n<sourceParts.length&&sourceParts[start+n].lipschitz)n++;}batches.push({ps:sourceParts.slice(start,start+n),programKey:source+'/'+start,traceKind:distance?'distance':'interval'});start+=n;}
 for(const {ps,programKey,traceKind} of batches){
 window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);
-window.A4_STARTUP?.step("正在编译整车解析域："+source+"；此阶段可能较慢…",A4_STARTUP_RUN);
+QA.progress={phase:"compile",part:programKey,compiledPrograms:QA.compiled.length};window.A4_STARTUP?.step("正在编译整车解析域："+programKey+"；此阶段可能较慢…",A4_STARTUP_RUN);
 // Each local id maps to the same retained global part, in unchanged draw order.
 let dispatch=ps.map((p,i)=>`if(id==${i})return ${DYNAMIC.scalar(p)};`).join('\n');
 
@@ -66,15 +73,16 @@ float mid=(a+b)*.5;if(top<30){lefts[top]=mid;rights[top]=b;top++;lefts[top]=a;ri
 }
 if(hit<0.)discard;vec3 p=eye+rd*hit;float h=.0003;vec3 n=normalize(vec3(field(p+vec3(h,0,0))-field(p-vec3(h,0,0)),field(p+vec3(0,h,0))-field(p-vec3(0,h,0)),field(p+vec3(0,0,h))-field(p-vec3(0,0,h))));outColor=vec4(surfaceColor(p,n,rd,hit,cutX,color),1);gl_FragDepth=hit/80.;}`;
 let p,pair;const safe=fs.replace(/\b[A-Za-z_]\w*__\w*\b/g,n=>n.replace(/__/g,"_neg_"));
-if(traceKind==='interval'){if(ps.length!==1||ps[0].lipschitz)throw Error('Interval singleton classification');pair=intervalGPU.compile(safe);p=pair.tail;}
-else{if(ps.some(x=>!x.lipschitz))throw Error('Distance certification missing');p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,vs));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,distanceOnly(safe)));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));}
-programs[programKey]={p,pair,ps,source,traceKind};window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);QA.compiled.push({source,parts:ps.length});document.getElementById("status").textContent=JSON.stringify(QA);await new Promise(r=>setTimeout(r,0));window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);}}
+const compilation=[];const compileProgress=detail=>{window.A4_STARTUP.assertActive(A4_STARTUP_RUN);const record={...detail,part:programKey};QA.progress=record;compilation.push(record);if(window.reportA4Trace)window.reportA4Trace(record);window.A4_STARTUP.step('编译 '+programKey+' / '+detail.phase+' / '+(detail.sourceBytes||0)+' bytes',A4_STARTUP_RUN);};
+if(traceKind==='interval'){if(ps.length!==1||ps[0].lipschitz)throw Error('Interval singleton classification');pair=await intervalGPU.compileAsync(safe,()=>window.A4_STARTUP.assertActive(A4_STARTUP_RUN),compileProgress);p=pair.tail;}
+else{if(ps.some(x=>!x.lipschitz))throw Error('Distance certification missing');p=await A4_INTERVAL_GPU.linkProgramAsync(gl,vs,distanceOnly(safe),()=>window.A4_STARTUP.assertActive(A4_STARTUP_RUN),compileProgress);}
+programs[programKey]={p,pair,ps,source,traceKind};window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);QA.compiled.push({source,programKey,parts:ps.length,compilation});document.getElementById("status").textContent=JSON.stringify(QA);await new Promise(r=>setTimeout(r,0));window.A4_STARTUP?.assertActive(A4_STARTUP_RUN);}}
 async function renderFrame(eye=[12,3.5,-4],target=[0,1.8,-4],cut=100,theta=.4,installation=DYNAMIC.snapshot(),appearance=SURFACE.snapshot(),frameRunId=window.A4_STARTUP?.state.runId){
  const guard=()=>window.A4_STARTUP?.assertActive(frameRunId);guard();QA.done=false;
  const frameQA={...QA,errors:[...QA.errors],done:false,frameValid:false,runId:frameRunId};const {width,height,rayEpsilon}=RENDER_RESOLUTION;
  if(c.width!==width||c.height!==height||gl.drawingBufferWidth!==width||gl.drawingBufferHeight!==height)throw Error('Render buffer dimensions changed after page initialization');
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,width,height);gl.disable(gl.SCISSOR_TEST);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LESS);gl.depthMask(true);gl.clearColor(.075,.1,.14,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
- frameQA.draws=0;frameQA.physicalStateDraws=0;frameQA.intervalFields=[];const start=performance.now();
+ frameQA.draws=0;frameQA.physicalDistanceDraws=0;frameQA.physicalStateDraws=0;frameQA.intervalFields=[];const start=performance.now();
  const progress=(phase,part,detail={})=>{guard();QA.progress={phase,part,logicalDraws:frameQA.draws,ms:performance.now()-start,...detail};if(window.reportA4Trace)window.reportA4Trace(QA.progress);};
  for(const [programKey,{p,pair,ps,source:src,traceKind}]of Object.entries(programs)){
   guard();progress('source-start',programKey,{traceKind});
@@ -87,14 +95,16 @@ async function renderFrame(eye=[12,3.5,-4],target=[0,1.8,-4],cut=100,theta=.4,in
    progress('field-start',x.id,{traceKind,box});
    if(traceKind==='interval'){
     const stats=await intervalGPU.render(pair,box,bindUniforms,guard,detail=>progress('interval-batch',x.id,detail));guard();frameQA.physicalStateDraws+=stats.physicalStateDraws;frameQA.intervalFields.push({id:x.id,...stats});
-   }else{bindUniforms(p);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,width,height);gl.enable(gl.SCISSOR_TEST);gl.scissor(...box);gl.drawArrays(gl.TRIANGLES,0,3);}
+   }else{bindUniforms(p);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.enable(gl.SCISSOR_TEST);
+    for(const tile of A4_INTERVAL_GPU.tiles(box)){guard();gl.viewport(...tile);gl.scissor(...tile);progress('distance-tile-submit',x.id,{traceKind,box,tile});gl.drawArrays(gl.TRIANGLES,0,3);frameQA.physicalDistanceDraws++;await A4_INTERVAL_GPU.waitForGPU(gl,guard,x.id);guard();}
+    gl.viewport(0,0,width,height);
+   }
    frameQA.draws++;progress('field-submitted',x.id,{traceKind});
   }
   await new Promise(r=>setTimeout(r,0));guard();
  }
- guard();gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,width,height);gl.disable(gl.SCISSOR_TEST);gl.finish();
+ guard();gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,width,height);gl.disable(gl.SCISSOR_TEST);await A4_INTERVAL_GPU.waitForGPU(gl,guard,'whole-frame');guard();
  frameQA.resolution={width,height,drawingBufferWidth:gl.drawingBufferWidth,drawingBufferHeight:gl.drawingBufferHeight,viewport:[0,0,width,height],rayEpsilon,legacyShader:RENDER_RESOLUTION.legacy,nativeSampling:true,resizedFromImage:false};frameQA.ms=performance.now()-start;frameQA.jsSubmissionMs=frameQA.ms;frameQA.glError=gl.getError();if(gl.isContextLost())throw Error("WebGL context lost before whole-frame completion");if(frameQA.glError!==gl.NO_ERROR)throw Error("WebGL error after whole-frame submission: 0x"+frameQA.glError.toString(16));frameQA.theta=theta;frameQA.installation=installation;frameQA.appearance=appearance;frameQA.surface={...SURFACE.coverage(installation),geometryDisplacement:0,shadingOnly:true,independentClock:false,filtered:true,footprint:'tangent-plane ray cone; no derivative in divergent flow; edge/curvature AA not certified',historicalMaterialCertainty:false,pixelReadbackVerified:false};frameQA.mechanicalAcceptance=false;frameQA.outsideValves=installation.mode==='candidate'?{leftQ:DYNAMIC.outsideValvePose(theta).left.spindleDisplacement,rightQ:DYNAMIC.outsideValvePose(theta).right.spindleDisplacement,fixedReversingSetting:.75,reconstructed:true,middleFrozen:false}:null;frameQA.centralControl=installation.mode==='candidate'?{qMiddle:DYNAMIC.gresleySolver.pose(theta).qMiddle,finiteMinusIdeal:DYNAMIC.gresleySolver.pose(theta).finiteMinusIdeal,inferredHorizontalInstallation:true,sideOffsetMiddleValve:true,middleChestPresent:true,baselinePlateOverlapKnown:true,candidateFiniteStack:true,historicalR28Failures:['original central levers intersected frame fields','original centre-horizontal spindle intersected power-cylinder moving parts'],currentWholeNeighborStatus:'Read R29 whole-neighbor evidence; no whole-mechanical certification',realFrameOpeningsAndInstallationUnverified:true,candidateExplicitMount:true,verifiedFrameMount:false,verifiedEndLocks:false}:null;frameQA.steamPath=installation.mode==='candidate'&&DYNAMIC.steamPathCandidate?{candidateInstalled:true,parts:DYNAMIC.steamPathCandidate.parts.length,sourceName:'steamPath',theta,hostCount:Object.keys(DYNAMIC.steamPathCandidate.hostCuts).length,subtractOnly:true,completeSteamNetwork:false,historicalValveEventsVerified:false,sameTimeChambers:DYNAMIC.steamPathCandidate.inspection(theta,installation).workingChambers}:null;frameQA.upstreamSteam=DYNAMIC.upstreamCandidate?.network(theta,installation)||null;window.A4_STARTUP?.assertActive(frameRunId);frameQA.done=true;frameQA.frameValid=true;delete frameQA.invalidatedBy;Object.assign(QA,frameQA);delete QA.invalidatedBy;document.getElementById("status").textContent=`${width}×${height} native pixels · ${SCENE.parts.length} defined analytic fields · ${frameQA.draws} logical fields / ${frameQA.physicalStateDraws} interval-state draws · GL ${frameQA.glError} · JS submission ${(frameQA.jsSubmissionMs/1000).toFixed(2)} s; software-WebGL readback timing only in BROWSER_QA · theta ${theta.toFixed(4)} rad · ${appearance.mode==='waves'?'解析微法线 / 粗糙度研究':'原诊断色'} · 几何位移 0`;if(window.RESEARCH_UI)RESEARCH_UI.showRendered(theta,installation,appearance);return {...frameQA};}
-let renderTail=Promise.resolve();
 window.render=function(eye,target,cut,theta,installation=DYNAMIC.snapshot(),appearance=SURFACE.snapshot()){
  const mechanical=DYNAMIC.snapshot(installation),surface=SURFACE.snapshot(appearance);
  const eyeSnapshot=eye?.slice(),targetSnapshot=target?.slice();
@@ -112,4 +122,20 @@ window.RESEARCH_UI.install();const firstFrame=await RESEARCH_UI.request({throwOn
 if(firstFrame?.status!=="submitted"||firstFrame.runId!==A4_STARTUP_RUN)throw Error("整车首帧未确认提交；初始化未完成。");
 window.A4_STARTUP?.step("整车首帧已提交。可切换候选、时间与剖切；软件渲染可能较慢。",A4_STARTUP_RUN);
 
-}catch(e){if(window.A4_STARTUP&&A4_STARTUP_RUN!==window.A4_STARTUP.state.runId)return;window.A4_STARTUP?.fail(String(e),A4_STARTUP_RUN);if(!QA.errors.includes(String(e)))QA.errors.push(String(e));document.getElementById("status").textContent=JSON.stringify(QA,null,2)}})();
+}catch(e){if(window.A4_STARTUP&&A4_STARTUP_RUN!==window.A4_STARTUP.state.runId)return;window.A4_STARTUP?.fail(String(e),A4_STARTUP_RUN);if(!QA.errors.includes(String(e)))QA.errors.push(String(e));document.getElementById("status").textContent=JSON.stringify(QA,null,2);if(!gl.isContextLost())renderer.dispose();}
+}
+window.A4_RESTART=async function(){
+ if(initPromise)return initPromise;
+ if(gl.isContextLost())throw Error('GPU 上下文尚未恢复，不能重建。');
+ const previous=window.A4_RENDERER;
+ window.A4_STARTUP.beginRun('正在完整重建整车渲染资源…');
+ initPromise=(async()=>{if(previous){await previous.drain().catch(()=>{});previous.dispose();}await initializeA4Renderer();})().finally(()=>{initPromise=null;});
+ return initPromise;
+};
+c.addEventListener('webglcontextlost',()=>{if(window.A4_RENDERER)window.A4_RENDERER.contextWasLost=true;});
+c.addEventListener('webglcontextrestored',()=>{
+ if(automaticRestarts>=1){window.A4_STARTUP.fail('已停止自动重试：恢复后再次中断，请保留诊断信息。');return;}
+ automaticRestarts++;const pending=initPromise;Promise.resolve(pending).catch(()=>{}).then(()=>window.A4_RESTART()).catch(e=>window.A4_STARTUP.fail(String(e)));
+});
+initPromise=initializeA4Renderer().finally(()=>{initPromise=null;});
+initPromise;

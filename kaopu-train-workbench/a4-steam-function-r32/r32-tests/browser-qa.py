@@ -77,7 +77,22 @@ try:
   page.evaluate("gl.getExtension('WEBGL_lose_context').loseContext()")
   page.wait_for_function('!QA.done && !QA.frameValid && A4_STARTUP.state.errors.length>0',timeout=10000)
   report['post_success_context_loss']=page.evaluate('({done:QA.done,frameValid:QA.frameValid,rendered:document.getElementById("rendered").textContent,errors:A4_STARTUP.state.errors})')
-  browser.close();report['status']='PASS'
+  # One supported restoration must create a new generation and rebuild actual GPU resources.
+  old_run=page.evaluate('A4_STARTUP.state.runId')
+  page.evaluate("gl.getExtension('WEBGL_lose_context').restoreContext()")
+  page.wait_for_function('(old)=>A4_STARTUP.state.runId>old && QA.done && QA.frameValid',arg=old_run,timeout=180000)
+  report['restored_frame']=page.evaluate('({qa:QA,startup:A4_STARTUP.state,rendererRun:A4_RENDERER.runId})')
+  assert report['restored_frame']['qa']['draws']==703 and report['restored_frame']['qa']['glError']==0
+  page.locator('#c').screenshot(path=str(P/'r32-restored-generation.png'))
+  # Repeated loss is not allowed to create an automatic refresh/restart loop.
+  restored_run=page.evaluate('A4_STARTUP.state.runId')
+  page.evaluate("gl.getExtension('WEBGL_lose_context').loseContext()")
+  page.wait_for_function('!QA.done && A4_STARTUP.state.errors.length>0',timeout=10000)
+  page.evaluate("gl.getExtension('WEBGL_lose_context').restoreContext()")
+  page.wait_for_timeout(1000)
+  report['second_restore_stopped']=page.evaluate('({runId:A4_STARTUP.state.runId,done:QA.done,errors:A4_STARTUP.state.errors})')
+  assert report['second_restore_stopped']['runId']==restored_run and not report['second_restore_stopped']['done']
+  browser.close();report['status']='PASS' 
 except Exception as e:
  try:
   report['failureSnapshot']=page.evaluate('({qa:window.QA,startup:window.A4_STARTUP?.state,trace:window.__A4_TRACE,status:document.getElementById("status")?.textContent,rendered:document.getElementById("rendered")?.textContent})')
