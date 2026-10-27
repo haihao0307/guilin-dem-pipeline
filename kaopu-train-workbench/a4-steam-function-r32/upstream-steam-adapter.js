@@ -11,7 +11,22 @@ function install(scene,D,api){
  D.visible=(p,s)=>p.source==='upstreamSteam'?U.enabled(s):old.visible(p,s);
  D.argument=(p,q='p')=>p.source==='upstreamSteam'?(p.upstreamMotion?`upRegulatorInverse(${q})`:q):old.argument(p,q);
  D.scalar=p=>{if(p.source==='upstreamSteam')return p.glsl_function+'('+D.argument(p)+')';const before=old.scalar(p),cut=U.hostCuts[p.id];return cut?`(installationCandidate==1&&upstreamCandidate==1?max(${before},-${cut.glsl_function}(p)):${before})`:before;};
- D.interval=p=>U.hostCuts[p.id]?'return vec2(-1e20,1e20);':old.interval(p);
+ // The boiler is interval-traced (no certified global Lipschitz value). Do
+ // not erase its useful retained lower bound when adding one small aperture.
+ // max(host,-cut) >= host; the finite cylinder cut is 1-Lipschitz. Preserve
+ // baseline/R31 exact range expression. A loose +1e20 upper bound also covers
+ // retained service-hole max operations not represented in the original range.
+ const boilerHost='boiler/outer_steel_shell';
+ D.upstreamBoilerRange=function(lo,hi,retainedRange,s=D.snapshot()){
+  if(!U.enabled(s))return retainedRange.slice();
+  const mid=lo.map((v,i)=>(v+hi[i])*.5),radius=Math.hypot(...hi.map((v,i)=>v-lo[i]))*.500001+.00001;
+  const cutUpper=U.scalar(U.hostCuts[boilerHost].ast,mid)+radius;
+  return[Math.max(retainedRange[0],-cutUpper),1e20];
+ };
+ D.interval=p=>{const before=old.interval(p);if(p.id!==boilerHost)return before;
+  const match=before.match(/^return ([^;]+);$/);if(!match)throw Error('Retained boiler range contract changed');
+  return`vec2 retainedRange=${match[1]};if(installationCandidate==1&&upstreamCandidate==1){vec3 mid=.5*(lo+hi);float radius=.500001*length(hi-lo)+.00001;float cutUpper=${U.hostCuts[boilerHost].glsl_function}(mid)+radius;return vec2(max(retainedRange.x,-cutUpper),1e20);}return retainedRange;`;
+ };
  D.classify=p=>p.upstreamMotion?{type:'upstreamRegulator'}:old.classify(p);
  D.transform=(p,t,m,inverse=false,s=D.snapshot())=>m?.type==='upstreamRegulator'?p.map((v,i)=>v+(i===2?(inverse?-1:1)*s.regulatorOpen*U.parameters.regulator.lift:0)):old.transform(p,t,m,inverse,s);
  D.bounds=(p,t,s=D.snapshot())=>p.source==='upstreamSteam'?[p.aabb_min,p.aabb_max].map(v=>v.map((n,i)=>n+(p.upstreamMotion&&i===2?s.regulatorOpen*U.parameters.regulator.lift:0))):old.bounds(p,t,s);

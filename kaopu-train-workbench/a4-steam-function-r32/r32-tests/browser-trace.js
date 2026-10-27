@@ -12,7 +12,7 @@
  wrap('uniform1i',function(old,a){if(a[0]&&names.get(a[0])==='id'&&typeof programs!=='undefined'){T.partIndex=a[1];T.partId=programs[T.source]?.ps[a[1]]?.id||null;}return old.apply(this,a);});
  wrap('uniform1f',function(old,a){if(a[0]&&names.get(a[0])==='lip')T.fieldType=a[1]>0?'bounded-distance':'interval-subdivision';return old.apply(this,a);});
  wrap('scissor',function(old,a){T.scissor=a.slice();return old.apply(this,a);});
- wrap('drawArrays',function(old,a){T.drawCalls++;T.phase='draw-call';if(T.drawCalls%25===1)emit();const r=old.apply(this,a);T.phase='draw-returned';return r;});
+ wrap('drawArrays',function(old,a){T.drawCalls++;T.phase='draw-call';if(T.source==='pressure'||T.drawCalls%25===1)emit();const r=old.apply(this,a);T.phase='draw-returned';if(T.source==='pressure')emit();return r;});
  wrap('finish',function(old,a){T.phase='finish-begin';emit();const r=old.apply(this,a);T.phase='finish-returned';emit();return r;});
  const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(...args){const g=get.apply(this,args);if(g&&args[0]==='webgl2'){const ext=g.getExtension('WEBGL_debug_renderer_info');T.backend={vendor:g.getParameter(ext?ext.UNMASKED_VENDOR_WEBGL:g.VENDOR),renderer:g.getParameter(ext?ext.UNMASKED_RENDERER_WEBGL:g.RENDERER),version:g.getParameter(g.VERSION)};T.phase='context-created';emit();}return g;};
  document.addEventListener('webglcontextlost',()=>{T.phase='contextlost';emit();},true);

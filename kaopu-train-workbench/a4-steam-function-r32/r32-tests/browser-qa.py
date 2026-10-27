@@ -28,8 +28,13 @@ try:
   page.expose_function('reportA4Trace',trace)
   page.add_init_script(path=str(P/'browser-trace.js'))
   page.goto('http://127.0.0.1:'+str(server.server_port),wait_until='load')
-  page.wait_for_function('window.QA && (QA.done || QA.errors.length)',timeout=480000)
-  q=page.evaluate('QA');report['first']=q;report['firstStartup']=page.evaluate('A4_STARTUP.state');assert q['done'] and not q['errors'],q
+  page.wait_for_function('window.QA && (QA.done || QA.errors.length || window.A4_STARTUP?.state.errors.length)' ,timeout=480000)
+  q=page.evaluate('QA');report['first']=q;report['firstStartup']=page.evaluate('A4_STARTUP.state')
+  if not q['done'] or q['errors']:
+   report['failureSnapshot']=page.evaluate('({qa:window.QA,startup:window.A4_STARTUP?.state,trace:window.__A4_TRACE,status:document.getElementById("status")?.textContent,rendered:document.getElementById("rendered")?.textContent})')
+   try:page.screenshot(path=str(P/'failure-diagnostic-page.png'),full_page=True,timeout=10000)
+   except Exception as screenshot_error:report['screenshot_error']=repr(screenshot_error)
+   raise AssertionError(q)
   report['backend']=page.evaluate("""()=>{const e=gl.getExtension('WEBGL_debug_renderer_info');return {vendor:gl.getParameter(e?e.UNMASKED_VENDOR_WEBGL:gl.VENDOR),renderer:gl.getParameter(e?e.UNMASKED_RENDERER_WEBGL:gl.RENDERER),version:gl.getParameter(gl.VERSION)};}""")
   report['hardware_gpu_claim']=False
   print('A4_FIRST_FRAME',json.dumps(q,ensure_ascii=False),flush=True)

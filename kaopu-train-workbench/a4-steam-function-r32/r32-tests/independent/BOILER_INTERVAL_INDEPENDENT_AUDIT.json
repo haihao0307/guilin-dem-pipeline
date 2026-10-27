@@ -1,0 +1,147 @@
+{
+  "checked": "2026-10-27T00:45:59.366Z",
+  "source": "/workspace/scratch/2f609cc83d31/a4-generation-r32-20261026-2348/a4-steam-function-r32",
+  "adapterSha256": "7cc2267fba9f641474bacb7a69f0351dd4b7f687f4337b304b480e11bfca0579",
+  "tests": [
+    {
+      "name": "actual emitted interval is candidate-R32 guarded and preserves original range call",
+      "status": "PASS",
+      "evidence": {
+        "field": "(installationCandidate==1&&upstreamCandidate==1?max(max(pr_boiler_outer_steel_shell(p),-svc_host_cut_3(p)),-up_cut_boiler_front_tubeplate(p)):max(pr_boiler_outer_steel_shell(p),-svc_host_cut_3(p)))",
+        "interval": "vec2 retainedRange=pr_boiler_outer_steel_shell_range(lo,hi);if(installationCandidate==1&&upstreamCandidate==1){vec3 mid=.5*(lo+hi);float radius=.500001*length(hi-lo)+.00001;float cutUpper=up_cut_boiler_front_tubeplate(mid)+radius;return vec2(max(retainedRange.x,-cutUpper),1e20);}return retainedRange;",
+        "lip": null,
+        "cut": {
+          "op": "cylinder",
+          "a": [
+            0,
+            3.3,
+            3.09205
+          ],
+          "b": [
+            0,
+            3.3,
+            3.1330500000000003
+          ],
+          "r": 0.038
+        }
+      }
+    },
+    {
+      "name": "baseline and retained R31 output exactly original interval and CPU helper parity",
+      "status": "PASS",
+      "evidence": {
+        "boxes": 380,
+        "disabledCombinations": 3
+      }
+    },
+    {
+      "name": "candidate interval encloses actual scalar with retained service cuts and new AST cylinder",
+      "status": "PASS",
+      "evidence": {
+        "boxes": 380,
+        "samples": 10260,
+        "minimumLowerMargin": 0.0000138565651228717
+      }
+    },
+    {
+      "name": "finite cylinder cut Lipschitz upper bound encloses sampled complete-box cut values",
+      "status": "PASS",
+      "evidence": {
+        "samples": 10260,
+        "minMargin": 0.000013592100435364223,
+        "proof": "max(radial-distance minus radius, two normalized axial affine fields) is 1-Lipschitz; center plus half-diagonal encloses the query box."
+      }
+    },
+    {
+      "name": "retained host exterior and new aperture empty space prune; old-unbounded negative control does not",
+      "status": "PASS",
+      "evidence": [
+        {
+          "name": "retained-exterior",
+          "p": [
+            1.1,
+            3.3,
+            0
+          ],
+          "h": 0.001,
+          "before": [
+            0.3309515556093835,
+            0.33423508312884365
+          ],
+          "after": [
+            0.3309515556093835,
+            100000000000000000000
+          ],
+          "oldUnboundedWouldPrune": false
+        },
+        {
+          "name": "retained-hollow-interior",
+          "p": [
+            0,
+            3.3,
+            0
+          ],
+          "h": 0.001,
+          "before": [
+            0.4172868639691712,
+            0.4194023953219567
+          ],
+          "after": [
+            0.4172868639691712,
+            100000000000000000000
+          ],
+          "oldUnboundedWouldPrune": false
+        },
+        {
+          "name": "new-tubeplate-aperture",
+          "p": [
+            0,
+            3.3,
+            3.11
+          ],
+          "h": 0.001,
+          "before": [
+            -0.015968444032823804,
+            -0.013931555967175789
+          ],
+          "after": [
+            0.016207945728329544,
+            100000000000000000000
+          ],
+          "oldUnboundedWouldPrune": false
+        }
+      ]
+    },
+    {
+      "name": "no actual retained-solid sample is wrongly rejected by interval",
+      "status": "PASS",
+      "evidence": {
+        "negativeSolidWitnesses": 1124
+      }
+    },
+    {
+      "name": "boiler original scalar, service cut, new cut and range are the same live shader dispatch",
+      "status": "PASS",
+      "evidence": {
+        "partIndex": 0,
+        "source": "pressure",
+        "consumer": "app.js ranges(...) -> rr.x>0 pruning",
+        "shaderRangeSha256": "1b894dbf60c1e6f04cf2c092bea9df4ee24dd779bf441f1f27d92ad82e6b3af9"
+      }
+    },
+    {
+      "name": "actual pre-fix adapter negative control; every entity/scalar unchanged and only boiler interval differs",
+      "status": "PASS",
+      "evidence": {
+        "actualPreFixRange": "return vec2(-1e20,1e20);",
+        "scalarFieldsUnchanged": 728,
+        "sceneSourcesUnchanged": 10,
+        "changedIntervalParts": [
+          "boiler/outer_steel_shell"
+        ]
+      }
+    }
+  ],
+  "scope": "Source-derived CPU interval inclusion and actual GLSL generation integration; no real GPU execution or formal all-float rounding certification.",
+  "status": "PASS"
+}
