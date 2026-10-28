@@ -71,3 +71,10 @@ R2 已禁止用文档、分支、截图数量冒充进展，但当前 browser QA
 - 不证明 R32 源码没有差异，只证明该 CI 对照视图没有可见差异。
 - 未运行硬件 GPU、公网页、production 或用户验收。
 - 未修改 main、A4 trial、生产 Mother、R2 或全局门禁。
+
+## 8. Routing receipt
+
+- #91 comment: `6463513860`
+- URL: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6463513860
+- `POSTED = YES`
+- `ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED = NO`
