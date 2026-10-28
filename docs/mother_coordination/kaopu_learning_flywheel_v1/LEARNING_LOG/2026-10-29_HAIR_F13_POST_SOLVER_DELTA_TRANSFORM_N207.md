@@ -59,5 +59,5 @@
 
 - 仅适用 F13 representative guide 从 solver state 经 bounded-delta pipeline 到最终 display centerline 的长度监管。
 - 不证明 dense followers、twist、有限半径碰撞、自碰撞、材质、视觉保真、性能或用户接受；dense follower 另由 N206 管理。
-- `POSTED=false`（写入前）；learning synthetic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+- `POSTED=true`（[#91 comment 6478996941](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6478996941)）；learning synthetic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
 - KPI 均为 `unknown`；8/8 合成分类器不是生产 KPI。
