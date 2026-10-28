@@ -66,5 +66,5 @@
 - 仅适用 representative-guide displacement 到 dense displayed followers 的中心线长度审计。
 - 不要求 114171 根独立物理求解；允许共享 delta，只要求共享结果在声明范围内被完整验证。
 - 不证明有限半径碰撞、自碰撞、材质、发型保真、性能或用户接受。
-- `POSTED=false`（写入前）；learning synthetic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+- `POSTED=true`（[#91 comment 6473493501](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6473493501)）；learning synthetic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
 - KPI 均为 `unknown`；合成分类器 8/8 不冒充生产 KPI。
