@@ -1,0 +1,121 @@
+{
+  "schema": "kaopu.learning-probe-result/1",
+  "run": "N207_HAIR_F13_POST_SOLVER_DELTA_TRANSFORM",
+  "sourceSubject": "codex/hair-structure-lab-r01-20261016@2175d53de12a44dbedb989d3e8b34837f6315dcb",
+  "boundedQuestion": "Does F13 preserve guide inextensibility after PhotoDynamics.write tanh limiting, node mobility weighting, root ramp, and 25-to-49 shader interpolation?",
+  "fixture": {
+    "guideLengthM": 0.15,
+    "rotationDeg": 45,
+    "bodyDeltaLimitM": 0.035,
+    "nodeCount": 25,
+    "displayCount": 49,
+    "classifierOnlyArcDriftLimit": 0.005,
+    "note": "The limit is a synthetic classifier fixture, not a Hair production threshold."
+  },
+  "observations": {
+    "rawSolverMetrics": {
+      "restArcLengthM": 0.15,
+      "deformedArcLengthM": 0.15000000000000002,
+      "totalArcLengthDriftRatio": 2.220446049250313e-16,
+      "maxSegmentStretchRatio": 8.881784197001252e-16,
+      "maxSegmentCompressionRatio": -1.5543122344752192e-15,
+      "rootErrorM": 0,
+      "finite": true
+    },
+    "coarsePostWriteMetrics": {
+      "restArcLengthM": 0.15,
+      "deformedArcLengthM": 0.14647167822416646,
+      "totalArcLengthDriftRatio": -0.02352214517222362,
+      "maxSegmentStretchRatio": 0.289026304681987,
+      "maxSegmentCompressionRatio": -0.07597118713125728,
+      "rootErrorM": 0,
+      "finite": true
+    },
+    "denseExactRigidMetrics": {
+      "restArcLengthM": 0.15,
+      "deformedArcLengthM": 0.14999999999999994,
+      "totalArcLengthDriftRatio": -3.3306690738754696e-16,
+      "maxSegmentStretchRatio": 5.329070518200751e-15,
+      "maxSegmentCompressionRatio": -4.551914400963142e-15,
+      "rootErrorM": 0,
+      "finite": true
+    },
+    "denseDisplayMetrics": {
+      "restArcLengthM": 0.15,
+      "deformedArcLengthM": 0.14664192406709897,
+      "totalArcLengthDriftRatio": -0.02238717288600678,
+      "maxSegmentStretchRatio": 0.24580598295461242,
+      "maxSegmentCompressionRatio": -0.07597791108559748,
+      "rootErrorM": 0,
+      "finite": true
+    },
+    "solverArcInvariantPreserved": true,
+    "postSolverTransformPreservedSameInvariant": false
+  },
+  "cases": [
+    {
+      "id": "subject-unbound",
+      "expected": "HOLD_SUBJECT_UNBOUND",
+      "actual": "HOLD_SUBJECT_UNBOUND",
+      "pass": true
+    },
+    {
+      "id": "solver-green-post-transform-centerlines-unbound",
+      "expected": "HOLD_POST_SOLVER_CENTERLINES_UNBOUND",
+      "actual": "HOLD_POST_SOLVER_CENTERLINES_UNBOUND",
+      "pass": true
+    },
+    {
+      "id": "root-finite-only-post-write-metrics-missing",
+      "expected": "HOLD_POST_SOLVER_ARC_RECEIPT_MISSING",
+      "actual": "HOLD_POST_SOLVER_ARC_RECEIPT_MISSING",
+      "pass": true
+    },
+    {
+      "id": "threshold-unfrozen",
+      "expected": "HOLD_POST_SOLVER_ARC_THRESHOLD_UNFROZEN",
+      "actual": "HOLD_POST_SOLVER_ARC_THRESHOLD_UNFROZEN",
+      "pass": true
+    },
+    {
+      "id": "positive-control-missing",
+      "expected": "HOLD_POST_SOLVER_POSITIVE_CONTROL_MISSING",
+      "actual": "HOLD_POST_SOLVER_POSITIVE_CONTROL_MISSING",
+      "pass": true
+    },
+    {
+      "id": "positive-control-not-rejected",
+      "expected": "HOLD_POST_SOLVER_POSITIVE_CONTROL_NOT_REJECTED",
+      "actual": "HOLD_POST_SOLVER_POSITIVE_CONTROL_NOT_REJECTED",
+      "pass": true
+    },
+    {
+      "id": "rigid-solver-result-distorted-by-post-transform",
+      "expected": "REJECT_POST_SOLVER_DISPLAY_STRETCH",
+      "actual": "REJECT_POST_SOLVER_DISPLAY_STRETCH",
+      "pass": true
+    },
+    {
+      "id": "complete-scoped-pass",
+      "expected": "SCOPED_POST_SOLVER_DISPLAY_INEXTENSIBILITY_VERIFIED_NOT_FULL_HAIR_PHYSICS",
+      "actual": "SCOPED_POST_SOLVER_DISPLAY_INEXTENSIBILITY_VERIFIED_NOT_FULL_HAIR_PHYSICS",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "total": 8
+  },
+  "decision": "HOLD_F13_POST_SOLVER_DISPLAY_INEXTENSIBILITY_UNBOUND",
+  "regressionRouting": "REUSE_HAIR_GUIDE_ARC_LENGTH_INVARIANT_001_ADD_STAGE_EVIDENCE_NO_DUPLICATE_CASE",
+  "teacherStatus": "NO_NOVELTY",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "LEARNING_GATE_RUN": true,
+    "HAIR_PRODUCTION_GATE_RUN": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
