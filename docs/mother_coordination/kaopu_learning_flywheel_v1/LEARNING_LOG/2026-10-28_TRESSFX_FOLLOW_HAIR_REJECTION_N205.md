@@ -57,6 +57,7 @@ N151 已冻结“192 条 guide distinct + 3067 个 emergence probes 不等于 ac
 - 仅拒绝 TressFX 4.1 `GenerateFollowHairs()` radius 法作为 KAOPU 当前 root-bound/arc-preserving/frame-transport follower teacher；不评价或否定其渲染、抗锯齿、碰撞或 GPU simulation 其他模块。
 - 不新增 Teacher Registry/referenceSet/method candidate，不进入 AUDITION/PROBATION。
 - 对 Hair Mother 的建议仅是保留 N151/N157/N161 既有门禁，并把 `shared guide UV + nonzero root offset` 与 `fixed root-frame offset along curved guide` 作为其正控候选；是否采纳仍待 Mother。
-- `POSTED=false`（写入前）；`ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
-- Mother query：`NOT_QUERIED/UNKNOWN`。
+- `POSTED=true`：https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6468098708 。
+- learning synthetic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / HAIR-PRODUCTION-GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
+- Mother query：已通过协调 issue 定向 `POSTED`，真实 Hair Mother 回执仍为 `UNKNOWN`。
 - KPI：均 `unknown`；没有新生产运行，不造指标。
