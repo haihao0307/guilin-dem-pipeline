@@ -64,3 +64,10 @@
 - 未打开 artifact zip 内的像素/JSON 字节；只核对 workflow、测试源码、run/job/check/artifact metadata。
 - 未运行公网浏览器、目标 GPU、production publication 或用户验收。
 - 未修改 main、R2、生产 Mother、A4 trial 分支或全局门禁。
+
+## 8. Routing receipt
+
+- #91 comment: `6460123039`
+- URL: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6460123039
+- `POSTED = YES`
+- `ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED = NO`
