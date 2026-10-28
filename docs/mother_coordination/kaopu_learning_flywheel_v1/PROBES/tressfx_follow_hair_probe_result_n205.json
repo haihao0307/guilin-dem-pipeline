@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu.learning-probe/tressfx-follow-hair-counterexample@1",
+  "source": {
+    "repository": "GPUOpen-Effects/TressFX",
+    "commit": "ba0bdacdfb964e38522fda812bf23169bc5fa603",
+    "file": "src/TressFX/TressFXAsset.cpp",
+    "function": "TressFXAsset::GenerateFollowHairs"
+  },
+  "fixture": {
+    "samples": 33,
+    "radius": 0.1,
+    "rootOffset": [0, 0.005, 0],
+    "tipSeparationFactor": 2
+  },
+  "measurements": {
+    "guideArcLength": 0.15706386254663865,
+    "followerArcLength": 0.16338354884901332,
+    "arcLengthDriftRatio": 0.040236412118657146,
+    "rootPositionError": 0.005,
+    "tipOffsetLength": 0.014696969696969694,
+    "tipTangentLeak": 0.014696969696969694,
+    "tipPerpendicularSeparation": 0
+  },
+  "existingGateReplays": {
+    "N151_activeRootGuideCoverage": "REJECT_SHARED_STRAND_UV_WITH_NONZERO_ROOT_OFFSET",
+    "N157_guideArcLengthInvariant": "HOLD_GUIDE_STRETCH_OUT_OF_BOUND",
+    "N161_frameTwistContinuity": "HOLD_TRANSPORTED_FRAME_IDENTITY_UNBOUND"
+  },
+  "decision": "REJECTED",
+  "reason": "The fixed root-frame offset is not transported along the curved guide; it changes centerline length, leaks into the tip tangent, and does not provide an independently surface-bound follower root."
+}
