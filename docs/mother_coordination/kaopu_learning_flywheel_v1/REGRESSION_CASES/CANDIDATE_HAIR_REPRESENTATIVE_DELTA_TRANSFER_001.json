@@ -1,0 +1,80 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "HAIR-REPRESENTATIVE-DELTA-TRANSFER-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "scope": {
+    "mother": "Hair",
+    "taskClass": "REPRESENTATIVE_GUIDE_DISPLACEMENT_TO_DENSE_DISPLAY_FOLLOWERS",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "A representative guide can preserve its own root and arc length while the same arc-position displacement field stretches another follower with a different rest tangent. Root attachment, finite values, bounded guide motion and a green representative solver therefore do not prove dense displayed-follower inextensibility.",
+    "observedSubject": {
+      "version": "F13-photo-fiber-motion",
+      "sourceCommit": "2175d53de12a44dbedb989d3e8b34837f6315dcb",
+      "displayedStrands": 114171,
+      "clumps": 43,
+      "representativeGuides": 43,
+      "representativeNodes": 25,
+      "displayedSamplesPerStrand": 49,
+      "dynamicGpuSampledStrands": 86,
+      "dynamicGpuRootBound": true,
+      "dynamicGpuFinite": true,
+      "dynamicStaticPathError": null,
+      "perFollowerArcReceiptFound": false,
+      "fullPerStrandSimulation": false,
+      "userAccepted": false
+    }
+  },
+  "distinctFrom": [
+    "HAIR-GUIDE-ARC-LENGTH-INVARIANT-001 checks the solved guide centerline; this case checks the downstream transfer from one guide to heterogeneous displayed follower paths.",
+    "HAIR-SCALP root/coverage cases check root and carrier identity; this case preserves both roots while producing follower stretch.",
+    "HAIR-BUNDLE-FRAME-TWIST-CONTINUITY-001 checks section-frame angular continuity; this case checks displayed centerline length after displacement transfer."
+  ],
+  "requiredReceiptFields": [
+    "subjectSourceSha",
+    "subjectBuildSha",
+    "motionMode",
+    "measurementFrameIds",
+    "clumpId",
+    "representativeGuideId",
+    "displayedHairId",
+    "restPathDigest",
+    "deformedPathDigest",
+    "rootError",
+    "maxSegmentStretchRatio",
+    "maxSegmentCompressionRatio",
+    "totalArcLengthDriftRatio",
+    "measuredFollowerCount",
+    "totalFollowerCount",
+    "thresholdBasis",
+    "positiveControlId",
+    "positiveControlDetected",
+    "verifierIdentity",
+    "runId",
+    "decision"
+  ],
+  "gate": [
+    "Preserve F13's valid static-path, native-root, finite-value, motion and bounded representative-guide evidence; this Candidate does not reopen those claims.",
+    "A representative guide arc-length pass cannot substitute for measurements on the displayed follower paths that receive its delta field.",
+    "For a claim covering all 114171 displayed strands, compute per-strand segment strain and total arc drift for the complete census, then bind the maximum and the corresponding hair/clump identity. Aggregate mean or 86 root-only GPU samples are insufficient.",
+    "Thresholds must be frozen before the run and justified for the exact Hair task; synthetic fixture values are not production thresholds.",
+    "Inject a rigid-rotation representative delta that preserves the representative arc but stretches an orthogonal follower, and prove the independent verifier rejects it.",
+    "A scoped pass proves only bounded centerline distortion under the tested motion frames. It does not prove independent per-strand physics, finite-width collision, self-contact, appearance quality or USER-ACCEPTED."
+  ],
+  "states": [
+    "HOLD_SUBJECT_UNBOUND",
+    "HOLD_ROOT_BINDING_UNBOUND",
+    "HOLD_REPRESENTATIVE_ARC_RECEIPT_MISSING",
+    "HOLD_FOLLOWER_ARC_RECEIPT_MISSING",
+    "HOLD_FOLLOWER_ARC_THRESHOLD_UNFROZEN",
+    "HOLD_FOLLOWER_POSITIVE_CONTROL_MISSING",
+    "REJECT_FOLLOWER_ARC_STRETCH",
+    "SCOPED_FOLLOWER_DELTA_TRANSFER_VERIFIED_NOT_PER_STRAND_PHYSICS"
+  ],
+  "boundedHypothesis": "If one representative displacement field is valid for all displayed followers in its clump, then a complete follower census must stay within pre-frozen segment/arc limits, and a rigid-guide/orthogonal-follower positive control must be rejected even though the guide root and arc length remain exact.",
+  "currentF13State": "HOLD_F13_FOLLOWER_DELTA_TRANSFER_INEXTENSIBILITY_UNBOUND",
+  "activationGate": "Hair Mother implements the receipt on one immutable F13 descendant and an independent verifier runs the positive control plus complete follower census; coordinator review is required before activation.",
+  "rollback": "Remove the Candidate receipt/check only; preserve F12/F13 geometry, motion, optics and existing evidence."
+}
