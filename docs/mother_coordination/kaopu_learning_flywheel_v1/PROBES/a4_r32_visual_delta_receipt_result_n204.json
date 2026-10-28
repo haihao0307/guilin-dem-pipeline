@@ -1,0 +1,97 @@
+{
+  "status": "PASS",
+  "decision": "HOLD_COMPARISON_FRAME_PROVES_NO_VISIBLE_DELTA",
+  "scope": "Exact GitHub Actions artifact replay for one equal camera/pose comparison; not proof that R32 source has no differences and not user-device acceptance.",
+  "subject": {
+    "commit": "580acd1c8b851d0c843826e2b49c7079411473bd",
+    "workflowRun": 40484446930,
+    "artifactId": 12724761571,
+    "artifactDigest": "sha256:99aa6309741366a3d4bee7cdc9bbca41c4750ff4625c236565afd1655bf0b9bc",
+    "browserStatus": "PASS",
+    "backend": {
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "hardwareGpuClaim": false,
+    "phoneVerified": false
+  },
+  "comparison": {
+    "candidate": {
+      "name": "r32-whole",
+      "draws": 703,
+      "pixelReadback": {
+        "nonBackgroundPixels": 6930,
+        "colors": 215,
+        "glError": 0
+      },
+      "pngBytes": 17608,
+      "pngSha256": "23bb932832d6b8ee7f5cb68eb906c7382f06b5e64a466f90784110b985673599"
+    },
+    "parent": {
+      "name": "retained-r31",
+      "draws": 693,
+      "pixelReadback": {
+        "nonBackgroundPixels": 6930,
+        "colors": 215,
+        "glError": 0
+      },
+      "pngBytes": 17608,
+      "pngSha256": "23bb932832d6b8ee7f5cb68eb906c7382f06b5e64a466f90784110b985673599"
+    },
+    "exactByteIdentity": true,
+    "inferredChangedPixelCount": 0,
+    "currentMacroGatePassesBoth": true,
+    "declaredVisualDeltaGatePass": false
+  },
+  "assertions": [
+    {
+      "name": "artifact is bound to the inspected commit",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact browser result is PASS",
+      "status": "PASS"
+    },
+    {
+      "name": "R32 and retained R31 comparison frames exist",
+      "status": "PASS"
+    },
+    {
+      "name": "both frames pass current macro frame gate",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate records ten additional draws",
+      "status": "PASS"
+    },
+    {
+      "name": "pixel-readback summary is identical",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate and parent PNG bytes are identical",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate and parent PNG SHA-256 are identical",
+      "status": "PASS"
+    },
+    {
+      "name": "hash comparison detects a different R32 view",
+      "status": "PASS"
+    },
+    {
+      "name": "visual-delta gate rejects exact-equality comparison",
+      "status": "PASS"
+    }
+  ],
+  "passCount": 10,
+  "totalCount": 10,
+  "limitations": [
+    "The exact-equality result is decisive for this one comparison view only.",
+    "Additional R32 objects may be occluded, outside the frame, degenerate, or overwritten; this replay does not choose among those causes.",
+    "Static PNGs cannot establish absence or presence of temporal flicker.",
+    "The artifact used SwiftShader software rendering and makes no hardware-GPU claim."
+  ]
+}
