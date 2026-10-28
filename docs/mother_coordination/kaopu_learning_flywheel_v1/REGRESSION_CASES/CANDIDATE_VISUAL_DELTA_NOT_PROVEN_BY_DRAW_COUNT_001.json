@@ -1,0 +1,74 @@
+{
+  "caseId": "CANDIDATE-VISUAL-DELTA-NOT-PROVEN-BY-DRAW-COUNT-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-28",
+  "appliesTo": [
+    "FunctionRendering",
+    "GPU or browser visual candidates",
+    "candidate versus retained-parent comparisons"
+  ],
+  "trigger": {
+    "subject": "trial/a4-r32-normal-chrome-20261027@580acd1c8b851d0c843826e2b49c7079411473bd",
+    "workflowRun": 40484446930,
+    "artifactId": 12724761571,
+    "observation": "r32-whole recorded 703 draws and retained-r31 recorded 693 draws, but their same-view PNG files and pixel-readback summaries were exactly identical.",
+    "failureMechanism": "A macro frame gate can treat draw-count or source-coverage growth as visual progress even when the comparison view exposes zero candidate pixel delta."
+  },
+  "deduplication": {
+    "issue91Search": "No existing comment found for exact candidate/parent pixel identity or the 703-versus-693 draw pair.",
+    "defaultBranchCodeSearch": "No matching pixel-identical visual-delta regression found.",
+    "newCaseRequired": true
+  },
+  "taskAnchorFields": [
+    "visualDeltaRequired",
+    "candidateSubjectSHA",
+    "parentSubjectSHA",
+    "declaredDeltaObjects",
+    "comparisonCameraPose",
+    "comparisonState",
+    "deltaExposureView"
+  ],
+  "deliveryReceiptFields": [
+    "candidateScreenshotSHA256",
+    "parentScreenshotSHA256",
+    "changedPixelCount",
+    "changedPixelRatio",
+    "declaredDeltaMaskCoverage",
+    "comparisonValidity",
+    "visualDeltaDecision"
+  ],
+  "verifierGate": {
+    "when": "visualDeltaRequired=true",
+    "hardFail": "A valid equal-camera/equal-state exposure view has candidateScreenshotSHA256 equal to parentScreenshotSHA256.",
+    "hold": "The declared changed objects are occluded, outside the frame, degenerate, overwritten, or the comparison view otherwise does not expose the claimed delta.",
+    "passRequires": [
+      "candidate and parent are bound to exact immutable subjects",
+      "camera, pose, time and visibility state are equivalent",
+      "the view is chosen to expose every declared changed object",
+      "nonzero pixel delta overlaps the declared delta mask",
+      "independent verifier records the result"
+    ],
+    "notes": [
+      "Different hashes are necessary but not sufficient for quality or correctness.",
+      "More draws, files, objects, screenshots or passing source tests do not substitute for a visible accepted delta."
+    ]
+  },
+  "controls": {
+    "historicalNegative": "R32 whole versus retained R31: same PNG SHA-256 despite 10 additional draws; reject visual-delta claim for this view.",
+    "nonComparableControl": "R32 opposite-camera PNG differs, but camera inequality makes it invalid evidence for candidate-versus-parent delta.",
+    "positiveMinimum": "A same-camera exposure view with nonzero delta inside the declared object mask may proceed to qualitative verification."
+  },
+  "scopeBoundary": [
+    "Does not prove R32 source has no differences.",
+    "Does not diagnose whether the extra objects are occluded, off-frame, degenerate or overwritten.",
+    "Does not establish temporal stability, hardware-GPU behavior, production readiness or user acceptance."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
