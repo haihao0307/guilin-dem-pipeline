@@ -1,0 +1,101 @@
+{
+  "schema": "kaopu.teacher-audition-probe/1",
+  "run": "N208_PBRT_V4_HAIR_OPTICS_PARAMETER_SEMANTICS",
+  "sourceSubjects": {
+    "kaopu": "haihao0307/guilin-dem-pipeline@2175d53de12a44dbedb989d3e8b34837f6315dcb:kaopu-hair-workbench/foundation/f13/src/FiberOptics.mjs",
+    "teacher": "mmp/pbrt-v4@b4ce9687e6c695f5582997c61b0c66cf064bdb4a:src/pbrt/bxdfs.h,src/pbrt/bxdfs.cpp,src/pbrt/bsdfs_test.cpp"
+  },
+  "boundedQuestion": "Does PBRT v4 know a reproducible hair-optics parameter/test separation that F13 cannot currently express with one roughness scalar and four hand-authored absorption presets?",
+  "semanticReplay": {
+    "fixedLongitudinalRoughness": 0.38,
+    "lowAzimuthalRoughness": {
+      "pbrt": {
+        "betaM": 0.38,
+        "betaN": 0.2,
+        "longitudinalVariances": [0.15455340990265856, 0.03863835247566464, 0.6182136396106342],
+        "azimuthalScale": 0.06314196623795632
+      },
+      "f13": {
+        "scalarRoughness": 0.38,
+        "longitudinalWidths": [0.42941821107167777, 0.27912183719659056, 0.77295277992902],
+        "azimuthalWidths": [0.7, 0.7, 0.85],
+        "absorptionPreset": "brown"
+      }
+    },
+    "highAzimuthalRoughness": {
+      "pbrt": {
+        "betaM": 0.38,
+        "betaN": 0.8,
+        "longitudinalVariances": [0.15455340990265856, 0.03863835247566464, 0.6182136396106342],
+        "azimuthalScale": 0.636557224922016
+      },
+      "f13": {
+        "scalarRoughness": 0.38,
+        "longitudinalWidths": [0.42941821107167777, 0.27912183719659056, 0.77295277992902],
+        "azimuthalWidths": [0.7, 0.7, 0.85],
+        "absorptionPreset": "brown"
+      }
+    },
+    "pbrtAzimuthalScaleChange": 0.5734152586840597,
+    "f13AzimuthalWidthsChange": [0, 0, 0],
+    "melaninExamples": {
+      "eumelaninOnly": [0.419, 0.697, 1.37],
+      "pheomelaninOnly": [0.187, 0.4, 1.05],
+      "equalMixture": [0.303, 0.5485, 1.21]
+    },
+    "structuralGapConfirmed": true
+  },
+  "cases": [
+    {"id": "source-unbound", "expected": "UNKNOWN", "actual": "UNKNOWN", "pass": true},
+    {"id": "maintenance-unbound", "expected": "UNKNOWN", "actual": "UNKNOWN", "pass": true},
+    {"id": "no-runnable-code", "expected": "UNKNOWN", "actual": "UNKNOWN", "pass": true},
+    {"id": "tests-unbound", "expected": "UNKNOWN", "actual": "UNKNOWN", "pass": true},
+    {"id": "license-unbound", "expected": "UNKNOWN", "actual": "UNKNOWN", "pass": true},
+    {"id": "not-directly-relevant", "expected": "NO_NOVELTY", "actual": "NO_NOVELTY", "pass": true},
+    {"id": "semantics-already-covered", "expected": "NO_NOVELTY", "actual": "NO_NOVELTY", "pass": true},
+    {"id": "closed-runtime-required", "expected": "REJECTED", "actual": "REJECTED", "pass": true},
+    {"id": "bounded-source-only-audition", "expected": "TEACHER_CANDIDATE", "actual": "TEACHER_CANDIDATE", "pass": true}
+  ],
+  "summary": {
+    "passed": 9,
+    "total": 9
+  },
+  "decision": "TEACHER_CANDIDATE",
+  "boundedNovelty": [
+    "Independent beta_m and beta_n parameter semantics instead of one scalar roughness.",
+    "Cuticle tilt alpha and an explicit p>=3 residual term instead of only fixed lobe shifts.",
+    "Eumelanin/pheomelanin concentrations mapped to absorption instead of color-name presets.",
+    "Executable white-furnace, sampling-weight, and sampling-consistency tests."
+  ],
+  "nonAdoptionBoundary": [
+    "Do not import PBRT's path tracer, CUDA/OptiX route, scene format, or full renderer.",
+    "Do not claim real-time performance, browser parity, visual improvement, or USER-ACCEPTED.",
+    "Apache-2.0 source may inform a clean-room scoped audition; any copied code still requires license notice and review."
+  ],
+  "proposedMinimumFalsifiableTrial": {
+    "mother": "Hair",
+    "implementation": "CPU reference evaluator or isolated shader lab only",
+    "frozenInputs": ["tangent", "viewDirection", "lightDirection", "eta", "h", "sigmaA", "betaM", "betaN", "alpha"],
+    "requiredChecks": [
+      "betaN sweep changes azimuthal width while betaM remains fixed",
+      "betaM sweep changes longitudinal width while betaN remains fixed",
+      "melanin concentrations deterministically map to sigmaA",
+      "finite output over the frozen angle grid",
+      "white-furnace error bound declared before the run",
+      "comparison against retained F13 under identical lighting"
+    ]
+  },
+  "lifecycle": {
+    "RADAR_FOUND": true,
+    "TEACHER_CANDIDATE": true,
+    "AUDITION": false,
+    "PROBATION": false,
+    "ACTIVE_TEACHER": false,
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": true,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
