@@ -72,6 +72,6 @@ PBRT HairBxDF 提供 F13 当前不能独立表达的四件事：
 ## 6. 状态与边界
 
 - `RADAR_FOUND=true / TEACHER_CANDIDATE=true / AUDITION=false / PROBATION=false / ACTIVE_TEACHER=false`。
-- `POSTED=false`（写入前）；learning semantic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`。
+- `POSTED=true`（[#91 comment 6483698029](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6483698029)）；learning semantic `GATE-RUN=true`；`ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`。
 - 不创建 production regression；只有 audition 暴露真实 F13 failure 或通过单-Mother trial 后，才决定更新 Delivery Receipt / verifier gate。
 - KPI 全部 `unknown`；9/9 是老师分类器，不是生产质量或性能 KPI。
