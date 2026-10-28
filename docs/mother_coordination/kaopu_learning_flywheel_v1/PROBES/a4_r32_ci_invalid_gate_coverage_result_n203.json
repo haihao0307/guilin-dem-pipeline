@@ -1,0 +1,87 @@
+{
+  "status": "PASS",
+  "decision": "HOLD_CI_SUCCESS_DOES_NOT_COVER_INVALID_SAMPLE_GATE",
+  "scope": "Historical workflow/source coverage replay plus synthetic negative control; not artifact-pixel inspection and not user-device acceptance.",
+  "subject": {
+    "branch": "trial/a4-r32-normal-chrome-20261027",
+    "sha": "580acd1c8b851d0c843826e2b49c7079411473bd",
+    "workflowRun": 40484446930,
+    "job": 122122608252,
+    "artifact": 12724761571,
+    "artifactDigest": "sha256:99aa6309741366a3d4bee7cdc9bbca41c4750ff4625c236565afd1655bf0b9bc"
+  },
+  "observedCurrentChecks": {
+    "runConclusion": "success",
+    "browserScriptExitRequiredZero": true,
+    "done": true,
+    "frameValid": true,
+    "errorsEmpty": true,
+    "glErrorZero": true,
+    "expectedDraws": true,
+    "nonBackgroundPixelsAbove1000": true,
+    "colorsAbove20": true,
+    "pointerAndZoomInteraction": true,
+    "contextLossInvalidation": true,
+    "contextRestoreOnce": true
+  },
+  "requiredInvalidSampleChecks": {
+    "explicitInvalidReason": false,
+    "nonfiniteGradientRejected": false,
+    "zeroGradientRejected": false,
+    "residualConvergenceRequired": false,
+    "invalidCountReadback": false,
+    "visibleCommitRequiresZeroInvalid": false,
+    "frozenInputMultiFrameStateHash": false
+  },
+  "controls": {
+    "clean": {
+      "currentGate": true,
+      "candidateGate": true
+    },
+    "hiddenInvalid": {
+      "currentGate": true,
+      "candidateGate": false
+    }
+  },
+  "assertions": [
+    {
+      "name": "workflow is bound to exact inspected subject",
+      "status": "PASS"
+    },
+    {
+      "name": "historical run and job are successful",
+      "status": "PASS"
+    },
+    {
+      "name": "current gate accepts clean positive control",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate gate accepts clean positive control",
+      "status": "PASS"
+    },
+    {
+      "name": "current gate also accepts hidden-invalid negative control",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate gate rejects hidden-invalid negative control",
+      "status": "PASS"
+    },
+    {
+      "name": "no invalid-sample requirement is covered",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact metadata is subject-bound and digest-addressed",
+      "status": "PASS"
+    }
+  ],
+  "passCount": 8,
+  "totalCount": 8,
+  "limitations": [
+    "The GitHub artifact archive bytes were not opened in this replay.",
+    "The negative control proves predicate insufficiency, not that the historical R32 frame contained black flicker pixels.",
+    "No public browser, target GPU, production publication, or user acceptance was run."
+  ]
+}
