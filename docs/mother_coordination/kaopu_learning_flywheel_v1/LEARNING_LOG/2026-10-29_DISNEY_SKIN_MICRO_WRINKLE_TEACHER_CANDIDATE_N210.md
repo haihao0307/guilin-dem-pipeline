@@ -96,7 +96,7 @@ Disney Research Studios 2023 的 **Graph-Based Synthesis for Skin Micro Wrinkles
 
 ## 状态
 
-- `POSTED`: false（写本记录时）
+- `POSTED`: true（#91 comment `6490987114`）
 - `ACKNOWLEDGED`: false
 - parameter-semantics `GATE-RUN`: true
 - `AUDITION`: false
@@ -105,3 +105,5 @@ Disney Research Studios 2023 的 **Graph-Based Synthesis for Skin Micro Wrinkles
 - `PROBATION / ACTIVE_TEACHER / ADOPTED / USER-ACCEPTED`: false
 
 未修改 main、生产 Skin/Humanoid Mother、R2 OS、全局门禁或公网页。KPI：unknown。
+
+定向路由：https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6490987114
