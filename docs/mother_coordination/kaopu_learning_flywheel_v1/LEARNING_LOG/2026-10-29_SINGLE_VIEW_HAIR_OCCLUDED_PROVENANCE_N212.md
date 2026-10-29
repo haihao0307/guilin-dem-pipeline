@@ -102,7 +102,7 @@ N211 已确认 DiffLocks 的公开合同是 `single frontal RGB -> image-conditi
 
 - main baseline：`3ccae4bde0c91973adbb81f99ec4d54bc9357ce0`
 - source/semantic synthetic `GATE-RUN=true`
-- `POSTED=false`（文件落地前）
+- `POSTED=true`（Hair Mother 定向路由：#91 comment `6501353389`）
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=false`
 - Hair production `GATE-RUN=false`
