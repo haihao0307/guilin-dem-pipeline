@@ -1,0 +1,94 @@
+{
+  "caseId": "HAIR-SINGLE-VIEW-OCCLUDED-PRIOR-NOT-REFERENCE-TRUTH-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-29",
+  "appliesTo": [
+    "Hair Mother",
+    "Humanoid or avatar reconstruction",
+    "single-view or sparse-view reference replication",
+    "image-conditioned 3D generators"
+  ],
+  "trigger": {
+    "teacherContext": "DiffLocks generates explicit 3D strands from a single frontal image using a learned diffusion prior.",
+    "observation": "A front projection cannot constrain depth or fully occluded backside geometry. Multiple materially different strand sets can produce the exact same front projection.",
+    "failureMechanism": "A plausible learned prior can be silently promoted from INFERRED/OCCLUDED to REFERENCE_MATCH or CURRENT_TRUTH, turning single-view reconstruction into an unauthorized creative substitute."
+  },
+  "deduplication": {
+    "issue91Search": "No existing #91 case found that binds single-view hair reconstruction to per-region observed-versus-inferred provenance and withheld-view evidence.",
+    "defaultBranchCodeSearch": "No matching single-view occluded-hair provenance regression found on main.",
+    "existingPolicy": "REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE already requires UNKNOWN/OCCLUDED and forbids unapproved inferred hidden surfaces; this Candidate is a domain-specific executable regression, not a new global principle.",
+    "newCaseRequired": true
+  },
+  "taskAnchorFields": [
+    "taskMode",
+    "creativeAuthorization",
+    "referenceViewSet",
+    "referenceCoverageMaskDigest",
+    "observedRegions",
+    "occludedRegions",
+    "occludedGeometryPolicy",
+    "teacherModelCommit",
+    "teacherCheckpointDigest",
+    "teacherSeed",
+    "withheldValidationViews"
+  ],
+  "deliveryReceiptFields": [
+    "regionEvidenceClasses",
+    "frontReferenceMatch",
+    "withheldViewMatch",
+    "occludedGeometryClaimState",
+    "priorGeneratedRegionDigest",
+    "referenceBoundRegionDigest",
+    "scalpBindingReceipt",
+    "creativeSubstituteDecision"
+  ],
+  "allowedRegionEvidenceClasses": [
+    "OBSERVED_REFERENCE",
+    "MEASURED_RELATION",
+    "APPROVED_CONSTRAINT",
+    "PHYSICS_DERIVED",
+    "INFERRED_PRIOR_CANDIDATE",
+    "OCCLUDED_UNKNOWN"
+  ],
+  "verifierGate": {
+    "when": "taskMode=REPLICATION_LOCKED and any generated 3D region is not directly constrained by the referenceViewSet",
+    "hardFail": [
+      "An INFERRED_PRIOR_CANDIDATE or OCCLUDED_UNKNOWN region is labeled REFERENCE_MATCH, CURRENT_TRUTH, FROZEN, ACCEPTED_BASELINE, or USER_ACCEPTED without new evidence or explicit user authorization.",
+      "A front-only match is used as proof of backside or depth correctness.",
+      "The candidate silently falls back to a model prior while receipt claims exact replication."
+    ],
+    "hold": [
+      "Occluded geometry is disclosed as INFERRED_PRIOR_CANDIDATE but no independent side/back/scan evidence exists.",
+      "The reference coverage mask or per-region evidence classification is missing.",
+      "Withheld views exist but were not run against the exact candidate subject."
+    ],
+    "passRequires": [
+      "every visible and occluded region has an evidence class",
+      "front-only evidence is scoped only to front-observable claims",
+      "occluded regions remain OCCLUDED_UNKNOWN or INFERRED_PRIOR_CANDIDATE unless additional evidence constrains them",
+      "any REFERENCE_MATCH promotion is supported by side/back/multiview/scan evidence or an explicit approved constraint",
+      "an independent verifier checks the exact candidate and source-view set"
+    ]
+  },
+  "controls": {
+    "syntheticNegative": "Three 328-point strand sets share the exact same front projection hash, while two priors differ from reference by 50.546 mm and 37.910 mm RMS in the marked occluded region.",
+    "frontOnlyControl": "A naive front-projection gate accepts both different priors; the provenance-aware gate rejects truth promotion and holds a disclosed prior.",
+    "multiviewPositive": "A side reference exposes the depth difference; a candidate may pass only when the exact side projection also matches and occluded regions are labeled REFERENCE_MATCH."
+  },
+  "scopeBoundary": [
+    "Does not prove DiffLocks or any specific model always generates incorrect backside hair.",
+    "Does not prohibit learned priors for exploration or initialization when they are explicitly labeled and isolated from accepted reference truth.",
+    "Does not establish a production fidelity threshold, model quality, hardware behavior, or user acceptance.",
+    "Applies to truth/provenance claims, not to creative tasks where the user explicitly authorizes hidden-surface design."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "postedReceipt": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
+
