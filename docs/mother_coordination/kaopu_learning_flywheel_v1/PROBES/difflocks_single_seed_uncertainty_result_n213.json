@@ -1,0 +1,115 @@
+{
+  "probeId": "DIFFLOCKS-SINGLE-SEED-UNCERTAINTY-N213",
+  "generatedAt": "2026-10-30T03:37:00+08:00",
+  "upstreamEvidence": {
+    "repository": "Meshcapade/difflocks",
+    "commit": "fcc73747dc60320c30228b6711000a53fc0c9d84",
+    "inferenceBlob": "544ff03c7b3fc83251429c14da4ffe4ba52e31a3",
+    "fixedSeeds": {
+      "torch": 5,
+      "numpy": 5,
+      "pythonRandom": 5
+    },
+    "inferenceSamplesPerInvocation": 1,
+    "authorIssueStatement": "The model is a diffusion one so it is slightly stochastic and can give slightly different results depending on the seed."
+  },
+  "fixtureOnly": true,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "hashes": {
+    "frontHashes": [
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+      "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e"
+    ],
+    "sideHashes": [
+      "6ca995c64d3bba6e7c977cc4a84b25ce3dbac7d1cf395190650f9c106ee2cf49",
+      "5b56f0f7da8c09bb139ceccce4bdb853ccb5baf30e4adf0c5d0f3009159539fa",
+      "42569776338c3c098ef8389f7cd8632db03920063dabaf15af9dc32a00875d8c",
+      "7966bfa9a1aad22c6e0c311726d5847f6cd3f376932c1e1c0f31bcf51eb297d4",
+      "355344c0d885b39142c217be7485821b8d0c875c145f148265af0f1079522fd4",
+      "8d2681efe8f869025cf80a37d3eaecaddec1b6042ea08bddd2e9b7c472ca9dda",
+      "c7b565a28e9bdfdbed820f21a95998dd2e3ebd1b4797feabe65b0c7e6a287950"
+    ],
+    "repeatSeed5": [
+      "796aea9a4288690fc25ff42b0319e8dfd52bcecb49da0412174b58fc2467f49b",
+      "796aea9a4288690fc25ff42b0319e8dfd52bcecb49da0412174b58fc2467f49b",
+      "796aea9a4288690fc25ff42b0319e8dfd52bcecb49da0412174b58fc2467f49b"
+    ]
+  },
+  "metrics": {
+    "hypothesisCount": 7,
+    "observedVarianceM2": 9.138512789734901e-37,
+    "occludedVarianceM2": 0.00005708893777871083,
+    "occludedStdMm": 7.555722187766754
+  },
+  "decisions": {
+    "deterministicRuntimeGate": "PASS_FIXED_SEED_REPEATABLE",
+    "singleSampleTruthGate": "REJECT_SINGLE_SAMPLE_PROMOTED_AS_UNIQUE_TRUTH",
+    "repeatabilityTruthGate": "REJECT_REPEATABILITY_MISUSED_AS_EPISTEMIC_CERTAINTY",
+    "ensembleGate": "HOLD_POSTERIOR_AMBIGUITY_DISCLOSED"
+  },
+  "checks": [
+    {
+      "name": "seed 5 is byte-stable in the synthetic sampler",
+      "pass": true
+    },
+    {
+      "name": "all seeds preserve the same front projection",
+      "pass": true
+    },
+    {
+      "name": "different seeds expose multiple side hypotheses",
+      "pass": true
+    },
+    {
+      "name": "observed-front ensemble variance is numerically zero",
+      "pass": true
+    },
+    {
+      "name": "occluded ensemble variance is nonzero",
+      "pass": true
+    },
+    {
+      "name": "fixed-seed runtime repeatability passes",
+      "pass": true
+    },
+    {
+      "name": "one sample cannot be promoted as unique truth",
+      "pass": true
+    },
+    {
+      "name": "repeating one seed is not epistemic certainty",
+      "pass": true
+    },
+    {
+      "name": "multi-seed ambiguity is disclosed but not resolved",
+      "pass": true
+    },
+    {
+      "name": "an external withheld view remains necessary for truth promotion",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "passed": 10,
+    "failed": 0,
+    "total": 10
+  },
+  "boundary": [
+    "Synthetic posterior replay only; no DiffLocks checkpoint was run.",
+    "Fixed-seed repeatability is an execution property, not proof that occluded geometry is uniquely determined or correct.",
+    "Multi-seed variation can reveal ambiguity but cannot select reference truth without independent evidence."
+  ]
+}
