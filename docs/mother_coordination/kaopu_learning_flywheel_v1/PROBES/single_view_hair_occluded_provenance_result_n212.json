@@ -1,0 +1,95 @@
+{
+  "probeId": "HAIR-SINGLE-VIEW-OCCLUDED-PROVENANCE-N212",
+  "generatedAt": "2026-10-29T23:42:00+08:00",
+  "taskMode": "REPLICATION_LOCKED",
+  "creativeAuthorization": false,
+  "fixtureOnly": true,
+  "method": "Three strand sets share exactly the same x/y centerlines, hence the same orthographic front projection. Only the z coordinates of the marked OCCLUDED tail differ. A side projection exposes the ambiguity.",
+  "hashes": {
+    "referenceFront": "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+    "priorAFront": "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+    "priorBFront": "1512e30bf009940929ad702933265d0c438ca37ab4077f7f8acf2cc9b2ae1c1e",
+    "referenceSide": "862a37a166317825080455c2946065cb91619d98fc88544b50283507095f124c",
+    "priorASide": "60c8d38418db5ef1785eb2fe69a42b4ef1fcfca124702148c92b54a79930fb6f",
+    "priorBSide": "36a543a40bb744e6679ff129af8f538d9f3f92bdfb47e4c27c279392bbcb4ebf"
+  },
+  "frontMatches": {
+    "priorA": true,
+    "priorB": true
+  },
+  "sideMatches": {
+    "priorA": false,
+    "priorB": false
+  },
+  "metrics": {
+    "totalPointsPerHair": 328,
+    "observedFrontPoints": 184,
+    "occludedPoints": 144,
+    "priorAObservedRmsM": 0,
+    "priorBOccludedRmsM": 0.03790968227698162,
+    "priorAOccludedRmsM": 0.050546243035975484
+  },
+  "decisions": {
+    "naiveFrontOnlyGatePriorA": "PASS",
+    "naiveFrontOnlyGatePriorB": "PASS",
+    "provenanceAwareTruthClaim": "REJECT_OCCLUDED_PRIOR_PROMOTED_AS_REFERENCE_TRUTH",
+    "provenanceAwareDisclosedPrior": "HOLD_OCCLUDED_GEOMETRY_UNVERIFIED",
+    "withheldSidePriorA": "REJECT_WITHHELD_VIEW_MISMATCH"
+  },
+  "checks": [
+    {
+      "name": "front projection is identical for reference and prior A",
+      "pass": true
+    },
+    {
+      "name": "front projection is identical for reference and prior B",
+      "pass": true
+    },
+    {
+      "name": "side projection exposes prior A difference",
+      "pass": true
+    },
+    {
+      "name": "side projection exposes prior B difference",
+      "pass": true
+    },
+    {
+      "name": "observed region is unchanged in 3D",
+      "pass": true
+    },
+    {
+      "name": "occluded prior A is materially different",
+      "pass": true
+    },
+    {
+      "name": "occluded prior B is materially different",
+      "pass": true
+    },
+    {
+      "name": "front-only truth claim is rejected",
+      "pass": true
+    },
+    {
+      "name": "front-only disclosed prior is held, not promoted",
+      "pass": true
+    },
+    {
+      "name": "withheld side mismatch rejects the candidate",
+      "pass": true
+    },
+    {
+      "name": "matching multiview evidence can pass",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "passed": 11,
+    "failed": 0,
+    "total": 11
+  },
+  "boundary": [
+    "Synthetic observability counterexample only; it is not a DiffLocks quality measurement.",
+    "It proves non-identifiability under a front projection, not that every generated backside is wrong.",
+    "A plausible learned prior may be useful as an explicitly labeled candidate, but cannot be promoted as reference truth without additional evidence or user authorization."
+  ]
+}
