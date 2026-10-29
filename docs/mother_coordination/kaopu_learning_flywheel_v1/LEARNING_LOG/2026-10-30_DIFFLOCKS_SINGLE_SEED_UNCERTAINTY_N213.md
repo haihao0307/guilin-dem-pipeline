@@ -88,7 +88,7 @@ ICCV 2023 DiffPose 针对单图 2D→3D lifting 明确指出：单图高度 ambi
 - main baseline：`3ccae4bde0c91973adbb81f99ec4d54bc9357ce0`
 - Candidate parent：`automation/n212-single-view-hair-occluded-provenance-20261029@91670e2605b91ae2981c1ec7094096b59fa91d62`
 - source + synthetic uncertainty `GATE-RUN=true`
-- `POSTED=false`（文件落地前）
+- `POSTED=true`（Hair Mother 定向路由：#91 comment `6506582603`）
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=false`
 - Hair production `GATE-RUN=false`
