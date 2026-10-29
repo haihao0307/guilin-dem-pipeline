@@ -107,7 +107,7 @@ Delivery Receipt 必须把 `UPSTREAM_INFERENCE_RUN`、`NPZ_GEOMETRY_GATE`、`SCA
 
 ## 9. 路由状态
 
-- `POSTED=false`（文件落地前）
+- `POSTED=true`（Hair Mother 定向路由：#91 comment `6495822059`）
 - source-contract `GATE-RUN=true`
 - `ACKNOWLEDGED=false`
 - `AUDITION=false`
