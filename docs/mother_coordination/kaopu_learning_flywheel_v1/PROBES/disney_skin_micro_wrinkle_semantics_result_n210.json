@@ -1,0 +1,52 @@
+{
+  "schema": "KAOPU_DISNEY_SKIN_MICRO_WRINKLE_SEMANTICS_N210_V1",
+  "boundedQuestion": "Does pore-node / wrinkle-edge graph semantics add a controllable microrelief representation beyond unstructured noise?",
+  "sourceModel": {
+    "title": "Graph-Based Synthesis for Skin Micro Wrinkles",
+    "venue": "Eurographics Symposium on Geometry Processing 2023",
+    "methodBoundary": "Independent parameter-semantics replay of pore-node binding and the paper's axial orientation sampler; not a reproduction of CUDA trail simulation, displacement shader, scan fitting, or final image quality."
+  },
+  "configuration": {
+    "seed": 1511506142,
+    "minimumPoreDistanceUv": 0.055,
+    "targetPores": 190,
+    "kNearest": 5,
+    "preferredOrientationRadians": 0.4487989505128276,
+    "sigmaRadians": 0.3,
+    "directionalBaseStrength": 0.05,
+    "isotropicBaseStrength": 1
+  },
+  "observations": {
+    "poreCount": 190,
+    "candidateEdgeCount": 535,
+    "graphEndpointMaxError": 0,
+    "naiveEndpointOnPoreFraction": 0.003738317757009346,
+    "directional": {
+      "axialResultant": 0.6902564325974523,
+      "within15DegFraction": 0.6408263975864857
+    },
+    "isotropic": {
+      "axialResultant": 0.10855447776954288,
+      "within15DegFraction": 0.24866482873627363
+    },
+    "replayHash": "1f004999bce3dcdce03712b1bf9af71d7f9844eab339ab451ca1beab7cdbcd60"
+  },
+  "tests": [
+    { "name": "poisson_graph_has_enough_pores", "pass": true },
+    { "name": "knn_graph_has_candidate_edges", "pass": true },
+    { "name": "graph_wrinkle_endpoints_are_pore_nodes", "pass": true },
+    { "name": "naive_open_segments_do_not_bind_to_pores", "pass": true },
+    { "name": "low_base_strength_is_directional", "pass": true },
+    { "name": "low_base_strength_concentrates_near_flow", "pass": true },
+    { "name": "high_base_strength_reduces_anisotropy", "pass": true },
+    { "name": "fixed_seed_has_stable_hash", "pass": true }
+  ],
+  "passed": 8,
+  "total": 8,
+  "decision": "TEACHER_CANDIDATE_PARAMETER_SEMANTICS_REPRODUCED",
+  "limits": [
+    "No public implementation or dataset from the paper was found.",
+    "No facial region map, UV-distortion correction, trail continuation/crossing penalties, multi-level displacement, BRDF, subsurface scattering, browser, device, or production validation is included.",
+    "The three supplied images are visual observations only and do not disclose their source maps or renderer."
+  ]
+}
