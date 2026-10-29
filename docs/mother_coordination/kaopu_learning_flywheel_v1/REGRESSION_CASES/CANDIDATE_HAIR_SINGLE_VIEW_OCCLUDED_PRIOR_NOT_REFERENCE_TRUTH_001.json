@@ -30,6 +30,9 @@
     "teacherModelCommit",
     "teacherCheckpointDigest",
     "teacherSeed",
+    "hypothesisSeedSet",
+    "hypothesisCount",
+    "uncertaintyAuditRequired",
     "withheldValidationViews"
   ],
   "deliveryReceiptFields": [
@@ -39,6 +42,10 @@
     "occludedGeometryClaimState",
     "priorGeneratedRegionDigest",
     "referenceBoundRegionDigest",
+    "singleSeedRepeatability",
+    "observedRegionEnsembleVariance",
+    "occludedRegionEnsembleVariance",
+    "posteriorAmbiguityDecision",
     "scalpBindingReceipt",
     "creativeSubstituteDecision"
   ],
@@ -55,10 +62,13 @@
     "hardFail": [
       "An INFERRED_PRIOR_CANDIDATE or OCCLUDED_UNKNOWN region is labeled REFERENCE_MATCH, CURRENT_TRUTH, FROZEN, ACCEPTED_BASELINE, or USER_ACCEPTED without new evidence or explicit user authorization.",
       "A front-only match is used as proof of backside or depth correctness.",
+      "Repeated output from one fixed seed is used as proof that occluded geometry is uniquely determined or correct.",
       "The candidate silently falls back to a model prior while receipt claims exact replication."
     ],
     "hold": [
       "Occluded geometry is disclosed as INFERRED_PRIOR_CANDIDATE but no independent side/back/scan evidence exists.",
+      "Only one diffusion sample was inspected for a truth claim over an ambiguous occluded region.",
+      "A multi-seed ensemble exposes occluded variation but no external evidence selects a reference-bound hypothesis.",
       "The reference coverage mask or per-region evidence classification is missing.",
       "Withheld views exist but were not run against the exact candidate subject."
     ],
@@ -66,12 +76,15 @@
       "every visible and occluded region has an evidence class",
       "front-only evidence is scoped only to front-observable claims",
       "occluded regions remain OCCLUDED_UNKNOWN or INFERRED_PRIOR_CANDIDATE unless additional evidence constrains them",
+      "fixed-seed repeatability is recorded separately from truth certainty",
+      "when uncertaintyAuditRequired=true, multiple declared seeds quantify observed-versus-occluded variation without promoting any sample by popularity",
       "any REFERENCE_MATCH promotion is supported by side/back/multiview/scan evidence or an explicit approved constraint",
       "an independent verifier checks the exact candidate and source-view set"
     ]
   },
   "controls": {
     "syntheticNegative": "Three 328-point strand sets share the exact same front projection hash, while two priors differ from reference by 50.546 mm and 37.910 mm RMS in the marked occluded region.",
+    "singleSeedNegative": "Repeating seed 5 three times gives the same full-geometry hash and passes a deterministic runtime gate, while seven distinct seeds preserve one front hash but produce seven different side hashes and 7.556 mm occluded-region ensemble standard deviation.",
     "frontOnlyControl": "A naive front-projection gate accepts both different priors; the provenance-aware gate rejects truth promotion and holds a disclosed prior.",
     "multiviewPositive": "A side reference exposes the depth difference; a candidate may pass only when the exact side projection also matches and occluded regions are labeled REFERENCE_MATCH."
   },
@@ -80,6 +93,15 @@
     "Does not prohibit learned priors for exploration or initialization when they are explicitly labeled and isolated from accepted reference truth.",
     "Does not establish a production fidelity threshold, model quality, hardware behavior, or user acceptance.",
     "Applies to truth/provenance claims, not to creative tasks where the user explicitly authorizes hidden-surface design."
+  ],
+  "evidenceUpdates": [
+    {
+      "increment": "N213",
+      "date": "2026-10-30",
+      "finding": "DiffLocks pins Torch, NumPy and Python random seeds to 5 and emits one sample per invocation. The author confirms seed-dependent stochasticity. A fixed seed improves replayability but does not establish epistemic certainty for occluded geometry.",
+      "gateRun": true,
+      "postedReceipt": null
+    }
   ],
   "lifecycle": {
     "posted": true,
