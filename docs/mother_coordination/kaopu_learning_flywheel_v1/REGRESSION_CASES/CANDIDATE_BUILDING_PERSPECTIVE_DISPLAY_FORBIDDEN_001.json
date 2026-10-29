@@ -1,0 +1,83 @@
+{
+  "caseId": "BUILDING-PERSPECTIVE-DISPLAY-FORBIDDEN-001",
+  "status": "CANDIDATE",
+  "date": "2026-10-29",
+  "appliesTo": [
+    "Building",
+    "Architecture"
+  ],
+  "complements": [
+    "BUILDING-LEARNED-SYSTEMS-NOT-INSTANTIATED-001"
+  ],
+  "userFrozenInvariant": "Remove the far-small-near-large perspective display mode from the complete Building Mother system.",
+  "failure": {
+    "observation": "The 2026-10-29 Lean Code artifact still exposes active entrypoints whose static dependency closures reach perspective camera fitting, FOV rays, and depth-divided screen projection.",
+    "mustNeverRepeat": [
+      "package or UI called lean while active perspective display remains reachable",
+      "renderer changed while picker or label projection remains perspective",
+      "legacy perspective wrapper re-exported into an active entrypoint",
+      "static marker absence promoted as visual or user acceptance",
+      "producer self-approval"
+    ]
+  },
+  "taskAnchorAdditions": {
+    "displayProjectionInvariant": "PERSPECTIVE_DISPLAY_FORBIDDEN",
+    "allowedProjectionModes": [
+      "ORTHOGRAPHIC"
+    ],
+    "projectionScope": [
+      "render",
+      "pick",
+      "labels",
+      "all_active_entrypoints"
+    ],
+    "legacyProjectionHandling": "NOT_REACHABLE_FROM_ACTIVE_ENTRYPOINTS"
+  },
+  "deliveryReceiptAdditions": [
+    "entrypointReachabilityManifest",
+    "projectionModeByEntrypoint",
+    "renderProjectionEvidence",
+    "pickRayProjectionEvidence",
+    "labelProjectionEvidence",
+    "legacyPerspectiveReachable",
+    "independentVerifier"
+  ],
+  "gate": {
+    "rejectIf": [
+      "any active entrypoint reaches perspective fit/FOV ray/depth-divided projection",
+      "render, pick, and label projection modes disagree",
+      "legacy perspective code is re-exported into active code",
+      "producerId equals verifierId"
+    ],
+    "releaseOnlyIf": [
+      "every active entrypoint is orthographic",
+      "camera distance changes do not change screen-space object scale",
+      "orthographic scale is the only supported display-scale control",
+      "static reachability and browser positive/negative controls pass on the exact candidate"
+    ]
+  },
+  "observedReplay": {
+    "artifact": "Building-Mother-Lean-Code-20261029.zip",
+    "artifactSha256": "481b8865137f817bd3a128df52536b6e69afad45d952d159b654fc113afa0a8f",
+    "entrypoints": 8,
+    "entrypointsWithActivePerspectivePath": 6,
+    "uniqueReachableFiles": 157,
+    "missingStaticDependencies": 0,
+    "decision": "REJECT_ACTIVE_PERSPECTIVE_MODE_STILL_REACHABLE"
+  },
+  "proof": {
+    "probe": "PROBES/building_perspective_mode_reachability_probe_n209.mjs",
+    "result": "PROBES/building_perspective_mode_reachability_result_n209.json",
+    "evidenceLayer": "CURRENT_ARTIFACT_SOURCE_AND_STATIC_REACHABILITY",
+    "limits": "No production edit, browser run, geometry judgment, package-size judgment, or user acceptance."
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implementedProduction": false,
+    "gateRunSourceStatic": true,
+    "gateRunProductionBrowser": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
