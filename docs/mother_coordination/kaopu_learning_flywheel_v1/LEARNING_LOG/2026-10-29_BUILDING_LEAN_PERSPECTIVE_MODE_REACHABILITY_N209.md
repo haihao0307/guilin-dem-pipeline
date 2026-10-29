@@ -96,7 +96,7 @@ N197 `BUILDING-LEARNED-SYSTEMS-NOT-INSTANTIATED-001` 管“外壳或文档不能
 
 ## 状态
 
-- `POSTED`: false（写本记录时）
+- `POSTED`: true（#91 comment `6487414042`）
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: false
 - source/static `GATE-RUN`: true
@@ -105,3 +105,5 @@ N197 `BUILDING-LEARNED-SYSTEMS-NOT-INSTANTIATED-001` 管“外壳或文档不能
 - `USER-ACCEPTED`: false
 
 未修改 main、生产 Building Mother、R2 OS、全局门禁或公网页。KPI：unknown。
+
+定向路由：https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6487414042
