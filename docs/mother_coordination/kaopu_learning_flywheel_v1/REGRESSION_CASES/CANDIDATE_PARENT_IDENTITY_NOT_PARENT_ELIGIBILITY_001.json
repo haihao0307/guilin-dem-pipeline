@@ -1,0 +1,182 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "PARENT-IDENTITY-NOT-PARENT-ELIGIBILITY-001",
+  "status": "CANDIDATE_MOTOR_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "boundedQuestion": "When a successor artifact names or retains an earlier revision, what proves that the exact parent was eligible to seed the successor rather than merely available and hashable?",
+  "currentBestViewComparison": {
+    "covered": [
+      "EPHEMERAL-PUBLIC-PARENT-NOT-REPLAYABLE-001 requires immutable parent identity and replayability.",
+      "REJECTED-DESCENDANT-QUARANTINE-001 prevents rejected ancestry or copied rejected content from silently returning."
+    ],
+    "newDiscriminator": "Parent content identity and parent eligibility are orthogonal. An immutable, replayable parent still cannot seed an accepted lineage unless a scoped verifier verdict authorizes that exact parent and the child receipt binds the inherited and changed scopes."
+  },
+  "actualObservation": {
+    "subject": "Motor private intermediate packages R15-R17",
+    "r15": {
+      "packageSHA256": "f26473bab430e5b4fe00e27fd2106b0ef97f628df81004c3c3bdda9a4808eaa8",
+      "geometrySHA256": "b608281cb05a301ae2bb6754e445693bb94f92a01c7eda8502f5a2aa95b56d2a",
+      "receiptDecision": "eligible partial shared-front baseline for root choice; not complete front-face or optical fidelity"
+    },
+    "r16": {
+      "packageSHA256": "1833bd3a3840877e09fb6ab4b6422143d6887bf62e114350803f537cc74ec8b7",
+      "geometrySHA256": "a276b7573c952e935ab4bb9234fb77a10ffa0508e43361214269f4b0ec4cff6b",
+      "readmeClaim": "developed from R15 shared nose support",
+      "receiptBoundary": "partial grille improvement; lower frame and lowest bar remain occluded"
+    },
+    "r17": {
+      "packageSHA256": "5925befeb2ef31d43bb5daf3139cf8b180bf7bdf38364542f1905c85532f1dcd",
+      "geometrySHA256": "56562285cf313178f04209dbddac96da92becef073e62b5478835427155374c2",
+      "readmeClaim": "retains R16 lamp/grille relationship",
+      "embeddedBaselineGeometrySHA256": "b608281cb05a301ae2bb6754e445693bb94f92a01c7eda8502f5a2aa95b56d2a",
+      "embeddedBaselineIdentity": "R15, not evidence of an exact R16 parent binding",
+      "receiptBoundary": "eligible partial baseline for root acceptance; schematic bumper and lens remain"
+    },
+    "commonMissingFields": [
+      "parentArtifactDigest",
+      "parentSubjectDigest",
+      "parentVerifierVerdict",
+      "parentAcceptedScope",
+      "inheritedScope",
+      "changedScope",
+      "rejectedScopeCarriedForward",
+      "independentVerifierIdentity"
+    ],
+    "decision": "HOLD_LINEAGE_PROMOTION_PARENT_IDENTITY_AND_ELIGIBILITY_UNBOUND",
+    "preservedClaims": [
+      "Local numerical and visual evidence remains evidence for each exact package.",
+      "R17 may remain a technical candidate; this gate does not label it rejected or erase its local improvement.",
+      "No production, user acceptance, or canonical-root promotion is inferred."
+    ]
+  },
+  "requiredTaskAnchorAndReceiptFields": [
+    "parentArtifactDigest",
+    "parentSubjectDigest",
+    "parentVerifierVerdict",
+    "parentAcceptedScope",
+    "inheritedScope",
+    "changedScope",
+    "rejectedScopeCarriedForward",
+    "userReauthorizationForRejectedScope",
+    "independentVerifierIdentity",
+    "childArtifactDigest"
+  ],
+  "decisionOrder": [
+    "Reject digest mismatch before considering eligibility.",
+    "Hold when exact parent identity is absent.",
+    "Hold when exact parent is known but its scoped eligibility verdict is absent.",
+    "Quarantine rejected scope unless exact current user reauthorization covers it.",
+    "Only then classify the child as eligible for ordinary candidate verification."
+  ],
+  "decisions": [
+    "HOLD_PARENT_DIGEST_MISMATCH",
+    "HOLD_PARENT_IDENTITY_UNBOUND",
+    "HOLD_PARENT_ELIGIBILITY_UNBOUND",
+    "HOLD_REJECTED_DESCENDANT_PRESENT",
+    "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
+  ],
+  "cases": [
+    {
+      "id": "MOTOR_R16_TEXT_ONLY_PARENT",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": null,
+        "parentSubjectDigest": null,
+        "parentVerifierVerdict": null,
+        "rejectedScopeCarriedForward": false
+      },
+      "expect": "HOLD_PARENT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "MOTOR_R17_NAMES_R16_EMBEDS_R15_ONLY",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": null,
+        "parentSubjectDigest": null,
+        "parentVerifierVerdict": null,
+        "embeddedOlderBaselineOnly": true,
+        "rejectedScopeCarriedForward": false
+      },
+      "expect": "HOLD_PARENT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "CONTROL_EXACT_PARENT_NO_VERDICT",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:exact-parent",
+        "parentSubjectDigest": "sha256:exact-subject",
+        "parentDigestMatches": true,
+        "parentVerifierVerdict": null,
+        "rejectedScopeCarriedForward": false
+      },
+      "expect": "HOLD_PARENT_ELIGIBILITY_UNBOUND"
+    },
+    {
+      "id": "CONTROL_EXACT_PARENT_DIGEST_MISMATCH",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:declared-parent",
+        "parentSubjectDigest": "sha256:declared-subject",
+        "parentDigestMatches": false,
+        "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
+        "rejectedScopeCarriedForward": false
+      },
+      "expect": "HOLD_PARENT_DIGEST_MISMATCH"
+    },
+    {
+      "id": "CONTROL_REJECTED_SCOPE_NOT_REAUTHORIZED",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:exact-parent",
+        "parentSubjectDigest": "sha256:exact-subject",
+        "parentDigestMatches": true,
+        "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
+        "parentAcceptedScope": ["shared-front-support"],
+        "rejectedScopeCarriedForward": true,
+        "userReauthorizationForRejectedScope": false
+      },
+      "expect": "HOLD_REJECTED_DESCENDANT_PRESENT"
+    },
+    {
+      "id": "CONTROL_COMPLETE_SCOPED_LINEAGE",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:exact-parent",
+        "parentSubjectDigest": "sha256:exact-subject",
+        "parentDigestMatches": true,
+        "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
+        "parentAcceptedScope": ["shared-front-support", "lamp-grille-relation"],
+        "inheritedScope": ["lamp-grille-relation"],
+        "changedScope": ["bumper-upper-boundary", "bumper-subdomains"],
+        "rejectedScopeCarriedForward": false,
+        "independentVerifierIdentity": "verifier:independent",
+        "childArtifactDigest": "sha256:exact-child"
+      },
+      "expect": "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherGateRunRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Remove this Candidate if one real Motor trial shows parent identity plus scoped parent eligibility cannot discriminate an invalid inherited baseline from a valid child candidate."
+  },
+  "routing": {
+    "target": "Motor Mother through coordinator issue #91",
+    "motherStatus": "NOT_QUERIED_UNKNOWN",
+    "requestedAnswer": [
+      "Is exact R16 the intended parent of R17?",
+      "Was R16 accepted for the specific lamp/grille scope inherited by R17?",
+      "Which R16 scopes remain rejected or unknown?",
+      "What minimal verifier run binds R17 to exact R16 without promoting unrelated scopes?"
+    ]
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
