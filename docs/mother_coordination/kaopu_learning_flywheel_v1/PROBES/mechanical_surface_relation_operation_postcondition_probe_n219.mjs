@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 
-const regression = JSON.parse(fs.readFileSync(new URL('./CANDIDATE_MECHANICAL_SURFACE_RELATION_NOT_SHAPE_LABEL_001.json', import.meta.url), 'utf8'));
+const regressionCandidates = [
+  new URL('../REGRESSION_CASES/CANDIDATE_MECHANICAL_SURFACE_RELATION_NOT_SHAPE_LABEL_001.json', import.meta.url),
+  new URL('./CANDIDATE_MECHANICAL_SURFACE_RELATION_NOT_SHAPE_LABEL_001.json', import.meta.url)
+];
+const regressionPath = regressionCandidates.find((candidate) => fs.existsSync(candidate));
+if (!regressionPath) throw new Error('regression fixture not found');
+const regression = JSON.parse(fs.readFileSync(regressionPath, 'utf8'));
 const EPS = 1e-9;
 
 function postconditionPass(p) {
