@@ -110,7 +110,7 @@ Mother must select the exact part and operation. Until then: `NOT_QUERIED / UNKN
 
 ## Lifecycle
 
-- `POSTED=false`
+- `POSTED=true` — routed to coordinator issue #91
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=true` — Candidate checker only
 - `GATE-RUN=true` — source/synthetic replay only
