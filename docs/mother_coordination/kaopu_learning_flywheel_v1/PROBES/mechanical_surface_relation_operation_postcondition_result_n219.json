@@ -1,0 +1,19 @@
+{
+  "caseId": "MECHANICAL-SURFACE-RELATION-NOT-SHAPE-LABEL-001",
+  "extension": "N219_KERNEL_SUCCESS_NOT_SURFACE_TRUTH",
+  "total": 17,
+  "passed": 17,
+  "allPassed": true,
+  "newNegativeControls": [
+    {"id":"KERNEL_SUCCESS_WITHOUT_BOUND_SUBJECTS","actual":"HOLD_KERNEL_OPERATION_RECEIPT_UNBOUND"},
+    {"id":"SCHEMA_VALIDATION_MISSING","actual":"HOLD_SCHEMA_VALIDATION_MISSING"},
+    {"id":"SCHEMA_INVALID_OUTPUT","actual":"REJECT_SCHEMA_INVALID_BREP"},
+    {"id":"UPSTREAM_ISSUE_36_SUCCESS_BUT_KERNEL_INVALID","actual":"REJECT_KERNEL_GEOMETRY_INVALID"},
+    {"id":"UPSTREAM_ISSUE_35_SUCCESS_VALID_BUT_WRONG_BOOLEAN","actual":"REJECT_OPERATION_SEMANTIC_POSTCONDITION"}
+  ],
+  "positiveControl": {
+    "id": "COMPLETE_OPERATION_POSITIVE_CONTROL",
+    "actual": "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
+  },
+  "scopeBoundary": "Source-contract and synthetic receipt replay only. NVIDIA usd-brep was not installed or executed; no KAOPU production part, browser renderer, reference fidelity, device runtime, adoption or user acceptance was tested. Upstream issue facts remain source observations tied to their stated revisions and fixtures."
+}
