@@ -1,0 +1,46 @@
+{
+  "caseId": "PARENT-IDENTITY-NOT-PARENT-ELIGIBILITY-001",
+  "attempts": [
+    {
+      "attempt": 1,
+      "passed": 5,
+      "total": 6,
+      "allPassed": false,
+      "failure": "CONTROL_REJECTED_SCOPE_NOT_REAUTHORIZED stopped at HOLD_PARENT_ELIGIBILITY_UNBOUND because the fixture omitted parentAcceptedScope.",
+      "repair": "Add the missing parent eligibility precondition so the negative control reaches the rejected-descendant check. No classifier-order change."
+    },
+    {
+      "attempt": 2,
+      "passed": 6,
+      "total": 6,
+      "allPassed": true
+    }
+  ],
+  "finalResults": [
+    {
+      "id": "MOTOR_R16_TEXT_ONLY_PARENT",
+      "actual": "HOLD_PARENT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "MOTOR_R17_NAMES_R16_EMBEDS_R15_ONLY",
+      "actual": "HOLD_PARENT_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "CONTROL_EXACT_PARENT_NO_VERDICT",
+      "actual": "HOLD_PARENT_ELIGIBILITY_UNBOUND"
+    },
+    {
+      "id": "CONTROL_EXACT_PARENT_DIGEST_MISMATCH",
+      "actual": "HOLD_PARENT_DIGEST_MISMATCH"
+    },
+    {
+      "id": "CONTROL_REJECTED_SCOPE_NOT_REAUTHORIZED",
+      "actual": "HOLD_REJECTED_DESCENDANT_PRESENT"
+    },
+    {
+      "id": "CONTROL_COMPLETE_SCOPED_LINEAGE",
+      "actual": "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
+    }
+  ],
+  "scopeBoundary": "Synthetic state-classifier replay only. Motor package local evidence was inspected and hash-bound, but geometry, browser, production, and user acceptance were not rerun."
+}
