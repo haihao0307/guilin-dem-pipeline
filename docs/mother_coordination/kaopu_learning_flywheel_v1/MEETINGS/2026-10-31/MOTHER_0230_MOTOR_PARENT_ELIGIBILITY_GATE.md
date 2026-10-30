@@ -2,7 +2,7 @@
 
 - 记录 ID：`KAOPU-MOTHER-20261031-MOTOR-PARENT-ELIGIBILITY-R1`
 - 实际开始：2026-10-31 02:32:27 +08:00
-- 实际结束：2026-10-31 02:36:58 +08:00
+- 实际结束：2026-10-31 02:34:45 +08:00
 - 会议边界：只处理 Motor R15/R16/R17 的父对象继承资格；未修改生产 Mother、main、资产、排程或学习飞轮
 - 参与证据：协调端读取 main、R2 OS、reference/freshness gates、#91/#63、Motor 相关分支与 N217；未取得 Motor Mother 新回复
 - main：`3ccae4bde0c91973adbb81f99ec4d54bc9357ce0`
