@@ -2,12 +2,15 @@
   "caseId": "MECHANICAL-STANDARD-IDENTITY-AND-DIMENSION-PROVENANCE-001",
   "status": "CANDIDATE_SYNTHETIC_SOURCE_AUDIT_PASSED_NOT_ADOPTED",
   "scope": "Mechanical Mother reusable fasteners, keys, pins, washers and related standard parts",
-  "userCorrection": "Use existing recognized standards and shared definitions; do not invent incompatible part names, keys or dimensions per vehicle.",
+  "userCorrection": "Use existing recognized standards and shared definitions; do not invent incompatible part names, keys, dimensions, materials or aging states per vehicle.",
   "failureMechanisms": [
     "STANDARD_NAME_WITH_UNVERIFIED_DIMENSION_TABLE",
     "PRESENTATION_ALIAS_PROMOTED_TO_DIMENSIONAL_EQUIVALENCE",
     "MISSING_STANDARD_EDITION_OR_SOURCE_REVISION",
-    "LOCAL_KEY_SCHEMA_DRIFT_ACROSS_ASSEMBLIES"
+    "LOCAL_KEY_SCHEMA_DRIFT_ACROSS_ASSEMBLIES",
+    "STANDARD_DESIGNATION_PROMOTED_TO_MATERIAL_OR_COATING_IDENTITY",
+    "FINISH_LABEL_COLLAPSES_PROTECTIVE_SYSTEM_AND_VISUAL_CONDITION",
+    "GENERIC_OLD_NEW_TAG_WITHOUT_SERVICE_ENVIRONMENT_OR_EXPOSURE_PROVENANCE"
   ],
   "taskAnchorRequired": [
     "standardAuthority",
@@ -19,7 +22,14 @@
     "nominalLength",
     "toleranceClass",
     "materialGrade",
-    "finish",
+    "heatTreatment",
+    "protectiveSystem",
+    "protectiveSystemSpec",
+    "lubricantState",
+    "serviceEnvironment",
+    "exposureHistory",
+    "conditionState",
+    "conditionEvidence",
     "sourceRevision",
     "sourceTableDigest",
     "geometryRoute"
@@ -29,6 +39,8 @@
     "aliasScope",
     "dimensionInvariantResult",
     "diameterLengthCompatibilityResult",
+    "materialProtectionCompatibilityResult",
+    "environmentConditionCompatibilityResult",
     "sourceProvenanceResult",
     "crossAssemblyKeyCompatibilityResult",
     "verifierIdentity"
@@ -48,13 +60,34 @@
       "name": "invented local key",
       "input": { "standardAuthority": null, "standardDesignation": "vehicleBoltA" },
       "expected": "REJECT_UNBOUND_STANDARD_IDENTITY"
+    },
+    {
+      "name": "standard designation silently supplies material and coating",
+      "input": {
+        "standardDesignation": "ISO4017",
+        "materialGrade": null,
+        "protectiveSystem": null,
+        "conditionState": "old"
+      },
+      "expected": "REJECT_COLLAPSED_STANDARD_MATERIAL_CONDITION_IDENTITY"
+    },
+    {
+      "name": "visual rust without compatible substrate or exposure evidence",
+      "input": {
+        "materialGrade": "stainless-unspecified",
+        "protectiveSystem": "passivated",
+        "serviceEnvironment": null,
+        "exposureHistory": null,
+        "conditionState": "heavy-red-rust"
+      },
+      "expected": "REJECT_UNSUPPORTED_CONDITION_STATE"
     }
   ],
   "positiveControl": {
-    "input": "authorized source + pinned edition + valid dimensions + compatible shared key",
-    "expected": "CANDIDATE_STANDARD_PART_IDENTITY_BOUND"
+    "input": "authorized geometry source + pinned edition + material grade + protective system + service environment + evidence-backed condition state + independent verifier",
+    "expected": "CANDIDATE_STANDARD_PART_IDENTITY_AND_CONDITION_BOUND"
   },
-  "promotionRule": "A third-party catalog may teach schema and test design, but no dimension becomes Canonical Truth until an authorized normative or manufacturer source is pinned and all invariants pass independent verification.",
+  "promotionRule": "A third-party catalog or historical engineering manual may teach schema and test design, but no dimension, material/coating choice or aging state becomes Canonical Truth until an authorized current source is pinned and independent compatibility checks pass. Geometry standard, material, protective system and observed condition remain separate keys.",
   "adoption": {
     "POSTED": false,
     "ACKNOWLEDGED": false,
