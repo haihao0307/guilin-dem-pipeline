@@ -1,0 +1,109 @@
+{
+  "probeId": "N216-STYLIZED-REFERENCE-CURVATURE-FIDELITY",
+  "boundedQuestion": "Can sparse silhouette anchors prove one-to-one learning of a stylized mechanical reference continuous surface while keeping engineering truth separate?",
+  "decision": "SEPARATE_VISIBLE_REFERENCE_FIDELITY_FROM_ENGINEERING_TRUTH_AND_GATE_CURVATURE",
+  "externalTeacherStatus": "NO_NOVELTY",
+  "reference": {
+    "id": "E50-ARTISTIC-REFERENCE-A",
+    "kind": "artistic-mechanical-reference",
+    "engineeringAuthority": "UNKNOWN",
+    "externalGeometryCopyAllowed": false,
+    "externalTextureCopyAllowed": false,
+    "curve": [
+      [
+        0,
+        0
+      ],
+      [
+        0.25,
+        0.8
+      ],
+      [
+        0.75,
+        0.8
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  },
+  "substitute": {
+    "id": "PRODUCER-SUBSTITUTE",
+    "curve": [
+      [
+        0,
+        0
+      ],
+      [
+        0.05,
+        1.2
+      ],
+      [
+        0.95,
+        0.4
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  },
+  "faithful": {
+    "id": "INDEPENDENT-PROCEDURAL-RECONSTRUCTION",
+    "curve": [
+      [
+        0,
+        0
+      ],
+      [
+        0.25,
+        0.8
+      ],
+      [
+        0.75,
+        0.8
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  },
+  "measurements": {
+    "substituteCurveDeviation": 0.12879751550398802,
+    "substituteCurvatureDeviation": 1.9531829348443055,
+    "faithfulCurveDeviation": 0
+  },
+  "variantMixReceipt": {
+    "referenceVariantIds": [
+      "E50-ARTISTIC-REFERENCE-A",
+      "E50-ARTISTIC-REFERENCE-B"
+    ],
+    "perPartMapping": null,
+    "decision": "REJECT_MIXED_REFERENCE_VARIANTS_WITHOUT_PART_MAPPING"
+  },
+  "claimStates": {
+    "visibleShape": "REFERENCE_MATCH_CANDIDATE",
+    "engineeringTruth": "UNKNOWN",
+    "hiddenGeometry": "OCCLUDED_UNKNOWN",
+    "materialRoute": "KAOPU_MATERIAL_MOTHER_ONLY"
+  },
+  "checks": {
+    "endpointsAndMidpointMatch": true,
+    "sparseAnchorGateWouldFalsePass": true,
+    "continuousCurveDetectsSubstitute": true,
+    "curvatureSignatureDetectsSubstitute": true,
+    "faithfulIndependentFormulaPasses": true,
+    "unmappedVariantMixRejected": true,
+    "referenceMatchDoesNotPromoteEngineeringTruth": true,
+    "meshTextureCopyRemainForbidden": true
+  },
+  "passed": true,
+  "limitations": [
+    "This is a synthetic 2D profile-contract replay, not an E50 production surface comparison.",
+    "Passing the curve gate does not establish hidden geometry, mating fit, material correctness, engineering accuracy or user acceptance.",
+    "Production requires fixed reference digests, per-part coverage, multiple section curves and independent visual/numeric verification."
+  ]
+}
+
