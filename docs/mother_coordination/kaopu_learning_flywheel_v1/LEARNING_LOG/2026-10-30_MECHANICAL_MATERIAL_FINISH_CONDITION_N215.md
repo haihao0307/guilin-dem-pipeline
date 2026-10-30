@@ -60,7 +60,7 @@ The existing `MECHANICAL-STANDARD-IDENTITY-AND-DIMENSION-PROVENANCE-001` case is
 
 Decision: `SEPARATE_GEOMETRY_MATERIAL_PROTECTION_AND_CONDITION_KEYS`.
 
-- `POSTED=false`
+- `POSTED=true` — targeted to Mechanical Mother through issue #91 comment `6517636776`
 - source/synthetic `GATE-RUN=true`
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=false`
