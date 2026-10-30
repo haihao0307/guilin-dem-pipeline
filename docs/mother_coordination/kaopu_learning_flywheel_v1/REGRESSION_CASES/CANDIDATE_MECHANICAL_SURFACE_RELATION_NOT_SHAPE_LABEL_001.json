@@ -1,0 +1,254 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "MECHANICAL-SURFACE-RELATION-NOT-SHAPE-LABEL-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "boundedQuestion": "Can a mechanical or vehicle part be treated as a function-surface reconstruction when the delivery names a quadric family or shows a rendered surface but does not bind the executable equation, frame, domain, patch relations, continuity and reference residual?",
+  "actualObservation": {
+    "userCorrection": "Study the mathematical surface relations and use them to construct vehicle and part surfaces.",
+    "referenceSet": "Six user-provided educational images enumerate canonical quadrics and standard equations; no source image bytes are copied into this record.",
+    "currentVisibleDelivery": "Mechanical Parts Mother version 3 exposes part categories, model labels, material views, orthographic controls and CPU complete-pixel evaluation. A current Motor R22 screenshot declares self-authored surfaces/program materials.",
+    "missingVisibleReceiptFields": [
+      "surfaceEquationOrParametricMap",
+      "coordinateFrameAndTransform",
+      "coefficientUnits",
+      "trimmedDomain",
+      "patchAdjacencyGraph",
+      "requiredContinuity",
+      "measuredJoinResidual",
+      "referenceSectionResidual"
+    ],
+    "decision": "HOLD_SURFACE_RELATION_RECEIPT_MISSING",
+    "boundary": "This is an evidence-closure finding. It does not prove that hidden source code lacks equations, and it does not reject the current visual asset."
+  },
+  "currentBestViewComparison": {
+    "existingCoverage": [
+      "STYLIZED-REFERENCE-VISIBLE-SHAPE-NOT-ENGINEERING-TRUTH-001 separates artistic reference fidelity from engineering truth and rejects sparse-anchor false passes.",
+      "MOTHER-FUNCTION.md records executable object ownership, variables and dependency relations for Building."
+    ],
+    "newDiscriminator": "A surface-family label such as ellipsoid/cylinder and a rendered image are not an executable surface relation. A function-surface receipt must bind each patch equation, local frame, finite domain, adjacency and required C0/G1/G2 closure, then test reference residual over the declared visible region."
+  },
+  "requiredTaskAnchorAndReceiptFields": [
+    "referenceSetDigest",
+    "partStableId",
+    "surfacePatchIds",
+    "surfaceFamilyPerPatch",
+    "surfaceEquationOrParametricMap",
+    "coefficientUnits",
+    "localCoordinateFrame",
+    "worldTransform",
+    "trimmedDomain",
+    "patchAdjacencyGraph",
+    "requiredContinuityPerJoin",
+    "measuredPositionTangentCurvatureResidual",
+    "referenceSectionSet",
+    "referenceSectionResidual",
+    "hiddenRegionState",
+    "materialFunctionSeparateFromGeometry",
+    "independentVerifier"
+  ],
+  "decisionOrder": [
+    "Require an evaluable surface relation, not only a family label or screenshot.",
+    "Bind coordinate frame, transform and coefficient units before comparing coefficients.",
+    "Bind finite patch domains and adjacency before evaluating joins.",
+    "Evaluate position (C0), tangent/normal (G1) and curvature (G2) according to the declared join requirement.",
+    "Evaluate reference residual over the declared section set; sparse landmarks are insufficient.",
+    "Keep material functions separate from geometry evidence.",
+    "A complete receipt is only candidate-eligible; it is not engineering truth or user acceptance."
+  ],
+  "decisions": [
+    "HOLD_SURFACE_EQUATION_UNBOUND",
+    "HOLD_FRAME_OR_UNITS_UNBOUND",
+    "HOLD_SURFACE_DOMAIN_UNBOUND",
+    "HOLD_PATCH_RELATION_UNBOUND",
+    "REJECT_C0_DISCONTINUITY",
+    "REJECT_G1_DISCONTINUITY",
+    "REJECT_G2_DISCONTINUITY",
+    "HOLD_REFERENCE_RESIDUAL_UNVERIFIED",
+    "REJECT_REFERENCE_CURVATURE_RESIDUAL",
+    "REJECT_MATERIAL_SUBSTITUTED_FOR_GEOMETRY",
+    "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
+  ],
+  "cases": [
+    {
+      "id": "CURRENT_VISIBLE_DELIVERY_LABEL_AND_RENDER_ONLY",
+      "input": {
+        "equationBound": false
+      },
+      "expect": "HOLD_SURFACE_EQUATION_UNBOUND"
+    },
+    {
+      "id": "QUADRIC_EQUATION_WITHOUT_FRAME_OR_UNITS",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": false,
+        "unitsBound": false
+      },
+      "expect": "HOLD_FRAME_OR_UNITS_UNBOUND"
+    },
+    {
+      "id": "UNTRIMMED_INFINITE_QUADRIC_USED_AS_PART",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": false
+      },
+      "expect": "HOLD_SURFACE_DOMAIN_UNBOUND"
+    },
+    {
+      "id": "PATCHES_HAVE_EQUATIONS_BUT_NO_ADJACENCY",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": false
+      },
+      "expect": "HOLD_PATCH_RELATION_UNBOUND"
+    },
+    {
+      "id": "C0_POSITION_BREAK",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "C0",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0.01, 0, 1],
+        "referenceResidualSamples": [0.001, 0.001],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": false
+      },
+      "expect": "REJECT_C0_DISCONTINUITY"
+    },
+    {
+      "id": "G1_TANGENT_BREAK",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G1",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0.2, 1],
+        "referenceResidualSamples": [0.001, 0.001],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": false
+      },
+      "expect": "REJECT_G1_DISCONTINUITY"
+    },
+    {
+      "id": "G2_CURVATURE_BREAK",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G2",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0, 0.5],
+        "referenceResidualSamples": [0.001, 0.001],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": false
+      },
+      "expect": "REJECT_G2_DISCONTINUITY"
+    },
+    {
+      "id": "MATERIAL_MASK_HIDES_GEOMETRY_ERROR",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G2",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0, 1],
+        "referenceResidualSamples": [0.001, 0.001],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": true
+      },
+      "expect": "REJECT_MATERIAL_SUBSTITUTED_FOR_GEOMETRY"
+    },
+    {
+      "id": "NO_FULL_SECTION_RESIDUAL",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G2",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0, 1],
+        "referenceResidualSamples": null,
+        "materialUsedAsGeometryEvidence": false
+      },
+      "expect": "HOLD_REFERENCE_RESIDUAL_UNVERIFIED"
+    },
+    {
+      "id": "FULL_SECTION_RESIDUAL_EXCEEDS_TOLERANCE",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G2",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0, 1],
+        "referenceResidualSamples": [0.001, 0.028, 0.002],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": false
+      },
+      "expect": "REJECT_REFERENCE_CURVATURE_RESIDUAL"
+    },
+    {
+      "id": "COMPLETE_PATCH_RELATION_POSITIVE_CONTROL",
+      "input": {
+        "equationBound": true,
+        "coordinateFrameBound": true,
+        "unitsBound": true,
+        "domainBound": true,
+        "patchGraphBound": true,
+        "requiredContinuity": "G2",
+        "leftPolynomial": [0, 0, 1],
+        "rightPolynomial": [0, 0, 1],
+        "referenceResidualSamples": [0.001, 0.003, 0.002, 0.004],
+        "referenceTolerance": 0.01,
+        "materialUsedAsGeometryEvidence": false,
+        "independentVerifier": "verifier:independent"
+      },
+      "expect": "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherGateRunRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Remove this Candidate if one exact Mechanical/Motor trial shows the equation-frame-domain-join receipt cannot distinguish a generic labeled primitive from a reference-bound function surface."
+  },
+  "routing": {
+    "target": "Mechanical/Motor Mother through coordinator issue #91",
+    "motherStatus": "NOT_QUERIED_UNKNOWN",
+    "requestedAnswer": [
+      "Which exact part and reference region is the first production trial?",
+      "Which executable patches and coordinate frames currently generate it?",
+      "Which joins require C0, G1 or G2 continuity?",
+      "What matched-section residual and negative control will falsify the candidate?"
+    ]
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
