@@ -1,0 +1,66 @@
+{
+  "caseId": "MECHANICAL-STANDARD-IDENTITY-AND-DIMENSION-PROVENANCE-001",
+  "status": "CANDIDATE_SYNTHETIC_SOURCE_AUDIT_PASSED_NOT_ADOPTED",
+  "scope": "Mechanical Mother reusable fasteners, keys, pins, washers and related standard parts",
+  "userCorrection": "Use existing recognized standards and shared definitions; do not invent incompatible part names, keys or dimensions per vehicle.",
+  "failureMechanisms": [
+    "STANDARD_NAME_WITH_UNVERIFIED_DIMENSION_TABLE",
+    "PRESENTATION_ALIAS_PROMOTED_TO_DIMENSIONAL_EQUIVALENCE",
+    "MISSING_STANDARD_EDITION_OR_SOURCE_REVISION",
+    "LOCAL_KEY_SCHEMA_DRIFT_ACROSS_ASSEMBLIES"
+  ],
+  "taskAnchorRequired": [
+    "standardAuthority",
+    "standardDesignation",
+    "standardEdition",
+    "partFamily",
+    "nominalDiameter",
+    "pitch",
+    "nominalLength",
+    "toleranceClass",
+    "materialGrade",
+    "finish",
+    "sourceRevision",
+    "sourceTableDigest",
+    "geometryRoute"
+  ],
+  "deliveryReceiptRequired": [
+    "resolvedCanonicalPartId",
+    "aliasScope",
+    "dimensionInvariantResult",
+    "diameterLengthCompatibilityResult",
+    "sourceProvenanceResult",
+    "crossAssemblyKeyCompatibilityResult",
+    "verifierIdentity"
+  ],
+  "negativeControls": [
+    {
+      "name": "nominal outside range",
+      "input": { "standard": "ISO4017", "nominalLength": 140, "min": 139.2, "max": 130.8 },
+      "expected": "REJECT_DIMENSION_TABLE_INVARIANT"
+    },
+    {
+      "name": "icon alias treated as dimensional equivalence",
+      "input": { "alias": "DIN933 -> ISO4017", "aliasScope": "ICON" },
+      "expected": "REJECT_ALIAS_SCOPE_ESCALATION"
+    },
+    {
+      "name": "invented local key",
+      "input": { "standardAuthority": null, "standardDesignation": "vehicleBoltA" },
+      "expected": "REJECT_UNBOUND_STANDARD_IDENTITY"
+    }
+  ],
+  "positiveControl": {
+    "input": "authorized source + pinned edition + valid dimensions + compatible shared key",
+    "expected": "CANDIDATE_STANDARD_PART_IDENTITY_BOUND"
+  },
+  "promotionRule": "A third-party catalog may teach schema and test design, but no dimension becomes Canonical Truth until an authorized normative or manufacturer source is pinned and all invariants pass independent verification.",
+  "adoption": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
