@@ -1,60 +1,76 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "MECHANICAL-SURFACE-RELATION-NOT-SHAPE-LABEL-001",
-  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
+  "status": "CANDIDATE_SOURCE_AND_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
   "active": false,
-  "boundedQuestion": "Can a mechanical or vehicle part be treated as a function-surface reconstruction when the delivery names a quadric family or shows a rendered surface but does not bind the executable equation, frame, domain, patch relations, continuity and reference residual?",
+  "boundedQuestion": "When a mechanical surface relation is produced by a CAD/BRep operation, can kernel SUCCESS prove the output is valid and semantically correct without schema, kernel-geometry, and operation-postcondition validation?",
   "actualObservation": {
-    "userCorrection": "Study the mathematical surface relations and use them to construct vehicle and part surfaces.",
-    "referenceSet": "Six user-provided educational images enumerate canonical quadrics and standard equations; no source image bytes are copied into this record.",
-    "currentVisibleDelivery": "Mechanical Parts Mother version 3 exposes part categories, model labels, material views, orthographic controls and CPU complete-pixel evaluation. A current Motor R22 screenshot declares self-authored surfaces/program materials.",
-    "missingVisibleReceiptFields": [
-      "surfaceEquationOrParametricMap",
-      "coordinateFrameAndTransform",
-      "coefficientUnits",
-      "trimmedDomain",
-      "patchAdjacencyGraph",
-      "requiredContinuity",
-      "measuredJoinResidual",
-      "referenceSectionResidual"
+    "userCorrection": "Study mathematical surface relations and use them to construct every vehicle part by function, without importing a triangle-mesh production route.",
+    "newReferenceLead": "Four user-provided images identify NVIDIA-Omniverse/usd-brep and its NURBS/BRep kernel as a possible source teacher.",
+    "decision": "HOLD_KERNEL_SUCCESS_NOT_SURFACE_TRUTH",
+    "boundary": "This is a source-contract and synthetic replay. USD BRep was not installed or run against a KAOPU production part; no current Mechanical/Motor asset is judged by this record."
+  },
+  "teacherCandidate": {
+    "name": "NVIDIA Omniverse USD BRep / SMLib",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "RADAR_FOUND -> TEACHER_CANDIDATE",
+    "pinnedRevision": "3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5",
+    "release": "1.0.1 (2026-10-21 changelog; release commit published 2026-10-22)",
+    "license": "Apache-2.0, with repository third-party notices retained",
+    "moreThanCurrentBestView": "It supplies an explicit exact-geometry data model that binds regions, shells, faces, loops, edgeuses, edges and vertices to analytic or NURBS geometry, and it explicitly separates schema validation from kernel-backed geometric validation. Current KAOPU N218 requires patch equations and joins but does not yet require operation-level postconditions after a kernel mutation reports success.",
+    "reproducibilityEvidence": [
+      "Public C++ and Python APIs",
+      "Runnable examples",
+      "Source build and full-test instructions",
+      "BrepArray schema validator",
+      "Kernel-backed geometry validator / AssertValid",
+      "Public issue reproductions with exact versions and numeric expectations"
     ],
-    "decision": "HOLD_SURFACE_RELATION_RECEIPT_MISSING",
-    "boundary": "This is an evidence-closure finding. It does not prove that hidden source code lacks equations, and it does not reject the current visual asset."
+    "integrationRisks": [
+      "The library includes tessellation and mesh I/O paths; those are out of scope for KAOPU's triangle-free production route.",
+      "The kernel/OpenUSD toolchain is substantially heavier than the current WebGPU runtime and is not a direct browser dependency.",
+      "macOS support is limited; the supported Python wheel targets CPython 3.12 on Linux and Windows.",
+      "Known issues include malformed-data crashes, heal operations that can report success despite repair failure, and current 1.0.1 operations that can return success with invalid or semantically wrong output."
+    ],
+    "learningScope": "Learn the exact surface/topology schema, validation layering, and postcondition design. Do not adopt tessellation, polygon display, STEP/USD production dependency, or the kernel as a global runtime without a separate audition."
   },
   "currentBestViewComparison": {
     "existingCoverage": [
-      "STYLIZED-REFERENCE-VISIBLE-SHAPE-NOT-ENGINEERING-TRUTH-001 separates artistic reference fidelity from engineering truth and rejects sparse-anchor false passes.",
-      "MOTHER-FUNCTION.md records executable object ownership, variables and dependency relations for Building."
+      "N218 already rejects surface-family labels, untrimmed quadrics, missing patch adjacency, C0/G1/G2 breaks, and missing reference-section residuals.",
+      "R2 already requires independent verification and forbids Producer self-approval."
     ],
-    "newDiscriminator": "A surface-family label such as ellipsoid/cylinder and a rendered image are not an executable surface relation. A function-surface receipt must bind each patch equation, local frame, finite domain, adjacency and required C0/G1/G2 closure, then test reference residual over the declared visible region."
+    "newDiscriminator": "A modeling operation's status code is producer evidence, not verifier evidence. A generated BRep must bind the exact input/output subjects and pass three independent layers: serialized schema/topology checks, kernel-backed geometric validity, and operation-specific semantic postconditions such as containment, expected volume bounds, non-empty material, preserved analytic type, or reference residual."
   },
   "requiredTaskAnchorAndReceiptFields": [
     "referenceSetDigest",
     "partStableId",
     "surfacePatchIds",
-    "surfaceFamilyPerPatch",
     "surfaceEquationOrParametricMap",
-    "coefficientUnits",
     "localCoordinateFrame",
     "worldTransform",
     "trimmedDomain",
     "patchAdjacencyGraph",
     "requiredContinuityPerJoin",
-    "measuredPositionTangentCurvatureResidual",
-    "referenceSectionSet",
     "referenceSectionResidual",
-    "hiddenRegionState",
-    "materialFunctionSeparateFromGeometry",
+    "modelingOperation",
+    "kernelNameVersionRevision",
+    "operationParameters",
+    "inputSubjectDigests",
+    "outputSubjectDigest",
+    "kernelStatus",
+    "schemaValidationSubjectDigestAndVerdict",
+    "kernelGeometryValidationSubjectDigestAndVerdict",
+    "semanticPostconditionManifestAndResults",
     "independentVerifier"
   ],
   "decisionOrder": [
-    "Require an evaluable surface relation, not only a family label or screenshot.",
-    "Bind coordinate frame, transform and coefficient units before comparing coefficients.",
-    "Bind finite patch domains and adjacency before evaluating joins.",
-    "Evaluate position (C0), tangent/normal (G1) and curvature (G2) according to the declared join requirement.",
-    "Evaluate reference residual over the declared section set; sparse landmarks are insufficient.",
-    "Keep material functions separate from geometry evidence.",
-    "A complete receipt is only candidate-eligible; it is not engineering truth or user acceptance."
+    "Apply the N218 equation-frame-domain-patch-continuity-reference checks first.",
+    "For a claimed modeling operation, bind the exact kernel revision, parameters, input digests and output digest.",
+    "Treat kernel SUCCESS only as an execution observation.",
+    "Run schema/topology validation on the exact output subject.",
+    "Run kernel-backed geometry validation and manifold/material checks on that same subject.",
+    "Run operation-specific semantic postconditions; generic validity cannot prove that a boolean, transform, shell, fillet or sweep produced the intended result.",
+    "A full pass remains candidate-eligible only; it is not reference acceptance, engineering truth or user acceptance."
   ],
   "decisions": [
     "HOLD_SURFACE_EQUATION_UNBOUND",
@@ -67,188 +83,49 @@
     "HOLD_REFERENCE_RESIDUAL_UNVERIFIED",
     "REJECT_REFERENCE_CURVATURE_RESIDUAL",
     "REJECT_MATERIAL_SUBSTITUTED_FOR_GEOMETRY",
+    "HOLD_KERNEL_OPERATION_RECEIPT_UNBOUND",
+    "HOLD_SCHEMA_VALIDATION_MISSING",
+    "REJECT_SCHEMA_INVALID_BREP",
+    "HOLD_KERNEL_GEOMETRY_VALIDATION_MISSING",
+    "REJECT_KERNEL_GEOMETRY_INVALID",
+    "HOLD_SEMANTIC_POSTCONDITIONS_MISSING",
+    "REJECT_OPERATION_SEMANTIC_POSTCONDITION",
     "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
   ],
   "cases": [
-    {
-      "id": "CURRENT_VISIBLE_DELIVERY_LABEL_AND_RENDER_ONLY",
-      "input": {
-        "equationBound": false
-      },
-      "expect": "HOLD_SURFACE_EQUATION_UNBOUND"
-    },
-    {
-      "id": "QUADRIC_EQUATION_WITHOUT_FRAME_OR_UNITS",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": false,
-        "unitsBound": false
-      },
-      "expect": "HOLD_FRAME_OR_UNITS_UNBOUND"
-    },
-    {
-      "id": "UNTRIMMED_INFINITE_QUADRIC_USED_AS_PART",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": false
-      },
-      "expect": "HOLD_SURFACE_DOMAIN_UNBOUND"
-    },
-    {
-      "id": "PATCHES_HAVE_EQUATIONS_BUT_NO_ADJACENCY",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": false
-      },
-      "expect": "HOLD_PATCH_RELATION_UNBOUND"
-    },
-    {
-      "id": "C0_POSITION_BREAK",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "C0",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0.01, 0, 1],
-        "referenceResidualSamples": [0.001, 0.001],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": false
-      },
-      "expect": "REJECT_C0_DISCONTINUITY"
-    },
-    {
-      "id": "G1_TANGENT_BREAK",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G1",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0.2, 1],
-        "referenceResidualSamples": [0.001, 0.001],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": false
-      },
-      "expect": "REJECT_G1_DISCONTINUITY"
-    },
-    {
-      "id": "G2_CURVATURE_BREAK",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G2",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0, 0.5],
-        "referenceResidualSamples": [0.001, 0.001],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": false
-      },
-      "expect": "REJECT_G2_DISCONTINUITY"
-    },
-    {
-      "id": "MATERIAL_MASK_HIDES_GEOMETRY_ERROR",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G2",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0, 1],
-        "referenceResidualSamples": [0.001, 0.001],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": true
-      },
-      "expect": "REJECT_MATERIAL_SUBSTITUTED_FOR_GEOMETRY"
-    },
-    {
-      "id": "NO_FULL_SECTION_RESIDUAL",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G2",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0, 1],
-        "referenceResidualSamples": null,
-        "materialUsedAsGeometryEvidence": false
-      },
-      "expect": "HOLD_REFERENCE_RESIDUAL_UNVERIFIED"
-    },
-    {
-      "id": "FULL_SECTION_RESIDUAL_EXCEEDS_TOLERANCE",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G2",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0, 1],
-        "referenceResidualSamples": [0.001, 0.028, 0.002],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": false
-      },
-      "expect": "REJECT_REFERENCE_CURVATURE_RESIDUAL"
-    },
-    {
-      "id": "COMPLETE_PATCH_RELATION_POSITIVE_CONTROL",
-      "input": {
-        "equationBound": true,
-        "coordinateFrameBound": true,
-        "unitsBound": true,
-        "domainBound": true,
-        "patchGraphBound": true,
-        "requiredContinuity": "G2",
-        "leftPolynomial": [0, 0, 1],
-        "rightPolynomial": [0, 0, 1],
-        "referenceResidualSamples": [0.001, 0.003, 0.002, 0.004],
-        "referenceTolerance": 0.01,
-        "materialUsedAsGeometryEvidence": false,
-        "independentVerifier": "verifier:independent"
-      },
-      "expect": "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
-    }
+    {"id":"LABEL_AND_RENDER_ONLY","input":{"equationBound":false},"expect":"HOLD_SURFACE_EQUATION_UNBOUND"},
+    {"id":"EQUATION_WITHOUT_FRAME","input":{"equationBound":true,"coordinateFrameBound":false,"unitsBound":true},"expect":"HOLD_FRAME_OR_UNITS_UNBOUND"},
+    {"id":"UNTRIMMED_SURFACE","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":false},"expect":"HOLD_SURFACE_DOMAIN_UNBOUND"},
+    {"id":"NO_PATCH_GRAPH","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":false},"expect":"HOLD_PATCH_RELATION_UNBOUND"},
+    {"id":"C0_BREAK","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"C0","leftPolynomial":[0,0,1],"rightPolynomial":[0.01,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v"},"expect":"REJECT_C0_DISCONTINUITY"},
+    {"id":"G1_BREAK","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G1","leftPolynomial":[0,0,1],"rightPolynomial":[0,0.2,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v"},"expect":"REJECT_G1_DISCONTINUITY"},
+    {"id":"G2_BREAK","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,0.5],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v"},"expect":"REJECT_G2_DISCONTINUITY"},
+    {"id":"MATERIAL_MASK","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"materialUsedAsGeometryEvidence":true,"independentVerifier":"v"},"expect":"REJECT_MATERIAL_SUBSTITUTED_FOR_GEOMETRY"},
+    {"id":"NO_REFERENCE_RESIDUAL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":null,"independentVerifier":"v"},"expect":"HOLD_REFERENCE_RESIDUAL_UNVERIFIED"},
+    {"id":"REFERENCE_RESIDUAL_FAIL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001,0.028],"referenceTolerance":0.01,"independentVerifier":"v"},"expect":"REJECT_REFERENCE_CURVATURE_RESIDUAL"},
+    {"id":"N218_POSITIVE_NO_MUTATION_CLAIM","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001,0.003],"referenceTolerance":0.01,"independentVerifier":"v"},"expect":"CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"},
+    {"id":"KERNEL_SUCCESS_WITHOUT_BOUND_SUBJECTS","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS"},"expect":"HOLD_KERNEL_OPERATION_RECEIPT_UNBOUND"},
+    {"id":"SCHEMA_VALIDATION_MISSING","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["in-a"],"outputSubjectDigest":"out"},"expect":"HOLD_SCHEMA_VALIDATION_MISSING"},
+    {"id":"SCHEMA_INVALID_OUTPUT","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["in-a"],"outputSubjectDigest":"out","schemaValidation":"FAIL"},"expect":"REJECT_SCHEMA_INVALID_BREP"},
+    {"id":"UPSTREAM_ISSUE_36_SUCCESS_BUT_KERNEL_INVALID","source":"NVIDIA-Omniverse/usd-brep#36 on 1.0.1","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["union-two-cylinders"],"outputSubjectDigest":"shell-output","schemaValidation":"PASS","kernelGeometryValidation":"FAIL"},"expect":"REJECT_KERNEL_GEOMETRY_INVALID"},
+    {"id":"UPSTREAM_ISSUE_35_SUCCESS_VALID_BUT_WRONG_BOOLEAN","source":"NVIDIA-Omniverse/usd-brep#35 on 1.0.1","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["skin-a","skin-b"],"outputSubjectDigest":"difference-empty","schemaValidation":"PASS","kernelGeometryValidation":"PASS","semanticPostconditions":[{"name":"differenceVolumeMm3","expectedMin":14000,"expectedMax":14100,"actual":0}]},"expect":"REJECT_OPERATION_SEMANTIC_POSTCONDITION"},
+    {"id":"COMPLETE_OPERATION_POSITIVE_CONTROL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001,0.003],"referenceTolerance":0.01,"independentVerifier":"verifier:independent","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5","inputSubjectDigests":["input-a","input-b"],"outputSubjectDigest":"output-c","schemaValidation":"PASS","kernelGeometryValidation":"PASS","semanticPostconditions":[{"name":"differenceVolumeMm3","expectedMin":14000,"expectedMax":14100,"actual":14051.84},{"name":"manifoldSolid","expected":true,"actual":true}]},"expect":"CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"}
   ],
   "activation": {
     "global": false,
     "singleMotherGateRunRequired": true,
     "independentVerifierRequired": true,
-    "rollbackPoint": "Remove this Candidate if one exact Mechanical/Motor trial shows the equation-frame-domain-join receipt cannot distinguish a generic labeled primitive from a reference-bound function surface."
+    "rollbackPoint": "Remove the operation-postcondition extension if one exact Mechanical/Motor trial demonstrates that status+schema+geometry validation alone catches every intentionally injected semantically wrong boolean/transform/sweep output."
   },
   "routing": {
     "target": "Mechanical/Motor Mother through coordinator issue #91",
     "motherStatus": "NOT_QUERIED_UNKNOWN",
     "requestedAnswer": [
-      "Which exact part and reference region is the first production trial?",
-      "Which executable patches and coordinate frames currently generate it?",
-      "Which joins require C0, G1 or G2 continuity?",
-      "What matched-section residual and negative control will falsify the candidate?"
+      "Which exact part and operation should be the first audition?",
+      "Which analytic/NURBS/topology fields can map to the existing function-surface representation without tessellation?",
+      "Which operation-specific postconditions distinguish a valid-looking wrong result from the intended part?",
+      "Can the exact output be validated independently without adding a mesh runtime?"
     ]
   },
-  "lifecycle": {
-    "POSTED": false,
-    "ACKNOWLEDGED": false,
-    "IMPLEMENTED": true,
-    "GATE-RUN": true,
-    "ADOPTED": false,
-    "USER-ACCEPTED": false
-  }
+  "lifecycle": {"POSTED":false,"ACKNOWLEDGED":false,"IMPLEMENTED":true,"GATE-RUN":true,"ADOPTED":false,"USER-ACCEPTED":false}
 }
