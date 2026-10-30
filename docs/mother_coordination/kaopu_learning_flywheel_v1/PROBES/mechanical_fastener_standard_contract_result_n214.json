@@ -1,0 +1,58 @@
+{
+  "probeId": "N214-MECHANICAL-FASTENER-STANDARD-CONTRACT",
+  "source": {
+    "repository": "shaise/FreeCAD_FastenersWB",
+    "commit": "fddd07af422b7d3a69098b32333711c5eeae184c",
+    "tableBlob": "fd371954e8ac4b03c275dccdf87c663ef38f4df1",
+    "aliasBlob": "6a0ddf7cf981be6e1c5000253fa0a941eaa35da3",
+    "license": "GPL-2.0-or-later"
+  },
+  "boundedQuestion": "Can a maintained third-party fastener catalog be used as KAOPU canonical dimensional truth without an independent provenance and invariant gate?",
+  "decision": "HOLD_THIRD_PARTY_FASTENER_TABLE_NOT_CANONICAL_TRUTH",
+  "teacherStatus": "TEACHER_CANDIDATE",
+  "teacherScope": "catalog schema, standard identity keys, diameter-length compatibility structure, and alias-scope separation only",
+  "rejectedScope": "copying upstream dimensions or BRep/thread geometry into production as authoritative truth",
+  "rowResults": [
+    { "nominal": 130, "min": 129.2, "max": 130.8, "failures": [] },
+    {
+      "nominal": 140,
+      "min": 139.2,
+      "max": 130.8,
+      "failures": ["MIN_EXCEEDS_MAX", "NOMINAL_OUTSIDE_ALLOWED_INTERVAL"]
+    },
+    { "nominal": 150, "min": 149.2, "max": 150.8, "failures": [] }
+  ],
+  "aliases": {
+    "iconAlias": { "DIN933": "ISO4017" },
+    "typeAlias": { "ISO299": "DIN508" }
+  },
+  "requiredIdentity": [
+    "authority",
+    "designation",
+    "edition",
+    "family",
+    "nominalDiameter",
+    "pitch",
+    "nominalLength",
+    "toleranceClass",
+    "materialGrade",
+    "finish",
+    "sourceRevision",
+    "sourceTableDigest"
+  ],
+  "checks": {
+    "positive130Passes": true,
+    "corrupted140Rejected": true,
+    "positive150Passes": true,
+    "iconAliasIsNotTypeAlias": true,
+    "identityContractHasSourceAndEdition": true,
+    "sourcePinned": true
+  },
+  "passed": true,
+  "limitations": [
+    "The probe validates a pinned source-contract excerpt, not the ISO 4017 standard itself.",
+    "It does not verify any production Mechanical Mother asset.",
+    "GPL source and standards-derived tables must not be copied into KAOPU without rights review.",
+    "Normative dimensions require an authorized standard or manufacturer source plus independent checks."
+  ]
+}
