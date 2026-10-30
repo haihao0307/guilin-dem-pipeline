@@ -63,7 +63,7 @@ Minimum production trial:
 
 Decision: `SEPARATE_VISIBLE_REFERENCE_FIDELITY_FROM_ENGINEERING_TRUTH_AND_GATE_CURVATURE`.
 
-- `POSTED=false`
+- `POSTED=true` — targeted to Mechanical Mother through issue #91 comment `6521862523`
 - synthetic contract `GATE-RUN=true`
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=false`
