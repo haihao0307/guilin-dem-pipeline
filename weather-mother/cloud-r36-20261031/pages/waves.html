@@ -1,0 +1,62 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>R36 积云 · 解析边界融合</title><style>*{box-sizing:border-box}body{margin:0;background:#112b43;color:white;font:14px system-ui}canvas{position:fixed;width:100%;height:100%;touch-action:none}.panel{position:fixed;top:18px;left:18px;max-width:340px;padding:18px;background:#122d42e6;border:1px solid #adc9dc44;border-radius:14px}h1{font-size:22px;margin:0 0 8px}p{font-size:12px;color:#c0d6e7;line-height:1.6}label{display:block;margin:10px 0}input{width:150px;vertical-align:middle}select,button{background:#315a74;color:white;border:1px solid #819caf;padding:7px;border-radius:7px}button{cursor:pointer}#metrics{position:fixed;bottom:12px;left:15px;background:#102a40d9;padding:10px;font:12px monospace;border-radius:8px}#error{color:#ffb5a5;white-space:pre-wrap}.controls{display:flex;gap:8px}details{margin-top:12px}summary{cursor:pointer}button:focus-visible{outline:2px solid white}@media(max-width:600px){.panel{max-width:260px;padding:10px}h1{font-size:17px}}</style>
+<canvas id="c" aria-label="实时三维造波云，可拖动旋转和滚轮缩放"></canvas><section class="panel"><h1>积云 · 解析边界融合 · R36</h1><p>拖动绕云观察 · 滚轮拉近／拉远<br>连续三维函数，无图片、无历史帧混合。<br>研究候选：尚未通过自然动态与等质量性能验收。</p><div class="controls"><button id="play">暂停</button><button id="reset">回到起点</button><button id="compare">原天气对照</button></div><details open><summary>云体与显示</summary><label>形变速度 <input id="speed" type="range" min="0" max="3" step=".05" value="1"></label><label>细节强度 <input id="detail" type="range" min="0" max="1" step=".01" value=".65"></label><label>云密度 <input id="density" type="range" min=".3" max="2" step=".05" value="1"></label><label>显示像素 <select id="pixels"><option value="960">轻量 · 约 52 万像素</option><option value="1280" selected>标准 · 约 92 万像素</option><option value="1920">精细 · 约 207 万像素</option></select></label><label>体积采样 <select id="steps"><option>64</option><option selected>96</option><option>144</option></select></label><button id="measure">测量 5 秒</button><p id="result">同像素、同设备比较。不同云体不能仅按 FPS 判定优劣。</p></details><pre id="error"></pre></section><div id="metrics">正在建立云体…</div>
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+out vec4 color;
+uniform vec2 uResolution,uAngles;
+uniform float uTime,uDistance,uDetail,uDensity;
+uniform int uSteps;
+// Dimensionless object coordinates: Y is up, no rotation/shear of cloud frame.
+// Analytic ray/ellipsoid intersection uses the same conservative support as density.
+// Learned boundary-first idea from the retained analytic lab; no teacher shader copied.
+const int LOBES=10;
+const vec3 C[LOBES]=vec3[](vec3(-1.7,0,0),vec3(-.4,.05,0),vec3(1.,0,0),vec3(2.,-.05,.1),vec3(-1.25,.7,.05),vec3(.0,.9,0),vec3(1.1,.65,.05),vec3(-.35,1.35,.1),vec3(.65,1.1,.1),vec3(.35,.4,.85));
+const vec3 R[LOBES]=vec3[](vec3(1.1,.65,.85),vec3(1.3,.7,1.),vec3(1.1,.7,.85),vec3(.75,.55,.7),vec3(.9,.85,.85),vec3(1.,1.,.95),vec3(.85,.85,.8),vec3(.95,1.05,.85),vec3(.8,.9,.8),vec3(.85,.8,.75));
+float hash3(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
+float cloudNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(mix(hash3(i),hash3(i+vec3(1,0,0)),f.x),mix(hash3(i+vec3(0,1,0)),hash3(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash3(i+vec3(0,0,1)),hash3(i+vec3(1,0,1)),f.x),mix(hash3(i+vec3(0,1,1)),hash3(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float envelope(vec3 p){float a=100.,b=100.;for(int k=0;k<LOBES;k++){float d=length((p-C[k])/R[k])-1.;if(d<a){b=a;a=d;}else b=min(b,d);}float h=max(.30-abs(a-b),0.)/.30;return a-h*h*.075;}
+float field(vec3 p){
+ float e=envelope(p);if(e>.0)return 0.; // noises only erode support; analytic bounds are conservative
+ float t=uTime*.07;vec3 q=p+vec3(.07*sin(t),-.12*t,.06*cos(t*.8));
+ float broad=cloudNoise(q*3.6),medium=cloudNoise(q*8.1+13.7),fine=cloudNoise(q*18.3+27.1);
+ float erosion=(1.-broad)*.36+(1.-medium)*.16+uDetail*(1.-fine)*.10;
+ float d=1.-smoothstep(-.20,.015,e+erosion);
+ return d*(.78+.22*broad)*uDensity*smoothstep(-.68,-.35,p.y);
+}
+vec2 ellipsoid(vec3 ro,vec3 rd,vec3 c,vec3 r){vec3 o=(ro-c)/r,d=rd/r;float a=dot(d,d),b=dot(o,d),h=b*b-a*(dot(o,o)-1.);if(h<0.)return vec2(1e4,-1e4);h=sqrt(h);return vec2((-b-h)/a,(-b+h)/a);}
+vec2 bound(vec3 ro,vec3 rd){vec2 hit=vec2(1e4,-1e4);for(int k=0;k<LOBES;k++){vec2 h=ellipsoid(ro,rd,C[k],R[k]*1.08);if(h.y>max(h.x,0.)){hit.x=min(hit.x,h.x);hit.y=max(hit.y,h.y);}}return hit;}
+void main(){
+ vec2 uv=(gl_FragCoord.xy-.5*uResolution)/uResolution.y;
+ vec3 target=vec3(0,.65,0),ro=target+uDistance*vec3(sin(uAngles.x)*cos(uAngles.y),sin(uAngles.y),cos(uAngles.x)*cos(uAngles.y));
+ vec3 f=normalize(target-ro),r=normalize(cross(f,vec3(0,1,0))),up=cross(r,f),rd=normalize(f*1.7+r*uv.x+up*uv.y);
+ vec3 sky=mix(vec3(.68,.79,.87),vec3(.27,.51,.73),smoothstep(-.3,.65,rd.y));
+ vec2 hit=bound(ro,rd);float start=max(hit.x,0.),end=hit.y;vec3 sum=vec3(0);float trans=1.;
+ if(end>start){float stepSize=(end-start)/float(uSteps);vec3 sun=normalize(vec3(-.65,1.,1.));
+ for(int i=0;i<144;i++){if(i>=uSteps||trans<.015)break;float t=start+(float(i)+.5)*stepSize;vec3 p=ro+rd*t;float d=field(p);if(d<.002)continue;
+ float tau=0.;for(int j=0;j<4;j++){float h=.12+.18*float(j*j);tau+=field(p+sun*h)*(.22+.16*float(j));}
+ float light=exp(-tau*2.0);float upper=smoothstep(-1.,2.5,p.y);
+ vec3 lighting=vec3(.36,.42,.51)*(.82+.18*upper)+vec3(.57,.54,.49)*(light+.13*exp(-tau*.4));
+ float opacity=1.-exp(-d*stepSize*2.3);sum+=trans*opacity*lighting;trans*=1.-opacity;
+ }}
+ vec3 c=sum+trans*sky;color=vec4(pow(clamp(c,0.,1.),vec3(.92)),1.);
+}</script>
+<script>(()=>{'use strict';const $=id=>document.getElementById(id),canvas=$('c');let gl,p,vao,loc={},time=0,playing=true,angles=[.0,.06],distance=10,last=performance.now(),dirty=true,frames=0,stamp=last,intervals=[],previousFrame=last,measure=null,drag=null,hidden=false,ext=null,queries=[],gpuSamples=[];
+const qa=window.WaveCloudQA={version:'R36',errors:[],frames:0,physicalWeather:false,temporalHistory:false};
+function fail(e){qa.errors.push(String(e));$('error').textContent=String(e);playing=false;}
+function compile(type,s){let x=gl.createShader(type);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(x));return x;}
+function resize(){let w=Number($('pixels').value);const aspect=innerWidth/Math.max(1,innerHeight),budget=w*w*9/16;canvas.width=Math.round(Math.sqrt(budget*aspect));canvas.height=Math.round(canvas.width/aspect);gl.viewport(0,0,canvas.width,canvas.height);dirty=true;intervals=[];}
+addEventListener('resize',()=>{if(gl)resize();});
+function reset(){time=0;angles=[.0,.06];distance=10;last=performance.now();dirty=true;}
+function quantile(a,q){const b=[...a].sort((x,y)=>x-y);return b[Math.min(b.length-1,Math.floor(b.length*q))]||0;}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,Math.max(0,(now-last)/1000));last=now;if(hidden||document.hidden||gl.isContextLost())return;if(playing){time+=dt*Number($('speed').value);dirty=true;}if(!dirty)return;
+ while(queries.length&&gl.getQueryParameter(queries[0],gl.QUERY_RESULT_AVAILABLE)){const q=queries.shift(),ok=!gl.getParameter(ext.GPU_DISJOINT_EXT);if(ok)gpuSamples.push(gl.getQueryParameter(q,gl.QUERY_RESULT)/1e6);gl.deleteQuery(q);if(gpuSamples.length>120)gpuSamples.shift();}
+ let query=null;if(ext&&queries.length<4){query=gl.createQuery();gl.beginQuery(ext.TIME_ELAPSED_EXT,query);}
+ gl.useProgram(p);gl.uniform2f(loc.uResolution,canvas.width,canvas.height);gl.uniform2fv(loc.uAngles,angles);gl.uniform1f(loc.uTime,time);gl.uniform1f(loc.uDistance,distance);gl.uniform1f(loc.uDetail,Number($('detail').value));gl.uniform1f(loc.uDensity,Number($('density').value));gl.uniform1i(loc.uSteps,Number($('steps').value));gl.drawArrays(gl.TRIANGLES,0,3);
+ if(query){gl.endQuery(ext.TIME_ELAPSED_EXT);queries.push(query);}dirty=false;qa.frames++;frames++;const delta=now-previousFrame;previousFrame=now;if(delta<500)intervals.push(delta);if(intervals.length>180)intervals.shift();
+ if(now-stamp>700){$('metrics').textContent=`R36 · ${canvas.width}×${canvas.height} · ${$('steps').value} 步 · ${(frames*1000/(now-stamp)).toFixed(1)} FPS · P95 ${quantile(intervals,.95).toFixed(1)} ms · GPU ${gpuSamples.length?quantile(gpuSamples,.5).toFixed(1)+' ms':'不可用'} · ${time.toFixed(1)} s`;frames=0;stamp=now;}
+ if(measure){measure.frames++;measure.times.push(delta);if(now-measure.start>=5000){const result={fps:measure.frames*1000/(now-measure.start),p95:quantile(measure.times,.95),pixels:[canvas.width,canvas.height],steps:Number($('steps').value)};qa.measurement=result;$('result').textContent=`本次 ${result.fps.toFixed(1)} FPS / P95 ${result.p95.toFixed(1)} ms；${result.pixels.join('×')}，${result.steps} 步。`;measure=null;}}
+}
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'暂停':'播放';last=previousFrame=performance.now();};$('reset').onclick=reset;$('compare').onclick=()=>parent.postMessage({type:'weather-r31-open-original'},'*');$('pixels').onchange=()=>{measure=null;resize();};for(const k of ['detail','density','steps','speed'])$(k).oninput=()=>{dirty=true;measure=null;};$('measure').onclick=()=>{playing=true;$('play').textContent='暂停';previousFrame=performance.now();measure={start:previousFrame,frames:0,times:[]};$('result').textContent='测量中，请保持参数与窗口不变…';};
+canvas.onpointerdown=e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);};canvas.onpointermove=e=>{if(!drag)return;angles[0]+=(e.clientX-drag[0])*.005;angles[1]=Math.max(-.8,Math.min(.8,angles[1]+(e.clientY-drag[1])*.005));drag=[e.clientX,e.clientY];dirty=true;};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;canvas.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(5.5,Math.min(18,distance*Math.exp(e.deltaY*.001)));dirty=true;},{passive:false});document.addEventListener('visibilitychange',()=>{last=previousFrame=performance.now();measure=null;});addEventListener('message',e=>{if(e.data?.type==='weather-r31-host'){hidden=!!e.data.hidden;last=performance.now();}});canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();fail('图形上下文丢失，请重新进入本场景。');});
+try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,powerPreference:'high-performance'});if(!gl)throw Error('需要 WebGL2');let v=compile(gl.VERTEX_SHADER,'#version 300 es\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}'),f=compile(gl.FRAGMENT_SHADER,$('fs').textContent);p=gl.createProgram();gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));gl.deleteShader(v);gl.deleteShader(f);vao=gl.createVertexArray();gl.bindVertexArray(vao);for(const k of ['uResolution','uAngles','uTime','uDistance','uDetail','uDensity','uSteps'])loc[k]=gl.getUniformLocation(p,k);ext=gl.getExtension('EXT_disjoint_timer_query_webgl2');resize();requestAnimationFrame(frame);}catch(e){fail(e);}
+})();</script></html>

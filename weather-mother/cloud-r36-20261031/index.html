@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weather Mother R36 · 精简函数版</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#162d3b;color:#edf5fa;font:14px system-ui}header{height:96px;padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}nav{display:flex;gap:6px;overflow:auto}button{white-space:nowrap;color:inherit;background:#284d63;border:1px solid #5d8196;border-radius:20px;padding:9px 13px;cursor:pointer}button[aria-pressed=true]{background:#d6e8fa;color:#18374b}iframe{display:block;border:0;width:100%;height:calc(100dvh - 96px)}small{color:#b4c9d7}#error{color:#ffc6b4}button:focus-visible{outline:3px solid white}@media(max-width:700px){header{height:140px}iframe{height:calc(100dvh - 140px)}}</style>
+<header><strong>WEATHER MOTHER · R36</strong><nav aria-label="云场景"><button data-scene="waves">新造波云 · 三维</button><button data-scene="silver">银边积云</button><button data-scene="sea">层叠云海</button><button data-scene="flight">自由观察</button><button data-scene="weather">原天气系统</button><button data-scene="tiny">程序噪声云海</button><button data-scene="protean">云中飞行参考</button><button data-scene="lab">解析云实验</button></nav><small>无录像 · 无旧飞机 · 无噪声图片｜切换场景重新开始，释放上一场景资源。R36 为待验收候选。</small><span id="error" role="alert"></span></header>
+<main id="view"></main><script>
+const SOURCES={"scapes": "pages/scapes.html", "flight": "pages/flight.html", "protean": "pages/protean.html", "lab": "pages/lab.html", "waves": "pages/waves.html", "tiny": "pages/tiny.html", "weather": "pages/weather.html"};
+let frame=null,ticket=0;
+async function activate(scene){
+ const key=['silver','sea'].includes(scene)?'scapes':scene;
+ if(!SOURCES[key])return;
+ document.getElementById('error').textContent='';const id=++ticket;frame?.remove();frame=document.createElement('iframe');frame.title='Weather Mother '+scene;
+ frame.onload=()=>{if(id!==ticket)return;try{if(key==='scapes')frame.contentWindow.Cloudscape.setState({mode:scene==='silver'?1:0});window.WeatherR36.qa.loaded=true}catch(e){document.getElementById('error').textContent=String(e)}};
+ try {
+ const response=await fetch(SOURCES[key]);
+ if(!response.ok)throw Error('场景加载失败 '+response.status);
+ const source=await response.text();if(id!==ticket)return;
+ frame.srcdoc=source;
+ }catch(e){if(id===ticket)document.getElementById('error').textContent=String(e);return;}document.getElementById('view').replaceChildren(frame);
+ document.querySelectorAll('[data-scene]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===scene)));
+ window.WeatherR36.qa.scene=scene;window.WeatherR36.qa.loaded=false;
+}
+window.WeatherR36={version:'WM-R36-LEAN-20261031',qa:{loaded:false,visualAcceptance:false},activate};
+document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>activate(b.dataset.scene));
+addEventListener('message',e=>{if(e.source===frame?.contentWindow&&e.data?.type==='weather-r31-open-original')activate('weather')});
+const selected=new URLSearchParams(location.search).get('scene');activate(['silver','sea',...Object.keys(SOURCES)].includes(selected)?selected:'waves');
+</script></html>

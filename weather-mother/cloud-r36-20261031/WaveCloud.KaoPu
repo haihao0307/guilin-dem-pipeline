@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu.weather.wave-cloud/1",
+  "status": "R36 candidate; R34 remains accepted",
+  "identity": "weather.wave-cloud.cumulus-study",
+  "domain": {
+    "frame": "local cloud frame",
+    "axes": [
+      "right",
+      "up",
+      "back"
+    ],
+    "unit": "artistic dimensionless",
+    "bounds": [
+      [
+        -2.9,
+        -0.68,
+        -1.1
+      ],
+      [
+        2.9,
+        2.6,
+        1.7
+      ]
+    ],
+    "physicalMeasurements": null
+  },
+  "definition": {
+    "source": "src/waves.html#fs",
+    "envelope": "smooth minimum of two nearest of ten ellipsoids; union support inflated by 1.08",
+    "field": "three-dimensional quintic value noise erosion inside analytic support",
+    "frequencies": [
+      3.6,
+      8.1,
+      18.3
+    ],
+    "seed": "fixed hash3 implementation in waves.html",
+    "timeUnit": "seconds",
+    "timeScale": 0.07,
+    "historyFrames": 0,
+    "storedNoiseImages": 0
+  },
+  "sampling": {
+    "raySteps": [
+      64,
+      96,
+      144
+    ],
+    "lightSamplesPerOccupiedStep": 4,
+    "earlyExitTransmittance": 0.015,
+    "pixels": "aspect-preserving 518400 / 921600 / 2073600 pixel budgets",
+    "precision": "highp float",
+    "spatialFilter": "none; distant fine bands may alias, assess at target pixels",
+    "cache": "none"
+  },
+  "limits": [
+    "Not fluid simulation or calibrated cloud microphysics",
+    "Periodic artistic deformation; not physically measured wind",
+    "No guarantee of equal quality to original weather",
+    "Cloud-only candidate; rain, snow and lightning are not reimplemented",
+    "Camera quality budget changes numerical integration, not the fixed density field definition"
+  ]
+}
