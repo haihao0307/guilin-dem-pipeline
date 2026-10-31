@@ -54,6 +54,6 @@ Smallest Mother follow-through: add the intended WGSL byte to the private checkp
 - Observation: current archive and manifests inspected; owner and independent CPU/mock suites rerun.
 - Candidate checker: IMPLEMENTED on the learning branch only.
 - GATE-RUN: current Vehicle package, 13/13 evidence checks.
-- Mother routing: pending POSTED to #91.
+- Mother routing: POSTED to #91 as comment `6545548001`.
 - ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED: false / unknown.
 
