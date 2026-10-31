@@ -48,7 +48,7 @@ This is not a new failure class. It is a new exact-subject recurrence under `CAN
 
 ## State
 
-- POSTED: N223 and this follow-up route to #91.
+- POSTED: N223 comment `6545548001`; N224 follow-up comment `6548310826`.
 - ACKNOWLEDGED: yes, coordinator comment `6547524817`.
 - Candidate checker: IMPLEMENTED on the learning branch only.
 - GATE-RUN: package closure/root-cause replay 11/11.
