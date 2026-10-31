@@ -1,0 +1,137 @@
+{
+  "caseId": "FUNCTION-CLASS-SHARING-NOT-TOTAL-INSTANCE-COLLAPSE-001",
+  "extension": "N222_FUNCTION_CLASS_SHARING_INSTANCE_DEPENDENCE",
+  "total": 11,
+  "passed": 11,
+  "allPassed": true,
+  "evidence": {
+    "rotationSweep": {
+      "instances": 100,
+      "diffuseMin": 0,
+      "diffuseMax": 1,
+      "diffuseSpread": 1,
+      "roundedUniqueValues": 26,
+      "oneSharedFinalValueValid": false
+    },
+    "pointLightTranslationSweep": {
+      "instances": 100,
+      "diffuseMin": 0.7071067811865475,
+      "diffuseMax": 0.9999489887009642,
+      "diffuseSpread": 0.2928422075144167,
+      "roundedUniqueValues": 50,
+      "oneSharedLightVectorOrDiffuseValid": false
+    },
+    "normalMatrixSweep": {
+      "canonicalNormal": [
+        0.5773502691896258,
+        0.5773502691896258,
+        0.5773502691896258
+      ],
+      "identityWorldNormal": [
+        0.5773502691896258,
+        0.5773502691896258,
+        0.5773502691896258
+      ],
+      "nonuniformScaleWorldNormal": [
+        0.2182178902359924,
+        0.4364357804719848,
+        0.8728715609439696
+      ],
+      "l2Delta": 0.4859689214585705,
+      "oneSharedWorldNormalValid": false
+    },
+    "directionalTranslationInvariant": {
+      "instances": 100,
+      "diffuseSpread": 0,
+      "scopedClaim": "translation-only, same orientation/material/sample, constant directional light, unshadowed view-independent diffuse",
+      "scopedSharedDiffuseValid": true
+    },
+    "occlusionPartition": {
+      "instances": 100,
+      "visibleCount": 50,
+      "occludedCount": 50,
+      "oneSharedVisibilityValid": false
+    }
+  },
+  "results": [
+    {
+      "id": "MISSING_FUNCTION_IDENTITY",
+      "expect": "HOLD_FUNCTION_CLASS_IDENTITY_UNBOUND",
+      "actual": "HOLD_FUNCTION_CLASS_IDENTITY_UNBOUND",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "FUNCTION_CLASS_WITHOUT_INSTANCE_TRANSFORMS",
+      "expect": "HOLD_INSTANCE_SET_OR_TRANSFORMS_UNBOUND",
+      "actual": "HOLD_INSTANCE_SET_OR_TRANSFORMS_UNBOUND",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "SHARED_FINAL_SHADING_WITHOUT_INVARIANCE_PROOF",
+      "expect": "HOLD_SHARED_EVALUATION_INVARIANCE_UNPROVEN",
+      "actual": "HOLD_SHARED_EVALUATION_INVARIANCE_UNPROVEN",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "ROTATED_INSTANCES_REUSE_ONE_DIFFUSE_RESULT",
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "actual": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "TRANSLATED_INSTANCES_REUSE_POINT_LIGHT_VECTOR",
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "actual": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "NONUNIFORM_SCALE_REUSES_ONE_WORLD_NORMAL",
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "actual": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "SAME_CLASS_REUSES_ONE_VISIBILITY_RESULT",
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "actual": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "BATCH_SHARED_CODE_COEFFICIENTS_PER_INSTANCE_SHADING",
+      "expect": "CANDIDATE_FUNCTION_CLASS_BATCHING_WITH_INSTANCE_EVALUATION_REQUIRED",
+      "actual": "CANDIDATE_FUNCTION_CLASS_BATCHING_WITH_INSTANCE_EVALUATION_REQUIRED",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "CANONICAL_INTRINSIC_SAMPLE_SHARE",
+      "expect": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN",
+      "actual": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "TRANSLATION_ONLY_CONSTANT_DIRECTIONAL_DIFFUSE_SCOPE",
+      "expect": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN",
+      "actual": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN",
+      "evidenceOk": true,
+      "passed": true
+    },
+    {
+      "id": "ONE_OVER_100_TOTAL_EVALUATION_CLAIM",
+      "expect": "REJECT_FUNCTION_CLASS_IDENTITY_AS_TOTAL_INSTANCE_EVALUATION_COLLAPSE",
+      "actual": "REJECT_FUNCTION_CLASS_IDENTITY_AS_TOTAL_INSTANCE_EVALUATION_COLLAPSE",
+      "evidenceOk": true,
+      "passed": true
+    }
+  ],
+  "boundary": "Synthetic analytic replay only; no production renderer, browser, GPU timing, image-quality or user-acceptance run."
+}
+
