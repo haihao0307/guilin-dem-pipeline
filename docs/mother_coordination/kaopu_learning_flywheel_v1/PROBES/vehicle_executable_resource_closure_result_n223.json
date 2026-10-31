@@ -1,0 +1,38 @@
+{
+  "id": "N223",
+  "status": "PASS",
+  "decision": "HOLD_VEHICLE_WEBGPU_ROUTE_DELIVERY_RESOURCE_CLOSURE_FAILED",
+  "packageSha256": "745b9f97c5511f145131f35b007458c81adb8851f865e2103b5e69c0436c8e77",
+  "packageManifestCreatedUTC": "2026-10-31T15:28:27.867217+00:00",
+  "boundedQuestion": "Does the current private Vehicle checkpoint contain a runnable, manifest-pinned WebGPU compute route rather than only CPU/mock evidence?",
+  "evidence": {
+    "gpuHostEntry": "runtime/gpu-experiment/index.mjs",
+    "shaderReference": "./compute.wgsl",
+    "resolvedShaderPath": "runtime/gpu-experiment/compute.wgsl",
+    "shaderExists": false,
+    "shaderManifestPinned": false,
+    "productionPreviewBackend": "CPU Canvas2D",
+    "gpuExperimentScope": "self-authored plane/biquadratic fixtures only; current vehicle bundles unsupported",
+    "ownerAndIndependentSuites": "CPU/fail-closed and CPU/mock only; no packaged shader compilation or GPU execution"
+  },
+  "checksPassed": 13,
+  "checksTotal": 13,
+  "checks": [
+    {"name": "package hash is pinned", "pass": true},
+    {"name": "checkpoint manifest is present", "pass": true},
+    {"name": "GPU host entry is present and pinned", "pass": true},
+    {"name": "GPU host declares a relative shader fetch", "pass": true},
+    {"name": "referenced WGSL shader is absent", "pass": true},
+    {"name": "referenced WGSL shader is absent from manifest", "pass": true},
+    {"name": "checkpoint suffix policy excludes WGSL", "pass": true},
+    {"name": "GPU README says real shader execution was not run", "pass": true},
+    {"name": "GPU README limits scope away from current car bundles", "pass": true},
+    {"name": "current preview explicitly paints CPU Canvas2D", "pass": true},
+    {"name": "owner test can stop before shader fetch", "pass": true},
+    {"name": "independent mock replaces fetch and does not load packaged WGSL", "pass": true},
+    {"name": "independent review records a shader hash not delivered by checkpoint", "pass": true}
+  ],
+  "interpretation": "The package preserves genuine function-geometry and CPU-renderer work, but its delivered WebGPU experiment is not executable because a transitive shader resource is absent. Manifest hash verification proves captured-byte integrity, not executable dependency closure.",
+  "candidateGate": "Before a delivery may claim a runnable route, every statically referenced runtime resource must exist, be manifest-pinned, and be exercised without a mock that replaces the resource load.",
+  "adoption": "CANDIDATE_ONLY_NOT_ACKNOWLEDGED_NOT_ADOPTED"
+}
