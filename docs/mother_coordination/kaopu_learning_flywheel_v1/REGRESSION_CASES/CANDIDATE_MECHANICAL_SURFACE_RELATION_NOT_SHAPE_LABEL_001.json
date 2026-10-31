@@ -3,12 +3,12 @@
   "caseId": "MECHANICAL-SURFACE-RELATION-NOT-SHAPE-LABEL-001",
   "status": "CANDIDATE_SOURCE_AND_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
   "active": false,
-  "boundedQuestion": "When a mechanical surface relation is produced by a CAD/BRep operation, can kernel SUCCESS prove the output is valid and semantically correct without schema, kernel-geometry, and operation-postcondition validation?",
+  "boundedQuestion": "When exact analytic/NURBS BRep is the authoritative authoring representation, can that fact prove the production display/runtime route is triangle-free without an independently bound evaluation trace?",
   "actualObservation": {
     "userCorrection": "Study mathematical surface relations and use them to construct every vehicle part by function, without importing a triangle-mesh production route.",
     "newReferenceLead": "Four user-provided images identify NVIDIA-Omniverse/usd-brep and its NURBS/BRep kernel as a possible source teacher.",
-    "decision": "HOLD_KERNEL_SUCCESS_NOT_SURFACE_TRUTH",
-    "boundary": "This is a source-contract and synthetic replay. USD BRep was not installed or run against a KAOPU production part; no current Mechanical/Motor asset is judged by this record."
+    "decision": "REJECT_EXACT_AUTHORING_MISCLAIMED_AS_TRIANGLE_FREE_RUNTIME",
+    "boundary": "This extends the N218/N219 source-contract and synthetic replay only. USD BRep was not installed or run against a KAOPU production part; no current Mechanical/Motor asset or renderer is judged by this record."
   },
   "teacherCandidate": {
     "name": "NVIDIA Omniverse USD BRep / SMLib",
@@ -17,7 +17,7 @@
     "pinnedRevision": "3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5",
     "release": "1.0.1 (2026-10-21 changelog; release commit published 2026-10-22)",
     "license": "Apache-2.0, with repository third-party notices retained",
-    "moreThanCurrentBestView": "It supplies an explicit exact-geometry data model that binds regions, shells, faces, loops, edgeuses, edges and vertices to analytic or NURBS geometry, and it explicitly separates schema validation from kernel-backed geometric validation. Current KAOPU N218 requires patch equations and joins but does not yet require operation-level postconditions after a kernel mutation reports success.",
+    "moreThanCurrentBestView": "It supplies an explicit exact-geometry data model that binds regions, shells, faces, loops, edgeuses, edges and vertices to analytic or NURBS geometry, while its official viewing paths separately tessellate those exact BReps into transient Hydra meshes or authored UsdGeomMesh prims. Current KAOPU already separates evidence layers in principle, but the N218/N219 mechanical receipt did not yet make authoring representation and runtime evaluation route independently auditable.",
     "reproducibilityEvidence": [
       "Public C++ and Python APIs",
       "Runnable examples",
@@ -27,19 +27,19 @@
       "Public issue reproductions with exact versions and numeric expectations"
     ],
     "integrationRisks": [
-      "The library includes tessellation and mesh I/O paths; those are out of scope for KAOPU's triangle-free production route.",
+      "The library's documented Hydra and PyVista viewing paths tessellate exact BReps into triangle meshes; exact source geometry cannot be used as evidence of a triangle-free display/runtime route.",
       "The kernel/OpenUSD toolchain is substantially heavier than the current WebGPU runtime and is not a direct browser dependency.",
       "macOS support is limited; the supported Python wheel targets CPython 3.12 on Linux and Windows.",
       "Known issues include malformed-data crashes, heal operations that can report success despite repair failure, and current 1.0.1 operations that can return success with invalid or semantically wrong output."
     ],
-    "learningScope": "Learn the exact surface/topology schema, validation layering, and postcondition design. Do not adopt tessellation, polygon display, STEP/USD production dependency, or the kernel as a global runtime without a separate audition."
+    "learningScope": "Learn the exact surface/topology schema, validation layering, operation postconditions, and the explicit authoring/display separation. Do not adopt tessellation, polygon display, STEP/USD production dependency, or the kernel as a global runtime; do not credit a renderer route as triangle-free without a separately bound evaluation trace."
   },
   "currentBestViewComparison": {
     "existingCoverage": [
       "N218 already rejects surface-family labels, untrimmed quadrics, missing patch adjacency, C0/G1/G2 breaks, and missing reference-section residuals.",
       "R2 already requires independent verification and forbids Producer self-approval."
     ],
-    "newDiscriminator": "A modeling operation's status code is producer evidence, not verifier evidence. A generated BRep must bind the exact input/output subjects and pass three independent layers: serialized schema/topology checks, kernel-backed geometric validity, and operation-specific semantic postconditions such as containment, expected volume bounds, non-empty material, preserved analytic type, or reference residual."
+    "newDiscriminator": "Exact authoring geometry and production evaluation are different subjects. A BRep may remain analytic/NURBS in USD while the official viewer tessellates it into transient Hydra meshes. A triangle-free runtime claim therefore needs a bound runtime/display subject, complete render-pass coverage, and independently verified observations that no tessellator or triangle primitives/buffers were used."
   },
   "requiredTaskAnchorAndReceiptFields": [
     "referenceSetDigest",
@@ -61,7 +61,16 @@
     "schemaValidationSubjectDigestAndVerdict",
     "kernelGeometryValidationSubjectDigestAndVerdict",
     "semanticPostconditionManifestAndResults",
-    "independentVerifier"
+    "independentVerifier",
+    "authoritativeAuthoringRepresentation",
+    "runtimeDisplayClaim",
+    "runtimeSubjectDigest",
+    "displayEvaluationRoute",
+    "displayEvaluationTraceDigest",
+    "allRenderPassesCovered",
+    "tessellationInvoked",
+    "trianglePrimitivesOrBuffersObserved",
+    "displayRouteIndependentVerifier"
   ],
   "decisionOrder": [
     "Apply the N218 equation-frame-domain-patch-continuity-reference checks first.",
@@ -70,7 +79,10 @@
     "Run schema/topology validation on the exact output subject.",
     "Run kernel-backed geometry validation and manifold/material checks on that same subject.",
     "Run operation-specific semantic postconditions; generic validity cannot prove that a boolean, transform, shell, fillet or sweep produced the intended result.",
-    "A full pass remains candidate-eligible only; it is not reference acceptance, engineering truth or user acceptance."
+    "A full operation pass remains candidate-eligible only; it is not reference acceptance, engineering truth or user acceptance.",
+    "If a triangle-free runtime/display claim is made, bind the runtime subject and evaluation trace separately from the authoring BRep.",
+    "Require coverage of every production render pass and record whether tessellation or triangle primitives/buffers were invoked or observed.",
+    "Reject any route that infers triangle-free runtime from exact authoring geometry while the display route emits PolyBrep, UsdGeomMesh, Hydra mesh, or triangles."
   ],
   "decisions": [
     "HOLD_SURFACE_EQUATION_UNBOUND",
@@ -90,7 +102,11 @@
     "REJECT_KERNEL_GEOMETRY_INVALID",
     "HOLD_SEMANTIC_POSTCONDITIONS_MISSING",
     "REJECT_OPERATION_SEMANTIC_POSTCONDITION",
-    "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
+    "CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED",
+    "HOLD_RUNTIME_EVALUATION_ROUTE_UNBOUND",
+    "HOLD_RUNTIME_RENDER_PASS_COVERAGE_INCOMPLETE",
+    "REJECT_EXACT_AUTHORING_MISCLAIMED_AS_TRIANGLE_FREE_RUNTIME",
+    "CANDIDATE_TRIANGLE_FREE_RUNTIME_ROUTE_ELIGIBLE_NOT_REFERENCE_ACCEPTED"
   ],
   "cases": [
     {"id":"LABEL_AND_RENDER_ONLY","input":{"equationBound":false},"expect":"HOLD_SURFACE_EQUATION_UNBOUND"},
@@ -109,13 +125,18 @@
     {"id":"SCHEMA_INVALID_OUTPUT","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["in-a"],"outputSubjectDigest":"out","schemaValidation":"FAIL"},"expect":"REJECT_SCHEMA_INVALID_BREP"},
     {"id":"UPSTREAM_ISSUE_36_SUCCESS_BUT_KERNEL_INVALID","source":"NVIDIA-Omniverse/usd-brep#36 on 1.0.1","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["union-two-cylinders"],"outputSubjectDigest":"shell-output","schemaValidation":"PASS","kernelGeometryValidation":"FAIL"},"expect":"REJECT_KERNEL_GEOMETRY_INVALID"},
     {"id":"UPSTREAM_ISSUE_35_SUCCESS_VALID_BUT_WRONG_BOOLEAN","source":"NVIDIA-Omniverse/usd-brep#35 on 1.0.1","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b95","inputSubjectDigests":["skin-a","skin-b"],"outputSubjectDigest":"difference-empty","schemaValidation":"PASS","kernelGeometryValidation":"PASS","semanticPostconditions":[{"name":"differenceVolumeMm3","expectedMin":14000,"expectedMax":14100,"actual":0}]},"expect":"REJECT_OPERATION_SEMANTIC_POSTCONDITION"},
-    {"id":"COMPLETE_OPERATION_POSITIVE_CONTROL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001,0.003],"referenceTolerance":0.01,"independentVerifier":"verifier:independent","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5","inputSubjectDigests":["input-a","input-b"],"outputSubjectDigest":"output-c","schemaValidation":"PASS","kernelGeometryValidation":"PASS","semanticPostconditions":[{"name":"differenceVolumeMm3","expectedMin":14000,"expectedMax":14100,"actual":14051.84},{"name":"manifoldSolid","expected":true,"actual":true}]},"expect":"CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"}
+    {"id":"COMPLETE_OPERATION_POSITIVE_CONTROL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001,0.003],"referenceTolerance":0.01,"independentVerifier":"verifier:independent","modelingOperationClaimed":true,"kernelStatus":"SM_SUCCESS","kernelRevision":"3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5","inputSubjectDigests":["input-a","input-b"],"outputSubjectDigest":"output-c","schemaValidation":"PASS","kernelGeometryValidation":"PASS","semanticPostconditions":[{"name":"differenceVolumeMm3","expectedMin":14000,"expectedMax":14100,"actual":14051.84},{"name":"manifoldSolid","expected":true,"actual":true}]},"expect":"CANDIDATE_SURFACE_RELATION_ELIGIBLE_NOT_REFERENCE_ACCEPTED"},
+    {"id":"EXACT_AUTHORING_WITHOUT_RUNTIME_ROUTE_RECEIPT","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","runtimeDisplayClaim":"TRIANGLE_FREE","authoritativeAuthoringRepresentation":"EXACT_ANALYTIC_NURBS_BREP"},"expect":"HOLD_RUNTIME_EVALUATION_ROUTE_UNBOUND"},
+    {"id":"UPSTREAM_HDUSDBREP_EXACT_SOURCE_TRANSIENT_HYDRA_MESH","source":"NVIDIA-Omniverse/usd-brep source/HYDRA_USD_BREP/README.md at 3fd5b95","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","runtimeDisplayClaim":"TRIANGLE_FREE","authoritativeAuthoringRepresentation":"EXACT_ANALYTIC_NURBS_BREP","runtimeSubjectDigest":"hdUsdBrep@3fd5b95","displayEvaluationRoute":"SMLIB_TESSELLATION_TO_TRANSIENT_HYDRA_MESH","displayEvaluationTraceDigest":"official-source-contract@3fd5b95","allRenderPassesCovered":true,"tessellationInvoked":true,"trianglePrimitivesOrBuffersObserved":true,"displayRouteIndependentVerifier":"official-source-review"},"expect":"REJECT_EXACT_AUTHORING_MISCLAIMED_AS_TRIANGLE_FREE_RUNTIME"},
+    {"id":"UPSTREAM_TESSELLATE_FILE_AUTHORS_USDGEOMMESH","source":"NVIDIA-Omniverse/usd-brep README.md and SmApiUsdTessellate at 3fd5b95","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","runtimeDisplayClaim":"TRIANGLE_FREE","authoritativeAuthoringRepresentation":"EXACT_ANALYTIC_NURBS_BREP","runtimeSubjectDigest":"tessellate-file@3fd5b95","displayEvaluationRoute":"BREP_TO_USDGEOMMESH","displayEvaluationTraceDigest":"official-source-contract@3fd5b95","allRenderPassesCovered":true,"tessellationInvoked":true,"trianglePrimitivesOrBuffersObserved":true,"displayRouteIndependentVerifier":"official-source-review"},"expect":"REJECT_EXACT_AUTHORING_MISCLAIMED_AS_TRIANGLE_FREE_RUNTIME"},
+    {"id":"DIRECT_PARAMETRIC_ROUTE_PARTIAL_PASS_COVERAGE","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","runtimeDisplayClaim":"TRIANGLE_FREE","authoritativeAuthoringRepresentation":"EXACT_ANALYTIC_NURBS_BREP","runtimeSubjectDigest":"runtime-a","displayEvaluationRoute":"DIRECT_PARAMETRIC_ANALYTIC_EVALUATION","displayEvaluationTraceDigest":"trace-a","allRenderPassesCovered":false,"tessellationInvoked":false,"trianglePrimitivesOrBuffersObserved":false,"displayRouteIndependentVerifier":"verifier:independent"},"expect":"HOLD_RUNTIME_RENDER_PASS_COVERAGE_INCOMPLETE"},
+    {"id":"DIRECT_PARAMETRIC_TRIANGLE_FREE_ROUTE_POSITIVE_CONTROL","input":{"equationBound":true,"coordinateFrameBound":true,"unitsBound":true,"domainBound":true,"patchGraphBound":true,"requiredContinuity":"G2","leftPolynomial":[0,0,1],"rightPolynomial":[0,0,1],"referenceResidualSamples":[0.001],"referenceTolerance":0.01,"independentVerifier":"v","runtimeDisplayClaim":"TRIANGLE_FREE","authoritativeAuthoringRepresentation":"EXACT_ANALYTIC_NURBS_BREP","runtimeSubjectDigest":"runtime-b","displayEvaluationRoute":"DIRECT_PARAMETRIC_ANALYTIC_EVALUATION","displayEvaluationTraceDigest":"trace-b","allRenderPassesCovered":true,"tessellationInvoked":false,"trianglePrimitivesOrBuffersObserved":false,"displayRouteIndependentVerifier":"verifier:independent"},"expect":"CANDIDATE_TRIANGLE_FREE_RUNTIME_ROUTE_ELIGIBLE_NOT_REFERENCE_ACCEPTED"}
   ],
   "activation": {
     "global": false,
     "singleMotherGateRunRequired": true,
     "independentVerifierRequired": true,
-    "rollbackPoint": "Remove the operation-postcondition extension if one exact Mechanical/Motor trial demonstrates that status+schema+geometry validation alone catches every intentionally injected semantically wrong boolean/transform/sweep output."
+    "rollbackPoint": "Remove the authoring/runtime-route extension if one exact Mechanical/Motor trial proves that an exact authoring-representation receipt alone deterministically exposes tessellation and triangle use across every production render pass without binding a separate runtime evaluation trace."
   },
   "routing": {
     "target": "Mechanical/Motor Mother through coordinator issue #91",
@@ -124,7 +145,8 @@
       "Which exact part and operation should be the first audition?",
       "Which analytic/NURBS/topology fields can map to the existing function-surface representation without tessellation?",
       "Which operation-specific postconditions distinguish a valid-looking wrong result from the intended part?",
-      "Can the exact output be validated independently without adding a mesh runtime?"
+      "Can the exact output be validated independently without adding a mesh runtime?",
+      "Which production runtime/display subject and render passes must be traced to substantiate a triangle-free claim?"
     ]
   },
   "lifecycle": {"POSTED":true,"ACKNOWLEDGED":false,"IMPLEMENTED":true,"GATE-RUN":true,"ADOPTED":false,"USER-ACCEPTED":false}
