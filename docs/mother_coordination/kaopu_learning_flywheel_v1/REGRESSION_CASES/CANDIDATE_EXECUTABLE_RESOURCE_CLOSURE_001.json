@@ -1,0 +1,54 @@
+{
+  "id": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+  "status": "Candidate",
+  "title": "Manifest integrity is not executable resource closure",
+  "trigger": "A delivered runtime entry references a local shader, worker, WASM, schema, model, or other resource that is absent from the delivery or absent from its manifest, while tests still pass by returning before the load or replacing the loader with a mock.",
+  "failureClass": "INCOMPLETE_EXECUTABLE_DELIVERY_WITH_GREEN_MOCK_TESTS",
+  "currentReplay": {
+    "subject": "KAOPU_VEHICLE_FUNCTION_REBUILD_R01_PRIVATE.zip version 18",
+    "sha256": "745b9f97c5511f145131f35b007458c81adb8851f865e2103b5e69c0436c8e77",
+    "observation": "runtime/gpu-experiment/index.mjs fetches ./compute.wgsl, but runtime/gpu-experiment/compute.wgsl is absent and not pinned by CHECKPOINT_MANIFEST.json. The checkpoint builder allowlist omits .wgsl. CPU/fail-closed and CPU/mock suites pass without compiling the packaged shader.",
+    "decision": "HOLD_VEHICLE_WEBGPU_ROUTE_DELIVERY_RESOURCE_CLOSURE_FAILED"
+  },
+  "candidateRule": {
+    "taskAnchorFields": [
+      "runtimeEntryPoints",
+      "transitiveRuntimeResources",
+      "resourceManifestPins",
+      "resourceLoadTestMode",
+      "realBackendExecutionStatus"
+    ],
+    "deliveryReceiptFields": [
+      "executableResourceClosure",
+      "missingRuntimeResources",
+      "mockedResourceLoads",
+      "backendActuallyExecuted"
+    ],
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure.",
+    "failClosedState": "HOLD_RUNTIME_ROUTE_NOT_DELIVERED"
+  },
+  "minimumFalsifiableTrial": {
+    "scope": "one Vehicle private checkpoint only",
+    "pass": "All referenced GPU resources exist and are manifest-pinned; the device test loads the delivered WGSL and reaches real shader compilation on an available adapter.",
+    "fail": "Any referenced runtime resource is absent/unpinned, or all green tests bypass/replace its load."
+  },
+  "boundaries": [
+    "Does not reject the mathematical geometry, CPU renderer, or the design of the isolated GPU experiment.",
+    "Does not claim WebGPU hardware failure; no actual adapter executed this package.",
+    "Does not require global adoption before a second Mother or historical replay validates usefulness.",
+    "Offline source triangulation used only for observation is outside this gate unless it becomes a delivered runtime dependency."
+  ],
+  "rollback": "Remove this Candidate if a replay shows that the referenced resource is intentionally external and the delivery contract names, pins, and validates that external dependency explicitly.",
+  "evidence": [
+    "n223/vehicle_executable_resource_closure_probe_n223.mjs",
+    "n223/vehicle_executable_resource_closure_result_n223.json"
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
