@@ -1,0 +1,57 @@
+{
+  "id": "N224",
+  "status": "PASS",
+  "decision": "KEEP_ROOT_CAUSE_REVIEW_V24_RESOURCE_CLOSURE_UNRESOLVED",
+  "subject": {
+    "libraryIdentity": "libfile_76004f2c53d08191906a035a2ef295ad",
+    "packageName": "KAOPU_VEHICLE_FUNCTION_REBUILD_R01_PRIVATE.zip",
+    "packageVersion": "24",
+    "packageSha256": "81fbd0166cb21d74deff6c86dc3079688302461c3bb90e70a58fe1b7b7cded0a",
+    "packageManifestCreatedUTC": "2026-10-31T19:29:06.831500+00:00"
+  },
+  "boundedQuestion": "After N223 was acknowledged and moved to ROOT_CAUSE_REVIEW, does current package v24 satisfy the five named repair items?",
+  "repairContract": {
+    "wgslAllowlisted": false,
+    "shaderDeliveredAndPinned": false,
+    "transitiveClosureCheckerDelivered": false,
+    "nonSubstitutingDeliveredShaderLoadTest": false,
+    "realShaderCompileOrDeviceExecution": false,
+    "r2TaskAnchorAndDeliveryReceiptPresent": false
+  },
+  "evidence": {
+    "shaderReference": "./compute.wgsl",
+    "shaderPath": "runtime/gpu-experiment/compute.wgsl",
+    "shaderExists": false,
+    "shaderManifestPinned": false,
+    "closureCheckerFiles": [],
+    "taskAnchorFiles": [],
+    "ownerTestState": "CPU_AND_FAILCLOSED_ONLY_PASS; gpuExecuted=false; shaderCompiled=false",
+    "independentTestState": "CPU_MOCK_ONLY_PASS; fetch substituted; gpuExecuted=false; shaderCompiled=false"
+  },
+  "checksPassed": 11,
+  "checksTotal": 11,
+  "checks": [
+    {"name": "package version is current v24", "pass": true},
+    {"name": "package digest is pinned", "pass": true},
+    {"name": "GPU host still references compute.wgsl", "pass": true},
+    {"name": "repair item 1 unresolved: checkpoint allowlist still omits .wgsl", "pass": true},
+    {"name": "repair item 2 unresolved: shader absent from delivered archive", "pass": true},
+    {"name": "repair item 2 unresolved: shader absent from manifest", "pass": true},
+    {"name": "repair item 3 unresolved: no executable-resource closure checker delivered", "pass": true},
+    {"name": "repair item 4 unresolved: owner test reports no shader compilation", "pass": true},
+    {"name": "repair item 4 unresolved: independent test substitutes fetch bytes", "pass": true},
+    {"name": "repair item 5 remains honestly unverified", "pass": true},
+    {"name": "R2 execution receipts are not present in the package", "pass": true}
+  ],
+  "interpretation": "The v24 archive is fresh but does not implement the acknowledged root-cause repair contract. Fresh package timestamps and additional unrelated files cannot advance the WebGPU route state.",
+  "regressionAction": "Update evidence on CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001; do not create a duplicate case.",
+  "state": {
+    "posted": true,
+    "acknowledged": true,
+    "rootCauseReview": true,
+    "productionImplemented": false,
+    "gpuRuntimeGateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
