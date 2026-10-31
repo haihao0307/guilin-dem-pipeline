@@ -1,0 +1,252 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "FUNCTION-CLASS-SHARING-NOT-TOTAL-INSTANCE-COLLAPSE-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_ADOPTED",
+  "active": false,
+  "boundedQuestion": "For N instances of one analytic function class, which values may be evaluated once per class, and can final hit, visibility and lighting work be reduced to 1/N?",
+  "actualObservation": {
+    "userGoal": "Group objects with the same function and reuse function/light work instead of performing per-object ray intersection.",
+    "currentBestView": "N221 proves a standards-level compute-storage-canvas presentation route with zero render draws, but explicitly leaves shared function-class evaluation, lighting, visibility and the no-per-object-intersection claim unverified.",
+    "newDiscriminator": "Function-code identity and canonical intrinsic identity do not imply equality of world-space arguments or final radiometric results. Reuse is legal only within an explicitly proved invariance/equivalence partition.",
+    "decision": "REJECT_FUNCTION_CLASS_IDENTITY_AS_TOTAL_INSTANCE_EVALUATION_COLLAPSE",
+    "boundary": "This is a mathematical and synthetic receipt replay. It does not benchmark a production renderer and does not reject batching, shared code, shared coefficients, shared canonical samples, acceleration structures or scoped lighting reuse."
+  },
+  "shareabilityLedger": {
+    "classOrCanonicalCandidates": [
+      "function definition and compiled evaluator",
+      "coefficient/parameter block when its digest is identical",
+      "canonical trimmed domain and patch topology",
+      "canonical samples and intrinsic derivatives when their sample-argument digest is identical"
+    ],
+    "instanceDependentByDefault": [
+      "world-to-object query transform",
+      "instance bounds/culling and candidate membership",
+      "world hit position and hit ordering",
+      "world normal through inverse-transpose normal transform",
+      "light and view vectors",
+      "visibility, occlusion and shadow state",
+      "final shading/radiance"
+    ],
+    "scopedExceptions": [
+      "Translation-only instances under one constant directional light may share unshadowed diffuse response if orientation, material, canonical sample and normal are identical and the claim excludes view, visibility, shadow and position-dependent effects.",
+      "A stronger shared result is legal only for an equivalence class whose required invariants are bound and independently verified."
+    ]
+  },
+  "requiredTaskAnchorAndReceiptFields": [
+    "runtimeSubjectDigest",
+    "functionClassId",
+    "functionDefinitionDigest",
+    "parameterDigest",
+    "canonicalDomainDigest",
+    "canonicalSampleArgumentDigest",
+    "instanceSetDigest",
+    "instanceIds",
+    "instanceTransformDigests",
+    "inverseTransformDigests",
+    "normalTransformDigests",
+    "materialParameterDigests",
+    "lightModelAndStateDigest",
+    "viewStateDigest",
+    "visibilityAndShadowSubjectDigest",
+    "equivalencePartition",
+    "invarianceProofPerSharedQuantity",
+    "sharedQuantities",
+    "perInstanceQuantities",
+    "compiledEvaluatorCount",
+    "uniqueCanonicalSampleArgumentCount",
+    "instanceTransformEvaluationCount",
+    "visibilityEvaluationCount",
+    "shadingEvaluationCount",
+    "independentVerifier"
+  ],
+  "decisions": [
+    "HOLD_FUNCTION_CLASS_IDENTITY_UNBOUND",
+    "HOLD_INSTANCE_SET_OR_TRANSFORMS_UNBOUND",
+    "HOLD_SHARED_EVALUATION_INVARIANCE_UNPROVEN",
+    "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES",
+    "REJECT_FUNCTION_CLASS_IDENTITY_AS_TOTAL_INSTANCE_EVALUATION_COLLAPSE",
+    "CANDIDATE_FUNCTION_CLASS_BATCHING_WITH_INSTANCE_EVALUATION_REQUIRED",
+    "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN"
+  ],
+  "cases": [
+    {
+      "id": "MISSING_FUNCTION_IDENTITY",
+      "input": {},
+      "expect": "HOLD_FUNCTION_CLASS_IDENTITY_UNBOUND"
+    },
+    {
+      "id": "FUNCTION_CLASS_WITHOUT_INSTANCE_TRANSFORMS",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["a", "b"]
+      },
+      "expect": "HOLD_INSTANCE_SET_OR_TRANSFORMS_UNBOUND"
+    },
+    {
+      "id": "SHARED_FINAL_SHADING_WITHOUT_INVARIANCE_PROOF",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["a", "b"],
+        "instanceTransformDigests": ["identity", "rotate-y-90"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["finalShading"]
+      },
+      "expect": "HOLD_SHARED_EVALUATION_INVARIANCE_UNPROVEN"
+    },
+    {
+      "id": "ROTATED_INSTANCES_REUSE_ONE_DIFFUSE_RESULT",
+      "syntheticEvidence": "rotationSweep",
+      "input": {
+        "functionClassId": "plane-patch",
+        "functionDefinitionDigest": "fn:plane",
+        "parameterDigest": "unit-patch",
+        "canonicalDomainDigest": "uv01",
+        "instanceIds": ["r0", "r1", "r2"],
+        "instanceTransformDigests": ["ry0", "ry90", "ry180"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["worldNormal", "finalShading"],
+        "equivalenceProof": {"verified": true, "sameNormalTransform": false, "sameLightVector": true}
+      },
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES"
+    },
+    {
+      "id": "TRANSLATED_INSTANCES_REUSE_POINT_LIGHT_VECTOR",
+      "syntheticEvidence": "pointLightTranslationSweep",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["t0", "t1", "t2"],
+        "instanceTransformDigests": ["tx-5", "tx0", "tx5"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["lightVector", "finalShading"],
+        "equivalenceProof": {"verified": true, "sameNormalTransform": true, "sameLightVector": false, "lightModel": "POINT"}
+      },
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES"
+    },
+    {
+      "id": "NONUNIFORM_SCALE_REUSES_ONE_WORLD_NORMAL",
+      "syntheticEvidence": "normalMatrixSweep",
+      "input": {
+        "functionClassId": "implicit-patch",
+        "functionDefinitionDigest": "fn:implicit",
+        "parameterDigest": "p1",
+        "canonicalDomainDigest": "d1",
+        "instanceIds": ["s0", "s1"],
+        "instanceTransformDigests": ["scale1", "scale2-1-0.5"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["worldNormal"],
+        "equivalenceProof": {"verified": true, "sameNormalTransform": false}
+      },
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES"
+    },
+    {
+      "id": "SAME_CLASS_REUSES_ONE_VISIBILITY_RESULT",
+      "syntheticEvidence": "occlusionPartition",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["visible", "occluded"],
+        "instanceTransformDigests": ["tz0", "tz4"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["visibility", "finalShading"],
+        "equivalenceProof": {"verified": true, "sameVisibility": false, "sameShadowState": false}
+      },
+      "expect": "REJECT_INSTANCE_DEPENDENT_RESULT_REUSED_ACROSS_NON_EQUIVALENT_INSTANCES"
+    },
+    {
+      "id": "BATCH_SHARED_CODE_COEFFICIENTS_PER_INSTANCE_SHADING",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["a", "b", "c"],
+        "instanceTransformDigests": ["ta", "tb", "tc"],
+        "sharedEvaluationClaim": false,
+        "sharedQuantities": ["functionDefinition", "coefficients", "canonicalDomain"],
+        "perInstanceQuantities": ["worldToObjectQuery", "worldNormal", "visibility", "finalShading"],
+        "independentVerifier": "candidate-verifier"
+      },
+      "expect": "CANDIDATE_FUNCTION_CLASS_BATCHING_WITH_INSTANCE_EVALUATION_REQUIRED"
+    },
+    {
+      "id": "CANONICAL_INTRINSIC_SAMPLE_SHARE",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "canonicalSampleArgumentDigest": "uv-grid-64",
+        "instanceIds": ["a", "b", "c"],
+        "instanceTransformDigests": ["ta", "tb", "tc"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["functionDefinition", "coefficients", "canonicalDomain", "canonicalSamples", "canonicalDerivatives"],
+        "equivalenceProof": {"verified": true, "sameFunctionDefinition": true, "sameParameters": true, "sameCanonicalSampleArguments": true},
+        "independentVerifier": "candidate-verifier"
+      },
+      "expect": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN"
+    },
+    {
+      "id": "TRANSLATION_ONLY_CONSTANT_DIRECTIONAL_DIFFUSE_SCOPE",
+      "syntheticEvidence": "directionalTranslationInvariant",
+      "input": {
+        "functionClassId": "plane-patch",
+        "functionDefinitionDigest": "fn:plane",
+        "parameterDigest": "unit-patch",
+        "canonicalDomainDigest": "uv01",
+        "canonicalSampleArgumentDigest": "uv-center",
+        "instanceIds": ["a", "b", "c"],
+        "instanceTransformDigests": ["tx-5", "tx0", "tx5"],
+        "sharedEvaluationClaim": true,
+        "sharedQuantities": ["unshadowedDirectionalDiffuse"],
+        "equivalenceProof": {"verified": true, "sameNormalTransform": true, "sameLightVector": true, "lightModel": "DIRECTIONAL_CONSTANT", "viewIndependent": true, "visibilityExcluded": true, "shadowExcluded": true, "sameMaterial": true},
+        "independentVerifier": "candidate-verifier"
+      },
+      "expect": "CANDIDATE_FUNCTION_CLASS_SHARING_SCOPED_NOT_GENERAL_1_OVER_N_PROVEN"
+    },
+    {
+      "id": "ONE_OVER_100_TOTAL_EVALUATION_CLAIM",
+      "syntheticEvidence": "rotationSweep",
+      "input": {
+        "functionClassId": "sphere",
+        "functionDefinitionDigest": "fn:sphere",
+        "parameterDigest": "radius:1",
+        "canonicalDomainDigest": "sphere-domain",
+        "instanceIds": ["i0", "i1", "i2"],
+        "instanceTransformDigests": ["ry0", "ry45", "ry90"],
+        "sharedEvaluationClaim": true,
+        "totalEvaluationReductionClaim": "ONE_OVER_N",
+        "sharedQuantities": ["worldRayHit", "worldNormal", "lightVector", "visibility", "finalShading"],
+        "equivalenceProof": {"verified": true, "sameFunctionDefinition": true, "sameParameters": true, "sameNormalTransform": false, "sameLightVector": false, "sameVisibility": false}
+      },
+      "expect": "REJECT_FUNCTION_CLASS_IDENTITY_AS_TOTAL_INSTANCE_EVALUATION_COLLAPSE"
+    }
+  ],
+  "activation": {
+    "global": false,
+    "singleMotherGateRunRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Delete this Candidate if a production trace demonstrates a general exact algorithm that reuses world hit, normal, visibility and final shading for non-equivalent transforms without hidden per-instance evaluation, while preserving identical output."
+  },
+  "routing": {
+    "target": "Mechanical/Motor renderer owner through coordinator issue #91",
+    "motherStatus": "NOT_QUERIED_UNKNOWN",
+    "requestedAnswer": [
+      "Which exact quantities are currently claimed to be evaluated once per function class?",
+      "Which per-instance transforms, bounds, visibility and lighting quantities are still evaluated?",
+      "What equivalence partition proves each shared result invariant?",
+      "Can one 100-instance trace report separate class-shared and instance-dependent evaluation counts without claiming a false 1/100 total reduction?"
+    ]
+  },
+  "lifecycle": {"POSTED": false, "ACKNOWLEDGED": false, "IMPLEMENTED": true, "GATE-RUN": true, "ADOPTED": false, "USER-ACCEPTED": false}
+}
