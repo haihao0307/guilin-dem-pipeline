@@ -10,6 +10,22 @@
     "observation": "runtime/gpu-experiment/index.mjs fetches ./compute.wgsl, but runtime/gpu-experiment/compute.wgsl is absent and not pinned by CHECKPOINT_MANIFEST.json. The checkpoint builder allowlist omits .wgsl. CPU/fail-closed and CPU/mock suites pass without compiling the packaged shader.",
     "decision": "HOLD_VEHICLE_WEBGPU_ROUTE_DELIVERY_RESOURCE_CLOSURE_FAILED"
   },
+  "followupReplays": [
+    {
+      "subject": "KAOPU_VEHICLE_FUNCTION_REBUILD_R01_PRIVATE.zip version 22",
+      "sha256": "9060196f166be86d9abcddb992c9fd7178d227b6ac63692c600d8a2715a730b6",
+      "source": "#91 coordinator comment 6547524817",
+      "observation": "Same missing shader and manifest pin after multiple package updates; coordinator moved the subject to HOLD_GATE_FAIL / ROOT_CAUSE_REVIEW and named five repair items."
+    },
+    {
+      "subject": "KAOPU_VEHICLE_FUNCTION_REBUILD_R01_PRIVATE.zip version 24",
+      "sha256": "81fbd0166cb21d74deff6c86dc3079688302461c3bb90e70a58fe1b7b7cded0a",
+      "manifestCreatedUTC": "2026-10-31T19:29:06.831500+00:00",
+      "observation": "The acknowledged repair contract remains unimplemented: no WGSL allowlist, delivered shader, manifest pin, closure checker, non-substituting shader-load test, real shader compilation, or R2 execution receipt.",
+      "decision": "KEEP_ROOT_CAUSE_REVIEW_V24_RESOURCE_CLOSURE_UNRESOLVED",
+      "evidence": "PROBES/vehicle_webgpu_root_cause_followup_result_n224.json"
+    }
+  ],
   "candidateRule": {
     "taskAnchorFields": [
       "runtimeEntryPoints",
@@ -45,8 +61,10 @@
   ],
   "lifecycle": {
     "posted": true,
-    "postTarget": "haihao0307/guilin-dem-pipeline#91 comment 6545548001",
-    "acknowledged": false,
+    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and N224 follow-up",
+    "acknowledged": true,
+    "acknowledgementEvidence": "haihao0307/guilin-dem-pipeline#91 comment 6547524817",
+    "rootCauseReview": true,
     "candidateCheckerImplemented": true,
     "productionImplemented": false,
     "gateRun": true,
