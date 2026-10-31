@@ -68,3 +68,5 @@ Task Anchor / Delivery Receipt 需要把：
 - 当前仅为 synthetic Candidate checker；没有跑 KAOPU production renderer、浏览器、GPU 性能、画质或用户验收。
 - 不修改 main、生产 Mother、R2 或全局门禁。
 - KPI：unknown。
+- 已定向 POST 至 `#91 issuecomment-6542939017`；尚无 ACK。
+- Lifecycle：`POSTED / IMPLEMENTED(candidate checker) / GATE-RUN(synthetic)`；`ACKNOWLEDGED / production GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
