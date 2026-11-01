@@ -24,6 +24,16 @@
       "observation": "The acknowledged repair contract remains unimplemented: no WGSL allowlist, delivered shader, manifest pin, closure checker, non-substituting shader-load test, real shader compilation, or R2 execution receipt.",
       "decision": "KEEP_ROOT_CAUSE_REVIEW_V24_RESOURCE_CLOSURE_UNRESOLVED",
       "evidence": "PROBES/vehicle_webgpu_root_cause_followup_result_n224.json"
+    },
+    {
+      "subject": "A6_POST4376852_NATIVE_FREEZE_HOST_PREPARATION_R01_20261101.zip",
+      "libraryIdentity": "libfile_b5e6822105808191abb719df0f5a6596",
+      "sha256": "a2b030fb3248049ef73688b2b96ffc786c64aa7bbe28089601458446f9c0ed5c",
+      "observation": "The archive contains a complete relative native snapshot and its untouched manifest verifies 66/66. In a fresh workspace, test-exact and test-negative-ownership passed, but replay-smoke stopped at revision-guard-tests because mkdtempSync hard-codes /workspace/shared/post4376852-guard-* and the parent directory did not exist. Creating only /workspace/shared, without changing package bytes, made all four core replay programs pass.",
+      "distinction": "This is not a missing geometry/runtime module and does not invalidate the fixed-revision numeric, ownership, or hot-cost evidence. It is an undeclared replay-environment/writable-temp-root dependency.",
+      "decision": "HOLD_A6_HOST_PREPARATION_REPLAY_ENVIRONMENT_CLOSURE_INCOMPLETE",
+      "evidence": "PROBES/a6_host_preparation_fresh_workspace_replay_result_n230.json",
+      "subjectAcknowledged": false
     }
   ],
   "candidateRule": {
@@ -32,16 +42,22 @@
       "transitiveRuntimeResources",
       "resourceManifestPins",
       "resourceLoadTestMode",
-      "realBackendExecutionStatus"
+      "realBackendExecutionStatus",
+      "replayEnvironmentPrerequisites",
+      "writableTempRoots",
+      "freshWorkspaceReplayCommand"
     ],
     "deliveryReceiptFields": [
       "executableResourceClosure",
       "missingRuntimeResources",
       "mockedResourceLoads",
-      "backendActuallyExecuted"
+      "backendActuallyExecuted",
+      "freshWorkspaceReplayStatus",
+      "environmentBootstrapActions",
+      "undeclaredAbsoluteWorkspaceRoots"
     ],
-    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure.",
-    "failClosedState": "HOLD_RUNTIME_ROUTE_NOT_DELIVERED"
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory.",
+    "failClosedState": "HOLD_RUNTIME_OR_REPLAY_CLOSURE_INCOMPLETE"
   },
   "minimumFalsifiableTrial": {
     "scope": "one Vehicle private checkpoint only",
@@ -52,16 +68,19 @@
     "Does not reject the mathematical geometry, CPU renderer, or the design of the isolated GPU experiment.",
     "Does not claim WebGPU hardware failure; no actual adapter executed this package.",
     "Does not require global adoption before a second Mother or historical replay validates usefulness.",
-    "Offline source triangulation used only for observation is outside this gate unless it becomes a delivered runtime dependency."
+    "Offline source triangulation used only for observation is outside this gate unless it becomes a delivered runtime dependency.",
+    "An explicitly named, pinned external artifact is not silently missing; it remains a declared prerequisite and cannot support a standalone/self-contained replay claim until materialized.",
+    "A hard-coded writable temp root is replay-environment closure, distinct from geometry/runtime module closure; fixing it does not certify numeric results beyond the already tested fixed revision."
   ],
   "rollback": "Remove this Candidate if a replay shows that the referenced resource is intentionally external and the delivery contract names, pins, and validates that external dependency explicitly.",
   "evidence": [
     "n223/vehicle_executable_resource_closure_probe_n223.mjs",
-    "n223/vehicle_executable_resource_closure_result_n223.json"
+    "n223/vehicle_executable_resource_closure_result_n223.json",
+    "n230/a6_host_preparation_fresh_workspace_replay_result_n230.json"
   ],
   "lifecycle": {
     "posted": true,
-    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826",
+    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826; A6 N230 directional follow-up pending",
     "acknowledged": true,
     "acknowledgementEvidence": "haihao0307/guilin-dem-pipeline#91 comment 6547524817",
     "rootCauseReview": true,
@@ -70,5 +89,10 @@
     "gateRun": true,
     "adopted": false,
     "userAccepted": false
+  },
+  "environmentClosureTrial": {
+    "scope": "one A6 host-preparation archive only",
+    "pass": "From a fresh extraction with the author workspace absent, every named core replay program runs using packaged bytes and declared environment prerequisites; the harness creates its own writable temporary roots.",
+    "fail": "Any core program requires an undeclared absolute workspace directory or external byte resource, even when package integrity and earlier tests pass."
   }
 }
