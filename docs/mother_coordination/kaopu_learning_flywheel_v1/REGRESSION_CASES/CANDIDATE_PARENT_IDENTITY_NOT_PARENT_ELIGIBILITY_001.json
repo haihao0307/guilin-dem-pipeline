@@ -1,7 +1,7 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "PARENT-IDENTITY-NOT-PARENT-ELIGIBILITY-001",
-  "status": "CANDIDATE_MOTOR_HISTORY_REPLAY_PASSED_NOT_ADOPTED",
+  "status": "CANDIDATE_MOTOR_HISTORY_REPLAY_PLUS_REAR_COVER_FAIL_CLOSED_REPLAY_PASSED_NOT_ADOPTED",
   "active": false,
   "boundedQuestion": "When a successor artifact names or retains an earlier revision, what proves that the exact parent was eligible to seed the successor rather than merely available and hashable?",
   "currentBestViewComparison": {
@@ -9,7 +9,8 @@
       "EPHEMERAL-PUBLIC-PARENT-NOT-REPLAYABLE-001 requires immutable parent identity and replayability.",
       "REJECTED-DESCENDANT-QUARANTINE-001 prevents rejected ancestry or copied rejected content from silently returning."
     ],
-    "newDiscriminator": "Parent content identity and parent eligibility are orthogonal. An immutable, replayable parent still cannot seed an accepted lineage unless a scoped verifier verdict authorizes that exact parent and the child receipt binds the inherited and changed scopes."
+    "newDiscriminator": "Parent content identity and parent eligibility are orthogonal. An immutable, replayable parent still cannot seed an accepted lineage unless a scoped verifier verdict authorizes that exact parent and the child receipt binds the inherited and changed scopes.",
+    "newEvidenceN226": "A rejection registry can prove that listed parents are ineligible, but absence from that denylist is not evidence of scoped parent eligibility. Unknown hashes must fail closed at the promotion boundary."
   },
   "actualObservation": {
     "subject": "Motor private intermediate packages R15-R17",
@@ -59,12 +60,16 @@
     "rejectedScopeCarriedForward",
     "userReauthorizationForRejectedScope",
     "independentVerifierIdentity",
-    "childArtifactDigest"
+    "childArtifactDigest",
+    "parentEligibilityRegistryDigest",
+    "parentEligibilityEntry",
+    "parentEligibilityScope"
   ],
   "decisionOrder": [
     "Reject digest mismatch before considering eligibility.",
     "Hold when exact parent identity is absent.",
     "Hold when exact parent is known but its scoped eligibility verdict is absent.",
+    "Hold when a parent is absent from the rejection registry unless a separate scoped eligibility registry and verifier verdict authorize it; denylist absence is never promotion eligibility.",
     "Quarantine rejected scope unless exact current user reauthorization covers it.",
     "Only then classify the child as eligible for ordinary candidate verification."
   ],
@@ -73,7 +78,8 @@
     "HOLD_PARENT_IDENTITY_UNBOUND",
     "HOLD_PARENT_ELIGIBILITY_UNBOUND",
     "HOLD_REJECTED_DESCENDANT_PRESENT",
-    "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
+    "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED",
+    "REJECT_DENYLIST_ABSENCE_AS_PROMOTION_ELIGIBILITY"
   ],
   "cases": [
     {
@@ -131,7 +137,9 @@
         "parentSubjectDigest": "sha256:exact-subject",
         "parentDigestMatches": true,
         "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
-        "parentAcceptedScope": ["shared-front-support"],
+        "parentAcceptedScope": [
+          "shared-front-support"
+        ],
         "rejectedScopeCarriedForward": true,
         "userReauthorizationForRejectedScope": false
       },
@@ -145,12 +153,91 @@
         "parentSubjectDigest": "sha256:exact-subject",
         "parentDigestMatches": true,
         "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
-        "parentAcceptedScope": ["shared-front-support", "lamp-grille-relation"],
-        "inheritedScope": ["lamp-grille-relation"],
-        "changedScope": ["bumper-upper-boundary", "bumper-subdomains"],
+        "parentAcceptedScope": [
+          "shared-front-support",
+          "lamp-grille-relation"
+        ],
+        "inheritedScope": [
+          "lamp-grille-relation"
+        ],
+        "changedScope": [
+          "bumper-upper-boundary",
+          "bumper-subdomains"
+        ],
         "rejectedScopeCarriedForward": false,
         "independentVerifierIdentity": "verifier:independent",
         "childArtifactDigest": "sha256:exact-child"
+      },
+      "expect": "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
+    },
+    {
+      "id": "REAR_COVER_KNOWN_REJECTED_HASH",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:a7f6005d2b80fa3e80fba53067ccd997ad87abc6044c6758ad45909fdc3f739c",
+        "parentSubjectDigest": "sha256:rear-cover",
+        "parentDigestMatches": true,
+        "parentRegistryStatus": "REJECTED",
+        "rejectedScopeCarriedForward": true,
+        "userReauthorizationForRejectedScope": false
+      },
+      "expect": "HOLD_REJECTED_DESCENDANT_PRESENT"
+    },
+    {
+      "id": "REAR_COVER_KNOWN_PARTIAL_NOT_ACCEPTED_HASH",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:e55963b24cfead249b416a55eff23f4973cd764a4e88bbd753e5e3eb4e10f59c",
+        "parentSubjectDigest": "sha256:rear-cover",
+        "parentDigestMatches": true,
+        "parentRegistryStatus": "PARTIAL_NOT_ACCEPTED"
+      },
+      "expect": "HOLD_PARENT_ELIGIBILITY_UNBOUND"
+    },
+    {
+      "id": "REAR_COVER_UNKNOWN_HASH_NOT_IN_REJECT_REGISTRY",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:70c5304757435335853cfe97e619f6140c6597507dab0a97dd1a7bae8d8c9241",
+        "parentSubjectDigest": "sha256:rear-cover",
+        "parentDigestMatches": true,
+        "parentRegistryStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED"
+      },
+      "expect": "HOLD_PARENT_ELIGIBILITY_UNBOUND"
+    },
+    {
+      "id": "CONTROL_DENYLIST_ABSENCE_CLAIMED_AS_ELIGIBILITY",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:unknown-parent",
+        "parentSubjectDigest": "sha256:rear-cover",
+        "parentDigestMatches": true,
+        "parentRegistryStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED",
+        "denylistAbsenceClaimedAsEligibility": true
+      },
+      "expect": "REJECT_DENYLIST_ABSENCE_AS_PROMOTION_ELIGIBILITY"
+    },
+    {
+      "id": "CONTROL_EXACT_PARENT_SCOPED_ELIGIBILITY_REGISTRY",
+      "input": {
+        "parentClaimed": true,
+        "parentArtifactDigest": "sha256:eligible-parent",
+        "parentSubjectDigest": "sha256:rear-cover",
+        "parentDigestMatches": true,
+        "parentRegistryStatus": "ELIGIBLE_FOR_SCOPED_INHERITANCE",
+        "parentVerifierVerdict": "ACCEPTED_FOR_SCOPED_INHERITANCE",
+        "parentAcceptedScope": [
+          "rear-cover-support"
+        ],
+        "inheritedScope": [
+          "rear-cover-support"
+        ],
+        "changedScope": [
+          "rear-cover-surface"
+        ],
+        "rejectedScopeCarriedForward": false,
+        "independentVerifierIdentity": "verifier:independent",
+        "childArtifactDigest": "sha256:child"
       },
       "expect": "CANDIDATE_LINEAGE_ELIGIBLE_NOT_USER_ACCEPTED"
     }
@@ -162,13 +249,13 @@
     "rollbackPoint": "Remove this Candidate if one real Motor trial shows parent identity plus scoped parent eligibility cannot discriminate an invalid inherited baseline from a valid child candidate."
   },
   "routing": {
-    "target": "Motor Mother through coordinator issue #91",
+    "target": "Vehicle/Motor Mother through coordinator issue #91",
     "motherStatus": "NOT_QUERIED_UNKNOWN",
     "requestedAnswer": [
-      "Is exact R16 the intended parent of R17?",
-      "Was R16 accepted for the specific lamp/grille scope inherited by R17?",
-      "Which R16 scopes remain rejected or unknown?",
-      "What minimal verifier run binds R17 to exact R16 without promoting unrelated scopes?"
+      "Is the reject-registry gate used at any actual parent-selection or overlay boundary?",
+      "Does a separate eligibility allowlist already exist for unknown/new rear-cover hashes?",
+      "Should the reusable split be isKnownRejected(hash) versus isEligibleParent(hash, scope, verifierVerdict)?",
+      "Can one minimal trial run known rejected, unknown, and explicitly eligible controls through the actual selection boundary?"
     ]
   },
   "lifecycle": {
@@ -178,5 +265,30 @@
     "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
+  },
+  "actualObservationN226": {
+    "subject": "PARTIAL_REAR_COVER_REJECTED_BASELINES_CHECKPOINT.zip version 7",
+    "libraryId": "libfile_97b921c59c2c8191a441a8bb7911b7ad",
+    "zipSHA256": "ee323e4bc24402bfbb3961bec2d20ecf25b359e45e80f7e0debcecd0768bf27d",
+    "manifest": {
+      "entries": 450,
+      "mismatches": 0
+    },
+    "registry": {
+      "schema": "private-rejection-registry-v1",
+      "entries": 10,
+      "rejected": 8,
+      "partialNotAccepted": 2,
+      "unknownStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED"
+    },
+    "gateReplay": {
+      "knownEntriesBlocked": 10,
+      "unknownHash": "70c5304757435335853cfe97e619f6140c6597507dab0a97dd1a7bae8d8c9241",
+      "unknownReturnedWithoutThrow": true,
+      "returnedStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED",
+      "mayLoadByDefault": false
+    },
+    "decision": "HOLD_REAR_COVER_UNKNOWN_HASH_NOT_FAIL_CLOSED_FOR_PARENT_ELIGIBILITY",
+    "scope": "Candidate audit only; no evidence that production imports this private gate."
   }
 }
