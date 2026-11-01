@@ -1,0 +1,44 @@
+{
+  "schema": "kaopu.observation/1",
+  "observationId": "N226-REAR-COVER-REJECT-REGISTRY-UNKNOWN-FAIL-CLOSED",
+  "subject": {
+    "libraryTitle": "PARTIAL_REAR_COVER_REJECTED_BASELINES_CHECKPOINT.zip",
+    "libraryId": "libfile_97b921c59c2c8191a441a8bb7911b7ad",
+    "libraryVersion": 7,
+    "zipSHA256": "ee323e4bc24402bfbb3961bec2d20ecf25b359e45e80f7e0debcecd0768bf27d",
+    "manifestEntries": 450,
+    "manifestMismatches": 0
+  },
+  "positiveEvidence": {
+    "registrySchema": "private-rejection-registry-v1",
+    "registeredEntries": 10,
+    "registeredRejected": 8,
+    "registeredPartialNotAccepted": 2,
+    "registeredHashesBlockedByGate": 10,
+    "documentedUnknownStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED",
+    "documentedDefaultLoad": null
+  },
+  "counterexample": {
+    "entrypoint": "requireNonRejectedCover",
+    "inputSHA256": "70c5304757435335853cfe97e619f6140c6597507dab0a97dd1a7bae8d8c9241",
+    "registryMatch": false,
+    "returnedStatus": "UNREVIEWED_NOT_AUTO_ACCEPTED",
+    "threw": false,
+    "mayLoadByDefault": false,
+    "mechanism": "The function rejects only registered hashes. An unknown hash returns successfully, so callers can mistake denylist absence for promotion eligibility despite the returned flag."
+  },
+  "boundedDecision": "HOLD_REAR_COVER_UNKNOWN_HASH_NOT_FAIL_CLOSED_FOR_PARENT_ELIGIBILITY",
+  "scope": "Candidate audit only. The package is not production, the package documentation is honest, and no evidence shows that production imports this gate.",
+  "requiredSemanticSplit": [
+    "isKnownRejected(hash)",
+    "isEligibleParent(hash, scope, verifierVerdict)"
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
