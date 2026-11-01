@@ -16,6 +16,26 @@
     ],
     "remainingGap": "No explicit, separately gated transmission/kinematic edge graph establishes which axle or driver drives each wheel. Shared Time and a correct world matrix are evidence of numerical motion equivalence, not by themselves a transmission relationship receipt."
   },
+  "followups": [
+    {
+      "run": "N228",
+      "subjectVersion": 20,
+      "archiveSha256": "8fb6cedbdf48416902b60b9cb8633911654043435e16b085177cb12fcead658e",
+      "freshPackageDelta": "679 files were added and 5 old v12 checkpoint-history files removed, but the current wheel contract, canonical train, three wheel/assembly test files, current evaluator, and wheel builder are byte-identical to N227 version 13.",
+      "counterexample": {
+        "instanceID": "train88/A6/A4/drive_wheel_rear",
+        "mutation": "Time.axleID: locomotive.driver.1 -> tender.tender.1",
+        "wrongButKnownToken": true,
+        "canonicalImportAccepted": true,
+        "evaluationAccepted": true,
+        "sharedTimes": 3,
+        "matrixScalarComparisons": 30240,
+        "changedMatrixScalars": 0,
+        "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+      },
+      "packageTestReplay": "18/18 current wheel, canonical-binding, and assembly tests passed on the unmodified v20 package; this preserves positive geometry/time evidence but is not an axle-relation negative test."
+    }
+  ],
   "invariant": [
     "Identity, placement, structural/subordinate, and transmission/kinematic relations are separate claim layers.",
     "A broad relationship-verified label requires resolved references and negative controls for every claimed layer.",
@@ -27,7 +47,8 @@
     {"case": "placement parent exists but belongs to wrong assembly", "decision": "HOLD_PARENT_SCOPE_MISMATCH"},
     {"case": "member bypasses declared owner", "decision": "HOLD_SUBORDINATE_RELATION_MISMATCH"},
     {"case": "geometry/time passes but no transmission edge exists", "decision": "HOLD_TRANSMISSION_RELATION_UNBOUND"},
-    {"case": "transmission edge driver is missing or wrong role", "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"}
+    {"case": "transmission edge driver is missing or wrong role", "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"},
+    {"case": "wrong-but-known axle token imports and evaluates with identical frames", "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"}
   ],
   "candidateReceiptFields": [
     "identityGraphRef",
