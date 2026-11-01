@@ -85,7 +85,7 @@ The actual Vehicle/Mechanical Mother should answer only:
 
 ## State
 
-- `POSTED`: pending issue comment
+- `POSTED`: issue #91 comment `6557500053`
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: Candidate probe only
 - `GATE-RUN`: Candidate 7-control replay only
