@@ -34,6 +34,29 @@
         "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
       },
       "packageTestReplay": "18/18 current wheel, canonical-binding, and assembly tests passed on the unmodified v20 package; this preserves positive geometry/time evidence but is not an axle-relation negative test."
+    },
+    {
+      "run": "N229",
+      "subjectVersion": 27,
+      "archiveSha256": "4e6a823a900cc113c683a6d5c0aa769084d5cea0ed512a220a359b7e92b228a0",
+      "freshPackageDelta": "516 paths were added and 1 path removed relative to v20; no same-path file changed. The current wheel contract, canonical train, current evaluator, wheel builder, and three current wheel/assembly test files remain byte-identical. The relevant new native-time-adapter-r01 selects an exclusive native versus static frame authority and intentionally reuses evaluateCurrent.",
+      "positiveReplay": "18/18 current wheel/canonical-binding/assembly tests and 5/5 native frame-authority adapter tests passed on the unmodified v27 package.",
+      "counterexample": {
+        "instanceID": "train88/A6/A4/drive_wheel_rear",
+        "mutation": "Time.axleID: locomotive.driver.1 -> tender.tender.1",
+        "wrongButKnownToken": true,
+        "canonicalImportAccepted": true,
+        "currentEvaluationAccepted": true,
+        "currentSharedTimes": 3,
+        "currentMatrixScalarComparisons": 30240,
+        "currentChangedMatrixScalars": 0,
+        "nativeFrameAuthorityAccepted": true,
+        "nativeFrameAuthorityQueries": 7038,
+        "nativeFrameAuthorityMatrixScalarComparisons": 110256,
+        "nativeFrameAuthorityChangedMatrixScalars": 0,
+        "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+      },
+      "scope": "The new adapter is valuable for preventing static/dynamic double composition, but it is not an axle/driver relationship gate and does not consume Time.axleID."
     }
   ],
   "invariant": [
@@ -42,13 +65,34 @@
     "UNKNOWN physical attachment remains UNKNOWN and is not silently promoted or used to invalidate a bounded logical-graph candidate."
   ],
   "decisionTable": [
-    {"case": "all required logical edges resolve and match scope", "decision": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE"},
-    {"case": "placement parent absent", "decision": "HOLD_PARENT_RELATION_UNRESOLVED"},
-    {"case": "placement parent exists but belongs to wrong assembly", "decision": "HOLD_PARENT_SCOPE_MISMATCH"},
-    {"case": "member bypasses declared owner", "decision": "HOLD_SUBORDINATE_RELATION_MISMATCH"},
-    {"case": "geometry/time passes but no transmission edge exists", "decision": "HOLD_TRANSMISSION_RELATION_UNBOUND"},
-    {"case": "transmission edge driver is missing or wrong role", "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"},
-    {"case": "wrong-but-known axle token imports and evaluates with identical frames", "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"}
+    {
+      "case": "all required logical edges resolve and match scope",
+      "decision": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE"
+    },
+    {
+      "case": "placement parent absent",
+      "decision": "HOLD_PARENT_RELATION_UNRESOLVED"
+    },
+    {
+      "case": "placement parent exists but belongs to wrong assembly",
+      "decision": "HOLD_PARENT_SCOPE_MISMATCH"
+    },
+    {
+      "case": "member bypasses declared owner",
+      "decision": "HOLD_SUBORDINATE_RELATION_MISMATCH"
+    },
+    {
+      "case": "geometry/time passes but no transmission edge exists",
+      "decision": "HOLD_TRANSMISSION_RELATION_UNBOUND"
+    },
+    {
+      "case": "transmission edge driver is missing or wrong role",
+      "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"
+    },
+    {
+      "case": "wrong-but-known axle token imports and evaluates with identical frames",
+      "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+    }
   ],
   "candidateReceiptFields": [
     "identityGraphRef",
@@ -67,8 +111,8 @@
   "state": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
-    "IMPLEMENTED": "Candidate probe only",
-    "GATE_RUN": "Candidate 7-control replay only",
+    "IMPLEMENTED": "Candidate probes only",
+    "GATE_RUN": "Candidate 7-control relation-graph replay plus exact v20 and v27 mutation replays",
     "ADOPTED": false,
     "USER_ACCEPTED": false
   }
