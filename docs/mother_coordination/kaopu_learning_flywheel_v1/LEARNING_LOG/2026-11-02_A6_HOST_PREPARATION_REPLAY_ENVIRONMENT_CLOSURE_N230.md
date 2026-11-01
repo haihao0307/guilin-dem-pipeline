@@ -73,7 +73,7 @@ It does not certify different hardware, browser/GPU, canonical/Time integration,
 
 ## State
 
-- `POSTED`: pending directional follow-up
+- `POSTED`: issue #91 comment `6565727325`
 - `ACKNOWLEDGED`: false for this A6 subject
 - `IMPLEMENTED`: Candidate static checker and regression update only
 - `GATE-RUN`: fresh-extraction runtime replay plus controlled temp-root positive replay
