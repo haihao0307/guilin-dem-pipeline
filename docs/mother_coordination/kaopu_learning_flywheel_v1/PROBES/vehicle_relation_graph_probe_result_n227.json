@@ -1,0 +1,14 @@
+{
+  "schema": "kaopu.candidate.relation-graph-probe-result/1",
+  "passed": 7,
+  "total": 7,
+  "results": [
+    {"name": "valid logical graph; physical attachment remains UNKNOWN", "expected": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE", "actual": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE", "passed": true},
+    {"name": "dangling placement parent", "expected": "HOLD_PARENT_RELATION_UNRESOLVED", "actual": "HOLD_PARENT_RELATION_UNRESOLVED", "passed": true},
+    {"name": "wheel placed under wrong assembly", "expected": "HOLD_PARENT_SCOPE_MISMATCH", "actual": "HOLD_PARENT_SCOPE_MISMATCH", "passed": true},
+    {"name": "member bypasses wheel parent", "expected": "HOLD_SUBORDINATE_RELATION_MISMATCH", "actual": "HOLD_SUBORDINATE_RELATION_MISMATCH", "passed": true},
+    {"name": "missing transmission edge despite geometry/time proof", "expected": "HOLD_TRANSMISSION_RELATION_UNBOUND", "actual": "HOLD_TRANSMISSION_RELATION_UNBOUND", "passed": true},
+    {"name": "dangling transmission driver", "expected": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED", "actual": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED", "passed": true},
+    {"name": "wrong driver role", "expected": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED", "actual": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED", "passed": true}
+  ]
+}
