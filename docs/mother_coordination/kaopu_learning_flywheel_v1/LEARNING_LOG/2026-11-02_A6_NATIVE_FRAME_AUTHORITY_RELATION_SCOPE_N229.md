@@ -72,7 +72,7 @@ This does not reject A6 geometry, shared Time, the exclusive frame-authority ada
 
 ## State
 
-- `POSTED`: pending directional follow-up
+- `POSTED`: issue #91 comment `6562997810`
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: Candidate probe/regression update only
 - `GATE-RUN`: exact v27 current + native-adapter mutation, plus 18/18 and 5/5 unmodified replay
