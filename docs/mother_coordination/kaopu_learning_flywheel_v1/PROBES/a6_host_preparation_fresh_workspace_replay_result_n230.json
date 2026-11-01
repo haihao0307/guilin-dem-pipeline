@@ -1,0 +1,59 @@
+{
+  "schema": "kaopu.candidate.a6-host-preparation-fresh-workspace-replay-result/1",
+  "exactSubject": {
+    "name": "A6_POST4376852_NATIVE_FREEZE_HOST_PREPARATION_R01_20261101.zip",
+    "libraryFileID": "libfile_b5e6822105808191abb719df0f5a6596",
+    "archiveSHA256": "a2b030fb3248049ef73688b2b96ffc786c64aa7bbe28089601458446f9c0ed5c",
+    "archiveBytes": 169988,
+    "archiveEntries": 67
+  },
+  "positiveEvidence": {
+    "untouchedManifestEntries": 66,
+    "untouchedManifestMismatches": 0,
+    "packagedNativeSnapshot": true,
+    "relativeRuntimeImports": true,
+    "firstFreshReplayProgramsPassedBeforeFailure": [
+      "test-exact.mjs",
+      "test-negative-ownership.mjs"
+    ],
+    "fixedRevisionNumericOwnershipAndHotCostEvidenceNotRejected": true
+  },
+  "freshWorkspaceReplay": {
+    "authorSourceWorkspaceAbsent": true,
+    "workspaceSharedParentInitiallyAbsent": true,
+    "replayCommand": "node replay-smoke.mjs",
+    "exitCode": 1,
+    "firstFailedProgram": "revision-guard-tests.mjs",
+    "errorCode": "ENOENT",
+    "failingOperation": "mkdtempSync('/workspace/shared/post4376852-guard-')",
+    "undeclaredAbsoluteWritableRoot": "/workspace/shared",
+    "fourthProgramNotRun": true
+  },
+  "controlledBootstrap": {
+    "action": "create /workspace/shared only",
+    "sourceFixtureOrRuntimeCodeModified": false,
+    "replayExitCode": 0,
+    "programsPassed": [
+      "test-exact.mjs",
+      "test-negative-ownership.mjs",
+      "revision-guard-tests.mjs",
+      "test-original-ownership-after-freeze.mjs"
+    ]
+  },
+  "deterministicStaticProbe": {
+    "hardcodedWritableTempPrefixes": 1,
+    "undeclaredAbsoluteWritableRoots": [
+      "/workspace/shared"
+    ],
+    "decision": "HOLD_A6_HOST_PREPARATION_REPLAY_ENVIRONMENT_CLOSURE_INCOMPLETE"
+  },
+  "relatedBoundary": {
+    "v29ExternalPackage": "A6_V29_HOST_PREPARATION_R01_FIXED_REVISION_EQUIVALENCE_20261101.zip",
+    "classification": "declared pinned external dependency, not hidden resource closure",
+    "observedFreshWorkspaceResult": "fails at first exact import when the explicitly required v29 source tree is not materialized",
+    "consequence": "does not support a standalone replay claim, but confirms its documented portability limitation rather than creating a new failure class"
+  },
+  "minimumRepair": "Use fs.mkdtempSync(path.join(os.tmpdir(), 'post4376852-guard-')) or create and declare a package-local writable temp parent before the guard; rerun from a fresh extraction with no author workspace directories precreated.",
+  "decision": "HOLD_A6_HOST_PREPARATION_REPLAY_ENVIRONMENT_CLOSURE_INCOMPLETE",
+  "limitation": "This does not reject the package's self-contained runtime snapshot, fixed-revision Float64 equality, ownership checks, or bounded hot-cost observation. It blocks only the stronger clean-workspace/full-core-replay claim until the test harness owns its temporary-directory prerequisite."
+}
