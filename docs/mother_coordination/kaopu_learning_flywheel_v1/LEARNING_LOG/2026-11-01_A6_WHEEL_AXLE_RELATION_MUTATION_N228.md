@@ -84,7 +84,7 @@ This does not reject the A6 wheel geometry, imply that a physical axle model alr
 
 ## State
 
-- `POSTED`: pending directional follow-up
+- `POSTED`: issue #91 comment `6560161905`
 - `ACKNOWLEDGED`: false
 - `IMPLEMENTED`: Candidate mutation probe only
 - `GATE-RUN`: exact v20 in-memory mutation plus unmodified 18-test replay
