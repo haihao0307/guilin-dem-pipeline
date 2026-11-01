@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu.regression-case.candidate/1",
+  "id": "CANDIDATE_GEOMETRY_TIME_NOT_RELATION_GRAPH_001",
+  "status": "Candidate",
+  "failureClass": "geometry/time equivalence or stable identities are promoted to parent/subordinate/transmission relationship proof",
+  "boundedSubject": "A6 wheel relationship-verification scope only",
+  "observation": {
+    "package": "A6_SPACETIME_R01_WHEEL_VERIFIED_CHECKPOINT_20261101.zip",
+    "libraryIdentity": "libfile_2cabe4dab46c8191b45f04e641c12ca2",
+    "libraryVersionObserved": 13,
+    "archiveSha256": "1bf084b6de355c37538e1cb6b070945163aeb9137e1730957919f61a2a5a060b",
+    "positiveEvidence": [
+      "14 wheelsets, 28 wheel faces, 5 shared wheelset models, and 624 named leaf boundary views are recorded",
+      "known parent matrices and 624 leaf world points are compared against the independent source generator at multiple shared Times",
+      "the package explicitly leaves physical contact, bearings, loads, suspension, brakes, and couplers unknown"
+    ],
+    "remainingGap": "No explicit, separately gated transmission/kinematic edge graph establishes which axle or driver drives each wheel. Shared Time and a correct world matrix are evidence of numerical motion equivalence, not by themselves a transmission relationship receipt."
+  },
+  "invariant": [
+    "Identity, placement, structural/subordinate, and transmission/kinematic relations are separate claim layers.",
+    "A broad relationship-verified label requires resolved references and negative controls for every claimed layer.",
+    "UNKNOWN physical attachment remains UNKNOWN and is not silently promoted or used to invalidate a bounded logical-graph candidate."
+  ],
+  "decisionTable": [
+    {"case": "all required logical edges resolve and match scope", "decision": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE"},
+    {"case": "placement parent absent", "decision": "HOLD_PARENT_RELATION_UNRESOLVED"},
+    {"case": "placement parent exists but belongs to wrong assembly", "decision": "HOLD_PARENT_SCOPE_MISMATCH"},
+    {"case": "member bypasses declared owner", "decision": "HOLD_SUBORDINATE_RELATION_MISMATCH"},
+    {"case": "geometry/time passes but no transmission edge exists", "decision": "HOLD_TRANSMISSION_RELATION_UNBOUND"},
+    {"case": "transmission edge driver is missing or wrong role", "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"}
+  ],
+  "candidateReceiptFields": [
+    "identityGraphRef",
+    "placementEdgeCount",
+    "placementVerifierVerdict",
+    "subordinateEdgeCount",
+    "subordinateVerifierVerdict",
+    "transmissionEdgeCount",
+    "transmissionDriverRefsResolved",
+    "kinematicLawCheck",
+    "physicalAttachmentStatus",
+    "geometryTimeReceiptRef"
+  ],
+  "scopeBoundary": "Does not reject the package, alter the train asset, certify engineering or physical attachment, or require a global OS change. It only prevents broad relationship claims from inheriting geometry/time evidence.",
+  "route": "Vehicle/Mechanical Mother via issue #91",
+  "state": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "Candidate probe only",
+    "GATE_RUN": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
