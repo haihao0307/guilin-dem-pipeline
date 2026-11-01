@@ -2,6 +2,7 @@
 
 - 会议编号：`KAOPU-MOTHER-20261102-MECHANICAL-PRISM-CONTRACT-001`
 - 实际核查开始：2026-11-02 02:26:37 +08:00
+- 实际核查结束：2026-11-02 02:30:04 +08:00（3分27秒；完成即结束）
 - 协调分支读取基线：`af35ddedcac6227e3c657a91e07fb2e2347f48e4`
 - main：`34553e93d75a427c10dbf5b0077d42f8cdda0a63`
 - 范围：一个最高价值问题——新 Mechanical 凸截面方轴私有包能否按 R2 进入生产候选
@@ -69,7 +70,7 @@
 
 ## 生命周期
 
-- `POSTED`：待写入 #91 后更新
+- `POSTED=true`：#91 comment `6562091956`
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=true`：仅私有 Library 工件
 - `GATE-RUN=true`：fresh restore + local source/reference/machine gates
