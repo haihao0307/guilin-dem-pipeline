@@ -86,7 +86,9 @@ exit 1
 
 不新建重复 case；更新 `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001`。
 
-当前 lifecycle：`POSTED / Candidate IMPLEMENTED / GATE-RUN`；`ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`。\n\nPOST receipt：`haihao0307/guilin-dem-pipeline#91 comment 6591405050`。
+当前 lifecycle：`POSTED / Candidate IMPLEMENTED / GATE-RUN`；`ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`。
+
+POST receipt：`haihao0307/guilin-dem-pipeline#91 comment 6591405050`。
 
 ## 边界
 
