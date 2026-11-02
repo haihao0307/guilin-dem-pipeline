@@ -1,0 +1,121 @@
+{
+  "schema": "kaopu.learning-flywheel.probe-result/1",
+  "run": "N235",
+  "observedAt": "2026-11-03T07:40:00+08:00",
+  "boundedQuestion": "Can A4_ORIGINAL_SHORT_INNER_RETURN_INSTALLED_R06.zip execute every included current local gate from a fresh extraction using only packaged or explicitly materialized prerequisite bytes?",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainHead": "34553e93d75a427c10dbf5b0077d42f8cdda0a63",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "r2OSBlob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "replicationGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "priorLearningHead": "882a200d81c24abba1378200bd9725f9a9931e86"
+  },
+  "subject": {
+    "name": "A4_ORIGINAL_SHORT_INNER_RETURN_INSTALLED_R06.zip",
+    "libraryIdentity": "libfile_6bc4b7c511448191843d3fb8801f61f6",
+    "zipSHA256": "9f214b3965483af25593d4d1406c813691e89ff7af6b8f153598bb7cfdc38d9d",
+    "archiveEntries": 646,
+    "manifestEntries": 645,
+    "previousCheckpoint": {
+      "libraryIdentity": "libfile_84c57058845c8191b9e944a7fda8c7a5",
+      "sha256": "0f0bfaa49e7e8cf46d24334207f8be13eff216021af68d7450644d2b3e073dca"
+    }
+  },
+  "freshExtraction": {
+    "authorWorkspacePrecreated": false,
+    "manifest": {
+      "checked": 645,
+      "mismatchCount": 0,
+      "status": "PASS"
+    },
+    "includedTests": [
+      {
+        "name": "analytic-pass.test.mjs",
+        "status": "PASS",
+        "passes": 9,
+        "rejectedConfigurations": 10
+      },
+      {
+        "name": "camera.test.mjs",
+        "status": "PASS",
+        "cases": 1625
+      },
+      {
+        "name": "display-newton-state.test.mjs",
+        "status": "FAIL_ENOENT",
+        "missingPath": "a6-spacetime-conversion-r01/original-window-frame-r01/window-native.glsl",
+        "exitCode": 1
+      },
+      {
+        "name": "pane-order.test.mjs",
+        "status": "PASS",
+        "directions": 5,
+        "refusalGates": 7
+      },
+      {
+        "name": "ui-protocol.test.mjs",
+        "status": "PASS_NODE_MOCK_ONLY",
+        "modes": 11,
+        "browserUsed": false
+      }
+    ],
+    "missingDependency": {
+      "referencedBy": "a6-spacetime-conversion-r01/original-function-assembly-r01/display-newton-state.test.mjs",
+      "absentDirectory": "a6-spacetime-conversion-r01/original-window-frame-r01",
+      "manifestCoverage": false,
+      "automaticResolverIncluded": false,
+      "exactExternalPrerequisitePathMappingDeclared": false
+    },
+    "actualGLES": {
+      "status": "PASS",
+      "renderer": "Mesa llvmpipe OpenGL ES 3.2",
+      "installedMembers": 10,
+      "rows": 11,
+      "archivedRowHashMatches": 11,
+      "archivedPNGByteMatches": 11,
+      "nativeSceneTriangles": 0,
+      "sourceGeometryOrTexturesUsed": false,
+      "rejectedBaselineUsed": false
+    }
+  },
+  "observation": "The archive manifest truthfully covers all 645 packaged files and the current 10-member software-GLES renderer reproduces all 11 archived images byte-for-byte. However, one included gate imports historical window-frame source/diagnostic bytes from a relative directory that is absent from the archive and manifest; fresh extraction therefore cannot replay the complete included test set without an external merged checkpoint.",
+  "decision": "HOLD_A4_R06_FRESH_WORKSPACE_TEST_RESOURCE_CLOSURE_INCOMPLETE",
+  "currentBestView": {
+    "retained": [
+      "Exact packaged current renderer is deterministic for the tested software-GLES environment.",
+      "R06 analytic pass test, camera math, pane-order unit gate, and Node protocol gate pass independently.",
+      "The failure is not evidence that R06 pixels or short-return geometry are wrong."
+    ],
+    "blocked": [
+      "self-contained complete local-gate replay",
+      "fresh-workspace closure of the included display-newton-state provenance gate",
+      "promotion from packaged-output replay to complete executable verification closure"
+    ]
+  },
+  "minimumRepair": [
+    "Package original-window-frame-r01 dependencies and manifest-pin them, or",
+    "declare an exact external prerequisite with path mapping plus an automated exact-SHA materializer before tests, and",
+    "run all included gates from fresh extraction without author-workspace state."
+  ],
+  "regression": {
+    "id": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "action": "UPDATED_EXISTING_NO_DUPLICATE"
+  },
+  "boundaries": [
+    "No claim about visual, source-shape, whole-cab, whole-train, browser, hardware-GPU, mobile, production, or user acceptance.",
+    "The separate pane-order verifier/production-path split in issue #91 comment 6585164812 remains HOLD and was not re-tested here.",
+    "A previous-checkpoint Library ID plus SHA is useful provenance but is not by itself an executable path resolver for a relative import.",
+    "No production Mother, private package, main branch, R2 OS, or global gate was modified."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": true,
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
