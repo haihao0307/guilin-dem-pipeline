@@ -1,0 +1,99 @@
+{
+  "schema": "kaopu.learning-flywheel.probe-result/1.0",
+  "run": "N232",
+  "dateAsiaShanghai": "2026-11-02",
+  "boundedQuestion": "Does A6_WHOLE_CPU_INSPECTION_R02 fail closed on any executable runtime byte change before RESTORE_DISPLAY declares PASS, rather than binding only cached data and expected frame hashes?",
+  "subject": {
+    "libraryFileID": "libfile_430c3c55f5248191b61df60c6d64e150",
+    "libraryVersion": 1,
+    "createdUTC": "2026-11-02T10:48:41.917686Z",
+    "modifiedUTC": "2026-11-02T11:15:38.373233Z",
+    "archiveName": "A6_WHOLE_CPU_INSPECTION_R02.zip",
+    "archiveSHA256": "3eade028f95b9fec427ba55da7243ec101afa64b032c132a83a1560f01f3afa1",
+    "archiveBytes": 28694906,
+    "archiveEntries": 561,
+    "manifestEntries": 560,
+    "claimedSiteCommit": "a3027b41cadad23e01e4ff50c3e8dacaa884b782"
+  },
+  "baselineBlobs": {
+    "rootAGENTS": "251b664646a489e9292748f1d41998ee62a338f5",
+    "motherOSR2": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "replicationGate": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGate": "4754a90a94e4a9e7806357b6eb292e5c713e9021"
+  },
+  "positiveControl": {
+    "manifestIntegrity": {
+      "checked": 560,
+      "mismatches": 0
+    },
+    "command": "node RESTORE_DISPLAY.mjs",
+    "status": "PASS_INDEPENDENT_HYBRID_DISPLAY_RESTORE",
+    "frames": [
+      {
+        "seconds": 0,
+        "width": 320,
+        "height": 180,
+        "rgbaSHA256": "cd0ae8035b42a90a20888e280ad3f5cad074a9b8eeaa911a9e4f62f797cb32f0"
+      },
+      {
+        "seconds": 0.53,
+        "width": 320,
+        "height": 180,
+        "rgbaSHA256": "af740a9e2ad6c71d654193dd2c44deed83c1efb735a4e397cbf06c20a6a36ab6"
+      }
+    ],
+    "exactWheelReplacedCellDraws": 596,
+    "sourceDraws": 1097,
+    "displayEntries": 820,
+    "timeAuthority": "a6/current-native-common-Time-world-frame/1",
+    "additionalStaticComposition": false,
+    "wholeGeometryAccepted": false
+  },
+  "negativeControl": {
+    "mutation": "Append one verifier-only no-op comment to site/cpu-whole/cache-runtime.mjs; no data, expected frame, WASM, geometry, material, or runtime behavior change.",
+    "originalSHA256": "e12248b47a0c3cb673fa8d4fcd4e15c78aeedd6a7727588db7134229cd62fb16",
+    "mutatedSHA256": "c5b9da360fe14014e218356893e85387360741d2418348e49dc8bf4ceb96b8cf",
+    "originalBytes": 8417,
+    "mutatedBytes": 8511,
+    "externalManifestCheck": {
+      "mismatches": 1,
+      "path": "site/cpu-whole/cache-runtime.mjs"
+    },
+    "packagedRestoreResult": "PASS_INDEPENDENT_HYBRID_DISPLAY_RESTORE",
+    "outputHashesUnchanged": true,
+    "observation": "RESTORE_DISPLAY verifies canonical, packet, cache metadata, wheel bindings, decompressed jets, and expected output frames, but it does not verify MANIFEST.json before importing the executable JS/WASM closure."
+  },
+  "decision": "HOLD_A6_R02_RESTORE_RUNTIME_RESOURCE_IDENTITY_NOT_FAIL_CLOSED",
+  "candidateFix": {
+    "rule": "Validate every MANIFEST.json entry before any packaged runtime module or WASM executes.",
+    "implementationBoundary": "Use a separate preflight wrapper or convert static runtime imports to dynamic imports after full manifest validation; a top-level check placed after static imports is too late.",
+    "requiredNegativeTest": "Any one-byte mutation of imported JS or WASM must stop before render and must not write a PASS restore receipt."
+  },
+  "claimScope": {
+    "verified": [
+      "The exact archive is internally complete against its 560-entry manifest.",
+      "The untouched package replays two actual 320x180 CPU frames byte-identically in a fresh extraction.",
+      "The package preserves explicit boundaries: not full train, not full source regeneration, not hardware GPU/browser/mobile/production/user acceptance."
+    ],
+    "notVerified": [
+      "Pre-execution identity closure of all imported runtime JS and WASM.",
+      "Current/default authority promotion.",
+      "Whole geometry or material acceptance.",
+      "Hardware GPU, browser, mobile, production, visual acceptance, or user acceptance."
+    ]
+  },
+  "regressionHandling": {
+    "action": "UPDATE_EXISTING",
+    "caseID": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "newFailureClassCreated": false
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": "verifier-only exact mutation and manifest comparison",
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
