@@ -105,7 +105,7 @@ The following remain outside the accepted scope:
 
 No new regression. `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001` receives this exact-subject positive control.
 
-- POSTED: false (pending #91 routing)
+- POSTED: true — #91 comment `6586833224`
 - ACKNOWLEDGED: false
 - IMPLEMENTED: existing package lock + verifier-only mutation; production false
 - GATE-RUN: true
