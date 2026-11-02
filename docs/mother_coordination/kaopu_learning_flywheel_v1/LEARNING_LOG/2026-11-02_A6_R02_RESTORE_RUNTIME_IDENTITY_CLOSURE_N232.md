@@ -116,7 +116,7 @@ Not verified:
 
 No new regression case. `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001` receives this exact-subject negative control and the pre-import manifest rule.
 
-- POSTED: false (pending #91 routing)
+- POSTED: true — #91 comment `6576312725`
 - ACKNOWLEDGED: false
 - IMPLEMENTED: verifier-only mutation/check; production fix false
 - GATE-RUN: true
