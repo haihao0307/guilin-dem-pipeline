@@ -113,7 +113,7 @@ No new regression. `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001` receives this exa
 - actual untouched output is reproduced;
 - declared external prerequisites are not misclassified as hidden standalone dependencies.
 
-- POSTED: false (pending #91 routing)
+- POSTED: true — #91 comment `6581472661`
 - ACKNOWLEDGED: false
 - IMPLEMENTED: existing package gate + verifier-only mutation; production false
 - GATE-RUN: true
