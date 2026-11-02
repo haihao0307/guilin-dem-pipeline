@@ -1,0 +1,48 @@
+{
+  "version": "NPC-LIFE-OBSERVATION-R03",
+  "status": "SOURCE_CANDIDATE_READY_FOR_BROWSER_VERIFICATION",
+  "task": "修复打不开的生活动作网页并自查内容、迭代一版",
+  "baselineCommit": "339a687dcc64160bd78730c671b8926b62af55df",
+  "native": "HUMAN-INTEGRATED-R07",
+  "nativeSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+  "scope": [
+    "bounded recoverable boot",
+    "original standalone resources",
+    "native GPU acknowledged continuous observation",
+    "original bottle and window physical interactions"
+  ],
+  "preserve": [
+    "native geometry/rig/weights/material",
+    "prior immutable published versions",
+    "draft PR, no merge or force push"
+  ],
+  "limits": {
+    "startupMS": 180000,
+    "nativeRenderCalls": 12,
+    "GPUWaitMS": 45000,
+    "fixedPhysicsStep": 0.008333333333333333,
+    "maxAdvanceSeconds": 0.12
+  },
+  "verification": "Local checks rerun on recovered sources; actual R03 browser and public delivery not yet verified.",
+  "currentMain": "5543f756ca3af1428323696324303fa70b8de850",
+  "draftPR": 323,
+  "localChecks": {
+    "assetCases": 4,
+    "bootQueueClockFixtures": 24,
+    "continuousTraceFixtures": 25,
+    "causalityCases": 21,
+    "actualBrowserPassed": false,
+    "navigationPayloadFixtures": 12
+  },
+  "candidateHTML": {
+    "bytes": 66603687,
+    "sha256": "4087a67df10ee3c62d0645ff02afef3d0f0643f81d3c64dc4f3360e568099440"
+  },
+  "previousCandidateFailure": {
+    "run": 39534051283,
+    "source": "85a4d7185c5d22918d6a02a50789de7caf382023",
+    "stage": "candidate response and freshness",
+    "reason": "large file response evicted from inspector cache; screenshot independently exposed CSS hiding recovery shell",
+    "delivery": "not published"
+  }
+}
