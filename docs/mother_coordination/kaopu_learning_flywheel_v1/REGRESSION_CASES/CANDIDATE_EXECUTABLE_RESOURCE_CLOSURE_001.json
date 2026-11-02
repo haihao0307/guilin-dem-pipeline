@@ -45,7 +45,10 @@
       "realBackendExecutionStatus",
       "replayEnvironmentPrerequisites",
       "writableTempRoots",
-      "freshWorkspaceReplayCommand"
+      "freshWorkspaceReplayCommand",
+      "finalGoArchiveSHA256",
+      "explicitFinalGoState",
+      "partialRestoreAllowlist"
     ],
     "deliveryReceiptFields": [
       "executableResourceClosure",
@@ -54,9 +57,12 @@
       "backendActuallyExecuted",
       "freshWorkspaceReplayStatus",
       "environmentBootstrapActions",
-      "undeclaredAbsoluteWorkspaceRoots"
+      "undeclaredAbsoluteWorkspaceRoots",
+      "archiveIntegrityBeforeAfter",
+      "actualReplayScope",
+      "outputByteIdentity"
     ],
-    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory.",
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority.",
     "failClosedState": "HOLD_RUNTIME_OR_REPLAY_CLOSURE_INCOMPLETE"
   },
   "minimumFalsifiableTrial": {
@@ -76,11 +82,12 @@
   "evidence": [
     "n223/vehicle_executable_resource_closure_probe_n223.mjs",
     "n223/vehicle_executable_resource_closure_result_n223.json",
-    "n230/a6_host_preparation_fresh_workspace_replay_result_n230.json"
+    "n230/a6_host_preparation_fresh_workspace_replay_result_n230.json",
+    "n231/a6_v35_whole_install_replay_closure_result_n231.json"
   ],
   "lifecycle": {
     "posted": true,
-    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826; A6 N230 issue #91 comment 6565727325",
+    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826; A6 N230 issue #91 comment 6565727325; A6 N231 directional follow-up pending",
     "acknowledged": true,
     "acknowledgementEvidence": "haihao0307/guilin-dem-pipeline#91 comment 6547524817",
     "rootCauseReview": true,
@@ -94,5 +101,20 @@
     "scope": "one A6 host-preparation archive only",
     "pass": "From a fresh extraction with the author workspace absent, every named core replay program runs using packaged bytes and declared environment prerequisites; the harness creates its own writable temporary roots.",
     "fail": "Any core program requires an undeclared absolute workspace directory or external byte resource, even when package integrity and earlier tests pass."
-  }
+  },
+  "positiveControlReplays": [
+    {
+      "subject": "A6_SPACETIME_R01_WHEEL_VERIFIED_CHECKPOINT_20261101.zip version 35 / whole-v34-install-r01",
+      "libraryIdentity": "libfile_2cabe4dab46c8191b45f04e641c12ca2",
+      "sha256": "30e0a239f2d7cbb96d2d15ed4ea6c5cd007720d6cb5dee036282fe98da8f22c8",
+      "observation": "The packaged frozen recipe correctly rejected planning before final-GO. A verification-only derived recipe bound the exact v35 archive SHA without modifying the archive. The controller restored an exact 734-file allowlist from the 14,034-entry archive, passed Node/Python outside-I/O negative controls, reran frames, 91-program implicit probe, and 1,096-field software-GL render, and reproduced the archived PNG byte-for-byte.",
+      "decision": "ACCEPT_A6_V34_ISOLATED_INSTALL_REPLAY_CLOSURE_AS_BOUNDED_VERIFIED_NOT_CURRENT_AUTHORITY_INSTALL",
+      "evidence": "PROBES/a6_v35_whole_install_replay_closure_result_n231.json",
+      "boundaries": [
+        "Explicit final-GO is a declared authorization prerequisite, not an undeclared resource dependency.",
+        "The replay proves only the isolated v34 installation stage; defaultChanged=false and wholeTrainComplete=false remain.",
+        "This does not resolve the distinct N230 host-preparation package's hard-coded temp-root defect."
+      ]
+    }
+  ]
 }
