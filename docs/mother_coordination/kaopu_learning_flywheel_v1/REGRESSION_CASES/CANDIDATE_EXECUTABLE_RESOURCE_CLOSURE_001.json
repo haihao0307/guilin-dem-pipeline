@@ -34,6 +34,16 @@
       "decision": "HOLD_A6_HOST_PREPARATION_REPLAY_ENVIRONMENT_CLOSURE_INCOMPLETE",
       "evidence": "PROBES/a6_host_preparation_fresh_workspace_replay_result_n230.json",
       "subjectAcknowledged": false
+    },
+    {
+      "subject": "A6_WHOLE_CPU_INSPECTION_R02.zip version 1",
+      "libraryIdentity": "libfile_430c3c55f5248191b61df60c6d64e150",
+      "sha256": "3eade028f95b9fec427ba55da7243ec101afa64b032c132a83a1560f01f3afa1",
+      "observation": "The untouched archive verified 560/560 manifest entries and fresh-replayed two actual CPU frames byte-identically. A verifier-only no-op comment mutation of imported site/cpu-whole/cache-runtime.mjs produced one manifest mismatch, yet RESTORE_DISPLAY.mjs still returned PASS with the same frame hashes because it verifies selected data/cache/output hashes but does not consume MANIFEST.json before importing the executable JS/WASM closure.",
+      "distinction": "This does not invalidate the display repair or deterministic outputs for the exact untouched package. It identifies a narrower pre-execution runtime identity binding gap: integrity metadata exists but is not wired into the restore gate.",
+      "decision": "HOLD_A6_R02_RESTORE_RUNTIME_RESOURCE_IDENTITY_NOT_FAIL_CLOSED",
+      "evidence": "PROBES/a6_r02_restore_runtime_identity_closure_result_n232.json",
+      "subjectAcknowledged": false
     }
   ],
   "candidateRule": {
@@ -48,7 +58,9 @@
       "freshWorkspaceReplayCommand",
       "finalGoArchiveSHA256",
       "explicitFinalGoState",
-      "partialRestoreAllowlist"
+      "partialRestoreAllowlist",
+      "executableRuntimeManifestEntrypoint",
+      "preImportIntegrityGate"
     ],
     "deliveryReceiptFields": [
       "executableResourceClosure",
@@ -60,9 +72,12 @@
       "undeclaredAbsoluteWorkspaceRoots",
       "archiveIntegrityBeforeAfter",
       "actualReplayScope",
-      "outputByteIdentity"
+      "outputByteIdentity",
+      "runtimeManifestEntriesChecked",
+      "runtimeManifestMismatchCount",
+      "preImportIntegrityGateStatus"
     ],
-    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority.",
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority. When a replay claims fixed executable runtime identity, validate the complete delivered manifest before any runtime JS module or WASM executes; static ESM imports require a separate preflight wrapper or post-validation dynamic imports. Any imported-byte mismatch must stop before rendering and must not emit a PASS receipt.",
     "failClosedState": "HOLD_RUNTIME_OR_REPLAY_CLOSURE_INCOMPLETE"
   },
   "minimumFalsifiableTrial": {
@@ -76,14 +91,16 @@
     "Does not require global adoption before a second Mother or historical replay validates usefulness.",
     "Offline source triangulation used only for observation is outside this gate unless it becomes a delivered runtime dependency.",
     "An explicitly named, pinned external artifact is not silently missing; it remains a declared prerequisite and cannot support a standalone/self-contained replay claim until materialized.",
-    "A hard-coded writable temp root is replay-environment closure, distinct from geometry/runtime module closure; fixing it does not certify numeric results beyond the already tested fixed revision."
+    "A hard-coded writable temp root is replay-environment closure, distinct from geometry/runtime module closure; fixing it does not certify numeric results beyond the already tested fixed revision.",
+    "A manifest may correctly describe all packaged bytes while the executable restore entry still fails to enforce it; this is a wiring defect in the gate, not proof that the untouched runtime output is wrong."
   ],
   "rollback": "Remove this Candidate if a replay shows that the referenced resource is intentionally external and the delivery contract names, pins, and validates that external dependency explicitly.",
   "evidence": [
     "n223/vehicle_executable_resource_closure_probe_n223.mjs",
     "n223/vehicle_executable_resource_closure_result_n223.json",
     "n230/a6_host_preparation_fresh_workspace_replay_result_n230.json",
-    "n231/a6_v35_whole_install_replay_closure_result_n231.json"
+    "n231/a6_v35_whole_install_replay_closure_result_n231.json",
+    "n232/a6_r02_restore_runtime_identity_closure_result_n232.json"
   ],
   "lifecycle": {
     "posted": true,
@@ -116,5 +133,10 @@
         "This does not resolve the distinct N230 host-preparation package's hard-coded temp-root defect."
       ]
     }
-  ]
+  ],
+  "runtimeIdentityClosureTrial": {
+    "scope": "one A6 R02 CPU display archive only",
+    "pass": "The untouched archive validates every manifest entry before runtime import and reproduces both expected frame hashes; a one-byte mutation of any imported JS or WASM is rejected before render.",
+    "fail": "The packaged restore emits PASS after an imported runtime byte differs from its manifest, even if output pixels remain unchanged."
+  }
 }
