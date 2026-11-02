@@ -1,0 +1,141 @@
+{
+  "schema": "kaopu.learning-flywheel.probe-result/1.0",
+  "run": "N233",
+  "dateAsiaShanghai": "2026-11-02",
+  "boundedQuestion": "Does the new Side A member in A4_ORIGINAL_SIDE_A_AND_LOCAL_ASSEMBLY_R01 fail closed on stale or mutated shader bytes before GLES compilation and rendering?",
+  "subject": {
+    "libraryFileID": "libfile_10e7de6eba648191bd4a4b1ff3dafcf4",
+    "libraryVersion": null,
+    "createdUTC": "2026-11-02T15:26:38.589715Z",
+    "modifiedUTC": "2026-11-02T15:26:38.589715Z",
+    "archiveName": "A4_ORIGINAL_SIDE_A_AND_LOCAL_ASSEMBLY_R01.zip",
+    "archiveSHA256": "bce05df647390edcfceb38f521b9353c5d6f10b68cd537080693610203ca1cc7",
+    "archiveBytes": 942076,
+    "archiveEntries": 167,
+    "manifestEntries": 166,
+    "priorRoofLibraryID": "libfile_fa1f8dd64a8c81919ba3807c9f4ecb50",
+    "priorRoofArchiveSHA256": "d853b4c49efb19a0f148e94b3d1c4f1fb47de4d481b81fcd8078e5012e67c804"
+  },
+  "baselineBlobs": {
+    "rootAGENTS": "251b664646a489e9292748f1d41998ee62a338f5",
+    "motherOSR2": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "replicationGate": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGate": "4754a90a94e4a9e7806357b6eb292e5c713e9021"
+  },
+  "packageIntegrity": {
+    "checked": 166,
+    "mismatches": 0,
+    "scope": "partial recovery of broader project; complete new A domain and current local new-function container"
+  },
+  "positiveControl": {
+    "sideNative": {
+      "status": "PASS_NATIVE_BOUNDED_A_WEB",
+      "roles": 34,
+      "jets": 584,
+      "maxD1Error": 5.706861879315834e-10,
+      "minJacobian": 0.00013871823833494214,
+      "sharedPortMaxC0": 0,
+      "trueApertureCentersRejected": 4
+    },
+    "parameterConsumption": {
+      "status": "PASS_CONTROLLED_NATIVE_PARAMETER_CONSUMPTION",
+      "controls": 4
+    },
+    "camera": {
+      "status": "PASS_OFFLINE_CAMERA_MATH",
+      "cases": 750,
+      "maxAbsNDC": 0.8800000000000001
+    },
+    "uiProtocol": {
+      "status": "PASS_PURE_NODE_UI_PROTOCOL_ONLY",
+      "cases": [
+        "normal",
+        "no-gpu",
+        "stale-shader",
+        "stale-second-shader"
+      ],
+      "browserUsed": false
+    },
+    "freshGLES": {
+      "status": "ACTUAL_GLES3_LOCAL_ASSEMBLY",
+      "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "version": "OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.2",
+      "width": 800,
+      "height": 600,
+      "nativeSceneTriangles": 0,
+      "sourceGeometryOrTexturesUsed": false,
+      "rejectedBaselineUsed": false,
+      "rows": [
+        {
+          "filter": 0,
+          "components": [
+            "roof",
+            "sideA"
+          ],
+          "rgbaSHA256": "73294942f28ff9e84d2a18369b43261ecd61c8a502c1babb25be897329787795"
+        },
+        {
+          "filter": 1,
+          "components": [
+            "roof"
+          ],
+          "rgbaSHA256": "5943153eb1c6a5800bb1e2c89d1ff78a598f2c5d7d8eb3620a0458a3520a99a1"
+        },
+        {
+          "filter": 2,
+          "components": [
+            "sideA"
+          ],
+          "rgbaSHA256": "a791c2320d4fdb537fe280e6e14d097d286551aa08f9632b45edb5ac946b0f67"
+        }
+      ],
+      "allRGBAByteIdenticalToArchive": true
+    }
+  },
+  "negativeControl": {
+    "mutation": "Append one verifier-only no-op comment to original-function-assembly-r01/side-a-r01.frag.",
+    "expectedSHA256": "0ed0a985f2bad3842748f508431c5fdd0fc3333fc9d6c054cf8ad2b015a06168",
+    "mutatedSHA256": "294c220bc7f668f8c49c972e5dbe360302d7d7f771095f0b3b05589fe1351141",
+    "originalBytes": 35701,
+    "mutatedBytes": 35798,
+    "command": "python3 render-current-assembly.py",
+    "exitCode": 1,
+    "rejectionPoint": "hash assertion before cp()/shader compilation and before any draw",
+    "result": "PASS_FAIL_CLOSED_STALE_SIDE_A_SHADER"
+  },
+  "decision": "ACCEPT_A4_SIDE_A_LOCAL_GEOMETRY_LOCK_AS_BOUNDED_STALE_SHADER_FAIL_CLOSED_NOT_ASSEMBLY_ACCEPTANCE",
+  "claimScope": {
+    "verified": [
+      "The exact archive matches its 166-entry manifest.",
+      "The new Side A runtime and prior Roof R02 render together from packaged analytic shaders with no source triangles or rejected baseline.",
+      "The local renderer and Node protocol reject stale bytes for both members; an actual Side A shader mutation is rejected before compilation/render.",
+      "Three fresh software-GLES outputs are byte-identical to the archive."
+    ],
+    "notVerified": [
+      "whole cab side completeness",
+      "external roof/eave/inner-lining interface acceptance",
+      "window frames, glass, eave strip, lower/front side, or third-window turn",
+      "full canonical historical replay or source re-observation",
+      "browser, hardware GPU, mobile, publication, production, visual acceptance, or user acceptance",
+      "physical scale or manufactured part count"
+    ],
+    "declaredExternalPrerequisites": {
+      "fullCanonicalRestoration": "separate original roof archive and shared mechanical canonical/core dependencies",
+      "packageClaim": "partial recovery only; absence does not invalidate bounded local display replay"
+    }
+  },
+  "regressionHandling": {
+    "action": "UPDATE_EXISTING_POSITIVE_CONTROL",
+    "caseID": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "newRegressionCreated": false
+  },
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": "existing package geometry lock plus verifier-only exact mutation",
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
