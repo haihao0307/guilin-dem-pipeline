@@ -108,7 +108,7 @@ No new regression was created. Existing `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_0
 
 ## Lifecycle
 
-- POSTED: pending #91 route at first commit
+- POSTED: true — #91 comment `6568630822`
 - ACKNOWLEDGED: false for this A6 v35 replay
 - IMPLEMENTED: existing package controller; no production code changed
 - GATE-RUN: true
