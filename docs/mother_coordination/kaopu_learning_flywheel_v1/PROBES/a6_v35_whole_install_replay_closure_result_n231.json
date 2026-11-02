@@ -1,0 +1,111 @@
+{
+  "schema": "kaopu.learning-flywheel.probe-result/1.0",
+  "run": "N231",
+  "dateAsiaShanghai": "2026-11-02",
+  "boundedQuestion": "Can the v35 whole-v34-install partial-recovery controller independently restore and rerun the exact isolated v34 installation from the complete checkpoint archive after an exact final-GO is bound?",
+  "subject": {
+    "libraryFileID": "libfile_2cabe4dab46c8191b45f04e641c12ca2",
+    "libraryVersion": 35,
+    "libraryModifiedUTC": "2026-11-02T03:30:16.171858Z",
+    "archiveName": "A6_SPACETIME_R01_WHEEL_VERIFIED_CHECKPOINT_20261101.zip",
+    "archiveSHA256": "30e0a239f2d7cbb96d2d15ed4ea6c5cd007720d6cb5dee036282fe98da8f22c8",
+    "archiveBytes": 238516022,
+    "archiveEntries": 14034
+  },
+  "baselineBlobs": {
+    "rootAGENTS": "251b664646a489e9292748f1d41998ee62a338f5",
+    "motherOSR2": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "replicationGate": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGate": "4754a90a94e4a9e7806357b6eb292e5c713e9021"
+  },
+  "preflight": {
+    "packagedFrozenRecipeState": "AWAIT_FINAL_COMPLETE_ZIP_GO",
+    "firstPlanAttempt": "REJECTED_BEFORE_ARCHIVE_ACCESS",
+    "rejectionReason": "finalArchiveReady=false and archiveSHA256=null",
+    "smallTests": {
+      "passed": 7,
+      "total": 7
+    },
+    "derivedGo": {
+      "archiveSHA256": "30e0a239f2d7cbb96d2d15ed4ea6c5cd007720d6cb5dee036282fe98da8f22c8",
+      "recipeSHA256": "9fe49927f1649451cda5f9d6effa92636e3d3e3d3f522c2dbbe70248a0fb40c1",
+      "scope": "external verification-only derived recipe; checkpoint bytes unchanged"
+    }
+  },
+  "plan": {
+    "status": "HASH_PINNED_NOT_RUNTIME_EXECUTED",
+    "completeEntries": 14034,
+    "selectedFiles": 734,
+    "selectedBytes": 102500141,
+    "baseVerifiedV34Files": 346,
+    "shaderFiles": 374,
+    "fullFreezeRestored": false
+  },
+  "replay": {
+    "status": "PASS_WHOLE_INSTALL_BOUNDED_PARTIAL_RUNTIME",
+    "proofSHA256": "6230e8e0198d669a332059e7de4a88f1c91b4dbe3d8c30dbbee2f9ddb286f8e5",
+    "archiveIntegrityVerified": true,
+    "archiveUnchanged": true,
+    "restorationErrors": [],
+    "tests": {
+      "negativeNodeReads": {
+        "exitCode": 0
+      },
+      "negativePythonReadsWrites": {
+        "exitCode": 0
+      },
+      "checkFrames": {
+        "exitCode": 0,
+        "oldDrawsChecked": 1005,
+        "views": 13,
+        "dynamicSameOwnerRows": 26,
+        "maximumPriorInverseDifference": 0
+      },
+      "implicitProbe": {
+        "exitCode": 0,
+        "programs": 91,
+        "checks": 455,
+        "allArchivedNumericAndDomainResultsBitIdentical": true
+      },
+      "installedRender": {
+        "exitCode": 0,
+        "fields": 1096,
+        "programs": 374,
+        "pngByteIdentical": true,
+        "pngSHA256": "defff39c877be0bd72d2a727afc18a034622f3e793f2948101a5bcd3f4f1476b"
+      }
+    },
+    "timingObservationSeconds": {
+      "total": 311.69039200800034,
+      "render": 295.4275393810003
+    },
+    "timingUsedAsGate": false
+  },
+  "claimScope": {
+    "verified": "exact v35 archive can restore and rerun the isolated v34 whole-locomotive installation stage after explicit SHA-bound final-GO",
+    "notVerified": [
+      "current/default authority replacement",
+      "whole train completion",
+      "full freeze restore",
+      "old/removal comparison rerender",
+      "source measurement or long mathematical suites",
+      "hardware GPU, browser, mobile, production, visual acceptance, or user acceptance",
+      "whole geometry or material acceptance"
+    ],
+    "packageFacts": {
+      "defaultChanged": false,
+      "wholeTrainComplete": false,
+      "currentAuthority": "tender-top-r01/train.A6-tender-top-r01.KaoPu.json",
+      "currentStableCheckpointVersion": 13
+    }
+  },
+  "decision": "ACCEPT_A6_V34_ISOLATED_INSTALL_REPLAY_CLOSURE_AS_BOUNDED_VERIFIED_NOT_CURRENT_AUTHORITY_INSTALL",
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": "existing package controller",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
