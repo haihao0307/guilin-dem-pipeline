@@ -1,0 +1,83 @@
+{
+  "schema": "kaopu.regression-case/2",
+  "caseId": "VERIFIER-PRODUCTION-PATH-EQUIVALENCE-001",
+  "status": "CANDIDATE",
+  "scope": {
+    "mother": "Train",
+    "taskClass": "TRANSPARENT_ORDERING_RUNTIME_VERIFICATION",
+    "globalAdoption": false
+  },
+  "failure": {
+    "summary": "Production runtime and real-pixel verifier use different implementations of a critical ordering gate; both pass separately, but no test executes the production gate with the real graphics path.",
+    "exactSubject": {
+      "libraryFileId": "libfile_8956662ffa54819195b5ccdd9778c7b8",
+      "fileName": "A4_ORIGINAL_REAR_PANE_TWO_PANE_ASSEMBLY_R01.zip",
+      "archiveSha256": "b5a1d9ee18782aa4cab1cfa760dbc2ceea2b31dedbc2492f4f89f6ee0aae3cf0",
+      "productionModule": "original-function-assembly-r01/app.mjs",
+      "gateModule": "original-function-assembly-r01/pane-order.mjs",
+      "realPixelVerifiers": [
+        "original-function-assembly-r01/render-current-assembly.py",
+        "original-rear-glass-r01/render-two-panes.py",
+        "original-rear-glass-r01/render-two-panes-gles.py"
+      ]
+    },
+    "observed": [
+      "app.mjs imports and calls orderDrawRecords before real WebGL draw submission",
+      "pane-order.test.mjs passes 5 direction cases and 7 refusal gates, but does not execute real graphics",
+      "ui-protocol.test.mjs imports app.mjs but uses a mocked WebGL object",
+      "all three real-pixel verifier scripts implement their own inline sort and never import or call orderDrawRecords",
+      "fresh replay of current package passes the unit/UI tests and the real GL scripts separately",
+      "after changing the second pane interval to overlap the first in a disposable extraction, render-current-assembly.py still exited successfully; production orderDrawRecords rejects the same condition"
+    ]
+  },
+  "mustNeverRepeat": [
+    "claim production gate coverage when the real-pixel verifier reimplements the gate",
+    "count a mocked graphics path plus a separate real-pixel path as end-to-end production verification",
+    "allow a negative condition rejected by production code to pass the official real-pixel verifier",
+    "promote a transparency candidate without binding the exact ordering module used for draw submission"
+  ],
+  "requiredForPass": [
+    "exact artifact and production module hashes bound",
+    "the real graphics harness invokes the exact production ordering module or a byte-identical shared executable authority",
+    "draw-order trace binds physicalPaneID, shader hash, material hash, interval authority and camera",
+    "overlapping interval, stale order authority, duplicate pane and unsupported projection stop before draw",
+    "valid forward and reverse camera directions produce verified far-to-near overlap pixels",
+    "browser/device evidence remains separate from offline GL evidence"
+  ],
+  "cases": [
+    {
+      "id": "A4_R01_SPLIT_PATH_HISTORY",
+      "input": {
+        "productionGateUnitPass": true,
+        "productionAppMockedGraphicsPass": true,
+        "realPixelPass": true,
+        "realPixelUsesExactProductionGate": false
+      },
+      "expect": "HOLD_VERIFIER_PRODUCTION_PATH_SPLIT"
+    },
+    {
+      "id": "OVERLAP_NEGATIVE_ACCEPTED_BY_REAL_PIXEL_PATH",
+      "input": {
+        "overlappingIntervals": true,
+        "productionGateRejects": true,
+        "realPixelVerifierRejectsBeforeDraw": false
+      },
+      "expect": "REJECT_VERIFIER_PATH_DOES_NOT_ENFORCE_GATE"
+    },
+    {
+      "id": "UNIFIED_REAL_GRAPHICS_PATH",
+      "input": {
+        "artifactIdentityBound": true,
+        "productionGateIdentityBound": true,
+        "realPixelUsesExactProductionGate": true,
+        "negativeCasesRejectBeforeDraw": true,
+        "validOverlapPixelsVerified": true
+      },
+      "expect": "PASS_SCOPED_PRODUCTION_PATH_EQUIVALENCE"
+    }
+  ],
+  "rollback": {
+    "coordinationBaseSha": "806a05a550625861b5a46082902e545f1c6de331",
+    "productionBranchesModified": false
+  }
+}
