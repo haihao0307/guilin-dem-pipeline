@@ -2,6 +2,7 @@
 
 - 会议编号：`KAOPU-MOTHER-20261103-A4-PANE-ORDER-PATH-001`
 - 实际核查开始：2026-11-03 02:32:16 +08:00
+- 实际核查结束：2026-11-03 02:36:43 +08:00（4 分 27 秒）
 - 协调分支读取基线：`806a05a550625861b5a46082902e545f1c6de331`
 - main：`34553e93d75a427c10dbf5b0077d42f8cdda0a63`
 - 范围：一个最高价值问题——A4 前后两块玻璃的真实 GL 证据是否执行了拟交付页面的同一排序门
@@ -80,7 +81,7 @@
 
 ## 生命周期
 
-- `POSTED`：待 #91 写入后更新
+- `POSTED=true`：[#91 comment 6585164812](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6585164812)
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=true`：私有局部装配
 - `GATE-RUN=true`：source/native、排序单测、mock UI 与离线 GL/GLES 分项
