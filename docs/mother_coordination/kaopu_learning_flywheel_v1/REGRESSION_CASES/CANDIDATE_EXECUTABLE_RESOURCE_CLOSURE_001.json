@@ -101,7 +101,8 @@
     "n223/vehicle_executable_resource_closure_result_n223.json",
     "n230/a6_host_preparation_fresh_workspace_replay_result_n230.json",
     "n231/a6_v35_whole_install_replay_closure_result_n231.json",
-    "n232/a6_r02_restore_runtime_identity_closure_result_n232.json"
+    "n232/a6_r02_restore_runtime_identity_closure_result_n232.json",
+    "n233/a4_side_a_local_stale_geometry_lock_result_n233.json"
   ],
   "lifecycle": {
     "posted": true,
@@ -133,11 +134,29 @@
         "The replay proves only the isolated v34 installation stage; defaultChanged=false and wholeTrainComplete=false remain.",
         "This does not resolve the distinct N230 host-preparation package's hard-coded temp-root defect."
       ]
+    },
+    {
+      "subject": "A4_ORIGINAL_SIDE_A_AND_LOCAL_ASSEMBLY_R01.zip / Roof R02 + Side A R01 local container",
+      "libraryIdentity": "libfile_10e7de6eba648191bd4a4b1ff3dafcf4",
+      "sha256": "bce05df647390edcfceb38f521b9353c5d6f10b68cd537080693610203ca1cc7",
+      "observation": "The pristine archive matched all 166 manifest entries. Fresh software-GLES replay reproduced the full two-member assembly, Roof-only, and Side-A-only RGBA buffers byte-for-byte. Both members are listed in GEOMETRY_LOCK.json with exact shader hashes. A verifier-only no-op byte mutation of the new Side A shader caused the actual local renderer to exit at the hash assertion before program creation, shader compilation, or draw.",
+      "decision": "ACCEPT_A4_SIDE_A_LOCAL_GEOMETRY_LOCK_AS_BOUNDED_STALE_SHADER_FAIL_CLOSED_NOT_ASSEMBLY_ACCEPTANCE",
+      "evidence": "PROBES/a4_side_a_local_stale_geometry_lock_result_n233.json",
+      "boundaries": [
+        "This verifies local executable geometry identity and deterministic software-GLES replay, not visual or production acceptance.",
+        "The package explicitly claims partial recovery; full canonical historical replay and source re-observation remain declared external prerequisites.",
+        "Whole cab side, eave/inner-lining interface, frames, glass, browser, hardware GPU, mobile, publication and user acceptance remain unverified."
+      ]
     }
   ],
   "runtimeIdentityClosureTrial": {
     "scope": "one A6 R02 CPU display archive only",
     "pass": "The untouched archive validates every manifest entry before runtime import and reproduces both expected frame hashes; a one-byte mutation of any imported JS or WASM is rejected before render.",
     "fail": "The packaged restore emits PASS after an imported runtime byte differs from its manifest, even if output pixels remain unchanged."
+  },
+  "localGeometryIdentityPositiveTrial": {
+    "scope": "one A4 Roof R02 + Side A R01 local analytic assembly",
+    "pass": "Every installed member is hash-bound before shader compilation; pristine packaged outputs reproduce byte-identically; a one-byte member mutation is rejected before any draw.",
+    "fail": "A stale or mutated member compiles/renders, a member is not included in the lock, or expected output identity is accepted without loading the delivered shader bytes."
   }
 }
