@@ -65,4 +65,6 @@ Delivery Receipt fields: `preRunInputHashes`, `preCommitInputHashes`, `stagedRec
 
 This does not reject the rear-inset geometry, native continuity, pristine GLES render, or archived source metrics. It does not establish that the archived first failure was false. It says only that the current executable gate cannot yet authorize a PASS across every concurrent-write timing window.
 
-Lifecycle before Mother receipt: `Candidate IMPLEMENTED / GATE-RUN`; `POSTED / ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`.
+Lifecycle: `POSTED / Candidate IMPLEMENTED / GATE-RUN`; `ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`.
+
+POST receipt: `haihao0307/guilin-dem-pipeline#91 comment 6594948827`.
