@@ -1,0 +1,52 @@
+{
+  "id": "CANDIDATE_ATOMIC_EVIDENCE_COMMIT_001",
+  "status": "Candidate",
+  "title": "Final input validation and PASS publication must be one atomic evidence commit",
+  "trigger": "A verifier checks frozen input identities, performs more code or I/O, and then writes an authoritative PASS receipt without an immutable snapshot or atomic compare-and-commit.",
+  "failureClass": "TOCTOU_PASS_RECEIPT_AFTER_FINAL_IDENTITY_CHECK",
+  "currentReplay": {
+    "subject": "A4_ORIGINAL_TENDER_REAR_INSETS_INSTALLED_R01.zip",
+    "libraryIdentity": "libfile_9184da0dfb408191905357ecc8b6ee05",
+    "sha256": "3490556a2147b199675b9b8a96cc5fff6045c077595139913fa0e9caae271ae8",
+    "observation": "The packaged new-source.py hashes frozen modules at start and near completion, then calls TeacherObservation.assert_unchanged() and writes NEW_SOURCE_QA.json. In an isolated verifier replay, a module mutation after the second module-hash loop but before receipt write exited 0 and emitted PASS.",
+    "decision": "HOLD_A4_TENDER_INSETS_SOURCE_RECEIPT_ATOMICITY_FAIL_OPEN",
+    "evidence": "PROBES/a4_tender_insets_atomic_receipt_result_n236.json"
+  },
+  "candidateRule": {
+    "taskAnchorFields": [
+      "frozenInputSnapshotId",
+      "receiptCommitProtocol",
+      "concurrentWriteNegativeTest"
+    ],
+    "deliveryReceiptFields": [
+      "preRunInputHashes",
+      "preCommitInputHashes",
+      "stagedReceiptSHA256",
+      "atomicCommitStatus",
+      "concurrentWriteRejected"
+    ],
+    "verifierGate": "Run validation against an immutable snapshot, or stage the receipt and atomically compare-and-commit it against the complete frozen input set. The last complete input check must occur inside the commit critical section. If any input differs, exit nonzero and leave no authoritative PASS at the canonical receipt path.",
+    "failClosedState": "HOLD_EVIDENCE_COMMIT_NOT_ATOMIC"
+  },
+  "minimumFalsifiableTrial": {
+    "scope": "one A4 source-first verifier path",
+    "pass": "A one-byte frozen-input mutation after validation but before publication is rejected with nonzero exit and no authoritative PASS; exact restore passes the same plan.",
+    "fail": "The canonical PASS receipt is created or retained for the mutated input state."
+  },
+  "boundaries": [
+    "This case concerns receipt authority and change control, not geometry or visual acceptance.",
+    "An archived report can remain evidence for its exact bytes while the executable gate remains incomplete.",
+    "The full production source query remains UNKNOWN when its source adapter and asset closure are not delivered.",
+    "Candidate is not globally adopted until a single-Mother implementation and negative replay pass."
+  ],
+  "rollback": "Retire this Candidate if a replay proves the receipt is produced from an immutable snapshot or by an atomic transaction that cannot observe post-check input changes.",
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": true,
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
