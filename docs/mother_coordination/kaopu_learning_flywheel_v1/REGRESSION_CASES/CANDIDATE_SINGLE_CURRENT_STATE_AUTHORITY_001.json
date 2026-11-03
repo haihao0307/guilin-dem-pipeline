@@ -1,0 +1,59 @@
+{
+  "id": "CANDIDATE_SINGLE_CURRENT_STATE_AUTHORITY_001",
+  "status": "Candidate",
+  "title": "A final delivery must expose one machine-readable current-state authority and retire stale authorities",
+  "trigger": "One delivered archive contains multiple manifest-pinned receipts or top-level manifests that make opposite claims about whether the same revision is installed, run, or current, without an explicit machine-readable authority and supersession relation.",
+  "failureClass": "CONTRADICTORY_CURRENT_STATE_AUTHORITIES_IN_ONE_DELIVERY",
+  "currentReplay": {
+    "subject": "A4_ORIGINAL_NOSE_R02_INSTALLED_ISSUE.zip",
+    "libraryIdentity": "libfile_b1d8c8ceeb208191ad249306005ae666",
+    "sha256": "942df017729b65ffe6e93e9de01aa162540b26d8483ad97ae8b37361daa0307e",
+    "observation": "ENTRY_SHA_MANIFEST.json verifies 4020/4020 and pins ORIGINAL_REBUILD_CURRENT.json as installed inspection ISSUE, INSTALL_RECEIPT.json as INSTALLED_NOT_YET_GLES_VERIFIED, NOSE_R02_INSPECTION_GLES_QA.json as ACTUAL_GLES3_LOCAL_ASSEMBLY, and FINAL_STATUS.json as FROZEN_PREPARED_NOT_INSTALLED with installed=NO, installer=NOT_EXECUTED and actualGPU=NOT_RUN. The same archive also exposes a top-level FINAL_ENTRY_SHA_MANIFEST.json with 130 hash mismatches, including an older ORIGINAL_REBUILD_CURRENT.json identity, and neither top-level manifest declares authority precedence or supersession.",
+    "decision": "HOLD_A4_NOSE_R02_FINAL_DELIVERY_STATUS_AUTHORITY_CONTRADICTORY",
+    "evidence": "PROBES/a4_nose_r02_final_state_authority_result_n238.json"
+  },
+  "noveltyAgainstExistingCases": {
+    "CANDIDATE_ATOMIC_EVIDENCE_COMMIT_001": "Different failure: no concurrent mutation or validation-to-publication race is needed; the immutable delivered bytes themselves expose opposite current-state authorities.",
+    "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001": "Different failure: the relevant receipts and manifests are present and executable evidence exists; the missing property is unique state authority and explicit supersession, not resource closure.",
+    "TERRAIN_NO_STALE_DELIVERY_001": "Same broad no-stale principle, but this replay adds a cross-receipt and cross-manifest machine rule for one archive and is kept Candidate rather than changing the production regression globally."
+  },
+  "candidateRule": {
+    "taskAnchorFields": [
+      "currentStateAuthorityPath",
+      "currentStateAuthoritySchema",
+      "supersededStatePaths",
+      "manifestAuthorityPrecedence"
+    ],
+    "deliveryReceiptFields": [
+      "canonicalStateSHA256",
+      "stateLineage",
+      "supersedes",
+      "topLevelManifestVerification",
+      "statusConsistency"
+    ],
+    "verifierGate": "Fail closed unless exactly one machine-readable current-state authority is named; every top-level manifest either verifies against delivered bytes or is explicitly marked superseded/non-authoritative; every non-history receipt about the same revision agrees on installed/run/current semantics. Historical receipts may remain only under declared history with a machine-readable supersededBy relation.",
+    "failClosedState": "HOLD_CURRENT_STATE_AUTHORITY_AMBIGUOUS"
+  },
+  "minimumFalsifiableTrial": {
+    "scope": "one A4 Nose R02 ISSUE delivery copy",
+    "pass": "A consumer starting only from the archive root resolves exactly one current-state authority; its SHA verifies; all top-level manifests verify or are explicitly superseded; querying installed/run/current yields one answer while INSPECTION_ISSUE_NOT_ACCEPTED remains unchanged.",
+    "fail": "Two root-reachable authoritative paths still yield opposite installed/run/current answers, or a top-level manifest fails its own hashes without an explicit superseded/non-authoritative state."
+  },
+  "boundaries": [
+    "This case does not reject the actual GLES installation evidence or the 147-program/1320-draw bounded assembly.",
+    "This case does not promote Nose R02 shape, interface, motion, whole-train, production, or user acceptance; INSPECTION_ISSUE_NOT_ACCEPTED remains authoritative content.",
+    "Historical pre-install evidence may remain if it is moved or classified as history and linked by supersededBy.",
+    "Candidate is not globally adopted until a single-Mother repaired delivery passes the same root-only consumer replay."
+  ],
+  "rollback": "Retire this Candidate if the archive already contains a documented machine-readable precedence/supersession rule that deterministically makes the stale manifest and pre-install FINAL_STATUS non-authoritative for every root-only consumer.",
+  "lifecycle": {
+    "posted": false,
+    "postTarget": null,
+    "acknowledged": false,
+    "candidateImplemented": true,
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
