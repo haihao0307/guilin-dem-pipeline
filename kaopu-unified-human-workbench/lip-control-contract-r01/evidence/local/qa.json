@@ -1,0 +1,1472 @@
+{
+  "schema": "kaopu/independent-lip-wetness-audit@1",
+  "mode": "all",
+  "startedAt": "2026-10-18T02:56:07.019Z",
+  "tests": [
+    {
+      "name": "stable renderer and original wetness API are observable",
+      "passed": true,
+      "result": {
+        "initial": {
+          "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+          "width": 640,
+          "height": 512
+        },
+        "state": {
+          "dna": {
+            "schema": "kaopu/lip-anatomy-dna@1",
+            "upperMelanin": 0.26,
+            "lowerMelanin": 0.16,
+            "upperBlood": 0.48,
+            "lowerBlood": 0.54,
+            "oxygenation": 0.72,
+            "upperRoughness": 0.54,
+            "lowerRoughness": 0.49,
+            "upperWetness": 0.35,
+            "lowerWetness": 0.45,
+            "tissueDepth": 1,
+            "microGeometry": 1,
+            "skinRefinement": 0.65
+          },
+          "lipSettings": {
+            "schema": "kaopu/lip-structure@2",
+            "enabled": true,
+            "structure": 1,
+            "upperVolume": 0.8,
+            "lowerVolume": 0.7,
+            "cupid": 0.75,
+            "tubercle": 0.8,
+            "corners": 0.55,
+            "borderSoftness": 0.48,
+            "furrows": 0.65,
+            "pigment": 0.68,
+            "wetness": 0.35,
+            "dryRoughness": 0.53,
+            "eyeSmoothing": 0.35,
+            "colorVariation": 0.65,
+            "upperShade": 0.45,
+            "dryness": 0.3,
+            "microRelief": 0.65,
+            "textureDensity": 1,
+            "patternSeed": 37
+          },
+          "pose": {
+            "schema": "kaopu/lip-performance@1",
+            "pucker": 0,
+            "funnel": 0,
+            "press": 0,
+            "seal": 0,
+            "rollIn": 0,
+            "rollOut": 0,
+            "stretchLeft": 0,
+            "stretchRight": 0,
+            "upperRaise": 0,
+            "lowerDepress": 0,
+            "cornerLeft": 0,
+            "cornerRight": 0,
+            "adhesion": 0,
+            "release": 0,
+            "jawOpen": 0
+          },
+          "head": {
+            "enabled": true,
+            "seed": 731,
+            "tone": 0.72,
+            "warmth": 0.46,
+            "blood": 0.48,
+            "variation": 0.9,
+            "pores": 0.88,
+            "poreRadius": 0.09,
+            "poreSpacing": 0.58,
+            "microrelief": 0.72,
+            "roughness": 0.51,
+            "oil": 0.26,
+            "scatter": 0.62,
+            "freckles": 0.2,
+            "lipColor": 0.54,
+            "lipWetness": 0.24,
+            "eyeThinness": 0.34,
+            "diagnostic": 0
+          },
+          "body": {
+            "enabled": true,
+            "regionalColor": 0.72,
+            "lidWarmth": 0.46,
+            "noseWarmth": 0.38,
+            "earBlood": 0.44,
+            "earTransmission": 0.58,
+            "bodyVariation": 0.64,
+            "bodyPores": 0.78,
+            "jointTone": 0.42,
+            "neckCreases": 0.34,
+            "beardShadow": 0.04,
+            "audit": 0
+          },
+          "geometry": {
+            "attributes": {
+              "position": "7df8b6813bfa503cd8e2a3d12b6b0276aedcf6e8005b06e2546ad11c07a29535",
+              "normal": "ab04793265b00531535f3b57fc6624859793df2435a565f079e8344eae8809e5",
+              "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+              "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+              "skinIndex": null,
+              "skinWeight": null
+            },
+            "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+            "canonicalPositions": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+            "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de"
+          },
+          "lighting": {
+            "lights": [
+              {
+                "type": "HemisphereLight",
+                "color": [
+                  0.7379104087672317,
+                  0.8631572134510892,
+                  1
+                ],
+                "intensity": 1.6,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1
+                ],
+                "visible": false
+              },
+              {
+                "type": "DirectionalLight",
+                "color": [
+                  1,
+                  0.7011018919268015,
+                  0.5332764040016892
+                ],
+                "intensity": 3.2,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  -2,
+                  3,
+                  4,
+                  1
+                ],
+                "visible": false
+              },
+              {
+                "type": "DirectionalLight",
+                "color": [
+                  0.36625259558833256,
+                  0.5394794890033748,
+                  0.7379104087672317
+                ],
+                "intensity": 2.6,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  2,
+                  2,
+                  -2,
+                  1
+                ],
+                "visible": false
+              },
+              {
+                "type": "RectAreaLight",
+                "color": [
+                  1.1310784284563347,
+                  0.9730112050086658,
+                  0.8813727463709912
+                ],
+                "intensity": 7.2727272727272725,
+                "matrix": [
+                  0.7313537016191706,
+                  0,
+                  0.6819983600624984,
+                  0,
+                  0.27739372355502145,
+                  0.913545457642601,
+                  -0.2974683494976418,
+                  0,
+                  -0.6230365039547985,
+                  0.40673664307580015,
+                  0.6681248520442954,
+                  0,
+                  -0.6854049185221172,
+                  1.163982711291156,
+                  0.7648977088026229,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "RectAreaLight",
+                "color": [
+                  1.0052297539176216,
+                  0.9874473725127881,
+                  1.1089445082544023
+                ],
+                "intensity": 0.6495928142187422,
+                "matrix": [
+                  0.8525245220595057,
+                  -6.938893903907228e-18,
+                  -0.5226872289306591,
+                  0,
+                  -0.06257204189701793,
+                  0.9928086358538663,
+                  -0.10205759230367448,
+                  0,
+                  0.5189283947328852,
+                  0.11971220728891938,
+                  0.8463937077778672,
+                  0,
+                  0.7004885687175565,
+                  0.8781838837478171,
+                  1.1725918770540187,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "RectAreaLight",
+                "color": [
+                  1.0425881383994025,
+                  0.9838211106622988,
+                  1.034860158318712
+                ],
+                "intensity": 5.140939912102185,
+                "matrix": [
+                  -0.6810558805071523,
+                  0,
+                  -0.7322314440302514,
+                  0,
+                  -0.21638918766375098,
+                  0.955336489125606,
+                  0.2012657745553943,
+                  0,
+                  0.6995274169672331,
+                  0.29552020666133955,
+                  -0.6506375337820511,
+                  0,
+                  0.7694153944921177,
+                  1.0416446312352494,
+                  -0.6857409156063585,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "HemisphereLight",
+                "color": [
+                  0.7529422167708612,
+                  0.8307698767709715,
+                  0.913098651791473
+                ],
+                "intensity": 0.08,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "DirectionalLight",
+                "color": [
+                  1,
+                  0.8796223968851662,
+                  0.7379104087672317
+                ],
+                "intensity": 0,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1
+                ],
+                "visible": false
+              },
+              {
+                "type": "DirectionalLight",
+                "color": [
+                  1,
+                  0.965,
+                  0.93
+                ],
+                "intensity": 3.2,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0.9784581441716371,
+                  1.15690771266234,
+                  0.7638525528115048,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "DirectionalLight",
+                "color": [
+                  0.91,
+                  0.955,
+                  1
+                ],
+                "intensity": 1.35,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  -1.089084925730247,
+                  1.0977294604532188,
+                  0.6289214604110225,
+                  1
+                ],
+                "visible": true
+              },
+              {
+                "type": "HemisphereLight",
+                "color": [
+                  0.95,
+                  0.975,
+                  1
+                ],
+                "intensity": 0.38,
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1
+                ],
+                "visible": true
+              }
+            ],
+            "exposure": 1,
+            "toneMapping": 4
+          },
+          "camera": {
+            "position": [
+              -0.0014174247416935191,
+              0.665934982675927,
+              0.2267434765070413
+            ],
+            "quaternion": [
+              0.0005387019528504405,
+              -0.0064700011009413945,
+              0.000003485475687158492,
+              0.9999789242148113
+            ],
+            "projection": [
+              2.8847068070087,
+              0,
+              0,
+              0,
+              0,
+              3.6058835087608747,
+              0,
+              0,
+              0,
+              0,
+              -1.0004000800160031,
+              -1,
+              0,
+              0,
+              -0.020004000800160033,
+              0
+            ],
+            "target": [
+              -0.00010545082644640221,
+              0.6660442241878393,
+              0.12536085521268409
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "direct current psWet establishes the exact allowed rendering footprint",
+      "passed": true,
+      "result": {
+        "low": {
+          "sha256": "da71ada4b096a5f840d96415e5c40fdc864b264c126cc18ef878fbb64268fdf8",
+          "width": 640,
+          "height": 512
+        },
+        "high": {
+          "sha256": "661a2f1409b0022940dacb96f5619cd1aff4e9947ae43eaeef6f5a1bdd5849a2",
+          "width": 640,
+          "height": 512
+        },
+        "difference": {
+          "changedInside": 47502,
+          "changedOutside": 0,
+          "maximumInside": 49,
+          "maximumOutside": 0,
+          "absoluteInside": 94617
+        },
+        "scope": "zero-outside-mouth"
+      }
+    },
+    {
+      "name": "negative controls reject wholeFrameOnly and an added outside-mouth tint",
+      "passed": true,
+      "result": {
+        "wholeFrameOnly": {
+          "rejected": true,
+          "difference": {
+            "changedInside": 0,
+            "changedOutside": 137314,
+            "maximumInside": 0,
+            "maximumOutside": 1,
+            "absoluteInside": 0
+          }
+        },
+        "lipsPlusOutside": {
+          "rejected": true,
+          "injectedOutsidePixels": 1
+        }
+      }
+    },
+    {
+      "name": "R07 accepts each legacy wetness value but its mouth pixels do not respond",
+      "passed": true,
+      "result": [
+        {
+          "key": "upperWetness",
+          "low": {
+            "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+            "width": 640,
+            "height": 512
+          },
+          "high": {
+            "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+            "width": 640,
+            "height": 512
+          },
+          "difference": {
+            "changedInside": 0,
+            "changedOutside": 0,
+            "maximumInside": 0,
+            "maximumOutside": 0,
+            "absoluteInside": 0
+          }
+        },
+        {
+          "key": "lowerWetness",
+          "low": {
+            "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+            "width": 640,
+            "height": 512
+          },
+          "high": {
+            "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+            "width": 640,
+            "height": 512
+          },
+          "difference": {
+            "changedInside": 0,
+            "changedOutside": 0,
+            "maximumInside": 0,
+            "maximumOutside": 0,
+            "absoluteInside": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "R07 also accepts the original aggregate wetness field without a rendered response",
+      "passed": true,
+      "result": {
+        "difference": {
+          "changedInside": 0,
+          "changedOutside": 0,
+          "maximumInside": 0,
+          "maximumOutside": 0,
+          "absoluteInside": 0
+        },
+        "low": {
+          "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+          "width": 640,
+          "height": 512
+        },
+        "high": {
+          "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+          "width": 640,
+          "height": 512
+        }
+      }
+    },
+    {
+      "name": "original visible UI also silently accepts wetness in R07",
+      "passed": true,
+      "result": {
+        "events": [
+          {
+            "trusted": true,
+            "value": "0"
+          },
+          {
+            "trusted": true,
+            "value": "1"
+          }
+        ],
+        "difference": {
+          "changedInside": 0,
+          "changedOutside": 0,
+          "maximumInside": 0,
+          "maximumOutside": 0,
+          "absoluteInside": 0
+        }
+      }
+    },
+    {
+      "name": "positive control: the same legacy wetness keys work on the original material",
+      "passed": true,
+      "result": {
+        "selected": {
+          "programEnabled": false,
+          "selectedNames": [
+            ""
+          ],
+          "usesProceduralMaterial": false,
+          "gray": false
+        },
+        "results": [
+          {
+            "key": "upperWetness",
+            "difference": {
+              "changedInside": 7363,
+              "changedOutside": 0,
+              "maximumInside": 30,
+              "maximumOutside": 0,
+              "absoluteInside": 10070
+            },
+            "low": {
+              "sha256": "b51497e59c163717460778345c3970a4a537efa55c222c0388d7211e052cc84b",
+              "width": 640,
+              "height": 512
+            },
+            "high": {
+              "sha256": "5b69c69f90b55ad2ddab2db351a1a690cec7c7f5cacee47b76f3fa289c25465e",
+              "width": 640,
+              "height": 512
+            }
+          },
+          {
+            "key": "lowerWetness",
+            "difference": {
+              "changedInside": 9431,
+              "changedOutside": 0,
+              "maximumInside": 71,
+              "maximumOutside": 0,
+              "absoluteInside": 23770
+            },
+            "low": {
+              "sha256": "f4b93d0684eac3625a471bfb5ab01372af3d6fe1b99e2b307810f00810802046",
+              "width": 640,
+              "height": 512
+            },
+            "high": {
+              "sha256": "f4f1f279ba41f14747e95c86773ac1dd05dfaa5c6a3ddc23b69780cfcee252b0",
+              "width": 640,
+              "height": 512
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "guard installation leaves the original person, parameters, geometry, lighting and image unchanged",
+      "passed": true,
+      "result": {
+        "before": {
+          "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+          "width": 640,
+          "height": 512
+        },
+        "after": {
+          "sha256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+          "width": 640,
+          "height": 512
+        }
+      }
+    },
+    {
+      "name": "unsupported changes are rejected before any part of a mixed patch mutates",
+      "passed": true,
+      "result": {
+        "results": [
+          {
+            "key": "upperWetness",
+            "error": {
+              "name": "Error",
+              "message": "当前材质不支持旧湿润参数：upperWetness。原值仍保留；请使用当前唇部湿润，或切回原皮肤后调整。",
+              "code": "LIP_CONTROL_INACTIVE"
+            },
+            "observed": {
+              "schema": "kaopu/lip-anatomy-dna@1",
+              "upperMelanin": 0.26,
+              "lowerMelanin": 0.16,
+              "upperBlood": 0.48,
+              "lowerBlood": 0.54,
+              "oxygenation": 0.72,
+              "upperRoughness": 0.54,
+              "lowerRoughness": 0.49,
+              "upperWetness": 0.35,
+              "lowerWetness": 0.45,
+              "tissueDepth": 1,
+              "microGeometry": 1,
+              "skinRefinement": 0.65
+            }
+          },
+          {
+            "key": "lowerWetness",
+            "error": {
+              "name": "Error",
+              "message": "当前材质不支持旧湿润参数：lowerWetness。原值仍保留；请使用当前唇部湿润，或切回原皮肤后调整。",
+              "code": "LIP_CONTROL_INACTIVE"
+            },
+            "observed": {
+              "schema": "kaopu/lip-anatomy-dna@1",
+              "upperMelanin": 0.26,
+              "lowerMelanin": 0.16,
+              "upperBlood": 0.48,
+              "lowerBlood": 0.54,
+              "oxygenation": 0.72,
+              "upperRoughness": 0.54,
+              "lowerRoughness": 0.49,
+              "upperWetness": 0.35,
+              "lowerWetness": 0.45,
+              "tissueDepth": 1,
+              "microGeometry": 1,
+              "skinRefinement": 0.65
+            }
+          }
+        ],
+        "aggregate": {
+          "error": {
+            "name": "Error",
+            "message": "当前材质不支持旧湿润参数：wetness。原值仍保留；请使用当前唇部湿润，或切回原皮肤后调整。",
+            "code": "LIP_CONTROL_INACTIVE"
+          },
+          "observed": {
+            "schema": "kaopu/lip-structure@2",
+            "enabled": true,
+            "structure": 1,
+            "upperVolume": 0.8,
+            "lowerVolume": 0.7,
+            "cupid": 0.75,
+            "tubercle": 0.8,
+            "corners": 0.55,
+            "borderSoftness": 0.48,
+            "furrows": 0.65,
+            "pigment": 0.68,
+            "wetness": 0.35,
+            "dryRoughness": 0.53,
+            "eyeSmoothing": 0.35,
+            "colorVariation": 0.65,
+            "upperShade": 0.45,
+            "dryness": 0.3,
+            "microRelief": 0.65,
+            "textureDensity": 1,
+            "patternSeed": 37
+          }
+        },
+        "noChange": {
+          "accepted": true
+        }
+      }
+    },
+    {
+      "name": "inactive old sliders are disabled and their authored values remain intact",
+      "passed": true,
+      "result": {
+        "observed": [
+          {
+            "key": "upperWetness",
+            "disabled": true,
+            "value": "0.35",
+            "title": "当前皮肤支持整体唇部湿润，不支持旧版的上下唇分别调整。旧值仍保留，切回原皮肤可继续使用。",
+            "describedBy": "lcc-legacy-note"
+          },
+          {
+            "key": "lowerWetness",
+            "disabled": true,
+            "value": "0.45",
+            "title": "当前皮肤支持整体唇部湿润，不支持旧版的上下唇分别调整。旧值仍保留，切回原皮肤可继续使用。",
+            "describedBy": "lcc-legacy-note"
+          }
+        ],
+        "aggregate": {
+          "disabled": true,
+          "value": "0.35"
+        },
+        "notes": [
+          "当前皮肤支持整体唇部湿润，不支持旧版的上下唇分别调整。旧值仍保留，切回原皮肤可继续使用。前往当前唇部湿润",
+          "当前皮肤支持整体唇部湿润，不支持旧版的上下唇分别调整。旧值仍保留，切回原皮肤可继续使用。前往当前唇部湿润"
+        ]
+      }
+    },
+    {
+      "name": "the current wetness entry changes beauty pixels without changing old DNA or geometry",
+      "passed": true,
+      "result": {
+        "forwarding": {
+          "difference": {
+            "changedInside": 47502,
+            "changedOutside": 0,
+            "maximumInside": 49,
+            "maximumOutside": 0,
+            "absoluteInside": 94617
+          },
+          "protection": "exact-zero-outside-mouth",
+          "inheritedOutsidePixels": 0
+        },
+        "uiForwarding": {
+          "difference": {
+            "changedInside": 47502,
+            "changedOutside": 0,
+            "maximumInside": 49,
+            "maximumOutside": 0,
+            "absoluteInside": 94617
+          },
+          "protection": "exact-zero-outside-mouth",
+          "inheritedOutsidePixels": 0
+        },
+        "low": {
+          "sha256": "da71ada4b096a5f840d96415e5c40fdc864b264c126cc18ef878fbb64268fdf8",
+          "width": 640,
+          "height": 512
+        },
+        "high": {
+          "sha256": "661a2f1409b0022940dacb96f5619cd1aff4e9947ae43eaeef6f5a1bdd5849a2",
+          "width": 640,
+          "height": 512
+        }
+      }
+    },
+    {
+      "name": "real controller archive and restore preserve all three legacy values and active psWet",
+      "passed": true,
+      "result": {
+        "archiveProof": {
+          "sha256": "b705f444f93f16b01781bea5706c246a377674aa532a5a30aba5aaf8496cad99",
+          "bytes": 11151,
+          "entry": "__IDENTITY_QA__.controller().archive()"
+        },
+        "restoredValues": {
+          "wetness": 0.24,
+          "upperWetness": 0.22,
+          "lowerWetness": 0.73,
+          "currentWetness": 0.61
+        },
+        "before": {
+          "sha256": "e794396c0bf8e05cd0b9d80d050f416258708fdc4cb256d4b6cab6336601d188",
+          "width": 640,
+          "height": 512
+        },
+        "after": {
+          "sha256": "e794396c0bf8e05cd0b9d80d050f416258708fdc4cb256d4b6cab6336601d188",
+          "width": 640,
+          "height": 512
+        },
+        "entry": "await __IDENTITY_QA__.controller().restore(savedArchive)"
+      }
+    },
+    {
+      "name": "rejected presets and public reset preserve debug and the first original recipe undo",
+      "passed": true,
+      "result": {
+        "rejected": [
+          "trusted disabled dry click",
+          "synthetic disabled dry click",
+          "trusted disabled reset click",
+          "synthetic disabled reset click",
+          "public lipWorkbench.reset()"
+        ],
+        "resetError": {
+          "code": "LIP_CONTROL_INACTIVE",
+          "message": "当前材质不支持旧湿润参数：wetness。原值仍保留；请使用当前唇部湿润，或切回原皮肤后调整。"
+        },
+        "debugSentinel": 4,
+        "edit": {
+          "upperVolume": 1.17,
+          "wetness": 0.67
+        },
+        "undoClicks": 1,
+        "restoredRecipe": {
+          "schema": "kaopu/lip-structure@2",
+          "enabled": true,
+          "structure": 1,
+          "upperVolume": 0.8,
+          "lowerVolume": 0.7,
+          "cupid": 0.75,
+          "tubercle": 0.8,
+          "corners": 0.55,
+          "borderSoftness": 0.48,
+          "furrows": 0.65,
+          "pigment": 0.68,
+          "wetness": 0.35,
+          "dryRoughness": 0.53,
+          "eyeSmoothing": 0.35,
+          "colorVariation": 0.65,
+          "upperShade": 0.45,
+          "dryness": 0.3,
+          "microRelief": 0.65,
+          "textureDensity": 1,
+          "patternSeed": 37
+        },
+        "preservedCurrentWetness": 0.59,
+        "visibleExplanation": "撤销恢复的是原唇部配方；当前程序皮肤的整体湿润值不会随它改变。",
+        "undoFrame": {
+          "sha256": "f37b715732fba52b91b0d4108505cb0c5d2a6946e2743033d3e350949be29dfb",
+          "width": 640,
+          "height": 512
+        }
+      }
+    },
+    {
+      "name": "native material restores both old controls and returning to procedural material restores the guard",
+      "passed": true,
+      "result": {
+        "selected": {
+          "programEnabled": false,
+          "selectedNames": [
+            ""
+          ],
+          "usesProceduralMaterial": false,
+          "gray": false
+        },
+        "results": [
+          {
+            "key": "upperWetness",
+            "difference": {
+              "changedInside": 7363,
+              "changedOutside": 0,
+              "maximumInside": 30,
+              "maximumOutside": 0,
+              "absoluteInside": 10070
+            }
+          },
+          {
+            "key": "lowerWetness",
+            "difference": {
+              "changedInside": 9431,
+              "changedOutside": 0,
+              "maximumInside": 71,
+              "maximumOutside": 0,
+              "absoluteInside": 23770
+            }
+          }
+        ],
+        "returnImage": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "requestFailures": [],
+  "baselineSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+  "verifierSHA256": "9942cdeeaa9984817db312478be73d4e62cae1fd17a27a3647cb7ff6c54fb2b9",
+  "sourceSHA": "1f08e20cca0aa864a5faf86aa70f08d836062a49",
+  "framebuffer": {
+    "width": 640,
+    "height": 512,
+    "pixelRatio": 1
+  },
+  "completed": true,
+  "necessityEstablished": true,
+  "softwareRenderer": true,
+  "physicalPhone": false,
+  "visualImprovementClaimed": false,
+  "upperLowerCapabilityRestored": false,
+  "limits": "Frozen R07 default person; two legacy wetness DNA controls; same-machine rendering. This check does not certify photorealism or all-person behavior.",
+  "candidateSHA256": "b369935d5d6c51e1cd4f0c93c8ca93ef7f5653319b2580b13a4faa192679d2a6",
+  "baseline": {
+    "url": "http://127.0.0.1:36935/baseline.html",
+    "loadMS": 18990,
+    "host": {
+      "ready": true,
+      "errors": [],
+      "finalFrame": true
+    }
+  },
+  "roi": {
+    "minX": 66,
+    "maxX": 574,
+    "minY": 61,
+    "maxY": 434,
+    "vertexCount": 93462,
+    "source": "native LipRails ROI; final projected geometry; lower-left framebuffer coordinates"
+  },
+  "initialFramebufferSHA256": "f53f4eb943ad8405f60ead8cf92f2e3c7fd41c883b402e5735c293e323724ea5",
+  "initialState": {
+    "dna": {
+      "schema": "kaopu/lip-anatomy-dna@1",
+      "upperMelanin": 0.26,
+      "lowerMelanin": 0.16,
+      "upperBlood": 0.48,
+      "lowerBlood": 0.54,
+      "oxygenation": 0.72,
+      "upperRoughness": 0.54,
+      "lowerRoughness": 0.49,
+      "upperWetness": 0.35,
+      "lowerWetness": 0.45,
+      "tissueDepth": 1,
+      "microGeometry": 1,
+      "skinRefinement": 0.65
+    },
+    "lipSettings": {
+      "schema": "kaopu/lip-structure@2",
+      "enabled": true,
+      "structure": 1,
+      "upperVolume": 0.8,
+      "lowerVolume": 0.7,
+      "cupid": 0.75,
+      "tubercle": 0.8,
+      "corners": 0.55,
+      "borderSoftness": 0.48,
+      "furrows": 0.65,
+      "pigment": 0.68,
+      "wetness": 0.35,
+      "dryRoughness": 0.53,
+      "eyeSmoothing": 0.35,
+      "colorVariation": 0.65,
+      "upperShade": 0.45,
+      "dryness": 0.3,
+      "microRelief": 0.65,
+      "textureDensity": 1,
+      "patternSeed": 37
+    },
+    "pose": {
+      "schema": "kaopu/lip-performance@1",
+      "pucker": 0,
+      "funnel": 0,
+      "press": 0,
+      "seal": 0,
+      "rollIn": 0,
+      "rollOut": 0,
+      "stretchLeft": 0,
+      "stretchRight": 0,
+      "upperRaise": 0,
+      "lowerDepress": 0,
+      "cornerLeft": 0,
+      "cornerRight": 0,
+      "adhesion": 0,
+      "release": 0,
+      "jawOpen": 0
+    },
+    "head": {
+      "enabled": true,
+      "seed": 731,
+      "tone": 0.72,
+      "warmth": 0.46,
+      "blood": 0.48,
+      "variation": 0.9,
+      "pores": 0.88,
+      "poreRadius": 0.09,
+      "poreSpacing": 0.58,
+      "microrelief": 0.72,
+      "roughness": 0.51,
+      "oil": 0.26,
+      "scatter": 0.62,
+      "freckles": 0.2,
+      "lipColor": 0.54,
+      "lipWetness": 0.24,
+      "eyeThinness": 0.34,
+      "diagnostic": 0
+    },
+    "body": {
+      "enabled": true,
+      "regionalColor": 0.72,
+      "lidWarmth": 0.46,
+      "noseWarmth": 0.38,
+      "earBlood": 0.44,
+      "earTransmission": 0.58,
+      "bodyVariation": 0.64,
+      "bodyPores": 0.78,
+      "jointTone": 0.42,
+      "neckCreases": 0.34,
+      "beardShadow": 0.04,
+      "audit": 0
+    },
+    "geometry": {
+      "attributes": {
+        "position": "7df8b6813bfa503cd8e2a3d12b6b0276aedcf6e8005b06e2546ad11c07a29535",
+        "normal": "ab04793265b00531535f3b57fc6624859793df2435a565f079e8344eae8809e5",
+        "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+        "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+        "skinIndex": null,
+        "skinWeight": null
+      },
+      "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+      "canonicalPositions": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+      "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de"
+    },
+    "lighting": {
+      "lights": [
+        {
+          "type": "HemisphereLight",
+          "color": [
+            0.7379104087672317,
+            0.8631572134510892,
+            1
+          ],
+          "intensity": 1.6,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "color": [
+            1,
+            0.7011018919268015,
+            0.5332764040016892
+          ],
+          "intensity": 3.2,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -2,
+            3,
+            4,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "color": [
+            0.36625259558833256,
+            0.5394794890033748,
+            0.7379104087672317
+          ],
+          "intensity": 2.6,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            2,
+            -2,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "RectAreaLight",
+          "color": [
+            1.1310784284563347,
+            0.9730112050086658,
+            0.8813727463709912
+          ],
+          "intensity": 7.2727272727272725,
+          "matrix": [
+            0.7313537016191706,
+            0,
+            0.6819983600624984,
+            0,
+            0.27739372355502145,
+            0.913545457642601,
+            -0.2974683494976418,
+            0,
+            -0.6230365039547985,
+            0.40673664307580015,
+            0.6681248520442954,
+            0,
+            -0.6854049185221172,
+            1.163982711291156,
+            0.7648977088026229,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "RectAreaLight",
+          "color": [
+            1.0052297539176216,
+            0.9874473725127881,
+            1.1089445082544023
+          ],
+          "intensity": 0.6495928142187422,
+          "matrix": [
+            0.8525245220595057,
+            -6.938893903907228e-18,
+            -0.5226872289306591,
+            0,
+            -0.06257204189701793,
+            0.9928086358538663,
+            -0.10205759230367448,
+            0,
+            0.5189283947328852,
+            0.11971220728891938,
+            0.8463937077778672,
+            0,
+            0.7004885687175565,
+            0.8781838837478171,
+            1.1725918770540187,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "RectAreaLight",
+          "color": [
+            1.0425881383994025,
+            0.9838211106622988,
+            1.034860158318712
+          ],
+          "intensity": 5.140939912102185,
+          "matrix": [
+            -0.6810558805071523,
+            0,
+            -0.7322314440302514,
+            0,
+            -0.21638918766375098,
+            0.955336489125606,
+            0.2012657745553943,
+            0,
+            0.6995274169672331,
+            0.29552020666133955,
+            -0.6506375337820511,
+            0,
+            0.7694153944921177,
+            1.0416446312352494,
+            -0.6857409156063585,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "HemisphereLight",
+          "color": [
+            0.7529422167708612,
+            0.8307698767709715,
+            0.913098651791473
+          ],
+          "intensity": 0.08,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "DirectionalLight",
+          "color": [
+            1,
+            0.8796223968851662,
+            0.7379104087672317
+          ],
+          "intensity": 0,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "color": [
+            1,
+            0.965,
+            0.93
+          ],
+          "intensity": 3.2,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0.9784581441716371,
+            1.15690771266234,
+            0.7638525528115048,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "DirectionalLight",
+          "color": [
+            0.91,
+            0.955,
+            1
+          ],
+          "intensity": 1.35,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -1.089084925730247,
+            1.0977294604532188,
+            0.6289214604110225,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "HemisphereLight",
+          "color": [
+            0.95,
+            0.975,
+            1
+          ],
+          "intensity": 0.38,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": true
+        }
+      ],
+      "exposure": 1,
+      "toneMapping": 4
+    },
+    "camera": {
+      "position": [
+        -0.0014174247416935191,
+        0.665934982675927,
+        0.2267434765070413
+      ],
+      "quaternion": [
+        0.0005387019528504405,
+        -0.0064700011009413945,
+        0.000003485475687158492,
+        0.9999789242148113
+      ],
+      "projection": [
+        2.8847068070087,
+        0,
+        0,
+        0,
+        0,
+        3.6058835087608747,
+        0,
+        0,
+        0,
+        0,
+        -1.0004000800160031,
+        -1,
+        0,
+        0,
+        -0.020004000800160033,
+        0
+      ],
+      "target": [
+        -0.00010545082644640221,
+        0.6660442241878393,
+        0.12536085521268409
+      ]
+    }
+  },
+  "baselineDirectWetness": {
+    "low": {
+      "sha256": "da71ada4b096a5f840d96415e5c40fdc864b264c126cc18ef878fbb64268fdf8",
+      "width": 640,
+      "height": 512
+    },
+    "high": {
+      "sha256": "661a2f1409b0022940dacb96f5619cd1aff4e9947ae43eaeef6f5a1bdd5849a2",
+      "width": 640,
+      "height": 512
+    },
+    "difference": {
+      "changedInside": 47502,
+      "changedOutside": 0,
+      "maximumInside": 49,
+      "maximumOutside": 0,
+      "absoluteInside": 94617
+    },
+    "scope": "zero-outside-mouth"
+  },
+  "candidate": {
+    "url": "http://127.0.0.1:36935/candidate.html",
+    "loadMS": 17728,
+    "host": {
+      "ready": true,
+      "errors": [],
+      "finalFrame": true
+    }
+  },
+  "finishedAt": "2026-10-18T03:16:56.063Z"
+}

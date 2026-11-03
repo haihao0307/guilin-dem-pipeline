@@ -1,0 +1,153 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "taskId": "LIP-CONTROL-CONTRACT-R01-20261017",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "headSha": "ea84c309cd29457f73b85085d409318a8d8ffdef",
+  "sourceSha": "1f08e20cca0aa864a5faf86aa70f08d836062a49",
+  "evidenceCommit": "d7baf424219d5e7dafc16069a506700c5bd40d63",
+  "targetObject": "Frozen R07 default human / legacy lip wetness controls",
+  "targetDefectOrChange": "Stop unsupported live wetness edits from appearing successful; retain authored recipes, original material controls, current effective input and restoration.",
+  "productionFilesChanged": [
+    "kaopu-unified-human-workbench/lip-control-contract-r01/LipControlContract.js",
+    "kaopu-unified-human-workbench/lip-control-contract-r01/build.cjs",
+    "kaopu-unified-human-workbench/lip-control-contract-r01/preview.html"
+  ],
+  "verificationFiles": [
+    "kaopu-unified-human-workbench/lip-control-contract-r01/verify-wetness.cjs",
+    ".github/workflows/lip-control-contract-r01.yml",
+    ".github/workflows/lip-control-contract-r01-publish.yml"
+  ],
+  "tests": [
+    {
+      "stage": "construction",
+      "passed": true,
+      "evidence": "BUILD_MANIFEST.json",
+      "originalHostRestorationExact": true,
+      "originalScriptsUnchanged": true
+    },
+    {
+      "stage": "independent local before/after",
+      "passed": true,
+      "count": 14,
+      "runId": 39091795794,
+      "evidence": "evidence/local/qa.json",
+      "qaSHA256": "9b7f59c3a6cdd3104fd026fe5bee82618ad4722adbae7b080e0ff174cd096ae4"
+    },
+    {
+      "stage": "fixed public HTTPS",
+      "passed": true,
+      "count": 4,
+      "runId": 39093513566,
+      "evidence": "evidence/public/qa.json",
+      "qaSHA256": "ac9ae09940286378f7ff21357d7d9ca64cef7ebf370886998dab20604a29494f"
+    },
+    {
+      "stage": "independent evidence review",
+      "passed": true,
+      "verifier": "facial_rules_audit",
+      "checks": [
+        "Original and recovery local files byte-identical",
+        "All local and public PNG framebuffers recomputed",
+        "Direct fixed raw HTTPS fetch matches verified HTML bytes"
+      ]
+    }
+  ],
+  "independentSourceReview": {
+    "reviewer": "semantic_architecture_audit",
+    "productApproved": true,
+    "recoveryWorkflowApproved": true,
+    "firstRevisionRejectedFor": [
+      "Preset/history effects before rejection",
+      "Undo semantics bypassing setter",
+      "bfcache teardown survival",
+      "Unreviewed native material hook acceptance"
+    ],
+    "disposition": "Presets rejected before effects; undo retained as explicit recipe restoration; bfcache lifecycle preserved; both reviewed material objects/hooks checked"
+  },
+  "browserDesktop": {
+    "engine": "Chromium 145.0.7632.6",
+    "playwright": "1.58.2",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "framebuffer": {
+      "width": 640,
+      "height": 512,
+      "pixelRatio": 1
+    },
+    "softwareRenderer": true,
+    "localAndPublicOnDifferentRunners": true,
+    "exactCrossRunnerFramebufferReproduction": true
+  },
+  "browser390x844": null,
+  "referenceViews": [
+    {
+      "person": "Frozen R07 default",
+      "view": "macro",
+      "region": "Native LipRails projected conservative rectangle",
+      "roi": {
+        "minX": 66,
+        "maxX": 574,
+        "minY": 61,
+        "maxY": 434,
+        "vertexCount": 93462,
+        "source": "native LipRails ROI; final projected geometry; lower-left framebuffer coordinates"
+      }
+    }
+  ],
+  "regressionCasesRun": [
+    "R07-LEGACY-LIP-WETNESS-NO-CONSUMER"
+  ],
+  "outcome": {
+    "legacyWetnessChangedPixels": {
+      "aggregate": 0,
+      "upper": 0,
+      "lower": 0
+    },
+    "nativePositiveControlInside": {
+      "upper": 7363,
+      "lower": 9431
+    },
+    "currentWetnessChangedPixels": {
+      "inside": 47502,
+      "outside": 0
+    },
+    "candidateCurrentFramesEqualOriginalDirectFrames": true,
+    "initialAndRestoredPersonStateGeometryAndFramesEqualBaseline": true,
+    "realArchiveRoundTrip": true,
+    "originalGeometricUndoAndCurrentWetnessPreserved": true
+  },
+  "pipelineRecovery": {
+    "originalRunOutcome": "Local phase passed; subsequent publication failed because evidence directory is ignored",
+    "recoveryRunOutcome": "Success",
+    "provenance": "evidence/RECOVERY_PROVENANCE.json",
+    "productAndVerifierUnchanged": true,
+    "predicatesOrThresholdsRelaxed": false,
+    "metadataQualification": "Original unmodified verifier uses a same-runner label; this recovery actually compared a new runner against immutable prior local evidence and required exact byte/frame equality."
+  },
+  "failedGates": [],
+  "knownLimitations": [
+    "Frozen R07 default human and one macro view; not all people, views, materials or devices",
+    "ROI is a conservative mouth rectangle, not precise anatomical lip segmentation",
+    "No added upper/lower independent wetness capability in the R07 program material",
+    "No photorealism, physiological accuracy or improved visual quality claim",
+    "Three legacy live-edit fields only; not every raw assignment or material API",
+    "Unknown material or shader-hook replacements require renewed review",
+    "Legacy recipe preparation while R07 is displayed requires a native-material switch or the existing full restoration path",
+    "bfcache handling was source-reviewed, without a dedicated real history-navigation test",
+    "Inherited remote resource loader; standalone offline packaging and physical phone acceptance not established",
+    "No measured person-hour savings or autonomous general learning claim"
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "READY_FOR_USER_REVIEW",
+  "decision": "Retain this bounded reliability correction as a review candidate; do not proliferate per-control wrappers as the long-term architecture",
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ea84c309cd29457f73b85085d409318a8d8ffdef/kaopu-unified-human-workbench/lip-control-contract-r01/preview.html",
+  "draftPR": "https://github.com/haihao0307/guilin-dem-pipeline/pull/304",
+  "nextAction": "Review the fixed candidate; any future host or material integration must preserve the proven control and restoration contract."
+}

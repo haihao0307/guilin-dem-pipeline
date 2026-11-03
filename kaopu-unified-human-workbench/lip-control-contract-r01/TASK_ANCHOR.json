@@ -1,0 +1,18 @@
+{
+  "schema": "kaopu/task-anchor@2",
+  "taskId": "LIP-CONTROL-CONTRACT-R01-20261017",
+  "authorization": "User requested professional system audit and a small justified implementation with independent before/after assessment.",
+  "baseCommit": "5543f756ca3af1428323696324303fa70b8de850",
+  "hostPath": "kaopu-unified-human-workbench/human-integrated-r07/preview.html",
+  "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+  "primaryDefect": "Legacy lip wetness controls accept changes while the active R07 fragment shader has no consumer for them.",
+  "scope": ["ET19 wetness", "ET19 upperWetness", "ET19 lowerWetness", "R07 current lipWetness entry", "material ownership changes and archive compatibility"],
+  "decision": "Expose supported controls for the actual material; reject changed unsupported legacy live-edit parameters atomically. Preserve legacy values. No unvalidated numeric migration.",
+  "restorationException": "Complete archive restore and original lip undo restore the authored recipe. Keep geometric undo and old material values; explicitly explain that R07 psWet is not changed by original lip undo.",
+  "unchanged": ["canonical pointer", "all original source and preview bytes", "geometry", "shader", "lighting", "presets", "archive schema", "PR303", "other active feature branches"],
+  "baselineGate": "Real framebuffer probe must show legacy state changes without lip ROI response in R07, and a response for the same family in native material. Otherwise reject this proposal.",
+  "candidateGates": ["independent browser verification", "exact baseline/candidate framebuffer and geometry equality without edits", "atomic rejection of unsupported mixed patch", "native controls recover after material switch", "current control changes actual lip ROI", "archived legacy values survive", "fixed public HTTPS readback"],
+  "producer": "root",
+  "independentVerifier": "facial_rules_audit",
+  "promotion": "isolated feature preview and draft PR only; user visual acceptance and mainline promotion are not granted by machine tests"
+}
