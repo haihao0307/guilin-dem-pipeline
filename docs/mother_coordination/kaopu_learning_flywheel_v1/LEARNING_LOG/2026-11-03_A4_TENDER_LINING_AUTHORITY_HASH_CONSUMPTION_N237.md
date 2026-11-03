@@ -50,4 +50,4 @@ Candidate fields:
 - Delivery Receipt: `authorityHashesCheckedBeforeUse`, `authorityHashMismatchCount`
 - fail-closed state: `HOLD_DECLARED_AUTHORITY_IDENTITY_NOT_CONSUMED`
 
-Lifecycle before Mother receipt: `Candidate IMPLEMENTED / GATE-RUN`; `POSTED / ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`.
+Lifecycle: `POSTED / Candidate IMPLEMENTED / GATE-RUN`; `ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED = false`.\n\nPOST receipt: `haihao0307/guilin-dem-pipeline#91 comment 6598178220`.
