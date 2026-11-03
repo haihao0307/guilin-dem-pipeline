@@ -1,0 +1,87 @@
+{
+  "schema": "kaopu.learning-flywheel.probe-result/1",
+  "run": "N237",
+  "observedAt": "2026-11-03T16:43:00+08:00",
+  "boundedQuestion": "Does the installed tender-lining execution gate consume the declared authority module, parameters, freeze, and current-wall dependency identities before accepting the material binding?",
+  "subject": {
+    "name": "A4_ORIGINAL_TENDER_RIVETS_LINING_INSTALLED_R01.zip",
+    "libraryIdentity": "libfile_60449235147c8191bfae85587f32ac35",
+    "sha256": "760ead29eb000d79631c5e9db9518f3c3c38acb5be6707dfa85c1b03a0867a70",
+    "entryManifestEntries": 1289,
+    "entryManifestMismatches": 0
+  },
+  "staticObservation": {
+    "consumer": "a6-spacetime-conversion-r01/original-function-assembly-r01/lining-binding.mjs::validateLiningBinding",
+    "consumedAuthorityFields": [
+      "authority.GLSLSHA256"
+    ],
+    "declaredButNotConsumedFields": [
+      "authority.moduleSHA256",
+      "authority.parametersSHA256",
+      "authority.freezeSHA256"
+    ],
+    "wallAuthorityBindingConsumedByAssembly": false,
+    "wallAuthorityBindingPath": "a6-spacetime-conversion-r01/original-tender-lining-r01/native/WALL_AUTHORITY_BINDING.json",
+    "wallDependencyBytesPackagedAndExact": true,
+    "wallDependencies": [
+      {
+        "path": "a6-spacetime-conversion-r01/original-tender-shell-r01/section-mother.mjs",
+        "sha256": "7b500472dbcc7f31f81f1b1ad721a046a7f399c9d63678bc8423d6ef8fee02d2"
+      },
+      {
+        "path": "a6-spacetime-conversion-r01/original-tender-shell-r01/section.parameters.json",
+        "sha256": "81ab604f50ed0896ca5778d99f49078e88f7d36008c8222aa9081681324ddaaa"
+      },
+      {
+        "path": "a6-spacetime-conversion-r01/original-tender-shell-r01/wall-profile.mjs",
+        "sha256": "e9247ac45279d10ea110bd34fa86bd31644b3ea3947ab65a735a839e305144db"
+      }
+    ]
+  },
+  "falsifiableTrial": {
+    "positiveControl": "The pristine binding passes validateLiningBinding with the installed enclosure member and canonical component/view IDs.",
+    "negativeMutation": {
+      "authority.moduleSHA256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "authority.parametersSHA256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "authority.freezeSHA256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "outerBindingHashRecomputed": true,
+    "expectedFailClosedResult": "Reject before accepting the lining binding because declared authority identities do not match delivered bytes.",
+    "actualResult": "ACCEPTED_WRONG_DECLARED_AUTHORITY_HASHES",
+    "probeExitCode": 0,
+    "probe": "PROBES/a4_tender_lining_authority_hash_consumption_probe_n237.mjs"
+  },
+  "decision": "HOLD_A4_TENDER_LINING_DECLARED_AUTHORITY_IDENTITY_NOT_FAIL_CLOSED",
+  "regression": {
+    "action": "extend-existing",
+    "id": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "newCaseCreated": false
+  },
+  "candidateRuleDelta": {
+    "taskAnchorFields": [
+      "declaredAuthorityResources",
+      "authorityIdentityConsumer"
+    ],
+    "deliveryReceiptFields": [
+      "authorityHashesCheckedBeforeUse",
+      "authorityHashMismatchCount"
+    ],
+    "verifierGate": "Every declared authority hash that supports a current-binding claim must be recomputed from the delivered or exactly materialized byte resource and compared by the actual pre-use verifier. Hash-shaped metadata and an outer receipt hash do not establish transitive authority identity.",
+    "failClosedState": "HOLD_DECLARED_AUTHORITY_IDENTITY_NOT_CONSUMED"
+  },
+  "boundaries": [
+    "Does not reject the packaged lining geometry, material mask, source interpretation, shader pixels, or the exact pristine package bytes.",
+    "Does not claim that the packaged wall dependency bytes are wrong; all three delivered wall resources match WALL_AUTHORITY_BINDING.json.",
+    "Does not establish browser, device, production, Mother, or user acceptance.",
+    "The packaged ui-protocol.test.mjs was not used as a full-runtime positive control because the pristine package currently fails an unrelated draw-count assertion (actual 0, expected 673); this result is limited to the exact installed binding consumer."
+  ],
+  "lifecycle": {
+    "candidateImplemented": true,
+    "gateRun": true,
+    "posted": false,
+    "acknowledged": false,
+    "productionImplemented": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
