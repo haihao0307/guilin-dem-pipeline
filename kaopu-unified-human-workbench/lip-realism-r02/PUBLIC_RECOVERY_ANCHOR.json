@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu/lip-public-recovery-anchor@1",
+  "taskId": "LIP-VISUAL-COLOUR-R02-20261018",
+  "mode": "public",
+  "fixed": {
+    "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "previewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+    "moduleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+    "manifestSHA256": "f306e7af381692e0423fcc1fee8d0c693bb4b121b30d086aaf36401d52619ccf",
+    "coreSHA256": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+    "coreVerifierSHA256": "35be7f4e420427e69841755380bc0999ba949af288884e4357b16ffc6cb95503",
+    "coreRunId": "39100909391",
+    "publicVerifierSHA256": "753683da5aa94114c14ead1c8661aba1d2f6e1b0baa3ea02564cf1ab0da4338c"
+  },
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+  "reason": "Original core passed 11/11. Original public failed at strict scene equality because live lights retained optional undefined own keys which prior JSON omitted. Only omit those absent optional keys; preserve all real values and exact frame/UI/mobile/cleanup gates.",
+  "originalFailure": {
+    "runId": "39100909391",
+    "artifactId": "12127080792",
+    "qaPath": "evidence/public-attempt-39100909391/qa.json",
+    "qaSHA256": "6ded12f6184cd7922a9c064c40669b03da26a2d62b115cffcab48c388dc445a5",
+    "publicComplete": false,
+    "initialStateCaptured": false
+  },
+  "review": {
+    "reviewer": "/root/lip_visual_source_audit",
+    "verifierStatus": "PUBLIC_RECOVERY_VERIFIER_SOURCE_PASS",
+    "workflowStatus": "PUBLIC_RECOVERY_WORKFLOW_SOURCE_PASS",
+    "workflowSHA256": "afff018b2330b343d9cf9434cad47e7fc83816c00aaf548a621a7371eecb5950",
+    "reviewedAt": "2026-10-18T06:10:08Z",
+    "confirmed": [
+      "Workflow executes public mode only against build ba0c4eb337e03997878aecaf477d8ec3fe8b7231; it neither rebuilds production nor reruns the completed core.",
+      "Preflight requires exact original preview, manifest, module, core QA, failed public QA and reviewed public verifier bytes; original core completion, all 11 tests, identity, errors and cleanup remain required.",
+      "Original run artifact manifest f306e7af381692e0423fcc1fee8d0c693bb4b121b30d086aaf36401d52619ccf, core QA 9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769 and failed public QA 6ded12f6184cd7922a9c064c40669b03da26a2d62b115cffcab48c388dc445a5 were independently rehashed. The original successful immutable raw readback records preview ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571 at the fixed build.",
+      "The local mirror has old local-unpublished preview/manifest files and no core QA at the repository path; no complete local fixture preflight is claimed. Recovery must inherit the frozen inputs from parent ba0c4eb337e03997878aecaf477d8ec3fe8b7231 and tree 8c46023311499e824b96b3736476a6b8b4c98ecc, with only the explicit recovery file whitelist changed.",
+      "New evidence is written to evidence/public-recovery while the original failed public QA remains distinct. New-run rendering is identified honestly and the original exact state, frame, UI, mobile and cleanup requirements remain unchanged.",
+      "Both local HEAD and fetched branch head must equal RECOVERY_SHA before the proof commit; the final git add is limited to PUBLICATION_PROOF.json and evidence/public-recovery. Main, production and original core are outside this mutation.",
+      "Workflow YAML parsed, all four shell blocks passed bash syntax checking, and both embedded Python blocks parsed. Proof retains visualAcceptance=false, productionReady=false and no claim of significant overall visual improvement."
+    ],
+    "limitation": "Source review passed; actual public recovery is still pending."
+  },
+  "constraints": [
+    "Do not rebuild or change production, fixed preview, manifest or original core bytes.",
+    "Recover on a new CI runner; do not claim same-runner rendering. Exact original frame SHA equality remains required.",
+    "Keep prior failed public evidence distinct from new public-recovery output.",
+    "Final strict fast-forward guard compares current branch head with RECOVERY_SHA, not the old build.",
+    "Do not treat technical verification or bounded non-regression as aesthetic acceptance."
+  ],
+  "visualReview": "INDEPENDENT_VISUAL_REVIEW_FINAL.json",
+  "visualAcceptance": false,
+  "productionReady": false,
+  "publicHttpsPassed": false
+}

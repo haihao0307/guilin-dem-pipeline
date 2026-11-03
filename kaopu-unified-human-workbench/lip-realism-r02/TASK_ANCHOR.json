@@ -1,0 +1,94 @@
+{
+  "schema": "kaopu/task-anchor@2",
+  "taskId": "LIP-VISUAL-COLOUR-R02-20261018",
+  "dispatchTime": "2026-10-18T03:42:11Z",
+  "userDirective": "先看嘴唇主要问题，再调整；单调湿润没有明显提升。审核者须提出理由、反证、自审与实际前后比较。",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/lip-colour-r02-20261018",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "targetObject": "同一原生人物的唇红组织与口周颜色过渡",
+  "targetDefectOrChange": "R01 底色接近统一灰粉填充；新旧唇色重复合成，早期肤色快照覆盖后续皮肤层。",
+  "referenceSet": {
+    "inheritedR07": "5543f756ca3af1428323696324303fa70b8de850",
+    "R01Source": "544ec81bcef6185a553df138585c7059e832a122",
+    "R01Build": "0db4b3c0e5e6e86663be6466fa7ab4b486bd5420",
+    "R01ModuleSHA256": "0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d"
+  },
+  "acceptedBaseline": "R07 existing same-person host; R01 is an evidence-backed comparison, not user-accepted photorealism.",
+  "expectedArtifact": "Isolated real 3D R02 workbench with same-view R01/R02/R07 comparison, fixed verified HTTPS and draft PR",
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/lip-realism-r02/",
+    ".github/workflows/lip-colour-r02.yml"
+  ],
+  "protectedInvariants": [
+    "R01/R02 canonical and display geometry, normals, native identity and rig identical",
+    "R01/R02 roughness, wetness, microfolds, lighting and camera identical",
+    "Original R07 host and R01 source files unchanged",
+    "No overwrite of PR303 archive-recovery work",
+    "No main mutation, merge, force push, external replacement mesh, image generation or baked shadow"
+  ],
+  "boundedHypotheses": [
+    "Stopping legacy tint before downstream skin layers and compositing the unchanged R01 native lip tissue once preserves complete perioral skin; technical necessity and small visual benefit must be reported separately."
+  ],
+  "acceptanceGates": [
+    "Actual beauty and albedo R01/R02 front/macro/oblique comparison reviewed independently",
+    "Old psLip no longer contaminates R02 lip-boundary albedo, positive R01/R07 control",
+    "Wetness cannot change albedo",
+    "Parameter-specific published R01 regionalColor positive control in the unchanged full native near-mouth skin band before candidate startup; no candidate-based selection. Thin old-feather regional response and exact amplitude preservation are explicitly unproven. Beard retains the old-feather gate.",
+    "Unchanged geometry/normals/roughness/camera/light; no changes outside conservative native lip ROI",
+    "Final HTTPS exact bytes and browser interactions verified; no screenshot substitute"
+  ],
+  "deferredFindings": [
+    "Inherited open-mouth inner-rim/corner continuity needs stage-by-stage vertex evidence; shallow-looking bright interior first needs semantic surface and material identification.",
+    "Existing R01 reduces long scratches and highlights; do not claim these as newly fixed",
+    "No calibrated subject-specific pigment map or measured optical coefficients",
+    "Exact regionalColor response preservation within the thin old-feather intersection and exact response amplitudes are not established by the current 8-bit evidence."
+  ],
+  "regressionCases": [
+    {
+      "id": "LIP-VISUAL-NOT-WETNESS-ONLY",
+      "failure": "Control reliability was mistaken for visual progress",
+      "gate": "Require visible defect reduction in matched images and independent review; parameter response alone cannot pass."
+    },
+    {
+      "id": "R02-SPATIAL-COLOUR-REJECTED",
+      "failure": "New broad/local pigment modulation made visible mottled patches; measurable change was not visual improvement.",
+      "gate": "Added pigment and inner darkening removed entirely; no claimed improvement from undoing a failed addition."
+    },
+    {
+      "id": "R02-EXTRA-EDGE-REJECTED",
+      "failure": "Second actual three-way review found no clear benefit from extra outer blending and mild perceptual vermilion narrowing.",
+      "gate": "Remove its shader, uniform and UI; false-only compatibility state; reject retired true archives before mutation."
+    },
+    {
+      "id": "R02-PARAMETER-SPECIFIC-POSITIVE-CONTROL",
+      "failure": "regionalColor was incorrectly expected to have the same visible old-feather support as old lipColor.",
+      "gate": "Select from the independently loaded published R01 regionalColor response, not successful candidate responses; retain >=8 baseline and >=4 candidate thresholds."
+    },
+    {
+      "id": "R02-THIN-REGIONAL-OBSERVABILITY-UNSUPPORTED",
+      "failure": "Independent published R01 itself had only 4 one-DN regionalColor responses in the thin old-feather intersection; candidate never loaded.",
+      "gate": "Withdraw the unsupported thin-intersection quantitative claim. Use the same whole native near-mouth band for regionalColor own baseline positive control (107 observed points); retain >=8/>=4, fixed coordinates, source chain audit and the beard old-feather gate. No full-face expansion, exposure amplification or candidate-success selection."
+    }
+  ],
+  "status": "BOUNDED_CORRECTION_VERIFIED_PUBLIC_DELIVERED_WHOLE_LIP_REALISM_UNMET",
+  "sourceModified": true,
+  "interactive3D": true,
+  "staticImageSubstitute": false,
+  "publicHttpsPassed": true,
+  "browserPassed": true,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "productionSourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+  "fixedBuildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+  "coreRunId": "39100909391",
+  "publicRecoveryAnchor": "PUBLIC_RECOVERY_ANCHOR.json",
+  "boundedVisualNonRegressionConfirmed": true,
+  "significantOverallVisualImprovementEstablished": false,
+  "wholeLipGoalMet": false,
+  "publicRecoveryRunId": "39104145778",
+  "recoverySourceSHA": "c7452d6514e0cac7f92f9e8530336cd1a87fd4e4",
+  "publicProofCommit": "5ee953fbd3a63042399ca415e1f17f2bc4e8cf90",
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+  "finalReceipt": "FINAL_AUDIT_RECEIPT.json"
+}

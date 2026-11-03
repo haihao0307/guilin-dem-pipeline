@@ -1,0 +1,278 @@
+{
+  "schema": "kaopu/independent-lip-inner-candidate-source-review@1",
+  "task": "LIP-INNER-R04",
+  "reviewer": "/root/lip_r03_geometry",
+  "reviewedAtUTC": "2026-10-18T07:36:46.175239+00:00",
+  "scope": "Read-only production-source review and independent verification of the existing R02 diagnostic recovery receipt. Only this review file was written by the reviewer.",
+  "snapshot": {
+    "InnerLip.js": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/InnerLip.js",
+      "sha256": "bee372fb1cb27c6a661525f67adf2b33d532ba8ac802cbef15cbeb8ac9bcd95f",
+      "bytes": 14566
+    },
+    "build.cjs": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/build.cjs",
+      "sha256": "a832b933fae1d6be9bd7d343fe8b33cc3b5fe9b4db9f8173e3e70330c4b73107",
+      "bytes": 2615
+    },
+    "MucosaSurface.js": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/implementation/MucosaSurface.js",
+      "sha256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+      "bytes": 8606
+    },
+    "frozenR02Module": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-realism-r02/LipSurface.js",
+      "sha256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+      "bytes": 30243
+    },
+    "frozenR07Host": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/human-integrated-r07/preview.html",
+      "sha256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+      "bytes": 5449139
+    }
+  },
+  "candidateCommit": null,
+  "candidateCommitMeaning": "The implementation was inspected as a working-tree candidate. Exact file hashes above identify the review; no unpublished source was treated as a completed build.",
+  "decision": {
+    "sourceContractReview": "PASS_WITH_RUNTIME_GATES_PENDING",
+    "productionGeometryModificationJustified": false,
+    "productionGeometryAlgorithmEditedByCandidate": false,
+    "productionShaderGPUVerifiedByThisReview": false,
+    "productionCandidateVisualAcceptance": false,
+    "productionCandidateProductionReady": false,
+    "rationale": "The four-pose diagnostic does not locate a visible geometric fold at a single solver phase. It does show that the broad pale inner sidewall changes under a same-geometry native oral-material experiment. Restoring the lost oral-skin material responsibility is a justified bounded candidate. Keep native geometry, contacts and R02 coarse-relief inheritance intact."
+  },
+  "innerLipSourceChecks": [
+    {
+      "subject": "Matched R04 / R02 comparison",
+      "result": "PASS_SOURCE",
+      "evidence": "compare(mode) validates r04/r02, preserves the already-active R02 base, and changes comparison plus liEnabled/liDiagnostic through sync() and viewer.render(). It does not call model.compute(), viewer.update(), a geometry setter, or the native lip solver for a matched R02-base toggle.",
+      "condition": "The base must already be R02. A transition from a legacy R07 archive calls the inherited priorCompare(r02), which can restore the ancestor R02 relief scale and update display geometry. The current report qualifies this instead of declaring every transition geometry-invariant."
+    },
+    {
+      "subject": "Native pose and camera ownership",
+      "result": "PASS_SOURCE",
+      "evidence": "pose(name) uses the existing window.lipWorkbench.stop/setPose APIs on the current person; view(kind) delegates to the existing captured R02 base.view. There is no model allocation or geometry import. Default startup uses native jawOpen 0.36 and the native macro view.",
+      "poseValues": {
+        "neutral": {
+          "jawOpen": 0,
+          "allLocalActions": 0
+        },
+        "jaw": {
+          "jawOpen": 0.36,
+          "allLocalActions": 0
+        },
+        "speak": {
+          "jawOpen": 0.36,
+          "upperRaise": 0.2,
+          "lowerDepress": 0.12,
+          "otherLocalActions": 0
+        },
+        "pucker": {
+          "jawOpen": 0.06,
+          "pucker": 0.82,
+          "seal": 0.24,
+          "otherLocalActions": 0
+        }
+      }
+    },
+    {
+      "subject": "Archive ancestry and recursion",
+      "result": "PASS_SOURCE",
+      "evidence": "controller.archive and controller.restore are bound before installing the new aliases. R04 archive calls that captured R02 function and appends innerLip. The retained R02 function already captured the complete body/head/native ancestry. Current API aliases call controller.archive/restore dynamically exactly once. The prior functions do not call the new aliases, so the proposed route has no recursive archive cycle."
+    },
+    {
+      "subject": "Complete current-person save routing",
+      "result": "PASS_SOURCE",
+      "evidence": "Native fullCommonWorkbench/controller aliases, R02 base, head and body APIs all route to the current controller archive. body.save is redirected. A shell capture listener intercepts the retained R02/head/body save closures before their descendants execute; retained load controls and file inputs use currentRestore. Native top-level actions call the current controller dynamically. The new R04 save serializes the full currentArchive rather than a lip-only object.",
+      "runtimeLimit": "Actual download equality and archive round-trip on the compiled candidate remain runtime gates; this review establishes the intended source route."
+    },
+    {
+      "subject": "R04 validation before person mutation",
+      "result": "PASS_SOURCE",
+      "evidence": "Input must be a non-array object. hasOwnProperty controls innerLip presence; only an own field is read. Explicit null, false, zero, empty string, undefined, arrays and other non-object own values are rejected. Schema, version, implementation, comparison and diagnostic are validated before structuredClone and before priorRestore(copy). A legacy archive with no own innerLip uses the inherited path with R04 disabled."
+    },
+    {
+      "subject": "Ancestor protocol scope",
+      "result": "PASS_SOURCE",
+      "evidence": "R04 adds one kaopu/lip-inner@1 field and removes only that field before passing the clone to the captured R02 restore. The existing lipRealism schema, calibration data, head/body/native archive fields and their validation remain inherited. R04 does not migrate PR305 protocols or interpret PR307 state."
+    },
+    {
+      "subject": "Invalid comparison input has no partial switch",
+      "result": "PASS_SOURCE",
+      "evidence": "The replacement base.compare checks the inherited r01/r02/r07 enumeration before changing comparison or calling sync. Invalid mode therefore throws before changing the R04 uniform state."
+    }
+  ],
+  "resolvedSourceIssues": [
+    {
+      "issue": "Truthy-only innerLip validation skipped explicit falsy fields",
+      "fix": "Separate own-field presence from value; reject malformed present fields before calling priorRestore.",
+      "reason": "A malformed R04 archive must not mutate the person and then silently behave like a legacy file."
+    },
+    {
+      "issue": "An inherited innerLip property could bypass own-field validation but still be applied",
+      "fix": "own=hasOwn?a.innerLip:undefined.",
+      "reason": "Direct restore API calls and JSON restoration now use the same definition of absent legacy state."
+    },
+    {
+      "issue": "Invalid base.compare mode disabled R04 before ancestor validation threw",
+      "fix": "Validate mode before changing comparison or uniforms.",
+      "reason": "A rejected request should leave the held comparison unchanged."
+    },
+    {
+      "issue": "The geometry-invariance report was unconditional across legacy base transitions",
+      "fix": "Report false only for an R02 base, otherwise null, and explicitly document restoring inherited R02 relief from legacy R07.",
+      "reason": "The normal matched comparison is uniform-only, while a version ancestry transition has a different scope."
+    }
+  ],
+  "shaderSourceChecks": [
+    {
+      "subject": "Semantic domain",
+      "result": "PASS_SOURCE",
+      "evidence": "liOral = clamp(vL19State.x,0,1) * clamp(vCSRegion.x,0,1) * (1-step(0.5,vCSType)); liWeight additionally requires liEnabled and the actual native uLEnabled. It uses the continuous inherited oral-skin semantic, not a camera-space region, exterior lip silhouette or newly classified triangles.",
+      "limit": "Fractional native oral-skin weights are intentional transition coverage. The source does not establish a new anatomical boundary."
+    },
+    {
+      "subject": "Upper / lower identity",
+      "result": "PASS_SOURCE",
+      "evidence": "The helper derives upper from the midpoint of lrInnerTop/lrInnerBottom at vFRest.x and vFRest.y. R02 rail() and native F5 jl() use the same inherited Hermite rail interpolation. U5 assigns lower values to x and upper values to y for melanin, blood, roughness and wetness. The candidate uses that ordering. It does not rely on incomplete vL19Detail.z on deep oral vertices."
+    },
+    {
+      "subject": "Native parameter ownership",
+      "result": "PASS_SOURCE",
+      "evidence": "The original live native uniform objects are required rather than synthesized. The helper only adds its two uniform handles, preserves native references/values, and publishes the new fragment only after every anchor check succeeds. The outer wrapper independently captures and checks the native object identities during compilation."
+    },
+    {
+      "subject": "Palette and response endpoint",
+      "result": "PASS_SOURCE",
+      "evidence": "pcBase is the existing C2 pcBoundary pre-lip base in linear light. F5/U5 supply the selected melanin/blood/oxygen, upper/lower tone, mucosa tint, contact, roughness, coat and bounded depth expressions. The candidate composites this endpoint once by liWeight. Exterior atlas, dry patches, decorative mottling and outer-fade code were deliberately not copied.",
+      "limit": "These inherited appearance coefficients are not measured tissue optics. The same-geometry material ablation did not independently isolate which of color, coat, height or depth contributed how much."
+    },
+    {
+      "subject": "R02 off guard",
+      "result": "PASS_SOURCE_RUNTIME_EQUALITY_PENDING",
+      "evidence": "With liEnabled=0 and liDiagnostic=0, liWeight is zero. No new psBase, psR, psH, clearcoat or outgoingLight assignment executes. The inherited shader code and native uniforms remain present.",
+      "limit": "Changing the compiled fragment can affect compiler output; only the actual same-scene GPU/frame comparison can establish exact R02 pixel equality. This source review does not substitute for that gate."
+    },
+    {
+      "subject": "Geometric and derivative ownership",
+      "result": "PASS_SOURCE",
+      "evidence": "The only height edit is psH *= 1-liWeight before inherited dFdx/dFdy normal evaluation. There is no vertex shader assignment, mesh attribute/index/group change or native geometric normal write. This fades the inherited shader height field out of oral-skin responsibility while retaining true geometric folds.",
+      "limit": "Height derivatives have ordinary adjacent fragment-quad support. It would be inaccurate to claim every pixel at zero oral weight is necessarily bit-identical to R02 if its derivative neighbors cross the transition. No arbitrary visual threshold is introduced here."
+    },
+    {
+      "subject": "Mouth depth stays on oral skin",
+      "result": "PASS_SOURCE",
+      "evidence": "vL19Detail.w is used only inside liWeight>0, in the inherited bounded .12+.88*exp(-max(0,w)*120) expression. It cannot directly modify outer-skin color where liWeight is zero, and the csType guard excludes teeth/gums/tongue from this shared-skin candidate.",
+      "limit": "w is a normalized native mouth-forward depth proxy, not measured optical path length or tissue thickness. The retained original material handles teeth/gums/tongue independently."
+    },
+    {
+      "subject": "Diagnostic independence",
+      "result": "PASS_SOURCE",
+      "evidence": "The purple identity view uses liOral independent of liEnabled and uLEnabled, after earlier diagnostics and before opaque_fragment. It therefore identifies the same inherited oral-skin region in both comparison modes. It is a semantic view, not a pass/fail heatmap."
+    }
+  ],
+  "shaderAnchorOrder": [
+    "R07 native vertex-contract and procedural fragment hook",
+    "Frozen R02 declaration/rail helpers and final color/height/roughness composite",
+    "R04 pure mucosa color/roughness and psH attenuation at retained roughnessFactor=psR anchor",
+    "Inherited normal_fragment_maps and dFdx/dFdy(psH) evaluation",
+    "Inherited material initialization and frozen R02 clearcoat block",
+    "R04 clearcoat override immediately before lights_fragment_begin",
+    "Inherited lighting accumulation",
+    "R04 bounded oral-depth visibility before all existing psView diagnostics",
+    "Retained body/head/R02 diagnostics",
+    "Optional R04 oral identity diagnostic before opaque_fragment"
+  ],
+  "buildSourceChecks": {
+    "result": "PASS_SOURCE",
+    "immutableR02SHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+    "moduleOrder": [
+      "MucosaSurface.js",
+      "InnerLip.js"
+    ],
+    "evidence": [
+      "Build reads the frozen R02 preview and checks its full-byte SHA256 before appending.",
+      "Each appended module is parsed as JavaScript and rejects an embedded closing script token.",
+      "The two modules and source metadata are appended before the last closing body tag.",
+      "Removing the exact suffix must recover the original R02 string.",
+      "The sequence of inherited script hashes must remain exactly equal.",
+      "Build manifest retains baseline source/build hashes and marks visual acceptance and production readiness false."
+    ],
+    "buildExecutedByThisReviewer": false
+  },
+  "independentDiagnosticRecoveryReview": {
+    "runID": 39107556193,
+    "diagnosticCommit": "eda9f3f55dd2734d444da2907a0f9bb3d29e1002",
+    "verifierSHA256": "0935fdb1806f2af288133e44437efc98bf88a314a455591e50bd15c2d1c3553f",
+    "qaSHA256": "f89d4227c59fc29dd0e5455d1aacd8314cb0e62251a0c2f55c9f89ee78d9e7d5",
+    "baselineSourceCommit": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "baselineBuildCommit": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "baselinePreviewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+    "completed": true,
+    "testsPassed": 7,
+    "testCount": 7,
+    "initialStateEqualsRestoredState": true,
+    "initialStateEqualsAfterNormalFrameState": true,
+    "actualRestoredFrameSHA256": "4e938508f2885a37fe452933ff99343fd5ef54974023e750ab714407f506751c",
+    "actualRestoredFrameExact": true,
+    "allSixImagesByteEqualToFirstDiagnostic": true,
+    "frames": [
+      {
+        "file": "jaw-macro-native-material-experiment.png",
+        "sha256": "66b793eeb375c218f068c668b5d32540a1cb1595a830641e34e928b123cf844d",
+        "exactSameBytesAsFirstDiagnostic": true
+      },
+      {
+        "file": "jaw-macro-r02.png",
+        "sha256": "cec91e4a69860fbae492f9da5e326c34514abc55f8f6feca494c14746c6d3f3d",
+        "exactSameBytesAsFirstDiagnostic": true
+      },
+      {
+        "file": "jaw-oblique-native-material-experiment.png",
+        "sha256": "c8d10bfd1fa2d9261aaf5bc3c48aa753bd51c1bdddc6bff59b177c703a58016a",
+        "exactSameBytesAsFirstDiagnostic": true
+      },
+      {
+        "file": "jaw-oblique-r02.png",
+        "sha256": "40d189e71d109902efbfd1634fd873f5052f3d4e50b8c2b15986a3d6313c1688",
+        "exactSameBytesAsFirstDiagnostic": true
+      },
+      {
+        "file": "neutral-macro-r02.png",
+        "sha256": "dd60c3fa008e04b254fee7dce7a24eb6b431314f63e7151404dfe4813803717a",
+        "exactSameBytesAsFirstDiagnostic": true
+      },
+      {
+        "file": "pucker-oblique-r02.png",
+        "sha256": "5b6e5cd34b4a372fdd86b113839430c2ae3bfe26106c4f66a84a44fc8e5cd1ac",
+        "exactSameBytesAsFirstDiagnostic": true
+      }
+    ],
+    "meaning": "The amended diagnostic recovery has actual strict state/frame/after-frame evidence. It resolves the diagnostic restoration failure without changing any of the six geometry/material attribution images. It is not a runtime verification or visual acceptance of the new production shader candidate.",
+    "firstFailureRetained": {
+      "runID": 39106942241,
+      "diagnosticCommit": "0021244195ae23243b3b4dc73f269f547d66b9bb",
+      "qaSHA256": "2371cee61da7bde65e54544fb70596311d6278382cbd806cd60909e37198f505",
+      "testsPassed": 6,
+      "testCount": 7,
+      "failure": "Original final restoration differed in nine serialized leaves: exposure and two lights/targets. The original run remains failed and its review/evidence are not rewritten.",
+      "independentGeometryReviewFile": "geometry-diagnostic-review.json",
+      "independentGeometryReviewSHA256": "8d7cc8fd8f265d182c3c8fa3bac763f3ce73e5b77fc39457ad5555c0e953376b"
+    }
+  },
+  "remainingRuntimeGatesForCandidate": [
+    "Compile the actual inherited shader in the actual viewer; preserve the pre-R04 and final fragment evidence and verify real GPU link.",
+    "Prove native uniform identities and geometry/attribute/index/group invariants on the held same-person scene.",
+    "Prove that liEnabled off plus diagnostic off recovers exact R02 frames for the held same scene, with the restored scene state unchanged.",
+    "Review actual R04 / R02 beauty and semantic images for the requested poses and views; do not convert a displacement or pixel-count threshold into visual acceptance.",
+    "Verify current archive download/restore routes and reject malformed R04 state before person changes on the actual candidate."
+  ],
+  "prohibitedInferences": [
+    "No exact solver layer is declared to introduce the visible stepped inner rim.",
+    "The Kd envelope is not removed or changed: it moved no native-rim vertices in the four diagnosed poses.",
+    "The 49 rim pairs use 49 distinct upper and 49 distinct lower vertices for this person; no duplicate-pair defect is asserted.",
+    "Pucker and speak local-action neighbor differences identify follow-up candidates only, not a proven visible fold cause.",
+    "The new shader source review is not a claim of measured anatomy, full volume scattering, visual success, or production readiness."
+  ]
+}

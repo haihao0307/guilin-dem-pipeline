@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu/lip-inner-material-candidate-review@1",
+  "reviewer": "/root/lip_r03_material",
+  "candidateFile": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/implementation/MucosaSurface.js",
+  "candidateSHA256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+  "candidateBytes": 8606,
+  "hostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+  "r02ModuleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+  "scope": "SOURCE_CONTRACT_REVIEW_ONLY; no assembled substitute shader, GPU compilation or visual acceptance claimed",
+  "checks": {
+    "hostBytesFrozen": true,
+    "r02BytesFrozen": true,
+    "r02ReliefAnchorRetained": true,
+    "hostNativeBaseAnchorRetained": true,
+    "hostNativeCommonUniformsAlreadyDeclared": true,
+    "hostDepthAnchorUniqueInAppend": true,
+    "hostVertexSuppliesType": true,
+    "r02SuppliesOralVaryings": true,
+    "r02SuppliesInnerRails": true,
+    "helperNoVertexAssignment": true,
+    "helperNoAttributeOrIndexOrGroupCalls": true,
+    "helperNoUniformValueAssignment": true,
+    "helperNoNativeUniformAssignment": true,
+    "helperSyntax": true
+  },
+  "runtimeGatesPending": [
+    "previous frozen R02 fragment and final compiled fragment saved",
+    "actual native uniform object identity preserved across apply",
+    "GL linked and genuine viewer draw",
+    "same held scene r04/r02 beauty and purple semantic identity comparison",
+    "off switch exact same scene/frame recovery",
+    "all geometry/attributes/indices/groups protected"
+  ],
+  "sourceMapping": [
+    {
+      "block": "domain",
+      "source": "U5 lpMucosa and v1 skin csType",
+      "decision": "Continuous l19State.x * csRegion.x, with csType skin guard. No front/outer rail clipping; liDiagnostic independent of liEnabled and uLEnabled."
+    },
+    {
+      "block": "base",
+      "source": "Ow csBase before lip composite; R07 C2 pcBoundary identical expressions",
+      "decision": "Reuse already calculated pcBase in linear light; reuse actual native csTone authoring indirectly and native csLipColor/csLipMix objects."
+    },
+    {
+      "block": "color",
+      "source": "U5 melanin/blood/oxygen formula and full mucosa tint .72; F5 upper tone; U5 contact proxy",
+      "decision": "Selected full mucosa endpoint with one liWeight composite. No new pigment coefficients, random noise, exterior fade, texture atlas, dry patch or wetness-to-albedo coupling."
+    },
+    {
+      "block": "roughness",
+      "source": "U5 regional roughness with uLRough/csRoughness offsets and full mucosa wet gain",
+      "decision": "Retain .28-.79 bound; no exterior atlas/fine/noise/footprint corrections because that texture field is not restored."
+    },
+    {
+      "block": "height",
+      "source": "F5/U5 csSurface and face h suppressed by native lpMask; R07 procedure incorrectly supplied follicles to oral skin",
+      "decision": "Fade only inherited psH by 1-liWeight. Keep all real geometry, geometric normals, native grooves. Derivative evaluation has ordinary adjacent pixel quad support."
+    },
+    {
+      "block": "coat",
+      "source": "U5 .010+csOil*.025+wetGain*.32 and .43-wetGain*.24",
+      "decision": "Single liWeight composite after R02 coat and before lights_fragment_begin. Inherited BRDF and light transport unchanged."
+    },
+    {
+      "block": "visibility",
+      "source": "U5 .12+.88*exp(-max(0,vL19Detail.w)*120)",
+      "decision": "Restore bounded original depth appearance approximation only for liWeight>0, before existing diagnostics. Not measured path length, tissue thickness, full occlusion or volume transport."
+    },
+    {
+      "block": "diagnostic",
+      "source": "U5 neutral/purple identity colours",
+      "decision": "Constant neutral background and purple continuous oral-skin identity, independent of R04/R02 beauty. Native teeth/gums/tongue keep their own material."
+    }
+  ],
+  "observedBasis": {
+    "diagnosticRun": "39106942241",
+    "source": "0021244",
+    "checkerSHA256": "f7b62cb1c4c75bd17deb263540f7ae08777f1ab31da083f2fcf6cd20280d371a",
+    "completeDiagnosticPassed": false,
+    "failure": "final full scene restoration differed in exposure and two lights/targets; bounded material restoration and scene equality passed",
+    "fullyOralTrianglesMoved": 49358,
+    "mixedOrFractionalOralTrianglesRetained": 16213,
+    "obliquePixelsChanged": 1879,
+    "macroPixelsChanged": 318,
+    "visualFinding": "The pale inner corner/sidewall wedges changed to a dark oral appearance under original native material. Outer lip fill, corner folding and teeth remained visibly unchanged.",
+    "causalLimit": "Whole-material experiment isolates the material path, not independent contributions of albedo, roughness, coat, height or depth."
+  },
+  "productionSourceEditedByThisAgent": false,
+  "candidateOpticsMeasured": false,
+  "candidateVisualAcceptance": false,
+  "candidateProductionReady": false
+}

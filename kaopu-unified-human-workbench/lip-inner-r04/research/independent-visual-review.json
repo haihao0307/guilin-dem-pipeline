@@ -1,0 +1,249 @@
+{
+  "review_id": "LIP-INNER-R04-independent-visual-review",
+  "status": "completed_candidate02_visual_review_technical_acceptance_separate",
+  "review_scope": "独立审核 R04 局部内唇候选相对冻结 R02 的真实 GPU 图；不评价另一窗口的 R03 细纹实现。",
+  "method": {
+    "basis": "逐张直接查看真实渲染图，并在成对候选到齐后逐对比较；不以参数、像素差大小或技术通过推断美感。",
+    "baseline_reviewed": [
+      "evidence/diagnosis/neutral-macro-r02.png",
+      "evidence/diagnosis/jaw-macro-r02.png",
+      "evidence/diagnosis/jaw-oblique-r02.png",
+      "evidence/diagnosis/pucker-oblique-r02.png"
+    ],
+    "native_material_experiment_used_as_candidate": false,
+    "candidate_pairs_reviewed": [
+      "evidence/candidate-02-39109600185/neutral-macro-r02.png / neutral-macro-r04.png",
+      "evidence/candidate-02-39109600185/jaw-macro-r02.png / jaw-macro-r04.png",
+      "evidence/candidate-02-39109600185/jaw-oblique-r02.png / jaw-oblique-r04.png",
+      "evidence/candidate-02-39109600185/speak-macro-r02.png / speak-macro-r04.png",
+      "evidence/candidate-02-39109600185/pucker-oblique-r02.png / pucker-oblique-r04.png"
+    ],
+    "additional_production_images_reviewed": [
+      "evidence/candidate-02-39109600185/jaw-oblique-semantic.png",
+      "evidence/candidate-02-39109600185/independent-r02-jaw-macro.png"
+    ],
+    "comparison_control": "最终判断逐对使用 candidate02 同一目录中的 R02 与 R04 原始生产 PNG。最初的 diagnosis 四张图只用于基线问题清单，没有将其与构图不同的生产候选图拼成前后对照。",
+    "semantic_image_limit": "在实际完整材质前后对照之后查看语义图；语义图只帮助辨认受影响区域，不用于判定美感。",
+    "browser_pairs_reviewed": [
+      "jaw-oblique-r02.jpg / jaw-oblique-r04.jpg，candidate02 的真实 Connected Chrome 同场景切换截图"
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "area": "局部内侧变化",
+      "criterion": "内唇与外唇之间应出现可见且连续的过渡和组织层次，张嘴、斜视、噘嘴都能维持；单纯增加亮度或湿润反光不足以判定质感通过。"
+    },
+    {
+      "area": "外唇填色感",
+      "criterion": "必须单独判断整片粉色表面是否仍显均匀、平滑、类似填色；局部内侧收益不能被概括为整个嘴唇自然度通过。"
+    },
+    {
+      "area": "边界",
+      "criterion": "内缘不能新增清晰的涂色带、黑环、锯齿或不连续接缝；外唇与肤色的软边不能进一步模糊或扩大。"
+    },
+    {
+      "area": "口角与折痕",
+      "criterion": "检查两侧口角的夹捏、折痕、拉扯和张嘴时的浅色空隙；颜色和高光不能盖过折痕或把口角染成独立斑块。"
+    },
+    {
+      "area": "牙齿及口腔邻接",
+      "criterion": "逐对检查牙齿本体、牙齿旁的口腔、唇齿接缝是否改变；牙齿原有灰暗、块状等问题须独立保留，不能归功于局部内唇修正，也不能被新亮边掩盖。"
+    },
+    {
+      "area": "保留门槛",
+      "criterion": "可保留的局部收益必须在实际对照中能够辨认、在不同姿态下自洽，且不引入可见回归；若收益很弱或仅某视角成立，应明确写成弱收益或局部收益。"
+    }
+  ],
+  "baseline_findings": [
+    {
+      "view": "neutral-macro-r02",
+      "inner_lip": "闭口时主要可见一条较深的水平唇缝，内侧组织层次很少。",
+      "outer_lip": "上下唇均为大块较均匀的粉棕色表面，下唇有宽而柔的高光，细微纹理未充分打破平滑填色感。",
+      "boundary": "下唇外缘与肤色的过渡较糊，上唇外缘也偏柔；中央唇缝明显比外缘锐利。",
+      "corners": "两侧口角有细而深的接缝与夹捏，不能仅靠中央内唇变化视为解决。",
+      "teeth": "此视角牙齿未明显暴露，无法据此验收牙齿。"
+    },
+    {
+      "view": "jaw-macro-r02",
+      "inner_lip": "张嘴后下唇内缘呈细而明确的浅粉线，与口腔暗色接得较硬，缺少较厚、连续的内外组织过渡。",
+      "outer_lip": "下唇仍是宽大的光滑粉色面，右侧和中央的柔亮区有塑料或蜡质感；上唇中央深浅变化少。",
+      "boundary": "唇齿与口腔间的边缘很清楚；下唇外边较软，两类边缘的处理不一致。",
+      "corners": "双侧口角出现浅色三角形区域和薄的接缝，口角邻接结构仍不自然。",
+      "teeth": "下排牙齿灰暗、块状且轮廓生硬；牙冠体积和切缘处理显得粗糙，上排只露少量牙面。"
+    },
+    {
+      "view": "jaw-oblique-r02",
+      "inner_lip": "斜视进一步显出下唇内侧近似薄边，缺少内唇转向口腔的可信厚度与渐变。",
+      "outer_lip": "整片下唇仍以均匀粉色和宽高光为主，纹理对体积的解释不足。",
+      "boundary": "内缘的细亮边明显；外唇到皮肤的过渡偏软，局部轮廓没有自然的组织差异。",
+      "corners": "画面左侧口角附近有大块浅肤色楔形区域，右侧有深缝和拉扯；这是显著的整体真实感障碍。",
+      "teeth": "后牙与前牙均可见灰色、棱面和不自然的块状轮廓，近口角处尤为明显。"
+    },
+    {
+      "view": "pucker-oblique-r02",
+      "inner_lip": "噘嘴时内侧收成很细的横向带，带状边缘与可见牙齿交错，接缝显得机械。",
+      "outer_lip": "噘嘴的体积可读，但大面积粉色仍偏平整，不能把体积变化误记为材质自然。",
+      "boundary": "横向唇缝近乎直线，内部暴露的小片浅色牙面使接缝更碎；下唇外缘仍偏模糊。",
+      "corners": "口角向外牵拉、折痕深且形状尖，尤其画面右侧，属于仍需改善的表情结构问题。",
+      "teeth": "窄缝中的牙齿呈灰白碎片或硬边条状，需在 R04 对照中确认未被新增内缘颜色或高光加强。"
+    }
+  ],
+  "candidate_gpu_attempts": [
+    {
+      "run_id": "39108869490",
+      "artifact_directory": "evidence/candidate-01-39108869490",
+      "status": "not_visually_reviewable",
+      "evidence_available": "证据回收负责人报告 production 启动 GPU drain 超时，无目标 PNG；本审核员未据技术日志作质感判断。",
+      "visual_verdict": "没有实际候选画面，无法判断 R04 的收益或回归。",
+      "diagnostic_substitution": false
+    },
+    {
+      "run_id": "39109600185",
+      "artifact_directory": "evidence/candidate-02-39109600185",
+      "status": "five_production_pairs_available_and_visually_reviewed",
+      "source_commit": "b4abc9a1d11953869063acf28d6a9e67c080cf4e",
+      "build_commit": "70dc8a62c0f03f701580030aed77e53284d21948",
+      "evidence_available": "已直接查看五组成对实际生产 PNG，加语义图与独立 R02 图，共 12 张。",
+      "technical_status_reported_by_evidence_agent": "证据负责人报告五组成对 actual-state、独立 R02 exact-off 与 shader/uniform 检查通过，但总 run 在后续保存 setup 的 pre-frame draw-cache 比较失败，尚未完成保存/恢复验收。视觉审核不将前述局部技术通过改写成整轮技术通过。",
+      "diagnostic_substitution": false
+    }
+  ],
+  "preliminary_browser_review": {
+    "status": "limited_to_one_actual_browser_pair",
+    "source_commit": "b4abc9a1d11953869063acf28d6a9e67c080cf4e",
+    "build_commit": "70dc8a62c0f03f701580030aed77e53284d21948",
+    "metadata": "../repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/browser-review/BROWSER_REVIEW.json",
+    "before": "../repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/browser-review/jaw-oblique-r02.jpg",
+    "after": "../repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/browser-review/jaw-oblique-r04.jpg",
+    "evidence_limit": "已直接查看两张 1338×1112 原始 JPEG 和捕获元数据。这是实际浏览器画面的视觉初读；单对图不能替代冻结 CI 的五组成对 PNG，也不能证明跨姿态、受保护状态或完整技术验收。",
+    "local_inner_gain": "画面左侧口角向后牙上方延伸的大片浅肤色楔形区域，在 R04 变为与口腔连贯的深红棕色内壁；原先像浅色缺口的视觉断裂明显减轻，口腔深度更连贯。这是明确可辨的局部颜色与组织归属收益，不能描述成几何缺口已经被修复。下唇内缘也略显深和沉稳，但其收益远小于左侧内壁的变化。",
+    "outer_lip_fill": "上下唇外侧的大块均匀粉色、宽柔高光和偏平滑表面仍在；此对截图没有支持外唇填色感已经解决。",
+    "boundary": "左侧原浅色楔形区域与口腔暗部的硬色差显著降低。下唇内缘仍然很薄，外唇到皮肤的边缘仍较软；未见新增明显色环或外溢，但只能限定于这一对。",
+    "corners_and_creases": "左侧口角内部的颜色衔接改善，口角本身的夹捏和薄折痕仍在；画面右侧尖的折痕与深缝未见解决。",
+    "teeth": "牙齿仍然灰暗、块状，切缘和后牙形状生硬。此对截图未见牙齿本体的明显新变化；口腔颜色更连贯不等于牙齿真实感通过。",
+    "visible_regression": "此单一视角未发现明确新增的可见回归；跨姿态和其他视角待生产成对 PNG。",
+    "provisional_retain_assessment": "有值得进入完整审核的明确局部收益，主要是口内浅肤色断裂被纠正。不能据此批准整个嘴唇质感，也不能提前给 R04 最终保留结论。"
+  },
+  "candidate_review": [
+    {
+      "view": "neutral-macro",
+      "before": "evidence/candidate-02-39109600185/neutral-macro-r02.png",
+      "after": "evidence/candidate-02-39109600185/neutral-macro-r04.png",
+      "local_inner_change": "没有辨认出具有实际视觉意义的局部变化；闭口时内侧暴露极少。不能给此视角记作质感收益。",
+      "outer_lip_fill": "大块粉棕色与下唇宽柔高光基本相同，仍偏平滑和填色。",
+      "boundary": "中央深唇缝和偏软的外缘仍在，未见明确改变。",
+      "corners_and_creases": "两侧的细深接缝、夹捏仍在，未见明确改变。",
+      "teeth": "未明显暴露，不能用这对图判断牙齿改进。",
+      "visible_regression": "未发现明确新增回归。",
+      "local_gain_strength": "none_visible",
+      "retain_assessment": "此视角支持未见扰动，不构成保留候选的正向美感依据。"
+    },
+    {
+      "view": "jaw-macro",
+      "before": "evidence/candidate-02-39109600185/jaw-macro-r02.png",
+      "after": "evidence/candidate-02-39109600185/jaw-macro-r04.png",
+      "local_inner_change": "双侧后牙上方、口角内的浅肤色三角区域变成深红棕色，与口腔暗部的颜色关系更连贯。下唇接近牙齿的内缘略变深，内外侧的区分稍清楚。最明确收益来自纠正口内浅肤色断裂，而非增加湿润高光。",
+      "outer_lip_fill": "上下唇外侧大面积粉色、下唇宽高光与平滑表面未获可辨认改善，填色感仍在。",
+      "boundary": "两侧口内的突兀浅色块消退；下唇的内外过渡仍主要是很窄的一条边，上唇下沿仍显深而硬，未达到细腻组织过渡。",
+      "corners_and_creases": "口角内部的颜色归属改善，口角的薄折痕、夹捏和邻接形状仍在。",
+      "teeth": "灰暗的块状牙齿、粗硬的牙冠及切缘未见改善；未发现牙齿本体的明确新增变化。",
+      "visible_regression": "未发现明确新增回归；没有看到大面积颜色外溢或新增异常高光。",
+      "local_gain_strength": "clear_local",
+      "retain_assessment": "值得保留为口内颜色衔接的局部修正，不能称完整嘴唇质感通过。"
+    },
+    {
+      "view": "jaw-oblique",
+      "before": "evidence/candidate-02-39109600185/jaw-oblique-r02.png",
+      "after": "evidence/candidate-02-39109600185/jaw-oblique-r04.png",
+      "local_inner_change": "这是五对中最容易辨认收益的一对：画面左侧口内原来很大的浅肤色楔形区域，被连贯的深红棕内壁取代，后牙上方不再显出突兀的浅色开口。口腔看起来更连贯，但该内壁仍偏平、偏单色，不能据此认定真实黏膜层次已经建立。",
+      "outer_lip_fill": "外唇大块粉色、较糊的外缘和宽高光保持原状，整体仍显平滑。",
+      "boundary": "原先口内浅色楔形区域与暗口腔的硬色差明显减少；下唇内缘仍较薄且清楚，外唇组织转折没有因此变得充分。",
+      "corners_and_creases": "画面左侧口角内部不再有大片浅肤色断裂，但口角本体仍细、尖、夹捏；右侧尖折痕仍在。颜色改善不能描述成几何缺口修复。",
+      "teeth": "后牙和前牙仍灰暗且呈块状、棱面；本体未见明确新增变化。",
+      "visible_regression": "未发现明确新增回归。剩余的平面感和硬边属于仍未解决的问题，不应虚报为候选新增损伤。",
+      "local_gain_strength": "clear_local_strongest_in_set",
+      "retain_assessment": "有明确、可保留的局部收益；其作用范围是口内壁与内缘的颜色归属和衔接。"
+    },
+    {
+      "view": "speak-macro",
+      "before": "evidence/candidate-02-39109600185/speak-macro-r02.png",
+      "after": "evidence/candidate-02-39109600185/speak-macro-r04.png",
+      "local_inner_change": "与张嘴正面一致，双侧口内的浅肤色三角区变暗红棕，消除突兀浅色块的收益成立。下唇中央内缘略沉下去，但组织过渡仍非常窄。",
+      "outer_lip_fill": "外唇大面积粉色与宽柔高光未获可辨认改善。",
+      "boundary": "上唇内侧仍有一条分段、偏浅的细带，下唇内缘两侧也仍有亮细带；这些机械、碎的接缝在 R02 已存在，R04 没有解决。",
+      "corners_and_creases": "口角内部浅色断裂改善，口角周围的拉扯和薄折痕未见改善。",
+      "teeth": "可见牙齿仍偏灰且轮廓生硬；没有辨认出牙齿本体的新变化。",
+      "visible_regression": "未发现明确新增回归；亮细带与分段感仍存，不能列为此轮新引入的缺陷。",
+      "local_gain_strength": "clear_local",
+      "retain_assessment": "支持保留口内颜色修正；说话姿态的内唇边界仍未达到自然质感。"
+    },
+    {
+      "view": "pucker-oblique",
+      "before": "evidence/candidate-02-39109600185/pucker-oblique-r02.png",
+      "after": "evidence/candidate-02-39109600185/pucker-oblique-r04.png",
+      "local_inner_change": "窄唇缝中的下侧细带略变深、偏暖，浅粉色的线状感稍有降低；收益很弱，不能宣称噘嘴自然度明显提高。",
+      "outer_lip_fill": "噘起的外唇仍为平滑的大块粉色，微细纹理与颜色变化不足的问题未变。",
+      "boundary": "横向唇缝仍近乎直线，细带与灰白牙片交错的机械接缝依然明显；没有出现充分、连续的内外唇过渡。",
+      "corners_and_creases": "双侧外拉和尖的折痕仍在，尤其画面右侧。",
+      "teeth": "窄缝中的灰白碎片状牙面及硬边仍在；未见明确新增牙齿变化。",
+      "visible_regression": "未发现明确新增回归；色带虽稍深，未明显扩散到外唇。",
+      "local_gain_strength": "weak_local",
+      "retain_assessment": "只能记为很弱的局部色带变化；保留候选的主要依据仍是三个开口视图中的口内壁改善。"
+    }
+  ],
+  "criterion_results": [
+    {
+      "area": "口内浅肤色断裂与颜色归属",
+      "result": "pass_for_scoped_local_correction",
+      "reason": "张嘴正面、张嘴斜面和说话三对实际帧均有明确局部收益，尤以张嘴斜面左侧内壁最明显。"
+    },
+    {
+      "area": "内唇组织层次与真实黏膜质感",
+      "result": "not_passed",
+      "reason": "新内壁仍偏平、偏单色，内外过渡多为很窄的边；不能由颜色归属修正推论完整组织质感通过。"
+    },
+    {
+      "area": "外唇填色感",
+      "result": "not_passed",
+      "reason": "大块粉色、宽柔高光和偏平滑的表面仍在，五对图未提供外唇质感明显改善的依据。"
+    },
+    {
+      "area": "边界与接缝",
+      "result": "partially_improved_not_passed_overall",
+      "reason": "口内浅色断裂减少，但薄的内缘、说话时的分段亮带、噘嘴的机械横缝仍在。"
+    },
+    {
+      "area": "口角与折痕",
+      "result": "not_passed",
+      "reason": "口角内颜色衔接有收益，口角形状、夹捏和表情牵拉没有随之解决。"
+    },
+    {
+      "area": "牙齿",
+      "result": "not_passed",
+      "reason": "灰暗、块状、棱面和粗硬切缘仍存在；没有看出此轮修复牙齿的依据，也没有确认新增牙齿回归。"
+    },
+    {
+      "area": "新增可见回归",
+      "result": "none_confirmed_in_reviewed_static_pairs",
+      "reason": "五组成对静态完整材质图中未发现明确新增外溢、异常高光、牙齿变化或口角损伤；此结论不覆盖未见的动态过程和保存恢复路径。"
+    }
+  ],
+  "provisional_conclusion": "先前的真实浏览器单对初读已由五组成对生产 PNG 的直接视觉检查补全；局部口内颜色衔接的收益成立，整体嘴唇质感仍未通过。",
+  "final_verdict": {
+    "candidate": "candidate02 / Run39109600185 / source b4abc9a1d11953869063acf28d6a9e67c080cf4e",
+    "local_visual_retention": "recommend_retain_scoped_local_correction",
+    "headline": "建议保留 R04 对口内浅肤色区域的局部颜色修正；不批准整体嘴唇质感通过。",
+    "basis": "实际五对生产图中，三个开口视图都减少了口角内浅肤色块与暗口腔的突兀断裂，斜视收益最明确；噘嘴仅弱收益，闭口未见实际收益。该收益主要是内壁颜色与衔接的修正，不是单纯更湿润。",
+    "overall_lip_realism": "not_passed",
+    "unresolved": [
+      "外唇的大块填色与平滑蜡质感",
+      "内唇单色和平面感、窄薄过渡",
+      "说话和噘嘴时的机械接缝与亮细带",
+      "口角夹捏、尖折痕和表情牵拉",
+      "灰暗块状牙齿及粗硬牙面轮廓"
+    ],
+    "visible_regressions": "本次五对实际静态帧中未确认明确新增回归。",
+    "technical_acceptance": "不在本视觉批准范围内；证据负责人报告此 run 的保存 setup 检查失败，完整技术验收仍需单独完成。",
+    "limits": "结论严格绑定已查看的 candidate02 源码/构建对应画面，不为未见的新候选、动态连续性、保存恢复、其他人物或 R03 细纹工作背书。"
+  }
+}

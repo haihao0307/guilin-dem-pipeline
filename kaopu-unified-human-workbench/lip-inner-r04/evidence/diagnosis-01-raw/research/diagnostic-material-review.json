@@ -1,0 +1,27 @@
+{
+  "schema": "kaopu/lip-inner-diagnostic-material-review@1",
+  "reviewer": "/root/lip_r03_material",
+  "reviewedAt": "2026-10-18T07:11:04.931737+00:00",
+  "reviewedFile": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/verification/diagnose-inner.cjs",
+  "reviewedSHA256": "f7b62cb1c4c75bd17deb263540f7ae08777f1ab31da083f2fcf6cd20280d371a",
+  "decision": "PASS_FOR_BOUNDED_DIAGNOSTIC_EXECUTION",
+  "productionOrVisualAcceptance": false,
+  "findings": [
+    "Native and procedural slots resolve by actual material object identity and must differ.",
+    "Only procedural-slot triangles whose three vertices are skin (csType<.5) and fully oral (l19State.x>=.999) move to native; mixed boundaries remain.",
+    "Indices are regrouped without modifying any attribute or oriented triangle; full triangle multiset equality is checked.",
+    "Fixed pose persists through both camera views; poseForFrame rejects use during active material ablation.",
+    "capture verifies the actual full native person rendered and that the wrapper retained the same cached draw geometry.",
+    "finally restores the original index BufferAttribute object, exact material groups and attributes; failure cannot become a pass.",
+    "The reported state compares protected canonical/native geometry, calibration, DNA, camera and light; final baseline framebuffer is separately checked."
+  ],
+  "nonblockingClarifications": [
+    "mixedOralPreserved counts every oral-containing procedural triangle not fully >=.999, including all-fractional triples. It is not restricted to a triple containing a zero oral vertex.",
+    "The material experiment changes several native optical mechanisms together; observed response establishes material responsibility, not an isolated albedo cause or a final visual improvement."
+  ],
+  "limitations": [
+    "This is source review; no browser outcome was assumed.",
+    "This review does not approve a production triangle material split.",
+    "Projected representative vertices do not establish exact pixel-ray ownership."
+  ]
+}

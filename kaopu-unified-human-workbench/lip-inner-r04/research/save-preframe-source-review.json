@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu/lip-inner-save-preframe-source-review@1",
+  "reviewer": "/root/lip_r03_geometry",
+  "reviewedAtUTC": "2026-10-18T08:08:41.111367+00:00",
+  "scope": "Only the published 8235 -> e15 checker diff around test 10 save setup was reviewed; no production edit or regression expansion.",
+  "snapshot": {
+    "oldCheckerSHA256": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+    "newCheckerSHA256": "e15be8a0b29e8345290d710c7773f0a989fed9b93f6266a2863959b7425686a8",
+    "repoCheckerSHA256": "e15be8a0b29e8345290d710c7773f0a989fed9b93f6266a2863959b7425686a8",
+    "unchangedShellSHA256": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
+    "unchangedMaterialSHA256": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6"
+  },
+  "decision": "PASS_LIMITED_SOURCE_REVIEW_RUNTIME_PENDING",
+  "reviewedChanges": [
+    "preFrameState clones the state and removes only drawGeometry; camera, lighting, native geometry, identity, pose, DNA, calibration, head/body settings and function restoration remain in the save-setup comparison.",
+    "commonPerson now delegates to preFrameState and then removes camera/lighting; its prior baseline/fresh semantics are unchanged.",
+    "The actual before snapshot is preserved as q.savePreFrameState and checkpointed with the explicit scope before asserting. The snapshot is not given a fabricated rendered draw cache.",
+    "All three actual DOM downloads still require complete archive equality, current head/body settings and original calibration. Each save still requires complete actual state equality against the measured before, including its actual drawGeometry.",
+    "archiveReferenceState now identifies the already measured rendered jaw/macro R04 pair. Save setup must first prove all other fields equal. The subsequent fresh native render still requires complete state equality, including drawGeometry, plus exact frame equality against the previous actual R04 frame."
+  ],
+  "whyThisBoundaryIsValid": "The retained native pose update can temporarily assign the native geometry/material to v.mesh. The procedural renderer wrapper chooses the draw index, groups and material slots when a real render occurs. The save setup intentionally suppresses render, so its native-input state can be checked immediately while its draw cache must be compared at the later actual-render boundary. This does not authorize changing any native geometry or repairing state to match a reference.",
+  "firstAffectedRunPreserved": {
+    "runID": 39109600185,
+    "sourceCommit": "b4abc9a1d11953869063acf28d6a9e67c080cf4e",
+    "buildCommit": "70dc8a62c0f03f701580030aed77e53284d21948",
+    "qaSHA256": "c662bd7bc5330dcb41230f7c2c65b0fa974b3d8365134edf856cb2137c54ebe5",
+    "checkerSHA256": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+    "completed": false,
+    "passedTests": 9,
+    "failedTest": "three actual top head and body DOM saves retain R04 and native calibration",
+    "targetPNGsAlreadyCaptured": 12,
+    "observedError": "Save-setup assertion summary shows empty groups, the native index and one native material slot in actual, versus the previously rendered procedural draw partition in expected.",
+    "evidenceLimit": "The old checker did not persist the complete save-setup actual snapshot before the failed assertion. Its assertion text elides unchanged sections and is not an independently exhaustive serialized actual/expected comparison. This review does not claim that the old error proves every unprinted field equal. The new strict pre-frame assertion will fail on any remaining native/camera/light difference and now preserves actual state before failure."
+  },
+  "gatesUnchanged": {
+    "browserEvaluateDeadlineMS": 120000,
+    "testCount": 12,
+    "savedPNGCount": 12,
+    "readbackCount": 13,
+    "samePageActualFrameFullState": true,
+    "independentR02ActualFrameFullStateAndPixelEquality": true,
+    "freshActualFrameFullStateAndPixelEquality": true,
+    "malformedArchiveStateAndRenderProtection": true,
+    "realGPUAndUniformIdentityChecks": true,
+    "actualDOMDownloadsAndFullArchiveEquality": true
+  },
+  "runtimeStatus": {
+    "newCheckerExecutedByReviewer": false,
+    "fullRunPassed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "publishedEarlierReviewsModified": false
+}
