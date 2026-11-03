@@ -1,0 +1,122 @@
+{
+  "schema": "npc-r02-native-final-production-summary/1",
+  "passed": true,
+  "createdAt": "2026-10-20T06:30:31.420886+00:00",
+  "sourceHashes": {
+    "ActorAdapter.mjs": "f7c1604782811d7742c85820c42dcb383b21bb8dea215f7d289b24a9e10ea39d",
+    "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+    "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1",
+    "LifeWorld.mjs": "ce3489e4539787010aac078ca128b5cd7e11ac24e75bd3360808bfc40d82386b",
+    "WindowInteraction.mjs": "97284a3cefc521cdfc2a7d8bae1e263f7328e5a14dcf3cde0ef582e415b84ce7"
+  },
+  "actualNativeBodyAndProductionController": true,
+  "fullHeadMaterialGPUAcceptance": false,
+  "limits": "The native probes retain actual 104-bone body geometry and all CSR influences. Current full R07 rendering and the independent complete browser suite remain a separate required acceptance stage.",
+  "reports": {
+    "native-frame-recovery.json": {
+      "passed": true,
+      "sha256": "13f3868a2ecf29b65f697e610ad4dcaf789868fa70f403ec9d0212dbf582a89a",
+      "completedAt": "2026-10-20T06:27:55.080Z"
+    },
+    "native-withdraw-clearance-actual.json": {
+      "passed": true,
+      "sha256": "da51f2605fdc613c8dd3938f82b6bbfd6d5c9cbc2d3249f98f36df5bd9350b55",
+      "completedAt": "2026-10-20T06:28:39.973Z"
+    },
+    "native-window-cancel-dynamic.json": {
+      "passed": true,
+      "sha256": "d85631be828b64fd8f61565e2f21e9994b105738908abd0bbe544f3f13b26059",
+      "completedAt": "2026-10-20T06:27:52.503Z"
+    },
+    "native-window-cancel-early.json": {
+      "passed": true,
+      "sha256": "7b94e0b22865da922013f5fc7a8983f17fcb97ca7dcdbfa1587eec86af84d4c5",
+      "completedAt": "2026-10-20T06:27:53.799Z"
+    },
+    "native-window-cancel-early-support-off.json": {
+      "passed": true,
+      "sha256": "b80c2be3994b2693c75bb48e6bf96daaefdcfbcb3ce17eed11b5cfb49f4754ca",
+      "completedAt": "2026-10-20T06:27:54.906Z"
+    },
+    "native-bottle-recovery.json": {
+      "passed": true,
+      "sha256": "4b19af708f2b2838111511d6cce2a4d6e78e8ee11b4fe21aebaf9809b5348860",
+      "completedAt": "2026-10-20T06:28:06.549Z"
+    }
+  },
+  "framedContact": {
+    "rotatedSamples": 160,
+    "maxHandErrorM": 6.379964213648124e-08,
+    "maxBottlePenetrationM": 0.0009999934788185033,
+    "maxLeafPenetrationM": 0,
+    "maxBoneErrorM": 4.440892098500626e-16,
+    "maxFootJointErrorM": 5.551115123125783e-17,
+    "maxFootErrorM": 2.6586991880867813e-08
+  },
+  "windowWithdrawal": {
+    "paths": 36,
+    "timeStepS": 0.008333333333333333,
+    "withdrawalSteps": 108,
+    "restSteps": 78,
+    "maxSolidPenetrationM": 0,
+    "minReachMarginM": 0.05998013489990994,
+    "minTableSignedDistanceM": 0.022285281888797387,
+    "minHandTableClearanceM": 0.09391815213302035
+  },
+  "dynamicWindowCancel": {
+    "passed": true,
+    "maxSolidPenetrationM": 0,
+    "maxCylinderPenetrationM": 0.0034624726524530927,
+    "angularTravelAfterCancelDeg": -9.062895963200265,
+    "reachClamped": false,
+    "finalRestPoseErrorRad": 0,
+    "tolerances": {
+      "assistedHandlePenetrationM": 0.005,
+      "solidBoxPenetrationM": 0.003,
+      "boneAndFootJointErrorM": 1e-08
+    }
+  },
+  "earlyCancel": {
+    "native-window-cancel-early.json": {
+      "passed": true,
+      "supportEnabled": true,
+      "candidateEarlyRest": false,
+      "maxSolidPenetrationM": 0,
+      "maxCylinderPenetrationM": 0,
+      "reachClamped": false,
+      "finalRestPoseErrorRad": 0
+    },
+    "native-window-cancel-early-support-off.json": {
+      "passed": true,
+      "supportEnabled": false,
+      "candidateEarlyRest": false,
+      "maxSolidPenetrationM": 0,
+      "maxCylinderPenetrationM": 0,
+      "reachClamped": false,
+      "finalRestPoseErrorRad": 0
+    }
+  },
+  "bottleRecovery": {
+    "paths": 10,
+    "productionPassed": true,
+    "productionProtocol": {
+      "verticalOffsetM": 0.03,
+      "rearwardMinimumM": 0.14,
+      "tableRearMarginM": 0.19
+    },
+    "maxSolidPenetrationM": 0,
+    "minTableSignedDistanceM": 0.009525350301276686,
+    "maxBoneErrorM": 4.2327252813834093e-16,
+    "maxFootJointErrorM": 5.551115123125783e-17,
+    "maxPalmErrorM": 6.855004092263972e-08,
+    "anyReachClamped": false
+  },
+  "failureEvidenceRetained": [
+    "native-recovery-first-failure.json",
+    "native-recovery-surface-first-failure.json",
+    "native-recovery-table-first-failure.json",
+    "native-bottle-recovery-table014-first-failure.json",
+    "native-window-cancel-early-first-failure.json",
+    "native-window-cancel-dynamic-first-report.json"
+  ]
+}
