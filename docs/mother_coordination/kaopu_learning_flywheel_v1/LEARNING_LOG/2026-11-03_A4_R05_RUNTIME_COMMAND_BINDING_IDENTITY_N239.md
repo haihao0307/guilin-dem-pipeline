@@ -83,7 +83,7 @@ Update `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001` so that:
 
 ## Lifecycle
 
-- POSTED: false (pending #91 route)
+- POSTED: true — #91 comment `6608249809`
 - ACKNOWLEDGED: false
 - Candidate IMPLEMENTED: true
 - production IMPLEMENTED: false
