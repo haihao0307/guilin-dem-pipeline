@@ -1,0 +1,130 @@
+{
+  "schema": "kaopu.learning.probe/1",
+  "id": "a4_r05_runtime_command_binding_identity_result_n239",
+  "recordedAt": "2026-11-03T15:37:00Z",
+  "boundedQuestion": "Does isolated Player R05 validate the frozen identity of the imported runtime command-binding modules before producing PASS, so a modified adapter cannot emit different window uniforms under the current gate?",
+  "subject": {
+    "file": "A4_ORIGINAL_ROUND_HOUSINGS_ANGLED_WINDOWS_PLAYER_R05.zip",
+    "libraryIdentity": "libfile_876998c223c88191891e685bf5663a77",
+    "sha256": "a418e3137d3f737e8808b7b9920cbf2598401701ac9daf3cb75279441c7e15f6",
+    "archiveEntries": 17315,
+    "nativePlayerRevision": "train-native-orthographic-player-r05"
+  },
+  "pristine": {
+    "files": {
+      "NativeTrainBackend.mjs": "768267df357e6641d76fcbae4ecea1d72505675b4a9b588fba1bbe90bbb2669f",
+      "native/angled-cab-windows-pass.mjs": "6cdacdfa4b89cbb318625fdab152ff6562dc4921188e1a176584794db5d6b5aa"
+    },
+    "freeze": {
+      "status": "FROZEN_LOCAL_R05",
+      "count": 496,
+      "backendListed": true,
+      "angledPassListed": true,
+      "consumedBeforeStaticImport": false
+    },
+    "gateCommands": [
+      "node new-admission.test.mjs",
+      "node player-protocol.test.mjs"
+    ],
+    "gateResults": [
+      "PASS_ACTUAL_SHARED_BACKEND_ALL58_SELECTIONS_AND_NEW_OWNERSHIP",
+      "PASS_ACTUAL_PLAYER_AND_RUNTIME_MODULE_PROTOCOL_MOCK_GL_ONLY"
+    ],
+    "filter57": {
+      "drawCount": 66,
+      "firstEightUSide": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "lastEightUSide": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        1
+      ]
+    }
+  },
+  "isolatedMutation": {
+    "productionBytesModified": false,
+    "packageModified": false,
+    "workspace": "verifier-only isolated copy",
+    "mutatedFiles": {
+      "NativeTrainBackend.mjs": {
+        "sha256": "68b1a8086dd6639ff098871b9be815bce721696da1757ce831f1514b756efe13",
+        "change": "redirect the existing static import to a verifier-only wrapper"
+      },
+      "native/angled-cab-windows-pass-mutated.mjs": {
+        "sha256": "44e93222a04046914023eabd4818a9ac92bb064b994317bf34ccb80cef97fca4",
+        "change": "delegate to the original exact validator/setter but negate the value sent to uSide"
+      }
+    },
+    "frozenManifestReplay": {
+      "listedMismatchCount": 1,
+      "mismatches": [
+        "NativeTrainBackend.mjs"
+      ],
+      "unlistedAddedFiles": [
+        "native/angled-cab-windows-pass-mutated.mjs"
+      ]
+    },
+    "gateResults": [
+      "PASS_ACTUAL_SHARED_BACKEND_ALL58_SELECTIONS_AND_NEW_OWNERSHIP",
+      "PASS_ACTUAL_PLAYER_AND_RUNTIME_MODULE_PROTOCOL_MOCK_GL_ONLY"
+    ],
+    "filter57": {
+      "drawCount": 66,
+      "firstEightUSide": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "lastEightUSide": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        -1
+      ]
+    }
+  },
+  "observation": "FREEZE.json contains the relevant runtime modules, but neither packaged gate consumes it before Node static imports. The mock-GL checks assert lifecycle, counts, selection and some negative paths, not the semantic identity of the command stream. A changed adapter therefore emitted a different left/right uniform sequence while both gates stayed green.",
+  "decision": "HOLD_A4_R05_PLAYER_RUNTIME_COMMAND_BINDING_IDENTITY_NOT_FAIL_CLOSED",
+  "candidate": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+  "minimumRepairTrial": {
+    "pass": "A pre-import wrapper verifies all runtime module bytes against a consumed executable manifest, and the same uSide mutation is rejected before load/render/PASS; a semantic trace also compares the selected filter command stream.",
+    "fail": "Any imported adapter mismatch reaches render, or count-only mock gates still PASS after the uniform sequence changes."
+  },
+  "boundaries": [
+    "The untouched R05 package passed its packaged Node gates.",
+    "This probe does not claim the archived pristine EGL PNGs are wrong.",
+    "Browser, hardware GPU, publication, production and user acceptance remain NOT_RUN or false as declared by the package.",
+    "No production Mother branch or artifact was modified."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": true,
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
