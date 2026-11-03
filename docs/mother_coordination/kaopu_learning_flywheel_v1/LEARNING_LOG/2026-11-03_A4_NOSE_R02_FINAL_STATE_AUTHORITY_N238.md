@@ -70,7 +70,7 @@ Minimum falsifiable trial: on one repaired A4 Nose R02 ISSUE delivery copy, a ro
 
 ## Lifecycle and boundaries
 
-- POSTED: false (pending #91 route)
+- POSTED: true — #91 comment `6603022494`
 - ACKNOWLEDGED: false
 - Candidate IMPLEMENTED: true
 - production IMPLEMENTED: false
