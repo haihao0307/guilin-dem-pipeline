@@ -67,6 +67,16 @@
       "evidence": "PROBES/a4_tender_lining_authority_hash_consumption_result_n237.json",
       "subjectAcknowledged": false,
       "source": "#91 coordinator routing comment 6598178220"
+    },
+    {
+      "subject": "A4_ORIGINAL_ROUND_HOUSINGS_ANGLED_WINDOWS_PLAYER_R05.zip / isolated shared Player R05",
+      "libraryIdentity": "libfile_876998c223c88191891e685bf5663a77",
+      "sha256": "a418e3137d3f737e8808b7b9920cbf2598401701ac9daf3cb75279441c7e15f6",
+      "observation": "The pristine package passed new-admission.test.mjs and player-protocol.test.mjs. GEOMETRY_LOCK hash-binds the shaders, pass plans, material and canonical bytes, but the imported NativeTrainBackend.mjs and angled-cab-windows-pass.mjs command-binding modules are outside the consumed pre-import identity gate. In a verifier-only isolated copy, the backend import was redirected to a wrapper that negated every uSide uniform after the original exact pass validation. Both gates still returned PASS with 66 draws for filter 57, while the first eight uSide values changed from [1,1,1,1,1,1,1,1] to [-1,-1,-1,-1,-1,-1,-1,-1] and the tail was reversed correspondingly.",
+      "distinction": "This does not show that the untouched R05 package or its archived software-EGL frames are wrong. It identifies a narrower last-mile executable-closure gap: validated geometry data can be transformed into different GPU commands by an unbound imported adapter while count-only mock-GL gates remain green.",
+      "decision": "HOLD_A4_R05_PLAYER_RUNTIME_COMMAND_BINDING_IDENTITY_NOT_FAIL_CLOSED",
+      "evidence": "PROBES/a4_r05_runtime_command_binding_identity_result_n239.json",
+      "subjectAcknowledged": false
     }
   ],
   "candidateRule": {
@@ -88,7 +98,9 @@
       "externalDependencyPathMappings",
       "externalDependencyMaterializer",
       "declaredAuthorityResources",
-      "authorityIdentityConsumer"
+      "authorityIdentityConsumer",
+      "runtimeCommandBindingModules",
+      "runtimeCommandBindingModulePins"
     ],
     "deliveryReceiptFields": [
       "executableResourceClosure",
@@ -108,9 +120,12 @@
       "externalDependencyMaterializationReceipt",
       "completeGateSetFreshWorkspaceStatus",
       "authorityHashesCheckedBeforeUse",
-      "authorityHashMismatchCount"
+      "authorityHashMismatchCount",
+      "runtimeCommandBindingHashesChecked",
+      "semanticCommandTraceComparison",
+      "runtimeCommandBindingMutationRejectedBeforeDraw"
     ],
-    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority. When a replay claims fixed executable runtime identity, validate the complete delivered manifest before any runtime JS module or WASM executes; static ESM imports require a separate preflight wrapper or post-validation dynamic imports. Any imported-byte mismatch must stop before rendering and must not emit a PASS receipt. An included verifier/test is part of the executable closure: every relative file it reads must be packaged and manifest-pinned, or an exact external prerequisite must include path mapping plus an automated exact-SHA materializer. A previous-checkpoint identifier without executable restoration does not make a fresh extraction replay-complete. Every declared authority hash used to support a current-binding claim must be recomputed from the delivered or exactly materialized byte resource and compared by the actual pre-use verifier. An outer receipt hash proves only receipt-byte identity; hash-shaped transitive metadata that no consumer checks is not authority closure.",
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority. When a replay claims fixed executable runtime identity, validate the complete delivered manifest before any runtime JS module or WASM executes; static ESM imports require a separate preflight wrapper or post-validation dynamic imports. Any imported-byte mismatch must stop before rendering and must not emit a PASS receipt. An included verifier/test is part of the executable closure: every relative file it reads must be packaged and manifest-pinned, or an exact external prerequisite must include path mapping plus an automated exact-SHA materializer. A previous-checkpoint identifier without executable restoration does not make a fresh extraction replay-complete. Every declared authority hash used to support a current-binding claim must be recomputed from the delivered or exactly materialized byte resource and compared by the actual pre-use verifier. An outer receipt hash proves only receipt-byte identity; hash-shaped transitive metadata that no consumer checks is not authority closure. Runtime command-binding modules that convert validated plans into GPU/API calls are part of the executable closure. Their delivered bytes must be identity-bound and checked before import/use, and a bounded semantic command trace must detect changed uniforms, bindings, dispatch parameters, or resource selection. Program/draw counts and mock-GL lifecycle PASS alone cannot establish last-mile command-binding identity.",
     "failClosedState": "HOLD_RUNTIME_OR_REPLAY_CLOSURE_INCOMPLETE"
   },
   "minimumFalsifiableTrial": {
@@ -127,7 +142,8 @@
     "A hard-coded writable temp root is replay-environment closure, distinct from geometry/runtime module closure; fixing it does not certify numeric results beyond the already tested fixed revision.",
     "A manifest may correctly describe all packaged bytes while the executable restore entry still fails to enforce it; this is a wiring defect in the gate, not proof that the untouched runtime output is wrong.",
     "A previous-checkpoint ID and SHA establish provenance but do not resolve relative imports by themselves; closure requires packaged bytes or an executable exact-SHA materialization/path-mapping step.",
-    "Correctly packaged and manifest-pinned authority bytes do not establish runtime authority closure unless the actual pre-use consumer recomputes and compares the declared transitive hashes."
+    "Correctly packaged and manifest-pinned authority bytes do not establish runtime authority closure unless the actual pre-use consumer recomputes and compares the declared transitive hashes.",
+    "Hash-bound shaders and pass plans do not close the last mile when an unbound imported adapter can alter the GPU/API command stream after validation; this is distinct from proving that pristine archived pixels are wrong."
   ],
   "rollback": "Remove this Candidate if a replay shows that the referenced resource is intentionally external and the delivery contract names, pins, and validates that external dependency explicitly.",
   "evidence": [
@@ -139,11 +155,12 @@
     "n233/a4_side_a_local_stale_geometry_lock_result_n233.json",
     "n234/a4_inner_return_r02_install_lock_result_n234.json",
     "n235/a4_r06_fresh_workspace_resource_closure_result_n235.json",
-    "n237/a4_tender_lining_authority_hash_consumption_result_n237.json"
+    "n237/a4_tender_lining_authority_hash_consumption_result_n237.json",
+    "n239/a4_r05_runtime_command_binding_identity_result_n239.json"
   ],
   "lifecycle": {
     "posted": true,
-    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826; A6 N230 issue #91 comment 6565727325; A6 N231 issue #91 comment 6568630822; A6 N232 issue #91 comment 6576312725; A4 Side A N233 issue #91 comment 6581472661; A4 inner-return N234 issue #91 comment 6586833224; A4 R06 N235 issue #91 comment 6591405050; A4 tender lining N237 issue #91 comment 6598178220",
+    "postTarget": "haihao0307/guilin-dem-pipeline#91 comments 6545548001 and 6548310826; A6 N230 issue #91 comment 6565727325; A6 N231 issue #91 comment 6568630822; A6 N232 issue #91 comment 6576312725; A4 Side A N233 issue #91 comment 6581472661; A4 inner-return N234 issue #91 comment 6586833224; A4 R06 N235 issue #91 comment 6591405050; A4 tender lining N237 issue #91 comment 6598178220; A4 Player R05 N239 pending #91 route",
     "acknowledged": true,
     "acknowledgementEvidence": "haihao0307/guilin-dem-pipeline#91 comment 6547524817",
     "rootCauseReview": true,
@@ -216,5 +233,10 @@
     "scope": "one A4 material-only tender lining binding",
     "pass": "The actual pre-use binding gate recomputes the declared module, parameters, freeze, and current-wall dependency hashes from delivered or exactly materialized bytes; a wrong declared hash is rejected before binding acceptance.",
     "fail": "A self-consistent outer binding receipt is accepted after any declared transitive authority hash is changed to a wrong value."
+  },
+  "runtimeCommandBindingIdentityTrial": {
+    "scope": "one A4 isolated shared Player R05 package",
+    "pass": "The actual pre-use gate identity-binds every imported runtime command-binding module and a verifier-only semantic mutation that changes uSide is rejected before any draw or PASS receipt.",
+    "fail": "The packaged gates still PASS with identical program/draw counts after a runtime adapter changes the emitted uniform command sequence."
   }
 }
