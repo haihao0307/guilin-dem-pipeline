@@ -56,6 +56,16 @@
       "evidence": "PROBES/a4_r06_fresh_workspace_resource_closure_result_n235.json",
       "subjectAcknowledged": false,
       "source": "#91 coordinator routing comment 6591405050"
+    },
+    {
+      "subject": "A4_ORIGINAL_TENDER_RIVETS_LINING_INSTALLED_R01.zip / material-only tender lining binding",
+      "libraryIdentity": "libfile_60449235147c8191bfae85587f32ac35",
+      "sha256": "760ead29eb000d79631c5e9db9518f3c3c38acb5be6707dfa85c1b03a0867a70",
+      "observation": "The untouched archive verifies 1289/1289 manifest entries, and all three packaged current-wall dependency bytes match WALL_AUTHORITY_BINDING.json. The installed validateLiningBinding consumer checks only authority.GLSLSHA256. A verifier-only binding changed authority.moduleSHA256, authority.parametersSHA256, and authority.freezeSHA256 to well-formed wrong values and recomputed the outer liningBindingSHA256; the outer receipt hash passed and the actual validator still accepted the binding with exit 0.",
+      "distinction": "This does not show that the pristine delivered wall or lining bytes are wrong. It identifies a transitive identity-consumption gap: correct evidence is present, but the actual pre-use binding gate does not recompute or compare most declared authority identities.",
+      "decision": "HOLD_A4_TENDER_LINING_DECLARED_AUTHORITY_IDENTITY_NOT_FAIL_CLOSED",
+      "evidence": "PROBES/a4_tender_lining_authority_hash_consumption_result_n237.json",
+      "subjectAcknowledged": false
     }
   ],
   "candidateRule": {
@@ -75,7 +85,9 @@
       "preImportIntegrityGate",
       "externalExecutableTestDependencies",
       "externalDependencyPathMappings",
-      "externalDependencyMaterializer"
+      "externalDependencyMaterializer",
+      "declaredAuthorityResources",
+      "authorityIdentityConsumer"
     ],
     "deliveryReceiptFields": [
       "executableResourceClosure",
@@ -93,9 +105,11 @@
       "preImportIntegrityGateStatus",
       "includedTestReplayStatus",
       "externalDependencyMaterializationReceipt",
-      "completeGateSetFreshWorkspaceStatus"
+      "completeGateSetFreshWorkspaceStatus",
+      "authorityHashesCheckedBeforeUse",
+      "authorityHashMismatchCount"
     ],
-    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority. When a replay claims fixed executable runtime identity, validate the complete delivered manifest before any runtime JS module or WASM executes; static ESM imports require a separate preflight wrapper or post-validation dynamic imports. Any imported-byte mismatch must stop before rendering and must not emit a PASS receipt. An included verifier/test is part of the executable closure: every relative file it reads must be packaged and manifest-pinned, or an exact external prerequisite must include path mapping plus an automated exact-SHA materializer. A previous-checkpoint identifier without executable restoration does not make a fresh extraction replay-complete.",
+    "verifierGate": "For every in-scope local runtime resource reference, require file existence, manifest hash coverage, and at least one test that loads the delivered bytes. A mock returning substitute bytes cannot establish delivery closure. For a claimed self-contained replay, also require a fresh-extraction run with no author-workspace directories precreated; every required writable/cache/temp root must be declared and either created by the harness or derived from an OS/package-local temporary directory. A bounded partial replay may require an explicit external final-GO only when that prerequisite is declared and bound to the exact archive SHA; the receipt must preserve the allowlist, archive-before/after identity, negative I/O controls, actual runtime scope, and output byte identity, and must not promote an isolated stage to current/default authority. When a replay claims fixed executable runtime identity, validate the complete delivered manifest before any runtime JS module or WASM executes; static ESM imports require a separate preflight wrapper or post-validation dynamic imports. Any imported-byte mismatch must stop before rendering and must not emit a PASS receipt. An included verifier/test is part of the executable closure: every relative file it reads must be packaged and manifest-pinned, or an exact external prerequisite must include path mapping plus an automated exact-SHA materializer. A previous-checkpoint identifier without executable restoration does not make a fresh extraction replay-complete. Every declared authority hash used to support a current-binding claim must be recomputed from the delivered or exactly materialized byte resource and compared by the actual pre-use verifier. An outer receipt hash proves only receipt-byte identity; hash-shaped transitive metadata that no consumer checks is not authority closure.",
     "failClosedState": "HOLD_RUNTIME_OR_REPLAY_CLOSURE_INCOMPLETE"
   },
   "minimumFalsifiableTrial": {
@@ -111,7 +125,8 @@
     "An explicitly named, pinned external artifact is not silently missing; it remains a declared prerequisite and cannot support a standalone/self-contained replay claim until materialized.",
     "A hard-coded writable temp root is replay-environment closure, distinct from geometry/runtime module closure; fixing it does not certify numeric results beyond the already tested fixed revision.",
     "A manifest may correctly describe all packaged bytes while the executable restore entry still fails to enforce it; this is a wiring defect in the gate, not proof that the untouched runtime output is wrong.",
-    "A previous-checkpoint ID and SHA establish provenance but do not resolve relative imports by themselves; closure requires packaged bytes or an executable exact-SHA materialization/path-mapping step."
+    "A previous-checkpoint ID and SHA establish provenance but do not resolve relative imports by themselves; closure requires packaged bytes or an executable exact-SHA materialization/path-mapping step.",
+    "Correctly packaged and manifest-pinned authority bytes do not establish runtime authority closure unless the actual pre-use consumer recomputes and compares the declared transitive hashes."
   ],
   "rollback": "Remove this Candidate if a replay shows that the referenced resource is intentionally external and the delivery contract names, pins, and validates that external dependency explicitly.",
   "evidence": [
@@ -122,7 +137,8 @@
     "n232/a6_r02_restore_runtime_identity_closure_result_n232.json",
     "n233/a4_side_a_local_stale_geometry_lock_result_n233.json",
     "n234/a4_inner_return_r02_install_lock_result_n234.json",
-    "n235/a4_r06_fresh_workspace_resource_closure_result_n235.json"
+    "n235/a4_r06_fresh_workspace_resource_closure_result_n235.json",
+    "n237/a4_tender_lining_authority_hash_consumption_result_n237.json"
   ],
   "lifecycle": {
     "posted": true,
@@ -194,5 +210,10 @@
     "scope": "one A4 Roof R02 + Side A R01 local analytic assembly",
     "pass": "Every installed member is hash-bound before shader compilation; pristine packaged outputs reproduce byte-identically; a one-byte member mutation is rejected before any draw.",
     "fail": "A stale or mutated member compiles/renders, a member is not included in the lock, or expected output identity is accepted without loading the delivered shader bytes."
+  },
+  "declaredAuthorityIdentityTrial": {
+    "scope": "one A4 material-only tender lining binding",
+    "pass": "The actual pre-use binding gate recomputes the declared module, parameters, freeze, and current-wall dependency hashes from delivered or exactly materialized bytes; a wrong declared hash is rejected before binding acceptance.",
+    "fail": "A self-consistent outer binding receipt is accepted after any declared transitive authority hash is changed to a wrong value."
   }
 }
