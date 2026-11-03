@@ -1,0 +1,151 @@
+<section id="layer-app" aria-label="独立衣物叠穿研究工作台">
+  <svg class="layer-icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="layer-icon-hanger" viewBox="0 0 24 24"><path d="M9.5 6.2a2.5 2.5 0 1 1 3.2 2.4c-.7.2-.7.8-.7 1.4v1l8.7 5.3a1.4 1.4 0 0 1-.7 2.6H4a1.4 1.4 0 0 1-.7-2.6L12 11"/></symbol>
+      <symbol id="layer-icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="layer-icon-play" viewBox="0 0 24 24"><path d="m9 5 10 7-10 7Z"/></symbol>
+      <symbol id="layer-icon-reset" viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 1.8 6.2M4 5v6h6"/></symbol>
+      <symbol id="layer-icon-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.6"/></symbol>
+      <symbol id="layer-icon-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+      <symbol id="layer-icon-layer" viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5Zm0 5 9 5 9-5M3 18l9 5 9-5"/></symbol>
+      <symbol id="layer-icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.2"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="layer-header">
+    <div class="layer-brand" aria-hidden="true"><svg><use href="#layer-icon-hanger"/></svg></div>
+    <div class="layer-heading">
+      <div class="layer-eyebrow">裁缝工作台 <span>/</span> 穿着研究</div>
+      <h1>独立衣物叠穿</h1>
+    </div>
+    <div class="layer-header-right">
+      <span class="layer-version">R01 <span>·</span> 接触研究</span>
+      <span id="layer-status" role="status" aria-live="polite">正在准备</span>
+    </div>
+  </header>
+
+  <div class="layer-workspace">
+    <aside class="layer-wardrobe" aria-label="衣物清单">
+      <div class="layer-section-heading">
+        <div><span class="layer-kicker">OUTFIT</span><h2>这一套穿着</h2></div>
+        <svg class="layer-section-icon" aria-hidden="true"><use href="#layer-icon-layer"/></svg>
+      </div>
+      <p class="layer-panel-note">每件衣服独立保留。<br>选择一件，检查它的材料与接触。</p>
+
+      <div class="layer-list-caption"><span>独立衣物</span><span>选择检查</span></div>
+      <div id="layer-list" aria-label="已穿衣物列表"></div>
+
+      <div class="layer-add-block">
+        <h3>添加衣物</h3>
+        <div class="layer-add-options">
+          <button id="add-inner" type="button"><svg aria-hidden="true"><use href="#layer-icon-plus"/></svg><span>高领内搭</span><span class="layer-button-meta">内层</span></button>
+          <button id="add-outer" type="button"><svg aria-hidden="true"><use href="#layer-icon-plus"/></svg><span>V领外层</span><span class="layer-button-meta">外层</span></button>
+          <button id="add-pants" type="button"><svg aria-hidden="true"><use href="#layer-icon-plus"/></svg><span>原款短裤</span><span class="layer-button-meta">下装</span></button>
+        </div>
+      </div>
+
+      <div class="layer-selection-tools">
+        <button id="isolate-selected" type="button"><svg aria-hidden="true"><use href="#layer-icon-eye"/></svg>单独查看</button>
+        <button id="all-visible" type="button">显示全部</button>
+        <button id="remove-selected" class="layer-remove" type="button">卸下所选衣物</button>
+      </div>
+
+      <div class="layer-wardrobe-foot">
+        <div class="layer-small-rule"></div>
+        <p>独立版型，独立材料。<br>在同一次穿着中观察相互影响。</p>
+        <a id="source-link" href="https://haihao0307.github.io/guilin-dem-pipeline/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/" target="_blank" rel="noopener noreferrer">打开原裁缝总台<svg aria-hidden="true"><use href="#layer-icon-arrow"/></svg></a>
+      </div>
+    </aside>
+
+    <main class="layer-view" aria-label="三维穿着检查">
+      <div class="layer-view-heading">
+        <div><span class="layer-kicker">FITTING ROOM</span><h2>高领内搭 <span>×</span> V领外层</h2></div>
+        <p>各件独立 · 拖动/轻推检查接触</p>
+      </div>
+
+      <div class="layer-stage-wrap">
+        <div id="layer-stage" aria-label="可旋转的三维人物与衣物">
+          <div id="layer-loading" role="status" aria-live="polite">
+            <div class="layer-loading-card">
+              <span class="layer-loader" aria-hidden="true"></span>
+              <strong id="load-text">正在准备人物与衣物…</strong>
+              <span>准备完成后，即可检查独立衣层。</span>
+            </div>
+          </div>
+        </div>
+        <nav class="layer-view-tools" aria-label="观察视角">
+          <button id="view-front" type="button" title="正面观察">正面</button>
+          <button id="view-side" type="button" title="侧面观察">侧面</button>
+          <button id="view-back" type="button" title="背面观察">背面</button>
+          <span aria-hidden="true"></span>
+          <button id="view-detail" type="button" title="靠近衣物观察">近看衣层</button>
+        </nav>
+        <div class="layer-stage-hint" aria-hidden="true"><span class="layer-hint-mouse"></span><span class="layer-navigation-hint">普通拖动旋转 · 滚轮缩放<br><span class="layer-force-hint">Shift + 拖动布料施力</span></span></div>
+        <div class="layer-stage-caption">INDEPENDENT LAYERS<br><strong>一个穿着组合</strong></div>
+      </div>
+
+      <div class="layer-metrics" aria-label="当前模拟数据">
+        <div class="layer-metric"><span class="layer-metric-label">独立衣物</span><strong id="metric-layers">—</strong></div>
+        <div class="layer-metric"><span class="layer-metric-label">本批接触约束</span><strong id="metric-contacts">—</strong></div>
+        <div class="layer-metric"><span class="layer-metric-label">本步耗时</span><strong id="metric-step">—</strong></div>
+        <div class="layer-metric-note"><svg aria-hidden="true"><use href="#layer-icon-info"/></svg><span>接触数据随模拟更新，<br>不代表已通过所有动作验证。</span></div>
+      </div>
+      <p class="layer-scope-note">限定两种上衣与原款短裤、静止人物；上身两层叠穿。连续防穿插、任意动作仍待验证。</p>
+    </main>
+
+    <aside class="layer-controls" aria-label="衣物与模拟控制">
+      <section class="layer-control-section layer-material-section">
+        <span class="layer-kicker">SELECTED GARMENT</span>
+        <div class="layer-selected-heading"><h2 id="selected-name">尚未选择衣物</h2><span class="layer-selection-dot" aria-hidden="true"></span></div>
+        <label class="layer-color-row" for="color"><span>衣物颜色</span><input id="color" type="color" value="#b8a58a" aria-label="所选衣物颜色"></label>
+
+        <div class="layer-range-field">
+          <div class="layer-range-label"><label for="thickness">额外接触余量</label><output id="thickness-value" for="thickness">+0.0 mm</output></div>
+          <input id="thickness" type="range" min="0" max="6" step="0.1" value="0" aria-describedby="thickness-note">
+          <div class="layer-range-scale" aria-hidden="true"><span>无额外余量</span><span>+6 mm</span></div>
+          <p id="thickness-note" class="layer-field-note">按实体纱线包络计算基础间隙；此处只增加接触余量。</p>
+        </div>
+        <div class="layer-range-field">
+          <div class="layer-range-label"><label for="friction">衣间摩擦</label><output id="friction-value" for="friction">0.30</output></div>
+          <input id="friction" type="range" min="0" max="1" step="0.05" value="0.3">
+          <div class="layer-range-scale" aria-hidden="true"><span>易滑动</span><span>阻力较大</span></div>
+        </div>
+      </section>
+
+      <section class="layer-control-section">
+        <div class="layer-subheading"><h3>布料模拟</h3><span>观察相互作用</span></div>
+        <button id="play" class="layer-primary" type="button">开始布料模拟</button>
+        <div class="layer-two-buttons"><button id="reset" type="button"><svg aria-hidden="true"><use href="#layer-icon-reset"/></svg>重新穿着</button><button id="step" type="button">推进一步</button></div>
+
+        <div class="layer-range-field layer-wind-field">
+          <div class="layer-range-label"><label for="wind">风力</label><output id="wind-value" for="wind">0.0</output></div>
+          <input id="wind" type="range" min="0" max="2" step="0.1" value="0">
+          <div class="layer-range-scale" aria-hidden="true"><span>无风</span><span>较强</span></div>
+        </div>
+
+        <div class="layer-touch-actions"><button id="tug" type="button">轻拉所选衣摆<span aria-hidden="true">↗</span></button><button id="push" type="button">轻推外层<span aria-hidden="true">↘</span></button></div>
+      </section>
+
+      <section class="layer-control-section layer-check-section">
+        <h3>检查方式</h3>
+        <label class="layer-check"><input id="exploded" type="checkbox"><span>分开查看衣层</span></label>
+        <label class="layer-check"><input id="contacts" type="checkbox"><span>显示残余接触样本</span></label>
+        <label class="layer-check"><input id="cloth-contact" type="checkbox" checked><span>衣物间碰撞</span><span class="layer-check-tag">参与模拟</span></label>
+      </section>
+
+      <details id="help" class="layer-help">
+        <summary><svg aria-hidden="true"><use href="#layer-icon-info"/></svg><span>研究说明与验证边界</span><span class="layer-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="layer-help-content">
+          <p>每件衣物保留独立对象、材料与形变。这里研究的是衣物穿在一起之后的接触关系。</p>
+          <p>初始穿着顺序与运动中的碰撞需要分别处理。接触基础间隙按原实体纱线的几何包络计算，滑杆只增加余量。这不是现实织物的实测厚度。</p>
+          <p>当前摩擦采用切向相对位移阻尼近似；接触使用离散的点与三角形检查，尚未实现连续碰撞检测。</p>
+          <p>“本批接触约束”统计最近一批求解遇到的约束；橙点只显示本步最终复测仍有残余的样本。两者不一一对应，未显示样本不代表全部表面没有相交。</p>
+          <p>本轮限定两种上衣与原款短裤、静止人物；上身两层叠穿。三件衣物分别保留对象，并参与同一模拟流程。连续防穿插、任意动作和其他衣物组合仍待验证。</p>
+          <div class="layer-help-links"><a href="https://support.clo3d.com/hc/en-us/articles/115000294487-Use-Layer-Drape-Additional-Garment" target="_blank" rel="noopener noreferrer">CLO · 初始层序</a><a href="https://www.sidefx.com/docs/houdini/nodes/sop/vellumsolver.html" target="_blank" rel="noopener noreferrer">Vellum · 层间接触</a></div>
+          <h4>当前诊断</h4>
+          <pre id="diagnostics" aria-live="polite">等待模拟数据。</pre>
+        </div>
+      </details>
+    </aside>
+  </div>
+</section>
