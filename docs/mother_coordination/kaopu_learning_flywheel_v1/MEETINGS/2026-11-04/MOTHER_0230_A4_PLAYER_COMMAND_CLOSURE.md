@@ -2,7 +2,7 @@
 
 - 会议编号：`KAOPU-MOTHER-20261104-A4-PLAYER-COMMAND-CLOSURE-001`
 - 实际核查开始：2026-11-04 02:31:49 +08:00
-- 实际核查结束：待关闭时回填
+- 实际核查结束：2026-11-04 02:35:19 +08:00（3 分 30 秒）
 - 协调分支读取基线：`1fac83104f00865319ce8eb32a62e85e918ec1dd`
 - main：`34553e93d75a427c10dbf5b0077d42f8cdda0a63`
 - 强制协议 blobs：AGENTS `251b6646…338f5`；R2 `d942d44b…b2bf`；Reference gate `8c0a49c7…8278`；Freshness gate `4754a90a…9021`
@@ -72,7 +72,7 @@ Player R05 不得晋级 `CANDIDATE_READY`。Train/A4 display integrator 在同�
 
 ## 生命周期
 
-- `POSTED`：待 #91 定向写入后回填
+- `POSTED=true`：[#91 comment 6612332765](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6612332765)
 - `ACKNOWLEDGED=false`（本轮 Train/A4）
 - `IMPLEMENTED=true`：私有 R05 Player
 - `GATE-RUN=true`：packaged Node 正控与 N239 隔离负控
