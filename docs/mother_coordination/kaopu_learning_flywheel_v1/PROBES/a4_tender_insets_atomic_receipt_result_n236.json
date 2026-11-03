@@ -1,0 +1,85 @@
+{
+  "runId": "N236",
+  "observedAtUTC": "2026-11-03T03:47:23Z",
+  "boundedQuestion": "Does the packaged source-first freeze guard make the PASS receipt atomic with the frozen native module, including the interval after the final module hash check and before receipt write?",
+  "subject": {
+    "name": "A4_ORIGINAL_TENDER_REAR_INSETS_INSTALLED_R01.zip",
+    "libraryIdentity": "libfile_9184da0dfb408191905357ecc8b6ee05",
+    "sha256": "3490556a2147b199675b9b8a96cc5fff6045c077595139913fa0e9caae271ae8",
+    "manifestEntries": 339,
+    "priorCheckpoint": {
+      "libraryIdentity": "libfile_219e62c5563c819199985fd5368e72bd",
+      "sha256": "6209e369776667f7f784e60e9003151514cbc3ce1b816d47fa73770e5a1899ef"
+    }
+  },
+  "pristineChecks": {
+    "manifest": "PASS_339_OF_339",
+    "nativeTest": "PASS_SHARED_PANEL_MOTHER_LOCAL_D1_C0",
+    "repeatTest": "PASS_54_CHECKS_MAX_ZERO",
+    "frozenPanelModuleSHA256": "d3a82dbc6e7049de1e22ffd85d0fe6b27c58fb05a2e3ad46bc6d2ab5548a8841",
+    "archivedSourceReceiptSHA256": "7b4c9b03e70217e2b75f69f3d1091d2d9a37673c2501b9116d28668f7ede3820"
+  },
+  "packageClaim": {
+    "firstRun": "FAILED_FIRST_SOURCE_RUN_NATIVE_FREEZE_WRITE_GUARD",
+    "replay": "PASS_SAME_PLAN_AFTER_EXACT_NATIVE_RESTORE",
+    "scope": "324 source coordinates"
+  },
+  "independentReplayBoundary": {
+    "fullProductionSourceReplay": "UNKNOWN",
+    "reason": "The delivered package does not include current/qa/reference_observe.py or its source asset closure, so the original 324-coordinate source query cannot be independently rerun from the archive alone.",
+    "whatWasTested": "The unchanged packaged new-source.py receipt ordering, with a verifier-only deterministic source adapter in an isolated copy."
+  },
+  "negativeTrial": {
+    "mutation": "Append a verifier-only comment to panel-mother.mjs only after new-source.py completes its second module hash loop and enters TeacherObservation.assert_unchanged(), but before NEW_SOURCE_QA.json is written.",
+    "originalModuleSHA256": "d3a82dbc6e7049de1e22ffd85d0fe6b27c58fb05a2e3ad46bc6d2ab5548a8841",
+    "mutatedModuleSHA256": "b48ea8d9f1d03eae6f1b91ca8fa8e007d3441821b65e326d1352911b1062f0eb",
+    "processExitCode": 0,
+    "receiptWritten": true,
+    "receiptStatus": "COMPLETE_NEW_COORDINATE_SOURCE_ACCOUNTING_NOT_SHAPE_ACCEPTANCE",
+    "receiptSHA256": "6adfc7fdac814d7c00a0e49db6e9843911f164f6f381bdb184ad52f57e65139c",
+    "result": "FAIL_OPEN_TOCTOU_AFTER_FINAL_HASH_BEFORE_RECEIPT_WRITE"
+  },
+  "positiveControl": {
+    "action": "Restore panel-mother.mjs exactly to the frozen SHA and rerun the same 324-row plan with no concurrent write.",
+    "restoredModuleSHA256": "d3a82dbc6e7049de1e22ffd85d0fe6b27c58fb05a2e3ad46bc6d2ab5548a8841",
+    "processExitCode": 0,
+    "planned": 324,
+    "matched": 324,
+    "unknown": 0,
+    "result": "PASS_SAME_PLAN_AFTER_EXACT_RESTORE_IN_VERIFIER_ADAPTER_SCOPE"
+  },
+  "rootCause": "new-source.py performs the last frozen-module hash assertion before calling r.assert_unchanged(), then writes the receipt afterward. The validation and publication are separate operations; there is no immutable snapshot, lock, staged receipt bound to post-write hashes, or atomic compare-and-commit.",
+  "decision": "HOLD_A4_TENDER_INSETS_SOURCE_RECEIPT_ATOMICITY_FAIL_OPEN",
+  "candidateRule": {
+    "status": "Candidate",
+    "verifierGate": "A validation receipt must be generated from an immutable snapshot or committed with an atomic compare-and-commit. Re-hash every frozen input and the staged receipt immediately before an atomic rename/commit; any mismatch must delete or quarantine the staged receipt and exit nonzero. A PASS file written after the last identity check is not authoritative.",
+    "taskAnchorFields": [
+      "frozenInputSnapshotId",
+      "receiptCommitProtocol",
+      "concurrentWriteNegativeTest"
+    ],
+    "deliveryReceiptFields": [
+      "preRunInputHashes",
+      "preCommitInputHashes",
+      "stagedReceiptSHA256",
+      "atomicCommitStatus",
+      "concurrentWriteRejected"
+    ],
+    "minimumTrial": "On one A4 Mother only, pause after the final validation check, mutate one frozen input byte, and require nonzero exit with no authoritative PASS receipt; exact restore must pass the same plan."
+  },
+  "boundaries": [
+    "Does not reject the two-inset geometry, native D1/C0 results, software-GLES output, or the archived pristine source metrics.",
+    "Does not prove the archived first failure was fabricated; it shows the present script does not close every concurrent-write timing window.",
+    "Does not certify the original source query because its source adapter and source asset are absent from the package.",
+    "Candidate applies first to this A4 source-first receipt path; no global OS change is adopted."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "candidateImplemented": true,
+    "productionImplemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
