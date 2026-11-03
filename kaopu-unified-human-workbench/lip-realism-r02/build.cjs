@@ -1,0 +1,34 @@
+/* Isolated R02 build. Keep R07 and R01 ancestors byte-identical. */
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),vm=require('node:vm');
+const dir=__dirname,hash=x=>crypto.createHash('sha256').update(x).digest('hex');
+const expectedHost='d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a';
+const hostBytes=fs.readFileSync(path.resolve(dir,'../human-integrated-r07/preview.html'));
+if(hash(hostBytes)!==expectedHost)throw Error('Frozen R07 host changed');
+const host=hostBytes.toString('utf8');
+const source=process.env.SOURCE_SHA||process.env.GITHUB_SHA||'local-unpublished';
+const moduleText=fs.readFileSync(path.join(dir,'LipSurface.js'),'utf8');
+new vm.Script(moduleText,{filename:'LipSurface.js'});
+const inheritedModule=fs.readFileSync(path.join(dir,'reference/LipSurface.r01.js'),'utf8');
+if(hash(inheritedModule)!=='0e3246b07a5f0a9f0f4de3298dcfc43ccf88c8018e55792c28225cb74b76b03d')throw Error('Frozen R01 reference changed');
+const make=(text,version,commit)=>{
+ if(text.includes('</script'))throw Error('Unsafe inline script terminator');
+ const metadata={version,sourceCommit:commit,baseCommit:'5543f756ca3af1428323696324303fa70b8de850',hostSHA256:expectedHost,moduleSHA256:hash(text)};
+ const suffix='\n<!-- '+version+' APPEND-ONLY SPECIALIST -->\n<script>window.__LIP_REALISM_SOURCE__='+JSON.stringify(metadata)+';\n'+text+'\n</script>\n';
+ const at=host.lastIndexOf('</body>');if(at<0)throw Error('Host closing body missing');
+ const preview=host.slice(0,at)+suffix+host.slice(at);
+ if(preview.replace(suffix,'')!==host)throw Error('Host restoration not exact');
+ return{preview,metadata};
+};
+const baseline=make(inheritedModule,'LIP-REALISM-R01','544ec81bcef6185a553df138585c7059e832a122');
+const baselineHash=hash(baseline.preview);
+if(baselineHash!=='4d11c5a8c7b9a0573e37e68ce93eaa9a1657c6b49da6c386a6aa6488ff45f231')throw Error('R01 QA reference is not the actual published bytes');
+const {preview,metadata}=make(moduleText,'LIP-REALISM-R02',source);
+const scriptHashes=s=>Array.from(s.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g),m=>hash(m[1]));
+const originals=scriptHashes(host),result=scriptHashes(preview);
+if(JSON.stringify(result.slice(0,originals.length))!==JSON.stringify(originals))throw Error('Inherited script changed');
+fs.writeFileSync(path.join(dir,'baseline-r01.html'),baseline.preview);
+fs.writeFileSync(path.join(dir,'preview.html'),preview);
+const manifest={...metadata,previewSHA256:hash(preview),previewBytes:Buffer.byteLength(preview),R01BaselineSHA256:baselineHash,R01Source:baseline.metadata.sourceCommit,R01PublishedBuild:'0db4b3c0e5e6e86663be6466fa7ab4b486bd5420',originalScriptHashes:originals,hostRestorationExact:true,R01ComparisonChangesGeometry:false,R01ComparisonChangesRoughness:false,R01ComparisonChangesWetness:false,R01ComparisonChangesFolds:false,canonicalGeometryChanged:false,referenceAssetsImported:0,newImageMaps:0,standaloneOffline:false,inheritedStreamingAssets:true,buildTime:new Date().toISOString()};
+fs.writeFileSync(path.join(dir,'BUILD_MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
+console.log(JSON.stringify({version:metadata.version,source,previewSHA256:manifest.previewSHA256,previewBytes:manifest.previewBytes,R01BaselineExact:true,hostRestorationExact:true}));

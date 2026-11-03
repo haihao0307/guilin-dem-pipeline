@@ -1,0 +1,168 @@
+{
+  "schema": "kaopu/lip-iteration-review@1",
+  "iteration": 1,
+  "sourceSHA": "bf235cbb741de1eb21f469c9e020b95a65f24040",
+  "runId": "39096551073",
+  "artifactSHA256": "9562ffc044854dc1833bba7f96cca26ad1fdd143771d6f3770a52c08242f9be0",
+  "previewSHA256": "d2d1095646c21b93226974df1b26e3353931a2104355b5b526a6f60ebe050bf0",
+  "qaSHA256": "e7f2483de6661793293b8a0fcbad493a490fdb81afb2188aa245325e1732e7e4",
+  "visualDecision": "REJECT_ADDED_PIGMENT_FIELD",
+  "rootObserved": "Macro and oblique beauty show broad mottled lower-lip colour; base-colour on/off establishes its source. Whole-face benefit is not demonstrated.",
+  "removed": [
+    "new broad/local pigment modulation",
+    "extra inner colour darkening"
+  ],
+  "retainedForRevalidation": [
+    "legacy tint blocked before downstream skin layers",
+    "single native alpha with full final perioral skin",
+    "optional outer-only transition with exposure-gated corners"
+  ],
+  "testsActuallyPassed": [
+    "R01/R02 front beauty and base colour preserve geometry and the outside mouth",
+    "R01/R02 macro beauty and base colour preserve geometry and the outside mouth",
+    "R01/R02 oblique beauty and base colour preserve geometry and the outside mouth",
+    "old psLip colour visibly leaks in R01 and has zero base-colour effect in R02",
+    "R01/R02 roughness and normal diagnostics are byte-identical",
+    "wetness 0 to 1 changes no R02 base-colour pixel",
+    "removing added spatial colour changes lip pixels without changing geometry or production settings"
+  ],
+  "unpassedTests": [
+    {
+      "name": "late beard and regional-colour layers retain actual responses just outside the native lip outline",
+      "error": "AssertionError [ERR_ASSERTION]: Native near-mouth probes do not sample the old feather overlap; this gate needs an observable overlap, not distant skin pixels"
+    }
+  ],
+  "cleanupError": "Error: close browser exceeded 15000 ms; pending work is not a pass",
+  "correctedObservationPremise": {
+    "nativeSkinProbes": 6392,
+    "nonzeroOldFeatherProbes": 515,
+    "oldFeatherMaximumApprox": 0.0457565,
+    "observedR01OldTintIntersection": 64,
+    "observedOldTintMaximumRGBDelta": 1,
+    "method": "Same native 1.5–7mm band; oldFeather>0 plus actual R01 old-tint 0/1 RGB difference, chosen independently of the candidate skin response.",
+    "minimumOverlapCountUnchanged": 8,
+    "minimumResponseCountUnchanged": 4
+  },
+  "imageEvidence": [
+    {
+      "path": "published-r01-macro-colour.png",
+      "sha256": "e043e7a0a4b64ee5eccba4ec8e71b3abf7f2d4fb380e82095b839431b309e083"
+    },
+    {
+      "path": "r01-front-beauty.png",
+      "sha256": "23ce9065c89fb95eebccedacc47a82039eb27f61c4b47ef3643f7226dab4120b"
+    },
+    {
+      "path": "r01-front-colour.png",
+      "sha256": "1da10101f3a9fb6e9115410b461623611cc3e726be6e8a662a1d32ffb9701339"
+    },
+    {
+      "path": "r01-macro-beauty.png",
+      "sha256": "67ceb5f3988052609e5b6356e7d7c68c2339c8ff726d5bbb4f7664c7c4d1c027"
+    },
+    {
+      "path": "r01-macro-colour.png",
+      "sha256": "e043e7a0a4b64ee5eccba4ec8e71b3abf7f2d4fb380e82095b839431b309e083"
+    },
+    {
+      "path": "r01-normals.png",
+      "sha256": "bb3fb6909dd06bb62607759060cbb684c7de349326d5f22793a53615ff077889"
+    },
+    {
+      "path": "r01-oblique-beauty.png",
+      "sha256": "cfebec27d33af0d2037dcbc4d18f76c37c2f28caba16cf271abf7770b23e4504"
+    },
+    {
+      "path": "r01-oblique-colour.png",
+      "sha256": "27cd648aa7af65173ac525ee2acb53f2d79e1338d0090273548fccbde03e5a5c"
+    },
+    {
+      "path": "r01-old-lip-colour-0.png",
+      "sha256": "3305d54f594a867b893f91e67b0600c278f611521b9b2f4f35ccdc4acfd1cfa4"
+    },
+    {
+      "path": "r01-old-lip-colour-1.png",
+      "sha256": "0228c28f6bb379b97935e4dd9ca6c1c56395523a7007112d3be22430db3a5e4d"
+    },
+    {
+      "path": "r01-roughness.png",
+      "sha256": "518a7722ca8f3a444923f4e29208bb097a4deb1e96af0a6a4fa1fcfaa46f4a69"
+    },
+    {
+      "path": "r02-front-beauty.png",
+      "sha256": "85681d0556d0e49bed9eee17bfc4a93ecd9ceec58e0bcd185c68d7fc0cd057cc"
+    },
+    {
+      "path": "r02-front-colour.png",
+      "sha256": "038425bd2a08f4a9d662b55260adb13a260a151465c0fd3f0e630d47e30cec47"
+    },
+    {
+      "path": "r02-macro-beauty.png",
+      "sha256": "31c6626e3dae2ed85c3aea4568257740c8d472511bcd35958de3e09499567edc"
+    },
+    {
+      "path": "r02-macro-colour.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "r02-normals.png",
+      "sha256": "bb3fb6909dd06bb62607759060cbb684c7de349326d5f22793a53615ff077889"
+    },
+    {
+      "path": "r02-oblique-beauty.png",
+      "sha256": "2e3332038dfa7af8256121361bd92c52fcde87684739db9dc04efe31c354a92c"
+    },
+    {
+      "path": "r02-oblique-colour.png",
+      "sha256": "dc3da98e60c7bcb4812cd829638b5b2ecfe259976f8ea067a3038c917cb97733"
+    },
+    {
+      "path": "r02-old-lip-colour-0.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "r02-old-lip-colour-1.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "r02-roughness.png",
+      "sha256": "518a7722ca8f3a444923f4e29208bb097a4deb1e96af0a6a4fa1fcfaa46f4a69"
+    },
+    {
+      "path": "r02-spatial-colour-disabled.png",
+      "sha256": "5a82ee6b922d6d1059c953dd7d075455b96d6276d1d60a74bbf75dda3a886ae0"
+    },
+    {
+      "path": "r02-spatial-colour-enabled.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "r02-wetness-0-colour.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    },
+    {
+      "path": "r02-wetness-1-colour.png",
+      "sha256": "1437c8cbcd5e576a57822305e0b590d8065559d6b85cb69ba3f33e0e1176b305"
+    }
+  ],
+  "publicBuildCreated": false,
+  "browserPassed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "independentVisualReview": {
+    "reviewer": "/root/lip_visual_independent_review",
+    "status": "REJECT_ADDED_SPATIAL_COLOUR",
+    "observations": [
+      "Lower-lip broad red/grey patches read as mottled paint; upper-lip cloud-like variation has no clear relation to the folds or contact line.",
+      "Outer outline looks softer than R01 in complete macro material, especially upper edge; contribution cannot yet be assigned to composition repair vs transition.",
+      "Spatial-off colour looks clean, but no spatial-off beauty was captured; standalone composition appearance remains unproven."
+    ],
+    "nextDecision": "Remove additional pigment field and inner darkening; require actual three-way images for the remaining external transition."
+  },
+  "boundedRuntimeAdjustment": {
+    "coreBudgetMS": 1440000,
+    "previousCoreBudgetMS": 1200000,
+    "reason": "The first actual seven-test pass sequence consumed about 12.7 minutes, including 511 seconds of measured frame GPU waits; the revised run adds two beauty frames, still must execute skin/archive/UI/restoration stages, and now explicitly drains the GPU during cleanup. Increase only the bounded wall-clock allowance; pixel/state/count/cleanup gates unchanged.",
+    "publicBudgetMSUnchanged": 480000
+  }
+}
