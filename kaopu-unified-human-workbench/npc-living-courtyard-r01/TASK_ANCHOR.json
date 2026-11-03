@@ -1,0 +1,53 @@
+{
+  "taskId": "NPC-LIVING-COURTYARD-R01-20261020",
+  "dispatchTime": "2026-10-20T04:45:50Z",
+  "userDirectiveVerbatimOrLosslessSummary": "拿两个最新版人物，按照自主生活系统搭建基础网页；原创好看的空间表达；分层自查后继续。",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/npc-living-courtyard-r01-20261020",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "targetObject": "两个完整R07人物的自主生活场景",
+  "targetDefectOrChange": "新增需求驱动自主选择、真实物品因果变化、可中断活动和空间中的可见执行",
+  "referenceSet": [
+    "CURRENT_HUMAN R07",
+    "npc-life-observation-r01@85718686d88585a449c3add050a089c45eee1207"
+  ],
+  "acceptedBaseline": "HUMAN-INTEGRATED-R07",
+  "expectedArtifact": "自主生活小院 standalone HTML 和固定公开HTTPS网页",
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/npc-living-courtyard-r01",
+    "docs/handoffs/npc-living-courtyard-r01-20261020"
+  ],
+  "protectedInvariants": [
+    "完整原生人物网格/104骨骼/CSR蒙皮/皮肤保留",
+    "不覆盖PR310或其它活动分支",
+    "不同体型来自原生生成器",
+    "用户视觉验收保持待定"
+  ],
+  "forbiddenRoutes": [
+    "占位人物",
+    "固定动作轮播冒充自主选择",
+    "模拟测试冒充真实浏览器",
+    "截图替代三维",
+    "未验证公网链接",
+    "生成图像替代三维"
+  ],
+  "creativeAuthorization": "用户明确授权自己做一个好看的空间表达；人物来源固定",
+  "acceptanceGates": [
+    "来源hash一致",
+    "独立行为因果测试",
+    "两个完整人物可见且动作改变",
+    "物品/金钱等状态与接触执行一致",
+    "干扰后改变计划",
+    "完整桌面浏览器与手机视口",
+    "固定公网HTTP与版本匹配",
+    "独立verifier审查"
+  ],
+  "real3DChecklist": {
+    "noGeneratedImageSubstitute": true,
+    "productionSourceModified": "pending",
+    "interactive3D": "pending",
+    "realtimeRuntime": true,
+    "publicAndBrowserVerified": "pending",
+    "screenshotOnlyIsFailure": true
+  }
+}
