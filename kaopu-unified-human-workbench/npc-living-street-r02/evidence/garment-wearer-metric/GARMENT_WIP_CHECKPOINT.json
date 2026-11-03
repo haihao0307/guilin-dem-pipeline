@@ -1,0 +1,352 @@
+{
+  "schema": "garment-wip-checkpoint/7",
+  "releaseCandidate": false,
+  "runtimeWardrobeIntegrated": false,
+  "neutralStatus": "D T03/P01 exact runtime Float32 packed-display body and complete CSR sampled full-body 4mm initialization passed",
+  "dynamicStatus": "Original upper fixed reference restored; same accepted neutral and original dense targets/order from beginning. Initial idle + walk0..19 pass (21 poses), first failure walk20 T03 wearer edge2.443107; all T03/P01 body samples outside>=4mm. Read-only exact trace finds missing multiple-surface offset candidate; proposed fix not run.",
+  "newDependencies": [
+    "Original waist-attachments.mjs source locked as file73, SHA bf63216f946e834ace38ccd2118f822de52bab3045d757d49b79a140e9269bd6; now imported only by NativeGarmentFit. Existing source mesh-contact.mjs supplies its only dependency."
+  ],
+  "files": [
+    {
+      "path": "src/NativeGarmentContact.mjs",
+      "bytes": 6635,
+      "sha256": "2a70afc51af9dfdd81c85d847511f27fab751ff6758468ee1743289ee813ed4d",
+      "gitBlob": "a809675b487598d47c5676580e375a0f75d6ff94"
+    },
+    {
+      "path": "src/NativeGarmentCorrective.mjs",
+      "bytes": 9654,
+      "sha256": "5441f9d45c4e42d6af2259e6c30c5a754db4c4e81d89c726af1324fa3efe2d54",
+      "gitBlob": "68c1ff4ae1ec77095f3d724d0561b09c95c9be2e"
+    },
+    {
+      "path": "src/NativeGarmentFit.mjs",
+      "bytes": 17807,
+      "sha256": "6fd6cb9cb77126a15e3bfeb8e7b0ebcaf32873c1e41fb17e7cddde816049a1c1",
+      "gitBlob": "4033594e4c7ef3fe2c59508546a2a0e0f7c3ac3e"
+    },
+    {
+      "path": "src/NativeGarmentMetric.mjs",
+      "bytes": 15151,
+      "sha256": "315f1b7cd875d79a36fae9cdebe795037f2fab31c4279f5f2f5a621710654a31",
+      "gitBlob": "9c06350d8918be3429162979e750fc6bcbcc34db"
+    },
+    {
+      "path": "src/NativeGarmentReference.mjs",
+      "bytes": 5746,
+      "sha256": "90e87bdfab887f2065868df85b0fe1231b662dd78bbe927bab46374a8978ebd8",
+      "gitBlob": "b1190302d6ca39882c2f1616926a95dd6b78f878"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-continuous-captured-pose.mjs",
+      "bytes": 17931,
+      "sha256": "3e4c69b8a1c0ceb07f05b6314a00ea619e384ab5b32bdd99db5afe78e6b3e114",
+      "gitBlob": "17a5dab328b2af1b0efdde8ce3cba0a28c34a7eb"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/depth-raster.py",
+      "bytes": 8887,
+      "sha256": "aec114575635e33afeba92ad49d0baa2c422be5547f619952f45cb3f1c8e3612",
+      "gitBlob": "92a86a8d80f591edb00b93da334c58e6000d832f"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_BODY_REPLAY_CONTRACT.json",
+      "bytes": 516,
+      "sha256": "12c89a31d3d82435bd0c02e636adca9282e374d3764a1a18e2c29220e6c8a038",
+      "gitBlob": "f3d966fd5526b42e1b8b87cedbeba897de33ad36"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_CAPTURE_GARMENT.json",
+      "bytes": 44474,
+      "sha256": "9c44ec7209497514b636fbdc866fd3d2c6c6fdf7b646d6b5e2a444930a8aaad6",
+      "gitBlob": "750614657ebb07aa4cf94c9fca45a3ffe920a2b4"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_CAPTURE_RESULT.json",
+      "bytes": 3671,
+      "sha256": "32bbb598b45e985aac2153050b617d00fb0feed7f00da85a9c04cae86ff00425",
+      "gitBlob": "2687c1c096756c6eb57a115e3c1ede7dc7940d6a"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_T03_CONTACT_TRACE.json",
+      "bytes": 258620,
+      "sha256": "331a95ed02287650f29a7ee460a109b32f819c30956a725501ac00fc0d94a34c",
+      "gitBlob": "3c6c23af99936979f5439e6f824df25cfec8c4b1"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_T03_RADIAL_HEMISPHERE_RCA.json",
+      "bytes": 47078,
+      "sha256": "cd94626735689780b9557acc27c78ebda53968cd13744b5f5aea7f0377321d3d",
+      "gitBlob": "79411e6c95e2f5dfb6c5036dd9baf0cdec68b59c"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_CONTINUOUS_NEUTRAL_STATE.json",
+      "bytes": 1080714,
+      "sha256": "56989042bd32372279468d4a055c853313a65b81934c7168dc8c8e30911c34b1",
+      "gitBlob": "a15d18d62a4bec5e098ca894c78e49f96ad182eb"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_RADIAL_FIX_COMPARISON.json",
+      "bytes": 2039,
+      "sha256": "846b61c45ae5270ec7d2b16a4a76562e0ffd5711ddac03ce044fb7522ce96bdc",
+      "gitBlob": "8d5f3a485e6130c56af241e858d20c5df73c274e"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ENTRY_RADIAL_FIX_MAXIMUM_EDGES.json",
+      "bytes": 2284,
+      "sha256": "919f24aed2439d9b40465a15bfe3ebc65d56c9af2d25f240d8623a8a1fb81a3a",
+      "gitBlob": "6335770d88e7e2b94e582652e1e77c8dec7c3933"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-outside-radial-hemisphere/RECEIPT.json",
+      "bytes": 2302,
+      "sha256": "8fb3a704f905aa793cfbae272c9d02fd28293f44e00d2ea05084c208a538c1e0",
+      "gitBlob": "284cfe8910b1e769609b994df80fb68b41218d9e"
+    },
+    {
+      "path": "appearance-source-lock.json",
+      "bytes": 40866,
+      "sha256": "8621cafc4aa133516f5a522afe966708639e758f38c53f53ef1321da68f4b409",
+      "gitBlob": "a9dd3387b4653a01b90073f6b149d34cc9863bda"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-idle-positive-clearance.mjs",
+      "bytes": 5899,
+      "sha256": "dc286d202dcd28416cc994ae583046e9e4a3f081e76d41385bad4f98b788cc6c",
+      "gitBlob": "4a95098c61d7c84447175b74f8a17ead154609fa"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-cold-entry-material-side.mjs",
+      "bytes": 5337,
+      "sha256": "c9989d1f13e9aae7c8145959f8521fa184c2c84320ee355e518adc1632554958",
+      "gitBlob": "696c12356b4e51f168f29d02bb246ab2a5a0e7dc"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_INITIAL_IDLE_POSITIVE_CLEARANCE_RCA.json",
+      "bytes": 6732,
+      "sha256": "f7091602e66e6f58037c8a3c3ac2461615f96ec74137a27131174f5768299518",
+      "gitBlob": "893da9be0a0868309f5e6472c61fec41dfcec161"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK7_POSITIVE_CLEARANCE_RCA.json",
+      "bytes": 3810,
+      "sha256": "fff306469fc84eccd6049c05861e47edb1a2e88130739ecd07c416c89c73326d",
+      "gitBlob": "4cb1e7dfeb6d66ab963b6a8e272ce6830f598de1"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_COLD_ENTRY_LEFT_MATERIAL_SIDE_RCA.json",
+      "bytes": 9063,
+      "sha256": "3b30c8c2d4bbd203da10a0a677c7c7adb1d25b0e0d53aa4734e1f715687e07d3",
+      "gitBlob": "9f74a65ad65f4049cf77cae07a6cf8566bf2de48"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk7-source-waist.mjs",
+      "bytes": 6886,
+      "sha256": "51950adfe6c6f50fb17d2dfc8949030250c123f4abaf451e7ce5b1c1b414a65b",
+      "gitBlob": "8da6b241489b80b7a1cc268b4da6dddaddf0efce"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK7_ORIGINAL_WAIST_TARGETS.json",
+      "bytes": 5179,
+      "sha256": "e629ea9e4009296e4f0a300ea989d082ed65e4fec97b74e748661852accf72c1",
+      "gitBlob": "923680491dad92e9824fabefa10ef1afcb037219"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_ORIGINAL_WAIST_CHAIN_CHECKPOINT.json",
+      "bytes": 303618,
+      "sha256": "18b4ab45258d41470024f4c6217bccabd26b7173dcf0f8a35895d67a3ee3967b",
+      "gitBlob": "3449a1885630df4b35e9cbca69ab68490d88726b"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-source-waist-transport/RECEIPT.json",
+      "bytes": 1332,
+      "sha256": "3a7a93c46d32f4ca36dc2e77a6319261db3e15794357ab7e120179128a7d5e02",
+      "gitBlob": "4e93feaabd571fbe56355c20a13a157b2282775c"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-posed-positive-clearance.mjs",
+      "bytes": 6090,
+      "sha256": "b71bd57a4d68c93b331b17ffd90690717e25fe8cddc3d6c9f908cb99ce511493",
+      "gitBlob": "ff9e8fb932822eae765284fe1fb83c2357433d02"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk21-contact-trace.mjs",
+      "bytes": 18863,
+      "sha256": "ee6d24213d3e6fd9789edc77c3829593f834f8c08625238c92a2dcb15b2b3870",
+      "gitBlob": "2df96367a09d3fa6032b2ff3e88fa64b1da27b0d"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk21-source-dense-contact.mjs",
+      "bytes": 6589,
+      "sha256": "6de9349c367c8245e9bf7775e88c9c28a10b824da14c4ace6a58302b1b8b10a6",
+      "gitBlob": "6ff2e3fcf0db36d7dc7c9d11dc09fd21a37bb7a3"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK21_T03_POSITIVE_CLEARANCE_RCA.json",
+      "bytes": 3725,
+      "sha256": "682cda0a442d568f8e83417189c0867a97658c8723cfd05dd7acd55079907860",
+      "gitBlob": "653977bb0533dc22648c71a1963b3d2f8dc278eb"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK21_T03_LAST_CONTACT_TRACE.json",
+      "bytes": 204283,
+      "sha256": "d0841dffbeca79c8fceca16b6214fd1b2734a813ea2a44dc6f876c329e7532f1",
+      "gitBlob": "3a52a508efda8c0b5802ef884a7709f202f1d789"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK21_T03_ACCEPTED_ENTRY_STATE.json",
+      "bytes": 271646,
+      "sha256": "2653ec39eff639cd63560798ffc9f3130320b9d0169d2a79428e5db3d9f07f62",
+      "gitBlob": "2623c8ab13acd648f0b472d3be928e09588ff9a0"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/ORIGINAL_DENSE_CONTACT_CONTRACT.json",
+      "bytes": 3313,
+      "sha256": "a829884eb7696a97ab496373405d28048816e4a9ea6e7365827857548d49b6ed",
+      "gitBlob": "70e73675f6b53fe6ea24c8d4faa92037170e41a2"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK21_ORIGINAL_DENSE_CONTACT_RESULT.json",
+      "bytes": 10624,
+      "sha256": "add479bef7602478451c5efdb03346bb4c3ec8d1b218d4cb6a2befa1630dcc55",
+      "gitBlob": "34a67f66242dc1416871afd772923d6c7409d802"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK21_SOURCE_DENSE_EDGE_TRACE.json",
+      "bytes": 177810,
+      "sha256": "066b5c4ef4d38c652106ceefcbc437d9d245fd441c22a93b993428aa15887de8",
+      "gitBlob": "b5506ae7d019ce22feb0962de2b86ed49ad5c16c"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_SOURCE_DENSE_INITIAL_PREFIX.json",
+      "bytes": 283726,
+      "sha256": "8726a409761efe9dd182649ae1b4322220d4154d86618dd04da405a7e01984ce",
+      "gitBlob": "860b57dab7bd66084d52ab77da4a108db3af94cd"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_SOURCE_DENSE_FIRST_FAILURE_EDGE_LENGTHS.json",
+      "bytes": 554,
+      "sha256": "559ff2cb1774d86aea64fc7f2557d3fe0da64187594480b09481e73ee9464d11",
+      "gitBlob": "9ff1d30032e4a9e96c1723b4215042df9e035f50"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-source-dense-contact/RECEIPT.json",
+      "bytes": 936,
+      "sha256": "9e3921c222351f7b449b2609473a827c7828a42e5edf1d93b33d7f12a1ada486",
+      "gitBlob": "f5976dff842ef934dc195fed48a2d3fc35ba8711"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk18-underarm-geometry.mjs",
+      "bytes": 9093,
+      "sha256": "c45c991aa23cc5eeb5b4055df5e001bd5a6b3db1595aeb93d3c658b34922852c",
+      "gitBlob": "ef888a4edeb0b391282c44ee33a650462e4c6a83"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK18_UNDERARM_GEOMETRY_READONLY.json",
+      "bytes": 10409,
+      "sha256": "b8a0d80e3ccab4fc30f8f86d22a45009e536342606a3b535340a73b2fe5d5ebf",
+      "gitBlob": "5b4496f73bfbd2538e0852932ababd36554bf65a"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK18_COMPLETE_SOURCE_TOP_REFERENCE.json",
+      "bytes": 14992,
+      "sha256": "549e1a84f567affd6655631b0ef27d6194c2ab3fd6b2a136043624f760898134",
+      "gitBlob": "f1a92bc8f3fab5573d8c39d19384f5bce5d8af91"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-original-top-reference/NativeGarmentFit.mjs",
+      "bytes": 15877,
+      "sha256": "692689aeb593c05f1495b0785570b571d834fa46530342e056ffeaebc4e0f0f8",
+      "gitBlob": "22fde2897e85d8ef484cc3bf6091544fdb4ea753"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/before-original-top-reference/receipt.json",
+      "bytes": 1495,
+      "sha256": "02cf3b1352de25aa3609012f33c5858cdfb487b8b5aced3599bb539d10e9c171",
+      "gitBlob": "9076158603bc719d1db76c93d06dc4dfff4032f6"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_SOURCE_TOP_REFERENCE_INITIAL_PREFIX.json",
+      "bytes": 310457,
+      "sha256": "cc85dc9b198bb4ee5a0dbb7910e0f4535649724f124619e9eed0eacd3324632f",
+      "gitBlob": "75b2428498542d6cf2171f41716c54da4e21eb1d"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_SOURCE_TOP_FIRST_FAILURE_EDGE.json",
+      "bytes": 1603,
+      "sha256": "c75f1297103d667c084bce070ab798322722ddfa960036205c26408de12ec9f7",
+      "gitBlob": "ae6e5a53481fd9a957b30e7632c0cdd5fcc7d3f9"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_SOURCE_TOP_TRANSPORT_RESULT.json",
+      "bytes": 11530,
+      "sha256": "494a2d73f0e355061aeed622532a2624e18809db19aee5ebdf065a081d604d40",
+      "gitBlob": "d19ad94fba8127423e60bffdfe0522cd00c72096"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-source-top-walk20-trace.mjs",
+      "bytes": 7558,
+      "sha256": "b6b5472395a50ff467c871be450d282aa1ceafb014efdacb106e36e17da0ad60",
+      "gitBlob": "66221944143981de7786cf7841621237ed25d7ce"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK20_SOURCE_TOP_ACCEPTED_ENTRY_STATE.json",
+      "bytes": 271000,
+      "sha256": "5053d98487ab4c4d4e8d2af254d5780bc3ebd599f2dfb80a73090439dc726f55",
+      "gitBlob": "4c77cadc9812f6ed4b7e2c3f998708cc78d94e65"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK20_SOURCE_TOP_CONTACT_TRACE.json",
+      "bytes": 385680,
+      "sha256": "df7843851ca9eec7ee324a16c7f7f92fda7e7934970e3a7e3e82c56c20fdb7a9",
+      "gitBlob": "fe5089b0e4e377da0432769066a76a14b256dce9"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/check-walk20-offset-feature.mjs",
+      "bytes": 5924,
+      "sha256": "7c9e133cbee374d212076a19adc8109c4c99c92277382ec6eec33c8f5ee23004",
+      "gitBlob": "66939f5d6a533c346efaa82dcca1a48bbba044b5"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D_WALK20_OFFSET_FEATURE_READONLY.json",
+      "bytes": 17021,
+      "sha256": "da97f55b93523fa928bd0d3de8129a969b26e5ec35bfc3dbd4460db282e9476e",
+      "gitBlob": "333c2583f617f8f5d50337ae5872e6ed82534381"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D-source-top-reference-initial-prefix-first-failure-reference-geometry.json",
+      "bytes": 1615799,
+      "sha256": "9f4e325d1f1d5747f50fe1062fe5ea19d0d234e83b4a62f56e12aa7e614ab79c",
+      "gitBlob": "93c7b2c6a7073eaacfde5cfea664f777ebd1d170"
+    },
+    {
+      "path": "evidence/garment-wearer-metric/D-source-top-reference-initial-prefix-first-failure-corrective-geometry.json",
+      "bytes": 1614570,
+      "sha256": "04e7111fa6d819839e243e79ca703b47ebdcea6e1bd840946ba3665833bb94b7",
+      "gitBlob": "4506eb8b7cb48b8187139bd941dba6f3fa3eb7f5"
+    }
+  ],
+  "sourceAuditMarginM": 0.004,
+  "localPlanningGuardM": 1e-05,
+  "createdAtUTC": "2026-10-21T04:15:26.676026+00:00",
+  "runningReportNotIncluded": "No garment process running. Current top transport is saved; Contact remains 2a70afc and the multiple-face offset query is proof only.",
+  "sourceInteriorSampleMarginsM": {
+    "vertex": 0,
+    "edge": 0.0006,
+    "triangle": 0.0008
+  },
+  "sourceDenseSampleOrder": [
+    "vertex",
+    "edge",
+    "triangle"
+  ],
+  "productionReady": false,
+  "planningContactMarginsM": {
+    "vertex": 0.00401,
+    "edge": 0.00461,
+    "triangle": 0.00481
+  },
+  "sourceOriginalBaseContactMarginM": 0.004,
+  "planningVertexContactMarginM": 0.00401
+}

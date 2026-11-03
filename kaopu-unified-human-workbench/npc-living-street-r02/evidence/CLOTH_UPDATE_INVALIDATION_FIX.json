@@ -1,0 +1,31 @@
+{
+  "schema": "npc-r02-cloth-update-invalidation-fix/1",
+  "createdAt": "2026-10-20T09:33:24.107771+00:00",
+  "parentSourceHead": "f6fd791af06f22aace3f37b2154e3d166e0c337b",
+  "status": "SOURCE_REVIEWED_ACTUAL_RUNTIME_PENDING",
+  "sourceSHA256": {
+    "src/NativeWardrobe.mjs": "3f2fabb58a00ba6ee1de229375780a6fc8ce0019c0c866ba4361ff3c98aa1282",
+    "src/Workbench.mjs": "1b2543f504c8a04ba8cb9fde132d62bcb425da8127aeb46cdcb972946f6b886d"
+  },
+  "changes": [
+    "Restore original source requestRender wake-up callback through the managed render request only",
+    "Compare all complete native skin-matrix values exactly; a camera redraw with an identical pose does not repeat control deformation, normals or source atlas invalidation",
+    "Pass actual local-pose/root change as source material motion state; all submitted batches still execute original material camera/sampling update"
+  ],
+  "unchanged": [
+    "bindGarment/skinBound/projectGarment/deformControl algorithms",
+    "complete garment control topology and source paper UVs",
+    "every original fibre and strand, original screen-error sampling and its native minimum",
+    "body mesh, complete CSR skinning, actual motion and physical contact thresholds"
+  ],
+  "limits": [
+    "This static bound-garment adapter has immutable binding/paper/topology. Future live fitted-cloth state must add its own invalidation input.",
+    "No claim of initial-frame speedup; the observed original minimum alone submitted 13368240 denim yarn triangles.",
+    "Known material fit defects are separate and remain rejected."
+  ],
+  "independentReview": "evidence/INDEPENDENT_R02_CLOTH_SCHEDULING_REVIEW.json",
+  "releaseCandidate": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

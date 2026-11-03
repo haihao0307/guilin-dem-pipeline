@@ -1,0 +1,48 @@
+{
+  "schema": "native-mechanism-wrist-contact-rca/1",
+  "release": false,
+  "rendered": false,
+  "baseline": {
+    "path": "evidence/NATIVE_ENVIRONMENT_A_D_FIRST.json",
+    "bytes": 128623,
+    "sha256": "2ea1333293452210ebfc63ecc563b5558341a4682c13abc086e3e29ff0ed3094"
+  },
+  "observedFailure": "Real handle contact alone admitted anatomically folded wrists: A window 115.399 degrees, A valve 74.502 degrees, D valve 110.174 degrees. Receipts and handle geometry succeeded while this independent wrist check failed.",
+  "cause": "The mechanism path solved a fixed generic elbow pole, reapplied source forearm calibration, then forcibly oriented the wrist. It did not constrain the elbow/hand direction together, and environment actions were outside the existing strict native wrist gate.",
+  "change": "Reuse the existing exact coupled two-link and forearm-roll solver with the original mechanism palm frame. An analytic minimum free roll about the unchanged palm normal preserves the same visible handle contact point, native bone lengths and full CSR. Mechanism actions now require the same wrist/clamp gate before the environment may move. Object grasp behavior retains its original frame by default.",
+  "firstMeasuredResult": {
+    "path": "evidence/NATIVE_ENVIRONMENT_A_D_COUPLED.json",
+    "bytes": 128681,
+    "sha256": "717e43bd7fd0df38c69316a312e0ab7e767b7181605f2288767e67b9e8c5e62b"
+  },
+  "sourceFiles": [
+    {
+      "path": "src/NativeMotion.mjs",
+      "bytes": 43539,
+      "sha256": "18b35b80844aab9a3535da90ac2c0e41e59fee02ebba2f84e95c881c1fa978e2"
+    },
+    {
+      "path": "src/NativeObjectReach.mjs",
+      "bytes": 5439,
+      "sha256": "9fbc3fb4e205ac762e47be3a7515a6a5c065c80a80f0992174a93766c99a542c"
+    },
+    {
+      "path": "src/EnvironmentWorld.mjs",
+      "bytes": 4876,
+      "sha256": "218ad1aee3d3eea912596b7598fb23a6351db2e464234ca922aefdcf3453479c"
+    }
+  ],
+  "remaining": "Current integrated source freeze and actual browser/visual inspection. All 16 eligible A/B/C/D/E/F mechanism scenarios passed the recorded numerical contact, wrist, body/sole, actual handle motion and receipt gates; the B/C/E/F run retains its metadata-only concurrent-source-change qualification. D cannot reach the current window and is correctly excluded by actual fixture capability assessment; D can operate the valve.",
+  "additionalMeasuredResult": {
+    "path": "evidence/NATIVE_ENVIRONMENT_B_C_E_F_COUPLED.json",
+    "bytes": 259950,
+    "sha256": "6694602f89ee0acc9b9b97ce7c09d4224ce77d375eea026e9995689080f179ed",
+    "allMeasuredEligibleCasesPassed": true,
+    "sourceBindingLimitation": "The runner detected NativeShoes.mjs changed during execution; numerical results belong to the captured compiled source hashes."
+  },
+  "sourceDriftReview": {
+    "path": "evidence/NATIVE_SHOE_ENVELOPE_METADATA_REVIEW.diff",
+    "sha256": "6a20f291ffa482bcd83baa747f18949479b2250fec523a781a54bb0a8664fb97",
+    "review": "Independent root inspection: the change adds complete original shoe convex-envelope metadata for pickup entry planning. Original sole position computation and footwear geometry deformation are unchanged. The environment execution does not consume this new metadata. This is scoped equivalence evidence, not a claim that the runner source-unchanged gate passed."
+  }
+}

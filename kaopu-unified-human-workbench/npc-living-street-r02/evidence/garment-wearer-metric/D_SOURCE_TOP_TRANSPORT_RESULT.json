@@ -1,0 +1,372 @@
+{
+  "schema": "source-top-transport-and-offset-feature-rca/1",
+  "releaseCandidate": false,
+  "productionReady": false,
+  "runtimeWardrobeIntegrated": false,
+  "sourceHashes": {
+    "src/NativeGarmentFit.mjs": "6fd6cb9cb77126a15e3bfeb8e7b0ebcaf32873c1e41fb17e7cddde816049a1c1",
+    "src/NativeGarmentMetric.mjs": "315f1b7cd875d79a36fae9cdebe795037f2fab31c4279f5f2f5a621710654a31",
+    "src/NativeGarmentContact.mjs": "2a70afc51af9dfdd81c85d847511f27fab751ff6758468ee1743289ee813ed4d",
+    "src/NativeGarmentCorrective.mjs": "5441f9d45c4e42d6af2259e6c30c5a754db4c4e81d89c726af1324fa3efe2d54",
+    "src/NativeGarmentReference.mjs": "90e87bdfab887f2065868df85b0fe1231b662dd78bbe927bab46374a8978ebd8"
+  },
+  "sourceTransportChange": "T03 original fixed triangle barycentric body point plus every CSR rotated offset; P01 continuous field and original waistband remain unchanged",
+  "inputSHA256": "05e4a1a4133bc9aa46fdc6991a9c3b85608fe43f141d01f8b486f94ba6042db7",
+  "csrSHA256": "ca59eea6d83df1265635cdc1e63678a7e075ae6c7f961c0d7391c755f13bb31c",
+  "acceptedNeutral": {
+    "reusedAcceptedState": true,
+    "path": "evidence/garment-wearer-metric/D_CONTINUOUS_NEUTRAL_STATE.json",
+    "sha256": "56989042bd32372279468d4a055c853313a65b81934c7168dc8c8e30911c34b1",
+    "sourceHashes": {
+      "src/NativeGarmentFit.mjs": "ebb1f5247174a43d2dfcc024e002d0dcdd4047299867dede55336d7a375511d7",
+      "src/NativeGarmentMetric.mjs": "315f1b7cd875d79a36fae9cdebe795037f2fab31c4279f5f2f5a621710654a31",
+      "src/NativeGarmentContact.mjs": "2a70afc51af9dfdd81c85d847511f27fab751ff6758468ee1743289ee813ed4d",
+      "src/NativeGarmentCorrective.mjs": "376431ce7997d316445a393bf62769939883eb3886220cf6c8c75e3ee7a86aba",
+      "src/NativeGarmentReference.mjs": "90e87bdfab887f2065868df85b0fe1231b662dd78bbe927bab46374a8978ebd8"
+    }
+  },
+  "completedAcceptedPoses": 21,
+  "acceptedThroughFrame": 19,
+  "firstFailure": {
+    "sequenceIndex": 21,
+    "frame": 20,
+    "phase": "walk",
+    "sourceFrame": null,
+    "garments": [
+      "T03"
+    ],
+    "atNeutralToInitialRuntimePose": false,
+    "atInitialNeutralToEntryGap": false
+  },
+  "lastFailureEdge": {
+    "frame": 20,
+    "sourceEdge": 3290,
+    "panelId": "right_btorso",
+    "panelIndex": 2,
+    "localVertices": [
+      38,
+      2
+    ],
+    "sourceVertices": [
+      1206,
+      1170
+    ],
+    "sourceTriangle": 2116,
+    "a": 1177,
+    "b": 1142,
+    "paperRest": 0.007505230524019235,
+    "ungradedSourcePaperRest": null,
+    "wearerRestM": 0.005098046470522447,
+    "referenceLengthM": 0.0050602937575147935,
+    "finalLengthM": 0.012455073945265389,
+    "sewnIds": [
+      1177,
+      1142
+    ],
+    "referencePositions": [
+      [
+        -0.1264959931732291,
+        0.04172697513402474,
+        0.36137593872399165
+      ],
+      [
+        -0.12559662471604047,
+        0.036802958211491446,
+        0.36063312876366327
+      ]
+    ],
+    "finalPositions": [
+      [
+        -0.12589520856909914,
+        0.04301483057344258,
+        0.3515732372184444
+      ],
+      [
+        -0.12400832635634913,
+        0.03072957033885731,
+        0.3507726602603984
+      ]
+    ],
+    "maximumWearerRatio": 2.443107181796441,
+    "fullBodyContact": {
+      "samples": 12894,
+      "byKind": {
+        "vertex": {
+          "count": 2226,
+          "inside": 0,
+          "positiveBelowMargin": 0
+        },
+        "triangle": {
+          "count": 4220,
+          "inside": 0,
+          "positiveBelowMargin": 0
+        },
+        "edge": {
+          "count": 6448,
+          "inside": 0,
+          "positiveBelowMargin": 0
+        }
+      },
+      "inside": 0,
+      "clearanceDeficits": 0,
+      "minimumOutsideM": 0.004027756982385999,
+      "worstInside": [],
+      "marginM": 0.004,
+      "fullBody": true,
+      "triangleSamplesRetained": true,
+      "positiveBelowMarginIsNotPenetration": true,
+      "continuousCollisionCertified": false
+    }
+  },
+  "sameOutputObserver": {
+    "bodyMaximumScalarDifferenceM": 0,
+    "clothMaximumScalarDifferenceM": 0
+  },
+  "cause": "The candidate set contains individual face offsets and one radial endpoint, but omits simultaneous offsets at two witnessed nearby body surfaces. The last dense edge contact jumps to a farther single-face endpoint; unchanged inverse-mass distribution stretches a short material edge after the last strain pass.",
+  "pointOnlyCounterexamples": [
+    {
+      "eventIndex": 35,
+      "oldRequestM": 0.013848614837637115,
+      "shorterActualExterior": {
+        "keptFaceOffsets": [
+          2016,
+          687
+        ],
+        "removedFaceOffsets": [
+          2022
+        ],
+        "reason": "a negative multiplier cannot be an active outward contact; remove that linearized constraint and solve the remaining witnessed feature",
+        "multipliers": [
+          0.011329450331074967,
+          0.01151205057398127
+        ],
+        "positiveMultipliers": true,
+        "planeResiduals": [
+          0.00019567998051927453,
+          1.7889335846010823e-18,
+          1.0842021724855044e-18
+        ],
+        "delta": [
+          0.00027678024975068445,
+          0.0008732784117929855,
+          -0.0028626119523331842
+        ],
+        "lengthM": 0.0030056230104250495,
+        "endpoint": [
+          -0.12377176307773709,
+          0.027777320122756667,
+          0.3493678233295022
+        ],
+        "fullBodyProof": {
+          "face": 687,
+          "distance": 0.004609999999999998,
+          "winding": 0,
+          "inside": false
+        },
+        "preferredNormalDot": 0.0004885518210324918,
+        "faceProofs": [
+          {
+            "face": 2022,
+            "triangle": 674,
+            "ids": [
+              368,
+              378,
+              358
+            ],
+            "normal": [
+              0.9565763510916057,
+              0.20153315949911688,
+              -0.21058506631423932
+            ],
+            "closest": [
+              -0.12815337724226133,
+              0.02643718712458393,
+              0.35100255583870554
+            ],
+            "bary": [
+              0,
+              0.7492246642552225,
+              0.2507753357447775
+            ],
+            "distance": 0.0048648586327042585
+          },
+          {
+            "face": 2016,
+            "triangle": 672,
+            "ids": [
+              136,
+              348,
+              349
+            ],
+            "normal": [
+              -0.9823739181467077,
+              -0.04083372395864901,
+              -0.18241187442914605
+            ],
+            "closest": [
+              -0.1193444964114527,
+              0.028259677357099836,
+              0.35068940536444204
+            ],
+            "bary": [
+              0.4322123810057099,
+              0,
+              0.5677876189942901
+            ],
+            "distance": 0.004645421155395035
+          },
+          {
+            "face": 687,
+            "triangle": 229,
+            "ids": [
+              358,
+              378,
+              134
+            ],
+            "normal": [
+              0.9908344902269254,
+              0.11604379694392913,
+              -0.0691436921749563
+            ],
+            "closest": [
+              -0.1283395100776832,
+              0.027242358218845155,
+              0.3496865757504288
+            ],
+            "bary": [
+              0.29450961378467455,
+              0.6303437725145973,
+              0.07514661370072817
+            ],
+            "distance": 0.004609999999999998
+          }
+        ],
+        "qualified": true
+      }
+    },
+    {
+      "eventIndex": 71,
+      "oldRequestM": 0.011887537265998437,
+      "shorterActualExterior": {
+        "derivation": "minimum Euclidean delta satisfying the two observed actual face offset halfspaces; lambda=(N*N^T)^-1*(margin-signedPlaneDistances)",
+        "normalDot": -0.9654958302760568,
+        "normalAngleDegrees": 164.90510335489336,
+        "determinant": 0.06781780171954777,
+        "offsetDeficits": [
+          0.0005463964248027036,
+          -0.0001546992977192272
+        ],
+        "multipliers": [
+          0.005854434792063075,
+          0.005497733082640745
+        ],
+        "positiveMultipliers": true,
+        "delta": [
+          0.0003999463234420266,
+          0.0004548779271367568,
+          -0.0014076490338363894
+        ],
+        "lengthM": 0.0015324316600395425,
+        "endpoint": [
+          -0.12391870339252592,
+          0.029300335374063062,
+          0.3498182323210949
+        ],
+        "preferredNormalDot": 0.0004957990255110115,
+        "distanceFromReferenceM": 0.015131223408056803,
+        "fullBodyProof": {
+          "face": 2016,
+          "distance": 0.004609999999999992,
+          "winding": 0,
+          "inside": false
+        },
+        "faceProofs": [
+          {
+            "face": 687,
+            "triangle": 229,
+            "ids": [
+              358,
+              378,
+              134
+            ],
+            "normal": [
+              0.9908344902269254,
+              0.11604379694392913,
+              -0.0691436921749563
+            ],
+            "closest": [
+              -0.12848645039247206,
+              0.028765373470151546,
+              0.35013698474202143
+            ],
+            "bary": [
+              0.4650350293244099,
+              0.4392509756848559,
+              0.09571399499073417
+            ],
+            "distance": 0.004610000000000012
+          },
+          {
+            "face": 2016,
+            "triangle": 672,
+            "ids": [
+              136,
+              348,
+              349
+            ],
+            "normal": [
+              -0.9823739181467077,
+              -0.04083372395864901,
+              -0.18241187442914605
+            ],
+            "closest": [
+              -0.1193899596298696,
+              0.029488578841512438,
+              0.35065915106221324
+            ],
+            "bary": [
+              0.30732048268993784,
+              0.08284829090930204,
+              0.6098312264007602
+            ],
+            "distance": 0.004609999999999992
+          }
+        ],
+        "qualified": true
+      }
+    }
+  ],
+  "nextBoundedChange": "Proposed only: supplement already-outside radial failures with positive active-set candidates from at most three actual nearest witnesses; exact full-body winding/distance and original side/bound checks remain. No production contact change or cloth solve for this proposal yet.",
+  "unchangedContracts": {
+    "hSeconds": 0.004166666666666667,
+    "materialIterations": 16,
+    "guardIterations": 12,
+    "sourceAuditMarginM": 0.004,
+    "localPlanningGuardM": 1e-05,
+    "planningContactMarginM": 0.00401,
+    "sourceInteriorSampleMarginsM": {
+      "vertex": 0,
+      "edge": 0.0006,
+      "triangle": 0.0008
+    },
+    "sourceDenseSampleOrder": [
+      "vertex",
+      "edge",
+      "triangle"
+    ],
+    "perSampleContactStepM": 0.008,
+    "totalMaterialDisplacementLimitM": 0.08
+  },
+  "timing": {
+    "meanTotalPerPoseMS": 2472.9737608181817,
+    "worstTotalPerPoseMS": 2939.621084000002,
+    "interactivePerformanceAccepted": false
+  },
+  "visual": {
+    "inspected": true,
+    "originalTopBefore": "depth-raster/D-source-top-reference-initial-prefix-first-failure-reference-geometry-three.png",
+    "after": "depth-raster/D-source-top-reference-initial-prefix-first-failure-corrective-geometry-three.png",
+    "assessment": "No large underarm wing or gross top tear in this D24 flat diagnostic. Same-frame material gate still fails and original webpage materials are not exercised.",
+    "websiteAccepted": false
+  }
+}

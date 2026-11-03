@@ -1,0 +1,819 @@
+{
+  "schema": "npc-r02-native-appearance/1",
+  "createdAt": "2026-10-20",
+  "sourcePolicy": {
+    "completeOriginalGarments": true,
+    "completeOriginalShoeParts": true,
+    "originalHairCountsAndSegments": true,
+    "weightsTruncated": false,
+    "sourceBodyClipped": false,
+    "visualVerification": "pending independent rendered six-wearer review"
+  },
+  "nativeSources": {
+    "garments": {
+      "repository": "haihao0307/guilin-dem-pipeline",
+      "commit": "c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49",
+      "runtimeSourceCommit": "3fc034fa91efc77c31656493d7638ef5ff6047c3",
+      "folder": "kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef",
+      "status": "Original complete papers/materials reused; original dynamic cloth defects are not accepted as passing wearer behavior."
+    },
+    "shoes": {
+      "repository": "haihao0307/Humanoid-Rig-Lab-Next",
+      "commit": "02671d8595e410aca4f81047133f984d6f7950da",
+      "folder": "shoe-workshop/r14",
+      "wearerFitValidated": false
+    },
+    "shortHair": {
+      "repository": "haihao0307/guilin-dem-pipeline",
+      "commit": "c89ebc4da8d24ef3decfad85336c5dffb2c471c8",
+      "folder": "kaopu-hair-workbench/fusion/r14-l03/src",
+      "humanAccepted": false,
+      "count": 36000,
+      "segments": 9,
+      "module": "HairLayer.js"
+    },
+    "longHair": {
+      "repository": "haihao0307/guilin-dem-pipeline",
+      "commit": "d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15",
+      "folder": "kaopu-hair-workbench/qa/isolated-longhair-r01/src",
+      "humanAccepted": false,
+      "count": 32000,
+      "segments": 40,
+      "module": "LongHairLayer.js",
+      "lengthMeters": [
+        0.26,
+        0.43
+      ],
+      "contactAcceleration": {
+        "module": "vendor/appearance/hair-static-envelope-exact.mjs",
+        "method": "Exact BVH selection within the original 27-cell candidate domain, same Three Triangle closest-point arithmetic and source cell/face tie order",
+        "geometryReduced": false,
+        "parametersChanged": false,
+        "fullTailPointComparisons": 640000,
+        "strictlyDifferentPoints": 0,
+        "maximumDifferenceM": 0,
+        "nearSurfaceAndGridBoundaryComparisons": 3215,
+        "nonzeroSourceCorrectionsCompared": 13067,
+        "evidence": [
+          "evidence/HAIR_ENVELOPE_EXACT_COMPARE.json",
+          "evidence/HAIR_ENVELOPE_FULL_LONG_COMPARE.json"
+        ]
+      }
+    }
+  },
+  "looks": {
+    "A": "D01",
+    "B": "L02",
+    "C": "D04",
+    "D": "D03",
+    "E": "L04",
+    "F": "D02"
+  },
+  "shoeStyles": {
+    "A": "canvas",
+    "B": "penny",
+    "C": "chelsea",
+    "D": "canvas",
+    "E": "monk",
+    "F": "penny"
+  },
+  "hairStyles": {
+    "A": "short",
+    "B": "buzz",
+    "C": "short",
+    "D": "medium",
+    "E": "long",
+    "F": "long"
+  },
+  "knitIsolation": {
+    "activeInDefaultSixLooks": false,
+    "acceptedPublicBranch": "KNIT-PUBLIC-P02 C2",
+    "acceptedCommit": "6f1a7f1353d2b47822525769313d63cc51890a0c",
+    "acceptedPath": "kaopu-fabric-workbench/knit-public-p02/index.html",
+    "userDecisionAt": "2026-10-15 03:06",
+    "rejectedP03MustNotBeBaseline": true,
+    "sourceOfDecision": "Parent PersonalContext exact retrieval reported 2026-10-20; user rollback 2026-10-15 02:48, accepted P02 C2 03:06, explicit rejected-descendant isolation 18:38",
+    "runtimeKnitFamilyGuard": true,
+    "note": "No P02 full garment integration is claimed. Unused MP05 knit helper remains only as an original shared-module dependency."
+  },
+  "regressionGates": [
+    "Do not reuse rejected R01 cutoff shirt or hide/remove native body vertices.",
+    "Do not promote R13C.3 rejected transparent crown or P03 rejected bright segmented fibres.",
+    "Inspect all six hair crowns, parts, sideburns, long sections and roots after motion.",
+    "Check every original sole under planted and rolled foot poses.",
+    "Check complete garments in standing/walking/sitting/pickup poses; original donor static status is not six-wearer acceptance."
+  ],
+  "files": [
+    {
+      "local": "cloth-r10/assets/native-person.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/assets/native-person.json.gz",
+      "sha256": "937c94073151c39b1afa08aa1a75df46263453c593fb0579e03615fdf3f8dfb3",
+      "gitBlob": "e0c6030db452b8bd737c13c6f7b6b967621403d5",
+      "bytes": 3220845
+    },
+    {
+      "local": "cloth-r10/continuous-demand.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/continuous-demand.mjs",
+      "sha256": "d1a50d588e4a134d1d38ea8fcb758999fe99af186580904552b3488a861247af",
+      "gitBlob": "43e0c6303d3d7d1ea810f6f09719992859821445",
+      "bytes": 2500
+    },
+    {
+      "local": "cloth-r10/continuous-solid.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/continuous-solid.mjs",
+      "sha256": "067e1e35560b7ef2b2213212cb59413b80b8d7d418cfdb8588e61cc1976a252c",
+      "gitBlob": "5c05bb8bfe133418b51a1eb848b7ee7c3e78b3b2",
+      "bytes": 16355
+    },
+    {
+      "local": "cloth-r10/geometry-core.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/geometry-core.mjs",
+      "sha256": "7a16359557e1751f6eb06d8e4d13fee514ae5d0a889cd2709a4c102a5c8526e3",
+      "gitBlob": "cc1af977f06155fbbd680189fd79a1ab85e0d97c",
+      "bytes": 10637
+    },
+    {
+      "local": "cloth-r10/gpu-seam-frames.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/gpu-seam-frames.mjs",
+      "sha256": "13673a90135f105570f1e003f745673b8688b30d324b47418d777b8c6e731dd2",
+      "gitBlob": "b23831705c878aa1a2453b421e211f1a567243ec",
+      "bytes": 6832
+    },
+    {
+      "local": "cloth-r10/looks.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/looks.mjs",
+      "sha256": "1b909e3c3959794d71bdd2e8ba16a615e6503bc7d987f513e5a7e46230a2d30d",
+      "gitBlob": "d124b0ce9c796ec5151dd06ca352adcfdc0ab6b6",
+      "bytes": 1773
+    },
+    {
+      "local": "cloth-r10/material-settings.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/material-settings.mjs",
+      "sha256": "e210f121a573f1c9441502cea1045aa1783103b0af2797832ab9ca6980f92021",
+      "gitBlob": "8a5901d2c80ab94424dbb0b1f632198c64920fd3",
+      "bytes": 2527
+    },
+    {
+      "local": "cloth-r10/material-shaders.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/material-shaders.mjs",
+      "sha256": "e43192b6543da832cd6b1ef38da631cf73ecb398710f187154a8a61867541a0d",
+      "gitBlob": "a318c07e739d683ed506902df5d3e3cdcb5b20d5",
+      "bytes": 10477
+    },
+    {
+      "local": "cloth-r10/materials.json",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/materials.json",
+      "sha256": "045e5b4304dd8c9fab541f4db0361acf22bc477b534c1b89e0e907a3530fd431",
+      "gitBlob": "cd8d2d6d13796e01cffc8d8958734b4ecaa28c38",
+      "bytes": 16502
+    },
+    {
+      "local": "cloth-r10/mesh-contact.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/mesh-contact.mjs",
+      "sha256": "0fe9b8e0840c7b35c4ee3fce9b7d648c220043783ad6166314812472ddde8ff3",
+      "gitBlob": "fc340fac00f6a84da979327ecd56ab546dded479",
+      "bytes": 6022
+    },
+    {
+      "local": "cloth-r10/native/P01.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/P01.json.gz",
+      "sha256": "16eb3a9573fcc9b1df5b7c0f17aa9aa3e057d44ca725f58ca98d86cb7153d6b1",
+      "gitBlob": "a2e6ff0b52ec42a6666db0063349e63e76930c15",
+      "bytes": 514320
+    },
+    {
+      "local": "cloth-r10/native/P02.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/P02.json.gz",
+      "sha256": "de72455147a54c0b1c19cad5129af9dc6d900806ccad94495853b2272745c4bd",
+      "gitBlob": "306fae1cc634a1cbda81d16e7f9419d7e6fdcf05",
+      "bytes": 288828
+    },
+    {
+      "local": "cloth-r10/native/P04.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/P04.json.gz",
+      "sha256": "9ffe42b200557d81e6474424496cf1d84b1d486790333111ce9628042d549bea",
+      "gitBlob": "c5e3e3c348bdd88f9bd17398c8a2d2443741c53b",
+      "bytes": 440304
+    },
+    {
+      "local": "cloth-r10/native/T01.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/T01.json.gz",
+      "sha256": "196873db656b7641484e8e8954d920a305ca64b86239b48cc560a1dc8bded177",
+      "gitBlob": "cb61e06932b57641662568abcada217b225755f8",
+      "bytes": 198540
+    },
+    {
+      "local": "cloth-r10/native/T03.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/T03.json.gz",
+      "sha256": "9e482f71400fa0b6161a4c6bf122d44ffefde3ca4bae2cbbb213f2d02d8e653f",
+      "gitBlob": "97026589d59c1e37e302a4f677ca1f2ba9f2b82b",
+      "bytes": 197321
+    },
+    {
+      "local": "cloth-r10/native/T17.json.gz",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/T17.json.gz",
+      "sha256": "230b9155d392bf178b64dcf1dcfc52c2b560442f3bac2d8cbe09c3845f46d949",
+      "gitBlob": "0f0550e90575206abda3ddccfc3a931462fc59a1",
+      "bytes": 196846
+    },
+    {
+      "local": "cloth-r10/native/cotton-surface.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/cotton-surface.js",
+      "sha256": "64be6240a2f1ed1b5cbbd04838c0e3b99990123d59de6e3b559a91aca260a612",
+      "gitBlob": "ccb30537df37bc9b5238639b80f8e20a57a8476a",
+      "bytes": 4364
+    },
+    {
+      "local": "cloth-r10/native/knit-r11.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/knit-r11.mjs",
+      "sha256": "de1e9ed73e95d9260c1feae9ca0c7ad38223b347c96faf83fbf809f29656353c",
+      "gitBlob": "2e571786fc03ee11a4164b8759a961245018803b",
+      "bytes": 1106
+    },
+    {
+      "local": "cloth-r10/native/leather-r13.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/leather-r13.mjs",
+      "sha256": "a633edbf9e94809ec2a12b884c7369acabac6a076393d70449c9c60eb0871260",
+      "gitBlob": "a84543e00425ee9b8371bd9dbfa69a401931447a",
+      "bytes": 11006
+    },
+    {
+      "local": "cloth-r10/native/leather-seam-r13.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/leather-seam-r13.mjs",
+      "sha256": "8c96262c019c6f61c3eb3ceeedfbba294f4f1f1c0df7687597452df90bebd1c9",
+      "gitBlob": "822b0672b6e3694d0dfbc423c64386caaeb33e26",
+      "bytes": 9817
+    },
+    {
+      "local": "cloth-r10/native/noise-kernel.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/native/noise-kernel.js",
+      "sha256": "4f489feb68a521c607a09e92ba45ff5e857fec0d03a307bdcadb30b2745e101e",
+      "gitBlob": "e84d900070bed4a23879f39aaaa298033af6fac9",
+      "bytes": 2158
+    },
+    {
+      "local": "cloth-r10/outfits-r043.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/outfits-r043.mjs",
+      "sha256": "9d6190d2a5df59bb53ad39df0c21df7fe10d85bdefd447bba86338c5cc88b20d",
+      "gitBlob": "51e48e314b6b618b663709a00c1580f981a03b91",
+      "bytes": 2833
+    },
+    {
+      "local": "cloth-r10/panel-grain.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/panel-grain.mjs",
+      "sha256": "f104e31b5c5c37a7298983c189c3ca728fe166776376804ced905a8f4e3cafed",
+      "gitBlob": "03cdf2843bcded2610e4444f377c977be0281165",
+      "bytes": 895
+    },
+    {
+      "local": "cloth-r10/sampling-stability.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/sampling-stability.mjs",
+      "sha256": "ba2615f5ccecb84300274618a2b9280626190f55c5cacf76ee7d68068cf597e7",
+      "gitBlob": "d31ffe7632cd2e808977837b1125164628689d61",
+      "bytes": 1314
+    },
+    {
+      "local": "cloth-r10/sewn-normals-r0433.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/sewn-normals-r0433.mjs",
+      "sha256": "eb270e5f0033d7f7e5efdb30f7090abdf3d5212155b9c789009c1e6e86153f3f",
+      "gitBlob": "2de633cbe4e01fb864da441815e5c88a33e85061",
+      "bytes": 2234
+    },
+    {
+      "local": "cloth-r10/sewn-trims.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/sewn-trims.mjs",
+      "sha256": "a9ab9873105175bf5d72acf56e78ccee5b054c6b5c25ff549db6bdb9cea4a03a",
+      "gitBlob": "f21177849845f9c0ea6380c4f507fa224c6c5965",
+      "bytes": 8554
+    },
+    {
+      "local": "cloth-r10/solid-helpers.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/solid-helpers.mjs",
+      "sha256": "2a2aba8daaea3fb50217939206dd3957f5acf1f5f9a94f80650599c193c4ec3e",
+      "gitBlob": "3e08e0ea48a1067838ec291b16948fe2c2a5cb58",
+      "bytes": 5595
+    },
+    {
+      "local": "cloth-r10/solid-textiles.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/solid-textiles.mjs",
+      "sha256": "e6e626f6e01c4f0abb8a765757db016017b9d00cb1394a07402300c6a7cbad6a",
+      "gitBlob": "505acd15fd75db58b927ba9088fa5f652c05f3ab",
+      "bytes": 12104
+    },
+    {
+      "local": "cloth-r10/source-contract.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/source-contract.mjs",
+      "sha256": "1d3c69652a76c9b3d6c752c0f05552c7c1ea5453142d2f5058d87e12e826e446",
+      "gitBlob": "08bfe2c792ac0b1cb3589fcf5fcd0cd9ad4e4a1f",
+      "bytes": 2165
+    },
+    {
+      "local": "cloth-r10/surface-binding.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/surface-binding.mjs",
+      "sha256": "15226e81cd1cbdfefe3882dc686523bb1956a77e396ee8a450a2b97c534e2436",
+      "gitBlob": "703f58e13b240ee61fa297eef5548e678fd5cba1",
+      "bytes": 5115
+    },
+    {
+      "local": "cloth-r10/yarn-batching.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/yarn-batching.mjs",
+      "sha256": "4701bca5a88e68853fb9c6ad6210613197c15a14bb864abebe0fcd14f6ca0f72",
+      "gitBlob": "bf4abc3a65657508aaa374e4f55a4f6dd8a3a691",
+      "bytes": 4605
+    },
+    {
+      "local": "cloth-r10/yarn-frame-atlas.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/yarn-frame-atlas.mjs",
+      "sha256": "5cc30483be5f7d4349d13b434c61c5990bf86c455cbc82795e316b29872d2054",
+      "gitBlob": "8aef23e9586afc943f84e0f0d0aa20a4bcb1a7a7",
+      "bytes": 8006
+    },
+    {
+      "local": "hair-long/FiberMaterial.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/FiberMaterial.js",
+      "sha256": "f69fbdf0704181ac5fa58c9b289982d9de37e3fbabc37be4cd2f3075005e1009",
+      "gitBlob": "beccea4dba7e958d700b72eaf0d2a782d05cd6f1",
+      "bytes": 21348
+    },
+    {
+      "local": "hair-long/GNMModel.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/GNMModel.js",
+      "sha256": "e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f",
+      "gitBlob": "ca923f888a28b061f1245bda6d4c123dda107ef8",
+      "bytes": 20105
+    },
+    {
+      "local": "hair-long/LongHairLayer.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/LongHairLayer.js",
+      "sha256": "32d280293d07437c4fe795bf795b17f340b0519f3189b261b4e92c9d1b0cdd32",
+      "gitBlob": "b5e8fa9049beafe2e9c9afcb8fd256336f2d8dc2",
+      "bytes": 12062
+    },
+    {
+      "local": "hair-long/RefinedHairLayer.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/RefinedHairLayer.js",
+      "sha256": "0efce4f675f2b3337cc7f423db59d8adeb78c4ad30fa5ea377ff0ce7a8276dbd",
+      "gitBlob": "9dfd39b3e701e508106f16d72f44e53965dcf3ac",
+      "bytes": 25039
+    },
+    {
+      "local": "hair-long/RegionFields.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/RegionFields.js",
+      "sha256": "5f44f91573826287bc9e44805d4872513b9846d522a267f910f461bc0c60e956",
+      "gitBlob": "f4cec0c07fd97e98dcb5d20343e110688634262d",
+      "bytes": 2411
+    },
+    {
+      "local": "hair-long/ScalpBinding.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/ScalpBinding.js",
+      "sha256": "3951e1eabc85f6ef45ebd5aa08e6771b062e6d9813e484888c7c2edd958dbfa9",
+      "gitBlob": "508299a93e9b3568e717386d674148c481b698a3",
+      "bytes": 6843
+    },
+    {
+      "local": "hair-long/SemanticSampler.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/SemanticSampler.js",
+      "sha256": "46773ae831195f6e5eac8c110e31ea60fdd60bba29bc4baefd0197d834d237e9",
+      "gitBlob": "0393c9f55516fed0a96129f47dcd75351c343178",
+      "bytes": 6297
+    },
+    {
+      "local": "hair-long/StaticSurfaceEnvelope.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/d689a5ee8bc5d493d2b43e7b6ea10dbea1868b15/kaopu-hair-workbench/qa/isolated-longhair-r01/src/StaticSurfaceEnvelope.js",
+      "sha256": "9139dd5dcdf097530dd50890decbfee8644147cfc36cd4fed731a208fa05ea0a",
+      "gitBlob": "aa8cedf0c715d7086694dcdfe9b66ac088092564",
+      "bytes": 2069
+    },
+    {
+      "local": "hair-r14/FiberMaterial.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/FiberMaterial.js",
+      "sha256": "4cfaa2133550d505ac8e6e3126013a70e981f604296c2ed62914a57210cdf7b1",
+      "gitBlob": "d4b691846ec0244d2275e359ce5c45be76e8bc27",
+      "bytes": 22259
+    },
+    {
+      "local": "hair-r14/FusionFields.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/FusionFields.js",
+      "sha256": "5f1173ed45a88850967a5397e1b85b75aedf1bc87d0fd1e9d4937a7e04c03e61",
+      "gitBlob": "691c84d2cc8ea1e6c9d3465d7d2b49c75c89ab3d",
+      "bytes": 7280
+    },
+    {
+      "local": "hair-r14/GNMModel.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/GNMModel.js",
+      "sha256": "e9619714dc5a975f66fc8c9cef76220441fd8e644cf9d14e43022b4705579c5f",
+      "gitBlob": "ca923f888a28b061f1245bda6d4c123dda107ef8",
+      "bytes": 20105
+    },
+    {
+      "local": "hair-r14/HairLayer.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/HairLayer.js",
+      "sha256": "7443e3a5fe7e95c8ec83de5551286714a01faad0ab3e1dbba79af4edd54c2a37",
+      "gitBlob": "9022d978a6a09430cb1146b9dc526c6f4b09cfc9",
+      "bytes": 26363
+    },
+    {
+      "local": "hair-r14/RegionFields.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/RegionFields.js",
+      "sha256": "8645dcc5561a833f4f5445a607eb8a68c9230ec67ea0ba9b714d96674433bc56",
+      "gitBlob": "aad969be5ffc56309c82e16f0c8ef3df83d3a49f",
+      "bytes": 2608
+    },
+    {
+      "local": "hair-r14/ScalpBinding.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/ScalpBinding.js",
+      "sha256": "3951e1eabc85f6ef45ebd5aa08e6771b062e6d9813e484888c7c2edd958dbfa9",
+      "gitBlob": "508299a93e9b3568e717386d674148c481b698a3",
+      "bytes": 6843
+    },
+    {
+      "local": "hair-r14/SemanticSampler.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/SemanticSampler.js",
+      "sha256": "46773ae831195f6e5eac8c110e31ea60fdd60bba29bc4baefd0197d834d237e9",
+      "gitBlob": "0393c9f55516fed0a96129f47dcd75351c343178",
+      "bytes": 6297
+    },
+    {
+      "local": "hair-r14/StrandCore.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c89ebc4da8d24ef3decfad85336c5dffb2c471c8/kaopu-hair-workbench/fusion/r14-l03/src/StrandCore.js",
+      "sha256": "6904eee1641215cbbf80785a33dc0dbce3ccf452d7f1df070f181fd221506e5b",
+      "gitBlob": "7d2543ff419d61d7420e744c7e9df0067a886969",
+      "bytes": 5319
+    },
+    {
+      "local": "shoe-native/r04/src/materials.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r04/src/materials.mjs",
+      "sha256": "f060d49bdbdafb2ad0035ea56d739e16e89e91c4da1c09175c4b50ea3e83785c",
+      "gitBlob": "562948263bad9353f7fbedf1a16c00becd4d1a13",
+      "bytes": 2897
+    },
+    {
+      "local": "shoe-native/r04/vendor/r02/site/leather.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r04/vendor/r02/site/leather.js",
+      "sha256": "a633edbf9e94809ec2a12b884c7369acabac6a076393d70449c9c60eb0871260",
+      "gitBlob": "a84543e00425ee9b8371bd9dbfa69a401931447a",
+      "bytes": 11006
+    },
+    {
+      "local": "shoe-native/r04/vendor/r05/site/appearance.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r04/vendor/r05/site/appearance.js",
+      "sha256": "8a87e9ee43bec1c52c256d2da68223755f28c9d98b0905af7933fa5268372bed",
+      "gitBlob": "2ce8b7bc2db18b656ef96bd66343398d2cad857f",
+      "bytes": 3591
+    },
+    {
+      "local": "shoe-native/r04/vendor/r06/site/catalogue.js",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r04/vendor/r06/site/catalogue.js",
+      "sha256": "1c10f7a9e6074e072d39192915a47ddfa1305894a5f15d330340d84e6205e4ae",
+      "gitBlob": "d6307f5f8f5e3ec1cf3f618ca114d2846f22169b",
+      "bytes": 4511
+    },
+    {
+      "local": "shoe-native/r05/src/materials.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r05/src/materials.mjs",
+      "sha256": "3efaa10fbcc3897b4999bfc53baf4719ee5929c0a22a6839f3b2436c372abc8d",
+      "gitBlob": "6ba13b36f9113eb1059db3ea71da8ea57f55aa33",
+      "bytes": 1888
+    },
+    {
+      "local": "shoe-native/r07/src/materials.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r07/src/materials.mjs",
+      "sha256": "e2ffd2a69fa89bc347fd17c5801958a672a83b4f3c3b9405f27db18d9d9ea9dc",
+      "gitBlob": "738a84511b3ad631ddfefd36e0ee941b278d5c5f",
+      "bytes": 454
+    },
+    {
+      "local": "shoe-native/r09/src/materials.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r09/src/materials.mjs",
+      "sha256": "5a0ed8d62f1d96294a801cea80f3b63ca544b9223a38817e5e8acc8e46843f5c",
+      "gitBlob": "86251d631cf8aa154e2e4d391be8e3d84700cff9",
+      "bytes": 6655
+    },
+    {
+      "local": "shoe-native/r14/src/deformation.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/deformation.mjs",
+      "sha256": "15a407659fca3a3cf6725c3f32acf9caf96a0302e20a382d4a155fabfe4600fa",
+      "gitBlob": "09b01c7a54124fc57dc2fea815f848505afc4a44",
+      "bytes": 6911
+    },
+    {
+      "local": "shoe-native/r14/src/kernel.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/kernel.mjs",
+      "sha256": "366d03fca66cfc7744c32ff7a551a5e9bb73b7278699b5400eba6f94506d21af",
+      "gitBlob": "9890d0c743884c7a1630e75727c2a78b0a59c625",
+      "bytes": 16327
+    },
+    {
+      "local": "shoe-native/r14/src/materials.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/materials.mjs",
+      "sha256": "9ea2a9c23c80be8cced25dec985bc20b2fa8df14190575db97c6c8444070be88",
+      "gitBlob": "9741ca1b87349ee569209b16e56588e64e4342ab",
+      "bytes": 22519
+    },
+    {
+      "local": "shoe-native/r14/src/model.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/model.mjs",
+      "sha256": "0c4225b060e8efa91b37fcfadf0cda56191afedc8d64c3f9f34d1e3e600b6744",
+      "gitBlob": "5201fba7ba4b559de6725d2dbdb4953604e45a1e",
+      "bytes": 1831
+    },
+    {
+      "local": "shoe-native/r14/src/monk-canvas.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/monk-canvas.mjs",
+      "sha256": "62e0bcb5e83338b3464a0a0dea99a46d0ccb01cd89814ab811da4ba16264fe99",
+      "gitBlob": "3cd486fead1d566788dda87d5b0296b27e47f773",
+      "bytes": 34647
+    },
+    {
+      "local": "shoe-native/r14/src/penny-chelsea.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/penny-chelsea.mjs",
+      "sha256": "8eb285d95176fa46ab784ea4ab6d4601c6c741c28d923ef0f24e8654696ceb66",
+      "gitBlob": "d9db2a29ab90caa9afa079b12c04773c013e5b7b",
+      "bytes": 12228
+    },
+    {
+      "local": "shoe-native/r14/src/soles.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/soles.mjs",
+      "sha256": "fcc5d6ccae4e38e099e94019803a8aff4ed6dd42abbd6c6992f284382d0308fa",
+      "gitBlob": "d344e1c820e6356d297ea483d70c420bf0775950",
+      "bytes": 7086
+    },
+    {
+      "local": "shoe-native/r14/src/surface-coordinates.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/src/surface-coordinates.mjs",
+      "sha256": "8731903981979d96d49f5d92e5f2804acd25c26f9272d3ef10736c1d6b3e8970",
+      "gitBlob": "89218d6f2bf0d6e3238dc95fa5287c95f8e62fc6",
+      "bytes": 23826
+    },
+    {
+      "local": "shoe-shared-original.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/725f7c52102613f8d22ea36f0fff6a281ea7770c/kaopu-unified-human-workbench/crowd-performance-r01/shoe-sharing/shared-native-shoes.mjs",
+      "sha256": "0df1f2f0375aab318779f26fa325a32e0056fed4c574c8bd7b49c70cfeab1ba8",
+      "gitBlob": "fe1cfa35bad974332f5ac94e6649f393fed6b9cf",
+      "bytes": 2568
+    },
+    {
+      "local": "shoes-r14/public-lite.html",
+      "url": "https://raw.githubusercontent.com/haihao0307/Humanoid-Rig-Lab-Next/02671d8595e410aca4f81047133f984d6f7950da/shoe-workshop/r14/public-lite.html",
+      "sha256": "fdce5d544bf9816f331a1e8db16ad272d454780f9a6b8c255fee474f854a04e8",
+      "gitBlob": "d0bc24f55308be9010c2beb47883214ccc2ce868",
+      "bytes": 13762029
+    },
+    {
+      "local": "cloth-r10/lower-body-contact.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/lower-body-contact.mjs",
+      "bytes": 9573,
+      "sha256": "f60b9420e22a102a510db3b9634c6e29cebe5f1887bb3b9276b18ac8c12c6df6",
+      "gitBlob": "fce48d326422bdd8ac3f4f2c31924e9099a6936f"
+    },
+    {
+      "local": "cloth-r10/geometry-worker.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/geometry-worker.mjs",
+      "sha256": "dd02b1c94afb26bc6a96c68c8414fbd537403a41ab548166fd642f6fa1e50adb",
+      "gitBlob": "d9237628189357fbdf5a5e0c4678b05c270be2d8",
+      "bytes": 1347
+    },
+    {
+      "local": "cloth-r10/material-geometry.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/material-geometry.mjs",
+      "sha256": "86b6fcbb49d353e3282aef58130c229bc7d4fe54d21e1a9f4d6189fde57b9393",
+      "gitBlob": "97004ad39abbf4b54dc68f1493a1be0ee01ff18f",
+      "bytes": 2429
+    },
+    {
+      "local": "cloth-r10/cloth-physics.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/cloth-physics.mjs",
+      "sha256": "ffe3fee9a82f75b28703273800dec2542a966b7003672bfdf58b8ef667643298",
+      "gitBlob": "7b8c3bfa10c862ff38693efdb739c99968361ee0",
+      "bytes": 11901
+    },
+    {
+      "local": "cloth-r10/material-physics.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/material-physics.mjs",
+      "sha256": "5b040b89a14808f904ce4488e2e9d74835e8afaa0ba53836db4a64bf67cbd099",
+      "gitBlob": "1826cb3cb96594bfac5c3253a30f84646d2a511d",
+      "bytes": 4758
+    },
+    {
+      "local": "cloth-r10/seam-refinement.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/seam-refinement.mjs",
+      "sha256": "24dfd080b2e54c63b9c613d922807856065137ebdc083e9f0137d4222fb7bbbf",
+      "gitBlob": "9ff96ab1986cf7cd07d5b9959bcd6f2aea5c0d6c",
+      "bytes": 8716
+    },
+    {
+      "local": "cloth-r10/reduced-cloth.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/reduced-cloth.mjs",
+      "sha256": "a851fdee4a269c05e6cd0d8efd3479d9985a557247659235b67d6646940cf4e2",
+      "gitBlob": "08e02670dcc6b58685563052a936fc3f702a9278",
+      "bytes": 17297
+    },
+    {
+      "local": "cloth-r10/waist-attachments.mjs",
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49/kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/waist-attachments.mjs",
+      "bytes": 1621,
+      "sha256": "bf63216f946e834ace38ccd2118f822de52bab3045d757d49b79a140e9269bd6",
+      "gitBlob": "ea7d4c3d531e0d3be5ccedefb1a6bb6aed092c87"
+    }
+  ],
+  "adaptedCopies": [
+    {
+      "source": "cloth-r10/sewn-normals-r0433.mjs",
+      "output": "cloth-adapted/sewn-normals-r0433.mjs"
+    },
+    {
+      "source": "cloth-r10/source-contract.mjs",
+      "output": "cloth-adapted/source-contract.mjs"
+    },
+    {
+      "source": "cloth-r10/outfits-r043.mjs",
+      "output": "cloth-adapted/outfits-r043.mjs"
+    },
+    {
+      "source": "cloth-r10/mesh-contact.mjs",
+      "output": "cloth-adapted/mesh-contact.mjs"
+    },
+    {
+      "source": "cloth-r10/sampling-stability.mjs",
+      "output": "cloth-adapted/sampling-stability.mjs"
+    },
+    {
+      "source": "cloth-r10/panel-grain.mjs",
+      "output": "cloth-adapted/panel-grain.mjs"
+    },
+    {
+      "source": "cloth-r10/geometry-core.mjs",
+      "output": "cloth-adapted/geometry-core.mjs"
+    },
+    {
+      "source": "cloth-r10/surface-binding.mjs",
+      "output": "cloth-adapted/surface-binding.mjs"
+    },
+    {
+      "source": "cloth-r10/native/knit-r11.mjs",
+      "output": "cloth-adapted/native/knit-r11.mjs"
+    },
+    {
+      "source": "cloth-r10/material-settings.mjs",
+      "output": "cloth-adapted/material-settings.mjs"
+    },
+    {
+      "source": "cloth-r10/gpu-seam-frames.mjs",
+      "output": "cloth-adapted/gpu-seam-frames.mjs"
+    },
+    {
+      "source": "cloth-r10/native/leather-seam-r13.mjs",
+      "output": "cloth-adapted/native/leather-seam-r13.mjs"
+    },
+    {
+      "source": "cloth-r10/sewn-trims.mjs",
+      "output": "cloth-adapted/sewn-trims.mjs"
+    },
+    {
+      "source": "cloth-r10/yarn-batching.mjs",
+      "output": "cloth-adapted/yarn-batching.mjs"
+    },
+    {
+      "source": "cloth-r10/native/cotton-surface.js",
+      "output": "cloth-adapted/native/cotton-surface.js"
+    },
+    {
+      "source": "cloth-r10/native/noise-kernel.js",
+      "output": "cloth-adapted/native/noise-kernel.js"
+    },
+    {
+      "source": "cloth-r10/material-shaders.mjs",
+      "output": "cloth-adapted/material-shaders.mjs"
+    },
+    {
+      "source": "cloth-r10/native/leather-r13.mjs",
+      "output": "cloth-adapted/native/leather-r13.mjs"
+    },
+    {
+      "source": "cloth-r10/solid-helpers.mjs",
+      "output": "cloth-adapted/solid-helpers.mjs"
+    },
+    {
+      "source": "cloth-r10/solid-textiles.mjs",
+      "output": "cloth-adapted/solid-textiles.mjs"
+    },
+    {
+      "source": "cloth-r10/yarn-frame-atlas.mjs",
+      "output": "cloth-adapted/yarn-frame-atlas.mjs"
+    },
+    {
+      "source": "cloth-r10/continuous-demand.mjs",
+      "output": "cloth-adapted/continuous-demand.mjs"
+    },
+    {
+      "source": "cloth-r10/continuous-solid.mjs",
+      "output": "cloth-adapted/continuous-solid.mjs"
+    },
+    {
+      "source": "cloth-r10/looks.mjs",
+      "output": "cloth-adapted/looks.mjs"
+    },
+    {
+      "source": "hair-r14/StrandCore.js",
+      "output": "hair-short-adapted/StrandCore.js"
+    },
+    {
+      "source": "hair-r14/RegionFields.js",
+      "output": "hair-short-adapted/RegionFields.js"
+    },
+    {
+      "source": "hair-r14/FusionFields.js",
+      "output": "hair-short-adapted/FusionFields.js"
+    },
+    {
+      "source": "hair-r14/GNMModel.js",
+      "output": "hair-short-adapted/GNMModel.js"
+    },
+    {
+      "source": "hair-r14/SemanticSampler.js",
+      "output": "hair-short-adapted/SemanticSampler.js"
+    },
+    {
+      "source": "hair-r14/ScalpBinding.js",
+      "output": "hair-short-adapted/ScalpBinding.js"
+    },
+    {
+      "source": "hair-r14/HairLayer.js",
+      "output": "hair-short-adapted/HairLayer.js"
+    },
+    {
+      "source": "hair-r14/FiberMaterial.js",
+      "output": "hair-short-adapted/FiberMaterial.js"
+    },
+    {
+      "source": "hair-long/StaticSurfaceEnvelope.js",
+      "output": "hair-long-adapted/StaticSurfaceEnvelope.js"
+    },
+    {
+      "source": "hair-long/RegionFields.js",
+      "output": "hair-long-adapted/RegionFields.js"
+    },
+    {
+      "source": "hair-long/GNMModel.js",
+      "output": "hair-long-adapted/GNMModel.js"
+    },
+    {
+      "source": "hair-long/SemanticSampler.js",
+      "output": "hair-long-adapted/SemanticSampler.js"
+    },
+    {
+      "source": "hair-long/ScalpBinding.js",
+      "output": "hair-long-adapted/ScalpBinding.js"
+    },
+    {
+      "source": "hair-long/RefinedHairLayer.js",
+      "output": "hair-long-adapted/RefinedHairLayer.js"
+    },
+    {
+      "source": "hair-long/FiberMaterial.js",
+      "output": "hair-long-adapted/FiberMaterial.js"
+    },
+    {
+      "source": "hair-long/LongHairLayer.js",
+      "output": "hair-long-adapted/LongHairLayer.js"
+    },
+    {
+      "source": "cloth-r10/lower-body-contact.mjs",
+      "output": "cloth-adapted/lower-body-contact.mjs"
+    },
+    {
+      "source": "cloth-r10/geometry-worker.mjs",
+      "output": "cloth-adapted/geometry-worker.mjs"
+    },
+    {
+      "source": "cloth-r10/material-geometry.mjs",
+      "output": "cloth-adapted/material-geometry.mjs"
+    }
+  ],
+  "dataPackets": [
+    "T01",
+    "T03",
+    "T17",
+    "P01",
+    "P02",
+    "P04"
+  ],
+  "generated": {
+    "dataModule": "appearance-data.mjs",
+    "scanJSON": "shoes-r14/scan-data.json",
+    "scanFrom": "shoes-r14/public-lite.html",
+    "scanPayloadId": "scan-data"
+  },
+  "adapterEdits": [
+    "cloth solid-helpers and solid-textiles: only worker URL uses __NPC_CLOTH_WORKER_URL when present.",
+    "long hair imports of the original native Three path resolve to bare three, aliased to the same R07 runtime.",
+    "short hair relative vendor/three imports resolve to bare three.",
+    "NativeWardrobe: exact native garment topology + barycentric full CSR + posed source MeshContact clearance.",
+    "NativeShoes: original native style geometry/materials + measured uniform wearer scale + native foot skin attachment.",
+    "NativeHair: source geometry/fibre shader + full barycentric root CSR transport, no density LOD."
+  ],
+  "limitations": [
+    "Original long hair is authored static hanging hair, with static source body contact, not dynamic hair physics.",
+    "No garment triangle-interior/self-collision or shoe pressure/comfort certification is claimed."
+  ]
+}

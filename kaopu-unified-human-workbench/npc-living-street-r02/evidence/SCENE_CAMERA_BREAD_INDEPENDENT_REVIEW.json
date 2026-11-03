@@ -1,0 +1,110 @@
+{
+  "schema": "scene-camera-bread-contract-independent-readonly/1",
+  "sourceHashes": {
+    "src/SceneCamera.mjs": {
+      "bytes": 4933,
+      "sha256": "498fad3f9160c45e39c2666ee0a18a3e8301894b18c22adb3ad1b1a6befac2ad"
+    },
+    "src/BreadTransportPath.mjs": {
+      "bytes": 1158,
+      "sha256": "98eb8c2f5b83bf2b3ec0d74a46ff91d899cdaa343d48fa8dc6b3b685d367b14a"
+    },
+    "src/BreadApproachPath.mjs": {
+      "bytes": 931,
+      "sha256": "aaf4f5a296d4c901156b8a326bd014e995b1af42340f19ddea32cc17efb79015"
+    },
+    "src/ItemWorld.mjs": {
+      "bytes": 45713,
+      "sha256": "ce20f425c7570128df7dec72f5004ceafcff4aa6252e67d07c8d5661a45d5ce7"
+    },
+    "src/ActorAdapter.mjs": {
+      "bytes": 49787,
+      "sha256": "1c8c84de41e0162ee07115239898c7fb5d1e6caef43f69760824357cc7f69f89"
+    },
+    "src/NativeMotion.mjs": {
+      "bytes": 42952,
+      "sha256": "6b51998c88c185b8c1be2e5bf11a992da3bdc12cf412a2d8d6b1fc88d2931b21"
+    },
+    "src/NativeObjectReach.mjs": {
+      "bytes": 3962,
+      "sha256": "06523c8cd15bb19ca04004daf309635b637286e169f9ec37d15e02ca38d2127b"
+    },
+    "evidence/SCENE_CAMERA_GEOMETRY.json": {
+      "bytes": 15400,
+      "sha256": "edb7d3798ad8cf05f9724750e4b1f04a73bc72d6532b5fbf94f8b45c87626bf6"
+    },
+    "evidence/NATIVE_BREAD_TRANSPORT_D_SIDE.json": {
+      "bytes": 17763,
+      "sha256": "8f3c0572d1d293778bd57daf685cfcb936b9ee80b719fa2370ff5203c230ed41"
+    },
+    "evidence/NATIVE_BREAD_TRANSPORT_D_SIDE_TRACE.json": {
+      "bytes": 435636,
+      "sha256": "9dd951e168eb1feb179c9b0acf1994923788433caf2f2725c5428d008d93d841"
+    }
+  },
+  "productionEdited": false,
+  "newBrowserOrChainRun": false,
+  "camera": {
+    "earlyStopEquivalent": true,
+    "proof": "Candidates are sorted by nonnegative preference < pi+.1; any blocked ray adds >=100. The first clear candidate is the global minimum. Without a clear candidate all 48 are evaluated.",
+    "viewDirectionCorrect": true,
+    "visibility": "Actual street world matrices and visible ancestors; no scenery hidden.",
+    "nativeOrbit": "Locked R07 has enableDamping=false. Current elevations .19/.34 and distances are inside Workbench min/max bounds, so orbit.update does not clamp these candidates.",
+    "observedGeometryEvidence": {
+      "file": "evidence/SCENE_CAMERA_GEOMETRY.json",
+      "rows": 24,
+      "allOccludedProbesZero": true,
+      "candidatePool": 48,
+      "evaluatedRange": [
+        1,
+        15
+      ],
+      "browserAcceptance": false
+    },
+    "scope": "Six standing probes at checked locations; cached report is not a new visibility proof after every sub-.65m movement, arbitrary user orbit, or character articulation."
+  },
+  "bread": {
+    "palmOriginCorrect": true,
+    "actualConservativeHullCorners": 8,
+    "physicalHalfExtentsM": [
+      0.075,
+      0.035,
+      0.045
+    ],
+    "fixedGripYawRadians": 1.5707963267948966,
+    "DObservedGeometry": {
+      "handHorizontalRadiusM": 0.11130998003125774,
+      "handMinimumYFromPalmM": -0.0301592164503642,
+      "propHorizontalRadiusFromPalmM": 0.15660459763365825,
+      "incorrectCenterOnlyRadiusM": 0.08746427842267951,
+      "palmClearanceY": 1.047,
+      "exitPalmZ": -0.22139540236634175,
+      "counterBoardTopY": 1.0
+    },
+    "phases": {
+      "approach": "Raise complete hand outside; move above board; lower to actual loaf contact.",
+      "held": "Lift before .69; move outside through .84; lower to the measured bag thereafter. Cubic clamping keeps the phase endpoints continuous.",
+      "origin": "Source target is refreshed before grasp, then full palm/object offsets are frozen at actual grasp."
+    },
+    "newRollScope": {
+      "rollBegins": 0.84,
+      "currentHorizontalRadiusInvariant": "Yaw only; a newly added roll is not covered by that claim alone.",
+      "propFull3DRadiusFromPalmM": 0.1604680653588121,
+      "extraOver2DRadiusM": 0.003863467725153863,
+      "existingMarginM": 0.012,
+      "DPropCoveredByExistingMargin": true,
+      "recommendedExplicitEnvelope": "If claiming arbitrary yaw/roll clearance, record full 3D palm-to-eight-corner radius and full 3D native hand radius, or explicitly preserve the yaw-only scope before exiting."
+    },
+    "existingDTrace": {
+      "file": "evidence/NATIVE_BREAD_TRANSPORT_D_SIDE_TRACE.json",
+      "heldFramesBeforeFailure": 74,
+      "maximumObservedHandCounterPenetrationM": 0,
+      "maximumObservedHandPropPenetrationM": 0.0020669689594630656,
+      "wholeTransactionPassed": false,
+      "reason": "The existing trace ends in a native pose rejection; it is not a successful buy receipt. The held-only wrist summary excludes a frame released by the failure."
+    },
+    "scope": "Geometry and phase contract read only, not force/contact/food transaction certification. Native reach limits, actual Cannon response and receipts remain authoritative."
+  },
+  "release": false,
+  "visualAcceptance": false
+}
