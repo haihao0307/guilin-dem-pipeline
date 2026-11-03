@@ -1,0 +1,120 @@
+name: NPC life observation R01 candidate
+on:
+  push:
+    branches: [feature/npc-life-observation-r01-20261020]
+    paths:
+      - 'kaopu-unified-human-workbench/npc-life-observation-r01/**'
+      - '.github/workflows/npc-life-observation-r01.yml'
+permissions:
+  contents: write
+concurrency:
+  group: npc-life-observation-r01-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/human-integrated-r06
+            kaopu-unified-human-workbench/npc-life-observation-r01
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Build exact canonical-host candidate
+        run: |
+          node kaopu-unified-human-workbench/npc-life-observation-r01/prepare.cjs
+          node kaopu-unified-human-workbench/npc-life-observation-r01/build.cjs
+      - name: Prepare the project's Chromium verification runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Verify and preserve complete native startup
+        timeout-minutes: 15
+        env:
+          NPC_QA_PHASE: startup
+          NPC_QA_OUT: /tmp/npc-startup
+          NPC_BOOT_TIMEOUT_MS: 600000
+        run: node kaopu-unified-human-workbench/npc-life-observation-r01/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-native-startup-${{ github.sha }}
+          path: /tmp/npc-startup
+          retention-days: 14
+      - name: Verify complete native interaction in real Chromium
+        timeout-minutes: 30
+        env:
+          NPC_QA_PHASE: suite
+          NPC_QA_OUT: /tmp/npc-browser
+          NPC_BOOT_TIMEOUT_MS: 600000
+        run: node kaopu-unified-human-workbench/npc-life-observation-r01/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-native-interaction-${{ github.sha }}
+          path: /tmp/npc-browser
+          retention-days: 14
+      - name: Stage isolated public candidate
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),crypto=require('crypto');
+          const dir='kaopu-unified-human-workbench/npc-life-observation-r01';
+          const m=JSON.parse(fs.readFileSync(dir+'/BUILD.json'));
+          m.sourceHead=process.env.SOURCE_HEAD;
+          m.publicPath='npc-life-observation/r01-20261020/'+process.env.SOURCE_HEAD+'/';
+          m.publicURL='https://haihao0307.github.io/guilin-dem-pipeline/'+m.publicPath;
+          fs.writeFileSync(dir+'/BUILD.json',JSON.stringify(m,null,2));
+          fs.mkdirSync('/tmp/npc-public',{recursive:true});
+          fs.copyFileSync(dir+'/preview.html','/tmp/npc-public/index.html');
+          fs.copyFileSync(dir+'/BUILD.json','/tmp/npc-public/BUILD.json');
+          console.log(m.publicURL);
+          JS
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public-pages
+          sparse-checkout: npc-life-observation
+      - name: Publish only the new version directory
+        env:
+          SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          cd public-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          out="npc-life-observation/r01-20261020/${SOURCE_HEAD}"
+          mkdir -p "$out"
+          cp /tmp/npc-public/index.html "$out/index.html"
+          cp /tmp/npc-public/BUILD.json "$out/BUILD.json"
+          git add -- "$out"
+          git commit -m "Publish isolated NPC observation candidate ${SOURCE_HEAD}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+          done
+          exit 1
+      - name: Wait for the exact public HTML and source receipt
+        timeout-minutes: 22
+        run: node kaopu-unified-human-workbench/npc-life-observation-r01/wait-public.cjs
+      - name: Verify the final public URL with actual native interaction
+        timeout-minutes: 18
+        env:
+          NPC_QA_PHASE: public
+          NPC_QA_OUT: /tmp/npc-live-browser
+          NPC_BOOT_TIMEOUT_MS: 600000
+          PREVIEW_URL: https://haihao0307.github.io/guilin-dem-pipeline/npc-life-observation/r01-20261020/${{ github.sha }}/
+        run: node kaopu-unified-human-workbench/npc-life-observation-r01/verify-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npc-life-observation-${{ github.sha }}
+          path: |
+            /tmp/npc-public
+            /tmp/npc-live-http
+            /tmp/npc-live-browser
+          retention-days: 14
