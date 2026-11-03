@@ -1,0 +1,96 @@
+{
+  "schema": "kaopu/independent-lip-diagnostic-visual-review@1",
+  "reviewer": "/root/lip_r05_visual_review",
+  "reviewDate": "2026-10-20",
+  "status": "controlled-diagnostic-reviewed-production-candidate-pending",
+  "scope": "Direct independent viewing of five actual pucker PNGs from diagnosis-02; byte verification of restoration frames and earlier reviewed diagnosis-01 frames. No production code, browser, or GitHub changes by this reviewer.",
+  "provenance": {
+    "diagnosticCommit": "a904630990b3623d095025cdffb4c33db144135d",
+    "sourceSHA": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "buildSHA": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "verifierSHA256": "ba434439031aa66d7ae3982d58f90ce91a7c085491775f3a195d7476be7e06bf",
+    "evidenceDirectory": "../evidence/diagnosis-02",
+    "qaSHA256": "1a37357b74275c459cc8d9dcd067e83430268fa898fc372a4fb891288bfcc549",
+    "width": 640,
+    "height": 512
+  },
+  "technicalEvidenceBoundary": {
+    "completed": true,
+    "testsPassed": 5,
+    "testsTotal": 5,
+    "savedFrames": 12,
+    "speakRestorationStateExact": true,
+    "puckerRestorationStateExact": true,
+    "finalOriginalShaderRestorationStateExact": true,
+    "finalOriginalShaderRestorationPixelsExact": true,
+    "independentlyComparedPNGBytes": {
+      "puckerBaselineAndRestoredExact": true,
+      "puckerBaselineAndOriginalShaderRestoredExact": true,
+      "allSevenPreviouslySavedDiagnosis01PNGsExact": true
+    },
+    "interpretation": "This batch completes the intended controlled diagnostic sequence. It does not contain a production repair or establish an aesthetic pass.",
+    "publicCandidateDeliveredByThisDiagnostic": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "QAResultUsedAsBeautyAcceptance": false,
+    "independentRuntimeReexecutionByReviewer": false,
+    "previousFailurePreserved": "../evidence/diagnosis-01/qa.json"
+  },
+  "directlyViewedInputs": [
+    {"file": "pucker-oblique-r04.png", "sha256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609", "bytes": 292475},
+    {"file": "pucker-oblique-no-bump.png", "sha256": "706271cac9addd51b689bacb18abac900e1b759dae2f96e12c17b82774a232ee", "bytes": 250379},
+    {"file": "pucker-oblique-albedo.png", "sha256": "b820f25aab7b6128f37d600ebe1e7bfb89f0a443c4102a443c61684efa298ab8", "bytes": 185931},
+    {"file": "pucker-oblique-no-local.png", "sha256": "654114a9612a263a73ee273f10b3e433fe43d59350b362f6d92ba5fdcd59157e", "bytes": 288904},
+    {"file": "pucker-oblique-no-closure.png", "sha256": "422386247e15cbc6c3c3700a55af5f68bcf3bef4ad665553c71cb91420c1a4d9", "bytes": 292144}
+  ],
+  "observations": [
+    {
+      "mode": "r04",
+      "visible": "嘴唇整体收拢，口角有强牵拉折痕；中央开口呈很薄的近横向缝隙，夹着灰色牙齿片段。外唇粉色与宽软高光仍占主导。"
+    },
+    {
+      "mode": "no-bump",
+      "visible": "脸部的细小表面点状细节明显减弱，但中央薄缝、灰牙片段和尖口角折痕仍在。去掉细节后，部分大折叠阴影反而更显眼。",
+      "supportedInference": "本次被关闭的程序凹凸不是这些 pucker 缺陷存在的必要条件。",
+      "limit": "保留的几何法线、形变与其他着色仍可能参与；不能将此结论扩大为所有法线均无问题。"
+    },
+    {
+      "mode": "albedo",
+      "visible": "唇体变成平色块，仍能看见夹着灰色牙齿的薄开口；口角的明暗折痕在平色显示下不再可读。",
+      "supportedInference": "中央细缝与牙齿可见性没有依赖湿润高光才能出现。几何投影、遮挡与表面分界仍需区分。",
+      "limit": "平色图隐藏了阴影，不能据此说口角几何折叠已经消失，也不能直接证明网格孔洞。"
+    },
+    {
+      "mode": "no-local",
+      "visible": "嘴明显变宽，噘嘴收拢与向前聚集的观感减弱，两侧口角牵拉折痕也减弱；但中央灰牙细缝仍然清楚存在。",
+      "supportedInference": "局部动作路径实际负责了相当一部分收拢及口角形变。关闭它会改变口角观感，但没有消除中央薄缝。",
+      "limit": "同时丢失了有效的 pucker 动作表达。不能把嘴更宽、动作更弱的图称为同动作修复，也不能由整个路径关闭直接确定某个子步骤有错。"
+    },
+    {
+      "mode": "no-closure",
+      "visible": "整体噘嘴外形与尖口角折痕大体保留；中央上下内缘分开更多，暴露出更宽、更连续的牙齿片段。",
+      "supportedInference": "本次移除的闭合位置更新参与了中央缝隙压窄。它与口角牵拉的可见作用不同：关闭闭合位置更新并没有明显解决口角折痕。",
+      "limit": "该消融只移除了闭合阶段的位置更新，仍保留闭合压力/应变字段供下游使用。它不等于关闭整个接触模型，也不能证明应该削弱闭口能力或扩大开口作为成品修复。"
+    }
+  ],
+  "causalSummary": {
+    "centralSeam": "对闭合位置更新有可见响应；不依赖本轮被关闭的凹凸或高光表现才能存在。",
+    "cornerAndPuckerShape": "对整段局部动作关闭有明显响应，但与预期的收拢动作一同消失；不能将消融直接用于生产。",
+    "separateMechanisms": "本组证据支持将中央缝隙与口角牵拉分别处理，而不是假定有一个全局开关能同时修好。",
+    "specificTriangleOrVertexCauseProvenByThisReview": false,
+    "generalAnatomicalValidityProven": false
+  },
+  "candidateReviewImplications": {
+    "currentCandidateScope": "上内缘的动作归属修复；没有由本审核授权扩展成 pucker 全面改善。",
+    "speakTarget": "保留有效抬唇/下压动作，在真实 beauty 图中减少上内缘的分段薄片与不合理转折。不能退回 no-local 图。",
+    "puckerExpectationForThisScope": "作为保留与退步检查；除非真实候选图显示清楚收益，不宣称 pucker 改善。",
+    "doNotAccept": ["关闭局部动作来减少折痕", "扩大中央开口或取消闭合能力来减少薄缝", "从诊断 5/5 通过推断成品质感已通过"],
+    "wholeLipAppearance": "外唇平滑填色和宽软高光仍然没有在本诊断中得到修复。"
+  },
+  "decision": {
+    "diagnosticSequenceAcceptedAsComplete": true,
+    "productionRepairAccepted": false,
+    "overallLipVisualAcceptance": false,
+    "nextEvidence": "实际 R05 候选的同条件 beauty 对照与动作能力保持证据"
+  }
+}

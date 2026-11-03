@@ -1,0 +1,131 @@
+{
+  "schema": "lip-motion-candidate-source-note@1",
+  "candidate": {
+    "module": "src/MotionContinuity.js",
+    "version": "native-return-motion-ownership@1",
+    "sha256": "0173a00cdbcfc31aae9ad75e22ee4e4ba25fa2396897b5c6ce8513b338b03b6f",
+    "bytes": 17050,
+    "status": "Frozen first candidate for real rendered acceptance; not yet visually accepted by this note",
+    "api": ["install(viewer, model)", "setEnabled(boolean)", "report()", "uninstall()"]
+  },
+  "baseline": {
+    "r04SourceCommit": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "r04BuildCommit": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "r04HandoffCommit": "ab2641ef0bfe038aafd3956611590c9e4ab9d09e",
+    "r04PreviewSHA256": "16e30c857d0f460b661845d557043a367638076dad920bd1966b34a59bedaae8"
+  },
+  "evidence": [
+    {
+      "files": ["evidence/diagnosis-01/speak-macro-r04.png", "evidence/diagnosis-01/speak-macro-no-bump.png", "evidence/diagnosis-01/speak-macro-albedo.png", "evidence/diagnosis-01/speak-macro-no-local.png"],
+      "kind": "Actual fixed-baseline rendered stage counterfactuals",
+      "observation": "The hanging upper inner strip survives bump removal. It substantially disappears when the entire original local stage is removed. This attributes a visible component to local motion, without licensing removal of that motion as a production repair.",
+      "review": "Personally inspected by geometry audit agent"
+    },
+    {
+      "file": "evidence/diagnosis-01/speak-visible-triangles.json",
+      "kind": "CPU frontmost draw-triangle calculation at selected pixel centres using the actual displayed geometry and camera",
+      "triangles": [473039, 528995, 380471],
+      "vertexExamples": [70752, 145944, 145939, 150229, 135939, 108808, 139783, 34465, 121061],
+      "observation": "Sampled triangles in the visible upper inner-return region contain both native upper=true and upper=false samples. Samples have negative v, mostly red=0 and inner approximately 0.25 to 0.5. The original binary upper field drives opposing motion terms. Together with the rendered stage counterfactuals, this motivates the ownership hypothesis tested by this candidate.",
+      "limits": "Finite sample locations, with edge/MSAA uncertainty. Edge samples explicitly report fragmentOwnershipCertain=false and cpuGeometryAttributionReliable=false; the candidate triangle at the pixel centre is not proof of every antialiased fragment contributing to that rendered pixel. This is not a complete anatomical label map. The mapping verifies the original topology prefix against the actual drawn geometry; native topology and final draw counts differ."
+    },
+    {
+      "files": ["evidence/diagnosis-02/pucker-oblique-r04.png", "evidence/diagnosis-02/pucker-oblique-no-closure.png", "evidence/diagnosis-02/pucker-visible-triangles.json"],
+      "kind": "Actual rendered closure counterfactual plus visible-triangle binding",
+      "review": "Parent and independent visual reviewer observations, plus geometry-agent triangle-data inspection",
+      "observation": "Removing closure changes the central thin pink band while opening the mouth farther. Pucker outline remains, and corner folds remain. This supports testing ownership of the original closure direction, while retaining the original gap, seal and adhesion calculation.",
+      "visibleTriangleExamples": [289594, 524658, 175206],
+      "boundaryFinding": "Some visible inner-edge samples have inner/oral=0. A correction restricted to oral>0 would miss these observed native skin triangles."
+    }
+  ],
+  "nativeSource": {
+    "file": "../lip-inner-r04/preview.html",
+    "sampleFunction": "L5.sample, line 4118: binary upper comes from comparison against the rest-space innerTop/innerBottom midpoint",
+    "topologyAndSolver": "Kl topology and Ql.apply, line 4173; Ql.apply starts near character offset 4654432 in the fixed R04 preview",
+    "localBoundary": "The native topology pairs.map call, after all original local motion and before original pair closure sampling",
+    "closureBoundary": "The native topology lips[Symbol.iterator] call, after original closure displacement and before later original processing",
+    "frame": "ao(model): canonical landmark axes are converted to display geometry with l(h)=[h[0],h[2],-h[1]]"
+  },
+  "intervention": {
+    "principle": "Preserve all original stages, declared actions and coefficients. Add only the difference induced by changing upper/lower motion ownership on selected inner-return skin vertices.",
+    "reference": {
+      "requiredDeclaredPose": "jawOpen=.36 and every other declared local action zero",
+      "requiredStageBuffer": "Completed original solver.base, captured before native local processing",
+      "carrierGeometry": "The existing 49 upper and lower contact-pair points form two reference polylines",
+      "distance": "Euclidean distance to the nearest segment on each fixed polyline",
+      "newCarrier": "smooth(-.55,.55,(distanceLower-distanceUpper)/max(1e-9,distanceLower+distanceUpper))",
+      "ownership": "newUpper=originalUpper+support*(newCarrier-originalUpper)",
+      "poseIndependence": "The carrier is built from the explicit native reference, never from the user's initial arbitrary expression or a camera projection",
+      "notMeasuredPhysiology": true
+    },
+    "support": {
+      "domain": "skin=true, csType<.5, v<-.015, abs(u)<1.10, weight>.001",
+      "formula": "(1-smooth(-.24,-.015,v))*(1-smooth(.72,1,red))*(1-smooth(.86,1.10,abs(u)))*(1-smooth(.006,.014,max(0,depth)))*max(front,inner)",
+      "protectedDirectly": "Every original sample with v>=-.015 or csType>=.5 receives zero direct correction. Samples with red=1 also receive zero through the support formula. These are explicit native sample-domain protections; their anatomical extent and final visible behavior require the actual model review.",
+      "qualification": "Support widths and carrier confidence thresholds are engineering choices for this candidate, not measured anatomical constants. Downstream original normal, strain, micro and collision processing can still propagate an indirect difference."
+    },
+    "localCorrection": {
+      "formula": "deltaOwnership * scale * nativeWeight * ((.0018*upperRaise+.0024*lowerDepress)*gauss(u,.9)+.0034*funnel*gauss(u,.85)*gauss(v,.8)-.0025*(rollOut-rollIn)*gauss(v-.2,.75))",
+      "direction": "The original ao(model) up axis after canonical-to-display conversion",
+      "derivation": "Exact upper-minus-lower difference of the three original opposing vertical motion terms; shared local terms, declared action values and native coefficients remain untouched. Retained final movement of the rendered lip body is a separate acceptance measurement.",
+      "timing": "Added at the first pairs.map boundary before original closure gap sampling"
+    },
+    "closureCorrection": {
+      "formula": "2*deltaOwnership*originalInterpolatedDelta*gauss(max(0,v),.92)*(1-smooth(.94,1.14,abs(u)))*max(front,inner*.7)",
+      "interpolation": "Retains the original clamped u mapping across 49 samples and linear interpolation between neighboring returned delta values",
+      "derivation": "Exact difference of original upper=+1 and lower=-1 closure signs, using the existing evaluated delta rather than a new closure target",
+      "timing": "Added at the first lips iterator boundary after original closure displacement",
+      "retained": "The original gap, seal, press, adhesion, closure pressure and later solver algorithms all execute. Their values are evaluated after the repaired local geometry, so this does not assert that every closure delta or final vertex position is numerically identical to R04."
+    },
+    "changesExcluded": ["Material settings", "Canonical position buffers", "DNA", "Mesh creation", "Global prototypes", "Original native source replacement", "Disabling any native motion or closure stage"]
+  },
+  "reviewCorrection": {
+    "issue": "The initial draft computed up in canonical landmark coordinates but applied it to the display position buffer",
+    "discoveredBy": "Parent source audit before first candidate submission",
+    "fix": "Apply the same native conversion [up[0],up[2],-up[1]] used by ao(model)",
+    "includedInFrozenCandidate": true,
+    "regressionCheck": "A synthetic canonical Z axis must move display Y and leave display Z unchanged"
+  },
+  "lifecycle": {
+    "hooks": "Instance-only original solver.apply wrapper, with temporary own pairs.map and lips iterator descriptors restored in finally",
+    "disable": "The original solver runs directly when disabled",
+    "uninstall": "Restores the exact prior apply own descriptor or inherited lookup. The caller performs the subsequent native update.",
+    "ordinaryInvalidation": "Identity, shape, calibration or known native topology binding changes disable the correction, record valid=false and invalidationReason, and continue the original native evaluation. They do not enter errors[].",
+    "unexpectedFailure": "Unexpected phase counts, non-finite corrections, invalid display domain, canonical aliasing, descriptor changes and other invariant failures remain errors; they are not broadly swallowed.",
+    "rebuild": "Enabling on another person or calibration requires a fresh deterministic native jaw=.36 install. Parent control rebuilds inside render suppression and then restores the saved declared pose.",
+    "runtimeFingerprints": "FNV-1a plus byte length are only runtime reproducibility/invalidation helpers. They do not replace the SHA256 source and evidence provenance."
+  },
+  "syntheticVerification": {
+    "status": "PASS",
+    "fixture": "100 display vertices, 49 contact pairs, two intentionally wrong return owners, canonical up=Z, native display up=Y; ephemeral Node VM harness",
+    "checks": [
+      "Module syntax and deterministic repeated ownership construction",
+      "All 98 protected exterior-body fixture vertices exactly match native output",
+      "A wrongly lower-labelled upper return receives the original full upperRaise amplitude",
+      "A wrongly upper-labelled lower return receives the original full lowerDepress amplitude",
+      "Corrections move display Y and leave display Z unchanged",
+      "Closure direction changes by the ownership difference while reusing the same original delta",
+      "Disabling restores native behavior",
+      "Temporary map and iterator descriptors are restored",
+      "Supported shape change continues one original native evaluation, disables candidate and leaves errors empty",
+      "Uninstall restores the original inherited apply function"
+    ],
+    "meaning": "Verifies limited stage algebra and lifecycle on the fixture. It does not establish actual person topology classification, practical motion amplitude preservation, archive restoration, performance, image improvement or visual acceptance."
+  },
+  "acceptanceStillRequired": [
+    "Actual fixed-character R04/R05 rendered comparison for speak and pucker, including mouth macro and face context",
+    "Declared pose equality plus independently measured retention of protected lip-body movement",
+    "Neutral, jaw, expression midpoint and return-to-original behavior",
+    "Actual original stage count, descriptor restoration and canonical/DNA preservation",
+    "Fresh archive reload with the same deterministic ownership and final pose",
+    "Normal person/shape change fallbacks and new-reference reinstall",
+    "Independent visual review: reject if strip reduction is purchased by lost mouth action, distorted lip body, worse corners or new gaps"
+  ],
+  "nonClaims": [
+    "Stage ablations are diagnostic counterfactuals, not finished repairs.",
+    "Numeric probes and self-reported invariants are not visual proof.",
+    "This candidate is not a complete biomechanical or whole-mouth solution.",
+    "Improvement in speak cannot be generalized to pucker before its actual candidate images are reviewed.",
+    "No claim is made that dental-envelope removal or contact-pair duplication explains the remaining visible strip."
+  ]
+}

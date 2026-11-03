@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu/independent-lip-visual-baseline@1",
+  "reviewer": "/root/lip_r05_visual_review",
+  "reviewDate": "2026-10-18",
+  "status": "baseline-review-complete-candidate-review-pending",
+  "scope": "Direct visual inspection of five actual, unedited R04 beauty PNGs and one semantic diagnostic PNG; no product code changes, browser control, or pushes.",
+  "baseline": {
+    "version": "LIP-INNER-R04",
+    "sourceSHA": "9d855c6051e76a20f052c95f0dda95103d946ef7",
+    "buildSHA": "f70e40b301ea964956d9915ab820e4efe1105549",
+    "evidenceCommit": "7d461172a772a6fc29cb3aa44d251c1e04f08f7d",
+    "repositoryDirectory": "kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03",
+    "localDirectory": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-03",
+    "width": 640,
+    "height": 512
+  },
+  "method": {
+    "imagesActuallyViewed": true,
+    "tool": "view_image",
+    "imageEditing": false,
+    "automatedTestResultUsedAsVisualQualityEvidence": false,
+    "runtimeCodeUsedToPredetermineVisualDiagnosis": false,
+    "anatomicalReferenceComparisonPerformed": false,
+    "causalLimit": "A beauty image can establish the visible defect and its location, but cannot uniquely attribute it to geometry, normals, material composition, illumination, or dental occlusion.",
+    "semanticLimit": "The purple diagnostic was used only to recognize the displayed oral semantic area. Diagnostic colors and flat shading are not beauty-quality evidence."
+  },
+  "inputs": [
+    {"file": "neutral-macro-r04.png", "sha256": "50c8971ac3dc708115a3baddc7b06f9f7b82fc742a8c219685f6bbff0ba2903a", "bytes": 325879, "role": "beauty", "actuallyViewed": true},
+    {"file": "speak-macro-r04.png", "sha256": "2ba7387f2b41c88991303499f3b577d1a7dce3bec6cdac19fca1dbfc704571c2", "bytes": 325245, "role": "beauty", "actuallyViewed": true},
+    {"file": "pucker-oblique-r04.png", "sha256": "c235eb39d46dce9a63845a5af42c299aa17220a6d66c25b117aab90d5225a609", "bytes": 292475, "role": "beauty", "actuallyViewed": true},
+    {"file": "jaw-macro-r04.png", "sha256": "f0af66d2eaeb091677e0ecbb143e2f3072f1744d5387c6d42c97c2598fedb236", "bytes": 321401, "role": "beauty", "actuallyViewed": true},
+    {"file": "jaw-oblique-r04.png", "sha256": "dd9026c3a2b12eb551efb053d8b8077900cc32f591db6bb0c243197da4cf1a59", "bytes": 283029, "role": "beauty", "actuallyViewed": true},
+    {"file": "jaw-oblique-semantic.png", "sha256": "02753a34c3ad09b5e761198aece4385501f645db84611d393688dc5020e865d1", "bytes": 29986, "role": "semantic-only", "actuallyViewed": true}
+  ],
+  "priorityDefects": [
+    {
+      "id": "P1-mechanical-inner-edge",
+      "recommendedImplementationPriority": 1,
+      "title": "说话与噘嘴时，口内边缘和嘴缝呈薄片、分段接缝感",
+      "directObservations": [
+        {"image": "speak-macro-r04.png", "observation": "上唇内缘可见一串分段的窄浅色面片；下唇内缘出现宽度不均、局部断续的明亮细带，右半边更明显。", "approximateRegionPixels": {"upper": [200, 212, 453, 248], "lower": [132, 276, 510, 324]}},
+        {"image": "pucker-oblique-r04.png", "observation": "嘴缝为近横向、很薄的锯齿状开口，两侧薄边之间夹着灰色牙齿细条；画面右侧口角尖锐，附近折痕呈明显牵拉和折叠观感。", "approximateRegionPixels": {"seam": [208, 266, 512, 307], "viewerRightCorner": [486, 277, 576, 357]}},
+        {"image": "jaw-macro-r04.png", "observation": "张口边缘同样很薄，两侧口角有尖锐收束；下唇主体与口内暗面之间缺少容易读出的连续转折。"},
+        {"image": "jaw-oblique-r04.png", "observation": "内壁已为深红褐色，但靠口角和唇缘的连接依然呈窄边；这张图本身不足以证明存在几何孔洞。"}
+      ],
+      "confidenceVisibleDefect": "high",
+      "causalStatus": "unresolved",
+      "competingCauses": ["局部形变或几何转折", "法线或切线在边缘的变化", "内缘材质及高光分配", "牙齿在狭窄开口后的遮挡"],
+      "notEstablished": ["不是已经证明的重复顶点或重复采样问题", "不是已经证明的牙齿避让整体推动唇缘", "不能把灰色牙齿细条直接算成嘴唇材质缺陷", "不能仅因口角尖锐就断言真实人体不会出现此形态"],
+      "reasonToInvestigateFirst": "缺陷位置具体，并在多个非闭口姿态中重复可见；适合用固定状态、逐阶段的实际画面干预定位成因。",
+      "minimumVisualAcceptance": "在相同人物、镜头、光照、原生 640×512 尺寸的 speak 和 pucker beauty 对照中，无需诊断着色或放大就能辨认接缝更连续、更有转折；不能通过整体压暗、隐藏牙齿、缩小开口或改变人物来遮盖问题。",
+      "boundedConclusionIfPassed": "只可宣称内缘连续性或口角连接的局部改善，不能因此宣称整体嘴唇质感通过。"
+    },
+    {
+      "id": "P2-outer-lip-fill-and-soft-highlight",
+      "recommendedImplementationPriority": 2,
+      "title": "外唇大面积平滑填色、宽软高光，主导了闭口时的蜡质观感",
+      "directObservations": [
+        {"image": "neutral-macro-r04.png", "observation": "上下唇总体为大片粉色与较平滑的明暗；存在淡竖纹，但对表面观感的调制较弱；下唇宽软高光与偏糊的外缘，使唇体读起来接近填色的光滑块。"},
+        {"image": "speak-macro-r04.png", "observation": "下唇主体的粉色与柔和大高光仍占主导，口内修复没有明显改变这部分观感。"},
+        {"image": "pucker-oblique-r04.png", "observation": "竖向细线较容易看到，但整体仍偏均匀平滑；增加可数的细线本身并不足以让唇体自然。"},
+        {"image": "jaw-macro-r04.png", "observation": "大面积下唇保持平滑和相对均一的表面表达。"},
+        {"image": "jaw-oblique-r04.png", "observation": "斜侧能看到唇体体积，但表面依然偏平滑与单一；不能仅从这一视图判断是缺少几何还是着色信息。"}
+      ],
+      "confidenceVisibleAppearance": "high",
+      "judgmentType": "independent qualitative appearance assessment, not a measured anatomical deviation",
+      "causalStatus": "unresolved",
+      "competingCauses": ["色彩分区与层次", "微表面和细节法线的幅度、尺度与方向", "粗糙度和高光形状", "唇体形状及边界过渡", "固定测试灯光下的响应"],
+      "reasonPriorityIsSecond": "其视觉影响更广，但需要先建立干预和归因；直接增加湿润度、噪声或沟纹很容易换一种假感。",
+      "minimumVisualAcceptance": "neutral beauty 及至少一个非闭口 beauty 对照中，外唇表面在原尺寸下可读出更自然的层次与体积；单纯变亮、变暗、变红或增加规则细纹不算通过。",
+      "riskToUserGoal": "如果 R05 只修复几像素内缘亮带，外唇的大面积观感可能基本不变。局部技术修复通过与用户能明显感知的整体质感提升必须分别记录。"
+    }
+  ],
+  "secondaryObservations": [
+    "牙齿偏灰、轮廓偏硬且分块感强；它们影响开口场景整体真实感，但应作为独立对象排查。",
+    "深红褐色内壁仍偏平整、偏单色；本次没有重新评估 R04 相对于 R02 的修复收益。",
+    "五张图是不同固定姿态，不能据此证明帧间跳变、动态连续性或动态稳定性。"
+  ],
+  "candidateReviewProtocol": {
+    "requiredMatchedBeautyPairs": ["neutral/macro", "speak/macro", "pucker/oblique", "jaw/macro", "jaw/oblique"],
+    "requiredControls": ["相同人物和参数", "相同姿态", "相同镜头", "相同灯光与曝光", "相同输出尺寸", "实际网页渲染而非生成图片或人工修图"],
+    "firstQuestion": "不看开关标签、不看 QA 数字，在原尺寸 beauty 图中能否明确指出哪一块更好，以及是否损失了原有形态？",
+    "separateDecisions": ["目标局部缺陷是否改善", "是否足以满足本轮明显实际效果", "是否新增可见退步", "整体嘴唇是否可接受"],
+    "noAutomaticAcceptance": "CI 通过、参数语义合理、改变了像素，都不能替代视觉验收。",
+    "status": "awaiting actual R05 candidate images"
+  },
+  "baselineDecision": {
+    "overallLipVisualAcceptance": false,
+    "recommendedFirstInvestigation": "P1-mechanical-inner-edge",
+    "broaderAppearanceConstraint": "P2-outer-lip-fill-and-soft-highlight",
+    "mustNotPromise": "在没有候选同条件实际图以前，不能承诺修复 P1 会使闭口嘴唇明显更真实。"
+  }
+}
