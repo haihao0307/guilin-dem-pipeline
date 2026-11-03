@@ -1,0 +1,94 @@
+{
+  "schema": "kaopu.mother-delivery-receipt/2.0",
+  "artifactKind": "research_knowledge_contract",
+  "taskId": "CLO-AI-GARMENT-LEARNING-20261021",
+  "baseSha": "5543f756ca3af1428323696324303fa70b8de850",
+  "headSha": "264dad7445bb09a07f23c216c17a1ec82d84072b",
+  "headShaMeaning": "The reviewed knowledge-content commit. This receipt is added by a later commit to avoid a self-referential commit hash.",
+  "targetObject": "docs/research/clo-ai-garment-learning-20261021",
+  "targetDefectOrChange": "Turn two observed CLO + AI examples into source-linked knowledge, code-aware adoption guidance and an explicit proposed integration contract.",
+  "knowledgeFilesChanged": [
+    "README.zh-CN.md",
+    "KNOWLEDGE_CONTRACT.json",
+    "TASK_ANCHOR.json"
+  ],
+  "contentSha256": {
+    "README.zh-CN.md": "c9f11415b03b8eb1c454b720b2c254492a73c5841b59cafa58b9d6c97590c391",
+    "KNOWLEDGE_CONTRACT.json": "4b17bb9384e043b08063323aa3560dea6b003b0db49898d052cd534c11563f0c",
+    "TASK_ANCHOR.json": "a4af52f8927bd9680951345af59e3d53bc491f70dba1191aec14d0aa5946dfac"
+  },
+  "productionFilesChanged": [],
+  "tests": [
+    {
+      "name": "JSON parsing",
+      "status": "PASS",
+      "scope": "The two knowledge-content JSON files parse."
+    },
+    {
+      "name": "Evidence and knowledge reference integrity",
+      "status": "PASS",
+      "scope": "22 unique evidence identifiers; seven knowledge cards; referenced identifiers resolve."
+    },
+    {
+      "name": "Code and source independent review",
+      "status": "PASS",
+      "scope": "Knowledge only; independently checked against frozen project sources. Not garment acceptance."
+    },
+    {
+      "name": "CLO and integration-contract independent review",
+      "status": "PASS",
+      "scope": "Knowledge only; body/pose, material and acceptance invalidation rules reviewed. Not runtime validation."
+    },
+    {
+      "name": "Pinned remote content verification",
+      "status": "PASS",
+      "scope": "All three content files fetched at headSha match local reviewed contents byte for byte."
+    }
+  ],
+  "browserDesktop": null,
+  "browser390x844": null,
+  "referenceViews": [
+    {
+      "url": "https://x.com/irinatoxi/status/2112109267788423379",
+      "observed": "Post text and several video frames, including CLO 2D patterns beside a dressed 3D avatar. Not a frame-by-frame audit."
+    },
+    {
+      "url": "https://x.com/irinatoxi/status/2112265445193486494",
+      "observed": "Post text and several video frames, including dress details and multiple views. Not a frame-by-frame audit."
+    }
+  ],
+  "regressionCasesRun": [],
+  "failedGates": [],
+  "gatesNotRun": [
+    "runtime integration",
+    "new 3D artifact",
+    "garment visual acceptance",
+    "dynamic collision acceptance",
+    "calibrated-material acceptance",
+    "device performance acceptance",
+    "public workbench deployment"
+  ],
+  "knownLimitations": [
+    "The author's actual AI model, bridge, prompts, intermediate operations, manual interventions and source project are unavailable.",
+    "CLO documentation and separate public MCP projects establish plausible capabilities, not the author's exact architecture.",
+    "Project comparisons describe pinned remote snapshots, not unpushed changes in other work windows.",
+    "The knowledge contract is a design specification, not an executable JSON Schema or wired runtime API.",
+    "No clothing-generator, solver, rendering, material, human, wardrobe or deployment source was modified.",
+    "Knowledge acceptance does not approve the existing 60-style batch or the layering experiment."
+  ],
+  "fallbackActive": false,
+  "freshArtifactProven": true,
+  "freshArtifactScope": "The three committed research-knowledge content files, verified at headSha.",
+  "creativeSubstituteDetected": false,
+  "staleOrWrongTargetDetected": false,
+  "runtimeIntegrationPerformed": false,
+  "productionSourceModified": false,
+  "new3DArtifact": false,
+  "publicDeploymentPerformed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "status": "CANDIDATE_READY",
+  "statusScope": "Reviewable research knowledge on an isolated branch; not merged and not production runtime acceptance.",
+  "runtimeArtifactStatus": "NO_NEW_3D_ARTIFACT",
+  "nextAction": "Review the knowledge branch. Implement a bounded structured-edit and diagnostics pilot against an agreed current clothing branch, retaining the protected invariants and independent runtime gates."
+}
