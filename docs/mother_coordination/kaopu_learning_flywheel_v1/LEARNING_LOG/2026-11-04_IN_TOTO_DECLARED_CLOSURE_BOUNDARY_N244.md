@@ -82,6 +82,6 @@ No R2/global-gate change is proposed. Adoption requires a real Player package tr
 
 ## State
 
-`POSTED=false / ACKNOWLEDGED=false for N244 / IMPLEMENTED=true (Candidate probe only) / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false`.
+Issue #91 comment `6629852166`: `POSTED=true / ACKNOWLEDGED=false for N244 / IMPLEMENTED=true (Candidate probe only) / GATE-RUN=true / ADOPTED=false / USER-ACCEPTED=false`.
 
 Teacher lifecycle: `RADAR_FOUND -> TEACHER_CANDIDATE -> AUDITION`; `PROBATION / ACTIVE_TEACHER / LEARNED_OUT / RETIRED=false`.
