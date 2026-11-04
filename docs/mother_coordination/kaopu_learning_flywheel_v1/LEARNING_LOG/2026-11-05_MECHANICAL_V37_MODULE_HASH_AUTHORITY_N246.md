@@ -67,6 +67,6 @@ Mechanical Mother / publisher should answer only:
 
 - This does not publish, modify, or promote v37.
 - It does not verify browser, hardware GPU, mobile, fixed HTTPS, visual acceptance, production readiness, or user acceptance.
-- `POSTED=false` until the targeted issue comment is created.
+- `POSTED=true` — issue #91 comment 6640367697.
 - `ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`.
 - The public-web HOLD from comment 6638923180 remains unchanged.
