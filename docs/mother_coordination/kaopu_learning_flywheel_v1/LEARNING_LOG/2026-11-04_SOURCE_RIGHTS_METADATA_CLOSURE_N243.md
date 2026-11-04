@@ -73,4 +73,4 @@ Lifecycle: `RADAR_FOUND -> TEACHER_CANDIDATE -> AUDITION`. `PROBATION / ACTIVE_T
 
 ## State
 
-`POSTED=false / ACKNOWLEDGED=false / IMPLEMENTED=true (Candidate branch only) / GATE-RUN=true (2/2 historical replay) / ADOPTED=false / USER-ACCEPTED=false`.
+Issue #91 comment `6625577300`: `POSTED=true / ACKNOWLEDGED=false / IMPLEMENTED=true (Candidate branch only) / GATE-RUN=true (2/2 historical replay) / ADOPTED=false / USER-ACCEPTED=false`.
