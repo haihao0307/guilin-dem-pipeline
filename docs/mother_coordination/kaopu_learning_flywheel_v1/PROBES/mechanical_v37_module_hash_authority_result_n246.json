@@ -1,0 +1,74 @@
+{
+  "id": "KAOPU_LEARNING_FLYWHEEL_N246_MECHANICAL_V37_MODULE_HASH_AUTHORITY",
+  "subject": {
+    "file": "Mechanical-Mother-v37-offline.zip",
+    "zipSHA256": "d4f19a70a743e8c78b859cb5c69c26543ed3b59cc4c3a7bd20cf12199b086b81",
+    "libraryIdentity": "libfile_6321c7c1c3588191a3127681b6da5f50",
+    "sourceCommit": "b7281661a7f05ee8a4d9710e80f55c36a339cdfe"
+  },
+  "boundedQuestion": "Is own.test.mjs failure evidence of changed production modules, or a stale authority comparison that can be safely superseded?",
+  "observations": [
+    {
+      "path": "site/mother.mjs",
+      "contract": "kernel",
+      "module": "mother.mjs",
+      "actualSHA256": "492c018ff4b39a59c4cdbaecb43a0b33427a4ddec1e8b62c783cc23c419d6c61",
+      "packageManifestSHA256": "492c018ff4b39a59c4cdbaecb43a0b33427a4ddec1e8b62c783cc23c419d6c61",
+      "packageManifestMatches": true,
+      "declaredDependencySHA256": "492c018ff4b39a59c4cdbaecb43a0b33427a4ddec1e8b62c783cc23c419d6c61",
+      "declaredDependencyMatches": true,
+      "aggregateContractSHA256": "sha256:da0d57ae7e0a938226d9253d596b1c3d4e9f97e2eacf6bb1e1bd86609192447b",
+      "legacyIndividualVsAggregateMatches": false
+    },
+    {
+      "path": "site/render.mjs",
+      "contract": "displayPolicy",
+      "module": "render.mjs",
+      "actualSHA256": "089666f6d5a97cdb356c8f054d5a516b59f9c47ea2ecba3344d0e5508d07f53a",
+      "packageManifestSHA256": "089666f6d5a97cdb356c8f054d5a516b59f9c47ea2ecba3344d0e5508d07f53a",
+      "packageManifestMatches": true,
+      "declaredDependencySHA256": null,
+      "declaredDependencyMatches": false,
+      "aggregateContractSHA256": "sha256:fca5b680f3046902e3d68c38599cd8341dbdbd715c5cc72893cfa5c594aed7ae",
+      "legacyIndividualVsAggregateMatches": false
+    }
+  ],
+  "pristine": {
+    "legacyTestExitCode": 1,
+    "legacyTestPassed": false,
+    "packageCheckerExitCode": 0,
+    "packageCheckerPassed": true
+  },
+  "mutationTrials": [
+    {
+      "path": "site/mother.mjs",
+      "packageCheckerRejected": true,
+      "packageCheckerExitCode": 1,
+      "declaredDependencyGateRejected": true,
+      "requiredEntrypointDeclared": true
+    },
+    {
+      "path": "site/render.mjs",
+      "packageCheckerRejected": true,
+      "packageCheckerExitCode": 1,
+      "declaredDependencyGateRejected": false,
+      "requiredEntrypointDeclared": false
+    }
+  ],
+  "decision": "STALE_LEGACY_ASSERTION_CONFIRMED_HOLD_SEMANTIC_ENTRYPOINT_AUTHORITY_INCOMPLETE",
+  "interpretation": [
+    "The archive is byte-intact; FILE-MANIFEST and CHECK-PACKAGE bind both mother.mjs and render.mjs and reject verifier-only mutations.",
+    "The legacy test compares individual module hashes with aggregate contract hashes, so its failure does not establish a changed module.",
+    "version.kernel.dependencies correctly declares mother.mjs, but version.displayPolicy.dependencies does not declare render.mjs.",
+    "Therefore the legacy assertion may be superseded only by a composite authority that keeps package-manifest verification and explicitly classifies every required semantic entrypoint; dependency-only supersession is not fail-closed."
+  ],
+  "boundaries": {
+    "productionModified": false,
+    "packageModified": false,
+    "publicWebVerified": false,
+    "browserVerified": false,
+    "hardwareGPUVerified": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
