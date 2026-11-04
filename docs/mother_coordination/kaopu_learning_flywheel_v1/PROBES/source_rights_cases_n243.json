@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu.source-rights-replay/1.0-candidate",
+  "boundedQuestion": "Can declared-vs-concluded licensing plus separately captured source-use restrictions fail closed when the offline archive omits a source-page NoAI restriction?",
+  "intendedUse": ["TEACHER_AUDITION", "GENERATIVE_AI_INPUT"],
+  "cases": [
+    {
+      "caseId": "N241-G3516H-CONTROL",
+      "sourceUri": "https://sketchfab.com/3d-models/cat-g3516h-natural-gas-engine-b64acd62fa2b4b19af344003c3645e41",
+      "sourceRetrievedAt": "2026-11-04T07:47:42Z",
+      "sourceEvidence": {
+        "licenseExpression": "CC-BY-4.0",
+        "useRestrictions": []
+      },
+      "artifact": {
+        "sha256": "b200d74dfaac98159fe2ab481456c7f504df4de0693001c7938fd14502f75cee",
+        "declaredLicenseExpression": "CC-BY-4.0",
+        "embeddedUseRestrictions": []
+      },
+      "concludedLicenseExpression": "CC-BY-4.0",
+      "expectedRightsGate": "PASS_RIGHTS_METADATA_CLOSURE",
+      "scopeNote": "Passing this narrow rights-metadata gate does not override the separate KAOPU no-attribution final-asset rule or teacher-quality rejection."
+    },
+    {
+      "caseId": "N242-SKID-STEER-NOAI-CONFLICT",
+      "sourceUri": "https://sketchfab.com/3d-models/caterpillar-skid-steer-loader-859a64d242314ec3af5bfb449bdfa673",
+      "sourceRetrievedAt": "2026-11-04T07:47:42Z",
+      "sourceEvidence": {
+        "licenseExpression": "CC-BY-4.0",
+        "useRestrictions": ["GENERATIVE_AI_INPUT", "GENERATIVE_AI_DATASET", "GENERATIVE_AI_DEVELOPMENT"]
+      },
+      "artifact": {
+        "sha256": "38dbb225c2dbd95ad6ec417bb5a57cc414d4a463801ca707ed38ef91123ff12e",
+        "declaredLicenseExpression": "CC-BY-4.0",
+        "embeddedUseRestrictions": []
+      },
+      "concludedLicenseExpression": "CC-BY-4.0",
+      "expectedRightsGate": "REJECTED_RIGHTS_CONFLICT",
+      "scopeNote": "NoAI is preserved as source-use evidence, not misrepresented as an SPDX LicenseRef or a legal conclusion about enforceability."
+    }
+  ]
+}
