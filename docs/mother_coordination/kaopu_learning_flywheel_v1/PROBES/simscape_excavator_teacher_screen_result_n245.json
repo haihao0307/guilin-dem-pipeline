@@ -1,0 +1,138 @@
+{
+  "schema": "kaopu.learning.teacher-screen/1.0",
+  "runId": "N245",
+  "runDate": "2026-11-04",
+  "boundedQuestion": "Can simscape/Excavator-Simscape teach Mechanical/Vehicle/Engineering-Machinery Mother a reproducible pin-location-to-hydraulic-force/load-chart method that exceeds the current static-mesh Current Best View, without importing its restricted code or assets?",
+  "baseline": {
+    "mainSha": "34553e93d75a427c10dbf5b0077d42f8cdda0a63",
+    "priorEvidence": [
+      "N241 CAT G3516H static mesh rejected",
+      "N242 Caterpillar skid-steer visual part partition rejected"
+    ],
+    "applicableRegressions": [
+      "MOTHER-NO-METHOD-INVENTION-001",
+      "CANDIDATE-SOURCE-RIGHTS-METADATA-CLOSURE-001"
+    ]
+  },
+  "subject": {
+    "repository": "simscape/Excavator-Simscape",
+    "pinnedCommit": "455c74d1b24f488ab9645b0cde84a710dcf5c674",
+    "releaseTag": "26.1.51.9",
+    "releaseName": "R2026a",
+    "publishedAt": "2026-05-17T20:46:39Z",
+    "sourceUrl": "https://github.com/simscape/Excavator-Simscape",
+    "releaseUrl": "https://github.com/simscape/Excavator-Simscape/releases/tag/26.1.51.9"
+  },
+  "screening": {
+    "provenance": {
+      "state": "PASS_SOURCE_IDENTIFIED",
+      "evidence": "Repository copyright and commit authorship identify MathWorks; pinned public repository, commit and release."
+    },
+    "maintenance": {
+      "state": "PASS_ACTIVE_RELEASE_LINE",
+      "evidence": "R2026a release published 2026-05-17; repository pushed 2026-05-17."
+    },
+    "runnableEvidence": {
+      "state": "PARTIAL_NOT_RUN_HERE",
+      "evidence": {
+        "treeEntries": 1332,
+        "matlabFiles": 61,
+        "simulinkModels": 13,
+        "cadFiles": 52,
+        "solidworksParts": 24,
+        "solidworksAssemblies": 2,
+        "stepFiles": 23,
+        "stlFiles": 1,
+        "testScenarioScripts": [
+          "Models/Overview/Excavator_Complete_Tests.m",
+          "Models/Overview/Excavator_Motion_Tests.m",
+          "Scripts_Data/Excavator_Test_Scenario_Define.m",
+          "Scripts_Data/Excavator_Test_Scenario_Select.m"
+        ],
+        "formalUnitFrameworkFound": false,
+        "localFunctionalRun": false
+      }
+    },
+    "rights": {
+      "state": "METHOD_OBSERVATION_ONLY",
+      "declaredLicense": "MathWorks restricted BSD-like license",
+      "restriction": "Software, modifications and derivatives are licensed solely for use with MathWorks products and services.",
+      "kaopuBoundary": "Do not copy/import code, CAD, meshes, screenshots, model files, tables or derived assets into KAOPU production or final assets."
+    },
+    "directRelevance": {
+      "state": "HIGH_BOUNDED_RELEVANCE",
+      "domain": "pin-location ledger -> linkage geometry -> hydraulic actuator force -> BOF/TOF/load chart/dig-cycle validation"
+    },
+    "novelty": {
+      "state": "NOVEL",
+      "answer": "It adds an explicit editable pin ledger, global/local transform conversion, hydraulic cylinders and relief pressures, ISO-6015-labelled BOF/TOF workflows, pin loads, load charts, and dynamic dig-cycle scenarios; N241/N242 supplied none of these executable relationships."
+    },
+    "dependencyRisk": {
+      "state": "HIGH",
+      "items": [
+        "MATLAB R2026a",
+        "Simulink",
+        "Simscape",
+        "Simscape Multibody",
+        "Simscape Fluids",
+        "licensed runtime and commercial toolchain",
+        "no current KAOPU replay receipt"
+      ]
+    },
+    "demoOnlyOrOpacity": {
+      "state": "PARTIAL_RISK",
+      "evidence": "Source and data are public and substantial, but no formal unit-test framework or CI evidence was found in the pinned tree; screenshots and example outputs are not independent acceptance evidence."
+    }
+  },
+  "decision": {
+    "teacherStatus": "TEACHER_CANDIDATE",
+    "lifecycle": [
+      "RADAR_FOUND",
+      "TEACHER_CANDIDATE"
+    ],
+    "auditionStarted": false,
+    "registryAdded": false,
+    "methodCandidateAdded": false,
+    "adopted": false,
+    "exactNovelQuestionAnswer": "For the narrow question of turning excavator pin geometry into auditable hydraulic force/load-chart/dig-cycle checks, it provides an explicit parameter and validation structure absent from KAOPU's current static-mesh observations.",
+    "hardBoundary": "Teacher for method semantics only; not a geometry/reference/asset donor and not evidence for a specific manufacturer machine."
+  },
+  "proposedFalsifiableAudition": {
+    "environment": "fresh licensed MATLAB R2026a environment",
+    "pinnedInputs": [
+      "commit 455c74d1b24f488ab9645b0cde84a710dcf5c674",
+      "release 26.1.51.9",
+      "toolbox/version receipt",
+      "one named BOF scenario",
+      "one named dig-cycle scenario"
+    ],
+    "procedure": [
+      "capture exact pin ledger, pressures, cylinder areas and model identities",
+      "run pristine BOF scenario and record force/pressure/pin-load outputs",
+      "change exactly one pin coordinate by a declared delta and rerun",
+      "restore the pin and require deterministic return within declared tolerance",
+      "independent verifier checks global/local transforms, cylinder stroke limits and output lineage"
+    ],
+    "falsifier": "If the pin mutation is not consumed by the executed model, outputs cannot be reproduced after restore, or required dependencies/assets are unavailable, reject or hold the teacher.",
+    "kaopuProductionMutation": false
+  },
+  "routing": {
+    "target": "Mechanical / Vehicle / Engineering-Machinery Mother",
+    "status": "NOT_QUERIED",
+    "acknowledgement": false
+  },
+  "lifecycleState": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": false,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "limitations": [
+    "No MATLAB/Simscape execution was performed in this run.",
+    "No claim that ISO 6015 calculations are correct was independently verified.",
+    "No claim that the CAD represents a specific real manufacturer excavator.",
+    "No KAOPU production asset, Mother branch, R2 gate or main branch changed."
+  ]
+}
