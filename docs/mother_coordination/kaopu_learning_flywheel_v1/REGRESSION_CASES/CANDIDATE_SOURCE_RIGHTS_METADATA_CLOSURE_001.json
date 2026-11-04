@@ -1,0 +1,46 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "CANDIDATE-SOURCE-RIGHTS-METADATA-CLOSURE-001",
+  "status": "CANDIDATE_SINGLE_MOTHER_TRIAL",
+  "domain": "teacher-intake/source-rights",
+  "source": "N242_real_observation",
+  "createdAt": "2026-11-04T07:47:42Z",
+  "failureClass": "SOURCE_RIGHTS_RESTRICTION_OMITTED_FROM_OFFLINE_PACKAGE",
+  "failureDescription": "An external source page carries a use restriction relevant to the intended AI audition, while the downloaded archive and its embedded license metadata omit that restriction.",
+  "mustNeverRepeat": [
+    "treating an offline license file as complete source-rights evidence without checking the current original listing",
+    "encoding a platform use restriction as an SPDX license term without evidence that it is part of the license",
+    "allowing AI audition when intended use intersects a captured NoAI restriction",
+    "claiming legal enforceability or legal clearance from a metadata gate"
+  ],
+  "requiredEvidence": [
+    "sourceUri",
+    "sourceRetrievedAt",
+    "normalizedSourceRightsEvidenceDigest",
+    "artifactSha256",
+    "declaredLicenseExpression",
+    "concludedLicenseExpression",
+    "sourceUseRestrictions",
+    "embeddedUseRestrictions",
+    "intendedUse"
+  ],
+  "gateLogic": [
+    "missing required evidence -> HOLD_RIGHTS_METADATA_INCOMPLETE",
+    "source license differs from concluded license without explanation -> HOLD_LICENSE_CONCLUSION_MISMATCH",
+    "source restriction omitted from offline metadata but unrelated to intended use -> HOLD_RIGHTS_METADATA_INCOMPLETE",
+    "source restriction intersects intended use -> REJECTED_RIGHTS_CONFLICT",
+    "otherwise -> PASS_RIGHTS_METADATA_CLOSURE"
+  ],
+  "historicalReplay": {
+    "runner": "source_rights_gate.mjs",
+    "fixtures": "rights_cases.json",
+    "result": "source_rights_gate_result.json",
+    "passed": 2,
+    "total": 2
+  },
+  "appliesTo": [
+    "Mechanical/Vehicle/Engineering-Machinery Mother external teacher intake"
+  ],
+  "active": false,
+  "adoptionBoundary": "Candidate only; requires Mother acknowledgement and a real audition before any wider adoption."
+}
