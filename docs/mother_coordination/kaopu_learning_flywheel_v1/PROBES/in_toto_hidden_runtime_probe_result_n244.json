@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu.in-toto-hidden-runtime-probe/1.0",
+  "pinnedReferenceImplementation": {
+    "package": "in-toto==3.1.0",
+    "releaseTag": "v3.1.0",
+    "releaseDate": "2026-05-04",
+    "wheelSha256": "9a5e73c8e983cdfdfb153760d532893ec0260597c09724ad875ce7950e294a79"
+  },
+  "standardLayout": {
+    "materialsRules": [
+      "ALLOW runner.mjs",
+      "ALLOW declared-command-binding.mjs",
+      "DISALLOW *"
+    ],
+    "authorizedFunctionary": "producer"
+  },
+  "pristine": {
+    "semanticOutput": {"side": 1},
+    "recordedMaterials": ["declared-command-binding.mjs", "runner.mjs"],
+    "hiddenWrapperRecorded": false,
+    "verification": {"passed": true, "errorType": null}
+  },
+  "mutatedHiddenWrapper": {
+    "semanticOutput": {"side": -1},
+    "recordedMaterials": ["declared-command-binding.mjs", "runner.mjs"],
+    "hiddenWrapperRecorded": false,
+    "standardVerification": {"passed": true, "errorType": null},
+    "independentLayoutRequiresHiddenWrapper": {
+      "passed": false,
+      "errorType": "RuleVerificationError"
+    }
+  },
+  "unauthorizedFunctionary": {
+    "recordedMaterials": ["declared-command-binding.mjs", "runner.mjs"],
+    "standardVerification": {
+      "passed": false,
+      "errorType": "LinkNotFoundError"
+    }
+  },
+  "probeStatus": "PASS_EXPECTED_BOUNDARY",
+  "decision": "ACCEPT_IN_TOTO_FUNCTIONARY_AND_DECLARED_ARTIFACT_CHAINING_AS_BOUNDED_TEACHER_HOLD_AS_UNDECLARED_RUNTIME_DISCOVERY_GATE"
+}
