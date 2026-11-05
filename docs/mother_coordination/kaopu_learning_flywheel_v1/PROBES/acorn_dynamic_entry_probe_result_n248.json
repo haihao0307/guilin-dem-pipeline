@@ -1,0 +1,86 @@
+{
+  "schema": "kaopu.learning-flywheel/acorn-dynamic-entrypoint-audition/1.0",
+  "date": "2026-11-06",
+  "subject": {
+    "package": "Mechanical-Mother-v37-offline.zip",
+    "packageSha256": "d4f19a70a743e8c78b859cb5c69c26543ed3b59cc4c3a7bd20cf12199b086b81",
+    "sourceCommit": "b7281661a7f05ee8a4d9710e80f55c36a339cdfe",
+    "bootFile": "site/boot.js",
+    "bootSha256": "08809fb489b58d74fd4df2885425604924c979cd53c03ef9c065f951268d4852",
+    "targetFile": "site/app.mjs",
+    "targetSha256": "b34c4dc808f8fcb6fa87e07880aeba76f6e1cceeb088abe3f61321aeb69548b5"
+  },
+  "teacher": {
+    "name": "Acorn ECMAScript parser",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": [
+      "RADAR_FOUND",
+      "TEACHER_CANDIDATE",
+      "AUDITION"
+    ],
+    "testedVersion": "8.18.0",
+    "testedVia": "Node.js v24.22.1 vendored internal dependency for isolated audition only",
+    "currentUpstreamVersionObserved": "8.19.0",
+    "upstreamHeadObserved": "69788e23ca00483aef84005502dc3b88f2af38df",
+    "license": "MIT",
+    "productionIntegrationRisk": "Do not depend on Node internal/deps or --expose-internals; pin explicit parser package and hash."
+  },
+  "boundedQuestion": "Can a full AST pass discover the literal dynamic import in classic site/boot.js and fail closed when its target is missing?",
+  "trials": [
+    {
+      "id": "pristine-exact-boot",
+      "inputSha256": "08809fb489b58d74fd4df2885425604924c979cd53c03ef9c065f951268d4852",
+      "importExpressions": 1,
+      "specifier": "./app.mjs",
+      "analyzable": true,
+      "targetExists": true,
+      "exitCode": 0,
+      "decision": "PASS_LITERAL_RUNTIME_ENTRYPOINT_DISCOVERY"
+    },
+    {
+      "id": "missing-target-one-byte-control",
+      "inputSha256": "f97849674f976aebf36b6109d9b1832a7fa97a4f02e4e5b3a5e9d1a3c7c73bcc",
+      "mutation": "./app.mjs -> ./xpp.mjs",
+      "sameLength": true,
+      "importExpressions": 1,
+      "specifier": "./xpp.mjs",
+      "analyzable": true,
+      "targetExists": false,
+      "exitCode": 2,
+      "decision": "HOLD_UNRESOLVED_RUNTIME_ENTRYPOINT"
+    },
+    {
+      "id": "computed-specifier-boundary-control",
+      "inputSha256": "cd37d6ed3d4a97f7a2c350235ee93639f0f9f97b920182ecacda9dd174c1d1d5",
+      "expression": "import('./' + target + '.mjs')",
+      "importExpressions": 1,
+      "specifier": null,
+      "analyzable": false,
+      "targetExists": null,
+      "exitCode": 2,
+      "decision": "HOLD_UNRESOLVED_RUNTIME_ENTRYPOINT"
+    }
+  ],
+  "exactNovelty": "Classic-script AST parsing exposes ImportExpression and distinguishes literal from runtime-computed targets; SourceTextModule.moduleRequests did not expose the boot.js edge.",
+  "boundaries": [
+    "Does not discover undeclared HTML roots automatically.",
+    "Does not prove runtime-computed specifier sets.",
+    "Does not bind hashes without a separate verifier step.",
+    "Worker and SharedWorker coverage not validated in this bounded audition.",
+    "Does not replace browser/runtime tracing."
+  ],
+  "regressionRouting": {
+    "existingCandidate": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "newRegressionCreated": false
+  },
+  "decision": "ACCEPT_ACORN_LITERAL_IMPORTEXPRESSION_DISCOVERY_AS_BOUNDED_TEACHER_HOLD_COMPUTED_SPECIFIERS_WORKERS_AND_ROOT_DECLARATION",
+  "lifecycle": {
+    "POSTED": false,
+    "CANDIDATE_IMPLEMENTED": true,
+    "GATE_RUN": true,
+    "ACKNOWLEDGED": false,
+    "PRODUCTION_IMPLEMENTED": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
