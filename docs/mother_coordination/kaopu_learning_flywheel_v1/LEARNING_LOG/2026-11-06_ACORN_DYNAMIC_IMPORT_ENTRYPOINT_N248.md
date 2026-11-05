@@ -107,6 +107,8 @@ Mechanical-only candidate:
 
 No new regression case. This extends evidence for `CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001`.
 
-Lifecycle at save: `POSTED=false / Candidate IMPLEMENTED=true / GATE-RUN=true`; `ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`.
+Directed route: https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6667619886
+
+Lifecycle at save: `POSTED=true / Candidate IMPLEMENTED=true / GATE-RUN=true`; `ACKNOWLEDGED / production IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`.
 
 This is not a global R2 change and not production adoption.
