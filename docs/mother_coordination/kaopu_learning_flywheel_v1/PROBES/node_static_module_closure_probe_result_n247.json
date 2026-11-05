@@ -1,0 +1,77 @@
+{
+  "schema": "kaopu.learning-flywheel/node-static-module-closure-probe/1.0",
+  "run": "N247",
+  "subject": {
+    "package": "Mechanical-Mother-v37-offline.zip",
+    "libraryFileId": "libfile_6321c7c1c3588191a3127681b6da5f50",
+    "packageSha256": "d4f19a70a743e8c78b859cb5c69c26543ed3b59cc4c3a7bd20cf12199b086b81",
+    "declaredSourceCommit": "b7281661a7f05ee8a4d9710e80f55c36a339cdfe",
+    "entryRoot": "site/app.mjs"
+  },
+  "teacher": {
+    "name": "Node.js vm.SourceTextModule.moduleRequests",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": [
+      "RADAR_FOUND",
+      "TEACHER_CANDIDATE",
+      "AUDITION"
+    ],
+    "pinnedAuditionRuntime": "Node.js v24.22.1",
+    "license": "MIT",
+    "apiStability": "EXPERIMENTAL",
+    "flag": "--experimental-vm-modules"
+  },
+  "boundedQuestion": "Can a parser-derived static ESM closure detect render.mjs missing from displayPolicy.dependencies?",
+  "pristine": {
+    "packageManifest": "PASS_311_OF_311",
+    "staticClosureCount": 42,
+    "unresolvedStaticRequests": 0,
+    "externalStaticRequests": 0
+  },
+  "positiveControl": {
+    "appModuleRequests": [
+      "./shared-webgpu/latest-frame-scheduler.mjs",
+      "./shared-webgpu/diagnostic-ui.mjs",
+      "./system-mothers.mjs",
+      "./render.mjs",
+      "./generic-catalog.mjs",
+      "./hinge-variants.mjs",
+      "./identity-core.mjs",
+      "./wood-head-choice.mjs",
+      "./overview-r27.mjs"
+    ],
+    "renderInStaticClosure": true,
+    "renderDeclaredInDisplayPolicyDependencies": false,
+    "renderObservedSha256": "089666f6d5a97cdb356c8f054d5a516b59f9c47ea2ecba3344d0e5508d07f53a",
+    "appDeclaredSha256": "37f4297dea140ad5d81854906bc95678b0506460a903c4f02ccea7e29b0d9941",
+    "appObservedSha256": "b34c4dc808f8fcb6fa87e07880aeba76f6e1cceeb088abe3f61321aeb69548b5",
+    "appDeclaredHashMatches": false
+  },
+  "negativeBoundary": {
+    "bootSourceContains": "import('./app.mjs')",
+    "bootModuleRequests": [],
+    "dynamicImportDiscovered": false,
+    "workerAndOtherRuntimeRootsRequireExplicitRootLedger": true,
+    "browserResolutionAndNonJavaScriptResourcesCovered": false
+  },
+  "noveltyRelativeToCurrentBestView": "Current integrity manifests bind delivered bytes, and displayPolicy.dependencies is a manual partial list. SourceTextModule.moduleRequests derives the static ESM requests from parsed source, exposing both the undeclared render.mjs edge and the stale app.mjs declared identity. It does not discover boot.js dynamic import, so it complements rather than replaces declared-root and runtime-trace gates.",
+  "decision": "ACCEPT_STATIC_ESM_REQUEST_GRAPH_AS_BOUNDED_TEACHER_HOLD_DYNAMIC_IMPORT_AND_ROOT_DISCOVERY",
+  "candidateRegression": {
+    "action": "UPDATE_EXISTING_EVIDENCE",
+    "caseId": "CANDIDATE_EXECUTABLE_RESOURCE_CLOSURE_001",
+    "newCaseCreated": false
+  },
+  "adoption": {
+    "scope": "Mechanical Mother display entrypoint only",
+    "minimumTrial": "Bind an explicit root ledger, derive the static ESM closure from each root, hash every resolved module, reject missing/unresolved/out-of-root requests before import, and separately gate dynamic imports and worker roots.",
+    "globalAdoption": false
+  },
+  "lifecycleState": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE": true,
+    "GATE_RUN": true,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
