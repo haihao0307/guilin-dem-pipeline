@@ -2,7 +2,7 @@
   "schema": "kaopu.mother-regression-case/2.0",
   "caseId": "LATEST-PENDING-REQUEST-SURVIVES-INFLIGHT-FAILURE-001",
   "title": "An in-flight failure must not silently erase the newest pending request",
-  "status": "CANDIDATE_SINGLE_MODULE_REPRODUCED_NOT_ADOPTED",
+  "status": "CANDIDATE_SINGLE_MODULE_REPRODUCED_RECOVERY_PROOF_INCOMPLETE_NOT_ADOPTED",
   "active": false,
   "failureClass": "LATEST_PENDING_REQUEST_DROPPED_ON_INFLIGHT_FAILURE",
   "source": {
@@ -34,7 +34,8 @@
     "Treat a manual later restart as proof that a request already pending at failure time was preserved.",
     "Clear the newest pending revision without returning an explicit dropped/retry-required identity.",
     "Reject waiters for revisions newer than the failed evaluation without distinguishing their coverage.",
-    "Use coalescing success tests or a clean restart test as substitutes for failure-interleaving coverage."
+    "Use coalescing success tests or a clean restart test as substitutes for failure-interleaving coverage.",
+    "Treat a numeric resourceEpoch increment as proof that a lost device was replaced or that resources were rebuilt."
   ],
   "requiredEvidence": [
     "exact scheduler commit and source blob",
@@ -42,16 +43,28 @@
     "revision-scoped settlement for both r1 and r2",
     "proof that r2 is either evaluated automatically or returned explicitly as RETRY_REQUIRED with its revision identity",
     "proof that a stale completion cannot publish over a newer requested revision",
-    "new dispatch-time run bound to the corrected commit"
+    "new dispatch-time run bound to the corrected commit",
+    "for device-loss recovery, an acquisition receipt binding prior/new resource epoch, distinct prior/new device identity, non-lost replacement status, recreated resources, and unchanged latest-intent revision"
   ],
   "gateLogic": {
-    "pass": "After the forced r1 failure, r2 is not silently lost: it is evaluated, or the caller receives an explicit revision-bound retry requirement and demonstrably reissues it.",
-    "hold": "r2 disappears, is rejected only with r1's undifferentiated error, or the test observes only a later manual fresh request.",
-    "browserBoundary": "Module-level passage does not prove browser, WebGPU, whole-player, frame-rate, or image fidelity."
+    "pass": "After the forced r1 failure, r2 is not silently lost: it is evaluated on a still-valid resource epoch, or the caller receives an explicit revision-bound retry requirement and a verified acquisition receipt proves a distinct usable device plus rebuilt resources before demonstrable reissue.",
+    "hold": "r2 disappears, is rejected only with r1's undifferentiated error, the test observes only a later manual fresh request, or resource recovery is represented only by incrementing an epoch counter without device/resource identity evidence.",
+    "browserBoundary": "Module-level passage does not prove browser, WebGPU, whole-player, frame-rate, image fidelity, or actual device/resource recovery."
   },
+  "evidenceAddenda": [
+    {
+      "id": "N250_RESOURCE_EPOCH_IDENTITY_PROOF",
+      "decision": "HOLD_N249_RESOURCE_EPOCH_RECOVERY_PROOF_INCOMPLETE",
+      "n249ProbeSha256": "442416e3ea591f0c40c92ae6f09e71c6bec1acd53d1574fe790f24f77ad8dba3",
+      "probeSha256": "f5040f01f637688742ff7ac3d922734752230e9844d930ab319c04faf397ee2a",
+      "resultSha256": "b7a79aaa01b9af221714b82716bbb915fd2bf548d742cf3bde0d745565091ac4",
+      "result": "6/6 deterministic identity/receipt cases passed",
+      "novelFailureMechanism": "The epoch-only N249 model can increment 7 to 8 and reissue the latest intent while retaining the same lost device identity."
+    }
+  ],
   "appliesTo": [
     "KaoPu Engine latest-frame and newest-request schedulers",
-    "Other Mother schedulers only after a local bounded trial confirms equivalent request and failure semantics"
+    "Other Mother schedulers only after a local bounded trial confirms equivalent request, failure, and resource-identity semantics"
   ],
   "activation": {
     "implemented": false,
