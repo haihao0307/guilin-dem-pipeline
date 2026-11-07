@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "LATEST-PENDING-REQUEST-SURVIVES-INFLIGHT-FAILURE-001",
+  "title": "An in-flight failure must not silently erase the newest pending request",
+  "status": "CANDIDATE_SINGLE_MODULE_REPRODUCED_NOT_ADOPTED",
+  "active": false,
+  "failureClass": "LATEST_PENDING_REQUEST_DROPPED_ON_INFLIGHT_FAILURE",
+  "source": {
+    "repository": "haihao0307/KaoPu-Engine",
+    "subjectCommit": "af1ffb7516de642c17ac61f33b9104482394073a",
+    "subjectPath": "core/LatestFrameScheduler.mjs",
+    "subjectBlob": "5f899bfc50c7bb454bca792fbd4783144b4aafb2",
+    "independentReviewArchiveSha256": "4c3036c964bcd9516e867de33155bce83c67c1b4551b0a436cb68ebc9d50ae9e",
+    "independentSuite": "11/11 PASS on Node v24.22.1; the failing interleaving was not covered by those 11 checks"
+  },
+  "trigger": "A draw for revision r1 is in flight, revision r2 arrives and becomes the newest pending request, then the r1 draw rejects before r2 is evaluated.",
+  "observedCounterexample": {
+    "requestedRevisions": [1, 2],
+    "drawnRevisions": [1],
+    "settledResults": [
+      "forced-first-draw-failure",
+      "forced-first-draw-failure"
+    ],
+    "finalReport": {
+      "requested": 2,
+      "completed": 0,
+      "frames": 0,
+      "pending": 0,
+      "waitingCallers": 0
+    },
+    "cause": "LatestFrameScheduler.run() catch clears this.pending and rejects every waiter, including the later revision."
+  },
+  "mustNeverRepeat": [
+    "Treat a manual later restart as proof that a request already pending at failure time was preserved.",
+    "Clear the newest pending revision without returning an explicit dropped/retry-required identity.",
+    "Reject waiters for revisions newer than the failed evaluation without distinguishing their coverage.",
+    "Use coalescing success tests or a clean restart test as substitutes for failure-interleaving coverage."
+  ],
+  "requiredEvidence": [
+    "exact scheduler commit and source blob",
+    "deterministic interleaving with r1 in flight, r2 pending, then forced r1 failure",
+    "revision-scoped settlement for both r1 and r2",
+    "proof that r2 is either evaluated automatically or returned explicitly as RETRY_REQUIRED with its revision identity",
+    "proof that a stale completion cannot publish over a newer requested revision",
+    "new dispatch-time run bound to the corrected commit"
+  ],
+  "gateLogic": {
+    "pass": "After the forced r1 failure, r2 is not silently lost: it is evaluated, or the caller receives an explicit revision-bound retry requirement and demonstrably reissues it.",
+    "hold": "r2 disappears, is rejected only with r1's undifferentiated error, or the test observes only a later manual fresh request.",
+    "browserBoundary": "Module-level passage does not prove browser, WebGPU, whole-player, frame-rate, or image fidelity."
+  },
+  "appliesTo": [
+    "KaoPu Engine latest-frame and newest-request schedulers",
+    "Other Mother schedulers only after a local bounded trial confirms equivalent request and failure semantics"
+  ],
+  "activation": {
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
