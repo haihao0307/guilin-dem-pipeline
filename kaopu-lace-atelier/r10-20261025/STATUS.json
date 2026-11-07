@@ -1,0 +1,110 @@
+{
+  "stage": "R10",
+  "status": "research-candidate-draft",
+  "date": "2026-10-25",
+  "sourceBaseline": "Human-Fabric-Workbench@608bb3f5335409a022d7a6bd6ee120a6733c505b",
+  "sha256": "cd173ebc36a18279202bc08623386e8bf50e964fc313a634e3a166e6b865033f",
+  "implemented": [
+    "directional normalized yarn angular approximation with shared direct-light shadow path",
+    "independently effective roughness anisotropy softness and luster controls at full scatter",
+    "preallocated legacy fuzz storage and byte-preserving ring calculation reuse",
+    "instanced real fibres with optional richness and rare longer flyaways",
+    "flat close-inspection camera with same 38 degree lens and real scale",
+    "independent yarn-core and fuzz cache with atomic failure cleanup",
+    "preflight of both segment and fuzz budgets before loading state",
+    "R09/R10 comparison under three lights and actual JSON round trip"
+  ],
+  "visualOutcome": "Backlight hard glints are reduced. Rod-like fill and restrained material/fuzz differences remain. Rich density was not selected as the default because its ordinary-view benefit was weak.",
+  "defaultDecision": {
+    "fuzzRichness": 0,
+    "cottonFlyaways": 0.65,
+    "silkFlyaways": 0.05,
+    "fineFlyaways": 0.25,
+    "rootAndTriangleCount": "same as R09; optional positive richness increases actual roots and submitted triangles"
+  },
+  "cost": {
+    "r09": {
+      "primaryTriangles": 3605264,
+      "fuzzRoots": 75025,
+      "fuzzTriangles": 600200,
+      "totalTriangles": 4205464,
+      "primaryBytes": 173940904,
+      "fuzzBytes": 33929304,
+      "totalRetainedBytes": 207870208
+    },
+    "r10": {
+      "primaryTriangles": 3605264,
+      "fuzzRoots": 75025,
+      "fuzzTriangles": 600200,
+      "totalTriangles": 4205464,
+      "primaryBytes": 173940904,
+      "fuzzBytes": 4203032,
+      "totalRetainedBytes": 178143936,
+      "flyawayCount": 5853
+    }
+  },
+  "tests": {
+    "total": 105,
+    "passed": 105,
+    "failed": 0,
+    "finalEmbeddedSources": "every embedded module compared to saved source"
+  },
+  "browser": {
+    "transport": "HTTP localhost",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "samples": 32,
+    "regularCloseCameraDistanceCm": "2.614",
+    "flatCloseCameraDistanceCm": "0.871",
+    "patterns": [
+      "botanical",
+      "rosette",
+      "ribbon"
+    ],
+    "materials": [
+      "cotton",
+      "silk",
+      "fine"
+    ],
+    "views": [
+      "overall",
+      "macro",
+      "fiber",
+      "yarn",
+      "edge",
+      "back"
+    ],
+    "lighting": [
+      "studio",
+      "raking",
+      "backlight"
+    ],
+    "expectedSegmentBudgetErrors": 1,
+    "unexpectedApplicationWarningsOrErrors": 0,
+    "actualSaveLoad": "Downloaded JSON restored scatter .42, richness .35, flyaways .4, bend 0 and yarn camera.",
+    "componentRebuild": "Fill fuzz edits rebuilt fill fuzz only, with no yarn-core rebuild.",
+    "rejectionRetention": "Segment failure retained immediate scatter .43 and built richness .35 / flyaways .4, with pitch .18. Fuzz-budget recipe rejected before applying state; revision and camera retained.",
+    "densityMode": "Dense slider disabled at canonical 0 labelled follow yarn diameter; open restores .18 minimum .08.",
+    "motionSampling": "Moving/stationary sampling functional cycle checked; full shimmer acceptance remains open."
+  },
+  "localStructuralFailure": {
+    "status": "HOLD_LOCAL",
+    "croppedShortPaths": 9,
+    "pathsWithReversedSweepEdges": 5,
+    "inwardSamples": 34,
+    "reversedTriangles": 1,
+    "reference": "qa/geometry-diagnosis.md",
+    "action": "retained and measured, no normal flip or deletion used to hide it"
+  },
+  "physics": "Existing display bend and endpoint attachment only; no gravity, contact, collision or stretch solver.",
+  "unverified": [
+    "same-scale real fabric reference appearance",
+    "rod-like fill and fine fibre distribution",
+    "complete motion shimmer and multi-page stress",
+    "actual GPU frame time and other devices",
+    "file:// double-click runtime",
+    "named craft topology and backside yarn",
+    "garment physics"
+  ],
+  "fileProtocol": "Automatic browser URL policy disallows file:// in this conversation. R10 actual double-click runtime not verified; no bypass attempted.",
+  "delivery": "Standalone candidate and existing Draft PR updates only; old R05/R08/R09 unchanged."
+}

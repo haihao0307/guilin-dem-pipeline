@@ -1,0 +1,211 @@
+{
+  "stage": "R12",
+  "status": "research-candidate-draft",
+  "date": "2026-10-26",
+  "sourceBaseline": "Human-Fabric-Workbench@92502d8016a294d1ee1e404e3b4dae4696318e77 / R11",
+  "sha256": "94bf48dad18e3cbd5fa851df8ac31729c65aa9613c63abee6f5b807798728fda",
+  "implemented": [
+    "bounded real yarn bundle envelope with shared fuzz surface",
+    "flatter matte cotton recipe and explicit .17 mm display fill at .18 mm pitch",
+    "normalized directional silk finish with live independent per-layer control",
+    "real radius thinning for fine net with nominal millimetres shown",
+    "strict state roundtrip and safe rejected-build restoration",
+    "standalone workbench and screenshot comparison"
+  ],
+  "visualOutcome": "Cotton fill appears flatter and more continuous; silk direction response and fine open coverage distinguish at macro/raking. Whole-cloth regular needle-bar appearance remains. Studio cotton/silk distinction is modest. No real-fabric visual acceptance.",
+  "displayDefaults": {
+    "fillMm": 0.17,
+    "pitchMm": 0.18,
+    "cottonFillFlatten": 0.32,
+    "cottonFillRoughness": 0.86,
+    "cottonFillSpecular": 0.14,
+    "nominalFillDiameterMm": {
+      "cotton": 0.17,
+      "silk": 0.16388,
+      "fine": 0.112625
+    },
+    "nominalNetDiameterMm": {
+      "cotton": 0.075,
+      "silk": 0.07365,
+      "fine": 0.0530625
+    },
+    "comparison": "R11 frozen material on same CURRENT structure, not full historical default replay"
+  },
+  "geometry": {
+    "segments": 239869,
+    "profileRadiusFactorBound": [
+      0.88,
+      1.12
+    ],
+    "triangleIncreaseFromProfile": 0,
+    "localCases": 72,
+    "noNewDefects": true,
+    "fullFinalBotanicalLayers": 12,
+    "fullFinalDetectedDefects": 0,
+    "inheritedExtremeDefectsRetained": true,
+    "rejectedPitchMm": 0.14,
+    "rejection": "existing 250000 segment budget; no simplification",
+    "cost": {
+      "cotton": {
+        "r11Material": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 4204600,
+          "totalGeometryBytes": 178141328,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 600424,
+          "totalTriangles": 4205592,
+          "roots": 75053,
+          "flyaways": 5878,
+          "shortStitchChanges": 60
+        },
+        "r12": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 4204600,
+          "totalGeometryBytes": 178141328,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 600424,
+          "totalTriangles": 4205592,
+          "roots": 75053,
+          "flyaways": 5878,
+          "shortStitchChanges": 60
+        }
+      },
+      "silk": {
+        "r11Material": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 1231448,
+          "totalGeometryBytes": 175168176,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 175688,
+          "totalTriangles": 3780856,
+          "roots": 21961,
+          "flyaways": 112,
+          "shortStitchChanges": 60
+        },
+        "r12": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 1231448,
+          "totalGeometryBytes": 175168176,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 175688,
+          "totalTriangles": 3780856,
+          "roots": 21961,
+          "flyaways": 112,
+          "shortStitchChanges": 60
+        }
+      },
+      "fine": {
+        "r11Material": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 2263360,
+          "totalGeometryBytes": 176200088,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 323104,
+          "totalTriangles": 3928272,
+          "roots": 40388,
+          "flyaways": 1205,
+          "shortStitchChanges": 60
+        },
+        "r12": {
+          "primaryBytes": 173936728,
+          "fuzzBytes": 2263360,
+          "totalGeometryBytes": 176200088,
+          "primaryTriangles": 3605168,
+          "fuzzTriangles": 323104,
+          "totalTriangles": 3928272,
+          "roots": 40388,
+          "flyaways": 1205,
+          "shortStitchChanges": 60
+        }
+      }
+    }
+  },
+  "tests": {
+    "total": 149,
+    "passed": 149,
+    "failed": 0
+  },
+  "browser": {
+    "transport": "localhost HTTP",
+    "frames": 18,
+    "samples": 32,
+    "unexpectedWarningsOrErrors": 0,
+    "intentionalBudgetErrors": 1,
+    "roundtrip": {
+      "camera": "yarn",
+      "light": "studio",
+      "material": "custom",
+      "revision": "18",
+      "samples": "32",
+      "yarnProfile": {
+        "fill": {
+          "bundleProfile": 0.43,
+          "finishFocus": 0.63,
+          "yarnFineness": 0.31
+        },
+        "net": {
+          "bundleProfile": 0.2,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        },
+        "outline": {
+          "bundleProfile": 0.65,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        },
+        "trim": {
+          "bundleProfile": 0.65,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        }
+      },
+      "diameter": "当前层名义线径 0.146–0.146 mm；截面起伏会改变局部宽度。"
+    },
+    "rejectedBuild": {
+      "material": "custom",
+      "revision": "18",
+      "yarnProfile": {
+        "fill": {
+          "bundleProfile": 0.43,
+          "finishFocus": 0.63,
+          "yarnFineness": 0.31
+        },
+        "net": {
+          "bundleProfile": 0.2,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        },
+        "outline": {
+          "bundleProfile": 0.65,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        },
+        "trim": {
+          "bundleProfile": 0.65,
+          "finishFocus": 0.25,
+          "yarnFineness": 0
+        }
+      },
+      "pitch": "0.18",
+      "message": "当前配方超过 250,000 段的生成预算。请增大间距、缩小布样，或关闭针脚柔弯；配方不会被自动简化。"
+    }
+  },
+  "unverified": [
+    "real measured fabric appearance",
+    "complete elimination of whole-cloth regular rods",
+    "open cut ends and named craft/backside yarn",
+    "motion shimmer and cross-device/GPU acceptance",
+    "actual file:// double-click",
+    "garment gravity/contact/collision/stretch physics"
+  ],
+  "fileProtocol": "Browser URL policy blocked file:// in the established session; not bypassed. Static embedding checks do not satisfy actual double-click gate.",
+  "next": [
+    "continuous fibres and stitch grouping at whole-cloth scale",
+    "same-scale real fabric material calibration",
+    "cut ends/backside/temporal/device/file protocol checks",
+    "garment physics after visual work"
+  ],
+  "delivery": "Existing Draft PR updates only; no merge/deploy, old version directories unchanged.",
+  "sourceCommit": "09a01c405e6fe8619991161d7a13e62c1faa4649",
+  "evidenceSelection": "process and source tools are in the linked source repository"
+}
