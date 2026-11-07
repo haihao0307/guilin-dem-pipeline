@@ -1,0 +1,211 @@
+{
+  "probe": "webgpu_device_loss_epoch_probe_n249",
+  "status": "PASS",
+  "cases": {
+    "draw_local_preserves_latest": {
+      "pass": true,
+      "events": [
+        [
+          "request",
+          1,
+          7
+        ],
+        [
+          "draw-start",
+          1,
+          7
+        ],
+        [
+          "request",
+          2,
+          7
+        ],
+        [
+          "failure",
+          1,
+          7,
+          "draw-local",
+          null
+        ],
+        [
+          "draw-start",
+          2,
+          7
+        ],
+        [
+          "draw-accepted",
+          2,
+          7
+        ]
+      ]
+    },
+    "unknown_loss_migrates_latest_once": {
+      "pass": true,
+      "events": [
+        [
+          "request",
+          1,
+          7
+        ],
+        [
+          "draw-start",
+          1,
+          7
+        ],
+        [
+          "request",
+          2,
+          7
+        ],
+        [
+          "failure",
+          1,
+          7,
+          "device-lost",
+          "unknown"
+        ],
+        [
+          "retry-required",
+          2,
+          7
+        ],
+        [
+          "reissued",
+          2,
+          8
+        ],
+        [
+          "draw-start",
+          2,
+          8
+        ],
+        [
+          "draw-accepted",
+          2,
+          8
+        ]
+      ]
+    },
+    "destroyed_is_terminal": {
+      "pass": true,
+      "events": [
+        [
+          "request",
+          1,
+          7
+        ],
+        [
+          "draw-start",
+          1,
+          7
+        ],
+        [
+          "request",
+          2,
+          7
+        ],
+        [
+          "failure",
+          1,
+          7,
+          "device-lost",
+          "destroyed"
+        ],
+        [
+          "terminal-no-reissue",
+          2,
+          7
+        ]
+      ]
+    },
+    "repeated_loss_stops_at_budget": {
+      "pass": true,
+      "events": [
+        [
+          "request",
+          1,
+          7
+        ],
+        [
+          "draw-start",
+          1,
+          7
+        ],
+        [
+          "request",
+          2,
+          7
+        ],
+        [
+          "failure",
+          1,
+          7,
+          "device-lost",
+          "unknown"
+        ],
+        [
+          "retry-required",
+          2,
+          7
+        ],
+        [
+          "reissued",
+          2,
+          8
+        ],
+        [
+          "draw-start",
+          2,
+          8
+        ],
+        [
+          "request",
+          3,
+          8
+        ],
+        [
+          "failure",
+          2,
+          8,
+          "device-lost",
+          "unknown"
+        ],
+        [
+          "retry-exhausted",
+          3,
+          8
+        ]
+      ]
+    },
+    "stale_old_epoch_cannot_overwrite": {
+      "pass": true,
+      "events": [
+        [
+          "request",
+          1,
+          7
+        ],
+        [
+          "draw-start",
+          1,
+          7
+        ],
+        [
+          "stale-epoch-completion",
+          1,
+          7
+        ]
+      ]
+    }
+  },
+  "boundary": {
+    "teacher_fact": "Device loss invalidates the device and its resources; destroyed is intentional terminal loss, while unknown may be recoverable only with a new device/resource epoch.",
+    "kaopu_candidate_not_teacher_fact": "One epoch migration per intent is a bounded trial policy, not a WebGPU requirement.",
+    "not_proven": [
+      "browser conformance",
+      "GPU/device recovery",
+      "production scheduler integration",
+      "user acceptance"
+    ]
+  }
+}
