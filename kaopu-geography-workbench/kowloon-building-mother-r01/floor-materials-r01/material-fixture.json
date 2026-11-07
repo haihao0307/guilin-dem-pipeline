@@ -1,0 +1,43 @@
+{
+  "schema": "kaopu.floor-material-fixture/1",
+  "units": "metres",
+  "status": "isolated material adapter; not a rendered KCC floor",
+  "input": {
+    "role": "10 floor tile; 11 exterior horizontal tile; 12 interior wall paint; 13 dark coated metal; 14 design door",
+    "localMetres": "Rigid metre chart; X/Z floor, X/Y wall/door, member-local XYZ metal. Never normalized UVs.",
+    "localNormal": "Normal in exactly the same rigid chart as localMetres. Renderer must rotate directions consistently.",
+    "physicalFootprintM": "Pixel footprint in physical metres, nonnegative. Not camera distance or screen UV.",
+    "stableObjectId": "Stable per-surface seed, preferably 0..65535. Never time/camera/random-per-draw. Not a replacement for geometry identity."
+  },
+  "output": {
+    "baseColor": "Linear RGB legacy-compatible color; not a complete multi-phase BRDF.",
+    "roughness": "Perceptual GGX roughness; renderer squares exactly once for alpha.",
+    "metallic": "Metal coverage; coated frame at intact default remains dielectric at surface.",
+    "height": "Metre microheight INCLUDING material-only grout/bevel profile. Does not change geometry.",
+    "coverageDiffuse": "Direct diffuse contribution before Fresnel attenuation, especially important for R06 phase separation.",
+    "coverageF0": "Use directly for Fresnel. Do not reconstruct from a tinted baseColor and metallic.",
+    "clearcoat": "Dielectric top-layer coverage; both entering and exiting substrate energy must be attenuated.",
+    "clearcoatRoughness": "Perceptual roughness of dielectric top layer.",
+    "cell": "Stable integer ceramic cell; (-1,-1) for non-tile roles.",
+    "tileMask": "Footprint-filtered tile coverage, 0 grout to 1 tile.",
+    "bevelGradient": "Analytic UV gradient of ONLY the tile/grout bevel profile; not total height derivative.",
+    "cavity": "Bounded timber microcavity factor, otherwise 1. Not scene AO."
+  },
+  "samples": [
+    {"role":10,"localMetres":[0.1505,0,0.1505],"localNormal":[0,1,0],"physicalFootprintM":0.0001,"stableObjectId":2010,"expectedCell":[0,0],"expectedTileMask":1},
+    {"role":11,"localMetres":[0.1005,0.0255,0],"localNormal":[0,0,1],"physicalFootprintM":0.0001,"stableObjectId":2011,"expectedCell":[0,0],"expectedTileMask":1},
+    {"role":11,"localMetres":[0,0.0255,0],"localNormal":[0,0,1],"physicalFootprintM":0.0001,"stableObjectId":2011,"expectedTileMask":0},
+    {"role":12,"localMetres":[0.4,1.2,0],"localNormal":[0,0,1],"physicalFootprintM":0.0001,"stableObjectId":2012},
+    {"role":13,"localMetres":[0.04,0.2,0.02],"localNormal":[0,0,1],"physicalFootprintM":0.0001,"stableObjectId":2013},
+    {"role":14,"localMetres":[0.2,1.1,0],"localNormal":[0,0,1],"physicalFootprintM":0.0001,"stableObjectId":2014}
+  ],
+  "evidence": {
+    "observedAppearance": "Parent inspected KCC source photograph and reports pale horizontal exterior tiles plus dark metal side-opening frame. The photograph is not imported here.",
+    "designedNotMeasured": "All dimensions, color numbers, grout, roughness, finish composition, interior floor/wall/door selections.",
+    "tile10": "298 x 298 mm tile and 3 mm joint, interior design only",
+    "tile11": "198 x 48 mm tile and 3 mm joint, horizontal appearance evidence but metric specification is design",
+    "realDisplacement": false,
+    "originalCeramicStatus": "R04 authored research receiver, not mature/recovered/calibrated mother",
+    "wallPaintStatus": "New opaque paint receiver consuming original plaster field, not recovered mature paint"
+  }
+}

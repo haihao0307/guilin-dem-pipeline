@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {floorFinishRole,applyFloorFinishDispatch} from '../whole-building-floor-study-r01/finish-dispatch.mjs';
+test('exterior front and room side use authored local depth, not camera-flipped normal',()=>{assert.equal(floorFinishRole(11,0,[0,.14]),11);assert.equal(floorFinishRole(11,.14,[0,.14]),12);assert.equal(floorFinishRole(11,.07,[0,.14]),12);for(const role of [1,2,6,10,12,13,14])assert.equal(floorFinishRole(role,.14,[0,.14]),role);});
+test('finish patch changes only the material assignment token and guards code drift',()=>{const original='a;h.materialRole=r.identity.y;h.local=p;b;',patched=applyFloorFinishDispatch(original);assert.equal(patched.replace(/h.materialRole=.*?;h.local=p;/,'h.materialRole=r.identity.y;h.local=p;'),original);assert.throws(()=>applyFloorFinishDispatch('none'));assert.throws(()=>applyFloorFinishDispatch(original+original));});
