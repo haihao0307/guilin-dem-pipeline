@@ -1,7 +1,7 @@
 {
   "id": "RUN-SUCCESS-NOT-RERUN-REPRODUCIBILITY-001",
-  "status": "Candidate",
-  "scope": "Fish Mother long-lived browser regression reruns only",
+  "status": "CANDIDATE_N252_SECOND_SUBJECT_STATIC_GATE_RUN_NOT_ADOPTED",
+  "scope": "Fish Mother long-lived browser regression reruns and KaoPu Engine GPU optimization reruns",
   "problem": "An immutable source/workflow and one successful run can be overclaimed as proof that the same gate is reproducible later while actions, runner image, runtime patches, transitive dependencies, browser and system packages remain mutable or unrecorded.",
   "falsifiableHypothesis": "A claim-separated toolchain-closure gate will preserve the historical R012 success while refusing rerun reproducibility until action resolution, runner image, runtime versions, dependency closure, browser and system dependency identities are recorded.",
   "requiredFields": [
@@ -21,7 +21,15 @@
     "browserBuildReceipt",
     "systemDependencyInventoryDigest",
     "toolchainManifestDigest",
-    "rerunDecision"
+    "rerunDecision",
+    "qaSourceSha",
+    "evidenceOutputPath",
+    "evidenceOutputDigestOrMissing",
+    "runtimeResolutionMode",
+    "browserExecutableReceipt",
+    "serverBootstrapCommand",
+    "serverServedSubjectSha",
+    "qaResultSubjectSha"
   ],
   "decisions": [
     "HISTORICAL_RUN_VERIFIED",
@@ -32,7 +40,13 @@
     "HOLD_DEPENDENCY_CLOSURE_MISSING",
     "HOLD_BROWSER_SYSTEM_CLOSURE_MISSING",
     "TOOLCHAIN_DRIFT_DETECTED",
-    "RERUN_TOOLCHAIN_CLOSURE_VERIFIED"
+    "RERUN_TOOLCHAIN_CLOSURE_VERIFIED",
+    "HOLD_QA_SOURCE_MISSING",
+    "HOLD_EVIDENCE_OUTPUT_MISSING",
+    "HOLD_NONPORTABLE_RUNTIME_PATH",
+    "HOLD_SERVER_BOOTSTRAP_UNBOUND",
+    "HOLD_TESTED_SUBJECT_UNBOUND",
+    "RERUN_CLOSURE_CANDIDATE"
   ],
   "activation": {
     "global": false,
@@ -47,5 +61,72 @@
     "GATE-RUN": false,
     "ADOPTED": false,
     "USER-ACCEPTED": false
-  }
+  },
+  "observedSubjects": [
+    {
+      "id": "KAOPU_ENGINE_YARN_SHARED_FRAME_RERUN",
+      "testedSubjectSha": "603682e1c1aa86323154038ccfc7215833afcda9",
+      "implementationPath": "research/display-quality/YarnSharedFrameStudy.mjs",
+      "implementationBlobSha": "a8df7d678854a190c42125fcff15220ff3ab5acc",
+      "oraclePath": "qa/shared-yarn-frame-oracle-20261101.cjs",
+      "oracleBlobSha": "0571213b4fa759be65eb40961bee398653382d5c",
+      "smokePath": "qa/shared-frame-smoke-20261101.cjs",
+      "smokeBlobSha": "17bdaf3bb3c5ecc9a4a257cbce0105396424f2f0",
+      "namedEvidenceOutputsPresent": false,
+      "absoluteWindowsRuntimePaths": true,
+      "dependencyLockPresent": false,
+      "serverBootstrapBound": false,
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED"
+    }
+  ],
+  "subjectCases": [
+    {
+      "id": "CURRENT_ENGINE_SHARED_FRAME_ORACLE",
+      "input": {
+        "implementationPresent": true,
+        "qaSourcePresent": true,
+        "evidenceOutputPresent": false,
+        "absoluteRuntimePaths": true,
+        "dependencyLockPresent": false,
+        "serverBootstrapBound": false,
+        "subjectIdentityBound": true
+      },
+      "expect": [
+        "HOLD_EVIDENCE_OUTPUT_MISSING",
+        "HOLD_NONPORTABLE_RUNTIME_PATH",
+        "HOLD_DEPENDENCY_CLOSURE_MISSING",
+        "HOLD_SERVER_BOOTSTRAP_UNBOUND"
+      ]
+    },
+    {
+      "id": "CONTROL_COMPLETE_RERUN_CLOSURE",
+      "input": {
+        "implementationPresent": true,
+        "qaSourcePresent": true,
+        "evidenceOutputPresent": true,
+        "absoluteRuntimePaths": false,
+        "dependencyLockPresent": true,
+        "serverBootstrapBound": true,
+        "subjectIdentityBound": true
+      },
+      "expect": "RERUN_CLOSURE_CANDIDATE"
+    }
+  ],
+  "evidenceIncrements": [
+    {
+      "id": "N252_YARN_SHARED_FRAME_RERUN_CLOSURE",
+      "boundedQuestion": "Can a clean clone reproduce and adjudicate the existing shared-frame yarn optimization without the original Windows workstation?",
+      "replay": "N252-CPU-STATIC-REPLAY-20261108",
+      "result": "6/6 PASS",
+      "branch": "automation/n252-yarn-shared-frame-rerun-closure-20261108",
+      "lifecycle": {
+        "POSTED": false,
+        "ACKNOWLEDGED": false,
+        "IMPLEMENTED": true,
+        "GATE-RUN": true,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      }
+    }
+  ]
 }
