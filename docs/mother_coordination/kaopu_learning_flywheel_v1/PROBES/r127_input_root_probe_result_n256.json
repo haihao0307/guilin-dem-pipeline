@@ -1,0 +1,29 @@
+{
+  "probe": "N256_R127_CONTENT_ADDRESSED_RELATIVE_INPUT_ROOT",
+  "runtime": "v24.22.1",
+  "subjectArchiveSha256": "59c6dd88d0e57b2cd03a3314c93257e58cb6446ecb5c669a50deb7bee51af585",
+  "manifestAbsoluteInputCount": 29,
+  "reviewSourceFileCount": 13,
+  "absolutePathLiteralOccurrenceCount": 55,
+  "absolutePathSourceFileCount": 9,
+  "executableAbsolutePathSourceFileCount": 6,
+  "actualR127ExitCode": 1,
+  "actualR127Failure": "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/workspace/shared/motor-gpu-rebuild-r127/dist/e50-open-profile-workbench-r127/runtime/profiles/native.mjs' imported from evidence/independent-review/oracle.mjs",
+  "missingMappingError": "MISSING_MAPPING:inputs/value.mjs",
+  "digestMismatchError": "DIGEST_MISMATCH:inputs/value.mjs",
+  "absoluteFixtureExitCode": 1,
+  "relativeFixtureExitCode": 0,
+  "relativeFixtureOutput": "42",
+  "checks": {
+    "r127ContainsHostAbsolutePathLiterals": true,
+    "r127FailsDuringAbsoluteEsmResolution": true,
+    "exactContentAddressedMappingPasses": true,
+    "missingMappingFailsClosed": true,
+    "digestMismatchFailsClosed": true,
+    "relativeInputRootConsumerRuns": true,
+    "mountMapAloneDoesNotRewriteStaticAbsoluteImport": true
+  },
+  "passCount": 7,
+  "totalChecks": 7,
+  "boundary": "A content-addressed mount map validates caller-supplied bytes but cannot rewrite pre-existing static absolute ESM imports. Provider/verifier source must consume a relative logical input root or bind a versioned loader whose identity is part of the receipt."
+}
