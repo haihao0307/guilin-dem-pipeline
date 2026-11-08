@@ -1,11 +1,15 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "REJECTED-DESCENDANT-QUARANTINE-001",
-  "status": "CANDIDATE_TWO_HISTORY_INSTANCES_RECORDED_NOT_GATE_RUN_NOT_ADOPTED",
+  "status": "CANDIDATE_THREE_HISTORY_INSTANCES_N251_CPU_GATE_RUN_NOT_ADOPTED",
   "active": false,
   "scope": {
-    "mothers": ["Knit", "BrowLash"],
-    "taskClass": "USER_REJECTED_CANDIDATE_BASELINE_RESTORE_AND_FUTURE_LINEAGE",
+    "mothers": [
+      "Knit",
+      "BrowLash",
+      "QuickShorts"
+    ],
+    "taskClass": "USER_REJECTED_OR_RETIRED_ARTIFACT_FUTURE_REINTRODUCTION",
     "globalAdoption": false
   },
   "failure": {
@@ -30,6 +34,22 @@
         "rejectedBranchCurrentHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
         "acceptedBranchCurrentHead": "25f6a0c9f2fb43f7a7ed6cf6fdc5cf70ab78b8de",
         "rejectedReason": "User rejected R05 and restored R04 as the current brow-lash lineage baseline."
+      },
+      {
+        "id": "QUICK_SHORTS_R4_PUBLISHER_RETIRED",
+        "currentMainSha": "6a003f0fafb9ae27d71e95963728461288c14edb",
+        "parentMainSha": "34553e93d75a427c10dbf5b0077d42f8cdda0a63",
+        "retiredTarget": "gh-pages:quick-shorts-r4",
+        "targetAbsentAtGhPagesSha": "54a30da8f78a5cab703f9498bb661deeb0aeea2b",
+        "historicalPublisherPath": ".github/workflows/publish-quick-shorts-r4.yml",
+        "historicalPublisherBlob": "d3af50f196c0b075aa4d95755bb3ad81071a0080",
+        "historicalPublisherDefaultBranch": true,
+        "historicalPublisherManualTrigger": true,
+        "historicalPublisherWriteAuthority": "contents: write",
+        "historicalMutableSource": "haihao0307/Humanoid-Rig-Lab-Next@main:quick-shorts-r4",
+        "currentSourcePathAbsent": true,
+        "currentMatchingPublisherAbsent": true,
+        "failureReason": "Target deletion alone was not a complete retirement proof while a reachable default-branch publisher could rematerialize the same target from a mutable source alias."
       }
     ]
   },
@@ -38,7 +58,8 @@
     "Treat branch reset, PR closure, page similarity, or a renamed directory as proof that rejected content cannot return.",
     "Cherry-pick, copy, regenerate, or indirectly inherit a rejected file/tree/behavior without explicit current user reauthorization.",
     "Erase rejected evidence from history or claim that a published Git object was physically deleted.",
-    "Promote a restored lineage baseline to final visual acceptance merely because the user selected it as the restart point."
+    "Promote a restored lineage baseline to final visual acceptance merely because the user selected it as the restart point.",
+    "Treat target absence as a complete retirement receipt while a reachable publisher still has trigger, write authority, target-path match, and a source route that can materialize the same rejected or retired artifact."
   ],
   "requiredTaskAnchorAndReceiptFields": [
     "acceptedBaseSha",
@@ -52,20 +73,37 @@
     "userReauthorization",
     "reauthorizedScope",
     "independentVerifier",
-    "userVisualAcceptance"
+    "userVisualAcceptance",
+    "retiredTargetRepositoryBranchPath",
+    "targetAbsenceReadback",
+    "publisherReachabilitySet",
+    "publisherDefaultBranchPresence",
+    "publisherTriggerReachable",
+    "publisherWriteAuthority",
+    "publisherTargetPathMatch",
+    "publisherSourceIdentityOrMutableAlias",
+    "sourceMaterializationReachability",
+    "publisherReachabilityAuditAt"
   ],
   "gate": [
     "A rejected candidate remains EVIDENCE_ONLY even when its immutable SHA or closed PR is readable.",
     "A new candidate is HOLD_REJECTED_DESCENDANT_PRESENT when rejected ancestry or rejected content identity is present and no exact current user reauthorization covers it.",
     "Ancestry checks are necessary but not sufficient: copied or regenerated rejected files must also be checked by path, tree/blob digest, or behavior-specific regression.",
     "A clean descendant of the restored accepted baseline is only eligible for normal verification; it is not automatically reference-faithful, visually accepted, or production-ready.",
-    "Reauthorization must name the rejected element and scope; a general request to continue does not revive all rejected work."
+    "Reauthorization must name the rejected element and scope; a general request to continue does not revive all rejected work.",
+    "Target absence is necessary but not sufficient for retirement: every executable publisher capable of writing the same target must be included in a producer-reachability audit.",
+    "A live matching writer yields HOLD_RETIRED_TARGET_RECREATION_REACHABLE when its source can materialize the target or when it reads a mutable source alias whose path can reappear.",
+    "Documentation-only references and writers for different target paths do not count as reintroduction paths.",
+    "A current source-path 404 does not close a mutable-alias publisher path; the publisher itself must be removed, disabled with non-reenableable authority, or otherwise proven unable to write the retired target."
   ],
   "states": [
     "BASELINE_RESTORED_REJECTED_AUDIT_ONLY",
     "HOLD_REJECTED_DESCENDANT_PRESENT",
     "HOLD_REAUTHORIZATION_SCOPE_MISSING",
-    "CANDIDATE_ELIGIBLE_NOT_VISUAL_ACCEPTED"
+    "CANDIDATE_ELIGIBLE_NOT_VISUAL_ACCEPTED",
+    "HOLD_RETIRED_TARGET_STILL_PRESENT",
+    "HOLD_RETIRED_TARGET_RECREATION_REACHABLE",
+    "RETIRED_TARGET_NOT_REACHABLE_CANDIDATE"
   ],
   "cases": [
     {
@@ -109,6 +147,36 @@
         "userReauthorization": false
       },
       "expect": "CANDIDATE_ELIGIBLE_NOT_VISUAL_ACCEPTED"
+    },
+    {
+      "id": "QUICK_SHORTS_R4_HISTORICAL_PUBLISHER_REACHABLE",
+      "input": {
+        "targetRetired": true,
+        "targetAbsent": true,
+        "publisherOnDefaultBranch": true,
+        "publisherEnabled": true,
+        "triggerReachable": true,
+        "writePermission": true,
+        "targetPathMatch": true,
+        "sourceCanMaterializeTarget": false,
+        "mutableSourceAlias": true,
+        "sourcePathCanReappear": true
+      },
+      "expect": "HOLD_RETIRED_TARGET_RECREATION_REACHABLE"
+    },
+    {
+      "id": "QUICK_SHORTS_R4_CURRENT_TARGET_AND_WRITER_ABSENT",
+      "input": {
+        "targetRetired": true,
+        "targetAbsent": true,
+        "publisherOnDefaultBranch": false,
+        "publisherEnabled": false,
+        "triggerReachable": false,
+        "writePermission": false,
+        "targetPathMatch": false,
+        "sourceCanMaterializeTarget": false
+      },
+      "expect": "RETIRED_TARGET_NOT_REACHABLE_CANDIDATE"
     }
   ],
   "activation": {
@@ -124,5 +192,22 @@
     "GATE-RUN": false,
     "ADOPTED": false,
     "USER-ACCEPTED": false
-  }
+  },
+  "evidenceIncrements": [
+    {
+      "id": "N251_RETIRED_PUBLISHER_REACHABILITY",
+      "boundedQuestion": "Is target absence sufficient for retirement when an executable publisher can recreate the same target?",
+      "replay": "N251-CPU-REPLAY-20261108",
+      "result": "6/6 PASS",
+      "branch": "automation/n251-retired-publisher-reachability-20261108",
+      "lifecycle": {
+        "POSTED": false,
+        "ACKNOWLEDGED": false,
+        "IMPLEMENTED": true,
+        "GATE-RUN": true,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      }
+    }
+  ]
 }
