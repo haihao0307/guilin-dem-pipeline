@@ -1,26 +1,36 @@
 {
   "id": "RUN-SUCCESS-NOT-RERUN-REPRODUCIBILITY-001",
-  "status": "Candidate",
-  "scope": "Fish Mother long-lived browser regression reruns only",
-  "problem": "An immutable source/workflow and one successful run can be overclaimed as proof that the same gate is reproducible later while actions, runner image, runtime patches, transitive dependencies, browser and system packages remain mutable or unrecorded.",
-  "falsifiableHypothesis": "A claim-separated toolchain-closure gate will preserve the historical R012 success while refusing rerun reproducibility until action resolution, runner image, runtime versions, dependency closure, browser and system dependency identities are recorded.",
+  "status": "CANDIDATE_N256_CAR_SINGLE_MOTHER_AUDITION_NOT_ADOPTED",
+  "scope": "Fish browser rerun origin plus one bounded Car R127 recovery-packaging recurrence; global=false",
+  "problem": "A successful historical run or a package whose files pass hashes can still be non-rerunnable when the verifier depends on unrecorded toolchains, ambient host paths, or static absolute imports. A content-addressed mount map verifies supplied bytes but does not by itself redirect source code that never consumes the map.",
+  "falsifiableHypothesis": "A Car R127 verifier whose command, working directory and all source references are relative to one content-addressed logical input root will rerun in an empty directory and fail closed for a missing predecessor, changed source byte or changed verifier dependency. A mount map added without removing or explicitly loading static host-absolute imports will still fail before the mapped input can be used.",
   "requiredFields": [
     "claimId",
     "testedSubjectSha",
-    "workflowBlobSha",
-    "runId",
-    "jobId",
+    "subjectArchiveSha256",
+    "workflowBlobShaOrNotApplicable",
+    "runIdOrLocalRunReceipt",
     "historicalRunDecision",
     "actionResolutionManifest",
-    "runnerImageRelease",
+    "logicalInputRootDigest",
+    "callerSuppliedInputManifest",
+    "mountMapDigest",
+    "sourcePathBindingMode",
+    "absolutePathLiteralSet",
+    "loaderIdentityOrUnknown",
+    "workingDirectoryRelativeToInputRoot",
+    "commandDigest",
+    "platformIdentity",
+    "runnerImageReleaseOrLocalRuntimeIdentity",
     "runnerSbomDigestOrUnknown",
     "resolvedRuntimeVersions",
     "dependencyLockDigest",
     "frozenInstallDecision",
     "installedDependencyInventoryDigest",
-    "browserBuildReceipt",
+    "browserBuildReceiptOrNotApplicable",
     "systemDependencyInventoryDigest",
     "toolchainManifestDigest",
+    "newRunReceiptDigest",
     "rerunDecision"
   ],
   "decisions": [
@@ -31,20 +41,80 @@
     "HOLD_RUNTIME_VERSION_UNRESOLVED",
     "HOLD_DEPENDENCY_CLOSURE_MISSING",
     "HOLD_BROWSER_SYSTEM_CLOSURE_MISSING",
+    "HOLD_HOST_ABSOLUTE_PATH_LITERAL",
+    "HOLD_MOUNT_MAP_NOT_CONSUMED_BY_SOURCE",
+    "HOLD_REQUIRED_INPUT_MISSING",
+    "HOLD_INPUT_DIGEST_MISMATCH",
     "TOOLCHAIN_DRIFT_DETECTED",
+    "RERUN_INPUT_NAMESPACE_CANDIDATE",
     "RERUN_TOOLCHAIN_CLOSURE_VERIFIED"
   ],
   "activation": {
     "global": false,
     "motherTrialRequired": true,
+    "trialMother": "Car / Motor Mother R127 recovery packaging only",
     "independentVerifierRequired": true,
-    "rollbackPoint": "Do not change current R2 gates or invalidate run 35974311593; remove this Candidate if a real rerun shows no discriminating value."
+    "rollbackPoint": "Retain R127 as a frozen inactive recovery candidate and keep the original historical evidence if a package-relative single-entrypoint trial cannot preserve exact audit semantics. Remove the relative-root candidate wrapper; do not reactivate geometry or weaken existing gates."
   },
+  "teacher": {
+    "name": "Bazel Remote Execution API v2.3 input-root model",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "specificNovelty": "Bind the command and a content-addressed input-root Directory into one Action identity; materialize the exact tree before execution; require the working directory and outputs to be relative to that root.",
+    "boundary": "REAPI explicitly leaves default environment, host filesystems and some path resolution to implementations; it can allow absolute command paths or absolute symlink targets. It is an action-identity and input-namespace teacher, not proof of sandbox hermeticity and not a reason to deploy a remote executor.",
+    "license": "Apache-2.0",
+    "maintenance": "Official repository main c2c07e3d718d3d490a4958344d9c3e47de0bfaf3; pushed 2026-10-20; schema, generated Go and test vectors present.",
+    "integrationDecision": "LEARN_SCHEMA_NOT_DEPENDENCY; do not add a remote execution service to KAOPU."
+  },
+  "subjectCases": [
+    {
+      "id": "FISH_HISTORICAL_BROWSER_RERUN",
+      "decision": "UNKNOWN_RERUN_REPRODUCIBILITY_TOOLCHAIN_UNSEALED",
+      "originScope": true
+    },
+    {
+      "id": "CAR_R127_STATIC_ABSOLUTE_IMPORTS",
+      "subjectArchiveSha256": "59c6dd88d0e57b2cd03a3314c93257e58cb6446ecb5c669a50deb7bee51af585",
+      "manifestAbsoluteInputCount": 29,
+      "absolutePathLiteralOccurrenceCount": 55,
+      "executableAbsolutePathSourceFileCount": 6,
+      "decision": [
+        "HOLD_HOST_ABSOLUTE_PATH_LITERAL",
+        "HOLD_MOUNT_MAP_NOT_CONSUMED_BY_SOURCE",
+        "UNKNOWN_RERUN_REPRODUCIBILITY_TOOLCHAIN_UNSEALED"
+      ]
+    }
+  ],
+  "evidenceIncrements": [
+    {
+      "id": "N255_CAR_R127_PORTABLE_RERUN_FAILURE",
+      "result": "root hashes PASS; verify-seal and run-all FAIL in a new environment",
+      "routingReceipt": {
+        "issue": 91,
+        "commentId": 6725399330,
+        "status": "POSTED",
+        "acknowledged": false
+      }
+    },
+    {
+      "id": "N256_R127_CONTENT_ADDRESSED_RELATIVE_INPUT_ROOT",
+      "boundedQuestion": "Can a content-addressed mount map alone make the R127 verifier portable when its JavaScript modules contain static host-absolute imports?",
+      "replay": "N256-CPU-R127-RELATIVE-INPUT-ROOT-20261109",
+      "result": "7/7 PASS",
+      "branch": "automation/n256-r127-relative-input-root-20261109",
+      "routingReceipt": {
+        "issue": 91,
+        "commentId": null,
+        "status": "NOT_POSTED",
+        "acknowledged": false
+      }
+    }
+  ],
   "lifecycle": {
     "POSTED": false,
     "ACKNOWLEDGED": false,
-    "IMPLEMENTED": false,
-    "GATE-RUN": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
     "ADOPTED": false,
     "USER-ACCEPTED": false
   }
