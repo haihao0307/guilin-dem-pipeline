@@ -1,0 +1,82 @@
+{
+  "schema": "kaopu.yarn-shared-frame-rerun-result/1",
+  "runId": "N252-CPU-STATIC-REPLAY-20261108",
+  "fixtureSha256": "2846ab6de6b28228cc33c8c4fe62cdc3d81559cd7d7837b96b6c72cc003a39c6",
+  "totals": {
+    "total": 6,
+    "passed": 6
+  },
+  "allPassed": true,
+  "cases": [
+    {
+      "id": "current_engine_shared_frame_oracle",
+      "expectedHolds": [
+        "HOLD_EVIDENCE_OUTPUT_MISSING",
+        "HOLD_NONPORTABLE_RUNTIME_PATH",
+        "HOLD_DEPENDENCY_CLOSURE_MISSING",
+        "HOLD_SERVER_BOOTSTRAP_UNBOUND"
+      ],
+      "actualHolds": [
+        "HOLD_EVIDENCE_OUTPUT_MISSING",
+        "HOLD_NONPORTABLE_RUNTIME_PATH",
+        "HOLD_DEPENDENCY_CLOSURE_MISSING",
+        "HOLD_SERVER_BOOTSTRAP_UNBOUND"
+      ],
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED",
+      "pass": true
+    },
+    {
+      "id": "implementation_without_qa",
+      "expectedHolds": [
+        "HOLD_QA_SOURCE_MISSING",
+        "HOLD_EVIDENCE_OUTPUT_MISSING"
+      ],
+      "actualHolds": [
+        "HOLD_QA_SOURCE_MISSING",
+        "HOLD_EVIDENCE_OUTPUT_MISSING"
+      ],
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED",
+      "pass": true
+    },
+    {
+      "id": "output_exists_but_absolute_runtime_path",
+      "expectedHolds": [
+        "HOLD_NONPORTABLE_RUNTIME_PATH"
+      ],
+      "actualHolds": [
+        "HOLD_NONPORTABLE_RUNTIME_PATH"
+      ],
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED",
+      "pass": true
+    },
+    {
+      "id": "portable_script_without_dependency_lock",
+      "expectedHolds": [
+        "HOLD_DEPENDENCY_CLOSURE_MISSING"
+      ],
+      "actualHolds": [
+        "HOLD_DEPENDENCY_CLOSURE_MISSING"
+      ],
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED",
+      "pass": true
+    },
+    {
+      "id": "portable_script_without_subject_binding",
+      "expectedHolds": [
+        "HOLD_TESTED_SUBJECT_UNBOUND"
+      ],
+      "actualHolds": [
+        "HOLD_TESTED_SUBJECT_UNBOUND"
+      ],
+      "decision": "RERUN_REPRODUCIBILITY_UNSEALED",
+      "pass": true
+    },
+    {
+      "id": "complete_rerun_closure",
+      "expectedHolds": [],
+      "actualHolds": [],
+      "decision": "RERUN_CLOSURE_CANDIDATE",
+      "pass": true
+    }
+  ]
+}
