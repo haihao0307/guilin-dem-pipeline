@@ -1,0 +1,85 @@
+{
+  "schema": "kaopu.yarn-shared-frame-rerun-fixture/1",
+  "cases": [
+    {
+      "id": "current_engine_shared_frame_oracle",
+      "implementationPresent": true,
+      "qaSourcePresent": true,
+      "evidenceOutputPresent": false,
+      "absoluteRuntimePaths": true,
+      "dependencyLockPresent": false,
+      "serverBootstrapBound": false,
+      "subjectIdentityBound": true,
+      "expectedHolds": [
+        "HOLD_EVIDENCE_OUTPUT_MISSING",
+        "HOLD_NONPORTABLE_RUNTIME_PATH",
+        "HOLD_DEPENDENCY_CLOSURE_MISSING",
+        "HOLD_SERVER_BOOTSTRAP_UNBOUND"
+      ]
+    },
+    {
+      "id": "implementation_without_qa",
+      "implementationPresent": true,
+      "qaSourcePresent": false,
+      "evidenceOutputPresent": false,
+      "absoluteRuntimePaths": false,
+      "dependencyLockPresent": true,
+      "serverBootstrapBound": true,
+      "subjectIdentityBound": true,
+      "expectedHolds": [
+        "HOLD_QA_SOURCE_MISSING",
+        "HOLD_EVIDENCE_OUTPUT_MISSING"
+      ]
+    },
+    {
+      "id": "output_exists_but_absolute_runtime_path",
+      "implementationPresent": true,
+      "qaSourcePresent": true,
+      "evidenceOutputPresent": true,
+      "absoluteRuntimePaths": true,
+      "dependencyLockPresent": true,
+      "serverBootstrapBound": true,
+      "subjectIdentityBound": true,
+      "expectedHolds": [
+        "HOLD_NONPORTABLE_RUNTIME_PATH"
+      ]
+    },
+    {
+      "id": "portable_script_without_dependency_lock",
+      "implementationPresent": true,
+      "qaSourcePresent": true,
+      "evidenceOutputPresent": true,
+      "absoluteRuntimePaths": false,
+      "dependencyLockPresent": false,
+      "serverBootstrapBound": true,
+      "subjectIdentityBound": true,
+      "expectedHolds": [
+        "HOLD_DEPENDENCY_CLOSURE_MISSING"
+      ]
+    },
+    {
+      "id": "portable_script_without_subject_binding",
+      "implementationPresent": true,
+      "qaSourcePresent": true,
+      "evidenceOutputPresent": true,
+      "absoluteRuntimePaths": false,
+      "dependencyLockPresent": true,
+      "serverBootstrapBound": true,
+      "subjectIdentityBound": false,
+      "expectedHolds": [
+        "HOLD_TESTED_SUBJECT_UNBOUND"
+      ]
+    },
+    {
+      "id": "complete_rerun_closure",
+      "implementationPresent": true,
+      "qaSourcePresent": true,
+      "evidenceOutputPresent": true,
+      "absoluteRuntimePaths": false,
+      "dependencyLockPresent": true,
+      "serverBootstrapBound": true,
+      "subjectIdentityBound": true,
+      "expectedHolds": []
+    }
+  ]
+}
