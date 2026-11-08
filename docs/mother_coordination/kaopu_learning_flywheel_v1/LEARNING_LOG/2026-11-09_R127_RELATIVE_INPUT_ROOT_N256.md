@@ -103,5 +103,5 @@ Only Car R127 packaging owner should rewrite one entrypoint to consume a package
 - Do not modify Car geometry, source profiles, production activation or accepted baseline.
 - No GPU/browser/visual/publication evidence is claimed.
 - Preserve restricted-asset policy: caller supplies bytes; receipt records digest and logical identity, not redistribution permission.
-- Routing receipt: pending.
-- Lifecycle before routing: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`; `POSTED/ACKNOWLEDGED/production IMPLEMENTED/ADOPTED/USER-ACCEPTED=false`.
+- Routing receipt: issue #91 comment `6726327412`; `POSTED=true`.
+- Lifecycle after routing: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`, `POSTED=true`; `ACKNOWLEDGED/production IMPLEMENTED/ADOPTED/USER-ACCEPTED=false`.
