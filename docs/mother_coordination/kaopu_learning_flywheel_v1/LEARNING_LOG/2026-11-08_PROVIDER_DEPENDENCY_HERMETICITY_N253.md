@@ -100,4 +100,5 @@ The candidate is a verifier/audit rule, not a new Mother production responsibili
 - No claim that Bazel participated as an external AI.
 - No target GPU/browser/device evidence; this is a deterministic CPU counterexample only.
 - Only KaoPu Engine/function-provider owner should evaluate relevance, existing equivalent coverage, reusable fields and the smallest one-provider trial.
-- Lifecycle at save: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`; `POSTED/ACKNOWLEDGED/ADOPTED/USER-ACCEPTED=false` until routing receipt exists.
+- Routing receipt: issue #91 comment `6721142635`, `POSTED=true`.
+- Lifecycle after routing: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`, `POSTED=true`; `ACKNOWLEDGED/production IMPLEMENTED/ADOPTED/USER-ACCEPTED=false`.
