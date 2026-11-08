@@ -1,0 +1,79 @@
+{
+  "schema": "kaopu.retired-publisher-reachability-fixture/1",
+  "cases": [
+    {
+      "id": "historical_live_publisher_can_recreate_retired_target",
+      "targetRetired": true,
+      "targetAbsent": true,
+      "publisherOnDefaultBranch": true,
+      "publisherEnabled": true,
+      "triggerReachable": true,
+      "writePermission": true,
+      "targetPathMatch": true,
+      "sourceCanMaterializeTarget": true,
+      "expected": "HOLD_RETIRED_TARGET_RECREATION_REACHABLE"
+    },
+    {
+      "id": "source_missing_now_but_mutable_alias_can_restore_it",
+      "targetRetired": true,
+      "targetAbsent": true,
+      "publisherOnDefaultBranch": true,
+      "publisherEnabled": true,
+      "triggerReachable": true,
+      "writePermission": true,
+      "targetPathMatch": true,
+      "sourceCanMaterializeTarget": false,
+      "mutableSourceAlias": true,
+      "sourcePathCanReappear": true,
+      "expected": "HOLD_RETIRED_TARGET_RECREATION_REACHABLE"
+    },
+    {
+      "id": "retired_target_absent_and_writer_removed",
+      "targetRetired": true,
+      "targetAbsent": true,
+      "publisherOnDefaultBranch": false,
+      "publisherEnabled": false,
+      "triggerReachable": false,
+      "writePermission": false,
+      "targetPathMatch": false,
+      "sourceCanMaterializeTarget": false,
+      "expected": "RETIRED_TARGET_NOT_REACHABLE_CANDIDATE"
+    },
+    {
+      "id": "documentation_reference_is_not_a_writer",
+      "targetRetired": true,
+      "targetAbsent": true,
+      "publisherOnDefaultBranch": true,
+      "publisherEnabled": true,
+      "triggerReachable": true,
+      "writePermission": false,
+      "targetPathMatch": true,
+      "sourceCanMaterializeTarget": true,
+      "expected": "RETIRED_TARGET_NOT_REACHABLE_CANDIDATE"
+    },
+    {
+      "id": "different_target_writer_does_not_block_retirement",
+      "targetRetired": true,
+      "targetAbsent": true,
+      "publisherOnDefaultBranch": true,
+      "publisherEnabled": true,
+      "triggerReachable": true,
+      "writePermission": true,
+      "targetPathMatch": false,
+      "sourceCanMaterializeTarget": true,
+      "expected": "RETIRED_TARGET_NOT_REACHABLE_CANDIDATE"
+    },
+    {
+      "id": "artifact_still_present_is_not_retired_even_without_writer",
+      "targetRetired": true,
+      "targetAbsent": false,
+      "publisherOnDefaultBranch": false,
+      "publisherEnabled": false,
+      "triggerReachable": false,
+      "writePermission": false,
+      "targetPathMatch": false,
+      "sourceCanMaterializeTarget": false,
+      "expected": "HOLD_RETIRED_TARGET_STILL_PRESENT"
+    }
+  ]
+}
