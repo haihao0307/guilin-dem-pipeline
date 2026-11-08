@@ -98,5 +98,5 @@ This is a single Engine/function-provider candidate. It does not change Mother s
 - No GPU/browser/device/production evidence; this is CPU-only.
 - Direct SES adoption remains rejected pending one-provider compatibility evidence.
 - Route only to #91 for the Engine/function-provider owner to answer the four Mother questions and propose the smallest source-created-provider trial.
-- Routing receipt: pending.
-- Lifecycle before routing: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`; `POSTED/ACKNOWLEDGED/production IMPLEMENTED/ADOPTED/USER-ACCEPTED=false`.
+- Routing receipt: issue #91 comment `6723587341`; `POSTED=true`.
+- Lifecycle after routing: `IMPLEMENTED(candidate)=true`, `GATE-RUN=true`, `POSTED=true`; `ACKNOWLEDGED/production IMPLEMENTED/ADOPTED/USER-ACCEPTED=false`.
