@@ -1,9 +1,9 @@
 {
   "id": "UNDECLARED-PROVIDER-DEPENDENCY-001",
-  "status": "CANDIDATE_N253_SINGLE_ENGINE_AUDITION_NOT_ADOPTED",
+  "status": "CANDIDATE_N254_SINGLE_ENGINE_AUDITION_NOT_ADOPTED",
   "scope": "KaoPu Engine function-provider dependency declarations and exact result reuse",
-  "problem": "A Mother/provider can omit a transitive input while the Engine still forms a stable key from the declared subset, causing a cache hit to reuse a result that is wrong for the current world state.",
-  "falsifiableHypothesis": "For providers that read state only through an auditable access facade, recording or denying undeclared reads will detect the executed-path counterexample before a reusable result is published; changing the hidden input while the declared subset stays fixed will otherwise produce a key collision with different output.",
+  "problem": "A Mother/provider can omit a transitive input while the Engine still forms a stable key from the declared subset. An input Proxy catches only mediated state reads; a provider created in the host realm can retain undeclared closure/global authority and produce a different result under the same declared key.",
+  "falsifiableHypothesis": "Executed-path read auditing detects hidden dependencies only on mediated channels. If provider source is created or evaluated in a realm whose endowments are limited to the declared dependency set, an undeclared ambient read fails before result publication; passing an already-created host function into that realm does not remove its closure authority.",
   "requiredFields": [
     "providerIdentity",
     "providerVersion",
@@ -11,6 +11,12 @@
     "declaredDependencySet",
     "executedReadSet",
     "undeclaredReadSet",
+    "providerCodeOrigin",
+    "providerEvaluationRealm",
+    "ambientEndowmentSet",
+    "closureCapturePossible",
+    "unmediatedAmbientReadSetOrUnknown",
+    "auditCoverageClaim",
     "scenarioSet",
     "auditMode",
     "resultPublicationDecision",
@@ -22,13 +28,14 @@
     "HOLD_UNDECLARED_PROVIDER_READ",
     "HOLD_UNMEDIATED_INPUT_CHANNEL",
     "UNKNOWN_UNEXECUTED_BRANCH_COMPLETENESS",
+    "UNKNOWN_HOST_CLOSURE_DEPENDENCIES",
     "CANDIDATE_EXACT_REUSE_KEY"
   ],
   "activation": {
     "global": false,
     "motherTrialRequired": true,
     "independentVerifierRequired": true,
-    "rollbackPoint": "Remove the audit wrapper and retain the existing FunctionAssetContract if one bounded provider trial finds false blocking, unmediated channels, or no discriminating value; do not change production cache behavior in this audition."
+    "rollbackPoint": "Keep current trusted-provider registration and mark closure/global dependency completeness UNKNOWN if one bounded source-evaluated provider trial is incompatible with required Engine imports, GPU/device objects, or performance. Do not add SES or change production cache behavior in this audition."
   },
   "teacher": {
     "name": "Bazel sandboxing and hermetic action model",
@@ -38,6 +45,15 @@
     "boundary": "Bazel's default sandbox documentation says host files may remain readable by absolute path; stronger hermetic isolation or a mediated provider access facade is required. Dynamic read observation covers only executed paths.",
     "license": "Apache-2.0",
     "integrationDecision": "LEARN_PRINCIPLE_NOT_DEPENDENCY; do not add Bazel to KaoPu Engine."
+  },
+  "teacherFollowup": {
+    "name": "Endo SES Compartments",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "specificNovelty": "Authority is fixed at provider creation/evaluation: a compartment can start without ambient authority and receive explicit endowments, but moving an existing host function into a compartment does not erase its captured closure.",
+    "boundary": "Endo warns that the host must maintain the boundary and harden endowments; the project remains under active security review. Current KaoPu providers are trusted module functions with imports and closures, so direct integration has unmeasured compatibility and performance cost.",
+    "license": "Apache-2.0",
+    "integrationDecision": "LEARN_CONSTRUCTION_BOUNDARY_NOT_DEPENDENCY; do not add SES to KaoPu Engine without a one-provider compatibility trial."
   },
   "lifecycle": {
     "POSTED": true,
@@ -66,6 +82,18 @@
     {
       "id": "UNEXECUTED_BRANCH_CONTROL",
       "expect": "UNKNOWN_UNEXECUTED_BRANCH_COMPLETENESS"
+    },
+    {
+      "id": "HOST_CLOSURE_BYPASSES_INPUT_PROXY",
+      "declaredDependencies": ["height", "width"],
+      "ambientDependency": "ambientWeather",
+      "expect": [
+        "same-declared-key",
+        "different-result",
+        "input-proxy-misses-ambient-read",
+        "passing-host-function-preserves-closure-authority",
+        "HOLD_UNMEDIATED_INPUT_CHANNEL"
+      ]
     }
   ],
   "evidenceIncrements": [
@@ -86,6 +114,27 @@
       "routingReceipt": {
         "issue": 91,
         "commentId": 6721142635,
+        "status": "POSTED",
+        "acknowledged": false
+      }
+    },
+    {
+      "id": "N254_AMBIENT_AUTHORITY_CONSTRUCTION_BOUNDARY",
+      "boundedQuestion": "Can an input read-set audit discover provider dependencies captured through a host closure or global, and where must restriction occur?",
+      "replay": "N254-CPU-AMBIENT-AUTHORITY-REPLAY-20261108",
+      "result": "6/6 PASS",
+      "lifecycle": {
+        "POSTED": true,
+        "ACKNOWLEDGED": false,
+        "IMPLEMENTED": true,
+        "GATE-RUN": true,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      },
+      "branch": "automation/n254-provider-ambient-authority-20261108",
+      "routingReceipt": {
+        "issue": 91,
+        "commentId": 6723587341,
         "status": "POSTED",
         "acknowledged": false
       }
