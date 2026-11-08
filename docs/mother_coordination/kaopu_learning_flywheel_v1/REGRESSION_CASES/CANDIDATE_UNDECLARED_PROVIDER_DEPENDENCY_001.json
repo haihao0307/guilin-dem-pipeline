@@ -1,0 +1,87 @@
+{
+  "id": "UNDECLARED-PROVIDER-DEPENDENCY-001",
+  "status": "CANDIDATE_N253_SINGLE_ENGINE_AUDITION_NOT_ADOPTED",
+  "scope": "KaoPu Engine function-provider dependency declarations and exact result reuse",
+  "problem": "A Mother/provider can omit a transitive input while the Engine still forms a stable key from the declared subset, causing a cache hit to reuse a result that is wrong for the current world state.",
+  "falsifiableHypothesis": "For providers that read state only through an auditable access facade, recording or denying undeclared reads will detect the executed-path counterexample before a reusable result is published; changing the hidden input while the declared subset stays fixed will otherwise produce a key collision with different output.",
+  "requiredFields": [
+    "providerIdentity",
+    "providerVersion",
+    "resourceName",
+    "declaredDependencySet",
+    "executedReadSet",
+    "undeclaredReadSet",
+    "scenarioSet",
+    "auditMode",
+    "resultPublicationDecision",
+    "branchCoverageStatus",
+    "numericBackendIdentity"
+  ],
+  "decisions": [
+    "DEPENDENCY_AUDIT_PASS_EXECUTED_PATHS",
+    "HOLD_UNDECLARED_PROVIDER_READ",
+    "HOLD_UNMEDIATED_INPUT_CHANNEL",
+    "UNKNOWN_UNEXECUTED_BRANCH_COMPLETENESS",
+    "CANDIDATE_EXACT_REUSE_KEY"
+  ],
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "independentVerifierRequired": true,
+    "rollbackPoint": "Remove the audit wrapper and retain the existing FunctionAssetContract if one bounded provider trial finds false blocking, unmediated channels, or no discriminating value; do not change production cache behavior in this audition."
+  },
+  "teacher": {
+    "name": "Bazel sandboxing and hermetic action model",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "specificNovelty": "Turn an undeclared input access into an execution failure by exposing only declared inputs, rather than treating a declaration or cache-key equality as proof of completeness.",
+    "boundary": "Bazel's default sandbox documentation says host files may remain readable by absolute path; stronger hermetic isolation or a mediated provider access facade is required. Dynamic read observation covers only executed paths.",
+    "license": "Apache-2.0",
+    "integrationDecision": "LEARN_PRINCIPLE_NOT_DEPENDENCY; do not add Bazel to KaoPu Engine."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "subjectCases": [
+    {
+      "id": "HIDDEN_WEATHER_INPUT_COLLIDES",
+      "declaredDependencies": ["height", "width"],
+      "actualReadDependencies": ["height", "weather", "width"],
+      "controlStates": [
+        {"width": 2, "height": 3, "weather": "dry"},
+        {"width": 2, "height": 3, "weather": "rain"}
+      ],
+      "expect": ["same-declared-key", "different-result", "HOLD_UNDECLARED_PROVIDER_READ"]
+    },
+    {
+      "id": "COMPLETE_KEY_CONTROL",
+      "declaredDependencies": ["height", "weather", "width"],
+      "expect": "CANDIDATE_EXACT_REUSE_KEY"
+    },
+    {
+      "id": "UNEXECUTED_BRANCH_CONTROL",
+      "expect": "UNKNOWN_UNEXECUTED_BRANCH_COMPLETENESS"
+    }
+  ],
+  "evidenceIncrements": [
+    {
+      "id": "N253_PROVIDER_DEPENDENCY_HERMETICITY_AUDITION",
+      "boundedQuestion": "How can KaoPu Engine discover a Mother/provider dependency omitted from an exact-reuse declaration?",
+      "replay": "N253-CPU-MEDIATED-READ-REPLAY-20261108",
+      "result": "6/6 PASS",
+      "lifecycle": {
+        "POSTED": false,
+        "ACKNOWLEDGED": false,
+        "IMPLEMENTED": true,
+        "GATE-RUN": true,
+        "ADOPTED": false,
+        "USER-ACCEPTED": false
+      }
+    }
+  ]
+}
