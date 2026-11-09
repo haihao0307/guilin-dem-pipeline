@@ -42,4 +42,4 @@ A single Car/Motor trial would add a coordinator-signed layout digest, role-spec
 
 This proves credential separation and integrity only. One person may control both keys; identity issuance, custody and revocation remain required. It does not prove verifier competence, correct technical judgment, GPU/browser execution or user acceptance.
 
-No production Mother, R2 OS, global gate or R136 archive was changed. Current state: candidate probe `IMPLEMENTED / GATE-RUN`; routing `NOT_POSTED`; `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.
+No production Mother, R2 OS, global gate or R136 archive was changed. The targeted routing receipt is [issue #91 comment 6754541769](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6754541769). Current state: candidate probe `IMPLEMENTED / GATE-RUN`; routing `POSTED`; `ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`.
