@@ -44,4 +44,4 @@ The gate must reject an injected static ESM absolute import, Python or shader-to
 
 ## Boundary and lifecycle
 
-No production Mother, R2 OS, global gate, or real R136 archive was changed or executed. No GPU claim was made. Current lifecycle is `NOT_POSTED`; `ACKNOWLEDGED`, `IMPLEMENTED`, `GATE-RUN`, `ADOPTED`, and `USER-ACCEPTED` are all false.
+No production Mother, R2 OS, global gate, or real R136 archive was changed or executed. No GPU claim was made. The targeted routing receipt is [issue #91 comment 6749890193](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6749890193). Current lifecycle is `POSTED`; `ACKNOWLEDGED`, `IMPLEMENTED`, `GATE-RUN`, `ADOPTED`, and `USER-ACCEPTED` are all false.
