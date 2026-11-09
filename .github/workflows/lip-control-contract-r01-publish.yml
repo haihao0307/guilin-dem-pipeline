@@ -1,0 +1,116 @@
+name: Recover verified lip control contract publication
+on:
+  push:
+    branches: [feature/lip-control-contract-r01-20261017]
+    paths: ['.github/workflows/lip-control-contract-r01-publish.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: lip-control-contract-r01
+  cancel-in-progress: false
+jobs:
+  publish-exact-verified-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SCOPE: kaopu-unified-human-workbench/lip-control-contract-r01
+      SOURCE_SHA: 1f08e20cca0aa864a5faf86aa70f08d836062a49
+      VERIFIED_RUN_ID: '39091795794'
+      BASELINE_PATH: kaopu-unified-human-workbench/human-integrated-r07/preview.html
+      CANDIDATE_PATH: kaopu-unified-human-workbench/lip-control-contract-r01/preview.html
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            kaopu-unified-human-workbench/human-integrated-r07
+            kaopu-unified-human-workbench/lip-control-contract-r01
+            .github/workflows
+      - name: Require all product and verifier sources to equal the verified commit
+        run: |
+          git fetch --depth=1 origin "$SOURCE_SHA"
+          for file in TASK_ANCHOR.json LipControlContract.js build.cjs verify-wetness.cjs; do
+            test "$(git rev-parse "$GITHUB_SHA:$SCOPE/$file")" = "$(git rev-parse "$SOURCE_SHA:$SCOPE/$file")"
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          name: lip-control-contract-r01-39091795794
+          run-id: 39091795794
+          github-token: ${{ github.token }}
+          path: /tmp/lcc-verified-first-run
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproduce the exact already-verified candidate bytes
+        run: node "$SCOPE/build.cjs"
+      - name: Require the original completed evidence before resuming publication
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs'), crypto = require('node:crypto'), assert = require('node:assert/strict');
+          const scope = process.env.SCOPE, prior = '/tmp/lcc-verified-first-run';
+          const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+          const qaBytes = fs.readFileSync(prior + '/evidence/local/qa.json');
+          assert.equal(digest(qaBytes), '9b7f59c3a6cdd3104fd026fe5bee82618ad4722adbae7b080e0ff174cd096ae4');
+          const qa = JSON.parse(qaBytes), manifest = JSON.parse(fs.readFileSync(prior + '/BUILD_MANIFEST.json'));
+          assert.equal(qa.sourceSHA, process.env.SOURCE_SHA);
+          assert.equal(qa.completed, true); assert.equal(qa.necessityEstablished, true);
+          assert.equal(qa.tests.length, 14); assert(qa.tests.every(test => test.passed === true));
+          for (const field of ['pageErrors', 'consoleErrors', 'requestFailures']) assert.deepEqual(qa[field], []);
+          assert.equal(qa.verifierSHA256, digest(fs.readFileSync(scope + '/verify-wetness.cjs')));
+          assert.equal(manifest.moduleSHA256, digest(fs.readFileSync(scope + '/LipControlContract.js')));
+          assert.equal(manifest.sourceCommit, process.env.SOURCE_SHA);
+          assert.equal(qa.candidateSHA256, 'b369935d5d6c51e1cd4f0c93c8ca93ef7f5653319b2580b13a4faa192679d2a6');
+          assert.equal(digest(fs.readFileSync(scope + '/preview.html')), qa.candidateSHA256);
+          assert.deepEqual(JSON.parse(fs.readFileSync(scope + '/BUILD_MANIFEST.json')), manifest);
+          fs.cpSync(prior + '/evidence/local', scope + '/evidence/local', { recursive: true });
+          fs.writeFileSync(scope + '/evidence/RECOVERY_PROVENANCE.json', JSON.stringify({
+            sourceRun: Number(process.env.VERIFIED_RUN_ID), sourceArtifact: 12123746270,
+            sourceCommit: process.env.SOURCE_SHA, recoveryWorkflowCommit: process.env.GITHUB_SHA,
+            recoveryRun: Number(process.env.GITHUB_RUN_ID), originalQASHA256: digest(qaBytes),
+            reason: 'All 14 real browser checks passed; publication git add failed because evidence is ignored.',
+            productAndVerifierUnchanged: true, exactVerifiedBuildReproduced: true,
+            publicComparison: 'New runner must reproduce the prior exact framebuffer hashes; mismatches remain failures.'
+          }, null, 2) + '\n');
+          NODE
+      - name: Publish only this verified scope with a branch lease
+        id: preview
+        run: |
+          test "$GITHUB_REF_NAME" = feature/lip-control-contract-r01-20261017
+          git fetch origin "$GITHUB_REF_NAME"
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$SCOPE/preview.html" "$SCOPE/BUILD_MANIFEST.json"
+          git add -f "$SCOPE/evidence/local" "$SCOPE/evidence/RECOVERY_PROVENANCE.json"
+          git commit -m 'Publish exact independently verified lip control candidate [skip ci]'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          printf 'sha=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Install the same fixed real-browser runtime
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.58.2 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Verify the fixed public page against the preserved exact evidence
+        env:
+          MODE: public
+          CANDIDATE_URL: https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${{ steps.preview.outputs.sha }}/kaopu-unified-human-workbench/lip-control-contract-r01/preview.html
+          LOCAL_QA_PATH: kaopu-unified-human-workbench/lip-control-contract-r01/evidence/local/qa.json
+          QA_OUT: kaopu-unified-human-workbench/lip-control-contract-r01/evidence/public
+          PUBLIC_COMMIT: ${{ steps.preview.outputs.sha }}
+        run: node "$SCOPE/verify-wetness.cjs"
+      - name: Preserve successful fixed public readback with a branch lease
+        run: |
+          git fetch origin "$GITHUB_REF_NAME"
+          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          git add -f "$SCOPE/evidence/public"
+          git commit -m 'Record exact fixed HTTPS lip contract readback [skip ci]'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+      - name: Preserve the recovered evidence and public readback
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lip-control-contract-r01-public-${{ github.run_id }}
+          path: |
+            kaopu-unified-human-workbench/lip-control-contract-r01/evidence
+            kaopu-unified-human-workbench/lip-control-contract-r01/BUILD_MANIFEST.json
+          retention-days: 30

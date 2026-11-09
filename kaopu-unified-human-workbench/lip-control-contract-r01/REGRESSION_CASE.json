@@ -1,0 +1,50 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "R07-LEGACY-LIP-WETNESS-NO-CONSUMER",
+  "domain": "Human workbench / lip material controls",
+  "source": "user_requested_system_audit_and_independent_source_review",
+  "createdAt": "2026-10-18T03:16:00Z",
+  "failureClass": "STATE_UPDATE_WITHOUT_ACTIVE_RENDER_CONSUMER",
+  "failureDescription": "Frozen R07 accepts changes to legacy aggregate, upper and lower lip wetness while the active fragment shader does not consume them. Real browser probes of API and trusted UI input reproduce a zero-pixel response. The same upper/lower controls respond in the native material.",
+  "rejectedArtifact": null,
+  "evidence": {
+    "localRun": 39091795794,
+    "localQA": "evidence/local/qa.json",
+    "localQASHA256": "9b7f59c3a6cdd3104fd026fe5bee82618ad4722adbae7b080e0ff174cd096ae4",
+    "independentlyRecomputedPNG": true
+  },
+  "mustNeverRepeat": [
+    "Treat successful state or uniform assignment as proof that the active render path uses the parameter",
+    "Use any whole-frame change as proof of a correctly connected mouth control",
+    "Silently average independent legacy values into an uncalibrated one-dimensional current control",
+    "Reject a preset after it has already modified diagnostics or private undo history",
+    "Delete inactive recipe values or block geometric restoration merely because another material is displayed",
+    "Treat an unreviewed material or shader hook as a supported consumer"
+  ],
+  "requiredEvidence": [
+    "Frozen host bytes and a deterministic nonblank real WebGL framebuffer",
+    "R07 no-response probes for all three legacy wetness fields, including trusted UI input",
+    "A native-material positive control for the same legacy control family",
+    "Independent mouth-region measurement and rejected outside-region synthetic counterexamples",
+    "Exact candidate/default preservation and exact forwarding to original psWet low/high frames",
+    "Atomic rejection, native-material recovery, real archive round trip and geometric undo",
+    "Fixed HTTPS bytes, version, startup, key interaction and framebuffer readback"
+  ],
+  "gateLogic": [
+    "A baseline legacy mouth response disproves the stated defect premise",
+    "A failed native positive control makes the evidence inconclusive; it does not prove the absence of the defect",
+    "Reject candidate changes to the default person, geometry, lighting, camera or framebuffer",
+    "Reject current-control responses differing from original direct psWet endpoint frames",
+    "Require zero changes outside the independent ROI when the baseline has zero; otherwise preserve and disclose the exact inherited footprint",
+    "Classify browser failure, timeout and incomplete publication separately from product success",
+    "Machine success permits a bounded review candidate, without automatically setting visualAcceptance or productionReady"
+  ],
+  "appliesTo": [
+    "Frozen R07 host at 5543f756ca3af1428323696324303fa70b8de850",
+    "lipStructure.settings.wetness",
+    "lipStructure.anatomy.settings.upperWetness",
+    "lipStructure.anatomy.settings.lowerWetness",
+    "Reviewed R07 and native ET19 material objects and shader hooks"
+  ],
+  "active": true
+}
