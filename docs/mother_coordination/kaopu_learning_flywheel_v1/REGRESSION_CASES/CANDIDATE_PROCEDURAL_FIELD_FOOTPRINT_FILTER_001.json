@@ -1,0 +1,97 @@
+{
+  "schema": "kaopu.regression-case/1",
+  "id": "PROCEDURAL-FIELD-FOOTPRINT-FILTER-001",
+  "title": "程序场像素足迹过滤不得改写对象真值或被误报为全通道抗闪烁",
+  "status": "CANDIDATE_N258_ENGINE_MATERIAL_SINGLE_MOTHER_AUDITION_NOT_ADOPTED",
+  "scope": {
+    "mother": ["Engine", "Material"],
+    "global": false,
+    "productionChange": false
+  },
+  "boundedQuestion": "像素足迹驱动的程序场过滤，能否在不改对象真值、也不偷换成 LOD 的前提下，抑制远距高频闪烁？",
+  "failureMechanism": "程序材质的高频 value 与 analytic gradient 在屏幕足迹超过可解析频率后仍被直接求值，造成远距黑点、闪烁或法线抖动；只过滤一个通道、只做距离衰减，或用 LOD 替代后宣称问题已解决，都会形成 silent fallback / false pass。",
+  "teacher": {
+    "repository": "mrdoob/codevember-2026",
+    "commit": "0ea8c66a3b2a227aaf4a2db32815a11036f9a4ab",
+    "auditedFiles": {
+      "05/README.md": "8fb934",
+      "05/materials.js": "cf4e15",
+      "05/geology.js": "f6fada",
+      "05/botany.js": "9ccc30",
+      "05/package.json": "801b10",
+      "05/package-lock.json": "a489a1"
+    },
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "exactNovelty": "相对 KAOPU Current Best View，新增的不是泛化的‘远处少细节’，而是同一程序场同时返回 value 与 analytic gradient，并按像素足迹让两者共同收敛到明示的 unresolved limit；对象/源场不变，过滤发生在 observation evaluation。",
+    "screening": {
+      "sourceProvenance": "作者官方 GitHub 仓库；固定 commit 与文件 blob；非中文站点、非 AI 汇总。",
+      "maintenance": "仓库与该 commit 在 2026-11-09 有真实活动；未归档；该方法无独立 release/issue 历史。",
+      "reproducibility": "含可运行 JS、锁文件、Node tests、browser GPU checks 与 benchmark；但没有该过滤方法的专门 temporal-shimmer regression。",
+      "licenseRights": "仓库 MIT；README 声明场景无图像纹理、导入模型或 HDR；Three.js 依赖为 MIT。",
+      "directRelevance": "直接对应程序材质高频黑点、远距闪烁和梯度/法线抖动。",
+      "noveltyVsCurrentBestView": "提供 value+gradient 联动收敛与像素足迹语义，而非仅距离衰减。",
+      "integrationRisk": "原实现依赖 WebGPU、fragment derivatives、Three.js 0.187 experimental API 与 CDN；艺术场景约 20.7M 源三角形。只 audition 原理，不引入依赖。",
+      "failureBoundary": "艺术 demo；阈值手调；只覆盖部分程序通道；普通 compute shader 无 dpdx/dpdy；场景同时使用 meshlet LOD，不能把其整体表现归因于该过滤。"
+    }
+  },
+  "falsifiableHypothesis": "若为每个声明的高频程序通道绑定精确 field digest、坐标空间、shader stage、频率/幅度、footprint metric、filter band 与 unresolved limit，则在 footprint sweep 中 value 应连续收敛到该 limit、analytic gradient 应连续收敛到零；固定相机微抖 temporal delta 应显著低于未过滤对照。compute 路径必须显式提供可审计的 footprint 估计。",
+  "requiredTaskAnchorFields": [
+    "fieldFunctionDigest",
+    "coordinateSpace",
+    "shaderStage",
+    "frequencyAmplitude",
+    "footprintSource",
+    "footprintMetric",
+    "filterBandLowHigh",
+    "unresolvedLimitValue",
+    "gradientMethod",
+    "filteredChannelSet",
+    "unfilteredChannelSet",
+    "currentHead",
+    "gpuBrowserDevice",
+    "temporalSweep",
+    "thresholdsAndResults",
+    "errorAndFallbackState"
+  ],
+  "verifierDecisions": [
+    "HOLD_FOOTPRINT_UNBOUND",
+    "HOLD_COMPUTE_FOOTPRINT_UNKNOWN",
+    "HOLD_UNFILTERED_CHANNEL_REMAINS",
+    "HOLD_TEMPORAL_SWEEP_MISSING",
+    "CANDIDATE_INVARIANTS_CPU_PASS",
+    "PASS_SCOPED_GPU_TEMPORAL_FILTER"
+  ],
+  "minimumTrial": {
+    "target": "Engine/Material single Mother only",
+    "producer": "bind one existing procedural field and enumerate every high-frequency output channel",
+    "verifier": "independent verifier runs footprint sweep, fragment GPU compile/run, compute-path footprint test where applicable, fixed-camera micro-jitter temporal comparison, and negative control with one intentionally unfiltered channel",
+    "pass": "All declared channels meet documented convergence and temporal thresholds with no object/source-field mutation, no LOD substitution, no silent fallback, and recorded GPU/browser/device provenance.",
+    "rollback": "Remove the candidate filter wrapper and Task Anchor fields; retain the failed evidence. Do not change R2 OS or global gates."
+  },
+  "probeEvidence": {
+    "probe": "PROBES/procedural_field_footprint_filter_probe_n258.mjs",
+    "result": "PROBES/procedural_field_footprint_filter_result_n258.json",
+    "conclusion": "METHOD_INVARIANTS_REPRODUCED_CPU_ONLY",
+    "negativeControl": "一个已过滤通道不能证明其余未过滤高频通道安全。"
+  },
+  "boundaries": [
+    "未进行 WGSL 编译或 GPU 执行。",
+    "未进行相机 temporal sweep 或像素对比。",
+    "普通 compute-stage evaluation 不可直接使用 fragment derivatives。",
+    "不采用 Three.js、meshlet LOD、场景资产或原项目成本结构。"
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE_RUN": "CPU invariant probe only",
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "routing": {
+    "issue": 91,
+    "target": "Engine/Material Mother",
+    "commentId": null
+  }
+}
