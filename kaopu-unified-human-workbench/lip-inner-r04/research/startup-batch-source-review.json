@@ -1,0 +1,152 @@
+{
+  "schema": "kaopu/lip-inner-startup-batch-source-review@1",
+  "task": "LIP-INNER-R04 candidate-02",
+  "reviewer": "/root/lip_r03_geometry",
+  "reviewedAtUTC": "2026-10-18T07:56:57.387445+00:00",
+  "scope": "Read-only review of the boot transaction and the native APIs it invokes. This report is the only file written by the reviewer.",
+  "snapshot": {
+    "newShell": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/repo/kaopu-unified-human-workbench/lip-inner-r04/InnerLip.js",
+      "sha256": "0d29bcc5738d4ee612a584851ed743c22ee2552865d37bb1c15fb641512b1a9c",
+      "bytes": 15508
+    },
+    "originalShellSHA256": "bee372fb1cb27c6a661525f67adf2b33d532ba8ac802cbef15cbeb8ac9bcd95f",
+    "frozenR02ModuleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+    "frozenR07HostSHA256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "productionChecker": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/verification/verify-inner.cjs",
+      "sha256": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+      "browserEvaluateDeadlineMS": 120000,
+      "modifiedForCandidate02": false
+    },
+    "diagnosticChecker": {
+      "path": "/workspace/scratch/c1f8c7fc7cfa/lip-visual-audit/r04/verification/diagnose-inner.cjs",
+      "sha256": "0935fdb1806f2af288133e44437efc98bf88a314a455591e50bd15c2d1c3553f",
+      "modifiedForCandidate02": false
+    }
+  },
+  "decision": {
+    "sourceReview": "PASS_BOUNDED_BOOT_BATCH_CANDIDATE",
+    "reason": "The boot sequence contains redundant synchronous render requests while committing one final R02-base, native jaw-open, macro-view state. Deferring those requests at the existing viewer.render entry point preserves the native CPU updates and allows the final normal render to perform shader compilation, lighting/group selection and GPU submission. It is a bounded initialization scheduling change.",
+    "productionGeometryOrMaterialAlgorithmChanged": false,
+    "nativeViewerPrototypePatched": false,
+    "rendererRenderStubNeeded": false,
+    "exactCauseOfFirstTimeoutEstablished": false,
+    "actualPerformancePassed": false,
+    "newCandidatePublicRuntimePassed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "actualNativeCallChain": [
+    {
+      "caller": "window.lifelikeIdle.pause() / lipWorkbench.stop()",
+      "source": "R07 n4 and G5",
+      "behavior": "The frozen non-requested idle API pause is a no-op. G5 stop sets the local playback flag false and cancels its requestAnimationFrame. The duplicated stop calls do not alter the pose or submit a native frame.",
+      "conditionalLimit": "If the optional full idle system was explicitly started, its runtime pause remains the original API; the audited startup is the frozen default non-requested idle state."
+    },
+    {
+      "caller": "priorCompare(r02)",
+      "source": "R02 LipSurface.js compare() -> set()",
+      "behavior": "On the normal already-enabled R02 base, the prior code synchronized its uniforms and called viewer.render despite requesting the current comparison. The new initialization calls priorCompare only if the base is not already R02. If a legacy base must be normalized, the original compare/set still executes inside the transaction, including its required display-geometry update."
+    },
+    {
+      "caller": "pose(jaw) -> lipWorkbench.setPose(desiredPose)",
+      "source": "InnerLip.js pose(), R07 G5 p(), t1.performance.set(), O5.update(), controller.changed()",
+      "behavior": "The original performance.set updates native pose/model state and computes the person. lipStructure.update updates the original live lip uniforms. controller.changed runs viewer.update, motion refresh and original change listeners. The default motion mode is shape, for which MotionStudio.refresh returns. UI status synchronization remains intact."
+    },
+    {
+      "caller": "viewer.update()",
+      "source": "R07 fh.update() -> ih/Q1/Nn/F1 and their existing ancestors",
+      "behavior": "The complete display-geometry and surface-field chain executes. fh.update sets inUnified around the inherited update sequence and calls viewer.render once after clearing it. Nested render requests are already subject to native inUnified/inFoldUpdate/inLipUpdate/inOcularUpdate guards. No native update function or algorithm is replaced by this candidate."
+    },
+    {
+      "caller": "view(macro) -> base.view(macro)",
+      "source": "R02 LipSurface.js view(), R07 z5 native lipWorkbench.view()",
+      "behavior": "The native view derives framing from the current native person, writes orbit target/camera, calls orbit.update and explicitly requests viewer.render. R02 then applies its retained front-angle correction, calls orbit.update, restores the inspection-light mode and explicitly requests another viewer.render. The R04 view wrapper only records its selected view and synchronizes controls."
+    },
+    {
+      "caller": "orbit.update change event",
+      "source": "R07 native viewer constructor",
+      "behavior": "The original callback is this.onOrbit=()=>this.render(). It reads the current viewer.render dynamically, so synchronous camera-change render requests are contained by the temporary own property. Whether a particular orbit.update emits a change is state-dependent."
+    },
+    {
+      "caller": "skin.inspection.set(mode)",
+      "source": "R07 C4 setLight()",
+      "behavior": "The original inspection-light mode, applyLight and UI state writes still execute. Its explicit viewer.render request is deferred. The eventual original renderer.render wrapper performs applyLight again as part of a normal frame."
+    },
+    {
+      "caller": "final render() after descriptor restoration",
+      "source": "InnerLip.js render() and original native viewer / renderer wrappers",
+      "behavior": "The final call synchronizes R04 controls and uniforms, enters the restored viewer.render, performs retained native beforeRender/light/surface logic, invokes the retained C4 lighting and procedural geometry/material selection wrappers, compiles the new shader through the real onBeforeCompile chain, and submits the normal native GPU draw. Its ready value is read after this call."
+    }
+  ],
+  "transactionReview": {
+    "capturedBeforeReplacement": [
+      "Object.getOwnPropertyDescriptor(viewer, render)",
+      "viewer.render function identity"
+    ],
+    "temporaryMutation": "A configurable writable own viewer.render function counts and defers synchronous render requests only during boot state setup.",
+    "originalOperationsRetained": [
+      "pause original optional idle",
+      "stop original lip playback",
+      "conditionally normalize the original R02 comparison",
+      "set native jaw pose",
+      "set native macro view"
+    ],
+    "restoration": "The finally block restores the exact original own descriptor when one existed, otherwise deletes the temporary own property so the original prototype lookup is restored. It then records originalRenderRestored from function identity. A failed identity restoration throws before the final draw.",
+    "exceptionBehavior": "If setup throws, finally still restores viewer.render; the outer boot error path records the failure. The final render is not issued from finally, so a partially failed setup is not presented as completed.",
+    "finalRenderCountWithinThisExplicitBootTail": 1,
+    "wholeStartupFrameCountClaimed": false,
+    "wholeStartupFrameCountLimit": "Existing ResizeObserver, requestAnimationFrame and other asynchronous callbacks may render after the synchronous transaction. This source review does not assert that the complete inherited startup emits only one frame.",
+    "readiness": "The wrapper publishes no fabricated ready value. During the transaction compiles can remain zero and report().ready can be false; these intermediate return values are not treated as failures or acceptance gates. The final restored normal render performs actual compilation. No intermediate new-shader compilation is required for native pose/camera/field updates."
+  },
+  "whyNotStubRendererRender": {
+    "finding": "No required direct renderer.render bypass was identified in the audited boot APIs; their render requests reach the dynamic viewer.render entry point.",
+    "nativeRisk": "K1.beforeRender contains a shadow pass that calls renderer.render and then records shadow progress/clears dirty. Stubbing renderer.render after entering that path could leave CPU completion flags claiming that a shadow draw occurred when it did not.",
+    "decision": "Keep renderer.render untouched. Deferring at viewer.render avoids entering the native beforeRender/GPU submission path until the final actual frame."
+  },
+  "retainedFinalRenderSideEffects": [
+    "Native model/display geometry updates run during setup and do not require GPU readback.",
+    "Native view calculation uses the updated native person, not a prior rendered image.",
+    "Original lip parameter/uniform updates execute during setup.",
+    "Cine lighting center/reframe and display surface field updates remain on the original CPU path.",
+    "Retained light-dependent surface logic and original C4 inspection-light application run during the final normal render.",
+    "Procedural draw geometry/group/material selection remains in the original renderer wrapper and runs for the final actual scene.",
+    "New material shader compilation is deferred until the restored normal draw rather than skipped or emulated."
+  ],
+  "initializationEvidence": {
+    "fields": [
+      "batched",
+      "suppressedRenderCalls",
+      "originalRenderRestored"
+    ],
+    "reportedBy": "status.initialization and a copied report().initialization object, available to the frozen production checker startup report",
+    "countMeaning": "suppressedRenderCalls counts viewer.render entry requests. Some would already have been skipped by existing native update guards. It is not the number of GPU frames saved and must not be reported as such."
+  },
+  "firstCandidateFailurePreserved": {
+    "runID": 39108869490,
+    "sourceCommit": "6580ecde2082d779018bcfc90e3aa57b03d801ae",
+    "buildCommit": "fbbdba156ba2d799c859ab3094f8f83391f4ddc0",
+    "previewSHA256": "bb49a2532ca1a153dc65ea55dc80411ce6168a78396df8c5ebaa293fe4f58089",
+    "checkerSHA256": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+    "qaSHA256": "85f2648061176b92fbf572c8add9dacb359f23a151841940c860610f19af8ef8",
+    "failure": "Error: R04 public browser evaluate exceeded 120000 ms; pending work is not a pass",
+    "failedStage": "R04 public drain original startup GPU queue",
+    "stageElapsedMS": 120003,
+    "deadlineMS": 120000,
+    "targetFramesCaptured": 0,
+    "onlyCompletedTest": "fixed public bytes source modules and R02 ancestor",
+    "cleanup": {
+      "completed": true,
+      "browserDisconnected": true,
+      "errors": [],
+      "elapsedMS": 834
+    },
+    "lastNativeRenderCounter": 43,
+    "contextLost": false,
+    "cleanupGLErrorBefore": 0,
+    "cleanupGLErrorAfter": 0,
+    "meaning": "The first candidate timed out waiting for startup gl.finish plus one-pixel readback before any target comparison frame. Context/error and cleanup evidence do not establish which portion of the pending work consumed the deadline. The redundant render requests justify testing this narrow scheduling candidate, but do not prove that batching resolves the timeout."
+  },
+  "runtimeGate": "Run the unchanged 8235 production checker against the actual candidate-02 public build. Preserve the 120000 ms browser-evaluate deadline, strict state/draw-domain equality, actual expanded GPU shader evidence, twelve saved target frames, and fresh downloaded-archive readback. No actual runtime success is claimed by this source review."
+}

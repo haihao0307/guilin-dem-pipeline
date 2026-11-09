@@ -1,0 +1,45 @@
+{
+  "schema": "kaopu/r05-motion-attribution-source-note@1",
+  "reviewedAtUTC": "2026-10-20T02:15:17.761906+00:00",
+  "script": "verification/MotionAttribution.js",
+  "sha256": "0e8e1b053be97729cc46ceb4841d46a6d006f2bae71b4856a790b0a3e98cbb10",
+  "bytes": 32380,
+  "usage": [
+    "Load the fixed R04 page and wait for innerLip.ready / native final frame, then inject this classic IIFE script.",
+    "setMode(mode) selects baseline, no-local, or no-closure but does not update geometry or render. Run the existing native pose/update and capture a real frame.",
+    "visibleSamples(points,width,height) reads the current actual v.mesh after its real frame; points accept {x,y,label} or [x,y], at most 256. Input is zero-based framebuffer pixel indices with top-left origin, sampled at x+.5/y+.5. The synchronous result may be awaited.",
+    "restore() restores the original solver.apply descriptor and invokes one original viewer.update if an ablation has executed. The current declared pose is retained; caller must verify the restored actual frame."
+  ],
+  "intervention": [
+    "Only the original display position array of the original lip solver is restored at verified instance-level stage boundaries.",
+    "no-local restores before-local positions at pairs.map entry; downstream closure, envelope, normal, strain and micro code then execute normally.",
+    "no-closure restores after-local positions at lips[Symbol.iterator] entry; closure pressure fields are deliberately preserved, making this a position-only causal ablation.",
+    "Every call restores pairs.map and lips iterator own-property descriptors in finally. Baseline/restore removes the outer solver.apply own hook and restores its original descriptor. Native exceptions mark failure and unhook.",
+    "No prototype, canonical positions, DNA, authored settings, shader source, workflow or published R04 file is modified."
+  ],
+  "attributionChecks": [
+    "Actual drawing buffer dimensions and viewport/scissor are checked.",
+    "Actual draw and displayed vertex count and position buffer identity must match.",
+    "Original topology count is 198406 in the retained R04 evidence; final display count is 266098. Native sample mapping therefore requires exact fRest/csType/l19Oral correspondence for the full retained topology prefix. IDs appended beyond that prefix receive no invented sample.",
+    "Triangles come from the actual current index buffer, material groups and drawRange. CPU code performs homogeneous frustum clipping, front/back-side culling, screen-centre barycentric inclusion, frontmost NDC depth selection, and perspective-correct native attribute interpolation.",
+    "Unhit pixels return per-point available:false; failures of prerequisites return available:false with a reason. They do not throw into the parent frame runner.",
+    "MSAA edges within one pixel, depth ties and unsupported material coverage/depth behavior are explicitly flagged. Other scene objects and shader fragment discard/displacement are not reproduced; fragmentOwnershipCertain is always false."
+  ],
+  "verification": {
+    "nodeSyntaxCheckPassed": true,
+    "isolatedSyntheticLogicPassed": true,
+    "checks": [
+      "no-local removes local position delta only",
+      "no-closure removes closure position delta only",
+      "inner method descriptors restore after each call",
+      "restore returns outer descriptor and original native rebuild",
+      "pixel-centre hit and no-hit result",
+      "framebuffer mismatch returns unavailable",
+      "synthetic native exception restores hooks and records failure"
+    ],
+    "browserOrGPUExecutedByThisAgent": false,
+    "visualAcceptance": false,
+    "productionRepair": false
+  },
+  "remainingCallerGate": "Actual fixed R04 browser and CI rendering, real before/ablation/restored frames, declared pose and full native state invariants, and independent image review."
+}

@@ -1,0 +1,1463 @@
+{
+  "schema": "kaopu/lip-colour-composition-qa@1",
+  "version": "LIP-REALISM-R02",
+  "mode": "public",
+  "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+  "verifierSHA256": "753683da5aa94114c14ead1c8661aba1d2f6e1b0baa3ea02564cf1ab0da4338c",
+  "startedAt": "2026-10-18T06:28:47.851Z",
+  "tests": [
+    {
+      "name": "immutable public bytes exactly match the locally verified candidate",
+      "passed": true,
+      "elapsedMS": 502,
+      "result": {
+        "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+        "httpStatus": 200,
+        "bytes": 5479787,
+        "sha256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+        "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231"
+      }
+    },
+    {
+      "name": "public startup matches the retained measured person and R02 frame",
+      "passed": true,
+      "elapsedMS": 30374,
+      "result": {
+        "frame": {
+          "width": 640,
+          "height": 512,
+          "sha256": "a6345c4b175c0756f00366f86f73887113eb2043c7bc8e228e0e69c6831a9e24",
+          "nonUniformPixels": 116471
+        },
+        "protectedSceneMatched": true
+      }
+    },
+    {
+      "name": "real UI comparison and view buttons select measured frames and preserve the same person",
+      "passed": true,
+      "elapsedMS": 93599,
+      "result": {
+        "method": "Playwright clicks on visible native buttons; final WebGL readback",
+        "records": [
+          {
+            "action": "front / R01",
+            "frame": {
+              "width": 640,
+              "height": 512,
+              "sha256": "e3fe606d34cea0498be0fc43c0daca1f537a2b0858d0bf7756246c9f1d36a191",
+              "nonUniformPixels": 116471
+            }
+          },
+          {
+            "action": "R02 / oblique",
+            "frame": {
+              "width": 640,
+              "height": 512,
+              "sha256": "e933e85bd53ca86cc145a526de13bb12d8de5e081a725a3cd00b90c01a153db8",
+              "nonUniformPixels": 274657
+            }
+          },
+          {
+            "action": "R02 / macro",
+            "frame": {
+              "width": 640,
+              "height": 512,
+              "sha256": "4e938508f2885a37fe452933ff99343fd5ef54974023e750ab714407f506751c",
+              "nonUniformPixels": 313229
+            }
+          }
+        ],
+        "events": [
+          {
+            "trusted": true,
+            "mode": null,
+            "view": "front"
+          },
+          {
+            "trusted": true,
+            "mode": "r01",
+            "view": null
+          },
+          {
+            "trusted": true,
+            "mode": "r02",
+            "view": null
+          },
+          {
+            "trusted": true,
+            "mode": null,
+            "view": "oblique"
+          },
+          {
+            "trusted": true,
+            "mode": null,
+            "view": "macro"
+          }
+        ]
+      }
+    },
+    {
+      "name": "public 390 by 844 viewport keeps comparison and view controls usable without horizontal overflow",
+      "passed": true,
+      "elapsedMS": 40756,
+      "result": {
+        "tested": true,
+        "physicalDevice": false,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "layout": {
+          "innerWidth": 390,
+          "innerHeight": 844,
+          "clientWidth": 390,
+          "documentScrollWidth": 390,
+          "bodyScrollWidth": 390,
+          "panel": {
+            "x": 7,
+            "width": 376,
+            "left": 7,
+            "right": 383
+          }
+        },
+        "records": [
+          {
+            "selector": "[data-lr-comparison=\"r01\"]",
+            "box": {
+              "x": 138.65625,
+              "y": 512.546875,
+              "width": 112.671875,
+              "height": 36.59375
+            },
+            "observed": {
+              "comparison": "r01",
+              "view": "macro",
+              "enabled": true
+            }
+          },
+          {
+            "selector": "[data-lr-comparison=\"r02\"]",
+            "box": {
+              "x": 20,
+              "y": 512.546875,
+              "width": 112.65625,
+              "height": 36.59375
+            },
+            "observed": {
+              "comparison": "r02",
+              "view": "macro",
+              "enabled": true
+            }
+          },
+          {
+            "selector": "[data-lr-view=\"front\"]",
+            "box": {
+              "x": 20,
+              "y": 584.1875,
+              "width": 172.5,
+              "height": 36.59375
+            },
+            "observed": {
+              "comparison": "r02",
+              "view": "front",
+              "enabled": true
+            }
+          },
+          {
+            "selector": "[data-lr-view=\"macro\"]",
+            "box": {
+              "x": 197.5,
+              "y": 584.1875,
+              "width": 172.5,
+              "height": 36.59375
+            },
+            "observed": {
+              "comparison": "r02",
+              "view": "macro",
+              "enabled": true
+            }
+          }
+        ],
+        "events": [
+          {
+            "trusted": true,
+            "mode": "r01",
+            "view": null
+          },
+          {
+            "trusted": true,
+            "mode": "r02",
+            "view": null
+          },
+          {
+            "trusted": true,
+            "mode": null,
+            "view": "front"
+          },
+          {
+            "trusted": true,
+            "mode": null,
+            "view": "macro"
+          }
+        ],
+        "canvas": {
+          "width": 376,
+          "height": 400,
+          "nonUniformPixels": 150333,
+          "error": 0,
+          "contextLost": false,
+          "programs": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "cssBounds": {
+            "left": 7,
+            "top": 64,
+            "width": 376,
+            "height": 400
+          }
+        },
+        "performanceClaimed": false
+      }
+    }
+  ],
+  "frames": [
+    {
+      "name": "public-r02-front",
+      "width": 640,
+      "height": 512,
+      "sha256": "a6345c4b175c0756f00366f86f73887113eb2043c7bc8e228e0e69c6831a9e24",
+      "nonUniformPixels": 116471,
+      "pngSHA256": "c7dccb1e42dc6c3028ecda80e47ea7d25b9ebe2a77b2df2e30186e8cdce9692c",
+      "elapsedMS": 30291.499999999985,
+      "gpu": {
+        "width": 640,
+        "height": 512,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "defaultFramebuffer": true,
+        "elapsedMS": 30291.499999999985,
+        "passes": [
+          {
+            "nativeScene": true,
+            "nativeCamera": true,
+            "frameDelta": 1,
+            "drawCalls": 2,
+            "triangles": 531702
+          }
+        ],
+        "programs": [
+          {
+            "id": 0,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 1,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 2,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 3,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 4,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 5,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 6,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 7,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 8,
+            "linked": true,
+            "log": ""
+          }
+        ],
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      }
+    },
+    {
+      "name": "public-ui-r01-front",
+      "width": 640,
+      "height": 512,
+      "sha256": "e3fe606d34cea0498be0fc43c0daca1f537a2b0858d0bf7756246c9f1d36a191",
+      "nonUniformPixels": 116471,
+      "pngSHA256": "23ce9065c89fb95eebccedacc47a82039eb27f61c4b47ef3643f7226dab4120b",
+      "elapsedMS": 37195.79999999999,
+      "gpu": {
+        "width": 640,
+        "height": 512,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "defaultFramebuffer": true,
+        "elapsedMS": 37195.79999999999,
+        "passes": [
+          {
+            "nativeScene": true,
+            "nativeCamera": true,
+            "frameDelta": 1,
+            "drawCalls": 2,
+            "triangles": 531702
+          }
+        ],
+        "programs": [
+          {
+            "id": 0,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 1,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 2,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 3,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 4,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 5,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 6,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 7,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 8,
+            "linked": true,
+            "log": ""
+          }
+        ],
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      }
+    },
+    {
+      "name": "public-ui-r02-oblique",
+      "width": 640,
+      "height": 512,
+      "sha256": "e933e85bd53ca86cc145a526de13bb12d8de5e081a725a3cd00b90c01a153db8",
+      "nonUniformPixels": 274657,
+      "pngSHA256": "6a7e5cf9fdd172e8d5fd723f7fea53fb32f525ce9c9dbe63b325dcb769e958b9",
+      "elapsedMS": 27138.599999999977,
+      "gpu": {
+        "width": 640,
+        "height": 512,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "defaultFramebuffer": true,
+        "elapsedMS": 27138.599999999977,
+        "passes": [
+          {
+            "nativeScene": true,
+            "nativeCamera": true,
+            "frameDelta": 1,
+            "drawCalls": 2,
+            "triangles": 531702
+          }
+        ],
+        "programs": [
+          {
+            "id": 0,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 1,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 2,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 3,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 4,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 5,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 6,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 7,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 8,
+            "linked": true,
+            "log": ""
+          }
+        ],
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      }
+    },
+    {
+      "name": "public-ui-r02-macro",
+      "width": 640,
+      "height": 512,
+      "sha256": "4e938508f2885a37fe452933ff99343fd5ef54974023e750ab714407f506751c",
+      "nonUniformPixels": 313229,
+      "pngSHA256": "dd60c3fa008e04b254fee7dce7a24eb6b431314f63e7151404dfe4813803717a",
+      "elapsedMS": 24819.100000000035,
+      "gpu": {
+        "width": 640,
+        "height": 512,
+        "errorBefore": 0,
+        "error": 0,
+        "contextLost": false,
+        "defaultFramebuffer": true,
+        "elapsedMS": 24819.100000000035,
+        "passes": [
+          {
+            "nativeScene": true,
+            "nativeCamera": true,
+            "frameDelta": 1,
+            "drawCalls": 2,
+            "triangles": 531702
+          }
+        ],
+        "programs": [
+          {
+            "id": 0,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 1,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 2,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 3,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 4,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 5,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 6,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 7,
+            "linked": true,
+            "log": ""
+          },
+          {
+            "id": 8,
+            "linked": true,
+            "log": ""
+          }
+        ],
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "resourceErrors": [],
+  "framebuffer": {
+    "width": 640,
+    "height": 512,
+    "pixelRatio": 1
+  },
+  "browserViewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "softwareRenderer": true,
+  "physicalPhone": false,
+  "completed": true,
+  "necessityEstablished": true,
+  "publicHttpsPassed": true,
+  "browserPassed": true,
+  "interactive3D": true,
+  "shareAllowed": true,
+  "generatedImageUsed": false,
+  "staticImageSubstitute": false,
+  "sourceModified": true,
+  "userVisualAccepted": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "budgetMS": 480000,
+  "candidateScope": "Legacy lip-tint composition correction only; extra spatial colour and outer-edge transition were withdrawn after independent visual review.",
+  "priorFailureEvidence": {
+    "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39096551073",
+    "sourceSHA": "bf235cbb741de1eb21f469c9e020b95a65f24040",
+    "verifierSHA256": "6f5bd3941b1c9e6ec828fb46507efba3fd2f677dc4036f2d547625042ebfa2b5",
+    "artifactID": 12124738959,
+    "artifactSHA256": "9562ffc044854dc1833bba7f96cca26ad1fdd143771d6f3770a52c08242f9be0",
+    "classification": "The fixed 10% old-feather sampling premise failed before either skin-layer perturbation was executed; this was not a measured skin response failure.",
+    "observedMacroProbes": {
+      "total": 6392,
+      "nonzeroOldFeather": 515,
+      "maximumOldFeather": 0.045756502743540255,
+      "visibleR01OldTintResponse": 64
+    },
+    "cleanup": "The original 15-second browser close also timed out after pending native renders; cleanup now explicitly drains each page before closing it, with bounded failure handling."
+  },
+  "priorParameterSamplingFailureEvidence": {
+    "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39098058680",
+    "sourceSHA": "331b5c469ce822d989a10193d2292c17b94e346a",
+    "verifierSHA256": "7e5328286a4d5662a0e7aa7a895b9edd197e59609b99074fa050a2c76b930bb0",
+    "artifactID": 12125727373,
+    "artifactSHA256": "a7764a58a8bae00bbefc521ccc4baffff206825369254ae2281e812e34376d34",
+    "observedRegionalResponses": {
+      "nativeBand": 109,
+      "nativeBandSamples": 6392,
+      "oldTintPositiveControl": 3,
+      "oldTintPositiveControlSamples": 64
+    },
+    "classification": "regionalColor had nonzero responses but did not meet four responses in the old lipColor positive-control subset. That subset did not establish regionalColor observability; its own published-R01 positive control now runs before candidate startup."
+  },
+  "priorRegionalObservabilityFailureEvidence": {
+    "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39100007306",
+    "sourceSHA": "3fe2aa9329b75b44c13c61b8df8cd94a5fc6b54e",
+    "verifierSHA256": "efd77963bedbb8639fbfc581c9dc92d3181660a8981240723c1a30b9667236c3",
+    "artifactID": 12126411431,
+    "artifactSHA256": "dfc4a62bb76ba65c1830c65a99b49724f0c3db47045aa0e3b959a0de0060da94",
+    "qaSHA256": "f62e124699f40c084b080eba1b6d44b73b09425a183aec255b9df3b263eacf8d",
+    "observedPublishedR01RegionalOverlap": {
+      "nativeBandSamples": 6392,
+      "nonzeroOldFeatherSamples": 515,
+      "visibleResponses": 4,
+      "upper": 3,
+      "lower": 1,
+      "maximumChannelDeltaDN": 1
+    },
+    "candidateStarted": false,
+    "completed": false,
+    "classification": "The published R01 baseline itself had fewer than eight visible regionalColor responses in the thin old-feather intersection. This was a preflight observability failure, not a candidate pass or failure; quantitative preservation in that intersection is not claimed by this scoped suite."
+  },
+  "skinResponseScope": {
+    "beardShadow": "Nonzero responses in the unchanged native near-mouth skin band and its independently selected R01 old-tint-positive old-feather overlap.",
+    "regionalColor": "Nonzero responses in the unchanged native near-mouth skin band and at its independently visible published-R01 regionalColor positive-control pixels.",
+    "regionalColorThinOldFeatherPreservationEstablished": false,
+    "fullResponseAmplitudePreservationEstablished": false
+  },
+  "limitations": [
+    "One frozen person, neutral pose, three existing views, one real Chromium SwiftShader runner.",
+    "Native LipRails projected ROI is a conservative mouth rectangle, not a pixel-perfect anatomical segmentation.",
+    "The retained R01 path is checked against one macro base-colour frame from the byte-identical published R01 page; the remaining views compare paths in the same candidate.",
+    "Near-mouth probes use projected native skin vertices 1.5–7 mm outside the outer lip rails in the inherited rest frame; no physiological measurement is claimed.",
+    "beardShadow uses the R01 lipColor-positive old-feather overlap. regionalColor uses its own visible positive control across the unchanged native near-mouth band in the byte-identical published R01 page, without an old-feather restriction. Neither set is selected from candidate responses.",
+    "regionalColor preservation in the thin old-feather intersection is not quantified: the original baseline had only four visible one-DN responses there. Skin checks establish nonzero observable responses, not exact preservation of their full magnitude.",
+    "The tests establish composition and preservation properties, not photorealism or user aesthetic approval.",
+    "The inherited remote loader is retained; offline operation and real-phone performance are not certified."
+  ],
+  "lastProgress": {
+    "sequence": 35,
+    "at": "2026-10-18T06:33:46.468Z",
+    "name": "cleanup close browser after pages",
+    "event": "end",
+    "elapsedMS": 66
+  },
+  "updatedAt": "2026-10-18T06:33:46.469Z",
+  "activeStages": [],
+  "coreVerifierCompatibility": {
+    "schema": "kaopu/lip-public-verifier-recovery@1",
+    "coreSHA256": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+    "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "buildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+    "previewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+    "moduleSHA256": "692fba84f258990b1f7c80ab15d1c628b228821fce45d30f81dafba2e53aefe8",
+    "coreVerifierSHA256": "35be7f4e420427e69841755380bc0999ba949af288884e4357b16ffc6cb95503",
+    "publicVerifierSHA256": "753683da5aa94114c14ead1c8661aba1d2f6e1b0baa3ea02564cf1ab0da4338c",
+    "recoverySourceSHA": "c7452d6514e0cac7f92f9e8530336cd1a87fd4e4",
+    "originalCoreUnmodified": true,
+    "rendererRelation": "This public-only recovery is a new CI run; exact pixel equality against the original core frames is still required.",
+    "reason": "Only absent light ground/target properties are omitted to match the existing JSON evidence shape; real values remain strictly compared. Original core frames and evidence are reused unchanged; this run verifies the fixed public page.",
+    "priorPublicFailure": {
+      "runId": 39100909391,
+      "artifactID": 12127080792,
+      "qaSHA256": "6ded12f6184cd7922a9c064c40669b03da26a2d62b115cffcab48c388dc445a5",
+      "completed": false
+    }
+  },
+  "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+  "publicRawURL": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+  "publicBuildSHA": "ba0c4eb337e03997878aecaf477d8ec3fe8b7231",
+  "previewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571",
+  "localEvidence": {
+    "path": "kaopu-unified-human-workbench/lip-realism-r02/evidence/core/qa.json",
+    "sha256": "9bce2614509d18e394547297da7b00a89c20b93ee4a0c433da8644372300c769",
+    "sourceSHA": "01cfde47476b7be6764e9c6a79d925462511539b",
+    "previewSHA256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571"
+  },
+  "candidateStartup": {
+    "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+    "httpStatus": 200,
+    "elapsedMS": 24253,
+    "host": {
+      "version": "LIP-REALISM-R02",
+      "finalFrame": true,
+      "ready": true,
+      "headErrors": [],
+      "lipErrors": [],
+      "nativeLipErrors": [],
+      "compare": "function",
+      "ablation": "function",
+      "spatialColour": false,
+      "withdrawnTransitionControls": 0
+    }
+  },
+  "publicInitialState": {
+    "geometry": {
+      "attributes": {
+        "position": "2a5f53bce3440917bdd9fb42b79c12c0c84594b8b0b29248827f1263c1f9fb74",
+        "normal": "017c38d95be92e43b1991aeb6554148f1dcb754b338b9ff1f817cbc8731f8fdc",
+        "csRest": "9bdac9bc0167a1c3e77fffe4f584f8a65b38bfb8618dfd5609e9009935c0491d",
+        "fRest": "81d7b0e850860a7127ee9b4d64a10a6ab636a2ef1671e2c51992585f24360bf9",
+        "skinIndex": null,
+        "skinWeight": null
+      },
+      "index": "dde240f688ef10f61721ad12a35a3f79e410f9049a1d16361fdb669c6c7a95db",
+      "canonicalPositions": "90df3ac15d0874d1eb68a0ee52e61e81c08ac920a903a9b965fb58f14c218b67",
+      "canonicalFaces": "e8526431b9b24bec71d8161ed409794a8398ffc68ad25800abb27e0fc09644de",
+      "vertices": 266098,
+      "triangles": 531702
+    },
+    "camera": {
+      "position": [
+        -0.00006476417183876038,
+        0.7165724039077759,
+        0.5806745048725662
+      ],
+      "quaternion": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "projection": [
+        3.0289421473591354,
+        0,
+        0,
+        0,
+        0,
+        3.7861776841989188,
+        0,
+        0,
+        0,
+        0,
+        -1.0004000800160031,
+        -1,
+        0,
+        0,
+        -0.020004000800160033,
+        0
+      ],
+      "target": [
+        -0.00006476417183876038,
+        0.7165724039077759,
+        0.029960371553897865
+      ],
+      "fov": 31,
+      "zoom": 1.05
+    },
+    "lighting": {
+      "lights": [
+        {
+          "type": "HemisphereLight",
+          "name": "",
+          "color": [
+            0.7379104087672317,
+            0.8631572134510892,
+            1
+          ],
+          "ground": [
+            0.035601314869097636,
+            0.040915196900556984,
+            0.059511238155621766
+          ],
+          "intensity": 1.6,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "name": "",
+          "color": [
+            1,
+            0.7011018919268015,
+            0.5332764040016892
+          ],
+          "intensity": 3.2,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -2,
+            3,
+            4,
+            1
+          ],
+          "target": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "name": "",
+          "color": [
+            0.36625259558833256,
+            0.5394794890033748,
+            0.7379104087672317
+          ],
+          "intensity": 2.6,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            2,
+            -2,
+            1
+          ],
+          "target": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "RectAreaLight",
+          "name": "ET20 key",
+          "color": [
+            1.1310784284563347,
+            0.9730112050086658,
+            0.8813727463709912
+          ],
+          "intensity": 7.2727272727272725,
+          "matrix": [
+            0.7313537016191706,
+            0,
+            0.6819983600624984,
+            0,
+            0.27739372355502145,
+            0.913545457642601,
+            -0.2974683494976418,
+            0,
+            -0.6230365039547985,
+            0.40673664307580015,
+            0.6681248520442954,
+            0,
+            -0.6854049185221172,
+            1.163982711291156,
+            0.7648977088026229,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "RectAreaLight",
+          "name": "ET20 fill",
+          "color": [
+            1.0052297539176216,
+            0.9874473725127881,
+            1.1089445082544023
+          ],
+          "intensity": 0.6495928142187422,
+          "matrix": [
+            0.8525245220595057,
+            -6.938893903907228e-18,
+            -0.5226872289306591,
+            0,
+            -0.06257204189701793,
+            0.9928086358538663,
+            -0.10205759230367448,
+            0,
+            0.5189283947328852,
+            0.11971220728891938,
+            0.8463937077778672,
+            0,
+            0.7004885687175565,
+            0.8781838837478171,
+            1.1725918770540187,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "RectAreaLight",
+          "name": "ET20 rim",
+          "color": [
+            1.0425881383994025,
+            0.9838211106622988,
+            1.034860158318712
+          ],
+          "intensity": 5.140939912102185,
+          "matrix": [
+            -0.6810558805071523,
+            0,
+            -0.7322314440302514,
+            0,
+            -0.21638918766375098,
+            0.955336489125606,
+            0.2012657745553943,
+            0,
+            0.6995274169672331,
+            0.29552020666133955,
+            -0.6506375337820511,
+            0,
+            0.7694153944921177,
+            1.0416446312352494,
+            -0.6857409156063585,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "HemisphereLight",
+          "name": "",
+          "color": [
+            0.7529422167708612,
+            0.8307698767709715,
+            0.913098651791473
+          ],
+          "ground": [
+            0.08021982030622662,
+            0.054480276435339814,
+            0.038204371589236
+          ],
+          "intensity": 0.08,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "name": "",
+          "color": [
+            1,
+            0.8796223968851662,
+            0.7379104087672317
+          ],
+          "intensity": 0,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "target": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "visible": false
+        },
+        {
+          "type": "DirectionalLight",
+          "name": "",
+          "color": [
+            1,
+            0.965,
+            0.93
+          ],
+          "intensity": 3.2,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0.9784581441716371,
+            1.15690771266234,
+            0.7638525528115048,
+            1
+          ],
+          "target": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -0.00006476417183876038,
+            0.7165724039077759,
+            0.029960371553897858,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "DirectionalLight",
+          "name": "",
+          "color": [
+            0.91,
+            0.955,
+            1
+          ],
+          "intensity": 1.35,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -1.089084925730247,
+            1.0977294604532188,
+            0.6289214604110225,
+            1
+          ],
+          "target": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            -0.00006476417183876038,
+            0.7165724039077759,
+            0.029960371553897858,
+            1
+          ],
+          "visible": true
+        },
+        {
+          "type": "HemisphereLight",
+          "name": "",
+          "color": [
+            0.95,
+            0.975,
+            1
+          ],
+          "ground": [
+            0.12,
+            0.13,
+            0.145
+          ],
+          "intensity": 0.38,
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1
+          ],
+          "visible": true
+        }
+      ],
+      "exposure": 1,
+      "toneMapping": 4,
+      "outputColorSpace": "srgb"
+    },
+    "head": {
+      "enabled": true,
+      "seed": 731,
+      "tone": 0.72,
+      "warmth": 0.46,
+      "blood": 0.48,
+      "variation": 0.9,
+      "pores": 0.88,
+      "poreRadius": 0.09,
+      "poreSpacing": 0.58,
+      "microrelief": 0.72,
+      "roughness": 0.51,
+      "oil": 0.26,
+      "scatter": 0.62,
+      "freckles": 0.2,
+      "lipColor": 0.54,
+      "lipWetness": 0.24,
+      "eyeThinness": 0.34,
+      "diagnostic": 0
+    },
+    "body": {
+      "enabled": true,
+      "regionalColor": 0.72,
+      "lidWarmth": 0.46,
+      "noseWarmth": 0.38,
+      "earBlood": 0.44,
+      "earTransmission": 0.58,
+      "bodyVariation": 0.64,
+      "bodyPores": 0.78,
+      "jointTone": 0.42,
+      "neckCreases": 0.34,
+      "beardShadow": 0.04,
+      "audit": 0
+    },
+    "lip": {
+      "enabled": true,
+      "redness": 0.4,
+      "pigment": 0.25,
+      "upperDifference": 0.18,
+      "variation": 0.65,
+      "edgeSoftness": 0.34,
+      "wetness": 0.35,
+      "roughness": 0.53,
+      "foldStrength": 0.55,
+      "seed": 731,
+      "diagnostic": 0
+    },
+    "nativeLipDNA": {
+      "schema": "kaopu/lip-anatomy-dna@1",
+      "upperMelanin": 0.26,
+      "lowerMelanin": 0.16,
+      "upperBlood": 0.48,
+      "lowerBlood": 0.54,
+      "oxygenation": 0.72,
+      "upperRoughness": 0.54,
+      "lowerRoughness": 0.49,
+      "upperWetness": 0.35,
+      "lowerWetness": 0.45,
+      "tissueDepth": 1,
+      "microGeometry": 1,
+      "skinRefinement": 0.65
+    },
+    "nativeLipShape": {
+      "schema": "kaopu/lip-structure@2",
+      "enabled": true,
+      "structure": 1,
+      "upperVolume": 0.8,
+      "lowerVolume": 0.7,
+      "cupid": 0.75,
+      "tubercle": 0.8,
+      "corners": 0.55,
+      "borderSoftness": 0.48,
+      "furrows": 0.65,
+      "pigment": 0.68,
+      "wetness": 0.35,
+      "dryRoughness": 0.53,
+      "eyeSmoothing": 0.35,
+      "colorVariation": 0.65,
+      "upperShade": 0.45,
+      "dryness": 0.3,
+      "microRelief": 0.65,
+      "textureDensity": 1,
+      "patternSeed": 37
+    },
+    "nativeLipPose": {
+      "schema": "kaopu/lip-performance@1",
+      "pucker": 0,
+      "funnel": 0,
+      "press": 0,
+      "seal": 0,
+      "rollIn": 0,
+      "rollOut": 0,
+      "stretchLeft": 0,
+      "stretchRight": 0,
+      "upperRaise": 0,
+      "lowerDepress": 0,
+      "cornerLeft": 0,
+      "cornerRight": 0,
+      "adhesion": 0,
+      "release": 0,
+      "jawOpen": 0
+    }
+  },
+  "uiViewport": {
+    "name": "public-mobile-390x844",
+    "bytes": 182641,
+    "sha256": "b17982835cc12a2bcaef131667c1285535fc4a5b0207a04bc395c01d9a031b3b",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "role": "internal actual UI evidence; not a deliverable substitute"
+  },
+  "uiViewports": [
+    {
+      "name": "public-ui",
+      "bytes": 498928,
+      "sha256": "cf4d2f7e4e879598eebfac7c6225c94b9b636e0bbce389c65d02eb982fe53e97",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "role": "internal actual UI evidence; not a deliverable substitute"
+    },
+    {
+      "name": "public-mobile-390x844",
+      "bytes": 182641,
+      "sha256": "b17982835cc12a2bcaef131667c1285535fc4a5b0207a04bc395c01d9a031b3b",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "role": "internal actual UI evidence; not a deliverable substitute"
+    }
+  ],
+  "mobileViewport": {
+    "tested": true,
+    "physicalDevice": false,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": {
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "clientWidth": 390,
+      "documentScrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "panel": {
+        "x": 7,
+        "width": 376,
+        "left": 7,
+        "right": 383
+      }
+    },
+    "records": [
+      {
+        "selector": "[data-lr-comparison=\"r01\"]",
+        "box": {
+          "x": 138.65625,
+          "y": 512.546875,
+          "width": 112.671875,
+          "height": 36.59375
+        },
+        "observed": {
+          "comparison": "r01",
+          "view": "macro",
+          "enabled": true
+        }
+      },
+      {
+        "selector": "[data-lr-comparison=\"r02\"]",
+        "box": {
+          "x": 20,
+          "y": 512.546875,
+          "width": 112.65625,
+          "height": 36.59375
+        },
+        "observed": {
+          "comparison": "r02",
+          "view": "macro",
+          "enabled": true
+        }
+      },
+      {
+        "selector": "[data-lr-view=\"front\"]",
+        "box": {
+          "x": 20,
+          "y": 584.1875,
+          "width": 172.5,
+          "height": 36.59375
+        },
+        "observed": {
+          "comparison": "r02",
+          "view": "front",
+          "enabled": true
+        }
+      },
+      {
+        "selector": "[data-lr-view=\"macro\"]",
+        "box": {
+          "x": 197.5,
+          "y": 584.1875,
+          "width": 172.5,
+          "height": 36.59375
+        },
+        "observed": {
+          "comparison": "r02",
+          "view": "macro",
+          "enabled": true
+        }
+      }
+    ],
+    "events": [
+      {
+        "trusted": true,
+        "mode": "r01",
+        "view": null
+      },
+      {
+        "trusted": true,
+        "mode": "r02",
+        "view": null
+      },
+      {
+        "trusted": true,
+        "mode": null,
+        "view": "front"
+      },
+      {
+        "trusted": true,
+        "mode": null,
+        "view": "macro"
+      }
+    ],
+    "canvas": {
+      "width": 376,
+      "height": 400,
+      "nonUniformPixels": 150333,
+      "error": 0,
+      "contextLost": false,
+      "programs": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "cssBounds": {
+        "left": 7,
+        "top": 64,
+        "width": 376,
+        "height": 400
+      }
+    },
+    "performanceClaimed": false
+  },
+  "desktopViewportRestored": true,
+  "publicSmokePassed": true,
+  "verificationFinishedAt": "2026-10-18T06:33:24.323Z",
+  "cleanup": {
+    "startedAt": "2026-10-18T06:33:24.327Z",
+    "pageCount": 1,
+    "pages": [
+      {
+        "index": 0,
+        "url": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+        "alreadyClosed": false,
+        "gpu": {
+          "available": true,
+          "errorBefore": 0,
+          "errorAfter": 0,
+          "contextLostBefore": false,
+          "contextLostAfter": false,
+          "submittedFrame": 86,
+          "frameAfterDrain": 86,
+          "drawingBuffer": [
+            640,
+            512
+          ],
+          "elapsedMS": 22013.20000000001
+        },
+        "closed": true
+      }
+    ],
+    "errors": [],
+    "completed": true,
+    "browserDisconnected": true,
+    "finishedAt": "2026-10-18T06:33:46.469Z",
+    "elapsedMS": 22142
+  },
+  "finishedAt": "2026-10-18T06:33:46.470Z"
+}
