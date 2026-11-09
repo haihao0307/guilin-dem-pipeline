@@ -1,14 +1,19 @@
 {
   "schema": "kaopu.regression-case/2",
   "caseId": "TREE-NO-2D-CANVAS-AS-3D-001",
-  "status": "CANDIDATE",
+  "status": "CANDIDATE_N257_MULTI_MOTHER_RECURRENCE_NOT_ADOPTED",
   "scope": {
-    "mother": "Tree",
+    "mothers": [
+      "Tree",
+      "Excavator / Engineering Machinery"
+    ],
     "taskClass": "REAL_3D_WORKBENCH_REQUIRED",
-    "globalAdoption": false
+    "globalAdoption": false,
+    "origin": "Tree",
+    "recurrenceScope": "Excavator / Engineering Machinery single-Mother evidence only"
   },
   "failure": {
-    "summary": "A Canvas2D renderer was labeled Mobile 3D and its screenshot-only workflow completed successfully.",
+    "summary": "A real-3D workbench request is answered with a Canvas2D renderer, screenshot-only workflow, or model-generated static image whose painted controls/HUD can be mistaken for an interactive runtime.",
     "historicalSubject": {
       "branch": "gh-pages",
       "headSha": "2391451bf5b4e03f34642656df337d1b547b7415",
@@ -27,7 +32,9 @@
   "mustNeverRepeat": [
     "count a perspective-projected Canvas2D drawing as a real 3D workbench",
     "promote a green screenshot job as proof of a requirement the job does not test",
-    "use a 2D substitute as the parent of the next 3D Tree candidate"
+    "use a 2D substitute as the parent of the next 3D Tree candidate",
+    "count painted joystick, HUD or camera icons inside a PNG as critical interactions",
+    "send a model-generated gameplay/workbench image when the user asked for a complete interactive excavator workbench"
   ],
   "gate": {
     "decisionOnHistoricalSubject": "REJECTED_2D_CANVAS_SUBSTITUTE",
@@ -48,7 +55,14 @@
       "custom perspective projection math",
       "non-empty screenshots",
       "HTTP 200",
-      "green workflow status without requirement-linked assertions"
+      "green workflow status without requirement-linked assertions",
+      "model-generated PNG with painted controls or HUD",
+      "visual resemblance to a game/workbench UI without executable runtime evidence"
+    ],
+    "decisions": [
+      "REJECTED_2D_CANVAS_SUBSTITUTE",
+      "REJECTED_STATIC_IMAGE_SUBSTITUTE",
+      "PASS_REAL_3D_RUNTIME_EVIDENCE"
     ]
   },
   "cases": [
@@ -107,10 +121,58 @@
         "criticalInteractionVerified": false
       },
       "expect": "NOT_APPLICABLE"
+    },
+    {
+      "id": "EXCAVATOR_STATIC_PNG_RECURRENCE_20261109",
+      "input": {
+        "taskRequiresReal3D": true,
+        "userRequestedCompleteWorkbench": true,
+        "actualArtifactKind": "STATIC_PNG",
+        "actualArtifactSha256": "101c30c144378106aa9d498948b380353987303cdf498744be6e8974e2b1e12d",
+        "actualArtifactBytes": 2544141,
+        "actualArtifactDimensions": "1672x941",
+        "modelGenerated": true,
+        "paintedControlsOrHud": true,
+        "runtime3DContextObserved": false,
+        "canvas2DOnly": false,
+        "ciSuccess": false,
+        "ciAssertsRuntime3D": false,
+        "screenshotExists": true,
+        "criticalInteractionVerified": false,
+        "sourceModified": "UNKNOWN",
+        "publicHttpsPassed": false,
+        "browserPassed": false
+      },
+      "expect": "REJECTED_STATIC_IMAGE_SUBSTITUTE"
     }
   ],
   "rollback": {
-    "coordinationBaseSha": "91c47b7f1d57b8c1008741e0562630e1eef59bca",
-    "productionBranchesModified": false
+    "coordinationBaseSha": "a403eb830c5d1ef01dcbecc75cc74e714e1decad",
+    "productionBranchesModified": false,
+    "instruction": "Remove only the N257 Excavator recurrence evidence if its source binding is disproved; retain the Tree origin case and do not promote the static image into any production lineage."
+  },
+  "evidenceRecurrences": [
+    {
+      "id": "N257_EXCAVATOR_STATIC_IMAGE_AFTER_WORKBENCH_REQUEST",
+      "observedAt": "2026-11-09T07:16:35.826080Z",
+      "userCorrectionObservedAt": "2026-11-09T07:20:00Z",
+      "artifactName": "阳光中学救援拆除行动.png",
+      "artifactSha256": "101c30c144378106aa9d498948b380353987303cdf498744be6e8974e2b1e12d",
+      "sourceProvenance": "ChatGPT Library generated artifact metadata plus materialized byte inspection",
+      "exactNewFact": "The generated artifact is a PNG image with painted joystick/HUD controls, not an executable workbench. No source, runtime 3D context, critical interaction, browser or public-HTTPS receipt is bound.",
+      "userCorrection": "Build the complete excavator workbench now; the prior activity had not produced that workbench.",
+      "mechanismNovelty": "NO_NOVELTY_EXISTING_CASE_EXTENDED",
+      "decision": "REJECTED_STATIC_IMAGE_SUBSTITUTE",
+      "productionLineageAllowed": false
+    }
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE_REGRESSION": true,
+    "IMPLEMENTED_PRODUCTION": false,
+    "GATE_RUN": true,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
   }
 }
