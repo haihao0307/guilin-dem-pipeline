@@ -1,0 +1,154 @@
+{
+  "schema": "npc-r02-independent-f-grasp-source-review/1",
+  "createdAt": "2026-10-20T09:11:31.784071+00:00",
+  "reviewer": "/root/courtyard_independent_review",
+  "scope": "Read-only review of the native thumb metacarpal fallback, its actual production calibration/runtime formula, numeric evidence, and failure diagnostics before the third startup-only candidate. No production files changed; no redundant grasp suite rerun.",
+  "status": "NO_NEW_SOURCE_BLOCKER_FOR_BOUNDED_F_GRASP_FALLBACK",
+  "fallbackMayEnterStartupCandidate": true,
+  "releaseCandidate": false,
+  "candidateApproved": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "sourceSHA256": {
+    "src/ActorAdapter.mjs": "6ddfdd4b3d4080f846fa944f1dc72086a2af1904f2e59b3abdaaa511e205303a",
+    "src/Workbench.mjs": "a82991d68fbdee369f02c736bc70f040747e774f8583614ac97c7a0f7f4996a3",
+    "src/NativeMotion.mjs": "a85cd8dfddc85f25762c721d2ac060d97c82e3469e5bb39dc76aae75f29caa22",
+    "vendor/appearance/hair-static-envelope-exact.mjs": "6d5c2af70699f93bbafa6ba837e3930cf6fa6045c052578fbe8bc618bf3bcfe0",
+    "vendor/r07-preview.html": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a",
+    "evidence/NATIVE_GRASP_CURRENT_RECEIPT.json": "2e8c59dbbe270b087c1fbfb4847e2fe56706df80f89865b3fc0d2a17745acf3c",
+    "evidence/NATIVE_GRASP_CURRENT_VALIDATION.json": "00b73ff0fcab10dd146467450040586cf1cfb2c1acccb22dc2ced8b0fce14b9a",
+    "evidence/NATIVE_GRASP_F_CALIBRATION.json": "6e004eed93780356c9c1748a9c3ee15cbbafc28e680ce7a98f3c91311dc275b5",
+    "evidence/ActorAdapter-native-grasp-baseline.mjs": "e64506d967c8b79f3ad163b5323771ed42ae51fd1c9b0ed03e4d66f8d1638fbc",
+    "evidence/run-native-grasp.cjs": "f8d56fce5977a0ca40e6ec4f92975e6dde0bd696f9ab4695875c223d113bb494",
+    "evidence/check-native-grasp.mjs": "109a5c3ecd26c0e5440919c087e5dc85c18713448ff0f9f5bb59c3c9c8ef06e3",
+    "evidence/HAND_DISPLAY_EQUIVALENCE.md": "6619aae86b26fbd54587772653b1a239fef9df83ff870ec505dfe801d3d56e61",
+    "evidence/HAND_DISPLAY_EQUIVALENCE_LIP_SELECTOR.json": "5b288cd7d06596daee3305b7adf0d7299b3abdf4663206cfc0645917a228ab31"
+  },
+  "reviewedDiff": {
+    "baselinePath": "/tmp/npc-r02-submit-2/src/ActorAdapter.mjs",
+    "adapter": [
+      "Export existing findPalmSupport and fitCylinderGrasp without changing palm selection.",
+      "Append sixth open-pose candidate only after original five fail.",
+      "Apply matching original metacarpal1 rotation in calibration and runtime.",
+      "Capture actual weighted displayed hand data on failed calibration."
+    ],
+    "workbench": "Only accumulates and displays startup calibration/failure details; inadmissible fit still logs and throws before scene construction.",
+    "meshOrBoneLengthReplacement": false,
+    "collisionToleranceRelaxed": false,
+    "originalFiveCandidatesUnchanged": true,
+    "originalFiveCandidates": [
+      {
+        "angle": -35,
+        "opposition": -35
+      },
+      {
+        "angle": -35,
+        "opposition": -45
+      },
+      {
+        "angle": -45,
+        "opposition": -35
+      },
+      {
+        "angle": -45,
+        "opposition": -45
+      },
+      {
+        "angle": -25,
+        "opposition": -45
+      }
+    ],
+    "newCandidate": {
+      "angle": -45,
+      "opposition": -45,
+      "metacarpalOpposition": -11.6,
+      "onlyAfterOriginalFiveFail": true,
+      "actorIdBypass": false
+    }
+  },
+  "formulaReview": {
+    "calibration": "sign * (open.metacarpalOpposition ?? 0) * (1 - values[0])",
+    "runtime": "sign * (fit.open.metacarpalOpposition ?? 0) * (1 - fit.closure[0] * amount)",
+    "identity": "values[0] = fit.closure[0] * amount",
+    "sameAxis": "Original native hand frame.forward; original rig index metacarpal1.L/R.",
+    "conclusion": "Same algebraic rotation and taper. F fallback changes a native joint rotation only; default compensation is zero for earlier candidates."
+  },
+  "unchangedGates": {
+    "openMinimumSignedDistanceM": -0.0005,
+    "closureSearchToleranceM": 0.001,
+    "trajectoryMinimumSignedDistanceM": -0.0011,
+    "trajectorySamplesPerSide": 21,
+    "fingerNearDistanceM": 0.003,
+    "minimumNearVerticesPerFinger": 3,
+    "minimumTouchingNonThumbFingers": 3,
+    "minimumNonThumbClosure": 0.05,
+    "closureCoarseSteps": 40,
+    "closureBisections": 12,
+    "fixtureCylinderRadiusM": 0.032,
+    "fixtureCylinderHeightM": 0.14,
+    "fixtureGripHeightM": 0
+  },
+  "numericEvidenceIndependentlyRecomputedFromRecords": {
+    "actualProductionFitsAdmissible": 12,
+    "expectedFits": 12,
+    "previouslyPassingProductionFitRecordsExactlyUnchanged": [
+      "DL",
+      "DR",
+      "AL",
+      "AR",
+      "EL",
+      "ER",
+      "BL",
+      "BR",
+      "CL",
+      "CR"
+    ],
+    "runtimeSamples": 252,
+    "maxRuntimeFitSignedDistanceDifferenceM": 0,
+    "maxRuntimeBoneLengthErrorM": 2.1510571102112408e-16,
+    "F": [
+      {
+        "side": "L",
+        "openMinimumM": -0.0003956517404283405,
+        "openMarginBeyondGateM": 0.0001043482595716595,
+        "trajectoryMinimumM": -0.0009999283631017299,
+        "touchingNonThumbFingers": 4
+      },
+      {
+        "side": "R",
+        "openMinimumM": -0.0003956517404283405,
+        "openMarginBeyondGateM": 0.0001043482595716595,
+        "trajectoryMinimumM": -0.0009999969627795986,
+        "touchingNonThumbFingers": 4
+      }
+    ],
+    "calibrationRationale": "The recorded -8/-10 degree original-joint measurements extrapolate to approximately -11.56 degrees for a 0.1 mm margin beyond the unchanged open gate. The single rounded -11.6 degree candidate is within the declared 14 degree outward calibration bound.",
+    "method": "Read actual production fit objects, compare complete A-E objects with baseline, verify source hashes and every stored runtime frame. No new live rendering or independent large numeric run was performed."
+  },
+  "failureSafety": {
+    "configureShapeValidated": true,
+    "poseRestoredInFinally": true,
+    "failedFitStopsStartup": true,
+    "fixtureContainsActualHandVerticesAndAllCSRInfluences": true,
+    "fixtureMutatesDisplayedGeometry": false,
+    "fixtureMapping": "Original vertex IDs are retained; hand list and palm patch indices are remapped into the copied point set. Existing patch.vertex remains an original ID.",
+    "fixtureBoundary": "The diagnostic contains weighted points and the selected palm patch, not the complete triangle index buffer. It supports replay of the selected-patch fit, not an independent rerun of palm triangle selection without the original geometry.",
+    "exportsBoundary": "Helpers remain module exports used by calibration/diagnostics; no production browser control or gate bypass was added."
+  },
+  "evidenceLayers": {
+    "source": "Bounded patch and source-contract review supported. Original native mesh, hierarchy and acceptance gates are retained.",
+    "numeric": "Current-source canonical full-CSR hand fixture supports all 12 fits and calibration/runtime parity; A-E ten production fit objects are exactly unchanged.",
+    "browser": "Current candidate complete R07 displayed hand dump, actual startup, six near views and integrated grasp have not been independently verified by this review.",
+    "public": "No R02 public approval or delivery proof supplied by this review."
+  },
+  "limits": [
+    "The hand-only canonical/display equivalence document identifies retained hand vertices and triangle triples through source selectors. It is not a byte-for-byte comparison against a live F full-display hand dump.",
+    "A-E equality is established for calibration records and the neutral-rig hand runtime fixture. The new zero metacarpal assignment is not a claim of byte-identical full-body animation frames under every imported base pose.",
+    "The finite-cylinder vertex gate is not continuous-triangle nonintersection or force/friction verification.",
+    "Production ItemWorld contact, dynamic object lock, lift, bag transfer and actual displayed pickup still need the current candidate integration evidence. The hand calibration does not close the prior pickup fixture/ItemWorld gap.",
+    "Earlier a85 pickup and exact long-hair source reviews remain bounded approvals for diagnostic inclusion. They do not approve complete motion, hair collision, clothing or visual quality.",
+    "Known clothing/body intersections remain unresolved. No overall candidate or user visual acceptance is granted."
+  ],
+  "disposition": "The F fallback and its fail-closed diagnostics may enter the next startup-only diagnostic with releaseCandidate=false. Require actual current-head rendered evidence before any broader acceptance."
+}

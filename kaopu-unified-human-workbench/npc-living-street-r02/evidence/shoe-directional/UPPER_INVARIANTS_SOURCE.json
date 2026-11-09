@@ -1,0 +1,11 @@
+{
+  "source": "evidence/shoe-directional/ActualAnkleUpperCandidate.mjs",
+  "sourceSHA256": "e1cafb07ea29ea96cf71b58d1a1428baeb15c9206fe67b1bd68cdc6529cb8a8f",
+  "output": "evidence/shoe-directional/ActualAnkleUpperCached.mjs",
+  "outputSHA256": "cec1036a649589b359b728a8df9fddad2751f359d43b530f08eb4fb5b7b7dfc3",
+  "modifications": [
+    "Reuse only neutral complete-body BVH, original static 53050 sample identities/coordinates, exact foot-native sample coordinates, exact four-double neutral query results, static height limits.",
+    "Rebuild actual-body BVH and repeat every actual sample query and original outward-exit calculation. No actual pose result or previous field is reused.",
+    "Explicit per-fit/actor identity guard; production version invalidation would require recreating this prepared object when neutral body/binding/fit/topology changes."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "npc-r02-render-submission-fix/1",
+  "createdAt": "2026-10-20T09:17:48.740384+00:00",
+  "parentSourceHead": "d69d2574ca3972cd68eeb557e9771c650519c95a",
+  "status": "SOURCE_AND_BUILD_VERIFIED_ACTUAL_RUNTIME_PENDING",
+  "rootCause": "The previous fence bounded native beauty draws, while each animation callback could still submit original yarn-frame and seam-frame GPU render-target passes through appearance.update outside that fence.",
+  "change": "A synchronous onBeforeRender hook now performs every runtime appearance update only after the previous GPU fence completes, then native beauty and the next fence follow. Camera, orbit, resize, reset and initial setup only request the coalesced frame. The first appearance update runs while ready is false.",
+  "unchanged": [
+    "All native bodies, hair strands, garment material samples and shoe geometry",
+    "Motion, physics and ownership acknowledgement gates",
+    "All original material shader and atlas implementations"
+  ],
+  "actualRuntimeObservations": "appearancePreparation reports actual renderer frame increments inside the synchronous hook and CPU duration; outsideBatchRenderPasses counts native renderer increments observed while a managed GPU fence is pending (startup and idle/readback gaps are not measured). Real runtime values remain pending; this is not performance acceptance.",
+  "dimensionsDiagnostic": "Startup retains complete native person bounds, including the actual GNM head, before appearance loading so original garment grading can use real wearer dimensions.",
+  "sourceSHA256": {
+    "src/RenderQueue.mjs": "bcf4d4181bfb07be57f1b940569b9cffb8ab157ad280035f145c3449d8fc8bfe",
+    "src/Workbench.mjs": "b6fa13c1041279d58f833c1343781bd9087c9e65822e1e035c12c0fc4b122c6c",
+    "verify-browser.cjs": "ce9a1e8db473a755b0f12c0382b65cf4f7a7cb4190f8723db641869421dedd06"
+  },
+  "localCheckHost": true,
+  "localBundle": true,
+  "releaseCandidate": false,
+  "shareAllowed": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "schedulingFixture": {
+    "file": "evidence/RENDER_SUBMISSION_FIXTURE.json",
+    "passed": true,
+    "scope": "CPU scheduling with fake GL fences; startup drain, pending coalescing, latest pose, preparation ordering, completed frame acknowledgement and escaped render detection; not real GPU evidence"
+  },
+  "localBuild": {
+    "checkHostPassed": true,
+    "bundlePassed": true,
+    "previewBytes": 16928281,
+    "previewSHA256": "5bc8432e831cf6cdc65aac6c635e955cd1092833084d6eddbd0d49c0e31b7200"
+  },
+  "updatedAt": "2026-10-20T09:24:27.717425+00:00"
+}

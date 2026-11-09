@@ -1,0 +1,32 @@
+{
+  "schema": "npc-clean-source-fix/1",
+  "failureRun": 39395034970,
+  "failureHead": "adcc9c42fdf4ecb2cdbcbc9480224cfd0c2be41f",
+  "stage": "prepareNativePackets",
+  "cause": "The source snapshot excluded the existing StreamingManifest.json because it was mistaken for a generated vendor cache. prepareNativePackets consumes this exact source manifest before downloading any packet.",
+  "correction": "Commit the original byte-identical manifest; do not change packet hashes or download policy.",
+  "file": {
+    "path": "vendor/StreamingManifest.json",
+    "bytes": 40984,
+    "sha256": "f3075563d5b20ae6bd6471de77eb6394fa4cb12f5aa37774075ccaadd9c7fbd4",
+    "gitBlob": "8e4fd545c6384269471f31fb077a688f470e6657"
+  },
+  "additionalSourceClosure": {
+    "cause": "The first snapshot also omitted the original cloth geometry worker and its material-geometry dependency from appearance-source-lock, which prepare must reproduce before bundling.",
+    "lockedOriginalFiles": [
+      {
+        "path": "cloth-r10/geometry-worker.mjs",
+        "gitBlob": "d9237628189357fbdf5a5e0c4678b05c270be2d8"
+      },
+      {
+        "path": "cloth-r10/material-geometry.mjs",
+        "gitBlob": "97004ad39abbf4b54dc68f1493a1be0ee01ff18f"
+      }
+    ],
+    "verifiedSourceFiles": 68,
+    "adaptedCopies": 43
+  },
+  "startupVerified": false,
+  "visualAcceptance": false,
+  "shareAllowed": false
+}

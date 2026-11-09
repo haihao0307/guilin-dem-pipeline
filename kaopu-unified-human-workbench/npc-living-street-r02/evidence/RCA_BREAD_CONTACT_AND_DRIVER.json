@@ -1,0 +1,71 @@
+{
+  "schema": "bread-contact-and-driver-rca/1",
+  "release": false,
+  "rendered": false,
+  "trials": [
+    {
+      "sourceReport": "NATIVE_BREAD_TRANSPORT_D_FIRST.json",
+      "transactionSucceeded": true,
+      "validationAccepted": false,
+      "wristMaxDegrees": 168.8832357526812,
+      "handPropMaxPenetrationM": 0.0055995409262464425,
+      "handFixtureMaxPenetrationM": 0.024714727652654034,
+      "causes": [
+        "Fixed elbow pole followed by hand orientation folds the native wrist backwards.",
+        "Straight approach intersects the actual raised serving board.",
+        "Finished physical record stops its hand driver one progress sample before the displayed final pose."
+      ]
+    },
+    {
+      "sourceReport": "NATIVE_BREAD_TRANSPORT_D_COUPLED.json",
+      "transactionSucceeded": false,
+      "validationAccepted": false,
+      "contactWristDegrees": 85.92004856436411,
+      "heldFrames": 0,
+      "handFixtureMaxPenetrationM": 0,
+      "cause": "Coupled elbow solve exposes that the fixed frontal contact orientation is outside the native wrist cone at the real short-body bakery stance."
+    }
+  ],
+  "implemented": [
+    "Velocity-only hand driving at physical substeps and true N-to-impulse conversion.",
+    "Reject invalid held native pose before issuing a success receipt.",
+    "Continue physical driver updates until the completed attempt is logically committed.",
+    "Approach the loaf above the actual counter using the measured complete native hand envelope.",
+    "Use the retained coupled elbow/forearm-roll solve and strict 65-degree gate."
+  ],
+  "nextCandidate": {
+    "method": "Use the actual long-axis end surface of the same unchanged ellipsoid loaf with a fixed quarter-turn hand approach.",
+    "handTurnRadians": 1.5707963267948966,
+    "physicalHalfExtentsM": [
+      0.075,
+      0.035,
+      0.045
+    ],
+    "gripFrameHalfExtentsM": [
+      0.045,
+      0.035,
+      0.075
+    ],
+    "status": "Independent actual native hand fit and pose measurement in progress; no success claimed."
+  },
+  "scope": "Numerical native body/hand and real rigid item diagnostics; excludes GNM lips, eating, materials and browser.",
+  "subsequentEvidence": [
+    {
+      "report": "NATIVE_BREAD_TRANSPORT_D_SIDE.json",
+      "result": "Real quarter-turn grasp and clear counter, rejected at final bag: no feasible horizontal-hand yaw under unchanged native lengths and wrist gate."
+    },
+    {
+      "report": "BREAD_BAG_D_FREE_ROLL_CANDIDATE.json",
+      "result": "Independent endpoint proof: full original hand rolled down about same palm normal; original bag unchanged, wrist16.806degrees, hand penetration0.99998mm. Static geometry only."
+    },
+    {
+      "report": "NATIVE_BREAD_TRANSPORT_D_SIDE_ROLL.json",
+      "result": "Actual conserved physical purchase and all held-object gates pass; full approach inspection found an unheld wrist97.90785degrees, so not accepted as complete action."
+    },
+    {
+      "report": "NATIVE_BREAD_TRANSPORT_D_FREE_APPROACH.json",
+      "result": "Analytic free palm roll reduced unheld wrist to65.0003075degrees. Exact root classification uses a fully coupled elbow pole while implementation blended the natural pole during approach; therefore strengthen the implementation correspondence, retain strict65degree gate."
+    }
+  ],
+  "currentCorrection": "Use original angularReachIntervals with exact rotated-palm coefficients and unsquared measure; fully coupled pole for free approach. Actual full-hand 3D palm radius sets approach clearance; physical loaf corner norm sets rigid-rotation-invariant exit clearance. Add all-action wrist, actual force/torque/substep gates."
+}

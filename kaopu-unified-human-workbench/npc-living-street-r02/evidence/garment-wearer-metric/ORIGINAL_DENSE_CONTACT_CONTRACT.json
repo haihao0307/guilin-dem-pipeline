@@ -1,0 +1,126 @@
+{
+  "schema": "original-dense-contact-contract-and-same-input-cause/1",
+  "sourceCommit": "c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49",
+  "sourcePath": "kaopu-tailor-workbench/material-products/mp05-studio-r10-3fc034fa91ef/cloth-physics.mjs",
+  "sha256": "ffe3fee9a82f75b28703273800dec2542a966b7003672bfdf58b8ef667643298",
+  "sourceFunction": "ClothSolver.projectContacts",
+  "sourceSampleOrder": [
+    "vertex",
+    "edge",
+    "triangle"
+  ],
+  "sourceAdditionalMarginM": {
+    "vertex": 0,
+    "edge": 0.0006,
+    "triangle": 0.0008
+  },
+  "localPlanningGuardM": 1e-05,
+  "finalAuditMarginM": 0.004,
+  "unchanged16Plus12Budget": true,
+  "sameInputTraceOutputErrorM": 0,
+  "knownFailureFinalVertexEvent": {
+    "phase": "final",
+    "sample": {
+      "kind": "vertex",
+      "ids": [
+        1177
+      ],
+      "weights": [
+        1
+      ]
+    },
+    "point": [
+      -0.1240101333231147,
+      0.032731818252131444,
+      0.35169406404208736
+    ],
+    "origin": [
+      -0.13000726411410857,
+      0.04131206792045822,
+      0.35728446030436706
+    ],
+    "normal": [
+      0.9571928718012086,
+      0.28814809567932503,
+      0.027431389489661378
+    ],
+    "result": {
+      "face": 2016,
+      "distance": 0.003984581052240309,
+      "winding": 0,
+      "inside": false,
+      "delta": [
+        -2.5012483997202688e-05,
+        -7.54862682948381e-07,
+        -4.464160820292735e-06
+      ],
+      "endpoint": [
+        -0.1240351458071119,
+        0.03273106338944849,
+        0.3516895998812671
+      ],
+      "direction": [
+        -0.9840094182367296,
+        -0.029696850164091043,
+        -0.17562335241004967
+      ],
+      "sourceFace": 2016,
+      "endpointFace": 2016,
+      "endpointDistance": 0.004010000000000003,
+      "endpointWinding": 0,
+      "reason": "verified minimum exterior clearance",
+      "resolved": true
+    },
+    "before": {
+      "point": [
+        -0.12420326410892685,
+        0.03437589091226722,
+        0.3528922758691587
+      ],
+      "actual": {
+        "face": 1932,
+        "distance": 0.0040099999999999945,
+        "winding": 0,
+        "inside": false
+      },
+      "vertices": [
+        [
+          -0.12439639489473898,
+          0.036019963572402995,
+          0.35409048769623
+        ],
+        [
+          -0.1240101333231147,
+          0.032731818252131444,
+          0.35169406404208736
+        ]
+      ]
+    },
+    "after": {
+      "point": [
+        -0.12421577035092544,
+        0.03437551348092574,
+        0.35289004378874855
+      ],
+      "actual": {
+        "face": 1932,
+        "distance": 0.003997736866898409,
+        "winding": 0,
+        "inside": false
+      },
+      "vertices": [
+        [
+          -0.12439639489473898,
+          0.036019963572402995,
+          0.35409048769623
+        ],
+        [
+          -0.1240351458071119,
+          0.03273106338944849,
+          0.3516895998812671
+        ]
+      ]
+    }
+  },
+  "conclusion": "The dense edge was corrected to4.01mm, then the original final vertex phase moved vertex1177 by25.419\u00b5m and reduced the edge midpoint to3.9977369mm. The local adapter had omitted the source600/800\u00b5m interior sample targets and source edge-before-triangle ordering. Restoring those source requirements changes neither final4mm audit nor the separately declared10\u00b5m local guard."
+}

@@ -1,0 +1,878 @@
+{
+  "status": "REJECTED_SOURCE_SAFETY_GATE",
+  "productionChanged": false,
+  "visualAcceptance": false,
+  "sourceOnly": false,
+  "scope": "Original whole source garment positions and original paper grading/refinements, full source CoupledCloth/WasmCloth. The donor GPU fitting rest/previous-body formulas are explicitly bridged into WASM. No per-point closest-body retarget, reduced cloth, body masking or threshold change. Canonical native body includes all 9253 retained body recipes; final GNM head/cranial fairing is outside this isolated collider.",
+  "sourceRevision": "c5c0bedbc35f24cbb35426ab9c14b74ca7fc5f49",
+  "actor": "D",
+  "look": "D01",
+  "originalHeight": {
+    "lo": -0.9858653545379639,
+    "hi": 0.8521101474761963,
+    "heightM": 1.8379755020141602
+  },
+  "measuredTargetHeightM": 1.5038026571273804,
+  "targetHeightEvidence": "ci-startup-d69/failure-dom-state.json source.identities[id=D].measurements; run39398696434 head d69d2574ca3972cd68eeb557e9771c650519c95a artifact12254821611",
+  "originalPhysics": {
+    "substepHz": 240,
+    "iterations": 16,
+    "guardIterations": 12,
+    "gravity": 1,
+    "bend": 1,
+    "softness": 1,
+    "damping": 7,
+    "clearanceMM": 4,
+    "maximumSourceStretchGate": 1.45
+  },
+  "records": [
+    {
+      "label": "original-source-initial",
+      "index": 0,
+      "fraction": 0,
+      "simulationSeconds": 0,
+      "solverMS": 0,
+      "elapsedMS": 0,
+      "items": [
+        {
+          "id": "T01",
+          "vertices": 2332,
+          "triangles": 4180,
+          "particles": 2220,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 16720,
+          "minimumProbeSignedM": 0.0015260990118318271,
+          "worst": {
+            "triangle": 3183,
+            "point": [
+              -0.1588745613892873,
+              -0.02396565054853757,
+              0.5498900016148884
+            ],
+            "ids": [
+              1777,
+              2323,
+              2326
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.9731157802547737,
+          "gradedPaperEdgeMax": 1.112612619075566,
+          "originalPaperEdgeMax": 1.112612619075566,
+          "guardOutside": 0,
+          "edgeCount": 6508,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0,
+            "substeps": 0,
+            "particles": 2220,
+            "originalVertices": 2332,
+            "sewnPairs": 112,
+            "seamGapMM": 0,
+            "waistAnchors": 0,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 6508,
+            "dihedralConstraints": 6138,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 0,
+            "minEdgeStretch": 0.9731157802547737,
+            "maxEdgeStretch": 1.112612619075566,
+            "contactCorrections": 0,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        },
+        {
+          "id": "P01",
+          "vertices": 6607,
+          "triangles": 12068,
+          "particles": 6097,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 48272,
+          "minimumProbeSignedM": 0.002898549458420653,
+          "worst": {
+            "triangle": 44,
+            "point": [
+              0.19882526993751526,
+              0.0670846551656723,
+              -0.9328727722167969
+            ],
+            "ids": [
+              19,
+              20,
+              277
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8901507182664024,
+          "gradedPaperEdgeMax": 1.1204370721947894,
+          "originalPaperEdgeMax": 1.1204370721947894,
+          "guardOutside": 6,
+          "edgeCount": 18607,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0,
+            "substeps": 0,
+            "particles": 6097,
+            "originalVertices": 6607,
+            "sewnPairs": 531,
+            "seamGapMM": 0,
+            "waistAnchors": 20,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 18607,
+            "dihedralConstraints": 18038,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 0,
+            "minEdgeStretch": 0.8901507182664024,
+            "maxEdgeStretch": 1.1204370721947894,
+            "contactCorrections": 0,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        }
+      ]
+    },
+    {
+      "label": "source-fit",
+      "index": 1,
+      "fraction": 0.03125,
+      "simulationSeconds": 0.016666666666666666,
+      "solverMS": 978.4757819999995,
+      "elapsedMS": 1508.9856140000002,
+      "items": [
+        {
+          "id": "T01",
+          "vertices": 2332,
+          "triangles": 4180,
+          "particles": 2220,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 16720,
+          "minimumProbeSignedM": 0.00479998661266481,
+          "worst": {
+            "triangle": 3173,
+            "point": [
+              -0.12418630346655846,
+              0.006836267886683345,
+              0.5628231167793274
+            ],
+            "ids": [
+              1768,
+              1772,
+              2331
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.7246999170445426,
+          "gradedPaperEdgeMax": 1.2168258245479024,
+          "originalPaperEdgeMax": 1.2168245955206014,
+          "guardOutside": 54,
+          "edgeCount": 6508,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.016666666666666666,
+            "substeps": 4,
+            "particles": 2220,
+            "originalVertices": 2332,
+            "sewnPairs": 112,
+            "seamGapMM": 0,
+            "waistAnchors": 0,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 6508,
+            "dihedralConstraints": 6138,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 9.273495160271201,
+            "minEdgeStretch": 0.7246999170445426,
+            "maxEdgeStretch": 1.2168258245479024,
+            "contactCorrections": 398,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        },
+        {
+          "id": "P01",
+          "vertices": 6607,
+          "triangles": 12068,
+          "particles": 6097,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 48272,
+          "minimumProbeSignedM": 0.0032924328804808615,
+          "worst": {
+            "triangle": 12008,
+            "point": [
+              -0.14557215571403503,
+              -0.02237032726407051,
+              0.17562178522348404
+            ],
+            "ids": [
+              6546,
+              6547,
+              6579
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8998793999099596,
+          "gradedPaperEdgeMax": 1.1540609257315848,
+          "originalPaperEdgeMax": 1.1516726769319285,
+          "guardOutside": 152,
+          "edgeCount": 18607,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.016666666666666666,
+            "substeps": 4,
+            "particles": 6097,
+            "originalVertices": 6607,
+            "sewnPairs": 531,
+            "seamGapMM": 0,
+            "waistAnchors": 20,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 18607,
+            "dihedralConstraints": 18038,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 11.878506204522399,
+            "minEdgeStretch": 0.8998793999099596,
+            "maxEdgeStretch": 1.1540609257315848,
+            "contactCorrections": 2641,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        }
+      ],
+      "maximumLastFrameDisplacementM": 0.0118785062045224
+    },
+    {
+      "label": "source-fit",
+      "index": 8,
+      "fraction": 0.25,
+      "simulationSeconds": 0.13333333333333333,
+      "solverMS": 846.6958880000002,
+      "elapsedMS": 7639.812743,
+      "items": [
+        {
+          "id": "T01",
+          "vertices": 2332,
+          "triangles": 4180,
+          "particles": 2220,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 16720,
+          "minimumProbeSignedM": 0.004799979342250773,
+          "worst": {
+            "triangle": 3174,
+            "point": [
+              -0.10208981111645699,
+              0.00823085312731564,
+              0.546360433101654
+            ],
+            "ids": [
+              1769,
+              1770,
+              1771
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8908838154571977,
+          "gradedPaperEdgeMax": 1.2114070017254224,
+          "originalPaperEdgeMax": 1.1653206111581134,
+          "guardOutside": 94,
+          "edgeCount": 6508,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.13333333333333333,
+            "substeps": 32,
+            "particles": 2220,
+            "originalVertices": 2332,
+            "sewnPairs": 112,
+            "seamGapMM": 0,
+            "waistAnchors": 0,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 6508,
+            "dihedralConstraints": 6138,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 42.00972807638279,
+            "minEdgeStretch": 0.8908838154571977,
+            "maxEdgeStretch": 1.2114070017254224,
+            "contactCorrections": 798,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        },
+        {
+          "id": "P01",
+          "vertices": 6607,
+          "triangles": 12068,
+          "particles": 6097,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 48272,
+          "minimumProbeSignedM": 0.0032289064830813763,
+          "worst": {
+            "triangle": 12008,
+            "point": [
+              -0.13585588335990906,
+              -0.01959748938679695,
+              0.17072638869285583
+            ],
+            "ids": [
+              6546,
+              6547,
+              6579
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8353378096407069,
+          "gradedPaperEdgeMax": 1.4282513420743415,
+          "originalPaperEdgeMax": 1.3655325927683186,
+          "guardOutside": 431,
+          "edgeCount": 18607,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.13333333333333333,
+            "substeps": 32,
+            "particles": 6097,
+            "originalVertices": 6607,
+            "sewnPairs": 531,
+            "seamGapMM": 0,
+            "waistAnchors": 20,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 18607,
+            "dihedralConstraints": 18038,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 43.44492284867406,
+            "minEdgeStretch": 0.8353378096407069,
+            "maxEdgeStretch": 1.4282513420743415,
+            "contactCorrections": 1533,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        }
+      ],
+      "maximumLastFrameDisplacementM": 0.012125989717363436
+    },
+    {
+      "label": "source-safety-rollback",
+      "index": 8,
+      "fraction": 0.25,
+      "simulationSeconds": 0.13333333333333333,
+      "solverMS": 846.6958880000002,
+      "elapsedMS": 9016.005597000001,
+      "items": [
+        {
+          "id": "T01",
+          "vertices": 2332,
+          "triangles": 4180,
+          "particles": 2220,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 16720,
+          "minimumProbeSignedM": 0.004799979342250773,
+          "worst": {
+            "triangle": 3174,
+            "point": [
+              -0.10208981111645699,
+              0.00823085312731564,
+              0.546360433101654
+            ],
+            "ids": [
+              1769,
+              1770,
+              1771
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8908838154571977,
+          "gradedPaperEdgeMax": 1.2114070017254224,
+          "originalPaperEdgeMax": 1.1653206111581134,
+          "guardOutside": 94,
+          "edgeCount": 6508,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.13333333333333333,
+            "substeps": 32,
+            "particles": 2220,
+            "originalVertices": 2332,
+            "sewnPairs": 112,
+            "seamGapMM": 0,
+            "waistAnchors": 0,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 6508,
+            "dihedralConstraints": 6138,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 42.00972807638279,
+            "minEdgeStretch": 0.8908838154571977,
+            "maxEdgeStretch": 1.2114070017254224,
+            "contactCorrections": 798,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        },
+        {
+          "id": "P01",
+          "vertices": 6607,
+          "triangles": 12068,
+          "particles": 6097,
+          "rayInside": 0,
+          "penetratingOver1mm": 0,
+          "triangleProbes": 48272,
+          "minimumProbeSignedM": 0.0032289064830813763,
+          "worst": {
+            "triangle": 12008,
+            "point": [
+              -0.13585588335990906,
+              -0.01959748938679695,
+              0.17072638869285583
+            ],
+            "ids": [
+              6546,
+              6547,
+              6579
+            ],
+            "winding": 0
+          },
+          "gradedPaperEdgeMin": 0.8353378096407069,
+          "gradedPaperEdgeMax": 1.4282513420743415,
+          "originalPaperEdgeMax": 1.3655325927683186,
+          "guardOutside": 431,
+          "edgeCount": 18607,
+          "maxSeamGapM": 0,
+          "audit": {
+            "type": "XPBD-distance-and-dihedral",
+            "gravityMS2": 9.81,
+            "seconds": 0.13333333333333333,
+            "substeps": 32,
+            "particles": 6097,
+            "originalVertices": 6607,
+            "sewnPairs": 531,
+            "seamGapMM": 0,
+            "waistAnchors": 20,
+            "shoulderAnchors": 0,
+            "distanceConstraints": 18607,
+            "dihedralConstraints": 18038,
+            "minBodyVertexDistanceMM": null,
+            "minBodyInteriorSampleMM": null,
+            "maxMoveMM": 43.44492284867406,
+            "minEdgeStretch": 0.8353378096407069,
+            "maxEdgeStretch": 1.4282513420743415,
+            "contactCorrections": 1533,
+            "safetyTrips": 0,
+            "densityKgM2": 0.39,
+            "materialCalibrated": false,
+            "continuousCollision": false,
+            "restMetric": "original flat paper",
+            "kinematicShapeAttraction": false,
+            "strainGuard": "engineering limits, not fabric calibration"
+          }
+        }
+      ],
+      "error": {
+        "message": "物理应变超出工程安全范围，已完整回滚本步状态",
+        "stack": "Error: 物理应变超出工程安全范围，已完整回滚本步状态\n    at WasmCloth.step (file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3345:13)\n    at FullWasmSourceFitter.step (file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3474:9)\n    at file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3843:14",
+        "attemptedFrame": 9,
+        "failedStepMS": 852.3025620000008,
+        "preRollbackSourceAudits": [
+          {
+            "attemptedFrame": 9,
+            "id": "T01",
+            "gradedPaperMax": 1.214255406901685,
+            "gradedPaperMin": 0.901518023311903,
+            "maximumFromOriginalPositionsMM": 45.85035396569265
+          },
+          {
+            "attemptedFrame": 9,
+            "id": "P01",
+            "gradedPaperMax": 1.4581577542485396,
+            "gradedPaperMin": 0.8317647567558578,
+            "maximumFromOriginalPositionsMM": 48.65412048192126
+          }
+        ]
+      }
+    }
+  ],
+  "grading": {
+    "top": {
+      "width": 1.02,
+      "length": 0.8181842769282975,
+      "measurements": [
+        {
+          "joint": "spine02",
+          "vertices": 549,
+          "depthRatio": 0.7976484922477808,
+          "widthRatio": 0.7474297630173997
+        },
+        {
+          "joint": "spine03",
+          "vertices": 262,
+          "depthRatio": 0.6962467255407284,
+          "widthRatio": 0.8118854223094008
+        },
+        {
+          "joint": "upperarm01.L",
+          "vertices": 112,
+          "depthRatio": 0.6141602758866489,
+          "widthRatio": 0.7961329445876447
+        },
+        {
+          "joint": "upperarm01.R",
+          "vertices": 112,
+          "depthRatio": 0.6141602758866489,
+          "widthRatio": 0.7959362320564082
+        }
+      ]
+    },
+    "bottom": {
+      "width": 1.02,
+      "length": 0.8181842769282975,
+      "measurements": [
+        {
+          "joint": "spine01",
+          "vertices": 344,
+          "depthRatio": 0.7243583263832559,
+          "widthRatio": 0.7898284856292208
+        },
+        {
+          "joint": "upperleg01.L",
+          "vertices": 164,
+          "depthRatio": 0.6206826833631577,
+          "widthRatio": 0.7141530884232351
+        },
+        {
+          "joint": "upperleg01.R",
+          "vertices": 164,
+          "depthRatio": 0.6206826833631577,
+          "widthRatio": 0.7141530127001949
+        }
+      ]
+    },
+    "sourceFullNativeHeightM": 1.8379755020141602,
+    "targetFullNativeHeightM": 1.5038026571273804,
+    "method": "exact platform-person bone-region span and full native person height formulas"
+  },
+  "refinement": [
+    {
+      "id": "T01",
+      "original": {
+        "vertices": 2332,
+        "triangles": 4180,
+        "paperAreaMM2": 441231.17443674733,
+        "seamPairs": 112
+      },
+      "gradedBeforeRefinement": {
+        "vertices": 2332,
+        "triangles": 4180,
+        "paperAreaMM2": 368228.5776030492,
+        "seamPairs": 112
+      },
+      "after": {
+        "vertices": 2332,
+        "triangles": 4180,
+        "paperAreaMM2": 368228.5776030492,
+        "seamPairs": 112
+      },
+      "unmatchedBefore": [],
+      "unmatchedAfter": [],
+      "addedSeamSites": 0,
+      "addedRiseSites": 0,
+      "maxRetainedVertexShiftMM": 0,
+      "maxRetainedUVShiftMM": 0,
+      "allOriginalSourceVerticesRetained": true,
+      "refinementPaperAreaRetained": true,
+      "newClothPatches": 0
+    },
+    {
+      "id": "P01",
+      "original": {
+        "vertices": 6511,
+        "triangles": 11944,
+        "paperAreaMM2": 1292301.865860522,
+        "seamPairs": 463
+      },
+      "gradedBeforeRefinement": {
+        "vertices": 6511,
+        "triangles": 11944,
+        "paperAreaMM2": 1078487.8890459167,
+        "seamPairs": 463
+      },
+      "after": {
+        "vertices": 6607,
+        "triangles": 12068,
+        "paperAreaMM2": 1078487.8890459167,
+        "seamPairs": 531
+      },
+      "unmatchedBefore": [
+        {
+          "seam": "s6",
+          "side": "b",
+          "panel": "pant_b_r",
+          "edge": "e1",
+          "unmatched": 34
+        },
+        {
+          "seam": "s12",
+          "side": "b",
+          "panel": "pant_b_l",
+          "edge": "e11",
+          "unmatched": 34
+        }
+      ],
+      "unmatchedAfter": [],
+      "addedSeamSites": 68,
+      "addedRiseSites": 28,
+      "maxRetainedVertexShiftMM": 0,
+      "maxRetainedUVShiftMM": 0,
+      "allOriginalSourceVerticesRetained": true,
+      "refinementPaperAreaRetained": true,
+      "newClothPatches": 0
+    }
+  ],
+  "nativeBody": {
+    "vertices": 9253,
+    "triangles": 18416,
+    "sourceOriginalPositions": true,
+    "targetFullCSR": true,
+    "weightsTruncated": false,
+    "geometryRemoved": false
+  },
+  "sourceWasmBytes": 31870786,
+  "error": {
+    "message": "物理应变超出工程安全范围，已完整回滚本步状态",
+    "stack": "Error: 物理应变超出工程安全范围，已完整回滚本步状态\n    at WasmCloth.step (file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3345:13)\n    at FullWasmSourceFitter.step (file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3474:9)\n    at file:///workspace/scratch/8e6a7fffcc90/npc-life-r02/evidence/check-appearance-cloth-source-fit.bundle.mjs:3843:14",
+    "attemptedFrame": 9,
+    "failedStepMS": 852.3025620000008,
+    "preRollbackSourceAudits": [
+      {
+        "attemptedFrame": 9,
+        "id": "T01",
+        "gradedPaperMax": 1.214255406901685,
+        "gradedPaperMin": 0.901518023311903,
+        "maximumFromOriginalPositionsMM": 45.85035396569265
+      },
+      {
+        "attemptedFrame": 9,
+        "id": "P01",
+        "gradedPaperMax": 1.4581577542485396,
+        "gradedPaperMin": 0.8317647567558578,
+        "maximumFromOriginalPositionsMM": 48.65412048192126
+      }
+    ]
+  },
+  "summary": {
+    "elapsedMS": 9523.608115,
+    "simulationSeconds": 0.13333333333333333,
+    "completedFrames": 8,
+    "completedFitFraction": 0.25,
+    "completedSourceSubsteps": [
+      32,
+      32
+    ],
+    "sourceSafetyTrips": 1,
+    "sourceRollbacks": 1,
+    "stepMS": {
+      "count": 8,
+      "min": 764.6157410000005,
+      "max": 993.4905500000004,
+      "mean": 824.670101625
+    },
+    "failedStepMS": 852.3025620000008,
+    "maximumFrameDisplacementM": 0.012125989717363436,
+    "clothStateResetPerFrame": false,
+    "sourcePositionAndVelocityRetained": true,
+    "allSourceDynamicDegreesRetained": true,
+    "fittingAdapter": {
+      "source": "GPUCloth.step fitFraction + actorPrevious formulas",
+      "target": "original complete WasmCloth",
+      "constraintsChanged": false,
+      "iterationsChanged": false,
+      "safetyThresholdChanged": false,
+      "maximumMemoryRestMismatchM": 0,
+      "fitRollbacks": 1
+    },
+    "productionCandidate": false
+  },
+  "sourceStepAudits": [
+    {
+      "attemptedFrame": 1,
+      "id": "T01",
+      "gradedPaperMax": 1.2168258245479024,
+      "gradedPaperMin": 0.7246999170445426,
+      "maximumFromOriginalPositionsMM": 9.273495160271201
+    },
+    {
+      "attemptedFrame": 1,
+      "id": "P01",
+      "gradedPaperMax": 1.1540609257315848,
+      "gradedPaperMin": 0.8998793999099596,
+      "maximumFromOriginalPositionsMM": 11.878506204522399
+    },
+    {
+      "attemptedFrame": 2,
+      "id": "T01",
+      "gradedPaperMax": 1.1335375717782528,
+      "gradedPaperMin": 0.8767257036961906,
+      "maximumFromOriginalPositionsMM": 12.149023400786986
+    },
+    {
+      "attemptedFrame": 2,
+      "id": "P01",
+      "gradedPaperMax": 1.166179438684851,
+      "gradedPaperMin": 0.885633475725354,
+      "maximumFromOriginalPositionsMM": 16.24294464298249
+    },
+    {
+      "attemptedFrame": 3,
+      "id": "T01",
+      "gradedPaperMax": 1.139323446643061,
+      "gradedPaperMin": 0.8901132762562713,
+      "maximumFromOriginalPositionsMM": 17.314411601275484
+    },
+    {
+      "attemptedFrame": 3,
+      "id": "P01",
+      "gradedPaperMax": 1.227180927018618,
+      "gradedPaperMin": 0.8691901438974392,
+      "maximumFromOriginalPositionsMM": 20.378174518291694
+    },
+    {
+      "attemptedFrame": 4,
+      "id": "T01",
+      "gradedPaperMax": 1.134676757101852,
+      "gradedPaperMin": 0.8976618366801997,
+      "maximumFromOriginalPositionsMM": 21.688287216485122
+    },
+    {
+      "attemptedFrame": 4,
+      "id": "P01",
+      "gradedPaperMax": 1.2747595285803006,
+      "gradedPaperMin": 0.8881537354363603,
+      "maximumFromOriginalPositionsMM": 23.459692894863736
+    },
+    {
+      "attemptedFrame": 5,
+      "id": "T01",
+      "gradedPaperMax": 1.1477784464590641,
+      "gradedPaperMin": 0.8750692522261485,
+      "maximumFromOriginalPositionsMM": 27.21906883378771
+    },
+    {
+      "attemptedFrame": 5,
+      "id": "P01",
+      "gradedPaperMax": 1.322408203577492,
+      "gradedPaperMin": 0.856812995215514,
+      "maximumFromOriginalPositionsMM": 28.640675495101664
+    },
+    {
+      "attemptedFrame": 6,
+      "id": "T01",
+      "gradedPaperMax": 1.1686754953266758,
+      "gradedPaperMin": 0.8942120415264222,
+      "maximumFromOriginalPositionsMM": 32.67896288702752
+    },
+    {
+      "attemptedFrame": 6,
+      "id": "P01",
+      "gradedPaperMax": 1.362553908270945,
+      "gradedPaperMin": 0.8413878407630934,
+      "maximumFromOriginalPositionsMM": 33.31924378790495
+    },
+    {
+      "attemptedFrame": 7,
+      "id": "T01",
+      "gradedPaperMax": 1.198038724625339,
+      "gradedPaperMin": 0.8888432356276927,
+      "maximumFromOriginalPositionsMM": 38.06823914288069
+    },
+    {
+      "attemptedFrame": 7,
+      "id": "P01",
+      "gradedPaperMax": 1.395780392950845,
+      "gradedPaperMin": 0.8150009380924029,
+      "maximumFromOriginalPositionsMM": 39.197120733588605
+    },
+    {
+      "attemptedFrame": 8,
+      "id": "T01",
+      "gradedPaperMax": 1.2114070017254224,
+      "gradedPaperMin": 0.8908838154571977,
+      "maximumFromOriginalPositionsMM": 42.00972807638279
+    },
+    {
+      "attemptedFrame": 8,
+      "id": "P01",
+      "gradedPaperMax": 1.4282513420743415,
+      "gradedPaperMin": 0.8353378096407069,
+      "maximumFromOriginalPositionsMM": 43.44492284867406
+    },
+    {
+      "attemptedFrame": 9,
+      "id": "T01",
+      "gradedPaperMax": 1.214255406901685,
+      "gradedPaperMin": 0.901518023311903,
+      "maximumFromOriginalPositionsMM": 45.85035396569265
+    },
+    {
+      "attemptedFrame": 9,
+      "id": "P01",
+      "gradedPaperMax": 1.4581577542485396,
+      "gradedPaperMin": 0.8317647567558578,
+      "maximumFromOriginalPositionsMM": 48.65412048192126
+    }
+  ]
+}
