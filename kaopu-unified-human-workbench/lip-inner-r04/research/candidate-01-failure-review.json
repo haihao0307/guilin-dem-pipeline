@@ -1,0 +1,155 @@
+{
+  "schema": "kaopu/lip-inner-candidate-failure-review@1",
+  "reviewedAtUTC": "2026-10-18 07:53:12 UTC",
+  "candidate": 1,
+  "run": {
+    "id": 39108869490,
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39108869490",
+    "status": "completed",
+    "conclusion": "failure",
+    "updatedAt": "2026-10-18T07:48:41Z",
+    "jobId": 117620484190,
+    "jobStatus": "completed",
+    "jobConclusion": "failure",
+    "evidenceCommitStep": "success",
+    "uploadArtifactStep": "success",
+    "completeJobStep": "success",
+    "inProgressSteps": 0
+  },
+  "git": {
+    "source": "6580ecde2082d779018bcfc90e3aa57b03d801ae",
+    "sourceTree": "d067ed062a4eb83b88ebdf66ee93aff9d5e2de39",
+    "build": "fbbdba156ba2d799c859ab3094f8f83391f4ddc0",
+    "evidenceCommit": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
+    "evidenceTree": "a2689ee5b0865ee7f6beaa63e3390cdc8c7d30ef",
+    "evidenceParents": [
+      "fbbdba156ba2d799c859ab3094f8f83391f4ddc0"
+    ],
+    "branch": "refs/heads/feature/lip-inner-r04-20261018",
+    "observedBranchHead": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71",
+    "observationMethod": "Read-only GitHub git/ref, commit and Actions run APIs",
+    "strictFFNextBase": "cc06ecfcc5cc7164f15fc9112a70af1ff6ea4d71"
+  },
+  "artifact": {
+    "id": 12129244023,
+    "zipBytes": 31044,
+    "zipSHA256": "2058ca3b0e1f280922679a02a890f6dc67a15bf92ee66f724e91867729a310c8",
+    "allFilesRetrieved": 10,
+    "zipHashVerified": true
+  },
+  "rawQA": {
+    "repoPath": "kaopu-unified-human-workbench/lip-inner-r04/evidence/candidate-01/qa.json",
+    "sha256": "85f2648061176b92fbf572c8add9dacb359f23a151841940c860610f19af8ef8",
+    "bytes": 6228,
+    "originalBytesModified": false,
+    "localCopy": "candidate-01-39108869490/qa.json"
+  },
+  "preview": {
+    "publicURL": "https://htmlpreview.github.io/?https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/fbbdba156ba2d799c859ab3094f8f83391f4ddc0/kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+    "sha256": "bb49a2532ca1a153dc65ea55dc80411ce6168a78396df8c5ebaa293fe4f58089",
+    "bytes": 5503523,
+    "manifestSHA256": "069774f9f03bf08d1bcf55da8f168868e466b9449bc408e77f270c7e637cf617",
+    "moduleHashes": {
+      "MucosaSurface.js": "4dcfa37fad6a2d5b41fed460f5a08a03c1015224bffcb33d92c7dee3ac954af6",
+      "InnerLip.js": "bee372fb1cb27c6a661525f67adf2b33d532ba8ac802cbef15cbeb8ac9bcd95f"
+    }
+  },
+  "firstFailure": {
+    "stage": "R04 public drain original startup GPU queue",
+    "error": "Error: R04 public browser evaluate exceeded 120000 ms; pending work is not a pass",
+    "stack": "Error: R04 public browser evaluate exceeded 120000 ms; pending work is not a pass\n    at Timeout.<anonymous> (/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/kaopu-unified-human-workbench/lip-inner-r04/verification/verify-inner.cjs:43:164)\n    at listOnTimeout (node:internal/timers:585:17)\n    at process.processTimers (node:internal/timers:521:7)",
+    "stageElapsedMS": 120003,
+    "fixedEvaluateBudgetMS": 120000,
+    "work": "Drain already submitted native startup work via gl.finish and one-pixel readPixels; no replacement render",
+    "actualFullFrameReadbacks": 0,
+    "savedPNGCount": 0,
+    "tests": [
+      {
+        "name": "fixed public bytes source modules and R02 ancestor",
+        "passed": true,
+        "elapsedMS": 1388,
+        "result": {
+          "baseline": {
+            "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/ba0c4eb337e03997878aecaf477d8ec3fe8b7231/kaopu-unified-human-workbench/lip-realism-r02/preview.html",
+            "status": 200,
+            "bytes": 5479787,
+            "sha256": "ccc7af8e97969667bf63ab8bbc61e845d95e7b5e7f70adb167a662a63c0cb571"
+          },
+          "public": {
+            "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/fbbdba156ba2d799c859ab3094f8f83391f4ddc0/kaopu-unified-human-workbench/lip-inner-r04/preview.html",
+            "status": 200,
+            "bytes": 5503523,
+            "sha256": "bb49a2532ca1a153dc65ea55dc80411ce6168a78396df8c5ebaa293fe4f58089"
+          },
+          "manifestSHA256": "069774f9f03bf08d1bcf55da8f168868e466b9449bc408e77f270c7e637cf617"
+        }
+      }
+    ]
+  },
+  "browserErrors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "resourceErrors": []
+  },
+  "cleanup": {
+    "completed": true,
+    "browserDisconnected": true,
+    "errors": [],
+    "elapsedMS": 834
+  },
+  "cleanupPages": [
+    {
+      "label": "final cleanup",
+      "gpu": {
+        "available": true,
+        "before": 0,
+        "after": 0,
+        "lostBefore": false,
+        "lostAfter": false,
+        "frameBefore": 43,
+        "frameAfter": 43
+      },
+      "closed": true
+    }
+  ],
+  "nativeGPUAtCleanup": {
+    "frameCounterBefore": 43,
+    "frameCounterAfter": 43,
+    "glErrorBefore": 0,
+    "glErrorAfter": 0,
+    "contextLostBefore": false,
+    "contextLostAfter": false,
+    "newFrameSubmittedByCleanup": false
+  },
+  "gates": {
+    "completed": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "shareAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "conclusions": [
+    "Fixed public source bytes, modules and immutable R02 ancestor provenance passed.",
+    "The first startup GPU queue drain exceeded its unchanged 120000 ms boundary.",
+    "No target full-frame image was captured; paired R04/R02, semantic, shader-source, archive and fresh-context checks were not reached.",
+    "Error arrays were empty and cleanup observed GL error zero with a live context; this does not turn the timed-out drain into a pass.",
+    "There is no production image evidence on which to accept or reject R04 visual quality."
+  ],
+  "unconfirmedHypothesis": {
+    "candidate": "Extra native renders during R04 boot priorCompare, pose, view and final render may increase the pending startup queue.",
+    "status": "Requires native call-chain review; not established by this failed run.",
+    "scopeOfPossibleChange": "Only actual product boot batching with exact local descriptor restoration and a final native frame; keep verifier budget and matched-state gates unchanged."
+  },
+  "changesByThisReview": {
+    "productionSource": false,
+    "verifierSource": false,
+    "diagnosticSource": false,
+    "workflow": false,
+    "rawEvidence": false,
+    "reviewFileOnly": true
+  },
+  "frozenVerifierSHA256": "8235c143cf0dd838d7b27da0cbfacdfdb0a00b897913a754c545a37e842a63e6",
+  "frozenDiagnosticSHA256": "0935fdb1806f2af288133e44437efc98bf88a314a455591e50bd15c2d1c3553f"
+}
