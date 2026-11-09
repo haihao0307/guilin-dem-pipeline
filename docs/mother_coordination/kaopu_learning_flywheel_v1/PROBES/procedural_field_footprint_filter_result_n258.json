@@ -1,0 +1,25 @@
+{
+  "schema": "kaopu.probe-result/1",
+  "probeId": "N258-PROCEDURAL-FIELD-FOOTPRINT-FILTER",
+  "subject": "mrdoob/codevember-2026@0ea8c66a/05 materials.js + geology.js",
+  "runtime": "Node.js CPU only",
+  "tests": {
+    "analyticGradientVsCentralDifference": {
+      "samples": 1000,
+      "axes": 3,
+      "maxAbsError": 4.0987635507860887e-10,
+      "status": "PASS"
+    },
+    "lowFootprintPreservesValueAndGradient": "PASS",
+    "highFootprintConvergesToMeanAndZeroGradient": "PASS",
+    "footprintFadeMonotonic": "PASS",
+    "unfilteredChannelNegativeControl": "PASS"
+  },
+  "conclusion": "METHOD_INVARIANTS_REPRODUCED_CPU_ONLY",
+  "boundary": [
+    "No WGSL compilation or GPU execution was performed.",
+    "No temporal camera sweep or pixel comparison was performed.",
+    "Fragment derivatives are unavailable in ordinary compute-stage evaluation.",
+    "Filtering one channel does not prove that all procedural channels are shimmer-safe."
+  ]
+}
