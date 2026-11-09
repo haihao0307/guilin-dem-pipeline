@@ -1,0 +1,67 @@
+{
+  "probe": "N262_PRODUCER_VERIFIER_IDENTITY_SEPARATION",
+  "boundedQuestion": "Can an independent-review receipt prove that an authorized verifier distinct from the producer reviewed the exact same subject and producer attestation?",
+  "teacher": {
+    "name": "in-toto layout + signed link metadata",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "exactNovelty": "R2 states that Producer cannot approve itself; in-toto adds signed, layout-authorized functionary identities and artifact-chain binding that can make the separation executable rather than self-declared."
+  },
+  "cases": [
+    {
+      "id": "valid-distinct-chain",
+      "expected": "PASS_ROLE_SEPARATED_ATTESTATION_CHAIN",
+      "actual": "PASS_ROLE_SEPARATED_ATTESTATION_CHAIN",
+      "pass": true
+    },
+    {
+      "id": "same-key-authorized-for-both-roles",
+      "expected": "HOLD_ROLE_IDENTITY_NOT_DISTINCT",
+      "actual": "HOLD_ROLE_IDENTITY_NOT_DISTINCT",
+      "pass": true
+    },
+    {
+      "id": "layout-role-key-forged-after-coordinator-signature",
+      "expected": "HOLD_LAYOUT_SIGNATURE_INVALID",
+      "actual": "HOLD_LAYOUT_SIGNATURE_INVALID",
+      "pass": true
+    },
+    {
+      "id": "verifier-attests-different-subject",
+      "expected": "HOLD_SUBJECT_IDENTITY_MISMATCH",
+      "actual": "HOLD_SUBJECT_IDENTITY_MISMATCH",
+      "pass": true
+    },
+    {
+      "id": "producer-statement-tampered-after-signature",
+      "expected": "HOLD_PRODUCER_ATTESTATION_INVALID",
+      "actual": "HOLD_PRODUCER_ATTESTATION_INVALID",
+      "pass": true
+    },
+    {
+      "id": "verifier-receipt-bound-to-replaced-producer-envelope",
+      "expected": "HOLD_REVIEW_CHAIN_MISMATCH",
+      "actual": "HOLD_REVIEW_CHAIN_MISMATCH",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "allPassed": true
+  },
+  "decision": "CANDIDATE_ROLE_SEPARATED_ATTESTATION_GATE_PASSES_SYNTHETIC_REPLAY",
+  "limits": [
+    "Distinct keys prove cryptographic identities, not distinct humans; key issuance and custody remain operational requirements.",
+    "A valid verifier signature does not prove technical correctness, browser/GPU execution, competence, or user acceptance.",
+    "The probe uses generated local keys and a synthetic subject; it does not sign or approve R136."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE-RUN": "synthetic replay only",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

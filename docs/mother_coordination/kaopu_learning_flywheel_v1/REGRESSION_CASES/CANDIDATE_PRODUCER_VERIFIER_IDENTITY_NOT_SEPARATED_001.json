@@ -1,0 +1,126 @@
+{
+  "id": "PRODUCER-VERIFIER-IDENTITY-NOT-SEPARATED-001",
+  "status": "Candidate",
+  "scope": "Car/Motor R136 independent-review receipt trial only",
+  "problem": "A package can label scripts or results as independent-review while providing no machine-verifiable evidence that an authorized verifier identity distinct from the producer reviewed the exact same subject and producer attestation.",
+  "realFailureEvidence": {
+    "issue": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6748140400",
+    "subject": "CAR_RECOVERY_R136_BOUNDED_GPU_ADMISSION_PRIVATE_DELTA.zip",
+    "subjectSha256": "970367f8ea22aeed8517b5a86e33c4207526b941ef9e3a9e9a2ddb693597ef9e",
+    "observation": "The archive contains evidence/independent-review entrypoints, but has no Task Anchor, Delivery Receipt, accepted baseline, producer identity, verifier identity, signed role authorization, or receipt binding the verifier to the exact producer statement.",
+    "claimBoundary": "This does not prove that the producer actually self-approved; verifier independence remains UNKNOWN."
+  },
+  "currentBestView": {
+    "covered": "R2 already states that Producer cannot approve itself and requires an independent verifier.",
+    "gap": "The policy is not yet an executable identity and subject-chain check; role names inside one archive are self-declared strings."
+  },
+  "teacher": {
+    "name": "in-toto layout and signed link metadata",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "screening": {
+      "sourceProvenance": {
+        "result": "PASS",
+        "evidence": [
+          "https://github.com/in-toto/specification/blob/master/in-toto-spec.md",
+          "https://in-toto.io/docs/getting-started/",
+          "https://github.com/in-toto/in-toto"
+        ]
+      },
+      "maintenanceReleaseIssueActivity": {
+        "result": "PASS",
+        "evidence": "Official implementation release v3.1.0 was published 2026-05-04; develop commit e352b43ad7cb8915d84c36d791aa61346152a0a3 is dated 2026-08-27; repository is not archived or disabled."
+      },
+      "runnableCodeTestsData": {
+        "result": "PASS",
+        "evidence": "Reference Python implementation, verification code, demos and extensive tests including test_verifylib.py and test_in_toto_verify.py are public."
+      },
+      "licenseAssetRights": {
+        "result": "PASS",
+        "evidence": "Official implementation LICENSE is Apache License 2.0; this audition copies no external assets or code."
+      },
+      "directRelevance": {
+        "result": "PASS",
+        "evidence": "R136 names an independent-review step but does not bind that role to a distinct authorized identity or the exact producer statement."
+      },
+      "noveltyOverCurrentBestView": {
+        "result": "PASS",
+        "answer": "It converts the R2 separation-of-duty sentence into a signed layout that authorizes role-specific functionary identities and signed link metadata that binds verifier, producer statement and exact artifact subject."
+      },
+      "dependencyHardwareCostDataIntegrationRisk": {
+        "result": "MODERATE",
+        "evidence": "No special hardware is required for the principle, but identity issuance, private-key custody, revocation, canonical serialization and signer availability are new operational dependencies."
+      },
+      "demoOnlyOpacityClosedDependencyVersionRisk": {
+        "result": "PASS_WITH_BOUNDARY",
+        "evidence": "Open specification and implementation, not demo-only. Signatures prove credential control and integrity, not human independence, competence, technical correctness, GPU execution or user acceptance."
+      }
+    }
+  },
+  "falsifiableHypothesis": "If a coordinator-signed verification layout authorizes distinct producer and verifier identities, and the verifier signs a receipt over the exact subject digest and exact producer-attestation digest, then self-signing, layout-role forgery, subject substitution, producer-statement tampering and stale review-chain reuse are rejected while a valid distinct chain passes.",
+  "candidateFields": {
+    "taskAnchor": [
+      "verificationLayoutDigest",
+      "layoutSignerIdentity",
+      "producerAuthorizedIdentitySet",
+      "verifierAuthorizedIdentitySet",
+      "producerVerifierIdentityMustBeDistinct",
+      "subjectDigest"
+    ],
+    "deliveryReceipt": [
+      "producerAttestationDigest",
+      "producerSignerKeyId",
+      "verifierAttestationDigest",
+      "verifierSignerKeyId",
+      "reviewedProducerAttestationDigest",
+      "identityIssuerOrKeyCustodyUnknown",
+      "signatureVerificationResult"
+    ]
+  },
+  "decisions": [
+    "HOLD_LAYOUT_SIGNATURE_INVALID",
+    "HOLD_ROLE_IDENTITY_NOT_DISTINCT",
+    "HOLD_PRODUCER_ATTESTATION_INVALID",
+    "HOLD_VERIFIER_ATTESTATION_INVALID",
+    "HOLD_SUBJECT_IDENTITY_MISMATCH",
+    "HOLD_REVIEW_CHAIN_MISMATCH",
+    "PASS_ROLE_SEPARATED_ATTESTATION_CHAIN"
+  ],
+  "minimalReplay": {
+    "probe": "PROBES/producer_verifier_identity_probe_n262.mjs",
+    "result": "PROBES/producer_verifier_identity_probe_result_n262.json",
+    "summary": "6/6 PASS",
+    "controls": [
+      "valid distinct producer/verifier chain",
+      "same authorized key used for both roles",
+      "role authorization changed after coordinator signature",
+      "verifier signs a different subject",
+      "producer statement changed after signature",
+      "verifier receipt reused against a replacement producer envelope"
+    ]
+  },
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "independentIdentityIssuerOrCustodyEvidenceRequired": true,
+    "rollbackPoint": "Remove this Candidate if a real Car/Motor trial shows no discrimination beyond existing R2 receipts; do not modify R2 or production gates before that trial."
+  },
+  "limits": [
+    "Distinct keys do not prove distinct humans if one actor controls both keys.",
+    "A valid signature does not prove that review logic was correct or actually exercised GPU/browser/device paths.",
+    "This synthetic probe does not sign, approve or change R136."
+  ],
+  "routing": {
+    "issue": 91,
+    "target": "Car/Motor recovery packaging owner and independent verifier",
+    "state": "NOT_POSTED"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE-RUN": "synthetic replay only",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
