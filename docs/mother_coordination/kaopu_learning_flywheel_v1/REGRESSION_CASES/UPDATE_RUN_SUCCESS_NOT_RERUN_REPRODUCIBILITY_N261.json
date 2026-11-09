@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "kaopu.regression-evidence-update.v1",
+  "run": "N261",
+  "date": "2026-11-10",
+  "updatesExistingCase": "RUN-SUCCESS-NOT-RERUN-REPRODUCIBILITY-001",
+  "createsNewRegressionCase": false,
+  "targetMother": "Car/Motor",
+  "trigger": {
+    "issue": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6748140400",
+    "archive": "CAR_RECOVERY_R136_BOUNDED_GPU_ADMISSION_PRIVATE_DELTA.zip",
+    "archiveSha256": "970367f8ea22aeed8517b5a86e33c4207526b941ef9e3a9e9a2ddb693597ef9e",
+    "observedFailure": "R136 repeated the package-unsealed failure: declared evidence exists, while static ESM imports and verifier inputs still resolve through /workspace/shared ambient authority."
+  },
+  "boundedQuestion": "How can the Car/Motor verifier prove ESM, Python, and shader tooling actually consume only one declared content-addressed input root, rather than merely recording a manifest that source resolvers bypass?",
+  "currentBestViewBeforeN261": [
+    "N256 established Command + input_root_digest + relative working_directory as the action identity boundary.",
+    "N256 also established that a mount map cannot rewrite static absolute ESM imports.",
+    "The current view did not yet separate manifest integrity from enforced file-access authority."
+  ],
+  "teacherScreening": {
+    "teacher": "bazelbuild/bazel sandboxing",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "sourceProvenance": {
+      "result": "PASS",
+      "evidence": [
+        "https://github.com/bazelbuild/bazel/blob/master/site/en/docs/sandboxing.md",
+        "https://github.com/bazelbuild/bazel/blob/master/src/main/tools/linux-sandbox.cc",
+        "https://github.com/bazelbuild/bazel/blob/master/src/test/shell/integration/sandboxing_test.sh"
+      ]
+    },
+    "maintenanceReleaseIssueActivity": {
+      "result": "PASS",
+      "evidence": "Official repository was active at master bb65e8a523496da74619c6678cc75ba8ca15016d on 2026-11-09; stable release 9.3.2 was published 2026-11-05."
+    },
+    "runnableCodeTestsData": {
+      "result": "PASS",
+      "evidence": "Production implementation and integration tests exist; this audition does not treat the documentation alone as proof."
+    },
+    "licenseAssetRights": {
+      "result": "PASS",
+      "evidence": "Apache-2.0 repository; no external assets are copied into KAOPU."
+    },
+    "directRelevance": {
+      "result": "PASS",
+      "evidence": "R136 has a declared package yet its verifier still resolves undeclared host-absolute ESM and Python inputs."
+    },
+    "noveltyOverCurrentBestView": {
+      "result": "PASS",
+      "answer": "It adds the missing distinction between content-addressed input identity and enforced runtime authority: per-action execroot/isolation plus an explicit fail-closed sandbox strategy is required to prove that consumers cannot bypass the manifest."
+    },
+    "dependencyHardwareCostIntegrationRisk": {
+      "result": "HIGH",
+      "evidence": "Adopting Bazel wholesale would add a large build-system dependency; namespace sandboxing also varies by host/container. Only the bounded verification principle is auditioned."
+    },
+    "demoOnlyOpacityClosedDependencyVersionRisk": {
+      "result": "PASS_WITH_BOUNDARY",
+      "evidence": "Not demo-only or closed, but basic process-wrapper isolation still exposes absolute host paths and generic sandbox selection may fall back; the candidate therefore requires an explicit strategy and negative controls."
+    }
+  },
+  "externalMethod": {
+    "transferablePrinciple": "A content-addressed manifest is necessary but insufficient. The process must execute in an input closure that denies undeclared paths, and sandbox unavailability must be a gate failure rather than a local-mode fallback.",
+    "notAdopted": [
+      "Bazel as a repository-wide build system",
+      "Any global R2 or gate change",
+      "Any claim that processwrapper-sandbox alone hides host absolute paths"
+    ]
+  },
+  "falsifiableHypothesis": "If the real R136 package-relative verifier runs all ESM, Python, and shader-tool reads inside a filesystem sandbox whose only task-data root is the declared input-root digest, then the positive replay passes while an injected host-absolute import, missing declared input, tampered byte, and unavailable sandbox each fail before candidate admission.",
+  "minimalReplay": {
+    "probe": "PROBES/declared_input_root_probe_n261.mjs",
+    "result": "PROBES/declared_input_root_probe_result_n261.json",
+    "localDecision": "BLOCKED_VALID_NO_SANDBOX_FALLBACK",
+    "confirmed": [
+      "Declared Node, Python, and shader-like consumers run.",
+      "Manifest verification rejects a missing input.",
+      "Manifest verification rejects one changed declared byte.",
+      "Without isolation, Node path reads, Python path reads, shader-like path reads, and a static ESM import all consume undeclared ambient files successfully.",
+      "The runner did not silently substitute ordinary execution when filesystem enforcement was unavailable."
+    ],
+    "notConfirmed": [
+      "An enforced positive run of the real R136 verifier",
+      "Denial of the injected absolute path inside this runner",
+      "GPU execution or hardware validation"
+    ],
+    "environmentBlockers": [
+      "bubblewrap namespace entry failed",
+      "unshare user/mount namespace was not permitted",
+      "ptrace/strace was not permitted",
+      "chroot was not permitted",
+      "Landlock syscall returned ENOSYS"
+    ]
+  },
+  "candidateTranslation": {
+    "taskAnchorFields": [
+      "inputRootDigest",
+      "packageRelativeEntryPoint",
+      "sandboxStrategy",
+      "sandboxFallbackPolicy=DENY",
+      "declaredTaskDataRoots"
+    ],
+    "deliveryReceiptFields": [
+      "resolvedInputRootDigest",
+      "executedEntryPoint",
+      "effectiveSandboxStrategy",
+      "sandboxCapabilityProbe",
+      "negativeControlResults"
+    ],
+    "verifierGate": "Reject when the sandbox is unavailable, an undeclared absolute path resolves, a manifest entry is missing or changed, or the declared manifest is not consumed by every toolchain entrypoint.",
+    "requiredNegativeControls": [
+      "injected static ESM host-absolute import",
+      "Python host-absolute input",
+      "shader-tool host-absolute input",
+      "missing declared file",
+      "one-byte declared-file tamper",
+      "sandbox unavailable"
+    ]
+  },
+  "applicabilityBoundary": "Car/Motor package-relative verifier admission and other Mothers only after their own scoped replay. This evidence does not authorize a global gate, Bazel adoption, production-branch changes, or GPU claims.",
+  "decision": "KEEP_AS_TEACHER_CANDIDATE_AND_ROUTE_ONE_FAIL_CLOSED_R136_TRIAL",
+  "routing": {
+    "issue": 91,
+    "state": "NOT_POSTED",
+    "requestedMotherResponse": [
+      "Is this bounded question relevant to the current R136 failure?",
+      "Does the existing Car/Motor verifier already enforce the declared closure rather than merely record it?",
+      "Which principle, code, or negative control is worth learning?",
+      "What is the smallest real package-relative fail-closed trial?"
+    ]
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}

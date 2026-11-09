@@ -1,0 +1,253 @@
+{
+  "probe": "N261_CAR_R136_DECLARED_INPUT_ROOT_SANDBOX_AUDITION",
+  "boundedQuestion": "Can one content-addressed manifest prove ESM, Python, and shader-tool reads come only from its declared closure?",
+  "teacher": {
+    "name": "bazelbuild/bazel sandboxing",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "novelty": "REAPI-style input identity is not access enforcement; a verifier needs per-action filesystem isolation plus explicit no-fallback behavior."
+  },
+  "manifest": {
+    "declaredRootDigest": "4f4c89608a7a557b2658d5079248113dff3c6c966bd942936c6f347617fffab2",
+    "positive": {
+      "pass": true,
+      "failures": []
+    },
+    "negativeMissing": {
+      "pass": false,
+      "failures": [
+        {
+          "relativePath": "missing.wgsl",
+          "expected": "41a9650647ac7eabff4d3c87c3974cde79b18728a6ce0347aeff12054d5b3794",
+          "actual": null,
+          "reason": "ENOENT"
+        }
+      ]
+    },
+    "negativeTampered": {
+      "pass": false,
+      "failures": [
+        {
+          "relativePath": "input.txt",
+          "expected": "b128e47931d4a83b7011014938328f5424eeccd3d41e88be1e240b70f9137a19",
+          "actual": "74c7b0727a3ce8c938578a64def05fd2c8e5c3c70e5a3069bd9529e92fa92717",
+          "reason": "DIGEST_MISMATCH"
+        }
+      ]
+    }
+  },
+  "unisolated": {
+    "nodeDeclared": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/n261-input-root-LI04iO/declared/node-reader.mjs",
+        "/tmp/n261-input-root-LI04iO/declared/input.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "declared-r136-fixture",
+      "stderr": "",
+      "error": null
+    },
+    "pythonDeclared": {
+      "command": [
+        "/usr/bin/python3",
+        "/tmp/n261-input-root-LI04iO/declared/python_reader.py",
+        "/tmp/n261-input-root-LI04iO/declared/input.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "declared-r136-fixture",
+      "stderr": "",
+      "error": null
+    },
+    "shaderDeclared": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/n261-input-root-LI04iO/declared/shader-tool.mjs",
+        "/tmp/n261-input-root-LI04iO/declared/input.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "b128e47931d4a83b7011014938328f5424eeccd3d41e88be1e240b70f9137a19",
+      "stderr": "",
+      "error": null
+    },
+    "nodeAmbientByPath": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/n261-input-root-LI04iO/declared/node-reader.mjs",
+        "/tmp/n261-input-root-LI04iO/ambient/secret.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "ambient-host-authority",
+      "stderr": "",
+      "error": null
+    },
+    "pythonAmbientByPath": {
+      "command": [
+        "/usr/bin/python3",
+        "/tmp/n261-input-root-LI04iO/declared/python_reader.py",
+        "/tmp/n261-input-root-LI04iO/ambient/secret.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "ambient-host-authority",
+      "stderr": "",
+      "error": null
+    },
+    "shaderAmbientByPath": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/n261-input-root-LI04iO/declared/shader-tool.mjs",
+        "/tmp/n261-input-root-LI04iO/ambient/secret.txt"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "9eb6fac40c446066da178e4b80db4c046807c7f3519bb62ed15bea0f50064393",
+      "stderr": "",
+      "error": null
+    },
+    "nodeAmbientStaticImport": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "/tmp/n261-input-root-LI04iO/declared/injected-static-import.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "ambient-static-import",
+      "stderr": "",
+      "error": null
+    }
+  },
+  "enforcementCapabilities": {
+    "bwrap": {
+      "command": [
+        "/usr/bin/bwrap",
+        "--die-with-parent",
+        "--unshare-user",
+        "--unshare-net",
+        "--dev",
+        "/dev",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/bin",
+        "/bin",
+        "--ro-bind",
+        "/lib",
+        "/lib",
+        "--ro-bind",
+        "/lib64",
+        "/lib64",
+        "--ro-bind",
+        "/opt",
+        "/opt",
+        "--tmpfs",
+        "/tmp",
+        "--chdir",
+        "/tmp",
+        "/bin/sh",
+        "-c",
+        "printf sandbox-ok"
+      ],
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "bwrap: open /proc/82/ns/ns failed: No such file or directory",
+      "error": "spawnSync /usr/bin/bwrap ETIMEDOUT"
+    },
+    "unshare": {
+      "command": [
+        "/usr/bin/unshare",
+        "--user",
+        "--mount",
+        "--map-root-user",
+        "/bin/true"
+      ],
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "unshare: write failed /proc/self/uid_map: Operation not permitted",
+      "error": null
+    },
+    "strace": {
+      "command": [
+        "/usr/bin/strace",
+        "-f",
+        "-e",
+        "trace=%file",
+        "/bin/true"
+      ],
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "/usr/bin/strace: test_ptrace_get_syscall_info: PTRACE_TRACEME: Operation not permitted\n/usr/bin/strace: ptrace(PTRACE_TRACEME, ...): Operation not permitted\n/usr/bin/strace: PTRACE_SETOPTIONS: Operation not permitted\n/usr/bin/strace: cleanup: waitpid(-1, __WALL): No child processes",
+      "error": null
+    },
+    "chroot": {
+      "command": [
+        "/usr/sbin/chroot",
+        "/tmp/n261-input-root-LI04iO",
+        "/bin/true"
+      ],
+      "status": 125,
+      "signal": null,
+      "stdout": "",
+      "stderr": "/usr/sbin/chroot: cannot change root directory to '/tmp/n261-input-root-LI04iO': Operation not permitted",
+      "error": null
+    },
+    "landlockCompile": {
+      "command": [
+        "/usr/bin/gcc",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-o",
+        "/tmp/n261-input-root-LI04iO/landlock_exec_n261",
+        "/workspace/scratch/a0bbfc7ad8f6/n261_probe/landlock_exec_n261.c"
+      ],
+      "status": 0,
+      "signal": null,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    "landlockAbi": {
+      "command": [
+        "/tmp/n261-input-root-LI04iO/landlock_exec_n261",
+        "--abi"
+      ],
+      "status": 125,
+      "signal": null,
+      "stdout": "",
+      "stderr": "landlock_exec_n261: query ABI: Function not implemented",
+      "error": null
+    }
+  },
+  "assertions": {
+    "declaredConsumersRun": true,
+    "undeclaredAmbientConsumersAlsoRunWithoutIsolation": true,
+    "missingInputRejectedByManifest": true,
+    "tamperedByteRejectedByManifest": true,
+    "filesystemEnforcementAvailableInThisRunner": false,
+    "noSilentFallback": true
+  },
+  "decision": "BLOCKED_VALID_NO_SANDBOX_FALLBACK",
+  "interpretation": [
+    "The manifest catches missing and changed declared bytes.",
+    "The same manifest does not stop Node ESM, Python, or a shader-like tool from reading an undeclared absolute path.",
+    "This runner exposes no usable filesystem-isolation or syscall-audit primitive; the audition therefore stops instead of silently replaying in local mode.",
+    "Do not adopt globally. Next valid trial must run the real package-relative entrypoint inside an environment that can deny the injected absolute path."
+  ],
+  "scope": {
+    "productionMotherChanged": false,
+    "r2Changed": false,
+    "realR136ArchiveExecuted": false,
+    "gpuValidated": false,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
