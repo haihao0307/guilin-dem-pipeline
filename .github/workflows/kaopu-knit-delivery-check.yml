@@ -1,0 +1,90 @@
+name: Verify published knit candidate
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/kaopu-knit-delivery-check.yml]
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install isolated browser test
+        run: |
+          npm install --prefix .knit-qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          ./.knit-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify public bytes and actual interactive rendering
+        env:
+          NODE_PATH: ${{ github.workspace }}/.knit-qa/node_modules
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const { createHash } = require('node:crypto');
+          const assert = require('node:assert/strict');
+          const url = 'https://haihao0307.github.io/guilin-dem-pipeline/kaopu-knit-lab/';
+          const expected = '7deb133d275a1e57e1930dd32dd5996f9fa55f280be67d0176729cbac0bada06';
+          const sha = b => createHash('sha256').update(b).digest('hex');
+          (async () => {
+            let http;
+            for(let attempt=0;attempt<40;attempt++) {
+              const r=await fetch(url+'?delivery=6a7a344b&check='+attempt,{cache:'no-store'});
+              const data=Buffer.from(await r.arrayBuffer());
+              http={status:r.status,bytes:data.length,sha256:sha(data),url:r.url};
+              if(r.status===200 && http.sha256===expected) break;
+              console.log('PUBLIC_WAIT',JSON.stringify(http));
+              await new Promise(r=>setTimeout(r,8000));
+            }
+            assert.equal(http.status,200); assert.equal(http.sha256,expected);
+            console.log('PUBLIC_HTTP_OK',JSON.stringify(http));
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            const proof={url,sourceCommit:'6a7a344bccc7869905b572c929e827555bc093d7',http,sourceModified:false,deliveryRepaired:true,interactive3D:true,staticImageSubstitute:false,visualReferenceMatched:false,hardwarePerformanceVerified:false,realMobileDeviceTested:false,runs:[]};
+            try {
+              for(const [name,viewport] of [['desktop',{width:1000,height:900}],['mobile-viewport',{width:390,height:844}]]) {
+                const context=await browser.newContext({viewport,deviceScaleFactor:1,hasTouch:name!=='desktop'});
+                const page=await context.newPage(); const errors=[],failed=[];
+                page.on('pageerror',e=>errors.push(String(e)));
+                page.on('requestfailed',r=>failed.push({url:r.url(),error:r.failure()}));
+                page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text());});
+                const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+                assert.equal(response.status(),200); assert.equal(sha(await response.body()),expected);
+                await page.waitForFunction(()=>window.KNIT_LAB?.error||window.KNIT_LAB?.completedFrames>=3,{},{timeout:180000});
+                let initial=await page.evaluate(()=>({ready:KNIT_LAB.ready,frames:KNIT_LAB.completedFrames,error:KNIT_LAB.error||null,glError:KNIT_LAB.lastGLError||0,stats:KNIT_LAB.stats,yaw:KNIT_LAB.state.yaw}));
+                assert.equal(initial.error,null); assert(initial.ready); assert(initial.frames>=3); assert.equal(initial.glError,0);
+                await page.getByRole('button',{name:'纱线',exact:true}).click();
+                assert(await page.locator('#panel').isVisible());
+                await page.getByRole('button',{name:'纱线',exact:true}).click();
+                await page.getByRole('button',{name:'旋转',exact:true}).click();
+                await page.waitForFunction(n=>KNIT_LAB.completedFrames>=n,initial.frames+2,{timeout:180000});
+                const yaw=await page.evaluate(()=>KNIT_LAB.state.yaw); assert.notEqual(yaw,initial.yaw);
+                await page.getByRole('button',{name:'旋转',exact:true}).click();
+                await page.getByRole('button',{name:'领口',exact:true}).click();
+                assert.equal(await page.evaluate(()=>KNIT_LAB.state.view),'collar');
+                await page.getByRole('button',{name:'整件',exact:true}).click();
+                const n=await page.evaluate(()=>KNIT_LAB.completedFrames);
+                await page.waitForFunction(n=>KNIT_LAB.completedFrames>n,n,{timeout:180000});
+                const pixels=await page.evaluate(()=>{
+                  const c=document.querySelector('#stage'),g=c.getContext('webgl2'),p=new Uint8Array(4),colors=new Set();
+                  let min=255,max=0;
+                  for(let y=1;y<12;y++)for(let x=1;x<12;x++){
+                    g.readPixels(Math.floor(c.width*x/12),Math.floor(c.height*y/12),1,1,g.RGBA,g.UNSIGNED_BYTE,p);
+                    colors.add([...p].join(','));for(let k=0;k<3;k++){min=Math.min(min,p[k]);max=Math.max(max,p[k]);}
+                  }
+                  return {distinctSamples:colors.size,channelRange:max-min,glError:g.getError()};
+                });
+                assert(pixels.distinctSamples>12); assert(pixels.channelRange>30); assert.equal(pixels.glError,0);
+                const screenshot=await page.screenshot({type:'jpeg',quality:82}); assert(screenshot.length>10000);
+                const final=await page.evaluate(()=>({frames:KNIT_LAB.completedFrames,error:KNIT_LAB.error||null,glError:KNIT_LAB.lastGLError||0,view:KNIT_LAB.state.view}));
+                assert.equal(final.error,null);assert.equal(final.glError,0);assert.equal(errors.length,0);assert.equal(failed.length,0);
+                const result={name,viewport,httpStatus:response.status(),initial,final,rotationChanged:true,settingsOpened:true,cameraSwitchWorked:true,pixels,screenshotBytes:screenshot.length,screenshotSha256:sha(screenshot),errors,failed};
+                proof.runs.push(result);console.log('PUBLIC_BROWSER_OK',JSON.stringify(result));
+                await context.close();
+              }
+              proof.publicHttpsPassed=true;proof.browserPassed=true;proof.shareAllowed=true;proof.verifiedAt=new Date().toISOString();
+              console.log('PUBLICATION_PROOF_JSON='+JSON.stringify(proof));
+            } finally {await browser.close();}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
