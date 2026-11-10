@@ -1,0 +1,62 @@
+name: Knit distance noise R03
+on:
+  push:
+    branches: [feature/knit-distance-noise-r03-20261110]
+    paths:
+      - kaopu-fabric-workbench/knit-distance-r03/**
+      - .github/workflows/knit-distance-r03.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-distance-r03
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-fabric-workbench/knit-distance-r03
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build
+        run: |
+          python kaopu-fabric-workbench/knit-distance-r03/build.py
+          node --check kaopu-fabric-workbench/knit-distance-r03/app.js
+      - name: Install independent browser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/knit-r03
+          cd /tmp/knit-r03
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Actual runtime and data
+        run: |
+          SITE="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-distance-r03"
+          cp "$SITE/qa.mjs" /tmp/knit-r03/qa.mjs
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r03-http.log 2>&1 &
+          if test -f "$SITE/PUBLIC_URL.txt"; then export QA_URL="$(cat "$SITE/PUBLIC_URL.txt")"; fi
+          SITE_DIR="$SITE" xvfb-run -a node /tmp/knit-r03/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-distance-r03
+          path: kaopu-fabric-workbench/knit-distance-r03
+          retention-days: 7
+      - name: Save truthful evidence
+        if: always()
+        run: |
+          git config user.name 'Knit runtime verifier'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-distance-r03
+          if test -f kaopu-fabric-workbench/knit-distance-r03/evidence/QA.json; then git add -f kaopu-fabric-workbench/knit-distance-r03/evidence/QA.json; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Save distance-noise build and actual browser result [skip ci]'
+            git push origin HEAD:feature/knit-distance-noise-r03-20261110
+          fi
