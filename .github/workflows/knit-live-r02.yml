@@ -31,6 +31,8 @@ jobs:
           node --check kaopu-fabric-workbench/knit-three-live-r02/ui.js
       - name: Install browser test dependencies
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
           mkdir -p /tmp/knit-qa
           cd /tmp/knit-qa
           npm init -y
@@ -45,7 +47,7 @@ jobs:
           if test -f "$SITE/PUBLIC_URL.txt"; then
             export QA_URL="$(cat "$SITE/PUBLIC_URL.txt")"
           fi
-          SITE_DIR="$SITE" QA_OUT="$SITE/evidence" node /tmp/knit-qa/qa.mjs
+          SITE_DIR="$SITE" QA_OUT="$SITE/evidence" xvfb-run -a node /tmp/knit-qa/qa.mjs
       - name: Upload runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,6 +64,9 @@ jobs:
           git config user.name 'Knit workbench verification'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A kaopu-fabric-workbench/knit-three-live-r02
+          if test -f kaopu-fabric-workbench/knit-three-live-r02/evidence/BROWSER_QA.json; then
+            git add -f kaopu-fabric-workbench/knit-three-live-r02/evidence/BROWSER_QA.json
+          fi
           if ! git diff --cached --quiet; then
             git commit -m 'Record standalone build and actual browser QA result [skip ci]'
             git push origin HEAD:feature/knit-three-live-r02-20261110

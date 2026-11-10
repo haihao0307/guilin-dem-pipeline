@@ -5,9 +5,12 @@ import {resolve} from 'node:path';
 const site=resolve(process.env.SITE_DIR||'kaopu-fabric-workbench/knit-three-live-r02'),out=resolve(process.env.QA_OUT||'evidence/knit-live-r02');await mkdir(out,{recursive:true});
 const target=process.env.QA_URL||'http://127.0.0.1:8925/kaopu-fabric-workbench/knit-three-live-r02/index.html?qa=1&size=160x112&density=40x12';
 const result={schema:'kaopu/knit-live-browser-qa@1',version:'KNIT-LIVE-R02',target,testStarted:new Date().toISOString(),sourceCommit:process.env.GITHUB_SHA||null,browserTested:true,hardwareTested:false,phoneHardwareTested:false,visualAcceptance:false,shareAllowed:false,errors:[],routes:{}};
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-unsafe-webgpu','--enable-unsafe-swiftshader','--use-angle=swiftshader','--disable-vulkan-surface','--disable-dev-shm-usage']});
+let browser;
 try{
- const page=await browser.newPage({viewport:{width:1200,height:900}});page.setDefaultTimeout(300000);page.on('pageerror',e=>result.errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))result.errors.push(m.text());console.log('browser',m.type(),m.text().slice(0,1200));});
+ browser=await chromium.launch({headless:false,channel:'chromium',dumpio:true,args:['--no-sandbox','--enable-unsafe-webgpu','--enable-features=Vulkan','--use-angle=vulkan','--use-vulkan=swiftshader','--use-webgpu-adapter=swiftshader','--disable-vulkan-surface','--disable-dev-shm-usage']});
+ const page=await browser.newPage({viewport:{width:1200,height:900}});page.setDefaultTimeout(300000);
+ await page.addInitScript(()=>{if(globalThis.GPUDevice){const old=GPUDevice.prototype.createComputePipelineAsync;GPUDevice.prototype.createComputePipelineAsync=async function(desc){const t=performance.now();console.log('PIPELINE_START',desc.compute.entryPoint);const p=await old.call(this,desc);console.log('PIPELINE_DONE',desc.compute.entryPoint,performance.now()-t);return p;};}});
+ page.on('pageerror',e=>result.errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))result.errors.push(m.text());console.log('browser',m.type(),m.text().slice(0,1200));});
  const response=await page.goto(target,{waitUntil:'domcontentloaded'});result.httpStatus=response?.status();if(!response?.ok())throw Error('HTTP startup failed');
  if(process.env.QA_URL){const bytes=await response.body();result.servedSHA256=createHash('sha256').update(bytes).digest('hex');result.expectedSHA256=createHash('sha256').update(await readFile(site+'/index.html')).digest('hex');if(result.servedSHA256!==result.expectedSHA256)throw Error('Public HTML differs from built HTML');}
  await page.waitForFunction(()=>window.KnitLive?.ready||window.KnitLive?.state.failed,null,{timeout:300000});
@@ -16,8 +19,7 @@ try{
  for(const m of ['reference','proxy','surfel']){
   console.log('ROUTE',m);result.routes[m]=await page.evaluate(m=>KnitLive.render(m),m);
   const sample=await page.evaluate(async()=>{const a=new Float32Array(await KnitLive.engine.read(7));let lo=1e9,hi=-1e9,s=0;const n=KnitLive.engine.w*KnitLive.engine.h;for(let i=0;i<n;i++)for(let k=0;k<3;k++){lo=Math.min(lo,a[i*4+k]);hi=Math.max(hi,a[i*4+k]);s+=a[i*4+k];}return{min:lo,max:hi,mean:s/(n*3)};});
-  result.routes[m].imageRange=sample;if(!(sample.max-sample.min>.05))throw Error(m+' empty or constant output');
-  await page.screenshot({path:out+'/'+m+'.png'});
+  result.routes[m].imageRange=sample;if(!(sample.max-sample.min>.05))throw Error(m+' empty or constant output');await page.screenshot({path:out+'/'+m+'.png'});
  }
  result.quality=await page.evaluate(()=>KnitLive.check());if(!result.quality?.proxy)throw Error('No quality results');
  result.benchmark=await page.evaluate(()=>KnitLive.compare(6));if(result.benchmark.incomplete)throw Error('Incomplete benchmark');
@@ -36,4 +38,4 @@ try{
  if(!result.runtimePassed)throw Error('Browser errors: '+result.errors.join('\n'));
  console.log('RUNTIME_QA_PASSED',JSON.stringify({device:result.device.adapter,benchmark:result.benchmark.summary,quality:result.quality}));
 }catch(e){result.failure=e.stack||String(e);result.runtimePassed=false;console.error(result.failure);process.exitCode=1;}
-finally{await writeFile(out+'/BROWSER_QA.json',JSON.stringify(result,null,2));await browser.close();}
+finally{await writeFile(out+'/BROWSER_QA.json',JSON.stringify(result,null,2));if(browser)await browser.close();}
