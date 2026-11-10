@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Read the official public MCP tool schemas
+      - name: Read selected official public articles and shader metadata
         shell: bash
         run: |
           python3 - <<'PY'
@@ -27,11 +27,9 @@ jobs:
               except json.JSONDecodeError:
                   messages=[json.loads(line[6:]) for line in text.splitlines() if line.startswith('data: ') and line[6:].strip()]
                   return messages[-1] if messages else {'unparsed':text[:1500]}
-          init=rpc({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'kaopu-knit-research','version':'1.0'}}})
-          print('INITIALIZE',json.dumps(init,ensure_ascii=False)[:5000])
-          tools=rpc({'jsonrpc':'2.0','id':2,'method':'tools/list','params':{}})
-          for tool in tools.get('result',{}).get('tools',[]):
-              if tool.get('name') in ['search_shaders','get_shader','list_articles','get_article','get_authoring_guide']:
-                  print('PUBLIC_TOOL',json.dumps(tool,ensure_ascii=False))
-          if 'error' in tools: raise RuntimeError(json.dumps(tools['error']))
+          rpc({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'kaopu-knit-research','version':'1.0'}}})
+          calls=[('search_shaders',{'query':'knit','limit':5}),('search_shaders',{'query':'cloth','limit':5}),('search_shaders',{'query':'fur','limit':5}),('get_article',{'slug':'ray-marching'}),('get_article',{'slug':'domain-warp'})]
+          for i,(name,args) in enumerate(calls,3):
+              result=rpc({'jsonrpc':'2.0','id':i,'method':'tools/call','params':{'name':name,'arguments':args}})
+              print('RESEARCH_RESULT',name,json.dumps(args),json.dumps(result,ensure_ascii=False))
           PY
