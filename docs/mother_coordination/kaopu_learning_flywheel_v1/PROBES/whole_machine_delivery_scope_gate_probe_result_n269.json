@@ -1,0 +1,92 @@
+{
+  "schema": "kaopu.whole-machine-delivery-scope-gate/1",
+  "runtime": "v24.22.1",
+  "fixtureCount": 9,
+  "passed": true,
+  "results": [
+    {
+      "id": "whole_machine_observation_ready_with_declared_gap",
+      "expected": "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE",
+      "observed": {
+        "pass": true,
+        "state": "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "fully_accepted_only_after_all_layers_pass",
+      "expected": "WHOLE_MACHINE_ACCEPTED_CANDIDATE",
+      "observed": {
+        "pass": true,
+        "state": "WHOLE_MACHINE_ACCEPTED_CANDIDATE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "faithful_part_only_does_not_satisfy_whole_machine",
+      "expected": "HOLD_PARTIAL_NOT_WHOLE_MACHINE_DELIVERY",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_PARTIAL_NOT_WHOLE_MACHINE_DELIVERY"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "static_image_does_not_prove_interactivity",
+      "expected": "HOLD_STATIC_NOT_INTERACTIVE",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_STATIC_NOT_INTERACTIVE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "http_success_does_not_prove_usability",
+      "expected": "HOLD_HTTP_ONLY_NOT_USABLE",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_HTTP_ONLY_NOT_USABLE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "missing_selectability_blocks_observation_ready",
+      "expected": "HOLD_WHOLE_MACHINE_CAPABILITY_MISSING",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_WHOLE_MACHINE_CAPABILITY_MISSING",
+        "missingCapabilities": [
+          "selectable"
+        ]
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "complete_runtime_not_reconnected_to_original_workbench",
+      "expected": "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "known_gap_hidden",
+      "expected": "HOLD_KNOWN_GAPS_NOT_DECLARED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_KNOWN_GAPS_NOT_DECLARED"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "observation_ready_overclaimed_as_full_acceptance",
+      "expected": "HOLD_OBSERVATION_READY_OVERCLAIMED_AS_ACCEPTED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_OBSERVATION_READY_OVERCLAIMED_AS_ACCEPTED"
+      },
+      "assertionPass": true
+    }
+  ]
+}
