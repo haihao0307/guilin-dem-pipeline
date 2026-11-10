@@ -1,0 +1,59 @@
+{
+  "current": {
+    "subjectCommit": "2facea64052d4c72c3a73ab7e0978cc180b54d7a",
+    "presentPaths": [
+      "README.txt",
+      "index.html",
+      "MOTHER_OBJECT_DEFINITION_RULE_2026-09-09.md",
+      "MOTHER_PUBLIC_PREVIEW_DELIVERY_RULE_2026-09-08.md",
+      "pages/cloud1.html",
+      "pages/cloud2.html",
+      "pages/cloud3.html",
+      "pages/flight.html",
+      "pages/lab.html",
+      "pages/protean.html",
+      "pages/scapes.html",
+      "pages/tiny.html",
+      "pages/waves.html",
+      "pages/weather.html"
+    ],
+    "declaredPaths": [
+      {"path": "build.py", "claim": "README run command"},
+      {"path": "SOURCES.txt", "claim": "README source and license pointer"},
+      {"path": "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "claim": "included legacy-rule successor pointer"},
+      {"path": "pages/cloud1.html", "claim": "index runtime scene"},
+      {"path": "pages/cloud2.html", "claim": "index runtime scene"},
+      {"path": "pages/cloud3.html", "claim": "index runtime scene"}
+    ]
+  },
+  "controls": [
+    {
+      "name": "all declared paths present",
+      "subjectCommit": "synthetic-positive",
+      "presentPaths": ["build.py", "SOURCES.txt", "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "pages/cloud1.html", "pages/cloud2.html", "pages/cloud3.html"],
+      "declaredPaths": [
+        {"path": "build.py", "claim": "README run command"},
+        {"path": "SOURCES.txt", "claim": "README source and license pointer"},
+        {"path": "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "claim": "included legacy-rule successor pointer"},
+        {"path": "pages/cloud1.html", "claim": "index runtime scene"},
+        {"path": "pages/cloud2.html", "claim": "index runtime scene"},
+        {"path": "pages/cloud3.html", "claim": "index runtime scene"}
+      ],
+      "expected": "SOURCE_CLOSURE_VERIFIED_ONLY"
+    },
+    {
+      "name": "one declared build entry missing",
+      "subjectCommit": "synthetic-negative",
+      "presentPaths": ["SOURCES.txt", "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "pages/cloud1.html", "pages/cloud2.html", "pages/cloud3.html"],
+      "declaredPaths": [
+        {"path": "build.py", "claim": "README run command"},
+        {"path": "SOURCES.txt", "claim": "README source and license pointer"},
+        {"path": "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "claim": "included legacy-rule successor pointer"},
+        {"path": "pages/cloud1.html", "claim": "index runtime scene"},
+        {"path": "pages/cloud2.html", "claim": "index runtime scene"},
+        {"path": "pages/cloud3.html", "claim": "index runtime scene"}
+      ],
+      "expected": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE"
+    }
+  ]
+}
