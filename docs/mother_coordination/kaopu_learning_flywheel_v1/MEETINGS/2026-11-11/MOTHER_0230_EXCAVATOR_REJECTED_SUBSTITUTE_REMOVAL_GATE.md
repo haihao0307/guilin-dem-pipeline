@@ -59,4 +59,4 @@
 
 需要定义最小机器可读的 `RejectedLineageQuarantineReceipt`：它必须同时证明 exact public build 中不可触达、失败证据仍可恢复，并能阻止 quarantine 字节重新进入 parent/reference selection。
 
-生命周期：本分支的协调记录 `IMPLEMENTED=true / GATE-RUN=true`；生产 `IMPLEMENTED / ACKNOWLEDGED / ADOPTED / USER-ACCEPTED=false`。发布到 #91 后，协调状态才可记 `POSTED=true`。
+生命周期：协调记录 `POSTED=true / IMPLEMENTED=true / GATE-RUN=true`（[#91 comment 6775961868](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6775961868)）；生产 `ACKNOWLEDGED / IMPLEMENTED / GATE-RUN / ADOPTED / USER-ACCEPTED=false`。
