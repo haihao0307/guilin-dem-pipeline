@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu.weather-r46-provenance-pointer-closure.n265.v1",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "e43e84a9c84ca2bad3c8a2ae52627c5a1c5b9d02",
+    "directory": "weather-mother/r46-cloud-layout-20261110",
+    "readmeBlob": "5d3947739200e9f5d3d8cd9ae6a8cda896c0ed32",
+    "sourcesManifestBlob": "3185c90beaba24536650bc05c07038b63a11e4f2",
+    "licenseBlob": "2666399ee94b46320e9a3862ed97ebf67ad55c29"
+  },
+  "boundedQuestion": "Does R46 resolve N263 by making every exact source and operative-rule pointer in its committed provenance manifest resolvable at the exact subject?",
+  "current": {
+    "manifestPresent": true,
+    "licensePresent": true,
+    "runtimeCandidatePagesPresent": true,
+    "runtimeCandidatePageBlobs": {
+      "pages/own1.html": "7496a2b39b9db01ca8fcb28cb1d197f55ceffc02",
+      "pages/own2.html": "e315fc9cd92ef84c93deddac3cd2b6015bac6871",
+      "pages/own3.html": "26ae4b505990222a85bba48be7b91885c082ab6c",
+      "pages/own4.html": "5d96aa18743d86d10025eaf1f5e94368c7ffd9a6"
+    },
+    "declaredPointerChecks": [
+      {"path": "src/gardner_source.glsl", "claim": "exact Gardner source", "present": false},
+      {"path": "src/tiny.html", "claim": "retained Tiny Clouds source formula", "present": false},
+      {"path": "src/noise.glsl", "claim": "R34 running noise shader", "present": false},
+      {"path": "src/protean.html", "claim": "retained Protean attribution", "present": false},
+      {"path": "src/waves.html", "claim": "R35 wave-cloud source", "present": false},
+      {"path": "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "claim": "operative successor delivery rule", "present": false}
+    ],
+    "missingDeclaredPointerCount": 6,
+    "commitBoundWorkflowRunCount": 0,
+    "equivalentSourceIdentity": "UNKNOWN_UNBOUND",
+    "verdict": "HOLD_DECLARED_PROVENANCE_POINTERS_DANGLING"
+  },
+  "comparisonToN263": {
+    "resolved": [
+      "SOURCES.txt now exists",
+      "README no longer declares missing build.py"
+    ],
+    "unresolved": [
+      "SOURCES.txt points to source paths absent from the exact subject",
+      "operative successor delivery rule pointer is still absent"
+    ],
+    "novelty": "NO_NOVELTY_EXISTING_N43_EXACT_SUBJECT_CLOSURE_MECHANISM",
+    "regressionAction": "REUSE_EXISTING_NO_DUPLICATE_CASE"
+  },
+  "controls": [
+    {"name": "manifest and all declared pointers present", "expected": "DECLARED_PROVENANCE_CLOSURE_VERIFIED_ONLY", "actual": "DECLARED_PROVENANCE_CLOSURE_VERIFIED_ONLY"},
+    {"name": "manifest present with one dangling pointer", "expected": "HOLD_DECLARED_PROVENANCE_POINTERS_DANGLING", "actual": "HOLD_DECLARED_PROVENANCE_POINTERS_DANGLING"},
+    {"name": "runtime page present but declared source identity unbound", "expected": "UNKNOWN_EQUIVALENT_SOURCE_IDENTITY_UNBOUND", "actual": "UNKNOWN_EQUIVALENT_SOURCE_IDENTITY_UNBOUND"}
+  ],
+  "controlsPass": true,
+  "boundaries": [
+    "This does not reject R46 visual quality or runtime page bytes.",
+    "This does not prove the referenced source never existed elsewhere.",
+    "This does not verify the README FPS numbers, browser, device, mobile, physics, or user acceptance.",
+    "A same-name or similar page is not treated as the declared source without an exact identity mapping."
+  ],
+  "observedAt": "2026-11-10T11:42:26Z"
+}
