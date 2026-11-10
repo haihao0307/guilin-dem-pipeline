@@ -17,19 +17,19 @@ const TAU:f32=6.28318530718;
 const PITCH:f32=11.6;
 const RADIUS:f32=1.72;
 fn hash(x:u32)->f32{var n=(x^4291u)*73244475u;n=(n^(n>>16u))*73244475u;return f32(n^(n>>16u))/4294967296.;}
-fn h3(p:vec3<i32>)->f32{return hash(u32(p.x)*1597334677u^u32(p.y)*3812015801u^u32(p.z)*2798796415u);}
+fn h3(p:vec3<i32>)->f32{let x=u32(p.x)*1597334677u;let y=u32(p.y)*3812015801u;let z=u32(p.z)*2798796415u;return hash(x^y^z);}
 fn noise(p:vec3<f32>)->f32{let i=vec3<i32>(floor(p));let f=fract(p);let u=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3<i32>(1,0,0)),u.x),mix(h3(i+vec3<i32>(0,1,0)),h3(i+vec3<i32>(1,1,0)),u.x),u.y),mix(mix(h3(i+vec3<i32>(0,0,1)),h3(i+vec3<i32>(1,0,1)),u.x),mix(h3(i+vec3<i32>(0,1,1)),h3(i+vec3<i32>(1,1,1)),u.x),u.y),u.z);}
 fn direction(px:vec2<f32>)->vec3<f32>{let q=(px/g.view.xy*2.-1.)*vec2<f32>(g.view.x/g.view.y,-1.);return normalize(g.forward.xyz+g.view.z*(g.right.xyz*q.x+g.up.xyz*q.y));}
 fn planePoint(rd:vec3<f32>)->vec3<f32>{let z=select(rd.z,select(-.0001,.0001,rd.z>=0.),abs(rd.z)<.0001);let t=clamp(-g.eye.z/z,0.,20000.);return g.eye.xyz+rd*t;}
 fn detailWeights(distance:f32)->array<f32,6>{var a:array<f32,6>;for(var i=0u;i<6u;i++){let end=160.*pow(2.,f32(5u-i))*g.control.y;a[i]=1.-smoothstep(end*.55,end,distance);}return a;}
-@compute @workgroup_size(8,8) fn controls(@builtin(global_invocation_id) gid:vec3<u32>){let px=gid.xy;if(any(px>=g.dims.xy)){return;}let index=px.y*g.dims.x+px.x;let rd=direction(vec2<f32>(px)+.5);let p=planePoint(rd);let distance=length(p-g.eye.xyz);var measure=distance;
+@compute @workgroup_size(8,8) fn controls(@builtin(global_invocation_id) gid:vec3<u32>){let px=gid.xy;if(any(px>=g.dims.xy)){return;}let index=px.y*g.dims.x+px.x;var measure=g.control.x;
  // Route 0 never reads the viewport, projection scale or yarn/pixel diameter for policy selection.
  // Camera projection still necessarily uses the viewport in every route.
- if(g.dims.z==1u){let dx=planePoint(direction(vec2<f32>(px)+vec2<f32>(1.5,.5)))-p;let dy=planePoint(direction(vec2<f32>(px)+vec2<f32>(.5,1.5)))-p;let footprint=max(length(dx),length(dy));measure=footprint/(.68865522658/448.);}
+ if(g.dims.z==1u){let rd=direction(vec2<f32>(px)+.5);let p=planePoint(rd);let dx=planePoint(direction(vec2<f32>(px)+vec2<f32>(1.5,.5)))-p;let dy=planePoint(direction(vec2<f32>(px)+vec2<f32>(.5,1.5)))-p;let footprint=max(length(dx),length(dy));measure=footprint/(.68865522658/448.);}
  var w=detailWeights(measure);if(g.dims.z==2u){for(var i=0u;i<6u;i++){w[i]=1.;}}
  // Diagnostic-only locked budget isolates controller overhead without changing detail work.
  if(g.control.z>.5){for(var i=0u;i<6u;i++){w[i]=1.;}}
- policy[index*2u]=vec4<f32>(w[0],w[1],w[2],w[3]);policy[index*2u+1u]=vec4<f32>(w[4],w[5],distance,measure);
+ policy[index*2u]=vec4<f32>(w[0],w[1],w[2],w[3]);policy[index*2u+1u]=vec4<f32>(w[4],w[5],g.control.x,measure);
 }
 fn field(p:vec3<f32>)->Field{
  let shift=vec3<f32>(162.4,156.6,0.);let q=p+shift;let cell=vec2<i32>(floor(q.xy/vec2<f32>(PITCH,PITCH*.5)));let local=q.xy-vec2<f32>(cell)*vec2<f32>(PITCH,PITCH*.5);let uv=clamp(vec2<u32>(local/vec2<f32>(PITCH,PITCH*.5)*vec2<f32>(16.,8.)),vec2<u32>(0),vec2<u32>(15,7));
@@ -46,10 +46,10 @@ fn volume(f:Field,w:array<f32,6>)->f32{
  let height=f.sd;let longCoord=f.t*45.55;let circum=f.theta*RADIUS;var density=.065;var frequency=1.;
  // Six nested anisotropic 3D fields. All coordinates are anchored to yarn/material space.
  // An absent band contributes its approximate mean, never a fully evaluated invisible band.
- for(var i=0u;i<6u;i++){let a=w[i];let mean=.038/(1.+f32(i)*.25);density+=mean*(1.-a);if(a>.001||g.control.w>.5){let q=vec3<f32>(longCoord*.10*frequency,circum*3.1*frequency+sin(longCoord*.16+height)*.18,height*1.3*frequency+f.lane*17.);let ridged=pow(max(0.,1.-abs(noise(q)*2.-1.)),18.);density+=a*ridged*.48/(1.+f32(i)*.25);}frequency*=1.65;}
+ for(var i=0u;i<6u;i++){let a=w[i];let mean=.038/(1.+f32(i)*.25);density+=mean*(1.-a);if(a>0.||g.control.w>.5){let q=vec3<f32>(longCoord*.10*frequency,circum*3.1*frequency+sin(longCoord*.16+height)*.18,height*1.3*frequency+f.lane*17.);let ridged=pow(max(0.,1.-abs(noise(q)*2.-1.)),18.);density+=a*ridged*.48/(1.+f32(i)*.25);}frequency*=1.65;}
  return g.appearance.x*density*exp(-height*3.4);
 }
-fn surfaceNoise(f:Field,w:array<f32,6>)->vec3<f32>{var color=0.;var fibre=0.;var energy=0.;var freq=1.;for(var i=0u;i<6u;i++){let a=w[i];if(a>.001||g.control.w>.5){let phase=f.theta*18.*freq+f.t*TAU*2.8;let v=noise(vec3<f32>(f.t*8.*freq,f.theta*10.*freq+sin(f.t*27.)*.3,f.lane*13.));let wave=sin(phase+v*1.1);color+=a*(v-.5)*.12/pow(1.5,f32(i));fibre+=a*wave*.14/pow(1.4,f32(i));}energy+=(1.-a)*.022;freq*=1.9;}return vec3<f32>(color,fibre,energy);}
+fn surfaceNoise(f:Field,w:array<f32,6>)->vec3<f32>{var color=0.;var fibre=0.;var energy=0.;var freq=1.;for(var i=0u;i<6u;i++){let a=w[i];if(a>0.||g.control.w>.5){let phase=f.theta*18.*freq+f.t*TAU*2.8;let v=noise(vec3<f32>(f.t*8.*freq,f.theta*10.*freq+sin(f.t*27.)*.3,f.lane*13.));let wave=sin(phase+v*1.1);color+=a*(v-.5)*.12/pow(1.5,f32(i));fibre+=a*wave*.14/pow(1.4,f32(i));}energy+=(1.-a)*.022;freq*=1.9;}return vec3<f32>(color,fibre,energy);}
 fn softShadow(p:vec3<f32>,L:vec3<f32>)->f32{var v=1.;var t=.35;for(var i=0u;i<8u;i++){let d=field(p+L*t).sd;v=min(v,clamp(4.*d/t,0.,1.));t+=max(.35,d*.8);}return .22+.78*v;}
 fn surface(f:Field,p:vec3<f32>,rd:vec3<f32>,w:array<f32,6>)->vec3<f32>{let micro=surfaceNoise(f,w);var n=normalize(f.n+cross(f.tangent,f.n)*micro.y);if(dot(n,-rd)<0.){n=-n;}let base=g.appearance.yzw*(1.+micro.x+.025*sin(f.t*31.+f.lane));let L1=normalize(vec3<f32>(-.6,.65,1.));let L2=normalize(vec3<f32>(.7,.25,.85));let H1=normalize(L1-rd);let H2=normalize(L2-rd);let sh=softShadow(p+f.n*.08,L1);let nv=max(0.,dot(n,-rd));let velvet=(.08+micro.z)*pow(1.-nv,2.);let soft=.13+.13*sqrt(max(0.,1.-pow(dot(f.tangent,L1),2.)));let diff1=max(dot(n,L1),0.);let diff2=max(dot(n,L2),0.);let shine=.045*pow(max(0.,dot(n,H1)),12.)+.025*pow(max(0.,dot(n,H2)),12.);return base*(soft+vec3<f32>(1.8,1.48,1.12)*diff1*sh+vec3<f32>(.45,.64,.95)*diff2)+vec3<f32>(velvet+shine);}
 fn renderRay(rd:vec3<f32>,w:array<f32,6>)->vec4<f32>{let span=slab(g.eye.xyz,rd);var color=vec3<f32>(.035);if(span.x>span.y){return vec4<f32>(color,1.e8);}var t=span.x;var alpha=0.;var fur=vec3<f32>(0.);var depth=1.e8;
