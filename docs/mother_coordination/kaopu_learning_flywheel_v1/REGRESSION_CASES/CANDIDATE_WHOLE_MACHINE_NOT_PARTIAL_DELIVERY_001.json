@@ -1,0 +1,91 @@
+{
+  "id": "WHOLE-MACHINE-NOT-PARTIAL-DELIVERY-001",
+  "status": "Candidate",
+  "scope": "Car, Train 88, Excavator and Mechanical Mother trial only",
+  "problem": "When the expected artifact is a complete vehicle, machine or assembly in the original workbench, truthful part-level work, a static image, a local test or HTTP success can be useful internal evidence but cannot satisfy the whole-machine delivery contract.",
+  "sourceCorrection": {
+    "title": "整机交付工作方式.md",
+    "updated": "2026-11-10",
+    "applicableMothers": ["Car", "Train 88", "Excavator", "Mechanical"],
+    "contract": "The whole artifact must be visible, rotatable, selectable and adjustable, published to the original workbench, with missing or untested items explicit. Observation-ready and fully accepted are distinct states."
+  },
+  "currentBestView": {
+    "covered": "R2 already binds expectedArtifact and target fidelity, while the reference and freshness gates block creative substitution and stale delivery.",
+    "gap": "No applicable regression case was found that makes a faithful part-level candidate fail when the expected artifact is the complete machine, or that distinguishes whole-machine observation-ready from full acceptance.",
+    "noDuplicateRegressionFound": true
+  },
+  "boundedQuestion": "When expectedArtifact is the complete machine in the original workbench, what minimum receipt distinguishes valid whole-machine observation-ready delivery from part-level progress, static or HTTP evidence, and overclaimed full acceptance?",
+  "falsifiableHypothesis": "A receipt requiring exact artifact identity, complete-machine kind, visible/rotatable/selectable/adjustable capabilities, publication to the original workbench, explicit known gaps and separated acceptance layers rejects partial, static, HTTP-only, disconnected and overclaimed candidates while allowing an honestly labeled observation-ready whole machine.",
+  "candidateFields": {
+    "taskAnchor": [
+      "expectedArtifactId",
+      "expectedArtifactKind=complete_machine",
+      "originalWorkbenchUrl",
+      "requiredCapabilities[visible,rotatable,selectable,adjustable]"
+    ],
+    "deliveryReceipt": [
+      "productionHead",
+      "deliveredArtifactKind",
+      "evidenceKind",
+      "capabilityResults",
+      "publishedToOriginalWorkbench",
+      "knownGaps",
+      "gapsExplicitlyDeclared",
+      "claimedState",
+      "acceptanceLayers[package,productionRuntime,browser,device,user]",
+      "independentVerifierIdentityAndRunTime"
+    ]
+  },
+  "decisions": [
+    "HOLD_WHOLE_MACHINE_CONTRACT_UNBOUND",
+    "HOLD_EXPECTED_ARTIFACT_NOT_WHOLE_MACHINE",
+    "HOLD_PARTIAL_NOT_WHOLE_MACHINE_DELIVERY",
+    "HOLD_STATIC_NOT_INTERACTIVE",
+    "HOLD_HTTP_ONLY_NOT_USABLE",
+    "HOLD_WHOLE_MACHINE_CAPABILITY_MISSING",
+    "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED",
+    "HOLD_KNOWN_GAPS_NOT_DECLARED",
+    "HOLD_OBSERVATION_READY_OVERCLAIMED_AS_ACCEPTED",
+    "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE",
+    "WHOLE_MACHINE_ACCEPTED_CANDIDATE"
+  ],
+  "minimalReplay": {
+    "probe": "PROBES/whole_machine_delivery_scope_gate_n269.mjs",
+    "result": "PROBES/whole_machine_delivery_scope_gate_result_n269.json",
+    "expected": "9/9 assertions pass",
+    "controls": [
+      "observation-ready whole machine with an explicit deferred gap",
+      "full acceptance only when all acceptance layers pass",
+      "faithful part-only candidate",
+      "static image",
+      "HTTP success only",
+      "missing selectability",
+      "not published to the original workbench",
+      "hidden known gap",
+      "observation-ready candidate overclaimed as fully accepted"
+    ]
+  },
+  "activation": {
+    "global": false,
+    "motherTrialRequired": true,
+    "rollbackPoint": "Remove this Candidate if one real affected Mother trial shows no discrimination beyond existing R2 receipts; do not modify R2 or production gates before that trial."
+  },
+  "limits": [
+    "The synthetic replay does not prove any current car, train, excavator or mechanical production artifact is observation-ready.",
+    "Capability booleans require real verifier evidence; producer declarations alone are insufficient.",
+    "Observation-ready intentionally permits declared deferred detail gaps and is not user acceptance."
+  ],
+  "routing": {
+    "issue": 91,
+    "target": "Car, Train 88, Excavator and Mechanical Mother owners",
+    "state": "NOT_POSTED"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
