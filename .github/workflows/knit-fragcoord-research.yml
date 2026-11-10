@@ -1,0 +1,37 @@
+name: Knit FragCoord public source inspection
+on:
+  push:
+    branches: [research/knit-fragcoord-20261110]
+    paths: [.github/workflows/knit-fragcoord-research.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Read the official public MCP tool schemas
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import urllib.request, json
+          endpoint='https://fragcoord.xyz/mcp'
+          headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream','User-Agent':'KAOPU-Knit-Research/1.0'}
+          def rpc(payload):
+              req=urllib.request.Request(endpoint,data=json.dumps(payload).encode(),headers=headers)
+              with urllib.request.urlopen(req,timeout=45) as response:
+                  session=response.headers.get('Mcp-Session-Id')
+                  if session: headers['Mcp-Session-Id']=session
+                  text=response.read().decode()
+              try: return json.loads(text)
+              except json.JSONDecodeError:
+                  messages=[json.loads(line[6:]) for line in text.splitlines() if line.startswith('data: ') and line[6:].strip()]
+                  return messages[-1] if messages else {'unparsed':text[:1500]}
+          init=rpc({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'kaopu-knit-research','version':'1.0'}}})
+          print('INITIALIZE',json.dumps(init,ensure_ascii=False)[:5000])
+          tools=rpc({'jsonrpc':'2.0','id':2,'method':'tools/list','params':{}})
+          for tool in tools.get('result',{}).get('tools',[]):
+              if tool.get('name') in ['search_shaders','get_shader','list_articles','get_article','get_authoring_guide']:
+                  print('PUBLIC_TOOL',json.dumps(tool,ensure_ascii=False))
+          if 'error' in tools: raise RuntimeError(json.dumps(tools['error']))
+          PY
