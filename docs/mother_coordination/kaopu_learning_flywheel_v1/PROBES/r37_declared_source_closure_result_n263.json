@@ -1,0 +1,25 @@
+{
+  "schema": "kaopu.r37-declared-source-closure.n263.v1",
+  "current": {
+    "subjectCommit": "2facea64052d4c72c3a73ab7e0978cc180b54d7a",
+    "checks": [
+      {"path": "build.py", "claim": "README run command", "present": false},
+      {"path": "SOURCES.txt", "claim": "README source and license pointer", "present": false},
+      {"path": "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md", "claim": "included legacy-rule successor pointer", "present": false},
+      {"path": "pages/cloud1.html", "claim": "index runtime scene", "present": true},
+      {"path": "pages/cloud2.html", "claim": "index runtime scene", "present": true},
+      {"path": "pages/cloud3.html", "claim": "index runtime scene", "present": true}
+    ],
+    "missingCount": 3,
+    "missingPaths": ["build.py", "SOURCES.txt", "MOTHER_DELIVERY_FORMAT_RULE_2026-09-25.md"],
+    "verdict": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE"
+  },
+  "controls": [
+    {"name": "all declared paths present", "expected": "SOURCE_CLOSURE_VERIFIED_ONLY", "actual": "SOURCE_CLOSURE_VERIFIED_ONLY"},
+    {"name": "one declared build entry missing", "expected": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE", "actual": "HOLD_DECLARED_SOURCE_CLOSURE_INCOMPLETE"}
+  ],
+  "controlsPass": true,
+  "commitBoundWorkflowRuns": 0,
+  "evidenceSource": "GitHub exact-ref content lookups and exact commit file list",
+  "evidenceObservedAt": "2026-11-10T03:39:00Z"
+}
