@@ -29,6 +29,7 @@ jobs:
           python kaopu-fabric-workbench/knit-three-live-r02/build.py
           node --check kaopu-fabric-workbench/knit-three-live-r02/engine.js
           node --check kaopu-fabric-workbench/knit-three-live-r02/ui.js
+          node --check kaopu-fabric-workbench/knit-three-live-r02/scheduler.js
       - name: Install browser test dependencies
         run: |
           sudo apt-get update -qq
@@ -42,10 +43,12 @@ jobs:
         id: browser
         run: |
           SITE="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-three-live-r02"
-          cp "$SITE/qa.mjs" /tmp/knit-qa/qa.mjs
           python -m http.server 8925 --bind 127.0.0.1 > /tmp/knit-server.log 2>&1 &
           if test -f "$SITE/PUBLIC_URL.txt"; then
             export QA_URL="$(cat "$SITE/PUBLIC_URL.txt")"
+            cp "$SITE/qa-public.mjs" /tmp/knit-qa/qa.mjs
+          else
+            cp "$SITE/qa.mjs" /tmp/knit-qa/qa.mjs
           fi
           SITE_DIR="$SITE" QA_OUT="$SITE/evidence" xvfb-run -a node /tmp/knit-qa/qa.mjs
       - name: Upload runtime evidence
@@ -64,9 +67,11 @@ jobs:
           git config user.name 'Knit workbench verification'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A kaopu-fabric-workbench/knit-three-live-r02
-          if test -f kaopu-fabric-workbench/knit-three-live-r02/evidence/BROWSER_QA.json; then
-            git add -f kaopu-fabric-workbench/knit-three-live-r02/evidence/BROWSER_QA.json
-          fi
+          for file in BROWSER_QA.json PUBLIC_QA.json; do
+            if test -f "kaopu-fabric-workbench/knit-three-live-r02/evidence/$file"; then
+              git add -f "kaopu-fabric-workbench/knit-three-live-r02/evidence/$file"
+            fi
+          done
           if ! git diff --cached --quiet; then
             git commit -m 'Record standalone build and actual browser QA result [skip ci]'
             git push origin HEAD:feature/knit-three-live-r02-20261110
