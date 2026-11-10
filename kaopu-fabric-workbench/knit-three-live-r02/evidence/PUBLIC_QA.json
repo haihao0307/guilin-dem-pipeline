@@ -1,15 +1,261 @@
 {
   "schema": "kaopu/knit-public-runtime-qa@1",
   "version": "KNIT-LIVE-R02",
-  "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fabric-workbench/knit-three-live-r02/?qa=1&size=160x112&density=80x16",
-  "started": "2026-11-10T05:37:25.556Z",
-  "sourceCommit": "ba9371cecf72ad867ea94d663fd164a88f92dc44",
+  "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-fabric-workbench/knit-three-live-r02/?qa=1&size=160x112&density=80x16&published=019b79a6",
+  "started": "2026-11-10T05:40:25.664Z",
+  "sourceCommit": "dbadc55edb051a427a6f2eec6d392437c23a52f0",
   "hardwareTested": false,
   "phoneHardwareTested": false,
-  "errors": [
-    "Failed to load resource: the server responded with a status of 404 ()"
-  ],
-  "routes": {},
-  "runtimePassed": false,
-  "failure": "Error: Public HTTP 404\n    at file:///tmp/knit-qa/qa.mjs:11:94\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)"
+  "errors": [],
+  "routes": {
+    "reference": {
+      "completedWallMs": 8583.399999999994,
+      "gpuMs": 8561.611921999998,
+      "stages": [
+        {
+          "stage": "query",
+          "ms": 8541.757097999998
+        },
+        {
+          "stage": "shading",
+          "ms": 19.854824
+        }
+      ],
+      "submissionCount": 19,
+      "softwareQueryBatchPixels": 1024,
+      "eyeMm": [
+        22,
+        15,
+        90
+      ],
+      "frameTotalMs": 8583.799999999988,
+      "samples": {
+        "min": 0.2223743200302124,
+        "max": 0.6805545091629028,
+        "covered": 17706
+      }
+    },
+    "proxy": {
+      "completedWallMs": 2745.7999999999884,
+      "gpuMs": 2715.067859,
+      "stages": [
+        {
+          "stage": "clear",
+          "ms": 0.062644
+        },
+        {
+          "stage": "bin",
+          "ms": 1.986903
+        },
+        {
+          "stage": "query",
+          "ms": 2692.9688850000002
+        },
+        {
+          "stage": "shading",
+          "ms": 20.049427
+        }
+      ],
+      "submissionCount": 21,
+      "softwareQueryBatchPixels": 1024,
+      "eyeMm": [
+        22,
+        15,
+        90
+      ],
+      "frameTotalMs": 2748.5,
+      "samples": {
+        "min": 0.2223743200302124,
+        "max": 0.6805545091629028,
+        "covered": 17706
+      }
+    },
+    "surfel": {
+      "completedWallMs": 563.3999999999942,
+      "gpuMs": 557.9942540000001,
+      "stages": [
+        {
+          "stage": "clear",
+          "ms": 0.802409
+        },
+        {
+          "stage": "splat",
+          "ms": 535.1494150000001
+        },
+        {
+          "stage": "resolve",
+          "ms": 2.61578
+        },
+        {
+          "stage": "shading",
+          "ms": 19.42665
+        }
+      ],
+      "submissionCount": 5,
+      "softwareQueryBatchPixels": 1024,
+      "eyeMm": [
+        22,
+        15,
+        90
+      ],
+      "frameTotalMs": 865.1000000000058,
+      "samples": {
+        "min": 0.2223743200302124,
+        "max": 0.6802111864089966,
+        "covered": 17782
+      }
+    }
+  },
+  "httpStatus": 200,
+  "servedSHA256": "eb40520fd65965a4336d5b5910533b9af8495f7f9a1b9d6f1764c98b7a70353a",
+  "expectedSHA256": "eb40520fd65965a4336d5b5910533b9af8495f7f9a1b9d6f1764c98b7a70353a",
+  "metadata": {
+    "schema": "kaopu/knit-browser-ab@1",
+    "version": "KNIT-LIVE-R02",
+    "sourceEngineCommit": "603682e1c1aa86323154038ccfc7215833afcda9",
+    "backend": "WebGPU compute",
+    "adapter": {
+      "vendor": "google",
+      "architecture": "swiftshader",
+      "device": "",
+      "description": "",
+      "isFallbackAdapter": true
+    },
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
+    "hardwareClassification": "software",
+    "grid": [
+      28,
+      54
+    ],
+    "pitchMm": 11.6,
+    "radiusMm": 1.72,
+    "aaSamples": 4,
+    "fuzzComputed": false,
+    "triangleDrawCalls": 0,
+    "physicalCloth": false,
+    "worldCacheStatic": true,
+    "baselineQualification": "source-derived WebGPU port, not the unchanged engine player; shared experimental shading and shadows",
+    "shadowMapSize": [
+      256,
+      256
+    ],
+    "shadowMapBiasMm": 0.6,
+    "lightProjection": "perspective 38 degrees",
+    "size": [
+      160,
+      112
+    ],
+    "density": [
+      80,
+      16
+    ],
+    "surfacePoints": 1935360,
+    "bufferBytes": [
+      1146880,
+      16,
+      92897280,
+      286720,
+      286720,
+      1120,
+      2293760,
+      573440
+    ],
+    "declaredBufferBytesTotal": 97485936,
+    "notPhysicalVRAMMeasurement": true,
+    "eyeMm": [
+      22,
+      15,
+      90
+    ],
+    "shaderCompileCpuMs": {
+      "prepare": 80.39999999999418,
+      "clear": 11.39999999999418,
+      "bin": 28.30000000000291,
+      "query": 642.1999999999971,
+      "splat": 37.30000000000291,
+      "resolve": 21.19999999999709,
+      "shading": 90.30000000000291,
+      "shadowExport": 10.30000000000291
+    },
+    "preparation": {
+      "totalCompletedMs": 18502.699999999997,
+      "shadowPasses": [
+        {
+          "completedWallMs": 9521.300000000003,
+          "gpuMs": 9461.440629000002,
+          "stages": [
+            {
+              "stage": "clear",
+              "ms": 39.301457
+            },
+            {
+              "stage": "bin",
+              "ms": 2.136859
+            },
+            {
+              "stage": "query",
+              "ms": 9418.707926000003
+            },
+            {
+              "stage": "shadowExport",
+              "ms": 1.294387
+            }
+          ],
+          "submissionCount": 67,
+          "softwareQueryBatchPixels": 1024
+        },
+        {
+          "completedWallMs": 8979.599999999991,
+          "gpuMs": 8912.771483999997,
+          "stages": [
+            {
+              "stage": "clear",
+              "ms": 0.240993
+            },
+            {
+              "stage": "bin",
+              "ms": 3.153002
+            },
+            {
+              "stage": "query",
+              "ms": 8908.404595999997
+            },
+            {
+              "stage": "shadowExport",
+              "ms": 0.972893
+            }
+          ],
+          "submissionCount": 67,
+          "softwareQueryBatchPixels": 1024
+        }
+      ],
+      "surfel": null
+    },
+    "executionScheduling": {
+      "softwareQueryBatchPixels": 1024,
+      "triangleDraws": 0,
+      "sourceFunctionChanged": false,
+      "qualityReduction": false
+    }
+  },
+  "liveLoop": {
+    "frames": 5,
+    "fps": "1.72",
+    "active": "surfel"
+  },
+  "orbit": {
+    "before": [
+      22,
+      15,
+      90
+    ],
+    "after": [
+      38.26077579378347,
+      21.18753754786866,
+      83.0433699238867
+    ]
+  },
+  "performanceButtonEnabled": true,
+  "runtimePassed": true,
+  "completed": "2026-11-10T05:41:05.288Z"
 }
