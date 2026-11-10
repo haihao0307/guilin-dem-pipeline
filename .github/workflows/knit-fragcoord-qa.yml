@@ -1,0 +1,43 @@
+name: Knit FragCoord isolated WebGPU correctness
+on:
+  push:
+    branches: [research/knit-fragcoord-20261110]
+    paths:
+      - research/knit-fragcoord-r01/**
+      - .github/workflows/knit-fragcoord-qa.yml
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: research/knit-fragcoord-r01
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/knit-qa" --no-save --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          "$RUNNER_TEMP/knit-qa/node_modules/.bin/playwright" install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+          echo "NODE_PATH=$RUNNER_TEMP/knit-qa/node_modules" >> "$GITHUB_ENV"
+      - name: Verify JavaScript and real file-open compute rendering
+        run: |
+          node --check research/knit-fragcoord-r01/runtime.js
+          node --check research/knit-fragcoord-r01/qa.cjs
+          node research/knit-fragcoord-r01/qa.cjs
+      - name: Retain bounded diagnostic evidence, never deploy this carrier
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: knit-fragcoord-correctness-${{ github.sha }}
+          path: |
+            research/knit-fragcoord-r01/evidence/
+            research/knit-fragcoord-r01/diagnostic.html
+          retention-days: 1
+          if-no-files-found: error
