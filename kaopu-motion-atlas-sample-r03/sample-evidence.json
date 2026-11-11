@@ -1,28 +1,66 @@
 {
-  "schema": "kaopu-motion-atlas-sample-evidence/1",
-  "source": "http://mocap.cs.cmu.edu/subjects/16/16_33.amc",
-  "sourceSkeleton": "http://mocap.cs.cmu.edu/subjects/16/16.asf",
-  "licenseReference": "https://mocap.cs.cmu.edu/",
-  "sourceClipId": "CMU 16_33",
-  "sourceSchema": "cmu16-33-source-positions/1",
-  "fps": 120,
-  "frames": 285,
-  "joints": 31,
-  "jitterMetric": "RMS and maximum absolute XYZ second difference multiplied by fps squared, across all joints and interior frames",
-  "raw": {
-    "rms": 30.523646102799223,
-    "max": 1443.3356337855564
+  "schema": "kaopu-motion-atlas-cmu-sample-evidence/2",
+  "measurement": {
+    "jitter": "RMS of XYZ second differences multiplied by fps squared across every joint and interior frame",
+    "smoothing": "three-tap binomial [0.25, 0.5, 0.25], with source-labelled contact intervals locking lfoot/rfoot horizontal XZ positions to the first contact sample",
+    "contactDrift": "maximum horizontal XZ distance from each contact interval's first foot sample, across all frames and both feet",
+    "units": "source position coordinates are metres; contact drift is reported in millimetres"
   },
-  "threeTapBinomialPreview": {
-    "kernel": [0.25, 0.5, 0.25],
-    "rms": 12.589901847433598,
-    "max": 496.8123285628806,
-    "rmsReductionPercent": 58.75361087259159
-  },
+  "clips": [
+    {
+      "id": "16_33",
+      "label": "slow walk / stop",
+      "fps": 120,
+      "frames": 285,
+      "joints": 31,
+      "contactIntervals": 5,
+      "contactFrames": 369,
+      "rawJitterRms": 30.523646102799223,
+      "filteredJitterRms": 12.589901847433598,
+      "jitterReductionPercent": 58.75361087259159,
+      "rawMaxContactDriftMm": 51.32929039473257,
+      "lockedMaxContactDriftMm": 0,
+      "sourceAMC": "http://mocap.cs.cmu.edu/subjects/16/16_33.amc",
+      "contactLabelMethod": "Intervals are present in the committed source JSON; method is not separately stated there."
+    },
+    {
+      "id": "16_57",
+      "label": "run / jog, sudden stop",
+      "fps": 120,
+      "frames": 268,
+      "joints": 31,
+      "contactIntervals": 5,
+      "contactFrames": 309,
+      "rawJitterRms": 21.58491554251214,
+      "filteredJitterRms": 12.13960319767461,
+      "jitterReductionPercent": 43.758857088111846,
+      "rawMaxContactDriftMm": 30.130071611458643,
+      "lockedMaxContactDriftMm": 0,
+      "sourceAMC": "http://mocap.cs.cmu.edu/subjects/16/16_57.amc",
+      "contactLabelMethod": "Five-frame offline median plus measured source height/velocity hysteresis; explicitly an independent candidate."
+    },
+    {
+      "id": "16_01",
+      "label": "jump",
+      "fps": 120,
+      "frames": 322,
+      "joints": 31,
+      "contactIntervals": 4,
+      "contactFrames": 524,
+      "rawJitterRms": 40.81639799985681,
+      "filteredJitterRms": 15.380820042437666,
+      "jitterReductionPercent": 62.31705687872893,
+      "rawMaxContactDriftMm": 32.78911212516333,
+      "lockedMaxContactDriftMm": 0,
+      "sourceAMC": "http://mocap.cs.cmu.edu/subjects/16/16_01.amc",
+      "contactLabelMethod": "Five-frame offline median plus measured source height/velocity hysteresis; explicitly an independent candidate."
+    }
+  ],
   "limitations": [
-    "This is one CMU source clip, not the full CMU or Mesh2Motion catalogue.",
-    "The three-tap filter is a diagnostic preview only; it is not proof of correct retargeting or physically planted feet.",
-    "The source has no independently verified per-frame foot-contact labels in this JSON.",
-    "The original 1.49 GB Motion Atlas bundle and its 87 uploaded chunks are not present in this repository branch."
+    "These are three existing CMU source clips, not the full 2,548 CMU records.",
+    "No Mesh2Motion source clip has yet been recovered or measured.",
+    "Contact labels are interval estimates, not force-plate ground truth.",
+    "Zero locked drift is guaranteed by the preview's horizontal contact-anchor operation; it does not prove the original source's contact labels are all correct or that a retargeted character will have zero visible sliding.",
+    "This preview does not yet exercise the user's own character rig."
   ]
 }
