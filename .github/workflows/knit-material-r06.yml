@@ -33,7 +33,7 @@ jobs:
           ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench"
           mkdir -p "$ROOT/knit-material-r06"
           cp -a "$ROOT/knit-material-r04/." "$ROOT/knit-material-r06/"
-          cat "$ROOT"/knit-material-r06-source.part0 "$ROOT"/knit-material-r06-source.part1 "$ROOT"/knit-material-r06-source.part2 "$ROOT"/knit-material-r06-source.part3 | base64 -d | tar -xz -C "$ROOT/knit-material-r06"
+          cat "$ROOT"/knit-material-r06-source.part0 "$ROOT"/knit-material-r06-source.part1 "$ROOT"/knit-material-r06-source.part2 "$ROOT"/knit-material-r06-source.part3 | tar -xz -C "$ROOT/knit-material-r06"
           cd "$ROOT/knit-material-r06"
           python patch_r06.py
           node --check app.js
