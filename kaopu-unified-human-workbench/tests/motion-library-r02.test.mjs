@@ -19,7 +19,8 @@ test('shared skeletons and identical channels are stored once; R4E and R41 clips
   {id:'r41-turn',source:'r41',skeleton,fps:30,channels},
   {id:'r41-idle',source:'R41',skeleton,fps:30,channels},
   {id:'r4e-run',source:'R4E',skeleton,fps:30,channels},
-  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels}
+  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels},
+  {id:'cmu-source-r41-three',source:'CMU',skeleton,fps:30,channels}
  ]});
  assert.equal(db.clips.length,2);assert.equal(db.stats.skeletonCount,1);assert.equal(db.stats.uniqueChannelCount,1);
 });
@@ -85,7 +86,8 @@ test('output contains only action records and CMU/Mesh2Motion categories',()=>{
   {id:'r41-a',source:'R41',skeleton,fps:30,channels},
   {id:'r41-b',source:'R41',skeleton,fps:30,channels},
   {id:'r41-c',source:'R41',skeleton,fps:30,channels},
-  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels}
+  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels},
+  {id:'cmu-source-r41-three',source:'CMU',skeleton,fps:30,channels}
  ]});
  assert.deepEqual(db.clips.map(x=>x.source),['CMU','Mesh2Motion']);
  assert.ok(!JSON.stringify(db).includes('ignored.mp4'));
