@@ -1,0 +1,549 @@
+{
+  "schema": "kaopu-motion-contact-lock-skeleton-gate-result/1",
+  "subject": {
+    "path": "n273/cmu-sample-pack.json",
+    "sha256": "521c5545f6c9733c248e4abb57c3245b9a5f1d6b1a32c884ab6784fc83f621b9",
+    "gitBlobSHA": "8fb1c53c733832bdbf727d82f21fe01aa8fff4e9"
+  },
+  "boundedQuestion": "Does horizontal lfoot/rfoot anchoring eliminate drift without breaking adjacent skeleton edge lengths?",
+  "sentinel": {
+    "maxAbsoluteDeltaMm": 5,
+    "maxRelativeDeltaPct": 5,
+    "note": "Candidate smoke threshold for the single-Mother replay; not a globally adopted production tolerance."
+  },
+  "observations": {
+    "clipCount": 3,
+    "maxSmoothOnlyEdgeDeltaMm": 0.80417588609355,
+    "maxSmoothOnlyRelativeDeltaPct": 1.2235637878343955,
+    "maxPreviewLockEdgeDeltaMm": 44.29503697753934,
+    "maxPreviewLockRelativeDeltaPct": 70.97837341109756
+  },
+  "replayAssertions": [
+    {
+      "id": "EXACT_THREE_CMU_CLIPS",
+      "pass": true
+    },
+    {
+      "id": "SMOOTH_ONLY_CONTROL_WITHIN_SENTINEL",
+      "pass": true
+    },
+    {
+      "id": "PREVIEW_LOCK_REJECTED_ON_ALL_CLIPS",
+      "pass": true
+    },
+    {
+      "id": "LOCK_ERROR_EXCEEDS_QUANTIZATION_BY_100X",
+      "pass": true
+    }
+  ],
+  "replayPassCount": 4,
+  "decision": "HOLD_ZERO_DRIFT_BREAKS_SKELETON_EDGE_LENGTH",
+  "clips": [
+    {
+      "id": "16_33",
+      "sourceRecordGitBlobSHA": "5eaf0c4fe256e5272fd6935d1ef0a725f7a0c288",
+      "edges": [
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "ltibia->lfoot",
+          "samples": 160,
+          "rmsDeltaMm": 0.06600589596514418,
+          "maxDeltaMm": 0.35068254402824406,
+          "maxRelativeDeltaPct": 0.2810106845077942,
+          "worst": {
+            "frame": 17,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 17,
+              "seconds": 0.13333333333333333
+            },
+            "sourceLengthMm": 124.7933133369943,
+            "candidateLengthMm": 124.44263079296606,
+            "deltaMm": 0.35068254402824406,
+            "relativeDeltaPct": 0.2810106845077942
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "ltibia->lfoot",
+          "samples": 160,
+          "rmsDeltaMm": 8.35821059383933,
+          "maxDeltaMm": 19.621960759544976,
+          "maxRelativeDeltaPct": 15.72377245078404,
+          "worst": {
+            "frame": 160,
+            "span": {
+              "startFrame": 87,
+              "endFrame": 163,
+              "seconds": 0.6416666666666667
+            },
+            "sourceLengthMm": 124.79168609799207,
+            "candidateLengthMm": 105.1697253384471,
+            "deltaMm": 19.621960759544976,
+            "relativeDeltaPct": 15.72377245078404
+          }
+        },
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "lfoot->ltoes",
+          "samples": 160,
+          "rmsDeltaMm": 0.03813554376342617,
+          "maxDeltaMm": 0.2892118794656298,
+          "maxRelativeDeltaPct": 0.46348820118589606,
+          "worst": {
+            "frame": 17,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 17,
+              "seconds": 0.13333333333333333
+            },
+            "sourceLengthMm": 62.39897342060549,
+            "candidateLengthMm": 62.10976154113986,
+            "deltaMm": 0.2892118794656298,
+            "relativeDeltaPct": 0.46348820118589606
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "lfoot->ltoes",
+          "samples": 160,
+          "rmsDeltaMm": 11.273349901795296,
+          "maxDeltaMm": 44.29503697753934,
+          "maxRelativeDeltaPct": 70.97837341109756,
+          "worst": {
+            "frame": 163,
+            "span": {
+              "startFrame": 87,
+              "endFrame": 163,
+              "seconds": 0.6416666666666667
+            },
+            "sourceLengthMm": 62.40638499981989,
+            "candidateLengthMm": 106.70142197735923,
+            "deltaMm": 44.29503697753934,
+            "relativeDeltaPct": 70.97837341109756
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rtibia->rfoot",
+          "samples": 209,
+          "rmsDeltaMm": 0.11570935688863525,
+          "maxDeltaMm": 0.6718736690533023,
+          "maxRelativeDeltaPct": 0.5079966042649884,
+          "worst": {
+            "frame": 91,
+            "span": {
+              "startFrame": 22,
+              "endFrame": 96,
+              "seconds": 0.625
+            },
+            "sourceLengthMm": 132.25948036117776,
+            "candidateLengthMm": 131.58760669212447,
+            "deltaMm": 0.6718736690533023,
+            "relativeDeltaPct": 0.5079966042649884
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rtibia->rfoot",
+          "samples": 209,
+          "rmsDeltaMm": 7.592719611694749,
+          "maxDeltaMm": 11.504007540638684,
+          "maxRelativeDeltaPct": 8.697730907242795,
+          "worst": {
+            "frame": 88,
+            "span": {
+              "startFrame": 22,
+              "endFrame": 96,
+              "seconds": 0.625
+            },
+            "sourceLengthMm": 132.2644683231007,
+            "candidateLengthMm": 120.760460782462,
+            "deltaMm": 11.504007540638684,
+            "relativeDeltaPct": 8.697730907242795
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rfoot->rtoes",
+          "samples": 209,
+          "rmsDeltaMm": 0.11631141783405677,
+          "maxDeltaMm": 0.80417588609355,
+          "maxRelativeDeltaPct": 1.2235637878343955,
+          "worst": {
+            "frame": 91,
+            "span": {
+              "startFrame": 22,
+              "endFrame": 96,
+              "seconds": 0.625
+            },
+            "sourceLengthMm": 65.72406719529296,
+            "candidateLengthMm": 64.91989130919941,
+            "deltaMm": 0.80417588609355,
+            "relativeDeltaPct": 1.2235637878343955
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rfoot->rtoes",
+          "samples": 209,
+          "rmsDeltaMm": 9.808898099935838,
+          "maxDeltaMm": 34.87061337166435,
+          "maxRelativeDeltaPct": 53.04594615978697,
+          "worst": {
+            "frame": 96,
+            "span": {
+              "startFrame": 22,
+              "endFrame": 96,
+              "seconds": 0.625
+            },
+            "sourceLengthMm": 65.73662248690181,
+            "candidateLengthMm": 100.60723585856616,
+            "deltaMm": 34.87061337166435,
+            "relativeDeltaPct": 53.04594615978697
+          }
+        }
+      ]
+    },
+    {
+      "id": "16_57",
+      "sourceRecordGitBlobSHA": "971fb4babd5799db07efb9c93b8d4df5850f7a25",
+      "edges": [
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "ltibia->lfoot",
+          "samples": 153,
+          "rmsDeltaMm": 0.07520738574449601,
+          "maxDeltaMm": 0.4184997031854293,
+          "maxRelativeDeltaPct": 0.33535434900079925,
+          "worst": {
+            "frame": 28,
+            "span": {
+              "startFrame": 13,
+              "endFrame": 28
+            },
+            "sourceLengthMm": 124.79328341271395,
+            "candidateLengthMm": 124.37478370952851,
+            "deltaMm": 0.4184997031854293,
+            "relativeDeltaPct": 0.33535434900079925
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "ltibia->lfoot",
+          "samples": 153,
+          "rmsDeltaMm": 5.581256672957656,
+          "maxDeltaMm": 18.007295285093498,
+          "maxRelativeDeltaPct": 14.430050744593034,
+          "worst": {
+            "frame": 142,
+            "span": {
+              "startFrame": 89,
+              "endFrame": 142
+            },
+            "sourceLengthMm": 124.79024227853712,
+            "candidateLengthMm": 106.78294699344362,
+            "deltaMm": 18.007295285093498,
+            "relativeDeltaPct": 14.430050744593034
+          }
+        },
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "lfoot->ltoes",
+          "samples": 153,
+          "rmsDeltaMm": 0.04131920301248133,
+          "maxDeltaMm": 0.2566905214919993,
+          "maxRelativeDeltaPct": 0.41134610181690207,
+          "worst": {
+            "frame": 142,
+            "span": {
+              "startFrame": 89,
+              "endFrame": 142
+            },
+            "sourceLengthMm": 62.40256571247565,
+            "candidateLengthMm": 62.14587519098365,
+            "deltaMm": 0.2566905214919993,
+            "relativeDeltaPct": 0.41134610181690207
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "lfoot->ltoes",
+          "samples": 153,
+          "rmsDeltaMm": 7.259420166521657,
+          "maxDeltaMm": 30.02294663536626,
+          "maxRelativeDeltaPct": 48.11171831251165,
+          "worst": {
+            "frame": 142,
+            "span": {
+              "startFrame": 89,
+              "endFrame": 142
+            },
+            "sourceLengthMm": 62.40256571247565,
+            "candidateLengthMm": 92.4255123478419,
+            "deltaMm": 30.02294663536626,
+            "relativeDeltaPct": 48.11171831251165
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rtibia->rfoot",
+          "samples": 156,
+          "rmsDeltaMm": 0.0342293471066333,
+          "maxDeltaMm": 0.22457748704787783,
+          "maxRelativeDeltaPct": 0.1698016683047877,
+          "worst": {
+            "frame": 75,
+            "span": {
+              "startFrame": 48,
+              "endFrame": 75
+            },
+            "sourceLengthMm": 132.25870469350724,
+            "candidateLengthMm": 132.03412720645935,
+            "deltaMm": 0.22457748704787783,
+            "relativeDeltaPct": 0.1698016683047877
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rtibia->rfoot",
+          "samples": 156,
+          "rmsDeltaMm": 4.066752263279587,
+          "maxDeltaMm": 7.514461199719102,
+          "maxRelativeDeltaPct": 5.681638283947294,
+          "worst": {
+            "frame": 75,
+            "span": {
+              "startFrame": 48,
+              "endFrame": 75
+            },
+            "sourceLengthMm": 132.25870469350724,
+            "candidateLengthMm": 124.74424349378813,
+            "deltaMm": 7.514461199719102,
+            "relativeDeltaPct": 5.681638283947294
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rfoot->rtoes",
+          "samples": 156,
+          "rmsDeltaMm": 0.01991263046268102,
+          "maxDeltaMm": 0.11949917968347157,
+          "maxRelativeDeltaPct": 0.18175194542968293,
+          "worst": {
+            "frame": 75,
+            "span": {
+              "startFrame": 48,
+              "endFrame": 75
+            },
+            "sourceLengthMm": 65.7485010138194,
+            "candidateLengthMm": 65.62900183413593,
+            "deltaMm": 0.11949917968347157,
+            "relativeDeltaPct": 0.18175194542968293
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rfoot->rtoes",
+          "samples": 156,
+          "rmsDeltaMm": 5.011382684345998,
+          "maxDeltaMm": 10.121328663462132,
+          "maxRelativeDeltaPct": 15.39400671862431,
+          "worst": {
+            "frame": 75,
+            "span": {
+              "startFrame": 48,
+              "endFrame": 75
+            },
+            "sourceLengthMm": 65.7485010138194,
+            "candidateLengthMm": 75.86982967728153,
+            "deltaMm": 10.121328663462132,
+            "relativeDeltaPct": 15.39400671862431
+          }
+        }
+      ]
+    },
+    {
+      "id": "16_01",
+      "sourceRecordGitBlobSHA": "bf74231e374c5a3365974296c3bb9023f5f6dcc5",
+      "edges": [
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "ltibia->lfoot",
+          "samples": 261,
+          "rmsDeltaMm": 0.0392426336246667,
+          "maxDeltaMm": 0.3571455551571179,
+          "maxRelativeDeltaPct": 0.2861836317248232,
+          "worst": {
+            "frame": 125,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 125
+            },
+            "sourceLengthMm": 124.7959406359506,
+            "candidateLengthMm": 124.43879508079348,
+            "deltaMm": 0.3571455551571179,
+            "relativeDeltaPct": 0.2861836317248232
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "ltibia->lfoot",
+          "samples": 261,
+          "rmsDeltaMm": 12.66041318641006,
+          "maxDeltaMm": 24.269455037740958,
+          "maxRelativeDeltaPct": 19.447403295417075,
+          "worst": {
+            "frame": 109,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 125
+            },
+            "sourceLengthMm": 124.79535015073314,
+            "candidateLengthMm": 100.52589511299219,
+            "deltaMm": 24.269455037740958,
+            "relativeDeltaPct": 19.447403295417075
+          }
+        },
+        {
+          "side": "l",
+          "stage": "smooth-only",
+          "edge": "lfoot->ltoes",
+          "samples": 261,
+          "rmsDeltaMm": 0.02918108935966389,
+          "maxDeltaMm": 0.3665069495599263,
+          "maxRelativeDeltaPct": 0.5873153830265699,
+          "worst": {
+            "frame": 125,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 125
+            },
+            "sourceLengthMm": 62.40377149177202,
+            "candidateLengthMm": 62.0372645422121,
+            "deltaMm": 0.3665069495599263,
+            "relativeDeltaPct": 0.5873153830265699
+          }
+        },
+        {
+          "side": "l",
+          "stage": "preview-lock",
+          "edge": "lfoot->ltoes",
+          "samples": 261,
+          "rmsDeltaMm": 14.255315270285871,
+          "maxDeltaMm": 30.723956536240312,
+          "maxRelativeDeltaPct": 49.23413409442935,
+          "worst": {
+            "frame": 125,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 125
+            },
+            "sourceLengthMm": 62.40377149177202,
+            "candidateLengthMm": 93.12772802801234,
+            "deltaMm": 30.723956536240312,
+            "relativeDeltaPct": 49.23413409442935
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rtibia->rfoot",
+          "samples": 263,
+          "rmsDeltaMm": 0.028025847929089714,
+          "maxDeltaMm": 0.2159099701778966,
+          "maxRelativeDeltaPct": 0.16324245028812226,
+          "worst": {
+            "frame": 126,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 126
+            },
+            "sourceLengthMm": 132.2633725460604,
+            "candidateLengthMm": 132.04746257588252,
+            "deltaMm": 0.2159099701778966,
+            "relativeDeltaPct": 0.16324245028812226
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rtibia->rfoot",
+          "samples": 263,
+          "rmsDeltaMm": 8.057369575375365,
+          "maxDeltaMm": 11.43160700363005,
+          "maxRelativeDeltaPct": 8.643168135802044,
+          "worst": {
+            "frame": 312,
+            "span": {
+              "startFrame": 184,
+              "endFrame": 321
+            },
+            "sourceLengthMm": 132.2617681851824,
+            "candidateLengthMm": 143.69337518881244,
+            "deltaMm": 11.43160700363005,
+            "relativeDeltaPct": 8.643168135802044
+          }
+        },
+        {
+          "side": "r",
+          "stage": "smooth-only",
+          "edge": "rfoot->rtoes",
+          "samples": 263,
+          "rmsDeltaMm": 0.04685438456855487,
+          "maxDeltaMm": 0.390791841234403,
+          "maxRelativeDeltaPct": 0.5945430555083995,
+          "worst": {
+            "frame": 126,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 126
+            },
+            "sourceLengthMm": 65.72977980547316,
+            "candidateLengthMm": 65.33898796423875,
+            "deltaMm": 0.390791841234403,
+            "relativeDeltaPct": 0.5945430555083995
+          }
+        },
+        {
+          "side": "r",
+          "stage": "preview-lock",
+          "edge": "rfoot->rtoes",
+          "samples": 263,
+          "rmsDeltaMm": 8.898845375022487,
+          "maxDeltaMm": 15.493186341858936,
+          "maxRelativeDeltaPct": 23.571030342275474,
+          "worst": {
+            "frame": 126,
+            "span": {
+              "startFrame": 2,
+              "endFrame": 126
+            },
+            "sourceLengthMm": 65.72977980547316,
+            "candidateLengthMm": 81.2229661473321,
+            "deltaMm": 15.493186341858936,
+            "relativeDeltaPct": 23.571030342275474
+          }
+        }
+      ]
+    }
+  ]
+}
