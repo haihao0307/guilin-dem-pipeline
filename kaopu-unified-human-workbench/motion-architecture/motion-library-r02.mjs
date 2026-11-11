@@ -110,23 +110,26 @@ export function decodeParameterizedVariant(parentChannels,packet){
 }
 
 export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.00005}={}) {
-  const skeletonByKey=new Map(), skeletonRegistry={}, payloadByKey=new Map(), records=[],motionFamilies={};
-  for(const s of skeletons){
-    assert(s&&Array.isArray(s.names)&&Array.isArray(s.parents)&&s.names.length===s.parents.length,'valid skeleton required');
-    const key=stable({names:s.names,parents:s.parents,rest:s.restFingerprint??null});
-    const id='sk-'+fnv1a(key); skeletonByKey.set(key,id); skeletonRegistry[id]={id,names:s.names,parents:s.parents,restFingerprint:s.restFingerprint??null};
-  }
+  const skeletonByKey=new Map(), skeletonRegistry={}, payloadByKey=new Map(), records=[],motionFamilies={},clipIds=new Set();
+  // Only skeletons referenced by accepted clips are emitted. An unrelated
+  // preloaded skeleton must not leak into the data-only output.
   for(const clip of clips){
+    assert(clip&&typeof clip.id==='string'&&clip.id.trim(),'clip id required');
+    assert(!clipIds.has(clip.id),'duplicate clip id');
+    clipIds.add(clip.id);
     const source=String(clip.source?.kind??clip.source??'').toLowerCase().replace(/[^a-z0-9]/g,'');
     const clipKey=String(clip.id??'').toLowerCase().replace(/[^a-z0-9]/g,'');
     // The production library is intentionally limited to CMU and Mesh2Motion.
     // R41/R4E, Quaternius prototypes and unrelated source families never enter it.
     if(!source.startsWith('cmu')&&!source.startsWith('mesh2motion')) continue;
     if(['r41','r4e'].some(tag=>source.startsWith(tag)||clipKey.startsWith(tag))) continue;
+    assert(clip.skeleton&&Array.isArray(clip.skeleton.names)&&Array.isArray(clip.skeleton.parents)&&clip.skeleton.names.length>0&&clip.skeleton.names.length===clip.skeleton.parents.length,'valid clip skeleton required');
+    assert(finite(clip.fps)&&clip.fps>0,'positive clip fps required');
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
     let skeletonId=skeletonByKey.get(skKey);
     if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
     const channelRefs={},channels=clip.channels??{},frameCount=clip.frameCount??Object.values(channels)[0]?.length??0;
+    assert(Object.keys(channels).length>0,'clip must contain at least one motion channel');
     const signature=stable(Object.keys(channels).sort().map(name=>[name,channels[name]?.length,channels[name]?.[0]?.length]));
     const category=source.startsWith('cmu')?'CMU':'Mesh2Motion';
     const familyId='mf-'+fnv1a(stable({category,skeletonId,fps:clip.fps,frameCount,signature}));
