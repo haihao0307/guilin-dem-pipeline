@@ -1,0 +1,162 @@
+{
+  "schema": "kaopu.mother-coordination-result/1.0",
+  "runId": "N274",
+  "meetingDateBeijing": "2026-11-12",
+  "readSet": {
+    "mainSha": "73452580929bc9cc37a8e57d79da69af994af808",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "motherProductionOsR2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "referenceReplicationGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "issue91LatestBeforeRun": {
+      "commentId": 6800436338,
+      "status": "POSTED_NO_RELEVANT_ACK"
+    },
+    "issue63": "NO_NEW_RELEVANT_RECEIPT"
+  },
+  "task": {
+    "taskId": "UNBOUND_EXCAVATOR_CAT_WHOLE_MACHINE_RUNTIME_V134",
+    "targetObject": "complete CAT excavator live runtime in the original engineering-machinery workbench",
+    "targetDefect": "new candidate assets and screenshots exist, but Site v134 failed deployment, the 3D scene did not start, and the fixed URL is owner-auth gated",
+    "mode": "REPLICATION_LOCKED",
+    "creativeAuthorization": false,
+    "acceptedBaseline": "UNKNOWN",
+    "baseSha": "UNKNOWN_FOR_EXCAVATOR_PRODUCTION",
+    "userLastConstraint": "Resume normal progress, preserve excavator detail item by item, restore a complete visible/rotatable/selectable/adjustable machine to the original workbench, and provide an externally openable browser URL for final delivery.",
+    "referenceSet": {
+      "canonicalWholeMachineReference": "UNKNOWN",
+      "candidateAssets": [
+        {
+          "name": "Excavator_CAT.usdz",
+          "sha256": "1b251caf6b331e574895072e93f09ebb8cec55c7adbd2e75174fa2aec85c52cc"
+        },
+        {
+          "name": "excavator (2).zip",
+          "sha256": "0a6aa78c...bd91b",
+          "license": "CC-BY-4.0"
+        },
+        {
+          "name": "excavator (3).zip",
+          "sha256": "830e2a3e...1058",
+          "license": "CC-BY-4.0"
+        },
+        {
+          "name": "excavator (4).zip",
+          "sha256": "0ed9da12...51ea",
+          "license": "CC-BY-4.0"
+        },
+        {
+          "name": "excavator_1 (1).zip",
+          "sha256": "93a74cc0...7271",
+          "license": "CC-BY-NC-4.0"
+        },
+        {
+          "name": "excavator_3d_model.zip",
+          "sha256": "6b176283...8271",
+          "license": "CC-BY-NC-4.0"
+        }
+      ],
+      "acceptedParent": "UNKNOWN"
+    },
+    "forbiddenRoutes": [
+      "offline or static preview presented as live whole-machine runtime",
+      "bucket-only observation presented as complete-machine delivery",
+      "saved Site version presented as deployed production version",
+      "v134 screenshot bound to the v133 live URL",
+      "owner-only URL presented as externally accessible delivery"
+    ]
+  },
+  "siteEvidence": {
+    "projectId": "appgprj_6ae8e4bfd96c81919a574245b0b488f0",
+    "fixedUrl": "https://kaopu-excavator-function-workbench.sunhaihao.chatgpt.site",
+    "accessObservation": "Sign in required / Log in to access",
+    "accessMode": "custom_owner_only",
+    "version134": {
+      "commitSha": "48f017f20a4ddc061345db404a86979c4bd6fb9b",
+      "deploymentId": "appgdep_6af4ae82385481919850e86255f7c944",
+      "status": "failed",
+      "failureMessage": "Cloudflare Sandbox Worker request failed before receiving a response",
+      "url": null
+    },
+    "version133": {
+      "commitSha": "805a8f35f90ef97ce01d4ce0fa5ec0890d42810c",
+      "deploymentId": "appgdep_6af48d2fa3a08191a1ca3235588c41b1",
+      "status": "succeeded",
+      "url": "https://kaopu-excavator-function-workbench.sunhaihao.chatgpt.site"
+    }
+  },
+  "screenshotEvidence": [
+    {
+      "name": "IMG_8625.png",
+      "sha256": "86bbb3a0a844f88eca878741564dd36c34c0fec51fabee36d2baaad763c6f715",
+      "finding": "complete CAT excavator visible but modal says 3D scene did not finish startup/model decode failed"
+    },
+    {
+      "name": "IMG_8627.jpeg",
+      "sha256": "59b09fdb2052610f592e06cf9a4594de01622f6367803dcec98cd2b1cabe11cf",
+      "finding": "complete CAT excavator visible with 7% reload/startup failure"
+    },
+    {
+      "name": "IMG_8629.png",
+      "sha256": "dc6f682b41838b52bfa66783179639ed4c5a33bd03a35171a9361e749e470ff5",
+      "finding": "bucket-only observation, not whole-machine proof"
+    }
+  ],
+  "applicableRegression": {
+    "caseId": "WHOLE-MACHINE-NOT-PARTIAL-DELIVERY-001",
+    "action": "REAL_SUBJECT_EVIDENCE_UPDATE_ONLY_NO_DUPLICATE_CASE",
+    "holds": [
+      "HOLD_STATIC_NOT_INTERACTIVE",
+      "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED",
+      "HOLD_WHOLE_MACHINE_CAPABILITY_MISSING"
+    ],
+    "staleWrongTarget": "REJECTED_STALE_OR_WRONG_TARGET_DELIVERY"
+  },
+  "gates": {
+    "Contract": "FAIL_TASK_ANCHOR_AND_DELIVERY_RECEIPT_ABSENT",
+    "Freshness": "FAIL_V134_NOT_DEPLOYED_LIVE_HEAD_UNCHANGED",
+    "ReferenceFidelity": "FAIL_CANONICAL_REFERENCE_AND_ACCEPTED_PARENT_UNBOUND",
+    "Machine": "FAIL_DECODE_STARTUP_FAILURE_AND_NO_EXACT_VERSION_READINESS_RECEIPT",
+    "Browser": "FAIL_V134_NO_PRODUCTION_URL_FIXED_URL_AUTH_GATED_NO_DESKTOP_390_PAIR",
+    "decision": "HOLD_GATE_FAIL",
+    "artifactStatus": "NO_NEW_ARTIFACT"
+  },
+  "boundedMethod": {
+    "owner": "Excavator Mother for asset/runtime; Site publisher for exact deployment; independent verifier for gates",
+    "steps": [
+      "Bind one Task Anchor to a canonical asset digest, source/license, accepted parent and exact Site commit/version.",
+      "Deploy that exact version successfully and prove the fixed URL serves the same commit.",
+      "Verify live whole-machine decode/render plus rotate/select/adjust in the original workbench without offline-preview or startup-failure UI.",
+      "Capture the same externally accessible URL/version on desktop and a 390x844 browser viewport, then publish a layered Delivery Receipt with known limitations."
+    ],
+    "minimalValidation": "Exact Task Anchor + succeeded exact-version deployment + fixed-URL commit match + live whole-machine rotate/select/adjust + externally accessible desktop/390x844 evidence + Delivery Receipt.",
+    "falsifier": "Any saved-only version, stale live URL, authentication gate, offline/static fallback, partial-only object, startup failure, or missing major interaction."
+  },
+  "unfinishedBoundary": [
+    "No accepted excavator baseline established.",
+    "No canonical whole-machine referenceSet selected.",
+    "No v134 production deployment or live whole-machine runtime proven.",
+    "No external accessibility, desktop/390x844 pair, device proof or user acceptance.",
+    "No Mother production branch, Site, access policy, baseline, main or R2 policy modified."
+  ],
+  "learningFlywheelQuestion": "How should a machine-readable WholeMachineRuntimeDeliveryReceipt bind saved Site version, deployment status, fixed-URL served commit, model decode/render readiness and rotate/select/adjust interactions so saved success, screenshots or HTTP reachability cannot masquerade as usable whole-machine delivery?",
+  "posting": {
+    "issue": 91,
+    "commentId": 6804123431,
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6804123431"
+  },
+  "lifecycle": {
+    "coordination": {
+      "POSTED": true,
+      "IMPLEMENTED": true,
+      "GATE_RUN": true
+    },
+    "production": {
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": false,
+      "GATE_RUN": false,
+      "ADOPTED": false,
+      "USER_ACCEPTED": false
+    }
+  }
+}
