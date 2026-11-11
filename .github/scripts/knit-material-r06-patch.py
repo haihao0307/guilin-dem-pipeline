@@ -13,7 +13,7 @@ s=s.replace(needle,replacement)
 needle="a+='\\n'+(r/'search.js').read_text()+'\\n'+(r/'performance.js').read_text()+'\\nboot();\\n'"
 replacement=needle+"""
 a=a.replace("VERSION='KNIT-MATERIAL-R05'","VERSION='KNIT-MATERIAL-R06'")
-a=a.replace("let accelerated=true;","let accelerated=true;\\nfunction useAcceleration(){return accelerated&&W>=640&&material.params.hairDensity>=800;}")
+a=a.replace("let accelerated=true;","let accelerated=true;\\nfunction useAcceleration(){return accelerated&&!soft&&W>=640&&material.params.hairDensity>=800;}")
 a=a.replace("accelerated?1:0","useAcceleration()?1:0")
 a=a.replace("if(accelerated)steps.push({name:'makeDepth'","if(useAcceleration())steps.push({name:'makeDepth'")
 a=a.replace("revision,accelerated,profiled","revision,accelerated:useAcceleration(),requestedAcceleration:accelerated,profiled")
