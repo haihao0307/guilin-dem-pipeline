@@ -56,6 +56,12 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
  <div id="status">正在读取固定版本的 CMU 源动作…</div>
  <div class="note">平滑对照仅用于观察轨迹高频噪声，未修改源数据。此来源没有逐帧接触真值，因此不能将平滑后的脚部轨迹直接认定为真实脚锁。</div>
  <div class="divider"></div>
+ <h2>三条真实动作 · 数据压缩实测</h2>
+ <div class="metric-grid">
+  <div class="metric"><b>1.66 MB</b><span>原始 JSON</span></div><div class="metric"><b>233.7 KB</b><span>精简数据包</span></div><div class="metric"><b>85.97%</b><span>体积减少</span></div>
+ </div>
+ <div class="note">逐关节、逐坐标轴 uint16 量化；最大位置误差 0.0264 mm。仅针对这三条 CMU 样本，原始文件仍保留不动，不能外推为完整动作库压缩率。</div>
+ <div class="divider"></div>
  <h2>原动作库历史清单（尚未重新载入原始分片）</h2>
  <div class="metric-grid">
   <div class="metric"><b>2,548</b><span>CMU 条目</span></div><div class="metric"><b>141</b><span>Mesh2Motion 条目</span></div><div class="metric"><b>84</b><span>Quaternius 原型</span></div>
@@ -67,12 +73,8 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
 </aside>
 </main>
 <script>
-const BASE='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/activity-r01/';
-const SOURCES={
- '16_33':{file:'CMU-WALK-SOURCE.json',label:'slow walk / stop',schema:'cmu16-33-source-positions/1'},
- '16_57':{file:'16_57-SOURCE.json',label:'run / jog, sudden stop',schema:'cmu-captured-source-positions/1'},
- '16_01':{file:'16_01-SOURCE.json',label:'jump',schema:'cmu-captured-source-positions/1'}
-};
+const PACK_URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-motion-atlas-sample-r03/cmu-sample-pack.json';
+const SOURCES={'16_33':{label:'slow walk / stop'},'16_57':{label:'run / jog, sudden stop'},'16_01':{label:'jump'}};
 const $=id=>document.getElementById(id),canvas=$('view'),ctx=canvas.getContext('2d');
 const links=[['root','lhipjoint'],['lhipjoint','lfemur'],['lfemur','ltibia'],['ltibia','lfoot'],['lfoot','ltoes'],['root','rhipjoint'],['rhipjoint','rfemur'],['rfemur','rtibia'],['rtibia','rfoot'],['rfoot','rtoes'],['root','lowerback'],['lowerback','upperback'],['upperback','thorax'],['thorax','lowerneck'],['lowerneck','upperneck'],['upperneck','head'],['thorax','lclavicle'],['lclavicle','lhumerus'],['lhumerus','lradius'],['lradius','lwrist'],['lwrist','lhand'],['lhand','lfingers'],['lwrist','lthumb'],['thorax','rclavicle'],['rclavicle','rhumerus'],['rhumerus','rradius'],['rradius','rwrist'],['rwrist','rhand'],['rhand','rfingers'],['rwrist','rthumb']];
 let data=null,frame=0,playing=false,last=0,view='oblique',showSmooth=true,speed=1,raf=0,loadToken=0;
@@ -110,10 +112,11 @@ function draw(){if(!data)return;const pts=showSmooth?data.smooth:data.points,nam
 }
 function tick(t){if(!playing)return;if(!last)last=t;const dt=t-last;last=t;frame=Math.min(data.points.length-1,frame+dt*data.fps*speed/1000);if(frame>=data.points.length-1){frame=data.points.length-1;playing=false;$('play').textContent='▶ 播放'}draw();if(playing)raf=requestAnimationFrame(tick)}
 function setPlaying(v){playing=v;last=0;$('play').textContent=v?'Ⅱ 暂停':'▶ 播放';if(v)raf=requestAnimationFrame(tick);else cancelAnimationFrame(raf)}
-async function loadClip(key){const token=++loadToken;setPlaying(false);$('status').textContent='正在读取 '+key+' 源动作…';try{const meta=SOURCES[key],r=await fetch(BASE+meta.file);if(!r.ok)throw Error('Source HTTP '+r.status);const source=await r.json();if(token!==loadToken)return;if(source.schema!==meta.schema||source.points?.length<2||source.names?.length!==31||source.fps!==120)throw Error('Source schema / frame / skeleton validation failed');if(!source.contacts?.l||!source.contacts?.r)throw Error('Missing left/right contact intervals');data={...source,key,label:meta.label,points:source.points,smooth:smoothFrames(source)};frame=0;
+function decodePoints(clip){const binary=atob(clip.data),bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0)),view=new DataView(bytes.buffer);if(bytes.byteLength!==clip.frames*clip.jointCount*6)throw Error('Packed track byte count mismatch');const points=new Array(clip.frames);let offset=0;for(let f=0;f<clip.frames;f++){const row=new Array(clip.jointCount);for(let j=0;j<clip.jointCount;j++){const p=new Array(3);for(let k=0;k<3;k++){const q=j*3+k,n=view.getUint16(offset,true);offset+=2;p[k]=clip.mins[q]+n*clip.scales[q]}row[j]=p}points[f]=row}return points}
+async function loadClip(key){const token=++loadToken;setPlaying(false);$('status').textContent='正在读取压缩动作数据 '+key+'…';try{const meta=SOURCES[key],r=await fetch(PACK_URL);if(!r.ok)throw Error('Packed source HTTP '+r.status);const pack=await r.json();if(pack.schema!=='kaopu-cmu-point-track-pack/1')throw Error('Packed library schema mismatch');const clip=pack.clips.find(x=>x.id===key);if(!clip)throw Error('Clip missing from packed source');const points=decodePoints(clip);if(token!==loadToken)return;if(points.length!==clip.frames||clip.jointCount!==31||clip.fps!==120)throw Error('Decoded source shape validation failed');if(!clip.contacts?.l||!clip.contacts?.r)throw Error('Missing left/right contact intervals');const source={...clip,points};data={...source,key,label:meta.label,points,smooth:smoothFrames(source)};frame=0;
  const a=jitter(data.points,data.fps),b=jitter(data.smooth,data.fps),raw=contactDrift(data,data.points),locked=contactDrift(data,data.smooth);
  $('jointCount').textContent=data.names.length;$('frameCount').textContent=data.points.length;$('sourceFPS').textContent=data.fps;$('rawJitter').textContent=a.toFixed(2);$('smoothJitter').textContent=b.toFixed(2);$('reduction').textContent=((1-b/a)*100).toFixed(1)+'%';$('rawSlip').textContent=(raw.max*1000).toFixed(1)+' mm';$('lockedSlip').textContent=(locked.max*1000).toFixed(1)+' mm';$('contactFrames').textContent=raw.frames+' / '+raw.intervals+'段';
- $('timeline').max=data.points.length-1;$('timeline').value=0;$('viewLabel').textContent='CMU '+key+' · '+meta.label+' · source positions';$('status').innerHTML='<span class="good">来源核验通过</span>\n'+(data.sourceURL||'CMU subject 16 / '+key)+'\n'+data.licenceReference+'\n'+data.fps+' Hz · '+data.points.length+' frames · '+data.names.length+' joints\nContact labels: '+(data.contactMethod||'source-recorded intervals; method not separately specified')+'\nContact windows: L '+data.contacts.l.length+' / R '+data.contacts.r.length;draw();
+ $('timeline').max=data.points.length-1;$('timeline').value=0;$('viewLabel').textContent='CMU '+key+' · '+meta.label+' · source positions';$('status').innerHTML='<span class="good">来源核验通过</span>\n'+(data.sourceURL||'CMU subject 16 / '+key)+'\n'+data.licenceReference+'\n'+data.fps+' Hz · '+data.points.length+' frames · '+data.names.length+' joints\nSource record SHA: '+data.sourceRecordGitBlobSHA+'\nContact labels: '+(data.contactMethod||'source-recorded intervals; method not separately specified')+'\nContact windows: L '+data.contacts.l.length+' / R '+data.contacts.r.length;draw();
  }catch(e){if(token===loadToken)$('status').textContent='加载失败：'+e.message}}
 $('play').onclick=()=>setPlaying(!playing);$('step').onclick=()=>{if(!data)return;setPlaying(false);frame=Math.min(data.points.length-1,frame+1);draw()};$('reset').onclick=()=>{if(!data)return;setPlaying(false);frame=0;draw()};$('timeline').oninput=e=>{if(!data)return;setPlaying(false);frame=Number(e.target.value);draw()};$('speed').oninput=e=>{speed=Number(e.target.value);$('speedValue').textContent=speed.toFixed(2)+'×'};$('smooth').onclick=()=>{showSmooth=!showSmooth;$('smooth').textContent='显示平滑对照：'+(showSmooth?'开':'关');draw()};$('clipSelect').onchange=e=>loadClip(e.target.value);document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('primary',x===b));draw()});
 loadClip('16_33');
