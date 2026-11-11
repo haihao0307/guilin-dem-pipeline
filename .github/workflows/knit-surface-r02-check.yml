@@ -12,7 +12,7 @@ permissions:
 jobs:
   public-surface:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/setup-node@v4
         with:
@@ -36,10 +36,11 @@ jobs:
           const url=base+'surface-r02.html';
           const raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+process.env.GITHUB_SHA+'/kaopu-knit-lab/';
           const proof={version:'KAOPU-KNIT-SURFACE-R02.1-20261111',commit:process.env.GITHUB_SHA,url,referenceMatched:false,realMobileDeviceTested:false,hardwarePerformanceVerified:false,physicsVerified:false,checks:[],resources:[]};
+          const checkpoint=(name,detail={})=>console.log('CHECKPOINT',name,JSON.stringify(detail));
           (async()=>{
             for(const path of ['surface-r02.html','r02/runtime.js']){
               const sr=await fetch(raw+path);assert.equal(sr.status,200);const expected=sha(Buffer.from(await sr.arrayBuffer()));let found=false;
-              for(let i=0;i<55;i++){const r=await fetch(base+path+'?verify='+process.env.GITHUB_SHA+'&n='+i,{cache:'no-store'});const b=Buffer.from(await r.arrayBuffer());if(r.status===200&&sha(b)===expected){proof.resources.push({path,status:r.status,bytes:b.length,sha256:expected});found=true;break;}await new Promise(r=>setTimeout(r,5000));}
+              for(let i=0;i<100;i++){const r=await fetch(base+path+'?verify='+process.env.GITHUB_SHA+'&n='+i,{cache:'no-store'});const b=Buffer.from(await r.arrayBuffer());if(r.status===200&&sha(b)===expected){proof.resources.push({path,status:r.status,bytes:b.length,sha256:expected});found=true;break;}if(i%10===0)checkpoint('publish-pending',{path,status:r.status,bytes:b.length,sha256:sha(b)});await new Promise(r=>setTimeout(r,5000));}
               assert(found,'Public bytes not current: '+path);
             }
             console.log('PUBLIC_RESOURCES_OK',JSON.stringify(proof.resources));
@@ -48,29 +49,29 @@ jobs:
               for(const [name,viewport] of [['desktop',{width:820,height:680}],['mobile-viewport',{width:390,height:844}]]){
                 const ctx=await browser.newContext({viewport,deviceScaleFactor:1,hasTouch:name!=='desktop'});
                 const page=await ctx.newPage();page.setDefaultTimeout(180000);const errors=[],failed=[];
-                page.on('pageerror',e=>errors.push(String(e)));page.on('requestfailed',r=>failed.push(r.url()));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+                page.on('pageerror',e=>{errors.push(String(e));checkpoint('pageerror',{name,error:String(e)});});page.on('requestfailed',r=>failed.push(r.url()));page.on('console',m=>{if(m.type()==='error'){errors.push(m.text());checkpoint('consoleerror',{name,error:m.text()});}});
                 const res=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});assert.equal(res.status(),200);
-                const done=async n=>{await page.waitForFunction(n=>window.KNIT_SURFACE?.error||window.KNIT_SURFACE?.completedFrames>=n,n,{timeout:240000});const e=await page.evaluate(()=>KNIT_SURFACE.error);assert.equal(e,null);};
-                await done(1);
                 const snap=()=>page.evaluate(()=>({version:KNIT_SURFACE.version,ready:KNIT_SURFACE.ready,error:KNIT_SURFACE.error,frames:KNIT_SURFACE.completedFrames,gl:KNIT_SURFACE.lastGLError,state:JSON.parse(JSON.stringify(KNIT_SURFACE.state)),stats:KNIT_SURFACE.stats,lastFrameWallMs:KNIT_SURFACE.lastFrameWallMs}));
-                const initial=await snap();assert.equal(initial.version,proof.version);assert(initial.ready);assert.equal(initial.gl,0);
+                const done=async n=>{try{await page.waitForFunction(n=>window.KNIT_SURFACE?.error||window.KNIT_SURFACE?.completedFrames>=n,n,{timeout:240000});}catch(e){checkpoint('frame-timeout',await snap());throw e;}const e=await page.evaluate(()=>KNIT_SURFACE.error);assert.equal(e,null);};
+                await done(1);
+                const initial=await snap();assert.equal(initial.version,proof.version);assert(initial.ready);assert.equal(initial.gl,0);checkpoint(name+'-initial',initial);
                 const canvasHash=async()=>sha(Buffer.from((await page.evaluate(()=>document.querySelector('#stage').toDataURL('image/png'))).split(',')[1],'base64'));
                 const firstHash=await canvasHash();
                 await page.screenshot({path:'knit-r02-evidence/'+name+'-surface.png'});
                 await page.getByRole('button',{name:'控制',exact:true}).click();assert(await page.locator('#panel').isVisible());
-                await page.locator('#quality').focus();await page.locator('#quality').press('Home');let n=(await snap()).frames;await done(n+1);assert.equal((await snap()).state.quality,1);
+                let n=(await snap()).frames;await page.locator('#quality').focus();await page.locator('#quality').press('Home');await done(n+1);assert.equal((await snap()).state.quality,1);checkpoint(name+'-quality');
                 await page.getByRole('button',{name:'关闭控制',exact:true}).click();
                 n=(await snap()).frames;await page.getByRole('button',{name:'微距',exact:true}).click();await done(n+1);assert.equal((await snap()).state.distance,3.2);const macroHash=await canvasHash();assert.notEqual(firstHash,macroHash);
-                await page.screenshot({path:'knit-r02-evidence/'+name+'-macro.png'});
+                await page.screenshot({path:'knit-r02-evidence/'+name+'-macro.png'});checkpoint(name+'-macro');
                 if(name==='desktop'){
-                  const before=await snap();await page.mouse.move(300,250);await page.mouse.down();await page.mouse.move(355,275,{steps:5});await page.mouse.up();await done(before.frames+1);assert.notEqual((await snap()).state.yaw,before.state.yaw);assert.notEqual(await canvasHash(),macroHash);
-                  const panBefore=await snap();await page.keyboard.press('ArrowRight');await done(panBefore.frames+1);assert((await snap()).state.pan[0]>panBefore.state.pan[0]);
-                  await page.getByRole('button',{name:'连续移动',exact:true}).click();const moving=await snap();await done(moving.frames+2);await page.getByRole('button',{name:'暂停移动',exact:true}).click();assert((await snap()).state.pan[1]>moving.state.pan[1]);
-                  await page.getByRole('button',{name:'追光',exact:true}).click();const lit=await snap();await done(lit.frames+2);await page.getByRole('button',{name:'追光',exact:true}).click();assert.notEqual((await snap()).state.lightAz,lit.state.lightAz);
+                  const before=await snap();await page.mouse.move(300,250);await page.mouse.down();await page.mouse.move(355,275,{steps:5});await page.mouse.up();await done(before.frames+1);assert.notEqual((await snap()).state.yaw,before.state.yaw);assert.notEqual(await canvasHash(),macroHash);checkpoint('drag');
+                  const panBefore=await snap();await page.keyboard.press('ArrowRight');await done(panBefore.frames+1);assert((await snap()).state.pan[0]>panBefore.state.pan[0]);checkpoint('pan');
+                  await page.getByRole('button',{name:'连续移动',exact:true}).click();const moving=await snap();await done(moving.frames+2);await page.getByRole('button',{name:'暂停移动',exact:true}).click();assert((await snap()).state.pan[1]>moving.state.pan[1]);checkpoint('moving');
+                  await page.getByRole('button',{name:'追光',exact:true}).click();const lit=await snap();await done(lit.frames+2);await page.getByRole('button',{name:'追光',exact:true}).click();assert.notEqual((await snap()).state.lightAz,lit.state.lightAz);checkpoint('light');
                   await page.getByRole('button',{name:'控制',exact:true}).click();const preFuzz=await snap();await page.locator('#fuzz').focus();await page.locator('#fuzz').press('Home');await done(preFuzz.frames+1);assert.equal((await snap()).state.fuzz,0);const bareHash=await canvasHash();
-                  const preShadow=await snap();await page.locator('#shadow').uncheck();await done(preShadow.frames+1);assert.equal((await snap()).state.shadow,0);assert.notEqual(await canvasHash(),bareHash);
+                  const preShadow=await snap();await page.locator('#shadow').uncheck();await done(preShadow.frames+1);assert.equal((await snap()).state.shadow,0);assert.notEqual(await canvasHash(),bareHash);checkpoint('fuzz-shadow');
                   const preColour=await snap();await page.getByRole('button',{name:'鼠尾草',exact:true}).click();await done(preColour.frames+1);assert.equal((await snap()).state.color,2);
-                  await page.getByRole('button',{name:'关闭控制',exact:true}).click();await page.getByRole('button',{name:'自然变化',exact:true}).click();assert.equal((await snap()).state.natural,0);
+                  await page.getByRole('button',{name:'关闭控制',exact:true}).click();n=(await snap()).frames;await page.getByRole('button',{name:'自然变化',exact:true}).click();await done(n+1);assert.equal((await snap()).state.natural,0);
                   proof.checks.push({desktopDrag:true,keyboardPan:true,continuousSurfaceMotion:true,independentMovingLight:true,fuzzOff:true,shadowOffChangesPixels:true,colourSwitch:true,periodicMode:true});
                 }
                 assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),viewport.width);
