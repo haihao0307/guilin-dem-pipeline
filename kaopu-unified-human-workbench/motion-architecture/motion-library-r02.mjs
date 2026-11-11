@@ -66,7 +66,9 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
   }
   for(const clip of clips){
     const source=String(clip.source?.kind??clip.source??'').toLowerCase();
-    if(source==='r41'||source.startsWith('r41-')||clip.id?.startsWith('r41-')) continue;
+    const clipKey=String(clip.id??'').toLowerCase();
+    // Exclude both the previous R41 label and the R4E label explicitly named in the current Atlas cleanup.
+    if(['r41','r4e'].some(tag=>source===tag||source.startsWith(tag+'-')||clipKey===tag||clipKey.startsWith(tag+'-'))) continue;
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
     let skeletonId=skeletonByKey.get(skKey);
     if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
