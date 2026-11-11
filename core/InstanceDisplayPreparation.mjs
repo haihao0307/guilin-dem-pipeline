@@ -1,0 +1,10 @@
+import {canonical} from './Expressions.mjs';
+// Shared view preparation plus exact-input instance records. No geometry,
+// sampling policy, product names, field evaluation or world-state ownership.
+export class InstanceDisplayPreparation{
+ constructor({prepareView,project}){if(typeof prepareView!=='function'||typeof project!=='function')throw Error('View preparation providers required');this.prepareView=prepareView;this.project=project;this.viewKey=null;this.common=null;this.entries=new Map();this.verified=false;this.totalViews=0;this.totalProjections=0;}
+ prepare({viewKey,view,instances,requireDisjoint=true}){const preparedAt=performance.now(),sameView=viewKey===this.viewKey,common=sameView?this.common:this.prepareView(view);if(!sameView)this.totalViews++;const entries=new Map(),rects=[],signatures=[];let projected=0,reused=0;for(const instance of instances){if(entries.has(instance.id))throw Error('Unique instance IDs required');const key=canonical(instance),old=sameView?this.entries.get(instance.id):null;let rect;if(old?.key===key){rect=old.rect;reused++;}else{rect=this.project(instance,common,view);projected++;}entries.set(instance.id,{key,rect});rects.push(rect);signatures.push(key);}
+ const canReuseVerification=sameView&&this.verified&&projected===0;if(requireDisjoint&&!canReuseVerification){const sorted=[...rects].sort((a,b)=>a.x-b.x||a.y-b.y);for(let i=0;i<sorted.length;i++){const a=sorted[i];if(!a.w||!a.h)continue;for(let j=i+1;j<sorted.length&&sorted[j].x<a.x+a.w;j++){const b=sorted[j];if(b.w&&b.h&&Math.min(a.y+a.h,b.y+b.h)>Math.max(a.y,b.y))throw Error('Display provider requires disjoint instance coverage');}}}
+ this.viewKey=viewKey;this.common=common;this.entries=entries;this.verified=requireDisjoint;this.totalProjections+=projected;return{cpuMs:performance.now()-preparedAt,rects,signatures,projected,reused,common:this.common,viewBuilds:this.totalViews,totalProjections:this.totalProjections,disjointCheckReused:requireDisjoint&&canReuseVerification};}
+ invalidate(){this.viewKey=null;this.entries.clear();this.verified=false;}
+}
