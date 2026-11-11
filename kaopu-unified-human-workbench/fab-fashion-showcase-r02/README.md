@@ -58,3 +58,12 @@ Fab 页面提供的 Windows Mannequins standalone demo 指向 Google Drive 登�
 ## 展示场景的已知静态开销
 
 代码中每种场景的静态 mesh 数量：Studio 1；Fab 环形场景 6；Runway 18。三组对象均保留在同一 scene 中，仅切换可见性，因此多次切换后已创建的几何缓存可能继续占用 GPU 内存。额外聚光灯为 Studio 3、Fab 3、Runway 2，均不投射阴影。场景激活时的新增 draw calls 预期分别约为 1 / 6 / 18（不含人物和原地面）；这是按对象结构推算的上限，不是实际 GPU 性能测量。
+
+
+## 镜头与静态场景成本
+
+提供全身、人像、侧面、近景四种镜头构图。原始 Fab 资产的官方说明还包括七种画幅比例、镜头移动与动画变体；本网页目前没有声称复刻完整 Sequencer / Scene Manager 工作流。
+
+代码中的静态 mesh 数量：Studio 1；Fab 环形场景 6（圆形背板、3 个环、2 个侧柱）；Runway 18（走台、2 条边线、15 个中心标记）。三组对象都保留在同一 scene，仅切换可见性，因此多次切换后已创建的几何缓存可能继续占用 GPU 内存。额外聚光灯分别为 3 / 3 / 2 盏，均不投射阴影。场景激活时新增 draw calls 结构计数约为 1 / 6 / 18（不含人物与原地面），不是实测结果。
+
+Fab 原始页面：<https://www.fab.com/listings/34abbb9d-02b6-4385-a790-e760e6ce3872>。公开 Mannequins demo：<https://drive.google.com/file/d/1VPhZiUiYsO7Wfd2Z6W0Nb7hCy4gEyu7o/view?usp=sharing>。人物当前主线指针：<https://github.com/haihao0307/guilin-dem-pipeline/blob/main/kaopu-unified-human-workbench/CURRENT_HUMAN.json>。完整人物整合试验：<https://github.com/haihao0307/guilin-dem-pipeline/pull/317>。
