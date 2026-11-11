@@ -96,7 +96,7 @@ export function encodeParameterizedVariant(parentChannels,variantChannels,{maxEr
   }
   const savings=standaloneBytes?1-encodedBytes/standaloneBytes:0;
   if(maxObservedError>maxError+1e-7||savings<minSavings)return null;
-  return {encoding:'parent-affine-residual/1',channels,standaloneBytes,encodedBytes,savings,maxObservedError};
+  return {encoding:'parent-affine-residual/1',channels,standaloneBytes,encodedBytes,savings,savedBytes:standaloneBytes-encodedBytes,maxObservedError};
 }
 export function decodeParameterizedVariant(parentChannels,packet){
   assert(packet?.encoding==='parent-affine-residual/1','unsupported parameterized motion encoding');
@@ -134,7 +134,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     }
     if(familyVariant){
       family.variants.push({clipId:clip.id,encoding:familyVariant.encoding,channels:familyVariant.channels,
-        savings:familyVariant.savings,maxObservedError:familyVariant.maxObservedError});
+        savings:familyVariant.savings,savedBytes:familyVariant.savedBytes,maxObservedError:familyVariant.maxObservedError});
       records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,frameCount,
         familyRef:familyId,variant:true});
     }else{
@@ -145,19 +145,19 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
       }
       if(!family){
         motionFamilies[familyId]={id:familyId,parentClipId:clip.id,skeletonId,fps:clip.fps,frameCount,
-          parentChannels:channels,variants:[]};
+          parentChannels:channels,parentChannelRefs:{...channelRefs},variants:[]};
       }
       records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,
         frameCount,channels:channelRefs,familyParent:!family?familyId:undefined});
     }
   }
   const compactFamilies=Object.fromEntries(Object.entries(motionFamilies).map(([id,f])=>[id,{id,parentClipId:f.parentClipId,skeletonId:f.skeletonId,
-    fps:f.fps,frameCount:f.frameCount,variants:f.variants}]));
+    fps:f.fps,frameCount:f.frameCount,parentChannelRefs:f.parentChannelRefs,variants:f.variants}]));
   return {schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),motionFamilies:compactFamilies,
     stats:{clipCount:records.length,skeletonCount:Object.keys(skeletonRegistry).length,uniqueChannelCount:payloadByKey.size,
       familyCount:Object.keys(compactFamilies).length,parameterizedClipCount:records.filter(r=>r.variant).length,
       encodedBytes:Object.values(payloadByKey).reduce((n,p)=>n+p.data.length*3/4,0),
-      parameterizedSavingsBytes:Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+Math.max(0,v.savings),0),0)}};
+      parameterizedSavingsBytes:Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+(v.savedBytes??0),0),0)}};
 }
 export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,derivativeCutoff=1,contactMask=null}={}) {
   const {width}=flattenFrames(frames); assert(width===3,'vector track must contain XYZ');
