@@ -1,0 +1,120 @@
+{
+  "round": "N272",
+  "observedAt": "2026-11-11T11:55:00Z",
+  "boundedQuestion": "When third-party teacher code remains in the delivered Weather candidate, can source comments and an unlinked README alone support removing the rendered teacher/reference disclosure?",
+  "selectionReason": "R50/R51 intentionally changed the user-facing provenance layer while retaining third-party code and notices. This is a live exact-subject risk; the motion README main-write was already content-reverted within two minutes and needs a separate incident receipt only if residual refs or policy gaps emerge.",
+  "exactSubjects": {
+    "r49": {
+      "commit": "240e8007ed764cd3cbbea8922b69fb5814022bed",
+      "path": "weather-mother/r49-cloud-performance-20261111/",
+      "visibleEvidence": [
+        "拖动观察 · 原作参考"
+      ],
+      "status": "VISIBLE_REFERENCE_DISCLOSURE"
+    },
+    "r50": {
+      "commit": "e3d5c67a655260f80cf2b8c90f0be188fb65a3ee",
+      "path": "weather-mother/r50-cloud-detail-20261111/",
+      "changes": [
+        "Removed · 原作参考 from pink and interactive rendered bars",
+        "Retained SPDX/license/author notices in embedded shader source",
+        "README_R50 still says the pink scene contains CC BY-NC-SA teacher code"
+      ],
+      "status": "SOURCE_NOTICE_RETAINED_RENDERED_DISCLOSURE_REMOVED"
+    },
+    "r51": {
+      "commit": "0b574765e7a87158d01018711d53834a5ad97d65",
+      "path": "weather-mother/r51-cloud-detail-20261111/",
+      "changes": [
+        "WEATHER MOTHER / TEACHER REPLICA -> WEATHER MOTHER",
+        "TINY CLOUDS / lsBfDz -> 连续噪声云海",
+        "老师原式 control set hidden",
+        "云中飞行参考 -> 云中飞行"
+      ],
+      "status": "TEACHER_IDENTITY_AND_ENTRY_HIDDEN_IN_RENDERED_SURFACE"
+    }
+  },
+  "sourceTruth": {
+    "pink": "CC BY-NC-SA 4.0 teacher code by @teadrinker remains present; R50 adds a small KAOPU noise modulation and is not an independent rewrite.",
+    "interactive": "MIT teacher code by @lumiey remains present.",
+    "tiny": "Teacher formula/structure remains in the page; self-owned noise replaces an image input, but the page is still a teacher replica/adaptation.",
+    "legalCompliance": "UNKNOWN_CONTEXT_DEPENDENT"
+  },
+  "teacherAudition": {
+    "source": "Creative Commons BY-NC-SA 4.0 legal code + official attribution practices",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "explicitNoveltyAnswer": "It specifies that shared CC material must retain supplied creator/copyright/license/disclaimer/source information, indicate modifications, and present attribution in a manner reasonable for the medium and context. KAOPU already records source provenance, but did not separately gate the truthfulness of the rendered delivery surface.",
+    "screening": {
+      "provenance": "Official Creative Commons legal code and official CC attribution guide.",
+      "maintenance": "CC 4.0 is the current stable legal code; official guide remains maintained.",
+      "reproducibility": "No reference implementation is required; the exact disclosure fields can be replayed as deterministic fixtures.",
+      "licenseAndRights": "Official public license text used as normative evidence; no third-party asset bytes are imported.",
+      "directRelevance": "Directly governs the retained CC BY-NC-SA reference code and modification disclosure.",
+      "novelty": "Adds medium/context-dependent attribution plus explicit modification/source-link requirements to the source-vs-rendered truth comparison.",
+      "integrationRisk": "Legal sufficiency remains context-dependent; a visible link may be preferable to permanent UI text; localization and link integrity must be tested.",
+      "antiDemoCheck": "Not a marketing/demo source; canonical license and operational attribution guidance."
+    }
+  },
+  "replay": {
+    "probe": "user_visible_provenance_gate_n272.mjs",
+    "assertions": {
+      "passed": 6,
+      "total": 6
+    },
+    "positiveControls": [
+      "R49 visible reference label",
+      "Compact UI with visible bound source/about link",
+      "Proven independent work"
+    ],
+    "negativeControls": [
+      "R50 label removal with source comments retained",
+      "R51 teacher identity/control hidden",
+      "Visible label with missing source notice"
+    ]
+  },
+  "decision": {
+    "status": "HOLD_USER_VISIBLE_PROVENANCE_HIDDEN",
+    "renderedClaimStatus": "HOLD_RENDERED_CLAIM_SOURCE_TRUTH_MISMATCH",
+    "sourceNoticeStatus": "PASS_RETAINED_IN_SOURCE",
+    "licenseComplianceStatus": "UNKNOWN_CONTEXT_DEPENDENT",
+    "promotionAllowed": false,
+    "reason": "The source layer is more truthful than the rendered layer. Retaining notices in code does not by itself make the user-facing claim semantically honest when the only teacher/reference markers are removed or hidden."
+  },
+  "candidateTranslation": {
+    "regression": "CANDIDATE_USER_VISIBLE_PROVENANCE_NOT_HIDDEN_001",
+    "taskAnchorFields": [
+      "thirdPartyMaterialPresent",
+      "exactSourceIdentity",
+      "licenseIdentity",
+      "modificationStatus",
+      "requiredUserVisibleProvenance",
+      "allowedDisclosureLocation",
+      "deliverySurface"
+    ],
+    "deliveryReceiptFields": [
+      "sourceNoticeRetained",
+      "userVisibleProvenance",
+      "userVisibleProvenanceLink",
+      "linkTargetDigest",
+      "renderedClaimIdentity",
+      "sourceTruthIdentity",
+      "renderedSourceTruthMatch"
+    ],
+    "minimumTrial": "Weather R51 only: expose a compact visible Sources/About control resolving to digest-bound creator/source/license/modification data; verify it in the rendered page; fail closed when missing, broken or mismatched."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE-RUN": "synthetic plus exact-source history replay",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "boundaries": [
+    "This is an operational provenance/truth gate, not legal advice.",
+    "No browser, public URL, device, production, visual-quality or user acceptance was run.",
+    "R50/R51 source work is not rejected; promotion is held until rendered provenance is truthful or visibly linked.",
+    "No production Mother, main, R2, global gate, schedule or public route was modified."
+  ]
+}
