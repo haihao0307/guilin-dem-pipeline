@@ -1,0 +1,95 @@
+{
+  "round": "N271",
+  "observedAt": "2026-11-11T07:41:00Z",
+  "boundedQuestion": "Does Weather Mother R48 provide a retrievable, exact-subject performance receipt that can support the commit claim that interactive and clear-sky frame rates improved?",
+  "subject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "018e401d0b87446eddd6da6c4af34ba931466151",
+    "commitMessage": "weather: improve interactive and clear sky frame rates R48",
+    "path": "weather-mother/r48-cloud-performance-20261111/",
+    "baselineCommit": "e3f80e7edff4e161427a0c29c34f0acbce58760d",
+    "baselinePath": "weather-mother/r47-reference-clouds-20261111/"
+  },
+  "exactCodeDelta": {
+    "interactive": {
+      "r47Blob": "11a881e3ba30c185b50bfc13cc3874d52cafdce6",
+      "r48Blob": "f23203390b08fda5b67b5b752a1bf5b5cb63469c",
+      "volumeSamples": {
+        "r47": 256,
+        "r48": 192
+      },
+      "lightSamples": {
+        "r47": 12,
+        "r48": 8
+      }
+    },
+    "clearSky": {
+      "r47Blob": "26ae4b505990222a85bba48be7b91885c082ab6c",
+      "r48Blob": "302cba43c817eddadc96c8dfafae2223edc8f302",
+      "sunDepthSamples": {
+        "r47": 5,
+        "r48": 4
+      },
+      "minimumStep": {
+        "r47": 0.045,
+        "r48": 0.055
+      }
+    },
+    "status": "VERIFIED_SOURCE_DELTA"
+  },
+  "claimBoundaryFromReadme": {
+    "blob": "b3184825a15dbfc60090ba45b6d49ecb569f2b4a",
+    "deviceCount": 1,
+    "resolution": "960x540",
+    "durationApproxSeconds": 5,
+    "visualEquivalenceProven": false,
+    "userDeviceFrameRateExpectedToDiffer": true,
+    "testRecordLocationClaim": "local only"
+  },
+  "receiptClosure": {
+    "r48CommittedFileCount": 21,
+    "committedPerformanceReceiptFound": false,
+    "exactRecordPathDeclared": false,
+    "recordDigestDeclared": false,
+    "baselineAndCandidateMeasurementsRetrievable": false,
+    "deviceBrowserGpuDriverDeclared": false,
+    "warmupAndSamplingProtocolDeclared": false,
+    "framePacingOrTailMetricDeclared": false,
+    "associatedWorkflowRuns": 0
+  },
+  "decision": {
+    "status": "HOLD_R48_PERFORMANCE_IMPROVEMENT_RECEIPT_NOT_RETRIEVABLE",
+    "codeDeltaAcceptedAsObservation": true,
+    "performanceImprovementAccepted": false,
+    "visualEquivalenceAccepted": false,
+    "reason": "R48 contains a real source change and honestly disclaims visual equivalence, but the referenced local test record is absent from the exact committed subject and no exact path, digest, environment, paired baseline/candidate measurements, or workflow receipt is retrievable."
+  },
+  "novelty": {
+    "status": "NO_NOVELTY",
+    "reason": "The failure is an exact-subject Delivery Receipt/freshness closure instance already covered by R2 and TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE; no new regression or OS change is warranted.",
+    "regressionAction": "UPDATE_EVIDENCE_ONLY"
+  },
+  "minimumFalsifiableRepair": {
+    "scope": "Weather Mother R48 only",
+    "requirements": [
+      "Commit one exact receipt path and SHA-256 bound to both R47 and R48 blobs.",
+      "Record device, OS, browser/version, GPU/driver, power state, viewport, render resolution, scene, parameters, warmup, sample window and visibility state.",
+      "Run paired R47/R48 measurements under the same protocol and publish raw frame intervals plus at least median FPS and p95 frame time; invalidate disjoint GPU timer samples.",
+      "Bind fixed-view visual comparison or explicitly keep visual equivalence UNKNOWN.",
+      "Fail closed when the receipt path or any bound blob is missing or mismatched."
+    ]
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "evidence-only verifier record",
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "boundaries": [
+    "No production Mother, main, R2, gate, public preview or asset was modified.",
+    "No browser, hardware GPU, device, production, visual or user acceptance was run.",
+    "This result does not reject the R48 source delta; it limits the performance claim to an unverified Observation."
+  ]
+}
