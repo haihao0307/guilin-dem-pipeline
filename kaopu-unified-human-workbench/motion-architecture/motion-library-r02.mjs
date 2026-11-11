@@ -92,15 +92,21 @@ export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,deriv
   assert(finite(fps)&&fps>0&&finite(minCutoff)&&minCutoff>0&&finite(beta)&&beta>=0,'invalid filter settings');
   const alpha=(cutoff)=>{const tau=1/(2*Math.PI*cutoff),te=1/fps;return 1/(1+tau/te);};
   const out=[Array.from(frames[0])]; let prev=Array.from(frames[0]),prevD=[0,0,0];
+  // A contact interval must stay at the position where contact began, not
+  // chase the preceding filtered sample (which can accumulate foot drift).
+  let contactAnchor=null, wasInContact=Boolean(contactMask?.[0]);
+  if(wasInContact) contactAnchor=[prev[0],prev[2]];
   for(let i=1;i<frames.length;i++){
-    const next=frames[i],row=[];
+    const next=frames[i],row=[],inContact=Boolean(contactMask?.[i]);
+    if(inContact&&!wasInContact) contactAnchor=[prev[0],prev[2]];
+    if(!inContact) contactAnchor=null;
     for(let j=0;j<3;j++){
       const d=(next[j]-prev[j])*fps, ed=prevD[j]+alpha(derivativeCutoff)*(d-prevD[j]);
       const cutoff=minCutoff+beta*Math.abs(ed), a=alpha(cutoff);
       row[j]=prev[j]+a*(next[j]-prev[j]); prevD[j]=ed;
     }
-    if(contactMask?.[i]) { const anchor=out[i-1]; row[0]=anchor[0];row[2]=anchor[2]; }
-    out.push(row);prev=row;
+    if(inContact&&contactAnchor) { row[0]=contactAnchor[0];row[2]=contactAnchor[1]; }
+    out.push(row);prev=row;wasInContact=inContact;
   }
   // Remove low-frequency endpoint drift introduced by causal filtering without
   // changing the first or final sample; this keeps clip root displacement intact.
@@ -113,6 +119,48 @@ export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,deriv
   }
   return out;
 }
+
+/**
+ * Smooth quaternion tracks without crossing the q/-q representation seam.
+ * Input/output use [x,y,z,w]; filtering is performed by shortest-arc slerp.
+ * This is deliberately conservative: it removes frame-to-frame spikes but
+ * does not invent new poses or alter the clip's first/last orientation.
+ */
+export function smoothQuaternionTrack(frames,{fps=120,minCutoff=2,beta=0.02}={}) {
+  assert(Array.isArray(frames)&&frames.length>0,'non-empty quaternion frames required');
+  assert(frames.every(q=>Array.isArray(q)&&q.length===4&&q.every(finite)),'finite XYZW quaternion frames required');
+  assert(finite(fps)&&fps>0&&finite(minCutoff)&&minCutoff>0&&finite(beta)&&beta>=0,'invalid quaternion filter settings');
+  const normalize=q=>{const n=Math.hypot(...q)||1;return q.map(v=>v/n);};
+  const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+  const slerp=(a,b,t)=>{
+    let cos=dot(a,b),end=b;
+    if(cos<0){cos=-cos;end=b.map(v=>-v);}
+    if(cos>0.9995)return normalize(a.map((v,i)=>v+(end[i]-v)*t));
+    const theta=Math.acos(Math.max(-1,Math.min(1,cos))),sin=Math.sin(theta);
+    const x=Math.sin((1-t)*theta)/sin,y=Math.sin(t*theta)/sin;
+    return normalize(a.map((v,i)=>v*x+end[i]*y));
+  };
+  const alpha=cutoff=>{const tau=1/(2*Math.PI*cutoff),te=1/fps;return 1/(1+tau/te);};
+  const source=frames.map(normalize),out=[source[0]],velocity=0;
+  let speed=velocity;
+  for(let i=1;i<source.length;i++){
+    const prev=out[i-1],next=dot(prev,source[i])<0?source[i].map(v=>-v):source[i];
+    const angle=2*Math.acos(Math.max(-1,Math.min(1,Math.abs(dot(prev,next)))));
+    const angularSpeed=angle*fps;
+    speed+=alpha(1)*(angularSpeed-speed);
+    const cutoff=minCutoff+beta*speed;
+    out.push(slerp(prev,next,alpha(cutoff)));
+  }
+  // Preserve exact endpoint orientation while distributing only the residual
+  // angular correction over the track; no discontinuous final-frame snap.
+  if(out.length>1){
+    const last=out.length-1, target=source[last];
+    const signedTarget=dot(out[last],target)<0?target.map(v=>-v):target;
+    for(let i=1;i<=last;i++)out[i]=slerp(out[i],signedTarget,i/last);
+  }
+  return out;
+}
+
 export function motionJitterReport(frames,{fps=120}={}) {
   const {width}=flattenFrames(frames); const energy=[];
   for(let i=2;i<frames.length;i++){let e=0;for(let j=0;j<width;j++)e+=(frames[i][j]-2*frames[i-1][j]+frames[i-2][j])**2;energy.push(Math.sqrt(e)*fps*fps);}
