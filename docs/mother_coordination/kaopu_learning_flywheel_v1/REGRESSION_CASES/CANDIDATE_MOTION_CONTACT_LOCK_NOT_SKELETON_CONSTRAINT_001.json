@@ -74,6 +74,40 @@
       "issue": 91,
       "commentId": 6800436338,
       "url": "https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6800436338"
-    }
+    },
+    "CANDIDATE-IMPLEMENTED": true,
+    "CANDIDATE-GATE-RUN": true,
+    "scopeNote": "Candidate learning-branch probe only; no production Mother implementation or production gate run."
+  },
+  "candidateEvidence": {
+    "auditionId": "N275_ORANGEDUCK_FIXED_LENGTH_CHAIN",
+    "teacher": "Daniel Holden / GenoView-InverseKinematics",
+    "teacherStatus": "TEACHER_CANDIDATE / AUDITION",
+    "teacherRepoHead": "3b9920c7dd5436c5bc05f045002a64f085c69a9d",
+    "teacherCodeLicense": "MIT",
+    "exactSubject": {
+      "repository": "haihao0307/guilin-dem-pipeline",
+      "pullRequest": 344,
+      "head": "b6395634f0598aac144c4054aa5119f884f27722",
+      "packPath": "kaopu-unified-human-workbench/motion-atlas-r03/cmu-sample-pack.json",
+      "packGitBlobSHA": "8fb1c53c733832bdbf727d82f21fe01aa8fff4e9",
+      "packSHA256": "521c5545f6c9733c248e4abb57c3245b9a5f1d6b1a32c884ab6784fc83f621b9"
+    },
+    "replay": {
+      "contactSamples": 1202,
+      "unreachableTargets": 0,
+      "maxTargetResidualMm": 8.441528768080324e-14,
+      "maxHorizontalFootDriftMm": 2.797157557069881e-14,
+      "maxAdjacentEdgeDeltaMm": 4.440892098500626e-13,
+      "maxAdjacentEdgeRelativeDeltaPct": 3.3581992180559734e-13,
+      "maxJointMoveMm": 52.69999070149833,
+      "assertions": "4/4 PASS",
+      "decision": "PASS_TEACHER_PRINCIPLE_AUDITION_FIXED_LENGTH_CHAIN"
+    },
+    "interpretation": "A fixed-length two-bone chain can hit the same contact-foot target on the exact three-clip subject without the N273 edge stretch. This independently reimplements only the principle in position space; it does not validate local rotations, joint limits, contact transitions, rendering, or user-visible quality.",
+    "evidencePaths": [
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/motion_chain_ik_audition_n275.mjs",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/motion_chain_ik_audition_result_n275.json"
+    ]
   }
 }
