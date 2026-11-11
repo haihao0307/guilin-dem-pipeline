@@ -53,3 +53,8 @@ Fab 页面提供的 Windows Mannequins standalone demo 指向 Google Drive 登�
 - 固定原生运行包哈希与 5 个分片清单沿用已锁定的 crowd-runtime R01；不改写原人物/头发/服装/鞋运行包。
 - 场景切换、灯光滑杆、每场景渲染 CPU 时间、提交 FPS、Draw Calls、Triangles、Geometry、Textures 监控代码均存在。
 - 浏览器端实际视觉、交互、R02 GPU 时间及同机 A/B 性能：尚未验收，不伪造结果。
+
+
+## 展示场景的已知静态开销
+
+代码中每种场景的静态 mesh 数量：Studio 1；Fab 环形场景 6；Runway 18。三组对象均保留在同一 scene 中，仅切换可见性，因此多次切换后已创建的几何缓存可能继续占用 GPU 内存。额外聚光灯为 Studio 3、Fab 3、Runway 2，均不投射阴影。场景激活时的新增 draw calls 预期分别约为 1 / 6 / 18（不含人物和原地面）；这是按对象结构推算的上限，不是实际 GPU 性能测量。
