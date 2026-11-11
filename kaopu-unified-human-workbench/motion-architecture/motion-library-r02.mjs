@@ -156,7 +156,10 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
   }
   const compactFamilies=Object.fromEntries(Object.entries(motionFamilies).map(([id,f])=>[id,{id,parentClipId:f.parentClipId,skeletonId:f.skeletonId,
     fps:f.fps,frameCount:f.frameCount,parentChannelRefs:f.parentChannelRefs,variants:f.variants}]));
-  const libraryCore={schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),motionFamilies:compactFamilies};
+  // Channel references use the public ch-<hash> identifier; key the payload
+  // table by that same identifier so references resolve without a second lookup.
+  const channelTable=Object.fromEntries([...payloadByKey.values()].map(packet=>[packet.id,packet]));
+  const libraryCore={schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:channelTable,motionFamilies:compactFamilies};
   const byteLength=value=>typeof TextEncoder!=='undefined'?new TextEncoder().encode(value).byteLength:value.length;
   const encodedBytes=byteLength(JSON.stringify(libraryCore));
   const rawMotionRecords=clips.filter(clip=>{
