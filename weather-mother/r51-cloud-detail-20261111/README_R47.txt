@@ -1,0 +1,1 @@
+Weather Mother R47 原作复刻研究候选。粉色天空采用 Goodbye Dream Clouds 原作多通道着色器，作者 @teadrinker，CC BY-NC-SA 4.0，仅限符合该许可的非商业使用；https://fragcoord.xyz/s/gcbixaag 。互动云采用 Clouds 原着色器，作者 @lumiey，MIT；https://fragcoord.xyz/s/cjoysude 。源码内保留版权及许可声明。它们是原作参考，尚未替换为自有云噪声，不声称原创、商用许可或逐帧一致。
