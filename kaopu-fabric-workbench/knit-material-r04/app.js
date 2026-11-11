@@ -1,0 +1,121 @@
+'use strict';
+const $=id=>document.getElementById(id),VERSION='KNIT-MATERIAL-R04',SCHEMA='kaopu.fabric-material/1',ABI='knit-p02-compute/1';
+const CTRL=[[-.5,-.39,-.08],[-.36,-.43,.13],[-.14,-.22,.29],[-.29,.2,.06],[-.28,.51,-.13],[0,.63,-.18],[.28,.51,-.13],[.29,.2,.06],[.14,-.22,.29],[.36,-.43,.13],[.5,-.39,-.08]];
+const RANGES={pitch:[4,22],rowStretch:[.65,1.65],radius:[.25,3.5],loft:[.55,1.5],hairDensity:[0,1440],hairLength:[.2,10],hairDiameter:[.012,.08],curl:[0,1.5],undercoat:[0,1.5],twist:[.3,4],pattern:[0,5],patternScale:[.5,10],seed:[0,65535]};
+const LABELS={pitch:'网眼 / 针距',rowStretch:'纱线行距',radius:'纱线半径',loft:'交织起伏',hairDensity:'绒毛密度',hairLength:'毛长尺度',hairDiameter:'毛丝直径',curl:'毛丝弯曲',undercoat:'短绒底层',twist:'纱线捻度',patternScale:'花纹尺度',seed:'固定种子'};
+const SETTINGS=[['pitch',.1,'mm'],['rowStretch',.01,'×'],['radius',.05,'mm'],['loft',.05,'×'],['twist',.05,'×'],['hairDensity',10,'根/针'],['hairLength',.1,'mm'],['hairDiameter',.001,'mm'],['curl',.05,'×'],['undercoat',.05,'×'],['patternScale',.1,'针'],['seed',1,'']];
+const clone=x=>JSON.parse(JSON.stringify(x)),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
+function makeMaterial(x){return{schema:SCHEMA,engineABI:ABI,name:x.name,structure:{type:'p02-catmulrom/1',controlPoints:clone(CTRL)},params:clone(x.params),source:DEFAULT_MATERIAL};}
+const library=PRESET_DATA.map(makeMaterial);
+let material=clone(library[0]),selected=0,device,adapterInfo,layout,ctx,texture,pipes,source,stamp=false,soft=false;
+let buffers={},W=640,H=480,ready=false,busy=false,pending=0,chain=Promise.resolve(),dirty=true,live=true,orbit=false,failed=false,frame=0;
+let camera={distance:270,yaw:.12,pitch:.08,fov:38},policyMode=0,carrier=false,revision=0,lastReport=null,lastResult=null,frameTimes=[];
+let editorTab='source',editorDirty=false,compileCache=new Map(),visibleSource='';
+function setStatus(text){$('status').textContent=text;}
+function error(text){$('error').hidden=false;$('error').textContent=text;setStatus(text);}
+function clearError(){$('error').hidden=true;}
+function fatal(e){failed=true;live=false;error('运行停止：'+(e.message||e));console.error(e);}
+function linear(hex){return [1,3,5].map(i=>{const x=parseInt(hex.slice(i,i+2),16)/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});}
+function validate(x){
+ if(!x||x.schema!==SCHEMA||x.engineABI!==ABI)throw Error('不是本工作台支持的布料材质格式。');
+ if(typeof x.name!=='string'||!x.name.trim()||x.name.length>80)throw Error('材质名称必须是1–80个字符。');
+ if(x.structure?.type!=='p02-catmulrom/1'||JSON.stringify(x.structure.controlPoints)!==JSON.stringify(CTRL))throw Error('本版本只接受已锁定的P02针织结构。');
+ if(!x.params||typeof x.source!=='string'||x.source.length>48000)throw Error('缺少参数或函数代码过长。');
+ for(const [k,[lo,hi]]of Object.entries(RANGES)){const n=x.params[k];if(typeof n!=='number'||!Number.isFinite(n)||n<lo||n>hi)throw Error(`${k} 必须在 ${lo}–${hi} 之间。`);}
+ for(const k of ['hairDensity','pattern','seed'])if(!Number.isInteger(x.params[k]))throw Error(k+' 必须是整数。');
+ for(const k of ['colorA','colorB'])if(!/^#[0-9a-f]{6}$/i.test(x.params[k]))throw Error('色彩必须为 #RRGGBB。');
+ if(x.params.radius>x.params.pitch*.28)throw Error('纱线半径不能超过针距的28%，请先增加针距。');
+ if(/@(?:compute|vertex|fragment|group|binding)\b|var\s*</.test(x.source))throw Error('材质文件只允许函数代码，不能覆盖渲染入口或GPU资源。');
+ for(const name of ['materialYarnRadius','materialColor','surfaceNoise','volume','strandPoint'])if(!new RegExp('fn\\s+'+name+'\\s*\\(').test(x.source))throw Error('缺少函数 '+name);
+ return {schema:SCHEMA,engineABI:ABI,name:x.name.trim(),structure:clone(x.structure),params:Object.fromEntries(Object.keys(RANGES).concat(['colorA','colorB']).map(k=>[k,x.params[k]])),source:x.source};
+}
+function curve(t,p){const v=t*10,i=Math.min(9,Math.floor(v)),x=v-i,a=CTRL[Math.max(0,i-1)],b=CTRL[i],c=CTRL[i+1],d=CTRL[Math.min(10,i+2)];return b.map((v,k)=>(v+.5*(-a[k]+c[k])*x+.5*(2*a[k]-5*v+4*c[k]-d[k])*x*x+.5*(-a[k]+3*v-3*c[k]+d[k])*x*x*x+(k===0?.5:0))*p.pitch*(k===1?p.rowStretch:k===2?p.loft:1));}
+function buildSource(p){
+ const start=performance.now(),N=80,segments=new Float32Array(N*8),bins=[],ids=[],sx=p.pitch,sy=p.pitch*.5*p.rowStretch;
+ for(let i=0;i<N;i++)segments.set([...curve(i/N,p),i/N,...curve((i+1)/N,p),(i+1)/N],i*8);
+ const margin=p.radius*1.15+1.35+.08;
+ for(let y=0;y<8;y++)for(let x=0;x<16;x++){
+  const start=ids.length/4,lo=[x/16*sx,y/8*sy],hi=[(x+1)/16*sx,(y+1)/8*sy];
+  for(let row=-3;row<=3;row++)for(let col=-1;col<=1;col++)for(let s=0;s<N;s++){
+   const a=s*8,b=a+4,ox=col*sx,oy=row*sy;
+   if(Math.max(segments[a],segments[b])+ox+margin<lo[0]||Math.min(segments[a],segments[b])+ox-margin>hi[0]||Math.max(segments[a+1],segments[b+1])+oy+margin<lo[1]||Math.min(segments[a+1],segments[b+1])+oy-margin>hi[1])continue;
+   ids.push(s,col,row,0);
+  }bins.push(start,ids.length/4-start);
+ }
+ return{segments,bins:new Uint32Array(bins),ids:new Int32Array(ids),cols:Math.max(1,Math.round(160/sx)),rows:Math.max(1,Math.round(160/sy)),cpuMs:performance.now()-start};
+}
+function gpuBuffer(data,usage){const b=device.createBuffer({size:Math.max(16,typeof data==='number'?data:data.byteLength),usage});if(typeof data!=='number')device.queue.writeBuffer(b,0,data);return b;}
+function replaceSource(s){for(const k of ['segments','bins','ids']){buffers[k]?.destroy();buffers[k]=gpuBuffer(s[k],GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST);}source=s;}
+function allocate(w,h){if(![160,320,480,640,960].includes(w)||h!==Math.round(w*.75))throw Error('不支持的像素设置');W=w;H=h;texture?.destroy();for(const [k,bpp]of [['policy',32],['pixels',16],['hairAccum',16]]){buffers[k]?.destroy();buffers[k]=gpuBuffer(W*H*bpp,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC);}texture=device.createTexture({size:[W,H],format:'rgba8unorm',usage:GPUTextureUsage.STORAGE_BINDING|GPUTextureUsage.COPY_SRC});$('view').width=W;$('view').height=H;$('resolution').value=String(W);frameTimes=[];}
+async function compile(code){
+ if(compileCache.has(code))return compileCache.get(code);
+ const assembled=CORE.replace('//__MATERIAL__',code);device.pushErrorScope('validation');let popped=false;
+ try{const mod=device.createShaderModule({code:assembled});const diagnostics=await mod.getCompilationInfo(),errors=diagnostics.messages.filter(x=>x.type==='error');if(errors.length)throw Error(errors.map(e=>`${e.lineNum}:${e.linePos} ${e.message}`).join('\n'));
+ const pipelineLayout=device.createPipelineLayout({bindGroupLayouts:[layout]}),result={};
+ for(const entryPoint of ['controls','render','clearHairs','hairs','composite'])result[entryPoint]=await device.createComputePipelineAsync({layout:pipelineLayout,compute:{module:mod,entryPoint}});
+ const err=await device.popErrorScope();popped=true;if(err)throw Error(err.message);compileCache.set(code,result);return result;
+ }catch(e){if(!popped)try{await device.popErrorScope();}catch{}throw e;}
+}
+function enqueue(job){pending++;chain=chain.catch(()=>{}).then(async()=>{while(busy)await sleep(12);try{return await job();}finally{pending--;dirty=true;}});return chain;}
+async function applyCandidate(raw){const next=validate(raw);const newPipes=await compile(next.source);const s=buildSource(next.params);replaceSource(s);material=next;pipes=newPipes;visibleSource=CORE.replace('//__MATERIAL__',material.source);revision++;lastReport=null;frameTimes=[];clearError();syncControls();syncEditor(true);return true;}
+async function selectMaterial(index){if(!library[index])throw Error('无此材质');return enqueue(async()=>{setStatus('载入 '+library[index].name);await applyCandidate(library[index]);selected=index;syncLibrary();});}
+function eye(){const r=camera.distance;return[r*Math.cos(camera.pitch)*Math.sin(camera.yaw),r*Math.sin(camera.pitch),r*Math.cos(camera.pitch)*Math.cos(camera.yaw)];}
+function params(offset=0){const b=new ArrayBuffer(208),f=new Float32Array(b),u=new Uint32Array(b),e=eye(),fw=norm(e.map(x=>-x)),rt=norm(cross(fw,[0,1,0])),up=cross(rt,fw),p=material.params;f.set(e,0);f.set(fw,4);f.set(rt,8);f.set(up,12);f.set([W,H,Math.tan(camera.fov*Math.PI/360),0],16);f.set([camera.distance,1,0,0],20);f.set([1,...linear(p.colorA)],24);u.set([W,H,policyMode,offset],28);f.set([p.pitch,p.rowStretch,p.radius,p.loft],32);f.set([source.cols,source.rows,p.hairDensity,p.hairLength],36);f.set([...linear(p.colorB),0],40);f.set([p.pattern,p.patternScale,p.seed,p.twist],44);f.set([p.hairDiameter,p.curl,p.undercoat,carrier?1:0],48);return b;}
+function bind(slot){return device.createBindGroup({layout,entries:[{binding:0,resource:{buffer:buffers.uniform,offset:slot*256,size:208}},...[['segments',1],['bins',2],['ids',3],['policy',4],['pixels',5],['hairAccum',7]].map(([k,binding])=>({binding,resource:{buffer:buffers[k]}})),{binding:6,resource:texture.createView()}]});}
+async function render({present=true}={}){
+ if(failed)throw Error('GPU已停止');const start=performance.now(),snapshot=params(),n=carrier?0:source.cols*source.rows*material.params.hairDensity;
+ const steps=[{name:'controls',x:Math.ceil(W/8),y:Math.ceil(H/8),offset:0},{name:'clearHairs',x:Math.ceil(W/8),y:Math.ceil(H/8),offset:0}];
+ const rows=soft?8:H;for(let y=0;y<H;y+=rows)steps.push({name:'render',x:Math.ceil(W/8),y:Math.ceil(Math.min(rows,H-y)/8),offset:y});
+ const batch=soft?8192:Math.max(1,n);for(let i=0;i<n;i+=batch){const groups=Math.ceil(Math.min(batch,n-i)/64);steps.push({name:'hairs',x:Math.min(256,groups),y:Math.ceil(groups/256),offset:i});}
+ steps.push({name:'composite',x:Math.ceil(W/8),y:Math.ceil(H/8),offset:0});
+ if(steps.length>1024)throw Error('当前设置超出分批上限，请降低毛丝密度。');
+ let qs,res,read;if(stamp){qs=device.createQuerySet({type:'timestamp',count:steps.length*2});res=gpuBuffer(steps.length*16,GPUBufferUsage.QUERY_RESOLVE|GPUBufferUsage.COPY_SRC);read=gpuBuffer(steps.length*16,GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ);}
+ let encoder=device.createCommandEncoder();
+ try{for(let i=0;i<steps.length;i++){
+  const s=steps[i],raw=snapshot.slice(0);new Uint32Array(raw)[31]=s.offset;device.queue.writeBuffer(buffers.uniform,i*256,raw);
+  const pass=encoder.beginComputePass(qs?{timestampWrites:{querySet:qs,beginningOfPassWriteIndex:i*2,endOfPassWriteIndex:i*2+1}}:{});pass.setPipeline(pipes[s.name]);pass.setBindGroup(0,bind(i));pass.dispatchWorkgroups(s.x,s.y);pass.end();
+  if(soft&&i<steps.length-1){device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();encoder=device.createCommandEncoder();if(failed)throw Error('GPU执行失败');}
+ }
+ if(present)encoder.copyTextureToTexture({texture},{texture:ctx.getCurrentTexture()},[W,H]);
+ if(qs){encoder.resolveQuerySet(qs,0,steps.length*2,res,0);encoder.copyBufferToBuffer(res,0,read,0,steps.length*16);}device.queue.submit([encoder.finish()]);await device.queue.onSubmittedWorkDone();const wallMs=performance.now()-start;if(failed)throw Error('GPU执行失败');
+ const stages={};if(read){await read.mapAsync(GPUMapMode.READ);const a=new BigUint64Array(read.getMappedRange());steps.forEach((s,i)=>stages[s.name]=(stages[s.name]||0)+Number(a[i*2+1]-a[i*2])/1e6);read.unmap();}
+ lastResult={wallMs,gpuMs:stamp?Object.values(stages).reduce((a,b)=>a+b,0):null,stages,dispatchedFibres:n,submissionCount:soft?steps.length:1,revision};return lastResult;
+ }finally{read?.destroy();res?.destroy();qs?.destroy();}
+}
+async function readPixels(){const b=buffers.pixels,r=gpuBuffer(b.size,GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ),e=device.createCommandEncoder();e.copyBufferToBuffer(b,0,r,0,b.size);device.queue.submit([e.finish()]);await r.mapAsync(GPUMapMode.READ);const a=new Float32Array(r.getMappedRange().slice(0));r.unmap();r.destroy();return a;}
+function metadata(){return{version:VERSION,adapter:adapterInfo,softwareBackend:soft,browser:navigator.userAgent,realHardwareTested:!soft&&!!adapterInfo,width:W,height:H,camera:clone(camera),material:material.name,params:clone(material.params),sourceGrid:source?[source.cols,source.rows]:null,sourceCurveSegments:80,sourcePreparationCpuMs:source?.cpuMs,bufferBytes:Object.values(buffers).reduce((n,b)=>n+b.size,0),notDriverVRAM:true,triangleDrawCalls:0,physicalCloth:false,planeCarrier:'analytic rectangle with local yarn/fibre thickness',shaderSource:'editable functions plus fixed P02 host',pureNoise:false,fibreBlend:'weighted optical-depth approximation, not exact hair sorting',sourceFullFidelityAccepted:false,revision,lastResult};}
+function updateStats(r){$('wall').textContent=r.wallMs.toFixed(2)+' ms';$('gpu').textContent=r.gpuMs===null?'未提供':r.gpuMs.toFixed(2)+' ms';$('frame').textContent=String(frame);$('fibres').textContent=r.dispatchedFibres.toLocaleString();$('buffer').textContent=(Object.values(buffers).reduce((n,b)=>n+b.size,0)/1e6).toFixed(1)+' MB';$('modeInfo').textContent=`${W} × ${H} 实际像素 · ${source.cols} × ${source.rows} 针 · 无三角绘制`;$('distanceValue').textContent=(camera.distance/10).toFixed(1)+' cm';}
+async function drawOnce(){if(!ready||busy||failed||pending)return;busy=true;dirty=false;const rev=revision;try{const r=await render();frame++;const now=performance.now();frameTimes.push(now);if(frameTimes.length>20)frameTimes.shift();$('fps').textContent=frameTimes.length>1?((frameTimes.length-1)*1000/(now-frameTimes[0])).toFixed(1):'—';updateStats(r);$('veil').hidden=true;setStatus(soft?'软件WebGPU后端：速度不能代表实体显卡。':'拖动旋转 · 滚轮缩放 · 修改材质后重新实测');}catch(e){fatal(e);}finally{busy=false;if(revision!==rev)dirty=true;}}
+let previous=0;function loop(t){requestAnimationFrame(loop);if(orbit&&!busy&&!pending){camera.yaw+=(previous?Math.min((t-previous)/1000,.1):0)*.2;dirty=true;}previous=t;if(ready&&!failed&&!busy&&!pending&&!document.hidden&&(live||dirty))drawOnce();}
+function syncLibrary(){const c=$('materials');c.replaceChildren();library.forEach((m,i)=>{const b=document.createElement('button');b.textContent=m.name;b.className=i===selected?'selected':'';b.style.setProperty('--swatch',m.params.colorA);b.onclick=()=>selectMaterial(i).catch(e=>error(e.message));c.append(b);});}
+function syncControls(){for(const [k]of SETTINGS){const el=$(k);if(el){el.value=material.params[k];$(k+'Value').textContent=String(material.params[k]);}}$('colorA').value=material.params.colorA;$('colorB').value=material.params.colorB;$('pattern').value=material.params.pattern;$('materialName').value=material.name;$('currentName').textContent=material.name;}
+function syncEditor(force=false){if(editorDirty&&!force)return;const text=editorTab==='source'?material.source:editorTab==='json'?JSON.stringify(material,null,2):visibleSource;$('code').value=text;$('code').readOnly=editorTab==='runtime';editorDirty=false;$('codeState').textContent='已应用';$('codeState').className='';$('apply').disabled=editorTab==='runtime';$('lines').textContent=Array.from({length:text.split('\n').length},(_,i)=>i+1).join('\n');}
+function changed(){revision++;dirty=true;lastReport=null;frameTimes=[];$('measured').textContent='待测';}
+let paramTimer;function editParam(k,v){clearTimeout(paramTimer);const next=clone(material);next.params[k]=v;try{validate(next);}catch(e){error(e.message);syncControls();return;}const geometry=['pitch','rowStretch','radius','loft'].includes(k);paramTimer=setTimeout(()=>enqueue(async()=>{if(geometry)replaceSource(buildSource(next.params));material.params=next.params;library[selected]=clone(material);changed();clearError();syncControls();syncEditor();}).catch(e=>error(e.message)),geometry?180:40);$(k+'Value')&&($(k+'Value').textContent=String(v));}
+function setupControls(){for(const [k,step,unit]of SETTINGS){const label=document.createElement('label');label.className='control';const top=document.createElement('span');top.textContent=LABELS[k];const val=document.createElement('output');val.id=k+'Value';top.append(val);const slider=document.createElement('input');slider.type='range';slider.id=k;slider.min=RANGES[k][0];slider.max=RANGES[k][1];slider.step=step;slider.oninput=()=>editParam(k,+slider.value);const small=document.createElement('small');small.textContent=unit;label.append(top,slider,small);$(k.startsWith('hair')||['curl','undercoat'].includes(k)?'hairControls':'knitControls').append(label);}}
+function download(name,text,type='application/json'){const u=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+async function importText(text){if(text.length>1000000)throw Error('材质文件超过1 MB。');const doc=JSON.parse(text);const items=doc.schema==='kaopu.fabric-library/1'?doc.materials:[doc];if(!Array.isArray(items)||items.length<1||items.length>30)throw Error('每次最多导入30种材质。');const valid=items.map(validate);return enqueue(async()=>{for(const m of valid)await compile(m.source);await applyCandidate(valid[0]);const i=library.length;library.push(...valid);selected=i;syncLibrary();setStatus('导入成功：'+valid.length+'种材质');return valid.length;});}
+async function applyEditor(){return enqueue(async()=>{setStatus('编译材质函数…');const x=editorTab==='json'?JSON.parse($('code').value):{...clone(material),source:$('code').value};await applyCandidate(x);library[selected]=clone(material);syncLibrary();setStatus('代码已应用；画面使用新的函数。');});}
+function stats(xs){const a=[...xs].sort((a,b)=>a-b);return{n:a.length,median:(a[(a.length-1)>>1]+a[a.length>>1])/2,min:a[0],max:a.at(-1)};}
+async function benchmark(){const wasLive=live;live=false;return enqueue(async()=>{try{setStatus('预热当前材质');await render({present:false});const trials=[];for(let i=0;i<6;i++){setStatus('实测 '+(i+1)+'/6');trials.push(await render({present:false}));}lastReport={...metadata(),timestampUTC:new Date().toISOString(),trials,wallMs:stats(trials.map(x=>x.wallMs)),gpuMs:stamp?stats(trials.map(x=>x.gpuMs)):null,timing:'completed offscreen frame; no readback or screenshots; preparation excluded; not display FPS'};$('measured').textContent=lastReport.wallMs.median.toFixed(2)+' ms';setStatus('本材质6帧实测完成，可导出记录。');return lastReport;}finally{live=wasLive;}});}
+setupControls();syncLibrary();syncControls();syncEditor(true);
+$('apply').onclick=()=>applyEditor().catch(e=>{error('编译未通过，保留上一份可用材质：\n'+e.message);$('codeState').textContent='未应用';});
+$('code').addEventListener('input',()=>{editorDirty=true;$('codeState').textContent='有未应用修改';$('codeState').className='dirty';const n=$('code').value.split('\n').length;$('lines').textContent=Array.from({length:n},(_,i)=>i+1).join('\n');});
+$('code').onscroll=()=>{$('lines').scrollTop=$('code').scrollTop;};$('code').onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('apply').click();}if(e.key==='Tab'){e.preventDefault();const t=e.target,a=t.selectionStart,b=t.selectionEnd;t.setRangeText('    ',a,b,'end');t.dispatchEvent(new Event('input'));}};
+for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>{if(editorDirty&&!confirm('放弃尚未应用的代码修改？'))return;editorTab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));syncEditor(true);};
+$('exportMaterial').onclick=()=>download(material.name+'.fabric.json',JSON.stringify(material,null,2));$('exportLibrary').onclick=()=>download('KAOPU_布料材质库.json',JSON.stringify({schema:'kaopu.fabric-library/1',materials:library.map((m,i)=>i===selected?material:m)},null,2));$('import').onclick=()=>$('files').click();$('files').onchange=async()=>{try{for(const f of $('files').files)await importText(await f.text());}catch(e){error('导入失败：'+e.message);}finally{$('files').value='';}};
+$('duplicate').onclick=()=>{const x=clone(material);x.name+=' · 副本';library.push(x);selected=library.length-1;material=x;syncLibrary();syncControls();syncEditor();};$('materialName').onchange=()=>{const name=$('materialName').value.trim().slice(0,80);if(!name)return;material.name=name;library[selected]=clone(material);syncLibrary();syncControls();syncEditor();};
+for(const k of ['colorA','colorB'])$(k).oninput=()=>editParam(k,$(k).value);$('pattern').onchange=()=>editParam('pattern',+$('pattern').value);
+$('resolution').onchange=()=>enqueue(async()=>{const w=+$('resolution').value;allocate(w,Math.round(w*.75));changed();}).catch(e=>error(e.message));$('policy').onchange=()=>{policyMode=+$('policy').value;changed();};$('carrier').onchange=()=>{carrier=$('carrier').checked;changed();};
+$('distance').oninput=()=>{camera.distance=+$('distance').value;changed();};$('orbit').onclick=()=>{orbit=!orbit;$('orbit').classList.toggle('active',orbit);};$('pause').onclick=()=>{live=!live;$('pause').textContent=live?'暂停':'继续';};$('reset').onclick=()=>{camera={distance:270,yaw:.12,pitch:.08,fov:38};$('distance').value=270;changed();};
+$('bench').onclick=()=>benchmark().catch(e=>error(e.message));$('report').onclick=()=>download('材质实测.json',JSON.stringify(lastReport||metadata(),null,2));
+let drag;const cv=$('view');cv.onpointerdown=e=>{drag=[e.clientX,e.clientY,camera.yaw,camera.pitch];cv.setPointerCapture(e.pointerId);};cv.onpointerup=cv.onpointercancel=()=>drag=null;cv.onpointermove=e=>{if(!drag)return;camera.yaw=drag[2]+(e.clientX-drag[0])*.006;camera.pitch=Math.max(-1.3,Math.min(1.3,drag[3]+(e.clientY-drag[1])*.004));orbit=false;changed();};cv.onwheel=e=>{e.preventDefault();camera.distance=Math.max(45,Math.min(1400,camera.distance*Math.exp(e.deltaY*.001)));$('distance').value=camera.distance;changed();};
+async function boot(){try{
+ if(!navigator.gpu)throw Error('浏览器未提供WebGPU。请使用支持WebGPU且启用硬件加速的浏览器；本页不会用图片替代。');
+ const a=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!a)throw Error('没有可用WebGPU设备。');const i=a.info;adapterInfo={vendor:i?.vendor,architecture:i?.architecture,description:i?.description,isFallbackAdapter:i?.isFallbackAdapter??null};soft=/swiftshader|llvmpipe|lavapipe|software/i.test(JSON.stringify(adapterInfo))||adapterInfo.isFallbackAdapter===true;stamp=a.features.has('timestamp-query');device=await a.requestDevice({requiredFeatures:stamp?['timestamp-query']:[]});device.addEventListener('uncapturederror',e=>fatal(e.error));device.lost.then(e=>fatal(Error(e.message)));ctx=cv.getContext('webgpu');ctx.configure({device,format:'rgba8unorm',usage:GPUTextureUsage.COPY_DST|GPUTextureUsage.RENDER_ATTACHMENT,alphaMode:'opaque'});
+ layout=device.createBindGroupLayout({entries:[{binding:0,visibility:4,buffer:{type:'uniform'}},...[1,2,3].map(binding=>({binding,visibility:4,buffer:{type:'read-only-storage'}})),...[4,5,7].map(binding=>({binding,visibility:4,buffer:{type:'storage'}})),{binding:6,visibility:4,storageTexture:{access:'write-only',format:'rgba8unorm'}}]});buffers.uniform=gpuBuffer(1024*256,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);
+ const args=new URLSearchParams(location.search);if(args.get('qa')==='1'){W=160;H=120;live=false;}allocate(W,H);setStatus('编译真实材质函数…');await applyCandidate(material);ready=true;$('device').textContent=(soft?'软件后端 · ':'')+[adapterInfo.vendor,adapterInfo.architecture,adapterInfo.description].filter(Boolean).join(' / ');await drawOnce();requestAnimationFrame(loop);
+ }catch(e){fatal(e);}}
+window.FabricLab={get ready(){return ready;},get state(){return{ready,failed,busy,pending,frame,material:clone(material),metadata:metadata()};},pause:async()=>{live=false;while(busy||pending)await sleep(10);},render:()=>enqueue(async()=>{const r=await render();frame++;updateStats(r);return r;}),read:readPixels,select:selectMaterial,importText,exportText:()=>JSON.stringify(material),library:()=>clone(library),applySource:code=>enqueue(()=>applyCandidate({...clone(material),source:code})),setParams:p=>enqueue(()=>applyCandidate({...clone(material),params:{...material.params,...p}})),setView:o=>enqueue(async()=>{if(o.width)allocate(o.width,Math.round(o.width*.75));for(const k of ['distance','yaw','pitch','fov'])if(o[k]!==undefined)camera[k]=o[k];if(o.carrier!==undefined)carrier=o.carrier;changed();}),benchmark};
+boot();
