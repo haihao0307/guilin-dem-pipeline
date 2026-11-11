@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,smoothQuaternionTrack,motionJitterReport} from '../motion-architecture/motion-library-r02.mjs';
+import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,smoothQuaternionTrack,motionJitterReport,encodeParameterizedVariant,decodeParameterizedVariant} from '../motion-architecture/motion-library-r02.mjs';
 
 test('delta channel round-trips within declared error',()=>{
  const src=Array.from({length:80},(_,i)=>[Math.sin(i*.04),i*.002,Math.cos(i*.04)]);
@@ -45,4 +45,32 @@ test('quaternion smoothing handles q/-q equivalence and preserves unit length',(
  assert.equal(dst.length,src.length);
  for(const q of dst)assert.ok(Math.abs(Math.hypot(...q)-1)<1e-6);
  assert.ok(Math.abs(dst[0][3]-Math.abs(src[0][3]))<1e-6);
+});
+
+test('similar motion variants store one parent plus compact parameters and residuals',()=>{
+ const parent={root:Array.from({length:120},(_,i)=>[Math.sin(i*.045),i*.001,Math.cos(i*.045)])};
+ const variant={root:parent.root.map((p,i)=>[p[0]*1.08+.015,p[1]*.97-.004,p[2]*1.08-.01+i%3*.000001])};
+ const packet=encodeParameterizedVariant(parent,variant,{maxError:.00005,minSavings:.08});
+ assert.ok(packet,'similar clip should qualify for parent encoding');
+ assert.ok(packet.savedBytes>0);
+ const decoded=decodeParameterizedVariant(parent,packet);
+ let max=0;for(let i=0;i<120;i++)for(let j=0;j<3;j++)max=Math.max(max,Math.abs(decoded.root[i][j]-variant.root[i][j]));
+ assert.ok(max<=.00005+1e-7);
+});
+test('compact library links variant records to a retained parent channel record',()=>{
+ const skeleton={names:['root'],parents:[-1],restFingerprint:'r1'};
+ const parent={root:Array.from({length:120},(_,i)=>[Math.sin(i*.045),i*.001,Math.cos(i*.045)])};
+ const variant={root:parent.root.map((p,i)=>[p[0]*1.08+.015,p[1]*.97-.004,p[2]*1.08-.01+i%3*.000001])};
+ const db=buildCompactMotionLibrary({clips:[
+  {id:'cmu-parent',source:'cmu',skeleton,fps:30,channels:parent},
+  {id:'cmu-variant',source:'cmu',skeleton,fps:30,channels:variant}
+ ]});
+ assert.equal(db.stats.clipCount,2);
+ assert.equal(db.stats.parameterizedClipCount,1);
+ const family=db.motionFamilies[db.clips[1].familyRef];
+ assert.ok(family.parentChannelRefs.root);
+ const decodedParent={root:decodeDeltaChannel(db.channels[family.parentChannelRefs.root])};
+ const decoded=decodeParameterizedVariant(decodedParent,family.variants[0]);
+ let max=0;for(let i=0;i<120;i++)for(let j=0;j<3;j++)max=Math.max(max,Math.abs(decoded.root[i][j]-variant.root[i][j]));
+ assert.ok(max<=.00005+1e-7);
 });
