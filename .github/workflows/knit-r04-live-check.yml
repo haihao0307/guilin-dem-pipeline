@@ -33,7 +33,7 @@ jobs:
           const paths=['research/real-knit-abcd-r04/index.html','research/real-knit-abcd-r04/viewer.mjs','research/display-quality/InstanceSurfaceRendererR04.mjs','research/display-quality/SourceKnit.glsl','research/display-quality/SourceFibres.glsl','fixtures/local-knit-r03/p02-curve.mjs','fixtures/local-knit-r03/eb1.js'];
           (async()=>{
             const resources=[];
-            for(const p of paths){const r=await fetch(base+p+'?qa='+Date.now());assert.equal(r.status,200,p);const t=await r.text();assert(t.length>100,p);resources.push({path:p,status:r.status,bytes:t.length});}
+            for(const p of paths){let ok=null,last=0;for(let n=0;n<120;n++){const r=await fetch(base+p+'?qa='+Date.now()+'-'+n,{cache:'no-store'});last=r.status;if(r.status===200){const t=await r.text();if(t.length>100){ok={path:p,status:r.status,bytes:t.length};break;}}if(n%12===0)console.log('PUBLISH_WAIT',p,last,n);await new Promise(resolve=>setTimeout(resolve,5000));}assert(ok,'Pages did not publish '+p+'; last status '+last);resources.push(ok);}
             console.log('PUBLIC_RESOURCES_OK',JSON.stringify(resources));
             const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
             try{
