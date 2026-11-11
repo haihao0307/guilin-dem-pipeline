@@ -50,7 +50,8 @@ jobs:
         run: |
           ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r06"
           python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r06-http.log 2>&1 &
-          SITE_DIR="$ROOT" xvfb-run -a node "$ROOT/qa.mjs"
+          cp "$ROOT/qa.mjs" /tmp/knit-r06/qa.mjs
+          SITE_DIR="$ROOT" xvfb-run -a node /tmp/knit-r06/qa.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
