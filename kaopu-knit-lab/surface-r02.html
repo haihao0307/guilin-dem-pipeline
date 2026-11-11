@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="description" content="KAOPU-KNIT-SURFACE-R02.1-20261111"><link rel="icon" href="data:,"><title>针织 · KAOPU R02.1</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#202325;color:#eeeae2;font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}canvas{display:block;width:100%;height:100%;touch-action:none}header{position:absolute;top:22px;left:26px;right:26px;display:flex;align-items:center;justify-content:space-between;pointer-events:none;gap:16px}header>*{pointer-events:auto}.brand{font-size:12px;letter-spacing:3px;text-shadow:0 1px 8px #0009}.brand span{display:block;font-size:10px;letter-spacing:1px;opacity:.66;margin-top:3px}button{border:1px solid #ffffff25;color:inherit;font:inherit;font-size:12px;border-radius:20px;padding:8px 15px;background:#252728cc;backdrop-filter:blur(15px);cursor:pointer;white-space:nowrap}button:hover{background:#484942d9}button:focus-visible,input:focus-visible{outline:2px solid #eee1bb;outline-offset:3px}.active{background:#d9d0b8!important;color:#252725}.topactions{display:flex;gap:7px}nav{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:5px;padding:5px;border-radius:28px;border:1px solid #ffffff20;background:#202424c9;backdrop-filter:blur(14px)}nav button{border:0;background:none;padding:8px 14px}.help{position:absolute;left:26px;bottom:30px;font-size:10px;line-height:1.8;color:#e9e6dd;text-shadow:0 1px 8px #000;pointer-events:none;opacity:.75}#stats{position:absolute;right:26px;bottom:32px;font-size:10px;color:#e9e6dd;text-shadow:0 1px 8px #000;pointer-events:none;font-variant-numeric:tabular-nums}#loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:14px 24px;border-radius:18px;background:#222b;font-size:13px;max-width:80vw}#loading[hidden]{display:none}aside{display:none;position:absolute;right:22px;top:80px;bottom:85px;width:275px;overflow:auto;background:#222626ed;border:1px solid #ffffff20;border-radius:18px;padding:22px;backdrop-filter:blur(18px)}aside.open{display:block}h2{margin:0 0 18px;font-size:14px;font-weight:500}#close{float:right;border:0;background:none;padding:0 5px;font-size:18px}label{display:flex;justify-content:space-between;align-items:center;margin:17px 0 8px;font-size:11px;color:#c9cbc3}output{color:#e3dcc8;font-variant-numeric:tabular-nums}input[type=range]{width:100%;height:3px;accent-color:#d0c29f;display:block}input[type=checkbox]{accent-color:#d0c29f}.swatches{display:flex;gap:12px;padding:4px}.swatches button{width:27px;height:27px;padding:0;border-radius:50%;border:0}.swatches .selected{outline:1px solid #eee4ce;outline-offset:4px}#notes{position:absolute;display:none;left:25px;top:80px;width:min(390px,calc(100vw - 50px));padding:24px;background:#222626f2;border:1px solid #ffffff20;border-radius:18px;line-height:1.8}#notes.open{display:block}p{font-size:11px;color:#c0c4ba;margin:12px 0}a{color:#dfcfab}hr{border:0;border-top:1px solid #ffffff17;margin:22px 0}.mobile{display:none}@media(max-width:700px){header{top:17px;left:16px;right:16px}.brand{font-size:11px}.brand span{font-size:9px}.topactions button{padding:7px 11px;font-size:11px}nav{bottom:60px;gap:0;width:max-content;max-width:calc(100vw - 24px)}nav button{padding:8px 11px;font-size:11px}.help{left:16px;bottom:14px;font-size:9px}#stats{right:16px;bottom:17px;font-size:9px}aside{right:12px;top:72px;bottom:110px;width:258px}.desktop{display:none}.mobile{display:inline}}
+</style></head><body><canvas id="stage" aria-label="可旋转与平移的三维针织布面"></canvas><header><div class="brand">KAOPU / KNIT<span id="version">R02.1 · 无限布面</span></div><div class="topactions"><button id="natural" class="active">自然变化</button><button id="controls">控制</button><button id="info" aria-label="实现说明">i</button></div></header><div id="loading">正在编译纱线着色器…</div><nav aria-label="布面操作"><button id="surface">布面</button><button id="macro">微距</button><button id="top">俯视</button><button id="light">追光</button><button id="move">暂停移动</button></nav><div class="help"><span class="desktop">拖动调角度 · 滚轮缩放<br>Shift + 拖动 / 方向键平移</span><span class="mobile">单指调角度 · 双指缩放</span></div><div id="stats">准备中</div><aside id="panel"><button id="close" aria-label="关闭控制">×</button><h2>纱线与光</h2><div class="swatches"><button class="selected" data-color="0" style="background:#c6b18c" aria-label="燕麦"></button><button data-color="1" style="background:#dedbcc" aria-label="米白"></button><button data-color="2" style="background:#819b8c" aria-label="鼠尾草"></button><button data-color="3" style="background:#546d81" aria-label="蓝灰"></button><button data-color="4" style="background:#a15d4f" aria-label="砖红"></button></div>
+<label for="pitch">视角倾斜<output id="pitchValue">37</output></label><input id="pitch" type="range" min="5" max="58" step="1" value="37">
+<label for="lightAz">光源方位<output id="lightAzValue">-68</output></label><input id="lightAz" type="range" min="-180" max="180" step="1" value="-68">
+<label for="lightEl">光源高度<output id="lightElValue">49</output></label><input id="lightEl" type="range" min="18" max="85" step="1" value="49">
+<label for="fuzz">短绒伸出<output id="fuzzValue">1</output></label><input id="fuzz" type="range" min="0" max="2" step=".1" value="1">
+<label for="twist">纱线捻合<output id="twistValue">2</output></label><input id="twist" type="range" min="1" max="5" step="1" value="2">
+<label for="loft">纱线蓬松<output id="loftValue">1</output></label><input id="loft" type="range" min=".85" max="1.12" step=".03" value="1">
+<label for="exposure">曝光<output id="exposureValue">1.15</output></label><input id="exposure" type="range" min=".65" max="1.6" step=".05" value="1.15">
+<label for="speed">移动速度<output id="speedValue">.16</output></label><input id="speed" type="range" min=".02" max=".6" step=".02" value=".16">
+<label for="quality">渲染采样倍率<output id="qualityValue">1.5</output></label><input id="quality" type="range" min="1" max="2" step=".25" value="1.5">
+<label for="shadow">纱线自阴影<input id="shadow" type="checkbox" checked></label><hr><p>三维纱线、表面纤维和短绒共享数学模板，只绘制镜头范围。采样倍率改变像素分辨率，不切换网格档位。</p></aside><section id="notes"><h2>针织布面 · R02.1</h2><p>这一页只研究无限延展的布面，不含整件衣服。针目周期连续铺开；“自然变化”改变逐针染色和短绒，不声称数学上全局不重复。</p><p>主纱采用连续三股截面；每针生成 180 条表面纤维和 140 根短绒。表面由空间曲线求交形成，不是毛衣照片、预渲染视频或平面图像。</p><p>参考：<a href="https://www.behance.net/gallery/126769995/Knitting-experiment-in-Houdini" target="_blank" rel="noopener">Yongji Chen 的 Houdini 针织研究</a>；无限浏览的交互目标来自你指定的 <a href="https://fragcoord.xyz/s/t0lzula9" target="_blank" rel="noopener">FragCoord 页面</a>。该页面的作品源码未读取成功，没有冒称移植其代码。</p><p>这是视觉候选，尚未通过一比一参考验收；没有纱线物理、自碰撞或制造拓扑验证。软件图形后端默认静止。帧耗时按完成的画面记录，不能代表你的显卡性能。</p></section>
+<script type="x-shader/x-glsl" id="shader-common">
+precision highp float;
+precision highp int;
+precision highp usampler3D;
+precision highp sampler2D;
+uniform vec2 uRes;
+uniform vec3 uEye,uRight,uUp,uForward,uLight,uTint;
+uniform mat4 uVP;
+uniform float uTan,uLoft,uFuzz,uTwist,uExposure,uNatural,uShadow,uRelief,uFootprint;
+uniform usampler3D uGrid;
+uniform sampler2D uCurve;
+const float PI=3.14159265359,TAU=6.28318530718,R=.170;
+const int NS=80;
+const float COURSE=.36;
+const int ROWS=5;
+float hash(float n){return fract(sin(n*127.1+311.7)*43758.5453123);}
+float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(dot(i,vec2(1,157))),hash(dot(i+vec2(1,0),vec2(1,157))),f.x),mix(hash(dot(i+vec2(0,1),vec2(1,157))),hash(dot(i+1.,vec2(1,157))),f.x),f.y);}
+float heightAt(vec2 p){return uRelief*(.13*sin(p.x*.28+p.y*.11)+.09*cos(p.y*.31-p.x*.09));}
+vec3 flatten(vec3 p){return vec3(p.xy,p.z-heightAt(p.xy));}
+vec3 curvedNormal(vec3 n,vec2 xy){float hx=uRelief*(.0364*cos(xy.x*.28+xy.y*.11)+.0081*sin(xy.y*.31-xy.x*.09));float hy=uRelief*(.0143*cos(xy.x*.28+xy.y*.11)-.0279*sin(xy.y*.31-xy.x*.09));return normalize(vec3(n.xy-n.z*vec2(hx,hy),n.z));}
+uvec4 field(vec3 p){ivec3 sz=textureSize(uGrid,0);vec3 uv=vec3(fract(p.x),fract(p.y/COURSE),clamp((p.z+.43)/.96,0.,.999999));return texelFetch(uGrid,clamp(ivec3(uv*vec3(sz)),ivec3(0),sz-1),0);}
+float bound(vec3 p){if(p.z>.53)return p.z-.51;if(p.z<-.43)return -.40-p.z;return max(0.,float(field(p).z)/65535.-.202-.018);}
+void segment(vec3 q,int id,inout float best,inout vec3 T,inout vec3 N,inout float arc,inout vec2 cell){
+ int row=id/NS,j=id%NS;vec4 a=texelFetch(uCurve,ivec2(j,row),0),b=texelFetch(uCurve,ivec2(j+1,row),0);vec3 before=texelFetch(uCurve,ivec2(max(0,j-1),row),0).xyz,after=texelFetch(uCurve,ivec2(min(NS,j+2),row),0).xyz;
+ if(j==0)before=texelFetch(uCurve,ivec2(NS-1,row),0).xyz-vec3(1,0,0);if(j==NS-1)after=texelFetch(uCurve,ivec2(1,row),0).xyz+vec3(1,0,0);vec3 ab=b.xyz-a.xyz,m0=(b.xyz-before)*.5,m1=(after-a.xyz)*.5;float h=clamp(dot(q-a.xyz,ab)/max(dot(ab,ab),1e-10),0.,1.);vec3 cp,dt;
+ for(int it=0;it<2;it++){float h2=h*h,h3=h2*h;cp=(2.*h3-3.*h2+1.)*a.xyz+(h3-2.*h2+h)*m0+(-2.*h3+3.*h2)*b.xyz+(h3-h2)*m1;dt=(6.*h2-6.*h)*a.xyz+(3.*h2-4.*h+1.)*m0+(-6.*h2+6.*h)*b.xyz+(3.*h2-2.*h)*m1;h=clamp(h-dot(cp-q,dt)/max(dot(dt,dt),1e-10),0.,1.);}
+ float h2=h*h,h3=h2*h;cp=(2.*h3-3.*h2+1.)*a.xyz+(h3-2.*h2+h)*m0+(-2.*h3+3.*h2)*b.xyz+(h3-h2)*m1;dt=(6.*h2-6.*h)*a.xyz+(3.*h2-4.*h+1.)*m0+(-6.*h2+6.*h)*b.xyz+(3.*h2-2.*h)*m1;
+ vec3 d=q-cp;float dd=dot(d,d);if(dd<best){best=dd;T=normalize(dt);N=d/max(sqrt(dd),1e-8);arc=mix(a.w,b.w,h);cell=vec2(float(row/ROWS-1),float(row%ROWS-2));}}
+float yarnCross(float rho,vec3 T,inout vec3 N,float arc,vec2 cell,out vec3 FT,out float grain){
+ vec3 B=normalize(cross(T,vec3(0,0,1))),A=cross(B,T);vec2 q=vec2(dot(N,A),dot(N,B))*rho;float phase=uTwist*TAU*(arc+cell.x);float co=cos(phase),si=sin(phase);mat2 rot=mat2(co,-si,si,co);vec2 qr=rot*q;float best=1e3;vec2 nn=vec2(1,0),chosen=vec2(0);grain=1.;
+ for(int ply=0;ply<3;ply++){float ang=float(ply)*TAU/3.;vec2 pc=vec2(cos(ang),sin(ang))*.054*uLoft;vec2 v=qr-pc;float r=.116*uLoft;float d=length(v)-r;if(d<best){best=d;nn=normalize(v);chosen=pc+nn*r;}}
+ vec2 nw=transpose(rot)*nn;N=normalize(nw.x*A+nw.y*B);vec2 fc=transpose(rot)*chosen;FT=normalize(T+(A*(-fc.y)+B*fc.x)*uTwist*2.2);N=normalize(N-FT*dot(N,FT));return best;
+}
+float exact(vec3 p,out vec3 T,out vec3 N,out float arc,out vec2 cell){uvec4 f=field(p);vec3 q=vec3(fract(p.x),fract(p.y/COURSE)*COURSE,p.z);float best=1e8;T=vec3(1,0,0);N=vec3(0,0,1);arc=0.;cell=vec2(0);
+ for(int k=-1;k<=1;k++){int a=int(f.x),b=int(f.y);segment(q,a/NS*NS+clamp(a%NS+k,0,NS-1),best,T,N,arc,cell);segment(q,b/NS*NS+clamp(b%NS+k,0,NS-1),best,T,N,arc,cell);}
+ cell+=vec2(floor(p.x),floor(p.y/COURSE));vec3 FT;float grain;return yarnCross(sqrt(best),T,N,arc,cell,FT,grain);}
+float map(vec3 world){vec3 p=flatten(world);float d=bound(p);if(d>.035)return d;vec3 T,N;float s;vec2 c;return exact(p,T,N,s,c)*.86;}
+float visibility(vec3 pos,vec3 L){if(uShadow<.5)return 1.;float t=.027,res=1.;for(int i=0;i<35;i++){float d=map(pos+L*t);if(d<.001)return .10;res=min(res,7.*max(d,.0001)/t);t+=clamp(d,.012,.18);if(t>2.6)break;}return .10+.90*clamp(res,0.,1.);}
+vec3 tintAt(vec2 c){float n=noise2(c*.28);float fine=hash(dot(c,vec2(37.17,113.1)));float v=mix(1.,.88+.17*n+.09*fine,uNatural);return uTint*v;}
+vec3 linearLight(vec3 tint,vec3 N,vec3 T,vec3 V,float sh){vec3 L=normalize(uLight);float nl=max(dot(N,L),0.);float nv=max(dot(N,V),0.);vec3 H=normalize(L+V);float th=dot(T,H);float sheen=pow(max(0.,1.-nv),2.6)*(.28+.72*max(0.,dot(N,L)*.5+.5));float fibre=pow(max(0.,1.-th*th),13.)*.055;vec3 hemi=mix(vec3(.18,.155,.128),vec3(.60,.68,.80),N.z*.5+.5);return tint*(hemi*.48+vec3(1.22,1.09,.92)*nl*sh*.87)+sqrt(tint)*sheen*.10+sqrt(tint)*fibre*sh*nl;}
+vec3 displayColour(vec3 x){x*=uExposure;x=max(x,vec3(0));x=x/(1.+x*.34);return pow(clamp(x,0.,1.),vec3(1./2.2));}
+#ifndef VERTEX_STAGE
+vec3 rayDir(){vec2 q=(2.*gl_FragCoord.xy-uRes)/uRes.y;return normalize(uForward+uTan*(q.x*uRight+q.y*uUp));}
+#endif
+</script>
+<script type="x-shader/x-glsl" id="shader-mainVert">#version 300 es
+precision highp float;
+void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}
+</script>
+<script type="x-shader/x-glsl" id="shader-mainFrag">#version 300 es
+// COMMON
+out vec4 fragColor;
+void main(){vec3 rd=rayDir();float top=.90;float t=rd.z<-.0001?max(0.,(top-uEye.z)/rd.z):200.;bool hit=false;vec3 p;float d=1.;for(int i=0;i<170;i++){p=uEye+rd*t;d=map(p);if(d<.00022){hit=true;break;}t+=max(.00015,d*.65);if(t>180.||p.z<-.85)break;}
+ if(!hit){float a=max(0.,dot(rd,normalize(uLight)));vec3 back=vec3(.028,.033,.037)+.015*pow(a,4.);fragColor=vec4(displayColour(back),1);gl_FragDepth=1.;return;}
+ vec3 T,N;float arc;vec2 cell;vec3 localP=flatten(p);exact(localP,T,N,arc,cell);N=curvedNormal(N,p.xy);
+ float fleck=.91+.09*noise2(p.xy*140.+vec2(localP.z*63.));vec3 tint=tintAt(cell)*fleck;
+ float sh=visibility(p+N*.012,normalize(uLight));float cavity=.72+.28*smoothstep(-.17,.32,localP.z);vec3 col=linearLight(tint,N,T,-rd,sh)*cavity;float fog=1.-exp(-max(t-20.,0.)*.014);col=mix(col,vec3(.20,.215,.23),fog);fragColor=vec4(displayColour(col),1);vec4 clip=uVP*vec4(p,1);gl_FragDepth=clip.z/clip.w*.5+.5;}
+</script>
+<script type="x-shader/x-glsl" id="shader-fibreVert">#version 300 es
+#define VERTEX_STAGE
+// COMMON
+uniform sampler2D uStrands;
+uniform vec4 uCells;
+flat out vec3 vA,vB,vTint;
+flat out float vR,vAlpha;
+vec4 readData(int n){ivec2 size=textureSize(uStrands,0);return texelFetch(uStrands,ivec2(n%size.x,n/size.x),0);}
+void main(){int ix=gl_InstanceID%int(uCells.z),iy=gl_InstanceID/int(uCells.z);vec2 cell=uCells.xy+vec2(ix,iy);vec4 a=readData(gl_VertexID*3),b=readData(gl_VertexID*3+1);vec3 pa=a.xyz,pb=b.xyz;pa.xy+=vec2(cell.x,cell.y*COURSE);pb.xy+=vec2(cell.x,cell.y*COURSE);pa.z+=heightAt(pa.xy);pb.z+=heightAt(pb.xy);vA=pa;vB=pb;vR=a.w;vTint=tintAt(cell)*(.86+.23*hash(b.w*17.+cell.y*3.));vec3 mid=(pa+pb)*.5;vec4 clip=uVP*vec4(mid,1);vec3 face=readData(gl_VertexID*3+2).xyz;if(dot(face,normalize(uEye-mid))<-.28){gl_Position=vec4(2,2,2,1);gl_PointSize=1.;vAlpha=0.;return;}float rad=length(pb-pa)*.5+vR;float px=uRes.y/max(.01,clip.w)/uTan;gl_PointSize=clamp(2.*rad*px+3.,2.,256.);gl_Position=clip;vAlpha=clamp(vR*px*1.5,.05,1.);}
+</script>
+<script type="x-shader/x-glsl" id="shader-fibreFrag">#version 300 es
+// COMMON
+flat in vec3 vA,vB,vTint;
+flat in float vR,vAlpha;
+out vec4 fragColor;
+float cap(vec3 ro,vec3 rd,vec3 pa,vec3 pb,float ra){vec3 ba=pb-pa,oa=ro-pa;float baba=dot(ba,ba),bard=dot(ba,rd),baoa=dot(ba,oa),rdoa=dot(rd,oa),oaoa=dot(oa,oa);float a=baba-bard*bard,b=baba*rdoa-baoa*bard,c=baba*oaoa-baoa*baoa-ra*ra*baba,h=b*b-a*c;if(h>=0.&&abs(a)>1e-12){float t=(-b-sqrt(h))/a;float y=baoa+t*bard;if(y>0.&&y<baba&&t>0.)return t;}float result=1e6;for(int i=0;i<2;i++){vec3 oc=ro-(i==0?pa:pb);float b=dot(rd,oc),h=b*b-dot(oc,oc)+ra*ra;if(h>0.){float t=-b-sqrt(h);if(t>0.)result=min(result,t);}}return result;}
+void main(){vec3 rd=rayDir();float dist=length((vA+vB)*.5-uEye),pixel=2.*uTan*dist/uRes.y;float radius=max(vR,pixel*.48);float t=cap(uEye,rd,vA,vB,radius);if(t>1e5)discard;vec3 p=uEye+rd*t,T=normalize(vB-vA);vec3 q=vA+clamp(dot(p-vA,T),0.,length(vB-vA))*T;vec3 N=normalize(p-q);vec3 col=linearLight(vTint,N,T,-rd,.45+.55*smoothstep(-.11,.22,flatten(p).z));fragColor=vec4(displayColour(col),vAlpha*smoothstep(0.,.35,abs(dot(N,-rd))));vec4 clip=uVP*vec4(p,1);gl_FragDepth=clip.z/clip.w*.5+.5;}
+</script>
+<script type="x-shader/x-glsl" id="shader-hairVert">#version 300 es
+#define VERTEX_STAGE
+// COMMON
+uniform vec4 uCells;
+flat out vec3 vA,vB;
+flat out float vR,vAlpha;
+flat out vec3 vTint;
+vec3 hp(vec3 root,vec3 T,vec3 radial,vec3 side,float t,float len,float lift,float seed){float bend=sin(t*PI*.83)*lift;return root+T*(t-.1)*len+radial*((.116*uLoft*.98)+bend)+side*sin(t*PI)*lift*.4;}
+void main(){int ix=gl_InstanceID%int(uCells.z),iy=gl_InstanceID/int(uCells.z);vec2 cell=uCells.xy+vec2(ix,iy);int hair=gl_VertexID/3,k=gl_VertexID%3;float sd=float(hair)*17.17+31.;float nat=uNatural*hash(dot(cell,vec2(7.1,31.7)))*29.;float s=hash(sd+nat)*float(NS);int j=min(NS-1,int(s));vec4 a=texelFetch(uCurve,ivec2(j,7),0),b=texelFetch(uCurve,ivec2(j+1,7),0);vec3 T=normalize(b.xyz-a.xyz),B=normalize(cross(T,vec3(0,0,1))),A=cross(B,T),root=mix(a.xyz,b.xyz,fract(s));float ply=floor(hash(sd+8.)*3.);float theta=mix(a.w,b.w,fract(s))*uTwist*TAU+ply*TAU/3.;root+=(cos(theta)*A+sin(theta)*B)*.054*uLoft;float angle=hash(sd+3.+nat)*TAU;vec3 radial=cos(angle)*A+sin(angle)*B;float len=(.035+.15*pow(hash(sd+5.+nat),2.))*uFuzz;float lift=(.008+.05*pow(hash(sd+6.+nat),2.))*uFuzz;vec3 pa=hp(root,T,radial,B,float(k)/3.,len,lift,sd),pb=hp(root,T,radial,B,float(k+1)/3.,len,lift,sd);pa.xy+=vec2(cell.x,cell.y*COURSE);pb.xy+=vec2(cell.x,cell.y*COURSE);pa.z+=heightAt(pa.xy);pb.z+=heightAt(pb.xy);vA=pa;vB=pb;vR=.0011*(.65+.65*hash(sd+9.));vTint=tintAt(cell)*(.85+.25*hash(sd+11.));vec3 mid=(pa+pb)*.5;vec4 clip=uVP*vec4(mid,1);float rad=length(pb-pa)*.5+vR;float px=uRes.y/max(.01,clip.w)/uTan;gl_PointSize=clamp(2.*rad*px+3.,2.,256.);gl_Position=clip;vAlpha=clamp(vR*px*1.7,.06,1.);}
+</script>
+<script type="x-shader/x-glsl" id="shader-hairFrag">#version 300 es
+// COMMON
+flat in vec3 vA,vB,vTint;
+flat in float vR,vAlpha;
+out vec4 fragColor;
+float cap(vec3 ro,vec3 rd,vec3 pa,vec3 pb,float ra){vec3 ba=pb-pa,oa=ro-pa;float baba=dot(ba,ba),bard=dot(ba,rd),baoa=dot(ba,oa),rdoa=dot(rd,oa),oaoa=dot(oa,oa);float a=baba-bard*bard,b=baba*rdoa-baoa*bard,c=baba*oaoa-baoa*baoa-ra*ra*baba,h=b*b-a*c;if(h>=0.&&abs(a)>1e-12){float t=(-b-sqrt(h))/a;float y=baoa+t*bard;if(y>0.&&y<baba&&t>0.)return t;}float result=1e6;for(int i=0;i<2;i++){vec3 oc=ro-(i==0?pa:pb);float b=dot(rd,oc),h=b*b-dot(oc,oc)+ra*ra;if(h>0.){float t=-b-sqrt(h);if(t>0.)result=min(result,t);}}return result;}
+void main(){vec3 rd=rayDir();float dist=length((vA+vB)*.5-uEye),pixel=2.*uTan*dist/uRes.y;float radius=max(vR,pixel*.48);float t=cap(uEye,rd,vA,vB,radius);if(t>1e5)discard;vec3 p=uEye+rd*t,T=normalize(vB-vA);vec3 q=vA+clamp(dot(p-vA,T),0.,length(vB-vA))*T;vec3 N=normalize(p-q);vec3 col=linearLight(vTint,N,T,-rd,.76);fragColor=vec4(displayColour(col),min(.78,vAlpha)*smoothstep(0.,.35,abs(dot(N,-rd))));vec4 clip=uVP*vec4(p,1);gl_FragDepth=clip.z/clip.w*.5+.5;}
+</script>
+<script>const SHADERS={};for(const name of ['mainVert','mainFrag','fibreVert','fibreFrag','hairVert','hairFrag'])SHADERS[name]=document.getElementById('shader-'+name).textContent.trim().replace('// COMMON',document.getElementById('shader-common').textContent);</script>
+<script src="r02/runtime.js"></script></body></html>
