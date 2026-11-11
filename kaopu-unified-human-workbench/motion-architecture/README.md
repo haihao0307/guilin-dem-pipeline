@@ -134,3 +134,16 @@ node --test kaopu-unified-human-workbench/tests/motion-library-r02.test.mjs
 ```
 
 Tests cover delta round-trip error, category filtering, R41/R4E/Quaternius exclusion, shared skeletons and channels, parent/parameter/residual compression, planted-foot anchoring, and quaternion normalization.
+
+
+---
+
+# Motion Atlas R03 sample viewer and source import
+
+A source-backed playback page is available at `../motion-atlas-r03/index.html`. It loads the committed CMU 16_33 slow-walk source (285 frames, 31 joints, 120 Hz), provides play/pause, frame stepping, timeline, camera view, and a raw/three-tap-smoothed trajectory comparison.
+
+The measured sample is recorded in `../motion-atlas-r03/sample-evidence.json`. On this one source clip, the all-joint XYZ second-difference RMS falls from 30.5236 to 12.5899 under a three-tap binomial preview filter (58.75%). This is a source-data diagnostic, not evidence that all CMU/Mesh2Motion actions are fixed; it does not certify foot contact because this source JSON does not carry independently verified contact labels.
+
+`importPointTrackClip()` converts point-track source JSON into the compact action-channel contract. It requires an independently verified parent table and FPS; it deliberately refuses to guess missing skeleton hierarchy or sampling rate. This makes the CMU/Mesh2Motion ingestion path explicit without pretending the entire 2,689-action source bundle has been imported.
+
+The Atlas source package is still separate: previous publication records list 5,897 files / 1,491,756,714 bytes, with 87 uploaded chunks and the dedup report at `/assets/cmu/deduplication.json`. Those assets are not in this Git branch. The live site, exact three R41 action IDs, Mesh2Motion source frames, full import, and original-page runtime replacement remain outstanding.
