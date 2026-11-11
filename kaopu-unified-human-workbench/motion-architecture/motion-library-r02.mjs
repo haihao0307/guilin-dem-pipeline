@@ -122,7 +122,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     // The production library is intentionally limited to CMU and Mesh2Motion.
     // R41/R4E, Quaternius prototypes and unrelated source families never enter it.
     if(!source.startsWith('cmu')&&!source.startsWith('mesh2motion')) continue;
-    if(['r41','r4e'].some(tag=>source.startsWith(tag)||clipKey.startsWith(tag))) continue;
+    if(['r41','r4e'].some(tag=>source.includes(tag)||clipKey.includes(tag))) continue;
     assert(clip.skeleton&&Array.isArray(clip.skeleton.names)&&Array.isArray(clip.skeleton.parents)&&clip.skeleton.names.length>0&&clip.skeleton.names.length===clip.skeleton.parents.length,'valid clip skeleton required');
     assert(finite(clip.fps)&&clip.fps>0,'positive clip fps required');
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
