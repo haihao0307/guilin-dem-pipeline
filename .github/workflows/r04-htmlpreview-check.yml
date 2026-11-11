@@ -1,0 +1,48 @@
+name: R04 HTMLPreview Live Browser QA
+on:
+  push:
+    branches: [qa/r04-htmlpreview-20261111]
+    paths:
+      - 'research/real-knit-abcd-r04/**'
+      - 'research/display-quality/**'
+      - 'core/**'
+      - 'fixtures/local-knit-r03/**'
+      - '.github/workflows/r04-htmlpreview-check.yml'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --prefix /tmp/r04qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          /tmp/r04qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify raw sources and HTMLPreview browser rendering
+        env:
+          NODE_PATH: /tmp/r04qa/node_modules
+        run: |
+          node <<'NODE'
+          const {chromium}=require('playwright');const assert=require('node:assert/strict');
+          const raw='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+process.env.GITHUB_SHA+'/';
+          const preview='https://htmlpreview.github.io/?'+raw+'research/real-knit-abcd-r04/index.html';
+          const paths=['research/real-knit-abcd-r04/index.html','research/real-knit-abcd-r04/viewer.mjs','research/display-quality/InstanceSurfaceRendererR04.mjs','research/display-quality/SourceKnit.glsl','research/display-quality/SourceFibres.glsl','fixtures/local-knit-r03/p02-curve.mjs','fixtures/local-knit-r03/eb1.js'];
+          (async()=>{const resources=[];for(const p of paths){const r=await fetch(raw+p);assert.equal(r.status,200,p);const t=await r.text();assert(t.length>100,p);resources.push({path:p,bytes:t.length});}console.log('RAW_RESOURCES_OK',JSON.stringify(resources));
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+          try{const page=await browser.newPage({viewport:{width:800,height:600},deviceScaleFactor:1});page.setDefaultTimeout(240000);const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+          const response=await page.goto(preview,{waitUntil:'domcontentloaded',timeout:90000});assert(response.status()===200,'HTMLPreview status '+response.status());
+          await page.waitForFunction(()=>window.KNIT_R04?.ready||window.KNIT_R04?.error,null,{timeout:600000});
+          const state=await page.evaluate(()=>({ready:KNIT_R04.ready,error:KNIT_R04.error,stats:KNIT_R04.stats(),status:document.querySelector('#status')?.textContent}));assert(state.ready,'R04 frame failed: '+state.error);assert.equal(errors.length,0,errors.join(';'));
+          await page.screenshot({path:'r04-htmlpreview.png'});console.log('HTMLPREVIEW_LIVE_FRAME_OK',JSON.stringify({preview,state,errors}));}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r04-htmlpreview-live-browser-${{ github.sha }}
+          path: r04-htmlpreview.png
+          retention-days: 7
+          if-no-files-found: ignore
