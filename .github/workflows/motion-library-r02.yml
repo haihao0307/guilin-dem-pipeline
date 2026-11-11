@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/motion-architecture
+            kaopu-unified-human-workbench/tests
+          sparse-checkout-cone-mode: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
