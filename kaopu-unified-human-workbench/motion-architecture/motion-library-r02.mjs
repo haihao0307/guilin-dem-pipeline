@@ -117,10 +117,12 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     const id='sk-'+fnv1a(key); skeletonByKey.set(key,id); skeletonRegistry[id]={id,names:s.names,parents:s.parents,restFingerprint:s.restFingerprint??null};
   }
   for(const clip of clips){
-    const source=String(clip.source?.kind??clip.source??'').toLowerCase();
-    const clipKey=String(clip.id??'').toLowerCase();
-    // Exclude both the previous R41 label and the R4E label explicitly named in the current Atlas cleanup.
-    if(['r41','r4e'].some(tag=>source===tag||source.startsWith(tag+'-')||clipKey===tag||clipKey.startsWith(tag+'-'))) continue;
+    const source=String(clip.source?.kind??clip.source??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const clipKey=String(clip.id??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    // The production library is intentionally limited to CMU and Mesh2Motion.
+    // R41/R4E, Quaternius prototypes and unrelated source families never enter it.
+    if(!source.startsWith('cmu')&&!source.startsWith('mesh2motion')) continue;
+    if(['r41','r4e'].some(tag=>source.startsWith(tag)||clipKey.startsWith(tag))) continue;
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
     let skeletonId=skeletonByKey.get(skKey);
     if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
@@ -135,7 +137,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     if(familyVariant){
       family.variants.push({clipId:clip.id,encoding:familyVariant.encoding,channels:familyVariant.channels,
         savings:familyVariant.savings,savedBytes:familyVariant.savedBytes,maxObservedError:familyVariant.maxObservedError});
-      records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,frameCount,
+      records.push({id:clip.id,source:source.startsWith('cmu')?'CMU':'Mesh2Motion',category:source.startsWith('cmu')?'CMU':'Mesh2Motion',skeletonId,fps:clip.fps,frameCount,
         familyRef:familyId,variant:true});
     }else{
       for(const [name,frames] of Object.entries(channels)){
@@ -147,17 +149,26 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
         motionFamilies[familyId]={id:familyId,parentClipId:clip.id,skeletonId,fps:clip.fps,frameCount,
           parentChannels:channels,parentChannelRefs:{...channelRefs},variants:[]};
       }
-      records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,
+      records.push({id:clip.id,source:source.startsWith('cmu')?'CMU':'Mesh2Motion',category:source.startsWith('cmu')?'CMU':'Mesh2Motion',skeletonId,fps:clip.fps,
         frameCount,channels:channelRefs,familyParent:!family?familyId:undefined});
     }
   }
   const compactFamilies=Object.fromEntries(Object.entries(motionFamilies).map(([id,f])=>[id,{id,parentClipId:f.parentClipId,skeletonId:f.skeletonId,
     fps:f.fps,frameCount:f.frameCount,parentChannelRefs:f.parentChannelRefs,variants:f.variants}]));
-  return {schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),motionFamilies:compactFamilies,
-    stats:{clipCount:records.length,skeletonCount:Object.keys(skeletonRegistry).length,uniqueChannelCount:payloadByKey.size,
-      familyCount:Object.keys(compactFamilies).length,parameterizedClipCount:records.filter(r=>r.variant).length,
-      encodedBytes:Object.values(payloadByKey).reduce((n,p)=>n+p.data.length*3/4,0),
-      parameterizedSavingsBytes:Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+(v.savedBytes??0),0),0)}};
+  const libraryCore={schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),motionFamilies:compactFamilies};
+  const byteLength=value=>typeof TextEncoder!=='undefined'?new TextEncoder().encode(value).byteLength:value.length;
+  const encodedBytes=byteLength(JSON.stringify(libraryCore));
+  const rawMotionRecords=clips.filter(clip=>{
+    const s=String(clip.source?.kind??clip.source??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    return s.startsWith('cmu')||s.startsWith('mesh2motion');
+  }).map(clip=>({id:clip.id,source:clip.source?.kind??clip.source,fps:clip.fps,frameCount:clip.frameCount,
+    skeleton:clip.skeleton,channels:clip.channels}));
+  const sourceBytes=byteLength(JSON.stringify(rawMotionRecords));
+  const parameterizedSavingsBytes=Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+(v.savedBytes??0),0),0);
+  return {...libraryCore,stats:{clipCount:records.length,skeletonCount:Object.keys(skeletonRegistry).length,uniqueChannelCount:payloadByKey.size,
+    familyCount:Object.keys(compactFamilies).length,parameterizedClipCount:records.filter(r=>r.variant).length,
+    sourceBytes,encodedBytes,bytesSaved:sourceBytes-encodedBytes,compressionRatio:sourceBytes?encodedBytes/sourceBytes:1,
+    parameterizedSavingsBytes}};
 }
 export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,derivativeCutoff=1,contactMask=null}={}) {
   const {width}=flattenFrames(frames); assert(width===3,'vector track must contain XYZ');
