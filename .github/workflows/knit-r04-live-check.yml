@@ -1,0 +1,56 @@
+name: R04 Original Knit Public Browser QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'research/real-knit-abcd-r04/**'
+      - 'research/display-quality/**'
+      - 'core/**'
+      - 'fixtures/local-knit-r03/**'
+      - '.github/workflows/knit-r04-live-check.yml'
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser verifier
+        run: |
+          npm install --prefix /tmp/r04qa --no-save --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          /tmp/r04qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify published source and real browser frame
+        env:
+          NODE_PATH: /tmp/r04qa/node_modules
+        run: |
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          const base='https://haihao0307.github.io/guilin-dem-pipeline/';
+          const paths=['research/real-knit-abcd-r04/index.html','research/real-knit-abcd-r04/viewer.mjs','research/display-quality/InstanceSurfaceRendererR04.mjs','research/display-quality/SourceKnit.glsl','research/display-quality/SourceFibres.glsl','fixtures/local-knit-r03/p02-curve.mjs','fixtures/local-knit-r03/eb1.js'];
+          (async()=>{
+            const resources=[];
+            for(const p of paths){const r=await fetch(base+p+'?qa='+Date.now());assert.equal(r.status,200,p);const t=await r.text();assert(t.length>100,p);resources.push({path:p,status:r.status,bytes:t.length});}
+            console.log('PUBLIC_RESOURCES_OK',JSON.stringify(resources));
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            try{
+              const page=await browser.newPage({viewport:{width:800,height:600},deviceScaleFactor:1});page.setDefaultTimeout(240000);
+              const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+              const response=await page.goto(base+'research/real-knit-abcd-r04/',{waitUntil:'domcontentloaded',timeout:90000});assert.equal(response.status(),200);
+              await page.waitForFunction(()=>window.KNIT_R04?.ready||window.KNIT_R04?.error,null,{timeout:600000});
+              const state=await page.evaluate(()=>({ready:KNIT_R04.ready,error:KNIT_R04.error,stats:KNIT_R04.stats(),status:document.querySelector('#status').textContent}));
+              assert(state.ready,'R04 first live frame did not complete: '+state.error);assert.equal(state.error,null);assert.equal(errors.length,0,errors.join(';'));
+              await page.screenshot({path:'r04-public-browser.png'});console.log('PUBLIC_LIVE_FRAME_OK',JSON.stringify({state,errors}));
+            }finally{await browser.close();}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r04-original-knit-public-browser-${{ github.sha }}
+          path: r04-public-browser.png
+          retention-days: 7
+          if-no-files-found: ignore
