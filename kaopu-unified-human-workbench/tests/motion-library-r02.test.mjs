@@ -93,3 +93,14 @@ test('output contains only action records and CMU/Mesh2Motion categories',()=>{
  assert.ok(!JSON.stringify(db).includes('Quaternius'));
  assert.ok(db.stats.encodedBytes>0&&db.stats.inputActionBytes>0);
 });
+
+test('unused skeletons and unrelated metadata do not leak into the compact catalogue',()=>{
+ const used={names:['root'],parents:[-1],restFingerprint:'used'};
+ const unused={names:['unused-root','unused-arm'],parents:[-1,0],restFingerprint:'unused'};
+ const db=buildCompactMotionLibrary({skeletons:[unused],clips:[
+  {id:'cmu-only',source:'CMU',skeleton:used,fps:30,channels:{root:[[0,0,0],[1,0,0]]},thumbnail:'not-in-output'}
+ ]});
+ assert.equal(db.stats.skeletonCount,1);
+ assert.ok(!JSON.stringify(db).includes('unused-root'));
+ assert.ok(!JSON.stringify(db).includes('not-in-output'));
+});
