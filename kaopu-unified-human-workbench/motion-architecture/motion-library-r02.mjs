@@ -36,7 +36,9 @@ export function encodeDeltaChannel(frames,{maxError=0.00005}={}) {
   let maxDelta=0;
   for(let f=1;f<count;f++) for(let j=0;j<width;j++) maxDelta=Math.max(maxDelta,Math.abs(frames[f][j]-frames[f-1][j]));
   const scale=maxDelta===0?1:maxDelta/32767;
-  const useInt16=scale*0.5<=maxError;
+  // Quantization error accumulates when deltas are reconstructed sequentially.
+  // Use Int16 only when the worst-case cumulative bound stays within maxError.
+  const useInt16=scale*0.5*(count-1)<=maxError;
   const raw=useInt16?new Int16Array((count-1)*width):new Float32Array((count-1)*width);
   let p=0;
   for(let f=1;f<count;f++) for(let j=0;j<width;j++){
@@ -99,6 +101,15 @@ export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,deriv
     }
     if(contactMask?.[i]) { const anchor=out[i-1]; row[0]=anchor[0];row[2]=anchor[2]; }
     out.push(row);prev=row;
+  }
+  // Remove low-frequency endpoint drift introduced by causal filtering without
+  // changing the first or final sample; this keeps clip root displacement intact.
+  if(out.length>1){
+    const last=out.length-1;
+    for(let j=0;j<3;j++){
+      const correction=frames[last][j]-out[last][j];
+      for(let i=1;i<=last;i++) out[i][j]+=correction*(i/last);
+    }
   }
   return out;
 }
