@@ -16,6 +16,8 @@ test('shared skeletons and identical channels are stored once; R4E and R41 clips
   {id:'cmu-1',source:'cmu',skeleton,fps:120,channels},
   {id:'mesh-1',source:'mesh2motion',skeleton,fps:30,channels},
   {id:'r41-walk',source:'r41',skeleton,fps:30,channels},
+  {id:'r41-turn',source:'r41',skeleton,fps:30,channels},
+  {id:'r41-idle',source:'R41',skeleton,fps:30,channels},
   {id:'r4e-run',source:'R4E',skeleton,fps:30,channels}
  ]});
  assert.equal(db.clips.length,2);assert.equal(db.stats.skeletonCount,1);assert.equal(db.stats.uniqueChannelCount,1);
