@@ -1,0 +1,116 @@
+{
+  "schema": "kaopu.learning-flywheel-result/1",
+  "runId": "N270",
+  "recordedAt": "2026-11-11T11:43:06+08:00",
+  "scope": "institutional_problem_with_external_primary_evidence",
+  "boundedQuestion": "What minimum receipt allows a Fab item to be studied as a method, incorporated into a KAOPU WebGPU project, or rejected from public redistribution without treating Free price as permission?",
+  "canonicalReadSet": {
+    "mainSha": "e43e84a9c84ca2bad3c8a2ae52627c5a1c5b9d02",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "motherProductionOsR2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "referenceReplicationGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "freshnessGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "issue91LatestCommentIdBeforeRun": 6782463184,
+    "issue63LatestCommentId": 5910449798
+  },
+  "freshnessObservation": {
+    "mainChangedSinceN269": false,
+    "newMotherReceiptSinceN269": false,
+    "n269LifecycleRemains": "POSTED_NOT_ACKNOWLEDGED"
+  },
+  "currentProductionEvidence": {
+    "listings": [
+      {
+        "id": "880e319a-a59e-4ed2-b268-b32dac7fa016",
+        "title": "Game Animation Sample",
+        "state": "FREE_LISTING_EXACT_LICENSE_UNBOUND"
+      },
+      {
+        "id": "4c1f2eee-3004-4466-8c86-796e2e94d562",
+        "title": "ML Deformer Sample",
+        "state": "FREE_LISTING_EXACT_LICENSE_UNBOUND"
+      },
+      {
+        "id": "783058bc-1afc-472a-96b1-289ad13c6aa9",
+        "title": "[Free] Procedural Building Generator",
+        "state": "FREE_LISTING_EXACT_LICENSE_UNBOUND"
+      }
+    ],
+    "sharedObservation": "All three official listing pages show Free, Unreal Engine format and Allows usage with AI: No, while the crawled License terms field is blank. This does not prove that no license exists; it leaves the exact listing license and acquisition receipt unbound in this run."
+  },
+  "externalEvidence": {
+    "sources": [
+      {
+        "ref": "turn363view3",
+        "url": "https://www.fab.com/eula?lang=en",
+        "fact": "Fab Standard allows modification and use with compatible tools, and Project distribution with incorporated assets, but prohibits standalone asset redistribution."
+      },
+      {
+        "ref": "turn363view4",
+        "url": "https://dev.epicgames.com/documentation/fab/licenses-and-pricing-in-fab",
+        "fact": "Fab offers CC-BY and Standard; Standard can be free or paid; Reference-Only and legacy UE Marketplace terms are distinct."
+      },
+      {
+        "ref": "turn364search2",
+        "url": "https://dev.epicgames.com/documentation/fab/purchasing-and-downloading-assets-in-fab",
+        "fact": "A free Standard product is acquired by accepting the applicable EULA."
+      }
+    ],
+    "teacherAudition": "NOT_RUN_THIS_ROUND"
+  },
+  "currentBestView": {
+    "existingCoverage": [
+      "R2 and the reference gate require provenance and source-to-change mapping.",
+      "N263/N265 fail closed on missing or dangling source/license pointers."
+    ],
+    "gap": "No applicable regression found that separates free price, exact license/acquisition identity, method-only study, project incorporation and standalone redistribution.",
+    "regressionAction": "CREATE_DEDUPED_CANDIDATE"
+  },
+  "falsifiableHypothesis": {
+    "statement": "Binding exact listing/publisher identity, exact license type/tier/terms, acquisition receipt, intended AI use, project-incorporation boundary, public source exposure and attribution will allow method-only study and rights-bound project use while rejecting unbound license, Reference-Only source conversion, NoAI training, missing CC-BY attribution and standalone redistribution.",
+    "falsifier": "A real acquisition/publication trial shows the receipt rejects a clearly permitted project use, permits raw standalone redistribution, or adds no discrimination beyond an existing exact rights receipt."
+  },
+  "candidate": {
+    "regressionId": "FREE-ASSET-LICENSE-NOT-REDISTRIBUTION-001",
+    "institutionalIncrement": "EXTERNAL_ASSET_RIGHTS_AND_DISTRIBUTION_RECEIPT_CANDIDATE",
+    "osChangeRequired": false,
+    "globalAdoption": false
+  },
+  "probe": {
+    "runtime": "Node v24.22.1 CPU synthetic replay",
+    "fixtureCount": 13,
+    "result": "13/13 assertions PASS",
+    "probeSha256": "0b6cb1abae913027aa57121a9121368174508a738abf3f34765711a2fcf00ba5",
+    "probeResultSha256": "5adc40d84ead9914cbeac2541cf7fcf80da4d0e665cf3b6ba699669b8e94ae61",
+    "candidateSha256": "ad86a855ebdce933433fe36ea505bba7254b2de25978066598c9509df29ea23f",
+    "limitation": "Synthetic policy-state discrimination only; no Fab account transaction, download, legal determination, production incorporation, public repository audit or browser/device run."
+  },
+  "decision": {
+    "status": "CANDIDATE_IMPLEMENTED_SYNTHETIC_GATE_RUN",
+    "methodStudy": "PASS_METHOD_OBSERVATION_ONLY when no asset bytes/media are copied, supplied to a model, incorporated or distributed.",
+    "currentThreeListingUse": "HOLD_LICENSE_IDENTITY_UNBOUND until exact license and acquisition receipt are bound.",
+    "nextTrial": "One affected Mother should bind one exact Fab acquisition, keep raw licensed content private, publish only an incorporated project output, and let an independent verifier inspect the public manifest, attribution and extraction/standalone boundary.",
+    "productionStatus": "UNKNOWN"
+  },
+  "routing": {
+    "target": "Asset Intake plus affected Animation, Humanoid and Architecture owners via issue 91",
+    "status": "NOT_POSTED"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": true,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
