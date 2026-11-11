@@ -91,5 +91,5 @@ test('output contains only action records and CMU/Mesh2Motion categories',()=>{
  assert.ok(!JSON.stringify(db).includes('ignored.mp4'));
  assert.ok(!JSON.stringify(db).includes('ignored.png'));
  assert.ok(!JSON.stringify(db).includes('Quaternius'));
- assert.ok(db.stats.encodedBytes>0&&db.stats.sourceBytes>0);
+ assert.ok(db.stats.encodedBytes>0&&db.stats.inputActionBytes>0);
 });
