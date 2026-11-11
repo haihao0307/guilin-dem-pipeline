@@ -1,0 +1,125 @@
+{
+  "schema": "kaopu.fab-asset-rights-distribution-gate/1",
+  "runtime": "v24.22.1",
+  "fixtureCount": 13,
+  "passed": true,
+  "results": [
+    {
+      "id": "method_observation_without_copying_content",
+      "expected": "PASS_METHOD_OBSERVATION_ONLY",
+      "observed": {
+        "pass": true,
+        "state": "PASS_METHOD_OBSERVATION_ONLY"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "free_price_does_not_bind_license_type",
+      "expected": "HOLD_LICENSE_IDENTITY_UNBOUND",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_LICENSE_IDENTITY_UNBOUND"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "standard_license_without_acquisition_receipt",
+      "expected": "HOLD_LICENSE_ACQUISITION_UNBOUND",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_LICENSE_ACQUISITION_UNBOUND"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "standard_asset_incorporated_into_project",
+      "expected": "PASS_RIGHTS_BOUND_PROJECT_USE_CANDIDATE",
+      "observed": {
+        "pass": true,
+        "state": "PASS_RIGHTS_BOUND_PROJECT_USE_CANDIDATE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "standard_raw_asset_republished_as_download",
+      "expected": "HOLD_STANDALONE_ASSET_REDISTRIBUTION",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_STANDALONE_ASSET_REDISTRIBUTION"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "public_project_without_incorporation_boundary",
+      "expected": "HOLD_PROJECT_INCORPORATION_BOUNDARY_UNPROVEN",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_PROJECT_INCORPORATION_BOUNDARY_UNPROVEN"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "reference_only_tier_requested_as_source",
+      "expected": "HOLD_REFERENCE_ONLY_SOURCE_RIGHTS_ABSENT",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_REFERENCE_ONLY_SOURCE_RIGHTS_ABSENT"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "cc_by_without_attribution",
+      "expected": "HOLD_CC_BY_ATTRIBUTION_MISSING",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_CC_BY_ATTRIBUTION_MISSING"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "cc_by_with_attribution",
+      "expected": "PASS_RIGHTS_BOUND_PROJECT_USE_CANDIDATE",
+      "observed": {
+        "pass": true,
+        "state": "PASS_RIGHTS_BOUND_PROJECT_USE_CANDIDATE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "legacy_marketplace_terms_not_bound",
+      "expected": "HOLD_LEGACY_LICENSE_TERMS_UNRESOLVED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_LEGACY_LICENSE_TERMS_UNRESOLVED"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "noai_content_used_for_training",
+      "expected": "HOLD_NOAI_TRAINING_USE",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_NOAI_TRAINING_USE"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "noai_asset_media_supplied_to_unclassified_inference",
+      "expected": "HOLD_NOAI_INFERENCE_SCOPE_UNRESOLVED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_NOAI_INFERENCE_SCOPE_UNRESOLVED"
+      },
+      "assertionPass": true
+    },
+    {
+      "id": "raw_licensed_content_committed_to_public_source_repo",
+      "expected": "HOLD_RAW_LICENSED_CONTENT_PUBLICLY_EXPOSED",
+      "observed": {
+        "pass": false,
+        "state": "HOLD_RAW_LICENSED_CONTENT_PUBLICLY_EXPOSED"
+      },
+      "assertionPass": true
+    }
+  ]
+}
