@@ -1,0 +1,103 @@
+{
+  "id": "CANDIDATE_USER_VISIBLE_PROVENANCE_NOT_HIDDEN_001",
+  "title": "Third-party provenance retained in source but hidden from the rendered delivery surface",
+  "status": "CANDIDATE",
+  "scope": "single-Mother audition; Weather R49-R51 exact subjects",
+  "createdAt": "2026-11-11",
+  "problem": "A candidate can retain copyright and license notices in source while removing the only rendered teacher/reference disclosure, allowing the user-facing surface to imply sole project authorship or independent implementation.",
+  "distinctFrom": [
+    "DECLARED_SOURCE_CLOSURE: source paths may exist and still be truthfully hidden from the rendered claim layer.",
+    "UNAUTHORIZED_CREATIVE_SUBSTITUTE: this case concerns provenance disclosure, not whether geometry or appearance was invented.",
+    "FREE_ASSET_LICENSE_NOT_REDISTRIBUTION: this case does not decide acquisition or redistribution rights; it verifies cross-layer claim consistency."
+  ],
+  "taskAnchorFields": [
+    "thirdPartyMaterialPresent",
+    "exactSourceIdentity",
+    "licenseIdentity",
+    "modificationStatus",
+    "requiredUserVisibleProvenance",
+    "allowedDisclosureLocation",
+    "deliverySurface"
+  ],
+  "deliveryReceiptFields": [
+    "sourceNoticeRetained",
+    "userVisibleProvenance",
+    "userVisibleProvenanceLink",
+    "linkTargetDigest",
+    "linkTargetContainsRequiredAttribution",
+    "renderedClaimIdentity",
+    "sourceTruthIdentity",
+    "renderedSourceTruthMatch"
+  ],
+  "gate": {
+    "pass": [
+      "No third-party material is present and exact source identity proves independent work.",
+      "Third-party material is present and the rendered surface states teacher/reference status.",
+      "A compact rendered surface provides a visible, working link to an attribution/source panel bound by digest."
+    ],
+    "hold": [
+      "HOLD_SOURCE_NOTICE_MISSING",
+      "HOLD_SOURCE_IDENTITY_UNBOUND",
+      "HOLD_MODIFICATION_STATUS_UNDECLARED",
+      "HOLD_USER_VISIBLE_PROVENANCE_HIDDEN",
+      "HOLD_RENDERED_CLAIM_SOURCE_TRUTH_MISMATCH"
+    ],
+    "rule": "Source comments and README provenance are necessary but cannot by themselves authorize a rendered claim that hides teacher/reference status. UI disclosure need not be verbose: a visible source/about link is sufficient when it resolves to complete bound attribution."
+  },
+  "exactReplay": {
+    "r49": {
+      "commit": "240e8007ed764cd3cbbea8922b69fb5814022bed",
+      "pinkBlob": "d29e8d0263715c8e1bea03234d8ede95c2e08c3c",
+      "interactiveBlob": "f23203390b08fda5b67b5b752a1bf5b5cb63469c",
+      "renderedDisclosure": "拖动观察 · 原作参考",
+      "verdict": "PASS_PROVENANCE_DISCLOSURE_BOUND"
+    },
+    "r50": {
+      "commit": "e3d5c67a655260f80cf2b8c90f0be188fb65a3ee",
+      "pinkBlob": "7daab5928fc6db5aba3ea993973bd7f7d8a229a6",
+      "interactiveBlob": "d226612e47a2d0d602cdeb20775d2a3baaa0aa8b",
+      "sourceNoticesRetained": true,
+      "renderedDisclosureRemoved": true,
+      "verdict": "HOLD_USER_VISIBLE_PROVENANCE_HIDDEN"
+    },
+    "r51": {
+      "commit": "0b574765e7a87158d01018711d53834a5ad97d65",
+      "tinyBlob": "0914f2353507e8337638c12b4008f8432ca47f70",
+      "removedRenderedIdentity": [
+        "WEATHER MOTHER / TEACHER REPLICA",
+        "TINY CLOUDS / lsBfDz"
+      ],
+      "hiddenControl": "老师原式",
+      "sourceAndReadmeNoticesRetained": true,
+      "verdict": "HOLD_RENDERED_CLAIM_SOURCE_TRUTH_MISMATCH"
+    }
+  },
+  "externalEvidence": [
+    {
+      "source": "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.en",
+      "use": "CC BY-NC-SA 4.0 section 3(a): retain creator/copyright/license/disclaimer/source URI where supplied, indicate modifications, and satisfy in a reasonable manner for the medium/context."
+    },
+    {
+      "source": "https://wiki.creativecommons.org/wiki/Best_practices_for_attribution",
+      "use": "Creative Commons recommends Title/Author/Source/License and accessible links."
+    },
+    {
+      "source": "https://opensource.org/license/mit",
+      "use": "MIT requires copyright and permission notice in copies or substantial portions; this candidate does not claim that MIT itself mandates visible UI attribution."
+    }
+  ],
+  "boundaries": [
+    "This is an operational truth/provenance gate, not a legal opinion.",
+    "It does not decide whether source-only attribution is legally sufficient in every medium.",
+    "It does not reject R50/R51 rendering quality or source modifications.",
+    "No production Mother, main, R2, global gate or public route is modified."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate probe only",
+    "GATE-RUN": "synthetic plus exact-source history replay",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
