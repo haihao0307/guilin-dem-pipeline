@@ -9,13 +9,14 @@ test('delta channel round-trips within declared error',()=>{
  let max=0;for(let i=0;i<src.length;i++)for(let j=0;j<3;j++)max=Math.max(max,Math.abs(src[i][j]-dst[i][j]));
  assert.ok(max<=p.maxErrorBound+1e-6);
 });
-test('shared skeletons and identical channels are stored once; R41 clips are excluded',()=>{
+test('shared skeletons and identical channels are stored once; R4E and R41 clips are excluded',()=>{
  const skeleton={names:['root','hip'],parents:[-1,0],restFingerprint:'rest-a'};
  const channels={root:Array.from({length:5},(_,i)=>[i*.01,0,0])};
  const db=buildCompactMotionLibrary({clips:[
   {id:'cmu-1',source:'cmu',skeleton,fps:120,channels},
   {id:'mesh-1',source:'mesh2motion',skeleton,fps:30,channels},
-  {id:'r41-walk',source:'r41',skeleton,fps:30,channels}
+  {id:'r41-walk',source:'r41',skeleton,fps:30,channels},
+  {id:'r4e-run',source:'R4E',skeleton,fps:30,channels}
  ]});
  assert.equal(db.clips.length,2);assert.equal(db.stats.skeletonCount,1);assert.equal(db.stats.uniqueChannelCount,1);
 });
