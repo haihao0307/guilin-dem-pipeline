@@ -1,0 +1,68 @@
+name: Knit R05 same-quality performance
+on:
+  push:
+    branches: [feature/knit-material-r05-20261111]
+    paths:
+      - kaopu-fabric-workbench/knit-material-r05/**
+      - .github/workflows/knit-material-r05.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-material-r05
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-material-r04
+            kaopu-fabric-workbench/knit-material-r05
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build without modifying R04
+        run: |
+          python kaopu-fabric-workbench/knit-material-r05/build.py
+          node --check kaopu-fabric-workbench/knit-material-r05/app-built.js
+      - name: Install independent browser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/knit-r05
+          cd /tmp/knit-r05
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Same pixels and measured performance
+        run: |
+          SITE="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r05"
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r05-http.log 2>&1 &
+          if test -f "$SITE/PUBLIC_URL.txt"; then
+            export QA_URL="$(cat "$SITE/PUBLIC_URL.txt")"
+            cp "$SITE/qa-public.mjs" /tmp/knit-r05/qa.mjs
+          else
+            cp "$SITE/qa.mjs" /tmp/knit-r05/qa.mjs
+          fi
+          SITE_DIR="$SITE" xvfb-run -a node /tmp/knit-r05/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-material-r05
+          path: kaopu-fabric-workbench/knit-material-r05
+          retention-days: 7
+      - name: Preserve real evidence in isolated branch
+        if: always()
+        run: |
+          git config user.name 'Knit runtime verifier'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-material-r05
+          if test -d kaopu-fabric-workbench/knit-material-r05/evidence; then git add -f kaopu-fabric-workbench/knit-material-r05/evidence/*.json; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record R05 build and actual comparisons [skip ci]'
+            git push origin HEAD:feature/knit-material-r05-20261111
+          fi
