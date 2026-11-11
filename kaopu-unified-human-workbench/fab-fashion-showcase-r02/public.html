@@ -6,6 +6,7 @@ function installShowcase(){
   const app=document.getElementById('crowd-app');if(!app)return;observer.disconnect();
   try{
    const raw=window.hairF13?._raw?.(),T=raw?.THREE,v=raw?.viewer;if(!T||!v?.scene||!v?.renderer)throw Error('原生渲染上下文不可用');
+   const tag=app.querySelector('.cr-tag');if(tag)tag.textContent='HUMAN-INTEGRATED-R07 / F13 HAIR / T03+P02 / R14 SHOES · R02';
    const scene=v.scene,renderer=v.renderer,camera=v.camera,orbit=v.orbit;
    const mat=(c,r=.6,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
    const mesh=(g,m,parent,x=0,y=0,z=0,rx=0)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);o.rotation.x=rx;o.receiveShadow=true;parent.add(o);return o;};
@@ -19,7 +20,7 @@ function installShowcase(){
    mesh(new T.TorusGeometry(2.88,.055,12,128),mat('#89949b',.34,.62),fab,0,2.15,-3.9);
    mesh(new T.TorusGeometry(1.78,.035,10,128),mat('#56636b',.4,.5),fab,0,2.15,-3.88);
    for(const x of [-3.65,3.65])mesh(new T.BoxGeometry(.18,5.4,.3),mat('#3d484e',.42,.4),fab,x,2.6,-3.85);
-   mesh(new T.PlaneGeometry(18,5),mat('#262b31',.5,.22),runway,0,-.012,0,-Math.PI/2);
+   mesh(new T.PlaneGeometry(18,5),mat('#262b31',.5,.22),runway,0,.001,0,-Math.PI/2);
    for(const x of [-2.25,2.25])mesh(new T.BoxGeometry(18,.025,.035),mat('#b8a67e',.28,.7),runway,0,.006,x);
    for(let i=-7;i<=7;i++)mesh(new T.BoxGeometry(.055,.012,.36),mat('#d2c6a8',.35,.25),runway,i*1.12,.006,0);
    function spot(group,color,intensity,p,t,a){const l=new T.SpotLight(color,intensity,18,a,.6,1.4);l.position.set(...p);l.target.position.set(...t);group.add(l,l.target);return l;}
