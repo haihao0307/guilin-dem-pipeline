@@ -1,0 +1,70 @@
+name: Knit R06 adaptive same-quality verification
+on:
+  push:
+    branches: [feature/knit-material-r06-adaptive-20261111]
+    paths:
+      - kaopu-fabric-workbench/knit-material-r06/**
+      - .github/workflows/knit-material-r06.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-material-r06
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-material-r04
+            kaopu-fabric-workbench/knit-material-r05
+            .github/scripts/knit-material-r06-patch.py
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build adaptive R06 from verified R05 sources
+        run: |
+          python .github/scripts/knit-material-r06-patch.py
+          python kaopu-fabric-workbench/knit-material-r06/build.py
+          node --check kaopu-fabric-workbench/knit-material-r06/app-built.js
+      - name: Install independent browser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/knit-r06
+          cd /tmp/knit-r06
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Actual R04 versus R06 browser comparison
+        run: |
+          SITE="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r06"
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r06-http.log 2>&1 &
+          if test -f "$SITE/PUBLIC_URL.txt"; then
+            export QA_URL="$(cat "$SITE/PUBLIC_URL.txt")"
+          fi
+          cp "$SITE/qa.mjs" /tmp/knit-r06/qa.mjs
+          SITE_DIR="$SITE" xvfb-run -a node /tmp/knit-r06/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-material-r06
+          path: kaopu-fabric-workbench/knit-material-r06
+          retention-days: 7
+      - name: Preserve exact browser evidence
+        if: always()
+        run: |
+          git config user.name 'Knit runtime verifier'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-material-r06
+          if test -f kaopu-fabric-workbench/knit-material-r06/evidence/QA.json; then
+            git add -f kaopu-fabric-workbench/knit-material-r06/evidence/QA.json
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record R06 adaptive build and actual browser comparison [skip ci]'
+            git push origin HEAD:feature/knit-material-r06-adaptive-20261111
+          fi
