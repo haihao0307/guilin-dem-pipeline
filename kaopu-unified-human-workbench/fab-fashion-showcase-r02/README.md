@@ -45,3 +45,11 @@ Fab 页面提供的 Windows Mannequins standalone demo 指向 Google Drive 登�
 - 衣物仍是原区域物理范围，不是逐纱线完整自由布料；头发与衣物之间没有完整耦合碰撞。
 - 鞋仍为足部刚性跟随，不具备独立鞋材力学。
 - 本分支独立，不改人物、服装、头发或动作生产线。
+
+
+## R02 源码检查记录
+
+- GitHub 回读：页面 19,615 bytes；脚本语法解析通过。
+- 固定原生运行包哈希与 5 个分片清单沿用已锁定的 crowd-runtime R01；不改写原人物/头发/服装/鞋运行包。
+- 场景切换、灯光滑杆、每场景渲染 CPU 时间、提交 FPS、Draw Calls、Triangles、Geometry、Textures 监控代码均存在。
+- 浏览器端实际视觉、交互、R02 GPU 时间及同机 A/B 性能：尚未验收，不伪造结果。
