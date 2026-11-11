@@ -171,7 +171,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
   const parameterizedSavingsBytes=Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+(v.savedBytes??0),0),0);
   return {...libraryCore,stats:{clipCount:records.length,skeletonCount:Object.keys(skeletonRegistry).length,uniqueChannelCount:payloadByKey.size,
     familyCount:Object.keys(compactFamilies).length,parameterizedClipCount:records.filter(r=>r.variant).length,
-    sourceBytes,encodedBytes,bytesSaved:sourceBytes-encodedBytes,compressionRatio:sourceBytes?encodedBytes/sourceBytes:1,
+    inputActionBytes:sourceBytes,encodedBytes,bytesSaved:sourceBytes-encodedBytes,compressionRatio:sourceBytes?encodedBytes/sourceBytes:1,
     parameterizedSavingsBytes}};
 }
 export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,derivativeCutoff=1,contactMask=null}={}) {
