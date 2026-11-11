@@ -1,0 +1,74 @@
+{
+  "id": "MOTION-CONTACT-LOCK-NOT-SKELETON-CONSTRAINT-001",
+  "title": "Zero foot drift does not prove skeleton-constrained motion cleanup",
+  "state": "CANDIDATE",
+  "ownerScope": [
+    "Animation Mother",
+    "Humanoid Mother"
+  ],
+  "trigger": "A cleanup stage directly overwrites one or more global joint positions during a contact interval and claims footskate/jitter improvement from zero foot drift.",
+  "exactSubject": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "pullRequest": 344,
+    "head": "b6395634f0598aac144c4054aa5119f884f27722",
+    "packPath": "kaopu-unified-human-workbench/motion-atlas-r03/cmu-sample-pack.json",
+    "packGitBlobSHA": "8fb1c53c733832bdbf727d82f21fe01aa8fff4e9",
+    "packSHA256": "521c5545f6c9733c248e4abb57c3245b9a5f1d6b1a32c884ab6784fc83f621b9"
+  },
+  "currentObservation": {
+    "decision": "HOLD_ZERO_DRIFT_BREAKS_SKELETON_EDGE_LENGTH",
+    "clipCount": 3,
+    "maxSmoothOnlyAdjacentEdgeDeltaMm": 0.80417588609355,
+    "maxPreviewLockAdjacentEdgeDeltaMm": 44.29503697753934,
+    "maxPreviewLockAdjacentEdgeRelativeDeltaPct": 70.97837341109756,
+    "replayAssertions": "4/4 PASS",
+    "note": "The current preview locks only lfoot/rfoot horizontal XZ while tibia and toe points continue on their smoothed tracks. Zero locked drift is therefore true by construction but not a skeleton-valid cleanup receipt."
+  },
+  "candidateGate": {
+    "requiredInputs": [
+      "exact source/pack digest",
+      "joint topology or equivalent link set",
+      "contact interval provenance and confidence",
+      "declared cleanup stage and coordinate space",
+      "candidate bone-length sentinel with explicit scope"
+    ],
+    "requiredMeasurements": [
+      "contact drift before/after",
+      "adjacent edge length delta before/after",
+      "contact transition continuity",
+      "root/hip reachability or explicit IK/FK feasibility",
+      "same metrics on at least one known-good and one known-bad control"
+    ],
+    "candidateSmokeThresholds": {
+      "maxAbsoluteAdjacentEdgeDeltaMm": 5,
+      "maxRelativeAdjacentEdgeDeltaPct": 5,
+      "status": "CANDIDATE_SINGLE_MOTHER_ONLY_NOT_GLOBAL_TOLERANCE"
+    },
+    "passCondition": "Drift reduction and skeleton-edge sentinel both pass on the exact subject; contact transitions and coordinate-space assumptions remain explicit.",
+    "holdConditions": [
+      "zero drift is obtained by single-joint overwrite while adjacent edge sentinel fails",
+      "contact labels are unbound or silently guessed",
+      "only aggregate jitter decreases while topology/reachability is unmeasured",
+      "a method trained on another skeleton/domain is adopted without a bounded transfer trial"
+    ]
+  },
+  "minimumFalsifiableTrial": {
+    "target": "PR #344 three-CMU-clip sample only",
+    "hypothesis": "Replacing direct foot-point overwrite with a kinematic cleanup route can reduce planted-foot drift without exceeding the candidate adjacent-edge sentinel.",
+    "controls": [
+      "current smooth-only path",
+      "current single-foot XZ lock path",
+      "known-bad isolated foot offset",
+      "candidate fixed-skeleton FK/IK path"
+    ],
+    "adoptionBoundary": "One Animation/Humanoid Mother trial. Do not change R2 or global gates until an independent verifier repeats the exact-subject run."
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
