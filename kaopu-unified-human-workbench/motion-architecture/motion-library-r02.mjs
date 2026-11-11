@@ -128,7 +128,8 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
     const channelRefs={},channels=clip.channels??{},frameCount=clip.frameCount??Object.values(channels)[0]?.length??0;
     const signature=stable(Object.keys(channels).sort().map(name=>[name,channels[name]?.length,channels[name]?.[0]?.length]));
-    const familyId='mf-'+fnv1a(stable({skeletonId,fps:clip.fps,frameCount,signature}));
+    const category=source.startsWith('cmu')?'CMU':'Mesh2Motion';
+    const familyId='mf-'+fnv1a(stable({category,skeletonId,fps:clip.fps,frameCount,signature}));
     const family=motionFamilies[familyId];
     let familyVariant=null;
     if(family&&family.frameCount===frameCount){
@@ -137,7 +138,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     if(familyVariant){
       family.variants.push({clipId:clip.id,encoding:familyVariant.encoding,channels:familyVariant.channels,
         savings:familyVariant.savings,savedBytes:familyVariant.savedBytes,maxObservedError:familyVariant.maxObservedError});
-      records.push({id:clip.id,source:source.startsWith('cmu')?'CMU':'Mesh2Motion',category:source.startsWith('cmu')?'CMU':'Mesh2Motion',skeletonId,fps:clip.fps,frameCount,
+      records.push({id:clip.id,source:category,category,skeletonId,fps:clip.fps,frameCount,
         familyRef:familyId,variant:true});
     }else{
       for(const [name,frames] of Object.entries(channels)){
