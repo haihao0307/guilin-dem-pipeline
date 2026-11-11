@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,motionJitterReport} from '../motion-architecture/motion-library-r02.mjs';
+import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,smoothQuaternionTrack,motionJitterReport} from '../motion-architecture/motion-library-r02.mjs';
 
 test('delta channel round-trips within declared error',()=>{
  const src=Array.from({length:80},(_,i)=>[Math.sin(i*.04),i*.002,Math.cos(i*.04)]);
@@ -26,4 +26,21 @@ test('adaptive vector filter reduces high-frequency jitter while retaining slow 
  const before=motionJitterReport(src),after=motionJitterReport(dst);
  assert.ok(after.rms<before.rms*.8);
  assert.ok(Math.abs(dst.at(-1)[0]-src.at(-1)[0])<.01);
+});
+
+test('contact intervals hold the landing anchor without cumulative foot drift',()=>{
+ const src=Array.from({length:12},(_,i)=>[i*.01,0,0]);
+ const mask=Array.from({length:12},(_,i)=>i>=4&&i<=8);
+ const dst=smoothVectorTrack(src,{fps:60,contactMask:mask});
+ for(let i=4;i<=8;i++){assert.ok(Math.abs(dst[i][0]-dst[3][0])<1e-9);assert.ok(Math.abs(dst[i][2]-dst[3][2])<1e-9);}
+});
+test('quaternion smoothing handles q/-q equivalence and preserves unit length',()=>{
+ const src=Array.from({length:40},(_,i)=>{
+  const a=i*.01+(i%2?.08:-.08),q=[0,Math.sin(a/2),0,Math.cos(a/2)];
+  return i%2?q.map(v=>-v):q;
+ });
+ const dst=smoothQuaternionTrack(src,{fps:60,minCutoff:1.5,beta:.01});
+ assert.equal(dst.length,src.length);
+ for(const q of dst)assert.ok(Math.abs(Math.hypot(...q)-1)<1e-6);
+ assert.ok(Math.abs(dst[0][3]-Math.abs(src[0][3]))<1e-6);
 });
