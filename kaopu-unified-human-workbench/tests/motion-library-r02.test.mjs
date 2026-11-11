@@ -35,7 +35,7 @@ test('contact intervals hold the landing anchor without cumulative foot drift',(
  const src=Array.from({length:12},(_,i)=>[i*.01,0,0]);
  const mask=Array.from({length:12},(_,i)=>i>=4&&i<=8);
  const dst=smoothVectorTrack(src,{fps:60,contactMask:mask});
- for(let i=4;i<=8;i++){assert.ok(Math.abs(dst[i][0]-dst[3][0])<1e-9);assert.ok(Math.abs(dst[i][2]-dst[3][2])<1e-9);}
+ for(let i=4;i<=8;i++){assert.ok(Math.abs(dst[i][0]-src[4][0])<1e-9);assert.ok(Math.abs(dst[i][2]-src[4][2])<1e-9);}
 });
 test('quaternion smoothing handles q/-q equivalence and preserves unit length',()=>{
  const src=Array.from({length:40},(_,i)=>{
