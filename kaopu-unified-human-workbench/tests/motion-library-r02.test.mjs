@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,smoothQuaternionTrack,motionJitterReport,encodeParameterizedVariant,decodeParameterizedVariant} from '../motion-architecture/motion-library-r02.mjs';
+import {encodeDeltaChannel,decodeDeltaChannel,buildCompactMotionLibrary,smoothVectorTrack,smoothQuaternionTrack,motionJitterReport,encodeParameterizedVariant,decodeParameterizedVariant,importPointTrackClip} from '../motion-architecture/motion-library-r02.mjs';
 
 test('delta channel round-trips within declared error',()=>{
  const src=Array.from({length:80},(_,i)=>[Math.sin(i*.04),i*.002,Math.cos(i*.04)]);
@@ -105,4 +105,21 @@ test('unused skeletons and unrelated metadata do not leak into the compact catal
  assert.equal(db.stats.skeletonCount,1);
  assert.ok(!JSON.stringify(db).includes('unused-root'));
  assert.ok(!JSON.stringify(db).includes('not-in-output'));
+});
+
+test('source point-track importer preserves verified CMU skeleton, fps and XYZ channels',()=>{
+ const clip=importPointTrackClip({id:'cmu-16-33',source:'CMU',fps:120,
+  names:['root','hip','foot'],parents:[-1,0,1],
+  points:[[[0,1,0],[0,.5,0],[0,.05,.1]],[[.01,1,0],[.01,.5,0],[.02,.05,.1]]],
+  restFingerprint:'cmu-16-asf-verified'});
+ assert.equal(clip.source,'CMU');assert.equal(clip.fps,120);assert.equal(clip.frameCount,2);
+ assert.deepEqual(clip.channels.foot,[[0,.05,.1],[.02,.05,.1]]);
+ assert.deepEqual(clip.skeleton.parents,[-1,0,1]);
+});
+test('source point-track importer rejects missing fps, guessed skeletons and excluded tags',()=>{
+ const base={id:'cmu-a',source:'CMU',fps:120,names:['root'],parents:[-1],points:[[[0,0,0]]]};
+ assert.throws(()=>importPointTrackClip({...base,fps:null}),/FPS/);
+ assert.throws(()=>importPointTrackClip({...base,parents:[]}),/parent table/);
+ assert.throws(()=>importPointTrackClip({...base,id:'cmu-r41-three'}),/excluded/);
+ assert.throws(()=>importPointTrackClip({...base,source:'Quaternius'}),/only CMU/);
 });
