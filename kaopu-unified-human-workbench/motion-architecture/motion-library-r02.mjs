@@ -185,7 +185,7 @@ export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,deriv
   if(wasInContact) contactAnchor=[prev[0],prev[2]];
   for(let i=1;i<frames.length;i++){
     const next=frames[i],row=[],inContact=Boolean(contactMask?.[i]);
-    if(inContact&&!wasInContact) contactAnchor=[prev[0],prev[2]];
+    if(inContact&&!wasInContact) contactAnchor=[next[0],next[2]];
     if(!inContact) contactAnchor=null;
     for(let j=0;j<3;j++){
       const d=(next[j]-prev[j])*fps, ed=prevD[j]+alpha(derivativeCutoff)*(d-prevD[j]);
