@@ -18,7 +18,8 @@ test('shared skeletons and identical channels are stored once; R4E and R41 clips
   {id:'r41-walk',source:'r41',skeleton,fps:30,channels},
   {id:'r41-turn',source:'r41',skeleton,fps:30,channels},
   {id:'r41-idle',source:'R41',skeleton,fps:30,channels},
-  {id:'r4e-run',source:'R4E',skeleton,fps:30,channels}
+  {id:'r4e-run',source:'R4E',skeleton,fps:30,channels},
+  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels}
  ]});
  assert.equal(db.clips.length,2);assert.equal(db.stats.skeletonCount,1);assert.equal(db.stats.uniqueChannelCount,1);
 });
@@ -73,4 +74,22 @@ test('compact library links variant records to a retained parent channel record'
  const decoded=decodeParameterizedVariant(decodedParent,family.variants[0]);
  let max=0;for(let i=0;i<120;i++)for(let j=0;j<3;j++)max=Math.max(max,Math.abs(decoded.root[i][j]-variant.root[i][j]));
  assert.ok(max<=.00005+1e-7);
+});
+
+test('output contains only action records and CMU/Mesh2Motion categories',()=>{
+ const skeleton={names:['root'],parents:[-1],restFingerprint:'r'};
+ const channels={root:[[0,0,0],[.1,0,0],[.2,0,0]]};
+ const db=buildCompactMotionLibrary({clips:[
+  {id:'cmu-walk',source:'CMU',skeleton,fps:30,channels,model:{mesh:'ignored'},previewImage:'ignored.png'},
+  {id:'mesh2motion-run',source:'Mesh2Motion',skeleton,fps:30,channels,video:'ignored.mp4'},
+  {id:'r41-a',source:'R41',skeleton,fps:30,channels},
+  {id:'r41-b',source:'R41',skeleton,fps:30,channels},
+  {id:'r41-c',source:'R41',skeleton,fps:30,channels},
+  {id:'quaternius-idle',source:'Quaternius',skeleton,fps:30,channels}
+ ]});
+ assert.deepEqual(db.clips.map(x=>x.source),['CMU','Mesh2Motion']);
+ assert.ok(!JSON.stringify(db).includes('ignored.mp4'));
+ assert.ok(!JSON.stringify(db).includes('ignored.png'));
+ assert.ok(!JSON.stringify(db).includes('Quaternius'));
+ assert.ok(db.stats.encodedBytes>0&&db.stats.sourceBytes>0);
 });
