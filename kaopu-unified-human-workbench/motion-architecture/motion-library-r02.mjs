@@ -45,7 +45,7 @@ export function encodeDeltaChannel(frames,{maxError=0.00005}={}) {
     const d=frames[f][j]-frames[f-1][j];
     raw[p++]=useInt16?Math.max(-32767,Math.min(32767,Math.round(d/scale))):d;
   }
-  return {encoding:useInt16?'delta-i16':'delta-f32',width,count,scale:useInt16?scale:1,maxErrorBound:useInt16?scale*0.5:0,
+  return {encoding:useInt16?'delta-i16':'delta-f32',width,count,scale:useInt16?scale:1,maxErrorBound:useInt16?scale*0.5*(count-1):0,
     base:Array.from(base),data:bytesToBase64(new Uint8Array(raw.buffer))};
 }
 export function decodeDeltaChannel(packet) {
