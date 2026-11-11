@@ -18,10 +18,10 @@ const base64ToBytes = value => {
   if (typeof Buffer !== 'undefined') return new Uint8Array(Buffer.from(value,'base64'));
   const s=atob(value); return Uint8Array.from(s,c=>c.charCodeAt(0));
 };
-function fnv1a(text) {
-  let h=0x811c9dc5;
-  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,0x01000193);}
-  return (h>>>0).toString(16).padStart(8,'0');
+function fnv1a64(text) {
+  let h=0xcbf29ce484222325n;
+  for(let i=0;i<text.length;i++){h^=BigInt(text.charCodeAt(i));h=BigInt.asUintN(64,h*0x100000001b3n);}
+  return h.toString(16).padStart(16,'0');
 }
 function flattenFrames(frames) {
   assert(Array.isArray(frames)&&frames.length>0,'non-empty channel frames required');
@@ -127,12 +127,12 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     assert(finite(clip.fps)&&clip.fps>0,'positive clip fps required');
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
     let skeletonId=skeletonByKey.get(skKey);
-    if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
+    if(!skeletonId){skeletonId='sk-'+fnv1a64(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
     const channelRefs={},channels=clip.channels??{},frameCount=clip.frameCount??Object.values(channels)[0]?.length??0;
     assert(Object.keys(channels).length>0,'clip must contain at least one motion channel');
     const signature=stable(Object.keys(channels).sort().map(name=>[name,channels[name]?.length,channels[name]?.[0]?.length]));
     const category=source.startsWith('cmu')?'CMU':'Mesh2Motion';
-    const familyId='mf-'+fnv1a(stable({category,skeletonId,fps:clip.fps,frameCount,signature}));
+    const familyId='mf-'+fnv1a64(stable({category,skeletonId,fps:clip.fps,frameCount,signature}));
     const family=motionFamilies[familyId];
     let familyVariant=null;
     if(family&&family.frameCount===frameCount){
@@ -145,7 +145,7 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
         familyRef:familyId,variant:true});
     }else{
       for(const [name,frames] of Object.entries(channels)){
-        const packet=encodeDeltaChannel(frames,{maxError}),key=fnv1a(stable(packet));
+        const packet=encodeDeltaChannel(frames,{maxError}),key=fnv1a64(stable(packet));
         if(!payloadByKey.has(key))payloadByKey.set(key,{id:'ch-'+key,...packet});
         channelRefs[name]='ch-'+key;
       }
@@ -167,7 +167,8 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
   const encodedBytes=byteLength(JSON.stringify(libraryCore));
   const rawMotionRecords=clips.filter(clip=>{
     const s=String(clip.source?.kind??clip.source??'').toLowerCase().replace(/[^a-z0-9]/g,'');
-    return s.startsWith('cmu')||s.startsWith('mesh2motion');
+    const id=String(clip.id??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    return (s.startsWith('cmu')||s.startsWith('mesh2motion'))&&!['r41','r4e'].some(tag=>s.includes(tag)||id.includes(tag));
   }).map(clip=>({id:clip.id,source:clip.source?.kind??clip.source,fps:clip.fps,frameCount:clip.frameCount,
     skeleton:clip.skeleton,channels:clip.channels}));
   const sourceBytes=byteLength(JSON.stringify(rawMotionRecords));
