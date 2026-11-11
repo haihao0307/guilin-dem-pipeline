@@ -113,6 +113,8 @@ export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,deriv
   if(out.length>1){
     const last=out.length-1;
     for(let j=0;j<3;j++){
+      // Never distribute root-drift correction through planted-foot X/Z axes.
+      if(contactMask&& (j===0||j===2)) continue;
       const correction=frames[last][j]-out[last][j];
       for(let i=1;i<=last;i++) out[i][j]+=correction*(i/last);
     }
