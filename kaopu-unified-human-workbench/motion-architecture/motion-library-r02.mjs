@@ -109,6 +109,32 @@ export function decodeParameterizedVariant(parentChannels,packet){
   return result;
 }
 
+
+/**
+ * Convert a source position-track clip (one XYZ point per named joint/frame)
+ * into the action-only internal channel contract. The caller must supply the
+ * verified parent table from that source's skeleton file; this function never
+ * guesses hierarchy, units, coordinate axes, or missing FPS.
+ */
+export function importPointTrackClip({id,source,fps,names,parents,points,restFingerprint=null}={}){
+  assert(typeof id==='string'&&id.trim(),'source clip id required');
+  const category=String(source??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  assert(category.startsWith('cmu')||category.startsWith('mesh2motion'),'only CMU and Mesh2Motion source clips are accepted');
+  assert(!['r41','r4e'].some(tag=>category.includes(tag)||id.toLowerCase().replace(/[^a-z0-9]/g,'').includes(tag)),'R41/R4E clips are excluded');
+  assert(finite(fps)&&fps>0,'source FPS must be independently supplied');
+  assert(Array.isArray(names)&&names.length>0&&new Set(names).size===names.length,'unique ordered joint names required');
+  assert(Array.isArray(parents)&&parents.length===names.length&&parents.every((p,i)=>Number.isInteger(p)&&p>=-1&&p<names.length&&p!==i),'verified parent table required');
+  assert(Array.isArray(points)&&points.length>0,'source point frames required');
+  for(const frame of points){
+    assert(Array.isArray(frame)&&frame.length===names.length,'source joint count changed between frames');
+    for(const point of frame)assert(Array.isArray(point)&&point.length===3&&point.every(finite),'finite XYZ joint point required');
+  }
+  const channels={};
+  for(let j=0;j<names.length;j++)channels[names[j]]=points.map(frame=>frame[j].slice());
+  return {id,source:category.startsWith('cmu')?'CMU':'Mesh2Motion',fps,frameCount:points.length,
+    skeleton:{names:[...names],parents:[...parents],restFingerprint},channels};
+}
+
 export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.00005}={}) {
   const skeletonByKey=new Map(), skeletonRegistry={}, payloadByKey=new Map(), records=[],motionFamilies={},clipIds=new Set();
   // Only skeletons referenced by accepted clips are emitted. An unrelated
