@@ -12,6 +12,8 @@ test('source-backed Motion Atlas preview uses the pinned CMU 16_33 data and requ
  assert.match(html,/data-view="front"/);
  assert.match(html,/data-view="side"/);
  assert.match(html,/data-view="oblique"/);
+ assert.match(html,/Math\.floor\(frame\)/);
+ assert.match(html,/pts\[hi\]\[j\]\[k\]/);
 });
 test('sample evidence is explicitly bounded and does not claim full-catalogue acceptance',()=>{
  assert.equal(evidence.sourceClipId,'CMU 16_33');
