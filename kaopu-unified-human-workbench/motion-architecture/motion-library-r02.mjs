@@ -59,8 +59,58 @@ export function decodeDeltaChannel(packet) {
   for(let f=1;f<count;f++){const row=new Array(width);for(let j=0;j<width;j++)row[j]=frames[f-1][j]+(packet.encoding==='delta-i16'?deltas[p++]*scale:deltas[p++]);frames[f]=row;}
   return frames;
 }
+
+// Fit a per-axis affine transform from a parent action to a same-topology
+// variant. Residuals preserve the individual action's measured differences.
+function fitAffineTrack(parent,child){
+  const {width}=flattenFrames(parent);flattenFrames(child);
+  assert(parent.length===child.length&&child[0].length===width,'parent/variant channel shapes must match');
+  const scale=new Array(width),offset=new Array(width),residual=child.map(()=>new Array(width));
+  for(let j=0;j<width;j++){
+    let mx=0,my=0;for(let i=0;i<parent.length;i++){mx+=parent[i][j];my+=child[i][j];}
+    mx/=parent.length;my/=parent.length;
+    let covariance=0,variance=0;
+    for(let i=0;i<parent.length;i++){const x=parent[i][j]-mx;covariance+=x*(child[i][j]-my);variance+=x*x;}
+    scale[j]=variance>1e-12?covariance/variance:0;
+    offset[j]=my-scale[j]*mx;
+    for(let i=0;i<parent.length;i++)residual[i][j]=child[i][j]-(parent[i][j]*scale[j]+offset[j]);
+  }
+  return {scale,offset,residual};
+}
+export function encodeParameterizedVariant(parentChannels,variantChannels,{maxError=0.00005,minSavings=0.08}={}){
+  const names=Object.keys(parentChannels).sort();
+  assert(names.length>0&&stable(names)===stable(Object.keys(variantChannels).sort()),'parent and variant channel sets must match');
+  const channels={};let standaloneBytes=0,encodedBytes=0,maxObservedError=0;
+  for(const name of names){
+    const parent=parentChannels[name],variant=variantChannels[name],fit=fitAffineTrack(parent,variant);
+    const residual=encodeDeltaChannel(fit.residual,{maxError});
+    const decoded=decodeDeltaChannel(residual);
+    for(let i=0;i<variant.length;i++)for(let j=0;j<variant[i].length;j++){
+      const reconstructed=parent[i][j]*fit.scale[j]+fit.offset[j]+decoded[i][j];
+      maxObservedError=Math.max(maxObservedError,Math.abs(reconstructed-variant[i][j]));
+    }
+    const original=encodeDeltaChannel(variant,{maxError});
+    standaloneBytes+=JSON.stringify(original).length;
+    const entry={scale:fit.scale,offset:fit.offset,residual};
+    encodedBytes+=JSON.stringify(entry).length;channels[name]=entry;
+  }
+  const savings=standaloneBytes?1-encodedBytes/standaloneBytes:0;
+  if(maxObservedError>maxError+1e-7||savings<minSavings)return null;
+  return {encoding:'parent-affine-residual/1',channels,standaloneBytes,encodedBytes,savings,maxObservedError};
+}
+export function decodeParameterizedVariant(parentChannels,packet){
+  assert(packet?.encoding==='parent-affine-residual/1','unsupported parameterized motion encoding');
+  const result={};
+  for(const [name,entry] of Object.entries(packet.channels)){
+    const parent=parentChannels[name],residual=decodeDeltaChannel(entry.residual);
+    assert(parent&&parent.length===residual.length,'parent channel frame count mismatch');
+    result[name]=parent.map((frame,i)=>frame.map((v,j)=>v*entry.scale[j]+entry.offset[j]+residual[i][j]));
+  }
+  return result;
+}
+
 export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.00005}={}) {
-  const skeletonByKey=new Map(), skeletonRegistry={}, payloadByKey=new Map(), records=[];
+  const skeletonByKey=new Map(), skeletonRegistry={}, payloadByKey=new Map(), records=[],motionFamilies={};
   for(const s of skeletons){
     assert(s&&Array.isArray(s.names)&&Array.isArray(s.parents)&&s.names.length===s.parents.length,'valid skeleton required');
     const key=stable({names:s.names,parents:s.parents,rest:s.restFingerprint??null});
@@ -74,18 +124,40 @@ export function buildCompactMotionLibrary({skeletons=[],clips=[],maxError=0.0000
     const skKey=stable({names:clip.skeleton.names,parents:clip.skeleton.parents,rest:clip.skeleton.restFingerprint??null});
     let skeletonId=skeletonByKey.get(skKey);
     if(!skeletonId){skeletonId='sk-'+fnv1a(skKey);skeletonByKey.set(skKey,skeletonId);skeletonRegistry[skeletonId]={id:skeletonId,names:clip.skeleton.names,parents:clip.skeleton.parents,restFingerprint:clip.skeleton.restFingerprint??null};}
-    const channelRefs={};
-    for(const [name,frames] of Object.entries(clip.channels??{})){
-      const packet=encodeDeltaChannel(frames,{maxError}), key=fnv1a(stable(packet));
-      if(!payloadByKey.has(key)) payloadByKey.set(key,{id:'ch-'+key,...packet});
-      channelRefs[name]='ch-'+key;
+    const channelRefs={},channels=clip.channels??{},frameCount=clip.frameCount??Object.values(channels)[0]?.length??0;
+    const signature=stable(Object.keys(channels).sort().map(name=>[name,channels[name]?.length,channels[name]?.[0]?.length]));
+    const familyId='mf-'+fnv1a(stable({skeletonId,fps:clip.fps,frameCount,signature}));
+    const family=motionFamilies[familyId];
+    let familyVariant=null;
+    if(family&&family.frameCount===frameCount){
+      familyVariant=encodeParameterizedVariant(family.parentChannels,channels,{maxError});
     }
-    records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,
-      frameCount:clip.frameCount??Object.values(clip.channels??{})[0]?.length??0,channels:channelRefs});
+    if(familyVariant){
+      family.variants.push({clipId:clip.id,encoding:familyVariant.encoding,channels:familyVariant.channels,
+        savings:familyVariant.savings,maxObservedError:familyVariant.maxObservedError});
+      records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,frameCount,
+        familyRef:familyId,variant:true});
+    }else{
+      for(const [name,frames] of Object.entries(channels)){
+        const packet=encodeDeltaChannel(frames,{maxError}),key=fnv1a(stable(packet));
+        if(!payloadByKey.has(key))payloadByKey.set(key,{id:'ch-'+key,...packet});
+        channelRefs[name]='ch-'+key;
+      }
+      if(!family){
+        motionFamilies[familyId]={id:familyId,parentClipId:clip.id,skeletonId,fps:clip.fps,frameCount,
+          parentChannels:channels,variants:[]};
+      }
+      records.push({id:clip.id,source:clip.source?.kind??clip.source??'unknown',skeletonId,fps:clip.fps,
+        frameCount,channels:channelRefs,familyParent:!family?familyId:undefined});
+    }
   }
-  return {schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),
+  const compactFamilies=Object.fromEntries(Object.entries(motionFamilies).map(([id,f])=>[id,{id,parentClipId:f.parentClipId,skeletonId:f.skeletonId,
+    fps:f.fps,frameCount:f.frameCount,variants:f.variants}]));
+  return {schema:'kaopu-motion-library/2',skeletons:skeletonRegistry,clips:records,channels:Object.fromEntries(payloadByKey),motionFamilies:compactFamilies,
     stats:{clipCount:records.length,skeletonCount:Object.keys(skeletonRegistry).length,uniqueChannelCount:payloadByKey.size,
-      encodedBytes:Object.values(payloadByKey).reduce((n,p)=>n+p.data.length*3/4,0)}};
+      familyCount:Object.keys(compactFamilies).length,parameterizedClipCount:records.filter(r=>r.variant).length,
+      encodedBytes:Object.values(payloadByKey).reduce((n,p)=>n+p.data.length*3/4,0),
+      parameterizedSavingsBytes:Object.values(compactFamilies).reduce((n,f)=>n+f.variants.reduce((s,v)=>s+Math.max(0,v.savings),0),0)}};
 }
 export function smoothVectorTrack(frames,{fps=120,minCutoff=1.2,beta=0.015,derivativeCutoff=1,contactMask=null}={}) {
   const {width}=flattenFrames(frames); assert(width===3,'vector track must contain XYZ');
