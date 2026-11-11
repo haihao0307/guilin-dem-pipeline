@@ -78,7 +78,10 @@ const links=[['root','lhipjoint'],['lhipjoint','lfemur'],['lfemur','ltibia'],['l
 let data=null,frame=0,playing=false,last=0,view='oblique',showSmooth=true,speed=1,raf=0,loadToken=0;
 const index=()=>Object.fromEntries(data.names.map((n,i)=>[n,i]));
 function smoothFrames(source){
- const points=source.points,smoothed=points.map((row,i)=>row.map((p,j)=>{if(i===0||i===points.length-1)return p.slice();const a=points[i-1][j],b=points[i+1][j];return p.map((v,k)=>a[k]*.25+v*.5+b[k]*.25)}));
+ const points=source.points,weights=[1,6,15,20,15,6,1];
+ // Reuse the seven-sample offline binomial position filter already used by
+ // NativeCapturedRetarget.mjs; clamp endpoints to avoid inventing edge frames.
+ const smoothed=points.map((row,i)=>row.map((p,j)=>p.map((_,k)=>weights.reduce((sum,w,t)=>sum+w*points[Math.max(0,Math.min(points.length-1,i+t-3))][j][k],0)/64)));
  const idx=Object.fromEntries(source.names.map((n,i)=>[n,i]));
  // Estimated contact windows are treated as intervals, not single-frame events.
  // During stance, lock the foot reference point horizontally; retain vertical
