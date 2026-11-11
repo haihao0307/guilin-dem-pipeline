@@ -103,7 +103,7 @@ Before routing:
 
 - Candidate regression: `IMPLEMENTED=true`
 - exact-subject history replay: `GATE-RUN=true`
-- `POSTED=false`
+- `POSTED=true` via #91 comment `6800436338`
 - `ACKNOWLEDGED / production IMPLEMENTED / production GATE-RUN / ADOPTED / USER-ACCEPTED=false`
 
 No main, PR #344, production Mother branch, R2, global gate, user-facing page, or automation was modified.
