@@ -74,7 +74,7 @@ const index=()=>Object.fromEntries(data.names.map((n,i)=>[n,i]));
 function smoothFrames(points){return points.map((row,i)=>row.map((p,j)=>{if(i===0||i===points.length-1)return p;const a=points[i-1][j],b=points[i+1][j];return p.map((v,k)=>a[k]*.25+v*.5+b[k]*.25)}));}
 function jitter(points){let sum=0,n=0;for(let i=2;i<points.length;i++)for(let j=0;j<points[i].length;j++)for(let k=0;k<3;k++){const d=points[i][j][k]-2*points[i-1][j][k]+points[i-2][j][k];sum+=d*d;n++}return Math.sqrt(sum/Math.max(1,n))*data.fps*data.fps;}
 function projected(p,center,scale){let x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2];let a=view==='front'?0:view==='side'?Math.PI/2:Math.PI/5;let rx=x*Math.cos(a)-z*Math.sin(a),rz=x*Math.sin(a)+z*Math.cos(a);const perspective=1/(1+rz*.08);return [canvas.width/2+rx*scale*perspective,canvas.height*.78-y*scale*perspective];}
-function draw(){if(!data)return;const pts=showSmooth?data.smooth:data.points,row=pts[frame],names=index();ctx.clearRect(0,0,canvas.width,canvas.height);
+function draw(){if(!data)return;const pts=showSmooth?data.smooth:data.points,names=index(),lo=Math.floor(frame),hi=Math.min(pts.length-1,lo+1),t=frame-lo,row=pts[lo].map((p,j)=>p.map((v,k)=>v+(pts[hi][j][k]-v)*t));ctx.clearRect(0,0,canvas.width,canvas.height);
  const all=row,center=[0,0,0];for(const p of all)for(let k=0;k<3;k++)center[k]+=p[k]/all.length;
  const scale=330;ctx.strokeStyle='rgba(135,177,205,.16)';ctx.lineWidth=1;for(let i=0;i<12;i++){const y=canvas.height*.78-i*42;ctx.beginPath();ctx.moveTo(100,y);ctx.lineTo(1100,y);ctx.stroke()}
  const projectedByName={};for(const n of data.names)projectedByName[n]=projected(row[names[n]],center,scale);
@@ -82,7 +82,7 @@ function draw(){if(!data)return;const pts=showSmooth?data.smooth:data.points,row
  for(const [a,b] of links){if(!(a in names)||!(b in names))continue;const p=projectedByName[a],q=projectedByName[b];ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.strokeStyle=(a.includes('foot')||b.includes('foot')||a.includes('toes')||b.includes('toes'))?'#fbbf24':'#8bd3f7';ctx.lineWidth=(a==='root'||b==='thorax'||b==='head')?7:5;ctx.stroke()}
  for(const n of data.names){const p=projectedByName[n];ctx.beginPath();ctx.arc(p[0],p[1],n==='head'?10:5,0,Math.PI*2);ctx.fillStyle=n.includes('foot')||n.includes('toes')?'#fbbf24':'#d9f3ff';ctx.fill()}
  ctx.fillStyle='#b9d2e5';ctx.font='16px system-ui';ctx.fillText(showSmooth?'平滑轨迹预览':'原始轨迹预览',24,canvas.height-28);
- $('clock').textContent=frame+' / '+(data.points.length-1);$('timeline').value=frame;
+ $('clock').textContent=frame.toFixed(1)+' / '+(data.points.length-1);$('timeline').value=Math.round(frame);
 }
 function tick(t){if(!playing)return;if(!last)last=t;const dt=t-last;last=t;const advance=dt*data.fps*speed/1000;frame=Math.min(data.points.length-1,frame+advance);if(frame>=data.points.length-1){frame=data.points.length-1;playing=false;$('play').textContent='▶ 播放'}draw();if(playing)raf=requestAnimationFrame(tick)}
 function setPlaying(v){playing=v;last=0;$('play').textContent=v?'Ⅱ 暂停':'▶ 播放';if(v)raf=requestAnimationFrame(tick);else cancelAnimationFrame(raf)}
