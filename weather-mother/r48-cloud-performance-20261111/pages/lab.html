@@ -1,0 +1,238 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weather Mother R34 实时云实验</title><style>
+*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#142737;color:#edf6fb;font:15px/1.6 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1500px;margin:auto;padding:96px 24px 40px}h1{font-size:25px;margin:0 0 6px}h2{font-size:19px;margin:0 0 12px}.lead,.hint{color:#b8cfdf;margin:6px 0 16px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0}button,select{font:inherit;border-radius:9px;padding:8px 13px;background:#254b63;border:1px solid #497089;color:inherit;cursor:pointer}button:hover{background:#36627d}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #bde6ff;outline-offset:3px}input[type=checkbox]{width:17px;height:17px;vertical-align:middle}.views{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.views.comparing{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.view{overflow:hidden;border:1px solid #3c5f76;border-radius:15px;background:#0d2030}.view header{padding:10px 16px;display:flex;justify-content:space-between;align-items:center}canvas,video{display:block;width:100%;aspect-ratio:16/9;background:#0e2334;object-fit:contain}canvas{touch-action:none}video{max-height:none}.hud{padding:10px 14px;background:#173448;font:13px/1.6 ui-monospace,Consolas,monospace;min-height:42px}.card{background:#203b4d;border:1px solid #385569;border-radius:15px;padding:20px;margin:18px 0}.parameters{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.parameters label{min-width:200px}.parameters input{width:120px;vertical-align:middle}.parameters output{font-variant-numeric:tabular-nums;padding-left:6px}.note{font-size:13px;color:#a8c8dc}#error{display:none;white-space:pre-wrap;color:#ffd0c1}#error:not(:empty){display:block}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:9px 12px;border-bottom:1px solid #3a5669;vertical-align:top}th{color:#a9d4ee}pre{white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto;font:12px/1.6 ui-monospace,Consolas,monospace}summary{cursor:pointer;color:#b5dfff}#referencePane[hidden]{display:none}.pill{font-size:12px;border:1px solid #547286;border-radius:16px;padding:3px 10px}.buttonrow{display:flex;gap:10px;flex-wrap:wrap}#measureResult{white-space:pre-wrap}.disabled{opacity:.5}@media(max-width:800px){main{padding:100px 12px 24px}.views.comparing{grid-template-columns:1fr}.card{padding:15px}table{font-size:12px}th,td{padding:7px}.parameters label{min-width:180px}}
+</style></head><body><main>
+<h1>Weather Mother · R34 实时云实验</h1><p class="lead">老师录像已移除。这里直接运行云代码，原式与天气参数实验均保留。</p>
+<div class="toolbar"><label>运行模式 <select id="renderer"><option value="teacher">新云原代码 · 原式运行</option><option value="weather">Weather Mother · 解析云融合实验</option></select></label><button id="play">暂停</button><button id="reset">从头运行</button><label>渲染尺寸 <select id="renderSize"><option value="native">随窗口</option><option value="960x540">960×540</option><option value="1280x720">1280×720</option><option value="1576x898">1576×898 · 原截图像素</option><option value="1920x1080">1920×1080</option></select></label><label><input type="checkbox" id="fullResolution" checked>原生像素</label><span class="pill" id="compileState">正在编译新云代码</span></div>
+<div class="views" id="views"><section class="view"><header><strong id="liveTitle">新云原代码 · 实时 WebGL</strong><span>实时渲染</span></header><canvas id="cloudCanvas" aria-label="新云代码实时生成的云" tabindex="0"></canvas><div class="hud" id="metrics" aria-live="off">准备渲染…</div></section></div>
+<pre id="error" role="alert"></pre>
+<div class="card"><div class="parameters"><label>时间 <input id="time" type="range" min="0" max="30" step="0.01" value="0"><output id="timeValue">0.00 s</output></label><label id="densityLabel">云密度 <input id="density" type="range" min="0.3" max="1.5" step="0.01" value="1"><output id="densityValue">1.00</output></label><label id="windLabel">云平移 <input id="wind" type="range" min="0" max="2" step="0.05" value="0.25"><output id="windValue">0.25</output></label><label id="evolutionLabel">形变速度 <input id="evolution" type="range" min="0" max="2" step="0.05" value="1"><output id="evolutionValue">1.00</output></label></div><p class="note" id="modeNote">原式模式保留全部着色器公式、相机与天空。拖动画布对应原代码 iMouse；按空格比较轮廓项与厚度项，按 S 切换背景。密度、平移、形变参数用于融合实验。</p><div class="buttonrow"><button id="measure">测量当前模式 · 8 秒</button><button id="openWeather">进入原天气 · 历史混合实验</button></div><p class="note" id="measureResult">FPS 来自实时提交的画面；录像帧率不计入。本版没有录像解码和播放。不同表示和画质的 FPS 不作为等质量提速证据。</p></div>
+<section class="card"><h2>本版实际进展</h2><table><thead><tr><th>工作项</th><th>已经接入的内容</th><th>当前验收</th></tr></thead><tbody><tr><td>新代码跑通</td><td>完整原 GLSL 接到 WebGL2，补齐时间、分辨率、鼠标与键盘纹理；实时暂停、拖动和复位。</td><td id="sourceAcceptance">保留既有代码；当前页面正在检查编译与实际绘制</td></tr><tr><td>老师录像清理</td><td>录像文件、内嵌视频数据及播放器均已移除，老师代码与学习记录保留。</td><td>R34 精简：无录像、无旧飞机；程序噪声在独立云海页运行。</td></tr><tr><td>低成本表示并入天气实验</td><td>解析交点 + 轮廓/厚度透明度 + 多尺度噪声，接入三团云、蓝天空、密度、统一演化时钟与平移。</td><td id="fusionAcceptance">本机已跑通；仅外部观察，不支持穿云和体积光路，尚未替换全天气表示。</td></tr><tr><td>原天气残影实验</td><td>保留同一体积云，提供“旧混合 / 形变感知 / 无历史”切换。新策略按秒衰减历史，变化云边减少历史权重。</td><td>三种策略已在浏览器跑通。自然度与残影改善仍需对照验收。</td></tr><tr><td>性能</td><td>实时 FPS、帧间隔 P95、GPU 时间（支持时）、内部像素尺寸；8 秒独立模式测量。</td><td id="performanceAcceptance">R31 历史实测（不是本次重测）：1576×898、从 0 秒测 8 秒，原式 / 融合实验均约 60 FPS，P95 16.9 ms。原体积天气另读约 30 FPS；不同表示，不是同画质提速证明。</td></tr></tbody></table></section>
+<section class="card"><h2>并入 Weather Mother 的知识</h2><p>解析云把“射线是否命中”先算出来，再用少量噪声估算轮廓与厚度，适合作为外部观察和远云的候选表示。原天气的近云、穿云与遮挡仍需要体积采样。两种表示的质量边界应分别验收。</p><p>云会形变时，上一帧颜色并不一定属于当前云边。历史混合应按实际经过的时间衰减，并降低变化轮廓的信任；平移重投影不能独自解决形变。</p><p class="note">本实验云的半径、位置与密度都是无量纲的显示参数，不是测量或真实云尺度。原式源代码署名及 CC BY-NC-SA 注释保留，当前作为研究运行。</p><details><summary>查看本次运行的原 GLSL 代码</summary><pre id="sourceCode">// Gardner textured ellipsoids - https://www.cs.drexel.edu/~david/Classes/Papers/p297-gardner.pdf + bib
+
+vec3 R = vec3(2.,4.,2.);              // ellipsoid radius
+vec3 L = normalize(vec3(-.4,0.,1.));  // light source
+#define AMBIENT .4					  // ambient luminosity
+
+#define ANIM true
+#define PI 3.1415927
+vec4 FragColor;
+
+bool keyToggle(int ascii) {
+	return (texture(iChannel2,vec2((.5+float(ascii))/256.,0.75)).x &gt; 0.);
+}
+
+// --- noise functions from https://www.shadertoy.com/view/XslGRr
+// Created by inigo quilez - iq/2013
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+mat3 m = mat3( 0.00,  0.80,  0.60,
+              -0.80,  0.36, -0.48,
+              -0.60, -0.48,  0.64 );
+
+float hash( float n )    // in [0,1]
+{
+    return fract(sin(n)*43758.5453);
+}
+
+float noise( in vec3 x ) // in [0,1]
+{
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+
+    f = f*f*(3.0-2.0*f);
+
+    float n = p.x + p.y*57.0 + 113.0*p.z;
+
+    float res = mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
+                        mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y),
+                    mix(mix( hash(n+113.0), hash(n+114.0),f.x),
+                        mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
+    return res;
+}
+
+float fbm( vec3 p )    // in [0,1]
+{
+	if (ANIM) p += iTime;
+    float f;
+    f  = 0.5000*noise( p ); p = m*p*2.02;
+    f += 0.2500*noise( p ); p = m*p*2.03;
+    f += 0.1250*noise( p ); p = m*p*2.01;
+    f += 0.0625*noise( p );
+    return f;
+}
+// --- End of Created by inigo quilez
+
+float snoise( in vec3 x ) // in [-1,1]
+{ return 2.*noise(x)-1.; }
+
+float sfbm( vec3 p )      // in [-1,1]
+{
+	if (ANIM) p += iTime;
+    float f;
+    f  = 0.5000*snoise( p ); p = m*p*2.02;
+    f += 0.2500*snoise( p ); p = m*p*2.03;
+    f += 0.1250*snoise( p ); p = m*p*2.01;
+    f += 0.0625*snoise( p );
+    return f;
+}
+
+
+
+// --- view matrix when looking T from O with [-1,1]x[-1,1] screen at dist d
+
+
+mat3 lookat(vec3 O, vec3 T, float d) {
+	mat3 M;
+	vec3 OT = normalize(T-O);
+	M[0] = OT;
+	M[2] = normalize(vec3(0.,0.,1.)-OT.z*OT)/d;
+	M[1] = cross(M[2],OT);
+	return M;
+}
+
+// --- ray -  ellipsoid intersection
+// if true, return P,N and thickness l
+
+bool intersect_ellipsoid(vec3 O, vec3 D, out vec3 P, out vec3 N, out float l) {
+	vec3 OR = O/R, DR = D/R; // to space where ellipsoid is a sphere 
+		// P=O+tD &amp; |P|=1 -&gt; solve t in O^2 +2(O.D)t + D^2.t^2 = 1
+	float OD = dot(OR,DR), OO=dot(OR,OR), DD=dot(DR,DR);
+	float d = OD*OD - (OO-1.)*DD;
+	
+	if (!((d &gt;=0.)&amp;&amp;(OD&lt;0.)&amp;&amp;(OO&gt;1.))) return false;
+	// ray intersects the ellipsoid (and not in our back)
+	// note that t&gt;0 &lt;=&gt; -OD&gt;0 &amp;  OD^2 &gt; OD^ -(OO-1.)*DD -&gt; |O|&gt;1
+		
+	float t = (-OD-sqrt(d))/DD;
+	// return intersection point, normal and thickness
+	P = O+t*D;
+	N=normalize(P/(R*R));
+	l = 2.*sqrt(d)/DD;
+
+	return true;
+}
+
+// --- Gardner textured ellipsoids (sort of)
+
+// &#x27;s&#x27; index corresponds to Garner faked silhouette
+// &#x27;i&#x27; index corresponds to interior term faked by mid-surface
+
+float ks,ps, ki,pi;  // smoothness/thichness parameters
+
+float l;
+void draw_obj(vec3 O, mat3 M, vec2 pos, int mode) {
+	vec3 D = normalize(M*vec3(1.,pos));		// ray
+	
+	vec3 P,N; 
+	if (! intersect_ellipsoid(O,D, P,N,l)) return;
+	
+	vec3 Pm = P+.5*l*D,                		// .5: deepest point inside cloud. 
+		 Nm = normalize(Pm/(R*R)),     		// it&#x27;s normal
+	     Nn = normalize(P/R);
+	float nl = clamp( dot(N,L),0.,1.), 		// ratio of light-facing (for lighting)
+		  nd = clamp(-dot(Nn,D),0.,1.); 	// ratio of camera-facing (for silhouette)
+            // try 1.
+
+	float ns = fbm(P), ni = fbm(Pm+10.);
+	float A, l0 = 3.;
+	//l += l*(l/l0-1.)/(1.+l*l/(l0*l0));     // optical depth modified at silhouette
+	l = clamp(l-6.*ni,0.,1e10);
+	float As = pow(ks*nd, ps), 			 	 // silhouette
+		  Ai = 1.-pow(.7,pi*l);              // interior
+
+
+	As =clamp(As-ns,0.,1.)*2.; // As = 2.*pow(As ,.6);
+	if (mode==2) 
+		A = 1.- (1.-As)*(1.-Ai);  			// mul Ti and Ts
+	else
+		A = (mode==0) ? Ai : As; 
+	A = clamp(A,0.,1.); 
+	nl = .8*( nl + ((mode==0) ? fbm(Pm-10.) : fbm(P+10.) ));
+
+	#if 0 // noise bump
+	N = normalize(N -.1*(dFdx(A)*M[1]+dFdy(A)*M[2])*iResolution.y); 
+	nl = clamp( dot(N,L),0.,1.);
+#endif
+	
+	vec4 col = vec4(mix(nl,1.,AMBIENT));
+	FragColor = mix(FragColor,col,A);
+}
+
+// === main =============================================
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+	float t = iTime;
+    vec2 uv = 2.*(fragCoord.xy / iResolution.y-vec2(.85,.5));
+	vec2 mouse = 2.*(iMouse.xy / iResolution.xy - vec2(.85,.5));
+	float z = .2;
+	ks = 1.+mouse.x, ps = mouse.y*8., ki, pi;
+	ks = 1.; ps = 3.;   ki = .9; pi = 3.;
+	
+	if (iMouse.z&gt;0.) {
+		t = -PI/2.*mouse.x;
+		z = -PI/2.*mouse.y;
+	}
+	vec3 O = vec3(-15.*cos(t)*cos(z),15.*sin(t)*cos(z),15.*sin(z));	// camera
+	float compas = t-.2*uv.x; vec2 dir = vec2(cos(compas),sin(compas));
+	FragColor = (keyToggle(64+19)) 
+		? vec4(0.) 
+		: clamp(vec4(.6,.7+.3*dir,1.)*(uv.y+1.6)/1.8,0.,1.); 		// sky
+
+	mat3 M = lookat(O,vec3(0.),5.); 
+	vec2 dx = vec2(1.,0.);
+	
+	if (!keyToggle(32))
+		draw_obj(O,M, uv, 2);	
+	else {
+		draw_obj(O,M, 1.5*(uv+dx), 0);	
+		draw_obj(O,M, 1.5*(uv-dx), 1);	
+	}
+    
+   fragColor = FragColor; 
+}
+</pre></details><details><summary>查看原天气改动与实验边界</summary><pre>R31 原天气实验（保留 R29/R30 原文件）
+1. 原天气仍运行原有体积云、采样步数、深度/透明度校验和邻域钳制。
+2. 旧策略：保留每帧最大 0.89 的历史混合。
+3. 新实验：基础权重 exp(-实际帧间隔 / 0.085 秒)。
+4. 当前透明度的屏幕梯度、前后透明度变化越明显，云边历史上限越低（0.28）。
+5. 按内部演化时间变化降低信任，保留原有循环相位信任。
+6. 选择无历史作为消融对照；它同时使用原系统的非时域采样，不构成只改一个变量的性能实验。
+7. GPU fence 提交调度、体积生成、光照缓存及像素尺寸保持原逻辑。
+边界：阈值是候选值，可能增加噪声或削弱降噪；尚未证明自然度、残影完全消除或等质量提速。
+低成本解析云模式尚未取代此体积渲染器。
+</pre></details></section>
+</main><script>
+const TEACHER_SOURCE="// Gardner textured ellipsoids - https://www.cs.drexel.edu/~david/Classes/Papers/p297-gardner.pdf + bib\n\nvec3 R = vec3(2.,4.,2.);              // ellipsoid radius\nvec3 L = normalize(vec3(-.4,0.,1.));  // light source\n#define AMBIENT .4\t\t\t\t\t  // ambient luminosity\n\n#define ANIM true\n#define PI 3.1415927\nvec4 FragColor;\n\nbool keyToggle(int ascii) {\n\treturn (texture(iChannel2,vec2((.5+float(ascii))/256.,0.75)).x > 0.);\n}\n\n// --- noise functions from https://www.shadertoy.com/view/XslGRr\n// Created by inigo quilez - iq/2013\n// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.\n\nmat3 m = mat3( 0.00,  0.80,  0.60,\n              -0.80,  0.36, -0.48,\n              -0.60, -0.48,  0.64 );\n\nfloat hash( float n )    // in [0,1]\n{\n    return fract(sin(n)*43758.5453);\n}\n\nfloat noise( in vec3 x ) // in [0,1]\n{\n    vec3 p = floor(x);\n    vec3 f = fract(x);\n\n    f = f*f*(3.0-2.0*f);\n\n    float n = p.x + p.y*57.0 + 113.0*p.z;\n\n    float res = mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),\n                        mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y),\n                    mix(mix( hash(n+113.0), hash(n+114.0),f.x),\n                        mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);\n    return res;\n}\n\nfloat fbm( vec3 p )    // in [0,1]\n{\n\tif (ANIM) p += iTime;\n    float f;\n    f  = 0.5000*noise( p ); p = m*p*2.02;\n    f += 0.2500*noise( p ); p = m*p*2.03;\n    f += 0.1250*noise( p ); p = m*p*2.01;\n    f += 0.0625*noise( p );\n    return f;\n}\n// --- End of Created by inigo quilez\n\nfloat snoise( in vec3 x ) // in [-1,1]\n{ return 2.*noise(x)-1.; }\n\nfloat sfbm( vec3 p )      // in [-1,1]\n{\n\tif (ANIM) p += iTime;\n    float f;\n    f  = 0.5000*snoise( p ); p = m*p*2.02;\n    f += 0.2500*snoise( p ); p = m*p*2.03;\n    f += 0.1250*snoise( p ); p = m*p*2.01;\n    f += 0.0625*snoise( p );\n    return f;\n}\n\n\n\n// --- view matrix when looking T from O with [-1,1]x[-1,1] screen at dist d\n\n\nmat3 lookat(vec3 O, vec3 T, float d) {\n\tmat3 M;\n\tvec3 OT = normalize(T-O);\n\tM[0] = OT;\n\tM[2] = normalize(vec3(0.,0.,1.)-OT.z*OT)/d;\n\tM[1] = cross(M[2],OT);\n\treturn M;\n}\n\n// --- ray -  ellipsoid intersection\n// if true, return P,N and thickness l\n\nbool intersect_ellipsoid(vec3 O, vec3 D, out vec3 P, out vec3 N, out float l) {\n\tvec3 OR = O/R, DR = D/R; // to space where ellipsoid is a sphere \n\t\t// P=O+tD & |P|=1 -> solve t in O^2 +2(O.D)t + D^2.t^2 = 1\n\tfloat OD = dot(OR,DR), OO=dot(OR,OR), DD=dot(DR,DR);\n\tfloat d = OD*OD - (OO-1.)*DD;\n\t\n\tif (!((d >=0.)&&(OD<0.)&&(OO>1.))) return false;\n\t// ray intersects the ellipsoid (and not in our back)\n\t// note that t>0 <=> -OD>0 &  OD^2 > OD^ -(OO-1.)*DD -> |O|>1\n\t\t\n\tfloat t = (-OD-sqrt(d))/DD;\n\t// return intersection point, normal and thickness\n\tP = O+t*D;\n\tN=normalize(P/(R*R));\n\tl = 2.*sqrt(d)/DD;\n\n\treturn true;\n}\n\n// --- Gardner textured ellipsoids (sort of)\n\n// 's' index corresponds to Garner faked silhouette\n// 'i' index corresponds to interior term faked by mid-surface\n\nfloat ks,ps, ki,pi;  // smoothness/thichness parameters\n\nfloat l;\nvoid draw_obj(vec3 O, mat3 M, vec2 pos, int mode) {\n\tvec3 D = normalize(M*vec3(1.,pos));\t\t// ray\n\t\n\tvec3 P,N; \n\tif (! intersect_ellipsoid(O,D, P,N,l)) return;\n\t\n\tvec3 Pm = P+.5*l*D,                \t\t// .5: deepest point inside cloud. \n\t\t Nm = normalize(Pm/(R*R)),     \t\t// it's normal\n\t     Nn = normalize(P/R);\n\tfloat nl = clamp( dot(N,L),0.,1.), \t\t// ratio of light-facing (for lighting)\n\t\t  nd = clamp(-dot(Nn,D),0.,1.); \t// ratio of camera-facing (for silhouette)\n            // try 1.\n\n\tfloat ns = fbm(P), ni = fbm(Pm+10.);\n\tfloat A, l0 = 3.;\n\t//l += l*(l/l0-1.)/(1.+l*l/(l0*l0));     // optical depth modified at silhouette\n\tl = clamp(l-6.*ni,0.,1e10);\n\tfloat As = pow(ks*nd, ps), \t\t\t \t // silhouette\n\t\t  Ai = 1.-pow(.7,pi*l);              // interior\n\n\n\tAs =clamp(As-ns,0.,1.)*2.; // As = 2.*pow(As ,.6);\n\tif (mode==2) \n\t\tA = 1.- (1.-As)*(1.-Ai);  \t\t\t// mul Ti and Ts\n\telse\n\t\tA = (mode==0) ? Ai : As; \n\tA = clamp(A,0.,1.); \n\tnl = .8*( nl + ((mode==0) ? fbm(Pm-10.) : fbm(P+10.) ));\n\n\t#if 0 // noise bump\n\tN = normalize(N -.1*(dFdx(A)*M[1]+dFdy(A)*M[2])*iResolution.y); \n\tnl = clamp( dot(N,L),0.,1.);\n#endif\n\t\n\tvec4 col = vec4(mix(nl,1.,AMBIENT));\n\tFragColor = mix(FragColor,col,A);\n}\n\n// === main =============================================\n\nvoid mainImage( out vec4 fragColor, in vec2 fragCoord ) {\n\tfloat t = iTime;\n    vec2 uv = 2.*(fragCoord.xy / iResolution.y-vec2(.85,.5));\n\tvec2 mouse = 2.*(iMouse.xy / iResolution.xy - vec2(.85,.5));\n\tfloat z = .2;\n\tks = 1.+mouse.x, ps = mouse.y*8., ki, pi;\n\tks = 1.; ps = 3.;   ki = .9; pi = 3.;\n\t\n\tif (iMouse.z>0.) {\n\t\tt = -PI/2.*mouse.x;\n\t\tz = -PI/2.*mouse.y;\n\t}\n\tvec3 O = vec3(-15.*cos(t)*cos(z),15.*sin(t)*cos(z),15.*sin(z));\t// camera\n\tfloat compas = t-.2*uv.x; vec2 dir = vec2(cos(compas),sin(compas));\n\tFragColor = (keyToggle(64+19)) \n\t\t? vec4(0.) \n\t\t: clamp(vec4(.6,.7+.3*dir,1.)*(uv.y+1.6)/1.8,0.,1.); \t\t// sky\n\n\tmat3 M = lookat(O,vec3(0.),5.); \n\tvec2 dx = vec2(1.,0.);\n\t\n\tif (!keyToggle(32))\n\t\tdraw_obj(O,M, uv, 2);\t\n\telse {\n\t\tdraw_obj(O,M, 1.5*(uv+dx), 0);\t\n\t\tdraw_obj(O,M, 1.5*(uv-dx), 1);\t\n\t}\n    \n   fragColor = FragColor; \n}\n";
+const FUSION_SOURCE="// Gardner textured ellipsoids - https://www.cs.drexel.edu/~david/Classes/Papers/p297-gardner.pdf + bib\n\nvec3 R = vec3(2.,4.,2.);              // ellipsoid radius\nvec3 L = normalize(vec3(-.4,0.,1.));  // light source\n#define AMBIENT .4\t\t\t\t\t  // ambient luminosity\n\n#define ANIM true\n#define PI 3.1415927\nvec4 FragColor;\n\nbool keyToggle(int ascii) {\n\treturn (texture(iChannel2,vec2((.5+float(ascii))/256.,0.75)).x > 0.);\n}\n\n// --- noise functions from https://www.shadertoy.com/view/XslGRr\n// Created by inigo quilez - iq/2013\n// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.\n\nmat3 m = mat3( 0.00,  0.80,  0.60,\n              -0.80,  0.36, -0.48,\n              -0.60, -0.48,  0.64 );\n\nfloat hash( float n )    // in [0,1]\n{\n    return fract(sin(n)*43758.5453);\n}\n\nfloat noise( in vec3 x ) // in [0,1]\n{\n    vec3 p = floor(x);\n    vec3 f = fract(x);\n\n    f = f*f*(3.0-2.0*f);\n\n    float n = p.x + p.y*57.0 + 113.0*p.z;\n\n    float res = mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),\n                        mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y),\n                    mix(mix( hash(n+113.0), hash(n+114.0),f.x),\n                        mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);\n    return res;\n}\n\nfloat fbm( vec3 p )    // in [0,1]\n{\n\tif (ANIM) p += iTime;\n    float f;\n    f  = 0.5000*noise( p ); p = m*p*2.02;\n    f += 0.2500*noise( p ); p = m*p*2.03;\n    f += 0.1250*noise( p ); p = m*p*2.01;\n    f += 0.0625*noise( p );\n    return f;\n}\n// --- End of Created by inigo quilez\n\nfloat snoise( in vec3 x ) // in [-1,1]\n{ return 2.*noise(x)-1.; }\n\nfloat sfbm( vec3 p )      // in [-1,1]\n{\n\tif (ANIM) p += iTime;\n    float f;\n    f  = 0.5000*snoise( p ); p = m*p*2.02;\n    f += 0.2500*snoise( p ); p = m*p*2.03;\n    f += 0.1250*snoise( p ); p = m*p*2.01;\n    f += 0.0625*snoise( p );\n    return f;\n}\n\n\n\n// --- view matrix when looking T from O with [-1,1]x[-1,1] screen at dist d\n\n\nmat3 lookat(vec3 O, vec3 T, float d) {\n\tmat3 M;\n\tvec3 OT = normalize(T-O);\n\tM[0] = OT;\n\tM[2] = normalize(vec3(0.,0.,1.)-OT.z*OT)/d;\n\tM[1] = cross(M[2],OT);\n\treturn M;\n}\n\n// --- ray -  ellipsoid intersection\n// if true, return P,N and thickness l\n\nbool intersect_ellipsoid(vec3 O, vec3 D, out vec3 P, out vec3 N, out float l) {\n\tvec3 OR = O/R, DR = D/R; // to space where ellipsoid is a sphere \n\t\t// P=O+tD & |P|=1 -> solve t in O^2 +2(O.D)t + D^2.t^2 = 1\n\tfloat OD = dot(OR,DR), OO=dot(OR,OR), DD=dot(DR,DR);\n\tfloat d = OD*OD - (OO-1.)*DD;\n\t\n\tif (!((d >=0.)&&(OD<0.)&&(OO>1.))) return false;\n\t// ray intersects the ellipsoid (and not in our back)\n\t// note that t>0 <=> -OD>0 &  OD^2 > OD^ -(OO-1.)*DD -> |O|>1\n\t\t\n\tfloat t = (-OD-sqrt(d))/DD;\n\t// return intersection point, normal and thickness\n\tP = O+t*D;\n\tN=normalize(P/(R*R));\n\tl = 2.*sqrt(d)/DD;\n\n\treturn true;\n}\n\n// --- Gardner textured ellipsoids (sort of)\n\n// 's' index corresponds to Garner faked silhouette\n// 'i' index corresponds to interior term faked by mid-surface\n\nfloat ks,ps, ki,pi;  // smoothness/thichness parameters\n\nfloat l;\nvoid draw_obj(vec3 O, mat3 M, vec2 pos, int mode) {\n\tvec3 D = normalize(M*vec3(1.,pos));\t\t// ray\n\t\n\tvec3 P,N; \n\tif (! intersect_ellipsoid(O,D, P,N,l)) return;\n\t\n\tvec3 Pm = P+.5*l*D,                \t\t// .5: deepest point inside cloud. \n\t\t Nm = normalize(Pm/(R*R)),     \t\t// it's normal\n\t     Nn = normalize(P/R);\n\tfloat nl = clamp( dot(N,L),0.,1.), \t\t// ratio of light-facing (for lighting)\n\t\t  nd = clamp(-dot(Nn,D),0.,1.); \t// ratio of camera-facing (for silhouette)\n            // try 1.\n\n\tfloat ns = fbm(P), ni = fbm(Pm+10.);\n\tfloat A, l0 = 3.;\n\t//l += l*(l/l0-1.)/(1.+l*l/(l0*l0));     // optical depth modified at silhouette\n\tl = clamp(l-6.*ni,0.,1e10);\n\tfloat As = pow(ks*nd, ps), \t\t\t \t // silhouette\n\t\t  Ai = 1.-pow(.7,pi*l);              // interior\n\n\n\tAs =clamp(As-ns,0.,1.)*2.; // As = 2.*pow(As ,.6);\n\tif (mode==2) \n\t\tA = 1.- (1.-As)*(1.-Ai);  \t\t\t// mul Ti and Ts\n\telse\n\t\tA = (mode==0) ? Ai : As; \n\tA = clamp(A*uDensity,0.,1.); \n\tnl = .8*( nl + ((mode==0) ? fbm(Pm-10.) : fbm(P+10.) ));\n\n\t#if 0 // noise bump\n\tN = normalize(N -.1*(dFdx(A)*M[1]+dFdy(A)*M[2])*iResolution.y); \n\tnl = clamp( dot(N,L),0.,1.);\n#endif\n\t\n\tvec4 col = vec4(mix(nl,1.,AMBIENT));\n\tFragColor = mix(FragColor,col,A);\n}\n\n// === main =============================================\n\n\nvoid mainImage(out vec4 fragColor, in vec2 fragCoord){\n vec2 uv=2.*(fragCoord/iResolution.y-vec2(.5*iResolution.x/iResolution.y,.5));\n vec3 O=vec3(0.,-22.,2.8),T=vec3(0.,0.,1.5);\n mat3 M=lookat(O,T,2.8);\n L=normalize(vec3(-.4,-.35,1.));ks=1.;ps=3.;ki=.9;pi=3.;\n vec3 sky=mix(vec3(.68,.80,.87),vec3(.27,.55,.76),clamp(.5+.5*uv.y,0.,1.));\n FragColor=vec4(sky,1.);\n vec3 drift=vec3(uWindSpeed*.12*uWorldTime,0.,0.);\n // z-up local display frame; far-to-near order; dimensionless ellipsoids.\n R=vec3(2.1,2.6,2.0);draw_obj(O-(vec3(6.8,2.,.3)+drift),M,uv,2);\n R=vec3(2.0,2.5,2.1);draw_obj(O-(vec3(-6.6,1.,.45)+drift),M,uv,2);\n R=vec3(3.1,2.8,3.25);draw_obj(O-(vec3(0.,0.,1.5)+drift),M,uv,2);\n fragColor=FragColor;\n}\n";
+</script><script>(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('cloudCanvas');let gl,teacher,fusion,program,raf,disposed=false,lost=false,hidden=false,playing=true,clock=0,last=performance.now(),dirty=true,frames=0,measurement=null;
+const samples=[],gpuTimes=[],pending=[],mouse=[0,0,0,0],keyboard=new Uint8Array(256*3*4);let texture,ext,activeQuery=null,lastHud=0,mode='teacher',teacherFrames=0,fusionFrames=0;
+const vs='#version 300 es\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}';
+const prefix='#version 300 es\nprecision highp float;\nuniform vec3 iResolution;uniform float iTime;uniform vec4 iMouse;uniform sampler2D iChannel2;uniform float uDensity,uWindSpeed,uWorldTime;out vec4 outputColor;\n';
+const suffix='\nvoid main(){mainImage(outputColor,gl_FragCoord.xy);}\n';
+function fail(e){$('error').textContent=String(e?.message||e);$('compileState').textContent='运行失败';playing=false;$('play').textContent='继续';}
+function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const error=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(error)}return s}
+function build(source){const p=gl.createProgram(),v=compile(gl.VERTEX_SHADER,vs),f=compile(gl.FRAGMENT_SHADER,prefix+source+suffix);gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);gl.deleteShader(v);gl.deleteShader(f);if(!gl.getProgramParameter(p,gl.LINK_STATUS)){const error=gl.getProgramInfoLog(p);gl.deleteProgram(p);throw Error(error)}const names=['iResolution','iTime','iMouse','iChannel2','uDensity','uWindSpeed','uWorldTime'];return {p,u:Object.fromEntries(names.map(n=>[n,gl.getUniformLocation(p,n)]))}}
+function clearStats(){samples.length=0;gpuTimes.length=0;last=performance.now();lastHud=0;}
+function resize(){const box=canvas.getBoundingClientRect(),ratio=$('fullResolution').checked?devicePixelRatio:Math.min(devicePixelRatio,1),preset=$('renderSize').value;let w=Math.max(2,Math.min(3840,Math.round(box.width*ratio))),h=Math.max(2,Math.round(w*9/16));if(preset!=='native'){[w,h]=preset.split('x').map(Number)}if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);mouse[0]=w*.5;mouse[1]=h*.5;dirty=true;clearStats()}}
+function percentile(values,q){if(!values.length)return null;const a=values.slice().sort((a,b)=>a-b);return a[Math.min(a.length-1,Math.floor(q*(a.length-1)))]}
+function stats(){const mean=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;return {mode,renderSize:[canvas.width,canvas.height],fps:mean?1000/mean:null,frameP95Ms:percentile(samples,.95),gpuMedianMs:percentile(gpuTimes,.5),frames,time:clock,sampleCount:samples.length,playing}}
+function paintHud(){const s=stats();$('metrics').textContent=`${mode==='teacher'?'原式':'融合实验'} · ${canvas.width}×${canvas.height} · ${s.fps?s.fps.toFixed(1):'—'} FPS · 帧间隔 P95 ${s.frameP95Ms?s.frameP95Ms.toFixed(1):'—'} ms · GPU ${s.gpuMedianMs?s.gpuMedianMs.toFixed(2)+' ms':'不可用/等待'} · t ${clock.toFixed(2)} s${playing?'':' · 已暂停'}`;$('time').value=Math.min(30,clock);$('timeValue').value=clock.toFixed(2)+' s';}
+function poll(){if(!ext)return;if(gl.getParameter(ext.GPU_DISJOINT_EXT)){pending.forEach(q=>gl.deleteQuery(q));pending.length=0;gpuTimes.length=0;return}while(pending.length&&gl.getQueryParameter(pending[0],gl.QUERY_RESULT_AVAILABLE)){const q=pending.shift(),ms=gl.getQueryParameter(q,gl.QUERY_RESULT)/1e6;gl.deleteQuery(q);if(ms>0&&Number.isFinite(ms)){gpuTimes.push(ms);if(gpuTimes.length>120)gpuTimes.shift()}}}
+function draw(){gl.useProgram(program.p);const u=program.u;gl.uniform3f(u.iResolution,canvas.width,canvas.height,1);gl.uniform1f(u.iTime,mode==='teacher'?clock:clock*+$('evolution').value);gl.uniform4fv(u.iMouse,mouse);gl.uniform1i(u.iChannel2,0);gl.uniform1f(u.uDensity,+$('density').value);gl.uniform1f(u.uWindSpeed,+$('wind').value);gl.uniform1f(u.uWorldTime,clock);if(ext&&pending.length<4){activeQuery=gl.createQuery();gl.beginQuery(ext.TIME_ELAPSED_EXT,activeQuery)}gl.drawArrays(gl.TRIANGLES,0,3);if(activeQuery){gl.endQuery(ext.TIME_ELAPSED_EXT);pending.push(activeQuery);activeQuery=null}frames++;const error=gl.getError();if(error)throw Error('WebGL '+error);if(mode==='teacher')teacherFrames++;else fusionFrames++;$('sourceAcceptance').textContent='原式编译成功；已实际绘制 '+teacherFrames+' 帧';if(mode==='weather')$('fusionAcceptance').textContent='融合实验已实际绘制 '+fusionFrames+' 帧；仅外部观察，穿云/体积光路尚未接入。';}
+function tick(now){if(disposed)return;raf=requestAnimationFrame(tick);const dt=(now-last)/1000;last=now;if(lost||hidden||window.cloudModuleHidden||document.hidden){samples.length=0;return}try{resize();poll();if(playing){clock+=Math.min(Math.max(dt,0),.25);dirty=true}if(playing||dirty){if(dt>0&&dt<.5&&playing){samples.push(dt*1000);if(samples.length>120)samples.shift()}draw();dirty=false}if(now-lastHud>400){paintHud();lastHud=now}if(measurement){if(now-measurement.start>1000)measurement.times.push(dt*1000);if(now-measurement.start>=8000){const s=stats(),a=measurement.times.filter(x=>x>0&&x<1000),fps=a.length?a.length*1000/a.reduce((x,y)=>x+y,0):0;const record={...s,fps,frameP95Ms:percentile(a,.95),durationS:(now-measurement.start)/1000,samples:a.length};$('measureResult').textContent=`8 秒测量完成：${mode==='teacher'?'原代码':'融合实验'} / ${s.renderSize.join('×')} / ${fps.toFixed(1)} FPS / P95 ${record.frameP95Ms?.toFixed(1)} ms / GPU 中位 ${s.gpuMedianMs?.toFixed(2)||'不可用'} ms。单模式、本机，非等画质比较。`;$('performanceAcceptance').textContent=$('measureResult').textContent;measurement=null;$('measure').disabled=false;window.WeatherR34CloudLab.lastMeasurement=record;}}}catch(e){fail(e)}}
+function setPlaying(value){playing=!!value;$('play').textContent=playing?'暂停':'继续';last=performance.now();clearStats();dirty=true;paintHud()}
+function setMode(value){mode=value;program=mode==='teacher'?teacher:fusion;$('renderer').value=mode;mouse[2]=0;$('liveTitle').textContent=mode==='teacher'?'新云原代码 · 实时 WebGL':'Weather Mother · 解析云融合实验';$('modeNote').textContent=mode==='teacher'?'原式模式保留全部着色器公式、相机与天空。拖动画布对应原代码 iMouse；空格比较轮廓项与厚度项，S 切换背景。密度、平移、形变参数用于融合实验。':'融合实验：三团解析云接入蓝天空、密度、平移和统一形变时间；不混合历史颜色。此表示不支持内部射线起点，不能代替近云穿行与全天气。';['density','wind','evolution'].forEach(id=>{$(id).disabled=mode==='teacher';$(id+'Label').classList.toggle('disabled',mode==='teacher')});clock=0;clearStats();dirty=true;}
+$('play').onclick=()=>setPlaying(!playing);$('reset').onclick=()=>{clock=0;mouse[2]=0;clearStats();dirty=true};$('renderer').onchange=()=>setMode($('renderer').value);$('fullResolution').onchange=()=>{dirty=true;clearStats()};
+$('time').oninput=()=>{setPlaying(false);clock=+$('time').value;dirty=true;paintHud()};['density','wind','evolution'].forEach(id=>$(id).oninput=()=>{$(id+'Value').value=(+$(id).value).toFixed(2);clearStats();dirty=true});
+$('renderSize').onchange=()=>{clearStats();dirty=true};
+$('measure').onclick=()=>{clock=0;mouse[2]=0;setPlaying(true);measurement={start:performance.now(),times:[]};$('measure').disabled=true;$('measureResult').textContent='正在从 0 秒测量 8 秒；当前只运行实时云，无录像解码…'};
+$('openWeather').onclick=()=>parent.postMessage({type:'weather-r31-open-original'},'*');
+function mousePosition(e){const b=canvas.getBoundingClientRect();mouse[0]=(e.clientX-b.left)/b.width*canvas.width;mouse[1]=(b.bottom-e.clientY)/b.height*canvas.height;dirty=true}
+canvas.onpointerdown=e=>{canvas.focus();canvas.setPointerCapture(e.pointerId);mousePosition(e);mouse[2]=1;mouse[3]=1};canvas.onpointermove=e=>{if(e.buttons)mousePosition(e)};canvas.onpointerup=canvas.onpointercancel=()=>{mouse[2]=0;mouse[3]=0;dirty=true};canvas.onkeydown=e=>{const key=e.code==='Space'?32:e.code==='KeyS'?83:null;if(key!==null&&!e.repeat){e.preventDefault();keyboard[(2*256+key)*4]=keyboard[(2*256+key)*4]?0:255;gl.bindTexture(gl.TEXTURE_2D,texture);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,256,3,gl.RGBA,gl.UNSIGNED_BYTE,keyboard);dirty=true}};
+addEventListener('message',e=>{if(e.source===parent&&e.data?.type==='weather-r31-host'){hidden=!!e.data.hidden;last=performance.now();dirty=true;clearStats()}});document.addEventListener('visibilitychange',()=>{last=performance.now();clearStats()});addEventListener('blur',()=>{mouse[2]=0;mouse[3]=0});canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;fail('图形上下文丢失；重新载入可恢复。')});canvas.addEventListener('webglcontextrestored',()=>location.reload());
+window.WeatherR34CloudLab={version:'WM-R34-NO-VIDEO-20261026',getState:stats,lastMeasurement:null};
+addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(raf);if(gl&&!lost){pending.forEach(q=>gl.deleteQuery(q));gl.deleteTexture(texture);if(teacher)gl.deleteProgram(teacher.p);if(fusion)gl.deleteProgram(fusion.p)}});
+try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,powerPreference:'high-performance',preserveDrawingBuffer:true});if(!gl)throw Error('当前浏览器不支持 WebGL2；源代码仍可在下方查看。');teacher=build(TEACHER_SOURCE);fusion=build(FUSION_SOURCE);ext=gl.getExtension('EXT_disjoint_timer_query_webgl2');texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,256,3,0,gl.RGBA,gl.UNSIGNED_BYTE,keyboard);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);setMode('teacher');resize();draw();$('compileState').textContent='原式 / 融合着色器已编译';raf=requestAnimationFrame(tick)}catch(e){fail(e)}
+})();
+</script></body></html>
