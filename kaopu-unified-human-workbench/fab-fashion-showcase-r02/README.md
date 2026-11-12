@@ -76,3 +76,10 @@ Fab 原始页面：<https://www.fab.com/listings/34abbb9d-02b6-4385-a790-e760e6c
 - 四个镜头预设：全身、人像、侧面、近景。
 - 主光、补光、轮廓光和曝光独立调节。
 - 已回读当前 HTML；外层 loader 与动态注入的展示扩展分别通过 JavaScript 语法编译检查。尚未在实际浏览器中验收交互与最终画面。
+
+
+## Fixed public Pages entry
+
+The preview HTML is also published as `index.html` on the repository's existing `gh-pages` branch, avoiding the htmlpreview wrapper. Direct URL: https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/fab-fashion-showcase-r02/index.html
+
+Published Pages commit: `8cc16e7550c26eff2f6d26b13eea8a98b4dbd775`. GitHub source read-back confirms the exact file exists on `gh-pages`, with explicit HTML head/body, a visible loader, startup error diagnostics, and both outer and injected JavaScript syntax checks passing. Pages deployment and end-user browser rendering still require live browser verification.
