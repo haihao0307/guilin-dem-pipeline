@@ -91,7 +91,7 @@ Applies after a real 3D garment and explicit rest metric already exist. It does 
 
 - Research: `GATE-RUN`
 - Teacher: `TEACHER_CANDIDATE / AUDITION`
-- Mother routing: `POSTED` only after the coordination comment is created.
+- Mother routing: `POSTED` to #91 as comment `6828412955`.
 - Mother ACK: `UNKNOWN` until a real reply.
 - Production implementation: not done.
 - Adoption: not done.
