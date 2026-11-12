@@ -31,12 +31,11 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
 </style>
 </head>
 <body>
-<header><div><div class="brand">KAOPU / MOTION ATLAS</div><div class="sub">R03 · source-backed playback & jitter inspection</div></div><div class="row"><span class="tag">3 verified CMU source clips</span><span class="tag">31 joints · 120 Hz</span></div></header>
+<header><div><div class="brand">KAOPU / MOTION ATLAS</div><div class="sub">R03 · source-backed playback & jitter inspection</div></div><div class="row"><span class="tag">CMU source sample</span><span class="tag">31 joints · 285 frames · 120 Hz</span></div></header>
 <main>
 <section class="panel">
  <div class="stage"><canvas id="view" width="1200" height="760"></canvas><div class="overlay" id="viewLabel">CMU 16_33 · slow walk · source positions</div></div>
  <div class="controls">
-  <div class="row"><label for="clipSelect">动作源</label><select id="clipSelect"><option value="16_33">16_33 · 慢走 / 停止</option><option value="16_57">16_57 · 跑步 / 急停</option><option value="16_01">16_01 · 跳跃</option></select></div>
   <div class="row"><button class="primary" id="play">▶ 播放</button><button id="step">单帧</button><button id="reset">复位</button><span class="muted" id="clock">0 / 284</span><span class="muted" id="fps">—</span></div>
   <input id="timeline" type="range" min="0" max="284" value="0">
   <div class="row"><label style="flex:1">播放速度 <b id="speedValue">1.0×</b></label><input id="speed" type="range" min=".25" max="2" step=".05" value="1" style="max-width:180px"></div>
@@ -44,9 +43,9 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
  </div>
 </section>
 <aside class="panel controls">
- <div><h1>动作数据检查</h1><div class="sub">直接读取仓库中已提交的 CMU 源位置数据；不是程序合成的动作。切换三条独立捕捉片段进行观察。</div></div>
+ <div><h1>动作数据检查</h1><div class="sub">不是合成动画：直接读取已提交的 CMU 16_33 源位置数据。原始来源：mocap.cs.cmu.edu/subjects/16/16_33.amc</div></div>
  <div class="metric-grid">
-  <div class="metric"><b id="jointCount">31</b><span>骨骼关节点</span></div><div class="metric"><b id="frameCount">—</b><span>捕捉帧</span></div><div class="metric"><b id="sourceFPS">120</b><span>源 FPS</span></div>
+  <div class="metric"><b>31</b><span>骨骼关节点</span></div><div class="metric"><b>285</b><span>捕捉帧</span></div><div class="metric"><b>120</b><span>源 FPS</span></div>
  </div>
  <div class="divider"></div>
  <h2>抖动测量 · XYZ 轨迹二阶差分</h2>
@@ -56,12 +55,6 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
  <div id="status">正在读取固定版本的 CMU 源动作…</div>
  <div class="note">平滑对照仅用于观察轨迹高频噪声，未修改源数据。此来源没有逐帧接触真值，因此不能将平滑后的脚部轨迹直接认定为真实脚锁。</div>
  <div class="divider"></div>
- <h2>三条真实动作 · 数据压缩实测</h2>
- <div class="metric-grid">
-  <div class="metric"><b>1.66 MB</b><span>原始 JSON</span></div><div class="metric"><b>233.7 KB</b><span>精简数据包</span></div><div class="metric"><b>85.97%</b><span>体积减少</span></div>
- </div>
- <div class="note">逐关节、逐坐标轴 uint16 量化；最大位置误差 0.0264 mm。仅针对这三条 CMU 样本，原始文件仍保留不动，不能外推为完整动作库压缩率。</div>
- <div class="divider"></div>
  <h2>原动作库历史清单（尚未重新载入原始分片）</h2>
  <div class="metric-grid">
   <div class="metric"><b>2,548</b><span>CMU 条目</span></div><div class="metric"><b>141</b><span>Mesh2Motion 条目</span></div><div class="metric"><b>84</b><span>Quaternius 原型</span></div>
@@ -69,56 +62,34 @@ label{color:#b9c9d8;font-size:12px;display:flex;justify-content:space-between;ga
  <div class="metric-grid">
   <div class="metric"><b>5,897</b><span>原发布文件</span></div><div class="metric"><b>1.49 GB</b><span>原发布体积</span></div><div class="metric"><b>2,406</b><span>历史归并组</span></div>
  </div>
- <div class="note">这三条是仓库中已有的真实 CMU 样本，不代表 2,689 条保留动作已经迁入。Mesh2Motion 原始轨迹、原站完整分片和三个 R41 精确 ID 仍未恢复；这里没有用占位动画冒充全量库。</div>
+ <div class="note">本页只加载一个可追溯的 CMU 样本，不代表 2,689 条保留动作已经迁入。完整库、三个 R41 精确 ID、Mesh2Motion 原始轨迹仍需从原站分片恢复；未用占位动作冒充全量导入。</div>
 </aside>
 </main>
 <script>
-const PACK_URL='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-motion-atlas-sample-r03/cmu-sample-pack.json';
-const SOURCES={'16_33':{label:'slow walk / stop'},'16_57':{label:'run / jog, sudden stop'},'16_01':{label:'jump'}};
+const SOURCE='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/activity-r01/CMU-WALK-SOURCE.json';
 const $=id=>document.getElementById(id),canvas=$('view'),ctx=canvas.getContext('2d');
 const links=[['root','lhipjoint'],['lhipjoint','lfemur'],['lfemur','ltibia'],['ltibia','lfoot'],['lfoot','ltoes'],['root','rhipjoint'],['rhipjoint','rfemur'],['rfemur','rtibia'],['rtibia','rfoot'],['rfoot','rtoes'],['root','lowerback'],['lowerback','upperback'],['upperback','thorax'],['thorax','lowerneck'],['lowerneck','upperneck'],['upperneck','head'],['thorax','lclavicle'],['lclavicle','lhumerus'],['lhumerus','lradius'],['lradius','lwrist'],['lwrist','lhand'],['lhand','lfingers'],['lwrist','lthumb'],['thorax','rclavicle'],['rclavicle','rhumerus'],['rhumerus','rradius'],['rradius','rwrist'],['rwrist','rhand'],['rhand','rfingers'],['rwrist','rthumb']];
-let data=null,frame=0,playing=false,last=0,view='oblique',showSmooth=true,speed=1,raf=0,loadToken=0;
+let data=null,frame=0,playing=false,last=0,view='oblique',showSmooth=true,speed=1,raf=0;
 const index=()=>Object.fromEntries(data.names.map((n,i)=>[n,i]));
-function smoothFrames(source){
- const points=source.points,weights=[1,6,15,20,15,6,1];
- // Reuse the seven-sample offline binomial position filter already used by
- // NativeCapturedRetarget.mjs; clamp endpoints to avoid inventing edge frames.
- const smoothed=points.map((row,i)=>row.map((p,j)=>p.map((_,k)=>weights.reduce((sum,w,t)=>sum+w*points[Math.max(0,Math.min(points.length-1,i+t-3))][j][k],0)/64)));
- const idx=Object.fromEntries(source.names.map((n,i)=>[n,i]));
- // Estimated contact windows are treated as intervals, not single-frame events.
- // During stance, lock the foot reference point horizontally; retain vertical
- // motion and toe roll so the filter does not flatten heel/toe articulation.
- for(const side of ['l','r']){
-  const joint=idx[side+'foot'];if(joint===undefined)continue;
-  for(const span of source.contacts?.[side]||[]){
-   const start=Math.max(0,span.startFrame),end=Math.min(points.length-1,span.endFrame),anchor=points[start][joint];
-   for(let f=start;f<=end;f++){smoothed[f][joint][0]=anchor[0];smoothed[f][joint][2]=anchor[2];}
-  }
- }
- return smoothed;
-}
-function jitter(points,fps){let sum=0,n=0;for(let i=2;i<points.length;i++)for(let j=0;j<points[i].length;j++)for(let k=0;k<3;k++){const d=(points[i][j][k]-2*points[i-1][j][k]+points[i-2][j][k])*fps*fps;sum+=d*d;n++}return Math.sqrt(sum/Math.max(1,n));}
-function contactDrift(source,points){let max=0,frames=0,intervals=0;const idx=Object.fromEntries(source.names.map((n,i)=>[n,i]));for(const side of ['l','r']){const j=idx[side+'foot'];if(j===undefined)continue;for(const span of source.contacts?.[side]||[]){intervals++;const start=Math.max(0,span.startFrame),end=Math.min(points.length-1,span.endFrame),anchor=points[start][j];frames+=end-start+1;for(let f=start;f<=end;f++){const p=points[f][j];max=Math.max(max,Math.hypot(p[0]-anchor[0],p[2]-anchor[2]));}}}return {max,frames,intervals};}
+function smoothFrames(points){return points.map((row,i)=>row.map((p,j)=>{if(i===0||i===points.length-1)return p;const a=points[i-1][j],b=points[i+1][j];return p.map((v,k)=>a[k]*.25+v*.5+b[k]*.25)}));}
+function jitter(points){let sum=0,n=0;for(let i=2;i<points.length;i++)for(let j=0;j<points[i].length;j++)for(let k=0;k<3;k++){const d=points[i][j][k]-2*points[i-1][j][k]+points[i-2][j][k];sum+=d*d;n++}return Math.sqrt(sum/Math.max(1,n))*data.fps*data.fps;}
 function projected(p,center,scale){let x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2];let a=view==='front'?0:view==='side'?Math.PI/2:Math.PI/5;let rx=x*Math.cos(a)-z*Math.sin(a),rz=x*Math.sin(a)+z*Math.cos(a);const perspective=1/(1+rz*.08);return [canvas.width/2+rx*scale*perspective,canvas.height*.78-y*scale*perspective];}
 function draw(){if(!data)return;const pts=showSmooth?data.smooth:data.points,names=index(),lo=Math.floor(frame),hi=Math.min(pts.length-1,lo+1),t=frame-lo,row=pts[lo].map((p,j)=>p.map((v,k)=>v+(pts[hi][j][k]-v)*t));ctx.clearRect(0,0,canvas.width,canvas.height);
- const center=[0,0,0];for(const p of row)for(let k=0;k<3;k++)center[k]+=p[k]/row.length;
+ const all=row,center=[0,0,0];for(const p of all)for(let k=0;k<3;k++)center[k]+=p[k]/all.length;
  const scale=330;ctx.strokeStyle='rgba(135,177,205,.16)';ctx.lineWidth=1;for(let i=0;i<12;i++){const y=canvas.height*.78-i*42;ctx.beginPath();ctx.moveTo(100,y);ctx.lineTo(1100,y);ctx.stroke()}
  const projectedByName={};for(const n of data.names)projectedByName[n]=projected(row[names[n]],center,scale);
  ctx.lineCap='round';ctx.lineJoin='round';
  for(const [a,b] of links){if(!(a in names)||!(b in names))continue;const p=projectedByName[a],q=projectedByName[b];ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.strokeStyle=(a.includes('foot')||b.includes('foot')||a.includes('toes')||b.includes('toes'))?'#fbbf24':'#8bd3f7';ctx.lineWidth=(a==='root'||b==='thorax'||b==='head')?7:5;ctx.stroke()}
  for(const n of data.names){const p=projectedByName[n];ctx.beginPath();ctx.arc(p[0],p[1],n==='head'?10:5,0,Math.PI*2);ctx.fillStyle=n.includes('foot')||n.includes('toes')?'#fbbf24':'#d9f3ff';ctx.fill()}
- ctx.fillStyle='#b9d2e5';ctx.font='16px system-ui';ctx.fillText(showSmooth?'平滑 + 接触锁定':'原始捕捉轨迹',24,canvas.height-28);
+ ctx.fillStyle='#b9d2e5';ctx.font='16px system-ui';ctx.fillText(showSmooth?'平滑轨迹预览':'原始轨迹预览',24,canvas.height-28);
  $('clock').textContent=frame.toFixed(1)+' / '+(data.points.length-1);$('timeline').value=Math.round(frame);
 }
-function tick(t){if(!playing)return;if(!last)last=t;const dt=t-last;last=t;frame=Math.min(data.points.length-1,frame+dt*data.fps*speed/1000);if(frame>=data.points.length-1){frame=data.points.length-1;playing=false;$('play').textContent='▶ 播放'}draw();if(playing)raf=requestAnimationFrame(tick)}
+function tick(t){if(!playing)return;if(!last)last=t;const dt=t-last;last=t;const advance=dt*data.fps*speed/1000;frame=Math.min(data.points.length-1,frame+advance);if(frame>=data.points.length-1){frame=data.points.length-1;playing=false;$('play').textContent='▶ 播放'}draw();if(playing)raf=requestAnimationFrame(tick)}
 function setPlaying(v){playing=v;last=0;$('play').textContent=v?'Ⅱ 暂停':'▶ 播放';if(v)raf=requestAnimationFrame(tick);else cancelAnimationFrame(raf)}
-function decodePoints(clip){const binary=atob(clip.data),bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0)),view=new DataView(bytes.buffer);if(bytes.byteLength!==clip.frames*clip.jointCount*6)throw Error('Packed track byte count mismatch');const points=new Array(clip.frames);let offset=0;for(let f=0;f<clip.frames;f++){const row=new Array(clip.jointCount);for(let j=0;j<clip.jointCount;j++){const p=new Array(3);for(let k=0;k<3;k++){const q=j*3+k,n=view.getUint16(offset,true);offset+=2;p[k]=clip.mins[q]+n*clip.scales[q]}row[j]=p}points[f]=row}return points}
-async function loadClip(key){const token=++loadToken;setPlaying(false);$('status').textContent='正在读取压缩动作数据 '+key+'…';try{const meta=SOURCES[key],r=await fetch(PACK_URL);if(!r.ok)throw Error('Packed source HTTP '+r.status);const pack=await r.json();if(pack.schema!=='kaopu-cmu-point-track-pack/1')throw Error('Packed library schema mismatch');const clip=pack.clips.find(x=>x.id===key);if(!clip)throw Error('Clip missing from packed source');const points=decodePoints(clip);if(token!==loadToken)return;if(points.length!==clip.frames||clip.jointCount!==31||clip.fps!==120)throw Error('Decoded source shape validation failed');if(!clip.contacts?.l||!clip.contacts?.r)throw Error('Missing left/right contact intervals');const source={...clip,points};data={...source,key,label:meta.label,points,smooth:smoothFrames(source)};frame=0;
- const a=jitter(data.points,data.fps),b=jitter(data.smooth,data.fps),raw=contactDrift(data,data.points),locked=contactDrift(data,data.smooth);
- $('jointCount').textContent=data.names.length;$('frameCount').textContent=data.points.length;$('sourceFPS').textContent=data.fps;$('rawJitter').textContent=a.toFixed(2);$('smoothJitter').textContent=b.toFixed(2);$('reduction').textContent=((1-b/a)*100).toFixed(1)+'%';$('rawSlip').textContent=(raw.max*1000).toFixed(1)+' mm';$('lockedSlip').textContent=(locked.max*1000).toFixed(1)+' mm';$('contactFrames').textContent=raw.frames+' / '+raw.intervals+'段';
- $('timeline').max=data.points.length-1;$('timeline').value=0;$('viewLabel').textContent='CMU '+key+' · '+meta.label+' · source positions';$('status').innerHTML='<span class="good">来源核验通过</span>\n'+(data.sourceURL||'CMU subject 16 / '+key)+'\n'+data.licenceReference+'\n'+data.fps+' Hz · '+data.points.length+' frames · '+data.names.length+' joints\nSource record SHA: '+data.sourceRecordGitBlobSHA+'\nContact labels: '+(data.contactMethod||'source-recorded intervals; method not separately specified')+'\nContact windows: L '+data.contacts.l.length+' / R '+data.contacts.r.length;draw();
- }catch(e){if(token===loadToken)$('status').textContent='加载失败：'+e.message}}
-$('play').onclick=()=>setPlaying(!playing);$('step').onclick=()=>{if(!data)return;setPlaying(false);frame=Math.min(data.points.length-1,frame+1);draw()};$('reset').onclick=()=>{if(!data)return;setPlaying(false);frame=0;draw()};$('timeline').oninput=e=>{if(!data)return;setPlaying(false);frame=Number(e.target.value);draw()};$('speed').oninput=e=>{speed=Number(e.target.value);$('speedValue').textContent=speed.toFixed(2)+'×'};$('smooth').onclick=()=>{showSmooth=!showSmooth;$('smooth').textContent='显示平滑对照：'+(showSmooth?'开':'关');draw()};$('clipSelect').onchange=e=>loadClip(e.target.value);document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('primary',x===b));draw()});
-loadClip('16_33');
+async function init(){try{const r=await fetch(SOURCE);if(!r.ok)throw Error('CMU source HTTP '+r.status);data=await r.json();if(data.schema!=='cmu16-33-source-positions/1'||data.points.length!==285||data.names.length!==31)throw Error('Source shape/provenance check failed');
+ data.smooth=smoothFrames(data.points);const a=jitter(data.points),b=jitter(data.smooth);$('rawJitter').textContent=a.toFixed(1);$('smoothJitter').textContent=b.toFixed(1);$('reduction').textContent=((1-b/a)*100).toFixed(1)+'%';$('status').innerHTML='<span class="good">来源核验通过</span>\n'+data.sourceURL+'\n'+data.licenceReference+'\n'+data.fps+' Hz · '+data.points.length+' frames · '+data.names.length+' joints';draw();
+ }catch(e){$('status').textContent='加载失败：'+e.message}}
+$('play').onclick=()=>setPlaying(!playing);$('step').onclick=()=>{setPlaying(false);frame=Math.min(data.points.length-1,frame+1);draw()};$('reset').onclick=()=>{setPlaying(false);frame=0;draw()};$('timeline').oninput=e=>{setPlaying(false);frame=Number(e.target.value);draw()};$('speed').oninput=e=>{speed=Number(e.target.value);$('speedValue').textContent=speed.toFixed(2)+'×'};$('smooth').onclick=()=>{showSmooth=!showSmooth;$('smooth').textContent='显示平滑对照：'+(showSmooth?'开':'关');draw()};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('primary',x===b));draw()});
+init();
 </script>
 </body></html>
