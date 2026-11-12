@@ -1,0 +1,46 @@
+{
+  "probe": "N279_CLOTH_SDF_CONTACT_AND_EDGE_INVARIANT",
+  "config": {
+    "n": 11,
+    "spacing": 0.2,
+    "restZ": 1.2,
+    "predictedDrop": 0.7,
+    "bodyRadius": 0.9,
+    "clearance": 0.02,
+    "iterations": 160,
+    "stiffness": 0.9
+  },
+  "bodyPoseVersion": "sphere-origin-r0.9-v1",
+  "cases": {
+    "noContact": {
+      "penetratingVertices": 45,
+      "minSignedDistance": -0.4,
+      "meanAbsoluteEdgeStrain": 0.13200274723201305,
+      "maxAbsoluteEdgeStrain": 2.640054944640259
+    },
+    "projectionOnly": {
+      "penetratingVertices": 0,
+      "minSignedDistance": 0.019999999999999907,
+      "meanAbsoluteEdgeStrain": 0.2455196050259201,
+      "maxAbsoluteEdgeStrain": 2.640054944640259
+    },
+    "jointDistanceAndContact": {
+      "penetratingVertices": 0,
+      "minSignedDistance": 0.019999999999999796,
+      "meanAbsoluteEdgeStrain": 0.0010869290107874978,
+      "maxAbsoluteEdgeStrain": 0.004266500373532267
+    },
+    "staleBodyPoseControl": {
+      "penetratingVertices": 18,
+      "minSignedDistance": -0.14149085334425648,
+      "meanAbsoluteEdgeStrain": 0.001051867418855766,
+      "maxAbsoluteEdgeStrain": 0.004228759543093652
+    }
+  },
+  "gates": {
+    "projectionOnlyRemovesPenetration": true,
+    "jointRemovesPenetration": true,
+    "jointReducesMeanEdgeStrainByHalf": true,
+    "stalePoseIsDetected": true
+  }
+}
