@@ -1,0 +1,58 @@
+name: Knit material R07 build and publish candidate
+on:
+  push:
+    branches: [feature/knit-material-r07-gpu-cache-20261112]
+    paths:
+      - kaopu-fabric-workbench/knit-material-r07-patch.py
+      - kaopu-fabric-workbench/knit-material-r07-qa.mjs
+      - .github/workflows/knit-material-r07-build.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-material-r07-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-material-r06
+            kaopu-fabric-workbench/knit-material-r07-patch.py
+            kaopu-fabric-workbench/knit-material-r07-qa.mjs
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate standalone R07 candidate
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench"
+          python "$ROOT/knit-material-r07-patch.py"
+          cp "$ROOT/knit-material-r07-qa.mjs" "$ROOT/knit-material-r07/qa-r07.mjs"
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          r=Path('kaopu-fabric-workbench/knit-material-r07')
+          p=r/'app.js';s=p.read_text()
+          s=s.replace("...[4,5,7].map(binding=>({binding,visibility:4,buffer:{type:'storage'}}))","...[4,5,7,8].map(binding=>({binding,visibility:4,buffer:{type:'storage'}}))")
+          s=s.replace("lastResult={wallMs,gpuMs:stamp?Object.values(stages).reduce((a,b)=>a+b,0):null,stages,dispatchedFibres:n,submissionCount:soft?steps.length:1,revision};return lastResult;","if(cacheEnabled&&n>0&&!hairCacheValid){hairCacheValid=true;cacheBuildCount++;}lastResult={wallMs,gpuMs:stamp?Object.values(stages).reduce((a,b)=>a+b,0):null,stages,dispatchedFibres:n,submissionCount:soft?steps.length:1,revision,cacheEnabled,hairCacheBytes:buffers.hairCache?.size||0};return lastResult;")
+          s=s.replace("surfaceSolver:directMode?'R06 direct parametric yarn solve':'R04 128-step field marcher',","surfaceSolver:directMode?'R06 direct parametric yarn solve':'R04 128-step field marcher',hairCache:cacheEnabled?'R07 persistent GPU strand cache':'R06 per-frame strand recompute',hairCacheBytes:buffers.hairCache?.size||0,cacheBuildCount,")
+          s=s.replace("setSolver:value=>enqueue(async()=>{directMode=!!value;changed();}),compareSolvers","setSolver:value=>enqueue(async()=>{directMode=!!value;changed();}),setCache:value=>enqueue(async()=>{cacheEnabled=!!value;changed();}),compareSolvers")
+          p.write_text(s)
+          core=(r/'core.wgsl').read_text();shell=(r/'shell.html').read_text()
+          html=shell.replace('/*DATA*/','const CORE='+json.dumps(core,ensure_ascii=False)+';\\nconst DEFAULT_MATERIAL='+json.dumps((r/'material.wgsl').read_text(),ensure_ascii=False)+';\\nconst PRESET_DATA='+(r/'presets.json').read_text()+';').replace('/*APP*/',s)
+          (r/'index.html').write_text(html)
+          (r/'BUILD.json').write_text(json.dumps({'version':'KNIT-MATERIAL-R07','sha256':hashlib.sha256(html.encode()).hexdigest(),'bytes':len(html.encode()),'optimization':'persistent GPU cache of nine exact curve positions per fibre','cacheBytesDefault':491520*160,'qualityInvariants':{'resolution':[640,480],'fibres':491520,'segmentsPerFibre':8,'triangles':0},'validation':{'shaderCompile':False,'browser':False,'pixelEquivalence':False,'80PercentReduction':False,'hardware60FPS':False}},indent=2))
+          PY
+          node --check "$ROOT/knit-material-r07/app.js"
+      - name: Commit R07 candidate source
+        run: |
+          git sparse-checkout add kaopu-fabric-workbench/knit-material-r07
+          git config user.name 'Knit R07 builder'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-material-r07
+          git commit -m 'Build isolated R07 persistent GPU strand-cache candidate [skip ci]'
+          git push origin HEAD:feature/knit-material-r07-gpu-cache-20261112
