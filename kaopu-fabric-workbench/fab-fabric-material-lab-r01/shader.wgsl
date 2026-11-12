@@ -9,7 +9,7 @@ if(kind<.5){let a=ridge(q.x);let b=ridge(q.y);h=mix(a,b,select(0.,1.,fract(cell.
 else if(kind<1.5){let d=q.x+q.y*.42;h=ridge(d)*.62+ridge(q.y)*.08;fiber=abs(noise2(q*2.7)-.5)*.16;}
 else if(kind<2.5){let d=q.x+q.y*.35;h=ridge(d)*.42+ridge(q.y)*.12;fiber=abs(noise2(q*8.)-.5)*.22;ink=select(0.,1.,noise2(q*.8)>.58);}
 else if(kind<3.5){let a=ridge(q.x*.55);let b=ridge(q.y*.55);h=mix(a,b,select(.25,.75,fract(cell.x+cell.y)>.5))*.72;fiber=abs(noise2(q*1.8)-.5)*.12;}
-else if(kind<4.5){let row=fract(q.y*.5);let col=fract(q.x);let loop=sin(col*PI)*sin(row*PI);h=pow(max(0.,loop),.55)*.88+ridge(q.y*.5)*.12;fiber=abs(noise2(q*7.)-.5)*.18;}
+else if(kind<4.5){let row=fract(q.y*.5);let col=fract(q.x);let loopShape=sin(col*PI)*sin(row*PI);h=pow(max(0.,loopShape),.55)*.88+ridge(q.y*.5)*.12;fiber=abs(noise2(q*7.)-.5)*.18;}
 else if(kind<5.5){h=noise2(q*2.)*.18+noise2(q*7.)*.08;fiber=pow(max(0.,noise2(q*12.)-.35),2.);}
 else{let a=ridge(q.x*1.2);let b=ridge(q.y*1.2);h=mix(a,b,select(.35,.65,fract(cell.x+cell.y)>.5))*.5;fiber=abs(noise2(q*5.)-.5)*.12;ink=select(0.,1.,sin(q.x*1.2)*sin(q.y*1.2)>.72);}
 return vec4<f32>(h+fiber,fiber,ink,n);}
