@@ -6,13 +6,25 @@
   "sourceCorrection": {
     "title": "整机交付工作方式.md",
     "updated": "2026-11-10",
-    "applicableMothers": ["Car", "Train 88", "Excavator", "Mechanical"],
+    "applicableMothers": [
+      "Car",
+      "Train 88",
+      "Excavator",
+      "Mechanical"
+    ],
     "contract": "The whole artifact must be visible, rotatable, selectable and adjustable, published to the original workbench, with missing or untested items explicit. Observation-ready and fully accepted are distinct states."
   },
   "currentBestView": {
     "covered": "R2 already binds expectedArtifact and target fidelity, while the reference and freshness gates block creative substitution and stale delivery.",
     "gap": "No applicable regression case was found that makes a faithful part-level candidate fail when the expected artifact is the complete machine, or that distinguishes whole-machine observation-ready from full acceptance.",
-    "noDuplicateRegressionFound": true
+    "noDuplicateRegressionFound": true,
+    "realMotherTrial": {
+      "issue": 91,
+      "commentId": 6832497697,
+      "subject": "Excavator / ZAXIS 85USB / Site v169",
+      "observed": "site deployment succeeded and catalog row exists, but the exact machine has no current route+assetDigest+servedVersion-bound startup/readiness receipt",
+      "decision": "HOLD_GATE_FAIL"
+    }
   },
   "boundedQuestion": "When expectedArtifact is the complete machine in the original workbench, what minimum receipt distinguishes valid whole-machine observation-ready delivery from part-level progress, static or HTTP evidence, and overclaimed full acceptance?",
   "falsifiableHypothesis": "A receipt requiring exact artifact identity, complete-machine kind, visible/rotatable/selectable/adjustable capabilities, publication to the original workbench, explicit known gaps and separated acceptance layers rejects partial, static, HTTP-only, disconnected and overclaimed candidates while allowing an honestly labeled observation-ready whole machine.",
@@ -33,7 +45,16 @@
       "gapsExplicitlyDeclared",
       "claimedState",
       "acceptanceLayers[package,productionRuntime,browser,device,user]",
-      "independentVerifierIdentityAndRunTime"
+      "independentVerifierIdentityAndRunTime",
+      "artifactId",
+      "route",
+      "assetDigest",
+      "servedVersion",
+      "startupProbe.result",
+      "startupProbe.moduleGraphResolved",
+      "startupProbe.fatalConsoleErrors",
+      "startupProbe.lastCompletedFrame",
+      "startupProbe.currentReadiness"
     ]
   },
   "decisions": [
@@ -47,7 +68,15 @@
     "HOLD_KNOWN_GAPS_NOT_DECLARED",
     "HOLD_OBSERVATION_READY_OVERCLAIMED_AS_ACCEPTED",
     "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE",
-    "WHOLE_MACHINE_ACCEPTED_CANDIDATE"
+    "WHOLE_MACHINE_ACCEPTED_CANDIDATE",
+    "HOLD_ENTRY_NOT_FOUND",
+    "HOLD_ENTRY_VERSION_MISMATCH",
+    "HOLD_ENTRY_ASSET_IDENTITY_MISMATCH",
+    "HOLD_ENTRY_STARTUP_UNKNOWN",
+    "HOLD_ENTRY_STARTUP_FAILED",
+    "HOLD_ENTRY_STARTUP_RECEIPT_STALE",
+    "HOLD_ENTRY_NO_COMPLETED_FRAME",
+    "HOLD_ENTRY_NOT_CURRENTLY_READY"
   ],
   "minimalReplay": {
     "probe": "PROBES/whole_machine_delivery_scope_gate_n269.mjs",
@@ -63,17 +92,36 @@
       "not published to the original workbench",
       "hidden known gap",
       "observation-ready candidate overclaimed as fully accepted"
-    ]
+    ],
+    "n280Extension": {
+      "probe": "PROBES/n280_machine_entry_readiness_probe.mjs",
+      "result": "PROBES/n280_machine_entry_readiness_result.json",
+      "expected": "8/8 assertions pass",
+      "keyRule": "Readiness is keyed by artifactId + servedVersion + assetDigest; site and sibling states are not inherited.",
+      "controls": [
+        "catalog row only",
+        "module resolution fatal",
+        "prior served version",
+        "sibling ready",
+        "asset digest mismatch",
+        "owner-only route",
+        "exact ready public entry",
+        "later readiness regression"
+      ]
+    }
   },
   "activation": {
     "global": false,
     "motherTrialRequired": true,
-    "rollbackPoint": "Remove this Candidate if one real affected Mother trial shows no discrimination beyond existing R2 receipts; do not modify R2 or production gates before that trial."
+    "rollbackPoint": "Remove this Candidate if one real affected Mother trial shows no discrimination beyond existing R2 receipts; do not modify R2 or production gates before that trial.",
+    "n280TrialResult": "Candidate discriminated a real affected-Mother case: successful Site deployment/catalog presence remained HOLD because exact ZAXIS runtime readiness was unbound. Keep Candidate/local; do not globally adopt yet."
   },
   "limits": [
     "The synthetic replay does not prove any current car, train, excavator or mechanical production artifact is observation-ready.",
     "Capability booleans require real verifier evidence; producer declarations alone are insufficient.",
-    "Observation-ready intentionally permits declared deferred detail gaps and is not user acceptance."
+    "Observation-ready intentionally permits declared deferred detail gaps and is not user acceptance.",
+    "Per-entry readiness is revocable and fail-closed: UNKNOWN/FAILURE/identity mismatch cannot inherit site-level or sibling success.",
+    "lastCompletedFrame is not visual correctness, performance, device acceptance or user acceptance."
   ],
   "routing": {
     "issue": 91,
@@ -86,7 +134,7 @@
     "POSTED": true,
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": "candidate probe only",
-    "GATE-RUN": false,
+    "GATE-RUN": "candidate synthetic 8/8 + N280 affected-Mother historical replay",
     "ADOPTED": false,
     "USER-ACCEPTED": false
   }
