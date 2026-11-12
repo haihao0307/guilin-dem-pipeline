@@ -79,7 +79,7 @@ Applicable existing cases were reviewed:
 
 ## Lifecycle
 
-- `POSTED=false` at file creation
+- `POSTED=true` — https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6822638361
 - `ACKNOWLEDGED=false`
 - source/public page `IMPLEMENTED=true`
 - exact-source/public browser `GATE-RUN=true`
