@@ -23,8 +23,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Syntax validation
+      - name: Build standalone R07 HTML and syntax validation
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          r=Path('kaopu-fabric-workbench/knit-material-r07')
+          core=(r/'core.wgsl').read_text()
+          shell=(r/'shell.html').read_text()
+          app=(r/'app.js').read_text()
+          html=shell.replace('/*DATA*/','const CORE='+json.dumps(core,ensure_ascii=False)+';\\nconst DEFAULT_MATERIAL='+json.dumps((r/'material.wgsl').read_text(),ensure_ascii=False)+';\\nconst PRESET_DATA='+(r/'presets.json').read_text()+';').replace('/*APP*/',app)
+          (r/'index.html').write_text(html)
+          (r/'BUILD.json').write_text(json.dumps({'version':'KNIT-MATERIAL-R07','sha256':hashlib.sha256(html.encode()).hexdigest(),'bytes':len(html.encode()),'optimization':'persistent GPU cache of nine exact curve positions per fibre','cacheBytesDefault':491520*160,'qualityInvariants':{'resolution':[640,480],'fibres':491520,'segmentsPerFibre':8,'triangles':0},'validation':{'shaderCompile':False,'browser':False,'pixelEquivalence':False,'80PercentReduction':False,'hardware60FPS':False}},indent=2))
+          PY
           cd kaopu-fabric-workbench/knit-material-r07
           node --check app.js
           node --check qa-r07.mjs
