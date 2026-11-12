@@ -103,7 +103,7 @@ State must be keyed by `artifactId + servedVersion + assetDigest`. A site-level 
 - Candidate regression refinement: `IMPLEMENTED`
 - Synthetic replay: `GATE-RUN`
 - Real affected-Mother historical replay: `GATE-RUN`
-- Routing: pending #91 comment
+- Routing: `POSTED` to #91 comment `6834230698`
 - Mother ACK: `UNKNOWN`
 - Production IMPLEMENTED/GATE-RUN: false
 - ADOPTED: false
