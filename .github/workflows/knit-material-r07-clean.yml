@@ -1,0 +1,61 @@
+name: Knit material R07 clean branch QA
+on:
+  push:
+    branches: [feature/knit-material-r07-clean-20261112]
+    paths:
+      - kaopu-fabric-workbench/knit-material-r07/**
+      - .github/workflows/knit-material-r07-clean.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-material-r07-clean
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-fabric-workbench/knit-material-r07
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax validation
+        run: |
+          cd kaopu-fabric-workbench/knit-material-r07
+          node --check app.js
+          node --check qa-r07.mjs
+      - name: Install software WebGPU browser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/knit-r07-clean
+          cd /tmp/knit-r07-clean
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: WebGPU compile, full-fibre cache, pixel equivalence and A/B
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r07"
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r07-clean-http.log 2>&1 &
+          cp "$ROOT/qa-r07.mjs" /tmp/knit-r07-clean/qa-r07.mjs
+          SITE_DIR="$ROOT" xvfb-run -a node /tmp/knit-r07-clean/qa-r07.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-material-r07-clean
+          path: kaopu-fabric-workbench/knit-material-r07
+          retention-days: 7
+      - name: Preserve QA evidence
+        if: always()
+        run: |
+          git config user.name 'Knit runtime verifier'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-material-r07
+          if ! git diff --cached --quiet; then
+            git commit -m 'Save R07 clean-branch QA evidence [skip ci]'
+            git push origin HEAD:feature/knit-material-r07-clean-20261112
+          fi
