@@ -1,4 +1,4 @@
-const $=id=>document.getElementById(id);
+const PI=Math.PI;const $=id=>document.getElementById(id);
 const M=[
 {name:'Plain cotton · 平纹棉',kind:0,a:'#c9c1b2',b:'#8c8171',freq:44,relief:.24,rough:.9,desc:'Fab / Quixel Plain Weave Cotton：经纬交错，细密棉纱'},
 {name:'Twill cotton · 斜纹棉',kind:1,a:'#555c63',b:'#252b32',freq:56,relief:.34,rough:.78,desc:'Fab / Quixel Cotton Twill：连续斜向浮线'},
