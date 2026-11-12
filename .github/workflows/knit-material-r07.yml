@@ -1,0 +1,87 @@
+name: Knit material R07 persistent GPU hair cache
+on:
+  push:
+    branches: [feature/knit-material-r07-gpu-cache-20261112]
+    paths:
+      - kaopu-fabric-workbench/knit-material-r07-patch.py
+      - kaopu-fabric-workbench/knit-material-r07-qa.mjs
+      - .github/workflows/knit-material-r07.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knit-material-r07
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-fabric-workbench/knit-material-r06
+            kaopu-fabric-workbench/knit-material-r07-patch.py
+            kaopu-fabric-workbench/knit-material-r07-qa.mjs
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Create isolated R07 from accepted R04/R06 source
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench"
+          python "$ROOT/knit-material-r07-patch.py"
+          cp "$ROOT/knit-material-r07-qa.mjs" "$ROOT/knit-material-r07/qa-r07.mjs"
+      - name: Fix bind layout, cache lifecycle and build standalone page
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r07"
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          r=Path('kaopu-fabric-workbench/knit-material-r07')
+          p=r/'app.js';s=p.read_text()
+          s=s.replace("...[4,5,7].map(binding=>({binding,visibility:4,buffer:{type:'storage'}}))","...[4,5,7,8].map(binding=>({binding,visibility:4,buffer:{type:'storage'}}))")
+          s=s.replace("lastResult={wallMs,gpuMs:stamp?Object.values(stages).reduce((a,b)=>a+b,0):null,stages,dispatchedFibres:n,submissionCount:soft?steps.length:1,revision};return lastResult;","if(cacheEnabled&&n>0&&!hairCacheValid){hairCacheValid=true;cacheBuildCount++;}lastResult={wallMs,gpuMs:stamp?Object.values(stages).reduce((a,b)=>a+b,0):null,stages,dispatchedFibres:n,submissionCount:soft?steps.length:1,revision,cacheEnabled,hairCacheBytes:buffers.hairCache?.size||0};return lastResult;")
+          s=s.replace("surfaceSolver:directMode?'R06 direct parametric yarn solve':'R04 128-step field marcher',","surfaceSolver:directMode?'R06 direct parametric yarn solve':'R04 128-step field marcher',hairCache:cacheEnabled?'R07 persistent GPU strand cache':'R06 per-frame strand recompute',hairCacheBytes:buffers.hairCache?.size||0,cacheBuildCount,")
+          s=s.replace("setSolver:value=>enqueue(async()=>{directMode=!!value;changed();}),compareSolvers","setSolver:value=>enqueue(async()=>{directMode=!!value;changed();}),setCache:value=>enqueue(async()=>{cacheEnabled=!!value;changed();}),compareSolvers")
+          p.write_text(s)
+          core=(r/'core.wgsl').read_text()
+          shell=(r/'shell.html').read_text()
+          html=shell.replace('/*DATA*/','const CORE='+json.dumps(core,ensure_ascii=False)+';\\nconst DEFAULT_MATERIAL='+json.dumps((r/'material.wgsl').read_text(),ensure_ascii=False)+';\\nconst PRESET_DATA='+(r/'presets.json').read_text()+';').replace('/*APP*/',s)
+          (r/'index.html').write_text(html)
+          (r/'BUILD.json').write_text(json.dumps({'version':'KNIT-MATERIAL-R07','sha256':hashlib.sha256(html.encode()).hexdigest(),'bytes':len(html.encode()),'optimization':'persistent GPU cache of nine exact curve positions per fibre','cacheBytesDefault':491520*160,'qualityInvariants':{'resolution':[640,480],'fibres':491520,'segmentsPerFibre':8,'triangles':0},'validation':{'shaderCompile':False,'browser':False,'pixelEquivalence':False,'80PercentReduction':False,'hardware60FPS':False}},indent=2))
+          PY
+          node --check "$ROOT/app.js"
+          node --check "$ROOT/qa-r07.mjs"
+      - name: Install software WebGPU browser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/knit-r07
+          cd /tmp/knit-r07
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Actual WebGPU shader compile, pixel equivalence and interleaved A/B
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench/knit-material-r07"
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/knit-r07-http.log 2>&1 &
+          cp "$ROOT/qa-r07.mjs" /tmp/knit-r07/qa-r07.mjs
+          SITE_DIR="$ROOT" xvfb-run -a node /tmp/knit-r07/qa-r07.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: knit-material-r07
+          path: kaopu-fabric-workbench/knit-material-r07
+          retention-days: 7
+      - name: Preserve R07 source and test evidence
+        if: always()
+        run: |
+          git sparse-checkout add kaopu-fabric-workbench/knit-material-r07
+          git config user.name 'Knit runtime verifier'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/knit-material-r07
+          if ! git diff --cached --quiet; then
+            git commit -m 'Save R07 persistent hair cache browser evidence [skip ci]'
+            git push origin HEAD:feature/knit-material-r07-gpu-cache-20261112
+          fi
