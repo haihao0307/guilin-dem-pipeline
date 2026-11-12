@@ -1,0 +1,56 @@
+{
+  "probe": "N280_PER_ENTRY_STARTUP_READINESS",
+  "principle": "site deployment and catalog presence never inherit runtime readiness to an entry",
+  "results": [
+    {
+      "name": "v169 catalog row only",
+      "expected": "HOLD_ENTRY_STARTUP_UNKNOWN",
+      "actual": "HOLD_ENTRY_STARTUP_UNKNOWN"
+    },
+    {
+      "name": "bare module resolution fatal",
+      "expected": "HOLD_ENTRY_STARTUP_FAILED",
+      "actual": "HOLD_ENTRY_STARTUP_FAILED"
+    },
+    {
+      "name": "receipt from prior served version",
+      "expected": "HOLD_ENTRY_VERSION_MISMATCH",
+      "actual": "HOLD_ENTRY_VERSION_MISMATCH"
+    },
+    {
+      "name": "sibling machine ready does not promote ZAXIS",
+      "expected": "HOLD_ENTRY_STARTUP_UNKNOWN",
+      "actual": "HOLD_ENTRY_STARTUP_UNKNOWN"
+    },
+    {
+      "name": "catalog identity differs from canonical digest",
+      "expected": "HOLD_ENTRY_ASSET_IDENTITY_MISMATCH",
+      "actual": "HOLD_ENTRY_ASSET_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "runtime ready but owner-only",
+      "expected": "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED",
+      "actual": "HOLD_ORIGINAL_WORKBENCH_NOT_PUBLISHED"
+    },
+    {
+      "name": "exact entry ready and public",
+      "expected": "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE",
+      "actual": "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE"
+    },
+    {
+      "name": "readiness is revocable after a later fault",
+      "expected": "HOLD_ENTRY_NOT_CURRENTLY_READY",
+      "actual": "HOLD_ENTRY_NOT_CURRENTLY_READY"
+    }
+  ],
+  "assertions": {
+    "passed": 8,
+    "total": 8,
+    "allPassed": true
+  },
+  "boundaries": [
+    "Synthetic state-machine replay; it does not execute the ZAXIS runtime.",
+    "lastCompletedFrame is a receipt field, not proof of visual correctness or GPU performance.",
+    "WHOLE_MACHINE_OBSERVATION_READY_CANDIDATE is not device or user acceptance."
+  ]
+}
