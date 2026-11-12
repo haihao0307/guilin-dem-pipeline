@@ -1,0 +1,114 @@
+{
+  "id": "CANDIDATE_ROLLBACK_SOURCE_RESET_NOT_VISIBLE_BASELINE_RESTORED_001",
+  "title": "Source branch reset presented as restored prior good visible result without a bound visible baseline receipt",
+  "status": "CANDIDATE",
+  "scope": "single-Mother audition; Animation/Humanoid PR #344 rollback",
+  "createdAt": "2026-11-12",
+  "problem": "A branch can be reset to an earlier source commit and pass source-level CI while the user-facing preview remains missing, stale, or unbound. SOURCE-RESET is not equivalent to VISIBLE-BASELINE-RESTORED.",
+  "userCorrection": {
+    "text": "退回你这次修改的内容，我看不到任何以前的好效果了",
+    "observedAt": "2026-11-12T02:06:27Z"
+  },
+  "distinctFrom": [
+    "TASK_FRESHNESS: the candidate head can be fresh and exact while the public visible result is absent.",
+    "REJECTED_DESCENDANT_QUARANTINE: this case verifies restoration identity and visibility, not only whether descendants of a rejected lineage are blocked.",
+    "USER_VISIBLE_PROVENANCE: this case binds the restored result itself, not third-party attribution.",
+    "REFERENCE_REPLICATION: this case does not decide whether a visible result faithfully replicates a reference."
+  ],
+  "taskAnchorFields": [
+    "rollbackRequestIdentity",
+    "rollbackTargetArtifact",
+    "rollbackTargetCommit",
+    "rollbackTargetScreenshotOrGolden",
+    "rollbackTargetPublicUrl",
+    "rollbackTargetAcceptanceState",
+    "candidateHeadSha"
+  ],
+  "deliveryReceiptFields": [
+    "rollbackOperation",
+    "sourceResetFromSha",
+    "sourceResetToSha",
+    "exactHeadCiRun",
+    "publicUrl",
+    "publicHttpStatus",
+    "renderedCandidateIdentity",
+    "renderedTargetIdentity",
+    "fixedViewEvidence",
+    "visibleBaselineMatch",
+    "userAcceptance"
+  ],
+  "gate": {
+    "pass": [
+      "Rollback target is bound to an exact previously accepted artifact, commit plus render, or golden screenshot.",
+      "Candidate head and exact-head CI receipt are present.",
+      "The declared public URL returns the restored candidate and the rendered identity matches the bound rollback target.",
+      "SOURCE-RESET and VISIBLE-BASELINE-RESTORED are reported as separate states.",
+      "USER-ACCEPTED remains separate from verifier pass."
+    ],
+    "hold": [
+      "HOLD_ROLLBACK_TARGET_IDENTITY_UNBOUND",
+      "HOLD_ROLLBACK_PUBLIC_URL_UNAVAILABLE",
+      "HOLD_ROLLBACK_RENDERED_TARGET_MISMATCH",
+      "HOLD_SOURCE_RESET_MISSTATED_AS_VISIBLE_RESTORATION",
+      "HOLD_ROLLBACK_USER_ACCEPTANCE_UNKNOWN"
+    ],
+    "rule": "A source reset may satisfy source rollback only. It must not be reported as restoration of the previous good visible result until the target identity is bound and the exact public candidate is rendered and compared."
+  },
+  "exactReplay": {
+    "pullRequest": 344,
+    "oldHeadBeforeRollback": "b6395634f0598aac144c4054aa5119f884f27722",
+    "rollbackHead": "50c284deae700803e3817fb8e284a7f117dfb799",
+    "relationship": "old head is 17 commits ahead of rollback head; rollback head is their merge base",
+    "removedByReset": [
+      ".github/workflows/motion-atlas-package.yml",
+      "kaopu-unified-human-workbench/full/motion-library-r02/cmu-sample-pack.json",
+      "three-clip selector/package changes"
+    ],
+    "sourceState": {
+      "operation": "SOURCE-RESET",
+      "implemented": true,
+      "exactHeadQaRun": 43139278590,
+      "exactHeadQaConclusion": "success"
+    },
+    "visibleState": {
+      "expectedPublicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/motion-atlas-r03/index.html",
+      "httpResult": "404 File not found",
+      "sourceJsonUrl": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-unified-human-workbench/full/activity-r01/CMU-WALK-SOURCE.json",
+      "sourceJsonResult": "200; schema cmu16-33-source-positions/1; 285 frames; 31 joints; 120 Hz",
+      "boundAcceptedVisibleTarget": "UNKNOWN",
+      "visibleBaselineRestored": false
+    },
+    "verdict": "HOLD_SOURCE_RESET_WITHOUT_VISIBLE_BASELINE_RECEIPT"
+  },
+  "falsifiableHypothesis": "If the rollback truly restores the previous good visible result, then a target-bound public URL at the rollback head will render the same accepted subject in a fixed view; a missing URL, unbound target, or identity mismatch falsifies restoration.",
+  "minimumTrial": {
+    "mother": "Animation/Humanoid",
+    "steps": [
+      "Bind one exact prior accepted visible target: artifact digest or commit plus fixed-view screenshot and URL.",
+      "Publish only that rollback candidate under an exact candidate identity.",
+      "Run exact-head source CI and a browser gate against the declared public URL.",
+      "Compare rendered subject identity and fixed view to the bound target.",
+      "Record verifier decision separately from user acceptance."
+    ],
+    "rollbackPoint": "No production or global gate change; remove this candidate rule if the historical replay cannot distinguish source reset from visible restoration."
+  },
+  "boundaries": [
+    "This case does not judge motion quality, contact locking, IK, or reference fidelity.",
+    "It does not identify a user-accepted previous-good baseline; that state remains UNKNOWN.",
+    "It does not modify PR #344, any production Mother branch, main, R2, public deployment, or global gate."
+  ],
+  "lifecycle": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate regression only",
+    "GATE-RUN": "exact Git history, exact-head CI, live public browser replay",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "routing": {
+    "issue": 91,
+    "status": "POSTED",
+    "target": "Animation/Humanoid Mother",
+    "acknowledged": false
+  }
+}
