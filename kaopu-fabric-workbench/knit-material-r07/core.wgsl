@@ -13,7 +13,7 @@ struct Field { sd:f32, t:f32, lane:f32, theta:f32, n:vec3<f32>, tangent:vec3<f32
 @group(0) @binding(5) var<storage,read_write> pixels:array<vec4<f32>>;
 @group(0) @binding(6) var outputTex:texture_storage_2d<rgba8unorm,write>;
 @group(0) @binding(7) var<storage,read_write> hairAccum:array<atomic<u32>>;
-struct HairCache { points:array<vec4<f32>,9>, meta:vec4<f32>, }
+struct HairCache { points:array<vec4<f32>,9>, auxData:vec4<f32>, }
 @group(0) @binding(8) var<storage,read_write> hairCache:array<HairCache>;
 const PI:f32=3.14159265359;
 const TAU:f32=6.28318530718;
@@ -148,7 +148,7 @@ fn project(p:vec3<f32>)->vec3<f32>{let q=p-g.eye.xyz;let z=dot(q,g.forward.xyz);
  var cached:HairCache;cached.points[0]=vec4<f32>(root,1.);
  for(var k=1u;k<=8u;k++){cached.points[k]=vec4<f32>(strandPoint(root,T,B,W,Q,id,f32(k)/8.,len),1.);}
  let light=normalize(vec3<f32>(-.6,.65,1.));let nl=max(0.,dot(Q,light));let wrap=.40+.38*sqrt(max(0.,1.-pow(dot(T,light),2.)));
- cached.meta=vec4<f32>(f32(col)+at,f32(row),(wrap+nl*.9)*(.86+.28*hash(id*97u)),0.);hairCache[index]=cached;
+ cached.auxData=vec4<f32>(f32(col)+at,f32(row),(wrap+nl*.9)*(.86+.28*hash(id*97u)),0.);hairCache[index]=cached;
 }
 
 @compute @workgroup_size(8,8) fn clearHairs(@builtin(global_invocation_id) gid:vec3<u32>){if(any(gid.xy>=g.dims.xy)){return;}let i=(gid.y*g.dims.x+gid.x)*4u;for(var j=0u;j<4u;j++){atomicStore(&hairAccum[i+j],0u);}if(gid.x==0u&&gid.y==0u){atomicStore(&hairAccum[g.dims.x*g.dims.y*4u],0u);atomicStore(&hairAccum[g.dims.x*g.dims.y*4u+1u],0u);}}
@@ -191,7 +191,7 @@ fn project(p:vec3<f32>)->vec3<f32>{let q=p-g.eye.xyz;let z=dot(q,g.forward.xyz);
  if(g.fibre.w>.5||g.appearance.x<.001){return;}
  let index=gid.x+gid.y*16384u+g.dims.w;let count=u32(g.fabric.z);let total=u32(g.fabric.x*g.fabric.y)*count;
  if(index>=total||count==0u){return;}
- let cached=hairCache[index];let fiberColor=materialColor(cached.meta.xy)*cached.meta.z;var a=project(cached.points[0].xyz);
+ let cached=hairCache[index];let fiberColor=materialColor(cached.auxData.xy)*cached.auxData.z;var a=project(cached.points[0].xyz);
  for(var k=1u;k<=8u;k++){
   let b=project(cached.points[k].xyz);if(min(a.z,b.z)<1.){a=b;continue;}
   let physicalRadius=g.fibre.x*.5*g.view.y/(g.view.z*(a.z+b.z));let radius=max(.55,physicalRadius);
