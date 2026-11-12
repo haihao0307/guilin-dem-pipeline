@@ -1,0 +1,60 @@
+{
+  "id": "CANDIDATE_CLOTH_BODY_CONTACT_AND_METRIC_001",
+  "status": "CANDIDATE",
+  "title": "Zero penetration must not hide garment metric damage or stale body contact",
+  "appliesTo": [
+    "clothing",
+    "fabric",
+    "cloth simulation",
+    "garment-on-body contact"
+  ],
+  "precondition": [
+    "A real 3D garment mesh exists",
+    "A rest metric or equivalent stretch/bend constraints are versioned",
+    "The current body mesh and pose are versioned",
+    "A body SDF or equivalent signed-distance query is versioned"
+  ],
+  "knownBadControls": [
+    {
+      "name": "projection-only",
+      "expectedFailure": "penetration may be zero while mean/max edge strain exceeds the task contract"
+    },
+    {
+      "name": "stale-body-pose-sdf",
+      "expectedFailure": "cloth can satisfy the stale collider yet penetrate the current body"
+    }
+  ],
+  "requiredReceiptFields": [
+    "garmentMeshSha",
+    "restMetricSha",
+    "bodyMeshSha",
+    "bodyPoseSha",
+    "bodySdfSha",
+    "sdfResolution",
+    "contactTolerance",
+    "friction",
+    "substeps",
+    "solverIterations",
+    "penetratingVertexCount",
+    "minSignedDistance",
+    "meanAbsoluteEdgeStrain",
+    "maxAbsoluteEdgeStrain",
+    "selfCollisionStatus",
+    "producerId",
+    "verifierId",
+    "currentHeadSha"
+  ],
+  "gate": [
+    "All mesh/pose/SDF/rest-metric identities resolve to the current candidate",
+    "Penetration and metric error both meet task-specific thresholds",
+    "A stale-pose negative control fails",
+    "Producer and verifier are distinct",
+    "Thresholds are declared by the task contract; N279 smoke thresholds are not production defaults"
+  ],
+  "replay": {
+    "command": "node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n279_cloth_sdf_probe.mjs",
+    "result": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n279_cloth_sdf_probe_result.json",
+    "observation": "joint distance/contact solve removed penetration and cut mean absolute edge strain from 0.2455196050 to 0.0010869290; stale collider left 18 current-body penetrations"
+  },
+  "scopeBoundary": "Does not validate garment patterns, sewing, material calibration, self-collision, animated-body SDF updates, production performance, visual acceptance, or user acceptance."
+}
