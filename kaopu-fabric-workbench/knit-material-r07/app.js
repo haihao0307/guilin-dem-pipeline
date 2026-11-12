@@ -7,7 +7,8 @@ const SETTINGS=[['pitch',.1,'mm'],['rowStretch',.01,'×'],['radius',.05,'mm'],['
 const clone=x=>JSON.parse(JSON.stringify(x)),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
 function makeMaterial(x){return{schema:SCHEMA,engineABI:ABI,name:x.name,structure:{type:'p02-catmulrom/1',controlPoints:clone(CTRL)},params:clone(x.params),source:DEFAULT_MATERIAL};}
-const library=PRESET_DATA.map(makeMaterial);\nconst PRODUCTION_HAIR_DENSITY=library[0].params.hairDensity;
+const library=PRESET_DATA.map(makeMaterial);
+const PRODUCTION_HAIR_DENSITY=library[0].params.hairDensity;
 let material=clone(library[0]),selected=0,device,adapterInfo,layout,ctx,texture,pipes,source,stamp=false,soft=false;
 let buffers={},hairCacheValid=false,cacheEnabled=true,cacheBuildCount=0,W=640,H=480,ready=false,busy=false,pending=0,chain=Promise.resolve(),dirty=true,live=true,orbit=false,failed=false,frame=0;
 let camera={distance:270,yaw:.12,pitch:.08,fov:38},policyMode=0,carrier=false,revision=0,lastReport=null,lastResult=null,frameTimes=[];
