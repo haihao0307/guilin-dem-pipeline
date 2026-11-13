@@ -145,7 +145,7 @@ The first target trial should be selected by the coordinator from the actual que
 - SEI: `TEACHER_CANDIDATE / AUDITION`;
 - existing regression refinement: Candidate `IMPLEMENTED=true`;
 - audit: `GATE-RUN=true`;
-- `POSTED=false` until targeted routing;
+- `POSTED=true` at [#91 issuecomment-6851876886](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6851876886);
 - `ACKNOWLEDGED=false`;
 - `ADOPTED=false`;
 - `USER-ACCEPTED=false`;
