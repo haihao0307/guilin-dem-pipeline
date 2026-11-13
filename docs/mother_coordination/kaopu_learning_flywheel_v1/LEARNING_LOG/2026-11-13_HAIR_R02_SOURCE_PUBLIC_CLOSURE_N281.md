@@ -124,3 +124,6 @@ Do not publish the current source merely to clear the 404 before its shader comp
 - `USER-ACCEPTED=false`
 
 Frozen: main, `gh-pages`, Hair production source, R2, global gates and access policy.
+
+
+Routing receipt: [#91 comment 6843161039](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6843161039). State at routing: `POSTED=true`; Mother `ACKNOWLEDGED=false`.
